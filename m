@@ -1,80 +1,64 @@
-Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out203-205-221-209.mail.qq.com (out203-205-221-209.mail.qq.com [203.205.221.209])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A775B3A874F
-	for <cgroups@vger.kernel.org>; Fri, 10 Apr 2026 21:07:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A24D91E8332;
+	Sat, 11 Apr 2026 04:25:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.209
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775855286; cv=none; b=CWAhQNMYjTSpxR1gBDxfDbrbysVdFZM0EnakizMPlrole5bnB4SLgV6fS1a32mr2p/aiDIuhQcVtULN3VewuYeqB9TOhGsut6uAx4QzFLpqmnyOkyan+a+zmRNGVTVqiyX0kT9r7unb1AAy4O0Nb3FnPRP8++AH47TxTQy/8Pds=
+	t=1775881564; cv=none; b=ALYC0MNGS3i/WFjwgtSWb1wuUf51DSq0XZDTaoH7O8PXc6V7OiPV3JYxgFspEXZtN9OtDH7InAjK8LjuegY8o7u/pqrj2vBZtgPZysjsCsZUYD3T5BlGoBFGvifFMqEMHW38avuYRu0DFNCeGfU9yjmQ3jTDhEs8ju5ShomZQg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775855286; c=relaxed/simple;
-	bh=vs3QDWwNH10RCc4zFoNuAaKqRY15PIf14IbBQYxdpfE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gLdi77L2GdMnQR2ef6p08paHLcy+2HUVNSShUjb/sRioq9Zh4BzI1QUVnHGRE3EGlntufVf+c8zzNCSKxKy7CmzdERCkO86gtM8KX9IVqF7GKuffPBY+lCl6jssr7XllRG/YTu4klxeKObPon0631wuXxME0gU3r2SW/mJndzUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mTZbeYOG; arc=none smtp.client-ip=209.85.161.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775881564; c=relaxed/simple;
+	bh=i8ECkSpTHbdKnr+q+VhTGQbRZqS3ney23LDjnFzvsUU=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=nEOOLwiH5yMS5EhgUaMMIp4AhVOSGugPT3kQSNIZv3vAwV3Jq2o8Y9y8FE/XuHGGzXYgZ5DKud4N87wffw9ntBVwoG/L7dny/BIKa38omDffV3dTWihO/A7qaSpY5qG2+F9H0iJaJpy59plg96wl16ek4Qq3KgLOjAasAHtXX4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=kkaDeRGb; arc=none smtp.client-ip=203.205.221.209
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mTZbeYOG"
-Received: by mail-oo1-f46.google.com with SMTP id 006d021491bc7-66ee7b9af94so913533eaf.0
-        for <cgroups@vger.kernel.org>; Fri, 10 Apr 2026 14:07:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775855275; x=1776460075; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Txux4TW6NI8BBnT/9aUbbKCnnuVuxmAnvDFuD00fzoQ=;
-        b=mTZbeYOGCChtZIIs1yEcCtGqFy+EY7EWywHT8BaoQExmqin9TMWN6v2N2aeY8Di96k
-         9QG+H5OUsp5vFuL6/ez4SKFEpsFcKGXKqfBIX60JbgMG9QwcR6OF4KyqYgATcBSYX1fE
-         HrTkm1npcTkGZ3eO6oWMGmKw5qXaiGZoTf1p6KBgrg2wBz809xp6aofbFBd5n5u+tzhY
-         /ws/XqmbpXUZ8UAugnVfeHpWsM9BQR6BYyFnT3r6CoVsONEEw+QlfIN9KPJq7uld2kHS
-         N0UzV6SWiC+weI9+um0TA24UEbRoA91aNyWQSWBNeoUrOCNBd+m3IEWdgznXF/W8gxle
-         zmGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775855275; x=1776460075;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Txux4TW6NI8BBnT/9aUbbKCnnuVuxmAnvDFuD00fzoQ=;
-        b=SVd+lThLMqnVQs0P/Gv7JWRpxq5ZVZvqP9rXmEyrh/YZE4uzcQGBrzYX6oxPQTV3T2
-         FmaG2cahgyo/wMK31IORcFjn9sET+sq4LRmRRg3Dszl98ASeFOggnJRKQtU49eEdH9jk
-         1CmYujXnq9y1zoMUL9UN1/A0TofwoQ5XM76IiD+3tOtdwqgjMtC/nW7f/JZi26SNGY9G
-         4GYP3tb7hvKgfTHj94pnUeMnA3FvTNJHFhLMXW41TGTr5M/5E2iUkswKxo9XBQKGd9IM
-         jHtQcdTp2HYtwdsfPHtkSjawaCcmbePNPB+FS+Rq069xoSpGkxjjIaevip3yglKkXxRb
-         pVRA==
-X-Forwarded-Encrypted: i=1; AJvYcCW0RUmiXWT0k11zoiFVnHZ7ovrbKIMH+XoGY09kwSbJ++ZO4nUNU803k5OrzngcdBB3ldvYbRH8@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJQLNgkgjT4OXOzCoEugvHke1JkysV0RRz9Zlxb/hC7F6IZASq
-	+kHmUBd1Yt08mnJn97Vx7sU44dh3BY9bbzK6C18CB4SJZMH9/H+HpTCh
-X-Gm-Gg: AeBDieu+xZr0NM80OaF8OO5rUsEuGUixRvi44s1tQXw9jIazngJpkEu8YdRk4EzF7RA
-	KdMmzpyIsZNvcEtaUIDEAvUavA0CKPolhoJMSsPwzFFUcbcni/9w8bgnT5SXAaxAzU2HToucNP1
-	mbGsNLdOPkpgaiyPG0Vy1D5clr6dGiDLdznoEHXWR8NYxo6d/1VfjrX9eaVPEfg4aiSWzZ4wiOQ
-	7R9Zg9BHeHkuLbLeBI+Flecq5Uja990PiDue6h9u8GhW2+D/CfIvot7qA1jZu9vyGaj5wEERfAe
-	NbJTfznp/sn9bhHglS/9PD6Syz22zIDQjcA6V4iLoPuPQfIroJ60/IT+FBoCS0Qk8eoPnf9zAHy
-	vjlJ3OEM7lS0hZRt1Xj6wIYKgwvL3/4urYlxzYs4skE0rlMs+JnmSf5XeS/eXu8gFvQtE++mBpG
-	DzfYcLEXTfn970/JR4Cdi/2g==
-X-Received: by 2002:a05:6820:6307:b0:685:c39e:583a with SMTP id 006d021491bc7-68be7ee7a15mr1487108eaf.30.1775855275568;
-        Fri, 10 Apr 2026 14:07:55 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:43::])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-68bc88c80a7sm1944727eaf.8.2026.04.10.14.07.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Apr 2026 14:07:55 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="kkaDeRGb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1775881551; bh=K1kn5EOLSpbs0c/uaDu497Dr1rBVxMHC6uE5Jvub4KI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=kkaDeRGb2OWwKonQwlBP+sdCFo45sYwrJN/jty5tBuRuDjohNT5DMaIK3/QhykGlp
+	 0TODtCUhKJc8boxq3rPni3M/fjq4l5Iygdou+A/lp64vGzvpuuytgbmp/V82eUpElt
+	 FvnnZ7Bw21QTuWotNFUc2teLSZ5d/YIySh5azl2s=
+Received: from lxu-ped-host.. ([111.198.231.89])
+	by newxmesmtplogicsvrszc43-0.qq.com (NewEsmtp) with SMTP
+	id 66F36E3B; Sat, 11 Apr 2026 12:25:47 +0800
+X-QQ-mid: xmsmtpt1775881547t2kvuohn0
+Message-ID: <tencent_851B66256EBA58BB8933329E6D1BD54BBE08@qq.com>
+X-QQ-XMAILINFO: MFA3rFz8fXqrm7QwfSDRR/rxICBlFpPOIBIQQRyCcNas2ayUSVgO6H7sI12vnm
+	 r1nbAINbonOjhqZmGzpZuZALnMkJ5DrFpWG0tc/w7NhngJGrZfX9G6/WzZEj+eyPpIKXfkFJ9CGp
+	 FSSbuf6DOSPELz/RPTAxW6ajIbmNhUy45radSB7wX/4pq5Y9X+FFlL3MS8PfkCbtSyE2wJ00NHEn
+	 rUVRrN5/GXl1ouhaOWcnm2i7JUfJypUpJcB9E94wv8gE2KQ/vbVvHpP7bc+UKbeJdOs1sZESRwfj
+	 hKjFwJBlTUGSHFk/uzLIP1bfe4JLy1HA9bz9bT9Ag+7uMzB6CQKauh9VgVUxcSRs1RdWYkfr9rCz
+	 0QoKsMCCxeOP6pvL3FNLUsUULymgv+WAxTKRMoI37Gpibvj+KZUJBqB/irglfUvvGhmz3A0xsHFb
+	 GVzvSHicXKr8c7e+UJ6aiqYRD64H2GljCyFi6tqi/TMLn2hzlBgmQdjp3kymqc2NTUw536UAYXQ0
+	 pSpZrbOJmv0wNRnMShAEyNopVtbwoaje+iJYcS7MvTUb2mfFxCW+WdUzFWz68PCuN+cwix2KE++r
+	 8izjK5YrpBXPFL0p3lFGtKkMVDXilzfQTFs6jDj3vkrdZikkwkJa7ZxwepPJFcI4vi+EqyqJTG92
+	 0h0PnBpWrwNsLsxgJOw+xcmbZqd4q1xLeeuEvj2+6b6r6cety8NwPD+oT1t91zGODh7VZG7hCSbq
+	 9xgjrSlbmIyKa862gEzTBQo3Bozx3fCFoVNYeMYOhs/jzIGTNDKqdGWiAskCXyZVvrhkDZGFSDaK
+	 YeaTYxnwklMMNkT/ON8wXT6pWax6gqRNen3CKEIlZXGAo2KVqSP1a6baoQJBlsu7oNZwOc0UvyhS
+	 je5LXP7e6npSudX+Yke/MzQiFb82O3tp2P0yvFg0zonMpcV9hv8GDX/bTgZbZls5xt0B2nJiUESb
+	 nXkxRYSb+riqDmCwbJPR8ua5cDkK8Qu0TeD1G0JHxsEZzplAQ7Vo4auxzx5PgqsullPo+FiKb2Zo
+	 qazN8DcA==
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+From: Edward Adam Davis <eadavis@qq.com>
+To: tj@kernel.org
+Cc: cgroups@vger.kernel.org,
+	chenridong@huaweicloud.com,
+	eadavis@qq.com,
+	hannes@cmpxchg.org,
 	linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: [PATCH 7/8 RFC] mm/memcontrol: optimize stock usage for cgroup v2
-Date: Fri, 10 Apr 2026 14:07:01 -0700
-Message-ID: <20260410210742.550489-8-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260410210742.550489-1-joshua.hahnjy@gmail.com>
-References: <20260410210742.550489-1-joshua.hahnjy@gmail.com>
+	mkoutny@suse.com,
+	syzbot+33e571025d88efd1312c@syzkaller.appspotmail.com,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [PATCH v2] sched/psi: fix race between file release and pressure write
+Date: Sat, 11 Apr 2026 12:25:47 +0800
+X-OQ-MSGID: <20260411042546.163772-2-eadavis@qq.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <adlL_QXVAgCBH9L8@slm.duckdns.org>
+References: <adlL_QXVAgCBH9L8@slm.duckdns.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -83,56 +67,42 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In cgroup v2, tasks can only belong to leaf cgroups, meaning non-leaf
-cgroups never receive direct charges. Having stock remain in these
-cgroups therefore, is wasted percpu memory that will never be consumed
-unless all of its children are removed.
+On Fri, 10 Apr 2026 09:14:05 -1000, Tejun Heo wrote:
+> >  static ssize_t pressure_write(struct kernfs_open_file *of, char *buf,
+> >  			      size_t nbytes, enum psi_res res)
+> >  {
+> > -	struct cgroup_file_ctx *ctx = of->priv;
+> > +	struct cgroup_file_ctx *ctx;
+> >  	struct psi_trigger *new;
+> >  	struct cgroup *cgrp;
+> >  	struct psi_group *psi;
+> > +	ssize_t ret = 0;
+> >
+> >  	cgrp = cgroup_kn_lock_live(of->kn, false);
+> >  	if (!cgrp)
+> >  		return -ENODEV;
+> >
+> > +	ctx = of->priv;
+> > +	if (!ctx) {
+> 
+> This test likely isn't necessary but that's pre-existing.
+Where?
+Are you referring to the check for of->released within:
+'kernfs_fop_write_iter()->kernfs_get_active_of()'? This check is not
+performed under the protection of the cgroup_mutex; consequently, it
+is susceptible to race conditions, rendering the value unreliable, as
+it could be updated at any moment.
+> 
+> > +		ret = -ENODEV;
+> > +		goto out_unlock;
+> > +	}
+> > +
+> >  	cgroup_get(cgrp);
+> 
+> We don't need get/put if we don't drop the mutex, right?
+I believe that is indeed the case; the cgroup_get() call here is intended
+to facilitate subsequent operations, such as executing an smp store.
 
-To avoid leaving unused but accounted charges from remaining in non-leaf
-cgroups, drain the stock when leaf cgroups become parents.
-
-There is one caveat, which is concurrent charging and child creation.
-When a leaf cgroup becomes a parent at the same time it is still
-charging a task, there can be a race condition where the parent's
-stock is drained, then refilled by the charge.
-
-Instead of adding expensive synchronization mechanisms, accept the
-pages kept captive by parent page_counters which will not be able to use
-the stock until all its children are offlined first. It is a rare
-race condition, and is also bounded by MEMCG_CHARGE_BATCH = 64 pages.
-
-This optimization is not for cgroup v1, where tasks can be attached to
-any cgroup in the hierarchy, meaning stock can be consumed & refilled
-for non-leaf cgroups as well.
-
-Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
----
- mm/memcontrol.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6d50f5d667434..4be1638dde180 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4130,6 +4130,17 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	 */
- 	xa_store(&mem_cgroup_private_ids, memcg->id.id, memcg, GFP_KERNEL);
- 
-+	/*
-+	 * On v2, non-leaf memcgs cannot directly be charged. This child's
-+	 * parent is no longer a leaf, so drain the parent's stock.
-+	 */
-+	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
-+		struct mem_cgroup *parent = parent_mem_cgroup(memcg);
-+
-+		if (parent)
-+			page_counter_drain_stock(&parent->memory);
-+	}
-+
- 	return 0;
- free_objcg:
- 	for_each_node(nid) {
--- 
-2.52.0
+Edward
+BR
 
