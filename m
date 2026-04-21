@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A3B5369236;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8507B37F748;
 	Tue, 21 Apr 2026 06:16:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776752214; cv=none; b=SMOFqRwa6KdXoY41T6l0zfluJqUip9g/OTDt04nM73DE1MM/78MSZXNlIUuHz8jQR+TrQtUyXQMLlLhrFTkkBprIkz6x9UPSceLQTcdqioZP/YUyHiUtF+CBzez4Q6RyEKBzpY5YSqj0JC9DOLPX2Jwj5aGjxJl2HgfFH4n8Tr8=
+	t=1776752214; cv=none; b=ldFaX/n7MJKzPHqaeJiSONqjKirI2sDNyyPibaa51TKqvwMIhPucgjgpImpruVqANvk1vbQGI2xU6Bj9Q+V3slXdgamAAiNVPzvGzJsGtXKJxpTJ58mSjchEzukG5/ywF3Yl0l3Sq/TXcH+BUz3wv5PVDYwwfFOggUJGQvv0xXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1776752214; c=relaxed/simple;
-	bh=R6SopjDHSwYyapYpCTCyeRRNRa8GYVbolWOQ9GyqllU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=EtNg7VV1htxqVHmaEiudPJGkixM1/y4y51p8UCX0cS8UxfMo5h8fTZ8LNUzCj6pwnHSNDkgRtnPF2Vhp4GW/CVG+5qY5IfZwGuW7qEfyzgWldR+GkhUG6CE/rKUBvbb00JnnH1mwHJv7J9LrmdpZnLkTnOuWHu2IZOM8rmFb7go=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T3+TKpHf; arc=none smtp.client-ip=10.30.226.201
+	bh=Jq+2g/EuZYELu4Xod9IzqQhR1K4oK3YcKoIfx89cJqE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=W6FFOSXGUiP/cV5qXlMBnK6b0G2Oc9X3Uc9w4XN3zlVvIk1svn12fCmxOovL2izVzsLWTz13z1dHFu29Fv6kDDDIdOQ6337tFUbwYoq14XgTFc6a6WCPfR+PF58e27uus+9nOTgorK18Q2a1B1u7w5oOLC7AU5wP/r/TPti/WAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dbkAATn6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T3+TKpHf"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 386B5C4AF0E;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dbkAATn6"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 12308C2BCB7;
 	Tue, 21 Apr 2026 06:16:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1776752214;
-	bh=R6SopjDHSwYyapYpCTCyeRRNRa8GYVbolWOQ9GyqllU=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=T3+TKpHfay1bgn9sjV6FndDpVmvtTtCnVpihO8QE5F1ZyZ1LL9kVxji8bEEmOCX+D
-	 iRnSxz0Bvd6opGk4TVXbfmvbvdv6ItBvE096n5ilIFqRcOTKU+0gKYpBZK+dvOYcD5
-	 vxjL8gxFINvJBn7RZKYZeyZaYl3szBmFNFytOVnfAKDF4W9SjcejX5F7jMlZPhVMgI
-	 100uJ78AGZ9x//zGfe8TBK3NDSdJSJM/zTKKZViaKbuCqcBi9B/2MIF8ohD5CIGhUg
-	 yWd3AslIuymISe3hqHL+It81CfyV9+yzjC/qIpJAD9lgcPOUl0DOw8NXH25bHrBcQf
-	 FpjRpeairWxLw==
+	bh=Jq+2g/EuZYELu4Xod9IzqQhR1K4oK3YcKoIfx89cJqE=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=dbkAATn61No2nYD6A7RFXIcnyVNiQtl2Wcmvr4u2Sl/qSIsbxV8CPZ+AtFQzvwmvc
+	 6DFIOfQKv9YStNWkSmE8jOjiG4mf7jwSgkhVBJUPFDaa5jqYCBL5OGLEDslhU7W0l+
+	 loavAPJIS8X1oSnCDk9WKgx2TNME/Je0K49miIvkdjCIT+4J6n2eJz8brv9gqUBC/K
+	 6NcGgIdxD5jDkahTB2LFYQ2tITOT4pWB3y5IBOJ+w5yfHeu+QkQ2s9MzlCzFHNzNEw
+	 DEFPaAuTLqlOsAEmjMK80/Gasf1OSbM4zFduZyjfaX6Gr2gLed3cEKqV1Fyswj7RqQ
+	 cTAQewPbubFEw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24952F327AA;
-	Tue, 21 Apr 2026 06:16:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0AF6F327A8;
+	Tue, 21 Apr 2026 06:16:53 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 21 Apr 2026 14:16:46 +0800
-Subject: [PATCH v3 02/12] mm, swap: move common swap cache operations into
- standalone helpers
+Subject: [PATCH v3 00/12] mm, swap: swap table phase IV: unify allocation
+ and reduce static metadata
+Date: Tue, 21 Apr 2026 14:16:44 +0800
+Message-Id: <20260421-swap-table-p4-v3-0-2f23759a76bc@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,9 +41,11 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260421-swap-table-p4-v3-2-2f23759a76bc@tencent.com>
-References: <20260421-swap-table-p4-v3-0-2f23759a76bc@tencent.com>
-In-Reply-To: <20260421-swap-table-p4-v3-0-2f23759a76bc@tencent.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/13MQQ6CMBCF4auQrq3pjMVSV97DuChlkCZaSEuqh
+ nB3Cy6MLN9Lvn9ikYKjyE7FxAIlF13v8zjsCmY742/EXZM3Q4FHAQA8Ps3AR1PfiQ+S64pIY22
+ MspJlMwRq3WvtXa55dy6OfXiv+QTL+y0hik0pARcchFS6bEBXUJ5H8pb8uLf9gy2thD8vQW09L
+ l61WQsoJVb/fp7nDzBl7KzsAAAA
+X-Change-ID: 20260111-swap-table-p4-98ee92baa7c4
 To: linux-mm@kvack.org
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
  David Hildenbrand <david@kernel.org>, Zi Yan <ziy@nvidia.com>, 
@@ -64,11 +66,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Axel Rasmussen <axelrasmussen@google.com>, Lorenzo Stoakes <ljs@kernel.org>, 
  Yosry Ahmed <yosry@kernel.org>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1776752211; l=7606;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1776752211; l=6664;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=Xxsj15DVBqltGKyFemwp7PmhTrU7RQZkfsqaAm93t00=;
- b=TZWpTnNStGa74ex3xHVO0+P3/UneFys55enKax8zcVZuLpR4dCooT9Q6tzt2XnQ5vFagH7f1p
- IOdbFgATsrACszEZkgpnJIaadtd7BxDhIX3SVLvA33X5f52F0CAt7b5
+ bh=Jq+2g/EuZYELu4Xod9IzqQhR1K4oK3YcKoIfx89cJqE=;
+ b=FyXzgmWAt9uW4Er33MihGGiukxDaxaaory1YWdx32QGCDV4K61FifWvn5q/a+E8K3CgvWRXDe
+ a11dpN5OL8BCSceugbN/s3X8w7x6o68iIfAxhVUVNCADC6aTjSGa+HE
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -76,230 +78,165 @@ X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
 X-Original-From: Kairui Song <kasong@tencent.com>
 Reply-To: kasong@tencent.com
 
-From: Kairui Song <kasong@tencent.com>
+This series unifies the allocation and charging of anon and shmem swap
+in folios, provides better synchronization, consolidates the metadata
+management, hence dropping the static array and map, and improves the
+performance. The static metadata overhead is now close to zero, and
+workload performance is slightly improved.
 
-Move a few swap cache checking, adding, and deletion operations
-into standalone helpers to be used later. And while at it, add
-proper kernel doc.
+For example, mounting a 1TB swap device saves about 512MB of memory:
 
-No feature or behavior change.
+Before:
+free -m
+          total   used      free   shared   buff/cache   available
+Mem:       1464    805       346        1          382         658
+Swap:   1048575      0   1048575
+
+After:
+free -m
+          total   used      free   shared   buff/cache   available
+Mem:       1464    277       899         1         356        1187
+Swap:   1048575      0   1048575
+
+Memory usage is ~512M lower, and we now have a close to 0 static
+overhead. It was about 2 bytes per slot before, now roughly 0.09375
+bytes per slot (48 bytes ci info per cluster, which is 512 slots).
+
+Performance test is also looking good, testing Redis in a 1.5G VM using
+5G ZRAM as swap:
+
+valkey-server --maxmemory 2560M
+redis-benchmark -r 3000000 -n 3000000 -d 1024 -c 12 -P 32 -t get
+
+Before: 3289011.918750 RPS
+After:  3312087.142241 RPS (0.99% better)
+
+Testing with build kernel under global pressure on a 48c96t system,
+limiting the total memory to 8G, using 12G ZRAM, 24 test runs,
+enabling THP:
+
+make -j96, using defconfig
+
+Before: user time 2904.59s system time 4773.99s
+After:  user time 2909.38s system time 4641.55s (2.77% better)
+
+Testing with usemem on a 32c machine using 48G brd ramdisk and 16G
+RAM, 12 test run:
+
+usemem --init-time -O -y -x -n 48 1G
+
+Before: Throughput (Sum): 6482.58 MB/s Free Latency: 371371.67us
+After:  Throughput (Sum): 6539.28 MB/s Free Latency: 363059.88us
+
+Seems similar, or slightly better.
+
+This series also reduces memory thrashing, I no longer see any:
+"Huh VM_FAULT_OOM leaked out to the #PF handler. Retrying PF", it was
+shown several times during stress testing before this series when under
+great pressure:
+
+Before: grep -Ri VM_FAULT_OOM <test logs> | wc -l => 18
+After:  grep -Ri VM_FAULT_OOM <test logs> | wc -l => 0
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/swap_state.c | 141 ++++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 95 insertions(+), 46 deletions(-)
+Changes in v3:
+- This is based on mm-unstable, also applies to mm-new, and has no
+  conflict with YoungJun's tier series, and only trivial conflict with
+  Baoquan's swapops due to filename change.
+- Fix zero map build issue on 32 bit archs [ YoungJun Park ]
+- Cleanup memcg table allocation helpers [ YoungJun Park ]
+- Fix WARN for non NUMA build:
+  https://lore.kernel.org/linux-mm/CAMgjq7ANih7u7SJB8uWcQHS8XRJySNRc3ti9V-SVey0nGE3gLQ@mail.gmail.com/
+- Improve of commit messages.
+- Re-test several tests, the conclusion is the same as v2.
+- Link to v2: https://patch.msgid.link/20260417-swap-table-p4-v2-0-17f5d1015428@tencent.com
 
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 204a9499d50c..3da285a891b2 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -137,8 +137,42 @@ void *swap_cache_get_shadow(swp_entry_t entry)
- 	return NULL;
- }
- 
--void __swap_cache_add_folio(struct swap_cluster_info *ci,
--			    struct folio *folio, swp_entry_t entry)
-+/**
-+ * __swap_cache_add_check - Check if a range is suitable for adding a folio.
-+ * @ci: The locked swap cluster.
-+ * @ci_off: Range start offset.
-+ * @nr: Number of slots to check.
-+ * @shadow: Returns the shadow value if one exists in the range.
-+ *
-+ * Check if all slots covered by given range have a swap count >= 1.
-+ * Retrieves the shadow if there is one.
-+ *
-+ * Context: Caller must lock the cluster.
-+ */
-+static int __swap_cache_add_check(struct swap_cluster_info *ci,
-+				  unsigned int ci_off, unsigned int nr,
-+				  void **shadow)
-+{
-+	unsigned int ci_end = ci_off + nr;
-+	unsigned long old_tb;
-+
-+	if (unlikely(!ci->table))
-+		return -ENOENT;
-+	do {
-+		old_tb = __swap_table_get(ci, ci_off);
-+		if (unlikely(swp_tb_is_folio(old_tb)))
-+			return -EEXIST;
-+		if (unlikely(!__swp_tb_get_count(old_tb)))
-+			return -ENOENT;
-+		if (swp_tb_is_shadow(old_tb))
-+			*shadow = swp_tb_to_shadow(old_tb);
-+	} while (++ci_off < ci_end);
-+
-+	return 0;
-+}
-+
-+static void __swap_cache_do_add_folio(struct swap_cluster_info *ci,
-+				      struct folio *folio, swp_entry_t entry)
- {
- 	unsigned int ci_off = swp_cluster_offset(entry), ci_end;
- 	unsigned long nr_pages = folio_nr_pages(folio);
-@@ -159,7 +193,28 @@ void __swap_cache_add_folio(struct swap_cluster_info *ci,
- 	folio_ref_add(folio, nr_pages);
- 	folio_set_swapcache(folio);
- 	folio->swap = entry;
-+}
- 
-+/**
-+ * __swap_cache_add_folio - Add a folio to the swap cache and update stats.
-+ * @ci: The locked swap cluster.
-+ * @folio: The folio to be added.
-+ * @entry: The swap entry corresponding to the folio.
-+ *
-+ * Unconditionally add a folio to the swap cache. The caller must ensure
-+ * all slots are usable and have no conflicts. This assigns entry to
-+ * @folio->swap, increases folio refcount by the number of pages, and
-+ * updates swap cache stats.
-+ *
-+ * Context: Caller must ensure the folio is locked and lock the cluster
-+ * that holds the entries.
-+ */
-+void __swap_cache_add_folio(struct swap_cluster_info *ci,
-+			    struct folio *folio, swp_entry_t entry)
-+{
-+	unsigned long nr_pages = folio_nr_pages(folio);
-+
-+	__swap_cache_do_add_folio(ci, folio, entry);
- 	node_stat_mod_folio(folio, NR_FILE_PAGES, nr_pages);
- 	lruvec_stat_mod_folio(folio, NR_SWAPCACHE, nr_pages);
- }
-@@ -168,9 +223,11 @@ void __swap_cache_add_folio(struct swap_cluster_info *ci,
-  * swap_cache_add_folio - Add a folio into the swap cache.
-  * @folio: The folio to be added.
-  * @entry: The swap entry corresponding to the folio.
-- * @gfp: gfp_mask for XArray node allocation.
-  * @shadowp: If a shadow is found, return the shadow.
-  *
-+ * Add a folio into the swap cache. Will return error if any slot is no
-+ * longer a valid swapped out slot or already occupied by another folio.
-+ *
-  * Context: Caller must ensure @entry is valid and protect the swap device
-  * with reference count or locks.
-  */
-@@ -179,60 +236,31 @@ static int swap_cache_add_folio(struct folio *folio, swp_entry_t entry,
- {
- 	int err;
- 	void *shadow = NULL;
--	unsigned long old_tb;
-+	unsigned int ci_off;
- 	struct swap_info_struct *si;
- 	struct swap_cluster_info *ci;
--	unsigned int ci_start, ci_off, ci_end;
- 	unsigned long nr_pages = folio_nr_pages(folio);
- 
- 	si = __swap_entry_to_info(entry);
--	ci_start = swp_cluster_offset(entry);
--	ci_end = ci_start + nr_pages;
--	ci_off = ci_start;
- 	ci = swap_cluster_lock(si, swp_offset(entry));
--	if (unlikely(!ci->table)) {
--		err = -ENOENT;
--		goto failed;
-+	ci_off = swp_cluster_offset(entry);
-+	err = __swap_cache_add_check(ci, ci_off, nr_pages, &shadow);
-+	if (err) {
-+		swap_cluster_unlock(ci);
-+		return err;
- 	}
--	do {
--		old_tb = __swap_table_get(ci, ci_off);
--		if (unlikely(swp_tb_is_folio(old_tb))) {
--			err = -EEXIST;
--			goto failed;
--		}
--		if (unlikely(!__swp_tb_get_count(old_tb))) {
--			err = -ENOENT;
--			goto failed;
--		}
--		if (swp_tb_is_shadow(old_tb))
--			shadow = swp_tb_to_shadow(old_tb);
--	} while (++ci_off < ci_end);
-+
- 	__swap_cache_add_folio(ci, folio, entry);
- 	swap_cluster_unlock(ci);
- 	if (shadowp)
- 		*shadowp = shadow;
--	return 0;
- 
--failed:
--	swap_cluster_unlock(ci);
--	return err;
-+	return 0;
- }
- 
--/**
-- * __swap_cache_del_folio - Removes a folio from the swap cache.
-- * @ci: The locked swap cluster.
-- * @folio: The folio.
-- * @entry: The first swap entry that the folio corresponds to.
-- * @shadow: shadow value to be filled in the swap cache.
-- *
-- * Removes a folio from the swap cache and fills a shadow in place.
-- * This won't put the folio's refcount. The caller has to do that.
-- *
-- * Context: Caller must ensure the folio is locked and in the swap cache
-- * using the index of @entry, and lock the cluster that holds the entries.
-- */
--void __swap_cache_del_folio(struct swap_cluster_info *ci, struct folio *folio,
--			    swp_entry_t entry, void *shadow)
-+static void __swap_cache_do_del_folio(struct swap_cluster_info *ci,
-+				      struct folio *folio,
-+				      swp_entry_t entry, void *shadow)
- {
- 	int count;
- 	unsigned long old_tb;
-@@ -259,14 +287,12 @@ void __swap_cache_del_folio(struct swap_cluster_info *ci, struct folio *folio,
- 			folio_swapped = true;
- 		else
- 			need_free = true;
--		/* If shadow is NULL, we sets an empty shadow. */
-+		/* If shadow is NULL, we set an empty shadow. */
- 		__swap_table_set(ci, ci_off, shadow_to_swp_tb(shadow, count));
- 	} while (++ci_off < ci_end);
- 
- 	folio->swap.val = 0;
- 	folio_clear_swapcache(folio);
--	node_stat_mod_folio(folio, NR_FILE_PAGES, -nr_pages);
--	lruvec_stat_mod_folio(folio, NR_SWAPCACHE, -nr_pages);
- 
- 	if (!folio_swapped) {
- 		__swap_cluster_free_entries(si, ci, ci_start, nr_pages);
-@@ -279,6 +305,29 @@ void __swap_cache_del_folio(struct swap_cluster_info *ci, struct folio *folio,
- 	}
- }
- 
-+/**
-+ * __swap_cache_del_folio - Removes a folio from the swap cache.
-+ * @ci: The locked swap cluster.
-+ * @folio: The folio.
-+ * @entry: The first swap entry that the folio corresponds to.
-+ * @shadow: shadow value to be filled in the swap cache.
-+ *
-+ * Removes a folio from the swap cache and fills a shadow in place.
-+ * This won't put the folio's refcount. The caller has to do that.
-+ *
-+ * Context: Caller must ensure the folio is locked and in the swap cache
-+ * using the index of @entry, and lock the cluster that holds the entries.
-+ */
-+void __swap_cache_del_folio(struct swap_cluster_info *ci, struct folio *folio,
-+			    swp_entry_t entry, void *shadow)
-+{
-+	unsigned long nr_pages = folio_nr_pages(folio);
-+
-+	__swap_cache_do_del_folio(ci, folio, entry, shadow);
-+	node_stat_mod_folio(folio, NR_FILE_PAGES, -nr_pages);
-+	lruvec_stat_mod_folio(folio, NR_SWAPCACHE, -nr_pages);
-+}
-+
- /**
-  * swap_cache_del_folio - Removes a folio from the swap cache.
-  * @folio: The folio.
+Changes in v2:
+- Drop the RFC prefix and also the RFC part.
+- Now there is zero change to cgroup or refault tracking, RFC v1 changed
+  some cgroup behavior. To archive that v2 use a standalone memcg_table
+  for each cluster. It can be dropped or better optimized later if we
+  have a better solution. The performance gain is partly cancelled
+  compared to RFC v1 since we now need an extra allocation for free cluster
+  isolation and peak memory usage is 2 bytes higher. But still looking
+  good. That table size is accetable (1024 bytes), no RCU needed, and
+  fits for kmalloc. Even if we keep it as it is in the future,
+  it's still accetable.
+- Link to v1: https://lore.kernel.org/r/20260220-swap-table-p4-v1-0-104795d19815@tencent.com
 
--- 
-2.53.0
+To: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Chris Li <chrisl@kernel.org>
+Cc: Kairui Song <kasong@tencent.com>
+Cc: Kemeng Shi <shikemeng@huaweicloud.com>
+Cc: Nhat Pham <nphamcs@gmail.com>
+Cc: Baoquan He <bhe@redhat.com>
+Cc: Barry Song <baohua@kernel.org>
+Cc: Youngjun Park <youngjun.park@lge.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Yosry Ahmed <yosry@kernel.org>
+Cc: Chengming Zhou <chengming.zhou@linux.dev>
+Cc: David Hildenbrand <david@kernel.org>
+Cc: Lorenzo Stoakes <ljs@kernel.org>
+Cc: Zi Yan <ziy@nvidia.com>
+Cc: Baolin Wang <baolin.wang@linux.alibaba.com>
+Cc: Dev Jain <dev.jain@arm.com>
+Cc: Lance Yang <lance.yang@linux.dev>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Muchun Song <muchun.song@linux.dev>
+Cc: Suren Baghdasaryan <surenb@google.com>
+Cc: Axel Rasmussen <axelrasmussen@google.com>
+Cc: Qi Zheng <zhengqi.arch@bytedance.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+
+---
+Kairui Song (12):
+      mm, swap: simplify swap cache allocation helper
+      mm, swap: move common swap cache operations into standalone helpers
+      mm/huge_memory: move THP gfp limit helper into header
+      mm, swap: add support for stable large allocation in swap cache directly
+      mm, swap: unify large folio allocation
+      mm/memcg, swap: tidy up cgroup v1 memsw swap helpers
+      mm, swap: support flexible batch freeing of slots in different memcgs
+      mm, swap: delay and unify memcg lookup and charging for swapin
+      mm, swap: consolidate cluster allocation helpers
+      mm/memcg, swap: store cgroup id in cluster table directly
+      mm/memcg: remove no longer used swap cgroup array
+      mm, swap: merge zeromap into swap table
+
+ MAINTAINERS                 |   1 -
+ include/linux/huge_mm.h     |  30 +++
+ include/linux/memcontrol.h  |  16 +-
+ include/linux/swap.h        |  19 +-
+ include/linux/swap_cgroup.h |  47 ----
+ mm/Makefile                 |   3 -
+ mm/huge_memory.c            |   2 +-
+ mm/internal.h               |  11 +-
+ mm/memcontrol-v1.c          |  66 +++---
+ mm/memcontrol.c             |  32 +--
+ mm/memory.c                 |  88 ++------
+ mm/page_io.c                |  58 ++++-
+ mm/shmem.c                  | 122 +++--------
+ mm/swap.h                   |  91 +++-----
+ mm/swap_cgroup.c            | 172 ---------------
+ mm/swap_state.c             | 516 +++++++++++++++++++++++++-------------------
+ mm/swap_table.h             | 169 ++++++++++++---
+ mm/swapfile.c               | 212 +++++++++---------
+ mm/vmscan.c                 |   2 +-
+ mm/zswap.c                  |  25 +--
+ 20 files changed, 783 insertions(+), 899 deletions(-)
+---
+base-commit: f1541b40cd422d7e22273be9b7e9edfc9ea4f0d7
+change-id: 20260111-swap-table-p4-98ee92baa7c4
+
+Best regards,
+--  
+Kairui Song <kasong@tencent.com>
 
 
