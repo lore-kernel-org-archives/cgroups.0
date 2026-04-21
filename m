@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 390CD367F2E
-	for <cgroups@vger.kernel.org>; Tue, 21 Apr 2026 03:06:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF09377EC7
+	for <cgroups@vger.kernel.org>; Tue, 21 Apr 2026 03:06:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776740804; cv=none; b=eAbrAtUQr5ljSbPbdR7WlGyCxMJUYn662OK5OUQYyMq7Xn2j+dhnfSnJMld+Nat7LdjCW+RNXYlH6zYLMNKi7jm8MXywXkN+L/OpD8uTLpQoIM6Djv4S8qln29botCg6G1FZtXSQd55ornfLbQ8VnJ+3YVt2FPNM7Kgj4yZXlPs=
+	t=1776740810; cv=none; b=NqpCzLyy/ZpJ52DcYY+tJ/mtd0PWB0AwZibxdn45sCyzx2E9AUtp+6zPYoUpAniQNOJvq4unb5cRI/zZZZiH1Tmq6iD71YFjWKy1zFfoy14bhSBDlfiKe0rYUJ1YNt5aMiS9bVshciePf5U8L1lrweVXo31CoR97Ps7xscKFdG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776740804; c=relaxed/simple;
-	bh=y21cwGAHYaNaF8YRvTFnxXt2GMtqpW0sgbaYNH/AjnQ=;
+	s=arc-20240116; t=1776740810; c=relaxed/simple;
+	bh=k5g7pP+2/ZD9JxKbuSILo333vnrc8GjjdJo8hw2U1bo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KLeAQPKC7hnBCBbJDAds2PRvi8sjjvUSxvIpp0uMVXUjv5tYiVMDI/rJa+7gjxah1hHCf8nW7p8Q7r3yKdUofeTmKXkbS8IQx2mw+vJh8Jmap9HEjsRd124Ub9Q7NOTu0OcoCTGN/VY3HjmHvkogmj/mMWYmaMgSQbLDtsC3YBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KnOxeVXP; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=sSReSwcZyx9PEZ/p3pxU6/saEUIkbzQBh1eRbQtQAEOVysJGrYJjrcgny2oqsXSA6vQLrHXXqp7JhIMQgIIDkEH1F/9//KlgpuV17MgN6RK4ASWGo+JvSZ0IeBcaYxfooOGYJTH/xeodFNN/VcBxMYC1EvoubiT4qdVXXunTdAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OK2zQ1O6; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KnOxeVXP"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OK2zQ1O6"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776740802;
+	s=mimecast20190719; t=1776740807;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=aKF+VwmZQV0pl/RDzNAg6PxSXQMnzdlIZnccx5H1z+o=;
-	b=KnOxeVXPgKvQSAjESC9gSdwEtP0ngL/YsqeWcQIhbiXJzTNzdi2U7fAwu5Y6nOeJCfKghU
-	g0LoFkEjZbhW3EokbJ91lt2OeFqM6juun+vdPy95lUkP6snJtSUHVl8OohcR2drtFe6VKx
-	5aJJ3W3zuKbekVbpRrEvoONKZ3eqQrI=
+	bh=+WNNC/jKnAyyd7qhSX1oISqS9Aod8NglMEV4NJJnJ44=;
+	b=OK2zQ1O6Q0MUKt0qhi4ZJb1Z3RE67Ifk++81UKymbYTg7VeV2+9+qVFdcfJoaXrcXJlHIS
+	Xhx58tl1c6Y2RJwBG98jDgQ38/g71EmBiwLzqXJ4yLd8RPczodLLjmRzfUqRl3C8Q6o7zZ
+	xDSFdpxd8GgPja/el/pNl2xIC7b/viI=
 Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-195-8E3QXaAOMxq70JNFAK8-2A-1; Mon,
- 20 Apr 2026 23:06:38 -0400
-X-MC-Unique: 8E3QXaAOMxq70JNFAK8-2A-1
-X-Mimecast-MFC-AGG-ID: 8E3QXaAOMxq70JNFAK8-2A_1776740790
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-635-K3QwEf64Osazpz2xQZ8DLQ-1; Mon,
+ 20 Apr 2026 23:06:42 -0400
+X-MC-Unique: K3QwEf64Osazpz2xQZ8DLQ-1
+X-Mimecast-MFC-AGG-ID: K3QwEf64Osazpz2xQZ8DLQ_1776740797
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 95D931956054;
-	Tue, 21 Apr 2026 03:06:30 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B10771956056;
+	Tue, 21 Apr 2026 03:06:37 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.65.81])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 572CA19560AB;
-	Tue, 21 Apr 2026 03:06:23 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CE75C19560AB;
+	Tue, 21 Apr 2026 03:06:30 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -96,9 +96,9 @@ Cc: cgroups@vger.kernel.org,
 	Costa Shulyupin <cshulyup@redhat.com>,
 	Qiliang Yuan <realwujing@gmail.com>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH 13/23] sched/core: Use RCU to protect access of HK_TYPE_KERNEL_NOISE cpumask
-Date: Mon, 20 Apr 2026 23:03:41 -0400
-Message-ID: <20260421030351.281436-14-longman@redhat.com>
+Subject: [PATCH 14/23] hwmon/coretemp: Use RCU to protect access of HK_TYPE_MISC cpumask
+Date: Mon, 20 Apr 2026 23:03:42 -0400
+Message-ID: <20260421030351.281436-15-longman@redhat.com>
 In-Reply-To: <20260421030351.281436-1-longman@redhat.com>
 References: <20260421030351.281436-1-longman@redhat.com>
 Precedence: bulk
@@ -110,39 +110,31 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-As HK_TYPE_KERNEL_NOISE is going to be changeable at run time, use
-RCU to protect access to the cpumask when needed. Some access of the
-HK_TYPE_KERNEL_NOISE cpumask is done inside the tick code that has
-interrupt disabled which is a rcu_read_lock() critical section. Anyway,
-housekeeping_cpumask() will warn if they are used in invalid context.
+As HK_TYPE_MISC cpumask is going to be changeable at run time, use RCU
+to protect access to the cpumask.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/sched/core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/hwmon/coretemp.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 8952f5764517..6ae00c23d8a7 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -1261,6 +1261,8 @@ int get_nohz_timer_target(void)
- 	struct sched_domain *sd;
- 	const struct cpumask *hk_mask;
+diff --git a/drivers/hwmon/coretemp.c b/drivers/hwmon/coretemp.c
+index 6a0d94711ead..0284ea6a3b79 100644
+--- a/drivers/hwmon/coretemp.c
++++ b/drivers/hwmon/coretemp.c
+@@ -563,8 +563,10 @@ static int create_core_data(struct platform_device *pdev, unsigned int cpu,
+ 	u32 eax, edx;
+ 	int err;
  
-+	guard(rcu)();
-+
- 	if (housekeeping_cpu(cpu, HK_TYPE_KERNEL_NOISE)) {
- 		if (!idle_cpu(cpu))
- 			return cpu;
-@@ -1269,8 +1271,6 @@ int get_nohz_timer_target(void)
+-	if (!housekeeping_cpu(cpu, HK_TYPE_MISC))
+-		return 0;
++	scoped_guard(rcu) {
++		if (!housekeeping_cpu(cpu, HK_TYPE_MISC))
++			return 0;
++	}
  
- 	hk_mask = housekeeping_cpumask(HK_TYPE_KERNEL_NOISE);
- 
--	guard(rcu)();
--
- 	for_each_domain(cpu, sd) {
- 		for_each_cpu_and(i, sched_domain_span(sd), hk_mask) {
- 			if (cpu == i)
+ 	tdata = init_temp_data(pdata, cpu, pkg_flag);
+ 	if (!tdata)
 -- 
 2.53.0
 
