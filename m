@@ -1,147 +1,159 @@
-Received: from mail.piware.de (mail.piware.de [37.120.164.117])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id DAB2C3B95F9
-	for <cgroups@vger.kernel.org>; Wed, 29 Apr 2026 09:27:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.120.164.117
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5FD3921CC;
+	Wed, 29 Apr 2026 09:30:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777454880; cv=none; b=aH1QNIjikKg1nIpbPWoz+jzXAAK6wR0hHYo5HXouH7o3qxmk2rbqJCq8xEYxGsUMi4Udz0SdF/R2H4SBFHhDPRc42ND9SPcZghsDJQSgYhmp3uiQz/1ba1WjxgV8/c5607CxZ5MY3oNC2nssNlhJuwzVpec1GRy/oYG/jVQlXqE=
+	t=1777455017; cv=none; b=NjDJ5Aw0N8L/wnt3Q1ESjOnpyuytIf5jVknBZPjNMvPjWkQ/m9gwi3ZLeBmzadEKF5a3R9nyITpZ3Fa7sMZrlqQdmZetjJhYFIeWxqhhitUm7tXPdSC2Pi0YfA9PsoEjMCOB35eLjtOi0VM4D1Ii0mZEs3iKtxhVd4tT/HXpmVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777454880; c=relaxed/simple;
-	bh=lbnV1yh2q7Kw2N6Hs/665oEorNYsmRrbx0PyoUuKNVs=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=hyrIlOYZSF30ddlBXEiaz2KuhGNRp78xpUBZmRDsZlUyXRXrN9HyT+nHF0HXVDo8k56FUip18HsWiECRLzokUpYx+jQUpD5/fFFtpFFjfwvm4ZWSkfb8bpC0y/OigoQZew+2WpTkacZ4e+IHMYlotAtsOOzPj/Uo0WGMjkD3Mqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=piware.de; spf=pass smtp.mailfrom=piware.de; dkim=pass (2048-bit key) header.d=piware.de header.i=@piware.de header.b=C87voxvv; arc=none smtp.client-ip=37.120.164.117
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=piware.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=piware.de
+	s=arc-20240116; t=1777455017; c=relaxed/simple;
+	bh=yy8oNEAoS/uzpxt3v8eVFMCgeKKpmjXxjvuY7Wbunjs=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:In-Reply-To:
+	 Content-Type:References; b=YOu86P6ioza40OWZaO0BFDCpIcmAcvD9e+yGBj8fkqMbl9NM+zqZMUVtOozmbhdXP6Lv89IT4o88hV02I0pRVtvIPkgQzHAbTi7KT2GXtcTxF99Zg/LQjPga6X4nW0o7SEn3cjEbA55k0IXSaAUI1L3CKlb0mE4DYeqUhUI+0tA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=f4Jz3rp4; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=piware.de header.i=@piware.de header.b="C87voxvv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=piware.de; s=2025;
-	t=1777454468; bh=lbnV1yh2q7Kw2N6Hs/665oEorNYsmRrbx0PyoUuKNVs=;
-	h=Date:From:To:Cc:Subject:From;
-	b=C87voxvvfYTJiTUkg/JB+oLEJkglbZQ1oN3PO5bPjHZeKaQMsVhU9PfSfzflWZ/Mk
-	 80yTwbhQol4ZazuH+8cGpejhmVZVOfmnH8spFncT9SqiK+ME9OR2O/SqTCHCLqJgZ2
-	 wduFKsEsRmzA2NjOeiWFLAxpBmbhic0+QolP7eUn8GLpwXyVcsLNYeIqSGwhs/VdYX
-	 CJ9PmaAobAKz1dHsn2Y024TfZdc9dGrGKk7JQkNC06RTVKfmOuuSvlgREGGKnN6FJO
-	 Dr3bIZpB7K7No6RLX2tNmfxMymow5pdQ7RYp1VbMu/pGAsnV3Snf3eLke2OhsAJLsF
-	 +D3drWwN+dlWQ==
-Received: from piware.de (localhost [127.0.0.1])
-	by mail.piware.de (Postfix) with ESMTP id 81470FF881;
-	Wed, 29 Apr 2026 11:21:08 +0200 (CEST)
-Date: Wed, 29 Apr 2026 11:21:07 +0200
-From: Martin Pitt <martin@piware.de>
-To: regressions@lists.linux.dev
-Cc: cgroups@vger.kernel.org, tj@kernel.org, lizefan.x@bytedance.com,
-	hannes@cmpxchg.org
-Subject: [REGRESSION] 6.9.11: systemd hangs in cgroup_drain_dying during
- cleanup after podman operations
-Message-ID: <afHNg2VX2jy9bW7y@piware.de>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="f4Jz3rp4"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260429093002epoutp0459abb6078236d1b7922c976b1042db95~qyehotRtY1912719127epoutp04T;
+	Wed, 29 Apr 2026 09:30:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260429093002epoutp0459abb6078236d1b7922c976b1042db95~qyehotRtY1912719127epoutp04T
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1777455003;
+	bh=l2sErW9ifuxlN4x+Sne0CeYYbEJKHpiCBGf6vhcU2Jk=;
+	h=Date:From:Subject:To:Cc:In-Reply-To:References:From;
+	b=f4Jz3rp4k+M6bC+6TqlXloRnoElu8gbjEIiUIua1QviqkO+4RxEinkUKYJCggf8Hd
+	 FVrvtEGPb/OllLUxDO4vDE05M+R+UKBx6SqInb9CWkL+WMtxaQmXCaDix7f3d++h7o
+	 yAcy3bhNxsmOBqM5dvxXy58dF4C26cPcMyLnfNPE=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20260429093002epcas5p409aa78c4d55a86cef067895205a1b2d5~qyehWqKUG3126931269epcas5p4T;
+	Wed, 29 Apr 2026 09:30:02 +0000 (GMT)
+Received: from epcpadp1new (unknown [182.195.40.141]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4g5Bpy4N4Rz3hhT9; Wed, 29 Apr
+	2026 09:30:02 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260429061641epcas5p3c2d6063ba101e347c36ccfa050174482~qv1tDSpkV0853808538epcas5p3d;
+	Wed, 29 Apr 2026 06:16:41 +0000 (GMT)
+Received: from [107.122.10.65] (unknown [107.122.10.65]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260429061628epsmtip20cd5b871612ade998c9aaa11fb84dd9a~qv1gikvBb1891418914epsmtip2w;
+	Wed, 29 Apr 2026 06:16:28 +0000 (GMT)
+Message-ID: <1891546521.01777455002601.JavaMail.epsvc@epcpadp1new>
+Date: Wed, 29 Apr 2026 11:45:26 +0530
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Arun George/Arun George <arun.george@samsung.com>
+Subject: Re: [LSF/MM/BPF TOPIC][RFC PATCH v4 00/27] Private Memory Nodes (w/
+ Compressed RAM)
+To: Gregory Price <gourry@gourry.net>
+Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-cxl@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-trace-kernel@vger.kernel.org, damon@lists.linux.dev,
+	kernel-team@meta.com, gregkh@linuxfoundation.org, rafael@kernel.org,
+	dakr@kernel.org, dave@stgolabs.net, jonathan.cameron@huawei.com,
+	dave.jiang@intel.com, alison.schofield@intel.com, vishal.l.verma@intel.com,
+	ira.weiny@intel.com, dan.j.williams@intel.com, longman@redhat.com,
+	akpm@linux-foundation.org, david@kernel.org, lorenzo.stoakes@oracle.com,
+	Liam.Howlett@oracle.com, vbabka@suse.cz, rppt@kernel.org, surenb@google.com,
+	mhocko@suse.com, osalvador@suse.de, ziy@nvidia.com, matthew.brost@intel.com,
+	joshua.hahnjy@gmail.com, rakie.kim@sk.com, byungchul@sk.com,
+	ying.huang@linux.alibaba.com, apopple@nvidia.com, axelrasmussen@google.com,
+	yuanchu@google.com, weixugc@google.com, yury.norov@gmail.com,
+	linux@rasmusvillemoes.dk, mhiramat@kernel.org,
+	mathieu.desnoyers@efficios.com, tj@kernel.org, hannes@cmpxchg.org,
+	mkoutny@suse.com, jackmanb@google.com, sj@kernel.org,
+	baolin.wang@linux.alibaba.com, npache@redhat.com, ryan.roberts@arm.com,
+	dev.jain@arm.com, baohua@kernel.org, lance.yang@linux.dev,
+	muchun.song@linux.dev, xu.xin16@zte.com.cn, chengming.zhou@linux.dev,
+	jannh@google.com, linmiaohe@huawei.com, nao.horiguchi@gmail.com,
+	pfalcato@suse.de, rientjes@google.com, shakeel.butt@linux.dev,
+	riel@surriel.com, harry.yoo@oracle.com, cl@gentwo.org,
+	roman.gushchin@linux.dev, chrisl@kernel.org, kasong@tencent.com,
+	shikemeng@huaweicloud.com, nphamcs@gmail.com, bhe@redhat.com,
+	zhengqi.arch@bytedance.com, terry.bowman@amd.com, gost.dev@samsung.com,
+	arungeorge05@gmail.com, cpgs@samsung.com
+Content-Language: en-US
+In-Reply-To: <ae_i9IlIndumJWN3@gourry-fedora-PF4VCD3F>
+Content-Transfer-Encoding: 7bit
+X-CMS-MailID: 20260429061641epcas5p3c2d6063ba101e347c36ccfa050174482
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20260427123800epcas5p1e1a2fed257091b31e2e6c3a7d1b0c2b0
+References: <20260222084842.1824063-1-gourry@gourry.net>
+	<CGME20260427123800epcas5p1e1a2fed257091b31e2e6c3a7d1b0c2b0@epcas5p1.samsung.com>
+	<1983025922.01777297382206.JavaMail.epsvc@epcpadp2new>
+	<ae_i9IlIndumJWN3@gourry-fedora-PF4VCD3F>
 
-Hello,
+On 28-04-2026 03:58 am, Gregory Price wrote:
+> On Mon, Apr 27, 2026 at 06:02:57PM +0530, Arun George wrote:
+>>
+>> Any particular workload you are targeting with
+>> this (which can tolerate this latency)?
+>>
+>> Any deployments you think of where the goal is a capacity expansion
+>> with a compromise in performance?
+>>
+> Primary use cases for us are any workload that benefits from zswap -
+> which is many, many (many, many [many, many]) workloads.
+> 
+A curious question please. If the primary use case is swap, can't we 
+handle this problem statement by re-using the zsmalloc allocation classes?
 
-Our cockpit tests found a kernel regression introduced between 6.9.10 (working)
-and 6.9.11 (broken) that causes a system hang during cgroup cleanup after
-podman container operations. I've kept notes in
-https://github.com/cockpit-project/bots/pull/8970#issuecomment-4342147158 , but
-now I am at the end of my wisdom how to squeeze more information out of this.
+A separate size class can be reserved for non-compressed pages in 
+zsmalloc. And this interface could be used by zswap, zram etc. (We have 
+been using this implementation for testing btw.). This does not require 
+additional book-keeping or buddy allocator.
 
-=== Summary ===
+But that approach will not give a generic solution and not available for 
+user-land anyway!
+>> And I believe the bear-proof cage might work in the normal scenarios,
+>> but may not work for all.
+> 
+> If it can't work for all workloads, then it's likely not general purpose
+> enough to find core kernel support and should seek to use the existing
+> interfaces (DAX and friends).
+> 
+I agree. That is a good point.
 
-When running podman REST API operations on rootless containers followed by user
-session cleanup (loginctl/pkill), systemd (pid 1) gets stuck in
-cgroup_drain_dying trying to remove an empty cgroup. After that, I'm
+> 
+> You need two controls over compressed RAM for it to be reliable:
+> 
+>    - Allocation control (acquiring new struct page to write to)
+>    - Write-control (preventing new writes to compressed pages)
+> 
+> Private nodes provide the allocation control.
+> 
+> A read-only mapping, and guarantee that only memory that can reach
+> the device is userland memory - is the only way to control the cpu
+> writes from the OS perspective.
+> 
+So write-control part need to handled in the specific back end driver of 
+private pages while the allocation control is a generic front-end sort 
+of, right? (Ex: zswap cram back end for compressed devices case.)>
+> In the next version of the RFC i'll demonstrate cram.c as a new swap
+> backend that allows for read-only mappings to be soft-faulted in,
+> migration on write, isolation to ANON memory, and some optional
+> settings that allow a device or administrator a "writable budget"
+> which allows some number of pages to be made writable without migration.
 
-- Unable to run commands that access /proc (ps, top, lsns, ls /proc, etc.)
-- Unable to create new SSH sessions or VT logins
-- If I previously logged into the QEMU VT, that login session remains
-  more or less functional, except not being able to run most commands
+Great! I believe "writable budget" could be an interesting idea which 
+can solve the 'bus error' sort of scenarios due to device not capable of 
+taking any more writes. The write budget could be replenished using the 
+control path and writes will not go ahead without the budget available, 
+right?>
+> ~Gregory
+> 
+~Arun George
 
-=== Kernel Versions ===
-
-- Last known working: 6.9.10
-- Broken: 6.9.11 (OpenSUSE Tumbleweed), 6.9.13 (Fedora 44), 6.9.14 (Fedora 44),
-  Ubuntu 26.04 (7.0.0)
-
-=== Stack Trace ===
-
-From sysrq-trigger task dump, systemd is stuck in:
-
-[  207.958946] task:systemd         state:D stack:0     pid:1     tgid:1     ppid:0
-[  207.959734] Call Trace:
-[  207.960117]  <TASK>
-[  207.960333]  __schedule+0x2b2/0x5d0
-[  207.960603]  schedule+0x27/0x80
-[  207.960945]  cgroup_drain_dying+0xef/0x1a0
-[  207.961287]  ? __pfx_autoremove_wake_function+0x10/0x10
-[  207.961639]  cgroup_rmdir+0x37/0x100
-[  207.961945]  kernfs_iop_rmdir+0x6a/0xd0
-[  207.962239]  vfs_rmdir+0x154/0x270
-[  207.962486]  do_rmdir+0x201/0x280
-[  207.962723]  __x64_sys_unlinkat+0x8c/0xd0
-
-=== Observations ===
-
-- /sys/fs/cgroup/user.slice/user-1000.slice/cgroup.procs was empty, indicating
-  all processes were killed but the cgroup itself cannot be removed
-- Multiple zombie processes present, unable to be reaped (user@1000.service
-  systemd, podman, conmon processes)
-- RCU subsystem appears healthy (rcu_exp_gp_kthr in S state)
-
-=== Reproducer ===
-
-The bug is triggered by a specific sequence of podman REST API operations on
-rootless containers, followed by user cleanup. The reproducer is part of the
-cockpit-podman test suite. I created a branch where I reduced the test to the
-absolute minimum, and also replaced as many UI clicks as possible with shell
-operations (all but one):
-
-  https://github.com/martinpitt/cockpit-podman/blob/kernel-hang/test/check-application#L1486
-
-Sequence:
-1. Create and stop a rootless container as the admin user
-2. Call podman REST API lifecycle operations: start → restart → stop
-3. Create an exec session (console/TTY connection) via REST API
-4. Start the container again via REST API
-5. Cleanup: loginctl terminate-user admin; loginctl kill-user admin; pkill -9 -u admin
-
-Using podman CLI commands (e.g., "podman start swamped-crate") instead of the
-REST API does NOT trigger the hang, only when using the REST API. That may be
-because of the different process layout, or just sheer timing -- as eventually,
-both CLI and API should result in the same actual cgroup/container operations
-on the podman side.
-
-The bug is very timing-sensitive. I attempted to create a standalone shell
-script reproducer, but failed, it always passes with that. Even with the
-original cockpit-podman integration test failure it's unreliable: it can hang
-on the first iteration, most of the time it fails within 5 runs, but I've had
-stretches where 50+ iterations passed before the hang happened.
-
-=== Full debug output ===
-
-The above GitHub PR comment links to the full dmesg log. Direct link:
-https://github.com/user-attachments/files/27195205/dmesg-cgrouphang.txt
-
-This covers initial boot up to the hang, and then the outputs of sysrq task
-dump (t), memory info (m), and blocked tasks (w).
-
-=== Additional Notes ===
-
-In one early test run, a different hang pattern was observed where
-rcu_exp_gp_kthr was in D state with a process stuck in
-synchronize_rcu_expedited during namespace cleanup, but this variant has not
-reproduced in subsequent runs. The cgroup cleanup deadlock appears to be the
-primary manifestation.
-
-This is my first (non-trivial) kernel bug report, so please bear with me. I'm
-normally stay firmly in userland.
-
-Thanks,
-
-Martin Pitt
