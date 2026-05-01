@@ -1,30 +1,32 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF04B29A9E9
-	for <cgroups@vger.kernel.org>; Fri,  1 May 2026 02:21:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D80A12EACEF
+	for <cgroups@vger.kernel.org>; Fri,  1 May 2026 02:21:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777602088; cv=none; b=tbzj9r/NeRDbzw+z0pXrkPCqFtfW8zv1nVpDvGi92LqU7DKA7WQdh+uqDLhFYIu1w8WPCsVSP6mwrpkruiHf6+NmeeKm/czWrfifKRXX5ZWX49I8b7QFJ4+UJijA0tbyOrEG4ckU8UpJn2K0kv+Yxa4nOpxIFEbNt38kwCn8bro=
+	t=1777602090; cv=none; b=gD9snsYg/P5zXvyXtB2cMbalfdkHQv8KxwLYL44pbsfxZFyBB6bhgY9bzolg9RSZq0lltpg1f174QbPrAz1K/EykmHEd2Ay0IaHQS5tsfdtxlWDYn4UrQBBHr45301RkoYWaOv55Y0xUzOn7s6MI5ygnN5LSF3ujd5KaFPoRbkg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777602088; c=relaxed/simple;
-	bh=Nfpug8EBqILfEEBWnFAmLFa+NOlWS63AoatPY2hJOI8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h5d0UrtBir/8rLTlCfTUnVmzLV/N71e/JkIk7R5EHH1tY7McljhzfWJ5f966ynZBJIsKgIfYFBGs72+qROSnTwEX4kQ4dpRSk3MVjKEOXZn8RQ10NYkgf1Jx0wabviuA8BFGk8zXo1EHtiysujpgg7uVoKXB62K5Vtv0Ie8FLvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UZn6lwAU; arc=none smtp.client-ip=91.218.175.183
+	s=arc-20240116; t=1777602090; c=relaxed/simple;
+	bh=85yqVfc9aiA3OqKgXtUAbwLO/KOrXwWM03KlTyAOUow=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=hJXrZTE0HG4smH8Xc/xqhZi5J8RsrokUNhuvviE5b4F/m4sTiczpzLd4ZD0qOHCdbKwqDWGjkWGLqykg18MxnR9qQ//8+svYKS/GEEQbBGGOTtevr2OmSUJa153wSWFSbjTdxjgh7l2GPr1aYnXTYHh1ue0r3SXLAYZvNUym9Ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vzRjGgtu; arc=none smtp.client-ip=91.218.175.189
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UZn6lwAU"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vzRjGgtu"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1777602075;
+	t=1777602086;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=3twploam4MV/bq5u/Ty0iH6HK100PxWqx9qv6h7XzQg=;
-	b=UZn6lwAUya5Xqtq40t+UrkKEXXFY9Z2IHb6Rwly1pbpj3+VOZ9/R474cwB5eDgVQvM3oFz
-	tq4oR7/tjB2jcS5ypfFobRHj/IGmLL5MTnbWaRkWgjFUw47NQ/iWJQPXkmJDYH0Wbgi8lE
-	soqpuUXGjwL2TyvDxA3aI1aUZnDg530=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O2N4+x1Sn+wQRdLiVZolUUHuNzDmAcEVcLCFnksgkqM=;
+	b=vzRjGgtuFJ1JAtGsc21WhF7K4u4Px7oOGVVXWwhcVFAaoFiF4WrwGixClRcwplk3TT/yOA
+	YKlrafWQIZddgGjYIzxPPtgfc9+svL48E8wXWBqVqG+/JNkB9NSt/0BLp+9ktmyYGf4BR0
+	//dM0MNYWNijWA4/VQynOLmUvtjXGQg=
 From: Li Wang <li.wang@linux.dev>
 To: akpm@linux-foundation.org,
 	hannes@cmpxchg.org,
@@ -38,10 +40,16 @@ To: akpm@linux-foundation.org,
 Cc: cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/2] selftests/cgroup: Fix false positive failures in test_percpu_basic
-Date: Fri,  1 May 2026 10:20:56 +0800
-Message-ID: <20260501022058.18024-1-li.wang@linux.dev>
+	linux-kernel@vger.kernel.org,
+	Waiman Long <longman@redhat.com>,
+	Christoph Lameter <cl@linux.com>,
+	Shakeel Butt <shakeelb@google.com>,
+	Vlastimil Babka <vbabka@suse.cz>
+Subject: [PATCH v2 2/2] selftests/cgroup: include slab in test_percpu_basic memory check
+Date: Fri,  1 May 2026 10:20:58 +0800
+Message-ID: <20260501022058.18024-3-li.wang@linux.dev>
+In-Reply-To: <20260501022058.18024-1-li.wang@linux.dev>
+References: <20260501022058.18024-1-li.wang@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,28 +59,84 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-This patch series addresses two separate issues that cause false
-positive failures in the test_percpu_basic test within the cgroup
-kmem selftests.
+test_percpu_basic() currently compares memory.current against only
+memory.stat:percpu after creating 1000 child cgroups.
 
-The first issue stems from a hardcoded assumption about the system
-page size, which breaks the test on architectures with larger page
-sizes.
+Observed failure:
+  #./test_kmem
+  ok 1 test_kmem_basic
+  ok 2 test_kmem_memcg_deletion
+  ok 3 test_kmem_proc_kpagecgroup
+  ok 4 test_kmem_kernel_stacks
+  ok 5 test_kmem_dead_cgroups
+  memory.current 11530240
+  percpu 8440000
+  not ok 6 test_percpu_basic
 
-The second issue is an overly strict memory check that fails to
-account for the slab metadata allocated during cgroup creation.
+That assumption is too strict: child cgroup creation also allocates
+slab-backed metadata, so memory.current is expected to be larger than
+percpu alone. One visible path is:
 
-v2:
-  * Replace my email with li.wang@linux.dev
-  * Adding Waiman's Reviewed-by tag
+  cgroup_mkdir()
+    cgroup_create()
+      cgroup_addrm_file()
+        cgroup_add_file()
+          __kernfs_create_file()
+            __kernfs_new_node()
+              kmem_cache_zalloc()
 
-Li Wang (2):
-  selftests/cgroup: Fix hardcoded page size in test_percpu_basic
-  selftests/cgroup: include slab in test_percpu_basic memory check
+These kernfs allocations are charged as slab and show up in
+memory.stat:slab.
 
- tools/testing/selftests/cgroup/test_kmem.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+Update the check to compare memory.current against (percpu + slab)
+within MAX_VMSTAT_ERROR, and print slab/delta in the failure message to
+improve diagnostics.
 
+Signed-off-by: Li Wang <li.wang@linux.dev>
+Cc: Waiman Long <longman@redhat.com>
+Cc: Christoph Lameter <cl@linux.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Shakeel Butt <shakeelb@google.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Reviewed-by: Waiman Long <longman@redhat.com>
+---
+ tools/testing/selftests/cgroup/test_kmem.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index 249d7911306..4b579969889 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -353,7 +353,7 @@ static int test_percpu_basic(const char *root)
+ {
+ 	int ret = KSFT_FAIL;
+ 	char *parent, *child;
+-	long current, percpu;
++	long current, percpu, slab;
+ 	int i;
+ 
+ 	parent = cg_name(root, "percpu_basic_test");
+@@ -379,13 +379,14 @@ static int test_percpu_basic(const char *root)
+ 
+ 	current = cg_read_long(parent, "memory.current");
+ 	percpu = cg_read_key_long(parent, "memory.stat", "percpu ");
++	slab = cg_read_key_long(parent, "memory.stat", "slab ");
+ 
+-	if (current > 0 && percpu > 0 && labs(current - percpu) <
+-	    MAX_VMSTAT_ERROR)
++	if (current > 0 && percpu > 0 && slab >= 0 &&
++			labs(current - (percpu + slab)) < MAX_VMSTAT_ERROR)
+ 		ret = KSFT_PASS;
+ 	else
+-		printf("memory.current %ld\npercpu %ld\n",
+-		       current, percpu);
++		printf("memory.current %ld\npercpu %ld\nslab %ld\ndelta %ld\n",
++			current, percpu, slab, current - (percpu + slab));
+ 
+ cleanup_children:
+ 	for (i = 0; i < 1000; i++) {
 -- 
 2.54.0
 
