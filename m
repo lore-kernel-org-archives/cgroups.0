@@ -1,100 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36A18191F98;
-	Tue,  5 May 2026 19:56:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 867E61FC110;
+	Tue,  5 May 2026 22:05:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778011020; cv=none; b=t7H7r4iP9jdoA1DndJRqzuKv+sF97213vmmjxXfDh564ok2DSB1pN1fGuh2YUrxp0JLyQiJgWWTUJg4PRD/iwzoODVG9jW53p0uoCWV4D1kpyhQgI34l8ffz5XpVteP52SBIpYUahsg007lJpUMG/JreLbsOqyOa8X7ELUK2ops=
+	t=1778018740; cv=none; b=VbHS9Rstkzqj6HZf1cNMCbEPpW0dFfR/DWOwxM7XjIPYfxkv5q9QS83BhzRkH/IKHIZ930prNxJgOKRrE1fiV2ENpCmLhweAoHyC09Gk+14DO8IN8DOyrop2wY8dNrBr7a+BSlpi9l++/tvXLxDifTP2PRALFRQgMiNd5Ia4cJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778011020; c=relaxed/simple;
-	bh=opI4nRge+pnDPw6dlEInDU8nwonqI8rpKgI7ADyuHaQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AboiTSvjYzplG5kQJNsW4Xh9vlYSOhnyjbqOG8Xc/g8A2hQCGlOfCZ0XEAD4PTUGbGfAMjao0SDv5bN22LeiThecI9vGnmxZjJYFdiqm4zCcHoFaxezmPpPa0/A3gxJT4lsnAjwRhO9jbLT5hwGFlWPTkD3dsmmj0WP1/cyHdxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RsfgsgMD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778018740; c=relaxed/simple;
+	bh=MF76jSWcfmbdQcv7mOkVB8lgG+j2xi80v/OC7YRzDOw=;
+	h=Date:Message-ID:From:To:Cc:Subject; b=XMPGLpr7DelmBS0baB4ZdujHtD4trP2NDiPWVxsMuPxisKs25nxHvuNs+c39j+J4BzVC7LhE53MYTZkGnveYNyQIM0AKTjmjPstY99kCme6v7CbMTPanHdqO3/mM/wwkIwEgyxD33BuWXtX38D/0T5a8EEF/RI51Pvhcaj4LHPE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mpa+XVhw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RsfgsgMD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7E21C2BCB4;
-	Tue,  5 May 2026 19:56:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mpa+XVhw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F65DC2BCB4;
+	Tue,  5 May 2026 22:05:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778011019;
-	bh=opI4nRge+pnDPw6dlEInDU8nwonqI8rpKgI7ADyuHaQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RsfgsgMD5s82Kcae2a+cW5/cYF2A3ZDVlVMlnk7O9DMrT7b5RWYdLhr2RtKabDCIB
-	 GiB0T/YeL3ej4Mr0TcHGdjulI4xXp8YmApkxxw6/bBQZ6zf8JP7WXoo9S6sLUszh/F
-	 /rXixGnhPmOylAS9OPZhD98dxKzaifRzWfrgK5uKfJITo0VVHoJ+RVTWvZR7Hj9Ykp
-	 qf5qiK4lDRXWEI3oFqnZyaZFbY6LMVyMlV1JpbK+aWCCs0is2Z9S3UO4d1nXxIVvtH
-	 oF44cfaQyAX45VpS2S28pvKADDOcWLXDwYHsyM+Q2Ucsj28koHE0EL/7tiT300Mjid
-	 vyI5np2Iu6DeQ==
-Date: Tue, 5 May 2026 09:56:58 -1000
+	s=k20201202; t=1778018740;
+	bh=MF76jSWcfmbdQcv7mOkVB8lgG+j2xi80v/OC7YRzDOw=;
+	h=Date:From:To:Cc:Subject:From;
+	b=Mpa+XVhwdyZByd7yejGkvXXWl44yx7duLRlBAQ7qCaaO7gsJRJa62143Oirh83QVr
+	 nM8U5wZyM7B123nfDKU/W3mpDMcjHOrWWpP8Usa98v7HaQwXzDoaLT1S7pdI0iOOvD
+	 W35YqyNONrpAPTBiDH5vv5xT7iZnvzUlm68fI6A7QxtVATPFvM23o8Tq8hqRjGCiLo
+	 KOYDJ8Css+qfQ8FMwre/WnYMUKop9w94NbCI5S4kVBv+GZqdpkewp1ezPZVjrBr1sC
+	 JGTIa1rpapqL93+2OFuK9OvCyVvwmCF1XzraEhaZ5fme6QJKJKlUL5QUff4FDcYBEk
+	 xJyIzFeCQHBzA==
+Date: Tue, 05 May 2026 12:05:39 -1000
+Message-ID: <f5258b93b0a513c90b4129177a2eb50d@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Yuri Andriaccio <yurand2000@gmail.com>, Ingo Molnar <mingo@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	linux-kernel@vger.kernel.org,
-	Luca Abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org
-Subject: Re: [RFC PATCH v5 20/29] sched/deadline: Allow deeper hierarchies of
- RT cgroups
-Message-ID: <afpLir8tD0Ycb3D8@slm.duckdns.org>
-References: <20260430213835.62217-1-yurand2000@gmail.com>
- <20260430213835.62217-21-yurand2000@gmail.com>
- <20260505151523.GF3102624@noisy.programming.kicks-ass.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+	Waiman Long <longman@redhat.com>
+Subject: [GIT PULL] cgroup: Fixes for v7.1-rc2
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260505151523.GF3102624@noisy.programming.kicks-ass.net>
 
 Hello,
 
-Some high level comments:
+The following changes since commit 981cd338614c96070cf9854679014fd027c1fb1d:
 
-- Please align it with existing cgroup2 interface files. See cpu.max. This
-  can be e.g. cpu.rt.max without about the same semantics.
+  docs: cgroup: fix typo 'protetion' -> 'protection' (2026-04-27 07:55:40 -1000)
 
-- cgroup2 enforces that internal cgroups w/ controllers enabled cannot have
-  threads in them. No need to enforce that separately.
+are available in the Git repository at:
 
-- However, the cpu controller is a threaded controller which means that it
-  can have threaded sub-hierarchy where the no-internal-process rule doesn't
-  apply. This was created explicitly for cpu controller. The proposed change
-  blocks it effectively forcing cpu controller into regular domain
-  controller behavior subject to no-internal-process rule. Note these are
-  enforced at controller granularity and this means that users who use the
-  threaded mode will be forced to pick between the two.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.1-rc2-fixes
 
-- This has the same problem with cgroup1's rt cgroup sched support where
-  there is no way to have a permissive default configuration, which means
-  that users who don't really care about distributing rt shares
-  hierarchically would get blocked from running rt processes by default,
-  which basically forces distros to disable rt cgroup sched support. This is
-  not new but it'd be a shame to put in all the work and the end result is
-  that most people don't even have access to the feature.
+for you to fetch changes up to d8769544bde51b0ac980d10f8fe9f9fed6c95995:
 
-Here's my suggestion if there is desire for this to become something most
-people have easy access to:
+  docs: cgroup-v1: Update charge-commit section (2026-05-04 11:02:12 -1000)
 
-- Don't make it impossible to use in conjunction with other resource control
-  mechanisms especially not CPU controller itself. Don't force people to
-  choose between threaded mode and rt control. Allow them to co-exist in a
-  reasonable manner.
+----------------------------------------------------------------
+cgroup: Fixes for v7.1-rc2
 
-- The same in the wider scope. Don't let it get in the way of people who
-  don't care about it. Compromising on interface / failure mode is better
-  than people not being able to use it in most cases.
+- During v6.19, cgroup task unlink was moved from do_exit() to after the
+  final task switch to satisfy a controller invariant. That left the kernel
+  seeing tasks past exit_signals() longer than userspace expected, and
+  several v7.0 follow-ups tried to bridge the gap by making rmdir wait for
+  the kernel side. None held up. The latest is an A-A deadlock when rmdir
+  is invoked by the reaper of zombies whose pidns teardown the rmdir itself
+  is waiting on, which points at the synchronizing approach being
+  fundamentally wrong:
+
+  - Take a different approach: drop the wait, leave rmdir's user-visible
+    side returning as soon as cgroup.procs is empty, and defer the css
+    percpu_ref kill that drives ->css_offline() until the cgroup is fully
+    depopulated.
+
+  - Tagged for stable. Somewhat invasive but contained. The hope is that
+    fixing forward sticks. If not, the fallback is to revert the entire
+    chain and rework on the development branch.
+
+  - Doesn't plug a pre-existing analogous race in
+    cgroup_apply_control_disable() (controller disable via subtree_control).
+    Not a regression. The development branch will do the more invasive
+    restructuring needed for that.
+
+- Documentation update for cgroup-v1 charge-commit section that still
+  referenced functions removed when the memcg hugetlb try-commit-cancel
+  protocol was retired.
+
+----------------------------------------------------------------
+T.J. Mercier (1):
+      docs: cgroup-v1: Update charge-commit section
+
+Tejun Heo (1):
+      cgroup: Defer css percpu_ref kill on rmdir until cgroup is depopulated
+
+ Documentation/admin-guide/cgroup-v1/memcg_test.rst |   6 +-
+ include/linux/cgroup-defs.h                        |   4 +-
+ kernel/cgroup/cgroup.c                             | 250 ++++++++++-----------
+ 3 files changed, 121 insertions(+), 139 deletions(-)
 
 Thanks.
 
--- 
+--
 tejun
