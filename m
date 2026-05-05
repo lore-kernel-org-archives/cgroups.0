@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 795DF38BF7A
-	for <cgroups@vger.kernel.org>; Tue,  5 May 2026 14:39:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA59324677B
+	for <cgroups@vger.kernel.org>; Tue,  5 May 2026 14:44:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777991945; cv=none; b=iSOyxjXHp4deE7myI443EdDeqWQ/Xthjlyp5a/dF2Y9zcbiMsv6m2wzuTF83Mw0o+LaCkwkAvJyGuLeVu2kopYYqhQt2D3C308VlHsDjXl8XMbAKGnPV5pfXI8jfwCaZ7RGW9jSI6rDicYipxv7QJyggyNUEXEX/qXPqXNnGnUI=
+	t=1777992244; cv=none; b=mcU6IwYMkNFkGWOgJoHtYcLvNvIbRLJdUGB/d/6tsnQKjON6JnXGr+QHBd6AUQprVcat9Y9Ig8JhapiIERCHqeizb8QSFaBg1Q3PsDVHmBX3lfvbqXMst6clJfOlRslso4OGUFBpP+eqFTfZfMOzZjCgd54qsdflPy9na7Dt4s4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777991945; c=relaxed/simple;
-	bh=Ym9ogyaXd1d4ow3s0Qu3bhGEm4Tu2PsqLCPbEnugjXA=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=mefVVF4rR1ZXwNhEnd/r5TWgoy53jJE4MlYAfU91gxhK2lr8Y1QjzbEUuMOEJSO5aRyt5bvdrJ9RlF2fNg0WuImQESuvk0o6ehBbQQdDut1ci6KR5nKUaJ7+W3iDecASO4zhzZDHbjHEOTtladWvfZ5tdpZpJ17pNdR2cKJnlig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Z77TACmM; arc=none smtp.client-ip=192.198.163.13
+	s=arc-20240116; t=1777992244; c=relaxed/simple;
+	bh=ryCfha7UkscC6GKGKRfvCkQN9dvXoPIPHVeZsHKA79c=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=PRI32t7x9ePSQ6OYu/CmXFHP3Dv9U6YRkMXNZyqminb6IaDhFqjDtfq02mk3JseTKUEtUKo2tf+fWplfByya9JBwh2hx0TWb9uFi/Ce3yH51lUVhUGUs62zXSP6GtrCU4ogrYGe2g/nEt79D980gHc0hJ4G2ts9GSqoszaSezC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hyR96sxg; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Z77TACmM"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hyR96sxg"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777991943; x=1809527943;
+  t=1777992243; x=1809528243;
   h=date:from:to:cc:subject:message-id;
-  bh=Ym9ogyaXd1d4ow3s0Qu3bhGEm4Tu2PsqLCPbEnugjXA=;
-  b=Z77TACmMaBm4btyDg9ZQO7dR2ZxXZ2Vx3SFxYEkt9sD3me91VXJetuuA
-   QpGAbJv+5k1zF+gHwMKNeT3wq1FoCYW+kMyy9OrYOdKry1fXh1jAiJsWu
-   rpknM13C4D58DII0CGAiryZEfdq1UcstkJ+EZjg/X6ltGQiwroYC4A3an
-   z/ZDNSVuUu6XJ/DJOzagFaEho8tQsLFsh39KLymq2H/o1yOoLHJqmmlBy
-   SU3ZbdY7ECiG7SfgKysm4wJUAI354lRC+Ua5FuMGOwPbgp5+m7DJhLYtN
-   trzc+biMayS+8j14EfziEW9ExcZavVzE7wy2q4/jqrGCRpeks312haYxA
+  bh=ryCfha7UkscC6GKGKRfvCkQN9dvXoPIPHVeZsHKA79c=;
+  b=hyR96sxgBuEDudOxQ/Owg+4cqo4yG3nrG4DT+OXgpHRWpwK9Tn7HojlU
+   iEGNvXyydaQbf5KzVdgP34GP73AKf34nLRw9p9w6FK/ublMA7q0DCl73X
+   O7VOHfhEsdKNXQy32U4YpINKtDpLX+fM3mm3V5ZiFZxk+akSBBYlKNezr
+   WCN+sIQxHO/OaWLw74zsXHMWjge09tWUZUTVxTAWdO5cmyqUJjBQDQ70s
+   RkHcmwqwstsau0zgykVKkbF94Xcu6Hu0vJHiQCya5DeKkFctLPzmDc6Ex
+   iO1j6Bf3x/pJR/nfYcsBhvean/ihKem4kOMtGPmYhxabX6KcuPfj1Olow
    Q==;
-X-CSE-ConnectionGUID: svJhi8w4QGy/VmZNQcjdgQ==
-X-CSE-MsgGUID: cuApsq4KQ7+uGFy45S+TEQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11777"; a="81425132"
+X-CSE-ConnectionGUID: N4gF2CNWRjO+dpZ0lJNCTg==
+X-CSE-MsgGUID: ofb1tvClQVO26MPh+ZBD2w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11777"; a="77886512"
 X-IronPort-AV: E=Sophos;i="6.23,217,1770624000"; 
-   d="scan'208";a="81425132"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2026 07:39:02 -0700
-X-CSE-ConnectionGUID: 3KbAeCNmTTe+GiTwq8iAOg==
-X-CSE-MsgGUID: /oKEqg2RSeCxl1IVeCtwYA==
+   d="scan'208";a="77886512"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2026 07:44:02 -0700
+X-CSE-ConnectionGUID: pIIvQOKvS4Khmsv0i0BUwQ==
+X-CSE-MsgGUID: bsZRjYIbQUGJTAU5npsZJQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,217,1770624000"; 
-   d="scan'208";a="259505035"
+   d="scan'208";a="232699804"
 Received: from lkp-server01.sh.intel.com (HELO 9ec114424ce8) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 05 May 2026 07:39:00 -0700
+  by fmviesa007.fm.intel.com with ESMTP; 05 May 2026 07:44:01 -0700
 Received: from kbuild by 9ec114424ce8 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wKGvK-000000000Az-1eLt;
-	Tue, 05 May 2026 14:38:58 +0000
-Date: Tue, 05 May 2026 22:38:00 +0800
+	id 1wKH0A-000000000Bl-3RTL;
+	Tue, 05 May 2026 14:43:58 +0000
+Date: Tue, 05 May 2026 22:43:51 +0800
 From: kernel test robot <lkp@intel.com>
 To: Tejun Heo <tj@kernel.org>
 Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 655ae569a21dc09368f5fdeca5d499c50c3d686a
-Message-ID: <202605052251.TRIXlbyy-lkp@intel.com>
+Subject: [tj-cgroup:for-7.1-fixes] BUILD SUCCESS
+ d8769544bde51b0ac980d10f8fe9f9fed6c95995
+Message-ID: <202605052242.eXT39uIH-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 655ae569a21dc09368f5fdeca5d499c50c3d686a  Merge branch 'for-7.1-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.1-fixes
+branch HEAD: d8769544bde51b0ac980d10f8fe9f9fed6c95995  docs: cgroup-v1: Update charge-commit section
 
-elapsed time: 728m
+elapsed time: 734m
 
-configs tested: 218
+configs tested: 214
 configs skipped: 14
 
 The following configs have been built successfully.
@@ -80,7 +80,6 @@ arc                              allyesconfig    clang-23
 arc                                 defconfig    gcc-15.2.0
 arc                   randconfig-001-20260505    gcc-8.5.0
 arc                   randconfig-002-20260505    gcc-8.5.0
-arm                               allnoconfig    clang-23
 arm                               allnoconfig    gcc-15.2.0
 arm                              allyesconfig    clang-16
 arm                                 defconfig    gcc-15.2.0
@@ -104,7 +103,6 @@ csky                  randconfig-001-20260505    gcc-14.3.0
 csky                  randconfig-002-20260505    gcc-14.3.0
 hexagon                          allmodconfig    clang-17
 hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
 hexagon                           allnoconfig    gcc-15.2.0
 hexagon                             defconfig    gcc-15.2.0
 hexagon                        randconfig-001    gcc-11.5.0
@@ -114,7 +112,6 @@ hexagon                        randconfig-002    gcc-11.5.0
 hexagon               randconfig-002-20260505    clang-23
 hexagon               randconfig-002-20260505    gcc-11.5.0
 i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-14
 i386                              allnoconfig    gcc-15.2.0
 i386                             allyesconfig    clang-20
 i386                 buildonly-randconfig-001    gcc-14
@@ -145,7 +142,6 @@ i386                  randconfig-015-20260505    clang-20
 i386                  randconfig-016-20260505    clang-20
 i386                  randconfig-017-20260505    clang-20
 loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
 loongarch                         allnoconfig    gcc-15.2.0
 loongarch                           defconfig    clang-19
 loongarch                      randconfig-001    gcc-11.5.0
