@@ -1,200 +1,148 @@
-Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11021133.outbound.protection.outlook.com [40.107.130.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7316B3ED5D9;
-	Thu,  7 May 2026 14:31:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.133
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778164279; cv=fail; b=VYOnzhT/VUlXBzi1hSRDaTA8JukzIXeGdMzJr6GnahLk7ZFk6q9/0XxYa8wRR4nOIeoK/0EhmGYfRgFt+L98Yla5hbd6fyYQO+GrEoUf3DmXcwNI6sH0IHI+5MKts+1+p0MQbAQ55JpoSwZmFg1bPVFbTTBj5Voi0+4iSft+Ol4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778164279; c=relaxed/simple;
-	bh=ZJMqSOWiZ7oWsD//26cv7NYkNbNZ1seJwyyYNwZFM58=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oy6Pcp/qXLlHaPY1jLYxCtUKhezBz4/D3zOf7CUzZwfkS1dOtFHJAPnVcFdyz6VIS8aESNmJ1MIFhGAPNc2Owv+y9ivi0LazDZQef/5f6BHos75QV4HcVcn0kL9IwkVEBORSR3V+cS4JX/n5DrqEK/seP3llU2pPE3TbwzsP4dc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=santannapisa.it; spf=pass smtp.mailfrom=santannapisa.it; dkim=pass (1024-bit key) header.d=santannapisa.it header.i=@santannapisa.it header.b=ouY0OKaY; arc=fail smtp.client-ip=40.107.130.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=santannapisa.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=santannapisa.it
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D44323ED12B
+	for <cgroups@vger.kernel.org>; Thu,  7 May 2026 15:03:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778166232; cv=none; b=YZjvG/YAhSTjdjkVMVMaZr0SMmJRiuGqESsmJDPQPyatx/fenThVeNDfDULWijnAIvwSZ/XUqUm1tP4r+yeDtt42ELxtuS0ssVqxol/YY8yper1CmOqgkNWChIv+hxX1Q/nZaEvKRCIAeGWHG5pMqW1rT4mzHd0vxI7+Nmet/so=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778166232; c=relaxed/simple;
+	bh=UJs5ytlCCyg20J5o4zAHFe4QUueSJXkmMI6sMMBEKkc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fw7NnNMNryNJxQgTWz4X4FnL/MbA9BrrcpP3yE6T759LD9T0LJyWEQ/8eQZzssHFzYahP/ZJ7aE6eTrhrbIXTQmaQPEWmEwEG1dLsqnmijUsO55CwLzz1o3FSOpANU2qw5Lzpztb9OG5QD1bWEHRr1+XRINXTq+ndFe6TWPxMis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=W62MmzGV; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=aMWqGBW3; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=santannapisa.it header.i=@santannapisa.it header.b="ouY0OKaY"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Pxb8RUg4r6VWn5frYzMj7IM86HnxMMfbhX7sp0kyQF93sWRZxRCus2mWJzhsjQBgCr62mt6XgLzLtpIPOXAyu5lcI9UWbhmmfGm7P2SMF775PIMszGd74boV1eNkQ51RlM7QSLBMv39RdY5Gtj+40AzSjfSYh0W0Wojwtiv1x9tQjDqa+FlHP4f7pKDMGiemBvvRNOU1QTOX4PvGBs0zSeIYSwOyA7EVllc2kp+xNn1BYTbPUtbGggdL3584HHLH+01Zv3zfkyFdXFVXWfXlzjEVfs5ZKHOBaFo+tgy+VmEgunX58piBNb0AZkXG2MxTCwyYEcIR9ZvxHsWWLcuCWg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=e4HjBlbNndBALW+dUlOxW7hRCEehStgzyE9I5pgrhwU=;
- b=CZRVpY7f34iWdjm36N+yX4GhRtoCcumEK1R5F+cT9qvPYj52kJ37GhEWxbrkRM0U0rlsbSH+HtmPVknN/0F+qKxyR5hjt+V8Y05UkCwqA1XsaajTykHpbNYvf5R4LQoNI29QkHDjlxuFxZN4QEgJl19j1YaoPQBTuluyO7dnlH4eiofs5Me/0mfnumLDK0alHTZRHHONBRnNYKbwPshvx1DUJFh521DwKQx85QVqLnnHJpXA4WL5ETVsQb4LtUt/wevG3ObdKdI5B81Jl230fRI/8wjukSmmr+eUWac1VjvIJEdQFCp9g9oSdnyfOobe9EMsTGLPVVFTLxwu+DWxTA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=santannapisa.it; dmarc=pass action=none
- header.from=santannapisa.it; dkim=pass header.d=santannapisa.it; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=santannapisa.it;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e4HjBlbNndBALW+dUlOxW7hRCEehStgzyE9I5pgrhwU=;
- b=ouY0OKaYakX9tKbcjcUTaI2iwkD+3EzvORI/kWIpN96TTWdRHfo4sxjktGCxWIUJkzx1tIOiWbLojUDgLKLS2Xtu21/R36qIWJlTDrk1fxviFMwcJiQZA7F3CzqQbb7BZLahYs2rd6ULm9Uq09AzoS/2hETWO9Ix+S5UedImvL8=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=santannapisa.it;
-Received: from PAVPR03MB8969.eurprd03.prod.outlook.com (2603:10a6:102:32e::7)
- by PA1PR03MB10673.eurprd03.prod.outlook.com (2603:10a6:102:482::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.15; Thu, 7 May
- 2026 14:31:12 +0000
-Received: from PAVPR03MB8969.eurprd03.prod.outlook.com
- ([fe80::26c1:111c:f60d:f9b9]) by PAVPR03MB8969.eurprd03.prod.outlook.com
- ([fe80::26c1:111c:f60d:f9b9%6]) with mapi id 15.20.9891.008; Thu, 7 May 2026
- 14:31:12 +0000
-Date: Thu, 7 May 2026 16:30:58 +0200
-From: luca abeni <luca.abeni@santannapisa.it>
-To: Tejun Heo <tj@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Yuri Andriaccio
- <yurand2000@gmail.com>, Ingo Molnar <mingo@redhat.com>, Juri Lelli
- <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>,
- Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt
- <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman
- <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- linux-kernel@vger.kernel.org, Yuri Andriaccio
- <yuri.andriaccio@santannapisa.it>, hannes@cmpxchg.org, mkoutny@suse.com,
- cgroups@vger.kernel.org
-Subject: Re: [RFC PATCH v5 20/29] sched/deadline: Allow deeper hierarchies
- of RT cgroups
-Message-ID: <20260507163058.2c435922@nowhere>
-In-Reply-To: <afpLir8tD0Ycb3D8@slm.duckdns.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W62MmzGV";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="aMWqGBW3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778166228;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YURhvkXpTF8xikVoRHSszCa7GyvYbYBHZNpB5UERt/A=;
+	b=W62MmzGVsORUEa6Cui+fkS77B5o8giUzm+JsfY+OMTJk72b0FRs4WB9wKYXNQGc9n0EmwV
+	7RRMX0ChOMO5nCKLu/edFXWXeHWmyMm+fM+3ZUmw+vKYwaSZa7wLnemUQs8d6o8+OtLaJz
+	0TDt7Ba570S4JyuVHQroyM3s0NWHI7k=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-60-yEw8r08FMb2EVp83RngoDA-1; Thu, 07 May 2026 11:03:46 -0400
+X-MC-Unique: yEw8r08FMb2EVp83RngoDA-1
+X-Mimecast-MFC-AGG-ID: yEw8r08FMb2EVp83RngoDA_1778166225
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-48a55de6fb0so8385665e9.3
+        for <cgroups@vger.kernel.org>; Thu, 07 May 2026 08:03:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1778166225; x=1778771025; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=YURhvkXpTF8xikVoRHSszCa7GyvYbYBHZNpB5UERt/A=;
+        b=aMWqGBW3Zla/3DO/SlaWchUFkCmoqtBZggt5NSfgrHGxqEmKR8nfRd/JAgAo0vSlVU
+         eI60uscnPdT414mWDpcB0NEZ+2lOT23y/xSTeuU1Lcz6H4gzvJZ/aHTCoIe6ZgNxagk2
+         2l0SWY/jxEuTfRbkbwecTWRf220+6qgOQfM70xnkfNDK7g+opEB9zx5GC0svcYf8GVsy
+         g40fdff2Rj+X4nUDM/9mbr3fi5SkNe5mc1sK8IxT7OBELA0nFZ/Naz1MP2l4XHZeOVju
+         w7IaEbwK5TSEHjFJR7+glQAG+QtoW5sYj7fO9FEXi0JjmjvFvLzz66v3ufxYr0/f7ahC
+         ZLiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778166225; x=1778771025;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=YURhvkXpTF8xikVoRHSszCa7GyvYbYBHZNpB5UERt/A=;
+        b=gAZmC4eJ2eIrhNu7WU+XXzk+BMSu90/Y0EAHKwZc/gdrH3xHB9H53NL98CJcaywsyr
+         BzEiDkDksGgQV6HiJJzzhu4lktO/2furK7yVSt635boewTzNfuXqXJ+bffEPCyNA9js7
+         cclF25o3yiI6WnjusR21bodfBpodwGJqzgG+BsOmJv+78MbQ1z24pum20zsCZYjX/ZH5
+         shNsmM0BQ1v9+MP11r6i8fQulBkMhPtX+THgvQpYnZF+P0IJ05dXbDdhEjlv5pPhPWdk
+         FJ10cfzVDCcBmtW5WM76RmPKZvpk+DP9iATCjM5M1yMFglZn0S5MHp80rCPvWuwmOBTX
+         aimQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/Yoj/XTORkUcD/7OuxvxLaA4s1+t1t3CZ0el01Cng9D0+HuMzYX/S8b0sN8EkvYD6B7sXfXidp@vger.kernel.org
+X-Gm-Message-State: AOJu0YzeANUIdVA4HVPuR4GkF3Cmn5dVCH8iWaO0cVwYs75IPgmQqvz2
+	PwonQaUP1EJBrSZdxnyv1ASEgiBV5IjkdyR3SkKfvvwCHSxfvk7YH9ALkPfK6NKu0ni5G8g88+L
+	6pK7EPOyQlotmUMu7bYC6n2X/7+YpB/FiScjvvkKlj8ENxcjp88Yv74vn0bM=
+X-Gm-Gg: AeBDiet00GDqzO7YHI8T49aqdN49M5Jc0DDSjyUBoLlVWIh7WBqiNz4JJ8C32M3+wlD
+	gsZM1KASB10jIr9AYdKSlXh3V27UUaCue081LgDuybXZWxZyaxG5fg6qw6oCIE2Q4f33O2RcYHX
+	0ijZ5lWDV3UIkTkOKEHab+srNBiMRLUAKucprtESbRKd+8I/5+k1WlGsuigA69HbWMs0OzcoG7F
+	zAOx5Xs3ezzitJ51yE2IMp3ob3i7WTxGSJjtte8wiG3uVrBuN2nMIir2jGkdKMt3X/j3lYijN85
+	PIYnZMS5oJ6gXHgq4clOvpejJuObn8KeXceFEJpCBALZbGBWAv2K165+1Cgib3WPzZ0fEpFIq+X
+	RZZy7WKcyDnlUmZISyiBsiDYdM1Aj0ktdtnIRPhogPMh+cptmL75cZjLeMLBGgQ==
+X-Received: by 2002:a05:600c:c494:b0:485:46fd:7887 with SMTP id 5b1f17b1804b1-48e51f32c35mr131414385e9.13.1778166224912;
+        Thu, 07 May 2026 08:03:44 -0700 (PDT)
+X-Received: by 2002:a05:600c:c494:b0:485:46fd:7887 with SMTP id 5b1f17b1804b1-48e51f32c35mr131413315e9.13.1778166224163;
+        Thu, 07 May 2026 08:03:44 -0700 (PDT)
+Received: from jlelli-thinkpadt14gen4.remote.csb ([176.206.7.99])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45055960fd6sm22020103f8f.31.2026.05.07.08.03.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 May 2026 08:03:43 -0700 (PDT)
+Date: Thu, 7 May 2026 17:03:41 +0200
+From: Juri Lelli <juri.lelli@redhat.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Yuri Andriaccio <yurand2000@gmail.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	Luca Abeni <luca.abeni@santannapisa.it>,
+	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
+	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org
+Subject: Re: [RFC PATCH v5 20/29] sched/deadline: Allow deeper hierarchies of
+ RT cgroups
+Message-ID: <afypzfyH0M7Rcge2@jlelli-thinkpadt14gen4.remote.csb>
 References: <20260430213835.62217-1-yurand2000@gmail.com>
-	<20260430213835.62217-21-yurand2000@gmail.com>
-	<20260505151523.GF3102624@noisy.programming.kicks-ass.net>
-	<afpLir8tD0Ycb3D8@slm.duckdns.org>
-Organization: Scuola Superiore Sant'Anna
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.50; x86_64-pc-linux-gnu)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MI1P293CA0024.ITAP293.PROD.OUTLOOK.COM (2603:10a6:290:3::6)
- To PAVPR03MB8969.eurprd03.prod.outlook.com (2603:10a6:102:32e::7)
+ <20260430213835.62217-21-yurand2000@gmail.com>
+ <20260505151523.GF3102624@noisy.programming.kicks-ass.net>
+ <afpLir8tD0Ycb3D8@slm.duckdns.org>
+ <20260507105331.GQ1026330@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PAVPR03MB8969:EE_|PA1PR03MB10673:EE_
-X-MS-Office365-Filtering-Correlation-Id: 72744339-08a7-483c-ff48-08deac454961
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|366016|786006|1800799024|376014|7416014|22082099003|56012099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	mzIK+ZdWLBKko2ZrNOMWhSMqwLWn/0/oB6iO+5zbZAaEFi1PR5pcSZUUXdiii59mjFItMC9eYoisa4SuTFrbahxiBBMBfG/djl2VOOlso3whSiRScAQVPxWA2cgdEe001XDA4GyFFGDW4YrHOt7PIA713mv1gLKyRk+hY8rmVVAW15EZeAPXwDSkGjaka1jIVyIvB5ilt6pTF08ovh8mep0uiVsi2y3fG1usNeKt96bNBlcuRDbkxPjdbfmj+d6goZwwXeXz3VrihViU3/UOiY2yPgmRD0yMkZw8V4UEXzxAu9H/6KlSeXzfTszAtsVf+3q1iEINB6HWl2DvLmDban6xEurGlVbOtLF1YE+2EGUdZx5BfeVz+xTbgBJyULlm2PjngcW4T8OlHTF9JZUqz1AZmSgtgDCG07Z1FEimUCQVlS+U2abeuhysVpUe4AVszICq4I9KjukDwZZkLQDwLnr5vqQj8pyqoR95rpAf6twY0nNm1NgRHW6LcFIOU22P7kH2Nv/OZinWNP6iSZK3sL1hhRI9X40CVLsu1d1g+quv3lzBhnmRvod73vA9fV2zAkZajVZH5buGp1iyVgr46rNre2hR3utXo5vXHByIk2xDQQMwBJ60BvhYlaJ6tclQuDuDfHmcU4/NQxuRW95Nz7kW25GiL1IIQcuFLpZK+85/nmHfX0a4TZeT02Hnp677
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAVPR03MB8969.eurprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(786006)(1800799024)(376014)(7416014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?f5QDICSY8hoUp/I2c7pdoOixYCijbtXbdR5WMDE8ClIKgzcw18P40cCApELh?=
- =?us-ascii?Q?KgIkugufDn76BV4QiUq9lksZPy9EM9iFha1UggQSnhhv44PZJg9FiHUISXj0?=
- =?us-ascii?Q?WOfyhM4Kwzh6LPfdb10UWf59DnkSc0qm4wdFBur9Kp/tWOC81bGktiAUetGX?=
- =?us-ascii?Q?wt6MErFRfKR0r9SLvN2L07ieTfgh8Kx/IsgTRoTrJTSrwQOkdJCOOvOqdmRG?=
- =?us-ascii?Q?wSV02j83g7MTVQKfWGylBP0OJhFs9jA5kPblZKeQyzcbLGthp/HjoN0/D8dl?=
- =?us-ascii?Q?gOYbj8EJKW9DITwH0zYro/1NhQzxrLXT9XUXsRguDq3JVsZ1+RPGLhCZzJXb?=
- =?us-ascii?Q?1vNVmMkmXjXRqIP6M+XSOBT+9DWYnc4IM07rUMFKrXaZf+iTaUyD8sG7upMH?=
- =?us-ascii?Q?D8Yz6z0xpdw7OD5BeHZYXg8ZpMwFJ4N9Fs+7gSfxwP7jjHogMBTghOqoovir?=
- =?us-ascii?Q?QT1atrOzAcFURQgv64soD8aXyeZMlK4O9WkD4ydDhBOs1R90QLeovNDCvWVJ?=
- =?us-ascii?Q?PDNh1Bk4z1GyP0q7edQUa5VXDMHHF2eE4jUvUWOwWQIuKkxJaf76YkTe+1cC?=
- =?us-ascii?Q?soYf79SISMXE6a8K8z8Dqt8bxgJMbm2F28KPrDBvtf3P4qHKjeAKsFf1z2hi?=
- =?us-ascii?Q?oRnlT/v0h1ICtNr7KG8nSyIic1w58nB9FACrnjUNB8w07NWv8LyQsC2dRFRQ?=
- =?us-ascii?Q?5n+JMYwYYywiMLsesGMjPp8PPBNAoz1gLwKzLVO1M8Gnyw/oGMeZFwAJ8nXt?=
- =?us-ascii?Q?f8IYtHy6hLUdID27hEtefmfWhAftF3QUXisM7QNzW/VYPAgNn7g5dVPLtDqO?=
- =?us-ascii?Q?nyi+KFNLqqe/qkx1nwTN/bGJ3Q5rNiiUZKUtTtxhLxJNisZSns+LlAj0rIkD?=
- =?us-ascii?Q?7k6OiHEaOhLiQGrZl4rWx/LsQILJQFyq9mkkQUvLni4tnHHlqGlVe94puEEe?=
- =?us-ascii?Q?xccUPlgJW1QfA4yZjIqS+OYRlUQRHRC5ZEd/ixSq7tkNqv/TtwD2gD+N0a+I?=
- =?us-ascii?Q?3Xo1/MbsKRR+9cC4R9D7k6c7ONrspJx1dswyTCCKLuylp2bX9Nz7Gr7Z30va?=
- =?us-ascii?Q?qSRSxWIDh8DReWP9SWIa1FbyRKhF/wvXBT8b2wx9zk7V5TdQ3W3UE5rH5S+j?=
- =?us-ascii?Q?40jL4tChdON8+xRzdghObBNDIqXFe2XebsTNlSumy9sr6WW0WAbPhHjKhsuH?=
- =?us-ascii?Q?bmhGqVWjop4mfaBLYq0dQavqg/Vj1fThSPFWVaDDgWHvakbkhGakk79+gP0g?=
- =?us-ascii?Q?hSS4p04Jt2ykGoWykfI+R6CqGjWtUE2Ql9gmD0IOCLyLgRRSepBFR4gH20am?=
- =?us-ascii?Q?ttvt68ZsdGiSvZYKJG4+RaOrIC8Yc517D5lw+LIGo5pr5QhxqlFgBgJ82dCd?=
- =?us-ascii?Q?I2nMUTVYoHr5ZbSoKBhQfmbTG+SjfvEdyAgM18p+Z93vvrvmifrRRtLKNTpR?=
- =?us-ascii?Q?Vbl1DKkMNJPSHwAXBR4rXeEW8CF8i878uVSgvBIf7/qfAr/NxrVsHTvJaH0P?=
- =?us-ascii?Q?+mfONLjUAQsXjH1DF0P6qzXoSzUc+rxuicK3HhLRbn8jJ4fXGKFN33z/Dwm+?=
- =?us-ascii?Q?A1O+hXtoyYILjyj9JnNNTbqGeD70rOATisa2cQAohaZBg6it6jS8cQ2mxSjm?=
- =?us-ascii?Q?Hz5H5okcoD3EUHOoBOelN3JSL03N1jtiRhp21tIt3dNcFhQ3r32tAb7iditt?=
- =?us-ascii?Q?+TBxuYyMpB5a4SscXzIWNZ7/DQhPJ0Y15sHx+0Yeud6c/QPj/yLNC/ZGEa9r?=
- =?us-ascii?Q?dFirhMkqubT7ZfCn/hGytlV/9yCnsWv52kJHn26HeGkV/+xyOauoflL4CKiX?=
-X-MS-Exchange-AntiSpam-MessageData-1: w/P5dp3vf1yFf6ie40T5zMEhHxzBLh6MXjQ=
-X-OriginatorOrg: santannapisa.it
-X-MS-Exchange-CrossTenant-Network-Message-Id: 72744339-08a7-483c-ff48-08deac454961
-X-MS-Exchange-CrossTenant-AuthSource: PAVPR03MB8969.eurprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 May 2026 14:31:11.9502
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: d97360e3-138d-4b5f-956f-a646c364a01e
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: F4hP4uK/1Jd5Qw8e827BklQHFirVhKpkC/a+BbzpnhUfDJjkG3fgBnRH09LwwPjmeehLWRXX7sWPlf8hveTQcang4yFYCM+ewIMMm2NjVj4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA1PR03MB10673
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260507105331.GQ1026330@noisy.programming.kicks-ass.net>
 
-Hi Tejun,
+On 07/05/26 12:53, Peter Zijlstra wrote:
+> On Tue, May 05, 2026 at 09:56:58AM -1000, Tejun Heo wrote:
 
-first of all, thanks for your comments! I think this is the kind of
-dicussion that we need to have...
-Right now we have something that works "well enough" for real-time, but
-we want to make it useful in general, so that distributions will not
-disable it by default.
+...
 
-I need to better study your suggestions (I do not know cgroup v2
-much...), but I have some questions to better understand possible
-solutions:
-
-On Tue, 5 May 2026 09:56:58 -1000
-Tejun Heo <tj@kernel.org> wrote:
-[...]
-> - cgroup2 enforces that internal cgroups w/ controllers enabled
-> cannot have threads in them. No need to enforce that separately.
+> > - However, the cpu controller is a threaded controller which means that it
+> >   can have threaded sub-hierarchy where the no-internal-process rule doesn't
+> >   apply. This was created explicitly for cpu controller. The proposed change
+> >   blocks it effectively forcing cpu controller into regular domain
+> >   controller behavior subject to no-internal-process rule. Note these are
+> >   enforced at controller granularity and this means that users who use the
+> >   threaded mode will be forced to pick between the two.
 > 
-> - However, the cpu controller is a threaded controller which means
-> that it can have threaded sub-hierarchy where the no-internal-process
-> rule doesn't apply. This was created explicitly for cpu controller.
-> The proposed change blocks it effectively forcing cpu controller into
-> regular domain controller behavior subject to no-internal-process
-> rule. Note these are enforced at controller granularity and this
-> means that users who use the threaded mode will be forced to pick
-> between the two.
-
-Just to better understand: would it make sense to allow non-{FIFO,RT}
-tasks to be in non-leaf cgroups (as allowed by the threaded CPU
-controller), while enforcing that FIFO/RR tasks can only be in leaf
-cgroups? Or would this be a hack that compromises the rt-CPU controller
-usefulness?
-
-
-> - This has the same problem with cgroup1's rt cgroup sched support
-> where there is no way to have a permissive default configuration,
-> which means that users who don't really care about distributing rt
-> shares hierarchically would get blocked from running rt processes by
-> default, which basically forces distros to disable rt cgroup sched
-> support. This is not new but it'd be a shame to put in all the work
-> and the end result is that most people don't even have access to the
-> feature.
-
-Yes, we have a bad default here.
-Would a default like "allow running FIFO/RR tasks without runtime
-enforcement" (this is what happens to FIFO/RR tasks running in the root
-control group) be acceptable?
-
-
-			Thanks,
-				Luca
-
+> Right... this then means we need two controls, one to do hierarchical
+> bandwidth distribution, and one to assign bandwidth to the internal
+> group -- which is then subject to its own bandwidth distribution
+> constraint.
 > 
-> Here's my suggestion if there is desire for this to become something
-> most people have easy access to:
-> 
-> - Don't make it impossible to use in conjunction with other resource
-> control mechanisms especially not CPU controller itself. Don't force
-> people to choose between threaded mode and rt control. Allow them to
-> co-exist in a reasonable manner.
-> 
-> - The same in the wider scope. Don't let it get in the way of people
-> who don't care about it. Compromising on interface / failure mode is
-> better than people not being able to use it in most cases.
-> 
-> Thanks.
-> 
+> This might be a little confusing, but there is no way around that
+> AFAICT.
+
+Just to check if I'm following, you are thinking something like below?
+
+groupA/
+  cpu.rt.max = "50 50 100"       <- 0.5 from root
+  cpu.rt.internal = "20 20 100"  <- 0.2 from groupA for threads at this
+                                        level
+  + threadA                               <
+  + threadB                               <
+  +- group1/
+       cpu.rt.max = "30 30 100"  <- 0.3 from groupA
+       + threadC
+
+And we still keep it flat, so 2 dl-entities (per CPU), one handles
+threads at groupA level and the other threads inside group1?
+
+Thanks,
+Juri
 
