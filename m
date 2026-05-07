@@ -1,49 +1,49 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D65D3F65F7
-	for <cgroups@vger.kernel.org>; Thu,  7 May 2026 13:54:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A65663128B6
+	for <cgroups@vger.kernel.org>; Thu,  7 May 2026 14:31:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778162043; cv=none; b=SkdicbRdJ9quvOBbzi7mJBOCADdYW/xIQD5AhSGOjmsxsXemvoq0aH4Z2gi13oonTxi8B3O2L3f+HI/ToF3SSskn5rBWeaWq3FO/3PmqIoG2lJ/yKGqGmlRFfzfyRk7IFvGN7D/h1v7aia3oL9LhMAJ89YZ0gdBa+vy7geHXsNo=
+	t=1778164279; cv=none; b=A2/9z3fh/zvd5UlIPCSSrud9o7yht6ccbX8YH3g8vLlLye6WB10fRg7r6dKaV+dJV+EB/h5va2XV+d4XV2KtBolDrkCb02394YQz6CLV83sPevH8dhIIAh5ugdzBU2Su3QrwUa0mcuRH1JJlAe9PcNvavteMpTcEagp041NAIMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778162043; c=relaxed/simple;
-	bh=YBFN/8jZxMSFbyzP/Gk03pFxtAKWoGLOdakNBq7QnNM=;
+	s=arc-20240116; t=1778164279; c=relaxed/simple;
+	bh=xdxmQytP/UzokOhHCLRQJRAGp72jp0MEug8OKlI0hKc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dBGgCw7biXyyfsui0yTZzlfPjWclULagrYuvhktOG8T6Nl9R/6LPIYaNjJoq/iSiALFYJT+oDd8JeaoQCdxN+zwezbhlWttj6F6dIKi6/R7/hqudVMF0Ze4ui1XPhbofJ4dLQhzenKa0kv1UawoH3wYFXXmnaYsIQhvLJHnengY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JZye/vEO; arc=none smtp.client-ip=170.10.129.124
+	 In-Reply-To:Content-Type; b=ZAis9tQ8647mvx1ys7ZIHsLeTL8mq3fLik6UBcLqsL7GKMEXQH+sJoRyalsElecHf/tUQG9MWAH9Yf9IIeyx3YHjtdYKBosFDSpgUMhuBX9KiFuSgSc95WAngC/R4gd3s3EQjYPQF5J4CCOOPYZsPxTAScoH+AhirTSrKM74s7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Vxf5pZE5; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JZye/vEO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vxf5pZE5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778162041;
+	s=mimecast20190719; t=1778164276;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=JqVA5cExOZf1mQiP3plqnzFj9TXbyUviQpiazaj1Hp0=;
-	b=JZye/vEOP5/bxmaR5qqP7WIrajOhyVrXUu7N3jQvpG9Tq1jbuY4edBUHnTInl5mUiAfL1h
-	TokySxPYbP5hAfTDJviKyby10lNu05wNoivpCGInfNFc+MMBIfzALEGvtx6t9xwa3SvXlt
-	vdI4E17UnzirKEgI2FDS08shhG35Fls=
+	bh=kNaiWR+eqSu7WO4M7F1ji4bzG7ml343gIkmWsIUgsNs=;
+	b=Vxf5pZE5CnjkQ0G3lKeCfOZGiFx8qBdRE6jKxHcoEK2EWGLuLNbFkch6n421A/h3NqZj8D
+	w5FtnmWVYrsC1qvTy1xf4R/x5rn6OHYAlA3NgZo+6IxPuyG7EGWosVoZsuh5JHUSXs1R/b
+	XRv/YwRWTNNFGGv+KcVPaPVSJEuV6xM=
 Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-183-URb_qEpgNjycfWL90W6AHg-1; Thu,
- 07 May 2026 09:53:56 -0400
-X-MC-Unique: URb_qEpgNjycfWL90W6AHg-1
-X-Mimecast-MFC-AGG-ID: URb_qEpgNjycfWL90W6AHg_1778162033
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-205-Ix9Co-CvOh-DT0l8et_Qww-1; Thu,
+ 07 May 2026 10:31:11 -0400
+X-MC-Unique: Ix9Co-CvOh-DT0l8et_Qww-1
+X-Mimecast-MFC-AGG-ID: Ix9Co-CvOh-DT0l8et_Qww_1778164269
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AD90E195608E;
-	Thu,  7 May 2026 13:53:52 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E91F519560A7;
+	Thu,  7 May 2026 14:31:07 +0000 (UTC)
 Received: from [10.2.16.64] (unknown [10.2.16.64])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 212DB19560A3;
-	Thu,  7 May 2026 13:53:49 +0000 (UTC)
-Message-ID: <891b7731-b0e7-44ca-9954-0e5a1ee9be98@redhat.com>
-Date: Thu, 7 May 2026 09:53:48 -0400
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id F17981801A63;
+	Thu,  7 May 2026 14:31:01 +0000 (UTC)
+Message-ID: <6410d11c-1d8a-4e72-ac22-43058027b304@redhat.com>
+Date: Thu, 7 May 2026 10:31:00 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,64 +51,84 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] cgroup/cpuset: move PF_EXITING check before
- __GFP_HARDWALL in cpuset_current_node_allowed()
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Chen Wandun <chenwandun1@gmail.com>
-Cc: chenridong@huaweicloud.com, tj@kernel.org, hannes@cmpxchg.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260507105434.3266234-1-chenwandun@lixiang.com>
- <afx1u4kV-2kvgEEf@localhost.localdomain>
+Subject: Re: [PATCH v2 1/2] cgroup/cpuset: reset DL migration state on
+ can_attach() failure
+To: Guopeng Zhang <zhangguopeng@kylinos.cn>, Tejun Heo <tj@kernel.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
+ Juri Lelli <juri.lelli@redhat.com>
+Cc: Chen Ridong <chenridong@huaweicloud.com>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Vincent Guittot <vincent.guittot@linaro.org>,
+ Dietmar Eggemann <dietmar.eggemann@arm.com>,
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
+ Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
+ K Prateek Nayak <kprateek.nayak@amd.com>,
+ Gabriele Monaco <gmonaco@redhat.com>, Will Deacon <will@kernel.org>,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260507103310.35849-1-zhangguopeng@kylinos.cn>
+ <20260507103310.35849-2-zhangguopeng@kylinos.cn>
 Content-Language: en-US
 From: Waiman Long <longman@redhat.com>
-In-Reply-To: <afx1u4kV-2kvgEEf@localhost.localdomain>
+In-Reply-To: <20260507103310.35849-2-zhangguopeng@kylinos.cn>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 5/7/26 8:33 AM, Michal Koutný wrote:
-> On Thu, May 07, 2026 at 06:54:34PM +0800, Chen Wandun <chenwandun1@gmail.com> wrote:
->> This makes it unreachable in the common case, so dying tasks can get
->> stuck in direct reclaim or even trigger OOM while trying to exit,
->> despite being allowed to allocate from any node.
-> (OTOH, the caused OOM could select this task and bypass the hardwall. So
-> this should only expedite but no unblock the exit path.)
+On 5/7/26 6:33 AM, Guopeng Zhang wrote:
+> cpuset_can_attach() accumulates temporary SCHED_DEADLINE migration
+> state in the destination cpuset while walking the taskset.
 >
->> Move the PF_EXITING check before __GFP_HARDWALL so that dying tasks
->> can allocate memory from any node to exit quickly, even when cpusets
->> are enabled.
-> This makes sense to me on its own (given other hardwall exemptions,
-> namely the commit c596d9f320aaf ("cpusets: allow TIF_MEMDIE threads to
-> allocate anywhere")).
+> If a later task_can_attach() or security_task_setscheduler() check
+> fails, cgroup_migrate_execute() treats cpuset as the failing subsystem
+> and does not call cpuset_cancel_attach() for it. The partially
+> accumulated state is then left behind and can be consumed by a later
+> attach, corrupting cpuset DL task accounting and pending DL bandwidth
+> accounting.
 >
-> Acked-by: Michal Koutný <mkoutny@suse.com>
-
-This looks good to me too.
-
-Acked-by: Waiman Long <longman@redhat.com>
-
+> Reset the pending DL migration state before returning from those
+> per-task failure paths.
 >
+> Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
+> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> ---
+>   kernel/cgroup/cpuset.c | 8 ++++++--
+>   1 file changed, 6 insertions(+), 2 deletions(-)
 >
-> At first, I wondered whether this could happen on cpuset v2 -- it can --
-> because only per-cpuset hardwalling is absent but the generic logic for
-> GFP_USER allocations is still meant to be in place. Nevertheless, it
-> occured to me we can spare callback_lock in this function (a separate
-> chaneg for cpuset_current_node_allowed()):
->
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index e3a081a07c6d..ae41736399a1 100644
 > --- a/kernel/cgroup/cpuset.c
 > +++ b/kernel/cgroup/cpuset.c
-> @@ -4213,6 +4213,9 @@ bool cpuset_current_node_allowed(int node, gfp_t gfp_mask)
->          if (current->flags & PF_EXITING) /* Let dying task have memory */
->                  return true;
->
-> +       if (is_in_v2_mode())
-> +               return true;
+> @@ -3029,12 +3029,12 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>   	cgroup_taskset_for_each(task, css, tset) {
+>   		ret = task_can_attach(task);
+>   		if (ret)
+> -			goto out_unlock;
+> +			goto out_reset_dl_data;
+>   
+>   		if (setsched_check) {
+>   			ret = security_task_setscheduler(task);
+>   			if (ret)
+> -				goto out_unlock;
+> +				goto out_reset_dl_data;
+>   		}
+>   
+>   		if (dl_task(task)) {
+> @@ -3070,6 +3070,10 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>   	 * changes which zero cpus/mems_allowed.
+>   	 */
+>   	cs->attach_in_progress++;
+> +	goto out_unlock;
 > +
->          /* Not hardwall and node outside mems_allowed: scan up cpusets */
->          spin_lock_irqsave(&callback_lock, flags);
+> +out_reset_dl_data:
+> +	reset_migrate_dl_data(cs);
+>   out_unlock:
+>   	mutex_unlock(&cpuset_mutex);
+>   	return ret;
 
-Yes, it is a performance optimization that is worth to have as cgroup v2 
-doesn't have the concept of memory hardwall yet.
+I would prefer the likely success path be a straight line instead of 
+doing a goto. IOW, move out_reset_dl_data below return. Other than that, 
+this patch looks good to me.
 
 Cheers,
 Longman
