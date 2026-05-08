@@ -1,30 +1,49 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B9261FECAB;
-	Fri,  8 May 2026 01:58:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24B4E2F8E97
+	for <cgroups@vger.kernel.org>; Fri,  8 May 2026 02:26:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778205522; cv=none; b=SqoIiA3VmVwUdoloWqgyTPnXMDHizH5X8UhPplgCs5dvUTUQf9ojpTvN+qWqKM/iayf0Yv/WW9V2DOI/YjQ9GQyGkLYIXjOXpmq/H54vWkge0xqY8BMfBzf8RU5LLY8SqHl8r9epsIiyo/D1Ut6cE/5mbWXnmFVzMHo/3lI6OIQ=
+	t=1778207202; cv=none; b=bkGtoGzBjjZZlp8S33VPN9SyYsvmbmTWPyDIBK9rHIa8Uzf7KUpovtjoWiwu38WdLxn80FG0x8L5RWuYIRmIlHWKlFZ6d7o7+Lz7+bLeSoDJl9tg4vSUadwlzvosNlSVUicmhx6X9LMutRqufVaYReZAHxjRhwpW1JNlkZbKrTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778205522; c=relaxed/simple;
-	bh=IFOa+dcoaldD4uCTzBx/ob6giJ4Z7U9VrpWeh2VXEOs=;
+	s=arc-20240116; t=1778207202; c=relaxed/simple;
+	bh=6/RSalBHI0pfI6AbtPBYxQtCmMkyokNiv6ItsHzwFg4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kdqFKLK4hPLzVDHMHs1pXz0TTSaVa0+oz+YhQW8UoZGw13ycW01R78c/8WPxQlJHa7AHDDhsmckXnALQMHYL1vSVWgh8tGjC0amMy9rLE2gqo6fmS82tQ3fMUF44uNBriZj4frwP9eXKICNwsSe05lm/DX6nl1Km9Wb7UfJ8crE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gBWxn2gRWzYQtlv;
-	Fri,  8 May 2026 09:39:25 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 7B15E40592;
-	Fri,  8 May 2026 09:39:48 +0800 (CST)
-Received: from [10.67.111.176] (unknown [10.67.111.176])
-	by APP2 (Coremail) with SMTP id Syh0CgDnTPvjPv1ptK3yBQ--.32089S2;
-	Fri, 08 May 2026 09:39:48 +0800 (CST)
-Message-ID: <02352ad2-9c85-4825-82b6-49c6a4b081d8@huaweicloud.com>
-Date: Fri, 8 May 2026 09:39:47 +0800
+	 In-Reply-To:Content-Type; b=sMWJFY0JOOxUjzrmiZ529kGNjBBDGBbr/xEsEcEzKVN11nVA9WOjMKQ3dbCsWOB9A7GHiur4OPp6XQW+BFzumlMYVvljNMqJ9OmvZpWjjhhSFIKn0/prG7OHqlAKmFucblaUfRi0FeiIxEYnpQQpyFNPrHB9ajTExA/v8fZk0+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BQd0BM76; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BQd0BM76"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778207200;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=N3U2igDBUZJtz/ZfFX4rmmix0sPx+03wNhxS/hhCrnU=;
+	b=BQd0BM766YwWP+6W4R6wB7l8B2RcmCS2i+7ZykhgQDITuu/Tw401+jR87r4XSPEWxpVwV2
+	9FcfbouZCu5ylDqbn24ZQ3LYfW2OmJH7TLbMWfMXT6m0/f1hLtUhnJt/yiTlVjA3qLGle5
+	KVtJSzoAb5SSsGKLeP5zmuYVkNkEqQw=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-216-oVi7TPr5NjuwY388fNUnuA-1; Thu,
+ 07 May 2026 22:26:36 -0400
+X-MC-Unique: oVi7TPr5NjuwY388fNUnuA-1
+X-Mimecast-MFC-AGG-ID: oVi7TPr5NjuwY388fNUnuA_1778207194
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 99280180034C;
+	Fri,  8 May 2026 02:26:33 +0000 (UTC)
+Received: from [10.2.16.15] (unknown [10.2.16.15])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 803F418004A3;
+	Fri,  8 May 2026 02:26:27 +0000 (UTC)
+Message-ID: <ff904e7f-60bd-40ce-818e-b03b47a79e6f@redhat.com>
+Date: Thu, 7 May 2026 22:26:26 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -32,117 +51,108 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] cgroup/cpuset: move PF_EXITING check before
- __GFP_HARDWALL in cpuset_current_node_allowed()
-To: Chen Wandun <chenwandun1@gmail.com>, longman@redhat.com, tj@kernel.org,
- hannes@cmpxchg.org, mkoutny@suse.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260507105434.3266234-1-chenwandun@lixiang.com>
+Subject: Re: [PATCH v2 1/2] cgroup/cpuset: reset DL migration state on
+ can_attach() failure
+To: Chen Ridong <chenridong@huaweicloud.com>,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>, Tejun Heo <tj@kernel.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
+ Juri Lelli <juri.lelli@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+ Vincent Guittot <vincent.guittot@linaro.org>,
+ Dietmar Eggemann <dietmar.eggemann@arm.com>,
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
+ Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
+ K Prateek Nayak <kprateek.nayak@amd.com>,
+ Gabriele Monaco <gmonaco@redhat.com>, Will Deacon <will@kernel.org>,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260507103310.35849-1-zhangguopeng@kylinos.cn>
+ <20260507103310.35849-2-zhangguopeng@kylinos.cn>
+ <6410d11c-1d8a-4e72-ac22-43058027b304@redhat.com>
+ <5d69e8bb-c925-4de2-8d50-0880b23864e0@huaweicloud.com>
 Content-Language: en-US
-From: Chen Ridong <chenridong@huaweicloud.com>
-In-Reply-To: <20260507105434.3266234-1-chenwandun@lixiang.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:Syh0CgDnTPvjPv1ptK3yBQ--.32089S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxXry8WF45Ww1ftF4xGF17KFg_yoW5Kw15pF
-	s5CayjyFs5AFyIkws0qw4kuFyF9w4rCF45GFyj934FvFZxtF1jkr1DG3W5XFyjyry5uF1F
-	qF13tFs7ua1DAa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUylb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAK
-	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
-	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xII
-	jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
-	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
-	67AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUUUUU
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <5d69e8bb-c925-4de2-8d50-0880b23864e0@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
 
+On 5/7/26 10:14 PM, Chen Ridong wrote:
+>
+> On 2026/5/7 22:31, Waiman Long wrote:
+>> On 5/7/26 6:33 AM, Guopeng Zhang wrote:
+>>> cpuset_can_attach() accumulates temporary SCHED_DEADLINE migration
+>>> state in the destination cpuset while walking the taskset.
+>>>
+>>> If a later task_can_attach() or security_task_setscheduler() check
+>>> fails, cgroup_migrate_execute() treats cpuset as the failing subsystem
+>>> and does not call cpuset_cancel_attach() for it. The partially
+>>> accumulated state is then left behind and can be consumed by a later
+>>> attach, corrupting cpuset DL task accounting and pending DL bandwidth
+>>> accounting.
+>>>
+>>> Reset the pending DL migration state before returning from those
+>>> per-task failure paths.
+>>>
+>>> Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
+>>> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>>> ---
+>>>    kernel/cgroup/cpuset.c | 8 ++++++--
+>>>    1 file changed, 6 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>> index e3a081a07c6d..ae41736399a1 100644
+>>> --- a/kernel/cgroup/cpuset.c
+>>> +++ b/kernel/cgroup/cpuset.c
+>>> @@ -3029,12 +3029,12 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>>>        cgroup_taskset_for_each(task, css, tset) {
+>>>            ret = task_can_attach(task);
+>>>            if (ret)
+>>> -            goto out_unlock;
+>>> +            goto out_reset_dl_data;
+>>>              if (setsched_check) {
+>>>                ret = security_task_setscheduler(task);
+>>>                if (ret)
+>>> -                goto out_unlock;
+>>> +                goto out_reset_dl_data;
+>>>            }
+>>>              if (dl_task(task)) {
+>>> @@ -3070,6 +3070,10 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>>>         * changes which zero cpus/mems_allowed.
+>>>         */
+>>>        cs->attach_in_progress++;
+>>> +    goto out_unlock;
+>>> +
+>>> +out_reset_dl_data:
+>>> +    reset_migrate_dl_data(cs);
+>>>    out_unlock:
+>>>        mutex_unlock(&cpuset_mutex);
+>>>        return ret;
+>> I would prefer the likely success path be a straight line instead of doing a
+>> goto. IOW, move out_reset_dl_data below return. Other than that, this patch
+>> looks good to me.
+>>
+> I've read the code and found several places that call reset_migrate_dl_data(cs).
+>
+> I think it would be better to call reset_migrate_dl_data(cs) only when we
+> encounter an error, for example:
+>
+> ```
+> static int cpuset_can_attach(struct cgroup_taskset *tset)
+> {
+> ...
+> out_unlock:
+> 	if (ret)
+> 		reset_migrate_dl_data(cs);
+> 	mutex_unlock(&cpuset_mutex);
+> 	return ret;
+> }
+> ```
+> After that, no other places would need to call reset_migrate_dl_data(cs), right?
+>
+Yes, that should work too.
 
-On 2026/5/7 18:54, Chen Wandun wrote:
-> Since prepare_alloc_pages() unconditionally adds __GFP_HARDWALL for the
-> fast path when cpusets are enabled, the __GFP_HARDWALL check in
-> cpuset_current_node_allowed() causes the PF_EXITING escape path to be
-> skipped on the first allocation attempt.  This makes it unreachable in
-> the common case, so dying tasks can get stuck in direct reclaim or even
-> trigger OOM while trying to exit, despite being allowed to allocate from
-> any node.
-> 
-> Move the PF_EXITING check before __GFP_HARDWALL so that dying tasks
-> can allocate memory from any node to exit quickly, even when cpusets
-> are enabled.
-> 
-> Also update the function comment to reflect the actual behavior of
-> prepare_alloc_pages() and the corrected check ordering.
-> 
-> Signed-off-by: Chen Wandun <chenwandun@lixiang.com>
-> ---
->  kernel/cgroup/cpuset.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index e3a081a07c6d..a48901a0416a 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -4176,11 +4176,11 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
->   * current's mems_allowed, yes.  If it's not a __GFP_HARDWALL request and this
->   * node is set in the nearest hardwalled cpuset ancestor to current's cpuset,
->   * yes.  If current has access to memory reserves as an oom victim, yes.
-> - * Otherwise, no.
-> + * If the current task is PF_EXITING, yes. Otherwise, no.
->   *
->   * GFP_USER allocations are marked with the __GFP_HARDWALL bit,
->   * and do not allow allocations outside the current tasks cpuset
-> - * unless the task has been OOM killed.
-> + * unless the task has been OOM killed or is exiting.
->   * GFP_KERNEL allocations are not so marked, so can escape to the
->   * nearest enclosing hardwalled ancestor cpuset.
->   *
-> @@ -4194,7 +4194,9 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
->   * The first call here from mm/page_alloc:get_page_from_freelist()
->   * has __GFP_HARDWALL set in gfp_mask, enforcing hardwall cpusets,
->   * so no allocation on a node outside the cpuset is allowed (unless
-> - * in interrupt, of course).
-> + * in interrupt, of course).  The PF_EXITING check must therefore
-> + * come before the __GFP_HARDWALL check, otherwise a dying task
-> + * would be blocked on the fast path.
->   *
->   * The second pass through get_page_from_freelist() doesn't even call
->   * here for GFP_ATOMIC calls.  For those calls, the __alloc_pages()
-> @@ -4204,6 +4206,7 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
->   *	in_interrupt - any node ok (current task context irrelevant)
->   *	GFP_ATOMIC   - any node ok
->   *	tsk_is_oom_victim   - any node ok
-> + *	PF_EXITING   - any node ok (let dying task exit quickly)
->   *	GFP_KERNEL   - any node in enclosing hardwalled cpuset ok
->   *	GFP_USER     - only nodes in current tasks mems allowed ok.
->   */
-> @@ -4223,11 +4226,10 @@ bool cpuset_current_node_allowed(int node, gfp_t gfp_mask)
->  	 */
->  	if (unlikely(tsk_is_oom_victim(current)))
->  		return true;
-> -	if (gfp_mask & __GFP_HARDWALL)	/* If hardwall request, stop here */
-> -		return false;
-> -
->  	if (current->flags & PF_EXITING) /* Let dying task have memory */
->  		return true;
-> +	if (gfp_mask & __GFP_HARDWALL)	/* If hardwall request, stop here */
-> +		return false;
->  
->  	/* Not hardwall and node outside mems_allowed: scan up cpusets */
->  	spin_lock_irqsave(&callback_lock, flags);
-
-Make sense.
-
-BTW, how did you find this issue?
-
-Reviewed-by: Chen Ridong <chenridong@huaweicloud.com>
-
--- 
-Best regards,
-Ridong
+Cheers,
+Longman
 
