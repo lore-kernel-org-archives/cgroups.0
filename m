@@ -1,155 +1,94 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD8321D590;
-	Fri,  8 May 2026 02:34:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 583A87261C;
+	Fri,  8 May 2026 03:34:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778207681; cv=none; b=K/jTb2s1YrnNNxoQSzoq+M2jRKm8XK6tkcntLWscPrWrvUb1egGBpc8R80yjBAiBYCxKZt9IkyOpc5qbdHZ8iFX0sPybsLjYQ4EtpKsWEDqlRRaLfdoMyZeEILsCCI1Himr04O9wfdSPBPknWPDp9U7gdKnUBruYHh85joDlqn8=
+	t=1778211290; cv=none; b=MOYAyQOHrvxLpj3vMECBqpPQd3/q3Cx5UAws00cBiWRhyVgNjnnr8MbuqAEM6yFBkarPJCmAFqOXq0vJJRcDdLFzBkCog2m01btTe4skTRrJRhVb6rFmBn1pdwovJuz1mNufXzoP89rAUukQ5zXXbY+lrv4bnIhaoqxNxc9I9Fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778207681; c=relaxed/simple;
-	bh=yqAPr+L7+pskUBuH/ID4imCmvtdA37YvmxMz/JHx+4M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Y/HdvHR9s/yw/8p9kFsp9tjlvmBEi43ePP3DwKJ7JvESOpb75/8krB0z3ocHhnLslghmQ3oNTxtxwygOOfDwcwwa0c4cfnf8WHLfe2dOvejNp37388kcXFC273SSIZUOZvavjcG9khTgLC43f1HQTQHpxrBOl8Cqv+RlL+i8R6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gBXjJ59rnzKHMsH;
-	Fri,  8 May 2026 10:13:40 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 1B4AB40574;
-	Fri,  8 May 2026 10:14:26 +0800 (CST)
-Received: from [10.67.111.176] (unknown [10.67.111.176])
-	by APP2 (Coremail) with SMTP id Syh0CgBHYP4AR_1pHZL1BQ--.1677S2;
-	Fri, 08 May 2026 10:14:25 +0800 (CST)
-Message-ID: <5d69e8bb-c925-4de2-8d50-0880b23864e0@huaweicloud.com>
-Date: Fri, 8 May 2026 10:14:24 +0800
+	s=arc-20240116; t=1778211290; c=relaxed/simple;
+	bh=kSX2u1I3f0Tn1NlMiYtehd71oqmpsdrqM5KGOMu2Yp8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ma97aaBwbE95vKawa0XaOAfsuhuFIw5xotk5ieONd5OpVoN5Nn44RK7AGfHG25chY9/3/t1p4Dsvbz3qXzOJqwZrzlQT8Zif+1q3icN6XFeQKij1+dDAJJHQQxb6VEcGA0QRwpRBdI1JXQFYiSRJug0sE1xpqUg9nzFXTMG72+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: da6372244a8e11f1aa26b74ffac11d73-20260508
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
+	SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
+	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
+	AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:8ccf84f5-c22c-4b56-a741-74252e47ac63,IP:10,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:5
+X-CID-INFO: VERSION:1.3.12,REQID:8ccf84f5-c22c-4b56-a741-74252e47ac63,IP:10,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:5
+X-CID-META: VersionHash:e7bac3a,CLOUDID:79f0ebbbad2a746af007f2672fafc150,BulkI
+	D:26050811344413JNI6JL,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|102|127|
+	850|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil
+	,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:
+	0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: da6372244a8e11f1aa26b74ffac11d73-20260508
+X-User: lihongfu@kylinos.cn
+Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
+	(envelope-from <lihongfu@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1267940299; Fri, 08 May 2026 11:34:43 +0800
+From: Hongfu Li <lihongfu@kylinos.cn>
+To: longman@redhat.com,
+	chenridong@huaweicloud.com,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shuah@kernel.org
+Cc: cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hongfu Li <lihongfu@kylinos.cn>
+Subject: [PATCH] selftests/cgroup: Fix incorrect variable check in online_cpus()
+Date: Fri,  8 May 2026 11:34:53 +0800
+Message-Id: <20260508033453.1425026-1-lihongfu@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] cgroup/cpuset: reset DL migration state on
- can_attach() failure
-To: Waiman Long <longman@redhat.com>, Guopeng Zhang
- <zhangguopeng@kylinos.cn>, Tejun Heo <tj@kernel.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Juri Lelli <juri.lelli@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Dietmar Eggemann <dietmar.eggemann@arm.com>,
- Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
- Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- K Prateek Nayak <kprateek.nayak@amd.com>,
- Gabriele Monaco <gmonaco@redhat.com>, Will Deacon <will@kernel.org>,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <20260507103310.35849-1-zhangguopeng@kylinos.cn>
- <20260507103310.35849-2-zhangguopeng@kylinos.cn>
- <6410d11c-1d8a-4e72-ac22-43058027b304@redhat.com>
-Content-Language: en-US
-From: Chen Ridong <chenridong@huaweicloud.com>
-In-Reply-To: <6410d11c-1d8a-4e72-ac22-43058027b304@redhat.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgBHYP4AR_1pHZL1BQ--.1677S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxGr48Xw18urWkGw1Duw15Jwb_yoW5Ar4kpF
-	1vgryUtryYvFykKa17Kw1UWry2qw18X3WUKrn5ta48Jr17AFyj9r1UWrn0gr1UJr4xGa45
-	JF1Uuw17uF1DtFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
-	s2-5UUUUU==
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
+"OFFLINE_CPUS" is a literal string that is always non-empty. It should
+be "$OFFLINE_CPUS" to check the variable's value instead.
 
+Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
+---
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 2026/5/7 22:31, Waiman Long wrote:
-> On 5/7/26 6:33 AM, Guopeng Zhang wrote:
->> cpuset_can_attach() accumulates temporary SCHED_DEADLINE migration
->> state in the destination cpuset while walking the taskset.
->>
->> If a later task_can_attach() or security_task_setscheduler() check
->> fails, cgroup_migrate_execute() treats cpuset as the failing subsystem
->> and does not call cpuset_cancel_attach() for it. The partially
->> accumulated state is then left behind and can be consumed by a later
->> attach, corrupting cpuset DL task accounting and pending DL bandwidth
->> accounting.
->>
->> Reset the pending DL migration state before returning from those
->> per-task failure paths.
->>
->> Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
->> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
->> ---
->>   kernel/cgroup/cpuset.c | 8 ++++++--
->>   1 file changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index e3a081a07c6d..ae41736399a1 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -3029,12 +3029,12 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
->>       cgroup_taskset_for_each(task, css, tset) {
->>           ret = task_can_attach(task);
->>           if (ret)
->> -            goto out_unlock;
->> +            goto out_reset_dl_data;
->>             if (setsched_check) {
->>               ret = security_task_setscheduler(task);
->>               if (ret)
->> -                goto out_unlock;
->> +                goto out_reset_dl_data;
->>           }
->>             if (dl_task(task)) {
->> @@ -3070,6 +3070,10 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
->>        * changes which zero cpus/mems_allowed.
->>        */
->>       cs->attach_in_progress++;
->> +    goto out_unlock;
->> +
->> +out_reset_dl_data:
->> +    reset_migrate_dl_data(cs);
->>   out_unlock:
->>       mutex_unlock(&cpuset_mutex);
->>       return ret;
-> 
-> I would prefer the likely success path be a straight line instead of doing a
-> goto. IOW, move out_reset_dl_data below return. Other than that, this patch
-> looks good to me.
-> 
-
-I've read the code and found several places that call reset_migrate_dl_data(cs).
-
-I think it would be better to call reset_migrate_dl_data(cs) only when we
-encounter an error, for example:
-
-```
-static int cpuset_can_attach(struct cgroup_taskset *tset)
-{
-...
-out_unlock:
-	if (ret)
-		reset_migrate_dl_data(cs);
-	mutex_unlock(&cpuset_mutex);
-	return ret;
-}
-```
-After that, no other places would need to call reset_migrate_dl_data(cs), right?
-
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index a56f4153c64d..df89ddfa073f 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -617,7 +617,7 @@ set_ctrl_state_noerr()
+ 
+ online_cpus()
+ {
+-	[[ -n "OFFLINE_CPUS" ]] && {
++	[[ -n "$OFFLINE_CPUS" ]] && {
+ 		for C in $OFFLINE_CPUS
+ 		do
+ 			write_cpu_online ${C}=1
 -- 
-Best regards,
-Ridong
+2.25.1
 
