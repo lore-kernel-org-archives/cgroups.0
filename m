@@ -1,19 +1,20 @@
 Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2CF034DCD7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A836366567;
 	Sat,  9 May 2026 10:21:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778322072; cv=none; b=UIxSOJUlOqDSJi4AfjR5M0AF2HCLD5Prc5Ji6aNQ2B4QXQxLQNfIr+K4KuA+QYBO3+jmHO3hJyrmSjD53uP+q9oIJFUTRaTLW/x8jYCSG1sLY5DnSx16rx826fvOzDzl+RFidgziX1RXdkpYSnUgahdWC+rpl6+2j0wstghI0YM=
+	t=1778322073; cv=none; b=Ndk4sl3jDAnRTsCjHzfm9CJwMu1deIVH3ks0F0dibeK+loSxBr13RQwvIN0bH5E5YLiOCIa1JDLquC41/rrxxIUsyB+FbrUMyJuQTzzj6HWQqEgjQHKFusZyB21ghMG8nk/Fth40CQ8ArpZHFJ/tsDcf9TwFvQZ+uqV+q8OzjNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778322072; c=relaxed/simple;
-	bh=6835E2PRzdrd31nNd2DJIDB7DODiEHtT4mRk25j2zeU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZjzDLYTRHc1HWTjqh4Bm0gRmX4wOlFhHHa8HmVuH8871DXf5Lp/KN7IkcZlUa6LdyxLEzExGnEOP/g9H+WVcnjlOFanST/nsBUosMyFXn5S3KKvDZLyLTxfD4UKJdD7XyBf8DNWZuWrnittxTesxbrYlsMDW79TGrmdeu2AZIE0=
+	s=arc-20240116; t=1778322073; c=relaxed/simple;
+	bh=9UY4lx+qpaeqHJrjvMvCGkvUILKDNgLrYqQFQ2f7Mdo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=rV6npp78+4KZh0wp8pBCRq5s9gxQvGf23Utp4S2HXtQG9GEuMhscR9Y8CeAE1dO8ZwoUR5BzhFOWEf34Y2XU1DFw0j8a0WYj5LOSsvNS34zxrQM667P7+B4/zC0RN+FnoSBnWZCLi2AoKvcgQ7XNVzNMWunQOBxRQfEnIw6hMWA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: c7f073644b9011f1aa26b74ffac11d73-20260509
+X-UUID: c9a6585e4b9011f1aa26b74ffac11d73-20260509
 X-CTIC-Tags:
 	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CHARSET
 	HR_CHARSET_NUM, HR_CTE_8B, HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD
@@ -22,30 +23,30 @@ X-CTIC-Tags:
 	HR_TO_CHARSET, HR_TO_CHARSET_NUM, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NAME
 	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
 	SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_C_CI
-	GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
+	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
+	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:04623cf2-4ce3-4e39-a232-a17e232e7935,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:5
-X-CID-INFO: VERSION:1.3.12,REQID:04623cf2-4ce3-4e39-a232-a17e232e7935,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:5
-X-CID-META: VersionHash:e7bac3a,CLOUDID:40b5c49ee527a977d8cfcd881fb46d61,BulkI
-	D:260509182103X6OSL6BC,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|102|127|
-	898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:99|1,File:nil,RT:nil,Bulk:nil,
-	QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-	,ARC:0
+X-CID-O-INFO: VERSION:1.3.12,REQID:2b4be64a-df84-41cb-92fb-a41ba35373ae,IP:10,
+	URL:0,TC:0,Content:-25,EDM:-25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,A
+	CTION:release,TS:-45
+X-CID-INFO: VERSION:1.3.12,REQID:2b4be64a-df84-41cb-92fb-a41ba35373ae,IP:10,UR
+	L:0,TC:0,Content:-25,EDM:-25,RT:0,SF:-5,FILE:0,BULK:0,RULE:NOTI_GNA5D1EA,A
+	CTION:release,TS:-45
+X-CID-META: VersionHash:e7bac3a,CLOUDID:129e7735530cef6d96dfa9b27d2389c5,BulkI
+	D:260509182106ZV0HNUYA,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|81|82|10
+	2|127|898,TC:nil,Content:0|15|50,EDM:2,IP:-2,URL:0,File:nil,RT:nil,Bulk:ni
+	l,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE
+	:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_ULS,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: c7f073644b9011f1aa26b74ffac11d73-20260509
+X-UUID: c9a6585e4b9011f1aa26b74ffac11d73-20260509
 X-User: zhangguopeng@kylinos.cn
 Received: from yan.. [(223.70.159.239)] by mailgw.kylinos.cn
 	(envelope-from <zhangguopeng@kylinos.cn>)
 	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1971415662; Sat, 09 May 2026 18:21:02 +0800
+	with ESMTP id 1786915945; Sat, 09 May 2026 18:21:05 +0800
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 To: Waiman Long <longman@redhat.com>,
 	Tejun Heo <tj@kernel.org>,
@@ -67,10 +68,12 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH v3 0/2] cgroup/cpuset: fix DL attach accounting
-Date: Sat,  9 May 2026 18:20:29 +0800
-Message-ID: <20260509102031.97608-1-zhangguopeng@kylinos.cn>
+Subject: [PATCH v3 1/2] cgroup/cpuset: reset DL migration state on can_attach() failure
+Date: Sat,  9 May 2026 18:20:30 +0800
+Message-ID: <20260509102031.97608-2-zhangguopeng@kylinos.cn>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260509102031.97608-1-zhangguopeng@kylinos.cn>
+References: <20260509102031.97608-1-zhangguopeng@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -79,54 +82,59 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+cpuset_can_attach() accumulates temporary SCHED_DEADLINE migration
+state in the destination cpuset while walking the taskset.
 
-This v3 series contains two cpuset fixes for SCHED_DEADLINE attach
+If a later task_can_attach() or security_task_setscheduler() check
+fails, cgroup_migrate_execute() treats cpuset as the failing subsystem
+and does not call cpuset_cancel_attach() for it. The partially
+accumulated state is then left behind and can be consumed by a later
+attach, corrupting cpuset DL task accounting and pending DL bandwidth
 accounting.
 
-Patch 1 fixes an internal cpuset_can_attach() failure path where
-temporary DL migration state can be left behind if a later per-task
-check fails before cpuset marks attach_in_progress.
+Reset the pending DL migration state from the common error exit when
+ret is non-zero. Successful can_attach() keeps the state for
+cpuset_attach() or cpuset_cancel_attach().
 
-Patch 2 keeps cpuset DL bandwidth reservation aligned with the condition
-used by set_cpus_allowed_dl() for source-side bandwidth removal. It keeps
-counting all migrating DL tasks for cpuset task accounting, but reserves
-destination DL bandwidth only for tasks that actually need a root-domain
-bandwidth move.
-
-Guopeng Zhang (2):
-  cgroup/cpuset: reset DL migration state on can_attach() failure
-  cgroup/cpuset: reserve DL bandwidth only for root-domain moves
-
- include/linux/sched/deadline.h  |  9 ++++++++
- kernel/cgroup/cpuset-internal.h |  1 +
- kernel/cgroup/cpuset.c          | 39 ++++++++++++++++++---------------
- kernel/sched/deadline.c         | 13 ++++++++---
- 4 files changed, 41 insertions(+), 21 deletions(-)
-
+Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
+Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
-Changes in v3:
-- Patch 1: use common ret != 0 cleanup in cpuset_can_attach(), as
-  suggested by Waiman Long and Chen Ridong.
-- Patch 2: drop task_cpu_possible_mask() / attach-target-mask handling
-  as suggested by Waiman Long.
-- Patch 2: keep the change limited to reserving DL bandwidth only for
-  tasks that need a root-domain bandwidth move.
-- Leave the broader can_attach()/attach() transaction model unchanged.
+ kernel/cgroup/cpuset.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Changes in v2:
-- Split the original change into two patches.
-- Add a separate fix for resetting pending DL migration state on
-  cpuset_can_attach() failure.
-- Clarify that nr_migrate_dl_tasks counts all migrating DL tasks for
-  cpuset task accounting, while sum_migrate_dl_bw only tracks bandwidth
-  needing destination root-domain reservation.
-
-v2:
-  https://lore.kernel.org/all/20260507103310.35849-1-zhangguopeng@kylinos.cn/
-
-v1:
-  https://lore.kernel.org/all/20260421083449.95750-1-zhangguopeng@kylinos.cn
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index e3a081a07c6d..b9c839538900 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3050,16 +3050,13 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 		int cpu = cpumask_any_and(cpu_active_mask, cs->effective_cpus);
+ 
+ 		if (unlikely(cpu >= nr_cpu_ids)) {
+-			reset_migrate_dl_data(cs);
+ 			ret = -EINVAL;
+ 			goto out_unlock;
+ 		}
+ 
+ 		ret = dl_bw_alloc(cpu, cs->sum_migrate_dl_bw);
+-		if (ret) {
+-			reset_migrate_dl_data(cs);
++		if (ret)
+ 			goto out_unlock;
+-		}
+ 
+ 		cs->dl_bw_cpu = cpu;
+ 	}
+@@ -3070,7 +3067,10 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 	 * changes which zero cpus/mems_allowed.
+ 	 */
+ 	cs->attach_in_progress++;
++
+ out_unlock:
++	if (ret)
++		reset_migrate_dl_data(cs);
+ 	mutex_unlock(&cpuset_mutex);
+ 	return ret;
+ }
 -- 
 2.43.0
+
