@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 488BB3C3C16
-	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 08:36:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69423C872B
+	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 08:36:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778488562; cv=none; b=E2NM/CPhQ/MKI9T9I2SwVkEo/JAdYGI853rVavLHbYLn5CYWR12ssct7ZgOHllF30fJEm/4PbidhS7br3GhnxOB2vD7CGw9EvYG2DtcKg3UQObVniM7RDYAHJyrMmjnDn9yxOr2t/Z5Q1XdQ1MpUUQvwOlv2r3ZKq3fzquk7vKo=
+	t=1778488567; cv=none; b=H7lmQkfSgpbcLkGPXtT1PpLchWjm9RmS6R6dXYJ7ymAq8TS5ALiJfkgtr8DkNGLnoT8Q7dib0eY+wPnYR0ew5fE57Y47PlNZ8ip4PgE0soL2lXbj7vx+BsndWhLU+lS+LK0TvDso1EnIEsL8cJy2ivn9M81IQlZLnhVbyvkeXag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778488562; c=relaxed/simple;
+	s=arc-20240116; t=1778488567; c=relaxed/simple;
 	bh=/EBK9Za3dzKeST6xzL+uhXsqga85E68iUDnkuLoGL9Q=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=UKQ75UxkRbFXY9V05InkDh5LvEQcT8Yy9xjeOj3v2iuHDn0nuwMCm7I6sKy7vqzkWXA1fscBEBtgw2oyO4PI02p/kU2tT2DGjOqTPU48WWtSAkqpMESN0t+RO+M3FxF7fBjsxfNiQfZ+h4lEoipVLeUQQESUu+Yar6oIFJzazo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G8xk+Rc3; arc=none smtp.client-ip=10.30.226.201
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=iFx8BvmxI7ZAvmOFRCvfR8BDrXMyKvAdj+20+P2VQ4PcUP7/HQwXIY+dLrrEdu9tq4UJbiopUun+/h33dDOMlHd4c/6FmLDuC+VegDQOINpJKk/A7Z3yHy9w894F33oxAHrezXraPIx0/xTJ7PZ8WAZ5Qv52lfejqOUsU5fLpsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EHSosQNW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G8xk+Rc3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C1A7C2BCF5;
-	Mon, 11 May 2026 08:36:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EHSosQNW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1484DC2BCB0;
+	Mon, 11 May 2026 08:36:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778488561;
+	s=k20201202; t=1778488565;
 	bh=/EBK9Za3dzKeST6xzL+uhXsqga85E68iUDnkuLoGL9Q=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=G8xk+Rc3eIqRQt0vI+6veshK7W/MVAEz7JeIhLc4M4dcGm7SoWeBNHQv2jZSqlEXu
-	 QnR+almD3L3H33Edqx4yqbXSqQwBOZN8++75J/9PIdvNRplbZiTI2hNxWFc4nlVXLI
-	 1FKMIgO46h771tsFMwWkwcApyP1CBQpW5q7cxOah+XzgW6iCrGdQS1AH5ORNTf3BVz
-	 ZXp2E8qvKzK1BS2slUF9PwttI453s4tMEVB9bC65H728nPvgwaeRL2ERzNL/UQF0gi
-	 TG0uE1GeiAyJaTwhp766f07YQNGbGJFwoX4nl9COYQWG/9WNBXD+3jD+D0I/lkows0
-	 KOYse6KMExc+g==
-Date: Sun, 10 May 2026 22:36:00 -1000
-Message-ID: <1217c9bba758367164b27f508b27a84c@kernel.org>
+	b=EHSosQNWCAyeUiTyCCE3Q9c7AIySd6FQcEdzoIb9PTz3MQoRRuY7xmShz8a/escLC
+	 9j6tWffwcqd/tPt2tHM3D/OUiu2PFl2z0SPHhW24xPgg+E+ao9+S7iDlRJGq7n9w05
+	 x7E71p9/OzBKWokFFoQbLXPAwYbZmrzYN7Otvs3uETXb6tgGujGaCVGgGq+dqJBxcz
+	 0cPr2RRbJUXXoApw0woGLzqTg6ytZxahyH7fFTu8vIyTDw312Mt2huarP52xMAuxIs
+	 /RcNg6a1529dAEAO8T97n8oozgam4uukwcWmEQeE6/p5ZoSdDdCZoCpaafZa+F3s0I
+	 m+7QYAEuV++Aw==
+Date: Sun, 10 May 2026 22:36:04 -1000
+Message-ID: <2d0dbeae9e3bfa4a5006964c38d2edda@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cuitao@kylinos.cn>
 Cc: hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
 	cgroups@vger.kernel.org
-Subject: Re: [PATCH] selftests/cgroup: fix child process escaping to parent
- cleanup in test_cpucg_nice
-In-Reply-To: <20260511061508.255649-1-cuitao@kylinos.cn>
-References: <20260511061508.255649-1-cuitao@kylinos.cn>
+Subject: Re: [PATCH] selftests/cgroup: fix misleading debug message
+ in test_cgfreezer_time_child
+In-Reply-To: <20260511062520.256160-1-cuitao@kylinos.cn>
+References: <20260511062520.256160-1-cuitao@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
