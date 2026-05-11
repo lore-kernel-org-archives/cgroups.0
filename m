@@ -1,108 +1,80 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F9FA79CD;
-	Mon, 11 May 2026 02:15:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 518F51A682F
+	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 02:47:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778465751; cv=none; b=VKH9/I0fC9a0X6hsDfYhKLsbEuM+rCqqcUA3EUQc/xAM22XUA8xn7o2h3ECLl5IdL8jK9q1Es7wu29BMOEwqA4kL+nqXGWw255MpzJTqagcBcX+8/jykHLgHdgNfWDQDm6Qb2e9pjRdZRKRvMRW+DbliUBYc0tJVobFz/X4rLQ4=
+	t=1778467642; cv=none; b=NzULJqWTmmpULeY2xl3O6q1e1/z0HSNcb7uNRMN41yfygTIODHcwxzKdD1Z4S7DP1EBNtzwUocs8m3JKwasK2Y4qtJg+X4p0mh3HfDJlTThIaxy+rbMXZqp0a9kaD8d56IO7jzXF3kVpgTEt+XbPe5STpM/ONE+JJicZGsT4yCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778465751; c=relaxed/simple;
-	bh=wuGJdRaPh/Ig3gQ3vvFrtAFhW0Yupnj5bTo1RsFGf18=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=W5hI6QlFrhbpVSx9lrp2t8uzrnEGHRcCOIhiQ2KcA3nso+FHOKKagnU9iOLwc6sUVzInjraAW0hocGtsJB1eYEfSL0LNQU75m8L/iakh1SH6ZQqb1Pf6wotabTHntlSzm4BPNrrv5LApE+ZvmFIBoiyc+rAVyOwWCaArunJuj2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 4f8027d04cdf11f1aa26b74ffac11d73-20260511
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
-	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
-	SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:42d4a2d6-9824-400e-aa51-21302500bbab,IP:20,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:15
-X-CID-INFO: VERSION:1.3.12,REQID:42d4a2d6-9824-400e-aa51-21302500bbab,IP:20,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:15
-X-CID-META: VersionHash:e7bac3a,CLOUDID:c0f1bc505a59e0244e4d02c0d05f47b1,BulkI
-	D:260511101544MUQHD3MK,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|102|127|
-	850|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil
-	,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:
-	0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 4f8027d04cdf11f1aa26b74ffac11d73-20260511
-X-User: lihongfu@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <lihongfu@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 485543758; Mon, 11 May 2026 10:15:42 +0800
-From: Hongfu Li <lihongfu@kylinos.cn>
-To: hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	shuah@kernel.org
-Cc: cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hongfu Li <lihongfu@kylinos.cn>
-Subject: [PATCH] selftests/cgroup: check malloc return value in alloc_anon functions
-Date: Mon, 11 May 2026 10:16:15 +0800
-Message-Id: <20260511021615.1768623-1-lihongfu@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1778467642; c=relaxed/simple;
+	bh=k6NApm+olFkXSQ+kxEGbkEYlLu6TBi3SimT4+3HDyXw=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=mtskjvl0gSWfb7F2QKQQi3YJ4iGXQT+Peu+ogBBDRx0tmuiLJbhmVUzO1xC2mnnqGXw+zQHCauX0/9VOoanjx9+iU4gFtPWQuIEMAJ0gP7iNRwes3TmmmS+8cem4oAyBZ+Mp7yEIxcwXJZxE6dF67mB26d7AajqOHHNvX8bZOf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mcK52oTj; arc=none smtp.client-ip=91.218.175.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mcK52oTj"
+Content-Type: text/plain;
+	charset=us-ascii
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1778467639;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j3SwfQTRstxGAWJOQrDfplfV/r0dJnk93kn46PHmRmA=;
+	b=mcK52oTjOdqXICVU/+QRzwUY2kZ+/hvTdAxifTWyazCwjrZEWyA8b5xvPXfYUQ/1ourdEF
+	UPJ3X5zZbgmrUwqqfEyU3Z6d5YEQe8yDj7X6zAjwoh933/j0IyezeAHfMD0jDxNj6B9jAz
+	OM+nDZ+/GRW2zuUl61Bb0tU9pBgf1hw=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.500.181\))
+Subject: Re: [PATCH] selftests/cgroup: check malloc return value in alloc_anon
+ functions
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20260511021615.1768623-1-lihongfu@kylinos.cn>
+Date: Mon, 11 May 2026 10:46:41 +0800
+Cc: hannes@cmpxchg.org,
+ mhocko@kernel.org,
+ roman.gushchin@linux.dev,
+ shakeel.butt@linux.dev,
+ tj@kernel.org,
+ mkoutny@suse.com,
+ shuah@kernel.org,
+ cgroups@vger.kernel.org,
+ linux-mm@kvack.org,
+ linux-kselftest@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Message-Id: <EA4FB6D8-52F0-4135-8EBE-0B26BBA9D303@linux.dev>
+References: <20260511021615.1768623-1-lihongfu@kylinos.cn>
+To: Hongfu Li <lihongfu@kylinos.cn>
+X-Migadu-Flow: FLOW_OUT
 
-The alloc_anon() function calls malloc() without checking for a NULL
-return. If memory allocation fails, a NULL pointer dereference will
-occur when accessing the buffer.
 
-Add proper error handling to return -1 when malloc() fails in all
-four alloc_anon variants:
-- alloc_anon()
-- alloc_anon_50M_check()
-- alloc_anon_noexit()
-- alloc_anon_50M_check_swap()
 
-Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
----
- tools/testing/selftests/cgroup/test_memcontrol.c | 5 +++++
- 1 file changed, 5 insertions(+)
+> On May 11, 2026, at 10:16, Hongfu Li <lihongfu@kylinos.cn> wrote:
+> 
+> The alloc_anon() function calls malloc() without checking for a NULL
+> return. If memory allocation fails, a NULL pointer dereference will
+> occur when accessing the buffer.
+> 
+> Add proper error handling to return -1 when malloc() fails in all
+> four alloc_anon variants:
+> - alloc_anon()
+> - alloc_anon_50M_check()
+> - alloc_anon_noexit()
+> - alloc_anon_50M_check_swap()
+> 
+> Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index b43da9bc20c4..8ef9c99a82eb 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -61,6 +61,11 @@ int alloc_anon(const char *cgroup, void *arg)
- 	char *buf, *ptr;
- 
- 	buf = malloc(size);
-+	if (buf == NULL) {
-+		fprintf(stderr, "malloc() failed\n");
-+		return -1;
-+	}
-+
- 	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
- 		*ptr = 0;
- 
--- 
-2.25.1
+Reviewed-by: Muchun Song <muchun.song@linux.dev>
+
+Thanks.
 
