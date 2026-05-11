@@ -1,96 +1,176 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 603AF37881F
-	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 12:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34B2A3783B1;
+	Mon, 11 May 2026 12:07:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778501102; cv=none; b=sUSW6xtiyIwECS6o1i54XItjx0ywprjKmVt/0EfAo8f5ZC4IE1Pq2Ylv1Rg8Fzh+bkDmWvCQlkZGnoKBSaa2o6ENitEgu7YY6Vg0ZnSFoMsTQsrHkJoXikGvvCTknpqa9nHW3FT+E8u+0c2q/jzO23H/dAM7+HKQX+kKWqpAsT8=
+	t=1778501239; cv=none; b=jaN8+pD+Rxtd4zFPFODwtQ3EfjgKy8VXbcL6DCM58qmD2cZJOJSSC/1XT4Y/TqA5qbom9MOhaaDZu5eyjuzhHzpLBA+JDGBIYYiYNpN25DWPcWHAI2Zw4/naQr2F/jSzpnMUXbg+SUccbmWEJe4pQkWFzT1nlUfSCmoCLxQaZvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778501102; c=relaxed/simple;
-	bh=+i9nY4yS0mmOkbjwKmwBLgjJ9pvH9NuVOTXbzoovY1k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c98L9A/aGzCujEsfbeP7ki9u+hdBFY6VQR/B+QVYBNHItDe8ELf/1ZfmhTEKqcDPa9vEV5eg91u/KooJ58gVKGL0Qe1SF5pHVtLIjoMUP/q24eCj+iJOK72pSR+DpRUVdLd7PPkwXfXNtEoAayNAMud4bvvNn2n4hQ7ANuxP8Gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=idsgeYUT; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778501239; c=relaxed/simple;
+	bh=35Kv0mlRvH3hwlj9HeKuME4m7V56VBlCI/r94DX+fOs=;
+	h=Message-ID:Date:From:To:Cc:Subject; b=XnO3BGWRbXHfm9N5Vh4BYiph+KAT1rs6Si5DzuxL2RLNEL363pss3d1mOv80fLNLl01ifH3IsmUFLmc42R4jSHjWKii3J02WbqZc4e2mVevPLQX4yXfHLpZPqhbMuecejthWtvgQ5KDMhpad0P1Ff+vQWDJPc/LOH0S7I2ns5tk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jqX6ZhlX; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="idsgeYUT"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-48d102471a4so41829815e9.2
-        for <cgroups@vger.kernel.org>; Mon, 11 May 2026 05:05:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778501100; x=1779105900; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cqTnF9n3Qex9jOfxNTk7/2y9GOIfeHPZuAdK9XxmLL4=;
-        b=idsgeYUTnnQaeJsP7mq0J3y4XnHB8z8WZRQpeZGpl8ikv/KA9Q4NM0684iuFMn8uAa
-         yjdkSlf2sXCuFnMQUCKU/tdPBm42S/pzQGWVgfjntq3P1BFvvFT0Tt4EDJGioktxsIwW
-         UYhOk+0xwcSqDnUr/M2Yi1pu+SYp9EnxjoNDkOEpgQG/Ye/s4r4JBm8YvnvduiLr3o53
-         vE+ShIVz5GBv19VbFR448lV4dDnxix1XfO2596CFkyBnSyBd+q1vrQ1vkyUjAg+gsVYs
-         5YaVLt0WTyH2mqJ0S/EyIkQT5oHWK7pcraODrp5Xvcpvw5kwZtxGSRaENJ5cPR/VU7c9
-         JLpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778501100; x=1779105900;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cqTnF9n3Qex9jOfxNTk7/2y9GOIfeHPZuAdK9XxmLL4=;
-        b=WUaHlvJ7m6HhYzebyGL+2SONc5RPZxKxgqieP9CnY69Hrx8ZDK0jlc2IZRqwyplpCe
-         rQcO1GUNndbHgWBVRmj8ulca6PiQXCibMP1u8p38A9DT1VPO3t74aEnjwvBvp6d4gShz
-         Lnp3xHYWBhlaaln3VlPZ12KLDIB6n4GizLnVyQV0rmp4UPtDXjzrWe2Smsf+LGeGxH1K
-         UqxA1o6s64KtpvLfhflYsVNgOBd21wi3snqXEvZD9R2RIAIPoKmL1DRmRgQzBZ0z5PQI
-         Y2oaguQs9U4/UX3Ua/TCry9Ih1PX+7cWFxS5oiSGm8ratnNw0fLmsvVCPNgK+A435pmd
-         7tug==
-X-Forwarded-Encrypted: i=1; AFNElJ8SdMo9rbGcBLT0BF+NDHOfnjYjZEgkrfc3bTiKb9jH9gRs3RDoZBHdvDR2P8Ylhpr5c1ECy22J@vger.kernel.org
-X-Gm-Message-State: AOJu0YyCQl16znHb66iQXdTWTBzfglomaiVVwCJZDbc8oUzSogRhk/0T
-	CnYPleuoS4XUVTO+KmYgl+KPRQ1zFxq3PlYHpAl9XuWCuCNFWFmPs80D
-X-Gm-Gg: Acq92OGFzlGcsPymAoQt1dPiOBieRG6kyWg8FjNeMF2bVXDCoscK2GRbrhdG/n82iOD
-	b8MafO5Siauc9a3dCc/lKmLQESO6mbjt5F37pDhzSEpPxh1FrlivxqGLLLazdC/UY9x3h1sr4nb
-	MwpuSo+Hy6Q8Fels7UnkFEaZujUoVx8s43VETH0GSnWTybGMx9SvdkXuM8qCtLsKlPHBLqzLrqd
-	GZA03dK8m+jlOKGKkZy+xsW4dLCLUaWf97YvU1EtxdFPktb36Ej++GNl2aLypPFVwZxmurQfHX4
-	Lw8XpVl1oY35hYFGhhhVv/fwYZi8+c2eoDfu0RyFPiFqadAWw5Yh3Q9SyDRJp86HEBgAicA2GTb
-	QhQRLd+motuGhdd0XXc8A41hYF7T3zI7ezyNKWJALtyiSgHuSOzejxVH3bCNKatmmFV1DWnyGPh
-	v7Y0B7WLq76v61yHViX5B5CEzWFJqr02ViEUfLsTrmHhbrVJUFB4x4rzPN2J8gQ//pG/dfsRGbw
-	w==
-X-Received: by 2002:a05:600c:1908:b0:489:1cd2:610a with SMTP id 5b1f17b1804b1-48e6767dfa2mr228143905e9.9.1778501099495;
-        Mon, 11 May 2026 05:04:59 -0700 (PDT)
-Received: from fedora ([185.193.234.8])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45491ca2fd6sm26106273f8f.30.2026.05.11.05.04.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 May 2026 05:04:59 -0700 (PDT)
-Date: Mon, 11 May 2026 13:04:56 +0100
-From: Vishal Moola <vishal.moola@gmail.com>
-To: Hongfu Li <lihongfu@kylinos.cn>
-Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
-	jthoughton@google.com, seanjc@google.com, zhangguopeng@kylinos.cn,
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] selftests/cgroup: Add NULL check after malloc in
- cgroup_util.c
-Message-ID: <agHF6GQg9MpwSfPa@fedora>
-References: <20260511060853.1873161-1-lihongfu@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jqX6ZhlX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Subject:Cc:To:From:Date:Message-ID:
+	Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=gwoa4YLIjBkQq4z+z/ifxnVXEuuhlOQhZT1BuSyrH0I=; b=jqX6ZhlXz54tOsKUTFR2LuxSz5
+	kzS2YaWznndls1PlM6OiJwEmkuMtbpkdkAtnTMj1qrDZR6gR30MWjt+1MmD2/UfOjqjV+lYi7jvoW
+	qEuThLpz76wgo4HSQtIQElCxlvG4lfQyLLGlIs+ruZehLwn/sT7LzClHJscdutwHv03+e+hVZ1882
+	dW2WX8fVbjJID5THR4mHk1qkXaUpHYzjKFaUUrDpi9iIJOdAQpB7eKJypATRmRZhA3ZKe7Ae1GDCA
+	WHyfV1QT2gDBGDmAMoZuqQOEoZXobv1hUGkO3FyGY9kqgVbUAtj1O4fH4pUo5u0t//TTrVS6iE9n5
+	GBkv/Byw==;
+Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wMPPZ-000000088lz-2R6S;
+	Mon, 11 May 2026 12:07:01 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
+	id 0698730063F; Mon, 11 May 2026 14:07:00 +0200 (CEST)
+Message-ID: <20260511113104.563854162@infradead.org>
+User-Agent: quilt/0.68
+Date: Mon, 11 May 2026 13:31:04 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: mingo@kernel.org
+Cc: longman@redhat.com,
+ chenridong@huaweicloud.com,
+ peterz@infradead.org,
+ juri.lelli@redhat.com,
+ vincent.guittot@linaro.org,
+ dietmar.eggemann@arm.com,
+ rostedt@goodmis.org,
+ bsegall@google.com,
+ mgorman@suse.de,
+ vschneid@redhat.com,
+ tj@kernel.org,
+ hannes@cmpxchg.org,
+ mkoutny@suse.com,
+ cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ jstultz@google.com,
+ kprateek.nayak@amd.com,
+ qyousef@layalina.io
+Subject: [PATCH v2 00/10] sched: Flatten the pick
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260511060853.1873161-1-lihongfu@kylinos.cn>
 
-On Mon, May 11, 2026 at 02:08:53PM +0800, Hongfu Li wrote:
-> Add NULL checks after malloc() in three helper functions to prevent
-> NULL pointer dereference on memory allocation failure.
-> - cg_name()
-> - cg_name_indexed()
-> - cg_control()
-> 
-> These functions allocate memory with malloc() but previously called
-> snprintf() unconditionally, which would trigger undefined behavior
-> if allocation fails.
-> 
-> Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
-> ---
+Hi!
 
-Reviewed-by: Vishal Moola <vishal.moola@gmail.com>
+So cgroup scheduling has always been a pain in the arse. The problems start
+with weight distribution and end with hierachical picks and it all sucks.
+
+The problems with weight distribution are related to that infernal global
+fraction:
+
+             tg->w * grq_i->w
+   ge_i->w = ----------------
+             \Sum_j grq_j->w
+
+which we've approximated reasonably well by now. However, the immediate
+consequence of this fraction is that the total group weight (tg->w) gets
+fragmented across all your CPUs. And at 64 CPUs that means your per-cpu cgroup
+weight ends up being a nice 19 task worth. And more CPUs more tiny. Combine
+with the fact that 256 CPU systems are relatively common these days, this
+becomes painful.
+
+The common 'solution' is to inflate the group weight by 'nr_cpus'; the
+immediate problem with that is that when all load of a group gets concentrated
+on a single CPU, the per-cpu cgroup weight becomes insanely large, easily
+exceeding nice -20.
+
+Additionally there are numerical limits on the max weight you can have before
+the math starts suffering overflows. As such there is a definite limit on the
+total group weight. Which has annoyed people ;-)
+
+The first few patches add a knob /debug/sched/cgroup_mode and a few different
+options on how to deal with this. My favourite is 'concur', but obviously that
+is also the most expensive one :-/ It adds a tg->tasks counter which makes the
+update_tg_load_avg() thing more expensive.
+
+I have some ideas but I figured I ought to share these things before sinking
+more time into it.
+
+
+On to the hierarchical pick; this has been causing trouble for a very long
+time. So once again an attempt at flatting it. The basic idea is to keep the
+full hierarchical load tracking as-is, but keep all the runnable entities in a
+single level. The immediate concequence of all this is ofcourse that we need to
+constantly re-compute the effective weight of each entity as things progress.
+
+Reweight is done on:
+ - enqueue
+ - pick -- or rather set_next_entity(.first=true)
+ - tick
+
+So while the {en,de}queue operations are still O(depth) due to the full
+accounting mess, the pick is now a single level. Removing the intermediate
+levels that obscure runnability etc.
+
+
+For testing, I've done a little experiment, I dug out what is colloqually known
+as a potato. A trusty old Sandybridge 12600k with a RX 580, and ran a game on
+it. From GOG, I had available 'Shadows: Awakens', a fun title that normally
+runs really well on this machine (provided you stick to 1080p).
+
+To make it interesting, I added 8 (one for each logical CPU) copies of: 'nice
+spin.sh'; this results in the game becoming almost unplayable, as in proper
+terrible.
+
+I used MangoHUD to record a few minutes of playtime for statistics, and then
+quit the came and re-started it with a shorter slice set (base/10). This
+results in the game being entirely playable -- not great, but definiltey
+playable.
+
+  Lutris / GE-Proton10-34 / Steam Runtime 3 (sniper)
+  Intel Core i7-2600K
+  AMD Radeon RX 580
+
+  Shadows Awakening (GOG)
+
+	  default slice(*)
+
+  FPS min  3.8    20.6
+      avg 48.0    57.2
+      mag 87.4    80.3
+
+  FT  min   9.4    8.4
+      avg  34.5   19.5
+      max 107.4   37.2
+
+  FPS (Frames Per Second)
+  FT  (FrameTime)
+
+  [*] Command prefix: 'chrt -o --sched-runtime 280000 0'
+      effectively setting 'base_slice_ns/10'
+
+I have not compared to a kernel without flat on, just wanted to run non trivial
+workloads and play with slice to make sure everything 'works'.
+
+
+Can also be had:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/peterz/queue.git sched/flat
+
+ include/linux/cpuset.h |    6 
+ include/linux/sched.h  |    1 
+ kernel/cgroup/cpuset.c |   15 
+ kernel/sched/core.c    |   47 --
+ kernel/sched/debug.c   |  171 +++++---
+ kernel/sched/fair.c    | 1038 ++++++++++++++++++++++---------------------------
+ kernel/sched/pelt.c    |    6 
+ kernel/sched/sched.h   |   44 --
+ 8 files changed, 672 insertions(+), 656 deletions(-)
+
+---
+Change since v1 ( https://patch.msgid.link/20260317095113.387450089@infradead.org ):
+ - various Sashiko thingies
+ - rebase atop curren -tip
+
+
