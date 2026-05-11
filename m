@@ -1,214 +1,137 @@
-Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021105.outbound.protection.outlook.com [52.101.95.105])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F367A3630A9;
-	Mon, 11 May 2026 11:08:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.105
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778497735; cv=fail; b=ovtQemJQXyiNeftofEKOXj3ReJlYd/0nvHBdUD0i/OB80+IgQwIlxPaCgfZyc1mjY/tRLAk2mgW3/jr/itpwIGkvWDJZmpxeVG970G/FtGxfMeRwhxkE9Ai8ySd9Zw9fgPinxKm7afo74KeyTHBgxXWlYnlPV6ZuAazHlydqq6M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778497735; c=relaxed/simple;
-	bh=mXBacL2oEggFrNHuEUSCEndhkqPPWvGDzHk0v0lmO6w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=rcvloaLwTQD2/BgXHEuofPcD8o6rNp8xYmpYSNWqefd6uXuQqFCkQW/mtNVisyCdQewvW9EKPBA+klTXK4DpQBoIPH20ifTvyTxDVGh+YzaDc6XVn/V/0Uu2CqXPaxAwtmIsZp1qQXZoudSSWj2tmaHV8/GjBS357kcfQn0TtY8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.95.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=wGmSGrM6PgITfIcUAkBmJYvZBNjS+HR42Nmh1lwVh1sQFhUA8rplBcKpx/cVsNA8jB8UYvicHxTtidjirR+k1lnAMJHEBtP9VkhTiBxM5rVNXFpvSLMnqu5uME+RP2+i2jXreuPw4CkV6qZmJ41+SBZNl+gEYsHIeB50QgWSZ1rceSpIhxQBO3xkbLcwfmp0VmgUHujwSinfoQp7XNQCLAeiDsuEoRCKz/xN5cTdDjTpGOnofhmrKNSyoRx56BToXuOcyqz+zuqSFfyIkE+TdCx4xDfijioJcQvi5hf9VP4u7bxTnM2Sve+RgwyoQiTv0l4ToVfz5XIAzbvw2LJGsA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mXBacL2oEggFrNHuEUSCEndhkqPPWvGDzHk0v0lmO6w=;
- b=iw6Ys615R7YE9El9u5Gu/2AAsOdCEOyD2JXiOiUCC0Oep4tgzQhq71kmKU2hs6Z3HaIPpg50YRLFTS4QTw+Wx8d+4XuXeoadirNEl4A166RYi6rGRZd/0MlzVtgkD2wyEohpQiHak19nC7KS9IhdGPWvPMKEMRwZQ+Qdc0aL1UClS6yzjSAYKFasRav9QN7K7FEiXP0Dzec2KM+exnTLFZtT7Mmm4Iwx3UOgqdPe/kWO0hbp+m+eHQbqNGHw+le3rAL0hcss3KaPhytOhOqZrHWKNmC52KSWVz4kcmDHk6Ne9f//pHkDnclrYUlNO5WfZ5yGIDvKXJVEKMnizS4maQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
- dkim=pass header.d=atomlin.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=atomlin.com;
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
- by LO7P123MB7647.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:411::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Mon, 11 May
- 2026 11:08:50 +0000
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9846.025; Mon, 11 May 2026
- 11:08:49 +0000
-Date: Mon, 11 May 2026 07:08:45 -0400
-From: Aaron Tomlin <atomlin@atomlin.com>
-To: Waiman Long <longman@redhat.com>
-Cc: tsbogend@alpha.franken.de, paul@paul-moore.com, jmorris@namei.org, 
-	serge@hallyn.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, 
-	vincent.guittot@linaro.org, stephen.smalley.work@gmail.com, casey@schaufler-ca.com, 
-	tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, chenridong@huaweicloud.com, 
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, 
-	vschneid@redhat.com, kprateek.nayak@amd.com, omosnace@redhat.com, kees@kernel.org, 
-	neelx@suse.com, sean@ashe.io, chjohnst@gmail.com, steve@abita.co, 
-	mproche@gmail.com, nick.lange@gmail.com, cgroups@vger.kernel.org, 
-	linux-mips@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] cgroup/cpuset: Fix deadline bandwidth leak in
- cpuset_can_attach()
-Message-ID: <aihz6zlfmcaxwb3ef4luisfpwqibwsajpphy5vzuksy3ftfkms@whhv2ax5plpb>
-References: <20260509164847.939294-1-atomlin@atomlin.com>
- <20260509164847.939294-2-atomlin@atomlin.com>
- <8aaa7dd9-2426-475c-af64-85ef5f2aa855@redhat.com>
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="34mfdjxs7nhcxtld"
-Content-Disposition: inline
-In-Reply-To: <8aaa7dd9-2426-475c-af64-85ef5f2aa855@redhat.com>
-X-ClientProxiedBy: BL1P223CA0033.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:208:5b6::8) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:400:70::10)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB55A79CD
+	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 11:39:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778499594; cv=none; b=ULqD4wy8qzzrf2Mc05m/ouG+DCLaWtSC09U5jb61v0K6uxEEEQmHKbgWqgKQhG8y20lvDleCZAc+nXXO9+msizwiP/135q5jvPRmNBUgINuRXR4rsB8lQM8hiS6TvgGt6rma7SJ2wN64C2Jm9P1Aag9ziPC/E2KgkiG72x6UTUA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778499594; c=relaxed/simple;
+	bh=JXwoxY9aO+DdJZo6FW5QgM56rkq1xPTTIDZwqNN6ABM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B78Y7BxOdZMI8dj4EDzS+YzcSE/33QP6RhCaBb2y7s1ShFPuYqYZolR1qsGxFjkzNrQDcYY+1d61a7HemQKEp4DnCoQ0ax90rptcZqgIc9t2JwXi6orMkC/EKcVwSD1AcCxNFyUk9SSgB+JRF3LTFI1rQaEizBpifHEwFbUNUoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=awtrweLH; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="awtrweLH"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-48896199cbaso38506005e9.1
+        for <cgroups@vger.kernel.org>; Mon, 11 May 2026 04:39:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1778499591; x=1779104391; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=JXwoxY9aO+DdJZo6FW5QgM56rkq1xPTTIDZwqNN6ABM=;
+        b=awtrweLHbVfJ+6Bw9y4sECp2qtc+IrEupfd3CpIoOpE0Z3Z0sUOd+m/G+/IKQL713l
+         rozCh97r0ERbJZI5AMmUiU7wg9ugEJyDfHOc7QeOzEGlhvlp3li7annLpI5vDiRZRWXi
+         zRwUgc2o4pO6DRu/H3+Vl847g7KCc7CHRafUXphKNcDne6tQGRc0Re5fAv4bBFcSt0Jq
+         LFuDRKryDDeydy3/fQOhOXv0r5WI3wuPbN+lHaFGpxBJqZUzf9jZzHa9B5wjEFKcwc1M
+         ZW/+h7abq5nxSyYLoHJ3Ths2IUdjnA3ZzlZeziRjGMQygDdjQUcLRzBIor4DKvDFH5U5
+         TmAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778499591; x=1779104391;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=JXwoxY9aO+DdJZo6FW5QgM56rkq1xPTTIDZwqNN6ABM=;
+        b=p7yYY4dQcKPXtDUjDDnlcwGmgv7hg4ujIVXNe0tMCZ65Zm/San7ReiTzLiEwKESqAr
+         8TKUwcxCpUCeKBG/WN14CCD6j5XEqyteYC6t1fRVjc5I0NrxvWa+6o3aFYGk6tqqnZhu
+         u5Bg3+XlffdTA7b7Sj7adRwHrS5q/dGv4V9a4B7FlhGJQYtAm7rhQ5R07RXJJ1W0G+9V
+         YTQpher4YS07F8OqZP+zYod7C4TKBBLZiHY2wKEvSJP+AIm+NuOOSmaS5QISPpAdCK7E
+         0TN1O9GCY297XHADRylZw8CFcTMilOG+70thuc2dHIvkf0uP8SwRVAdAmQpTQ7l5QEqV
+         x3aQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+LcVMZzkR40/5MJNqXTLcqXdFB0rZuOxcEfmsG3vnQG2It9r8Aho8feafTIVRV4CUnApRkntEF@vger.kernel.org
+X-Gm-Message-State: AOJu0YwqHYwrNljV/9Hh4zOSq90LH7pwFutHwW+e9izcNJE9nfvdR8ZW
+	WyLPOOVVUqhC/30i858EzP/c9RcXY6trooKSDyvGBwJmX0Hs1/Vrb95Qv5wDLxuiLOg=
+X-Gm-Gg: Acq92OHapnKB0FM5afnRHx8qJ/EsT4NrtRifJy7e6UHUlv/CUUPf6EfCK0aBeLZzc04
+	R6CV0F0MhLX1iedTLs58oS/4KKzfazdOMRIIBYOnTzgjn1/VIkZ0aZH+dLbwc5AeZumTaMTKELZ
+	JBsQJUYScKaPrBZbyqonkH9YRLzXKh66s0dWvJopVK9ljVNarUQeQNMzcA2A1c8jERNuRUvR7pn
+	6qes8hmaX/NWA+14jEA6KM781SckB2uR2eTd01KcNVjLMEe9X8rMrwQHdwwGTiTglr9Oc92yee2
+	8TmGUJwS9qW4HzQc6c0+XmMNQzK2YV98FgDr8cHFqcYCsakAeYCm/jz87jK/QEyA0NRtrT8Vu0J
+	ZNBVxXtAndVP6C7/zk17meWiEHJ9hoORbrIlgW12pln6vTwIGghGqR7/sQo5q3AgJFKC4m7q5rz
+	YP2fvFD9VIlcUOCn619vwT9yYIL+aSou5xjqp6TI0pJTxxAfXB
+X-Received: by 2002:a05:600c:83c5:b0:488:c683:be89 with SMTP id 5b1f17b1804b1-48e51f2a759mr342964415e9.9.1778499591165;
+        Mon, 11 May 2026 04:39:51 -0700 (PDT)
+Received: from localhost.localdomain (nat2.prg.suse.com. [195.250.132.146])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48e6db0b08asm83235955e9.8.2026.05.11.04.39.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 May 2026 04:39:50 -0700 (PDT)
+Date: Mon, 11 May 2026 13:39:48 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Hao Jia <jiahao.kernel@gmail.com>
+Cc: akpm@linux-foundation.org, tj@kernel.org, hannes@cmpxchg.org, 
+	shakeel.butt@linux.dev, mhocko@kernel.org, yosry@kernel.org, nphamcs@gmail.com, 
+	chengming.zhou@linux.dev, muchun.song@linux.dev, roman.gushchin@linux.dev, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	linux-doc@vger.kernel.org, Hao Jia <jiahao1@lixiang.com>
+Subject: Re: [PATCH 0/3] mm/zswap: Implement per-cgroup proactive writeback
+Message-ID: <agG-gNEclOVf-9WA@localhost.localdomain>
+References: <20260511105149.75584-1-jiahao.kernel@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|LO7P123MB7647:EE_
-X-MS-Office365-Filtering-Correlation-Id: d7f18010-87f7-42a6-44ab-08deaf4dada2
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|13003099007|3023799003|18002099003|56012099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	AlcqtfPgtZUAVDnEkc/91P3vzIKDLRoL1N/Oveyi3hklcNvgQhTJjRs+rEMSI2JvPDmyz/wNlgFAY+qLoyDEAhb8MvS26wqxT/VfwbzZhSNxVOLellJddgtNj2UaBDgsDQmbsEm2d95UjjVBqA1M+cpoCZ+GsqYcIxvnqGD5KWympSIFBOzYVqu09YBIUkzJXjucUNKkBuPY2/04vYW6J3YwfSHMbCztfSn5/q6gRChGrmgxMsrpLzqo7XInb0iG6+lRa3HvI2RnmOOoz5UXqlQbJOb4gcDQbK4gZbU93Ti6IsALLXpV8kX9JeHEIcWofQVbf640pKsjBoY4tmXyjN87bGm3ER1XFdtR17BVenbJlaJk7cs9N6bQGB0GwrDDW+qOlRlFK1NBNsMMTMYTZTzhMLIcAOCdymbQexlpJMlNT9km+Jv5YaPKH6bkq6RQ854OCNhZNtbePrp6EencTHV4Jc0i+9Wsho/I30aNgGjSooIA92ew9j2PumWA3CLCIYuJWogXiy2HSYZNlJc6YeViiAhPu+alm+YQZYfpB61lhNezIexiTXOIRnwXtwmxmiKnc99LE6ykj3cORH8D7UVRZPCocYJovC0EQNocOCl6doPJGFVp7fYw704Ofi+E3qQ76+jNEb+mI9+Mj1vf3/Ui1Nh1w7CJlldtnHipebCZ7MWn099C2aqNmyobY5OB1BPqMXK1aYh91ERBdDcQjQ==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(13003099007)(3023799003)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bVc5cHplUU40aTNLNW1hSnlxanV1RlQydGN4TW8wRmJrMUZ5eDZPUzVyZmZx?=
- =?utf-8?B?RU53ZDFGRk1ieG1hYUVCYVVUcFR3MVNJdTRjUzh0WG5BajBPenN5Y3hvUTkr?=
- =?utf-8?B?Um9id29QaFNlaGtSZzM1U3BBK0FNR21SQUdYTFl1ejZYQ3FwSFh6WktRY1Ft?=
- =?utf-8?B?MVVtS3YvT21EVmVQNThYbWpmU1kvOWxtWGNtalNVZzBkTExqOVJIdlBmK3Ri?=
- =?utf-8?B?VDJhWXlyQkxRbml5N3BJRDZ1WFR6bGJiZHJTcjQ0NjRQMk5kUDIwQjV5TEFR?=
- =?utf-8?B?WUladHRLWVMrN29tTVlESTZkRy8ydS8rdjZ3QjYvNUZrczd0VVlNVUtzUG1L?=
- =?utf-8?B?RHRQL0kxY0d6aFJiNkhYY05UeDkwK3ZvNVBRZ2lxZDBXSVBaRWV6dTViMWYw?=
- =?utf-8?B?d1RZakg2ak1vMEM4TVhiYUE2RFJ3SGVielR5UVZsR25NeHpVWGU1bFcwRlJR?=
- =?utf-8?B?djlaMXNDMlNmRmxHTzNJdkYwTHVYWEtOdllpSVlUWHFVSzJLM3M0R0xsdnUw?=
- =?utf-8?B?aHVBcWxXbTNySkw0MENSRXBleEZXb3VQWEdzUjJpemh4NWRqUmtIbXo2dzRn?=
- =?utf-8?B?TDBmUnl0Ri9ZQUV0dUUrakEyajFRcmtaNmNrdXROcHdLWmpTR1NxUHdtYjUw?=
- =?utf-8?B?WkJjNjRDS2dES201QTlpblFiREpUSjBTc0NvS09FeTVDem0xQ1dtTG9HV2NY?=
- =?utf-8?B?RkJ0cGhXNTVqK2FsejB3RHdvUkJNL2hTK3h5NEFNVWFNUTIzeE1KS21oNDFw?=
- =?utf-8?B?d21ncUtWYlgwM1E5RXIvSW1iTSsxRHlZdWlicEc0NDFrNVNYZVZKeGsrVXpF?=
- =?utf-8?B?Sm5JWmo4UFIvZDVNbWZrdjVxQy9rd2tPU3JwbkxUQklOb0xEMGQ5VE5BQ0xZ?=
- =?utf-8?B?QWdNRWtiekJPcGRrdzNtZjNtR0N4bUVnR0JGcGVjN29jL0ZxbnZwVVBXWmpD?=
- =?utf-8?B?OHdSNzdIZzR5NGQyME8yWmpOS2ZDRWJWWXZPWG5uYTNRUG9PenpwVVBETVBS?=
- =?utf-8?B?WHM1WFZ5RWxZTU8zRlBLcmcxem1rRUorRlNLRkV3V3U4R3NCNVpWYlpXMSsr?=
- =?utf-8?B?Y0MwSmJEVlF6a1JBdVNFbjFURmlVQ2xkUE5rU3JVRVFiZjAxbGFFVGRWb1Bs?=
- =?utf-8?B?dmFSVDZCY0Ixc2RnTmI1TnVtTlA1ZnZ4VFRTUHo2R1h1ZERuU0l0bmVvRmx2?=
- =?utf-8?B?R296ZjNNbFppRDlSaTNwSFR1S3dQbkdRdjRQSlVhc0NIL05WMmdnNWJKQThU?=
- =?utf-8?B?MXpPa1FKcEcwSCs3WUplcytOYjlDdVh1TmtBVFdYRTVZd0RvTk9jL01xTTlO?=
- =?utf-8?B?Vy9oeXZWYTVuZG1IN1VXN1QwWVVReXN3QkR4MDFSM0IwNmNvN1g3bEZ6bWdp?=
- =?utf-8?B?VHJZMy96Mkp2VWZ2bGdmMkp5UFJVNEs3TXlOSkNTdTQvZy9JU1IvNGtzaWht?=
- =?utf-8?B?djMvR0tLUmVCUzk0cm9PUlhudGlZSVZaN3Q3dVZQQVRmb1ZkNlQrQTlVUGY1?=
- =?utf-8?B?enB0NWF3VzlKOVN2d0RscG1nZTJNa0Vvc3NqaXM3bE9TQ1Q2MjZVeXA1RHRB?=
- =?utf-8?B?UnYxamlORmZJd3dUTFJ5QlM5aDNodUF2M08vbHZGVkkxczh6T1d3c1Robmtx?=
- =?utf-8?B?dkRsWGk5R0dYN0pibWRibVlHT2VEbkkraHlmYW9QcC85bElFNVlqamxIUzQz?=
- =?utf-8?B?VlRvTzdseEtHL3NUc29KTkgwY0V1eHpGWFlidjV4akpKNTBYdE9nbVZsS2ht?=
- =?utf-8?B?UTk4dnJpdWxUM01GOG0zS1VJRDUwMUNGSnlabEI3SXRhMjh3ZEFDV1hEdXVj?=
- =?utf-8?B?eVFWdk9zaXJNTHE4RGNwN3FtZXBhbXduZ1Rjb0c1a0pQKzYvSnhjR2tZZ2hR?=
- =?utf-8?B?NlJhdFRBbkNWby9PSUtzVHZjUWtnZ0NQK2VGYk9pV2lyM2JwRDdlT0xxMWFz?=
- =?utf-8?B?Y1hZNDVvTzNNa2E2RlVMamRobUlpTHZVaGhXaXF4MTUvTFJqR0dSZ3lnYkUz?=
- =?utf-8?B?Ym8zRHVrYVFET3VmT204K3puTmNMZUtNS3dXZlZtMldkZHdLMkJDK3VHTi82?=
- =?utf-8?B?aXF6VEZJTGtpNXJkbzdyMjZzUHlIK1dQWWhGb3U0SDd1aTZrZjBlN3gvby9r?=
- =?utf-8?B?Q1p1aE1DSUl0QjJZamhuSHRlMlNkSjdGN2pLU0FYRnc3QU5tRkFhaFBkcjU0?=
- =?utf-8?B?T3RFQTZXbHdhekNnWGxyc3Bwbm12L1dLMk5pZ0FFczI1WDlWLytlcThOQjB3?=
- =?utf-8?B?Zjdydkd3V1djaHJYTDgxTUVickV4ZU0yY0NIWHJnbk92R2xvd0k0UERySVVx?=
- =?utf-8?B?anZCYWRXaHVueTg5VjB3K2ZqbXRxSis1VVZsenlyNkNKcm9NZXBYdz09?=
-X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d7f18010-87f7-42a6-44ab-08deaf4dada2
-X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 11:08:49.8036
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rVqJ3ajHA/79KQJUj9AgQO0wYpi9H+afQh5/R+nKV3l8TYaEoFuksVfN8nNRceTf9pWLQvKiNJZX+hrGOm1lrg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO7P123MB7647
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="o3jizhh4qfyisfpc"
+Content-Disposition: inline
+In-Reply-To: <20260511105149.75584-1-jiahao.kernel@gmail.com>
 
---34mfdjxs7nhcxtld
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
+
+--o3jizhh4qfyisfpc
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH 1/3] cgroup/cpuset: Fix deadline bandwidth leak in
- cpuset_can_attach()
+Subject: Re: [PATCH 0/3] mm/zswap: Implement per-cgroup proactive writeback
 MIME-Version: 1.0
 
-On Mon, May 11, 2026 at 01:10:02AM -0400, Waiman Long wrote:
+On Mon, May 11, 2026 at 06:51:46PM +0800, Hao Jia <jiahao.kernel@gmail.com>=
+ wrote:
+> From: Hao Jia <jiahao1@lixiang.com>
 >=20
-> On 5/9/26 12:48 PM, Aaron Tomlin wrote:
-> > During a cgroup migration, cpuset_can_attach() iterates over the
-> > provided taskset. If a task within the batch is a deadline (DL) task,
-> > the destination cpuset's DL metrics (i.e., nr_migrate_dl_tasks and
-> > sum_migrate_dl_bw) are appropriately incremented.
-> >=20
-> > However, if a subsequent task in the same migration batch fails the
-> > task_can_attach() check, the loop aborts and jumps directly to
-> > out_unlock. Consequently, any DL metrics accumulated from previously
-> > processed tasks in the batch remain permanently inflated in the
-> > destination cpuset. Because the migration is subsequently aborted by the
-> > cgroup core, cpuset_cancel_attach() is never invoked to unwind these
-> > specific increments.
-> >=20
-> > This behaviour results in a permanent leak of deadline bandwidth, which
-> > incorrectly restricts the admission control capacity of the destination
-> > cpuset.
-> >=20
-> > To resolve this, introduce an out_unlock_reset failure path that
-> > conditionally invokes reset_migrate_dl_data(). This guarantees that if a
-> > batch migration is aborted for any reason, the pending DL metrics are
-> > safely reset before returning the error.
-> >=20
-> > Fixes: 0a67b847e1f06 ("cpuset: Allow setscheduler regardless of manipul=
-ated task")
+> Zswap currently writes back pages to backing swap devices reactively,
+> triggered either by memory pressure via the shrinker or by the pool
+> reaching its size limit. However, this reactive approach makes writeback
+> timing indeterminate and can disrupt latency-sensitive workloads when
+> eviction happens to coincide with a critical execution window.
 >=20
-> That is not the commit that introduced the bug. Anyway, there is already
-> another patch sent recently to fix this bug. See
->=20
-> https://lore.kernel.org/lkml/20260509102031.97608-2-zhangguopeng@kylinos.=
-cn/
->=20
-Hi Waiman,
+> Furthermore, in certain scenarios, it is desirable to trigger writeback
+> in advance to free up memory. For example, users may want to prepare for
+> an upcoming memory-intensive workload by flushing cold memory to the
+> backing storage when the system is relatively idle.
 
-Thank you for the follow up.
+I can imagine the zswap writeout can come at the least possible
+moment...
 
-Acknowledged. I will drop this patch in the next iteration due to [1].
+> To address these issues, this patch series introduces a per-cgroup
+> interface that allows users to proactively write back cold compressed
+> pages from zswap to the backing swap device.
 
-Please note, the sashiko AI Review bot reported: cpuset_can_attach()
-incorrectly assumes all migrating tasks originate from the same source
-cpuset. At first glance, this feedback is valid. I plan to submit a patch,
-if no solution was already proposed.
+=2E..but I see this series is not only per-cgroup proactive reclaim but
+it's also age-based reclaim.
 
-[1]: https://lore.kernel.org/lkml/20260509102031.97608-2-zhangguopeng@kylin=
-os.cn/
+The per-cg consumption and limits (and regular memory reclaim) are all
+measured in sizes. This age-based invocations don't seem commensurable
+(e.g. how would users in practice determine what is the desired input to
+here).
 
-Kind regards,
---=20
-Aaron Tomlin
+Could you explain more reasoning behind this design?
 
---34mfdjxs7nhcxtld
+Thanks,
+Michal
+
+--o3jizhh4qfyisfpc
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCgAdFiEEeQaE6/qKljiNHm6b4t6WWBnMd9YFAmoBuL0ACgkQ4t6WWBnM
-d9bsww//Xwh+Wwf6l9x/WxaqjQG+15NRi711h1Q2u+jCojNhOzmupUhEngRTlL50
-mJ8UXgEFkIicGL9POYhvUVzRcv+xa3/vRqG7O26Ruxk4Xtv+7iNf7B3ye6OZ0eKd
-HvKkaPxkhok4B2xIa3Vycx/lepgwTKqZ3ChHS7h/b0Z1aalK7TifwipOqmUdqYLk
-z8CYfQwwaKo3lMY2EE+iiwWui+i3ImJ3nH1PFLPoeYMEsWs3g7Yi+WJYaDtI5vbN
-bKbMKvb1tH7DpGNmxtyKWVKM4EBSxpUmqa5vDeZO+mXD0gLK/y8Zq5FPwNrGlEqZ
-glRvYu3xhF2tgtYYP2CvHDdHR8zZONkihkgx7/6gEWBBY5iH920MD9lz2wzvA8N0
-buDBQHpVphCsGeKAbIpRsK/ZVRam5q2X93pLYZOvLZq52Mh7Do+l2rZjZoIcWnaa
-Hs0823Jb/Ls+zT6Hf3FRPNlWKkeBSvqPjXPKvXFIkPGQpG+ZEYoybhAY94tErf5o
-3ficumJeXB4+TA+A1HHuKfxDFoGwdk0D8AcbPMwUKrMVQEQzeGwXyzEdAOYWcAsv
-TyodxBXm4iqHElbsLogZQ7VkGI3LlOxxzvmpv8jpGVDUR5LQA3oaoBOGSk+3uCA/
-PYJNO4je5KCys/K2EYObAy84d4riVFIJZ8JFSSJaYMTAGr5DMmA=
-=gQ4g
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCagHAARsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AisVgEAue3WyVVGY7GBg1v3Zt8e
+eeD5pIl0nLnXPUEjlLTIJNUA/2WZU04Y/56uL4zU3y+755L6om2vsL3DmWWaCGB9
+0zoN
+=7Raz
 -----END PGP SIGNATURE-----
 
---34mfdjxs7nhcxtld--
+--o3jizhh4qfyisfpc--
