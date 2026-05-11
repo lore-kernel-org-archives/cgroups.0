@@ -1,40 +1,40 @@
 Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD35837AA7E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E2837B027;
 	Mon, 11 May 2026 12:07:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778501243; cv=none; b=miTLnF2oPAanF/0pLug4uW08/4t91j1o+JIbj+PuDL9pgx3AWYyePSjWh+AEab4EpJTEaCl/TdDXHyWsd9ngOCPtUa0cxxnBHAgSSKPqTEGnr2eNBO4xI6jJyLm7iIhWVUTpP7MPqWj4LyrvwQTMRReqGdtVjJoK01IfXLLSVAg=
+	t=1778501244; cv=none; b=PC1+uHjURijoQNir9l1V8mkidgUAXk7XB4ZfrQejcaw2QIINSQQOQT9DdDd1ZxZ8UZigraBFqbvC+5XffMz36QtbSlLCpRgwEXB8pJ/xNvxOK/ZH+U8tsuc5/pox+8FlbfsCysJ30ExKD5yh55NwxgXGKMx++2kBTzjSTSwkFTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778501243; c=relaxed/simple;
-	bh=hxLQPb3dZmxgpnnb5eMMN5QzCDrXRzIkJMRiqBnHDRU=;
+	s=arc-20240116; t=1778501244; c=relaxed/simple;
+	bh=k+pTtIaHnkTkTKHeFxbxviXAACzwjbCoERO6tUUG+L4=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=Vy/5dULV0EU+BmC73JcRYK/eTFbLkbGk+iZ7xqG2sN3PIWS3zW2nZGfzMFiH/K7qW1h7EEH53kTOjP2+rU3meRo3hgamV/YUQ+LsZDOZsKzNl0W1k35As8HkZkkCzaV8KU/6C4ec+L4IxQaYiogzOlQOQRS8fDmCyrtiPUG8Pe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dHPYRult; arc=none smtp.client-ip=90.155.92.199
+	 Content-Type; b=BwWsdaa1q8ipBpFpYdLCBEHM9zc/LnPABQVV0JtjP6aQ+Hgi7uNA69CqVNbyu3ItXBgNfNr5g7zC3IO+mFTnnneZkB4kNYu0BsfnWANK2+KqQxTHI815bcDAZZlmVDWU7ijLcon/F9I5qkKNyY5Q2hsXQoOk+IGjxeFDSFcJ808=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gBY4cj+a; arc=none smtp.client-ip=90.155.92.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dHPYRult"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gBY4cj+a"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
 	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=S0mi3ejVRKZtD/+6BvinHRssu4pdxxO2hzy61vpyyO8=; b=dHPYRultxTY3aIYkyfLKk1lH23
-	rfSK6/lCjY4HHaLv0apiYL3YvMtnUubcD7lpbLbwh1j5pI/KmfkLfhiawbNNA5EYH/BfHbRT1Ha/R
-	qoNVzko2sn0xh287gdeS1sM+ozRI5J6YHpfjvNtXv3QeqP+kqLO2XgEqg7Ic/3lIAprw2Q1FgziSr
-	nH2LzCqpB3fPC4m8pTPLuymfp/tydtXaqh5Mx8k13vfI9k6QF4y4VjxafEBTeysfturHb9N/jFnZB
-	dB11EXagVAbivdgILQrUismejpF3XL0qIVd4r31vjDoRScT4/QAbOcBKXQhL4C5v9k1nN1Qfk3QRZ
-	X5vHzrfA==;
+	bh=MfDnJaDuHfmTlNlHQofhOK4P8wdrC5bwkWlHclTuFTk=; b=gBY4cj+ak1BsL/7h5Ll8ILYeyr
+	LQ+5eLAL94kuEJGQR8z7kueUciFt3VwRvPVBw6tKdlCa27U1O0KuYgthD2kqPWf3dGXlVM62MEW3d
+	+alW+Np1TRPkSd7SSAQFOazSgTGqOah7RWvUyWkL8LwcEkLbqkGDq52JN7mnyzpA7hd+NTES5oPI2
+	QkmJSFzxuEJRzj/PiQeMRsVKiizI+wsbkgGrhsNAQpqZcz2jWZxAjFjfhVbpDMXXmQQzV8CQ5xaC5
+	Oep7vldSjmb+h+oRCh6x5p3wGFoIm5JVY07Bm+N9hF+OCMY6uC9xKId0RVn5/sR6vB5DA9+c6mkRU
+	UmCDD5hA==;
 Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
 	by desiato.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wMPPa-0000000BZMq-04y4;
+	id 1wMPPZ-0000000BZMR-1yZd;
 	Mon, 11 May 2026 12:07:03 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 325DC3030E7; Mon, 11 May 2026 14:07:00 +0200 (CEST)
-Message-ID: <20260511120628.057634261@infradead.org>
+	id 1702B302F8E; Mon, 11 May 2026 14:07:00 +0200 (CEST)
+Message-ID: <20260511120627.281160085@infradead.org>
 User-Agent: quilt/0.68
-Date: Mon, 11 May 2026 13:31:13 +0200
+Date: Mon, 11 May 2026 13:31:07 +0200
 From: Peter Zijlstra <peterz@infradead.org>
 To: mingo@kernel.org
 Cc: longman@redhat.com,
@@ -55,7 +55,7 @@ Cc: longman@redhat.com,
  jstultz@google.com,
  kprateek.nayak@amd.com,
  qyousef@layalina.io
-Subject: [PATCH v2 09/10] sched: Remove sched_class::pick_next_task()
+Subject: [PATCH v2 03/10] sched/debug: Collapse subsequent CONFIG_SCHED_CLASS_EXT sections
 References: <20260511113104.563854162@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -65,293 +65,170 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-The reason for pick_next_task_fair() is the put/set optimization that
-avoids touching the common ancestors. However, it is possible to
-implement this in the put_prev_task() and set_next_task() calls as
-used in put_prev_set_next_task().
-
-Notably, put_prev_set_next_task() is the only site that:
-
- - calls put_prev_task() with a .next argument;
- - calls set_next_task() with .first = true.
-
-This means that put_prev_task() can determine the common hierarchy and
-stop there, and then set_next_task() can terminate where put_prev_task
-stopped.
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
- kernel/sched/core.c  |   27 +++------
- kernel/sched/fair.c  |  139 +++++++++++++++++----------------------------------
- kernel/sched/sched.h |   14 -----
- 3 files changed, 57 insertions(+), 123 deletions(-)
+ kernel/sched/debug.c |   92 ++++++++++++++++++++++++---------------------------
+ 1 file changed, 44 insertions(+), 48 deletions(-)
 
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -5980,16 +5980,15 @@ __pick_next_task(struct rq *rq, struct t
- 	if (likely(!sched_class_above(prev->sched_class, &fair_sched_class) &&
- 		   rq->nr_running == rq->cfs.h_nr_queued)) {
+--- a/kernel/sched/debug.c
++++ b/kernel/sched/debug.c
+@@ -446,6 +446,8 @@ static const struct file_operations fair
+ 	.release	= single_release,
+ };
  
--		p = pick_next_task_fair(rq, prev, rf);
-+		p = pick_task_fair(rq, rf);
- 		if (unlikely(p == RETRY_TASK))
- 			goto restart;
++static struct dentry *debugfs_sched;
++
+ #ifdef CONFIG_SCHED_CLASS_EXT
+ static ssize_t
+ sched_ext_server_runtime_write(struct file *filp, const char __user *ubuf,
+@@ -478,75 +480,92 @@ static const struct file_operations ext_
+ 	.llseek		= seq_lseek,
+ 	.release	= single_release,
+ };
+-#endif /* CONFIG_SCHED_CLASS_EXT */
  
- 		/* Assume the next prioritized class is idle_sched_class */
--		if (!p) {
-+		if (!p)
- 			p = pick_task_idle(rq, rf);
--			put_prev_set_next_task(rq, prev, p);
--		}
- 
-+		put_prev_set_next_task(rq, prev, p);
- 		return p;
- 	}
- 
-@@ -5997,20 +5996,12 @@ __pick_next_task(struct rq *rq, struct t
- 	prev_balance(rq, prev, rf);
- 
- 	for_each_active_class(class) {
--		if (class->pick_next_task) {
--			p = class->pick_next_task(rq, prev, rf);
--			if (unlikely(p == RETRY_TASK))
--				goto restart;
--			if (p)
--				return p;
--		} else {
--			p = class->pick_task(rq, rf);
--			if (unlikely(p == RETRY_TASK))
--				goto restart;
--			if (p) {
--				put_prev_set_next_task(rq, prev, p);
--				return p;
--			}
-+		p = class->pick_task(rq, rf);
-+		if (unlikely(p == RETRY_TASK))
-+			goto restart;
-+		if (p) {
-+			put_prev_set_next_task(rq, prev, p);
-+			return p;
- 		}
- 	}
- 
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -9214,7 +9214,7 @@ static void wakeup_preempt_fair(struct r
- 	resched_curr_lazy(rq);
- }
- 
--static struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf)
-+struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf)
- 	__must_hold(__rq_lockp(rq))
+ static ssize_t
+-sched_fair_server_period_write(struct file *filp, const char __user *ubuf,
+-			       size_t cnt, loff_t *ppos)
++sched_ext_server_period_write(struct file *filp, const char __user *ubuf,
++			      size_t cnt, loff_t *ppos)
  {
- 	struct sched_entity *se;
-@@ -9257,72 +9257,6 @@ static struct task_struct *pick_task_fai
- 	return NULL;
+ 	long cpu = (long) ((struct seq_file *) filp->private_data)->private;
+ 	struct rq *rq = cpu_rq(cpu);
+ 
+ 	return sched_server_write_common(filp, ubuf, cnt, ppos, DL_PERIOD,
+-					&rq->fair_server);
++					&rq->ext_server);
  }
  
--static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool first);
--static void set_next_task_fair(struct rq *rq, struct task_struct *p, bool first);
--
--struct task_struct *
--pick_next_task_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
--	__must_hold(__rq_lockp(rq))
--{
--	struct sched_entity *se;
--	struct task_struct *p;
--
--	p = pick_task_fair(rq, rf);
--	if (unlikely(p == RETRY_TASK))
--		return p;
--	if (!p)
--		return p;
--	se = &p->se;
--
--#ifdef CONFIG_FAIR_GROUP_SCHED
--	if (prev->sched_class != &fair_sched_class)
--		goto simple;
--
--	__put_prev_set_next_dl_server(rq, prev, p);
--
--	/*
--	 * Because of the set_next_buddy() in dequeue_task_fair() it is rather
--	 * likely that a next task is from the same cgroup as the current.
--	 *
--	 * Therefore attempt to avoid putting and setting the entire cgroup
--	 * hierarchy, only change the part that actually changes.
--	 *
--	 * Since we haven't yet done put_prev_entity and if the selected task
--	 * is a different task than we started out with, try and touch the
--	 * least amount of cfs_rqs.
--	 */
--	if (prev != p) {
--		struct sched_entity *pse = &prev->se;
--		struct cfs_rq *cfs_rq;
--
--		while (!(cfs_rq = is_same_group(se, pse))) {
--			int se_depth = se->depth;
--			int pse_depth = pse->depth;
--
--			if (se_depth <= pse_depth) {
--				put_prev_entity(cfs_rq_of(pse), pse);
--				pse = parent_entity(pse);
--			}
--			if (se_depth >= pse_depth) {
--				set_next_entity(cfs_rq_of(se), se, true);
--				se = parent_entity(se);
--			}
--		}
--
--		put_prev_entity(cfs_rq, pse);
--		set_next_entity(cfs_rq, se, true);
--
--		__set_next_task_fair(rq, p, true);
--	}
--
--	return p;
--
--simple:
--#endif /* CONFIG_FAIR_GROUP_SCHED */
--	put_prev_set_next_task(rq, prev, p);
--	return p;
--}
--
- static struct task_struct *
- fair_server_pick_task(struct sched_dl_entity *dl_se, struct rq_flags *rf)
- 	__must_hold(__rq_lockp(dl_se->rq))
-@@ -9346,10 +9280,33 @@ static void put_prev_task_fair(struct rq
+-static int sched_fair_server_period_show(struct seq_file *m, void *v)
++static int sched_ext_server_period_show(struct seq_file *m, void *v)
  {
- 	struct sched_entity *se = &prev->se;
- 	struct cfs_rq *cfs_rq;
-+	struct sched_entity *nse = NULL;
+ 	unsigned long cpu = (unsigned long) m->private;
+ 	struct rq *rq = cpu_rq(cpu);
  
--	for_each_sched_entity(se) {
-+#ifdef CONFIG_FAIR_GROUP_SCHED
-+	if (next && next->sched_class == &fair_sched_class)
-+		nse = &next->se;
-+#endif
-+
-+	while (se) {
- 		cfs_rq = cfs_rq_of(se);
--		put_prev_entity(cfs_rq, se);
-+		if (!nse || cfs_rq->curr)
-+			put_prev_entity(cfs_rq, se);
-+#ifdef CONFIG_FAIR_GROUP_SCHED
-+		if (nse) {
-+			if (is_same_group(se, nse))
-+				break;
-+
-+			int d = nse->depth - se->depth;
-+			if (d >= 0) {
-+				/* nse has equal or greater depth, ascend */
-+				nse = parent_entity(nse);
-+				/* if nse is the deeper, do not ascend se */
-+				if (d > 0)
-+					continue;
-+			}
-+		}
-+#endif
-+		se = parent_entity(se);
- 	}
+-	return sched_server_show_common(m, v, DL_PERIOD, &rq->fair_server);
++	return sched_server_show_common(m, v, DL_PERIOD, &rq->ext_server);
  }
  
-@@ -13896,10 +13853,30 @@ static void switched_to_fair(struct rq *
- 	}
- }
- 
--static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
-+/*
-+ * Account for a task changing its policy or group.
-+ *
-+ * This routine is mostly called to set cfs_rq->curr field when a task
-+ * migrates between groups/classes.
-+ */
-+static void set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
+-static int sched_fair_server_period_open(struct inode *inode, struct file *filp)
++static int sched_ext_server_period_open(struct inode *inode, struct file *filp)
  {
- 	struct sched_entity *se = &p->se;
+-	return single_open(filp, sched_fair_server_period_show, inode->i_private);
++	return single_open(filp, sched_ext_server_period_show, inode->i_private);
+ }
  
-+	for_each_sched_entity(se) {
-+		struct cfs_rq *cfs_rq = cfs_rq_of(se);
+-static const struct file_operations fair_server_period_fops = {
+-	.open		= sched_fair_server_period_open,
+-	.write		= sched_fair_server_period_write,
++static const struct file_operations ext_server_period_fops = {
++	.open		= sched_ext_server_period_open,
++	.write		= sched_ext_server_period_write,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+ 	.release	= single_release,
+ };
+ 
+-#ifdef CONFIG_SCHED_CLASS_EXT
++static void debugfs_ext_server_init(void)
++{
++	struct dentry *d_ext;
++	unsigned long cpu;
 +
-+		if (IS_ENABLED(CONFIG_FAIR_GROUP_SCHED) &&
-+		    first && cfs_rq->curr)
-+			break;
++	d_ext = debugfs_create_dir("ext_server", debugfs_sched);
++	if (!d_ext)
++		return;
 +
-+		set_next_entity(cfs_rq, se, first);
-+		/* ensure bandwidth has been allocated on our new cfs_rq */
-+		account_cfs_rq_runtime(cfs_rq, 0);
++	for_each_possible_cpu(cpu) {
++		struct dentry *d_cpu;
++		char buf[32];
++
++		snprintf(buf, sizeof(buf), "cpu%lu", cpu);
++		d_cpu = debugfs_create_dir(buf, d_ext);
++
++		debugfs_create_file("runtime", 0644, d_cpu, (void *) cpu, &ext_server_runtime_fops);
++		debugfs_create_file("period", 0644, d_cpu, (void *) cpu, &ext_server_period_fops);
 +	}
++}
++#endif /* CONFIG_SCHED_CLASS_EXT */
 +
-+	se = &p->se;
-+
- 	if (task_on_rq_queued(p)) {
- 		/*
- 		 * Move the next running task to the front of the list, so our
-@@ -13919,27 +13896,6 @@ static void __set_next_task_fair(struct
- 	sched_fair_update_stop_tick(rq, p);
- }
- 
--/*
-- * Account for a task changing its policy or group.
-- *
-- * This routine is mostly called to set cfs_rq->curr field when a task
-- * migrates between groups/classes.
-- */
--static void set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
--{
--	struct sched_entity *se = &p->se;
--
--	for_each_sched_entity(se) {
--		struct cfs_rq *cfs_rq = cfs_rq_of(se);
--
--		set_next_entity(cfs_rq, se, first);
--		/* ensure bandwidth has been allocated on our new cfs_rq */
--		account_cfs_rq_runtime(cfs_rq, 0);
--	}
--
--	__set_next_task_fair(rq, p, first);
--}
--
- void init_cfs_rq(struct cfs_rq *cfs_rq)
+ static ssize_t
+-sched_ext_server_period_write(struct file *filp, const char __user *ubuf,
+-			      size_t cnt, loff_t *ppos)
++sched_fair_server_period_write(struct file *filp, const char __user *ubuf,
++			       size_t cnt, loff_t *ppos)
  {
- 	cfs_rq->tasks_timeline = RB_ROOT_CACHED;
-@@ -14251,7 +14207,6 @@ DEFINE_SCHED_CLASS(fair) = {
- 	.wakeup_preempt		= wakeup_preempt_fair,
+ 	long cpu = (long) ((struct seq_file *) filp->private_data)->private;
+ 	struct rq *rq = cpu_rq(cpu);
  
- 	.pick_task		= pick_task_fair,
--	.pick_next_task		= pick_next_task_fair,
- 	.put_prev_task		= put_prev_task_fair,
- 	.set_next_task          = set_next_task_fair,
- 
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2555,17 +2555,6 @@ struct sched_class {
- 	 * schedule/pick_next_task: rq->lock
- 	 */
- 	struct task_struct *(*pick_task)(struct rq *rq, struct rq_flags *rf);
--	/*
--	 * Optional! When implemented pick_next_task() should be equivalent to:
--	 *
--	 *   next = pick_task();
--	 *   if (next) {
--	 *       put_prev_task(prev);
--	 *       set_next_task_first(next);
--	 *   }
--	 */
--	struct task_struct *(*pick_next_task)(struct rq *rq, struct task_struct *prev,
--					      struct rq_flags *rf);
- 
- 	/*
- 	 * sched_change:
-@@ -2789,8 +2778,7 @@ static inline bool sched_fair_runnable(s
- 	return rq->cfs.nr_queued > 0;
+ 	return sched_server_write_common(filp, ubuf, cnt, ppos, DL_PERIOD,
+-					&rq->ext_server);
++					&rq->fair_server);
  }
  
--extern struct task_struct *pick_next_task_fair(struct rq *rq, struct task_struct *prev,
--					       struct rq_flags *rf);
-+extern struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf);
- extern struct task_struct *pick_task_idle(struct rq *rq, struct rq_flags *rf);
+-static int sched_ext_server_period_show(struct seq_file *m, void *v)
++static int sched_fair_server_period_show(struct seq_file *m, void *v)
+ {
+ 	unsigned long cpu = (unsigned long) m->private;
+ 	struct rq *rq = cpu_rq(cpu);
  
- #define SCA_CHECK		0x01
+-	return sched_server_show_common(m, v, DL_PERIOD, &rq->ext_server);
++	return sched_server_show_common(m, v, DL_PERIOD, &rq->fair_server);
+ }
+ 
+-static int sched_ext_server_period_open(struct inode *inode, struct file *filp)
++static int sched_fair_server_period_open(struct inode *inode, struct file *filp)
+ {
+-	return single_open(filp, sched_ext_server_period_show, inode->i_private);
++	return single_open(filp, sched_fair_server_period_show, inode->i_private);
+ }
+ 
+-static const struct file_operations ext_server_period_fops = {
+-	.open		= sched_ext_server_period_open,
+-	.write		= sched_ext_server_period_write,
++static const struct file_operations fair_server_period_fops = {
++	.open		= sched_fair_server_period_open,
++	.write		= sched_fair_server_period_write,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+ 	.release	= single_release,
+ };
+-#endif /* CONFIG_SCHED_CLASS_EXT */
+-
+-static struct dentry *debugfs_sched;
+ 
+ static void debugfs_fair_server_init(void)
+ {
+@@ -569,29 +588,6 @@ static void debugfs_fair_server_init(voi
+ 	}
+ }
+ 
+-#ifdef CONFIG_SCHED_CLASS_EXT
+-static void debugfs_ext_server_init(void)
+-{
+-	struct dentry *d_ext;
+-	unsigned long cpu;
+-
+-	d_ext = debugfs_create_dir("ext_server", debugfs_sched);
+-	if (!d_ext)
+-		return;
+-
+-	for_each_possible_cpu(cpu) {
+-		struct dentry *d_cpu;
+-		char buf[32];
+-
+-		snprintf(buf, sizeof(buf), "cpu%lu", cpu);
+-		d_cpu = debugfs_create_dir(buf, d_ext);
+-
+-		debugfs_create_file("runtime", 0644, d_cpu, (void *) cpu, &ext_server_runtime_fops);
+-		debugfs_create_file("period", 0644, d_cpu, (void *) cpu, &ext_server_period_fops);
+-	}
+-}
+-#endif /* CONFIG_SCHED_CLASS_EXT */
+-
+ static __init int sched_init_debug(void)
+ {
+ 	struct dentry __maybe_unused *numa;
 
 
