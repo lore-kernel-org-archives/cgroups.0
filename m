@@ -1,113 +1,95 @@
-Received: from mslow3.mail.gandi.net (mslow3.mail.gandi.net [217.70.178.249])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E85D3A5427;
-	Mon, 11 May 2026 20:37:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.178.249
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD8432AADC;
+	Mon, 11 May 2026 21:12:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778531859; cv=none; b=sc0ZVl6cm2kKmMFO3UkLj0s8IoKWrHbvquccVhF9z6IZI7yJPT9cA3ml/DENvlF6+CNKPPGvbNarloOzTiUThCipP5drsRi1opm8yNey56v7FzLWqQYVkBYxqiT++Akosnl0EmQeEMNaktL+gQ/U2rbMZ5bv20TJC/hHqB59Pro=
+	t=1778533971; cv=none; b=ayTI+nqF+HCCrsVi/7PLj3anLupF0w2Vkyaobr4ZUwP9L3GKrrJ9LuSgXsj7PhAmfA6mZXox5aKlZzFepLIwJAMVgc9zxQ23hl7BGGrquF2Kw2Zd6nUPKBg/gnLmn3ZXi0okm+jUMHOqE2g6pYVi5oj4StBIaU5Icbo2HVj241Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778531859; c=relaxed/simple;
-	bh=3FcJXRECXSVEy1APXMqNZLYMls8NcB/BhmQBZ2z8gm0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=t9fn1cYK63xRLarCKYH9BuQZvm/2P+BU/HP1XQC1yeOcXvuQrzxNL0DGUzRjReIfBpq7/+tHaMNqfHI3zhQyIa7grEVuHSiNVCChkjkVljOgL0vM5r3DbK5KZIcluNzGj5hdJEqyafqqEshihcQd4Lfy87A9UpcGSav0cVzYu/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.178.249
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
-Received: from relay8-d.mail.gandi.net (relay8-d.mail.gandi.net [217.70.183.201])
-	by mslow3.mail.gandi.net (Postfix) with ESMTP id 932A458161A;
-	Mon, 11 May 2026 20:27:19 +0000 (UTC)
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 8A2613EC9F;
-	Mon, 11 May 2026 20:27:07 +0000 (UTC)
-From: Alexandre Ghiti <alex@ghiti.fr>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Dennis Zhou <dennis@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Christoph Lameter <cl@gentwo.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Yosry Ahmed <yosry@kernel.org>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Chengming Zhou <chengming.zhou@linux.dev>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Minchan Kim <minchan@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Barry Song <baohua@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Wei Xu <weixugc@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
-	Joshua Hahn <joshua.hahnjy@gmail.com>,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	Alexandre Ghiti <alex@ghiti.fr>
-Subject: [PATCH 5/8] mm: memcontrol: per-node kmem accounting for page charges
-Date: Mon, 11 May 2026 22:20:40 +0200
-Message-ID: <20260511202136.330358-6-alex@ghiti.fr>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260511202136.330358-1-alex@ghiti.fr>
-References: <20260511202136.330358-1-alex@ghiti.fr>
+	s=arc-20240116; t=1778533971; c=relaxed/simple;
+	bh=NM9hT8Fsvi3n2nwRZxfAVFQAf1Vhq3vLs0fNanGuwkU=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=uR5q9ByPji6P72mciBBAFvNEfjUMu7b4TpW+twd2lC+zEcymZj4j455h1UMxEX3Bi8QYScljNcwHFqC59yqPFihnxYtLfwwf56VKcm9lAhjAyp/TF535QPhoisa6zYkaNUIJjGJ04NcCFOVzUGCBm2MmpTlUnBL4ngq3Az2hQmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=RUll7hu/; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="RUll7hu/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5417FC2BCB0;
+	Mon, 11 May 2026 21:12:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1778533971;
+	bh=NM9hT8Fsvi3n2nwRZxfAVFQAf1Vhq3vLs0fNanGuwkU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=RUll7hu/kdrsdt56J2K8L+DJt83t2yMVr1lZoc0E4pitUX/J4KfTZJD35PxJzib0c
+	 kIkKF4Xe4uB2qoNVQP2RKU9sikQ+MwmKkF5VMPF14Wmojg7PF8evmZ9ly9qi0Bn7G2
+	 gTo5iL2Pn2FKCLyxBouo+H6LtHuViXNhwgR7ehHw=
+Date: Mon, 11 May 2026 14:12:49 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Kairui Song <ryncsn@gmail.com>
+Cc: kasong@tencent.com, linux-mm@kvack.org, David Hildenbrand
+ <david@kernel.org>, Zi Yan <ziy@nvidia.com>, Baolin Wang
+ <baolin.wang@linux.alibaba.com>, Barry Song <baohua@kernel.org>, Hugh
+ Dickins <hughd@google.com>, Chris Li <chrisl@kernel.org>, Kemeng Shi
+ <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He
+ <bhe@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Youngjun Park
+ <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, Roman
+ Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Qi Zheng <zhengqi.arch@bytedance.com>,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Yosry Ahmed
+ <yosry@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, Dev Jain
+ <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Michal Hocko
+ <mhocko@suse.com>, Michal Hocko <mhocko@kernel.org>, Suren Baghdasaryan
+ <surenb@google.com>, Axel Rasmussen <axelrasmussen@google.com>
+Subject: Re: [PATCH v3 00/12] mm, swap: swap table phase IV: unify
+ allocation and reduce static metadata
+Message-Id: <20260511141249.eac1426fee41c9fe463e7e23@linux-foundation.org>
+In-Reply-To: <CAMgjq7CJ8Are6m7X2UxUoJ=77c_oSpdG8-bzkmdRzwey2Cp1gQ@mail.gmail.com>
+References: <20260421-swap-table-p4-v3-0-2f23759a76bc@tencent.com>
+	<CAMgjq7CJ8Are6m7X2UxUoJ=77c_oSpdG8-bzkmdRzwey2Cp1gQ@mail.gmail.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-GND-Sasl: alex@ghiti.fr
-X-GND-Cause: dmFkZTGZq0GkJau6RWVth2AkA6mXp5hevURRivnwJLaOUMsROukueZFeGriViT3+cCjdcQdQP0MXVJyz1fLtz5XFi7fYpUSG4G6HGJNwB7Iq+AffJ+iN70qPoWx4sPkTvS8S8edtNse4haP6xRwCWHJvcVy7zsnDElyg9ELyVKHPrzVc71knPq23qOqkwc4KIrg5BHucIt4/5JbUi95cV8eeMKs6lPZKscraThdxjN0ea9JVj3y6puOv/mj1bfUb5Bpth59ONuYJuZ08jwh3vLgdvYEWkwTPa3c1OOv3+xRvJspVD1HTOqkt57ReSG7Uxn9/R/VsgPJlS+GPzNYXtlpAG3mkYTAIM1ioE4A72moamTmDwfzMr293yA/XjueFmhG3Guvd1oXp42UY5s/EBvQlo8IklfJP7ZXgmBBHv0fuaxc5ZSR11W7sTucYe2ULX7DeyKejwLOWYWayEEbOR3QT1ndfJRC1QuZHm68xLVJfc3l1JzkqD75sInVtm6Ifr94ZC9m4m6NPREPzANNw/ZS5Ij0E23LBlB7sFal0c55SCgPUiHxPQWsvBvsA/jSKcq6ujg4d2NpSwuWRiJ+nzKI1wev02q9clqLO1A/AHyW09CrVi+89fOO3uSRKaEcMXp6kHM+LAcs10Whs9m8Q5VqbA8QeXSLwg1J+iFPI8jU33HH2jA
-X-GND-State: clean
-X-GND-Score: -100
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Update __memcg_kmem_charge_page() to use per-node obj_cgroup for
-correct NUMA attribution of NR_KMEM.
+On Sat, 25 Apr 2026 02:11:47 +0800 Kairui Song <ryncsn@gmail.com> wrote:
 
-Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
----
- mm/memcontrol.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+> > base-commit: f1541b40cd422d7e22273be9b7e9edfc9ea4f0d7
+> > change-id: 20260111-swap-table-p4-98ee92baa7c4
+> >
+> > Best regards,
+> > --
+> > Kairui Song <kasong@tencent.com>
+> >
+> >
+> 
+> I checked sashiko's review, it seems sashiko itself is bugged or
+> something wrong, Most patched end up with:
+> Tool error: Review tool timed out (active time exceeded)
+> 
+> The rest of the results are all false positives, maybe I can add a few
+> more comments in the code or commit so it can understand the code
+> better.
+> 
+> And checking V2's review:
+> https://sashiko.dev/#/patchset/20260417-swap-table-p4-v2-0-17f5d1015428%40tencent.com
+> 
+> Which are mostly false positives and I've fixed the two real but
+> trivial issues already. Things should be fine.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 979a847e542a..66d2beb1c974 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3105,17 +3105,19 @@ static void page_set_objcg(struct page *page, const struct obj_cgroup *objcg)
-  */
- int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
- {
--	struct obj_cgroup *objcg;
-+	struct obj_cgroup *objcg, *nid_objcg;
-+	int nid = page_to_nid(page);
- 	int ret = 0;
- 
- 	objcg = current_obj_cgroup();
- 	if (objcg && !obj_cgroup_is_root(objcg)) {
--		ret = obj_cgroup_charge_pages(objcg, gfp, 1 << order);
--		if (!ret) {
--			obj_cgroup_get(objcg);
--			page_set_objcg(page, objcg);
--			return 0;
--		}
-+		nid_objcg = obj_cgroup_get_nid(objcg, nid);
-+		ret = obj_cgroup_charge_pages(nid_objcg, gfp, 1 << order);
-+		if (ret)
-+			return ret;
-+		obj_cgroup_get(nid_objcg);
-+		page_set_objcg(page, nid_objcg);
-+		return 0;
- 	}
- 	return ret;
- }
--- 
-2.54.0
+Sashiko review of v3:
+
+	https://sashiko.dev/#/patchset/20260421-swap-table-p4-v3-0-2f23759a76bc@tencent.com
+
+appears to be complete, so perhaps it went back and figured it out.
+
+It claims to have several "critical" and "high" things, so please
+recheck?
+
+From your replies in this thread, I believe that we'll be seeing a v4
+series?
 
