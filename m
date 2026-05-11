@@ -1,137 +1,123 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB55A79CD
-	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 11:39:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B5936E493
+	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 11:59:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778499594; cv=none; b=ULqD4wy8qzzrf2Mc05m/ouG+DCLaWtSC09U5jb61v0K6uxEEEQmHKbgWqgKQhG8y20lvDleCZAc+nXXO9+msizwiP/135q5jvPRmNBUgINuRXR4rsB8lQM8hiS6TvgGt6rma7SJ2wN64C2Jm9P1Aag9ziPC/E2KgkiG72x6UTUA=
+	t=1778500754; cv=none; b=BJ3zpAHiLP5nfcNGhKllX8q+Z8tVMZ8CNxol4lUCWoJCQPDHUEhrcvZaHVUC4cjqFCPz06AGEbnFoFuq7wuLH+oD7yo5yBzV0q44D5vwoobJbSzfgvciwPl+fS+YIaLHksiNnCesR/OZCs2eBzc6qUyRLwq4voQ6PPsBxbSXZ0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778499594; c=relaxed/simple;
-	bh=JXwoxY9aO+DdJZo6FW5QgM56rkq1xPTTIDZwqNN6ABM=;
+	s=arc-20240116; t=1778500754; c=relaxed/simple;
+	bh=E/TJvFs4t4lBs160Q7ddNOnGS+1yrt+GmYwsY8ieCxk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B78Y7BxOdZMI8dj4EDzS+YzcSE/33QP6RhCaBb2y7s1ShFPuYqYZolR1qsGxFjkzNrQDcYY+1d61a7HemQKEp4DnCoQ0ax90rptcZqgIc9t2JwXi6orMkC/EKcVwSD1AcCxNFyUk9SSgB+JRF3LTFI1rQaEizBpifHEwFbUNUoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=awtrweLH; arc=none smtp.client-ip=209.85.128.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=tl3cVSIWOR+ncgKY9EVTrr7c9bJBqKr21N0wmx51aE2n5jbMPg2+JmEM6JO1fc7fxlZ0qGL6BuKT8/KVJUUGlbYwICim5iGMuZrNK+p85TObdTMwVr+TxP4zOdJikCQI1i/4Z0BQ3eIGGwBB8c2FtXFd0D+M7B6tlDFj/dsjzL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=crVZvZQp; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="awtrweLH"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-48896199cbaso38506005e9.1
-        for <cgroups@vger.kernel.org>; Mon, 11 May 2026 04:39:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="crVZvZQp"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-459bf19e87bso370216f8f.1
+        for <cgroups@vger.kernel.org>; Mon, 11 May 2026 04:59:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1778499591; x=1779104391; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1778500751; x=1779105551; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=JXwoxY9aO+DdJZo6FW5QgM56rkq1xPTTIDZwqNN6ABM=;
-        b=awtrweLHbVfJ+6Bw9y4sECp2qtc+IrEupfd3CpIoOpE0Z3Z0sUOd+m/G+/IKQL713l
-         rozCh97r0ERbJZI5AMmUiU7wg9ugEJyDfHOc7QeOzEGlhvlp3li7annLpI5vDiRZRWXi
-         zRwUgc2o4pO6DRu/H3+Vl847g7KCc7CHRafUXphKNcDne6tQGRc0Re5fAv4bBFcSt0Jq
-         LFuDRKryDDeydy3/fQOhOXv0r5WI3wuPbN+lHaFGpxBJqZUzf9jZzHa9B5wjEFKcwc1M
-         ZW/+h7abq5nxSyYLoHJ3Ths2IUdjnA3ZzlZeziRjGMQygDdjQUcLRzBIor4DKvDFH5U5
-         TmAQ==
+        bh=btlqUdi0qGhMKZ3fIin3gDvxyyqT63yde/F745AE8nE=;
+        b=crVZvZQpDtP2iYrYETO5PJ5Zteho20POdFeIfBtnrH/7TGw21YcyeLQq8AzeyTJGhh
+         /nvqZXJ1gcsV06WBca+TVHOIK+yLbtS5TK6T8NBCeWAfRrUQN6hww4WxWQ/kXNZJq05X
+         9sqW0FfCqDD/TwHGq6pXTHnYit95O1g+pRuLKbOZbnRWSm1DR9a7cndIn4BrlumGoc1t
+         rIW/DMlWreE7P8fcZ6lSpJeiOeFHVEqaseNaraKpYWj7ByqBMtGqe2ucX4NOqUmqFeQb
+         VLeeQs+s8pSmZM0/7LjtRcRE5YIEdZV2HqMwnflNxHs6k+wOXj4eShGIsj1J0zQML7nb
+         4HUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778499591; x=1779104391;
+        d=1e100.net; s=20251104; t=1778500751; x=1779105551;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=JXwoxY9aO+DdJZo6FW5QgM56rkq1xPTTIDZwqNN6ABM=;
-        b=p7yYY4dQcKPXtDUjDDnlcwGmgv7hg4ujIVXNe0tMCZ65Zm/San7ReiTzLiEwKESqAr
-         8TKUwcxCpUCeKBG/WN14CCD6j5XEqyteYC6t1fRVjc5I0NrxvWa+6o3aFYGk6tqqnZhu
-         u5Bg3+XlffdTA7b7Sj7adRwHrS5q/dGv4V9a4B7FlhGJQYtAm7rhQ5R07RXJJ1W0G+9V
-         YTQpher4YS07F8OqZP+zYod7C4TKBBLZiHY2wKEvSJP+AIm+NuOOSmaS5QISPpAdCK7E
-         0TN1O9GCY297XHADRylZw8CFcTMilOG+70thuc2dHIvkf0uP8SwRVAdAmQpTQ7l5QEqV
-         x3aQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+LcVMZzkR40/5MJNqXTLcqXdFB0rZuOxcEfmsG3vnQG2It9r8Aho8feafTIVRV4CUnApRkntEF@vger.kernel.org
-X-Gm-Message-State: AOJu0YwqHYwrNljV/9Hh4zOSq90LH7pwFutHwW+e9izcNJE9nfvdR8ZW
-	WyLPOOVVUqhC/30i858EzP/c9RcXY6trooKSDyvGBwJmX0Hs1/Vrb95Qv5wDLxuiLOg=
-X-Gm-Gg: Acq92OHapnKB0FM5afnRHx8qJ/EsT4NrtRifJy7e6UHUlv/CUUPf6EfCK0aBeLZzc04
-	R6CV0F0MhLX1iedTLs58oS/4KKzfazdOMRIIBYOnTzgjn1/VIkZ0aZH+dLbwc5AeZumTaMTKELZ
-	JBsQJUYScKaPrBZbyqonkH9YRLzXKh66s0dWvJopVK9ljVNarUQeQNMzcA2A1c8jERNuRUvR7pn
-	6qes8hmaX/NWA+14jEA6KM781SckB2uR2eTd01KcNVjLMEe9X8rMrwQHdwwGTiTglr9Oc92yee2
-	8TmGUJwS9qW4HzQc6c0+XmMNQzK2YV98FgDr8cHFqcYCsakAeYCm/jz87jK/QEyA0NRtrT8Vu0J
-	ZNBVxXtAndVP6C7/zk17meWiEHJ9hoORbrIlgW12pln6vTwIGghGqR7/sQo5q3AgJFKC4m7q5rz
-	YP2fvFD9VIlcUOCn619vwT9yYIL+aSou5xjqp6TI0pJTxxAfXB
-X-Received: by 2002:a05:600c:83c5:b0:488:c683:be89 with SMTP id 5b1f17b1804b1-48e51f2a759mr342964415e9.9.1778499591165;
-        Mon, 11 May 2026 04:39:51 -0700 (PDT)
-Received: from localhost.localdomain (nat2.prg.suse.com. [195.250.132.146])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48e6db0b08asm83235955e9.8.2026.05.11.04.39.50
+        bh=btlqUdi0qGhMKZ3fIin3gDvxyyqT63yde/F745AE8nE=;
+        b=IihL9YR7LLzGmMtxVFoPmXF6DbKWdl3bxbgcXZiRLbaq85/cNd/v4sAiSh6d3ihQkC
+         3AXfP6tEr8xAoJD4nICcAF6Dt/bD7yetlwn5Agy8daOCSETMccSWXA2NI/jzZoTc9x4o
+         j6yRnQfI6MPABPecx7XnW/9bzcL2TOQVokURlHhBK28EajMb4yDdwqESxOvqdja61V7n
+         z6K9Jc09xQ6QUhpZxcm7UTGNyfyM1gu+xlBnE2B1qnErJqJS3Jrzs+1goZQt2/1PBxIR
+         jG8gl8kgrg/R6c7YNYfZg1lx67tyFvJzlGiqmSnUuNnRi++SrGUjgbm5coWPWOyaOBpw
+         Ht7g==
+X-Forwarded-Encrypted: i=1; AFNElJ/yo5XgQVIZ/BJuB0jt2G6ZgTfIhDuwa/y8HUVDBCbLJGRxxORl3kKOrc1BxDtcLdcdKApwW7Ji@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7i245O4XjLLCYzrWCVcSFszV9pilCq0PtjT2cyGJr0IWNkTDW
+	4Q4I7jAsi7E0OucM6+B16ZkqxTDvjm++L5/H2ZhnYLXsiltDBGwqHNuR
+X-Gm-Gg: Acq92OF7ArHMbxOagvMXv35nUTOp2gqg9nddcOXI2yQKOthatSWWNxnn5S1xiuD7uyZ
+	wQGAWoXN1CFlkLnEUFxkkct3jALucUnjphof1qRFdLSi2b3aKRvFoHhu3K1qbSqBJrZqdxYCmAL
+	fL8hvdGJZLa/YkhQBD+Ur6kk361M9gW5mGKMgYAiSrTIssuoMpR4helstuFc0ntseFBqn20mTNB
+	7r1sTjnvZxJynTIb+ATQE8Fsv4QJLlwiI9tt7brcGQs6KgSIeoFgUYdxZxFtWl+oNwjzVbWdQ0f
+	JI9C0jzM6zhbA0JvP8IMo215F0UfCuRTqpfeoWimnVyF/pOSvv8unI/1fU+/43379JJ+MvE8++S
+	oRW9zZ7AEceUUQEjO4jh/oqttsmMAggngXxE33h465D468sAqELqENszLUjL/zi9tglBV9pUUxL
+	wfHZ3ROAqX3tIBywJ6PmrUiEKX7XtqaOJ8LpjUHeyXS/mDamYXY+dWQHlFOqTgjLLrlqu1IZ+G2
+	r4FbXeyhmhx
+X-Received: by 2002:a5d:588e:0:b0:43d:184:8aa2 with SMTP id ffacd0b85a97d-4546140b235mr21067301f8f.16.1778500750944;
+        Mon, 11 May 2026 04:59:10 -0700 (PDT)
+Received: from fedora ([185.193.234.8])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45491bae13csm24580060f8f.29.2026.05.11.04.59.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 May 2026 04:39:50 -0700 (PDT)
-Date: Mon, 11 May 2026 13:39:48 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Hao Jia <jiahao.kernel@gmail.com>
-Cc: akpm@linux-foundation.org, tj@kernel.org, hannes@cmpxchg.org, 
-	shakeel.butt@linux.dev, mhocko@kernel.org, yosry@kernel.org, nphamcs@gmail.com, 
-	chengming.zhou@linux.dev, muchun.song@linux.dev, roman.gushchin@linux.dev, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, Hao Jia <jiahao1@lixiang.com>
-Subject: Re: [PATCH 0/3] mm/zswap: Implement per-cgroup proactive writeback
-Message-ID: <agG-gNEclOVf-9WA@localhost.localdomain>
-References: <20260511105149.75584-1-jiahao.kernel@gmail.com>
+        Mon, 11 May 2026 04:59:10 -0700 (PDT)
+Date: Mon, 11 May 2026 12:59:08 +0100
+From: Vishal Moola <vishal.moola@gmail.com>
+To: Hongfu Li <lihongfu@kylinos.cn>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev, muchun.song@linux.dev, tj@kernel.org,
+	mkoutny@suse.com, shuah@kernel.org, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] selftests/cgroup: check malloc return value in
+ alloc_anon functions
+Message-ID: <agHEjG7_fHMAnQrw@fedora>
+References: <20260511021615.1768623-1-lihongfu@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="o3jizhh4qfyisfpc"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260511105149.75584-1-jiahao.kernel@gmail.com>
+In-Reply-To: <20260511021615.1768623-1-lihongfu@kylinos.cn>
 
+On Mon, May 11, 2026 at 10:16:15AM +0800, Hongfu Li wrote:
+> The alloc_anon() function calls malloc() without checking for a NULL
+> return. If memory allocation fails, a NULL pointer dereference will
+> occur when accessing the buffer.
+> 
+> Add proper error handling to return -1 when malloc() fails in all
+> four alloc_anon variants:
+> - alloc_anon()
 
---o3jizhh4qfyisfpc
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH 0/3] mm/zswap: Implement per-cgroup proactive writeback
-MIME-Version: 1.0
+Just a nit, It looks like the below already have proper error handling.
 
-On Mon, May 11, 2026 at 06:51:46PM +0800, Hao Jia <jiahao.kernel@gmail.com>=
- wrote:
-> From: Hao Jia <jiahao1@lixiang.com>
->=20
-> Zswap currently writes back pages to backing swap devices reactively,
-> triggered either by memory pressure via the shrinker or by the pool
-> reaching its size limit. However, this reactive approach makes writeback
-> timing indeterminate and can disrupt latency-sensitive workloads when
-> eviction happens to coincide with a critical execution window.
->=20
-> Furthermore, in certain scenarios, it is desirable to trigger writeback
-> in advance to free up memory. For example, users may want to prepare for
-> an upcoming memory-intensive workload by flushing cold memory to the
-> backing storage when the system is relatively idle.
+> - alloc_anon_50M_check()
+> - alloc_anon_noexit()
+> - alloc_anon_50M_check_swap()
+> 
+> Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
+> ---
+>  tools/testing/selftests/cgroup/test_memcontrol.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+> index b43da9bc20c4..8ef9c99a82eb 100644
+> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
+> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+> @@ -61,6 +61,11 @@ int alloc_anon(const char *cgroup, void *arg)
+>  	char *buf, *ptr;
+>  
+>  	buf = malloc(size);
+> +	if (buf == NULL) {
+> +		fprintf(stderr, "malloc() failed\n");
+> +		return -1;
+> +	}
+> +
+>  	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
+>  		*ptr = 0;
 
-I can imagine the zswap writeout can come at the least possible
-moment...
+Every malloc() call in this file has this same pattern. Maybe we'd be
+better off making it a helper function?
 
-> To address these issues, this patch series introduces a per-cgroup
-> interface that allows users to proactively write back cold compressed
-> pages from zswap to the backing swap device.
-
-=2E..but I see this series is not only per-cgroup proactive reclaim but
-it's also age-based reclaim.
-
-The per-cg consumption and limits (and regular memory reclaim) are all
-measured in sizes. This age-based invocations don't seem commensurable
-(e.g. how would users in practice determine what is the desired input to
-here).
-
-Could you explain more reasoning behind this design?
-
-Thanks,
-Michal
-
---o3jizhh4qfyisfpc
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCagHAARsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AisVgEAue3WyVVGY7GBg1v3Zt8e
-eeD5pIl0nLnXPUEjlLTIJNUA/2WZU04Y/56uL4zU3y+755L6om2vsL3DmWWaCGB9
-0zoN
-=7Raz
------END PGP SIGNATURE-----
-
---o3jizhh4qfyisfpc--
+Either way:
+Reviewed-by: Vishal Moola <vishal.moola@gmail.com>
