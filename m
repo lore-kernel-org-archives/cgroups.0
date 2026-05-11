@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E183C4540;
-	Mon, 11 May 2026 08:35:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 488BB3C3C16
+	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 08:36:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778488559; cv=none; b=PHIzu0pa+sCW9psUlj4qcyhjP3JVImh9QYKebsLPERw0yw2Xd6gAyAX9brKVQWzJO8ZvQKoBOhs9Ku8PpO99mNT0JvgofUyUJOC+NiuZ3TPYeAH+sVLAhzCK9MQNbM+GTNR4J+JEVCfBe29wlAaDDroiFCTDLC5cSzsChMvJ0zc=
+	t=1778488562; cv=none; b=E2NM/CPhQ/MKI9T9I2SwVkEo/JAdYGI853rVavLHbYLn5CYWR12ssct7ZgOHllF30fJEm/4PbidhS7br3GhnxOB2vD7CGw9EvYG2DtcKg3UQObVniM7RDYAHJyrMmjnDn9yxOr2t/Z5Q1XdQ1MpUUQvwOlv2r3ZKq3fzquk7vKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778488559; c=relaxed/simple;
+	s=arc-20240116; t=1778488562; c=relaxed/simple;
 	bh=/EBK9Za3dzKeST6xzL+uhXsqga85E68iUDnkuLoGL9Q=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=NnU5yQtdcGSx9ZOmtHXg1bedoXOz0yegggtoaDeulOcn0etFKnIaxOM1IM1fMmQEgsPmFFYRXx/tfzWcyM6x5EGLN5kwlqkH1JEZF7VsEfwHQbwujxkr93Iv/G5pAJhak9MGC+sEb1tV/t5UB1TnH5Ca0hJUQ/6648/PStfgt6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DY61d69C; arc=none smtp.client-ip=10.30.226.201
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=UKQ75UxkRbFXY9V05InkDh5LvEQcT8Yy9xjeOj3v2iuHDn0nuwMCm7I6sKy7vqzkWXA1fscBEBtgw2oyO4PI02p/kU2tT2DGjOqTPU48WWtSAkqpMESN0t+RO+M3FxF7fBjsxfNiQfZ+h4lEoipVLeUQQESUu+Yar6oIFJzazo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G8xk+Rc3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DY61d69C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DAC7C2BCB0;
-	Mon, 11 May 2026 08:35:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G8xk+Rc3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C1A7C2BCF5;
+	Mon, 11 May 2026 08:36:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778488557;
+	s=k20201202; t=1778488561;
 	bh=/EBK9Za3dzKeST6xzL+uhXsqga85E68iUDnkuLoGL9Q=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=DY61d69CJfp19KazmqNOGXOlE0zodqOtGBXFfZqUT1fw5rJyP1eqzeA+fUqo0FX44
-	 v/qlsgBJWvKRB7guPiVmcyg6aaYrRWyylje0MrvCj/Efy0hprOxKr+2VdmceYbKAbR
-	 SlkIyQ1/Q/skQIzhyVAwxtmBnmDQTDnPSbulmSuqZa7m9fdpAkR1UE6FAvm6+BYirD
-	 xl2aHdMkjHZ9bRUg8AzoCSf0boyJ/PkrMiKWPRzv5yZE63Pxxzqfd0FucZ+A5YyBYd
-	 QT9GT+Hgqhco+O58i4MrG2PC3p2KfIDsLkvoGYnWpLA/h013/f8YhhiDFrO39vzOhD
-	 xXQ2IzAsLxqRA==
-Date: Sun, 10 May 2026 22:35:56 -1000
-Message-ID: <60bda7187dc09b87588e47276174c71d@kernel.org>
+	b=G8xk+Rc3eIqRQt0vI+6veshK7W/MVAEz7JeIhLc4M4dcGm7SoWeBNHQv2jZSqlEXu
+	 QnR+almD3L3H33Edqx4yqbXSqQwBOZN8++75J/9PIdvNRplbZiTI2hNxWFc4nlVXLI
+	 1FKMIgO46h771tsFMwWkwcApyP1CBQpW5q7cxOah+XzgW6iCrGdQS1AH5ORNTf3BVz
+	 ZXp2E8qvKzK1BS2slUF9PwttI453s4tMEVB9bC65H728nPvgwaeRL2ERzNL/UQF0gi
+	 TG0uE1GeiAyJaTwhp766f07YQNGbGJFwoX4nl9COYQWG/9WNBXD+3jD+D0I/lkows0
+	 KOYse6KMExc+g==
+Date: Sun, 10 May 2026 22:36:00 -1000
+Message-ID: <1217c9bba758367164b27f508b27a84c@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Hongfu Li <lihongfu@kylinos.cn>
+To: Tao Cui <cuitao@kylinos.cn>
 Cc: hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
-	jthoughton@google.com, seanjc@google.com,
-	zhangguopeng@kylinos.cn, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] selftests/cgroup: Add NULL check after malloc
- in cgroup_util.c
-In-Reply-To: <20260511060853.1873161-1-lihongfu@kylinos.cn>
-References: <20260511060853.1873161-1-lihongfu@kylinos.cn>
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH] selftests/cgroup: fix child process escaping to parent
+ cleanup in test_cpucg_nice
+In-Reply-To: <20260511061508.255649-1-cuitao@kylinos.cn>
+References: <20260511061508.255649-1-cuitao@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
