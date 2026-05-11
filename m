@@ -1,145 +1,102 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5207733F8B1;
-	Mon, 11 May 2026 09:05:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D2C63ACF1A
+	for <cgroups@vger.kernel.org>; Mon, 11 May 2026 09:18:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778490329; cv=none; b=U4ScQFTbyQpWM0DFAJWkyUytM1q5dKPb4jb57C6tyhUf8E/mTYcJLwS/VETTNCA4ca8C6Tg2YUznjOGw35fOzj9n+7LrhdPfdZw9qV2i/Ilo32E9J+TLkf61ljBheJ0ba72yNprF99pXwcFwvS5jrbw+qTllUZy0VFejbER2J/g=
+	t=1778491090; cv=none; b=PxZ0RnTCxmgHj7vx1WbzbpQcuPyjHqPSzDbTTVMZy9SFTZjSio74DW91Q3ybdkfxSOJL1VKOlTLvw5WasfYukr53w28mVD/p9DtLykbGt5WHMZ64Ax30gZ1FMBKWXHi6MvOi4o40IAdRTyBjmuFjZv4BaezblJpAaEGYTPuBCgQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778490329; c=relaxed/simple;
-	bh=srk5mZG7aTdHgcZkrQCyoDZYyMrqXbpKqPz+lXoIZSQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MuUkK3/bLYgV4OzeFsmLhLiKOQYOIOo1Oe4HYD8cZJ4JKTORxWHqGTCp4KUAn7dtrweEX5caO7YnCoi7kEc58WN5oYWVvSxH2Db/2VlbxMFEtFMrzpJ54AnmSf2cj8gfgRQR2ia72kyisM0Lwqr1bmR+cGSkJ+Q31Sz0M6lEdQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gDYhL1dVSzYQv2f;
-	Mon, 11 May 2026 17:04:50 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 047C840576;
-	Mon, 11 May 2026 17:05:19 +0800 (CST)
-Received: from [10.67.111.176] (unknown [10.67.111.176])
-	by APP3 (Coremail) with SMTP id _Ch0CgDHJC3NmwFqxEJ0Bw--.56076S2;
-	Mon, 11 May 2026 17:05:18 +0800 (CST)
-Message-ID: <22d91fdc-db54-4bcf-bc5a-2a496cc43057@huaweicloud.com>
-Date: Mon, 11 May 2026 17:05:17 +0800
+	s=arc-20240116; t=1778491090; c=relaxed/simple;
+	bh=pwWkAtpKB25W5l/pFKutykzdZw0GbktZByfPApb8TKg=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=qg/JcQuEK809ToU43n8bayM1LOzJdlDuvMsWid2YxzfDIB8Vhr0D1XcNHWzSAKHd9augoVkCy8Gb7WHXqva/a4T1cxm0E3sZ9bZXSLnjX5S1vjSrTkT1PjIt1iups+Eo+YnZjvGM5GbKcQiC4Ergzu21rcvBm6ERhrLBl4U/3WE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eJ1Y2kCq; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eJ1Y2kCq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778491088;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ei0HxkGf9mos5QkEOT0Kl7X6cJ9/4FAxEWCyRzKiivY=;
+	b=eJ1Y2kCqbzVRXs3FbYHFqsJKbbj7zAGatp02fNml+kTGuDGSioXSVXGkUkhQklStRfTs8t
+	MGUZMwLZsv+eiVBQLLU1sf5AUqe1cl8ziybuG/zUHrWWJJCRhwVMTo9pVpdS2by2kuRqVj
+	FF6UmBYifUsEWxPCwczzmthOn7hgMeA=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-670-w4C5fSlgOU6ehWR_qJvTjA-1; Mon,
+ 11 May 2026 05:18:04 -0400
+X-MC-Unique: w4C5fSlgOU6ehWR_qJvTjA-1
+X-Mimecast-MFC-AGG-ID: w4C5fSlgOU6ehWR_qJvTjA_1778491082
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2DF461956096;
+	Mon, 11 May 2026 09:18:00 +0000 (UTC)
+Received: from jlelli-thinkpadt14gen4.remote.csb (headnet01.pony-001.prod.iad2.dc.redhat.com [10.2.32.101])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 390AC30001BE;
+	Mon, 11 May 2026 09:17:53 +0000 (UTC)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] cgroup: Keep favordynmods enabled once per-threadgroup
- rwsem is active
-To: Guopeng Zhang <zhangguopeng@kylinos.cn>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>
-Cc: Yi Tao <escape@linux.alibaba.com>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260511081607.83490-1-zhangguopeng@kylinos.cn>
-Content-Language: en-US
-From: Chen Ridong <chenridong@huaweicloud.com>
-In-Reply-To: <20260511081607.83490-1-zhangguopeng@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgDHJC3NmwFqxEJ0Bw--.56076S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxAw17tFWxKr4DKFWDKr4Uurg_yoW5ZrWfpa
-	nrAryftws8KFn0yas7ta40qF18Jr4FqFW7JFWDKw18Aw13GrsYqr4Ik3WUXF1jvFnrGFW7
-	JwnIyr4kCF4qyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyGb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAK
-	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
-	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xII
-	jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
-	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
-	67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1veHDUUUUU==
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v3 1/2] cgroup/cpuset: reset DL migration state on
+ can_attach() failure
+From: Juri Lelli <juri.lelli@redhat.com>
+To: Guopeng Zhang <zhangguopeng@kylinos.cn>
+Cc: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
+ Juri Lelli <juri.lelli@redhat.com>, 
+ Chen Ridong <chenridong@huaweicloud.com>, 
+ Johannes Weiner <hannes@cmpxchg.org>, 
+ Vincent Guittot <vincent.guittot@linaro.org>, 
+ Dietmar Eggemann <dietmar.eggemann@arm.com>, 
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, 
+ Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>, 
+ K Prateek Nayak <kprateek.nayak@amd.com>, 
+ Gabriele Monaco <gmonaco@redhat.com>, Will Deacon <will@kernel.org>, 
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+In-Reply-To: <20260509102031.97608-2-zhangguopeng@kylinos.cn>
+References: <20260509102031.97608-1-zhangguopeng@kylinos.cn>
+ <20260509102031.97608-2-zhangguopeng@kylinos.cn>
+Date: Mon, 11 May 2026 11:17:48 +0200
+Message-Id: <177849106875.40525.17604766142898490713.b4-review@b4>
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1778491073; l=744;
+ i=juri.lelli@redhat.com; s=20250626; h=from:subject:message-id;
+ bh=pwWkAtpKB25W5l/pFKutykzdZw0GbktZByfPApb8TKg=;
+ b=gCDpgyRUkJiJ/KLH1Ost4djuseF3N6kDpjk7XIvyGDqNrJA/Iadf19qNKe3vftt0bZY4nJu9G
+ 45TmyX5XQ2nDS4UGAkq7+pdREbRvF0m3BLQyP6PkLFHAox1ty2D3lOo
+X-Developer-Key: i=juri.lelli@redhat.com; a=ed25519;
+ pk=kSwf88oiY/PYrNMRL/tjuBPiSGzc+U3bD13Zag6wO5Q=
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
+On Sat, 09 May 2026 18:20:30 +0800, Guopeng Zhang <zhangguopeng@kylinos.cn> wrote:
+> cpuset_can_attach() accumulates temporary SCHED_DEADLINE migration
+> state in the destination cpuset while walking the taskset.
+> 
+> If a later task_can_attach() or security_task_setscheduler() check
+> fails, cgroup_migrate_execute() treats cpuset as the failing subsystem
+> and does not call cpuset_cancel_attach() for it. The partially
+> accumulated state is then left behind and can be consumed by a later
+> attach, corrupting cpuset DL task accounting and pending DL bandwidth
+> accounting.
+> 
+> [...]
 
-
-On 2026/5/11 16:16, Guopeng Zhang wrote:
-> cgroup_enable_per_threadgroup_rwsem is a one-way switch. Once it is
-> enabled, cgroup.procs writes use the per-threadgroup rwsem and
-> cgroup_threadgroup_change_begin()/end() use the same global state to
-> decide whether to take and release the per-threadgroup rwsem.
-> 
-> The disable path warned that the per-threadgroup rwsem mechanism could not
-> be disabled but still called rcu_sync_exit() and cleared
-> CGRP_ROOT_FAVOR_DYNMODS. That partially disabled favordynmods while the
-> global per-threadgroup rwsem mode remained enabled: cgroup.procs writes
-> would continue to use the per-threadgroup rwsem, while
-> cgroup_threadgroup_change_begin()/end() could observe the exited rcu_sync
-> state. The root would also no longer report favordynmods.
-> 
-> Make the transition match the documented one-way semantics. Call
-> rcu_sync_enter() only for the first favordynmods enable, and make later
-> disable attempts a no-op after warning once the per-threadgroup rwsem mode
-> has been enabled.
-> 
-> Fixes: 0568f89d4fb8 ("cgroup: replace global percpu_rwsem with per threadgroup resem when writing to cgroup.procs")
-> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> ---
-> Manual AB test:
-> 
-> Before this patch:
->   enable favordynmods:
->     cgroup2 opts: rw,relatime,favordynmods
->   disable attempt:
->     cgroup2 opts: rw,relatime
->   dmesg:
->     cgroup: cgroup favordynmods: per threadgroup rwsem mechanism can't be disabled
-> 
-> After this patch:
->   enable favordynmods:
->     cgroup2 opts: rw,relatime,favordynmods
->   disable attempt:
->     cgroup2 opts: rw,relatime,favordynmods
->   dmesg:
->     cgroup: cgroup favordynmods: per threadgroup rwsem mechanism can't be disabled
-> 
->  kernel/cgroup/cgroup.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 6152add0c5eb..fd10fb5b3598 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -1297,14 +1297,13 @@ void cgroup_favor_dynmods(struct cgroup_root *root, bool favor)
->  	 */
->  	percpu_down_write(&cgroup_threadgroup_rwsem);
->  	if (favor && !favoring) {
-> -		cgroup_enable_per_threadgroup_rwsem = true;
-> -		rcu_sync_enter(&cgroup_threadgroup_rwsem.rss);
-> +		if (!cgroup_enable_per_threadgroup_rwsem) {
-
-Is this branch redundant? I think if (favor && !favoring) alone should suffice —
-or can the outer condition be true twice (i.e., can this block be entered
-multiple times)?
-
-
-> +			cgroup_enable_per_threadgroup_rwsem = true;
-> +			rcu_sync_enter(&cgroup_threadgroup_rwsem.rss);
-> +		}
->  		root->flags |= CGRP_ROOT_FAVOR_DYNMODS;
->  	} else if (!favor && favoring) {
-> -		if (cgroup_enable_per_threadgroup_rwsem)
-> -			pr_warn_once("cgroup favordynmods: per threadgroup rwsem mechanism can't be disabled\n");
-> -		rcu_sync_exit(&cgroup_threadgroup_rwsem.rss);
-> -		root->flags &= ~CGRP_ROOT_FAVOR_DYNMODS;
-> +		pr_warn_once("cgroup favordynmods: per threadgroup rwsem mechanism can't be disabled\n");
->  	}
->  	percpu_up_write(&cgroup_threadgroup_rwsem);
->  }
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+Tested-by: Juri Lelli <juri.lelli@redhat.com>
 
 -- 
-Best regards,
-Ridong
+Juri Lelli <juri.lelli@redhat.com>
 
