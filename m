@@ -1,193 +1,358 @@
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020093.outbound.protection.outlook.com [52.101.195.93])
+Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD43837EFF1;
-	Mon, 11 May 2026 20:25:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.93
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778531134; cv=fail; b=VVif1VoqsAIYf0aNJcIS32uqcjy60PhfZZqU3Fld3cbJRzvyQV+TOKgcUlRnpqzU71XdcW3Wl7oJcV9BjX4/yLvOrHEpj1/snWj0ZkFwxutZTS+TU6++VMwdPf5UAo9q7ewvmk12lV+fCfdNXRWwQTIwwnZXOXM+hgXrwHm7T6Q=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778531134; c=relaxed/simple;
-	bh=r7hDVemhI2YXZfCJE7LzF9SAYP0T8p1nJVdHsC6eF3g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=g7ORScUQ1fM+rMDHTgyct9CzRdwg7JM6WX9NJdZK5/WZABQ2r8FfcMwPGpmyp+YjDLDUWB9+6G2zTDH3cqlKXVZ/Pq6tV71bRdtBwRtXlvx5q5X3qJphA+hfLRDJ6D9S/lWsNklEE8zv62NORAWeT3l+1GIqwgSCIW08R4GLTOY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.195.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=C6koXPU0I/sBtSe1Q7a23jMQYCQ2YX6TYo0uj2+V5IgtQ/Tm7pmAZ7eSraJ9pFVxA34clU4ac7fG9XK2Q5ghHazAGQWkg7rbKs0MRCq+IcI6/p0JjcpfhEJ7RAxOj3HkBKWWNKee9xhNA7sJwz8eT4eqpOVlWQp9Y2Y4CN9iM+21v8ZaYWL8W1QUoP+0gTadYRFm6EtveTFrT6BhxS0uC6AYxSFrd6v4chvvSHy1FW3TPFpm+Rw4bix7rwgnYQqnIKGsLYmVe5jExOWzIyoO1f7Jfh+glFS7yMh6kIXjBYwwH9t1b2NSEVWakdYNmb4nZo+A1qQw39Jpb9I9Rm1JvA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=r7hDVemhI2YXZfCJE7LzF9SAYP0T8p1nJVdHsC6eF3g=;
- b=Ui3YOY2T4yNcWrwAlmyjHToCMZaWsxXzQtB9LePmj7Hqnqvg4VKrSZrFzYTgagjpLB3fXs14+KpeGuziGGI69k4769bHDl3ddYT5IMN/MTeSSO3CbNFjFsIdQNxYXEmnL7LaEymV62yYy36Gw5LvSZcfl5FC0lcENMWtttm5N0gqoIAthGZcjTnG8bF2baPYx2CRCBetGuAt+ZPdFpwNybWPY2MJIl0B8cXo+vOwoK7x2VZXbG8NIiO2ITXgu/7UURV9uwREjyULrHckV6ZJS2HuQCrS+zNkSUPOb76ZwuO2iWojIhspcBjVWNu3u0F2/tmxzptxlKJ2N6n6R35gaQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
- dkim=pass header.d=atomlin.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=atomlin.com;
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
- by CW1P123MB7820.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:243::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Mon, 11 May
- 2026 20:25:29 +0000
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9846.025; Mon, 11 May 2026
- 20:25:29 +0000
-Date: Mon, 11 May 2026 16:25:25 -0400
-From: Aaron Tomlin <atomlin@atomlin.com>
-To: Waiman Long <longman@redhat.com>
-Cc: tsbogend@alpha.franken.de, paul@paul-moore.com, jmorris@namei.org, 
-	serge@hallyn.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, 
-	vincent.guittot@linaro.org, stephen.smalley.work@gmail.com, casey@schaufler-ca.com, 
-	tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, chenridong@huaweicloud.com, 
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, 
-	vschneid@redhat.com, kprateek.nayak@amd.com, omosnace@redhat.com, kees@kernel.org, 
-	neelx@suse.com, sean@ashe.io, chjohnst@gmail.com, steve@abita.co, 
-	mproche@gmail.com, nick.lange@gmail.com, cgroups@vger.kernel.org, 
-	linux-mips@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] cgroup/cpuset: Fix deadline bandwidth leak in
- cpuset_can_attach()
-Message-ID: <dif4xi73znyz3diguyxihzztgosvyj3bjeh3y3oidg4gnt2qpv@5nygeq3rk333>
-References: <20260509164847.939294-1-atomlin@atomlin.com>
- <20260509164847.939294-2-atomlin@atomlin.com>
- <8aaa7dd9-2426-475c-af64-85ef5f2aa855@redhat.com>
- <aihz6zlfmcaxwb3ef4luisfpwqibwsajpphy5vzuksy3ftfkms@whhv2ax5plpb>
- <354af9fc-1c70-4ee4-a0ff-8821bebec7b8@redhat.com>
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="jrqcg3cyap65nupq"
-Content-Disposition: inline
-In-Reply-To: <354af9fc-1c70-4ee4-a0ff-8821bebec7b8@redhat.com>
-X-ClientProxiedBy: BL1PR13CA0270.namprd13.prod.outlook.com
- (2603:10b6:208:2ba::35) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:400:70::10)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4DA437FF51;
+	Mon, 11 May 2026 20:26:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778531171; cv=none; b=Zylo3e5bINaVqwMeJtB1V5Lz4tAs9ETDxER+sgH8tMPc8783TlnS18EQMMhPPpcxuGGGvKHktUukvYixmoctH4zl9di7B1u7ZlOPW96pQ35forvUH9Q6F80pKMxubC97XhWGLek2N78C+o0hlGJ7yGCb8CjZ3BQl8n1MXgaxJkk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778531171; c=relaxed/simple;
+	bh=GDUTVCLbaqnFxJHy/T1zq9alaGPwroXfhDoW1ClGD0g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=UQTlPMaK2WlvhF6xTerQEkfKn0+EusyfNc9GXoaqNevs1gLn3nM+1YTBKJypsl4d/MXYBOUMTjPOBJn8gDJ5X6mooBLsVDZ0R9n/HQ9UDZq0oiZGcCwPWsKI1zzQhFjVj7j2IixL1/B8L0L/3NTuR5ZiZPMUYIjg+Sq//lO8nSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.196
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 053FD3ECD9;
+	Mon, 11 May 2026 20:26:02 +0000 (UTC)
+From: Alexandre Ghiti <alex@ghiti.fr>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Dennis Zhou <dennis@kernel.org>,
+	Tejun Heo <tj@kernel.org>,
+	Christoph Lameter <cl@gentwo.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Yosry Ahmed <yosry@kernel.org>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Chengming Zhou <chengming.zhou@linux.dev>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	Minchan Kim <minchan@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Barry Song <baohua@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Wei Xu <weixugc@google.com>,
+	Yuanchu Xie <yuanchu@google.com>,
+	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	Alexandre Ghiti <alex@ghiti.fr>
+Subject: [PATCH 4/8] mm: memcontrol: track MEMCG_KMEM per NUMA node
+Date: Mon, 11 May 2026 22:20:39 +0200
+Message-ID: <20260511202136.330358-5-alex@ghiti.fr>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260511202136.330358-1-alex@ghiti.fr>
+References: <20260511202136.330358-1-alex@ghiti.fr>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CW1P123MB7820:EE_
-X-MS-Office365-Filtering-Correlation-Id: 05b6edf2-a782-486d-95f3-08deaf9b712e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	sCWaxIkpj48DqctKtcI9qgp5NNpp81gNVBRYl0fHYmp1XC8KBi+nmT4bXdQ/sPecu4/0WgZxQg1Zi4oUPZPJMTab0QSjq3N9TdqtvSSRVsDo1i3otizMzNSf1ap8omwmEChKi0SaPt5tnBk9iDuPJaXigoEO6F7NfyA+z25n8X8/cMCneWWA8stt6E1aHWCA8/f87t8SJYYYMpX6YJlqr5ug8XnHGBs1+SbmS6QysvmBu69AOOf5uqINZPN9ztfXgRzr1qt1abLnK7hYlRi2WeZKeDisyI+n457UBk0lA7d7D+5KCFsEeK2tj/i5KWICrM1OOzICUfBPqIQyhwKj8PwTqQkXx2uYD91UVouIPlfcdXnj54+d4rivPeyYaVZcd50Oz/f4Auc/78R0BLLi6uCE15AAJJDfDcbSgjYLhCBMRH74ca62aGNfxFRA6hjdj8xGvXXEU8YsylJxhyLxMLDh5N/1gMJUKiBQRxmv4HHZCaV1+cc2LtTeiRY9KnVlCKFzDEauTvILDcCH+agvYEOHq0K0FUR0Q+9KYS9qW1QTOjT19vQvk0Sr4fzk3EIp31rVaV8wniY3orcRnPACLxUhYcIKAi/A1vmwIEU/do041lS/EaHH+l5SLWOk1udJN21FAvM606h3jSLzvGG4ahSIZVG+A4VedMVWkIFzm5EKalkhzIhQ7iW7IZmpJA1aaA8h/0E3hRtclvBEzB5Uxg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZXNrUVZjeGF3TTRhMTVvaGxYN2E5ZXkwdEU0OXBRREhJLytmZTJaTWl2bnNi?=
- =?utf-8?B?TXVTK2NQd1drMmpHQlRDQnlWUWpxMHFPNVp3bk5yWUlxNVBGSTJabjlxVjZi?=
- =?utf-8?B?VnpURXJnUmMyM241NnB2WGE3aGwxc0dWSms4L1ROdm5nQzlTMDBxam5URmt1?=
- =?utf-8?B?bFlhMFFvK2FqNW9sc2s1WGhBTFhYMlpuaHhhNENyZmt3Vi8xTEM1TEpQZzlm?=
- =?utf-8?B?b0Zyb0YrdFhIRGh1R1p6M2tuSWw4cmtoLzNudFpmK3orblcxckRmeFFJaHRJ?=
- =?utf-8?B?UE1CUXpoZ0lBcVFENURjczlacVRDWTZsZXRwUkRZb0Z4d2U1elEwY20xVHZT?=
- =?utf-8?B?U3NQdk0zR2VhVkhzMXVRdnhTemR3V05rRWtUVXlsQXY5M1BJTnhuU2VvT2Nq?=
- =?utf-8?B?QUk4RmNqTGk1amE5UWZjNEFHVjlYVEtlTjdSa0t5akxUWU83MFM0SERrQ2sv?=
- =?utf-8?B?TFZnYkRua1BVNW5lQ08zQVE2WEZOVVhRSkpxclB4MDJDQ055UXhBZzA4cmtC?=
- =?utf-8?B?TGFuQVNEb0ovaGhESS9yM2d4MTZqQmxzMUZHLzRjN2UrWUFRTmd5V09HQmlG?=
- =?utf-8?B?QTY0bnRDZnZQOUhSeHV2dDRMTzNNdTNPQ1d4YW9TdmQyang4a1ZxeTlPUHRP?=
- =?utf-8?B?RWZmU2JFMERyaHZWOGNvZVg3b2UxNEZRZ0wwVG9tUEg3a2pEb2tZZjVKOHo4?=
- =?utf-8?B?YVlIeGNHdkMrMXk0aW1XWHdzYWpCaWM2cG9MeWRoUHBYYnczSW10L294YWxL?=
- =?utf-8?B?bGRQWjF6eEdOVEVleVJPWW1CQVpVSndJTUhEVW1pUmVTRWZWWXVQQzhFSXc5?=
- =?utf-8?B?aGVOUkgxUzFkamV3dmJkbVRvSmFTY1N5ajRKOW1sNVE1TnFrMm5pK3Y3a3lQ?=
- =?utf-8?B?Z3g0UFZVSHZ3bmxtT1FMSWdmTjJMdWtHSXZiVlQ2RGRjdUZFQjRWbklDS1d3?=
- =?utf-8?B?RHRVeUlEVjgwMjVRSVFZVlNmeW5pclR5OTdrVWRzR0NZQ004WEZ5eWxaT3d2?=
- =?utf-8?B?UjU4TFdVejlVK1RCN0xrN1Z6b3FPUHh3cTNmbEZTZUt0RTgxYjdUc0NJMEZQ?=
- =?utf-8?B?ZXdKWlNITGpXUUxPVWRqNHZLM2F4bTlFMEh0R05ZMktJU0lsRzludFZJY0xX?=
- =?utf-8?B?bWpEdmxMdWpUbFkyZlhOc1FZK1FENU9pOGk3aUpubDdGaCtjbEVlYWNUNUdC?=
- =?utf-8?B?NXdtbitkZHYwUE1jMkE5RGl5bkt4QmVQT0NlY05jclRUNXY0OHppTVFmTUxo?=
- =?utf-8?B?Njg4MTZDTGErUEh0UjFYZStSYW1mR2FXa2h5ZTJ2ZjZ2OWlsNC9oOFRnTmhN?=
- =?utf-8?B?dXN0N1Qxa1c3Z3k5RFNCSzdZTDFmQkszdkdDYkhTc0g3dm0vU0J1bVo2eWUz?=
- =?utf-8?B?SmVrVVBNa0ltdE0rTVgzR1NUS1c1VXcxSkVwKzhDUitEMWZVL1NLRzVCY1F0?=
- =?utf-8?B?MENDVTJTOEZFZFRKaVEveGhOeU1IWlM3bGFrQXdzNVZ1Q0hYVEIyZ0hhbjJB?=
- =?utf-8?B?V2NtYjkyMTNvTjh4OHVuOHAwd1UzTGdySmdrcXRDMVVSd0RDQk1IZ0VzcFVs?=
- =?utf-8?B?UDdRTlJqMkcrMUpMc2pyTXdzU1J6aTZ4anNIMytucW5Kd3ZScVZQK2pFMnRQ?=
- =?utf-8?B?VXNqajhvZWtYZ01Pdjd3WlA0eUtWcERJVi8waTJROUZGMmc2VExlVExNUnA0?=
- =?utf-8?B?RGpvTEFyTFBYQkNzbm9EMzZPc0JGZjFTdWtMOUQvRGZEU2hpYmplUUhEUFBO?=
- =?utf-8?B?cExncFNtK0NCdmJRdVc3aWd0UVBGRmxjdDlxc0xkbC9TRERyNXMxSzBwbTJy?=
- =?utf-8?B?SThtYVRwNzlLTzBXckRMcDArbHBFUC9FOW1HaUhrcXZ1YmFrenFvcXhRWUY3?=
- =?utf-8?B?RERVNVkwR21DSll2bGdibTdSTWVzSlc3bnRRY2xsUllIVEgzMGx5eDVqSzgv?=
- =?utf-8?B?RTFla3E3aExwenI3bFV1NGh0UzAvR0MvUmZYbkdLSVVYQXR4Vm03SGVxT0tQ?=
- =?utf-8?B?UStLSkZ4YkZzdklXWk01MS9NaEUvVmdmNlFDcWdReW1OVFN4NnFwazlQdUhK?=
- =?utf-8?B?RGJmcjhUVnduV2hHaVZZV2hHQmdiSVo3Y3RrSVZpNDgyR0lXQ1FkNk93N0NC?=
- =?utf-8?B?M0wvY2hiWGFwS1pMcUlRd2MzcXFzU1VJajBDWElIMmhnbmJNQ0NqbHQyZ3Qr?=
- =?utf-8?B?V2FUQ1VEV0dwNnpzam8zL0pKbU5UWnVQWWtFSkMrNW1GellQS01WWG0rTngr?=
- =?utf-8?B?RHVyVkpJVkxmREdQVEtVaktnS1lFODBYYUdSQzEwL2R6ZWN6eE00U3pGR3l1?=
- =?utf-8?B?YUtPVlM4cFk1a1hralpGREJiYjlVWmh6eWg2QkZGOFhaRTYwN1NRUT09?=
-X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 05b6edf2-a782-486d-95f3-08deaf9b712e
-X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 20:25:28.9521
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ah7l86FDJvbj3RdeyHcdXA0zwoT9Tm05wokBH0wvd2Ul3wTjX+c6wXNBTSt4WMIq32Yd7Vy1tVLxnZpeK7u8SA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CW1P123MB7820
+Content-Transfer-Encoding: 8bit
+X-GND-Sasl: alex@ghiti.fr
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: dmFkZTGASuQ7DzVEqE1yqVdt2m1IEMvyeiZ424ZAVS1woSZRBsZRcHOaYxo/wRroa9V549fgoGhwPyYnAfDpxQNFtzkxj0I5TMeBg/5jBppJQkWIBRGnFCdwyKb3+iAwjbc6HCyc2w6Fq1RMe0bJWfA1ndpco4RPwk+ydi46o3tuXnoPGtt57UGuv0fBX6aLFC8egYVKjqd5+b/oNYSj52BJhnje7YewqzwfY3MT59q3IHUZSXd+23dBE9VioRxzwOkioSO0aPH0PeFEsizQ7P2RVgZRWW0PznWL4m6swkEsBSSzcbL/DhTQy/lqZtdEuHj15ch+irNHdmG3iRmpUdYJcCG6UFYwppZMwjrObvHgS58EMHksvqWQIt2KoQM0PZI1xpseSbGrSzDpknKQ+GFdNcw6nOnuQ7+BHS8KOGvpiRrvIYuNxZheuDRqrTykhxMCB4UABVryh8YDbWheFsYjuf47s1ibUxyV/k+zNA2KBvnrWQo+TqY1nHZR1pKRBn4vA1Js2TB6x2+e46F3wkLynXmRZ7UOBPtwrw/U8L6g1VS5gQu7/v9h7bC/QwawE1PkD4NW825qh3+uTm/QJcU5xEOFLVpUaL4Atbgj7z+hHtFPYRb2xCf+4dewwOSer5gMqtqckA2iapVf+FiWW+VV5nGaibP2+vS0guMGZW1Df2SyvQ
 
---jrqcg3cyap65nupq
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH 1/3] cgroup/cpuset: Fix deadline bandwidth leak in
- cpuset_can_attach()
-MIME-Version: 1.0
+This patch gets rid of MEMCG_KMEM and wires all the "generic" functions
+by introducing per-node obj_cgroup objects.
 
-On Mon, May 11, 2026 at 01:54:37PM -0400, Waiman Long wrote:
-> > Hi Waiman,
-> >=20
-> > Thank you for the follow up.
-> >=20
-> > Acknowledged. I will drop this patch in the next iteration due to [1].
-> >=20
-> > Please note, the sashiko AI Review bot reported: cpuset_can_attach()
-> > incorrectly assumes all migrating tasks originate from the same source
-> > cpuset. At first glance, this feedback is valid. I plan to submit a pat=
-ch,
-> > if no solution was already proposed.
-> >=20
-> > [1]: https://lore.kernel.org/lkml/20260509102031.97608-2-zhangguopeng@k=
-ylinos.cn/
->=20
-> Yes, it does look like the AI feedback is valid. I will take a further lo=
-ok
-> into this.
->=20
-> Thanks,
-> Longman
+Note that it does not convert the kmem users to proper per-memcg-per-node
+accounting now, this is done in upcoming patches.
 
-No worries, I have it. I'll submit a patch for review shortly.
+Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
+---
+ include/linux/memcontrol.h | 23 ++++++++++----
+ include/linux/mmzone.h     |  1 +
+ mm/memcontrol.c            | 64 ++++++++++++++++++++++++--------------
+ mm/vmstat.c                |  1 +
+ 4 files changed, 59 insertions(+), 30 deletions(-)
 
-Kind regards,
---=20
-Aaron Tomlin
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 568ab08f42af..17cf823160e4 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -35,7 +35,6 @@ enum memcg_stat_item {
+ 	MEMCG_SWAP = NR_VM_NODE_STAT_ITEMS,
+ 	MEMCG_SOCK,
+ 	MEMCG_PERCPU_B,
+-	MEMCG_KMEM,
+ 	MEMCG_ZSWAP_B,
+ 	MEMCG_ZSWAPPED,
+ 	MEMCG_ZSWAP_INCOMP,
+@@ -126,9 +125,10 @@ struct mem_cgroup_per_node {
+ 	struct list_head objcg_list;
+ 
+ #ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
+-	/* slab stats for nmi context */
++	/* slab and kmem stats for nmi context */
+ 	atomic_t		slab_reclaimable;
+ 	atomic_t		slab_unreclaimable;
++	atomic_t		kmem;
+ #endif
+ };
+ 
+@@ -190,6 +190,7 @@ struct obj_cgroup {
+ 		struct rcu_head rcu;
+ 	};
+ 	bool is_root;
++	int nid;
+ };
+ 
+ /*
+@@ -254,10 +255,6 @@ struct mem_cgroup {
+ 	atomic_long_t		memory_events[MEMCG_NR_MEMORY_EVENTS];
+ 	atomic_long_t		memory_events_local[MEMCG_NR_MEMORY_EVENTS];
+ 
+-#ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
+-	/* MEMCG_KMEM for nmi context */
+-	atomic_t		kmem_stat;
+-#endif
+ 	/*
+ 	 * Hint of reclaim pressure for socket memroy management. Note
+ 	 * that this indicator should NOT be used in legacy cgroup mode
+@@ -776,6 +773,20 @@ static inline void obj_cgroup_put(struct obj_cgroup *objcg)
+ 		percpu_ref_put(&objcg->refcnt);
+ }
+ 
++static inline struct obj_cgroup *obj_cgroup_get_nid(struct obj_cgroup *objcg,
++						    int nid)
++{
++	struct obj_cgroup *nid_objcg;
++	struct mem_cgroup *memcg;
++
++	rcu_read_lock();
++	memcg = obj_cgroup_memcg(objcg);
++	nid_objcg = rcu_dereference(memcg->nodeinfo[nid]->objcg);
++	rcu_read_unlock();
++
++	return nid_objcg;
++}
++
+ static inline bool mem_cgroup_tryget(struct mem_cgroup *memcg)
+ {
+ 	return !memcg || css_tryget(&memcg->css);
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 9adb2ad21da5..97eb168fd7f3 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -326,6 +326,7 @@ enum node_stat_item {
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	NR_HUGETLB,
+ #endif
++	NR_KMEM,
+ 	NR_BALLOON_PAGES,
+ 	NR_KERNEL_FILE_PAGES,
+ 	NR_GPU_ACTIVE,	/* Pages assigned to GPU objects */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index aaaa6a8b9f15..979a847e542a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -136,6 +136,7 @@ bool mem_cgroup_kmem_disabled(void)
+ }
+ 
+ static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages);
++static void mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx, int val);
+ 
+ static void obj_cgroup_release(struct percpu_ref *ref)
+ {
+@@ -170,9 +171,11 @@ static void obj_cgroup_release(struct percpu_ref *ref)
+ 
+ 	if (nr_pages) {
+ 		struct mem_cgroup *memcg;
++		struct lruvec *lruvec;
+ 
+ 		memcg = get_mem_cgroup_from_objcg(objcg);
+-		mod_memcg_state(memcg, MEMCG_KMEM, -nr_pages);
++		lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(objcg->nid));
++		mod_lruvec_state(lruvec, NR_KMEM, -nr_pages);
+ 		memcg1_account_kmem(memcg, -nr_pages);
+ 		if (!mem_cgroup_is_root(memcg))
+ 			memcg_uncharge(memcg, nr_pages);
+@@ -423,13 +426,13 @@ static const unsigned int memcg_node_stat_items[] = {
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	NR_HUGETLB,
+ #endif
++	NR_KMEM,
+ };
+ 
+ static const unsigned int memcg_stat_items[] = {
+ 	MEMCG_SWAP,
+ 	MEMCG_SOCK,
+ 	MEMCG_PERCPU_B,
+-	MEMCG_KMEM,
+ 	MEMCG_ZSWAP_B,
+ 	MEMCG_ZSWAPPED,
+ 	MEMCG_ZSWAP_INCOMP,
+@@ -1537,7 +1540,7 @@ struct memory_stat {
+ static const struct memory_stat memory_stats[] = {
+ 	{ "anon",			NR_ANON_MAPPED			},
+ 	{ "file",			NR_FILE_PAGES			},
+-	{ "kernel",			MEMCG_KMEM			},
++	{ "kernel",			NR_KMEM				},
+ 	{ "kernel_stack",		NR_KERNEL_STACK_KB		},
+ 	{ "pagetables",			NR_PAGETABLE			},
+ 	{ "sec_pagetables",		NR_SECONDARY_PAGETABLE		},
+@@ -3004,20 +3007,26 @@ struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio)
+ }
+ 
+ #ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
+-static inline void account_kmem_nmi_safe(struct mem_cgroup *memcg, int val)
++static inline void account_kmem_nmi_safe(struct mem_cgroup *memcg, int nid, int val)
+ {
+ 	if (likely(!in_nmi())) {
+-		mod_memcg_state(memcg, MEMCG_KMEM, val);
++		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
++
++		mod_lruvec_state(lruvec, NR_KMEM, val);
+ 	} else {
++		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
++
+ 		/* preemption is disabled in_nmi(). */
+ 		css_rstat_updated(&memcg->css, smp_processor_id());
+-		atomic_add(val, &memcg->kmem_stat);
++		atomic_add(val, &pn->kmem);
+ 	}
+ }
+ #else
+-static inline void account_kmem_nmi_safe(struct mem_cgroup *memcg, int val)
++static inline void account_kmem_nmi_safe(struct mem_cgroup *memcg, int nid, int val)
+ {
+-	mod_memcg_state(memcg, MEMCG_KMEM, val);
++	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
++
++	mod_lruvec_state(lruvec, NR_KMEM, val);
+ }
+ #endif
+ 
+@@ -3033,7 +3042,7 @@ static void obj_cgroup_uncharge_pages(struct obj_cgroup *objcg,
+ 
+ 	memcg = get_mem_cgroup_from_objcg(objcg);
+ 
+-	account_kmem_nmi_safe(memcg, -nr_pages);
++	account_kmem_nmi_safe(memcg, objcg->nid, -nr_pages);
+ 	memcg1_account_kmem(memcg, -nr_pages);
+ 	if (!mem_cgroup_is_root(memcg))
+ 		refill_stock(memcg, nr_pages);
+@@ -3061,7 +3070,7 @@ static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
+ 	if (ret)
+ 		goto out;
+ 
+-	account_kmem_nmi_safe(memcg, nr_pages);
++	account_kmem_nmi_safe(memcg, objcg->nid, nr_pages);
+ 	memcg1_account_kmem(memcg, nr_pages);
+ out:
+ 	css_put(&memcg->css);
+@@ -3238,10 +3247,11 @@ static void drain_obj_stock(struct obj_stock_pcp *stock)
+ 
+ 		if (nr_pages) {
+ 			struct mem_cgroup *memcg;
++			struct lruvec *lruvec;
+ 
+ 			memcg = get_mem_cgroup_from_objcg(old);
+-
+-			mod_memcg_state(memcg, MEMCG_KMEM, -nr_pages);
++			lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(old->nid));
++			mod_lruvec_state(lruvec, NR_KMEM, -nr_pages);
+ 			memcg1_account_kmem(memcg, -nr_pages);
+ 			if (!mem_cgroup_is_root(memcg))
+ 				memcg_uncharge(memcg, nr_pages);
+@@ -3250,7 +3260,7 @@ static void drain_obj_stock(struct obj_stock_pcp *stock)
+ 		}
+ 
+ 		/*
+-		 * The leftover is flushed to the centralized per-memcg value.
++		 * The leftover is flushed to the per-node per-memcg value.
+ 		 * On the next attempt to refill obj stock it will be moved
+ 		 * to a per-cpu stock (probably, on an other CPU), see
+ 		 * refill_obj_stock().
+@@ -3417,7 +3427,7 @@ void obj_cgroup_account_kmem(struct obj_cgroup *objcg, unsigned int nr_pages)
+ 
+ 	rcu_read_lock();
+ 	memcg = obj_cgroup_memcg(objcg);
+-	account_kmem_nmi_safe(memcg, nr_pages);
++	account_kmem_nmi_safe(memcg, objcg->nid, nr_pages);
+ 	memcg1_account_kmem(memcg, nr_pages);
+ 	rcu_read_unlock();
+ }
+@@ -4165,6 +4175,7 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 		if (unlikely(mem_cgroup_is_root(memcg)))
+ 			objcg->is_root = true;
+ 
++		objcg->nid = nid;
+ 		objcg->memcg = memcg;
+ 		rcu_assign_pointer(memcg->nodeinfo[nid]->objcg, objcg);
+ 		obj_cgroup_get(objcg);
+@@ -4369,15 +4380,6 @@ static void flush_nmi_stats(struct mem_cgroup *memcg, struct mem_cgroup *parent,
+ {
+ 	int nid;
+ 
+-	if (atomic_read(&memcg->kmem_stat)) {
+-		int kmem = atomic_xchg(&memcg->kmem_stat, 0);
+-		int index = memcg_stats_index(MEMCG_KMEM);
+-
+-		memcg->vmstats->state[index] += kmem;
+-		if (parent)
+-			parent->vmstats->state_pending[index] += kmem;
+-	}
+-
+ 	for_each_node_state(nid, N_MEMORY) {
+ 		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
+ 		struct lruvec_stats *lstats = pn->lruvec_stats;
+@@ -4408,6 +4410,18 @@ static void flush_nmi_stats(struct mem_cgroup *memcg, struct mem_cgroup *parent,
+ 			if (parent)
+ 				parent->vmstats->state_pending[index] += slab;
+ 		}
++		if (atomic_read(&pn->kmem)) {
++			int kmem = atomic_xchg(&pn->kmem, 0);
++			int index = memcg_stats_index(NR_KMEM);
++
++			mod_node_page_state(NODE_DATA(nid), NR_KMEM, kmem);
++			lstats->state[index] += kmem;
++			memcg->vmstats->state[index] += kmem;
++			if (plstats)
++				plstats->state_pending[index] += kmem;
++			if (parent)
++				parent->vmstats->state_pending[index] += kmem;
++		}
+ 	}
+ }
+ #else
+@@ -5173,7 +5187,9 @@ static void uncharge_batch(const struct uncharge_gather *ug)
+ 	if (ug->nr_memory) {
+ 		memcg_uncharge(memcg, ug->nr_memory);
+ 		if (ug->nr_kmem) {
+-			mod_memcg_state(memcg, MEMCG_KMEM, -ug->nr_kmem);
++			struct lruvec *lruvec =
++				mem_cgroup_lruvec(memcg, NODE_DATA(ug->objcg->nid));
++			mod_lruvec_state(lruvec, NR_KMEM, -ug->nr_kmem);
+ 			memcg1_account_kmem(memcg, -ug->nr_kmem);
+ 		}
+ 		memcg1_oom_recover(memcg);
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index f534972f517d..d55437d1852e 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -1293,6 +1293,7 @@ const char * const vmstat_text[] = {
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	[I(NR_HUGETLB)]				= "nr_hugetlb",
+ #endif
++	[I(NR_KMEM)]				= "nr_kmem",
+ 	[I(NR_BALLOON_PAGES)]			= "nr_balloon_pages",
+ 	[I(NR_KERNEL_FILE_PAGES)]		= "nr_kernel_file_pages",
+ 	[I(NR_GPU_ACTIVE)]			= "nr_gpu_active",
+-- 
+2.54.0
 
---jrqcg3cyap65nupq
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEeQaE6/qKljiNHm6b4t6WWBnMd9YFAmoCOzUACgkQ4t6WWBnM
-d9Z1Mw/9Fvj+bRSfdhTS2OSiYGFkxkwzjIV2hi2rP/F/074x3+NhmlyX6BU//3HT
-6jr+qYIn9ahQNAGW9qsoYJNINn5cDBWCAeIyLAygMvhe2uurN6d00TnljBxc15Py
-ARodKck6kz2A5MC/c3usSymZhs0Z1FXJAwFPVCEMzj5/n/Mu6k9Y4FL3JnUAKUgs
-ilgwo90VgMZTYxfEbTeWLwBga2qUta2TbiLjmR+ydAYrs6HcrXzZM77aj4CQtrbj
-EYKqe6btSK2FiDp4M723f02PtMq/AmKBKgjTOUUmXMF/vnsYAz5LxokcE0RxSmri
-WiuFY7st6uhL2KlKu46PB2T/dy+GM98su+sno6+ZpW19qDu6+8JZ3/uUvJ7UaDO3
-qllX+Qbgt5vrboeLso9FML/1xAKyPaSUSH9/zhK4c+J0j1EuRiWhz+AEOhYknHHl
-cw84zdVePJbHoSLq8yJUl6smoNF4TYU+6zuMF2pVXcCx1dvxW0Mji3gsh1yk4qh2
-HxaejZPiBTU+ERHW+kKkF0hF0JuI4sNJ8UnwYwgL+DiTHB9/BQYlYokKAjdswAQQ
-pKZpwgHHeENcf/rfu+ZG2MgYKbWlAChw3UHmkbXs/HiZYW5mzKvgz3dUYPrlmOLX
-6w1dnT2nY0IcIve8RozBPXUZRW5Hg3QXdRoLQDl2gmBeb3+NVqM=
-=aVzE
------END PGP SIGNATURE-----
-
---jrqcg3cyap65nupq--
