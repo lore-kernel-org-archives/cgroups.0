@@ -1,333 +1,174 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11023085.outbound.protection.outlook.com [52.101.72.85])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F103A4F51
-	for <cgroups@vger.kernel.org>; Thu, 14 May 2026 06:51:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778741463; cv=none; b=MRKGCAUXn+CWXqTzn5HxZzo/MWmmW15WwxGu3qAF+onPG/rZDKUf+t9ypBf26UUcnNEJ/YZck46Mv5P4uL2bGJ1Eo2Ps9uZnUWxj+2WPQWTt7otvrh/h29g1BAg6NWpF7XcgPHEgAhFcGepRvSxFYmJ+vygfxFHfvhPc/hsyY1s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778741463; c=relaxed/simple;
-	bh=fj1hmx4xOKFqNne/OxB98c+LZTkkEp9L0IsBI01a3UA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EXGUs6gkFUPZJQP9Z6BL91sMGvpBFmizhhp6mftmzgNzCKN9T9MCILyQCYSxpxAMPFyi2sd8YyqRgxoR84gIXzrTNrtCcYbsGPKWvg0W4uy8ZJTgxx+ZDhuB98z3XyVBKp0rlCPylcxEnZpgRGKN45aDPAsvSVg3hDSXYtKevj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 40a8f8ac4f6111f1aa26b74ffac11d73-20260514
-X-CTIC-Tags:
-	HR_CC_AS_FROM, HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:044286c9-387b-4c7c-bc3c-11c17ebb3a68,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:5
-X-CID-INFO: VERSION:1.3.12,REQID:044286c9-387b-4c7c-bc3c-11c17ebb3a68,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:5
-X-CID-META: VersionHash:e7bac3a,CLOUDID:cae6773b37a89830f8b24fd2b98c1db5,BulkI
-	D:260514145057WX1JK1HQ,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|81|82|10
-	2|127|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:n
-	il,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BR
-	E:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 40a8f8ac4f6111f1aa26b74ffac11d73-20260514
-X-User: cuitao@kylinos.cn
-Received: from ctao-book.. [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <cuitao@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 800256046; Thu, 14 May 2026 14:50:54 +0800
-From: Tao Cui <cuitao@kylinos.cn>
-To: tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	cgroups@vger.kernel.org
-Cc: Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH v3 3/4] cgroup/rdma: add rdma.events.local for per-cgroup allocation failure attribution
-Date: Thu, 14 May 2026 14:50:33 +0800
-Message-ID: <20260514065034.387197-4-cuitao@kylinos.cn>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260514065034.387197-1-cuitao@kylinos.cn>
-References: <20260514065034.387197-1-cuitao@kylinos.cn>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6211DF748;
+	Thu, 14 May 2026 07:25:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.85
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778743557; cv=fail; b=cnkWxMOGmN98oFFsedOODZqNOVEwFhFsSdjU39yRvQLuq//hVoqeXfkvjUyKH1kyTyXaqHi72mGYeydx6yg/YV+590TZ1MwxQGRWlc6iz3OdshW4KERvZmF9FB5JBi8C0EQmzJrzUl1s4a5kUplCeDHe4sI9FM8npGHo5X8nOV8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778743557; c=relaxed/simple;
+	bh=mkdr3WANnI8pFQ/lOJS2yZPi/5I7wgVHVvP0wLox1Yo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=bQwLEXlwi3aspGoCIkyx1J5eFwZFloKBwTsCZBhEDjMpRcicweuNj2SCEaunx7VbKzVpXtDjVQNFrUw2aFaEnySW7KW0eokJZ2ejdkioomcV2cexxma1+dOMPD5btspwmyJNpMmfdaWjS3g29XMKmXRPkzxfpg16rwSaCE5P5qk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=santannapisa.it; spf=pass smtp.mailfrom=santannapisa.it; dkim=pass (1024-bit key) header.d=santannapisa.it header.i=@santannapisa.it header.b=grByfLhn; arc=fail smtp.client-ip=52.101.72.85
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=santannapisa.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=santannapisa.it
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=santannapisa.it header.i=@santannapisa.it header.b="grByfLhn"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=FfsmLQLUJQXYxiNYGKjiTd0X5P1DVGsQFNZnPd56JazZhER5nf/BZ2wX8uerHRBsNnEmo2Bbia66jVXc6K0Myd2Hy9r8u9jzDiyn3F2FH0DYgu8l1Srl2GmuhiOpTx9pfGQqefZw0PJwHNYacWj03gjy7BfAtYDzkjdnZV53uZ8ADwGZ8xXOxPUxpPvZnjrDC7GvBgoTnsaiZGcedvxE/JHmPNw0NJeSXINS+bujv15eKf04IMk6nIQvZm+cYWZOz+c4BUh+feYwmGVzmV6SCC7b/+qoLcpu07Wur2AxUs93ucrhDvaT5vDI0Niqg03d60q4KjMqNH+aEQENQPJ0mA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=egnNFI5eQBHvXMIzwTeDtQbJyRE9lwVLcV5X3Of5p0I=;
+ b=tmyAaVCejpIP5msA4iGXPB0TVbPQ5ROn51gGK0kZ9zCxg1nFt+CNaJypJoThdtYsAwTnRD5FVWfFiKtxjavRMDeHC4z+FaSqz0S5zTlz+N9wvANOd7jVzbTPJhTF0uBCeUdoz2ESIpBUsz9Vx1ET5NeqDE2wsHo6s1tzikHO54M2kG4PJomVN73h0pwPCfSf6L0u50+jSpip7NbqK/oP8LoYAvwzG8/SQqQ+g+DCMPnlE0UsMTBPV/hfnMpJbMBCXa+xAsses5WtGx2erIhhm5R49r8LiQkhk7SMaJm40UUCGl1yxphgktSwM1Jq0gBQUqzrzUTbWlbn3xjVU4+O/w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=santannapisa.it; dmarc=pass action=none
+ header.from=santannapisa.it; dkim=pass header.d=santannapisa.it; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=santannapisa.it;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=egnNFI5eQBHvXMIzwTeDtQbJyRE9lwVLcV5X3Of5p0I=;
+ b=grByfLhn4+Q56YTR9P3qu7sdqDCmmFTj9iH79c6WYUVH3KewCd9Os0d2/XR0YJK+X1n5VqsQCJaoCKtkdWVSMVWxrfklWm6qxKYRgiwv6LkYXNbdgZaa2VKq29bRfY14w+mpGPG7WqUArXZpYJY6BWPfoM1tacaQIo/LDWpiGn0=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=santannapisa.it;
+Received: from PAVPR03MB8969.eurprd03.prod.outlook.com (2603:10a6:102:32e::7)
+ by AS8PR03MB6984.eurprd03.prod.outlook.com (2603:10a6:20b:29e::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Thu, 14 May
+ 2026 07:25:49 +0000
+Received: from PAVPR03MB8969.eurprd03.prod.outlook.com
+ ([fe80::26c1:111c:f60d:f9b9]) by PAVPR03MB8969.eurprd03.prod.outlook.com
+ ([fe80::26c1:111c:f60d:f9b9%6]) with mapi id 15.20.9913.009; Thu, 14 May 2026
+ 07:25:49 +0000
+Date: Thu, 14 May 2026 09:25:46 +0200
+From: luca abeni <luca.abeni@santannapisa.it>
+To: Tejun Heo <tj@kernel.org>
+Cc: Yuri Andriaccio <yuri.andriaccio@santannapisa.it>, Peter Zijlstra
+ <peterz@infradead.org>, Yuri Andriaccio <yurand2000@gmail.com>, Ingo Molnar
+ <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot
+ <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>,
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel
+ Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
+ linux-kernel@vger.kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
+ cgroups@vger.kernel.org
+Subject: Re: [RFC PATCH v5 20/29] sched/deadline: Allow deeper hierarchies
+ of RT cgroups
+Message-ID: <20260514092546.4265d486@luca64>
+In-Reply-To: <b549b3cb062f2823ba6d4723b7b9260b@kernel.org>
+References: <20260430213835.62217-1-yurand2000@gmail.com>
+	<20260430213835.62217-21-yurand2000@gmail.com>
+	<20260505151523.GF3102624@noisy.programming.kicks-ass.net>
+	<afpLir8tD0Ycb3D8@slm.duckdns.org>
+	<20260507163058.2c435922@nowhere>
+	<agIfvZuvXEtK45em@slm.duckdns.org>
+	<c446b9be-38d7-425c-9ca8-eda721fe1c9e@santannapisa.it>
+	<b549b3cb062f2823ba6d4723b7b9260b@kernel.org>
+Organization: Scuola Superiore S. Anna
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.50; x86_64-pc-linux-gnu)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MI1P293CA0014.ITAP293.PROD.OUTLOOK.COM
+ (2603:10a6:290:2::17) To PAVPR03MB8969.eurprd03.prod.outlook.com
+ (2603:10a6:102:32e::7)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAVPR03MB8969:EE_|AS8PR03MB6984:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3481ff81-6476-4f24-7e6e-08deb18a0591
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|786006|366016|1800799024|11063799003|18002099003|56012099003|22082099003|4143699003;
+X-Microsoft-Antispam-Message-Info:
+	XMD8lWuba6vS15xobRiwM9z6p7wi7cSIdJ5B1ajM6w3NIZEUoJcDuK+pkwuh/NALxSOPR35bthQkPu3Zufi58pQyFSfr189ssEQT6YXrrRxKqOSzAA9gdPpD1v+7SBN8r6GOLnE62E2zt081ycSbKgu+5hpq/YdbHs0QSyPmR8dJNJ+H0aQ0sXujjLsnIuEN8SUKmZkMzRiJXkyz7v/s3HM0kX/Qt+T1yo+nWSaGg33uvYL0AlmOSVqBtshVumymQBMHNLhlW5qMrm6rIKzZHyQb0zq7xnpEafQgTCP5StBdYg9eTSrQnlv/U1oGMBbWQF+mt4IWKSzNo/05teK1+GEp1OfYkaR/tMmQJtoio3AzL/LkNXTX9snI49ttt/5hGgqagxDHpNDUkwUAwlR7CKdlLFZ+yDnrEje0czT0E5Nq2X3pdqQfOwMhsexkm0COMaBTBTEPU0+hs1+gBLhkcWxLPb3SXSmCHCNIvLjaMFbH23/eB/kW69qkYlKLJJEc5o2S+Xc+Y6QGV/YF1ULOgoIoI2/ZVa4X7RTRqCKKnhEr34J1cr7DhDs54kj1YvgCRCj8Kyjb1b20K2XlcLp80YA6sz8CUmpYMgfBW/K8jLHv+fBIfZLqqn0qlciNrJ465eJ4+DtNPMwgRgtesDPJhgOy2AX08uPSrgxr88AEWodC417nFbH2viHqAq8ybfjG
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAVPR03MB8969.eurprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(786006)(366016)(1800799024)(11063799003)(18002099003)(56012099003)(22082099003)(4143699003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?nBp7SjuhqMVgmVka3bafOHLS5GOF4g05f3IiiPzqngKUzj1SrcOyB3RHGh6/?=
+ =?us-ascii?Q?XymwjjqemAJBMvgQRuhBELX4RzxuUNVC6QmGnVkyNtoxKlLCSUHFPL4E1VMC?=
+ =?us-ascii?Q?KRu/jTHVgZr1uVrE1UuC7b0yTyTjgva8uiisJJk2jeyfkw9oB3Q6xZBDyr22?=
+ =?us-ascii?Q?GY8cjFW2M2yOEmgIQMBzNfWefiLyOqbQM3YSjKYI9znQxqk6Xeu28xV8FLds?=
+ =?us-ascii?Q?JQqnjbp873mFCkDW/F31HfSv+51JBTuPGty/DL0CKW46oDJw4b8RmlhL5cG9?=
+ =?us-ascii?Q?PNShnH3Z7GuPeOnlgOeJ4uoBUg1w1NfJuxlzytRgo7X3+/Pd0r0cQ6PCGG0H?=
+ =?us-ascii?Q?sv9n0Et1TmbKFH5t6V0DENqGX3009hfA6LehE+YmmPx0vAeSafskH/GB9ndH?=
+ =?us-ascii?Q?vEXnhNnyEHaYuPbX+0VZ7rtDCb2XgyCtfi58qCAy0KdAOX4aguLa0jzo65Kr?=
+ =?us-ascii?Q?IYRUnKe/KR6dUVeZ6wJz+RJVw1im5LnpWORbGxeZTCxJGPEozWsvhpv4rPep?=
+ =?us-ascii?Q?/e405IsyPz4ayxILzGMUJMexVHKBdGY2HaEm72SX4d6T8eFaszyBFoBrTmU6?=
+ =?us-ascii?Q?ZHUsqJnijpGVWGCK/KUxxqMW//fngi+9+W3qLxWQhd7OPZg3y6QrEO3praR/?=
+ =?us-ascii?Q?+pLPmIBZqiaeXz0B/+RcuuzK2udi1bRHJWuXRfyiEOGln1C+57nJlsxMBwFH?=
+ =?us-ascii?Q?eR9Uv/6GNTvZIVzB662asSBnzi+Tx/S2JSxndxktxXlqrRCvp/fp0N4MMOUE?=
+ =?us-ascii?Q?vyckhNHjah8JqZUMvPTBDgOVFIrs9GPDAf4d+9aIO2i4v6f6YM/CicGEv5Lu?=
+ =?us-ascii?Q?7GHzRbqYf0zfuCoEKnzsyrT/eTmy8d38ufoEdxe848UwKUK+doQIrN/kpkNc?=
+ =?us-ascii?Q?PGio9BZuoQBIxmYuDMcdpajS41XM3AodTs0tmqzy7TnrM3SF62niID8Yffr3?=
+ =?us-ascii?Q?NaWcHRpp4ZwKhAFVvWAHvKKScdVe5WykM4/abFRzvCVFaGkAC7WZNggFaGV4?=
+ =?us-ascii?Q?Ra69z2iqnnt9qnAhX+BHWp9fvmAOtTfJhwRlxV65MdXaelRcDKYyIWiQZewt?=
+ =?us-ascii?Q?2IbZGRutdskXlCe7X/IwFENKIb8ZzhXOvWXN6MiThLkk8D7zOejk5FRM+SC+?=
+ =?us-ascii?Q?p6Qz6zcBmWTqvyYQI6t2RaHxyyQ3aQV1DrDake3pGeaP9AdKVxUbcyyVoY/k?=
+ =?us-ascii?Q?zyFFyaiLjSziX6s8e0dozgUQoeZq7ydO6B7Aiz7ezbSscgotbAXW2NXMURnP?=
+ =?us-ascii?Q?/XZDUmwZDv7snDJjDrv9CbaU23poPOeuIzTglBdVVawT05cNVZtfmF9OScmg?=
+ =?us-ascii?Q?y3101EuS4AHFMO/BEyPv4kgEn4Wzk9a4PATQJiGo4g+zrOUZlfuq47+aDRkA?=
+ =?us-ascii?Q?OlCeNF++zcYLapmqKp1yXayWnh+/VLf6ua/Wi4+9O6MeAIL4jp/MqT0fihtl?=
+ =?us-ascii?Q?nmxhOK6oSkGUHwP6Ip5Qmetf9aF3a0Us72L499sQHRpEHKP15TzS7vRWHx9y?=
+ =?us-ascii?Q?98RBpd/0O/jaN11xt0iVcBdOYUbcx7m+q7vYC5UzCuLutq+K8XaMHXwZp1yd?=
+ =?us-ascii?Q?CDkA4XxKUFct1YS+2g8KI72CBD3qTO0K4PLzI1/ZY+QYt234akpg7z8Cy+ZK?=
+ =?us-ascii?Q?McMCbOdDW8DK+yRIGo0ZqFRZqjmCEnePhM988tRZ73nnz6GMt2Ce/NpGPFjj?=
+ =?us-ascii?Q?xIA8j/vzZkB4Kwx3t3gSJ+P/Zkiw/UC6n5+tDArw0q4erEHmhvOYZRQNNPqg?=
+ =?us-ascii?Q?5ICZUFFSmoUkg+4yShs1PKXdMezUt8Q=3D?=
+X-OriginatorOrg: santannapisa.it
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3481ff81-6476-4f24-7e6e-08deb18a0591
+X-MS-Exchange-CrossTenant-AuthSource: PAVPR03MB8969.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 May 2026 07:25:49.2128
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: d97360e3-138d-4b5f-956f-a646c364a01e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RNXwhU8jYQ7egyZ7rVX+cTp7ec+OI/QuGllDEOK+TnH1mcoCaXgHFxUops5AM9PcRAQ60nFI6kary5mJKcaz12OVuC+RXlkKIG6hpVVRouI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR03MB6984
 
-Add per-cgroup local event counters to track RDMA resource limit
-exhaustion from the perspective of individual cgroups. The
-rdma.events.local file reports two per-resource counters:
+Hi Tejun,
 
-- max: number of times this cgroup's limit was the one that blocked
-  an allocation in the subtree
-- alloc_fail: number of allocation attempts originating from this
-  cgroup that failed due to an ancestor's limit
+On Tue, 12 May 2026 08:19:02 -1000
+Tejun Heo <tj@kernel.org> wrote:
 
-This mirrors the design of pids.events.local, where events are
-attributed to the cgroup that imposed the limit, not necessarily the
-cgroup where the allocation was attempted.
+> Hello,
+> 
+> How is a delegated subtree prevented from setting cpu.rt.min = 'root'
+> and escaping its ancestors' cpu.rt.max budget?
 
-Also extend rdma.events with a hierarchical alloc_fail counter that
-tracks allocation failures propagating upward from the requesting
-cgroup, complementing the existing max counter, so that rdma.events
-and rdma.events.local share the same output format.
+If I understand well (please correct me :), the following strategy
+should address this concern (and the ones expressed in successive
+emails):
+- cpu.rt.max can be "runtime, period" (or "runtime, period, deadline")
+  or "root". "root" gives the current behaviour when RT cgroup
+  scheduling is not enabled (so, no need to disable it at build time :)
+  - if cpu.rt.max is "root", the cgroup's FIFO/RR tasks are scheduled in
+    the root cgroup
+  - if cpu.rt.max is "root", the children cgroups can only have "root"
+    in cpu.rt.max
+- if cpu.rt.max is not "root", then cpu.rt.min (or cpu.rt.internal)
+  is "runtime, period" and describes the dl server for this cgroup's
+  FIFO/RR tasks.
+- The default value for cpu.rt.min is copied from cpu.rt.max, so as a
+  default all the CPU utilization of the cgroup is dedicated it its RT
+  tasks
+- the admission test is: cpu.rt.min utilization plus the sum of the
+  children's cpu.rt.max utilizations must be <= cpu.rt.max utilization;
+  children can have cpu.rt.max="root" only if cpu.rt.max="root"
 
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
----
- include/linux/cgroup_rdma.h |   3 +-
- kernel/cgroup/rdma.c        | 143 +++++++++++++++++++++++++++---------
- 2 files changed, 109 insertions(+), 37 deletions(-)
+Can this work? I think it avoids escaping the parents' cpu.rt.max,
+allows for a reasonable default (no-one should be forced to disable this
+feature), and should respect all the requirements... Or am I missing
+something?
 
-diff --git a/include/linux/cgroup_rdma.h b/include/linux/cgroup_rdma.h
-index ac691fe7d3f5..404e746552ca 100644
---- a/include/linux/cgroup_rdma.h
-+++ b/include/linux/cgroup_rdma.h
-@@ -25,8 +25,9 @@ struct rdma_cgroup {
- 	 */
- 	struct list_head		rpools;
- 
--	/* Handle for rdma.events */
-+	/* Handles for rdma.events[.local] */
- 	struct cgroup_file		events_file;
-+	struct cgroup_file		events_local_file;
- };
- 
- struct rdmacg_device {
-diff --git a/kernel/cgroup/rdma.c b/kernel/cgroup/rdma.c
-index 927bbf1eb949..7c238a9d64d4 100644
---- a/kernel/cgroup/rdma.c
-+++ b/kernel/cgroup/rdma.c
-@@ -82,8 +82,11 @@ struct rdmacg_resource_pool {
- 	/* total number counts which are set to max */
- 	int			num_max_cnt;
- 
--	/* per-resource hierarchical max event counters */
-+	/* per-resource event counters */
- 	u64			events_max[RDMACG_RESOURCE_MAX];
-+	u64			events_alloc_fail[RDMACG_RESOURCE_MAX];
-+	u64			events_local_max[RDMACG_RESOURCE_MAX];
-+	u64			events_local_alloc_fail[RDMACG_RESOURCE_MAX];
- };
- 
- static struct rdma_cgroup *css_rdmacg(struct cgroup_subsys_state *css)
-@@ -131,6 +134,26 @@ static void free_cg_rpool_locked(struct rdmacg_resource_pool *rpool)
- 	kfree(rpool);
- }
- 
-+static bool rpool_has_persistent_state(struct rdmacg_resource_pool *rpool)
-+{
-+	int i;
-+
-+	/*
-+	 * Keep the rpool alive if any peak value is non-zero,
-+	 * so that rdma.peak persists as a historical high-
-+	 * watermark even after all resources are freed.
-+	 */
-+	for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
-+		if (rpool->resources[i].peak ||
-+		    READ_ONCE(rpool->events_max[i]) ||
-+		    READ_ONCE(rpool->events_local_max[i]) ||
-+		    READ_ONCE(rpool->events_alloc_fail[i]) ||
-+		    READ_ONCE(rpool->events_local_alloc_fail[i]))
-+			return true;
-+	}
-+	return false;
-+}
-+
- static struct rdmacg_resource_pool *
- find_cg_rpool_locked(struct rdma_cgroup *cg,
- 		     struct rdmacg_device *device)
-@@ -209,37 +232,30 @@ uncharge_cg_locked(struct rdma_cgroup *cg,
- 	rpool->usage_sum--;
- 	if (rpool->usage_sum == 0 &&
- 	    rpool->num_max_cnt == RDMACG_RESOURCE_MAX) {
--		int i;
--
--		/*
--		 * Keep the rpool alive if any peak value is non-zero,
--		 * so that rdma.peak persists as a historical high-
--		 * watermark even after all resources are freed.
--		 */
--		for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
--			if (rpool->resources[i].peak ||
--			    READ_ONCE(rpool->events_max[i]))
--				return;
-+		if (!rpool_has_persistent_state(rpool)) {
-+			/*
-+			 * No user of the rpool and all entries are set to max, so
-+			 * safe to delete this rpool.
-+			 */
-+			free_cg_rpool_locked(rpool);
- 		}
--		/*
--		 * No user of the rpool and all entries are set to max, so
--		 * safe to delete this rpool.
--		 */
--		free_cg_rpool_locked(rpool);
- 	}
- }
- 
- /**
-- * rdmacg_event_locked - fire hierarchical max event when resource limit is hit
-+ * rdmacg_event_locked - fire event when resource allocation exceeds limit
-+ * @cg: requesting cgroup
-  * @over_cg: cgroup whose limit was exceeded
-  * @device: rdma device
-  * @index: resource type index
-  *
-- * Must be called under rdmacg_mutex. Propagates max event counts
-- * from @over_cg (including itself) upward to all ancestors with
-- * an rpool and notifies userspace.
-+ * Must be called under rdmacg_mutex. Updates event counters in the
-+ * resource pools of @cg and @over_cg, propagates hierarchical max
-+ * events from @over_cg (including itself) upward, and notifies
-+ * userspace via cgroup_file_notify().
-  */
--static void rdmacg_event_locked(struct rdma_cgroup *over_cg,
-+static void rdmacg_event_locked(struct rdma_cgroup *cg,
-+				struct rdma_cgroup *over_cg,
- 				struct rdmacg_device *device,
- 				enum rdmacg_resource_type index)
- {
-@@ -248,6 +264,21 @@ static void rdmacg_event_locked(struct rdma_cgroup *over_cg,
- 
- 	lockdep_assert_held(&rdmacg_mutex);
- 
-+	/* Increment local alloc_fail in requesting cgroup */
-+	rpool = find_cg_rpool_locked(cg, device);
-+	if (rpool) {
-+		rpool->events_local_alloc_fail[index]++;
-+		cgroup_file_notify(&cg->events_local_file);
-+	}
-+
-+	/* Increment local max in the over-limit cgroup */
-+	rpool = find_cg_rpool_locked(over_cg, device);
-+	if (rpool) {
-+		rpool->events_local_max[index]++;
-+		cgroup_file_notify(&over_cg->events_local_file);
-+	}
-+
-+	/* Propagate hierarchical max events upward */
- 	for (p = over_cg; parent_rdmacg(p); p = parent_rdmacg(p)) {
- 		rpool = get_cg_rpool_locked(p, device);
- 		if (!IS_ERR(rpool)) {
-@@ -255,6 +286,14 @@ static void rdmacg_event_locked(struct rdma_cgroup *over_cg,
- 			cgroup_file_notify(&p->events_file);
- 		}
- 	}
-+	/* Propagate hierarchical alloc_fail from requesting cgroup upward */
-+	for (p = cg; parent_rdmacg(p); p = parent_rdmacg(p)) {
-+		rpool = get_cg_rpool_locked(p, device);
-+		if (!IS_ERR(rpool)) {
-+			rpool->events_alloc_fail[index]++;
-+			cgroup_file_notify(&p->events_file);
-+		}
-+	}
- }
- 
- /**
-@@ -368,7 +407,7 @@ int rdmacg_try_charge(struct rdma_cgroup **rdmacg,
- 
- err:
- 	if (ret == -EAGAIN)
--		rdmacg_event_locked(p, device, index);
-+		rdmacg_event_locked(cg, p, device, index);
- 	mutex_unlock(&rdmacg_mutex);
- 	rdmacg_uncharge_hierarchy(cg, device, p, index);
- 	return ret;
-@@ -525,18 +564,13 @@ static ssize_t rdmacg_resource_set_max(struct kernfs_open_file *of,
- 
- 	if (rpool->usage_sum == 0 &&
- 	    rpool->num_max_cnt == RDMACG_RESOURCE_MAX) {
--		int i;
--
--		for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
--			if (rpool->resources[i].peak ||
--			    READ_ONCE(rpool->events_max[i]))
--				goto dev_err;
-+		if (!rpool_has_persistent_state(rpool)) {
-+			/*
-+			 * No user of the rpool and all entries are set to max, so
-+			 * safe to delete this rpool.
-+			 */
-+			free_cg_rpool_locked(rpool);
- 		}
--		/*
--		 * No user of the rpool and all entries are set to max, so
--		 * safe to delete this rpool.
--		 */
--		free_cg_rpool_locked(rpool);
- 	}
- 
- dev_err:
-@@ -618,9 +652,40 @@ static int rdmacg_events_show(struct seq_file *sf, void *v)
- 
- 		seq_printf(sf, "%s ", device->name);
- 		for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
--			seq_printf(sf, "%s.max=%llu",
-+			seq_printf(sf, "%s.max=%llu %s.alloc_fail=%llu",
-+				   rdmacg_resource_names[i],
-+				   rpool ? READ_ONCE(rpool->events_max[i]) : 0ULL,
-+				   rdmacg_resource_names[i],
-+				   rpool ? READ_ONCE(rpool->events_alloc_fail[i]) : 0ULL);
-+			if (i < RDMACG_RESOURCE_MAX - 1)
-+				seq_putc(sf, ' ');
-+		}
-+		seq_putc(sf, '\n');
-+	}
-+
-+	mutex_unlock(&rdmacg_mutex);
-+	return 0;
-+}
-+
-+static int rdmacg_events_local_show(struct seq_file *sf, void *v)
-+{
-+	struct rdma_cgroup *cg = css_rdmacg(seq_css(sf));
-+	struct rdmacg_resource_pool *rpool;
-+	struct rdmacg_device *device;
-+	int i;
-+
-+	mutex_lock(&rdmacg_mutex);
-+
-+	list_for_each_entry(device, &rdmacg_devices, dev_node) {
-+		rpool = find_cg_rpool_locked(cg, device);
-+
-+		seq_printf(sf, "%s ", device->name);
-+		for (i = 0; i < RDMACG_RESOURCE_MAX; i++) {
-+			seq_printf(sf, "%s.max=%llu %s.alloc_fail=%llu",
-+				   rdmacg_resource_names[i],
-+				   rpool ? READ_ONCE(rpool->events_local_max[i]) : 0ULL,
- 				   rdmacg_resource_names[i],
--				   rpool ? READ_ONCE(rpool->events_max[i]) : 0ULL);
-+				   rpool ? READ_ONCE(rpool->events_local_alloc_fail[i]) : 0ULL);
- 			if (i < RDMACG_RESOURCE_MAX - 1)
- 				seq_putc(sf, ' ');
- 		}
-@@ -657,6 +722,12 @@ static struct cftype rdmacg_files[] = {
- 		.file_offset = offsetof(struct rdma_cgroup, events_file),
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 	},
-+	{
-+		.name = "events.local",
-+		.seq_show = rdmacg_events_local_show,
-+		.file_offset = offsetof(struct rdma_cgroup, events_local_file),
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
- 	{ }	/* terminate */
- };
- 
--- 
-2.43.0
 
+
+			Thanks,
+				Luca
