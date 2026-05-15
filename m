@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3891D407562;
-	Fri, 15 May 2026 09:54:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 389B943DA23;
+	Fri, 15 May 2026 09:54:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778838862; cv=none; b=K6h5uACI0sEtA4NQDP7ulVcoMZApwQEmNYZq2v+157lkDJKp/ySFXdqgb3Sq2eqNZ1bn/J65kIMdclsJHBrMdwlVvxr5LvF4u2kPUcLW+EqO4+b1xIF4yesecYToEo5KuLT6yiLQYWd96OvfQx+N9Ryh6O81v4n/ZweFVkIlREA=
+	t=1778838862; cv=none; b=FX7N17Mgjin4mbq86NmF+xHlZiLydC1BEanP4vwCWpB+5tzWrNXiQunrppzifa0Q1jstXtP/eqxOYNseaAA3QxRYfzwFF51psHXJERx4HdimjLjRDvgROdTD6jqvp2Z26opslWnT5rcQUec98A9Oww6Q/pKEoTDIYUcKgsGbMec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1778838862; c=relaxed/simple;
-	bh=rRfCO3aB9U/iOJqwoxzGYYLza2p29DrYATWT/0SQ+24=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Ph+AI/6fSefLGzPA85TFkboxguDNjImqVieiemtR13Pyguk26uS/exT7HwtphNebaXBS9vTMADk8VI9nYTvsqSzoCzUYZutTRpHMLkiqjBgCdpLIMwK6CugvhdFItfqVDzcPyzFWoQ8156ErDznYd/0GsE6ADGF7P6tj5OTXj0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k0Oll3qK; arc=none smtp.client-ip=10.30.226.201
+	bh=fxPLjjzwJE4NXFx7tLD197c2NXECqvzlGTxAHCYE6GU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=fKvJV4FJlcikT655sjitvYMWEvhMNeEd7daxQZTBkCUCUaEsv8XwnsWREZ/TvBOzhI+q4WXgQSo512mcBR0QXeNx29YnW83z1BNbxUOhQuZbd82yX0F+fw+aGGaABIETnEGHv7uvnqeUSHZpWfN6J6lj/qDHhFRlwRGe8loOdjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rKOlMlnn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k0Oll3qK"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C8067C2BCB8;
-	Fri, 15 May 2026 09:54:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rKOlMlnn"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 02F2DC2BCF7;
+	Fri, 15 May 2026 09:54:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778838861;
-	bh=rRfCO3aB9U/iOJqwoxzGYYLza2p29DrYATWT/0SQ+24=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=k0Oll3qKP67UhQmoxQmeUE6JUgAGFiwHRSgmuMkJyJZ74ZWKT76idVMtJn+MWrXV6
-	 m+EGn51Rw4N07ymgpHgybR146CtzzSRzKH2S3WPIGnhjizeRpYY+OfaFCte7pE/InX
-	 1YaKG7t3cfOh06Syp9xp/a3do23K5kdPR+icyfWG9mlqDKmpR3nBl3It6YZTLRdik3
-	 U6Mh5Vlu4EmepWBtEY3lZ6N+UYfs/ZrfWTtzri4GzcKqsadku/afilIL6p5stlSGmQ
-	 Q8xnHtVI8IiVOzkwA43vpMrDYoZiEMryTAGTU6A1yyM39XLLzDr+VsQyTEP5ixdYTh
-	 uBq7DMRw8BKCw==
+	s=k20201202; t=1778838862;
+	bh=fxPLjjzwJE4NXFx7tLD197c2NXECqvzlGTxAHCYE6GU=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=rKOlMlnnqZQRkYZPUVV79tE9UUBH1rbSpN0Pa1Jz6I83qVoszSS5qfdft4f6La68K
+	 T9YVoXUHHjXackpssURFQT3s5BNn+rm1Hs+ssClsYWFt38SfGxhKZSl+Lp7NFkn9V3
+	 YgBAqifHin4yhskl6ibnjX6sa/IXZMu527c9raKZc2tyt1hwuKZHzDJqkegzggng3H
+	 GNMj1wr0aL32cdG+ms2IzIql3dnQ0DG5yu9Ks4seyKqe2nkfjs2vwPdrL9vfx8MR8U
+	 6KWjc5qdpHg/S2LW4nXbEvGPu0CpHyzKzDJip+kYCBZEp/iNY6FxxuyxnivYCith2N
+	 nApr2nwyz+YPQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B788CCD4851;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED7F0CD4F41;
 	Fri, 15 May 2026 09:54:21 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Subject: [PATCH v4 00/12] mm, swap: swap table phase IV: unify allocation
- and reduce static metadata
-Date: Fri, 15 May 2026 17:54:13 +0800
-Message-Id: <20260515-swap-table-p4-v4-0-f1b49e845a8d@tencent.com>
+Date: Fri, 15 May 2026 17:54:16 +0800
+Subject: [PATCH v4 03/12] mm/huge_memory: move THP gfp limit helper into
+ header
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,11 +41,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/2XPQQ6CMBCF4auQrq3pDIVSV97DuChlkCYKhJKqI
- dzdggsVl2+S709mYp4GR54dkokNFJx3XRuH3CXMNqa9EHdV3AwF5gIAuL+bno+mvBLvJdcFkcb
- SGGUli6YfqHaPtXc6x904P3bDc80HWK7vEqLYlAJwwUFIpbMKdAHZcaTWUjvubXdjSyvgx0tQW
- 4+LV3XUAjKJxb9PvzxuPwlp9FhjqjJtVF7aXz/P8wuoTi2wLAEAAA==
-X-Change-ID: 20260111-swap-table-p4-98ee92baa7c4
+Message-Id: <20260515-swap-table-p4-v4-3-f1b49e845a8d@tencent.com>
+References: <20260515-swap-table-p4-v4-0-f1b49e845a8d@tencent.com>
+In-Reply-To: <20260515-swap-table-p4-v4-0-f1b49e845a8d@tencent.com>
 To: linux-mm@kvack.org
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
  David Hildenbrand <david@kernel.org>, Zi Yan <ziy@nvidia.com>, 
@@ -61,11 +59,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Kairui Song <kasong@tencent.com>, Lorenzo Stoakes <ljs@kernel.org>, 
  Yosry Ahmed <yosry@kernel.org>, Qi Zheng <qi.zheng@linux.dev>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1778838859; l=6356;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1778838859; l=4383;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=BzTfwZUHtgNuqb5kM5h8jWNl9TZuFWWrTO/8ZiO5hi8=;
- b=/z+CporQVOPlwE8qWqtM/px6qF000ZygbqyZO29u6WegtlV8G0t7mj9M34l1uTmVuBiLbS8cv
- SyWBheMxXesCx00/nOjBdY1LPrLy7/Y0+h3eFO4VeJI4Qo/K2brv0tk
+ bh=MR1heGhcrCQDpIR+H9UupQ+NXKwJ5c9dggOiT/gkYv0=;
+ b=cWFw412xS3sDKJ+PhtpWUSwVeblVGe3BtMC6dcax400yqikBppSYNd7HgsJEP85P2pCiCyzal
+ x3cvSLOlQ2lB7lPnwNlQJ7Xmy5DItUdBfaUY2c4wzNeuKzBMtuC9EKw
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -75,151 +73,136 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-This series unifies the allocation and charging of anon and shmem swap
-in folios, provides better synchronization, consolidates the metadata
-management, hence dropping the static array and map, and improves the
-performance. The static metadata overhead is now close to zero, and
-workload performance is slightly improved.
+Shmem has some special requirements for THP GFP and has to limit it in
+certain zones or provide a more lenient fallback.
 
-For example, mounting a 1TB swap device saves about 512MB of memory:
+We'll use this helper for generic swap THP allocation, which needs to
+support shmem. For a typical GFP_HIGHUSER_MOVABLE swap-in, this helper
+is basically a no-op. But it's necessary for certain shmem users, mostly
+drivers.
 
-Before:
-free -m
-          total   used      free   shared   buff/cache   available
-Mem:       1464    805       346        1          382         658
-Swap:   1048575      0   1048575
+No feature change.
 
-After:
-free -m
-          total   used      free   shared   buff/cache   available
-Mem:       1464    277       899         1         356        1187
-Swap:   1048575      0   1048575
-
-Memory usage is ~512M lower, and we now have a close to 0 static
-overhead. It was about 2 bytes per slot before, now roughly 0.09375
-bytes per slot (48 bytes ci info per cluster, which is 512 slots).
-
-Performance test is also looking good, testing Redis in a 2G VM using
-6G ZRAM as swap:
-
-valkey-server --maxmemory 2560M
-redis-benchmark -r 3000000 -n 3000000 -d 1024 -c 12 -P 32 -t get
-
-Before: 3385017.283654 RPS
-After:  3433309.307292 RPS (1.42% better)
-
-Testing with build kernel under global pressure on a 48c96t system,
-limiting the total memory to 8G, using 12G ZRAM, 24 test runs,
-enabling THP:
-
-make -j96, using defconfig
-
-Before: user time 2904.59s system time 4773.99s
-After:  user time 2909.38s system time 4641.55s (2.77% better)
-
-Testing with usemem on a 32c machine using 48G brd ramdisk and 16G
-RAM, 12 test run:
-
-usemem --init-time -O -y -x -n 48 1G
-
-Before: Throughput (Sum): 6482.58 MB/s Free Latency: 371371.67us
-After:  Throughput (Sum): 6539.28 MB/s Free Latency: 363059.88us
-
-Seems similar, or slightly better.
-
-This series also reduces memory thrashing, I no longer see any:
-"Huh VM_FAULT_OOM leaked out to the #PF handler. Retrying PF", it was
-shown several times during stress testing before this series when under
-great pressure:
-
-Before: grep -Ri VM_FAULT_OOM <test logs> | wc -l => 18
-After:  grep -Ri VM_FAULT_OOM <test logs> | wc -l => 0
-
+Acked-by: Chris Li <chrisl@kernel.org>
+Reviewed-by: Zi Yan <ziy@nvidia.com>
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
-Changes in v4:
-- Rebased on latest mm-unstable and re-test, benchmark results are
-  basically the same so mostly kept unchanged. Changes in v4 are code
-  style and very minor behavior change.
-- Improve a few commit messages, rename a few variables as suggested by
-  [ Chris Li ].
-- Rename thp_limit_gfp_mask to thp_shmem_limit_gfp_mask as suggested by
-  [ Zi Yan ].
-- Cleanup a few allocation and code style issue [ YoungJun Park ]
-- Remove the forced fallback in swap_cache_alloc_folio, the caller will
-  pass in the exact orders to be used. [ Baolin Wang ]
-- Rename swapin_entry to swapin_sync, it's only used by synchronization
-  devices at this moment and describes what it does better
-  [ David Hildenbrand ]
-- Link to v3: https://patch.msgid.link/20260421-swap-table-p4-v3-0-2f23759a76bc@tencent.com
+ include/linux/huge_mm.h | 30 ++++++++++++++++++++++++++++++
+ mm/shmem.c              | 30 +++---------------------------
+ 2 files changed, 33 insertions(+), 27 deletions(-)
 
-Changes in v3:
-- This is based on mm-unstable, also applies to mm-new, and has no
-  conflict with YoungJun's tier series, and only trivial conflict with
-  Baoquan's swapops due to filename change.
-- Fix zero map build issue on 32 bit archs [ YoungJun Park ]
-- Cleanup memcg table allocation helpers [ YoungJun Park ]
-- Fix WARN for non NUMA build:
-  https://lore.kernel.org/linux-mm/CAMgjq7ANih7u7SJB8uWcQHS8XRJySNRc3ti9V-SVey0nGE3gLQ@mail.gmail.com/
-- Improve of commit messages.
-- Re-test several tests, the conclusion is the same as v2.
-- Link to v2: https://patch.msgid.link/20260417-swap-table-p4-v2-0-17f5d1015428@tencent.com
+diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
+index 127f9e1e7604..edece3e26985 100644
+--- a/include/linux/huge_mm.h
++++ b/include/linux/huge_mm.h
+@@ -242,6 +242,31 @@ static inline bool thp_vma_suitable_order(struct vm_area_struct *vma,
+ 	return true;
+ }
+ 
++/*
++ * Make sure huge_gfp is always more limited than limit_gfp.
++ * Some shmem users want THP allocation to be done less aggressively
++ * and only in certain zone.
++ */
++static inline gfp_t thp_shmem_limit_gfp_mask(gfp_t huge_gfp, gfp_t limit_gfp)
++{
++	gfp_t allowflags = __GFP_IO | __GFP_FS | __GFP_RECLAIM;
++	gfp_t denyflags = __GFP_NOWARN | __GFP_NORETRY;
++	gfp_t zoneflags = limit_gfp & GFP_ZONEMASK;
++	gfp_t result = huge_gfp & ~(allowflags | GFP_ZONEMASK);
++
++	/* Allow allocations only from the originally specified zones. */
++	result |= zoneflags;
++
++	/*
++	 * Minimize the result gfp by taking the union with the deny flags,
++	 * and the intersection of the allow flags.
++	 */
++	result |= (limit_gfp & denyflags);
++	result |= (huge_gfp & limit_gfp) & allowflags;
++
++	return result;
++}
++
+ /*
+  * Filter the bitfield of input orders to the ones suitable for use in the vma.
+  * See thp_vma_suitable_order().
+@@ -565,6 +590,11 @@ static inline bool thp_vma_suitable_order(struct vm_area_struct *vma,
+ 	return false;
+ }
+ 
++static inline gfp_t thp_shmem_limit_gfp_mask(gfp_t huge_gfp, gfp_t limit_gfp)
++{
++	return huge_gfp;
++}
++
+ static inline unsigned long thp_vma_suitable_orders(struct vm_area_struct *vma,
+ 		unsigned long addr, unsigned long orders)
+ {
+diff --git a/mm/shmem.c b/mm/shmem.c
+index bab3529af23c..6edb23b41bac 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1791,30 +1791,6 @@ static struct folio *shmem_swapin_cluster(swp_entry_t swap, gfp_t gfp,
+ 	return folio;
+ }
+ 
+-/*
+- * Make sure huge_gfp is always more limited than limit_gfp.
+- * Some of the flags set permissions, while others set limitations.
+- */
+-static gfp_t limit_gfp_mask(gfp_t huge_gfp, gfp_t limit_gfp)
+-{
+-	gfp_t allowflags = __GFP_IO | __GFP_FS | __GFP_RECLAIM;
+-	gfp_t denyflags = __GFP_NOWARN | __GFP_NORETRY;
+-	gfp_t zoneflags = limit_gfp & GFP_ZONEMASK;
+-	gfp_t result = huge_gfp & ~(allowflags | GFP_ZONEMASK);
+-
+-	/* Allow allocations only from the originally specified zones. */
+-	result |= zoneflags;
+-
+-	/*
+-	 * Minimize the result gfp by taking the union with the deny flags,
+-	 * and the intersection of the allow flags.
+-	 */
+-	result |= (limit_gfp & denyflags);
+-	result |= (huge_gfp & limit_gfp) & allowflags;
+-
+-	return result;
+-}
+-
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+ bool shmem_hpage_pmd_enabled(void)
+ {
+@@ -2065,7 +2041,7 @@ static struct folio *shmem_swap_alloc_folio(struct inode *inode,
+ 		     non_swapcache_batch(entry, nr_pages) != nr_pages)
+ 			goto fallback;
+ 
+-		alloc_gfp = limit_gfp_mask(vma_thp_gfp_mask(vma), gfp);
++		alloc_gfp = thp_shmem_limit_gfp_mask(vma_thp_gfp_mask(vma), gfp);
+ 	}
+ retry:
+ 	new = shmem_alloc_folio(alloc_gfp, order, info, index);
+@@ -2141,7 +2117,7 @@ static int shmem_replace_folio(struct folio **foliop, gfp_t gfp,
+ 	if (nr_pages > 1) {
+ 		gfp_t huge_gfp = vma_thp_gfp_mask(vma);
+ 
+-		gfp = limit_gfp_mask(huge_gfp, gfp);
++		gfp = thp_shmem_limit_gfp_mask(huge_gfp, gfp);
+ 	}
+ #endif
+ 
+@@ -2548,7 +2524,7 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+ 		gfp_t huge_gfp;
+ 
+ 		huge_gfp = vma_thp_gfp_mask(vma);
+-		huge_gfp = limit_gfp_mask(huge_gfp, gfp);
++		huge_gfp = thp_shmem_limit_gfp_mask(huge_gfp, gfp);
+ 		folio = shmem_alloc_and_add_folio(vmf, huge_gfp,
+ 				inode, index, fault_mm, orders);
+ 		if (!IS_ERR(folio)) {
 
-Changes in v2:
-- Drop the RFC prefix and also the RFC part.
-- Now there is zero change to cgroup or refault tracking, RFC v1 changed
-  some cgroup behavior. To archive that v2 use a standalone memcg_table
-  for each cluster. It can be dropped or better optimized later if we
-  have a better solution. The performance gain is partly cancelled
-  compared to RFC v1 since we now need an extra allocation for free cluster
-  isolation and peak memory usage is 2 bytes higher. But still looking
-  good. That table size is accetable (1024 bytes), no RCU needed, and
-  fits for kmalloc. Even if we keep it as it is in the future,
-  it's still accetable.
-- Link to v1: https://lore.kernel.org/r/20260220-swap-table-p4-v1-0-104795d19815@tencent.com
-
----
-Kairui Song (12):
-      mm, swap: simplify swap cache allocation helper
-      mm, swap: move common swap cache operations into standalone helpers
-      mm/huge_memory: move THP gfp limit helper into header
-      mm, swap: add support for stable large allocation in swap cache directly
-      mm, swap: unify large folio allocation
-      mm/memcg, swap: tidy up cgroup v1 memsw swap helpers
-      mm, swap: support flexible batch freeing of slots in different memcgs
-      mm, swap: delay and unify memcg lookup and charging for swapin
-      mm, swap: consolidate cluster allocation helpers
-      mm/memcg, swap: store cgroup id in cluster table directly
-      mm/memcg: remove no longer used swap cgroup array
-      mm, swap: merge zeromap into swap table
-
- MAINTAINERS                 |   1 -
- include/linux/huge_mm.h     |  30 +++
- include/linux/memcontrol.h  |  16 +-
- include/linux/swap.h        |  19 +-
- include/linux/swap_cgroup.h |  47 ----
- mm/Makefile                 |   3 -
- mm/huge_memory.c            |   2 +-
- mm/internal.h               |  11 +-
- mm/memcontrol-v1.c          |  66 ++++--
- mm/memcontrol.c             |  31 ++-
- mm/memory.c                 |  88 ++------
- mm/page_io.c                |  61 +++++-
- mm/shmem.c                  | 123 +++--------
- mm/swap.h                   |  91 +++-----
- mm/swap_cgroup.c            | 174 ---------------
- mm/swap_state.c             | 519 +++++++++++++++++++++++++-------------------
- mm/swap_table.h             | 179 ++++++++++++---
- mm/swapfile.c               | 215 +++++++++---------
- mm/vmscan.c                 |   2 +-
- mm/zswap.c                  |  25 +--
- 20 files changed, 800 insertions(+), 903 deletions(-)
----
-base-commit: 444fc9435e57157fcf30fc99aee44997f3458641
-change-id: 20260111-swap-table-p4-98ee92baa7c4
-
-Best regards,
---  
-Kairui Song <kasong@tencent.com>
+-- 
+2.54.0
 
 
