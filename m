@@ -1,397 +1,406 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DFB3315D3B
-	for <cgroups@vger.kernel.org>; Tue, 19 May 2026 15:14:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779203679; cv=pass; b=J5RU/e/PyFD8oJXdA4MUtYoGbb63i6r4jLywpdk+AIWPZMFvcWkr6XpeCZUamYkP7DEgWT4+uwtAiEFpqPMt3QeTFF2Vo80g/ABtsH448ybXPaqRGNw654p9ar6iciZX2S91040cFxx4krHdVwTxSNNif5hATQyo+kxTFq5wWoI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779203679; c=relaxed/simple;
-	bh=GA0PQI75UOoRCcf99QZgF7SfyEX7OGS+zH+EEW8i5Qc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZAiOhLawARTbH0ef1gYtkEdQFskyCvkGMnZpbbF+9jqEZUcSD2YJFihAMPJW6dx/088m9XaPtGEO5XLVB9BIjGEjpNREq7Jc0KcVY3XOR59eKXxDuEjd1/jhX+CdoEXl/kI8gy+CLCYFnuJCVIHQ5grD9dP2uK5Y/5l6DauOqDM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=kQ5CvUbf; arc=pass smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37E602DCBF8
+	for <cgroups@vger.kernel.org>; Tue, 19 May 2026 16:00:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779206439; cv=none; b=KDRw8mwZSJf9cnsJvTA+5/ejix3hm2gyXh34r+8hNRcoOxrRfwc9fpFK+HwYoRmKytUdDJvdg5qIKEvRUvyTmpziWfopqivOwli6kOThPZ9az3PrmziWtde5ep+CQtsw5Ay5ToBkYV4MmhyVAtAb/HYrx0LWYb9P/4zw7rbZAV0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779206439; c=relaxed/simple;
+	bh=OWvl2gDr2tO8/A0xx+YxYDi6nhszzlOeBBlrlVUDVH0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=m77viBYshOF3yRl9KrOWa8ZjUtfGSbg5y/9XV74Zn+jZPGr5OU5vy0u0/2GD+D7KYee0w2ehZiKNthMMGjMIv+mxhVZ/auTF5iUqQQ/q9Gw2GQpSwricgc+Rt00hqSB3mrEMotTGGDiJmy9c+kJQWWGSZnqQAdDwlCsj1AnL1Pw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YenKr1BH; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=P8X18DB+; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kQ5CvUbf"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-67da63ae541so8116650a12.0
-        for <cgroups@vger.kernel.org>; Tue, 19 May 2026 08:14:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1779203676; cv=none;
-        d=google.com; s=arc-20240605;
-        b=dSlA5j/VPFD8+u4YZzoBrCliv+IIet8Dmd9kyoh/QOju6IKaxqbfg6/jA9mXEwA1lw
-         cO2tmVPic5cRoZALxyksQt0jn7weKr/eG7sknEFjjxZPO9M12jWNIovtwB0F4R7gNyjz
-         QpoQYVE2tJ3Sbhbn1BfJoTbdxh9F7RjPmkxRdKTJUtx5IzQer9uosnYHc4WTp8MVWZiD
-         qwhqBwiB2WV5eOi5xPYVd39GsLRMhlF7Rsyc7FsvuC06MS8gYh/MIA+9LiKzTPE3sAE7
-         LE7Cg6059u7C0dINf1m+lqiuyecZhu87SUkeVYDg4k4x3chTmkUfTWZpqiiycN2lhdes
-         CkXg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=Nl5pzXfqmREJgLa9QCh8fbDY+oJd7AG8p4ttgoLV1Ys=;
-        fh=ABSx6mv4RCuVV0A708xwWIuIf2w64fg8FN6bvqegefA=;
-        b=getZSnEPnp5fRO6as4nzPCISl6pf/BwvBJAY1YVNqo2IEpfOMsBQmXPvo+OLvJpfu8
-         UICCoX6Ca+cDxOx+0EzSeIaxqLRs9wT1Xk9awcLkyh7crztBX8srZwZSEN7YNGcM/+bX
-         Mnr0gM5arso1C+EczmTjkqV7ENWenjWjrwv69tZPnH/w07rUGEJpDcEOXyS5j7NCLQKl
-         FoMbfFs4+g2iIVSHBXYRP0liNeGppcbvBD7daOc2ak6zF/droS4dqeV/THRVxA3Xe3ca
-         dQuGpz9od52BjO7fxS4SJglzL5OLPqzVD0n3498nGEpPgqWnUJLQOnlhE9wvAha/Jn12
-         fKoA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YenKr1BH";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="P8X18DB+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779206437;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lxAuh/+LJ+cDVuOYgE+wIRcTwCiP9gqh5qSpye35R00=;
+	b=YenKr1BHZLGp0juZYcRCKwuqZNhqgkSISZtXjp1+5PlgmgY95HNIPUeJ8/FTeAZRIpfMJD
+	Z4DmUfsReUIZunHnw3N4f87H7MSQ2kJi+cxqlT8hj9r5WyqmTwmIuTRMzsYls46cy0Jy/P
+	d7cloeLAKOChCR6jVCRVdWofxDUUkW8=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-547-zhF_KSxNPwC9vrZzOdWF_g-1; Tue, 19 May 2026 12:00:35 -0400
+X-MC-Unique: zhF_KSxNPwC9vrZzOdWF_g-1
+X-Mimecast-MFC-AGG-ID: zhF_KSxNPwC9vrZzOdWF_g_1779206435
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-8baa173eacbso17516826d6.0
+        for <cgroups@vger.kernel.org>; Tue, 19 May 2026 09:00:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1779203676; x=1779808476; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Nl5pzXfqmREJgLa9QCh8fbDY+oJd7AG8p4ttgoLV1Ys=;
-        b=kQ5CvUbfByUI5hBga3Ye1LFlI0A6XFhC3cHPJXmAg6B+O0rDMBn62/3GP8L9+G/5A1
-         U5oPMtTwIXpK/H2dHItyoxhoTBLz2tpLSAV/V2kYSezd8zw6bXcxu/odSVYeewVtrktf
-         lQ43tat250QwGXNrzTpv40ZhKD435rkhI1ahb+47OdVMDA8mk9qO3cX1K0oTkzLRFY2B
-         iinRffwQfidL8oFEgCz/A7L4KSjzj3rvDJhEUjsFDulfv20Bd5oo2kv/mWTjxKsTKwIw
-         jAcIR0ZCaREpjBXsxWgz7M+qX3OJxWTRCvQjThvruyAKqRIThAdquoQZAcwMUduBzg68
-         OAUQ==
+        d=redhat.com; s=google; t=1779206435; x=1779811235; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lxAuh/+LJ+cDVuOYgE+wIRcTwCiP9gqh5qSpye35R00=;
+        b=P8X18DB+GAmxeHl2m7T18XCC1vbWNkLiYSRw4QGRrpwM/F6e6LigNviI1n4QxKhMgt
+         WXZsJVZLeiMRzyEmp5wyyIUiR2vOUUhhik7jkA1hdcrVcklsbS/a5f9iu/xKLTrnGRc3
+         3TeZ5FauihjBSKP9d3RMZShGWX3YVrp82unaQZSqrlO+ASelDJyS8DQIXa96VKmaqeBd
+         zSM+rmHl+dudOXieyW6ES5OT+vdmlDj3lTcXyVwMWkvjA3hfQqEi6vC+R6d7JPpt9ipS
+         c6gdDmuxjPoF9fnY9RV4cQLucIdEtDt/+g+mfQ4GqedtHGblLyS/9FxbNJ7xOTWb4NHt
+         MGwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779203676; x=1779808476;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Nl5pzXfqmREJgLa9QCh8fbDY+oJd7AG8p4ttgoLV1Ys=;
-        b=pK9ZFBnGIgvPMwn6NVkcUm1oDv9giQ9ozm26gy5Gc6fG/hjPl1bPkQFb8mSuo1iIUZ
-         vvxeR7NcR0jc4TmcaCLY57lsud2Rsp0tuE3WPlmlyEzwJLlsxXuv/9OZitHBAFOxt8Nn
-         0FUUcWWMdWakS/dd5J1bGfE+ddJT4CjbGi3Sw2NA/4ECplMcrnfkmc+/vDQbpyHbXWUp
-         MtkTVcNpVEA6umql+09xZXvquLa+E8o+AitFHuOqYy48mwts8EndMgDki1d1wxFHDlFh
-         Kj6dc9sJK/dLj8muPC9DssthRb1ERsxVvWFIauYZymk5gfdQjiiaDSRgnNs6fbqcpb0O
-         8fEA==
-X-Forwarded-Encrypted: i=1; AFNElJ/hVrJMTBF2O90dBOjK4HmWsw7Ansulm3trRzMXQyj7H7835L1Zy6biwoENBBAKVqnRQplJwxCH@vger.kernel.org
-X-Gm-Message-State: AOJu0YxN8KN1TIeJtBJktKrqRlVBaWsZU6DCevKZ8aJBZ7VBj8eBVk6i
-	AxUXHeCNIPPUPgfqfeYmMHJamdSBwcRGoGJVljEga03zfP5tTRjQ6jCsOyVJhI6wjTUOCyG4kQ4
-	yI/d5KDellLwmihLuI8DjzEbDTpnf6wue5GFpUwPh/Q==
-X-Gm-Gg: Acq92OHPZsX60k94Mpkg6Z6QGOCwIwXs1sPZSty/LDf91OeT9xwq05Tup4eM3ha/D9x
-	aVj8Q14EHHpi/fHfm+FNVwNIP1TRETeFTdLgEN9tx4qdjLJI5B86S1Kvor9+6XSJaAPcXqPNLTC
-	uaOXfyNVsPIPzRCh7vjuN0Ax1j2Z1iVH2vlISRFMRF1ght7LzmlukSvOS/cFjs7y8Hl0JCZf79g
-	l4TNGWUis5rYuOXWEHw0kB0wadXrivwNq2jYPHI+/wHwrrmVzpBZR/Pr4ojaMjlmMuEnGNwSf9L
-	PnujHW7kqQgplqbWLXOihGXUcbwNgCvqHv5V
-X-Received: by 2002:a17:907:c714:b0:bcf:9dd2:f79e with SMTP id
- a640c23a62f3a-bd517964d82mr1193318866b.29.1779203675686; Tue, 19 May 2026
- 08:14:35 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1779206435; x=1779811235;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=lxAuh/+LJ+cDVuOYgE+wIRcTwCiP9gqh5qSpye35R00=;
+        b=Z/G7gckWjbL91gwN8JIJJPArebEp/qEPE5psfXopi3SXUnRgQaH5elnV5aMfhevA2Q
+         HKi6XkOj21tM1YzgaGYpKHRNdPdycfhipIj8r/ImrE29Z/vkyQ+MdNls4WgJIbGo+1/v
+         eWpnij0kBzAag/ikIpr33euPeLhg98VTyqIqyRCvhbucuqYsUM1GiSe7HTuTqz37NqOO
+         xzrlOvPv1m42Tc+1IA9VJndbAy2iT1UvyUqJr8geK3iVwaQtC1MPCdiVgt1j7T6Vtcja
+         iyXvoY5UH9j+MHAauPJTkiT4TU+J7EBqe+rzjZlHILcDJ9DxT5Ebqw7jiv1nIG6fzpdk
+         Il9Q==
+X-Gm-Message-State: AOJu0YxG5ATH6CpTXmyE7iTDXyg60ZX4Or9N1WEBmLM2INuv+VVLTKFV
+	3YMTEdZZAA4jwCb44uy7aGzNy1uErdZ2K2D+uIFqL/6TZBIjg/aHv3eUcydA1rrON+VEiOH50Bh
+	VbjDf/KBvbrRqftxbhmGjN4d56h3ugSLjvrJJQtVE82zBH5mGNemKP21ZBok=
+X-Gm-Gg: Acq92OGiz95c8vDHekbpZ+ivq3sxLRriP9/RzEp2IfH3hMA29i54/oeUk/yWWLmEf2P
+	XhtMLDmFMSw+jPjXB5N5zNMBmIQFXdRCll95Q3iml8SHj6zeVJmi6FUOE3DQ2+TRDfPbIwJZcRQ
+	8ABZicQ7emssfvYyJTPrsGZ66nmF8P3zkLQfEMpz775CUnw6GHJGujpjmq22fzscQVjVgb5Rpah
+	bJkflwra3iBaDqHUZrEgk8H7OqIA8+Zu+jza3YrqZ1ueMMzivJG/XIyRaL+Sjr8Ec5AYP2pwdcZ
+	AMe+kYI8OkQQCydkkQuyzJBYTHO90waOPvxdQqpv0YDdDmEWgrpidxfito9ebvVB/CzBeDS0r7N
+	DBgc+VKE9C1pz5OgJbUdLgFuRC0CvIccwFABSfkIjOtixKIFUXqB53PG1rXWOA6vc7NId0jZOo2
+	Z/
+X-Received: by 2002:a0c:ea52:0:b0:8c9:c38a:20e1 with SMTP id 6a1803df08f44-8ca0f5ab3bemr240747376d6.10.1779206434515;
+        Tue, 19 May 2026 09:00:34 -0700 (PDT)
+X-Received: by 2002:a0c:ea52:0:b0:8c9:c38a:20e1 with SMTP id 6a1803df08f44-8ca0f5ab3bemr240746326d6.10.1779206433782;
+        Tue, 19 May 2026 09:00:33 -0700 (PDT)
+Received: from localhost (pool-100-17-21-205.bstnma.fios.verizon.net. [100.17.21.205])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ca36095326sm95016266d6.14.2026.05.19.09.00.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 May 2026 09:00:33 -0700 (PDT)
+From: Eric Chanudet <echanude@redhat.com>
+Date: Tue, 19 May 2026 11:59:02 -0400
+Subject: [PATCH v2 2/2] cgroup/dmem: add dmem.memcg control file for
+ double-charging to memcg
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260511113104.563854162@infradead.org> <20260511120628.057634261@infradead.org>
-In-Reply-To: <20260511120628.057634261@infradead.org>
-From: Vincent Guittot <vincent.guittot@linaro.org>
-Date: Tue, 19 May 2026 17:14:22 +0200
-X-Gm-Features: AVHnY4JK1SqRt6L1UhvDQnTKPdNUwnoUf7sUCXtnmZaAcDJau7we7w-I9JKpBiQ
-Message-ID: <CAKfTPtC3wbJYRSwT5CjGRC68WmXLgf9EaOSdC=37BVPu_4Gk0w@mail.gmail.com>
-Subject: Re: [PATCH v2 09/10] sched: Remove sched_class::pick_next_task()
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: mingo@kernel.org, longman@redhat.com, chenridong@huaweicloud.com, 
-	juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, 
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, tj@kernel.org, 
-	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, jstultz@google.com, kprateek.nayak@amd.com, 
-	qyousef@layalina.io
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260519-cgroup-dmem-memcg-double-charge-v2-2-db4d1407062b@redhat.com>
+References: <20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com>
+In-Reply-To: <20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
+ Natalie Vock <natalie.vock@gmx.de>, Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, 
+ linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ "T.J. Mercier" <tjmercier@google.com>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ Maxime Ripard <mripard@redhat.com>, Albert Esteve <aesteve@redhat.com>, 
+ Dave Airlie <airlied@gmail.com>, linux-doc@vger.kernel.org, 
+ Eric Chanudet <echanude@redhat.com>
+X-Mailer: b4 0.14.2
 
-On Mon, 11 May 2026 at 14:07, Peter Zijlstra <peterz@infradead.org> wrote:
->
-> The reason for pick_next_task_fair() is the put/set optimization that
-> avoids touching the common ancestors. However, it is possible to
-> implement this in the put_prev_task() and set_next_task() calls as
-> used in put_prev_set_next_task().
->
-> Notably, put_prev_set_next_task() is the only site that:
->
->  - calls put_prev_task() with a .next argument;
->  - calls set_next_task() with .first = true.
->
-> This means that put_prev_task() can determine the common hierarchy and
-> stop there, and then set_next_task() can terminate where put_prev_task
-> stopped.
->
-> Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Add a root-only cgroupfs file "dmem.memcg" that lets an administrator
+configure whether allocations in a dmem region should also be charged to
+the memory controller.
 
-Hackbench results on my Arm64 dev machine stay similars with patch 8
-and 9 (unlike patch 10)
+To handle inheritance, dmem adds a depends_on the memory controller,
+unless MEMCG isn't configured in.
 
-Reviewed-by: Vincent Guittot <vincent.guittot@linaro.org>
+Double-charging is disabled by default. Once a charge is attempted, the
+setting is locked to prevent inconsistent accounting by a small 4-state
+machine (off, on, locked off, locked on).
 
+The memcg to charge is derived from the pool's cgroup, since the pool
+holds a reference to the dmem cgroup state that keeps the cgroup alive
+until it gets uncharged.
 
-> ---
->  kernel/sched/core.c  |   27 +++------
->  kernel/sched/fair.c  |  139 +++++++++++++++++----------------------------------
->  kernel/sched/sched.h |   14 -----
->  3 files changed, 57 insertions(+), 123 deletions(-)
->
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -5980,16 +5980,15 @@ __pick_next_task(struct rq *rq, struct t
->         if (likely(!sched_class_above(prev->sched_class, &fair_sched_class) &&
->                    rq->nr_running == rq->cfs.h_nr_queued)) {
->
-> -               p = pick_next_task_fair(rq, prev, rf);
-> +               p = pick_task_fair(rq, rf);
->                 if (unlikely(p == RETRY_TASK))
->                         goto restart;
->
->                 /* Assume the next prioritized class is idle_sched_class */
-> -               if (!p) {
-> +               if (!p)
->                         p = pick_task_idle(rq, rf);
-> -                       put_prev_set_next_task(rq, prev, p);
-> -               }
->
-> +               put_prev_set_next_task(rq, prev, p);
->                 return p;
->         }
->
-> @@ -5997,20 +5996,12 @@ __pick_next_task(struct rq *rq, struct t
->         prev_balance(rq, prev, rf);
->
->         for_each_active_class(class) {
-> -               if (class->pick_next_task) {
-> -                       p = class->pick_next_task(rq, prev, rf);
-> -                       if (unlikely(p == RETRY_TASK))
-> -                               goto restart;
-> -                       if (p)
-> -                               return p;
-> -               } else {
-> -                       p = class->pick_task(rq, rf);
-> -                       if (unlikely(p == RETRY_TASK))
-> -                               goto restart;
-> -                       if (p) {
-> -                               put_prev_set_next_task(rq, prev, p);
-> -                               return p;
-> -                       }
-> +               p = class->pick_task(rq, rf);
-> +               if (unlikely(p == RETRY_TASK))
-> +                       goto restart;
-> +               if (p) {
-> +                       put_prev_set_next_task(rq, prev, p);
-> +                       return p;
->                 }
->         }
->
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -9214,7 +9214,7 @@ static void wakeup_preempt_fair(struct r
->         resched_curr_lazy(rq);
->  }
->
-> -static struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf)
-> +struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf)
->         __must_hold(__rq_lockp(rq))
->  {
->         struct sched_entity *se;
-> @@ -9257,72 +9257,6 @@ static struct task_struct *pick_task_fai
->         return NULL;
->  }
->
-> -static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool first);
-> -static void set_next_task_fair(struct rq *rq, struct task_struct *p, bool first);
-> -
-> -struct task_struct *
-> -pick_next_task_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
-> -       __must_hold(__rq_lockp(rq))
-> -{
-> -       struct sched_entity *se;
-> -       struct task_struct *p;
-> -
-> -       p = pick_task_fair(rq, rf);
-> -       if (unlikely(p == RETRY_TASK))
-> -               return p;
-> -       if (!p)
-> -               return p;
-> -       se = &p->se;
-> -
-> -#ifdef CONFIG_FAIR_GROUP_SCHED
-> -       if (prev->sched_class != &fair_sched_class)
-> -               goto simple;
-> -
-> -       __put_prev_set_next_dl_server(rq, prev, p);
-> -
-> -       /*
-> -        * Because of the set_next_buddy() in dequeue_task_fair() it is rather
-> -        * likely that a next task is from the same cgroup as the current.
-> -        *
-> -        * Therefore attempt to avoid putting and setting the entire cgroup
-> -        * hierarchy, only change the part that actually changes.
-> -        *
-> -        * Since we haven't yet done put_prev_entity and if the selected task
-> -        * is a different task than we started out with, try and touch the
-> -        * least amount of cfs_rqs.
-> -        */
-> -       if (prev != p) {
-> -               struct sched_entity *pse = &prev->se;
-> -               struct cfs_rq *cfs_rq;
-> -
-> -               while (!(cfs_rq = is_same_group(se, pse))) {
-> -                       int se_depth = se->depth;
-> -                       int pse_depth = pse->depth;
-> -
-> -                       if (se_depth <= pse_depth) {
-> -                               put_prev_entity(cfs_rq_of(pse), pse);
-> -                               pse = parent_entity(pse);
-> -                       }
-> -                       if (se_depth >= pse_depth) {
-> -                               set_next_entity(cfs_rq_of(se), se, true);
-> -                               se = parent_entity(se);
-> -                       }
-> -               }
-> -
-> -               put_prev_entity(cfs_rq, pse);
-> -               set_next_entity(cfs_rq, se, true);
-> -
-> -               __set_next_task_fair(rq, p, true);
-> -       }
-> -
-> -       return p;
-> -
-> -simple:
-> -#endif /* CONFIG_FAIR_GROUP_SCHED */
-> -       put_prev_set_next_task(rq, prev, p);
-> -       return p;
-> -}
-> -
->  static struct task_struct *
->  fair_server_pick_task(struct sched_dl_entity *dl_se, struct rq_flags *rf)
->         __must_hold(__rq_lockp(dl_se->rq))
-> @@ -9346,10 +9280,33 @@ static void put_prev_task_fair(struct rq
->  {
->         struct sched_entity *se = &prev->se;
->         struct cfs_rq *cfs_rq;
-> +       struct sched_entity *nse = NULL;
->
-> -       for_each_sched_entity(se) {
-> +#ifdef CONFIG_FAIR_GROUP_SCHED
-> +       if (next && next->sched_class == &fair_sched_class)
-> +               nse = &next->se;
-> +#endif
-> +
-> +       while (se) {
->                 cfs_rq = cfs_rq_of(se);
-> -               put_prev_entity(cfs_rq, se);
-> +               if (!nse || cfs_rq->curr)
-> +                       put_prev_entity(cfs_rq, se);
-> +#ifdef CONFIG_FAIR_GROUP_SCHED
-> +               if (nse) {
-> +                       if (is_same_group(se, nse))
-> +                               break;
-> +
-> +                       int d = nse->depth - se->depth;
-> +                       if (d >= 0) {
-> +                               /* nse has equal or greater depth, ascend */
-> +                               nse = parent_entity(nse);
-> +                               /* if nse is the deeper, do not ascend se */
-> +                               if (d > 0)
-> +                                       continue;
-> +                       }
-> +               }
-> +#endif
-> +               se = parent_entity(se);
->         }
->  }
->
-> @@ -13896,10 +13853,30 @@ static void switched_to_fair(struct rq *
->         }
->  }
->
-> -static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
-> +/*
-> + * Account for a task changing its policy or group.
-> + *
-> + * This routine is mostly called to set cfs_rq->curr field when a task
-> + * migrates between groups/classes.
-> + */
-> +static void set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
->  {
->         struct sched_entity *se = &p->se;
->
-> +       for_each_sched_entity(se) {
-> +               struct cfs_rq *cfs_rq = cfs_rq_of(se);
-> +
-> +               if (IS_ENABLED(CONFIG_FAIR_GROUP_SCHED) &&
-> +                   first && cfs_rq->curr)
-> +                       break;
-> +
-> +               set_next_entity(cfs_rq, se, first);
-> +               /* ensure bandwidth has been allocated on our new cfs_rq */
-> +               account_cfs_rq_runtime(cfs_rq, 0);
-> +       }
-> +
-> +       se = &p->se;
-> +
->         if (task_on_rq_queued(p)) {
->                 /*
->                  * Move the next running task to the front of the list, so our
-> @@ -13919,27 +13896,6 @@ static void __set_next_task_fair(struct
->         sched_fair_update_stop_tick(rq, p);
->  }
->
-> -/*
-> - * Account for a task changing its policy or group.
-> - *
-> - * This routine is mostly called to set cfs_rq->curr field when a task
-> - * migrates between groups/classes.
-> - */
-> -static void set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
-> -{
-> -       struct sched_entity *se = &p->se;
-> -
-> -       for_each_sched_entity(se) {
-> -               struct cfs_rq *cfs_rq = cfs_rq_of(se);
-> -
-> -               set_next_entity(cfs_rq, se, first);
-> -               /* ensure bandwidth has been allocated on our new cfs_rq */
-> -               account_cfs_rq_runtime(cfs_rq, 0);
-> -       }
-> -
-> -       __set_next_task_fair(rq, p, first);
-> -}
-> -
->  void init_cfs_rq(struct cfs_rq *cfs_rq)
->  {
->         cfs_rq->tasks_timeline = RB_ROOT_CACHED;
-> @@ -14251,7 +14207,6 @@ DEFINE_SCHED_CLASS(fair) = {
->         .wakeup_preempt         = wakeup_preempt_fair,
->
->         .pick_task              = pick_task_fair,
-> -       .pick_next_task         = pick_next_task_fair,
->         .put_prev_task          = put_prev_task_fair,
->         .set_next_task          = set_next_task_fair,
->
-> --- a/kernel/sched/sched.h
-> +++ b/kernel/sched/sched.h
-> @@ -2555,17 +2555,6 @@ struct sched_class {
->          * schedule/pick_next_task: rq->lock
->          */
->         struct task_struct *(*pick_task)(struct rq *rq, struct rq_flags *rf);
-> -       /*
-> -        * Optional! When implemented pick_next_task() should be equivalent to:
-> -        *
-> -        *   next = pick_task();
-> -        *   if (next) {
-> -        *       put_prev_task(prev);
-> -        *       set_next_task_first(next);
-> -        *   }
-> -        */
-> -       struct task_struct *(*pick_next_task)(struct rq *rq, struct task_struct *prev,
-> -                                             struct rq_flags *rf);
->
->         /*
->          * sched_change:
-> @@ -2789,8 +2778,7 @@ static inline bool sched_fair_runnable(s
->         return rq->cfs.nr_queued > 0;
->  }
->
-> -extern struct task_struct *pick_next_task_fair(struct rq *rq, struct task_struct *prev,
-> -                                              struct rq_flags *rf);
-> +extern struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf);
->  extern struct task_struct *pick_task_idle(struct rq *rq, struct rq_flags *rf);
->
->  #define SCA_CHECK              0x01
->
->
+Signed-off-by: Eric Chanudet <echanude@redhat.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst |  23 +++++
+ kernel/cgroup/dmem.c                    | 158 +++++++++++++++++++++++++++++++-
+ 2 files changed, 178 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 6efd0095ed995b1550317662bc1b56c7a7f3db23..1d2fa55ddf0faa17baa916a8914d3033e8e42359 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2828,6 +2828,29 @@ DMEM Interface Files
+ 	  drm/0000:03:00.0/vram0 12550144
+ 	  drm/0000:03:00.0/stolen 8650752
+ 
++  dmem.memcg
++	A readwrite nested-keyed file that exists only on the root
++	cgroup. It configures whether allocations in a dmem region
++	should also be charged to the memory controller.
++
++	Upon the first charge to a region, its setting can no longer be changed
++	and is reported as "[true|false] (locked)".
++
++	Charges to the memory controller are visible in ``memory.stat`` as the
++	``dmem`` entry, reported in bytes.
++
++	An example read output follows::
++
++	  drm/0000:03:00.0/vram0 false
++	  drm/0000:03:00.0/stolen false (locked)
++
++	Writing uses the same nested-keyed format::
++
++	  echo "drm/0000:03:00.0/vram0 true" > dmem.memcg
++
++	This file is only available when the kernel is built with
++	``CONFIG_MEMCG``.
++
+ HugeTLB
+ -------
+ 
+diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
+index 1ab1fb47f2711ecc60dd13e611a8a4920b48f3e9..e07b20b8025c528f190f84c76b088cb8a32a7f5e 100644
+--- a/kernel/cgroup/dmem.c
++++ b/kernel/cgroup/dmem.c
+@@ -17,6 +17,14 @@
+ #include <linux/refcount.h>
+ #include <linux/rculist.h>
+ #include <linux/slab.h>
++#include <linux/memcontrol.h>
++
++enum dmem_memcg_status {
++	DMEM_MEMCG_OFF,
++	DMEM_MEMCG_ON,
++	DMEM_MEMCG_LOCKED_OFF,
++	DMEM_MEMCG_LOCKED_ON,
++};
+ 
+ struct dmem_cgroup_region {
+ 	/**
+@@ -51,6 +59,14 @@ struct dmem_cgroup_region {
+ 	 * No new pools should be added to the region afterwards.
+ 	 */
+ 	bool unregistered;
++
++	/**
++	 * @memcg_status: Whether allocation in this region should charge memcg.
++	 * DMEM_MEMCG_OFF/DMEM_MEMCG_ON or
++	 * DMEM_MEMCG_LOCKED_OFF/DMEM_MEMCG_LOCKED_ON, frozen after first allocation.
++	 * Transitions to a locked state are one-way.
++	 */
++	atomic_t memcg_status;
+ };
+ 
+ struct dmemcg_state {
+@@ -609,6 +625,34 @@ get_cg_pool_unlocked(struct dmemcg_state *cg, struct dmem_cgroup_region *region)
+ 	return pool;
+ }
+ 
++static bool apply_memcg_charge(atomic_t *status)
++{
++	int state = atomic_read(status);
++
++	for (;;) {
++		switch (state) {
++		case DMEM_MEMCG_OFF:
++			state = atomic_cmpxchg(status, DMEM_MEMCG_OFF,
++					       DMEM_MEMCG_LOCKED_OFF);
++			if (state != DMEM_MEMCG_OFF)
++				continue;
++			return false;
++		case DMEM_MEMCG_LOCKED_OFF:
++			return false;
++		case DMEM_MEMCG_ON:
++			state = atomic_cmpxchg(status, DMEM_MEMCG_ON,
++					       DMEM_MEMCG_LOCKED_ON);
++			if (state != DMEM_MEMCG_ON)
++				continue;
++			return true;
++		case DMEM_MEMCG_LOCKED_ON:
++			return true;
++		}
++		WARN_ONCE(1, "Invalid memcg_status (%#x).\n", state);
++		return false;
++	}
++}
++
+ /**
+  * dmem_cgroup_uncharge() - Uncharge a pool.
+  * @pool: Pool to uncharge.
+@@ -624,6 +668,12 @@ void dmem_cgroup_uncharge(struct dmem_cgroup_pool_state *pool, u64 size)
+ 		return;
+ 
+ 	page_counter_uncharge(&pool->cnt, size);
++
++	if (atomic_read(&pool->region->memcg_status) == DMEM_MEMCG_LOCKED_ON &&
++	    !WARN_ON_ONCE(size > (u64)UINT_MAX << PAGE_SHIFT))
++		mem_cgroup_dmem_uncharge(pool->cs->css.cgroup,
++					 PAGE_ALIGN(size) >> PAGE_SHIFT);
++
+ 	css_put(&pool->cs->css);
+ 	dmemcg_pool_put(pool);
+ }
+@@ -655,6 +705,8 @@ int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
+ 	struct dmemcg_state *cg;
+ 	struct dmem_cgroup_pool_state *pool;
+ 	struct page_counter *fail;
++	unsigned long nr_pages = PAGE_ALIGN(size) >> PAGE_SHIFT;
++	bool charge_memcg;
+ 	int ret;
+ 
+ 	*ret_pool = NULL;
+@@ -670,7 +722,28 @@ int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
+ 	pool = get_cg_pool_unlocked(cg, region);
+ 	if (IS_ERR(pool)) {
+ 		ret = PTR_ERR(pool);
+-		goto err;
++		goto err_css_put;
++	}
++
++	charge_memcg = apply_memcg_charge(&region->memcg_status);
++	if (charge_memcg) {
++		/* mem_cgroup_dmem_charge limitation from try_charge_memcg */
++		if (size > (u64)UINT_MAX << PAGE_SHIFT) {
++			ret = -EINVAL;
++			dmemcg_pool_put(pool);
++			goto err_css_put;
++		}
++
++		if (!mem_cgroup_dmem_charge(pool->cs->css.cgroup, nr_pages,
++					    GFP_KERNEL)) {
++			/*
++			 * No dmem_cgroup_state_evict_valuable() could help,
++			 * there's no ret_limit_pool to return.
++			 */
++			ret = -ENOMEM;
++			dmemcg_pool_put(pool);
++			goto err_css_put;
++		}
+ 	}
+ 
+ 	if (!page_counter_try_charge(&pool->cnt, size, &fail)) {
+@@ -681,14 +754,17 @@ int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
+ 		}
+ 		dmemcg_pool_put(pool);
+ 		ret = -EAGAIN;
+-		goto err;
++		goto err_uncharge_memcg;
+ 	}
+ 
+ 	/* On success, reference from get_current_dmemcs is transferred to *ret_pool */
+ 	*ret_pool = pool;
+ 	return 0;
+ 
+-err:
++err_uncharge_memcg:
++	if (charge_memcg)
++		mem_cgroup_dmem_uncharge(pool->cs->css.cgroup, nr_pages);
++err_css_put:
+ 	css_put(&cg->css);
+ 	return ret;
+ }
+@@ -845,6 +921,71 @@ static ssize_t dmem_cgroup_region_max_write(struct kernfs_open_file *of,
+ 	return dmemcg_limit_write(of, buf, nbytes, off, set_resource_max);
+ }
+ 
++#ifdef CONFIG_MEMCG
++static int dmem_cgroup_memcg_show(struct seq_file *sf, void *v)
++{
++	struct dmem_cgroup_region *region;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(region, &dmem_cgroup_regions, region_node) {
++		int state = atomic_read(&region->memcg_status);
++
++		seq_printf(sf, "%s %s\n", region->name,
++			   state == DMEM_MEMCG_ON ? "true" :
++			   state == DMEM_MEMCG_OFF ? "false" :
++			   state == DMEM_MEMCG_LOCKED_ON ? "true (locked)" :
++			   state == DMEM_MEMCG_LOCKED_OFF ? "false (locked)" :
++			   "(invalid)");
++	}
++	rcu_read_unlock();
++	return 0;
++}
++
++static ssize_t dmem_cgroup_memcg_write(struct kernfs_open_file *of, char *buf,
++				       size_t nbytes, loff_t off)
++{
++	while (buf) {
++		struct dmem_cgroup_region *region;
++		char *options, *name;
++		bool flag;
++
++		options = buf;
++		buf = strchr(buf, '\n');
++		if (buf)
++			*buf++ = '\0';
++
++		options = strstrip(options);
++		if (!options[0])
++			continue;
++
++		name = strsep(&options, " \t");
++		if (!name[0])
++			continue;
++
++		if (!options || !options[0])
++			return -EINVAL;
++
++		if (kstrtobool(options, &flag))
++			return -EINVAL;
++
++		rcu_read_lock();
++		region = dmemcg_get_region_by_name(name);
++		rcu_read_unlock();
++		if (!region)
++			return -ENODEV;
++
++		atomic_cmpxchg(&region->memcg_status,
++			       flag ? DMEM_MEMCG_OFF : DMEM_MEMCG_ON,
++			       flag ? DMEM_MEMCG_ON : DMEM_MEMCG_OFF);
++		/* Continue if a region is already locked. */
++
++		kref_put(&region->ref, dmemcg_free_region);
++	}
++
++	return nbytes;
++}
++#endif
++
+ static struct cftype files[] = {
+ 	{
+ 		.name = "capacity",
+@@ -873,6 +1014,14 @@ static struct cftype files[] = {
+ 		.seq_show = dmem_cgroup_region_max_show,
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 	},
++#ifdef CONFIG_MEMCG
++	{
++		.name = "memcg",
++		.write = dmem_cgroup_memcg_write,
++		.seq_show = dmem_cgroup_memcg_show,
++		.flags = CFTYPE_ONLY_ON_ROOT,
++	},
++#endif
+ 	{ } /* Zero entry terminates. */
+ };
+ 
+@@ -882,4 +1031,7 @@ struct cgroup_subsys dmem_cgrp_subsys = {
+ 	.css_offline	= dmemcs_offline,
+ 	.legacy_cftypes	= files,
+ 	.dfl_cftypes	= files,
++#ifdef CONFIG_MEMCG
++	.depends_on	= 1 << memory_cgrp_id,
++#endif
+ };
+
+-- 
+2.52.0
+
