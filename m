@@ -1,253 +1,229 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 707E62D46B3
-	for <cgroups@vger.kernel.org>; Tue, 19 May 2026 16:01:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBF171D5170;
+	Tue, 19 May 2026 16:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779206508; cv=none; b=YbKMUFR5SG9009K4QqQnhU2f5/JH/gCuvbgIjmJqGL9Myq0lgjKw0aBBdSio9BBE8EyIcWzkocFI1tR+t57+Qr+9R+H8bpSiqKR0KxAT+l6F3m6OGfU3H8bJuIwFSbExP2B3UnlYwkOW5c/5LY/tokTmcHYroGVYcmN9WRuH3So=
+	t=1779208328; cv=none; b=lvaQkv2doIqjaxSD2jZpTrCq66NcKE6sSrOiVzVFz8jj2NVDTFcQJ8zAXfZ3cV3ZXzI9b1Cd0/zxwg1GOFHXLm3N9O928GLh2vkouvHy9xgBdjizWHEbRnKzdTb0ZHv35PzrebcDLURf2H1LocDxqSoL9wkQvrexlpbc05qJcxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779206508; c=relaxed/simple;
-	bh=m6bdn04H37lQht89QtTbnUX523/2qZixGamCNPKOT80=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=PSuM8UTiox9OOcuEGZtZY6VF7TIbCDpho52xoAwECgPdMca9iCchM1fuQjP5cMAwf2yndOo9T4ufb+zSebjEogQmFYTQEbWGAPt/IisKRQy1djmEtxWiebLGelyYj+8FLYKhv11XDxudsilTCkunL6V0p7zw/jYyUXJvV2P9dyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OxTnzH/P; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=YYZuMyhT; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1779208328; c=relaxed/simple;
+	bh=SzpovHMoKEOZz3NZw5bD7XsjuYX6EnzOkbjbXVaRR6E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RbBdMraz1TMrD4vsJhJICVyv64ebZbTdWnYIegB9CKwPQn/tQACtGMG2Fu0QJifwP5IS8zOQxAhD2D+heuOpSdVuOxgWJ6uxJ+bZVuZM32OcDKRSIHwtlsIC2e9u/WW7LjelddAfpbcr2hQ3fIbQkjrWRCOnT9SMd3Z5oR4zuN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qs10YNzG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OxTnzH/P";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="YYZuMyhT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1779206506;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cipZ17JT05Ge5l1VfUm/NtrMByICdVG7S5/ux07qG+4=;
-	b=OxTnzH/PRjzrqpADJ+QbUp40J3k8PoxBSucl4RZ1bRsg6zeoNXSnqTgmO1f5TH+t4IeAXz
-	JXWs1m8krQQ6bLVP/qzOR52Gpn28v9mofT64jg5ygz5xFDSln7Pc4zO0a30mowkBSWrGUc
-	jJGJmRSBN0CUEZ7i2d60hTVWInuvT+I=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-578-KoOf7wn5Ofih_hmEMoVnig-1; Tue, 19 May 2026 12:01:45 -0400
-X-MC-Unique: KoOf7wn5Ofih_hmEMoVnig-1
-X-Mimecast-MFC-AGG-ID: KoOf7wn5Ofih_hmEMoVnig_1779206505
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-90fc64a47edso649094885a.2
-        for <cgroups@vger.kernel.org>; Tue, 19 May 2026 09:01:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1779206505; x=1779811305; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=cipZ17JT05Ge5l1VfUm/NtrMByICdVG7S5/ux07qG+4=;
-        b=YYZuMyhTnrPP6HvVETcwGABjbms+3HdGmX1PFtSF8vhQBq80ySytVZz6Wz8q4Ok06A
-         9nnjQ54h7U6JjRGK8KJn/bzKA3riG8afcbFYnsQHovXxUflTssd4mcCRHO9aOVtEErEL
-         muTdX4U2ew9neAB7dctdWjAUVYAklJjQzuurU6akSMmCe2ye2Rk3p4SLJbmAo6KKTcD7
-         bgG/cUyOdtJKMJbalTj30QaQNxTMfrMfyGH3ddnXru3A52q02KND4uG09oVw2glK7LU+
-         2ZItyAVigNMkib2ODCtfn5i1a2IzxINNu05j3G6AZ004GJpyfGQPpnDqXxHJl9Or+BlT
-         3fuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779206505; x=1779811305;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=cipZ17JT05Ge5l1VfUm/NtrMByICdVG7S5/ux07qG+4=;
-        b=SZ5JhAvv39VNJdGbANZxHSWF/jNEtS16BG1Rkamkr4HUiVjM1e/qpktfscChCd85r0
-         xkqFLqGIj/sSREsATw5aEfgx9vdFcSHs/IcF2AJG2f0aB5GDmzS7zcDNuyVthJ7wLxj1
-         I5A8xvneASA784ZCFFNHaRkve7/Qe6ShbWGIgPNX3bE/1jO1blHneH+ZghGDnnNVV/gG
-         ZmsemqvctgF7unPspWyzdmXth71o7JQZ24A0o/Y7koN5uP28CFX9CmTDDdF4tHc6uqaj
-         VsX5LMLsvX2Eo5G/RrFksVu0pFQTw/QtwE6otmt9qruoQ/k4cDd4W51c94fuAiV+PdPG
-         P+YA==
-X-Gm-Message-State: AOJu0YwkmtDYDp7ousqyNRP2yRz8an/Qec305ExDCI+X2iQOQgFMjQqX
-	52Jxzcemn/TLZtTC4J0DtoiG/1+hcGYnt9zGvcybGdAoLrxA10tpuqV08Wm3Z71cb+R3BKvlEFD
-	P/Ow11PLqtK/x9fmbnkrxjR/Yn+aCza/opcuPR2VLoAudnaT9awnqxRB2MbY=
-X-Gm-Gg: Acq92OExH0msstW7Dexgo6uDDeixJkZbb6MCJgfmh6bfsOJXVat3tR99CYacSzQOu2a
-	eoUj39Sh0Udl2eJBfJWKnvMwpOieFsdY6ejd+6zGGDRAF6ABOTEFr1k+B/9vSD2sVkUcUkoARTb
-	EdGgA0syOMIwnrUoKmQfKb5ay+AKpSwqHZJmLFzFgjjg/7+eekvTgcEYJAOlYvO7xmFtpHEPtch
-	PXASe7ocXIBNXcqcQMhre92bo9Qb6XqRT3dcI8lqzofLijcwyrhHnkvVxaJJ4HFs5WLGVEcv1os
-	d3+oSUHv29BGQuGFAQdiVbZ5MxVVUzQyY1mdoZWj2cavEdcoyXV3KLX2V/yvEKiEbEKqMVG0Wt5
-	vFARN//3VQUThzlv8dSIIRKuW5Ntp1zq8+Z+hZKUV8hfLIreH2fqyImGXLA/PHc6lvA==
-X-Received: by 2002:a05:620a:7116:b0:90a:708c:e6d9 with SMTP id af79cd13be357-911d10425e9mr3114789785a.56.1779206463560;
-        Tue, 19 May 2026 09:01:03 -0700 (PDT)
-X-Received: by 2002:a05:620a:7116:b0:90a:708c:e6d9 with SMTP id af79cd13be357-911d10425e9mr3114014285a.56.1779206432003;
-        Tue, 19 May 2026 09:00:32 -0700 (PDT)
-Received: from localhost (pool-100-17-21-205.bstnma.fios.verizon.net. [100.17.21.205])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-910bd62e233sm1876151185a.45.2026.05.19.09.00.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2026 09:00:31 -0700 (PDT)
-From: Eric Chanudet <echanude@redhat.com>
-Date: Tue, 19 May 2026 11:59:01 -0400
-Subject: [PATCH v2 1/2] mm/memcontrol: add dmem charge/uncharge functions
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qs10YNzG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7FF4C2BCB3;
+	Tue, 19 May 2026 16:32:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779208328;
+	bh=SzpovHMoKEOZz3NZw5bD7XsjuYX6EnzOkbjbXVaRR6E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Qs10YNzGekgmtvHxgReV7P65tiMHHCYBYIjL502DOF/37vXQZXib42brdzZbD1BpW
+	 apttq7P/8t6ZJA5lh1XjKteQRKGy4IUleOftZiOcSJsul4W7AKVx3Ez6YGa8R6OZB6
+	 CwAt12wi/8Lw6DlCo2ZSjnidYwVR01dnhiDj2cTIMr5ZPTxXTEbbfXSw+aTnzpEZe2
+	 dItkNurzD1Uu3US5tLWBeZGSHywlXtbBITQXETM353dDe9pdSg6bBaIdcVy6uqixof
+	 W/luHicp+KZcBO1+K9htM0KBLl83yP0yCtyjGiv1wasSx7UUKxcdI2k7orYuuNWSJj
+	 4AogqySbyMoSQ==
+Date: Tue, 19 May 2026 18:32:04 +0200
+From: Maxime Ripard <mripard@kernel.org>
+To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Cc: Albert Esteve <aesteve@redhat.com>, Barry Song <baohua@kernel.org>, 
+	"T.J. Mercier" <tjmercier@google.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Sumit Semwal <sumit.semwal@linaro.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, 
+	Brian Starkey <Brian.Starkey@arm.com>, John Stultz <jstultz@google.com>, 
+	Christian Brauner <brauner@kernel.org>, Paul Moore <paul@paul-moore.com>, 
+	James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
+	Stephen Smalley <stephen.smalley.work@gmail.com>, Ondrej Mosnacek <omosnace@redhat.com>, 
+	Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, dri- <devel@lists.freedesktop.org>, 
+	linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org, 
+	selinux@vger.kernel.org, linux-kselftest@vger.kernel.org, echanude@redhat.com
+Subject: Re: [Linaro-mm-sig] Re: [PATCH RFC 2/5] dma-heap: charge dma-buf
+ memory via explicit memcg
+Message-ID: <20260519-graceful-hypnotic-penguin-0be97e@penduick>
+References: <20260512-v2_20230123_tjmercier_google_com-v1-0-6326701c3691@redhat.com>
+ <20260512-v2_20230123_tjmercier_google_com-v1-2-6326701c3691@redhat.com>
+ <8ef38815-6ae9-4359-86d4-042554357639@amd.com>
+ <CABdmKX2uwZ12kYJYPJGfWxuMBOJS=64b1GRj72tfB5D=NKM22w@mail.gmail.com>
+ <CADSE00Jq_uvNgvxgPze0mEdUd+hF4-DPZkHy0KroWHZzygf4WA@mail.gmail.com>
+ <CABdmKX3DhejYBis9htLDnzPrG7vuF3R3URLVNEbnyd61SSsx=g@mail.gmail.com>
+ <CAGsJ_4zyecY6E-=Tm4_couT7uoM9LMcFdTMUPkZAjj4zUKE-dQ@mail.gmail.com>
+ <cb84c2ee-9de1-4565-b2e0-60984721228f@amd.com>
+ <CADSE00Lc42s2bzXzV5D7t1Enf56u4BVj-yXLp3Yxhm0=qMPvuw@mail.gmail.com>
+ <9cc79977-9a42-40eb-bfa7-460881c1e10f@amd.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260519-cgroup-dmem-memcg-double-charge-v2-1-db4d1407062b@redhat.com>
-References: <20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com>
-In-Reply-To: <20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com>
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
- Roman Gushchin <roman.gushchin@linux.dev>, 
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
- Andrew Morton <akpm@linux-foundation.org>, 
- Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
- Natalie Vock <natalie.vock@gmx.de>, Tejun Heo <tj@kernel.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, 
- linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- "T.J. Mercier" <tjmercier@google.com>, 
- =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
- Maxime Ripard <mripard@redhat.com>, Albert Esteve <aesteve@redhat.com>, 
- Dave Airlie <airlied@gmail.com>, linux-doc@vger.kernel.org, 
- Eric Chanudet <echanude@redhat.com>
-X-Mailer: b4 0.14.2
+Content-Type: multipart/signed; micalg=pgp-sha384;
+	protocol="application/pgp-signature"; boundary="ran3hospswhrt5o6"
+Content-Disposition: inline
+In-Reply-To: <9cc79977-9a42-40eb-bfa7-460881c1e10f@amd.com>
 
-Add mem_cgroup_dmem_charge() and mem_cgroup_dmem_uncharge() to allow
-dmem pool allocations to optionally be double-charged against the memory
-controller. Take the struct cgroup from the dmem pool's css as there is
-no convenient object exported to represent these allocations. These will
-resolve the effective memory css from that cgroup and perform the
-charge.
 
-Introduce a MEMCG_DMEM stat counter to memory.stat to make the cgroup's
-dmem charge visible.
+--ran3hospswhrt5o6
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [Linaro-mm-sig] Re: [PATCH RFC 2/5] dma-heap: charge dma-buf
+ memory via explicit memcg
+MIME-Version: 1.0
 
-Signed-off-by: Eric Chanudet <echanude@redhat.com>
----
- include/linux/memcontrol.h | 16 ++++++++++++
- mm/memcontrol.c            | 65 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 81 insertions(+)
+Hi Chritian,
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index dc3fa687759b45748b2acee6d7f43da325eb50c1..8e1d49b87fb64e6114f3eb920293e14920290fe7 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -39,6 +39,7 @@ enum memcg_stat_item {
- 	MEMCG_ZSWAP_B,
- 	MEMCG_ZSWAPPED,
- 	MEMCG_ZSWAP_INCOMP,
-+	MEMCG_DMEM,
- 	MEMCG_NR_STAT,
- };
- 
-@@ -1872,6 +1873,21 @@ static inline bool mem_cgroup_zswap_writeback_enabled(struct mem_cgroup *memcg)
- }
- #endif
- 
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_CGROUP_DMEM)
-+bool mem_cgroup_dmem_charge(struct cgroup *cgrp, unsigned int nr_pages,
-+			    gfp_t gfp_mask);
-+void mem_cgroup_dmem_uncharge(struct cgroup *cgrp, unsigned int nr_pages);
-+#else
-+static inline bool mem_cgroup_dmem_charge(struct cgroup *cgrp,
-+					  unsigned int nr_pages, gfp_t gfp_mask)
-+{
-+	return true;
-+}
-+static inline void mem_cgroup_dmem_uncharge(struct cgroup *cgrp,
-+					    unsigned int nr_pages)
-+{
-+}
-+#endif
- 
- /* Cgroup v1-related declarations */
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c03d4787d466803db49cdaa90e6d6ba426b7afe2..91a7ac16b6eac2d6c3700b6885a068bf8b640706 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -433,6 +433,7 @@ static const unsigned int memcg_stat_items[] = {
- 	MEMCG_ZSWAP_B,
- 	MEMCG_ZSWAPPED,
- 	MEMCG_ZSWAP_INCOMP,
-+	MEMCG_DMEM,
- };
- 
- #define NR_MEMCG_NODE_STAT_ITEMS ARRAY_SIZE(memcg_node_stat_items)
-@@ -1606,6 +1607,9 @@ static const struct memory_stat memory_stats[] = {
- #ifdef CONFIG_NUMA_BALANCING
- 	{ "pgpromote_success",		PGPROMOTE_SUCCESS	},
- #endif
-+#ifdef CONFIG_CGROUP_DMEM
-+	{ "dmem",			MEMCG_DMEM		},
-+#endif
- };
- 
- /* The actual unit of the state item, not the same as the output unit */
-@@ -5909,6 +5913,67 @@ static struct cftype zswap_files[] = {
- };
- #endif /* CONFIG_ZSWAP */
- 
-+#ifdef CONFIG_CGROUP_DMEM
-+/**
-+ * mem_cgroup_dmem_charge - charge memcg for a dmem pool allocation
-+ * @cgrp: cgroup of the dmem pool
-+ * @nr_pages: number of pages to charge
-+ * @gfp_mask: reclaim mode
-+ *
-+ * Charges @nr_pages to @memcg. Returns %true if the charge fit within
-+ * @memcg's configured limit, %false if it doesn't.
-+ */
-+bool mem_cgroup_dmem_charge(struct cgroup *cgrp, unsigned int nr_pages,
-+			    gfp_t gfp_mask)
-+{
-+	struct cgroup_subsys_state *mem_css;
-+	struct mem_cgroup *memcg;
-+
-+	/* CGROUP_DMEM and MEMCG guarantees this cannot be NULL. */
-+	mem_css = cgroup_get_e_css(cgrp, &memory_cgrp_subsys);
-+
-+	/* Use the memcg, if any, of the dmem cgroup. */
-+	memcg = mem_cgroup_from_css(mem_css);
-+	if (!memcg || mem_cgroup_is_root(memcg)) {
-+		css_put(mem_css);
-+		return false;
-+	}
-+
-+	if (try_charge_memcg(memcg, gfp_mask, nr_pages)) {
-+		css_put(mem_css);
-+		return false;
-+	}
-+
-+	mod_memcg_state(memcg, MEMCG_DMEM, nr_pages);
-+	css_put(mem_css);
-+	return true;
-+}
-+
-+/**
-+ * mem_cgroup_dmem_uncharge - uncharge memcg from a dmem pool allocation
-+ * @cgrp: cgroup of the dmem pool
-+ * @nr_pages: number of pages to uncharge
-+ */
-+void mem_cgroup_dmem_uncharge(struct cgroup *cgrp, unsigned int nr_pages)
-+{
-+	struct cgroup_subsys_state *mem_css;
-+	struct mem_cgroup *memcg;
-+
-+	/* CGROUP_DMEM and MEMCG guarantees this cannot be NULL. */
-+	mem_css = cgroup_get_e_css(cgrp, &memory_cgrp_subsys);
-+
-+	memcg = mem_cgroup_from_css(mem_css);
-+	if (!memcg || mem_cgroup_is_root(memcg)) {
-+		css_put(mem_css);
-+		return;
-+	}
-+
-+	mod_memcg_state(memcg, MEMCG_DMEM, -nr_pages);
-+	refill_stock(memcg, nr_pages);
-+	css_put(mem_css);
-+}
-+#endif /* CONFIG_CGROUP_DMEM */
-+
- static int __init mem_cgroup_swap_init(void)
- {
- 	if (mem_cgroup_disabled())
+On Tue, May 19, 2026 at 09:53:19AM +0200, Christian K=F6nig wrote:
+> On 5/18/26 14:06, Albert Esteve wrote:
+> >>>>> udmabufs are already
+> >>>>> memcg-charged, so adding a separate MEMCG_DMABUF would double count.
+> >>>>> Are there any other exporters you had in mind that would benefit fr=
+om
+> >>>>> this approach?
+> >>
+> >> Well apart from DMA-buf memfd_create() is one of the things which as b=
+roken our neck in the past a couple of times.
+> >>
+> >> But thinking more about it what if instead of making this DMA-buf heap=
+s specific what if we have a general cgroups function which allows to chang=
+e accounting of a buffer referenced by a file descriptor to a different pro=
+cess?
+> >>
+> >> That would cover not only the DMA-buf heaps use case, but also all oth=
+er DMA-buf with dmem and whatever we come up in the future as well.
+> >=20
+> > I removed a draft adding an ioctl for charge transfer from the series
+> > before sending because I wanted to focus on the charge_pid_fd approach
+> > and keep things simple, deferring the recharge path to a follow-up
+> > depending on feedback.
+> >=20
+> > The main difference between my removed draft and what you're
+> > describing, iiuc, is scope and layer: my draft was an explicit ioctl
+> > on the dma-buf fd that the consumer calls to claim the charge (see
+> > below), while you seem to be suggesting a more general kernel-internal
+> > function that could work across buffer types and cgroup controllers,
+> > so not necessarily userspace-initiated? A kernel-internal function
+> > will need a way to identify the target process, which sounds similar
+> > to the binder-backed approach from TJ [1]. For everything else, the
+> > receiver still needs to declare itself, which the ioctl accomplishes.
+> >=20
+> > ```
+> > # When an app imports a daemon-allocated buffer, it can transfer the
+> > charge to itself:
+> > int buf_fd =3D receive_dmabuf_from_daemon();
+> > ioctl(buf_fd, DMA_BUF_IOCTL_XFER_CHARGE); /* charge now attributed to
+> > apps's cgroup */
+>=20
+> Well that thinking goes into the right direction, but the requirements ar=
+e still not completely
+> covered as far as I can see.
+>=20
+> Let me explain below a bit more.
+>=20
+> >=20
+> > [1] https://lore.kernel.org/cgroups/20230109213809.418135-1-tjmercier@g=
+oogle.com/
+> >=20
+> >>
+> >> The only drawback I can see is that DMA-buf heap allocations would be =
+temporarily accounted to the memory allocation daemon, but I don't think th=
+at this would be a problem.
+> >=20
+> > The main reasons we moved away from TJ's transfer-based approach
+> > toward `charge_pid_fd` are: avoid the transient charge window on the
+> > daemon's cgroup; and to decouple from Binder, allowing any allocator
+> > to use it.
+>=20
+> Yeah those concerns are completely correct.
+>=20
+> The application should not volunteering says 'Charge that buffer to
+> me.', but rather that the daemon says force charge that buffer to this
+> application and tell me when the application is over its limit.
 
--- 
-2.52.0
+I would agree, but with a caveat: how do we want to deal with malicious
+applications here? The application should have expressed that it's okay
+for it to be charged by a different process, otherwise it becomes
+trivial for a malicious app to create arbitrary charges against another
+application in the system and DoS it.
 
+But then, that means that an application could arbitrarily charge the
+daemon as well if it doesn't opt-in but asks for allocations.
+
+So maybe we should have an opt-in for the caller, and a way for the
+daemon to check if the caller has indeed opted in before performing the
+allocation (and the charge transfer)?
+
+> > Technically, both approaches could coexist, though. Of the three
+> > scenarios TJ described:
+> > - Scenario 2 is directly addressed by charge_pid_fd approach without
+> > any transient charge on the daemon at the cost of one extra field in
+> > the heap ioctl uAPI struct.
+>=20
+> Yeah extending the uAPI to pass in the pid on allocation time is not
+> much of a problem, but you also need to modify the whole stack above
+> it and that is a bit more trickier.
+>=20
+> > - Scenario 3 can be handled by the charge transfer function without
+> > changes to SurfaceFlinger. The app or dequeueBuffer claims the charge
+> > for itself or the app, respectively (depending on whether we include a
+> > pid_fd field in the transfer ioctl). It also covers non-heap
+> > exporters. The con in both variants is the transient charge window on
+> > the daemon.
+>=20
+> It should be trivial for the deamon to charge the buffer to an
+> application before handing it out.
+>=20
+> > Both approaches shift the responsibility for correct charging
+> > attribution to userspace: first, 'charge_pid_fd` on the allocator's
+> > side, and the transfer charge on the consumer's side.
+>=20
+> Yeah that's why I said it would be better if we do that without any
+> uAPI change, but with all the uAPI we have to transfer file
+> descriptors (dup(), fork(), passing FDs over sockets etc...) it could
+> be really tricky to implement that.
+>=20
+> > Deciding on one, the other or both depends on how much we value
+> > avoiding transient attribution, and how much we need a non-heap
+> > generic solution. With the XFER_CHARGE we can cover both. Thus, the
+> > `charge_pid_fd` approach in this RFC can be seen as a
+> > performance/strictness optimisation, eliminating transient charges to
+> > the daemon at the cost of a permanent uAPI addition to the heap ioctl
+> > struct, but not strictly required for correctness.
+>=20
+> Well all we need is a uAPI which says charge this buffer (file
+> descriptor) to that cgroup (pidfd).
+>=20
+> With this at hand we should be able to handle all use cases at the
+> same time.
+>=20
+> > On the other hand, if we agree on the end goal of migrating other
+> > exporters to use dma-buf heaps
+>=20
+> That won't work. DMA-buf heaps is actually only a rather small and
+> Anroid specific use case.
+
+I don't think that's true anymore. heaps are used in lots of different
+use cases now in the embedded space, including in regular, generic,
+components not specifically used for embedded systems.
+
+Maxime
+
+--ran3hospswhrt5o6
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJUEABMJAB0WIQTkHFbLp4ejekA/qfgnX84Zoj2+dgUCagyQfwAKCRAnX84Zoj2+
+dtabAX9HzGm1Ns4iAysPJk3eSmxFA0qKTFqj4loXjy2WUfrHE3uAJd/mivZu/62z
+8PDG3v4Bf0oF/N6HgEYqscS3K19cW4kROdi4s5J7LhNBraebPMHWMnpHJVUOF4SA
+yFPMifkqJw==
+=3qFV
+-----END PGP SIGNATURE-----
+
+--ran3hospswhrt5o6--
