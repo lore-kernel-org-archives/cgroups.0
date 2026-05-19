@@ -1,166 +1,158 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0AD72E11B9
-	for <cgroups@vger.kernel.org>; Tue, 19 May 2026 16:00:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779206446; cv=pass; b=rmnj5MaahUS40lbIDup1975xZI45m+q8EX/Cz7WynVmUDIsldaBtILuJX8ssscVh7k6s7LYpRdbiXm0CC6SHQudr3aO1NRxevV6rAXcTcXMcFC8ZdpEI1X1GOTrznRmQD4NgwTw3JD1191istBI74rLPzHKxTBYcleOu8zODU2o=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779206446; c=relaxed/simple;
-	bh=cPZ1ZHAazdJKhRB4S2ZAvFvXwqTbAB9qru8H2rDgQbE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=b/B/YuGtDBHvbUxG3boC9j8aUjzSf/yUL2e+u6VSQ0UUBZmOgIDobWOLXzhkFh8CneIiunUqq6w/QxLSnqU8tPVtmCYnK9rGOAwpLl8EuOyodJOm530z6R3BDLjHKJbTjaCmgdQzZ4AQxkH0tS5HdZKnuKWwPo9LuB5xe0K7ONs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=H3YCPN8s; arc=pass smtp.client-ip=209.85.218.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 337B82E040E
+	for <cgroups@vger.kernel.org>; Tue, 19 May 2026 16:01:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779206502; cv=none; b=XSfoRrytNFqBcdAEdgXwLKW3iOEUqcXWAZoCm+NSJ9mSUIq7KE8WGU/K40qtcGYeSIdnVkdw7TtdEnSYTww/v1zayWdXNEwDMMb+72WEh8Y+IbNcBPI9Prkq6WEzGS15zfhgI7a74lEtIFtukYuXHnDvzg181WtZBev00UZNh2E=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779206502; c=relaxed/simple;
+	bh=6qUbI3kCpq9IrzG3DkvyvMZ2Bn6Qq+bPF5M36smFsFg=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=npag3mzUzSM4WaLvmGEVA97TFiT8zCQWlmv/5NQBVzAauqykbCA4y9NX0j7FAEEW9O6Q6HBL52T1Yzyby9a8g1syAdPxxPMBhDfsyTr23xu2SFdBSTq2pSwfE0BxCS003XGCoxsuz2GgSpiXzukoLir4h7KFlpRlHs9p9orArbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ra1bos6h; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=dQP+YTkf; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H3YCPN8s"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-bd9a71b565aso164954066b.0
-        for <cgroups@vger.kernel.org>; Tue, 19 May 2026 09:00:44 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1779206443; cv=none;
-        d=google.com; s=arc-20240605;
-        b=iPfaXlF5hTaQQOE6Z3TN+EP/5ujzHo3empiCaJEC44ua6vqwMno1p2wzGy0GN3SphW
-         AdunPiDVV5N/kh6dfk2GFQDre5L3dSSgzA1Fng7OjTP2109vjONuUBn4XFxFO/GUR+s3
-         MDRaH6hRJ00MiWI4S5F5q4a2lixK4e32wALMAyU/u5ejv/9ifKmLWesd9jlhCHexl9wB
-         cUKZbpXv8hDJkjaBUfLxpsXzmkbOqDfdx7pE1lOE8LMnb0djEeAhyyN7hNZDRWTeXmmM
-         o9uK+bQ4lnrYdvj03r7DYnFcxtSwheUk40ls5ib4yLnXKkbeZq1wFq6fQ5g9JS5exHF0
-         sqgQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=pTRYOj3DIJtg/GKXucjBSs8QmOIt1ssEUuPjNuk0UCc=;
-        fh=1SAvPDCmoMOdgMZ2EBf6ILn/dXBAx6ntSp09gQWlqUI=;
-        b=TGxT5aUdn8NLKcdvPTxo31LE8vqX4XUVc9N4mgdp7HOAXHyR+ZqVCZOEPcb5VJw3va
-         gwH2Kf0E61+fucUJ/GY5KMZ/6BNU8E4aOv6ogP2wS83ECWyp9xM7uRXLgpC/El7A7O4d
-         asSJjBsp8OvpLnHtc05fhyrXp6C/Z1jdTo2IYEUGa1CJ6NfIjK7C5tFepe+PA339ovqK
-         dCQ7G5g6aLY8RobNUkEp3L22D+l1OkEoUki+4Jw/ocFPKv3K4eVPJr5fjtwcZTyM+jGk
-         4YwsK5E57fQmHPSQc/aYl8hxb0w8Vqp3j70uJQa+zmKhzwf4AS8ThH3QjM4F2f8W8L/1
-         F7cg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ra1bos6h";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="dQP+YTkf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779206500;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=T6OjxI0zZxwDX8SXPRnZD+crOhWj/eJOyVt4Fi52IP8=;
+	b=Ra1bos6hcFwLcQhxS1f8w1QQuwXtZHvVwSYH5a4EbtWflyujoBh1xVaSm4lWNPqG2Y/SH1
+	hFB46csglNEqT3wwiX8ka8mnbig99PtX37vaM7Q2CsRulBf/40mO6RovRzAhgNcFloXUqq
+	EGE/bwI+gSLceVTOoLBU8E51qcU7+TU=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-599-Mk7dwadBP6OfgG-VaUxVKw-1; Tue, 19 May 2026 12:01:36 -0400
+X-MC-Unique: Mk7dwadBP6OfgG-VaUxVKw-1
+X-Mimecast-MFC-AGG-ID: Mk7dwadBP6OfgG-VaUxVKw_1779206496
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-91382222f94so741534185a.1
+        for <cgroups@vger.kernel.org>; Tue, 19 May 2026 09:01:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1779206443; x=1779811243; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=pTRYOj3DIJtg/GKXucjBSs8QmOIt1ssEUuPjNuk0UCc=;
-        b=H3YCPN8s0+Xo6oZcG4ZBXVyE17sqb3ztXwTxTIwATWoETMEpn2fgAG4X+MY0/REhDx
-         rLTFqlS5wiXuwwzFyUhvo4GkZSYnHyjT9m0C93jm9ZCtFFG+AFZ+G9o1A/PYYeH5XWWn
-         o49XbDMP6qFSFDga5xGdkBhTz+2LqXXObemA0/VpLQgOCwI3wlpdvxrihrDqzUNnIdXM
-         8NLGV/lWcOWdzsYgq0A+jiAyKx0OjSz1OlLAUCg66JzuqT8VehHEY5kc2bXxM/NOBmYH
-         ViRbbq+PichWYAVIczcN1d3FXqX7ZBoO7fCETZLEA/h7vL1YulRaQNNSB+DQNsoicibu
-         zF7A==
+        d=redhat.com; s=google; t=1779206496; x=1779811296; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=T6OjxI0zZxwDX8SXPRnZD+crOhWj/eJOyVt4Fi52IP8=;
+        b=dQP+YTkfiYqA1H4Uw11m1+1xabV4GpAojoD3stYfYHeW2VUx+96qTIVGFpt1fKEAd4
+         rVl/qmqGFCQYuW+2egPmDKYfGOTBSPNMv9+K7THUUK6NG4rMLfur1DX2lMHJ2UW6vqq7
+         MzisW05I452Y2+AoWHt274lrHMottF/kA/XnhIsvLBpOP5JUOLDH6px2PeqZ5tr/63XR
+         8GXLFRHQaPVUdwAPSl7hc7neR8dvR65Rd8TWlQv3x3TYYjw+z98kRsoaJ7t09H1iT0cj
+         iS0CUl+gdgHZrh1hpSyIo41bB/VYl5FxFueoarh0abbjPT2g2a/Nq3hAKpljQGtYRy5c
+         M6kQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779206443; x=1779811243;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1779206496; x=1779811296;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pTRYOj3DIJtg/GKXucjBSs8QmOIt1ssEUuPjNuk0UCc=;
-        b=g7JXusyHfDWiSGRefxsENfDsRd+XqEDy00suFpv42plQ4jRpz0UQogQRwLE4e4LLeO
-         QQxOkuaReljTQsU0QxRmjZH31bvor3ndVvilwVrjqeBJTHUsS0teMmL9pOCi3mp1Umu8
-         OOUJhnm2Tfsrd5rL1iVBm8JX1XjrUeYBsGfoSSwQycbigkXx/xWpq8NrmeQomRrvM1Pg
-         87m70icA3jn85xgHh54LF5wJ+v/8wQI25ifCF8ee51hi1ph4ZBKDZbSqXhWmx7jttYUc
-         +5f9oDGsRF0Lq7tAkhwpIs4GeX5Apt0YWOCbqRtKuTU5Oqysdptb1aFgQqnuw3kkKiPG
-         xJbg==
-X-Forwarded-Encrypted: i=1; AFNElJ9qlsn7hStMfpmupGGeFnnUrzkG5rvB65I/5RzkNuhJwiMgs8Jhh+l7VRhDggYoeGKGso+rH6UX@vger.kernel.org
-X-Gm-Message-State: AOJu0YyMAW9RBiVN0wZeZAtaYUQIMQDwf5mbg0WEiVnnKA1r01Co+EqL
-	0fMfqhKUIaYEnotKQsCQxTO9Uk3hksPUNWfgX/kXMlGtpQ+/fQD7zZWRTV7tC4wGu7br4BegQSr
-	pz43Nok7kV9rH5STPL048e0eEzkwq37wzg5glyxw0WQ==
-X-Gm-Gg: Acq92OEP74j5HqoUMeKc9JEdzixfgNgLsqv1LEzIuR/cn/FL2tA3PrQ/fKqaI7oSYb9
-	3G2ChK2Cj3cILhEnIGU7zSirBhVjshArxxmcbTM7hwv5ZWqVevtVdizGJa3BuOv07lQqyX4G5Qc
-	H1+mfJ9sKnqV8iRQRZ6oHPwFP+kjGd26Ih06dLugxWJfeAlc7dL3i/A4HwRndBO+5zFKWp+gGp1
-	ZZw60Xc/eCurrVsaAT06hUhNMRCYytjMTAyf4r+nc/x0oJ35Il0WyLkjfWtZDtwOMWeRLxeCVdK
-	/Q4jo6zJGfBdmQJvRKmd9Tj4mdiVnx+/bZcA
-X-Received: by 2002:a17:907:874b:b0:bd3:5e5d:7ea3 with SMTP id
- a640c23a62f3a-bd517930d25mr1270422766b.33.1779206442935; Tue, 19 May 2026
- 09:00:42 -0700 (PDT)
+        bh=T6OjxI0zZxwDX8SXPRnZD+crOhWj/eJOyVt4Fi52IP8=;
+        b=FctJMVjuJ8+G8yYPyMJoDdqelQYgV/2f/amNxU9iUX1hH9TIcWMlux8Y/PpjKI12Ah
+         QGlkHLfxTZ/nRzKPsq8G5UUvgtOIliwXblcNPNaM3Wf5sqGC9KIoCTPejptvWhebm641
+         fV+45Nn2OWq1of8/0L3A7ku7rtQwgp8EbNLhhdORZ5Ba7qRoGEDw+TCw1j5T3XCIocu9
+         RDGcJNgAK08F2mdxFrdshPWBQzVkpjmF8cdQza39oCUjF6b7yqHn1zPaOaQkf+AhADdJ
+         v9UmAaW50Ki8yQN32+Eb0r0Umzh9ySfrDJL2+sieVInzzP8oR2cGp0SF2FpsIKRmj5en
+         OvWg==
+X-Gm-Message-State: AOJu0YyMlM/fBT6X0NHgBHRlFWzqWZgwCSaSMBPCBolQRqIP2uk2iToO
+	pRO139ysTOMncBq1Xaja88vyfWrpZwRFOXC/axHBOAqQ4kroQM47RhRVLlxTHBY5FpUjkIN8bzq
+	LwYYv+5k8+uBrHYXKqDC2XQP978QSLIKiXU6GX/QDeZyGoPdDIj7Fgw76aas=
+X-Gm-Gg: Acq92OEdz1G4qmBEBuWIWoGCjMa+qcQ1GLfyWRl9/QPYwrgpoW1AolTWIGfBtTv1G+L
+	+QOyN24eqD7ukOyQrqarkXgfZNTn5uHeQcdV8Fz3WbHnAXQB7b172FKtsCBfkgvb1/MdMs2wE7t
+	wHkVef/Q/JsJOyw4qVeWXs2ULnGO8/8xJ/48cPLbrkJq8m4+uyIRXCzafpMmNAzfdSNfmjY4kpQ
+	xXI5EmBoK7n5jVWmEgivpLhIX9LaIFfqjWb4MnjAR3sj1DuXNxn5MMRJ4e9NCk6jOg1zogq0H6W
+	TaTrZ1RlrmTO29FqKuUSBwikzlGYFuWH54fLldKoQoMZZbwZaa3nop+QMwNjB8YRrhA3dUk2+oJ
+	HIDvjjS0ewmNxXmdYRWFO0XBGPcq1Dzp3PJsMNdJrriZb1Pd6XNcJQlPXNBJXUzpOCQ==
+X-Received: by 2002:a05:620a:460f:b0:911:4cb1:8a60 with SMTP id af79cd13be357-911cd178131mr3073462485a.13.1779206455601;
+        Tue, 19 May 2026 09:00:55 -0700 (PDT)
+X-Received: by 2002:a05:620a:460f:b0:911:4cb1:8a60 with SMTP id af79cd13be357-911cd178131mr3072809785a.13.1779206430240;
+        Tue, 19 May 2026 09:00:30 -0700 (PDT)
+Received: from localhost (pool-100-17-21-205.bstnma.fios.verizon.net. [100.17.21.205])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-910bc9363fcsm1883933785a.27.2026.05.19.09.00.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 May 2026 09:00:29 -0700 (PDT)
+From: Eric Chanudet <echanude@redhat.com>
+Subject: [PATCH v2 0/2] cgroup/dmem: allow double-charging dmem allocations
+ to memcg
+Date: Tue, 19 May 2026 11:59:00 -0400
+Message-Id: <20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260511113104.563854162@infradead.org> <CAKfTPtA2aBtuBffVV02VgsRRi5mRK0G5ununzuvJ7h7buygNxg@mail.gmail.com>
- <20260513113510.GK1889694@noisy.programming.kicks-ass.net>
- <CAKfTPtCXOnjtVV1gKLnbS8Lo6W4r8hbdUDYVYLMd2Qc1ZqBq4w@mail.gmail.com>
- <20260518211239.GY3102624@noisy.programming.kicks-ass.net> <CAKfTPtBF5UX_0_zvOpBwz9ZDZWcgGzAZC+ansyA8LVP58v6SAQ@mail.gmail.com>
-In-Reply-To: <CAKfTPtBF5UX_0_zvOpBwz9ZDZWcgGzAZC+ansyA8LVP58v6SAQ@mail.gmail.com>
-From: Vincent Guittot <vincent.guittot@linaro.org>
-Date: Tue, 19 May 2026 18:00:31 +0200
-X-Gm-Features: AVHnY4IkeljuipVEqTGHHhaIIHUeesM_mi9ctkg1bVKpapoPCwSZ7iIrtOhSZ1E
-Message-ID: <CAKfTPtBXWrvniz1c1Tq4DUdWc+V625+FKfOao6H3Za+2ZZ1peA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/10] sched: Flatten the pick
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: mingo@kernel.org, longman@redhat.com, chenridong@huaweicloud.com, 
-	juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, 
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, tj@kernel.org, 
-	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, jstultz@google.com, kprateek.nayak@amd.com, 
-	qyousef@layalina.io
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4WNTQrCMBCFr1Jm7cgktRZdeQ9xkSaTH7CNJG1BS
+ u/uoAdw8Xg8+PjeBpVL4grXZoPCa6opTzL0oQEbzRQYk5MNmvSZWt2jDSUvL3QjjyixAV1ehie
+ j4EVw8orIXLwfvAaxxFTnXN7fg1VJ3X+uE7V/XatCQtv2yqmuc6zNrbCLZj7aPMJj3/cPgkfhe
+ r8AAAA=
+X-Change-ID: 20260327-cgroup-dmem-memcg-double-charge-0f100a9ffbf2
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
+ Natalie Vock <natalie.vock@gmx.de>, Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, 
+ linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ "T.J. Mercier" <tjmercier@google.com>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ Maxime Ripard <mripard@redhat.com>, Albert Esteve <aesteve@redhat.com>, 
+ Dave Airlie <airlied@gmail.com>, linux-doc@vger.kernel.org, 
+ Eric Chanudet <echanude@redhat.com>
+X-Mailer: b4 0.14.2
 
-On Tue, 19 May 2026 at 12:13, Vincent Guittot
-<vincent.guittot@linaro.org> wrote:
->
-> On Mon, 18 May 2026 at 23:12, Peter Zijlstra <peterz@infradead.org> wrote:
-> >
-> > On Mon, May 18, 2026 at 03:34:51PM +0200, Vincent Guittot wrote:
-> > > On Wed, 13 May 2026 at 13:35, Peter Zijlstra <peterz@infradead.org> wrote:
-> > > >
-> > > > On Tue, May 12, 2026 at 10:42:33AM +0200, Vincent Guittot wrote:
-> > > >
-> > > > > I haven't reviewed the patches yet but I ran some tests with it while
-> > > > > testing sched latency related changes for short slice wakeup
-> > > > > preemption. I have some large hackbench regressions with this series
-> > > > > on HMP system with and without EAS. those figures are unexpected
-> > > > > because the benchs run on root cfs
-> > > > >
-> > > > > One example with hackbench 8 groups thread pipe
-> > > > > tip/sched/core  tip/sched/core          +this patchset          +this patchset
-> > > > > slice 2.8ms     16ms                    2.8ms                   16ms
-> > > > > dragonboard rb5 with EAS
-> > > > > 0,748(+/-4,6%)  0,621(+/-3.6%) +17%     1,915(+/-7.9%) -156%
-> > > > > 0,689(+/- 9.1%) +8%
-> > > > >
-> > > > > radxa orion6 HMP without EAS
-> > > > > 0,588(+/-5.8%)  0,677(+/-5.9%) -15%     1,505(+/-10%) -156%
-> > > > > 1,071(+/-5.9%) -82%
-> > > > >
-> > > > > Increasing the slice partly removes regressions but tis is surprising
-> > > > > because the bench runs at root cfs and I thought that results will not
-> > > > > change in such a case
-> > > >
-> > > > D'oh :/
-> > > >
-> > > > diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> > > > index e54da4c6c945..77d0e1937f2c 100644
-> > > > --- a/kernel/sched/fair.c
-> > > > +++ b/kernel/sched/fair.c
-> > > > @@ -9071,7 +9071,7 @@ static void wakeup_preempt_fair(struct rq *rq, struct task_struct *p, int wake_f
-> > > >         enum preempt_wakeup_action preempt_action = PREEMPT_WAKEUP_PICK;
-> > > >         struct task_struct *donor = rq->donor;
-> > > >         struct sched_entity *nse, *se = &donor->se, *pse = &p->se;
-> > > > -       struct cfs_rq *cfs_rq = task_cfs_rq(donor);
-> > > > +       struct cfs_rq *cfs_rq = &rq->cfs;
-> > >
-> > > I tested this patch on top of the series but it doesn't fix the perf
-> > > regression on rb5
-> > >
-> > > hackbench 8 groups thread pipe is still at 1.907(+/-7.6%) with default
-> > > slice duration
-> >
-> > Weird, I can't reproduce anymore with this fixed :/
-> >
-> > I'll try more hackbench variants tomorrow I suppose.
->
-> I tried several conf :
-> - HMP with EAS enabled
-> - HMP without EAS enabled (perf cpufreq gov)
-> - SMP (only the 4 little cores)
->
-> All of them show large regressions with hackbench which are almost
-> recovered when increasing the slice from 2.8 to 16ms
+Following suggestion[1], offer a cgroupfs entry to allow an
+administrator to request that a dmem controlled region also charges to
+the memory controller.
 
-With patch 10 the vlag value is very often set to the max 3.8ms (the
-clamp value of 2.8ms slice + 1ms tick) whereas it is usually less than
-a 1ms without patch 10
+Add mem_cgroup_dmem_charge/uncharge helpers to resolve the effective
+cgroup from a dmem pool's cgroup, perform the charge and update a
+MEMCG_DMEM stat counter.
+
+Add a "dmem.memcg" control file at the root level to configure memcg
+charging per region. The setting is disabled by default and locked on
+first charge attempt.
+
+[1] https://lore.kernel.org/all/a446b598-5041-450b-aaa9-3c39a09ff6a0@amd.com/
+
+Signed-off-by: Eric Chanudet <echanude@redhat.com>
+---
+Changes in v2:
+- Use mem_cgroup_dmem_{,un}charge to account for memcg pages instead of
+  exposing raw nr_pages functions. Use it to centralize where to find
+  the effective cgroup from the pool's cgroup (Johannes)
+- Set depends_on for cgrp_memory if CONFIG_MEMCG by having a memory
+  controller in children cgroup (Michal)
+- Move dmem.memcg to the root level as it applies by region for all
+  cgroups
+- Add a dmem memory.stats entry for reporting memcg charges for dmem
+  allocations.
+- Wrap the memcg enable/disable/lock configuration under a single state
+  to avoid toctou races and simplify transitions.
+- Link to v1: https://lore.kernel.org/r/20260403-cgroup-dmem-memcg-double-charge-v1-0-c371d155de2a@redhat.com
+
+---
+Eric Chanudet (2):
+      mm/memcontrol: add dmem charge/uncharge functions
+      cgroup/dmem: add dmem.memcg control file for double-charging to memcg
+
+ Documentation/admin-guide/cgroup-v2.rst |  23 +++++
+ include/linux/memcontrol.h              |  16 ++++
+ kernel/cgroup/dmem.c                    | 158 +++++++++++++++++++++++++++++++-
+ mm/memcontrol.c                         |  65 +++++++++++++
+ 4 files changed, 259 insertions(+), 3 deletions(-)
+---
+base-commit: d989f135f71699294bb2ffd4726b526456e2db68
+change-id: 20260327-cgroup-dmem-memcg-double-charge-0f100a9ffbf2
+
+Best regards,
+-- 
+Eric Chanudet <echanude@redhat.com>
+
