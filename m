@@ -1,30 +1,30 @@
-Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93E4D33DEE5
-	for <cgroups@vger.kernel.org>; Wed, 20 May 2026 05:29:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B0882A1B2
+	for <cgroups@vger.kernel.org>; Wed, 20 May 2026 05:31:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779254985; cv=none; b=DNNvrT1yj7IteGqha5EN+6aV3Hsl3O0cBNMkg5fCHm3cbwoVfQdL6Nm+q/G154URK8oBDw7azn5fecF4R0o84dNyvO6YUr9FsZZliUnLqqpvtj5BQUVlDOeo3Le8oVP4OLfuOiG1aY/0/Okj6rgG0z+9FoEXI99Tr2rqWQK7fBE=
+	t=1779255094; cv=none; b=rrDAgZFXkQcNvFH2rGK8IuK3hKc2vbCl3Hkic9vrkbYANOGUxBRBK4N8siK0Z8Oc16d2fKxT+RuJdQoSSMzR6CBOV/26+iy1sLUcadAOpaEjCI9f9jO+BHSsE96CEBfw31Ztmdm27YmQRQjRlPNOQZ7tXQl4A71ZhABA5BmDeQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779254985; c=relaxed/simple;
+	s=arc-20240116; t=1779255094; c=relaxed/simple;
 	bh=73hjRAr0YftTq0WZs0M2L0a0A82EJnKVBxl1ZETxMHs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c73fisupUcU+zlkX36ptPcpR0giNDCzpPlVCX9nSAq/fL8FX5EYMbQ8Qe0IRLz4GUiQPoR9eVAaFJFtPiDdyUms9vSkS8AWZX8uOjARuvVUhbJ8M6XkvRRUBQckb7nUem+c84tvyftd+JYe0MpV9fhpyRfn/6djur05DmSvKMCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oOdT9Qjk; arc=none smtp.client-ip=91.218.175.181
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AahriP4ORbcBRmUL2gD/3qqlL4JaVe8XQ3fLoru9CY5jo5lhCKU960yuI9AEkQk0pcVakMz9wVyMHCfwOTc8Vd7N2vtcp3eQ+6sxptususSJK+VicJNs3hlmiYmR37sMzrrM8bqVMppNh8ywDwmJRCCV1uLjpLafnIYZTbExPyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GzrO3ZU/; arc=none smtp.client-ip=91.218.175.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oOdT9Qjk"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GzrO3ZU/"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1779254980;
+	t=1779255091;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding;
 	bh=w9644gpBoOdPB14uQ67yzVOzo6y2pa74KkqSttfHrQ0=;
-	b=oOdT9QjkNL+aTBjlLReLdJ3EnXS+dfmLSkf1hJvCfaJRXr5TbQqGqYmnDT4sm8Vlg+lrJa
-	ZBbuCyt9/riSrBjJHV7ewel8MUcet5SG9UxkNLjIfMGFZI3EIZVKm3q0Ge9ITu96Q6lVLE
-	y+hO0sIKpsKasqvqEjtX6/uwcii3Mcs=
+	b=GzrO3ZU/2Y+tqIZ1TZ3hLZ53OwRP/Dgfxc7Xoi4ikVGmYzjrsiw/iIuHN9So5e9BWqQGjt
+	E1J9Ug+2qb2K6GEbX/i9Z3UoeSzrR/WHVY57qvRldi2PqIDnL0aC/BnmernotrhtG06lcH
+	Ye4abrA8khI2O+PSYOL9TKda/C8DWqw=
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
@@ -41,8 +41,8 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org,
 	kernel test robot <oliver.sang@intel.com>
 Subject: [PATCH 0/4] memcg: shrink obj_stock_pcp and cache multiple objcgs
-Date: Tue, 19 May 2026 22:29:00 -0700
-Message-ID: <20260520052904.2673675-1-shakeel.butt@linux.dev>
+Date: Tue, 19 May 2026 22:31:18 -0700
+Message-ID: <20260520053123.2709959-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
