@@ -1,49 +1,23 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B929F3CAA27;
-	Fri, 22 May 2026 11:38:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B600F3D5C2C;
+	Fri, 22 May 2026 12:00:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779449893; cv=none; b=UYsAGgS/ofAAL9LXeE90wbO2fZ9ulJ4G3Ib2l9ettUCKQ4dV99eMkx9RvFcSciGERzy0LKY2wnBjSMfb6OxHJfTvcsxo67mZXT4MYIISDQiwOD5Ee6yS94e9zmE7YS9s6WSxewe+7ztLESRJGpP1c0sk9SyKlbmmRoUkwp+uBFY=
+	t=1779451207; cv=none; b=JVy9aRHIgbSwA7rx81mXpQetzjO70BgCrlF0Ht81DfNEqULCueMvPW2l7/X/o8qsjmHr+WyD9A9yoVcLGir0gePWuiIi4DPaGaxmEqXzpDK2Y0Va074C/SUbNjXx08R1JN1gZRtv7PgZM2yZn3xuWITsT8Dj60ft9y6jEDpV+zY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779449893; c=relaxed/simple;
-	bh=8+SVtEunmLO5luTB/woJSREfnnEC/4OY69OYVm8LLR4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=KF0fmiQs3ZIP37GbSzxQsyTzKg8qvXXm6cheqMTM3QeVlKef8oJ5+Iei3gNFHU5zHqwtIugnOTsi1wWJCb2uoRCZp+fGMD0xnPZ7ZXzuoXAZ7QgtBdaRmDVAZ9ge0Mv+k3UYCenIvtGTW/Q3KDhpQo+oaj2LA4kW01SpM0CkVCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=JERPYZtT; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="JERPYZtT"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260522113802epoutp047d45dc3660ab4d2cdce57be27d46d659~x4D12kzVZ0577105771epoutp04e;
-	Fri, 22 May 2026 11:38:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260522113802epoutp047d45dc3660ab4d2cdce57be27d46d659~x4D12kzVZ0577105771epoutp04e
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1779449882;
-	bh=X9XR94YHNMocWUFw9punBQGDBFYxc1lt25ZEVZWgtac=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=JERPYZtTU2TlEprNnCJlv0WM7hhtolUmAJHHUSjqwurELxRa/onqsWy1YDtIN+8xj
-	 +MRV/ZDvXNq0x1UISaIT5DzyMNQLc2ARA7V98cZIDNSHBwP9Pl28ac/y9dgft9Nee1
-	 aqj+yfQb92T4awPevYqHuFEft5mQPyEqwKj12DkU=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260522113801epcas5p3905b503bc0cfbc37e68be912f3324730~x4D1cklL90648906489epcas5p32;
-	Fri, 22 May 2026 11:38:01 +0000 (GMT)
-Received: from epcpadp2new (unknown [182.195.40.142]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4gMNZ16HSyz6B9m7; Fri, 22 May
-	2026 11:38:01 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20260522084048epcas5p4778c8dc9ced70300473adfc67f24098c~x1pGJAfr53182831828epcas5p4i;
-	Fri, 22 May 2026 08:40:48 +0000 (GMT)
-Received: from [107.122.10.65] (unknown [107.122.10.65]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260522084036epsmtip25fbb927d3a064212cc2ad4bc1ee9e926~x1o6sdf2f2396423964epsmtip2V;
-	Fri, 22 May 2026 08:40:35 +0000 (GMT)
-Message-ID: <1891546521.01779449881859.JavaMail.epsvc@epcpadp2new>
-Date: Fri, 22 May 2026 14:10:34 +0530
+	s=arc-20240116; t=1779451207; c=relaxed/simple;
+	bh=fbbKCCrY3BmvyZw2c/eMjZh3Vo/ZWlwwpAQZ2RiZgGY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ne/ePkpaVJSfa5Js5yTCrkC/Ec9NPr84opzNorQdWoIy7QNDJy/+McwZecFgPfQwHPLiGKm39KRn9OC+/ML/xW7PPogABu4lkxzLdqIcnalaSjqFOLsNm3tBnSiYOiMqcpy5a5FVfITjyVgbtOyuWHljEPB/OikJkD8K51sTcXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 2B76E1F415;
+	Fri, 22 May 2026 11:59:51 +0000 (UTC)
+Message-ID: <601a6c29-de31-44d7-b354-cc7a0e42d732@ghiti.fr>
+Date: Fri, 22 May 2026 13:59:51 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,116 +25,116 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [LSF/MM/BPF TOPIC][RFC PATCH v4 00/27] Private Memory Nodes (w/
- Compressed RAM)
-To: Gregory Price <gourry@gourry.net>
-Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-cxl@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org,
-	linux-trace-kernel@vger.kernel.org, damon@lists.linux.dev,
-	kernel-team@meta.com, gregkh@linuxfoundation.org, rafael@kernel.org,
-	dakr@kernel.org, dave@stgolabs.net, dave.jiang@intel.com,
-	alison.schofield@intel.com, vishal.l.verma@intel.com, ira.weiny@intel.com,
-	longman@redhat.com, akpm@linux-foundation.org, david@kernel.org,
-	lorenzo.stoakes@oracle.com, Liam.Howlett@oracle.com, vbabka@suse.cz,
-	rppt@kernel.org, surenb@google.com, mhocko@suse.com, osalvador@suse.de,
-	ziy@nvidia.com, matthew.brost@intel.com, joshua.hahnjy@gmail.com,
-	rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com,
-	apopple@nvidia.com, axelrasmussen@google.com, yuanchu@google.com,
-	weixugc@google.com, yury.norov@gmail.com, linux@rasmusvillemoes.dk,
-	mhiramat@kernel.org, mathieu.desnoyers@efficios.com, tj@kernel.org,
-	hannes@cmpxchg.org, mkoutny@suse.com, jackmanb@google.com, sj@kernel.org,
-	baolin.wang@linux.alibaba.com, npache@redhat.com, ryan.roberts@arm.com,
-	dev.jain@arm.com, baohua@kernel.org, lance.yang@linux.dev,
-	muchun.song@linux.dev, xu.xin16@zte.com.cn, chengming.zhou@linux.dev,
-	jannh@google.com, linmiaohe@huawei.com, nao.horiguchi@gmail.com,
-	pfalcato@suse.de, rientjes@google.com, shakeel.butt@linux.dev,
-	riel@surriel.com, harry.yoo@oracle.com, cl@gentwo.org,
-	roman.gushchin@linux.dev, chrisl@kernel.org, kasong@tencent.com,
-	shikemeng@huaweicloud.com, nphamcs@gmail.com, bhe@redhat.com,
-	zhengqi.arch@bytedance.com, terry.bowman@amd.com, gost.dev@samsung.com,
-	arungeorge05@gmail.com, cpgs@samsung.com
+Subject: Re: [PATCH 4/8] mm: memcontrol: track MEMCG_KMEM per NUMA node
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Dennis Zhou <dennis@kernel.org>,
+ Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@gentwo.org>,
+ Vlastimil Babka <vbabka@kernel.org>, Yosry Ahmed <yosry@kernel.org>,
+ Nhat Pham <nphamcs@gmail.com>, Sergey Senozhatsky
+ <senozhatsky@chromium.org>, Chengming Zhou <chengming.zhou@linux.dev>,
+ Suren Baghdasaryan <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ Minchan Kim <minchan@kernel.org>, Mike Rapoport <rppt@kernel.org>,
+ Axel Rasmussen <axelrasmussen@google.com>, Barry Song <baohua@kernel.org>,
+ Kairui Song <kasong@tencent.com>, Wei Xu <weixugc@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, "Liam R . Howlett"
+ <Liam.Howlett@oracle.com>, Joshua Hahn <joshua.hahnjy@gmail.com>,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260511202136.330358-1-alex@ghiti.fr>
+ <20260511202136.330358-5-alex@ghiti.fr> <ag9AY2SrcsE1B3Ti@linux.dev>
 Content-Language: en-US
-From: Arun George/Arun George <arun.george@samsung.com>
-In-Reply-To: <afmgJcFUjQLYxkb5@gourry-fedora-PF4VCD3F>
+From: Alexandre Ghiti <alex@ghiti.fr>
+In-Reply-To: <ag9AY2SrcsE1B3Ti@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260522084048epcas5p4778c8dc9ced70300473adfc67f24098c
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20260427123800epcas5p1e1a2fed257091b31e2e6c3a7d1b0c2b0
-References: <20260222084842.1824063-1-gourry@gourry.net>
-	<CGME20260427123800epcas5p1e1a2fed257091b31e2e6c3a7d1b0c2b0@epcas5p1.samsung.com>
-	<1983025922.01777297382206.JavaMail.epsvc@epcpadp2new>
-	<ae_i9IlIndumJWN3@gourry-fedora-PF4VCD3F>
-	<1891546521.01777455002601.JavaMail.epsvc@epcpadp1new>
-	<afIKxG5mJZE6QgpR@gourry-fedora-PF4VCD3F>
-	<1891546521.01777901881625.JavaMail.epsvc@epcpadp2new>
-	<afmgJcFUjQLYxkb5@gourry-fedora-PF4VCD3F>
+X-GND-Sasl: alex@ghiti.fr
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: dmFkZTEfzuW/isuEquYusTjkCChymQZGYrE6UQrubmew1s29pfPbQNHYcMXPE1xkckOz4Gx0v3nmpsWrjOwwNI/NQP2eMy0oeQPLTyFe6w5utDyi4foMiOVk4+AXCNSKtaXZSJaS8qbvrdYN8pxLR2nFCYce0CWO3EmPID8zG5tYwOwQfHMa1OEb945QZyjUtxYGW1qqWXOSWY/gnoZgw2ppsRwrCUORANR234l8GGNNWkEZCc8iIZNv6/ArqYXZ5daLx5INydrxyR9kh4hQlxTLIdopou03K9EciWwQERt8JUyD/HkFt5SP0vbD1yY5ukGLKg8ld6Sa0ErWG65+c1P3ct8HSKRcjr5HVfJKW0/9xYzRmfz2BxG3HmECiQ+iT/sIjdchBLIyxQpMTorwb5K6HA8z0DGz9RvGwfqqEF+NaUoz3InIEWgSYze4ATmZ/p0clh5zOYJ9N4VMhQ+b/CTqJrUNWEtBqGBTAah7NOliBmO9ZTLNskkzAQtwc7R5ZBALlgbV49CtnhHnXOD6m5kqj/qNOSnJqydGb6oUVFMpDj5tYC1jWxVdrNYxX/x/g1USbTUsLpDGxM1+q0vhJftZRIcFM3d7qTVClJAqLoPdu6utVZx1uwc3/X+FUEQ3DuysdHQ0g/JAUFyLxprfZr1MJ7aRYH7NUQsDbBIPkY6P1/G4WA
 
-Thanks.
+On 5/21/26 19:28, Shakeel Butt wrote:
+> On Mon, May 11, 2026 at 10:20:39PM +0200, Alexandre Ghiti wrote:
+>> This patch gets rid of MEMCG_KMEM and wires all the "generic" functions
+>> by introducing per-node obj_cgroup objects.
+>>
+>> Note that it does not convert the kmem users to proper per-memcg-per-node
+>> accounting now, this is done in upcoming patches.
+>>
+>> Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
+>> ---
+>>   include/linux/memcontrol.h | 23 ++++++++++----
+>>   include/linux/mmzone.h     |  1 +
+>>   mm/memcontrol.c            | 64 ++++++++++++++++++++++++--------------
+>>   mm/vmstat.c                |  1 +
+>>   4 files changed, 59 insertions(+), 30 deletions(-)
+>>
+>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>> index 568ab08f42af..17cf823160e4 100644
+>> --- a/include/linux/memcontrol.h
+>> +++ b/include/linux/memcontrol.h
+>> @@ -35,7 +35,6 @@ enum memcg_stat_item {
+>>   	MEMCG_SWAP = NR_VM_NODE_STAT_ITEMS,
+>>   	MEMCG_SOCK,
+>>   	MEMCG_PERCPU_B,
+>> -	MEMCG_KMEM,
+>>   	MEMCG_ZSWAP_B,
+>>   	MEMCG_ZSWAPPED,
+>>   	MEMCG_ZSWAP_INCOMP,
+>> @@ -126,9 +125,10 @@ struct mem_cgroup_per_node {
+>>   	struct list_head objcg_list;
+>>   
+>>   #ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
+>> -	/* slab stats for nmi context */
+>> +	/* slab and kmem stats for nmi context */
+>>   	atomic_t		slab_reclaimable;
+>>   	atomic_t		slab_unreclaimable;
+>> +	atomic_t		kmem;
+>>   #endif
+>>   };
+>>   
+>> @@ -190,6 +190,7 @@ struct obj_cgroup {
+>>   		struct rcu_head rcu;
+>>   	};
+>>   	bool is_root;
+>> +	int nid;
+>>   };
+>>   
+>>   /*
+>> @@ -254,10 +255,6 @@ struct mem_cgroup {
+>>   	atomic_long_t		memory_events[MEMCG_NR_MEMORY_EVENTS];
+>>   	atomic_long_t		memory_events_local[MEMCG_NR_MEMORY_EVENTS];
+>>   
+>> -#ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
+>> -	/* MEMCG_KMEM for nmi context */
+>> -	atomic_t		kmem_stat;
+>> -#endif
+>>   	/*
+>>   	 * Hint of reclaim pressure for socket memroy management. Note
+>>   	 * that this indicator should NOT be used in legacy cgroup mode
+>> @@ -776,6 +773,20 @@ static inline void obj_cgroup_put(struct obj_cgroup *objcg)
+>>   		percpu_ref_put(&objcg->refcnt);
+>>   }
+>>   
+>> +static inline struct obj_cgroup *obj_cgroup_get_nid(struct obj_cgroup *objcg,
+>> +						    int nid)
+>> +{
+>> +	struct obj_cgroup *nid_objcg;
+>> +	struct mem_cgroup *memcg;
+>> +
+>> +	rcu_read_lock();
+>> +	memcg = obj_cgroup_memcg(objcg);
+>> +	nid_objcg = rcu_dereference(memcg->nodeinfo[nid]->objcg);
+>> +	rcu_read_unlock();
+>> +
+>> +	return nid_objcg;
+> What is guarating the life of nid_objcg?
 
-On 05-05-2026 01:15 pm, Gregory Price wrote:
-> In the scenario i'm talking about, a "write budget" is defined as a
-> number of pages that are allows to be mapped writable in the page
-> tables at any given time.
-> Agree. I was also in the same context.
 
-I am trying to bring the device perspective here, and would like to 
-discuss a few corner cases and possible solutions.
+Sashiko raised the same question, so I need to be educated here: what 
+currently guarantees the life objcg returned by current_obj_cgroup()?
 
-As I see, solving the compressed memory problem statement has these 
-aspects mainly:
 
-1) Allocation control: private/managed memory concept.
-2) Write control: write-protected PTEs, write-controlled use cases like 
-ZSWAP
-3) Proactive reclaims: optional methods to ease back-pressure using 
-memory shrinkers, ballooning, kswapd, promotion etc. These methods will 
-be triggered based on notifications/interrupts from the device.
-
-May be they are not enough to cover some corner cases for cram!
-
-  I believe that this thin-provisioned memory infra is susceptible to 
-'writes-above-media-capacity corner cases' (because of not handling 
-device back-pressure notifications in time) whichever methods we use in 
-the kernel. Even if we use write-controlled methods like ZSWAP and 
-pro-active reclaims, there could be corner cases where the communication 
-with the device could be broken and the write path is not aware of it 
-immediately. Note that OCP spec [1] says the device should mark the 
-memory location as 'poisoned' in 'over-capacity' writes.
-
-So I have the following proposals / options for this scenario.
-
-    Option 1: Poisoned data management - This is about accepting that 
-poisoning of memory locations can happen in much more regular frequency 
-here than regular memories and we need to figure out potential recovery 
-mechanisms in host (not recovery of data; but recovery from the poison 
-situation). But I guess folks will not be okay with it in general, and I 
-am not aware of any workloads where data poisoning is tolerated (may be 
-caching workloads?).
-
-    Option 2 (preferred): Device assisted write budgeting - This is 
-about a device aware / assisted mechanism for the write-controlled 
-use-cases (Ex: ZSWAP) to know the 'safe number of  writes' that can be 
-performed to the device (Or allows to be mapped writable in the page 
-tables). This could be like a 'token bucket' algorithm, where the device 
-provides a 'budget / set of tokens' to the host. And it need to be 
-replenished periodically in the device communication code path; and if 
-the host does not find the token, writes cannot go ahead.
-
-In short, the communication with the device has to be maintained to make 
-pages mapped writable. For MVP, this could be a simple constraint of 
-checking actual device capacity periodically to replenish write-budget 
-for CRAM. For other users of private nodes (GPU memory?), this 
-constraint may not be needed at all.
-
-We are planning to send an RFC code which will fit into your CRAM infra 
-to discuss this poison management approach further.
-
-[1]: 
-https://www.opencompute.org/documents/hyperscale-tiered-memory-expander-specification-for-compute-express-link-cxl-1-pdf
-
-~Arun George
-
+>
