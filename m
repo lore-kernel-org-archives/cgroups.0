@@ -1,20 +1,20 @@
 Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB37435BDC7;
-	Mon, 25 May 2026 05:55:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA4535E1A4;
+	Mon, 25 May 2026 05:55:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779688531; cv=none; b=fdOvHARQChaenC4CYOC3+tLhszfzTDCBJkUjPoAFl5Z42BSjFlZ5e1eHQQULzY+QD6n9w4DwJjKtqEpGPHdX3/aDBOSFSLHs5yh47Fh53skCDkOcX+7CovtgZZmcburoDclRVJRFxJMZOnw1JQ6429IFciQduBGtC+ve/OWoRIg=
+	t=1779688533; cv=none; b=CbnWUCGyuXhwU8ZcOtLD/ZFjuujEyr9EW/G7zbQ+glIxUvwYl3TWXvNB0Vt0P98fdE7dRVN4arJ6FLTkcFUVXZOLSAkmRF9xyO61xojmADIlf3narQ09JolSQat9KXRnXujFofadQBAWxsZfzPflo6kJS/iUL5UpSD/LGVzkUag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779688531; c=relaxed/simple;
-	bh=Mi3MiSQiC7TZqoWzidoQsuHP7hmy7V56ihCQsC5LzDw=;
+	s=arc-20240116; t=1779688533; c=relaxed/simple;
+	bh=ktOk/GvLve51kE1T9N84D/rZ4ewXUW0v2NqXJU89u+4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=d9WJKYt35uki7rmBBZo9bbq6sbrRWVUeQQpNQ/6m4lqXEhtRk3BNJk3tFyiXO3/KwXaEhq31QPZfSHF9Fx3su8R0TDbUP9oWBbHiJ+0Kzn8JiHAxEhgnUBwOntqHqxQze+opI3iVTjIK9xxNIwh+ytUQwBA8rwnaUhdqluK3MYA=
+	 MIME-Version; b=bW8yWRCdTSdfV0Wda3r4uijrbyOrh6qccL6kXQQPebWs4HCipSF2/gwKb+fVcRa+EpgWRTTcV2XUctYjX6B9fK4IYDJf6sOyQwq1fh3JI3lvl4dmvFrIcpbVA07cTt273Z3U/Z0I1pe6QfGMawPIYtxCwBqyx7fQCxRDmNjEW/o=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 516fe88a57fe11f1aa26b74ffac11d73-20260525
+X-UUID: 532822f057fe11f1aa26b74ffac11d73-20260525
 X-CTIC-Tags:
 	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
 	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
@@ -25,27 +25,27 @@ X-CTIC-Tags:
 	DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS
 	GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:fce3c9d3-a5e2-4368-8f2a-4aa5812b7f6b,IP:20,
-	URL:0,TC:0,Content:0,EDM:-20,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:0
-X-CID-INFO: VERSION:1.3.12,REQID:fce3c9d3-a5e2-4368-8f2a-4aa5812b7f6b,IP:20,UR
-	L:0,TC:0,Content:0,EDM:-20,RT:0,SF:0,FILE:0,BULK:0,RULE:EDM_GE969F26,ACTIO
-	N:release,TS:0
-X-CID-META: VersionHash:e7bac3a,CLOUDID:3e7d4209f96287518a67207084e03bf4,BulkI
-	D:260525135525CJSJ1KDY,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|81|82|10
-	2|127|865|898,TC:nil,Content:0|15|50,EDM:1,IP:-2,URL:0,File:nil,RT:nil,Bul
-	k:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0
-	,BRE:0,ARC:0
+X-CID-O-INFO: VERSION:1.3.12,REQID:cd665136-72d9-49bd-9825-e40b1ed7c5ba,IP:20,
+	URL:0,TC:0,Content:100,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:120
+X-CID-INFO: VERSION:1.3.12,REQID:cd665136-72d9-49bd-9825-e40b1ed7c5ba,IP:20,UR
+	L:0,TC:0,Content:100,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTI
+	ON:quarantine,TS:120
+X-CID-META: VersionHash:e7bac3a,CLOUDID:e31643a14b2771712a6429d1f3648d56,BulkI
+	D:260525135528FZ0IOAOM,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|81|82|12
+	7|865|898,TC:nil,Content:3|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:n
+	il,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BR
+	E:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_AEC,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ASC,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 516fe88a57fe11f1aa26b74ffac11d73-20260525
+X-UUID: 532822f057fe11f1aa26b74ffac11d73-20260525
 X-User: cuitao@kylinos.cn
 Received: from ctao-book.. [(223.70.159.239)] by mailgw.kylinos.cn
 	(envelope-from <cuitao@kylinos.cn>)
 	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 2011196849; Mon, 25 May 2026 13:55:22 +0800
+	with ESMTP id 1325786295; Mon, 25 May 2026 13:55:25 +0800
 From: Tao Cui <cuitao@kylinos.cn>
 To: tj@kernel.org,
 	hannes@cmpxchg.org,
@@ -55,9 +55,9 @@ To: tj@kernel.org,
 Cc: linux-rdma@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	Tao Cui <cuitao@kylinos.cn>
-Subject: [RFC PATCH rdma-next 3/5] cgroup/rdma: add MR per-type resource counting
-Date: Mon, 25 May 2026 13:55:04 +0800
-Message-ID: <20260525055506.2002985-4-cuitao@kylinos.cn>
+Subject: [RFC PATCH rdma-next 5/5] cgroup/rdma: update cgroup resource list for QP, MR and MR_MEM
+Date: Mon, 25 May 2026 13:55:06 +0800
+Message-ID: <20260525055506.2002985-6-cuitao@kylinos.cn>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260525055506.2002985-1-cuitao@kylinos.cn>
 References: <20260525055506.2002985-1-cuitao@kylinos.cn>
@@ -69,98 +69,78 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add RDMACG_RESOURCE_MR so that Memory Region registration can be
-tracked and limited independently from the aggregate hca_object
-counter.
-
-Like QP, MR uses dual charging: the existing hca_object charge in
-the generic IDR path still applies, and an additional per-type MR
-counter is incremented.  This enables MR-specific limits:
-
-  echo "mlx5_0 mr=500" > rdma.max
-
-Extend uverbs_obj_to_rdmacg_type() with the MR mapping case.
+The RDMA cgroup now supports per-type resource counting for QP, MR
+(count) and MR_MEM (cumulative memory size in bytes).  Update the
+rdma.rst document to list all five resources and revise the usage
+examples accordingly.
 
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- drivers/infiniband/core/rdma_core.c |  1 +
- include/linux/cgroup_rdma.h         |  1 +
- kernel/cgroup/rdma.c                | 17 +++++++++++++++++
- 3 files changed, 19 insertions(+)
+ Documentation/admin-guide/cgroup-v2.rst | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/infiniband/core/rdma_core.c b/drivers/infiniband/core/rdma_core.c
-index aca735947230..8fb0df4aa0af 100644
---- a/drivers/infiniband/core/rdma_core.c
-+++ b/drivers/infiniband/core/rdma_core.c
-@@ -427,6 +427,7 @@ uverbs_obj_to_rdmacg_type(u16 uverbs_obj_id)
- {
- 	switch (uverbs_obj_id) {
- 	case UVERBS_OBJECT_QP: return RDMACG_RESOURCE_QP;
-+	case UVERBS_OBJECT_MR: return RDMACG_RESOURCE_MR;
- 	default:               return RDMACG_RESOURCE_HCA_OBJECT;
- 	}
- }
-diff --git a/include/linux/cgroup_rdma.h b/include/linux/cgroup_rdma.h
-index 2dcae0e04063..35caccc8eb8d 100644
---- a/include/linux/cgroup_rdma.h
-+++ b/include/linux/cgroup_rdma.h
-@@ -13,6 +13,7 @@ enum rdmacg_resource_type {
- 	RDMACG_RESOURCE_HCA_HANDLE,
- 	RDMACG_RESOURCE_HCA_OBJECT,
- 	RDMACG_RESOURCE_QP,
-+	RDMACG_RESOURCE_MR,
- 	RDMACG_RESOURCE_MAX,
- };
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 993446ab66d0..512af59e302a 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2769,12 +2769,15 @@ RDMA Interface Files
+ 	  ==========	=============================
+ 	  hca_handle	Maximum number of HCA Handles
+ 	  hca_object 	Maximum number of HCA Objects
++	  qp		Maximum number of Queue Pairs
++	  mr		Maximum number of Memory Regions
++	  mr_mem	Maximum cumulative MR memory size in bytes
+ 	  ==========	=============================
  
-diff --git a/kernel/cgroup/rdma.c b/kernel/cgroup/rdma.c
-index f9922f6f87c9..a056a14d9af5 100644
---- a/kernel/cgroup/rdma.c
-+++ b/kernel/cgroup/rdma.c
-@@ -25,6 +25,8 @@ enum rdmacg_limit_tokens {
- 	RDMACG_HCA_OBJECT_MAX,
- 	RDMACG_QP_VAL,
- 	RDMACG_QP_MAX,
-+	RDMACG_MR_VAL,
-+	RDMACG_MR_MAX,
- 	NR_RDMACG_LIMIT_TOKENS,
- };
+ 	An example for mlx4 and ocrdma device follows::
  
-@@ -40,6 +42,8 @@ static const match_table_t rdmacg_limit_tokens = {
- 	{ RDMACG_HCA_OBJECT_MAX,	"hca_object=max"	},
- 	{ RDMACG_QP_VAL,		"qp=%d"			},
- 	{ RDMACG_QP_MAX,		"qp=max"		},
-+	{ RDMACG_MR_VAL,		"mr=%d"			},
-+	{ RDMACG_MR_MAX,		"mr=max"		},
- 	{ NR_RDMACG_LIMIT_TOKENS,	NULL			},
- };
+-	  mlx4_0 hca_handle=2 hca_object=2000
+-	  ocrdma1 hca_handle=3 hca_object=max
++	  mlx4_0 hca_handle=2 hca_object=2000 qp=100 mr=500 mr_mem=1073741824
++	  ocrdma1 hca_handle=3 hca_object=max qp=max mr=max mr_mem=max
  
-@@ -65,6 +69,7 @@ static char const *rdmacg_resource_names[] = {
- 	[RDMACG_RESOURCE_HCA_HANDLE]	= "hca_handle",
- 	[RDMACG_RESOURCE_HCA_OBJECT]	= "hca_object",
- 	[RDMACG_RESOURCE_QP]		= "qp",
-+	[RDMACG_RESOURCE_MR]		= "mr",
- };
- static_assert(ARRAY_SIZE(rdmacg_resource_names) == RDMACG_RESOURCE_MAX);
+   rdma.current
+ 	A read-only file that describes current resource usage.
+@@ -2782,8 +2785,8 @@ RDMA Interface Files
  
-@@ -592,6 +597,18 @@ static ssize_t rdmacg_resource_set_max(struct kernfs_open_file *of,
- 			new_limits[RDMACG_RESOURCE_QP] = S64_MAX;
- 			enables |= BIT(RDMACG_RESOURCE_QP);
- 			break;
-+		case RDMACG_MR_VAL:
-+			if (match_s64(&args[0], &intval)) {
-+				ret = -EINVAL;
-+				goto parse_err;
-+			}
-+			new_limits[RDMACG_RESOURCE_MR] = intval;
-+			enables |= BIT(RDMACG_RESOURCE_MR);
-+			break;
-+		case RDMACG_MR_MAX:
-+			new_limits[RDMACG_RESOURCE_MR] = S64_MAX;
-+			enables |= BIT(RDMACG_RESOURCE_MR);
-+			break;
- 		default:
- 			ret = -EINVAL;
- 			goto parse_err;
+ 	An example for mlx4 and ocrdma device follows::
+ 
+-	  mlx4_0 hca_handle=1 hca_object=20
+-	  ocrdma1 hca_handle=1 hca_object=23
++	  mlx4_0 hca_handle=1 hca_object=20 qp=5 mr=10 mr_mem=10485760
++	  ocrdma1 hca_handle=1 hca_object=23 qp=3 mr=8 mr_mem=8388608
+ 
+   rdma.peak
+ 	A read-only nested-keyed file that exists for all the cgroups
+@@ -2792,8 +2795,8 @@ RDMA Interface Files
+ 
+ 	An example for mlx4 and ocrdma device follows::
+ 
+-	  mlx4_0 hca_handle=1 hca_object=20
+-	  ocrdma1 hca_handle=0 hca_object=23
++	  mlx4_0 hca_handle=1 hca_object=20 qp=5 mr=10 mr_mem=10485760
++	  ocrdma1 hca_handle=0 hca_object=23 qp=3 mr=8 mr_mem=8388608
+ 
+   rdma.events
+ 	A read-only nested-keyed file which exists on non-root
+@@ -2815,7 +2818,7 @@ RDMA Interface Files
+ 
+ 	An example for mlx4 device follows::
+ 
+-	  mlx4_0 hca_handle.max=5 hca_handle.alloc_fail=3 hca_object.max=0 hca_object.alloc_fail=0
++	  mlx4_0 hca_handle.max=5 hca_handle.alloc_fail=3 hca_object.max=0 hca_object.alloc_fail=0 qp.max=0 qp.alloc_fail=0 mr.max=0 mr.alloc_fail=0 mr_mem.max=0 mr_mem.alloc_fail=0
+ 
+   rdma.events.local
+ 	Similar to rdma.events but the fields in the file are local
+@@ -2836,7 +2839,7 @@ RDMA Interface Files
+ 
+ 	An example for mlx4 device follows::
+ 
+-	  mlx4_0 hca_handle.max=5 hca_handle.alloc_fail=0 hca_object.max=0 hca_object.alloc_fail=0
++	  mlx4_0 hca_handle.max=5 hca_handle.alloc_fail=0 hca_object.max=0 hca_object.alloc_fail=0 qp.max=0 qp.alloc_fail=0 mr.max=0 mr.alloc_fail=0 mr_mem.max=0 mr_mem.alloc_fail=0
+ 
+ DMEM
+ ----
 -- 
 2.43.0
 
