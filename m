@@ -1,163 +1,211 @@
-Received: from out-180.mta1.migadu.com (out-180.mta1.migadu.com [95.215.58.180])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A85BD30F80C
-	for <cgroups@vger.kernel.org>; Tue, 26 May 2026 15:33:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E403403123
+	for <cgroups@vger.kernel.org>; Tue, 26 May 2026 16:59:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779809629; cv=none; b=lqzEMu4gnT7MYrXvuAQUpsai6Uc3eu69qKgw7b2xP6HqFA7Z7wdwDCdx+XQnhfT56IpebCygFNRCvMrEtiXWHlhWfOaGQTrd2EOAo2S+0PtX6LsybCvKe2DlW1iWwJOearwYA8Vgrl9W1xPTuW2/6nU5TShxB5UEppGVn1rZj0I=
+	t=1779814752; cv=none; b=YurlzMjX34eKyVjFqRxuYg/k0oy0O1d9P9UXMrYuTcNGvBWjxKkit/S8BGoM9BYoRkxFisqDCyijmYjbOtN7OlbU9WCjurvRVx2YLTo7iI3tkMgs4pw0AfNruq6qkohtuYwybvJ+Lpkf5G4aRa6kbptt4JNP9Xc6axK+uctFqJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779809629; c=relaxed/simple;
-	bh=xpnjY2kxhcf877bhzUZaTGKn9SA3OCRNvKpGKrLX+NA=;
+	s=arc-20240116; t=1779814752; c=relaxed/simple;
+	bh=Qu3cX7hp15/dx5l9QwIIMPC3NhQ0zgTS490oYVxhoJQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LSDKvUu9TEAtvfFgX/mls9jiVYumW71hh4prlbVlC1EFRkSOhkOnMOGi89y04GKVfbvOnhhdD6b3NHIuaib0utNMwiECwt0+wPnZZ+TgT2w6miEjAq47RAJkr3DqZr0ItWMPxHJhRSbPyeQWUgCCNy0gmWTZR8tKPKFowAtlTBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Xi7XAV3l; arc=none smtp.client-ip=95.215.58.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=PCLKybfS2/O02Y+ktvS9SkLrq8NIY0q1hGpcJYiwHcA4V984XR0/uaF8bjOxl88EMLsl44WEA1i7COtHdM6D6iwcmmTNTgJfO4D2GwdTvfA/rZpg74i4tSpXpOq7zBSgeEinHcAkatyApmfPQ+mGkOuOMyMIjrTJoj4NiZAwG7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IrQshl4Y; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=oQ+fycG6; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Xi7XAV3l"
-Date: Tue, 26 May 2026 23:33:37 +0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1779809625;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IrQshl4Y";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="oQ+fycG6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779814750;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=NHV2IZakIJ6ChTDpKQtKC37v7LOZC1b1R6tmDq4OICA=;
-	b=Xi7XAV3lh9hYv2hFye5tI8gAsLnnSPo2uW/9r0tMSCh/Kd9CO/NqZYX0/zQtQch+Xf02+m
-	tDdsa0IFcReKI/y+7D2fLOL7nESYfktQq5z/ewCd8n800Ht2D8N5M9LUyimL08QfnFdF8c
-	GNqblj8Rv4P4X1DQvrp+bSOcQg+AKXk=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Baoquan He <baoquan.he@linux.dev>
-To: Youngjun Park <youngjun.park@lge.com>
-Cc: akpm@linux-foundation.org, chrisl@kernel.org, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org,
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, shikemeng@huaweicloud.com, nphamcs@gmail.com,
-	bhe@redhat.com, baohua@kernel.org, gunho.lee@lge.com,
-	taejoon.song@lge.com, hyungjun.cho@lge.com, mkoutny@suse.com,
-	baver.bae@lge.com, matia.kim@lge.com
-Subject: Re: [PATCH v6 3/4] mm: memcontrol: add interfaces for swap tier
- selection
-Message-ID: <ahW9UQH93jBT_VaD@MiWiFi-R3L-srv>
-References: <20260421055323.940344-1-youngjun.park@lge.com>
- <20260421055323.940344-4-youngjun.park@lge.com>
+	bh=73qJRcIVQTUMp+UCzOKPBNoPdNKc7KyWvvJbngzri24=;
+	b=IrQshl4YLBEKVQSARTc1lqzl/wPCM635kGALBBri5JNqMDQvMAAYmG241r4s74vZh4Pp9O
+	qGwIiLdZdIOxQ8YI+HlfK8RlRPlCWWbsoquKZI+4lyn9zZWCxwe0m07f5pA/xSfz5gRsfZ
+	nvPDjr3bTS+KKgj4k0dlLP4VjAA+wnk=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-170-AlO8vXAyO8iFfAUkg-mUfw-1; Tue, 26 May 2026 12:59:08 -0400
+X-MC-Unique: AlO8vXAyO8iFfAUkg-mUfw-1
+X-Mimecast-MFC-AGG-ID: AlO8vXAyO8iFfAUkg-mUfw_1779814748
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-914b5249bc1so679175885a.2
+        for <cgroups@vger.kernel.org>; Tue, 26 May 2026 09:59:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1779814748; x=1780419548; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=73qJRcIVQTUMp+UCzOKPBNoPdNKc7KyWvvJbngzri24=;
+        b=oQ+fycG6vge/XN5x6UArwwdDi8lLNOc77iVLsBK+Y9sFj3i+9d4DjuETJv8G+e11VV
+         Nm5Y6AD2PfMCHj/y9tfGi2SsV799XE/PnZF4bNbqa9Ot/HkHOp0oTqhlHf+54+1qu4mw
+         My0ORacKIjdbhHSbK7aE174okp3bL1FYtatUjEF2ysMsfP8sVgX2+EWbghVlOPjZOql/
+         PGgCFBAIpPobmnZiQULQbxXVtSOD0uAnXAGiKcuU8hxFtdzVpUcmo+9iN2+rq5zx+s+3
+         TZvqrwoqz0m1nmKN1x89Tl9OU83pFmEQItsMts6+QNGNgTbpGoPb2cXHPyF/WODZmje5
+         SUZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779814748; x=1780419548;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=73qJRcIVQTUMp+UCzOKPBNoPdNKc7KyWvvJbngzri24=;
+        b=XZ73myuv0FbgIgciSacvkN5sKgmMwLxUPiUnFekts4csYxudvwI/C+CD2ivB/FnR1N
+         DZPhTLFAEdxiSb0r71rjJ08tWji0OCflMxbezZP1TSDNfLkpFFZWvRuZcqxM+wRFa5Sl
+         ZSiRclK0rYfpcCdIc/u9bo37roMb2yin6E30rgymWz79NX6i/PnC9nWvPCNEbnq9mvsi
+         YUe/F8rDtqFx0j9o2o5O+t8nGX9p57INyLf8glw557PT4tweFWaaxC+FXYW1EJJdaehy
+         hJ0iiikm+x+nNE2iIqQhJ1bMrPL7dkdwB1El/CwbXPRzrx/LmNr4LhhL7F7FISNmyCbm
+         20Dg==
+X-Forwarded-Encrypted: i=1; AFNElJ/N3yEGq9O4dCMKoUnJ5jkNUhEXlIbj9rqJ+nitt7q6uXhnrRURflPq6gLHbbdFVGrjPZ7Ttvyn@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw/0YoZysY4rrf/lr1IiG6xq8p28WUao7NS96jFck6Q5ap63YZf
+	J9ZOoNYdjktukXMw//id8a+uQqGT8s5T+KJ7804NcTyO8nhf80L+B6hWDqytO/17ymPRSf31yE4
+	kXYYk/3sBJySZiCz4dxtlYt2ZQumVcINhzrhOcvcNeZwnFrbeuuf0IffBP7E=
+X-Gm-Gg: Acq92OFk/2TTqh2EzywXXoVcAk0q1R3r6lFGjr9eHsWahVf+Oz3y1D8I/gRp04pCL5o
+	mFdf+8rTpUegAYmMW14QkpnOUvviBgQ9S7zNUJDH2w2Ae/jZfIDnZVWY1r2CPPoYIJ2x31qMj2o
+	nLHkNf2QBWQcsdrrZ802FqaqMWTbaKism3wFeCEYLP4F3ZTl5SWcJT4V+t1oK0r5zi4uX18DHsK
+	GBp3iq7agrd9LDReXqkZm63FkHm+az6H7VrQVuJLc3VB4vHK0FqeDKzryeagcC8UDT/BGpjM0s2
+	Jvw9ffETFJTZYnXn/3NlOZYvUSwPQCp3NBoLZKKjRWNjnlaTrV5uI1Vmn+1AEC2+JLJC+cMfCuG
+	syivYaNI/Au3dT0HbBEBs8MjS4TnFhe4wFnohQ0jTrxqhiL8YnEULaEKqP0zW5jQo9Q==
+X-Received: by 2002:a05:620a:2718:b0:914:c0e8:224 with SMTP id af79cd13be357-914c0e80a72mr2780659485a.54.1779814748214;
+        Tue, 26 May 2026 09:59:08 -0700 (PDT)
+X-Received: by 2002:a05:620a:2718:b0:914:c0e8:224 with SMTP id af79cd13be357-914c0e80a72mr2780650485a.54.1779814747523;
+        Tue, 26 May 2026 09:59:07 -0700 (PDT)
+Received: from localhost (pool-100-17-21-205.bstnma.fios.verizon.net. [100.17.21.205])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-914f8806496sm245054085a.38.2026.05.26.09.59.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 May 2026 09:59:06 -0700 (PDT)
+Date: Tue, 26 May 2026 12:59:05 -0400
+From: Eric Chanudet <echanude@redhat.com>
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
+	Natalie Vock <natalie.vock@gmx.de>, Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	"T.J. Mercier" <tjmercier@google.com>, Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>, 
+	Maxime Ripard <mripard@redhat.com>, Albert Esteve <aesteve@redhat.com>, 
+	Dave Airlie <airlied@gmail.com>, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] cgroup/dmem: add dmem.memcg control file for
+ double-charging to memcg
+Message-ID: <ahXKFYBdCMDBvc_N@x1nano>
+References: <20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com>
+ <20260519-cgroup-dmem-memcg-double-charge-v2-2-db4d1407062b@redhat.com>
+ <ahBxB5a9sX9DEWvl@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20260421055323.940344-4-youngjun.park@lge.com>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ahBxB5a9sX9DEWvl@localhost.localdomain>
 
-On 04/21/26 at 02:53pm, Youngjun Park wrote:
-...snip...
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c3d98ab41f1f..0f67572e5e3e 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -68,6 +68,7 @@
->  #include <net/ip.h>
->  #include "slab.h"
->  #include "memcontrol-v1.h"
-> +#include "swap_tier.h"
->  
->  #include <linux/uaccess.h>
->  
-> @@ -4130,6 +4131,8 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
->  	refcount_set(&memcg->id.ref, 1);
->  	css_get(css);
->  
-> +	swap_tiers_memcg_inherit_mask(memcg);
-> +
->  	/*
->  	 * Ensure mem_cgroup_from_private_id() works once we're fully online.
->  	 *
-> @@ -5667,6 +5670,88 @@ static int swap_events_show(struct seq_file *m, void *v)
->  	return 0;
->  }
->  
-> +static int swap_tier_show(struct seq_file *m, void *v)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
-> +
-> +	swap_tiers_mask_show(m, READ_ONCE(memcg->tier_mask));
-> +	return 0;
-> +}
-> +
-> +static ssize_t swap_tier_write(struct kernfs_open_file *of,
-> +				char *buf, size_t nbytes, loff_t off)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-> +	char *pos, *token;
-> +	int ret = 0;
-> +	int original_mask = 0;
-> +
-> +	pos = strstrip(buf);
-> +
-> +	spin_lock(&swap_tier_lock);
-> +	if (!*pos) {
-> +		WRITE_ONCE(memcg->tier_mask, TIER_ALL_MASK);
-> +		goto sync;
-> +	}
-> +
-> +	original_mask = memcg->tier_mask;
-> +
-> +	while ((token = strsep(&pos, " \t\n")) != NULL) {
-> +		int mask;
-> +
-> +		if (!*token)
-> +			continue;
-> +
-> +		if (token[0] != '-' && token[0] != '+') {
-> +			ret = -EINVAL;
-> +			goto err;
-> +		}
-> +
-> +		mask = swap_tiers_mask_lookup(token+1);
-> +		if (!mask) {
-> +			ret = -EINVAL;
-> +			goto err;
-> +		}
-> +
-> +		/*
-> +		 * if child already set, cannot add that tiers for hierarch mismatching.
-> +		 * parent compatible, child must respect parent selected swap device.
-> +		 */
+On Fri, May 22, 2026 at 05:26:16PM +0200, Michal Koutný wrote:
+> Hello Eric.
+> 
+> On Tue, May 19, 2026 at 11:59:02AM -0400, Eric Chanudet <echanude@redhat.com> wrote:
+> > Add a root-only cgroupfs file "dmem.memcg" that lets an administrator
+> > configure whether allocations in a dmem region should also be charged to
+> > the memory controller.
+> 
+> This kinda makes sense as it is not unlike io.cost.* device
+> configurators.
+> 
+> Just for my better understanding -- will there be a space for userspace
+> to switch this? (No charged dmem allocations happen before responsible
+> userspace runs, so that the attribute remains unlocked.)
+> 
+> (I'm rather indifferent about the actual double charging/non-charging
+> matter.)
 
-This paragraph of code comment sounds a little unnatural. We are writing
-it into memcg, the child memcg is handled in
-swap_tiers_memcg_sync_mask(), isn't it? I don't get the 2nd sentence.
-Could you help explain?
+Yes, this is intended to be configured before the user space stack that
+would start allocating things is started. Once it has started (and tried
+to charge something), the configuration is locked
 
-> +		switch (token[0]) {
-> +		case '-':
-> +			WRITE_ONCE(memcg->tier_mask,
-> +				   memcg->tier_mask & ~mask);
-> +			break;
-> +		case '+':
-> +			WRITE_ONCE(memcg->tier_mask,
-> +				   memcg->tier_mask | mask);
-> +			break;
-> +		default:
-> +			ret = -EINVAL;
-> +			break;
-> +		}
-> +
-> +		if (ret)
-> +			goto err;
-> +	}
-> +
-> +sync:
-> +	swap_tiers_memcg_sync_mask(memcg);
-> +err:
-> +	if (ret)
-> +		WRITE_ONCE(memcg->tier_mask, original_mask);
-> +	spin_unlock(&swap_tier_lock);
-> +	return ret ? ret : nbytes;
-> +}
-> +
-...snip...
+> 
+> > 
+> > To handle inheritance, dmem adds a depends_on the memory controller,
+> > unless MEMCG isn't configured in.
+> > 
+> > Double-charging is disabled by default. Once a charge is attempted, the
+> > setting is locked to prevent inconsistent accounting by a small 4-state
+> > machine (off, on, locked off, locked on).
+> > 
+> > The memcg to charge is derived from the pool's cgroup, since the pool
+> > holds a reference to the dmem cgroup state that keeps the cgroup alive
+> > until it gets uncharged.
+> > 
+> > Signed-off-by: Eric Chanudet <echanude@redhat.com>
+> > ---
+> >  Documentation/admin-guide/cgroup-v2.rst |  23 +++++
+> >  kernel/cgroup/dmem.c                    | 158 +++++++++++++++++++++++++++++++-
+> >  2 files changed, 178 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> > index 6efd0095ed995b1550317662bc1b56c7a7f3db23..1d2fa55ddf0faa17baa916a8914d3033e8e42359 100644
+> > --- a/Documentation/admin-guide/cgroup-v2.rst
+> > +++ b/Documentation/admin-guide/cgroup-v2.rst
+> > @@ -2828,6 +2828,29 @@ DMEM Interface Files
+> >  	  drm/0000:03:00.0/vram0 12550144
+> >  	  drm/0000:03:00.0/stolen 8650752
+> >  
+> > +  dmem.memcg
+> > +	A readwrite nested-keyed file that exists only on the root
+> > +	cgroup.
+> 
+> Strictly speaking this is not nested-keyed but flat keyed [1],
+
+Indeed,
+
+> which leads me to realization that this is the first instance of a boolean.
+> All in call, such a composition comes to my mind (latter is RO):
+> 
+> 	drm/0000:03:00.0/vram0 enable=0|1 locked=0|1
+> 
+
+So per[1] 1 key, 2 sub-keys (enable RW, locked RO), that looks better
+and match the documentation, thanks!
+
+> 
+> 
+> > +static ssize_t dmem_cgroup_memcg_write(struct kernfs_open_file *of, char *buf,
+> > +				       size_t nbytes, loff_t off)
+> > +{
+> > +	while (buf) {
+> > +		struct dmem_cgroup_region *region;
+> > +		char *options, *name;
+> > +		bool flag;
+> > +
+> > +		options = buf;
+> > +		buf = strchr(buf, '\n');
+> > +		if (buf)
+> > +			*buf++ = '\0';
+> 
+> I recall there was a discussion about accepting only a single device per
+> write(2) (at the same time I see this idiom is still present in other
+> dmem.* files, so this is nothing to change in _this_ patch).
+
+I would second that. When setting say dmem.max for 2 regions, with a
+typo on the second, the first one is set, but write still get EINVAL.
+
+Also, I just notice dmemcg_limit_write() returns EINVAL if the region is
+not found (this patch returns ENODEV).
+
+> 
+> Thanks,
+> Michal
+> 
+> [1] https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#format
+
+
+
+-- 
+Eric Chanudet
+
