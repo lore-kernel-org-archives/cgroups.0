@@ -1,59 +1,207 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BC83C661D;
-	Wed, 27 May 2026 20:36:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82903342173
+	for <cgroups@vger.kernel.org>; Wed, 27 May 2026 20:48:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779914216; cv=none; b=rRog9XPNCJOg9pPhBPVwO5SLfd4G/Z265n7mXAZtZm91cnkLLV6ArDGlushwgyxSb1s3N7uY+zR+nLbzwQdRpNU9BrUtvyjlUxtvUyJ6ycC/00xrtjASXnKX5E9AfKMyNXqQe4mlwq+ogCul8oWh6DGTOvmGah9fYUg0AfrQbSg=
+	t=1779914893; cv=none; b=ItCAPpTWu06Hm+IsLrS0nY9HkZFFQdnE8tBgiOr6XOufo2A5MStix6EtB2G9JXsPIyX1nFYB/4tYDnZ0e5Ky4X7i5+z6KElj5B1oEaCSZyXrLxviFN3+HQxLKM3HuiYYGQmpdYQsczwf7DD4Gvo/UXztXMAXY3NikxM7KQC1t2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779914216; c=relaxed/simple;
-	bh=ivUTafxW7EUYHVzuAj524XGfbtSrkHr+Zd+VSWRd/Zc=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=KwwF1IEvRSbHjV6d1us4fjBtV88a0Ef0D8hy6noKuoAoqp3AY8P00KFc8EJHavkf6mGwoaCVxIbjbfQBLcJPMWCs+r5RJNhPpG8dSglyLzFuluoadkiKvG1aJij3lVYwwdd6+tqSvzZIYsHt6hIOnJB5srRElWUqpzXROc/v1pU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=uO0kMIEC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779914893; c=relaxed/simple;
+	bh=gquPeyIrgrXq7dLjLlFiTq8DRz00IYvKdULLyzd3nQI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NijtHHBegez9g08SfTh58qjzBwiZGj5JS1HEnLwYOc9zvsM41YxVIL+nSxn6fFpNdS9eGU8wAYK50A0MNX0/Qnms8ebB+rHmLwVNOjT46Q4rJvW8tPGgLkr7NCi8iND3alS3Jy9s1YdJt31FOsgeorPkhzF5zv1wtYVOVthew5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=QB0CiFIL; arc=none smtp.client-ip=209.85.160.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="uO0kMIEC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F41091F000E9;
-	Wed, 27 May 2026 20:36:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="QB0CiFIL"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-51306c9f2e1so141376291cf.0
+        for <cgroups@vger.kernel.org>; Wed, 27 May 2026 13:48:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1779914212;
-	bh=zoqeZwG3y/DBbZTflYJmnprqIV3duVrLDa/AW8PkbO8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=uO0kMIECI+ZA9S927s3ybqIf4C88FRCgd72kPKcPaZoajjn9zvOEn3ySaNm+LtO6q
-	 fvAQQYcklDxHuiAL+BcXbr8jVHUg3oZz8TJJL4p9sRE0SVVRjoWB+jXBaPSILloafl
-	 WpntFOChULwcpyxhpmx18DOfzp5atrrnU3pruI3E=
-Date: Wed, 27 May 2026 13:36:51 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Youngjun Park <youngjun.park@lge.com>
-Cc: chrisl@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, kasong@tencent.com, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, shikemeng@huaweicloud.com, nphamcs@gmail.com,
- baoquan.he@linux.dev, baohua@kernel.org, gunho.lee@lge.com,
- taejoon.song@lge.com, hyungjun.cho@lge.com, mkoutny@suse.com,
- baver.bae@lge.com, matia.kim@lge.com
-Subject: Re: [PATCH v7 0/4] mm: swap: introduce swap tier infrastructure
-Message-Id: <20260527133651.2ce806fa542a82eca5ff66d6@linux-foundation.org>
-In-Reply-To: <20260527062247.3440692-1-youngjun.park@lge.com>
-References: <20260527062247.3440692-1-youngjun.park@lge.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        d=cmpxchg.org; s=google; t=1779914888; x=1780519688; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GBXzyPhWkzGmNH/N9A+/kfLtlL9nu+YFCZMUKmgaFzk=;
+        b=QB0CiFILJDYJbNEV//W8WxUN7gH4RvSyq3pCkLHgldimXgbNAR7sqZYaSmrg9uIQEl
+         oc4zjfpob2K2S3id7/3gaensZcIMiWDlGvZnlvkDy5L7RzkFd5ysUg85xop5oBdNJZyi
+         IlzxyKOkqCVWneZs3Dt+5pR+qu8L7hfis6IFx9vCKiMlepAvHmOc1kvpCXJjv0YWa8O1
+         TH2jS0ll2jZUNUfCy9rAMktfA+EJDoqtZlSU+ldwZAjrIs/VaPexAuLTFICSbx9EPcBF
+         wtmSWAiMP1OxMS+OnmPjkFIIIoRfjnnhhWkhIfBaQSY6IonAXkTIRVwFUBinik9pSvTw
+         9fgg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779914888; x=1780519688;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=GBXzyPhWkzGmNH/N9A+/kfLtlL9nu+YFCZMUKmgaFzk=;
+        b=fgEnrwO6sXZLsmq5fFTpH5veAbQ4PiZIpAYKBs5aNoK6Eat5wZM3049IvS9f4e863M
+         OdLkFwc461As8L+/cPW/HWW3F3gvtkjNcBApvVQ1B+lVLaJLOxx6llJ+qRYah+WS7wRA
+         5Twysp9lOr8NGHRxEX2xiQjKZwFZC9XHK80kZiQ1+DIkVBr0O3ZoBRuyYQqDMWKnaBma
+         qI6rMVNDqwkBT3I/DBFuDRoJn49bQQz4ZZNk8nzSAtAvJigRrV8jBmUznTO6xMGLCdfd
+         PAg1HaBaB9h62g6Z7DreiWRbbGWIGViXzDuv85CLLOtaDhGs3TtT2GFoAca+iYEnYTjl
+         8Dlg==
+X-Forwarded-Encrypted: i=1; AFNElJ8OrsCCPYjQXF7W5cDsf8P0Y2AO2OYsaibC4Sm5b2VcXIbkjS18Im10qy205gckyAgQ+9ccnrfe@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz3JdZTxPo2MSJM1hUnqJQ2CpCs8BKl9NO7YY2QM2W2Geo3WI6t
+	dOr/1lWJ0AWpnHWktop8uSmgSAHQ7fTwap28P0VKTrrZ26ikbBGowmEvpqKWpoi680s=
+X-Gm-Gg: Acq92OEMCxRqAhYTjuJgICQZgTDCrGf1UNrga01xvUJSP+Gk3b5ZkC0jpnD7PPH65oU
+	cgNj0XT8ZaqDVam02WhSAEQd3oELF6aDnnqZ9j6dCCpPwRNtGw+kxHIuLoIV0Tkw5txQy7Udy3G
+	T+/hq+FyDsGqeAcCzHC1Tey/z0Hz4gFQuMtcoKwysbtCLRkKaSUGy5cfKTwYpdIrd7S4cOhxC+N
+	nORvyk9uhHhgCqlE7BddxZCkZkq7C98TY2r3Q35R9dncwgrc2YZ/ewgt/Q1et1k4FtyHzmY+o0j
+	jg3mY4RMo197LRtXl2MmOjZL6Pdo8luL9167bUD7pRQ5miJ3crHf1xEuyk3+1BcwgqRZfkVHuK4
+	jGx882dfZyiydEPWw60msWLwTbqXp2cNHvsvHIEU0kSVLqQ+JuHadCY8HfD9k8YxKkkAkMEhe/i
+	vcR1RTKiF9sZJMnCIAVB9rw8Vvcx/koPym
+X-Received: by 2002:a05:622a:244b:b0:50d:e471:2d1e with SMTP id d75a77b69052e-516d43cb2dbmr336768581cf.35.1779914887963;
+        Wed, 27 May 2026 13:48:07 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517069f2d2fsm59376831cf.3.2026.05.27.13.48.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 May 2026 13:48:07 -0700 (PDT)
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Michal Hocko <mhocko@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Yosry Ahmed <yosry.ahmed@linux.dev>,
+	Zi Yan <ziy@nvidia.com>,
+	"Liam R . Howlett" <liam@infradead.org>,
+	Usama Arif <usama.arif@linux.dev>,
+	Kiryl Shutsemau <kas@kernel.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Kairui Song <ryncsn@gmail.com>,
+	Mikhail Zaslonko <zaslonko@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Barry Song <baohua@kernel.org>,
+	Dev Jain <dev.jain@arm.com>,
+	Lance Yang <lance.yang@linux.dev>,
+	Nico Pache <npache@redhat.com>,
+	Ryan Roberts <ryan.roberts@arm.com>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v5 1/9] mm: list_lru: fix set_shrinker_bit() call during race with cgroup deletion
+Date: Wed, 27 May 2026 16:45:08 -0400
+Message-ID: <20260527204757.2544958-2-hannes@cmpxchg.org>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260527204757.2544958-1-hannes@cmpxchg.org>
+References: <20260527204757.2544958-1-hannes@cmpxchg.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed, 27 May 2026 15:22:43 +0900 Youngjun Park <youngjun.park@lge.com> wrote:
+When list_lru_add() races with cgroup deletion, the shrinker bit is set
+on the wrong group and lost. This can cause a shrinker run to miss the
+cgroup that actually has the object.
 
-> This is v7 of the swap tier series addressing review feedback.
-> The cover letter has been simplified.
+When the passed in memcg is dead, the function finds the first non-dead
+parent from the passed in memcg and adds the object there; but the
+shrinker bit is set on the memcg that was passed in.
 
-One question from Sashiko.   Minor, but easy to address.
-	https://sashiko.dev/#/patchset/20260527062247.3440692-1-youngjun.park@lge.com
+This bug is as old as the shrinker bitmap itself.
 
-I'm reluctant to add a new feature patchset at this time - we have a lot
-already and we're at -rc5.   What do others think?
+Fix it by returning the "effective" memcg from the locking function, and
+have the caller use that.
+
+Fixes: fae91d6d8be5 ("mm/list_lru.c: set bit in memcg shrinker bitmap on first list_lru item appearance")
+Reported-by: Usama Arif <usama.arif@linux.dev>
+Reported-by: Sashiko
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/list_lru.c | 26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
+
+diff --git a/mm/list_lru.c b/mm/list_lru.c
+index dd29bcf8eb5f..45d1b97737ea 100644
+--- a/mm/list_lru.c
++++ b/mm/list_lru.c
+@@ -77,14 +77,14 @@ static inline bool lock_list_lru(struct list_lru_one *l, bool irq)
+ }
+ 
+ static inline struct list_lru_one *
+-lock_list_lru_of_memcg(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
+-		       bool irq, bool skip_empty)
++lock_list_lru_of_memcg(struct list_lru *lru, int nid,
++		       struct mem_cgroup **memcg, bool irq, bool skip_empty)
+ {
+ 	struct list_lru_one *l;
+ 
+ 	rcu_read_lock();
+ again:
+-	l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
++	l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(*memcg));
+ 	if (likely(l) && lock_list_lru(l, irq)) {
+ 		rcu_read_unlock();
+ 		return l;
+@@ -97,8 +97,8 @@ lock_list_lru_of_memcg(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
+ 		rcu_read_unlock();
+ 		return NULL;
+ 	}
+-	VM_WARN_ON(!css_is_dying(&memcg->css));
+-	memcg = parent_mem_cgroup(memcg);
++	VM_WARN_ON(!css_is_dying(&(*memcg)->css));
++	*memcg = parent_mem_cgroup(*memcg);
+ 	goto again;
+ }
+ 
+@@ -135,8 +135,8 @@ list_lru_from_memcg_idx(struct list_lru *lru, int nid, int idx)
+ }
+ 
+ static inline struct list_lru_one *
+-lock_list_lru_of_memcg(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
+-		       bool irq, bool skip_empty)
++lock_list_lru_of_memcg(struct list_lru *lru, int nid,
++		       struct mem_cgroup **memcg, bool irq, bool skip_empty)
+ {
+ 	struct list_lru_one *l = &lru->node[nid].lru;
+ 
+@@ -164,12 +164,16 @@ bool list_lru_add(struct list_lru *lru, struct list_head *item, int nid,
+ 	struct list_lru_node *nlru = &lru->node[nid];
+ 	struct list_lru_one *l;
+ 
+-	l = lock_list_lru_of_memcg(lru, nid, memcg, false, false);
++	l = lock_list_lru_of_memcg(lru, nid, &memcg, false, false);
+ 	if (!l)
+ 		return false;
+ 	if (list_empty(item)) {
+ 		list_add_tail(item, &l->list);
+-		/* Set shrinker bit if the first element was added */
++		/*
++		 * Set shrinker bit on the memcg that owns the locked
++		 * sublist - lock_list_lru_of_memcg() may have walked up
++		 * past a dying memcg, and the bit must be set there.
++		 */
+ 		if (!l->nr_items++)
+ 			set_shrinker_bit(memcg, nid, lru_shrinker_id(lru));
+ 		unlock_list_lru(l, false);
+@@ -204,7 +208,7 @@ bool list_lru_del(struct list_lru *lru, struct list_head *item, int nid,
+ {
+ 	struct list_lru_node *nlru = &lru->node[nid];
+ 	struct list_lru_one *l;
+-	l = lock_list_lru_of_memcg(lru, nid, memcg, false, false);
++	l = lock_list_lru_of_memcg(lru, nid, &memcg, false, false);
+ 	if (!l)
+ 		return false;
+ 	if (!list_empty(item)) {
+@@ -288,7 +292,7 @@ __list_lru_walk_one(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
+ 	unsigned long isolated = 0;
+ 
+ restart:
+-	l = lock_list_lru_of_memcg(lru, nid, memcg, irq_off, true);
++	l = lock_list_lru_of_memcg(lru, nid, &memcg, irq_off, true);
+ 	if (!l)
+ 		return isolated;
+ 	list_for_each_safe(item, n, &l->list) {
+-- 
+2.54.0
+
