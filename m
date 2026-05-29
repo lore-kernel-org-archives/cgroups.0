@@ -1,53 +1,53 @@
-Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F771267B07
-	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 02:19:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72672282F1C
+	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 02:21:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780021172; cv=none; b=NsbaO/rOAxmjah1P9j8qfFEkuM7qagPtOC8iCtYhLDrmElzk5AvoUkDNqdIaDzBjqMWIPiWprKYh2NsXaH0MriKymqmXfrU6f4YrmQTdNupKRR9yc5GfspphN0Gj35ze84e8obAHiPTMvKWP8EWKgLDyDWoco24QoMxb/oBM8mA=
+	t=1780021298; cv=none; b=cQEHwPtHpHewsxohg6MtLz4YZ97Kb59IN9EHTm7lY7DN5BptOFBE8FFNo6xjj2BZ7bSdWCO9Iq5wcFCgLmJ7wKDAhN/pMO+eyhOLm1UIV6iPPYKGQuAA0I7iBBM2yQgl1+WmTrlS9bDAVx6XhCEdGJImc0Ej0+g1gvOfpbtnEh8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780021172; c=relaxed/simple;
-	bh=mDM9DSs/FWie+AmBTK0WBZBwM5L33g0aQtehlZMNGL4=;
+	s=arc-20240116; t=1780021298; c=relaxed/simple;
+	bh=EyQGvr2J6GXD5/IJXt+tAGdKHuOR2P3OEi9dy2YjAe4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mJlCzkUfb+3NYcuUsnpFOMngZWQbqDcPaYDt8xChQRo85JyOUO0Vdz1JvE5xjRvbcCwVYYZVyX1FDQQNwAHxPHz+vqa3zBj8QJLwj5pOWA/JHO/ewCoBuHSYQcwtW5TFGBAhIfvF95Hy/r2DgfrUtnkHunhDOOLO6m4CfGqdTaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=J8TIOOKh; arc=none smtp.client-ip=95.215.58.171
+	 In-Reply-To:Content-Type; b=qHihHqggl3KsJFhLaV9hDF2/Dx5Iz36ZZ+lILNNEZ6ciD4qd2ykkzT63ClqJ44WAfAc1uTLFDqQjQ3SSK2VCEoRzuUBRSpJh/eK4YFzM0ihuopULQM688QurABd2+pbzFtMaZ8OTx/KMoHCG8VSUX9P3Mr19xtM9B86co/EtxK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qe1fJfOw; arc=none smtp.client-ip=91.218.175.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="J8TIOOKh"
-Message-ID: <a3f84c49-96cd-4da3-838e-11c72990bc06@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qe1fJfOw"
+Message-ID: <7954e78e-1146-4141-b39d-60b02f3efde3@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1780021168;
+	t=1780021294;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=MTEYA+9JAkvteNFvAUGj4LNQw8LAznaBqzFkJbujJ0g=;
-	b=J8TIOOKhrI1JdisGxDSPCb2VYEd9vG2NYkcFK0jBakOQg2DwqlzvhP5QMY/hnsyCTWLLrm
-	6OtXcsy7Zw0Y5QlXbAfRTHnkKDYzhxI3yet3oecsX0o83bGxVhYhmR91PFbn7brcNexfIl
-	jqyF6AnGpNJXGXWyS1VAwqlQI90yD5w=
-Date: Fri, 29 May 2026 10:19:17 +0800
+	bh=zoKitNsl9nVOLxqk+A4i5syRWewX+PeHUE5Up6g+Too=;
+	b=qe1fJfOwfaAtbUS538mtqbFis1RX5LjAdBAQEI3Eccx7Oqr29whk0XJxfOWYxhdYbDEw/K
+	VnguaSns1J0xUUNf5Sg01PqZrahuTCWIofWCshRRnZhSIZdZjTzxpCizjf8/g9Thn6MRal
+	XMX87CQKd1art7gPAcN1pWnPa2n64Rs=
+Date: Fri, 29 May 2026 10:21:12 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH-next v3 3/5] cgroup/cpuset: Made cpuset_attach_old_cs
- track task group leaders
+Subject: Re: [PATCH-next v3 4/5] cgroup/cpuset: Move
+ mpol_rebind_mm/cpuset_migrate_mm() calls inside cpuset_attach_task()
 To: Waiman Long <longman@redhat.com>, Chen Ridong
  <chenridong@huaweicloud.com>, Tejun Heo <tj@kernel.org>,
  Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
  <mkoutny@suse.com>, Ingo Molnar <mingo@redhat.com>,
  Peter Zijlstra <peterz@infradead.org>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- Aaron Tomlin <atomlin@atomlin.com>, Ridong Chen <ridong.chen@linux.dev>
+ Aaron Tomlin <atomlin@atomlin.com>
 References: <20260527153800.1557449-1-longman@redhat.com>
- <20260527153800.1557449-4-longman@redhat.com>
+ <20260527153800.1557449-5-longman@redhat.com>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <20260527153800.1557449-4-longman@redhat.com>
+In-Reply-To: <20260527153800.1557449-5-longman@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
@@ -55,76 +55,75 @@ X-Migadu-Flow: FLOW_OUT
 
 
 在 2026/5/27 23:37, Waiman Long 写道:
-> There are two possible ways that migration of tasks from multiple source
-> cpusets to a target cpuset can happen. Either a multithread application
-> with threads in different cpusets is wholely moved to a new cpuset
-> or disabling of v2 cpuset controller will move all the tasks in child
-> cpusets to the parent cpuset.
+> The cpuset_attach_task() was introduced in commit 42a11bf5c543
+> ("cgroup/cpuset: Make cpuset_fork() handle CLONE_INTO_CGROUP properly")
+> to enable the CLONE_INTO_CGROUP flag of clone(2) to behave more like
+> moving a task from one cpuset into another one. That commits didn't
+> move the mpol_rebind_mm() and cpuset_migrate_mm() calls for group leader
+> into cpuset_attach_task().
 > 
-> In the former case, t is the mm setting of the group leader that really
-> matters. So cpuset_attach_old_cs should track the oldcs of the thread
-> leader. In the latter case, effective_mems of child cpusets must always
-> be a subset of the parent. So no real page migration will be necessary
-> no matter which child cpuset is selected as cpuset_attach_old_cs.
+> When the CLONE_INTO_CGROUP flag is used without CLONE_THREAD, the new
+> task is its own group leader. So it is still not equivalent to moving
+> task between cpusets in this case. Make CLONE_INTO_CGROUP behaves
+> more close to cpuset_attach() by moving the mpol_rebind_mm() and
+> cpuset_migrate_mm() calls inside cpuset_attach_task(). As a result,
+> cpuset_attach_old_cs, attach_cpus_updated and attach_mems_updated will
+> also need to be updated in cpuset_fork().
 > 
-> IOW, cpuset_attach_old_cs should be updated to match the latest task
-> group leader in cpuset_can_attach().
+> Besides, the original code use cpuset_attach_nodemask_to for
+> both nodemask returned by guarantee_online_mems() used only by
+> cpuset_change_task_nodemask() and cs->effective_mems in all other cases.
+> Such dual use is now impractical by merging the two task iteration loops
+> into one. So keep cpuset_attach_nodemask_to for the nodemask returned
+> by guarantee_online_mems() and reference cs->effective_mems directly
+> in all the other cases.
 > 
-> Suggested-by: Ridong Chen <ridong.chen@linux.dev>
 > Signed-off-by: Waiman Long <longman@redhat.com>
 > ---
->  kernel/cgroup/cpuset.c | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
+>  kernel/cgroup/cpuset.c | 90 ++++++++++++++++++++++--------------------
+>  1 file changed, 47 insertions(+), 43 deletions(-)
 > 
 > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 4457c4f11fce..b233a71f9b7c 100644
+> index b233a71f9b7c..7100575927f6 100644
 > --- a/kernel/cgroup/cpuset.c
 > +++ b/kernel/cgroup/cpuset.c
-> @@ -2967,6 +2967,20 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  /*
->   * cpuset_can_attach() and cpuset_attach() specific internal data
->   * Protected by cpuset_mutex
-> + *
-> + * The cpuset_attach_old_cs is used mainly by cpuset_migrate_mm() tp get the
-> + * old_mems_allowed value. There are two ways that many-to-one cpuset migration
-> + * can happen:
-Hi Waiman,
+> @@ -3149,9 +3149,12 @@ static void cpuset_cancel_attach(struct cgroup_taskset *tset)
+>   */
+>  static cpumask_var_t cpus_attach;
+>  static nodemask_t cpuset_attach_nodemask_to;
+> +static bool queue_task_work;
+...
+> @@ -3686,7 +3685,12 @@ static void cpuset_fork(struct task_struct *task)
+>  	/* CLONE_INTO_CGROUP */
+>  	mutex_lock(&cpuset_mutex);
+>  	guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
+> +	/* Assume CPUs and memory nodes are updated */
+> +	attach_cpus_updated = attach_mems_updated = true;
+> +	cpuset_attach_old_cs = oldcs;
+> +	oldcs->old_mems_allowed = oldcs->effective_mems;
+>  	cpuset_attach_task(cs, task);
+> +	attach_cpus_updated = attach_mems_updated = false;
+>  
+>  	dec_attach_in_progress_locked(cs);
+>  	mutex_unlock(&cpuset_mutex);
+Just a minor nit while running checkpatch --strict on this patch:
 
-I applied this series locally and ran some of my test cases. I didn't
-observe any issue so far.
+checkpatch reports:
 
-While doing a static/checkpatch pass, I noticed a few minor issues in
-patches 3, 4 and 5. They are all non-functional nits.
+CHECK: multiple assignments should be avoided
 
-For this patch, I only noticed a couple of small wording/typo nits in
-the new comment:
+Perhaps the multiple assignments can be split to keep the patch
+checkpatch-clean?
 
-s/tp get/to get/
+attach_cpus_updated = true;
+attach_mems_updated = true;
+
+and later:
+
+attach_cpus_updated = false;
+attach_mems_updated = false;
+
+Just a style nit.
 
 Best,
 Guopeng
-> + * 1) A multithread application with threads in different cpusets is wholely
-> + *    moved to a new cpuset.
-> + * 2) Disabling v2 cpuset controller will move all the tasks in child cpusets
-> + *    to the parent cpuset.
-> + *
-> + * In the former case, it is the mm setting of the group leader that really
-> + * matters. So cpuset_attach_old_cs should track the oldcs of the thread
-> + * leader. In the latter case, effective_mems of child cpusets must always
-> + * be a subset of the parent. So no real page migration will be necessary no
-> + * matter which child cpuset is selected as cpuset_attach_old_cs.
->   */
->  static struct cpuset *cpuset_attach_old_cs;
->  static bool attach_cpus_updated;
-> @@ -3069,6 +3083,10 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
->  		if (ret)
->  			goto out_unlock;
->  
-> +		/* Update cpuset_attach_old_cs to the latest group leader */
-> +		if (task == task->group_leader)
-> +			cpuset_attach_old_cs = task_cs(task);
-> +
->  		if (setsched_check) {
->  			ret = security_task_setscheduler(task);
->  			if (ret)
-
