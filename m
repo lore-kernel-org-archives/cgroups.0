@@ -1,47 +1,45 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 706283B5847
-	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 21:28:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A1B03A63F2
+	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 21:28:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780090134; cv=none; b=a1pweHjPYDfi+MagFfNiNn3dgEQ8Tx2NiaG1DO4Jqsh4qVyqLjSmd0ezGAmkkh+1Oo6RCUPI6aKC6ga0rzO/JK2hEXS9ZMVJhDJ6QxEx/XQlSFpr6JucXjmB1OoI97DT71XoI44VKMIAIWDhxiz/MBxRGUuWQrIoDjELd8eeWeM=
+	t=1780090135; cv=none; b=WkWnZwwqk4gV92ncpshg9DXYe1jTrJRZDgL/RWGIiKS7G9aiRCiAWpskI+CJqiRul/MV4AvJsDkDqtkz3d0FzPYwWrfkD6aByAMXJe8QGkkqVlh79aplGk6XjRJXjwySnVeok65GdbFhNrXqIcauFkEj3OdbUntsngOz2lKXG50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780090134; c=relaxed/simple;
-	bh=NTEXf8aQYEc8MJuQHzKBIvYng4oAmq/M8poKbVSsfVM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TZIelvPAFxA3pUqf2PcU/6DTUJZAi3EdqVAAI2cr+tMwtx59PqUKj1PFvy9Hi8nn2/1iGLhn5jVGxXXqczu9Wzt9L3hclL2eNLOFhm6x2c5iTuNYY4MSKGeDtMvrS4YwZJ/EmZRT1U2TX0Vr3aUiuR3cgC29hSNN+whg+1LLxAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gj9tWfmE; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1780090135; c=relaxed/simple;
+	bh=0cshPsnQwIcr+5VqQYjEZhIyyxzr/OIau2ixJwZ9yYQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sNOTUAcCQ4BSQmUjyrEKjAReetqnoA3/tsv1wdLnJYIu8KPYLTK/EjWnW4eibBhkT+4l17zVYuSk3s9cBBCNQF5Wncjr7SNFeMHog1sjwLckc4gVQQ4W1VRoEV/413IPTTsM5/rt31cz1ZZhR4Xft9qPIGnKsZbBOgQ8AUrLuzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=giy7tgtU; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gj9tWfmE"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="giy7tgtU"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1780090132;
+	s=mimecast20190719; t=1780090131;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hGjmwF10xGyuxQZDmJerw4+PM99FzisxArCfH3Pc0oo=;
-	b=gj9tWfmEOf4hWw5cuPcGeKTtKqSQzovfAo0vC1hpwnZLz84+6ngz/QN4cOG1F/58EuPJIx
-	9HGAqETSWWbwNXeSM4VwiWdWgYjfjAx09SEW/Q924SFF/IvGT9c11ir56ejV9vJgFkSKtN
-	pd4UJZueXT3SHw/qgvutKB/3B65XNlA=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Uv6Y23LUodS/Zv6jMai00tlGP+SaZfgHwcOOf6Yl5Z0=;
+	b=giy7tgtUeEBfI72v4Gaq+gl6mY1qrbn419WXTj9+AUd257m1cVYJsRyyJPBv0K/KgTLtyK
+	f1S4ta8fYhkF74vJdXO31icilDChPrphnZikHTMoTJbxw0xOhSbYIIs2j7/oW69qMppPvB
+	+KrLqXSphz0ljRg7McEEbHsTIh5AHJg=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-628-AeP6LoyiNGyPYM6TcTgEfQ-1; Fri,
- 29 May 2026 17:28:49 -0400
-X-MC-Unique: AeP6LoyiNGyPYM6TcTgEfQ-1
-X-Mimecast-MFC-AGG-ID: AeP6LoyiNGyPYM6TcTgEfQ_1780090127
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-605-I4eyyDWgOPGxTvESxo86Cg-1; Fri,
+ 29 May 2026 17:28:46 -0400
+X-MC-Unique: I4eyyDWgOPGxTvESxo86Cg-1
+X-Mimecast-MFC-AGG-ID: I4eyyDWgOPGxTvESxo86Cg_1780090124
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A4E4319560B2;
-	Fri, 29 May 2026 21:28:46 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.64.54])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 5B7AF19560B0;
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1FAAD180034C;
 	Fri, 29 May 2026 21:28:44 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.64.54])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C1D0019560A3;
+	Fri, 29 May 2026 21:28:40 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Chen Ridong <chenridong@huaweicloud.com>,
 	Tejun Heo <tj@kernel.org>,
@@ -53,11 +51,9 @@ Cc: cgroups@vger.kernel.org,
 	Aaron Tomlin <atomlin@atomlin.com>,
 	Guopeng Zhang <guopeng.zhang@linux.dev>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH-next v4 1/6] cgroup/cpuset: Fix node inconsistencies between cpuset_update_tasks_nodemask() and cpuset_attach()
-Date: Fri, 29 May 2026 17:21:03 -0400
-Message-ID: <20260529212108.120506-2-longman@redhat.com>
-In-Reply-To: <20260529212108.120506-1-longman@redhat.com>
-References: <20260529212108.120506-1-longman@redhat.com>
+Subject: [PATCH-next v4 0/6] cgroup/cpuset: Support multiple source/destination cpusets for cpuset_*attach()
+Date: Fri, 29 May 2026 17:21:02 -0400
+Message-ID: <20260529212108.120506-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -67,150 +63,68 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Whenever memory node mask is changed, there are 4 places where the node
-mask has to be updated or used.
- 1) task's node mask via cpuset_change_task_nodemask()
- 2) memory policy binding via mpol_rebind_mm()
- 3) if memory migration is enabled, migrate from old_mems_allowed to
-    the new node mask via cpuset_migrate_mm().
- 4) setting old_mems_allowed
+ v4:
+  - Add a new patch 1 to fix inconsistency in node mask usage in
+    cpuset_update_tasks_nodemask() and cpuset_attach() and adjust
+    the subsequent patches accordingly.
+  - Update patch 3 to set the update flags whenever the CPU or node
+    mask is updated to address issue reported by Sashiko.
+  - Update patch 5 to remove unneeded setting of old_mems_allowed as
+    well as calling schedule_flush_migrate_mm() if queue_task_work is
+    set.
 
-These memory actions are done in cpuset_update_tasks_nodemask() and
-cpuset_attach(). However there are inconsistencies in what node masks
-are being used in these 2 functions.
+ v3:
+  - Rebased to the lastest linux-next tree.
+  - Keep cpuset_attach_old_cs as suggested by Chen Ridong and replace
+    patch 3 by a new one to make it track task group leader.
 
-In cpuset_update_tasks_nodemask(),
- - cpuset_change_task_nodemask(): guarantee_online_mems()
- - mpol_rebind_mm(): mems_allowed
- - cpuset_migrate_mm(): guarantee_online_mems()
- - old_mems_allowed: guarantee_online_mems()
+Sashiko AI review of another cpuset patch had found that cpuset_attach()
+and cpuset_can_attach() can be passed a cgroup_taskset with tasks
+migrating from one source cpuset to multiple destination cpusets and
+vice versa.  Further testing of the cpuset code indicates that this is
+indeed the case when the v2 cpuset controller is enabled or disabled.
 
-In cpuset_attach(),
- - cpuset_change_task_nodemask(): guarantee_online_mems()
- - mpol_rebind_mm(): effective_mems
- - cpuset_migrate_mm(): effective_mems
- - old_mems_allowed: effective_mems
+Unfortunately, cpuset_attach() and cpuset_can_attach() still assume that
+there will be one source and one destinaton cpuset which may result in
+inocrrect behavior.
 
-These inconsistencies dates back to quite a long time ago and it is
-hard to say what should be the correct values.
+This patch series is created to fix this issue.
 
-The guarantee_online_mems() function returns a node mask from current or
-an ancestor cpuset that is a subset of node_states[N_MEMORY]. Nodes in
-node_states[N_MEMORY] are all online, i.e. in node_states[N_ONLINE].
-However, node in node_states[N_ONLINE] may not have memory. So
-node_states[N_MEMORY] should be a subset of node_states[N_ONLINE].
+Patch 1 is to fix an inconsistency in the way node mask update is being
+handled in cpuset_update_tasks_nodemask() and cpuset_attach() so that
+they match each other.
 
-The guarantee_online_mems() function should only be useful for v1 where
-mems_allowed is the same as effective_mems. With v2, the memory nodes
-in effective_mems should always be a subset of node_states[N_MEMORY],
-so guarantee_online_mems() should just return cs->effective_mems.
+Patches 2 and 3 are just preparatory patches to make the remaining
+patches easier to review.
 
-Let use the following setup for both of them and make them consistent.
- - cpuset_change_task_nodemask(): guarantee_online_mems()
- - mpol_rebind_mm(): effective_mems
- - cpuset_migrate_mm(): guarantee_online_mems()
- - old_mems_allowed: guarantee_online_mems()
+Patch 4 makes cpuset_attach_old_cs to track group leader for use by
+cpuset_migrate_mm().
 
-So for v2, it is effectively all effective_mems. For v1, mpol_rebind_mm()
-uses cpus_allowed which may differ from what guarantee_online_mems()
-returns.
+Patch 5 moves mpol_rebind_mm() and cpuset_migrate_mm() inside
+cpuset_attach_task() to make CLONE_INTO_CGROUP flag of clone(2) works
+more like moving task from one cpuset to another one, while also make
+supporting multiple source and destination cpusets easier.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 34 +++++++++++++++++++++++-----------
- 1 file changed, 23 insertions(+), 11 deletions(-)
+Patch 6 makes the necessary changes to enable the support of multiple
+source and destination cpusets by keeping all the source and destination
+cpusets found during task iterations in two singly linked lists for
+source and destination cpusets respectively.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 51327333980a..961427cd83a5 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2615,6 +2615,13 @@ static void *cpuset_being_rebound;
-  * Iterate through each task of @cs updating its mems_allowed to the
-  * effective cpuset's.  As this function is called with cpuset_mutex held,
-  * cpuset membership stays stable.
-+ *
-+ * - cpuset_change_task_nodemask(): guarantee_online_mems()
-+ * - mpol_rebind_mm(): effective_mems
-+ * - cpuset_migrate_mm(): guarantee_online_mems()
-+ * - old_mems_allowed: guarantee_online_mems()
-+ *
-+ * For v2, guarantee_online_mems() should just return effective_mems.
-  */
- void cpuset_update_tasks_nodemask(struct cpuset *cs)
- {
-@@ -2624,7 +2631,10 @@ void cpuset_update_tasks_nodemask(struct cpuset *cs)
- 
- 	cpuset_being_rebound = cs;		/* causes mpol_dup() rebind */
- 
--	guarantee_online_mems(cs, &newmems);
-+	if (cpuset_v2())
-+		newmems = cs->effective_mems;
-+	else
-+		guarantee_online_mems(cs, &newmems);
- 
- 	/*
- 	 * The mpol_rebind_mm() call takes mmap_lock, which we couldn't
-@@ -2649,7 +2659,7 @@ void cpuset_update_tasks_nodemask(struct cpuset *cs)
- 
- 		migrate = is_memory_migrate(cs);
- 
--		mpol_rebind_mm(mm, &cs->mems_allowed);
-+		mpol_rebind_mm(mm, &cs->effective_mems);
- 		if (migrate)
- 			cpuset_migrate_mm(mm, &cs->old_mems_allowed, &newmems);
- 		else
-@@ -2713,6 +2723,8 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems)
- 
- 		WARN_ON(!is_in_v2_mode() &&
- 			!nodes_equal(cp->mems_allowed, cp->effective_mems));
-+		WARN_ON(cpuset_v2() &&
-+			!nodes_subset(cp->effective_mems, node_states[N_MEMORY]));
- 
- 		cpuset_update_tasks_nodemask(cp);
- 
-@@ -3147,17 +3159,18 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 
- 	/*
- 	 * In the default hierarchy, enabling cpuset in the child cgroups
--	 * will trigger a number of cpuset_attach() calls with no change
--	 * in effective cpus and mems. In that case, we can optimize out
--	 * by skipping the task iteration and update.
-+	 * will trigger a cpuset_attach() call with no change in effective cpus
-+	 * and mems. In that case, we can optimize out by skipping the task
-+	 * iteration and update.
- 	 */
--	if (cpuset_v2() && !cpus_updated && !mems_updated) {
-+	if (cpuset_v2()) {
- 		cpuset_attach_nodemask_to = cs->effective_mems;
--		goto out;
-+		if (!cpus_updated && !mems_updated)
-+			goto out;
-+	} else {
-+		guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
- 	}
- 
--	guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
--
- 	cgroup_taskset_for_each(task, css, tset)
- 		cpuset_attach_task(cs, task);
- 
-@@ -3167,7 +3180,6 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 	 * if there is no change in effective_mems and CS_MEMORY_MIGRATE is
- 	 * not set.
- 	 */
--	cpuset_attach_nodemask_to = cs->effective_mems;
- 	if (!is_memory_migrate(cs) && !mems_updated)
- 		goto out;
- 
-@@ -3175,7 +3187,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 		struct mm_struct *mm = get_task_mm(leader);
- 
- 		if (mm) {
--			mpol_rebind_mm(mm, &cpuset_attach_nodemask_to);
-+			mpol_rebind_mm(mm, &cs->effective_mems);
- 
- 			/*
- 			 * old_mems_allowed is the same with mems_allowed
+Waiman Long (6):
+  cgroup/cpuset: Fix node inconsistencies between
+    cpuset_update_tasks_nodemask() and cpuset_attach()
+  cgroup/cpuset: Add a cpuset_reserve_dl_bw() helper
+  cgroup/cpuset: Expand the scope of cpuset_can_attach_check()
+  cgroup/cpuset: Made cpuset_attach_old_cs track task group leaders
+  cgroup/cpuset: Move mpol_rebind_mm/cpuset_migrate_mm() calls inside
+    cpuset_attach_task()
+  cgroup/cpuset: Support multiple source/destination cpusets for
+    cpuset_*attach()
+
+ kernel/cgroup/cpuset-internal.h |   6 +
+ kernel/cgroup/cpuset.c          | 424 +++++++++++++++++++++++---------
+ 2 files changed, 308 insertions(+), 122 deletions(-)
+
 -- 
 2.54.0
 
