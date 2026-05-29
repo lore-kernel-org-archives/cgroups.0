@@ -1,142 +1,146 @@
-Received: from out-179.mta0.migadu.com (out-179.mta0.migadu.com [91.218.175.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 307F43BA22E
-	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 09:08:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EC5C3546FB
+	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 09:56:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780045681; cv=none; b=qNJiw89BcmL8XCg3aO43v3a4IeXo5NFXUtokjCv5OHjcpyYEASZb+rRqoM56pb9C83UByG+G31TtumgjcSrBzVuYiL3ntVrnM6eUdnj1bBYDuDBPazpcqldCucZJJGvu/ZaD24rbga/MW+898q4Ex6jR/A/ox6GGpcX7P4dw5ms=
+	t=1780048592; cv=none; b=nYgQNlSE6fYzTB8eCTWh74chJcIXnKRUeCwmXJtTB0AizSzm6ofwbQr0cJ1moBRtiMljN7wKx8pS88zIMsbF6tMS0FYVzho+1nnq0Shoxanw7DdDyhCHAV1fl5B4RF/Mfhm1dgByRsCYzRlBxWqTCHUlwyJjQ2QDBEH9HOqed9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780045681; c=relaxed/simple;
-	bh=QFJ3jZPuLzz4cgAvH+lI4rf+q+2dlZJEBGn8x0mV3us=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P33ghf7hTbgdREacNBWS/lx6h+14DBnR3CUBitxJOQJyEM9TXSB+YCOcygCc2drq8jAAYQZx9SScc1mW9Z5JqmiviqTiGg6HO7ZePba+rmbtWGNPfrPlFQy7VOUyYPYnAflndPtfYR4XEH2PTDu9wVA9a/Od/FXz6P9LOY9Db0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kSr+qF2v; arc=none smtp.client-ip=91.218.175.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1780048592; c=relaxed/simple;
+	bh=b4SlGHyKejpjGEPSSsF9TtxkNCBpxGUf0lpztK/k6FU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bXQEVd15U/C8s4GB7R4MM5qExBkmJ1O6AKFZJbovj4ZCe0MzCVNKlVGZ2vL0N24s73cUfX1E2THGoIa5GcONmM57T3LuSVKz8s01EJZudj3+vXaorZXOx1JaKmG5AbHd7ocy4kiBnzh/0mg92FkoBSImDm5iOscyF3UfhizO8iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jVQAw4GH; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kSr+qF2v"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1780045668;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=vIvD+tH8GardrAeKrBNHrByBYjz1cKNJeWoucOPY6/8=;
-	b=kSr+qF2vh+aTNnPPbeUEB/WywSiJucZo5qK+L0/Xgjufi7rbPFpXCpbCU9XDw+CZ/ztbck
-	mlZHhz3kX/l3lgA/LcwTk9ckCSOc/E3gEZNeq1uE2P3pXpB4WMuk7Ykrkq98SxeEb7VAum
-	I41p4Md3k4vPk64olozpCvF++XSdcpw=
-From: Tao Cui <cui.tao@linux.dev>
-To: tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	leon@kernel.org,
-	jgg@ziepe.ca
-Cc: linux-rdma@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH rdma-next v2 0/3] cgroup/rdma: add MR memory size resource tracking
-Date: Fri, 29 May 2026 17:07:30 +0800
-Message-ID: <20260529090733.2242822-1-cui.tao@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jVQAw4GH"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-45ef1629ff4so357078f8f.0
+        for <cgroups@vger.kernel.org>; Fri, 29 May 2026 02:56:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780048590; x=1780653390; darn=vger.kernel.org;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QlBVL2w9TAGD5JVBams2MPk6DO1Ps9XKY2pj6ZAb950=;
+        b=jVQAw4GHq19+XzXlvAaw6dL6k9Ehf2rQF0oT2xRU6PzGVvpUeYKgHIARgCND67ZZEK
+         6ln6r9u73kj364EMV3Ljd4ODIc4HM13izpThsm9GpwlkfGsofCVgWUyRW8kh/Jr54gYz
+         hL0o7wkWyl6qDtiHlvmjutstqBRW9CNpW1CnEvw+zJcZGbzf9O9dzzvGqnBE2Zdvvx3b
+         mWQCWRhGkGmbnFumNnYBObFF/baRlOUZyo9dliNPUIqPIzvN9zRoeyZqGpYRM+SiGriu
+         4vvlGMItgXHxbFr1HK8ZuiW+hQ3dTEUrfNrrPdh61Y7qTD6Sp72lt+1Q/fVXtMPgUQu8
+         esLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780048590; x=1780653390;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QlBVL2w9TAGD5JVBams2MPk6DO1Ps9XKY2pj6ZAb950=;
+        b=KkEOdfjxSiQ6ACiCdmGZlMWmAB1ZCScY/aBojUjgDKvPV3T0Oz2AJJzEXtilKu9Yl5
+         Gk9p5t4NDuVz/sMNxzPRgXcvaiyo2Rz5zw3u1sRBA96IG77Zazux8pQDHYarUzNshu/j
+         Qqt3KTBJR3mhg10lTvYJgXbn52RiHcRmW9LTgaJNv3+Bt9XnrKx3XHrQyS0K/FI/NFEZ
+         DZHwYwPQ4WPVUqwusJQkFYvqi+wZZKVsEXjxG0MZpoR5dNGt+sIVaz184fYzh6Rkk7Es
+         TEFf8eTgbbFcy9+f4JidgrWJqSzSTqBVuB5V5owbvuic0dGvH9Roe6N3njGjwTZ8fWc/
+         dYdA==
+X-Forwarded-Encrypted: i=1; AFNElJ9JYrXQfb5FdR2ieBHGuJiJHDidfy+4Jl5hFRPO05bPmNZspDpjictDuzpRhllOX5sU89jnSqqM@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyqvp1mUPMYLtSFR4ckA6zJfC+nckYRnc4NQT5n6UwCp7W4wcK+
+	hYcsSq6ECltoXwYjT4RV6KU9cOJvrJyvNYCioNdM4FQZzsVSFAk0O9De
+X-Gm-Gg: Acq92OH6hsLy9CzCKks9xQKgJrd+0CGBUeCsJtEe7Ag0EWOobGop/eYR26c5XabpRzL
+	aqC+IcZAoA8GRkvyaZHBQO0t2KEaQIzYq8yNNwVqC2i2oVw98sATjaeZvseSyTjt4RnXsnjYsLW
+	tLYA2oFIRNZ6GomEmaOysUCgJvCN5Gbg1+SBg0k3KZK/577uyNzl9d2S2prgk+leWL6HApFP7uO
+	CvGmRmiYEpWMNaus54tez/tGJMM+5dqg43DXHpVAisBv5eXjN/gqc9LuIcH5qf/OdUQ90yzDfSK
+	9CyJDgh0Nf2ja5IOz+vXpLvIEqFb3bhN7Dg+R8n4KjZbji8X+7PIUaAjZL4Yy5n9dkgSk1g/S/v
+	UtQkBeIX9Sy/dGexrLGrdh3zAEQ56MBN06m/FvuhivjlkAVBmb/vWA337NwPKzN7rD7BNFuRQ3v
+	fN3wRn9t3rC76GPYh+uUB9rbfa/Q80mDil
+X-Received: by 2002:a05:600c:c168:b0:490:50eb:b777 with SMTP id 5b1f17b1804b1-4909c07267dmr43425645e9.5.1780048589855;
+        Fri, 29 May 2026 02:56:29 -0700 (PDT)
+Received: from localhost ([185.92.221.13])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4909c09ab75sm11200965e9.6.2026.05.29.02.56.28
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 29 May 2026 02:56:29 -0700 (PDT)
+Date: Fri, 29 May 2026 09:56:28 +0000
+From: Wei Yang <richard.weiyang@gmail.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Michal Hocko <mhocko@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+	Yosry Ahmed <yosry.ahmed@linux.dev>, Zi Yan <ziy@nvidia.com>,
+	"Liam R . Howlett" <liam@infradead.org>,
+	Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>,
+	Vlastimil Babka <vbabka@kernel.org>, Kairui Song <ryncsn@gmail.com>,
+	Mikhail Zaslonko <zaslonko@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Barry Song <baohua@kernel.org>, Dev Jain <dev.jain@arm.com>,
+	Lance Yang <lance.yang@linux.dev>, Nico Pache <npache@redhat.com>,
+	Ryan Roberts <ryan.roberts@arm.com>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 5/9] mm: list_lru: deduplicate lock_list_lru()
+Message-ID: <20260529095628.nagjdy3f24z6qjtk@master>
+Reply-To: Wei Yang <richard.weiyang@gmail.com>
+References: <20260527204757.2544958-1-hannes@cmpxchg.org>
+ <20260527204757.2544958-6-hannes@cmpxchg.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260527204757.2544958-6-hannes@cmpxchg.org>
+User-Agent: NeoMutt/20170113 (1.7.2)
 
-From: Tao Cui <cuitao@kylinos.cn>
+On Wed, May 27, 2026 at 04:45:12PM -0400, Johannes Weiner wrote:
+>The MEMCG and !MEMCG paths have the same pattern. Share the code.
+>
+>Reviewed-by: David Hildenbrand (Arm) <david@kernel.org>
+>Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+>Reviewed-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
+>Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+>Reviewed-by: Liam R. Howlett (Oracle) <liam@infradead.org>
+>---
+> mm/list_lru.c | 21 +++++++++------------
+> 1 file changed, 9 insertions(+), 12 deletions(-)
+>
+>diff --git a/mm/list_lru.c b/mm/list_lru.c
+>index 7d0523e44010..fdb3fe2ea64f 100644
+>--- a/mm/list_lru.c
+>+++ b/mm/list_lru.c
+>@@ -15,6 +15,14 @@
+> #include "slab.h"
+> #include "internal.h"
 
-Currently the RDMA cgroup only tracks two aggregate counters:
-hca_handle and hca_object.  The real scarce resource in multi-tenant
-deployments is pinned memory: how much physical memory gets registered
-through MRs.  The existing hca_object counter is too coarse to capture
-this.
+Hi, Johannes
 
-This series adds a single new resource type:
+One very tiny nit below.
 
-  - mr_mem  - Cumulative MR memory size in bytes
+> 
+>+static inline void lock_list_lru(struct list_lru_one *l, bool irq)
 
-The per-object-type counters (qp, mr) from RFC v1 have been removed
-per review feedback [1]: modern NICs pool objects from the same memory
-pool so the distinction between QP count and MR count is not
-meaningful for resource limiting.  hca_object remains sufficient for
-coarse object accounting.
+Here we use @irq.
 
-After this series, an administrator can set limits like:
+>+{
+>+	if (irq)
+>+		spin_lock_irq(&l->lock);
+>+	else
+>+		spin_lock(&l->lock);
+>+}
+>+
+> static inline void unlock_list_lru(struct list_lru_one *l, bool irq_off)
 
-    echo "mlx5_0 mr_mem=1073741824" > rdma.max
+Here we use @irq_off.
 
-Design
-~~~~~~
+Do you think it would be nicer to unify the parameter name?
 
-mr_mem is not page-level ownership tracking; it is object-based
-accounting tied to the MR lifetime:
+Also the name in callsite and the argument annotation. Would it be cleaner
+readers?
 
-  - charged at MR registration time
-  - uncharged at MR destruction time
-  - the charge is pinned to the cgroup that created the MR for the
-    entire lifetime of the MR object
-
-This model intentionally defines accounting semantics around MR
-object lifetime rather than page ownership:
-
-1. fork(): fork() does not duplicate MR objects.  Even though the
-   child inherits the uverbs fd and can access the parent's ucontext,
-   the MR remains a single kernel object.  The charge is tied to the
-   MR object, not to the number of processes that can reach it, so
-   no splitting or re-accounting is needed.
-
-2. Cgroup migration: mr_mem follows the same semantics as the existing
-   hca_object; charge at creation time against the invoking task's
-   cgroup, uncharge at destruction time.  The RDMA cgroup does not
-   implement can_attach/attach callbacks today, so charges do not
-   migrate with the task.  This is a known limitation that applies
-   equally to hca_handle and hca_object.  mr_mem does not introduce
-   any new complication here.
-
-3. Overlap with memory cgroup: mr_mem does not count process memory
-   usage; it represents a per-device DMA registration budget: the
-   amount of memory this cgroup may register through a given HCA.
-   This is a different dimension from what memory cgroup tracks.  An
-   administrator might set mr_mem limits differently per device, which
-   memory cgroup cannot express.
-
-   In particular, mr_mem tracks the registered memory range associated
-   with the MR rather than exact dynamically pinned pages (e.g. for
-   ODP MRs).  This is a stable, policy-oriented approximation of
-   registration footprint, not an attempt at precise physical page
-   accounting.
-
-Tao Cui (3):
-  cgroup/rdma: extend charge/uncharge API with s64 amount parameter
-  cgroup/rdma: add MR memory size resource tracking
-  cgroup/rdma: update cgroup resource list for MR_MEM
-
- Documentation/admin-guide/cgroup-v2.rst       |  21 ++--
- drivers/infiniband/core/cgroup.c              |  10 +-
- drivers/infiniband/core/core_priv.h           |  12 +-
- drivers/infiniband/core/rdma_core.c           |  20 +++-
- drivers/infiniband/core/uverbs_cmd.c          |  61 +++++++++-
- drivers/infiniband/core/uverbs_std_types_mr.c |  37 ++++++
- include/linux/cgroup_rdma.h                   |   8 +-
- include/rdma/ib_verbs.h                       |   1 +
- kernel/cgroup/rdma.c                          | 108 +++++++++++++-----
- 9 files changed, 219 insertions(+), 59 deletions(-)
-
----
-Changes from RFC v1:
-
-  - Removed RDMACG_RESOURCE_QP and RDMACG_RESOURCE_MR per-type
-    counters following review feedback from Jason Gunthorpe [1].
-  - Retained only RDMACG_RESOURCE_MR_MEM as the sole new resource.
-  - Added detailed semantic notes to the commit messages addressing
-    fork(), cgroup migration, and overlap with memory cgroup [2].
-  - Renamed patches to reflect the narrower scope.
-
-[1] https://lore.kernel.org/all/20260525134314.GI7702@ziepe.ca/
-[2] https://lore.kernel.org/all/20260528075537.2170697-1-cuitao@kylinos.cn/
 -- 
-2.43.0
-
+Wei Yang
+Help you, Help me
