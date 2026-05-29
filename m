@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C799814A4CC;
-	Fri, 29 May 2026 12:46:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62180230BE9;
+	Fri, 29 May 2026 12:48:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780058802; cv=none; b=je+N7Mfg6pdX+pTP9wLEyMUCFQooNp5HVbAqr8uVhnbjEz/Fp/9QsHH0YFqRmNf/PFGgQnLSgYl8+2axiLNmGKCvP5iYUALjdcEbao7zF5o2DnwUCzV8xUppLSzi7TtoeeW4nn5c0osKWTVIyHOBXw17FY/SpEiTIaRYWuO01c8=
+	t=1780058901; cv=none; b=frumHOBQcsVLZu5/BVETsszPF7b7u+oenury4MxOm9fAeL64hOoqq6IQ7IDeUDvAtiJgEtAcQlQrw137ol93vSmCCMqnaaQeAgM/44kenVVWE2h2MbXAo6H74CQPDY9xs2NCBhordNos3yBiBUIdjlEA281ROv3GZkkCfn30QKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780058802; c=relaxed/simple;
-	bh=n4uZhdK6XzpQGNzverimKltVRsJ+TnUC5WxnmXwitTA=;
+	s=arc-20240116; t=1780058901; c=relaxed/simple;
+	bh=HO1WR6twZag3h0xFdgAKX/czudAafCz+VLFaYqj8tHY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rDXCzgRBLk0gTGt/UlE3WPW58CUsg8CXrlrZIXty0dvOpzFBjfSH7ReuLEWPqa2ixyfPwQFqBrIlkQReChFNLs0XBjBTnF/3/WVK30bYsAc1y09P1VUmtF213DK+kp7UxD0Ql7PvDz5kLhg9X4OSCt8OgXAJuo0efsDfuRKh4zQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QMNPfQLU; arc=none smtp.client-ip=192.198.163.8
+	 Content-Type:Content-Disposition:In-Reply-To; b=YBkHUJyfeq4/9YyPy6gb/u3KkkySSSwwQmgK4GfeOZgqIjve/C933+qsxHCPyRiJsxEEWqk2pPkeUTNy6TJVFxtNekGl0URPZ58hvWcLjp3JAhFPecjSp95MA6Nd+EVgYJQFN+63bmAYYCpSf7VsXbJRutcFMdLO8fV/T8K+FpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KeNiSrYG; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QMNPfQLU"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KeNiSrYG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780058801; x=1811594801;
+  t=1780058901; x=1811594901;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=n4uZhdK6XzpQGNzverimKltVRsJ+TnUC5WxnmXwitTA=;
-  b=QMNPfQLUBVzRrAvQGNmW8JuB5TpBygLyRkBD6zgHrT62f0Lmlayhmnu5
-   biaDWfKzPp1+PD1lrbjAhPyBIiWVG+FZwQtUszj/eC3bOYJnzNeHsDzIq
-   2BbHS64apyADH2IcYOE5ZcndduPKxbwRGepdQgIMzocfqjDkxyfsH3XGF
-   cvMaL7IlhPEwgXqiyH7C1R8AiIOyRAWFt215B3USstiQ8f2d1gxeOCh9y
-   OJ1M7YAztKmegh9qmhCaMaBhkjPH1AVjU4eHaTNLX+mMYELvNLqa0/zl8
-   MKP3zencbBTm08oTRYAKj9O1UEWkSUYU1B3zOQ+vu/SzxUfyRqeQrz/Sz
-   g==;
-X-CSE-ConnectionGUID: Z4uWgfB6Q86KBB5GD88VEA==
-X-CSE-MsgGUID: EDmIBK/JRjSpTl1JxB/zGA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11801"; a="98481776"
+  bh=HO1WR6twZag3h0xFdgAKX/czudAafCz+VLFaYqj8tHY=;
+  b=KeNiSrYGTnccyiKPNdbD2o5msj5UCid/4wK7VKxWXJYLAHCWb0ZBUh0Q
+   wBYVNs4Yqmk/Im77vb6Zgq7U4s3x1ge3bd5LYuUsTmruzHtXVkwL5ndqT
+   om4fgSXcv0kk3V1kWXktJwvLtOi6XvGiObh4e4y6yU5+Hxon/ZmJgNiIm
+   4C+krKgWPcJL7R03dhMyLkH/vj72LYEeN6ETYJYBjaWX35ne1SGrYWd00
+   6E2coVT635gmEKiBb8SccwqlrvW5kv/iqbaLLhVkGPDrYzzzQQfYZeUsV
+   XwMyyKWHUo74oY4sIPXws1swT9AZ8zdJhernWDm8qZlF2I8rYRWpAyeup
+   w==;
+X-CSE-ConnectionGUID: 60iPpsI/TJqi2bDv81Xjjw==
+X-CSE-MsgGUID: attDDFnGTiSsnSD9E7K9xA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11801"; a="81092967"
 X-IronPort-AV: E=Sophos;i="6.24,175,1774335600"; 
-   d="scan'208";a="98481776"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2026 05:46:41 -0700
-X-CSE-ConnectionGUID: 7Q0VXFu1S5OXyxwepwhv/A==
-X-CSE-MsgGUID: Tmn/iAW3QhuifguaSATNwg==
+   d="scan'208";a="81092967"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2026 05:48:20 -0700
+X-CSE-ConnectionGUID: U45MxQSeSeayqC7nDdmzOw==
+X-CSE-MsgGUID: lttKo//4TxeWrxIwEzQrzg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.24,175,1774335600"; 
-   d="scan'208";a="242940030"
-Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
-  by orviesa009.jf.intel.com with ESMTP; 29 May 2026 05:46:36 -0700
-Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
+   d="scan'208";a="240294353"
+Received: from lkp-server01.sh.intel.com (HELO f0d55cb201f0) ([10.239.97.150])
+  by fmviesa008.fm.intel.com with ESMTP; 29 May 2026 05:48:16 -0700
+Received: from kbuild by f0d55cb201f0 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wSwbi-000000000tV-1M5I;
-	Fri, 29 May 2026 12:46:34 +0000
-Date: Fri, 29 May 2026 14:45:47 +0200
+	id 1wSwdI-000000007EM-3wbN;
+	Fri, 29 May 2026 12:48:12 +0000
+Date: Fri, 29 May 2026 20:47:17 +0800
 From: kernel test robot <lkp@intel.com>
 To: Yury Norov <ynorov@nvidia.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
@@ -58,7 +58,7 @@ To: Yury Norov <ynorov@nvidia.com>,
 	Gregory Price <gourry@gourry.net>,
 	Ying Huang <ying.huang@linux.alibaba.com>,
 	Alistair Popple <apopple@nvidia.com>, linux-kernel@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+Cc: oe-kbuild-all@lists.linux.dev,
 	Linux Memory Management List <linux-mm@kvack.org>,
 	Yury Norov <ynorov@nvidia.com>,
 	Farhad Alemi <farhad.alemi@berkeley.edu>,
@@ -67,7 +67,7 @@ Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
 	cgroups@vger.kernel.org
 Subject: Re: [PATCH] mm: don't allow empty relative nodemask in
  mpol_relative_nodemask()
-Message-ID: <202605291432.MbAf9EG6-lkp@intel.com>
+Message-ID: <202605292049.eaIv99hr-lkp@intel.com>
 References: <20260528190337.878027-1-ynorov@nvidia.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -89,24 +89,27 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Yury-Norov/mm-don-t-allow
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
 patch link:    https://lore.kernel.org/r/20260528190337.878027-1-ynorov%40nvidia.com
 patch subject: [PATCH] mm: don't allow empty relative nodemask in mpol_relative_nodemask()
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260529/202605291432.MbAf9EG6-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260529/202605291432.MbAf9EG6-lkp@intel.com/reproduce)
+config: sparc64-randconfig-002-20260529 (https://download.01.org/0day-ci/archive/20260529/202605292049.eaIv99hr-lkp@intel.com/config)
+compiler: sparc64-linux-gcc (GCC) 8.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260529/202605292049.eaIv99hr-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202605291432.MbAf9EG6-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202605292049.eaIv99hr-lkp@intel.com/
 
 All warnings (new ones prefixed by >>):
 
->> mm/mempolicy.c:377:3: warning: void function 'mpol_relative_nodemask' should not return a value [-Wreturn-mismatch]
-     377 |                 return -EINVAL;
-         |                 ^      ~~~~~~~
-   1 warning generated.
+   mm/mempolicy.c: In function 'mpol_relative_nodemask':
+>> mm/mempolicy.c:377:10: warning: 'return' with a value, in function returning void
+      return -EINVAL;
+             ^
+   mm/mempolicy.c:370:13: note: declared here
+    static void mpol_relative_nodemask(nodemask_t *ret, const nodemask_t *orig,
+                ^~~~~~~~~~~~~~~~~~~~~~
 
 
-vim +/mpol_relative_nodemask +377 mm/mempolicy.c
+vim +/return +377 mm/mempolicy.c
 
    369	
    370	static void mpol_relative_nodemask(nodemask_t *ret, const nodemask_t *orig,
