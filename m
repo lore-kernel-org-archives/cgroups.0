@@ -1,179 +1,163 @@
-Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A72D73DD50D
-	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 21:14:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EB023B47D7
+	for <cgroups@vger.kernel.org>; Fri, 29 May 2026 21:28:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780089266; cv=none; b=qH0fbc4vjVLh0dzRZkXuV2Gpnn8PGF8wE2a9wTEgUF/cqhpr3ulTMe2Pvtj35AMeswC/pEiGdBIDL+Jzf7+qtx8E/N2ER5l/VxMjHm+4xC+qx2Pbg3xiR0y3cn4BTEGvjgHVHTlEm8zATwCiY+TiuQB4wFqMiHKo1kG3YomSDPI=
+	t=1780090134; cv=none; b=sNnV6YEueAtLLes3n/KNZIuzjHMdmeUShd3LmkFxePrg11tuD7E9oMmf+7GQE1Zfft6a/u0TSqKsf4Jtgoply8KwqnWQepnDQT4KK0yC0cts80L5BB+aQHaO1/qfxVAJmPvNfj2gD7lXWJrqjec2QI/zfXkB8c4BKS6Susxhp8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780089266; c=relaxed/simple;
-	bh=IXJ/fW4v6YEmX7UdLSm5aasq+tpsSacfX7N/jI01lJ4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bSwVrJVd1jtDnhjndEY7c8YfFeQwDDMjw+/IkWkQRfOcDmRHrmhebjExopq0CUY3pQw2Lh6uXF2LUBn7UPw6Hkkyiqve4bXxYbQ0LYXWNBEzo3j8VvsX3I5ZPUD8VZbm8y3pWroP/qD4WF11wQcMltycoOe12JzhvSyPosq4Lfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mt5q4yEc; arc=none smtp.client-ip=95.215.58.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1780090134; c=relaxed/simple;
+	bh=dauKbPjpI0fNqAAsQtAR1VwjFqQ0hhG0aIcjoX2j3b8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=s6HCOsqquyvXKQ5CILq+QipHVi3TmfvlWkUcIDw37t7EwgWo+bcun6mBPo9B1R3G1rFlCPr3QxT4c2Uv04FqG7EK0tT9deB4CeqrqQILqc7UEBgv9VysnDhmUJX0VNv/c/ZK/tt2Fp14jEPoSxLCx7A03b/5djRFJU1KU2uCOIs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fgyJ4OTL; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mt5q4yEc"
-Message-ID: <ea3c6ed3-5d15-436e-9fa7-2e2d8ce26147@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1780089261;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fgyJ4OTL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1780090132;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=oAkmbr+OI++HT8zsiLOhQzkwD5SiBfLNC0Gds70M4nY=;
-	b=mt5q4yEcPHtz7/eDy+xc2Vjji6Z2FAwQXP1TLiEVesrvtL99oHtEKHzUHGuh93A/yi91eS
-	YiVAZ+d6XuV9IeDDAc8/WJcRRvbDJT2CXoEY6xjhgPrH6nop2Z4llc2X2YzMfoP4lkt2un
-	yJWDRmhyF54o2f5pR5xBWcZG/dijcZA=
-Date: Fri, 29 May 2026 14:14:11 -0700
+	bh=pGtNVc/HlFeIKiY6aBuwFV5+Ml3YH/UwqpIoqUttfKI=;
+	b=fgyJ4OTLrZvviL4gycnYXqyR1tKffh/wtyP82bCEFyZKmICgSQ3pyT3yLfj3WoKkfP3Rpy
+	6R4w3nbP5Lx76+UeLG/ZXadAcrKoK84OKYouK+OTvxC8u6v6ouGiLyP3bJ7e4Tkc5S4VGG
+	9SWzH8sW4wV0ASNOlQ7Yr11QS04to5E=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-347-NrVAW1A9OU6lM4osxMxLKQ-1; Fri,
+ 29 May 2026 17:28:50 -0400
+X-MC-Unique: NrVAW1A9OU6lM4osxMxLKQ-1
+X-Mimecast-MFC-AGG-ID: NrVAW1A9OU6lM4osxMxLKQ_1780090129
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E304619560BB;
+	Fri, 29 May 2026 21:28:48 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.64.54])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C448F19560A3;
+	Fri, 29 May 2026 21:28:46 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Chen Ridong <chenridong@huaweicloud.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Guopeng Zhang <guopeng.zhang@linux.dev>,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH-next v4 2/6] cgroup/cpuset: Add a cpuset_reserve_dl_bw() helper
+Date: Fri, 29 May 2026 17:21:04 -0400
+Message-ID: <20260529212108.120506-3-longman@redhat.com>
+In-Reply-To: <20260529212108.120506-1-longman@redhat.com>
+References: <20260529212108.120506-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH rdma-next v2 0/3] cgroup/rdma: add MR memory size resource
- tracking
-To: Tao Cui <cui.tao@linux.dev>, tj@kernel.org, hannes@cmpxchg.org,
- mkoutny@suse.com, leon@kernel.org, jgg@ziepe.ca
-Cc: linux-rdma@vger.kernel.org, cgroups@vger.kernel.org,
- Tao Cui <cuitao@kylinos.cn>
-References: <20260529090733.2242822-1-cui.tao@linux.dev>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "yanjun.zhu" <yanjun.zhu@linux.dev>
-In-Reply-To: <20260529090733.2242822-1-cui.tao@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 5/29/26 2:07 AM, Tao Cui wrote:
-> From: Tao Cui <cuitao@kylinos.cn>
-> 
-> Currently the RDMA cgroup only tracks two aggregate counters:
-> hca_handle and hca_object.  The real scarce resource in multi-tenant
-> deployments is pinned memory: how much physical memory gets registered
-> through MRs.  The existing hca_object counter is too coarse to capture
-> this.
-> 
-> This series adds a single new resource type:
-> 
->    - mr_mem  - Cumulative MR memory size in bytes
-> 
-> The per-object-type counters (qp, mr) from RFC v1 have been removed
-> per review feedback [1]: modern NICs pool objects from the same memory
-> pool so the distinction between QP count and MR count is not
-> meaningful for resource limiting.  hca_object remains sufficient for
-> coarse object accounting.
-> 
-> After this series, an administrator can set limits like:
-> 
->      echo "mlx5_0 mr_mem=1073741824" > rdma.max
-> 
+Extract the DL bandwidth allocation code in cpuset_attach() to a new
+cpuset_reserve_dl_bw() helper to simplify code.
 
-Hi,
+No functional change is expected.
 
-Thanks for the patchset! Introducing `mr_mem` to track and limit pinned
-memory size is a very practical enhancement for multi-tenant deployments.
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ kernel/cgroup/cpuset.c | 53 ++++++++++++++++++++++++------------------
+ 1 file changed, 30 insertions(+), 23 deletions(-)
 
-I have a question regarding how this new resource type interacts with
-Fast Registration (FRWR / FRMR), which is widely used in production
-environments (e.g., NVMe-oF, iSER) to achieve high performance.
-
-As we know, FRWR decouples the MR object allocation (`ib_alloc_mr`) from
-the actual memory page mapping (`ib_map_mr_sg`). The creation of FRWR
-Memory Regions is often managed via a pre-allocated page pool.
-
-Could you clarify how `mr_mem` accounts for FRWR in the following scenarios?
-
-1. Accounting Granularity: Does `mr_mem` charge the maximum capacity of
-    the FRWR object at its allocation time (`ib_alloc_mr`), or does it
-    dynamically track the actual mapped bytes during the fast-reg data 
-path? If it's the former, it represents a "static maximum budget" per 
-pool, which seems more practical for performance.
-
-2. Kernel-space vs Userspace: FRWR pools are frequently allocated by
-    kernel-space drivers (like NVMe-oF target/host). If these kernel
-    threads are not bound to a specific user cgroup, will their FRWR
-    allocations end up in the root cgroup, potentially bypassing the
-    per-tenant limits?
-
-Don't you think it would be beneficial to explicitly document or 
-consider the FRWR pattern in the design section, given its prevalence in
-real-world storage and networking workloads?
-
-Thanks,
-Zhu Yanjun
-
-> Design
-> ~~~~~~
-> 
-> mr_mem is not page-level ownership tracking; it is object-based
-> accounting tied to the MR lifetime:
-> 
->    - charged at MR registration time
->    - uncharged at MR destruction time
->    - the charge is pinned to the cgroup that created the MR for the
->      entire lifetime of the MR object
-> 
-> This model intentionally defines accounting semantics around MR
-> object lifetime rather than page ownership:
-> 
-> 1. fork(): fork() does not duplicate MR objects.  Even though the
->     child inherits the uverbs fd and can access the parent's ucontext,
->     the MR remains a single kernel object.  The charge is tied to the
->     MR object, not to the number of processes that can reach it, so
->     no splitting or re-accounting is needed.
-> 
-> 2. Cgroup migration: mr_mem follows the same semantics as the existing
->     hca_object; charge at creation time against the invoking task's
->     cgroup, uncharge at destruction time.  The RDMA cgroup does not
->     implement can_attach/attach callbacks today, so charges do not
->     migrate with the task.  This is a known limitation that applies
->     equally to hca_handle and hca_object.  mr_mem does not introduce
->     any new complication here.
-> 
-> 3. Overlap with memory cgroup: mr_mem does not count process memory
->     usage; it represents a per-device DMA registration budget: the
->     amount of memory this cgroup may register through a given HCA.
->     This is a different dimension from what memory cgroup tracks.  An
->     administrator might set mr_mem limits differently per device, which
->     memory cgroup cannot express.
-> 
->     In particular, mr_mem tracks the registered memory range associated
->     with the MR rather than exact dynamically pinned pages (e.g. for
->     ODP MRs).  This is a stable, policy-oriented approximation of
->     registration footprint, not an attempt at precise physical page
->     accounting.
-> 
-> Tao Cui (3):
->    cgroup/rdma: extend charge/uncharge API with s64 amount parameter
->    cgroup/rdma: add MR memory size resource tracking
->    cgroup/rdma: update cgroup resource list for MR_MEM
-> 
->   Documentation/admin-guide/cgroup-v2.rst       |  21 ++--
->   drivers/infiniband/core/cgroup.c              |  10 +-
->   drivers/infiniband/core/core_priv.h           |  12 +-
->   drivers/infiniband/core/rdma_core.c           |  20 +++-
->   drivers/infiniband/core/uverbs_cmd.c          |  61 +++++++++-
->   drivers/infiniband/core/uverbs_std_types_mr.c |  37 ++++++
->   include/linux/cgroup_rdma.h                   |   8 +-
->   include/rdma/ib_verbs.h                       |   1 +
->   kernel/cgroup/rdma.c                          | 108 +++++++++++++-----
->   9 files changed, 219 insertions(+), 59 deletions(-)
-> 
-> ---
-> Changes from RFC v1:
-> 
->    - Removed RDMACG_RESOURCE_QP and RDMACG_RESOURCE_MR per-type
->      counters following review feedback from Jason Gunthorpe [1].
->    - Retained only RDMACG_RESOURCE_MR_MEM as the sole new resource.
->    - Added detailed semantic notes to the commit messages addressing
->      fork(), cgroup migration, and overlap with memory cgroup [2].
->    - Renamed patches to reflect the narrower scope.
-> 
-> [1] https://lore.kernel.org/all/20260525134314.GI7702@ziepe.ca/
-> [2] https://lore.kernel.org/all/20260528075537.2170697-1-cuitao@kylinos.cn/
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 961427cd83a5..a6f191b48529 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2992,6 +2992,25 @@ static int cpuset_can_attach_check(struct cpuset *cs)
+ 	return 0;
+ }
+ 
++static int cpuset_reserve_dl_bw(struct cpuset *cs)
++{
++	int cpu, ret;
++
++	if (!cs->sum_migrate_dl_bw)
++		return 0;
++
++	cpu = cpumask_any_and(cpu_active_mask, cs->effective_cpus);
++	if (unlikely(cpu >= nr_cpu_ids))
++		return -EINVAL;
++
++	ret = dl_bw_alloc(cpu, cs->sum_migrate_dl_bw);
++	if (ret)
++		return ret;
++
++	cs->dl_bw_cpu = cpu;
++	return 0;
++}
++
+ static void reset_migrate_dl_data(struct cpuset *cs)
+ {
+ 	cs->nr_migrate_dl_tasks = 0;
+@@ -3006,7 +3025,7 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 	struct cpuset *cs, *oldcs;
+ 	struct task_struct *task;
+ 	bool setsched_check;
+-	int cpu, ret;
++	int ret;
+ 
+ 	/* used later by cpuset_attach() */
+ 	cpuset_attach_old_cs = task_cs(cgroup_taskset_first(tset, &css));
+@@ -3062,31 +3081,19 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 		}
+ 	}
+ 
+-	if (!cs->sum_migrate_dl_bw)
+-		goto out_success;
+-
+-	cpu = cpumask_any_and(cpu_active_mask, cs->effective_cpus);
+-	if (unlikely(cpu >= nr_cpu_ids)) {
+-		ret = -EINVAL;
+-		goto out_unlock;
+-	}
+-
+-	ret = dl_bw_alloc(cpu, cs->sum_migrate_dl_bw);
+-	if (ret)
+-		goto out_unlock;
+-
+-	cs->dl_bw_cpu = cpu;
+-
+-out_success:
+-	/*
+-	 * Mark attach is in progress.  This makes validate_change() fail
+-	 * changes which zero cpus/mems_allowed.
+-	 */
+-	cs->attach_in_progress++;
++	ret = cpuset_reserve_dl_bw(cs);
+ 
+ out_unlock:
+-	if (ret)
++	if (ret) {
+ 		reset_migrate_dl_data(cs);
++	} else {
++		/*
++		 * Mark attach is in progress.  This makes validate_change() fail
++		 * changes which zero cpus/mems_allowed.
++		 */
++		cs->attach_in_progress++;
++	}
++
+ 	mutex_unlock(&cpuset_mutex);
+ 	return ret;
+ }
+-- 
+2.54.0
 
