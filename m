@@ -1,48 +1,48 @@
-Received: from xmbghk7.mail.qq.com (xmbghk7.mail.qq.com [43.163.128.48])
+Received: from xmbghk7.mail.qq.com (xmbghk7.mail.qq.com [43.163.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B9BE3438BD;
-	Fri, 29 May 2026 12:19:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=43.163.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868173E00BA;
+	Fri, 29 May 2026 12:19:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=43.163.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780057183; cv=none; b=OKFcv5ewCkaTdaR/5+GnoTDV9dt6jM7xyy0eAQhfEx2oFmVxF068lSrZeCPafcqo+5gsbefaJvpEGqcgCWAXme5vAOlm5GUeWU7hnDjoinkJqvKzy1zNO2n1UPos7vljiwj/3J3Ue4LD6yvdU6KRP0ou9NBYHgnE01ffAVkNG3M=
+	t=1780057184; cv=none; b=pybA6eqq9aDNNG3nxM5M6M9eWapPSe4T8cavL3X51X+gno/ZU9SjNHFmIdFptxSd5s2Va0yvw3AXTJLggWzs3X5aXn0yNeb+940gmOuSoCqhLq8LgIddqXsZNUXYemaj2rXvOl/TZT+gTdbbIW+MHvU+M3akU22C/RqdcMQARWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780057183; c=relaxed/simple;
-	bh=IJIhxNj6wWIRUVVmjKYBMeKl3sJ/RkXIW4Hu88GF9gE=;
+	s=arc-20240116; t=1780057184; c=relaxed/simple;
+	bh=/K2wG6zQbNZTvESItts/W7FuL5ZTh3gamKmzdrcQRVM=;
 	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=Pqz2tQMM+4HOdlTjWH3oOqkimIk+E5iqyimD93/K6c/VVR3Uvv1zO2hEXIyIPWVVv/FgwVViSbjzyKR39rp4YfEFunX2r2+7aonI6XLZ5whmAeUKlSETanzaQrGiedbfFE4lq94z+F4cpNDpU+2zX6Ls/opYcS6uQOj5dim9O7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=h+Xilcb+; arc=none smtp.client-ip=43.163.128.48
+	 MIME-Version; b=HsTrGrLaJhFIOw+ekWO5NVk1EWyTZKM1nR4xBkaDSj6o69WxGGyOrlJ+ndM2LztZTqnIeIIeD+iVVZajW/kWEJyDmULeYuE2DB3iHgHuB5sKbxBRIFiDHGOAyDTrYEEkUT7fWBO9dptZbg7l6nS7Ur/bwC1ppxIUniieMLCq1vU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=M7hGKodZ; arc=none smtp.client-ip=43.163.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="h+Xilcb+"
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="M7hGKodZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1780057179; bh=e9pDd68+wLvH4AeGJEXTLZCNqdsKkVQuDmz0y/Qyl40=;
+	t=1780057175; bh=xut7uEA2LcmM4LrlZiZ/byyWZ1r0WI1YSP1vZ4Egj64=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=h+Xilcb+Fe2a+TdyND9eRmzpcWn65K1nBdf+U1Tcpxrle9mkaWuaGs92Dj7+4Gyqu
-	 E5kqBNXOpgr4kNi7T3fhli4vTM6GVQ2gt42yEsJ1O+AzgjDPfPS6p4L/Zf9KtjNZMy
-	 Bx2TH95F4j3um3bRRG5JuxuisRPgCw5F6ZQVWuXw=
+	b=M7hGKodZsqPkt26jzW2LkQsc6xsh6OEcmg69gQ4tmGWLrp4MG/I8hglTllW2D/G6I
+	 hJYW3mcxbVoEaTUTBlDhm/wscJUy0CZq0IvnfiT+rCGPsbS8LQLTRJMzJVtFrvPmcH
+	 lZ3jATB+1ppOf+u95kPUyGtBEDxKAsX+KNDcWsI0=
 Received: from node68.. ([166.111.236.25])
 	by newxmesmtplogicsvrsza73-0.qq.com (NewEsmtp) with SMTP
 	id 4DC10017; Fri, 29 May 2026 20:19:28 +0800
-X-QQ-mid: xmsmtpt1780057176tr24p40mn
-Message-ID: <tencent_69E7033C2446FE6E922D28B82E9F59142D09@qq.com>
-X-QQ-XMAILINFO: NcJw5CIirWgGxMPMMf2Xe4hBEBXn4hAHfolRSxm6+zPzISbV8Hly/4GctJa4j0
-	 /Zwax7rBPKgCvjRhIpWIEMfK/hLRiJNnJv5iYpCP8i5S5K3nMVpulonB9o0ul+xA9hcQ0mx+X+85
-	 2NJdkYsR/B9ahT5scviN33mGJYnW4QltRFCRA/lTjDQyeTozqDPEHYSzmODT52L4xGBHcR4WnJaF
-	 NhiOv+sE1NQE9qdszpvr0iVpMg8Pg4hGvHwTZAYU/iWhgHiNF55eMcX50UFh1lRdS/1nkur5lydG
-	 FLVGBLwrVzv+ga0RF6bxF7z4ZioHDKh0OD31pp0hlwJyixBEswr0ReNnl/sQqaY5YJqwyMEfdekZ
-	 BxIHOMNKyY9mOQOAFul5mbS43GsrLLEZHPI3LG3oHH9JFzJCLc7NBbvGNyw2ymKgu5pYqJcFhPYg
-	 kqyDna8DHjyvVjont2VGFEVUjYSRU2XMZZWUA9y+4pG8beI1CPfssyimdEl6HmNaMfyxfF9t/3Yc
-	 tEF5zoBXdSUa77Ch8bC1GoOt1OsGGkoANEY+PUbZ2Euob8C4ZQXrFYl8TfFBPIw6vFsbr0zBx+bg
-	 kLjBaUboDP11xAE1vE1nGBGjt9PGzGtCxUfbzmwXXnXOrhjRPzBOCj4gsNWALJu4p7eL21EPDvmQ
-	 yfjvioRg6edGBBhgP+AUxlOWr30REOTMsq1ImSZqKgUENMxZdrua4namZUD2CBC0ig8kQu7LKTnG
-	 GgNKS3nkTVMEYshUKswxb8TGE/0LPku+SBz63hq8MjjbqqDvDG62UnFwV9QAYSYmgo/iK7qkwQyv
-	 Kpug2b7ABBs7Ngszgk0QwvkTIIEMLxv3f+VgAERJ2tQLbyc6++FXndclzN1PUsN64zhsQvfNabqE
-	 Y+vXnSkAEg914R0pjjmh1S0keSAE5pBD+4U2HAZ4NDfZSLV9QsnaOzuy0CYJj0fEDjpSVjTRUFRC
-	 NuZ8cFSN+FpmpCHw9H+z+PS6RIuqlUi3KihEhPHgtzjuv+AgbUeKiC4tZfg6FUWgmuP4QpqeST3T
-	 uVTGS3pWJ1c3t/Vd5ezCpKIta1kwPhccBSJQYQaFnXzjMy7UEUUwf1rvHM7Ih/TUBiGqSBww==
-X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+X-QQ-mid: xmsmtpt1780057172tac6i9zgh
+Message-ID: <tencent_7D186EDC2C9AB9009F9915C1E68F3CF44609@qq.com>
+X-QQ-XMAILINFO: OATpkVjS499uNEtWMEQWZx4ULda/MSJcXY82UGEO/ENJfG6dAYdIxvNqNQ/4b5
+	 NHjOLjOuuAhYF6UBBQoNqJg19p5N8mZHmqoquhVxAR/rlpLMCNtE3cRRk9CUve/AaHFTV6ZXFrU3
+	 yeqjsTFYNmxR+Z6ruyX+zd/HCdJUErIf/ytbubdXHsfjzdlwKC1+WwOAEbqwvha+9rvrow2rlZ2r
+	 de35kdqnkk62m40gvQ4nKczdt55wpV+TC4gARpND2xGdEurKCsJ8ux8fsuUiB7GEdHs/C5viEize
+	 xmxKjD++Fcux8yvlWSQsA+J8j8RkKagftsl+/BnbAxzpWzPs02kQMxZ+nhwPWT6L62yhP7VIEvbz
+	 CkqqQPROLBg6XEQolIGukrp1iM98/n44SQQIILHJ5fjF1SInNRBDHJosBvHLYwqAf6x03xGGvZs4
+	 A7QAvojdiXMbu4s6ZgPuGbcFWgt3PZQZvy4LTi03VfZdMn1ON+rEupb+q2TmFCuGGCM3FLnyg8O+
+	 BrqU2yUT9YIXuLRkkjnDgpeIGjYYHBcj11odwImoAlTec1N+FbGQYCTAiClAYDu+9W5PMQvC66LE
+	 ZbqeY6hgPE25rj8FfQ3JgHzKe9zepNn7LcyjFNIIVz0mfZvkvS6GVDM+KVt6IHDAKV7cGqnC7Hu7
+	 8HF0j5RzVfZKlrIV30lt/445qaD/GXFN/Y4Q/gfCHl40YOw8FOSQP53iNY/9c8LZ5YbbFSxsU3UA
+	 25Y7kBdc/3U64ORJ+85DGz0ruorUU8kHUl+0iNtnmJMMadp8+U/ivsXcbmbAXawixcUSqoSBKJ6j
+	 rJcqAsEFIf63tN7SZdkbIP/DApDQW43Kf6872Ux5u3nWN6ihONCF+JR2GfLg+0CXpX+weqLikMAJ
+	 1gQ/QN5S0UITTDoA7uJfSDz6pM2/u0J79ZiI0FKqKF41ZN20jVKFqt7R4WzMgjmBgB+1b4+z9fHJ
+	 9NGej8Q9WFPgKD80I4VxxNc0qkjqriULetfmT1SM8IHDf83DRec0I18+2d8zcnDVlTsvTz+0O91n
+	 OkhSF9Zac1BqRyUOPDKLT3IJa6Fe6SIy/9nQlOyxcwYknlSNNh
+X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
 From: fujunjie <fujunjie1@qq.com>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	linux-mm@kvack.org,
@@ -59,9 +59,9 @@ Cc: Chris Li <chrisl@kernel.org>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org
-Subject: [RFC PATCH v2 5/9] mm: add common locality admission for zswap large swapin
-Date: Fri, 29 May 2026 12:19:24 +0000
-X-OQ-MSGID: <20260529121928.4115683-5-fujunjie1@qq.com>
+Subject: [RFC PATCH v2 3/9] mm/zswap: support fully zswap-backed large folio loads
+Date: Fri, 29 May 2026 12:19:22 +0000
+X-OQ-MSGID: <20260529121928.4115683-3-fujunjie1@qq.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <tencent_98CD9F78E48D08DC005A6471A13CFF28B60A@qq.com>
 References: <tencent_98CD9F78E48D08DC005A6471A13CFF28B60A@qq.com>
@@ -73,263 +73,197 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Fully zswap-backed ranges are safe to load as a large folio only when
-the caller has a reason to expect the neighbouring slots to be useful.
-Otherwise a sparse refault can turn one 4K demand fault into a 64K
-decompression and swapcache fill.
+zswap currently refuses large swapcache folios. That is correct for mixed
+backend ranges, but it also prevents the common swapin path from loading a
+range that is still fully backed by zswap.
 
-Add a common admission gate for zswap-backed large swapin. The common
-layer keeps backend checks, the 64K cap, recent-refault rejection, and
-zswap reclaim-pressure rejection. It consumes a caller-provided locality
-order mask instead of looking at anon or shmem state directly.
+Teach zswap_load() to fill a locked large swapcache folio by decompressing
+each base-page entry into the matching folio offset, then flushing the
+folio once. A missing entry after zswap data has been seen is reported as
+-EAGAIN so the caller can drop the speculative large folio and retry
+order-0.
 
-Callers pass no locality evidence for now, so this patch only installs
-the common policy hook. Later patches add anon and shmem producers.
+The large load keeps the zswap entries in place. It is a clean speculative
+fill: until the swap slots are freed, zswap remains the backing copy if
+reclaim drops the large folio before PTEs are installed.
 
 Signed-off-by: fujunjie <fujunjie1@qq.com>
 ---
- mm/memory.c     |   2 +-
- mm/shmem.c      |   2 +-
- mm/swap.h       |   8 ++--
- mm/swap_state.c | 118 ++++++++++++++++++++++++++++++++++++++++++++----
- 4 files changed, 117 insertions(+), 13 deletions(-)
+ mm/zswap.c | 105 ++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 87 insertions(+), 18 deletions(-)
 
-diff --git a/mm/memory.c b/mm/memory.c
-index d73a19692dea..92a82008d583 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4849,7 +4849,7 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 		if (data_race(si->flags & SWP_SYNCHRONOUS_IO))
- 			folio = swapin_sync(entry, GFP_HIGHUSER_MOVABLE,
- 					    thp_swapin_suitable_orders(vmf) | BIT(0),
--					    vmf, NULL, 0);
-+					    0, vmf, NULL, 0);
- 		else
- 			folio = swapin_readahead(entry, GFP_HIGHUSER_MOVABLE, vmf);
+diff --git a/mm/zswap.c b/mm/zswap.c
+index da5297f7bd69..94ba112a2982 100644
+--- a/mm/zswap.c
++++ b/mm/zswap.c
+@@ -15,6 +15,8 @@
  
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 56c23a7b15c7..fa99b48ed62b 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -2031,7 +2031,7 @@ static struct folio *shmem_swap_alloc_folio(struct inode *inode,
- 
- again:
- 	mpol = shmem_get_pgoff_policy(info, index, order, &ilx);
--	folio = swapin_sync(entry, gfp, BIT(order), vmf, mpol, ilx);
-+	folio = swapin_sync(entry, gfp, BIT(order), 0, vmf, mpol, ilx);
- 	mpol_cond_put(mpol);
- 
- 	if (!IS_ERR(folio))
-diff --git a/mm/swap.h b/mm/swap.h
-index ea7e1f3c4410..dd35a310d06d 100644
---- a/mm/swap.h
-+++ b/mm/swap.h
-@@ -323,9 +323,10 @@ struct folio *read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
- struct folio *swap_cluster_readahead(swp_entry_t entry, gfp_t flag,
- 		struct mempolicy *mpol, pgoff_t ilx);
- struct folio *swapin_readahead(swp_entry_t entry, gfp_t flag,
--		struct vm_fault *vmf);
-+			struct vm_fault *vmf);
- struct folio *swapin_sync(swp_entry_t entry, gfp_t flag, unsigned long orders,
--			   struct vm_fault *vmf, struct mempolicy *mpol, pgoff_t ilx);
-+			  unsigned long locality_orders, struct vm_fault *vmf,
-+			  struct mempolicy *mpol, pgoff_t ilx);
- void swap_update_readahead(struct folio *folio, struct vm_area_struct *vma,
- 			   unsigned long addr);
- 
-@@ -418,7 +419,8 @@ static inline struct folio *swapin_readahead(swp_entry_t swp, gfp_t gfp_mask,
- 
- static inline struct folio *swapin_sync(
- 	swp_entry_t entry, gfp_t flag, unsigned long orders,
--	struct vm_fault *vmf, struct mempolicy *mpol, pgoff_t ilx)
-+	unsigned long locality_orders, struct vm_fault *vmf,
-+	struct mempolicy *mpol, pgoff_t ilx)
- {
- 	return NULL;
- }
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index f03ad4832f16..5a4ca289009a 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -21,6 +21,7 @@
- #include <linux/migrate.h>
- #include <linux/vmalloc.h>
- #include <linux/huge_mm.h>
-+#include <linux/sizes.h>
- #include <linux/zswap.h>
- #include <linux/shmem_fs.h>
- #include "internal.h"
-@@ -556,6 +557,24 @@ static struct folio *swap_cache_alloc_speculative_folio(swp_entry_t targ_entry,
- 					mpol, ilx, true);
+ #include <linux/module.h>
+ #include <linux/cpu.h>
++#include <linux/mm.h>
++#include <linux/huge_mm.h>
+ #include <linux/highmem.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+@@ -934,7 +936,8 @@ static bool zswap_compress(struct page *page, struct zswap_entry *entry,
+ 	return comp_ret == 0 && alloc_ret == 0;
  }
  
-+/*
-+ * Initial conservative cap for speculative zswap large swapin. Locality
-+ * evidence is supplied by the caller or by generic VMA hints; the common
-+ * swapin layer keeps backend safety and pressure decisions here.
-+ */
-+#define SWAPIN_ZSWAP_MAX_SIZE			SZ_64K
-+#if PAGE_SIZE < SWAPIN_ZSWAP_MAX_SIZE
-+#define SWAPIN_ZSWAP_MAX_ORDER			\
-+	ilog2(SWAPIN_ZSWAP_MAX_SIZE / PAGE_SIZE)
-+#else
-+#define SWAPIN_ZSWAP_MAX_ORDER			0
-+#endif
-+
-+struct zswap_admit_ctx {
-+	bool pressure_checked;
-+	bool reclaim_pressure;
-+};
-+
- static bool swapin_zeromap_same(swp_entry_t entry, unsigned int nr_pages)
+-static bool zswap_decompress(struct zswap_entry *entry, struct folio *folio)
++static bool zswap_decompress(struct zswap_entry *entry, struct folio *folio,
++			     unsigned int page_idx, bool flush_dcache)
  {
- 	unsigned int ci_start = swp_cluster_offset(entry);
-@@ -586,11 +605,84 @@ static bool swapin_zeromap_same(swp_entry_t entry, unsigned int nr_pages)
- 	return true;
- }
+ 	struct zswap_pool *pool = entry->pool;
+ 	struct scatterlist input[2]; /* zsmalloc returns an SG list 1-2 entries */
+@@ -952,14 +955,15 @@ static bool zswap_decompress(struct zswap_entry *entry, struct folio *folio)
  
-+static bool swapin_zswap_locality(struct vm_fault *vmf, unsigned int order,
-+				  unsigned long locality_orders)
-+{
-+	struct vm_area_struct *vma = vmf ? vmf->vma : NULL;
-+
-+	if (!order || order > MAX_PAGE_ORDER)
-+		return false;
-+
-+	if (vma && (vma->vm_flags & VM_RAND_READ))
-+		return false;
-+
-+	return locality_orders & BIT(order);
-+}
-+
-+static bool swapin_zswap_refaulted(swp_entry_t entry, unsigned int nr_pages)
-+{
-+	unsigned int type = swp_type(entry);
-+	pgoff_t offset = swp_offset(entry);
-+	unsigned int i;
-+
-+	for (i = 0; i < nr_pages; i++) {
-+		bool workingset;
-+		void *shadow;
-+
-+		shadow = swap_cache_get_shadow(swp_entry(type, offset + i));
-+		if (!shadow)
-+			continue;
-+		if (workingset_test_recent(shadow, false, &workingset, false) &&
-+		    workingset)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+static bool swapin_zswap_admit(swp_entry_t entry,
-+			       unsigned int order, unsigned int nr_pages,
-+			       struct vm_fault *vmf,
-+			       unsigned long locality_orders,
-+			       struct zswap_admit_ctx *ctx)
-+{
-+	if (order > SWAPIN_ZSWAP_MAX_ORDER)
-+		return false;
-+
-+	/*
-+	 * Treat zswap-backed large swapin as speculative. The common layer
-+	 * consumes caller-provided locality orders, but does not inspect
-+	 * anon-specific PTE state or shmem-specific mapping state directly.
-+	 */
-+	if (!swapin_zswap_locality(vmf, order, locality_orders))
-+		return false;
-+
-+	/*
-+	 * A recent workingset refault shadow in the target range means reclaim
-+	 * already saw churn there. Keep the refault path narrow instead of
-+	 * speculatively decompressing neighbouring slots.
-+	 */
-+	if (swapin_zswap_refaulted(entry, nr_pages))
-+		return false;
-+
-+	if (!ctx->pressure_checked) {
-+		ctx->reclaim_pressure = zswap_pool_reclaim_pressure();
-+		ctx->pressure_checked = true;
-+	}
-+	if (ctx->reclaim_pressure)
-+		return false;
-+
-+	return true;
-+}
-+
- static unsigned long swapin_admit_orders(swp_entry_t entry,
--					 unsigned long orders)
-+					 unsigned long orders,
-+					 struct vm_fault *vmf,
-+					 unsigned long locality_orders)
- {
- 	unsigned long candidates = orders & ~BIT(0);
- 	unsigned long admitted = orders & BIT(0);
-+	struct zswap_admit_ctx zswap_ctx = {};
- 	int order;
+ 		WARN_ON_ONCE(input->length != PAGE_SIZE);
  
- 	if (!candidates)
-@@ -616,9 +708,14 @@ static unsigned long swapin_admit_orders(swp_entry_t entry,
+-		dst = kmap_local_folio(folio, 0);
++		dst = kmap_local_folio(folio, page_idx * PAGE_SIZE);
+ 		memcpy_from_sglist(dst, input, 0, PAGE_SIZE);
+ 		dlen = PAGE_SIZE;
+ 		kunmap_local(dst);
+-		flush_dcache_folio(folio);
++		if (flush_dcache)
++			flush_dcache_folio(folio);
+ 	} else {
+ 		sg_init_table(&output, 1);
+-		sg_set_folio(&output, folio, PAGE_SIZE, 0);
++		sg_set_folio(&output, folio, PAGE_SIZE, page_idx * PAGE_SIZE);
+ 		acomp_request_set_params(acomp_ctx->req, input, &output,
+ 					 entry->length, PAGE_SIZE);
+ 		ret = crypto_acomp_decompress(acomp_ctx->req);
+@@ -1042,7 +1046,7 @@ static int zswap_writeback_entry(struct zswap_entry *entry,
+ 		goto out;
+ 	}
  
- 		state = zswap_probe_range(range_entry, nr_pages);
- 		switch (state) {
-+		case ZSWAP_RANGE_ALL_ZSWAP:
-+			admit = swapin_zswap_admit(range_entry, order,
-+						   nr_pages, vmf,
-+						   locality_orders,
-+						   &zswap_ctx);
-+			break;
- 		case ZSWAP_RANGE_MIXED:
- 			break;
--		case ZSWAP_RANGE_ALL_ZSWAP:
- 		case ZSWAP_RANGE_NEVER_ENABLED:
- 		case ZSWAP_RANGE_NO_ZSWAP:
- 			admit = true;
-@@ -769,8 +866,8 @@ static struct folio *swap_cache_read_folio(swp_entry_t entry, gfp_t gfp,
- 	ret = swap_read_folio(folio, plug);
- 	/*
- 	 * Swap readahead allocates order-0 folios. -EAGAIN is reserved for
--	 * retryable large zswap backend races and must be handled by the
--	 * synchronous common swapin path.
-+	 * retryable large zswap backend races and should never escape to this
-+	 * order-0 path.
- 	 */
- 	VM_WARN_ON_ONCE(ret == -EAGAIN);
- 	if (readahead) {
-@@ -786,6 +883,7 @@ static struct folio *swap_cache_read_folio(swp_entry_t entry, gfp_t gfp,
-  * @entry: swap entry indicating the target slot
-  * @gfp: memory allocation flags
-  * @orders: allocation orders
-+ * @locality_orders: orders with caller-provided locality evidence
-  * @vmf: fault information
-  * @mpol: NUMA memory allocation policy to be applied
-  * @ilx: NUMA interleave index, for use only when MPOL_INTERLEAVE
-@@ -794,16 +892,20 @@ static struct folio *swap_cache_read_folio(swp_entry_t entry, gfp_t gfp,
-  * existing folio in the swap cache for @entry. This initiates the IO, too,
-  * if needed. @entry is rounded down if @orders allow large allocation.
+-	if (!zswap_decompress(entry, folio)) {
++	if (!zswap_decompress(entry, folio, 0, true)) {
+ 		ret = -EIO;
+ 		goto out;
+ 	}
+@@ -1615,10 +1619,9 @@ enum zswap_range_state zswap_probe_range(swp_entry_t swp,
+  *  NOT marked up-to-date, so that an IO error is emitted (e.g. do_swap_page()
+  *  will SIGBUS).
   *
-- * Context: Caller must ensure @entry is valid and pin the swap device with refcount.
-+ * Context: Caller must ensure @entry is valid and pin the swap device with
-+ * refcount.
-  * Return: Returns the folio on success, error code if failed.
-  */
--struct folio *swapin_sync(swp_entry_t entry, gfp_t gfp, unsigned long orders,
--			   struct vm_fault *vmf, struct mempolicy *mpol, pgoff_t ilx)
-+struct folio *swapin_sync(swp_entry_t entry, gfp_t gfp,
-+			  unsigned long orders,
-+			  unsigned long locality_orders,
-+			  struct vm_fault *vmf, struct mempolicy *mpol,
-+			  pgoff_t ilx)
+- *  -EINVAL: if the swapped out content was in zswap, but the page belongs
+- *  to a large folio, which is not supported by zswap. The folio is unlocked,
+- *  but NOT marked up-to-date, so that an IO error is emitted (e.g.
+- *  do_swap_page() will SIGBUS).
++ *  -EAGAIN: if the swapped out content belongs to a large folio, but the
++ *  range is mixed or raced with writeback. The folio remains locked so the
++ *  caller can drop the large swapcache folio and retry order-0.
+  *
+  *  -ENOENT: if the swapped out content was not in zswap. The folio remains
+  *  locked on return.
+@@ -1626,9 +1629,12 @@ enum zswap_range_state zswap_probe_range(swp_entry_t swp,
+ int zswap_load(struct folio *folio)
  {
- 	struct folio *folio;
- 	int ret;
+ 	swp_entry_t swp = folio->swap;
++	unsigned int nr_pages = folio_nr_pages(folio);
++	unsigned int type = swp_type(swp);
+ 	pgoff_t offset = swp_offset(swp);
+-	struct xarray *tree = swap_zswap_tree(swp);
++	struct xarray *tree;
+ 	struct zswap_entry *entry;
++	unsigned int i;
  
--	orders = swapin_admit_orders(entry, orders);
-+	orders = swapin_admit_orders(entry, orders, vmf, locality_orders);
- again:
- 	do {
- 		folio = swap_cache_get_folio(entry);
+ 	VM_WARN_ON_ONCE(!folio_test_locked(folio));
+ 	VM_WARN_ON_ONCE(!folio_test_swapcache(folio));
+@@ -1636,21 +1642,84 @@ int zswap_load(struct folio *folio)
+ 	if (zswap_never_enabled())
+ 		return -ENOENT;
+ 
+-	/*
+-	 * Large folios should not be swapped in while zswap is being used, as
+-	 * they are not properly handled. Zswap does not properly load large
+-	 * folios, and a large folio may only be partially in zswap.
+-	 */
+-	if (WARN_ON_ONCE(folio_test_large(folio))) {
++	if (folio_test_large(folio)) {
++		struct obj_cgroup *first_objcg = NULL;
++		bool same_objcg = true;
++		bool saw_zswap = false;
++		bool saw_non_zswap = false;
++
++		/*
++		 * The locked large swapcache folio now covers the range and
++		 * conflicts with zswap writeback's order-0 swapcache allocation.
++		 * If the range is mixed or an entry disappears, retry order-0.
++		 */
++		for (i = 0; i < nr_pages; i++) {
++			tree = swap_zswap_tree(swp_entry(type, offset + i));
++			entry = xa_load(tree, offset + i);
++			if (!entry) {
++				if (saw_zswap)
++					return -EAGAIN;
++				saw_non_zswap = true;
++				continue;
++			}
++			if (saw_non_zswap)
++				return -EAGAIN;
++
++			if (!saw_zswap)
++				first_objcg = entry->objcg;
++			else if (entry->objcg != first_objcg)
++				same_objcg = false;
++			saw_zswap = true;
++		}
++		if (!saw_zswap)
++			return -ENOENT;
++
++		for (i = 0; i < nr_pages; i++) {
++			tree = swap_zswap_tree(swp_entry(type, offset + i));
++			entry = xa_load(tree, offset + i);
++			if (!entry)
++				return -EAGAIN;
++
++			if (!zswap_decompress(entry, folio, i, false)) {
++				folio_unlock(folio);
++				return -EIO;
++			}
++		}
++
++		flush_dcache_folio(folio);
++		/*
++		 * Keep zswap entries until swap slots are freed. This is a clean
++		 * speculative fill; zswap remains the backing copy if reclaim
++		 * drops the large folio before PTEs are installed.
++		 */
++		folio_mark_uptodate(folio);
++		count_vm_events(ZSWPIN, nr_pages);
++		count_mthp_stat(folio_order(folio), MTHP_STAT_SWPIN);
++
++		if (same_objcg) {
++			if (first_objcg)
++				count_objcg_events(first_objcg, ZSWPIN, nr_pages);
++		} else {
++			for (i = 0; i < nr_pages; i++) {
++				tree = swap_zswap_tree(swp_entry(type, offset + i));
++				entry = xa_load(tree, offset + i);
++				if (WARN_ON_ONCE(!entry))
++					continue;
++				if (entry->objcg)
++					count_objcg_events(entry->objcg, ZSWPIN, 1);
++			}
++		}
++
+ 		folio_unlock(folio);
+-		return -EINVAL;
++		return 0;
+ 	}
+ 
++	tree = swap_zswap_tree(swp);
+ 	entry = xa_load(tree, offset);
+ 	if (!entry)
+ 		return -ENOENT;
+ 
+-	if (!zswap_decompress(entry, folio)) {
++	if (!zswap_decompress(entry, folio, 0, true)) {
+ 		folio_unlock(folio);
+ 		return -EIO;
+ 	}
 -- 
 2.34.1
 
