@@ -1,94 +1,82 @@
-Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B5432D8DC4
-	for <cgroups@vger.kernel.org>; Tue,  2 Jun 2026 04:38:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3548829ACC5
+	for <cgroups@vger.kernel.org>; Tue,  2 Jun 2026 04:49:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780375110; cv=none; b=n6QdJSOmG0XnDyHvU/dv5oZp+JfB4IBwL5b7luPiqwPCH/wgeS4CGMSYu6DjhaYEwg7Qk+S4iOY5Ujrcna833CqA2YOkWaMM5CU8hpU57h0om9cbVPeHaISAx4sjmTBg4+XQpPj24gpsHlU1OfLkRRlplUQpW5VeGBmNh+lYOME=
+	t=1780375769; cv=none; b=VtZXfny9l/tJbxo4UUu6YVsqUAINVBU/cxCe01Nx2Jyr9G/39nksVfoyTmza5mVz0v59m5eRO4p0jANysEJkrs5fHDcQYZqWImGy8zVRqDKwuhUY9Nb8hV/ULnqhUVRHwXh2Kmx9OSPaJkcLEFzME/GR9/Lu6wpoQk016p/N7s4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780375110; c=relaxed/simple;
-	bh=DQh8SihepS/bdj/Vqb0/Ye6Gngc7/uF3vsBGv/GTXVg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d4VG5AQyTpu0jzClTWblaXp0f1CqfN2WfhAMTaO93ySGPJYSfvnmltnzCxpprTv6lYUEq0nqBeSKw2P7P1p2+S/GdTqPMRf3Ps0GJsOfcH4TYWhT7YiXRukXoz1vQRUO1KRsSaXkkjqs5ynN0+rfVNuw5nzX/SyPouVhKp9XE64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jTqW2E1O; arc=none smtp.client-ip=95.215.58.172
+	s=arc-20240116; t=1780375769; c=relaxed/simple;
+	bh=1Qrk5ZXccS97TyXCQxR52Bh8rhkslTxwBKocetfsx7s=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=hxuHqLukP2D5RapvGNhG35ma6pxYU9+qG43ueRQ4BguLwEc2/vE6kPOkGE5nuPk4uW9QILywyQezNwZwq14DIm51/zLSvSDl46HQW3XuL6zCrZP7cd/n1pmJ/r0clWDWlcudv+N7RtuTbR/+LYkZKixGPVyU1i+/w5X2NmJ7N10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LIKnJB0J; arc=none smtp.client-ip=91.218.175.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jTqW2E1O"
-Message-ID: <1dce1561-b42a-4322-a99f-89eba1e7c227@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LIKnJB0J"
+Message-ID: <39c542a0-bf0f-408c-a9ff-17b4c629bd36@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1780375107;
+	t=1780375764;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/14mXd0q1MBnuc0ydGe40mVtZmaecJq1itLWhQAj/UQ=;
-	b=jTqW2E1OzAFOKAWGc9K+vAdZbQ+j6VvpFnF5EObq7hBUO5GDclhGAbTbV06Jht+tayX7um
-	Egbg7h7ufGLgiyds8gmkt9HPomylcdCY6byqJY9Y2Ymab1HCK0uAtRGPMImqs8n/5Qotfz
-	l3671eM2Cj6zd0Ew2rimViAUVa+skV8=
-Date: Tue, 2 Jun 2026 12:38:01 +0800
+	bh=SwTLelEfiTVz4jxk36vlB7KdEqDbVGRLNUw55IfMwNs=;
+	b=LIKnJB0JYtwzfYiGNcT58DCvfqVcH8SmyLcKRYecmSyVG6oaHRCJT1odfahrDm7WBwOKjb
+	eq5gR/tYclOq1CyrqvTVG43qLHTUDO2O44DE7Bxx5bmg23DMbOTjdCR3SvZ0l2oX9f2Qsi
+	HB+rvV786I2HWEyhYWEJKGgZFSVmf0o=
+Date: Tue, 2 Jun 2026 12:49:15 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/1] mm/thp: clear deferred split shrinker bits when
- queues drain
-Content-Language: en-US
-To: akpm@linux-foundation.org, hannes@cmpxchg.org
-Cc: david@kernel.org, ljs@kernel.org, shakeel.butt@linux.dev,
- mhocko@kernel.org, david@fromorbit.com, roman.gushchin@linux.dev,
- muchun.song@linux.dev, qi.zheng@linux.dev, yosry.ahmed@linux.dev,
- ziy@nvidia.com, liam@infradead.org, usama.arif@linux.dev, kas@kernel.org,
- vbabka@kernel.org, ryncsn@gmail.com, zaslonko@linux.ibm.com,
- gor@linux.ibm.com, wangkefeng.wang@huawei.com,
- baolin.wang@linux.alibaba.com, baohua@kernel.org, dev.jain@arm.com,
- npache@redhat.com, ryan.roberts@arm.com, cgroups@vger.kernel.org,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org
-References: <20260602043453.67597-1-lance.yang@linux.dev>
+Cc: cui.tao@linux.dev, linux-kernel@vger.kernel.org,
+ Tao Cui <cuitao@kylinos.cn>, "Claude Opus 4 . 7" <noreply@anthropic.com>
+Subject: Re: [PATCH] cgroup/cpuset: Fix update_prstate() always returning 0 on
+ partition errors
+To: longman@redhat.com, chenridong@huaweicloud.com, tj@kernel.org,
+ hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org
+References: <20260602043652.2380163-1-cui.tao@linux.dev>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Lance Yang <lance.yang@linux.dev>
-In-Reply-To: <20260602043453.67597-1-lance.yang@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260602043652.2380163-1-cui.tao@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-Sorry, I missed Johannes in Cc ...
+Kindly disregard this patch. 
+The issue is fixed by AI auto-testing without Signed-off-by; the tag will be included in v2.
 
-On 2026/6/2 12:34, Lance Yang wrote:
-> From: Lance Yang <lance.yang@linux.dev>
+在 2026/6/2 12:36, Tao Cui 写道:
+> From: Tao Cui <cuitao@kylinos.cn>
 > 
-> deferred_split_count() returns the raw list_lru count. When the per-memcg,
-> per-node list is empty, that count is 0.
+> update_prstate() stores the error code in cs->prs_err and transitions
+> the partition to an invalid state, but always returns 0. The caller
+> cpuset_partition_write() uses "return retval ?: nbytes", so the write
+> syscall always appears to succeed from userspace even when the partition
+> became invalid. Return -EINVAL when err is set so userspace can detect
+> the failure immediately.
 > 
-> That skips scanning, but it does not tell memcg reclaim that the shrinker
-> is empty. shrink_slab_memcg() only clears the memcg shrinker bit when the
-> count callback reports SHRINK_EMPTY.
-> 
-> Return SHRINK_EMPTY for an empty deferred split list, so the bit can be
-> cleared once the queue has drained.
-> 
-> Signed-off-by: Lance Yang <lance.yang@linux.dev>
+> Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
 > ---
->   mm/huge_memory.c | 5 ++++-
->   1 file changed, 4 insertions(+), 1 deletion(-)
+>  kernel/cgroup/cpuset.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index 72f6caf0fec6..62d598290c3b 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -4397,7 +4397,10 @@ void deferred_split_folio(struct folio *folio, bool partially_mapped)
->   static unsigned long deferred_split_count(struct shrinker *shrink,
->   		struct shrink_control *sc)
->   {
-> -	return list_lru_shrink_count(&deferred_split_lru, sc);
-> +	unsigned long count;
-> +
-> +	count = list_lru_shrink_count(&deferred_split_lru, sc);
-> +	return count ?: SHRINK_EMPTY;
->   }
->   
->   static bool thp_underused(struct folio *folio)
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 591e3aa487fc..8605b4da610e 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2965,7 +2965,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>  	if (force_sd_rebuild)
+>  		rebuild_sched_domains_locked();
+>  	free_tmpmasks(&tmpmask);
+> -	return 0;
+> +	return err ? -EINVAL : 0;
+>  }
+>  
+>  static struct cpuset *cpuset_attach_old_cs;
 
