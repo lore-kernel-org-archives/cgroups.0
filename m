@@ -1,73 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6135D3812D0;
-	Wed,  3 Jun 2026 17:55:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0052A397E6A;
+	Wed,  3 Jun 2026 17:58:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780509313; cv=none; b=adq96kDRFefpZMfwgFuWkQeHoaxFgOV1uaFuUwwKFasOf6KPZiExC4bGrr1ihmSVfyd5fPLhpoerGXiPGv+cjGDRUs9/D0uthn9d4hxqpoM0l77oVYgtQ+BoN4++aA9FU7FW4VB6Z+C2q/Kjzt3H4ZAmva3zAEEmtwfM1aM+J0M=
+	t=1780509496; cv=none; b=mV+x9ec/NNEFT7qz5uHjnElXZqs7P43Bp5nh9a9jeuLVj3FVT1rgsvT8cZkVvo5H5ROrZcY2INDX02dh220etgUypsLMcS7uv8DvdxH5tVqJAmU8GxUIlChCYqDGDEXShhy7N4/M2fcWTc7aI9GtZjXCpm3sqepNi3JpjfxhfJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780509313; c=relaxed/simple;
-	bh=G0rDbT469hFZorAr0zpcUyuvH/OynSKNu0YEYkNKIf0=;
+	s=arc-20240116; t=1780509496; c=relaxed/simple;
+	bh=vvLPP6WEde/WUFYdnAcqQBHtS6dTD4LXo5956YoNyb4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Voyj2DRfLm7NuvZ30P9ius/tuyIvgyZWzKvLW7u32p8t38skkHV5gDw4Q/JNz3soIFBg/M0CDUgTPcLPrjYuoMPWmRfTzypzCZNspevJKiX2wc7NYdEGkTjwscMwPZtMG+AGMfHamzsfasqGo/z+vJzLFt/rd8epVlE4Ou+WamQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eltnyHCK; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=HsB7UIswKrKDl7O3n4z1Entx3lbk0yvmm25H778BUhySY/BDtNB3cGOj/8/Vealzqj+BrV44TFnFdejJcqZBaTh97qpA27neClTn9/DI3scQxcXLPyZOvi4Bu1zU8CIjwU+uLjGnM4tZUy2M2ECU/sZtJyY7VI79gbjBXgVTaAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P2TiUt6z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eltnyHCK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A53841F00893;
-	Wed,  3 Jun 2026 17:55:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P2TiUt6z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F32A41F00893;
+	Wed,  3 Jun 2026 17:58:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780509312;
-	bh=dIsSV0HW1+ANeS9umGY/QJFakDMw7AYj6n8OmAaihas=;
+	s=k20260515; t=1780509494;
+	bh=Ykcodhu/XhN28Udohna/yV1olxzbiwJfyoyWGAC5NnM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=eltnyHCKe3zkwhu1VQv3PxsGoVF21f2sxBgxiCfQOPiPzKfR5rO5edX8/RlSzmBoX
-	 AAAqZJL+3WF9xd8vANbabA7EozFcKo5yKs/Kh/tu3fhxweIo0uFsANF4mzRi/sjKgC
-	 Ly5KHTbVH3X9bQITn0CsZXBP2/JMoi7uugaSoZEST0X12vNhKqOn4/giUa0gvgVxy4
-	 ywdGNqeoXM0Fk5jAnbtUl2f2XU4I9j1AfhlBYVp3w1huH+Pv8E8ADcfw4gcHmJ+VnO
-	 4KnZwmmgoEKAtFwQG/7BsTwhVk9LuqTJ8CWcE7zcxsYn1rCYWE+qZ6iTNKhDd5LL/A
-	 0feE5ngEA/7iQ==
-Date: Wed, 3 Jun 2026 17:55:10 +0000
+	b=P2TiUt6zfW4qf6SwrC02SlsHFTbmLmtiLZLbf4P7PA8z2eEVp5ti6jzeRyOfR25dg
+	 hj2iuGgjeuxq4rCJWfRPSCSUdOvsQIubNsgfikQ3l02ZMPm02WIrJdm3owUWEb+vpy
+	 Clv2OlNXoKMHRUBD7heBvO+JAjOTG9q1tcuKc9jhmvPuAho2CCdFQ8EBuiVK2Y5v8M
+	 WA8YJkM2ipgB26/ZHDGwwjOFxivIrZhWqTtDTwLSLewYnOtKDVv8b/qvfDpeNwHhU2
+	 wEgnDH67/woY31cN6ZMp4Oi8hrN1mCjBh/J2EZ1GDwRtm15bjeLWF5AoLPhJs4Gh73
+	 9lywnI06QpqZg==
+Date: Wed, 3 Jun 2026 17:58:12 +0000
 From: Yosry Ahmed <yosry@kernel.org>
-To: Hao Jia <jiahao.kernel@gmail.com>
-Cc: akpm@linux-foundation.org, tj@kernel.org, hannes@cmpxchg.org, 
-	shakeel.butt@linux.dev, mhocko@kernel.org, mkoutny@suse.com, nphamcs@gmail.com, 
-	chengming.zhou@linux.dev, muchun.song@linux.dev, roman.gushchin@linux.dev, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, Hao Jia <jiahao1@lixiang.com>
+To: Hao Jia <jiahao.kernel@gmail.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>
+Cc: akpm@linux-foundation.org, tj@kernel.org, shakeel.butt@linux.dev, 
+	mhocko@kernel.org, mkoutny@suse.com, chengming.zhou@linux.dev, 
+	muchun.song@linux.dev, roman.gushchin@linux.dev, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	Hao Jia <jiahao1@lixiang.com>
 Subject: Re: [PATCH v3 2/4] mm/zswap: Implement proactive writeback
-Message-ID: <aiBqPjeHmECC0b0P@google.com>
+Message-ID: <aiBqzOtEv5iAC_qC@google.com>
 References: <20260526114601.67041-1-jiahao.kernel@gmail.com>
  <20260526114601.67041-3-jiahao.kernel@gmail.com>
- <aho-Z6wshceTAYd9@google.com>
- <ea2c1323-1440-e927-f14a-0eac54a245bf@gmail.com>
+ <CAKEwX=MQe_KFZe2vBXQYh0aa-x+E8AzNwmyjJGJk4tDoS9ML3A@mail.gmail.com>
+ <aho_VtLCmIRsNyvO@google.com>
+ <6deeaea7-3cd1-4403-29fc-d2dc55c297f8@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ea2c1323-1440-e927-f14a-0eac54a245bf@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6deeaea7-3cd1-4403-29fc-d2dc55c297f8@gmail.com>
 
-> > Is the main difference that we are scanning in batches here? I think we
-> > can have shrink_memcg() do that too. If anything, it might make the
-> > shrinker more efficient. Over-reclaim is ofc a concern, and especially
-> > in the zswap_store() path as the overhead can be noticeable. Maybe we
-> > can parameterize the batch size based on the code path.
+On Wed, Jun 03, 2026 at 07:22:36PM +0800, Hao Jia wrote:
+> 
+> 
+> On 2026/5/30 09:40, Yosry Ahmed wrote:
+> > On Fri, May 29, 2026 at 12:58:09PM -0700, Nhat Pham wrote:
+> > > On Tue, May 26, 2026 at 4:46 AM Hao Jia <jiahao.kernel@gmail.com> wrote:
+> > > > 
+> > > > From: Hao Jia <jiahao1@lixiang.com>
+> > > > 
+> > > > Zswap currently writes back pages to backing swap reactively, triggered
+> > > > either by the shrinker or when the pool reaches its size limit. There is
+> > > > no mechanism to control the amount of writeback for a specific memory
+> > > > cgroup. However, users may want to proactively write back zswap pages,
+> > > > e.g., to free up memory for other applications or to prepare for
+> > > > memory-intensive workloads.
+> > > > 
+> > > > Introduce a "zswap_writeback_only" key to the memory.reclaim cgroup
+> > > > interface. When specified, this key bypasses standard memory reclaim
+> > > > and exclusively performs proactive zswap writeback up to the requested
+> > > > budget. If omitted, the default reclaim behavior remains unchanged.
+> > > > 
+> > > > Example usage:
+> > > >    # Write back 100MB of pages from zswap to the backing swap
+> > > >    echo "100M zswap_writeback_only" > memory.reclaim
+> > > 
+> > > Hmmm, so this 100MB is the pre-compression size? i.e if this 100 MB
+> > > compresses to 25 MB, then you're only freeing 25 MB?
+> > > 
+> > > I'm ok-ish with this, but can you document it?
 > > 
-> > Nhat, what do you think?
+> > That's a good point. I think pre-compressed size doesn't make sense to
+> > be honest. We should care about how much memory we are actually trying
+> > to save by doing writeback here.
+> > 
+> > The pre-compressed size is only useful in determining the blast radius,
+> > how many actual pages are going to have slower page faults now. But
+> > then, I don't think there's a reasonable way for userspace to decide
+> > that.
+> > 
+> > I understand passing in the compressed size is tricky because we need to
+> > keep track of the size of the compressed pages we end up writing back,
+> > but it should be doable.
 > 
-> Nhat, since we now have the referenced-based second chance algorithm, should
-> we consider doing batch writeback for shrink_memcg() as well?
+> Agreed. Using pre-compressed size is probably easier to implement. IIRC,
+> interfaces like ZRAM writeback_limit are also calculated using the
+> pre-compressed size.
 > 
-> Of course, we could pass a parameter to control whether batch writeback is
-> needed, so as to preserve the original behavior of shrink_memcg().
+> I'll clarify this in the documentation in the next version.
+> 
+> > 
+> > If we really want pre-compressed size here, then yes we need to make it
+> > very clear, and I vote that we use a separate interface in this case
+> > because memory.reclaim having different meanings for the amount of
+> > memory written to it is extremely counter-intuitive.
+> > 
+> Agree. This would indeed break the semantics of memory.reclaim. I will use a
+> separate interface for proactive writeback in the next version.
 
-Yeah probably best to parameterize the batch size and keep the current
-behavior of the shrinker for this series. We can play with using batches
-for the shrinker later.
+But doesn't it make more sense to specify the compressed size, which is
+ultimately the amount of memory you actually want to reclaim.
 
-> 
-> Thanks,
-> Hao
+Johannes, Nhat, WDYT?
