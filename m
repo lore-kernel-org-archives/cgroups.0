@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66ECF310651;
-	Wed,  3 Jun 2026 13:28:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB4B48124B;
+	Wed,  3 Jun 2026 13:28:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780493288; cv=none; b=hILEopbn+VGy4gk3DtkkHQMwX+bzf1duenHr77tDjWHFW5C4tt7rSO8VDJkMgG0aEJkEsC1zwIjgVjLV/dO60Vu9VWjC9gLRKkdYhUgb34Pop9dkG27+jX2yj7cXMkl7QnGonKd8HTQKvor3VJANvwzsuQ/GzlS+l1IX+VPnhdE=
+	t=1780493294; cv=none; b=vCX0rsTDJEmWp/z67QKEYCx3lYtaD1tGLRZ5uHFNUn3xBUd4StXxfqqQmR52Z8H0oQOySU9oQYVg8IszKdKR/N+ndlAUK2JZi0tpKRPxg02FUYHJViERDysKEZXp4Uk0zlFCKuuwXnUn2Wrlwg0uBf5iHlLkwmoA5G8IUho/sP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780493288; c=relaxed/simple;
-	bh=oisoRXJ2gtTtelAnL7ChS1gY+yJ04+5vl2kmyW2L3Jw=;
+	s=arc-20240116; t=1780493294; c=relaxed/simple;
+	bh=XqpEPvX8NJrnkxm1dggQtpiLAF+Fa7ePz9pr8gbnEA8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H9fP7greUnqrIEaO3ttluoJxkLEnNmR/lkL+VAJKWY6oiYsEL8IzEzSLNuPRjZRDH1+YaSnPsgQ4SGGQ0m4ZFWFB8LwzQrQ2beJdEJOqt3gi9qCijkbQ2fmHPhqFe9LZTmDeo3UfoMJZrn5YIE+DiNNSTvm2wbJpOH4hlJewSCQ=
+	 MIME-Version; b=a7870rURQ7KE380q9iWaFcROUJ+TFlyi2Z4PjaEdDXrsCP++Wi5iKua4+HqhMv3I0DPtM0S2pWt2ov2CF+6pMB/onFDUvqICNoW6z21SOFf7+1+WI6Ntvm0jHnX9EfZbePu5nM1HsmXtsvnIRpmuzRO+6Eal5IzZR991WDOfF1U=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB6CB1F00898;
-	Wed,  3 Jun 2026 13:28:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 862AC1F00893;
+	Wed,  3 Jun 2026 13:28:07 +0000 (UTC)
 From: Yu Kuai <yukuai@fygo.io>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Tejun Heo <tj@kernel.org>,
@@ -24,9 +24,9 @@ Cc: Tejun Heo <tj@kernel.org>,
 	linux-block@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/5] blk-cgroup: skip dying blkg in blkcg_activate_policy()
-Date: Wed,  3 Jun 2026 21:27:44 +0800
-Message-ID: <aefd4e655bb5825513eeb1b2c0ed3edd39b44241.1780492756.git.yukuai@fygo.io>
+Subject: [PATCH 5/5] blk-cgroup: factor policy pd teardown loop into helper
+Date: Wed,  3 Jun 2026 21:27:45 +0800
+Message-ID: <b23df513de562739af61fa61ba80ef5e8059a636.1780492756.git.yukuai@fygo.io>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <cover.1780492756.git.yukuai@fygo.io>
 References: <cover.1780492756.git.yukuai@fygo.io>
@@ -40,56 +40,124 @@ Content-Transfer-Encoding: 8bit
 
 From: Zheng Qixing <zhengqixing@huawei.com>
 
-When switching IO schedulers on a block device, blkcg_activate_policy()
-can race with concurrent blkcg deletion, leading to a use-after-free in
-rcu_accelerate_cbs.
+Move the teardown sequence which offlines and frees per-policy
+blkg_policy_data (pd) into a helper for readability.
 
-T1:                               T2:
-                                  blkg_destroy
-                                  kill(&blkg->refcnt) // blkg->refcnt=1->0
-                                  blkg_release // call_rcu(__blkg_release)
-                                  ...
-                                  blkg_free_workfn
-                                  ->pd_free_fn(pd)
-elv_iosched_store
-elevator_switch
-...
-iterate blkg list
-blkg_get(blkg) // blkg->refcnt=0->1
-                                  list_del_init(&blkg->q_node)
-blkg_put(pinned_blkg) // blkg->refcnt=1->0
-blkg_release // call_rcu again
-rcu_accelerate_cbs // uaf
+No functional change intended.
 
-Fix this by checking hlist_unhashed(&blkg->blkcg_node) before getting
-a reference to the blkg. This is the same check used in blkg_destroy()
-to detect if a blkg has already been destroyed. If the blkg is already
-unhashed, skip processing it since it's being destroyed.
-
-Fixes: f1c006f1c685 ("blk-cgroup: synchronize pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy()")
 Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- block/blk-cgroup.c | 2 ++
- 1 file changed, 2 insertions(+)
+ block/blk-cgroup.c | 57 ++++++++++++++++++++++------------------------
+ 1 file changed, 27 insertions(+), 30 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 007dfc4f9c59..b479a9796fb3 100644
+index b479a9796fb3..c75b2a103bbc 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -1623,10 +1623,12 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
- 	list_for_each_entry_reverse(blkg, &q->blkg_list, q_node) {
- 		struct blkg_policy_data *pd;
+@@ -1575,10 +1575,35 @@ struct cgroup_subsys io_cgrp_subsys = {
+ 	.depends_on = 1 << memory_cgrp_id,
+ #endif
+ };
+ EXPORT_SYMBOL_GPL(io_cgrp_subsys);
  
- 		if (blkg->pd[pol->plid])
- 			continue;
-+		if (hlist_unhashed(&blkg->blkcg_node))
-+			continue;
++/*
++ * Tear down per-blkg policy data for @pol on @q.
++ */
++static void blkcg_policy_teardown_pds(struct request_queue *q,
++				      const struct blkcg_policy *pol)
++{
++	struct blkcg_gq *blkg;
++
++	list_for_each_entry(blkg, &q->blkg_list, q_node) {
++		struct blkcg *blkcg = blkg->blkcg;
++		struct blkg_policy_data *pd;
++
++		spin_lock(&blkcg->lock);
++		pd = blkg->pd[pol->plid];
++		if (pd) {
++			if (pd->online && pol->pd_offline_fn)
++				pol->pd_offline_fn(pd);
++			pd->online = false;
++			pol->pd_free_fn(pd);
++			blkg->pd[pol->plid] = NULL;
++		}
++		spin_unlock(&blkcg->lock);
++	}
++}
++
+ /**
+  * blkcg_activate_policy - activate a blkcg policy on a gendisk
+  * @disk: gendisk of interest
+  * @pol: blkcg policy to activate
+  *
+@@ -1690,25 +1715,11 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
+ 	return ret;
  
- 		/* If prealloc matches, use it; otherwise try GFP_NOWAIT */
- 		if (blkg == pinned_blkg) {
- 			pd = pd_prealloc;
- 			pd_prealloc = NULL;
+ enomem:
+ 	/* alloc failed, take down everything */
+ 	spin_lock_irq(&q->queue_lock);
+-	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+-		struct blkcg *blkcg = blkg->blkcg;
+-		struct blkg_policy_data *pd;
+-
+-		spin_lock(&blkcg->lock);
+-		pd = blkg->pd[pol->plid];
+-		if (pd) {
+-			if (pd->online && pol->pd_offline_fn)
+-				pol->pd_offline_fn(pd);
+-			pd->online = false;
+-			pol->pd_free_fn(pd);
+-			blkg->pd[pol->plid] = NULL;
+-		}
+-		spin_unlock(&blkcg->lock);
+-	}
++	blkcg_policy_teardown_pds(q, pol);
+ 	spin_unlock_irq(&q->queue_lock);
+ 	ret = -ENOMEM;
+ 	goto out;
+ }
+ EXPORT_SYMBOL_GPL(blkcg_activate_policy);
+@@ -1723,11 +1734,10 @@ EXPORT_SYMBOL_GPL(blkcg_activate_policy);
+  */
+ void blkcg_deactivate_policy(struct gendisk *disk,
+ 			     const struct blkcg_policy *pol)
+ {
+ 	struct request_queue *q = disk->queue;
+-	struct blkcg_gq *blkg;
+ 	unsigned int memflags;
+ 
+ 	if (!blkcg_policy_enabled(q, pol))
+ 		return;
+ 
+@@ -1736,24 +1746,11 @@ void blkcg_deactivate_policy(struct gendisk *disk,
+ 
+ 	mutex_lock(&q->blkcg_mutex);
+ 	spin_lock_irq(&q->queue_lock);
+ 
+ 	__clear_bit(pol->plid, q->blkcg_pols);
+-
+-	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+-		struct blkcg *blkcg = blkg->blkcg;
+-
+-		spin_lock(&blkcg->lock);
+-		if (blkg->pd[pol->plid]) {
+-			if (blkg->pd[pol->plid]->online && pol->pd_offline_fn)
+-				pol->pd_offline_fn(blkg->pd[pol->plid]);
+-			pol->pd_free_fn(blkg->pd[pol->plid]);
+-			blkg->pd[pol->plid] = NULL;
+-		}
+-		spin_unlock(&blkcg->lock);
+-	}
+-
++	blkcg_policy_teardown_pds(q, pol);
+ 	spin_unlock_irq(&q->queue_lock);
+ 	mutex_unlock(&q->blkcg_mutex);
+ 
+ 	if (queue_is_mq(q))
+ 		blk_mq_unfreeze_queue(q, memflags);
 -- 
 2.51.0
 
