@@ -1,39 +1,40 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 316B639EF3D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19D33BE178;
 	Fri,  5 Jun 2026 12:43:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780663417; cv=none; b=dI54VujTuN3ug58eL8ICx2NjEJ394Jzzsm1cnImABWAr1YWiuL3mgnKHq2mv25if3gjk6EYLl0JyEKUJx5Uiz4Pb3ZoodMx6odYV7gwNlCsf3B30pZtnd6UFb+Q8E7WON718pitLckIWZAAqNPcJUy1nXL4u9C8eKsvBoYYoGZ8=
+	t=1780663417; cv=none; b=r2eKlBP6P8eY6KwTEDbp0X2xub1EomXzr8s+msrcKSKVbJDXurk/wAkN2nHOcVbVSgkY/M7S9C7zPzIp2HGAxoFDgOX9U0uUFcwm8S/jgyJNgCAJ2qPE9JIZdXfUJy06xAgEkxHKXBSlNycFSb+1s/PNi8u2wmQR0IrLUvmhOh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1780663417; c=relaxed/simple;
-	bh=aDIrB95KNzK7HC+Xu3E607OxvbBYLZrnOO19Y/teGeU=;
-	h=Message-ID:Date:From:To:Cc:Subject; b=eChACB65WmRWMwjwIdK2JP8X8UA8pJw9GZ59T0ugnmGScRiAYrig1FCgOQR0IaQGAXmJa0UNLh++n+X6Bcb9CpmWsrI7uGeuggNAmPwyxlcFtPdzlKODASSd7Ih02rBGeJyQQYn235XsNKzepDHb5fCYzKT+UcS+1dGq3wqiP1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MBzANZ4B; arc=none smtp.client-ip=90.155.50.34
+	bh=wPXmGodprzDP+VkF82WYp0drWRnJQcEqtntT6G1+gto=;
+	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
+	 Content-Type; b=sC6HKoyZ+NnBcwyT4UwRsLp9S9oWRTAZshS9VGM0juEvj56eR3HOluu1AmHaMZF3zDFE7stPm4BkiINA3j+7KQwemUyjDGzsKoxeT2B+USShsc27kprGtjDxZNj02/YypFTbnWYcsLikBc6WrOHDiIyZ9yA7fIFBGww3t63bZ64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CH/VSXrf; arc=none smtp.client-ip=90.155.92.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MBzANZ4B"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CH/VSXrf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Subject:Cc:To:From:Date:Message-ID:
-	Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=Q3ny1+Vd+Cmj6V00T3SLK/5xttZKURF3PCHHpqW59ow=; b=MBzANZ4BtdMjsgPReoQ4Bvpj8o
-	+cQ6JuBfjPuZ26oRrzE+6ReHApF93pF8Ylqjl+qQ71cN1YeKCfwfjUDKz9d5ypVmsD+al72TAVi3s
-	S9nBkyMj+PI+fwU45rvUYJOLLWPwMsGgCgvX+4a3ujRYa7WCOaIDk687KWTMVG/2wFE6v3Fz2ZNYf
-	lFwcl6uStZ+r1m35TzPxPFmgzcrgEx3xgoPzm002XDlgRzFL97Khw90io0PpM2QbSqOsycQKza7tl
-	M6c/LYzlPcvjm9qJ3n7IpqNpA9e9rrn8q1hWsL4pDPPVp2fnpD2huFSgEPw1WHavSWD8//NvLRT+F
-	7GRFYHGQ==;
+	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
+	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
+	Content-ID:Content-Description:In-Reply-To;
+	bh=DFUPfbO4QZ1wRkdXk7p/tFg3ovHGoKUf1O97CDPHAEI=; b=CH/VSXrfdeRZMoyKl1RKWY7GSY
+	jYART92EHPk5R+WquOVRNPPzZhBqCfNoL6B/biXOpuvErHkt8t9dl5TkDUwuETV8Vzd0/LtlXqqf+
+	nOeZqsFzKGS8PfzphN5D4CrRy+K/O+OeoTExW7d9snvHqGVFPNBZeD2OufcvVHRjPlepn3p/sgHlA
+	9h9FHMnp8n+v8RZ1tLegXdCUV/t8IbHm7uGc1O1DgRNiLTFA3523gm3aSzg7BDy/7mAgt9oIe5VuT
+	Rp95sUuFp0owkkeYU55JZMLz7izQCon95o/kdXCxlPdFfry7oyWrM1wmAxCxM7HGN7jD61HXnjzV4
+	hxnCnMvw==;
 Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wVTtH-00000007vak-3qhz;
-	Fri, 05 Jun 2026 12:43:12 +0000
+	by desiato.infradead.org with esmtpsa (Exim 4.99.2 #2 (Red Hat Linux))
+	id 1wVTtJ-0000000FbIK-3GTu;
+	Fri, 05 Jun 2026 12:43:13 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 1E0B6300339; Fri, 05 Jun 2026 14:43:11 +0200 (CEST)
-Message-ID: <20260605105513.354837583@infradead.org>
+	id 3749B3030E7; Fri, 05 Jun 2026 14:43:11 +0200 (CEST)
+Message-ID: <20260605124051.921991975@infradead.org>
 User-Agent: quilt/0.68
-Date: Fri, 05 Jun 2026 14:40:13 +0200
+Date: Fri, 05 Jun 2026 14:40:18 +0200
 From: Peter Zijlstra <peterz@infradead.org>
 To: mingo@kernel.org
 Cc: longman@redhat.com,
@@ -54,79 +55,78 @@ Cc: longman@redhat.com,
  jstultz@google.com,
  kprateek.nayak@amd.com,
  qyousef@layalina.io
-Subject: [PATCH v3 0/7] sched: Flatten the pick
+Subject: [PATCH v3 5/7] sched/fair: Add cgroup_mode: tasks
+References: <20260605105513.354837583@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 
+Since we are exploring this space; include a scheme that scales by total number
+of runnable tasks. This results in:
 
-Hi!
+	F_g_n' = M * F_g_n
 
-New version, same story [1]. TL;DR:
+This will obviously have: avg(F_g_n') > 1, (it will be ~M/N in fact).
 
- - Adds new cgroup_mode knob and implements new policies to address the
-   hierarchy level weight mismatch.
+And while that sounds odd, it actually has a fairly straight foward meaning for
+"cpu.weight": average weight per member task.
 
- - Builds upon that base to create a flat / single runqueue scheduler where the
-   cgroup hierarchy is expressed through dynamic weight management.
+This is an entirely valid and workable option, it is however wildly different
+from the traditional meaning.
 
-I'm hoping to be able to merge these patches early in the next cycle (after
-7.2-rc1).
+Included for completeness (and curiosity).
 
-Random benchmark:
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ kernel/sched/debug.c |    1 +
+ kernel/sched/fair.c  |   16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
 
-Game vs 'for ((i=0; i<8; i++)) do nice ./spin.sh; done':
+--- a/kernel/sched/debug.c
++++ b/kernel/sched/debug.c
+@@ -643,6 +643,7 @@ static const char *cgroup_mode_str[] = {
+ 	"smp",
+ 	"concur",
+ 	"max",
++	"tasks",
+ };
+ 
+ static int sched_cgroup_mode(const char *str)
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4852,6 +4852,19 @@ static inline int tg_tasks(struct task_g
+ }
+ 
+ /*
++ * Func: fraction(nr_tasks * tg->shares)
++ *
++ * Scale tg->shares by the number of tasks.
++ */
++static long calc_tasks_shares(struct cfs_rq *cfs_rq)
++{
++	struct task_group *tg = cfs_rq->tg;
++	int nr = tg_tasks(tg);
++	long tg_shares = READ_ONCE(tg->shares);
++	return __calc_smp_shares(cfs_rq, nr * tg_shares, nr * tg_shares);
++}
++
++/*
+  * Func: min(fraction(nr_cpus * tg->shares), nice -20)
+  *
+  * Scale tg->shares by the maximal number of CPUs; but clip the max shares at
+@@ -4921,6 +4934,9 @@ void __sched_cgroup_mode_update(int mode
+ 	case 3:
+ 		func = &calc_max_shares;
+ 		break;
++	case 4:
++		func = &calc_tasks_shares;
++		break;
+ 	}
+ 	static_call_update(calc_group_shares, func);
+ }
 
-  Lutris / GE-Proton10-34 / Steam Runtime 3 (sniper)
-  Intel Core i7-2600K
-  AMD Radeon RX 580
-
-  Shadows Awakening (GOG)
-
-	  default slice(*)
-
-  FPS min   4.0   29.0
-      avg  47.5   59.2
-      max  83.7   83.7
-
-  FT  min   9.3   10.2
-      avg  34.0   17.0
-      max 121.2   30.0
-
-  FPS (Frames Per Second)
-  FT  (FrameTime)
-
-  [*] Command prefix: 'chrt -o --sched-runtime 100000 0'
-
-
-Changes since v2:
-
- - merged debug and prep patches
- - fixed update_entity_lag() on dequeue (Vincent)
- - fixed throttle vs tick (Prateek)
- - fixed wakeup_preempt_fair()
- - rebased on tip/sched/core
- - rewritten cgroup_mode changelogs
- - reworked cgroup_mode concur
- - added cgroup_mode tasks
- - changed default cgroup_mode
-
-
-[1] - https://lore.kernel.org/r/20260511113104.563854162@infradead.org
-
-Can also be had:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/peterz/queue.git sched/flat
-
- include/linux/cpuset.h |    6 
- include/linux/sched.h  |    1 
- kernel/cgroup/cpuset.c |   15 
- kernel/sched/core.c    |    5 
- kernel/sched/debug.c   |   89 ++++
- kernel/sched/fair.c    |  943 ++++++++++++++++++++++++-------------------------
- kernel/sched/pelt.c    |    6 
- kernel/sched/sched.h   |   30 -
- 8 files changed, 607 insertions(+), 488 deletions(-)
 
