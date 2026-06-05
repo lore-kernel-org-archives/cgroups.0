@@ -1,33 +1,33 @@
 Received: from lankhorst.se (unknown [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B49260566;
-	Fri,  5 Jun 2026 11:13:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D986F4D2ED9;
+	Fri,  5 Jun 2026 11:27:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780658041; cv=none; b=mMdsEv4vp1WSNv30gAPLbQ38USA/bea8/ree7BCluEMQRkO+oHbS1f59RgW2R8e/iN1hx+5ppj9x4tLYBNzveT9b2teHTHa2amER1YOhPKeuAWbyPr5P+QXd8W5uQ3MgQ1mhPNbyVCx3UdnjQ09x/Jm0bPnGJCTd2zQ2uPMXhbU=
+	t=1780658831; cv=none; b=SnuPQV4kO0LWP5NnlnRqx1kNkZvIkLGiIyaYUNzkvZgKmeRxndkeEL18XMmYhbiJw9vQdbaaD3+Apl+RZo22/OfnwYbXgHqUMUtFfM9FsUMLq75ESTNZGhWigaUJgc58tE4cCrBxzMD7eVC2OH0qiRL6O1x7iAwvNZgIJcQYlBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780658041; c=relaxed/simple;
-	bh=ZMIjWts6XvJ/jhRFZHvdvlkNH+2yiGMbLQW8gHV1kwM=;
+	s=arc-20240116; t=1780658831; c=relaxed/simple;
+	bh=grJWHPyWHk8AoQrPfPCjbyowZDDAMw3aAx81Y2+OkBE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sPr6euiewYACmKFFSontGWl4+gpvzW8F79Ku2QarxmsAkdNFnu6b0H/0c8ahFcSwRZsBzE1L8kAH3sx+MZ/VmQY2PYIIH5Ko46Z1wai/vZe2Gmx1B+6fCzYM2n2Iixcvlj9WBNEjzkXBEskBlZAcRrC6mR//VI0i+6ICP4mFyd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se; spf=pass smtp.mailfrom=lankhorst.se; dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b=CEexm4Sd; arc=none smtp.client-ip=141.105.120.124
+	 In-Reply-To:Content-Type; b=h6PsYXVIAjWE/dSpHEjyX0rQwLWP7//i0MftUI0VJhYf59l3YIsDDxPOXq9kRpvt7MYcwY4DyATz5v6r/oFYccktPQJbB9fdhtckXPbnZGxDootWsMwevjaP4QL/IUnW85nrUKnW5ZE1HthtMqpsS9pXM+POJGIsecULP+TxF5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se; spf=pass smtp.mailfrom=lankhorst.se; dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b=N74i+GGN; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lankhorst.se
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b="CEexm4Sd"
+	dkim=pass (2048-bit key) header.d=lankhorst.se header.i=@lankhorst.se header.b="N74i+GGN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lankhorst.se;
-	s=default; t=1780658031;
-	bh=ZMIjWts6XvJ/jhRFZHvdvlkNH+2yiGMbLQW8gHV1kwM=;
+	s=default; t=1780658828;
+	bh=grJWHPyWHk8AoQrPfPCjbyowZDDAMw3aAx81Y2+OkBE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=CEexm4Sd9mFFbUW90LsMcO3+Mj3TbO0dZyBWnLyaExoVg9Nx4w1NiQFwerSK7AEVa
-	 pUXW/dRqapt1pg4raMvsX2k9eCYQSgtFEOKWEb9pGTWBgSM5Hs/yVt30aCOCUE8Icq
-	 0kC64phG1c1l0dR5LD9hwJlb8JB/eo4Cg0MqJoG8CowI7XJO5RoJWSJ3BuFmgnN4ty
-	 CM5A9c8bml2t/C9wrJ40Ovyp6RZjK/KLrbv58d/4Gk9eVJdthXa/losttEAXScNfCt
-	 i2W5MmIQCrs9H5ctSLwh3MsX4BwuSISL2e96oeF0Jr8qxvZ0bVq4sAzbtpCPeTxOdJ
-	 BK59XHVm4B/vA==
-Message-ID: <fdce637f-703f-46d9-91ab-05fe3728393e@lankhorst.se>
-Date: Fri, 5 Jun 2026 13:13:52 +0200
+	b=N74i+GGNoRR0g17Ffnu3NiFljaOwuwpxqDTJa+TTkHeJKzoXGffMgGBLgkNZy6V9P
+	 FW0Imepg0M0DhWM8mTNCenAbBV4/lME5xB9WI8+e/iouz18LG0s9xNjLqerAsABoEW
+	 LlEeOcceVMFODm5FuCtxrHcqbrh/PRJCZ8cEZVOpemUnWLXhoas7Bkfmkvai0zSHKV
+	 0xCxUlhn1ewaBnBdUNOe1z1vXFWJaJyL1CE5/0svZmq4cTKPhwiTaqDiUfkrw6AuPA
+	 Mqs2bk0KvRWGChOHirz1VP6jjLrxCeFCQ834fPxVyLumz1+ltC+Ptp+UXJh3KShG5r
+	 8gU5ZyT/srkBg==
+Message-ID: <158bc103-7f99-4df4-8d3b-2da9b04ac0ed@lankhorst.se>
+Date: Fri, 5 Jun 2026 13:27:09 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,40 +35,136 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] cgroup/dmem: introduce a peak file
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Thadeu Lima de Souza Cascardo <cascardo@igalia.com>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
+Subject: Re: [PATCH v2 2/2] cgroup/dmem: add dmem.memcg control file for
+ double-charging to memcg
+To: Eric Chanudet <echanude@redhat.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
  Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>, Maxime Ripard <mripard@kernel.org>,
- Natalie Vock <natalie.vock@gmx.de>,
- Tvrtko Ursulin <tvrtko.ursulin@igalia.com>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org,
- dri-devel@lists.freedesktop.org, kernel-dev@igalia.com
-References: <20260514-dmem_peak-v3-1-b64ce5d3ac38@igalia.com>
- <ahCISfTlN10gD8e6@localhost.localdomain>
- <89901220-0a43-4668-9d20-aaecc72c58dd@lankhorst.se>
- <ahmOBo02TA8u8RW2@localhost.localdomain>
+ Andrew Morton <akpm@linux-foundation.org>, Maxime Ripard
+ <mripard@kernel.org>, Natalie Vock <natalie.vock@gmx.de>,
+ Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, "T.J. Mercier" <tjmercier@google.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Maxime Ripard <mripard@redhat.com>, Albert Esteve <aesteve@redhat.com>,
+ Dave Airlie <airlied@gmail.com>, linux-doc@vger.kernel.org
+References: <20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com>
+ <20260519-cgroup-dmem-memcg-double-charge-v2-2-db4d1407062b@redhat.com>
+ <ahBxB5a9sX9DEWvl@localhost.localdomain> <ahXKFYBdCMDBvc_N@x1nano>
 Content-Language: en-US
 From: Maarten Lankhorst <dev@lankhorst.se>
-In-Reply-To: <ahmOBo02TA8u8RW2@localhost.localdomain>
+In-Reply-To: <ahXKFYBdCMDBvc_N@x1nano>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Hey,
 
-On 5/29/26 15:01, Michal Koutný wrote:
-> On Fri, May 29, 2026 at 09:34:28AM +0200, Maarten Lankhorst <dev@lankhorst.se> wrote:
->>> Reviewed-by: Michal Koutný <mkoutny@suse.com>
->> Reviewed-by: Maarten Lankhorst <dev@lankhorst.se>
+On 5/26/26 18:59, Eric Chanudet wrote:
+> On Fri, May 22, 2026 at 05:26:16PM +0200, Michal Koutný wrote:
+>> Hello Eric.
 >>
->> With your r-b it's ok to push it to the dmemcg tree?
+>> On Tue, May 19, 2026 at 11:59:02AM -0400, Eric Chanudet <echanude@redhat.com> wrote:
+>>> Add a root-only cgroupfs file "dmem.memcg" that lets an administrator
+>>> configure whether allocations in a dmem region should also be charged to
+>>> the memory controller.
+>>
+>> This kinda makes sense as it is not unlike io.cost.* device
+>> configurators.
+>>
+>> Just for my better understanding -- will there be a space for userspace
+>> to switch this? (No charged dmem allocations happen before responsible
+>> userspace runs, so that the attribute remains unlocked.)
+>>
+>> (I'm rather indifferent about the actual double charging/non-charging
+>> matter.)
 > 
-> Please go for it.
+> Yes, this is intended to be configured before the user space stack that
+> would start allocating things is started. Once it has started (and tried
+> to charge something), the configuration is locked
 > 
-> Michal
+>>
+>>>
+>>> To handle inheritance, dmem adds a depends_on the memory controller,
+>>> unless MEMCG isn't configured in.
+>>>
+>>> Double-charging is disabled by default. Once a charge is attempted, the
+>>> setting is locked to prevent inconsistent accounting by a small 4-state
+>>> machine (off, on, locked off, locked on).
+>>>
+>>> The memcg to charge is derived from the pool's cgroup, since the pool
+>>> holds a reference to the dmem cgroup state that keeps the cgroup alive
+>>> until it gets uncharged.
+>>>
+>>> Signed-off-by: Eric Chanudet <echanude@redhat.com>
+>>> ---
+>>>  Documentation/admin-guide/cgroup-v2.rst |  23 +++++
+>>>  kernel/cgroup/dmem.c                    | 158 +++++++++++++++++++++++++++++++-
+>>>  2 files changed, 178 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>>> index 6efd0095ed995b1550317662bc1b56c7a7f3db23..1d2fa55ddf0faa17baa916a8914d3033e8e42359 100644
+>>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>>> @@ -2828,6 +2828,29 @@ DMEM Interface Files
+>>>  	  drm/0000:03:00.0/vram0 12550144
+>>>  	  drm/0000:03:00.0/stolen 8650752
+>>>  
+>>> +  dmem.memcg
+>>> +	A readwrite nested-keyed file that exists only on the root
+>>> +	cgroup.
+>>
+>> Strictly speaking this is not nested-keyed but flat keyed [1],
+> 
+> Indeed,
+> 
+>> which leads me to realization that this is the first instance of a boolean.
+>> All in call, such a composition comes to my mind (latter is RO):
+>>
+>> 	drm/0000:03:00.0/vram0 enable=0|1 locked=0|1
+>>
+> 
+> So per[1] 1 key, 2 sub-keys (enable RW, locked RO), that looks better
+> and match the documentation, thanks!
+> 
+>>
+>>
+>>> +static ssize_t dmem_cgroup_memcg_write(struct kernfs_open_file *of, char *buf,
+>>> +				       size_t nbytes, loff_t off)
+>>> +{
+>>> +	while (buf) {
+>>> +		struct dmem_cgroup_region *region;
+>>> +		char *options, *name;
+>>> +		bool flag;
+>>> +
+>>> +		options = buf;
+>>> +		buf = strchr(buf, '\n');
+>>> +		if (buf)
+>>> +			*buf++ = '\0';
+>>
+>> I recall there was a discussion about accepting only a single device per
+>> write(2) (at the same time I see this idiom is still present in other
+>> dmem.* files, so this is nothing to change in _this_ patch).
+> 
+> I would second that. When setting say dmem.max for 2 regions, with a
+> typo on the second, the first one is set, but write still get EINVAL.
+> 
+> Also, I just notice dmemcg_limit_write() returns EINVAL if the region is
+> not found (this patch returns ENODEV).
+> 
+>>
+>> Thanks,
+>> Michal
+>>
+>> [1] https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#format
+> 
+> 
+> 
 
-Thanks, pushed and queued for v7.3!
+Perhaps a bit late, but before we start adding this UAPI we should enforce a
+single region per write?
 
+Kind regards,
+~Maarten Lankhorst
