@@ -1,40 +1,40 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A6A3BE628;
-	Fri,  5 Jun 2026 12:43:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65FF43C414F;
+	Fri,  5 Jun 2026 12:43:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780663417; cv=none; b=oCZ3iqHLqH8uPOo/EX/WyOI7a+CpuTdqg2T+9AFRIZvEYv+rd0mW+GrFef0ATmagnTu1KsjP/EkbBenwyZhPupMkIidR0e2g4gvcQbb1sjVnkrXMD7IUdoJEVTe/c2W7VEtEKcHscSo/XNqNtYAY0JUp0Qd+RkN7MayCmmortp8=
+	t=1780663418; cv=none; b=RnGHZlww4ZkoHLgTicdkiYN5K0DdSPXWGBapYeqyBxEHJ+Jmo4uEvyubnAl6souJGhIsgq6zRNcG9ONnO91hMsmCqBtmBFVAI4vdU+hyPMMd0onfN6b6CuI63Ren1ulMkJ15VjD940N1TYC5nzgso9DdVT1Kqj0euccHX2ad9eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780663417; c=relaxed/simple;
-	bh=c4VeD7Zsnsh/unQbMVpMRZY4PeiOUexoPYPgs57H0qE=;
+	s=arc-20240116; t=1780663418; c=relaxed/simple;
+	bh=Ynt7i9S9WcoxmiTkpFWjBbZk4A2pTNZaEtkFTUFzxbY=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=SZNiGiFJ53QZsdUFhT126vlpPVtiOVdlCD4NCcN5Ucc7fXTErMc82N4vpWDsb1k+MGZi7o2SJqtnU3WkdgLPJgiQKFG27M0CMT4UiuEqxQ0WN601S7mu50JpdvLXIyTq6QtTC0qHa39qCO3M3y9QBRb/MO97YEy/DaydFwqd92c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DbEBAgkJ; arc=none smtp.client-ip=90.155.92.199
+	 Content-Type; b=dnFzMCPa4Rd4aE6eSVZRM4kI75HwLPYhjopqjALh9xEhXgQbpxKRM9PkBQ4pVYbZiGmWYhE4mYPdvFhPGT483WpyW6iPqcaQ0iAy009GDANHdeO2o2wd2eHaaEAU55wljdIzYFbpT5CVDypNvYiGQPcguYVmgwehVM4eY7GzFZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cMpwb87j; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DbEBAgkJ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cMpwb87j"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
+	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:References:
 	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=+g4JhBB4PfZbxdVKSRhV8vLIidbqMDTAQZUEIvo+pog=; b=DbEBAgkJFcX1rGQxNeqWt4CQ++
-	5eWJMCWSzlMl0d5Y693X2WbPWN3RA5AO8PUlfoZZOv2NAntEaoIfn8vWMHmwuvFJm38IFYA5rnJLT
-	sCEuwbJfU4i3B6pcfndeeZHCEpa3+VuVFlmTA/5RD4mgcettt4XmPt3vgPmo4RxlqVbUQ7XraATUa
-	6YFqPWayrYQ5NmrFBEk/+Kw9zOjbc8WDh3Zw9x37epjNBx4V8MQRedQhgcWK8guTtUV4L3zPyNMzQ
-	tlNEg3SxWe/oK1vZVBcOU5uJw0djOv1jryZl7m1GvA4ZXZxD42rkyLAclYTjwShG9QyXQIJtqz61J
-	ROWe2HLA==;
-Received: from 2001-1c00-8d85-4b00-266e-96ff-fe07-7dcc.cable.dynamic.v6.ziggo.nl ([2001:1c00:8d85:4b00:266e:96ff:fe07:7dcc] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.99.2 #2 (Red Hat Linux))
-	id 1wVTtJ-0000000FbIH-1CPx;
+	bh=iagqKCq+Q/VlKH7MvQ1XZ0bf/xG9PDjiUd+QpNkj100=; b=cMpwb87j98ztIVKkVkYzhzizTc
+	wK1pXB1k3vKwDP7ALrNE1LK7LRXDhhe5Lxuq4Zoy7UzbM1rPtHpW5k+IfzOaHQKxXheXJe8k43Yva
+	JZ/0VbMAesN+6YfUYvWkVF7T2TfIYCXh0dkWna63CQRDgLVO87vw2wLF49YpG0Rd1jSS0MM6YrBGB
+	JfqsZ6wc0cwfIqUejDmmF5yo2z4TOWPpv8QoVFa7J1JL0211vDQ57RTCRPFuHlghwc40xzRw+VYzj
+	YXLL2/Y7G/MWVdk+5xaHrR5E6FjD2GeIH+k610uqWxVMs9FFvBEESAHlqo1+PlLgaVKR+WjaOqMOm
+	QfV1ThhQ==;
+Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wVTtI-00000007var-28pa;
 	Fri, 05 Jun 2026 12:43:13 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 2D0DC302F8E; Fri, 05 Jun 2026 14:43:11 +0200 (CEST)
-Message-ID: <20260605124051.589618504@infradead.org>
+	id 3BA2130325A; Fri, 05 Jun 2026 14:43:11 +0200 (CEST)
+Message-ID: <20260605124052.080482755@infradead.org>
 User-Agent: quilt/0.68
-Date: Fri, 05 Jun 2026 14:40:16 +0200
+Date: Fri, 05 Jun 2026 14:40:19 +0200
 From: Peter Zijlstra <peterz@infradead.org>
 To: mingo@kernel.org
 Cc: longman@redhat.com,
@@ -55,7 +55,7 @@ Cc: longman@redhat.com,
  jstultz@google.com,
  kprateek.nayak@amd.com,
  qyousef@layalina.io
-Subject: [PATCH v3 3/7] sched/fair: Add cgroup_mode: max
+Subject: [PATCH v3 6/7] sched/fair: Change the default cgroup_mode to concur
 References: <20260605105513.354837583@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -65,177 +65,57 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-In order to avoid the average CPU fraction avg(F_g_n) becoming tiny '1/N',
-assume each cgroup is maximally concurrent and distrubute 'N*weight', such
-that:
+For all the reasons described in the preceding patches, the way cgroup
+weight is computed is problematic. However, changing it is bound to
+also lead to trouble. Esp. since people might have taken to inflating
+the weight value where they can.
 
-	F_g_n' = N * F_g_n
+Since things are configurable, change the default and hope this serves
+more people than it hurts, esp. in the longer run.
 
-Giving:
-
-	avg(F_g_n') = N*avg(F_g_n) ~ N * 1/N = 1
-
-And while this sounds like it solves things, remember what that ~ meant. There
-is the corner case when a cgroup is minimally loaded, eg a single runnable
-task, therefore limit the CPU fraction to that of a nice -20 task to avoid
-getting too much load.
-
-This last bit is what makes it different from a previous proposal to allow
-raising cpu.weight to '100 * N', that would not limit the mininal concurrency
-case and results in a very large F_g_n. And just like F_g_n << 1 is
-problematic, so is F_g_n >> 1 for the exact same reasons (it would drown the
-kthreads, but it also risks overflowing the load values).
-
-So while this might appear to be a better scheme than the current default
-scheme, it doesn't really handle less than maximal concurrency nicely -- it
-clips and introduces artificially large weights. So where the traditional SMP
-mode works well when nr_tasks << nr_cpus, MAX doesn't work well in that regime
-and vice-versa.
-
-The meaning of "cpu.weight" would be: weight per allowed CPU.
-
-Included for completeness (and infrastructure).
+Specifically, this prepares for a flattened runqueue, where the hierarchical
+weight becomes far more important (F_g^d terms), so getting rid of small F_g is
+imperative.
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
- include/linux/cpuset.h |    6 +++++
- kernel/cgroup/cpuset.c |   15 ++++++++++++++
- kernel/sched/debug.c   |    1 
- kernel/sched/fair.c    |   52 ++++++++++++++++++++++++++++++++++++++++++++-----
- 4 files changed, 69 insertions(+), 5 deletions(-)
+ kernel/sched/debug.c |    2 +-
+ kernel/sched/fair.c  |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -80,6 +80,7 @@ extern void lockdep_assert_cpuset_lock_h
- extern void cpuset_cpus_allowed_locked(struct task_struct *p, struct cpumask *mask);
- extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
- extern bool cpuset_cpus_allowed_fallback(struct task_struct *p);
-+extern int cpuset_num_cpus(struct cgroup *cgroup);
- extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
- #define cpuset_current_mems_allowed (current->mems_allowed)
- void cpuset_init_current_mems_allowed(void);
-@@ -216,6 +217,11 @@ static inline bool cpuset_cpus_allowed_f
- 	return false;
- }
- 
-+static inline int cpuset_num_cpus(struct cgroup *cgroup)
-+{
-+	return num_online_cpus();
-+}
-+
- static inline nodemask_t cpuset_mems_allowed(struct task_struct *p)
- {
- 	return node_possible_map;
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -4116,6 +4116,21 @@ bool cpuset_cpus_allowed_fallback(struct
- 	return changed;
- }
- 
-+int cpuset_num_cpus(struct cgroup *cgrp)
-+{
-+	int nr = num_online_cpus();
-+	struct cpuset *cs;
-+
-+	if (is_in_v2_mode()) {
-+		guard(rcu)();
-+		cs = css_cs(cgroup_e_css(cgrp, &cpuset_cgrp_subsys));
-+		if (cs)
-+			nr = cpumask_weight(cs->effective_cpus);
-+	}
-+
-+	return nr;
-+}
-+
- void __init cpuset_init_current_mems_allowed(void)
- {
- 	nodes_setall(current->mems_allowed);
 --- a/kernel/sched/debug.c
 +++ b/kernel/sched/debug.c
-@@ -641,6 +641,7 @@ static int cgroup_mode = 1;
- static const char *cgroup_mode_str[] = {
- 	"up",
- 	"smp",
-+	"max",
- };
+@@ -635,7 +635,7 @@ static void debugfs_fair_server_init(voi
+ }
  
- static int sched_cgroup_mode(const char *str)
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+-static int cgroup_mode = 1;
++static int cgroup_mode = 2;
+ 
+ /* See __sched_cgroup_mode_update(). */
+ static const char *cgroup_mode_str[] = {
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -4801,12 +4801,10 @@ static inline int throttled_hierarchy(st
-  *
-  * hence icky!
-  */
--static long calc_smp(struct cfs_rq *cfs_rq)
-+static long __calc_smp_shares(struct cfs_rq *cfs_rq, long tg_shares, long shares_max)
- {
--	long tg_weight, tg_shares, load, shares;
- 	struct task_group *tg = cfs_rq->tg;
--
--	tg_shares = READ_ONCE(tg->shares);
-+	long tg_weight, load, shares;
- 
- 	load = max(scale_load_down(cfs_rq->load.weight), cfs_rq->avg.load_avg);
- 
-@@ -4832,7 +4830,48 @@ static long calc_smp(struct cfs_rq *cfs_
- 	 * case no task is runnable on a CPU MIN_SHARES=2 should be returned
- 	 * instead of 0.
- 	 */
--	return clamp_t(long, shares, MIN_SHARES, tg_shares);
-+	return clamp_t(long, shares, MIN_SHARES, shares_max);
-+}
-+
-+static int tg_cpus(struct task_group *tg)
-+{
-+	int nr = num_online_cpus();
-+
-+	if (cpusets_enabled()) {
-+		struct cgroup *cgrp = tg->css.cgroup;
-+		if (cgrp)
-+			nr = cpuset_num_cpus(cgrp);
-+	}
-+
-+	return nr;
-+}
-+
-+/*
-+ * Func: min(fraction(nr_cpus * tg->shares), nice -20)
-+ *
-+ * Scale tg->shares by the maximal number of CPUs; but clip the max shares at
-+ * nice -20, otherwise a single spinner on a 512 CPU machine would result in
-+ * 512*NICE_0_LOAD, which is also crazy.
-+ */
-+static long calc_max_shares(struct cfs_rq *cfs_rq)
-+{
-+	struct task_group *tg = cfs_rq->tg;
-+	int nr = tg_cpus(tg);
-+	long tg_shares = READ_ONCE(tg->shares);
-+	long max_shares = scale_load(sched_prio_to_weight[0]);
-+	return __calc_smp_shares(cfs_rq, tg_shares * nr, max_shares);
-+}
-+
-+/*
-+ * Func: fraction(tg->shares)
-+ *
-+ * This infamously results in tiny shares when you have many CPUs.
-+ */
-+static long calc_smp_shares(struct cfs_rq *cfs_rq)
-+{
-+	struct task_group *tg = cfs_rq->tg;
-+	long tg_shares = READ_ONCE(tg->shares);
-+	return __calc_smp_shares(cfs_rq, tg_shares, tg_shares);
+@@ -4921,7 +4921,7 @@ static long calc_up_shares(struct cfs_rq
+ 	return READ_ONCE(tg->shares);
  }
  
- /*
-@@ -4857,6 +4896,9 @@ void __sched_cgroup_mode_update(int mode
- 	default:
+-DEFINE_STATIC_CALL(calc_group_shares, calc_smp_shares);
++DEFINE_STATIC_CALL(calc_group_shares, calc_concur_shares);
+ 
+ void __sched_cgroup_mode_update(int mode)
+ {
+@@ -4931,10 +4931,10 @@ void __sched_cgroup_mode_update(int mode
+ 		func = &calc_up_shares;
+ 		break;
+ 	case 1:
+-	default:
  		func = &calc_smp_shares;
  		break;
-+	case 2:
-+		func = &calc_max_shares;
-+		break;
- 	}
- 	static_call_update(calc_group_shares, func);
- }
+ 	case 2:
++	default:
+ 		func = &calc_concur_shares;
+ 		break;
+ 	case 3:
 
 
