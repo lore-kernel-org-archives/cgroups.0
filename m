@@ -1,62 +1,62 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B417A3B83EE
-	for <cgroups@vger.kernel.org>; Mon,  8 Jun 2026 12:16:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 560993BB9FC
+	for <cgroups@vger.kernel.org>; Mon,  8 Jun 2026 12:16:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780920970; cv=none; b=SQ6fkD9PdmnkYNoVPs70xlrDSJmJRG2iHmm8gnYUf4SDvxdIvyX+jLSvtMayaZnozZo0/fkPcLgrhYZbF2uWFNj+HA2XWkM4NWAAKpn/Cj2vihOi3fzA49pXw95QA/UMLcEWJNl3YIdc0D1pqAV0E4wDt+qcwVVfKN/5vW2LL1E=
+	t=1780920971; cv=none; b=uVVykCZnT4DB7ImEE2k4qUJE3SJ0lzMfXfQfCtMRw9UwB+bYhV07n/NJLTlCJJZ1vztHnK3AtTmg6kYbBdOILuTYKD9jJXfgKx0UifBItbdN4nbZJrTeLFLNlj60jgBTtE3xNHStq2VjxfYj0MxV1bOIxeYHtTLV74Yta7ivAkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780920970; c=relaxed/simple;
-	bh=O4QRi/1KDDjUv1bgVSbxKdT6dZaaPpKxQaswvFSPefI=;
+	s=arc-20240116; t=1780920971; c=relaxed/simple;
+	bh=tDC7u52egQ55UBVu3L5EMvdM3Vtu7xDSms+xUy0L7YA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sECOnnio1ZGC0fpgn/e2tWjKTHqVQHmRBQ5gxLQLOAmp+UKvV2qzoxUGGSKkIE4alhxErFHyu6S9qBS9SWWj0RXXtU+kd+zvE7vFJT255UVAR1k86GuaApYLxY0TD0kJxGzZ5XZcsSdnMmoThffjUiOVCE0f2OJFULlM8uwrMm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HqfLFeT/; arc=none smtp.client-ip=209.85.221.53
+	 MIME-Version; b=rrb1eYKMPPCPagILTW+WB/08HwkODQc6VezdRUZwjcgvop+yZEjxpowzEZPYoBb8BJSruZDYWF4uIrBzxdGnTJQiCLnkn1xNjFAhAVFODc9bKOfVrGavL0pz3y65NWGgWFOsgOetGEqGhjqiUsnLYJYYUj5CcbGjDi6zdpBR46g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MNtbC7fq; arc=none smtp.client-ip=209.85.221.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HqfLFeT/"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-45ef1629ff4so2797723f8f.0
-        for <cgroups@vger.kernel.org>; Mon, 08 Jun 2026 05:16:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MNtbC7fq"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-45ee5cdbd28so3071275f8f.1
+        for <cgroups@vger.kernel.org>; Mon, 08 Jun 2026 05:16:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780920966; x=1781525766; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780920968; x=1781525768; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=6LCDTuPozw1aQu15eNY968u+ZsEnLeyKTwQrNnXXOZ8=;
-        b=HqfLFeT/8mmXrvMf6CjqBXyRt8Tjf6F6X6mBlpO+Sk8VPQcIpSJ2DrGow6KcglQJBr
-         WYIEP/EtzAhz8z7J13hHWQZF0n9uCC1QIs/Uf0R2YA1lboQrJrW0AD/ZtYbKwT2yc0rR
-         pVuTC9TtEFCRSNyh1tOWdkyFaNTNg1h5oXW9vmhzaROxiRhCminuRUFk5yf8d+woSooU
-         2dnOrUcQn019Alc3u/oMrKZJ5KvFxe+SoUTLvxvxhS5vUkLxIDceH0TGTDotlTIQrEgq
-         LwLxL52QF7g9Wou7rSrd0b49sItQxEe3i7HBYQqeq8Di2neVLEWVk2U7MOQDESE7G0Bu
-         yXBQ==
+        bh=tOIvSewylSpCmuC9OVq7JPT5uWWaJG2zU5cqeF25bdA=;
+        b=MNtbC7fqAvcJ4DGOCs299AC1jcmNRSVulF0OCzJXgyEEudLQ0BHWrVQmCKNjzpjUy3
+         EAhTlyR6s/LwwMlt6CG7Cn+UErlYebwG/EoQxZsbhmYr+nggiC6LAOK1yjOWwlMASAXv
+         7TkTrG9vRsMjMyvfGzR5JrtGM4ygdthlIF4rC5HTvUKdk4nTRGSZWKcsZMWzMFFN/NyP
+         Ff5Eyca/HY/kdyPc9yKUZe6OIBQ8oaXhf/QpSbyfV7AvYQ9OV1mrcym9+iVuQORCr5jj
+         nfzQPpinN8PvJ0mUJNqo5F5o/VOdvNptKKiFruY6ELgcLlwa3+CSxXnQAGVAekVJ5NFa
+         P1yg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780920966; x=1781525766;
+        d=1e100.net; s=20251104; t=1780920968; x=1781525768;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=6LCDTuPozw1aQu15eNY968u+ZsEnLeyKTwQrNnXXOZ8=;
-        b=AQsrRWqIQEzdvj2G71R9y0XSRG+vtXnVbE7XqtKVo83ZP9j1mabh5LSIy9V401fyCM
-         Z0D9v58sUnmkTqbvgOijcCMTJkIUTv2/ha9nbnAfTJ2CLGhHlw3dItulOm/TF8cVgMOi
-         UR5w66pxkJzpcaTkWyGyy7k2X9qYM8gXrGw6F5msgSvadggu6CVObpndZ7XxoEgNW24o
-         dgBRqTFm2/fEKeSSUvScwu+NgjVywpacUGVBVxNPdjavA5PjmVguKWZza+dn5U8ACwyX
-         Ahb2U7rjOkvuXPoveEgBwhHJ7UwmR4h7cVtzV2/8dDd7T66SmMhd/0ATz7BstTUKh7Xz
-         0w2g==
-X-Gm-Message-State: AOJu0Yy/NC7pElTJFL8foT9OtQDys2VQwknpTL1GkIPEfZa4NNDdtTs9
-	2O7lonukpsV3bYQYqrHHHPf7OJ7wYId3MEk9phzXsmZbgldfl2v4WqYZ
-X-Gm-Gg: Acq92OEKUZwdrOhXZq+51WY+G4Zq6Ts3V9Q1eSAdI8G2lC42WT0KqbGczCaE8Zi/Uay
-	zqwV1rVYL41ZfPcRCvp/2kRoPnR3BHbPx/7tXbstNxELZ+OxT/E8+gIw+tD/UN3wkjLY39gO+ce
-	9XK/j/P1V8YVUff2efs1CqaDq4nw8TVyrzP0Zsgezl8U82Q5ScqYwuUv91KGkyjAIDQ33fgvPgm
-	XqYIcS3uNHIZtrvzleuE9wrnz4dkpeTGEKdRXSnD86E3hXMakWkCqqQPvArIhpeVPdY6ov4Cpw7
-	6CIO/j7Q02hP3Dk6AuRR+r8VZIoH14kBI7cF8/yfCs4l9lecImT3577KHnDww9XDqw1wf9qbPNY
-	cB0rFfdMP2LcLAOgaIz+4MqQqq/z+2tlYsSYk6CpYAZbHHdYPjWFumx+w3R9khmWNcyQjPoEh4/
-	vdUpWUvJjhB1amVPYOhDt4DceeWWj6aLQ=
-X-Received: by 2002:a05:6000:46cd:b0:460:1492:4f0d with SMTP id ffacd0b85a97d-4603063c591mr15526771f8f.34.1780920965986;
-        Mon, 08 Jun 2026 05:16:05 -0700 (PDT)
+        bh=tOIvSewylSpCmuC9OVq7JPT5uWWaJG2zU5cqeF25bdA=;
+        b=ir9nc9EECuMF/YqHNm9KEim1//pkfQB6JOejV2qe1YJe5K/DoEbUUXjoXfVKaVGIxU
+         OtjdaMWKGvhJZ1YXVR3wJwGpJLkHXTDYTHG1N820UTLJ2n3vAFOUlnyY1YrqGYxmVjB8
+         FOIdHD7EQfRdNTW9ua0GP3fjk2c63DXkxS4u7gAK9nJUXhfxJF0PVXleF+Zz1RdLouYv
+         FmP8rOnwrNKnbNvmT6f4OBmT3KOrBXzEvUK3+mLX9/Yi/LgVX2qrldaqG2chE6KGNog9
+         4UFG2ExM6lxUgjaAxWvoZnAAgwRlSiyiKbWpjWjGkTxmMUX3FcXruIrktodjr+W+5m1C
+         /J/A==
+X-Gm-Message-State: AOJu0Yx/bAKmKCRpO2Pv8a9/tEHgY1oh4W+BuL6oJ2wcBFl4po8Cxivk
+	rfpzYXY17otZHhhV7cnW1CXO5Y0iQuACvza6JX9+CM1p/JLJhF6s731e
+X-Gm-Gg: Acq92OHHMSrF1lNLempx0TlkPnf9RsP6uuSBJRMFxZL4HjGuMWbkf2VpyI4JmGKYEB+
+	aTCFkN3Xlz0f0SPt21c+KKL/8eicaGiyiK6W2z6uDyxh7rNsyN8ot3Zorpm5lBuD893jtz9zU11
+	Ydf/EJayIZvU0IDbs/4qcpp66BBP0df5WLfJ0b+JRLzFmOfRyyyOtNHSnGlWAvNwtaqNyUEm8Hn
+	X4FGo1SqmDxRL4e9ql35PHPcZDan86WCwE+p/ocEvpgHvP9mHhmFYGt26tA7S5f1ZbkF2XLYWyY
+	dHQVMwXJnVN9qH0PQ5jT1TtqblFVPcINXiTwUqBKMjMAAO5PWaNrCsHYvdvJ+91AZlcwGPbNZEX
+	JgaM4fMAaPgRDPi+b7PCMI15NU/0lGbEGeE2aWZWXqIjV5wlRd2hmCwaG68a49iaUKlUdsYZmqi
+	WPQFC9G50UuN414/BZD/rtvIsgwV4WpeY=
+X-Received: by 2002:a5d:6448:0:b0:460:d18:865c with SMTP id ffacd0b85a97d-46032b61422mr15269071f8f.1.1780920967701;
+        Mon, 08 Jun 2026 05:16:07 -0700 (PDT)
 Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f2ec711sm50644906f8f.12.2026.06.08.05.16.05
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f2ec711sm50644906f8f.12.2026.06.08.05.16.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Jun 2026 05:16:05 -0700 (PDT)
+        Mon, 08 Jun 2026 05:16:07 -0700 (PDT)
 From: Yuri Andriaccio <yurand2000@gmail.com>
 To: Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>,
@@ -74,9 +74,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luca Abeni <luca.abeni@santannapisa.it>,
 	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: [RFC PATCH v6 19/25] sched/rt: Remove old RT_GROUP_SCHED data structures
-Date: Mon,  8 Jun 2026 14:15:38 +0200
-Message-ID: <20260608121546.69910-20-yurand2000@gmail.com>
+Subject: [RFC PATCH v6 21/25] sched/rt: Hook HCBS migration functions
+Date: Mon,  8 Jun 2026 14:15:40 +0200
+Message-ID: <20260608121546.69910-22-yurand2000@gmail.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260608121546.69910-1-yurand2000@gmail.com>
 References: <20260608121546.69910-1-yurand2000@gmail.com>
@@ -88,120 +88,121 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: luca abeni <luca.abeni@santannapisa.it>
+Hook rt-cgroup migration functions:
 
-Completely remove the old RT_GROUP_SCHED's functions and data structures:
+- select_task_rt_rq
+  Always return the cpu where the task is scheduled.
+- balance_rt
+- put_prev_task_rt
+  If a server is throttled, put_prev_task_rt is invoked and a push is
+  necessary so that the task can keep running on another server if possible.
+- switched_to_rt
+  Keep track of the deadline server that is assigned to the task switching
+  to FIFO/RR priority.
 
-- Remove the fields back and my_q from sched_rt_entity.
-- Remove the rt_bandwidth data structure.
-- Remove the field rt_bandwidth from task_group.
-- Remove the rt_bandwidth_enabled function.
-- Remove the fields rt_queued, rt_throttled, rt_time, rt_runtime,
-  rt_runtime_lock and rt_nr_boosted from rt_rq.
-
-All of the removed fields and data are similarly represented in previously
-added fields in rq, rt_rq, dl_bandwidth and in the dl server themselves.
-
-Co-developed-by: Yuri Andriaccio <yurand2000@gmail.com>
-Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
+Co-developed-by: Alessio Balsini <a.balsini@sssup.it>
+Signed-off-by: Alessio Balsini <a.balsini@sssup.it>
+Co-developed-by: Andrea Parri <parri.andrea@gmail.com>
+Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
+Co-developed-by: luca abeni <luca.abeni@santannapisa.it>
 Signed-off-by: luca abeni <luca.abeni@santannapisa.it>
+Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
 ---
- include/linux/sched.h |  3 ---
- kernel/sched/sched.h  | 33 ---------------------------------
- 2 files changed, 36 deletions(-)
+ kernel/sched/rt.c | 38 +++++++++++++++++++++++++++++++-------
+ 1 file changed, 31 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0021069581c2..e934ec9fc3a9 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -628,12 +628,9 @@ struct sched_rt_entity {
- 	unsigned short			on_rq;
- 	unsigned short			on_list;
-
--	struct sched_rt_entity		*back;
- #ifdef CONFIG_RT_GROUP_SCHED
- 	/* rq on which this entity is (to be) queued: */
- 	struct rt_rq			*rt_rq;
--	/* rq "owned" by this entity/group: */
--	struct rt_rq			*my_q;
- #endif
- } __randomize_layout;
-
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 394f40dc26db..53248cbbeaf8 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -313,15 +313,6 @@ struct rt_prio_array {
- 	struct list_head queue[MAX_RT_PRIO];
- };
-
--struct rt_bandwidth {
--	/* nests inside the rq lock: */
--	raw_spinlock_t		rt_runtime_lock;
--	ktime_t			rt_period;
--	u64			rt_runtime;
--	struct hrtimer		rt_period_timer;
--	unsigned int		rt_period_active;
--};
--
- struct dl_bandwidth {
- 	raw_spinlock_t		dl_runtime_lock;
- 	u64			dl_runtime;
-@@ -343,12 +334,6 @@ static inline int dl_bandwidth_enabled(void)
-  *  - cache the fraction of bandwidth that is currently allocated in
-  *    each root domain;
-  *
-- * This is all done in the data structure below. It is similar to the
-- * one used for RT-throttling (rt_bandwidth), with the main difference
-- * that, since here we are only interested in admission control, we
-- * do not decrease any runtime while the group "executes", neither we
-- * need a timer to replenish it.
-- *
-  * With respect to SMP, bandwidth is given on a per root domain basis,
-  * meaning that:
-  *  - bw (< 100%) is the deadline bandwidth of each CPU;
-@@ -511,11 +496,9 @@ struct task_group {
- 	 * different deadline server, and a runqueue per CPU. All the dl-servers
- 	 * share the same dl_bandwidth object.
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 276eebe8d0a9..964704d88ba1 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -976,6 +976,10 @@ select_task_rq_rt(struct task_struct *p, int cpu, int flags)
+ 	struct rq *rq;
+ 	bool test;
+ 
++	/* Just return the task_cpu for processes inside task groups */
++	if (is_dl_group(rt_rq_of_se(&p->rt)))
++		goto out;
++
+ 	/* For anything but wake ups, just return the task_cpu */
+ 	if (!(flags & (WF_TTWU | WF_FORK)))
+ 		goto out;
+@@ -1065,21 +1069,25 @@ static void check_preempt_equal_prio(struct rq *rq, struct task_struct *p)
+ 	resched_curr(rq);
+ }
+ 
+-static int balance_rt(struct rq *rq, struct task_struct *p, struct rq_flags *rf)
++static int balance_rt(struct rq *global_rq, struct task_struct *p, struct rq_flags *rf)
+ {
+-	if (!on_rt_rq(&p->rt) && need_pull_rt_task(rq, p)) {
++	struct rt_rq *rt_rq = rt_rq_of_se(&p->rt);
++
++	if (!on_rt_rq(&p->rt) && need_pull_rt_task(rq_of_rt_rq(rt_rq), p)) {
+ 		/*
+ 		 * This is OK, because current is on_cpu, which avoids it being
+ 		 * picked for load-balance and preemption/IRQs are still
+ 		 * disabled avoiding further scheduler activity on it and we've
+ 		 * not yet started the picking loop.
+ 		 */
+-		rq_unpin_lock(rq, rf);
+-		pull_rt_rq_task(&rq->rt);
+-		rq_repin_lock(rq, rf);
++		rq_unpin_lock(global_rq, rf);
++		pull_rt_rq_task(rt_rq);
++		rq_repin_lock(global_rq, rf);
+ 	}
+ 
+-	return sched_stop_runnable(rq) || sched_dl_runnable(rq) || sched_rt_runnable(rq);
++	return sched_stop_runnable(global_rq) ||
++	       sched_dl_runnable(global_rq) ||
++	       sched_rt_runnable(global_rq);
+ }
+ 
+ /*
+@@ -1241,6 +1249,13 @@ static void put_prev_task_rt(struct rq *rq, struct task_struct *p, struct task_s
  	 */
--	struct sched_rt_entity	**rt_se;
- 	struct sched_dl_entity	**dl_se;
- 	struct rt_rq		**rt_rq;
-
--	struct rt_bandwidth	rt_bandwidth;
- 	struct dl_bandwidth	dl_bandwidth;
- #endif
-
-@@ -842,11 +825,6 @@ struct scx_rq {
- };
- #endif /* CONFIG_SCHED_CLASS_EXT */
-
--static inline int rt_bandwidth_enabled(void)
--{
--	return 0;
--}
--
- /* RT IPI pull logic requires IRQ_WORK */
- #if defined(CONFIG_IRQ_WORK) && defined(CONFIG_SMP)
- # define HAVE_RT_PUSH_IPI
-@@ -864,17 +842,6 @@ struct rt_rq {
- 	bool			overloaded;
- 	struct plist_head	pushable_tasks;
-
--	int			rt_queued;
--
--#ifdef CONFIG_RT_GROUP_SCHED
--	int			rt_throttled;
--	u64			rt_time; /* consumed RT time, goes up in update_curr_rt */
--	u64			rt_runtime; /* allotted RT time, "slice" from rt_bandwidth, RT sharing/balancing */
--	/* Nests inside the rq lock: */
--	raw_spinlock_t		rt_runtime_lock;
--
--	unsigned int		rt_nr_boosted;
--#endif
- #ifdef CONFIG_CGROUP_SCHED
- 	struct task_group	*tg; /* this tg has "this" rt_rq on given CPU for runnable entities */
- #endif
---
+ 	if (on_rt_rq(&p->rt) && p->nr_cpus_allowed > 1)
+ 		enqueue_pushable_task(rt_rq, p);
++
++	if (is_dl_group(rt_rq)) {
++		struct sched_dl_entity *dl_se = dl_group_of(rt_rq);
++
++		if (dl_se->dl_throttled)
++			rt_queue_push_tasks(rt_rq);
++	}
+ }
+ 
+ /* Only try algorithms three times */
+@@ -2050,12 +2065,21 @@ static void switching_to_rt(struct rq *rq, struct task_struct *p) {}
+  */
+ static void switched_to_rt(struct rq *rq, struct task_struct *p)
+ {
++	struct rt_rq *rt_rq = rt_rq_of_se(&p->rt);
++
+ 	/*
+ 	 * If we are running, update the avg_rt tracking, as the running time
+ 	 * will now on be accounted into the latter.
+ 	 */
+ 	if (task_current(rq, p)) {
+ 		update_rt_rq_load_avg(rq_clock_pelt(rq), rq, 0);
++
++		if (is_dl_group(rt_rq)) {
++			struct sched_dl_entity *dl_se = dl_group_of(rt_rq);
++
++			p->dl_server = dl_se;
++		}
++
+ 		return;
+ 	}
+ 
+@@ -2066,7 +2090,7 @@ static void switched_to_rt(struct rq *rq, struct task_struct *p)
+ 	 */
+ 	if (task_on_rq_queued(p)) {
+ 		if (p->nr_cpus_allowed > 1 && rq->rt.overloaded)
+-			rt_queue_push_tasks(rt_rq_of_se(&p->rt));
++			rt_queue_push_tasks(rt_rq);
+ 
+ 		if (p->prio < rq->donor->prio && cpu_online(cpu_of(rq)))
+ 			resched_curr(rq);
+-- 
 2.54.0
 
