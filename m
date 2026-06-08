@@ -1,62 +1,62 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EB9637C92A
-	for <cgroups@vger.kernel.org>; Mon,  8 Jun 2026 12:15:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D9237EFFB
+	for <cgroups@vger.kernel.org>; Mon,  8 Jun 2026 12:16:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780920962; cv=none; b=ZJxqSpraXqUL2cdhlQzYzJXH+KrgthyTMQXjnflGCoMDtsGMh84LQtdf77AMolgQ4Wh48xz6lEB9m+IoW+SWx0EMn6jJ2SwLgswrwVV2h3iKQ3AMrxsnsDteTCxeiRSTpTxyusNR6aRoSOANzyVsmtnaH6LfDKvHRTGD3MppWV8=
+	t=1780920963; cv=none; b=cgqfFY7AAD8EpeZPVFfN1dsl5ctiGaiVLY7G2KhUMd+79pf05GIOX+icJ7joNDmH6VR2CkGCyUktpEwCr3s2rFVNy/d/Zb39fJJEUBOKOw58vlnmjJNZeqGLvgvY0/m+bYbaS7FQa9Ce45IHZ0vdhMcuDzigMZD8bXhIXpyKpb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780920962; c=relaxed/simple;
-	bh=l7/2jOFeBJhQNf2GhvMwDBVsIZzI9+ePozibbqh9nsI=;
+	s=arc-20240116; t=1780920963; c=relaxed/simple;
+	bh=TCzeSZTBx8lzpAQELS8A6vLFLj2ynJCbG3lDm1QkhmQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WZWYj9Bp6ymk2bkM2pwHyV4aQiN4OgB+ZbanLh/L6VdkAWpuuLpJ1ap9b8e4S1i5L1OBJpCbN3ANjXNlBxJQV5fGtDvgzzHPb9yBnFUw1O9LW3pUfJa5QvBFuUpPAtOGWEwmIQjcAVMHS1BsPD1R+99j6tmB1l0jlzcLb2AWOfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TmBwjHDx; arc=none smtp.client-ip=209.85.221.47
+	 MIME-Version; b=PpgfOGn3zIpTpE42Gr82dAwgBZinN+tQLv4qWCAYVeamqetVBOY1xKzbScOsX/42ySPaegVzBnLXppVILXQSDxA9SDkOz+8GXSYe7DoYhiD6Jn6K1fOeUUf7Y1K1nHQBirMiDiUajM/DETtTQjCjode/pDZYiRkgDBhHNIfDAdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sZ15FC4X; arc=none smtp.client-ip=209.85.221.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TmBwjHDx"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-45eedcdaeaaso2942772f8f.3
-        for <cgroups@vger.kernel.org>; Mon, 08 Jun 2026 05:15:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sZ15FC4X"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-45ef1629ff4so2797631f8f.0
+        for <cgroups@vger.kernel.org>; Mon, 08 Jun 2026 05:16:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780920958; x=1781525758; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780920960; x=1781525760; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=U0yT2Aj62az0wIP5mZB6k9It5mchAon7rR5a4sHBIVw=;
-        b=TmBwjHDxf79PmLytvgLrD4ZbR6OA7SQ8yTStDmLfjnikQz53RC7QGmOj78cc+XheQf
-         XXMUIA2bHa/rEYDluqFiEhMHoPNTc3DNRMeZHLnDzsqumawWl10vGz5ZTrkjq6QHvhQP
-         BIXiIbMUyNOxqOxKiG2tTo9sMqdd2CPQe/XwCEHuOMeia0J9nINTrosWssfIsJaKkaJM
-         D/bzGXPEz4MobwlBomnl4VTVjvo+enrjpRQsj18/A9BeeIXtE7fJSyI4k23FVrHqjEZ/
-         ocU+b0/ionkalV+lfysdQiAjosFY49WVSOHcFeuVgAlwij4Vq0a15kX+GigEahShlyte
-         4yIA==
+        bh=LUGi6GN5j9tpmC+RZ4hz/nx0wpr5cX/yRLcD8GqgOGU=;
+        b=sZ15FC4Xo+dMBc8DAr8Nz0n5r8mJAwIH4eMX95UgFmlyZcTzctRRqlt/M/x8XgNkSL
+         5jPuq4gNp8IBdoJB6kA9EpUT79G4LkLSkkeZfEP9I9RT7n1INIyLE5+lHJdfJfCy2BdJ
+         5DaHBwG7aT7iOGVfGrNzKp5fpPGwSewmJtTB/asC2Pemwr18YhqpfXAk4YeeWb+G5YZC
+         p+acIRPu1gwcAPAn13Ol4it4IWMcFw6dmzo5XmEzj6GbsJwnIx49o+I9U+Kb8qJfCHHw
+         s8AmRHg3GLiAhNv1U1I4OOgyQBVNmUuUWtQQz1f92U0seTdKEB+144geQkw7n9RUjjVF
+         bubw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780920958; x=1781525758;
+        d=1e100.net; s=20251104; t=1780920960; x=1781525760;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=U0yT2Aj62az0wIP5mZB6k9It5mchAon7rR5a4sHBIVw=;
-        b=rL9NH+sMEhT23k2GrtwevzgAynp+fMyYWv9fyRmQ0Hje3Hc2T/pI5IHzw1rm90r740
-         g8n/vmKTwgCaSw9P9fw6Aa3yu2JPNeB+PiFLs+dkFBBCBBYBLZhKZSkLzcik0kgbWtRb
-         D9frE/ukzVGgqmDJ8KOoK/fwuuTEkqABc+jjJB/lKisz9SNO3vLISddg8v0BmjYZiHHn
-         Kds1HV69TKSwSmkV0IMWJJpJPNsatkpXpg+rXgmSdPwFI+vO0xeQIldA+wKqnMKlyUEp
-         qY4hZJyUl5LUyXACptCLhUlAGq00YMB1BIDpO1UP13mnsG8C76XNebtv/OUgIdbpzm8y
-         cu2Q==
-X-Gm-Message-State: AOJu0Yw9Cg0Q32DwJLhgMYG0Em96kevvN4uV02m5jOSurVHl1nAXa/qu
-	gf3/aBeolGGnNFPSaUiK18KXtyYfaPbhWeG7EiKZlWIMA1RoQRx7qjEq
-X-Gm-Gg: Acq92OEuCF7HW9R/rRNemIEFiR2XirPRAnrYitpSG3Z+3vuWxiqtEyVKuTqwvHIaQaK
-	vuWtrTIUaoYZCQiMLnbPCYUpoPai5nV60yUgBCrkEPG7NQXZB1wNB3iiKMmedjkTr1iIMqw5R+J
-	4QKpdJh9NGpaUZB8MQ6x180ZR7d226yD5hrJ+JK8uHWNm03V9AVxvIW50HIblhabGOERNgySid4
-	3m3MynKfGCbeCDPVTPsivQ7Iwn3koFd1oSykN/NJdjKobMwfZ5WfsXoZ3k+oQkdbzwSmmpqKYaq
-	2ctPQr3dZJtQgkqViLNS7ZlBCE4yrWqnCPwFCKSPmpZy49ZnHhWZ4CUqhyf0TFAj9IFy89iKA3x
-	HKRB2o/DklLWYMhPWo4AXMBYuA1OpZyXY4y6BOA0PAAAth052jLY2jHEzSMMOXBx22iQbg0zjw4
-	LMsakwGBw7zR3t53IWQKtpmE9+06W71sw=
-X-Received: by 2002:adf:f750:0:b0:45e:d8dc:922e with SMTP id ffacd0b85a97d-4603063a8ccmr17387986f8f.20.1780920958441;
-        Mon, 08 Jun 2026 05:15:58 -0700 (PDT)
+        bh=LUGi6GN5j9tpmC+RZ4hz/nx0wpr5cX/yRLcD8GqgOGU=;
+        b=ieaffi+hIzK2kGIQANJgB7z803EdGpyJAfSRjCA2IYpxFM1Ty0pdemuioFQ0WbCYPe
+         +i/e0meMYora0mfbfTOolnMd/6BC5n2/s/HeSLhDx13s66qiwDI+mmtytfEvdwq6nKBV
+         +uDKZXhMZarHAtQSizEiBLo9iZFMi9h8tBp17k51QSoo0TpoybFDLg9e6Nj4Egne6iX5
+         dJ5+5r0mfGj8wyEuCizwV128FhFSRb0/UVXI6H4RujN9WFmlfCFvWXt74TWWLg63BO0x
+         QIt9oOp5IvZvb81Ue1QBfCm/0+Ud8Fze+SJnW5hssO8eYXrF7SffMCl7BYzRftxTPsOE
+         z1TA==
+X-Gm-Message-State: AOJu0YzEZ+viMv5cU8F4hZKfZkTrP392SmHot40UdPmUB5E2b9FBpTpF
+	bBR4QJSDlFlooNLyYowzwMIPgR3O5yXSEXrIgp0GmGrEpTi9Kk9a5mjd
+X-Gm-Gg: Acq92OEAPZUUHDGfS8SlkoFSgv6vjPoZt6LOi5Cp2jy5cPSIPTVFkU7iBsKGDUK68SX
+	Kkr4lbekUkD9CdQsqvjgNEiIxqiXz3BYFHa+GHZLs43JhYNOSHAo/MgfHAkcXFXbL3rE0cvdnk2
+	Dd4yfbXW/3lOPwN8bw7TpRnpYlHpyWvJrVMqBnZPXA3NoTNr0BBfwb9RlQRI9u4KcWrs1CzBZqK
+	EpAb6Z+MJPNWJmFs0Huxa76zbY2wAojoPAMmNDhr/aLHn+Hr6aI8+PpImd1tKKSZAAl2WWgRhy6
+	0j8CQNsBdn3WssQ8NAzdfkvyktu1Jhevd2YoAsAZq+PzXghGby7RXqtY19eYVpUJabtPlxQFpEQ
+	WiiPWnDYwVr9jRrVFYF8HfwbTNBCDaKSPRRJq0abbqX1esbBYa2uqPBkjuqa/bFHmi+b4DQ7O49
+	0us7I4ZfDvrD6TsIzlchR6RURhn9lozSE=
+X-Received: by 2002:a05:6000:4029:b0:45e:f798:5531 with SMTP id ffacd0b85a97d-460306095b2mr26881415f8f.23.1780920960169;
+        Mon, 08 Jun 2026 05:16:00 -0700 (PDT)
 Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f2ec711sm50644906f8f.12.2026.06.08.05.15.57
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f2ec711sm50644906f8f.12.2026.06.08.05.15.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Jun 2026 05:15:58 -0700 (PDT)
+        Mon, 08 Jun 2026 05:15:59 -0700 (PDT)
 From: Yuri Andriaccio <yurand2000@gmail.com>
 To: Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>,
@@ -74,9 +74,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luca Abeni <luca.abeni@santannapisa.it>,
 	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: [RFC PATCH v6 11/25] sched/deadline: Add dl_init_tg
-Date: Mon,  8 Jun 2026 14:15:30 +0200
-Message-ID: <20260608121546.69910-12-yurand2000@gmail.com>
+Subject: [RFC PATCH v6 13/25] sched/deadline: Account rt-cgroups bandwidth in deadline tasks schedulability tests.
+Date: Mon,  8 Jun 2026 14:15:32 +0200
+Message-ID: <20260608121546.69910-14-yurand2000@gmail.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260608121546.69910-1-yurand2000@gmail.com>
 References: <20260608121546.69910-1-yurand2000@gmail.com>
@@ -90,11 +90,13 @@ Content-Transfer-Encoding: 8bit
 
 From: luca abeni <luca.abeni@santannapisa.it>
 
-Add dl_init_tg to initialize and/or update a rt-cgroup dl_server and to
-also account the allocated bandwidth. This function is currently unhooked
-and will be later used to allocate bandwidth to rt-cgroups.
+Account the rt-cgroups hierarchy's reserved bandwidth in the
+schedulability test of deadline entities. This mechanism allows to
+completely reserve portion of the rt-bandwidth to rt-cgroups even if
+they do not use all of it.
 
-Add lock guard for raw_spin_rq_lock_irq for cleaner code.
+Account for the rt-cgroups' reserved bandwidth also when changing the
+total dedicated bandwidth for real time tasks.
 
 Co-developed-by: Alessio Balsini <a.balsini@sssup.it>
 Signed-off-by: Alessio Balsini <a.balsini@sssup.it>
@@ -104,75 +106,62 @@ Co-developed-by: Yuri Andriaccio <yurand2000@gmail.com>
 Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
 Signed-off-by: luca abeni <luca.abeni@santannapisa.it>
 ---
- kernel/sched/deadline.c | 31 +++++++++++++++++++++++++++++++
- kernel/sched/sched.h    |  5 +++++
- 2 files changed, 36 insertions(+)
+ kernel/sched/deadline.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 673c6f2b5ece..afadc3521bc0 100644
+index afadc3521bc0..166d23f45cab 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -335,6 +335,37 @@ void cancel_inactive_timer(struct sched_dl_entity *dl_se)
- 	cancel_dl_timer(dl_se, &dl_se->inactive_timer);
+@@ -205,11 +205,22 @@ void __dl_add(struct dl_bw *dl_b, u64 tsk_bw, int cpus)
+ 	__dl_update(dl_b, -((s32)tsk_bw / cpus));
  }
- 
-+#ifdef CONFIG_RT_GROUP_SCHED
-+void dl_init_tg(struct sched_dl_entity *dl_se, u64 rt_runtime, u64 rt_period)
+
++static inline u64 get_dl_groups_bw(void)
 +{
-+	struct rq *rq = container_of_const(dl_se->dl_rq, struct rq, dl);
-+	int is_active;
-+	u64 new_bw;
-+
-+	guard(raw_spin_rq_lock_irq)(rq);
-+	is_active = dl_se->my_q->rt.rt_nr_running > 0;
-+
-+	update_rq_clock(rq);
-+	dl_server_stop(dl_se);
-+
-+	new_bw = to_ratio(rt_period, rt_runtime);
-+	dl_rq_change_utilization(rq, dl_se, new_bw);
-+
-+	dl_se->dl_runtime  = rt_runtime;
-+	dl_se->dl_deadline = rt_period;
-+	dl_se->dl_period   = rt_period;
-+
-+	dl_se->runtime = 0;
-+	dl_se->deadline = 0;
-+
-+	dl_se->dl_bw = new_bw;
-+	dl_se->dl_density = new_bw;
-+
-+	if (is_active)
-+		dl_server_start(dl_se);
-+}
++#ifdef CONFIG_RT_GROUP_SCHED
++	return to_ratio(root_task_group.dl_bandwidth.dl_period,
++			root_task_group.dl_bandwidth.dl_runtime);
++#else
++	return 0;
 +#endif
++}
 +
- static void dl_change_utilization(struct task_struct *p, u64 new_bw)
+ static inline bool
+ __dl_overflow(struct dl_bw *dl_b, unsigned long cap, u64 old_bw, u64 new_bw)
  {
- 	WARN_ON_ONCE(p->dl.flags & SCHED_FLAG_SUGOV);
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 0ba87be1c98f..58f67093145e 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -425,6 +425,7 @@ extern void dl_server_init(struct sched_dl_entity *dl_se, struct dl_rq *dl_rq,
- 		    struct rq *served_rq,
- 		    dl_server_pick_f pick_task);
- extern void sched_init_dl_servers(void);
-+extern void dl_init_tg(struct sched_dl_entity *dl_se, u64 rt_runtime, u64 rt_period);
- 
- extern void fair_server_init(struct rq *rq);
- extern void ext_server_init(struct rq *rq);
-@@ -2044,6 +2045,10 @@ static inline struct rq *_this_rq_lock_irq(struct rq_flags *rf) __acquires_ret
- 	return rq;
+ 	return dl_b->bw != -1 &&
+-	       cap_scale(dl_b->bw, cap) < dl_b->total_bw - old_bw + new_bw;
++	       cap_scale(dl_b->bw, cap) < dl_b->total_bw - old_bw + new_bw
++					+ cap_scale(get_dl_groups_bw(), cap);
  }
- 
-+DEFINE_LOCK_GUARD_1(raw_spin_rq_lock_irq, struct rq,
-+		    raw_spin_rq_lock_irq(_T->lock),
-+		    raw_spin_rq_unlock_irq(_T->lock))
-+
- #ifdef CONFIG_NUMA
- 
- enum numa_topology_type {
--- 
+
+ static inline
+@@ -3490,8 +3501,9 @@ int sched_dl_global_validate(void)
+ 	u64 period = global_rt_period();
+ 	u64 new_bw = to_ratio(period, runtime);
+ 	u64 cookie = ++dl_cookie;
++	u64 dl_groups_root = get_dl_groups_bw();
+ 	struct dl_bw *dl_b;
+-	int cpu, cpus, ret = 0;
++	int cpu, cap, cpus, ret = 0;
+ 	unsigned long flags;
+
+ 	/*
+@@ -3506,10 +3518,12 @@ int sched_dl_global_validate(void)
+ 			goto next;
+
+ 		dl_b = dl_bw_of(cpu);
++		cap = dl_bw_capacity(cpu);
+ 		cpus = dl_bw_cpus(cpu);
+
+ 		raw_spin_lock_irqsave(&dl_b->lock, flags);
+-		if (new_bw * cpus < dl_b->total_bw)
++		if (new_bw * cpus < dl_b->total_bw +
++				    cap_scale(dl_groups_root, cap))
+ 			ret = -EBUSY;
+ 		raw_spin_unlock_irqrestore(&dl_b->lock, flags);
+
+--
 2.54.0
 
