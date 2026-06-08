@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B8B634D382;
-	Mon,  8 Jun 2026 03:43:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFCEF34CFB9;
+	Mon,  8 Jun 2026 03:43:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780890196; cv=none; b=BOf3w8PtlB9fwkVNTy4NVavjw7+baVmEvPJZVE6QcF3u7GBwtbkUh+fwBJMtFifnSVKtg6+kDj1sbh6IRwfPxfmsM31gSXbhEGN6s0IRBMAr+rOMkXOS7HFgqqsld2MV8nm26YRgSWNmPQ5ZsCh1oFxHWV4HGft+EDc8uTCkgME=
+	t=1780890200; cv=none; b=SZfpzUkp0P2HcWzZQnRvv1zErk6jkx4Y+3mxQ69LfzxUEkfNh1rGnA7YPFAYz2G+ZrrRbu12vt/0jro0pHRtPlxq8vMNn81gX0TwSUKdmXJeNgnfqhuNo2VD1MeJEGSFfsJwbSS/muwS8QKvp4x12X//tOdg06cVcmMJUyF4QKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780890196; c=relaxed/simple;
-	bh=Ywh/pOq61c8tBbSiPsr/6aJSHg5spVpyQgkQezDzeoU=;
+	s=arc-20240116; t=1780890200; c=relaxed/simple;
+	bh=2bKznF2L7/t93XD7mtU61mUwsS+L2fk2ZnHKf23/UCw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y3n1F/ctR1HmHBOXsGr2wBS234QPsH9M/z3bCeOy+28bPFpurDOGTKKeBoLPDHw8HZSTvYMQwCo4t41j0nnlxT015yys+m5goqpljqsZmqyUEOHgMz0fhiCdOilrHVN16v8oP+gohqgAkRpC9goNGJFbdpx7xP3pPWJJeLD6IpA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fbA68OU7; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=IomJUc080P8yyRZwVYTzBz5KqEHBFfEvIDcrpwCw8rWcdYzCtPSQR0Q9ke+gPftEB5KB3bugiAZHbDUU66diOGQphK3wGiejaGM0HGtvhVmMz+PIlNYMcAToZ32uzRjk3n/7JR8vSG5XphxETkSS8wvunR7hluxhvi2wRjGmGrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LDGPIPI3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fbA68OU7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA0CB1F00898;
-	Mon,  8 Jun 2026 03:43:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LDGPIPI3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 746AB1F00893;
+	Mon,  8 Jun 2026 03:43:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780890195;
-	bh=vuwEd9q0hgQ/W0hmwr4wo03yb5oe8N9Mp2bIxGqEObI=;
+	s=k20260515; t=1780890199;
+	bh=XwgOL7yvpTj5e2kxLuLeC19oCe8j+WMlaRhCcir6U04=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fbA68OU7rwCZh52sRF98htb0dhiuh/KATAF4tJlKA4uL0h1y72Rwfg5n1HwT2Iatq
-	 2QBs5e+7arpdsq+7Dy8/9Z3KL6bO2QOi0AtlsP02SyS6J6r5ume+CRnpXLmyLe/8LO
-	 K8MiJuKAyIiZVOv9OFkM8WBUshcOEkxA55DgwKbYZ9By9NUHmYb+RJ6tavH/5UuyZh
-	 bGfpofy7aTfCFCXLladRntpq0W0VQHF+oN5McMMVfsdPEdUACiYEIV1/7YO9HBunEu
-	 oxXFmVx4xZ6airi8Ma5C3tnUoluJ4Ab34CdPYb8KqeKVg/ut1OTZng7rxPfURzMumA
-	 ZruqfS3oUKxhg==
+	b=LDGPIPI3GjdPwnLL9bjwz5Ut16DAKbzD0MWWoYlfOPr1iX4p0iex98B6R8tY6cYXZ
+	 sm/xc0jjukwVKIcd44R0eZa64PXHKlgMy/jGZKCxdA8bQsTgASJ5205uziCMyWd8dQ
+	 Fkr8CfyyACcK0F5z451FQy26fZMS9IwoFs8VoEh0kuxoMslVc9r4NWtgSpFIcI87q7
+	 brG88enB38rlb18Y92U/kTeZfBA3UJuhjS9Vw3l8qWa0JbZjqAdBEPNRP8XRMaHkBL
+	 t8ss7c4DgHIjI93/bX8Yo4gkCt4qpuwdk5r18Y3CwR0bqVPIbYNRfNjcEo/zU0wUDK
+	 K26gkMCakAKuA==
 From: Yu Kuai <yukuai@kernel.org>
 To: nilay@linux.ibm.com,
 	tom.leiming@gmail.com,
@@ -46,9 +46,9 @@ Cc: akpm@linux-foundation.org,
 	linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 4/8] blk-cgroup: don't nest queue_lock under rcu in blkg_lookup_create()
-Date: Mon,  8 Jun 2026 11:42:45 +0800
-Message-ID: <93f33cc9e5a39dddb78dcd934d0c1d04b564fb00.1780621988.git.yukuai@fygo.io>
+Subject: [PATCH 5/8] blk-cgroup: don't nest queue_lock under rcu in bio_associate_blkg()
+Date: Mon,  8 Jun 2026 11:42:46 +0800
+Message-ID: <8496fa234b21d4b31b7f068766906d0bffcac8e6.1780621988.git.yukuai@fygo.io>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <cover.1780621988.git.yukuai@fygo.io>
 References: <cover.1780621988.git.yukuai@fygo.io>
@@ -62,135 +62,51 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Change this in two steps:
-
-1) hold rcu lock and do blkg_lookup() from fast path;
-2) hold queue_lock directly from slow path, and don't nest it under rcu
-   lock;
-
-Prepare to convert protecting blkcg with blkcg_mutex instead of
-queue_lock.
+If a bio is already associated with a blkg, the blkcg is already pinned
+until the bio is done, so there is no need for RCU protection. Otherwise,
+protect blkcg_css() with RCU independently. Prepare to protect blkcg with
+blkcg_mutex instead of queue_lock.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- block/blk-cgroup.c | 57 +++++++++++++++++++++++++++++-----------------
- 1 file changed, 36 insertions(+), 21 deletions(-)
+ block/blk-cgroup.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 46fc65050c38..e2896d582235 100644
+index e2896d582235..8c9ca52a54f4 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -466,26 +466,21 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
- static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 		struct gendisk *disk)
- {
- 	struct request_queue *q = disk->queue;
- 	struct blkcg_gq *blkg;
--	unsigned long flags;
--
--	WARN_ON_ONCE(!rcu_read_lock_held());
+@@ -2186,20 +2186,24 @@ void bio_associate_blkg(struct bio *bio)
+ 	struct cgroup_subsys_state *css;
  
--	blkg = blkg_lookup(blkcg, q);
--	if (blkg)
--		return blkg;
--
--	spin_lock_irqsave(&q->queue_lock, flags);
-+	rcu_read_lock();
- 	blkg = blkg_lookup(blkcg, q);
- 	if (blkg) {
- 		if (blkcg != &blkcg_root &&
- 		    blkg != rcu_dereference(blkcg->blkg_hint))
- 			rcu_assign_pointer(blkcg->blkg_hint, blkg);
--		goto found;
-+		rcu_read_unlock();
-+		return blkg;
- 	}
-+	rcu_read_unlock();
- 
- 	/*
- 	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
- 	 * non-root blkgs have access to their parents.  Returns the closest
- 	 * blkg to the intended blkg should blkg_create() fail.
-@@ -513,12 +508,10 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 		}
- 		if (pos == blkcg)
- 			break;
- 	}
- 
--found:
--	spin_unlock_irqrestore(&q->queue_lock, flags);
- 	return blkg;
- }
- 
- static void blkg_destroy(struct blkcg_gq *blkg)
- {
-@@ -2098,10 +2091,22 @@ void blkcg_add_delay(struct blkcg_gq *blkg, u64 now, u64 delta)
+ 	if (blk_op_is_passthrough(bio->bi_opf))
  		return;
- 	blkcg_scale_delay(blkg, now);
- 	atomic64_add(delta, &blkg->delay_nsec);
+ 
+-	rcu_read_lock();
+-
+-	if (bio->bi_blkg)
++	if (bio->bi_blkg) {
+ 		css = bio_blkcg_css(bio);
+-	else
++		bio_associate_blkg_from_css(bio, css);
++	} else {
++		rcu_read_lock();
+ 		css = blkcg_css();
++		if (!css_tryget_online(css))
++			css = NULL;
++		rcu_read_unlock();
+ 
+-	bio_associate_blkg_from_css(bio, css);
+-
+-	rcu_read_unlock();
++		bio_associate_blkg_from_css(bio, css);
++		if (css)
++			css_put(css);
++	}
  }
- 
-+static inline struct blkcg_gq *blkg_lookup_tryget(struct blkcg_gq *blkg)
-+{
-+retry:
-+	if (blkg_tryget(blkg))
-+		return blkg;
-+
-+	blkg = blkg->parent;
-+	if (blkg)
-+		goto retry;
-+
-+	return NULL;
-+}
- /**
-  * blkg_tryget_closest - try and get a blkg ref on the closet blkg
-  * @bio: target bio
-  * @css: target css
-  *
-@@ -2110,24 +2115,34 @@ void blkcg_add_delay(struct blkcg_gq *blkg, u64 now, u64 delta)
-  * up taking a reference on or %NULL if no reference was taken.
-  */
- static inline struct blkcg_gq *blkg_tryget_closest(struct bio *bio,
- 		struct cgroup_subsys_state *css)
- {
--	struct blkcg_gq *blkg, *ret_blkg = NULL;
-+	struct request_queue *q = bio->bi_bdev->bd_queue;
-+	struct blkcg *blkcg = css_to_blkcg(css);
-+	struct blkcg_gq *blkg;
- 
- 	rcu_read_lock();
--	blkg = blkg_lookup_create(css_to_blkcg(css), bio->bi_bdev->bd_disk);
--	while (blkg) {
--		if (blkg_tryget(blkg)) {
--			ret_blkg = blkg;
--			break;
--		}
--		blkg = blkg->parent;
--	}
-+	blkg = blkg_lookup(blkcg, q);
-+	if (likely(blkg))
-+		blkg = blkg_lookup_tryget(blkg);
- 	rcu_read_unlock();
- 
--	return ret_blkg;
-+	if (blkg)
-+		return blkg;
-+
-+	/*
-+	 * Fast path failed, we're probably issuing IO in this cgroup the first
-+	 * time, hold lock to create new blkg.
-+	 */
-+	spin_lock_irq(&q->queue_lock);
-+	blkg = blkg_lookup_create(blkcg, bio->bi_bdev->bd_disk);
-+	if (blkg)
-+		blkg = blkg_lookup_tryget(blkg);
-+	spin_unlock_irq(&q->queue_lock);
-+
-+	return blkg;
- }
+ EXPORT_SYMBOL_GPL(bio_associate_blkg);
  
  /**
-  * bio_associate_blkg_from_css - associate a bio with a specified css
-  * @bio: target bio
+  * bio_clone_blkg_association - clone blkg association from src to dst bio
 -- 
 2.51.0
