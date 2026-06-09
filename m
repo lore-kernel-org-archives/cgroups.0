@@ -1,156 +1,143 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013069.outbound.protection.outlook.com [40.93.196.69])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 281D2306B31;
-	Tue,  9 Jun 2026 01:44:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.69
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780969494; cv=fail; b=I53KTmu98W/QNcHaFnyzgbWt+jEiNLkwARy0w7n0QUl1q8n7baCmHLG/6VIpke1FOSNFrhd0F4gBdTbAN/nTpSXgjxyeTNdF87K1456L78U5+iFuBdzrZpmeCd6UZamzw6f7j5s6O8I7++iZDwv1L41uYj4Hsiv9uJ7fBdfp3Hc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780969494; c=relaxed/simple;
-	bh=Xu7Ss53AJGb3vSwpuq33ug7Em6iWGtz08ABPdml6GBM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Kmen1ctF2Z2Lh0u6da+dRf8ViUGwGNt8A4XJ4VsJq2Mw4py2YJcSz6lpkqIDRK7Hv9PfpOQq8t0DT3INd/ftk3NvVDMUhJpzd7QIfw+d8qunuaDSqVqw7c3tUA/qOMuhtAFGMhg8zLjAieMuTcOizRdsHm6jcmKmdOxELPlUdpI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=JN5YVtUE; arc=fail smtp.client-ip=40.93.196.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E64782F7F0C
+	for <cgroups@vger.kernel.org>; Tue,  9 Jun 2026 02:59:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780973949; cv=none; b=YQkJA+u4EAdGNbFi2GndGwfApMsAWFGDN8hXcx60r1q4SiQS9i+2VJezE4D/yyzWKUTVXBm67JIcqCcjRs8dV8XALFOqlP2LE1ZkcFD2PmICdH/Hi2W9EtKYkmqtTvcfL5G70WCs0nSXnVYgwJ0GUqSD9sZoNd8USccwyeDzDYI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780973949; c=relaxed/simple;
+	bh=VDoSfHAmsuQiVN0285M6sKin2+Jfn5jHlFcoZMY1hIE=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=FQS8/TdtEE2qaz2o8jHOJP/90xTPzOH7SpUT6YTLxKmJq5NuUY1zbqacMapgKLB0g+ikJ0BPNYpHk54pp96EM0Cmme5sHmZoTz5XTu6HqFuoO4pjmi5AOHK+yhIu66JG9SeVBF2FGTFYIoAbtlq4U+unv4Jq8JczvGapODpqZZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=N2p5iG8S; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="JN5YVtUE"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=FDYb3Yv/cBlaSR2qSBPEWv0TQOd1xajsbjuqMeIYVPOVZJqjfedjpzYOVjeYJ2cufimyWPeMcafocnDyg/CVn6TYJq33ZqU5ngJKqN2MdlUN6l44hNNnvilKYiKaKgmqHf2Y0pIdUBxRxS6pR3DrbLnte41Ja36jDJdhSMfDseSvNSmViIvQ3SX+3HDIdWNQUjG1PSLRSQd67b2341S4XcyofgrhxntbUDYffAPKrSCmNzCAst9P1xxTvbnViHmo0P9exdVQuKZIwHN9RV33l5BKXOOxMX74VFolBIgIP9a79Y/4YhcXLocn3RW+HSLyihJW1MM+3/zEGRVpzWEMtw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kCsCVwycKyOWOO4nIEhUh0UmGOrLFCsTQvGHRGgT+t0=;
- b=GyM+kXHWusUdcV074DC/qGnHZI/YKbj5I7fZdMJPs8XwiRAKyicndvm+zXvDt91fCYRz7bYbkn7I4n2DYCKUnsXelLs7f0WLsfh7TetsFdwypH9X15Xs3v/aWk3q4Scir/loh2vnQWQSBJO6Jqlx26mDBPFBZcmnfteOQc8qlsbl6bY+05X92NHEFA6+t0p0aTBjhKO25nI88eJEVVx82IfazSJMiLYm6vOpBfT/SNYGwxzEUAS9ZLY8UNo4Q6MeupmFEI9iSkvKuyTb0VKKcldbI1vM8E09Ho8Dk20uMUF5qvUUgw2zqSVHXEeOCJwgC9NVqsqTPj/PmDYLsVDypg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kCsCVwycKyOWOO4nIEhUh0UmGOrLFCsTQvGHRGgT+t0=;
- b=JN5YVtUEI7DC/WjIKvtgkFbJqU5WTXQwfPfU3j587tPdLDrxyysQKIFJO8coch71fgcL6/lvMlHMvZRZilkWvYiooVbamcJ933GlWb68eAnlPw/veuvEZcsV/wwECgTi6fxhyqVWNoAaliqyK+RTCVQN4GZ9ZVXAVETCmZMKvbut/EkvirgV6zyTBubrHKZxlQZRLNHXp2M0xQdGOvINSpbEAxcdOwGi3SMY0tU1VmljAp0CUcrPzxXPGouP/MdZpfH0sTgqd2+Sk723WLeynyXGNH/a4/vaBINy+2VRuB+U9ECuFm8jQFsZCHVQXz21TdeA9PSlX/FsregG+ZH/UQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB9473.namprd12.prod.outlook.com (2603:10b6:8:252::5) by
- MW4PR12MB6924.namprd12.prod.outlook.com (2603:10b6:303:207::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.13; Tue, 9 Jun 2026
- 01:44:46 +0000
-Received: from DS7PR12MB9473.namprd12.prod.outlook.com
- ([fe80::f01d:73d2:2dda:c7b2]) by DS7PR12MB9473.namprd12.prod.outlook.com
- ([fe80::f01d:73d2:2dda:c7b2%5]) with mapi id 15.21.0092.011; Tue, 9 Jun 2026
- 01:44:45 +0000
-From: Zi Yan <ziy@nvidia.com>
-To: Gregory Price <gourry@gourry.net>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- kernel-team@meta.com, longman@redhat.com, chenridong@huaweicloud.com,
- akpm@linux-foundation.org, david@kernel.org, ljs@kernel.org,
- liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com,
- mhocko@suse.com, kasong@tencent.com, qi.zheng@linux.dev,
- shakeel.butt@linux.dev, baohua@kernel.org, axelrasmussen@google.com,
- yuanchu@google.com, weixugc@google.com, rientjes@google.com,
- chrisl@kernel.org, shikemeng@huaweicloud.com, nphamcs@gmail.com,
- baoquan.he@linux.dev, youngjun.park@lge.com, tj@kernel.org,
- hannes@cmpxchg.org, mkoutny@suse.com, jackmanb@google.com
-Subject: Re: [PATCH] mm: constify oom_control, scan_control, and alloc_context
- nodemask
-Date: Mon, 08 Jun 2026 21:44:42 -0400
-X-Mailer: MailMate (2.0r6290)
-Message-ID: <8C4E5377-F5CF-458E-BA49-3D962CB75477@nvidia.com>
-In-Reply-To: <20260609002919.3967782-1-gourry@gourry.net>
-References: <20260609002919.3967782-1-gourry@gourry.net>
-Content-Type: text/plain
-X-ClientProxiedBy: BL1PR13CA0279.namprd13.prod.outlook.com
- (2603:10b6:208:2bc::14) To DS7PR12MB9473.namprd12.prod.outlook.com
- (2603:10b6:8:252::5)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="N2p5iG8S"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1780973947; x=1812509947;
+  h=date:from:to:cc:subject:message-id;
+  bh=VDoSfHAmsuQiVN0285M6sKin2+Jfn5jHlFcoZMY1hIE=;
+  b=N2p5iG8SB6iAEElD4BMpnvB1zSKUCy1k4II+cjksUNk6/9aoNVgUH92X
+   V/wpuCHw0Y6jK7XI1z5ooDCHDOrxlHPrU0bDJ0hf6w7FwX2oW2W43KGA0
+   mgpryvUEyg/qdvtuspqeslME+/+OFCmA/lR8MxCavP6D4IbiZOgedslIr
+   u+rLN4JGh7xnVRlgR1qkKTfWCea4sgPqAKNfy6xWfes+hLvK6xd63azxw
+   JAxOlK47yR1xD6tzT/fZsZuzStsV+UGZ1UqUk7wt0tY6pzt+Ft13Yy+uB
+   MJAO6rZuPrY8kR/vg0SLDvm5quoaIDCB5qG4CNxhGZJl8WbIRnwFtNTI6
+   w==;
+X-CSE-ConnectionGUID: +eJq9ejXSIyrlHBdRqLkqQ==
+X-CSE-MsgGUID: LWLwIfYzRz6KV5Pfj5e1CQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11811"; a="107162758"
+X-IronPort-AV: E=Sophos;i="6.24,195,1774335600"; 
+   d="scan'208";a="107162758"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2026 19:59:06 -0700
+X-CSE-ConnectionGUID: uTGXtqz5Ql6ylFbrbSpYIg==
+X-CSE-MsgGUID: BUsqPWsbTLKfkwkL0XG/QQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,195,1774335600"; 
+   d="scan'208";a="244593021"
+Received: from lkp-server01.sh.intel.com (HELO f0d55cb201f0) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 08 Jun 2026 19:59:05 -0700
+Received: from kbuild by f0d55cb201f0 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wWmgA-00000000JXs-0kiv;
+	Tue, 09 Jun 2026 02:59:02 +0000
+Date: Tue, 09 Jun 2026 10:58:49 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-7.1-fixes] BUILD SUCCESS
+ 57aff991119693e09b414aff3267c0eae5e81da0
+Message-ID: <202606091041.wfl0CpU2-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB9473:EE_|MW4PR12MB6924:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5b0b462c-b443-439e-2e9d-08dec5c8af3e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|11063799006|56012099006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	X2O2Ra1NdE88w8XxK+jT1Ctm3GN+QPdtBDFuGReHukYMT/MUpCNOLw+gNJScVaifdzcEEegK0pvQ+qKbCyXspPgoQsL+nSFjCFDvuwShlLw73zW8YpJ0uhI3bMBR1UsuTcDEihnFW1h0gqV663VKzSw5e62MaVJZqoIdKZzKl+ISnvqq/Db5JAQ4uH0FIB0iBe/jzk+vULR5DW8Hg+i/K8KboaERrPJcFv23B2+tr2lHshiy7ZQ1IhulbYcExd7QAzMdvblfc6mp0MYkgPNzao+mbG70YLiXEQ/sFmKYHWWG2w7gyOMxULVFYY1vK1TFC5LX5Yh04wYk4nbZWWTuLRXPayBMLz0IUqjqyJoCdkiFzeMDMIcze3ppZ04g1U4hhA9fyR8Fw+wUpwh/4qfne/HSjUCsh7fhxIdy6gqBaTo1KpdLHPmWi64DItpTXruCL9PPi7ia5PfQrU1QLDSmwati0Kdx2Jhh+12pRP5i11xHvfZvSsw+5trH0kY9pQnlxuVkD4HbNfL8tKTRKwlTWwFqGj1WepmOCTLDsqIaTAbQ00WRBoHZY+uU4FgTtvJeLB1nnu5PZ/sP1PS2NeKy1GbCdu7694wL+Dsp4lhi1ByldFZkQ5wa9ggbtC98sw1Rn2lgEJNIMi4s5F9c5mL/unfS/ELCzZk9Y2Fx+RYyDwoxs3fMQGLcAPNsXtfWBipP
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9473.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(11063799006)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?BE0wPIPA7W8b6ch+M65X5xgqQcNEYbSuA1A2Aef96sKd56PYgnBQEmPOMs8Z?=
- =?us-ascii?Q?AHFZkNsob9WiCbHMzOi/srpPJmpj37P2rzgiEUWqfGBwunf25gdt7qeDvBPf?=
- =?us-ascii?Q?CjbLid04vmdJ63MipC59LGDCXlCKPmtFm1ByhqWcqF3KFY15mBZgK/q0Ay0q?=
- =?us-ascii?Q?+DvJsvnQgHcmckgDjX2NikO9foFheHbzf3ehXl9DRxnigvvSwm/756OoX4MV?=
- =?us-ascii?Q?qOsruKK6bz9nXBj9MKXQZOgk7UNe1xZKpB8rOZSpdEd5bXxUmfyelcCxLXCT?=
- =?us-ascii?Q?EFCXAEjevHjPXOy/HI70iMpyCEfFKH7WsDTnE55oqVselg2B+AdLnKA0oPO/?=
- =?us-ascii?Q?w462kX0zm+fe0PN7J2Tm0+HFOnsVy7gVDeTP/MuHTwh+WisGwc8B5/QUMuq7?=
- =?us-ascii?Q?6kaB5H5g/xZrjOxAQsLlyUzNnHJqr/ispsZERyuXqdmq6fsiG277+TX+kkUr?=
- =?us-ascii?Q?ldLrE1qNRXhzU7glw8UgoEU/eQ3xRgpU1L83UXDh1SSZn81YgelbDf09ifAy?=
- =?us-ascii?Q?tobyJrFEyoCSsWwcwMOGeX0NgKBronuyjZZ3i6HFxBdIsuafaPj9PgRRdOAB?=
- =?us-ascii?Q?Dsu7CgF0OVLvMq8i9kvY2MbHtirmPZ1WDAFctkHmuJbRiZdv292XdSO1rMFa?=
- =?us-ascii?Q?i1F1/tpy2r/k8l0Np/uSmeV5xpnjK45Y+n6vZwbDP18u7EJa26T5dQZG4qIa?=
- =?us-ascii?Q?2qpMdibbIk8K8M6zSgPy1wKvgPeMtT/h1dNUxmUL8j20E9BVwp3XOFPzyEe2?=
- =?us-ascii?Q?yIVhodY/5RfS76c+ksU2IH58lhHVcvYmbI1MX3ew9f9SlE23eLoh7qi4Ip9d?=
- =?us-ascii?Q?2sB/+XrJl/mqLOFKkbdNsH06cl5aix/3aPdpqXwPvnWLjufJ+ASHKnTUYFxV?=
- =?us-ascii?Q?YJouCVBic4rxJC+m7NaLyNY3Jc4et08egsX37LKRfSSxULRhhgfxjoMpbR7P?=
- =?us-ascii?Q?oPC5Cjs544EZyF9sTkBhs8cjkkmmuWdpZ2QYNWkxJ+QaBVyuDFYJBOLGxxtf?=
- =?us-ascii?Q?tMxPnLe5bIZu1C0REs6k5BC2xzGB9t98Qbu32aDf58p6exFpsCierjNKIPW4?=
- =?us-ascii?Q?O6eW2GA7hzm7yuMkO/S3mKlHCjVhNr1Yc6jDhgxhdaHYjPeC2PPPzbC3oKyN?=
- =?us-ascii?Q?pwQ316wE8CQZD9DkaNqr8ea8lwToLmmh7oD3C4iMRiAftuqAG8SPx85k6lBx?=
- =?us-ascii?Q?ociCjOVTOtWwukiQxs5Pq6tqWW3QdefMocJypBIdUQ7yHXV499AuUquzhVOi?=
- =?us-ascii?Q?EWOeWcepgTmq8mUBjdwvv5mQV4qx4NIxC244+LEuyXKtOoJ8lyW6YgpmKsm5?=
- =?us-ascii?Q?ZWbUr02nfB6MWtGLgFUO2VGo1tpjixCbUAnQWigPT+rHYwNZNGD7tfBzzfrC?=
- =?us-ascii?Q?Wc86ergAvq5fedjGEPesd6jZmELrcq4FGuf6GI6tEI60ppCfP54CBv+mys+x?=
- =?us-ascii?Q?3b0gswtCNmb8IQ9O5/CRzkcgfKdJH6YJnISOQmt5jZ9PmfU+j1eV9upzXI9F?=
- =?us-ascii?Q?F8nvtUYbzzGRoY133ig60rKg0Uypeq5iA/00WAII8a0TTSc+/naG5mwxwdA/?=
- =?us-ascii?Q?rvnUe8ozWLP9uaPJk+pwTsvKhRsnTRZ5v3eUSTFhgugAFWgMdjY91rhOUUec?=
- =?us-ascii?Q?40HCr+hCqCY2EjCfEQSESpZqediqKghVYQrzQSxmnILnvmnrTutYSV2T3J84?=
- =?us-ascii?Q?5zk2h3E5+9ULKSpvkKu37w+vjTqihUbljJqdFcBZJCGuwDlv?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5b0b462c-b443-439e-2e9d-08dec5c8af3e
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9473.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jun 2026 01:44:45.8344
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: l1Va6ej2yxcT6uq+5GeKkdNt9aVontAKJSw7aPub+jUjN3qfeLZVh4xWqB06gH+v
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB6924
 
-On 8 Jun 2026, at 20:29, Gregory Price wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.1-fixes
+branch HEAD: 57aff991119693e09b414aff3267c0eae5e81da0  cgroup/cpuset: Change Ridong's email
 
-> The nodemasks in these structures may come from a variety of sources,
-> including tasks and cpusets - and should never be modified by any code
-> when being passed around inside another context.
->
-> Signed-off-by: Gregory Price <gourry@gourry.net>
-> ---
->  include/linux/cpuset.h | 4 ++--
->  include/linux/mm.h     | 4 ++--
->  include/linux/mmzone.h | 6 +++---
->  include/linux/oom.h    | 2 +-
->  include/linux/swap.h   | 2 +-
->  kernel/cgroup/cpuset.c | 2 +-
->  mm/internal.h          | 2 +-
->  mm/mmzone.c            | 5 +++--
->  mm/page_alloc.c        | 6 +++---
->  mm/show_mem.c          | 9 ++++++---
->  mm/vmscan.c            | 6 +++---
->  11 files changed, 26 insertions(+), 22 deletions(-)
->
+elapsed time: 8965m
 
-LGTM and it compiles. As long as Sashiko does not complain, feel free to
-add:
+configs tested: 66
+configs skipped: 10
 
-Acked-by: Zi Yan <ziy@nvidia.com>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Best Regards,
-Yan, Zi
+tested configs:
+alpha                   allnoconfig    gcc-16.1.0
+alpha                  allyesconfig    gcc-16.1.0
+arc                    allmodconfig    gcc-16.1.0
+arc                     allnoconfig    gcc-16.1.0
+arc                    allyesconfig    gcc-16.1.0
+arm                     allnoconfig    clang-23
+arm                    allyesconfig    gcc-16.1.0
+arm64                  allmodconfig    clang-23
+arm64                   allnoconfig    gcc-16.1.0
+csky                   allmodconfig    gcc-16.1.0
+csky                    allnoconfig    gcc-16.1.0
+csky        randconfig-001-20260609    gcc-9.5.0
+csky        randconfig-002-20260609    gcc-11.5.0
+hexagon                allmodconfig    clang-23
+hexagon                 allnoconfig    clang-23
+i386                   allmodconfig    gcc-14
+i386                    allnoconfig    gcc-14
+i386                   allyesconfig    gcc-14
+loongarch              allmodconfig    clang-19
+loongarch               allnoconfig    clang-20
+m68k                   allmodconfig    gcc-16.1.0
+m68k                    allnoconfig    gcc-16.1.0
+m68k                   allyesconfig    gcc-16.1.0
+microblaze              allnoconfig    gcc-16.1.0
+microblaze             allyesconfig    gcc-16.1.0
+mips                   allmodconfig    gcc-16.1.0
+mips                    allnoconfig    gcc-16.1.0
+mips                   allyesconfig    gcc-16.1.0
+mips                 jazz_defconfig    clang-23
+nios2                  allmodconfig    gcc-11.5.0
+nios2                   allnoconfig    gcc-11.5.0
+openrisc               allmodconfig    gcc-16.1.0
+openrisc                allnoconfig    gcc-16.1.0
+openrisc                  defconfig    gcc-16.1.0
+parisc                 allmodconfig    gcc-16.1.0
+parisc                  allnoconfig    gcc-16.1.0
+parisc                 allyesconfig    gcc-16.1.0
+parisc                    defconfig    gcc-16.1.0
+powerpc                allmodconfig    gcc-16.1.0
+powerpc                 allnoconfig    gcc-16.1.0
+riscv                  allmodconfig    clang-23
+riscv                   allnoconfig    gcc-16.1.0
+riscv                  allyesconfig    clang-23
+riscv                     defconfig    clang-23
+s390                   allmodconfig    clang-23
+s390                    allnoconfig    clang-23
+s390                   allyesconfig    gcc-16.1.0
+s390                      defconfig    clang-18
+s390        randconfig-002-20260609    gcc-16.1.0
+sh                     allmodconfig    gcc-16.1.0
+sh                      allnoconfig    gcc-16.1.0
+sh                     allyesconfig    gcc-16.1.0
+sh          randconfig-001-20260609    gcc-13.4.0
+sh          randconfig-002-20260609    gcc-11.5.0
+sparc                   allnoconfig    gcc-16.1.0
+sparc                     defconfig    gcc-16.1.0
+sparc64                allmodconfig    clang-20
+um                     allmodconfig    clang-23
+um                      allnoconfig    clang-16
+um                     allyesconfig    gcc-14
+x86_64                 allmodconfig    clang-22
+x86_64                  allnoconfig    clang-22
+x86_64                 allyesconfig    clang-22
+x86_64                rhel-9.4-rust    clang-22
+xtensa                  allnoconfig    gcc-16.1.0
+xtensa                 allyesconfig    gcc-16.1.0
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
