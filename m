@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B937C427A14;
-	Wed, 10 Jun 2026 15:41:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83D9843D4EF;
+	Wed, 10 Jun 2026 15:41:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781106102; cv=none; b=VeMSBaBjY6lFqdAK+rplDfJ3QSBONZJWONHLDYh93Vc6BDOMjbpY5flJ4T4aW5hRAxWy0xnjzznpKKFzR9iQLVy3wjf4SmkDM++L352wBwPsOjf0sOVTycdxizCY1GlC1CDRKHD0nNvE27ANkR36ItYnyntE/pHHxjv9aGr+hdU=
+	t=1781106110; cv=none; b=N+Cj4IBSHOpwY9RvozAmBvDbSVtCvdVVevfdGqKYaNBb59t8XambCun9Kar1xpH4Yl3ji15ZIl1l9HLGmcBqNgTZEshrASqz7gDoPhXqCTBMldVzSHOPaJ7sYHwljIm4jemCj2Vaut6tPzbuwaqTgNR4klZ0F0xx5QVPLDuRQn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781106102; c=relaxed/simple;
-	bh=t5/NAGAIdygAciNzv+ca67lRXpVkp3wTRx5K2OM2XII=;
+	s=arc-20240116; t=1781106110; c=relaxed/simple;
+	bh=/4WmPX44Q4AFm8S99K3lkmPJVJCVaZFE72dvTQFFoto=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=J8EwN2w+rTJXAtT3zaCM2fp0P/2xkjY5LfEyNK2o7xK0fesg6uxFhs/qmqdmyXhnmsMPeV+bc0K9k3BZ4KYosXjjBqhfwbl8eAviYWFf2vVFxZ7efklGrEqdjSVfWr8d3l/cAjuqPxB6imMGmTxtTeord0hDd+W+ZkHDg7R0zoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jG++jPB3; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=aU7z8CGbvFcYrKvbAArT+L1jdVKyTNkzHfUYpo5YbaKuCUkk766GdgpRHIcUA5tpX0vWAr+pSzNu/xK281LRUtHQD9BcKf9KQmjKTwYLGpfW1FjscSqgkNKm3MycMHVxSHw9Nli3tGxCOwo2SynK6BgLtWNLklJJxbA26KszmFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Su1gbBTv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jG++jPB3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F39C61F00898;
-	Wed, 10 Jun 2026 15:41:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Su1gbBTv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65E8B1F00893;
+	Wed, 10 Jun 2026 15:41:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781106100;
-	bh=dSB8ooC+6hgvQ0d6cKYfHgJDcXeMR4283Uzll9HAga4=;
+	s=k20260515; t=1781106108;
+	bh=Z4p7lBTo620lw4Cx9cPSuEFRwzQZKtUkN/W+8V4LMiY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=jG++jPB3VG5I/EtNtf62Ed1ln6osVnnbU74LV3nqK+1LFuUZdvgJkQWVzMpx2G0fI
-	 zqBZAW6VeMSMQ4SJQ7zsDtD+/gXWx2wA9oLWbOXRivXk4kuy3rLbbssxonPu/bixaa
-	 BbpMzgfNK5YKTbkxlA531Z0m5IlAWev7ycTLGp1qthHpEhRTIG2e+GVy5pN1RE46Hu
-	 FyugsmjTgtYeZo5BOVRn92SXFEPLPKyQuIO2Uwsi05pkcC9eb7niNP8AGMFFNue4bM
-	 SMs7ocwMo48fAOM4EN0ynLFA7E/bwMslb5/DnulvwOEtq6ZD5bXC7SpvKClLHcfUoK
-	 fuh8YJhSRzmJg==
+	b=Su1gbBTvmRn8OWDOvh3qn3pI4cAxHZ45px1Swujt8aZRyDQ2J7bmOwZiD1kaqqChI
+	 HetPcwR6LmZcW4IC8PlXBx/UmddVjTIcdIO3FOs6AnS58JKxtaPhIbT8wb8accI83E
+	 g3t5AfHsFGIIRPOYjEHT7BPV7OtTDbuAdMQEiStz5Jixcbxo4J3KK2+gvgEWDBCmF9
+	 jccFfMTKAgQnaLM37K620iiUYGXcScDJS/t6B9eG+EKRovUFFlWbdVryacWBLk9mm9
+	 HOk6gy3RMYea3PCFfmfHKRA/snC0KQNkbfiwHpIfsxc1d5g3cME27KqU1tmsG9tWvk
+	 kD/LblYVS9Dow==
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Date: Wed, 10 Jun 2026 17:40:13 +0200
-Subject: [PATCH v2 11/16] mm/slab: allow kmem_cache_alloc_bulk() with any
- gfp flags
+Date: Wed, 10 Jun 2026 17:40:14 +0200
+Subject: [PATCH v2 12/16] mm/slab: pass slab_alloc_context to
+ __do_kmalloc_node()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260610-slab_alloc_flags-v2-11-7190909db118@kernel.org>
+Message-Id: <20260610-slab_alloc_flags-v2-12-7190909db118@kernel.org>
 References: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
 In-Reply-To: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
 To: Harry Yoo <harry@kernel.org>
@@ -55,63 +55,125 @@ Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
  "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 X-Mailer: b4 0.15.2
 
-The last user of gfpflags_allow_spinning() in slab is
-alloc_from_pcs_bulk(), which is only called from
-kmem_cache_alloc_bulk().
+With alloc_flags usage in slab, we can replace __GFP_NO_OBJ_EXT with an
+alloc flag that prevents kmalloc recursion. For that we need a version
+of kmalloc() that takes alloc_flags and use it in places that perform
+these potentially recursive kmalloc allocations (of sheaves or obj_ext
+arrays).
 
-It turns out that gfpflags_allow_spinning() is not necessary, because
-kmem_cache_alloc_bulk() is only expected to be called from context that
-does allow spinning, so simply replace it with 'true'.
-
-With that, we can remove the "@flags must allow spinning" part of the
-kernel doc, as there is no more connection to the gfp flags in the slab
-implementation.
-
-Also remove a comment in alloc_slab_obj_exts() because there should be
-no more false positives possible due to gfp_allowed_mask during early
-boot.
+As a preparatory step, make __do_kmalloc_node() take a pointer to
+slab_alloc_context. This replaces the 'caller' parameter and includes
+alloc_flags which we'll make use of.
 
 Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 ---
- mm/slub.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+ mm/slub.c | 47 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 32 insertions(+), 15 deletions(-)
 
 diff --git a/mm/slub.c b/mm/slub.c
-index 0b9974bfcb24..ef457e07db83 100644
+index ef457e07db83..6845e15c148a 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -2171,12 +2171,6 @@ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
+@@ -5338,19 +5338,14 @@ EXPORT_SYMBOL(__kmalloc_large_node_noprof);
  
- 	sz = obj_exts_alloc_size(s, slab, gfp);
+ static __always_inline
+ void *__do_kmalloc_node(size_t size, kmem_buckets *b, gfp_t flags, int node,
+-			unsigned long caller, kmalloc_token_t token)
++			kmalloc_token_t token, struct slab_alloc_context *ac)
+ {
+ 	struct kmem_cache *s;
+ 	void *ret;
+-	struct slab_alloc_context ac = {
+-		.caller_addr = caller,
+-		.orig_size = size,
+-		.alloc_flags = SLAB_ALLOC_DEFAULT,
+-	};
  
--	/*
--	 * Note that allow_spin may be false during early boot and its
--	 * restricted GFP_BOOT_MASK. Due to kmalloc_nolock() only supporting
--	 * architectures with cmpxchg16b, early obj_exts will be missing for
--	 * very early allocations on those.
--	 */
- 	if (unlikely(!allow_spin))
- 		vec = kmalloc_nolock(sz, __GFP_ZERO | __GFP_NO_OBJ_EXT,
- 				     slab_nid(slab));
-@@ -4867,7 +4861,7 @@ unsigned int alloc_from_pcs_bulk(struct kmem_cache *s, gfp_t gfp, size_t size,
- 		}
+ 	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE)) {
+ 		ret = __kmalloc_large_node_noprof(size, flags, node);
+-		trace_kmalloc(caller, ret, size,
++		trace_kmalloc(ac->caller_addr, ret, size,
+ 			      PAGE_SIZE << get_order(size), flags, node);
+ 		return ret;
+ 	}
+@@ -5360,22 +5355,34 @@ void *__do_kmalloc_node(size_t size, kmem_buckets *b, gfp_t flags, int node,
  
- 		full = barn_replace_empty_sheaf(barn, pcs->main,
--						gfpflags_allow_spinning(gfp));
-+						/* allow_spin = */ true);
+ 	s = kmalloc_slab(size, b, flags, token);
  
- 		if (full) {
- 			stat(s, BARN_GET);
-@@ -7333,8 +7327,7 @@ static bool __kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags,
-  * Allocate @size objects from @s and places them into @p.  @size must be larger
-  * than 0.
-  *
-- * Interrupts must be enabled when calling this function and @flags must allow
-- * spinning.
-+ * Interrupts must be enabled when calling this function.
-  *
-  * Unlike alloc_pages_bulk(), this function does not check for already allocated
-  * objects in @p, and thus the caller does not need to zero it.
+-	ret = slab_alloc_node(s, flags, node, &ac);
++	ret = slab_alloc_node(s, flags, node, ac);
+ 	ret = kasan_kmalloc(s, ret, size, flags);
+-	trace_kmalloc(caller, ret, size, s->size, flags, node);
++	trace_kmalloc(ac->caller_addr, ret, size, s->size, flags, node);
+ 	return ret;
+ }
+ void *__kmalloc_node_noprof(DECL_KMALLOC_PARAMS(size, b, token), gfp_t flags, int node)
+ {
++	struct slab_alloc_context ac = {
++		.caller_addr = _RET_IP_,
++		.orig_size = size,
++		.alloc_flags = SLAB_ALLOC_DEFAULT,
++	};
++
+ 	return __do_kmalloc_node(size, PASS_BUCKET_PARAM(b), flags, node,
+-				 _RET_IP_, PASS_TOKEN_PARAM(token));
++				 PASS_TOKEN_PARAM(token), &ac);
+ }
+ EXPORT_SYMBOL(__kmalloc_node_noprof);
+ 
+ void *__kmalloc_noprof(DECL_TOKEN_PARAMS(size, token), gfp_t flags)
+ {
+-	return __do_kmalloc_node(size, NULL, flags,  NUMA_NO_NODE, _RET_IP_,
+-				 PASS_TOKEN_PARAM(token));
++	struct slab_alloc_context ac = {
++		.caller_addr = _RET_IP_,
++		.orig_size = size,
++		.alloc_flags = SLAB_ALLOC_DEFAULT,
++	};
++
++	return __do_kmalloc_node(size, NULL, flags,  NUMA_NO_NODE,
++				 PASS_TOKEN_PARAM(token), &ac);
+ }
+ EXPORT_SYMBOL(__kmalloc_noprof);
+ 
+@@ -5471,9 +5478,14 @@ EXPORT_SYMBOL_GPL(_kmalloc_nolock_noprof);
+ void *__kmalloc_node_track_caller_noprof(DECL_KMALLOC_PARAMS(size, b, token), gfp_t flags,
+ 					 int node, unsigned long caller)
+ {
+-	return __do_kmalloc_node(size, PASS_BUCKET_PARAM(b), flags, node,
+-				 caller, PASS_TOKEN_PARAM(token));
++	struct slab_alloc_context ac = {
++		.caller_addr = caller,
++		.orig_size = size,
++		.alloc_flags = SLAB_ALLOC_DEFAULT,
++	};
+ 
++	return __do_kmalloc_node(size, PASS_BUCKET_PARAM(b), flags, node,
++				 PASS_TOKEN_PARAM(token), &ac);
+ }
+ EXPORT_SYMBOL(__kmalloc_node_track_caller_noprof);
+ 
+@@ -6874,6 +6886,11 @@ void *__kvmalloc_node_noprof(DECL_KMALLOC_PARAMS(size, b, token), unsigned long
+ {
+ 	bool allow_block;
+ 	void *ret;
++	struct slab_alloc_context ac = {
++		.caller_addr = _RET_IP_,
++		.orig_size = size,
++		.alloc_flags = SLAB_ALLOC_DEFAULT,
++	};
+ 
+ 	/*
+ 	 * It doesn't really make sense to fallback to vmalloc for sub page
+@@ -6881,7 +6898,7 @@ void *__kvmalloc_node_noprof(DECL_KMALLOC_PARAMS(size, b, token), unsigned long
+ 	 */
+ 	ret = __do_kmalloc_node(size, PASS_BUCKET_PARAM(b),
+ 				kmalloc_gfp_adjust(flags, size),
+-				node, _RET_IP_, PASS_TOKEN_PARAM(token));
++				node, PASS_TOKEN_PARAM(token), &ac);
+ 	if (ret || size <= PAGE_SIZE)
+ 		return ret;
+ 
 
 -- 
 2.54.0
