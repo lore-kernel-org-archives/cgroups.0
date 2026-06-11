@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 687AC34B19A;
-	Thu, 11 Jun 2026 06:40:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E682369985;
+	Thu, 11 Jun 2026 07:52:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781160054; cv=none; b=iE1kkL0Ay9J4Pbx7PnRTSN2oxnGOPRNlkYCYadOO/LL+TyNkzRqo118ipt3i2XRCkODWHmqpuvLvHlSx8f6bKwhoK8rtwY9KdW2w0dSnSzL0f0AoqoJ5Baa+hn24G0exg68YlfGQnRm6eV5XCoyCiuUXS25qDICW4L0m59Mckxs=
+	t=1781164364; cv=none; b=VgVmAN5j7UkjocP/2iRL8N+cmFBdN/KQ1lUwWBiNcmzkQlb3MR3gONqI39iUxnF80FOAcTJEwQEovFl7tf8etGwab/4RbWToE4jVAnnCAiIUjCRYGlVQ5Dihf8cCDeLUmEPyB+T0MY6vrFhVcRp920zLrOPM41co9j75rcAhn3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781160054; c=relaxed/simple;
-	bh=dxIPW7D2faP2bepXt2e5ZCrEJE6XJTpZdIFCgtoHcBk=;
+	s=arc-20240116; t=1781164364; c=relaxed/simple;
+	bh=mPcwQG1rbs4ruOPR40Na309HgvsibwaGkH/cLy7B1pk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L3RMCwJajcOkOuIztr4ZkcriNMezEQH8/VCgs5jt8SrdRlEfHTeSJwZLWKswK4AiENrHwHromOVHvfnsGiBiJUrSW+HcNdL7U4k/DM7kJaF6dFx3r5VfSb+H0f73irKtq4g+qmBZtsx+CCVbQAliJd/GnwKYqk9xGCDp8IYqRXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ny6YH0ag; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=D2mqE4aoWeRAyFxziW6vzwXQr9HN3BNrOPRi+fhgxYOXq5JxbKh9bn/5m3jm2Az6imUT2LXbZV4krzxxF+eTyKV29X/UXi5UzvtAoaVlz3b0D5Bw/DBq2aisv9Ip5p7jKhymeJjniGIe8rPdGnMMb8R9cZIS9cW8Rh2xZiivFpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cuHWA9uR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ny6YH0ag"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DD181F00893;
-	Thu, 11 Jun 2026 06:40:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cuHWA9uR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D5D21F00893;
+	Thu, 11 Jun 2026 07:52:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781160053;
-	bh=yi9ckVtDtphA7eMJncvdNkgvdgfwVN/oHKstajaBnTM=;
+	s=k20260515; t=1781164363;
+	bh=xijNDdKPHv1jokABJ/KJ4UCI30y34c5TQzlLjkdoZMU=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ny6YH0agPhJrgPlTnLMxDnStHWnM4CN6azBueRu5KlTzXqgWrnXqCaxFDweGkL/aO
-	 Ivlbxesvv27d8fnL5f/gdFXAjaF3tMorYBLWKMojHQVEKzeVIv1LFgYTtJaA03N3UU
-	 T8O1eb2OUfiN0X/fDnGd1cdT6sjp1v3H95MDXqCAvXm68z4XVRmepW28tbE6k5jr8j
-	 p2n3azySbjTwdJ8a0EPBOzxdMNnnIcB3I8Q36ec8Mog6EDsxi3Xd8zjKS6YwMv9nRA
-	 u08TDIFox4+LWNfl0R0vgIb7vu11g9aqOWvqTvQ5bv/DRiSpNZSUO/KVOMJpcEPj1C
-	 9DTc4fov9V1dw==
-Message-ID: <7064a90e-4bf5-4be7-8b7f-a5a11dcee66f@kernel.org>
-Date: Thu, 11 Jun 2026 15:40:47 +0900
+	b=cuHWA9uRu0xicoIbUbVAW5BaFPsqNLc/45roEzdVUouxzUOPf5BBWNRR+7WBZmwNX
+	 WN5xVEkq3jOWwSHFNktNsKOCsvvgQJKzhB+Azy/snZxkFydWBlqOhofwJI+84TQ1ui
+	 BPK6xXyy42L1bIagjFwuQH2g+t5W8FcFXnGaW/D7CvgtmyRHXix8PY+bBVTkbSMcYm
+	 i1NQpit5I8a4LCLppcGOd76APYY1/dgsFjD+ySBztXkLDZuX9qGDo/pV6q3yfHpfwF
+	 +Mq5PqIZJpXV5+bTLyUdBEP8k2/uF+bacz1+6xU1BDwV1MGvr0JnPxiS7MdSWcJ8zd
+	 ozRnuwapIYjEw==
+Message-ID: <49ca905a-0303-4fad-8257-485b0ed47c8d@kernel.org>
+Date: Thu, 11 Jun 2026 16:52:38 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 05/16] mm/slab: introduce alloc_flags and
- SLAB_ALLOC_TRYLOCK
+Subject: Re: [PATCH v2 08/16] mm/slab: pass alloc_flags to new slab allocation
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
  David Rientjes <rientjes@google.com>,
@@ -49,17 +48,17 @@ Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
  Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
  linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
- <20260610-slab_alloc_flags-v2-5-7190909db118@kernel.org>
+ <20260610-slab_alloc_flags-v2-8-7190909db118@kernel.org>
 Content-Language: en-US
 From: Harry Yoo <harry@kernel.org>
-In-Reply-To: <20260610-slab_alloc_flags-v2-5-7190909db118@kernel.org>
+In-Reply-To: <20260610-slab_alloc_flags-v2-8-7190909db118@kernel.org>
 Content-Type: multipart/signed; micalg=pgp-sha256;
  protocol="application/pgp-signature";
- boundary="------------cLKhUE1LS3RNZ8H0WJkZPja5"
+ boundary="------------YrjDV9X0pifSc8pX0GjzraWe"
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------cLKhUE1LS3RNZ8H0WJkZPja5
-Content-Type: multipart/mixed; boundary="------------cnCTg083TbHZKFbOy4OWEa5Q";
+--------------YrjDV9X0pifSc8pX0GjzraWe
+Content-Type: multipart/mixed; boundary="------------6OoaCLw56CPWa63NRnaF50aC";
  protected-headers="v1"
 From: Harry Yoo <harry@kernel.org>
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
@@ -73,126 +72,92 @@ Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
  Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
  Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
  linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Message-ID: <7064a90e-4bf5-4be7-8b7f-a5a11dcee66f@kernel.org>
-Subject: Re: [PATCH v2 05/16] mm/slab: introduce alloc_flags and
- SLAB_ALLOC_TRYLOCK
+Message-ID: <49ca905a-0303-4fad-8257-485b0ed47c8d@kernel.org>
+Subject: Re: [PATCH v2 08/16] mm/slab: pass alloc_flags to new slab allocation
 References: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
- <20260610-slab_alloc_flags-v2-5-7190909db118@kernel.org>
-In-Reply-To: <20260610-slab_alloc_flags-v2-5-7190909db118@kernel.org>
+ <20260610-slab_alloc_flags-v2-8-7190909db118@kernel.org>
+In-Reply-To: <20260610-slab_alloc_flags-v2-8-7190909db118@kernel.org>
 
---------------cnCTg083TbHZKFbOy4OWEa5Q
+--------------6OoaCLw56CPWa63NRnaF50aC
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
 
 
 On 6/11/26 12:40 AM, Vlastimil Babka (SUSE) wrote:
-> Similarly to the page allocators, introduce slab-allocator specific
-> alloc flags that internally control allocation behavior in addition to
-> gfp_flags, without occupying the limited gfp flags space.
+> Add the alloc_flags parameter to allocate_slab() and new_slab()
+> so it can be used to determine if spinning is allowed, independently
+> from gfp flags.
 >=20
-> Introduce the first flag SLAB_ALLOC_TRYLOCK that behaves similarly to
-> page allocator's ALLOC_TRYLOCK and will be used to reimplement
-> kmalloc_nolock()'s "!allow_spin" behavior. That currently relies on
-> gfpflags_allow_spinning() and thus the lack of both __GFP_RECLAIM flags=
-,
-> importantly __GFP_KSWAPD_RECLAIM. This can give false-positive results
-> e.g. in early boot with a restricted gfp_allowed_mask.
+> refill_objects() passes SLAB_ALLOC_DEFAULT because it can only be
+> reached from contexts that allow spinning.
 >=20
-> Also introduce alloc_flags_allow_spinning() to replace the usage of
-> gfpflags_allow_spinning().
->=20
-> Start using alloc_flags and the new check first in alloc_from_pcs() and=
+> Also change how trynode_flags are constructed in ___slab_alloc() to
+> achieve the same "do not upgrade to GFP_NOWAIT" by using masking instea=
+d
+> of a branch. It will now also not upgrade in cases where gfp is weaker
+> than GFP_NOWAIT (i.e. lacks __GFP_KSWAPD_RECLAIM) but doesn't come from=
 
-> __pcs_replace_empty_main(). This means some slab allocations that were
-> falsely treated as kmalloc_nolock() due to their gfp flags will now hav=
-e
-> higher chances of succeed, and this will further increase with followup=
+> kmalloc_nolock() - which is more correct anyway.
 
-> changes.
->=20
-> Remove a WARN_ON_ONCE() from refill_objects() as it's now legitimate to=
+Wait, debugobjects intentionally avoids __GFP_KSWAPD_RECLAIM,
+but we have been upgrading it to GFP_NOWAIT?
 
-> reach it from a slab allocation that's not _nolock() and yet lacks
-> __GFP_KSWAPD_RECLAIM for other reasons.
->=20
+> During the masking keep also existing __GFP_NOMEMALLOC (pointed out by
+> Sashiko) and __GFP_ACCOUNT. Previously the hardcoded GFP_NOWAIT would
+> eliminate them, but it's not a big problem that would need a separate
+> fix.
+
+Ack.
+
 > Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 > ---
->  mm/slab.h |  9 +++++++++
->  mm/slub.c | 17 ++++++++---------
->  2 files changed, 17 insertions(+), 9 deletions(-)
+>  mm/slub.c | 28 ++++++++++++++--------------
+>  1 file changed, 14 insertions(+), 14 deletions(-)
 >=20
-> diff --git a/mm/slab.h b/mm/slab.h
-> index 1bf9c3021ae3..96f65b625600 100644
-> --- a/mm/slab.h
-> +++ b/mm/slab.h
-> @@ -4664,7 +4665,7 @@ __pcs_replace_empty_main(struct kmem_cache *s, st=
-ruct slub_percpu_sheaves *pcs,
->  		return NULL;
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 98b79e5e7679..8f6ca3d5fdfa 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -4467,25 +4470,22 @@ static void *___slab_alloc(struct kmem_cache *s=
+, gfp_t gfpflags, int node,
+>  	 * 1) try to get a partial slab from target node only by having
+>  	 *    __GFP_THISNODE in pc.flags for get_from_partial()
+>  	 * 2) if 1) failed, try to allocate a new slab from target node with
+> -	 *    GPF_NOWAIT | __GFP_THISNODE opportunistically
+> +	 *    (at most) GFP_NOWAIT | __GFP_THISNODE opportunistically
+>  	 * 3) if 2) failed, retry with original gfpflags which will allow
+>  	 *    get_from_partial() try partial lists of other nodes before
+>  	 *    potentially allocating new page from other nodes
+>  	 */
+>  	if (unlikely(node !=3D NUMA_NO_NODE && !(gfpflags & __GFP_THISNODE)
+>  		     && try_thisnode)) {
+> -		if (unlikely(!allow_spin))
+> -			/* Do not upgrade gfp to NOWAIT from more restrictive mode */
+> -			trynode_flags =3D gfpflags | __GFP_THISNODE;
+> -		else
+> -			trynode_flags =3D GFP_NOWAIT | __GFP_THISNODE;
+> +		trynode_flags &=3D GFP_NOWAIT | __GFP_NOMEMALLOC | __GFP_ACCOUNT;
+> +		trynode_flags |=3D __GFP_NOWARN | __GFP_THISNODE;
 >  	}
-> =20
-> -	allow_spin =3D gfpflags_allow_spinning(gfp);
-> +	allow_spin =3D alloc_flags_allow_spinning(alloc_flags);
-
-Sashiko wrote [1]:
-> Does this bypass the caller's gfp constraints for standard allocations?=
-
-> Looking at slab_alloc_node(), standard allocations now pass
-> SLAB_ALLOC_DEFAULT into alloc_from_pcs():
-> -	object =3D alloc_from_pcs(s, gfpflags, node);
-> +	object =3D alloc_from_pcs(s, gfpflags, SLAB_ALLOC_DEFAULT, node);
-> This default flag means alloc_flags_allow_spinning() will unconditional=
-ly
-> return true regardless of the gfp flags provided.
-
-Yes, but that's not used in _nolock path
-as mentioned in patch 6 description :)
-
-> If a caller allocating under a raw spinlock intentionally strips
-> __GFP_KSWAPD_RECLAIM (for example, by using __GFP_NOWARN) to prevent
-> sleeping,
-
-That's a horrible hack (and hypothetical. Nobody should be stripping
-__GFP_KSWAP_RECLAIM instead of using kmalloc_nolock(). That's purely
-broken).
-
-> won't this allow the allocator to execute spin_lock_irqsave()
-> on barn->lock or n->list_lock?
->
-> On systems with preempt-rt enabled, a standard spinlock maps to a sleep=
-ing
-> lock, so taking these locks in an atomic context could cause a scheduli=
-ng
-> while atomic panic.
->
-> Since there is no nolock variant available for custom caches, do caller=
-s
-> currently have any alternative mitigation?
-
-Well, RT kernels are not supposed to allocate meomry under a raw
-spinlock (at least w/ allow_spin =3D true)
-
-[1]
-https://sashiko.dev/#/patchset/20260610-slab_alloc_flags-v2-0-7190909db11=
-8%40kernel.org
 
 --=20
 Cheers,
 Harry / Hyeonggon
 
---------------cnCTg083TbHZKFbOy4OWEa5Q--
+--------------6OoaCLw56CPWa63NRnaF50aC--
 
---------------cLKhUE1LS3RNZ8H0WJkZPja5
+--------------YrjDV9X0pifSc8pX0GjzraWe
 Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="OpenPGP_signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCaipYcAAKCRCGXBN6rc5S
-1vlSAP4uA7Ju8txQ+1RRIq0JRTyegK+jlhzzSR1685TnFW2XJwEAqBjZc2iaQWqe
-2tkPuBbObSXUfMAJjlbXtRikXRNiPA8=
-=tLgu
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCaippRgAKCRCGXBN6rc5S
+1mN5AP4tMVF5FXhfn3M1bOH0zcppauyBP0EZheCoVRoD/P0knwD/S22l7s4G+UN+
+i+T+KAlgVhbzLZ9juSKgV6kPwZV7/wY=
+=x6rW
 -----END PGP SIGNATURE-----
 
---------------cLKhUE1LS3RNZ8H0WJkZPja5--
+--------------YrjDV9X0pifSc8pX0GjzraWe--
