@@ -1,78 +1,127 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FE1535CB6F
-	for <cgroups@vger.kernel.org>; Thu, 11 Jun 2026 05:26:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B9E30146C;
+	Thu, 11 Jun 2026 06:05:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781155587; cv=none; b=eI4zsM1QCdPbz3ZainxQjz52i7Ovw+LNOG7HSb6/t3V9XxqKNVbLBES0utBLXJG+iRCHJbO5VwfuFBDVBNZ2p3pUDyKYXZoBpmUNA6utRY1P6jzPex2iYotlt6SlabGTuQoAhkAj18D3NAncSt1rAqRh/7DCi9P+v4ImO6zS0Wg=
+	t=1781157937; cv=none; b=WsC8uYnGPDD85d1iCof5ycEjlVMvYtZDh1Te5ElR/QFIi0Nn36WwEHVTFm/kVuTzNeCDugF9CVfWzUsFTL5JoZ56J2Rx3ImIUDnatTxjwhg99RSHE8sqPUA0LBRtvtpHfrrxIdKXpF3BuAUZk8g+WtHtjEW8efCb6/iEgjclSqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781155587; c=relaxed/simple;
-	bh=KWQqS8gV2CPteH4a+zKxTE85D/3pI+ltsiFq8cmqFKI=;
+	s=arc-20240116; t=1781157937; c=relaxed/simple;
+	bh=KCobAk1v9fNVAoJf0iITbOT1BGY69Eo1RWAE+L3IdP0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QauyCgEpKBQZeqAw8lCUJbVIcKzC9uBE2U52ZmYrai/mVLDIIf8+Iry+TX4ct8mWLHxxulKWfzgHRHPYec5IzOnIiAsFR7MFsHv1aYnHRu+fxl9NfjVMxreqJf9Qu2Z+1IH8pEdJvqvx4l5SqRWWA9yf+3N+IGh9UKpnMhosP0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GxqslFYr; arc=none smtp.client-ip=91.218.175.185
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 In-Reply-To:Content-Type; b=EBndtXAMEKWso39teE0JmVk2ylPnQMs86+a5Xbdc2q7WA1+Nj3dV77HlGNqwAmmYYN16/PljxvQLZz3tYtoHwD1VHM1CTzBr+FX8nJbm/JiFMyjPU48JbJgRmB+an4tOX2sXIJDdF0W4HosSQBjz0ZhdfgCyucOsTwLQV+c7Eeg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a2XT4r8o; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GxqslFYr"
-Message-ID: <0b1099e8-e124-4073-a0e8-2d4e85bc26dc@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1781155576;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=34u/gf0ccNs0AJS7sbBUEsTt849laT5bFT+HM9Xyi74=;
-	b=GxqslFYrILbXOQlWHj8igI1eCbxWd1zxelDqBdx7jfsco16NQTduCUecWvKi8JXiwGhR2U
-	fcyNmuKDL8Hez8SmareSvLt+vsPOAq6pnWt4NhCCCwTCnbLTZl+b6fUds4yDWlVbmx/hVk
-	7DgSIqPlyAmQvtyvqZRiud1HlGLddWM=
-Date: Thu, 11 Jun 2026 13:25:54 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a2XT4r8o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C9681F00893;
+	Thu, 11 Jun 2026 06:05:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781157936;
+	bh=KCobAk1v9fNVAoJf0iITbOT1BGY69Eo1RWAE+L3IdP0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=a2XT4r8oIoL31aBcHxAtMHleb4Gc/zG6F4q9xprFGdnrduVq98kVvFMSv+Npbmeru
+	 lCjdn1z/FvGPf+yMUK4O8Lu8LO6kx/7IJIIBHN3nh+OFgTif71AH35fhp8ToKRDWzi
+	 lT0nQXzfLinRd3g9h+96+JvJuSiyomGpXiDDqi8Jjln1E57A1aUyHcmGqX5q8EH7W8
+	 PWldc39RNmMOi6agX9cx2SjouHHEYZatOyJB9jusa1Rt99Hav1l4dlNPLS+wD83DAB
+	 +S6AOkwLbizkluJanjzk6P+cMVRoUgW09PPbD0iTzWTzAgih1pk1eQDJJAWhzEuaQq
+	 Ltyl3flw0ND7Q==
+Message-ID: <f9b7935c-f5f0-496c-b55e-1f3feee5c87a@kernel.org>
+Date: Thu, 11 Jun 2026 15:05:31 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/1] cgroup: rdma: free idle pools during cgroup teardown
-To: Ren Wei <n05ec@lzu.edu.cn>, cgroups@vger.kernel.org
-Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
- pandit.parav@gmail.com, yuantan098@gmail.com, zcliangcn@gmail.com,
- bird@lzu.edu.cn, tr0jan@lzu.edu.cn, d4n.for.sec@gmail.com
-References: <cover.1781092143.git.d4n.for.sec@gmail.com>
- <9eb365a37ab83f38686007f8a61a656759d39bd7.1781092143.git.d4n.for.sec@gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <9eb365a37ab83f38686007f8a61a656759d39bd7.1781092143.git.d4n.for.sec@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 07/16] mm/slab: replace struct partial_context with
+ slab_alloc_context
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
+ David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Suren Baghdasaryan <surenb@google.com>, Alexei Starovoitov <ast@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
+ <20260610-slab_alloc_flags-v2-7-7190909db118@kernel.org>
+Content-Language: en-US
+From: Harry Yoo <harry@kernel.org>
+In-Reply-To: <20260610-slab_alloc_flags-v2-7-7190909db118@kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------1O40a5juCIbpxLZ5dsBsgvqk"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------1O40a5juCIbpxLZ5dsBsgvqk
+Content-Type: multipart/mixed; boundary="------------7WEiTOn02pyYbf3OU7fSBKOd";
+ protected-headers="v1"
+From: Harry Yoo <harry@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
+ David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Suren Baghdasaryan <surenb@google.com>, Alexei Starovoitov <ast@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Message-ID: <f9b7935c-f5f0-496c-b55e-1f3feee5c87a@kernel.org>
+Subject: Re: [PATCH v2 07/16] mm/slab: replace struct partial_context with
+ slab_alloc_context
+References: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
+ <20260610-slab_alloc_flags-v2-7-7190909db118@kernel.org>
+In-Reply-To: <20260610-slab_alloc_flags-v2-7-7190909db118@kernel.org>
+
+--------------7WEiTOn02pyYbf3OU7fSBKOd
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
 
-在 2026/6/11 02:13, Ren Wei 写道:
-> From: Daming Li <d4n.for.sec@gmail.com>
-> 
-> rdmacg_css_offline() converts each pool to all-max limits so the
-> existing reclaim path can free it after the last uncharge. However,
-> zero-usage pools are already reclaimable at that point and leaving them
-> linked until rdmacg_css_free() lets later device teardown hit a
-> use-after-free when free_cg_rpool_locked() deletes cg_node from a freed
-> cgroup list head.
-> 
-> Free zero-usage pools directly from rdmacg_css_offline() while holding
-> rdmacg_mutex. This keeps the existing reclaim rule, avoids new lifetime
-> states, and ensures a cgroup cannot be freed with reclaimable rdmacg
-> pools still attached.
-Looks good to me.
 
-One minor note: the offline path skips rpool_has_persistent_state()
-and frees idle pools unconditionally. This means peak/event stats are
-lost earlier than before (at offline vs. at free). This is fine given
-the cgroup is dying, and css_free() cleans up remaining pools anyway.
+On 6/11/26 12:40 AM, Vlastimil Babka (SUSE) wrote:
+> Refactor get_from_partial_node(), get_from_any_partial(),
+> get_from_partial() and ___slab_alloc().
+>=20
+> Remove struct partial_context, which used to be more substantial but
+> shrank as part of the sheaves conversion. Instead pass gfp_flags and
+> pointer to the new slab_alloc_context, which together is a superset of
+> partial_context.
+>=20
+> This means alloc_flags are now available and we can use them to
+> determine if spinning is allowed, further reducing false positive "not
+> allowed" in the slow path due to gfp flags lacking __GFP_RECLAIM.
+>=20
+> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> ---
 
-Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+Looks good to me,
+Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
 
-Thanks,
---
-Tao
+--=20
+Cheers,
+Harry / Hyeonggon
+
+--------------7WEiTOn02pyYbf3OU7fSBKOd--
+
+--------------1O40a5juCIbpxLZ5dsBsgvqk
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCaipQKwAKCRCGXBN6rc5S
+1hN2AQDWJkWZRiTjIEVAqbOLRNnR7yDNdfBWX6DI98H+AvJzHQEAqj6jWeaKqi19
+xu+cPt/SkA9DOj9yVbTLCWbf+IbJeQA=
+=a3Ad
+-----END PGP SIGNATURE-----
+
+--------------1O40a5juCIbpxLZ5dsBsgvqk--
