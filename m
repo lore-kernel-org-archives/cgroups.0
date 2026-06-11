@@ -1,172 +1,88 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABF20242D67;
-	Thu, 11 Jun 2026 11:32:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9805374C14;
+	Thu, 11 Jun 2026 13:49:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781177579; cv=none; b=a3vqfVXLkoWxtz723Tfub7LUq68VeWV8qeW8eVDAfYTu6tIarE2MlP5oW9S1Q5LcW+xI+xMdISdggNoBFHzwcSsPO9roxgtU6h/oA3im8+aDZ3BagmhT9dRs11R3xD1Um/ujv3RIdLBCkwaHGJ9OUtHB+WWcm00qfIrN8bZbzX0=
+	t=1781185774; cv=none; b=KLLRT7hHWJXGGwMiklSXlPrd62/wyEoSucK07EmpefDa9ybDIzdRet9tMxo20QdqpLgnYQq1YK+nEXL7WenXju/wX7WZOhEqJCYX5SH0qN/Behbzx39OPHUFGhR6tB64l7NF/bbCpc7WgwZn5BdayY1V8zTOSDp57vwNcqQXpLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781177579; c=relaxed/simple;
-	bh=JnCub/wPXxOc+l3B7e0zn/JahGylm17eGn665Awp8xw=;
+	s=arc-20240116; t=1781185774; c=relaxed/simple;
+	bh=MeugTFb8f8jktxp5AhnF5uBtyQHUj4bp70Uuuq513pQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=riKORVtJJOfdzon/vc9Z10DbCOMxnGXukovBlyxFImO0oXLJBuACXsAJSsShy3uzMSDSycMu+TaT4O0J24G5TJHAYSzkwCFdozTcfq3aiLZm+Wx6R2V/mr2mkzFqaT36a5POmOn+04K3CynxaGG1qeNmdEczFDEviiOl0NbeyZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XvV+UjyZ; arc=none smtp.client-ip=90.155.92.199
+	 Content-Type:Content-Disposition:In-Reply-To; b=epiO8Ofj9cch+o9diGp/Gq002qRLsqy4lMNQDBMNJoBxVgUOZFPHSsXiA8zPGCk01FqhqN606qm4OcVrLccuGYrbzOQoDRLrPAjOCJIltzvm31BRgTVyll6AUUtN2Od0+xzs3Ihm9Taefgq/+C8R0VF1L62lFC7zTImLIuWWxQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lsSj5vn5; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XvV+UjyZ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lsSj5vn5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=zRU4ZE38yKLjcbcoPL7tdFV8bZE0iAIGaY9qks/tkzM=; b=XvV+UjyZxdi3/ZkayE2h0iSmpv
-	GqW1ZtnPI4PAc+/Zy6F1STpzVnUxUPMYIMW3MZlWD/hiJVuOvX6qPjfcJsEE3kNX/yQDBtmvQZTu4
-	7mNncviNE7vF6BgEhcoT9x0CkRvQ9ilwIEJ8Xs5tbO0598gSrvNSFfq/ubtURJAzvt8Ky0l9e4q7l
-	Ev5ZqF8Qj763OH1iZTu46rDLmU3dJrkZC/khGNp0rBsHVGk3163x6sdnKh9Vu8Gh73AiHPPnR6Is+
-	FnpcQPgpW5qe2vdMxdCjer9KhrjuCFkPSMCIRnfFZQZ3hLyoRsoF1OK3tmmXFlmc50FVi/C8PJ8MW
-	gWUE1qZg==;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=MeugTFb8f8jktxp5AhnF5uBtyQHUj4bp70Uuuq513pQ=; b=lsSj5vn5mPNhXjUR4dSQy5gVYA
+	uHmXZqGQZXWaeCPHnRf2W/lrcEqFS4pLyN3pq85alO7ERA9ZreVPSi8EapnWESGD0xGDfWkPjW/ng
+	505gbZCiPsFhLluE9Z60TgKgLM7W0SRPY/Oqn8e2/4cePzpBVRgU5ebUekcw8laloJeSfJaGZNWGc
+	5Ok9S4IFPZ1VuwAmCL+Kt8MX8b4IbHw5nZwrq/fILZMxkmlAxKcMec9TH9ZygtuCADYGPk9LOs/Ax
+	KmPUZoKxCGN0n3MkJ/dG61cd/z3s9BYBN94Shg9Y0VBVR189wPkoF/9pc1FcO4S707DYYkeu5Amg1
+	S2q0BaZQ==;
 Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.99.2 #2 (Red Hat Linux))
-	id 1wXde1-000000058P6-0qSd;
-	Thu, 11 Jun 2026 11:32:21 +0000
+	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wXfmM-00000001yzM-1jXa;
+	Thu, 11 Jun 2026 13:49:06 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 7DBC03002F0; Thu, 11 Jun 2026 13:32:19 +0200 (CEST)
-Date: Thu, 11 Jun 2026 13:32:19 +0200
+	id 41CEF3002F0; Thu, 11 Jun 2026 15:49:06 +0200 (CEST)
+Date: Thu, 11 Jun 2026 15:49:06 +0200
 From: Peter Zijlstra <peterz@infradead.org>
-To: Aaron Lu <ziqianlu@bytedance.com>
-Cc: mingo@kernel.org, longman@redhat.com, chenridong@huaweicloud.com,
-	juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
-	mgorman@suse.de, vschneid@redhat.com, tj@kernel.org,
-	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org,
+To: Waiman Long <longman@redhat.com>
+Cc: mingo@kernel.org, chenridong@huaweicloud.com, juri.lelli@redhat.com,
+	vincent.guittot@linaro.org, dietmar.eggemann@arm.com,
+	rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de,
+	vschneid@redhat.com, tj@kernel.org, hannes@cmpxchg.org,
+	mkoutny@suse.com, cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org, jstultz@google.com,
-	kprateek.nayak@amd.com, qyousef@layalina.io, svens@linux.ibm.com
-Subject: Re: [PATCH v2 08/10] sched/fair: Add newidle balance to
- pick_task_fair()
-Message-ID: <20260611113219.GG187714@noisy.programming.kicks-ass.net>
-References: <20260511113104.563854162@infradead.org>
- <20260511120627.944705718@infradead.org>
- <20260603095108.GA1684319@bytedance.com>
+	kprateek.nayak@amd.com, qyousef@layalina.io
+Subject: Re: [PATCH v3 3/7] sched/fair: Add cgroup_mode: max
+Message-ID: <20260611134906.GL48970@noisy.programming.kicks-ass.net>
+References: <20260605105513.354837583@infradead.org>
+ <20260605124051.589618504@infradead.org>
+ <d4ca5fe7-fd76-47c8-949a-a69916bfcbd4@redhat.com>
+ <0cbc8a90-8e88-4227-bea5-f12fb0f293db@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20260603095108.GA1684319@bytedance.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0cbc8a90-8e88-4227-bea5-f12fb0f293db@redhat.com>
 
+On Wed, Jun 10, 2026 at 11:42:47AM -0400, Waiman Long wrote:
 
-Aaron,
+> > > --- a/kernel/cgroup/cpuset.c
+> > > +++ b/kernel/cgroup/cpuset.c
+> > > @@ -4116,6 +4116,21 @@ bool cpuset_cpus_allowed_fallback(struct
+> > >       return changed;
+> > >   }
+> > >   +int cpuset_num_cpus(struct cgroup *cgrp)
+> > > +{
+> > > +    int nr = num_online_cpus();
+> > > +    struct cpuset *cs;
+> > > +
+> > > +    if (is_in_v2_mode()) {
+> > > +        guard(rcu)();
+> > > +        cs = css_cs(cgroup_e_css(cgrp, &cpuset_cgrp_subsys));
+> > > +        if (cs)
+> > > +            nr = cpumask_weight(cs->effective_cpus);
+> > > +    }
+> > > +
+> > > +    return nr;
+> > > +}
 
-Sorry I failed to notice this email earlier.
+> FYI, you may have to take the callback_lock to ensure the stability of the
+> effective_cpus mask.
 
-On Wed, Jun 03, 2026 at 05:51:08PM +0800, Aaron Lu wrote:
-
-> I applied below diff and the problem is gone:
-> 
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 5f48af700fd44..942a543af3e54 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -9897,6 +9897,9 @@ static struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf)
->  	return p;
->  
->  idle:
-> +	if (sched_core_enabled(rq))
-> +		return NULL;
-> +
->  	new_tasks = sched_balance_newidle(rq, rf);
->  	if (new_tasks < 0)
->  		return RETRY_TASK;
-> 
-
-Right, this is the safe patch and restores pick_task_fair() to its
-previous status (for core-sched).
-
-Since people are hitting this problem, I'm going to merge it as below.
-I've presumed your SoB, please let me know if that's a problem.
-
-I think I'm going to try and move newidle into sched_class::balance /
-balance_fair(), but I'll do that next cycle.
-
-Thanks!
-
----
-Subject: sched/fair: Fix newidle vs core-sched
-From: "Aaron Lu" <ziqianlu@bytedance.com>
-Date: Wed, 3 Jun 2026 17:51:08 +0800
-
-From: "Aaron Lu" <ziqianlu@bytedance.com>
-
-While testing Prateek's throttle series, I noticed a panic issue when
-coresched is enabled and bisected to this patch.
-
-I fed the panic log and this patch to an agent and its analysis looks
-correct to me(cpu56 and cpu57 are siblings in a VM):
-
-       cpu57 (holds core-wide lock)
-
-     pick_next_task() [core scheduling]
-     for_each_cpu_wrap(i, smt_mask, 57):
-       i=57: pick_task(rq_57)
-             pick_task_fair(rq_57)
-             -> picks task A
-       rq_57->core_pick = task A
-       // task_rq(A) == rq_57
-
-       i=56: pick_task(rq_56)
-             pick_task_fair(rq_56)
-             cfs_rq->nr_queued == 0
-             goto idle
-             sched_balance_newidle(rq_56)
-             raw_spin_rq_unlock(rq_56)
-             // core-wide lock released
-             newidle_balance() pulls
-               task A: rq_57 -> rq_56
-             // task_rq(A) == rq_56 now
-             raw_spin_rq_lock(rq_56)
-             // core-wide lock re-acquired
-             return > 0
-             goto again
-             pick_task_fair(rq_56)
-             -> picks task A
-       rq_56->core_pick = task A
-
-     // first loop done
-     // rq_57->core_pick is still task A (set before lock release)
-     // but task_rq(A) == rq_56 now
-     next = rq_57->core_pick  // = task A
-
-     put_prev_set_next_task(rq_57, prev, task A)
-     __set_next_task_fair(rq_57, task A)
-     hrtick_start_fair(rq_57, task A)
-     WARN_ON_ONCE(task_rq(task A) != rq_57)
-     // task_rq(A) == rq_56
-
-IOW: by allowing pick_task_fair() to do newidle_balance and not returning
-RETRY_TASK, it can end up selecting the same task on two CPUs. Restore the
-previous state by never doing newidle when core scheduling is enabled.
-
-Tested-by: Sven Schnelle <svens@linux.ibm.com>
-Signed-off-by: "Aaron Lu" <ziqianlu@bytedance.com>
-Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
-Link: https://patch.msgid.link/20260603095108.GA1684319@bytedance.com
----
- kernel/sched/fair.c |    3 +++
- 1 file changed, 3 insertions(+)
-
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -9942,6 +9942,9 @@ struct task_struct *pick_task_fair(struc
- 	return p;
- 
- idle:
-+	if (sched_core_enabled(rq))
-+		return NULL;
-+
- 	new_tasks = sched_balance_newidle(rq, rf);
- 	if (new_tasks < 0)
- 		return RETRY_TASK;
+That seems pointless, the moment we drop that lock, its changeable
+again. Either way around nr is but a snapshot.
