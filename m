@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8DD33DA5BD;
-	Mon, 15 Jun 2026 10:14:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D9313E2AC8;
+	Mon, 15 Jun 2026 11:08:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781518469; cv=none; b=VPUm9tpDh0Ht1VYF/Lt9mYeOJVfOFzZ5wTt0uoD5l0ZqFUc+pDU3PT+IXoK6JPPs73CHTNOmPEwGI1DqJQNMGW7nVQcn8CG9P+YNrAVCRI0twwmiqk7IzztY3COWxcZMOBZyRBdOm2Iai2s5ZNNn9pbxxIF5oMZE0e/5lG1ELk0=
+	t=1781521692; cv=none; b=jqh7wQb2C51/WqwDE46pgr/0endgGO3XssXACV0oXLKRBCPg4DTu4pMYu03zCEIcQbKYEBJnjBqi1gx7EWrxVfhSmwLRpK3F5tReTOMxSRE5kQH20dZx1y+dDc+Oh3G30OecOunFx751Kg39NWK0RZ5orcgUzdESDxYtjvPQEhA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781518469; c=relaxed/simple;
-	bh=+i98OB42+NmLa3evPR0ZxhKnbDfP9M9EeKCMjPpXO+w=;
+	s=arc-20240116; t=1781521692; c=relaxed/simple;
+	bh=OMfL5qaAr3g1O7EX8C8k4PihRKliEGpV7ArkSqXAmUk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GsAsT3tIGaJTFEb1KzY42y99G93Yxpc4nXC69jTxslVk39K6K5JYDcdUQkMR5TmPxz1lIxW659ZEttCgJbhvSlUqlHAjofh3ldTmSDH7pwORJ5OCV/8j69Lo6J51vgWgVtgIJL+EuLsg2MypJbKaYxd/G9sVOd1I78WjUdDZRcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SMyTsyB4; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=OVoTBY02C4hc2Y1M+EdHcO2j9PwizKS/E2+ZKzmsZ61+bH0OM8TkBhsylHt0Zm70fFN1zTK7uAm13Rdxm02RxgZtuilX0PkvCHA/4P6grbrWB07C4Wo12rm9KlVMhHPvXM2AGbwD6MJz1BRAJQg7uMjpm6AxKJYf/H5ww4GkfTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BjHDpjNq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SMyTsyB4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECAD01F000E9;
-	Mon, 15 Jun 2026 10:14:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BjHDpjNq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F19471F000E9;
+	Mon, 15 Jun 2026 11:08:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781518468;
-	bh=T2eZ9nicY2ugL7ZhQhUMhUTF6916IovA3mkaq4lvaXQ=;
+	s=k20260515; t=1781521691;
+	bh=BEFhWG42X1qJS9RE3Y2xOsipVZidmJ4sZg1AbDslOq8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=SMyTsyB4ltrLipBSuP0C8l+bwRDWSEU8kLkUu3IZFNMNtDlBEECikDD7LhyvijU6/
-	 vhQ+DM8JhL7di73ZhtNnlP3vASRDKZuEAYGK45GD1KfRCD4M49tR9ICRlmBQ6k539+
-	 3kVjBCWjy6QvLFtduPqVzFr5X9qdXVvvK+rbuI11cyr+6/OL3k2IEiv8yhCCrVmNLT
-	 vhrog67BSpEEJZTdC9V+n02oPykFZ1kAyMW5AXPcwQim26LKaEmXySqsV/xv0UY7Jw
-	 dv5Yxv+YBN5C108+p6CgA8yiKv0qfkTKFJXoOJ09YSJvDNT2c6+TFVe6bjjWmC9l0X
-	 H8Xcd2iTnrBWQ==
-Message-ID: <3f454a59-71d0-4354-87d6-85afb91a4ae2@kernel.org>
-Date: Mon, 15 Jun 2026 12:14:23 +0200
+	b=BjHDpjNqIKw8SmTSH877phGo/F0khvstQ26ztB0dDIr7Foq9/J9RR3S+28eRGcV7l
+	 OdYJOzfg17YYmKfru/SrH/SYX5mx9ggTN3CkFxc0DTs3cDrHcAZruHoK/K9+pHlDbo
+	 ilGFtZ23f6ncSaYaMN/1HtD3mgYedgNkwOOsSmn3yeg9U1HHZ3B+JtivoITdbdZKvN
+	 4q69iCv2Acdiq/IT7naqUDaUXQJXnyq33zOaI8OQVGZfGtLkuO3qGUXwnsdpqlU7a7
+	 P5Xwz+/3IccblaFl5BBmSWIZFL58AVv3pmPOFHtyHB7MEytjtBiKYMgUqmh++rDNH6
+	 tbHj8A8QXnaUw==
+Message-ID: <18c0ec1e-95c9-4aea-b9b6-bb599ab2760f@kernel.org>
+Date: Mon, 15 Jun 2026 13:08:06 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,13 +35,14 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 08/16] mm/slab: pass alloc_flags to new slab allocation
+Subject: Re: [PATCH v2 12/16] mm/slab: pass slab_alloc_context to
+ __do_kmalloc_node()
 Content-Language: en-US
-To: Harry Yoo <harry@kernel.org>
-Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
- David Rientjes <rientjes@google.com>,
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
+ Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
  Roman Gushchin <roman.gushchin@linux.dev>,
- Suren Baghdasaryan <surenb@google.com>, Alexei Starovoitov <ast@kernel.org>,
+ Alexei Starovoitov <ast@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
  Shakeel Butt <shakeel.butt@linux.dev>,
@@ -49,8 +50,8 @@ Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
  Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
  linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
- <20260610-slab_alloc_flags-v2-8-7190909db118@kernel.org>
- <49ca905a-0303-4fad-8257-485b0ed47c8d@kernel.org>
+ <20260610-slab_alloc_flags-v2-12-7190909db118@kernel.org>
+ <CAJuCfpHOXkZFq8UKiSqXzG-RBFNw5gO-JR0bBCn9uRc3Oc5ZbA@mail.gmail.com>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -91,71 +92,26 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <49ca905a-0303-4fad-8257-485b0ed47c8d@kernel.org>
+In-Reply-To: <CAJuCfpHOXkZFq8UKiSqXzG-RBFNw5gO-JR0bBCn9uRc3Oc5ZbA@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 6/11/26 09:52, Harry Yoo wrote:
+On 6/15/26 06:58, Suren Baghdasaryan wrote:
+> On Wed, Jun 10, 2026 at 8:41 AM Vlastimil Babka (SUSE)
+> <vbabka@kernel.org> wrote:
+>>
+>> With alloc_flags usage in slab, we can replace __GFP_NO_OBJ_EXT with an
+>> alloc flag that prevents kmalloc recursion. For that we need a version
+>> of kmalloc() that takes alloc_flags and use it in places that perform
+>> these potentially recursive kmalloc allocations (of sheaves or obj_ext
+>> arrays).
+>>
+>> As a preparatory step, make __do_kmalloc_node() take a pointer to
+>> slab_alloc_context. This replaces the 'caller' parameter and includes
+>> alloc_flags which we'll make use of.
 > 
-> 
-> On 6/11/26 12:40 AM, Vlastimil Babka (SUSE) wrote:
->> Add the alloc_flags parameter to allocate_slab() and new_slab()
->> so it can be used to determine if spinning is allowed, independently
->> from gfp flags.
->> 
->> refill_objects() passes SLAB_ALLOC_DEFAULT because it can only be
->> reached from contexts that allow spinning.
->> 
->> Also change how trynode_flags are constructed in ___slab_alloc() to
->> achieve the same "do not upgrade to GFP_NOWAIT" by using masking instead
->> of a branch. It will now also not upgrade in cases where gfp is weaker
->> than GFP_NOWAIT (i.e. lacks __GFP_KSWAPD_RECLAIM) but doesn't come from
->> kmalloc_nolock() - which is more correct anyway.
-> 
-> Wait, debugobjects intentionally avoids __GFP_KSWAPD_RECLAIM,
-> but we have been upgrading it to GFP_NOWAIT?
+> I think you could also eliminate __do_kmalloc_node() function's "size"
+> parameter as it's always the same as ac->orig_size.
 
-Actually, we have not been upgrading it until patch 6/16, which made the
-upgrade trigger by starting to rely on alloc_flags? Because previously it
-would be !allow_spin due to lack of __GFP_KSWAPD_RECLAIM.
-
-So I will move that flags adjustment to 6/16 (now 7/16).
-
->> During the masking keep also existing __GFP_NOMEMALLOC (pointed out by
->> Sashiko) and __GFP_ACCOUNT. Previously the hardcoded GFP_NOWAIT would
->> eliminate them, but it's not a big problem that would need a separate
->> fix.
-> 
-> Ack.
-> 
->> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
->> ---
->>  mm/slub.c | 28 ++++++++++++++--------------
->>  1 file changed, 14 insertions(+), 14 deletions(-)
->> 
->> diff --git a/mm/slub.c b/mm/slub.c
->> index 98b79e5e7679..8f6ca3d5fdfa 100644
->> --- a/mm/slub.c
->> +++ b/mm/slub.c
->> @@ -4467,25 +4470,22 @@ static void *___slab_alloc(struct kmem_cache *s, gfp_t gfpflags, int node,
->>  	 * 1) try to get a partial slab from target node only by having
->>  	 *    __GFP_THISNODE in pc.flags for get_from_partial()
->>  	 * 2) if 1) failed, try to allocate a new slab from target node with
->> -	 *    GPF_NOWAIT | __GFP_THISNODE opportunistically
->> +	 *    (at most) GFP_NOWAIT | __GFP_THISNODE opportunistically
->>  	 * 3) if 2) failed, retry with original gfpflags which will allow
->>  	 *    get_from_partial() try partial lists of other nodes before
->>  	 *    potentially allocating new page from other nodes
->>  	 */
->>  	if (unlikely(node != NUMA_NO_NODE && !(gfpflags & __GFP_THISNODE)
->>  		     && try_thisnode)) {
->> -		if (unlikely(!allow_spin))
->> -			/* Do not upgrade gfp to NOWAIT from more restrictive mode */
->> -			trynode_flags = gfpflags | __GFP_THISNODE;
->> -		else
->> -			trynode_flags = GFP_NOWAIT | __GFP_THISNODE;
->> +		trynode_flags &= GFP_NOWAIT | __GFP_NOMEMALLOC | __GFP_ACCOUNT;
->> +		trynode_flags |= __GFP_NOWARN | __GFP_THISNODE;
->>  	}
-> 
+OK, done.
 
