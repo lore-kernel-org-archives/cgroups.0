@@ -1,159 +1,202 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F143DB960
-	for <cgroups@vger.kernel.org>; Wed, 17 Jun 2026 14:40:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.176
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781707214; cv=pass; b=TDVYyKaKbMjYxJu7/5Q81PPBBu5AyJDFbi1XX3glJ3/hvbfqQrmz7MV8ZnbkWc0ZF6A0eUF/5od4j4vW0LfRoHf+TSaQZwuAqDiFlz9ApQM0yt7GBPDIJmzsTwh+0zed7tMShQSsN/VKG8ACWNFsqrsm/W1uUCodXhYupc5oyhk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781707214; c=relaxed/simple;
-	bh=SrECtSXktFVmwe2HfKzsMsXW5gYWCynhrT414gDrZrU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=bVhtjcrNbUL7yRI7YmmoLcWRI+FvdDMpGagASVs9Oqj8Zb6f/QX5DvgCBLLv4xxeEoVzQndSKeJ1S+7jlCikc5TQV3LMCa0szZ1tY1Kg1qsPlVMrLVBpKk3XaxeKAYXIsc0GygfE0EpXK7Q/WK2vBWhZGjjvnc8eiegyI2dLAy8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=oA8rh6Q0; arc=pass smtp.client-ip=209.85.160.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54B92217F27;
+	Wed, 17 Jun 2026 14:40:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781707246; cv=none; b=kUxbenQiBOjpCGFsYuMLDaM1lyYrmJ1NQj8ElFeUwPAIvR5TD6Y7bhzN80J4dkGTt2sx0wXr+/euVmoLDPXQQKh2gMUjfqjqRJ3+gX9/u9v0L27ScF4IRzOWucIPF2tr0pnQ3VTK5WFThPzg19rbPVhSXMNXPq9BGjLBiSPUtwc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781707246; c=relaxed/simple;
+	bh=nbIei5LQuFojnG61oo9TKFoyCWfciPusCPgoFw/p6i4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OSjekzgWXPzsaN41DMht36Air21OtitoIMf9/3+KoKFhHaYaN245gwScWWFbZflr3h+nrvbKU8QIxvvWzNg4r9aCwnot7ctSL7ggk1CJ42Hgf1jv1tJYpRGQ4DfXi7YHPcpz1dE8Sn+XTPS/l0mnh8mgw3SV2TX2jV3GNGbTNCs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZ3DSq6l; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="oA8rh6Q0"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-51765331535so263831cf.1
-        for <cgroups@vger.kernel.org>; Wed, 17 Jun 2026 07:40:13 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781707212; cv=none;
-        d=google.com; s=arc-20240605;
-        b=KGgeqL5AzAi3CmU1A63TGcruW3TT+aT2aQpVoN4AVGtYMJB5AI7d05YdIEwTQK/fWk
-         db5VwKE4rIzToy8GHR7vfRpBFoopYx+qlCsiwoGNItoMQLHP3OmfNbhxl8gEltwZOqH7
-         5rbDzkgZWwVpgeVZOuYQ/3Df0SXQKzjykwpNAl9jp9Hp7/gV1ihPUXgWPSi2YsV+a70A
-         qGx2365ptu2GiiaPuv6MijzS0jrXL30vKqk5cgnV4T+3sG1ZaBGe/CQTyi8fcJAaBtti
-         d/Dkm2xjFAVZyF8tFrsBMDHspvakQuOXeHr6o6o+AiL3WYXfObcq1jAlDxz/xf5Q1LwV
-         8Ihg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=SrECtSXktFVmwe2HfKzsMsXW5gYWCynhrT414gDrZrU=;
-        fh=sflAe4+eaKjFEpMyJ8R4I0OQHzu/i3bhD3C/1I4IthM=;
-        b=OTqXxJ1NRml7Y94nv5mLvg9lC26SUW7eWl9k2+W/CNx51bv2o8gzmmYryVr7NsBheK
-         v08ucJpaZqapLZIFJS2mk1iF5vlW1a2qNRYm3hexdgzc8aZaqenngZ/ZpenKV+dTxUbv
-         E+Mb8oJlFGdt73LOwXq6tdImrE+gIZpYQ06U/oOvsB0zNTllTPf9EC8CKh1LongcIQFa
-         tr4aBJZNKJQuzwjPk1Wotndf/CwfJ41Qij8hGBDMnyW5tQgBQRk75gdth9dbY5q25PgD
-         axP4uBCwfSVKXqvc8aiURbmsy29Lg6PGi7IZvdiBV4HU2yE3YuselwSB7YHFxf7eOC6o
-         w9NQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781707212; x=1782312012; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SrECtSXktFVmwe2HfKzsMsXW5gYWCynhrT414gDrZrU=;
-        b=oA8rh6Q0pWYj51q2L+7TcECsPzR9YrONFVd3boSeaKzMz12Fn9aup0I5SFSIV0RpAm
-         SKPyZqk+JUtO1bqWlo6CECqvB7ElIYQ+ifgvx2XahtzRH+Zmb9ZKS5Hl003MYOZIaZ3Q
-         MW6LPTeSr5vkbrgAwILdkUdtMahEh4RIsrnl5q6A/ZYmGNa9CZOu+jTnmHX8izKhXoiV
-         L/c4mqbwuL2te3msmIBNpZMyIjxpx8OFQ61bfQldmKThEa8ys3+9TZfIPSY3CfJP5Ubn
-         CHIrksCEIkGRr+TgK2mF8my2Pci7Yop4uussxdfdudkTksdO1/LfsWWm++YXGMVvTw6+
-         PJRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781707212; x=1782312012;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=SrECtSXktFVmwe2HfKzsMsXW5gYWCynhrT414gDrZrU=;
-        b=bW8tsa68kKDr9whRaiMp38sxakRU7XLvMZKPsWkkvbTTbWlU2iOPHnYd6oDH6utzJt
-         4QHx+o6Bsutg4qF5SG3aRl43QORtYtQgB2kgkI7+9RGhuClTLryPGzEfrujxM5VVgtFy
-         S/+EG4G2fI5LCH8IUuqbCMNPKtiY8HuqgMCjrmp6j/R3WtVnJWxhkeiNuKVCspesOru2
-         q4qGXxEQpCH1qoGYingf9O8zSRLlebUqeCBGqB2alaSg2KlXfBHK1mv/6yo/HLhh6Dek
-         Y7afuCxRPnrbFGszoe8Sc8ld725tD2SOgiNCxa0s7TUUw7BDoXTZW2MFooVYYrrARenX
-         8ViA==
-X-Forwarded-Encrypted: i=1; AFNElJ+sPQBgENftg98dq91FAUCk59d1cHONHHXE2WmZg1VvC6mx32h46/XsJdzboOQtZ7HeslJSR3AG@vger.kernel.org
-X-Gm-Message-State: AOJu0YyfGqaOSOjD+R6ZPYDqffaz3Uyv/I03Il/r9pLKAOMx0hnwdBQq
-	5kJus2OsmS+Vg/pzJOaZibBPKAdsNnaoa/5q/fF2TBvVwff35MrKpIo74/I65nz6g1TeM2CoNp2
-	j/esKYn3ZTuo29rLLF8tWcvsIt7T/gvIvkL7CdtZg
-X-Gm-Gg: Acq92OG52Osdpfi/bRcOAc8F47xqPPNIcYi28GqNk2+H919+ajG3BsqM6oaLA4z+vcZ
-	QooCfrYbjq0VFpjjg3bQAV7qAmOU/1pu6DLA9sH895MW9mrzwHqdAJmihGPR0u+1f+j0ZiGCSj/
-	cQwtqkTBotXhP7xJZkBhuF8dRo38c+CGGVxxz+DiwHmK79TZhBDLWbPGZ/JgofPqHDImeAO9tkd
-	B4aYaw3liE/qOtzYOYL7wE3ainC5eY2PDNP6DpCCpTlS3vx7JVaen3SE9U8zTxkFj8YOweDIJz7
-	T4iRWYzE06RLeBhWVyku3l4TZXs=
-X-Received: by 2002:a05:622a:1809:b0:516:ccc0:ee38 with SMTP id
- d75a77b69052e-519ad992ba9mr7504101cf.9.1781707211224; Wed, 17 Jun 2026
- 07:40:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZ3DSq6l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7565F1F000E9;
+	Wed, 17 Jun 2026 14:40:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781707245;
+	bh=nbIei5LQuFojnG61oo9TKFoyCWfciPusCPgoFw/p6i4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=jZ3DSq6l+QsHgbvMKTv3EZBc/yQZkW1DWZudDzczG0ToiC/FZhcJcb10b5j0pCQSs
+	 v8E6T26mo+I5raG2Luz57wasV+M16uL1T1+p0zZ8UVhuiPT98nv41MW/9QGWvuwsHj
+	 fLoCTYDnWfuYvmYOc+GYRVGVHbkQDd0aAkFWbTwKIhonIWFvPC7ekmQfWkqCKtaLWo
+	 rTjJ4HNqRsBTEyUPvO+Zxk5I+fgdrp//kizFou1k46AcHc10Pf73nKgZgqKUX0Marf
+	 4gAzFwLRYE+8GoedamHKn3j5hp+440s4kut6/nVmL1FiCaxP6VIHzJzv9uyjdhFiU1
+	 m4ZOa7/7LFnyg==
+Message-ID: <02f9c426-b568-4ddc-882f-aab8c7f31976@kernel.org>
+Date: Wed, 17 Jun 2026 23:40:39 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260610-slab_alloc_flags-v2-0-7190909db118@kernel.org>
- <20260610-slab_alloc_flags-v2-7-7190909db118@kernel.org> <f9b7935c-f5f0-496c-b55e-1f3feee5c87a@kernel.org>
- <CAJuCfpE3XfxLmV-DzM5nLqYqGsFJThr-1i4bmEEqMpGZ28RLFQ@mail.gmail.com> <1c63fbca-6ee4-466f-bfb5-5ff25a847607@kernel.org>
-In-Reply-To: <1c63fbca-6ee4-466f-bfb5-5ff25a847607@kernel.org>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Wed, 17 Jun 2026 07:39:59 -0700
-X-Gm-Features: AVVi8Ce_vCvZNT5yYs5Y8bQHsLpdQUSPne6OsjaB_y8AFj79h8otRJdz2a0FfJg
-Message-ID: <CAJuCfpGiDKygFBTAwwiBaXL+dGJjTR232Rd_ARTyAtjEAMkDZQ@mail.gmail.com>
-Subject: Re: [PATCH v2 07/16] mm/slab: replace struct partial_context with slab_alloc_context
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 14/15] mm/slab: remove __GFP_NO_OBJ_EXT usage from
+ alloc_slab_obj_exts()
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Alexei Starovoitov <ast@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>, Dmitry Vyukov <dvyukov@google.com>, 
-	kasan-dev@googlegroups.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
+ David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Suren Baghdasaryan <surenb@google.com>, Alexei Starovoitov <ast@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260615-slab_alloc_flags-v3-0-ce1146d140fb@kernel.org>
+ <20260615-slab_alloc_flags-v3-14-ce1146d140fb@kernel.org>
+ <78b67a9b-44e5-4649-957a-9d42bfaa098e@kernel.org>
+ <26c29e4b-09b1-424a-b4e4-3358aac20115@kernel.org>
+Content-Language: en-US
+From: Harry Yoo <harry@kernel.org>
+In-Reply-To: <26c29e4b-09b1-424a-b4e4-3358aac20115@kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------GV0qWTMYBB1AKSMm3bfNfef6"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------GV0qWTMYBB1AKSMm3bfNfef6
+Content-Type: multipart/mixed; boundary="------------oVz7MBau50V4H9MeL0byYqJq";
+ protected-headers="v1"
+From: Harry Yoo <harry@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>,
+ David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Suren Baghdasaryan <surenb@google.com>, Alexei Starovoitov <ast@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Dmitry Vyukov <dvyukov@google.com>, kasan-dev@googlegroups.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Message-ID: <02f9c426-b568-4ddc-882f-aab8c7f31976@kernel.org>
+Subject: Re: [PATCH v3 14/15] mm/slab: remove __GFP_NO_OBJ_EXT usage from
+ alloc_slab_obj_exts()
+References: <20260615-slab_alloc_flags-v3-0-ce1146d140fb@kernel.org>
+ <20260615-slab_alloc_flags-v3-14-ce1146d140fb@kernel.org>
+ <78b67a9b-44e5-4649-957a-9d42bfaa098e@kernel.org>
+ <26c29e4b-09b1-424a-b4e4-3358aac20115@kernel.org>
+In-Reply-To: <26c29e4b-09b1-424a-b4e4-3358aac20115@kernel.org>
+
+--------------oVz7MBau50V4H9MeL0byYqJq
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 15, 2026 at 3:01=E2=80=AFAM Vlastimil Babka (SUSE)
-<vbabka@kernel.org> wrote:
->
-> On 6/15/26 04:36, Suren Baghdasaryan wrote:
-> > On Wed, Jun 10, 2026 at 11:05=E2=80=AFPM Harry Yoo <harry@kernel.org> w=
-rote:
-> >>
-> >>
-> >>
-> >> On 6/11/26 12:40 AM, Vlastimil Babka (SUSE) wrote:
-> >> > Refactor get_from_partial_node(), get_from_any_partial(),
-> >> > get_from_partial() and ___slab_alloc().
-> >> >
-> >> > Remove struct partial_context, which used to be more substantial but
-> >> > shrank as part of the sheaves conversion. Instead pass gfp_flags and
-> >> > pointer to the new slab_alloc_context, which together is a superset =
-of
-> >> > partial_context.
-> >> >
-> >> > This means alloc_flags are now available and we can use them to
-> >> > determine if spinning is allowed, further reducing false positive "n=
-ot
-> >> > allowed" in the slow path due to gfp flags lacking __GFP_RECLAIM.
-> >> >
-> >> > Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-> >> > ---
-> >>
-> >> Looks good to me,
-> >> Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
-> >
-> > Ah, nice! The conversion I was anticipating in the previous patch...
-> > I would do this removal of partial_context as patch 6 and then convert
-> > ___slab_alloc() and get_from_any_partial*() altogether in patch 7. I
-> > think that would keep the behavior of the ___slab_alloc() more robust
-> > throughout the patchset. But I would say it's nice to have, not a
-> > must-have.
->
-> OK, so I switched the order of 6 7 and all the changes from
-> gfpflags_allow_spinning() to alloc_flags_allow_spinning are now in the
-> newly-later patch; the "replace struct partial_context with
-> slab_alloc_context" part has no functional changes. Verified that the end
-> result is exactly the same, and only updated changelogs a bit.
 
-Thanks for the refactoring. LGTM.
 
->
-> > Reviewed-by: Suren Baghdasaryan <surenb@google.com>
->
+On 6/17/26 11:36 PM, Vlastimil Babka (SUSE) wrote:
+> On 6/17/26 15:56, Harry Yoo wrote:
+>> On 6/15/26 8:54 PM, Vlastimil Babka (SUSE) wrote:
+>>> __GFP_NO_OBJ_EXT has limited scope within the slab allocator itself a=
+nd
+>>> gfp flags are a scarce resource, unlike slab's alloc_flags.
+>>>
+>>> Introduce SLAB_ALLOC_NO_RECURSE alloc flag that has the same intent a=
+s
+>>> __GFP_NO_OBJ_EXT but a more generic name, meaning that a kmalloc()
+>>> family function should not recurse into another kmalloc*() for the
+>>> purposes of allocating auxiliary structures (obj_ext arrays or sheave=
+s).
+>>>
+>>> First, replace the __GFP_NO_OBJ_EXT for allocating obj_ext arrays in
+>>> alloc_slab_obj_exts(). Make use of the newly added kmalloc_flags()
+>>> function, where we can pass alloc_flags with SLAB_ALLOC_NO_RECURSE
+>>> added. This will also pass through SLAB_ALLOC_NOLOCK so we don't need=
+
+>>> to special case kmalloc_nolock() anymore.
+>>>
+>>> Note that until now the kmalloc_nolock() ignored the incoming gfp fla=
+gs
+>>> and hardcoded __GFP_ZERO | __GFP_NO_OBJ_EXT. But it's correct to pass=
+ on
+>>> the incoming gfp flags (only augmented with __GFP_ZERO), because if
+>>> alloc_flags contain SLAB_ALLOC_NOLOCK, the incoming gfp flags have to=
+
+>>> be also compatible with it. However, we might have added __GFP_THISNO=
+DE
+>>> for opportunistic slab allocation, as pointed out by Hao Li, and
+>>> __GFP_COMP by allocate_slab() as pointed out by Shengming Hu. Solve t=
+his
+>>> by adding both flags to OBJCGS_CLEAR_MASK as it makes sense to strip
+>>> them anyway for non-kmalloc_nolock() allocations of sheaves or obj_ex=
+t
+>>> arrays as well.
+>>>
+>>> To avoid recursion of sheaf -> obj_ext -> sheaf -> ... allocations at=
+
+>>> this patch, until the next patch converts sheaves to
+>>> SLAB_ALLOC_NO_RECURSE, use both gfp and alloc_flags for obj_ext. The
+>>> next patch will remove the gfp part.
+>>>
+>>> Link: https://patch.msgid.link/20260610-slab_alloc_flags-v2-15-719090=
+9db118@kernel.org
+>>> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+>>> ---
+>>
+>> Looks good to me,
+>> Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
+>=20
 > Thanks!
->
-> >>
-> >> --
-> >> Cheers,
-> >> Harry / Hyeonggon
->
+> =20
+>> With some comments below.
+>>
+>> I was worried that perhaps replacing SLAB_ALLOC_NO_RECURSE with
+>> __GFP_NO_OBJ_EXT will create a cycle of
+>>
+>> alloc_slab_obj_exts(SLAB_ALLOC_DEFAULT)
+>> -> kmalloc_flags(SLAB_ALLOC_NO_RECURSE)
+>> -> alloc_from_pcs(SLAB_ALLOC_NO_RECURSE)
+>> -> refill_objects(SLAB_ALLOC_DEFAULT)
+>> -> new_slab(SLAB_ALLOC_DEFAULT)
+>> -> account_slab(SLAB_ALLOC_DEFAULT)
+>> -> alloc_slab_obj_exts(SLAB_ALLOC_DEFAULT)
+>>
+>> with __GFP_NO_OBJ_EXT, it would have been passed to refill_objects(),
+>> but SLAB_ALLOC_NO_RECURSE is not. However this cycle does not exist
+>> because alloc_slab_obj_exts() clears __GFP_ACCOUNT (as part of
+>> OBJCG_CLEAR_MASK) and memory profiling itself does not invoke
+>> alloc_slab_obj_exts() when allocating new slabs if SLAB_ACCOUNT is not=
+
+>> set (which is interesting, by the way).
+>=20
+> Hm yeah I think we should propagate alloc_flags to refill_objects() etc=
+, to=20
+> avoid later surprise. But can be done as a later cleanup.
+
+Ack.
+
+>> Also alloc_slab_obj_exts() propagating SLAB_ALLOC_NEW_SLAB to
+>> kmalloc_flags() is little bit confusing because it does not have any
+>> effect due to SLAB_ALLOC_NO_RECURSE.
+>=20
+> OK let's address this one by this fixup:
+
+The fixup looks good to me, thanks!
+
+--=20
+Cheers,
+Harry / Hyeonggon
+
+
+--------------oVz7MBau50V4H9MeL0byYqJq--
+
+--------------GV0qWTMYBB1AKSMm3bfNfef6
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCajKx5wAKCRCGXBN6rc5S
+1t9iAQDiPXLnO6zy942RtBt/uX/MTobE+4pvYi/Tod2EIOc7ZgEAm+SvzDRW2ab1
+rNcaW/zRWDP59NB8KIsOmgrG6w6qBAg=
+=zqiN
+-----END PGP SIGNATURE-----
+
+--------------GV0qWTMYBB1AKSMm3bfNfef6--
