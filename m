@@ -1,95 +1,97 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AFF23DB960
-	for <cgroups@vger.kernel.org>; Wed, 17 Jun 2026 14:40:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F09C321A459
+	for <cgroups@vger.kernel.org>; Wed, 17 Jun 2026 14:48:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.182
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781707251; cv=pass; b=d3SqE3+1SLPbya2cKogG8H1X6tuWNmFwl+O+teo5vdRFqA7viTxvLC/Aj5YUH3/3RdHggGOufsCkqLdQ4Qa5njYh/FBgvK4P/a4BYwwRo2RIgJs/ASgFAlBevJBl96G6xjMp3DgZBpEmv3Shh7vwD5rtpnGINn+r28YU7EJbVy0=
+	t=1781707711; cv=pass; b=PEM2RBji3T1XUtOvoa34taMAoGq26lUuz4DByui3kclQFGd854QAPyHwvvJPmviRR/YpJGa0joQAFjM3ylCgLw0+Y5UAMNkHaF8fVKDIJuppMoxc2xArmoUVT/pLsptXEeKLoDDxeOz7VLdz0dnv8GKhu+rhsBGyEUOSJLMbJiY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781707251; c=relaxed/simple;
-	bh=cRydp4W2/TDAsDWKlh+whwfZMy/N3DJe7on4E0pF0sU=;
+	s=arc-20240116; t=1781707711; c=relaxed/simple;
+	bh=y/GIZuRipV1xA0bKjpP28k4ZVR/VO4ai2RsA6wOxDdY=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Rdh71ofsQwgBlA3TIbGNHFsRCWwvfPapvgchz4adeG2OV9Kexa8iK6r7zzV/FZhnDmj65XoAm96qvBEVqJQkAiKJu7AfdRGQr2l7rZhDBM6+dcPLfYCszHwUUMGeLUrwfh67h8GBbs+JnMxZa0Y8NC2hal/97rU9BVKDWdcD+MY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MQc9M1xA; arc=pass smtp.client-ip=209.85.160.173
+	 To:Cc:Content-Type; b=cA509ClZMGJ73JmxtaN+EubEs0iqbiKZkmcbJj5KoCGqYhWv4MKznPS87A/TKPnYz5ZAqZQB5WTnjVugIfE6hBJh3bRxfyPJ5OwjAOQtQg0EvyOMz3HV3UGq5evt/4KjmVVuhStvqXL3Fcmft+iwH+YJcU5X94Ho8b+vIkjhkXA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=f0io/wIk; arc=pass smtp.client-ip=209.85.160.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MQc9M1xA"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-5177d1ff061so265081cf.1
-        for <cgroups@vger.kernel.org>; Wed, 17 Jun 2026 07:40:50 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781707249; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="f0io/wIk"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-5177d1ff061so267861cf.1
+        for <cgroups@vger.kernel.org>; Wed, 17 Jun 2026 07:48:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781707709; cv=none;
         d=google.com; s=arc-20240605;
-        b=UROuhBnXSiOa+oDOrN4QsdngnuhKIoQmhk8YoWey99AS1kPBNc3xAglQzik2c4pNkz
-         WokxTUUNbjuO6J9ANtQKqPcHv/hoh88zuqoIzfXfkQRqMrCK7pzkuFh+se17282YGD2P
-         H+d6yVX1q0ijv2rfwGE9Bfsw0NofF2j3t70Fp7OlqWTrNajwnHSbYnamwQrfwKP8aA4y
-         ZujQcDJkkSa6Hd6nP1yKsV8xLgI9HnT0T2Vg3GX77aCDYeRTkx9tYh4cV/YqK52Qw9i3
-         JqHI8EUBE1/8EB0CNCEcz1tE1/DWsncQNkYEL2WZXp1TPQI7wKrq9X2M8UBxFPZSyF+m
-         KfYg==
+        b=OhHrO2M8PMFCyV+ilXSInmV62HxGFM6NhXFYSzlqsvXkTnyXhMdrkxfIE3KjudP0iV
+         WqWGc4hVdUp+xxTPsAvlkDoDP3L2LGGlkKKLHQ0SYnsHF299z6LK+baFDPt5potglUss
+         D+yx1X/yqY5goRYZAgsMZRYrBLlvRv3KzAMnSsq9u265G3WaYDzTgzt565N0vhkCv0tD
+         OclufV15gWHOQNQs1wzdhBDW2pOiGApgQE6TlpycgiCXFS7YxAPU2A9ugsQrQutI5HVH
+         43LUGyuYGkwhgql1njdoZRBuPhuSwh2hGZgos7/9YaasP5uWq5ljw3PIXJU8LmXRaFmg
+         cFaA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=fLldEnRgCoRrO2LVnpcdrMsXlvj2tRLQs6man+PstFw=;
-        fh=2+eirvbLAQ+wv3WkhEpiJs4gJAmud+75Mbn2PfhRR1I=;
-        b=VAtcaStSnhKtqmfwhIWfdUGiD6aeLHVb/N1AjTNq2mxtyZx9i4gXCRKvyJ/s9UEGQC
-         n+ZEBaZINHVRZ/lQJelBzbOcZdHAES60TzqAITE5yMH2V8//1yQTH+joiskRmGr4veM/
-         +knEKVLH7wskic2/E4F052bZxMSTmp9b8AatcaXXrdkrFKAsbPg+ZT6CRa6EHTd8GvK/
-         mMxbGO3k5kIvB9Y+4FtPVs6ltXxli4PTiuuMHr2lFQH6dFetPuGUMIpPdcOiwvDcyfgH
-         DaXLzgYEimjsUMUUyuG3owMrZJ9tV5ZnjINqWRwLI/p9ReZvnz49YrQRaCpbpvbs4H58
-         6aMw==;
+        bh=XhQaVfAQOt3padp74Km2bFuDFtNkF12cIPOSV2s4BpU=;
+        fh=Q8qaXGFP7DEArs/DQQUiRfKe0Szt217//6pNzVlmB6Y=;
+        b=N4ubWoPC98leHXjs6iFJyHYX6L8GVXB3SHwEAirrMyv9Sq9oY1GLtTxpgRVBT/3IMw
+         QfTriEFclYw0VTKDu1g5GWuLhiEljSCNDWG9+rNK+IR071mM+I0buCn53m6bWZkdlRE1
+         Nln4MYx8RiY1k0D0otQyt+cAUE/LpntS2o57s4o20+npLD+RQes1MZbHvSCN+FklsO8/
+         +8zerCPjVC6QNuEUNSYBOgzv9+8vdCE3RSf7275bY2DxIV0ZthG8y76M0o3TP5EEi6SZ
+         nYgjtIRHq1cNiCpYBZgAsNj+BZPAqF5EizuOhGXJ8KMwTKxLz8OswgR+yO0rDU11w4Xx
+         EAKA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781707249; x=1782312049; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1781707709; x=1782312509; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fLldEnRgCoRrO2LVnpcdrMsXlvj2tRLQs6man+PstFw=;
-        b=MQc9M1xAZc3VegHmCAFF3L0R6vJVGkYMR3yBO/m8mcgxdTjfqKVzmd3xXzMl+EcPwi
-         dA4U/Tn+/q9CdQ6v4DFP2D3UuerbzyPH7ucgMonw6XzVBihPWajYkbL+jQjAxv0SkJgs
-         OD4D2qUjELqYBXgMg6EP7H1HlrSndgjJx0Tvuqjc/Mz7Y39n1SozySC4b60xsB94hVDR
-         v0ZeTVlgjVpeFAR6W8QAsTGD9GD09t9GbWBwTtY0p70BUzcLpsixJ/7LCBtmW+zHZPY7
-         o4CNa3sOflYTkCYR18mc0emHulcqEJVAfQrvyyrUVxayb1Bd+TS4O0BECLItza0DQ1Tb
-         YoXg==
+        bh=XhQaVfAQOt3padp74Km2bFuDFtNkF12cIPOSV2s4BpU=;
+        b=f0io/wIkegrRK/C2FkD1d6otn2IwX8RfwCK7PYINSS6ott3rkoM8dqjIdXMGFVyZbE
+         wKeWJFKnMpHRkcxMHRYdvJHr+p9Uq/1BWdKYceUiCPgHmsFd9EHvV/bdH99AsMkCCFUk
+         pglA3v9Z7TDfFaQuM/ZluoXKrNyPR/em4gOlha+dC0dXKRtk8qI9TiRppBjw5u1+R+1K
+         +wvyAiXA2B7IceZYKePlH4vf2dlEMMc5mfI+iY/9mBiyJGgP0UokYMmsFJNvmoMDNBPy
+         c6MDsOPrv9U6YRz3acpeHsHapKB+9Gsk6bsZOOuW4/R5KuU4r9aw/vFWA7XyZuz+pzRV
+         OR6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781707249; x=1782312049;
+        d=1e100.net; s=20251104; t=1781707709; x=1782312509;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=fLldEnRgCoRrO2LVnpcdrMsXlvj2tRLQs6man+PstFw=;
-        b=IOx7C4sB5cEKL6x3PSMeuOGdqmHasiaWANMGhz/YihvPd7Dz6FheesKZTgSMAkT9c9
-         M7aZzmKVaFrWe/mn2MOV90Ch+Tkz/Nw8Tfah8+t3dBDuG7C++n03wuF8mJ6X1FnQ8crp
-         odSCiqcm4GBAJQKnMojDp1+zeH2x5i8VUCtg2Vt/w6hXgBI0FiLi/vzCfVi3i0dTkisF
-         4mmE21Ca3OVao+0uv4ohpOb0L5ZDhq/XtFJJ8TRm6g8vtiVbx+ejDcn8k1J60BRdu6PT
-         dYLRNI9KjfoqDKXikBgtADQRbfjc7pD52NaNPi4gRuEX30gncM69u95KV+Ta5qf4U4ov
-         GyUg==
-X-Forwarded-Encrypted: i=1; AFNElJ+oP+bCJaSixHx03XVIreOm7+jPgPaZ68f68ZC9kwOloUz0YXzu1lFgf5AG13BTkdA/j53+nrDS@vger.kernel.org
-X-Gm-Message-State: AOJu0YwuviJ5ls7nM9YevlFnM5CBOstGnqIgOz8ZtrON5R/BGXUYJD/z
-	ZDrd+ow0TnwbHkZANLVXLRvjWe7HNCJmkIvNQoVogUk2mjmYTGqIgp+3HRQGtaHa9N+yOfh/6gY
-	gd3V+V0hGL2dZ7Lv1gfxGeYr/cTJ7md+XNRr+zJFq
-X-Gm-Gg: Acq92OFidCD6edOrtZoFFWXQTbFAOFKZucl0584jz443P9XmNhxHPcNdybRjX4BayvO
-	HbqKbklRQ5UhtDGU4JrxQwOl5kqCmOfuz/QLEZtXy3Y/leSYTUdENpGIFqLGht3r9DqSkfxMAjU
-	uV6EfHfIiCF6Ly/OXxfT8M5eZozCvMxdVEZTidFIcli8VvlyLRetCwq6yX59nn7JrMV6BGuToyX
-	oDvD4y1eQA1My9LC6qmtx6JRHQwkZCHi9ROlCxg6GULNAEBlbh2mt7lFNtWKMaxVu3yUY2Fr/CG
-	EmLV0Ok2DdWBS6/bGRl6cPVYTvc=
-X-Received: by 2002:a05:622a:4a06:b0:50e:595d:164 with SMTP id
- d75a77b69052e-519aa968720mr10392311cf.8.1781707248570; Wed, 17 Jun 2026
- 07:40:48 -0700 (PDT)
+        bh=XhQaVfAQOt3padp74Km2bFuDFtNkF12cIPOSV2s4BpU=;
+        b=FnP/Qs/FYwkZbKMNJ7fD0euhpqnt+9r+kpYen54GFTgh7g1Hy9f3lHYpcW5ZVJa2bk
+         S82mrXp5Jvik1Ewu+CJFYvFNAhd/paFdE0WK2zXvf9TfQLGyVnBE2kU0AVp1qzsBsQ1q
+         61WvL64yoy+DbCqWAcRqd0VoO/tY0l5vRD20gsnBNGYmVuVr1eYRZIFcyKpH4oXpsMka
+         DkNAQzqAciirPGkrDSisNaOKmNWiuxotL8ZPfM1oiw5M3cQDmfc9i0X+oDLV0izJas8e
+         V8L+5fygVT4/hCbQqbqVw43qPhhe9AEb5dJaklC01TROmuHCb+67uP7syisS8rrV+RYi
+         KnEA==
+X-Forwarded-Encrypted: i=1; AFNElJ/7gqFM2b6XjDXrOVVn9r+PsYWoVQPTOnUHodJArNHqY1pKhylE+/HvoBs9r0o/SvsRhVyVlMCT@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9KdJHQoicoZi/wzlJ5K4nlWODX0GgzY0XsvqKyMSKeelumwrN
+	xp+niVWIJteR7+/8vZ/VZjb0j8O/gEvUSWY6U6FWXg3PCv3c1pXbHpatKdCPczmgsraKllHNzn7
+	qdVZbLGB2kffSvbXMHISQytwtLXOg/lkQrrLcE+1P
+X-Gm-Gg: Acq92OGirDgWoy6BYec/dfau+vQ2EStAupKPBuCZvxZc3kJ5q5Nxd9ruFumECPdaykY
+	ZCYVKWyry4UwtAuydZF+7zTy/iVkXe6lKctjBfvOpglL3KMSMczwrbi5z5F2SJ1ivbhbcG5yPBt
+	weVT8q+rstOth8eSmSlgxoYTeu5mPm2I1ZgIDGqtWom8Mf7MJKJkk/LcJezGmglF4mAPH6n0SCI
+	zxx6DdAgFGU3hc1n4eNNv9VLJAm2vRooPZTEUus2Zf00KfLZa9B7pcmEIM14DxbwjiWZkF2R3CL
+	0pQBCkhMBNpYtP+tuq+lEgZ19dM=
+X-Received: by 2002:a05:622a:2589:b0:517:99ea:ab77 with SMTP id
+ d75a77b69052e-519adac7249mr8262361cf.23.1781707708059; Wed, 17 Jun 2026
+ 07:48:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260615-slab_alloc_flags-v3-0-ce1146d140fb@kernel.org> <20260615-slab_alloc_flags-v3-6-ce1146d140fb@kernel.org>
-In-Reply-To: <20260615-slab_alloc_flags-v3-6-ce1146d140fb@kernel.org>
+References: <20260615-slab_alloc_flags-v3-0-ce1146d140fb@kernel.org>
+ <20260615-slab_alloc_flags-v3-8-ce1146d140fb@kernel.org> <e9beb94a-6508-4bd0-b641-41e718990f7b@kernel.org>
+In-Reply-To: <e9beb94a-6508-4bd0-b641-41e718990f7b@kernel.org>
 From: Suren Baghdasaryan <surenb@google.com>
-Date: Wed, 17 Jun 2026 07:40:36 -0700
-X-Gm-Features: AVVi8CczXRRxBrbANo6lmOZl2uVP8dSZqTCSvZ0PGtq9Y6RVmxiC-ZjFk4f-2SI
-Message-ID: <CAJuCfpEcRj46xRjRXBLeJ_ZOk5COUprNvqRrgiBiQwGTPLhXtA@mail.gmail.com>
-Subject: Re: [PATCH v3 06/15] mm/slab: add alloc_flags to slab_alloc_context
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
+Date: Wed, 17 Jun 2026 07:48:15 -0700
+X-Gm-Features: AVVi8Cfwx7Hy97TQzo9j3Ib9iva_orAIE7OvChCK-GCxierIP-7yyp4HmbiYDGw
+Message-ID: <CAJuCfpEMf=n5UL7FCfptLqDm9PiE5b0BSLUfraew4dcpiZv-6A@mail.gmail.com>
+Subject: Re: [PATCH v3 08/15] mm/slab: pass alloc_flags through
+ slab_post_alloc_hook() chain
+To: Harry Yoo <harry@kernel.org>
+Cc: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Hao Li <hao.li@linux.dev>, 
 	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
 	Roman Gushchin <roman.gushchin@linux.dev>, Alexei Starovoitov <ast@kernel.org>, 
 	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
@@ -100,196 +102,58 @@ Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 15, 2026 at 4:55=E2=80=AFAM Vlastimil Babka (SUSE)
-<vbabka@kernel.org> wrote:
+On Tue, Jun 16, 2026 at 12:37=E2=80=AFAM Harry Yoo <harry@kernel.org> wrote=
+:
 >
-> Add alloc_flags as a new field to the slab_alloc_context helper struct,
-> so we can pass it to more functions in the slab implementation without
-> adding another function parameter.
 >
-> Start checking them via alloc_flags_allow_spinning() in
-> alloc_single_from_new_slab() (where we can drop the allow_spin
-> parameter), ___slab_alloc(), get_from_partial_node() and
-> get_from_any_partial(). This further reduces false-positive
-> spinning-not-allowed from allocations that are not kmalloc_nolock() but
-> lack __GFP_RECLAIM flags.
 >
-> _kmalloc_nolock_noprof() initializes ac.alloc_flags using its flags that
-> are SLAB_ALLOC_NOLOCK. slab_alloc_node() and __kmem_cache_alloc_bulk()
-> are not reachable from kmalloc_nolock() and all their callers expect
-> spinning to be allowed, so they can use SLAB_ALLOC_DEFAULT. This is
-> temporary as the scope of slab_alloc_context will further move to the
-> callers, making the alloc_flags usage more obvious.
+> On 6/15/26 8:54 PM, Vlastimil Babka (SUSE) wrote:
+> > Convert the whole following call stack to pass either slab_alloc_contex=
+t
+> > (thus including alloc_flags) or just alloc_flags as necessary:
+> >
+> > slab_post_alloc_hook()
+> >   alloc_tagging_slab_alloc_hook()
+> >     __alloc_tagging_slab_alloc_hook()
+> >       prepare_slab_obj_exts_hook()
+> >         alloc_slab_obj_exts()
+> >   memcg_slab_post_alloc_hook()
+> >     __memcg_slab_post_alloc_hook()
+> >       alloc_slab_obj_exts()
+> >
+> > Converting all these at once avoids unnecessary churn and is mostly
+> > mechanical.
+> >
+> > This ultimately allows to decide if spinning is allowed using
+> > alloc_flags in alloc_slab_obj_exts(), as well as slab_post_alloc_hook()=
+.
+> > Aside from alloc_from_pcs_bulk() (to be handled next) there is nothing
+> > else in slab itself relying on gfpflags_allow_spinning() which can
+> > be false even if not called from kmalloc_nolock().
+> >
+> > A followup change will also use the alloc_flags availability in the cal=
+l
+> > stack above to remove the __GFP_NO_OBJ_EXT flag.
+> >
+> > For alloc_slab_obj_exts(), also replace the suboptimal "bool new_slab"
+> > parameter with a SLAB_ALLOC_NEW_SLAB flag with identical functionality.
+> >
+> > To further reduce the number of parameters of slab_post_alloc_hook(),
+> > also make 'struct list_lru *lru' (which is NULL for most callers) a new
+> > field of slab_alloc_context.
+> >
+> > Link: https://patch.msgid.link/20260610-slab_alloc_flags-v2-9-7190909db=
+118@kernel.org
+> > Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> > ---
 >
-> Also change how trynode_flags are constructed in ___slab_alloc() to
-> achieve the same "do not upgrade to GFP_NOWAIT" by using masking instead
-> of checking allow_spin. We need to do that because we now determine
-> allow_spin from alloc_flags, and would otherwise start to upgrade e.g.
-> kmalloc() allocations without __GFP_KSWAPD_RECLAIM (that however do
-> allow spinning) to GFP_NOWAIT, thus including __GFP_KSWAPD_RECLAIM.
->
-> During the masking keep also existing __GFP_NOMEMALLOC (pointed out by
-> Sashiko) and __GFP_ACCOUNT. Previously the hardcoded GFP_NOWAIT would
-> eliminate them, but it's not a big problem that would need a separate
-> fix.
->
-> Link: https://patch.msgid.link/20260610-slab_alloc_flags-v2-6-7190909db11=
-8@kernel.org
+> Looks good to me,
 > Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
-> Reviewed-by: Hao Li <hao.li@linux.dev>
-> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 
 
-> ---
->  mm/slub.c | 28 +++++++++++++++-------------
->  1 file changed, 15 insertions(+), 13 deletions(-)
->
-> diff --git a/mm/slub.c b/mm/slub.c
-> index 6f6c15d796e1..3a34907b881b 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -217,6 +217,7 @@ static DEFINE_STATIC_KEY_FALSE(strict_numa);
->  struct slab_alloc_context {
->         unsigned long caller_addr;
->         size_t orig_size;
-> +       unsigned int alloc_flags;
->  };
->
->  /* Structure holding parameters for get_partial_node_bulk() */
-> @@ -3687,9 +3688,9 @@ static inline void init_slab_obj_iter(struct kmem_c=
-ache *s, struct slab *slab,
->   * and put the slab to the partial (or full) list.
->   */
->  static void *alloc_single_from_new_slab(struct kmem_cache *s, struct sla=
-b *slab,
-> -                                       const struct slab_alloc_context *=
-ac,
-> -                                       bool allow_spin)
-> +                                       const struct slab_alloc_context *=
-ac)
->  {
-> +       bool allow_spin =3D alloc_flags_allow_spinning(ac->alloc_flags);
->         struct kmem_cache_node *n;
->         struct slab_obj_iter iter;
->         bool needs_add_partial;
-> @@ -3835,7 +3836,7 @@ static void *get_from_partial_node(struct kmem_cach=
-e *s,
->         if (!n || !n->nr_partial)
->                 return NULL;
->
-> -       if (gfpflags_allow_spinning(gfp_flags))
-> +       if (alloc_flags_allow_spinning(ac->alloc_flags))
->                 spin_lock_irqsave(&n->list_lock, flags);
->         else if (!spin_trylock_irqsave(&n->list_lock, flags))
->                 return NULL;
-> @@ -3891,7 +3892,7 @@ static void *get_from_any_partial(struct kmem_cache=
- *s, gfp_t gfp_flags,
->         struct zone *zone;
->         enum zone_type highest_zoneidx =3D gfp_zone(gfp_flags);
->         unsigned int cpuset_mems_cookie;
-> -       bool allow_spin =3D gfpflags_allow_spinning(gfp_flags);
-> +       bool allow_spin =3D alloc_flags_allow_spinning(ac->alloc_flags);
->
->         /*
->          * The defrag ratio allows a configuration of the tradeoffs betwe=
-en
-> @@ -4449,7 +4450,7 @@ static unsigned int alloc_from_new_slab(struct kmem=
-_cache *s, struct slab *slab,
->  static void *___slab_alloc(struct kmem_cache *s, gfp_t gfpflags, int nod=
-e,
->                            const struct slab_alloc_context *ac)
->  {
-> -       bool allow_spin =3D gfpflags_allow_spinning(gfpflags);
-> +       bool allow_spin =3D alloc_flags_allow_spinning(ac->alloc_flags);
->         gfp_t trynode_flags;
->         void *object;
->         struct slab *slab;
-> @@ -4466,18 +4467,15 @@ static void *___slab_alloc(struct kmem_cache *s, =
-gfp_t gfpflags, int node,
->          * 1) try to get a partial slab from target node only by having
->          *    __GFP_THISNODE in trynode_flags for get_from_partial()
->          * 2) if 1) failed, try to allocate a new slab from target node w=
-ith
-> -        *    GPF_NOWAIT | __GFP_THISNODE opportunistically
-> +        *    (at most) GFP_NOWAIT | __GFP_THISNODE opportunistically
->          * 3) if 2) failed, retry with original gfpflags which will allow
->          *    get_from_partial() try partial lists of other nodes before
->          *    potentially allocating new page from other nodes
->          */
->         if (unlikely(node !=3D NUMA_NO_NODE && !(gfpflags & __GFP_THISNOD=
-E)
->                      && try_thisnode)) {
-> -               if (unlikely(!allow_spin))
-> -                       /* Do not upgrade gfp to NOWAIT from more restric=
-tive mode */
-> -                       trynode_flags =3D gfpflags | __GFP_THISNODE;
-> -               else
-> -                       trynode_flags =3D GFP_NOWAIT | __GFP_THISNODE;
-> +               trynode_flags &=3D GFP_NOWAIT | __GFP_NOMEMALLOC | __GFP_=
-ACCOUNT;
-> +               trynode_flags |=3D __GFP_NOWARN | __GFP_THISNODE;
->         }
->
->         object =3D get_from_partial(s, node, trynode_flags, ac);
-> @@ -4499,7 +4497,7 @@ static void *___slab_alloc(struct kmem_cache *s, gf=
-p_t gfpflags, int node,
->         stat(s, ALLOC_SLAB);
->
->         if (IS_ENABLED(CONFIG_SLUB_TINY) || kmem_cache_debug(s)) {
-> -               object =3D alloc_single_from_new_slab(s, slab, ac, allow_=
-spin);
-> +               object =3D alloc_single_from_new_slab(s, slab, ac);
->
->                 if (likely(object))
->                         goto success;
-> @@ -4918,6 +4916,7 @@ unsigned int alloc_from_pcs_bulk(struct kmem_cache =
-*s, gfp_t gfp, size_t size,
->  static __fastpath_inline void *slab_alloc_node(struct kmem_cache *s, str=
-uct list_lru *lru,
->                 gfp_t gfpflags, int node, unsigned long addr, size_t orig=
-_size)
->  {
-> +       const unsigned int alloc_flags =3D SLAB_ALLOC_DEFAULT;
->         void *object;
->
->         s =3D slab_pre_alloc_hook(s, gfpflags);
-> @@ -4928,12 +4927,13 @@ static __fastpath_inline void *slab_alloc_node(st=
-ruct kmem_cache *s, struct list
->         if (unlikely(object))
->                 goto out;
->
-> -       object =3D alloc_from_pcs(s, gfpflags, SLAB_ALLOC_DEFAULT, node);
-> +       object =3D alloc_from_pcs(s, gfpflags, alloc_flags, node);
->
->         if (unlikely(!object)) {
->                 const struct slab_alloc_context ac =3D {
->                         .caller_addr =3D addr,
->                         .orig_size =3D orig_size,
-> +                       .alloc_flags =3D alloc_flags,
->                 };
->                 object =3D __slab_alloc_node(s, gfpflags, node, &ac);
->         }
-> @@ -5366,6 +5366,7 @@ void *_kmalloc_nolock_noprof(DECL_TOKEN_PARAMS(size=
-, token), gfp_t gfp_flags, in
->         const struct slab_alloc_context ac =3D {
->                 .caller_addr =3D _RET_IP_,
->                 .orig_size =3D orig_size,
-> +               .alloc_flags =3D alloc_flags,
->         };
->
->         VM_WARN_ON_ONCE(gfp_flags & ~(__GFP_ACCOUNT | __GFP_ZERO |
-> @@ -7254,6 +7255,7 @@ static bool __kmem_cache_alloc_bulk(struct kmem_cac=
-he *s, gfp_t flags,
->                 const struct slab_alloc_context ac =3D {
->                         .caller_addr =3D _RET_IP_,
->                         .orig_size =3D s->object_size,
-> +                       .alloc_flags =3D SLAB_ALLOC_DEFAULT,
->                 };
->                 for (i =3D 0; i < size; i++) {
->
 >
 > --
-> 2.54.0
->
+> Cheers,
+> Harry / Hyeonggon
