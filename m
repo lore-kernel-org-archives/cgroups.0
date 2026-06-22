@@ -1,161 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6E335F5ED;
-	Mon, 22 Jun 2026 07:12:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCE5F363082;
+	Mon, 22 Jun 2026 07:14:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782112366; cv=none; b=qb6zTF3PRFEw/C7t/xm1n5mrue8F7mlW313pbIdpkmjt5O2S0Arm8OMFxfaPZUpySvCzbN+Dw+8eZAKMCUjUMsJ+3bYliFTGVGRr0lKGlpJH9g9iAU+Y7sg7Pg7p3Du/vdaW8XlKnbcekyWpghdiEFmGGLyt1tT9wkyjd1zG5Nk=
+	t=1782112457; cv=none; b=BLYXWfAwEJc9uI1EWkNLUhtYIXhr6zeebIV/qHnFx8dLa55FS+Z3YhKVJdC1OX+ugc+C0+mawCvYDa2uYUwYqFHx93Dq9FHKuiFdBCBUrPUiZXicg7C7nx67x17Ityw4ymMn0ATaT+sntkxHVhKi1k6RE/9h5qwot32nBGIwbkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782112366; c=relaxed/simple;
-	bh=AGUF0YQ33EbwT/3ioHdkBECB1RdLPaf7AAogYZIJpVg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZlJFJeRgL/BYxxAzE+FVYOy1+GOZDMVih0N2Rq6DZyP+8gtnn4xggTAOsiRdEQSQFeg5jaMtij7H4CUwK97Bwtp1s05JxXzwuOHvLriQIPS379Aagr/XWIfHkRfgay6Ae96yMl8ijrH9qWtq/mJw1PzhsAfBhjPQtpCpgCqklDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L4PNXIa9; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L4PNXIa9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83A371F000E9;
-	Mon, 22 Jun 2026 07:12:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782112364;
-	bh=JPDKWUY1v1INodMedwDx7DwR6GeDNvta1xVixbP8aME=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=L4PNXIa9Zw4w4w825y5AbRuIkOOgKjEMz0H/IY6pmo0/6ndTOJFPljNEwX3AL7dbj
-	 plw6zBxzTfQaZ/UroLuI54iZKHPFrPnF3lAqPwgK92ea6EP595egePsMrZLYbUJJoU
-	 168UWkvIZs2O/Ux0HkhEJiGWOLIT53MX63q3eL8x0Hhha674hOrFnrSs35GDOW2/Lx
-	 CSSgZC2lV8LlJN/6+qpsxBWDeUwGAGbcZWTnr89VN2ut3cW8PKou1Rl9C1+nzzIlw5
-	 6g7rbChB8u464k5hXQt7m1oerM34BEUDf/rr49Uy6trcC8HiyUQtylGI43wb1argWM
-	 rOa11sg/oUJ/w==
-Message-ID: <e629ca4a-69c8-4288-802a-9150ab9da4ee@kernel.org>
-Date: Mon, 22 Jun 2026 09:12:38 +0200
+	s=arc-20240116; t=1782112457; c=relaxed/simple;
+	bh=zc0mHaIb8J20hS18SLRxnEzEwY5WvhCW+hUuzn9Yaro=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sd87W0SKDi0nhxxKqup2M8nND2ZumPKn3Q0KuOmNVe1UIms1IifjO2odE35cVXzRd1JyEXxorIY7GtlHSYGrWA33gC+RlqB7gxIHJkaNhYZ2VQor6aysaq7UTYJQfCf1IZrqc5c1fPMqCCCmdbmHbpD+M1FA+sSEBK8zQ4zumIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gkKD64VRTzKHMRc;
+	Mon, 22 Jun 2026 15:13:10 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id B037C4057D;
+	Mon, 22 Jun 2026 15:14:06 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP1 (Coremail) with SMTP id cCh0CgB3eT694DhqGkK7Cg--.42632S5;
+	Mon, 22 Jun 2026 15:14:06 +0800 (CST)
+From: Zizhi Wo <wozizhi@huaweicloud.com>
+To: axboe@kernel.dk,
+	tj@kernel.org,
+	josef@toxicpanda.com,
+	linux-block@vger.kernel.org
+Cc: cgroups@vger.kernel.org,
+	yangerkun@huawei.com,
+	chengzhihao1@huawei.com,
+	houtao1@huawei.com,
+	yukuai@fygo.io,
+	wozizhi@huaweicloud.com
+Subject: [PATCH 1/2] blk-cgroup: fix blkg leak in blkg_create() error path
+Date: Mon, 22 Jun 2026 15:07:12 +0800
+Message-ID: <20260622070714.1158886-2-wozizhi@huaweicloud.com>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260622070714.1158886-1-wozizhi@huaweicloud.com>
+References: <20260622070714.1158886-1-wozizhi@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] cgroup/cpuset: rebind mm mempolicy to effective_mems,
- not mems_allowed
-To: Waiman Long <longman@redhat.com>, Gregory Price <gourry@gourry.net>
-Cc: Farhad Alemi <farhad.alemi@berkeley.edu>,
- Andrew Morton <akpm@linux-foundation.org>, Farhad Alemi <falemi@asu.edu>,
- Yury Norov <ynorov@nvidia.com>, Joshua Hahn <joshua.hahnjy@gmail.com>,
- Zi Yan <ziy@nvidia.com>, Matthew Brost <matthew.brost@intel.com>,
- Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>,
- Ying Huang <ying.huang@linux.alibaba.com>,
- Alistair Popple <apopple@nvidia.com>,
- Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, stable@vger.kernel.org
-References: <CA+0ovCg05rUk1-3k2ysdxmbcER8aG-wVh9SSTrrbp6LPWpPHYA@mail.gmail.com>
- <CA+0ovCgfHJHv5d1mzapWWvF-LhjppzDX8NPPLvCPZxPKg8RiYw@mail.gmail.com>
- <8d3b4561-92cd-4ebc-8462-5fb0fd659e8a@kernel.org>
- <ai_IHvyptWPcTD0y@gourry-fedora-PF4VCD3F>
- <70f486ce-5ef6-4d72-8cc3-7086f4eea930@redhat.com>
- <c1495b1b-9dee-4cd5-ac8e-eeb7a2d968ed@redhat.com>
- <51eafe6c-6622-479b-b391-6d3ff9350e75@kernel.org>
- <c61c7925-b9e7-4a6f-82e2-398849ad9f27@redhat.com>
- <38578aea-61c3-4328-aee9-8e7421672647@kernel.org>
- <9d8b650d-6faa-425a-8db7-1e206cb25158@redhat.com>
-From: "David Hildenbrand (Arm)" <david@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=david@kernel.org; keydata=
- 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
- qIws/H2t
-In-Reply-To: <9d8b650d-6faa-425a-8db7-1e206cb25158@redhat.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgB3eT694DhqGkK7Cg--.42632S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr47Xr13JrWkCrWrAFyDGFg_yoW8XF4xp3
+	y3JrW5tryrKFnrCay3JF1UW34FyF4rJryrJ393Gw4akry7WF1SvF18Cr4UJFW7Ca9rJw15
+	ZryYvFy0ka48C3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUQv14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AK
+	xVWUtVW8ZwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I
+	0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAI
+	cVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcV
+	CF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+	c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqkskUUUUU=
+X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
-On 6/21/26 05:24, Waiman Long wrote:
-> On 6/18/26 4:41 AM, David Hildenbrand (Arm) wrote:
->> On 6/16/26 17:23, Waiman Long wrote:
->>> Yes, taking newmems is a reasonable choice and there are pros and cons with each
->>> options. My focus is more on not changing how v1 cpuset behaves as it is well
->>> defined in the v1 cpusets.rst file:
->>>
->>>      Requests by a task, using the sched_setaffinity(2) system call to
->>>      include CPUs in its CPU affinity mask, and using the mbind(2) and
->>>      set_mempolicy(2) system calls to include Memory Nodes in its memory
->>>      policy, are both filtered through that task's cpuset, filtering out any
->>>      CPUs or Memory Nodes not in that cpuset.  The scheduler will not
->>>      schedule a task on a CPU that is not allowed in its cpus_allowed
->>>      vector, and the kernel page allocator will not allocate a page on a
->>>      node that is not allowed in the requesting task's mems_allowed vector.
->>>
->>> v2, OTOH, is more vague as to what setting cpuset.mems will mean and we
->>> generally follow what v1 is doing, but we have more leeway of what we can do.
->>>
->>> Using newmems will make the above text not totally correct. At least the offline
->>> memory nodes will be filtered out which will not be utilized by the task when
->>> the offline node becomes online. That is why I am saying that we will have to
->>> correct the documentation if we want to make this change.
->> So IIUC:
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 1335e437098e..cdfc615f35a5 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -2645,7 +2645,13 @@ void cpuset_update_tasks_nodemask(struct cpuset *cs)
->>                    migrate = is_memory_migrate(cs);
->>   -               mpol_rebind_mm(mm, &cs->mems_allowed);
->> +               /*
->> +                * For v1 we can have empty effective_mems, but we cannot
->> +                * attach any tasks (see cpuset_can_attach_check()). For v2,
->> +                * it's guaranteed to not be empty.
->> +                */
->> +               VM_WARN_ON_ONCE(nodes_empty(cs->effective_mems));
->> +               mpol_rebind_mm(mm, &cs->effective_mems);
->>                  if (migrate)
->>                          cpuset_migrate_mm(mm, &cs->old_mems_allowed, &newmems);
->>                  else
-> 
-> That is true, but I don't think we need a VM_WARN_ON_ONCE() here.
+When radix_tree_insert() fails in blkg_create(), the error path calls
+blkg_put() to release the blkg. This was correct when blkg->refcnt was an
+atomic_t: blkg_put() dropped it to 0 and triggered the release path.
 
-I'd prefer if we catch such stuff in the future more easily than running into
-late divide-by-zero. Maybe we should check in mpol_rebind_mm() instead.
+But commit 7fcf2b033b84 ("blkcg: change blkg reference counting to use
+percpu_ref") switched refcnt to a percpu_ref. In percpu mode
+percpu_ref_put() never checks for zero, so the release callback is never
+invoked. This blkg is on neither blkcg->blkg_list nor queue->blkg_list, so
+blkg_destroy_all() / blkcg_destroy_blkgs() can never reach it to call
+blkg_destroy()->percpu_ref_kill() either, cause the leak.
 
+Fix it by killing the percpu_ref instead, which switches it to atomic mode
+and drops the initial ref.
+
+Fixes: 7fcf2b033b84 ("blkcg: change blkg reference counting to use percpu_ref")
+Signed-off-by: Zizhi Wo <wozizhi@huaweicloud.com>
+Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+---
+ block/blk-cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index bc63bd220865..6386fe413994 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -437,11 +437,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+ 
+ 	if (!ret)
+ 		return blkg;
+ 
+ 	/* @blkg failed fully initialized, use the usual release path */
+-	blkg_put(blkg);
++	percpu_ref_kill(&blkg->refcnt);
+ 	return ERR_PTR(ret);
+ 
+ err_put_css:
+ 	css_put(&blkcg->css);
+ err_free_blkg:
 -- 
-Cheers,
+2.52.0
 
-David
