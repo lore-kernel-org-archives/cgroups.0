@@ -1,80 +1,101 @@
-Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AB5B3AB267
-	for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 05:58:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE333B992F
+	for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 06:28:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782194336; cv=none; b=eenuFu5J+JBseIoiUYGMYGTs8y8nXrQ/EBR+L9gJe5zSQ/EYOzE9gzTpkoheSqJnaZ1oey6k+em2FazcfD8iEVA13l8Pwo6xSH6hqrIe/9qkWQKOLlI1VyizHFpsXFUkLMaZNXgfCQgg9mCc46Ac4TlgDCJaJTZ/U9U4n0dpJsg=
+	t=1782196133; cv=none; b=dM+AS2ntTTBAiH+C3ixuvHwfbD0F9s3gwHjiU1ghdsiJwdfDCgdsYU/Np0cYc2DKAYNHlFrTgEDLlUdr8eMl6BGhMtUsHqq/bZ888EdBRp6xRBmGOawK7HF+WiqFKwfZDe5JX6tYXDomNOeqZ1US4lKqUBZ/vuIaAdgxNK8Iv/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782194336; c=relaxed/simple;
-	bh=BF+fnszT7Ayv5kvorYEhcGeVBctjq9mWvzd4D+GVK5s=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=oQ0lz+mcN5E2tpgqCl6ewzzoAxf5D5WSrDBroOZC0bqEKo43QHDxfsPE9b0ZhfXPm/9HQF1SedeZwg2/D1Xmci5hWGXYD7Jead6ElJMLF0teZh7YotkEcP9r9/snemdvjkpRzR4aTaYhaqKfJj6SeMUUejcU4v4oSXCFX+jDZmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tajNv4dA; arc=none smtp.client-ip=91.218.175.173
+	s=arc-20240116; t=1782196133; c=relaxed/simple;
+	bh=XPPPV4Ug35Um8J2lPRVVhS5HfHFpfErJBAhjv864suY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=T+cekraF35103lckAM2G/vZKuaZ/iJt+XxRAnu1d8lkDAM0U/LujUSaiYK1dSgGmWoMt+NALhJj1Ak3+YWqM/jRERAhmPg/HbIhzQDilAu6uDIGNqzpU4LGFKpD19I61ZLXsxWxyGbpqNfuB+Tr8IPSMG/S6qMikjj5McfqlMIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XnAJbpIJ; arc=none smtp.client-ip=95.215.58.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tajNv4dA"
-Message-ID: <5f3df3f7-87ab-47f4-a021-3fc1c367ddf5@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XnAJbpIJ"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1782194323;
+	t=1782196130;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/OETd/OZtVTRrWJlKdXZTAknAsVWCSn0UUVqxdY0ju8=;
-	b=tajNv4dANbPUzSpI0XOwof87LP5yhX8ovKjw7LhFN1KGVhPA1cfo5u021j2ER3rCVH3SeO
-	vuoIQLS0k9o1V4HR9OAn08KgbbN3EMvOa10fDhtJoD/pNtoD5unfpwKiRCLYMPoOhoOOHP
-	QRxySrNX3YWj9HGfqyFJQrDVPcyOCYU=
-Date: Tue, 23 Jun 2026 13:58:35 +0800
+	bh=fulPYBKv0+qQhpOwEZvPxrLqZb68dG2SMZzTJMFOD6c=;
+	b=XnAJbpIJbAuC34LqLXy68b1Vw4byyaTksocBJcQm1Bbv4HRQfGPY2mEU1QQYDMt7ZD8fi3
+	Pq5Pw+E3Ve87u+B4MFfetnx5/3vbwBe1MM06eUaKiGDk5nC6U6/U7nzpv9I0r2ko2DPhpn
+	qfMdrvqc0OSKUCeeWpdmA9G0s9zFI0s=
+From: Jiayuan Chen <jiayuan.chen@linux.dev>
+To: linux-mm@kvack.org
+Cc: yingfu.zhou@shopee.com,
+	jiayuan.chen@linux.dev,
+	Jiayuan Chen <jiayuan.chen@shopee.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kairui Song <kasong@tencent.com>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>,
+	Wei Xu <weixugc@google.com>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] memcg: bail out memory.high when memcg is dying
+Date: Tue, 23 Jun 2026 14:27:54 +0800
+Message-ID: <20260623062800.298514-2-jiayuan.chen@linux.dev>
+In-Reply-To: <20260623062800.298514-1-jiayuan.chen@linux.dev>
+References: <20260623062800.298514-1-jiayuan.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Cc: cui.tao@linux.dev, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: Re: [PATCH] cgroup: Use READ_ONCE() for task->flags in
- task_css_set_check()
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>
-References: <20260623022946.525885-1-guopeng.zhang@linux.dev>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20260623022946.525885-1-guopeng.zhang@linux.dev>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
+From: Jiayuan Chen <jiayuan.chen@shopee.com>
 
-Looks fine — this is a benign, PROVE_RCU-only race, and READ_ONCE()
-documents the lockless snapshot with no functional change.
+memory.high reclaims synchronously in the writer's context, and the
+latency can be very high - especially when reclaim performs swap I/O, or
+under thrashing where the loop may not converge for a long time.
 
-Acked-by: Tao Cui <cuitao@kylinos.cn>
+While this runs the kernfs active reference on the file is held, so a
+concurrent removal of the same cgroup blocks in kernfs_drain() under
+cgroup_mutex until it finishes. Reclaiming a dying cgroup is pointless,
+as its pages are reparented to the parent anyway.
 
-在 2026/6/23 10:29, Guopeng Zhang 写道:
-> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> 
-> task_css_set_check() uses rcu_dereference_check() to verify that
-> task->cgroups can be dereferenced. One accepted condition is that the
-> task is already exiting, tested by checking PF_EXITING in task->flags.
-> 
-> This is a lockless snapshot used only for the CONFIG_PROVE_RCU debug
-> predicate. This was found by KCSAN during fuzz testing. KCSAN can report
-> a data race when another task flag bit is updated concurrently. One report
-> shows pids_release() reading task->flags through task_css_set_check() while
-> do_task_dead() sets PF_NOFREEZE:
-> ...
-> The changed bit is PF_NOFREEZE, not PF_EXITING. PF_EXITING remains set
-> before and after the update, so the task_css_set_check() condition does
-> not change. This is not a race on task->cgroups and does not indicate
-> incorrect pids charging or uncharging.
-> 
-> Use READ_ONCE() to document the intended lockless snapshot of task->flags.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+Mitigate this by bailing out of the reclaim loop once memcg_is_dying().
+
+Reported-by: Zhou Yingfu <yingfu.zhou@shopee.com>
+Cc: Jiayuan Chen <jiayuan.chen@linux.dev>
+Signed-off-by: Jiayuan Chen <jiayuan.chen@shopee.com>
+---
+ mm/memcontrol.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 56cd4af08232..2d5cd056a25e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4793,6 +4793,9 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 		if (signal_pending(current))
+ 			break;
+ 
++		if (memcg_is_dying(memcg))
++			break;
++
+ 		if (!drained) {
+ 			drain_all_stock(memcg);
+ 			drained = true;
+-- 
+2.43.0
+
