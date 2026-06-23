@@ -1,188 +1,156 @@
-Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E0A138D3E6
-	for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 18:02:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F29A8390239
+	for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 18:10:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782237731; cv=none; b=L8gcxIelXJVjRy12ebqysw5wpWgzvl9wgqY80lrXcjuw5D7sfrNVAEGdnSFmfy0ixtbohWIy5zAwQlKDuvQj+UX+q66TDcojNuBeduB0ZFVQhdUX+u7A3z4gBODgFX7RsLI0gRlemSw5HwdUFTfmc+2CQmHqD1A7soLFB5f+JzU=
+	t=1782238246; cv=none; b=Pa++pnsHXW4pOVYeweWKEN6vwXJY9ejua/WYjPpP1zd7b/0eqjEUYLVYWOd5Gm1VezYkIBR0XygugCcPrOd7oEETSSef8+a3NNJRvvmAkHlCwUeeRZYYmsHxZ5UydRBThnaRQ4Y7OicfqV0lqvEWQAtRh0oBGi9NhialcTZeXOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782237731; c=relaxed/simple;
-	bh=Jh+o5uMNVOhQ+P6EcPC3ygD+Ch1h+HVJp9Xn5lLIfd4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oXyD0BFTV3dx5YDNR0PC06QXPsIfRqJKN9qt3mRjqTds0m+FVJ0M5CwBMfPg9fCSwrYdCaukgBuwR0fqHUfHV1pIIStPmpVc37yOwhqgbLyCgF5C1W2KA09WFKtWInJk5HYLvwqooDJStkbB31KJkKcYBlfA3P279uN0hsvgYVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nUgmPwA8; arc=none smtp.client-ip=209.85.161.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782238246; c=relaxed/simple;
+	bh=tq05N2NyBqQ5JGKENo2Kp7YwhqEkQubdotmf3YJrnZA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BWx4cadiKixIze+P35dM4d9iqYZghEtTbFOzaVyQIYVapZIm7v99lUD/f6S5byDmEpLzAp+3V27oLfRQleAL/EGql4XTEo88kVQ3aVAnaGv/ZH3Dxw7xBaAqkLUrA/rsPUaFabBXWYhQV2h7/VaoKivtE5sWbqG7sNW8L9x31bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X1nRv515; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nUgmPwA8"
-Received: by mail-oo1-f48.google.com with SMTP id 006d021491bc7-6a0ddedcd00so92375eaf.1
-        for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 11:02:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782237729; x=1782842529; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=trCYdPhQh348weekSBC7Ceo7XQeHFRdxOAyYAHYqFjo=;
-        b=nUgmPwA88+PS/WBOjlCzs5+7HoE1jX0UpgOorJKU5uNM7pl5lH0O1nfok1xgS9eQzf
-         bzJqOk+vGUHR6SlOx+xy8+YpOjbI5DWsylBOJSYWwKt2nEeYkbhAVvGkLarqu+wQi4X+
-         ju/rzuIGuK09rp/10UxhWmMapPZ1uT5zu1qZV+/wPGSjbLXTCIPdy6xgRoy5051gpd51
-         o1UERCh8XEr2H33h+1jd26raO97HOVWnnfyid5rfN26PO9OWE1HXUpd7PL8hRhAEFxaQ
-         Wa0InS0RPXSo09d/2QgQfoYWWgkwOB+wqnEBxDTkGwcWRxPjCI1TSKojUKEHAJX5KBuA
-         MzPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782237729; x=1782842529;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=trCYdPhQh348weekSBC7Ceo7XQeHFRdxOAyYAHYqFjo=;
-        b=D91AbFK2muZx0IdJwXndUu1/ICHA4k/NbIUd6IX4ekgRDFwweq8OjywrrlGPe45Y1l
-         ZUrbDlI1i/2/yrN59omSHsBxaO3q5Hg21lHNPxbH0zxv2/DInJL3cxdvCrWA0BxLZwqK
-         lr5Azgy0ZmiaBPq3jCZIuTcJTk6hEkiVPXxzEwee9qNxVAa809ObmoH6tZ6b59j31VPs
-         LyRZPCd9/B5GyqHbxVLc+6PLOqwhwFndtQ8gSApwIERt1MSc1O4zxW2Vxjssk98XmdfC
-         CrhylFH1c5my5Mv7p8caQy+pInRDhzD+G8n0vBLp7k4E2zlIXXN37e+Z7TD8vIOngegX
-         /qFA==
-X-Forwarded-Encrypted: i=1; AFNElJ9aqaUdOvjrs7QNn3lPDukAOTfJ/wAyqQ/0rxKVXq2GTpGLhqKN50C+s2NiMUhw622SfrDkqrLa@vger.kernel.org
-X-Gm-Message-State: AOJu0YwHJ7y5ossm/F4sPBm8G0Jp4AK5w/JdapSDfvMD32hwQWKHk8hK
-	8zIn86g3nwsuLdfsY8+kJaT3D/U2mXUIqumyKZif3rxqusNaDxTp4YM8
-X-Gm-Gg: AfdE7cm7IQareof71TWgvuHGg8FkYnZNYrmSpS5VfBDQiRFOfrkW7QXGknNV3hS9v34
-	wYwhGfJ2cZ6l9idwIPiW+u5EhVsSCrkpnI9Bp1ocFjC2I+Z+kLs7eQOE0Ik6q02z4OCQjh9JANi
-	x/jXWzMdKGao4h68lbGSsYDdmlHvzuvqQ5tctpEtZd4tbZVKdRAYn6QeZ6HbI3MbFtANEiVW/Tx
-	bj4yHIwvEIfec8WFwNvv/7+vlDy/JOztw5lFYnd8GGmRPYAj048v3tuN1rfAzlSsY84hxOqof6n
-	2boAoR/UqpaBKiJ7fHRMJnDY8qJDA8AE0owhHgili/GjkCmx2n/bOOsVz4y0oOaUF7UvSJ+VaI9
-	2ugi1lZDl/gpYHUEXH6SH6rfqsv1eQloAc8EBbCiu+ePYiHeISnmmRB6TolgdypNl//Ob69f/Km
-	wOP+hzbn13HaC0C1CX9ABKUkr9IqkEQKXMF5Rsz7r8gZY=
-X-Received: by 2002:a05:6820:3082:b0:69d:f855:b748 with SMTP id 006d021491bc7-6a11623b266mr2355735eaf.34.1782237690173;
-        Tue, 23 Jun 2026 11:01:30 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:45::])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-6a0e9f2a583sm7583532eaf.1.2026.06.23.11.01.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Jun 2026 11:01:29 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>
-Cc: Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R . Howlett" <liam.howlett@oracle.com>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: [PATCH v4 3/5] mm/page_counter: introduce page_counter_try_charge_stock()
-Date: Tue, 23 Jun 2026 11:01:21 -0700
-Message-ID: <20260623180124.868655-4-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260623180124.868655-1-joshua.hahnjy@gmail.com>
-References: <20260623180124.868655-1-joshua.hahnjy@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X1nRv515"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CFDF1F0155A
+	for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 18:10:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782238244;
+	bh=tq05N2NyBqQ5JGKENo2Kp7YwhqEkQubdotmf3YJrnZA=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=X1nRv515Stl6t4+NoB6Qix0fteA6CssGL7EH+pwMSccY3Ak5P6yAKM3Rb1l7XfVdy
+	 v+rjOF+lidhUlZzT/l/FcWlaf5yW+kdLDq2udjVAy7ShamhhQi8M+hnKRKc26pU2J6
+	 POo+qIaI234y7ErtLkXgInDdKbOMmMjHb4yqEnu7fuo6SYwct2Zt9egfwfKQ24+0pS
+	 kfZ8LOVHfXwTpumpK6tm0tr6F+CxnSzaFL6C7cPG/O25/MAm49C2grq0mitD8CL6Xh
+	 denrmS3s46mguFUWhQ6E9jlCirsGKXLiGX9co3tIUNMYuVIzJDNON+/IpaB4oYMaUL
+	 +X16byTeHjz0A==
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-697dc263e5fso158215a12.2
+        for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 11:10:44 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ86pZCmzwIrUFydAiatBOpVB/iOzhNe5KcoOF6yGv/1GVd6AQoIEbJpI6vZB6kaOUZ+Y6D1T1P3@vger.kernel.org
+X-Gm-Message-State: AOJu0YweVk16fuu2jWVZgUIZnE8YLHX/kJ0P+bDwNAeq2YqEtegFcjze
+	xVDCOE5rsw+7BY6qbCs5z2eHHfmSTzpVQmzrKYoVJbwgfVgBRHdirrmLjTFNhv4IkfdF1yvhjIh
+	DixigXxNT0bkFLfqQcIycECsLLOJ01Jk=
+X-Received: by 2002:a17:906:9f8a:b0:c0e:4007:8d94 with SMTP id
+ a640c23a62f3a-c108ecfa2b1mr236060766b.43.1782238243526; Tue, 23 Jun 2026
+ 11:10:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <ajnIasdb6j6yDUdy@google.com> <20260623004018.1864121-1-joshua.hahnjy@gmail.com>
+In-Reply-To: <20260623004018.1864121-1-joshua.hahnjy@gmail.com>
+From: Yosry Ahmed <yosry@kernel.org>
+Date: Tue, 23 Jun 2026 11:10:32 -0700
+X-Gmail-Original-Message-ID: <CAO9r8zOQQwDxmHGsRw_9k2eu6r=HU_HiXxbB4cbpwhc1GGgHOw@mail.gmail.com>
+X-Gm-Features: AVVi8CeHkJg-OCEUnLamzkS0g71Y0U9F0-dgswBYdQt5v8lrD2Rr2s34MhEXIG4
+Message-ID: <CAO9r8zOQQwDxmHGsRw_9k2eu6r=HU_HiXxbB4cbpwhc1GGgHOw@mail.gmail.com>
+Subject: Re: [PATCH v9 3/6] mm: memcontrol: add interface for swap tier selection
+To: Joshua Hahn <joshua.hahnjy@gmail.com>
+Cc: Youngjun Park <her0gyugyu@gmail.com>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	akpm@linux-foundation.org, chrisl@kernel.org, youngjun.park@lge.com, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
+	nphamcs@gmail.com, baoquan.he@linux.dev, baohua@kernel.org, gunho.lee@lge.com, 
+	taejoon.song@lge.com, hyungjun.cho@lge.com, mkoutny@suse.com, 
+	baver.bae@lge.com, matia.kim@lge.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add a stock-aware variant of page_counter_try_charge.
+On Mon, Jun 22, 2026 at 5:40=E2=80=AFPM Joshua Hahn <joshua.hahnjy@gmail.co=
+m> wrote:
+>
+> On Mon, 22 Jun 2026 23:46:31 +0000 Yosry Ahmed <yosry@kernel.org> wrote:
+>
+> > > > > If that is the case, I think auto-scaling makes sense but can be =
+a bit
+> > > > > tricky, since there is no universal tiered ratio; each workload w=
+ill
+> > > > > have different tiers it can swap to, so they will all have to cal=
+culate
+> > > > > their own ratios. Tiered memory limits escapes this difficulty si=
+nce we
+> > > > > assume all memory can be placed on all tiers, so we have a system=
+-wide
+> > > > > ratio : -)
+> > > >
+> > > > Hmm I don't follow. It's also possible (maybe not initially) that a
+> > > > memcg cannot use specific memory tiers, right? I am not sure what t=
+he
+> > > > difference is.
+> > >
+> > > You're right, I was speaking more to the current state of memory tier=
+s.
+> > > The majority of the feedack I received was that we already have too
+> > > many memcg knobs, so I just opted to make tiered memcg limits a
+> > > cgroup mount, with no ability for individual memcgs to tune their
+> > > limits or opt-in/out.
+> >
+> > Right, I think this is similar to the approach taken here. We have a
+> > single interface for per-tier limits. The main difference is that we're
+> > allowing 0/max values to disable/enable different swap tiers per-memcg,
+> > as there's a use case for that.
+> >
+> > Seems like for memory tiering there's no use case for that yet.
+>
+> Yes, I would agree with that.
+>
+> > > What do you think Yosry? Would it make sense for us to be able to
+> > > tune these values? Personally I think it makes sense but just wanted =
+to
+> > > make the basic features merged before I went to push for making those
+> > > knobs tunable.
+> >
+> > Right now we're not proposing to allow tuning swap tier limits either,
+> > just enable or disable a tier. My main question is about the default
+> > values.
+> >
+> > IIUC, for memory tiering, if you set memory.max, then the limits for
+> > tiers are auto-scaled. I think it makes sense to do the same for swap
+> > tiers for cosnsitency. Or am I wrong about the memory tiering limits
+> > behavior?
+>
+> No, you're right about that. Sorry for steering the thread to my
+> series ; -)
+>
+> To get back to the question of how the auto-tuning should work, the
+> main question is to which ratio we scale the swap limits to.
+> Do we set the swap limits proportional to how much swap is present
+> in the system, or how much swap is available to the cgroup?
+>
+> So if we have 3 swap tiers A, B, C, with 50G, 30G, and 20G capacity
+> respectively, how much should a cgroup with swap.max =3D 10G have if
+> it is limited to tiers A and B?
+>
+> This is what I was getting at earlier when I said we have to calculate
+> different ratios for different cgroups, based on what tiers they have
+> access to.
 
-As before with try_charge_memcg, it first tries to satisfy the charge by
-consuming the per-cpu stock (and skipping the hierarchical charge). On a
-miss, it tries to greedily overcharge up to counter->batch pages to
-refill the stock. Finally, if this fails, it tries to charge exactly the
-requested number of pages.
+That's a good question. I think the case that is particularly
+interesting is whether or not the limits of other tiers should change
+when another tier is disabled/enabled.
 
-The number of pages that were charged to the page_counter is reported
-back to the caller, so that stock hits don't trigger memory limit
-checks.
+So basically in your example, assuming everything starts as "max",
+when swap.max is set to 10G, the autoscaled limits would be: (tier A,
+5G), (tier B, 3G), (tier C, 2G). Now the question becomes, if
+userspace sets the limit of tier C to 0, should the limits for tiers A
+and B change?
 
-The variant is unused for now; memcg is converted in a later patch.
+On one hand, it's simpler to just keep the autoscaled limits unchanged
+in this case. However, this means that the effective swap limit is now
+8G, which is not great :/
 
-Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
----
- include/linux/page_counter.h |  4 +++
- mm/page_counter.c            | 48 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 52 insertions(+)
+The alternative is to recalculate all the limits when one of them
+changes, in which case the limits of A and B would change to 6.25G and
+3.75G. But I don't know if this will work well if we allow custom
+limits. What happens if the limit of tier C is written as 1 (or 4096)
+instead of 0? It's effectively the same scenario, but the tier is
+technically allowed.
 
-diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
-index 4abc7fe7c3494..b97b5491447e4 100644
---- a/include/linux/page_counter.h
-+++ b/include/linux/page_counter.h
-@@ -84,6 +84,10 @@ void page_counter_charge(struct page_counter *counter, unsigned long nr_pages);
- bool page_counter_try_charge(struct page_counter *counter,
- 			     unsigned long nr_pages,
- 			     struct page_counter **fail);
-+bool page_counter_try_charge_stock(struct page_counter *counter,
-+				   unsigned long nr_pages,
-+				   struct page_counter **fail,
-+				   unsigned long *nr_charged);
- void page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages);
- void page_counter_set_min(struct page_counter *counter, unsigned long nr_pages);
- void page_counter_set_low(struct page_counter *counter, unsigned long nr_pages);
-diff --git a/mm/page_counter.c b/mm/page_counter.c
-index 6bb48a913a90d..cce3af3f19e03 100644
---- a/mm/page_counter.c
-+++ b/mm/page_counter.c
-@@ -172,6 +172,54 @@ bool page_counter_try_charge(struct page_counter *counter,
- 	return false;
- }
- 
-+bool page_counter_try_charge_stock(struct page_counter *counter,
-+				   unsigned long nr_pages,
-+				   struct page_counter **fail,
-+				   unsigned long *nr_charged)
-+{
-+	struct page_counter_stock *stock;
-+	unsigned long charge = 0;
-+	int old;
-+
-+	if (!counter->stock)
-+		goto charge_exact;
-+
-+	preempt_disable();
-+	stock = this_cpu_ptr(counter->stock);
-+	old = atomic_read(&stock->nr_pages);
-+	while ((unsigned long)old >= nr_pages) {
-+		if (atomic_try_cmpxchg(&stock->nr_pages, &old,
-+				       old - (int)nr_pages)) {
-+			preempt_enable();
-+			goto out_success;
-+		}
-+	}
-+	preempt_enable();
-+
-+	charge = max_t(unsigned long, READ_ONCE(counter->batch), nr_pages);
-+	if (charge <= nr_pages)
-+		goto charge_exact;
-+
-+	if (page_counter_try_charge(counter, charge, fail)) {
-+		preempt_disable();
-+		stock = this_cpu_ptr(counter->stock);
-+		atomic_add((int)(charge - nr_pages), &stock->nr_pages);
-+		preempt_enable();
-+		goto out_success;
-+	}
-+
-+charge_exact:
-+	/* stock is not enabled, no need for surplus, or greedy charge failed */
-+	charge = nr_pages;
-+	if (!page_counter_try_charge(counter, charge, fail))
-+		return false;
-+
-+out_success:
-+	if (nr_charged)
-+		*nr_charged = charge;
-+	return true;
-+}
-+
- /**
-  * page_counter_uncharge - hierarchically uncharge pages
-  * @counter: counter
--- 
-2.53.0-Meta
-
+The more I think about it, the more I realize it may be best to drop
+the autoscaling thing. I imagine memory tiering might run into similar
+issues too :/
