@@ -1,169 +1,191 @@
-Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com [209.85.167.175])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 201473D9DBF
-	for <cgroups@vger.kernel.org>; Wed, 24 Jun 2026 15:23:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5803016F5
+	for <cgroups@vger.kernel.org>; Wed, 24 Jun 2026 15:45:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782314616; cv=none; b=sFA55wbZDTI9lObszUHVCxRNIDpsBpR2IDzF11ekNAxNFOYHi1MGmYoH5PGgnKFg5HrHukZ29ZJ1m5zCRcECQvpGD94h0fl2gIGDfyib2aem8Un5L1agl4uxYhmtBOySZudV4a6C9Xd1vg2g1zLdBWfHnK97zZNEmM8+6828WcY=
+	t=1782315933; cv=none; b=LBfL/yV9Uv/prfFFRtivEd01RwMddJ0ocdAc3XWltrAud+4uUwiHEm0qWs2ghkzHKmAzMoAipbVFqC+VNZWtylrft3o57Z8YeWS/8d8VZXr2Z+S6wWxRP4/xX0hqbpsz1jrndzbFn+YNmyeM+CGFqkcormr3Y2DKORbLfpEq7mQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782314616; c=relaxed/simple;
-	bh=TDpKuBop+fiDvr98096WtJv0rwGE5xpN35yQ6puN03M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mZVuk+uhh+V64i9Pj5OsIyX3vLxR4Z12xJN/hkI5ZR7VHpPX5oVTQDYY6iOAxg8+GFKtLClqSE/+zqfekqhsaYwjSxtE0+d8tgY3emfiFiqhb4KmkUXsNfJW+B5dR/VCvPJmNfKigqQw82BVpN/7MBMUjb7fnlVhRr2QUX9wnN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DCIjiiPi; arc=none smtp.client-ip=209.85.167.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782315933; c=relaxed/simple;
+	bh=RAgF1FFgNlfrdTEPiMpeZp2hIOVJKZIIQ2OLT1gYqKg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p3pXpEYcHKhGDsZyHDFW2ChwcK5/A1ZClhEKF1uJwDoeatdUG0ZoBSgsQNH4+EJ1nrMzFJfhldjgWAcaNIzDydx3VSzCf+1NaRb/KjH1KZk5Rfo682DscVoVSGz08Uv+06k3WcomDE1pZBzyfoB+C8bk/2HlRKXkb500gX5qEao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=PC4XpCk9; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DCIjiiPi"
-Received: by mail-oi1-f175.google.com with SMTP id 5614622812f47-49190e20a0cso93672b6e.1
-        for <cgroups@vger.kernel.org>; Wed, 24 Jun 2026 08:23:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="PC4XpCk9"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4926046fbc5so24575e9.0
+        for <cgroups@vger.kernel.org>; Wed, 24 Jun 2026 08:45:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782314614; x=1782919414; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WU7DP8gS2bWrp9HjVS61UBsZ2iorph10vTjTK+XSa98=;
-        b=DCIjiiPiiq8I9VLSjmy0J/lauUNSR+7BCyM3dEgtX1WGdKOVxqa6kIahC1c1XB5FnY
-         5ACz3vqt+gReplGlKbQq4pQ1beUeYxzPg4pZg1j1edXUF6BUceqwW+jMMGmSwIdecQDe
-         /F1Pc7XWOlTQonoDRAbSbO71T7yo7ECV3eIVGBWGyVAhIXEPtKaXmWH1Ny5sIshrF1d7
-         LY58CRhYuu0ZHMk7A0UFrzT3gOY9PyApyFRitRMoCvTYsHN0xoDUX0ZIPrZ6aaQn0uO0
-         d6STZ6Xc/qgjooyw+Z9rVFhE15aVKypqsn+OL4/GnZQGaUwcIkO5dsHo/alptWOukqHD
-         ckqw==
+        d=suse.com; s=google; t=1782315930; x=1782920730; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=qZ7EIwRMMtpttBcQvtyW0LvRDRIObg2LOmo61ZATMkk=;
+        b=PC4XpCk9ZdgAHBuZmiVPyzVa4otR1zjUYRDHtlAkdlMIPD19zg5U86gPApNbveseXM
+         WrPLBuRWMvbjMIT06IEOXF0r4oUp2VjWSZOl9k7ugiYecEyru0YFSyeifGMQRMPnkXqr
+         YZcPfo7ZvRVf9qAwDI65JZy/0b7CwaETeic6vsxBNPSc1QgaYA+GxR5q6W63kT872etx
+         4an3UMeoNfoxcXoUC6bdM7XfAruu+vYXCxcuIdUQB2B/ErhR6GuJ0ThKKJioyWkmCpcJ
+         Ou1S+qZ2NT+S9vz1EcTGQiyHaJ1egKPPWm0FyCmZP8Jsq82aFO95auiyvd26P+WNFJNT
+         Yp+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782314614; x=1782919414;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=WU7DP8gS2bWrp9HjVS61UBsZ2iorph10vTjTK+XSa98=;
-        b=QW3B0CiDG9mM1S6tR/ssV6N4qeHhHY9Mrn316hFctYK8OSIMgY8frEt+MZ5PeCxzlI
-         5mlXfAxFzgeaRuHxdsXmAYWCLcLYlgk5Jf4ulvGK4ktuw/TsDi0Zn2ARDibPI/tmgBJK
-         n3bVGHrcxcK/EIrNJMwdBBf1yAr05/4lwqsSKecff99zZ0iDTMmAXhFYaKt+R24L1yrT
-         C2C5aOv2lueeNSh2s9SAfWJOA3SULlTQLo8YsFiNoITIIF5GEBbrODVnAkodU8zuwoM6
-         PJx6Z8HZ4u14q41FcvWQWraBmR6Oe79+79RqdiiNuoymHJChB99TD20/zposwbF73k/P
-         EGMg==
-X-Forwarded-Encrypted: i=1; AFNElJ+MlY2rd0ylvj374Dqlk9T2i/x0nLaf75TkkpA/v28F4PFIwI64VbumpDmGSs/o7ekN+xl5iDKa@vger.kernel.org
-X-Gm-Message-State: AOJu0YyusNmtATIc2d5BkWXW67l7NbDOdG0guN9hAOs6lna4OAppCgJc
-	NBiKdqi4W1MdNJ11WKBYUNsGqsRYG0Ble0Ps+WOoSYo7mRuIi8D7/VAe
-X-Gm-Gg: AfdE7ckJ8mBUAWUIpnEl4Dl4ov7rD3gL92bV7go8hqLqrRkDPzu7f+dJHnQhXfLlPI7
-	na59nWP4QDQMuEgtAFApGfyKQTNrnYpkHRzQHIkctXMM/Ys3fF30yUzH9U9T+1qFYMfpn3eRwlP
-	vDUe2IxZ1twt2Kasc+foS+zdKBgEbLmaNHhFLDBgF1KSJpqpnV6UJ8OrcHWLzVUZJ48u55i/9Sy
-	tM+M6k6PEp2mkmUfNjmypSnPHq4O+IyrzUC7E6Z0414ysp0k76ER0ybf8p9QbPqUTwkoxE2g6FB
-	M41o6GbR/9jv5Q1tWm9Oja+EnMWfhrLRzcoX106IHMZIE4LywC2KLIE7W/XD1adzH9FqQcoyo6Q
-	kfFi7LQGKh0E3FKqB3rLOH4aA0qOOsmfiDz6HK7/WNQPqHIAem/8XyIO4i88qyVg0b+7O/Kj9S6
-	7jfipE2PHHS8NFOnv7AVLRRhfYMRoRKYcQTSB5YS03WCM=
-X-Received: by 2002:a05:6808:c185:b0:464:5f3:ed1 with SMTP id 5614622812f47-48f29793dc2mr5618299b6e.26.1782314613671;
-        Wed, 24 Jun 2026 08:23:33 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:41::])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-48aebb9f1d7sm9220420b6e.4.2026.06.24.08.23.32
+        d=1e100.net; s=20251104; t=1782315930; x=1782920730;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=qZ7EIwRMMtpttBcQvtyW0LvRDRIObg2LOmo61ZATMkk=;
+        b=f8S+QY5co7VXBjGWhRpOq4QLWDl81jjCNV5Uw4WrNkFYwRMJst2UnH5iii/VlmqYnT
+         SbjjX0lG946M4Io/4mb/uzqpCCnQdsdSRo4L8R4VHM+21xNweyTOy42kZe9xUCxeHnyD
+         MJdC2tdmpSu82Zwgk0/0XiyE9qe29qMT5rSnDzR6HD18BEbdLQSRVC8GnKcX8Y2Byn48
+         Ff1ewiaHVprsw/5+hQhxKq8STIAFrYdZFdcaT7YozFqHms+y3o7B0u7d7TU2u9Jjt0sO
+         KsDs8TnE74+2IoIzHkLLgECk6BiuLkPbHN5uqg1jDrNi5+d/tA7JM02rhwT0DQWplZm2
+         UEaw==
+X-Forwarded-Encrypted: i=1; AFNElJ+Ce2IW/KqozU9aRQX8+Pe1b0x5FqVaJk1r3zHTXlC5ZDk2ckmfV9ZE9Sl8YN7XUfI4FhpdIXh5@vger.kernel.org
+X-Gm-Message-State: AOJu0YzyahDTdR/PDQnYpj05Td562KZDn7CJf1+Z1a0NECKXXiqPYgwK
+	zmWW1dGFZV8tJDlrXUqJU4qEkg1jAe5bQgzepDUDGjvQvZ3gRPfXXuUtbFBZzTqhWsc3sVbhVK2
+	RKuq9jvs=
+X-Gm-Gg: AfdE7cnQflIE0E9ZhJias9Oc0uOIxWQzFnOjYWyqYMD6Yu5F19yOV/XvcTITEFWf5Vq
+	VUzx9yF9xmN/03Z684CMgq/DsYcrRUYTRuzzX8KCTP4BD+9UJt69FoKbelv79J2ewayl6lRrsWM
+	vat2SDa4fD2Jjt8YJVPWvXcInCmgOnF3Mqu9Txa0HWEDifHFNc2WepJCXl1ZkFIjNSbDBXwssYn
+	elYJN3v3yuLZAVW+MtMuDFlfkW4JyBtBfWB1sadSIcsLJ2m4p4AbxPXXHhEN2hNx+tL8dGlXz3D
+	XN/2wfbWKkD+R9kAOSQ4qLpH3ADrwPW3Qo2SU+cZ+/0/5wLGYYKWZx0JKoVLrmKewgOuKqXKHVb
+	vMk6MWsAE8KccIYB6mVxsS+HuM2SJSAqdCORilKInnZyvG7IJS4ytgO9P24MQFPcH9pskdIy/h4
+	Tp0VjHFCh/s3wYMmd+fw==
+X-Received: by 2002:a05:600c:3111:b0:492:38c9:b265 with SMTP id 5b1f17b1804b1-492632b6ef8mr14978345e9.15.1782315930241;
+        Wed, 24 Jun 2026 08:45:30 -0700 (PDT)
+Received: from localhost.localdomain ([62.77.90.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4926403573csm1307185e9.7.2026.06.24.08.45.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Jun 2026 08:23:33 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R . Howlett" <liam.howlett@oracle.com>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH v4 4/5] mm/memcontrol: convert memcg to use page_counter_stock
-Date: Wed, 24 Jun 2026 08:23:29 -0700
-Message-ID: <20260624152331.2228828-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260624144348.4117578-1-usama.arif@linux.dev>
-References: 
+        Wed, 24 Jun 2026 08:45:29 -0700 (PDT)
+Date: Wed, 24 Jun 2026 17:45:27 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Waiman Long <longman@redhat.com>
+Cc: Chen Ridong <chenridong@huaweicloud.com>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Aaron Tomlin <atomlin@atomlin.com>, 
+	Guopeng Zhang <guopeng.zhang@linux.dev>
+Subject: Re: [PATCH-next v5 6/6] cgroup/cpuset: Support multiple
+ source/destination cpusets for cpuset_*attach()
+Message-ID: <ajutWBoJqkhktkvX@localhost.localdomain>
+References: <20260602023203.248077-1-longman@redhat.com>
+ <20260602023203.248077-7-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="itlyjlmnqgc2pen7"
+Content-Disposition: inline
+In-Reply-To: <20260602023203.248077-7-longman@redhat.com>
 
-On Wed, 24 Jun 2026 07:43:47 -0700 Usama Arif <usama.arif@linux.dev> wrote:
 
-> On Tue, 23 Jun 2026 11:01:22 -0700 Joshua Hahn <joshua.hahnjy@gmail.com> wrote:
+--itlyjlmnqgc2pen7
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH-next v5 6/6] cgroup/cpuset: Support multiple
+ source/destination cpusets for cpuset_*attach()
+MIME-Version: 1.0
 
-Hello Usama!!
+Hello Waiman.
 
-Thank you for reviewing the patch : -)
+On Mon, Jun 01, 2026 at 10:32:03PM -0400, Waiman Long <longman@redhat.com> =
+wrote:
+> This problem is less an issue when enabling the cpuset controller as all
+> the newly created child cpusets will have exactly the same set of CPUs
+> and memory nodes except when deadline tasks are involved in migration
+> as the deadline task accounting data can be off.
+>=20
+> It can be more problematic when the cpuset controller is disabled as
+> their set of CPUs and memory nodes may differ from their parent or with
+> the moving of multi-threaded process from different threaded cgroups.
 
-[...snip...]
+When I generalize that it can be an issue for any threaded controller
+that somehow relies on the _difference_ between old and new thread
+membership.
 
-> > @@ -2595,7 +2596,6 @@ void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
-> >  static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> >  			    unsigned int nr_pages)
-> >  {
-> > -	unsigned int batch = max(MEMCG_CHARGE_BATCH, nr_pages);
-> >  	int nr_retries = MAX_RECLAIM_RETRIES;
-> >  	struct mem_cgroup *mem_over_limit;
-> >  	struct page_counter *counter;
-> > @@ -2606,36 +2606,30 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> >  	bool raised_max_event = false;
-> >  	unsigned long pflags;
-> >  	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
-> > +	unsigned long nr_charged = 0;
-> >  
-> >  retry:
-> > -	if (consume_stock(memcg, nr_pages))
-> > -		return 0;
-> > -
-> > -	if (!allow_spinning)
-> > -		/* Avoid the refill and flush of the older stock */
-> > -		batch = nr_pages;
-> > -
-> >  	reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
-> >  	if (do_memsw_account() &&
-> > -	    !page_counter_try_charge(&memcg->memsw, batch, &counter)) {
-> > +	    !page_counter_try_charge_stock(&memcg->memsw, nr_pages,
-> > +					   &counter, NULL)) {
-> >  		mem_over_limit = mem_cgroup_from_counter(counter, memsw);
-> >  		reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
-> >  		goto reclaim;
-> >  	}
-> >  
-> > -	if (page_counter_try_charge(&memcg->memory, batch, &counter))
-> > -		goto done_restock;
-> > +	if (page_counter_try_charge_stock(&memcg->memory, nr_pages,
-> > +					  &counter, &nr_charged)) {
-> > +		if (!nr_charged)
-> > +			return 0;
-> > +		goto handle_high;
-> > +	}
-> >  
-> >  	if (do_memsw_account())
-> > -		page_counter_uncharge(&memcg->memsw, batch);
-> > +		page_counter_uncharge(&memcg->memsw, nr_pages);
-> 
-> This needs a transactional rollback. page_counter_try_charge_stock() can
-> succeed by consuming memsw stock and charging 0 new pages, but the
-> memory-failure path unconditionally uncharges nr_pages from memsw.
-> That turns a failed allocation into a real memsw usage decrement.
+So I checked some: pids and perf_events look alright (no
+diff-dependency) but I noticed the very same issue is tackled in
+sched_change_group/scx_cgroup_move_task and that there is a member
+inside task_struct allocated for this state tracking already:
+  task_struct::scx::cgrp_moving_from
 
-Hmmmmmmmmmm....... I'm not sure.
+> Fix that by tracking the set of source (old) and destination cpusets
+> in singly linked lists and iterating them all to properly update the
+> internal data. Also keep the current cs and oldcs variables up-to-date
+> with the css and task iterators.
 
-At this point in the code, we are either (1) using cgroup v1 with memsw
-and charged successfully, or (2) not using cgroup v1 with memsw. So I'm
-not sure if this really is unconditional, we're just distinguishing
-between cases (1) and (2) by checking if we're using cgroupv1.
+So there would be more than a single use for something conceptually
+like:
 
-Or is your concern with taking a charge via stock, but uncharging with
-a hierarchical page_counter walk? If so, I think there's a case to be
-made here with just simply returning the stock. I just wanted to keep
-it consistent with the original memcontrol code, which only used
-stock to fulfill charges, not uncharges, since this could make the
-stock grow without bound.
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 004e6d56a499a..740c02f220c75 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1326,6 +1326,9 @@ struct task_struct {
+ #ifdef CONFIG_PREEMPT_RT
+        struct llist_node               cg_dead_lnode;
+ #endif /* CONFIG_PREEMPT_RT */
++#ifdef CONFIG_CGROUPS_MOVING_FROM
++       struct cgroup                   *cgrp_moving_from;
++#endif
+ #endif /* CONFIG_CGROUPS */
+ #ifdef CONFIG_X86_CPU_RESCTRL
+        u32                             closid;
+diff --git a/include/linux/sched/ext.h b/include/linux/sched/ext.h
+index 1a3af2ea2a794..5b63afe83f333 100644
+--- a/include/linux/sched/ext.h
++++ b/include/linux/sched/ext.h
+@@ -240,9 +240,6 @@ struct sched_ext_entity {
+        bool                    disallow;       /* reject switching into SC=
+X */
+=20
+        /* cold fields */
+-#ifdef CONFIG_EXT_GROUP_SCHED
+-       struct cgroup           *cgrp_moving_from;
+-#endif
+        struct list_head        tasks_node;
+ };
+=20
+diff --git a/init/Kconfig b/init/Kconfig
+index 2937c4d308aec..d7e7d4477f862 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1186,6 +1186,7 @@ config EXT_GROUP_SCHED
+        depends on SCHED_CLASS_EXT && CGROUP_SCHED
+        select GROUP_SCHED_WEIGHT
+        select GROUP_SCHED_BANDWIDTH
++       select CGROUPS_MOVING_FROM
+        default y
+=20
+ endif #CGROUP_SCHED
+@@ -1288,6 +1289,7 @@ config CPUSETS
+        depends on SMP
+        select UNION_FIND
+        select CPU_ISOLATION
++       select CGROUPS_MOVING_FROM
+        help
+          This option will let you create and manage CPUSETs which
+          allow dynamically partitioning a system into sets of CPUs and
 
-What do you think? Thanks again for reviewing Usama, I hope you have a
-great day!!!
-Joshua
+I think this could simplify the before-after state tracking generally,
+WDYT?
+
+Michal
+
+--itlyjlmnqgc2pen7
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCajv7kRsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AgcJwD/bg/SvG8VumQlUebbvHIr
+L1N7bJj/7LlKGZ3dYy8NebAA/itwcBWrkx3By3y8dBJOz4d5knPVRBXHIh5DGkHT
+P9wN
+=N/q4
+-----END PGP SIGNATURE-----
+
+--itlyjlmnqgc2pen7--
