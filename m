@@ -1,130 +1,392 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67EC5388378
-	for <cgroups@vger.kernel.org>; Wed, 24 Jun 2026 06:34:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615283812DB;
+	Wed, 24 Jun 2026 06:46:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782282851; cv=none; b=K6foFWSeapcjOzboVpxzRiiubMKNcNoQ3VDkCPd1Jc9GpTtXJElApCSG7rq4OUc85u6ImzfZvjmnqgxuzxPNCB19HBClDFy/5nYFSQyIikuHk1CgQqPQD+xFrXVM+aRuXilC9FVDyYgNkByhFZSULRjCGqgK2vtbYUDBtRoLrds=
+	t=1782283595; cv=none; b=FzzZs31DMYHsGltCY6nTFlZrMpu7RjI/T2KHdvz20njveOdumKIWuiLrO7L9x8lwic+eVWWRN6yrcz35khwQJAyKI6SrwTYoDxx1FAhQsCQEfmRZJeQoSgjyN2ym4elFj/Pu/x1DpJHoESS2DAQMJhM7o375+AfMwPkOHoN1tMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782282851; c=relaxed/simple;
-	bh=yFKVE1gDN/R4rptBShzoito5hCU5wF0GtrGLgkDuf8Y=;
+	s=arc-20240116; t=1782283595; c=relaxed/simple;
+	bh=g6EqeEXBnoaVRejOJ9u5Dj/ZEULH5FgloATObUGA1CQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LDP27bXRKyW0gy4X2ygm/RNXA1cJmQxU69/G7HRgu6qVuZOZPwWGPDod7kwNYXbG8UEJIahH2j0QtZ+36JFL4WS7jQTthmYT7xtzgtZmQc+6nGVWYAWsk2rcFRs7daJi0EscqAXiprg5liHdCfz330VRbFrdGGONThEfDoaG31Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c+o57lgT; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 MIME-Version; b=HjjiVL81sp66GS5jZdFx0jasUiMpZ8VKgHlT6Agsa5D+0CEtXInEWDolM7FdfAYQ2wBi/jvD7fO2TsA2ZIm4YdaaHOk7KtK1WFb3S+JAMLvQmB9HETNd8lTe9s+nyA6jwAmFBdCxNhS3AIPMGCqlNA6W3qnwQalwtUb3qUFM+ZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HDBgCtkD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c+o57lgT"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-84347ad88edso797790b3a.1
-        for <cgroups@vger.kernel.org>; Tue, 23 Jun 2026 23:34:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782282850; x=1782887650; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EkEtFGqDPkhp9SzmiZH6fjLwhoaBQ/zMPfZFx/9Imxs=;
-        b=c+o57lgTysSOAqoM6OTxCfE/H7n3spgHU3iWmBnVSY3w3/oLHlBO+we0w/xRE20bbX
-         a6vl8tcDwnDeCPA2RejuQ7IN49jbE0f4MJqrssP2xdJAKPaSmfyTooaRwogPaYCIDsr5
-         0RnMEuIDtZNszNBXQ5bhtNnHBC+ZnBdvJx4D8ntQ1UzGr09qfqtpk/JS1FWUoTLNULCw
-         582vgyKd31TeAC5fNPli+omtNvE3Io0Hzg126kkdQ3+0q0yN6WWnf2/b6CYbKfJgmPC2
-         ut6q6jZ8UqEZNj+ty5ngaXBVLJmoIVNM4sj2CYWJZpQxRd+HmSBUTdRfpsododLG9pEZ
-         DmYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782282850; x=1782887650;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=EkEtFGqDPkhp9SzmiZH6fjLwhoaBQ/zMPfZFx/9Imxs=;
-        b=SVCyUsY96egSSjK8Ybqvd/QSiySqn9Z92sDrbnGKyzsRHvgUouVnYzndE+IOJf5wJc
-         t7hx1GOB9X/OBm4SiPRBtlYQi6JKeuGcB499ASllREH7NnxXSMrs8Zvgc86TUe1sGNLy
-         KAAATbJWCIZt4t35FhlXLU6vTHQ8c3Ea+gEsB8HcXJETTxDh6cwIeU7ulu8yQXBERJni
-         a8J44PuvQNGcAiuxBiciVC50Bb97vYQ855E4kmzStmeNS5w7x8CETwT844JuEGSLAjjW
-         cuEwtAni+WPTDl1VVGcBH+gtKiErTbn/gUldiCq5M+z3kFKyCXmLZSRow4VQ92P7k6Ys
-         wgoQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8X0XAlIsf6gZm+cqsbTJTRz0sbDoUf2xxMXTLLlowL4c3XitURrhKngPnS8lnHOuReD4kfGPfV@vger.kernel.org
-X-Gm-Message-State: AOJu0YxR50yHsxJ6H2xylMHzomYeQjOg8nOmGPxWRkQop9Ate8I9yBEZ
-	9qtdQBz3FYuEUBtBu3mTeanQ1LE87DGtdPLxteKADnF3z4Zwt6jZzWLx
-X-Gm-Gg: AfdE7cmnX2vKk8iBA3/lHANvhgURILtumMShZAm5mmUpoR8Zh/W2gHsTklx5Ktdi1xI
-	1WJHPl+c+u3Ncily8uxXk+idqWOk2Wi+mdoZhDgcE8xIR30I2nmajMsBvcSSsq95yAZ0HS+bujK
-	3J0AC1bepR3bH/XVuzkdsi3emlMmNM3ipU9EdLZG8YMdm32+JU8lokAMmQyWPfDT+aX+1/FvQxI
-	vmR0ZOwDbSuk95pYX/TFefiR3i4Y9ZHrVR7UPN5Ha1aNxb2aD9JToGhotswHv4vlSd746mdaV0o
-	/mwh2EjpCzN/XJK3Cnm7mz/WtrY6cDmDb52i0nyHDL2/pIhuwheYQfV7+w8bv/T+rRSNf1eUn5j
-	igl4ZCYQqPzkLMWXV8IAlWBujtsU2BTkHSPVTU2fVLW81iYIi3RHEcEdbw0km+1V1dHZpK7Uy2n
-	EjrQGmg8Q=
-X-Received: by 2002:a05:6a21:699:b0:3b2:8685:1473 with SMTP id adf61e73a8af0-3bd2cffd2d4mr2708731637.7.1782282849718;
-        Tue, 23 Jun 2026 23:34:09 -0700 (PDT)
-Received: from ubuntu.. ([138.199.21.246])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8bc3172827sm11544089a12.9.2026.06.23.23.34.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Jun 2026 23:34:09 -0700 (PDT)
-From: Jing Wu <realwujing@gmail.com>
-To: Waiman Long <longman@redhat.com>
-Cc: Jing Wu <realwujing@gmail.com>,
-	Thomas Gleixner <tglx@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	rcu@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HDBgCtkD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8128D1F00A3A;
+	Wed, 24 Jun 2026 06:46:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782283594;
+	bh=o78VMkMHXJafuebuik6iANSdovRwVCbx8HrhJTxecac=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=HDBgCtkD0N0m3G4ByJftgW2z4xVPErZsjaf5Ijggo12hRQrHk869fmM4GA8WkIjqv
+	 Fzz2qz1AS7SJ2AP1pWrtvaEfzMwlZRv/6bGfBhXl1fUsNqb7SYVrx1PQD+A596NdUJ
+	 P9/fBBmiGd6UIdYrYqbRw1Cvj/MZu5auE/5xqfiI6InmpOjpJcwWLTSEIQoCj3PWpk
+	 OqzgaXF1XbRSIYR73R3NVV2AgirldWGZP1k4whw7coVekCwojLmQVT1QkicjY1yZeE
+	 qANSC7h/5A7nOeJJ7e5EHAl253SG5MCFtI7BOWbx+29v0tZzgOtSaTsi94Ib8Is8E4
+	 gEun5GaVKgDKQ==
+From: Yu Kuai <yukuai@kernel.org>
+To: Tejun Heo <tj@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Jens Axboe <axboe@kernel.dk>
+Cc: Zheng Qixing <zhengqixing@huawei.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Tang Yizhou <yizhou.tang@shopee.com>,
+	Nilay Shroff <nilay@linux.ibm.com>,
+	Ming Lei <ming.lei@redhat.com>,
 	cgroups@vger.kernel.org,
-	Qiliang Yuan <yuanql9@chinatelecom.cn>
-Subject: Re: [PATCH-next 00/23] cgroup/cpuset: Enable runtime update of nohz_full and managed_irq CPUs
-Date: Wed, 24 Jun 2026 14:34:04 +0800
-Message-ID: <20260624063404.2106807-1-realwujing@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260421030351.281436-1-longman@redhat.com>
-References: <20260421030351.281436-1-longman@redhat.com>
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] ext4: add unraid mount option for single-disk-per-group mode
+Date: Wed, 24 Jun 2026 14:46:20 +0800
+Message-ID: <20260624064625.1743650-2-yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260624064625.1743650-1-yukuai@kernel.org>
+References: <20260624064625.1743650-1-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi Waiman,
+From: Yu Kuai <yukuai@fnnas.com>
 
-Thomas Gleixner suggested we coordinate, so reaching out directly.
+Add support for an "unraid" mount option that enables a special mode
+designed for use with fault-tolerant md-linear arrays. In this mode:
 
-We have been working on a similar feature called Dynamic Housekeeping
-Management (DHM) [1][2][3][4]. The RFC was posted on 2026-02-06, v1 on
-2026-03-25, and v2 on 2026-04-13 — a week before your series appeared.
-It seems we developed these independently in parallel.
+1. Variable block groups: Each block group can have a different size,
+   allowing one physical disk per group. Lookup tables are used for
+   block-to-group mapping instead of fixed-size calculations.
 
-After Thomas's review of DHM v3, we are rebuilding v4 around the
-CPU-by-CPU offline/online hotplug mechanism, which aligns with the
-direction of your series.
+2. Distributed metadata: Every block group has its own superblock and
+   group descriptor table copy, enabling the filesystem to remain
+   accessible even if some disks fail.
 
-There is one key difference in scope worth discussing:
+3. Single-group allocation: Files are allocated entirely within a
+   single block group. If a group doesn't have enough space, the
+   allocation fails with -ENOSPC instead of trying other groups.
+   This ensures each file resides on a single physical disk.
 
-  Your series requires "nohz_full=" to be present at boot (even with
-  an empty CPU list) to opt into runtime updates. DHM targets systems
-  where nohz_full= was never configured at boot — enabling CPU noise
-  isolation purely at runtime without any boot-time setup.
+4. Inode locality: Inodes are allocated in the same group as their
+   parent directory, keeping files and their metadata on the same disk.
 
-  This requires making the nohz_full infrastructure activatable at
-  runtime for the first time, rather than just extending an already-
-  initialized boot configuration.
+This enables unraid-like functionality where:
+- Each disk is independent and can be read separately
+- Disk failures only affect files on that specific disk
+- The filesystem continues operating with reduced capacity
 
-Before we start coding v4, a few questions:
+Usage:
+  mount -t ext4 -o unraid /dev/md0 /mnt
 
-  1. Are you planning a v2 of your series? If so, what is your
-     timeline? We want to avoid duplicating effort on the subsystem
-     patches (tick, RCU, genirq).
+Note: This requires a specially formatted filesystem where each block
+group corresponds to one physical disk. A future mkfs.ext4 extension
+will support creating such filesystems.
 
-  2. Would you be open to extending your series to cover the
-     "no boot parameter" use case, or do you think it is better kept
-     as a separate series?
+Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+---
+ fs/ext4/balloc.c  | 45 ++++++++++++++++++++++++++++++++++++++++-----
+ fs/ext4/ext4.h    | 15 ++++++++++++++-
+ fs/ext4/ialloc.c  | 13 +++++++++++++
+ fs/ext4/mballoc.c |  8 ++++++++
+ fs/ext4/super.c   | 68 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 143 insertions(+), 6 deletions(-)
 
-  3. Are there specific patches in your series where you would welcome
-     our contribution directly?
+diff --git a/fs/ext4/balloc.c b/fs/ext4/balloc.c
+index 8040c731b3e4..bd151dc5480b 100644
+--- a/fs/ext4/balloc.c
++++ b/fs/ext4/balloc.c
+@@ -54,17 +54,43 @@ ext4_group_t ext4_get_group_number(struct super_block *sb,
+ void ext4_get_group_no_and_offset(struct super_block *sb, ext4_fsblk_t blocknr,
+ 		ext4_group_t *blockgrpp, ext4_grpblk_t *offsetp)
+ {
+-	struct ext4_super_block *es = EXT4_SB(sb)->s_es;
++	struct ext4_sb_info *sbi = EXT4_SB(sb);
++	struct ext4_super_block *es = sbi->s_es;
+ 	ext4_grpblk_t offset;
 
-Happy to collaborate on a unified approach.
+ 	blocknr = blocknr - le32_to_cpu(es->s_first_data_block);
++
++	/* Unraid mode: binary search through variable-size groups */
++	if (sbi->s_group_first_block) {
++		ext4_group_t lo = 0, hi = sbi->s_groups_count - 1;
++		ext4_fsblk_t first_data = le32_to_cpu(es->s_first_data_block);
++
++		blocknr += first_data; /* restore original block number */
++
++		while (lo < hi) {
++			ext4_group_t mid = (lo + hi + 1) / 2;
++
++			if (blocknr < sbi->s_group_first_block[mid])
++				hi = mid - 1;
++			else
++				lo = mid;
++		}
++		if (blockgrpp)
++			*blockgrpp = lo;
++		if (offsetp) {
++			offset = (blocknr - sbi->s_group_first_block[lo]) >>
++				 sbi->s_cluster_bits;
++			*offsetp = offset;
++		}
++		return;
++	}
++
+ 	offset = do_div(blocknr, EXT4_BLOCKS_PER_GROUP(sb)) >>
+-		EXT4_SB(sb)->s_cluster_bits;
++		sbi->s_cluster_bits;
+ 	if (offsetp)
+ 		*offsetp = offset;
+ 	if (blockgrpp)
+ 		*blockgrpp = blocknr;
+-
+ }
 
-[1] DHM RFC (2026-02-06): https://lore.kernel.org/r/20260206-feature-dynamic_isolcpus_dhei-v1-0-00a711eb0c74@gmail.com
-[2] DHM v1  (2026-03-25): https://lore.kernel.org/r/20260325-dhei-v12-final-v1-0-919cca23cadf@gmail.com
-[3] DHM v2  (2026-04-13): https://lore.kernel.org/r/20260413-wujing-dhm-v2-0-06df21caba5d@gmail.com
-[4] DHM v3  (2026-06-18): https://lore.kernel.org/r/20260618-wujing-dhm-v3-0-28f1a4d83b68@gmail.com
-[5] Your series v1 (2026-04-20): https://lore.kernel.org/r/20260421030351.281436-1-longman@redhat.com
+ /*
+@@ -162,8 +188,13 @@ static unsigned ext4_num_overhead_clusters(struct super_block *sb,
+ static unsigned int num_clusters_in_group(struct super_block *sb,
+ 					  ext4_group_t block_group)
+ {
++	struct ext4_sb_info *sbi = EXT4_SB(sb);
+ 	unsigned int blocks;
 
-Jing Wu <realwujing@gmail.com>
-Qiliang Yuan <yuanql9@chinatelecom.cn>
++	/* Unraid mode: use per-group blocks count */
++	if (sbi->s_group_blocks_count)
++		return EXT4_NUM_B2C(sbi, sbi->s_group_blocks_count[block_group]);
++
+ 	if (block_group == ext4_get_groups_count(sb) - 1) {
+ 		/*
+ 		 * Even though mke2fs always initializes the first and
+@@ -171,11 +202,11 @@ static unsigned int num_clusters_in_group(struct super_block *sb,
+ 		 * we need to make sure we calculate the right free
+ 		 * blocks.
+ 		 */
+-		blocks = ext4_blocks_count(EXT4_SB(sb)->s_es) -
++		blocks = ext4_blocks_count(sbi->s_es) -
+ 			ext4_group_first_block_no(sb, block_group);
+ 	} else
+ 		blocks = EXT4_BLOCKS_PER_GROUP(sb);
+-	return EXT4_NUM_B2C(EXT4_SB(sb), blocks);
++	return EXT4_NUM_B2C(sbi, blocks);
+ }
+
+ /* Initializes an uninitialized block bitmap */
+@@ -855,6 +886,13 @@ int ext4_bg_has_super(struct super_block *sb, ext4_group_t group)
+ {
+ 	struct ext4_super_block *es = EXT4_SB(sb)->s_es;
+
++	/*
++	 * Unraid mode: every group has a superblock copy for fault tolerance.
++	 * This allows mounting the filesystem even if some disks fail.
++	 */
++	if (test_opt2(sb, UNRAID))
++		return 1;
++
+ 	if (group == 0)
+ 		return 1;
+ 	if (ext4_has_feature_sparse_super2(sb)) {
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index 56112f201cac..063e37a82654 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -1295,6 +1295,9 @@ struct ext4_inode_info {
+ 						    * scanning in mballoc
+ 						    */
+ #define EXT4_MOUNT2_ABORT		0x00000100 /* Abort filesystem */
++#define EXT4_MOUNT2_UNRAID		0x00000200 /* Unraid mode: one disk per
++						    * group, single-group alloc
++						    */
+
+ #define clear_opt(sb, opt)		EXT4_SB(sb)->s_mount_opt &= \
+ 						~EXT4_MOUNT_##opt
+@@ -1687,6 +1690,10 @@ struct ext4_sb_info {
+ 	struct flex_groups * __rcu *s_flex_groups;
+ 	ext4_group_t s_flex_groups_allocated;
+
++	/* Unraid mode: variable block groups (one disk per group) */
++	ext4_fsblk_t *s_group_first_block;	/* First block of each group */
++	ext4_grpblk_t *s_group_blocks_count;	/* Blocks count per group */
++
+ 	/* workqueue for reserved extent conversions (buffered io) */
+ 	struct workqueue_struct *rsv_conversion_wq;
+
+@@ -2627,8 +2634,14 @@ struct dir_private_info {
+ static inline ext4_fsblk_t
+ ext4_group_first_block_no(struct super_block *sb, ext4_group_t group_no)
+ {
++	struct ext4_sb_info *sbi = EXT4_SB(sb);
++
++	/* Unraid mode: variable block groups, use lookup table */
++	if (sbi->s_group_first_block)
++		return sbi->s_group_first_block[group_no];
++
+ 	return group_no * (ext4_fsblk_t)EXT4_BLOCKS_PER_GROUP(sb) +
+-		le32_to_cpu(EXT4_SB(sb)->s_es->s_first_data_block);
++		le32_to_cpu(sbi->s_es->s_first_data_block);
+ }
+
+ /*
+diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
+index b20a1bf866ab..98fda602073e 100644
+--- a/fs/ext4/ialloc.c
++++ b/fs/ext4/ialloc.c
+@@ -438,6 +438,19 @@ static int find_group_orlov(struct super_block *sb, struct inode *parent,
+ 	int flex_size = ext4_flex_bg_size(sbi);
+ 	struct dx_hash_info hinfo;
+
++	/*
++	 * Unraid mode: always allocate inode in parent's group.
++	 * This ensures files and their inodes stay on the same disk.
++	 */
++	if (test_opt2(sb, UNRAID)) {
++		desc = ext4_get_group_desc(sb, parent_group, NULL);
++		if (desc && ext4_free_inodes_count(sb, desc) > 0) {
++			*group = parent_group;
++			return 0;
++		}
++		return -1; /* No free inodes in parent's group */
++	}
++
+ 	ngroups = real_ngroups;
+ 	if (flex_size > 1) {
+ 		ngroups = (real_ngroups + flex_size - 1) >>
+diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
+index 56d50fd3310b..9de674ec2f77 100644
+--- a/fs/ext4/mballoc.c
++++ b/fs/ext4/mballoc.c
+@@ -2997,6 +2997,14 @@ ext4_mb_regular_allocator(struct ext4_allocation_context *ac)
+ 	if (err || ac->ac_status == AC_STATUS_FOUND)
+ 		goto out;
+
++	/*
++	 * Unraid mode: files must be allocated entirely within a single group.
++	 * If the goal group doesn't have enough space, fail with -ENOSPC
++	 * instead of trying other groups.
++	 */
++	if (test_opt2(sb, UNRAID))
++		goto out;
++
+ 	if (unlikely(ac->ac_flags & EXT4_MB_HINT_GOAL_ONLY))
+ 		goto out;
+
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 87205660c5d0..9534a4ffbee7 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -1255,6 +1255,12 @@ static void ext4_group_desc_free(struct ext4_sb_info *sbi)
+ 		brelse(group_desc[i]);
+ 	kvfree(group_desc);
+ 	rcu_read_unlock();
++
++	/* Free unraid mode arrays */
++	kvfree(sbi->s_group_first_block);
++	kvfree(sbi->s_group_blocks_count);
++	sbi->s_group_first_block = NULL;
++	sbi->s_group_blocks_count = NULL;
+ }
+
+ static void ext4_flex_groups_free(struct ext4_sb_info *sbi)
+@@ -1677,6 +1683,7 @@ enum {
+ 	Opt_max_dir_size_kb, Opt_nojournal_checksum, Opt_nombcache,
+ 	Opt_no_prefetch_block_bitmaps, Opt_mb_optimize_scan,
+ 	Opt_errors, Opt_data, Opt_data_err, Opt_jqfmt, Opt_dax_type,
++	Opt_unraid,
+ #ifdef CONFIG_EXT4_DEBUG
+ 	Opt_fc_debug_max_replay, Opt_fc_debug_force
+ #endif
+@@ -1819,6 +1826,7 @@ static const struct fs_parameter_spec ext4_param_specs[] = {
+ 	fsparam_flag	("reservation",		Opt_removed),	/* mount option from ext2/3 */
+ 	fsparam_flag	("noreservation",	Opt_removed),	/* mount option from ext2/3 */
+ 	fsparam_u32	("journal",		Opt_removed),	/* mount option from ext2/3 */
++	fsparam_flag	("unraid",		Opt_unraid),
+ 	{}
+ };
+
+@@ -1912,6 +1920,7 @@ static const struct mount_opts {
+ 	 MOPT_SET | MOPT_2 | MOPT_EXT4_ONLY},
+ #endif
+ 	{Opt_abort, EXT4_MOUNT2_ABORT, MOPT_SET | MOPT_2},
++	{Opt_unraid, EXT4_MOUNT2_UNRAID, MOPT_SET | MOPT_2 | MOPT_EXT4_ONLY},
+ 	{Opt_err, 0, 0}
+ };
+
+@@ -4845,6 +4854,65 @@ static int ext4_check_geometry(struct super_block *sb,
+ 	return 0;
+ }
+
++/*
++ * Initialize unraid mode data structures.
++ * In unraid mode, each block group can have a different size (one disk per group).
++ * This function allocates and populates the lookup tables for variable-size groups.
++ *
++ * For now, this uses the standard fixed-size groups from the superblock.
++ * A future mkfs extension will store per-group sizes in the group descriptors.
++ */
++static int ext4_unraid_init(struct super_block *sb)
++{
++	struct ext4_sb_info *sbi = EXT4_SB(sb);
++	ext4_group_t ngroups = sbi->s_groups_count;
++	ext4_fsblk_t first_data_block;
++	ext4_group_t i;
++
++	if (!test_opt2(sb, UNRAID))
++		return 0;
++
++	sbi->s_group_first_block = kvmalloc_array(ngroups,
++						  sizeof(ext4_fsblk_t),
++						  GFP_KERNEL);
++	if (!sbi->s_group_first_block)
++		return -ENOMEM;
++
++	sbi->s_group_blocks_count = kvmalloc_array(ngroups,
++						   sizeof(ext4_grpblk_t),
++						   GFP_KERNEL);
++	if (!sbi->s_group_blocks_count) {
++		kvfree(sbi->s_group_first_block);
++		sbi->s_group_first_block = NULL;
++		return -ENOMEM;
++	}
++
++	/*
++	 * Initialize with standard fixed-size groups for now.
++	 * TODO: Read per-group sizes from extended group descriptors
++	 * when mkfs supports creating variable-size groups.
++	 */
++	first_data_block = le32_to_cpu(sbi->s_es->s_first_data_block);
++	for (i = 0; i < ngroups; i++) {
++		sbi->s_group_first_block[i] = first_data_block +
++			(ext4_fsblk_t)i * EXT4_BLOCKS_PER_GROUP(sb);
++
++		if (i == ngroups - 1) {
++			/* Last group may be smaller */
++			sbi->s_group_blocks_count[i] =
++				ext4_blocks_count(sbi->s_es) -
++				sbi->s_group_first_block[i];
++		} else {
++			sbi->s_group_blocks_count[i] = EXT4_BLOCKS_PER_GROUP(sb);
++		}
++	}
++
++	ext4_msg(sb, KERN_INFO, "unraid mode enabled: %u groups",
++		 ngroups);
++
++	return 0;
++}
++
+ static int ext4_group_desc_init(struct super_block *sb,
+ 				struct ext4_super_block *es,
+ 				ext4_fsblk_t logical_sb_block,
+@@ -4904,7 +4972,8 @@ static int ext4_group_desc_init(struct super_block *sb,
+ 		return -EFSCORRUPTED;
+ 	}
+
+-	return 0;
++	/* Initialize unraid mode data structures if enabled */
++	return ext4_unraid_init(sb);
+ }
+
+ static int ext4_load_and_init_journal(struct super_block *sb,
+--
+2.43.0
