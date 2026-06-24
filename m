@@ -1,52 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A13E332601;
-	Wed, 24 Jun 2026 21:13:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0242C8834;
+	Wed, 24 Jun 2026 22:34:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782335599; cv=none; b=erzDG/etjQot6PSTlk67JUFt5boTF+3I+SFDrFEpYMiwl2TUYT0XLcoM6mBx8faXgbTKcm4cGzv9K4t6LVINT7FYvjeQ9tws2ukUGqHq5HI0iJ7oN6rNgCtqAU6n2DyXLtElcyjRvaSgkZ/s/ajq+nEdYEXjG788X1LZA5xvsSE=
+	t=1782340448; cv=none; b=uSycMPV38YLsTDRxd5ysISHuV2YDCK8fDeMrA4nZ8j1NUqPOFPgSFQhNLXrfPnJ71sF8TSpujg6LmVRwTa3zSairDLXLVyr5zcbmeFQQiCwMS+o8pKPraV0siB94QoO0NfvaoCNHldJYHoGru02eiIWNuurx4o7SlOWl8Xkdk+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782335599; c=relaxed/simple;
-	bh=IgkyJKi60WXCmh17XYm05cccG/GD8qQaAxSY1ZxWgM8=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=ecdZfdjgg/sDtS/ICxJkam3pubTMUtmTGy0tYfTGIMnmJjDK16MzUZ+PHz7MuXI2KZhtlMcj2wRkHN7GAzo9TkwLbVLDUnOet7/9sZMG/GKzDw+kYldq9w2Fq2YF9/gDtDrxF1nYhETie8h/qBAJmn+IyhiUccDs9zTJ1tmuO9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hpzzEt9e; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782340448; c=relaxed/simple;
+	bh=jii3cJiVzwMrZB4rB2WKhpoWQtBuM+AjGlyEzg1nA6M=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=dvqjtMoNtvXV4LGWQxYSlc7lc32CWlM8W6qQ2z+YTWZO1eObstyYDHTvQItJLZdE9ir4QE9NtziVkRnOgxiY2RL/GWDs19Hpw5OGw4Lbe8mdduLRUxQOSEC0beAJ1LtGpsJDX30FpxdOPKxE0B7jDRww7PgNsPfBD4Ab0DTuumI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KGR132xp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hpzzEt9e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB07D1F000E9;
-	Wed, 24 Jun 2026 21:13:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KGR132xp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B2C01F000E9;
+	Wed, 24 Jun 2026 22:34:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782335598;
-	bh=IgkyJKi60WXCmh17XYm05cccG/GD8qQaAxSY1ZxWgM8=;
+	s=k20260515; t=1782340447;
+	bh=jii3cJiVzwMrZB4rB2WKhpoWQtBuM+AjGlyEzg1nA6M=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=hpzzEt9edeDrlb7Mk8cyLl1l6MhjfKjiybrLe2+TuN0uxIv+OYYcMxIJQjtup8H3P
-	 Wet5axQ42CRxu9hhnOKO7qzp1PFxxH78i110/dhpdUHjtO/a5UfKzhLHQfuS5W6duT
-	 caYCoAh7gbUCaZrUKS0i0MGBfcY2aMPK/B53jjeimk5Ksq7ussfSa9Cny3cETdtsEz
-	 HTVuEkuEaYg4OPBbtCqbmPWNCHDyrU4A2rGYDUn1ji/BGBB6d4Zsamtt9p4Wq/+JWd
-	 ZemW5f1dUd5RWGcDIFlzyI28aPsb2+HLC/CV5p0MkU/p1vKKbcgYPZ1sv1olGEPvTl
-	 n1udYq6ux4vGA==
-Date: Wed, 24 Jun 2026 11:13:17 -1000
-Message-ID: <b9eb3068c2d01bca8b19927351395ba9@kernel.org>
+	b=KGR132xp4zKrvrBYJBccPaNSdBiSD0Bs6OC0/6nmN8DFF5KhKV62NFad/GK3gwRa4
+	 Q/jURN8ktJGPK2feIYHxp5IlKZgx+cj2o85I99MxnECh1M7Slw3cYMl5r6l/9sityk
+	 3r/cM8cSkQnrMeHQ9NvNisLq2WL/SnDBGH4Gh1yhHoTVmPF8EeVpYL0Rpy+jMYL5te
+	 GZsp3yMsaVu4dQOfewsFNFw54830FLoHSQ5N/tK6UzhQm1oqTJkjLQNtg0CL0VwL6Y
+	 PphDxGJdsGfUbvuE1i6oJDUC5TIXb0mTdIhYAHT3+nJCRACK7Q7UzgwXocNmZPB1qu
+	 FLaSelRUQuEkA==
+Date: Wed, 24 Jun 2026 12:34:06 -1000
+Message-ID: <cf1e52e639fc595ddd5b1bc7cd8dcdf7@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Zenghui Yu <zenghui.yu@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
- Michal Koutný <mkoutny@suse.com>,
- cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cgroup: Fix a typo of the function name in comment
-In-Reply-To: <20260622110708.15593-1-zenghui.yu@linux.dev>
-References: <20260622110708.15593-1-zenghui.yu@linux.dev>
+To: syzbot+bb2e19a1190a556c01b1@syzkaller.appspotmail.com
+Cc: cgroups@vger.kernel.org,
+	hannes@cmpxchg.org,
+	linux-kernel@vger.kernel.org,
+	mkoutny@suse.com,
+	syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [cgroups?] INFO: task hung in cgroup_subtree_control_write (2)
+In-Reply-To: <6a2fb248.8812e0fc.3c3fa4.001a.GAE@google.com>
+References: <6a23a4b4.e4db5ad2.3b7dfb.0000.GAE@google.com> <6a2fb248.8812e0fc.3c3fa4.001a.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-Hello,
-
-Applied to cgroup/for-7.3.
+I tried to reproduce this locally with the syz reproducer on a matching
+PREEMPT_RT + KASAN build and could not trigger it, including looping the
+minimized reproducer with the matched controller set and high concurrency
+over many VM-hours.
 
 Thanks.
-
 --
 tejun
