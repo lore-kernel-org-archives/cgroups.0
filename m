@@ -1,139 +1,75 @@
-Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com [209.85.210.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85B83093DF
-	for <cgroups@vger.kernel.org>; Wed, 24 Jun 2026 18:37:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE4E326CE39;
+	Wed, 24 Jun 2026 18:52:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782326224; cv=none; b=tmtJYMww8Pp9wOOwLNO0bVHjDgfz5fFzTo5CFYTVj0V3spBdgEOk8+VBGIHRFoQzU9gkPrYi6Ns0N52/D26X5nyOoIhGFWx9Hpo58WqFIQsDwPxHwVWbRd13wIzdirj1+bb6xjv3/0ADAQ9FH5OPFC65oWzl4xX+k0Rp1DiRaQc=
+	t=1782327169; cv=none; b=tS6oqrAxKd3reAOg81dfT93fnEWEfvBX4aRCT6c7/L9Csbr/MeJIbIiGT4fsS50LUGMZa4CwDTT/D6hmLoP2tpbNJPnqjOAuafy3Z62j/Y7XxkiVrWD1urF5TLOJGgi4eV4lbkBfq/CnQMzZXB2ZbRCYU0oQqgQUMB08nA6djFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782326224; c=relaxed/simple;
-	bh=7xHrhPBm1lpdFCVAuHbPY5cWums6C3fM22yPL1LSm68=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tYP3IiztD9+PiC3LpsD4m7DV9pvdK2t3zN7rRwbAdIJ8SdM905W8lcXzWJGdu8koFXlzNgqAv9LX1ez+w6FeVewPnk3g1LYauhkmd7jnjPRHT1xz/nVjZZPG9V9cDkupmveAzKBp0CkeFYlVGxNMmKurWdy/e6H7Y1ERC8k1dLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HRBoEgkD; arc=none smtp.client-ip=209.85.210.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782327169; c=relaxed/simple;
+	bh=HZjqd0Y7OSQvpJcJ2bp9igewa30PUcr5IHn+FAh0a1E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OYjrjY4V/EGWKgzbJu+QUYsMPoon4eaq3Agtcs6UhwG0/80UBqBR8SC4Zxm8aNCbMDm/Ga74CjcYUUurkc08S5fNJJpfC3LDeSAZmJwKu9NZT6uf/tDK2luWXdp+yG1b+KI7xGUgvzuNocPEgxnIEOpzUl4HvPXSEVhSKXCjtX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mYZnXoy9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HRBoEgkD"
-Received: by mail-ot1-f48.google.com with SMTP id 46e09a7af769-7e93c3f1717so647953a34.2
-        for <cgroups@vger.kernel.org>; Wed, 24 Jun 2026 11:37:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782326222; x=1782931022; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=zbWIs/KwOpEaTVlvMb/98rnTZb76+gA0HeQzfXkUtFM=;
-        b=HRBoEgkDLzx1sauImSgvXFB5iCBGnv2MAyTR+znQW6LsMP6hJQ4E+/jP7hzTub+V1N
-         e9NzjE1rgZsy37HtWOZybZT7SNbXfH0mOeA3zLwe32FYs4ChvpgiTk5JfTVAK/Y8Org2
-         anhIgqHcicE2/JU2gTkyNKuxaAkc1hJuujWovSG86z9sGELiMHyEmdH5cgMMV/YjBUJv
-         eeDKf1jA49X+dLhzVZeyt0pQyPc0dBDYjjNMFOOEaNvWWWgJQmEOcQXmalg5rOwe57pj
-         MAMmE4/xyn9T9QxHGV0yOPEW1rhZZLwLCR5+wGpChLH81dFmPZ4Gm425Vx2y1BT/S+Zu
-         ZuhQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782326222; x=1782931022;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zbWIs/KwOpEaTVlvMb/98rnTZb76+gA0HeQzfXkUtFM=;
-        b=SqAe9DfGg11HssoeTVJyvobSvy1EGQXlrYAhhBZ3M7QYTNwJdTdPMcjmyeM9Cb3vhH
-         xIPWeRCrj2CJRN1RgBg6EVOC4HYUrmN3locMxFGh4BgJyXQY9yk6ZzMXhw2U1CauEihc
-         j/hoK29pOE5jTHf7YdB5j6aBsA0kO1h7WDX9/m4kE9X6y8hE92SeOzpI+taQ6MrfS6m9
-         xEw2XIjFvw37ybjgoQB7mSKvXpvqXt2J+099hSz2tS5x4LzQJOzMj4QPKsqvKJXNKhUq
-         fJF/kEoib3ie0ugqyKMabWGQDJg2FyDS+n1W3VyeFt7s47wgAIaGWpSDvFi7aoqE/BLR
-         aDcg==
-X-Forwarded-Encrypted: i=1; AFNElJ/KtqLBzx0GkPAdWV3esl58NHPlGSFKlHMD8MMmMLBnL3ZLcbRMV/dc7n1PnmBtV4a5i52Qm+/v@vger.kernel.org
-X-Gm-Message-State: AOJu0YyzM+49mRIySm8G7CSfQaKxQGpdYTf/LBtrm47LZoxXdnLPpIed
-	KAFEcjBS+M0o8+VqMo/QGSwj9JQ96W606f87MrCAYNPE4Yq/JNsz/9sz
-X-Gm-Gg: AfdE7cmOymN730PYS4yyUKAQv5z5pmrQNr4fFYi3b/p7HDsS0+mwaz0kyTr815QZMx6
-	CmzrM/D2wEWqkW7fZxv8/tkV8Ci1W7w3WTxg3gT4j5TOT91i+KINZM2g6RpqU/Kmlfw0Uhy5Do7
-	W4XCPCLBovbLqKdUW6DLjLpeth7j0j7YN0o3kAUucoKY6o3o2Zo8Eg3GYxE4vAgCdwP+6+LrNXq
-	HTLOCC/EzVN22p1y7HntL9RnEH35ZuebASP5cf2I56PDnRHfVS+HxoBsS4SUip4L33furhunX7S
-	3cyKWUrMMOiZA4c0ZXimOzk7bX7jiHAl/8cclJ6+KolYYRkqk4TNaTkYmLXV7ZqQFOflD9mS3of
-	xzNzIXdgPsqUuQ1QNdcKJ9cX1pAumpqj/+H2WBbUgICz4RoxMk0xNnKAidltDs8+XEh54AEKn2e
-	Fis61kC2zHfu+G/bgEkhM0nr3FGZvssCQIaDvDsAkxjA==
-X-Received: by 2002:a05:6830:6412:b0:7dc:dd19:7f69 with SMTP id 46e09a7af769-7e97949c243mr6906170a34.17.1782326221861;
-        Wed, 24 Jun 2026 11:37:01 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:7::])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7e944252015sm11789254a34.18.2026.06.24.11.37.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Jun 2026 11:37:01 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: linux-mm@kvack.org
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cgroups@vger.kernel.org,
-	linux-kernel@kvger.kernel.org,
-	kernel-team@meta.com
-Subject: [PATCH] mm/memcontrol: remove unused for_each_mem_cgroup macro and cleanup
-Date: Wed, 24 Jun 2026 11:36:59 -0700
-Message-ID: <20260624183700.1152742-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mYZnXoy9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53B881F000E9;
+	Wed, 24 Jun 2026 18:52:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782327168;
+	bh=D7hkJteoSNs8rS8VBpeystfizFe6bdWuHjQ285p+IEE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=mYZnXoy9/kEr1Csqc8vSItQjEXA/Xa2JMYS1/w+q+osQ2ycPTCHhBmPA151h3Ml/T
+	 nPRri5JwXErUOM5mbDide4yewYAtZ+X8mU1tEXedjiueoeOR24VdRc9c8pki8+zZa3
+	 EXa9J82JFFSQXFUupv4jWk/+Oqo1BVTSMNNVeEE2NklQLsBKMTScQ5qqy6nvYdTLjR
+	 qfT2QlMRvWLeYH3bpdbWxV8L0G/Y5wOukgExuH6X7VoiWeFzRN0XTEjfsvTPzVSxD8
+	 IMeX9nSca1ZKfW+/IvNjIJc+9c7Ri9tdld1PTJgvqiwmPjWWGDbUuQrxKqWNektPRL
+	 MfD3vQNXC7uNw==
+Date: Wed, 24 Jun 2026 08:52:47 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Hongfu Li <lihongfu@kylinos.cn>
+Cc: hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net,
+	skhan@linuxfoundation.org, dev@lankhorst.se, mripard@kernel.org,
+	natalie.vock@gmx.de, cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH 1/2] cgroup/dmem: add per-region event counters
+Message-ID: <ajwnf0uzT4PMHYZx@slm.duckdns.org>
+References: <20260624031107.667253-1-lihongfu@kylinos.cn>
+ <20260624031107.667253-2-lihongfu@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260624031107.667253-2-lihongfu@kylinos.cn>
 
-Commit 7e1c0d6f58207 ("memcg: switch lruvec stats to rstat") removed the
-last caller of for_each_mem_cgroup back in 2021, and there have not been
-any new callers since. Remove the macro.
+On Wed, Jun 24, 2026 at 11:11:06AM +0800, Hongfu Li wrote:
+> Add dmem.events to report hierarchical low/max event counts per DMEM
+> region.  Increment counters on dmem.max allocation failures and
+> dmem.low protection events.  The file is available for non-root cgroups
+> only.
 
-A comment in mem_cgroup_css_online has also been out of date since 2021,
-when 2bfd36374edd9 ("mm: vmscan: consolidate shrinker_maps handling
-code") open-coded the for_each_mem_cgroup iterator. Update the comment.
+Please don't double space in descs or comments. Also, maybe it's obvious but
+it'd help if you list why and how this is useful. Why do we want to add
+this?
 
-Finally, 99430ab8b804c ("mm: introduce BPF kfuncs to access memcg
-statistics and events") added a second declaration for memcg_events to
-include/linux/memcontrol.h, duplicating the one in mm/memcontrol-v1.h.
-Let's clean that up too.
+> +  dmem.events
+> +	A read-only file that reports the number of times each cgroup
+> +	has hit its configured memory limits.  The format lists each
+> +	region on a single line, followed by the event counters::
+> +
+> +	  drm/0000:03:00.0/vram0 low 0 max 3
+> +	  drm/0000:03:00.0/stolen low 0 max 0
 
-No functional changes intended.
+This isn't a supported file format. Please read the documentation on allowed
+formats.
 
-Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
----
-This is intended for the next release cycle. Thank you!
+Thanks.
 
- mm/memcontrol-v1.h | 6 ------
- mm/memcontrol.c    | 2 +-
- 2 files changed, 1 insertion(+), 7 deletions(-)
-
-diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
-index f92f81108d5ed..d3ed5b93290fb 100644
---- a/mm/memcontrol-v1.h
-+++ b/mm/memcontrol-v1.h
-@@ -17,14 +17,8 @@
- 	     iter != NULL;				\
- 	     iter = mem_cgroup_iter(root, iter, NULL))
- 
--#define for_each_mem_cgroup(iter)			\
--	for (iter = mem_cgroup_iter(NULL, NULL, NULL);	\
--	     iter != NULL;				\
--	     iter = mem_cgroup_iter(NULL, iter, NULL))
--
- void drain_all_stock(struct mem_cgroup *root_memcg);
- 
--unsigned long memcg_events(struct mem_cgroup *memcg, int event);
- int memory_stat_show(struct seq_file *m, void *v);
- 
- struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 56cd4af082326..e171fe36b0711 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4216,7 +4216,7 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	/*
- 	 * A memcg must be visible for expand_shrinker_info()
- 	 * by the time the maps are allocated. So, we allocate maps
--	 * here, when for_each_mem_cgroup() can't skip it.
-+	 * here, when mem_cgroup_iter() can't skip it.
- 	 */
- 	if (alloc_shrinker_info(memcg))
- 		goto offline_kmem;
 -- 
-2.53.0-Meta
-
+tejun
