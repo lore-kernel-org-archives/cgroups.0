@@ -1,99 +1,114 @@
-Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B57D31AAAA;
-	Thu, 25 Jun 2026 13:25:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C9B3033F5
+	for <cgroups@vger.kernel.org>; Thu, 25 Jun 2026 14:05:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782393919; cv=none; b=iMUkvS9smgXzwckGnDzf4JNxJNtIB/OA0ST2o7sziNHvvFUnNna0DGbq3bxDlAfh7oyU8SwM3aOd/0Vz4iYA9bLajOw6MkQ070nczJVP6F3WNUrpjyJmX7RRKW10iIjMf/RG/d/8pioJ2QGEafSJjT0pyXpEdYx6bxoL+aQcmnI=
+	t=1782396357; cv=none; b=ap/PZqxC5tW9CC1pOu16wMeyZEN1CqE3cyRmv6IWa/ovezfOp5EGA+nBU1jpxDl1+n6yCQWJek0+XuMcZOFRHNu8nSxjE1rybqVMlmdGfhoS43fOFsfQ94hYnl4wvCXUeYbgRFaBsT4bU0jENpqFiIgI7P6pb/ezavESToU44xs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782393919; c=relaxed/simple;
-	bh=cDRm9o+e1DCCdszZq67gYsG5H2t3Q6tznqzo59jSHew=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s0a5voz+sUauWpR+LxhgarEZoOpCBFnHTJO2ix7XN5IXoE2ugQWn63JOvgjAtaDtSwpHn/hKjP89l/Qk76DZZDxX9S8ThY1iAUqDm1X8TpCbDc6wdNCzCTm1zL0aCLBf3T++CH0lWbiCMlhcYaBpktES5oFL+og0WgOYcKozrY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=WeysAnzO; arc=none smtp.client-ip=213.97.179.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
+	s=arc-20240116; t=1782396357; c=relaxed/simple;
+	bh=32KL/T0pa0DTIfbi12niAIcca9ym7BhO1xxCHsrVCUk=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=P72IUrK1LU+7SNOmaR9z6hkyDhqJYMuRUK17HUGx4SWAwR+lbbHC+amDkFtSvD9OdWYr+Cv/IiQpSq2W/5AbhL8es9UrQeTKQg//KQuf4o0+WeD/wMw/65afvmfl4MpIgCYGsf+TI0+V3WbQTjaWoSIMAljMzDZcHaYoz5JVVig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CtHuWpBW; arc=none smtp.client-ip=91.218.175.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="WeysAnzO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=In-Reply-To:Content-Transfer-Encoding:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=ZhSTsKEqP6hhtF0Rymr3DME6a07dkDUYrzylnv1XxG8=; b=WeysAnzOduioc9tUdPr9SEjsBh
-	osUbX3DUqMcCAWzhJjeG5xFcNAVx8p9RI2X92EIdRBCgOfAoO4oBA9s4CkbL2YQm8bwGVjevivOuf
-	RQD2BX+5lF0iI5yxAzQVO8bshTYrPSD10ssSQ0eeTeVoSxo5q4rk3c85UArdJkFxeAV2v1/L9cAH1
-	8Hrx+Et3sR6MQUPFuAKsBS7iKDRGUN9ymkwSH5EWhgUB3bzYL3Bo/WsRhEv4G/apKUcLnCxDJJFE8
-	bjLmxOFL/nCYI8Z5WcpF7DIHq0+Sqssz1i2hxyE8RVIEk9A8bLbsncgPgnsrUm3rKyy5IK69ydYI2
-	PolOxVjA==;
-Received: from 179-125-64-254-dinamico.pombonet.net.br ([179.125.64.254] helo=quatroqueijos.cascardo.eti.br)
-	by fanzine2.igalia.com with esmtpsa 
-	(Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim)
-	id 1wck4j-00548a-Ap; Thu, 25 Jun 2026 15:25:02 +0200
-Date: Thu, 25 Jun 2026 10:22:02 -0300
-From: Thadeu Lima de Souza Cascardo <cascardo@igalia.com>
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Tejun Heo <tj@kernel.org>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	intel-xe@lists.freedesktop.org, Natalie Vock <natalie.vock@gmx.de>,
-	Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
-	Huang Rui <ray.huang@amd.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Matthew Auld <matthew.auld@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Simona Vetter <simona@ffwll.ch>, David Airlie <airlied@gmail.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 0/6] [PATCH v6 0/6] Add reclaim to the dmem cgroup
- controller
-Message-ID: <aj0rembs3CGy0ZMX@quatroqueijos.cascardo.eti.br>
-References: <20260611173301.17473-1-thomas.hellstrom@linux.intel.com>
- <ajBJU-Jp2QVy14qt@slm.duckdns.org>
- <ajBLAsNoKesXmFcs@slm.duckdns.org>
- <ajlUPmaMsa2gxOLg@quatroqueijos.cascardo.eti.br>
- <ajzxLABtnWym81Dp@localhost.localdomain>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CtHuWpBW"
+Message-ID: <d9ada3a3-6978-4602-a11d-689e0fa4171a@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1782396352;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ow20Ap6CSlfnAtL2yrWY3YbWQS38wkcMjV92g0akp4s=;
+	b=CtHuWpBWIYyJV44FQuTVcb6xRChzIBDhPA7zryOK6fF9uEGBJiqSJLvmkWUPWoEfILjCFt
+	jZRry3542AnM6EBbpgD6MEZAbHgloUVC3j4fzt92kTwj0pCuzwpfnhzwEZ/wNd7r9TIzpf
+	wmUV9hnwnqYNMX/B6B5b5p/PnKUXGOU=
+Date: Thu, 25 Jun 2026 22:05:46 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Cc: cui.tao@linux.dev, Shuah Khan <skhan@linuxfoundation.org>,
+ cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] cgroup/cpu: document cpu.stat.local
+To: Sun Shaojie <sunshaojie@kylinos.cn>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>
+References: <20260625130723.1144463-1-sunshaojie@kylinos.cn>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260625130723.1144463-1-sunshaojie@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ajzxLABtnWym81Dp@localhost.localdomain>
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, Jun 25, 2026 at 11:19:19AM +0200, Michal Koutn� wrote:
-> On Mon, Jun 22, 2026 at 12:26:54PM -0300, Thadeu Lima de Souza Cascardo <cascardo@igalia.com> wrote:
-> > As far as I understood the patchset, it doesn't fail the write if it fails
-> > to reclaim. It sets the new max, then, if the write is blocking, starts
-> > reclaim and eventually returns after multiple attempts. But it still
-> > returns success.
-> > 
-> > So I believe this is behaving as you would expect.
+
+
+在 2026/6/25 21:07, Sun Shaojie 写道:
+> Add documentation for the cpu.stat.local interface file, which reports
+> the throttled_usec stat -- the actual throttling time incurred by the
+> cgroup's own runqueues, which may include throttling inherited from
+> ancestor cgroup bandwidth limits. Unlike cpu.stat's throttled_usec
+> which only accounts for throttling caused by the cgroup's own CFS
+> bandwidth limit.
 > 
-> I was alarmed by the EBUSY mention similarly to Tejun but then I
-> couldn't find it in pre-patch (840ef6c78e6a2) nor in patched (v5) code.
-> Please make sure the EBUSY return behavior is not introduced
-> (essentially match memory.max behavior) and that the accompanying
-> message refers up to date code ;-)
+> When the controller is not enabled, the stat is not reported.
 > 
-> Michal
+> Signed-off-by: Sun Shaojie <sunshaojie@kylinos.cn>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 993446ab66d0..a7766f40ef65 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1160,6 +1160,23 @@ will be referred to. All time durations are in microseconds.
+>  	- nr_bursts
+>  	- burst_usec
+>  
+> +  cpu.stat.local
+> +	A read-only flat-keyed file which exists on non-root cgroups.
+> +	This file exists whether the controller is enabled or not.
+> +
 
-I think this is a reference to the fact that right now writing to dmem.max
-calls page_counter_set_max, which will return -EBUSY and fail to change the
-max value. It is just that we are not returning that error today to
-userspace (a fix I have submitted back in April).
+Hi Shaojie,
 
-So, this patchset by Thomas is setting max, and, then, if it is a blocking
-write, tries to evict on a best-effort basis, and returns success after a
-few attempts, still setting max to the written value.
+Thanks — the throttled_usec semantics are described correctly.
 
-Cascardo.
+One fix needed: "exists on non-root cgroups" is inaccurate.
+cpu.stat.local is registered without CFTYPE_NOT_ON_ROOT, so (like
+cpu.stat) it exists on the root cgroup too:
+
+  $ cat /sys/fs/cgroup/cpu.stat.local
+  throttled_usec 0
+
+Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+
+Thanks,
+Tao
+
+> +	It reports the following stat when the controller is enabled:
+> +
+> +	- throttled_usec
+> +
+> +	Unlike the ``throttled_usec`` reported by ``cpu.stat`` which
+> +	accounts for throttling caused by this cgroup's own CFS
+> +	bandwidth limit, ``cpu.stat.local`` reports the actual
+> +	throttling time incurred by this cgroup's own runqueues,
+> +	which may include throttling inherited from ancestor
+> +	cgroup bandwidth limits.
+> +
+> +	When the controller is not enabled, this stat is not reported.
+> +
+>    cpu.weight
+>  	A read-write single value file which exists on non-root
+>  	cgroups.  The default is "100".
+
