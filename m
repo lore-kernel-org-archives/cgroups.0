@@ -1,72 +1,45 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA7993A9852;
-	Thu, 25 Jun 2026 02:11:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A476C3043CF;
+	Thu, 25 Jun 2026 02:57:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782353497; cv=none; b=a0zrFzezthjHxkbf7KJgDPykCvS6BySzdrfIjwVJHHZ4PTYXnOJHldZNXy01Jed8PnQxEXfseNgaarZYjtvH4uXqyhjteESHS+IbNKSvu8zUKwXO0idg8IMuUIBrHTsIKiBBteNnsMZ6efE4l/P3ZgQPNS8lmQKaydyNTD0zx+8=
+	t=1782356266; cv=none; b=cvAzcHqKlRZ+y8JrAIXHeNQq5iOKyjfVXhwiCdU8lpOXr3z1l1HLFOyq6WDWNlp3m1dOjBHOj//cZpioKAba/a7kYQKRSUX6GBYKawA1m5KWR4ZwJzlXo7sxvguVBVyceU+5eyE6U3TzQHP2RZR/OZLNZ6uAoE96YQu/CO6lwVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782353497; c=relaxed/simple;
-	bh=dc6GxFOtX82fWBXyYCcZWmSGKG3m0bYG7gdRH4ekqJY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UOTNILA97Z4qQZp7G6DXBLVWE/7b5oY1KcWlEZW0ajl+D13ozpZVu75Z3BW8gWnOcRQ3LXMixC/aOJ9WEXws0sORpPK9yW/1yy0G1ZWSrKObSG39e7tAwPES07RbtfB27Zd5t37Cs2lW3+T+GJgwq+h1f5cD73VY1M2X3f8iG+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 2be80908703b11f1aa26b74ffac11d73-20260625
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_PRE_RE, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:28c332a2-702e-448d-83d3-ba56f2aaac95,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:28c332a2-702e-448d-83d3-ba56f2aaac95,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:6bf237fb64cc35fff2084227c0961fab,BulkI
-	D:260624112706YSGBNPCQ,BulkQuantity:3,Recheck:0,SF:17|19|64|66|78|80|81|82
-	|83|102|127|841|850|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File
-	:nil,RT:nil,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR
-	:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 2be80908703b11f1aa26b74ffac11d73-20260625
-X-User: lihongfu@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <lihongfu@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1390390969; Thu, 25 Jun 2026 10:11:26 +0800
-From: Hongfu Li <lihongfu@kylinos.cn>
-To: tj@kernel.org
-Cc: cgroups@vger.kernel.org,
-	corbet@lwn.net,
-	dev@lankhorst.se,
-	dri-devel@lists.freedesktop.org,
-	hannes@cmpxchg.org,
-	lihongfu@kylinos.cn,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mkoutny@suse.com,
-	mripard@kernel.org,
-	natalie.vock@gmx.de,
-	skhan@linuxfoundation.org,
-	hongfu.li@linux.dev
-Subject: Re: [PATCH 1/2] cgroup/dmem: add per-region event counters
-Date: Thu, 25 Jun 2026 10:10:53 +0800
-Message-Id: <20260625021053.488107-1-lihongfu@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <ajwnf0uzT4PMHYZx@slm.duckdns.org>
-References: <ajwnf0uzT4PMHYZx@slm.duckdns.org>
+	s=arc-20240116; t=1782356266; c=relaxed/simple;
+	bh=+2BaVSRcmfKPFyAkrMMcMTaSPgyr5m4hwjQOUV1tuXc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=d37MlKDQUjHITtExWmwQf4iI2sEgLRgKbd6Kd8AjZZIVBlX94f9TicQay4lL7dwktfglAS+Or+xQUZPw9AUeAZ43P+TnS3FBzLiCaCHdBmqCGg0BRcJArTVQrBOq26Ttt7plsHbQPDidNJeDa9MwMgK9yqaC7Qg82DmPk0rteW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jJnEy7CN; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jJnEy7CN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEABB1F000E9;
+	Thu, 25 Jun 2026 02:57:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782356265;
+	bh=+CQEh/h3ctyid1Zt6PFqXUhg8V5QGLVmjzIWJD0rmVU=;
+	h=From:To:Cc:Subject:Date;
+	b=jJnEy7CNSEDx49IHTxZ4hjWBtgeCPMMh2+pW7RcE9e+8Af373X6QJaW24JNbPi7Wv
+	 2KruFq2N2YIRht8iRCZTtwBCF6ZbdgzG3z44QeRLzi1M0IfHwyU+3bFLnIlxBxmsWP
+	 1XUcOoQ+uMy0JNT4RTf3jNgG5yyOr/9OEaBn67cS+4N3UAtNOvHPunO6iE636O2kOd
+	 2Nb8v2TwL5gOhi8xE0IdHrkZq1oGPE//WHfKnpC44UMY/fzozP7Me89mxdgY1uHiul
+	 H92vdddPhB1E7yXer6tiWQjtNYF0xwwlAjo5Tg+TMW+Iv4XgR5QgL9DFvrknxGSTat
+	 htzAtOsP3ltbQ==
+From: Yu Kuai <yukuai@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	Tejun Heo <tj@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>,
+	Zheng Qixing <zhengqixing@huawei.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Tang Yizhou <yizhou.tang@shopee.com>,
+	Yu Kuai <yukuai@fygo.io>,
+	cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/4] blk-cgroup: fix blkg list and policy data races
+Date: Thu, 25 Jun 2026 10:57:35 +0800
+Message-ID: <20260625025739.2459651-1-yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -75,43 +48,42 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi, Tejun
-Thanks for the review comments.
+From: Yu Kuai <yukuai@fygo.io>
 
-> > Add dmem.events to report hierarchical low/max event counts per DMEM
-> > region.  Increment counters on dmem.max allocation failures and
-> > dmem.low protection events.  The file is available for non-root cgroups
-> > only.
-> 
-> Please don't double space in descs or comments. Also, maybe it's obvious but
-> it'd help if you list why and how this is useful. Why do we want to add
-> this?
+Hi,
 
-I'll fix the double spacing in the commit message and comments.
+This series fixes races around q->blkg_list and blkg policy data
+lifetime.
 
-As for the motivation: dmem already exposes per-region limits and current
-usage, but not how often those limits actually matter at runtime. Without
-event counters, it's hard to tell whether allocation failures come from
-this cgroup, a parent limit, or pressure elsewhere in the hierarchy.
-dmem.events provides that visibility for tuning dmem.low/dmem.max and
-diagnosing recurring device memory pressure.
+Patch 1 protects blkg_destroy_all()'s q->blkg_list walk with
+blkcg_mutex.
 
-I'll expand the commit message to cover this.
- 
-> > +  dmem.events
-> > +	A read-only file that reports the number of times each cgroup
-> > +	has hit its configured memory limits.  The format lists each
-> > +	region on a single line, followed by the event counters::
-> > +
-> > +	  drm/0000:03:00.0/vram0 low 0 max 3
-> > +	  drm/0000:03:00.0/stolen low 0 max 0
-> 
-> This isn't a supported file format. Please read the documentation on allowed
-> formats.
+Patches 2-3 fix races between blkcg_activate_policy() and concurrent
+blkg destruction.
 
-Thanks for catching this. I'll switch dmem.events to nested-keyed format (region low=N max=M).
+Patch 4 factors the policy data teardown loop into a helper after the
+race fixes.
 
-Thanks again for the valuable feedback.
+Changes since v2:
+- Rebase on the latest block-7.2 branch.
 
-Best regards,
-Hongfu
+Changes since v1:
+- Drop the BFQ q->blkg_list patch because the current block tree already
+  has a stronger fix in commit 17b2d950a3c0 ("block, bfq: protect async
+  queue reset with blkcg locks").
+- Add Reviewed-by tags from Tang Yizhou.
+
+Yu Kuai (1):
+  blk-cgroup: protect q->blkg_list iteration in blkg_destroy_all() with
+    blkcg_mutex
+
+Zheng Qixing (3):
+  blk-cgroup: fix race between policy activation and blkg destruction
+  blk-cgroup: skip dying blkg in blkcg_activate_policy()
+  blk-cgroup: factor policy pd teardown loop into helper
+
+ block/blk-cgroup.c | 65 +++++++++++++++++++++++++---------------------
+ 1 file changed, 35 insertions(+), 30 deletions(-)
+
+-- 
+2.51.0
