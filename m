@@ -1,142 +1,101 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B1833987F
-	for <cgroups@vger.kernel.org>; Thu, 25 Jun 2026 12:45:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA2E5221723
+	for <cgroups@vger.kernel.org>; Thu, 25 Jun 2026 13:00:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782391549; cv=none; b=L4yTH61bywjdiUBvEiYDW/v2kcj06znWueQor/iCq3zKVXMGXYil8omO8RYZAg8NYVbL/Gg6ok9+ZvEf7hwoLt33edpZSWuwzmhe2LBilMzu0VJOLZ/7Dtus0PFRCgewvdXFCM6oWPL70MDRU9QLYylPbJUyVPhxLC1o+qMVyb8=
+	t=1782392411; cv=none; b=lXg1M3vwh0Gxr3/92abRxkn/qkyzcFunguRosVUU9k1gBr9nFI26rEQiyMIj/LSRJLyM+wVnCkS9sh3lHc0Amr0eYKzwogUhvd3qzqXQtQ+pAH0qND+FYlGRT8cs+yIhtxZmgB5RKQ5FzfQJMGAJTO9UzL7MwcK+DrV80Bn8zDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782391549; c=relaxed/simple;
-	bh=r2P5eA48y32H1bZjwDFCkLFtTjDcfkfC5PzuTzTwAxQ=;
+	s=arc-20240116; t=1782392411; c=relaxed/simple;
+	bh=bCw3MIqx3g0NUFGvKXHpmcRdrQ/MWTJ2UV4eNsCAY0Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iZh1R3zJt+w9g5J5aiMsyqUHnELH7Mej6t1CupShpghLi/Mu1KorE3hgj/ySdJpw6Zlx+ajaQ1E7tfXhNEtnxrPAKxP2nf5rzu6pOn0c+jPxsKtJKh+JiirtCgBW2j8f1WTuNJTnoLCMm3dXMqfbplI4ML9vJixBE+HjbQi34XA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=T3fbCpHg; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=mQQSRogHZE2XIZSMVMQfl7wpq+/GfUZvWxj2xOvIaqbftg0Sglabo91KsXcuVLx1vX4QH/4WdZVcgxGqFqa+uNzuae4DvnbtAbCJJ0Z4C54v2DcRZUeuw7hjwK65bIvMZaubWaA/DQQu8bDKgQOT655nafHRJkeYGiH3Z1KW0EM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=Tfcyr62c; arc=none smtp.client-ip=209.85.160.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T3fbCpHg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1782391546;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=o1fn8ZVw+fDJI0KtIjS3k5qrVd64OuJrrFoJt8QAlek=;
-	b=T3fbCpHgrEL102dAGxpGu5Dd0HTrGUD4xoRqmnSAJeaicZIjquCyh+lqdkH+bY1P2UXctH
-	t9u+RZ+epmZgITLQ1hEQz4bsCGiMox+EKmBRQzpXgoUccVQl+2/Hmk0Zda9k4nE41T9oRH
-	edNXCkYxuBrHkEG+1cvUR3h7SN1sW2M=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-670-mUjIHf6CPDiO-3HAL2RirQ-1; Thu,
- 25 Jun 2026 08:45:43 -0400
-X-MC-Unique: mUjIHf6CPDiO-3HAL2RirQ-1
-X-Mimecast-MFC-AGG-ID: mUjIHf6CPDiO-3HAL2RirQ_1782391541
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E509E195F16D;
-	Thu, 25 Jun 2026 12:45:40 +0000 (UTC)
-Received: from oak (unknown [10.22.88.172])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 605FB1800652;
-	Thu, 25 Jun 2026 12:45:39 +0000 (UTC)
-Date: Thu, 25 Jun 2026 08:45:32 -0400
-From: Joe Simmons-Talbott <josimmon@redhat.com>
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Joe Simmons-Talbott <joest@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>,
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] selftests/cgroup: Adjust cpu test duration based on HZ
-Message-ID: <20260625124532.GA19617@oak>
-References: <20260624160358.430354-1-joest@redhat.com>
- <ajzjLsBNS7rNZV2x@localhost.localdomain>
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="Tfcyr62c"
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-51758478240so12197971cf.2
+        for <cgroups@vger.kernel.org>; Thu, 25 Jun 2026 06:00:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1782392408; x=1782997208; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=4E7xhSxqesBGvRNciE8rd995p49J3l/FL5kNnGzEtQI=;
+        b=Tfcyr62cxJDHGGn7N55w7M28TIXd0HwQj6wYILiCTPn/Yq4HSPEXp7Ed4N8Ij8Udup
+         Md0a8YmISVjgzeVtB+3+ZKK/7aGxI+QxVdVRO103l5rv0CkPp8CrmteMvK9vfdFkSadU
+         7iGV1qZ68iuz4lLZTMEmekVOTm+1mHyQaFvUXfiXa+iPhwwA2duOpFVHFyRR2rMh4VDK
+         kZZblM3v1eQErjr/O5qB5zuXov2EIJ8ogzel9UHoUngt5iXY2B1eYvu4O8fRhnvZ3T/e
+         kw0hqQ+9UA/JLX0IOQYs3O4+OuLhwp9u/NfUVpkDa+HxA+UWvcsklRQkn+DNqqRsGXuM
+         cItA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782392408; x=1782997208;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4E7xhSxqesBGvRNciE8rd995p49J3l/FL5kNnGzEtQI=;
+        b=tECje3RP0mpxoqtG/iAC89/rHd9W1rQh03ZHMGQ0jQrtYLOJZbE37KX+Z8lxPhvGPN
+         Rv+vGi04NJFuPcVk64wlcTqZTVx2bby61c8iclJRWpWBnIlCSVr32+joLmf0rYN7TbS/
+         /NU94nbSHWTc4Gei9yu4KpQIMklTzVp9cnivLH+rpGM1ZSReDs2s+zILF/qkILm/T9e9
+         rmRCNYEu5G4P6S7TubOQQHCZ4zpD4O4oU/Zn6BlE34HVGdEc9dtl8dV0XHrKjgLbUlar
+         cgpC4YtqYdEzl1rhom0zBWdtruwrfcV4JOj0GW7IWLqrVSFDRM0DaH6BkFfOVwA7exI2
+         7VnQ==
+X-Forwarded-Encrypted: i=1; AFNElJ81JTwjuocOS6UczEoU960Y+QN2kvg5yixupPeKpWhQZ2A8PsaWb3l28v7KoaHlr7uuhPNrkxCX@vger.kernel.org
+X-Gm-Message-State: AOJu0YwAXpP54BMzoT+AkROAtQwkr243Z1iw4vCU51Lz6IpqnDnZsJE/
+	Nbd7pZe8Gj+R/9xoakzLwGbiGUumAM0LZ+FTSvftXqmm1eglFFIw7J0UpA/rROwo31Y=
+X-Gm-Gg: AfdE7clcKyMACU2vRYAMtB7LPimiZ7oesOPZgp8v6TGfCmJaH4mR0CZs3erV7K9EN6t
+	54G4ra67YGG6pZ4Xn9MVGASww9Ty54Jenbo+bA+armcq7DLKxDM4bGCNkydMMobL3VibW+maUmz
+	yPe3SwbIAkP4M26QIuA77wzVclqgo80aCG1c9d4hqXignYVFJTj1mf0f6LN9uLxTGBsPwItAv2p
+	bQ5RK7OYJqsWYLOOusb4pzaVVO/1qO83wXKHV7taSj7qMo8eKHDLcotMr7mG7n94mntBCWIxgxF
+	gQwaYO69Y8qnm7bqST9bifcVxRrs6N61OO7e/cvyqXQ3nntusim9xd6wDf8AolRguF73WVSnXDS
+	vLfY5LgxLAdm6juerlKYQoSTuT5NCmnJ2jLjGjPN3ybMb805xCaltAYfXoAHOBq5A5J7guRWak/
+	Darw1+kUDTdQE=
+X-Received: by 2002:ac8:5f8e:0:b0:50d:65ec:a071 with SMTP id d75a77b69052e-51a726f933cmr29001281cf.5.1782392406263;
+        Thu, 25 Jun 2026 06:00:06 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51a657f7b2esm34801631cf.30.2026.06.25.06.00.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 25 Jun 2026 06:00:05 -0700 (PDT)
+Date: Thu, 25 Jun 2026 09:00:01 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Joshua Hahn <joshua.hahnjy@gmail.com>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
+	linux-kernel@kvger.kernel.org, kernel-team@meta.com
+Subject: Re: [PATCH] mm/memcontrol: remove unused for_each_mem_cgroup macro
+ and cleanup
+Message-ID: <aj0mUeI_8t04Y4fj@cmpxchg.org>
+References: <20260624183700.1152742-1-joshua.hahnjy@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ajzjLsBNS7rNZV2x@localhost.localdomain>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+In-Reply-To: <20260624183700.1152742-1-joshua.hahnjy@gmail.com>
 
-On Thu, Jun 25, 2026 at 10:23:22AM +0200, Michal Koutný wrote:
-> Hi.
+On Wed, Jun 24, 2026 at 11:36:59AM -0700, Joshua Hahn wrote:
+> Commit 7e1c0d6f58207 ("memcg: switch lruvec stats to rstat") removed the
+> last caller of for_each_mem_cgroup back in 2021, and there have not been
+> any new callers since. Remove the macro.
 > 
-> On Wed, Jun 24, 2026 at 12:03:57PM -0400, Joe Simmons-Talbott <joest@redhat.com> wrote:
-> > +/*
-> > + * Best effort attempt to get the kernel's HZ value from the config.
-> > + * Return the HZ value if found otherwise return -1 to indicate failure.
-> > + */
-> > +static long
-> > +_get_config_hz(void)
+> A comment in mem_cgroup_css_online has also been out of date since 2021,
+> when 2bfd36374edd9 ("mm: vmscan: consolidate shrinker_maps handling
+> code") open-coded the for_each_mem_cgroup iterator. Update the comment.
 > 
-> drop underscore from the static function
+> Finally, 99430ab8b804c ("mm: introduce BPF kfuncs to access memcg
+> statistics and events") added a second declaration for memcg_events to
+> include/linux/memcontrol.h, duplicating the one in mm/memcontrol-v1.h.
+> Let's clean that up too.
 > 
-> > +{
-> > +	long hz = -1;
+> No functional changes intended.
 > 
-> use the default 1000 here to simplify the callers
-> 
-> > +	FILE *f;
-> > +	char cmd[256] = "zcat /proc/config.gz 2>/dev/null | grep '^CONFIG_HZ='";
-> > +
-> > +	f = popen(cmd, "r");
-> > +
-> > +	if (!f)
-> > +		return hz;
-> > +
-> > +	if (fscanf(f, "CONFIG_HZ=%ld", &hz) == EOF)
-> > +		goto out;
-> > +
-> > +out:
-> > +	pclose(f);
-> > +	return hz;
-> > +}
-> > +
-> >  /*
-> >   * This test creates a cgroup with some maximum value within a period, and
-> >   * verifies that a process in the cgroup is not overscheduled.
-> > @@ -646,15 +670,21 @@ test_cpucg_nested_weight_underprovisioned(const char *root)
-> >  static int test_cpucg_max(const char *root)
-> >  {
-> >  	int ret = KSFT_FAIL;
-> > +	long hz = _get_config_hz();
-> >  	long quota_usec = 1000;
-> >  	long default_period_usec = 100000; /* cpu.max's default period */
-> > -	long duration_seconds = 1;
-> > +	long duration_seconds;
-> >  
-> > -	long duration_usec = duration_seconds * USEC_PER_SEC;
-> > +	long duration_usec;
-> >  	long usage_usec, n_periods, remainder_usec, expected_usage_usec;
-> >  	char *cpucg;
-> >  	char quota_buf[32];
-> >  
-> > +	if (hz == -1)
-> > +		hz = 1000;
-> > +	duration_seconds = 1000 / hz;
-> > +	duration_usec = duration_seconds * USEC_PER_SEC;
-> 
-> I'd do the calculation in usecs
-> 
-> 	duration_usec = duration_seconds * USEC_PER_SEC * 1000 / hz;
-> 
-> so that actual duration is more precise (for hz=300 which is the only
-> that doesn't divide 1000)
-> 
-> All in all, make the adjustments for HZ with less code (since I expect
-> this will need adjustments for SMPs in future).
+> Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
 
-Hi Michal,
-
-Thanks for your feedback.  I'll make the changes you have suggested in v4.
-
-Thanks,
-Joe
-
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
