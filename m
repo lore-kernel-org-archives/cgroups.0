@@ -1,21 +1,21 @@
-Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
+Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C3CF1A9FA4;
-	Fri, 26 Jun 2026 10:33:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23FEA386578;
+	Fri, 26 Jun 2026 10:34:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782469991; cv=none; b=Tl7mokml9qLh0NII6c4HY2tsCJHBZl5ex1I5WO5MLsN1JCnzpOfQJgDMaeMN2OvsDaccE3JurgNRwdcAhRS0jwMGZFe6RE7Sts6NPWGf584SDtgFMf4ju9qbiatdO+4P2OhGGTjH0qYkKSBRB5eNNSyT2qDQ9u+enKFD75s51+w=
+	t=1782470059; cv=none; b=RhXvZxiHlV1A5BAg8sWKFuxqIp5SmF9ducgmg+T3R8/NJRNMkZ+Qa/znVtlOY16m9DktvkAgtQl4FAT/Q/FqEe/ia7hl9HS+27WrFok0zmU5l40eQPUuMhAPzlB8uKPP+QMGpeAMmZgVcWVCtkEyhQycwrfOdCgzuw7bK3oVANM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782469991; c=relaxed/simple;
-	bh=qN9Xt7aL3Es3fX04ON6ryHDR764FxOc0BY1s8Ae6l0E=;
+	s=arc-20240116; t=1782470059; c=relaxed/simple;
+	bh=pWgrlUV/OsfKyRy2jbkiPH/KFWWgKBblCFD4uY9gtcQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DieVetUST8pw8c/1T+a2YkQcmoCs7DQ0Ee/Ldg3EWnQoM1Iss5hqLNiF9NG07HTNi1LpT3ZsOWBwm3Bi68eQz2hkADGj6J/wqJ13mx98NCKE78a0sus5OSN/S4KuPOUvliJmtDM3F1P0WN9kqau2vaayd+DxZ6/Cnlm0k8FgHQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.198
+	 MIME-Version; b=nXWDuTYG3dMxQJKY16p+w7qycbLb0gMghY5POrOQuw7h4WDr0omm0awbVL4gmMkO1KZ46wAf84eX4161cenlPOpN63NvrBF01RSZ2tB4jv4qOyGDno+AahBr/AjUXwZjoklaq9+zHTtpPd6k4zelUa/BUljJQgu/+873rq699VQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.196
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
-Received: by mail.gandi.net (Postfix) with ESMTPSA id CF0FA3EB86;
-	Fri, 26 Jun 2026 10:32:55 +0000 (UTC)
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 35CA53EC65;
+	Fri, 26 Jun 2026 10:34:01 +0000 (UTC)
 From: Alexandre Ghiti <alex@ghiti.fr>
 To: alexandre@ghiti.fr,
 	Andrew Morton <akpm@linux-foundation.org>
@@ -59,9 +59,9 @@ Cc: Axel Rasmussen <axelrasmussen@google.com>,
 	Yosry Ahmed <yosry@kernel.org>,
 	Yuanchu Xie <yuanchu@google.com>,
 	Alexandre Ghiti <alex@ghiti.fr>
-Subject: [PATCH v2 8/9] mm: percpu: skip the per-cpu node walk on single-node systems
-Date: Fri, 26 Jun 2026 12:20:57 +0200
-Message-ID: <20260626102358.1603618-9-alex@ghiti.fr>
+Subject: [PATCH v2 9/9] mm: zswap: per-node kmem accounting for zswap/zsmalloc
+Date: Fri, 26 Jun 2026 12:20:58 +0200
+Message-ID: <20260626102358.1603618-10-alex@ghiti.fr>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260626102358.1603618-1-alex@ghiti.fr>
 References: <20260626102358.1603618-1-alex@ghiti.fr>
@@ -73,70 +73,93 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-GND-Sasl: alex@ghiti.fr
-X-GND-Cause: dmFkZTGdhs9xuqAzUROmmsJvsJjXlJZ0qeTIQWv1SwQGarWmGYIa0sFgvk5TpQ9jfrltusvZoPk8YdWn3PZEEalLBjdfHMe7NqNuZrhxSoChbVpy5Nep8byl3DHWVqDvp22mXFzlNO8942ydLlAkQ+L6aO+eIgnDvtvprJXn6Gk9sJGXK+ptPbEvnkFg0hCg1QwOx0jFi2oA3CD11zGmtPZ3Qj90hnJeuAwCdkM5UQT74WjOHTYJqjH6/g55DRp4gxglIvoWlT1Dy8heeGbvllTWUsmkWwtaP9Gq6rx1FN35MPiV+ZgrCHBylug5kSysqz4Bd4NnZNgsc26P0Z686fWBs04NGZ2L6BOqlCYjKvy0RPl7Thgt+4EKQYopbxzDs7aRSVnv8Om2E7KFTJqyW49SFwExedbRztVQ3o3Mx42iJb/e5jWK2J2HP0hZ8f6iwzaeOrYp24wuOmClFvrWLD0Vl4qKtHrID2ph3in0idGpyU1i+AnVA9ZmliVPBjveNKHVapt32F7vtuOo5Gr8AZ+yUGd3ELG9ZiGkMLsESU6QpYSR4Z+V/fA2nWJNczIPh54RZtlsCY6gKvvfZI+HtGQP2Mil6Dk60YBYJdUlCDWI2Ymw0Ya/Rwr3g0qWeGny0xO8mX/7X33UudNXMYp14pkhpFjJdky320ibKb7wdMNa3KUXNA
 X-GND-State: clean
 X-GND-Score: -100
+X-GND-Cause: dmFkZTG3h5G6t3FC2isZZGU/PT2pn+1paeiWOdgcvbFuD+1BKVsNu4saVvfuzt75aavMMcGzuV3jTmfiGGFoaK1beSakgFC7iEno5M78bKzolba0CnxXwUui8VjRa1yK6+WhcZ/aKsvWtdNWYdQgHkYc+meTm6yjPpGSSCaQ/cUZsVZjasBVRYNS5HCE4R0qp9cJZuPpvf7jxHkgnY4LdvAc8t5qsLJYCXTJKl501kxTLSYYWKNE5ufQVuz5upqkJLG0shbqvbT6RN7ik/pC7OXlu/GwZnn7PAXBL5PaAIvFrTlXRqOeQUW0BAvIJCUnr8re/L97syiX1fL4lPXMhmn2cVwrKlRN7SgVe3oX12fxoLpgCMiakunAF0nk7ZKlp4KV7lAyV9Av1/BDD7qQI0UD+tGTHnWIjwfXgb3VWkWC1vfMSQSTfjPuLaaFznyiH01XFnRH/+8/Il79IfAYhV813teP6pqb0tLfCzfBb2rseQ3ItD5QjdM52zAZrfUJEG8f6stkCHzzDO/uyzLPyjJJk5WnPzwnSPb2ym2c9iPwjEyOx/0VVV1BM2xGJP8TbWaMP7ZbXKW/HZJXEu0230c32PzvnJr1ezYLZ+XbYak7O1/XIQ4uGlicjMdcGOoJ8d+X7NurrBJkszb5Uu1NqYfo1vuyuyilJYRKxgyCO0VYmTE4NA
 
-pcpu_memcg_{post_alloc,free}_hook() determine each backing page's NUMA
-node by walking the chunk with vmalloc_to_page() once per possible CPU
-(plus the obj_exts vmalloc pages). On a single-node system that walk is
-pure overhead: with only one online node, page_to_nid() can only return
-that node, so the whole allocation footprint necessarily lives there.
+Update zswap and zsmalloc to use per-node obj_cgroup for kmem
+accounting, attributing compressed page charges to the correct
+NUMA node.
 
-Add a fast path in pcpu_memcg_accumulate(): when nr_online_nodes == 1,
-attribute pcpu_obj_full_size() (payload + obj_exts metadata) to
-first_online_node and return, skipping the O(num_possible_cpus)
-vmalloc_to_page() walk entirely. The result is identical to walking the
-pages, since every page is on that node.
+But actually, this is incomplete because it does not correctly account
+for entries that straddle pages, those pages being possibly on 2 different
+nodes.
 
+This will be correctly handled by Joshua in a different series [1].
+
+Link: https://lore.kernel.org/linux-mm/20260311195153.4013476-1-joshua.hahnjy@gmail.com/ [1]
 Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
 ---
- mm/percpu.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ include/linux/zsmalloc.h |  2 ++
+ mm/zsmalloc.c            | 11 +++++++++++
+ mm/zswap.c               | 19 ++++++++++++++++++-
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/mm/percpu.c b/mm/percpu.c
-index 9224344d4b8e..9a735d01b23a 100644
---- a/mm/percpu.c
-+++ b/mm/percpu.c
-@@ -1689,6 +1689,18 @@ static void pcpu_memcg_accumulate_obj_exts(struct pcpu_chunk *chunk, int off,
- 	}
+diff --git a/include/linux/zsmalloc.h b/include/linux/zsmalloc.h
+index 478410c880b1..30427f3fe232 100644
+--- a/include/linux/zsmalloc.h
++++ b/include/linux/zsmalloc.h
+@@ -50,6 +50,8 @@ void zs_obj_read_sg_end(struct zs_pool *pool, unsigned long handle);
+ void zs_obj_write(struct zs_pool *pool, unsigned long handle,
+ 		  void *handle_mem, size_t mem_len);
+ 
++int zs_handle_to_nid(struct zs_pool *pool, unsigned long handle);
++
+ extern const struct movable_operations zsmalloc_mops;
+ 
+ #endif
+diff --git a/mm/zsmalloc.c b/mm/zsmalloc.c
+index 83f5820c45f9..17f7403ebe77 100644
+--- a/mm/zsmalloc.c
++++ b/mm/zsmalloc.c
+@@ -1380,6 +1380,17 @@ static void obj_free(int class_size, unsigned long obj)
+ 	mod_zspage_inuse(zspage, -1);
  }
  
-+static void pcpu_memcg_accumulate(struct pcpu_chunk *chunk, int off, size_t size,
-+			     unsigned int *node_bytes)
++int zs_handle_to_nid(struct zs_pool *pool, unsigned long handle)
 +{
-+	if (nr_online_nodes == 1) {
-+		node_bytes[first_online_node] = pcpu_obj_full_size(size);
-+		return;
-+	}
++	unsigned long obj;
++	struct zpdesc *zpdesc;
 +
-+	pcpu_memcg_accumulate_pages(chunk, off, size, node_bytes);
-+	pcpu_memcg_accumulate_obj_exts(chunk, off, size, node_bytes);
++	obj = handle_to_obj(handle);
++	obj_to_zpdesc(obj, &zpdesc);
++	return page_to_nid(zpdesc_page(zpdesc));
 +}
++EXPORT_SYMBOL(zs_handle_to_nid);
 +
- static void pcpu_memcg_post_alloc_hook(struct obj_cgroup *objcg,
- 				       struct pcpu_chunk *chunk, int off,
- 				       size_t size)
-@@ -1705,8 +1717,7 @@ static void pcpu_memcg_post_alloc_hook(struct obj_cgroup *objcg,
- 		obj_cgroup_get(objcg);
- 		chunk->obj_exts[off >> PCPU_MIN_ALLOC_SHIFT].cgroup = objcg;
- 
--		pcpu_memcg_accumulate_pages(chunk, off, size, node_bytes);
--		pcpu_memcg_accumulate_obj_exts(chunk, off, size, node_bytes);
-+		pcpu_memcg_accumulate(chunk, off, size, node_bytes);
- 
- 		rcu_read_lock();
- 		mod_memcg_state(obj_cgroup_memcg(objcg), MEMCG_PERCPU_B,
-@@ -1748,8 +1759,7 @@ static void pcpu_memcg_free_hook(struct pcpu_chunk *chunk, int off, size_t size)
- 		return;
- 	chunk->obj_exts[off >> PCPU_MIN_ALLOC_SHIFT].cgroup = NULL;
- 
--	pcpu_memcg_accumulate_pages(chunk, off, size, node_bytes);
--	pcpu_memcg_accumulate_obj_exts(chunk, off, size, node_bytes);
-+	pcpu_memcg_accumulate(chunk, off, size, node_bytes);
- 
- 	rcu_read_lock();
- 	mod_memcg_state(obj_cgroup_memcg(objcg), MEMCG_PERCPU_B,
+ void zs_free(struct zs_pool *pool, unsigned long handle)
+ {
+ 	struct zspage *zspage;
+diff --git a/mm/zswap.c b/mm/zswap.c
+index 761cd699e0a3..466c6a3f4ef3 100644
+--- a/mm/zswap.c
++++ b/mm/zswap.c
+@@ -1438,7 +1438,24 @@ static bool zswap_store_page(struct page *page,
+ 	 */
+ 	zswap_pool_get(pool);
+ 	if (objcg) {
+-		obj_cgroup_get(objcg);
++		struct obj_cgroup *nid_objcg;
++		int nid = zs_handle_to_nid(pool->zs_pool, entry->handle);
++
++		/*
++		 * obj_cgroup_nid() returns a borrowed RCU pointer (no
++		 * reference), so the returned per-node objcg may be freed
++		 * (kfree_rcu) before we use it. Pin it with a tryget inside a
++		 * single rcu section; if it is already dying, fall back to the
++		 * folio objcg (held by the caller) so the charge still lands on
++		 * the right memcg, just without per-node attribution.
++		 */
++		rcu_read_lock();
++		nid_objcg = obj_cgroup_nid(objcg, nid);
++		if (nid_objcg && obj_cgroup_tryget(nid_objcg))
++			objcg = nid_objcg;
++		else
++			obj_cgroup_get(objcg);
++		rcu_read_unlock();
+ 		obj_cgroup_charge_zswap(objcg, entry->length);
+ 	}
+ 	atomic_long_inc(&zswap_stored_pages);
 -- 
 2.54.0
 
