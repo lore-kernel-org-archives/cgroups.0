@@ -1,20 +1,21 @@
-Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
+Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96D103EDAB6;
-	Fri, 26 Jun 2026 10:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 516413EE1E0;
+	Fri, 26 Jun 2026 10:25:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782469462; cv=none; b=Kq5yBnJpfVvmzLUoBHpRZvaBYTrGNb6k9lzD8khI+b10c+tqTEyXdJyusbWpMVlAyMoA7/A1RSlcgRqIeyn8TqbAp+mh5CjDM4kDAA+/wcYl2+D8JMbxgF8v5UsTj2EpVPhQnhBGckD5Oe/sIZgLqOxUubpeA2EkkLYdBlsgr2U=
+	t=1782469526; cv=none; b=TaK9Pah2JHx+yoVGXXpgQKUXWREh6zU14NW8mPpuvTyi+p0/A9jhry4vfrk53lUkYMelGXHVB0bm4si7D6IMd6QF0vYXZDjw2JmI8jOk5UD4zkO1fn//4vr/LdV9eDF6dRKR3Z5h+1isc8aLKJxFmwxJvvEtvFpIn0mNytfBRh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782469462; c=relaxed/simple;
-	bh=tVzFlRha4dFksiyF8EG/VwE6CNt6QOwM8UsvZo2iTdY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=P1cD/QIZTZxuiztO+inxq0lcSbk7m5Yvi+rJHAIXi4UQPbpaYolNxpGq9Pi6OvHavr3cIZ03iW6IhsEGG2iET4IlFAAKQQjEXZIRr6UeotGjFrha99/IzM5KIv3AlncYkzDpr6PG8nTNMQzOncO+6KRLm/JB4QohJ6BEwCoIKzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.193
+	s=arc-20240116; t=1782469526; c=relaxed/simple;
+	bh=eT634TRa+hkN4Tno+upTT9IjXr25zXhLSmfc/4c98v8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Cz/ELxc36bxRVATfnIBR6L1m0akW3zZvjAJfiT+uq24GHFDPY6r9Wb3x8Dz4H0HlPiMceNDBosAsVZLtnH92CtnttcUfNnBBW8obKrnIISxeeTQESljDi42yfDAQ6v3pht3V4d5wqN2tXxeF6Rz8HUMGt+3CEX5wqZ39B1OABM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
-Received: by mail.gandi.net (Postfix) with ESMTPSA id F10933EC32;
-	Fri, 26 Jun 2026 10:24:05 +0000 (UTC)
+Received: by mail.gandi.net (Postfix) with ESMTPSA id B43E71F654;
+	Fri, 26 Jun 2026 10:25:12 +0000 (UTC)
 From: Alexandre Ghiti <alex@ghiti.fr>
 To: alexandre@ghiti.fr,
 	Andrew Morton <akpm@linux-foundation.org>
@@ -58,156 +59,314 @@ Cc: Axel Rasmussen <axelrasmussen@google.com>,
 	Yosry Ahmed <yosry@kernel.org>,
 	Yuanchu Xie <yuanchu@google.com>,
 	Alexandre Ghiti <alex@ghiti.fr>
-Subject: [RESEND PATCH v2 0/9] per-memcg-per-node kmem accounting 
-Date: Fri, 26 Jun 2026 12:20:49 +0200
-Message-ID: <20260626102358.1603618-1-alex@ghiti.fr>
+Subject: [PATCH v2 1/9] memcg: convert task->objcg to a per-node objcgs array
+Date: Fri, 26 Jun 2026 12:20:50 +0200
+Message-ID: <20260626102358.1603618-2-alex@ghiti.fr>
 X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260626102358.1603618-1-alex@ghiti.fr>
+References: <20260626102358.1603618-1-alex@ghiti.fr>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-GND-Sasl: alex@ghiti.fr
 X-GND-State: clean
 X-GND-Score: -100
-X-GND-Cause: dmFkZTFhzY+biii5o3KhBLXaB+yyOv/umMcrPwchRIx4RYTC8ZjuYqysyo8r9nn3JKFmuG5Uk19BkC2D6n8TEC2Mcfy0nWPMVo8nc30IfS2BQHP3oO0XNvewSEjWxb+V+qXMeRrtEKaGMMN9KJMmBImmJx8NHyydw95ZZXxvE37YDgEJZry67dNdgLYaBvPH0mkgJ2HJEix+LUBCmDT45jCR4G82gG4ltLEJD97Z4sTDy7iebPKO3MVGE3lGNo3HwfpWa7pKcvGkNgi9U3x0cVIkCM2Z80V7XQ2XQIbDr+VMH4CwqiT0IbbxGuhT+dlPaPB7avStLr1QMtlPw4YJ5pYQFUwuQTrjyic8RRkpI+HOrJR8UzmJBvLDzvyOTIp1XhAtXJPnou/rxmuzLCAhwpAVltubXwTG0Ddbt+S7/GMg+nC84VtSyU8vJt2okiaHa+RJkDntCIJnrFhrNSB2nj7wjxcaNvVayVgWUvhgTzhHA8Mj3kk5EPtB436pgNAAKIZ8wDZOpoPudHxN5HPh0HX6VzaAILadEft/ZNX0Xrl2eGk9eW2R+jqKebzaW/I6HVplP17GNzD6jQqzR/l3L+Z4HxrYzNfRB5VcpTxDYlySe3pQo+yky0quIy54NBq9uQP7bmricCdorkEiWtOkBnx1Y7cjDeg4qPDhBSGV1QOGln8GTQ
+X-GND-Cause: dmFkZTGnYIDq9A11TftEatbke2wSLsM4U/RRnbCHpAUAIQBwHbVmowa+ke86M8Z6PPn5o7UKBvUMbr2gZWgcRiFc7ixLzqgLUvmoF1f6yq0GAxvM7ym0xa3n5f10aBqF/6aF0YuddnSkH5x50aCnRuJBlmRRybtyRnTHEtDjNABLsbF8/J37ko6Bm3zG+eW4NfAtWrkoIM0OVuVjH1i1R2t7kHuPQJtjQvB5ayDwVI8gcfE8wIDI8ctauyWpfQVDC9X4EX6LKQuBwn+BvrBeBO0dxg0WQvW3qtFakFlV8vs7Ehg02InoNEqwXY73y16xKIg4BKzVJqVRXZF2evXpKGHtjYSRlQMzxqWoYZh8SmozeBLEOJ1N7PlnJKommGvEBFVUvXF+NhgFfgmLXvwS+DR6qJv5JmzBkmPxMeCA6U/JlatjEXvMHeb33Fa1FeBZOZH5D5Mw/tLWSBmCm5nxBv0KYKQe+6j/zSh3zqN/c+1J+sHeLzu2hJCePgtRVrCkcxKFTo5HSPE8ZY/rqLtYoEn5XDZD1RX49og9scNZHde/aQUCOBcV4Eudt5advSOZjvKz2jPgeEEIZDdSR93jq2DxZPXGi4aobgdiiAure5qLx/8l+JVi/rQd9oQKuYlLMv8Rz1PiRCPbZrLBISfLVz5f8SKR0KxLIsoJzSxhlduvo+bvag
 
-This is version 2 of per-memcg-per-node kmem accounting.
+From: Shakeel Butt <shakeel.butt@linux.dev>
 
-As asked by Joshua, I ran some microbenchmarks to check the impact of
-this fine grain accounting.
+Commit 01b9da291c49 ("mm: memcontrol: convert objcg to be per-memcg
+per-node type") split a memcg's single obj_cgroup into one per NUMA
+node, but task_struct still cached only one objcg. On every cross-node
+allocation current_obj_cgroup() returned an objcg whose nid did not
+match the current CPU's node, so the stock's per-node vmstat batching
+and (separately) the per-node accounting hierarchy were defeated for
+multi-node workloads.
 
-TL;DR: There is a substantial impact (up to +337% on small percpu allocations)
-on a benchmark that loops over small percpu allocations. On the other hand,
-on a userspace program that creates a bpf percpu map, this cost is not visible.
+Replace task->objcg with task->objcgs: a tagged pointer to an
+nr_node_ids-sized array of per-node obj_cgroup pointers. Bit 0 keeps
+its meaning as CURRENT_OBJCG_UPDATE_FLAG so mem_cgroup_kmem_attach()
+can still atomically mark the cache stale from another task's context
+with a single set_bit().
 
-I followed Joshua's advice and now this version batches the memcg accounting:
-it improves the performance +337% vs +417% (v1) on 176 cores single node
-machine and +153% vs 206% (v1) on 80 cores 2 nodes machine.
+current_obj_cgroup() now indexes the array by numa_node_id() and falls
+back to root_mem_cgroup on a NULL array (kthread or fork-time alloc
+failure) or NULL entry (transient drain window).
 
-We can see that the overhead of this version scales linearly with the number of
-cpus (the number of nodes being small). This overhead comes mainly from
-vmalloc_to_page() so I have another variant (b) that decreases the impact even
-more (+131% vs +337% on 176 cores and +86% vs +153% on 80 cores) but I'm not
-sure the added complexity is needed so I did not send this version, let me know
-what you think.
+current_objcg_update() refreshes every entry under one rcu_read_lock,
+xchg'ing fresh per-node objcgs in and dropping the stale references.
+The outer cmpxchg loop on the tagged array pointer preserves the
+existing race-with-kmem_attach semantics: if the update bit is re-set
+mid-refresh, the whole refresh is retried.
 
-Performance
-===========
+The array is eagerly allocated in mem_cgroup_fork() for non-kthread
+tasks. This keeps current_objcg_update() off the allocation path, which
+matters because it runs from kmem allocation contexts that may be
+atomic. Kthreads and tasks whose fork-time kcalloc() fails simply leave
+task->objcgs as NULL and route kmem allocations to root_mem_cgroup, as
+before. The array is freed in mem_cgroup_exit() after dropping the
+per-node references.
 
-All benchmarks run in a memcg with __GFP_ACCOUNT.
+__get_obj_cgroup_from_memcg() takes nid as an explicit parameter so it
+can be reused for both folio charging (numa_node_id()) and the per-node
+refresh loop.
 
-1) BPF percpu map create/destroy, full series vs baseline kernel (two
-   boots, 176-CPU AMD EPYC, 1 NUMA node): the per-node accounting is lost
-   in the BPF syscall overhead, the delta is within noise (us/op):
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
+---
+ include/linux/sched.h |   7 +-
+ mm/memcontrol.c       | 148 +++++++++++++++++++++++++-----------------
+ 2 files changed, 95 insertions(+), 60 deletions(-)
 
-     size (B):    64     256    1024   4096   8192
-     delta:     -5.5%  -5.1%  -1.8%  -5.1%  -4.1%
-
-2) In-kernel microbench that isolates the accounting cost: a tight
-   __alloc_percpu_gfp()/free_percpu() loop, __GFP_ACCOUNT on vs off on the
-   same boot (ACCT COST = on - off). The dominant cost on a many-CPU box
-   is discovering each backing page's real node (vmalloc_to_page() per
-   possible CPU). ACCT COST by value size:
-
-   176-CPU EPYC, 1 node
-     size (B):              64       256      1024     4096     8192
-      baseline (upstream)  +5.3%    +5.4%    +0.1%    -1.8%    -0.5%
-      v1 credit (per-page) +417.3%  +182.5%  +68.5%   +21.4%   +16.1%
-   a) per-node accounting  +337.8%  +141.8%  +36.1%   +11.9%   +6.8%
-   b) per-page nid cache   +131.3%  +53.7%   +10.5%   +0.9%    +2.0%
-   c) single-node fast     +12.6%   +12.1%   +3.5%    +6.6%    +0.7%
-
-   80-CPU Xeon Gold 6138, 2 nodes (fast path inactive)
-     size (B):              64       256      1024     4096     8192
-      baseline (upstream)  +1.2%    -3.8%    +12.4%   +1.2%    +0.5%   (noise)
-      v1 credit (per-page) +206.1%  +134.0%  +44.5%   +11.6%   +11.5%
-   a) per-node accounting  +153.2%  +64.7%   +19.4%   +4.2%    +5.9%
-   b) per-page nid cache   +86.5%   +45.5%   +14.7%   +1.8%    +1.6%
-
-   (a) this patchset without fast path for single node
-   (b) is an alternative version, not in this series, that caches each backing
-       page's node in the chunk so the walk is paid once per page instead of
-       once per allocation
-   (c) this patchset with fast path for single node
-
-Changes in v2
-=============
-
-- objcg lifetime: Shakeel's patch 1 now guarantees the lifetime of every
-  per-node objcg
-- dropped patch 5 and 6 since Shakeel's patch 2 replaces them
-- fixed the number of precharged pages (the v1 formula under-precharged)
-- per-node batching (Joshua's suggestion): accumulate the per-node bytes
-  first, then issue one account_kmem()/uncharge() per touched node =>
-  O(nodes) memcg ops instead of O(num_possible_cpus)
-- single-node fast path: skip the per-cpu node walk on single node machines
-- obj_exts metadata is now accounted per-node (walk its vmalloc pages)
-  rather than charged whole to one memcg (Shakeel's main v1 objection).
-- renamed obj_cgroup_get_nid() -> obj_cgroup_nid() (returns a borrowed RCU
-  pointer, no ref taken).
-- zswap: fixed the missing locking around the per-node objcg lookup (now
-  done under RCU + obj_cgroup_tryget()).
-
-This series pursues the work initiated by Joshua [1]. We need kernel
-memory to be accounted on a per-node basis in order to be able to know
-the memcg <-> physical memory association.
-
-This series takes advantage of the recently introduced per-node
-obj_cgroup and makes those obj_cgroup tied to their NUMA node.
-
-The bulk of the series is percpu per-node accounting: percpu
-"precharges" the memcg before we know the actual location of the pages
-it uses, so charging and accounting had to be split. All other kmem
-users (slab, __memcg_kmem_charge_page) are now handled directly by
-Shakeel's per-node obj_cgroup infrastructure this series sits on, so
-only percpu and zswap need explicit per-node work here (zswap support
-is limited because Joshua is working on it in parallel [3]).
-
-Thanks Joshua and Shakeel for the early feedback!
-
-[1] https://lore.kernel.org/linux-mm/20260404033844.1892595-1-joshua.hahnjy@gmail.com/
-[2] https://lore.kernel.org/linux-mm/56c04b1c5d54f75ccdc12896df6c1ca35403ecc3.1772711148.git.zhengqi.arch@bytedance.com/
-[3] https://lore.kernel.org/linux-mm/20260311195153.4013476-1-joshua.hahnjy@gmail.com/
-
-Functional Testing
-==================
-
-- Tested with a percpu kmem self-test in an 8-node VM (2 nodes with CPUs,
-  6 memory-only). For each allocation it checks that every node is charged
-  and later uncharged the same number of bytes -- including a CPU-less node
-  that ends up holding the obj_exts metadata -- and that nothing is left
-  charged after teardown. All checks pass. (The self-test module is not
-  part of this series.)
-
-Alexandre Ghiti (7):
-  mm: percpu: fix obj_exts metadata charge size
-  mm: percpu: Split memcg charging and kmem accounting
-  mm: memcontrol: track MEMCG_KMEM per NUMA node
-  mm: percpu: per-node kmem accounting
-  mm: percpu: per-node kmem accounting for obj_exts metadata
-  mm: percpu: skip the per-cpu node walk on single-node systems
-  mm: zswap: per-node kmem accounting for zswap/zsmalloc
-
-Shakeel Butt (2):
-  memcg: convert task->objcg to a per-node objcgs array
-  memcg: charge kmem pages and slab objects against per-node objcg
-
- include/linux/memcontrol.h |  23 ++-
- include/linux/mmzone.h     |   1 +
- include/linux/sched.h      |   7 +-
- include/linux/zsmalloc.h   |   2 +
- mm/memcontrol.c            | 286 ++++++++++++++++++++++++++-----------
- mm/percpu-internal.h       |   2 +-
- mm/percpu.c                | 108 +++++++++++++-
- mm/vmstat.c                |   1 +
- mm/zsmalloc.c              |  11 ++
- mm/zswap.c                 |  19 ++-
- 10 files changed, 361 insertions(+), 99 deletions(-)
-
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index ee06cba5c6f5..d7ea9fe38d01 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1538,8 +1538,11 @@ struct task_struct {
+ 	/* Used by memcontrol for targeted memcg charge: */
+ 	struct mem_cgroup		*active_memcg;
+ 
+-	/* Cache for current->cgroups->memcg->nodeinfo[nid]->objcg lookups: */
+-	struct obj_cgroup		*objcg;
++	/*
++	 * Per-node cache for current->cgroups->memcg->nodeinfo[nid]->objcg
++	 * lookups. Tagged pointer: bit 0 = CURRENT_OBJCG_UPDATE_FLAG.
++	 */
++	struct obj_cgroup		**objcgs;
+ #endif
+ 
+ #ifdef CONFIG_BLK_CGROUP
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 56cd4af08232..ee47427de9e2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2907,10 +2907,9 @@ struct mem_cgroup *mem_cgroup_from_virt(void *p)
+ 	return folio_memcg_check(virt_to_folio(p));
+ }
+ 
+-static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
++static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg,
++						      int nid)
+ {
+-	int nid = numa_node_id();
+-
+ 	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+ 		struct obj_cgroup *objcg = rcu_dereference(memcg->nodeinfo[nid]->objcg);
+ 
+@@ -2926,67 +2925,73 @@ static inline struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *me
+ 	struct obj_cgroup *objcg;
+ 
+ 	rcu_read_lock();
+-	objcg = __get_obj_cgroup_from_memcg(memcg);
++	objcg = __get_obj_cgroup_from_memcg(memcg, numa_node_id());
+ 	rcu_read_unlock();
+ 
+ 	return objcg;
+ }
+ 
+-static struct obj_cgroup *current_objcg_update(void)
++static struct obj_cgroup **current_objcg_update(void)
+ {
+ 	struct mem_cgroup *memcg;
+-	struct obj_cgroup *old, *objcg = NULL;
++	struct obj_cgroup **objcgs;
++	unsigned long old_tagged;
++	int nid;
+ 
+ 	do {
+-		/* Atomically drop the update bit. */
+-		old = xchg(&current->objcg, NULL);
+-		if (old) {
+-			old = (struct obj_cgroup *)
+-				((unsigned long)old & ~CURRENT_OBJCG_UPDATE_FLAG);
+-			obj_cgroup_put(old);
+-
+-			old = NULL;
+-		}
+-
+-		/* If new objcg is NULL, no reason for the second atomic update. */
+-		if (!current->mm || (current->flags & PF_KTHREAD))
+-			return NULL;
++		old_tagged = (unsigned long)READ_ONCE(current->objcgs);
++		objcgs = (struct obj_cgroup **)
++			(old_tagged & ~CURRENT_OBJCG_UPDATE_FLAG);
+ 
+ 		/*
+-		 * Release the objcg pointer from the previous iteration,
+-		 * if try_cmpxcg() below fails.
++		 * If there is no per-node cache (kthread or fork-time
++		 * allocation failure), there is nothing to refresh. The
++		 * cmpxchg below still clears the update bit so we do not
++		 * keep re-entering this slow path.
+ 		 */
+-		if (unlikely(objcg)) {
+-			obj_cgroup_put(objcg);
+-			objcg = NULL;
++		if (objcgs) {
++			if (!current->mm || (current->flags & PF_KTHREAD)) {
++				/*
++				 * The task lost its mm: drop the cached
++				 * per-node references; future allocations will
++				 * fall back to root_mem_cgroup.
++				 */
++				for_each_node(nid)
++					obj_cgroup_put(xchg(&objcgs[nid], NULL));
++			} else {
++				/*
++				 * Re-read the memcg under rcu since the task
++				 * may have been asynchronously moved and the
++				 * previous memcg can be offlined.
++				 */
++				rcu_read_lock();
++				memcg = mem_cgroup_from_task(current);
++				for_each_node(nid) {
++					struct obj_cgroup *fresh, *stale;
++
++					fresh = __get_obj_cgroup_from_memcg(memcg, nid);
++					stale = xchg(&objcgs[nid], fresh);
++					obj_cgroup_put(stale);
++				}
++				rcu_read_unlock();
++			}
+ 		}
+ 
+ 		/*
+-		 * Obtain the new objcg pointer. The current task can be
+-		 * asynchronously moved to another memcg and the previous
+-		 * memcg can be offlined. So let's get the memcg pointer
+-		 * and try get a reference to objcg under a rcu read lock.
+-		 */
+-
+-		rcu_read_lock();
+-		memcg = mem_cgroup_from_task(current);
+-		objcg = __get_obj_cgroup_from_memcg(memcg);
+-		rcu_read_unlock();
+-
+-		/*
+-		 * Try set up a new objcg pointer atomically. If it
+-		 * fails, it means the update flag was set concurrently, so
+-		 * the whole procedure should be repeated.
++		 * Publish the cleared-flag pointer. If kmem_attach raced and
++		 * re-set the update bit, retry the whole refresh.
+ 		 */
+-	} while (!try_cmpxchg(&current->objcg, &old, objcg));
++	} while (!try_cmpxchg((unsigned long *)&current->objcgs,
++			      &old_tagged, (unsigned long)objcgs));
+ 
+-	return objcg;
++	return objcgs;
+ }
+ 
+ __always_inline struct obj_cgroup *current_obj_cgroup(void)
+ {
+ 	struct mem_cgroup *memcg;
+ 	struct obj_cgroup *objcg;
++	struct obj_cgroup **objcgs;
+ 	int nid = numa_node_id();
+ 
+ 	if (IS_ENABLED(CONFIG_MEMCG_NMI_UNSAFE) && in_nmi())
+@@ -2997,14 +3002,16 @@ __always_inline struct obj_cgroup *current_obj_cgroup(void)
+ 		if (unlikely(memcg))
+ 			goto from_memcg;
+ 
+-		objcg = READ_ONCE(current->objcg);
+-		if (unlikely((unsigned long)objcg & CURRENT_OBJCG_UPDATE_FLAG))
+-			objcg = current_objcg_update();
++		objcgs = READ_ONCE(current->objcgs);
++		if (unlikely((unsigned long)objcgs & CURRENT_OBJCG_UPDATE_FLAG))
++			objcgs = current_objcg_update();
+ 		/*
+-		 * Objcg reference is kept by the task, so it's safe
+-		 * to use the objcg by the current task.
++		 * Per-node objcg references are kept by the task, so it's
++		 * safe to use them by the current task.
+ 		 */
+-		return objcg ? : rcu_dereference_check(root_mem_cgroup->nodeinfo[nid]->objcg, 1);
++		if (objcgs && (objcg = objcgs[nid]))
++			return objcg;
++		return rcu_dereference_check(root_mem_cgroup->nodeinfo[nid]->objcg, 1);
+ 	}
+ 
+ 	memcg = this_cpu_read(int_active_memcg);
+@@ -4544,22 +4551,47 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+ 
+ static void mem_cgroup_fork(struct task_struct *task)
+ {
++	struct obj_cgroup **objcgs;
++
+ 	/*
+-	 * Set the update flag to cause task->objcg to be initialized lazily
+-	 * on the first allocation. It can be done without any synchronization
+-	 * because it's always performed on the current task, so does
+-	 * current_objcg_update().
++	 * Kthreads do not need a per-node cache; their kmem allocations fall
++	 * back to root_mem_cgroup via current_obj_cgroup().
+ 	 */
+-	task->objcg = (struct obj_cgroup *)CURRENT_OBJCG_UPDATE_FLAG;
++	if (task->flags & PF_KTHREAD) {
++		task->objcgs = NULL;
++		return;
++	}
++
++	/*
++	 * Eagerly allocate the per-node cache so that current_objcg_update()
++	 * never has to allocate from potentially-atomic kmem allocation
++	 * paths. On allocation failure this task will use root_mem_cgroup
++	 * for kmem accounting.
++	 *
++	 * Tag with the update flag so the first kmem allocation populates
++	 * the entries via current_objcg_update().
++	 */
++	objcgs = kcalloc(nr_node_ids, sizeof(*objcgs), GFP_KERNEL);
++	if (objcgs)
++		task->objcgs = (struct obj_cgroup **)
++			((unsigned long)objcgs | CURRENT_OBJCG_UPDATE_FLAG);
++	else
++		task->objcgs = NULL;
+ }
+ 
+ static void mem_cgroup_exit(struct task_struct *task)
+ {
+-	struct obj_cgroup *objcg = task->objcg;
++	struct obj_cgroup **objcgs;
++	int nid;
+ 
+-	objcg = (struct obj_cgroup *)
+-		((unsigned long)objcg & ~CURRENT_OBJCG_UPDATE_FLAG);
+-	obj_cgroup_put(objcg);
++	objcgs = (struct obj_cgroup **)
++		((unsigned long)task->objcgs & ~CURRENT_OBJCG_UPDATE_FLAG);
++
++	if (objcgs) {
++		for_each_node(nid)
++			obj_cgroup_put(objcgs[nid]);
++		kfree(objcgs);
++	}
+ 
+ 	/*
+ 	 * Some kernel allocations can happen after this point,
+@@ -4567,7 +4599,7 @@ static void mem_cgroup_exit(struct task_struct *task)
+ 	 * because it's always performed on the current task, so does
+ 	 * current_objcg_update().
+ 	 */
+-	task->objcg = NULL;
++	task->objcgs = NULL;
+ }
+ 
+ #ifdef CONFIG_LRU_GEN
+@@ -4599,7 +4631,7 @@ static void mem_cgroup_kmem_attach(struct cgroup_taskset *tset)
+ 
+ 	cgroup_taskset_for_each(task, css, tset) {
+ 		/* atomically set the update bit */
+-		set_bit(CURRENT_OBJCG_UPDATE_BIT, (unsigned long *)&task->objcg);
++		set_bit(CURRENT_OBJCG_UPDATE_BIT, (unsigned long *)&task->objcgs);
+ 	}
+ }
+ 
 -- 
 2.54.0
 
