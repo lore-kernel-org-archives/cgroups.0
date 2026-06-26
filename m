@@ -1,187 +1,176 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAA8D3B8405
-	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 18:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782499026; cv=pass; b=RBL/1SJ9BDr8sC6eFDIHeAkZjKBsoBrAlsOccp5EyPo4lIvhQVKzbEVkiOl6UlEBMGO1snc7mBVn0NB7BnxBGRIHNLWgsMjPfMkWrAWVvBgGXd9EbOALQM9zcc4WWFgkfFliFCcTZLkc4JM7A5O6K07n5iJShWhpOgndm0OXwG0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782499026; c=relaxed/simple;
-	bh=OfOa8rqqXCKRNRLH/nmiHKh0iPBKtZJR4R6D2Wg9rRw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jQzrpbPoV15vfuPu1J+5+lnHYHsdImovxzisFtVP6fNJD6EofdeiWjwuxbTXjfbysQwZiCnsvbQG9jfR+4QTl2HmVY5JccnC5a99KnBMs+5U8ci4Mfs/8IT3LgWhyY68GzdtgNfP1/PP/heIxVpHc0tPQ3Nr3GKwLwFpDZTZqFw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XsgvWSZL; arc=pass smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260403B7B71
+	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 18:37:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782499058; cv=none; b=TWD7IpGSqYDzMible7l7KTrjdwaSlvNqkAJe11DVuqsmw6Gdk1aBr1keum/IcWHovr8hFcB/xh+C5YmGZ+zFHdy0tN74ip+rdjueIiAU5r+lcRYa2E356IQ40pWricPglYFrEJmB6yFmv4G8OIRg0WA1QNY04yunfV8CxXprDF0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782499058; c=relaxed/simple;
+	bh=6dDnymeCyAIjxRoJW74PZ/gV2/Qm9iNCg2yVKleCGx0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ecUQ/h+jTx/SDvpN1Xzj8/DO2DVc5dVDk+CV35W89QQ/l/5X3p0PtOyvCQVApN7eM31ff3cLw4b4vP6KFJ4J9cZ7/m/Kr2gAgP8ASrUHcnBd2J3wspb3pbiw+xhrY2PfYmVZkd3NZxPc6qPDXtVWPRMHTKKnONMhzMr1CKy9PfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PTLB0fEA; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XsgvWSZL"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4903d730b1fso16707805e9.2
-        for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 11:37:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782499022; cv=none;
-        d=google.com; s=arc-20260327;
-        b=pWq4vTHMdGP2nM4xG1ozpICeuiewLXfMbWJuLFPYqyTAg1K2GgdRLwm03u7DDLw3lo
-         FEHoHblrzKDFICHiSLf/1H7kPVKTzJFNx3P4CPvqrh6+6EBa3QjAmuuWf8298Rfh144o
-         V6eI+TPdu+omik/pUqcOW72yVeS0BTH7o/iSRUJZYN51lYVj4C+4Hup99AL+Q+JnwklA
-         ehcZehwZMNN23rqKTTVdzrL5W2lSkOCHwaxdxF1XboFFQnaV3d/xEPFuUdjWR0flzcs3
-         U954q/1g32gWaxkIA9NSV1vt/iOVoot6IYdwt6DUfn+wdKxzya2Ws5HpcMeVM0FrvV6R
-         UCTg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=HOOeJEgGJirHLvCIZDna3WzBVXhg0OXljifTzHlO340=;
-        fh=07xrVQQFIRI19R4hQ2m7rGkK/6gXHdvj3le0GMREyII=;
-        b=Gn9ZJjqcwg88M+7L89dpa4aUmP0ctoHGTnKX4OfNrvVusm9oTPw+CM1LkAk5GAvbP/
-         fRArj0fpmgpPUjTIJeGAq2RBkDV06M98xzzJz5jfwWKdAkEHteVbFepov18kGTOe0u/w
-         GQQ6BnUiCngz/OAv60YHGcgsdc2B2BcjOdyjWp/TZvNugeNIpn9lmwkn00VuW88c8S3m
-         2xw++4swUBd3TcULxKF/zcoM7chMUSGPvnd0tVtXPDJA0b0A+hovbrang5MaKNydxu6w
-         v0WJ9I8263aQRuglkv7qRKBphyFDe8hQ12YF+IQph6KGS4eaLW9bpXcjJ+xpSpgdr/Ky
-         uPYQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782499022; x=1783103822; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HOOeJEgGJirHLvCIZDna3WzBVXhg0OXljifTzHlO340=;
-        b=XsgvWSZL4OJdDStOy8iZ02jKrcxWhZV2B0bWwznTt+6Q2cRxehpKw2ry2J3vOZWL9T
-         oO6Ee/cKEyqeS4g8NMdkwRE0vP18VHsvSG6VvIC7O3KOeSdxcvmELH9XChtIkFAIlJzk
-         E1I7YBx11WmHrrGvVxJWVKGx+aO+uz2ocA3UM7QJ0MDk+E35HEq5B1rqjPH2DjEZm78K
-         uwOwGu6rtUF7Pp6Ikp8PE9A/8z2V6U5eZgaMyhHuUfDu9jHwSQqzw76NvjU22bnEgN2X
-         4PZaWb9oJ4a1l8lO2rrOgEOWcKHqTGHgzKCbA22yaz1a7mlKUJfealBTKJ7gQGXLJ2BJ
-         0jug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782499022; x=1783103822;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=HOOeJEgGJirHLvCIZDna3WzBVXhg0OXljifTzHlO340=;
-        b=b6pkwZSpT+JGwlHIZbCPUvTPFedQv1jCT7oPeF4194fyZcQn+RGdzitYWd54cpqye2
-         NyhdCFPP+9IotOXPqy6x03jiNWU0JvY5psMey2dRKlAwm6RXBjak029lDOmenxWwFxcd
-         pww/gCE3G+LxysFACQmKzAkQpdAoJhGUC3Ri8D99LdGSE738TBPYXtc6NpTxrwwJXjWk
-         G7mbuLrFauC5pQG4EzX+1Lg1B7FDgtA0kyl7+aUoHEQUqBaJRbv9JLn3GshQtx+8a1+Q
-         mzVC3pogY1qULQ0V822626lcIi6dytqpQ43pZi479FcbQixGIff56r35k+hXYxNJDsuq
-         bMYQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/pEi0ZM3Fi2Usz6NnZ4m0usse6Tt4uPhJyk6gB8jQA2niiZsf6cGycL8I0RyM6kO3J2GSBac8b@vger.kernel.org
-X-Gm-Message-State: AOJu0YyDxVfy1+u6mFMV75d7w46QOhRDM2s483z1OfnNXv0kMZt2thXi
-	mHcIaaqqioK4NZHV0WG3+PC0RrbgF7O2FOzCu6n2cwsxfrHyXUzuPSXtZH5dH5tj5yBd8a9QD0C
-	UhYW4VaZRur1xevT5BJbzkg9XbcEzp5g=
-X-Gm-Gg: AfdE7cl9+SRsC/gyd86aDIsipsgqRn4yREx9RQ4vLeuQxdDFF+FOtoiNuWPgOzg5kZm
-	6K2ana/Ap3QQaNq6A9TVpmmkeqHmMnp7/o6DxU15i4DhOopQyLf39V35i27+ZdJP69yQOUk4c1F
-	oCx7nDDP0jcsTy8v/bH3FG920LWnOgQOcGbAslUz0tlksKt8fnf/pe2PmJ35pdDv91YqhK3b4Eh
-	CjNiY2LxPdiJdz68ZS9kZYhm9VUAEAyEmhQlgrVXEYEYfQuBUWkJFWnxZe8lSZ4R666jc9OEE3k
-	fEzn+utpUst9VHQeNkWi5hn1dpHY
-X-Received: by 2002:a05:600c:3b19:b0:490:3c15:7146 with SMTP id
- 5b1f17b1804b1-4926687e6eamr128170845e9.19.1782499021866; Fri, 26 Jun 2026
- 11:37:01 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PTLB0fEA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1782499056;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Xg+gfZZRw6uxD4/DdDYAkO88l6qr/2Ph391mNIOILd4=;
+	b=PTLB0fEAKcHHjN2447tjck6d2IPK9JieLCnjxoEGZ3ILyxJL/U55y5jODUIrKEp/V3wsId
+	wOY1UtP+vI4617sJBjp63qh0ZdwV3sn8/vJa18v9LMF9TKerFYlj4uMNyg6vZEFvOOyqhZ
+	yj5oZL6D0qbxhE5KCelHAPrFX2aOUWU=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-638-vKbXLotSONuCiEMUmwOrWQ-1; Fri,
+ 26 Jun 2026 14:37:30 -0400
+X-MC-Unique: vKbXLotSONuCiEMUmwOrWQ-1
+X-Mimecast-MFC-AGG-ID: vKbXLotSONuCiEMUmwOrWQ_1782499048
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 077271955DC9;
+	Fri, 26 Jun 2026 18:37:28 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.2.16.156])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E358619560A3;
+	Fri, 26 Jun 2026 18:37:23 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Farhad Alemi <farhad.alemi@berkeley.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Guopeng Zhang <guopeng.zhang@linux.dev>,
+	Gregory Price <gourry@gourry.net>,
+	David Hildenbrand <david@kernel.org>,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH v8 00/11] cgroup/cpuset: Support multiple source/destination cpusets for cpuset_*attach()
+Date: Fri, 26 Jun 2026 14:19:12 -0400
+Message-ID: <20260626181923.133658-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260626102358.1603618-10-alex@ghiti.fr> <20260626143244.3382853-1-usama.arif@linux.dev>
-In-Reply-To: <20260626143244.3382853-1-usama.arif@linux.dev>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Fri, 26 Jun 2026 11:36:50 -0700
-X-Gm-Features: AVVi8Ce_QPTWquN2d0lbnXchc4ZFxAYS-iAJXfFBvlstHcQ-UH4eG8289oGmnbI
-Message-ID: <CAKEwX=OKsjtStcuvhQ3WCGYoTJHT6eagBq1mZqX+DdbLm_BFLQ@mail.gmail.com>
-Subject: Re: [PATCH v2 9/9] mm: zswap: per-node kmem accounting for zswap/zsmalloc
-To: Usama Arif <usama.arif@linux.dev>
-Cc: Alexandre Ghiti <alex@ghiti.fr>, alexandre@ghiti.fr, 
-	Andrew Morton <akpm@linux-foundation.org>, Barry Song <baohua@kernel.org>, 
-	Ben Segall <bsegall@google.com>, cgroups@vger.kernel.org, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
-	David Hildenbrand <david@kernel.org>, Dennis Zhou <dennis@kernel.org>, 
-	Dietmar Eggemann <dietmar.eggemann@arm.com>, Ingo Molnar <mingo@redhat.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Kairui Song <kasong@tencent.com>, Kent Overstreet <kent.overstreet@linux.dev>, 
-	K Prateek Nayak <kprateek.nayak@amd.com>, "Liam R. Howlett" <liam@infradead.org>, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	Lorenzo Stoakes <ljs@kernel.org>, Mel Gorman <mgorman@suse.de>, Michal Hocko <mhocko@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Minchan Kim <minchan@kernel.org>, 
-	Muchun Song <muchun.song@linux.dev>, Peter Zijlstra <peterz@infradead.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Sergey Senozhatsky <senozhatsky@chromium.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Steven Rostedt <rostedt@goodmis.org>, Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, 
-	Valentin Schneider <vschneid@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Wei Xu <weixugc@google.com>, Yosry Ahmed <yosry@kernel.org>, 
-	Yuanchu Xie <yuanchu@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Fri, Jun 26, 2026 at 7:32=E2=80=AFAM Usama Arif <usama.arif@linux.dev> w=
-rote:
->
-> On Fri, 26 Jun 2026 12:20:58 +0200 Alexandre Ghiti <alex@ghiti.fr> wrote:
->
-> > Update zswap and zsmalloc to use per-node obj_cgroup for kmem
-> > accounting, attributing compressed page charges to the correct
-> > NUMA node.
-> >
-> > But actually, this is incomplete because it does not correctly account
-> > for entries that straddle pages, those pages being possibly on 2 differ=
-ent
-> > nodes.
-> >
-> > This will be correctly handled by Joshua in a different series [1].
-> >
-> > Link: https://lore.kernel.org/linux-mm/20260311195153.4013476-1-joshua.=
-hahnjy@gmail.com/ [1]
-> > Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
-> > ---
-> >  include/linux/zsmalloc.h |  2 ++
-> >  mm/zsmalloc.c            | 11 +++++++++++
-> >  mm/zswap.c               | 19 ++++++++++++++++++-
-> >  3 files changed, 31 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/include/linux/zsmalloc.h b/include/linux/zsmalloc.h
-> > index 478410c880b1..30427f3fe232 100644
-> > --- a/include/linux/zsmalloc.h
-> > +++ b/include/linux/zsmalloc.h
-> > @@ -50,6 +50,8 @@ void zs_obj_read_sg_end(struct zs_pool *pool, unsigne=
-d long handle);
-> >  void zs_obj_write(struct zs_pool *pool, unsigned long handle,
-> >                 void *handle_mem, size_t mem_len);
-> >
-> > +int zs_handle_to_nid(struct zs_pool *pool, unsigned long handle);
-> > +
-> >  extern const struct movable_operations zsmalloc_mops;
-> >
-> >  #endif
-> > diff --git a/mm/zsmalloc.c b/mm/zsmalloc.c
-> > index 83f5820c45f9..17f7403ebe77 100644
-> > --- a/mm/zsmalloc.c
-> > +++ b/mm/zsmalloc.c
-> > @@ -1380,6 +1380,17 @@ static void obj_free(int class_size, unsigned lo=
-ng obj)
-> >       mod_zspage_inuse(zspage, -1);
-> >  }
-> >
-> > +int zs_handle_to_nid(struct zs_pool *pool, unsigned long handle)
-> > +{
-> > +     unsigned long obj;
-> > +     struct zpdesc *zpdesc;
-> > +
-> > +     obj =3D handle_to_obj(handle);
-> > +     obj_to_zpdesc(obj, &zpdesc);
-> > +     return page_to_nid(zpdesc_page(zpdesc));
-> > +}
-> > +EXPORT_SYMBOL(zs_handle_to_nid);
->
-> Does this need the same locking as the other handle-to-zspage paths?
-> zs_free() takes pool->lock before handle_to_obj() because zspage migratio=
-n can
-> update or move the object behind the handle. This helper does the same de=
-code
-> without the lock, so zswap's uncharge path can race migration and charge =
-or
-> uncharge the wrong node, or observe transient zspage state.
->
+ v8:
+  - Update patch 3 to make attach_in_progress a global flag which block
+    all cpuset write operations until the attach is done.
+  - Add a new patch 4 to collect most of the attach related variables
+    into a attach_ctx structure as suggested by Ridong.
+  - Add a test_cpuset selftest patch contributed by Michal Koutný.
+  - Keep the existing Reviewed-by tags as there is no functional change
+    to the other patches other than rename of some variables. Also add
+    some new tags.
 
-Can we just charge it to the page's node for now? Once Joshua's patch
-series is in, we can correctly charge the node owning the data :)
+ v7: https://lore.kernel.org/lkml/20260621032816.1806773-1-longman@redhat.com/
+  - Include the fix patch from Farhad Alemi to fix a div/0 crash that
+    was part of the old patch 1.
+  - Integrated v6 patch 7 into earlier patches.
+  - Add a new "cgroup/cpuset: Prevent race between task attach and
+    cpuset state change" patch to ensure that there will be no cpuset
+    state change between cpuset_can_attach() and cpuset_attach() or
+    cpuset_cancel_attach().
+  - Break v6 patch 6 into 2 separate patches for supporting multiple
+    source cpusets and multiple destination cpusets respectively and
+    further simplify and streamline the code.
 
-FWIW, this is how these zswap entries are organized in the LRU too -
-following to the OG page's node.
+ v6:
+  - Make guarantee_online_mems() to only return cs->effective_mems with v2
+    in patch 1.
+  - Remove obsolete commit description text from patch 3.
+  - Add Reviewed-by tags.
+  - In patch 6, add WARN_ON_ONCE() test in cpuset_can_attach() to
+    confirm that cs != oldcs.
+
+Sashiko AI review of another cpuset patch had found that cpuset_attach()
+and cpuset_can_attach() can be passed a cgroup_taskset with tasks
+migrating from one source cpuset to multiple destination cpusets and
+vice versa.  Further testing of the cpuset code indicates that this is
+indeed the case when the v2 cpuset controller is enabled or disabled.
+
+Unfortunately, cpuset_attach() and cpuset_can_attach() still assume that
+there will be one source and one destinaton cpuset which may result in
+inocrrect behavior.
+
+This patch series is created to fix this issue.
+
+Patch 1 is a fix that fix a cgroup v2 div/0 crash due to bug in
+cpuset_update_tasks_nodemask().
+
+Patch 2 is to fix an inconsistency in the way node mask update is being
+handled in cpuset_update_tasks_nodemask() and cpuset_attach() so that
+they match each other.
+
+Patch 3 makes any cpuset state change to wait for the completion of the
+pending cpuset attach operation, if any.
+
+Patch 4 collects task attach related data into a common attach_ctx
+structure.
+
+Patches 5 and 6 are just preparatory patches to make the remaining
+patches easier to review.
+
+Patch 7 makes attach_ctx.old_cs track group leader for use by
+cpuset_migrate_mm().
+
+Patch 8 moves mpol_rebind_mm() and cpuset_migrate_mm() inside
+cpuset_attach_task() to make CLONE_INTO_CGROUP flag of clone(2) works
+more like moving task from one cpuset to another one, while also make
+supporting multiple source and destination cpusets easier.
+
+Patch 9 makes the necessary changes to enable the support of multiple
+source cpusets by keeping all the source cpusets found during task
+iterations in a singly linked lists.
+
+Patch 10 enables the support of multiple destination cpusets during the
+the enabling of cpuset v2 controller.
+
+Patch 11 adds new test case to test_cpuset to test disabling of cpuset
+controller.
+
+Farhad Alemi (1):
+  cgroup/cpuset: rebind mm mempolicy to effective_mems, not mems_allowed
+
+Michal Koutný (1):
+  selftests/cgroup: Add test for cpuset affinity on controller disable
+
+Waiman Long (9):
+  cgroup/cpuset: Fix node inconsistencies between
+    cpuset_update_tasks_nodemask() and cpuset_attach()
+  cgroup/cpuset: Prevent race between task attach and cpuset state
+    change
+  cgroup/cpuset: Put all task attach related variables into attach_ctx
+  cgroup/cpuset: Add a cpuset_reserve_dl_bw() helper
+  cgroup/cpuset: Expand the scope of cpuset_can_attach_check()
+  cgroup/cpuset: Make attach_ctx.old_cs track task group leader
+  cgroup/cpuset: Move mpol_rebind_mm/cpuset_migrate_mm() calls inside
+    cpuset_attach_task()
+  cgroup/cpuset: Support multiple source cpusets for cpuset_*attach()
+  cgroup/cpuset: Support multiple destination cpusets for
+    cpuset_*attach()
+
+ kernel/cgroup/cpuset-internal.h              |  11 +-
+ kernel/cgroup/cpuset.c                       | 442 ++++++++++++-------
+ tools/testing/selftests/cgroup/test_cpuset.c | 243 ++++++++++
+ 3 files changed, 541 insertions(+), 155 deletions(-)
+
+-- 
+2.54.0
+
