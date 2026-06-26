@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 769B130AABE;
-	Fri, 26 Jun 2026 15:00:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C161A0B15;
+	Fri, 26 Jun 2026 15:09:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782486058; cv=none; b=Pl1rK+vXtv+XP8jY7elN9ravgUcrxKgkUni4Q/7yPkczzHEOS8nlHgSKZfyNdVdVvOI1mOZYowmu8pOcX1iNUNznLlhRhFnq3jkqv6l/TTFTgA0MPkDWtu4Lo6/UCr/ZKIiDKOV38IoGrmIv1/frw/6vXuozBp1Pp4nHtf+mDj4=
+	t=1782486570; cv=none; b=ItdZVZJeb1y5E8uF3FhN3LLAoSGPZVBQgFaSR8voUjO1QgBQiMRZUfojfw9DJERYzL/ddjvH0f03/HKLLJ9dMVJRT/wcUgazOGDKnCuOWszzdTZ8ABE4C4QKTugmkrVauS3Mi7bncXwFyhEvqGf590e4S9O7Jss0Zh/drMDwtus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782486058; c=relaxed/simple;
-	bh=XSs3CUva20TTxVS/K+HeZG9LbMIKRnbeFCP9OdmsvHA=;
+	s=arc-20240116; t=1782486570; c=relaxed/simple;
+	bh=pO9q5/ZERzUyuBHblTMwVmboLPS+gVP4fti4BaerVVE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YZDUPLWIIDRrUyJWEQ7bkhTCOm68EY/myN5dmb4w/FZx6LklzGJijiXhe6cu44iQdypTMfBcYuYoUNEgBkzCWO3nBgMXk2LdCm0JJ06acK840AjVs+5+ht1t1JsVSJ6LmIQxFT0pbE767Mu/9A91ldHcD4H1rqyA1Wcp4xLWs8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nHoo2Yi/; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=TiOCAnG7mMI+8PWT2rhSMRR4LFSHcpP1LpCLe/MPjQbTyfOuTL75BXYPzLQ7NQAhcFPnoFa4bsVcrmfWPG1uPJxPJ4hgCiRJXs/rLtSSNF4bVil77vKqqkRF44+r0MaAw9vCCN7murtBi1b59pL+KbrAZBZbYIqb098YNL9wD4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WjfEBCkb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nHoo2Yi/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D48E01F000E9;
-	Fri, 26 Jun 2026 15:00:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WjfEBCkb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E8761F00A3A;
+	Fri, 26 Jun 2026 15:09:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782486055;
-	bh=juC1Y5v1j3sP5fMQDkrZYHNSUJQ+4S5mJUHcpe7Ac+Y=;
+	s=k20260515; t=1782486568;
+	bh=6MBy2BPUkeyOXyUL7Fz57L0BYcumMFApFKpBkO/8PzI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=nHoo2Yi/y4ujBsFKNm/8GmcKx89Mae5+bQ7ujza84jDtcjvSs+ZUoVL69Boo7vGdk
-	 8dMxUVeLpgwafnaKeZRD3TZp8e4ZtSG8lqn9Mp+jHxIjdPPx/R3ae/ZQMksOG/WTyg
-	 TE/mjtDb49CRf9bqw8oF9uoIPWqLpBwjtFyqazn6lpuFeiC1lpSDP0NUJoLeyUp/QK
-	 JHltctkNxct0riLSdhcwbrXAuyeFdoShcHwNnYhPyxw4qLzBGTBUTk7iUNgG3lXfAa
-	 CGPb1XNqC+Gj4LdIHL20+qPCy8Ef9+yq58//FqaxFz9FE1+B6ukmVUM3Bx1VffBvup
-	 g5G31jRhoyqug==
-Message-ID: <feb3e339-f61d-4f99-9859-e1895d396561@kernel.org>
-Date: Fri, 26 Jun 2026 17:00:51 +0200
+	b=WjfEBCkbGzVRIUD2Rmtyu6PIgaqLFU89CsEhXqdgmnDmy8UPaex1BeWyAc+/T1U0G
+	 +lhSPR3pV/ErHMPicQ7/CB6S3xjf1U/SCq/sXYVynnnLPwIkhc5k8C/nxAIPmmMDB/
+	 K4BxeNO4M6SsgxJA4pjOZ8JwgiRkYETVHmQkyEiG6OfHagiRewDiDwgqEBhay3otGQ
+	 n5feb/OLALrPJXumW0fOxMnhu6G54np5AJvfpkvZcFdqhQZc6LT64kT/tyF9vIr9hy
+	 y7gKK9N7maJqGjrnMCKKIxAkR47SKaRBeVFQ3kYdpJ+7srmarYJtTjKrDMG6s07pOr
+	 BYWELocHLM1xg==
+Message-ID: <b40a096a-ae54-40e2-816b-86c853435803@kernel.org>
+Date: Fri, 26 Jun 2026 17:09:23 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,9 +35,10 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 4/4] mm/slab: serialize defer_free_barrier()
+Subject: Re: [PATCH RFC 0/4] memcg,slab: kmalloc_nolock() fixes
 Content-Language: en-US
-To: "Harry Yoo (Oracle)" <harry@kernel.org>,
+To: Harry Yoo <harry@kernel.org>,
+ Alexei Starovoitov <alexei.starovoitov@gmail.com>,
  Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
  Roman Gushchin <roman.gushchin@linux.dev>,
  Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
@@ -47,7 +48,8 @@ To: "Harry Yoo (Oracle)" <harry@kernel.org>,
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, bpf@vger.kernel.org
 References: <20260624-kmalloc-nolock-fixes-v1-0-fdf4d17351dd@kernel.org>
- <20260624-kmalloc-nolock-fixes-v1-4-fdf4d17351dd@kernel.org>
+ <DJHF7S039QNX.KNVMFISSMLMU@gmail.com>
+ <b71f08a7-c767-4551-8e74-bc37aa1b028b@kernel.org>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -88,80 +90,78 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <20260624-kmalloc-nolock-fixes-v1-4-fdf4d17351dd@kernel.org>
+In-Reply-To: <b71f08a7-c767-4551-8e74-bc37aa1b028b@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 6/24/26 15:11, Harry Yoo (Oracle) wrote:
-> irq_work_sync() uses rcuwait instead of busy waiting in two cases:
+On 6/24/26 22:19, Harry Yoo wrote:
 > 
->   1. The kernel is using PREEMPT_RT and the irq work does not run in a
->      hardirq context.
 > 
->   2. The architecture cannot send inter-processor interrupts to make
->      busy waiting reasonably short.
+> On 6/25/26 1:30 AM, Alexei Starovoitov wrote:
+>> On Wed Jun 24, 2026 at 6:11 AM PDT, Harry Yoo (Oracle) wrote:
+>>>
+>>> Bug 1 was reported by lockdep, and bugs 2 [2] and 3 [3] were
+>>> reported by Sashiko.
+>> 
+>> ... and in fixes for sashiko complains sashiko finds more issues.
+>> I don't think it will ever end. I suggest to fix realistic scenarios
+>> instead of one out of billion cases that sashiko think is plausible
+>> but will never be hit in reality.
 > 
-> However, rcuwait.h says:
->> The caller is responsible for locking around rcuwait_wait_event(),
->> and [prepare_to/finish]_rcuwait() such that writes to @task are
->> properly serialized.
+> But we can trigger debug warnings for the first two bugs fairly
+> easily with slub_kunit. Doesn't that count as realistic scenarios?
 > 
-> Since defer_free_barrier() calls irq_work_sync() without any locks,
-> it can potentially cause a hang as writes to @task are not serialized.
+> (Ok, I admit that the last bug was purely theoretical, and would not
+>  have bothered if the fix was not straightforward)
 > 
-> Fix this by calling defer_free_barrier() under slab_mutex and
-> cpus_read_lock() and add lockdep asserts.
-> 
-> Now that defer_free_barrier() is called inside cpus_read_lock(), iterate
-> over online cpus instead of possible cpus.
-> 
-> Reported-by: Sashiko <sashiko+bot@kernel.org>
-> Closes: https://sashiko.dev/#/patchset/20260615-kfree_rcu_nolock-v3-0-70a54f3775bb%40kernel.org?part=5
-> Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Harry Yoo (Oracle) <harry@kernel.org>
+> You might argue that it's not as urgent as we might assume
+> (e.g., it's okay to not fix them asap or backport), but I don't think
+> we can just ignore them.
 
-Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Agreed, should be fixed, even if rare.
 
-> ---
->  mm/slab_common.c | 5 ++---
->  mm/slub.c        | 6 +++++-
->  2 files changed, 7 insertions(+), 4 deletions(-)
+> It might be bit harder to cause an actual deadlock than to
+> trigger a debug warning, though. We can discuss that [1] [2].
 > 
-> diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 388eb5980859..27f77273fabe 100644
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -550,11 +550,10 @@ void kmem_cache_destroy(struct kmem_cache *s)
->  		rcu_barrier();
->  	}
->  
-> -	/* Wait for deferred work from kmalloc/kfree_nolock() */
-> -	defer_free_barrier();
-> -
->  	cpus_read_lock();
->  	mutex_lock(&slab_mutex);
-> +	/* Wait for deferred work from kmalloc/kfree_nolock() */
-> +	defer_free_barrier();
->  
->  	s->refcount--;
->  	if (s->refcount) {
-> diff --git a/mm/slub.c b/mm/slub.c
-> index 4a3618e3967e..52c8d3f33782 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -6411,7 +6411,11 @@ void defer_free_barrier(void)
->  {
->  	int cpu;
->  
-> -	for_each_possible_cpu(cpu)
-> +	/* irq_work_sync() may use rcuwait that requires serialization */
-> +	lockdep_assert_held(&slab_mutex);
-> +	lockdep_assert_cpus_held();
-> +
-> +	for_each_online_cpu(cpu)
->  		irq_work_sync(&per_cpu_ptr(&defer_free_objects, cpu)->work);
->  }
->  
+>> The chance of server crashing
+>> due to cosmic rays are higher than such bugs.
+> 
+> I'm not convinced that it's the case.
+
+Yeah, especially with large fleets this will manifest for some machines, and
+as the usage of the API intensifies.
+
+> Well, I don't know what are the chances of calling kmalloc_nolock()
+> in NMI, or within slab or memcg (via tracing), and that is an important
+> factor here.
+> 
+>>> To BPF folks: do we need to backport kmalloc_nolock() support
+>>> for architectures without __CMPXCHG_DOUBLE to v6.18?
+>> 
+>> nope.
+> 
+> Thanks, that was what I was hoping :)
+> 
+> # The discussion
+> 
+> [1] Bug 1: freeing a slab object via kfree_nolock() or draining
+> the stock in kmalloc_nolock() happens very frequently. The objcg should
+> have been reparented (which happens upon cgroup removal, which is not
+> too rare) at some point if the objcg stock or a slab object is holding
+> the last reference.
+> 
+> Can this cause an actual deadlock? That depends on the chances of
+> calling kmalloc/kfree_nolock() in the middle of reparenting (see
+> reparent_[un]locks()) or objcg list manipulation under objcg_lock.
+> 
+> [2] Bug 2: You should exceed memcg limit to invoke
+> memcg_alloc_abort_single(), but you don't even have to be under
+> memory pressure to exceed that. (yeah, I had to modify the
+> kernel to implement a fault-injection-like-feature to trigger this).
+> Unfortunately, you cannot reclaim memory in unknown context when you
+> hit the limit. This should be fairly easy to trigger.
+> 
+> Can this cause an actual deadlock? That depends on the chances
+> of calling kmalloc/kfree_nolock() within the slab allocator.
 > 
 
