@@ -1,377 +1,138 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f47.google.com (mail-qv1-f47.google.com [209.85.219.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEBDE3B8409
-	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 18:38:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A1403B9DA9
+	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 18:53:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782499102; cv=none; b=ee3PRsH1k5Fw9yQ7hIADAl3VH7gJrCydsj4nAHFf5QUKAdiheI9s9oekdLYzTznlzhbJ8kuJPO2bbf3Nv6u425GiiWwZow1/NdEomCKtaaSmB95jTpGXXXSwi7CfxH/nHcXh18pya5mmcNkPMZNNr1FPLY2eLhncSyTxkTcwCGE=
+	t=1782500005; cv=none; b=l7md1gtcwEEqI35tTKxSscepqEXW3ao+EGl9HlkMVTAcgsCZAZ1VzWN1hjf4O8FmQeCydzu4z9umjbi588r5WjpowXN2vYsmXBfguea1Y4hsatbeFYk1JCBXg4Evq7Ub6ijzS2tQCIskw0QHOEXeJjL6coqwiyLLlj72Mr/NmUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782499102; c=relaxed/simple;
-	bh=ENYk6GNS43dprULP01JVzS2aHnkL+qdWkw6ys9fzHig=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UkpfC8yEZu920AgPiwLAhXiLLJnvirWxfsgZxz53AzhqsAYwAj8+4suM5ha4Klia2rQTTFQrzPBBKbeoJh32G5uZXlisNjoH3armZOS1BumKFsVkptLNJEiaLlx4mNC1vMW8PXjBk5pQDRtUdbZSwnxxdzltVLEoAfm0AgT47bo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aEgQTkbo; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1782500005; c=relaxed/simple;
+	bh=9XZqRQr/DXO0LxKf+tpIzaYO4GMeJs4kCEdyLaXiu2Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fs83rVi8uaCseUmqwibfre20O9hLj4q9R6i6rtA3KIsAjqD/IPxlHCCYgdkuxLArDOndjVrKJyXsdYfhs+KhF3F8qKbzr5BebuApHCNvZk6uSKmKL0zkjP5oPDb6gDjw8bXzJ4+eOFSotM3aE0mMhH3xWcF1EZrayJm8Fa97usY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=dAcnO2eD; arc=none smtp.client-ip=209.85.219.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aEgQTkbo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1782499100;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GhQadWWbyJNoWjy2SCoPtNuWLEk15QTFYZ61Hy14GqU=;
-	b=aEgQTkboYrLNjJU7R/ae2cOPs20GdZKgiYjcyE3WF4Hr/SLofTuCCK4DdB0YzY1Z3DdsW9
-	IM06QJqD7rgVrk7iUD/MmVY0AyJfnHS2375qOSNRTOYTHyP9C7gj0h0wtFC3y5DTRhGtvj
-	zw0xJ2v/NIRYKDE2cn1YG7uH1+rjb/M=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-292-Jcz7cGlwNy-7qRyhfnO9bQ-1; Fri,
- 26 Jun 2026 14:38:15 -0400
-X-MC-Unique: Jcz7cGlwNy-7qRyhfnO9bQ-1
-X-Mimecast-MFC-AGG-ID: Jcz7cGlwNy-7qRyhfnO9bQ_1782499093
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6E6CA1954B1E;
-	Fri, 26 Jun 2026 18:38:13 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.2.16.156])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B9A9819560A3;
-	Fri, 26 Jun 2026 18:38:08 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Ridong Chen <ridong.chen@linux.dev>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Farhad Alemi <farhad.alemi@berkeley.edu>,
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="dAcnO2eD"
+Received: by mail-qv1-f47.google.com with SMTP id 6a1803df08f44-8dd74f90e3eso12545316d6.2
+        for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 11:53:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1782500002; x=1783104802; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=69VEjjKoDye+wBUZ6dmdcwCgt8H3I0Ua/NDklzX2JWs=;
+        b=dAcnO2eDaFxfoCwz9CoVaF0XkL/rzd5Y8ltZgUwXVXuq5eDUVxQrdIG9B/OiPEEQvm
+         Q+eCzVYHIQkJelsH+g9qf7UYocUszgZ/qp7tGmDJ7m7cNAQ7WTTPFhei3sU0YvuWAZBF
+         P3WlMIX9wyoWDlyDhpYsj5DsBUeKc9MpqRg+kEKEg3toIf3ggqOvHC5duQmJwO13suLR
+         A9ex83CV4R0/IpCGDuAVMAoUbDCqCzniJYPG7GrbNbMGxX8WiQyIkx7xrQzZOiijaZqB
+         1Gg7+imZAw60UaMwpuITG5fZcx3tVYnNTY6JnnDBfIO1Ta+hvfW3zGZLvSdQYfl6S/VC
+         r3Hw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782500002; x=1783104802;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=69VEjjKoDye+wBUZ6dmdcwCgt8H3I0Ua/NDklzX2JWs=;
+        b=VldfNTUOCDGxDjnBBV8xAtPvgdXn2kLsxQ4QvZdmZkTr/oMB03K8QSteqSrRct4RYM
+         lF5veVzQcOFAEOWWkVHX53ubDOfEi/uSjIfmVk7NZLl4YYWvnQALGfrr7+2OK7qFKgWT
+         nxxKTIIK/6HpJ10dVJL61P21E4VA9iXEFgUpKCM1pMzL8JtYuCJBJeVmanlIE5GQr7s6
+         du/hqooEsja6/S0joi06lGLMlopqwzPALerMaJHYiLAG0oXHHDioDyMT7h1S3lmkZm2w
+         m8KF7z38sm1FZJuMV5fYLdgSrhk3OXpqsPLZ4upP+ja/0/NnHQgBug256dV+qWI1ifYS
+         IwfQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqNU5UsiJRcDvteOFdYbLuT6Zi0l8eQ+s9cIS+idkqB0rmYsJM6mhsxx7OTuNTBqJEBBNRpYIHB@vger.kernel.org
+X-Gm-Message-State: AOJu0YyskVgJoJIwuNDd3jMTLPttWyHPctKPH5Up2QDaYbZs9L12n0hY
+	g/oOblbRSXgjKHam5fIHZqyfrOgMd/innm409RPV9qvBub+x9KA1anOFbWNDHlknjck=
+X-Gm-Gg: AfdE7clYKclz0yF0oqwM9yALdT0/8WASBuEJL4hxHdv+Y8VK64B5rtTI2k9u9n0yCgs
+	WCiofK0Zou20R+YJXJ8VACqctmjv3iLkb7+2+eNszR9umbo5GtrzMDK7FA/sBOkh/91Ye6XYW/e
+	RryLcHiFxM995Ad/sNi3Xrt21z2bhINXipBx5OFYfNdhpx0nPIKn2NiKhb9tLll4bjEAjtLBCF7
+	qrFr7D+oDNrv2gBg1BpI1IHen0PfmFJlCadi+QaV9MvmL9N2dvM1sqYjwD+KMRlKHXv0f/HeW/F
+	CI6LxbSgMffaL9EbwBZfZo72MfAeLvk0wfitSSO3NVRm7bxZVJJqhGzw6QQAztuOHKr4S1ATyl1
+	9AoBTJIim8JfwM8y9eOd48uLE88COYo0QB6nvqPAFu5LQXv10WpBc++knsn+3f37l2WPDVXJCHN
+	TqGaPnnuMX1vA=
+X-Received: by 2002:a05:6214:3907:b0:8db:a79d:1f0d with SMTP id 6a1803df08f44-8e98609495amr30686266d6.31.1782500002098;
+        Fri, 26 Jun 2026 11:53:22 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8df7f0180d3sm219727366d6.3.2026.06.26.11.53.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 26 Jun 2026 11:53:21 -0700 (PDT)
+Date: Fri, 26 Jun 2026 14:53:20 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Breno Leitao <leitao@debian.org>
+Cc: Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Aaron Tomlin <atomlin@atomlin.com>,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Gregory Price <gourry@gourry.net>,
-	David Hildenbrand <david@kernel.org>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH v8 11/11] selftests/cgroup: Add test for cpuset affinity on controller disable
-Date: Fri, 26 Jun 2026 14:19:23 -0400
-Message-ID: <20260626181923.133658-12-longman@redhat.com>
-In-Reply-To: <20260626181923.133658-1-longman@redhat.com>
-References: <20260626181923.133658-1-longman@redhat.com>
+	Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com, stable@vger.kernel.org
+Subject: Re: [PATCH] mm: memcg: initialize *locked in memcg1_oom_prepare()
+ stub
+Message-ID: <aj7KoDXJv3NByGUm@cmpxchg.org>
+References: <20260626-memcg-oom-uninit-locked-v1-1-a00175936b39@debian.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260626-memcg-oom-uninit-locked-v1-1-a00175936b39@debian.org>
 
-From: Michal Koutný <mkoutny@suse.com>
+On Fri, Jun 26, 2026 at 05:43:02AM -0700, Breno Leitao wrote:
+> mem_cgroup_oom() passes an uninitialized "locked" to memcg1_oom_prepare()
+> and reads it back in memcg1_oom_finish():
+> 
+> 	bool locked, ret;
+> 	...
+> 	if (!memcg1_oom_prepare(memcg, &locked))
+> 		return false;
+> 	ret = mem_cgroup_out_of_memory(memcg, mask, order);
+> 	memcg1_oom_finish(memcg, locked);
+> 
+> This relies on memcg1_oom_prepare() setting *locked whenever it returns
+> true.  The CONFIG_MEMCG_V1=y version does, but the stub used when
+> CONFIG_MEMCG_V1=n returns true without touching *locked, so
+> memcg1_oom_finish() consumes an uninitialized value.  On a memcg OOM this
+> is reported by UBSAN:
+> 
+>   UBSAN: invalid-load in mm/memcontrol.c:1932:27
+>   load of value 0 is not a valid value for type 'bool' (aka '_Bool')
+> 
+> Initialize *locked to false in the stub; with cgroup v1 compiled out
+> there is no OOM lock to take.
+> 
+> Fixes: e93d4166b40a ("mm: memcg: put cgroup v1-specific code under a config option")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Breno Leitao <leitao@debian.org>
 
-Add a new selftest that exposes a bug in cpuset_attach() where thread
-CPU affinity is not properly updated when the cpuset controller is
-disabled in a threaded cgroup hierarchy.
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
-The test creates a threaded cgroup hierarchy with two child cgroups
-(A and B) having different cpuset.cpus constraints:
-- Parent: cpuset.cpus=0-1
-- Child A: cpuset.cpus=0-1
-- Child B: cpuset.cpus=1 (restricted to CPU 1 only)
+I prefer this way over the idea to initialize in the caller. For the
+actual implementation, the protocol is that the thing is initialized
+when the function returns true. This version of the fix maintains that
+for the dummy as well:
 
-A multithreaded process is created with threads placed in different
-cgroups. When the cpuset controller is disabled on the parent, thread
-affinities should be updated to match the parent's cpuset.
-
-Expected behavior:
-- thread_a affinity: {0-1} before and after (unchanged)
-- thread_b affinity: {1} before, {0-1} after (expanded)
-
-Current buggy behavior:
-- thread_b affinity remains {1} after controller disable
-
-Assisted-by: Claude:claude-sonnet-4-5
-Signed-off-by: Michal Koutný <mkoutny@suse.com>
-Acked-by: Waiman Long <longman@redhat.com>
----
- tools/testing/selftests/cgroup/test_cpuset.c | 243 +++++++++++++++++++
- 1 file changed, 243 insertions(+)
-
-diff --git a/tools/testing/selftests/cgroup/test_cpuset.c b/tools/testing/selftests/cgroup/test_cpuset.c
-index c5cf8b56ceb8..8b4c4a9dd78b 100644
---- a/tools/testing/selftests/cgroup/test_cpuset.c
-+++ b/tools/testing/selftests/cgroup/test_cpuset.c
-@@ -1,7 +1,13 @@
- // SPDX-License-Identifier: GPL-2.0
- 
-+#define _GNU_SOURCE
-+#include <assert.h>
- #include <linux/limits.h>
-+#include <pthread.h>
-+#include <sched.h>
- #include <signal.h>
-+#include <sys/syscall.h>
-+#include <unistd.h>
- 
- #include "kselftest.h"
- #include "cgroup_util.h"
-@@ -232,6 +238,242 @@ static int test_cpuset_perms_subtree(const char *root)
- 	return ret;
- }
- 
-+static int get_cpu_affinity(cpu_set_t *mask)
-+{
-+	CPU_ZERO(mask);
-+	return sched_getaffinity(0, sizeof(*mask), mask);
-+}
-+
-+static int cpu_set_equal(cpu_set_t *dst, unsigned long mask)
-+{
-+	cpu_set_t expected;
-+
-+	CPU_ZERO(&expected);
-+	assert(sizeof(mask) < CPU_SETSIZE);
-+
-+	for (int cpu = 0; cpu < sizeof(mask); ++cpu)
-+		if ((1UL << cpu) & mask)
-+			CPU_SET(cpu, &expected);
-+
-+	return CPU_EQUAL(&expected, dst);
-+}
-+
-+enum test_phase {
-+	AFFINITY_SETUP,
-+	AFFINITY_THREAD_A_READY,
-+	AFFINITY_THREADS_READY,
-+	AFFINITY_CONTROLLER_DISABLED,
-+	AFFINITY_COMPLETE,
-+	AFFINITY_ERROR
-+};
-+
-+struct thread_args {
-+	const char *cgroup;
-+	cpu_set_t *affinity_before;
-+	cpu_set_t *affinity_after;
-+	enum test_phase ready_phase;
-+};
-+
-+static pthread_mutex_t test_mutex = PTHREAD_MUTEX_INITIALIZER;
-+static pthread_cond_t test_cond = PTHREAD_COND_INITIALIZER;
-+static enum test_phase test_phase;
-+
-+static void *affinity_thread_fn(void *arg)
-+{
-+	struct thread_args *args = (struct thread_args *)arg;
-+
-+	if (cg_enter_current_thread(args->cgroup))
-+		goto fail;
-+
-+	if (get_cpu_affinity(args->affinity_before) != 0)
-+		goto fail;
-+
-+	pthread_mutex_lock(&test_mutex);
-+	if (test_phase < args->ready_phase)
-+		test_phase = args->ready_phase;
-+	pthread_cond_broadcast(&test_cond);
-+
-+	while (test_phase < AFFINITY_CONTROLLER_DISABLED)
-+		pthread_cond_wait(&test_cond, &test_mutex);
-+	pthread_mutex_unlock(&test_mutex);
-+
-+	if (get_cpu_affinity(args->affinity_after) != 0)
-+		goto fail;
-+
-+
-+	return NULL;
-+
-+fail:
-+	pthread_mutex_lock(&test_mutex);
-+	test_phase = AFFINITY_ERROR;
-+	pthread_cond_broadcast(&test_cond);
-+	pthread_mutex_unlock(&test_mutex);
-+	return NULL;
-+}
-+
-+/*
-+ * Test that disabling cpuset controller properly updates thread affinity.
-+ *
-+ * This test exposes a bug in cpuset_attach() where threads in child cgroups
-+ * don't get their affinity updated when the cpuset controller is disabled.
-+ *
-+ * Setup:
-+ * - Create parent cgroup with cpuset.cpus=0-1
-+ * - Create child A with cpuset.cpus=0-1
-+ * - Create child B with cpuset.cpus=1
-+ * - Place multithreaded process: group leader + thread_a in A, thread_b in B
-+ * - Disable cpuset controller on parent
-+ *
-+ * Expected: thread_b's affinity should expand from {1} to {0-1}
-+ * Buggy: thread_b's affinity remains {1}
-+ */
-+static int test_cpuset_affinity_on_controller_disable(const char *root)
-+{
-+	char *parent = NULL, *child_a = NULL, *child_b = NULL;
-+	pthread_t thread_a, thread_b;
-+	int thread_a_created = 0, thread_b_created = 0;
-+	cpu_set_t affinity_a_before, affinity_a_after;
-+	cpu_set_t affinity_b_before, affinity_b_after;
-+	int ret = KSFT_FAIL;
-+
-+	parent = cg_name(root, "cpuset_affinity_test");
-+	if (!parent)
-+		goto cleanup;
-+	if (cg_create(parent))
-+		goto cleanup;
-+	if (cg_write(parent, "cgroup.type", "threaded"))
-+		goto cleanup;
-+
-+	child_a = cg_name(parent, "A");
-+	if (!child_a)
-+		goto cleanup;
-+	if (cg_create(child_a))
-+		goto cleanup;
-+	if (cg_write(child_a, "cgroup.type", "threaded"))
-+		goto cleanup;
-+
-+	child_b = cg_name(parent, "B");
-+	if (!child_b)
-+		goto cleanup;
-+	if (cg_create(child_b))
-+		goto cleanup;
-+	if (cg_write(child_b, "cgroup.type", "threaded"))
-+		goto cleanup;
-+
-+	/* Now enable cpuset controller in parent */
-+	if (cg_write(parent, "cgroup.subtree_control", "+cpuset")) {
-+		ret = KSFT_SKIP;
-+		goto cleanup;
-+	}
-+
-+	/* Set CPU affinity constraints */
-+	if (cg_write(parent, "cpuset.cpus", "0-1"))
-+		goto cleanup;
-+	if (cg_write(child_a, "cpuset.cpus", "0-1"))
-+		goto cleanup;
-+	if (cg_write(child_b, "cpuset.cpus", "1"))
-+		goto cleanup;
-+
-+	/* Move group leader (main thread) to child A */
-+	if (cg_enter_current(child_a))
-+		goto cleanup;
-+
-+	/* Create threads - they will move themselves to their respective cgroups */
-+	test_phase = AFFINITY_SETUP;
-+
-+	struct thread_args args_a = {
-+		.cgroup = child_a,
-+		.affinity_before = &affinity_a_before,
-+		.affinity_after = &affinity_a_after,
-+		.ready_phase = AFFINITY_THREAD_A_READY,
-+	};
-+	if (pthread_create(&thread_a, NULL, affinity_thread_fn, &args_a))
-+		goto cleanup;
-+	thread_a_created = 1;
-+
-+	struct thread_args args_b = {
-+		.cgroup = child_b,
-+		.affinity_before = &affinity_b_before,
-+		.affinity_after = &affinity_b_after,
-+		.ready_phase = AFFINITY_THREADS_READY,
-+	};
-+	if (pthread_create(&thread_b, NULL, affinity_thread_fn, &args_b))
-+		goto cleanup_threads;
-+	thread_b_created = 1;
-+
-+	pthread_mutex_lock(&test_mutex);
-+	while (test_phase < AFFINITY_THREADS_READY)
-+		pthread_cond_wait(&test_cond, &test_mutex);
-+
-+	/* If a thread failed during setup, bail out */
-+	if (test_phase == AFFINITY_ERROR) {
-+		pthread_mutex_unlock(&test_mutex);
-+		goto cleanup_threads;
-+	}
-+	pthread_mutex_unlock(&test_mutex);
-+
-+	if (!cpu_set_equal(&affinity_a_before, 0x3)) {
-+		ksft_print_msg("FAIL: thread_a initial affinity incorrect\n");
-+		goto cleanup_threads;
-+	}
-+
-+	if (!cpu_set_equal(&affinity_b_before, 0x2)) {
-+		ksft_print_msg("FAIL: thread_b initial affinity incorrect\n");
-+		goto cleanup_threads;
-+	}
-+
-+	/* Disable cpuset controller - this should trigger affinity update */
-+	if (cg_write(parent, "cgroup.subtree_control", "-cpuset"))
-+		goto cleanup_threads;
-+
-+	/* Signal threads to save their final affinity and exit */
-+	pthread_mutex_lock(&test_mutex);
-+	test_phase = AFFINITY_CONTROLLER_DISABLED;
-+	pthread_cond_broadcast(&test_cond);
-+	pthread_mutex_unlock(&test_mutex);
-+
-+	pthread_join(thread_a, NULL);
-+	pthread_join(thread_b, NULL);
-+
-+	/* Verify thread affinities AFTER disabling controller */
-+	if (!cpu_set_equal(&affinity_a_after, 0x3)) {
-+		ksft_print_msg("FAIL: thread_a final affinity incorrect\n");
-+		goto cleanup;
-+	}
-+
-+	if (!cpu_set_equal(&affinity_b_after, 0x3)) {
-+		ksft_print_msg("FAIL: thread_b affinity did not expand to {0-1}\n");
-+		goto cleanup;
-+	}
-+
-+	ret = KSFT_PASS;
-+	goto cleanup;
-+
-+cleanup_threads:
-+	pthread_mutex_lock(&test_mutex);
-+	test_phase = AFFINITY_COMPLETE;
-+	pthread_cond_broadcast(&test_cond);
-+	pthread_mutex_unlock(&test_mutex);
-+
-+	if (thread_a_created)
-+		pthread_join(thread_a, NULL);
-+	if (thread_b_created)
-+		pthread_join(thread_b, NULL);
-+
-+cleanup:
-+	/* Move back to root before cleanup */
-+	cg_enter_current(root);
-+
-+	cg_destroy(child_b);
-+	free(child_b);
-+	cg_destroy(child_a);
-+	free(child_a);
-+	cg_destroy(parent);
-+	free(parent);
-+
-+	return ret;
-+}
-+
- 
- #define T(x) { x, #x }
- struct cpuset_test {
-@@ -241,6 +483,7 @@ struct cpuset_test {
- 	T(test_cpuset_perms_object_allow),
- 	T(test_cpuset_perms_object_deny),
- 	T(test_cpuset_perms_subtree),
-+	T(test_cpuset_affinity_on_controller_disable),
- };
- #undef T
- 
--- 
-2.54.0
-
+> ---
+>  mm/memcontrol-v1.h | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+> index f92f81108d5ed..4fa6e2bc8413f 100644
+> --- a/mm/memcontrol-v1.h
+> +++ b/mm/memcontrol-v1.h
+> @@ -107,7 +107,11 @@ static inline void memcg1_remove_from_trees(struct mem_cgroup *memcg) {}
+>  static inline void memcg1_soft_limit_reset(struct mem_cgroup *memcg) {}
+>  static inline void memcg1_css_offline(struct mem_cgroup *memcg) {}
+>  
+> -static inline bool memcg1_oom_prepare(struct mem_cgroup *memcg, bool *locked) { return true; }
+> +static inline bool memcg1_oom_prepare(struct mem_cgroup *memcg, bool *locked)
+> +{
+> +	*locked = false;
+> +	return true;
+> +}
+>  static inline void memcg1_oom_finish(struct mem_cgroup *memcg, bool locked) {}
+>  static inline void memcg1_oom_recover(struct mem_cgroup *memcg) {}
