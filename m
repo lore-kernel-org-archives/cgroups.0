@@ -1,132 +1,187 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A801481B1
-	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 16:44:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782492291; cv=none; b=S6uWfbMVo0/zDZ7ZXQ30e2pkgFzGG9TsboswAX6eL3OVmxdPdazvhmOqb/aAngNvEd5Q+8njyAifGNaWhGgUhAi8cJFgwuvHr6XtYLX5mivFZOBG2IZV9FGRdvQzQLqgld1ypy/lifWzVIEqMm3xP2NNUnhvoYWsQUDWBAo7CRs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782492291; c=relaxed/simple;
-	bh=m7F5wb38djwjdU4PCT+nH0ihnwGgVV3yXMzvQ77WA+A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DqCKZeESxQnRPolOiuHnIIrWnBK1fog4ZI/qsMp/9m6i4+4VnfuUragmC4uCLiV16vcT+pnepxYR2IlJf9E/opxoKg4vFeiUTur/QLHcxgUpcSbrR5Y37WCMQEYdO7JHZnks225EX15IC/rsZiz+b0fjNY5RaN6UcRVwa/J7DCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=TECVmPGk; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAA8D3B8405
+	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 18:37:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782499026; cv=pass; b=RBL/1SJ9BDr8sC6eFDIHeAkZjKBsoBrAlsOccp5EyPo4lIvhQVKzbEVkiOl6UlEBMGO1snc7mBVn0NB7BnxBGRIHNLWgsMjPfMkWrAWVvBgGXd9EbOALQM9zcc4WWFgkfFliFCcTZLkc4JM7A5O6K07n5iJShWhpOgndm0OXwG0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782499026; c=relaxed/simple;
+	bh=OfOa8rqqXCKRNRLH/nmiHKh0iPBKtZJR4R6D2Wg9rRw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jQzrpbPoV15vfuPu1J+5+lnHYHsdImovxzisFtVP6fNJD6EofdeiWjwuxbTXjfbysQwZiCnsvbQG9jfR+4QTl2HmVY5JccnC5a99KnBMs+5U8ci4Mfs/8IT3LgWhyY68GzdtgNfP1/PP/heIxVpHc0tPQ3Nr3GKwLwFpDZTZqFw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XsgvWSZL; arc=pass smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="TECVmPGk"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4926d6b177eso4231685e9.1
-        for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 09:44:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XsgvWSZL"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4903d730b1fso16707805e9.2
+        for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 11:37:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782499022; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pWq4vTHMdGP2nM4xG1ozpICeuiewLXfMbWJuLFPYqyTAg1K2GgdRLwm03u7DDLw3lo
+         FEHoHblrzKDFICHiSLf/1H7kPVKTzJFNx3P4CPvqrh6+6EBa3QjAmuuWf8298Rfh144o
+         V6eI+TPdu+omik/pUqcOW72yVeS0BTH7o/iSRUJZYN51lYVj4C+4Hup99AL+Q+JnwklA
+         ehcZehwZMNN23rqKTTVdzrL5W2lSkOCHwaxdxF1XboFFQnaV3d/xEPFuUdjWR0flzcs3
+         U954q/1g32gWaxkIA9NSV1vt/iOVoot6IYdwt6DUfn+wdKxzya2Ws5HpcMeVM0FrvV6R
+         UCTg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=HOOeJEgGJirHLvCIZDna3WzBVXhg0OXljifTzHlO340=;
+        fh=07xrVQQFIRI19R4hQ2m7rGkK/6gXHdvj3le0GMREyII=;
+        b=Gn9ZJjqcwg88M+7L89dpa4aUmP0ctoHGTnKX4OfNrvVusm9oTPw+CM1LkAk5GAvbP/
+         fRArj0fpmgpPUjTIJeGAq2RBkDV06M98xzzJz5jfwWKdAkEHteVbFepov18kGTOe0u/w
+         GQQ6BnUiCngz/OAv60YHGcgsdc2B2BcjOdyjWp/TZvNugeNIpn9lmwkn00VuW88c8S3m
+         2xw++4swUBd3TcULxKF/zcoM7chMUSGPvnd0tVtXPDJA0b0A+hovbrang5MaKNydxu6w
+         v0WJ9I8263aQRuglkv7qRKBphyFDe8hQ12YF+IQph6KGS4eaLW9bpXcjJ+xpSpgdr/Ky
+         uPYQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1782492289; x=1783097089; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=KiWBrutmWIAfCPXVB/qlhLvNu7kR/O5EnS7WLLWLfPA=;
-        b=TECVmPGkq0DaeiaNUl23gL3Wb4fhb619kgYRgs/l/tsrnW8IM81fqybkFcEldIy0yX
-         n3UInS9NnojoXAYsWuY+lDUjQbhMPr4gW4v/DKxoeJ/vZ21BtTE9MDnmX1wdiVsrwwPt
-         bW8UT01KcgXbHBPIKbHyWHG5/X0EK9Pbn682eqHPA0XTW+Ry06jsRsO9fx6Q7fz+ZNs7
-         Pj+tQuSZu3iCToo7DzMWcVoqQoLXfqUwvOcThlHMhz3uJc9LSiIO3NJV7emdkzVvSSO8
-         oqyuwj5XsE0U1PyBPkjcpV+USn1im6dg/xb4ZwF1fQ4w1I4rjScVEuFHy4jQQihDrQTC
-         8QIg==
+        d=gmail.com; s=20251104; t=1782499022; x=1783103822; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=HOOeJEgGJirHLvCIZDna3WzBVXhg0OXljifTzHlO340=;
+        b=XsgvWSZL4OJdDStOy8iZ02jKrcxWhZV2B0bWwznTt+6Q2cRxehpKw2ry2J3vOZWL9T
+         oO6Ee/cKEyqeS4g8NMdkwRE0vP18VHsvSG6VvIC7O3KOeSdxcvmELH9XChtIkFAIlJzk
+         E1I7YBx11WmHrrGvVxJWVKGx+aO+uz2ocA3UM7QJ0MDk+E35HEq5B1rqjPH2DjEZm78K
+         uwOwGu6rtUF7Pp6Ikp8PE9A/8z2V6U5eZgaMyhHuUfDu9jHwSQqzw76NvjU22bnEgN2X
+         4PZaWb9oJ4a1l8lO2rrOgEOWcKHqTGHgzKCbA22yaz1a7mlKUJfealBTKJ7gQGXLJ2BJ
+         0jug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782492289; x=1783097089;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KiWBrutmWIAfCPXVB/qlhLvNu7kR/O5EnS7WLLWLfPA=;
-        b=r1jo+NSVUg9YXimslnaxQdHu/T2mjlftcADLN4ChZ3NKGE0ti1gHnis2hV5HjEmps4
-         jxGc76dc/nBHhVRnsnrq1hZi9vhKZnrIiHyoHla9YnFC+L2ScFPuKaQI7jvxYOjfBHln
-         w5G1Mzh7PYlE2MGDa/sxvCoNjyNBL2LxnNhuPJITk1PXtr9LS0+XOYn62tmnLpX12+4x
-         4zs6F8bTbvgOvsAYCF5bMtVrfYA6Ewjpss2kEWyixXD2aSqbb0nMOVwVb4rePmiIwrew
-         LgIB72CPPPNAoWCrmZ89BpGvUfIrpGvZzzKadIOokQminix/TP/qLnLO1QnLT3NGA6Fb
-         cq6A==
-X-Forwarded-Encrypted: i=1; AFNElJ9u+0Q0Q52K2NpRH5cv3rhdsOfdwtFXE48/XIljiblyWBtX4Nv7JSYL09HTFAwxUr7Tx21YFTWc@vger.kernel.org
-X-Gm-Message-State: AOJu0YwePGfI4h/JeAJY3mH0CuSHOzSJwYXgYmaLbWkAp7Po8JUrbU9V
-	VfPugBi4Nri00VrbVpShVXj0btz53rualMQIQnHt8H3NfVAjlTm1VKgOXjgIsittckk=
-X-Gm-Gg: AfdE7cmwilattoS1Yvv473qbXTdCOLv7Jd1/2mRd42Tc0SqCfFK/xigc5t6kQnc7996
-	fILl1kC4SUXZLnikCLN52+fompd1+YCopTRHci+T+5zQPyf5X1ywGtkp5GFCJ1Cv/XxlRcydX5D
-	KvFDV+NlCTUaS3Iq0Sy5OkOW9UD/NTnPCynFfEdXm2qPLAwL5aPe1A7JnU3gckfhvlfpNSi4qqJ
-	sRU3k1sernBfW5Gn8e45rlIgbByP8qOfBtKtLbnbT3dsaAUonfMZl4xeW65NRswGtOFFMr4Bff+
-	h9bZLQjDSrjb+Gr9Ilt6xa7RG4sxRE9LtuggA2/MEjugkInm4z5lYJ8NnSivIJGTFmlhllJySJ/
-	SeO14FQFhqfpi14VW/zqGy5stcTv3T4iqPwX9QyoACgWixY1TQ2ulAW4Ckg65qyStjozk4+K57K
-	3Rq1LrUW2epdTGTLWgNw==
-X-Received: by 2002:a05:600c:c118:b0:492:6881:1114 with SMTP id 5b1f17b1804b1-49268811131mr76135445e9.0.1782492289053;
-        Fri, 26 Jun 2026 09:44:49 -0700 (PDT)
-Received: from localhost.localdomain ([62.77.90.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4926c02088dsm53200365e9.0.2026.06.26.09.44.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2026 09:44:48 -0700 (PDT)
-Date: Fri, 26 Jun 2026 18:44:46 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Joe Simmons-Talbott <joest@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Shuah Khan <shuah@kernel.org>, cui.tao@linux.dev, Li Wang <li.wang@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
-	Guopeng Zhang <zhangguopeng@kylinos.cn>, Sebastian Chlad <sebastianchlad@gmail.com>, 
-	"open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, 
-	"open list:KERNEL SELFTEST FRAMEWORK" <linux-kselftest@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH RESEND v4] selftests/cgroup: Adjust cpu test duration
- based on HZ
-Message-ID: <aj6r_tUrPH8eTuQw@localhost.localdomain>
-References: <20260625203307.1114538-1-joest@redhat.com>
+        d=1e100.net; s=20251104; t=1782499022; x=1783103822;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=HOOeJEgGJirHLvCIZDna3WzBVXhg0OXljifTzHlO340=;
+        b=b6pkwZSpT+JGwlHIZbCPUvTPFedQv1jCT7oPeF4194fyZcQn+RGdzitYWd54cpqye2
+         NyhdCFPP+9IotOXPqy6x03jiNWU0JvY5psMey2dRKlAwm6RXBjak029lDOmenxWwFxcd
+         pww/gCE3G+LxysFACQmKzAkQpdAoJhGUC3Ri8D99LdGSE738TBPYXtc6NpTxrwwJXjWk
+         G7mbuLrFauC5pQG4EzX+1Lg1B7FDgtA0kyl7+aUoHEQUqBaJRbv9JLn3GshQtx+8a1+Q
+         mzVC3pogY1qULQ0V822626lcIi6dytqpQ43pZi479FcbQixGIff56r35k+hXYxNJDsuq
+         bMYQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/pEi0ZM3Fi2Usz6NnZ4m0usse6Tt4uPhJyk6gB8jQA2niiZsf6cGycL8I0RyM6kO3J2GSBac8b@vger.kernel.org
+X-Gm-Message-State: AOJu0YyDxVfy1+u6mFMV75d7w46QOhRDM2s483z1OfnNXv0kMZt2thXi
+	mHcIaaqqioK4NZHV0WG3+PC0RrbgF7O2FOzCu6n2cwsxfrHyXUzuPSXtZH5dH5tj5yBd8a9QD0C
+	UhYW4VaZRur1xevT5BJbzkg9XbcEzp5g=
+X-Gm-Gg: AfdE7cl9+SRsC/gyd86aDIsipsgqRn4yREx9RQ4vLeuQxdDFF+FOtoiNuWPgOzg5kZm
+	6K2ana/Ap3QQaNq6A9TVpmmkeqHmMnp7/o6DxU15i4DhOopQyLf39V35i27+ZdJP69yQOUk4c1F
+	oCx7nDDP0jcsTy8v/bH3FG920LWnOgQOcGbAslUz0tlksKt8fnf/pe2PmJ35pdDv91YqhK3b4Eh
+	CjNiY2LxPdiJdz68ZS9kZYhm9VUAEAyEmhQlgrVXEYEYfQuBUWkJFWnxZe8lSZ4R666jc9OEE3k
+	fEzn+utpUst9VHQeNkWi5hn1dpHY
+X-Received: by 2002:a05:600c:3b19:b0:490:3c15:7146 with SMTP id
+ 5b1f17b1804b1-4926687e6eamr128170845e9.19.1782499021866; Fri, 26 Jun 2026
+ 11:37:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="hnagmfluecnp3bhm"
-Content-Disposition: inline
-In-Reply-To: <20260625203307.1114538-1-joest@redhat.com>
-
-
---hnagmfluecnp3bhm
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
+References: <20260626102358.1603618-10-alex@ghiti.fr> <20260626143244.3382853-1-usama.arif@linux.dev>
+In-Reply-To: <20260626143244.3382853-1-usama.arif@linux.dev>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Fri, 26 Jun 2026 11:36:50 -0700
+X-Gm-Features: AVVi8Ce_QPTWquN2d0lbnXchc4ZFxAYS-iAJXfFBvlstHcQ-UH4eG8289oGmnbI
+Message-ID: <CAKEwX=OKsjtStcuvhQ3WCGYoTJHT6eagBq1mZqX+DdbLm_BFLQ@mail.gmail.com>
+Subject: Re: [PATCH v2 9/9] mm: zswap: per-node kmem accounting for zswap/zsmalloc
+To: Usama Arif <usama.arif@linux.dev>
+Cc: Alexandre Ghiti <alex@ghiti.fr>, alexandre@ghiti.fr, 
+	Andrew Morton <akpm@linux-foundation.org>, Barry Song <baohua@kernel.org>, 
+	Ben Segall <bsegall@google.com>, cgroups@vger.kernel.org, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
+	David Hildenbrand <david@kernel.org>, Dennis Zhou <dennis@kernel.org>, 
+	Dietmar Eggemann <dietmar.eggemann@arm.com>, Ingo Molnar <mingo@redhat.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Juri Lelli <juri.lelli@redhat.com>, 
+	Kairui Song <kasong@tencent.com>, Kent Overstreet <kent.overstreet@linux.dev>, 
+	K Prateek Nayak <kprateek.nayak@amd.com>, "Liam R. Howlett" <liam@infradead.org>, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	Lorenzo Stoakes <ljs@kernel.org>, Mel Gorman <mgorman@suse.de>, Michal Hocko <mhocko@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Minchan Kim <minchan@kernel.org>, 
+	Muchun Song <muchun.song@linux.dev>, Peter Zijlstra <peterz@infradead.org>, 
+	Qi Zheng <qi.zheng@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Sergey Senozhatsky <senozhatsky@chromium.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Steven Rostedt <rostedt@goodmis.org>, Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, 
+	Valentin Schneider <vschneid@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Wei Xu <weixugc@google.com>, Yosry Ahmed <yosry@kernel.org>, 
+	Yuanchu Xie <yuanchu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH RESEND v4] selftests/cgroup: Adjust cpu test duration
- based on HZ
-MIME-Version: 1.0
 
-On Thu, Jun 25, 2026 at 04:33:04PM -0400, Joe Simmons-Talbott <joest@redhat=
-=2Ecom> wrote:
->  static int test_cpucg_max_nested(const char *root)
->  {
->  	int ret =3D KSFT_FAIL;
-> +	long hz =3D get_config_hz();
->  	long quota_usec =3D 1000;
->  	long default_period_usec =3D 100000; /* cpu.max's default period */
->  	long duration_seconds =3D 1;
-> =20
-> -	long duration_usec =3D duration_seconds * USEC_PER_SEC;
-> +	long duration_usec, duration_sec, duration_nsec;
->  	long usage_usec, n_periods, remainder_usec, expected_usage_usec;
->  	char *parent, *child;
->  	char quota_buf[32];
-> =20
-> +	duration_usec =3D duration_seconds * USEC_PER_SEC * 1000 / hz;
-> +	duration_sec =3D duration_usec / USEC_PER_SEC;
-> +	duration_nsec =3D duration_usec % USEC_PER_SEC * NSEC_PER_USEC;
+On Fri, Jun 26, 2026 at 7:32=E2=80=AFAM Usama Arif <usama.arif@linux.dev> w=
+rote:
+>
+> On Fri, 26 Jun 2026 12:20:58 +0200 Alexandre Ghiti <alex@ghiti.fr> wrote:
+>
+> > Update zswap and zsmalloc to use per-node obj_cgroup for kmem
+> > accounting, attributing compressed page charges to the correct
+> > NUMA node.
+> >
+> > But actually, this is incomplete because it does not correctly account
+> > for entries that straddle pages, those pages being possibly on 2 differ=
+ent
+> > nodes.
+> >
+> > This will be correctly handled by Joshua in a different series [1].
+> >
+> > Link: https://lore.kernel.org/linux-mm/20260311195153.4013476-1-joshua.=
+hahnjy@gmail.com/ [1]
+> > Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
+> > ---
+> >  include/linux/zsmalloc.h |  2 ++
+> >  mm/zsmalloc.c            | 11 +++++++++++
+> >  mm/zswap.c               | 19 ++++++++++++++++++-
+> >  3 files changed, 31 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/include/linux/zsmalloc.h b/include/linux/zsmalloc.h
+> > index 478410c880b1..30427f3fe232 100644
+> > --- a/include/linux/zsmalloc.h
+> > +++ b/include/linux/zsmalloc.h
+> > @@ -50,6 +50,8 @@ void zs_obj_read_sg_end(struct zs_pool *pool, unsigne=
+d long handle);
+> >  void zs_obj_write(struct zs_pool *pool, unsigned long handle,
+> >                 void *handle_mem, size_t mem_len);
+> >
+> > +int zs_handle_to_nid(struct zs_pool *pool, unsigned long handle);
+> > +
+> >  extern const struct movable_operations zsmalloc_mops;
+> >
+> >  #endif
+> > diff --git a/mm/zsmalloc.c b/mm/zsmalloc.c
+> > index 83f5820c45f9..17f7403ebe77 100644
+> > --- a/mm/zsmalloc.c
+> > +++ b/mm/zsmalloc.c
+> > @@ -1380,6 +1380,17 @@ static void obj_free(int class_size, unsigned lo=
+ng obj)
+> >       mod_zspage_inuse(zspage, -1);
+> >  }
+> >
+> > +int zs_handle_to_nid(struct zs_pool *pool, unsigned long handle)
+> > +{
+> > +     unsigned long obj;
+> > +     struct zpdesc *zpdesc;
+> > +
+> > +     obj =3D handle_to_obj(handle);
+> > +     obj_to_zpdesc(obj, &zpdesc);
+> > +     return page_to_nid(zpdesc_page(zpdesc));
+> > +}
+> > +EXPORT_SYMBOL(zs_handle_to_nid);
+>
+> Does this need the same locking as the other handle-to-zspage paths?
+> zs_free() takes pool->lock before handle_to_obj() because zspage migratio=
+n can
+> update or move the object behind the handle. This helper does the same de=
+code
+> without the lock, so zswap's uncharge path can race migration and charge =
+or
+> uncharge the wrong node, or observe transient zspage state.
+>
 
-Oh, that's duration in so many units and the seconds is there twice. (I
-understand why you did that for the rescale but) could you pick more
-descriptive/distinctive names then and ideally keep it simple :-p
+Can we just charge it to the page's node for now? Once Joshua's patch
+series is in, we can correctly charge the node owning the data :)
 
-Thanks,
-Michal
-
---hnagmfluecnp3bhm
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaj6sexsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AjcsgD+PahM0s+YmXEN2Ui9pVtE
-FMgDbmDnWk4anoBQVxTF6ZoA/0jjiW78vkltqLj1imUmdkfUdTjr7GhBD+a+VHwV
-lTQC
-=j+J0
------END PGP SIGNATURE-----
-
---hnagmfluecnp3bhm--
+FWIW, this is how these zswap entries are organized in the LRU too -
+following to the OG page's node.
