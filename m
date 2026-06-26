@@ -1,20 +1,21 @@
 Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA903EB108;
-	Fri, 26 Jun 2026 10:14:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A8E3EA96F;
+	Fri, 26 Jun 2026 10:14:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782468854; cv=none; b=IFviG8fu1b/J8rM30eowE8QbQ1jMdiqZjWizp2WkZ8yYt5wTTBcwtGTf7EbiGHT1gxK0oLUGxfI9UjEb3ZZSksYuHIY3Fdsxj+hEzTh2zPOCEBWeaZzMK3aDrd8KeYhW8T1H0GGeee4z3WaVpxbuw3bKDp005JXdLPdtglskhtI=
+	t=1782468857; cv=none; b=rWa9Q5FgB3DCHkuqnJ/Nr/EK/r2QxaGeTuCT2EdzswrhWjrWcDHX/t/FHAHgixbMz0HMHgZWDfuvSmC+LhcaygK3EurysBj3wAADfT59+nJRvS/caAmcZaqMUbvYulxYBkJi58Sevbwxx/oG5n4tsbA8OfEMQ+VUqjqQsvO6GjQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782468854; c=relaxed/simple;
-	bh=tVzFlRha4dFksiyF8EG/VwE6CNt6QOwM8UsvZo2iTdY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oI6g5Ppoiphnu8vin5kTOcqknFD2N/rCG+u5DgSrCFtBemJIlGCzErvU1NN6O9U/XLHqhMVIg6a3Md/JeJXuh/r02SAwf1PjBdAiIAmCo7a7bvbbbmrmzPIbTap3T0lWblpPWSxy1F/zHq9L4NKz7qNTUyENlGJCT+3LuTvGSfY=
+	s=arc-20240116; t=1782468857; c=relaxed/simple;
+	bh=URN1VHmVgBb3RpsysdLqm5wkdjNYhwAxOff/XOWWCNE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=MyZrdPFdM8tZlQ9yGEE7Ob9ZuMDAaPXtu1agnmDpdWZFgq0VyDYxk9Aan9ewnp9fN4cm4MTRjOMrZPjIA5ZsFoQVkBSJzZQcYxBPewH1Z4wF6nG7dpAoQafex/JaAYb2lpUDLYzPe5ZRJmlDdGG0lI8OQ/e15H7XisvcKCNlj2c=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr; spf=pass smtp.mailfrom=ghiti.fr; arc=none smtp.client-ip=217.70.183.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ghiti.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ghiti.fr
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 6D91820CCB;
-	Fri, 26 Jun 2026 10:13:58 +0000 (UTC)
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 900CA1FCF0;
+	Fri, 26 Jun 2026 10:14:09 +0000 (UTC)
 From: Alexandre Ghiti <alex@ghiti.fr>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Axel Rasmussen <axelrasmussen@google.com>,
@@ -57,10 +58,12 @@ Cc: Axel Rasmussen <axelrasmussen@google.com>,
 	Yosry Ahmed <yosry@kernel.org>,
 	Yuanchu Xie <yuanchu@google.com>,
 	Alexandre Ghiti <alex@ghiti.fr>
-Subject: [PATCH v2 0/9] per-memcg-per-node kmem accounting
-Date: Fri, 26 Jun 2026 12:09:27 +0200
-Message-ID: <20260626101356.1599643-1-alex@ghiti.fr>
+Subject: [RFC PATCH v2 2/9] memcg: charge kmem pages and slab objects against per-node objcg
+Date: Fri, 26 Jun 2026 12:09:29 +0200
+Message-ID: <20260626101356.1599643-3-alex@ghiti.fr>
 X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260626101356.1599643-1-alex@ghiti.fr>
+References: <20260626101356.1599643-1-alex@ghiti.fr>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -72,141 +75,121 @@ Content-Transfer-Encoding: 8bit
 X-GND-Sasl: alex@ghiti.fr
 X-GND-State: clean
 X-GND-Score: -100
-X-GND-Cause: dmFkZTGmWD2fPyKDYNlhP4gTn9Rxo3haDH1OvFRHYwg3drCV4CZLvBEv9OczPZLwKS6J1xcDH0flBnn6daeBkaySaYZY+gpFW+i7m/KXEZ6Ws5xxe7LMmjQQa3yDT3WkW05+4p6RkYb/hJCZRk8b5v7/dmFEsZvET0Yc8fWC1Cv3sVxs1kVYYH3+u9xFCDABt+tFKkSE1lH9umelwQZS8QLxMNjRIy+/D65/rXWJjzLo+lV3PJnR+L5/MRZq0DjZ9KN7P/vxZCT5yv4V3tYsbVUbg027xGHm8Agd400V3SYgE/wKtjrtxm9XDjR8lcftVfj3cDfgX61TYOv4S5tgOvyO2vnsQhJtjIJqc6z0vBvpp+4eBBcK5y+n2PqLKXvOVFxg7dXRMrvtLZCrQOVMnUXvzGrGExdkQWGLFhgX/4d90CMXdj38yfHzB+tApYX/GIN9/bvCoE7CtYCU44SyeJvQy+SHG2nh+vHy0BbEkChajexlf4B5nPVOemNEmX3S5Kc837Y0x86Cz0cvw0FOlgQxuhfb+/RtrxKbyIEk1h/rhgY8iI8L/UgL9NLkS43rJqbVn87T6lY+xbAsBI2VMFIu7d3pRT4R3S88vYjIEBsh9Yf40ZqlMsZuvvrDFYBRlMNTjQwqvPDOspANmyf0OcnhuNmRWo4QXtUTIUj4GIa68/KRoA
+X-GND-Cause: dmFkZTENOVM442mkDl9M7BOuxltKQt2rH08OLXMzqLdhHVnWXMdzNF01vIBStS5Nt4iilqFom901QuMuOF1Pq9t07VEFmuzCqBKDEHbzEAlauPxApG+nWsCnMt7DIs1AYrUJE1sXk7vUU87iB6IwD5JsImN5e9/A90WwduRMgnPXKLGVRrOJB97wbtTbX5BPEM1IF4F+NnAgfDBum8ZtTuGNN2u0mEW4pJ89gvJjUtCv8kzFp2gdioWSRcms4UFBYzWw0CGA0i1fxwBPKq/iqwbV5k5uxwvv85pN9nYRpVEik0e92v04sZgzysdmTkSmvo6Mqwp5rbG3T5ww4TyQK0PsaXiPavXed4NHz5kXSbiT0IMRX//zAt3ztlESCANNdQX5iA3zpNl+nPKm9QaNHFA91cbT4eZj7cIgdkpa4EB1zpCMIKLPYUe61r/ekG9HFSg97ZzJM5ByBCmtv+z7T3VMvy7ifGJohkztBGe4pNelJCB7SXJjm/Y4tyXYzOyieHWTedWKujWKtbI3lLyg59YXQyz1r/a9h+P24HTHskNNlxv1BJ9fYUMQ+gHERBnvT8hv6IsjltCepmiURtxKxbRG5tpHNZP1wqxFiwG7ru1d3jRz9TAeHcEaiVdN29CV4PJAxw+Yk3ZLeTSkSxesw6lijApcerRS1Q9ozIqSAzLj2wmCJg
 
-This is version 2 of per-memcg-per-node kmem accounting.
+From: Shakeel Butt <shakeel.butt@linux.dev>
 
-As asked by Joshua, I ran some microbenchmarks to check the impact of
-this fine grain accounting.
+After 01b9da291c49 ("mm: memcontrol: convert objcg to be per-memcg
+per-node type") current_obj_cgroup() returns the per-node objcg of the
+task's memcg for numa_node_id(). Two callers in the kmem accounting
+path always know the actual target node — the page being charged in
+__memcg_kmem_charge_page() and each slab being charged in
+__memcg_slab_post_alloc_hook() — but were using current_obj_cgroup()
+and so charged against an objcg whose nid did not match the
+allocation's physical node. The per-objcg vmstat batching (keyed by
+objcg->nid) and per-node charge attribution were both routed to the
+wrong sibling of the same memcg whenever the allocating CPU's node
+differed from the allocation's node.
 
-TL;DR: There is a substantial impact (up to +337% on small percpu allocations)
-on a benchmark that loops over small percpu allocations. On the other hand,
-on a userspace program that creates a bpf percpu map, this cost is not visible.
+Factor the per-node objcg lookup into __current_obj_cgroup(int nid)
+and keep current_obj_cgroup() as a one-line wrapper that passes
+numa_node_id(), preserving all other callers. Use the new helper in:
 
-I followed Joshua's advice and now this version batches the memcg accounting:
-it improves the performance +337% vs +417% (v1) on 176 cores single node
-machine and +153% vs 206% (v1) on 80 cores 2 nodes machine.
+  - __memcg_kmem_charge_page(): pass page_to_nid(page).
+  - __memcg_slab_post_alloc_hook(): re-fetch inside the loop using
+    slab_nid(slab) so each slab in a bulk allocation is charged
+    against its own node's objcg. The early per-task root/NULL check
+    above the loop remains (all per-node objcgs of a memcg share the
+    same root-ness, so it is still a valid fast path); the in-loop
+    check guards the transient drain window where one node's entry
+    may be NULL.
 
-We can see that the overhead of this version scales linearly with the number of
-cpus (the number of nodes being small). This overhead comes mainly from
-vmalloc_to_page() so I have another variant (b) that decreases the impact even
-more (+131% vs +337% on 176 cores and +86% vs +153% on 80 cores) but I'm not
-sure the added complexity is needed so I did not send this version, let me know
-what you think.
+Update the stale slab_pgdat(slab) reference in the TODO comment to
+slab_nid(slab); slab_pgdat is no longer relevant after the
+obj_stock_pcp cached_pgdat removal.
 
-Performance
-===========
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+Signed-off-by: Alexandre Ghiti <alex@ghiti.fr>
+---
+ mm/memcontrol.c | 26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
 
-All benchmarks run in a memcg with __GFP_ACCOUNT.
-
-1) BPF percpu map create/destroy, full series vs baseline kernel (two
-   boots, 176-CPU AMD EPYC, 1 NUMA node): the per-node accounting is lost
-   in the BPF syscall overhead, the delta is within noise (us/op):
-
-     size (B):    64     256    1024   4096   8192
-     delta:     -5.5%  -5.1%  -1.8%  -5.1%  -4.1%
-
-2) In-kernel microbench that isolates the accounting cost: a tight
-   __alloc_percpu_gfp()/free_percpu() loop, __GFP_ACCOUNT on vs off on the
-   same boot (ACCT COST = on - off). The dominant cost on a many-CPU box
-   is discovering each backing page's real node (vmalloc_to_page() per
-   possible CPU). ACCT COST by value size:
-
-   176-CPU EPYC, 1 node
-     size (B):              64       256      1024     4096     8192
-      baseline (upstream)  +5.3%    +5.4%    +0.1%    -1.8%    -0.5%
-      v1 credit (per-page) +417.3%  +182.5%  +68.5%   +21.4%   +16.1%
-   a) per-node accounting  +337.8%  +141.8%  +36.1%   +11.9%   +6.8%
-   b) per-page nid cache   +131.3%  +53.7%   +10.5%   +0.9%    +2.0%
-   c) single-node fast     +12.6%   +12.1%   +3.5%    +6.6%    +0.7%
-
-   80-CPU Xeon Gold 6138, 2 nodes (fast path inactive)
-     size (B):              64       256      1024     4096     8192
-      baseline (upstream)  +1.2%    -3.8%    +12.4%   +1.2%    +0.5%   (noise)
-      v1 credit (per-page) +206.1%  +134.0%  +44.5%   +11.6%   +11.5%
-   a) per-node accounting  +153.2%  +64.7%   +19.4%   +4.2%    +5.9%
-   b) per-page nid cache   +86.5%   +45.5%   +14.7%   +1.8%    +1.6%
-
-   (a) this patchset without fast path for single node
-   (b) is an alternative version, not in this series, that caches each backing
-       page's node in the chunk so the walk is paid once per page instead of
-       once per allocation
-   (c) this patchset with fast path for single node
-
-Changes in v2
-=============
-
-- objcg lifetime: Shakeel's patch 1 now guarantees the lifetime of every
-  per-node objcg
-- dropped patch 5 and 6 since Shakeel's patch 2 replaces them
-- fixed the number of precharged pages (the v1 formula under-precharged)
-- per-node batching (Joshua's suggestion): accumulate the per-node bytes
-  first, then issue one account_kmem()/uncharge() per touched node =>
-  O(nodes) memcg ops instead of O(num_possible_cpus)
-- single-node fast path: skip the per-cpu node walk on single node machines
-- obj_exts metadata is now accounted per-node (walk its vmalloc pages)
-  rather than charged whole to one memcg (Shakeel's main v1 objection).
-- renamed obj_cgroup_get_nid() -> obj_cgroup_nid() (returns a borrowed RCU
-  pointer, no ref taken).
-- zswap: fixed the missing locking around the per-node objcg lookup (now
-  done under RCU + obj_cgroup_tryget()).
-
-This series pursues the work initiated by Joshua [1]. We need kernel
-memory to be accounted on a per-node basis in order to be able to know
-the memcg <-> physical memory association.
-
-This series takes advantage of the recently introduced per-node
-obj_cgroup and makes those obj_cgroup tied to their NUMA node.
-
-The bulk of the series is percpu per-node accounting: percpu
-"precharges" the memcg before we know the actual location of the pages
-it uses, so charging and accounting had to be split. All other kmem
-users (slab, __memcg_kmem_charge_page) are now handled directly by
-Shakeel's per-node obj_cgroup infrastructure this series sits on, so
-only percpu and zswap need explicit per-node work here (zswap support
-is limited because Joshua is working on it in parallel [3]).
-
-Thanks Joshua and Shakeel for the early feedback!
-
-[1] https://lore.kernel.org/linux-mm/20260404033844.1892595-1-joshua.hahnjy@gmail.com/
-[2] https://lore.kernel.org/linux-mm/56c04b1c5d54f75ccdc12896df6c1ca35403ecc3.1772711148.git.zhengqi.arch@bytedance.com/
-[3] https://lore.kernel.org/linux-mm/20260311195153.4013476-1-joshua.hahnjy@gmail.com/
-
-Functional Testing
-==================
-
-- Tested with a percpu kmem self-test in an 8-node VM (2 nodes with CPUs,
-  6 memory-only). For each allocation it checks that every node is charged
-  and later uncharged the same number of bytes -- including a CPU-less node
-  that ends up holding the obj_exts metadata -- and that nothing is left
-  charged after teardown. All checks pass. (The self-test module is not
-  part of this series.)
-
-Alexandre Ghiti (7):
-  mm: percpu: fix obj_exts metadata charge size
-  mm: percpu: Split memcg charging and kmem accounting
-  mm: memcontrol: track MEMCG_KMEM per NUMA node
-  mm: percpu: per-node kmem accounting
-  mm: percpu: per-node kmem accounting for obj_exts metadata
-  mm: percpu: skip the per-cpu node walk on single-node systems
-  mm: zswap: per-node kmem accounting for zswap/zsmalloc
-
-Shakeel Butt (2):
-  memcg: convert task->objcg to a per-node objcgs array
-  memcg: charge kmem pages and slab objects against per-node objcg
-
- include/linux/memcontrol.h |  23 ++-
- include/linux/mmzone.h     |   1 +
- include/linux/sched.h      |   7 +-
- include/linux/zsmalloc.h   |   2 +
- mm/memcontrol.c            | 286 ++++++++++++++++++++++++++-----------
- mm/percpu-internal.h       |   2 +-
- mm/percpu.c                | 108 +++++++++++++-
- mm/vmstat.c                |   1 +
- mm/zsmalloc.c              |  11 ++
- mm/zswap.c                 |  19 ++-
- 10 files changed, 361 insertions(+), 99 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ee47427de9e2..3bcc20e72914 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2987,12 +2987,11 @@ static struct obj_cgroup **current_objcg_update(void)
+ 	return objcgs;
+ }
+ 
+-__always_inline struct obj_cgroup *current_obj_cgroup(void)
++__always_inline static struct obj_cgroup *__current_obj_cgroup(int nid)
+ {
+ 	struct mem_cgroup *memcg;
+ 	struct obj_cgroup *objcg;
+ 	struct obj_cgroup **objcgs;
+-	int nid = numa_node_id();
+ 
+ 	if (IS_ENABLED(CONFIG_MEMCG_NMI_UNSAFE) && in_nmi())
+ 		return NULL;
+@@ -3036,6 +3035,11 @@ __always_inline struct obj_cgroup *current_obj_cgroup(void)
+ 	return rcu_dereference_check(root_mem_cgroup->nodeinfo[nid]->objcg, 1);
+ }
+ 
++__always_inline struct obj_cgroup *current_obj_cgroup(void)
++{
++	return __current_obj_cgroup(numa_node_id());
++}
++
+ struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio)
+ {
+ 	struct obj_cgroup *objcg;
+@@ -3143,7 +3147,7 @@ int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
+ 	struct obj_cgroup *objcg;
+ 	int ret = 0;
+ 
+-	objcg = current_obj_cgroup();
++	objcg = __current_obj_cgroup(page_to_nid(page));
+ 	if (objcg && !obj_cgroup_is_root(objcg)) {
+ 		ret = obj_cgroup_charge_pages(objcg, gfp, 1 << order);
+ 		if (!ret) {
+@@ -3536,7 +3540,9 @@ static inline size_t obj_full_size(struct kmem_cache *s)
+ {
+ 	/*
+ 	 * For each accounted object there is an extra space which is used
+-	 * to store obj_cgroup membership. Charge it too.
++	 * to store obj_cgroup membership. Charge it too. In addition, we
++	 * allocate obj_exts array on the same node as slab_nid(), so per-node
++	 * kmem accounting is fine.
+ 	 */
+ 	return s->size + sizeof(struct obj_cgroup *);
+ }
+@@ -3594,6 +3600,16 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ 			continue;
+ 		}
+ 
++		/*
++		 * Charge against the per-node objcg matching the slab's node
++		 * so the stock's per-objcg vmstat batch (keyed by objcg->nid)
++		 * aligns with the physical slab. May transiently fall back to
++		 * root if the per-node entry is being drained.
++		 */
++		objcg = __current_obj_cgroup(slab_nid(slab));
++		if (!objcg || obj_cgroup_is_root(objcg))
++			continue;
++
+ 		/*
+ 		 * if we fail and size is 1, memcg_alloc_abort_single() will
+ 		 * just free the object, which is ok as we have not assigned
+@@ -3602,7 +3618,7 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ 		 * for larger sizes, kmem_cache_free_bulk() will uncharge
+ 		 * any objects that were already charged and obj_ext assigned
+ 		 *
+-		 * TODO: we could batch this until slab_pgdat(slab) changes
++		 * TODO: we could batch this until slab_nid(slab) changes
+ 		 * between iterations, with a more complicated undo
+ 		 */
+ 		stock = trylock_stock();
 -- 
 2.54.0
 
