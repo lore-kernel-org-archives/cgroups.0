@@ -1,45 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260403B7B71
-	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 18:37:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE5C3B7B71
+	for <cgroups@vger.kernel.org>; Fri, 26 Jun 2026 18:37:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782499058; cv=none; b=TWD7IpGSqYDzMible7l7KTrjdwaSlvNqkAJe11DVuqsmw6Gdk1aBr1keum/IcWHovr8hFcB/xh+C5YmGZ+zFHdy0tN74ip+rdjueIiAU5r+lcRYa2E356IQ40pWricPglYFrEJmB6yFmv4G8OIRg0WA1QNY04yunfV8CxXprDF0=
+	t=1782499060; cv=none; b=VezEyDWqvUfTJu3+14mpn70RffTYI0sDswqx9yfA5gJjy0KhuSPk+qis1KNmJbGNQgbIWLQ4WbMbXZa7FIFuPeGSFR+A+VZofRDn+GzvO9uOO3h2+D89FKI9gdsm1qUeZmn/h5vQQYXxZxqbFTwrj38zp7qQ22Ga7wxrY74kV0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782499058; c=relaxed/simple;
-	bh=6dDnymeCyAIjxRoJW74PZ/gV2/Qm9iNCg2yVKleCGx0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ecUQ/h+jTx/SDvpN1Xzj8/DO2DVc5dVDk+CV35W89QQ/l/5X3p0PtOyvCQVApN7eM31ff3cLw4b4vP6KFJ4J9cZ7/m/Kr2gAgP8ASrUHcnBd2J3wspb3pbiw+xhrY2PfYmVZkd3NZxPc6qPDXtVWPRMHTKKnONMhzMr1CKy9PfM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PTLB0fEA; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1782499060; c=relaxed/simple;
+	bh=mXjcUTmDVowFnF9K3FeEzkTX3raWKMYk0w6ariuPN1k=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=P4GWuZV4uIrgGjD2CdFi0IzoKUxlIAUFDXBJY7QmQpVBhqQEhIMLkNhcUr1W0nVOK/wyhTdORLGa7AM0vG0zQM5XGftZZMlyDLoqjtNXsfs+jHnNzefCoJokrSAXDTBwhoMbFdI54HgvlAQRepbjHnW1q8RJBehESeE3ImZ32UE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZjTKjyTu; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PTLB0fEA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZjTKjyTu"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1782499056;
+	s=mimecast20190719; t=1782499058;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=Xg+gfZZRw6uxD4/DdDYAkO88l6qr/2Ph391mNIOILd4=;
-	b=PTLB0fEAKcHHjN2447tjck6d2IPK9JieLCnjxoEGZ3ILyxJL/U55y5jODUIrKEp/V3wsId
-	wOY1UtP+vI4617sJBjp63qh0ZdwV3sn8/vJa18v9LMF9TKerFYlj4uMNyg6vZEFvOOyqhZ
-	yj5oZL6D0qbxhE5KCelHAPrFX2aOUWU=
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j1M2Kx3NvMzhbZMhdtI1I3GYyt89oduJLnaewNi/5PA=;
+	b=ZjTKjyTu0bLUpIOqS9on6OAOOyswjxWFHWGNZF0VlspIMFB51YUuWYX0olXWASps49b1g7
+	h0u0VBu8jgZngyU6HXDfaSc6PkWvWdReuMsNWm2fqHuDDZaBXY5kwgEm+uF99/mFWzUlEr
+	MKY25GdSHvIfk3EM9PYGohSJp02RCkU=
 Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-638-vKbXLotSONuCiEMUmwOrWQ-1; Fri,
- 26 Jun 2026 14:37:30 -0400
-X-MC-Unique: vKbXLotSONuCiEMUmwOrWQ-1
-X-Mimecast-MFC-AGG-ID: vKbXLotSONuCiEMUmwOrWQ_1782499048
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-170-w3zl_Y3lOa60FNxNfpLSSQ-1; Fri,
+ 26 Jun 2026 14:37:35 -0400
+X-MC-Unique: w3zl_Y3lOa60FNxNfpLSSQ-1
+X-Mimecast-MFC-AGG-ID: w3zl_Y3lOa60FNxNfpLSSQ_1782499052
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 077271955DC9;
-	Fri, 26 Jun 2026 18:37:28 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4B98C1955DC5;
+	Fri, 26 Jun 2026 18:37:32 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.2.16.156])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E358619560A3;
-	Fri, 26 Jun 2026 18:37:23 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 637B519560AB;
+	Fri, 26 Jun 2026 18:37:28 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Ridong Chen <ridong.chen@linux.dev>,
 	Tejun Heo <tj@kernel.org>,
@@ -55,122 +57,69 @@ Cc: cgroups@vger.kernel.org,
 	Guopeng Zhang <guopeng.zhang@linux.dev>,
 	Gregory Price <gourry@gourry.net>,
 	David Hildenbrand <david@kernel.org>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH v8 00/11] cgroup/cpuset: Support multiple source/destination cpusets for cpuset_*attach()
-Date: Fri, 26 Jun 2026 14:19:12 -0400
-Message-ID: <20260626181923.133658-1-longman@redhat.com>
+	Waiman Long <longman@redhat.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v8 01/11] cgroup/cpuset: rebind mm mempolicy to effective_mems, not mems_allowed
+Date: Fri, 26 Jun 2026 14:19:13 -0400
+Message-ID: <20260626181923.133658-2-longman@redhat.com>
+In-Reply-To: <20260626181923.133658-1-longman@redhat.com>
+References: <20260626181923.133658-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
- v8:
-  - Update patch 3 to make attach_in_progress a global flag which block
-    all cpuset write operations until the attach is done.
-  - Add a new patch 4 to collect most of the attach related variables
-    into a attach_ctx structure as suggested by Ridong.
-  - Add a test_cpuset selftest patch contributed by Michal Koutný.
-  - Keep the existing Reviewed-by tags as there is no functional change
-    to the other patches other than rename of some variables. Also add
-    some new tags.
+From: Farhad Alemi <farhad.alemi@berkeley.edu>
 
- v7: https://lore.kernel.org/lkml/20260621032816.1806773-1-longman@redhat.com/
-  - Include the fix patch from Farhad Alemi to fix a div/0 crash that
-    was part of the old patch 1.
-  - Integrated v6 patch 7 into earlier patches.
-  - Add a new "cgroup/cpuset: Prevent race between task attach and
-    cpuset state change" patch to ensure that there will be no cpuset
-    state change between cpuset_can_attach() and cpuset_attach() or
-    cpuset_cancel_attach().
-  - Break v6 patch 6 into 2 separate patches for supporting multiple
-    source cpusets and multiple destination cpusets respectively and
-    further simplify and streamline the code.
+Creating a child cpuset where cpuset.mems is never set leads to a div/0
+when a VMA mempolicy with MPOL_F_RELATIVE_NODES rebinds in response to a
+CPU hotplug event.
 
- v6:
-  - Make guarantee_online_mems() to only return cs->effective_mems with v2
-    in patch 1.
-  - Remove obsolete commit description text from patch 3.
-  - Add Reviewed-by tags.
-  - In patch 6, add WARN_ON_ONCE() test in cpuset_can_attach() to
-    confirm that cs != oldcs.
+Reproduction steps:
+ 1) Create a cgroup w/ cpuset controls (do not set cpuset.mems)
+ 2) Move the task into the child cpuset
+ 3) Create a VMA mempolicy for that task with MPOL_F_RELATIVE_NODES
+ 4) unplug and hotplug a cpu
+      echo 0 > /sys/devices/system/cpu/cpu1/online
+      echo 1 > /sys/devices/system/cpu/cpu1/online
+ 5) mempolicy rebind does a div/0 in mpol_relative_nodemask on the
+    call to __nodes_fold()
 
-Sashiko AI review of another cpuset patch had found that cpuset_attach()
-and cpuset_can_attach() can be passed a cgroup_taskset with tasks
-migrating from one source cpuset to multiple destination cpusets and
-vice versa.  Further testing of the cpuset code indicates that this is
-indeed the case when the v2 cpuset controller is enabled or disabled.
+The cpuset code passes (cs->mems_allowed) which is not guaranteed to have
+nodes to the rebind routine.  Use cs->effective_mems instead, which is
+guaranteed to have a non-empty nodemask.
 
-Unfortunately, cpuset_attach() and cpuset_can_attach() still assume that
-there will be one source and one destinaton cpuset which may result in
-inocrrect behavior.
+Closes: https://lore.kernel.org/linux-mm/CA+0ovCgxbZkXa+OU8w3s84R3KNPNxxRfmsNR-udh+afQBbGNmw@mail.gmail.com/
+Link: https://lore.kernel.org/all/CA+0ovCiEz6SP_sn3kN4Tb+_oC=eHMXy_Ffj=usV3wREdQrUtww@mail.gmail.com/
+Fixes: ae1c802382f7 ("cpuset: apply cs->effective_{cpus,mems}")
+Suggested-by: Gregory Price <gourry@gourry.net>
+Suggested-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Farhad Alemi <farhad.alemi@berkeley.edu>
+Acked-by: Waiman Long <longman@redhat.com>
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Reviewed-by: Gregory Price <gourry@gourry.net>
+Cc: stable@vger.kernel.org
+---
+ kernel/cgroup/cpuset.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This patch series is created to fix this issue.
-
-Patch 1 is a fix that fix a cgroup v2 div/0 crash due to bug in
-cpuset_update_tasks_nodemask().
-
-Patch 2 is to fix an inconsistency in the way node mask update is being
-handled in cpuset_update_tasks_nodemask() and cpuset_attach() so that
-they match each other.
-
-Patch 3 makes any cpuset state change to wait for the completion of the
-pending cpuset attach operation, if any.
-
-Patch 4 collects task attach related data into a common attach_ctx
-structure.
-
-Patches 5 and 6 are just preparatory patches to make the remaining
-patches easier to review.
-
-Patch 7 makes attach_ctx.old_cs track group leader for use by
-cpuset_migrate_mm().
-
-Patch 8 moves mpol_rebind_mm() and cpuset_migrate_mm() inside
-cpuset_attach_task() to make CLONE_INTO_CGROUP flag of clone(2) works
-more like moving task from one cpuset to another one, while also make
-supporting multiple source and destination cpusets easier.
-
-Patch 9 makes the necessary changes to enable the support of multiple
-source cpusets by keeping all the source cpusets found during task
-iterations in a singly linked lists.
-
-Patch 10 enables the support of multiple destination cpusets during the
-the enabling of cpuset v2 controller.
-
-Patch 11 adds new test case to test_cpuset to test disabling of cpuset
-controller.
-
-Farhad Alemi (1):
-  cgroup/cpuset: rebind mm mempolicy to effective_mems, not mems_allowed
-
-Michal Koutný (1):
-  selftests/cgroup: Add test for cpuset affinity on controller disable
-
-Waiman Long (9):
-  cgroup/cpuset: Fix node inconsistencies between
-    cpuset_update_tasks_nodemask() and cpuset_attach()
-  cgroup/cpuset: Prevent race between task attach and cpuset state
-    change
-  cgroup/cpuset: Put all task attach related variables into attach_ctx
-  cgroup/cpuset: Add a cpuset_reserve_dl_bw() helper
-  cgroup/cpuset: Expand the scope of cpuset_can_attach_check()
-  cgroup/cpuset: Make attach_ctx.old_cs track task group leader
-  cgroup/cpuset: Move mpol_rebind_mm/cpuset_migrate_mm() calls inside
-    cpuset_attach_task()
-  cgroup/cpuset: Support multiple source cpusets for cpuset_*attach()
-  cgroup/cpuset: Support multiple destination cpusets for
-    cpuset_*attach()
-
- kernel/cgroup/cpuset-internal.h              |  11 +-
- kernel/cgroup/cpuset.c                       | 442 ++++++++++++-------
- tools/testing/selftests/cgroup/test_cpuset.c | 243 ++++++++++
- 3 files changed, 541 insertions(+), 155 deletions(-)
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index e53f35e2726f..49d8564d1a48 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2671,7 +2671,7 @@ void cpuset_update_tasks_nodemask(struct cpuset *cs)
+ 
+ 		migrate = is_memory_migrate(cs);
+ 
+-		mpol_rebind_mm(mm, &cs->mems_allowed);
++		mpol_rebind_mm(mm, &cs->effective_mems);
+ 		if (migrate)
+ 			cpuset_migrate_mm(mm, &cs->old_mems_allowed, &newmems);
+ 		else
 -- 
 2.54.0
 
