@@ -1,32 +1,32 @@
-Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF3F827BF79
-	for <cgroups@vger.kernel.org>; Tue, 30 Jun 2026 01:29:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D6B36F8EA
+	for <cgroups@vger.kernel.org>; Tue, 30 Jun 2026 01:29:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782783001; cv=none; b=ImSQ65i9qKLrdPJpHjmRE65KTNGGc4tAj5pZZ1PjM3wjpKBa/TEqBBVsmRerfEFKRW6lLu1TFDan5VS6VmjyOFQ83eSmUoZFLsiuk7fNIGjlcF86kPoeYr4FuiiO0zWECGXBaGmmszxLrRiQilqHtI1sthNxuSeE8RuuzT7ZwRM=
+	t=1782783010; cv=none; b=em5Hbrx7t9krwpUKs6O6mIooSgKte9LSwpNuPeleeTN0LBEPhZ6trAY0BXMN5X3GwOKSQL/Dy8U2CcvMUGVE1+uLcppO7iSePtU7LRGssOCF8uXcygtxg//IxrevAoEVjcnA3cVmE738e62lkMCOzezkvshjG2oCn8Mccplz9No=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782783001; c=relaxed/simple;
-	bh=aFJldYyAlb1CdY3ktbD93x91fYqbwdvJA9Y1WTRy3Vo=;
+	s=arc-20240116; t=1782783010; c=relaxed/simple;
+	bh=fC2utO8KjnM+7TkHp1lSHynKJ6hfdXI72U5IvjcQtbU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bbE+Ls8iFWZFAqpl0mybGJ4dZx1FpPLJ2DpNCEHJ++8W1s1eEm5rIEws3yi1ntthZ5UaEyb38fjcswl5FTk/c0MX1ZKwW/3NbDmNRA7IrH/dNnsghMx7b+5L4Z9MuHtnfTZsuce1fUQ/+5dNqJY0B1kjqlg5GjJZaQYj3grBBhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LJ8Tyy/N; arc=none smtp.client-ip=91.218.175.172
+	 MIME-Version; b=DVUe5f9uaKSovpf1JV8ufKMc/AuWOPHttUuIKSGeDXpHbQDKUXusoRimEDfDCGAHwztziVZGWB1eUqLYIMawWjp1WgjUT4YkuS49y/RDOLTGbEOYXu6lXiVmGmzVFbM8plG6OMwgZ8wBDuoYUtwKEeBpuLhsdRnQctdSP5R7MVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jszc46Un; arc=none smtp.client-ip=91.218.175.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LJ8Tyy/N"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jszc46Un"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1782782989;
+	t=1782782997;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=v+SjXDyaIUskmylTeULQ7YpsBG7g1B+2e1JWTTH/oMw=;
-	b=LJ8Tyy/NprEhJ1xWl5tZRepKEJ7Bf0iHIWyvd/DvQB/j8JXueF6A951huLjm2u2D+cVJRC
-	q+dns6nOTW2bNzOJnTxthMxSXn4oLUUr7N1+ZD/bPOdGaufs0lY8JnEs6PwF54z8GiuLxQ
-	J1zBx6IR2GIfBmmIcQp4B6FfUlWqpDE=
+	bh=sNMKfSq2rmG4Tk4WWqhPVEGirGb4v0bYHt6h2drRT1Y=;
+	b=jszc46UnWBKJ802otRkO/5UZQNkUddnQJ9ptKfEgL1K0FluYSyc/NeY2+PMS5KLYXodKyE
+	EKseZFhOVvRVUt3u1GyTV8gcFigA3N7nO9AhQ5ldaJ4KmbPdIfGuVAxHmzGMcDTYXjOXvX
+	LJUoJ0SbQcQPsYoct3bDxCkxemu3efk=
 From: Jiayuan Chen <jiayuan.chen@linux.dev>
 To: linux-mm@kvack.org
 Cc: jiayuan.chen@shopee.com,
@@ -48,9 +48,9 @@ Cc: jiayuan.chen@shopee.com,
 	Wei Xu <weixugc@google.com>,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/4] memcg: bail out proactive reclaim when memcg is dying
-Date: Tue, 30 Jun 2026 09:29:03 +0800
-Message-ID: <20260630012909.144372-4-jiayuan.chen@linux.dev>
+Subject: [PATCH v2 4/4] memcg-v1: bail out reclaim when memcg is dying
+Date: Tue, 30 Jun 2026 09:29:04 +0800
+Message-ID: <20260630012909.144372-5-jiayuan.chen@linux.dev>
 In-Reply-To: <20260630012909.144372-1-jiayuan.chen@linux.dev>
 References: <20260630012909.144372-1-jiayuan.chen@linux.dev>
 Precedence: bulk
@@ -64,33 +64,53 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Jiayuan Chen <jiayuan.chen@shopee.com>
 
-Proactive reclaim via memory.reclaim can run for a long time - swap I/O
-or thrashing again dominating the latency - and delays cgroup removal in
-the same way.
+The legacy memory.limit_in_bytes and memory.memsw.limit_in_bytes writers
+retry page_counter_set_max() by reclaiming synchronously in the writer
+context. memory.force_empty similarly loops in synchronous reclaim until
+the cgroup is empty or reclaim stops making progress.
 
-Mitigate this by stopping the reclaim once memcg_is_dying().
+These writes hold a kernfs active reference on the file. If cgroup removal
+starts in parallel, the remover sets CSS_DYING and then waits in
+kernfs_drain() under cgroup_mutex for the active reference to drain.
+Continuing reclaim after the memcg is dying can therefore delay cgroup
+removal and keep cgroup_mutex held for a long time.
+
+Stop the v1 reclaim loops once the memcg is dying. For limit resizing,
+keep the existing -EBUSY semantics when the new limit could not be
+installed. For memory.force_empty, keep the existing best-effort success
+semantics.
 
 Reported-by: Zhou Yingfu <yingfu.zhou@shopee.com>
 Cc: Jiayuan Chen <jiayuan.chen@linux.dev>
 Signed-off-by: Jiayuan Chen <jiayuan.chen@shopee.com>
 ---
- mm/vmscan.c | 3 +++
- 1 file changed, 3 insertions(+)
+ mm/memcontrol-v1.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 754c5f5d716a..091b609cf1b1 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -7912,6 +7912,9 @@ int user_proactive_reclaim(char *buf,
+diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+index 765069211567..ad23de985d9a 100644
+--- a/mm/memcontrol-v1.c
++++ b/mm/memcontrol-v1.c
+@@ -1513,6 +1513,9 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
++		if (memcg_is_dying(memcg))
++			break;
++
+ 		if (!drained) {
+ 			drain_all_stock(memcg);
+ 			drained = true;
+@@ -1551,6 +1554,9 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
  		if (signal_pending(current))
  			return -EINTR;
  
-+		if (memcg && memcg_is_dying(memcg))
-+			return -EAGAIN;
++		if (memcg_is_dying(memcg))
++			break;
 +
- 		/*
- 		 * This is the final attempt, drain percpu lru caches in the
- 		 * hope of introducing more evictable pages.
+ 		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+ 						  MEMCG_RECLAIM_MAY_SWAP, NULL))
+ 			nr_retries--;
 -- 
 2.43.0
 
