@@ -1,45 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB6683ABD8D
-	for <cgroups@vger.kernel.org>; Thu,  2 Jul 2026 21:48:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A2613AE1BD
+	for <cgroups@vger.kernel.org>; Thu,  2 Jul 2026 21:48:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783028919; cv=none; b=cU6plrX2bWALE8T3/TKqscXJY1ASu8hyOTyrWPujYq3JTNudhBb4Ap+7kpO24DMlTw5xe1SUx3GQGbf2+dpNqLoPkzJhbWZU6kls7aZjoAhK3R/Ze6JseqnuYmwFkVAqrcwTCOdJM8pckw2roBOsCk33/gnLAXmXJbGYyQrLSn0=
+	t=1783028920; cv=none; b=Rwp9Et6s27K9+fSuV6QjVINqLhkvvRgGi3Rybv/5/HabWa9HoCBic0jbpWcg5Mw/oOBeSrLswAuVN7IYPayrVY67EA2bIEvD6ZW/a1lumAK45KDAKhcnvZXSWhxH2E8Nt81Iwzc9R3PuH7NtJfk1SDSSGaHuEodfabvZAuaz+cE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783028919; c=relaxed/simple;
-	bh=g5MMhWXgNSsTkOWjoGCaEbc1QtGQi3ZNPHLAzCfkltU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eHQTvYN+Qc0EZVbSyGQ07Ud16pNsw0FbdkiChHjMN7Lz/k5drG1egtIZmfE6+jj0EDYvM3q4Mvv5zu21qTVT98y+JKO0oHkfd/TY2gPbbsDXLNsBZzuJRVbUlC4h8u3ZFkYsTKPLbtVUX++r//o8csD6Kga4XDPWrriUR+SFUD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TG/K6lvE; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1783028920; c=relaxed/simple;
+	bh=b8zA02L7dbHZnekvsTp7+jvhAEKkl3j2kEjs1DNnyqU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YHGRGS5XmDMd7wgZkUqt/dy21q6vESlZ8+aJUCGi2fuQz0fRrY5B6LMyKuYn+GSqwfXA82RfdyNJHDWOveaFM8HW6EqIcOM7iw3I93s8bcb5uihsl5q+YNtJpNWiaS+9AkAY965kwRtrWPLe9bJ4g6/uO41vrM26wocv/zMQU7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cGljePx9; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TG/K6lvE"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cGljePx9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783028916;
+	s=mimecast20190719; t=1783028918;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=tJo1xq+H68wGHTCJ8EpBtInDY7c/Mfm7eNvFYrR3pf8=;
-	b=TG/K6lvEmiJTn4jhQdD67BtIPP4F6eH6ZgD4iq0WWT4DJNB8GSLW1vTJm1DUl+U3AWBCnl
-	Aob5BfVIvSXkEeyie/+q3o8yZcZUoU93qgISfGTVn5AFsxVpu8wDdqI3890Ka/9is7RQp1
-	cNrI/e0Rp7JsyDtG+jcsa24rYJzN+hs=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7+FrlfxuamhkKbmq9yuuMRV4s/1eBQwld5+rm882d84=;
+	b=cGljePx9XMGEVFL1wAF3azlcKXtijLv1HPs7TaZ/H0YDic+kMwrSEwcsQI6BmdigKLJCJb
+	Xuwzw44KZjz5FbsEdgM+8qd8bS89a36qdmVv8wbxiR6L/8uzTiHv9DRuOYQpg7S3/UjU8m
+	fhJvU2Xwsc0x6MxPp8+4EBbjefMJjW0=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-272--w7SewmuNLuCft1Wl_ABZQ-1; Thu,
- 02 Jul 2026 17:48:33 -0400
-X-MC-Unique: -w7SewmuNLuCft1Wl_ABZQ-1
-X-Mimecast-MFC-AGG-ID: -w7SewmuNLuCft1Wl_ABZQ_1783028912
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-458-J2TH0SBxNGSHkPSiBlV0SQ-1; Thu,
+ 02 Jul 2026 17:48:37 -0400
+X-MC-Unique: J2TH0SBxNGSHkPSiBlV0SQ-1
+X-Mimecast-MFC-AGG-ID: J2TH0SBxNGSHkPSiBlV0SQ_1783028915
 Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 91723187959C;
-	Thu,  2 Jul 2026 21:48:31 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 14C3B19792EC;
+	Thu,  2 Jul 2026 21:48:35 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.2.16.58])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E368236F24;
-	Thu,  2 Jul 2026 21:48:27 +0000 (UTC)
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 084A936F24;
+	Thu,  2 Jul 2026 21:48:31 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Ridong Chen <ridong.chen@linux.dev>,
 	Tejun Heo <tj@kernel.org>,
@@ -53,115 +55,100 @@ Cc: cgroups@vger.kernel.org,
 	Aaron Tomlin <atomlin@atomlin.com>,
 	Guopeng Zhang <guopeng.zhang@linux.dev>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH-next v10 00/11] cgroup/cpuset: Support multiple source/destination cpusets for cpuset_*attach()
-Date: Thu,  2 Jul 2026 17:47:46 -0400
-Message-ID: <20260702214757.579012-1-longman@redhat.com>
+Subject: [PATCH-next v10 01/11] cgroup/cpuset: Make nr_deadline_tasks an atomic_t
+Date: Thu,  2 Jul 2026 17:47:47 -0400
+Message-ID: <20260702214757.579012-2-longman@redhat.com>
+In-Reply-To: <20260702214757.579012-1-longman@redhat.com>
+References: <20260702214757.579012-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
- v10:
-  - Update the commit log of patch 1 to highlight the fact that it
-    can only partially fix the race problem.
-  - Fix some typos, remove some redundant code and add review tags.
+The nr_deadline_tasks variable in the cpuset structure was introduced by
+commit 6c24849f5515 ("sched/cpuset: Keep track of SCHED_DEADLINE task
+in cpusets"). It is reported by sashiko [1] that nr_deadline_tasks
+can currently be modified by inc_dl_tasks_cs() under rq->lock and
+by cpuset_attach() under cpuset_mutex. So if both updates happen
+simultaneously, the nr_deadline_tasks variable can be corrupted leading
+to incorrect operations down the road.
 
- v9: https://lore.kernel.org/lkml/20260630033344.352702-1-longman@redhat.comk
-  - Drop Farhad's mm mempolicy rebind fix patch as it has been merged to
-    linux-next via the mm tree.
-  - Add a new patch to make nr_deadline_tasks an atomic_t to prevent
-    data corruption due to concurrent update & adjust some later patches
-    accordingly.
-  - Add a new wait_attach_done_lock() helper for waiting ongoing task
-    operation as suggested by Ridong.
+Fix that by changing its type to atomic_t so that nr_deadline_tasks
+are always atomically updated. This fix patch is a low hanging fruit.
+It can handle some of the races between a concurrent sched_setscheduler()
+and cpuset_can_attach()/cpuset_attach() calls, but not all of them like
+the other issue raised by sashiko [2]. This will be handled hopefully
+in a future follow up patch.
 
- v8: https://lore.kernel.org/lkml/20260626181923.133658-1-longman@redhat.com/
-  - Update patch 3 to make attach_in_progress a global flag which block
-    all cpuset write operations until the attach is done.
-  - Add a new patch 4 to collect most of the attach related variables
-    into a attach_ctx structure as suggested by Ridong.
-  - Add a test_cpuset selftest patch contributed by Michal Koutný.
-  - Keep the existing Reviewed-by tags as there is no functional change
-    to the other patches other than rename of some variables. Also add
-    some new tags.
+[1] https://sashiko.dev/#/patchset/20260626181923.133658-1-longman%40redhat.com
+[2] https://sashiko.dev/#/patchset/20260630033344.352702-1-longman%40redhat.com
 
-Sashiko AI review of another cpuset patch had found that cpuset_attach()
-and cpuset_can_attach() can be passed a cgroup_taskset with tasks
-migrating from one source cpuset to multiple destination cpusets and
-vice versa.  Further testing of the cpuset code indicates that this is
-indeed the case when the v2 cpuset controller is enabled or disabled.
+Fixes: 6c24849f5515 ("sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets")
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ kernel/cgroup/cpuset-internal.h |  2 +-
+ kernel/cgroup/cpuset.c          | 10 +++++-----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Unfortunately, cpuset_attach() and cpuset_can_attach() still assume that
-there will be one source and one destinaton cpuset which may result in
-inocrrect behavior.
-
-This patch series is created to fix this issue.
-
-Patch 1 is to fix another nr_deadline_tasks data corruption problem
-reported by sashiko by making it an atomic_t data type.
-
-Patch 2 is to fix an inconsistency in the way node mask update is being
-handled in cpuset_update_tasks_nodemask() and cpuset_attach() so that
-they match each other.
-
-Patch 3 makes any cpuset state change to wait for the completion of the
-pending cpuset attach operation, if any.
-
-Patch 4 collects task attach related data into a common attach_ctx
-structure.
-
-Patches 5 and 6 are just preparatory patches to make the remaining
-patches easier to review.
-
-Patch 7 makes attach_ctx.old_cs track group leader for use by
-cpuset_migrate_mm().
-
-Patch 8 moves mpol_rebind_mm() and cpuset_migrate_mm() inside
-cpuset_attach_task() to make CLONE_INTO_CGROUP flag of clone(2) works
-more like moving task from one cpuset to another one, while also make
-supporting multiple source and destination cpusets easier.
-
-Patch 9 makes the necessary changes to enable the support of multiple
-source cpusets by keeping all the source cpusets found during task
-iterations in a singly linked lists.
-
-Patch 10 enables the support of multiple destination cpusets during the
-the enabling of cpuset v2 controller.
-
-Patch 11 adds a new test case to test_cpuset to test disabling of cpuset
-controller.
-
-*** BLURB HERE ***
-
-Michal Koutný (1):
-  selftests/cgroup: Add test for cpuset affinity on controller disable
-
-Waiman Long (10):
-  cgroup/cpuset: Make nr_deadline_tasks an atomic_t
-  cgroup/cpuset: Fix node inconsistencies between
-    cpuset_update_tasks_nodemask() and cpuset_attach()
-  cgroup/cpuset: Prevent race between task attach and cpuset state
-    change
-  cgroup/cpuset: Put all task attach related variables into attach_ctx
-  cgroup/cpuset: Add a cpuset_reserve_dl_bw() helper
-  cgroup/cpuset: Expand the scope of cpuset_can_attach_check()
-  cgroup/cpuset: Make attach_ctx.old_cs track task group leader
-  cgroup/cpuset: Move mpol_rebind_mm/cpuset_migrate_mm() calls inside
-    cpuset_attach_task()
-  cgroup/cpuset: Support multiple source cpusets for cpuset_*attach()
-  cgroup/cpuset: Support multiple destination cpusets for
-    cpuset_*attach()
-
- kernel/cgroup/cpuset-internal.h              |  13 +-
- kernel/cgroup/cpuset.c                       | 467 ++++++++++++-------
- tools/testing/selftests/cgroup/test_cpuset.c | 243 ++++++++++
- 3 files changed, 552 insertions(+), 171 deletions(-)
-
+diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
+index f7aaf01f7cd5..140700e5e236 100644
+--- a/kernel/cgroup/cpuset-internal.h
++++ b/kernel/cgroup/cpuset-internal.h
+@@ -165,7 +165,7 @@ struct cpuset {
+ 	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
+ 	 * know when to rebuild associated root domain bandwidth information.
+ 	 */
+-	int nr_deadline_tasks;
++	atomic_t nr_deadline_tasks;
+ 	int nr_migrate_dl_tasks;
+ 	/* DL bandwidth that needs destination reservation for this attach. */
+ 	u64 sum_migrate_dl_bw;
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 49d8564d1a48..c22e55d798cf 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -222,14 +222,14 @@ void inc_dl_tasks_cs(struct task_struct *p)
+ {
+ 	struct cpuset *cs = task_cs(p);
+ 
+-	cs->nr_deadline_tasks++;
++	atomic_inc(&cs->nr_deadline_tasks);
+ }
+ 
+ void dec_dl_tasks_cs(struct task_struct *p)
+ {
+ 	struct cpuset *cs = task_cs(p);
+ 
+-	cs->nr_deadline_tasks--;
++	atomic_dec(&cs->nr_deadline_tasks);
+ }
+ 
+ static inline bool is_partition_valid(const struct cpuset *cs)
+@@ -918,7 +918,7 @@ static void dl_update_tasks_root_domain(struct cpuset *cs)
+ 	struct css_task_iter it;
+ 	struct task_struct *task;
+ 
+-	if (cs->nr_deadline_tasks == 0)
++	if (atomic_read(&cs->nr_deadline_tasks) == 0)
+ 		return;
+ 
+ 	css_task_iter_start(&cs->css, 0, &it);
+@@ -3215,8 +3215,8 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+ 	cs->old_mems_allowed = cpuset_attach_nodemask_to;
+ 
+ 	if (cs->nr_migrate_dl_tasks) {
+-		cs->nr_deadline_tasks += cs->nr_migrate_dl_tasks;
+-		oldcs->nr_deadline_tasks -= cs->nr_migrate_dl_tasks;
++		atomic_add(cs->nr_migrate_dl_tasks, &cs->nr_deadline_tasks);
++		atomic_sub(cs->nr_migrate_dl_tasks, &oldcs->nr_deadline_tasks);
+ 		reset_migrate_dl_data(cs);
+ 	}
+ 
 -- 
 2.54.0
 
