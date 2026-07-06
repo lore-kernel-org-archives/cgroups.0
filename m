@@ -1,50 +1,51 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EF30424647
-	for <cgroups@vger.kernel.org>; Mon,  6 Jul 2026 12:07:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9B0642378D
+	for <cgroups@vger.kernel.org>; Mon,  6 Jul 2026 12:07:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783339649; cv=none; b=SsMk3aPBUokCGezM4laxqfF/72LxLkp8tnQps9Wdt9DzKVQn8tr6vz0COuZ/sDqH6PB0fgsuKd3+C38RTg9OarhwHCBoHmpXhn0KJKTZ+j8cTkRZ2NhQplGcx3kaQYsUkaLrWNQeRZ12TXvmlSwruuimegin2cZsnWWPr+hDVkM=
+	t=1783339652; cv=none; b=MSwx7HnnxF/E/lkg/jXk9PhxzFIOR16Bx6OH+bN3fuo0wBwauLY33QWW3AXW0mJePhsbhN+WUUFFR0IQql7eMJyFNpA14RzjSNuFuNgurukMF8zJhtEfUU1qQ+oUJ23UQw5TkBxyddE1LlqwBWbCYhBtQB8/qoPxYFm7nQS+zmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783339649; c=relaxed/simple;
-	bh=apTiBjcxVK24LBvkYWNEBawfEW1dEeAN4dJhk3rDuQQ=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=dMvwUha5+iYwAVcf3wUH2m3SH/nip1Fjk++xhvVB7guziSG2fifEpnEeDUuNYUOY9nXOoHtV6cZQeA9qEG8TWIUH7RKSH22v8xlqHnBQHCRTIk1Q66qvCqELHxOHjsAupDGMn9QJ5LRhDLOjyN4MpbPUCLA5IPLn2dDQNNJeEQo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GacUHo+M; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1783339652; c=relaxed/simple;
+	bh=eavUpsZxei5UtAZevT1ijzwKnp6hdPdATdDPDVBgwss=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Kj3vk4/6dsHqgQ+SNk7DA5031R0ptX0HIQBnhoO6wAiEiq7gqllu6nV+HV+gI0kOHBXiWu5KSpVLChC44ujjyt3aVsKWrBp3R3UShrrATXMSqQxqKRz5MnxHQzzOo7rPNf3oBWIT3ft8f/uu3kMwkj5tvfFiFx3RMK7WsCijkoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Cr2OF1YO; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GacUHo+M"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Cr2OF1YO"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783339647;
+	s=mimecast20190719; t=1783339649;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=IpTCLpoP72HvCckwdmId2yggkVlEZn3IaRv8GeRmMF8=;
-	b=GacUHo+Mg/fKnPe1znSRDrbyWZl7r0nrTbuTZ7cadwr40jrIfxnmDSyMAEWFaRjj42JCZx
-	+ddYZnY+lp9lIl5LfIfPQgYEBT560qPw9Gjcs9AlDCLMi1Jf/mFO322msaLXjOJ3P7adMG
-	piLzMxF9E9uEaNkDsdeJBZ2pM1ahw0I=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=xYc4YxXkMADptX22VOsP9bchD2b9RbGYp9Ru3MzZ4oY=;
+	b=Cr2OF1YOJOJHWixRaPAtpGSPD+Pn4hdPY0dI/NUxtepeRkfF7RTwvw8xde27rQw4/tFNJG
+	8mXKSnx3CRxBTUQr9ATZfAUEkwlcMf2T+TV9oFplw8oVvUMF8rT68OjPTtR2lJAi7XnrLY
+	3VMqRr9SqA3V73GO6yMTLnxr6HyL+9A=
 Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-616-7DdviG42Oc-H-9yD8dCJ2A-1; Mon,
- 06 Jul 2026 08:07:23 -0400
-X-MC-Unique: 7DdviG42Oc-H-9yD8dCJ2A-1
-X-Mimecast-MFC-AGG-ID: 7DdviG42Oc-H-9yD8dCJ2A_1783339642
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-171-XCFaqTxaOBuOoyEENnVGTA-1; Mon,
+ 06 Jul 2026 08:07:26 -0400
+X-MC-Unique: XCFaqTxaOBuOoyEENnVGTA-1
+X-Mimecast-MFC-AGG-ID: XCFaqTxaOBuOoyEENnVGTA_1783339644
 Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 47C1E1845449;
-	Mon,  6 Jul 2026 12:06:57 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 570EB180AC4F;
+	Mon,  6 Jul 2026 12:07:07 +0000 (UTC)
 Received: from [192.168.1.153] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CBEC918005B7;
-	Mon,  6 Jul 2026 12:06:54 +0000 (UTC)
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EA75418005B5;
+	Mon,  6 Jul 2026 12:07:04 +0000 (UTC)
 From: Albert Esteve <aesteve@redhat.com>
-Subject: [PATCH v5 0/4] cgroup: dmem: add selftest helper, coverage, and VM
- runner
-Date: Mon, 06 Jul 2026 14:06:39 +0200
-Message-Id: <20260706-kunit_cgroups-v5-0-6c42c8753468@redhat.com>
+Date: Mon, 06 Jul 2026 14:06:43 +0200
+Subject: [PATCH v5 4/4] selftests: cgroup: handle vmtest-dmem -b to test
+ locally built kernel
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -53,115 +54,145 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/2XM0WrCMBTG8VeRXC9ykpwmjVe+h8hI0hMbxlpJa
- nFI390oA7d6+X3w+99YoZyosN3mxjLNqaRxqKP52LDQu+FEPHV1MwlSgxIt/7oMafoMpzxezoW
- b6MFb0gjCsGrOmWK6PnuHY919KtOYf575WTze35I0q9IsOHBrhFfBKOsA9pm63k3bMH6zR2qWL
- 45SrLms3HutTdO1Em144+rFG8A1V5UjuWDBGx2teOP4hwu75lh51EFGtG10hP/4six3q0N5CGg
- BAAA=
-X-Change-ID: 20260318-kunit_cgroups-7fb0b9e64017
+Message-Id: <20260706-kunit_cgroups-v5-4-6c42c8753468@redhat.com>
+References: <20260706-kunit_cgroups-v5-0-6c42c8753468@redhat.com>
+In-Reply-To: <20260706-kunit_cgroups-v5-0-6c42c8753468@redhat.com>
 To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
  =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
  Shuah Khan <shuah@kernel.org>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
  linux-kselftest@vger.kernel.org, Albert Esteve <aesteve@redhat.com>, 
  Eric Chanudet <echanude@redhat.com>
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783339614; l=3898;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783339614; l=3899;
  i=aesteve@redhat.com; s=20260303; h=from:subject:message-id;
- bh=apTiBjcxVK24LBvkYWNEBawfEW1dEeAN4dJhk3rDuQQ=;
- b=iNuQ+fkdHFGf+OxI55Em3l9TA/NkJppdKoCSJigqbMbuNGI9lFETUPPtJvPC6OiMNG8lgoc8d
- HEwBO0B9bzDBtRdkHpsRSD+0wnbjsr6T2g/g/fHi9CudW58wdL6iKNZ
+ bh=eavUpsZxei5UtAZevT1ijzwKnp6hdPdATdDPDVBgwss=;
+ b=AbCyhwt+t21HQ5QLdnZrJSOifdRH4CW6kSPFNO1vmqGvbeFe5p02I69VqqDxq1FGC15h7T6dY
+ UlIWl+1NetYBL9VLgLdI2uAIHZvej77n4Q8tH4rcTO5hhfLx3rJTxo7
 X-Developer-Key: i=aesteve@redhat.com; a=ed25519;
  pk=YSFz6sOHd2L45+Fr8DIvHTi6lSIjhLZ5T+rkxspJt1s=
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Hi all,
+Currently vmtest-dmem.sh relies on the host's running kernel or a
+pre-built one when booting the virtme-ng VM, with no option to
+configure and build a local kernel tree directly.
 
-This small series adds practical test coverage for the dmem
-cgroup controller.
+This adds friction to the development cycle: the user must manually
+run vng --kconfig with the correct config fragment, build the kernel,
+and pass the result to the script.
 
-The motivation came from following the recent dmem API discussion in
-thread [1]. That discussion considered changing the dmem API and
-adding a new knob. Currently there are no dedicated tests covering
-dmem behaviour, which makes such changes riskier.
+Add a -b flag that automates this workflow.  When set, handle_build()
+configures the kernel using vng --kconfig with the selftest config
+fragment, builds it with make -j$(nproc), and run_vm() passes the
+local tree to vng --run so the VM boots the freshly built kernel.
 
-Adding selftests has an additional challenge: dmem charging paths
-are driver-driven today, so regression testing is harder unless a
-suitable driver is present in the test environment.
-
-This series addresses that by adding:
-- a kernel-side selftest helper module to trigger charge/uncharge
-  from userspace in a controlled way,
-- cgroup selftests covering dmem accounting and protection semantics
-  (including dmem.max enforcement and byte-granularity checks),
-- a virtme-based VM runner for repeatable execution of the dmem tests.
-
-The goal is to make dmem behavior easier to validate when evolving the API
-and implementation, while keeping tests deterministic and driver-independent.
-
-Thanks.
-
-[1] - https://lore.kernel.org/all/aZoHfloupKvF2oSu@fedora/
-
+Signed-off-by: Eric Chanudet <echanude@redhat.com>
 Signed-off-by: Albert Esteve <aesteve@redhat.com>
 ---
-Changes in v5:
-- Change parse_first_region() by find_selftest_region to scan
-  dmem.capacity lines
-- Use exact equality for limit readback, not values_close()
-- Write VM tempfile to $SCRIPT_DIR
-- Fix KTAP by dropping outer framing in test_dmem
-- Use array for optional vng args to handle paths with spaces
-- Respect O=/KBUILD_OUTPUT= when building, per bpf/vmtest.sh convention
-- Link to v4: https://lore.kernel.org/r/20260519-kunit_cgroups-v4-0-f6c2f498fae4@redhat.com
+ tools/testing/selftests/cgroup/vmtest-dmem.sh | 47 ++++++++++++++++++++++++---
+ 1 file changed, 43 insertions(+), 4 deletions(-)
 
-Changes in v4:
-- Fix charged_pool leak in dmem_selftest_init()
-- Replace ssh-based VM approach in vmtest-dmem.sh with vng --exec
-- Add main() wrapper to vmtest-dmem.sh
-- Other small fixes suggested by Sashiko
-- Link to v3: https://lore.kernel.org/r/20260504-kunit_cgroups-v3-0-4eac90b76f91@redhat.com
+diff --git a/tools/testing/selftests/cgroup/vmtest-dmem.sh b/tools/testing/selftests/cgroup/vmtest-dmem.sh
+index 0bb6529112b54..4d0e2c0511e5b 100755
+--- a/tools/testing/selftests/cgroup/vmtest-dmem.sh
++++ b/tools/testing/selftests/cgroup/vmtest-dmem.sh
+@@ -15,6 +15,7 @@ readonly KERNEL_CHECKOUT="$(realpath "${SCRIPT_DIR}"/../../../../)"
+ 
+ source "${SCRIPT_DIR}"/../kselftest/ktap_helpers.sh
+ 
++BUILD=0
+ QEMU="qemu-system-$(uname -m)"
+ VERBOSE=0
+ SHELL_MODE=0
+@@ -26,10 +27,22 @@ function usage() {
+ 	cat <<EOF
+ $0 [OPTIONS]
+ Options:
++	-b	Build kernel from source tree before booting
+ 	-q	QEMU binary/path (default: ${QEMU})
+ 	-s	Start interactive shell in VM instead of running tests
+ 	-v	Verbose output (vng boot logs on stdout)
+ 	-h	Display this help
++
++If you build your kernel using KBUILD_OUTPUT= or O= options, these
++can be passed as environment variables to the script:
++
++  O=<build_path> $0 -b
++
++or
++
++  KBUILD_OUTPUT=<build_path> $0 -b
++
++O= takes precedence over KBUILD_OUTPUT= if both are set.
+ EOF
+ }
+ 
+@@ -60,17 +73,41 @@ function check_deps() {
+ 	done
+ }
+ 
++function handle_build() {
++	[[ "${BUILD}" -eq 1 ]] || return 0
++
++	[[ -f "${KERNEL_CHECKOUT}/kernel/cgroup/dmem_selftest.c" ]] || \
++		fail "-b requires vmtest-dmem.sh called from the kernel source tree"
++
++	# Figure out where the kernel is being built.
++	# O takes precedence over KBUILD_OUTPUT.
++	local out_args=()
++	if [[ -n "${O:-}" ]]; then
++		out_args=(O="${O}")
++	elif [[ -n "${KBUILD_OUTPUT:-}" ]]; then
++		out_args=(KBUILD_OUTPUT="${KBUILD_OUTPUT}")
++	fi
++
++	pushd "${KERNEL_CHECKOUT}" &>/dev/null
++	vng --kconfig --config "${SCRIPT_DIR}"/config "${out_args[@]}" || \
++		fail "failed to generate .config for kernel source tree (${KERNEL_CHECKOUT})"
++	make "${out_args[@]}" -j"$(nproc 2>/dev/null || echo 1)" || \
++		fail "failed to build kernel from source tree (${KERNEL_CHECKOUT})"
++	popd &>/dev/null
++}
++
+ # Run vng with common flags. Extra arguments are appended by the caller:
+ #   --exec <script>  for automated test runs
+ #   (nothing)        for interactive shell mode
+ function run_vm() {
+-	local verbose_opt=""
++	local vng_args=()
+ 
+-	[[ "${VERBOSE}" -eq 1 ]] && verbose_opt="--verbose"
++	[[ "${BUILD}" -eq 1 ]] && vng_args+=("${KERNEL_CHECKOUT}")
++	[[ "${VERBOSE}" -eq 1 ]] && vng_args+=("--verbose")
+ 
+ 	vng \
+ 		--run \
+-		${verbose_opt:+"${verbose_opt}"} \
++		"${vng_args[@]}" \
+ 		--qemu="$(command -v "${QEMU}")" \
+ 		--user root \
+ 		--rw \
+@@ -78,10 +115,11 @@ function run_vm() {
+ }
+ 
+ function main() {
+-	while getopts ':hvq:s' opt; do
++	while getopts ':hvq:sb' opt; do
+ 		case "${opt}" in
+ 		v) VERBOSE=1 ;;
+ 		q) QEMU="${OPTARG}" ;;
++		b) BUILD=1 ;;
+ 		s) SHELL_MODE=1 ;;
+ 		h) usage; exit 0 ;;
+ 		*) usage; exit 1 ;;
+@@ -89,6 +127,7 @@ function main() {
+ 	done
+ 
+ 	check_deps
++	handle_build
+ 
+ 	if [[ "${SHELL_MODE}" -eq 1 ]]; then
+ 		echo "Starting interactive shell in VM. Exit to stop VM."
 
-Changes in v3:
-- Set charged flag on unexpected over-limit charge success.
-- Add CONFIG_DMEM_SELFTEST=m to selftest config.
-- Simplify -v to a boolean; single -v was a no-op.
-- Unquote kernel_opt to avoid empty-string arg to vng.
-- Document -b in usage() output.
-- Link to v2: https://lore.kernel.org/r/20260421-kunit_cgroups-v2-0-bb6675d8249c@redhat.com
-
-Changes in v2:
-- Fix debugfs_create_dir() error check
-- Fix module teardown race: call dmem_selftest_remove() before
-  uncharging so debugfs files are torn down
-- Use IS_ERR_OR_NULL() in selftest() sanity check
-- Add CONFIG_CGROUP_DMEM=y to the cgroup selftest config
-- Replace config-file parsing in check_guest_requirements() with
-  a direct check of /sys/fs/cgroup/cgroup.controllers
-- Add new patch 4 (from Eric Chanudet): vmtest-dmem.sh -b flag
-  to configure and build a local kernel tree
-- Link to v1: https://lore.kernel.org/r/20260327-kunit_cgroups-v1-0-971b3c739a00@redhat.com
-
----
-Albert Esteve (4):
-      cgroup: Add dmem_selftest module
-      selftests: cgroup: Add dmem selftest coverage
-      selftests: cgroup: Add vmtest-dmem runner script
-      selftests: cgroup: handle vmtest-dmem -b to test locally built kernel
-
- init/Kconfig                                  |  12 +
- kernel/cgroup/Makefile                        |   1 +
- kernel/cgroup/dmem_selftest.c                 | 198 +++++++++++
- tools/testing/selftests/cgroup/.gitignore     |   1 +
- tools/testing/selftests/cgroup/Makefile       |   4 +-
- tools/testing/selftests/cgroup/config         |   2 +
- tools/testing/selftests/cgroup/test_dmem.c    | 486 ++++++++++++++++++++++++++
- tools/testing/selftests/cgroup/vmtest-dmem.sh | 188 ++++++++++
- 8 files changed, 891 insertions(+), 1 deletion(-)
----
-base-commit: 8cdeaa50eae8dad34885515f62559ee83e7e8dda
-change-id: 20260318-kunit_cgroups-7fb0b9e64017
-
-Best regards,
 -- 
-Albert Esteve <aesteve@redhat.com>
+2.54.0
 
