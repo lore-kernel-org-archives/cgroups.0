@@ -1,78 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0440E3D811C;
-	Mon,  6 Jul 2026 19:25:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10D083C3789;
+	Mon,  6 Jul 2026 19:45:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783365912; cv=none; b=O3EyCQwmxzSVdBeY88xsie7Al9RT8TBE/ItMnLbEDV9MDsWu0qXi28RZ6hARGPfTPd6wm3au8atunphuzQN1wEdwYgLBemD3U/Af3bYwRytBEgI5mRJd2xwurqOfK3vWqBMWfRGKqy/w5+bzSY/j8iaBgH1tobSGC/5mgpNcLzc=
+	t=1783367157; cv=none; b=D7VJthrDdrr1L90d5DYw9E5sEhIjxQl3cSxlnRiv33D4OPrbpdhCuH5fp4zXFG62+41h7QVqK3oZejI/Ykw0K/F7gZBF7JNQbYAh7XpiIsTxp3XhXS7qfkzL1YR8omNxCUhwHQ7pkNul9FUihctQR1tHLS8DvJsf0uoTcl1bMD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783365912; c=relaxed/simple;
-	bh=JeP+SfukuBwOqjun+wT5LvNkpjB19xTqoJZuLWWpF14=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JM2mkVEciUNH9b1hlWbibOa9J/5ugWhAb0nfxONV1J6ko9/WgGlC59GU0fj++FfVaBFYuPJTumwRf1NnGr6fO6nJB2oBRFXlFhp5d2tCICpiRqHj3M/o5l6qMVnLIw87XDUK3Lq2Dzv8iNIgeOhh10Ixn7t+moN8of5I/XaGEDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GJ6k21O3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783367157; c=relaxed/simple;
+	bh=AovqIHQqwVYs0zTuniHpmPmij/s519jnqC8QcN6eRkg=;
+	h=Date:Message-ID:To:Cc:From:Subject:In-Reply-To:References; b=jV1Z0X7JAci8LX4EBcaiEF8gsIE9dKh1MkgS8/WMsCTAYamgJYubfiCnQT3J+USopViAuhijBvHuc6YeshPRUrLz6Kpr6d33imN2u0EVqee3pw/YWLJQwE6P18SnfPQtNyMrDZK9NRaRAFkidCFXlMqeMB47ZPzgBBclvYZITbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XOfQfD6B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GJ6k21O3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69D231F000E9;
-	Mon,  6 Jul 2026 19:25:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XOfQfD6B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C9411F000E9;
+	Mon,  6 Jul 2026 19:45:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783365911;
-	bh=u6Ou0jbsdMUOvdHXYTkqyWBUsmGQD9nbdqqr1UFdWDg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=GJ6k21O3aLYCNuYZdTOtBHnjVXv/pe0UdV/Lc9MyMQv3HtYcIoQhUXqfWzMizCkvP
-	 lWU0cLU78OXeUOjZjAU3cpK52hRZ4JRIqFth+2DjhHQQBYtmyrlpAQ+6Dtwyg3ZcDP
-	 nu7itkPJ3bzH2PYkoKq6HptUbsDvF942k1fF+XOcKUqE+EBsDqWak0ae86rXQqzFuv
-	 wUtNBUbJCpVZ3sXJzSAAx5mhKvdf/oz7LXclw152Vq+gcV/tCrMuNZ4k/t9riXn9LR
-	 GnbTfrwT3jPjdVbgmq5HK8a/+xpXOVTjrbBQXdLnyZDxNaliTrbxG0jRYTBf5yyGvN
-	 e1KkYjuXt4l0A==
-Date: Mon, 6 Jul 2026 09:25:10 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>
-Cc: intel-xe@lists.freedesktop.org, Natalie Vock <natalie.vock@gmx.de>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	cgroups@vger.kernel.org, Huang Rui <ray.huang@amd.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Matthew Auld <matthew.auld@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Simona Vetter <simona@ffwll.ch>, David Airlie <airlied@gmail.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Thadeu Lima de Souza Cascardo <cascardo@igalia.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
+	s=k20260515; t=1783367156;
+	bh=AovqIHQqwVYs0zTuniHpmPmij/s519jnqC8QcN6eRkg=;
+	h=Date:To:Cc:From:Subject:In-Reply-To:References;
+	b=XOfQfD6BV5xPh/dM2/TdgTOCFYbwCcwQ9mf6FopUDp6IG1cB3+quIfh+HUzbr19i1
+	 lZ+vyu3KCohQ2wEqRjvaoMyzAJKGjm7H6X1QH7c0IL2OdQL7CC6EEXVKzUBwR+m/Sa
+	 QhyyMQkNYYaFJIoy21I9oLbG6A9JrZXti4DJRV+w4SuRKdfmNZLjucKEhWKsBMukE9
+	 iyWM+wUvzn+JM6/jvHwRViM+a7GZP+Sp/XaP4tUyk6SCT+lWAEXS8vIw/LNXRyUc22
+	 8Fc2Dq7H7kKA2CuoxJz2VT028L4G1PpEdo/7bJADZbijFJUcryIcjVCYO53lbZAK9p
+	 7qJkWa+B8Iaww==
+Date: Mon, 06 Jul 2026 09:45:55 -1000
+Message-ID: <6414bf279afba506259bda347299fee9@kernel.org>
+To: Manuel Ebner <manuelebner@mailbox.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 3/6] cgroup/dmem: Add reclaim callback for lowering
- max below current usage
-Message-ID: <akwBFlw8MwhrwsRu@slm.duckdns.org>
-References: <20260703130541.2686-1-thomas.hellstrom@linux.intel.com>
- <20260703130541.2686-4-thomas.hellstrom@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] docs: cgroup: Fix bracket
+In-Reply-To: <20260703063805.219517-2-manuelebner@mailbox.org>
+References: <20260703063805.219517-2-manuelebner@mailbox.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260703130541.2686-4-thomas.hellstrom@linux.intel.com>
 
-Hello,
-
-On Fri, Jul 03, 2026 at 03:05:38PM +0200, Thomas Hellström wrote:
-> Also honor O_NONBLOCK so that if that flag is set during the
-> max value write, no reclaim is initiated. The idea is to avoid
-> charging the reclaim cost to the writer of the max value.
-
-Is this really necessary? I'm not necessarily against it but this is trivial
-to work around from userspace and feels like a gratuitous addition. What's
-the use case?
+Applied to cgroup/for-7.3.
 
 Thanks.
 
--- 
+--
 tejun
