@@ -1,35 +1,35 @@
 Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [205.139.111.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3312D3A8747
-	for <cgroups@vger.kernel.org>; Mon,  6 Jul 2026 02:42:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33C43A9628
+	for <cgroups@vger.kernel.org>; Mon,  6 Jul 2026 02:43:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.139.111.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783305780; cv=none; b=FmiOsoc6sbTELddEIhVG8sABqjc4dIlUDrTuVcrrKVZd+d2LrN836oTvxT0ETk2tKVizixtReA8jllWu32boljzB6/WNuLioBEgbml3zMSugHaQItNGYICV59QXuv5RqSLWkbwDZP8kO3G3lcsbfp5EeM9OEjK7dhiQ7ysta/18=
+	t=1783305783; cv=none; b=r0qeFKPiKhoHbFV97RGLPCbIeXJpKmt/7xv/W2BksZJI8jLurJjHecEHhH3y0BqSXRmwwtz+Vpqk3oGRgGkLkSzyj+if7nPmPcCFoyTHdBy4RtyVFRJocsJEghSL8U7/i3QigU8L3gf3PvrEFvrmpBxQxg3kLA5th+nN2zUgQ6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783305780; c=relaxed/simple;
-	bh=257a0blGbP2rFyfFp35RvWDPKLF88h1p98fYy9AucM0=;
+	s=arc-20240116; t=1783305783; c=relaxed/simple;
+	bh=CSb6DlmWZnNWPQO3SG+MXDiPWyTf0UQ0Jxw4B/Z0T6c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:content-type; b=aMWHH4YcISn9SG+K+4lOZU3uvte5dqPppskyz6hD9ZZcmXh0lA/Aoyjlb8BaqTQuP5alDlhdCVmXA4X7EBdqcnKaW0Ssv6RQ5TkTavxSNwDWBTSlxMQ0wNIiEj9vRjkpCabOGCUPBhw2M3+aX2+LrwxUKvufQy/BWuO/Wfthiew=
+	 MIME-Version:content-type; b=alS8NfQR0r5C1RI+fj/G9CPVG/gLy52ogib/fFKHS33270IrgwCX/YspOuQldI2zcLPYxk0gH0CddIdjHwDuBP2JO7mpVF8A0jxsX2+TxQklaNvraeUENlmoF15ZSR1TF24iXnNT9sxtU3XOSHCI6Rf+8Ags28JMZBlt5RhN5CM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=205.139.111.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
 Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-626-aGMjOx-OPfScocOsh9L_cA-1; Sun,
- 05 Jul 2026 22:42:55 -0400
-X-MC-Unique: aGMjOx-OPfScocOsh9L_cA-1
-X-Mimecast-MFC-AGG-ID: aGMjOx-OPfScocOsh9L_cA_1783305773
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-232-J5MRu7RAMjWyp02xDsLttQ-1; Sun,
+ 05 Jul 2026 22:41:45 -0400
+X-MC-Unique: J5MRu7RAMjWyp02xDsLttQ-1
+X-Mimecast-MFC-AGG-ID: J5MRu7RAMjWyp02xDsLttQ_1783305704
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 55AFE1955F78;
-	Mon,  6 Jul 2026 02:42:53 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A7D8B1955F78;
+	Mon,  6 Jul 2026 02:41:43 +0000 (UTC)
 Received: from dreadlord.redhat.com (unknown [10.67.32.13])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 84FBE300070A;
-	Mon,  6 Jul 2026 02:42:46 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B4A7F300070A;
+	Mon,  6 Jul 2026 02:41:36 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
@@ -44,9 +44,9 @@ Cc: cgroups@vger.kernel.org,
 	Waiman Long <longman@redhat.com>,
 	simona@ffwll.ch,
 	intel-xe@lists.freedesktop.org
-Subject: [PATCH 10/10] xe: create a flag to enable memcg accounting for XE as well.
-Date: Mon,  6 Jul 2026 12:36:19 +1000
-Message-ID: <20260706024122.853329-11-airlied@gmail.com>
+Subject: [PATCH 01/10] memcg: add support for GPU page counters. (v4)
+Date: Mon,  6 Jul 2026 12:36:10 +1000
+Message-ID: <20260706024122.853329-2-airlied@gmail.com>
 In-Reply-To: <20260706024122.853329-1-airlied@gmail.com>
 References: <20260706024122.853329-1-airlied@gmail.com>
 Precedence: bulk
@@ -57,133 +57,226 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: hIYFYB87Hg-FNz5luieVTIqBzdRgwTHpJGAUq046B9U_1783305773
+X-Mimecast-MFC-PROC-ID: JdLNvLCSxqFTEs5O7sDAUAoOmtDURu7IQszCsJP1uRE_1783305704
 X-Mimecast-Originator: gmail.com
 Content-Transfer-Encoding: quoted-printable
 content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
-From: Maarten Lankhorst <dev@lankhorst.se>
+From: Dave Airlie <airlied@redhat.com>
 
-This adds support for memcg accounting to ttm object used by xe driver.
+This introduces 2 new statistics and 3 new memcontrol APIs for dealing
+with GPU system memory allocations.
 
-Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
+The stats corresponds to the same stats in the global vmstat,
+for number of active GPU pages, and number of pages in pools that
+can be reclaimed.
+
+The first API charges a order of pages to a objcg, and sets
+the objcg on the pages like kmem does, and updates the active/reclaim
+statistic.
+
+The second API uncharges a page from the obj cgroup it is currently charged
+to.
+
+The third API allows moving a page to/from reclaim and between obj cgroups.
+When pages are added to the pool lru, this just updates accounting.
+When pages are being removed from a pool lru, they can be taken from
+the parent objcg so this allows them to be uncharged from there and transfe=
+rred
+to a new child objcg.
+
 Signed-off-by: Dave Airlie <airlied@redhat.com>
 ---
- drivers/gpu/drm/xe/xe_bo.c  | 10 +++++++---
- drivers/gpu/drm/xe/xe_bo.h  |  1 +
- drivers/gpu/drm/xe/xe_lrc.c |  3 ++-
- drivers/gpu/drm/xe/xe_oa.c  |  3 ++-
- drivers/gpu/drm/xe/xe_pt.c  |  3 ++-
- 5 files changed, 14 insertions(+), 6 deletions(-)
+v2: use memcg_node_stat_items
+v3: fix null ptr dereference in uncharge
+v4: AI review: fix parameter names, fix problem with reclaim moving doing w=
+rong thing
+---
+ Documentation/admin-guide/cgroup-v2.rst |   6 ++
+ include/linux/memcontrol.h              |  11 +++
+ mm/memcontrol.c                         | 104 ++++++++++++++++++++++++
+ 3 files changed, 121 insertions(+)
 
-diff --git a/drivers/gpu/drm/xe/xe_bo.c b/drivers/gpu/drm/xe/xe_bo.c
-index 62f1da04ca2b..e016f0314d86 100644
---- a/drivers/gpu/drm/xe/xe_bo.c
-+++ b/drivers/gpu/drm/xe/xe_bo.c
-@@ -56,6 +56,7 @@ static const struct ttm_place sys_placement_flags =3D {
- =09.flags =3D 0,
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-=
+guide/cgroup-v2.rst
+index 993446ab66d0..aa4f503770c5 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1573,6 +1573,12 @@ The following nested keys are defined.
+ =09  vmalloc (npn)
+ =09=09Amount of memory used for vmap backed memory.
+=20
++=09  gpu_active (npn)
++=09=09Amount of system memory used for GPU devices.
++
++=09  gpu_reclaim (npn)
++=09=09Amount of system memory cached for GPU devices.
++
+ =09  shmem
+ =09=09Amount of cached filesystem data that is swap-backed,
+ =09=09such as tmpfs, shm segments, shared anonymous mmap()s
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index e1f46a0016fc..3a968c6be0c8 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1583,6 +1583,17 @@ static inline void mem_cgroup_flush_foreign(struct b=
+di_writeback *wb)
+ #endif=09/* CONFIG_CGROUP_WRITEBACK */
+=20
+ struct sock;
++bool mem_cgroup_charge_gpu_page(struct obj_cgroup *objcg, struct page *pag=
+e,
++=09=09=09   unsigned int order,
++=09=09=09   gfp_t gfp_mask, bool reclaim);
++void mem_cgroup_uncharge_gpu_page(struct page *page,
++=09=09=09=09  unsigned int order,
++=09=09=09=09  bool reclaim);
++bool mem_cgroup_move_gpu_page_reclaim(struct obj_cgroup *objcg,
++=09=09=09=09      struct page *page,
++=09=09=09=09      unsigned int order,
++=09=09=09=09      bool to_reclaim);
++
+ #ifdef CONFIG_MEMCG
+ extern struct static_key_false memcg_sockets_enabled_key;
+ #define mem_cgroup_sockets_enabled static_branch_unlikely(&memcg_sockets_e=
+nabled_key)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6dc4888a90f3..4c682b91cbbe 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -423,6 +423,8 @@ static const unsigned int memcg_node_stat_items[] =3D {
+ #ifdef CONFIG_HUGETLB_PAGE
+ =09NR_HUGETLB,
+ #endif
++=09NR_GPU_ACTIVE,
++=09NR_GPU_RECLAIM,
  };
 =20
-+/* TTM_PL_FLAG_MEMCG is not set, those placements are used for eviction */
- static struct ttm_placement sys_placement =3D {
- =09.num_placement =3D 1,
- =09.placement =3D &sys_placement_flags,
-@@ -181,8 +182,8 @@ static void try_add_system(struct xe_device *xe, struct=
- xe_bo *bo,
+ static const unsigned int memcg_stat_items[] =3D {
+@@ -1553,6 +1555,8 @@ static const struct memory_stat memory_stats[] =3D {
+ =09{ "percpu",=09=09=09MEMCG_PERCPU_B=09=09=09},
+ =09{ "sock",=09=09=09MEMCG_SOCK=09=09=09},
+ =09{ "vmalloc",=09=09=09NR_VMALLOC=09=09=09},
++=09{ "gpu_active",=09=09=09NR_GPU_ACTIVE=09=09=09},
++=09{ "gpu_reclaim",=09=09NR_GPU_RECLAIM=09                },
+ =09{ "shmem",=09=09=09NR_SHMEM=09=09=09},
+ #ifdef CONFIG_ZSWAP
+ =09{ "zswap",=09=09=09MEMCG_ZSWAP_B=09=09=09},
+@@ -5508,6 +5512,106 @@ void mem_cgroup_flush_workqueue(void)
+ =09flush_workqueue(memcg_wq);
+ }
 =20
- =09=09bo->placements[*c] =3D (struct ttm_place) {
- =09=09=09.mem_type =3D XE_PL_TT,
--=09=09=09.flags =3D (bo_flags & XE_BO_FLAG_VRAM_MASK) ?
--=09=09=09TTM_PL_FLAG_FALLBACK : 0,
-+=09=09=09.flags =3D TTM_PL_FLAG_MEMCG | ((bo_flags & XE_BO_FLAG_VRAM_MASK)=
- ?
-+=09=09=09TTM_PL_FLAG_FALLBACK : 0),
- =09=09};
- =09=09*c +=3D 1;
- =09}
-@@ -2384,6 +2385,9 @@ struct xe_bo *xe_bo_init_locked(struct xe_device *xe,=
- struct xe_bo *bo,
- =09placement =3D (type =3D=3D ttm_bo_type_sg ||
- =09=09     bo->flags & XE_BO_FLAG_DEFER_BACKING) ? &sys_placement :
- =09=09&bo->placement;
++/**
++ * mem_cgroup_charge_gpu_page - charge a page to GPU memory tracking
++ * @objcg: objcg to charge, NULL charges root memcg
++ * @page: page to charge
++ * @order: page allocation order
++ * @gfp_mask: gfp mode
++ * @reclaim: charge the reclaim counter instead of the active one.
++ *
++ * Charge the order sized @page to the objcg. Returns %true if the charge =
+fit within
++ * @objcg's configured limit, %false if it doesn't.
++ */
++bool mem_cgroup_charge_gpu_page(struct obj_cgroup *objcg, struct page *pag=
+e,
++=09=09=09=09unsigned int order, gfp_t gfp_mask, bool reclaim)
++{
++=09unsigned int nr_pages =3D 1 << order;
++=09struct mem_cgroup *memcg =3D NULL;
++=09struct lruvec *lruvec;
++=09int ret;
 +
-+=09if (bo->flags & XE_BO_FLAG_ACCOUNTED)
-+=09=09ttm_bo_set_cgroup(&bo->ttm, get_obj_cgroup_from_current());
- =09err =3D ttm_bo_init_reserved(&xe->ttm, &bo->ttm, type,
- =09=09=09=09   placement, alignment,
- =09=09=09=09   &ctx, NULL, resv, xe_ttm_bo_destroy);
-@@ -3361,7 +3365,7 @@ int xe_gem_create_ioctl(struct drm_device *dev, void =
-*data,
- =09if (XE_IOCTL_DBG(xe, args->size & ~PAGE_MASK))
- =09=09return -EINVAL;
-=20
--=09bo_flags =3D 0;
-+=09bo_flags =3D XE_BO_FLAG_ACCOUNTED;
- =09if (args->flags & DRM_XE_GEM_CREATE_FLAG_DEFER_BACKING)
- =09=09bo_flags |=3D XE_BO_FLAG_DEFER_BACKING;
-=20
-diff --git a/drivers/gpu/drm/xe/xe_bo.h b/drivers/gpu/drm/xe/xe_bo.h
-index 6340317f7d2e..d38012c60175 100644
---- a/drivers/gpu/drm/xe/xe_bo.h
-+++ b/drivers/gpu/drm/xe/xe_bo.h
-@@ -52,6 +52,7 @@
- #define XE_BO_FLAG_CPU_ADDR_MIRROR=09BIT(24)
- #define XE_BO_FLAG_FORCE_USER_VRAM=09BIT(25)
- #define XE_BO_FLAG_NO_COMPRESSION=09BIT(26)
-+#define XE_BO_FLAG_ACCOUNTED=09=09BIT(27)
-=20
- /* this one is trigger internally only */
- #define XE_BO_FLAG_INTERNAL_TEST=09BIT(30)
-diff --git a/drivers/gpu/drm/xe/xe_lrc.c b/drivers/gpu/drm/xe/xe_lrc.c
-index a4292a11391d..61aa5033a292 100644
---- a/drivers/gpu/drm/xe/xe_lrc.c
-+++ b/drivers/gpu/drm/xe/xe_lrc.c
-@@ -1661,7 +1661,8 @@ static int xe_lrc_init(struct xe_lrc *lrc, struct xe_=
-hw_engine *hwe, struct xe_v
- =09=09   XE_BO_FLAG_GGTT_INVALIDATE;
-=20
- =09if ((vm && vm->xef) || init_flags & XE_LRC_CREATE_USER_CTX) /* userspac=
-e */
--=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM;
-+=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM |
-+=09=09=09    XE_BO_FLAG_ACCOUNTED;
-=20
- =09bo =3D xe_bo_create_pin_map_novm(xe, tile, bo_size,
- =09=09=09=09       ttm_bo_type_kernel,
-diff --git a/drivers/gpu/drm/xe/xe_oa.c b/drivers/gpu/drm/xe/xe_oa.c
-index 2dce6a47202c..38d491fa8231 100644
---- a/drivers/gpu/drm/xe/xe_oa.c
-+++ b/drivers/gpu/drm/xe/xe_oa.c
-@@ -910,7 +910,8 @@ static int xe_oa_alloc_oa_buffer(struct xe_oa_stream *s=
-tream, size_t size)
-=20
- =09bo =3D xe_bo_create_pin_map_novm(stream->oa->xe, stream->gt->tile,
- =09=09=09=09       size, ttm_bo_type_kernel,
--=09=09=09=09       vram | XE_BO_FLAG_GGTT, false);
-+=09=09=09=09       vram | XE_BO_FLAG_GGTT | XE_BO_FLAG_ACCOUNTED,
-+=09=09=09=09       false);
- =09if (IS_ERR(bo))
- =09=09return PTR_ERR(bo);
-=20
-diff --git a/drivers/gpu/drm/xe/xe_pt.c b/drivers/gpu/drm/xe/xe_pt.c
-index 670bc2206fea..daf346eaa8f5 100644
---- a/drivers/gpu/drm/xe/xe_pt.c
-+++ b/drivers/gpu/drm/xe/xe_pt.c
-@@ -123,7 +123,8 @@ struct xe_pt *xe_pt_create(struct xe_vm *vm, struct xe_=
-tile *tile,
- =09=09   XE_BO_FLAG_IGNORE_MIN_PAGE_SIZE |
- =09=09   XE_BO_FLAG_NO_RESV_EVICT | XE_BO_FLAG_PAGETABLE;
- =09if (vm->xef) /* userspace */
--=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM;
-+=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM |
-+=09=09=09    XE_BO_FLAG_ACCOUNTED;
-=20
- =09pt->level =3D level;
-=20
++=09if (objcg) {
++=09=09memcg =3D get_mem_cgroup_from_objcg(objcg);
++
++=09=09ret =3D try_charge_memcg(memcg, gfp_mask, nr_pages);
++=09=09if (ret) {
++=09=09=09mem_cgroup_put(memcg);
++=09=09=09return false;
++=09=09}
++
++=09=09obj_cgroup_get(objcg);
++=09=09page_set_objcg(page, objcg);
++=09}
++
++=09lruvec =3D mem_cgroup_lruvec(memcg, page_pgdat(page));
++=09mod_lruvec_state(lruvec, reclaim ? NR_GPU_RECLAIM : NR_GPU_ACTIVE, nr_p=
+ages);
++
++=09mem_cgroup_put(memcg);
++=09return true;
++}
++EXPORT_SYMBOL_GPL(mem_cgroup_charge_gpu_page);
++
++/**
++ * mem_cgroup_uncharge_gpu_page - uncharge a page from GPU memory tracking
++ * @page: page to uncharge
++ * @order: order of the page allocation
++ * @reclaim: uncharge the reclaim counter instead of the active.
++ */
++void mem_cgroup_uncharge_gpu_page(struct page *page,
++=09=09=09=09  unsigned int order, bool reclaim)
++{
++=09struct obj_cgroup *objcg =3D page_objcg(page);
++=09struct mem_cgroup *memcg;
++=09struct lruvec *lruvec;
++=09int nr_pages =3D 1 << order;
++
++=09memcg =3D objcg ? get_mem_cgroup_from_objcg(objcg) : NULL;
++
++=09lruvec =3D mem_cgroup_lruvec(memcg, page_pgdat(page));
++=09mod_lruvec_state(lruvec, reclaim ? NR_GPU_RECLAIM : NR_GPU_ACTIVE, -nr_=
+pages);
++
++=09if (memcg && !mem_cgroup_is_root(memcg))
++=09=09refill_stock(memcg, nr_pages);
++=09page->memcg_data =3D 0;
++=09obj_cgroup_put(objcg);
++=09mem_cgroup_put(memcg);
++}
++EXPORT_SYMBOL_GPL(mem_cgroup_uncharge_gpu_page);
++
++/**
++ * mem_cgroup_move_gpu_reclaim - move pages from gpu to gpu reclaim and ba=
+ck
++ * @new_objcg: objcg to move page to, NULL if just stats update.
++ * @nr_pages: number of pages to move
++ * @to_reclaim: true moves pages into reclaim, false moves them back
++ */
++bool mem_cgroup_move_gpu_page_reclaim(struct obj_cgroup *new_objcg,
++=09=09=09=09      struct page *page,
++=09=09=09=09      unsigned int order,
++=09=09=09=09      bool to_reclaim)
++{
++=09struct obj_cgroup *objcg =3D page_objcg(page);
++
++=09if (!objcg || !new_objcg || objcg =3D=3D new_objcg) {
++=09=09struct mem_cgroup *memcg =3D objcg ? get_mem_cgroup_from_objcg(objcg=
+) : NULL;
++=09=09struct lruvec *lruvec;
++=09=09unsigned long flags;
++=09=09int nr_pages =3D 1 << order;
++
++=09=09lruvec =3D mem_cgroup_lruvec(memcg, page_pgdat(page));
++=09=09local_irq_save(flags);
++=09=09mod_lruvec_state(lruvec, to_reclaim ? NR_GPU_RECLAIM : NR_GPU_ACTIVE=
+, nr_pages);
++=09=09mod_lruvec_state(lruvec, to_reclaim ? NR_GPU_ACTIVE : NR_GPU_RECLAIM=
+, -nr_pages);
++=09=09local_irq_restore(flags);
++=09=09mem_cgroup_put(memcg);
++=09=09return true;
++=09} else {
++=09=09mem_cgroup_uncharge_gpu_page(page, order, true);
++=09=09return mem_cgroup_charge_gpu_page(new_objcg, page, order, 0, false);
++=09}
++}
++EXPORT_SYMBOL_GPL(mem_cgroup_move_gpu_page_reclaim);
++
+ static int __init cgroup_memory(char *s)
+ {
+ =09char *token;
 --=20
 2.54.0
 
