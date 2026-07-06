@@ -1,53 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10D083C3789;
-	Mon,  6 Jul 2026 19:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 731B53C553F
+	for <cgroups@vger.kernel.org>; Mon,  6 Jul 2026 19:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783367157; cv=none; b=D7VJthrDdrr1L90d5DYw9E5sEhIjxQl3cSxlnRiv33D4OPrbpdhCuH5fp4zXFG62+41h7QVqK3oZejI/Ykw0K/F7gZBF7JNQbYAh7XpiIsTxp3XhXS7qfkzL1YR8omNxCUhwHQ7pkNul9FUihctQR1tHLS8DvJsf0uoTcl1bMD0=
+	t=1783367334; cv=none; b=fJt6wtWm0LAlBgDP4F76+DK0ymloW+fBnBr183gP/JnaLxIIC1wfldA3C6oIZz5e713N4WpQegGrhot6D/mF0O+Mu7jRUNQUC+AGvuSEEfK3ETjdjUn41JyoAVUxTczOKedcisjl9zow5W3SyCBmD0/JSAne6lTql7Q84BcgBf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783367157; c=relaxed/simple;
-	bh=AovqIHQqwVYs0zTuniHpmPmij/s519jnqC8QcN6eRkg=;
-	h=Date:Message-ID:To:Cc:From:Subject:In-Reply-To:References; b=jV1Z0X7JAci8LX4EBcaiEF8gsIE9dKh1MkgS8/WMsCTAYamgJYubfiCnQT3J+USopViAuhijBvHuc6YeshPRUrLz6Kpr6d33imN2u0EVqee3pw/YWLJQwE6P18SnfPQtNyMrDZK9NRaRAFkidCFXlMqeMB47ZPzgBBclvYZITbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XOfQfD6B; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783367334; c=relaxed/simple;
+	bh=CWX2RW1HumNtm6M/k384P/sHqBUZGLI5pEYS4rkWAmY=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=iEIBoUuSgKq1swsYsVtw3GgM+44XdPX3j6RCoWuNRbvzve8hEibusq2hI2zJFiugAU5XY3iam38S/kWIm6OFVqNGmVXjzEttSz9wFPE/7tXr0iZgBmp8jUxZFlf5mWFYpmAPcoDui/ShTe9w3RSsu3JP+GgMXxod6kq7QwMk+EI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oa9MCfRU; arc=none smtp.client-ip=91.218.175.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XOfQfD6B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C9411F000E9;
-	Mon,  6 Jul 2026 19:45:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783367156;
-	bh=AovqIHQqwVYs0zTuniHpmPmij/s519jnqC8QcN6eRkg=;
-	h=Date:To:Cc:From:Subject:In-Reply-To:References;
-	b=XOfQfD6BV5xPh/dM2/TdgTOCFYbwCcwQ9mf6FopUDp6IG1cB3+quIfh+HUzbr19i1
-	 lZ+vyu3KCohQ2wEqRjvaoMyzAJKGjm7H6X1QH7c0IL2OdQL7CC6EEXVKzUBwR+m/Sa
-	 QhyyMQkNYYaFJIoy21I9oLbG6A9JrZXti4DJRV+w4SuRKdfmNZLjucKEhWKsBMukE9
-	 iyWM+wUvzn+JM6/jvHwRViM+a7GZP+Sp/XaP4tUyk6SCT+lWAEXS8vIw/LNXRyUc22
-	 8Fc2Dq7H7kKA2CuoxJz2VT028L4G1PpEdo/7bJADZbijFJUcryIcjVCYO53lbZAK9p
-	 7qJkWa+B8Iaww==
-Date: Mon, 06 Jul 2026 09:45:55 -1000
-Message-ID: <6414bf279afba506259bda347299fee9@kernel.org>
-To: Manuel Ebner <manuelebner@mailbox.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Koutny <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] docs: cgroup: Fix bracket
-In-Reply-To: <20260703063805.219517-2-manuelebner@mailbox.org>
-References: <20260703063805.219517-2-manuelebner@mailbox.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oa9MCfRU"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1783367330;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CWX2RW1HumNtm6M/k384P/sHqBUZGLI5pEYS4rkWAmY=;
+	b=oa9MCfRUXRzMF16hkwzuVONS1rjnVLN/iWs9OAnpICtFE8D78D5wzHxUApszLYevIl1drt
+	38/rgPBMyLDJQN17BSXlpCgMRczydK+oB5BFryPa/4BLyiPwoGUbqyhioZbEldO81VkcNN
+	3HZg9UFwu8QCAH8p2dzM/zN8DKi0RZk=
+From: Roman Gushchin <roman.gushchin@linux.dev>
+To: Jiayuan Chen <jiayuan.chen@linux.dev>
+Cc: linux-mm@kvack.org,  jiayuan.chen@shopee.com,  Johannes Weiner
+ <hannes@cmpxchg.org>,  Michal Hocko <mhocko@kernel.org>,  Shakeel Butt
+ <shakeel.butt@linux.dev>,  Muchun Song <muchun.song@linux.dev>,  Andrew
+ Morton <akpm@linux-foundation.org>,  cgroups@vger.kernel.org,
+  linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] mm: memcg: reset oom_group in css_reset
+In-Reply-To: <20260703063826.306878-2-jiayuan.chen@linux.dev> (Jiayuan Chen's
+	message of "Fri, 3 Jul 2026 14:38:24 +0800")
+References: <20260703063826.306878-1-jiayuan.chen@linux.dev>
+	<20260703063826.306878-2-jiayuan.chen@linux.dev>
+Date: Mon, 06 Jul 2026 12:48:42 -0700
+Message-ID: <877bn7nbl1.fsf@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Migadu-Flow: FLOW_OUT
 
-Applied to cgroup/for-7.3.
+Jiayuan Chen <jiayuan.chen@linux.dev> writes:
 
-Thanks.
+> From: Jiayuan Chen <jiayuan.chen@shopee.com>
+>
+> memory.oom.group defaults to disabled, but css_reset did not clear
+> memcg->oom_group when a disabled memory css is kept alive by another
+> controller dependency.
+>
+> Reset it with the other memory controller policies so a hidden memcg
+> cannot keep applying stale group OOM kill policy.
+>
+> Cc: Jiayuan Chen <jiayuan.chen@linux.dev>
+> Signed-off-by: Jiayuan Chen <jiayuan.chen@shopee.com>
 
---
-tejun
+Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+
+Thanks!
