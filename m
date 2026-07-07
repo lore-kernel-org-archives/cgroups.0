@@ -1,105 +1,130 @@
-Received: from out-173.mta1.migadu.com (out-173.mta1.migadu.com [95.215.58.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CD523E0C5C;
-	Tue,  7 Jul 2026 10:22:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70CB3FB07A
+	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 12:01:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783419760; cv=none; b=grCEqGtOivNqeX+8f7ArupcysIuhq/NY+tOsJj9MucOCYZyfiJSujr8mGfRuI+GqtJtnuCZRfd7cnkw/x5wJOoIrBD5j6/IZIC3R/C3TBsD7mq61vafTPbWHAKiPUzvDux+rQfUfVN4imJws+NWEo4rn5thS+hBBt1q4rBxiBDo=
+	t=1783425699; cv=none; b=Lb/afIHxpuLVndRGpdKbmSoTBSSViaL/d6GXRTIsV2v+Htt6Xyscv3VxpuswlOWO/47W9HsSW17DW7f2RqUyAajY8t1lIIFwudaWa9EecNL2LYVSPyAxpuJNUzBlXINIUBfUCpP8VRjVYKcQ4mhdqeisXcUPW+p7mre1NrZe3eo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783419760; c=relaxed/simple;
-	bh=DaLe8/QXrTWscizG+dYcIkmo6WTPEu4GyF4vvjyKeyE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OpFcT+TpXyL4OdQgtIspY6FhHgVfBtmf5KKW0Szf+P+hvWs5awIB0tOLlmPbCAaSPKCNPEe605O4eRGr85NUDJz5iMM6RD1LghoDo3SVyXzwGRBioVME4NHfpQAUL/21W5rLPzNSjCl1THBfJugx7ip3su6PgAz1hv2rOJDhA10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=sYuUGfNw; arc=none smtp.client-ip=95.215.58.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1783425699; c=relaxed/simple;
+	bh=/8GUkb5deBcpAM3zS7bUZUXYwSqR4M6QK/IwDpzwj60=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NHoyqIehg7g5Lj9++/nSIkmPnT9uNw9XF86liXjsQfoJWooR13V4yRSdaYVMCuiA57VpWTQRMJjTZ9yUik6IPr2BywZfgtbFNmKFJwAnR2B+snl/I3KV7b4HEQCaE++wu8AsanSPCCKlhkYNISchsGRmbdY69zdGPz+RUr+PDWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Ovf3ok1t; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="sYuUGfNw"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1783419757;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=R9pYchVVq66JQF9/AQXK87a2K/GG6sLwSAaz3vkY6xc=;
-	b=sYuUGfNw0ciX5Btk/+HD/kCsVAsGe0ylxo8MZopdMGjHjljF2KDR6PYR2lgZ7BqpMp7dEy
-	AMX3jnhHEwDJfC/G13Krb8s/TCmhRPSUIdTC/LkiZd5IxdacIC4/hTt+SUAM2vlFOCq9cG
-	MBVj9dGf4R/05IjyyZqEQu9+uLuTaOg=
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>
-Cc: Shuah Khan <skhan@linuxfoundation.org>,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH 3/3] Docs/admin-guide/cgroup-v2: note blkcg_debug_stats gates io.latency stats
-Date: Tue,  7 Jul 2026 18:21:48 +0800
-Message-ID: <20260707102148.692250-4-guopeng.zhang@linux.dev>
-In-Reply-To: <20260707102148.692250-1-guopeng.zhang@linux.dev>
-References: <20260707102148.692250-1-guopeng.zhang@linux.dev>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Ovf3ok1t"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-493c00f74baso25747315e9.0
+        for <cgroups@vger.kernel.org>; Tue, 07 Jul 2026 05:01:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1783425696; x=1784030496; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2foD8/m5jsx3KDxdM1AXAhJaa/uPNeOmtxQBIkqM8nk=;
+        b=Ovf3ok1t7gVBe80wsLEjTuo3DgGqyi/DXr4UQhWI4DK2bkjClmH4+pm+2RmBOMk0ow
+         KUl6UcVQAqd3d4IzcNbDM3VOek+jvB+maiS8e2q/RYmkXtypKIj5OdTVbIs+6AdHAStB
+         huEIkoHs7/w42DD7qa/qSsKr2MfLsQjQFMWCjJxKWr+hTI7XXr6fwSYzwVM9sH0NKHHP
+         D4HD29nh/PxwCAyiBEuLIMPWby8OzY1J3XY8s9djumhxmAFYcswmy30tFggRfHlZ+Xg7
+         72D49KoSa7Pnwkqk1Fp7Mu5YqhAKixjqGs0WLLolGdNluGEaAmQ94lEFnMxwkJrRKQxp
+         CIzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783425696; x=1784030496;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=2foD8/m5jsx3KDxdM1AXAhJaa/uPNeOmtxQBIkqM8nk=;
+        b=RT+AMw7Ch9zZklxzBS4Zr43zN3sO1i/X77+OulWTrW80IEKlq3Ylw2asd3b/1nkUxm
+         E0cAKH4tu54i1J0UB1ryl7iIkVpVYMje8xnAtUAX5CosjcRKOm71tok2Lo5+PPGnW3FG
+         1bLbACG8e0t0vEKizakkiswYS97hqwigt7bdQ3PnIjRdSlzaCfVL7or8/Jr7P2KwlFS8
+         XF5/zGqPNXp79BCImAfqncuFXaxh95RQmp3iuiZWRfAKzbUPLGjB64TazMETge6uPFcp
+         xJPlqdAVOQITCCy3/2W6ltvbjD9+uA2zr7Ud3cjJvQb1DiTllgWwnJ/ylbRLzGjXDLa1
+         eOZg==
+X-Forwarded-Encrypted: i=1; AHgh+RpsirK+BRn+KdsU6JXQmFgw0AqzxeLyDscxlni4v4saYRXHBxPIxM0jaH1ZIdLSMiCHY7xSr6Ad@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPFKZwN5P+DxalgqclqGQRJbTpP5JxQb9x/9wZlDeC9QhozPEO
+	HvDS53HiIh3s3uMgsbNFbyaALgkJ6CXcvvVMYZU82n+Etxehc5u8dFcO0kPZ4FT5IahylhAHwYP
+	nW93bAo4=
+X-Gm-Gg: AfdE7cmkKAKDu84XFJmDluqvVcD9RHx+r1oif/gM7wq2NoEdScR2Uq/IifBmXPPqAAu
+	mBGhg2D0r0X2nHatOqcx6FDJCyiwasegTt8SVHeu2ttgQ6Og5FqOa1trtHgk4Z/GssjjEKA0q7+
+	vCXO1b23IWsYG6IZ6yD/lJimjALGC/bRkrlQn38weQSyeB7iOk6ig23Mj7DvwFV2n6p08HoRzbd
+	Eu38vjsQSNlxOMt1WBYQA0Gp5huO3l3ld27bdV00jZYaHWTikkESc6YcxSM+iuy9/Zc7beqGkK/
+	7ZINPspVBdmWsWUHkVrmZu4BvL9M5e09oiXAVwIVMafYQh4hrWIZqtCyASF1413Yg3NgRNzT1Em
+	8hzQWKOss4McULv1m6pLhzsrjomhr2g3QQMhcqEyLma42nBd5nMEa7JB/ybWFKG1dtXSrMmxlRk
+	A+oD8fmtemXcPXT/LC1v9yp8T8+wi/O1eKYOAyYQ==
+X-Received: by 2002:a05:600c:3b01:b0:493:b91c:6bf with SMTP id 5b1f17b1804b1-493df0a74c1mr48992425e9.18.1783425696112;
+        Tue, 07 Jul 2026 05:01:36 -0700 (PDT)
+Received: from localhost.localdomain (nat2.prg.suse.com. [195.250.132.146])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47aa039ae44sm32347941f8f.23.2026.07.07.05.01.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Jul 2026 05:01:35 -0700 (PDT)
+Date: Tue, 7 Jul 2026 14:01:33 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Zenghui Yu <zenghui.yu@linux.dev>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, 
+	yosry@kernel.org, nphamcs@gmail.com, chengming.zhou@linux.dev, tj@kernel.org, 
+	Shuah Khan <shuah@kernel.org>, mhocko@kernel.org, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, Li Wang <li.wang@linux.dev>
+Subject: Re: cgroup/test_zswap failed with "zswpout does not increase after
+ test program"
+Message-ID: <akzpi93tZry0cCCe@localhost.localdomain>
+References: <c0970cee-42c2-4844-b88e-229853f08e90@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="n32fxil2i3lu57lp"
+Content-Disposition: inline
+In-Reply-To: <c0970cee-42c2-4844-b88e-229853f08e90@linux.dev>
 
-From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-The io.stat section says that enabling the io.latency controller exposes
-the depth, avg_lat and win stats in addition to the normal ones. However,
-these io.latency-specific stats are debug stats and are only emitted when
-the blkcg_debug_stats module parameter is enabled, which is disabled by
-default.
+--n32fxil2i3lu57lp
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: cgroup/test_zswap failed with "zswpout does not increase after
+ test program"
+MIME-Version: 1.0
 
-Make this explicit so users do not expect these fields to appear in
-io.stat by default, and qualify the usage text that suggests using
-avg_lat to pick an io.latency target.
+Hello Zenghui.
 
-Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
----
- Documentation/admin-guide/cgroup-v2.rst | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+On Tue, Jul 07, 2026 at 05:38:13PM +0800, Zenghui Yu <zenghui.yu@linux.dev>=
+ wrote:
+> Hi,
+>=20
+> Running cgroup/test_zswap on my arm64 box failed immediately with:
+>=20
+>   [root@localhost cgroup]# ./test_zswap=20
+>   TAP version 13
+>   1..8
+>   # zswpout does not increase after test program
+>   not ok 1 test_zswap_usage
+>   [...]
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index df3fe7a7c6b3..0df15a672cf3 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2278,10 +2278,11 @@ groups D and F will influence each other.  Group G will influence nobody::
- So the ideal way to configure this is to set io.latency in groups A, B, and C.
- Generally you do not want to set a value lower than the latency your device
- supports.  Experiment to find the value that works best for your workload.
--Start at higher than the expected latency for your device and watch the
--avg_lat value in io.stat for your workload group to get an idea of the
--latency you see during normal operation.  Use the avg_lat value as a basis for
--your real setting, setting at 10-15% higher than the value in io.stat.
-+Start at higher than the expected latency for your device and, with
-+blkcg_debug_stats enabled, watch the avg_lat value in io.stat for your
-+workload group to get an idea of the latency you see during normal operation.
-+Use the avg_lat value as a basis for your real setting, setting at 10-15%
-+higher than the value in io.stat.
- 
- How IO Latency Throttling Works
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@@ -2319,7 +2320,9 @@ IO Latency Interface Files
- 
-   io.stat
- 	If the controller is enabled you will see extra stats in io.stat in
--	addition to the normal ones.
-+	addition to the normal ones.  These debug stats are only emitted when
-+	the blkcg_debug_stats module parameter is enabled (it is disabled by
-+	default).
- 
- 	  depth
- 		This is the current queue depth for the group.
--- 
-2.43.0
+What version of the tests do you run?
+Namely, does it have the recent patches from Li [1]?
 
+Thanks,
+Michal
+
+[1] 83476cc97bc63 ("Merge tag 'cgroup-for-7.2' of git://git.kernel.org/pub/=
+scm/linux/kernel/git/tj/cgroup") v7.2-rc1~136
+
+--n32fxil2i3lu57lp
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCakzqcRsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AjPxQD/TSp3AgFunXblm/wv+t06
+iUtOKzzPQFXPcFo4roUGy6UBAPI9Y58AN6NvZtotdqoeb85Dry7/rdwq9AfzhNfP
+8pEH
+=dE8U
+-----END PGP SIGNATURE-----
+
+--n32fxil2i3lu57lp--
