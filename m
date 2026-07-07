@@ -1,184 +1,83 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com [209.85.161.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C733921F0
-	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 18:56:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A7CC29B78F
+	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 20:32:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783450567; cv=none; b=cwF7GlrlLA2101LprR3RLEVOzCWVeHlFdVPEeWor63uvFa6tckzm7Qbho+zEnqrS3hrOKvfaDBOINIHQaswMw2niJFq0UD9lIoUxphUUzECvlYZU08RcMmrDDxG9lR4eC8nInyhB32C+znwT2Ulc86MfoZdOYKV4CtLvXQY687I=
+	t=1783456349; cv=none; b=WCVKQCiHes2CvqrsEYBhHS4ypplkDqX2DJi/UP5C9UI7+ynV0lAC39WQAS8bGP9CdG3rHbidDR0vg28pY7e3sHByAARJuN7MTtzqMkxxka35zsdilJn7MSGXrdyq+XGVSsytlmhz6u9y9JWHhIqdS1aOJ9bvpp5tL1W8ssz8nvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783450567; c=relaxed/simple;
-	bh=U/+M3E3EPHIelz0qJWKA5nFnQ/pyXTu+8uvC1CCRi0A=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Yi4aBI0QxSPpIICZmXtTassIMCDBQnWXmrMWmkAPttOC81uHvINmmg3Pwe/A/Vu7Y2GEmG4UgRHiWJZPPz/AeqErFd3FoqAhuOPZM3SpqQAXP0Q9cF7zFBX3ZqhooFourlW4BcD6eOrwKOctGI0SUAjzdDPvMOcuLDTTWeGmVG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fj1uEbKa; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fj1uEbKa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1783450566; x=1814986566;
-  h=date:from:to:cc:subject:message-id;
-  bh=U/+M3E3EPHIelz0qJWKA5nFnQ/pyXTu+8uvC1CCRi0A=;
-  b=fj1uEbKaLgXS9Uqmi6NYl1Snz0ND8cpa2nJ7JEeal+5L9b24+sxdBqd2
-   R1XHnuUlzRhjoRIZD9WAEsN/4ZSCX2JLTTAU6Efhe3BDX6T2MfeqomzVQ
-   cHiW9fDcIgm15niTv8eHVW4KmfI9nQyZJOvlw+NM3dX9gZ51kCgvAo+RN
-   cUCXU85+jo/obO/psPBDbMfk/YOXJEg9CDTNlZy2r7IfbFgstVP3CiCUJ
-   57kmSTdVJcijoZActkhMMWH1mSx5e3LkNXSv1nH61eVnRiwvKSTVQyYWA
-   DQzcPo43HtRf/XQln1MD4XjlKcx8HswQFdTZbITjohThVKTAmCkX+ZN4k
-   w==;
-X-CSE-ConnectionGUID: cAJhsLAdTv+Wc+h1FHn9CA==
-X-CSE-MsgGUID: N4sXD0RNQcKq8QPizxinJQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11840"; a="84163128"
-X-IronPort-AV: E=Sophos;i="6.25,153,1779174000"; 
-   d="scan'208";a="84163128"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jul 2026 11:56:06 -0700
-X-CSE-ConnectionGUID: UHce9+a1TVS+k83YRrlq9A==
-X-CSE-MsgGUID: XBflQOxwQbOqNipizC0/VQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,153,1779174000"; 
-   d="scan'208";a="257955936"
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by orviesa004.jf.intel.com with ESMTP; 07 Jul 2026 11:56:04 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1whAx7-00000000FaV-2xWj;
-	Tue, 07 Jul 2026 18:55:36 +0000
-Date: Wed, 08 Jul 2026 02:55:21 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- cc7d3289c11ad52984c350ad1d7f23cbfc58bc9c
-Message-ID: <202607080210.dWaLnUgB-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	s=arc-20240116; t=1783456349; c=relaxed/simple;
+	bh=zT8GtYrRO0iXUvJJ5YLz+AiFnGj8CCUFC6wghT8SjjE=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=uuIYGEzEmbVdwSYPiueSnsMzCprophk9rf6HDZ2ub2NJSImUVrNLJ77GMjVhlWspAsIf4DMk2ORBGz7h9sRW+i9gA5HCffgOXaIcjJwdI3NGsRGzyzPfw8VoKSWemgRqk153AxVCS5h/cO6m7MBx7i7M6xDFjoY55UuzALscsCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f71.google.com with SMTP id 006d021491bc7-6a178463cccso5877664eaf.0
+        for <cgroups@vger.kernel.org>; Tue, 07 Jul 2026 13:32:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783456347; x=1784061147;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vHSxX8WRXSlMuntur4mrwQtdbE8h9YVG/xm3TSqULEE=;
+        b=VGTmUX2/hnxKB5lukpLzqDPqFhHzS13CRFKjULh5wMPJN9w3p2IQw51XhvIoSac5NN
+         VVUTnp5xlTnqmCnR18xc98XJjpsE04aEnIax53Ak565xOBT8BJK7HuEbO9Xjr8RXsq6a
+         VB4K3YCyNFP9tS3lSel4xn3IMWLeP4lvChGbUUtR5MOd57KGEqNrhAX8p8wIRP9v9bEy
+         t0AeUv6PAZil1sLbrYACgUY3M3WmDpbltSjnRJ3F3ZcXzr0sIvX7JPIipTYJxNgBv310
+         nldj1kGZ+FKSc5jPeQQC0aKeNsC35nRM3LC+jMABMbnxmjhwQY7Z+dlLy+Ai9N3qma3a
+         YMyw==
+X-Gm-Message-State: AOJu0Ywln3FkerU1npsZbaG8sBWEKwMUxghgAT82ojmTULsjGArz2RUT
+	cmZw/+jXlMV4T2RAsxklVDLaN4dTrvjgLm+0ERtyuuDVcAazSQHBBwkI5RQvHVkTSYW0wyvSEpa
+	IqsXHpe+wZPGP7GIbMFKz8Q1cBYCefZ5OtNWp9NGDa8/DTzvWk4aen75pA9o=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Received: by 2002:a05:6820:8105:b0:6a1:41ae:1bd3 with SMTP id
+ 006d021491bc7-6a3555304b2mr4656001eaf.42.1783456347571; Tue, 07 Jul 2026
+ 13:32:27 -0700 (PDT)
+Date: Tue, 07 Jul 2026 13:32:27 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a4d625b.a1ad617e.25832.000b.GAE@google.com>
+Subject: [syzbot] Monthly cgroups report (Jul 2026)
+From: syzbot <syzbot+listd158f4de91eefe301a2b@syzkaller.appspotmail.com>
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: cc7d3289c11ad52984c350ad1d7f23cbfc58bc9c  Merge branch 'for-7.3' into for-next
+Hello cgroups maintainers/developers,
 
-elapsed time: 1023m
+This is a 31-day syzbot report for the cgroups subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/cgroups
 
-configs tested: 107
-configs skipped: 1
+During the period, 1 new issues were detected and 0 were fixed.
+In total, 4 issues are still open and 51 have already been fixed.
+There are also 3 low-priority issues.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Some of the still happening issues:
 
-tested configs:
-alpha                   allnoconfig    gcc-16.1.0
-alpha                  allyesconfig    gcc-16.1.0
-arc                    allmodconfig    clang-23
-arc                    allmodconfig    gcc-16.1.0
-arc                     allnoconfig    gcc-16.1.0
-arc                    allyesconfig    gcc-16.1.0
-arm                     allnoconfig    clang-17
-arm                     allnoconfig    gcc-16.1.0
-arm                    allyesconfig    clang-23
-arm                    allyesconfig    gcc-16.1.0
-arm64                  allmodconfig    clang-23
-arm64                   allnoconfig    gcc-16.1.0
-csky                   allmodconfig    gcc-16.1.0
-csky                    allnoconfig    gcc-16.1.0
-hexagon                allmodconfig    clang-23
-hexagon                 allnoconfig    clang-23
-hexagon                 allnoconfig    gcc-16.1.0
-hexagon     randconfig-001-20260707    clang-18
-hexagon     randconfig-002-20260707    clang-18
-i386                   allmodconfig    gcc-14
-i386                    allnoconfig    gcc-14
-i386                    allnoconfig    gcc-16.1.0
-i386                   allyesconfig    gcc-14
-i386                 randconfig-011    gcc-14
-i386        randconfig-011-20260707    gcc-14
-i386                 randconfig-012    gcc-14
-i386        randconfig-012-20260707    gcc-14
-i386                 randconfig-013    gcc-14
-i386        randconfig-013-20260707    gcc-14
-i386                 randconfig-014    gcc-14
-i386        randconfig-014-20260707    gcc-14
-i386                 randconfig-015    gcc-14
-i386        randconfig-015-20260707    gcc-14
-i386                 randconfig-016    gcc-14
-i386        randconfig-016-20260707    gcc-14
-i386                 randconfig-017    gcc-14
-i386        randconfig-017-20260707    gcc-14
-loongarch              allmodconfig    clang-19
-loongarch               allnoconfig    clang-20
-loongarch               allnoconfig    gcc-16.1.0
-loongarch   randconfig-001-20260707    clang-18
-loongarch   randconfig-002-20260707    clang-18
-m68k                   allmodconfig    gcc-16.1.0
-m68k                    allnoconfig    gcc-16.1.0
-m68k                   allyesconfig    clang-23
-m68k                   allyesconfig    gcc-16.1.0
-microblaze              allnoconfig    gcc-16.1.0
-microblaze             allyesconfig    gcc-16.1.0
-mips                   allmodconfig    gcc-16.1.0
-mips                    allnoconfig    gcc-16.1.0
-mips                   allyesconfig    gcc-16.1.0
-nios2                  allmodconfig    gcc-11.5.0
-nios2                   allnoconfig    clang-23
-nios2                   allnoconfig    gcc-11.5.0
-nios2       randconfig-001-20260707    clang-18
-nios2       randconfig-002-20260707    clang-18
-openrisc               allmodconfig    gcc-16.1.0
-openrisc                allnoconfig    clang-23
-openrisc                allnoconfig    gcc-16.1.0
-parisc                 allmodconfig    gcc-16.1.0
-parisc                  allnoconfig    clang-23
-parisc                  allnoconfig    gcc-16.1.0
-parisc                 allyesconfig    clang-17
-parisc                 allyesconfig    gcc-16.1.0
-parisc      randconfig-001-20260707    clang-22
-parisc      randconfig-002-20260707    clang-22
-powerpc                allmodconfig    gcc-16.1.0
-powerpc                 allnoconfig    clang-23
-powerpc                 allnoconfig    gcc-16.1.0
-powerpc     randconfig-001-20260707    clang-22
-powerpc     randconfig-002-20260707    clang-22
-powerpc64   randconfig-001-20260707    clang-22
-powerpc64   randconfig-002-20260707    clang-22
-riscv                  allmodconfig    clang-23
-riscv                   allnoconfig    clang-23
-riscv                   allnoconfig    gcc-16.1.0
-riscv                  allyesconfig    clang-23
-riscv       randconfig-001-20260708    clang-23
-riscv       randconfig-002-20260708    clang-23
-s390                   allmodconfig    clang-17
-s390                   allmodconfig    clang-23
-s390                    allnoconfig    clang-23
-s390                   allyesconfig    gcc-16.1.0
-s390        randconfig-001-20260708    clang-23
-s390        randconfig-002-20260708    clang-23
-sh                     allmodconfig    gcc-16.1.0
-sh                      allnoconfig    clang-23
-sh                      allnoconfig    gcc-16.1.0
-sh                     allyesconfig    clang-17
-sh                     allyesconfig    gcc-16.1.0
-sh          randconfig-001-20260708    clang-23
-sh          randconfig-002-20260708    clang-23
-sparc                   allnoconfig    clang-23
-sparc                   allnoconfig    gcc-16.1.0
-sparc64                allmodconfig    clang-20
-um                     allmodconfig    clang-17
-um                      allnoconfig    clang-17
-um                      allnoconfig    clang-23
-um                     allyesconfig    gcc-14
-x86_64                 allmodconfig    clang-22
-x86_64                  allnoconfig    clang-22
-x86_64                  allnoconfig    clang-23
-x86_64                 allyesconfig    clang-22
-x86_64                rhel-9.4-rust    clang-22
-xtensa                  allnoconfig    clang-23
-xtensa                  allnoconfig    gcc-16.1.0
-xtensa                 allyesconfig    gcc-16.1.0
+Ref Crashes Repro Title
+<1> 10116   Yes   WARNING in hrtick_start_fair
+                  https://syzkaller.appspot.com/bug?extid=2cbf10efc23b22ff9c31
+<2> 3854    Yes   possible deadlock in console_flush_all (4)
+                  https://syzkaller.appspot.com/bug?extid=d10e9d53059eb8aed654
+<3> 40      No    INFO: rcu detected stall in clone3 (6)
+                  https://syzkaller.appspot.com/bug?extid=774c2dfaebdf78f984c5
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
