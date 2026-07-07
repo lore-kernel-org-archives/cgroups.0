@@ -1,96 +1,57 @@
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A24B422550
-	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 21:35:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.178
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783460126; cv=pass; b=Ye4L5S5kYh8qekWzwTLM72OjbNbqOCZV4cD2FUQJsEcCLJYE4it57Ohy+PZk5FjXL/ahs33yfGFn9pkoabpvAT9mphJOhipf8js2GrzW4P1zxk3TwPD/UJHXDre+vhOpuUyHpMupJiSQtGraxc645fJdDH3B3IirhSNOXmfG9/A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783460126; c=relaxed/simple;
-	bh=6TvSEo37Ek9lu9N2ZPyjBCqwdDE/+51lgxZ/UejOrQs=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE2FC4252C0
+	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 21:36:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783460199; cv=none; b=IFPaQvJwiCfZSjNjsobMZB6OwlM/LJGE28wWvwRUR22VOfhvJ0jd5BF+GYC6nkfAWZLqOwkjKoIkcGAqEp5euwMTHNtDSJBhmvz71SeFri9rl5RpZCIVnOlMPLFByBI91XVj+DF7xTqC28+n00080aaYXzBI01n7KqEHJjDM8MU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783460199; c=relaxed/simple;
+	bh=mfvgbak40ISEAt+FEvvSkwOEo6xkg00TCiXxZ1jMDFI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pvuSLr7n4DECXNlgyLahDsyyYmjArR6bR106RjDvUYb7VPB8qkWuD4VGZYHWgjIhAd5X14xh4mt7o9KO1wtPxjqYQoC72zvbgvIGeuUUVjWcixf4o/zqemMxQWWoAef7RVXi6cU4NHf2818pwV4jxQhsaqUDPakKssGOXleS5+A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZjCzsYNh; arc=pass smtp.client-ip=209.85.208.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=DiQHtr6r9WyiUB51ArlNoa7zWMbYaRE8XRPBZmhYCwj8aNZ//OXNa1JNLH0sg6rWeRaNyaFMWfMhqclDoxMtX66vT7OtpuAOw9NqHFldDPjkZH6GydUQPVttvJUDLH1+SRE5FnyyDR3twDfwviA6Q8/3yW77+J2d5P/TWBISk0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mJsOeSIE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZjCzsYNh"
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-39b3027009fso282911fa.0
-        for <cgroups@vger.kernel.org>; Tue, 07 Jul 2026 14:35:24 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783460123; cv=none;
-        d=google.com; s=arc-20260327;
-        b=lToqnN2+zuxJeyOdS9UsVZmKByMDsNDVlbd9k8AXUNho3CXGB/AllXZWpJFZ6EhOWF
-         PQVAuOue+PLhIaNZJt7iuSsJNkxhPVf0yuGOt604IIoZjWNNm6rb6pET/ZmW/wgz8UZm
-         POA9aOtTtbe6tARxo7g8s6YziVUB9EnrpUaPDWVngMiqCGVbohz9ItFUWiKBs/abPOPN
-         kT24mXYhQEithQE2RdhUe9UtRgylGo68+VzuJL/3GdLi5z0mgWC4e97ArbW7t5vAqfDN
-         yl10Rb+7K1+uIREwjChQmN6SESZ8v3QunNM4ZmUKn18KevcDtSTmzUL5IteydD2aqU05
-         B60g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=6TvSEo37Ek9lu9N2ZPyjBCqwdDE/+51lgxZ/UejOrQs=;
-        fh=s1DSJd4+KBcks4RHojDlUVmSv4yWfPfo0az3HPB3k3s=;
-        b=TY+Oavw3czBgkjQjlb8UAfG24yE1/6j9cwzJC53Yq3VwxRHla4yA5gJSeRC5ZRt1ci
-         p8BNKBrEDynR1vmgnMcgJkzt0BbGVTOUkpZtWs0Cnc8/YiqKTmAVG30DJ5cU8UBEhwi2
-         bM+6t60UExff6sYRcm1NoKUM27qO4RZT/JPR1piZyOp+NRya5InN7TfaextUbNe7q7Ee
-         IjPYY1RFq1UVWEKH4CiX7SszJgV1x7UsvCq14xqFIslm9ZfTqKzvZio62jZZn3V21FnT
-         IvCgiFORUgpjjVbtLuZrZ+f/pynNvrdGsrYz7VxAfIWGz0IKLAAfU/Z9NDuqEp2i+mop
-         u24g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783460123; x=1784064923; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=6TvSEo37Ek9lu9N2ZPyjBCqwdDE/+51lgxZ/UejOrQs=;
-        b=ZjCzsYNhE25WrU5epO1JPGoPjEXvLjwdIplph61GHD77P/4woC4xd23Gc5B4qVz68A
-         Pn/g9MJsWWeE5C35ssN8dFc4lGqAhIvD3Nh1bX8vNjCWpmHMRXRJQ9qXy0XEV1bkhqMX
-         7ETpMraxlSGvEBn5UeHHNF47EKcy7/sUtoI/OuDg6LGdVwsWn1YFYq3+8pDIkHobx3N2
-         Ap/1aqArv/vh7wntoDmElEcok9ja6y5bkxC/PrQt5WgJVUD+i57hDm56vI906DR/9v7V
-         Md378Tc3IH0Zyuky7OFPjZRgJrieBwDIFeppYqzvfnNYcO0XGrn5LA+NePYfmiZAMP7n
-         3Wqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783460123; x=1784064923;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6TvSEo37Ek9lu9N2ZPyjBCqwdDE/+51lgxZ/UejOrQs=;
-        b=GQWjScZ++J5j9MYnOq6+63C5LnuuLaPDeTkDwNCoJ238kMUF9us5lphNRN2BjQFHQT
-         t9zmziEtkc52DTu1p3Zcpt3ussvoj/ZL8Esr6AaTD3NLMNjSilNF2UasUfzDr6Iuc2Qx
-         4HML/Jnk90GkdxtMGCM2fMEF82Heo1FM1YDdXtPE+YQXbSXuZELSXJY0dHkGXarmUEJt
-         GT1rVKzEmR3MlGmHBByQz4nPaf95vPAeJSzzbaZfPrNpSwGpN1ipM/XuOwy9p0C7/ICv
-         6jwXYCS+rpBOq2Zx3UM3az9jvLxE8UE0lZ82CMnB8dwEiXjAxj6vxXsM+x5CfoaG9K9a
-         1a2w==
-X-Forwarded-Encrypted: i=1; AHgh+RrMnbFbv+IcWWcEcUUAV+Fw0jsdP2YWJugL8+WYFZG+SMA14+wsv+1gxYy4qu3eMKtf6qZ4I/dD@vger.kernel.org
-X-Gm-Message-State: AOJu0YzXqZkXdbnmu7UQwZ4qZpE3YZv22LTVtmiG/Ukr1MBWCBaMfj/M
-	HvbPYlEbd0Xe+z6TRo98gE4elqvxInWd1W7Tp2MbJ6A2+ewtWk8mlznXysQSMEUB0OqcyKx+B+o
-	ATtgGYM6OIBgKIenn+DPaJebDUUO/s/Y=
-X-Gm-Gg: AfdE7ck8FuQbJZwPLFOOYIgSonUJyy/kQNl68pbxYFPpoeymGXBME+EFKLIyPD5zBoh
-	LrXKdXdLBOjEgFbH6p5lnyeJu5RfbTmnq5RdRJTKFPgwcYLtf4tyKUVFfzUnbAZ4XxLAXd+T1QB
-	iExJ1SjZutbO1Yfws9tW0dPZ2JZyDd1ZqaDMi3KQXcZWYuyRaK0HfcVbxuAKcUoAdNJrlxUIUFf
-	FxqE2kA4gSD1LijT/lSclkWP4N2JiMUsoO9DxzoLCUs7gZY9OWJunzwvgmEyIxrP5nzTEkCgKF8
-	ro8f1Zjn3xj3vxZcss/RCCWh1d1J
-X-Received: by 2002:a2e:bcc5:0:b0:39a:cfe8:dcbd with SMTP id
- 38308e7fff4ca-39c600386b8mr15519841fa.30.1783460122325; Tue, 07 Jul 2026
- 14:35:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mJsOeSIE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B7921F000E9
+	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 21:36:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783460198;
+	bh=mfvgbak40ISEAt+FEvvSkwOEo6xkg00TCiXxZ1jMDFI=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=mJsOeSIEeV2UmBonPeaqEf7COTUt8n6mdPtwegRTmR9V2CL8iymV36hqlrv6mNFwV
+	 DjFSroarFd/XqCvyDJtZih2xiXGOPgvmgcSfadydp96b6gvyMEXxGG0qTYdlgJNnsj
+	 DdctrHdmyO2thFrusKyz3daNq38RorUr7vPlYVA6NcBPo7b9ehUDZrTps/KzYb/BnL
+	 4zyc+9xsXk1ZSHdbhON+t/oOjEkpQoAJs8n9WNOkWb3s5ccjyM6dwaUL1jtqgkF9gR
+	 4LhvOxSkw2qomni5RTLX5BJJ/XkBRsVdQpaoHuynohTlfqq4QOGuAvk/uqEq+98j2N
+	 LQEqBwDx6TT5Q==
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c15b75c9e48so128658366b.1
+        for <cgroups@vger.kernel.org>; Tue, 07 Jul 2026 14:36:38 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RpKxCrT8vu59zCZICe5jq2fy4+czcsQ/RXOnlGBCx1bFicHT1Xe470TPDYcUI5BmuBg6ji2FpsC@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy49YtVJsvCAiB8jRrzoBVKvLMnJWY8Iv8R0d0FzkSvDXhqaR+T
+	xrkV/yrhFoEDKArh8WuWYgkP+ZalU6FjxiLkJiyXELqw9s6GZSf6C01YYKCn5ocZG9BeOYQIVxy
+	clU80ttxHDV9Y4P8LyTDMtlaGPFvkK00=
+X-Received: by 2002:a17:907:bf06:b0:c12:36ff:6ebb with SMTP id
+ a640c23a62f3a-c15a692b12dmr348765966b.44.1783460197298; Tue, 07 Jul 2026
+ 14:36:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <c0970cee-42c2-4844-b88e-229853f08e90@linux.dev> <CAO9r8zNJh65SZzdW8Cc8_8N5Wr+ORuRtU3kuaAX_DhLaESFYTA@mail.gmail.com>
-In-Reply-To: <CAO9r8zNJh65SZzdW8Cc8_8N5Wr+ORuRtU3kuaAX_DhLaESFYTA@mail.gmail.com>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Tue, 7 Jul 2026 14:35:09 -0700
-X-Gm-Features: AVVi8CcuwF-DUySIS23BW_Gdh2R_ilIjcwqI-GE5L8_I55ZKEN4Gc8qN02pks1A
-Message-ID: <CAKEwX=MMXdq7KTzcEgXfNt2L-eTmAVa+nijdyiujVOAhXQsHSg@mail.gmail.com>
+References: <c0970cee-42c2-4844-b88e-229853f08e90@linux.dev>
+ <CAO9r8zNJh65SZzdW8Cc8_8N5Wr+ORuRtU3kuaAX_DhLaESFYTA@mail.gmail.com> <CAKEwX=MMXdq7KTzcEgXfNt2L-eTmAVa+nijdyiujVOAhXQsHSg@mail.gmail.com>
+In-Reply-To: <CAKEwX=MMXdq7KTzcEgXfNt2L-eTmAVa+nijdyiujVOAhXQsHSg@mail.gmail.com>
+From: Yosry Ahmed <yosry@kernel.org>
+Date: Tue, 7 Jul 2026 14:36:25 -0700
+X-Gmail-Original-Message-ID: <CAO9r8zO-nAys0PJfXVRwLgAzwJLa9KxpMXKQKXJR7cnYKgmhRQ@mail.gmail.com>
+X-Gm-Features: AVVi8Cda2GhPqDSknVsY53Q6TlEfuCwJntD2kTQUNKYn1iwv3Wq_3XPV_UqjD2Q
+Message-ID: <CAO9r8zO-nAys0PJfXVRwLgAzwJLa9KxpMXKQKXJR7cnYKgmhRQ@mail.gmail.com>
 Subject: Re: cgroup/test_zswap failed with "zswpout does not increase after
  test program"
-To: Yosry Ahmed <yosry@kernel.org>
+To: Nhat Pham <nphamcs@gmail.com>
 Cc: Zenghui Yu <zenghui.yu@linux.dev>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
 	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	hannes@cmpxchg.org, chengming.zhou@linux.dev, tj@kernel.org, mkoutny@suse.com, 
@@ -100,20 +61,26 @@ Cc: Zenghui Yu <zenghui.yu@linux.dev>, linux-mm@kvack.org, cgroups@vger.kernel.o
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 7, 2026 at 11:25=E2=80=AFAM Yosry Ahmed <yosry@kernel.org> wrot=
-e:
+On Tue, Jul 7, 2026 at 2:35=E2=80=AFPM Nhat Pham <nphamcs@gmail.com> wrote:
 >
-> On Tue, Jul 7, 2026 at 2:38=E2=80=AFAM Zenghui Yu <zenghui.yu@linux.dev> =
-wrote:
+> On Tue, Jul 7, 2026 at 11:25=E2=80=AFAM Yosry Ahmed <yosry@kernel.org> wr=
+ote:
+> >
+> > On Tue, Jul 7, 2026 at 2:38=E2=80=AFAM Zenghui Yu <zenghui.yu@linux.dev=
+> wrote:
+> >
+> > We were discussing a way for userspace to explicitly trigger a flush
+> > before, which would come in handy for testing. However, we decided not
+> > to expose flushing as a concept to userspace.
+> >
+> > Unfortunately I think the only way to "fix" the test is to allocate
+> > more memory, enough to trigger a flush on most interesting setups.
+> > Perhaps we should scale the amount of memory with the number of CPUs
+> > so that we don't have to keep playing whack-a-mole.
 >
-> We were discussing a way for userspace to explicitly trigger a flush
-> before, which would come in handy for testing. However, we decided not
-> to expose flushing as a concept to userspace.
->
-> Unfortunately I think the only way to "fix" the test is to allocate
-> more memory, enough to trigger a flush on most interesting setups.
-> Perhaps we should scale the amount of memory with the number of CPUs
-> so that we don't have to keep playing whack-a-mole.
+> I don't have a good idea for writeback, but for zswap out, would
+> MADV_PAGEOUT work here?
 
-I don't have a good idea for writeback, but for zswap out, would
-MADV_PAGEOUT work here?
+I don't think the reclaim mechanism is the problem, but the fact that
+we don't have enough pending updates to flush the stats. Am I missing
+something?
