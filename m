@@ -1,139 +1,112 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208321A6824
-	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 00:17:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A1523BD06
+	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 01:50:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783383476; cv=none; b=aKHxhMc8XbyicsLStXWBccJ3Nr53ox+sHxYN3uiy1r10BzqTRfAqOpHTLdMGQjk41SKNbAoRIpxiUm/G49kWYMTIWtfOHR9T4J6T318HMyw+qo2AoWZkLy4NZ74F/EZCSQckgqpKCIoeyVgTcU0EGXeACqJFAWSNvk5sJz0g61M=
+	t=1783389020; cv=none; b=o+Le50v48qvkPunTSsnsW08VcZXgsaufmMt7poMcBVqyjpEc3LeFxN0M9yKlORdH3i5KndAaJJxzzagbkndjC8nV1ijwBdhqa/4jTWQ3yCQOeyoGPpI8ezuYfApbMO+cGnY4eRu918vD+qSP7l4gcPcOFV3lhbcyf2mLaWGEi18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783383476; c=relaxed/simple;
-	bh=af72MIiNPASyMrPenWUlckSQNn+OURdtih1H9LpKlI4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LuqzwfvADIkm0I6+QlD4vj6g+jHBkzAs0cRtZTfi6Fm/EysjYD9GnKwBH+SmOsF4HFmJMtIJ5ykySKniB3TiO8xthhkkGtOnAOX8WJoVb9BjgMKe4BmEKh2+rqrvnfRwSwBgqv4SqovjbPYjwvsV49QVRg3QZBmLnK3ZH4Qr4m8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P2UChFPG; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783389020; c=relaxed/simple;
+	bh=C9KKzrMhbHQ4j6vaR8/cSitMU7Oq2QiOexBUmdy+Mi8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=H5csYFBhpDxq2aXPJWX/AyCkhuKELbGgNLA2UvSZyoMKNOQsIJgG1e3e7Fdozx5vJvICNZoMVO2kLYfJ/AURNFqoVQnjdQ2ekP1xYUO27Rud+vrqpDisVIyYlqnWJPThoyJ0yxLnUVnnqVsNlKQC5/Uss2ChOqgTZWFItqsLqyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iGuO03Qb; arc=none smtp.client-ip=91.218.175.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P2UChFPG"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-385ea3ce80dso1676025a91.2
-        for <cgroups@vger.kernel.org>; Mon, 06 Jul 2026 17:17:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783383474; x=1783988274; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=NlYk0sNL0UkMJvtmh539AMWShHtruvV8sV0IdItG1l0=;
-        b=P2UChFPGk+gSselBw1l9QAitcDVL1UVr1rYuMfJAJp/H02DWIazkdCjUUQTqDHR+wE
-         gsPUm8oUz0Zdppyc1D7a6HBcy/zWtuvdA4up6FOx7SN3MJD5HSFAoBCvO9DumA5mg0Lw
-         a42EdP/KKa3XN/SOvd+wF5IuQrDFnPPrZJOouz0o952YAmIypE1+6eyCRtyWTv7I0n+R
-         u8tKEWp751lwecHjOhLXsn2Q/pxCtAVVWWyCaIYGu8wO3+zG4YOwwSiEhFgeKp4XFoo+
-         A8LwOVhCR0g0Os0yfMwZVSfh4fhRqxbQa51HnhL2FnR8wYxvWBW/MSwOnOfutcQjzdK+
-         f0zQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783383474; x=1783988274;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=NlYk0sNL0UkMJvtmh539AMWShHtruvV8sV0IdItG1l0=;
-        b=QykoNF60K2LpQk9jPsG9Wa8pRH91+CH2/fnuIBEe++XlxCq03zMU4kEM3uinmdYElq
-         9NXgggN7MVb3Dslqhv5eeia2yZ/+uMIoIyM8BI1ReNFTUm9u800+AbfhBHqXTsJM1tkN
-         tZO5vgbrmzaq6kPmyQE1YL1SopGvH6J5fsx2PBy4ej+H4I38yHUX6P1phixiDvi6U6w7
-         pybT6LiWkKgOWg3rnywOj4LuEBPyh5jdObFjA5qPnHWv/EWPsDHCX6jEyo2cb+cRXt1u
-         SFOs8UdhHSr6igWP0cEIbKXzH3EShRV/tsmE5nxRi+tuYgaPP1+DScuCs1csb1dMYoyP
-         IGng==
-X-Forwarded-Encrypted: i=1; AHgh+RqC8EHDV2hSpr4VTDewFgTCS1c1P1Sv0WINJHEMRlQdJlujG2MVq6whxjWZFTOlWXZXv6f+hpOp@vger.kernel.org
-X-Gm-Message-State: AOJu0Yygqpid6yGtlUpNgjq83/Vbl4XreGg5eUHxfLmGLO8f72fapYQZ
-	JrzSq7ivbfPhjUcgsgS2h0AjctUXqq4SNvY44FI7V1/vcwy1KMUjFtsZ
-X-Gm-Gg: AfdE7ckT02qXQGGTYpgb5tkz5Xz+L+ZK1s/Wwn/bk1cq9AkMOFieN0zMfCs+PbyzBV0
-	yh4CS2+W0b8D2nj4eS1OKh8UnUMPG1XsOa5uferVbteuRXA29jzqmiLSJ5QeAtCgsqhgHUYbIo6
-	nEL43gDlfMKG6Lx9hHofqJ1CuTIY81Dzt/dOL8i8e3KZSsY9eYdq4alxKvC+FA5O564WxY9NMJo
-	fraQpx8jzOY1hiudp0JSOctGZ7/vW28OjTh2fonhEtroMb8tE9NFD6WxcLYCO/7UBN0BS1qI+q3
-	wjn5UpaJz6iCpFKfQgCcu1Y2M9RA5NdmdIcT3RC5iF0IVwW5B8veQjwAddqyJmRdXOjpGHaSO2W
-	TpO8ekjXq6blU/TGJc8WuYkEooMFDagoaJq0geuTVVm9fyANeLKCGYuMz2FGdwNhBA9LW8xqUlQ
-	ltN8g5FES7zco874f00c95FeUZZsp9U+paYYl9Y/H3vjWfn946w2/5+nRZNJDgWwwTFbKZFQ==
-X-Received: by 2002:a17:90b:1845:b0:37f:9cdf:f0ad with SMTP id 98e67ed59e1d1-38757d76999mr2730666a91.28.1783383474243;
-        Mon, 06 Jul 2026 17:17:54 -0700 (PDT)
-Received: from ?IPv6:2a03:83e0:115c:1:275a:65bb:602c:da1d? ([2620:10d:c090:500::1:7696])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31174a89a89sm1783645eec.20.2026.07.06.17.17.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Jul 2026 17:17:53 -0700 (PDT)
-Message-ID: <bc12730fe6eccde10d36e6544607ae2464357e05.camel@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iGuO03Qb"
+Date: Mon, 6 Jul 2026 18:50:05 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1783389012;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pTk3bWiQbEnp9NY0pyiBv+XodrV//lC9BoLhtxJEGoA=;
+	b=iGuO03QbteJKA9aIihTwgX5AqWkgRqrX05rDKfDWlAWxDk7BNPcW0y5ca39Xps5t56uFb/
+	16s4rxVCluAQKhlh0zAY3smINquMtK0ZkTszFMX2OyuRCmfoPf5vVYOqLwrcLGYWDiEW8h
+	Qjag8AlxR8nfinWL6s7frKd+vQzT4ls=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Eduard Zingerman <eddyz87@gmail.com>
+Cc: Ziyang Men <ziyang.meme@gmail.com>, 
+	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, bpf@vger.kernel.org, 
+	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
+	Yonghong Song <yonghong.song@linux.dev>, Jiri Olsa <jolsa@kernel.org>, 
+	Emil Tsalapatis <emil@etsalapatis.com>, Shuah Khan <shuah@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, kernel-team@meta.com, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH 0/3] selftests/bpf: compare BPF and memory.stat memcg
  stat readers
-From: Eduard Zingerman <eddyz87@gmail.com>
-To: Ziyang Men <ziyang.meme@gmail.com>, Alexei Starovoitov <ast@kernel.org>,
-  Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko
- <andrii@kernel.org>, Kumar Kartikeya Dwivedi	 <memxor@gmail.com>,
- bpf@vger.kernel.org, shakeel.butt@linux.dev
-Cc: Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
- Yonghong Song <yonghong.song@linux.dev>, Jiri Olsa <jolsa@kernel.org>, Emil
- Tsalapatis <emil@etsalapatis.com>,  Shuah Khan <shuah@kernel.org>, Roman
- Gushchin <roman.gushchin@linux.dev>, kernel-team@meta.com, 
-	linux-mm@kvack.org, cgroups@vger.kernel.org,
- linux-kselftest@vger.kernel.org, 	linux-kernel@vger.kernel.org, Shakeel
- Butt <shakeel.butt@linux.dev>
-Date: Mon, 06 Jul 2026 17:17:50 -0700
-In-Reply-To: <20260704045617.487664-1-ziyang.meme@gmail.com>
+Message-ID: <akxW5dzvR9e2CfGq@linux.dev>
 References: <20260704045617.487664-1-ziyang.meme@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.1 (3.60.1-1.fc44) 
+ <bc12730fe6eccde10d36e6544607ae2464357e05.camel@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bc12730fe6eccde10d36e6544607ae2464357e05.camel@gmail.com>
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, 2026-07-03 at 21:56 -0700, Ziyang Men wrote:
+On Mon, Jul 06, 2026 at 05:17:50PM -0700, Eduard Zingerman wrote:
+> On Fri, 2026-07-03 at 21:56 -0700, Ziyang Men wrote:
+> 
+> [...]
+> 
+> Hi Ziyang,
+> 
+> I'm a bit hesitant adding 2.5K lines of code to the BPF selftests,
+> as this code would need to be (a) maintained, (b) run at each CI invocation.
+> Hence, the tests added need to be relevant for the BPF sub-system.
+> 
+> Regarding the benchmarking part, as you state yourself:
+> 
+>   > In my testing (a 60-CPU VM) the BPF path is roughly an order of magnitude
+>   > faster than the per-cgroup memory.stat parse for a whole-tree scan, mainly
+>   > because it avoids the per-cgroup open/read and string parsing.
+> 
+> With this, I think the benchmarking code can be dropped altogether.
+> 
+> Next, the three memcg_stat_{reader,churn,churn_percpu}.c files share a
+> lot of utility code almost verbatim (e.g. tree definition/construction).
+> Such duplication should be avoided.
+> 
+> Finally, from the BPF point of view the test exercises the following functionality:
+> - kfuncs:
+>   - bpf_mem_cgroup_page_state
+>   - bpf_mem_cgroup_vm_events
+>   - bpf_put_mem_cgroup
+>   - bpf_get_mem_cgroup
+> - main iterator logic.
+> 
+> All kfuncs but bpf_get_mem_cgroup() are thin wrappers around mm/memcontrol.c code,
+> all kfuncs including the bpf_get_mem_cgroup() are already exercised in the selftests.
+> The iterator logic itself is covered by 8 sub-tests in the prog_tests/cgroup_iter.c.
+> Hence two questions:
+> - What do these new tests add in terms of tests coverage?
+> - Why do BPF selftests need to exercise the churn and churn_percpu scenarios?
+> 
+> Shakeel, could you please comment as well?
 
-[...]
+Hi Eduard,
 
-Hi Ziyang,
+Thanks a lot for taking a look. The main motivation I had behind requesting
+Ziyang to send this series (beside making him learn the tooling and process of
+sending patches to lkml) was to have a reference implementation and performance
+comparison for BPF based cgroup/memcg stats collection.
 
-I'm a bit hesitant adding 2.5K lines of code to the BPF selftests,
-as this code would need to be (a) maintained, (b) run at each CI invocation=
-.
-Hence, the tests added need to be relevant for the BPF sub-system.
+However you have correctly pointed out that selftests might not be the right
+place for such kind of code as selftests are more focused on functional tests
+and run by a lot of CIs while this is a performance benchmarking code.
 
-Regarding the benchmarking part, as you state yourself:
+I am wondering if there is a place for this benchmarking code in kernel under
+tools folder but archiving it on lkml might be good enough and should be easily
+searchable. Anyways thanks again for your time.
 
-  > In my testing (a 60-CPU VM) the BPF path is roughly an order of magnitu=
-de
-  > faster than the per-cgroup memory.stat parse for a whole-tree scan, mai=
-nly
-  > because it avoids the per-cgroup open/read and string parsing.
-
-With this, I think the benchmarking code can be dropped altogether.
-
-Next, the three memcg_stat_{reader,churn,churn_percpu}.c files share a
-lot of utility code almost verbatim (e.g. tree definition/construction).
-Such duplication should be avoided.
-
-Finally, from the BPF point of view the test exercises the following functi=
-onality:
-- kfuncs:
-  - bpf_mem_cgroup_page_state
-  - bpf_mem_cgroup_vm_events
-  - bpf_put_mem_cgroup
-  - bpf_get_mem_cgroup
-- main iterator logic.
-
-All kfuncs but bpf_get_mem_cgroup() are thin wrappers around mm/memcontrol.=
-c code,
-all kfuncs including the bpf_get_mem_cgroup() are already exercised in the =
-selftests.
-The iterator logic itself is covered by 8 sub-tests in the prog_tests/cgrou=
-p_iter.c.
-Hence two questions:
-- What do these new tests add in terms of tests coverage?
-- Why do BPF selftests need to exercise the churn and churn_percpu scenario=
-s?
-
-Shakeel, could you please comment as well?
-
-Thanks,
-Eduard.
-
-[...]
+thanks,
+Shakeel
