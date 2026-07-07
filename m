@@ -1,130 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F07C143C7D6
-	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 18:25:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C733921F0
+	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 18:56:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783448731; cv=none; b=aMAyytLnp8sXBYBcRmyKwQ8gVVog0x8YFSUkhZgXueaC/OL5Pwkhv3tx6V9s6NKG4/rIPZdgWqU4HEOoVd/5Q1cPlYDhwfPhPFwdGhLQHUVZaV4OB+e7Z5O/vSTIPyK5aUYSOgTX5SVimuW5jLzphm8gO2ETgFF4Z1O0sYacX0w=
+	t=1783450567; cv=none; b=cwF7GlrlLA2101LprR3RLEVOzCWVeHlFdVPEeWor63uvFa6tckzm7Qbho+zEnqrS3hrOKvfaDBOINIHQaswMw2niJFq0UD9lIoUxphUUzECvlYZU08RcMmrDDxG9lR4eC8nInyhB32C+znwT2Ulc86MfoZdOYKV4CtLvXQY687I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783448731; c=relaxed/simple;
-	bh=WDatReQ1diJxMnQ27gX5bGDxa/1pmcVJt3crJPRj6lE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=d40R6d3c8p6rOBJue9alFgXENjGBpJiIKnA6ZkBovwLWBO92CPsIkvpJjHv1qL/eFYPs4jVUYjsrhXOsMRIHeOZ838ME1qYH9gE9Db+FAQr2cyTfujsZZFKbrmWmjIpMGDoXmHsvXSEfL8rtXk/z7/PsZmGNU1vWXrwkpJS5oiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B8R9IeOm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783450567; c=relaxed/simple;
+	bh=U/+M3E3EPHIelz0qJWKA5nFnQ/pyXTu+8uvC1CCRi0A=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=Yi4aBI0QxSPpIICZmXtTassIMCDBQnWXmrMWmkAPttOC81uHvINmmg3Pwe/A/Vu7Y2GEmG4UgRHiWJZPPz/AeqErFd3FoqAhuOPZM3SpqQAXP0Q9cF7zFBX3ZqhooFourlW4BcD6eOrwKOctGI0SUAjzdDPvMOcuLDTTWeGmVG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fj1uEbKa; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B8R9IeOm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B78FF1F00AC4
-	for <cgroups@vger.kernel.org>; Tue,  7 Jul 2026 18:25:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783448729;
-	bh=UodfhMWHJOTmOaDJSgPxCuKgMVhusPF/cnVjRAHGFO4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=B8R9IeOmQ/w6CN0kw35IGwlxxnZpEu99nbMX4c/Uz0ZcV4rgegRJI/jZiko7++/tb
-	 c7yvthhV1zfsHkolcBeQOX7HTX0sx6KH3vp7Q3YMAFi/s1gGzciFZzeli/XT38Q9XE
-	 jIUj0Ye1Vn5XWYnys16iy4Z9wVohuuK2k9yXDeBgmwTe3+cqlvBbVGw5OjeRnTJXaA
-	 62BCKeNy8ZiHZVWFCkEqfEs0r5Bljrmi6XyIu93HnVEejHreDAPSoHcaQutzY/dk8r
-	 cqIupSIZo4R9LvAy9nA4m6/IzjGrfi2efqDUvgDh8BiMKdxtEm00EAfxT4kT2Xs2Xg
-	 r6ZyRyoPdR1gA==
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-699fbcd23ccso5958692a12.1
-        for <cgroups@vger.kernel.org>; Tue, 07 Jul 2026 11:25:29 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ/aqCxiyvvP4829aXGLz6MBffvSfhMB2WIe415BrvrfgDvKzAhEHKnsTw8y120WjJIG2ZMK4/PQ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx7CSuDvFtTr2tlZ+9HnNMkxhCoGoICthDRCPCuvEdMLLch0TK/
-	DbqdoiWYnM3nqY2sJ47Zgspx2RUxl6BtpzUt+SRv0c+BDSZ/sMIvYDwg/FqiyrNMA2LJEglDrwD
-	Yid9Qkjd7017MV7rbmHkM7yPvJ9O4Bpc=
-X-Received: by 2002:a17:907:ea8:b0:c15:b27d:51e4 with SMTP id
- a640c23a62f3a-c15b27d5823mr202693266b.20.1783448728654; Tue, 07 Jul 2026
- 11:25:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fj1uEbKa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1783450566; x=1814986566;
+  h=date:from:to:cc:subject:message-id;
+  bh=U/+M3E3EPHIelz0qJWKA5nFnQ/pyXTu+8uvC1CCRi0A=;
+  b=fj1uEbKaLgXS9Uqmi6NYl1Snz0ND8cpa2nJ7JEeal+5L9b24+sxdBqd2
+   R1XHnuUlzRhjoRIZD9WAEsN/4ZSCX2JLTTAU6Efhe3BDX6T2MfeqomzVQ
+   cHiW9fDcIgm15niTv8eHVW4KmfI9nQyZJOvlw+NM3dX9gZ51kCgvAo+RN
+   cUCXU85+jo/obO/psPBDbMfk/YOXJEg9CDTNlZy2r7IfbFgstVP3CiCUJ
+   57kmSTdVJcijoZActkhMMWH1mSx5e3LkNXSv1nH61eVnRiwvKSTVQyYWA
+   DQzcPo43HtRf/XQln1MD4XjlKcx8HswQFdTZbITjohThVKTAmCkX+ZN4k
+   w==;
+X-CSE-ConnectionGUID: cAJhsLAdTv+Wc+h1FHn9CA==
+X-CSE-MsgGUID: N4sXD0RNQcKq8QPizxinJQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11840"; a="84163128"
+X-IronPort-AV: E=Sophos;i="6.25,153,1779174000"; 
+   d="scan'208";a="84163128"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jul 2026 11:56:06 -0700
+X-CSE-ConnectionGUID: UHce9+a1TVS+k83YRrlq9A==
+X-CSE-MsgGUID: XBflQOxwQbOqNipizC0/VQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,153,1779174000"; 
+   d="scan'208";a="257955936"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by orviesa004.jf.intel.com with ESMTP; 07 Jul 2026 11:56:04 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1whAx7-00000000FaV-2xWj;
+	Tue, 07 Jul 2026 18:55:36 +0000
+Date: Wed, 08 Jul 2026 02:55:21 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ cc7d3289c11ad52984c350ad1d7f23cbfc58bc9c
+Message-ID: <202607080210.dWaLnUgB-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <c0970cee-42c2-4844-b88e-229853f08e90@linux.dev>
-In-Reply-To: <c0970cee-42c2-4844-b88e-229853f08e90@linux.dev>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Tue, 7 Jul 2026 11:25:16 -0700
-X-Gmail-Original-Message-ID: <CAO9r8zNJh65SZzdW8Cc8_8N5Wr+ORuRtU3kuaAX_DhLaESFYTA@mail.gmail.com>
-X-Gm-Features: AVVi8CfOmsujy8Bb6nVmdtBpnu4IHHs228GbFDG2jlrs3NnSjCrtP5K0xKzG314
-Message-ID: <CAO9r8zNJh65SZzdW8Cc8_8N5Wr+ORuRtU3kuaAX_DhLaESFYTA@mail.gmail.com>
-Subject: Re: cgroup/test_zswap failed with "zswpout does not increase after
- test program"
-To: Zenghui Yu <zenghui.yu@linux.dev>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	hannes@cmpxchg.org, nphamcs@gmail.com, chengming.zhou@linux.dev, 
-	tj@kernel.org, mkoutny@suse.com, Shuah Khan <shuah@kernel.org>, mhocko@kernel.org, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 7, 2026 at 2:38=E2=80=AFAM Zenghui Yu <zenghui.yu@linux.dev> wr=
-ote:
->
-> Hi,
->
-> Running cgroup/test_zswap on my arm64 box failed immediately with:
->
->   [root@localhost cgroup]# ./test_zswap
->   TAP version 13
->   1..8
->   # zswpout does not increase after test program
->   not ok 1 test_zswap_usage
->   [...]
->
-> I'm sure that pages are successfully written into zswap by checking the
-> count_memcg_events(.., idx=3DZSWPOUT, ..) trace events. But "zswpout_afte=
-r"
-> in test_zswap_usage() is 0 and results in this failure.
->
-> I guess the problem is that (in this particular case) the memcg stats has
-> not been flushed when userspace reads it.
->
->  memcg_stat_format()
->    mem_cgroup_flush_stats()
->      __mem_cgroup_flush_stats(.., force=3Dfalse)
->        needs_flush =3D memcg_vmstats_needs_flush();
->
->  static bool memcg_vmstats_needs_flush(struct memcg_vmstats *vmstats)
->  {
->         return atomic_long_read(&vmstats->stats_updates) >
->                 MEMCG_CHARGE_BATCH * num_online_cpus();
->  }
->
-> I can image that memcg_vmstats_needs_flush() will return false because I'=
-m
-> testing a 16k-page-size kernel on a box with 96 cpus..
->
-> As we have a periodic flusher flushed all the stats every 2 seconds, I us=
-e
-> the following diff to wait the flusher to expose the accurate stats to
-> userspace.
->
-> diff --git a/tools/testing/selftests/cgroup/lib/cgroup_util.c b/tools/tes=
-ting/selftests/cgroup/lib/cgroup_util.c
-> index 3ce134509041..9596f294da0b 100644
-> --- a/tools/testing/selftests/cgroup/lib/cgroup_util.c
-> +++ b/tools/testing/selftests/cgroup/lib/cgroup_util.c
-> @@ -95,6 +95,8 @@ int cg_read(const char *cgroup, const char *control, ch=
-ar *buf, size_t len)
->
->         snprintf(path, sizeof(path), "%s/%s", cgroup, control);
->
-> +       sleep(2);
-> +
->         ret =3D read_text(path, buf, len);
->         return ret >=3D 0 ? 0 : ret;
->  }
->
-> I have no idea how to "fix" it properly. Please have a look!
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: cc7d3289c11ad52984c350ad1d7f23cbfc58bc9c  Merge branch 'for-7.3' into for-next
 
-We were discussing a way for userspace to explicitly trigger a flush
-before, which would come in handy for testing. However, we decided not
-to expose flushing as a concept to userspace.
+elapsed time: 1023m
 
-Unfortunately I think the only way to "fix" the test is to allocate
-more memory, enough to trigger a flush on most interesting setups.
-Perhaps we should scale the amount of memory with the number of CPUs
-so that we don't have to keep playing whack-a-mole.
+configs tested: 107
+configs skipped: 1
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                   allnoconfig    gcc-16.1.0
+alpha                  allyesconfig    gcc-16.1.0
+arc                    allmodconfig    clang-23
+arc                    allmodconfig    gcc-16.1.0
+arc                     allnoconfig    gcc-16.1.0
+arc                    allyesconfig    gcc-16.1.0
+arm                     allnoconfig    clang-17
+arm                     allnoconfig    gcc-16.1.0
+arm                    allyesconfig    clang-23
+arm                    allyesconfig    gcc-16.1.0
+arm64                  allmodconfig    clang-23
+arm64                   allnoconfig    gcc-16.1.0
+csky                   allmodconfig    gcc-16.1.0
+csky                    allnoconfig    gcc-16.1.0
+hexagon                allmodconfig    clang-23
+hexagon                 allnoconfig    clang-23
+hexagon                 allnoconfig    gcc-16.1.0
+hexagon     randconfig-001-20260707    clang-18
+hexagon     randconfig-002-20260707    clang-18
+i386                   allmodconfig    gcc-14
+i386                    allnoconfig    gcc-14
+i386                    allnoconfig    gcc-16.1.0
+i386                   allyesconfig    gcc-14
+i386                 randconfig-011    gcc-14
+i386        randconfig-011-20260707    gcc-14
+i386                 randconfig-012    gcc-14
+i386        randconfig-012-20260707    gcc-14
+i386                 randconfig-013    gcc-14
+i386        randconfig-013-20260707    gcc-14
+i386                 randconfig-014    gcc-14
+i386        randconfig-014-20260707    gcc-14
+i386                 randconfig-015    gcc-14
+i386        randconfig-015-20260707    gcc-14
+i386                 randconfig-016    gcc-14
+i386        randconfig-016-20260707    gcc-14
+i386                 randconfig-017    gcc-14
+i386        randconfig-017-20260707    gcc-14
+loongarch              allmodconfig    clang-19
+loongarch               allnoconfig    clang-20
+loongarch               allnoconfig    gcc-16.1.0
+loongarch   randconfig-001-20260707    clang-18
+loongarch   randconfig-002-20260707    clang-18
+m68k                   allmodconfig    gcc-16.1.0
+m68k                    allnoconfig    gcc-16.1.0
+m68k                   allyesconfig    clang-23
+m68k                   allyesconfig    gcc-16.1.0
+microblaze              allnoconfig    gcc-16.1.0
+microblaze             allyesconfig    gcc-16.1.0
+mips                   allmodconfig    gcc-16.1.0
+mips                    allnoconfig    gcc-16.1.0
+mips                   allyesconfig    gcc-16.1.0
+nios2                  allmodconfig    gcc-11.5.0
+nios2                   allnoconfig    clang-23
+nios2                   allnoconfig    gcc-11.5.0
+nios2       randconfig-001-20260707    clang-18
+nios2       randconfig-002-20260707    clang-18
+openrisc               allmodconfig    gcc-16.1.0
+openrisc                allnoconfig    clang-23
+openrisc                allnoconfig    gcc-16.1.0
+parisc                 allmodconfig    gcc-16.1.0
+parisc                  allnoconfig    clang-23
+parisc                  allnoconfig    gcc-16.1.0
+parisc                 allyesconfig    clang-17
+parisc                 allyesconfig    gcc-16.1.0
+parisc      randconfig-001-20260707    clang-22
+parisc      randconfig-002-20260707    clang-22
+powerpc                allmodconfig    gcc-16.1.0
+powerpc                 allnoconfig    clang-23
+powerpc                 allnoconfig    gcc-16.1.0
+powerpc     randconfig-001-20260707    clang-22
+powerpc     randconfig-002-20260707    clang-22
+powerpc64   randconfig-001-20260707    clang-22
+powerpc64   randconfig-002-20260707    clang-22
+riscv                  allmodconfig    clang-23
+riscv                   allnoconfig    clang-23
+riscv                   allnoconfig    gcc-16.1.0
+riscv                  allyesconfig    clang-23
+riscv       randconfig-001-20260708    clang-23
+riscv       randconfig-002-20260708    clang-23
+s390                   allmodconfig    clang-17
+s390                   allmodconfig    clang-23
+s390                    allnoconfig    clang-23
+s390                   allyesconfig    gcc-16.1.0
+s390        randconfig-001-20260708    clang-23
+s390        randconfig-002-20260708    clang-23
+sh                     allmodconfig    gcc-16.1.0
+sh                      allnoconfig    clang-23
+sh                      allnoconfig    gcc-16.1.0
+sh                     allyesconfig    clang-17
+sh                     allyesconfig    gcc-16.1.0
+sh          randconfig-001-20260708    clang-23
+sh          randconfig-002-20260708    clang-23
+sparc                   allnoconfig    clang-23
+sparc                   allnoconfig    gcc-16.1.0
+sparc64                allmodconfig    clang-20
+um                     allmodconfig    clang-17
+um                      allnoconfig    clang-17
+um                      allnoconfig    clang-23
+um                     allyesconfig    gcc-14
+x86_64                 allmodconfig    clang-22
+x86_64                  allnoconfig    clang-22
+x86_64                  allnoconfig    clang-23
+x86_64                 allyesconfig    clang-22
+x86_64                rhel-9.4-rust    clang-22
+xtensa                  allnoconfig    clang-23
+xtensa                  allnoconfig    gcc-16.1.0
+xtensa                 allyesconfig    gcc-16.1.0
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
