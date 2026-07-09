@@ -1,132 +1,129 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCA653368A7
-	for <cgroups@vger.kernel.org>; Thu,  9 Jul 2026 13:45:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86CA41C84CB
+	for <cgroups@vger.kernel.org>; Thu,  9 Jul 2026 14:24:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783604710; cv=none; b=NITnhBGPuOdN7KLApgdRKMvumO03qhTxgDkoU+QeW+BOPXXUiE9+huOooFpiN+hwoSPWo41bBFbuYKJQacwTgKa2pWLFD1Ojl1R8Me/NzybZYQZc6sFtdmdXMZO4GXZfsXNcFgLRYNZsgW8UpNBU+0m/5M0IkRx9o5TolX1D6iE=
+	t=1783607076; cv=none; b=Bxsunok0u3hiD0g8GkJM4Np1NyR7WaKZk+V1DdeTwsQPeCJJrPE1OHg7+eQ7BsVHzA1Lj4n2KC0NdTJ8kYM/udHPl53HWB65H2IuIN8EwWrA5hJMHyVBikghICgPpykZThWu2fvP0hORjKgQe+vqFGx83ffxZNkP3bHutZHAaFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783604710; c=relaxed/simple;
-	bh=hV1txD3s0gTLfPiS3b2/9sZVWfKgrmrE3xMhHxL2XQs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mWY4DD+jxYfmeSi5YS5jG23VliPrEX9RMrWVeaJRZbKjXK1SJixAj2XAxr2BovNIH/hLa3/6vnVppYx0gtA+dpZmZTXVH62vIWkoWnP2IVl0L+ZOnO3PsxM1UVcfvj5PDqbROX9VfVIQ2QEUaAygaBmgfGmIL9X9Nh7/qH9mkNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PQLGoyX+; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=LOntyHXA; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1783607076; c=relaxed/simple;
+	bh=tIHEGyT5ldvtsed8frzfaU4agFhwf0M8sm55kkXf0oA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=cPKIRlPV3mL6XSRrOJnudua98rTqy3YwWIjQ356YENirLpvzqLGZKh98Gl8vu1uM5hiOb/nMpFI9uSU2SltnScqe23kS5eDbgP8747qO6Cz27nyWE71aUNQ7ivOm2V/vEdeIk5sNdcjP93ANdW5ZcXGuZkMsS5iKp8CcatHNGo0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Btk+aZVn; arc=none smtp.client-ip=95.215.58.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PQLGoyX+";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="LOntyHXA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783604707;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Btk+aZVn"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1783607062;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=0B2CCHmIqiYi2OjZQM05i6RdlCsyGmxI7RbfTKwg3sQ=;
-	b=PQLGoyX+0pnsynX2L4PyEMCpKdGA3ajQw8Blf2UGg0rhosq2VDqNDerlGl3Uocpt2/RVVm
-	QKIJs6pszfuzQhr9/jZWqu9rgweLMaSYKveQGbTNUCB4MEB6V/k1F/6vCMyfJ0onKpe9i7
-	Hicu0FR7Mjs5fCaEDeCYgXERLU6302k=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-58-rdlip_AEOGOzUtMuCwcaww-1; Thu, 09 Jul 2026 09:45:06 -0400
-X-MC-Unique: rdlip_AEOGOzUtMuCwcaww-1
-X-Mimecast-MFC-AGG-ID: rdlip_AEOGOzUtMuCwcaww_1783604705
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-92ec3146553so159828385a.1
-        for <cgroups@vger.kernel.org>; Thu, 09 Jul 2026 06:45:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1783604705; x=1784209505; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=0B2CCHmIqiYi2OjZQM05i6RdlCsyGmxI7RbfTKwg3sQ=;
-        b=LOntyHXAiZrtud2uZP7sWN49TGh+ZRBTc5d0v8HDoTKwKJBzwF9Ma4RMASqFVza5R/
-         HNp8ANMbNbXRcIre0TJzUdMGPM2m2LVnsokqBx1IiWTECtywQD6JDd05TSip63Ddrc3N
-         PSpBxbyZdkaJN1GGRo5q/JBp1VcMrPJvvLTfqffqtkSoc9kjnM7N6KcwIp3UTkGFwlyi
-         AwqFsCgPW+UaW+JWnCg+bqPnWLExHonHb8CrA7K6MjeMv1CMd6AVNprnhwaEo20ixN5z
-         7iprXONBeF6+iAxwFXeiBLuf+aBG0OT7vj582dPd0N8TJbGfVXRamzGYgIYeisOfzMnt
-         3Ldg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783604705; x=1784209505;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0B2CCHmIqiYi2OjZQM05i6RdlCsyGmxI7RbfTKwg3sQ=;
-        b=BV/WG8P73Q2XO1S0ibwcFrnjTuXrjpsmDo5p6SWpW/HToyGucxGAWR8KkHl/jYzjAg
-         UkR7msECoBpL2xXD6vbNTzrAntCiwbTk18/czRPoUDtJYRYNB1MHGZUAj+85DpPBfDWg
-         dgXhfdTpfh/Cjo0y2YSmdavn1rUFyZ7Ml5e30umQyjzSgUrusy11rW0hW4FQoefzO+lq
-         p60wPtTHMooa5TfDLLWgCpYkPOOyqYYRzH0jB9aiYw9WBNAT0FNJXPeclKlaXjFCGnYx
-         IsMJZ2WOWmcx9K64jL0QN3lHP2Zr6eWK70zgPV7l0pkZi08P6oltpw/Lrg2AyozLCTMw
-         W5NQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqFBBYTIdFfKbex7gi6L73SzxWMLcijWaBOWoipGxcdtXtv8j3sKIoT4GBwh1XE5igbbhi7Idp9@vger.kernel.org
-X-Gm-Message-State: AOJu0YwubXuDVIJCAJa9Vad4oz5gjH4Syb1nZptg9rQ6JElrPBzDo5s6
-	RZ6+sEHEgux+96VTLsvstmBEykh13AqRWaH7V94hBwcepWl9LxFvQGWo4LamIUbP9p3eamfQJ4w
-	/n/JTUo9HQE8gzcFmFWH0/faPVU2+59Vmh6n8DhdomrveLMbMlmoxODKZjcY=
-X-Gm-Gg: AfdE7cn09jrA24e9hg7V2dlLUh2Nbd1QQqeQL3JPU4JGAr6EwcIywBPcJCrvwCx/r0k
-	BAeoGMCEyZDslKMqQYzfqoLMJcgrDoB1lzhFTuYGNQYaGAy0tarE36P6QWOQB7lU8sDdMfIbZF6
-	OAmLdJ4j+NQsmboWMDvED59ClC9+13PsnR4W9PVFGmRNqq/+EcCtCQphEKSXQttpDcFPH9M73CE
-	yCSNlf2C/SehSbxSp/gknQMdGYFRoNqxaRKLA25zJ3NEs9YXRKsbREgjksDXtSBG/8qidOCqLua
-	3fgmuA1GyMp5iDh+z4pIb+y2Ni4ygv7w/l+0p9QN8ErIZBn66xemlWcPLhcn17x1jGjBLDG09cd
-	WgBGXpSkI56PATA6jjaoAL9ntbIm9AwO2U4opgznc5rnCiaAO0sJ2UUg=
-X-Received: by 2002:a05:620a:4624:b0:92e:48a2:533a with SMTP id af79cd13be357-92ecf6aa74cmr764350685a.47.1783604704828;
-        Thu, 09 Jul 2026 06:45:04 -0700 (PDT)
-X-Received: by 2002:a05:620a:4624:b0:92e:48a2:533a with SMTP id af79cd13be357-92ecf6aa74cmr764344385a.47.1783604704231;
-        Thu, 09 Jul 2026 06:45:04 -0700 (PDT)
-Received: from localhost (pool-100-17-17-231.bstnma.fios.verizon.net. [100.17.17.231])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-92e90ccdf8dsm1665479785a.37.2026.07.09.06.45.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2026 06:45:03 -0700 (PDT)
-Date: Thu, 9 Jul 2026 09:45:02 -0400
-From: Eric Chanudet <echanude@redhat.com>
-To: Albert Esteve <aesteve@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH v5 3/4] selftests: cgroup: Add vmtest-dmem runner script
-Message-ID: <ak-gNsQ8vi7yDJsm@x1nano>
-References: <20260706-kunit_cgroups-v5-0-6c42c8753468@redhat.com>
- <20260706-kunit_cgroups-v5-3-6c42c8753468@redhat.com>
+	bh=EUy+Ri2pT7wvVY/ajX0BV3e3H7R/seUWuMeezghtcHk=;
+	b=Btk+aZVnVrfetD0/oZcoqxzqskUtquanN86nBAQQy2GMIakYKxG6K18qS76Eb9X434e39/
+	TvJH+sZo7/dtDfDgg+nTqQa5FHgW7AALn/bO2K+ZBt7ZDy5exPzUJd+zdv2IRElB9yMvXd
+	Q9FVDnwysjJC2HD9vFL2xq2PDCIZK9k=
+From: Usama Arif <usama.arif@linux.dev>
+To: Usama Arif <usama.arif@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	david@kernel.org,
+	ljs@kernel.org,
+	liam@infradead.org,
+	vbabka@kernel.org,
+	rppt@kernel.org,
+	surenb@google.com,
+	mhocko@suse.com,
+	kasong@tencent.com,
+	qi.zheng@linux.dev,
+	shakeel.butt@linux.dev,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	chrisl@kernel.org,
+	nphamcs@gmail.com,
+	baoquan.he@linux.dev,
+	youngjun.park@lge.com,
+	hannes@cmpxchg.org,
+	roman.gushchin@linux.dev,
+	muchun.song@linux.dev,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	rientjes@google.com,
+	kernel-team@meta.com
+Subject: Re: [PATCH 0/1] mm/vmscan: reduce lru_lock contention via vmstat-derived scan-balance cost
+Date: Thu,  9 Jul 2026 07:24:11 -0700
+Message-ID: <20260709142412.91707-1-usama.arif@linux.dev>
+In-Reply-To: <20260706122954.3552990-1-usama.arif@linux.dev>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260706-kunit_cgroups-v5-3-6c42c8753468@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Mon, Jul 06, 2026 at 02:06:42PM +0200, Albert Esteve wrote:
-> Currently, test_dmem relies on the dmem_selftest helper module
-> and a VM setup that may not have the helper preinstalled.
-> This makes automated coverage of dmem charge paths harder in
-> virtme-based runs.
-> 
-> Add tools/testing/selftests/cgroup/vmtest-dmem.sh to provide a
-> repeatable VM workflow for dmem tests. The script uses vng --exec
-> to run the test directly inside a virtme-ng guest with minimal
-> setup.
-> 
-> The script boots a virtme-ng guest, validates dmem controller
-> availability, ensures the dmem helper path is present, and runs
-> tools/testing/selftests/cgroup/test_dmem. If the helper is not
-> available as a loaded module, it attempts module build/load for
-> the running guest kernel before executing the test binary.
-> 
-> The runner also supports interactive shell mode (-s) and reuses
-> the verbosity and KTAP exit-code conventions used by other vmtest
-> scripts, so it integrates with existing kselftest workflows.
-> 
-> vmtest-dmem.sh is placed in TEST_FILES rather than TEST_PROGS so
-> it is installed alongside the test suite but not invoked
-> automatically by run_kselftest.sh. It requires a VM-capable host
-> and is intended to be run manually.
-> 
-> Signed-off-by: Albert Esteve <aesteve@redhat.com>
+On Mon,  6 Jul 2026 05:28:25 -0700 Usama Arif <usama.arif@linux.dev> wrote:
 
-Reviewed-by: Eric Chanudet <echanude@redhat.com>
+> The anon/file scan balance heuristic in get_scan_count() is fed by two
+> scalars in struct lruvec (anon_cost, file_cost) that every reclaim
+> producer updates under lruvec->lru_lock. The cost-recording work
+> itself is trivial, but it both contends for and contributes to
+> contention on lru_lock - which is often a contention point on
+> memory-pressured workloads. Specifically:
+> 
+> - shrink_inactive_list() re-acquires lru_lock at function exit just
+>   to call lru_note_cost_unlock_irq().
+> - shrink_active_list() does the same after rotation accounting.
+> - workingset_refault() takes folio_lruvec_lock_irq() purely to
+>   record the refault cost.
+> - prepare_scan_control() snapshots anon_cost/file_cost under
+>   lru_lock.
+> - lru_note_cost_unlock_irq() itself walks parent_lruvec() and
+>   re-acquires lru_lock on every ancestor, multiplying the cost
+>   of every update by memcg-hierarchy depth.
+> 
+> This patch removes those producer-side acquisitions entirely. The
+> producer-local inputs (PGROTATE_*, PGRECLAIM_PAGEOUT_*) become
+> per-LRU vmstat counters; WORKINGSET_RESTORE_* already captures the
+> refault input. prepare_scan_control() reads the raw cost signal
+> lock-free from those vmstats and folds the delta into a per-lruvec
+> accumulator. A dedicated per-lruvec cost_lock, not touched by
+> isolate_lru_folios(), move_folios_to_lru(), or folio_add_lru(),
+> serialises the accumulator RMW and the lrusize/4 halving check.
+> Hierarchy aggregation is implicit in rstat propagation, so the
+> parent_lruvec() walk and the lru_reparent_memcg() cost-splice both
+> disappear.
 
--- 
-Eric Chanudet
+Another update on this, I was profiling another Meta workload that suffers
+from very heavy reclaim and has a lot of cgroups. I ran:
 
+bpftrace -q -e 'profile:hz:99 { @[kstack, comm] = count(); }'
+
+The biggest entry was below:
+@[
+        lru_note_cost_unlock_irq+146
+        shrink_lruvec+1913
+        shrink_node+869
+        do_try_to_free_pages+197
+        try_to_free_mem_cgroup_pages+311
+        __mem_cgroup_charge+1832
+        filemap_add_folio+127
+        page_cache_ra_unbounded+347
+        filemap_fault+956
+        __do_fault+40
+        handle_mm_fault+4034
+        do_user_addr_fault+406
+        exc_page_fault+105
+        asm_exc_page_fault+34
+, Func___]: 5354
+
+5354 represents 51.42% of all kernel samples collected.
+
+A very signifcant amount of time was being spent just in lru_note_cost_unlock_irq
