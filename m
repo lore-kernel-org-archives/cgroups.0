@@ -1,120 +1,132 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from out-182.mta1.migadu.com (out-182.mta1.migadu.com [95.215.58.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 235192D0603
-	for <cgroups@vger.kernel.org>; Fri, 10 Jul 2026 03:48:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FFB236A362;
+	Fri, 10 Jul 2026 04:21:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783655295; cv=none; b=LnwaX2D9cKRgrKxwkqA/2fuB7EyZKWkqjF2o3s8EHyKjxJozTAkjrokSoiSWH8S+1Y3yjnW3kT2sLv9tWIXOK/DqDaPOqMw6F967dDPDJg+JFwIiwByyJ3RAj0w+sSiEgXgmg+YT/OeODMZECWmxq3kPygUC/mUL20Czm9/aVUk=
+	t=1783657321; cv=none; b=jcSSC+JugSu2XosNo9/fuXwsVcGKM2xXhx4zJ0CzZrypC+XE5UD9RhRFvozKYF1M/RbEUnDETw5O9j8JvyaX2Y+OimQxE+ArR5XJCSZvvmry89JK8xUSCvqce3WG0GTMZ4pOviyXpnZpkmHjL8T+9Dhq4Vugq1W+RVcIDofxMMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783655295; c=relaxed/simple;
-	bh=/Fd6KrNmo6PySHgGRsYcL5y0JMVCNUErPiaGXKyuEQE=;
+	s=arc-20240116; t=1783657321; c=relaxed/simple;
+	bh=LZcMK+XoldP7yradNDcuGxhwCXeeM+TMPel+b3TPJVk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QbI4W+YYVN9kKQtqxyrpzua1BFe81cMeIR3uWcipb+JZyzHgry68WyVhl5b1Fg8gntEimOyzUs0gtncfSbSQOLOMhxV3Pxqsme4gHut0wIIjHqRlw+BfrUx6jgcaS0RBoK4/SY1Ioed/+trxOpkBjZRBNUt0b1N946XTuKWGxKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ci+at1OI; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=tYgHEabZvMrhShnk2CIzOrhqrlfmQzRIg5ej6iWdcfB5NvzBCOsqLrhiIlJ6y65QRgSlurz4SMyxiijhc8rAgYt0WBKBhOnQ6BKpjJ6TVMVGw3LKE3ukFJ2azYiPdZmx9C1Gqfyy9a+f4JdwDC1L8UzTRqCnE6NkZZzZyqWNVxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qoMWIDHG; arc=none smtp.client-ip=95.215.58.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ci+at1OI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783655293;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qoMWIDHG"
+Message-ID: <2277444e-111e-405b-b031-57efa5fcb8ef@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1783657307;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kTM73mbrNFeg9NAnrcfOYiEcBbQPeq+yx3xgufQSvnQ=;
-	b=Ci+at1OIoektsy7UMphANkOFo3kBH8ZgXFXsvuBdFMVjhZWSi4ym4le5Wjz4iR49mTDMkv
-	f79im1J2SZGe7YInRmN5V52cfuOWmOlS0AxooZdI0O32lLglQEgytXDmyTyTjk9uVz3y0b
-	R1IvZlgMdlqNO1IvanBOHxjiJEMPuSA=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-711-3xlsM3t9O3uzBfC4kNmdZg-1; Thu,
- 09 Jul 2026 23:48:07 -0400
-X-MC-Unique: 3xlsM3t9O3uzBfC4kNmdZg-1
-X-Mimecast-MFC-AGG-ID: 3xlsM3t9O3uzBfC4kNmdZg_1783655286
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 89EB01956042;
-	Fri, 10 Jul 2026 03:48:05 +0000 (UTC)
-Received: from [10.22.80.240] (unknown [10.22.80.240])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7172A1800348;
-	Fri, 10 Jul 2026 03:48:03 +0000 (UTC)
-Message-ID: <e117b3e9-3973-40de-8976-eb0ebef18c4c@redhat.com>
-Date: Thu, 9 Jul 2026 23:48:02 -0400
+	bh=1lpSCBPT1MfvQVMMK5lCzHUYPGixov0SxOx6zazzW9Y=;
+	b=qoMWIDHGpox1VZZnudIb+Te9ql2jRejnUkB2P0kdJZvXuhTx3Oq8pUTu2RBISo9KvvEOn+
+	WMJf0T2gewvNq0cB9IR8RNRxcYTH4Eps0uD7HKaresot8LSlALraucQ31yCJiZyoPTt8YA
+	WXd/gfHAXNwwIbg+/6h/tHnpAlgHtKw=
+Date: Thu, 9 Jul 2026 21:21:10 -0700
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v10 10/11] cgroup/cpuset: Support multiple
- destination cpusets for cpuset_*attach()
-To: Tejun Heo <tj@kernel.org>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner
- <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>, Juri Lelli <juri.lelli@redhat.com>,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Aaron Tomlin <atomlin@atomlin.com>,
- Guopeng Zhang <guopeng.zhang@linux.dev>
-References: <20260702214757.579012-1-longman@redhat.com>
- <20260702214757.579012-11-longman@redhat.com>
- <e254af713b5345aec3d086771ecf1e71@kernel.org>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <e254af713b5345aec3d086771ecf1e71@kernel.org>
+Subject: Re: [PATCH rdma-next 12/13] RDMA/rxe: Implement disassociate_ucontext
+ callback
+To: Jiri Pirko <jiri@resnulli.us>, linux-rdma@vger.kernel.org,
+ "yanjun.zhu@linux.dev" <yanjun.zhu@linux.dev>
+Cc: cgroups@vger.kernel.org, netdev@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-kselftest@vger.kernel.org, jgg@ziepe.ca,
+ leon@kernel.org, parav@nvidia.com, mbloch@nvidia.com, cmeiohas@nvidia.com,
+ roman.gushchin@linux.dev, bvanassche@acm.org, zyjzyj2000@gmail.com,
+ shuah@kernel.org, tj@kernel.org, mkoutny@suse.com, hannes@cmpxchg.org,
+ alibuda@linux.alibaba.com, dust.li@linux.alibaba.com, sidraya@linux.ibm.com,
+ wenjia@linux.ibm.com
+References: <20260709095532.855647-1-jiri@resnulli.us>
+ <20260709095532.855647-13-jiri@resnulli.us>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Zhu Yanjun <yanjun.zhu@linux.dev>
+In-Reply-To: <20260709095532.855647-13-jiri@resnulli.us>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On 7/6/26 8:57 PM, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Thu, Jul 02, 2026 at 05:47:56PM -0400, Waiman Long wrote:
->> It is assumed that a given cpuset cannot be both a source and a
->> destination cpuset. [...] it will print a warning and fail the attach
->> operation in these unexpected cases [...]
-> This assumption doesn't hold - the WARN_ON_ONCE() and -EINVAL fire on a
-> legitimate migration. It's the case sashiko flagged, and it does reach
-> can_attach().
->
-> Threaded subtree with partial cpuset delegation:
->
->    P (+cpuset)
->    |- R (cpuset)        <- destination
->    |  `- C (no cpuset)  -> effective cpuset == R
->    `- W (cpuset)
->
-> Group leader in R, thread_a in C, thread_b in W; migrate the whole
-> process into R (echo $PID > R/cgroup.procs). thread_a moves C->R: its
-> cgroup changes so compare_css_sets() keeps it in the taskset, but its
-> cpuset css is unchanged (C inherits R's), so task_cs() == cs == R. cpuset
-> is in ss_mask because thread_b (W->R) changed. can_attach() then tags R
-> as a source (thread_a) and the destination (thread_b):
->
->    WARNING: kernel/cgroup/cpuset.c:3054 at cpuset_can_attach_check+0xcd/0x130
->     cpuset_can_attach+0x131/0x2f0
->     cgroup_migrate_execute+0x367/0x450
->    cgroup.procs write returns -EINVAL
->
-> So a thread already in the destination's effective cpuset does show up in
-> the iteration when it reaches that cpuset through a different, non-cpuset
-> child - compare_css_sets() keys on the cgroup, not the cpuset css.
->
-> 1-9 handle this correctly (the migration succeeds); the patch 10 guard
-> regresses it. I've taken 1-9 into for-7.3 - please respin 10-11. One
-> option: when oldcs == cs the pair is a cpuset no-op, so skip it and add
-> it to neither list.
 
-Sorry for the late reply. I was offline for a few days because my labtop 
-SSD was having problem.
+在 2026/7/9 2:55, Jiri Pirko 写道:
+> From: Jiri Pirko <jiri@nvidia.com>
+>
+> Implement an empty disassociate_ucontext() callback so the RDMA core
+> can move rxe devices between net namespaces. The core requires this
+> callback to reset user contexts without waiting for userspace.
+>
+> rxe needs no teardown here: its user-mapped queues live in
+> reference-counted vmalloc memory (see rxe_mmap.c) that stays valid
+> while userspace holds the mappings.
 
-Yes, I realize that my assumption about oldcs != cs is incorrect. I will 
-revise the remaining patch to address the issue.
+The logic here is correct for enabling netns migration. Since RXE's 
+user-mapped
 
-Thanks,
-Longman
+queues rely on reference-counted vmalloc memory, this empty stub is safe 
+enough
+
+to prevent kernel panics or Use-After-Free (UAF) during device movement.
+
+
+However, as a note for future improvement: keeping this callback 
+entirely empty
+
+means userspace won't be immediately notified (via SIGBUS or page table 
+zapping)
+
+when the underlying device is moved out of its netns. For now, this 
+serves well as
+
+a functional enabler, but we might want to introduce proper PTE 
+tearing/zap_vma_ptes()
+
+down the road if applications require strict, immediate disconnection 
+semantics.
+
+
+Thanks Jiri.
+
+Reviewed-by: Yanjun Zhu <yanjun.zhu@linux.dev>
+
+Zhu Yanjun
+
+> Signed-off-by: Jiri Pirko <jiri@nvidia.com>
+> ---
+>   drivers/infiniband/sw/rxe/rxe_verbs.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/infiniband/sw/rxe/rxe_verbs.c b/drivers/infiniband/sw/rxe/rxe_verbs.c
+> index 1ec130fee8ea..6eb10d2f0653 100644
+> --- a/drivers/infiniband/sw/rxe/rxe_verbs.c
+> +++ b/drivers/infiniband/sw/rxe/rxe_verbs.c
+> @@ -240,6 +240,10 @@ static void rxe_dealloc_ucontext(struct ib_ucontext *ibuc)
+>   		rxe_err_uc(uc, "cleanup failed, err = %d\n", err);
+>   }
+>   
+> +static void rxe_disassociate_ucontext(struct ib_ucontext *ibuc)
+> +{
+> +}
+> +
+>   /* pd */
+>   static int rxe_alloc_pd(struct ib_pd *ibpd, struct ib_udata *udata)
+>   {
+> @@ -1478,6 +1482,7 @@ static const struct ib_device_ops rxe_dev_ops = {
+>   	.destroy_srq = rxe_destroy_srq,
+>   	.detach_mcast = rxe_detach_mcast,
+>   	.device_group = &rxe_attr_group,
+> +	.disassociate_ucontext = rxe_disassociate_ucontext,
+>   	.enable_driver = rxe_enable_driver,
+>   	.get_dma_mr = rxe_get_dma_mr,
+>   	.get_hw_stats = rxe_ib_get_hw_stats,
+
+-- 
+Best Regards,
+Yanjun.Zhu
 
