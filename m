@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63B25335555
-	for <cgroups@vger.kernel.org>; Sun, 12 Jul 2026 15:01:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 818DC33F8AD
+	for <cgroups@vger.kernel.org>; Sun, 12 Jul 2026 15:01:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783868506; cv=none; b=gD9324+5lLNRQkf4yRuU4JqAHOHrf4/rX+2uhkuJRMcgGeFeeDYpaHDpJwqiWAPA/qToM3KVlKn/sK5eWutnD55rszSGrYSs5ofNs9aN58rUdfDRwHPkuPrKyc2wDKMf55usmtdx4fcoOD/ArdTUd89DIkj45c0V0/eSPhz0FT4=
+	t=1783868514; cv=none; b=BNVsFdw7/oxAVHHLU5zBwCwJmdg4hqPzLEJXxoUWwky+njvJkVnNoUc8OC7/ob/WqLujubpbHue2aCIAtCbyE8OcqgzAnOnlQB3WfiQpFWTIqYEcYxhS4u+bw1GlwSV1S1ZkiP/ME7EL+4tsmyckNLFUr4nrJpv53PbIiGMrANQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783868506; c=relaxed/simple;
-	bh=pHDGywNEMjucH1pm/H1+YHJKdnYw+vQDrwC1wqvPfvo=;
+	s=arc-20240116; t=1783868514; c=relaxed/simple;
+	bh=U3XeUnEL+rDTz+vN8wgmKNKJy9pBXpmiepr3NAb/tR8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o98z28XkRGMMDlWg1+xSD74F1izxaZ0BlpWDiYVU5uUGsNnMWqE71pKAJR5BTKwgAQ4FY92CVt3jtfMUEvoDkEC/5P4pHPig413bqPmlocR1x78wVsC5KrMHDearzWaCALTPI484W5+E/GjmwgO1BZP4+W1fGBhg4W4KQe+Gc6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DA6GQSzA; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=WaDUh55Ttq4qgI/cByPa0L89fTGUBh1JDolwD/7W7+9T0wfVrs8Ac3pNTwV8voj5IQX+IkTZAfWbNoDCLUcNTL1dFJRpp+WCsz/U8lIyEnyUpDAFB0bhdMD1tKjAH+mpRqSxjC+iznbmdX2WEUQ5MQm9hniY+35f4Qqy9fVijwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Qhb+rhnb; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DA6GQSzA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qhb+rhnb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783868502;
+	s=mimecast20190719; t=1783868506;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=FB69Y+VvNoTOSkjmMegtswoHj9QUfF0cVIM7Z0B1wYY=;
-	b=DA6GQSzAwDLpOkDx3dUfu7+Xa111c1CS6Prp0IABhXry3Oc4tjztSiNaAnLYLiOqANQHm/
-	DCg64yZPZv6QrbUVeUPT7UXdjKZhoBMF3sUtoZFuBmcKRd5mTZM7y0AvCyxj1DzglzMt1M
-	OANQUoKC2Yt7euBqArF6yEBKb0xORsc=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+	bh=/Qe+95+MXsZNLDf2pjnP57V9Q3yNl9VozQHNGuksZog=;
+	b=Qhb+rhnbvEMWJi1xzmxSQsGunLeVf0tKEigLlZAjlV9ByA7DcmwtCJSAEhXsfbASifSFjk
+	qOrdohOvVZHbnuBtt5xyQKsmM92cgE47YHkRbinm4rrBgtQqtx1czEiTr1sReFeBBhVFXA
+	2VU435lzpuHv3vDhiWKc0wu3Z8iGyY8=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-308-SD9P9dNHOY236uZa85uewA-1; Sun,
- 12 Jul 2026 11:01:39 -0400
-X-MC-Unique: SD9P9dNHOY236uZa85uewA-1
-X-Mimecast-MFC-AGG-ID: SD9P9dNHOY236uZa85uewA_1783868497
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-683-lffXiap-NA6n2b3dfVQDXQ-1; Sun,
+ 12 Jul 2026 11:01:42 -0400
+X-MC-Unique: lffXiap-NA6n2b3dfVQDXQ-1
+X-Mimecast-MFC-AGG-ID: lffXiap-NA6n2b3dfVQDXQ_1783868501
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 788BA18009E4;
-	Sun, 12 Jul 2026 15:01:37 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 25DCC180064A;
+	Sun, 12 Jul 2026 15:01:41 +0000 (UTC)
 Received: from llong-thinkpadp1gen5.rmtusnh.csb (unknown [10.22.80.43])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E73383000B54;
-	Sun, 12 Jul 2026 15:01:35 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 89B9F3000B50;
+	Sun, 12 Jul 2026 15:01:39 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Ridong Chen <ridong.chen@linux.dev>,
 	Tejun Heo <tj@kernel.org>,
@@ -52,9 +52,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH-next v2 1/3] cgroup/cpuset: Handle the special case of non-moving tasks in cpuset_can_attach()
-Date: Sun, 12 Jul 2026 11:01:25 -0400
-Message-ID: <20260712150127.236790-2-longman@redhat.com>
+Subject: [PATCH-next v2 3/3] selftests/cgroup: Add test for cpuset affinity on controller disable
+Date: Sun, 12 Jul 2026 11:01:27 -0400
+Message-ID: <20260712150127.236790-4-longman@redhat.com>
 In-Reply-To: <20260712150127.236790-1-longman@redhat.com>
 References: <20260712150127.236790-1-longman@redhat.com>
 Precedence: bulk
@@ -63,123 +63,309 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-With cgroup v2 migration of a multithreaded process having threads
-in different cgroups of a threaded subtree, it is possible that
-cpuset_can_attach() can be called with tasks that are not migrating with
-respect to cpuset if cpuset controller is not enabled in some of the
-subtree cgroups. IOW, the old cpuset can be the same as the new one. This
-can cause problem when we need to track the set of old cpusets and the
-new cpusets in singly linked lists as a cpuset cannot be in both lists.
+From: Michal Koutný <mkoutny@suse.com>
 
-As reported by Tejun, the following is an example threaded subtree with
-partial cpuset delegation that can cause this issue to show up.
+Add a new selftest that exposes a bug in cpuset_attach() where thread
+CPU affinity is not properly updated when the cpuset controller is
+disabled in a threaded cgroup hierarchy.
 
-  P (+cpuset)
-  |- R (cpuset)        <- destination
-  |  `- C (no cpuset)  -> effective cpuset == R
-  `- W (cpuset)
+The test creates a threaded cgroup hierarchy with two child cgroups
+(A and B) having different cpuset.cpus constraints:
+- Parent: cpuset.cpus=0-1
+- Child A: cpuset.cpus=0-1
+- Child B: cpuset.cpus=1 (restricted to CPU 1 only)
 
-Group leader in R, thread_a in C, thread_b in W; migrate the whole
-process into R (echo $PID > R/cgroup.procs). thread_a moves C->R:
-its cgroup changes so compare_css_sets() keeps it in the taskset, but
-its cpuset css is unchanged (C inherits R's), so task_cs() == cs ==
-R. cpuset is in ss_mask because thread_b (W->R) changed. can_attach()
-then tags R as a source (thread_a) and the destination (thread_b):
+A multithreaded process is created with threads placed in different
+cgroups. When the cpuset controller is disabled on the parent, thread
+affinities should be updated to match the parent's cpuset.
 
-Handle this special case by skipping tasks that are not migrating in
-cpuset_can_attach() and avoid calling cpuset_can_attach_check() in this
-case. By doing so, the destination cpuset will not be put into source
-cpuset linked list.
+Expected behavior:
+- thread_a affinity: {0-1} before and after (unchanged)
+- thread_b affinity: {1} before, {0-1} after (expanded)
 
-As the source cpuset cannot be easily determined in cpuset_attach(),
-unnecessary work can be performed if a task is not actually
-migrating. However, no harm will be done except wasting some
-CPU cycles. If it happens that none of the tasks is migrating,
-attach_ctx.old_cs will be NULL and task iteration won't be needed.
+Current buggy behavior:
+- thread_b affinity remains {1} after controller disable
 
-Reported-by: Tejun Heo <tj@kernel.org>
-Closes: https://lore.kernel.org/lkml/e254af713b5345aec3d086771ecf1e71@kernel.org
-Signed-off-by: Waiman Long <longman@redhat.com>
+Assisted-by: Claude:claude-sonnet-4-5
+Signed-off-by: Michal Koutný <mkoutny@suse.com>
+Acked-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 33 +++++++++++++++++++++++----------
- 1 file changed, 23 insertions(+), 10 deletions(-)
+ tools/testing/selftests/cgroup/test_cpuset.c | 243 +++++++++++++++++++
+ 1 file changed, 243 insertions(+)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index cf0d005d2b78..957c80a99fde 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3134,20 +3134,12 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 	bool setsched_check;
- 	int ret;
+diff --git a/tools/testing/selftests/cgroup/test_cpuset.c b/tools/testing/selftests/cgroup/test_cpuset.c
+index c5cf8b56ceb8..8b4c4a9dd78b 100644
+--- a/tools/testing/selftests/cgroup/test_cpuset.c
++++ b/tools/testing/selftests/cgroup/test_cpuset.c
+@@ -1,7 +1,13 @@
+ // SPDX-License-Identifier: GPL-2.0
  
--	/* used later by cpuset_attach() */
--	attach_ctx.old_cs = task_cs(cgroup_taskset_first(tset, &css));
--	oldcs = attach_ctx.old_cs;
--	cs = css_cs(css);
--
-+	oldcs = NULL;
- 	mutex_lock(&cpuset_mutex);
-+	attach_ctx.old_cs = NULL;	/* Used later in cpuset_attach_task() */
- 	attach_ctx.cpus_updated = false;
- 	attach_ctx.mems_updated = false;
++#define _GNU_SOURCE
++#include <assert.h>
+ #include <linux/limits.h>
++#include <pthread.h>
++#include <sched.h>
+ #include <signal.h>
++#include <sys/syscall.h>
++#include <unistd.h>
  
--	/* Check to see if task is allowed in the cpuset */
--	ret = cpuset_can_attach_check(cs, oldcs, &setsched_check);
--	if (ret)
--		goto out_unlock;
--
- 	/*
- 	 * The attach_ctx.old_cs is used mainly by cpuset_migrate_mm() to get
- 	 * the old_mems_allowed value. There are two ways that many-to-one
-@@ -3164,17 +3156,30 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 	 * of child cpusets must always be a subset of the parent. So no real
- 	 * page migration will be necessary no matter which child cpuset is
- 	 * selected as attach_ctx.old_cs.
-+	 *
-+	 * For a v2 threaded subtree where cpuset isn't enabled in some of the
-+	 * cgroups, it is possible that oldcs == cs for some of the tasks.
-+	 * In this case, we can skip checking on those tasks as there is no
-+	 * actual migration wrt cpuset.
- 	 */
- 	cgroup_taskset_for_each(task, css, tset) {
- 		struct cpuset *new_oldcs = task_cs(task);
+ #include "kselftest.h"
+ #include "cgroup_util.h"
+@@ -232,6 +238,242 @@ static int test_cpuset_perms_subtree(const char *root)
+ 	return ret;
+ }
  
-+		cs = css_cs(css);
- 		if (new_oldcs != oldcs) {
- 			oldcs = new_oldcs;
-+			if (oldcs == cs)
-+				continue;
-+			if (!attach_ctx.old_cs)
-+				attach_ctx.old_cs = oldcs;
- 			ret = cpuset_can_attach_check(cs, oldcs, &setsched_check);
- 			if (ret)
- 				goto out_unlock;
- 		}
- 
-+		if (oldcs == cs)
-+			continue;
++static int get_cpu_affinity(cpu_set_t *mask)
++{
++	CPU_ZERO(mask);
++	return sched_getaffinity(0, sizeof(*mask), mask);
++}
 +
- 		ret = task_can_attach(task);
- 		if (ret)
- 			goto out_unlock;
-@@ -3312,6 +3317,14 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 	attach_ctx.task_work_queued = false;
- 	guarantee_online_mems(cs, &attach_ctx.nodemask_to);
- 
-+	/*
-+	 * attach_ctx.old_cs can only be NULL if no task is actually migrating.
-+	 * This is highly unlikely. If it happens at all, there is nothing we
-+	 * need to do here.
-+	 */
-+	if (unlikely(!attach_ctx.old_cs))
-+		goto out;
++static int cpu_set_equal(cpu_set_t *dst, unsigned long mask)
++{
++	cpu_set_t expected;
 +
- 	/*
- 	 * In the default hierarchy, enabling cpuset in the child cgroups
- 	 * will trigger a cpuset_attach() call with no change in effective cpus
++	CPU_ZERO(&expected);
++	assert(sizeof(mask) < CPU_SETSIZE);
++
++	for (int cpu = 0; cpu < sizeof(mask); ++cpu)
++		if ((1UL << cpu) & mask)
++			CPU_SET(cpu, &expected);
++
++	return CPU_EQUAL(&expected, dst);
++}
++
++enum test_phase {
++	AFFINITY_SETUP,
++	AFFINITY_THREAD_A_READY,
++	AFFINITY_THREADS_READY,
++	AFFINITY_CONTROLLER_DISABLED,
++	AFFINITY_COMPLETE,
++	AFFINITY_ERROR
++};
++
++struct thread_args {
++	const char *cgroup;
++	cpu_set_t *affinity_before;
++	cpu_set_t *affinity_after;
++	enum test_phase ready_phase;
++};
++
++static pthread_mutex_t test_mutex = PTHREAD_MUTEX_INITIALIZER;
++static pthread_cond_t test_cond = PTHREAD_COND_INITIALIZER;
++static enum test_phase test_phase;
++
++static void *affinity_thread_fn(void *arg)
++{
++	struct thread_args *args = (struct thread_args *)arg;
++
++	if (cg_enter_current_thread(args->cgroup))
++		goto fail;
++
++	if (get_cpu_affinity(args->affinity_before) != 0)
++		goto fail;
++
++	pthread_mutex_lock(&test_mutex);
++	if (test_phase < args->ready_phase)
++		test_phase = args->ready_phase;
++	pthread_cond_broadcast(&test_cond);
++
++	while (test_phase < AFFINITY_CONTROLLER_DISABLED)
++		pthread_cond_wait(&test_cond, &test_mutex);
++	pthread_mutex_unlock(&test_mutex);
++
++	if (get_cpu_affinity(args->affinity_after) != 0)
++		goto fail;
++
++
++	return NULL;
++
++fail:
++	pthread_mutex_lock(&test_mutex);
++	test_phase = AFFINITY_ERROR;
++	pthread_cond_broadcast(&test_cond);
++	pthread_mutex_unlock(&test_mutex);
++	return NULL;
++}
++
++/*
++ * Test that disabling cpuset controller properly updates thread affinity.
++ *
++ * This test exposes a bug in cpuset_attach() where threads in child cgroups
++ * don't get their affinity updated when the cpuset controller is disabled.
++ *
++ * Setup:
++ * - Create parent cgroup with cpuset.cpus=0-1
++ * - Create child A with cpuset.cpus=0-1
++ * - Create child B with cpuset.cpus=1
++ * - Place multithreaded process: group leader + thread_a in A, thread_b in B
++ * - Disable cpuset controller on parent
++ *
++ * Expected: thread_b's affinity should expand from {1} to {0-1}
++ * Buggy: thread_b's affinity remains {1}
++ */
++static int test_cpuset_affinity_on_controller_disable(const char *root)
++{
++	char *parent = NULL, *child_a = NULL, *child_b = NULL;
++	pthread_t thread_a, thread_b;
++	int thread_a_created = 0, thread_b_created = 0;
++	cpu_set_t affinity_a_before, affinity_a_after;
++	cpu_set_t affinity_b_before, affinity_b_after;
++	int ret = KSFT_FAIL;
++
++	parent = cg_name(root, "cpuset_affinity_test");
++	if (!parent)
++		goto cleanup;
++	if (cg_create(parent))
++		goto cleanup;
++	if (cg_write(parent, "cgroup.type", "threaded"))
++		goto cleanup;
++
++	child_a = cg_name(parent, "A");
++	if (!child_a)
++		goto cleanup;
++	if (cg_create(child_a))
++		goto cleanup;
++	if (cg_write(child_a, "cgroup.type", "threaded"))
++		goto cleanup;
++
++	child_b = cg_name(parent, "B");
++	if (!child_b)
++		goto cleanup;
++	if (cg_create(child_b))
++		goto cleanup;
++	if (cg_write(child_b, "cgroup.type", "threaded"))
++		goto cleanup;
++
++	/* Now enable cpuset controller in parent */
++	if (cg_write(parent, "cgroup.subtree_control", "+cpuset")) {
++		ret = KSFT_SKIP;
++		goto cleanup;
++	}
++
++	/* Set CPU affinity constraints */
++	if (cg_write(parent, "cpuset.cpus", "0-1"))
++		goto cleanup;
++	if (cg_write(child_a, "cpuset.cpus", "0-1"))
++		goto cleanup;
++	if (cg_write(child_b, "cpuset.cpus", "1"))
++		goto cleanup;
++
++	/* Move group leader (main thread) to child A */
++	if (cg_enter_current(child_a))
++		goto cleanup;
++
++	/* Create threads - they will move themselves to their respective cgroups */
++	test_phase = AFFINITY_SETUP;
++
++	struct thread_args args_a = {
++		.cgroup = child_a,
++		.affinity_before = &affinity_a_before,
++		.affinity_after = &affinity_a_after,
++		.ready_phase = AFFINITY_THREAD_A_READY,
++	};
++	if (pthread_create(&thread_a, NULL, affinity_thread_fn, &args_a))
++		goto cleanup;
++	thread_a_created = 1;
++
++	struct thread_args args_b = {
++		.cgroup = child_b,
++		.affinity_before = &affinity_b_before,
++		.affinity_after = &affinity_b_after,
++		.ready_phase = AFFINITY_THREADS_READY,
++	};
++	if (pthread_create(&thread_b, NULL, affinity_thread_fn, &args_b))
++		goto cleanup_threads;
++	thread_b_created = 1;
++
++	pthread_mutex_lock(&test_mutex);
++	while (test_phase < AFFINITY_THREADS_READY)
++		pthread_cond_wait(&test_cond, &test_mutex);
++
++	/* If a thread failed during setup, bail out */
++	if (test_phase == AFFINITY_ERROR) {
++		pthread_mutex_unlock(&test_mutex);
++		goto cleanup_threads;
++	}
++	pthread_mutex_unlock(&test_mutex);
++
++	if (!cpu_set_equal(&affinity_a_before, 0x3)) {
++		ksft_print_msg("FAIL: thread_a initial affinity incorrect\n");
++		goto cleanup_threads;
++	}
++
++	if (!cpu_set_equal(&affinity_b_before, 0x2)) {
++		ksft_print_msg("FAIL: thread_b initial affinity incorrect\n");
++		goto cleanup_threads;
++	}
++
++	/* Disable cpuset controller - this should trigger affinity update */
++	if (cg_write(parent, "cgroup.subtree_control", "-cpuset"))
++		goto cleanup_threads;
++
++	/* Signal threads to save their final affinity and exit */
++	pthread_mutex_lock(&test_mutex);
++	test_phase = AFFINITY_CONTROLLER_DISABLED;
++	pthread_cond_broadcast(&test_cond);
++	pthread_mutex_unlock(&test_mutex);
++
++	pthread_join(thread_a, NULL);
++	pthread_join(thread_b, NULL);
++
++	/* Verify thread affinities AFTER disabling controller */
++	if (!cpu_set_equal(&affinity_a_after, 0x3)) {
++		ksft_print_msg("FAIL: thread_a final affinity incorrect\n");
++		goto cleanup;
++	}
++
++	if (!cpu_set_equal(&affinity_b_after, 0x3)) {
++		ksft_print_msg("FAIL: thread_b affinity did not expand to {0-1}\n");
++		goto cleanup;
++	}
++
++	ret = KSFT_PASS;
++	goto cleanup;
++
++cleanup_threads:
++	pthread_mutex_lock(&test_mutex);
++	test_phase = AFFINITY_COMPLETE;
++	pthread_cond_broadcast(&test_cond);
++	pthread_mutex_unlock(&test_mutex);
++
++	if (thread_a_created)
++		pthread_join(thread_a, NULL);
++	if (thread_b_created)
++		pthread_join(thread_b, NULL);
++
++cleanup:
++	/* Move back to root before cleanup */
++	cg_enter_current(root);
++
++	cg_destroy(child_b);
++	free(child_b);
++	cg_destroy(child_a);
++	free(child_a);
++	cg_destroy(parent);
++	free(parent);
++
++	return ret;
++}
++
+ 
+ #define T(x) { x, #x }
+ struct cpuset_test {
+@@ -241,6 +483,7 @@ struct cpuset_test {
+ 	T(test_cpuset_perms_object_allow),
+ 	T(test_cpuset_perms_object_deny),
+ 	T(test_cpuset_perms_subtree),
++	T(test_cpuset_affinity_on_controller_disable),
+ };
+ #undef T
+ 
 -- 
 2.55.0
 
