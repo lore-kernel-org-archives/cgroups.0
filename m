@@ -1,101 +1,58 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955E319A2A3
-	for <cgroups@vger.kernel.org>; Sun, 12 Jul 2026 02:03:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 197CE282F16
+	for <cgroups@vger.kernel.org>; Sun, 12 Jul 2026 15:01:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783821794; cv=none; b=reh0L4boVUjsvd35iUGQOtKejbEfCLaqO7kEuXL2zCSxARC5jsCnEDDFCmW1KwPbeah24BQkw7HHKRj5Wy1har0J+DssHy+kSbbNGVbAZARSU9YLPnk5IEgLPSGbhfLM5gULirJzt8eCQ0khSvS1F0hUyWWGuSmtCyhHx9H7WlQ=
+	t=1783868503; cv=none; b=bExqrb+ViYcWuTeslwyp29anfc5IWbIfWylgToblCifaOQsNDBoCI+Cv6tZuPDkmnR4Wz2X5Q4mVYMF0MAyL17OzemoZOM9RTdKQljxjPwxfrg4AnP7UaZevxVFVCN9Wuh2c8TBZZlBiRvOXv4o7qxlRJkHjmcdaX199/SipTgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783821794; c=relaxed/simple;
-	bh=gIrRZGFvpVg+UI8MnfnRXQS4xGe7DQbe0oX3Iu9S+ak=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dfOwN9pWKtek92UHJyCh1ezrQ72WnpLLF1ktGX/t2xdUltHDzcwbPMYMwvWReM0eVtbcd8EAvAPV5H9/L57peNiQ/YloS2Wziw0auA4mXYzZ07iFodEUnBITndWY5+rqu/sU3/8lteTwUswvLKVPRIrxaeKT8N9A34s2Ob2jzsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lWmuiV2p; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783868503; c=relaxed/simple;
+	bh=P5ocRm25zAG+HxZL+Y6QENHLjkKhN2fEWajfcsIde8A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=n33hlPLKmsqh4XaYp7idSumT/Ss0JI3m+Z7kM4YPAUk/z1qoiZduu5NXVyEYbNL4OnasbsKXPl+ZVplbnrZdeQDVe6/Cuwohv2BezSLyNYui260S3gkFxX+yQFlX20m8o/CZLj+VP/ZSO/ZZdT38eq/F48uJVX+0j4wwwOm4ges=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IHLCpuqA; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lWmuiV2p"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2caa0551d8bso7131695ad.2
-        for <cgroups@vger.kernel.org>; Sat, 11 Jul 2026 19:03:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783821793; x=1784426593; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=8AEc8nE6deo8T6dPEpOX1aaF1DO5pjrQkwlE8uC4Jqs=;
-        b=lWmuiV2pB6MX4xElQoR1oE2nG9A7+QSFnoIxcL6oCahmMMVRL3E0O+swaI7AcMai3D
-         sfaZCFbWEVpg/f2ytekAfQCzzFP6+JHDdN2i3rVuguCpECzISXiWhGMop8vKUNj5KaI9
-         UWItKKuN+rYQ/IG0aWXmmvLanLyhTh0PMPKThPOLJc2YrljvH0Hkdq4ZHU8J5OAkLcZR
-         GYCZf6F29xSu8ITWSuG8YDKpxAZgRHV27aJkR0abOu252Sfredd0zG8iTkHfb38ZKXvq
-         ibMPbF5jbuyiLPKlkeHKBjWps5F6qD/knGgSq3GNmoa8FNt3mL5ab+SxDQYsdTpj2ZCR
-         pz3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783821793; x=1784426593;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=8AEc8nE6deo8T6dPEpOX1aaF1DO5pjrQkwlE8uC4Jqs=;
-        b=se8zVILOxP927NBe8J3Ya3GLwCLUpjebdzsOcrJ23r4P+/Rn36jeLZu2kMtgb+3PGg
-         1rujWxeKwr5V5YL0PFpvWBszTT4ThEMNhPBhjVmPcmeAK6rIhA1D2VVkTJmiGs6isndV
-         663lTcYYq/OLUTSytw2mdaWixxgYpNjKEeBFHD4wzjgeQHQFoIyrdeR2cdFfmFgNkOPB
-         zA78u++CCOM6FjpdmymhmkYIb7cAOPnoLD6BSBAtQxsMJpMl9DH6J6kR2yq8iHZ8pZCe
-         D4Ks5KyLti38zDOUEOicN5AJAF+GH6q4nkZCF7WgLCouNgIuw6sPgv7y8VcpY5NEvCF+
-         rhUg==
-X-Forwarded-Encrypted: i=1; AHgh+RoI/KbViHDiQvh0Dj0FqaYP7wIbxyiKx14yHMR6GbzW0lgzoNfSTbYdAxhgu0Ia4Xm7h9mtvrr5@vger.kernel.org
-X-Gm-Message-State: AOJu0YyI+kwpZq5tliG6CWoGqwgw8mZpx026Aw2dR/5EqsWlifgT/dAy
-	bTTVqKeiDVq8u+JsqmylUH30kE6vRzyp1bDLb1zrToasgRDlbz7j+HaC
-X-Gm-Gg: AfdE7ckHpIgiPS52ZYEIJuuK+qPafFHzqPI6t4k90bqQ7/AzcRLYUO/KwGu6RJGodax
-	01WOatEpLWvVShgvBxJwWeDprj+L7SfKOGlsCpp13u6sxTzxrG1uvN0BRyO14ZXcpUVs2xFYl+J
-	jGVDN+XGOIZTRpvoCL7+MzoatjRWjUzS1d0773iEzrt9P7Gq2CfJMTgWXpRr/Rx7ezgTjiTaLV5
-	0WbcqjpnCnDR5SogTUVZjcgUrJvsApRCqD4mTK4aXOHKoC/EakZO6STjG8AnU+kYxLG2S2/nrqx
-	Qo4eo9BpHgQ9FQm+DBGCNT+shfZaPoziEexg4KS01MGRGTKLBaZEZIvI4pWu4pYgOIl+iwXRtn0
-	41G+ftgDu/xG956i+cH8ZslbAE/bUtqBdnyn8UKcWnhmpl4l+CVoaVQ3shqLxAmEXR0zYYAeS2n
-	LRWP6NPS0JmHPCNrFEv47Sk6wzeEF3su7AkpxKZPe1v54OPTcYv90qs+ZylJMfoxFFJTUA0Ha7D
-	sZd
-X-Received: by 2002:a17:902:ebc8:b0:2cc:9d9:b8df with SMTP id d9443c01a7336-2ce9f187200mr35725535ad.5.1783821792749;
-        Sat, 11 Jul 2026 19:03:12 -0700 (PDT)
-Received: from debian.lan ([60.177.121.15])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9bdb56fsm80691555ad.15.2026.07.11.19.03.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 11 Jul 2026 19:03:12 -0700 (PDT)
-From: Xueyuan Chen <xueyuan.chen21@gmail.com>
-To: baolin.wang@linux.alibaba.com
-Cc: xueyuan.chen21@gmail.com,
-	akpm@linux-foundation.org,
-	linux-mm@kvack.org,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IHLCpuqA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1783868501;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=WJYwqagu9WHsJWgv4HkLcS30bz2gxDzF3vSIDOR0Q8M=;
+	b=IHLCpuqAqJqpfCYmUJwMHzT+bD22Qgk8ZX5dUoQy0/b7UuWvXkkKWvmT9Ms+lcjVfZaAzq
+	wsev6DOFgn3e2j1a8sFh83DSAXhK4oXRuKeUmyvKdFgaXTddYHPfEJrq8WoaB57jlsxJeP
+	ViTl7KEfzcwsY/xPEM7j9h0iPuwKD3c=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-30-TeR0nH3tPUexB58C00cFJw-1; Sun,
+ 12 Jul 2026 11:01:37 -0400
+X-MC-Unique: TeR0nH3tPUexB58C00cFJw-1
+X-Mimecast-MFC-AGG-ID: TeR0nH3tPUexB58C00cFJw_1783868496
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B04771955DD2;
+	Sun, 12 Jul 2026 15:01:35 +0000 (UTC)
+Received: from llong-thinkpadp1gen5.rmtusnh.csb (unknown [10.22.80.43])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AC0AA3000B50;
+	Sun, 12 Jul 2026 15:01:33 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	baohua@kernel.org,
-	zhaonanzhe@xiaomi.com,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	chrisl@kernel.org,
-	kasong@tencent.com,
-	shikemeng@huaweicloud.com,
-	nphamcs@gmail.com,
-	bhe@redhat.com,
-	youngjun.park@lge.com,
-	david@kernel.org,
-	ljs@kernel.org,
-	liam@infradead.org,
-	vbabka@kernel.org,
-	rppt@kernel.org,
-	surenb@google.com,
-	qi.zheng@linux.dev,
-	axelrasmussen@google.com,
-	yuanchu@google.com,
-	weixugc@google.com
-Subject: Re: [RFC PATCH v2 3/3] mm/vmscan: avoid pointless large folio splits without swap
-Date: Sun, 12 Jul 2026 10:03:03 +0800
-Message-ID: <20260712020303.326384-1-xueyuan.chen21@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <7ec7533f-e1dc-4236-99cc-6848d651976e@linux.alibaba.com>
-References: <7ec7533f-e1dc-4236-99cc-6848d651976e@linux.alibaba.com>
+	linux-kselftest@vger.kernel.org,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH-next v2 0/3] cgroup/cpuset: Support multiple destination cpusets for cpuset_*attach()
+Date: Sun, 12 Jul 2026 11:01:24 -0400
+Message-ID: <20260712150127.236790-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -104,71 +61,38 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
+ v2:
+  - Make sure that attach_ctx.old_cs won't be set to a source cpuset that is
+    also the destination cpuset.
 
-On Fri, Jul 10, 2026 at 03:21:44PM +0800, Baolin Wang wrote:
->
->
->On 7/9/26 10:51 PM, Xueyuan Chen wrote:
->> From: "Barry Song (Xiaomi)" <baohua@kernel.org>
->> 
->> When swap is disabled, exhausted, or unavailable due to memcg swap
->> limits, splitting a large anonymous folio cannot make swapout progress.
->> The fallback only destroys the large folio and inflates split statistics.
->> 
->> Use -E2BIG from folio_alloc_swap() as the explicit signal that splitting
->> the folio might allow swapout of smaller pieces. For other allocation
->> failures, keep the existing activation path and avoid the split.
->> 
->> This preserves the split fallback for fragmented or partially available
->> swap, while avoiding it when there is no backing space for any part of the
->> folio.
->> 
->> Reported-by: Nanzhe Zhao <zhaonanzhe@xiaomi.com>
->> Signed-off-by: Barry Song (Xiaomi) <baohua@kernel.org>
->> ---
->>   mm/vmscan.c | 7 +++++--
->>   1 file changed, 5 insertions(+), 2 deletions(-)
->> 
->> diff --git a/mm/vmscan.c b/mm/vmscan.c
->> index bd1b1aa12581..40340a88f78e 100644
->> --- a/mm/vmscan.c
->> +++ b/mm/vmscan.c
->> @@ -1260,6 +1260,8 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
->>   		 */
->>   		if (folio_test_anon(folio) && folio_test_swapbacked(folio) &&
->>   				!folio_test_swapcache(folio)) {
->> +			int ret;
->> +
->>   			if (!(sc->gfp_mask & __GFP_IO))
->>   				goto keep_locked;
->>   			if (folio_maybe_dma_pinned(folio))
->> @@ -1278,10 +1280,11 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
->>   				    split_folio_to_list(folio, folio_list))
->>   					goto activate_locked;
->>   			}
->> -			if (folio_alloc_swap(folio)) {
->> +			ret = folio_alloc_swap(folio);
->> +			if (ret) {
->>   				int __maybe_unused order = folio_order(folio);
->>   
->> -				if (!folio_test_large(folio))
->> +				if (!folio_test_large(folio) || ret != -E2BIG)
->>   					goto activate_locked_split;
->
->Like I said in v1 [1], please apply the same change to shmem swap as well.
->
->[1] 
->https://lore.kernel.org/all/6e89f868-ca7a-484f-aeea-5d8d029714f2@linux.alibaba.com/
->
+ v1: https://lore.kernel.org/lkml/20260711020540.176740-1-longman@redhat.com
+  
+This is a follow-up patch series to [1] to properly handle a special case
+for cpuset task migration operation where the source and destination
+cpusets are the same. Patch 1 handle this special cases by skipping
+tasks are not migrating with respect to cpuset. Patch 2 enables
+cpuset_*attach() to handle the case where thare many destination cpusets
+which when a cpuset controller is enabled. Patch 3 adds a new test case
+into test_cpuset to test proper handling of cpu affinity when cpuset
+controller is disabled.
 
-Hi Baolin,
+[1] https://lore.kernel.org/lkml/20260702214757.579012-1-longman@redhat.com
 
-Thanks for pointing this out, and sorry for missing your v1 comment.
+Michal Koutný (1):
+  selftests/cgroup: Add test for cpuset affinity on controller disable
 
-I'll apply the same folio_alloc_swap() error handling to the shmem swap
-path in the next version.
+Waiman Long (2):
+  cgroup/cpuset: Handle the special case of non-moving tasks in
+    cpuset_can_attach()
+  cgroup/cpuset: Support multiple destination cpusets for
+    cpuset_*attach()
 
-Thanks,
-Xueyuan
+ kernel/cgroup/cpuset.c                       | 131 ++++++----
+ tools/testing/selftests/cgroup/test_cpuset.c | 243 +++++++++++++++++++
+ 2 files changed, 321 insertions(+), 53 deletions(-)
+
+-- 
+2.55.0
 
