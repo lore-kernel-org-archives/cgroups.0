@@ -1,234 +1,104 @@
-Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F690346E40
-	for <cgroups@vger.kernel.org>; Sun, 12 Jul 2026 22:51:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C279F38D403
+	for <cgroups@vger.kernel.org>; Sun, 12 Jul 2026 23:55:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783896664; cv=none; b=iJ1aVJViGzJV6+dFvWJX+fJy4XE7dvs84CTGWA7mPASstYtHiYAur1/ardk2lU7L7cmzzOYMmrqBh65lIRBQtA8do9wgXjBToYrkmbkURMCkYiEzvfOPC8voUt56u5Ko4qQSSniGSC61ZHVTP9t4lio39Guq7le98cXt+mPhQvQ=
+	t=1783900530; cv=none; b=hu5LeFVBll+He0p/jfzctn0lIIPBFaAWx1H3AXBWELGAWUzSxyzqKRzPCZ8ore5MEfGQfJT8HBi4nn7lY/B8ebWjOj424UyKUb4PBFRHmSpRStwP4YzcEF0NnQ/nhc9N2tTSdo9cceqJWukJkXY2JhqUpJtPKAwrcc4lOd/FBcA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783896664; c=relaxed/simple;
-	bh=Lvl9qfl/E52K7QLGUBXDQqfvmlRKuGOCnos3jpYClP4=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=nxmVk4hpQWvaHQ77OHfCMKXYs5sl/qXUSH1JM/X/BquFp9RD8gALL5RvnJ9C19LOeim0Vst/GfqJWGL3y7bOnq+VrAv6/y5eaG/4xAl8MPZakxixzTxdiw8bYUy9+LF5gRJlBf9SK5wEEuzzCjVGHjbhprUTfah3qKIiYqe4HhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RwNt9zUz; arc=none smtp.client-ip=209.85.128.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783900530; c=relaxed/simple;
+	bh=kwRCKDD4F+AfEtwUC3jmEbXgGCevYPrnBsdRrQF7trM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=n7ux3Oy73vCKa0gqTTVAJYYOGznAlqTDiOkj7v3a88IBr7qpQaNEclQoQx0iUqtdDYYRVnCWcXmGbSoSxhuGAjRDyXYtaHf12Q/t/Zyz6WW70JC7V4txFoMYrZuxXCXUjQu33afnfA9EubCBrjlkGD8jrnH+ndsk74rtB7YAi+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JSPTwaGh; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RwNt9zUz"
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-81e69a2db34so38026297b3.0
-        for <cgroups@vger.kernel.org>; Sun, 12 Jul 2026 15:51:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783896662; x=1784501462; darn=vger.kernel.org;
-        h=content-type:autocrypt:content-language:cc:to:subject:from
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=TJc6i8enkbXcBPC7Ck8EluErz+n+7CzeRLxf3P6RurQ=;
-        b=RwNt9zUz0yaOfH+upf7GRErYU9ZheAc7V+lYP0BXPm+35CbZ9lIdXnsozYcxUek7HM
-         Snt+TicFcQkhh8CazuXfkwa5lTM6jsUeH7AQYVD/st6vPA1QrDLl7VPG+KUHi5VN1qRB
-         vJpUEBzy5pySnuiwK33UROJ8VmJj0ayk0eBl3cFXGkO2SlhSWFBmIttLlgfPxkGJpSJn
-         0jgH2AZGgo91TmVxp/byhPo1TsSsU05ucgOYb3k+7PY6wiRMq4dS2o1CidzVHi62pRk8
-         3nE6aQk8LMMo342D6E037kBkDP2u38Y33JQtzxILXEaCxbYEAYE9H+SQ/tpyspmpLFIl
-         gBLg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783896662; x=1784501462;
-        h=content-type:autocrypt:content-language:cc:to:subject:from
-         :user-agent:mime-version:date:message-id:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TJc6i8enkbXcBPC7Ck8EluErz+n+7CzeRLxf3P6RurQ=;
-        b=arvdeIK+SCnqJWpBTM/6LpKRp/IQCxT06W9ai95mS9zCKrQOhsX0YCKijd/hduT9tl
-         2ZT1Jl6SJ8BNj4JJmn5lLzFORq7FtBxNg++pfqBZiZuDZZDof2Guzw0DZ8W/cLMCdSjy
-         GP01NDbeMUNDuQLQbsrhAYYNDUSfAcCmPf8LD3sbzUU+Uv8zjMRMoZ7BWdZjNM9QXIR+
-         587hTGJyUAMspAdvduOWUf+W9WntLiySOHI8iKtbhnw//B83A/2fRb08eOSZKiGY88Tg
-         Jv23iUaJz8d5EQFIUfhFCjZeC1P2z3f8CehY0WmM1h+oflryRb1Y5uCN+5RftKNiylhU
-         7W8Q==
-X-Gm-Message-State: AOJu0Yw0nNkb9qpb7kipPTxeUdveyZfnyxDITyjkR7pKXuIel36JEDpQ
-	6AgnJCQ5aSiCZMeXrJZd58HIOVLxvPlzyh/cX5qL77SpBGVOrXCm/JhpoZhzvQ==
-X-Gm-Gg: AfdE7cmTQQzksp3hgpp6GTc0k5nWBBZ3qaI/X4bHAESFP4po4WtqFrBTv8XW9EpLtNx
-	XpR4CrLqPduuqqgUNFVsFlAFSPQvnrYY9BWa01af8TN1YYb3SwgQBseDIwtPa4+qw+Opt4ikE3W
-	G498WZL6NYJ0mrwbtLUI8sVPuT2uLbX32dURYaNWn+QbpaxfKkjj3GImpV0iBt9ge1eith4SyqZ
-	Q9RBWh5Y9rswpWG6HvdqRXFLdaKVlk99sSCRnNFhq2S3Cnn61Ucwr8b8kfWZ8xuF1jgIwrrVARw
-	KSw6/Ml4obD6Dq9XlJJHLI+WrRmwQNlWyLfEvC/47F0wRyINbYUH10ZaVr2XSKLeVt1Dyirz+/S
-	fGpXMy7rlEp2BY2p83zH78bWYiOmRpzLB5qyhbYXTvandAAbRMIcfA2zkcJwFAumoTW6uW64428
-	I5d3q9S6FNxJzrA1E=
-X-Received: by 2002:a05:690c:4b90:b0:81d:78e2:2a8b with SMTP id 00721157ae682-81e90030f47mr51404197b3.7.1783896662234;
-        Sun, 12 Jul 2026 15:51:02 -0700 (PDT)
-Received: from [10.138.10.6] ([185.98.168.14])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-81e6be98397sm100947477b3.6.2026.07.12.15.51.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 12 Jul 2026 15:51:01 -0700 (PDT)
-Message-ID: <d83a6cc2-73bf-46fd-9ec2-abd667828d6e@gmail.com>
-Date: Sun, 12 Jul 2026 18:50:57 -0400
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JSPTwaGh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1783900528;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=UwiA5rvBHZcYdpl7FN/brlqf6KRR5zlUzix9hOp1j4c=;
+	b=JSPTwaGhGCO6BMyKYeZA7vwkAjOK/oJsJLsY8jO94lIoefSxArZLu50QGaFR1PIFPnIBYL
+	B8l+1JMwsI1tnqYNMVl6YKG3x/VXwnPkbpSiwjDTSQD+GQavGfTPReQQ0/ZCcQ/gwifPty
+	yfO77l4+cn/DNN6zQplsZnXjBClNjvs=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-227-ydoQKEeNMo6Q02EWJQv39w-1; Sun,
+ 12 Jul 2026 19:55:24 -0400
+X-MC-Unique: ydoQKEeNMo6Q02EWJQv39w-1
+X-Mimecast-MFC-AGG-ID: ydoQKEeNMo6Q02EWJQv39w_1783900523
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BCE4A1956089;
+	Sun, 12 Jul 2026 23:55:22 +0000 (UTC)
+Received: from llong-thinkpadp1gen5.rmtusnh.csb (unknown [10.22.80.43])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DC3F91956053;
+	Sun, 12 Jul 2026 23:55:20 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH-next v3 0/3] cgroup/cpuset: Support multiple destination cpusets for cpuset_*attach()
+Date: Sun, 12 Jul 2026 19:55:07 -0400
+Message-ID: <20260712235510.373125-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Demi Marie Obenour <demiobenour@gmail.com>
-Subject: Implementing a control group manager that isn't a persistent daemon
-To: Linux cgroups development <cgroups@vger.kernel.org>
-Cc: Alyssa Ross <hi@alyssa.is>,
- Spectrum OS Development <devel@spectrum-os.org>
-Content-Language: en-US
-Autocrypt: addr=demiobenour@gmail.com; keydata=
- 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
- +MYSfkEjBz0E8CLOcAw7JIwAaeBT
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------m95a235L8206E0EafVABCIbB"
-
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------m95a235L8206E0EafVABCIbB
-Content-Type: multipart/mixed; boundary="------------E5nSkM05pLhFvO3uMbWqDQjK";
- protected-headers="v1"; hp="clear"
-Message-ID: <d83a6cc2-73bf-46fd-9ec2-abd667828d6e@gmail.com>
-Date: Sun, 12 Jul 2026 18:50:57 -0400
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Demi Marie Obenour <demiobenour@gmail.com>
-Subject: Implementing a control group manager that isn't a persistent daemon
-To: Linux cgroups development <cgroups@vger.kernel.org>
-Cc: Alyssa Ross <hi@alyssa.is>,
- Spectrum OS Development <devel@spectrum-os.org>
-Content-Language: en-US
-Autocrypt: addr=demiobenour@gmail.com; keydata=
- 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
- +MYSfkEjBz0E8CLOcAw7JIwAaeBT
-
---------------E5nSkM05pLhFvO3uMbWqDQjK
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Hello!
+ v3:
+  - Swap the first 2 patches as the original patch 1 can introduce serious bug
+    without patch 2. Doing patch 2 first will be less problematic.
 
-I'm currently implementing a control group manager that isn't a
-persistent daemon.  Instead, it's a command-line tool.  The system
-I'm working on uses s6 instead of systemd, and s6 doesn't have native
-control group support.
+ v2: https://lore.kernel.org/lkml/20260712150127.236790-1-longman@redhat.com
+  - Make sure that attach_ctx.old_cs won't be set to a source cpuset that is
+    also the destination cpuset.
 
-The current plan is to offer a few options:
+ v1: https://lore.kernel.org/lkml/20260711020540.176740-1-longman@redhat.com
 
-1. Create a cgroup if it doesn't exist.  If it does, wait for it to
-   be empty.  Then execute a program in that cgroup.
+This is a follow-up patch series to [1] to properly handle a special case
+for cpuset task migration operation where the source and destination
+cpusets are the same.
 
-2. Create a program in a cgroup, without waiting for the cgroup to
-   be empty.
-  =20
-2. Kill all programs in a cgroup.
+Patch 1 enables cpuset_*attach() to handle the case where there are many
+destination cpusets from enabling cpuset controller. Patch 2 handles
+those tasks that have the same source and destination cpuset by skipping
+them as they are not migrating with respect to cpuset. Patch 3 adds a
+new test case into test_cpuset to test proper handling of cpu affinity
+when cpuset controller is disabled.
 
-Unfortunately, I'm not able to wait for a cgroup to become empty.
-I don't seem to be getting EPOLLPRI or EPOLLERR events.  What
-is the proper way to get those events?  Is there a kernel version
-with a bug in this area?
---=20
-Sincerely,
-Demi Marie Obenour (she/her/hers)
+[1] https://lore.kernel.org/lkml/20260702214757.579012-1-longman@redhat.com
 
+Michal Koutný (1):
+  selftests/cgroup: Add test for cpuset affinity on controller disable
 
+Waiman Long (2):
+  cgroup/cpuset: Support multiple destination cpusets for
+    cpuset_*attach()
+  cgroup/cpuset: Handle the special case of non-moving tasks in
+    cpuset_can_attach()
 
---------------E5nSkM05pLhFvO3uMbWqDQjK--
+ kernel/cgroup/cpuset.c                       | 131 ++++++----
+ tools/testing/selftests/cgroup/test_cpuset.c | 243 +++++++++++++++++++
+ 2 files changed, 321 insertions(+), 53 deletions(-)
 
---------------m95a235L8206E0EafVABCIbB
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+-- 
+2.55.0
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEopQtqVJW1aeuo9/sszaHOrMp8lMFAmpUGlEACgkQszaHOrMp
-8lNVkg//Xa8KQvJB6oSh/K1Ww3HmTYayegRNxDvQ+itoW4X7RUgIZHLHvouh1e1f
-Uyjqit/C9hyjQxqY6LV2ZjLP/q1MtINjYqXmTzDvfopKLMPEd17xTHBMJg9o9VqI
-7/jPb2E7/bWlX45SHU0EWWewZ8iMX16euLqT0pz1C2LmTYwjyCcP6X+hRFbJcTIy
-EA4sa8O5fe/485yFIG000GKRW/QGAirkG+eHAGYd/El83/k4Rzlv9QhQHZ9xhMkY
-98sZEAqUssouWLfseJMedMQWjqOAghiRs09NJz8D0oEdmrlsI/zR85CosFAuLOy3
-GFhuRZ1zur5LCe4mLRx06XNHpqBrrXUWg167bDeL7c6y0TpuWFPeJJLMe8x8ifuH
-wI3mhCNJ9/jA78q65FplztWPbe/455+ISauhReq940VQnwL9akfzqkRePPac8/df
-w+G6uuJExu5bD7+X9h87omqhmRUIdJB7TVfIUElOYOEILS/odsTo1BRgiWtr9JZo
-geS4/Soa8K2jJ8pexTaBWJ6UCTb4bbDrm5pqn9i1PYJsF7rGRI/Nu2Z6pFLX0xCN
-tMBQ4/efND+cHMWeNGzcXsyXZFcDpL1pjHI8XVyvM5T6pDZXueA5NwwnCuQ47SAl
-irplYPW+c+JVqKu8z8TX3oa+QfXlR0sj/cgzXKf4XkCxDsjm/+k=
-=z63Z
------END PGP SIGNATURE-----
-
---------------m95a235L8206E0EafVABCIbB--
