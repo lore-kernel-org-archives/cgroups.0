@@ -1,174 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57CEB31283E
-	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 19:57:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0604533A014;
+	Mon, 13 Jul 2026 21:29:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783972669; cv=none; b=NbBYq7RQ8C4aA3qoSpJ9lFAj5u6OgOrD7QyLvTKsssYsRuSjElkmHW0UFxJYxyyx8fl3MJT3uQ6slq9o8JgICau8aQtS2HA2Hm0y078iZ8QpBMy4winzSUd7+9eiUiHTrYnuHsE6V74UTzEcgWoEjnsZrC5rEHltJlRhkGbbUWc=
+	t=1783978153; cv=none; b=oOKLc9TbliIaUjTBB9HtZzUHDnDyQieQQdJHNZMXRtX/yFlpW9NYuJEPizabyZw2U1wHfvJ1nV1X5i4iPqOWFJY5c2sJVs5VIqoHsT6SBajTjF1bLkf+drRxdjL5NKZL1/HWNNJIie2ynRUUVhxSBHvlQtkOob2LVPEceLPUoWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783972669; c=relaxed/simple;
-	bh=Lb0u9083uAGrWjVRQ9Qk+A8Z+iONhqOvEGQOCQR578I=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gpmtBN6R99nmYxmhK1lGgBOO0SxF7Il3sAH9iKre6y/rWFhcobFupMyD8qKrEYikXlgYXCt0Bpab5S4B8Ca8YKZo4gJ/od2xqJuiBBnubpwIXCFBE7wXyz6b4n2RQHdRGIHIbOmZl6Q9At8GbLWSuhsg2nRamzNZlTm/8jW+3ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CZIKYpWk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783978153; c=relaxed/simple;
+	bh=j3d4cX8JIuQWaEIVaWXAmaK1H9qxgv0hzhQhA3RaqEY=;
+	h=Date:Message-ID:From:To:Cc:Subject; b=Q1P4L0HwtzMrLgHa3qyz+ADb6L2Z4klNizSC/erfxdYisnNRTejg2i6KiYpF+VLe501tJhTcGPLBOoJxbt7DwphvZpjLWilLQqYWEgZ3+9+04uRHdVKKJNa6Rm91B6DVOuJ0qusQsPSHo/KxFlJuwDpQI7EZBAnbqpqMxzVsCsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TF7EuoE+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CZIKYpWk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1576E1F01560
-	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 19:57:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TF7EuoE+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE5341F000E9;
+	Mon, 13 Jul 2026 21:29:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783972668;
-	bh=Lb0u9083uAGrWjVRQ9Qk+A8Z+iONhqOvEGQOCQR578I=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=CZIKYpWkmwL7fBz0EYJI/nWVVRo8dIncc2EbkWJWCc7zPOWJBom6lr6vTsp2/8ZUf
-	 WgtN82SoNrktYL/1fB3AW7AHfMED2SaWAWCOIJEZrY07ECr+wCuAd/QppjxLTCHEYt
-	 /LTBWOE4ToV+91i3OPXdPhbPtEBUoFLuSJtl5nhV2oM9FQxYyL+lY35V2vHIpvXhzy
-	 CdrK78U4870HwGn/Xb6Qw7bQOA3xOt5Zc7sF279cEpHvcisS1RvvqCX70/G5dlEvHX
-	 MlrqgRtohaaiyj0G8a8eg4HZa4GqlaE/3kfYVnX53IFMfvq5FhnR1f5yYbIR2qIQhH
-	 wb1AJLzkcB2HA==
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c1601d552a8so365040566b.2
-        for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 12:57:47 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Rp6Y3dsTHI3pqySVvtS60UL3onuqjfB9nHauPWfJreQS2k39PKKlR34qW0uUdMfCgntJAlR64yD@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBMHn9C2wqA/E7yy5kd4VmC10Zi6PwRAosF0tKzivaLnpP0q18
-	ZGoLixNdqImgLquRPLJau9tTB7ji8ttcN5y4JShfuX8Gdu5YlN6lqiQuxPYQWabT2VoWzyks3Tz
-	Rf7k6tkUMbiqcevJjJ4SGEpz8s4Ybigg=
-X-Received: by 2002:a17:907:c80f:b0:c16:f32:6ca3 with SMTP id
- a640c23a62f3a-c161f36ebb3mr490349366b.46.1783972666876; Mon, 13 Jul 2026
- 12:57:46 -0700 (PDT)
+	s=k20260515; t=1783978151;
+	bh=SbkrMH02T1vZtxsoRDtUjdNgFlPortPpeX6onzm/ojM=;
+	h=Date:From:To:Cc:Subject;
+	b=TF7EuoE+DBPNQAqKJgrNnoQN5XCOGiYu5raxKa09ISt6Wrhgn6R72U+QBLKxOql22
+	 1b+zPu4ywEUZ93/1BDPSweme4hMA648cY3+TNW0fhtrbZLtZ2P6aipt9FruNnr92Df
+	 VaL3F+UKdXeNf9iWagrfxpuFmgziDqnEkFQE12ul0StkqAoIzons6O0z2rkI3461iK
+	 94yHA1hLMt8xT+UbhRQ54lRzt5sp8BpjlKdEUhxbToZMYxTFqk3GPdsVC0PBm+3MfD
+	 BycEeDkjBH59Qqh1WsYeCGZh6fJQ69vhH1STYQgQstUoMZatljw80g5g37Fybbcm11
+	 cyK30ZF7GrcJg==
+Date: Mon, 13 Jul 2026 11:29:11 -1000
+Message-ID: <75e18325175b5439095c4248e0aa802d@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutný <mkoutny@suse.com>,
+	Waiman Long <longman@redhat.com>
+Subject: [GIT PULL] cgroup: Fixes for v7.2-rc3
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260713025644.170839-1-youngjun.park@lge.com>
- <CAO9r8zNJfhirbzvJzDWRaBQOM7XZcf_Jk0Bz=Y4dB4QK4W-MwQ@mail.gmail.com>
- <alUK8DWRy4LPxTpY@yjaykim-PowerEdge-T330> <CAO9r8zPvWKgQ8+ABxSnVnC452-enyMqCjBTA4pfNDVxsoJr25g@mail.gmail.com>
- <CACePvbX1U3pLRqCP-k9x9bvbn+sXCexnbqXjwXcdvwbH+qD6sA@mail.gmail.com>
- <CAO9r8zPtcne97wQKZFsNoMS-4zpTFvaA3EU8ghnEHPfwD28zoQ@mail.gmail.com>
- <CACePvbWOm3EL6Ph+A_NgAp80GcQt2N-qW1qbyxOVDL3EZSAh8g@mail.gmail.com>
- <CAO9r8zO4uW=SX7se154Z6+DrxfawZfAiRO6Ar5rUm3T78x5HUw@mail.gmail.com> <CACePvbX5oWcTRpQeBCQsod5C5KEhd-0vA4B1PGYddNfgTW2tvA@mail.gmail.com>
-In-Reply-To: <CACePvbX5oWcTRpQeBCQsod5C5KEhd-0vA4B1PGYddNfgTW2tvA@mail.gmail.com>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Mon, 13 Jul 2026 12:57:35 -0700
-X-Gmail-Original-Message-ID: <CAO9r8zNjouSvVABM4WhsXu8Uzcbd53gLEK0SXLeDMKJm1PeLJQ@mail.gmail.com>
-X-Gm-Features: AVVi8Cc2d5Jy4K-zB3uOZEByCUGAsFCJAB8Scukxi2qhgJNF_HV08DJxXMaC9aw
-Message-ID: <CAO9r8zNjouSvVABM4WhsXu8Uzcbd53gLEK0SXLeDMKJm1PeLJQ@mail.gmail.com>
-Subject: Re: [PATCH v10 0/6] mm/swap, memcg: Introduce swap tiers for cgroup
- based swap control
-To: Chris Li <chrisl@kernel.org>
-Cc: Youngjun Park <youngjun.park@lge.com>, akpm@linux-foundation.org, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kasong@tencent.com, 
-	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
-	shakeel.butt@linux.dev, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
-	baoquan.he@linux.dev, baohua@kernel.org, joshua.hahnjy@gmail.com, 
-	gunho.lee@lge.com, taejoon.song@lge.com, hyungjun.cho@lge.com, 
-	baver.bae@lge.com, her0gyugyu@gmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 13, 2026 at 12:39=E2=80=AFPM Chris Li <chrisl@kernel.org> wrote=
-:
->
-> On Mon, Jul 13, 2026 at 11:38=E2=80=AFAM Yosry Ahmed <yosry@kernel.org> w=
-rote:
-> >
-> > > > > Zswap will not be introduced as a tier. The existing user interfa=
-ce
-> > > > > makes zswap not exactly compatible with the tier ordering because=
- it
-> > > > > sits in front of every swapfile. If we change that, we break the =
-user
-> > > > > interface. I suggest we keep zswap working as it is now.
-> > > >
-> > > > The goal from making zswap a swap tier is to have a single framewor=
-k
-> > > > to configure swapping for a cgroup, instead of configuring zswap
-> > > > separately. Yes, zswap currently sits in front of all swap
-> > > > devices/tiers, but we are heading in the direction of changing that
-> > > > such that zswap is standalone, at which point it becomes more
-> > > > obviously a swap tier. If you want us to wait until that happens
-> > > > before adding zswap as a tier, I don't necessarily object, but I wa=
-nt
-> > > > to make sure that nothing will break if we add zswap as a tier late=
-r.
-> > >
-> > > I'm afraid your zswap user interface will have to break. I don't see =
-a
-> > > way around breaking your zswap user interface to fit the swap tiering=
-.
-> > > Once we move to the swap tier world, I don't think we should continue
-> > > using zswap.writeback to control the tier write back behavior. We wil=
-l
-> > > need to rethink this new world.
-> >
-> > I wasn't talking about the existing zswap interfaces. I want to make
-> > sure that if we introduce tiering initially without zswap as a tier,
-> > then add zswap as a tier, the semantics of tiering and user-visible
-> > zswap behavior doesn't break.
->
-> No, the user visible part of zswap must break because zswap currently
-> sits in front of every swapfile.
-> I don't see any other way around it.
+Hi Linus,
 
-If zswap becomes usable independent from a swapfile, it's mostly
-transparent to current users.
+The following changes since commit f0e6f20cb52b14c2c441f04e21cef0c95d498cac:
 
-> If you do know how zswap can interact with swap.tiers without breaking
-> the user interface, make a formal proposal and lay out all the
-> details. I did that exercise myself and I my conclusion is that it is
-> better to accept zswap is the classic behavior without burdening the
-> unified swap tier too much.
+  Merge tag 'ntfs3_for_7.2' of https://github.com/Paragon-Software-Group/linux-ntfs3 (2026-06-24 10:05:53 -0700)
 
-Today pages go to zswap, and when the limit is hit they get written
-back to a swap device. If zswap is a separate tier, pages will still
-go to zswap and then when the limit is hit they get written back to a
-swap device. In both cases, zswap writeback can be disabled.
+are available in the Git repository at:
 
-Can you share the findings from your exercise, and why zswap being a
-tier is a burden? Any specific examples?
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.2-rc3-fixes
 
->
-> > That being said, the existing zswap interfaces don't have to break
-> > with tiering, why do they? We may end up with redundant interfaces,
->
-> Because zswap does not have its own swap device, it borrows the swap
-> slot from the underlying swap device. That behavior is unique to zswap
-> and none of the other swap tiers have that.
+for you to fetch changes up to 97fef602584458b100d383afed9d176c0bc689ab:
 
-Yes, but we are heading in the direction of removing that restriction.
-But I also don't see the connection between that and the current
-interfaces breaking. Do you have any concrete examples?
+  Docs/admin-guide/cgroup-v2: note blkcg_debug_stats gates io.latency stats (2026-07-07 12:26:23 -1000)
 
->
-> > which is unfortunate, and we can work to deprecate some of them over
-> > time. But I don't see why we have to break them?
->
-> I don't want to special case the zswap for from the swap tiers.
+----------------------------------------------------------------
+cgroup: Fixes for v7.2-rc3
 
-Neither do I, but I fail to see where the special casing is, beyond
-the fact that zswap is not a swapfile but an in-memory swap.
+- A cpuset that never set its memory nodes could divide by zero when a
+  task's mempolicy rebinds on CPU hotplug. Rebind against the effective
+  nodes, which are always populated.
 
-> > > > An advantage of adding zswap as a tier right away is the proactive
-> > > > writeback use case. It naturally fits in the tiering framework as
-> > > > proactive demotion between swap tiers, which I expect may be useful=
- in
-> > > > non-zswap use cases as well. Without zswap as a tier, we'll have to
-> > > > use a different interface for proactive writeback, and then if/when
-> > > > zswap becomes a tier, we'll have multiple ways to do proactive
-> > > > writeback which isn't ideal.
-> > >
-> > > I am looking forward to abstracting a more common write back behavior
-> > > in the swap tier world. The classic zswap behavior will be preserved.
-> >
-> > Right, but this requires zswap being a tier, which you seem to be oppos=
-ed to :)
->
-> It does not need to as far as I can tell. People who want classic
-> zswap can use zswap as it is. I am thinking the swap ops provide some
-> interface for classic zswap to use, but zswap itself is not a tier
-> because it does not own swap devices.
+- Documentation fixes for memory.stat, io.stat, and the misc and v1 RDMA
+  controllers.
 
-A swap tier represents a class of swap devices or swap files with
-specific characteristics. Zswap satisfies that, although it's not
-really a swap device/file.
+----------------------------------------------------------------
+Doehyun Baek (1):
+      Docs/admin-guide/cgroup-v2: fix memory.stat doc details
+
+Farhad Alemi (1):
+      cgroup/cpuset: rebind mm mempolicy to effective_mems, not mems_allowed
+
+Guopeng Zhang (3):
+      Docs/admin-guide/cgroup-v2: drop stale misc interface file count
+      Docs/admin-guide/cgroup-v1: document rdma.peak, rdma.events and rdma.events.local
+      Docs/admin-guide/cgroup-v2: note blkcg_debug_stats gates io.latency stats
+
+ Documentation/admin-guide/cgroup-v1/rdma.rst | 66 ++++++++++++++++++++++++++++
+ Documentation/admin-guide/cgroup-v2.rst      | 20 +++++----
+ kernel/cgroup/cpuset.c                       |  7 ++-
+ 3 files changed, 84 insertions(+), 9 deletions(-)
+
+Thanks.
+
+--
+tejun
