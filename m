@@ -1,21 +1,20 @@
 Received: from lgeamrelo03.lge.com (lgeamrelo03.lge.com [156.147.51.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 552BE3164D8
-	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 02:56:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE02627B35B
+	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 03:11:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783911421; cv=none; b=Q0V3yG7VjjhWEYfbpEgHOSGzBAWRwHEQ/rwFEACw5BJlBXF0Bs2yT21x5Eh+Z/K3xfnSBk2i8h+4nQ1A6Q4PX/Hlvcs9V0jU/za6B4j4524kj/CpwJAKXT9gUQPm7ulkr+3dqQKpqvbLt7dbhaGdtwwcS+EaAcyAuzLU0SvNqTA=
+	t=1783912312; cv=none; b=GyeqNJexCVva3eUHU2YkO3nQXdWRiWSazX1N2jGETrTP90fLEnGawGHOicHb2xdpaTHEryZzdo84OiSDSAObg/P9HaSmLeq0myR7uY3IFqooNVfd01C4SPVkc0E30hyIXXYKOF/fmkiDRFRJry31bLl9VEIb3hwm/LU9X6smz1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783911421; c=relaxed/simple;
-	bh=R29KjIlG/12zBkwVZseY+aWsj6CPBU16wlOGTOPUaho=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=i/SlkLUix59+hYsRNkuNtizT+tos9tiXp2JTw7/W0gtzlTFvaqzMYAn3Fyqz38khSzMFCL+znKCrH6e8O572kj8VPPHPG9f5Ca8ebbSUJ1fLUVgwKPOKDgxZaZ0F/S8Ys0oJk7XeAkQ9HMPI7WGRUtUPy0yRkCAIoio8idg+CTo=
+	s=arc-20240116; t=1783912312; c=relaxed/simple;
+	bh=Po5njxvSjcWXacWac1+5h/VYOinCYBZzdpOOZoh2/3U=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mL90sLst1O3r+3slKecowYblRQfkCJjJ9FpE6+A0FtHZaiJanWjGT9VZxY0fOwLneq7vewY3DHNUTiRo/M6GAIQeK59foYEkRllvukCZGYz3+sB5J8yArv3877MEUCa0vrWgeHlz1DZuGtvDEwqqWidJL7B+B4Wivsrau6uP1fA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
 Received: from unknown (HELO yjaykim-PowerEdge-T330.lge.net) (10.177.112.156)
-	by 156.147.51.102 with ESMTP; 13 Jul 2026 11:56:55 +0900
+	by 156.147.51.102 with ESMTP; 13 Jul 2026 11:56:47 +0900
 X-Original-SENDERIP: 10.177.112.156
 X-Original-MAILFROM: youngjun.park@lge.com
 From: Youngjun Park <youngjun.park@lge.com>
@@ -41,12 +40,10 @@ Cc: chrisl@kernel.org,
 	hyungjun.cho@lge.com,
 	baver.bae@lge.com,
 	her0gyugyu@gmail.com
-Subject: [PATCH v10 6/6] selftests/cgroup: add a swap tier routing test
-Date: Mon, 13 Jul 2026 11:56:44 +0900
-Message-Id: <20260713025644.170839-7-youngjun.park@lge.com>
+Subject: [PATCH v10 0/6] mm/swap, memcg: Introduce swap tiers for cgroup based swap control
+Date: Mon, 13 Jul 2026 11:56:38 +0900
+Message-Id: <20260713025644.170839-1-youngjun.park@lge.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260713025644.170839-1-youngjun.park@lge.com>
-References: <20260713025644.170839-1-youngjun.park@lge.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -55,577 +52,310 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This commit adds a test program for the per-cgroup swap tier control
-memory.swap.tiers.max. It checks the default mask, toggling a tier,
-rejection of invalid input, and that recreating a tier resets the mask.
-It also checks that a cgroup's pages swap only to an allowed tier,
-including across the parent and child hierarchy. The routing check uses
-two zram devices placed in different tiers.
+This is the v10 series of the swap tier patchset.
 
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Youngjun Park <youngjun.park@lge.com>
----
+v10 folds in the Sashiko review fixes for the selftests added in v9 and
+rebases onto the current mm-new. There are no functional changes to the
+core swap or memcg code since v9; see the changelog for details.
+
+For context, the bulk of the series is unchanged since v8, with great thanks
+to Shakeel Butt and Yosry for the reviews and discussions [1] that shaped it.
+The main change in v8 was the interface change to use memory.swap.tiers.max
+with '0' (disable) and 'max' (enable) values. This mechanism was suggested
+by Shakeel and Yosry.
+
+This change allows for future extensions to control swap between tiers and
+aligns better with existing memcg interfaces. It is confined to patch #3's
+user-facing interface; internally, patch #3 still uses the existing mask
+processing method, which is implementation-efficient.
+
+We also discussed tier extensions. Thanks to Yosry, Nhat and Shakeel for their
+valuable feedback.
+
+Here is a brief summary of our tentative conclusions. Please correct me
+if anything is misrepresented (details in references):
+
+* Zswap tiering [2]:
+  Zswap can itself be a tier (typically the fastest one). But, until vswap lands, 
+  zswap cannot be the only allowed tier, 
+  since it still needs a physical device for allocation;
+  that restriction can be lifted once vswap is supported.
+* Vswap tiering [3]:
+  Vswap should be handled transparently to the user. Vswap itself will
+  not be tiered. But, someday supported if there is strong and real usecase.
+* Relationship with zswap.writeback [4]:
+  If zswap tiering is introduced, it could replace the zswap-only tier.
+  However, since zswap cannot be tiered independently without vswap, it is still
+  needed for non-vswap cases.
+* Tier demotion [5]:
+  A separate interface like memory.swap.tiers.demotion might be needed.
+  For now, we only support 0/max to enable/disable tiers. A future "auto"
+  mode could scale a per-tier limit from swapfile size and memory.swap.max,
+  similar to the direction memory tiering is heading in; the exact
+  default-scaling behaviour is still under discussion.
+
+I plan to apply the swap tier infrastructure and the first use case
+(cgroup-based swap control) first, and continue following up on the
+discussions above.
+
+Overview
+========
+
+Swap Tiers group swap devices into performance classes (e.g. NVMe,
+HDD, Network) and allow per-memcg selection of which tiers to use.
+This mechanism was suggested by Chris Li.
+
+Design Rationale
+================
+
+Swap tier selection is attached to memcg. A child cgroup may select a
+subset of the parent's allowed tiers.
+
+This
+- Preserves cgroup inheritance semantics (boundary at parent,
+  refinement at child).
+- Reuses memcg, which already groups processes and enforces
+  hierarchical memory limits.
+- Aligns with existing memcg swap controls (e.g. swap.max, zswap.writeback)
+- Avoids introducing a parallel swap control hierarchy.
+
+Placing tier control outside memcg (e.g., via BPF, syscalls, or
+madvise) would allow swap preference to diverge from the memcg
+hierarchy. Integrating it into memcg keeps the swap policy
+consistent with existing memory ownership semantics. There are
+also real use cases built around memcg.
+
+In the future, this can be extended to other interfaces to cover
+additional use cases.
+
+I believe a memcg-based swap control is a good starting point
+before such extensions.
+
+Use Cases
+=========
+
+#1: Latency separation (our primary deployment scenario)
+  [ / ]
+     |
+     +-- latency-sensitive workload  (fast tier)
+     +-- background workload         (slow tier)
+
+The parent defines the memory boundary.
+Each workload selects a swap tier via memory.swap.tiers.max according to
+latency requirements.
+
+This prevents latency-sensitive workloads from being swapped to
+slow devices used by background workloads.
+
+#2: Per-VM swap selection (Chris Li's deployment scenario)
+  [ / ]
+     |
+     +-- [ Job on VM ]              (tiers: zswap, SSD)
+            |
+            +-- [ VMM guest memory ]  (tiers: SSD)
+
+The parent (job) has access to both zswap and SSD tiers.
+The child (VMM guest memory) selects SSD as its swap tier via
+memory.swap.tiers.max. In this deployment, swap device selection
+happens at the child level from the parent's available set.
+
+#3: Tier isolation for reduced contention (hypothetical)
+  [ / ]                    (tiers: A, B)
+     |
+     +-- workload X        (tiers: A)
+     +-- workload Y        (tiers: B)
+
+Each child uses a different tier. Since swap paths are separated
+per tier, synchronization overhead between the two workloads is
+reduced.
+
+Future extension (Follow up)
+============================
+
+#1: Intra-tier distribution policy:
+  Currently, swap devices with the same priority are allocated in a
+  round-robin fashion. Per-tier policy files under
+  /sys/kernel/mm/swap/tiers/ can control how devices within a tier
+  are selected (e.g. round-robin, weighted).
+
+#2: Inter-tier promotion and demotion:
+  Promotion and demotion apply between tiers, not within a single
+  tier. The current interface defines only tier assignment; it does
+  not yet define when or how pages move between tiers. Two triggering
+  models are possible:
+
+  (a) User-triggered: userspace explicitly initiates migration between
+      tiers (e.g. via a new interface or existing move_pages semantics).
+  (b) Kernel-triggered: the kernel moves pages between tiers at
+      appropriate points such as reclaim or refault.
+
+#3: Per-VMA, per-process swap and BPF:
+  Not just for memcg based swap, possible to extend Per-VMA or per-process
+  swap. Or we can use it as BPF program.
+
+#4: Zswap and vswap tiering:
+  Tiering applies to the vswap + zswap combination.
+
+#5: Vswap on/off control:
+  Currently not supported. If a strong use case arises where vswap needs
+  to be controlled by memcg, the tier interface could be used for it.
+
+#6: Per-CPU swap allocation caching:
+  Per-si/per-tier per-CPU caching of allocations to reduce contention in
+  the tier-filtered allocation path.
+
+Experimentation
+===============
+
+Tested on our internal platform using NBD as a separate swap tier.
+Our first production's simple usecase.
+
+Without tiers:
+- No selective control over flash wear
+- Cannot selectively assign NBD to specific applications
+
+Cold launch improvement (preloaded vs. baseline):
+- App A: 13.17s -> 4.18s (68%)
+- App B: 5.60s -> 1.12s (80%)
+- App C: 10.25s -> 2.00s (80%)
+
+Performance impact with no tiers configured:
+<1% regression in kernel build and vm-scalability benchmarks
+
+Change log
+===========
+
+v10
+- selftests: applied the Sashiko review fixes, and dropped redundant comments and dead code.
+  (#5, #6 patches)
+- Rebased on recent mm-new.
+- v9 link: https://lore.kernel.org/linux-mm/20260620181635.299364-1-youngjun.park@lge.com/
+
+v9
+- Added selftests (per Nhat's request):
+ - selftests/mm: swap tier configuration test for /sys/kernel/mm/swap/tiers.(#5 patch)
+ - selftests/cgroup: swap tier routing test for memory.swap.tiers.max. (#6 patch)
+- Removed the redundant rcu_read_lock() around the memcg tier-mask tree walk;
+  for_each_mem_cgroup_tree() already takes RCU internally and returns each
+  memcg with a reference held. (#3 patch)
+- Sashiko review: swap_sync_discard() now honors the memcg tier mask, so the
+  discard fallback no longer drains clusters on disallowed tiers. Left as-is:
+  the cgroup tree walk under spinlock (bounded by cgroup.max.descendants, an
+  admin-controlled limit, and triggered only by infrequent tier writes) and
+  the pre-existing swap_avail_lock drop in swap_alloc_slow(). (#4 patch)
+- Dropped patch #4's Reviewed-by tags (Nhat, Kairui, Baoquan): the
+  swap_sync_discard() change above modifies that patch (the tier mask is now
+  passed as a parameter into the alloc and discard paths), so the earlier tags
+  no longer apply. Re-review would be welcome.
+- v8 link: https://lore.kernel.org/linux-mm/20260617053447.2831896-1-youngjun.park@lge.com/
+
+v8
+- Changed the memcg interface to memory.swap.tiers.max.
+  Values are '0' (disable) and 'max' (enable). Default is 'max'.
+- Addressed Sashiko's review: Update the mask value atomically at once and
+  read the mask value while grabbing lock.
+- Collected review tags from Kairui and Nhat.
+- Rebase on recent mm-new
+- v7 link: https://lore.kernel.org/linux-mm/20260527062247.3440692-1-youngjun.park@lge.com/
+
+v7
+- Collect Baoquan's review tag
+- Baoquan's feedback on fixing improper comment
+- Minor code adjustments per Baoquan's feedback.
+- Rebase on recent mm-new
+- v6 link: https://lore.kernel.org/linux-mm/20260421055323.940344-1-youngjun.park@lge.com/
+
+v6
+- Sashiko AI review fixes
+ - Fix batch parsing error path to restore snapshot before exit
+ - Reject overlong tier names to prevent truncated duplicates
+ - Avoid restoring raw list_head via memcpy (stale pointer risk)
+ - Ensure early parse errors do not skip DEF_SWAP_PRIO validation
+ - Use (1U << TIER_DEFAULT_IDX) to avoid signed shift UB
+ - Defer tier mask inheritance to css_online() to close race window
+ - Add READ_ONCE()/WRITE_ONCE() for tier mask accesses
+- Other fixes
+ - Fix build error reintroduced due to missing v5 change
+ - Fix WARNING in folio_tier_effective_mask by adding rcu_read_lock()
+ - default number of swap tier max (change to 32->31, for reserving last bit)
+ - commit message refinement.
+ - rebased on recently mm-new
+- v5 link: https://lore.kernel.org/linux-mm/20260325175453.2523280-1-youngjun.park@lge.com/
+
+v5
+- Fixed build errors reported in v4
+- rebased on up to date mm-new
+- Minor cleanups
+- Design docs with validation (by Shakeel Butt discussion)
+- v4 link : https://lore.kernel.org/linux-mm/20260217000950.4015880-1-youngjun.park@lge.com/
+
+v4
+- Simplified control flow and indentation
+- Added CONFIG option for MAX_SWAPTIER (default: 4)
+- Added memory.swap.tiers.effective interface
+- Reworked save/restore logic into snapshot/rollback model
+- Removed tier priority modification support (deferred)
+- Improved validation and fixed edge cases
+- Rebased onto latest mm-new
+- RFC v3 link: https://lore.kernel.org/linux-mm/20260131125454.3187546-1-youngjun.park@lge.com/
+
+RFC v1 ~ v3
+- Change the direction after discussion with Chris-Li
+- apply some LPC feedback.
+- RFC v2 - https://lore.kernel.org/linux-mm/20260126065242.1221862-1-youngjun.park@lge.com/
+- RFC v1 - https://lore.kernel.org/linux-mm/20251109124947.1101520-1-youngjun.park@lge.com/
+
+Earlier Approach (per cgroup swap priority)
+- v1: https://lore.kernel.org/linux-mm/20250716202006.3640584-1-youngjun.park@lge.com/
+- RFC: https://lore.kernel.org/linux-mm/aEvLjEInMQC7hEyh@yjaykim-PowerEdge-T330/T/#mbbb6a5e9e30843097e1f5f65fb98f31d582b973d
+
+Reference
+=========
+
+[1] https://lore.kernel.org/linux-doc/aiw2p5ANjsQUCIHA@linux.dev/
+[2] https://lore.kernel.org/linux-mm/CAKEwX=Nz9SWcEVQGQjHN8P8OANJY4BG0w+iQOzoNOWuteoVjAg@mail.gmail.com/
+[3] https://lore.kernel.org/cgroups/CAKEwX=O23a4iWBZoewKVb8QqODte6r3Xijckw3_oCJNoiO9M5A@mail.gmail.com/
+[4] https://lore.kernel.org/linux-mm/CAO9r8zOg0OP1Ak1v7CRzSfQq0D8b4Dw+_T0Jui6YTM_KwQQNOA@mail.gmail.com/
+[5] https://lore.kernel.org/linux-mm/CAO9r8zNi4-QC4sUi=xXWHt9WMeG39mbyoSf8kON9vLOZ=cbCmw@mail.gmail.com/
+
+Youngjun Park (6):
+  mm: swap: introduce swap tier infrastructure
+  mm: swap: associate swap devices with tiers
+  mm: memcontrol: add interface for swap tier selection
+  mm: swap: filter swap allocation by memcg tier mask
+  selftests/mm: add a swap tier configuration test
+  selftests/cgroup: add a swap tier routing test
+
+ Documentation/admin-guide/cgroup-v2.rst       |  20 +
+ Documentation/mm/index.rst                    |   1 +
+ Documentation/mm/swap-tier.rst                | 159 ++++++
+ MAINTAINERS                                   |   3 +
+ include/linux/memcontrol.h                    |   5 +
+ include/linux/swap.h                          |   1 +
+ mm/Kconfig                                    |  12 +
+ mm/Makefile                                   |   2 +-
+ mm/memcontrol.c                               |  67 +++
+ mm/swap.h                                     |   4 +
+ mm/swap_state.c                               |  75 +++
+ mm/swap_tier.c                                | 477 ++++++++++++++++
+ mm/swap_tier.h                                |  76 +++
+ mm/swapfile.c                                 |  34 +-
  tools/testing/selftests/cgroup/.gitignore     |   1 +
  tools/testing/selftests/cgroup/Makefile       |   2 +
  tools/testing/selftests/cgroup/config         |   2 +
  .../selftests/cgroup/test_swap_tiers.c        | 509 ++++++++++++++++++
- 4 files changed, 514 insertions(+)
+ tools/testing/selftests/mm/.gitignore         |   1 +
+ tools/testing/selftests/mm/Makefile           |   1 +
+ tools/testing/selftests/mm/config             |   2 +
+ tools/testing/selftests/mm/run_vmtests.sh     |   5 +
+ tools/testing/selftests/mm/swap_tier.c        | 337 ++++++++++++
+ 23 files changed, 1785 insertions(+), 11 deletions(-)
+ create mode 100644 Documentation/mm/swap-tier.rst
+ create mode 100644 mm/swap_tier.c
+ create mode 100644 mm/swap_tier.h
  create mode 100644 tools/testing/selftests/cgroup/test_swap_tiers.c
+ create mode 100644 tools/testing/selftests/mm/swap_tier.c
 
-diff --git a/tools/testing/selftests/cgroup/.gitignore b/tools/testing/selftests/cgroup/.gitignore
-index 952e4448bf07..77b8e6c3e592 100644
---- a/tools/testing/selftests/cgroup/.gitignore
-+++ b/tools/testing/selftests/cgroup/.gitignore
-@@ -8,5 +8,6 @@ test_kill
- test_kmem
- test_memcontrol
- test_pids
-+test_swap_tiers
- test_zswap
- wait_inotify
-diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
-index e01584c2189a..a98e3c414cd5 100644
---- a/tools/testing/selftests/cgroup/Makefile
-+++ b/tools/testing/selftests/cgroup/Makefile
-@@ -16,6 +16,7 @@ TEST_GEN_PROGS += test_kill
- TEST_GEN_PROGS += test_kmem
- TEST_GEN_PROGS += test_memcontrol
- TEST_GEN_PROGS += test_pids
-+TEST_GEN_PROGS += test_swap_tiers
- TEST_GEN_PROGS += test_zswap
- 
- LOCAL_HDRS += $(selfdir)/clone3/clone3_selftests.h $(selfdir)/pidfd/pidfd.h
-@@ -32,4 +33,5 @@ $(OUTPUT)/test_kill: $(LIBCGROUP_O)
- $(OUTPUT)/test_kmem: $(LIBCGROUP_O)
- $(OUTPUT)/test_memcontrol: $(LIBCGROUP_O)
- $(OUTPUT)/test_pids: $(LIBCGROUP_O)
-+$(OUTPUT)/test_swap_tiers: $(LIBCGROUP_O)
- $(OUTPUT)/test_zswap: $(LIBCGROUP_O)
-diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
-index 39f979690dd3..6086bb5bba97 100644
---- a/tools/testing/selftests/cgroup/config
-+++ b/tools/testing/selftests/cgroup/config
-@@ -4,3 +4,5 @@ CONFIG_CGROUP_FREEZER=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_MEMCG=y
- CONFIG_PAGE_COUNTER=y
-+CONFIG_SWAP=y
-+CONFIG_ZRAM=y
-diff --git a/tools/testing/selftests/cgroup/test_swap_tiers.c b/tools/testing/selftests/cgroup/test_swap_tiers.c
-new file mode 100644
-index 000000000000..9b4484409ed4
---- /dev/null
-+++ b/tools/testing/selftests/cgroup/test_swap_tiers.c
-@@ -0,0 +1,509 @@
-+// SPDX-License-Identifier: GPL-2.0
-+#define _GNU_SOURCE
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <linux/limits.h>
-+#include <signal.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/mman.h>
-+#include <sys/swap.h>
-+#include <sys/wait.h>
-+#include <unistd.h>
-+
-+#include "kselftest.h"
-+#include "cgroup_util.h"
-+
-+#ifndef MADV_PAGEOUT
-+#define MADV_PAGEOUT 21
-+#endif
-+
-+#define TIERS_PATH "/sys/kernel/mm/swap/tiers"
-+#define TIERS_MAX "memory.swap.tiers.max"
-+
-+static int tiers_write(const char *cmd)
-+{
-+	int fd, ret = 0;
-+
-+	fd = open(TIERS_PATH, O_WRONLY);
-+	if (fd < 0)
-+		return -errno;
-+	if (write(fd, cmd, strlen(cmd)) < 0)
-+		ret = -errno;
-+	close(fd);
-+	return ret;
-+}
-+
-+static int tier_count(void)
-+{
-+	char buf[4096], *line, *save;
-+	int fd, count = 0;
-+	ssize_t n;
-+
-+	fd = open(TIERS_PATH, O_RDONLY);
-+	if (fd < 0)
-+		return -1;
-+	n = read(fd, buf, sizeof(buf) - 1);
-+	close(fd);
-+	if (n < 0)
-+		return -1;
-+	buf[n] = '\0';
-+
-+	for (line = strtok_r(buf, "\n", &save); line;
-+	     line = strtok_r(NULL, "\n", &save)) {
-+		char name[64];
-+		int idx, s, e;
-+
-+		if (sscanf(line, "%63s %d %d %d", name, &idx, &s, &e) == 4)
-+			count++;
-+	}
-+	return count;
-+}
-+
-+static long swap_used_kb(const char *dev)
-+{
-+	char line[256];
-+	long used = -1;
-+	FILE *f;
-+
-+	f = fopen("/proc/swaps", "r");
-+	if (!f)
-+		return -1;
-+	while (fgets(line, sizeof(line), f)) {
-+		char name[128], type[64];
-+		long size, u, prio;
-+
-+		if (sscanf(line, "%127s %63s %ld %ld %ld",
-+			   name, type, &size, &u, &prio) >= 4 &&
-+		    !strcmp(name, dev)) {
-+			used = u;
-+			break;
-+		}
-+	}
-+	fclose(f);
-+	return used;
-+}
-+
-+static int swap_active_count(void)
-+{
-+	char line[256];
-+	int n = 0;
-+	FILE *f;
-+
-+	f = fopen("/proc/swaps", "r");
-+	if (!f)
-+		return -1;
-+	if (fgets(line, sizeof(line), f))
-+		while (fgets(line, sizeof(line), f))
-+			n++;
-+	fclose(f);
-+	return n;
-+}
-+
-+static void zram_remove(int idx);
-+static int zram_add(long size)
-+{
-+	char path[128], val[64];
-+	ssize_t n;
-+	int idx, fd;
-+
-+	fd = open("/sys/class/zram-control/hot_add", O_RDONLY);
-+	if (fd < 0)
-+		return -1;
-+	n = read(fd, val, sizeof(val) - 1);
-+	close(fd);
-+	if (n <= 0)
-+		return -1;
-+	val[n] = '\0';
-+	idx = atoi(val);
-+
-+	snprintf(path, sizeof(path), "/sys/block/zram%d/disksize", idx);
-+	fd = open(path, O_WRONLY);
-+	if (fd < 0) {
-+		zram_remove(idx);
-+		return -1;
-+	}
-+
-+	snprintf(val, sizeof(val), "%ld", size);
-+	n = write(fd, val, strlen(val));
-+	close(fd);
-+
-+	if (n != strlen(val)) {
-+		zram_remove(idx);
-+		return -1;
-+	}
-+
-+	return idx;
-+}
-+
-+static void zram_remove(int idx)
-+{
-+	char val[16];
-+	int fd;
-+
-+	fd = open("/sys/class/zram-control/hot_remove", O_WRONLY);
-+	if (fd < 0)
-+		return;
-+	snprintf(val, sizeof(val), "%d", idx);
-+	write(fd, val, strlen(val)); /* ignore: best-effort cleanup */
-+	close(fd);
-+}
-+
-+static int swap_setup(const char *dev, int prio)
-+{
-+	char cmd[128];
-+
-+	snprintf(cmd, sizeof(cmd), "mkswap %s >/dev/null 2>&1", dev);
-+	if (system(cmd))
-+		return -1;
-+	return swapon(dev, SWAP_FLAG_PREFER | (prio & SWAP_FLAG_PRIO_MASK));
-+}
-+
-+static int test_default(const char *root)
-+{
-+	char *cg = cg_name(root, "swaptier_default");
-+	int ret = KSFT_FAIL;
-+
-+	if (!cg || cg_create(cg))
-+		goto out;
-+	if (!cg_read_strstr(cg, TIERS_MAX, "fast max") &&
-+	    !cg_read_strstr(cg, TIERS_MAX, "slow max"))
-+		ret = KSFT_PASS;
-+out:
-+	if (cg) {
-+		cg_destroy(cg);
-+		free(cg);
-+	}
-+	return ret;
-+}
-+
-+static int test_toggle(const char *root)
-+{
-+	char *cg = cg_name(root, "swaptier_toggle");
-+	int ret = KSFT_FAIL;
-+
-+	if (!cg || cg_create(cg))
-+		goto out;
-+	if (cg_write(cg, TIERS_MAX, "fast 0"))
-+		goto out;
-+	if (cg_read_strstr(cg, TIERS_MAX, "fast 0"))
-+		goto out;
-+	if (cg_write(cg, TIERS_MAX, "fast max"))
-+		goto out;
-+	if (cg_read_strstr(cg, TIERS_MAX, "fast max"))
-+		goto out;
-+	ret = KSFT_PASS;
-+out:
-+	if (cg) {
-+		cg_destroy(cg);
-+		free(cg);
-+	}
-+	return ret;
-+}
-+
-+static int test_invalid(const char *root)
-+{
-+	char *cg = cg_name(root, "swaptier_invalid");
-+	int ret = KSFT_FAIL;
-+
-+	if (!cg || cg_create(cg))
-+		goto out;
-+	if (!cg_write(cg, TIERS_MAX, "nosuchtier 0"))
-+		goto out;
-+	if (!cg_write(cg, TIERS_MAX, "fast bogus"))
-+		goto out;
-+	ret = KSFT_PASS;
-+out:
-+	if (cg) {
-+		cg_destroy(cg);
-+		free(cg);
-+	}
-+	return ret;
-+}
-+
-+static int test_recreate(const char *root)
-+{
-+	char *cg = cg_name(root, "swaptier_recreate");
-+	int ret = KSFT_FAIL;
-+
-+	if (!cg || cg_create(cg))
-+		goto out;
-+	if (cg_write(cg, TIERS_MAX, "fast 0"))
-+		goto out;
-+	if (cg_read_strstr(cg, TIERS_MAX, "fast 0"))
-+		goto out;
-+	if (tiers_write("-fast") || tiers_write("+fast:10"))
-+		goto out;
-+	if (cg_read_strstr(cg, TIERS_MAX, "fast max"))
-+		goto out;
-+	ret = KSFT_PASS;
-+out:
-+	if (cg) {
-+		cg_destroy(cg);
-+		free(cg);
-+	}
-+	return ret;
-+}
-+
-+static int swapout_child(const char *cgroup, void *arg)
-+{
-+	size_t size = (size_t)arg;
-+	char *mem;
-+	size_t i;
-+	int page_size;
-+
-+	mem = mmap(NULL, size, PROT_READ | PROT_WRITE,
-+		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-+	if (mem == MAP_FAILED)
-+		return -1;
-+
-+	page_size = sysconf(_SC_PAGE_SIZE);
-+	for (i = 0; i < size; i += page_size)
-+		mem[i] = 'x';
-+	if (madvise(mem, size, MADV_PAGEOUT))
-+		return -1;
-+	/* Hold the swap entries while the parent inspects /proc/swaps. */
-+	pause();
-+	return 0;
-+}
-+
-+static int wait_for_dev(const char *dev, const char *dev2)
-+{
-+	int i;
-+
-+	for (i = 0; i < 50; i++) {
-+		if (access(dev, F_OK) == 0 && access(dev2, F_OK) == 0)
-+			return 0;
-+
-+		usleep(100000);
-+	}
-+
-+	return -1;
-+}
-+
-+static int run_routing_case(const char *cg)
-+{
-+	char fast_dev[32], slow_dev[32];
-+	int zfast = -1, zslow = -1;
-+	long used_fast, used_slow;
-+	int ret = KSFT_SKIP;
-+	pid_t pid = -1;
-+	int i;
-+
-+	/* Only our devices must be present, so usage is unambiguous. */
-+	if (swap_active_count() != 0)
-+		return KSFT_SKIP;
-+
-+	zfast = zram_add(MB(128));
-+	if (zfast < 0)
-+		goto out;
-+	snprintf(fast_dev, sizeof(fast_dev), "/dev/zram%d", zfast);
-+
-+	zslow = zram_add(MB(128));
-+	if (zslow < 0)
-+		goto out;
-+	snprintf(slow_dev, sizeof(slow_dev), "/dev/zram%d", zslow);
-+
-+	if (wait_for_dev(fast_dev, slow_dev))
-+		goto out;
-+
-+	/* prio 10 -> 'fast' tier [10, MAX]; prio 0 -> 'slow' tier [-1, 9]. */
-+	if (swap_setup(fast_dev, 10) || swap_setup(slow_dev, 0))
-+		goto out;
-+
-+	ret = KSFT_FAIL;
-+
-+	pid = cg_run_nowait(cg, swapout_child, (void *)MB(64));
-+	if (pid < 0)
-+		goto out;
-+
-+	for (i = 0; i < 300; i++) {		/* up to ~30s for pageout */
-+		if (swap_used_kb(slow_dev) > 0)
-+			break;
-+		usleep(100000);
-+	}
-+
-+	used_fast = swap_used_kb(fast_dev);
-+	used_slow = swap_used_kb(slow_dev);
-+	if (used_slow > 0 && used_fast == 0)
-+		ret = KSFT_PASS;
-+	else
-+		ksft_print_msg("routing[%s]: fast=%ldKB slow=%ldKB (want fast=0, slow>0)\n",
-+			       cg, used_fast, used_slow);
-+out:
-+	if (pid > 0) {
-+		kill(pid, SIGKILL);
-+		waitpid(pid, NULL, 0);
-+	}
-+	if (zfast >= 0) {
-+		swapoff(fast_dev);
-+		zram_remove(zfast);
-+	}
-+	if (zslow >= 0) {
-+		swapoff(slow_dev);
-+		zram_remove(zslow);
-+	}
-+	return ret;
-+}
-+
-+static int test_routing(const char *root)
-+{
-+	char *cg = cg_name(root, "swaptier_routing");
-+	int ret = KSFT_FAIL;
-+
-+	if (!cg || cg_create(cg))
-+		goto out;
-+	if (cg_write(cg, TIERS_MAX, "fast 0"))
-+		goto out;
-+	ret = run_routing_case(cg);
-+out:
-+	if (cg) {
-+		cg_destroy(cg);
-+		free(cg);
-+	}
-+	return ret;
-+}
-+
-+static char *make_parent(const char *root, const char *name)
-+{
-+	char *cg = cg_name(root, name);
-+
-+	if (cg && !cg_create(cg) &&
-+	    !cg_write(cg, "cgroup.subtree_control", "+memory"))
-+		return cg;
-+
-+	if (cg) {
-+		cg_destroy(cg);
-+		free(cg);
-+	}
-+	return NULL;
-+}
-+
-+static int test_routing_parent_wins(const char *root)
-+{
-+	char *parent = make_parent(root, "swaptier_pwins");
-+	char *child = NULL;
-+	int ret = KSFT_FAIL;
-+
-+	if (!parent)
-+		goto out;
-+	if (cg_write(parent, TIERS_MAX, "fast 0"))
-+		goto out;
-+
-+	child = cg_name(parent, "child");
-+	if (!child || cg_create(child))
-+		goto out;
-+	if (cg_write(child, TIERS_MAX, "fast max"))	/* child tries to re-enable */
-+		goto out;
-+
-+	ret = run_routing_case(child);
-+out:
-+	if (child) {
-+		cg_destroy(child);
-+		free(child);
-+	}
-+	if (parent) {
-+		cg_destroy(parent);
-+		free(parent);
-+	}
-+	return ret;
-+}
-+
-+static int test_routing_child_restricts(const char *root)
-+{
-+	char *parent = make_parent(root, "swaptier_crestr");
-+	char *child = NULL;
-+	int ret = KSFT_FAIL;
-+
-+	if (!parent)
-+		goto out;
-+
-+	child = cg_name(parent, "child");
-+	if (!child || cg_create(child))
-+		goto out;
-+	if (cg_write(child, TIERS_MAX, "fast 0"))
-+		goto out;
-+
-+	ret = run_routing_case(child);
-+out:
-+	if (child) {
-+		cg_destroy(child);
-+		free(child);
-+	}
-+	if (parent) {
-+		cg_destroy(parent);
-+		free(parent);
-+	}
-+	return ret;
-+}
-+
-+static void tiers_clear(void)
-+{
-+	char buf[4096], *line, *save;
-+	int fd;
-+	ssize_t n;
-+
-+	fd = open(TIERS_PATH, O_RDONLY);
-+	if (fd < 0)
-+		return;
-+	n = read(fd, buf, sizeof(buf) - 1);
-+	close(fd);
-+	if (n < 0)
-+		return;
-+	buf[n] = '\0';
-+
-+	for (line = strtok_r(buf, "\n", &save); line;
-+	     line = strtok_r(NULL, "\n", &save)) {
-+		char name[64], cmd[80];
-+		int idx, s, e;
-+
-+		if (sscanf(line, "%63s %d %d %d", name, &idx, &s, &e) != 4)
-+			continue;
-+		snprintf(cmd, sizeof(cmd), "-%s", name);
-+		tiers_write(cmd);
-+	}
-+}
-+
-+int main(void)
-+{
-+	char root[PATH_MAX];
-+
-+	ksft_print_header();
-+	ksft_set_plan(7);
-+
-+	if (geteuid() != 0)
-+		ksft_exit_skip("test requires root\n");
-+	if (cg_find_unified_root(root, sizeof(root), NULL))
-+		ksft_exit_skip("cgroup v2 isn't mounted\n");
-+	if (cg_read_strstr(root, "cgroup.controllers", "memory"))
-+		ksft_exit_skip("memory controller isn't available\n");
-+	if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
-+		if (cg_write(root, "cgroup.subtree_control", "+memory"))
-+			ksft_exit_skip("failed to enable memory controller\n");
-+	if (access(TIERS_PATH, F_OK))
-+		ksft_exit_skip("swap tiers interface not present\n");
-+	if (tier_count() != 0)
-+		ksft_exit_skip("swap tiers already configured; run on a clean system\n");
-+
-+	/* Two tiers: fast = [10, MAX], slow = [-1, 9]. */
-+	if (tiers_write("+slow:-1 +fast:10"))
-+		ksft_exit_skip("failed to configure swap tiers\n");
-+
-+	ksft_test_result(test_default(root) == KSFT_PASS, "default mask is max\n");
-+	ksft_test_result(test_toggle(root) == KSFT_PASS, "enable/disable tier\n");
-+	ksft_test_result(test_invalid(root) == KSFT_PASS, "invalid input rejected\n");
-+	ksft_test_result(test_recreate(root) == KSFT_PASS,
-+			 "recreated tier resets cgroup mask\n");
-+
-+	ksft_test_result_code(test_routing(root),
-+			      "swapout honors tier mask", NULL);
-+	ksft_test_result_code(test_routing_parent_wins(root),
-+			      "child cannot re-enable a parent-disabled tier", NULL);
-+	ksft_test_result_code(test_routing_child_restricts(root),
-+			      "child can restrict tiers below its parent", NULL);
-+
-+	tiers_clear();
-+
-+	ksft_finished();
-+}
+base-commit: 61cccb8363fcc282d4ae0555b8739dd227f5ad0b
 -- 
 2.34.1
-
