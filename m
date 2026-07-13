@@ -1,87 +1,105 @@
-Received: from lgeamrelo12.lge.com (lgeamrelo12.lge.com [156.147.23.52])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E20AC29BDAA
-	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 15:50:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.23.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80CA92C0F6D
+	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 15:50:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783957851; cv=none; b=trkkQI9eIQvmwIcNrUJcr/27SG5DPsvZ71slgDkAkW1bccIhzaj59j/wzd7EM0HciPdCNlbj2fhfZu5JPSUjwFs/WquMV8lGynh3C+E7hClVJ53a4Ai0Q7SlNZhfqVhUszxK2oB6Uq7AppJpJphTMBUSIwc87f8mZp/M36IJBgY=
+	t=1783957851; cv=none; b=qcWAoiHkMGloFxmUfK+FLBOnXJurQmn0943jgYfTelPMIfMOqlwj/Y4Lsg76Gz3MvWWCu99dEQF6FvGWEs2gjmT2yVe5yxZAuLB2sm7KPKHmNFdSj8Ny16epiUa2PplH+klDj7ewhF9zX6hrRgMIZdwNhuYHdKyCui25Q+67+Xk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783957851; c=relaxed/simple;
-	bh=lrTE/jBqsGUQGv5y+i6RrpN7GtTt/dRfzjiCSeWXts4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gxbF98Ld/NUuv3qnoijzl9uAHkmLaBDSboXew+ZDJ1fS7BHVCZ0xPqFB7cMFdW/j88qqmWxA8oOyyXck61NVCQG2g6oYhU90UcHgJi39ElxKjhG5SQTJLhvm9B3vQ5FQbQzHf5h5Yl/San62vldAxxsAxwyH74wSiPwX+O2G7Cg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.23.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
-Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
-	by 156.147.23.52 with ESMTP; 14 Jul 2026 00:20:45 +0900
-X-Original-SENDERIP: 156.147.1.125
-X-Original-MAILFROM: youngjun.park@lge.com
-Received: from unknown (HELO yjaykim-PowerEdge-T330) (10.177.112.156)
-	by 156.147.1.125 with ESMTP; 14 Jul 2026 00:20:45 +0900
-X-Original-SENDERIP: 10.177.112.156
-X-Original-MAILFROM: youngjun.park@lge.com
-Date: Tue, 14 Jul 2026 00:20:45 +0900
-From: Youngjun Park <youngjun.park@lge.com>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: akpm@linux-foundation.org, chrisl@kernel.org, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org,
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, shikemeng@huaweicloud.com,
-	baoquan.he@linux.dev, baohua@kernel.org, yosry@kernel.org,
-	joshua.hahnjy@gmail.com, gunho.lee@lge.com, taejoon.song@lge.com,
-	hyungjun.cho@lge.com, baver.bae@lge.com, her0gyugyu@gmail.com
-Subject: Re: [PATCH v10 2/6] mm: swap: associate swap devices with tiers
-Message-ID: <alUCTVQSVH/gPbjo@yjaykim-PowerEdge-T330>
-References: <20260713025644.170839-3-youngjun.park@lge.com>
- <20260713142856.102257-1-usama.arif@linux.dev>
+	bh=R9UsT6TIGaoWj/F85QeLUfDc+xfvWj4telTWCxXJt2M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dHbge3ocmqr4veZAHEITnein3GRopm6roHJzNuj+BKdI96u2nIjmR+Xm5FoMdXOHTSUTwewLPXpbpADulQseiKLG6VLhdHUWZzMDArRCPkeG0/znTK/uwTW8zJ8gDyYLM6DTwpqYROvhe0MdgtpQjUZGII3DmNvnsGAkOImTm/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jGYvq+lC; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jGYvq+lC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33CA21F0155A
+	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 15:50:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783957850;
+	bh=0nEqidDEll0lFKQJRsBXv+q0TtERg9N1HIHV1PMhX58=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=jGYvq+lC6AlLm5YUKylCcrjuPR192nylqWrEF79DC0BQGB1d5CMzhkZfqOIn5rE4e
+	 DdrSgNZQeQYrzGQYpUaOwiZlBq73sCQapbziXXMo+B8dfiZ3F1t4yfup0C/y/xebTA
+	 akueadAxOnLGfJho/RENMon3ZUhXeZq7SLeuuAl6CPWe+ZqDmFUm8aI6sGk9dWIG/z
+	 eCkEGVqL+U1RpuZ7KtoGDPXpFEDHBWb5ral03WxMz+IPDo6U1lgHCPbLdJ69nNHtN/
+	 ljZdnDGUnxCOBdDDF2ekeNCeDKpQQC4Qbhf2iOgUXppVVlk0HKMXPs+XgLLMhX47Mb
+	 FTvUArODxiFqg==
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c15d111ca99so318388166b.0
+        for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 08:50:50 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RooVTBFq5kkKmbIcPj5DjGEqJGeuhXEhCL3M9Y/Bj28eowElMQIDhkiuLdfUS4TRbdFHOuNfEkC@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzxue0T9gMDg2D/HRJIR9maPv0pyq1fVk1IGEKSny3OAQWNlnD0
+	g4tYd81YAHDFivnq6rCFJXYL9RPxRXILX3HlpSmQyrCj/ERW/5t6hupWXjxV0Id7CKW7crxyHhE
+	vMv4UC4CHEkox90hC6tZq2ZqmdBFowLI=
+X-Received: by 2002:a17:907:3f05:b0:c15:cfd7:fdcf with SMTP id
+ a640c23a62f3a-c161e9d8a53mr349487966b.29.1783957849053; Mon, 13 Jul 2026
+ 08:50:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260713142856.102257-1-usama.arif@linux.dev>
+References: <20260713025644.170839-1-youngjun.park@lge.com>
+In-Reply-To: <20260713025644.170839-1-youngjun.park@lge.com>
+From: Yosry Ahmed <yosry@kernel.org>
+Date: Mon, 13 Jul 2026 08:50:36 -0700
+X-Gmail-Original-Message-ID: <CAO9r8zNJfhirbzvJzDWRaBQOM7XZcf_Jk0Bz=Y4dB4QK4W-MwQ@mail.gmail.com>
+X-Gm-Features: AVVi8Cdhp3gmWcPxNKGi9xzKpj1txCkZgTK1iUjawQjsfXysMd41K64C1ZX9ciw
+Message-ID: <CAO9r8zNJfhirbzvJzDWRaBQOM7XZcf_Jk0Bz=Y4dB4QK4W-MwQ@mail.gmail.com>
+Subject: Re: [PATCH v10 0/6] mm/swap, memcg: Introduce swap tiers for cgroup
+ based swap control
+To: Youngjun Park <youngjun.park@lge.com>
+Cc: akpm@linux-foundation.org, chrisl@kernel.org, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kasong@tencent.com, 
+	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	shakeel.butt@linux.dev, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
+	baoquan.he@linux.dev, baohua@kernel.org, joshua.hahnjy@gmail.com, 
+	gunho.lee@lge.com, taejoon.song@lge.com, hyungjun.cho@lge.com, 
+	baver.bae@lge.com, her0gyugyu@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 13, 2026 at 07:28:53AM -0700, Usama Arif wrote:
+On Sun, Jul 12, 2026 at 7:57=E2=80=AFPM Youngjun Park <youngjun.park@lge.co=
+m> wrote:
+>
+> This is the v10 series of the swap tier patchset.
+>
+> v10 folds in the Sashiko review fixes for the selftests added in v9 and
+> rebases onto the current mm-new. There are no functional changes to the
+> core swap or memcg code since v9; see the changelog for details.
+>
+> For context, the bulk of the series is unchanged since v8, with great tha=
+nks
+> to Shakeel Butt and Yosry for the reviews and discussions [1] that shaped=
+ it.
+> The main change in v8 was the interface change to use memory.swap.tiers.m=
+ax
+> with '0' (disable) and 'max' (enable) values. This mechanism was suggeste=
+d
+> by Shakeel and Yosry.
+>
+> This change allows for future extensions to control swap between tiers an=
+d
+> aligns better with existing memcg interfaces. It is confined to patch #3'=
+s
+> user-facing interface; internally, patch #3 still uses the existing mask
+> processing method, which is implementation-efficient.
+>
+> We also discussed tier extensions. Thanks to Yosry, Nhat and Shakeel for =
+their
+> valuable feedback.
+>
+> Here is a brief summary of our tentative conclusions. Please correct me
+> if anything is misrepresented (details in references):
+>
+> * Zswap tiering [2]:
+>   Zswap can itself be a tier (typically the fastest one). But, until vswa=
+p lands,
+>   zswap cannot be the only allowed tier,
+>   since it still needs a physical device for allocation;
+>   that restriction can be lifted once vswap is supported.
 
-> >  #endif /* _SWAP_TIER_H */
-> > diff --git a/mm/swapfile.c b/mm/swapfile.c
-> > index ff567ad893a4..f3cff586cf30 100644
-> > --- a/mm/swapfile.c
-> > +++ b/mm/swapfile.c
-> > @@ -3041,6 +3041,8 @@ static void _enable_swap_info(struct swap_info_struct *si)
-> >  
-> >  	/* Add back to available list */
-> >  	add_to_avail_list(si, true);
-> > +
-> > +	swap_tiers_assign_dev(si);
-> 
-> Could we move the assignment before the device is added to the active and
-> available lists?
-> 
-> After patch 4, swap allocation checks si->tier_mask while holding only
-> swap_avail_lock. But here the new device is added to swap_avail_head
-> before swap_tiers_assign_dev() initializes its mask.
-> 
-> That creates a small window where reclaim can see this swap_info_struct
-> with a stale tier_mask. swap_info_struct instances are reused across
-> swapoff/swapon, so the stale mask can come from the previous device that
-> occupied this slot. A memcg allowed to use the old tier could then
-> temporarily allocate from the newly enabled device even if that device
-> belongs to a different tier.
-
-Hello Usama. 
-Thanks for the review!
-
-Good catch! You're right.
-the device becomes visible to swap_alloc_slow() the moment add_to_avail_list() drops swap_avail_lock, 
-before the mask is assigned. 
-
-Will move the assignment before the list insertions in v11.
-
-Youngjun
+Does this series support zswap being a tier? I cannot find any mention
+of zswap in the patches.
