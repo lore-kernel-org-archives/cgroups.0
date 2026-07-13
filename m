@@ -1,21 +1,21 @@
 Received: from lgeamrelo03.lge.com (lgeamrelo03.lge.com [156.147.51.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67FEB37755A
-	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 03:11:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AAA73783C1
+	for <cgroups@vger.kernel.org>; Mon, 13 Jul 2026 03:11:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783912317; cv=none; b=r+pOY9BqkE1LXVjsoRGLx7HC+SCcj5nshaPStbz8RrvK/4uWnSt+lBmX3B4KSnFtx3Jci6tfZNrzrtbxu4LeT1pSGSES9LmPjJlQCyPDoHbZ/A5v0RCBikveNmB85Q7O+ljeLSelBo3tcEHaPedc9tMHKI6kkvumxjNKWFwMwOk=
+	t=1783912321; cv=none; b=qqSDZOObMjSaShX2zLHjitPIutvpWy+lRByDTaIFzkfBQ8IBHBxaNwPDmeU22hTuHco/ImfkUQs9YnusCZx5KWarNp6Pn5V19XHrmwAptZfyTI93OHdzpyI4BH55cTpMm+uwQV0vva5hloI6T2Q7xOY+9xPvK3cRBUwysYP35Oc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783912317; c=relaxed/simple;
-	bh=FQkzVusuxqkKvf/J7uoOpNHWVGovVr1kka9RbUuWGDs=;
+	s=arc-20240116; t=1783912321; c=relaxed/simple;
+	bh=bukIn4M5GcFVgBkxOM9fvlzuU2owjZnHyKpTIjqPKtE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=E2frWxyA7nwBLxKwvmMettbvKc+WWlELpi3vDfdLzZKqPgMHCVOPf/zd4Li7zX/31fl0CdBpITojA2rxBep1AdLFARBxQ7joedXrmegfVUFkEo7Mh14cP6T90FzflnXPIEG+7nFn32lnTSTyPkDbtN2/F0PnqrpRsjvKDGbU2Ig=
+	 MIME-Version; b=KR7yOB5pKj+s3hs49ebXRU4HuemYQIdLi1MfjB54vBKVu33SyzB0ZwA/aMIH7faJaYITZIliIgL/Qd7hrdIisLoEpdRHsCI+znvTV0HBCD+Ey8qAtJJLGo6BRiRIT5BodgoSbcfxnPLmzN15D5Iv2PizR6vKWBZBGBAdZ9i9r1U=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
 Received: from unknown (HELO yjaykim-PowerEdge-T330.lge.net) (10.177.112.156)
-	by 156.147.51.102 with ESMTP; 13 Jul 2026 11:56:52 +0900
+	by 156.147.51.102 with ESMTP; 13 Jul 2026 11:56:54 +0900
 X-Original-SENDERIP: 10.177.112.156
 X-Original-MAILFROM: youngjun.park@lge.com
 From: Youngjun Park <youngjun.park@lge.com>
@@ -41,9 +41,9 @@ Cc: chrisl@kernel.org,
 	hyungjun.cho@lge.com,
 	baver.bae@lge.com,
 	her0gyugyu@gmail.com
-Subject: [PATCH v10 3/6] mm: memcontrol: add interface for swap tier selection
-Date: Mon, 13 Jul 2026 11:56:41 +0900
-Message-Id: <20260713025644.170839-4-youngjun.park@lge.com>
+Subject: [PATCH v10 5/6] selftests/mm: add a swap tier configuration test
+Date: Mon, 13 Jul 2026 11:56:43 +0900
+Message-Id: <20260713025644.170839-6-youngjun.park@lge.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260713025644.170839-1-youngjun.park@lge.com>
 References: <20260713025644.170839-1-youngjun.park@lge.com>
@@ -55,442 +55,424 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Introduce memory.swap.tiers.max, a flat-keyed file listing each
-tier defined in /sys/kernel/mm/swap/tiers with its state, "max"
-(allowed, the default) or "0" (disabled).  A tier is one bit in the
-cgroup's tier mask, so writing "<tier> max" or "<tier> 0" sets or
-clears that bit.
+This commit adds a test program for the global swap tier interface at
+/sys/kernel/mm/swap/tiers. It checks the add, split and remove
+operations and the documented error and batch atomicity rules. It also
+checks that a tier with an active swap device cannot be removed until
+the device is swapped off. That device is a zram device, and the check
+is skipped when zram is not available.
 
-Since the current use case lacks amount control, it only supports
-"max" (on) and "0" (off). Therefore, it does not track per-tier swap
-usage, relying instead on a fast runtime bitmask check.
-
-We maintain both `mask` and `effective_mask`. The `effective_mask` is
-strictly bounded by the parent (e.g., if a parent is "0", the child's
-effective state is "0" even if its `mask` is "max"). Maintaining this
-separately avoids costly cgroup tree traversals to check ancestors at
-runtime.
-
-Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
-Suggested-by: Yosry Ahmed <yosry@kernel.org>
+Assisted-by: Claude:claude-opus-4-8
 Signed-off-by: Youngjun Park <youngjun.park@lge.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst |  20 +++++
- Documentation/mm/swap-tier.rst          |   9 +++
- include/linux/memcontrol.h              |   5 ++
- mm/memcontrol.c                         |  67 ++++++++++++++++
- mm/swap_state.c                         |   5 +-
- mm/swap_tier.c                          | 102 +++++++++++++++++++++++-
- mm/swap_tier.h                          |  57 +++++++++++--
- 7 files changed, 255 insertions(+), 10 deletions(-)
+ tools/testing/selftests/mm/.gitignore     |   1 +
+ tools/testing/selftests/mm/Makefile       |   1 +
+ tools/testing/selftests/mm/config         |   2 +
+ tools/testing/selftests/mm/run_vmtests.sh |   5 +
+ tools/testing/selftests/mm/swap_tier.c    | 337 ++++++++++++++++++++++
+ 5 files changed, 346 insertions(+)
+ create mode 100644 tools/testing/selftests/mm/swap_tier.c
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 993446ab66d0..4b0b4f00ad6e 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1850,6 +1850,26 @@ The following nested keys are defined.
- 	Swap usage hard limit.  If a cgroup's swap usage reaches this
- 	limit, anonymous memory of the cgroup will not be swapped out.
+diff --git a/tools/testing/selftests/mm/.gitignore b/tools/testing/selftests/mm/.gitignore
+index 227476d8ff1f..94ee61a9914d 100644
+--- a/tools/testing/selftests/mm/.gitignore
++++ b/tools/testing/selftests/mm/.gitignore
+@@ -44,6 +44,7 @@ hmm-tests
+ memfd_secret
+ soft-dirty
+ split_huge_page_test
++swap_tier
+ ksm_tests
+ local_config.h
+ local_config.mk
+diff --git a/tools/testing/selftests/mm/Makefile b/tools/testing/selftests/mm/Makefile
+index ee8def9b4c31..4e47191e06ff 100644
+--- a/tools/testing/selftests/mm/Makefile
++++ b/tools/testing/selftests/mm/Makefile
+@@ -104,6 +104,7 @@ TEST_GEN_FILES += guard-regions
+ TEST_GEN_FILES += merge
+ TEST_GEN_FILES += rmap
+ TEST_GEN_FILES += folio_split_race_test
++TEST_GEN_FILES += swap_tier
  
-+  memory.swap.tiers.max
-+	A read-write flat-keyed file which exists on non-root
-+	cgroups.  The default is "max" for every tier.
-+
-+	Limits the swap tiers this cgroup may swap to.  Tiers are
-+	defined globally in /sys/kernel/mm/swap/tiers and listed here,
-+	one per line. When read, the values are displayed in descending
-+	order of the tiers (highest tier first)::
-+
-+	  <tier_1> max
-+	  <tier_2> 0
-+	  ...
-+
-+	Currently, only "max" and "0" are supported. "max" allows the
-+	tier, "0" disables it.  Each write sets a single "<tier> max"
-+	or "<tier> 0" pair.
-+
-+	A child may only narrow what its parent allows. A tier an
-+	ancestor disabled stays disabled regardless of the value here.
-+
-   memory.swap.events
- 	A read-only flat-keyed file which exists on non-root cgroups.
- 	The following entries are defined.  Unless specified
-diff --git a/Documentation/mm/swap-tier.rst b/Documentation/mm/swap-tier.rst
-index 0fb4a1153a67..addbc495de8c 100644
---- a/Documentation/mm/swap-tier.rst
-+++ b/Documentation/mm/swap-tier.rst
-@@ -15,6 +15,15 @@ speed to fully utilize this feature. While the current implementation is
- integrated with cgroups, the concept is designed to be extensible for other
- subsystems in the future.
+ ifneq ($(ARCH),arm64)
+ TEST_GEN_FILES += soft-dirty
+diff --git a/tools/testing/selftests/mm/config b/tools/testing/selftests/mm/config
+index 06f78bd232e2..de3752e1bbd2 100644
+--- a/tools/testing/selftests/mm/config
++++ b/tools/testing/selftests/mm/config
+@@ -14,3 +14,5 @@ CONFIG_UPROBES=y
+ CONFIG_MEMORY_FAILURE=y
+ CONFIG_HWPOISON_INJECT=m
+ CONFIG_PROC_MEM_ALWAYS_FORCE=y
++CONFIG_SWAP=y
++CONFIG_ZRAM=y
+diff --git a/tools/testing/selftests/mm/run_vmtests.sh b/tools/testing/selftests/mm/run_vmtests.sh
+index a60b9f9f16e7..06d53fad82ba 100755
+--- a/tools/testing/selftests/mm/run_vmtests.sh
++++ b/tools/testing/selftests/mm/run_vmtests.sh
+@@ -71,6 +71,8 @@ separated by spaces:
+ 	tests for VM_PFNMAP handling
+ - process_madv
+ 	test for process_madv
++- swap_tier
++	test the /sys/kernel/mm/swap/tiers configuration interface
+ - cow
+ 	test copy-on-write semantics
+ - thp
+@@ -352,6 +354,9 @@ CATEGORY="process_madv" run_test ./process_madv
  
-+Use case
-+---------
+ CATEGORY="vma_merge" run_test ./merge
+ 
++# swap tier configuration interface (/sys/kernel/mm/swap/tiers)
++CATEGORY="swap_tier" run_test ./swap_tier
 +
-+Users can perform selective swapping by choosing a swap tier assigned according
-+to speed within a cgroup.
+ if [ -x ./memfd_secret ]
+ then
+ if [ -f /proc/sys/kernel/yama/ptrace_scope ]; then
+diff --git a/tools/testing/selftests/mm/swap_tier.c b/tools/testing/selftests/mm/swap_tier.c
+new file mode 100644
+index 000000000000..bc77b59a7270
+--- /dev/null
++++ b/tools/testing/selftests/mm/swap_tier.c
+@@ -0,0 +1,337 @@
++// SPDX-License-Identifier: GPL-2.0
++#define _GNU_SOURCE
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/swap.h>
++#include <unistd.h>
 +
-+For more information on cgroup v2, please refer to
-+``Documentation/admin-guide/cgroup-v2.rst``.
++#include "kselftest.h"
 +
- Priority Range
- --------------
- 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 8724ff417ad4..895da2cc1a69 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -281,6 +281,11 @@ struct mem_cgroup {
- 	struct lru_gen_mm_list mm_list;
- #endif
- 
-+#ifdef CONFIG_SWAP
-+	int tier_mask;
-+	int tier_effective_mask;
-+#endif
++#define TIERS_PATH "/sys/kernel/mm/swap/tiers"
 +
- #ifdef CONFIG_MEMCG_V1
- 	/* Legacy consumer-oriented counters */
- 	struct page_counter kmem;		/* v1 only */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 929be41cadd4..6403d6b3ca41 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -68,6 +68,7 @@
- #include <net/ip.h>
- #include "slab.h"
- #include "memcontrol-v1.h"
-+#include "swap_tier.h"
- 
- #include <linux/uaccess.h>
- 
-@@ -4244,6 +4245,8 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	refcount_set(&memcg->id.ref, 1);
- 	css_get(css);
- 
-+	swap_tiers_memcg_inherit_mask(memcg);
-+
- 	/*
- 	 * Ensure mem_cgroup_from_private_id() works once we're fully online.
- 	 *
-@@ -5798,6 +5801,64 @@ static int swap_events_show(struct seq_file *m, void *v)
- 	return 0;
- }
- 
-+static int swap_tier_max_show(struct seq_file *m, void *v)
++static int tiers_write(const char *cmd)
 +{
-+	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
++	int fd, ret = 0;
 +
-+	swap_tiers_mask_show(m, memcg);
-+	return 0;
++	fd = open(TIERS_PATH, O_WRONLY);
++	if (fd < 0)
++		return -errno;
++	if (write(fd, cmd, strlen(cmd)) < 0)
++		ret = -errno;
++	close(fd);
++	return ret;
 +}
 +
-+static ssize_t swap_tier_max_write(struct kernfs_open_file *of,
-+				char *buf, size_t nbytes, loff_t off)
++static int tier_range(const char *name, int *start, int *end)
 +{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	char *pos, *name, *val;
-+	bool enable;
-+	int mask;
-+	int ret = 0;
++	char buf[4096], *line, *save;
++	int fd;
++	ssize_t n;
 +
-+	pos = strstrip(buf);
-+	name = strsep(&pos, " \t\n");
-+	if (!name || !*name)
-+		return -EINVAL;
-+	if (pos)
-+		pos = skip_spaces(pos);
-+	val = strsep(&pos, " \t\n");
-+	if (!val || !*val)
-+		return -EINVAL;
-+	if (pos && *skip_spaces(pos))
-+		return -EINVAL;
++	fd = open(TIERS_PATH, O_RDONLY);
++	if (fd < 0)
++		return -1;
++	n = read(fd, buf, sizeof(buf) - 1);
++	close(fd);
++	if (n < 0)
++		return -1;
++	buf[n] = '\0';
 +
-+	if (!strcmp(val, "max"))
-+		enable = true;
-+	else if (!strcmp(val, "0"))
-+		enable = false;
-+	else
-+		return -EINVAL;
++	for (line = strtok_r(buf, "\n", &save); line;
++	     line = strtok_r(NULL, "\n", &save)) {
++		char tname[64];
++		int idx, s, e;
 +
-+	spin_lock(&swap_tier_lock);
-+	mask = swap_tiers_mask_lookup(name);
-+	if (!mask) {
-+		ret = -EINVAL;
-+		goto out;
++		if (sscanf(line, "%63s %d %d %d", tname, &idx, &s, &e) != 4)
++			continue;
++		if (!strcmp(tname, name)) {
++			*start = s;
++			*end = e;
++			return 0;
++		}
 +	}
-+
-+	/*
-+	 * tier_mask is set per memcg here; the effective mask is clamped
-+	 * to the parent's in swap_tiers_memcg_sync_mask().
-+	 */
-+	if (enable)
-+		WRITE_ONCE(memcg->tier_mask, memcg->tier_mask | mask);
-+	else
-+		WRITE_ONCE(memcg->tier_mask, memcg->tier_mask & ~mask);
-+
-+	swap_tiers_memcg_sync_mask(memcg);
-+out:
-+	spin_unlock(&swap_tier_lock);
-+	return ret ? ret : nbytes;
++	return -1;
 +}
 +
- static struct cftype swap_files[] = {
- 	{
- 		.name = "swap.current",
-@@ -5830,6 +5891,12 @@ static struct cftype swap_files[] = {
- 		.file_offset = offsetof(struct mem_cgroup, swap_events_file),
- 		.seq_show = swap_events_show,
- 	},
-+	{
-+		.name = "swap.tiers.max",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = swap_tier_max_show,
-+		.write = swap_tier_max_write,
-+	},
- 	{ }	/* terminate */
- };
- 
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index dcec1a6c92bd..ba090fa80bf1 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -1053,6 +1053,7 @@ static ssize_t tiers_store(struct kobject *kobj,
- 	char *p, *token, *name, *tmp;
- 	int ret = 0;
- 	short prio;
-+	int mask = 0;
- 
- 	tmp = kstrdup(buf, GFP_KERNEL);
- 	if (!tmp)
-@@ -1085,7 +1086,7 @@ static ssize_t tiers_store(struct kobject *kobj,
- 				goto restore;
- 			break;
- 		case '-':
--			ret = swap_tiers_remove(token + 1);
-+			ret = swap_tiers_remove(token + 1, &mask);
- 			if (ret)
- 				goto restore;
- 			break;
-@@ -1095,7 +1096,7 @@ static ssize_t tiers_store(struct kobject *kobj,
- 		}
- 	}
- 
--	if (!swap_tiers_update()) {
-+	if (!swap_tiers_update(mask)) {
- 		ret = -EINVAL;
- 		goto restore;
- 	}
-diff --git a/mm/swap_tier.c b/mm/swap_tier.c
-index 6b57cadb3e95..98bfee760b8d 100644
---- a/mm/swap_tier.c
-+++ b/mm/swap_tier.c
-@@ -253,7 +253,7 @@ int swap_tiers_add(const char *name, int prio)
- 	return ret;
- }
- 
--int swap_tiers_remove(const char *name)
-+int swap_tiers_remove(const char *name, int *mask)
- {
- 	int ret = 0;
- 	struct swap_tier *tier;
-@@ -276,6 +276,7 @@ int swap_tiers_remove(const char *name)
- 		list_prev_entry(tier, list)->prio = DEF_SWAP_PRIO;
- 
- 	swap_tier_inactivate(tier);
-+	*mask |= TIER_MASK(tier);
- 
- 	return ret;
- }
-@@ -344,7 +345,24 @@ void swap_tiers_assign_dev(struct swap_info_struct *swp)
- 	swp->tier_mask = TIER_DEFAULT_MASK;
- }
- 
--bool swap_tiers_update(void)
-+#ifdef CONFIG_MEMCG
-+static void swap_tier_memcg_propagate(int mask)
++static bool tier_exists(const char *name)
 +{
-+	struct mem_cgroup *child;
++	int s, e;
 +
-+	for_each_mem_cgroup_tree(child, root_mem_cgroup) {
-+		WRITE_ONCE(child->tier_mask, child->tier_mask | mask);
-+		WRITE_ONCE(child->tier_effective_mask,
-+			   child->tier_effective_mask | mask);
++	return tier_range(name, &s, &e) == 0;
++}
++
++static bool range_is(const char *name, int start, int end)
++{
++	int s, e;
++
++	if (tier_range(name, &s, &e))
++		return false;
++	return s == start && e == end;
++}
++
++static int tier_count(void)
++{
++	char buf[4096], *line, *save;
++	int fd, count = 0;
++	ssize_t n;
++
++	fd = open(TIERS_PATH, O_RDONLY);
++	if (fd < 0)
++		return -1;
++	n = read(fd, buf, sizeof(buf) - 1);
++	close(fd);
++	if (n < 0)
++		return -1;
++	buf[n] = '\0';
++
++	for (line = strtok_r(buf, "\n", &save); line;
++	     line = strtok_r(NULL, "\n", &save)) {
++		char tname[64];
++		int idx, s, e;
++
++		if (sscanf(line, "%63s %d %d %d", tname, &idx, &s, &e) == 4)
++			count++;
 +	}
-+}
-+#else
-+static void swap_tier_memcg_propagate(int mask)
-+{
-+}
-+#endif
-+
-+bool swap_tiers_update(int mask)
- {
- 	struct swap_tier *tier;
- 	struct swap_info_struct *swp;
-@@ -375,5 +393,85 @@ bool swap_tiers_update(void)
- 		swap_tiers_assign_dev(swp);
- 	}
- 
-+	/*
-+	 * When a tier is removed, its index (bit position in the mask) becomes
-+	 * free for reassignment to a future tier. If a memcg had previously
-+	 * disabled this tier (cleared the bit in its swap.tiers.max file), the
-+	 * effective mask would keep that bit clear -- meaning the new tier at
-+	 * the same index would be silently unavailable, an invisible cgroup
-+	 * constraint left behind by a tier that no longer exists.
-+	 *
-+	 * To prevent this, OR the removed tier's mask bit into every memcg's
-+	 * tier_mask and tier_effective_mask. This resets the bit so the new
-+	 * tier is accessible by default; users who want to restrict it must
-+	 * explicitly disable it after the tier is re-created.
-+	 */
-+	if (mask)
-+		swap_tier_memcg_propagate(mask);
-+
- 	return true;
- }
-+
-+#ifdef CONFIG_MEMCG
-+void swap_tiers_mask_show(struct seq_file *m, struct mem_cgroup *memcg)
-+{
-+	struct swap_tier *tier;
-+	int mask;
-+
-+	spin_lock(&swap_tier_lock);
-+	mask = READ_ONCE(memcg->tier_mask);
-+
-+	for_each_active_tier(tier)
-+		seq_printf(m, "%s %s\n", tier->name,
-+			   (mask & TIER_MASK(tier)) ? "max" : "0");
-+	spin_unlock(&swap_tier_lock);
++	return count;
 +}
 +
-+int swap_tiers_mask_lookup(const char *name)
++static int test_coverage(void)
 +{
-+	struct swap_tier *tier;
-+
-+	lockdep_assert_held(&swap_tier_lock);
-+
-+	for_each_active_tier(tier) {
-+		if (!strcmp(name, tier->name))
-+			return TIER_MASK(tier);
-+	}
-+
-+	return 0;
++	if (tiers_write("+orphan:100") != -EINVAL)
++		return KSFT_FAIL;
++	if (tier_exists("orphan"))
++		return KSFT_FAIL;
++	return KSFT_PASS;
 +}
 +
-+static void __swap_tier_memcg_inherit_mask(struct mem_cgroup *memcg,
-+	struct mem_cgroup *parent)
++static int test_add(void)
 +{
-+	int parent_mask = parent
-+		? READ_ONCE(parent->tier_effective_mask)
-+		: TIER_ALL_MASK;
-+
-+	WRITE_ONCE(memcg->tier_effective_mask,
-+		   parent_mask & READ_ONCE(memcg->tier_mask));
++	if (tiers_write("+lo:-1 +hi:50"))
++		return KSFT_FAIL;
++	if (!range_is("hi", 50, SHRT_MAX) || !range_is("lo", -1, 49))
++		return KSFT_FAIL;
++	return KSFT_PASS;
 +}
 +
-+/* Computes the initial effective mask from the parent's effective mask. */
-+void swap_tiers_memcg_inherit_mask(struct mem_cgroup *memcg)
++static int test_split(void)
 +{
-+	spin_lock(&swap_tier_lock);
-+	memcg->tier_mask = TIER_ALL_MASK;
-+	__swap_tier_memcg_inherit_mask(memcg, parent_mem_cgroup(memcg));
-+	spin_unlock(&swap_tier_lock);
++	if (tiers_write("+mid:100"))
++		return KSFT_FAIL;
++	if (!range_is("mid", 100, SHRT_MAX) ||
++	    !range_is("hi", 50, 99) ||
++	    !range_is("lo", -1, 49))
++		return KSFT_FAIL;
++	return KSFT_PASS;
++}
++
++static int test_remove(void)
++{
++	/* Remove the top tier: 'hi' re-expands upward to SHRT_MAX. */
++	if (tiers_write("-mid"))
++		return KSFT_FAIL;
++	if (tier_exists("mid") || !range_is("hi", 50, SHRT_MAX))
++		return KSFT_FAIL;
++
++	/* Remove the lowest tier: 'hi' shifts its start down to -1. */
++	if (tiers_write("-lo"))
++		return KSFT_FAIL;
++	if (tier_exists("lo") || !range_is("hi", -1, SHRT_MAX))
++		return KSFT_FAIL;
++
++	return KSFT_PASS;
++}
++
++static int test_errors(void)
++{
++	if (tiers_write("+hi:100") != -EEXIST)		/* duplicate name */
++		return KSFT_FAIL;
++	if (tiers_write("+bad.name:100") != -EINVAL)	/* illegal name */
++		return KSFT_FAIL;
++	if (tiers_write("+dup:-1") != -EBUSY)		/* priority in use */
++		return KSFT_FAIL;
++	if (tiers_write("+low:-2") != -EINVAL)		/* prio < DEF_SWAP_PRIO */
++		return KSFT_FAIL;
++	return KSFT_PASS;
 +}
 +
 +/*
-+ * Called when a memcg's tier_mask is modified. Walks the subtree
-+ * and recomputes each descendant's effective mask against its parent.
++ * A write carrying several operations is atomic: if any operation fails, the
++ * whole batch is rolled back.
 + */
-+void swap_tiers_memcg_sync_mask(struct mem_cgroup *memcg)
++static int test_atomic(void)
 +{
-+	struct mem_cgroup *child;
-+
-+	lockdep_assert_held(&swap_tier_lock);
-+
-+	for_each_mem_cgroup_tree(child, memcg)
-+		__swap_tier_memcg_inherit_mask(child, parent_mem_cgroup(child));
++	if (tiers_write("+a:50 +a:60") != -EEXIST)
++		return KSFT_FAIL;
++	if (tier_exists("a") || !range_is("hi", -1, SHRT_MAX))
++		return KSFT_FAIL;
++	return KSFT_PASS;
 +}
-+#endif
-diff --git a/mm/swap_tier.h b/mm/swap_tier.h
-index 3e355f857363..e2f0cf32035b 100644
---- a/mm/swap_tier.h
-+++ b/mm/swap_tier.h
-@@ -10,22 +10,67 @@ struct swap_info_struct;
- 
- extern spinlock_t swap_tier_lock;
- 
--#define TIER_ALL_MASK		(~0)
--#define TIER_DEFAULT_IDX	(31)
--#define TIER_DEFAULT_MASK	(1U << TIER_DEFAULT_IDX)
--
- /* Initialization and application */
- void swap_tiers_init(void);
- ssize_t swap_tiers_sysfs_show(char *buf);
- 
- int swap_tiers_add(const char *name, int prio);
--int swap_tiers_remove(const char *name);
-+int swap_tiers_remove(const char *name, int *mask);
- 
- void swap_tiers_snapshot(void);
- void swap_tiers_snapshot_restore(void);
--bool swap_tiers_update(void);
-+bool swap_tiers_update(int mask);
- 
- /* Tier assignment */
- void swap_tiers_assign_dev(struct swap_info_struct *swp);
- 
-+#define TIER_ALL_MASK		(~0)
-+#define TIER_DEFAULT_IDX	(31)
-+#define TIER_DEFAULT_MASK	(1U << TIER_DEFAULT_IDX)
 +
-+#if defined(CONFIG_SWAP) && defined(CONFIG_MEMCG)
-+/* Memcg related functions */
-+void swap_tiers_mask_show(struct seq_file *m, struct mem_cgroup *memcg);
-+void swap_tiers_memcg_inherit_mask(struct mem_cgroup *memcg);
-+void swap_tiers_memcg_sync_mask(struct mem_cgroup *memcg);
-+int swap_tiers_mask_lookup(const char *name);
-+static inline int folio_tier_effective_mask(struct folio *folio)
++static void zram_remove(int idx);
++static int zram_add(long size)
 +{
-+	struct mem_cgroup *memcg;
-+	int mask = TIER_ALL_MASK;
++	char path[128], val[64];
++	ssize_t n;
++	int idx, fd;
 +
-+	rcu_read_lock();
-+	memcg = folio_memcg(folio);
-+	if (memcg)
-+		mask = READ_ONCE(memcg->tier_effective_mask);
-+	rcu_read_unlock();
++	fd = open("/sys/class/zram-control/hot_add", O_RDONLY);
++	if (fd < 0)
++		return -1;
++	n = read(fd, val, sizeof(val) - 1);
++	close(fd);
++	if (n <= 0)
++		return -1;
++	val[n] = '\0';
++	idx = atoi(val);
 +
-+	return mask;
-+}
-+#else
-+static inline void swap_tiers_mask_show(struct seq_file *m,
-+	struct mem_cgroup *memcg) {}
-+static inline void swap_tiers_memcg_inherit_mask(struct mem_cgroup *memcg) {}
-+static inline void swap_tiers_memcg_sync_mask(struct mem_cgroup *memcg) {}
-+static inline int swap_tiers_mask_lookup(const char *name)
-+{
-+	return 0;
-+}
-+static inline int folio_tier_effective_mask(struct folio *folio)
-+{
-+	return TIER_ALL_MASK;
-+}
-+#endif
++	snprintf(path, sizeof(path), "/sys/block/zram%d/disksize", idx);
++	fd = open(path, O_WRONLY);
++	if (fd < 0) {
++		zram_remove(idx);
++		return -1;
++	}
 +
-+/**
-+ * swap_tiers_mask_test - Check if the tier mask is valid
-+ * @tier_mask: The tier mask to check
-+ * @mask: The mask to compare against
-+ *
-+ * Return: true if condition matches, false otherwise
-+ */
-+static inline bool swap_tiers_mask_test(int tier_mask, int mask)
-+{
-+	return tier_mask & mask;
++	snprintf(val, sizeof(val), "%ld", size);
++	n = write(fd, val, strlen(val));
++	close(fd);
++
++	if (n != strlen(val)) {
++		zram_remove(idx);
++		return -1;
++	}
++
++	return idx;
 +}
- #endif /* _SWAP_TIER_H */
++
++static void zram_remove(int idx)
++{
++	char val[16];
++	int fd;
++
++	fd = open("/sys/class/zram-control/hot_remove", O_WRONLY);
++	if (fd < 0)
++		return;
++	snprintf(val, sizeof(val), "%d", idx);
++	write(fd, val, strlen(val)); /* ignore error. best-effort cleanup */
++	close(fd);
++}
++
++static int swap_setup(const char *dev, int prio)
++{
++	char cmd[128];
++
++	snprintf(cmd, sizeof(cmd), "mkswap %s >/dev/null 2>&1", dev);
++	if (system(cmd))
++		return -1;
++	return swapon(dev, SWAP_FLAG_PREFER | (prio & SWAP_FLAG_PRIO_MASK));
++}
++
++static int wait_for_dev(const char *dev)
++{
++	int i;
++
++	for (i = 0; i < 50; i++) {
++		if (access(dev, F_OK) == 0)
++			return 0;
++
++		usleep(100000);
++	}
++
++	return -1;
++}
++
++static int test_device_pins_tier(void)
++{
++	char dev[32];
++	int zidx, ret = KSFT_FAIL;
++
++	if (tiers_write("+top:50"))
++		return KSFT_FAIL;
++
++	zidx = zram_add(64 << 20);
++	if (zidx < 0) {
++		ret = KSFT_SKIP;
++		goto out_tier;
++	}
++	snprintf(dev, sizeof(dev), "/dev/zram%d", zidx);
++
++	if (wait_for_dev(dev)) {
++		ret = KSFT_SKIP;
++		goto out_zram;
++	}
++
++	if (swap_setup(dev, 50)) {
++		ret = KSFT_SKIP;
++		goto out_zram;
++	}
++
++	if (tiers_write("-top") == -EBUSY) {		/* blocked while active */
++		swapoff(dev);
++		if (!tiers_write("-top"))		/* removable after swapoff */
++			ret = KSFT_PASS;
++	} else {
++		swapoff(dev);
++	}
++out_zram:
++	zram_remove(zidx);
++out_tier:
++	tiers_write("-top");
++	return ret;
++}
++
++static void tiers_clear(void)
++{
++	char buf[4096], *line, *save;
++	int fd;
++	ssize_t n;
++
++	fd = open(TIERS_PATH, O_RDONLY);
++	if (fd < 0)
++		return;
++	n = read(fd, buf, sizeof(buf) - 1);
++	close(fd);
++	if (n < 0)
++		return;
++	buf[n] = '\0';
++
++	for (line = strtok_r(buf, "\n", &save); line;
++	     line = strtok_r(NULL, "\n", &save)) {
++		char name[64], cmd[80];
++		int idx, s, e;
++
++		if (sscanf(line, "%63s %d %d %d", name, &idx, &s, &e) != 4)
++			continue;
++		snprintf(cmd, sizeof(cmd), "-%s", name);
++		tiers_write(cmd);
++	}
++}
++
++int main(void)
++{
++	ksft_print_header();
++	ksft_set_plan(7);
++
++	if (geteuid() != 0)
++		ksft_exit_skip("test requires root\n");
++	if (access(TIERS_PATH, F_OK))
++		ksft_exit_skip("%s not present (CONFIG_SWAP/tiers)\n", TIERS_PATH);
++	if (tier_count() != 0)
++		ksft_exit_skip("swap tiers already configured; run on a clean system\n");
++
++	ksft_test_result(test_coverage() == KSFT_PASS, "coverage rule\n");
++	ksft_test_result(test_add() == KSFT_PASS, "add tiers\n");
++	ksft_test_result(test_split() == KSFT_PASS, "split tier\n");
++	ksft_test_result(test_remove() == KSFT_PASS, "remove and merge\n");
++	ksft_test_result(test_errors() == KSFT_PASS, "invalid operations\n");
++	ksft_test_result(test_atomic() == KSFT_PASS, "batch atomicity\n");
++
++	ksft_test_result_code(test_device_pins_tier(), "device pins its tier", NULL);
++
++	tiers_clear();
++
++	ksft_finished();
++}
 -- 
 2.34.1
 
