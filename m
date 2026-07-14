@@ -1,208 +1,234 @@
-Received: from mta22.hihonor.com (mta22.honor.com [81.70.192.198])
+Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C69E3BE154;
-	Tue, 14 Jul 2026 12:15:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.70.192.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFAED378D64
+	for <cgroups@vger.kernel.org>; Tue, 14 Jul 2026 12:44:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784031347; cv=none; b=i0/IV+jgWejmBGtS58lT5wIYgfu21+rCwmsm4KvttRS9hRnraSwRNICrI0KBYNkXpINoceFylpxi+2DWR1d7zFlF+wZ4XWSAsqMB0peGyP6k5W0YjmL8gw3JW1fXgPZWs0MJiviEPxkab4sIRXUrST/Pq/7DOlo79PT9r9SoZZ4=
+	t=1784033081; cv=none; b=jwpWNdM86ZW/isHAihTHXEdF4ZouU35H/CoJKw46Qjbrtij2pVPS6oD7DFDfaYKaL2UlfzfAz02v97uHnzJNra9QpcsIUJa7TEtS45bDVbYQ/VY1sn5wJqIEJ43F/rl1D1C5qbr90wAumSkyeKwiNeg585nkBE4yxUKwRxrm55g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784031347; c=relaxed/simple;
-	bh=LONzgChPkSvGUxgkSO88PSwlJValMfRNHzxGIgyGodY=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=esAWHf7UTXzFLKWl6UFKtDWEtEwsHFFOpKfjmYfERWzr34aZPku3dsX9gKMC9fX0XlpfeLy7PMw8K3iQKXoX8lfQogPIcFiwqavQAHcuQrOKEmJIi0uXfpIFxe/Mgb4Tm64djEkJ9wt+j2Oi9ryNS4RYIuoHSkQWxb1hcnh5GWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=honor.com; spf=pass smtp.mailfrom=honor.com; dkim=pass (1024-bit key) header.d=honor.com header.i=@honor.com header.b=kzZC2sC5; arc=none smtp.client-ip=81.70.192.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=honor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=honor.com
+	s=arc-20240116; t=1784033081; c=relaxed/simple;
+	bh=UDMGl+NchJmNqRQFdjRgGeXOP2yiFKcr6jrvX+VusAE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=fylTWVGKDGCAlcR9hzE8UdMBt+QpfkRvHkVJM/SiOx3tfNLBA97oH/yZwbX12OSMB+oRRJ/sQ/x+Q1nG3v15nDhVFxkZBA43AgFwQmJkStnWkwxlajWdLqoZB2nouMz8NZCWcoRTkd2FHb+uytk9IIppwBTKwEHFTCY781ueGR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Vfw4wVy4; arc=none smtp.client-ip=91.218.175.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=honor.com header.i=@honor.com header.b="kzZC2sC5"
-dkim-signature: v=1; a=rsa-sha256; d=honor.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=To:From;
-	bh=PTW4Mp0JJ6AVsiV1oNONd40biUPQE43rVLpkGa6ZhVA=;
-	b=kzZC2sC5NeUj3xvj/4OmiYy35YCivn0Y0FA7/mkxY+i64JpI3DVxZXqTIlyqc0B6RVQqXaanh
-	Ne3KgVhtuzaClsPDeY29BxbpRQ83UTtXsJrUJv4awWjVWpMBroPlhjX/5U0S2HahHPlK+PoBVQn
-	nF+PLe+DjkVykBypjWQ+CWQ=
-Received: from TW001.hihonor.com (unknown [10.77.229.151])
-	by mta22.hihonor.com (SkyGuard) with ESMTPS id 4gzytp6Dl2zYl0L8;
-	Tue, 14 Jul 2026 20:15:30 +0800 (CST)
-Received: from TA012-1.hihonor.com (10.77.199.132) by TW001.hihonor.com
- (10.77.229.151) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Tue, 14 Jul
- 2026 20:15:30 +0800
-Received: from localhost.localdomain (10.144.5.36) by TA012-1.hihonor.com
- (10.77.199.132) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Tue, 14 Jul
- 2026 20:15:20 +0800
-From: Zicheng Wang <wangzicheng@honor.com>
-To: <akpm@linux-foundation.org>, <yuanchu@google.com>
-CC: <tj@kernel.org>, <hannes@cmpxchg.org>, <mkoutny@suse.com>,
-	<corbet@lwn.net>, <kasong@tencent.com>, <qi.zheng@linux.dev>,
-	<shakeel.butt@linux.dev>, <baohua@kernel.org>, <axelrasmussen@google.com>,
-	<weixugc@google.com>, <david@kernel.org>, <ljs@kernel.org>,
-	<liam@infradead.org>, <vbabka@kernel.org>, <rppt@kernel.org>,
-	<surenb@google.com>, <mhocko@suse.com>, <roman.gushchin@linux.dev>,
-	<muchun.song@linux.dev>, <cgroups@vger.kernel.org>, <linux-mm@kvack.org>,
-	<linux-kernel@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<willy@infradead.org>, <denghaojie@honor.com>, <baoquan.he@linux.dev>,
-	<kaleshsingh@google.com>, <tjmercier@google.com>, <tao.wangtao@honor.com>,
-	<zhangji1@honor.com>, <wangzhen5@honor.com>, Zicheng Wang
-	<wangzicheng@honor.com>
-Subject: [RFC v2 2/3] mm: memcontrol: add memory.aging cgroup v2 file
-Date: Tue, 14 Jul 2026 20:15:28 +0800
-Message-ID: <20260714121529.2237261-3-wangzicheng@honor.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260714121529.2237261-1-wangzicheng@honor.com>
-References: <20260714121529.2237261-1-wangzicheng@honor.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Vfw4wVy4"
+Message-ID: <25a94af5-1dbe-4ab4-b47d-fb49987bfcd4@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784033076;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=SL2BuBErJSR+msyoMlTQpeX2tgyYFMJLBrTouVN+o3E=;
+	b=Vfw4wVy4dFED07nvt6oOpMkXirev2Y5GMxKO5ot6QfOqKJyPHMsdi4giItxcH80oClK6xP
+	5UglsrKFeXrW34PiHzsomYxK4+ifqhq3VTgN8mGFL/rnG6aQRdHl6tSw7NIPegyx5yPDDI
+	RbSVA//0HtXp7v6qjpAxaIHb4J6CP6g=
+Date: Tue, 14 Jul 2026 13:44:03 +0100
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TW004-1.hihonor.com (10.77.232.85) To TA012-1.hihonor.com
- (10.77.199.132)
+Subject: Re: [PATCH v2 2/2] mm/vmscan: reduce lru_lock contention via
+ vmstat-derived scan-balance cost
+To: Andrew Morton <akpm@linux-foundation.org>, david@kernel.org,
+ ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, rppt@kernel.org,
+ surenb@google.com, mhocko@suse.com, kasong@tencent.com, qi.zheng@linux.dev,
+ shakeel.butt@linux.dev, axelrasmussen@google.com, yuanchu@google.com,
+ weixugc@google.com, chrisl@kernel.org, nphamcs@gmail.com,
+ baoquan.he@linux.dev, youngjun.park@lge.com, hannes@cmpxchg.org,
+ roman.gushchin@linux.dev, muchun.song@linux.dev, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, rientjes@google.com,
+ kernel-team@meta.com
+References: <20260713163443.3562378-1-usama.arif@linux.dev>
+ <20260713163443.3562378-3-usama.arif@linux.dev>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Usama Arif <usama.arif@linux.dev>
+In-Reply-To: <20260713163443.3562378-3-usama.arif@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-Add a write-only memory.aging that triggers MGLRU aging (max_seq
-advancement) without reclaim - the aging counterpart of memory.reclaim.
-Userspace ages to rebalance the anon/file distribution across
-generations, then reclaims.  This is the control half of the loop;
-the observability it needs lands in the next patch.
 
-Useful for workloads such as the Android app lifecycle, where anon
-concentrates in the 2nd-youngest generation while file fills the
-oldest two and gets over-reclaimed.
 
-  echo 2 > /sys/fs/cgroup/foo/memory.aging
-  echo "100M" > /sys/fs/cgroup/foo/memory.reclaim
+On 13/07/2026 17:34, Usama Arif wrote:
+> The anon/file scan balance in get_scan_count() is driven by two scalars
+> in struct lruvec, anon_cost and file_cost, accumulated by every reclaim
+> producer under lruvec->lru_lock. The acquisition sites for cost work
+> specifically are:
+> 
+>   - shrink_inactive_list() re-takes lru_lock at function exit purely
+>     to call lru_note_cost_unlock_irq() with (nr_pageout, nr_scanned -
+>     nr_reclaimed). One acquisition per inactive shrink.
+>   - shrink_active_list() does the same with (0, nr_rotated). One
+>     acquisition per active shrink.
+>   - workingset_refault() takes the lock via folio_lruvec_lock_irq()
+>     purely to record the refault cost. One acquisition per refault.
+>   - prepare_scan_control() takes lru_lock just to snapshot the two
+>     scalars into sc->{anon,file}_cost.
+>   - lru_note_cost_unlock_irq() itself walks parent_lruvec and
+>     re-acquires lru_lock on each ancestor to propagate the update,
+>     adding O(memcg-depth) acquisitions per producer call.
+> 
+> This hurts because lru_lock is already a heavy contention point on
+> memory-heavy workloads: every isolate_lru_folios(), move_folios_to_lru()
+> and folio_add_lru() takes it. The cost work itself is trivial (two
+> scalar bumps and one comparison), but it contends with and causes
+> contention for actual LRU manipulation. The parent_lruvec() walk also
+> multiplies cost-update overhead by memcg hierarchy depth.
+> 
+> Replace the producer-side accumulators with a read-side accumulator fed
+> from per-LRU vmstat counters. The old producer formula was:
+> 
+>   cost = nr_io * SWAP_CLUSTER_MAX + nr_rotated
+> 
+> Add explicit node_stat counters for the producer-local inputs:
+> 
+>   PGRECLAIM_PAGEOUT_{ANON,FILE} - reclaim-driven pageout submissions
+>                                   (formerly stat.nr_pageout, weighted
+>                                   by SWAP_CLUSTER_MAX).
+>   PGROTATE_{ANON,FILE}          - reclaim-driven rotations, bumped from
+>                                   both shrink_inactive_list (by
+>                                   nr_scanned - nr_reclaimed) and
+>                                   shrink_active_list (by nr_rotated),
+>                                   unweighted.
+> 
+> WORKINGSET_RESTORE_{ANON,FILE} already captures the refault IO that
+> lru_note_cost_refault() used to bill.
+> 
+> In prepare_scan_control() the raw cost signal is recomputed lock-free of
+> lru_lock from monotonic counters:
+> 
+>   now = (PGRECLAIM_PAGEOUT_X + WORKINGSET_RESTORE_X) * SWAP_CLUSTER_MAX
+>         + PGROTATE_X
+> 
+> The delta against a per-lruvec prev_cost[] snapshot is folded into
+> cost_accum[]. Since one vmstat delta can cover many producer events
+> between reclaim passes, halve cost_accum[] until the total is back
+> within the lrusize/4 bound instead of halving only once.
+> 
+> Moving accumulation and decay to the reclaim side also improves the cost
+> model across reclaim gaps. With producer-side decay, events that happen
+> while reclaim is idle still age each other before reclaim ever samples
+> the costs. If a workload refaults a large anon set and then a smaller
+> file set before reclaim runs again, the later file activity can age the
+> earlier anon activity out of the cost model. The new scheme observes the
+> whole between-reclaim delta and decays anon and file proportionally, so
+> the scan-balance history better represents what happened since the last
+> reclaim pass.
+> 
+> A dedicated per-lruvec spinlock, cost_lock, serialises the prev_cost
+> RMW, the accumulator update, and the halving check against concurrent
+> reclaimers in the same memcg+node.
+> 
+> Hierarchy aggregation is now implicit in the vmstat accounting. The
+> producer-side parent_lruvec() walk and lru_reparent_memcg() cost splice
+> existed only because anon_cost/file_cost were private lruvec fields. With
+> the cost expressed as lruvec vmstats, rstat propagates the underlying
+> counters through the memcg hierarchy and prepare_scan_control() consumes
+> the same ratelimited rstat view as the surrounding reclaim heuristics.
+> 
+> memcg-v1's memory.stat anon_cost/file_cost is now sourced from
+> cost_accum[] instead of the removed lruvec anon_cost/file_cost fields.
+> The reported values only refresh when prepare_scan_control() runs and
+> are bounded at ~lrusize/4 by the halving loop; the scan-balance signal
+> they express is unchanged.
+> 
+> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+> ---
+>  include/linux/mmzone.h | 11 +++++--
+>  include/linux/swap.h   |  3 --
+>  mm/memcontrol-v1.c     |  4 +--
+>  mm/memcontrol.c        |  4 +++
+>  mm/mmzone.c            |  1 +
+>  mm/swap.c              | 69 ----------------------------------------
+>  mm/vmscan.c            | 72 ++++++++++++++++++++++++++++++++++++------
+>  mm/vmstat.c            |  4 +++
+>  mm/workingset.c        |  5 ---
+>  9 files changed, 82 insertions(+), 91 deletions(-)
+> 
 
-Gated by CONFIG_LRU_GEN.  Concurrent writers race on the lruvec lock;
-a caller that did not advance the window gets -EAGAIN.
+The patch will need the below fixlet so that the counters keep incrementing
+for MGLRU as well. The counters themselves are not actually used by MGLRU,
+so this is just for observability. This was reported by sashiko, Thanks
+Andrew for pointing this out!
 
-Signed-off-by: Zicheng Wang <wangzicheng@honor.com>
+
+From 0fd35b49112cc0d689741f04c485283e6dce3326 Mon Sep 17 00:00:00 2001
+From: Usama Arif <usama.arif@linux.dev>
+Date: Tue, 14 Jul 2026 05:18:16 -0700
+Subject: [PATCH] [fixlet] mm/vmscan: increment pgreclaim_pageout_* and
+ pgrotate_* for MGLRU
+
+/proc/vmstat and per-memcg memory.stat expose pgreclaim_pageout_*
+and pgrotate_* directly (memcg_node_stat_items in memcontrol.c
+forwards them per-memcg). Without this fix they stay at 0 whenever
+reclaim runs through MGLRU, misreporting observability.
+
+Under pure MGLRU the scan-balance signal itself is not consumed (both
+prepare_scan_control() and get_scan_count() are short-circuited on the
+MGLRU paths, and MGLRU's own type/tier selection comes from
+read_ctrl_pos() on lrugen->{avg_refaulted,avg_total,refaulted,evicted},
+not from anon_cost/file_cost), so this fix is about observability.
+
+Signed-off-by: Usama Arif <usama.arif@linux.dev>
 ---
- Documentation/admin-guide/cgroup-v2.rst       | 35 +++++++++++++++++++
- Documentation/admin-guide/mm/multigen_lru.rst | 13 +++++++
- mm/memcontrol.c                               | 30 ++++++++++++++++
- 3 files changed, 78 insertions(+)
+ mm/vmscan.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 6efd0095ed99..f42ac6dddbf6 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1437,6 +1437,41 @@ The following nested keys are defined.
- 	The valid range for swappiness is [0-200, max], setting
- 	swappiness=max exclusively reclaims anonymous memory.
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 279f78b7a0e4..2da36374bb4a 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4867,7 +4867,8 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	struct reclaim_stat stat;
+ 	struct lru_gen_mm_walk *walk;
+ 	int scanned, reclaimed;
+-	int isolated = 0, type, type_scanned;
++	int isolated = 0, nr_isolated = 0, type, type_scanned;
++	unsigned long total_reclaimed = 0, total_pageout = 0;
+ 	bool skip_retry = false;
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+@@ -4879,6 +4880,7 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
  
-+  memory.aging
-+	A write-only file which exists for all cgroups when
-+	CONFIG_LRU_GEN is enabled.
-+
-+	This interface triggers MGLRU aging (generation advancement)
-+	without page reclaim. It is useful for proactively rebalancing
-+	the distribution of pages across generations before invoking
-+	memory.reclaim, particularly for workloads (such as the Android
-+	application lifecycle) where anonymous pages concentrate in
-+	the youngest generations while file pages fill up the oldest
-+	generation and get over-reclaimed.
-+
-+	The single argument is the number of generations to age, in
-+	the range [1, MAX_NR_GENS]. MAX_NR_GENS is currently 4.
-+
-+	Example::
-+
-+	  echo 2 > memory.aging
-+
-+	Each aging pass advances both anonymous and file generations
-+	simultaneously, matching MGLRU's max_seq semantics. There is
-+	no way to age only one type - this is a property of MGLRU,
-+	not of this interface.
-+
-+	Proactive aging should be followed by memory.reclaim to
-+	actually free pages::
-+
-+	  echo 2 > /sys/fs/cgroup/foo/memory.aging
-+	  echo "100M" > /sys/fs/cgroup/foo/memory.reclaim
-+
-+	Returns -EAGAIN if this call did not advance the generation
-+	window (typically because a concurrent caller on the same
-+	cgroup got there first). Returns -EINVAL if the argument is
-+	missing, zero, or out of range.
-+
-   memory.peak
- 	A read-write single value file which exists on non-root cgroups.
+ 	scanned = isolate_folios(nr_to_scan, lruvec, sc, swappiness,
+ 				 &list, &isolated, &type, &type_scanned);
++	nr_isolated = isolated;
  
-diff --git a/Documentation/admin-guide/mm/multigen_lru.rst b/Documentation/admin-guide/mm/multigen_lru.rst
-index 9cb54b4ff5d9..fd8b4286014e 100644
---- a/Documentation/admin-guide/mm/multigen_lru.rst
-+++ b/Documentation/admin-guide/mm/multigen_lru.rst
-@@ -161,3 +161,16 @@ cold pages because of the overestimation, it retries on the next
- server according to the ranking result obtained from the working set
- estimation step. This less forceful approach limits the impacts on the
- existing jobs.
+ 	/* Scanning may have emptied the oldest gen, flush it */
+ 	if (scanned)
+@@ -4891,6 +4893,8 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ retry:
+ 	reclaimed = shrink_folio_list(&list, pgdat, sc, &stat, false, memcg);
+ 	sc->nr_reclaimed += reclaimed;
++	total_reclaimed += reclaimed;
++	total_pageout += stat.nr_pageout;
+ 	/* Retry pass is only meant for clean folios without new isolation */
+ 	if (isolated)
+ 		handle_reclaim_writeback(isolated, pgdat, sc, &stat);
+@@ -4944,6 +4948,13 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 		goto retry;
+ 	}
+ 
++	if (total_pageout)
++		mod_lruvec_state(lruvec, PGRECLAIM_PAGEOUT_ANON + type,
++				 total_pageout);
++	if (nr_isolated > total_reclaimed)
++		mod_lruvec_state(lruvec, PGROTATE_ANON + type,
++				 nr_isolated - total_reclaimed);
 +
-+Proactive aging
-+---------------
-+For workloads where it is useful to rebalance the distribution of
-+anonymous and file pages across generations before reclaiming (for
-+example, the Android application lifecycle, where an application
-+that has just been backgrounded has most of its anonymous pages
-+clustered in the youngest generations while file pages dominate
-+the oldest), the ``memory.aging`` cgroup v2 file can be used to
-+advance the generation counter without eviction. The file returns
-+-EAGAIN if no advance happened, so callers can correlate with the
-+``aging`` counter to verify how many passes actually took
-+effect. See Documentation/admin-guide/cgroup-v2.rst.
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e42f97e004b6..c6a969b56878 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4896,6 +4896,29 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
- 	return nbytes;
+ 	return scanned;
  }
  
-+#ifdef CONFIG_LRU_GEN
-+static ssize_t memory_aging(struct kernfs_open_file *of, char *buf,
-+			    size_t nbytes, loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	unsigned long nr_gens;
-+	int ret;
-+
-+	ret = kstrtoul(buf, 0, &nr_gens);
-+	if (ret)
-+		return ret;
-+
-+	if (nr_gens == 0 || nr_gens > MAX_NR_GENS)
-+		return -EINVAL;
-+
-+	ret = lru_gen_age_memcg(memcg, nr_gens);
-+	if (ret)
-+		return ret;
-+
-+	return nbytes;
-+}
-+#endif
-+
- static struct cftype memory_files[] = {
- 	{
- 		.name = "current",
-@@ -4967,6 +4990,13 @@ static struct cftype memory_files[] = {
- 		.flags = CFTYPE_NS_DELEGATABLE,
- 		.write = memory_reclaim,
- 	},
-+#ifdef CONFIG_LRU_GEN
-+	{
-+		.name = "aging",
-+		.flags = CFTYPE_NS_DELEGATABLE,
-+		.write = memory_aging,
-+	},
-+#endif
- 	{ }	/* terminate */
- };
- 
 -- 
-2.25.1
+2.53.0-Meta
+
+
 
