@@ -1,98 +1,135 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f73.google.com (mail-wm1-f73.google.com [209.85.128.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D2BC3F44CE
-	for <cgroups@vger.kernel.org>; Tue, 14 Jul 2026 08:58:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80283F7891
+	for <cgroups@vger.kernel.org>; Tue, 14 Jul 2026 09:32:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784019484; cv=none; b=UrvFjIUr2ZMI8KItuGw7Is29X3Azc2mIAWOGSlLCLZBTz0duWjV1xDCF8FQVhP1Ago3Inml5gzESr3GOsKsy8kgNmKJm//o+3GwVez4af1H3gj+XRH+HAj0D5fValX17VhzXt75KYxZ57TCERgqd0cF/F7OGQpyrNUg8TUfdq2Y=
+	t=1784021538; cv=none; b=MqudnNJN1K8UPkQ6daxvovLiAv4lXkZqFUeyP2p6/8FnBzrMHlqAPPWwQjPBPITmGv2zisDNYjumdtdBEgQNUiBxh97D+ZectTK+kRUHgvss2eNbaVS20JqDLSs62snoTJ+51Sr04x3i2BDSvW6H/JUg2OKXXri1RCJ2L5qqBX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784019484; c=relaxed/simple;
-	bh=qwRP4V+B9iDlbvfwesX2cvK8FhtV6iIKfYBrR6kvmBY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UAF1YY0E8g3IXyClCnMhZnct8Wf9hSrTVzG4Mb2YdndPhP1kI+y5Pnupky578PjqTw9T18tSg/2O1NTi10IMqH45YE2/MXFhsyvnnxo5BGPizQ0oG4PIcB5j/8zVXoKYqUpg4oHSx7/CKc/H++j9Vn3A+A7sBF+epDYcWyQMxOI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cvL8JFVI; arc=none smtp.client-ip=91.218.175.185
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784021538; c=relaxed/simple;
+	bh=I92yiOXzyb68qma0qhM4FYr4elXfxkrM60Dc5f3Vlro=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=RBY00dxplpnJHMJsbAKn7fRnml3XSJX0CnXIEyqPfpaixm59A0t319p9soPgz8+Ru7yQls2ypWKANbCBUtttSz/3n84CBQ7KsY2UrhuEEcTF0NwxRZIsa6Ciei5fU34V8K0lcDm2mjqHrtJ14Fk0DwHA8Wc569wSbEdoRiBAt6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=e0cWHm54; arc=none smtp.client-ip=209.85.128.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cvL8JFVI"
-Message-ID: <007856c9-3506-4888-9818-8e4630b37fdc@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784019480;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zdNrMq8bCxTLGPFwSKxLND/cn4ZHbHVtNZy8gkOzFEo=;
-	b=cvL8JFVI8hI1XSYBlYnTgG96ED8LBxldfSLuxN6z+Sksjj+kcaYQFUC71DKj/S2ZoO9LR5
-	uctNSsErdebcnnCIwrv66TbBoismLninA/PKyb0Qq2iMO2BwSOPAMhFpjTKO+kyiWC1NbD
-	1zWI4Nuz19MM1tJSfX2uIoCvpxgAM60=
-Date: Tue, 14 Jul 2026 16:57:45 +0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="e0cWHm54"
+Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-493e3ecd385so9287165e9.3
+        for <cgroups@vger.kernel.org>; Tue, 14 Jul 2026 02:32:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784021534; x=1784626334; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=ZaT/U/JlP96J7BKuqsxBkutEqQ8OPKC1/nIHLPADppk=;
+        b=e0cWHm54c+Jk6e7j6x2woHOqxYWlssYHqj71+eReyQI15cNSchv8YiugzTrg5aBkyB
+         pJaRooDJswFM4OnjJNE7vP4Nr05sPJNBByait13yY/De+535qbocpKRCntE3HpPh6L41
+         tCKJ9kK17cljDE6fSZKgmhYPYFK2N4QOPx/YFuvEFeW0lL1/4sTK1aB/8EHxLmfQhmbH
+         x4p32gIag1zqeKxC8tMiNNHksQdHGSqOLSO6jjqa+uXwtC11y42cdhKnRVq78FUZqORJ
+         bm2oSURV+KACV+yQYrZWxN7W7xlgEMFQgnS7x6g0lmZWe9ouKxpavcr1OwKfqUfKBNKr
+         UjGw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784021534; x=1784626334;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ZaT/U/JlP96J7BKuqsxBkutEqQ8OPKC1/nIHLPADppk=;
+        b=bnXHQGZ5aTd4QZtlxnYXxg/o2Y2BitVZqS5KADzbENRtu3mBe9jFaFoal70OgZtdSb
+         2U262XotUei8V/zZVd4NNulvHHH2kibpdjc9tgeZoV1aFsfO+vDpeR2wvBwVAvdf3wj8
+         ftMqsCvx3BGJoku56Cn0gKJtKVedyIp+bJHf1LMMxfWJSvKH6O73EH5LvEOLaikhSjj3
+         EzZqGifEOSY/yocZin8zWfzMI5xuLa9oVV5vEPveE3CXTb0e6t+3th1AuZyCYdCBtY+c
+         uaoVdIgx6+NoJVVc/7d4KiNxkvvVdB3G2c85o2XQwsR7KFn7S8Mnqupny7tx3F10Fu6t
+         B1Ig==
+X-Forwarded-Encrypted: i=1; AHgh+RqhnrRu7LyTncnFEGaDW2S/fxdasbO1E8Px9q1sGoa74oxoJW5l7LUPSGSkLP+N8IjFmcmmP/sq@vger.kernel.org
+X-Gm-Message-State: AOJu0YwlgxAW/+aPqr2bUFWA1gCBez7cn4km3JlLOTw4J4BjtqDkoNQQ
+	cYVwBe5NJjyhh1xF4BB2+84rmjXz//FL8i63t7x/zUNalGvErTfCJzBl10EakiMZEbEeNu5RdAj
+	mPkGb8bd2s7Wu/w==
+X-Received: from wmqh12.prod.google.com ([2002:a05:600c:350c:b0:493:f83f:e304])
+ (user=jackmanb job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:600c:705:b0:493:9661:f55d with SMTP id 5b1f17b1804b1-493f8826bf7mr96781345e9.30.1784021533525;
+ Tue, 14 Jul 2026 02:32:13 -0700 (PDT)
+Date: Tue, 14 Jul 2026 09:31:58 +0000
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Subject: Re: [PATCH-next v3 0/3] cgroup/cpuset: Support multiple destination
- cpusets for cpuset_*attach()
-To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20260712235510.373125-1-longman@redhat.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <20260712235510.373125-1-longman@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAA4CVmoC/4WNQQ6CMBBFr0Jm7ZihBAyuvIdhAWUK1cqQFlBCu
+ LuAB3D5kvffXyCwtxzgGi3gebLBSreBOkWg27JrGG29MShSGV1iwtDbDgc/O9FPNOKcvMcek0T
+ pLMmY6jyHbdt7NvZzdO/Fj8NYPVgPe2w3WhsG8fNxPMW79+9jipGwNKZKDadcE90akcbxWcsLi nVdv/ubn83NAAAA
+X-Change-Id: 20260710-spin-trylock-followup-332c636e0d99
+X-Mailer: b4 0.15.2
+Message-ID: <20260714-spin-trylock-followup-v2-0-3c20ed032b14@google.com>
+Subject: [PATCH v2 0/4] mm/page_alloc: couple of followups for recent cleanups
+From: Brendan Jackman <jackmanb@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+	Brendan Jackman <jackmanb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Zi Yan <ziy@nvidia.com>, 
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Clark Williams <clrkwllms@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, Waiman Long <longman@redhat.com>, 
+	Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>, 
+	"=?utf-8?q?Michal_Koutn=C3=BD?=" <mkoutny@suse.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	sashiko-bot@kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
 
 
-On 7/13/2026 7:55 AM, Waiman Long wrote:
->   v3:
->    - Swap the first 2 patches as the original patch 1 can introduce serious bug
->      without patch 2. Doing patch 2 first will be less problematic.
-> 
+---
+Changes in v2:
+- Separated from functional fixes
+- Added cpuset cleanup, comment fixup, VM_BUG_ON() removal from Zi Yan's
+  review of [0].
+- Link to v1: https://patch.msgid.link/20260710-spin-trylock-followup-v1-0-=
+affb5fe5ed00@google.com
 
-Would it make sense to squash these two patches into one?
+Based on mm-new, these are followups to [0]
 
->   v2: https://lore.kernel.org/lkml/20260712150127.236790-1-longman@redhat.com
->    - Make sure that attach_ctx.old_cs won't be set to a source cpuset that is
->      also the destination cpuset.
-> 
->   v1: https://lore.kernel.org/lkml/20260711020540.176740-1-longman@redhat.com
-> 
-> This is a follow-up patch series to [1] to properly handle a special case
-> for cpuset task migration operation where the source and destination
-> cpusets are the same.
-> 
-> Patch 1 enables cpuset_*attach() to handle the case where there are many
-> destination cpusets from enabling cpuset controller. Patch 2 handles
-> those tasks that have the same source and destination cpuset by skipping
-> them as they are not migrating with respect to cpuset. Patch 3 adds a
-> new test case into test_cpuset to test proper handling of cpu affinity
-> when cpuset controller is disabled.
-> 
-> [1] https://lore.kernel.org/lkml/20260702214757.579012-1-longman@redhat.com
-> 
-> Michal Koutný (1):
->    selftests/cgroup: Add test for cpuset affinity on controller disable
-> 
-> Waiman Long (2):
->    cgroup/cpuset: Support multiple destination cpusets for
->      cpuset_*attach()
->    cgroup/cpuset: Handle the special case of non-moving tasks in
->      cpuset_can_attach()
-> 
->   kernel/cgroup/cpuset.c                       | 131 ++++++----
->   tools/testing/selftests/cgroup/test_cpuset.c | 243 +++++++++++++++++++
->   2 files changed, 321 insertions(+), 53 deletions(-)
-> 
+The alloc_pages_nolock_noprof() comment fixup could be squashed into
+"mm/page_alloc: relax GFP WARN in nolock allocs" - currently
+11770f8836f44 in mm-new.
 
--- 
-Best regards
-Ridong
+The VM_BUG_ON() removal could be squashed into "mm: remove
+__alloc_pages_node()", currently fba100a6cdfc5.
+[0]: https://lore.kernel.org/all/20260703-alloc-trylock-v5-0-c87b714e19d3@g=
+oogle.com/
+
+To: Andrew Morton <akpm@linux-foundation.org>
+To: Vlastimil Babka <vbabka@kernel.org>
+To: Suren Baghdasaryan <surenb@google.com>
+To: Michal Hocko <mhocko@suse.com>
+To: Brendan Jackman <jackmanb@google.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+To: Zi Yan <ziy@nvidia.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Clark Williams <clrkwllms@kernel.org>
+To: Steven Rostedt <rostedt@goodmis.org>
+To: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>
+To: Tejun Heo <tj@kernel.org>
+To: Michal Koutn=C3=BD <mkoutny@suse.com>
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+
+---
+Brendan Jackman (4):
+      mm/page_alloc: rename FPI_TRYLOCK -> FPI_NOLOCK
+      cgroup/cpuset: update some comments about the page allocator
+      mm/page_alloc: fixup alloc_pages_nolock_noprof() comment
+      mm/page_alloc: remove a VM_BUG_ON()
+
+ kernel/cgroup/cpuset.c | 13 +++++--------
+ mm/page_alloc.c        | 22 +++++++++++-----------
+ 2 files changed, 16 insertions(+), 19 deletions(-)
+---
+base-commit: 61cccb8363fcc282d4ae0555b8739dd227f5ad0b
+change-id: 20260710-spin-trylock-followup-332c636e0d99
+
+Best regards,
+-- =20
+Brendan Jackman <jackmanb@google.com>
 
