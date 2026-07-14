@@ -1,131 +1,74 @@
-Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
+Received: from out-186.mta1.migadu.com (out-186.mta1.migadu.com [95.215.58.186])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D487A3D9DB6
-	for <cgroups@vger.kernel.org>; Tue, 14 Jul 2026 07:43:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B764E3F482F
+	for <cgroups@vger.kernel.org>; Tue, 14 Jul 2026 07:58:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784014996; cv=none; b=Tw3/hY1YmkjsL+EZi3ii3ClGq7KgTQ5+vdRip0HqE2V05KljygLmSbZacuRNkZ1/c6BnL/HuvMmsLgBbJETH4iMti8l525M/VYlzkitdD6sX3GIav0vstg84MOUu/5d1dsvVKsz076paYRN8Wc3tL1mT65Dt66wwXwbPmC/x40Y=
+	t=1784015903; cv=none; b=D4Ziu5+Ut3jhj+A2nkRRXu6NcrUth/X8o9aRGvZtdaP2+W34XNBCtAeX7WnE0uYvbIQEwjUNhCKTBj8xlMkGxTpaOaZnHK+6/eaIFW4vn09YI6SutIYpCdMn/s/tfpH4Gnqu8c0mYh+jicEfSb2Jw++7z9GlSOVIxUNLWnZpZV4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784014996; c=relaxed/simple;
-	bh=2CTl+A7c2f3UrWnkcWruNPzMdTHee/XegWULNb/RA/4=;
+	s=arc-20240116; t=1784015903; c=relaxed/simple;
+	bh=SBT1GRfMJYu5DqF6aGKf1w+9/SPtrvqrqYxhjSlpHhI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DATz6pCnBz1kQxCtSf/8RjzIcS/OafnFqOODoYGa3/KaE0SnRlpYvOuJcUP+Zw1PrvyD6E3lBCWnYuyse9Ha2W2FKcP+KcFCetDxBn4PgPhBcxUYAmlDJcLXWg5zTuL93gRoWS0uDN0BM6iRQGIk6Bm66KdBssbDJQBaIh8BUrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=hT0bmfKP; arc=none smtp.client-ip=91.218.175.177
+	 In-Reply-To:Content-Type; b=cv8fVyOOQHY9rGZgltoU1oUvjuQeNoIHjMUHSH25Mc4nJjolkp8dlPaJE3+gm256x62T5FYmyUdrK7Vre+xXE0BhoJtDdBYb827DLImHm7fsrrDUJ0D7A2rtlhucdXSTQa0yBPQutewwDjjBQ683fNY7qcRp/V4dN3tAxynaDQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=n1FTh+Jp; arc=none smtp.client-ip=95.215.58.186
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="hT0bmfKP"
-Message-ID: <0545ee70-b0a0-4a93-ac2c-3e84ff504e5a@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="n1FTh+Jp"
+Message-ID: <0f52a483-27d1-480a-bb0c-99c108e676b5@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784014992;
+	t=1784015899;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=f0I0BJ125x0ILzpKQzbAIfOkMzFcIP5uJz7O94Fnv8U=;
-	b=hT0bmfKPqQc9pDzFwsqCmtPPFoWQhN08bP7XCztt6T6O9I/sjqP6TCj1HVTvHABehMC/sC
-	D5UK+iM2oYcDiV2UGmsSH4Db3ghqh9VfT3omemPDv4Yqjxh37MZa9Q3ToX9mJG0B4UETN7
-	atCNfg0O9qKFcAuPjlda6yCvqWeDXv4=
-Date: Tue, 14 Jul 2026 15:42:52 +0800
+	bh=OkniB9iRE9HjM/WA7MlrZBOT68W89sN6W9xYL05jo1s=;
+	b=n1FTh+JpAeQQlCuAEVfL1kEPAaqwHzkFyq0bcYfdQFGZcO0WXrEo1an3hYHF+gNGckdoeW
+	5qY5kmuEbYAKtGE7erW9NHPRe87+U8HJgjM72MdPXsD+Yp+HGcq2+bX7BIH3OOEFUQ3DnR
+	KqsX1p+oGDyvM7JxdHHUIec785AJgP8=
+Date: Tue, 14 Jul 2026 15:58:04 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] memcg: move mem_cgroup_swappiness to memcontrol.h
-To: Barry Song <baohua@kernel.org>
+Subject: Re: [PATCH 2/2] mm: vmscan: fix node reclaim ignoring swappiness
+ parameter
+To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
  Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
  Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
- David Hildenbrand <david@kernel.org>, Yuanchu Xie <yuanchu@google.com>,
- linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ David Hildenbrand <david@kernel.org>, Barry Song <baohua@kernel.org>,
+ Yuanchu Xie <yuanchu@google.com>, linux-mm@kvack.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
  Ridong Chen <chenridong@xiaomi.com>
 References: <20260711091157.306070-1-ridong.chen@linux.dev>
- <20260711091157.306070-2-ridong.chen@linux.dev>
- <CAGsJ_4y39eSYqYwSPzqcZPk1wcJEYN3HZr83MPv8pMgN8Nct5A@mail.gmail.com>
- <87dc4105-b98b-4541-bafe-c0adfbf58836@linux.dev>
- <CAGsJ_4wDMrdvGksTJ1SMGE=aHY3CMY529ceKDD68cXLsHQCjtQ@mail.gmail.com>
- <CAGsJ_4zcgURKZKBAc6i0Y5g7u2OXjENDE7A=nqYcQ9TTVuR=Hg@mail.gmail.com>
+ <20260711091157.306070-3-ridong.chen@linux.dev>
+ <20260713112803.GF276793@cmpxchg.org>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <CAGsJ_4zcgURKZKBAc6i0Y5g7u2OXjENDE7A=nqYcQ9TTVuR=Hg@mail.gmail.com>
+In-Reply-To: <20260713112803.GF276793@cmpxchg.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Migadu-Flow: FLOW_OUT
 
+Hi Johannes,
 
+> Probably warrants a stable CC for 6.16 as well since this is pretty
+> user-visible breakage.
 
-On 7/14/2026 9:48 AM, Barry Song wrote:
-> On Tue, Jul 14, 2026 at 9:43 AM Barry Song <baohua@kernel.org> wrote:
->>
->> On Tue, Jul 14, 2026 at 9:20 AM Ridong Chen <ridong.chen@linux.dev> wrote:
->>>
->>>
->>>
->>> On 7/13/2026 11:08 PM, Barry Song wrote:
->>>> On Sat, Jul 11, 2026 at 5:12 PM Ridong Chen <ridong.chen@linux.dev> wrote:
->>>>>
->>>>> From: Ridong Chen <chenridong@xiaomi.com>
->>>>>
->>>>> The per-memcg swappiness knob is v1-only; v2 always uses global
->>>>> vm_swappiness and ignores the per-cgroup field.
->>>>>
->>>>> Guard memcg->swappiness with CONFIG_MEMCG_V1, and move the helper
->>>>> to memcontrol.h where it belongs.
->>>>>
->>>>> No functional change for v1; v2-only kernels drop the unused field.
->>>>>
->>>>> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
->>>>> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
->>>>
->>>> Reviewed-by: Barry Song <baohua@kernel.org>
->>>>
->>>> With some nits.
->>>>
->>>>> ---
->>>> [...]
->>>>>           struct mem_cgroup_per_node *nodeinfo[];
->>>>> @@ -365,6 +366,9 @@ enum objext_flags {
->>>>>
->>>>>    #define OBJEXTS_FLAGS_MASK (__NR_OBJEXTS_FLAGS - 1)
->>>>>
->>>>> +/* Defined in mm/vmscan.c; used by mem_cgroup_swappiness(). */
->>>>> +extern int vm_swappiness;
->>>>
->>>> This is a bit unusual. I'm not sure whether mm/swap.h would be
->>>> a more appropriate place for this.
->>>>
->>> Thank you for your reply.
->>>
->>> The vm_swappiness variable is not utilized within mm/swap.c.
->>> Furthermore, since memcontrol.h does not include swap.h, retaining the
->>> extern int vm_swappiness declaration in mm/swap.h will result in a
->>> compilation failure.
->>
->> If this is the case, it still seems better to keep
->> extern int vm_swappiness in include/linux/swap.h.
->>
->> Then we don't need the comment:
->> /* Defined in mm/vmscan.c; used by mem_cgroup_swappiness(). */
->>
->> It also makes it clearer that vm_swappiness is an extern variable
->> belonging to the swap module, rather than the memcontrol module.
-> 
-> BTW, if mem_c_group_swappiness() and vm_swappiness are only used
-> within mm/, could all of these be moved to mm/swap.h and
-> mm/internal.h instead?
-> 
-> We are making a big effort to move many unrelated things out of
-> include/linux/swap.h recently. Could you check?
-> 
-> https://lore.kernel.org/linux-mm/20260708-ch-swap-series-plus-folio-lru-cleanup-v9-0-2bc72b4f8730@gmail.com/
+Thanks for the stable tag suggestion.
+I checked the commit baseline:
 
-Good suggestion. Moving them to mm/internal.h makes sense. Will update 
-in the next version.
+git name-rev b980077899ea
+b980077899ea tags/v6.17-rc1
+
+So this should be tagged for 6.17+ rather than 6.16. I'll add:
+
+Cc: stable@vger.kernel.org # 6.17+
 
 -- 
 Best regards
