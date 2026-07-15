@@ -1,151 +1,87 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 472A43AD51A
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 08:28:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A2B938BF6A;
+	Wed, 15 Jul 2026 08:32:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784104112; cv=none; b=qHnFp+lIfOo9XOUsKj3lzW9OCllI55pKoO+rGI4iAQkY0kdSYUiccl8OGmXF///CCagpeOVtbp4Auw+GUUPPSdWT9D+aPPECG0+rByTXMvGh96yXQY8lfUEPOQE7d4Sd7q2yB++dsgzGFhIDwRoMMsQf5Sr7aU11Ocl7KvidjdQ=
+	t=1784104373; cv=none; b=JtSmiPEBpHNOaKyyJ1rUCi4hBYCHi3ydovWkwXIAAcR60IqVKyz6gLcEwmK1Ccm5ypJ5xy1yY+iZEG3T+JXXd5MlnH30Q/LNW2dlAn0DdDGH2ZG7LYInHcEGovBKrHuRS+Y9csS5YPvVh2quIHcnTbBAa/TBUuhiLZNipdZLHZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784104112; c=relaxed/simple;
-	bh=3cK/hdA+KmShv1b5t2wupekU05qRjUP2fy2Qsp/AljI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ex4MSzOeIVJlFQAIHWyT8pZnk/W5dpU9IlY8b4sf4CqVNNhGr1UFIxFXkM+epHGEuTZgINpo640kQMNJfzVvtP1guyR9i+BXe9zUaRB2UkSzw967F95ZADGOm71ixXcmmk6XKksqL7wz0v0ZCk44WK81WwUdwzGgrisXdyTiEq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FRUJElK8; arc=none smtp.client-ip=91.218.175.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784104373; c=relaxed/simple;
+	bh=jYyNf7jdQ6Kq27ZTcM89OY3IiaCJpkGvNgIyNj9yIvo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=vBJa9aYavmIFGpLjRMq3ALiLw02La7AMBaCXdeSqhEm62FARvKPmfXQnDc+E1qggm4w1bmGbSi+3VifQfBTWJXhQVUT3bfLHHO+moWdtf7EDKVe4jhnA/yiF/53YNx9Ect80DxMUUFGK1nBzM7nxpCA1VxKxpavII4GvXz3IyOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=x9mEQ4Qc; arc=none smtp.client-ip=115.124.30.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FRUJElK8"
-Message-ID: <a28e5f32-6b33-465d-8c62-a155f1f61ca8@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784104098;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=S7GAdy7BzpH1mY1l3xxBJ7jnUWvRdOJWdWyYoP9VmOo=;
-	b=FRUJElK8nJYnUa4z0EhRgh9pD4xudbHVG3EKKJQ9g0U+5ekiB4AaVTzUiDhJzu5yXkV09b
-	m4Qq3bCA8Dx2hgQRlhUB1y35ui00PREwKAYGVnsbdExx+jHbEUkfLQ72XPj2Sr9CTPpiG8
-	oHPr5rTYCpbKDSkbrAbbhwRu+SS7YHk=
-Date: Wed, 15 Jul 2026 16:28:04 +0800
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="x9mEQ4Qc"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1784104368; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=GK0Rc0oB65P7V7VYtRhPsG+gRmbfmhqvct0X2gUSOC8=;
+	b=x9mEQ4QcIIwT12CYo0D6GAj0Nei3amdUJaxhCwyUrrZ4tboVAbRgWY5OS/faXjDlczCtxdjLuzrT+GpcQ1/we7KlwrqGzRulzLr4/bG9JI0SjxiOy7UzR+lZ4mtnn8qH7l/i6J55dXHfph1pMf6hN+yPgtxLEjgD24xEWZE0DEA=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=lulie@linux.alibaba.com;NM=1;PH=DS;RN=13;SR=0;TI=SMTPD_---0X78Q1GT_1784104367;
+Received: from localhost(mailfrom:lulie@linux.alibaba.com fp:SMTPD_---0X78Q1GT_1784104367 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 15 Jul 2026 16:32:47 +0800
+From: Philo Lu <lulie@linux.alibaba.com>
+To: stable@vger.kernel.org
+Cc: chenridong@huawei.com,
+	tj@kernel.org,
+	lulie@linux.alibaba.com,
+	lizefan.x@bytedance.com,
+	hannes@cmpxchg.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	eadavis@qq.com,
+	chenridong@huaweicloud.com,
+	akpm@linux-foundation.org,
+	surenb@google.com,
+	dust.li@linux.alibaba.com
+Subject: [PATCH 6.12.y 1/2] cgroup/psi: Set of->priv to NULL upon file release
+Date: Wed, 15 Jul 2026 16:32:44 +0800
+Message-Id: <20260715083245.32115-2-lulie@linux.alibaba.com>
+X-Mailer: git-send-email 2.32.0.3.g01195cf9f
+In-Reply-To: <20260715083245.32115-1-lulie@linux.alibaba.com>
+References: <20260715083245.32115-1-lulie@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] memcg: move mem_cgroup_swappiness to memcontrol.h
-To: Barry Song <baohua@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
- David Hildenbrand <david@kernel.org>, Yuanchu Xie <yuanchu@google.com>,
- linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ridong Chen <chenridong@xiaomi.com>
-References: <20260711091157.306070-1-ridong.chen@linux.dev>
- <20260711091157.306070-2-ridong.chen@linux.dev>
- <CAGsJ_4y39eSYqYwSPzqcZPk1wcJEYN3HZr83MPv8pMgN8Nct5A@mail.gmail.com>
- <87dc4105-b98b-4541-bafe-c0adfbf58836@linux.dev>
- <CAGsJ_4wDMrdvGksTJ1SMGE=aHY3CMY529ceKDD68cXLsHQCjtQ@mail.gmail.com>
- <CAGsJ_4zcgURKZKBAc6i0Y5g7u2OXjENDE7A=nqYcQ9TTVuR=Hg@mail.gmail.com>
- <0545ee70-b0a0-4a93-ac2c-3e84ff504e5a@linux.dev>
- <CAGsJ_4x7cg-L_OzCdyZy+8zoKptVi-Jh18k1HRkvTBTbn-EQRA@mail.gmail.com>
- <bfb1cfa1-691a-4bac-beb6-caef9b3ac4e8@linux.dev>
- <CAGsJ_4w8P8ERoXJY70wXf71MYEA16vX+JMAaE4sfB4=OqzN_Pg@mail.gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <CAGsJ_4w8P8ERoXJY70wXf71MYEA16vX+JMAaE4sfB4=OqzN_Pg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
+From: Chen Ridong <chenridong@huawei.com>
 
+commit 94a4acfec14615e971eb2c9e1fa6c992c85ff6c6 upstream.
 
-On 7/14/2026 9:46 PM, Barry Song wrote:
-> On Tue, Jul 14, 2026 at 7:31 PM Ridong Chen <ridong.chen@linux.dev> wrote:
-> 
-> [...]
->>>>>>
->>>>>> If this is the case, it still seems better to keep
->>>>>> extern int vm_swappiness in include/linux/swap.h.
->>>>>>
->>>>>> Then we don't need the comment:
->>>>>> /* Defined in mm/vmscan.c; used by mem_cgroup_swappiness(). */
->>>>>>
->>>>>> It also makes it clearer that vm_swappiness is an extern variable
->>>>>> belonging to the swap module, rather than the memcontrol module.
->>>>>
->>>>> BTW, if mem_c_group_swappiness() and vm_swappiness are only used
->>>>> within mm/, could all of these be moved to mm/swap.h and
->>>>> mm/internal.h instead?
->>>>>
->>>>> We are making a big effort to move many unrelated things out of
->>>>> include/linux/swap.h recently. Could you check?
->>>>>
->>>>> https://lore.kernel.org/linux-mm/20260708-ch-swap-series-plus-folio-lru-cleanup-v9-0-2bc72b4f8730@gmail.com/
->>>>
->>>> Good suggestion. Moving them to mm/internal.h makes sense. Will update
->>>> in the next version.
->>>
->>> Either mm/swap.h or mm/internal.h.
->>> vm_swappiness probably belongs in mm/swap.h rather than
->>> mm/internal.h, right?
->>>
->>> BTW, I am not particularly eager about this cleanup;
->>> it could be done later as a separate patch.
->>>
->>> If you decide not to do the cleanup, I think it would be better to
->>> leave "extern int vm_swappiness" in include/linux/swap.h rather than
->>> declaring it in include/linux/memcontrol.h?
->> I noticed that some swap-related macros are already defined in
->> mm/internal.h, so I'm planning to place the code right after them for
->> better grouping. Does that work for you?
-> 
-> We also have mm/swap.h, which is dedicated to exporting
-> swap-related things. Is it a better place than mm/internal.h?
-> 
+Setting of->priv to NULL when the file is released enables earlier bug
+detection. This allows potential bugs to manifest as NULL pointer
+dereferences rather than use-after-free errors[1], which are generally more
+difficult to diagnose.
 
-Placing it in mm/swap.h is fine with me. Will update.
+[1] https://lore.kernel.org/cgroups/38ef3ff9-b380-44f0-9315-8b3714b0948d@huaweicloud.com/T/#m8a3b3f88f0ff3da5925d342e90043394f8b2091b
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Philo Lu <lulie@linux.alibaba.com>
+---
+ kernel/cgroup/cgroup.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-```
---- a/mm/swap.h
-+++ b/mm/swap.h
-@@ -4,6 +4,7 @@
-
-  #include <linux/atomic.h> /* for atomic_long_t */
-  #include <linux/mm.h> /* for PAGE_SHIFT */
-+#include <linux/memcontrol.h>
-  struct mempolicy;
-  struct swap_iocb;
-  struct swap_memcg_table;
-@@ -76,6 +77,25 @@ enum swap_cluster_flags {
-         CLUSTER_FLAG_MAX,
-  };
-
-+extern int vm_swappiness;
-+
-+static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
-+{
-+#ifdef CONFIG_MEMCG_V1
-+       /* Cgroup2 doesn't have per-cgroup swappiness */
-+       if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
-+               return READ_ONCE(vm_swappiness);
-+
-+       /* root ? */
-+       if (mem_cgroup_disabled() || mem_cgroup_is_root(memcg))
-+               return READ_ONCE(vm_swappiness);
-+
-+       return READ_ONCE(memcg->swappiness);
-+#else
-+       return READ_ONCE(vm_swappiness);
-+#endif
-+}
-+
-```
-
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 3c7d466f13df7..3ce02650f9484 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4162,6 +4162,7 @@ static void cgroup_file_release(struct kernfs_open_file *of)
+ 		cft->release(of);
+ 	put_cgroup_ns(ctx->ns);
+ 	kfree(ctx);
++	of->priv = NULL;
+ }
+ 
+ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
 -- 
-Best regards
-Ridong
+2.47.3
 
