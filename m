@@ -1,67 +1,68 @@
 Received: from mail-wm1-f73.google.com (mail-wm1-f73.google.com [209.85.128.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14AC144331F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1961942CB14
 	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 11:03:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784113421; cv=none; b=C7cPvMieVlsKSqQcvvQPqA7ZuAPW9mXZWRGTde8SLoebHiLxacVx9s+13Z8Ukv7RXwg8gBo1UYYjPf1qHdYnrOnZI1+PGWJ/eSf/98BW/Sn6ji5tysG9NaOqiVrLBKdmL1R3xQ7KBhK/8xoGhaIjnu+pfazWbopQwFluxk6Qzsw=
+	t=1784113421; cv=none; b=jtbfTvZQk0rH3CKdLY76+7phk7blYBixTe/P71FGQPCrlv35aTDbn8ihlEA81+PW7SoLeguV1w8dNw4pJjVkPm9Ny3u3Ii2d+4wKx3ZtP+jmD3VcvSWb9qMMgw66ZSJrULebuta7OKokqJXZ2Ofz3UZhYVduJUAqoFmokAn4Zk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784113421; c=relaxed/simple;
-	bh=CVr87p16kUYIkKSvdn3e7Q96lklgqj1Zs1PBoozN1Ps=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=nvEHVVyN4AaGxNDlpfvDEV4/4OfFI9vJ5nBTld3CqST8wAe51otw57fiVX+nSy4kPZlkrmUDoGIe80fntlIaDWADaB/8VNJowcXSOWg99vZNtv0Ny4rsHniC/irehcXRko9/nbEa0GiBJZ5d9klQ2mX3deezg5kfGFSSINQXGKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=KTt+MHW7; arc=none smtp.client-ip=209.85.128.73
+	bh=OuHNTKCxUIMX67vpWylAoqXnFPUPv0sLTOv0JBYEmnM=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=tYyYf9447pqiozqeg1nedC2jesIQWerI+qQc3koJGp9JDDlXhw6LD2e7iU9phJxf9vpBPyEQ82ozFf1iX//D3NfdW8P/8Gp7GY3oSMeCAiMJHtBQKpCbI5ARgCHFnvHMWk2tJG4v/bwjbBh044Wkpd2lYOSLMeNkAkbvzkHtj+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=oFeUzVQw; arc=none smtp.client-ip=209.85.128.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KTt+MHW7"
-Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-493c20d0468so22344525e9.1
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 04:03:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="oFeUzVQw"
+Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-493c526df6bso17621315e9.3
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 04:03:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784113418; x=1784718218; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=mf72NgjR/YGP7OyZOYwhsTao63XeRdktGGMG23Y8QgY=;
-        b=KTt+MHW7kllZBDV2cjMSMHoequntxgF5qFjqAmn5Gc1ExjjneNHH6k3I/m3l15LYwn
-         baOhs3YnJQiujt2NfmeKLbe3MOPmylrJ/meUygzClM0440SDwkbOVE5/xHwz9pwzb87S
-         35BQoezngDn6UwVYQ8LLU9yahQxJmQ74x79DKl508phghegn2ouDjAyXXPbcxELb6/LH
-         jg2nqW+l98ncem5zveJoUME08e4Gs+s4c6s+RAZIhE6huWag7yfhRbCpJsAfNxYKYOe5
-         M23XcRP8rEIUKKYeKcykXynAdFZR+/Ar7IF6nPa9S0YYtGevuPVugOTnk2MLpfM+umEb
-         PAbA==
+        d=google.com; s=20251104; t=1784113417; x=1784718217; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=BvOk2rkLE/yZxPV4YYeXjAMJoxjIiJfLSZRx9VhA7SI=;
+        b=oFeUzVQwqtx+v7NZENqyVgL5XpqXndqq/1Tcni5EF//rBKuPbSA0sYnebZtFJOiEsG
+         PvuOwq8gO9pXXnAvealfvY4KvDUFCq9UFrqi3vVTtg7NHs2ppChxzsX8yXRFotPKjwbj
+         b8J4N2Nr1zXf0pLsu0tw+mQrGsKkU/smCQQvpoZ+BhAEAqfL1X9MCadJpbAkRdo5CGSK
+         yC8D/3qm0nfXF3FQ8723fs4tb4InuvnQvjIPuyz8EXHsUpMjr1g9zUH7oZe1v99K0oz6
+         eqoUTa/qI/RQOVHntn++qL/LFztW/tP1yzVGSqd7VvHzehkX3HI2ZApKdi7TlzUdPaoG
+         Y6eQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784113418; x=1784718218;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mf72NgjR/YGP7OyZOYwhsTao63XeRdktGGMG23Y8QgY=;
-        b=b9AAmGSWlDbNrf75/+/6YdLNHA0Y+4kUW3ztfYX59VXb5p87GHcqyesjI2FPBK9tzR
-         bPgWZ+FFYkqC2UrusTuBgQvVeEOM2Vs9+ZgVI9DhRf4DuS4Np+wAAdWhzjPTu/tbpJuq
-         l8jy4UgPxpWr0neUWgkZSyB/tXU42WWsuiQ5QlkwAQzre0Kk8lLLSyCC7tM48o210yc5
-         myjq6njUaIlTu0MqkNrw60voVQAHwRSMjV1n2rsMnbbbUhN4ep93/zZQd830Zv+I3b5X
-         Va5OnsCATtfEXF+K4dtzYpuzvmZ5ZQ0X62EpLgar6Xuq2NIDr6dMz/Mb2iIMQIDMzNII
-         JvAQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqxwpDLCcWrcsYl2WdAxJRV5hXmpUVHmYoH3UK6hNN6raKhQYZpNoB0P2IKgkY4wXClsRi6E9BV@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdrILH8fyLJo0Q2ZJq5Pe4Nhey/m1hQxQAON/3LHcJDav7JCF6
-	x1wtKvFW3GlUDG0oy0u4XT9/Z/VsD/psHkkXbG4TZ2mx70OwtLwmNB9TG4Knvsa2StoIIzP0wB7
-	w21YVP+m9Buo0WQ==
-X-Received: from wmat13.prod.google.com ([2002:a05:600c:6d0d:b0:495:3c56:7eb1])
+        d=1e100.net; s=20251104; t=1784113417; x=1784718217;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=BvOk2rkLE/yZxPV4YYeXjAMJoxjIiJfLSZRx9VhA7SI=;
+        b=FiQUSMohNKWKp3aicIK4zUy5ZfUFlY3YNrpVZkjz36IKF8aci4p2umC+hCOxXXULYr
+         1EaCXk7PTnspxB68BfnpMlDvMXtfCV0I8jtUeozF+f+864O4MKl9aBxBH9GfS5KPEEG/
+         dZea3h4m3JYsdvjudDCD1gjRNErHKke/oTkHl8HhlsyZ2ka8WwTe3Hn6YrzZTU9pXhLG
+         em+MlyDL/Djh1I97HD1Ng0jpS6Z7Pyw9M9MCDzcNcKRDPrypffm7VcRobX0JDyl14rZy
+         HRhtqo+LhNWYOdNDyVLJfYSfG4wNRHjfbMP+PiHy8VbJtbpxxePfOaUGDXGO8uGn2Ar4
+         pbfA==
+X-Forwarded-Encrypted: i=1; AHgh+RoK4jiKynEepLkryRzslxaKn/veci8wwD1Jj59uthhExEIJL4GSiAvKButdv1ZLA7pLZp0pVeB6@vger.kernel.org
+X-Gm-Message-State: AOJu0YxbVJ0ysO58NceKSpI7HLe0bfJhWX28SPVn+93LCwwlS3UUUzbf
+	pMNZqbJW0WJVLTwD0vp5fxgm1WsokEEQTgPwJV0GDJNvejWTElW1R8ETc2wJdbGMQiAwDKNyoL9
+	CxJzB/FsHFjrUuA==
+X-Received: from wmoq16.prod.google.com ([2002:a05:600c:46d0:b0:493:b593:ca9f])
  (user=jackmanb job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:3223:b0:495:50c:259c with SMTP id 5b1f17b1804b1-495050c29d0mr54629235e9.7.1784113418268;
- Wed, 15 Jul 2026 04:03:38 -0700 (PDT)
-Date: Wed, 15 Jul 2026 11:03:18 +0000
-In-Reply-To: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
+ 2002:a05:600c:4f8a:b0:493:f7c8:eae2 with SMTP id 5b1f17b1804b1-493f87e6e9cmr175096055e9.15.1784113417076;
+ Wed, 15 Jul 2026 04:03:37 -0700 (PDT)
+Date: Wed, 15 Jul 2026 11:03:17 +0000
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
+X-B4-Tracking: v=1; b=H4sIAPVoV2oC/4XNQQ6CMBQE0KuQrq35tIDBlfcwLqD8QrVS0kKVE
+ O5uixtdGJeTzLxZiEOr0JFjshCLXjll+hD4LiGiq/oWqWpCJgxYAYcUqBtUT0c7ayNuVBqtzWM
+ aKOdMFLxAaMqShO1gUarn5p4v7+ym+opijFhsdMqNxs7bsU9j79+HTynQSso6l5hjA3BqjWk17 oW5k3ji2SeT/WJYYLhgEAjO6jT7YtZ1fQEIegvxFAEAAA==
+X-Change-Id: 20260710-spin-trylock-followup-332c636e0d99
 X-Mailer: b4 0.15.2
-Message-ID: <20260715-spin-trylock-followup-v3-1-fc4d246f705d@google.com>
-Subject: [PATCH v3 1/4] mm/page_alloc: rename FPI_TRYLOCK -> FPI_NOLOCK
+Message-ID: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
+Subject: [PATCH v3 0/4] mm/page_alloc: couple of followups for recent cleanups
 From: Brendan Jackman <jackmanb@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@kernel.org>, 
 	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
@@ -72,108 +73,77 @@ To: Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@kernel.or
 	"=?utf-8?q?Michal_Koutn=C3=BD?=" <mkoutny@suse.com>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
 	"Liam R. Howlett" <liam@infradead.org>, Mike Rapoport <rppt@kernel.org>
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	linux-rt-devel@lists.linux.dev
+	linux-rt-devel@lists.linux.dev, sashiko-bot@kernel.org
 Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-As discussed in the linked patch, the there is some inconsistency between
-"trylock" and "nolock" nomenclature, let's align it. Since "nolock" is
-used in the public API it seems to have more mindshare so do that.
 
-The linked patch did this for the ALLOC_ flag but forgot about FPI_.
 
-Link: https://lore.kernel.org/all/20260703-alloc-trylock-v5-1-c87b714e19d3@google.com/
-Reviewed-by: Zi Yan <ziy@nvidia.com>
-Signed-off-by: Brendan Jackman <jackmanb@google.com>
 ---
- mm/page_alloc.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Changes in v3:
+- Fixed Sashiko Links: (Zi Yan)
+- Fixed kerneldoc syntax (Sashiko)
+- Removed extra VM_BUG_ON() (Sashiko)
+- Link to v2: https://patch.msgid.link/20260714-spin-trylock-followup-v2-0-=
+3c20ed032b14@google.com
 
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index af63558391345..c2da85e69a0f8 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -90,7 +90,7 @@ typedef int __bitwise fpi_t;
- #define FPI_TO_TAIL		((__force fpi_t)BIT(1))
- 
- /* Free the page without taking locks. Rely on trylock only. */
--#define FPI_TRYLOCK		((__force fpi_t)BIT(2))
-+#define FPI_NOLOCK		((__force fpi_t)BIT(2))
- 
- /* free_pages_prepare() has already been called for page(s) being freed. */
- #define FPI_PREPARED		((__force fpi_t)BIT(3))
-@@ -1419,7 +1419,7 @@ static __always_inline bool __free_pages_prepare(struct page *page,
- 	page_table_check_free(page, order);
- 	pgalloc_tag_sub(page, 1 << order);
- 
--	if (!PageHighMem(page) && !(fpi_flags & FPI_TRYLOCK)) {
-+	if (!PageHighMem(page) && !(fpi_flags & FPI_NOLOCK)) {
- 		debug_check_no_locks_freed(page_address(page),
- 					   PAGE_SIZE << order);
- 		debug_check_no_obj_freed(page_address(page),
-@@ -1558,7 +1558,7 @@ static void free_one_page(struct zone *zone, struct page *page,
- 	struct llist_head *llhead;
- 	unsigned long flags;
- 
--	if (unlikely(fpi_flags & FPI_TRYLOCK)) {
-+	if (unlikely(fpi_flags & FPI_NOLOCK)) {
- 		if (!spin_trylock_irqsave(&zone->lock, flags)) {
- 			add_page_to_zone_llist(zone, page, order);
- 			return;
-@@ -1569,7 +1569,7 @@ static void free_one_page(struct zone *zone, struct page *page,
- 
- 	/* The lock succeeded. Process deferred pages. */
- 	llhead = &zone->trylock_free_pages;
--	if (unlikely(!llist_empty(llhead) && !(fpi_flags & FPI_TRYLOCK))) {
-+	if (unlikely(!llist_empty(llhead) && !(fpi_flags & FPI_NOLOCK))) {
- 		struct llist_node *llnode;
- 		struct page *p, *tmp;
- 
-@@ -2882,7 +2882,7 @@ static bool free_frozen_page_commit(struct zone *zone,
- 	if (pcp->free_count < (batch << CONFIG_PCP_BATCH_SCALE_MAX))
- 		pcp->free_count += (1 << order);
- 
--	if (unlikely(fpi_flags & FPI_TRYLOCK)) {
-+	if (unlikely(fpi_flags & FPI_NOLOCK)) {
- 		/*
- 		 * Do not attempt to take a zone lock. Let pcp->count get
- 		 * over high mark temporarily.
-@@ -2979,7 +2979,7 @@ static void __free_frozen_pages(struct page *page, unsigned int order,
- 		migratetype = MIGRATE_MOVABLE;
- 	}
- 
--	if (unlikely((fpi_flags & FPI_TRYLOCK) && IS_ENABLED(CONFIG_PREEMPT_RT)
-+	if (unlikely((fpi_flags & FPI_NOLOCK) && IS_ENABLED(CONFIG_PREEMPT_RT)
- 		     && (in_nmi() || in_hardirq()))) {
- 		add_page_to_zone_llist(zone, page, order);
- 		return;
-@@ -3002,7 +3002,7 @@ void free_frozen_pages(struct page *page, unsigned int order)
- 
- void free_frozen_pages_nolock(struct page *page, unsigned int order)
- {
--	__free_frozen_pages(page, order, FPI_TRYLOCK);
-+	__free_frozen_pages(page, order, FPI_NOLOCK);
- }
- 
- /*
-@@ -5399,7 +5399,7 @@ struct page *__alloc_frozen_pages_noprof(gfp_t gfp, unsigned int order,
- 	if (memcg_kmem_online() && (gfp & __GFP_ACCOUNT) && page &&
- 	    unlikely(__memcg_kmem_charge_page(page, gfp, order) != 0)) {
- 		__free_frozen_pages(page, order,
--				    alloc_flags & ALLOC_NOLOCK ? FPI_TRYLOCK : 0);
-+				    alloc_flags & ALLOC_NOLOCK ? FPI_NOLOCK : 0);
- 		page = NULL;
- 	}
- 
-@@ -5522,7 +5522,7 @@ EXPORT_SYMBOL(__free_pages);
-  */
- void free_pages_nolock(struct page *page, unsigned int order)
- {
--	___free_pages(page, order, FPI_TRYLOCK);
-+	___free_pages(page, order, FPI_NOLOCK);
- }
- 
- /**
+Changes in v2:
+- Separated from functional fixes
+- Added cpuset cleanup, comment fixup, VM_BUG_ON() removal from Zi Yan's
+  review of [0].
+- Link to v1: https://patch.msgid.link/20260710-spin-trylock-followup-v1-0-=
+affb5fe5ed00@google.com
 
--- 
-2.54.0
+Based on mm-new, these are followups to [0]
+
+The alloc_pages_nolock_noprof() comment fixup could be squashed into
+"mm/page_alloc: relax GFP WARN in nolock allocs" - currently
+11770f8836f44 in mm-new.
+
+The VM_BUG_ON() removal could be squashed into "mm: remove
+__alloc_pages_node()", currently fba100a6cdfc5.
+[0]: https://lore.kernel.org/all/20260703-alloc-trylock-v5-0-c87b714e19d3@g=
+oogle.com/
+
+To: Andrew Morton <akpm@linux-foundation.org>
+To: Vlastimil Babka <vbabka@kernel.org>
+To: Suren Baghdasaryan <surenb@google.com>
+To: Michal Hocko <mhocko@suse.com>
+To: Brendan Jackman <jackmanb@google.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+To: Zi Yan <ziy@nvidia.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Clark Williams <clrkwllms@kernel.org>
+To: Steven Rostedt <rostedt@goodmis.org>
+To: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>
+To: Tejun Heo <tj@kernel.org>
+To: Michal Koutn=C3=BD <mkoutny@suse.com>
+To: David Hildenbrand <david@kernel.org>
+To: Lorenzo Stoakes <ljs@kernel.org>
+To: "Liam R. Howlett" <liam@infradead.org>
+To: Mike Rapoport <rppt@kernel.org>
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-rt-devel@lists.linux.dev
+
+---
+Brendan Jackman (4):
+      mm/page_alloc: rename FPI_TRYLOCK -> FPI_NOLOCK
+      cgroup/cpuset: update some comments about the page allocator
+      mm/page_alloc: fixup alloc_pages_nolock_noprof() comment
+      mm/page_alloc: remove a couple of VM_BUG_ON()st
+
+ include/linux/gfp.h    |  1 -
+ kernel/cgroup/cpuset.c | 13 +++++--------
+ mm/page_alloc.c        | 22 +++++++++++-----------
+ 3 files changed, 16 insertions(+), 20 deletions(-)
+---
+base-commit: 59c684a9908d2e6f7a791f7f033eae57ec2b3a61
+change-id: 20260710-spin-trylock-followup-332c636e0d99
+
+Best regards,
+-- =20
+Brendan Jackman <jackmanb@google.com>
 
