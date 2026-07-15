@@ -1,68 +1,67 @@
 Received: from mail-wm1-f73.google.com (mail-wm1-f73.google.com [209.85.128.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1961942CB14
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 11:03:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB2764483A4
+	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 11:03:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784113421; cv=none; b=jtbfTvZQk0rH3CKdLY76+7phk7blYBixTe/P71FGQPCrlv35aTDbn8ihlEA81+PW7SoLeguV1w8dNw4pJjVkPm9Ny3u3Ii2d+4wKx3ZtP+jmD3VcvSWb9qMMgw66ZSJrULebuta7OKokqJXZ2Ofz3UZhYVduJUAqoFmokAn4Zk0=
+	t=1784113427; cv=none; b=rbbY5isjkv5vVFXFkyj+bkKSskan9cW71ONnqDiZrBrc7pj+mSakUA0D4H21iTYJe7CTBeywFpLGpM0sr6a0Omv/FbdVzotD9SNSXWyHoK5AhSifdwucnLeJhIVY5O14tnf3s8b9oswbKDQ2R1QaudkKUbmjsxKwsH4tzAF7vuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784113421; c=relaxed/simple;
-	bh=OuHNTKCxUIMX67vpWylAoqXnFPUPv0sLTOv0JBYEmnM=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=tYyYf9447pqiozqeg1nedC2jesIQWerI+qQc3koJGp9JDDlXhw6LD2e7iU9phJxf9vpBPyEQ82ozFf1iX//D3NfdW8P/8Gp7GY3oSMeCAiMJHtBQKpCbI5ARgCHFnvHMWk2tJG4v/bwjbBh044Wkpd2lYOSLMeNkAkbvzkHtj+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=oFeUzVQw; arc=none smtp.client-ip=209.85.128.73
+	s=arc-20240116; t=1784113427; c=relaxed/simple;
+	bh=yp7DtpLSpDTNqGYFYJZ54fWV2cqq9H1TNl9IkEg5RcQ=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=qloXNrNNnqB2Eo3yrDdCfNjQd81KjVlau18LGgEDVawk8wCIvZtgAvGoco7LHZRaWsFnnxKKY4sANHZRU5lfd/aURff+BcU83SBn0JcdgjzgI2penCI58x0uzNhm4qXnNL1eFZCBlCZRTCtz4oX3vbrk0mKJgyqq4c/s9HSkgMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=idqdw5SQ; arc=none smtp.client-ip=209.85.128.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="oFeUzVQw"
-Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-493c526df6bso17621315e9.3
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 04:03:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="idqdw5SQ"
+Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-493c55d5ce5so29315145e9.0
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 04:03:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784113417; x=1784718217; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=BvOk2rkLE/yZxPV4YYeXjAMJoxjIiJfLSZRx9VhA7SI=;
-        b=oFeUzVQwqtx+v7NZENqyVgL5XpqXndqq/1Tcni5EF//rBKuPbSA0sYnebZtFJOiEsG
-         PvuOwq8gO9pXXnAvealfvY4KvDUFCq9UFrqi3vVTtg7NHs2ppChxzsX8yXRFotPKjwbj
-         b8J4N2Nr1zXf0pLsu0tw+mQrGsKkU/smCQQvpoZ+BhAEAqfL1X9MCadJpbAkRdo5CGSK
-         yC8D/3qm0nfXF3FQ8723fs4tb4InuvnQvjIPuyz8EXHsUpMjr1g9zUH7oZe1v99K0oz6
-         eqoUTa/qI/RQOVHntn++qL/LFztW/tP1yzVGSqd7VvHzehkX3HI2ZApKdi7TlzUdPaoG
-         Y6eQ==
+        d=google.com; s=20251104; t=1784113420; x=1784718220; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=29O54/g86I/UhsnFuKm5xVq389jfQYeh9pI8FKcXiJI=;
+        b=idqdw5SQstnbIxWinBCL/EG9TvKh0Z/APZPPYTR8NLVzVLyxyCxU873ZZ6hziigj2m
+         1jSoIzRye9npjbDczF78Q/bfRwp9KV6dbn6PpP1SwEdSKMvePE7ToOn4xbDxYGlCQ4cC
+         geju6Xxcy+GNhROZb4O2tABPmvGp22A3wGK+EI18UkzaeBQgkUyrdPpfBCMedLebvfUo
+         2COZa1/yQqMo/s/CT1mwn6vclWOD8HjmH/BdQHAWpRF44FGFMw/TmaINll7ZXvUzVLmX
+         EH12xbvbhMQXANm7i/WyoUASoZh+F5cmt4P/ehTgiej7t6IoYByH0rTqR2J+8keCcsLa
+         3+HQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784113417; x=1784718217;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=BvOk2rkLE/yZxPV4YYeXjAMJoxjIiJfLSZRx9VhA7SI=;
-        b=FiQUSMohNKWKp3aicIK4zUy5ZfUFlY3YNrpVZkjz36IKF8aci4p2umC+hCOxXXULYr
-         1EaCXk7PTnspxB68BfnpMlDvMXtfCV0I8jtUeozF+f+864O4MKl9aBxBH9GfS5KPEEG/
-         dZea3h4m3JYsdvjudDCD1gjRNErHKke/oTkHl8HhlsyZ2ka8WwTe3Hn6YrzZTU9pXhLG
-         em+MlyDL/Djh1I97HD1Ng0jpS6Z7Pyw9M9MCDzcNcKRDPrypffm7VcRobX0JDyl14rZy
-         HRhtqo+LhNWYOdNDyVLJfYSfG4wNRHjfbMP+PiHy8VbJtbpxxePfOaUGDXGO8uGn2Ar4
-         pbfA==
-X-Forwarded-Encrypted: i=1; AHgh+RoK4jiKynEepLkryRzslxaKn/veci8wwD1Jj59uthhExEIJL4GSiAvKButdv1ZLA7pLZp0pVeB6@vger.kernel.org
-X-Gm-Message-State: AOJu0YxbVJ0ysO58NceKSpI7HLe0bfJhWX28SPVn+93LCwwlS3UUUzbf
-	pMNZqbJW0WJVLTwD0vp5fxgm1WsokEEQTgPwJV0GDJNvejWTElW1R8ETc2wJdbGMQiAwDKNyoL9
-	CxJzB/FsHFjrUuA==
-X-Received: from wmoq16.prod.google.com ([2002:a05:600c:46d0:b0:493:b593:ca9f])
+        d=1e100.net; s=20251104; t=1784113420; x=1784718220;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=29O54/g86I/UhsnFuKm5xVq389jfQYeh9pI8FKcXiJI=;
+        b=iLL5jVcmVSC8dHkJCjZptAJyxn9/HzwFtXCN6YTFB4vJsQF/GHTeIuwBySTLAsz0Ws
+         1e1j0jaYJxc4zHcbLRgg4DRnXqjzpWc/j97kIgufqoMZ6HNl1tJ58xxfHrakbYuvpsl4
+         funyfmC412Gni7PVCGUQVxRFYG/WgTEtn2sies6bOOUxMlI3dkhrPdbOdwUuCj24d6aq
+         3zU0IiFb2G2XDYxw0iPDZeimGBxM8E0HZ/0Yx3XvCYxjBVkRcb26j4o0joYNn6FsoOTh
+         oPkZjP34cd8/kmOCzvqiKBt8GqyL3SJcolYd/B6a0CFaJyQrzyQqp0MLTsDFgiAdBPIK
+         frsw==
+X-Forwarded-Encrypted: i=1; AHgh+RoT4CT9OxGyJnGE3IyrLAxZB+feK8kem0Vl/ZC0d8t1fq3WCRz06GhTCRtNbx/wIets4kIJi8sz@vger.kernel.org
+X-Gm-Message-State: AOJu0YxdB6zz1TTc+IMidj+UY5dsTAprL0CGmPS2ueaiCWhJTSu33m5j
+	rV2UOG+pkR4bYPl1QVdSrYtZfsj7syb7A4K83cuZcgtpwgc1+Fa6GbLjahTa7aeVO8BRKOCdpXp
+	sQy46zHymtZsUcw==
+X-Received: from wmqa14.prod.google.com ([2002:a05:600c:348e:b0:48a:79a9:335c])
  (user=jackmanb job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:4f8a:b0:493:f7c8:eae2 with SMTP id 5b1f17b1804b1-493f87e6e9cmr175096055e9.15.1784113417076;
- Wed, 15 Jul 2026 04:03:37 -0700 (PDT)
-Date: Wed, 15 Jul 2026 11:03:17 +0000
+ 2002:a05:600c:1393:b0:493:fa66:4861 with SMTP id 5b1f17b1804b1-4953c273bb2mr27821985e9.25.1784113419548;
+ Wed, 15 Jul 2026 04:03:39 -0700 (PDT)
+Date: Wed, 15 Jul 2026 11:03:19 +0000
+In-Reply-To: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAPVoV2oC/4XNQQ6CMBQE0KuQrq35tIDBlfcwLqD8QrVS0kKVE
- O5uixtdGJeTzLxZiEOr0JFjshCLXjll+hD4LiGiq/oWqWpCJgxYAYcUqBtUT0c7ayNuVBqtzWM
- aKOdMFLxAaMqShO1gUarn5p4v7+ym+opijFhsdMqNxs7bsU9j79+HTynQSso6l5hjA3BqjWk17 oW5k3ji2SeT/WJYYLhgEAjO6jT7YtZ1fQEIegvxFAEAAA==
-X-Change-Id: 20260710-spin-trylock-followup-332c636e0d99
+References: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
 X-Mailer: b4 0.15.2
-Message-ID: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
-Subject: [PATCH v3 0/4] mm/page_alloc: couple of followups for recent cleanups
+Message-ID: <20260715-spin-trylock-followup-v3-2-fc4d246f705d@google.com>
+Subject: [PATCH v3 2/4] cgroup/cpuset: update some comments about the page allocator
 From: Brendan Jackman <jackmanb@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@kernel.org>, 
 	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
@@ -73,77 +72,74 @@ To: Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@kernel.or
 	"=?utf-8?q?Michal_Koutn=C3=BD?=" <mkoutny@suse.com>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
 	"Liam R. Howlett" <liam@infradead.org>, Mike Rapoport <rppt@kernel.org>
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	linux-rt-devel@lists.linux.dev, sashiko-bot@kernel.org
+	linux-rt-devel@lists.linux.dev
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
 
+These comments describing the page allocator are out of date:
 
+- __alloc_pages() is no longer a public API and has no business being
+  described outside of mm/.
 
+- The `wait` variable is gone.
+
+It may be out of date for other reasons too but this patch is just
+fixing the issues that stood out.
+
+To fix it:
+
+- Instead of referring to a specific function, instead to "the page
+  allocator"
+
+- Completely drop out-of-date details of that function's internal
+  behaviour, since they were irrelevant anyway.
+
+Suggested-by: Zi Yan <ziy@nvidia.com>
+Link: https://lore.kernel.org/all/DJP11T5V7BDW.2FZZZ8R6LOY4I@nvidia.com/
+Reviewed-by: Zi Yan <ziy@nvidia.com>
+Signed-off-by: Brendan Jackman <jackmanb@google.com>
 ---
-Changes in v3:
-- Fixed Sashiko Links: (Zi Yan)
-- Fixed kerneldoc syntax (Sashiko)
-- Removed extra VM_BUG_ON() (Sashiko)
-- Link to v2: https://patch.msgid.link/20260714-spin-trylock-followup-v2-0-=
-3c20ed032b14@google.com
-
-Changes in v2:
-- Separated from functional fixes
-- Added cpuset cleanup, comment fixup, VM_BUG_ON() removal from Zi Yan's
-  review of [0].
-- Link to v1: https://patch.msgid.link/20260710-spin-trylock-followup-v1-0-=
-affb5fe5ed00@google.com
-
-Based on mm-new, these are followups to [0]
-
-The alloc_pages_nolock_noprof() comment fixup could be squashed into
-"mm/page_alloc: relax GFP WARN in nolock allocs" - currently
-11770f8836f44 in mm-new.
-
-The VM_BUG_ON() removal could be squashed into "mm: remove
-__alloc_pages_node()", currently fba100a6cdfc5.
-[0]: https://lore.kernel.org/all/20260703-alloc-trylock-v5-0-c87b714e19d3@g=
-oogle.com/
-
-To: Andrew Morton <akpm@linux-foundation.org>
-To: Vlastimil Babka <vbabka@kernel.org>
-To: Suren Baghdasaryan <surenb@google.com>
-To: Michal Hocko <mhocko@suse.com>
-To: Brendan Jackman <jackmanb@google.com>
-To: Johannes Weiner <hannes@cmpxchg.org>
-To: Zi Yan <ziy@nvidia.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Clark Williams <clrkwllms@kernel.org>
-To: Steven Rostedt <rostedt@goodmis.org>
-To: Waiman Long <longman@redhat.com>
-To: Ridong Chen <ridong.chen@linux.dev>
-To: Tejun Heo <tj@kernel.org>
-To: Michal Koutn=C3=BD <mkoutny@suse.com>
-To: David Hildenbrand <david@kernel.org>
-To: Lorenzo Stoakes <ljs@kernel.org>
-To: "Liam R. Howlett" <liam@infradead.org>
-To: Mike Rapoport <rppt@kernel.org>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org
-Cc: linux-rt-devel@lists.linux.dev
-
----
-Brendan Jackman (4):
-      mm/page_alloc: rename FPI_TRYLOCK -> FPI_NOLOCK
-      cgroup/cpuset: update some comments about the page allocator
-      mm/page_alloc: fixup alloc_pages_nolock_noprof() comment
-      mm/page_alloc: remove a couple of VM_BUG_ON()st
-
- include/linux/gfp.h    |  1 -
  kernel/cgroup/cpuset.c | 13 +++++--------
- mm/page_alloc.c        | 22 +++++++++++-----------
- 3 files changed, 16 insertions(+), 20 deletions(-)
----
-base-commit: 59c684a9908d2e6f7a791f7f033eae57ec2b3a61
-change-id: 20260710-spin-trylock-followup-332c636e0d99
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-Best regards,
--- =20
-Brendan Jackman <jackmanb@google.com>
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 24ea2d09cdbdb..dfd0f827e3b92 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -4193,7 +4193,7 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
+  * nearest enclosing hardwalled ancestor cpuset.
+  *
+  * Scanning up parent cpusets requires callback_lock.  The
+- * __alloc_pages() routine only calls here with __GFP_HARDWALL bit
++ * page allocator only calls here with __GFP_HARDWALL bit
+  * _not_ set if it's a GFP_KERNEL allocation, and all nodes in the
+  * current tasks mems_allowed came up empty on the first pass over
+  * the zonelist.  So only GFP_KERNEL allocations, if all nodes in the
+@@ -4206,11 +4206,8 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
+  * come before the __GFP_HARDWALL check, otherwise a dying task
+  * would be blocked on the fast path.
+  *
+- * The second pass through get_page_from_freelist() doesn't even call
+- * here for GFP_ATOMIC calls.  For those calls, the __alloc_pages()
+- * variable 'wait' is not set, and the bit ALLOC_CPUSET is not set
+- * in alloc_flags.  That logic and the checks below have the combined
+- * affect that:
++ * The second pass through get_page_from_freelist() doesn't even call here for
++ * GFP_ATOMIC calls.  That, and the checks below have the combined affect that:
+  *	in_interrupt - any node ok (current task context irrelevant)
+  *	GFP_ATOMIC   - any node ok
+  *	tsk_is_oom_victim   - any node ok
+@@ -4327,8 +4324,8 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
+  * should not be possible for the following code to return an
+  * offline node.  But if it did, that would be ok, as this routine
+  * is not returning the node where the allocation must be, only
+- * the node where the search should start.  The zonelist passed to
+- * __alloc_pages() will include all nodes.  If the slab allocator
++ * the node where the search should start.  The zonelist used by
++ * the allocator will include all nodes.  If the slab allocator
+  * is passed an offline node, it will fall back to the local node.
+  * See kmem_cache_alloc_node().
+  */
+
+-- 
+2.54.0
 
