@@ -1,119 +1,137 @@
-Received: from mail-wm1-f73.google.com (mail-wm1-f73.google.com [209.85.128.73])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6A382931D7
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 11:03:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04EAB41DEDC
+	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 12:44:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784113428; cv=none; b=gXF06xBIO7pkI9oJSmDv+3O5uQQ5quuZasLOCKMI6/KyZpaJ5b44GJ8tcXg9vRwogKzCcCSEPobRfEvSZ66I08M6NMxE9RVoHP8IyFhT6Cc4sXtajYCqKlTlcPZ2FuTh1XZBS1If4vjj3bmNNnh+Ufy5Mi4GpYc64h9iIwB1Ot0=
+	t=1784119491; cv=none; b=oZpBWc0rtjgHHEtgc2xJ23+j/4y8AXiMJKL4Hi/EvUSwNg7uC4q8tLyt6zyMd567aJn89ZQ6eV5ZBTpMc72Y/UK+WggQ+hEkO3BhNBETgIFAdM1fY8jRDc9bFbnptZnkmcDONZpoaopwFr27Np6Xp+3uSld3NNCim4VjCicZOdg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784113428; c=relaxed/simple;
-	bh=J6H+FoeqiU5MQFbzUvf2h1acD2Gc0AUhstmNBmOjGho=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=eTD7hWN12ugQzG0qLQ5EpGel3Nki1lJ8AsEUT/VZ3w+nqQhWghOlSmner9MZ53NRCGmZQaexpJn/LKHsD78xBHxm67NZW8x5ZTXKKZyqLPw1TdVUY0hex+U37iF0j7YQfbfsFSkd7SGhOehmtMQHQQnHRUdIo/kqxHdOBlHfClM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=i3lNIw2x; arc=none smtp.client-ip=209.85.128.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--jackmanb.bounces.google.com
+	s=arc-20240116; t=1784119491; c=relaxed/simple;
+	bh=Z13mCUbakk2/eWKWVOW9JmH2y08kjCRmD4nBz4zwb/k=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=QK8bDceiVIMgT03OnaQEMegC5k6r28veW68p4vyvoEOaGZl9kI03rzdnyw8gqhmoilijCaeZRpYdkeHJvlG5z5p2jJ82vUo99om2MnGCrca8S4JCYkS4skgtkacHIpl5HuIaS/9jW4U+NYnhRlnXCFnY0ayknd26kbx44vXGIv4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fWO690wB; arc=none smtp.client-ip=95.215.58.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="i3lNIw2x"
-Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-493bc2b376fso40499805e9.3
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 04:03:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784113422; x=1784718222; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=dz86EwLqIg9rsRKy2+oVo0cZ8RAfDlpYQ8xyeR+GWfk=;
-        b=i3lNIw2xeMpxYwYzM8naVyRgQp5PAXiLHUy9V2K3GirLBocN7FuHOV6gTAti6kTAKH
-         G08pbVe0UvruAdcd13goBm1+Ztg2tTfSHAw3mUc6ze++QCSKQb42yIdcWdIfOi34kOGF
-         DfpiMyE3/aDfd7MoFj5VZdI9LLsD5BjQhDKUU83SuHdWW2hUFh29iCisakKMfuppuYM9
-         EaPki2aK+TR0zt+PHgkYk5ku/e0wZJ5doD9fZPk9rfwbVAxL4ngGvp7+Mr5OvL6pAMtt
-         qoC/bxOCSlhs9cRTS+yC6NSS6IFlqicq6nZeChJ/blBhdZXURLGZ2nKbaOTDAzCu0qP3
-         9goQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784113422; x=1784718222;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=dz86EwLqIg9rsRKy2+oVo0cZ8RAfDlpYQ8xyeR+GWfk=;
-        b=Rv/dVvOdSqsISI5sd0dhK6aYlZV+4S+HyTELaywHqp2j9UbQs1/+xgXBTrX2npDiR7
-         nOf92XZ5HTeGvH/uujc67Uu+ZBWcNvHdGhAkrspou4J4AZ1o8NuQnZIqsWZV6aUL5Blb
-         WZW5Y6KWMolHtelNmq3UYV93dpwdWfjyPSjJSU938VdEgHwuXxiJKi0B6mCa0ZrvJBfI
-         vlR42gFDvF+p7SoJdIR+Mc/XyAH4kfyuilYXkM2hs59kq7xdTdrBFxFm4D09pMbrSKma
-         ZqqlNPsPUGX9JY3DFxgEgQR5Hj5AXQguVxkgMj9wXZxunAMYG4qBtb63pDxtXWDJ8qqC
-         +h0w==
-X-Forwarded-Encrypted: i=1; AHgh+RoBNyLwe7cpMtaj1iEUlvDFH2oYRskYHqRgKuDMB1gZSsxqgFK4XgwvFFZA6s0TUFLzkxibhyEI@vger.kernel.org
-X-Gm-Message-State: AOJu0YwuJXsWXkzNUTQur024vSFoFKiIgZMhf8+3KnaUFij0R+ml/eTA
-	Q5G7qirNbZn1R0iseVuoZ0esxLtegjlUyLgz/u+SEvpiIZa44XO4TPKI9PCmh/gWeVbc7YoCiEw
-	yDzfsrOsRQAG2qw==
-X-Received: from wmoh4.prod.google.com ([2002:a05:600c:3144:b0:490:b2a6:e6f5])
- (user=jackmanb job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:3e0d:b0:493:b499:3ef2 with SMTP id 5b1f17b1804b1-4953c299474mr25989985e9.37.1784113421736;
- Wed, 15 Jul 2026 04:03:41 -0700 (PDT)
-Date: Wed, 15 Jul 2026 11:03:21 +0000
-In-Reply-To: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fWO690wB"
+Message-ID: <882fbac2-bd42-44a7-8fba-b387b3f0fb2b@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784119481;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=W/AULJBPGThMdnA0tzmgbmYa+mAU/00kSN7xatYKRAg=;
+	b=fWO690wBzePos0ZC41kuuDNM8sVZqLVxEMHoTKZKM+z5izjTgG0PTb8GKSIt+lJpqHRw05
+	lIIZ+C+q70zFfdYGqMrUsFCnLdwIcyaIRFRQg2Zgjq60IZ08Un5ol4ziofVIWiudMPimPN
+	S8kQ+SBV6OGIbLSKrMYlHq7kGtKdWBk=
+Date: Wed, 15 Jul 2026 20:44:19 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
-X-Mailer: b4 0.15.2
-Message-ID: <20260715-spin-trylock-followup-v3-4-fc4d246f705d@google.com>
-Subject: [PATCH v3 4/4] mm/page_alloc: remove a couple of VM_BUG_ON()st
-From: Brendan Jackman <jackmanb@google.com>
-To: Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
-	Brendan Jackman <jackmanb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Zi Yan <ziy@nvidia.com>, 
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Clark Williams <clrkwllms@kernel.org>, 
-	Steven Rostedt <rostedt@goodmis.org>, Waiman Long <longman@redhat.com>, 
-	Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	"=?utf-8?q?Michal_Koutn=C3=BD?=" <mkoutny@suse.com>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Mike Rapoport <rppt@kernel.org>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	linux-rt-devel@lists.linux.dev
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Cc: cui.tao@linux.dev, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com,
+ cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH] blk-throttle: fix divide-by-zero on legacy iops limit of
+ 0
+To: David Laight <david.laight.linux@gmail.com>
+References: <20260714103552.1335658-1-cui.tao@linux.dev>
+ <20260714123754.7a88a65b@pumpkin>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260714123754.7a88a65b@pumpkin>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-VM_BUG_ON() is out of favour and on the way to removal, since I recently
-touched alloc_pages_node_noprof() I am removing that invocation, and
-also removing the __folio_alloc_node_noprof() one for consistency. If
-this precondition is violated, the system will soon crash anyway.
 
-Suggested-by: Zi Yan <ziy@nvidia.com>
-Link: https://lore.kernel.org/all/7F866265-3F2E-4765-B9D4-9AB898A9C4AC@nvidia.com/
-Acked-by: Zi Yan <ziy@nvidia.com>
-Signed-off-by: Brendan Jackman <jackmanb@google.com>
----
- include/linux/gfp.h | 1 -
- mm/page_alloc.c     | 1 -
- 2 files changed, 2 deletions(-)
 
-diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index 4d57e9c0bf204..872bc53f32ec8 100644
---- a/include/linux/gfp.h
-+++ b/include/linux/gfp.h
-@@ -255,7 +255,6 @@ static inline void warn_if_node_offline(int this_node, gfp_t gfp_mask)
- static inline
- struct folio *__folio_alloc_node_noprof(gfp_t gfp, unsigned int order, int nid)
- {
--	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
- 	warn_if_node_offline(nid, gfp);
- 
- 	return __folio_alloc_noprof(gfp, order, nid, NULL);
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 25a83a57aab66..4c6815f84adc6 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -5427,7 +5427,6 @@ struct page *alloc_pages_node_noprof(int nid, gfp_t gfp_mask, unsigned int order
- 	if (nid == NUMA_NO_NODE)
- 		nid = numa_mem_id();
- 
--	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
- 	warn_if_node_offline(nid, gfp_mask);
- 
- 	return __alloc_pages_noprof(gfp_mask, order, nid, NULL, ALLOC_DEFAULT);
+在 2026/7/14 19:37, David Laight 写道:
+> On Tue, 14 Jul 2026 18:35:52 +0800
+> Tao Cui <cui.tao@linux.dev> wrote:
+> 
+>> From: Tao Cui <cuitao@kylinos.cn>
+>>
+>> Writing a multiple of 2^32 (e.g. 4294967296) to a legacy cgroup v1
+>> throttle iops file (blkio.throttle.{read,write}_iops_device) silently
+>> truncates to 0: tg_set_conf() stores the sscanf-parsed u64 value into
+>> an unsigned int field with no clamping. The cgroup v2 path,
+>> tg_set_limit(), already clamps the same kind of value with
+>> min_t(u64, val, UINT_MAX), but the legacy path never did. Note that
+>> the "!v -> U64_MAX" mapping only catches an explicit zero and does not
+>> catch a value that truncates to zero.
+>>
+>> With iops stored as 0, tg_update_has_rules() sets has_rules_iops[] and
+>> the next IO reaches tg_within_iops_limit(), which computes
+>>
+>>     jiffy_wait = max(jiffy_wait, HZ / iops_limit + 1);
+>>
+>> triggering a divide-by-zero oops.
+>>
+>> Fix it in two places:
+>>
+>>   * tg_set_conf(): clamp the value to UINT_MAX, consistent with
+>>     tg_set_limit(). This closes the truncation root cause (and the
+>>     general silent truncation for any value above UINT_MAX).
+>>
+>>   * tg_dispatch_iops_time(): treat iops_limit == 0 as unlimited so the
+>>     divide in tg_within_iops_limit() is never reached, defending
+>>     against any future path that could produce a zero limit.
+>>
+>> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+>> ---
+>>  block/blk-throttle.c | 10 ++++++++--
+>>  1 file changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+>> index ffc3b70065d4..3f3c1374f4b2 100644
+>> --- a/block/blk-throttle.c
+>> +++ b/block/blk-throttle.c
+>> @@ -883,7 +883,12 @@ static unsigned long tg_dispatch_iops_time(struct throtl_grp *tg, struct bio *bi
+>>  	u32 iops_limit = tg_iops_limit(tg, rw);
+>>  	unsigned long iops_wait;
+>>  
+>> -	if (iops_limit == UINT_MAX || tg->flags & THROTL_TG_CANCELING)
+>> +	/*
+>> +	 * iops_limit == 0 is not a valid limit. Treat it as unlimited so we
+>> +	 * never reach the HZ / iops_limit divide in tg_within_iops_limit().
+>> +	 */
+>> +	if (iops_limit == UINT_MAX || iops_limit == 0 ||
+>> +	    tg->flags & THROTL_TG_CANCELING)
+>>  		return 0;
+>>  
+>>  	tg_update_slice(tg, rw);
+>> @@ -1386,7 +1391,8 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+>>  	if (is_u64)
+>>  		*(u64 *)((void *)tg + of_cft(of)->private) = v;
+>>  	else
+>> -		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
+>> +		*(unsigned int *)((void *)tg + of_cft(of)->private) =
+>> +			min_t(u64, v, UINT_MAX);
+> 
+> The LHS casts look horrid - there has to be a nicer way to do that.
+> 
+> And you don't need min_t() a plain min() will be fine.
+> 
+Hi David,
 
--- 
-2.54.0
+Both done in v2 — introduced a void *field local so the writes read
+*(u64 *)field / *(unsigned int *)field, and switched to
+min(v, (u64)UINT_MAX).
+
+Thanks,
+Tao
+> 	David
+> 
+> 
+> 
+>>  
+>>  	tg_conf_updated(tg, false);
+>>  	ret = 0;
+> 
 
