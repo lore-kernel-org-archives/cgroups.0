@@ -1,182 +1,253 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89D223B0AE1
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 16:13:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.177
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784132038; cv=pass; b=D9IT1rAm4/INIVCLRhVYSORsDedzYAcOaqj9uF6APAfwbvppYXuKO/SiV8Ncd7BrpNws2zb5k8Eri05fIfrw1Pcqaer2LkzA7K7wi56IUnd0cI7dnO6tndHBob+NNMf53vnmG7x3fsRYY11cSYeNTgguxu1qD7DcHcmNO7TltPg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784132038; c=relaxed/simple;
-	bh=Gqk2xfrCP7QtcWu2dcnH/EaXNlAyh1m4NaalRiol5p8=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 341473AF668
+	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 16:26:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784132771; cv=none; b=ofxVV5mQnoqlGn3wKe4fU/B9CcgOU+9cpJdF8Q4Po0Fa5kVUgGkuiUDmMyrIv1129X0aXRhzTLK6Pe8B1W4/d3bfcrDkeCrHjvwiG7sbWEw3EOlzWP5igMLicEGDh0IQ0GeqVNw6dWbWZqQk0SkNbfa44GQEAX9JEKnWshzda1c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784132771; c=relaxed/simple;
+	bh=0+1pAyVvNAL292EPJpz8WvnUr6GdmK2tG8JPLre2P2o=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=t7MDim9x+rCFdQb5bP6OECVKZO5C9wOyUZW+x/7J2ky1EHfK3SIkS4E17cbHkyV43vgnJAQfFJWZBXldxf5JY/TRa6HZF9RCqeQBP0jD19UtOJvrzLKgAAfmqmTK5yb3Kv+vnUYEiyFiAV6aZiH8sTnBBMK9CzI5hg0jMB46510=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=vexZM7f6; arc=pass smtp.client-ip=209.85.160.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 To:Cc:Content-Type; b=L+AreraE6ar3ZZ853YdAllynkQgWQ0thYevys/iMYUj9OMlrcJZOd3EZApMHoa638VllHS0+Yr8xs5gqtWDmMY5icMbWpJ5V0hlZQUuotXBx5iPluqbEo32k+aTPH8SCoXLIrbtru1lDr60J0NAyt9h8eqeRsOJx8GuxDVQ14Wc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VSbTbhtn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="vexZM7f6"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-51c10ed63c0so297761cf.1
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 09:13:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784132030; cv=none;
-        d=google.com; s=arc-20260327;
-        b=d+H/bgjiHLNivcdN6mSR4ZhZn2Re/PuPpA7RzoidyvTb1LtHvDZZCU9XSD8yNhIxi/
-         njg8a8C3XDzaIDpX20A6caJDCYiJOB0DGUaEnd407McIOjWJ9kbTXR5dLp1/UKZy/PQy
-         tkI1Zmep7El8Ra2qBxHkTvMCHCDI6IIK+qdJCs6WMW/dJktF5OxK+NXaPLeT/XD1muNd
-         c1/M89eyRYsQ8jlCl/eKFDc/NIPylpxiri/NKFN10y/mUpgyicaKj4XEkW8pTYPavnxH
-         hKbnUvhrxdHA2eYcz4xabED+GGujkAkeeCQlhH+8jgeEQ6EGKrLv5teo2G/W8KwtXx2y
-         L3QA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=NzrlbG1i1Z2grnBug4mVQe2iSrEhqBzyFP6w96GEH0Q=;
-        fh=2U8dq2mDjp1OBrncbHjKwCMt6uCqXJTdJKzr+dJgqfc=;
-        b=rZCGklq6AOsjbRe0GGbhVSdohmzitRTKB1ia2HqHK6CCeJB7F81gosASJB7st08k8D
-         VvpLngZ66YL5d43JnbSdItf3GI33mvcY1PkW9Io/9A4TPgZTM4zhp2J40uM3LtpZacXo
-         7XZEac++EZ3qWVaP/t5iTBoOJx2UNCzOVPtapO002RCYDqkZB59oxCy0ZAyjPnI6mx8T
-         7ERwO3W3Nk0GIcuKDQLYTKv1ckpidUhRpiJRSsnmeRp/gu//pjpiH8wAHi4abjLf3R9T
-         W/eEb7y1KRQLTLO/tGHEkiJZriF5pgPxokPF94nEtV3HuzbF0g+QOJrjQVVfYB2Tf717
-         FjOw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784132030; x=1784736830; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=NzrlbG1i1Z2grnBug4mVQe2iSrEhqBzyFP6w96GEH0Q=;
-        b=vexZM7f6pVKynt7RYwnnPPjmLgSyfrUbj39lSm2dqqPw999ZGWjPLh+PFfPjcekpz8
-         JykscWMiMWsVLAxJ7Z9vFRoaQqtCNIqUtK8O/a5aNJledvURQniZss9s9tenXmh6UsbQ
-         lhptTi0VGoedehjtNzsP1FuxXEZEuxceErtj6AXHNA8GeWZKWpj42mupreiKx201UwHP
-         4xS1/FSOUyy6DrsjWuBN6mpseOjF/2+vjUF+5euddhMKjs6ZztDVPM37jgyL3yKOyHl2
-         gq3O+IbJqw6ZRb6bAzKuxOdk65YiES/6Hpv41bs362LncmB1918ISHYrBiEYtiKsuszC
-         f2jQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784132030; x=1784736830;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=NzrlbG1i1Z2grnBug4mVQe2iSrEhqBzyFP6w96GEH0Q=;
-        b=a29WQnM1cmS0mQKwa5ZJ9oPer1mSZzyrvAJiEg9YW11U9PYkjbJYbqa+amUitVA8K3
-         //0NGQw2sqhqs9iaL4crzYCk7qD7nS/6ENAgfqz39/6RQ3ItGQz0U2zc62oLhfRKigFX
-         FWEd30pF76Kiy5GFzyWElEPjv6+6gbSFnYfyVM6cOpNOK4SyXcH5RD8XCPbh1AyrXh7h
-         xqSQXzkyIY2DAE0qRF/6nE+/d6sJrVAi1sqWpgPWUsQ+BTJuf4eOAgJHThLUUMMSlhQ2
-         zF8E2k8f2OQEnIfLXxN4iNb+uvS5W6U+ZvGsUPS/j5ESDQMxMoQGZoCD+5jVdcRW7n09
-         33Bw==
-X-Forwarded-Encrypted: i=1; AHgh+Rpuw1yEweFZz3LbbSqUi7WciR+5h3a9RikCNf1Vrw6yoqrTgGjVqGmJdMIruCDKjKCWfTvmd3jl@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz7HgcQIyNo/h+OjHjnm7u+zsEWOZ0zYB1snxfsHd3WqndIVt5L
-	YVi1Ge/lU0feTSes9PAflnuXB6lcO9XotahTnWfi+yuwhGvGlcW1ywIOYgr57Alj4AA/etRrUKN
-	Q0CJi6x1gdQoh1W6WuneSMyarpl9mIN+y9PrwKmRM
-X-Gm-Gg: AfdE7cnQ2jRwa3deDbJPofkGXTH7i9dde/VqW7rDouM86SDDHBGQNXojtNz7jUCGjNG
-	/sONCVZWaHA/hXkaQsxa5KXIvo2/m7iMP+H51eqMD0Wb2asH50OD6Hyx9FAxSjBnUlB4+5h/c2W
-	LrgZkg9+i5d+dVwez7BCWcRfE7C8OP01xvBTD8Lbump8Q7vkOJTU8S3Wj/ZGPUO7DZaN3fJ2J6/
-	aDvX7ddAotse5VjdBiXoOjTh2eGKW3v0ptHojleZMD6WBezRTyvmzjRz5x+PQGLqNVIE6J0/0cQ
-	XqwtxtfxlY30vBbOK6fp8xvOyWQ=
-X-Received: by 2002:ac8:7fd6:0:b0:51c:523:9540 with SMTP id
- d75a77b69052e-51d7bd7292emr28840051cf.18.1784132029139; Wed, 15 Jul 2026
- 09:13:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VSbTbhtn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D39BA1F0155E
+	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 16:26:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784132769;
+	bh=dd9XYmJa91i3eHqCaDt/pfCx2M1RLfbCHPrhn8OTm3g=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=VSbTbhtn7fpK0+soZOL9sgblFUi1zKSEfeoi8Q9LQU9aCvgJghHuO1dXiRbeWX4B8
+	 MdrOvpHtK3SdCjpFz2/siP6ZzgpwleA/YO2s8N9dPAEWuHtSZYkbJa5xioM8vJM3oH
+	 f44bjwuTHYNPYHcXO/DvTPWqif+MJWs/9C8UvIpk3NfAv1spweRUNYlly61ftzMylr
+	 43jivSpUCF8WZul+/VCfNJELtWZecKFUrrJ3nmUiwBIhvXSqKi1hBTl8c2eag0vhDX
+	 VwzYkOAJHa/o3pqaKierR7F/pmt6s7m4b/HjrMXxmxyfowHKmKWk71tpnJxNw/Wruk
+	 HjMgbybdE3Tkw==
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-698562f10e7so8085123a12.0
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 09:26:09 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RpsztEU1hThvrsVoIlrAu8FfeAvVA5lk8ybM4twk0nRPgcdJ58lG3og0xA8tLNNx9Kea2NzK+cH@vger.kernel.org
+X-Gm-Message-State: AOJu0YyduAR9qF3FUCuS8tfSC2QjJ2EHQA0YaQx/Y0z1dMXE+5kfJQlc
+	XMASmG0D1fmR0nB7B3g7hDUpbByq2gPKtLzL4OFL5lFqNbAIR4YyDddFTr/OfdN5PBgne3XW835
+	ivpgHKn4rndF/UUX02GnVHag963zRxcE=
+X-Received: by 2002:a17:907:c19:b0:c16:f32:6ca3 with SMTP id
+ a640c23a62f3a-c1667b3767cmr424280366b.46.1784132768582; Wed, 15 Jul 2026
+ 09:26:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org> <20260715-b4-objext_split-v1-2-9a49c4ccf4c3@kernel.org>
-In-Reply-To: <20260715-b4-objext_split-v1-2-9a49c4ccf4c3@kernel.org>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Wed, 15 Jul 2026 09:13:36 -0700
-X-Gm-Features: AUfX_mzWQymAiWtZQlBJB582QbB-RDSaqmDhzME45pNGf0-qJx6G_e02yGRYqOo
-Message-ID: <CAJuCfpE1P=8RiSwm1FV2TCpM2FPo3A4VH5izpKR=J9F-_h5Y_Q@mail.gmail.com>
-Subject: Re: [PATCH RFC 02/12] mm/slab: remove objs_per_slab()
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
-	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
+References: <20260713025644.170839-1-youngjun.park@lge.com>
+ <CAO9r8zNJfhirbzvJzDWRaBQOM7XZcf_Jk0Bz=Y4dB4QK4W-MwQ@mail.gmail.com>
+ <alUK8DWRy4LPxTpY@yjaykim-PowerEdge-T330> <CAO9r8zPvWKgQ8+ABxSnVnC452-enyMqCjBTA4pfNDVxsoJr25g@mail.gmail.com>
+ <alUQ0ksPP00PVwew@yjaykim-PowerEdge-T330> <alae-LIRwEFUjgs1@linux.dev> <alcebHobUCUyO70k@yjaykim-PowerEdge-T330>
+In-Reply-To: <alcebHobUCUyO70k@yjaykim-PowerEdge-T330>
+From: Yosry Ahmed <yosry@kernel.org>
+Date: Wed, 15 Jul 2026 09:25:56 -0700
+X-Gmail-Original-Message-ID: <CAO9r8zM+PNf-r4ToVQn_vMJfozN9ow6qCG_0WVfh9TWdxmdzrw@mail.gmail.com>
+X-Gm-Features: AUfX_myoQfmUvN8TiC3tXP59YsSu6CWZLautLR1tX1O8JZHdTCD8HIK9MKOgOsU
+Message-ID: <CAO9r8zM+PNf-r4ToVQn_vMJfozN9ow6qCG_0WVfh9TWdxmdzrw@mail.gmail.com>
+Subject: Re: [PATCH v10 0/6] mm/swap, memcg: Introduce swap tiers for cgroup
+ based swap control
+To: Youngjun Park <youngjun.park@lge.com>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, akpm@linux-foundation.org, chrisl@kernel.org, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
+	baoquan.he@linux.dev, baohua@kernel.org, joshua.hahnjy@gmail.com, 
+	gunho.lee@lge.com, taejoon.song@lge.com, hyungjun.cho@lge.com, 
+	baver.bae@lge.com, her0gyugyu@gmail.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jul 15, 2026 at 3:10=E2=80=AFAM Vlastimil Babka (SUSE)
-<vbabka@kernel.org> wrote:
+On Tue, Jul 14, 2026 at 10:45=E2=80=AFPM Youngjun Park <youngjun.park@lge.c=
+om> wrote:
 >
-> The function has an unused kmem_cache argument and almost nothing uses
-> it anyway; doing slab->objects is simpler. Remove it with the last two
-> users. KUNIT_EXPECT_EQ() needs a cast to avoid "error: =E2=80=98typeof=E2=
-=80=99 applied
-> to a bit-field" but we don't need to keep a wrapper just for that.
+> On Tue, Jul 14, 2026 at 01:44:28PM -0700, Shakeel Butt wrote:
+> > Hi Youngjun,
+> >
+> > Thanks for keep pushing this effort.
 >
-> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> Hi Shakeel
+> Huge thanks again for suggestion.
+>
+> > > Right, that's the plan.
+> > >
+> > > > but I would check all
+> > > > user-visible behaviors related to zswap (e.g. interaction with othe=
+r
+> > > > zswap interfaces) to make sure nothing breaks or changes in a
+> > > > meaningful way when zswap is introduced as a tier later.
+>
+> At now, the answer is there are nothing breaks or changes as a first revi=
+ew.
+> I think it'll be better to introduce zswap tier after this patch.
+> (Details are going on the below)
+>
+> > > Fair point. Let me review this more and get back to you!
+> >
+> > Please do report back what you find.
+> >
+> > Yosry, what is needed to enable zswap as a swap tier? What will be the =
+minimum
+> > requirements for that? If that is not too much, we can make that part o=
+f this
+> > series.
+> >
+> > Shakeel
+>
+> I tried to verify what changes once the zswap tier is introduced.
+> Please correct me if I'm wrong!
+>
+> First observation: before the zswap tier is introduced, some of this
+> is already possible today:
+>
+>   - a "zswap-only" tier equivalent on cgroup: memory.zswap.writeback =3D =
+0
+>   - disabling zswap entirely on cgroup: memory.zswap.max =3D 0
+>   - disabling swap (and zswap) entirely on cgroup: memory.swap.max =3D 0
+>
+> Given that, my take is that introducing the tier concept itself
+> doesn't change any user-visible zswap behavior, since on/off control
+> for the zswap tier is basically already possible today through other
+> knobs. So this isn't really a user-facing problem; it's more
+> something we need to think through carefully in the patch that
+> introduces the tier concept itself. That's what the points below are
+> about.
+>
+> The cgroup interface knobs and the zswap-global knobs need a
+> different kind of review, so let's start with the global ones. The
+> zswap-global knobs (compressor, max_pool_percent,
+> accept_threshold_percent, shrinker_enabled) look fine with tiers.
+> They're zswap-internal tuning, orthogonal to the tier concept, so
+> tiers shouldn't change their behavior. The remaining one, "enabled",
+> does overlap in spirit with the tier on/off knob: enabled =3D false is
+> basically the same as disabling zswap for every cgroup. But like the
+> other overlaps below, this doesn't look like a real problem.
 
-Reviewed-by: Suren Baghdasayan <surenb@google.com>
+Agreed, I don't think there's a problem there.
 
-> ---
->  mm/kfence/kfence_test.c | 2 +-
->  mm/slab.h               | 6 ------
->  mm/slub.c               | 3 +--
->  3 files changed, 2 insertions(+), 9 deletions(-)
 >
-> diff --git a/mm/kfence/kfence_test.c b/mm/kfence/kfence_test.c
-> index de2d0f7d62b1..9867c03ef0ae 100644
-> --- a/mm/kfence/kfence_test.c
-> +++ b/mm/kfence/kfence_test.c
-> @@ -295,7 +295,7 @@ static void *test_alloc(struct kunit *test, size_t si=
-ze, gfp_t gfp, enum allocat
->                          * memcg accounting works correctly.
->                          */
->                         KUNIT_EXPECT_EQ(test, obj_to_index(s, slab, alloc=
-), 0U);
-> -                       KUNIT_EXPECT_EQ(test, objs_per_slab(s, slab), 1);
-> +                       KUNIT_EXPECT_EQ(test, ((unsigned int)slab->object=
-s), 1);
+> The part that needs more thought is the overlap between
+> memory.zswap.max / memory.zswap.writeback, memory.swap.max, and the
+> new tier on/off knob. Since all of the above is already possible
+> today, adding a tier on top means we should make sure it doesn't
+> create confusing overlap.
 >
->                         if (policy =3D=3D ALLOCATE_ANY)
->                                 return alloc;
-> diff --git a/mm/slab.h b/mm/slab.h
-> index f5e336b6b6b0..01535e1e2d3c 100644
-> --- a/mm/slab.h
-> +++ b/mm/slab.h
-> @@ -330,12 +330,6 @@ static inline unsigned int obj_to_index(const struct=
- kmem_cache *cache,
->         return __obj_to_index(cache, slab_address(slab), obj);
->  }
+> 1) memory.swap.max vs. tier on/off
 >
-> -static inline int objs_per_slab(const struct kmem_cache *cache,
-> -                               const struct slab *slab)
-> -{
-> -       return slab->objects;
-> -}
-> -
->  /*
->   * State of the slab allocator.
->   *
-> diff --git a/mm/slub.c b/mm/slub.c
-> index a4be70d080fb..9e25f2dce7a6 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -2127,7 +2127,6 @@ int alloc_slab_obj_exts(struct slab *slab, struct k=
-mem_cache *s,
->                         gfp_t gfp, unsigned int alloc_flags)
->  {
->         const bool allow_spin =3D alloc_flags_allow_spinning(alloc_flags)=
-;
-> -       unsigned int objects =3D objs_per_slab(s, slab);
->         bool new_slab =3D alloc_flags & SLAB_ALLOC_NEW_SLAB;
->         unsigned long new_exts;
->         unsigned long old_exts;
-> @@ -2183,7 +2182,7 @@ int alloc_slab_obj_exts(struct slab *slab, struct k=
-mem_cache *s,
->  #endif
->  retry:
->         old_exts =3D READ_ONCE(slab->obj_exts);
-> -       handle_failed_objexts_alloc(old_exts, vec, objects);
-> +       handle_failed_objexts_alloc(old_exts, vec, slab->objects);
+>    memory.swap.max =3D 0 disables swap (and zswap) entirely, and
+>    memory.swap.max =3D max leaves everything enabled, so one knob can
+>    make the other a no-op. I don't think this is confusing in
+>    practice; they're just two independent ways to reach the same end
+>    state.
 >
->         if (new_slab) {
->                 /*
+>    Conceptually, the tier knob controls on/off/auto-scale, while
+>    memory.swap.max controls pure quantity, so they cover different
+>    concerns and can coexist. Even if the tier knob later takes a
+>    numeric value, that number would apply per tier, while swap.max is
+>    a total budget that doesn't care how the tiers split it up, so
+>    they still shouldn't step on each other.
+
+The memory.swap.max interaction with tier on/off would be the same as
+memory.max with memory tiers AFAICT. We just need to make sure we
+remain consistent.
+
+> 2) memory.zswap.max vs. zswap tier on/off
 >
-> --
-> 2.55.0
+>    memory.zswap.max =3D 0 looks semantically equivalent to turning the
+>    zswap tier off. Could memory.zswap.max simply be folded into
+>    memory.<zswap_tier_name>.max?
 >
+>    Yosry pointed out:
+>
+>    > > memory.zswap.max integrates naturally (it's
+>    > > memory.<tier_name>.max).
+>    > Not really. memory.zswap.max is in terms of memory usage
+>    > (compressed size), not swap usage (uncompressed size).
+>
+>    I'm not sure where the tier limit would actually apply here: is it
+>    checked in zswap_store() against the pre-compression size, while
+>    memory.zswap.max keeps tracking the compressed size?
+
+As the tier limit can only be 0 or max for now, I don't think this is
+a problem. zswap_store() would just check that the tier is not
+disabled.
+
+>    If so, once you give the tier limit a number, wouldn't its usage end u=
+p
+>    meaning basically the same thing as memory.zswap.max?
+
+If we allow values other than 0/max, I think for zswap that would be
+the limit on the uncompressed size to remain consistent with other
+swap tiers. So it would be different from memory.zswap.max.
+
+> For limit =3D 0 the two already look identical to me (both just block zsw=
+ap
+>    usage). I'd like to understand what benefit a non-zero tier limit
+>    (uncompressed) gives us over the existing memory.zswap.max
+>    (compressed), once tiers exist. Let me know if I'm missing
+>    something here.
+
+Yeah limit=3D0 and limit=3Dmax would behave similarly for both. If we do
+support other limits, the meaning would be different. Since most usage
+of zswap.max is either setting it to 0/max, we can check if we can
+deprecate that interface once we add zswap as a tier.
+
+>    Also note the mixed states this creates:
+>
+>      - memory.zswap.max has room, but the tier is off, so zswap can't
+>        be used.
+>      - memory.zswap.max =3D 0, but the tier is on, so zswap still can't
+>        be used.
+>
+>    Both knobs can independently block zswap usage, which seems worth
+>    flagging even if it's not harmful by itself.
+>
+>    On top of that, the tier knob is likely to stay on/off/auto-scale
+>    without a numeric limit, while memory.zswap.max only handles the
+>    numeric side, so the two should coexist as is. If the tier ever
+>    gains its own numeric limit, we'd need to revisit unifying it with
+>    memory.zswap.max.
+>
+> 3) memory.zswap.writeback vs. a "zswap-only" tier
+>
+>    memory.zswap.writeback =3D 0 can act like a zswap-only tier today,
+>    because zswap still borrows a slot from the real swap device to
+>    store data; writeback =3D 0 just skips writing that data out to the
+>    device . A tier restriction works differently: it applies at
+>    allocation time, so a zswap-only tier would block allocating any
+>    slot from another device. Since zswap currently depends on that
+>    very slot to store anything, this would break zswap instead of
+>    giving us a working zswap-only mode, so the tier restriction can't
+>    substitute for memory.zswap.writeback here.
+
+Yes, the semantics of zswap.writeback would be different than using
+zswap as the only tier, but we shouldn't allow zswap as the only tier
+anyway as I mentioned.
+
+>    With vswap, this changes: tier off and writeback =3D 0 converge to
+>    the same effect(right now the pure zswap only tier),
+
+Yes.
+
+>    since zswap no longer needs to borrow a slot from
+>    another device. Even so, memory.zswap.writeback still needs to
+>    stay, since vswap itself can be disabled at compile time or
+>    runtime, and we'd still need a way to express zswap-only behavior
+>    without it. I'd like to unify the two eventually, but for now they
+>    have to stay separate. I'll keep thinking about it.
+
+The goal is to eventually make zswap depend on vswap. Once we have
+that, we can deprecate zswap.writeback in favor of the tiering
+interface.
+
+>
+> How do you think?
+>
+> thanks
+> Youngjun
