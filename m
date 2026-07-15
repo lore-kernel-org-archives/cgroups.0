@@ -1,87 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30F37397341;
-	Wed, 15 Jul 2026 14:53:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9281B477982
+	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 15:01:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784127184; cv=none; b=ir9r60M0tFx+4SYHG7KSkAD0kXi+s6NDycf9k3M1B/EmCb6+r6hkjUSvGBwEZm6hFC232aquDu0RTlynU6fxSOgHk9D5tSu9OmBQoVBMLsenk86slpN4yQksO2IAN6RxivrUXNsD45/dbECKHFVY+7oZQaOlA5A8RCUEQWC34B4=
+	t=1784127675; cv=none; b=CYgibADHHyqPEjwIWfZFboLTAQF4/Kqvd5Rzg+/iGkocI+a14JWE2RCT5y9PW9I1zzFsi6znKXysWAGTqzQa7fg+LeikjPEGKdLWDyPz/ddYkGwaA4ZzEnpueRzsSuMNmtJhjBRW7/y3HIfjv+1xfozrVUmJjr7vpKiETnVql7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784127184; c=relaxed/simple;
-	bh=oOW/i3u2gDqzP3S18fPy+MdUIeXPVEpZ9/Z2DpO7uq4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rotSv+QKp6Tgkd6kqGfUfyG8iJpFjDM1eo9lgHDSySWHtAKpApcrAkN0KwDIwheRetUoMMCq1VZi2B25JzFpLF/4erKaI0WnNeNmtrSxDY89gv161NSrt9TQ/dNomdbxoPK/pw2zTBZcyzaydDflV2tG4ALykZZnvR2aWbxkyJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L2yL9AdT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784127675; c=relaxed/simple;
+	bh=qKOrk4ZpdygBcHTzM6yIeZBltWpVde0shkwhzwQGYhA=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=J9C61/vnPbax+P+RnQwqGBgdsXfNtauhKRTdPC1ZiW4nPjXdEvpjKjRRe70sn/Gaoy02WdOTcvTPWo6kNGqZrf9JCPcPWL3aleyfKG+tdr7TCjfeKZnMTrMHEPJY3DHOE1YosPcVuPoGMX0ZPNFaHivylBEP/EWbmH257GGyyso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Qqf5DJPc; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L2yL9AdT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98E321F00A3F;
-	Wed, 15 Jul 2026 14:53:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784127182;
-	bh=IGI7jhE2HjCJJxqodayCLjM3G9IgdjGjn7HLTwbN1HE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=L2yL9AdTJ5x+gPpxFTOQHsSXG/Nl+jnXj6B+Zpe3/UzyX1FXpmbdVdOswtXj1IsfN
-	 Yf3ZVJcglBSpr8sbJVjor1ltGBE/c5qQUmaLdwadMcESASEbINkDYN9aELjrJaTX7h
-	 o3nUxzh7s4XoRzeC0fzL04tUxQbfQaCq7A+d0jiIhViObzw/L3W30AFC7d4GqVix04
-	 lzvjxNhZJZFmFGLUpzmJ1qJsPvd8LYovF4/o0a5z3JgLjlYsd1cmFVihZIAHi+by2E
-	 EKHNXqBIazm46W2GvJIioltmtbvwOfjVYzV0Y3VWsr39XRLxnkQAkWidm8cvFVl3Zc
-	 OOFwlPvbQndng==
-Date: Wed, 15 Jul 2026 04:53:01 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Matt Fleming <matt@readmodwrite.com>
-Cc: David Vernet <void@manifault.com>, Andrea Righi <arighi@nvidia.com>,
-	Changwoo Min <changwoo@igalia.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Edward Adam Davis <eadavis@qq.com>,
-	Chen Ridong <chenridong@huaweicloud.com>,
-	Zhaoyang Huang <zhaoyang.huang@unisoc.com>,
-	"ziwei . dai" <ziwei.dai@unisoc.com>,
-	"ke . wang" <ke.wang@unisoc.com>,
-	Matt Fleming <mfleming@cloudflare.com>, sched-ext@lists.linux.dev,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, kernel-team@cloudflare.com
-Subject: Re: [PATCHSET v2] sched/psi: Fix psimon fork deadlock and
- rtpoll_timer UAF
-Message-ID: <aleezbzv6Fo72uiR@slm.duckdns.org>
-References: <20260712174619.3553231-1-tj@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qqf5DJPc"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-4758bd3731bso1736341f8f.0
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 08:01:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784127672; x=1784732472; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Vz9m2fMjwxafHbkl7XFVNeLKmdyS/JjM0NsjBw69d7Q=;
+        b=Qqf5DJPc5CdeBvy/0ptDwxy5dU90Ijv+srMNJ6eNoO6OnFNuxv7ObcsKSBt0vVo4iV
+         x2FW9NKrVHxi4S2DultftFzA1KnOildBIR2pV/jUJmFQi8D/xbVZl89wdttcpUT980us
+         MyUm8edk4ciE6tVHVWTNSkAy98LYzq3dBbwMzwhqYk16i4uEJrayNqZ2Hexr1zik38o4
+         UQVYWCzdAsQF39e87D6bXvmL0A8kjd5hcIANZQeGyaN5JpBQFbDsmtUU0iaqmwNHLR0o
+         6u8bb+U1/Fxz27BDpWnZxBbXgNnIQy6bgGTEZYBCKpgozd3pe2lzHYrhZ0YUk3Ka3eos
+         7JHQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784127672; x=1784732472;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Vz9m2fMjwxafHbkl7XFVNeLKmdyS/JjM0NsjBw69d7Q=;
+        b=P9BIiee+mKgBhS7p3/f8g337jqDrMvLOzOhswZACKM9Sq7IbgEjsQpRuwSviKtu+ML
+         44p/BrHd3VjE/ZnoizxXiO4eO1ynWoP85ELsuup23zYtYqxtyYDnuoWgquiHWtEey+fR
+         z+do/y64rM6JZU/7HcEEq/atQvhyrZMg+MMbMKL4Nhy76ZckRgdCa+bSmofduHhTq9O/
+         QOMX0Bxu3sGRhZc9cI19sWU6NupMCC8xF4rzVDBvtRXutCD8zilaAz0EknX07/3Lj9k+
+         HIuk3iyJBO1dpvSYjw/1oLJdlfZGJH1w4cmJbGnO0jMi7XjotIcGTj5ElCGJGwOl5Z7Q
+         v2Ww==
+X-Forwarded-Encrypted: i=1; AHgh+RpP1Whrw3PM0X08U4WQwuLutTqTycDDen8GI89UthlmT6KSzRjzPOqTzY7bBq7aYRuM566xQlNL@vger.kernel.org
+X-Gm-Message-State: AOJu0YxY8x9KurXPZIwUnrpTXaCF+FkvUHivoa+YSalOuGKlgkOK58aW
+	9mT3SVSq31gSqZBgxvSl9fMTqlN8qgnGjufRz2daLSKHw1CxqGS2thS6
+X-Gm-Gg: AfdE7ckDuDGa1FmqD48d4BbGgMPI4i9NUgUWJH68JLeHRMjJWTZm/l11KHdrd6bGn15
+	bGWJq6CDwSGgehm1YSsPJsOlChzFPX0yPdQfdL7byd4HLIM5y9DKUZrQEBIa6z1CwEhHTngSFd9
+	UoY9vn6+wXSWvGaFVC67xElP86sEPVBQTN17FjQXW2fGrODKw/7LtnQ9L1anuHHlzPQvuRpcEVJ
+	HBgpy03RnZIaf3cOGwI+iu/loLWK1n4c3GB4K1bO33iQSYqMrA4rkQif/3CL0Tpar6v2mz71zkh
+	HtnYXYyKevZjMv5nzClzxusWhJK5r0xSLuUnSDBpXELdUIkCw8s4wCVwUJ36N6tVzL3R/zqva0p
+	OpLFyR8DbWDoxZ6Ik98SnF87jmeQfJ/ld7iaidpM3PKnbpXNbqnm3GdiICNixZebi5iVSUJxAfY
+	f1Q5ZMhtxMjrSg3932G/YdnsZHGirRUNzI6Jcwb4r3qNvzOPZyMQ==
+X-Received: by 2002:a05:6000:4810:b0:47e:96f6:ab7f with SMTP id ffacd0b85a97d-47f2dcc1174mr24109536f8f.16.1784127671424;
+        Wed, 15 Jul 2026 08:01:11 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f4635a63esm17501217f8f.9.2026.07.15.08.01.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jul 2026 08:01:10 -0700 (PDT)
+Date: Wed, 15 Jul 2026 16:01:09 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com,
+ cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH] blk-throttle: fix divide-by-zero on legacy iops limit
+ of 0
+Message-ID: <20260715160109.51f553a7@pumpkin>
+In-Reply-To: <882fbac2-bd42-44a7-8fba-b387b3f0fb2b@linux.dev>
+References: <20260714103552.1335658-1-cui.tao@linux.dev>
+	<20260714123754.7a88a65b@pumpkin>
+	<882fbac2-bd42-44a7-8fba-b387b3f0fb2b@linux.dev>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260712174619.3553231-1-tj@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Sun, Jul 12, 2026 at 07:46:17AM -1000, Tejun Heo wrote:
-> Hello,
-> 
-> v2: - Retagged sched/psi (was cgroup) (patch 1).
->     - Added a fix for a pre-existing rtpoll_timer use-after-free that the
->       Sashiko AI review flagged on the previous posting (patch 2).
-> 
-> v1: https://lore.kernel.org/r/20260710134945-psimon-fix-tj@kernel.org
-> 
-> a5b98009f16d ("sched/psi: fix race between file release and pressure
-> write") made pressure_write() fork the psimon kthread while holding
-> cgroup_mutex, which deadlocks against the sched_ext enable path blocking
-> forks before grabbing cgroup_mutex. Patch 1 moves the fork outside
-> cgroup_mutex. Patch 2 fixes the use-after-free from a schedule attempt
-> re-arming group->rtpoll_timer behind psi_trigger_destroy() by shutting
-> down the timer when the group is freed.
-> 
-> Matt, patch 1 is unchanged from the previous posting except for the
-> subject prefix, so test results against that posting still apply.
-> 
-> Peter, once these are reviewed and tested, how do you want them routed?
-> I can take them through the cgroup tree if that works for you.
+On Wed, 15 Jul 2026 20:44:19 +0800
+Tao Cui <cui.tao@linux.dev> wrote:
 
-Applying this to cgroup/for-7.2-fixes. Please holler for any objections.
+> =E5=9C=A8 2026/7/14 19:37, David Laight =E5=86=99=E9=81=93:
+...
+> >>  	tg_update_slice(tg, rw);
+> >> @@ -1386,7 +1391,8 @@ static ssize_t tg_set_conf(struct kernfs_open_fi=
+le *of,
+> >>  	if (is_u64)
+> >>  		*(u64 *)((void *)tg + of_cft(of)->private) =3D v;
+> >>  	else
+> >> -		*(unsigned int *)((void *)tg + of_cft(of)->private) =3D v;
+> >> +		*(unsigned int *)((void *)tg + of_cft(of)->private) =3D
+> >> +			min_t(u64, v, UINT_MAX); =20
+> >=20
+> > The LHS casts look horrid - there has to be a nicer way to do that.
+> >=20
+> > And you don't need min_t() a plain min() will be fine.
+> >  =20
+> Hi David,
+>=20
+> Both done in v2 =E2=80=94 introduced a void *field local so the writes re=
+ad
+> *(u64 *)field / *(unsigned int *)field, and switched to
+> min(v, (u64)UINT_MAX).
 
-Thanks.
+You don't need the cast either.
 
--- 
-tejun
+	David
+
+>=20
+> Thanks,
+> Tao
+> > 	David
+> >=20
+> >=20
+> >  =20
+> >> =20
+> >>  	tg_conf_updated(tg, false);
+> >>  	ret =3D 0; =20
+> >  =20
+>=20
+
