@@ -1,190 +1,113 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22AFB3ACEF6
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 15:32:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784129552; cv=pass; b=XdBUKt1cpe9MyQt5c6Qrxy5OFbn8WU0H8VWOBTjo/j71LPgF9E3iD7fw/0fBLSi4kz7+Haq/v/P+qEhs4J7j+ClFdVMr1lxQbXWHn5ThwkXfgS+lDW8XMOSz5Qhrxbh3XSaziN9eDOZjCKmbBUmpIzor7T5t5AAz7nAmkkx1qnQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784129552; c=relaxed/simple;
-	bh=Oc2wQrnGBdzNKBn+SnEwM9HLZncjNfHx+xJFt+jCvAg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dFtZiGEMOHsaEXFbSs+vT1iVx+jaO2KkaAXyAVrw+Keuhg6JrkkHEAo3fEwlaJ38LLAT8TX0/NFqc4lvO6kK/5zk3XQiDyI0FUcbNfGD94IXPvBK5NyhW1d5oQjI3g2a/i8DpGdup+1HejubtJXyfp/dXZ14B999mc7DPl+dg+A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=G6mPl5m4; arc=pass smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B46A48B386
+	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 15:47:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784130442; cv=none; b=PV3VVBwrGt6BwbcxcSMXeXhVQhM8t5lWJB5s3+HNX45yKvyPZdH8LIqA5PLOi6hSDMvNxR0y7EyVBBE1aE3M+d+g0VUQi0bQQFzwXC/mN7EzF2q/Tb+bRGA+/Wtd477xzo+vxGbmkoQoY0w7WHbg+M0jMb1AyXgiQCr2d+i1DFE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784130442; c=relaxed/simple;
+	bh=uXKii3249bwX7TaBdPYgYiFbDVsswYSDgNZHix3FQtE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JF2wR3Aei8Qcqrs5s3ifZtyP92Vo2WymeapQZRBUV/EDSo+DnfKVEtx90hx8yY7mHcL7rMZzkBQpN/U86NRGQE46+ZXUupQ3xiXftaXgXxAuh9DKyoGTxgvDjUzdgeFoBGezgvuFeTY56dw3KgCn6VOQphrl/jGD0BLEuUJu4X8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AtwRaQ63; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="G6mPl5m4"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-69a19eb2e6dso11529a12.1
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 08:32:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784129549; cv=none;
-        d=google.com; s=arc-20260327;
-        b=obM1Jc10olT1k8uRz5C7QwmbybrCjoJmBT84hENUzgs00sQM7Jsv9NLhaV+H50zgvu
-         qdMcRWI+4p9Nyx0u7/BjgKtGx97ZkOiPfENkjXE88owT4vxOS+sp5ZUvqBzH5LUIMp2z
-         XupmzRdmlJlC+PFOlSWQVhl+XcoGJ6SxW65aAK7FsWui/OcPfBMAoh1cTvZaFZbO5XsF
-         kUHlZLiKJaPr4MhyfjzWVJdMcSrVaUH+7lSccMaTmFjd5fkhqygKBXtn4pIFGWLMJDrQ
-         wnUKuQrQSYH43MS2Zoc82935jN1H3A2ebym2QzjlfT1Zmm01vkJJd9Xy0H9YsPMRfUc+
-         mN0Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=o+EmL6ul0Mt4yc97Q5opSK0Zr5dXjXkyP7dXXPr3OPA=;
-        fh=wyhPxoMqt/vGtNRJsnTYB5Tn7yhEe01zIvrFf19rJLI=;
-        b=eX5LSEksF7F1KJDqvDfwILmqRDROFozSZYFpAIBFS63Tm/TLoftx//bMXbYQ1XBvq5
-         bAXewyaJpkWAcBsdYWWABlIfn20EcCWLpNXujKNq2Lm2g8hz5rK6fpw/YzXbrkTsDSKh
-         Z0uAycblZfnyUOQQWsdCTSVnWN3sBP3Lqooq+TrFSvhN/wZ3qi9jSPod+5HTqQiKQsx7
-         os/MTn6UdkSWdDTGm7tGxrMoObnx+d2UjnUvARYDDR4RpCzw17ZpXm5ZytusG9gLa14u
-         6zBtikjng24A9ipom1bKQdtoqsBjtgb8PclQuBCVJwShk9F0lysqMK9e/W4AOdffBI0a
-         ozZg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784129549; x=1784734349; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=o+EmL6ul0Mt4yc97Q5opSK0Zr5dXjXkyP7dXXPr3OPA=;
-        b=G6mPl5m40yU64Ume4KBhk9X4LqGQWIhjeitFPlngApRk9OLpcWBEC3N0vNhKv/c3pw
-         lQKBrQbS59k0bL6o33qd2VkpyUPLpLvl4gDqYRNeGgdcb2xUTEdzFYfJkNJhhPTjEFtj
-         i9k49BB2vA4h8JMVFtJ0TDkGn4w027dWQ2++hOKUzXFLuHwIRuX+QRe278lIim3fvY1O
-         s9hWNMuNOqab/ziDUG5pIpmDyfFjTd5Cf4AqlHwxk4c6ac5lPbIbAG7hI6CWuqef+w+j
-         4ZnxytPFlOWcauCSmd/uWqriWc1FaMrf35yKVp7Shysl4NOi2zlKPWiA9raZoKXeSpRX
-         cBOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784129549; x=1784734349;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=o+EmL6ul0Mt4yc97Q5opSK0Zr5dXjXkyP7dXXPr3OPA=;
-        b=o/p4OyduS8Q1YArydF1hY07TOGHRgt4wtCrYCOxSAF7LYMu7/SMvAoEmfaWhWxILOj
-         US/se1jE3MesYJ9cMuDvKg/nN4PZ3nzIlzgw66YQCqMJIWlPhvYmlQnSNvg3n9lAil0b
-         Q7KbyC33C8ZlwE6hWf82spT5g8ERI1cxc/SvAR+xuhKbkKNpV0/ZnfEwxRJWGkovRR/f
-         r63anZiwihF6FgzNT8/fcDUCEpe5VWny6yPhIdIj1WkssvI8BY0Vsk+EJdjkuMFR4oJS
-         y3WNlP65b2cFyM850WVxJjGWo7/GQzKBRObrSuDtWQCDxXbKZ5iHjAiKHk1gwdR4mavp
-         88eQ==
-X-Forwarded-Encrypted: i=1; AHgh+Robyo9Fagh6fm9eUnfFdXWDG9RmmX/EcftuPtcOmpwgfUE8Tow3kf/tMtOWDtYBWOmyLnT47KvG@vger.kernel.org
-X-Gm-Message-State: AOJu0YxBPjxRmKf+7XDIDOqr82J8h5myI3e9lEty4HDNyaQ/vQx2RfOK
-	CHp1rSjt/jLBj3k0DmFGuZqPjdo5oA0a/SeiWKHTqKfpG+0HW8g5tMpF3kHBRpRCAieT1Qwg10D
-	t1+Une5jfSIgtfRW2os9apoH300L3gm9TgQY63t0O
-X-Gm-Gg: AfdE7clJyCTti3zkuPG3Tq3VPf9YE5m0kUfdoKBqIimBGPhpGXJ3Aofi9NwLWB9b1UH
-	uf+oloSPspeDi28HWgI68GM21GlUThWoXAgAthzcVXW0xeRUeKhTIivj5oySPkWtHjV5/ZBRMtj
-	drrptOaXHPLn0KMK0yH5NNSs4ohKuupezqWMUARElaERXaiaTYm9e1Qfd71iYWpsgodPdsznhrJ
-	+lQWr/PsNHINvx8eprcbsq987aZFo8knchIVUdKHFyzntVf0EecMztRbhkD2DCpWMtMbKGPAQOR
-	Xu9qe80Zf4hTo3gsy1E+ROC2WMo=
-X-Received: by 2002:a05:6402:a39c:b0:697:e82f:e4f2 with SMTP id
- 4fb4d7f45d1cf-69ccf08bba4mr183091a12.4.1784129548768; Wed, 15 Jul 2026
- 08:32:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AtwRaQ63"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784130438;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=53ToRPoItWXCe4fnxBfQI8EvVQIHrJzVrRIqwgxe0z4=;
+	b=AtwRaQ63DhKnCRRcEbGyVFFMvj3XFtSZU1giS9OqEcTzITJR6Y1da0Q/kt0NyyRHH8KCRE
+	YtPlq5muUmKVa5oygfCZxTXbKA7F53hFaImXq3LTzAzdc4G5OMegkDZPlotysBuauZTpsX
+	bjGADr9hcuzU6Iiyx3huQe90TXDzl5w=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-55-8l_y5NGxPuyK0asBHJIthA-1; Wed,
+ 15 Jul 2026 11:47:14 -0400
+X-MC-Unique: 8l_y5NGxPuyK0asBHJIthA-1
+X-Mimecast-MFC-AGG-ID: 8l_y5NGxPuyK0asBHJIthA_1784130433
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DD8981955F2C;
+	Wed, 15 Jul 2026 15:47:12 +0000 (UTC)
+Received: from [10.22.89.72] (unknown [10.22.89.72])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A7E711800347;
+	Wed, 15 Jul 2026 15:47:11 +0000 (UTC)
+Message-ID: <47ae1970-b7a7-478d-b0d0-2110428c2ee3@redhat.com>
+Date: Wed, 15 Jul 2026 11:47:10 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
-In-Reply-To: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Wed, 15 Jul 2026 08:32:15 -0700
-X-Gm-Features: AUfX_mxQK59tgAAh8WBIpXQKDElc_jbLM3NvO9a2ZdZbwnoad_i4PU5FH57YufA
-Message-ID: <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
-Subject: Re: [PATCH RFC 00/12] mm/slab, alloc_tag: reduce obj_ext memory waste
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
-	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] selftests/cgroup: Fix intermittent
+ test_cgfreezer_ptrace test failures
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org
+References: <20260715035446.565625-1-longman@redhat.com>
+ <aldSsQAboD6g2Sso@localhost.localdomain>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <aldSsQAboD6g2Sso@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Wed, Jul 15, 2026 at 3:10=E2=80=AFAM Vlastimil Babka (SUSE)
-<vbabka@kernel.org> wrote:
->
-> The recent fixes for objext array handling inspired me to look into this
-> finally. It's been bothering me that the memory usage of struct
-> slabobj_ext depend only on config options and not whether the fields are
-> actually used. So with both CONFIG_MEMCG=3Dy and
-> CONFIG_MEM_ALLOC_PROFILING=3Dy there is always objcg field and codetag_re=
-f
-> field. And thus:
->
-> 1) Having memory allocation profiling config-enabled but not
->    boot-enabled means wasted memory on unused codetag_refs. This makes
->    it less suitable for a general distro config and the page allocator
->    side doesn't suffer from this, only slab and percpu.
->
-> 2) Complementary, with memory allocation profiling enabled, there are
->    caches/slabs that don't need the objcg field, so memory is wasted on
->    those.
 
-It's funny because yesterday I started working on a prototype for the
-same optimization. But your patchset is much more mature, so I'll
-focus instead on reviewing it.
+On 7/15/26 5:36 AM, Michal Koutný wrote:
+> Hi.
+>
+> On Tue, Jul 14, 2026 at 11:54:46PM -0400, Waiman Long <longman@redhat.com> wrote:
+>> It is found that the test_cgfreezer_ptrace test of test_freezer can
+>> intermittently fail on some architectures like arm64 and ppc64.
+>>
+>> After further tracing of the mechanics of the test_cgfreezer_ptrace test,
+>> it is found that the ptrace(PTRACE_DETACH) call will spawn another process
+>> to perform the detach
+> I'm reading kernel/ptrace.c and cannot find a new task creation.
+> I'm curious what is this "another process"?
+I should be more clear about that. It is not exec'ing a new binary. It 
+is just spawning a child process/thread which still has the same name 
+but different pid as well as running on a different CPU which are what I 
+am tracking.
+>
+> (Or is it referring to the child_fn() process from
+> test_cgfreezer_ptrace()? Then I'm suspicous about the transitional
+> unfreezing of it after PTRACE_DETACH. Wasn't it rightful expectation of
+> the test that the cgroup remains contiguously frozen?)
 
->
-> This series should solve the point 1) fully for slab, pcpuobj_ext
-> handling can be perhaps improved similarly, haven't looked into that.
->
-> For 2) it avoids allocating objcg fields for KMALLOC_NORMAL caches where
-> we know they are not necessary because kmalloc() with __GFP_ACCOUNT will
-> pick a KMALLOC_CGROUP type.
->
-> The named kmem_caches are tricky. They can be created with SLAB_ACCOUNT
-> and then we know objcg fields are always needed. But also they can be
-> created without SLAB_ACCOUNT and then some allocations have
-> __GFP_ACCOUNT and some not and we don't know that in advance.
+As said in my reply to the v1 thread, the detaching process includes a 
+call to ptrace_stop() which will unfreeze the cgroup temporarily and 
+then go back to frozen afterward. It is this transitional 
+unfreeze/freeze that may cause the test to fail if it detects the 
+transitional non-frozen state. My patch is to make sure that it can see 
+the final the frozen state and avoid reporting failure.
 
-Do you know how often this happens that a named cache with no
-SLAB_ACCOUNT is used for __GFP_ACCOUNT allocation?
+Cheers,
+Longman
 
 >
-> A possible future solution is to introduce e.g. SLAB_MAYBE_ACCOUNT, add
-> it to caches where we know __GFP_ACCOUNT is used, and only honour
-> __GFP_ACCOUNT for those, while warning for an unexpected usage
-> elsewhere.
+>> by temporarily unfreezes the cgroup and then freezes
+>> it again afterward during the detaching process. The reading of the
+>> frozen flag from cgroup.events is done by the main test_freezer process
+>> running probably on a different CPU. As a result, racing is possible and
+>> the intermediate unfrozen state can be read leading to occasional test
+>> failures especially on architectures with a weak memory model like arm64.
+> What state would the task be in during this window?
+>
+> Thanks,
+> Michal
 
-I wonder if for such caches we could create two separate caches, one
-serving __GFP_ACCOUNT and using extentions containing objcg and
-another one for non-__GFP_ACCOUNT with optimized extentions?
-
->
-> Only lightly tested, need to run at least some microbenchmarks to see if
-> the now somewhat more complicated access to objcg is visible or not.
->
-> Based on slab/for-next-fixes
->
-> Git branch: https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.=
-git/log/?h=3Db4/objext_split
->
-> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-> ---
-> Vlastimil Babka (SUSE) (12):
->       mm/slab: skip kfence objects in allocation profiling
->       mm/slab: remove objs_per_slab()
->       mm: move struct slabobj_ext to mm/slab.h
->       mm/slab: make slab_obj_ext() determine object index
->       mm/slab: abstract slabobj_ext.objcg access
->       mm/slab: abstract slabobj_ext.ref access
->       mm/slab: replace slab.stride with obj_exts_in_object
->       mm/slab: change struct slabobj_ext to a union
->       mm/slab: introduce slab_obj_ext_has_codetag()
->       mm/slab: reduce slabobj_ext memory with allocation profiling disabl=
-ed
->       mm/slab: add slab_needs_objcg() helper
->       mm/slab: stop allocating objcg pointers when unnecessary
->
->  include/linux/memcontrol.h |  13 ----
->  mm/kfence/core.c           |   5 +-
->  mm/kfence/kfence_test.c    |   2 +-
->  mm/memcontrol.c            |  41 ++++++-----
->  mm/slab.h                  | 169 ++++++++++++++++++++++++++++++++++++---=
-------
->  mm/slub.c                  | 162 +++++++++++++++++++++++++++------------=
-----
->  6 files changed, 267 insertions(+), 125 deletions(-)
-> ---
-> base-commit: d9e6a7623938968e3752b67e37eaff097e559a54
-> change-id: 20260714-b4-objext_split-da82426257d5
->
