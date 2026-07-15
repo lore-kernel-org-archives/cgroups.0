@@ -1,160 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C92114611E5
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 17:30:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784136642; cv=none; b=kOuGLZ0wJ1rp9F1WLZB2j9DkjqsfulzafuyMovBWgADhQRhZd1Pb8RJccRJrjjhwVq5u3A3Sr0S9qSWlZbWVw7yfb0rDzf5D+hJXS6PSbs2SpESWoyc+OxAsSWFImrGpfRHgzpMru/C+G7AOk9azbP2ShEBMhAqMXYKixMIoPu0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784136642; c=relaxed/simple;
-	bh=AaDK0YcKsOX8dmK42gislw1t6ZfV6eThD1LeGUn+aoE=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E247648C8DC
+	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 17:56:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784138172; cv=pass; b=O6Kd855ywtq4uQRiZ0XA74FyWdC5meoxkTfQ9TXtowxj+GVvVi+/TuckNV9DhZmf63rMQ0TBjmZxIzpZ2IAclCu9DHnZbQ/xgTCls9GkPZR3XmCoAUHEqwbizu9t2ckztYHcrSNXVdWHJW4O5FwkXwJFdzGAyA6qbEL6X8y/Qbg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784138172; c=relaxed/simple;
+	bh=u+3FAslbVlj96800WiAMAGOylgc0ssLAYc5uCqETipo=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iDAZXm76Gn01FTdhpu85pvjBfgh02/gJd3CbQEI+sZO7jZI/msGOUIZXr9hKdcwgFYKixyqnGthfnGYG8dncx3a3INMW1EWE9dgHU6qw4040KVlqvP7IkS6hnmxvVDpjjzrOhaF7XKAVOTkfaFSCaxd2nyLEsjlA3pHUvoyrHSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iTz2mQX9; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=qO0L1rm+mUnWSsEguGQMnT6pw7KtmOOTCFm0OohacC36ZTtSctI12KdnW/l8Yx4DqskfL3vma0yXKUKfBDeDY4pSh2m2zj8Wr7ivpj3hBJevOEvrYP71MlrMvTSSmBbjc2YOQyx4mN3y7W3TvSH4+tgU+LFtd3LBaqd073kcjRg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=A4hgAjv+; arc=pass smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iTz2mQX9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F23871F0155E
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 17:30:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784136639;
-	bh=AaDK0YcKsOX8dmK42gislw1t6ZfV6eThD1LeGUn+aoE=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=iTz2mQX9mo9FOF+YeHLrJJRscOP/PN+7w5mxSx/7TISdXov6SnSOp+9az6nNI0x+K
-	 D4eur/XVcaSPWc82j7hclEbYL5W2MZa+hL9910CaUEgDeybChSxGuNL3iaBdR9SIQn
-	 AT0wDOtNrMl+NzkUxWsL0oLPbeKo5LUO+vCj91e24V6c3PWlpRsBXPhUbtN0rAe9UY
-	 dghDB3YdKy0Z0rHwNcAf/J3GLaWPq78u9TdeXEidLxbHFl9xaTzvXhnRILOuxYkS3+
-	 j7wlKadOHlNDlItqAoN2NlkCx05pRljDZVw4wMdalS7eMLwUNid23HZYROJl6Alova
-	 8WPP8ObCH4UUQ==
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-809b19a7f25so78269497b3.3
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 10:30:38 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Rqe5PI/AbdYI8X23w+ypwTHbDVLsoDwCskpGCM1xwhn/L0Lq/KelxLBuway8nxbV6J5FA6e32sS@vger.kernel.org
-X-Gm-Message-State: AOJu0YzD6y3IwfSHUeitF44NFIIEuKYsq7Fx5uNGTz8MCWNLbDKUNc15
-	aqH+/E+yNcVOn2yYTC81UISEBE9eNXgW1x2QydujXvy7R4AJzlf+MyRp3Hm6h5h70VGk+3ew9nC
-	ksKN5BMguGGQnkS7QrFN7VP5elTaa9MNZsXzqVCJ/EQ==
-X-Received: by 2002:a05:690c:61c6:b0:814:608a:acb4 with SMTP id
- 00721157ae682-81ecf8769e3mr27004517b3.27.1784136638214; Wed, 15 Jul 2026
- 10:30:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="A4hgAjv+"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-493c556ada3so5575e9.0
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 10:56:10 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784138169; cv=none;
+        d=google.com; s=arc-20260327;
+        b=X0vBPO8x2zsoRyD2DQ4mbL5S1O5gcqfz5xsr6XYh1gHPks+Zi/7k4Sh9zFEgDWa5tr
+         sWAEpSngbQST/MMM9N6kMY3FXj6UGos9vVPETLinO7eNKdWifDQJk6Uw+zgAO0dimmGY
+         AOCJ9ZIAie3JJqkvn8Csaswraqgw7e0moqDXo7clNHeDuzCv0m10BMM/UJH18iPXnINs
+         j5AeotQMK2V/XL/BqVrEUlimfcD/cBULyQv6fBcS7D/l+L5V+gRHGtY1/zBhh9koXJja
+         deBrP4HIMw0MNmGCAa8ZlOAotjlo8hyRvld/0Xp8jOziBGJpyb8ib/+Cl7UWN3feZQUc
+         09jw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=RuBIyMRxxSG5xOKfBj9RRTURzzjnDkJEBKCLyFmN4sQ=;
+        fh=fGWGTr1VAaEoUpYsI3N0P8a1Mwm5o5Q/qaDFDSytGso=;
+        b=YKtvST14ELr1y+FnB7dwsAsTSR8X6t/ELYNwjTit/MiKHD5z5lPqA6cRdRidbqDoZO
+         R7OR4QHcsTzvu6tlDllYANqtK5ldyESuyiL+HxrK9/FK8diKaRVS+jQB6aiFQPCfbYTV
+         sfU+EzzHz+JGgbAFOADrNAJ/tVvnAY4bAjlnz27iaBxBd1582PSd8i4ftEuSf+LR253R
+         pB1ceNuJ6iDUzbeKo0W/WUVotEivKF88TYrvXAI0EcxsRUQ/ttbbQE+a1KsXez96uJQX
+         tCma4C47cHNASFf2937Ji1ciuLPUJYr8xEhIDQGpnQyKyOb0AYCGHkwRMUwErNCbngV5
+         nBWw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1784138169; x=1784742969; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=RuBIyMRxxSG5xOKfBj9RRTURzzjnDkJEBKCLyFmN4sQ=;
+        b=A4hgAjv+cRMPs1OEpvkfeZIySozAnIHRuQUe/3yE/Xk5dftlFG3toVQSh54TcUDa9L
+         Oj0tQ4KRMpYlTiRTcOCT7kjC2lsuBSGe12L7u2aNzp2l0BsfcVZclyE1ZOOv+MCEYUvI
+         4aj/+ak8C0mEO3owGJyjU85qe7UnvTkmPhjvsshpylZx50InZMHYIH2Daw3+HuGw0pcc
+         8tjLT7N8Mgi/eRumssERQwz90Jt/6COlHuFMjYMXZ7SxF+bGjKzKsoD9beSROq7sewYT
+         0SerjmRzmjo4kDWOp+NF15rkocmlO3w64W6v0wpzjkSA211XUGNffeuqujyrT9U14XNt
+         hfzQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784138169; x=1784742969;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=RuBIyMRxxSG5xOKfBj9RRTURzzjnDkJEBKCLyFmN4sQ=;
+        b=Wr/uwdQ4SylDa1vMSEFQ126xb6BaajSCrB8FDRJ9jdLoxpx3FExYlefBkZte5aeJ1k
+         +aAQfYodmkHDSA6SFEhXL8MdFxviBOIjqpsFg/D/CvZmnPM9Kqo0f/AY3cB2jttjeqFa
+         iT5Spvoqjkl2H5vXD29Z2l3pQtxRVTfsS4o6aAizIwp47IEgJ4YH6Lcg470shlpVMfv6
+         I5ZJyAoq+n3DnMQaJubWKknNl6LzU65HUYZoqpD1GJJxWBpdvCmASL4jvgLfwRWAOGEt
+         KYgIeKur2g0vxGnEHViEN5fSXKfTR6cMg1ZoVRxkZziIbitXaO/dpTwxzjCWZGyviJo8
+         1pfw==
+X-Forwarded-Encrypted: i=1; AHgh+Rq9s4kbwmwyOtf5ij4XATY/5yh8PWX8TpDDhW6NLW/pcylvylvl5QW0gF9uIjAr3I+K5fzx4uxS@vger.kernel.org
+X-Gm-Message-State: AOJu0YzI1A/D5UnlrjspQdzsj3U50y3M3NKzFWQ4YQe8tjMy5eECHaV+
+	UyL5DvOyipVh1b05nNXXFSExe3iGlrumCqZ8vr6upx9Yhl3wVifvIbnEElREQtg+4rx8GAiDB1g
+	tJw1JILfG9611DlMv3sYwZWZgyq8Hlbg1sdJ7lY/9
+X-Gm-Gg: AfdE7ckObWJCteX42IAQNyqhWUj9p4olaGdLmypfroDw1snw3Sq+pNuN68Qm7NZWLjS
+	ZYCNAXpXwXxK96VtyXvXyBNgo6nr8KndUnQxV4gbrzrn2vIf4EhjCEfc2Wlx3FDlJ9K8Q4kCytB
+	ZgBa7v0AOWgKGaX156APxrVwNFpeZU5ykHB5bKZsKCv/puE7HeCwTT4HrzoLeGgEJiqEzvVCYd3
+	k2n9SU4788wIAzIu5NDbEY2s2NZlqr0/Yo4TxLor8WzeOAMB+L1MhGIuwbiQdrmCyJJD6JOJQrx
+	rTgmzBvoYuTT1sZJrYPVaiK8Woe1riny0b+P9UcBJRAqEMFrrv0vlKaxBoGNDB/d6rLGqA==
+X-Received: by 2002:a05:600c:4ec6:b0:495:4069:b0de with SMTP id
+ 5b1f17b1804b1-495414230f0mr128295e9.9.1784138168394; Wed, 15 Jul 2026
+ 10:56:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260713025644.170839-1-youngjun.park@lge.com>
- <CAO9r8zNJfhirbzvJzDWRaBQOM7XZcf_Jk0Bz=Y4dB4QK4W-MwQ@mail.gmail.com>
- <alUK8DWRy4LPxTpY@yjaykim-PowerEdge-T330> <CAO9r8zPvWKgQ8+ABxSnVnC452-enyMqCjBTA4pfNDVxsoJr25g@mail.gmail.com>
- <alUQ0ksPP00PVwew@yjaykim-PowerEdge-T330> <alae-LIRwEFUjgs1@linux.dev>
- <CAO9r8zNfp-T19cYyZxKHBY-FnmQ_9=fbP4JYPPFgYtUCo5fZyg@mail.gmail.com>
- <alawYov0c7a0Q6_l@linux.dev> <alchYX43oV9KybWx@yjaykim-PowerEdge-T330> <CAO9r8zML09YzraA6rstMz6+Krui5Vma6a9D3j10_FXGbqfEQvQ@mail.gmail.com>
-In-Reply-To: <CAO9r8zML09YzraA6rstMz6+Krui5Vma6a9D3j10_FXGbqfEQvQ@mail.gmail.com>
-From: Chris Li <chrisl@kernel.org>
-Date: Wed, 15 Jul 2026 10:30:26 -0700
-X-Gmail-Original-Message-ID: <CACePvbVQxvZKa1y4b=mAgdT_uUO=nk4uvuSob3xvW9MZ6OEONg@mail.gmail.com>
-X-Gm-Features: AUfX_mwNi5Y1pwimKjBk_MgYVZ1E3p7vG6fWGe6nDpPFl9wzmA0F3NoEIhyTWok
-Message-ID: <CACePvbVQxvZKa1y4b=mAgdT_uUO=nk4uvuSob3xvW9MZ6OEONg@mail.gmail.com>
-Subject: Re: [PATCH v10 0/6] mm/swap, memcg: Introduce swap tiers for cgroup
- based swap control
-To: Yosry Ahmed <yosry@kernel.org>
-Cc: Youngjun Park <youngjun.park@lge.com>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, kasong@tencent.com, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
-	joshua.hahnjy@gmail.com, gunho.lee@lge.com, taejoon.song@lge.com, 
-	hyungjun.cho@lge.com, baver.bae@lge.com, her0gyugyu@gmail.com
+References: <20260714121529.2237261-1-wangzicheng@honor.com>
+In-Reply-To: <20260714121529.2237261-1-wangzicheng@honor.com>
+From: "T.J. Mercier" <tjmercier@google.com>
+Date: Wed, 15 Jul 2026 10:55:56 -0700
+X-Gm-Features: AUfX_mzAYIm26JZUendtoZyWaKS-eWpz07CFW-u1bis9rmp-d5YT8fcNAcUgKUM
+Message-ID: <CABdmKX3y841t4Oqg3RRHTGXWP-LMMSi_exDuxAc4jR9v9ChD2g@mail.gmail.com>
+Subject: Re: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
+To: Zicheng Wang <wangzicheng@honor.com>
+Cc: akpm@linux-foundation.org, yuanchu@google.com, tj@kernel.org, 
+	hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net, kasong@tencent.com, 
+	qi.zheng@linux.dev, shakeel.butt@linux.dev, baohua@kernel.org, 
+	axelrasmussen@google.com, weixugc@google.com, david@kernel.org, 
+	ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, 
+	surenb@google.com, mhocko@suse.com, roman.gushchin@linux.dev, 
+	muchun.song@linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, willy@infradead.org, 
+	denghaojie@honor.com, baoquan.he@linux.dev, kaleshsingh@google.com, 
+	tao.wangtao@honor.com, zhangji1@honor.com, wangzhen5@honor.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jul 15, 2026 at 9:27=E2=80=AFAM Yosry Ahmed <yosry@kernel.org> wrot=
-e:
->
-> On Tue, Jul 14, 2026 at 10:58=E2=80=AFPM Youngjun Park <youngjun.park@lge=
-.com> wrote:
-> >
-> > On Tue, Jul 14, 2026 at 03:25:40PM -0700, Shakeel Butt wrote:
-> > > On Tue, Jul 14, 2026 at 01:52:14PM -0700, Yosry Ahmed wrote:
-> > > [...]
-> > > > >
-> > > > > Yosry, what is needed to enable zswap as a swap tier? What will b=
-e the minimum
-> > > > > requirements for that?
-> > > >
-> > > > From zswap's perspective, we just need to skip zswap is zswap as a
-> > > > tier is disallowed. Could just be a check in zswap_store() similar =
-to
-> > > > the check if zswap is enabled. I am assuming that if a swap tier is
-> > > > disabled, nothing happens to the existing swapped out pages in this
-> > > > tier, but new pages do not get swapped out to it. This is the same
-> > > > behavior that happens if zswap is disabled at runtime.
-> > > >
-> > > > From the tiering perspective, we need to accept "zswap" as a possib=
-le
-> > > > tier, or maybe creating it as a tier by default if zswap is configu=
-red
-> > > > would be better to avoid handling the case where the user doesn't
-> > > > create a tier for zswap.
-> > >
-> > > Default tier if zswap is configured makes sense. Should zswap be trea=
-ted as
-> > > having 32767 (or maybe 32768) as priority as it sits infront of all s=
-wap
-> > > devices today? Also whichever swap tier has priority range containing=
- 32767,
-> > > will have zswap in it.
-> >
-> > Maybe we can handle zswap as an internally reserved tier which is alway=
-s
-> > preferred over swap devices.
-> >
-> > I do not think there is a strong use case for grouping zswap together w=
-ith a
-> > swap device that happens to use the highest priority. Also, using a vis=
-ible
-> > priority value for zswap may have a small side effect that one priority=
- value
-> > effectively becomes unavailable to users.
-> >
-> > That said, if zswap is represented as a tier, I agree that it should be=
- the
-> > top tier. The exact priority value or whether it is internally reserved=
- should
-> > be adjustable when we implement it.
->
-> Agreed.
->
-> [..]
-> > I agree this is reasonable. I can treat the demotion/writeback interact=
-ion as
-> > future work and follow up separately.
-> >
-> > > Youngjun, what do you think? Is this reasonable amount of additional =
-work or do
-> > > you envision some complexity here?
-> >
-> > I sent a note with some thoughts about making zswap a tier. Since Chris=
- also
-> > raised concerns around this area, I think it would be better to discuss=
- it a
-> > bit more and evaluate the details carefully.
-> >
-> > At this point, there does not seem to be an immediate use case that req=
-uires
-> > zswap tiering in this series. So my preference is to keep this as futur=
-e work
-> > for now, and follow up with an RFC after verifying that introducing zsw=
-ap as a
-> > tier on top of this patchset does not cause problems.
->
-> My main concern is locking ourselves into an implementation without
-> zswap as a tier. One of the appeals of swap tiering to me, from the
-> zswap side, is eventually unifying zswap writeback as part of a more
-> general swap demotion, and unifying zswap controls with more general
-> swap tier controls.
+On Tue, Jul 14, 2026 at 5:15=E2=80=AFAM Zicheng Wang <wangzicheng@honor.com=
+> wrote:
+> The benefit is workload-dependent: file-cache-bound servers gain from
+> aging, anon-bound servers do not, so no kernel default is correct for
+> all.  The kernel also cannot know when to age: on Android the right
+> moment is the foreground-to-background transition, when the app's pages
+> are cold but their PTE accessed bits are still accurate from foreground
+> execution, a framework concept.
 
-There is nothing locked. The major complexity will come when
-zswap/vswap/Xswap/ghostswap become independent swap devices for swap
-tiers. We are not there yet. But if you want a bool for zswap in swap
-tiers world, we can make it happen trivially.
+When an app transitions and becomes cached, we attempt to reclaim its
+entire workingset. We basically cat memory.current > memory.reclaim
+and freeze the cgroup.
+https://cs.android.com/android/platform/superproject/+/android-latest-relea=
+se:system/core/libprocessgroup/task_profiles.cpp;drc=3D65bd7ab941a709bf0498=
+71406981022b988e1721;l=3D706
 
-Chris
+File / anon balance vs hotness and generational placement doesn't
+matter in that scenario because we want to get rid of all of it. So I
+don't really understand how you'd want to use an aging knob.
