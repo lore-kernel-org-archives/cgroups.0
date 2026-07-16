@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7688430CC4;
-	Thu, 16 Jul 2026 14:47:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CA0A346A1D;
+	Thu, 16 Jul 2026 15:08:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784213280; cv=none; b=QTPs99MVj7ahtn01iHZ5ZJ9BCBLT8lZHT/N0SYTCm+cTNN/dCMv0mOBW27Z+qd2Wg97CA06DGy4cVdy5dG1qORpkZvA3OZWro6Wm5+Ctn+64IaIBRIor7vzOPz2n8PhmAVOxTxIYEUC6I0Nb9fqMv6uKngoxJFgn7ouqYLowF20=
+	t=1784214486; cv=none; b=dc90ag+nNQMYitRTyvfayBCRYCnrUyny+dUpnHKtrFlkD7ysQXQKOq9fJXrIo99GQ/16p3KqjboOkCsZLv9eX4RwZDQvmCi6GxFlZEckOmKZSXiK3xlazBivITe9PsIbU2paX2ut7P0Yayt5j9W0jrn8nacgLyFBI/ebAW5DyDs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784213280; c=relaxed/simple;
-	bh=HDp7p+uA/mf/PAyQVpgbXon8c97+O3lwXjwrditzgYs=;
+	s=arc-20240116; t=1784214486; c=relaxed/simple;
+	bh=NUc8EizNIfEwE2KLFoAnxARrKDQi7kCpbQSCkz7LyQk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Hbm+UP3EHOIPEDcWBdt66fF2hDxy5X9lpt25H6yUNAvl46IKk7+o3LVwWI9awWHHDhw416xPRijL2txdB/aHcgQhsHdgT0z0JNW/LVURn7AR0eciYWyLKbUp/AeOvVDXIbX5o2Ziwh+H9matUoQIKTrIkpItz7GiCPY1uMn+rr0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o3qex/Op; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=kYlZBHyXn9YLSYbuszx9933EnnY7jdzijO2pL04mWWB8eCqGf6LPFtQLGaLY5MPJmolBp++u0Ukzb/Jkmo1J1cH2zmHAoSEca/85b1QYbCZFPn5t8NuNiDGILFkERGYtbaAnf8byK3BGq1KoVndvuv3vPjBA0NTLzkivbhCIrd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fKMMmzgD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o3qex/Op"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E95B61F00A3E;
-	Thu, 16 Jul 2026 14:47:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fKMMmzgD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0FCA1F00A3A;
+	Thu, 16 Jul 2026 15:08:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784213278;
-	bh=gqih1PWPLfrxUcGFx1xd859LCOuVLJkxmPXs0LVVK3E=;
+	s=k20260515; t=1784214485;
+	bh=noEZ6+2cpB7DuHX7F4CYxQYpyejbPopCH8uJ2lKswiw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=o3qex/OpMM8/2lZGb3DNxYt2UeWKGoolYnOmw3tnZp1VaRLMON3v9nZusDk1IO1Cl
-	 79sp7ZYixCuEMwQ154T9Z+DDLUH+ApRnc/HyOgpySTOy0xTOtetN0DYx6NHwDfKKyw
-	 bwFh2sslOwUNVzmOGtSmmKozYC6N5q6nGCxi48yXEzLTO0fxYza2oSpEW43Nk1KOOs
-	 CaoMfA4O/ElaZP9OVJMi1CTJcMhrQoxTdeuZOe97vQ3Oi9/OkQOhh1uA2yZfHX3bXM
-	 JYzuNJNw3uzMn/nD1sAG+HLMCx3eJZfngyMlvxDZ7noiuYfTOVKsWbUxuQce4u6xEY
-	 VQFN3QiVgX3hg==
-Message-ID: <076dc6ce-4895-41d7-b9c1-9ec872e7c8b8@kernel.org>
-Date: Thu, 16 Jul 2026 16:47:54 +0200
+	b=fKMMmzgD8UZAY4iQDNzHsoe/vm62FJ8khvmHljKlL+8k75A8GjRKAIn6MxudSwOUc
+	 vHot8rNwI2vg53sgSyhGIYosr7n0Rlje8aG0MY/sPJh3bTMrzho8hN+4dErmvffD7D
+	 cq0FMFsXL9W1mLRSQ3UnyxIN/3E0oNP5b05tKLJ3zZzX1+5Qzu9a6z2oWqci1Cah0e
+	 DPjHAfrR+PWcfNifWNbVRkvz+r26Us9sLjTUH3aMr3nyCp4613zqvLVP6fsr+OtRLB
+	 z7P60p8v64kv+j/P8AEXSdaFJ+1t8aimnb108Fbix2cfryCHs9nudMfOxH2yYrwP/Y
+	 3y9/J0YyqjMnA==
+Message-ID: <e126d6b1-bed7-46bb-a8a3-cc555707b516@kernel.org>
+Date: Thu, 16 Jul 2026 17:08:00 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 09/12] mm/slab: introduce slab_obj_ext_has_codetag()
+Subject: Re: [PATCH RFC 12/12] mm/slab: stop allocating objcg pointers when
+ unnecessary
 Content-Language: en-US
 To: Suren Baghdasaryan <surenb@google.com>
 Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
@@ -46,8 +47,8 @@ Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
  Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <20260715-b4-objext_split-v1-9-9a49c4ccf4c3@kernel.org>
- <CAJuCfpGkpe=5O_vW9VKqKFxrBO+QquCD+mXth_qeUSqcWcW6hA@mail.gmail.com>
+ <20260715-b4-objext_split-v1-12-9a49c4ccf4c3@kernel.org>
+ <CAJuCfpHuXu3BDf93zeBQWSW_k5wApegp44rHoZwk5Ym6xxbqEA@mail.gmail.com>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -88,64 +89,77 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <CAJuCfpGkpe=5O_vW9VKqKFxrBO+QquCD+mXth_qeUSqcWcW6hA@mail.gmail.com>
+In-Reply-To: <CAJuCfpHuXu3BDf93zeBQWSW_k5wApegp44rHoZwk5Ym6xxbqEA@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 7/16/26 06:25, Suren Baghdasaryan wrote:
-> On Wed, Jul 15, 2026 at 3:11 AM Vlastimil Babka (SUSE)
-> <vbabka@kernel.org> wrote:
+On 7/16/26 06:46, Suren Baghdasaryan wrote:
+> Maybe now we should rename static_obj_ext_size() to
+> static_obj_ext_max_size() as it reflects the max possible size of
+> slabobj_ext?
+
+Hm with _max_size() it doesn't have to be called static_ anymore?
+
+But maybe we can get rid of it completely.
+
+The only caller is calculate_sizes():
+
+#if defined(CONFIG_SLAB_OBJ_EXT) && defined(CONFIG_64BIT)
+        if (slab_args_unmergeable(args, s->flags) &&
+                        (aligned_size - size >= static_obj_ext_size()))
+                s->flags |= SLAB_OBJ_EXT_IN_OBJ;
+#endif
+
+We don't have slab pointer to pass to static_obj_ext_max_size().
+But we should be able to figure it out from the cache via
+cache_needs_objcg().
+
+So we'd need cache_obj_ext_size()?
+
+The static max size here works, but may prevent SLAB_OBJ_EXT_IN_OBJ
+needlessly if padding can only fit codetag_ref and not objcg, but
+we don't need objcg.
+Which is probably only theoretical at this point as kmalloc_normal
+caches (that have no objcg) have no padding, at least without
+slab_debug. But still.
+
+>> +       size_t sz = 0;
+>> +
+>> +       if (slab_needs_objcg(slab))
+>> +               sz += 1;
+>> +
+>> +       if (slab_obj_ext_has_codetag())
+>> +               sz += 1;
+>> +
+>> +       return sizeof(struct slabobj_ext) * sz;
+>>  }
 >>
->> mem_alloc_profiling_enabled() allows evaluating (with a static key) if
->> memory profiling is currently enabled. mem_profiling_support is a
->> variable where false means it's not possible to enable it anymore,
->> because the system was booted with "never" or it was later shut down.
->> This is possible to query by mem_alloc_profiling_permanently_disabled().
+>>  #ifdef CONFIG_SLAB_OBJ_EXT
+>> @@ -741,7 +749,7 @@ static inline struct obj_cgroup **slab_obj_ext_objcgp(struct slabobj_ext *obj_ex
+>>  static inline union codetag_ref *
+>>  slab_obj_ext_codetag_ref(struct slab *slab, struct slabobj_ext *obj_ext)
+>>  {
+>> -       if (IS_ENABLED(CONFIG_MEMCG))
+>> +       if (slab_needs_objcg(slab))
+>>                 obj_ext += 1;
 >>
->> To make slabobj_ext array size handling dynamic, we need a snapshot of
->> mem_alloc_profiling_permanently_disabled() early in boot, so that's not
->> affected by a later shutdown. We also need it to be static key based for
->> performance. Neither mem_alloc_profiling_enabled() nor
->> mem_alloc_profiling_permanently_disabled() satisfy this.
+>>         return &obj_ext->_ctref;
+>> diff --git a/mm/slub.c b/mm/slub.c
+>> index 771d73abacb6..09c4931e5435 100644
+>> --- a/mm/slub.c
+>> +++ b/mm/slub.c
+>> @@ -2503,6 +2503,9 @@ void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p,
+>>         if (likely(!obj_exts))
+>>                 return;
 >>
->> Therefore introduce slab_obj_ext_has_codetag() with an underlying static
->> key for that use case. Its state is made to reflect the result of
->> mem_alloc_profiling_permanently_disabled() during kmem_cache_init(),
->> which does happen after setup_early_mem_profiling().
+>> +       if (!slab_needs_objcg(slab))
+>> +               return;
+>> +
+>>         get_slab_obj_exts(obj_exts);
+>>         __memcg_slab_free_hook(s, slab, p, objects, obj_exts);
+>>         put_slab_obj_exts(obj_exts);
 >>
->> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-> 
-> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-
-Thanks!
-
->> +/*
->> + * Make sure the static key used by slab_obj_ext_has_codetag() reflects the
->> + * value of !mem_alloc_profiling_permanently_disabled()
->> + *
->> + * Any later mem alloc profiling shutdown won't be reflected in the static key
->> + * because obj_exts with codetags might already exist.
->> + */
->> +static void __init slab_obj_ext_has_codetag_init(void)
->> +{
->> +       bool key_enabled = IS_ENABLED(CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT);
-> 
-> nit: This seems a bit indirect. Reader needs to remember that
-> slab_obj_ext_has_codetag_key is initialized based on
-> CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT. Wouldn't below code be
-> simpler?:
-> 
-> bool need_codetag = !mem_alloc_profiling_permanently_disabled();
-> if (need_codetag != static_key_enabled(&slab_obj_ext_has_codetag_key)) {
->         if (need_codetag)
->                 static_branch_enable(&slab_obj_ext_has_codetag_key);
->         else
->                 static_branch_disable(&slab_obj_ext_has_codetag_key);
-> }
-> 
-> It might be less performant but who cares, it's __init function used
-> only one time.
-
-Good idea, will do!
-
+>> --
+>> 2.55.0
+>>
 
