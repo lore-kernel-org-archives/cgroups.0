@@ -1,81 +1,81 @@
 Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A62239FCB5
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 15:27:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50AB03D88E0
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 15:28:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.172
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784215659; cv=pass; b=NPixUZaEXcddy+x43Yd71a3B+fgYOCc9NWWMxsJfARfZfAqlyYI/joWUJGR/BX3i/PYPh8QWoHLDCkg9cxpvfkVCIWdjhk2iZSY8U36ATtv0pm7bcaU07x6pRgaF5aoNwezyrA8i6bCv6X9zePzw3pHioxONmTCymJosLv81JnI=
+	t=1784215711; cv=pass; b=ICCtzWbmeLnvp41najHZS9EiYzn0MlZV0T4iQqKHmzRl8dGeNzUwFRBGiiT4NJVoXDV1peuyRz1QEz/47kwY1G9XeyEIjxEoEY6cjGwhF4WKR+VTH0Xw6u1y1/v/KSH7BjUn6mgmFvPLtsymS0JNeN34qQbwhegypB1ksW9jflA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784215659; c=relaxed/simple;
-	bh=AkPk8DH4+MLV9l0SRKwhxPXiX3RBVqSKWSFcnGZfWks=;
+	s=arc-20240116; t=1784215711; c=relaxed/simple;
+	bh=QaFVWLhw7Xm2uibhg3GR9DuxtrmKHWEyAWIfWdAUY+s=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hqvlO45DdkTVs2yT4y1AEfeRmP+mLt3QT8MvCLiRZ3PQrBHe1XRlf7fszU6LxGTy7wk7JJTInZDqLFtUfxiE83q+cRj/8vFSHCrayBoM6fCB3JOT93l+6+1EDMmeFtPDhwXtC5cgSW9La9iofyv76CpFmykZKRRGVgh32AuwvvA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=uaAcDvhG; arc=pass smtp.client-ip=209.85.160.172
+	 To:Cc:Content-Type; b=H6m6fCVz4BdgKx0iHEtjiFpVCdRUPQWRALo2HUtX+NtsvU8BalJki7TS+AyWv3+54LCg+ZihakZVrTyrTEgGIUMEEPXhAmATNCDYioTWQV4JdXIO31fQVECRk+jXGnn6l4cTyWtqFQRQSTL6bhNzGFALY2HzPnFxje98UfZcdYw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ZSYh5rmn; arc=pass smtp.client-ip=209.85.160.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="uaAcDvhG"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-51c10e86e52so29881cf.1
-        for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 08:27:36 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784215655; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZSYh5rmn"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-51c15a5b265so31511cf.0
+        for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 08:28:30 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784215709; cv=none;
         d=google.com; s=arc-20260327;
-        b=NqxhyPrxr2zpwKSJLu4ocbtaISOhC+ctF66Kkb2XE9PfRxFISbi8Rk1med3eykbr6E
-         b5SdykQwojsrxXv1kgR8MT2aHGEjluaexO4UXGio8DhzFo1jKr/fvfJgHrhnfKMlzaFf
-         Q2gKj3HSgFWjYLdv8tIOSpUNXdUzxn/oTfH96ZrMu9VI5+aHeWCpPa78SBHg7fnNpWUA
-         kFzXQdgBySZHaitXv63rOQTZbU+ANpObHKCqMtACl1i77qe7ul626kAnJEphjQ5KJImW
-         6iBVpidN7TOpCm3Zhd9qcl0req/IHUFFtY6G3QdMnnge3NpVn1i9aBXMHNNf2ZuSVEHi
-         qfdQ==
+        b=UXcWGHnN+2Lpaaa1OXz9KayI6VHmTicWgawAtmQA29T8gczxao+tsb+BHY6CuKLLaK
+         3ykugtdOSDICXAYmXIkuY8drX0AmM1VAFKnLt4oxooOmFrHr0Xfi+hbt2nsVTT4yclCH
+         S2j+SjLzLbEk68vlnyLWIfDU8WioImVZVrtErsIA8tMx/ME//Drp0PkfdPLO8lVguFmh
+         cks9iwIRZerhPvEdAALVjLL3GwY8NRCbTk6Z+YhEWGjOL4KuK9cY5Kz9WO8W5v4xnjTl
+         f3FmgP0KN5U/fby0rYCId/beBF+NxTroO1nMCg33NqeS3Qds0NsbGPMp6xQLs65kqUxo
+         xYRg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=1F/olKLrWB4qqHnjLjJSF9FomuDg/Zv/XEA7HymFvKM=;
-        fh=OO2exjEraPDMFgyoMZ6q+S3ax5wknnOdktIRqQD8gjk=;
-        b=Al0jNW7/jvACNMKYvGux/kTYMq7NEn1BOpTJSYXdTPteIRrxJRmHT9mo0fUK+Ulsl0
-         hVtJ8/brknroseuu/THie7bP7dM93rwQFb3frfKFNCxGo+HqTGbIa3lbU2WPnda/H5BR
-         kxzuIW7NPwk/BPCA6S7YjZsH9xrEQS9vAONz5gWWk3Ix+swDKjXZEZcZGdg7d/ZmEuJT
-         2s5julHdi4CVw76it5GdWrYpKBBs9SuPsEw3iKf1PqAuqj/4Tjvojm39jFBVf5HMaytA
-         UAhC9W9oG2cTui+dkAfRR99+UpxB7MJw1huZq25Ab3h13Zne8LcnAKLlywgLqC3gwgJ/
-         pnjQ==;
+        bh=9MTmsp7P9R6NbE0jd3nKRTx/bls+aSkmj63tjPdkby8=;
+        fh=HV4bX73V6ggE9Py+QROCXUO4pVJb2wh8UIB/EKhZDVY=;
+        b=hfX4QJVakeZlkamNLFzTPwoTNHul6f6Pf70IqOHtB3bzsnZW4ryDe60qqi66YcnuD6
+         vYBZEm94mNNcyNX3CHPHUbIwOSO8giKAx2uYN1o7qJF1AzaKS7DWP1DP2S03oJt06on9
+         aSfw7hq3ZLdbnuwyTL/A4tsapRh4ihiK0rBHSS/wh6ptM1VR7D2MggPo8KAw/rfosYun
+         bB9qgeJ82VBqbnb8NzGjQ+X4j2ge7gNOi+genmWMgUvrWnPfBbp5205gKS+x048W1v60
+         NbRnbEMqKleHHgEMBpFxfGakUn5PhVMhdcckQMWmwme440h2mv7xiJlXG9zezTsXl90I
+         /Eew==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784215655; x=1784820455; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1784215709; x=1784820509; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=1F/olKLrWB4qqHnjLjJSF9FomuDg/Zv/XEA7HymFvKM=;
-        b=uaAcDvhGw4X1W/kWqZMZFAMSc4W/GmMKEaTO4K4f4pzSb2W5mLZjbtib7JaQ4VrQEq
-         Haai+LAwjEVuz25h5IpqFiQTxXSYum3O79LXHIndAXs2NAthN92evgfuQTSFe7z1spsv
-         kSp2Ad3u3NjdJ58at/dIQQCS9FR7/f6MfcJsc+/y1pSnTk2uDlYQ+6K3zaU4uGUY7gxb
-         kBfVqb63F5OMOfhcfN8iA+dGCLBqwaQ7QK8J9jR/mVgBkimhk4oEjecsqsNoUDHGsHwG
-         FZm7wEtun9iPkh7D0yXvap/Rw0DdmFGvLt5+k9tjHlUDQ1vFbVIvfp9IYRMwMP/Dhg7I
-         bPpw==
+        bh=9MTmsp7P9R6NbE0jd3nKRTx/bls+aSkmj63tjPdkby8=;
+        b=ZSYh5rmnzmUz8+uBzOZYmUmOZffEGoaJxAzweuJoWmzvaxvF3yLuA+kBSLFuKfQqLb
+         2Ij21SXdJXdFGADI2Hr9hXLcEpiJDSiT/KxDJPgI2DcvC4/2XwR0W6ZLvFte13q/ZsGs
+         3RBEcIJhIUrbsk55HehToUz5seKsKUtdeFdNk5x834VP9dAu4qSraCTDr0plWv9Iy4yr
+         XN/alhnFgrBoG8h4hhulk/yO02upXB4/k2ypzf7hyj+5YNTj88IYkWch+GO1/K/CIofv
+         cbHtugI0oML2PwXyzPpAfRPloY/PT6ot+Gs/DMa7VurEf4lHw0JNBvftuGkP8myoqhTz
+         bwVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784215655; x=1784820455;
+        d=1e100.net; s=20251104; t=1784215709; x=1784820509;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=1F/olKLrWB4qqHnjLjJSF9FomuDg/Zv/XEA7HymFvKM=;
-        b=UR0uME01hrK38pdlXziFDFfwXfjpSYt0QNOKmA5V8IkfugARmOoy2jRooXPEVnZsn+
-         kebiGhX/52VviyBvNkvBST3JerRPwC+4K/0LZ/17zcwIF3rq8p3gUTz0/K1HllgKNh8Y
-         ArZZv86I5JuASded0z5XyliKqZ4rBwFgeCBmAABmF18iegfaUrtlwYjt1KkoKhkf34tY
-         IqA8vseKsGgrcnNajPIWas2QWvodsf+wK3e9KjaoC4hlaC964a9k0+JR/owVZihPnWAi
-         hZwLlNtDF0vJyofGIyzFRLqw8Uc9F/jDRasA3jxT/nWgJmJVFU+SyunKbVS3Nz9QBF07
-         A8WQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rp+L4bKyZLsph7KBdhrvsoEP5mkrS0abF0QceMLf9rxplhY4jj0MOuD2xdL9lPba044NvEdgO66@vger.kernel.org
-X-Gm-Message-State: AOJu0YxzEGbQKsuTO3Tsn6q9tb7VECJ2ZE1081jalahW2+nnNz+9O44G
-	YXJbmv9YyMRCWlNhKqf5Db7qKhZbhZh3PGrchdxk1sq5bMOaz+3M1wEFSLSkAwCGMi5sNxl8Sfn
-	tlw/0pa4UiGkXsrsa48kD3BeO/Qf9/R+itLkZgaSA
-X-Gm-Gg: AfdE7cn0Y6KcWQ7c87joBKGNKEcZFJ4SoR03E9I1JiayjAfaM02ZfxnZAE1/f5qjbDY
-	0XRahd6itkjstsUfwgSIaoi3avUmk0w+6EvPUkFNJjsbZRfwMYFqEDxBDHZuoSVbry+ODAjsd5B
-	CiMtJ7q3h8aIG6dNmEd4ifqQJ452CYVeg400dA0tRV03E2ZMPQ1dQce4a7YumsYwMlsiHdwMw02
-	NOKYCR12P+6DiVGBpF9hiHbouCmny+Rn/Un1IxArc2SgXguZYC0cOvznGKSeEwcayI000jwfu/Y
-	jOGjOzQOjDRG4pk=
-X-Received: by 2002:a05:622a:94:b0:517:6010:7c71 with SMTP id
- d75a77b69052e-51f7d273976mr9799081cf.4.1784215654893; Thu, 16 Jul 2026
- 08:27:34 -0700 (PDT)
+        bh=9MTmsp7P9R6NbE0jd3nKRTx/bls+aSkmj63tjPdkby8=;
+        b=ssFYcS+IboMZmHGRVTvCjTbqSRZ20V/gctLaQt/sJEBJ0l6jAdz66WTnPOAdS1BaWm
+         LensdNbLfnhCdIq7YKCFg5sXkQ00/TBDCDuqr5FWJr5Y8du7UpFw8EBwp+bHl03gOaWu
+         uYEa6g9rQkzuME8N15WkZnClV2VzLR7pbZmH/bHDztl4cRMVjZ2IYQ7PXSJaHQSV6HXT
+         n+obOr2fHQpfFfXF0zSPf9E165L3N7sFo1F7edxDZTH1c54rgrLtZ7G6GeIW+k/W6iCe
+         kt9V1B0zau2NCrAHqNXYdfheRUDp1+RWw+lqY7iYOAAC8N5H3dswWZujN+CcpQjax0xT
+         vT3Q==
+X-Forwarded-Encrypted: i=1; AHgh+RpZ2NMBwYLQ/x+GcCibp4g38hcz/TQ7QR7WKWT4R/kfDr4/f57o1K/RF8DYToeZWQcTQHHocEjA@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywbp2OlTLus0x8UpPENFdXCbSDRV6ewngNnrht3xeiGyhrTqSzG
+	RgjQZ8klCHHaHVwwj066oSxhPAzpXfOVzRP9Y7oi+0KPZYAARBxQCrdkcP7JsMyTPgwyybZiiLn
+	WgI1U/UMLbPzXcNndQSkDnnq8IET1D8o3Nn+REVwB
+X-Gm-Gg: AfdE7cl/x5wAzVHomhyi8n3UNYwPnMgAD80vgByDrqBpS30vdhwjbVYHML3YMc6GGhx
+	XhxVhnhcIsaMyN6OXUvfCGmMCRWcDVAAz0Yz26+q3aztH0wYdO8X4n/6AH8zKixFDbskGzYVZ+f
+	o8LKP8Ov6W3fpzomw5dEas1eUxNeB6pAElc7OxaiI9Eib/6nE/z65UHOWcF0eNyZEXc7PHr0A6y
+	UJTjMSc2CPjMCbeIRjSwx7/KOY9nxkakAcLUabKPjg3Y9QYaG3Ygi/1A1cBnkgyNvT3PCCSfWaj
+	Dt/HkZ/YdtXneq0=
+X-Received: by 2002:a05:622a:2618:b0:51c:e80:9e88 with SMTP id
+ d75a77b69052e-51f7f3ca787mr11136661cf.16.1784215708609; Thu, 16 Jul 2026
+ 08:28:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -83,14 +83,14 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <20260715-b4-objext_split-v1-5-9a49c4ccf4c3@kernel.org> <CAJuCfpEJV=OgCmQ9=tuMHOjMMh8bgHrpFe1gLtTXjagAenKZsg@mail.gmail.com>
- <eb3fc4d3-c8bd-44e9-88ba-7fb974a58aa3@kernel.org>
-In-Reply-To: <eb3fc4d3-c8bd-44e9-88ba-7fb974a58aa3@kernel.org>
+ <20260715-b4-objext_split-v1-8-9a49c4ccf4c3@kernel.org> <CAJuCfpGq3Yv8Dq=2mPgR5LGC=40VSNTA6mg4BjTRE0ADXMZkbg@mail.gmail.com>
+ <01aa6803-e6a7-4172-94ef-043914e2f794@kernel.org>
+In-Reply-To: <01aa6803-e6a7-4172-94ef-043914e2f794@kernel.org>
 From: Suren Baghdasaryan <surenb@google.com>
-Date: Thu, 16 Jul 2026 08:27:22 -0700
-X-Gm-Features: AUfX_my_bAm9pMs_cq2llYbd6SUBazq-pBVNFKSQG59fVdB5bXaPSKf2ohfyPJ4
-Message-ID: <CAJuCfpFX-9Cahs5ZCTU+P2g5eLnhR_2mhrUR9JhF8ZG6cj8=AA@mail.gmail.com>
-Subject: Re: [PATCH RFC 05/12] mm/slab: abstract slabobj_ext.objcg access
+Date: Thu, 16 Jul 2026 08:28:17 -0700
+X-Gm-Features: AUfX_mxXFm8bI5YPQvcEPkQ_QsAl3HLbXj-fL32BvT9M-JPrvDl12nUblHbqJTo
+Message-ID: <CAJuCfpGDzsoTp0Byg5QzeiOOJKoPWNXYcADOXC4hieHLNu1HQg@mail.gmail.com>
+Subject: Re: [PATCH RFC 08/12] mm/slab: change struct slabobj_ext to a union
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
 	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
@@ -101,77 +101,66 @@ Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jul 16, 2026 at 6:58=E2=80=AFAM Vlastimil Babka (SUSE)
+On Thu, Jul 16, 2026 at 7:43=E2=80=AFAM Vlastimil Babka (SUSE)
 <vbabka@kernel.org> wrote:
 >
-> On 7/16/26 03:27, Suren Baghdasaryan wrote:
+> On 7/16/26 06:11, Suren Baghdasaryan wrote:
 > > On Wed, Jul 15, 2026 at 3:11=E2=80=AFAM Vlastimil Babka (SUSE)
 > > <vbabka@kernel.org> wrote:
+> >> No functional change intended, the layout is still effectively static.
+> >>
+> >> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> >
+> > This is much cleaner than what I was preparing. Nicely done!
+> >
+> > Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+>
+> Thanks!
+>
+> >> ---
+> >>  mm/slab.h | 41 +++++++++++++++++++++++++++++++++--------
+> >>  mm/slub.c | 17 +++++++++--------
+> >>  2 files changed, 42 insertions(+), 16 deletions(-)
+> >>
+> >> diff --git a/mm/slab.h b/mm/slab.h
+> >> index 3ad9777ad600..359ab8caf61e 100644
 > >> --- a/mm/slab.h
 > >> +++ b/mm/slab.h
-> >> @@ -555,7 +555,7 @@ static inline bool need_kmalloc_no_objext(void)
+> >> @@ -554,14 +554,34 @@ static inline bool need_kmalloc_no_objext(void)
+> >>   * if MEMCG_DATA_OBJEXTS is set.
 > >>   */
 > >>  struct slabobj_ext {
-> >>  #ifdef CONFIG_MEMCG
-> >> -       struct obj_cgroup *objcg;
-> >> +       struct obj_cgroup *_objcg;
-> >>  #endif
-> >>  #ifdef CONFIG_MEM_ALLOC_PROFILING
-> >>         union codetag_ref ref;
-> >> @@ -661,6 +661,13 @@ slab_obj_ext(struct kmem_cache *s, struct slab *s=
-lab, unsigned long obj_exts,
-> >>         return kasan_reset_tag(obj_ext);
-> >>  }
-> >>
-> >> +#ifdef CONFIG_MEMCG
-> >> +static inline struct obj_cgroup **slab_obj_ext_objcgp(struct slabobj_=
-ext *obj_ext)
 > >
-> > I understand why you need to return obj_cgroup** but maybe instead we
-> > can have a separate setter function and just return a pointer here?
->
-> Yeah I rewrote it now and it looks better. Thanks! It ended up like this =
-due
-> to some previous attempt I made.
->
-> > That would also help catch cases when someone wants to set
-> > obj_ext._objcg that was optimized away (for that the setter would need
-> > an additional parameter to identify whether we allocated optimized
-> > objext vector).
->
-> It would need passing the slab parameter to assert
-> slab_obj_ext_has_codetag() in debug mode. I don't think it's worth it giv=
-en
-> the get/set is only called from few specialized places.
-
-Sounds good.
-
->
+> > Perhaps we should add a comment here stating that every element of
+> > this union should be pointer-sized?
 > >
-> >> +{
-> >> +       return &obj_ext->_objcg;
-> >> +}
-> >> +#endif
-> >> +
-> >>  int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
-> >>                         gfp_t gfp, unsigned int alloc_flags);
-> >>
-> >> diff --git a/mm/slub.c b/mm/slub.c
-> >> index 5e3f53bcd0d3..48e10198a3ce 100644
-> >> --- a/mm/slub.c
-> >> +++ b/mm/slub.c
-> >> @@ -2523,7 +2523,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags=
-)
-> >>         if (obj_exts) {
-> >>                 get_slab_obj_exts(obj_exts);
-> >>                 obj_ext =3D slab_obj_ext(s, slab, obj_exts, p);
-> >> -               if (unlikely(obj_ext->objcg)) {
-> >> +               if (unlikely(*slab_obj_ext_objcgp(obj_ext))) {
-> >>                         put_slab_obj_exts(obj_exts);
-> >>                         return true;
-> >>                 }
-> >>
-> >> --
-> >> 2.55.0
-> >>
+>
+> OK, how about this?
+>
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -550,10 +550,14 @@ static inline bool need_kmalloc_no_objext(void)
+>  }
+>
+>  /*
+> - * Extended information for slab objects stored as an array in page->mem=
+cg_data
+> - * if MEMCG_DATA_OBJEXTS is set.
+> + * Extended information for slab objects stored as a pointer to an array=
+ in
+> + * slab->obj_exts (aliasing page->memcg_data) if MEMCG_DATA_OBJEXTS is s=
+et.
+>   */
+>  struct slabobj_ext {
+> +       /*
+> +        * All elements of the union should be pointer-sized to avoid mem=
+ory
+> +        * waste
+> +        */
+
+Perfect. Thank you!
+
+>         union {
+>  #ifdef CONFIG_MEMCG
+>                 struct obj_cgroup *_objcg;
 >
