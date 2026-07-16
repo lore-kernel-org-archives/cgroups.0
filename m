@@ -1,93 +1,94 @@
-Received: from mail-qt1-f181.google.com (mail-qt1-f181.google.com [209.85.160.181])
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DED22BE644
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 04:25:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C734165F16
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 04:30:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.169
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784175955; cv=pass; b=j+oQPV5OTtEfWm2ghVVaMbBHqtGt0wEXWFx2Pxq2miPWJQD2SUDg27r+lD+Moxs+kT8Jr+6saN1IF19RDF1tJXgth1GI6ihNb7VCxmDn28oX4Yzg1XbyceD1e54urHyFreT89BA6BHMkvYa+Y8lk4SnKjcPpV99e+2r2AVFSMEU=
+	t=1784176232; cv=pass; b=p7uzKZgUpUsvDGFeOmvrEe5daQPeCfKK41w99/NtOG0eZmUSlNTfUbB8jpXuDBLyyLY8/89mLU5wuyszyeY7A8fDU5YV/lzH1n8YHAti10mR5cC6AoO20BK6yNs/hnWprtxzYtSeNyW/KP+btvC8D4Bf5tqYqtAkW6BwlbHWPug=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784175955; c=relaxed/simple;
-	bh=x2J7YgYRU0WIZTnCdfWLkwufxqLsKFgYnWuW0ubCnb4=;
+	s=arc-20240116; t=1784176232; c=relaxed/simple;
+	bh=SYCpj20mrnqCJsYJKMaG/fCD9cb7J7wKhfAlelM2+rY=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rKGtMaF8s6Lz60anSfM5ffVSkKhaR1zhUVjtQUWfI3AbBDjoUN/SVS6zHSqERCdRygE4zRWAD7gb5teE1HWeUbkMvejmr2lRsSpSypiQaxdlz9zC0Wsp8Us79ZmfODelPOgD4sLqO0FihM0PH8GHhCIhtYzyUn9dr1q2ZA/ntnI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=stvwYUmj; arc=pass smtp.client-ip=209.85.160.181
+	 To:Cc:Content-Type; b=tkfrTNISgDh/ZNPaDqTrW3dms2QzMk1BGgVXZMIvgoJ2yAv+bmnXRPnox68qv19mgOVu91HzZzoHlOaLRH1yLNUrvoW0iS09xeePqENsjjuqCiFy9PFdM55aSDRVmuLZxoB+V3ECUoSm7PCrcmLRSrwg7I782/WgD7npIO2z5Ls=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=VH5SYrMd; arc=pass smtp.client-ip=209.85.160.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="stvwYUmj"
-Received: by mail-qt1-f181.google.com with SMTP id d75a77b69052e-51c15a5b265so161141cf.0
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 21:25:53 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784175952; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VH5SYrMd"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-51c15a5b265so161641cf.0
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 21:30:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784176228; cv=none;
         d=google.com; s=arc-20260327;
-        b=ro+W97jlXhOWrNjFASk1ZdVO9xtKTK9J3hEVrTPUiR7pzSWC3t8/L0YjcTjbcFr1QR
-         MMDI1rblWI7JOAxXrc/ZKLSjtB2hH0P8WVeObV9coLHKX90f+tyQzyREQYrrU9g70Vlx
-         o5gkNxVh2qO/vhW+PyR0XKf+DBL/5JWzwXlGXB3H2s+sIKkQoSwavX74CNVFufEBPXKB
-         +YtlqU7d/3sNBGjwgjPrO42GIZQFqeQ0Rwjc8KQCnhzBPOTR6N1s6kwdKX9JD46AxceN
-         5k167mmmh4RK9jFRLpz5PeT34qvQJQ1Xl8MlmGb4jVcFUn7kMtwVnW8tdjiEgCGW2PHX
-         zioQ==
+        b=gK3kA/t0XtxGYNbzSlhYvUrCEF3xRFvjwfO/SyQMfmpICoKTCTlPRR40VNr1EzaeSC
+         gyv2F6qv+dQ77pn3tpzaidEki398YXqZxgoI8NNGQiNTpddoizqIXSDc/+tkKN4/CWE1
+         Zz74mLUrdCkZo0SX9443q90HMkD2X7ZbHfkwl/jVWhwLNNJ3XTTsrtzadrN6Mg+1ZWLk
+         u44MESSPuoe5dMIrLZJExKAIlDCMzQFShImDfHGbfMvuJu1swX/uwy+hq0DkKHeIlSmF
+         4u8BuweBiIu+lqrhP7B2SA1/5LebBf5blPf1XiltTI8TUlcRd7QwbEXGBWksLvz5L4ih
+         0GTQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=pVYCl3gFF/KqqrwQ8EI7oyBmG80AyMLJQ63EeA/h5/o=;
-        fh=kb8vfNdyjaTNtnJ+sPsSXQfkkWty4K2qpVLNvh7zNTw=;
-        b=joa9gopzpKbZvHPCuovtTDMh/GZiPrgbNWlMgkNgEGqcK3Cvgh6PcQjowFiuxPyRHv
-         VcMSD2sq0/8iYXY1Ah393ZpV0n0mE821Gqto19tXYfe4giHEMQPnR8Nt2I+0ch45xKWN
-         l73SniPOXMk1TJugvEwqQr2ww35OyHvOkHHYAh2bN/cPH+7sDChYvJ0FTkzsJ6gZwFl0
-         NozXm7HU6dD7g71lhgUmsovwrgZYtVLCHw0KqjZVOcqANh5sOgth1FxJVLBc1hPkb7le
-         Z7Mdsx64kZJbuT5G488wRVEe5PRh9B84+wkAOc2tRyHtQ/0YbJAhTUXkNkYPWMQGzY1m
-         bq1Q==;
+        bh=qPXbsSDypy3wPiCJBi1gr0/t6OIelw2fg6uTNPSbR/w=;
+        fh=OUbkFIrCTZ8vVe9ohHwYoTfwmbcuNZUNFNfm+SoPI9k=;
+        b=LQvvSaDAQGLNUC8N1l1DmMW/NtisR8TCr9wojyPYyNIOa7N7tEcLdIrjoqLRxDr1Th
+         GS2uQA2U0SLqHmGDdswPokg33UiV95Slg4fysPOKmAmMd9sSPxx4b1uer9OgU967Gkfe
+         84Ex37Yw0ZAOMtHYYcCSPnz602jEpvKUO05srlqaQz3o2mwImRYEECy0QHactpCqYHPt
+         fnvTODlHzn8AgRo1RUImSwaVVC3w8Abgafo5h28eHliiHvs8EMEvgxItiqisTmzNjsWV
+         sLb50fQTUX+pVQFGZGsvakwDNCMNPuiUNvi1/KBI8pG4tMG0sjzncF1my7aARMJgY1xz
+         P6Tg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784175952; x=1784780752; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1784176228; x=1784781028; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=pVYCl3gFF/KqqrwQ8EI7oyBmG80AyMLJQ63EeA/h5/o=;
-        b=stvwYUmjth4Em3mQbR28myOFn8cFsuG65Rn+iwLG6+boRnQNMbrrJ7F8pFC9bGTApS
-         6pKKpzMazgAGi8+ZBh2Ejm6eyWL6QrIjG/tIGofN4tjKdPBxg73Yr7QytnhNKt9bWXgG
-         3LDO9nDe1L9oDA/EObqvthsNn8qNn8PuFsyRvZcQURh8RNH0K4PQQbkB1lt5yK2o+ReI
-         PgqASnXyCfD+LqRRDoMCNn6NsKEwJ4T8VCCkev9XfFduuD39d7DaWrayYqTJNRlEfzgW
-         HNYjXOzYWeomDYJZCqha7Dz2LdfqYUIndaSWSNy91I9YVjuVdOQ9xnGnTFyobn2gwc9J
-         3Dfw==
+        bh=qPXbsSDypy3wPiCJBi1gr0/t6OIelw2fg6uTNPSbR/w=;
+        b=VH5SYrMd9gUmK50mv/7gfrqByU4ipsL3cAoA+gGLNVZuXfRrxRcZvsMnZvN4JFZEtO
+         XDq0Al7c+Ad92Sy3P8uDcIqjtuGQ0cTB7rcNOVbLriYdAiIYw8+h4SykSy0iFrEz7iCk
+         xpQjAr8qaIKpqD7YZ5vii6vQK1PkDGxvBypNAqKaUnH0t9L6M9GjBc8FXtkMVqv5/BAo
+         5S+Gdhjb1I4wU2RsRyByQbBlIpKcsifOp/QohTFk30bOLyE9AXnFszhCLHMCBtzOOn4y
+         xIGYdHwiRXudsx2k0ieExgOeW/dAfyuQAP/OP4+LZSuDBnvnk+xm86OUsMkDiXE2e4fK
+         ffpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784175952; x=1784780752;
+        d=1e100.net; s=20251104; t=1784176228; x=1784781028;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=pVYCl3gFF/KqqrwQ8EI7oyBmG80AyMLJQ63EeA/h5/o=;
-        b=VTawyHoeZwoqBLytZk6q194W9ScHsqh5uuUsyKtj13W7mY4opslvNUAN6Vufy6MYmB
-         1m1sdCYFDX0v6ylz77DULKVWS+yzN2rwY4dS0ZlSbkR4yjH0tk2a/lGC9UhQtwW8jx73
-         pb8o17unAqw4A3F/+1G9sZTPPZCQqxkDXf4NDcER+wICrHBFSPwqillUOnkXfeQkCMiZ
-         yU4QzuF1fZeBE+XO/RuD5nELEF4AqyPmtqxv5XI0Vd2gBTr4nkGrCpUm0/mbOFooj3ng
-         uXu74uzApbmeWyFXQgMXjmJhu+UjrTdYeEHrMQjgFW7lwChsjL7cH15R/sC6d0L9D7oU
-         N7hQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoTMPFT9N1Jex48O8USZqBiWDqQ/tfqk9z14dxo34xbLB1PhIBfZHxtP6uh+asXZEvFnoaaE1jS@vger.kernel.org
-X-Gm-Message-State: AOJu0YwqfV1Jx3DwdL5PaeRLsjvzG17rlmVCCyAbG2qwtJPN+Ldy2RIn
-	hEUcav8Ohli6bzYgHrqmR4pywpo48LDk5ls1QMy4cVBdfL/uKs+Gixg+Yua2dtnCA/k8+zG2/Kt
-	hUfZqVC6EmPly7UKs3o+6oFqj2lv028LQnw37ODzZ
-X-Gm-Gg: AfdE7cmTyj1Zc2KPiduBV6xsjHH055tX1LvX7LphY2NuHn1adp0XKH9cNx1f2QZywPc
-	0TE7bQaT0zHe2xiSh/UxTQCIdHK1wMbH0SM6h2SKEiOaEJItkHk3JnalG9x+GZFJKyJSqSoZKoS
-	VFzT0PWaxTakSGZt4vewoUo9Eo/XyuwTd1uNN/vuVzfnClz/7k9xwYQOleL5jQlw1diC+WZTUhn
-	9VVp5ohpD3V8PGm0WAheTPEp4mZjTopa9EdQ9NX8GOOvEi79b4wjkKVQ4xP
-X-Received: by 2002:a05:622a:15d3:b0:51b:fd5e:e81a with SMTP id
- d75a77b69052e-51f7f2d3c89mr4849471cf.20.1784175951747; Wed, 15 Jul 2026
- 21:25:51 -0700 (PDT)
+        bh=qPXbsSDypy3wPiCJBi1gr0/t6OIelw2fg6uTNPSbR/w=;
+        b=VxSgBKaHUWWP6FG+NvtX5UK32Yzbm8S3ZI7BXbaFGN88Fz4F47dej3ZEaLcL6Y38FC
+         yS2UDaI7vAaIfYn8wu73hFFpWc+8lYKJoW/YsMzu9V7VQmac/ALsrcuaB9gi18F5HHtq
+         UR7jp5Fn8Vq2B3Kc7enJHJ4yfLRnrNPYcs8hDgqB6MwCb6fT9Wiusouh819pUuYpvGC+
+         ZvO7GdE0G+6nKcbDJGHmNE/gOxyPpCdHdQoWCUBq9BNnT36iXFetH0sxbNmRalmj4p6Z
+         RO91nBHLiIbqw7GZMeH5ehXKgcHOfMajfI9cVGbI2cY66smjdLh7HsStFXkaXuICzEDr
+         UmUw==
+X-Forwarded-Encrypted: i=1; AHgh+RpDfuIM/+izbepeiATmrmaWt+Gm9ocD184pRRZQkwRz7kDBF9L0GS9I1ICgRCbgb41YkNunljOX@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywc8sUe8mnavfw33EsomEcrAJUcaq1rNIqeWB5MkVAIO1IRy4kF
+	bB10FEgqlGQfM5RUBrQDu6hjaws41x+IXL/pyMu20LY7PkZrKyLHnfsD5TDxW7nJH77FKdWOXz6
+	TUQJPHml4sdWaeyRfGXerFePTgqBPvcvZFsy5EL3j
+X-Gm-Gg: AfdE7ckW3JnIIwQrisDwMbIwSGXqMA9z0kUK+SZKpNm/qh0XzBDFclUuC2Rn6zfA3TG
+	VUmi1ZiZAxD1h3SJNo/AetqwjpxJ/xu9fyZfHIOJSX0jVEmabT6xBF5yxTmmghBaFed2hccW7Bn
+	RyvjUGItVX7j5Alzvc1/yt1zdg6MRZ1xLTtYbAoRHWYmFYfLKPfW5uNkXZ1Uxs3C/A8OehiuxHC
+	yCNUEA97MnyWSutpVculPU5vUTQ0UJdw3x6krBe3LYtBYw+UFsBdvYGxroi
+X-Received: by 2002:ac8:5cc5:0:b0:51c:7a90:a798 with SMTP id
+ d75a77b69052e-51f7f4c185cmr4875081cf.24.1784176227519; Wed, 15 Jul 2026
+ 21:30:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org> <20260715-b4-objext_split-v1-9-9a49c4ccf4c3@kernel.org>
-In-Reply-To: <20260715-b4-objext_split-v1-9-9a49c4ccf4c3@kernel.org>
+References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org> <20260715-b4-objext_split-v1-10-9a49c4ccf4c3@kernel.org>
+In-Reply-To: <20260715-b4-objext_split-v1-10-9a49c4ccf4c3@kernel.org>
 From: Suren Baghdasaryan <surenb@google.com>
-Date: Wed, 15 Jul 2026 21:25:39 -0700
-X-Gm-Features: AUfX_mzcvEykd5q7uqCxKTbaLxmiOsf8J2efBdBVlcFgCD-l4xFsXTifi66X4m4
-Message-ID: <CAJuCfpGkpe=5O_vW9VKqKFxrBO+QquCD+mXth_qeUSqcWcW6hA@mail.gmail.com>
-Subject: Re: [PATCH RFC 09/12] mm/slab: introduce slab_obj_ext_has_codetag()
+Date: Wed, 15 Jul 2026 21:30:15 -0700
+X-Gm-Features: AUfX_mzIwvD1EOJsmMk-LTsWWBZMYbvxEoZzeUE17X8MFBwGAL5qNSujdZODcvs
+Message-ID: <CAJuCfpGXHuhLmTJFXKrBmCOMb_j8bA3wndekuewh=TULjXTXNw@mail.gmail.com>
+Subject: Re: [PATCH RFC 10/12] mm/slab: reduce slabobj_ext memory with
+ allocation profiling disabled
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
 	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
@@ -101,148 +102,37 @@ Content-Transfer-Encoding: quoted-printable
 On Wed, Jul 15, 2026 at 3:11=E2=80=AFAM Vlastimil Babka (SUSE)
 <vbabka@kernel.org> wrote:
 >
-> mem_alloc_profiling_enabled() allows evaluating (with a static key) if
-> memory profiling is currently enabled. mem_profiling_support is a
-> variable where false means it's not possible to enable it anymore,
-> because the system was booted with "never" or it was later shut down.
-> This is possible to query by mem_alloc_profiling_permanently_disabled().
->
-> To make slabobj_ext array size handling dynamic, we need a snapshot of
-> mem_alloc_profiling_permanently_disabled() early in boot, so that's not
-> affected by a later shutdown. We also need it to be static key based for
-> performance. Neither mem_alloc_profiling_enabled() nor
-> mem_alloc_profiling_permanently_disabled() satisfy this.
->
-> Therefore introduce slab_obj_ext_has_codetag() with an underlying static
-> key for that use case. Its state is made to reflect the result of
-> mem_alloc_profiling_permanently_disabled() during kmem_cache_init(),
-> which does happen after setup_early_mem_profiling().
+> When memory allocation profiling is compiled in but permanently disabled
+> on boot with (implicit or explicit) "never" parameter, stop allocating
+> (wasting) memory for the codetag_ref parts of slabobj_ext metadata.
 >
 > Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+
+Looks good but we should verify that slab allocation performance is
+not regressed, especially if
+CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT=3DY and then profiling was
+disabled via "never" in the command line. I think that would be the
+worst case scenario for performance.
 
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 
 > ---
->  mm/slab.h | 16 ++++++++++++++++
->  mm/slub.c | 31 +++++++++++++++++++++++++++++++
->  2 files changed, 47 insertions(+)
+>  mm/slab.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
 > diff --git a/mm/slab.h b/mm/slab.h
-> index 359ab8caf61e..dcca86799fc9 100644
+> index dcca86799fc9..a50347c9dbe3 100644
 > --- a/mm/slab.h
 > +++ b/mm/slab.h
-> @@ -564,6 +564,22 @@ struct slabobj_ext {
->         };
->  } __aligned(8);
+> @@ -587,7 +587,7 @@ static inline size_t static_obj_ext_size(void)
+>         if (IS_ENABLED(CONFIG_MEMCG))
+>                 sz +=3D 1;
 >
-> +#ifdef CONFIG_MEM_ALLOC_PROFILING
-> +DECLARE_STATIC_KEY_MAYBE(CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT,
-> +                        slab_obj_ext_has_codetag_key);
-> +
-> +static inline bool slab_obj_ext_has_codetag(void)
-> +{
-> +       return static_branch_maybe(CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_=
-DEFAULT,
-> +                                  &slab_obj_ext_has_codetag_key);
-> +}
-> +#else
-> +static inline bool slab_obj_ext_has_codetag(void)
-> +{
-> +       return false;
-> +}
-> +#endif
-> +
->  static inline size_t static_obj_ext_size(void)
->  {
->         size_t sz =3D 0;
-> diff --git a/mm/slub.c b/mm/slub.c
-> index dd15af8abd62..4200e7105b30 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -213,6 +213,11 @@ DEFINE_STATIC_KEY_FALSE(slub_debug_enabled);
->  static DEFINE_STATIC_KEY_FALSE(strict_numa);
->  #endif
+> -       if (IS_ENABLED(CONFIG_MEM_ALLOC_PROFILING))
+> +       if (slab_obj_ext_has_codetag())
+>                 sz +=3D 1;
 >
-> +#ifdef CONFIG_MEM_ALLOC_PROFILING
-> +DEFINE_STATIC_KEY_MAYBE(CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT,
-> +                       slab_obj_ext_has_codetag_key);
-> +#endif
-> +
->  /* Structure holding extra parameters for slab allocations */
->  struct slab_alloc_context {
->         unsigned long caller_addr;
-> @@ -2415,6 +2420,26 @@ alloc_tagging_slab_free_hook(struct kmem_cache *s,=
- struct slab *slab, void **p,
->                 __alloc_tagging_slab_free_hook(s, slab, p, objects);
->  }
->
-> +/*
-> + * Make sure the static key used by slab_obj_ext_has_codetag() reflects =
-the
-> + * value of !mem_alloc_profiling_permanently_disabled()
-> + *
-> + * Any later mem alloc profiling shutdown won't be reflected in the stat=
-ic key
-> + * because obj_exts with codetags might already exist.
-> + */
-> +static void __init slab_obj_ext_has_codetag_init(void)
-> +{
-> +       bool key_enabled =3D IS_ENABLED(CONFIG_MEM_ALLOC_PROFILING_ENABLE=
-D_BY_DEFAULT);
-
-nit: This seems a bit indirect. Reader needs to remember that
-slab_obj_ext_has_codetag_key is initialized based on
-CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT. Wouldn't below code be
-simpler?:
-
-bool need_codetag =3D !mem_alloc_profiling_permanently_disabled();
-if (need_codetag !=3D static_key_enabled(&slab_obj_ext_has_codetag_key)) {
-        if (need_codetag)
-                static_branch_enable(&slab_obj_ext_has_codetag_key);
-        else
-                static_branch_disable(&slab_obj_ext_has_codetag_key);
-}
-
-It might be less performant but who cares, it's __init function used
-only one time.
-
-> +       bool need_codetag =3D !mem_alloc_profiling_permanently_disabled()=
-;
-> +
-> +       if (key_enabled !=3D need_codetag) {
-> +               if (need_codetag)
-> +                       static_branch_enable(&slab_obj_ext_has_codetag_ke=
-y);
-> +               else
-> +                       static_branch_disable(&slab_obj_ext_has_codetag_k=
-ey);
-> +       }
-> +}
-> +
->  #else /* CONFIG_MEM_ALLOC_PROFILING */
->
->  static inline void
-> @@ -2429,6 +2454,10 @@ alloc_tagging_slab_free_hook(struct kmem_cache *s,=
- struct slab *slab, void **p,
->  {
->  }
->
-> +static inline void slab_obj_ext_has_codetag_init(void)
-> +{
-> +}
-> +
->  #endif /* CONFIG_MEM_ALLOC_PROFILING */
->
->
-> @@ -8541,6 +8570,8 @@ void __init kmem_cache_init(void)
->                 boot_kmem_cache_node;
->         int node;
->
-> +       slab_obj_ext_has_codetag_init();
-> +
->         if (debug_guardpage_minorder())
->                 slub_max_order =3D 0;
->
+>         return sizeof(struct slabobj_ext) * sz;
 >
 > --
 > 2.55.0
