@@ -1,130 +1,174 @@
-Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 537BD31714A
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 03:26:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3D5663B9;
+	Thu, 16 Jul 2026 03:29:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784172392; cv=none; b=beLklgEPmEhoOo+OuECXUSS5M+mc8K3jVW2E5ubFkyeQonwicPe1FycSuFN6dXZsxL9SxnARioeTvfFPBajpazzD35MMf/GnVpTKYB37wC1x8FgPtAzfFmzEo5oGqkep3/mqVp+jkg2yIYFNz30r0A3yQs+C1MSso/CEKr1z+dw=
+	t=1784172548; cv=none; b=jOUa1vnoOf1GkUTOOnel5F/Ccaj9AfJBimizFYZxS0LjOYkVXm+JOJ4ONZHRWnBeDv9ubESoBj52oAAJZ5JDkm30MOcVpV0/xNykzYIo9wBqyNiIlNEcjcG+vXcVnNp8kjRTEJ2SR7X5lrZvENi88Dnasz8/GErKS+/6kSEpsOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784172392; c=relaxed/simple;
-	bh=WA917DKAKOwQI8iWYO+lgG3B+zDmXKZrt1gj1VohUHM=;
+	s=arc-20240116; t=1784172548; c=relaxed/simple;
+	bh=J2YEnM4t5mLWU1Nht9balyGsc9rTwGqXXcNB1tF8TPY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FFUiTUgYVUNFy0UHgie3ZDhR1Ij13CI4/zMR5U1890O2zbNAK1aaQxoywBZrgC/5YLf8DSpjKSeZkrcf1CslDBgZsqJ3XESCmRCXOP0lK+Z+QGmP3GvHQB3fKoSewi0OFUydxVUVC2e+Y/oWJ+ELLgu9YonGqkWskjImEM+mtdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Kzs63WiC; arc=none smtp.client-ip=95.215.58.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 In-Reply-To:Content-Type; b=Ya3cJ7nX0jMVuYJodkH9kHZGOsIViAEA5fP3EOzofixrAQhGW3Hq3Ro+WBzA2j/rxpxo5f1UJpRAAlArmmDyhYi6gvw6GOjIS5f5enlLoK2uQv9/xBjCYaZX0J5mexX71y0D6t1WIplMA2I37/fgZNXXc5kKwCmfwwUaECQZ+BI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gYm7ML9t; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Kzs63WiC"
-Message-ID: <688a39f3-4539-4916-80f7-67456a514169@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784172378;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NnyjyDapX7AyGQm2q6tRWBOCLxlc24/i4a9N09iebLA=;
-	b=Kzs63WiC192zhPydLmoGCNFB5idBm5wsZX6Yu30ywryMazQ5LAAcUpixyDemD8ow/Dz580
-	GT8Uhnk07l0TiaOF3IiOBWY8H1b6CE0TRhhwxhXUAY054weucbAwW1g7z7pz+3kkkokWnh
-	pm3kdP5i5fgXXSZAJ/KYmvM3jEKx/qU=
-Date: Thu, 16 Jul 2026 11:25:58 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gYm7ML9t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30DCB1F000E9;
+	Thu, 16 Jul 2026 03:29:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784172547;
+	bh=PUg+12QG4vSpX4SAh8HFUD5gRWGHLyJzN9G7+NNYJZY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=gYm7ML9trISPjlPVSeDw88FuWYrGVFHjgNEcqlArcKET0eUo34FejkWcq07KvMA4W
+	 9FAOWeM+XfiTWLKp0hqFVdwyCo02vHfbYPdHqvJLs6y7sMdgwd+3BOyLp5Ln6vj9FD
+	 uziwxF3uNOVstrjkmjgpIOQ+I+cBz+B17zqyBxPBZZUZyLTe43+dv49ej3LSCKL0xV
+	 RaHtkGSjpY3okW8zy7ZwrkJTKCOhcD42J8CTPbj/6PoxX88C9OvXurpLgOM9dGdCcM
+	 O1iiIw8UsdT77+8vRyZtZJm3Sp/iTYUjKqGh29SnaY+Mp0ntjb619IHXEOiOnt6R+O
+	 yg5K3GviAYOtA==
+Message-ID: <0d191478-43fb-4286-a2e6-3e7f3047b42a@kernel.org>
+Date: Thu, 16 Jul 2026 12:28:50 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 2/2] mm: vmscan: fix node reclaim ignoring swappiness
- parameter
-To: Ridong <ridong.chen@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
- Kairui Song <kasong@tencent.com>
-Cc: Muchun Song <muchun.song@linux.dev>,
- Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
- Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
- Youngjun Park <youngjun.park@lge.com>, David Hildenbrand <david@kernel.org>,
- Lorenzo Stoakes <ljs@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- Davidlohr Bueso <dave@stgolabs.net>, cgroups@vger.kernel.org,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- Ridong Chen <chenridong@xiaomi.com>, stable@vger.kernel.org
-References: <20260716031729.1064007-1-ridong.chen@linux.dev>
- <20260716031729.1064007-3-ridong.chen@linux.dev>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Qi Zheng <qi.zheng@linux.dev>
-In-Reply-To: <20260716031729.1064007-3-ridong.chen@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 00/12] mm/slab, alloc_tag: reduce obj_ext memory waste
+To: Suren Baghdasaryan <surenb@google.com>,
+ "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
+ <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
+Content-Language: en-US
+From: Harry Yoo <harry@kernel.org>
+In-Reply-To: <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------2W0maZ7GPqqOL0PvX4GiTb0p"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------2W0maZ7GPqqOL0PvX4GiTb0p
+Content-Type: multipart/mixed; boundary="------------tIgFmoxJ8ComLrftXtGV8HCG";
+ protected-headers="v1"
+From: Harry Yoo <harry@kernel.org>
+To: Suren Baghdasaryan <surenb@google.com>,
+ "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Message-ID: <0d191478-43fb-4286-a2e6-3e7f3047b42a@kernel.org>
+Subject: Re: [PATCH RFC 00/12] mm/slab, alloc_tag: reduce obj_ext memory waste
+References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
+ <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
+In-Reply-To: <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
+
+--------------tIgFmoxJ8ComLrftXtGV8HCG
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
 
 
-On 7/16/26 11:17 AM, Ridong wrote:
-> From: Ridong Chen <chenridong@xiaomi.com>
-> 
-> sc_swappiness() had two separate definitions depending on
-> CONFIG_MEMCG. The !CONFIG_MEMCG variant simply returned
-> vm_swappiness, ignoring the proactive_swappiness value passed
-> through scan_control. This caused the swappiness parameter
-> written to /sys/devices/system/node/nodeX/reclaim to have no
-> effect when CONFIG_MEMCG is disabled.
-> 
-> Fix this by consolidating sc_swappiness() into a single definition
-> that checks sc->proactive_swappiness first, then falls back to
-> mem_cgroup_swappiness() which already handles both CONFIG_MEMCG
-> and !CONFIG_MEMCG.
-> 
-> Before fix (swappiness=max ignored, mostly file pages reclaimed):
-> 
->      # cat /proc/sys/vm/swappiness
->      60
->      # cat /proc/vmstat | grep pgsteal
->      pgsteal_kswapd 0
->      pgsteal_direct 0
->      pgsteal_khugepaged 0
->      pgsteal_proactive 1840
->      pgsteal_anon 25
->      pgsteal_file 1815
->      # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
->      # cat /proc/vmstat | grep pgsteal
->      pgsteal_kswapd 0
->      pgsteal_direct 0
->      pgsteal_khugepaged 0
->      pgsteal_proactive 18013
->      pgsteal_anon 337
->      pgsteal_file 17676
-> 
-> After fix (swappiness=max honored, anon pages reclaimed as expected):
-> 
->      # cat /proc/vmstat | grep pgsteal
->      pgsteal_kswapd 0
->      pgsteal_direct 0
->      pgsteal_khugepaged 0
->      pgsteal_proactive 0
->      pgsteal_anon 0
->      pgsteal_file 0
->      # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
->      # cat /proc/vmstat | grep pgsteal
->      pgsteal_kswapd 0
->      pgsteal_direct 0
->      pgsteal_khugepaged 0
->      pgsteal_proactive 16283
->      pgsteal_anon 16283
->      pgsteal_file 0
-> 
-> Cc: stable@vger.kernel.org # 6.17+
-> Fixes: b980077899ea ("mm: introduce per-node proactive reclaim interface")
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Reviewed-by: Barry Song <baohua@kernel.org>
-> ---
->   mm/vmscan.c | 19 +++++++------------
->   1 file changed, 7 insertions(+), 12 deletions(-)
+On 7/16/26 12:32 AM, Suren Baghdasaryan wrote:
+> On Wed, Jul 15, 2026 at 3:10=E2=80=AFAM Vlastimil Babka (SUSE)
+> <vbabka@kernel.org> wrote:
+>>
+>> The recent fixes for objext array handling inspired me to look into th=
+is
+>> finally. It's been bothering me that the memory usage of struct
+>> slabobj_ext depend only on config options and not whether the fields a=
+re
+>> actually used.
 
-Thanks for fixing this!
++1 one more person bothered by this...
 
-Acked-by: Qi Zheng <qi.zheng@linux.dev>
+>> So with both CONFIG_MEMCG=3Dy and
+>> CONFIG_MEM_ALLOC_PROFILING=3Dy there is always objcg field and codetag=
+_ref
+>> field. And thus:
+>>
+>> 1) Having memory allocation profiling config-enabled but not
+>>    boot-enabled means wasted memory on unused codetag_refs. This makes=
 
+>>    it less suitable for a general distro config and the page allocator=
 
+>>    side doesn't suffer from this, only slab and percpu.
+>>
+>> 2) Complementary, with memory allocation profiling enabled, there are
+>>    caches/slabs that don't need the objcg field, so memory is wasted o=
+n
+>>    those.
+>=20
+> It's funny because yesterday I started working on a prototype for the
+> same optimization. But your patchset is much more mature, so I'll
+> focus instead on reviewing it.
+
+Ouch, a race condition!
+
+>> This series should solve the point 1) fully for slab, pcpuobj_ext
+>> handling can be perhaps improved similarly, haven't looked into that.
+>>
+>> For 2) it avoids allocating objcg fields for KMALLOC_NORMAL caches whe=
+re
+>> we know they are not necessary because kmalloc() with __GFP_ACCOUNT wi=
+ll
+>> pick a KMALLOC_CGROUP type.
+
+Unless KMALLOC_RECLAIM !=3D KMALLOC_NORMAL! (yes, SLUB_TINY)
+
+>> The named kmem_caches are tricky. They can be created with SLAB_ACCOUN=
+T
+>> and then we know objcg fields are always needed. But also they can be
+>> created without SLAB_ACCOUNT and then some allocations have
+>> __GFP_ACCOUNT and some not and we don't know that in advance.
+>=20
+> Do you know how often this happens that a named cache with no
+> SLAB_ACCOUNT is used for __GFP_ACCOUNT allocation?
+
+Not sure about how often, but one thing I recall is xarray
+(radix_tree_node cache), which decides to account the objects based on
+xarray flags.
+
+>> A possible future solution is to introduce e.g. SLAB_MAYBE_ACCOUNT, ad=
+d
+>> it to caches where we know __GFP_ACCOUNT is used, and only honour
+>> __GFP_ACCOUNT for those, while warning for an unexpected usage
+>> elsewhere.
+>
+> I wonder if for such caches we could create two separate caches, one
+> serving __GFP_ACCOUNT and using extentions containing objcg and
+> another one for non-__GFP_ACCOUNT with optimized extentions?
+
+You mean transparently to users? (e.g., user thinks it has created
+a single kmem_cache but actually there are two of them, multiplexed by
+__GFP_ACCOUNT bit)
+
+--=20
+Cheers,
+Harry / Hyeonggon
+
+--------------tIgFmoxJ8ComLrftXtGV8HCG--
+
+--------------2W0maZ7GPqqOL0PvX4GiTb0p
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCalhP8gAKCRCGXBN6rc5S
+1uJFAQCHO1N5GdmpwK5dT53zxVvqwtCPyRXEpUHeeKDpXt8rFAEArBwT5mE+9Ft5
+DbFjx1ACc5qvWdtSrfYbbdZR8F1WNQk=
+=SwZs
+-----END PGP SIGNATURE-----
+
+--------------2W0maZ7GPqqOL0PvX4GiTb0p--
