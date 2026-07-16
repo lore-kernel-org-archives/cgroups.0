@@ -1,166 +1,227 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50AB03D88E0
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 15:28:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.172
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784215711; cv=pass; b=ICCtzWbmeLnvp41najHZS9EiYzn0MlZV0T4iQqKHmzRl8dGeNzUwFRBGiiT4NJVoXDV1peuyRz1QEz/47kwY1G9XeyEIjxEoEY6cjGwhF4WKR+VTH0Xw6u1y1/v/KSH7BjUn6mgmFvPLtsymS0JNeN34qQbwhegypB1ksW9jflA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784215711; c=relaxed/simple;
-	bh=QaFVWLhw7Xm2uibhg3GR9DuxtrmKHWEyAWIfWdAUY+s=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=H6m6fCVz4BdgKx0iHEtjiFpVCdRUPQWRALo2HUtX+NtsvU8BalJki7TS+AyWv3+54LCg+ZihakZVrTyrTEgGIUMEEPXhAmATNCDYioTWQV4JdXIO31fQVECRk+jXGnn6l4cTyWtqFQRQSTL6bhNzGFALY2HzPnFxje98UfZcdYw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ZSYh5rmn; arc=pass smtp.client-ip=209.85.160.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79816296BC8
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 15:30:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784215805; cv=none; b=a/ACYBrIrXXa5rglW3Elr6jg4HXmL7quj84AHEyS9zdiBobSgFgCTvPpuKMAduyL3DXdGFCYBWEN90bfhjjT6sQq3TP+RkTUD02kK/K610jB+n6ZznePfex4HoKG0VdTqP9N6HJ21fWEXk38YPtzZDXBd2frToIIG/l8e54QQl8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784215805; c=relaxed/simple;
+	bh=8iV2D4LQwIFxirt282BnezgO4AAv0z0AJbV3lY+KhRE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=rMrljBTygkLVhKGMHansI5eju1xNkOmuqLuLrLXVNfYUykuHSC9lE00aHtKzJDIDXMop6ciZlpqJE/qjmYx1V7cKnfDciZMN5eA3VnybWseABl6mVvfdJa5k7E/KhDk2YnE5dKugB/vR2ejusc8f7sVIPhhF26JmnRgMmUmVLHI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ahs+VdUf; arc=none smtp.client-ip=209.85.160.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZSYh5rmn"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-51c15a5b265so31511cf.0
-        for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 08:28:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784215709; cv=none;
-        d=google.com; s=arc-20260327;
-        b=UXcWGHnN+2Lpaaa1OXz9KayI6VHmTicWgawAtmQA29T8gczxao+tsb+BHY6CuKLLaK
-         3ykugtdOSDICXAYmXIkuY8drX0AmM1VAFKnLt4oxooOmFrHr0Xfi+hbt2nsVTT4yclCH
-         S2j+SjLzLbEk68vlnyLWIfDU8WioImVZVrtErsIA8tMx/ME//Drp0PkfdPLO8lVguFmh
-         cks9iwIRZerhPvEdAALVjLL3GwY8NRCbTk6Z+YhEWGjOL4KuK9cY5Kz9WO8W5v4xnjTl
-         f3FmgP0KN5U/fby0rYCId/beBF+NxTroO1nMCg33NqeS3Qds0NsbGPMp6xQLs65kqUxo
-         xYRg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9MTmsp7P9R6NbE0jd3nKRTx/bls+aSkmj63tjPdkby8=;
-        fh=HV4bX73V6ggE9Py+QROCXUO4pVJb2wh8UIB/EKhZDVY=;
-        b=hfX4QJVakeZlkamNLFzTPwoTNHul6f6Pf70IqOHtB3bzsnZW4ryDe60qqi66YcnuD6
-         vYBZEm94mNNcyNX3CHPHUbIwOSO8giKAx2uYN1o7qJF1AzaKS7DWP1DP2S03oJt06on9
-         aSfw7hq3ZLdbnuwyTL/A4tsapRh4ihiK0rBHSS/wh6ptM1VR7D2MggPo8KAw/rfosYun
-         bB9qgeJ82VBqbnb8NzGjQ+X4j2ge7gNOi+genmWMgUvrWnPfBbp5205gKS+x048W1v60
-         NbRnbEMqKleHHgEMBpFxfGakUn5PhVMhdcckQMWmwme440h2mv7xiJlXG9zezTsXl90I
-         /Eew==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ahs+VdUf"
+Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-4471b489240so2292890fac.2
+        for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 08:30:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784215709; x=1784820509; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9MTmsp7P9R6NbE0jd3nKRTx/bls+aSkmj63tjPdkby8=;
-        b=ZSYh5rmnzmUz8+uBzOZYmUmOZffEGoaJxAzweuJoWmzvaxvF3yLuA+kBSLFuKfQqLb
-         2Ij21SXdJXdFGADI2Hr9hXLcEpiJDSiT/KxDJPgI2DcvC4/2XwR0W6ZLvFte13q/ZsGs
-         3RBEcIJhIUrbsk55HehToUz5seKsKUtdeFdNk5x834VP9dAu4qSraCTDr0plWv9Iy4yr
-         XN/alhnFgrBoG8h4hhulk/yO02upXB4/k2ypzf7hyj+5YNTj88IYkWch+GO1/K/CIofv
-         cbHtugI0oML2PwXyzPpAfRPloY/PT6ot+Gs/DMa7VurEf4lHw0JNBvftuGkP8myoqhTz
-         bwVg==
+        d=gmail.com; s=20251104; t=1784215802; x=1784820602; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=HOgCZnnw3NvbVl3CM6pSt350xIpvqCivFKqtyhSvLeI=;
+        b=ahs+VdUfBhiSwoi7GOTt8/5V59rKcUZaznsBXc35FJWqnBc+AnWexEXsxgBEMpKIri
+         PkDjLEKCHObH/2CceRkgWrQFXNAeZ+dt4bfH0v58W6wRkFD1HA1liCWiSvpXecX/JDiq
+         LweQ26C/0caRVG17NGQGiYSpc+wwmKCeYq6tuUpRPqC1TFqqa9saA2vMxEQfSnXi26Fn
+         6OsHrp+8/WF/cjdhbG3gYt5Jo28D8OQGuslsaZFWdtEbSz6GSuX4NE52ACS+o/mIJB7H
+         MCUwbcvjbff9zNP67f2wcrVw58fXw8Do0K63xeX47j4eIxYyIdIAi+MS9Ksb8VMAdRNa
+         JB4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784215709; x=1784820509;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9MTmsp7P9R6NbE0jd3nKRTx/bls+aSkmj63tjPdkby8=;
-        b=ssFYcS+IboMZmHGRVTvCjTbqSRZ20V/gctLaQt/sJEBJ0l6jAdz66WTnPOAdS1BaWm
-         LensdNbLfnhCdIq7YKCFg5sXkQ00/TBDCDuqr5FWJr5Y8du7UpFw8EBwp+bHl03gOaWu
-         uYEa6g9rQkzuME8N15WkZnClV2VzLR7pbZmH/bHDztl4cRMVjZ2IYQ7PXSJaHQSV6HXT
-         n+obOr2fHQpfFfXF0zSPf9E165L3N7sFo1F7edxDZTH1c54rgrLtZ7G6GeIW+k/W6iCe
-         kt9V1B0zau2NCrAHqNXYdfheRUDp1+RWw+lqY7iYOAAC8N5H3dswWZujN+CcpQjax0xT
-         vT3Q==
-X-Forwarded-Encrypted: i=1; AHgh+RpZ2NMBwYLQ/x+GcCibp4g38hcz/TQ7QR7WKWT4R/kfDr4/f57o1K/RF8DYToeZWQcTQHHocEjA@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywbp2OlTLus0x8UpPENFdXCbSDRV6ewngNnrht3xeiGyhrTqSzG
-	RgjQZ8klCHHaHVwwj066oSxhPAzpXfOVzRP9Y7oi+0KPZYAARBxQCrdkcP7JsMyTPgwyybZiiLn
-	WgI1U/UMLbPzXcNndQSkDnnq8IET1D8o3Nn+REVwB
-X-Gm-Gg: AfdE7cl/x5wAzVHomhyi8n3UNYwPnMgAD80vgByDrqBpS30vdhwjbVYHML3YMc6GGhx
-	XhxVhnhcIsaMyN6OXUvfCGmMCRWcDVAAz0Yz26+q3aztH0wYdO8X4n/6AH8zKixFDbskGzYVZ+f
-	o8LKP8Ov6W3fpzomw5dEas1eUxNeB6pAElc7OxaiI9Eib/6nE/z65UHOWcF0eNyZEXc7PHr0A6y
-	UJTjMSc2CPjMCbeIRjSwx7/KOY9nxkakAcLUabKPjg3Y9QYaG3Ygi/1A1cBnkgyNvT3PCCSfWaj
-	Dt/HkZ/YdtXneq0=
-X-Received: by 2002:a05:622a:2618:b0:51c:e80:9e88 with SMTP id
- d75a77b69052e-51f7f3ca787mr11136661cf.16.1784215708609; Thu, 16 Jul 2026
- 08:28:28 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1784215802; x=1784820602;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=HOgCZnnw3NvbVl3CM6pSt350xIpvqCivFKqtyhSvLeI=;
+        b=DwknvdS/17Ply4hqK+pONScG+qTOZ7vgPquo6cL4SaI+b2dQcSkh/1y/bUR2nbdxsj
+         Podhf5cHzf5K4Hjr3BzPxKc4FzMH8XzZ8n/Gx7sIwZnyxupuF2kir8nettkgQlHFhfcv
+         t82h0IR7WNRJfvZTkhB/VNSqTvXZsS69yM6Q1MgyB7HXhF6Fna44Pk06KmO4aQhkoG6G
+         U4vPvJwqPv7I4DrP0va39WePjTZ1Eadlmy65dC1tW5thzlfvfpkyJqPNCPhfzAl2CQcd
+         SOz+4AyIYvfCvr577GJOnvtPB3ynPGY7+O6kdBpAS8G0bv9GUqtwkJmDF22uRFxwVbtb
+         NR9Q==
+X-Forwarded-Encrypted: i=1; AHgh+Rr5fJ4Nv7OEObFy4/py8DZp7BgzOCzyY/tDJj789PBicUszmwLF1pV4LM9qHn3veleocVs+0ELe@vger.kernel.org
+X-Gm-Message-State: AOJu0YyvLWIyvLBqoGXuhI4cEtMkm8ghGUHw1BfMJwm+7kVbSEe8UBfv
+	D082XTBo9sO4ZGKdwnZLKopJMTIjfQF/w7LxXa99tJjKw47Iuc44bqJi
+X-Gm-Gg: AfdE7cnXYpDJeXSRPkGsvHVUdmS5pDWJu+D5JY3BM936RzsD0yN7U05NagQsX7HNr6Q
+	SUX0Mj9uS6XSQjb6XHGQD/xwJnyznqApEcjoyuA9CN1QTehb2pLtsFDf/AwJizlYj8TPhBMbPKg
+	W4S+x1ED9mHQCmfTZ3kxnACNYSaMoiKXf82ys80k9aMNxJYxUQGeL1b4p5UV3tETDNINyAfAGhC
+	IFnMdIzFrEEUVSnAReMjCdqS0eDjdqbn8MJ09MNsMOhIpSLz6aCK1ai21CF8s61e5MzQCxGbqZQ
+	+gxdkTHikq8Bq+ZHqqudStnUhnppkj4iVifu1ErNMxLw76OOp3X+qYewylyQUk2Bd8kJrZelvN7
+	hLIubzQLwXZSgDnpWQKZWg8hz7gBdd5yvO+6cq776KKvixQyrrCHC2Q6RsZpxHYG9jeM9xdGR4C
+	SZk2OklyJl0uPtg8q1uV3X6tWOfZC3tws=
+X-Received: by 2002:a05:6808:15a5:b0:495:e0a9:8c0 with SMTP id 5614622812f47-4a495e79355mr5583029b6e.11.1784215801297;
+        Thu, 16 Jul 2026 08:30:01 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:3::])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4a1ad4ac92csm18484759b6e.5.2026.07.16.08.30.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Jul 2026 08:30:00 -0700 (PDT)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: "David Hildenbrand (Arm)" <david@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chris Li <chrisl@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Muchun Song <muchun.song@linux.dev>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Baoquan He <bhe@redhat.com>,
+	Barry Song <baohua@kernel.org>,
+	Youngjun Park <youngjun.park@lge.com>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>,
+	Wei Xu <weixugc@google.com>,
+	Kaiyang Zhao <kaiyang2@cs.cmu.edu>,
+	David Rientjes <rientjes@google.com>,
+	Yiannis Nikolakopoulos <yiannis@zptcorp.com>,
+	"Rao, Bharata Bhasker" <bharata@amd.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [RFC PATCH 0/9 v2] mm/memcontrol: Make memory cgroup limits tier-aware
+Date: Thu, 16 Jul 2026 08:29:58 -0700
+Message-ID: <20260716152959.3524430-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <a8a0e540-414b-4174-a9f9-2c501fb46130@kernel.org>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <20260715-b4-objext_split-v1-8-9a49c4ccf4c3@kernel.org> <CAJuCfpGq3Yv8Dq=2mPgR5LGC=40VSNTA6mg4BjTRE0ADXMZkbg@mail.gmail.com>
- <01aa6803-e6a7-4172-94ef-043914e2f794@kernel.org>
-In-Reply-To: <01aa6803-e6a7-4172-94ef-043914e2f794@kernel.org>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Thu, 16 Jul 2026 08:28:17 -0700
-X-Gm-Features: AUfX_mxXFm8bI5YPQvcEPkQ_QsAl3HLbXj-fL32BvT9M-JPrvDl12nUblHbqJTo
-Message-ID: <CAJuCfpGDzsoTp0Byg5QzeiOOJKoPWNXYcADOXC4hieHLNu1HQg@mail.gmail.com>
-Subject: Re: [PATCH RFC 08/12] mm/slab: change struct slabobj_ext to a union
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
-	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jul 16, 2026 at 7:43=E2=80=AFAM Vlastimil Babka (SUSE)
-<vbabka@kernel.org> wrote:
->
-> On 7/16/26 06:11, Suren Baghdasaryan wrote:
-> > On Wed, Jul 15, 2026 at 3:11=E2=80=AFAM Vlastimil Babka (SUSE)
-> > <vbabka@kernel.org> wrote:
-> >> No functional change intended, the layout is still effectively static.
+On Thu, 16 Jul 2026 15:11:30 +0200 "David Hildenbrand (Arm)" <david@kernel.org> wrote:
+
+> Sorry for the late reply :) Yes, hopefully talk to you in person next time!
+
+Hello David, no worries! Thank you for taking the time to consider this
+series again.
+
+> >> Assume you have a bigger hierarchy (HBP, DRAM, CXL), or assume you have multiple
+> >> NUMA nodes with a hierarchy each.
 > >>
-> >> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-> >
-> > This is much cleaner than what I was preparing. Nicely done!
-> >
-> > Reviewed-by: Suren Baghdasaryan <surenb@google.com>
->
-> Thanks!
->
-> >> ---
-> >>  mm/slab.h | 41 +++++++++++++++++++++++++++++++++--------
-> >>  mm/slub.c | 17 +++++++++--------
-> >>  2 files changed, 42 insertions(+), 16 deletions(-)
-> >>
-> >> diff --git a/mm/slab.h b/mm/slab.h
-> >> index 3ad9777ad600..359ab8caf61e 100644
-> >> --- a/mm/slab.h
-> >> +++ b/mm/slab.h
-> >> @@ -554,14 +554,34 @@ static inline bool need_kmalloc_no_objext(void)
-> >>   * if MEMCG_DATA_OBJEXTS is set.
-> >>   */
-> >>  struct slabobj_ext {
-> >
-> > Perhaps we should add a comment here stating that every element of
-> > this union should be pointer-sized?
-> >
->
-> OK, how about this?
->
-> --- a/mm/slab.h
-> +++ b/mm/slab.h
-> @@ -550,10 +550,14 @@ static inline bool need_kmalloc_no_objext(void)
->  }
->
->  /*
-> - * Extended information for slab objects stored as an array in page->mem=
-cg_data
-> - * if MEMCG_DATA_OBJEXTS is set.
-> + * Extended information for slab objects stored as a pointer to an array=
- in
-> + * slab->obj_exts (aliasing page->memcg_data) if MEMCG_DATA_OBJEXTS is s=
-et.
->   */
->  struct slabobj_ext {
-> +       /*
-> +        * All elements of the union should be pointer-sized to avoid mem=
-ory
-> +        * waste
-> +        */
+> >> Your proposal doesn't really seem to be very versatile, or am I wrong?
+> > 
+> > Let me address these comments separately!
+> > 
+> > First, for the multi-numa-per-tier case, I think this is already pretty well
+> > handled by my series. Once we realize that a memcg is consuming too much memory
+> > from a tier, we trigger reclaim from that memcg via
+> > try_to_free_mem_cgroup_pages,
+> > which as far as I can tell already handles the multi-numa per memcg case.
+> > Other than restricting the scan_control's nodemask to target the nodes
+> > from that tier, I don't think there's anything else to be done.
+> 
+> I am not really sure about the "toptier" notion, in particular if your memory
+> hierarchy is not static.
+> 
+> Imagine that you have only DRAM in your system. Then you hotplug some slow CXL
+> memory. The you hotplug some HBM CXL memory.
+> 
+> The meanting of "toptier" changes, which is rather confusing to me.
 
-Perfect. Thank you!
+While I do agree with the idea that tiers in general are not stable, I think
+that for the most part the "toptier" node is generally stable through hotplugging
+nodes. In your example above, the DRAM will always be the toptier node, right?
+In any case, I think if we are to support 3+ tiers I have to change the
+semantics to distinguish between higher and lower tiers instead to be
+generic anyways, so I will change the wording to reflect this!
 
->         union {
->  #ifdef CONFIG_MEMCG
->                 struct obj_cgroup *_objcg;
->
+> > Next for the 3+ tier case, I think this is a lot more scalable than it seems
+> > at first. This series depends on another RFC that I sent out [1],
+> > which pushes the concept of "stock" from memcg to page_counter, which means
+> > that it is more scalable to just add more page counters to each memcg.
+> > This means that each tier would just need another page_counter to track its
+> > memory usage, and we trigger selective reclaim on the tier that is being
+> > targeted via the scan control nodemask we introduce in this series.
+> > 
+> > At my talk in LSFMMBPF, Usama noted that the user-visible API should probably
+> > remain the same, no matter what. The way I have currently established the
+> > memcg files aren't really scalable, so Usama suggested turning the
+> > "memory.toptier_XXX" sysfs files to "memory.tiered_XXX", which would include
+> > a newline-separated / space-separated list of per-tier limits. Something like:
+> > 
+> > $ cat memory.tiered_max
+> > tier_0 20971520
+> > tier_1 31457280
+> > ...
+> 
+> memcgs are currently not NUMA aware, so this could be one possible direction.
+> 
+> But is "tier" the right abstraction? I really don't know.
+
+From my Pov after working on this for a while, I think tiering is the grouping
+that makes the most sense. It is my understanding that memory present in
+different nodes, but belonging to the same memcg are fungible; memory from 
+one node isn't more or less scarce than the other node.
+
+However, if the system has multiple tiers then the memory is no longer
+fungible, and memcgs will be competing for the same scarce resource. So I think
+it makes sense to limit how much a memcg can make.
+
+> Are tier numbers really what we want? I don't know.
+
+If this doesn't make sense, I can change this to just tiers 0-3 (MAX_NR_TIERS
+is currently hardcoded to 4 across all architectures).
+
+> We'd really need some feedback from memcg folks.
+
+That would really be awesome : -)
+
+> > So we have a way to make both the user-facing side stable, and the internals
+> > also more scalable.
+> > 
+> > With that said, I've opted to leave the internals to 2 tiers for now -- I think
+> > it is not too late to add the generalization series when we start seeing
+> > 3+ tier systems out there in the wild. My goal was to introduce tieredness,
+> > and we can work towards generalization in a future work.
+> > 
+> > On that note, it seems like in general mm is aware of 3+ tiers, but most of the
+> > existing work revolves around distinguishing between toptier/everything else.
+> > I got this impression from reading mm/memory-tiers.c -- but please feel free
+> > to correct me if you feel like I have the wrong idea here : -)
+> 
+> I assume you're right, but it's something different if we end up providing a
+> proper memcg API towards the users.
+> 
+> > So perhaps the generalization work would benefit from first introducing more
+> > general tier awareness (not just toptier vs. rest) in memory-tiers.c.
+> > 
+> > What do you think? Does this approach of introducing toptier restriction for
+> > now, and then generalizing in future work make sense to you?
+> 
+> I'd suspect that we'd want to support multiple tiers from day one -- especially
+> get the interfaces right.
+
+So I think the interface that I have at the moment (in the v3) is stable across
+any number of memory tiers. My idea was to land something with a stable API
+and then as future work support 3+ tiers. But if it makes more sense to land
+the scalable tiered memcg work as the first iteration then I can work on that
+too.
+
+I've been working on v3 for a while, I will send it up sometime soon so that
+I can start the discussion on this again. I really want to discuss with memcg
+maintianers and migration maintainers to get some confirmation on whether
+the series's direction looks good and whether they are happy with my
+vision for the series.
+
+And then in v4, I will add the scalable tiers.
+
+How does that sound? : -) Again, thank you for coming back to this.
+It means a lot!
+Joshua
