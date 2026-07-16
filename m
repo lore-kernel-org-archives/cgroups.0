@@ -1,183 +1,200 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43D9835F8B9;
-	Thu, 16 Jul 2026 09:11:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6424392828
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 11:17:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784193082; cv=none; b=pSohBush+9T67N/t8EhXG1/z3kmjiIugEX7Hny4JvjtDmG5CAe+jBF104imJ4rnjeAkioAbV8AdTKzBokdvZVKNPiVmfwiPOT0fls6Ex7bpOH/XWxxl4RwLa0+hn7HVij6SiMovneG2G9aTgM68h/pYDk3mXQG6MAQ/Tc7NQL/4=
+	t=1784200652; cv=none; b=jBm/d7fNf1evjcHyEc02bMnL3d+a0/Z8o1OwvQ/rdWhP6Bu9CpJvagh6F1eP3+FsWNpsfyD2VNk7KLZw+rhGrhuElLQzHVBQZiL1deyF5hwR7SAhqLhQ6dm7yLZFaq+/eu3Bt4lRoh/O1aVVQyaUsHhk5jML/lrtHYKE0Ecagls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784193082; c=relaxed/simple;
-	bh=KPce9QFMgAIwe+cwCpgtpgfsU9rtNqF4p5MVTIBLk84=;
+	s=arc-20240116; t=1784200652; c=relaxed/simple;
+	bh=7kl6bwyaVgSrLTnoWraAKy7A1ORdxO4LmRRsCznSOU4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WWVYLcFFXMBnp6aWR+wTtrcTdnyyHBK+R0IU7DstKYb07pAsm6JZHM8bMJ5UWySThBSbovDRYDEy4b7xCT/IMUxH4urJTDEqyszBQdZkhab2aMu4F1jUkTDmh/IAEnmKlEtuIDr/ct1I00cwYDNaioEo111myA0HimW8lyJ+SXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z2vbq3wO; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=q5AJS6r+tRa3TJYYOW0xHKhDeq0Kls91gOgDHiYLztmiSfR75PDuLrXurKK88P50Fo2sAEpyFy2nu+yXKovHPS0xzvPoZCcH5OKpsB/88sGihF5mMA2hzQQgiJxNqCLZ0VLfq1b15vnoT9dfVcQTCtjkMM7mLe/qB+rMDVZsF2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iw2ftw/N; arc=none smtp.client-ip=91.218.175.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z2vbq3wO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45C981F000E9;
-	Thu, 16 Jul 2026 09:11:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784193071;
-	bh=iKN5NO81HJ06ZzzJkfJP7JqXMoZORuMoTwUI7uq6cgs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Z2vbq3wOpl76S0pNL0BrryzAjWr95MujoIU0p1D4TZj1lBt/ZIgS18pgjo/Z5r/jV
-	 wTpZvwRRRrReEfLqcNc+TMBxpomB+f7LPVQuAi/mzYUmVg5NuiwcSo14a5Z0ZVF9aC
-	 CkG2S1iU/K3K8q1xWNrudiqqdEgb7KCiTkK4jce5pLs0IQtn5s6XULuzZ0jhdnlks7
-	 WgzMFWZOy3kzi6l6gSAHAYHHFGoQ4jAGglmqi3ABDTBVHDiG4FaGlvHFA5L4tUFMUt
-	 0ehqga7FYirHu/3EtF3fXQ5UhHrbWXs9kOYAGwXUy+1lpJw4+cjDzWPkC6z0g/3+rf
-	 5dKtDD8PK04vA==
-Message-ID: <ab9782bf-d3dd-4cb5-ae66-127b3a16330b@kernel.org>
-Date: Thu, 16 Jul 2026 11:11:06 +0200
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iw2ftw/N"
+Message-ID: <65305712-8598-46aa-822b-914298277b64@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784200638;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hTG6hGzVl0dWfit8w/MB62E4ZbeaEHmlylI6bepXRC8=;
+	b=iw2ftw/NK2C6aLDREmrqRB3OjKsp0m0NcDAUexkCvaS+1CoWYFdLyp3g94WH+U7yxEgSiM
+	lGZoR+GtGUfnBlAM39TYcBixAEmtd9mi5XewkykQWHEgkw7LVMayH0akxk3gu2SaXH9Sp5
+	w0xjNbEHkRdLLMISoubCAbwZcP3ZMYQ=
+Date: Thu, 16 Jul 2026 19:17:03 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 01/12] mm/slab: skip kfence objects in allocation
- profiling
-Content-Language: en-US
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
+Subject: Re: [PATCH v2 2/2] mm: vmscan: fix node reclaim ignoring swappiness
+ parameter
+To: Qi Zheng <qi.zheng@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
  Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <20260715-b4-objext_split-v1-1-9a49c4ccf4c3@kernel.org>
- <CAJuCfpHgMwM7SK-sanGpEyCxCi-T+gDqFJHnV_AMt=S-x5oynw@mail.gmail.com>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <CAJuCfpHgMwM7SK-sanGpEyCxCi-T+gDqFJHnV_AMt=S-x5oynw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+ Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>
+Cc: Muchun Song <muchun.song@linux.dev>,
+ Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
+ Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
+ Youngjun Park <youngjun.park@lge.com>, David Hildenbrand <david@kernel.org>,
+ Lorenzo Stoakes <ljs@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Davidlohr Bueso <dave@stgolabs.net>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Ridong Chen <chenridong@xiaomi.com>, stable@vger.kernel.org
+References: <20260716031729.1064007-1-ridong.chen@linux.dev>
+ <20260716031729.1064007-3-ridong.chen@linux.dev>
+ <7ddf3eee-5fe2-45f7-8614-c8936a039e04@linux.dev>
+ <a5eb5433-cf6c-40ee-b14e-128a8bcc85bf@linux.dev>
+ <94a489d5-8b02-46e6-92d2-ccb85f556769@linux.dev>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <94a489d5-8b02-46e6-92d2-ccb85f556769@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On 7/15/26 18:02, Suren Baghdasaryan wrote:
-> On Wed, Jul 15, 2026 at 3:10 AM Vlastimil Babka (SUSE)
-> <vbabka@kernel.org> wrote:
->>
->> struct kfence_metadata only has obj_exts with CONFIG_MEMCG.
+
+
+On 7/16/2026 4:42 PM, Qi Zheng wrote:
 > 
-> I don't quite understand this statement. obj_exts are allocated when
-> either CONFIG_MEMCG or CONFIG_MEM_ALLOC_PROFILING is enabled.
-
-See in mm/kfence/kfence.h
-
-struct kfence_metadata {
-...
-#ifdef CONFIG_MEMCG
-        struct slabobj_ext obj_exts;
-#endif
-...
-
-then in mm/kfence/core.c kfence_init_pool()
-
-#ifdef CONFIG_MEMCG
-                struct slab *slab = page_slab(page);
-                slab->obj_exts = (unsigned long)&kfence_metadata_init[i / 2 - 1].obj_exts |
-                                 MEMCG_DATA_OBJEXTS;
-#endif
-
-So the slab kfence fakes only has this pre-inited obj_exts
-with CONFIG_MEMCG.
-
-What happens if we run memalloc profiling without MEMCG and this
-fake slab doesn't have a pre-assigned obj_exts? I guess
-__alloc_tagging_slab_alloc_hook() will allocate it via
-prepare_slab_obj_exts_hook().
-
-But it's something that was done consciously and probably
-just accidentally works.
-
->> If it's
->> enabled, it does also work for allocation profiling, but there's little
->> value recording tags for KFENCE objects.
 > 
-> Unless we are leaking them, right?
-
-Well if there are leaks in a particular callsite, we should see that from all
-the allocations that don't end up in kfence (as kfence allocations are rare).
-So we are very unlikely to miss a leak due to this.
-
->> Furthermore it would complicate
->> the upcoming changes, so just skip them in the slab hooks.
+> On 7/16/26 4:21 PM, Ridong Chen wrote:
+>>
+>>
+>> On 7/16/2026 11:58 AM, Qi Zheng wrote:
+>>> Hi Ridong,
+>>>
+>>> On 7/16/26 11:17 AM, Ridong wrote:
+>>>> From: Ridong Chen <chenridong@xiaomi.com>
+>>>>
+>>>> sc_swappiness() had two separate definitions depending on
+>>>> CONFIG_MEMCG. The !CONFIG_MEMCG variant simply returned
+>>>> vm_swappiness, ignoring the proactive_swappiness value passed
+>>>> through scan_control. This caused the swappiness parameter
+>>>> written to /sys/devices/system/node/nodeX/reclaim to have no
+>>>> effect when CONFIG_MEMCG is disabled.
+>>>>
+>>>> Fix this by consolidating sc_swappiness() into a single definition
+>>>> that checks sc->proactive_swappiness first, then falls back to
+>>>> mem_cgroup_swappiness() which already handles both CONFIG_MEMCG
+>>>> and !CONFIG_MEMCG.
+>>>>
+>>>> Before fix (swappiness=max ignored, mostly file pages reclaimed):
+>>>>
+>>>>      # cat /proc/sys/vm/swappiness
+>>>>      60
+>>>>      # cat /proc/vmstat | grep pgsteal
+>>>>      pgsteal_kswapd 0
+>>>>      pgsteal_direct 0
+>>>>      pgsteal_khugepaged 0
+>>>>      pgsteal_proactive 1840
+>>>>      pgsteal_anon 25
+>>>>      pgsteal_file 1815
+>>>>      # echo "64M swappiness=max" > /sys/devices/system/node/node0/ 
+>>>> reclaim
+>>>>      # cat /proc/vmstat | grep pgsteal
+>>>>      pgsteal_kswapd 0
+>>>>      pgsteal_direct 0
+>>>>      pgsteal_khugepaged 0
+>>>>      pgsteal_proactive 18013
+>>>>      pgsteal_anon 337
+>>>>      pgsteal_file 17676
+>>>>
+>>>> After fix (swappiness=max honored, anon pages reclaimed as expected):
+>>>>
+>>>
+>>> By the way, in get_scan_count(), it seems we still reclaim file pages
+>>> without swap space, even if swappiness=max (SWAPPINESS_ANON_ONLY) is
+>>> set.
+>>>
+>>> This behavior appears to contradict the semantics of
+>>> SWAPPINESS_ANON_ONLY, which probably needs a fix as well.
+>>>
+>> Thanks, Qi.
+>>
+>> You're right. Currently, when can_reclaim_anon_pages() returns false, 
+>> the reclaim logic falls back to scanning file folios even if 
+>> swappiness == SWAPPINESS_ANON_ONLY is set:
+>>
+>> ```
+>> static void get_scan_count(struct lruvec *lruvec, struct scan_control 
+>> *sc,
+>>                 unsigned long *nr)
+>> {
+>>      ....
+>>      /* If we have no swap space, do not bother scanning anon folios. */
+>>      if (!sc->may_swap || !can_reclaim_anon_pages(memcg, pgdat- 
+>> >node_id, sc)) {
+>>          scan_balance = SCAN_FILE;
+>>          goto out;
+>>      }
+>>
+>>      ...
+>>      /* Proactive reclaim initiated by userspace for anonymous memory 
+>> only */
+>>      if (swappiness == SWAPPINESS_ANON_ONLY) {
+>>          WARN_ON_ONCE(!sc->proactive);
+>>          scan_balance = SCAN_ANON;
+>>          goto out;
+>>      }
+>>      ...
+>> }
+>> ```
+>>
+>> The !can_reclaim_anon_pages() check above takes precedence over the 
+>> SWAPPINESS_ANON_ONLY branch, making the latter effectively unreachable 
+>> when anonymous pages are deemed non-reclaimable.
+>>
+>> To fix this, could we move the SWAPPINESS_ANON_ONLY check up before 
+>> the can_reclaim_anon_pages() check?
+>>
+>> ```
+>> static void get_scan_count(struct lruvec *lruvec, struct scan_control 
+>> *sc,
+>>                 unsigned long *nr)
+>> {
+>>      ...
+>>      /* Proactive reclaim initiated by userspace for anonymous memory 
+>> only */
+>>      if (swappiness == SWAPPINESS_ANON_ONLY) {
+>>          WARN_ON_ONCE(!sc->proactive);
+>>          scan_balance = SCAN_ANON;
+>>          goto out;
 > 
-> Ok, I can understand that. If we do this, we should document that
-> kfence objects are no longer tracked.
+> For SWAPPINESS_ANON_ONLY + !can_reclaim_anon_pages, perhaps we should
+> just return directly instead of goto out, since no pages can be
+> reclaimed in this situation.
 > 
+
+Much better.
+Would you mind if I send a separate patch to fix this issue?
+
+> 
+>>      }
+>>      ....
+>>      /* If we have no swap space, do not bother scanning anon folios. */
+>>      if (!sc->may_swap || !can_reclaim_anon_pages(memcg, pgdat- 
+>> >node_id, sc)) {
+>>          scan_balance = SCAN_FILE;
+>>          goto out;
+>>      }
 >>
->> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
->> ---
->>  mm/slub.c | 6 ++++++
->>  1 file changed, 6 insertions(+)
+>>      ...
+>> }
+>> ```
 >>
->> diff --git a/mm/slub.c b/mm/slub.c
->> index 0337e60db5ac..a4be70d080fb 100644
->> --- a/mm/slub.c
->> +++ b/mm/slub.c
->> @@ -2352,6 +2352,9 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags,
->>         if (alloc_flags & SLAB_ALLOC_NO_RECURSE)
->>                 return;
->>
->> +       if (is_kfence_address(object))
->> +               return;
->> +
->>         slab = virt_to_slab(object);
->>         obj_exts = prepare_slab_obj_exts_hook(s, slab, flags, alloc_flags, object);
->>         /*
->> @@ -2399,6 +2402,9 @@ __alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p
->>         for (i = 0; i < objects; i++) {
->>                 unsigned int off = obj_to_index(s, slab, p[i]);
->>
->> +               if (is_kfence_address(p[i]))
->> +                       continue;
->> +
->>                 alloc_tag_sub(&slab_obj_ext(slab, obj_exts, off)->ref, s->size);
->>         }
->>         put_slab_obj_exts(obj_exts);
->>
->> --
->> 2.55.0
->>
+> 
+
+-- 
+Best regards
+Ridong
 
