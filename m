@@ -1,67 +1,67 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B6293B9608
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 11:53:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 224D73CC31F
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 12:19:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784202838; cv=none; b=gGii8i/zjO0EaOYNWexWxcXL6wrhpoh0vSvfWAcA7V6dxJTO6t5HNioNQ7sJOvai6wr3nDdlYd/tO91njJGYyDHTh/pE48BbbG18BIB8gNCRCqBKccZVU8LSfN15OVhIxHc3AZapbYfoP+y2klQi+7CbnvTmUJf/hBFJC5bjNM4=
+	t=1784204395; cv=none; b=maBa9vmoFsRs3YGOHMvvHp6bwGUrXqCnDWJv3OyVq+SB3rNFVy0e/ZuCtmPQnPYT/opcWOWrjhWpp/C0vJalUZMyj1We0hCipNBPD0cYk4vy0g0U4xu9hzX2R0/zbcd6xCi9Gtql4IBQHaHS6ByaTHmCblykS9E7VFc+PFFvvUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784202838; c=relaxed/simple;
-	bh=sA0JGHy38xSnBYF4jz8RF27ZNqKo9oO58OEvqtrd2c8=;
+	s=arc-20240116; t=1784204395; c=relaxed/simple;
+	bh=PlzjWzgDDt6tc68NVLye65j+dlo1TtiJV4HmRQ9VJao=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ijUpUGjf1g4Be3y35tK1qOuHHqIpy83MExrIcQRLlPbCOPLdnqgwdX50gEuik2ziGK2VJ2emUoM46rFqSM9NmXJ/LiAJM6yCabxBUTPjCmotUdxOTNUnfY1JOFGXc99NVqSNBblyeoDBXQmaA+RNgBY//AF+RbI+9BQCgx3act8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rF3m7+Ad; arc=none smtp.client-ip=209.85.216.41
+	 In-Reply-To:Content-Type; b=Yr58uNplbO+yxwCKmjw46EDRQx8htBUBNIRzgJRz3oRuUrhjj1oKT8oiB1n9ZA4ngF13fbEY2lURmIX7Cu7B5t4YpcY3gN9aRu0/uv02kN9vvkPCdZ2FUjCT9q34TxESp3NSYpTGTeLUtXZ/Z1zdJMIkJ82d0ikCmklgfXyxrZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Fmxbrowx; arc=none smtp.client-ip=209.85.210.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rF3m7+Ad"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-38e1a9d9105so2555326a91.1
-        for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 04:53:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fmxbrowx"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-8485ef63b68so6089145b3a.1
+        for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 05:19:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784202837; x=1784807637; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784204388; x=1784809188; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=xuC1bTJn9dIqIbUB4ODFYcZuHR4GDYh4l9W/45UELX0=;
-        b=rF3m7+Ad3l7lWd3q51i4hGpCWtRQxw2i22dWo7gmw60cggOOWELfRFf+aJ9qzdcdg+
-         DcCr9XSInoWCRXTWJvwHSKXu13FPUYdET17qJetznnP5XUXM0wHrGT8sYmiABD/Sd8aS
-         W0YwL8Wo9h90HVcOL61YwpacvGCzX8noY1xKm96IH71loaxjsgEA1XgK/DqVxh6fdrRU
-         GNGfbiMkfdGs6Clt3euFbaGVlfQRzCmc3H4gU0PAGg5tRoiZ942TPMl+m0z2J0cmFcxK
-         S8EOGjrHqy0u797SKjaiPk14OVeuZ31mbpLgsQ9mQof942iSWd1sK/IKQpfED0tT0bt0
-         xHnA==
+        bh=NNVBy8u+XjMaZM3z2LpdEO0iw/XOyiSV5aem9nLfAFg=;
+        b=Fmxbrowx2/fDb/VorBk4l4aoN61eN4Fqzn/DN3EMn3VhtVhD2SQtsMCfp5AXNOcG8B
+         +npZhUJdT8/Y6M7JBuirILsehyEAne3RcJH8dGnng8gfUF4nQrA+iAqjYBYA9uk3/FA1
+         wkIfkb43iXKnp5nlQYOfaNxwI2shfw/LASOPLqXSnno3bUwE+1aqFrXhLgpm6tEHZKm8
+         uCChY/06s4zX7gQ7PTbNsjQL2BYpnXjbuvBDFZE9OqJ3g2GypmzJ+oxk1PT5tIveNsJK
+         dhwf6x5oPtgzPMdVsOtGYTzUs+x55JqwKs8dSTZRUXoCjykgwsilH/EIImlt8X8Q0Mu8
+         1frw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784202837; x=1784807637;
+        d=1e100.net; s=20251104; t=1784204388; x=1784809188;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=xuC1bTJn9dIqIbUB4ODFYcZuHR4GDYh4l9W/45UELX0=;
-        b=pZvIX+GXvMaF7fk5MtQAVA+RJvtAvOGxsIRBqSzYI8QCjd8TZMuPV8JBZqmNna5ZYx
-         vuXLOT/4pX3TnM5FX3kLBdJqrIYrymLHqRU20jWI15AZHLocHDYjn1JBOCbRf9vEwX3A
-         sX2XO1wlTxx+XsMkvC7MBtzX4GePb89aN5EAtM5cG3sNIy5X5nA9RTs1ZpUe/niGzftd
-         tiao1/KQxc4pY9OsO//LWJxScEMRXpkICLADV2FNPYIYtRV9IyGBJfl9k3Fm0hRarw4H
-         QAqIG0JHX+BRywDlTHDvOSd4VgW6ZVIxdhAzWZYj0Kqgr7jlL5Tagm05MgMa47ldA2jf
-         nM2A==
-X-Gm-Message-State: AOJu0Yyg1G+IBhvQkdWvv1x9hNSXhGvL78DwwDYNuqJ/YDG2L+sXu2V9
-	9zxq8SKHFUyFl0VrnRVNbnESrYkUjkaM+TKIiDi8EKjWI40S+nm521E8bIylZVjlofU=
-X-Gm-Gg: AfdE7cm6DEwLvJBMracrdyz5AFtVb69tpkRL7bwnslb7CazTRvcNz5bstKRRyOQdJxO
-	caW5mbTwtpVDmX0FLP+beiWEiG5PMXD8kI3fx40tF11HvSt4jsgvR5VSHu/OAD2GTopsCKFQRV8
-	FE1QB2rzorubhZY+00Tp1BDt9PZ6uAdgmi8MF1nZ0Hjl4R4MfiGjUI20h5NQqdj5CkVJUlJLIrE
-	BnmqeHBAhhh8+9U5RvUgjxG8gWJkcsVbaUewJ3/bVvK+S4dvWWTr1n9L/XCB1t8v8KHbpMXZNrS
-	U2f/RKDU1JW/vU6AKHSnHjcCMHDAc4kbWVC4LCowTXhMRcQuCK1wygm3S2XdEGOkqi2tbKIOdG2
-	9O4JVNP8LcjwzIBorTnsB1nGmKqUclYvbdO/BshEb3kOWuYKDaiZqTGAnbUrEF1RAYx4ga2bV7y
-	249gHDhiiNngGVdy1sVKmMh8kfVB9u/ydMttLgwJ9bS5pG8VyuZRZdJu1wypWelKW3QO2Cn711w
-	+Xp
-X-Received: by 2002:a17:90b:4a04:b0:387:e0bb:5802 with SMTP id 98e67ed59e1d1-38e2a12332amr6513482a91.41.1784202836681;
-        Thu, 16 Jul 2026 04:53:56 -0700 (PDT)
-Received: from ?IPV6:2400:79e0:1203:64b0:e174:fd48:2cf7:d01e? ([2400:79e0:1203:64b0:e174:fd48:2cf7:d01e])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38e2a20a7b8sm1507273a91.1.2026.07.16.04.53.54
+        bh=NNVBy8u+XjMaZM3z2LpdEO0iw/XOyiSV5aem9nLfAFg=;
+        b=TuLjqeQYVCxvMu47ooK2lJ8A3GTp/ytXT8Vck1D0jbNXMjKqE7fmNW3t8YfCI2GmSv
+         0+g6D7i/jq486gJrc8oM4isZrXzHHzR2Li55mhLVHqfVsmmtgOOquMQs5/inmUEZvndH
+         UghzJrWmYpHTUw/bl6XswSFURM4OamaTycNYGdBS4q1ziT2zcEximgriekiw6C1guSqc
+         GX6wN1QGe3c/aY3riB56OT08KMXzmn3OY8oPLjlZ/7eIcF7z0WI3tSY34WcTXRx/Dw+e
+         qamvLiSeHTeQrT4LwIJAhIB9sFINmJT/gSpoNg9GA8xmYjWlzvhEBNREThzv1IFidov5
+         NN6w==
+X-Forwarded-Encrypted: i=1; AHgh+RpwQ6BvuREFtv7qlYKUPWhp4K4MproTUGXQDLNCoFBRjrakio4ezBGTe3nKuoOhFaaRjyRDp3Q2@vger.kernel.org
+X-Gm-Message-State: AOJu0YyxvpFkkNu6tBPh33X5H2z2yPT/VJRv4PDbqYnsb6PX6r4RRezi
+	6+j+KcHxwxvlZbDeRsSxazu1F0IKEArxWgGljWpO3uF/GHWrY/jSZ+bg
+X-Gm-Gg: AfdE7cl/4aAAdTts8NZihXqOeeYS75lmnLF6rZg2unypWzGsg99QGBjPpryO8w0IWHF
+	qesu13116ah6pPLlGrS3D5aA6WHn3iQIDEAdw3BnccIJU6oFj60PePDvNxmvRRDrZZWws8C0NlN
+	QI4CJ5+Wp75t3q0LxLuWctZpOoMT/KDhgniQTp0Msynq1m6I5NYAbXcCrh07D24WRUZ+SduiytN
+	xuD8uVYO7QqzaAkuUJUpENvtQFhpvTM9CJFthRq14zhKesdofjpy+FtWUCagR60bkZNeOXevk1z
+	6akxquVK2q60pAXkSfZ6Fswql9MCNVYPt4EpAqgiUDW+lkFdvHebXmbx8yLpc4ryJ7EUyKheRo+
+	BMiFPVz2cO/NBB+m974p4GhBn3VAknp345YdvbxPMW03A1FUiQ+Lwe1ITeA4HIr/I9RIRpXoyDM
+	jt4RPll8eZGK7IVJoHuQqB
+X-Received: by 2002:a05:6a21:e97:b0:3c0:9c18:d5a7 with SMTP id adf61e73a8af0-3c3572937c3mr13731565637.68.1784204387596;
+        Thu, 16 Jul 2026 05:19:47 -0700 (PDT)
+Received: from [192.168.0.23] ([210.10.76.89])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cb258eb8578sm1834476a12.3.2026.07.16.05.19.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Jul 2026 04:53:56 -0700 (PDT)
-Message-ID: <5d0fe256-c1c8-4cf5-a69c-a7e9afa08097@gmail.com>
-Date: Thu, 16 Jul 2026 19:53:52 +0800
+        Thu, 16 Jul 2026 05:19:47 -0700 (PDT)
+Message-ID: <676f4205-edef-4d2d-a7b1-8878d466bb7e@gmail.com>
+Date: Thu, 16 Jul 2026 20:19:43 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -69,71 +69,57 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] block/cgroup: Drop stale -EBUSY retry from
- blkg_conf_prep()
-To: Yang Xiuwei <yangxiuwei@kylinos.cn>, Tejun Heo <tj@kernel.org>,
- Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org
-References: <20260622085623.520209-1-yangxiuwei@kylinos.cn>
+Subject: Re: [PATCH] blk-cgroup: show io.stat numbers for discard-only cgroups
+To: Tao Cui <cui.tao@linux.dev>, axboe@kernel.dk
+Cc: tj@kernel.org, josef@toxicpanda.com, cgroups@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Tao Cui <cuitao@kylinos.cn>
+References: <20260714063302.1153238-1-cui.tao@linux.dev>
 Content-Language: en-US
 From: Tang Yizhou <tangyeechou@gmail.com>
-In-Reply-To: <20260622085623.520209-1-yangxiuwei@kylinos.cn>
+In-Reply-To: <20260714063302.1153238-1-cui.tao@linux.dev>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 22/6/26 4:56 pm, Yang Xiuwei wrote:
-> Since commit 8f4236d9008b ("block: remove QUEUE_FLAG_BYPASS and
-> ->bypass") nothing in the blkcg blkg lookup/creation path
-> returns -EBUSY anymore. blkg_conf_prep() nevertheless still
-> retries at fail_exit with msleep(10) and restart_syscall()
-> — logic added in 2012 when blk_queue_bypass() could
 
-Hi Xiuwei,
-
-Thanks for the cleanup.
-
-Instead of the vague "logic added in 2012", please mention the commit
-e56da7e28796 ("blkcg: don't allow or retain configuration of missing devices").
-
-> cause blkg lookup/creation to fail with -EBUSY while the queue was
-> temporarily bypassed during elevator changes.
+On 14/7/26 2:33 pm, Tao Cui wrote:
+> From: Tao Cui <cuitao@kylinos.cn>
 > 
-> Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
+> blkcg_print_one_stat() gates the rbytes/wbytes/rios/wios/dbytes/dios
+> output on
+> 
+>     if (rbytes || wbytes || rios || wios)
+> 
+> which omits the discard counters.  A cgroup that has issued only discards
+> (zero read and write counters) therefore prints an empty stat line and its
+> dbytes/dios are never surfaced, even though they are accounted correctly.
+> 
+> The guard predates the addition of discard stats and was never updated;
+> include dbytes/dios so discard-only cgroups are reported.
+> 
+> Fixes: 636620b66d5d ("blkcg: Track DISCARD statistics and output them in cgroup io.stat")
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 > ---
->  block/blk-cgroup.c | 10 ----------
->  1 file changed, 10 deletions(-)
+>  block/blk-cgroup.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index 3093c1c03902..259f2240e7df 100644
+> index a778aa9d2bb9..b324701cb05d 100644
 > --- a/block/blk-cgroup.c
 > +++ b/block/blk-cgroup.c
-> @@ -919,16 +919,6 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
->  	spin_unlock_irq(&q->queue_lock);
->  fail_exit:
->  	mutex_unlock(&q->blkcg_mutex);
-> -	/*
-> -	 * If queue was bypassing, we should retry.  Do so after a
-> -	 * short msleep().  It isn't strictly necessary but queue
-> -	 * can be bypassing for some time and it's always nice to
-> -	 * avoid busy looping.
-> -	 */
-> -	if (ret == -EBUSY) {
-> -		msleep(10);
+> @@ -1154,7 +1154,7 @@ static void blkcg_print_one_stat(struct blkcg_gq *blkg, struct seq_file *s)
+>  		dios = bis->cur.ios[BLKG_IOSTAT_DISCARD];
+>  	} while (u64_stats_fetch_retry(&bis->sync, seq));
+>  
+> -	if (rbytes || wbytes || rios || wios) {
+> +	if (rbytes || wbytes || rios || wios || dbytes || dios) {
+>  		seq_printf(s, "rbytes=%llu wbytes=%llu rios=%llu wios=%llu dbytes=%llu dios=%llu",
+>  			rbytes, wbytes, rios, wios,
+>  			dbytes, dios);
 
-Since msleep() is gone, we can also remove #include <linux/delay.h>.
-
-With the above addressed, feel free to add:
 Reviewed-by: Tang Yizhou <yizhou.tang@shopee.com>
 
 -- 
 Best Regards,
 Yi
-
-> -		ret = restart_syscall();
-> -	}
->  	return ret;
->  }
->  EXPORT_SYMBOL_GPL(blkg_conf_prep);
-
-
 
