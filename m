@@ -1,109 +1,170 @@
-Received: from mail-oa1-f45.google.com (mail-oa1-f45.google.com [209.85.160.45])
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE2053D5259
-	for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 22:34:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784154881; cv=none; b=HCB/S86I8I9rJyMYdufJNDPkrpldRFnfRvsBWJgccT88wdNjXaIIkUaKbjD6+z6VU1hE+h7dAYFOsxDvqxYYcd3te6s9l2F2OunJEbyaTN4noWSq8Ck8bs4XV+CZFmTQDFvmMnrkkhugDcgdkRx6UnsoY9m8Surlrx9+IhMrmb0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784154881; c=relaxed/simple;
-	bh=MAbe7FFOxvk/HvR5Y86UBIzMmuEkVFfK1ZfCexZxO8k=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=MZn8l+JAqPFS50sukKbm14fnzaANm6/aVZn9BdwLPwi5BQ+7UoVXIb79b7uM9E35v655ucIeoLHSuQVDz6lSyCJ768rsBlk8coCFqCut39xu1qVzgGmsdRRgr2C7JpLvjCj/TDMBE7S6Zy9JFgQsZTsWzx52Je3YxuFPYeQzanw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=JAkHSR+J; arc=none smtp.client-ip=209.85.160.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19DD22E5B2D
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 00:56:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784163418; cv=pass; b=sNskOX068MQAV/sQW9mqRX90qO7O41e8FUZYm3fGyxwdQTjNSbgPIG/vpI0h2mGzPeUl/RxxDQVWqWqnQencvZFIlVEqYX3KjisP21sKFw5rA5P3jxQzzgir5IV/7+oJcI6jUFVr4uz0l+LxrIgP7PCbk9iA+aUS+mM7ItlvGQk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784163418; c=relaxed/simple;
+	bh=QHmgYMxgbOKG0Rkl6t+pPGbt9s4Heo8/Ob0ugz8hBDE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=mwJvsUhMQdWDhgtdd3j+DZSHL22thJaFkDzXSov+VqKFq15dHpp7aeMvNPVJkSCcb565XrFP6CvkicKnLhnND9y0z0VNj3E1JVU1Lb+PtAY+EIwbaRIPDhzTFUq2JOZL4S41LvWxY3INmx7RAGGNJGeCW0DZaUdnf0W6Ql++qwM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=eyowBDBH; arc=pass smtp.client-ip=209.85.160.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="JAkHSR+J"
-Received: by mail-oa1-f45.google.com with SMTP id 586e51a60fabf-4560d6f82edso1144309fac.3
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 15:34:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eyowBDBH"
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-51c10ed63c0so76371cf.1
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 17:56:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784163416; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pIjGPlIQYhtTc0zMQOcx0ySMt6aFSIAg+ROCon8JUT+/vviyKyNH/3YtKbBrCkoGpY
+         MuA0xDnXZ9NgVnUgDi84du/Lw9IU1mMJIado9M6tZu8H+AUQSt8jltTtr738Ug/AY06l
+         OdEBMPRSP60o/jeLOlcaYz4+71Tq4cMRxnP8e79fpLiscwXCVLhwdW3jWiojPGoEHOwP
+         I1K8na5rg6F3axBl1+ozcEoh5rcGHjVv6QVw+V9SUrZOHJol1vT2S5MMaaKfWnNlRd5a
+         YlznE0xrGAmeZYYBFaccLigDHCisX8gL4YxsQVlolElfsPZ8bXa/bR6dl2plWukX1SeN
+         lqUQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=PqON3OrUt0fOomb2BLaFL3MREMgEqqs5y6so9+j5zoo=;
+        fh=YeLMoUoin4EW5Do2qVNhZFl3/bLhnzrGAlvZ4haayaY=;
+        b=VGamlV9VQiClPBn3UlGPsGK/Rddw5bw2cKQ3kDN6Oh9eYyetiFhNCGPclOUgkeyObA
+         YdHGiOdHncBmBLq4SRYE1YoJcqE7D+1tOncq6wFiDiSU6blJCwdlUKBnX+z+IX5sYWiC
+         vVsqKngzqkJxtLIbne4FJioKUH9IjCOcNqnZhYRsvTOm9IZJkTk7QkskZues5BvxRHYH
+         l+0Tjl/kekg6304VBAEuUH8p5E9R4dfSZJVyFVllvGuN28WftQgqkqM6pzfMbNidf722
+         pFhRfE2EM7jtQ0OyygozRoDksQIH9R7IlNm5b690zycyjJty5+bU196dLGnqYvvegUss
+         GZwA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1784154878; x=1784759678; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=niLd5/LGzk3n5S3gnqCqcM7O0n/4L/Fl7i1GyHScQFo=;
-        b=JAkHSR+J/lKZzFfSOa+qcnjWG4jwFN5eXGXjHUilfSDLw85wx8gmkaVKT5dfkfeJ1p
-         qgK856/YYTvmGVmLPybXiValbIHUROtU81Ad61lUyEIKZpCq8BjK90yEFseI3JaM3XfY
-         KL2SYa2uxzZaUwb6lDVrMSGOlN9kA6rXVkc1ZP+ANLAiRfqbyF53tnvD1fv5EU/mSDRA
-         D/s3aIYzO41WBl39kdU2NWzgeymXwp9HMuclsS6QGAlcBhHAPL881pShUZXyUEFBtrVN
-         b64zJEcIgtFYvSqGCnIJzRl9SMSNuEkTu+r6C4Dl06r6tTrZWU/r9g7kTCKrbqrwlMdw
-         pDoQ==
+        d=google.com; s=20251104; t=1784163416; x=1784768216; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=PqON3OrUt0fOomb2BLaFL3MREMgEqqs5y6so9+j5zoo=;
+        b=eyowBDBHlAX5NVht3NrLZk5Y0sDzCD/NfwuZ5W5qOwLIkB0nCxrDGpLjdKJCxpXkqD
+         FbcAjhmhyPufVTVEhtbQMGDGSjkFX5hkppldY/oyWafiHup/Hnmh7d+QkAlmysUgdc5V
+         tAq9mtdFFBQnKCMhSUVerhGgAg+kKb8QRnhygfCc2g2M5MdWrtTzJXUKVdyjutzFzZMf
+         2/oEDP1S6AE1+CYgcgzimNy1TcVw/nVtqZDUEbAPh0JFMJ1b110Z9eH2mDxjfHP2uqMk
+         8+Rdbundbj2c7+QQjDIJnewAhnjrACXeUsYssE3NkbxBXeENG4bCnuJmtdDAdDkZi6kw
+         Ni7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784154878; x=1784759678;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+        d=1e100.net; s=20251104; t=1784163416; x=1784768216;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=niLd5/LGzk3n5S3gnqCqcM7O0n/4L/Fl7i1GyHScQFo=;
-        b=M7ENIXBJRBXTwu1nC9moXPUFBetFE8OPH5aM1yHIyshwHTBli8XxgC2mfkrGShwhN5
-         aNhTlXOmjtbxLmDsd+YGt/xICn2NeLBFXrBjQFRra+2RV3fABNlFfVJ92cX+aNuNSyQQ
-         3ZszAtgzOCqbGjz1wrcN66Wbx4TVMzx7v3HMk1QncTVRd1TXqCrj8Kr2NZ5CGYSglW6E
-         T0SmmitemLKJjoaO/ZQzglynr67EsHMlukmVh9C2V7bKzJjD/h4DbG3YHN7EZeVdXez3
-         xLomw/lPmcvlGdrznNsKaNBzaEwt/UWHZzRtufaeCodQMjlQORPqDTEvXsHilzD4CqMG
-         KQsA==
-X-Gm-Message-State: AOJu0Yxitfdv4fdulXvyyf2m9rkJxDvSsNnzJEKZwLQSHjSnacgNq66l
-	4myyxE+nwnnK1Af/+YyDSQgIkKf4Kq9+T/pdC0aD+dqvRMJt+wxeMBmN6YJIw2kBclY=
-X-Gm-Gg: AfdE7cn1WDdhPhpZKaNRIgbavL1MM7wjh7yEGF5hM8QWN7ZdUjaN3xSH2WwPnh7E1Rt
-	/dPdMn7d/0ssLpCsLTcMb77NQ3D/vnIfAyjjK1BGfDF8HydyULIm+meO3MePWKnyJI22iLk8OuV
-	UdoiX761VDmVbcLrHOYYuD4KDkYNOQI0lEuZmDhwzljQnThsGR/pUerOF9tJDu5iWhD7BQgGdMW
-	YwKXFAB0t1h/Srb3mu6rcPWRYSPi22m/cIasPjGd/T6Qxaki+JP6LF3CQLQWEVIA9yCqYabBwEp
-	M0ZBLQFKXeKb8MptSlbEZVAx+lTR0tGG65E2j7fnwyjyUfMJuc9y6P21/vNsTv2HLea0gpsxYls
-	PX1GtcGhFVUL7ovz6vk7g0Mwx4TRLGieMPc8Id6QgHSDiEYC1LA1sUU3qzRRrkUklQllabzfc2F
-	N+14pOQ4IXYOsaV5IDfuYS0m1QuuX7iJ4evis/LVu55eIMld/AJK9AXc8=
-X-Received: by 2002:a05:6870:70a1:b0:451:738b:79a9 with SMTP id 586e51a60fabf-4560b3f2edcmr4833708fac.4.1784154878606;
-        Wed, 15 Jul 2026 15:34:38 -0700 (PDT)
-Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-45200b7b4c5sm14362722fac.10.2026.07.15.15.34.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jul 2026 15:34:37 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: tj@kernel.org, josef@toxicpanda.com, Tao Cui <cui.tao@linux.dev>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
-In-Reply-To: <20260715132407.1469777-1-cui.tao@linux.dev>
-References: <20260715132407.1469777-1-cui.tao@linux.dev>
-Subject: Re: [PATCH v4] blk-cgroup: fix leaks and online flag on
- radix_tree_insert failure
-Message-Id: <178415487685.159585.7452024735126853374.b4-ty@b4>
-Date: Wed, 15 Jul 2026 16:34:36 -0600
+        bh=PqON3OrUt0fOomb2BLaFL3MREMgEqqs5y6so9+j5zoo=;
+        b=RvXkKnfJMFKMBzLqgDumKr3i2zWNDD+rfhKMfaiaGd57APczR4T7VwksoDZtfgpDSE
+         XMv4MTWFGMsa/omBnKSpSZIrLaL5I9r0VENo+pYgpzKCx3yVfyOMRHzSpiZ38d19GbU4
+         UJbGZLF3UcoADxYJGhov/mbb4kymdI0GsXRNPUrRqriBB+jAIP0mM2Lucc26GLYAiS+y
+         JWKDNv2Hxk9i3dj02W+SwrBVbHPVg4uhF2L8GcfDcRdDZ9gCRm2yyfWWGbRBlIORP2Oa
+         Mai/gmmz1kQOUvLSZTM7oyLX10JEcA71w7hXVjpQYTx9JVJAH/zZ8EXjSlmxIG9dT9AC
+         XBCw==
+X-Forwarded-Encrypted: i=1; AHgh+RoU87gSfK3ABUIgkjALVTrimTGGuaBTeI1VURuiiEVw1c6wSysnCkQCF9bH0nkjewu6vT+kXjTT@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz4x5WtUQI7/xbBOChHE+ZxiH9kz1LZ9DG1rcKlep5Xdu1tNHqk
+	WsYBFqTRLmL5CPHUOkX08Cx1bdZo9mDim3GeEQjSPanObrhGuoT2h05ZczCxUjy9pIXv45XLtB+
+	xV8B3EYQSGims7nLunBDuCnjWucymJtXrs/J13ZWt
+X-Gm-Gg: AfdE7clVwQ16UXQTLA0z+N8piWH12Cm2pnK3QhkHVl4P4KI/WHvjR4PsvREF6uO7ICU
+	tu+HlF4jpmDB6X0T8sgu/ESoxXwS0+C/GDvX1pawrEsxyeCKg4yPvDmLQ/bS+RmolUsXwjDrOpC
+	gJRJjwRHnpcgIXN7BePiNQUoYJXpeT/40ZOCv6qPzxoQv373E0HXDxlNyczt5CV9VJK97PUNFTh
+	7FGqSijJMLgEWez+G32O/Ma5qkKRad3VV/+1rt3oq7lhx27apr4LK2vn3Br
+X-Received: by 2002:a05:622a:4d95:b0:51b:fd21:c077 with SMTP id
+ d75a77b69052e-51fa50ac9f9mr2206021cf.21.1784163415394; Wed, 15 Jul 2026
+ 17:56:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.15.2
+References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org> <20260715-b4-objext_split-v1-3-9a49c4ccf4c3@kernel.org>
+In-Reply-To: <20260715-b4-objext_split-v1-3-9a49c4ccf4c3@kernel.org>
+From: Suren Baghdasaryan <surenb@google.com>
+Date: Wed, 15 Jul 2026 17:56:44 -0700
+X-Gm-Features: AUfX_mz6azLOlVXfbVD-t1IDS1r91veMOOF5VyiUSpL7t9Z77OmdvGy3eUFl1w4
+Message-ID: <CAJuCfpEoPjFttCsZPo158pH95ChoBV6N9SMD6Qs5vi4w-G8y5w@mail.gmail.com>
+Subject: Re: [PATCH RFC 03/12] mm: move struct slabobj_ext to mm/slab.h
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
+	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jul 15, 2026 at 3:10=E2=80=AFAM Vlastimil Babka (SUSE)
+<vbabka@kernel.org> wrote:
+>
+> Users of include/linux/memcontrol.h don't need to see this internal
+> structure. Further changes to the struct will reduce recompiling.
+>
+> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
-On Wed, 15 Jul 2026 21:24:07 +0800, Tao Cui wrote:
-> When radix_tree_insert() fails in blkg_create(), the error path has two
-> issues:
-> 
-> 1. blkg->online is set to true unconditionally, even when the blkg was
->    never fully inserted.  Move the assignment inside the success block.
-> 
-> 2. The error path calls blkg_put() without first calling
->    percpu_ref_kill().  Because the refcount is still in percpu mode,
->    percpu_ref_put() only does this_cpu_sub() without checking for zero,
->    so blkg_release() is never triggered.  This permanently leaks the
->    blkg memory, its percpu iostat, policy data, the parent blkg
->    reference, and the cgroup css reference — the latter preventing the
->    cgroup from ever being destroyed.
-> 
-> [...]
+Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 
-Applied, thanks!
-
-[1/1] blk-cgroup: fix leaks and online flag on radix_tree_insert failure
-      commit: dbbca20764382b4d411ec2918f4e278ffe547acc
-
-Best regards,
--- 
-Jens Axboe
-
-
-
+> ---
+>  include/linux/memcontrol.h | 13 -------------
+>  mm/slab.h                  | 13 +++++++++++++
+>  2 files changed, 13 insertions(+), 13 deletions(-)
+>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index e1f46a0016fc..93869cc35c25 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -1440,19 +1440,6 @@ static inline void mem_cgroup_flush_workqueue(void=
+) { }
+>  static inline int mem_cgroup_init(void) { return 0; }
+>  #endif /* CONFIG_MEMCG */
+>
+> -/*
+> - * Extended information for slab objects stored as an array in page->mem=
+cg_data
+> - * if MEMCG_DATA_OBJEXTS is set.
+> - */
+> -struct slabobj_ext {
+> -#ifdef CONFIG_MEMCG
+> -       struct obj_cgroup *objcg;
+> -#endif
+> -#ifdef CONFIG_MEM_ALLOC_PROFILING
+> -       union codetag_ref ref;
+> -#endif
+> -} __aligned(8);
+> -
+>  static inline struct lruvec *parent_lruvec(struct lruvec *lruvec)
+>  {
+>         struct mem_cgroup *memcg;
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 01535e1e2d3c..7bd361447c54 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -549,6 +549,19 @@ static inline bool need_kmalloc_no_objext(void)
+>         return false;
+>  }
+>
+> +/*
+> + * Extended information for slab objects stored as an array in page->mem=
+cg_data
+> + * if MEMCG_DATA_OBJEXTS is set.
+> + */
+> +struct slabobj_ext {
+> +#ifdef CONFIG_MEMCG
+> +       struct obj_cgroup *objcg;
+> +#endif
+> +#ifdef CONFIG_MEM_ALLOC_PROFILING
+> +       union codetag_ref ref;
+> +#endif
+> +} __aligned(8);
+> +
+>  #ifdef CONFIG_SLAB_OBJ_EXT
+>
+>  /*
+>
+> --
+> 2.55.0
+>
