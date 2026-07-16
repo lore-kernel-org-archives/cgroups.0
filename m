@@ -1,93 +1,93 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90635370AC7
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 04:36:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AD5014F112
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 04:46:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.170
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784176607; cv=pass; b=EHK0MHfpPj0tPyloavsb3l/HWo+jclDuqwcgJHNuuTC+HcOst0+V5OKSUrSdNbOBAbDAoNzZh/CF1Ry4EAgc6iP/NEKSIUz5jkGmBOUHoEFgts0sOVdwy5597JtvVHIE8uVNx8ZERTHrzMK3kKq8eCKUvGdxN6/FeHjyc2vIeR4=
+	t=1784177218; cv=pass; b=UZ9oJ8MYTjYqsgfrrRTYiIIb59qvqs8FLBQ3psKC7UpDotjOkirtxQI0qBdTmFjY8X+QDXurAA4aMWXznCGKGVzmXOclPxoD4f/pMqbLSCs/GUDjCzGYs4vrU7dVtX2EBUjhlVzyQoe4tCf16iVxAsV70Jykmcco7wLZ+L/zlKk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784176607; c=relaxed/simple;
-	bh=A/AnbnA9aoh3DJpkNRs1CtAgNkfbbricjqLSvFEDP88=;
+	s=arc-20240116; t=1784177218; c=relaxed/simple;
+	bh=r9tMeIfnsk8MTtFIvkaqaDbeip/rrh7jyXC9aKBxDBI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=u+J6CBfK6Jtx6cnGjh0OzIVQ0cav2MaUw8fA5K61zS9N/q6AfObOU3qm98bt6HogN7VSAcUqUITgI3CwvfS+i7tk0eVqT6M7fSO7jZgCnXz7XWdoogbPNK7Xy4TFG8OkpuHjI3J7/rL34pTTztlc476CgyOmQUrhl5apxhlkNgU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qJN/Vjqy; arc=pass smtp.client-ip=209.85.160.174
+	 To:Cc:Content-Type; b=SslbrLahj7nCjrN6qz6ShySJZUIxPQ5NzqaYXORwvrZyLw08SI9mMR4VzckzyQWAYcC4y/R0xegcho3xXjy/iPYveltvYaUtzGvqK3vvCXuW0hDKHk5ThifgpuXtuuQ7RrG1pk0e6QY4ETxLgg/FPrlFaJsIRpCwmm4QPxiJsGA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LLtpNQQF; arc=pass smtp.client-ip=209.85.160.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qJN/Vjqy"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-51c10ed63c0so118281cf.1
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 21:36:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784176604; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LLtpNQQF"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-51c01c79467so165011cf.0
+        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 21:46:57 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784177216; cv=none;
         d=google.com; s=arc-20260327;
-        b=n2jWtfywahRQjhpCWEbioTABuD75An7NcBqzLuBSQ5Fw7U2tg7sU8+8YmQjTFzea/B
-         gyN9Z/Blnd0j6GhYai4sIKR0kOj9QcmWNKc7loho/gqalSwhCL8eBfJysTOTyYL+mZUA
-         93bnHmv3A9ouvepvN+SesJGzdGavyzuM/PLpVmoPCdZlzOLh7OICIf1xmYr//gsTCN+3
-         gG4VhJBKIUNHsImbxuMgSO396dZ+Yrue1YsNekwh1T17MVyklKrqPixZjk/vtnuYFa92
-         MFcZeP5AB1NW8VE/GZrPVr6tVorPHSia5gCQug+e42gvekV+g0nDAHQTvs2Z2MthOFlc
-         iwGA==
+        b=E5zomCg2byQm3TjLILDFL4kIPrzi5O8ywojNybp7M9OLLfHPrgdy0lvur8h/qv0apJ
+         7EWt/34fXyoPRQURp8fMUFdrtxxpdMJGgGWjQAyXBWUH8rz0CnKC/AWgBVPR6+CYS+Ft
+         mlCb4lJkaCNDl4K/HkD5K7YMPw06T/+6RXDDXPf6FhACEn3axx+QCr41oK1E6plzU1Qo
+         jQ7Wy5qv8GDmr4i2t3qP/Dc89LkSUuX0impjw9q22spLzC9KvFxtk63PT6Lx1bcQQ6rG
+         rw1btXJq3z2XabJRCQ++okCshJ2frCCzutnl80FofYUxPEF5gHb+b9j2O95bKZOoDN3w
+         xf6Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=QITRJJ9I0wFb6SZoNyOXqNtZqIkjcQXWV4/MUrIOPv4=;
-        fh=eNJ4Z29Ol/FGkbIc0kAjWzdRd1PfdW9o21b9AoB1+d4=;
-        b=hWSXy4zaxBUEgOpGtXKpayPZiQC+zROuje1MufwvghSKdtZa2Z4FFollIs9Y9RN+wd
-         sSX2R7Pl2y69PUYA3xxT57tGUyxLI8MnvQDU3sQ/y+mkop06eauPzqUvdLTlHxBqytAA
-         YTsvIpKLJ1+fdOJUciT2zvVabGgx92YOcjku5NWDF87eNSnAgG0zND8ThgPZGEkEveth
-         zWq604b1HSN12pUIB/6cfsZ1e/Rx881YTgxLCLtDp678RhcLodp0VgD+usGjwIlWsEqP
-         pgmiJeaS6YpGkba1G/ImJGqOYE5FmMfswKQxqMBTR0fTbflObXxRvTCS7IvDn56982Iy
-         iq6Q==;
+        bh=QkYo68g6gezb441tzdBjHayPqeJqE9nrvYdojct+96I=;
+        fh=jjmFsJK/cjuwvumCwRMPS7Fvjfun7boNnCFS8++qNQ8=;
+        b=RZ0xYpyux/l/zqZQCUqxPVAuK9z9+/ol1LfMW4VHfdLXFlA2DtVvnfol5sBXBus+f/
+         xygFFCUSh5P0gid2GLC3OCgabNNXo5DASHL5ntzNU44394tB8z8NOBH6cd3bpSqWrgcf
+         OYiJ3YqPT5S7EDYw7IzVHN1YV1dqtuuWKVbBgSLrjy0/uprF2JgrX8u+uT6oQ6pnkDpy
+         ZcrPauW0GTUEs/80X+TODhoMB0hS1d/s3AbutTE6Fr39JzdT+AEobRIwsEtY21yH73Yt
+         b1lQyg0bfEMH+hV898kpw/1O/qm5O4uu4u9eFlTkUIiFeMlcFEvSEaoAnwF4qcMSV2um
+         KXZw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784176604; x=1784781404; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1784177216; x=1784782016; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=QITRJJ9I0wFb6SZoNyOXqNtZqIkjcQXWV4/MUrIOPv4=;
-        b=qJN/VjqyQoclSoOpVDrekr4VszD6F377wm+o9gRjkzWdo/hgDpITrdWwr4icomOKfk
-         7e7VeyZbCuvEXjB5AzrwC8cchqzo21eWU76SNS/lrezR7ACTTK5eP9p2HgGE1TgmnSAo
-         YNpT/Z4A7u2GuKaWCLTvYvZqhtEeswZPFeFjSA6vSh3a5Yl7ReA5uWEUq2AslS9cTCan
-         GLA0xBriENG+8bG15+wags/iMntdwc8UFN3gCNT5Gc5PXgXRXzgPJgc1CsfUi7iXrGSP
-         pO2KKSFLh0QmiKQb3EIjVkEd8ncbAWpqOZoyb938AuCBCVXbKYEWCwRJY9yHISdYGC0+
-         tFKQ==
+        bh=QkYo68g6gezb441tzdBjHayPqeJqE9nrvYdojct+96I=;
+        b=LLtpNQQFuT9nStM15W8P/7lrjXRut/ysswh0UC79Ndg/bHfF5dpQ2a7QMrEgzklpfM
+         w5mCYqi8Hdga3U4exQbGlo/UrGx6m9zw20S4wsYWQxHaDp3wW9foTEHB5qoyo5WAAjOf
+         Dr+aoiWBxP1WxgY8syJVXBCx+6ZXjaGtkw0sEbPai6b3CT9P9C0EpM5GR9i0/Q1WvFBg
+         b6RAkWJeHjWeGLH04rvM3Fp0J/B7uL+MTYWjSkaToN0lJCbZlAhFv1kfuzX8t+B94nNy
+         FJfwa/PBUdY2UR8ZJ28ER8XmI72gfRGeCtyWoX7JKOdibfU+8IfCQX5R5gAKOFWBtD8p
+         odmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784176604; x=1784781404;
+        d=1e100.net; s=20251104; t=1784177216; x=1784782016;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=QITRJJ9I0wFb6SZoNyOXqNtZqIkjcQXWV4/MUrIOPv4=;
-        b=MdUMZsCmbLC1IwmS3m42TZnClJIOPaijdJtEgvRbTJ3E4pV/q6lRjuzv+O0eLxYEwE
-         EvszI4Fmpz99Q9KoXplOSaDNMtL7AGVxsgw2WX4ondk50dAoyNCPzatTLw/GG6m9hu9Y
-         u/7ndxKFpT5vAX9YianWU4JFBUiiVenVEo6xErxmOr9dUtlhq6WMF3NfZEA7n54aHTu6
-         3VaoYjKa39ZoTZd1Xrk1vruKkyhO4vLREB95osOMOvXumnfzLE4xWNQgqW4P415cWCVA
-         x+Z+fD07YmF4nGG4hk//VwSymbBORnP2+UAIjjLPvFp+E8oAJoW6vv4rNiC7q8kHZlcJ
-         nYTw==
-X-Forwarded-Encrypted: i=1; AHgh+Rqz6UD9V1brwl6Vo0Ri9FVPZ8vf+uMXef71MOdh3gXFuGetaiHgVH71p2cDhpa0WyOftdQZ3K3s@vger.kernel.org
-X-Gm-Message-State: AOJu0YztvZXnxPRTsBGocRsLR8A9tkAbChhbGy5W4HEAjDUbUC645Mho
-	kxAlUPkkwFeGCBW9feCwRz8/n8jEvIZNnODxcQJeBAQZRVU3G/1yKKtuHnOkvyvXSe/LSD0ZKF5
-	HLhqciwsXgZcRKpEPvqs0J9q8eUmO7baVxMYPYK7i
-X-Gm-Gg: AfdE7cnBxWUxdi5W2ENit4v6TD91idMTtJ8zCSgqAS59eU21toIndKltBlVmSnsLX/H
-	bK10IC2Aaq9X49rn+OQv8kL1POu7V8fv6VOM0YcfgwKwBK4Hw2EgQZVwJp4rixe7T+Ccu3szG2j
-	HVVA9XzY8X00S/I7lIbgeA3LUwjDNivMg6hiIpsfZPydvOp+/m6b7FYDypDzCw2N0msHVZCdt96
-	4hpYS3CUWXgn6rYPDLqurQMAljRJAWtu1hEaJs0W8EkFNduBVyYKd3Thckvlr9o53W2ILA=
-X-Received: by 2002:a05:622a:598f:b0:517:6dc0:698d with SMTP id
- d75a77b69052e-51f7b8edd36mr5923421cf.0.1784176603889; Wed, 15 Jul 2026
- 21:36:43 -0700 (PDT)
+        bh=QkYo68g6gezb441tzdBjHayPqeJqE9nrvYdojct+96I=;
+        b=Yqv62Ajym7t6g5kcak2951302OtvIQA+8z0RzErjWZ6gRkg13X7god5qHm5r4HyUUK
+         imnso5Yr35vVw460MUTwK/DS5JJJu5VUiXhrImFHCUDOTYp+MwGsbF+WASmAcZYYH6Xo
+         VodW2jqRXFlCTXefO9J0vjKETAm6NYwRUPtKheCE/xfEZl6d8IFRY/QF4+BZLA5iH7EY
+         Z8Qkrq3PDX9+Lo1GroUTIrQVr+gQUJC89Bm/Oaw63H/JNAVM1fVfMDdLzADdlrQgqZkC
+         RPgG5C+Bp7sxvi6C5ss5dvsqHOUge78lFcGAW5yVlaKY7GgsVQjBBGspwb6RklOp3yKQ
+         JvJQ==
+X-Forwarded-Encrypted: i=1; AHgh+RobC/JnsFfd1riyTi/tENG17D/EI+mIu6pl3vk6F2AdYaSGoxAc0pl5/THrS+KO49B8hALTmsEC@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz7DVPfCQH8L8Fh/6t0BoNfbCGPEHCIhjAuTIsW4DXv+f+jm/OZ
+	/SFiEHLg+28wyUYGF3imAWaUcKVQvXxJZBihCP73fp8OZxBPpKVshQTOVsVO0QttdXY8VaMVyUc
+	ivcDFvlCWqTSyX62mWVhda5zTjcAf69xoJJn1tXoN
+X-Gm-Gg: AfdE7ckUj88Ud1hbcAPdL4rxYkMpvYbwcJIuk7O0abopGr75/1z/MjGRwF/gehfnbql
+	OI6Kdl8B+K3zQ1J2eZL8Y0hp93cGolx7/Ai/NH9j2AKNHC9z+dfO4tzubD0HBH2nZN/TwnTyBF3
+	ymErMQl591v2TR+DC9eUXqcjO4Xc7i9IbRrhYVdiwGLbq3/u1yOqXx52/y0PoAEYFnKaHiDkC2C
+	+cjB4P4NTTH4XAUsrjf1gwxo6AicKdj4kdnJsC+XUC83q5/U2gt0uuBwmOtObywrtubBVE=
+X-Received: by 2002:a05:622a:4c11:b0:510:f9b:fb5f with SMTP id
+ d75a77b69052e-51f80c34977mr5409551cf.16.1784177215783; Wed, 15 Jul 2026
+ 21:46:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org> <20260715-b4-objext_split-v1-11-9a49c4ccf4c3@kernel.org>
-In-Reply-To: <20260715-b4-objext_split-v1-11-9a49c4ccf4c3@kernel.org>
+References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org> <20260715-b4-objext_split-v1-12-9a49c4ccf4c3@kernel.org>
+In-Reply-To: <20260715-b4-objext_split-v1-12-9a49c4ccf4c3@kernel.org>
 From: Suren Baghdasaryan <surenb@google.com>
-Date: Wed, 15 Jul 2026 21:36:33 -0700
-X-Gm-Features: AUfX_mwLXx5kot7A00Q3hyCUcflgHM7XmoOgT0JJ9Nx_X_bElsMSswtKRvnAaew
-Message-ID: <CAJuCfpEwBeuo-70-GZJ1jMZP6+vopmuEsBScvHki97ccRyDDuA@mail.gmail.com>
-Subject: Re: [PATCH RFC 11/12] mm/slab: add slab_needs_objcg() helper
+Date: Wed, 15 Jul 2026 21:46:43 -0700
+X-Gm-Features: AUfX_mz_aFj-8xOsfsdMXRZ_fQhVoExHnQqcIqo8QRrYZa0FkludBjRw5lIFfIc
+Message-ID: <CAJuCfpHuXu3BDf93zeBQWSW_k5wApegp44rHoZwk5Ym6xxbqEA@mail.gmail.com>
+Subject: Re: [PATCH RFC 12/12] mm/slab: stop allocating objcg pointers when unnecessary
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>, 
 	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
@@ -101,116 +101,112 @@ Content-Transfer-Encoding: quoted-printable
 On Wed, Jul 15, 2026 at 3:11=E2=80=AFAM Vlastimil Babka (SUSE)
 <vbabka@kernel.org> wrote:
 >
-> Slabs of some caches never need the objcg part of struct slabobj_ext.
-> Introduce a helper to query this for a slab.
+> Start using the slab_needs_objcg() helper to calculate slabobj_ext size.
+> Caches that we know to never need objcg pointers (currently
+> KMALLOC_NORMAL caches) will thus stop wasting memory on them when memory
+> allocation profiling is enabled.
 >
-> Currently only is_kmalloc_normal() caches are considered as not needing
-> objcg's. We could also consider all kmem caches without SLAB_ACCOUNT,
-> however some might be used with and without __GFP_ACCOUNT concurrently
-> and we currently don't restrict that. This can be improved later.
+> For things to work properly, we need to also add slab_needs_objcg()
+> checks to mem_cgroup_from_obj_slab() and memcg_slab_free_hook(), because
+> when obj_exts array exists for a slab only due to mem_alloc profiling,
+> we would otherwise attempt to access a non-existing objcg pointer in
+> that slab.
 >
-> To make the evaluation of slab_needs_objcg() faster in the allocation
-> and free fast paths, add a obj_exts_needs_objcg flag into slab itself.
-> This optimization is only available on 64bit architectures where free
-> bits are available for the flag.
+> The function __memcg_slab_post_alloc_hook() should not be possible to
+> call for a slab where slab_needs_objcg() is false, but add a DEBUG_VM
+> check there to prevent breaking this assumption accidentally.
 >
 > Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
-Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+The change looks nice and simple. I'll take some more time to check if
+we missed anything.
+Only one nit below.
 
 > ---
->  mm/kfence/core.c |  3 +++
->  mm/slab.h        | 31 +++++++++++++++++++++++++++++--
->  mm/slub.c        |  4 ++++
->  3 files changed, 36 insertions(+), 2 deletions(-)
+>  mm/memcontrol.c |  6 ++++++
+>  mm/slab.h       | 12 ++++++++++--
+>  mm/slub.c       |  3 +++
+>  3 files changed, 19 insertions(+), 2 deletions(-)
 >
-> diff --git a/mm/kfence/core.c b/mm/kfence/core.c
-> index 717e8baf7e5d..afeaf80484ad 100644
-> --- a/mm/kfence/core.c
-> +++ b/mm/kfence/core.c
-> @@ -640,6 +640,9 @@ static unsigned long kfence_init_pool(void)
->                 struct slab *slab =3D page_slab(page);
->                 slab->obj_exts =3D (unsigned long)&kfence_metadata_init[i=
- / 2 - 1].obj_exts |
->                                  MEMCG_DATA_OBJEXTS;
-> +#ifdef CONFIG_64BIT
-> +               slab->obj_exts_needs_objcg =3D 1;
-> +#endif
->  #endif
->         }
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6303a2b1a9d0..09659722ec85 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2871,6 +2871,9 @@ struct mem_cgroup *mem_cgroup_from_obj_slab(struct =
+slab *slab, void *p)
+>         if (!obj_exts)
+>                 return NULL;
 >
+> +       if (!slab_needs_objcg(slab))
+> +               return NULL;
+> +
+>         get_slab_obj_exts(obj_exts);
+>         obj_ext =3D slab_obj_ext(slab->slab_cache, slab, obj_exts, p);
+>         objcg =3D *slab_obj_ext_objcgp(obj_ext);
+> @@ -3581,6 +3584,9 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache=
+ *s, struct list_lru *lru,
+>
+>                 slab =3D virt_to_slab(p[i]);
+>
+> +               if (IS_ENABLED(CONFIG_DEBUG_VM) && WARN_ON_ONCE(!slab_nee=
+ds_objcg(slab)))
+> +                       continue;
+> +
+>                 if (!slab_obj_exts(slab) &&
+>                     alloc_slab_obj_exts(slab, s, flags, slab_alloc_flags)=
+) {
+>                         continue;
 > diff --git a/mm/slab.h b/mm/slab.h
-> index a50347c9dbe3..948d075cdbef 100644
+> index 948d075cdbef..072cc2506756 100644
 > --- a/mm/slab.h
 > +++ b/mm/slab.h
-> @@ -81,10 +81,11 @@ struct freelist_counters {
->  #ifdef CONFIG_64BIT
->                                         /*
->                                          * Some optimizations use free bi=
-ts in 'counters' field
-> -                                        * to save memory. If these free =
-bits are not available,
-> -                                        * such optimizations are disable=
-d.
-> +                                        * to save memory or CPU. If thes=
-e free bits are not
-> +                                        * available, such optimizations =
-are disabled.
->                                          */
->                                         unsigned obj_exts_in_object:1;
-> +                                       unsigned obj_exts_needs_objcg:1;
->  #endif
->                                 };
->                         };
-> @@ -580,6 +581,32 @@ static inline bool slab_obj_ext_has_codetag(void)
->  }
->  #endif
+> @@ -622,7 +622,15 @@ static inline size_t static_obj_ext_size(void)
 >
-> +#ifdef CONFIG_MEMCG
-> +static inline bool cache_needs_objcg(struct kmem_cache *cache)
-> +{
-> +       return !is_kmalloc_normal(cache);
-> +}
-> +
-> +static inline bool slab_needs_objcg(struct slab *slab)
-> +{
-> +#ifdef CONFIG_64BIT
-> +       return slab->obj_exts_needs_objcg;
-> +#else
-> +       return cache_needs_objcg(slab->slab_cache);
-> +#endif
-> +}
-> +#else
-> +static inline bool cache_needs_objcg(struct kmem_cache *cache)
-> +{
-> +       return false;
-> +}
-> +
-> +static inline bool slab_needs_objcg(struct slab *slab)
-> +{
-> +       return false;
-> +}
-> +#endif
-> +
->  static inline size_t static_obj_ext_size(void)
+>  static inline size_t slab_obj_ext_size(struct slab *slab)
 >  {
->         size_t sz =3D 0;
+> -       return static_obj_ext_size();
+
+Maybe now we should rename static_obj_ext_size() to
+static_obj_ext_max_size() as it reflects the max possible size of
+slabobj_ext?
+
+> +       size_t sz =3D 0;
+> +
+> +       if (slab_needs_objcg(slab))
+> +               sz +=3D 1;
+> +
+> +       if (slab_obj_ext_has_codetag())
+> +               sz +=3D 1;
+> +
+> +       return sizeof(struct slabobj_ext) * sz;
+>  }
+>
+>  #ifdef CONFIG_SLAB_OBJ_EXT
+> @@ -741,7 +749,7 @@ static inline struct obj_cgroup **slab_obj_ext_objcgp=
+(struct slabobj_ext *obj_ex
+>  static inline union codetag_ref *
+>  slab_obj_ext_codetag_ref(struct slab *slab, struct slabobj_ext *obj_ext)
+>  {
+> -       if (IS_ENABLED(CONFIG_MEMCG))
+> +       if (slab_needs_objcg(slab))
+>                 obj_ext +=3D 1;
+>
+>         return &obj_ext->_ctref;
 > diff --git a/mm/slub.c b/mm/slub.c
-> index 4200e7105b30..771d73abacb6 100644
+> index 771d73abacb6..09c4931e5435 100644
 > --- a/mm/slub.c
 > +++ b/mm/slub.c
-> @@ -3426,6 +3426,10 @@ static struct slab *allocate_slab(struct kmem_cach=
-e *s, gfp_t flags,
+> @@ -2503,6 +2503,9 @@ void memcg_slab_free_hook(struct kmem_cache *s, str=
+uct slab *slab, void **p,
+>         if (likely(!obj_exts))
+>                 return;
 >
->         slab->objects =3D oo_objects(oo);
->
-> +#ifdef CONFIG_64BIT
-> +       if (cache_needs_objcg(s))
-> +               slab->obj_exts_needs_objcg =3D 1;
-> +#endif
->         slab->slab_cache =3D s;
->
->         kasan_poison_slab(slab);
+> +       if (!slab_needs_objcg(slab))
+> +               return;
+> +
+>         get_slab_obj_exts(obj_exts);
+>         __memcg_slab_free_hook(s, slab, p, objects, obj_exts);
+>         put_slab_obj_exts(obj_exts);
 >
 > --
 > 2.55.0
