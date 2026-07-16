@@ -1,174 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mta21.hihonor.com (mta21.hihonor.com [81.70.160.142])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3D5663B9;
-	Thu, 16 Jul 2026 03:29:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24752343885;
+	Thu, 16 Jul 2026 03:35:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.70.160.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784172548; cv=none; b=jOUa1vnoOf1GkUTOOnel5F/Ccaj9AfJBimizFYZxS0LjOYkVXm+JOJ4ONZHRWnBeDv9ubESoBj52oAAJZ5JDkm30MOcVpV0/xNykzYIo9wBqyNiIlNEcjcG+vXcVnNp8kjRTEJ2SR7X5lrZvENi88Dnasz8/GErKS+/6kSEpsOo=
+	t=1784172904; cv=none; b=T+XACGlRFPVAT5MPDH4thG6+SiqIqMXzvWKxIOaaGG9eRZA5CgYshdo/QFYxnTGpn82+Ph1N7mxYBZ2PYKswFxnBNRwdu1PBFEy8iS/5NDKX/NUsXkexPv2gMATg3QqIZ4qOVM/T2Q0jARdVoSamUMJqAMR+pc7NMdoY5wqqSV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784172548; c=relaxed/simple;
-	bh=J2YEnM4t5mLWU1Nht9balyGsc9rTwGqXXcNB1tF8TPY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ya3cJ7nX0jMVuYJodkH9kHZGOsIViAEA5fP3EOzofixrAQhGW3Hq3Ro+WBzA2j/rxpxo5f1UJpRAAlArmmDyhYi6gvw6GOjIS5f5enlLoK2uQv9/xBjCYaZX0J5mexX71y0D6t1WIplMA2I37/fgZNXXc5kKwCmfwwUaECQZ+BI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gYm7ML9t; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gYm7ML9t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30DCB1F000E9;
-	Thu, 16 Jul 2026 03:29:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784172547;
-	bh=PUg+12QG4vSpX4SAh8HFUD5gRWGHLyJzN9G7+NNYJZY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=gYm7ML9trISPjlPVSeDw88FuWYrGVFHjgNEcqlArcKET0eUo34FejkWcq07KvMA4W
-	 9FAOWeM+XfiTWLKp0hqFVdwyCo02vHfbYPdHqvJLs6y7sMdgwd+3BOyLp5Ln6vj9FD
-	 uziwxF3uNOVstrjkmjgpIOQ+I+cBz+B17zqyBxPBZZUZyLTe43+dv49ej3LSCKL0xV
-	 RaHtkGSjpY3okW8zy7ZwrkJTKCOhcD42J8CTPbj/6PoxX88C9OvXurpLgOM9dGdCcM
-	 O1iiIw8UsdT77+8vRyZtZJm3Sp/iTYUjKqGh29SnaY+Mp0ntjb619IHXEOiOnt6R+O
-	 yg5K3GviAYOtA==
-Message-ID: <0d191478-43fb-4286-a2e6-3e7f3047b42a@kernel.org>
-Date: Thu, 16 Jul 2026 12:28:50 +0900
+	s=arc-20240116; t=1784172904; c=relaxed/simple;
+	bh=5+8+NbPuaGLWx5/PBVIMntj2fE0TmHgC7SasPUv0ypc=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=ZV43QCx1+1/rHQG9JKlUR2csTLoHB7ihhv2ljNOLmPN2AtpLGW46WYUpnK9wMFe3HFQ60szfyWuEUp6+Tau2t845Up2UAeutOY21OW0qCEIbSDDnAqsVGPS0y9GlDBWRm4hRvgsxStnNwNQ6H0gfHBcBYlzgYBGtugIIAx5Caxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=honor.com; spf=pass smtp.mailfrom=honor.com; arc=none smtp.client-ip=81.70.160.142
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=honor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=honor.com
+Received: from TW002-1.hihonor.com (unknown [10.72.0.137])
+	by mta21.hihonor.com (SkyGuard) with ESMTPS id 4h0zFB0cGPzYlKMk;
+	Thu, 16 Jul 2026 11:34:54 +0800 (CST)
+Received: from TA009-1.hihonor.com (10.77.226.44) by TW002-1.hihonor.com
+ (10.72.0.137) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Thu, 16 Jul
+ 2026 11:34:53 +0800
+Received: from TA012-1.hihonor.com (10.77.199.132) by TA009-1.hihonor.com
+ (10.77.226.44) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Thu, 16 Jul
+ 2026 11:34:53 +0800
+Received: from TA012-1.hihonor.com ([fe80::6668:8cd2:ec5c:99b2]) by
+ TA012-1.hihonor.com ([fe80::6668:8cd2:ec5c:99b2%13]) with mapi id
+ 15.02.2562.017; Thu, 16 Jul 2026 11:34:43 +0800
+From: wangzicheng <wangzicheng@honor.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+CC: "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"yuanchu@google.com" <yuanchu@google.com>, "tj@kernel.org" <tj@kernel.org>,
+	"hannes@cmpxchg.org" <hannes@cmpxchg.org>, "mkoutny@suse.com"
+	<mkoutny@suse.com>, "corbet@lwn.net" <corbet@lwn.net>, "kasong@tencent.com"
+	<kasong@tencent.com>, "qi.zheng@linux.dev" <qi.zheng@linux.dev>,
+	"shakeel.butt@linux.dev" <shakeel.butt@linux.dev>, "baohua@kernel.org"
+	<baohua@kernel.org>, "axelrasmussen@google.com" <axelrasmussen@google.com>,
+	"weixugc@google.com" <weixugc@google.com>, "david@kernel.org"
+	<david@kernel.org>, "ljs@kernel.org" <ljs@kernel.org>, "liam@infradead.org"
+	<liam@infradead.org>, "vbabka@kernel.org" <vbabka@kernel.org>,
+	"rppt@kernel.org" <rppt@kernel.org>, "surenb@google.com" <surenb@google.com>,
+	"mhocko@suse.com" <mhocko@suse.com>, "roman.gushchin@linux.dev"
+	<roman.gushchin@linux.dev>, "muchun.song@linux.dev" <muchun.song@linux.dev>,
+	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org"
+	<linux-mm@kvack.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-doc@vger.kernel.org"
+	<linux-doc@vger.kernel.org>, "willy@infradead.org" <willy@infradead.org>,
+	denghaojie <denghaojie@honor.com>, "baoquan.he@linux.dev"
+	<baoquan.he@linux.dev>, "kaleshsingh@google.com" <kaleshsingh@google.com>,
+	wangtao <tao.wangtao@honor.com>, zhangji <zhangji1@honor.com>, wangzhen
+	<wangzhen5@honor.com>
+Subject: RE: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
+Thread-Topic: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
+Thread-Index: AQHdE4pwfI2vhxgx7kyzLikejPZWhrZuWS0AgAEfKFA=
+Date: Thu, 16 Jul 2026 03:34:42 +0000
+Message-ID: <75116e612e8142f4ada1dfcc834ceb09@honor.com>
+References: <20260714121529.2237261-1-wangzicheng@honor.com>
+ <CABdmKX3y841t4Oqg3RRHTGXWP-LMMSi_exDuxAc4jR9v9ChD2g@mail.gmail.com>
+In-Reply-To: <CABdmKX3y841t4Oqg3RRHTGXWP-LMMSi_exDuxAc4jR9v9ChD2g@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 00/12] mm/slab, alloc_tag: reduce obj_ext memory waste
-To: Suren Baghdasaryan <surenb@google.com>,
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
-Content-Language: en-US
-From: Harry Yoo <harry@kernel.org>
-In-Reply-To: <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------2W0maZ7GPqqOL0PvX4GiTb0p"
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------2W0maZ7GPqqOL0PvX4GiTb0p
-Content-Type: multipart/mixed; boundary="------------tIgFmoxJ8ComLrftXtGV8HCG";
- protected-headers="v1"
-From: Harry Yoo <harry@kernel.org>
-To: Suren Baghdasaryan <surenb@google.com>,
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Message-ID: <0d191478-43fb-4286-a2e6-3e7f3047b42a@kernel.org>
-Subject: Re: [PATCH RFC 00/12] mm/slab, alloc_tag: reduce obj_ext memory waste
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
-In-Reply-To: <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com>
-
---------------tIgFmoxJ8ComLrftXtGV8HCG
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-
-
-On 7/16/26 12:32 AM, Suren Baghdasaryan wrote:
-> On Wed, Jul 15, 2026 at 3:10=E2=80=AFAM Vlastimil Babka (SUSE)
-> <vbabka@kernel.org> wrote:
->>
->> The recent fixes for objext array handling inspired me to look into th=
-is
->> finally. It's been bothering me that the memory usage of struct
->> slabobj_ext depend only on config options and not whether the fields a=
-re
->> actually used.
-
-+1 one more person bothered by this...
-
->> So with both CONFIG_MEMCG=3Dy and
->> CONFIG_MEM_ALLOC_PROFILING=3Dy there is always objcg field and codetag=
-_ref
->> field. And thus:
->>
->> 1) Having memory allocation profiling config-enabled but not
->>    boot-enabled means wasted memory on unused codetag_refs. This makes=
-
->>    it less suitable for a general distro config and the page allocator=
-
->>    side doesn't suffer from this, only slab and percpu.
->>
->> 2) Complementary, with memory allocation profiling enabled, there are
->>    caches/slabs that don't need the objcg field, so memory is wasted o=
-n
->>    those.
->=20
-> It's funny because yesterday I started working on a prototype for the
-> same optimization. But your patchset is much more mature, so I'll
-> focus instead on reviewing it.
-
-Ouch, a race condition!
-
->> This series should solve the point 1) fully for slab, pcpuobj_ext
->> handling can be perhaps improved similarly, haven't looked into that.
->>
->> For 2) it avoids allocating objcg fields for KMALLOC_NORMAL caches whe=
-re
->> we know they are not necessary because kmalloc() with __GFP_ACCOUNT wi=
-ll
->> pick a KMALLOC_CGROUP type.
-
-Unless KMALLOC_RECLAIM !=3D KMALLOC_NORMAL! (yes, SLUB_TINY)
-
->> The named kmem_caches are tricky. They can be created with SLAB_ACCOUN=
-T
->> and then we know objcg fields are always needed. But also they can be
->> created without SLAB_ACCOUNT and then some allocations have
->> __GFP_ACCOUNT and some not and we don't know that in advance.
->=20
-> Do you know how often this happens that a named cache with no
-> SLAB_ACCOUNT is used for __GFP_ACCOUNT allocation?
-
-Not sure about how often, but one thing I recall is xarray
-(radix_tree_node cache), which decides to account the objects based on
-xarray flags.
-
->> A possible future solution is to introduce e.g. SLAB_MAYBE_ACCOUNT, ad=
-d
->> it to caches where we know __GFP_ACCOUNT is used, and only honour
->> __GFP_ACCOUNT for those, while warning for an unexpected usage
->> elsewhere.
->
-> I wonder if for such caches we could create two separate caches, one
-> serving __GFP_ACCOUNT and using extentions containing objcg and
-> another one for non-__GFP_ACCOUNT with optimized extentions?
-
-You mean transparently to users? (e.g., user thinks it has created
-a single kmem_cache but actually there are two of them, multiplexed by
-__GFP_ACCOUNT bit)
-
---=20
-Cheers,
-Harry / Hyeonggon
-
---------------tIgFmoxJ8ComLrftXtGV8HCG--
-
---------------2W0maZ7GPqqOL0PvX4GiTb0p
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCalhP8gAKCRCGXBN6rc5S
-1uJFAQCHO1N5GdmpwK5dT53zxVvqwtCPyRXEpUHeeKDpXt8rFAEArBwT5mE+9Ft5
-DbFjx1ACc5qvWdtSrfYbbdZR8F1WNQk=
-=SwZs
------END PGP SIGNATURE-----
-
---------------2W0maZ7GPqqOL0PvX4GiTb0p--
+PiBPbiBUdWUsIEp1bCAxNCwgMjAyNiBhdCA1OjE14oCvQU0gWmljaGVuZyBXYW5nIDx3YW5nemlj
+aGVuZ0Bob25vci5jb20+DQo+IHdyb3RlOg0KPiA+IFRoZSBiZW5lZml0IGlzIHdvcmtsb2FkLWRl
+cGVuZGVudDogZmlsZS1jYWNoZS1ib3VuZCBzZXJ2ZXJzIGdhaW4gZnJvbQ0KPiA+IGFnaW5nLCBh
+bm9uLWJvdW5kIHNlcnZlcnMgZG8gbm90LCBzbyBubyBrZXJuZWwgZGVmYXVsdCBpcyBjb3JyZWN0
+IGZvcg0KPiA+IGFsbC4gIFRoZSBrZXJuZWwgYWxzbyBjYW5ub3Qga25vdyB3aGVuIHRvIGFnZTog
+b24gQW5kcm9pZCB0aGUgcmlnaHQNCj4gPiBtb21lbnQgaXMgdGhlIGZvcmVncm91bmQtdG8tYmFj
+a2dyb3VuZCB0cmFuc2l0aW9uLCB3aGVuIHRoZSBhcHAncyBwYWdlcw0KPiA+IGFyZSBjb2xkIGJ1
+dCB0aGVpciBQVEUgYWNjZXNzZWQgYml0cyBhcmUgc3RpbGwgYWNjdXJhdGUgZnJvbSBmb3JlZ3Jv
+dW5kDQo+ID4gZXhlY3V0aW9uLCBhIGZyYW1ld29yayBjb25jZXB0Lg0KPiANCj4gV2hlbiBhbiBh
+cHAgdHJhbnNpdGlvbnMgYW5kIGJlY29tZXMgY2FjaGVkLCB3ZSBhdHRlbXB0IHRvIHJlY2xhaW0g
+aXRzDQo+IGVudGlyZSB3b3JraW5nc2V0LiBXZSBiYXNpY2FsbHkgY2F0IG1lbW9yeS5jdXJyZW50
+ID4gbWVtb3J5LnJlY2xhaW0NCj4gYW5kIGZyZWV6ZSB0aGUgY2dyb3VwLg0KPiBodHRwczovL2Nz
+LmFuZHJvaWQuY29tL2FuZHJvaWQvcGxhdGZvcm0vc3VwZXJwcm9qZWN0LysvYW5kcm9pZC1sYXRl
+c3QtDQo+IHJlbGVhc2U6c3lzdGVtL2NvcmUvbGlicHJvY2Vzc2dyb3VwL3Rhc2tfcHJvZmlsZXMu
+Y3BwO2RyYz02NWJkN2FiOTQxYTcwDQo+IDliZjA0OTg3MTQwNjk4MTAyMmI5ODhlMTcyMTtsPTcw
+Ng0KPiANCj4gRmlsZSAvIGFub24gYmFsYW5jZSB2cyBob3RuZXNzIGFuZCBnZW5lcmF0aW9uYWwg
+cGxhY2VtZW50IGRvZXNuJ3QNCj4gbWF0dGVyIGluIHRoYXQgc2NlbmFyaW8gYmVjYXVzZSB3ZSB3
+YW50IHRvIGdldCByaWQgb2YgYWxsIG9mIGl0LiBTbyBJDQo+IGRvbid0IHJlYWxseSB1bmRlcnN0
+YW5kIGhvdyB5b3UnZCB3YW50IHRvIHVzZSBhbiBhZ2luZyBrbm9iLg0KDQpIaSBULkouLA0KDQpU
+aGFua3MgZm9yIHRoZSByZWZlcmVuY2UuDQoNCldlIGtub3cgQW5kcm9pZCByZWNsYWltcyB0aGUg
+ZW50aXJlIHdvcmtpbmdzZXQgYW5kIGZyZWV6ZXMgdGhlIGNncm91cA0Kb24gYmFja2dyb3VuZGlu
+ZyAod2UgZGlzY3Vzc2VkIHRoaXMgYXQgTFNGL01NL0JQRiAyMDI2LCBpZiBJIHJlY2FsbCkuDQpX
+ZSBhcmUgY29uY2VybmVkIGFib3V0IHBlcmZvcm1hbmNlOiB0aGF0IG1lYW5zIGEgc3Vic2VxdWVu
+dCBob3Qgc3RhcnQNCmhhcyB0byByZS1mYXVsdCB0aGUgd2hvbGUgc2V0LCB3aGljaCBtYXkgaW5j
+cmVhc2UgSU8sIENQVSwgYW5kIHBvd2VyDQpjb3N0LiBXZSB3b3VsZCBwcmVmZXIgYSByZWNsYWlt
+IHJhdGlvIHR1bmVkIHBlciBTb0MsIHRyYWRpbmcgbWVtb3J5DQpoZWFkcm9vbSBhZ2FpbnN0IGhv
+dC1zdGFydCBsYXRlbmN5Lg0KDQpQcm9hY3RpdmUgYWdpbmcgaXMgd2hhdCBtYWtlcyB0aGF0IHdv
+cmthYmxlOiBhZ2UgZmlyc3Qgc28gYW5vbnltb3VzDQpwYWdlcyBiZWNvbWUgcmVjbGFpbWFibGUs
+IHRoZW4gcmVjbGFpbSB0aGVtIHdoaWxlIHJldGFpbmluZyB0aGUgZmlsZQ0KY2FjaGUuDQoNCmZn
+LT5iZyBpcyBhIHNpbXBsZSBhbmQgZWZmZWN0aXZlIGhldXJpc3RpYy4gUHJvYWN0aXZlIGFnaW5n
+IGlzIHVzZWZ1bA0KYmV5b25kIGl0OiBvbiBmaWxlLWNhY2hlLWJvdW5kIHNlcnZlcnMgKGZpbyBy
+YW5kb20tcmVhZCArMzEuOCUgaW4gb3VyDQptZWFzdXJlbWVudHMpLCBhbmQgbGlrZWx5IGluIG90
+aGVyIEFuZHJvaWQgc2NlbmFyaW9zIHdlIGhhdmUgbm90IHlldA0KZXhwbG9yZWQuDQogIA0KQmVz
+dCwNClppY2hlbmcNCg==
