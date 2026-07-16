@@ -1,211 +1,104 @@
-Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
+Received: from mta20.hihonor.com (mta20.honor.com [81.70.206.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB681389115
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 06:07:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA2A5477E;
+	Thu, 16 Jul 2026 06:38:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.70.206.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784182030; cv=none; b=jpKn7Y5e/zes6hYZlK6RgWnuhG6YT7FRhx/bJbyJ5FWDJ04FjPL1CSB4VXqsd7u922tv1fTHpoDYxo5n8iVGVa7b+mPQYRYzqUkmYT5NjkLJGlr3vekfuISyxJXwkfRTHSOli7SanVz9J7t5aa73sa2geV6f1cJ8dlkLHaHojv8=
+	t=1784183898; cv=none; b=UAB2zTdAnCf/3TkpGmLh6iUMPGKqdFZlxqqs8nkFQzuR2lksDYqAGbpdZIm9ecGNxC/TS4BFQ6iLciLvNdophA70dTkRgerXRfxTkdgPGQCH96dwMCZSvhjkeG5YXiTKUIfG23Srj+q/46VGbnpldky8lS3e4yCZenI9d+e/6Yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784182030; c=relaxed/simple;
-	bh=gdoFLsig6j4EFae6D9gJqSqmuDlEvqM1nvk/C9roJoI=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Z2AG7Ie/Y4oXDVYX7rIsqq+kPiEWUfH8bXXGFWmf69tjmTnPIWRy4aggtatkOv6Dno/pXXgSlBU3+zNzJJAmO1//vrH928WmwF5PO+IFF4TMpVLu9ByEB/LMAupBV3FOOVPklx863B+VjZIuFQU4IWLnoD3PbZWwFRGQDYzNt50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uAX/WdVg; arc=none smtp.client-ip=91.218.175.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uAX/WdVg"
-Message-ID: <c500efef-93d2-481d-8193-44b2822f76e2@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784182025;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P/P4Th/0tUd4b2Kq0qhZuqkwJXjiWeWYKkS1TJBpFWE=;
-	b=uAX/WdVgvqTN7dCCpUlZVP6groObBfXT8bUANKnMUOvi3WPzfcGXEYwXWk0KlbO6Z7ylSh
-	GzbW6Kjef7N1m9ceQFhd/pQKPc98hjYbzN+dW1/1gBH8Odi7QfDssgQNvIXMY8nW845r1n
-	INVudtNmyWmS7lt5weK6O2vK2m2W838=
-Date: Thu, 16 Jul 2026 14:06:58 +0800
+	s=arc-20240116; t=1784183898; c=relaxed/simple;
+	bh=VN2l4+L3cGzSMhgeLm2beoEljEgiLAJEQyRe6n/nqWg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=tfyNeIOC4vHnECZyhKuf/vwvzNtvwQXyDG1nt402xREAqHey7WkRxg+sBKPzkflRkxRdso+/WZVe7YFxc/rtX7KubxGVGq/eu/zPJXrgdVth6p0LRV1uWZlEjISv2DWP6ZoP33SE3J8B0Voc8IVrZiTZdFQviW/QHL/6uj72iDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=honor.com; spf=pass smtp.mailfrom=honor.com; arc=none smtp.client-ip=81.70.206.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=honor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=honor.com
+Received: from TW001.hihonor.com (unknown [10.77.229.151])
+	by mta20.hihonor.com (SkyGuard) with ESMTPS id 4h13Jb3SLDzYxkj2;
+	Thu, 16 Jul 2026 14:38:07 +0800 (CST)
+Received: from TA009-1.hihonor.com (10.77.226.44) by TW001.hihonor.com
+ (10.77.229.151) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Thu, 16 Jul
+ 2026 14:38:07 +0800
+Received: from TA012-1.hihonor.com (10.77.199.132) by TA009-1.hihonor.com
+ (10.77.226.44) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Thu, 16 Jul
+ 2026 14:38:01 +0800
+Received: from TA012-1.hihonor.com ([fe80::6668:8cd2:ec5c:99b2]) by
+ TA012-1.hihonor.com ([fe80::6668:8cd2:ec5c:99b2%13]) with mapi id
+ 15.02.2562.017; Thu, 16 Jul 2026 14:37:50 +0800
+From: wangzicheng <wangzicheng@honor.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+CC: "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"yuanchu@google.com" <yuanchu@google.com>, "tj@kernel.org" <tj@kernel.org>,
+	"mkoutny@suse.com" <mkoutny@suse.com>, "corbet@lwn.net" <corbet@lwn.net>,
+	"kasong@tencent.com" <kasong@tencent.com>, "qi.zheng@linux.dev"
+	<qi.zheng@linux.dev>, "shakeel.butt@linux.dev" <shakeel.butt@linux.dev>,
+	"baohua@kernel.org" <baohua@kernel.org>, "axelrasmussen@google.com"
+	<axelrasmussen@google.com>, "weixugc@google.com" <weixugc@google.com>,
+	"david@kernel.org" <david@kernel.org>, "ljs@kernel.org" <ljs@kernel.org>,
+	"liam@infradead.org" <liam@infradead.org>, "vbabka@kernel.org"
+	<vbabka@kernel.org>, "rppt@kernel.org" <rppt@kernel.org>, "surenb@google.com"
+	<surenb@google.com>, "mhocko@suse.com" <mhocko@suse.com>,
+	"roman.gushchin@linux.dev" <roman.gushchin@linux.dev>,
+	"muchun.song@linux.dev" <muchun.song@linux.dev>, "cgroups@vger.kernel.org"
+	<cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"willy@infradead.org" <willy@infradead.org>, denghaojie
+	<denghaojie@honor.com>, "baoquan.he@linux.dev" <baoquan.he@linux.dev>,
+	"kaleshsingh@google.com" <kaleshsingh@google.com>, "tjmercier@google.com"
+	<tjmercier@google.com>, wangtao <tao.wangtao@honor.com>, zhangji
+	<zhangji1@honor.com>, wangzhen <wangzhen5@honor.com>
+Subject: RE: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
+Thread-Topic: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
+Thread-Index: AQHdE4pwfI2vhxgx7kyzLikejPZWhrZuF3kAgAGbAtA=
+Date: Thu, 16 Jul 2026 06:37:50 +0000
+Message-ID: <0a218053083e41c8bc7aacc552c7f38c@honor.com>
+References: <20260714121529.2237261-1-wangzicheng@honor.com>
+ <20260715140046.GO276793@cmpxchg.org>
+In-Reply-To: <20260715140046.GO276793@cmpxchg.org>
+Accept-Language: en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Cc: cui.tao@linux.dev, Muchun Song <muchun.song@linux.dev>,
- Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
- Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
- Youngjun Park <youngjun.park@lge.com>, David Hildenbrand <david@kernel.org>,
- Qi Zheng <qi.zheng@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>,
- Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
- Wei Xu <weixugc@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
- cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- Ridong Chen <chenridong@xiaomi.com>
-Subject: Re: [PATCH v2 1/2] memcg: move mem_cgroup_swappiness and
- vm_swappiness to mm/swap.h
-To: Ridong <ridong.chen@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
- Kairui Song <kasong@tencent.com>
-References: <20260716031729.1064007-1-ridong.chen@linux.dev>
- <20260716031729.1064007-2-ridong.chen@linux.dev>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20260716031729.1064007-2-ridong.chen@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
+> Subject: Re: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
+>=20
+> On Tue, Jul 14, 2026 at 08:15:26PM +0800, Zicheng Wang wrote:
+> > MGLRU inverts the reclaim order when anonymous memory is faulted in
+> > bulk: anonymous pages sit in the young generations while file pages
+> > sit in the oldest two, so reclaim evicts hot file pages before cold
+> > anonymous pages.
+>=20
+> An aging inversion in the reclaim algorithm seems like an exceedingly
+> poor justification for a userspace interface to work around them.
 
-Reviewed-by: Song Hu <husong@kylinos.cn>
-在 2026/7/16 11:17, Ridong 写道:
-> From: Ridong Chen <chenridong@xiaomi.com>
-> 
-> The per-memcg swappiness knob is v1-only; v2 always uses global
-> vm_swappiness and ignores the per-cgroup field.
-> 
-> Both mem_cgroup_swappiness() and vm_swappiness are only used within
-> mm/ (memcontrol.c, memcontrol-v1.c, vmscan.c), so move them out of the
-> public include/linux/swap.h into the mm-private mm/swap.h. This keeps
-> unrelated declarations out of include/linux/swap.h.
-> 
-> Guard memcg->swappiness with CONFIG_MEMCG_V1 as well, so v2-only
-> kernels drop the unused field.
-> 
-> No functional change for v1; v2-only kernels drop the unused field.
-> 
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-> ---
->  include/linux/memcontrol.h |  4 ++--
->  include/linux/swap.h       | 19 -------------------
->  mm/memcontrol.c            |  4 ++--
->  mm/swap.h                  | 20 ++++++++++++++++++++
->  4 files changed, 24 insertions(+), 23 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 957260677678..e7a794dfb40e 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -239,8 +239,6 @@ struct mem_cgroup {
->  	 */
->  	bool oom_group;
->  
-> -	int swappiness;
-> -
->  	/* memory.events and memory.events.local */
->  	struct cgroup_file events_file;
->  	struct cgroup_file events_local_file;
-> @@ -318,6 +316,8 @@ struct mem_cgroup {
->  	/* List of events which userspace want to receive */
->  	struct list_head event_list;
->  	spinlock_t event_list_lock;
-> +
-> +	int swappiness;
->  #endif /* CONFIG_MEMCG_V1 */
->  
->  	struct mem_cgroup_per_node *nodeinfo[];
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 696ed01709c2..330a420fd6de 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -309,7 +309,6 @@ static inline bool lru_cache_disabled(void)
->  }
->  
->  extern unsigned long shrink_all_memory(unsigned long nr_pages);
-> -extern int vm_swappiness;
->  long remove_mapping(struct address_space *mapping, struct folio *folio);
->  
->  #if defined(CONFIG_SYSFS) && defined(CONFIG_NUMA)
-> @@ -468,25 +467,7 @@ static inline int add_swap_extent(struct swap_info_struct *sis,
->  }
->  #endif /* CONFIG_SWAP */
->  #ifdef CONFIG_MEMCG
-> -static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
-> -{
-> -	/* Cgroup2 doesn't have per-cgroup swappiness */
-> -	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> -		return READ_ONCE(vm_swappiness);
-> -
-> -	/* root ? */
-> -	if (mem_cgroup_disabled() || mem_cgroup_is_root(memcg))
-> -		return READ_ONCE(vm_swappiness);
-> -
-> -	return READ_ONCE(memcg->swappiness);
-> -}
-> -
->  void lru_reparent_memcg(struct mem_cgroup *memcg, struct mem_cgroup *parent, int nid);
-> -#else
-> -static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
-> -{
-> -	return READ_ONCE(vm_swappiness);
-> -}
->  #endif
->  
->  #if defined(CONFIG_SWAP) && defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 22f55aeb94f3..d6ba276740ea 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -63,6 +63,7 @@
->  #include <linux/sched/isolation.h>
->  #include <linux/kmemleak.h>
->  #include "internal.h"
-> +#include "swap.h"
->  #include "swap_table.h"
->  #include <net/sock.h>
->  #include <net/ip.h>
-> @@ -4174,11 +4175,10 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  #endif
->  	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
->  	if (parent) {
-> -		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
-> -
->  		page_counter_init(&memcg->memory, &parent->memory, memcg_on_dfl);
->  		page_counter_init(&memcg->swap, &parent->swap, false);
->  #ifdef CONFIG_MEMCG_V1
-> +		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
->  		memcg->memory.track_failcnt = !memcg_on_dfl;
->  		WRITE_ONCE(memcg->oom_kill_disable, READ_ONCE(parent->oom_kill_disable));
->  		page_counter_init(&memcg->kmem, &parent->kmem, false);
-> diff --git a/mm/swap.h b/mm/swap.h
-> index b51ad3071a73..a0e04b97a466 100644
-> --- a/mm/swap.h
-> +++ b/mm/swap.h
-> @@ -4,6 +4,7 @@
->  
->  #include <linux/atomic.h> /* for atomic_long_t */
->  #include <linux/mm.h> /* for PAGE_SHIFT */
-> +#include <linux/memcontrol.h> /* for mem_cgroup_swappiness() */
->  struct mempolicy;
->  struct swap_iocb;
->  struct swap_memcg_table;
-> @@ -76,6 +77,25 @@ enum swap_cluster_flags {
->  	CLUSTER_FLAG_MAX,
->  };
->  
-> +extern int vm_swappiness;
-> +
-> +static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
-> +{
-> +#ifdef CONFIG_MEMCG_V1
-> +	/* Cgroup2 doesn't have per-cgroup swappiness */
-> +	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> +		return READ_ONCE(vm_swappiness);
-> +
-> +	/* root ? */
-> +	if (mem_cgroup_disabled() || mem_cgroup_is_root(memcg))
-> +		return READ_ONCE(vm_swappiness);
-> +
-> +	return READ_ONCE(memcg->swappiness);
-> +#else
-> +	return READ_ONCE(vm_swappiness);
-> +#endif
-> +}
-> +
->  #ifdef CONFIG_SWAP
->  #include <linux/swapops.h> /* for swp_offset */
->  #include <linux/blk_types.h> /* for bio_end_io_t */
+Hi Johannes,
 
+Thanks for the reply.
+
+I agree the aging inversion is a real defect, and I have no good fix
+for it. But aging is not a workaround for it. Aging is a `MGLRU feature':
+rebalancing the generations lets MGLRU's swappiness work as designed,
+and we measure gains on both Android and file-cache-bound server
+workloads.
+
+The capability already exists in debugfs (the lru_gen "+" command), but
+production systems like Android cannot mount debugfs. memory.aging is a
+feasible path to that existing primitive. We ship it as a GKI module
+across kernels 6.6, 6.12 and 6.18 (Qcom and MTK), with stable
+gains on both Android and server workloads. Having it in-tree would be
+very helpful.
+
+Best,
+Zicheng
