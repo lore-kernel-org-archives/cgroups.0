@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD7DF3BCD11;
-	Thu, 16 Jul 2026 13:58:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 998D8431E67;
+	Thu, 16 Jul 2026 14:43:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784210304; cv=none; b=gqtv05Yh0mjDp/IX4fNttdwOVwWWTlAHUiwsQGJ5gpiP5f+XPNyMxz2ao8r0B1KrJG+gI1krukguTDzrVjEWroMsZFkSHsitL8YNu3+IY3/XW6b+SaxMtDly5gE6qfqrqEmgOAUboM2zz2yxuzP2u8YWmvkR+wd+H+j0dMy/0N8=
+	t=1784213029; cv=none; b=o1P51w3PX2EFCysedJYXsEgd3BMauwQdyEiaOmE/CgekVdHWat6R0dZSi8fkVJKLwB8RlvPqpejVabvehrVnqZCIC2wLtOCak7PrHybeRlvPXYvSfFBgItquIFnBk4ue+JsPJGu6lsW9UeE/HoWJE99/AZf8n7bRjRFmQZ3Uhic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784210304; c=relaxed/simple;
-	bh=ZeafglfvX/hxAyhsqjQ331bwD6COfedQZ/3pdJ4UNhE=;
+	s=arc-20240116; t=1784213029; c=relaxed/simple;
+	bh=mTe8D8nzgtbigkSBp1hbXfnITsUxOIHKOJYVryZbmRo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=azr0AYr+oEPdH6sLr1sVNK8w+5/e+VIdrAvJsPXrAL5f2YIwBPoXdjnmsdNW3Qdb8EwZ4GqCcw5JUL42+vqQkV5uoGK8g8vgdN/0wAHW5x2fncXw1QCLVBKxJxxRUTyMc+yKhCju8z29xsw/tJ0uPXyHheNlhuvbfD+8JLHEnV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J3QpNxlK; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=uCtF6pqYUkbX+kWRKlPSTZ15mvypY6ofX5mmTXxO0pvvbGP5ov9J6TSDPQuSX47a4R6fJIBNKLBRNFdnqS5RvfXmNccTt4L6J6PuWAmpd1emtD7RBgt5vnBuaT7Y5UdVvVV3/cWrJF/7BsB8wFX+X3vNQ9fGWp7uovrZqPDLJKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FJauAJak; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J3QpNxlK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37B711F00A3A;
-	Thu, 16 Jul 2026 13:58:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FJauAJak"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6C0C1F000E9;
+	Thu, 16 Jul 2026 14:43:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784210303;
-	bh=vZVvwb5gue2Pu5bCd5TzfBGCtT03YhDYvhjRxQgTOBY=;
+	s=k20260515; t=1784213020;
+	bh=mU+AkHG+unovjoou+Gc++cD5SyJh4xwusPC7zchS0m8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=J3QpNxlK+VfRxOQBqJ3Un2Zp2XZu+SBFJoDzQKLY+1pcxm5h5JkuCmJePpKOi+bV4
-	 FcmoPvyk+dtTe+rj/Sgm5BobMog+m8r01RYWJmkuIOv+y4gep+fqYziq43dFNUuz08
-	 lLyDEkcWlpC6SlWuyKtQIEO8wMa0Bj15QBwbmJLBSleZ56WMyiWv9K9b4vJFYfwSJc
-	 ZsEXhYV9Hl9MkVd7PMqi9AWwi1zYmgK3uH6Yc3HURviDObyLSXClZp2D/pc8IZU6Uw
-	 cTlTiafXjZZVXG2b4SciG2SOTAWlJX6xnavIdMVZezkTWpn7jQ8fiMfbMCtI7hWExJ
-	 AErWQyHw/crHA==
-Message-ID: <eb3fc4d3-c8bd-44e9-88ba-7fb974a58aa3@kernel.org>
-Date: Thu, 16 Jul 2026 15:58:19 +0200
+	b=FJauAJakhRvLtd584lr/GAriHLfmUjBqPUdRIv4YrgWA5IhTqvb2tRcX1o3i24R+g
+	 2broTkPr1VeFpwXQXpsesKck8xUKjn83EjzPBr+yqgR86w4zBP2aCYT00Cyd2D2cix
+	 MPeXf+WXorOO0Rj40ZtpBDXH2RA/12A1xbXD7FbhFEUpMG5hgiCDiPukBTEedWe6UH
+	 9hPL/878X3Rs4xlvQjToaIItSVqWLW2hOQ6RBfrZ3UtIibFGKvR8bhvbGRZyEKSLnU
+	 u9w+91zOogOw1vMlsvBhVj2vSKayZKuflTHagKlETCzG+3EdoJU4Mn4mixnFkK5pPV
+	 lqcN8AinTwW6g==
+Message-ID: <01aa6803-e6a7-4172-94ef-043914e2f794@kernel.org>
+Date: Thu, 16 Jul 2026 16:43:36 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 05/12] mm/slab: abstract slabobj_ext.objcg access
+Subject: Re: [PATCH RFC 08/12] mm/slab: change struct slabobj_ext to a union
 Content-Language: en-US
 To: Suren Baghdasaryan <surenb@google.com>
 Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
@@ -46,8 +46,8 @@ Cc: Harry Yoo <harry@kernel.org>, Hao Li <hao.li@linux.dev>,
  Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <20260715-b4-objext_split-v1-5-9a49c4ccf4c3@kernel.org>
- <CAJuCfpEJV=OgCmQ9=tuMHOjMMh8bgHrpFe1gLtTXjagAenKZsg@mail.gmail.com>
+ <20260715-b4-objext_split-v1-8-9a49c4ccf4c3@kernel.org>
+ <CAJuCfpGq3Yv8Dq=2mPgR5LGC=40VSNTA6mg4BjTRE0ADXMZkbg@mail.gmail.com>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -88,70 +88,60 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <CAJuCfpEJV=OgCmQ9=tuMHOjMMh8bgHrpFe1gLtTXjagAenKZsg@mail.gmail.com>
+In-Reply-To: <CAJuCfpGq3Yv8Dq=2mPgR5LGC=40VSNTA6mg4BjTRE0ADXMZkbg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 7/16/26 03:27, Suren Baghdasaryan wrote:
+On 7/16/26 06:11, Suren Baghdasaryan wrote:
 > On Wed, Jul 15, 2026 at 3:11 AM Vlastimil Babka (SUSE)
 > <vbabka@kernel.org> wrote:
+>> No functional change intended, the layout is still effectively static.
+>>
+>> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> 
+> This is much cleaner than what I was preparing. Nicely done!
+> 
+> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+
+Thanks!
+
+>> ---
+>>  mm/slab.h | 41 +++++++++++++++++++++++++++++++++--------
+>>  mm/slub.c | 17 +++++++++--------
+>>  2 files changed, 42 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/mm/slab.h b/mm/slab.h
+>> index 3ad9777ad600..359ab8caf61e 100644
 >> --- a/mm/slab.h
 >> +++ b/mm/slab.h
->> @@ -555,7 +555,7 @@ static inline bool need_kmalloc_no_objext(void)
+>> @@ -554,14 +554,34 @@ static inline bool need_kmalloc_no_objext(void)
+>>   * if MEMCG_DATA_OBJEXTS is set.
 >>   */
 >>  struct slabobj_ext {
->>  #ifdef CONFIG_MEMCG
->> -       struct obj_cgroup *objcg;
->> +       struct obj_cgroup *_objcg;
->>  #endif
->>  #ifdef CONFIG_MEM_ALLOC_PROFILING
->>         union codetag_ref ref;
->> @@ -661,6 +661,13 @@ slab_obj_ext(struct kmem_cache *s, struct slab *slab, unsigned long obj_exts,
->>         return kasan_reset_tag(obj_ext);
->>  }
->>
->> +#ifdef CONFIG_MEMCG
->> +static inline struct obj_cgroup **slab_obj_ext_objcgp(struct slabobj_ext *obj_ext)
 > 
-> I understand why you need to return obj_cgroup** but maybe instead we
-> can have a separate setter function and just return a pointer here?
-
-Yeah I rewrote it now and it looks better. Thanks! It ended up like this due
-to some previous attempt I made.
-
-> That would also help catch cases when someone wants to set
-> obj_ext._objcg that was optimized away (for that the setter would need
-> an additional parameter to identify whether we allocated optimized
-> objext vector).
-
-It would need passing the slab parameter to assert
-slab_obj_ext_has_codetag() in debug mode. I don't think it's worth it given
-the get/set is only called from few specialized places.
-
+> Perhaps we should add a comment here stating that every element of
+> this union should be pointer-sized?
 > 
->> +{
->> +       return &obj_ext->_objcg;
->> +}
->> +#endif
->> +
->>  int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
->>                         gfp_t gfp, unsigned int alloc_flags);
->>
->> diff --git a/mm/slub.c b/mm/slub.c
->> index 5e3f53bcd0d3..48e10198a3ce 100644
->> --- a/mm/slub.c
->> +++ b/mm/slub.c
->> @@ -2523,7 +2523,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags)
->>         if (obj_exts) {
->>                 get_slab_obj_exts(obj_exts);
->>                 obj_ext = slab_obj_ext(s, slab, obj_exts, p);
->> -               if (unlikely(obj_ext->objcg)) {
->> +               if (unlikely(*slab_obj_ext_objcgp(obj_ext))) {
->>                         put_slab_obj_exts(obj_exts);
->>                         return true;
->>                 }
->>
->> --
->> 2.55.0
->>
+
+OK, how about this?
+
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -550,10 +550,14 @@ static inline bool need_kmalloc_no_objext(void)
+ }
+ 
+ /*
+- * Extended information for slab objects stored as an array in page->memcg_data
+- * if MEMCG_DATA_OBJEXTS is set.
++ * Extended information for slab objects stored as a pointer to an array in
++ * slab->obj_exts (aliasing page->memcg_data) if MEMCG_DATA_OBJEXTS is set.
+  */
+ struct slabobj_ext {
++       /*
++        * All elements of the union should be pointer-sized to avoid memory
++        * waste
++        */
+        union {
+ #ifdef CONFIG_MEMCG
+                struct obj_cgroup *_objcg;
 
