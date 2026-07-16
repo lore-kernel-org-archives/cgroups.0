@@ -1,185 +1,187 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F88237266D
-	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 04:56:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.176
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784177764; cv=pass; b=Dy1429LvVpbQnPaC+N2n55SegDsbx9hVDS0julOvYMRLa4JmOEb9Ot2rEuDHLJeZKZxkISiXJBb30JNNohp7CCbjn5g2uTAVcMV9f3WWqEvAe3Xqu1r7Cw1GnsmNdWrij1Y0A1GObbOOLnlFdzJt8RykJ1lsahFMD4gwD5Y1ONY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784177764; c=relaxed/simple;
-	bh=FwQNxHjUS/9BAx82HL3adWHdlUQgXQ5/Xdc9egae3M0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YrKkJYDDuyBuLkoVCA6sIRhg1Kcx6LQfCqm47HJNEan4VEt889YOPfmZ/hcRFjPGljEHK1LU+9Fo0PE7uhK2aSMRnsDk+2m9OON/Cds3tQ/gz/YnZQDjUt7Iaeq4uV6kLsASaGxOrQXrnF2fdvEggVi5hIAT8DzoTC4i0LJclnA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PntnDs++; arc=pass smtp.client-ip=209.85.160.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C24CC3859EF
+	for <cgroups@vger.kernel.org>; Thu, 16 Jul 2026 06:06:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784182011; cv=none; b=RZw9rQbNm9n705jIYWW3wpanjkSz81jfOHcLd1/5kmAkf2yBHGkUanQKpgcVLaCMy+u3dXgKxuU8GlO2PWg7VNuQuXTiXLOy2V7R7QgMck03TI5fTHwWSXRVY0gWRiQqkrVST2CtVfiCr8zFGIg5dY5EA/zsiPa2b9pcI9hrby8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784182011; c=relaxed/simple;
+	bh=dbXVOSGpG+ytP577TTz2cjwlzWO5l0LZk965xEyoSUw=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=VSaPZDpwlMQmbZevoatdHVsE/XpxeD3sdiC+ua8jnfN7P2IffBzOAeBndFqi6LR/6BI1hjKsgPMTRPc6lTLtDfSEsmf12NOrVXWAqBDUgM17ApsJ9JFqcNZ6SW3cdi94YxKo771Mua10TLe4Pwma9JD/fQgFBo6QaD1aWuN/JuQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CPd0apMa; arc=none smtp.client-ip=91.218.175.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PntnDs++"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-51c15a5b265so164831cf.0
-        for <cgroups@vger.kernel.org>; Wed, 15 Jul 2026 21:56:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784177762; cv=none;
-        d=google.com; s=arc-20260327;
-        b=mdqUFRV5cyDV9KnousdDe5N7unVXu+RPTs8fdCvzipA3jeIGNOQvjERJxZy6mg3nRl
-         yo8DU01y3QDnyyJji8jCJACJk9f42KqzwQKL99WkSqYHwqditaDxjjCXqiFGJrzWy7ms
-         OlXJUUAC21ZPnCElgFKMwRJvmL4zFOCfaxzleZ4etPEj0kiTzLHRg8dJ5ZwqSsCVS65b
-         rjc/dXa0YkYFN/4Bi5NwuU5HjvixqCpsOSq3lCfBUzIslU0T8ErauH8nm4aVbraJsHbZ
-         JCyFX7DO7ls1N3gJpeaL70ql1/tg9cF+shyXH9eqmuo7AqbaeoTUpdBAc9Z568f4o4j3
-         O8Ww==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=bS/QNlnrbXpOGhrS6iLoq0SdHzM7UbN+ODYuLLYXyPI=;
-        fh=M07fwFlicujWymMGIZEsFMZu17pBhXeLKWCrcoeopoE=;
-        b=iw+Rvr7kZeW87yfSX85KBFFjH9TDnkua7Lkr0wPsdD8S0co2+FDG+q/5lL8t274xfh
-         E7GToVUxTb028AeRkGcDu5iL+ioNRByAt0Vuu4/RfqUijhSUYo/DiAkfpOX/q4fC2EPt
-         6frlmTtovO+rOt5dgrslkTSlNKXbuBfm8eZrzEf5IsuAq20NO3P0m1FfI8ACZ0tAP6mZ
-         0wMVG2emau4lDunbrn9DEd0RKqWWkEjSLBxTuOIfnpQG+T9wpurleV4WD5FGfUbEmt83
-         KAsxmxOQ0bSKRkCmraLcb/Z5QPahGR5fENMHRC7BElmeP6i4hY+fT0mXsQWAqy0+eUdj
-         clng==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784177762; x=1784782562; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=bS/QNlnrbXpOGhrS6iLoq0SdHzM7UbN+ODYuLLYXyPI=;
-        b=PntnDs++01r6xlD4nx1mRzm5IqMkCGEUPchVYp2jcBYzkxf70UQJDBEnxRApeg7Yiw
-         1xGCean8yuJG/6RPzpsPTkTtr2ZEei+DUvu2nbB84AhHSR3HB8Jb46G5je9ApuIW3fKl
-         fDTWkkJvd/GliOZoLPNkCxoK84F7eVUgCGxEQhbP9n5p2YmqzS732sQ780ZiSs8O1Gnk
-         CB3jsLW3ZbFDavoNxnL/Y02hh1bMo9cMHF7LYYMklnIuRmwWvNyTUuUUMEB0ZeKLHNCi
-         H4Djwnew6jLpZ9zgXZbbDpvQyLd4KCYjK/xlamp286WRBIR0sTrob4PfAqea0q1VBLSj
-         OhEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784177762; x=1784782562;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=bS/QNlnrbXpOGhrS6iLoq0SdHzM7UbN+ODYuLLYXyPI=;
-        b=Gb6QUaTs/pEfS6YRuLVvj6D3McVgvVOT29GGX8tEiz3a6YwJhTBw/utgVfW252pXEF
-         HlPdls7aVrhTWzLwrsXloxXFQjOw8qwV+MaLkxfclGZoYR2L/Ri5t/026TK82HRRHv7f
-         qdla2Reobq6bwIKl2fZfv783cjHBxzVmRkyA9rTWTywZNtbCnFP3a142J1leFieHOAXo
-         p1+RFmONgqpsQvVSpxb+4p92RN+kO8kMYKYtztciF3nQwm2cXgujI7k5zWBiYzrQztKB
-         4uUM9ClfK+UHRKLfBER500OMPKztvpcqdlRYL8u5/Jdl9OzKc40zLq/SzH0ZU0z6xCsi
-         MeMg==
-X-Forwarded-Encrypted: i=1; AHgh+RqpZ+F9DSLZ2z2McfXPWTLmgZ40KSN3hmmoghSo8MY8zDeqRA7YoyrK1unuJ/9MNpOkxyh0SF3B@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkxXhsUI5DtdZPgWxTFIYldi5xc2dZ5oMRZYkQgTwM4Y9Vhecz
-	ku84p/lb0nQ4BI9oyDf0kFba1h32vJylISaRpKJzQsax99t3LBiP4z7QmTG7Gr0ouPO1XjTThbp
-	d5HLytzhF9FM5hwgFFLi9YG4Ly8KVoeMB/Irts6js
-X-Gm-Gg: AfdE7clw+2wowIpCGQ5808V/yMsEKOf0Qyj6DoenaWUEwpoi0Ye4G+3G18dj+ntSBV9
-	zkhlqwTIVaWEtLr/BUfO5WkPpbCxDEPQnwX/6UKmOXir67b+nV/ZZ/iJ6E2fj0lolkJNhdGlCix
-	B9qghuxJhSGauB4Pj7CPQV5FwNqxElVrmZBY9HtauUEgXqVk1MBYRjTK0rAKXy9Y9cTl8T+acPt
-	SVJQoLPU823JzcjKeVVCXfpOnzsV9XYqyNyIHELScQm53HgpTBPFkz2ZbEIIhF6sHvr+zw=
-X-Received: by 2002:a05:622a:293:b0:51c:ae6:a57 with SMTP id
- d75a77b69052e-51fa44b7219mr3962941cf.11.1784177761873; Wed, 15 Jul 2026
- 21:56:01 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CPd0apMa"
+Message-ID: <c5efad07-7188-4f18-bdc3-fceb8aedc9b8@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784181995;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7uhHNMGoknzcpdCX17NI7sXI5Sy8+5TFbMqGXleEpE4=;
+	b=CPd0apMauILsa0blk2Zc4Px4Ow25bSesO0rzdBGHpTKJ4yZpjwqUAkpX7TFVcZKhK6fxaR
+	AG2mg6BU/X6qqv1UFv01iPxLiwxms33oA/l21mXJ2trnE4zIM1IwnFkC2VE9oBVmK4V8YZ
+	8Oyr8gGKFp4RFowyOqGoGApS8ieFzXY=
+Date: Thu, 16 Jul 2026 14:06:27 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <CAJuCfpEVQU6s58s9XWCVDUXzr=7bbatmCi35vxnSiyA1pe1P6g@mail.gmail.com> <0d191478-43fb-4286-a2e6-3e7f3047b42a@kernel.org>
-In-Reply-To: <0d191478-43fb-4286-a2e6-3e7f3047b42a@kernel.org>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Wed, 15 Jul 2026 21:55:50 -0700
-X-Gm-Features: AUfX_myzkvAFS4o6DwQPPiPbod62HAR9bJIYi6k3dRczP2dn9_9CQkC9qjxhTUs
-Message-ID: <CAJuCfpGGp1Yt7Jz0J_a-0+TRA7gX6mkYhZiqvAMbF86q3avJeg@mail.gmail.com>
-Subject: Re: [PATCH RFC 00/12] mm/slab, alloc_tag: reduce obj_ext memory waste
-To: Harry Yoo <harry@kernel.org>
-Cc: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Hao Li <hao.li@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
-	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc: cui.tao@linux.dev, Muchun Song <muchun.song@linux.dev>,
+ Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
+ Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
+ Youngjun Park <youngjun.park@lge.com>, David Hildenbrand <david@kernel.org>,
+ Qi Zheng <qi.zheng@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>,
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
+ Wei Xu <weixugc@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Ridong Chen <chenridong@xiaomi.com>, stable@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] mm: vmscan: fix node reclaim ignoring swappiness
+ parameter
+To: Ridong <ridong.chen@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>
+References: <20260716031729.1064007-1-ridong.chen@linux.dev>
+ <20260716031729.1064007-3-ridong.chen@linux.dev>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260716031729.1064007-3-ridong.chen@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Wed, Jul 15, 2026 at 8:29=E2=80=AFPM Harry Yoo <harry@kernel.org> wrote:
->
->
->
-> On 7/16/26 12:32 AM, Suren Baghdasaryan wrote:
-> > On Wed, Jul 15, 2026 at 3:10=E2=80=AFAM Vlastimil Babka (SUSE)
-> > <vbabka@kernel.org> wrote:
-> >>
-> >> The recent fixes for objext array handling inspired me to look into th=
-is
-> >> finally. It's been bothering me that the memory usage of struct
-> >> slabobj_ext depend only on config options and not whether the fields a=
-re
-> >> actually used.
->
-> +1 one more person bothered by this...
->
-> >> So with both CONFIG_MEMCG=3Dy and
-> >> CONFIG_MEM_ALLOC_PROFILING=3Dy there is always objcg field and codetag=
-_ref
-> >> field. And thus:
-> >>
-> >> 1) Having memory allocation profiling config-enabled but not
-> >>    boot-enabled means wasted memory on unused codetag_refs. This makes
-> >>    it less suitable for a general distro config and the page allocator
-> >>    side doesn't suffer from this, only slab and percpu.
-> >>
-> >> 2) Complementary, with memory allocation profiling enabled, there are
-> >>    caches/slabs that don't need the objcg field, so memory is wasted o=
-n
-> >>    those.
-> >
-> > It's funny because yesterday I started working on a prototype for the
-> > same optimization. But your patchset is much more mature, so I'll
-> > focus instead on reviewing it.
->
-> Ouch, a race condition!
->
-> >> This series should solve the point 1) fully for slab, pcpuobj_ext
-> >> handling can be perhaps improved similarly, haven't looked into that.
-> >>
-> >> For 2) it avoids allocating objcg fields for KMALLOC_NORMAL caches whe=
-re
-> >> we know they are not necessary because kmalloc() with __GFP_ACCOUNT wi=
-ll
-> >> pick a KMALLOC_CGROUP type.
->
-> Unless KMALLOC_RECLAIM !=3D KMALLOC_NORMAL! (yes, SLUB_TINY)
->
-> >> The named kmem_caches are tricky. They can be created with SLAB_ACCOUN=
-T
-> >> and then we know objcg fields are always needed. But also they can be
-> >> created without SLAB_ACCOUNT and then some allocations have
-> >> __GFP_ACCOUNT and some not and we don't know that in advance.
-> >
-> > Do you know how often this happens that a named cache with no
-> > SLAB_ACCOUNT is used for __GFP_ACCOUNT allocation?
->
-> Not sure about how often, but one thing I recall is xarray
-> (radix_tree_node cache), which decides to account the objects based on
-> xarray flags.
->
-> >> A possible future solution is to introduce e.g. SLAB_MAYBE_ACCOUNT, ad=
-d
-> >> it to caches where we know __GFP_ACCOUNT is used, and only honour
-> >> __GFP_ACCOUNT for those, while warning for an unexpected usage
-> >> elsewhere.
-> >
-> > I wonder if for such caches we could create two separate caches, one
-> > serving __GFP_ACCOUNT and using extentions containing objcg and
-> > another one for non-__GFP_ACCOUNT with optimized extentions?
->
-> You mean transparently to users? (e.g., user thinks it has created
-> a single kmem_cache but actually there are two of them, multiplexed by
-> __GFP_ACCOUNT bit)
+Hi Ridong,
 
-Yeah and only when we detect that a cache that does not have
-SLAB_ACCOUNT is used to allocate with __GFP_ACCOUNT set. Not sure
-about the performance impact though...
+Reproduced the bug and verified the fix in a QEMU x86_64 guest with
+CONFIG_MEMCG disabled. Global vm.swappiness pinned to 1, then:
 
->
-> --
-> Cheers,
-> Harry / Hyeonggon
+    echo "64M swappiness=<x>" > /sys/devices/system/node/node0/reclaim
+
+  swappiness= | buggy (anon/file)   | patched (anon/file)
+  ----------- | -------------------- | --------------------
+  max         |      0  /  16385     |  16292  /  0
+  200         |      2  /  16384     |  16837  /  0
+  1           |      0  /  16386     |      0  /  16467
+
+Unpatched ignores the swappiness arg (always file); patched honors it.
+Matches the commit message.
+
+Tested-by: Song Hu <husong@kylinos.cn>
+Reviewed-by: Song Hu <husong@kylinos.cn>
+
+在 2026/7/16 11:17, Ridong 写道:
+> From: Ridong Chen <chenridong@xiaomi.com>
+> 
+> sc_swappiness() had two separate definitions depending on
+> CONFIG_MEMCG. The !CONFIG_MEMCG variant simply returned
+> vm_swappiness, ignoring the proactive_swappiness value passed
+> through scan_control. This caused the swappiness parameter
+> written to /sys/devices/system/node/nodeX/reclaim to have no
+> effect when CONFIG_MEMCG is disabled.
+> 
+> Fix this by consolidating sc_swappiness() into a single definition
+> that checks sc->proactive_swappiness first, then falls back to
+> mem_cgroup_swappiness() which already handles both CONFIG_MEMCG
+> and !CONFIG_MEMCG.
+> 
+> Before fix (swappiness=max ignored, mostly file pages reclaimed):
+> 
+>     # cat /proc/sys/vm/swappiness
+>     60
+>     # cat /proc/vmstat | grep pgsteal
+>     pgsteal_kswapd 0
+>     pgsteal_direct 0
+>     pgsteal_khugepaged 0
+>     pgsteal_proactive 1840
+>     pgsteal_anon 25
+>     pgsteal_file 1815
+>     # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
+>     # cat /proc/vmstat | grep pgsteal
+>     pgsteal_kswapd 0
+>     pgsteal_direct 0
+>     pgsteal_khugepaged 0
+>     pgsteal_proactive 18013
+>     pgsteal_anon 337
+>     pgsteal_file 17676
+> 
+> After fix (swappiness=max honored, anon pages reclaimed as expected):
+> 
+>     # cat /proc/vmstat | grep pgsteal
+>     pgsteal_kswapd 0
+>     pgsteal_direct 0
+>     pgsteal_khugepaged 0
+>     pgsteal_proactive 0
+>     pgsteal_anon 0
+>     pgsteal_file 0
+>     # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
+>     # cat /proc/vmstat | grep pgsteal
+>     pgsteal_kswapd 0
+>     pgsteal_direct 0
+>     pgsteal_khugepaged 0
+>     pgsteal_proactive 16283
+>     pgsteal_anon 16283
+>     pgsteal_file 0
+> 
+> Cc: stable@vger.kernel.org # 6.17+
+> Fixes: b980077899ea ("mm: introduce per-node proactive reclaim interface")
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> Reviewed-by: Barry Song <baohua@kernel.org>
+> ---
+>  mm/vmscan.c | 19 +++++++------------
+>  1 file changed, 7 insertions(+), 12 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 986dde8e7429..bd71595c8b2b 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -199,6 +199,13 @@ struct scan_control {
+>   */
+>  int vm_swappiness = 60;
+>  
+> +static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
+> +{
+> +	if (sc->proactive && sc->proactive_swappiness)
+> +		return *sc->proactive_swappiness;
+> +	return mem_cgroup_swappiness(memcg);
+> +}
+> +
+>  #ifdef CONFIG_MEMCG
+>  
+>  /* Returns true for reclaim through cgroup limits or cgroup interfaces. */
+> @@ -239,13 +246,6 @@ static bool writeback_throttling_sane(struct scan_control *sc)
+>  #endif
+>  	return false;
+>  }
+> -
+> -static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
+> -{
+> -	if (sc->proactive && sc->proactive_swappiness)
+> -		return *sc->proactive_swappiness;
+> -	return mem_cgroup_swappiness(memcg);
+> -}
+>  #else
+>  static bool cgroup_reclaim(struct scan_control *sc)
+>  {
+> @@ -261,11 +261,6 @@ static bool writeback_throttling_sane(struct scan_control *sc)
+>  {
+>  	return true;
+>  }
+> -
+> -static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
+> -{
+> -	return READ_ONCE(vm_swappiness);
+> -}
+>  #endif
+>  
+>  static void set_task_reclaim_state(struct task_struct *task,
+
