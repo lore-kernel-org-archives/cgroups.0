@@ -1,186 +1,201 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DBB381EA3;
-	Fri, 17 Jul 2026 19:13:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E94A8231A21
+	for <cgroups@vger.kernel.org>; Fri, 17 Jul 2026 19:18:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784315600; cv=none; b=egL660SrZXEuIsLpFnWzSdvBpzPdlZng9px8rK1uHxRSU+47Hbwo7EKJh+nHHwW3VRB/0k4dzHdrE4BL8lWGpcPvryTm/L/Zs8INPTr2Yx0B0Qjh4rQsmWveCUUeSdRsFazQmz4ka98zOzOECZ/BcYTit64hLTMlQyOzLsCIKSU=
+	t=1784315918; cv=none; b=tASHN+V0A9Y/APm6g41ArQktcvUfHheyNKH8eRUkySzaajnpyQOvpFMTd299XL/l3biv40/tAT6FIJOgOgDKzRC1Lf+TF4WK9eXuej6PaN+qy59KTk7ODpkW/kLNAq+BYdoYBbGm5CqwQ3zzYqUa3WXNo8u75kpM1hIxHo6Wqn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784315600; c=relaxed/simple;
-	bh=QmLE8pA16iwvkESsKuDi/Klu9rtgOqVX7vI60wepmqs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Wrun69+jYncRlo+uUDJj5dDe4DWWPCNgmmyfBXy4bvQ0E+pQHPfh9Rdu4OXB7e+BTCnA+Er7kmRC+NEf07y7qiq6YUZ2J0gL9k9kvnLoupP+l5NmEDWLDLzAkWyPjed3KSwVB78iLPJ85wyHeI508cY+wX3Y4DzQPsbVLhKye20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=fdBaiNGG; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1784315918; c=relaxed/simple;
+	bh=srYYVlEd4UwIAe59iTD2Ack8aE8OFUXoRQ1EbQoEtnY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=quQNsiAhnR6H9JiY30fDDETp5Ai/Mv35S6gchG2CtB8JmkHLVgaICGfScu1UiI12EnqTzrnvbpEsAIrJu1qS2zs/2HiOw1YaJ2AF4tm2PhvmEWYq7ngStVeg43IReK+X1+JRWQ1tT3aLKWffaumqSRBfQ7uHA1FaEAftsnvsWNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hjDEtnT2; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="fdBaiNGG"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66HHC7Ka2614668;
-	Fri, 17 Jul 2026 19:12:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=89syRl
-	J5f4RK2+c7tG9GpAaWSoEXbJLopmcI9DrtT/U=; b=fdBaiNGG7XZZAsG80ct/Cv
-	Rj9WKL4P0I5LixUez6dRnGyWWJ7f6qoIc+WsUsUBVLmOUYVpUBMd7GlaCEKjYM1/
-	cAISyCWZHv5BwOL1ifokD4bGa5OKiIasYS4DTzQQa2fIFCcuEP2FM7W3J2cIJqeC
-	/XEDVP4GbRRiTEqrT/WXj3Lp88VPkjKIRzpLLhHv+sim0DaBdldOnPOcWspa4T38
-	BkheyhLFbpafLcxWcOkayh2PcPkx8NcprfXliAAhrq29c9iCCT4/K2BLn84NoKCs
-	VTW7ntRTYvRLOfmEB9eAK+gsFMz6oWN/u+r737IBSk7SJw9/nEhXY2gAZFgSnWHA
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fbegc70p6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 17 Jul 2026 19:12:18 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66HJ4aCZ010039;
-	Fri, 17 Jul 2026 19:12:17 GMT
-Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fc1nhtyk6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 17 Jul 2026 19:12:17 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66HJCHoU57737610
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 17 Jul 2026 19:12:17 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EDEA258055;
-	Fri, 17 Jul 2026 19:12:16 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1255758043;
-	Fri, 17 Jul 2026 19:12:10 +0000 (GMT)
-Received: from [9.43.55.154] (unknown [9.43.55.154])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 17 Jul 2026 19:12:09 +0000 (GMT)
-Message-ID: <6baae2af-640e-48bd-9909-977cd316c8d5@linux.ibm.com>
-Date: Sat, 18 Jul 2026 00:42:08 +0530
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hjDEtnT2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784315915;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=qEQzok7ha6LEmTS02fNPAr67fZndbGmEAF+yiB9riKU=;
+	b=hjDEtnT2FPHzk3XWYQ+K1wqdL7XcxxXcVJaXylrCbTyJ3J2pfi53eUnxQ+kVg8ui503XMB
+	mDZqRz1n/euHS2gr94bgJGr8zHNHjEnw98KrKqI22PZ2UBUi0lmyt1+B14RPFXZpeN3Urm
+	hoOaEcuLc2ao8Of3JYPAgLCWr7kLZJk=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-331-7QWie-4cNlqw6l1ueAylqA-1; Fri,
+ 17 Jul 2026 15:18:32 -0400
+X-MC-Unique: 7QWie-4cNlqw6l1ueAylqA-1
+X-Mimecast-MFC-AGG-ID: 7QWie-4cNlqw6l1ueAylqA_1784315911
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C82331944E43;
+	Fri, 17 Jul 2026 19:18:30 +0000 (UTC)
+Received: from llong-thinkpadp1gen5.rmtusnh.csb (unknown [10.22.81.98])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 00A2D1955D4A;
+	Fri, 17 Jul 2026 19:18:28 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH-cgroup/for-7.3] selftests/cgroup: Fix minor defects in test_cpuset
+Date: Fri, 17 Jul 2026 15:18:14 -0400
+Message-ID: <20260717191814.989215-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v1 01/17] nvme-multipath: retarget failedover bios
- from requeue work
-To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>, Alasdair Kergon <agk@redhat.com>,
-        Benjamin Marzinski <bmarzins@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Dongsheng Yang <dongsheng.yang@linux.dev>, Zheng Gu <cengku@gmail.com>,
-        Coly Li <colyli@fygo.io>, Kent Overstreet <kent.overstreet@linux.dev>,
-        Josef Bacik <josef@toxicpanda.com>, Yu Kuai <yukuai@fygo.io>,
-        linux-block@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-nvme@lists.infradead.org, dm-devel@lists.linux.dev,
-        linux-bcache@vger.kernel.org
-References: <20260704195124.1375075-1-yukuai@kernel.org>
- <20260704195124.1375075-2-yukuai@kernel.org>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <20260704195124.1375075-2-yukuai@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=fOcJG5ae c=1 sm=1 tr=0 ts=6a5a7e92 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=wsQ0yCsUK8wXSUUBpyMA:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE3MDE5NiBTYWx0ZWRfX7GLK2X+oF4UK
- iJeThXVkVapenyQ1sH1yQzUwapeLUMHpI0huFWOiHtJfQNJGfI1AW9PqYDCDJaalWjLAb5fPOLi
- rObNeXLBOt23K3q1VQphIm/q44BHhUb9tYA9yJ+jGMcMoxH546Qrp45+rZ9OWW8bOIV28gOnzf8
- YgqxtHlNjs7EY8LYjgAz+w66QLqDLzNJRWLr3bU7ynTQdHWaMF+Rkzoo4jx2tSCcl/6BwzxuJAL
- 2cKIAIrg1RbOmDJqWsbBrZTxCYTe3hXA/nWJpCOFre1tVC80M4KK457ZHB65LrwjL+HtcCTA45l
- dy7OS19z1Md04qd8NHRRFI+S3gEtVTPbXBB6IAtwJ0evAH48I8RQQBAsRfnayc1UQ3VW6qZ3IAa
- K/uOHo/6hE9GO6Ge/WtkDU1Ihthtt2FYikg6ANYHtALL0Nm7Cop0K3ps9nDTseCQvXPyu/Mjmkr
- VqllyeAwrX0XtQN112w==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE3MDE5NiBTYWx0ZWRfX3W6AXglZxwK2
- ueNSOqrmJUmdULiSN5cujIrGd1QIfi3DG8VyU8jYE1kNRBV1DK8ufGsGy4tT9OWcTt+Ji7SZxpY
- Q1H/NhS0jSlO20cMPivcrWp3EeohKfM=
-X-Proofpoint-GUID: qvRav-GNQoR5chPggKb6TgLJfY8amvqg
-X-Proofpoint-ORIG-GUID: ya_YvUqv2298obSTDavdmuJY0HegvuO_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-17_05,2026-07-17_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 impostorscore=0 suspectscore=0 adultscore=0
- priorityscore=1501 malwarescore=0 clxscore=1011 phishscore=0
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607170196
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 7/5/26 1:21 AM, Yu Kuai wrote:
-> From: Yu Kuai <yukuai@fygo.io>
-> 
-> bio_set_dev() is about to become explicitly sleepable because it can
-> associate the bio with a blkg for the destination queue.  NVMe failover
-> can run from request completion context, and nvme_failover_req() also holds
-> head->requeue_lock with interrupts disabled while it steals bios from the
-> failed request.  Calling bio_set_dev() there is not safe once the helper is
-> allowed to sleep.
-> 
-> The requeue lock only protects head->requeue_list.  Keep the list
-> manipulation under that lock, but defer retargeting to nvme_requeue_work(),
-> which already drains the list from process context before resubmitting each
-> bio.  The bios remain private to the requeue list until the worker pops
-> them, so moving the device switch there preserves the existing retry flow
-> while avoiding a sleepable helper in completion context.
-> 
-> Signed-off-by: Yu Kuai <yukuai@fygo.io>
-> ---
->   drivers/nvme/host/multipath.c | 4 +---
->   1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
-> index 9b9a657fa330..76baa180ae1c 100644
-> --- a/drivers/nvme/host/multipath.c
-> +++ b/drivers/nvme/host/multipath.c
-> @@ -149,7 +149,6 @@ void nvme_failover_req(struct request *req)
->   	struct nvme_ns *ns = req->q->queuedata;
->   	u16 status = nvme_req(req)->status & NVME_SCT_SC_MASK;
->   	unsigned long flags;
-> -	struct bio *bio;
->   
->   	nvme_mpath_clear_current_path(ns);
->   	atomic_long_inc(&ns->failover);
-> @@ -165,8 +164,6 @@ void nvme_failover_req(struct request *req)
->   	}
->   
->   	spin_lock_irqsave(&ns->head->requeue_lock, flags);
-> -	for (bio = req->bio; bio; bio = bio->bi_next)
-> -		bio_set_dev(bio, ns->head->disk->part0);
->   	blk_steal_bios(&ns->head->requeue_list, req);
->   	spin_unlock_irqrestore(&ns->head->requeue_lock, flags);
->   
-> @@ -684,6 +681,7 @@ static void nvme_requeue_work(struct work_struct *work)
->   		next = bio->bi_next;
->   		bio->bi_next = NULL;
->   
-> +		bio_set_dev(bio, head->disk->part0);
->   		submit_bio_noacct(bio);
+With commit 98149f542530 ("selftests/cgroup: Add test for cpuset affinity
+on controller disable"), sashiko [1] had report 3 different issues with
+the new test_cpuset_affinity_on_controller_disable() test.
 
-What happens if bio_set_dev() fails to associate a blkg? From what
-I understand, bio_associate_blkg() may fail, leaving bio->bi_blkg
-set to NULL. Later, submit_bio_noacct() can invoke blkcg-related
-helpers such as blk_should_throtl(), which expect a valid bio->bi_blkg.
-However if bio->bi_blkg is NULL then accessing it without NULL check
-could crash the kernel. This is probably not a bug introduced with your
-changes, but you may want to check it.
+ 1) `cpu_set_equal` iterates over mask bytes instead of bits, ignoring
+    CPUs >= 8.
+ 2) Thread synchronization logic allows the main thread to read
+    uninitialized stack memory, causing test flakiness.
+ 3) Test fails instead of skipping gracefully on uniprocessor systems
+    or when CPU 1 is unavailable.
 
-The question is, is bio_associate_blkg() guaranteed never to fail, or
-should the failure be handled explicitly before the bio is resubmitted?
+Fix the reported issues by:
+ 1) Iterates over the bit size of the mask.
+ 2) Test the new ready flag for each thread to end the wait
+    on the condoitional variable and eliminate the now unneeded
+    AFFINITY_THREAD_A_READY and AFFINITY_THREADS_READY test phases.
+ 3) Return KSFT_SKIP on "cpuset.cpus" setting failure.
 
-I also skimmed through the rest of the series. However, as Christoph
-mentioned in an earlier thread, we may be moving away from non-blocking
-blkg allocation altogether. If that's the direction we're taking, this
-series will likely need to be reworked. I'd therefore prefer to wait for
-the next revision before reviewing the other patches.
+[1] https://sashiko.dev/#/patchset/20260712235510.373125-1-longman%40redhat.com
 
-Thanks,
---Nilay
+Fixes: 98149f542530 ("selftests/cgroup: Add test for cpuset affinity on controller disable")
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ tools/testing/selftests/cgroup/test_cpuset.c | 38 +++++++++++---------
+ 1 file changed, 21 insertions(+), 17 deletions(-)
+
+diff --git a/tools/testing/selftests/cgroup/test_cpuset.c b/tools/testing/selftests/cgroup/test_cpuset.c
+index 8b4c4a9dd78b..8c2d4d4ef1fc 100644
+--- a/tools/testing/selftests/cgroup/test_cpuset.c
++++ b/tools/testing/selftests/cgroup/test_cpuset.c
+@@ -251,7 +251,7 @@ static int cpu_set_equal(cpu_set_t *dst, unsigned long mask)
+ 	CPU_ZERO(&expected);
+ 	assert(sizeof(mask) < CPU_SETSIZE);
+ 
+-	for (int cpu = 0; cpu < sizeof(mask); ++cpu)
++	for (int cpu = 0; cpu < sizeof(mask) * 8; ++cpu)
+ 		if ((1UL << cpu) & mask)
+ 			CPU_SET(cpu, &expected);
+ 
+@@ -260,8 +260,6 @@ static int cpu_set_equal(cpu_set_t *dst, unsigned long mask)
+ 
+ enum test_phase {
+ 	AFFINITY_SETUP,
+-	AFFINITY_THREAD_A_READY,
+-	AFFINITY_THREADS_READY,
+ 	AFFINITY_CONTROLLER_DISABLED,
+ 	AFFINITY_COMPLETE,
+ 	AFFINITY_ERROR
+@@ -271,7 +269,7 @@ struct thread_args {
+ 	const char *cgroup;
+ 	cpu_set_t *affinity_before;
+ 	cpu_set_t *affinity_after;
+-	enum test_phase ready_phase;
++	int affinity_before_ready;
+ };
+ 
+ static pthread_mutex_t test_mutex = PTHREAD_MUTEX_INITIALIZER;
+@@ -289,8 +287,7 @@ static void *affinity_thread_fn(void *arg)
+ 		goto fail;
+ 
+ 	pthread_mutex_lock(&test_mutex);
+-	if (test_phase < args->ready_phase)
+-		test_phase = args->ready_phase;
++	args->affinity_before_ready = 1;
+ 	pthread_cond_broadcast(&test_cond);
+ 
+ 	while (test_phase < AFFINITY_CONTROLLER_DISABLED)
+@@ -361,18 +358,20 @@ static int test_cpuset_affinity_on_controller_disable(const char *root)
+ 		goto cleanup;
+ 
+ 	/* Now enable cpuset controller in parent */
+-	if (cg_write(parent, "cgroup.subtree_control", "+cpuset")) {
+-		ret = KSFT_SKIP;
+-		goto cleanup;
+-	}
++	if (cg_write(parent, "cgroup.subtree_control", "+cpuset"))
++		goto skip;
+ 
+-	/* Set CPU affinity constraints */
++	/*
++	 * Set CPU affinity constraints
++	 * Skip the test if the setting of "cpuset.cpus" fails as the test
++	 * system may not have CPU 1.
++	 */
+ 	if (cg_write(parent, "cpuset.cpus", "0-1"))
+-		goto cleanup;
++		goto skip;
+ 	if (cg_write(child_a, "cpuset.cpus", "0-1"))
+-		goto cleanup;
++		goto skip;
+ 	if (cg_write(child_b, "cpuset.cpus", "1"))
+-		goto cleanup;
++		goto skip;
+ 
+ 	/* Move group leader (main thread) to child A */
+ 	if (cg_enter_current(child_a))
+@@ -385,7 +384,7 @@ static int test_cpuset_affinity_on_controller_disable(const char *root)
+ 		.cgroup = child_a,
+ 		.affinity_before = &affinity_a_before,
+ 		.affinity_after = &affinity_a_after,
+-		.ready_phase = AFFINITY_THREAD_A_READY,
++		.affinity_before_ready = 0,
+ 	};
+ 	if (pthread_create(&thread_a, NULL, affinity_thread_fn, &args_a))
+ 		goto cleanup;
+@@ -395,14 +394,15 @@ static int test_cpuset_affinity_on_controller_disable(const char *root)
+ 		.cgroup = child_b,
+ 		.affinity_before = &affinity_b_before,
+ 		.affinity_after = &affinity_b_after,
+-		.ready_phase = AFFINITY_THREADS_READY,
++		.affinity_before_ready = 0,
+ 	};
+ 	if (pthread_create(&thread_b, NULL, affinity_thread_fn, &args_b))
+ 		goto cleanup_threads;
+ 	thread_b_created = 1;
+ 
+ 	pthread_mutex_lock(&test_mutex);
+-	while (test_phase < AFFINITY_THREADS_READY)
++	while ((test_phase < AFFINITY_ERROR) &&
++	       (args_a.affinity_before_ready + args_b.affinity_before_ready < 2))
+ 		pthread_cond_wait(&test_cond, &test_mutex);
+ 
+ 	/* If a thread failed during setup, bail out */
+@@ -449,6 +449,10 @@ static int test_cpuset_affinity_on_controller_disable(const char *root)
+ 	ret = KSFT_PASS;
+ 	goto cleanup;
+ 
++skip:
++	ret = KSFT_SKIP;
++	goto cleanup;
++
+ cleanup_threads:
+ 	pthread_mutex_lock(&test_mutex);
+ 	test_phase = AFFINITY_COMPLETE;
+-- 
+2.55.0
 
