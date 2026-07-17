@@ -1,120 +1,143 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28B7B1D514E
-	for <cgroups@vger.kernel.org>; Fri, 17 Jul 2026 14:49:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09FA52C15A0
+	for <cgroups@vger.kernel.org>; Fri, 17 Jul 2026 15:07:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784299756; cv=none; b=rl1HfIjIHpck4N0zDaN58uDMRbmvEMFwI7NHtNQBDP4RllOWwfxMXOMI1d396QZeSuFaySIxyckq5DtPhZtkJC/m/zMXmFa0PSbJLvUgG1scwLmMTvAXBFYPzeFLSrEGFghdWn0XoS2BDhZv7q90wmd8Xrsk3ejUBLAdRNOLFqo=
+	t=1784300826; cv=none; b=V2qHMgQwpYztIQ5B/RvmYrIRtVaUzBBzUcYnpKL8ejndjzrOfteya6GrQWf6N5GuRLY3Iy4xXzF/yD1zoN+2lSS+THJKGgRjh0hExv3wtf035PqEghm4gIG/dyjI4janRzx7yj2CXtbEc207Q5ML3zxqBHPi3NMPape8oLWiY78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784299756; c=relaxed/simple;
-	bh=n7KNhhouRJfPPKsSowjR4uhZpTB4DvWvjk1/uN1YmGE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KPs3s1mysUluEgtVJ2DeRca4yhfa33cBiEvqAdmdHBj6Go2wxDyeq1EdeucJps8LbQWJlMxwEDzyKQaTBGNnutMp1UoIVKhU9uqRel0M+siGaUQdURm1mm/B2AEhL906z9Prr2CMmwl5XnEIkesVhFyASR1BFdCTWw7EPXT0+34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=UXi5CGXv; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1784300826; c=relaxed/simple;
+	bh=UzXoQ54grOHBxJXqvSe20dnebBRBQrRVxlPMfN6zvdY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sZ02siHpPWGylujqEoqiA2KaJ6d0zk5JJVx7n3O1xOid1kaOwldL0ifCCNF/t8C8V7vPV79hHsOZhfTXbL/F5uaH4/PlARqNzm2tGPSmt5F2CUu2Ieq6t2bil/JfQA+U8zTvAsvYSV/WW4vdJnsmIsKZzU+usY+Rcr7OeIw/aPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cetD3+RI; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="UXi5CGXv"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-493f6de72faso12160785e9.0
-        for <cgroups@vger.kernel.org>; Fri, 17 Jul 2026 07:49:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1784299753; x=1784904553; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=DQVZwUL5Yj/HZgLc5usvXd7dYSZnepBO0DvOQ94q45E=;
-        b=UXi5CGXvBNbX4mxWmW/mq/8rQH7+cFHhYGTgLyWliXV0Kkj32wxB1TS++lx+Nil3kn
-         QiFT6Ier1tQyrPMX0IpjjF8Y3tWbwW0uytm5HAXgoL/A1IJFmE0NzthSG6QCk81RKYwu
-         Cu8pOByXCn7pmBWPNrDGE4DqMc2G8KOImPAgPks+ga/IzF3Bf7O1RFlt1JA6rixwFx8U
-         Na2Y5GlrW5VRqn+YEdadZ+lzcSL1Az2wmiH6n+/qzvj2VxxfXQnhcSvx9wT/Sj7j6fmG
-         Ol+GsojYPL0DeUxAv9EJCoXXvjh5ORsJr3d7XECVwWw7kzJvu9XDOo3pND4irqpKjNRt
-         5JxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784299753; x=1784904553;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=DQVZwUL5Yj/HZgLc5usvXd7dYSZnepBO0DvOQ94q45E=;
-        b=GfXW19tUyhj8GXJv+hVNm6ElV2y9g8Vi20+gZoyKORipHA5YfXZvYqFz7WKRVTkcMZ
-         oeOOoZNtJM27OneFlGgYjLQJ0j4g9rucmDopyoTu9aKiKeXtwLX6JdgK0xYIxFX6S42E
-         mbKVf32IvCJDdXitBDsBcQKbxW10uoGGc+pLln2LBhRILNDD2ZX03jXXVLOVNyZ31P+1
-         4O6ReTi3uB6stn7sX1pKlRFNu4A09gOOa4ohSZ5Rjl1SlMle/Gw4kik5ltzM4EznJTw6
-         1OH5kJL7IYBlG49oqPPCzGgi0fSrrLLQ3tqr1sN9gECD9bVv5btY2UEqx2GpcGqwy8gu
-         1O2g==
-X-Forwarded-Encrypted: i=1; AHgh+Rr/1iGUw8cPPUEIe3/SzeKYP70cBlKbSpz1QpsrQT6gnIwsj1OLgGeMVzFf+VPZ/SDjbvaI8/QK@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy9gmLVWxCcgULBB8ZWKER2Yud6NZsnytpU+zCvtJ8wl4l2FCvt
-	K5FRMpmmsN8iJTaGAwGHHajhBBR+VqE06dF04c0O2bVML1UJcV3PqWBmC8gnt018o80=
-X-Gm-Gg: AfdE7clop+2UPSBXdGqxxG4B0T9PbBrT2qiAIkg80XdY1BtXnlR4fMBBon3Zrvlb/5y
-	bVLtU31t+vbXGyDtSVJRf1/ZqFbesfagoc9ovjocy5TozfX9nXJcdq+nNBgq4CxVzNrYfp2ssra
-	WM8M05zIhgxMVzvlKtkkLDLwj5xSFrCfxuQcPd5pnyaUzjSRF+VCnupO+pt1GnSCsmEEZbCG0FO
-	B+3LpBGpwbElZ8B4+7TYpqu389wP6I+LEc+bSIcQKpIOVFi9cmZJ3QlR7G6b3dCje68w97f7XFX
-	Q/DOllTs9J6tFMYvojgsDOtD205G7sRWCJElMRMPwZVs1vxKr4ev1rEquPmyIkzfA/qwx2tuKRD
-	S/swST8R7rjDf2BDwsCeIF8/PhFKie/hZZWAWV+/Ihaiu+qGSsGHQc246Z2nUsYYoIbCvwgENZY
-	0tszgSTA==
-X-Received: by 2002:a05:600c:35d1:b0:495:3a52:71b1 with SMTP id 5b1f17b1804b1-4954aa1a34fmr30304385e9.5.1784299753303;
-        Fri, 17 Jul 2026 07:49:13 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49549a3f07esm54400465e9.6.2026.07.17.07.49.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2026 07:49:12 -0700 (PDT)
-Date: Fri, 17 Jul 2026 16:49:11 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Jonathan Corbet <corbet@lwn.net>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, 
-	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, cuitao@kylinos.cn
-Subject: Re: [PATCH v2 2/2] Docs/admin-guide/cgroup-v2: fix delay_nsec unit
- in io.latency doc
-Message-ID: <alpA0tsH2cm4029Z@localhost.localdomain>
-References: <20260717060225.2019764-1-cui.tao@linux.dev>
- <20260717060225.2019764-3-cui.tao@linux.dev>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cetD3+RI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784300824;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=J51Fw8rU8N3jKV4+nr08wo0Mj4JR8dhWVcD01BFVxwA=;
+	b=cetD3+RIQppQmDXElkUU3aBu+shqq5+k8weuHE/7+fwMKEByS+gxQvMtzAttmZStszlpRo
+	JDisLxLlt+IVViCk40kglx0VVQpW61u3rvnxF+GPjtn/4IuIPLn/5zhmIHsAN+rbYxkWMA
+	u0mHI3glg11TujIvs1xySsk0nP4WdmA=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-424-L9jxO2hANjmfYFmmOGOa8w-1; Fri,
+ 17 Jul 2026 11:07:00 -0400
+X-MC-Unique: L9jxO2hANjmfYFmmOGOa8w-1
+X-Mimecast-MFC-AGG-ID: L9jxO2hANjmfYFmmOGOa8w_1784300817
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BCBC7180074B;
+	Fri, 17 Jul 2026 15:06:56 +0000 (UTC)
+Received: from [10.22.81.98] (unknown [10.22.81.98])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CF5911955D89;
+	Fri, 17 Jul 2026 15:06:51 +0000 (UTC)
+Message-ID: <d2bf022d-d30a-415e-8a96-4136258e347b@redhat.com>
+Date: Fri, 17 Jul 2026 11:06:50 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="pye5sop4w5d2exnu"
-Content-Disposition: inline
-In-Reply-To: <20260717060225.2019764-3-cui.tao@linux.dev>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/4] cgroup/cpuset: update some comments about the page
+ allocator
+To: Brendan Jackman <jackmanb@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
+ Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>,
+ Zi Yan <ziy@nvidia.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
+ Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>, Mike Rapoport <rppt@kernel.org>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-rt-devel@lists.linux.dev
+References: <20260715-spin-trylock-followup-v3-0-fc4d246f705d@google.com>
+ <20260715-spin-trylock-followup-v3-2-fc4d246f705d@google.com>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260715-spin-trylock-followup-v3-2-fc4d246f705d@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-
---pye5sop4w5d2exnu
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v2 2/2] Docs/admin-guide/cgroup-v2: fix delay_nsec unit
- in io.latency doc
-MIME-Version: 1.0
-
-On Fri, Jul 17, 2026 at 02:02:25PM +0800, Tao Cui <cui.tao@linux.dev> wrote:
-> From: Tao Cui <cuitao@kylinos.cn>
->=20
-> The io.latency doc says the io.stat delay field counts microseconds.  The
-> field is delay_nsec and is reported in nanoseconds.  Refer to it by its
-> real name and correct the unit.
->=20
-> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+On 7/15/26 7:03 AM, Brendan Jackman wrote:
+> These comments describing the page allocator are out of date:
+>
+> - __alloc_pages() is no longer a public API and has no business being
+>    described outside of mm/.
+>
+> - The `wait` variable is gone.
+>
+> It may be out of date for other reasons too but this patch is just
+> fixing the issues that stood out.
+>
+> To fix it:
+>
+> - Instead of referring to a specific function, instead to "the page
+>    allocator"
+>
+> - Completely drop out-of-date details of that function's internal
+>    behaviour, since they were irrelevant anyway.
+>
+> Suggested-by: Zi Yan <ziy@nvidia.com>
+> Link: https://lore.kernel.org/all/DJP11T5V7BDW.2FZZZ8R6LOY4I@nvidia.com/
+> Reviewed-by: Zi Yan <ziy@nvidia.com>
+> Signed-off-by: Brendan Jackman <jackmanb@google.com>
 > ---
->  Documentation/admin-guide/cgroup-v2.rst | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>   kernel/cgroup/cpuset.c | 13 +++++--------
+>   1 file changed, 5 insertions(+), 8 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 24ea2d09cdbdb..dfd0f827e3b92 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -4193,7 +4193,7 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
+>    * nearest enclosing hardwalled ancestor cpuset.
+>    *
+>    * Scanning up parent cpusets requires callback_lock.  The
+> - * __alloc_pages() routine only calls here with __GFP_HARDWALL bit
+> + * page allocator only calls here with __GFP_HARDWALL bit
+>    * _not_ set if it's a GFP_KERNEL allocation, and all nodes in the
+>    * current tasks mems_allowed came up empty on the first pass over
+>    * the zonelist.  So only GFP_KERNEL allocations, if all nodes in the
+> @@ -4206,11 +4206,8 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
+>    * come before the __GFP_HARDWALL check, otherwise a dying task
+>    * would be blocked on the fast path.
+>    *
+> - * The second pass through get_page_from_freelist() doesn't even call
+> - * here for GFP_ATOMIC calls.  For those calls, the __alloc_pages()
+> - * variable 'wait' is not set, and the bit ALLOC_CPUSET is not set
+> - * in alloc_flags.  That logic and the checks below have the combined
+> - * affect that:
+> + * The second pass through get_page_from_freelist() doesn't even call here for
+> + * GFP_ATOMIC calls.  That, and the checks below have the combined affect that:
+>    *	in_interrupt - any node ok (current task context irrelevant)
+>    *	GFP_ATOMIC   - any node ok
+>    *	tsk_is_oom_victim   - any node ok
+> @@ -4327,8 +4324,8 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
+>    * should not be possible for the following code to return an
+>    * offline node.  But if it did, that would be ok, as this routine
+>    * is not returning the node where the allocation must be, only
+> - * the node where the search should start.  The zonelist passed to
+> - * __alloc_pages() will include all nodes.  If the slab allocator
+> + * the node where the search should start.  The zonelist used by
+> + * the allocator will include all nodes.  If the slab allocator
+>    * is passed an offline node, it will fall back to the local node.
+>    * See kmem_cache_alloc_node().
+>    */
+Acked-by: Waiman Long <longman@redhat.com>
 
-Acked-by: Michal Koutn=FD <mkoutny@suse.com>
-
---pye5sop4w5d2exnu
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCalpA4xsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AixjAEA9/n0vXB3k2HvRBb083Jj
-tjUEjDc1NkoJGkZKUybqmTYBAPfbVswDStpRGY75PBl6pVDE9MVPM2cN0AaEGMWW
-+9IE
-=K1f0
------END PGP SIGNATURE-----
-
---pye5sop4w5d2exnu--
