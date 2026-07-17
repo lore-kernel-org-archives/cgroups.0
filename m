@@ -1,79 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0982B3D76;
-	Fri, 17 Jul 2026 00:39:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE752C0F81;
+	Fri, 17 Jul 2026 01:37:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784248792; cv=none; b=HulN0HeiNpAoIew38EavSCpcm1iVKWSo1mtbJS31/eVEfutvbAJSV3m3Su4JkBy7J20H5th7zmw07mr7TqwYIpt9C4JHDEwCz7b5i6Xjn3RF76rNE7b6lb9qfmu4NKdnV4+WJVWKeARtKDOBA5ZB9hzP6FHEN7UkFEBREHKr8tQ=
+	t=1784252280; cv=none; b=B9fM7GilHwRzOmfGg+IiQsXT5stfz1U7iI+NEa0Qq2yjle50NwEmmH3saEHS3f+onRCJDb173I3Q4IRqFpVAuMCM3zn0Mo1Ag6RBGi2rDTlTCD8QVNh9sHYsRI/fOX2I54K1LuHWquMeq2teMEO9p296RO1VWqFWSawrv/S33w4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784248792; c=relaxed/simple;
-	bh=FK7CzkkxNOWY2tZd5acQugSYRcIFkzQ6YnY8Dbkty84=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=HpaT6Rvu09VzkOb7YSJUP4ifO+KknqDw5JTqMt4e+fxrF+0dwsZ2d/Tmd4XKKupv3xe22mpMsNlDYp8K25HWMyXl7Tx0IeLI2v+46qwsLOlnjdo/jQM1/owNrDZ6JlKTx4BO495pu3cLxqbIje0ODc9yF6i4LSUXWq7FkXP29/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=XfhikE3g; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784252280; c=relaxed/simple;
+	bh=+4qV4iMuqjNYYclLyURVg+3Yz6/QyGSgI7KXwJ2cEVs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=D6Bn0MHyHC8uzhsmqkF0aMrLeCg9yUDuemwhMBDCquFay5mLKHq6hneROal4Ubl6TtrRNt10AsR5yEEiSJQRFanEyGc1PI2FarCfJiTKgICyHT5lDRqE+K4gecj+d+Xsm6uwgNv4hWMxAnP9wt9ljevoVUehrSYWEeyOdA/PT5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JSYJVlQ4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="XfhikE3g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 340471F000E9;
-	Fri, 17 Jul 2026 00:39:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1784248790;
-	bh=bSW5HxEFq+ITIVQonZ02kyA5U7MyDuFVOxWZi2QyV6k=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=XfhikE3guLBwj8Z869Wij09nEwSan5JaooHiPLP4Leq6MO2SJc831atjD+F4Q0D1s
-	 41WE4V2Pl3izSM02t9EfoEDrHbrKeZ+TWGGtTCqViezWxjdxI208UscWhFL1jtvKr8
-	 aRMzuCx5ZLfmFhzFUnLCD6z3enncwoeprrTN1qGk=
-Date: Thu, 16 Jul 2026 17:39:49 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Breno Leitao <leitao@debian.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, Michal Hocko
- <mhocko@suse.com>, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, kernel-team@meta.com, stable@vger.kernel.org,
- Joshua Hahn <joshua.hahnjy@gmail.com>, SeongJae Park <sj@kernel.org>
-Subject: Re: [PATCH v2] mm: memcg: initialize *locked in
- memcg1_oom_prepare() stub
-Message-Id: <20260716173949.0f87d0ab30c5eecb01067fce@linux-foundation.org>
-In-Reply-To: <20260716-memcg-oom-uninit-locked-v2-1-63631d878eb4@debian.org>
-References: <20260716-memcg-oom-uninit-locked-v2-1-63631d878eb4@debian.org>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JSYJVlQ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 889D51F00A3F;
+	Fri, 17 Jul 2026 01:37:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784252279;
+	bh=xN419WW436l578SyNHLzWNkb608Pt+kwr5S/9FasBuw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=JSYJVlQ4fC7uO0KLm3AlZrzwHOjDsomXGsHbc5bAM2X7Vn0ud4aUw0pABkFLvTfVN
+	 aRECljuCPqiuxyBUi6MF6NR55JptJIdbjAT0WjiCEf6rxAuyBjbV3keZzQrC55YDbZ
+	 OiefZuvUFkL3PXu371YUMLK0lsUgw7fDfI8buohIug5BBIgh+qP3Nhcazx0e0fFwLa
+	 KATSqm2TVMTJJDvMJENiUs3DXkalFJZYVmL0CaU3lrktZ/UWZwGRM2P7955333ia20
+	 OboH+1gQLRK3c2cSMS2CprtEwTSOIToHPODGWyERqnbiu/wH3xQBncwX3Z41TpzGAn
+	 XdfWG7wOsAqIw==
+From: Sasha Levin <sashal@kernel.org>
+To: stable@vger.kernel.org
+Cc: Sasha Levin <sashal@kernel.org>,
+	chenridong@huawei.com,
+	tj@kernel.org,
+	lulie@linux.alibaba.com,
+	lizefan.x@bytedance.com,
+	hannes@cmpxchg.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	eadavis@qq.com,
+	chenridong@huaweicloud.com,
+	akpm@linux-foundation.org,
+	surenb@google.com,
+	dust.li@linux.alibaba.com
+Subject: Re: [PATCH 6.12.y 0/2] sched/psi: fix race in pressure_write (CVE-2026-52991)
+Date: Thu, 16 Jul 2026 21:37:36 -0400
+Message-ID: <20260716232340.0009-stable-reply@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260715083245.32115-1-lulie@linux.alibaba.com>
+References: <20260715083245.32115-1-lulie@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Thu, 16 Jul 2026 06:42:18 -0700 Breno Leitao <leitao@debian.org> wrote:
+On Wed, Jul 15, 2026 at 04:32:43PM +0800, Philo Lu wrote:
+> Backport of the CVE-2026-52991 fix.
+>
+>   1/2 (94a4acfec146) clear of->priv on release, turning the UAF into an
+>       easier-to-detect NULL deref.
+>   2/2 (a5b98009f16d, the CVE fix) extend cgroup_mutex to cover all
+>       of->priv accesses, read ctx after taking the kn lock, and NULL-check
+>       of->priv. It depends on 1/2 as discussed in [0].
 
-> mem_cgroup_oom() passes an uninitialized "locked" to memcg1_oom_prepare()
-> and reads it back in memcg1_oom_finish():
-> 
-> 	bool locked, ret;
-> 	...
-> 	if (!memcg1_oom_prepare(memcg, &locked))
-> 		return false;
-> 	ret = mem_cgroup_out_of_memory(memcg, mask, order);
-> 	memcg1_oom_finish(memcg, locked);
-> 
-> This relies on memcg1_oom_prepare() setting *locked whenever it returns
-> true.  The CONFIG_MEMCG_V1=y version does, but the stub used when
-> CONFIG_MEMCG_V1=n returns true without touching *locked, so
-> memcg1_oom_finish() consumes an uninitialized value.  On a memcg OOM this
-> is reported by UBSAN:
-> 
->   UBSAN: invalid-load in mm/memcontrol.c:1932:27
->   load of value 0 is not a valid value for type 'bool' (aka '_Bool')
-> 
-> Initialize *locked to false in the stub; with cgroup v1 compiled out
-> there is no OOM lock to take.
+I'm holding off on this series (and the 6.6.y/6.1.y ones) for now: a5b98009f16d
+moves the psi trigger write path under cgroup_mutex, which means the psimon
+kthread gets created while holding cgroup_mutex and introduces a deadlock risk.
 
-Thanks.
+Tejun has a follow-up fix for that which is in the cgroup tree but hasn't
+reached mainline yet. Once it lands, I'll queue your series together with it on
+all three branches.
 
-Sashiko, as is its wont, reminds us that we all suck:
-	https://sashiko.dev/#/patchset/20260716-memcg-oom-uninit-locked-v2-1-63631d878eb4@debian.org
-
-Does this potential memcg issue look legit?
+-- 
+Thanks,
+Sasha
