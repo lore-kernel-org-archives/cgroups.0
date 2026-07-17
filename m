@@ -1,98 +1,162 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99013E0C67
-	for <cgroups@vger.kernel.org>; Fri, 17 Jul 2026 07:34:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65BA11E5714;
+	Fri, 17 Jul 2026 07:36:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784273694; cv=none; b=A4kKzVv4q+kmQfqLYSWG8FYrcPn1liTbbjvFegK0WKOxiwTyHHUZltiSTu0UcoElcdlofF4/V6olGwRYjG/2g5Zoo77+QPNsKngOE/HLuyfZQaDvQWyGk9kKESyMiRe6AjYK8j6aVoGq5JaKAa3UPO1Y/bDmRTnF8r4M5bDtg1E=
+	t=1784273815; cv=none; b=pGQhJpQYiEzzPU3zcZJf1rceYO/OTyHIbXFI/gX3Mfl5Hffv24W1itAe6ifGPC5IvC3ViCvx2nLy0xD7rtx+xSt3mKPoUVLgzh6XY4N4HmCx1CSDV1Hkr4XqBtBa1RzbSpBGHeOvh3hLT+IZ9BBkvHyPDOyR/x987MqNMrP/DPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784273694; c=relaxed/simple;
-	bh=1O+IXvP93QsnmDB8PqUpWiogGfVIwPW4GTxLt8ZihnQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HqDc51564o1taA3jvGLT9/NrT3zKDSUObylvwAOhzsa42yLn5BofddlgwpCFzEWg7JRe7aT9ngaI0fFV2HyeApxSad7WkaIAHRoFQ6A+b6Ge0qkogcnRj7+VOWe9hmRW9V9OQRyHfv824l3C20U5pDURQpROgj34i7f3ttCf1Oc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=r61lbZ0X; arc=none smtp.client-ip=91.218.175.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784273815; c=relaxed/simple;
+	bh=dHxVnGRt+88jdj6BhasKEHLIa/iHX1TE22XKpmpdAI4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Umof7TOhpqfadmJEtgrhwy1Cno2ZpgL7OO2Ut5ozehBIMvytWfjYYvdlDWST3ER7mQyhTjO76pd2dBKthksH6KHUS1ZrDjAGj0YDdf0m97ZslUbQjrhJGCIY/7EaFUb7/VSSFojCiPFOSWkW2U/6h200ja1NsKHY1zA05OIPJro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTORVCg2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="r61lbZ0X"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784273679;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=jz5gdCxdTYoQx8thAzRBdvWMUXnwkLzSp+1+Ty8D73s=;
-	b=r61lbZ0XdIH8b/KNPRmCTydABaO+nqeNFvLdMqOeR6HvHTU3dGWXXA5Yy8027way4m5AsF
-	hvTSvL+s0d3vk6xK8WmjAzIQd8Nx2qPWOsTWw92GEIgddMaMl7ORliSX3l3l4BYPoRYb8N
-	T2hhQs/7z30MLhCaDct0wG4yXeTtgsc=
-From: Tao Cui <cui.tao@linux.dev>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Leon Hwang <leon.hwang@linux.dev>,
-	cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	cui.tao@linux.dev,
-	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH v2] blk-iolatency: use guard(spinlock_irqsave)() in iolatency_clear_scaling()
-Date: Fri, 17 Jul 2026 15:34:21 +0800
-Message-ID: <20260717073421.2039722-1-cui.tao@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTORVCg2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47ED1F000E9;
+	Fri, 17 Jul 2026 07:36:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784273813;
+	bh=YNAjdcvaa7gS4IYw+DsY8dj8TiKJE8dkpDnHDWNJNyk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=eTORVCg2Ti8Q98ZZ8p45uMYF9lG6FF1OuXbIooRdjwU6PHSgqRmrCBGfITV2QrkPr
+	 PzCf1z1TE/w6CZNaEjesXi30/1DjhOg2rbCqiX882ERSMVfoduP0nvh1zR/NMtH2LE
+	 iYTbA516ZhVbhlXdbUGzX24JH815eVTRrcVjqXV0l7byuM3zr8t8HRJP+YgHxpv4tP
+	 4LmEXA1qOWSYsQfDbrMdICwRvVC+jhZLxV+15k6aO7HlkN/Jr2yc0iYxpIltAqevJr
+	 0dYc85lZe56fleeD3z+WG0Dp+lFIGCAw60yGrlh2QmE6q+lmkiAA9fG16xp92oP0Yw
+	 CVWoKr/mS9pxQ==
+Message-ID: <5d96283c-46fb-43e4-ac83-fb1b860fd6df@kernel.org>
+Date: Fri, 17 Jul 2026 16:36:47 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 12/12] mm/slab: stop allocating objcg pointers when
+ unnecessary
+To: Suren Baghdasaryan <surenb@google.com>,
+ "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
+ <20260715-b4-objext_split-v1-12-9a49c4ccf4c3@kernel.org>
+ <CAJuCfpHuXu3BDf93zeBQWSW_k5wApegp44rHoZwk5Ym6xxbqEA@mail.gmail.com>
+ <e126d6b1-bed7-46bb-a8a3-cc555707b516@kernel.org>
+ <CAJuCfpFicmMa54V5qVY7BYQuNih9u+-bQ+x51VDza7zWPK_mOg@mail.gmail.com>
+Content-Language: en-US
+From: Harry Yoo <harry@kernel.org>
+In-Reply-To: <CAJuCfpFicmMa54V5qVY7BYQuNih9u+-bQ+x51VDza7zWPK_mOg@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------juhReEuigYcjM4PhzvKkCSZ4"
 
-From: Tao Cui <cuitao@kylinos.cn>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------juhReEuigYcjM4PhzvKkCSZ4
+Content-Type: multipart/mixed; boundary="------------3d68Z9z4SzjRYMjj4IDJtfZ9";
+ protected-headers="v1"
+From: Harry Yoo <harry@kernel.org>
+To: Suren Baghdasaryan <surenb@google.com>,
+ "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Message-ID: <5d96283c-46fb-43e4-ac83-fb1b860fd6df@kernel.org>
+Subject: Re: [PATCH RFC 12/12] mm/slab: stop allocating objcg pointers when
+ unnecessary
+References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
+ <20260715-b4-objext_split-v1-12-9a49c4ccf4c3@kernel.org>
+ <CAJuCfpHuXu3BDf93zeBQWSW_k5wApegp44rHoZwk5Ym6xxbqEA@mail.gmail.com>
+ <e126d6b1-bed7-46bb-a8a3-cc555707b516@kernel.org>
+ <CAJuCfpFicmMa54V5qVY7BYQuNih9u+-bQ+x51VDza7zWPK_mOg@mail.gmail.com>
+In-Reply-To: <CAJuCfpFicmMa54V5qVY7BYQuNih9u+-bQ+x51VDza7zWPK_mOg@mail.gmail.com>
 
-child_lat.lock is acquired with irqsave semantics in both
-iolatency_check_latencies() (called from the blkcg_iolatency_done_bio()
-softirq path) and blkiolatency_timer_fn() (timer softirq).
-iolatency_clear_scaling() instead uses a plain spin_lock(), which only
-happens to be safe because both of its callers enter with interrupts
-already disabled:
+--------------3d68Z9z4SzjRYMjj4IDJtfZ9
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-  * iolatency_set_limit() runs under queue_lock via blkg_conf_prep(),
-    which returns with the lock held and interrupts disabled;
-  * iolatency_pd_offline() runs under queue_lock from blkg_destroy() and
-    blkcg_deactivate_policy(), both of which take it with spin_lock_irq().
 
-Take the lock with guard(spinlock_irqsave)() so the locking is
-self-contained and consistent with the other two sites, instead of
-relying on an undocumented caller precondition. No functional change.
 
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
----
+On 7/17/26 12:32 AM, Suren Baghdasaryan wrote:
+> On Thu, Jul 16, 2026 at 8:08=E2=80=AFAM Vlastimil Babka (SUSE)
+> <vbabka@kernel.org> wrote:
+>>
+>> On 7/16/26 06:46, Suren Baghdasaryan wrote:
+>>> Maybe now we should rename static_obj_ext_size() to
+>>> static_obj_ext_max_size() as it reflects the max possible size of
+>>> slabobj_ext?
+>>
+>> Hm with _max_size() it doesn't have to be called static_ anymore?
+>=20
+> Yeah, static_ is an implementation detail anyway.
+>=20
+>> But maybe we can get rid of it completely.
+>>
+>> The only caller is calculate_sizes():
+>=20
+> I was thinking the same but either way sounds fine to me. Keeping
+> obj_ext_max_size() would be a bit more self-documenting I think.
+>=20
+>>
+>> #if defined(CONFIG_SLAB_OBJ_EXT) && defined(CONFIG_64BIT)
+>>         if (slab_args_unmergeable(args, s->flags) &&
+>>                         (aligned_size - size >=3D static_obj_ext_size(=
+)))
+>>                 s->flags |=3D SLAB_OBJ_EXT_IN_OBJ;
+>> #endif
+>>
+>> We don't have slab pointer to pass to static_obj_ext_max_size().
+>> But we should be able to figure it out from the cache via
+>> cache_needs_objcg().
+>>
+>> So we'd need cache_obj_ext_size()?
 
-Changes in v2:
-- use guard(spinlock_irqsave)() (suggested by Leon Hwang)
+That sounds good?
 
----
- block/blk-iolatency.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+slab_obj_ext_size() takes slab parameter only to optimize access
+but the obj_exts size is already per-cache property.
 
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index cef02b6c5fa9..1cc33aa0b669 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -815,12 +815,11 @@ static void iolatency_clear_scaling(struct blkcg_gq *blkg)
- 			return;
- 
- 		lat_info = &iolat->child_lat;
--		spin_lock(&lat_info->lock);
-+		guard(spinlock_irqsave)(&lat_info->lock);
- 		atomic_set(&lat_info->scale_cookie, DEFAULT_SCALE_COOKIE);
- 		lat_info->last_scale_event = 0;
- 		lat_info->scale_grp = NULL;
- 		lat_info->scale_lat = 0;
--		spin_unlock(&lat_info->lock);
- 	}
- }
- 
--- 
-2.43.0
+>> The static max size here works, but may prevent SLAB_OBJ_EXT_IN_OBJ
+>> needlessly if padding can only fit codetag_ref and not objcg, but
+>> we don't need objcg.
+>> Which is probably only theoretical at this point as kmalloc_normal
+>> caches (that have no objcg) have no padding, at least without
+>> slab_debug. But still.
+>=20
+> Maybe keep it simple as is for now and then we can optimize it further?=
 
+
+But cache_obj_ext_size() isn't adding much complexity?
+
+Not sure why we would need something that represents
+"maximum size of obj_exts across the system" anyway...
+
+--=20
+Cheers,
+Harry / Hyeonggon
+
+--------------3d68Z9z4SzjRYMjj4IDJtfZ9--
+
+--------------juhReEuigYcjM4PhzvKkCSZ4
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCalnbjwAKCRCGXBN6rc5S
+1kz3AP0c8Fcvhsk6QCY076Qq9xU7Ajbm6fPXywxZG2uE2iNtXwD8Da200DO4Q7ge
+R8RmBS3245J6QFXDzPNcrjCpLU1oPg0=
+=loeC
+-----END PGP SIGNATURE-----
+
+--------------juhReEuigYcjM4PhzvKkCSZ4--
