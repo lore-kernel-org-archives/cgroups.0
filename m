@@ -1,30 +1,32 @@
-Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
+Received: from out-173.mta1.migadu.com (out-173.mta1.migadu.com [95.215.58.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1321337C930
-	for <cgroups@vger.kernel.org>; Fri, 17 Jul 2026 04:29:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 974D637C0EC
+	for <cgroups@vger.kernel.org>; Fri, 17 Jul 2026 04:29:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784262554; cv=none; b=Gs79fHK3iT0jj8TNYvehNGkqUODq1AzzeOE69beZNleR7lhsh3jPVwXAaMz5hxsH1kBoSLRDcFFud0CWXJJWbYuxx2JKmx4sOowtO5M7shZmr4pchbLUDUZIStX31FP/A0AeCRVeRY/XULTLiH9QR4USbo0pSkREzvUCI8on9wo=
+	t=1784262558; cv=none; b=A2cNHH25suTMrBNceljmgUw9/nkiJ7wWtU9Zsc3fM08D6hWcINtSw4OGF7F7EtxktAkCX+Y47cRBfQshQHO6c+ikJA71g5ti4aQs3zdPL0RlrEOPIj3VDa1vJ2EWPbvm2VH4zMjj3jph6b4tIseNf25mf+3DYBzdsS8YLIgpOhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784262554; c=relaxed/simple;
-	bh=cqVgEQjGi8SC8nIGs3Bo9AwpjXz1B44w2UNfMMxe+ZQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=o8xMKHjOwydGzbL+iavYdVEEbSoPfQ2Lt0UwgRbei5t5TiSiHUnWKcNEjog2CqfntGpHvmn2foUFweBi8jVJQzh6gefVvyxDAOiQYSO42lMgUpU+lk3hYn8FPg2HlR2oy6/RSjDzR++eDeTHcn6fhvQnjo3X+KrIqj8D/86Gs84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=e1r4t96W; arc=none smtp.client-ip=95.215.58.178
+	s=arc-20240116; t=1784262558; c=relaxed/simple;
+	bh=ua3GEs8av4fKYGgEome92IxLpMf9Xz9GhNiVp1ilV6w=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SK65u/FRu9wFgSsQqOuLx1RNNlf/68ibDg+oRx6QGZu0slx+WWUxB3BAlWQWf0rK/FVO2Nw3cOW1FBLnxh1VWC/EW27l+yJDp8DiCumhKLG4YACJjbuvhWpcnWWo3YcS3zPjUAJvleU0dWOTzs2I6hmgQY51ah0GXT8z78cO12U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=W8z8SST+; arc=none smtp.client-ip=95.215.58.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="e1r4t96W"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="W8z8SST+"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784262541;
+	t=1784262552;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=rYkAJ6k25UpukOkE6eF37TfWeES/EpuM0W49M8Ed5io=;
-	b=e1r4t96Wcno2ya2yjCaWkx5Op9S4qoxSr7fLp8P03JMRpkm3NAM1CtQAwATn7csNf9WnmZ
-	Fx/vjHpQClf5JUOqjwdH4K9M0k473XAKW3+dLFsRgFzBEyXwDiuZehgcbqOkFxRagfj5mu
-	LkuhUjuwxbDBFtxsJM/jaFawt6+UvCE=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0WA/PccghGHgwDI3QqI4VMqYsFAIGgfe0C5h0k9pSEA=;
+	b=W8z8SST++zfFC9i3WtnOP0DxUpDZvwy4SWcjOBJ42YAhBVUfKpdgpoenK1a6GyrnpMkiHS
+	s5pDbSLzRqVIX8aDdZ0mls7aRSjt9SgH+SJkmute2AZpirbCxOwiNbnk818sf/E1uuYr0T
+	HJqCmS6Q9NrUMGJOSPHjkG1w3fm9WRk=
 From: Tao Cui <cui.tao@linux.dev>
 To: Tejun Heo <tj@kernel.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
@@ -38,9 +40,11 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH 0/2] blk-iolatency: fix io.latency documentation accuracy
-Date: Fri, 17 Jul 2026 12:28:15 +0800
-Message-ID: <20260717042817.2001826-1-cui.tao@linux.dev>
+Subject: [PATCH 2/2] Docs/admin-guide/cgroup-v2: fix delay_nsec unit in io.latency doc
+Date: Fri, 17 Jul 2026 12:28:17 +0800
+Message-ID: <20260717042817.2001826-3-cui.tao@linux.dev>
+In-Reply-To: <20260717042817.2001826-1-cui.tao@linux.dev>
+References: <20260717042817.2001826-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,31 +56,32 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-Hi,
+The io.latency doc says the io.stat delay field counts microseconds.  The
+field is delay_nsec and is reported in nanoseconds.  Refer to it by its
+real name and correct the unit.
 
-This series fixes three inaccuracies in the io.latency documentation
-(Documentation/admin-guide/cgroup-v2.rst), all caused by the doc
-describing only rotational-device behavior:
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-  Patch 1 documents the rotational vs non-rotational difference:
-  throttling is based on average latency on rotational devices but on the
-  fraction of IOs that miss the target on non-rotational devices; the
-  tuning guidance and io.stat field list are updated accordingly
-  (avg_lat/win are rotational-only; missed/total are documented for
-  non-rotational devices).
-
-  Patch 2 corrects the delay unit: io.stat reports delay_nsec in
-  nanoseconds, not microseconds as the doc stated.
-
-Both patches are documentation-only and checkpatch-clean.
-
-Tao Cui (2):
-  Docs/admin-guide/cgroup-v2: document io.latency rotational vs
-    non-rotational behavior
-  Docs/admin-guide/cgroup-v2: fix delay_nsec unit in io.latency doc
-
- Documentation/admin-guide/cgroup-v2.rst | 53 +++++++++++++++++--------
- 1 file changed, 36 insertions(+), 17 deletions(-)
-
---
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index eec99813d82d..687839cf5c73 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2304,9 +2304,9 @@ This throttling takes 2 forms:
+   throttled without possibly adversely affecting higher priority groups.  This
+   includes swapping and metadata IO.  These types of IO are allowed to occur
+   normally, however they are "charged" to the originating group.  If the
+-  originating group is being throttled you will see the use_delay and delay
+-  fields in io.stat increase.  The delay value is how many microseconds that are
+-  being added to any process that runs in this group.  Because this number can
++  originating group is being throttled you will see the use_delay and delay_nsec
++  fields in io.stat increase.  The delay_nsec value is how many nanoseconds that
++  are being added to any process that runs in this group.  Because this number can
+   grow quite large if there is a lot of swapping or metadata IO occurring we
+   limit the individual delay events to 1 second at a time.
+ 
+-- 
 2.43.0
+
