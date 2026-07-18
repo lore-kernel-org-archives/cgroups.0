@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD0B385506;
-	Sat, 18 Jul 2026 08:17:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD889386426;
+	Sat, 18 Jul 2026 08:17:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784362654; cv=none; b=EVemMAFNAAZbvJQpQYNt6Sij2KCBGaFVYPCgHZ47igiwL2jr2fkbnmxrRupKI9juxFb01HDXKQemMfWEDg9/YQKLmcsiq8tZiwaM/IiOPc8Mw8II2o2vhQOC+eJJGfEIWT6wGd1NAWeQ32spm7HFqzWKA6IByixqnBYvDj3ZO58=
+	t=1784362655; cv=none; b=QaYev65BnrZX5oL11P3MRh1gDOoVWmX3Jlm0hu4l/nY9e77MWLOHrRCkk+z0dQHmUyjp4Aj4+kkG4vrTYkSLLtrITI5FzHL8WP6EJbLwg8GsSuq1GsmrgOcUhGzGVzB/ghWEkBQax16qGNubiHTv3K2m4L6N9lPAqQ7+2iZpxBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784362654; c=relaxed/simple;
-	bh=LzVYM0G3rTbPSRCaQzn51s7OchTJdHGpGlE1eKzGXYY=;
+	s=arc-20240116; t=1784362655; c=relaxed/simple;
+	bh=ZZdsoaNqjRsCK2YzvzFWkcRN8G2T44Ho8bFMDVkGRug=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UggbBpWFuP/mtZiy1jAd8fCdQYgd7oxmaPzc1frOH8vNDMo/s+JT7xRufCgRI/lFgGs/J9plUNZNtElbFDFyGAVtAeZgpIa8OF//RYGYs3HPUkxOHkeLztKuvCZYEv6J1Mz57Na5lChv56Rr+zs9shnoszKczhrxpFukaUPKsUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HljTG8z4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=F18ctkdPm02DMY+h7lnqzfQbXZ+BeuvMru+jZv8GLeOyvOmJV4mm0/Sc23ZJdlPx8Xjb4JmYIVrvHDkoRU03OSOciVAUlTHJXRrca0cBiBNksn7K/cqVdenJv/mj4/LPQ74icTZZr5q1vNpTdYg6JzAtL7+Y5J8OjIUPw3/yC8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VRXHENlh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HljTG8z4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 949FF1F000E9;
-	Sat, 18 Jul 2026 08:17:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VRXHENlh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9767C1F00A3A;
+	Sat, 18 Jul 2026 08:17:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784362652;
-	bh=bum8SlmQ0ceBjxlFkPed9Upqkvz003novEgerR7kv9c=;
+	s=k20260515; t=1784362653;
+	bh=QX5OCvkSWhwiyN3UtHAqpfquPj1Uwt8ux+A1O2J+fTk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HljTG8z4Xc1Rt4KFi+/5BSre64glZGlimdsUwxBicdI7qgCfhLKWmkkYbUyWZ40bo
-	 bkUolkwG7tnS1wk18H+R7PXzEoRTXMkJvO/+E2DAARRAVRUS89MJ4GERCA3+jLSNAW
-	 fqg7MCloUhrbLNbAHQRXVqv4MvWmzZ1mfptbybViq33ijnjTRMajjqMzx+UeS5K0+C
-	 nGMNoK/uXTi7RO6U8t1tJ/LybJPUgwdBNTz3T9CiCwiDgnPda3RwwYHVhgwn2uludY
-	 3/2xwomHGQ2QzA3e9z//xM3n1osjB5IrvX5wlOMCrhOcifEhecWaqdGXlIpPJEVALb
-	 NWH306/Y9PKew==
+	b=VRXHENlhWxPv/5JxQ5xsNKRhVGGH7VGid70CWow+F6LC6TX4RdhGMSr9BR7GDQMDW
+	 pXkzqXTBUAr+jLqLRlkqNxu+sycsBPiiMwn61+jWN3qB01k5ApiVv9QQnFdAZanRDf
+	 gzTttNi4t6TnbnqFCPEoAWt8uM1lUKOwqK7qHWWOhnMz7/Z3DVE/Xjg28o6wlWPoSv
+	 2l6AqOGh9DN1/D5YAXr8cYSZZOcl9Ch4ryCeOwjRQJ0J3e/agKoWbzZZ8YX+e4Qwn9
+	 d+9nQ4JB47RJ+kkFLRm5UR2t+h2tqgRkd2SY4D1d/VwxED7Xmi+io3zBFGCRNFgQ7D
+	 +zKdmP7TSlvZA==
 From: Tejun Heo <tj@kernel.org>
 To: David Vernet <void@manifault.com>,
 	Andrea Righi <arighi@nvidia.com>,
@@ -37,9 +37,9 @@ Cc: sched-ext@lists.linux.dev,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/8] sched_ext: Re-home tasks on cgroup migration
-Date: Fri, 17 Jul 2026 22:17:23 -1000
-Message-ID: <20260718081727.582037-5-tj@kernel.org>
+Subject: [PATCH 5/8] sched_ext: Deliver cgroup ops to each task_group's sched
+Date: Fri, 17 Jul 2026 22:17:24 -1000
+Message-ID: <20260718081727.582037-6-tj@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260718081727.582037-1-tj@kernel.org>
 References: <20260718081727.582037-1-tj@kernel.org>
@@ -51,287 +51,414 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A task's sched (p->scx.sched) must match its cgroup's owner
-(cgrp->scx_sched). cgroup migration breaks the invariant:
-scx_cgroup_move_task() only fires root's ops.cgroup_move() and never
-re-homes the task, leading to wrong-sched scheduling and, once the stale
-sched is freed, a use-after-free.
+With sub-schedulers claiming cgroup subtrees, cgroup ops must be delivered
+to each task_group's sched rather than always to root. Add tg->scx.sched to
+track which sched initialized the task_group. It is set and cleared together
+with SCX_TG_INITED.
 
-Hook into the new cgroup task migration events and re-home each task whose
-destination cgroup is owned by a different sched. The events map naturally
-to the transfer: MIGRATING runs the fallible init for the destination sched,
-letting it reject the migration the same way ops.cgroup_prep_move() can,
-MIGRATED does the re-home, which can't fail, and CANCELED undoes the init
-when the migration falls through.
+Deliver the ops accordingly:
 
-Pre-commit, the task's task_group still reflects the source, so
-__scx_init_task() grows an explicit cgroup argument for the migration path
-to hand ops.init_task() the destination cgroup.
+- ops.cgroup_exit() goes to the sched whose ops.cgroup_init() it pairs with.
+
+- ops.cgroup_prep_move/move/cancel_move() go to the task's sched, and only
+  for moves that don't re-home the task. A re-homing move is reported
+  through the ops.exit_task/init_task() pair instead. The cgroups passed to
+  the move ops can be outside the sched's inited set as the cpu controller
+  can be coarser than the sub-scheduler topology.
+
+- Knobs of a cgroup belong to the parent, so ops.set_weight/idle/bandwidth()
+  go to the parent task_group's sched.
+
+All task_groups currently resolve to the root sched, so no behavior changes
+until sub-schedulers start claiming cgroups.
+
+While at it, scx_cgroup_init() is restructured so both paths share the
+recording.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/sched/ext/ext.c      |  29 +++++---
- kernel/sched/ext/internal.h |   3 +-
- kernel/sched/ext/sub.c      | 135 ++++++++++++++++++++++++++++++++++--
- 3 files changed, 152 insertions(+), 15 deletions(-)
+ include/linux/sched/ext.h   |   2 +
+ kernel/sched/ext/ext.c      | 157 ++++++++++++++++++++++++++----------
+ kernel/sched/ext/internal.h |  34 +++++++-
+ 3 files changed, 146 insertions(+), 47 deletions(-)
 
+diff --git a/include/linux/sched/ext.h b/include/linux/sched/ext.h
+index cce42b21f5f5..a6db5d300f30 100644
+--- a/include/linux/sched/ext.h
++++ b/include/linux/sched/ext.h
+@@ -298,6 +298,8 @@ static inline bool scx_rcu_cpu_stall(const struct cpumask *stalled_mask) { retur
+ 
+ struct scx_task_group {
+ #ifdef CONFIG_EXT_GROUP_SCHED
++	struct scx_sched	*sched;
++
+ 	u32			flags;		/* SCX_TG_* */
+ 	u32			weight;
+ 	u64			bw_period_us;
 diff --git a/kernel/sched/ext/ext.c b/kernel/sched/ext/ext.c
-index cd99947b4229..6bac68758704 100644
+index 6bac68758704..b542900da5a3 100644
 --- a/kernel/sched/ext/ext.c
 +++ b/kernel/sched/ext/ext.c
-@@ -3485,15 +3485,28 @@ static struct cgroup *tg_cgrp(struct task_group *tg)
- 		return &cgrp_dfl_root.cgrp;
+@@ -4339,6 +4339,51 @@ void scx_tg_init(struct task_group *tg)
+ 	tg->scx.idle = false;
  }
  
--#define SCX_INIT_TASK_ARGS_CGROUP(tg)		.cgroup = tg_cgrp(tg),
-+#define SCX_INIT_TASK_ARGS_CGROUP(cgrp)		.cgroup = (cgrp),
- 
- #else	/* CONFIG_EXT_GROUP_SCHED */
- 
--#define SCX_INIT_TASK_ARGS_CGROUP(tg)
-+#define SCX_INIT_TASK_ARGS_CGROUP(cgrp)
- 
- #endif	/* CONFIG_EXT_GROUP_SCHED */
- 
--int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork)
 +/**
-+ * __scx_init_task - Initialize a task for a sched
-+ * @sch: sched to initialize @p for
-+ * @p: task of interest
-+ * @cgrp: cgroup @p is joining, %NULL for @p's current task_group's cgroup
-+ * @fork: %true if @p is being forked
++ * scx_tg_sched - Resolve a task_group's sched
++ * @tg: task_group of interest
 + *
-+ * Pre-commit cgroup migration passes @cgrp explicitly as @p's task_group
-+ * still reflects the source.
++ * Return the sched that @tg's ops.cgroup_init() succeeded on, %NULL if @tg
++ * isn't inited. An autogroup tg has no cgroup of its own and resolves to the
++ * root sched.
 + *
-+ * Return 0 on success, -errno on failure.
++ * Safe for callers read-locking the ops rwsem. tg->scx.sched rewrites
++ * write-lock it, and tg on/offline can't overlap such callers as a css's files
++ * are created after online and drained before offline.
 + */
-+int __scx_init_task(struct scx_sched *sch, struct task_struct *p,
-+		    struct cgroup *cgrp, bool fork)
++static struct scx_sched *scx_tg_sched(struct task_group *tg)
++{
++	lockdep_assert(lockdep_is_held(&cgroup_mutex) ||
++		       lockdep_is_held(&scx_cgroup_ops_rwsem));
++
++	if (!tg->css.cgroup)
++		tg = &root_task_group;
++	return tg->scx.sched;
++}
++
++/**
++ * scx_tg_knob_sched - Resolve the sched receiving a task_group's knob updates
++ * @tg: task_group of interest
++ *
++ * Knobs of a cgroup belong to the parent. Deliver the set_* ops to the
++ * parent task_group's sched, which equals @tg's own sched everywhere except
++ * at a sub-scheduler attach point, where the sub's parent sched receives
++ * them.
++ *
++ * The callers sit in @tg's cgroup file writes holding the ops rwsem read
++ * side. That extends scx_tg_sched()'s file-write argument to the parent's
++ * sched read: a parent css outlives its children's files.
++ */
++static struct scx_sched *scx_tg_knob_sched(struct task_group *tg)
++{
++	lockdep_assert(lockdep_is_held(&cgroup_mutex) ||
++		       lockdep_is_held(&scx_cgroup_ops_rwsem));
++
++	if (!tg->css.cgroup || !tg->css.parent)
++		return scx_tg_sched(&root_task_group);
++	return scx_tg_sched(css_tg(tg->css.parent));
++}
++
+ int scx_tg_online(struct task_group *tg)
  {
+ 	struct scx_sched *sch = scx_root;
+@@ -4359,8 +4404,10 @@ int scx_tg_online(struct task_group *tg)
+ 			if (ret)
+ 				ret = scx_ops_sanitize_err(sch, "cgroup_init", ret);
+ 		}
+-		if (ret == 0)
++		if (ret == 0) {
++			tg->scx.sched = sch;
+ 			tg->scx.flags |= SCX_TG_ONLINE | SCX_TG_INITED;
++		}
+ 	} else {
+ 		tg->scx.flags |= SCX_TG_ONLINE;
+ 	}
+@@ -4370,19 +4417,30 @@ int scx_tg_online(struct task_group *tg)
+ 
+ void scx_tg_offline(struct task_group *tg)
+ {
+-	struct scx_sched *sch = scx_root;
++	struct scx_sched *sch = tg->scx.sched;
+ 
+ 	WARN_ON_ONCE(!(tg->scx.flags & SCX_TG_ONLINE));
+ 
+-	if (scx_cgroup_enabled && SCX_HAS_OP(sch, cgroup_exit) &&
+-	    (tg->scx.flags & SCX_TG_INITED))
++	/* INITED implies non-NULL @sch, test before SCX_HAS_OP() derefs */
++	if (scx_cgroup_enabled && (tg->scx.flags & SCX_TG_INITED) &&
++	    SCX_HAS_OP(sch, cgroup_exit))
+ 		SCX_CALL_OP(sch, cgroup_exit, NULL, tg->css.cgroup);
++	tg->scx.sched = NULL;
+ 	tg->scx.flags &= ~(SCX_TG_ONLINE | SCX_TG_INITED);
+ }
+ 
++/*
++ * @p's sched for the cgroup migration paths. Stable as re-homes happen either
++ * at CGROUP_TASK_MIGRATED of the same migration or under scx_cgroup_lock(),
++ * both while holding cgroup_mutex.
++ */
++static struct scx_sched *scx_cgroup_task_sched(struct task_struct *p)
++{
++	return rcu_dereference_protected(p->scx.sched, lockdep_is_held(&cgroup_mutex));
++}
++
+ int scx_cgroup_can_attach(struct cgroup_taskset *tset)
+ {
+-	struct scx_sched *sch = scx_root;
+ 	struct cgroup_subsys_state *css;
+ 	struct task_struct *p;
  	int ret;
+@@ -4391,6 +4449,7 @@ int scx_cgroup_can_attach(struct cgroup_taskset *tset)
+ 		return 0;
  
-@@ -3501,7 +3514,7 @@ int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork)
+ 	cgroup_taskset_for_each(p, css, tset) {
++		struct scx_sched *sch = scx_cgroup_task_sched(p);
+ 		struct cgroup *from = tg_cgrp(task_group(p));
+ 		struct cgroup *to = tg_cgrp(css_tg(css));
  
- 	if (SCX_HAS_OP(sch, init_task)) {
- 		struct scx_init_task_args args = {
--			SCX_INIT_TASK_ARGS_CGROUP(task_group(p))
-+			SCX_INIT_TASK_ARGS_CGROUP(cgrp ?: tg_cgrp(task_group(p)))
- 			.fork = fork,
- 		};
+@@ -4404,11 +4463,22 @@ int scx_cgroup_can_attach(struct cgroup_taskset *tset)
+ 		if (from == to)
+ 			continue;
  
-@@ -3747,7 +3760,7 @@ int scx_fork(struct task_struct *p, struct kernel_clone_args *kargs)
- 		struct scx_sched *sch = scx_root;
- #endif
- 		scx_set_task_state(p, SCX_TASK_INIT_BEGIN);
--		ret = __scx_init_task(sch, p, true);
-+		ret = __scx_init_task(sch, p, NULL, true);
- 		if (unlikely(ret)) {
- 			scx_set_task_state(p, SCX_TASK_NONE);
- 			return ret;
-@@ -5969,8 +5982,8 @@ static void scx_root_disable(struct scx_sched *sch)
- 	WRITE_ONCE(scx_switching_all, false);
++		/*
++		 * The cgroup_move ops are delivered to @p's sched, and only for
++		 * moves that don't re-home @p. A re-homing move changes the dfl
++		 * cgroup's sched and is reported through the
++		 * exit_task/init_task pair that the re-homing generates.
++		 */
++		if (!sch || sch != task_css_set(p)->mg_dst_cset->dfl_cgrp->scx_sched)
++			continue;
++
+ 		if (SCX_HAS_OP(sch, cgroup_prep_move)) {
+ 			ret = SCX_CALL_OP_RET(sch, cgroup_prep_move, NULL,
+ 					      p, from, css->cgroup);
+-			if (ret)
++			if (ret) {
++				ret = scx_ops_sanitize_err(sch, "cgroup_prep_move", ret);
+ 				goto err;
++			}
+ 		}
+ 
+ 		p->scx.cgrp_moving_from = from;
+@@ -4418,41 +4488,41 @@ int scx_cgroup_can_attach(struct cgroup_taskset *tset)
+ 
+ err:
+ 	cgroup_taskset_for_each(p, css, tset) {
+-		if (SCX_HAS_OP(sch, cgroup_cancel_move) &&
+-		    p->scx.cgrp_moving_from)
++		struct scx_sched *sch = scx_cgroup_task_sched(p);
++
++		/* cgrp_moving_from implies non-NULL @sch, test it first */
++		if (p->scx.cgrp_moving_from && SCX_HAS_OP(sch, cgroup_cancel_move))
+ 			SCX_CALL_OP(sch, cgroup_cancel_move, NULL,
+ 				    p, p->scx.cgrp_moving_from, css->cgroup);
+ 		p->scx.cgrp_moving_from = NULL;
+ 	}
+ 
+-	return scx_ops_sanitize_err(sch, "cgroup_prep_move", ret);
++	return ret;
+ }
+ 
+ void scx_cgroup_move_task(struct task_struct *p)
+ {
+-	struct scx_sched *sch = scx_root;
++	struct scx_sched *sch;
+ 
+ 	if (!scx_cgroup_enabled)
+ 		return;
  
  	/*
--	 * Shut down cgroup support before tasks so that the cgroup attach path
--	 * doesn't race against scx_disable_and_exit_task().
-+	 * Shut down cgroup support before tasks so that the cgroup attach and
-+	 * migration paths don't race against scx_disable_and_exit_task().
+-	 * scx_cgroup_can_attach() sets cgrp_moving_from only when the task's
+-	 * cgroup changes. Migration keys off css rather than cgroup identity,
+-	 * so it can hand an unchanged-cgroup task here with cgrp_moving_from
+-	 * NULL. Nothing to report to the BPF scheduler then, so skip it and
+-	 * keep prep_move and move paired. Cgroup ops run on the root sched,
+-	 * dispatch on the explicit @sch.
++	 * Migration keys off css rather than cgroup identity, so it can hand an
++	 * unchanged-cgroup task here with cgrp_moving_from NULL. Nothing to
++	 * report to the BPF scheduler then, so skip it and keep prep_move and
++	 * move paired.
  	 */
- 	scx_cgroup_lock();
- 	scx_cgroup_enabled = false;
-@@ -7263,7 +7276,7 @@ static void scx_root_enable_workfn(struct kthread_work *work)
- 		scx_set_task_state(p, SCX_TASK_INIT_BEGIN);
- 		scx_task_iter_unlock(&sti);
+-	if (SCX_HAS_OP(sch, cgroup_move) && p->scx.cgrp_moving_from)
+-		__SCX_CALL_OP_TASK(sch, ops, cgroup_move, task_rq(p),
+-				   p, p->scx.cgrp_moving_from,
+-				   tg_cgrp(task_group(p)));
++	sch = scx_cgroup_task_sched(p);
++	if (p->scx.cgrp_moving_from && SCX_HAS_OP(sch, cgroup_move))
++		SCX_CALL_OP_TASK(sch, cgroup_move, task_rq(p),
++				 p, p->scx.cgrp_moving_from,
++				 tg_cgrp(task_group(p)));
+ 	p->scx.cgrp_moving_from = NULL;
+ }
  
--		ret = __scx_init_task(sch, p, false);
-+		ret = __scx_init_task(sch, p, NULL, false);
+ void scx_cgroup_cancel_attach(struct cgroup_taskset *tset)
+ {
+-	struct scx_sched *sch = scx_root;
+ 	struct cgroup_subsys_state *css;
+ 	struct task_struct *p;
  
- 		scx_task_iter_relock(&sti, p);
+@@ -4460,8 +4530,10 @@ void scx_cgroup_cancel_attach(struct cgroup_taskset *tset)
+ 		return;
+ 
+ 	cgroup_taskset_for_each(p, css, tset) {
+-		if (SCX_HAS_OP(sch, cgroup_cancel_move) &&
+-		    p->scx.cgrp_moving_from)
++		struct scx_sched *sch = scx_cgroup_task_sched(p);
++
++		/* cgrp_moving_from implies non-NULL @sch, test it first */
++		if (p->scx.cgrp_moving_from && SCX_HAS_OP(sch, cgroup_cancel_move))
+ 			SCX_CALL_OP(sch, cgroup_cancel_move, NULL,
+ 				    p, p->scx.cgrp_moving_from, css->cgroup);
+ 		p->scx.cgrp_moving_from = NULL;
+@@ -4473,7 +4545,7 @@ void scx_group_set_weight(struct task_group *tg, unsigned long weight)
+ 	struct scx_sched *sch;
+ 
+ 	percpu_down_read(&scx_cgroup_ops_rwsem);
+-	sch = scx_root;
++	sch = scx_tg_knob_sched(tg);
+ 
+ 	if (scx_cgroup_enabled && SCX_HAS_OP(sch, cgroup_set_weight) &&
+ 	    tg->scx.weight != weight)
+@@ -4489,7 +4561,7 @@ void scx_group_set_idle(struct task_group *tg, bool idle)
+ 	struct scx_sched *sch;
+ 
+ 	percpu_down_read(&scx_cgroup_ops_rwsem);
+-	sch = scx_root;
++	sch = scx_tg_knob_sched(tg);
+ 
+ 	if (scx_cgroup_enabled && SCX_HAS_OP(sch, cgroup_set_idle))
+ 		SCX_CALL_OP(sch, cgroup_set_idle, NULL, tg_cgrp(tg), idle);
+@@ -4506,7 +4578,7 @@ void scx_group_set_bandwidth(struct task_group *tg,
+ 	struct scx_sched *sch;
+ 
+ 	percpu_down_read(&scx_cgroup_ops_rwsem);
+-	sch = scx_root;
++	sch = scx_tg_knob_sched(tg);
+ 
+ 	if (scx_cgroup_enabled && SCX_HAS_OP(sch, cgroup_set_bandwidth) &&
+ 	    (tg->scx.bw_period_us != period_us ||
+@@ -4718,6 +4790,7 @@ static void scx_cgroup_exit(struct scx_sched *sch)
+ 
+ 		if (!(tg->scx.flags & SCX_TG_INITED))
+ 			continue;
++		tg->scx.sched = NULL;
+ 		tg->scx.flags &= ~SCX_TG_INITED;
+ 
+ 		if (!sch->ops.cgroup_exit)
+@@ -4738,28 +4811,26 @@ static int scx_cgroup_init(struct scx_sched *sch)
+ 	 */
+ 	css_for_each_descendant_pre(css, &root_task_group.css) {
+ 		struct task_group *tg = css_tg(css);
+-		struct scx_cgroup_init_args args = {
+-			.weight = tg->scx.weight,
+-			.bw_period_us = tg->scx.bw_period_us,
+-			.bw_quota_us = tg->scx.bw_quota_us,
+-			.bw_burst_us = tg->scx.bw_burst_us,
+-		};
+ 
+-		if ((tg->scx.flags &
+-		     (SCX_TG_ONLINE | SCX_TG_INITED)) != SCX_TG_ONLINE)
++		if ((tg->scx.flags & (SCX_TG_ONLINE | SCX_TG_INITED)) != SCX_TG_ONLINE)
+ 			continue;
+ 
+-		if (!sch->ops.cgroup_init) {
+-			tg->scx.flags |= SCX_TG_INITED;
+-			continue;
+-		}
++		if (sch->ops.cgroup_init) {
++			struct scx_cgroup_init_args args = {
++				.weight = tg->scx.weight,
++				.bw_period_us = tg->scx.bw_period_us,
++				.bw_quota_us = tg->scx.bw_quota_us,
++				.bw_burst_us = tg->scx.bw_burst_us,
++			};
+ 
+-		ret = SCX_CALL_OP_RET(sch, cgroup_init, NULL,
+-				      css->cgroup, &args);
+-		if (ret) {
+-			scx_error(sch, "ops.cgroup_init() failed (%d)", ret);
+-			return ret;
++			ret = SCX_CALL_OP_RET(sch, cgroup_init, NULL, css->cgroup, &args);
++			if (ret) {
++				scx_error(sch, "ops.cgroup_init() failed (%d)", ret);
++				return ret;
++			}
+ 		}
++
++		tg->scx.sched = sch;
+ 		tg->scx.flags |= SCX_TG_INITED;
+ 	}
  
 diff --git a/kernel/sched/ext/internal.h b/kernel/sched/ext/internal.h
-index d76ac22019af..23fc95502ea6 100644
+index 23fc95502ea6..ad90d4645a33 100644
 --- a/kernel/sched/ext/internal.h
 +++ b/kernel/sched/ext/internal.h
-@@ -1920,7 +1920,8 @@ void scx_flush_dispatch_buf(struct scx_sched *sch, struct rq *rq);
- void scx_kick_cpu(struct scx_sched *sch, s32 cpu, u64 flags);
- void schedule_dsq_reenq(struct scx_sched *sch, struct scx_dispatch_q *dsq,
- 			u64 reenq_flags, struct rq *locked_rq);
--int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork);
-+int __scx_init_task(struct scx_sched *sch, struct task_struct *p,
-+		    struct cgroup *cgrp, bool fork);
- void scx_enable_task(struct scx_sched *sch, struct task_struct *p);
- void __scx_disable_and_exit_task(struct scx_sched *sch, struct task_struct *p);
- void scx_sub_init_cancel_task(struct scx_sched *sch, struct task_struct *p);
-diff --git a/kernel/sched/ext/sub.c b/kernel/sched/ext/sub.c
-index 5f7ac6696d17..393dbd00d2f7 100644
---- a/kernel/sched/ext/sub.c
-+++ b/kernel/sched/ext/sub.c
-@@ -906,7 +906,7 @@ void scx_sub_disable(struct scx_sched *sch)
- 		 * parent. A child can't directly affect the parent through its
- 		 * own failures.
- 		 */
--		ret = __scx_init_task(parent, p, false);
-+		ret = __scx_init_task(parent, p, NULL, false);
- 		if (ret) {
- 			scx_fail_parent(sch, p, ret);
- 			put_task_struct(p);
-@@ -1212,7 +1212,7 @@ void scx_sub_enable_workfn(struct kthread_work *work)
- 		 * As $p is still on $parent, it can't be transitioned to INIT.
- 		 * Let's worry about task state later. Use __scx_init_task().
- 		 */
--		ret = __scx_init_task(sch, p, false);
-+		ret = __scx_init_task(sch, p, NULL, false);
- 		if (ret)
- 			goto abort;
+@@ -645,8 +645,14 @@ struct sched_ext_ops {
+ 	 * @cgrp: cgroup being initialized
+ 	 * @args: init arguments, see the struct definition
+ 	 *
+-	 * Either the BPF scheduler is being loaded or @cgrp created, initialize
+-	 * @cgrp for sched_ext. This operation may block.
++	 * Initialize @cgrp for sched_ext, delivered to @cgrp's sched either
++	 * when the BPF scheduler is being loaded or when @cgrp is created. This
++	 * operation may block.
++	 *
++	 * When the BPF scheduler is being loaded or cgroups are being handed
++	 * over, @cgrp may already have been removed by userspace: a removed
++	 * cgroup stays schedulable until its dying tasks finish their final
++	 * context switches.
+ 	 *
+ 	 * Return 0 for success, -errno for failure. An error return while
+ 	 * loading will abort loading of the BPF scheduler. During cgroup
+@@ -659,8 +665,13 @@ struct sched_ext_ops {
+ 	 * @cgroup_exit: Exit a cgroup
+ 	 * @cgrp: cgroup being exited
+ 	 *
+-	 * Either the BPF scheduler is being unloaded or @cgrp destroyed, exit
+-	 * @cgrp for sched_ext. This operation my block.
++	 * Exit @cgrp for sched_ext, delivered to the sched whose
++	 * ops.cgroup_init() it pairs with, either when the BPF scheduler is
++	 * being unloaded or when @cgrp is destroyed. This operation may block.
++	 *
++	 * For a destroyed @cgrp, delivery follows the last scheduling event on
++	 * it: a removed cgroup stays schedulable until its dying tasks finish
++	 * their final context switches.
+ 	 */
+ 	void (*cgroup_exit)(struct cgroup *cgrp);
  
-@@ -1336,6 +1336,99 @@ void scx_sub_enable_workfn(struct kthread_work *work)
- 	cmd->ret = 0;
- }
+@@ -673,6 +684,12 @@ struct sched_ext_ops {
+ 	 * Prepare @p for move from cgroup @from to @to. This operation may
+ 	 * block and can be used for allocations.
+ 	 *
++	 * The cgroup_move ops are delivered to @p's sched, and only for moves
++	 * that don't re-home @p. A re-homing move is reported through
++	 * ops.exit_task() and ops.init_task() instead. @from and @to can
++	 * reference cgroups the sched never received ops.cgroup_init() for, as
++	 * the cpu controller can be coarser than the sub-scheduler topology.
++	 *
+ 	 * Return 0 for success, -errno for failure. An error return aborts the
+ 	 * migration.
+ 	 */
+@@ -708,6 +725,11 @@ struct sched_ext_ops {
+ 	 * @weight: new weight [1..10000]
+ 	 *
+ 	 * Update @cgrp's weight to @weight.
++	 *
++	 * Knobs of a cgroup belong to the parent, so the set_* ops are
++	 * delivered to @cgrp's parent's sched. That sched may never have seen
++	 * ops.cgroup_init() for @cgrp - at a sub-scheduler attach point, the
++	 * parent sched tracks @cgrp through ops.sub_attach() instead.
+ 	 */
+ 	void (*cgroup_set_weight)(struct cgroup *cgrp, u32 weight);
  
-+/**
-+ * scx_cgroup_task_migrating - Prepare a task for a cgroup migration
-+ * @ctx: migration being prepared
-+ *
-+ * A task's sched must match its cgroup's owner, so a migration that crosses a
-+ * sched boundary re-homes the task once committed. Run the fallible part here,
-+ * before the migration commits: initialize the task for the destination sched.
-+ * A rejection fails the cgroup.procs write.
-+ */
-+static s32 scx_cgroup_task_migrating(struct cgroup_task_migrate_ctx *ctx)
-+{
-+	struct task_struct *p = ctx->task;
-+	struct scx_sched *to;
-+	int ret;
-+
-+	/*
-+	 * Cleared under scx_cgroup_lock() before root disable starts tearing
-+	 * down tasks. As cgroup_mutex is held, a set flag guarantees that the
-+	 * teardown loop is not running concurrently.
-+	 */
-+	if (!scx_cgroup_enabled)
-+		return NOTIFY_OK;
-+
-+	to = ctx->dst_dcgrp->scx_sched;
-+	if (scx_task_on_sched(to, p))
-+		return NOTIFY_OK;
-+
-+	ret = __scx_init_task(to, p, ctx->dst_dcgrp, false);
-+	if (ret)
-+		return notifier_from_errno(ret);
-+
-+	return NOTIFY_OK;
-+}
-+
-+/**
-+ * scx_cgroup_task_migrated - Re-home a task that changed cgroups
-+ * @ctx: committed migration
-+ *
-+ * Move the task to its new cgroup's sched, which scx_cgroup_task_migrating()
-+ * already initialized it for. Can't fail.
-+ *
-+ * This is safe against all phases of the destination sched's destruction. A
-+ * disable resets cgroup ownership to the parent and re-homes tasks in one
-+ * scx_cgroup_lock() section. If that section already ran, the destination would
-+ * be the parent. Otherwise, the re-home loop is still ahead and guaranteed to
-+ * visit the task, now in the destination cgroup.
-+ */
-+static void scx_cgroup_task_migrated(struct cgroup_task_migrate_ctx *ctx)
-+{
-+	struct task_struct *p = ctx->task;
-+	struct scx_sched *to;
-+	struct rq *rq;
-+	struct rq_flags rf;
-+
-+	if (!scx_cgroup_enabled)
-+		return;
-+
-+	to = ctx->dst_dcgrp->scx_sched;
-+	if (scx_task_on_sched(to, p))
-+		return;
-+
-+	rq = task_rq_lock(p, &rf);
-+	scx_rehome_task(to, p);
-+	task_rq_unlock(rq, p, &rf);
-+}
-+
-+/**
-+ * scx_cgroup_task_migrate_canceled - Undo migration preparation
-+ * @ctx: canceled migration
-+ *
-+ * The migration failed after scx_cgroup_task_migrating() initialized the task
-+ * for the destination sched. The task stays on its current sched in the source
-+ * cgroup. Undo the destination's init.
-+ */
-+static void scx_cgroup_task_migrate_canceled(struct cgroup_task_migrate_ctx *ctx)
-+{
-+	struct task_struct *p = ctx->task;
-+	struct scx_sched *to;
-+	struct rq *rq;
-+	struct rq_flags rf;
-+
-+	if (!scx_cgroup_enabled)
-+		return;
-+
-+	to = ctx->dst_dcgrp->scx_sched;
-+	if (scx_task_on_sched(to, p))
-+		return;
-+
-+	rq = task_rq_lock(p, &rf);
-+	scx_sub_init_cancel_task(to, p);
-+	task_rq_unlock(rq, p, &rf);
-+}
-+
- static s32 scx_cgroup_lifetime_notify(struct notifier_block *nb,
- 				      unsigned long action, void *data)
- {
-@@ -1367,12 +1460,42 @@ static struct notifier_block scx_cgroup_lifetime_nb = {
- 	.notifier_call = scx_cgroup_lifetime_notify,
- };
+@@ -728,6 +750,8 @@ struct sched_ext_ops {
+ 	 * burst temporarily. The specific control mechanism and thus the
+ 	 * interpretation of @period_us and burstiness is up to the BPF
+ 	 * scheduler.
++	 *
++	 * Delivery follows the same rule as cgroup_set_weight().
+ 	 */
+ 	void (*cgroup_set_bandwidth)(struct cgroup *cgrp,
+ 				     u64 period_us, u64 quota_us, u64 burst_us);
+@@ -740,6 +764,8 @@ struct sched_ext_ops {
+ 	 * Update @cgrp's idle state to @idle. This callback is invoked when
+ 	 * a cgroup transitions between idle and non-idle states, allowing the
+ 	 * BPF scheduler to adjust its behavior accordingly.
++	 *
++	 * Delivery follows the same rule as cgroup_set_weight().
+ 	 */
+ 	void (*cgroup_set_idle)(struct cgroup *cgrp, bool idle);
  
--static s32 __init scx_cgroup_lifetime_notifier_init(void)
-+static s32 scx_cgroup_task_notify(struct notifier_block *nb,
-+				  unsigned long action, void *data)
-+{
-+	struct cgroup_task_migrate_ctx *ctx = data;
-+
-+	switch (action) {
-+	case CGROUP_TASK_MIGRATING:
-+		return scx_cgroup_task_migrating(ctx);
-+	case CGROUP_TASK_MIGRATED:
-+		scx_cgroup_task_migrated(ctx);
-+		break;
-+	case CGROUP_TASK_MIGRATE_CANCELED:
-+		scx_cgroup_task_migrate_canceled(ctx);
-+		break;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block scx_cgroup_task_nb = {
-+	.notifier_call = scx_cgroup_task_notify,
-+};
-+
-+static s32 __init scx_cgroup_notifier_init(void)
- {
--	return blocking_notifier_chain_register(&cgroup_lifetime_notifier,
--						&scx_cgroup_lifetime_nb);
-+	s32 ret;
-+
-+	ret = blocking_notifier_chain_register(&cgroup_lifetime_notifier,
-+					       &scx_cgroup_lifetime_nb);
-+	if (ret)
-+		return ret;
-+
-+	return blocking_notifier_chain_register(&cgroup_task_notifier,
-+						&scx_cgroup_task_nb);
- }
--core_initcall(scx_cgroup_lifetime_notifier_init);
-+core_initcall(scx_cgroup_notifier_init);
- 
- static void scx_pstack_recursion(struct bpf_prog *prog, const char *op)
- {
 -- 
 2.55.0
 
