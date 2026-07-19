@@ -1,105 +1,138 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from flow-a2-smtp.messagingengine.com (flow-a2-smtp.messagingengine.com [103.168.172.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B063D175A5;
-	Sat, 18 Jul 2026 17:24:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBBB61ADFE4;
+	Sun, 19 Jul 2026 05:26:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784395479; cv=none; b=KGbxt8fJfRWTkpF0uNL1lRwaa0tnhmospIIinFlepg4zkOF9oQ4YRaGhDuMIE0ywCv/cWHbApMYjWLbGNV4tYeYTgEW5RPBvcn4mvNkxtwIdn6i7CMQqi12et2UmqcNgcpzpQrNXau4dLHDRJKcX2bMTURfBtJG39vUKMpC7Oj0=
+	t=1784438796; cv=none; b=IUFgWgHIeSDzn85amJT27RgBRqN33DgB9Jfx4xAyfAXoce1HED1IMtjr01f9fTu1LIL4PAriKth6JvrM9vY98DulJSEQKhypwHvQ8kK9RzgIAzMNGEcnue/GJ5lCl7aMjgljf6A+Nl6q7qhjI/MsFI6WltVxba/2KbogC3jelwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784395479; c=relaxed/simple;
-	bh=cqR8JikmrswSNqS04pYli1YM+ApLbSdN2Em8CMf+Eag=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=upDKUASgxAYugg7w96JdiNK96upxrdJgr0dR/tLZNm6zvZrFR46+C9FY2zHIAJcsQu4SS3MXZYSJ9Q5L0Q6LlTggT3RXC5acFrReDVHJ9EdL7Ch+IFWchnwNtPWYLT0Xa501GL9H24e1olBtDUNYwk2G/8urIV/1lzAybpCuksM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=s8HrN7ba; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1784438796; c=relaxed/simple;
+	bh=Hi0xnivGNtOREXt/UYVZ9Q6LdSO1ZOzCw7BzXniVlWQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qBbCqLmbVg5+IwXvfpjhZNZF3CQV9J7zq8ib4tKWDp7/oi0MeiZ4WbmkeMSV0XzGdZgWoFGILgjOIr46i+aLNytm+ap47wyLU+fsaRLgC0qBxQoI3y48cH3GlDQETYSMIsRr03RJaEp0n9LQQjgdyHDLArzjQxn65xI62qyvnXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com; spf=pass smtp.mailfrom=kroah.com; dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b=wF3Z0gGe; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=AKArMgXA; arc=none smtp.client-ip=103.168.172.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="s8HrN7ba"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=YfUejeag+x8hccV3Qa62JJochWWzcrdg8iAgBKzRx4g=; b=s8HrN7baK8JpoaoduYsQa2NMJt
-	Ry8E3Q4RnCUD51ayTrlE2ZSpwlSw9fkgcPm8QsEWtlaO911FRW8F67CcYaQ9wt7K/Ic9X+BIHpGIS
-	QkCThdXg2Be7gJazOGzNTpB7+Arh4dAoYCK74uvzwJYlEk9wNhJLah8PJiGk4VeLSi9XFgSZoE4kd
-	K/wV4BL25F4xAoWTid9uR9Ezo6o4KgU3fhE/TiQix6mYaPQIy07+dzrewndtQ7lI7uRCl8fy6y2Mm
-	IHDz0dQ+r9hfGlV393/ZVD96FWkMq0HOSPy1Op+r/R3UVuHE5u0b6OtDKSv2SDkZeDTbDC2YPzxtj
-	fmjuo2Fw==;
-Received: from [50.53.43.113] (helo=[192.168.254.34])
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wl8m7-00000004PH0-1RnD;
-	Sat, 18 Jul 2026 17:24:31 +0000
-Message-ID: <0f225a3d-b10b-4576-8880-2f3759e9fd22@infradead.org>
-Date: Sat, 18 Jul 2026 10:24:30 -0700
+	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="wF3Z0gGe";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="AKArMgXA"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailflow.phl.internal (Postfix) with ESMTP id CE29B1380039;
+	Sun, 19 Jul 2026 01:26:32 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-10.internal (MEProxy); Sun, 19 Jul 2026 01:26:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm2; t=1784438792; x=1784445992; bh=eecg0lJ7GM
+	VPKq2dqzJPtaANo6Zq9o9SX4g1WVGOqPE=; b=wF3Z0gGeJCJaKfT2Xzm96MtuXe
+	6i9JuofDLJjag12vbKOQXxWUwCIDLG5qLYIs3jssGixw1ydxbSLbcUhEk3RYJ32q
+	p6jfDXze08QvqdxVdwl8rKjDASgJSXvLRwZ62jiWu9f4H2yYQmbl4WiOV2SWP1Vx
+	Ik8k2RBZOD3tdyhzUwg54aK8Sz9RMx2s127/iyv+7czqc/6+tcichKZSP1OZcPhP
+	0JZTTAWjf2TJn4ZrSgA0w0oQ6PCyE2omuPGsJPi0Z9Qmbb7Skdxhf/UNxqgyiXfw
+	jOJV6HVK+yhxgvIB2f3TKVK5WDLsMybEliLYF/TVypMNiOA5ZcrVFyk3eaHg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
+	1784438792; x=1784445992; bh=eecg0lJ7GMVPKq2dqzJPtaANo6Zq9o9SX4g
+	1WVGOqPE=; b=AKArMgXA3oyEOmb2gYEzdRDbrk3jjIXGftrclIsUb78ZrPV9v5Y
+	2wcdLr1a/HOaopYJT2+xCMrXY7TMhrWHKmmp9/O1JVFCGtf1rdGVnOcpBVr8GQ28
+	hZ2Alpm2IEd7aSqo9PYD8mB3rh+G06RNMuoMG37xZqndPFspDxPTk0pnLQjHwtWt
+	klhTddiY9LhSZQbwBKTNyJOoCMv5EZcSfRjnfZXML/fGUGUEl0ZKu3UEGvyRoCNY
+	zHzI1uHYDh5yM7Nuh7ZCUZZCXs3+Qpynt4yP0+ToCTobJs94R1DSgA+HPqzaQhq9
+	jfE9BXC3zH145AcWFjp4PbGuSoepK6See2w==
+X-ME-Sender: <xms:CGBcam68ZHdmeOZ6tIQlFEKIdnwi1LM-SnuyPCsXOD78ThhloUfBTg>
+    <xme:CGBcanZmjiiooxYRu3pPUxpTWWn2AC0VxmPy-z3w490VEBZa84t5T_4cbahE8lezm
+    2I_TG77RStcZ3L79G_YeSCAxCvZpMD7_0HT7JDWxAt5SSfi-jE>
+X-ME-Received: <xmr:CGBcari6G4fr-bl4jC8-Td5rz8WjiZeWAmxbr3eJ--9PxS8mf55FfOnhyl6TFiEDiGhsjY4lioPkyNPLOTd233x_mA>
+X-ME-Proxy-Cause: dmFkZTFQyx31AWctr4aPvIzgtsidowCfviJ8Nq9RswvKEgWVIwvPHJ7EsYxWWMbjEFho7t
+    eR6zYIF+VcSNrTn/hg7VWB4uXEoAtwAzRf6c4Ux22xnFlnsswmCcO4dlsWLwit5cClU4lN
+    ECYl22j0epkDLpuABXzsKZmVYFeVuGQNlUPZPQmox1CQczKo6hSKFRmzaGpYxfNbs4BuAz
+    sv02VwwRup0SOCrcdLWmNwYGQIYSLiyJK5d7ilLs1rnPYKAnUdKHQ94+NCoqajlgyQ4XaD
+    aSvdTZeqskrLNrMmTmB9V80ytqPmuABDEHqWwfBGM3fYPxDplDwLNr3zg0bhul+bQOQjas
+    qV1G65lemm+JDmE4s94CT9c6EqdzXXwbftihLrVEI48kR5H1ahDB5w1sda33uxSKTkgNb/
+    8hb9jkSCAcAvLcLjQ+JEimezd3xBXPeZ/DHhmaGni/WJwJxHWI7cek23NEfyYp3RfrM872
+    Rmu+1pGFAFqcRsei+p+coRVDg4BPsUIOYEjsy7H/7kooso6XSi8eI6RwI9mrMc4VypYbO2
+    0R1JKagCw784hviQbYjNQ1kWTn/Njvg9X4JKynXiZsg8ypnlAjElr8koDDlcjoL+FrlePi
+    GObYuv5KGYMs65AWOwyjfBrvY6WPigO+wScHTOGsS6llmAhvm0vWbft3EWDA
+X-ME-Proxy: <xmx:CGBcahPa4HHXOK2-dWQGSAHgyS0kySTOlNx-M6lUq9lILtWlkbt97w>
+    <xmx:CGBcalPN2wFfvbIMC7-ekhGkcvvqpK73TSwuTd8mEJniJ8LG7doEwA>
+    <xmx:CGBcapJRtsQE8OHwhupEvfihfRzgTlb5TGQeXj_-3oqgVpadbrSpJw>
+    <xmx:CGBcakvRPEJGOgtk4HVpP1ynJCb7FxkI5EvuzJsllO7IgPXVJy02WA>
+    <xmx:CGBcapoJ6eTL5egjSNblq9BuInL0vu4lryGfgmHfPvOx7uAJrI_RmC1w>
+Feedback-ID: i787e41f1:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
+ 19 Jul 2026 01:26:31 -0400 (EDT)
+Date: Sun, 19 Jul 2026 07:26:24 +0200
+From: Greg KH <greg@kroah.com>
+To: Yahya Toubali <yahya@yahyatoubali.me>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	"open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>,
+	"open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"open list:DOCUMENTATION PROCESS" <workflows@vger.kernel.org>,
+	"open list:SOUND" <linux-sound@vger.kernel.org>
+Subject: Re: [PATCH v3] Documentation: add SPDX license identifiers to RST
+ files
+Message-ID: <2026071910-repressed-elsewhere-e2f8@gregkh>
+References: <20260718165618.1923627-1-yahya@yahyatoubali.me>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] Documentation: admin-guide: fix trailing whitespace in
- cgroup-v2.rst
-To: Yahya Toubali <yahya@yahyatoubali.me>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>,
- "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-Cc: Weijie Yuan <wy@wyuan.org>
-References: <alumXzlDApA_iMbY@wyuan.org>
- <20260718165614.1923568-1-yahya@yahyatoubali.me>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20260718165614.1923568-1-yahya@yahyatoubali.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260718165618.1923627-1-yahya@yahyatoubali.me>
 
-
-
-On 7/18/26 9:56 AM, Yahya Toubali wrote:
-> Remove trailing whitespace flagged by checkpatch.pl in the cgroup
-> memory and writeback sections.
+On Sat, Jul 18, 2026 at 05:56:16PM +0100, Yahya Toubali wrote:
+> Add SPDX-License-Identifier: GPL-2.0 to RST documentation files
+> that were missing it. This aligns with kernel documentation
+> conventions.
 > 
 > Signed-off-by: Yahya Toubali <yahya@yahyatoubali.me>
 > ---
->  Documentation/admin-guide/cgroup-v2.rst | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 14b8c571c0d1..481658cfef40 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1332,7 +1332,7 @@ PAGE_SIZE multiple when read back.
->  	cgroup is within its effective low boundary, the cgroup's
->  	memory won't be reclaimed unless there is no reclaimable
->  	memory available in unprotected cgroups.
-> -	Above the effective low	boundary (or 
-> +	Above the effective low	boundary (or
->  	effective min boundary if it is higher), pages are reclaimed
->  	proportionally to the overage, reducing reclaim pressure for
->  	smaller overages.
-> @@ -2194,7 +2194,7 @@ of the two is enforced.
->  
->  cgroup writeback requires explicit support from the underlying
->  filesystem.  Currently, cgroup writeback is implemented on ext2, ext4,
-> -btrfs, f2fs, and xfs.  On other filesystems, all writeback IOs are 
-> +btrfs, f2fs, and xfs.  On other filesystems, all writeback IOs are
->  attributed to the root cgroup.
->  
->  There are inherent differences in memory and writeback management
-> 
-> base-commit: 1229e2e57a5c2980ccd457b9b53ea0eed5a22ab3
-> prerequisite-patch-id: c8aee5eb39e3cd6f2b2f28c82163565665288d2a
+>  Documentation/admin-guide/cgroup-v2.rst      | 1 +
+>  Documentation/core-api/housekeeping.rst      | 2 ++
+>  Documentation/core-api/memory-allocation.rst | 1 +
+>  Documentation/doc-guide/sphinx.rst           | 1 +
+>  Documentation/process/5.Posting.rst          | 1 +
+>  Documentation/process/howto.rst              | 1 +
+>  Documentation/sound/designs/index.rst        | 2 ++
+>  7 files changed, 9 insertions(+)
 
-From Documentation/process/submitting-patches.rst: (paraphrased)
+Hi,
 
-Don't reply to v2 of a patch with v3 of that patch. We prefer that new/fresh
-patches begin their own email thread.
+This is the friendly patch-bot of Greg Kroah-Hartman.  You have sent him
+a patch that has triggered this response.  He used to manually respond
+to these common problems, but in order to save his sanity (he kept
+writing the same thing over and over, yet to different people), I was
+created.  Hopefully you will not take offence and will fix the problem
+in your patch and resubmit it so that it can be accepted into the Linux
+kernel tree.
 
-thanks.
--- 
-~Randy
+You are receiving this message because of the following common error(s)
+as indicated below:
 
+- This looks like a new version of a previously submitted patch, but you
+  did not list below the --- line any changes from the previous version.
+  Please read the section entitled "The canonical patch format" in the
+  kernel file, Documentation/process/submitting-patches.rst for what
+  needs to be done here to properly describe this.
+
+If you wish to discuss this problem further, or you have questions about
+how to resolve this issue, please feel free to respond to this email and
+Greg will reply once he has dug out from the pending patches received
+from other developers.
+
+thanks,
+
+greg k-h's patch email bot
