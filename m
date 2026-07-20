@@ -1,164 +1,143 @@
-Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3A1C2F8EA6
-	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 17:02:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05490442FBC
+	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 17:05:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784566981; cv=none; b=X3RfsYNGvX85ctNWzEd6BHPeATyaT7Sjmxvg0/aQWKiQzLkromsrdfCf/q/xcmrCAgwryVyMsHFNAdi2WbhnsnM/viQoGYL+kRlk1RdXaBP1gecJtCu/BaXTqRYRbPW0OR9KtPFeH77nCmrdF6jLPIxYh9JguqhBUXwViTJndO8=
+	t=1784567144; cv=none; b=Pi/QCR3myVMqOMYXi1el24VqUJwQCfsLdJn7KdyO8TQJvrTfdD+AKlDrV3sCKdzWMcMcuZlmnKK/lcgEly1eNePhwIXaNz1wKNxA1RJCPgNZ1yTVp7Ic8pmjJkY2OBzKzLmVTwN7ZWXaqN3dW+1O49i2vLNGUBgh04aus3Z7xnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784566981; c=relaxed/simple;
-	bh=I4Cjt6De6ZMzZvXTN3Kz0QgBxiCECILQOX1r7zMp9p4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fBwgzE+NI4Ab4aorG058P+2z2Ldk/czaZOycM6i68nPPMjd4uJY0pbfBsYopEyq0UXjTOWuIaS22hFYTj4/LmQ3geKIInNmbdX2nawV+mRWlaDe0B+ctvGmgT3h7jiGEN9tJ+xddQApmRL2wQiJMdeRmmjIjpNssZmdEx6IXbgo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vtHxYiUZ; arc=none smtp.client-ip=95.215.58.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784567144; c=relaxed/simple;
+	bh=EPHXgE92OZtwrusVZTpJimPa6PHp1mjxA6Q2dzygXUs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DUmZjBJ6c06aHANt+kTOk1w+wECMC3DNesp5/jU054ud36WEu1c1K+Z9r5x9HOC5lrE/9oc4OZ1uZC+p7EL2nJ+jT3i7QkZrrJP6aWUfYli+J0Jkq7qBDUsj5ru7Y3jbuF0FP/hUHElR+6d5i/NbtwS1Eexb/50JgbQz3OYqobE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FO5m1tKv; arc=none smtp.client-ip=209.85.128.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vtHxYiUZ"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784566975;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QMuWMKqgnkPBUwOMQjhA6e2FQmdsWS/MkwAM17YGiE0=;
-	b=vtHxYiUZTWBe/9tm3d3ozCfohoThor8P2b7AXRdvys5Cl6mM82JMRs56s9DMK0zdf2hsgs
-	1c67AiCnb+3NQHpKBoWrNnq6WZ/99VwJopyLHTT30dCg6BRPsJfxfsLzxdQ1IaBmrgDUMn
-	Ps/OUQTliWIsniL5NvYd80VXd/H8fvw=
-From: Usama Arif <usama.arif@linux.dev>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Usama Arif <usama.arif@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	david@kernel.org,
-	ljs@kernel.org,
-	liam@infradead.org,
-	vbabka@kernel.org,
-	rppt@kernel.org,
-	surenb@google.com,
-	mhocko@suse.com,
-	kasong@tencent.com,
-	qi.zheng@linux.dev,
-	shakeel.butt@linux.dev,
-	axelrasmussen@google.com,
-	yuanchu@google.com,
-	weixugc@google.com,
-	chrisl@kernel.org,
-	nphamcs@gmail.com,
-	baoquan.he@linux.dev,
-	youngjun.park@lge.com,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	rientjes@google.com,
-	kernel-team@meta.com
-Subject: Re: [PATCH v3 2/2] mm/vmscan: reduce lru_lock contention via vmstat-derived scan-balance cost
-Date: Mon, 20 Jul 2026 10:02:44 -0700
-Message-ID: <20260720170245.939058-1-usama.arif@linux.dev>
-In-Reply-To: <20260717210808.GI6843@cmpxchg.org>
-References: 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FO5m1tKv"
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-80c5cb9a888so87528547b3.3
+        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 10:05:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784567138; x=1785171938; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=GqlMGabo3ObXGmn0thsIH4WBoZJD0hx7su/ezzAUMj8=;
+        b=FO5m1tKvKY/aP9evleF+whRzKapro7xwpXTfGXXNFizkcZTJJYzjp7TrdtyJpzms44
+         wEGW2ZSDLx2S2MiuDVvCk8mnjw/9LYB7guNFDmTc98T6KeIw5Zkd/f66x21agGOP8vry
+         PovdbWeDQP3x+5VmgeCTa6UGAq4ANHuXSzvk6csHEpJNYDqFVYt6l9G+cAfj8RDzIunb
+         Su7DWx3/CycylC+5AaLNtrwMDvbYMDdFmLddLDVLrsVdtcwiczCMsbgYdwLtlx4XtWdi
+         3GILtvxicmAALWa0xztdyfuSXYXS0w/qc0ANr5jAvgXxedXmG7ptBY0fwtDISIKwezA1
+         y9qg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784567138; x=1785171938;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=GqlMGabo3ObXGmn0thsIH4WBoZJD0hx7su/ezzAUMj8=;
+        b=kCAaWhHAFbQdD+iUS+y4bdr57373XFqCWa2ETMjJe9XaxzGlCm9Q8k0uCN8lx9HK1e
+         Gr18o4PtN5apduzb5XdXQPKAqnzPoIRZcqzUtGgARSeaCmzyVnvTlYlhvZLRERZhpEAm
+         hqA9AFwmZh25FFcBDO82un1MLeYEO6+oETPFVpuEyThRFw9vT9+rB/idL7xLSwAvdITl
+         1Y0/Si/ufYkgargMs8yEee8V4YYK/2giWYZXwrXJJ3qFbOVHS7stkdBDAOey7+sSEX+W
+         5v3G/yOjRpMmHPbrU/8WqT7D+10WrqiwSgsqGLvh9WxuIDUZEtp/8iYho+i86vrVHSKE
+         8yrg==
+X-Forwarded-Encrypted: i=1; AHgh+RqyyOCFpxU1EQLuvGRjFg69mUZP2p4PA37E8X0O9s5EY4mgLhRw8aUNEENXdGJ4RO1NkQl15FxP@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4t1RDBO5e/8vVy+Mwlac2uEDHy0L2lU1N+c301+B30ANs/zLt
+	uQsodHD2tlc869cLKF0kYoEp4Ti2oBpIog7Tl6gbzTDUuBaigZ7eoj7h
+X-Gm-Gg: AR+sD13yfIOQ+Tw+/5rp/NL0NU2po3iIyVs2w8kEGDcLXPbpkTzGC4EOgBvTD3S4WIq
+	sPMNDCidTyaBz3sSOjDmxDGY/JD5/imjdOT20sExlVmv3Ue1tusJYqf6TeihuyD4Ywwn1jexMjy
+	QTtVkyAR//z0MHA9AN1WuYTvkh3r8arSa/sMa2fiH3pdM0yyNx5GCrDy6V3gq34eJYT37DL0Mx8
+	qKlyfQElCHkYIjpImt773s3NU1cch43C20QjGDWcEQXsfiNkx40193AGZWA+DTUBLCJPorIO0V2
+	tmQM9IzVF94hcRuCe18dlZpfEg7UgAoEGpZHPGI4XKVvUYzhD6WXiu+qmnPxY6UHaAA6ruktTR8
+	5XWTlJJmCYEyuyTtmmBU5f4bq5mPf17HWt2qLHtlY9anoGW44tUOCfnX3jc73DFEKzCThfcxhCO
+	5IN9P2+7GpT3QcBlqc5IJO
+X-Received: by 2002:a05:690c:4b0a:b0:80c:5ce9:8f1a with SMTP id 00721157ae682-81ef27f1ccbmr48967227b3.34.1784567137799;
+        Mon, 20 Jul 2026 10:05:37 -0700 (PDT)
+Received: from [192.168.0.23] ([210.10.76.89])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-81ef4034901sm53073037b3.12.2026.07.20.10.05.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Jul 2026 10:05:37 -0700 (PDT)
+Message-ID: <296cbf18-86da-4c1b-832d-a27a78881dd8@gmail.com>
+Date: Tue, 21 Jul 2026 01:05:31 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] block/blk-stat: fix mean loss when re-summing aggregated
+ stats
+To: Tao Cui <cui.tao@linux.dev>, Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+ Omar Sandoval <osandov@fb.com>, Bart Van Assche <bvanassche@acm.org>,
+ linux-block@vger.kernel.org, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+References: <20260720133813.45150-1-cui.tao@linux.dev>
+Content-Language: en-US
+From: Tang Yizhou <tangyeechou@gmail.com>
+In-Reply-To: <20260720133813.45150-1-cui.tao@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, 17 Jul 2026 23:08:08 +0200 Johannes Weiner <hannes@cmpxchg.org> wrote:
+On 20/7/26 9:38 pm, Tao Cui wrote:
+> From: Tao Cui <cuitao@kylinos.cn>
+> 
+> blk_rq_stat_sum() folds src into dst but only advances dst->mean and
+> dst->nr_samples, leaving dst->batch untouched.  The mean is computed
+> from src->batch (the raw per-cpu sum), so a stat that has already been
+> through one sum carries batch=0; if that aggregated stat is then used
+> as the src of another sum, its samples add nothing to the new mean.
+> 
+> iolatency hits exactly that: iolatency_check_latencies() first sums the
+> per-cpu stats into a local stat, then sums that local stat into
+> iolat->cur_stat.  After the first sum the local stat has batch=0, so
+> every later window drives cur_stat->mean toward zero.  On non-SSD
 
-> On Fri, Jul 17, 2026 at 06:57:32AM -0700, Usama Arif wrote:
-> > @@ -2303,12 +2301,63 @@ static void prepare_scan_control(pg_data_t *pgdat, struct scan_control *sc)
-> >  	mem_cgroup_flush_stats_ratelimited(sc->target_mem_cgroup);
-> >  
-> >  	/*
-> > -	 * Determine the scan balance between anon and file LRUs.
-> > +	 * Determine the scan balance between anon and file LRUs from per-LRU
-> > +	 * vmstat counters. The raw cost per side is:
-> > +	 *
-> > +	 *	PGROTATE	   - reclaim-driven rotations, bumped from both
-> > +	 *			     shrink_inactive_list and shrink_active_list
-> > +	 *			     (CPU work).
-> > +	 *	NR_VMSCAN_WRITE    - reclaim-driven anon pageout IO.
-> > +	 *	WORKINGSET_RESTORE - refaults of previously-workingset pages.
-> > +	 *
-> > +	 * The two IO terms are weighted by SWAP_CLUSTER_MAX to reflect the
-> > +	 * higher cost of an IO over a rotation.
-> > +	 *
-> > +	 * Reads are lock-free per-cpu sum collations, rstat-aggregated up
-> > +	 * the memcg hierarchy by mem_cgroup_flush_stats_ratelimited() above.
-> > +	 * Use lruvec_page_state_monotonic() so the unsigned subtraction
-> > +	 * `now - prev_cost[f]` yields the correct delta across a signed-long
-> > +	 * wraparound of the underlying counter (a real hazard on 32-bit that
-> > +	 * the clamp in lruvec_page_state() would otherwise turn into a huge
-> > +	 * spurious delta).
-> > +	 *
-> > +	 * The delta against prev_cost is folded into cost_accum, which is
-> > +	 * halved on both sides until their sum is within lrusize/4.
-> > +	 * cost_lock serialises concurrent reclaimers in the same memcg+node.
+Good catch, this is indeed a real issue.
+
+> devices it stays at 0, making the latency_sum_ok(&cur_stat) check that
+> gates scaling up always true -- the scale-up hysteresis is effectively
+> defeated.  SSD devices use the percentile path and are unaffected.
 > 
-> IMO that's a lot of describing what the code does. Why not stick
-> closer to the original comments?
+> Keep dst->batch in sync across sums so an aggregated stat can be reused
+> as a src.  blk_rq_stat.batch is internal to blk_rq_stat_init/_add/_sum
+> (no other reader in the tree), so the wbt and blk-mq consumers, which
+> only read ->mean/->min/->nr_samples, behave as before.
 > 
-> >  	 */
-> > -	spin_lock_irq(&target_lruvec->lru_lock);
-> > -	sc->anon_cost = target_lruvec->anon_cost;
-> > -	sc->file_cost = target_lruvec->file_cost;
-> > -	spin_unlock_irq(&target_lruvec->lru_lock);
-> > +	spin_lock(&target_lruvec->cost_lock);
-> > +	for (int f = 0; f <= 1; f++) {
-> > +		unsigned long now, delta;
-> > +
-> > +		now = lruvec_page_state_monotonic(target_lruvec, PGROTATE_ANON + f) +
-> > +		      lruvec_page_state_monotonic(target_lruvec,
-> > +						  WORKINGSET_RESTORE_BASE + f) *
-> > +				SWAP_CLUSTER_MAX;
-> > +		if (f == WORKINGSET_ANON)
-> > +			now += lruvec_page_state_monotonic(target_lruvec,
-> > +							   NR_VMSCAN_WRITE) *
-> > +				SWAP_CLUSTER_MAX;
+> Fixes: 34dbad5d26e2 ("blk-stat: convert to callback-based statistics reporting")
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 > 
-> It's hard to prove overflow behavior is correct. I would keep the
-> delta extraction dead simple, then do the weight math on the delta.
+> ---
+>  block/blk-stat.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> > +		delta = now - target_lruvec->prev_cost[f];
-> > +		target_lruvec->prev_cost[f] = now;
-> > +		target_lruvec->cost_accum[f] += delta;
-> > +	}
-> > +	unsigned long lrusize =
-> > +		lruvec_page_state(target_lruvec, NR_INACTIVE_ANON) +
-> > +		lruvec_page_state(target_lruvec, NR_ACTIVE_ANON) +
-> > +		lruvec_page_state(target_lruvec, NR_INACTIVE_FILE) +
-> > +		lruvec_page_state(target_lruvec, NR_ACTIVE_FILE);
-> > +	unsigned long cost_limit = lrusize / 4;
-> > +
-> > +	while (target_lruvec->cost_accum[WORKINGSET_ANON] > cost_limit ||
-> > +	       target_lruvec->cost_accum[WORKINGSET_FILE] > cost_limit ||
-> > +	       target_lruvec->cost_accum[WORKINGSET_ANON] +
-> > +	       target_lruvec->cost_accum[WORKINGSET_FILE] > cost_limit) {
-> > +		target_lruvec->cost_accum[WORKINGSET_ANON] /= 2;
-> > +		target_lruvec->cost_accum[WORKINGSET_FILE] /= 2;
-> 
-> Why do you need to check them individually? Between reclaim cycles,
-> there are no scans->rotations. And I don't see how you could get
-> refault events several times the size of the LRU, let alone in excess
-> of ULONG_MAX.
-> 
-> > +	}
-> > +	sc->anon_cost = target_lruvec->cost_accum[WORKINGSET_ANON];
-> > +	sc->file_cost = target_lruvec->cost_accum[WORKINGSET_FILE];
-> > +	spin_unlock(&target_lruvec->cost_lock);
-> 
-> I realize these long descriptor names make it hard, but I think this
-> can be cleaned up a bit and written in a more idiomatic way.
+> diff --git a/block/blk-stat.c b/block/blk-stat.c
+> index de126e1ea5ac..4d4781350083 100644
+> --- a/block/blk-stat.c
+> +++ b/block/blk-stat.c
+> @@ -36,6 +36,7 @@ void blk_rq_stat_sum(struct blk_rq_stat *dst, struct blk_rq_stat *src)
+>  	dst->mean = div_u64(src->batch + dst->mean * dst->nr_samples,
+>  				dst->nr_samples + src->nr_samples);
+>  
+> +	dst->batch += src->batch;
+
+This change doesn't actually fix the issue. As you already found, the local
+stat's batch is 0. Also, according to the comment of blk_rq_stat_sum(), @src is
+a per-CPU stat, so there is no issue in blk_stat_timer_fn(). Your change would
+actually make this case look strange.
+
+-- 
+Best Regards,
+Yi
+
+>  	dst->nr_samples += src->nr_samples;
+>  }
+>  
+> --
+> 2.43.0
 > 
 
-Thanks for the prototype and the above reivew comments!
-
-I integrated all of them and sent them as v4.
-
-And best part of it is, sashiko is happy as well now with v4 lol
