@@ -1,76 +1,74 @@
-Received: from mail-wr2-f0.google.com (mail-wr2-f0.google.com [74.125.225.64])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A641829BDBF
-	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 15:07:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5A1D306743
+	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 15:26:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784560063; cv=none; b=TCPk2tw1Iv+QMgReutnbrUvRvOWei/cgm4yFCqU9CS78TJ1f34QKXKDQGR4XZLgGX5dH9vOoANoYe0FedIT6leKdW88PiVh5rozA3wn0g7fXo+PfDG28fHJNGjr7WexDUOBVah1HPEZcQ7wS9iVAi91WQ8cZFc/mIeEkr7tfZ3g=
+	t=1784561212; cv=none; b=EjL3SbiXqsL/ptJjypDFzPF2Ysu2mZH0JgNXdSuITSLllQc2+3LvJ6OsA+7S9FW7a4sCzFVZUiqZgj3XyXdi0wByruJfnyG2CA6FR4iXQBmo1ahDCgQ2JLOSIKCmuks9J/Hb8bybeO7AWQrafTv674567+1mJMZQPjISjdhIpM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784560063; c=relaxed/simple;
-	bh=kZekYJjdgA9jTrzaGEtUfryy0E1YgJzlFnQXBMIRaKc=;
+	s=arc-20240116; t=1784561212; c=relaxed/simple;
+	bh=ghK5za8aF1N6pu59Foh6V9T8x31sHIYSxEvCSet479c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LRowWqeTanw0In+unTL5axChElmdN5Orn7frSrAnE03yNRWqTuksK5Wr//YagN0ZWhZwtz//zbHJgsHs0SGlaFulyFjBaOcxVscvd4yEt5C70XoeLG3qCLrEai8GYonYGY5zTkK9dRSf3IWIGwfR7FyZLhVrvVmaS6x87E/f+N0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=GI+Jsj3V; arc=none smtp.client-ip=74.125.225.64
+	 Content-Type:Content-Disposition:In-Reply-To; b=EFOKILs2Tjfn+zQ4akaV90t5hyGk5nnfFFvb1GQbdF2GYIBjY5lbYmKmwGic2fC+gbaBChEsgRAIvczh0hlkriSqj4Oa1geODGbd7bjzpwoIwvHPSODezHMeeQrbYa+MJIJmc/ZXItrBDzwJb3hsVV4PcJUQi3OuP3+BFHvFFqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EODW0rM2; arc=none smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="GI+Jsj3V"
-Received: by mail-wr2-f0.google.com with SMTP id ffacd0b85a97d-47825ef4012so2794558f8f.1
-        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 08:07:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EODW0rM2"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4954afac04bso27573685e9.0
+        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 08:26:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1784560060; x=1785164860; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1784561209; x=1785166009; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=kZekYJjdgA9jTrzaGEtUfryy0E1YgJzlFnQXBMIRaKc=;
-        b=GI+Jsj3Vrt1zFsjKUQ+rJPeGe1jTm/A3DWgpt005AWGJ3yn9IkJ/gPmSDUiQWRuf3U
-         GxcjhRpuegMMFaHk4CCm9rHRwLJm6i2H0Eonp/XVA13/feMLqSJdKuLUlGLgY6coZpuV
-         ps5jX+oOrpJTLMmv4OQYwbfxg/hMrImBW8dLgkhWyWziLDRmQhnZNcqCHRbU+xEk/oLr
-         8r84MMQ4shy8RbaG6n3qHBDI6eLetTZvMOfjBcsMNHehvL1W4e8c4za71OG/F2Jm06m1
-         DLMX+j1TuH0f7Do+vzGq5A7eM0w0xjhO8bsHIykxVl1HTb5o2OntPwC8nODvZZMURg20
-         dc1A==
+        bh=ghK5za8aF1N6pu59Foh6V9T8x31sHIYSxEvCSet479c=;
+        b=EODW0rM2HPV5v5jXus1d7KAZ9mo1j9TPtlIBiFreQgiElZjXszktq0p8r01pOxTADF
+         9cOtOrjCoKSFFDvpX8/HHtu3BCLRxlHKe+uKE5ZKg5J4nPOxZXRYL1If6O4FlfZMSug0
+         ftcJpm8AtbFt7FzxhQBY8+r/nEfcOMfuplJSnlCzkOOySkR1xTVqt0QwLIfoHqmjWveo
+         nziJmkQLDps+s3dK10Na80TWebbQLimIPSIlBe/ljLucc6yj7vjBpLar39UeIplHugzf
+         tk99l79OsRdIkxTA34txdLq/ipFyivs42MmbBiBAxToyPMm4fQ+q8bCyXB722ie8z7qH
+         OV5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784560060; x=1785164860;
+        d=1e100.net; s=20251104; t=1784561209; x=1785166009;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=kZekYJjdgA9jTrzaGEtUfryy0E1YgJzlFnQXBMIRaKc=;
-        b=FcnyEEcOv45WM146SF3lGz7Lc8/4IE80E5CO0sgUnar9iMwH+gkMFNtg9YX+FY1pk5
-         O0p7ypymiqXEwaJFos/jJabOVd6KdGvC+DMTJmNhzOJRVLGbXsmen03kEMJP/6cBs5BT
-         9VD2h8xIaZe6kOaw2+hySP7At3dYJTUD3lS6z8YQFydMN90PCXfx9UhYLTdupqetZurZ
-         biCsEeoE7s3jbRvh2IR69GUYNKwbvP4bwf6R0LhNNsEVDurfoPHkp8hwtekAmWkutpVD
-         wJKxV0KsoMHp6W1lNdFNKnFbAqtDpmNImfC5bgt5UrWknZJeJtTZ17aDk38G4dnoLDY1
-         ceTw==
-X-Forwarded-Encrypted: i=1; AHgh+RqmdFKW9wHVfM+A4UXFYJvjy88wISJ1seF80W9UTPv4i5H9pqfEXyHxoC5lWoWA0YorWdtiP+Tk@vger.kernel.org
-X-Gm-Message-State: AOJu0YzcHhPQrZ6uLTbe7J1cUYTiCFuVpRjAWk1hw380gv/48NIlKcpe
-	gMh43aUAFwrlanIK+vuvdxVzlInpi1/RuQUpQ+87+bY+d6O+whgs3tXP0sl/PfCa47A=
-X-Gm-Gg: AfdE7cl7WTQXYJSlnpiEw/qkUB/nH3cHpacuTcW9WzG9nbL5oxTniVyBnMNEN3qZ3gN
-	Jw7A8Z9nahkcMVX30J2qZz8RW+6KbMukOWitZJprRV80Bp1TTap1aRGP1iFxltBd+VpKN28CkzR
-	HgJpBESlreMlIE2skJIPILzTiDU26Qt/QR5sEfWyj/WlGrNunZjZUob/aUjMSm+i3rFky/6NkJg
-	AvO6yX+nzgOOBUM4zej+Sh9LcEDJloTDcEECQ+wvvFhiRuugF1iQ8Wzub7FxlQDjYKRwA9hGnYj
-	yooG/Y04xlHG+Sf6YUJIokyAw7bLBSmybTWYQAew3x6Cgi+UgX5M23wHTmCgJV8ALpVXd0cy7cJ
-	uVH4Vg09kn6SQQ4D2O1aUj9T3cmwMvnAC+N0Um6Aloy//bV2U651zKI9NDWGZZ43FbkTjgXbWxY
-	L2iQqp3w==
-X-Received: by 2002:a05:600c:1986:b0:495:64a8:c35c with SMTP id 5b1f17b1804b1-49564a8c364mr5779205e9.24.1784560059737;
-        Mon, 20 Jul 2026 08:07:39 -0700 (PDT)
+        bh=ghK5za8aF1N6pu59Foh6V9T8x31sHIYSxEvCSet479c=;
+        b=Ji0gb9bLqeNPFM6otcXw2EnNi8sUgs5z9iobL5UBXtZOf6eaxrtw0i9oz8FexNXdOf
+         MtXsgpL48oDWD3TP/IpzfUGAsOctPkYrVbT3QenhRLZLJBPByXKiLtiOQzPQxhqZwQIw
+         9pvVNj0hX0bVOdwCJn9FyivgetShmefHD0Z8t6bNkdgKBv3olJ4PB31XBxFuY/50LrHo
+         Ktcf+EW6D0iW13WTBwoxr3fAINbpLRP8yNo7qMW19CpgJM4dEIND6zXb90zdkcvKWVrF
+         nhECUo5ohAYVccjwrk5MIUVFh9mkIMXdm/gEyPIQPclqRln6EEVdzkHv/DSzyLd+IMnN
+         pHfQ==
+X-Gm-Message-State: AOJu0Yz6Wvqkt0IbGYmAFF2YHLbi6EedG/Zg2SLMiRyfKDX/rtdq27Np
+	wP5k5BZGlhGJUbv1R5EDK/x3zX/z26K/Z/jiXM8ThAUVuqmUXi9dQhj3fhSn1NFGxS4=
+X-Gm-Gg: AfdE7ckLJIPtZ4MJeT/9ORUjIrI8fpcrZkWemCdv4raPk/dIIh/yva+PQSzmiDgwBNV
+	YPJ8eK5SrfgyKxGSKGrhsiDH+0hYW4KCzD8+9NGVBfLpsQhRKt0i/14Chdab6dQ4jfPuAZYt4kV
+	epT1DnUUFMVL25qq/ynaDO578I3cM1eYYSZ65qFC2RBcxctTm0zjp5qN2hxOWlPk1LbCGj5WevS
+	pU7V3k/6HnKB6zacjUC1ypa9ljCLdwRK1/Yd3PzR8riP7lqeqPavXXKMCRFjalJREWrtYovNyst
+	HbfIPC+ih432HT9v2qbrAUAvowJ9gHjiOJoVCwAQwHWdNYh6KEm595DoFiGN/Soyq38nXZEcinW
+	h4aOAjqlDoa2a2YkKr8W1MQNRTJIyc2SUczJR82PfXm1jxkCdJYWJm30c1nOYMDIt2XJDSKHBhQ
+	m+KX/4sg==
+X-Received: by 2002:a05:600c:3512:b0:495:4572:21af with SMTP id 5b1f17b1804b1-4954a3ef7dbmr155802875e9.9.1784561209104;
+        Mon, 20 Jul 2026 08:26:49 -0700 (PDT)
 Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4954a2aa698sm264192565e9.4.2026.07.20.08.07.38
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4955de88951sm77982265e9.3.2026.07.20.08.26.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 08:07:39 -0700 (PDT)
-Date: Mon, 20 Jul 2026 17:07:37 +0200
+        Mon, 20 Jul 2026 08:26:48 -0700 (PDT)
+Date: Mon, 20 Jul 2026 17:26:46 +0200
 From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: Tao Cui <cui.tao@linux.dev>, cgroups@vger.kernel.org, 
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cuitao@kylinos.cn
+To: Tao Cui <cui.tao@linux.dev>
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, cuitao@kylinos.cn
 Subject: Re: [PATCH] cgroup/cpu: document cpu.stat nice_usec and
  core_sched.force_idle_usec
-Message-ID: <al45RUAYKgGt5IYS@localhost.localdomain>
+Message-ID: <al46ipavC-KCaoHv@localhost.localdomain>
 References: <20260718080100.2334415-1-cui.tao@linux.dev>
- <20260720150226.926730-1-joshua.hahnjy@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -78,12 +76,12 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="6epftcfwmdm62r3v"
+	protocol="application/pgp-signature"; boundary="w2bwicfq2kh5elpa"
 Content-Disposition: inline
-In-Reply-To: <20260720150226.926730-1-joshua.hahnjy@gmail.com>
+In-Reply-To: <20260718080100.2334415-1-cui.tao@linux.dev>
 
 
---6epftcfwmdm62r3v
+--w2bwicfq2kh5elpa
 Content-Type: text/plain; protected-headers=v1; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -91,31 +89,34 @@ Subject: Re: [PATCH] cgroup/cpu: document cpu.stat nice_usec and
  core_sched.force_idle_usec
 MIME-Version: 1.0
 
-On Mon, Jul 20, 2026 at 08:02:26AM -0700, Joshua Hahn <joshua.hahnjy@gmail.=
-com> wrote:
-> I have to ask, which tree is this based on? I can't seem to find a single
-> tree that contains the "(including those in descendant cgroups)" section
-> anywhere.=20
+On Sat, Jul 18, 2026 at 04:01:00PM +0800, Tao Cui <cui.tao@linux.dev> wrote:
+> From: Tao Cui <cuitao@kylinos.cn>
+>=20
+> cgroup_base_stat_cputime_show() unconditionally prints a fourth base
+> stat, nice_usec, in addition to usage_usec/user_usec/system_usec, and
+> also prints core_sched.force_idle_usec when CONFIG_SCHED_CORE is enabled.
+> Neither field is currently described in the cpu.stat section of
+> cgroup-v2.rst, which still states it "always reports the following three
+> stats".
 
-It is most likely linux-next which contains a nearby modification from
-[1] (or it was based on that regardless).
+Just to better sense popularity of the fields -- have you found this out
+by:
+a) reading cpu.stat and being confused about semantics of the fields or
+b) scanning files/code vs docs looking for discrepancies?
 
-HTH,
+Thanks,
 Michal
 
-[1] https://lore.kernel.org/lkml/20260629060636.200118-1-sunshaojie@kylinos=
-=2Ecn/
-
---6epftcfwmdm62r3v
+--w2bwicfq2kh5elpa
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCal45tRsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AjM6gD9Fm0pi8Et/bcFqnkqiw4H
-49e+XSsvzEjwawApGizXmPIBAJkcQKWuepD6r2fr/W5aFr5Y6UcGdVKXnZjLgnh+
-XH0N
-=qiy3
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCal4+MhsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ag3vwD9E1MC8njfG/ALqSIl0+J+
+vDpXYoCVjiKaSM/c4p3+facBAM1HnJky1cQzDzCmTg5mmKUbPFXANmVUH42v2ac9
+Y7MA
+=/WHZ
 -----END PGP SIGNATURE-----
 
---6epftcfwmdm62r3v--
+--w2bwicfq2kh5elpa--
