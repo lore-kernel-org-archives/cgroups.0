@@ -1,48 +1,48 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010016.outbound.protection.outlook.com [52.101.61.16])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012056.outbound.protection.outlook.com [52.101.53.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE66D3AC0D3;
-	Mon, 20 Jul 2026 05:55:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD84473463;
+	Mon, 20 Jul 2026 06:42:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.56
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784526911; cv=fail; b=otzHxGU+RXxK3ALgHRW6HvHACi42jxgQgQOR5+lHE44bu8EyvEusjlAL+L3B3FqWQkKOXVM5vifr9c0Km5o24AXXghrG+iwYitXAUt0W/KFrWkXGjkx2LrYJe+XubGR4ApfZ7ZuHRTuER3Jsn6l2i9jD6WFj5VLf1qxQamIJbGA=
+	t=1784529750; cv=fail; b=FKNKz2PfsKBO6mKS86cVJCj76TMlyuUBNsrXYupsL4VthBiFwlx2/dlROdLz+JdidsB/ry32MhVKSh2di/+Wft4dVd6pqOv6p4AwymecdSZvRyO2etAOmD7PbklBsfb/SDoimie3kWpSEI9EVC4HJ1DvjJ2e1CerYjo1ulRvXw8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784526911; c=relaxed/simple;
-	bh=vXcBW6woytkXb7505H1ntpTcmDykGYvTR1WFm1kXOgw=;
+	s=arc-20240116; t=1784529750; c=relaxed/simple;
+	bh=826gfcPypoUYb+3IsiSvt2rItlNZtFTIdj0e/ZddyYI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=MQXnyxMsfl2QPtvtqDRD85xFsFjGsSOpAHXNILN53yxP+9zfs02hbsX/3wrCRJ5MXXG2x3T6LNKevpsyUmFK0ywBgROgTGBIR0gpA4gsIjZ6yWrEX1nMVGyJR7CIQZd1NhFxByH/xArDUKPAZhlaLkQ1yaz4/rz8tOC5WmChiP0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=P8imsSCD; arc=fail smtp.client-ip=52.101.61.16
+	 Content-Disposition:In-Reply-To:MIME-Version; b=TjyDtYuaHrgSWVNBc8lY0+zk7pXMgQNnq7Dtd7yfh5UjTlqqmG88wLEyFfm5DE1zxXhAovDGPExsmW4BwrrOKrCT5W//A1jOgq4HPyP2hxJMB9uQjdmhjiwdOC+MNiutwzKOMoi4rFPemtaKIzq4F5+yLjyUSkRoPNAFnLQIfxg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=VMhzljk4; arc=fail smtp.client-ip=52.101.53.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="P8imsSCD"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="VMhzljk4"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uMQ9hJipOZJqDNs4EoHqaT8G+Y9YMUGy5N3XLMXfTBMoWWwOd5CGo1jIdXKaHyzsRCqqntTZPCEHoM//DQhcvLuwjtBzAXBDtzNwW6fVXmf0BsYe/6bHCeV3KvXyqIV49F397oFyjqiwjp6XQKrhRUSPo8sbj0II5IicAC23NJObmiBSjP0/BrpL9nMOatv/22WNryPImMEzmpDol+++beOPuPAMK2FbTTWJYFIIzKU1zO2voJSsoR7zK66u6SGQv5XJOqRP0sfvuHn9J8s6EUeBK0DeRsHOMfEB1Bcv7aM+NY+WlQ3eKaBABpRLU0zU7RNrVvZy4dWPIt8WbtJ8aQ==
+ b=p4ACK2+GnRmYtarQW/aku2dHX30K7qiKJ1eMR0fFYrxKXI1xPxXoAhQLOm8++ZQJVzvwF80M/dQMq+nsi7K6ihAJuaEmd3MpVx17ZnYTNWuCPEW6fCJp+p5bBg1glQ6MKPC66iGYmRHjJWCB1VG4segaIae6zl9laFRvILG83QQnpIdFLSgU4MCF7jh+hV+t5QOX7m/GCC1DruEg2sHwGvOe+dPINkJIzEB/Oe6H+yMWbv5RyBe0p0kvPNN7/p506+6kYDUyMT5agc12Kxj/Eob+8Q553pOFiG6vu3Wz6QOuc4KbK+XPMi3pffqLROdNozYnfm6HKf3tjgl4zWZ4xw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lYCVabQA0xJOujhr6ebDtz1Ix/FpOcFMunNhIIkxxdY=;
- b=pLihJhAg1qaJk3JFrY3smuZLAVTajNg6DdZIUW4Z7XnDoiWo/sCeSahxPz9l5wNJ0mfrnPwQXUDLXSfZBDqYrfh04SMrlx9U5DVCTi9fQIrmLAbmzFYhiaS8PNvkdwfhGL2v0LchGXG+OdZs2K50bi4cNQTyMAYkAwn78HuCcP5S976thdxUy1VlfHQLB8dDH2pXQIfJsMcP5bptCLaB53R0pFtvIN0IMhpEgSbQpRuZ7Hrwe200nWlQnG93ReIAIjHus+QM780iEBnxJPpxSh2ORiojVDCD4A8+PoLXBtDRBr2aWHbPQToSPnJVI12QOk0OCP+3zFG5DYg4ouV9hQ==
+ bh=WQiot40FXYF1wFY0SrKE570KBthgRSLsuJH+6VQSdDI=;
+ b=q0UgoBdakKHyYC3c0w2reHDvYzZ45DbL3Up3kEWR5wmekZvZfQ8xSDGmQTFsuvFlQydR7NEuFk2oDRAPjA1Diq/2OUn6ILXx24GjGOmxcBVlmq6eZqQHQkuILh4beMW9+s8NoaPpZwhZEYcBmhqXkeYyqlT9xYvwZjlLsuFP7Fba+A23ZkH4ZiV4feUEH6F4I8YsaP+UaSGLrmvXTLX8izwIvx7vk8NPghiCwpEU97r0Ixfo7+8UpKZcp3C+eoc13+3GyX9h4vnWh5zLbF3+Tzj0LQrS+97DlKtDzv8X6nx9ZZbEyLCcQb3SZnaJqiiFLM5EQRQMTXAFFlERmV85QA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lYCVabQA0xJOujhr6ebDtz1Ix/FpOcFMunNhIIkxxdY=;
- b=P8imsSCDKDW77/OWQPS31HZHXrVmY6opX/Q7si6Da3Qha2bz+KIudGiq4qqmB486hUmwpg1yRpVQ2zEpx37MGQKeFnYPrhUZ04HO0Gu7hE1tSEgQfPTYIO5nQWV/NvJPc65dPJvHyZf1YWue6BqvaypzR23COJewYj7FNT3llZmgnTGrvv2ZzsoejE81Fa1LOqOqtUT83j0mh6awJTNefyXwJSyoOpFw2WD0NBEqfF16uOSxSvm3ps7W0bmwe11kyZlQHbGJIRWgirKT+sU/001wo98njT43tmccKBUrNw8Yxn5891P7DgZ0qN8h1oTJFbWIgQ8+aEt8xDDmNz2n2A==
+ bh=WQiot40FXYF1wFY0SrKE570KBthgRSLsuJH+6VQSdDI=;
+ b=VMhzljk4WUTz5UGS8IOsFNk8g6dfjOmJ48fmKv0Tad5CBqdK74Rq5OodXx4BbaX4Nv4GI4Vv3fVpeHs/zw8YtCVnUj+KhTjOV+ALpqxe1JyZaKFHovqF/C0xg8Y9qDFB1UiOJeQbEW8kR0+IzUQl6FZ1vku9Rnb2bDH6B2ln0shS1H2Eks6sAzDu0VIP6kksx3JBlZKsZ3lK7ExNt0MeEwX+UETQVCfYBKUbSHdlu8BQVS6Kwh3HNlbPpBA2JNcPtYxiY5C8LgdSqEYqwVfIFv13YGdVxLDd2gja25AvzeZtK+VBsv4k2v3Iw9vH4gH3ze9ALaeQatjVlPSueoc5NQ==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from DM6PR12MB4827.namprd12.prod.outlook.com (2603:10b6:5:1d6::14)
- by LV3PR12MB9235.namprd12.prod.outlook.com (2603:10b6:408:1a4::10) with
+ by SJ2PR12MB8034.namprd12.prod.outlook.com (2603:10b6:a03:4cb::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.16; Mon, 20 Jul
- 2026 05:54:47 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.15; Mon, 20 Jul
+ 2026 06:42:24 +0000
 Received: from DM6PR12MB4827.namprd12.prod.outlook.com
  ([fe80::6261:3040:864b:159c]) by DM6PR12MB4827.namprd12.prod.outlook.com
  ([fe80::6261:3040:864b:159c%5]) with mapi id 15.21.0223.015; Mon, 20 Jul 2026
- 05:54:47 +0000
-Date: Mon, 20 Jul 2026 07:54:34 +0200
+ 06:42:24 +0000
+Date: Mon, 20 Jul 2026 08:42:16 +0200
 From: Andrea Righi <arighi@nvidia.com>
 To: Tejun Heo <tj@kernel.org>
 Cc: David Vernet <void@manifault.com>, Changwoo Min <changwoo@igalia.com>,
@@ -50,15 +50,15 @@ Cc: David Vernet <void@manifault.com>, Changwoo Min <changwoo@igalia.com>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Koutny <mkoutny@suse.com>, cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/8] sched_ext: Re-home tasks on cgroup migration
-Message-ID: <al24GoeqoJhGS4_H@gpd4>
+Subject: Re: [PATCHSET sched_ext/for-7.3] sched_ext: Cgroup migration and op
+ delivery for sub-schedulers
+Message-ID: <al3DSNiAviqdkqZS@gpd4>
 References: <20260718081727.582037-1-tj@kernel.org>
- <20260718081727.582037-5-tj@kernel.org>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260718081727.582037-5-tj@kernel.org>
-X-ClientProxiedBy: MI1P293CA0018.ITAP293.PROD.OUTLOOK.COM
- (2603:10a6:290:3::12) To DM6PR12MB4827.namprd12.prod.outlook.com
+In-Reply-To: <20260718081727.582037-1-tj@kernel.org>
+X-ClientProxiedBy: ZR1PEPF000077F0.CHEP278.PROD.OUTLOOK.COM
+ (2603:10a6:918::455) To DM6PR12MB4827.namprd12.prod.outlook.com
  (2603:10b6:5:1d6::14)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -67,353 +67,132 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR12MB4827:EE_|LV3PR12MB9235:EE_
-X-MS-Office365-Filtering-Correlation-Id: 588258af-79bb-4515-252c-08dee6236722
+X-MS-TrafficTypeDiagnostic: DM6PR12MB4827:EE_|SJ2PR12MB8034:EE_
+X-MS-Office365-Filtering-Correlation-Id: e538dffe-9f34-418e-f3c7-08dee62a0e77
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|6133799003|10067099003|11063799006|4143699003|56012099006|18002099003|22082099003;
+	BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|22082099003|18002099003|56012099006|11063799006|10067099003|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	gZ6pA6QOY+bkOvYjatVH1NbuKK8GwqgOxDNp8nODCEcSzwD+MM2coXMDaT9Z4+LX1qYeEBqNm85S5EZMkrnyG6cVIXprM4tmfRSWUIhSyXAIwouu8zn4gsjyhH32Ws8IDa+P1PK0oEtgUh4YfHpRT3wo8+vvyJoxwGL03zIdJlwqyxxYl5BCoI/JdqqcF1cSzr8O8toFu/LrcNwgMImy0TWkQQlCV4PDAYieoJHCmSM6xGpFDHzDDFIGLXXYEm/lF1bTjHMhdyDv+Gia22tg6gjK6TZAcGt/6ALwOphpe71gaJejT74O8xdkd19c80HR33Vw073JN62foiGuSkDuypm/PdqO7c9/slcMlK0UjSrLSlAhkEzSbOG2S+P6Od1BUe98tVXUjwWDEFgeAxt1M1qb8ECl3/FRkjYaNU8eFbDBvSJ9YV4U0haTrMa5UXNJzVHd6KEQAEt6MdBTStDg0tZ/vPW0mgcf3di605kLjlCwvyWeBpGzk3GqKeUpOmWBC+oIrEw1ugZt4BDrYnlcpycNhDznoM3W/mnoOwPK8FLp4m4RWd58tdwjoSfRAQc/RAP7v7KhfwGGRDz+51DNSyp/Gan2j5UdNFMoY8GCk2I4HfIneSgR7jh7muqse+/cdZgVFv/IxwBVq0KGHzqJC2TBV67Nw9KGeVFXKQav9Ig=
+	qt8oiy5BV8v/GtoPCHZnl/+MAW8jdR97Fyb/lehaewBdpfOF8oeVlyDgnM99ans2Q2DYIPaEDHbbYO81W4r2JR05tK9IkcmBcpd+BvIYFVTFpjxOX3PFD+5ggINsDFsrquiwZVvMTcpRFRhYDo19wp86e7NOlaK+0CiYUE43HVzBRR5yVNNZch89lGgHXJHFxgBa0fsoDsvGUR6XLI/rDcsnaEx7RsZU0mIJBeEh+jv9x12uz6wRMsHab7z8or6IZacyWOF15X2d/sUcGXvatuLwND/ytrnjuO51MJB1od56qQIPLtJG7lnESzcXifc+RX2Yl2+viXjff90O2zS4UTEE4VrWqxAVdcrnv7WTjooLhhHXeaxVAwQFxFNDQFrUwY7XrTrp/zWdI8YPTL4Mh7bZdOtr/bwtB1chwL4bCJAbSJ+kOQtvubeWPxk2gIyZmqXtGqRcuUhvDrclFV0Lr+uvpNT2SRnI+Eieyi0jOZYQyb+nTHUtZwHBn2BCRjWPHb32rzCWKSlVbVhu4EzF8XKtPPgYWmNKMMcyj4fIyY3tiTMe7ay5246k76fHOf5h4qxjrTIq3yxEUBZOo1JPs7rUGgpxHUtq+MBfkZTIDSJKCwfkEy0FwvPvIAH57Zx1b1If4LWqPyVGlqsRlItuXKbJcVYTneoBNyg57ziKYhU=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB4827.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(6133799003)(10067099003)(11063799006)(4143699003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB4827.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(22082099003)(18002099003)(56012099006)(11063799006)(10067099003)(6133799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?m49fPCReZs/VB6wIr+9PiHTysQvg8J+McLYavnvP4ureOUOUlb4vrZvyboJX?=
- =?us-ascii?Q?BcrjVnTqLgeRdG+fKArw3DM684eKHEEWp7CZTEfF9B7aUKHBHRUbAZsJgieL?=
- =?us-ascii?Q?pOgvJZx8Qedf4WC3fOH3dWy1MewMJtCe7SD6Qz7MmyWl1lDOWLFAOe41KFje?=
- =?us-ascii?Q?t60ywZ2kF1wC2luef/ZnbQuYkVS5dTVJel5M0LIbNna9kxtprAX5M4sYuuNZ?=
- =?us-ascii?Q?5KFEZu4R/wpmvr80GHgz+CLe53jMeKed3ahMioWArZOrSaUXb9hFDJecatSM?=
- =?us-ascii?Q?Zd9tnnhyZKbBOcc4CvZ9GVjn2QMtmaf7/N2QM93f4Qwmrc2JyILA4/v2cGPk?=
- =?us-ascii?Q?ptz8H7WwVNpf2gKh/Cdv5089wpiEcB56lfBq08PO7/J3sGO4R4dEXMbxmwxk?=
- =?us-ascii?Q?Kh2rtGAg13VLZWKaRBiHshU7DRIw+5PN/c2peyL35Rbcwq1HoTOund6O6fqA?=
- =?us-ascii?Q?9qP3XL2n4fMtReyWrE46+almTTbwlhQdmFKBkJ5cI0IEFH38hO2qCBOS8q0d?=
- =?us-ascii?Q?zafwaQi3XRIXeWtIVZ6gc82uu49qYoFjqy2DWVmwAbUCf7BTqOeo8iiJr4qC?=
- =?us-ascii?Q?K87b/kmj5zqNB8bGyfHLV+yUf2SSSiAbjVgo+WM6DKMY2OprLY/4OFbCBuZp?=
- =?us-ascii?Q?mIPTqBqn/Sb1mOMw0sXUL0yAj8Pn4p+LFmfaWWYZVVBX3Mte2szBWV3/r6K8?=
- =?us-ascii?Q?Pg5qYcptPIlDkJuhIr1cT6bIcD18ouGTufBa9kui04ZEg3HIPk/0J490Z3il?=
- =?us-ascii?Q?gvl2MDn4oR73EoZjA9IF6C1A4cFiW4Kvf+mZzoT/Hact3CeSFHQNZMRL8o4S?=
- =?us-ascii?Q?UM6z2BgSq4iOEIY9P/XdOH2Bz+wehnzYh1KDdCJMJSXnak4rW6dFSu4MHQ4H?=
- =?us-ascii?Q?KvyZ7XDYlrxVJWJnmRfmnEYSoYOhEHtScLqXHuHOqqziCIYCWIb4hzhYXJbu?=
- =?us-ascii?Q?otssgGgp1dM4yffOg4zMCtLPA5zj/wq61cxRteYTC4k4Q8F6gjt1Rb5UJ3yV?=
- =?us-ascii?Q?WmKNYuc4LfVjVTVk/GkJg3siAExMpzNxTPD4xh7rrsh3soh8bUJJXk3xTgq0?=
- =?us-ascii?Q?huEvRLUEyDmeKZ67hFPxQqtv4vBsuZ0l12qjJlk/X/3UtZ7kiBBgs7sJ7RB+?=
- =?us-ascii?Q?1iNUq54TYzChBZWBqB3JrUbOvyz3LNNyfbttcsFI1O9dWUJzCXJ/nLyb5Yvm?=
- =?us-ascii?Q?2USiyU4+w76IhpakecxoYHjb6OsG57u+BR13YjtDa0SPc8GmvNAUgr8g2YYf?=
- =?us-ascii?Q?2EEE3MfUH1goUdYrRZpd4lqkdcgCDcHC2GQCS97I5Gf6OIBFAjBXn93zxQtJ?=
- =?us-ascii?Q?vBOkxGiFsmQavqDCDo1iVwjc7Yjl0/V+5ui5FiQGHLOU5xbB+f5FoR0R9OyQ?=
- =?us-ascii?Q?m0m0UvRqGl7ncSZxVNF4pndpI+iS2HWoM3u7mx26hG6A3KIORqw3t/5bTGnh?=
- =?us-ascii?Q?TFJjMeAXil6QTWw+9ithLNVwYJVOcK48LY4xd8Jf3rgKZixFKDxU+x7FnpD4?=
- =?us-ascii?Q?tfiqURo5qSKSr7yQEu3hdTpntYSc57iocS+gfn5t7Y5Q8l5XZfgBAcIfCOL6?=
- =?us-ascii?Q?sqVPsGhG45KDODGmXsYTuVwJgMYHODHNb9A6UwkchzMMkzWrmqC73jzt8eHJ?=
- =?us-ascii?Q?/EughRA5mRGFkiOtYjlo1v0Nqu60kOmL7hur68Xm9DWkfC/WTn+zW6SdxGiL?=
- =?us-ascii?Q?tYZjKUrSkqYy7EQ970Q72DlG28dZntlRVunQVw0wO2l94+VBaLV9F/6YFbTA?=
- =?us-ascii?Q?PPh5Obn1yA=3D=3D?=
+	=?us-ascii?Q?nkP1/tjksEpLZ6in+D41lwRA26XExdOik3YOzIg81+RXTdcLIzHGnfZXYQ1P?=
+ =?us-ascii?Q?7Te04Cp8Zuq96y2lRs1oy+gghvMb7t0+9GcPfQckw/cKqn1ln4JvqCohsow9?=
+ =?us-ascii?Q?UdRo++QpZQJWpBQvh2oVjeT2TzljLRJyPtQYGKNeAJ2m7UWpcgM4R70nQquI?=
+ =?us-ascii?Q?ra4SiSpsxuhbKQQUfRVsHpyp3E8x+Aq4rR8UkYhu5aYoUp+CDdQbXgniRuBY?=
+ =?us-ascii?Q?ZGHaokBBY+K0JUHaR9PsjQf9/Ls15rfMTsUK4r3W1XtidST5jmpJZ0gaiSrz?=
+ =?us-ascii?Q?ZNwA/WMc65aQ6NPh2rBfXnsKgbSLSi31YN2dpTKdg3eleqhyjnP80UcChbpF?=
+ =?us-ascii?Q?2upx3UUcL8VbDHq4OdUsWFfhxRSaZlu0LhBR1DufgdM2k6o8e/Xd1utTBjhN?=
+ =?us-ascii?Q?vVCpRce89+O7SRZ6bLbDB2q0t7SkdR5nMk6iL1/vEEDvS7seJnKhwrsVCFuh?=
+ =?us-ascii?Q?7BLrV4dyc3spQCOwxI4h5GJ0eO9bjWbTEViE+NVLi8fZPTc3fuvOHl3t1rO1?=
+ =?us-ascii?Q?Y48oWKANvwbmKWnWJzQwwJ0cpNLESXt+zKiVFVFB780q8BJkW7e/u7x7HfEd?=
+ =?us-ascii?Q?CvJgpi3MSDaD/u5OwoknuH4NqwHQ8Iih6I8FmIBQ3UwImoATgD0Gxm8zPySy?=
+ =?us-ascii?Q?kDXa1WK2Uvt1PyDWpm7nOjmp1Eg5slsLcILLMpG4bZkWfFJ7EOYFaIY+8McR?=
+ =?us-ascii?Q?uTR4wKlx7UPVy2VclCZ+vKA1TkawwnjCXpbjlOIv0FlX/6Ydp5zRHLZdHpog?=
+ =?us-ascii?Q?imZkN37NsOWs95Y6UILIzJcSEHgP94GsBu/waWnLt808fzkct6A+pKly+X3D?=
+ =?us-ascii?Q?NYKvgDWvFVnO9fhj96MNFxsTKHR3CEN7TQGlf/UlIadU0iLRtzN9vqyQjSUr?=
+ =?us-ascii?Q?pobpC6qXZ3F+FWLJjBcSmyQUOnuzq/gs+KGawusZanvMpb6JbQEb9Qf40eWF?=
+ =?us-ascii?Q?b1DOLHKKWY06Kxwoz7sTrV/f6L9nP0g8Av16dlydUFwFxbFaJs1u7nf1xxOl?=
+ =?us-ascii?Q?BnZXU2KZ9SVGW2PGZXLEZPgEVbUAABAtp8KlkP9k13OCca891GFGSOEq4yEi?=
+ =?us-ascii?Q?4igqrazNITljc0KGQXzGOKeoE0r9npB6dPxod3etUdvOpxzGJJoz/QRMfaub?=
+ =?us-ascii?Q?RrLMEAwOCjIiuitgC1FUtJYNWLnFSBqb9dOoJuwv0gItLESGuT+gYcWtqrN+?=
+ =?us-ascii?Q?hn9bf9FqXd6xaw27UKKB6rWG2NaGGe85xQh+sXveG1nlux4SgR7MX9wkCFTp?=
+ =?us-ascii?Q?yRb0Bxgp1jqjxOes0AIxDr+1bv/NP2qCEND/dlw5Bi6lsN3zyVePk7yRFepd?=
+ =?us-ascii?Q?i0l8oOIhAdSuyCkPtm/EJfsEWVGIY23WSa5RtpPrDCY2ItzldJcWgAb22pTF?=
+ =?us-ascii?Q?TCt3xixMc0l3sclPECtbi4WuutHlY30Q+WYFcqX6TI8Ozp4oDpcWeZsazUPd?=
+ =?us-ascii?Q?nKAMrAjO/YlP97p1KD880Ai2EIubzWDJRNbhKy8hZ3ga7o9TStL3XD3/2vXM?=
+ =?us-ascii?Q?DtWp7VLL/4pr923GgIKq+2OhoGhfZ4f4/P2SZFOpwjyFoAPVdwRHc8Tt2O/H?=
+ =?us-ascii?Q?UXUqVxdrCvBXUw8xXrjaIH7tc9/EcAGLFr7AMvpOZASvPOzAAFNB1NxSC4r8?=
+ =?us-ascii?Q?7QA6ddkJtBbrtf1XcVDA9MlhWn2Ww16zQ/4zC1P+SWpce9JGXKxRgdyLcu7L?=
+ =?us-ascii?Q?hyPH8FvPp9AnmMfcMzJo76OiwRyNEYjhVgXKMhkJ0hXJu9TZOxmZPF7IjAt6?=
+ =?us-ascii?Q?91/XcUMO2g=3D=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 588258af-79bb-4515-252c-08dee6236722
+X-MS-Exchange-CrossTenant-Network-Message-Id: e538dffe-9f34-418e-f3c7-08dee62a0e77
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB4827.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2026 05:54:47.4037
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2026 06:42:24.1194
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gb4ip5/+a+WrhFwL88s60Lt0ap+Dfzb7A//tviF1rk/BoGlVXEwhFfkWyRsojufseluOytH3/M01FwNBc6WLIw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR12MB9235
+X-MS-Exchange-CrossTenant-UserPrincipalName: /TYeT9365okS08g+QW7ZCeM7Ai49Lgq7F6wtEj0oYhqqNdu8JfzTUGiWoSb53eV0x5juZE2CKPo5b4cyCyVwCw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8034
 
 Hi Tejun,
 
-On Fri, Jul 17, 2026 at 10:17:23PM -1000, Tejun Heo wrote:
-> A task's sched (p->scx.sched) must match its cgroup's owner
-> (cgrp->scx_sched). cgroup migration breaks the invariant:
-> scx_cgroup_move_task() only fires root's ops.cgroup_move() and never
-> re-homes the task, leading to wrong-sched scheduling and, once the stale
-> sched is freed, a use-after-free.
+On Fri, Jul 17, 2026 at 10:17:19PM -1000, Tejun Heo wrote:
+> Hello,
 > 
-> Hook into the new cgroup task migration events and re-home each task whose
-> destination cgroup is owned by a different sched. The events map naturally
-> to the transfer: MIGRATING runs the fallible init for the destination sched,
-> letting it reject the migration the same way ops.cgroup_prep_move() can,
-> MIGRATED does the re-home, which can't fail, and CANCELED undoes the init
-> when the migration falls through.
+> A task's sched must match its cgroup's: each sub-scheduler serves the
+> cgroup2 subtree it is attached to and the root scheduler serves the rest.
+> Cgroup migration currently breaks this. A task moved across a
+> sub-scheduler boundary keeps its old sched, leading to wrong-sched
+> scheduling and, once the stale sched is freed, a use-after-free. Cgroup
+> ops are also always delivered to the root scheduler no matter which sched
+> serves the cgroup.
 > 
-> Pre-commit, the task's task_group still reflects the source, so
-> __scx_init_task() grows an explicit cgroup argument for the migration path
-> to hand ops.init_task() the destination cgroup.
+> This patchset makes both follow the sub-scheduler topology:
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+> - cgroup gains a task migration notifier (0001). sched_ext uses it to
+>   re-home tasks whose migration crosses a sched boundary: the destination
+>   sched runs the fallible ops.init_task() before the migration commits,
+>   so a rejection fails the cgroup.procs write (0002-0004).
+> 
+> - cgroup_init/exit and the knob ops are delivered to the sched each
+>   task_group is on. The move ops go to the task's sched, only for
+>   migrations that don't re-home it (0005).
+> 
+> - Sub-scheduler enable claims the subtree's cgroups from the parent and
+>   disable returns them. A parent that fails to re-init a returned cgroup
+>   fails in turn and the cgroups move up the chain, ending at the root
+>   scheduler (0006).
+> 
+> - scx_qmap consumes cgroup weights through ops.cgroup_set_weight() and
+>   gains fault injection modes to exercise the failure paths (0007-0008).
+> 
+> Verified with a trace-based suite on the demo scheduler covering op
+> delivery and routing, handover failures, multi-level punt chains, cgroup1
+> and stress.
 
-Should we add:
+I left a comment on PATCH 4/8, but overall the series looks good to me.
 
-Fixes: 337ec00b1d9c ("sched_ext: Implement cgroup sub-sched enabling and disabling")
-Closes: https://lore.kernel.org/r/alnxrsexEe_nQwqL@gpd4
+I also confirm that, with this applied, I can no longer reproduce the
+use-after-free triggered by moving a task out of a sub-scheduler's cgroup and
+then terminating the sub-scheduler.
+
+Reviewed-by: Andrea Righi <arighi@nvidia.com>
 
 Thanks,
 -Andrea
 
-> ---
->  kernel/sched/ext/ext.c      |  29 +++++---
->  kernel/sched/ext/internal.h |   3 +-
->  kernel/sched/ext/sub.c      | 135 ++++++++++++++++++++++++++++++++++--
->  3 files changed, 152 insertions(+), 15 deletions(-)
 > 
-> diff --git a/kernel/sched/ext/ext.c b/kernel/sched/ext/ext.c
-> index cd99947b4229..6bac68758704 100644
-> --- a/kernel/sched/ext/ext.c
-> +++ b/kernel/sched/ext/ext.c
-> @@ -3485,15 +3485,28 @@ static struct cgroup *tg_cgrp(struct task_group *tg)
->  		return &cgrp_dfl_root.cgrp;
->  }
->  
-> -#define SCX_INIT_TASK_ARGS_CGROUP(tg)		.cgroup = tg_cgrp(tg),
-> +#define SCX_INIT_TASK_ARGS_CGROUP(cgrp)		.cgroup = (cgrp),
->  
->  #else	/* CONFIG_EXT_GROUP_SCHED */
->  
-> -#define SCX_INIT_TASK_ARGS_CGROUP(tg)
-> +#define SCX_INIT_TASK_ARGS_CGROUP(cgrp)
->  
->  #endif	/* CONFIG_EXT_GROUP_SCHED */
->  
-> -int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork)
-> +/**
-> + * __scx_init_task - Initialize a task for a sched
-> + * @sch: sched to initialize @p for
-> + * @p: task of interest
-> + * @cgrp: cgroup @p is joining, %NULL for @p's current task_group's cgroup
-> + * @fork: %true if @p is being forked
-> + *
-> + * Pre-commit cgroup migration passes @cgrp explicitly as @p's task_group
-> + * still reflects the source.
-> + *
-> + * Return 0 on success, -errno on failure.
-> + */
-> +int __scx_init_task(struct scx_sched *sch, struct task_struct *p,
-> +		    struct cgroup *cgrp, bool fork)
->  {
->  	int ret;
->  
-> @@ -3501,7 +3514,7 @@ int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork)
->  
->  	if (SCX_HAS_OP(sch, init_task)) {
->  		struct scx_init_task_args args = {
-> -			SCX_INIT_TASK_ARGS_CGROUP(task_group(p))
-> +			SCX_INIT_TASK_ARGS_CGROUP(cgrp ?: tg_cgrp(task_group(p)))
->  			.fork = fork,
->  		};
->  
-> @@ -3747,7 +3760,7 @@ int scx_fork(struct task_struct *p, struct kernel_clone_args *kargs)
->  		struct scx_sched *sch = scx_root;
->  #endif
->  		scx_set_task_state(p, SCX_TASK_INIT_BEGIN);
-> -		ret = __scx_init_task(sch, p, true);
-> +		ret = __scx_init_task(sch, p, NULL, true);
->  		if (unlikely(ret)) {
->  			scx_set_task_state(p, SCX_TASK_NONE);
->  			return ret;
-> @@ -5969,8 +5982,8 @@ static void scx_root_disable(struct scx_sched *sch)
->  	WRITE_ONCE(scx_switching_all, false);
->  
->  	/*
-> -	 * Shut down cgroup support before tasks so that the cgroup attach path
-> -	 * doesn't race against scx_disable_and_exit_task().
-> +	 * Shut down cgroup support before tasks so that the cgroup attach and
-> +	 * migration paths don't race against scx_disable_and_exit_task().
->  	 */
->  	scx_cgroup_lock();
->  	scx_cgroup_enabled = false;
-> @@ -7263,7 +7276,7 @@ static void scx_root_enable_workfn(struct kthread_work *work)
->  		scx_set_task_state(p, SCX_TASK_INIT_BEGIN);
->  		scx_task_iter_unlock(&sti);
->  
-> -		ret = __scx_init_task(sch, p, false);
-> +		ret = __scx_init_task(sch, p, NULL, false);
->  
->  		scx_task_iter_relock(&sti, p);
->  
-> diff --git a/kernel/sched/ext/internal.h b/kernel/sched/ext/internal.h
-> index d76ac22019af..23fc95502ea6 100644
-> --- a/kernel/sched/ext/internal.h
-> +++ b/kernel/sched/ext/internal.h
-> @@ -1920,7 +1920,8 @@ void scx_flush_dispatch_buf(struct scx_sched *sch, struct rq *rq);
->  void scx_kick_cpu(struct scx_sched *sch, s32 cpu, u64 flags);
->  void schedule_dsq_reenq(struct scx_sched *sch, struct scx_dispatch_q *dsq,
->  			u64 reenq_flags, struct rq *locked_rq);
-> -int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork);
-> +int __scx_init_task(struct scx_sched *sch, struct task_struct *p,
-> +		    struct cgroup *cgrp, bool fork);
->  void scx_enable_task(struct scx_sched *sch, struct task_struct *p);
->  void __scx_disable_and_exit_task(struct scx_sched *sch, struct task_struct *p);
->  void scx_sub_init_cancel_task(struct scx_sched *sch, struct task_struct *p);
-> diff --git a/kernel/sched/ext/sub.c b/kernel/sched/ext/sub.c
-> index 5f7ac6696d17..393dbd00d2f7 100644
-> --- a/kernel/sched/ext/sub.c
-> +++ b/kernel/sched/ext/sub.c
-> @@ -906,7 +906,7 @@ void scx_sub_disable(struct scx_sched *sch)
->  		 * parent. A child can't directly affect the parent through its
->  		 * own failures.
->  		 */
-> -		ret = __scx_init_task(parent, p, false);
-> +		ret = __scx_init_task(parent, p, NULL, false);
->  		if (ret) {
->  			scx_fail_parent(sch, p, ret);
->  			put_task_struct(p);
-> @@ -1212,7 +1212,7 @@ void scx_sub_enable_workfn(struct kthread_work *work)
->  		 * As $p is still on $parent, it can't be transitioned to INIT.
->  		 * Let's worry about task state later. Use __scx_init_task().
->  		 */
-> -		ret = __scx_init_task(sch, p, false);
-> +		ret = __scx_init_task(sch, p, NULL, false);
->  		if (ret)
->  			goto abort;
->  
-> @@ -1336,6 +1336,99 @@ void scx_sub_enable_workfn(struct kthread_work *work)
->  	cmd->ret = 0;
->  }
->  
-> +/**
-> + * scx_cgroup_task_migrating - Prepare a task for a cgroup migration
-> + * @ctx: migration being prepared
-> + *
-> + * A task's sched must match its cgroup's owner, so a migration that crosses a
-> + * sched boundary re-homes the task once committed. Run the fallible part here,
-> + * before the migration commits: initialize the task for the destination sched.
-> + * A rejection fails the cgroup.procs write.
-> + */
-> +static s32 scx_cgroup_task_migrating(struct cgroup_task_migrate_ctx *ctx)
-> +{
-> +	struct task_struct *p = ctx->task;
-> +	struct scx_sched *to;
-> +	int ret;
-> +
-> +	/*
-> +	 * Cleared under scx_cgroup_lock() before root disable starts tearing
-> +	 * down tasks. As cgroup_mutex is held, a set flag guarantees that the
-> +	 * teardown loop is not running concurrently.
-> +	 */
-> +	if (!scx_cgroup_enabled)
-> +		return NOTIFY_OK;
-> +
-> +	to = ctx->dst_dcgrp->scx_sched;
-> +	if (scx_task_on_sched(to, p))
-> +		return NOTIFY_OK;
-> +
-> +	ret = __scx_init_task(to, p, ctx->dst_dcgrp, false);
-> +	if (ret)
-> +		return notifier_from_errno(ret);
-> +
-> +	return NOTIFY_OK;
-> +}
-> +
-> +/**
-> + * scx_cgroup_task_migrated - Re-home a task that changed cgroups
-> + * @ctx: committed migration
-> + *
-> + * Move the task to its new cgroup's sched, which scx_cgroup_task_migrating()
-> + * already initialized it for. Can't fail.
-> + *
-> + * This is safe against all phases of the destination sched's destruction. A
-> + * disable resets cgroup ownership to the parent and re-homes tasks in one
-> + * scx_cgroup_lock() section. If that section already ran, the destination would
-> + * be the parent. Otherwise, the re-home loop is still ahead and guaranteed to
-> + * visit the task, now in the destination cgroup.
-> + */
-> +static void scx_cgroup_task_migrated(struct cgroup_task_migrate_ctx *ctx)
-> +{
-> +	struct task_struct *p = ctx->task;
-> +	struct scx_sched *to;
-> +	struct rq *rq;
-> +	struct rq_flags rf;
-> +
-> +	if (!scx_cgroup_enabled)
-> +		return;
-> +
-> +	to = ctx->dst_dcgrp->scx_sched;
-> +	if (scx_task_on_sched(to, p))
-> +		return;
-> +
-> +	rq = task_rq_lock(p, &rf);
-> +	scx_rehome_task(to, p);
-> +	task_rq_unlock(rq, p, &rf);
-> +}
-> +
-> +/**
-> + * scx_cgroup_task_migrate_canceled - Undo migration preparation
-> + * @ctx: canceled migration
-> + *
-> + * The migration failed after scx_cgroup_task_migrating() initialized the task
-> + * for the destination sched. The task stays on its current sched in the source
-> + * cgroup. Undo the destination's init.
-> + */
-> +static void scx_cgroup_task_migrate_canceled(struct cgroup_task_migrate_ctx *ctx)
-> +{
-> +	struct task_struct *p = ctx->task;
-> +	struct scx_sched *to;
-> +	struct rq *rq;
-> +	struct rq_flags rf;
-> +
-> +	if (!scx_cgroup_enabled)
-> +		return;
-> +
-> +	to = ctx->dst_dcgrp->scx_sched;
-> +	if (scx_task_on_sched(to, p))
-> +		return;
-> +
-> +	rq = task_rq_lock(p, &rf);
-> +	scx_sub_init_cancel_task(to, p);
-> +	task_rq_unlock(rq, p, &rf);
-> +}
-> +
->  static s32 scx_cgroup_lifetime_notify(struct notifier_block *nb,
->  				      unsigned long action, void *data)
->  {
-> @@ -1367,12 +1460,42 @@ static struct notifier_block scx_cgroup_lifetime_nb = {
->  	.notifier_call = scx_cgroup_lifetime_notify,
->  };
->  
-> -static s32 __init scx_cgroup_lifetime_notifier_init(void)
-> +static s32 scx_cgroup_task_notify(struct notifier_block *nb,
-> +				  unsigned long action, void *data)
-> +{
-> +	struct cgroup_task_migrate_ctx *ctx = data;
-> +
-> +	switch (action) {
-> +	case CGROUP_TASK_MIGRATING:
-> +		return scx_cgroup_task_migrating(ctx);
-> +	case CGROUP_TASK_MIGRATED:
-> +		scx_cgroup_task_migrated(ctx);
-> +		break;
-> +	case CGROUP_TASK_MIGRATE_CANCELED:
-> +		scx_cgroup_task_migrate_canceled(ctx);
-> +		break;
-> +	}
-> +
-> +	return NOTIFY_OK;
-> +}
-> +
-> +static struct notifier_block scx_cgroup_task_nb = {
-> +	.notifier_call = scx_cgroup_task_notify,
-> +};
-> +
-> +static s32 __init scx_cgroup_notifier_init(void)
->  {
-> -	return blocking_notifier_chain_register(&cgroup_lifetime_notifier,
-> -						&scx_cgroup_lifetime_nb);
-> +	s32 ret;
-> +
-> +	ret = blocking_notifier_chain_register(&cgroup_lifetime_notifier,
-> +					       &scx_cgroup_lifetime_nb);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return blocking_notifier_chain_register(&cgroup_task_notifier,
-> +						&scx_cgroup_task_nb);
->  }
-> -core_initcall(scx_cgroup_lifetime_notifier_init);
-> +core_initcall(scx_cgroup_notifier_init);
->  
->  static void scx_pstack_recursion(struct bpf_prog *prog, const char *op)
->  {
-> -- 
-> 2.55.0
+> Based on sched_ext/for-7.3 (7c2cd767705d).
 > 
+> Tejun Heo (8):
+>   cgroup: Add cgroup_task_notifier and task migration events
+>   sched_ext: Factor out scx_rehome_task() and scx_punt_task()
+>   sched_ext: Relocate scx_cgroup_enabled
+>   sched_ext: Re-home tasks on cgroup migration
+>   sched_ext: Deliver cgroup ops to each task_group's sched
+>   sched_ext: Hand over cgroups at sub-scheduler enable/disable
+>   tools/sched_ext: scx_qmap - Consume cgroup weights through set_weight
+>   tools/sched_ext: scx_qmap - Add init fault injection modes
+> 
+> Git tree: git://git.kernel.org/pub/scm/linux/kernel/git/tj/sched_ext.git scx-cgroup-migration
+> 
+>  include/linux/cgroup.h         |  26 +++
+>  include/linux/sched/ext.h      |  15 ++
+>  kernel/cgroup/cgroup.c         |  93 ++++++++-
+>  kernel/sched/ext/ext.c         | 247 +++++++++++++++++-------
+>  kernel/sched/ext/internal.h    |  44 ++++-
+>  kernel/sched/ext/sub.c         | 418 +++++++++++++++++++++++++++++++++++++----
+>  tools/sched_ext/scx_qmap.bpf.c |  95 ++++++++--
+>  tools/sched_ext/scx_qmap.c     | 110 +----------
+>  tools/sched_ext/scx_qmap.h     |   5 +-
+>  9 files changed, 819 insertions(+), 234 deletions(-)
+> 
+> --
+> tejun
