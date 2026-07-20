@@ -1,84 +1,65 @@
-Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021088.outbound.protection.outlook.com [52.101.100.88])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010016.outbound.protection.outlook.com [52.101.61.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F5812620DE;
-	Mon, 20 Jul 2026 01:42:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.88
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE66D3AC0D3;
+	Mon, 20 Jul 2026 05:55:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.16
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784511726; cv=fail; b=A7DsJTdZCq1sN3BiIWUQcN0GoRwpstckdjXDUijEf24FA0zMTfsSV3njtGtRoWiflbz1pGKt5cAZqWJlxB1tuJQ4H36lVt97V4tovlEvPh8/naPXvhivSp3TfWyg0Wrjb658kOZVTbyV38p39AnbdmEdhACWbbycd0KB6ha59KU=
+	t=1784526911; cv=fail; b=otzHxGU+RXxK3ALgHRW6HvHACi42jxgQgQOR5+lHE44bu8EyvEusjlAL+L3B3FqWQkKOXVM5vifr9c0Km5o24AXXghrG+iwYitXAUt0W/KFrWkXGjkx2LrYJe+XubGR4ApfZ7ZuHRTuER3Jsn6l2i9jD6WFj5VLf1qxQamIJbGA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784511726; c=relaxed/simple;
-	bh=4xWzVqKH0Jee4ArLIuJiHzJJ4KWj37wTT+lYhIUy1mY=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=RrJXiqvYAGN7rig1IBSgElZ0c+niRQyFTMQjfxJ7WL9QUkJV0xg9Et0XAhOotCvoVv6UHjOV265Q7FC+4mqJy4FpmSe1XnFUfc4KNngnRbnwhM361YcHkdEMjNQ2Hxq4g6Ox2ZU074i4y5+of3WM809syRoN4vktQmwrvEsAS8g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.100.88
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
+	s=arc-20240116; t=1784526911; c=relaxed/simple;
+	bh=vXcBW6woytkXb7505H1ntpTcmDykGYvTR1WFm1kXOgw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=MQXnyxMsfl2QPtvtqDRD85xFsFjGsSOpAHXNILN53yxP+9zfs02hbsX/3wrCRJ5MXXG2x3T6LNKevpsyUmFK0ywBgROgTGBIR0gpA4gsIjZ6yWrEX1nMVGyJR7CIQZd1NhFxByH/xArDUKPAZhlaLkQ1yaz4/rz8tOC5WmChiP0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=P8imsSCD; arc=fail smtp.client-ip=52.101.61.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="P8imsSCD"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HN+Jx2piuADR5R05MOnCMmWjODj52yS6x//cupUce52Xgi4K7tWbzYR56LZVgIAuhEkvsHSDp/I6mh6pLL+YDvURvzpznzzcFHws3UX+5A72F3nEH3X6X1Ceeidmvy7H0T+UtepEWKnSHWdhNEMXGYtH1Ni6vcmZPO6Mo93Rpe8dLwpa7n4PrkMkgdtZSIUJ3PO32k9BbTnNLrAtAWZ61l6ewpSBnxTYowsPGy/KYYOKp1txc8RMo3rHT6RRo4mUytpo1Mch83xTDRhbfaY9LRzcuflZoWYQzGMB39q3eik8HYfyBCLmbsamt1//hCTGvQIkKb2RsfqkSWkFl7uv3g==
+ b=uMQ9hJipOZJqDNs4EoHqaT8G+Y9YMUGy5N3XLMXfTBMoWWwOd5CGo1jIdXKaHyzsRCqqntTZPCEHoM//DQhcvLuwjtBzAXBDtzNwW6fVXmf0BsYe/6bHCeV3KvXyqIV49F397oFyjqiwjp6XQKrhRUSPo8sbj0II5IicAC23NJObmiBSjP0/BrpL9nMOatv/22WNryPImMEzmpDol+++beOPuPAMK2FbTTWJYFIIzKU1zO2voJSsoR7zK66u6SGQv5XJOqRP0sfvuHn9J8s6EUeBK0DeRsHOMfEB1Bcv7aM+NY+WlQ3eKaBABpRLU0zU7RNrVvZy4dWPIt8WbtJ8aQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=oZLJNwHQhk5EyQV4N9xbEtn1ssF3H0XMCxYKm7eIaeU=;
- b=TK6IZL388JZQ4G/yYe8gFo6BQMBydAZD7emelyUfbx972mYI8Ib8jUexSEIh6N3pBtTYOXiERWh3SqYxI9NqkyysXeNVqrO1mL50YyjmnKPsq06VOzMiOwoOKnqQKPtILa9iw3MD5S9HAjN6G4tb9sEviLVCeOz1qRW6W1D3yBt0sP3zrnWA5h3mm59hTrNSd4DYiz1PPY0S5/41mPBANuA/BPW/FKv2ejar7BjIZtqvrxfPgv2PixVqsJb4d1By621LOSjJxmzmoYBibvCXg7gqxN/k6a26DTOEB0/cURoRTfQCQiappf1hKeyfVAapHtevsy+D01+BB1tsWxDykg==
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lYCVabQA0xJOujhr6ebDtz1Ix/FpOcFMunNhIIkxxdY=;
+ b=pLihJhAg1qaJk3JFrY3smuZLAVTajNg6DdZIUW4Z7XnDoiWo/sCeSahxPz9l5wNJ0mfrnPwQXUDLXSfZBDqYrfh04SMrlx9U5DVCTi9fQIrmLAbmzFYhiaS8PNvkdwfhGL2v0LchGXG+OdZs2K50bi4cNQTyMAYkAwn78HuCcP5S976thdxUy1VlfHQLB8dDH2pXQIfJsMcP5bptCLaB53R0pFtvIN0IMhpEgSbQpRuZ7Hrwe200nWlQnG93ReIAIjHus+QM780iEBnxJPpxSh2ORiojVDCD4A8+PoLXBtDRBr2aWHbPQToSPnJVI12QOk0OCP+3zFG5DYg4ouV9hQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
- dkim=pass header.d=atomlin.com; arc=none
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lYCVabQA0xJOujhr6ebDtz1Ix/FpOcFMunNhIIkxxdY=;
+ b=P8imsSCDKDW77/OWQPS31HZHXrVmY6opX/Q7si6Da3Qha2bz+KIudGiq4qqmB486hUmwpg1yRpVQ2zEpx37MGQKeFnYPrhUZ04HO0Gu7hE1tSEgQfPTYIO5nQWV/NvJPc65dPJvHyZf1YWue6BqvaypzR23COJewYj7FNT3llZmgnTGrvv2ZzsoejE81Fa1LOqOqtUT83j0mh6awJTNefyXwJSyoOpFw2WD0NBEqfF16uOSxSvm3ps7W0bmwe11kyZlQHbGJIRWgirKT+sU/001wo98njT43tmccKBUrNw8Yxn5891P7DgZ0qN8h1oTJFbWIgQ8+aEt8xDDmNz2n2A==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=atomlin.com;
-Received: from CWLP123MB6607.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:183::5)
- by LOYP123MB2781.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:ed::14) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DM6PR12MB4827.namprd12.prod.outlook.com (2603:10b6:5:1d6::14)
+ by LV3PR12MB9235.namprd12.prod.outlook.com (2603:10b6:408:1a4::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.16; Mon, 20 Jul
- 2026 01:42:00 +0000
-Received: from CWLP123MB6607.GBRP123.PROD.OUTLOOK.COM
- ([fe80::cec4:77ab:262e:d230]) by CWLP123MB6607.GBRP123.PROD.OUTLOOK.COM
- ([fe80::cec4:77ab:262e:d230%4]) with mapi id 15.21.0223.015; Mon, 20 Jul 2026
- 01:42:00 +0000
-From: Aaron Tomlin <atomlin@atomlin.com>
-To: tsbogend@alpha.franken.de,
-	paul@paul-moore.com,
-	jmorris@namei.org,
-	serge@hallyn.com,
-	mingo@redhat.com,
-	peterz@infradead.org,
-	juri.lelli@redhat.com,
-	vincent.guittot@linaro.org,
-	stephen.smalley.work@gmail.com,
-	casey@schaufler-ca.com,
-	longman@redhat.com,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: chenridong@huaweicloud.com,
-	dietmar.eggemann@arm.com,
-	rostedt@goodmis.org,
-	bsegall@google.com,
-	mgorman@suse.de,
-	vschneid@redhat.com,
-	kprateek.nayak@amd.com,
-	omosnace@redhat.com,
-	kees@kernel.org,
-	atomlin@atomlin.com,
-	neelx@suse.com,
-	sean@ashe.io,
-	chjohnst@gmail.com,
-	steve@abita.co,
-	mproche@gmail.com,
-	nick.lange@gmail.com,
-	cgroups@vger.kernel.org,
-	linux-mips@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-security-module@vger.kernel.org,
-	selinux@vger.kernel.org,
+ 2026 05:54:47 +0000
+Received: from DM6PR12MB4827.namprd12.prod.outlook.com
+ ([fe80::6261:3040:864b:159c]) by DM6PR12MB4827.namprd12.prod.outlook.com
+ ([fe80::6261:3040:864b:159c%5]) with mapi id 15.21.0223.015; Mon, 20 Jul 2026
+ 05:54:47 +0000
+Date: Mon, 20 Jul 2026 07:54:34 +0200
+From: Andrea Righi <arighi@nvidia.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: David Vernet <void@manifault.com>, Changwoo Min <changwoo@igalia.com>,
+	sched-ext@lists.linux.dev, Emil Tsalapatis <emil@etsalapatis.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>, cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v4] security: Expand task_setscheduler LSM hook
-Date: Sun, 19 Jul 2026 21:41:56 -0400
-Message-ID: <20260720014156.459386-1-atomlin@atomlin.com>
-X-Mailer: git-send-email 2.54.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BN1PR10CA0009.namprd10.prod.outlook.com
- (2603:10b6:408:e0::14) To CWLP123MB6607.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:400:183::5)
+Subject: Re: [PATCH 4/8] sched_ext: Re-home tasks on cgroup migration
+Message-ID: <al24GoeqoJhGS4_H@gpd4>
+References: <20260718081727.582037-1-tj@kernel.org>
+ <20260718081727.582037-5-tj@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260718081727.582037-5-tj@kernel.org>
+X-ClientProxiedBy: MI1P293CA0018.ITAP293.PROD.OUTLOOK.COM
+ (2603:10a6:290:3::12) To DM6PR12MB4827.namprd12.prod.outlook.com
+ (2603:10b6:5:1d6::14)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -86,377 +67,353 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CWLP123MB6607:EE_|LOYP123MB2781:EE_
-X-MS-Office365-Filtering-Correlation-Id: de9fdcf9-e770-48de-5180-08dee6001755
+X-MS-TrafficTypeDiagnostic: DM6PR12MB4827:EE_|LV3PR12MB9235:EE_
+X-MS-Office365-Filtering-Correlation-Id: 588258af-79bb-4515-252c-08dee6236722
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|1800799024|366016|5023799004|56012099006|10067099003|6133799003|3023799007|18002099003|921020;
+	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|6133799003|10067099003|11063799006|4143699003|56012099006|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	qIQdW4uHz6k/RxhRz63tfUoK7HNXppHILUZXSVluMofpjIy8IKJmSj2AUYwhcEtzYkkb/ooy8b4XGZ+u0FUvmW02KpAkJoD9lnbAP11jtqVLbWPGF/oq4ORXpmjw1ZhM8xMxwzON+2F5H+JOoUhUVpi8hF2yjwcpAHptcve/6/6Jo+/e4q+yMDh28eseMq7g9k2OSHGCgc6Gh82xkP6nMNiWAJLWI4SxB90b9Yc71Rce6eBRU4zeXiJ6WaYe2VUTC/1yFdDNgxGUWpYAUDFcrOPoTa0MQwcnD8h6sdfGj+dAWnS5bMy8vwNViQFelrG+fNCOldCr0WmvSGd3XD2cnfHrEeZqRDJhD82+Ch5nDgtiX+qzLQVzRjC3p31kMmBJ+iuyeskugwoAVklD/2L9RWCvwtVRboTTYck5aWpAhDwR7kDrDOFJN+hbw9p6IbAywQ8Kmi4nN25+B47bX0p3kkBj1ilxPG3f7dm2Hbkp/YzRCCNzK9YYdqM0sszDTqdTRYMP3WRROwLMgBpgoabwsJDPAFKOG/3vx5bVeBe44t6IGiK1CtcYgZJwzeZnyiHEGQWpclYmSFV6FqC/f3RQWG5RylyxBXjHLcO8D0D8zhVWpi3CYLkvi+f5EAxlJlOY2XN6Nwl1Sk9zPPOhToTxdW1z35mbNWjoSfUosHUWtIy2V2Ws5Hizt3puUfJryPn0QOPfRllphODnAB31e0h6GA==
+	gZ6pA6QOY+bkOvYjatVH1NbuKK8GwqgOxDNp8nODCEcSzwD+MM2coXMDaT9Z4+LX1qYeEBqNm85S5EZMkrnyG6cVIXprM4tmfRSWUIhSyXAIwouu8zn4gsjyhH32Ws8IDa+P1PK0oEtgUh4YfHpRT3wo8+vvyJoxwGL03zIdJlwqyxxYl5BCoI/JdqqcF1cSzr8O8toFu/LrcNwgMImy0TWkQQlCV4PDAYieoJHCmSM6xGpFDHzDDFIGLXXYEm/lF1bTjHMhdyDv+Gia22tg6gjK6TZAcGt/6ALwOphpe71gaJejT74O8xdkd19c80HR33Vw073JN62foiGuSkDuypm/PdqO7c9/slcMlK0UjSrLSlAhkEzSbOG2S+P6Od1BUe98tVXUjwWDEFgeAxt1M1qb8ECl3/FRkjYaNU8eFbDBvSJ9YV4U0haTrMa5UXNJzVHd6KEQAEt6MdBTStDg0tZ/vPW0mgcf3di605kLjlCwvyWeBpGzk3GqKeUpOmWBC+oIrEw1ugZt4BDrYnlcpycNhDznoM3W/mnoOwPK8FLp4m4RWd58tdwjoSfRAQc/RAP7v7KhfwGGRDz+51DNSyp/Gan2j5UdNFMoY8GCk2I4HfIneSgR7jh7muqse+/cdZgVFv/IxwBVq0KGHzqJC2TBV67Nw9KGeVFXKQav9Ig=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB6607.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(1800799024)(366016)(5023799004)(56012099006)(10067099003)(6133799003)(3023799007)(18002099003)(921020);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB4827.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(6133799003)(10067099003)(11063799006)(4143699003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?KvzR1PE48UfAKBXnVKOBbnei0F/syYdM5kgHkLxjBc8qMF2Us05nwyLguU9r?=
- =?us-ascii?Q?M0DJcuMJX3N6hFCPCEBxpVU93oL8AFjKxoTR7ADDRwvGzIXAv5sgwa85AvjR?=
- =?us-ascii?Q?/BPqdKU40r+Pqvjo1Hsncd6/YwmSqEuA1Is4eE+0raSOS/2DLzpUu6C4uIGl?=
- =?us-ascii?Q?vcCOhUFsRrdirT3E1Zl7aorGQOgfkgb8/OL13rEyAqvMzfha8p4cIelUIbQE?=
- =?us-ascii?Q?hIOJl+YQU2Z0nHpK97e6hnSveEF/eFSDFTCpGRJZIMl8/fviDD22CHd/RXyP?=
- =?us-ascii?Q?KqRtfkDgjAtt5sOsMte2LZeaMZIF5N6JooSHZn2dWm95e+zqQ4IW38QkCEpG?=
- =?us-ascii?Q?wtP4GhlDtLfi4zAYdNF+g3/+UM4nqETlITdb/kFY2pFwGo2McNJsOoBBslBX?=
- =?us-ascii?Q?S2tCm06OwV7POYXBEKTe5px79wmX1Co86CuDlJcvTi6tEWQyf0gTXnZ9TWGA?=
- =?us-ascii?Q?qrk/IA+HFbtso7EB01qqGVBUYi1uvLFPn+lTKYg1gFcTH83pm5i6SvjBQPlu?=
- =?us-ascii?Q?8sSySoPFoJ11Xo9rmVQDN7rdJsQ/jyboZTCFPQHqElpcS3rAfXdoNgd09M2y?=
- =?us-ascii?Q?RW6vm45tTWj12bkSYfp0DOiLVRyCz8BtT1P6gZMoAk/nsVrCver55endlxs6?=
- =?us-ascii?Q?emv+aiy/+sDpWzJtAYdma63JD+gyc4Fy/Ln5eBJPgkjMpAaN9U2N5og+nkYd?=
- =?us-ascii?Q?THm206s0SNhzDbDbHmn8S1ZSx02z+0cSEAK8MkmwGlz5PamvvHXXBRU/KdWH?=
- =?us-ascii?Q?rXW+cOkr84poW88YtQivPF80attCsQlI7vspWLc2vrWcRadSq9Uy7zwgC11B?=
- =?us-ascii?Q?BE8DlEcOxlc+N1KAy+ktFnRBXFfoQ2qRe9xzRPwtDbisoS0Z5HfjRzxEkkV4?=
- =?us-ascii?Q?2YA+UDnO/83btz4ptgM79Foj82YM0qq/Q1Qc7tRsmehGYAdyCEzcHw4wUICw?=
- =?us-ascii?Q?p6ssct7yCtUczJvvTfkPDXGJVvKrFscCj1FBzVozTayZHOm+48Kc73xYF5ce?=
- =?us-ascii?Q?7U2rimmtrXyvLbQcrdU5V+iNlpz0wrW6hWnXgQN7xvYrqndTuynUGdAK63LV?=
- =?us-ascii?Q?aENxyyoe9BhcmK/xyoU5klKFHQNfaMs/SC/HjLCjRCajlqN9Rp2UN5nmkaLM?=
- =?us-ascii?Q?QI9rcYJBAlj+KlTzi4XlE4o5WGcDkpaGXoG1qI/kifQlqvGM+Rf3RSbGWaDu?=
- =?us-ascii?Q?VbBfGgZ9bAoE+wwMxDvp6cbGl6TiHGDa25ePwqSJIosSV7qVJTu4945sXRvu?=
- =?us-ascii?Q?MOIp6SUS2Kv5wXP71DBF6yUMUmVQLVG5POwfzZFc3/YBn7MaXUq91L5mDtvU?=
- =?us-ascii?Q?MgTmzo5btp1TCTz0OM25jTW2PBsUgiAO39Edv1cQZZd18Os0WocxNVcigp1/?=
- =?us-ascii?Q?8LabvY2lt6v9/OKhsK+9PqaqbmtFG21kA6QXhcrety6VZg/rK4wRMVcQapUh?=
- =?us-ascii?Q?QGXbzwU3fsD6Td6Qk2lClmO0lX5rvenDfaGeg5BNPKssGpR6zxPRMdECcfHD?=
- =?us-ascii?Q?Q0pSrmR97gj/RuBUNE43AbvIgu+QozvZNdHzhtuHLfbPVY+vBZ7SVmeXg3gf?=
- =?us-ascii?Q?9spGadQvYSv/Swu38sB7Jvyk7Nbt6cvvgjWWi+meELIa/7QFpRiehgullTYd?=
- =?us-ascii?Q?ZY5HJpH+97BlgS605oZsdakRTdtLINyxeEvF2Oob96YRPnMmP0f6Q1YVpY2Y?=
- =?us-ascii?Q?B3mYYxKK7Y7ftcW8/WaCzrBvzaNrYK/Gr1wUwg7jsBOYooPDlCi71OAOlKql?=
- =?us-ascii?Q?20z560UJRA=3D=3D?=
-X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: de9fdcf9-e770-48de-5180-08dee6001755
-X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB6607.GBRP123.PROD.OUTLOOK.COM
+	=?us-ascii?Q?m49fPCReZs/VB6wIr+9PiHTysQvg8J+McLYavnvP4ureOUOUlb4vrZvyboJX?=
+ =?us-ascii?Q?BcrjVnTqLgeRdG+fKArw3DM684eKHEEWp7CZTEfF9B7aUKHBHRUbAZsJgieL?=
+ =?us-ascii?Q?pOgvJZx8Qedf4WC3fOH3dWy1MewMJtCe7SD6Qz7MmyWl1lDOWLFAOe41KFje?=
+ =?us-ascii?Q?t60ywZ2kF1wC2luef/ZnbQuYkVS5dTVJel5M0LIbNna9kxtprAX5M4sYuuNZ?=
+ =?us-ascii?Q?5KFEZu4R/wpmvr80GHgz+CLe53jMeKed3ahMioWArZOrSaUXb9hFDJecatSM?=
+ =?us-ascii?Q?Zd9tnnhyZKbBOcc4CvZ9GVjn2QMtmaf7/N2QM93f4Qwmrc2JyILA4/v2cGPk?=
+ =?us-ascii?Q?ptz8H7WwVNpf2gKh/Cdv5089wpiEcB56lfBq08PO7/J3sGO4R4dEXMbxmwxk?=
+ =?us-ascii?Q?Kh2rtGAg13VLZWKaRBiHshU7DRIw+5PN/c2peyL35Rbcwq1HoTOund6O6fqA?=
+ =?us-ascii?Q?9qP3XL2n4fMtReyWrE46+almTTbwlhQdmFKBkJ5cI0IEFH38hO2qCBOS8q0d?=
+ =?us-ascii?Q?zafwaQi3XRIXeWtIVZ6gc82uu49qYoFjqy2DWVmwAbUCf7BTqOeo8iiJr4qC?=
+ =?us-ascii?Q?K87b/kmj5zqNB8bGyfHLV+yUf2SSSiAbjVgo+WM6DKMY2OprLY/4OFbCBuZp?=
+ =?us-ascii?Q?mIPTqBqn/Sb1mOMw0sXUL0yAj8Pn4p+LFmfaWWYZVVBX3Mte2szBWV3/r6K8?=
+ =?us-ascii?Q?Pg5qYcptPIlDkJuhIr1cT6bIcD18ouGTufBa9kui04ZEg3HIPk/0J490Z3il?=
+ =?us-ascii?Q?gvl2MDn4oR73EoZjA9IF6C1A4cFiW4Kvf+mZzoT/Hact3CeSFHQNZMRL8o4S?=
+ =?us-ascii?Q?UM6z2BgSq4iOEIY9P/XdOH2Bz+wehnzYh1KDdCJMJSXnak4rW6dFSu4MHQ4H?=
+ =?us-ascii?Q?KvyZ7XDYlrxVJWJnmRfmnEYSoYOhEHtScLqXHuHOqqziCIYCWIb4hzhYXJbu?=
+ =?us-ascii?Q?otssgGgp1dM4yffOg4zMCtLPA5zj/wq61cxRteYTC4k4Q8F6gjt1Rb5UJ3yV?=
+ =?us-ascii?Q?WmKNYuc4LfVjVTVk/GkJg3siAExMpzNxTPD4xh7rrsh3soh8bUJJXk3xTgq0?=
+ =?us-ascii?Q?huEvRLUEyDmeKZ67hFPxQqtv4vBsuZ0l12qjJlk/X/3UtZ7kiBBgs7sJ7RB+?=
+ =?us-ascii?Q?1iNUq54TYzChBZWBqB3JrUbOvyz3LNNyfbttcsFI1O9dWUJzCXJ/nLyb5Yvm?=
+ =?us-ascii?Q?2USiyU4+w76IhpakecxoYHjb6OsG57u+BR13YjtDa0SPc8GmvNAUgr8g2YYf?=
+ =?us-ascii?Q?2EEE3MfUH1goUdYrRZpd4lqkdcgCDcHC2GQCS97I5Gf6OIBFAjBXn93zxQtJ?=
+ =?us-ascii?Q?vBOkxGiFsmQavqDCDo1iVwjc7Yjl0/V+5ui5FiQGHLOU5xbB+f5FoR0R9OyQ?=
+ =?us-ascii?Q?m0m0UvRqGl7ncSZxVNF4pndpI+iS2HWoM3u7mx26hG6A3KIORqw3t/5bTGnh?=
+ =?us-ascii?Q?TFJjMeAXil6QTWw+9ithLNVwYJVOcK48LY4xd8Jf3rgKZixFKDxU+x7FnpD4?=
+ =?us-ascii?Q?tfiqURo5qSKSr7yQEu3hdTpntYSc57iocS+gfn5t7Y5Q8l5XZfgBAcIfCOL6?=
+ =?us-ascii?Q?sqVPsGhG45KDODGmXsYTuVwJgMYHODHNb9A6UwkchzMMkzWrmqC73jzt8eHJ?=
+ =?us-ascii?Q?/EughRA5mRGFkiOtYjlo1v0Nqu60kOmL7hur68Xm9DWkfC/WTn+zW6SdxGiL?=
+ =?us-ascii?Q?tYZjKUrSkqYy7EQ970Q72DlG28dZntlRVunQVw0wO2l94+VBaLV9F/6YFbTA?=
+ =?us-ascii?Q?PPh5Obn1yA=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 588258af-79bb-4515-252c-08dee6236722
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB4827.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2026 01:42:00.1725
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2026 05:54:47.4037
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: UFZCd6EKzm0Ob41S7LvfGhXH0VXid3iWH6mEsRu6GpV56Fj0uh2rUEar/SXTPFeyJ2K7SE/QwuCoIpPnu7afGA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LOYP123MB2781
+X-MS-Exchange-CrossTenant-UserPrincipalName: gb4ip5/+a+WrhFwL88s60Lt0ap+Dfzb7A//tviF1rk/BoGlVXEwhFfkWyRsojufseluOytH3/M01FwNBc6WLIw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR12MB9235
 
-At present, the task_setscheduler LSM hook provides security modules
-with the opportunity to mediate changes to a task's scheduling policy by
-inspecting the requested sched_attr. However, when invoked via
-sched_setaffinity(), the hook lacks visibility into the actual CPU
-affinity mask being requested. Consequently, security modules are
-entirely blind to the target CPUs and cannot make granular access
-control decisions based on spatial isolation.
+Hi Tejun,
 
-In modern multi-tenant and real-time environments, CPU isolation is a
-critical boundary. The inability to audit or restrict specific CPU
-pinning requests limits the effectiveness of security policies,
-particularly when attempting to shield isolated or cryptographic cores
-from unprivileged or compromised tasks.
+On Fri, Jul 17, 2026 at 10:17:23PM -1000, Tejun Heo wrote:
+> A task's sched (p->scx.sched) must match its cgroup's owner
+> (cgrp->scx_sched). cgroup migration breaks the invariant:
+> scx_cgroup_move_task() only fires root's ops.cgroup_move() and never
+> re-homes the task, leading to wrong-sched scheduling and, once the stale
+> sched is freed, a use-after-free.
+> 
+> Hook into the new cgroup task migration events and re-home each task whose
+> destination cgroup is owned by a different sched. The events map naturally
+> to the transfer: MIGRATING runs the fallible init for the destination sched,
+> letting it reject the migration the same way ops.cgroup_prep_move() can,
+> MIGRATED does the re-home, which can't fail, and CANCELED undoes the init
+> when the migration falls through.
+> 
+> Pre-commit, the task's task_group still reflects the source, so
+> __scx_init_task() grows an explicit cgroup argument for the migration path
+> to hand ops.init_task() the destination cgroup.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-This patch expands the security_task_setscheduler() hook signature to
-include a pointer to the requested cpumask alongside the existing
-sched_attr. Because this is a shared hook used for multiple scheduling
-attribute changes, call sites that do not modify CPU affinity are
-updated to safely pass NULL for the mask. To protect against unverified
-dereferences, the parameter is annotated with __nullable in the LSM hook
-definition, ensuring the BPF verifier mandates explicit NULL checks for
-attached eBPF programs.
+Should we add:
 
-Historically, SELinux has governed all scheduling alterations under a
-single, monolithic PROCESS__SETSCHED access vector. However, by
-inspecting fields such as attr->sched_policy or attr->sched_priority, a
-security module can introduce granular access controls. For instance,
-differentiating between standard time-sharing policies and
-latency-sensitive real-time policies.
+Fixes: 337ec00b1d9c ("sched_ext: Implement cgroup sub-sched enabling and disabling")
+Closes: https://lore.kernel.org/r/alnxrsexEe_nQwqL@gpd4
 
-This change updates all in-tree security modules (SELinux and Smack) to
-accommodate the new parameter mechanically, while providing LSMs with
-the necessary context to enforce strict affinity policies.
+Thanks,
+-Andrea
 
-Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
----
-Changes since v3:
-
- - Expanded the task_setscheduler LSM hook to accept the 'sched_attr'
-   payload, enabling BPF and other LSMs to inspect scheduling attributes
-   (Peter Zijlstra)
-
- - Updated all call sites for security_task_setscheduler() to correctly
-   pass the attr structure when available, or NULL otherwise
-   (Peter Zijlstra)
-
- - Added the necessary forward declaration for struct sched_attr to
-   include/linux/security.h
-
- - Linked to v3: https://lore.kernel.org/lkml/20260526142838.774711-1-atomlin@atomlin.com/
-
-Changes since v2:
-
- - Dropped patch 1. This is to be addressed by the cgroup cpuset
-   maintainer (Waiman Long)
-
- - Dropped patch 3. Will be submitted as a separate patch (Paul Moore)
-
- - Linked to v2: https://lore.kernel.org/lkml/20260509213803.968464-1-atomlin@atomlin.com/
-
-Changes since v1:
-
- - Reordered the allocation and user-copy of new_mask in the MIPS
-   architecture's mipsmt_sys_sched_setaffinity() to occur before the
-   LSM hook is invoked. This ensures the security modules evaluate a fully
-   populated mask rather than uninitialised memory, while cleanly handling
-   error unwinding
-
- - Updated cpuset_can_fork() to pass the destination cpuset's effective CPU
-   mask instead of NULL
-
- - Linked to v1: https://lore.kernel.org/lkml/20260509164847.939294-1-atomlin@atomlin.com/
-
-Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
----
- arch/mips/kernel/mips-mt-fpaff.c |  2 +-
- fs/proc/base.c                   |  2 +-
- include/linux/lsm_hook_defs.h    |  4 +++-
- include/linux/security.h         | 15 +++++++++++----
- kernel/cgroup/cpuset.c           |  4 ++--
- kernel/sched/syscalls.c          |  4 ++--
- security/commoncap.c             |  9 +++++++--
- security/security.c              | 14 +++++++++-----
- security/selinux/hooks.c         |  4 +++-
- security/smack/smack_lsm.c       | 13 +++++++++++--
- 10 files changed, 50 insertions(+), 21 deletions(-)
-
-diff --git a/arch/mips/kernel/mips-mt-fpaff.c b/arch/mips/kernel/mips-mt-fpaff.c
-index 4fead87d2f43..c7a5d55cf7ca 100644
---- a/arch/mips/kernel/mips-mt-fpaff.c
-+++ b/arch/mips/kernel/mips-mt-fpaff.c
-@@ -110,7 +110,7 @@ asmlinkage long mipsmt_sys_sched_setaffinity(pid_t pid, unsigned int len,
- 		goto out_unlock;
- 	}
- 
--	retval = security_task_setscheduler(p);
-+	retval = security_task_setscheduler(p, NULL, new_mask);
- 	if (retval)
- 		goto out_unlock;
- 
-diff --git a/fs/proc/base.c b/fs/proc/base.c
-index 780f81259052..b14401030e5c 100644
---- a/fs/proc/base.c
-+++ b/fs/proc/base.c
-@@ -2589,7 +2589,7 @@ static ssize_t timerslack_ns_write(struct file *file, const char __user *buf,
- 		}
- 		rcu_read_unlock();
- 
--		err = security_task_setscheduler(p);
-+		err = security_task_setscheduler(p, NULL, NULL);
- 		if (err) {
- 			count = err;
- 			goto out;
-diff --git a/include/linux/lsm_hook_defs.h b/include/linux/lsm_hook_defs.h
-index 65c9609ec207..80ca02879620 100644
---- a/include/linux/lsm_hook_defs.h
-+++ b/include/linux/lsm_hook_defs.h
-@@ -255,7 +255,9 @@ LSM_HOOK(int, 0, task_prlimit, const struct cred *cred,
- 	 const struct cred *tcred, unsigned int flags)
- LSM_HOOK(int, 0, task_setrlimit, struct task_struct *p, unsigned int resource,
- 	 struct rlimit *new_rlim)
--LSM_HOOK(int, 0, task_setscheduler, struct task_struct *p)
-+LSM_HOOK(int, 0, task_setscheduler, struct task_struct *p,
-+	 const struct sched_attr *attr__nullable,
-+	 const struct cpumask *in_mask__nullable)
- LSM_HOOK(int, 0, task_getscheduler, struct task_struct *p)
- LSM_HOOK(int, 0, task_movememory, struct task_struct *p)
- LSM_HOOK(int, 0, task_kill, struct task_struct *p, struct kernel_siginfo *info,
-diff --git a/include/linux/security.h b/include/linux/security.h
-index 153e9043058f..82dfe4e3f8d1 100644
---- a/include/linux/security.h
-+++ b/include/linux/security.h
-@@ -82,6 +82,7 @@ struct ctl_table;
- struct audit_krule;
- struct user_namespace;
- struct timezone;
-+struct sched_attr;
- 
- enum lsm_event {
- 	LSM_POLICY_CHANGE,
-@@ -196,7 +197,9 @@ extern int cap_mmap_addr(unsigned long addr);
- extern int cap_task_fix_setuid(struct cred *new, const struct cred *old, int flags);
- extern int cap_task_prctl(int option, unsigned long arg2, unsigned long arg3,
- 			  unsigned long arg4, unsigned long arg5);
--extern int cap_task_setscheduler(struct task_struct *p);
-+extern int cap_task_setscheduler(struct task_struct *p,
-+				 const struct sched_attr *attr,
-+				 const struct cpumask *in_mask);
- extern int cap_task_setioprio(struct task_struct *p, int ioprio);
- extern int cap_task_setnice(struct task_struct *p, int nice);
- extern int cap_vm_enough_memory(struct mm_struct *mm, long pages);
-@@ -531,7 +534,9 @@ int security_task_prlimit(const struct cred *cred, const struct cred *tcred,
- 			  unsigned int flags);
- int security_task_setrlimit(struct task_struct *p, unsigned int resource,
- 		struct rlimit *new_rlim);
--int security_task_setscheduler(struct task_struct *p);
-+int security_task_setscheduler(struct task_struct *p,
-+			       const struct sched_attr *attr,
-+			       const struct cpumask *in_mask);
- int security_task_getscheduler(struct task_struct *p);
- int security_task_movememory(struct task_struct *p);
- int security_task_kill(struct task_struct *p, struct kernel_siginfo *info,
-@@ -1393,9 +1398,11 @@ static inline int security_task_setrlimit(struct task_struct *p,
- 	return 0;
- }
- 
--static inline int security_task_setscheduler(struct task_struct *p)
-+static inline int security_task_setscheduler(struct task_struct *p,
-+					     const struct sched_attr *attr,
-+					     const struct cpumask *in_mask)
- {
--	return cap_task_setscheduler(p);
-+	return cap_task_setscheduler(p, attr, in_mask);
- }
- 
- static inline int security_task_getscheduler(struct task_struct *p)
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 45944b3e31ca..6ab47cf5582b 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3042,7 +3042,7 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 			goto out_unlock;
- 
- 		if (setsched_check) {
--			ret = security_task_setscheduler(task);
-+			ret = security_task_setscheduler(task, NULL, cs->effective_cpus);
- 			if (ret)
- 				goto out_unlock;
- 		}
-@@ -3600,7 +3600,7 @@ static int cpuset_can_fork(struct task_struct *task, struct css_set *cset)
- 	if (ret)
- 		goto out_unlock;
- 
--	ret = security_task_setscheduler(task);
-+	ret = security_task_setscheduler(task, NULL, cs->effective_cpus);
- 	if (ret)
- 		goto out_unlock;
- 
-diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
-index b215b0ead9a6..86490035e815 100644
---- a/kernel/sched/syscalls.c
-+++ b/kernel/sched/syscalls.c
-@@ -540,7 +540,7 @@ int __sched_setscheduler(struct task_struct *p,
- 		if (attr->sched_flags & SCHED_FLAG_SUGOV)
- 			return -EINVAL;
- 
--		retval = security_task_setscheduler(p);
-+		retval = security_task_setscheduler(p, attr, NULL);
- 		if (retval)
- 			return retval;
- 	}
-@@ -1213,7 +1213,7 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
- 			return -EPERM;
- 	}
- 
--	retval = security_task_setscheduler(p);
-+	retval = security_task_setscheduler(p, NULL, in_mask);
- 	if (retval)
- 		return retval;
- 
-diff --git a/security/commoncap.c b/security/commoncap.c
-index 3399535808fe..d83eee0459fe 100644
---- a/security/commoncap.c
-+++ b/security/commoncap.c
-@@ -1222,13 +1222,18 @@ static int cap_safe_nice(struct task_struct *p)
- /**
-  * cap_task_setscheduler - Determine if scheduler policy change is permitted
-  * @p: The task to affect
-+ * @attr: Requested scheduling attributes (ignored)
-+ * @in_mask: Requested CPU affinity mask (ignored)
-  *
-  * Determine if the requested scheduler policy change is permitted for the
-- * specified task.
-+ * specified task. The capabilities security module does not evaluate the
-+ * @attr or @in_mask parameters, relying solely on cap_safe_nice().
-  *
-  * Return: 0 if permission is granted, -ve if denied.
-  */
--int cap_task_setscheduler(struct task_struct *p)
-+int cap_task_setscheduler(struct task_struct *p,
-+			  const struct sched_attr *attr __always_unused,
-+			  const struct cpumask *in_mask __always_unused)
- {
- 	return cap_safe_nice(p);
- }
-diff --git a/security/security.c b/security/security.c
-index 71aea8fdf014..a6725dddc34f 100644
---- a/security/security.c
-+++ b/security/security.c
-@@ -3240,17 +3240,21 @@ int security_task_setrlimit(struct task_struct *p, unsigned int resource,
- }
- 
- /**
-- * security_task_setscheduler() - Check if setting sched policy/param is allowed
-+ * security_task_setscheduler() - Check if setting sched policy/param/affinity is allowed
-  * @p: target task
-+ * @attr: requested scheduling attributes, or NULL if not changing parameters
-+ * @in_mask: requested CPU affinity mask, or NULL if not changing affinity
-  *
-- * Check permission before setting scheduling policy and/or parameters of
-- * process @p.
-+ * Check permission before setting the scheduling policy, parameters, and/or
-+ * CPU affinity of process @p.
-  *
-  * Return: Returns 0 if permission is granted.
-  */
--int security_task_setscheduler(struct task_struct *p)
-+int security_task_setscheduler(struct task_struct *p,
-+			       const struct sched_attr *attr,
-+			       const struct cpumask *in_mask)
- {
--	return call_int_hook(task_setscheduler, p);
-+	return call_int_hook(task_setscheduler, p, attr, in_mask);
- }
- 
- /**
-diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 8d6945edae7a..d77a8d5c364c 100644
---- a/security/selinux/hooks.c
-+++ b/security/selinux/hooks.c
-@@ -4559,7 +4559,9 @@ static int selinux_task_setrlimit(struct task_struct *p, unsigned int resource,
- 	return 0;
- }
- 
--static int selinux_task_setscheduler(struct task_struct *p)
-+static int selinux_task_setscheduler(struct task_struct *p,
-+				     const struct sched_attr *attr __always_unused,
-+				     const struct cpumask *in_mask __always_unused)
- {
- 	return avc_has_perm(current_sid(), task_sid_obj(p), SECCLASS_PROCESS,
- 			    PROCESS__SETSCHED, NULL);
-diff --git a/security/smack/smack_lsm.c b/security/smack/smack_lsm.c
-index ff115068c5c0..cf28ccc28b80 100644
---- a/security/smack/smack_lsm.c
-+++ b/security/smack/smack_lsm.c
-@@ -2338,10 +2338,19 @@ static int smack_task_getioprio(struct task_struct *p)
- /**
-  * smack_task_setscheduler - Smack check on setting scheduler
-  * @p: the task object
-+ * @attr: Requested scheduling attributes (ignored)
-+ * @in_mask: Requested CPU affinity mask (ignored)
-  *
-- * Return 0 if read access is permitted
-+ * Evaluate whether the current task has write access to the target task @p
-+ * to change its scheduling policy. The Smack security module relies
-+ * strictly on label-based access control and does not evaluate CPU
-+ * affinity masks or scheduling attributes.
-+ *
-+ * Return: 0 if write access is permitted
-  */
--static int smack_task_setscheduler(struct task_struct *p)
-+static int smack_task_setscheduler(struct task_struct *p,
-+				   const struct sched_attr *attr __always_unused,
-+				   const struct cpumask *in_mask __always_unused)
- {
- 	return smk_curacc_on_task(p, MAY_WRITE, __func__);
- }
--- 
-2.54.0
-
+> ---
+>  kernel/sched/ext/ext.c      |  29 +++++---
+>  kernel/sched/ext/internal.h |   3 +-
+>  kernel/sched/ext/sub.c      | 135 ++++++++++++++++++++++++++++++++++--
+>  3 files changed, 152 insertions(+), 15 deletions(-)
+> 
+> diff --git a/kernel/sched/ext/ext.c b/kernel/sched/ext/ext.c
+> index cd99947b4229..6bac68758704 100644
+> --- a/kernel/sched/ext/ext.c
+> +++ b/kernel/sched/ext/ext.c
+> @@ -3485,15 +3485,28 @@ static struct cgroup *tg_cgrp(struct task_group *tg)
+>  		return &cgrp_dfl_root.cgrp;
+>  }
+>  
+> -#define SCX_INIT_TASK_ARGS_CGROUP(tg)		.cgroup = tg_cgrp(tg),
+> +#define SCX_INIT_TASK_ARGS_CGROUP(cgrp)		.cgroup = (cgrp),
+>  
+>  #else	/* CONFIG_EXT_GROUP_SCHED */
+>  
+> -#define SCX_INIT_TASK_ARGS_CGROUP(tg)
+> +#define SCX_INIT_TASK_ARGS_CGROUP(cgrp)
+>  
+>  #endif	/* CONFIG_EXT_GROUP_SCHED */
+>  
+> -int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork)
+> +/**
+> + * __scx_init_task - Initialize a task for a sched
+> + * @sch: sched to initialize @p for
+> + * @p: task of interest
+> + * @cgrp: cgroup @p is joining, %NULL for @p's current task_group's cgroup
+> + * @fork: %true if @p is being forked
+> + *
+> + * Pre-commit cgroup migration passes @cgrp explicitly as @p's task_group
+> + * still reflects the source.
+> + *
+> + * Return 0 on success, -errno on failure.
+> + */
+> +int __scx_init_task(struct scx_sched *sch, struct task_struct *p,
+> +		    struct cgroup *cgrp, bool fork)
+>  {
+>  	int ret;
+>  
+> @@ -3501,7 +3514,7 @@ int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork)
+>  
+>  	if (SCX_HAS_OP(sch, init_task)) {
+>  		struct scx_init_task_args args = {
+> -			SCX_INIT_TASK_ARGS_CGROUP(task_group(p))
+> +			SCX_INIT_TASK_ARGS_CGROUP(cgrp ?: tg_cgrp(task_group(p)))
+>  			.fork = fork,
+>  		};
+>  
+> @@ -3747,7 +3760,7 @@ int scx_fork(struct task_struct *p, struct kernel_clone_args *kargs)
+>  		struct scx_sched *sch = scx_root;
+>  #endif
+>  		scx_set_task_state(p, SCX_TASK_INIT_BEGIN);
+> -		ret = __scx_init_task(sch, p, true);
+> +		ret = __scx_init_task(sch, p, NULL, true);
+>  		if (unlikely(ret)) {
+>  			scx_set_task_state(p, SCX_TASK_NONE);
+>  			return ret;
+> @@ -5969,8 +5982,8 @@ static void scx_root_disable(struct scx_sched *sch)
+>  	WRITE_ONCE(scx_switching_all, false);
+>  
+>  	/*
+> -	 * Shut down cgroup support before tasks so that the cgroup attach path
+> -	 * doesn't race against scx_disable_and_exit_task().
+> +	 * Shut down cgroup support before tasks so that the cgroup attach and
+> +	 * migration paths don't race against scx_disable_and_exit_task().
+>  	 */
+>  	scx_cgroup_lock();
+>  	scx_cgroup_enabled = false;
+> @@ -7263,7 +7276,7 @@ static void scx_root_enable_workfn(struct kthread_work *work)
+>  		scx_set_task_state(p, SCX_TASK_INIT_BEGIN);
+>  		scx_task_iter_unlock(&sti);
+>  
+> -		ret = __scx_init_task(sch, p, false);
+> +		ret = __scx_init_task(sch, p, NULL, false);
+>  
+>  		scx_task_iter_relock(&sti, p);
+>  
+> diff --git a/kernel/sched/ext/internal.h b/kernel/sched/ext/internal.h
+> index d76ac22019af..23fc95502ea6 100644
+> --- a/kernel/sched/ext/internal.h
+> +++ b/kernel/sched/ext/internal.h
+> @@ -1920,7 +1920,8 @@ void scx_flush_dispatch_buf(struct scx_sched *sch, struct rq *rq);
+>  void scx_kick_cpu(struct scx_sched *sch, s32 cpu, u64 flags);
+>  void schedule_dsq_reenq(struct scx_sched *sch, struct scx_dispatch_q *dsq,
+>  			u64 reenq_flags, struct rq *locked_rq);
+> -int __scx_init_task(struct scx_sched *sch, struct task_struct *p, bool fork);
+> +int __scx_init_task(struct scx_sched *sch, struct task_struct *p,
+> +		    struct cgroup *cgrp, bool fork);
+>  void scx_enable_task(struct scx_sched *sch, struct task_struct *p);
+>  void __scx_disable_and_exit_task(struct scx_sched *sch, struct task_struct *p);
+>  void scx_sub_init_cancel_task(struct scx_sched *sch, struct task_struct *p);
+> diff --git a/kernel/sched/ext/sub.c b/kernel/sched/ext/sub.c
+> index 5f7ac6696d17..393dbd00d2f7 100644
+> --- a/kernel/sched/ext/sub.c
+> +++ b/kernel/sched/ext/sub.c
+> @@ -906,7 +906,7 @@ void scx_sub_disable(struct scx_sched *sch)
+>  		 * parent. A child can't directly affect the parent through its
+>  		 * own failures.
+>  		 */
+> -		ret = __scx_init_task(parent, p, false);
+> +		ret = __scx_init_task(parent, p, NULL, false);
+>  		if (ret) {
+>  			scx_fail_parent(sch, p, ret);
+>  			put_task_struct(p);
+> @@ -1212,7 +1212,7 @@ void scx_sub_enable_workfn(struct kthread_work *work)
+>  		 * As $p is still on $parent, it can't be transitioned to INIT.
+>  		 * Let's worry about task state later. Use __scx_init_task().
+>  		 */
+> -		ret = __scx_init_task(sch, p, false);
+> +		ret = __scx_init_task(sch, p, NULL, false);
+>  		if (ret)
+>  			goto abort;
+>  
+> @@ -1336,6 +1336,99 @@ void scx_sub_enable_workfn(struct kthread_work *work)
+>  	cmd->ret = 0;
+>  }
+>  
+> +/**
+> + * scx_cgroup_task_migrating - Prepare a task for a cgroup migration
+> + * @ctx: migration being prepared
+> + *
+> + * A task's sched must match its cgroup's owner, so a migration that crosses a
+> + * sched boundary re-homes the task once committed. Run the fallible part here,
+> + * before the migration commits: initialize the task for the destination sched.
+> + * A rejection fails the cgroup.procs write.
+> + */
+> +static s32 scx_cgroup_task_migrating(struct cgroup_task_migrate_ctx *ctx)
+> +{
+> +	struct task_struct *p = ctx->task;
+> +	struct scx_sched *to;
+> +	int ret;
+> +
+> +	/*
+> +	 * Cleared under scx_cgroup_lock() before root disable starts tearing
+> +	 * down tasks. As cgroup_mutex is held, a set flag guarantees that the
+> +	 * teardown loop is not running concurrently.
+> +	 */
+> +	if (!scx_cgroup_enabled)
+> +		return NOTIFY_OK;
+> +
+> +	to = ctx->dst_dcgrp->scx_sched;
+> +	if (scx_task_on_sched(to, p))
+> +		return NOTIFY_OK;
+> +
+> +	ret = __scx_init_task(to, p, ctx->dst_dcgrp, false);
+> +	if (ret)
+> +		return notifier_from_errno(ret);
+> +
+> +	return NOTIFY_OK;
+> +}
+> +
+> +/**
+> + * scx_cgroup_task_migrated - Re-home a task that changed cgroups
+> + * @ctx: committed migration
+> + *
+> + * Move the task to its new cgroup's sched, which scx_cgroup_task_migrating()
+> + * already initialized it for. Can't fail.
+> + *
+> + * This is safe against all phases of the destination sched's destruction. A
+> + * disable resets cgroup ownership to the parent and re-homes tasks in one
+> + * scx_cgroup_lock() section. If that section already ran, the destination would
+> + * be the parent. Otherwise, the re-home loop is still ahead and guaranteed to
+> + * visit the task, now in the destination cgroup.
+> + */
+> +static void scx_cgroup_task_migrated(struct cgroup_task_migrate_ctx *ctx)
+> +{
+> +	struct task_struct *p = ctx->task;
+> +	struct scx_sched *to;
+> +	struct rq *rq;
+> +	struct rq_flags rf;
+> +
+> +	if (!scx_cgroup_enabled)
+> +		return;
+> +
+> +	to = ctx->dst_dcgrp->scx_sched;
+> +	if (scx_task_on_sched(to, p))
+> +		return;
+> +
+> +	rq = task_rq_lock(p, &rf);
+> +	scx_rehome_task(to, p);
+> +	task_rq_unlock(rq, p, &rf);
+> +}
+> +
+> +/**
+> + * scx_cgroup_task_migrate_canceled - Undo migration preparation
+> + * @ctx: canceled migration
+> + *
+> + * The migration failed after scx_cgroup_task_migrating() initialized the task
+> + * for the destination sched. The task stays on its current sched in the source
+> + * cgroup. Undo the destination's init.
+> + */
+> +static void scx_cgroup_task_migrate_canceled(struct cgroup_task_migrate_ctx *ctx)
+> +{
+> +	struct task_struct *p = ctx->task;
+> +	struct scx_sched *to;
+> +	struct rq *rq;
+> +	struct rq_flags rf;
+> +
+> +	if (!scx_cgroup_enabled)
+> +		return;
+> +
+> +	to = ctx->dst_dcgrp->scx_sched;
+> +	if (scx_task_on_sched(to, p))
+> +		return;
+> +
+> +	rq = task_rq_lock(p, &rf);
+> +	scx_sub_init_cancel_task(to, p);
+> +	task_rq_unlock(rq, p, &rf);
+> +}
+> +
+>  static s32 scx_cgroup_lifetime_notify(struct notifier_block *nb,
+>  				      unsigned long action, void *data)
+>  {
+> @@ -1367,12 +1460,42 @@ static struct notifier_block scx_cgroup_lifetime_nb = {
+>  	.notifier_call = scx_cgroup_lifetime_notify,
+>  };
+>  
+> -static s32 __init scx_cgroup_lifetime_notifier_init(void)
+> +static s32 scx_cgroup_task_notify(struct notifier_block *nb,
+> +				  unsigned long action, void *data)
+> +{
+> +	struct cgroup_task_migrate_ctx *ctx = data;
+> +
+> +	switch (action) {
+> +	case CGROUP_TASK_MIGRATING:
+> +		return scx_cgroup_task_migrating(ctx);
+> +	case CGROUP_TASK_MIGRATED:
+> +		scx_cgroup_task_migrated(ctx);
+> +		break;
+> +	case CGROUP_TASK_MIGRATE_CANCELED:
+> +		scx_cgroup_task_migrate_canceled(ctx);
+> +		break;
+> +	}
+> +
+> +	return NOTIFY_OK;
+> +}
+> +
+> +static struct notifier_block scx_cgroup_task_nb = {
+> +	.notifier_call = scx_cgroup_task_notify,
+> +};
+> +
+> +static s32 __init scx_cgroup_notifier_init(void)
+>  {
+> -	return blocking_notifier_chain_register(&cgroup_lifetime_notifier,
+> -						&scx_cgroup_lifetime_nb);
+> +	s32 ret;
+> +
+> +	ret = blocking_notifier_chain_register(&cgroup_lifetime_notifier,
+> +					       &scx_cgroup_lifetime_nb);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return blocking_notifier_chain_register(&cgroup_task_notifier,
+> +						&scx_cgroup_task_nb);
+>  }
+> -core_initcall(scx_cgroup_lifetime_notifier_init);
+> +core_initcall(scx_cgroup_notifier_init);
+>  
+>  static void scx_pstack_recursion(struct bpf_prog *prog, const char *op)
+>  {
+> -- 
+> 2.55.0
+> 
