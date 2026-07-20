@@ -1,162 +1,143 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com [209.85.167.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E8933D88E3
-	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 15:01:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EF64432BD9
+	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 15:02:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784559693; cv=none; b=rbfthKZqfWvSXLIzcmZjAvEgZn1A3zvTA/od1ZZkR6KDgkuFLtHfACQX5jdqOQNc3C/CR6MrxWMDbsXPSWVlpYlWSm9Xcv5MNf3gXxorpk7zaPnlzqk4HP3xuwBgWB0eGirqIum8Wxo2l0OHWg7tQIKFRytfsTeAysHkGetUNi8=
+	t=1784559753; cv=none; b=n/hWgsYa0MOS4Wk2OQpe8Lti2hO1GuULiED36W9EVovcr5gluSPdx7isr/99qsScV7OYhBRqPJ+2c3zmqaDHNdcpFRadeCjtFogiZWfr80kvQGbCsWOezWU8t6LJx1jhcIn5KfaDSFGDSMU9c2x2t9HkB0XmRwfTItThrJmL0ZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784559693; c=relaxed/simple;
-	bh=/adrxk88ue9QZdaMDnxlrYJjorXsMzjdAQoGR492+Qg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gvp7j4tV093YGqE/rGOP8I020p0rNE/XPPDnNKEzgmvVl5U8lFsWzNIIXlmb+yZOIe1h1EsmE9KA/oq/D3DDlxN0chFfnbVeHVDA9kSqVK8mZJEWJxbTIusjPSP7N7HQkFmed2vqF/9fDSRLwrI8m6+Nf8SKQs0/SlOi8QyDYdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=A79W5mDv; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1784559753; c=relaxed/simple;
+	bh=Tq16sg4xa8nWWXzuYioMyhtg6n7YUHfctiTiYuI6iLk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SQxTJMTQSNpN08RPGyOmOIR4ADJ7vYnvgi4qnnjtcVlCrbubAYLp5IEb9xlW+U5UPW264GedJwtg1pUXIPGYPzi/DB/z6UH8SaP0rWJDEjn2u5l2CB7dmfIKTBHADRAydmWFbQb/6Q5DI4JB0VLnjwWoGeErECIJrGk8oQKXhGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D4RJMZHk; arc=none smtp.client-ip=209.85.167.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="A79W5mDv"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-49557167508so17799845e9.1
-        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 08:01:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D4RJMZHk"
+Received: by mail-oi1-f173.google.com with SMTP id 5614622812f47-4a2fdbb7be0so4176722b6e.3
+        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 08:02:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1784559690; x=1785164490; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=u1b8/cFFL6YY9kDs1t0qAstCmVExZsKMqgR0pyeRNAI=;
-        b=A79W5mDvUyz61Ff5WOX0SElycdgDhMMQVrhDSxIvRl15CG3G821T62wKBjDezO+0kB
-         Lqa3dFkH9zpOHhJT63kFTagtW2VEnC3yOQ86JhGAfudUkWUGBdM5HtQNY2xQ6AAvzNWh
-         msaXNJPPP9dUu9xf22t1yQHidTbRpK+pXB6eYeNTK0KFOCUU3JXVVvzbheAw+9n22LRg
-         Y/pB0IAJ5EDoCG0eh6Bx5cGbmGQP3Hl9B9BaFZ6lA/s5lmm00Q4eX+2b4TFs618W8OPO
-         xvoS86vojafEaVhreBpoisLXTyoahI0NDWKL3hyQ1MCNDvA1cvUBkyxGuwvjd5qo7ViC
-         bhng==
+        d=gmail.com; s=20251104; t=1784559751; x=1785164551; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=JcXGf7/frUgo9pt1iwmRdB5om1Q2CFstWLKuaK2u478=;
+        b=D4RJMZHkb4Jki1BTHSmtXiNe/WboPqgSUui63YhsMNSzkLRgg/BO8VNOfXX99bekWO
+         kj7INzv0eOx6kldy7x7DJ7VDp4h+N09oJd9KovEXi5T1Yke0v4lIH3urQHzUFcbmk8LD
+         XDAOkQXTFHz2Nm9zG9K0TkG1w33VnDmVQyxthVXTVcORhWjxNSLuKNXiLqIew+uWlJEZ
+         ITY9Cfl33uhOmo2bSN3QBG6KLnBZFqphMiZS/JzcZQawTVVXhmVahFy05KY6YAJE3sxx
+         IyKmy2dR86BNJUHkH7bJKY4zo1tVedqaZNGWAgAVBCzV5ZkcSl75p5667A4Ytt5YDDR9
+         QcEQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784559690; x=1785164490;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=u1b8/cFFL6YY9kDs1t0qAstCmVExZsKMqgR0pyeRNAI=;
-        b=KCJvc14IwAGLHE47FZ13/7fuNRVkG/xn95FdUpl9Mk0/EeiHqD3QFINhuKwxmxmnne
-         fnqXZ3S0iIQFbAx1FfMFMvftJChlOzyvSKY/K4qp2fnkHIIoM6kwaKKNVw2k8S5VTFxa
-         dyYjO/dAvbQgSac6f9dSCUxzBBCU0PdECIHVo/bGhDpxlfVrXM5vcA09DiRFSAvjokvV
-         N/Y3noOjvOBIAnMQUsElR5dM88e7MWEUzl+3K3UTcpGPBQ+WtU9TIsXYjYggttTvS6LT
-         JSPJrXXNdyIg9R6AHgWosCPZEStWV81A9UdqXBLgnVRT2R4cObYWwgRzE7injbx/TCI0
-         bUDA==
-X-Forwarded-Encrypted: i=1; AHgh+Rr4k5k/fcIMMbw9ScKjRE3oEy6EYlVFkqso+83VS4Ha0257QgIax597Af7KqR8AX0hIfCrb00PS@vger.kernel.org
-X-Gm-Message-State: AOJu0YxWUTiytBQm1YvWf7p4ng3kcnYZyaJo4O12/2HaFswqbwfSs2d0
-	JzDDtwIQ8oI9xIRX3bhY3ArDxYnPpGA2RmHAULkLbe8gfWkgyxG46lHB6ABD/gJx08k=
-X-Gm-Gg: AfdE7cmoIMprvub0zc8McHwVFE4PZyY9MGmHU99KiRkqHThOu7h+Q+QNicAE8zySlEW
-	EKtmJh1Cbp4GDub/KVfNX3XajNoGaPt4ASyYxZnKlv479IlJSa2Ij8bPMA3c1CXhvkyrNkMMqsp
-	vl40V5ntINNoAITEJ5hMFaY8GPthTZ8wPAiV1tYNjl8G3xDAOON3CmdLhOCKfH4OSbsq7UAcXCQ
-	h5MdjFinc6lVdvT4HIZZ0OGfN3aRDpo9KuIfTF7+4U23LnGMfeDLwfLrm/Jrs9FQPGqwN5AFiyA
-	OYCB0DlCV9aPKlUD5cJ2oalyp8OUkXNlbSCmVMKMj1j7OU+mN39LnY18iGwzP63zeZ8TqNj83gO
-	5FSUwTt2HKPko61eVxBz3LkOXgI/8jMgj30l3lBWrnM0AhrKvOjYRRDgPwNj5nwngEPmJOra0u0
-	H5/2Hvkw==
-X-Received: by 2002:a05:600c:e547:10b0:495:5420:bf9a with SMTP id 5b1f17b1804b1-4955420c7b9mr71637045e9.30.1784559689657;
-        Mon, 20 Jul 2026 08:01:29 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4955dfa81b2sm59596425e9.4.2026.07.20.08.01.28
+        d=1e100.net; s=20251104; t=1784559751; x=1785164551;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=JcXGf7/frUgo9pt1iwmRdB5om1Q2CFstWLKuaK2u478=;
+        b=pLux5HjPswrgULAHwXqmpFxrajNHBhAZHgugqP4TXlx33U3k8KkiPu4gDTNA5xVHFe
+         n2As2rNpytoDSsryJHLl1Wl567tX8jlIsN3Rf+WdjEpWli/SyyQctkaEsJ2YkGG4AOCo
+         /6DxCW/DYDhCqIckW0gS3nPhwJkUDhHG7TzMWxnG1n2ZMNJ6Zk4gq038GzC6lEl0fUnf
+         T3DFD10CjvJJHyHgWEeAcDK3XkTCcjJ3T+VjoiMYSQTqE81VsT8703Xj3KSWlIzhSqep
+         EPwLyaAzLLSvnv8cqpjATpYotf3Sc8vxvxP4qo27gz30fcnULVhLlIltuHrDlwv/GklM
+         iKKA==
+X-Gm-Message-State: AOJu0Ywtg1DwmKHvGFPxZ+PmpcYRmp1yMiMVn8oTKlpjRYkOZCaKwC4A
+	Pi+NWHfb6aAi0tSBdffqkRSrBH7VMv5ulNDMPdOIH803pVSPvIEOemjK
+X-Gm-Gg: AfdE7clJ7wsLaHziVfoieaUXNhUnSU9KfoMd47bp5JHeBdoN25A0/U3y/PS6FAWSrs5
+	OOZwp7IjSKKtpNmuupdx0AejwoFA+6hkJlslNgg2f33yxvyaGiM3alYveXJnLMlIzqVfsiWvF2K
+	afnazG0mEbWWRm0pQokHy9mOBtS69BRPlreIZ8ivyAyU+Ja7RIboYyFcNSBsgqAP6lAXI5YBX79
+	l0NR09EN8oh1IAe9cxKu2p3AU+K0GBO4BJm/8quDomtSL5f7j3cFffCGOd9b9oZLYff2TNnD9Pc
+	+JKtHba7P3n7ZUviHUH8okZpM+seuTnfCO9kKvA2iwgV2x7PxkCfBmUH+Iw4jAWngZV3PPX7sOF
+	yt5YBGhkOPfcC5/ABS/Eo40WaAr3t30rzxl4VXlNN5h4qwA+Wh7+gXAnhG9fYwC2gSYFf7hUGUG
+	mXrmMJFfZRbJwTYiZivKy/5n8ogReukRz+
+X-Received: by 2002:a05:6808:2227:b0:495:db8f:ded8 with SMTP id 5614622812f47-4a4d0346c90mr9145232b6e.9.1784559750787;
+        Mon, 20 Jul 2026 08:02:30 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:46::])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4a4d3aa81b4sm7518774b6e.5.2026.07.20.08.02.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 08:01:28 -0700 (PDT)
-Date: Mon, 20 Jul 2026 17:01:26 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Waiman Long <longman@redhat.com>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH-cgroup/for-7.3] selftests/cgroup: Fix minor defects in
- test_cpuset
-Message-ID: <al4tyJ2lRMj32Wpn@localhost.localdomain>
-References: <20260717191814.989215-1-longman@redhat.com>
+        Mon, 20 Jul 2026 08:02:28 -0700 (PDT)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: cgroups@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cuitao@kylinos.cn
+Subject: Re: [PATCH] cgroup/cpu: document cpu.stat nice_usec and core_sched.force_idle_usec
+Date: Mon, 20 Jul 2026 08:02:26 -0700
+Message-ID: <20260720150226.926730-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260718080100.2334415-1-cui.tao@linux.dev>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="fv4t7rj5joy2f4tw"
-Content-Disposition: inline
-In-Reply-To: <20260717191814.989215-1-longman@redhat.com>
+Content-Transfer-Encoding: 8bit
 
+> From: Tao Cui <cuitao@kylinos.cn>
+> 
+> cgroup_base_stat_cputime_show() unconditionally prints a fourth base
+> stat, nice_usec, in addition to usage_usec/user_usec/system_usec, and
+> also prints core_sched.force_idle_usec when CONFIG_SCHED_CORE is enabled.
+> Neither field is currently described in the cpu.stat section of
+> cgroup-v2.rst, which still states it "always reports the following three
+> stats".
+> 
+> nice_usec was added by commit aefa398d93d5 ("cgroup/rstat: Tracking
+> cgroup-level niced CPU time") and core_sched.force_idle_usec by commit
+> 1fcf54deb767 ("sched/core: add forced idle accounting for cgroups"); the
+> documentation was not updated in either case.
+> 
+> Update the cpu.stat description to list both fields and fix the count.
+> 
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 
---fv4t7rj5joy2f4tw
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH-cgroup/for-7.3] selftests/cgroup: Fix minor defects in
- test_cpuset
-MIME-Version: 1.0
+Hello Tao, thank you for the patch! I should have updated this when
+I added the nice stats. Thank you for finding this and updating it.
 
-On Fri, Jul 17, 2026 at 03:18:14PM -0400, Waiman Long <longman@redhat.com> =
-wrote:
-> With commit 98149f542530 ("selftests/cgroup: Add test for cpuset affinity
-> on controller disable"), sashiko [1] had report 3 different issues with
-> the new test_cpuset_affinity_on_controller_disable() test.
->=20
->  1) `cpu_set_equal` iterates over mask bytes instead of bits, ignoring
->     CPUs >=3D 8.
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 0df15a672cf3..778b759dd892 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1144,12 +1144,18 @@ will be referred to. All time durations are in microseconds.
+>  	A read-only flat-keyed file.
+>  	This file exists whether the controller is enabled or not.
+>  
+> -	It always reports the following three stats, which account for all the
+> +	It always reports the following four stats, which account for all the
+>  	processes in the cgroup (including those in descendant cgroups):
 
-Inline comment
+I have to ask, which tree is this based on? I can't seem to find a single
+tree that contains the "(including those in descendant cgroups)" section
+anywhere. 
 
->  2) Thread synchronization logic allows the main thread to read
->     uninitialized stack memory, causing test flakiness.
+>  	- usage_usec
+>  	- user_usec
+>  	- system_usec
+> +	- nice_usec
+> +
+> +	When core scheduling (CONFIG_SCHED_CORE) is enabled, an additional
+> +	stat is reported:
+> +
+> +	- core_sched.force_idle_usec
+>  
+>  	and the following five when the controller is enabled, which account for
+>  	only the processes under the fair-class scheduler:
+> -- 
+> 2.43.0
 
-Hm, I cannot see it (alhtough I don't see it through), what was the
-stack memory?
-(test_phase is static, then re-initalized)
-
->  3) Test fails instead of skipping gracefully on uniprocessor systems
->     or when CPU 1 is unavailable.
-
-Interesting catch.
-
->=20
-> Fix the reported issues by:
->  1) Iterates over the bit size of the mask.
->  2) Test the new ready flag for each thread to end the wait
->     on the condoitional variable and eliminate the now unneeded
->     AFFINITY_THREAD_A_READY and AFFINITY_THREADS_READY test phases.
-
-But the symmetric synchronization with counter is easier to reason
-about.
-
->  3) Return KSFT_SKIP on "cpuset.cpus" setting failure.
-
-It'd be better to have same style with test_cpuset_prs.sh, i.e. a guard
-at the beginning requesting a minimal number of CPUs. Next time...
-
-> @@ -251,7 +251,7 @@ static int cpu_set_equal(cpu_set_t *dst, unsigned lon=
-g mask)
->  	CPU_ZERO(&expected);
->  	assert(sizeof(mask) < CPU_SETSIZE);
-> =20
-> -	for (int cpu =3D 0; cpu < sizeof(mask); ++cpu)
-> +	for (int cpu =3D 0; cpu < sizeof(mask) * 8; ++cpu)
->  		if ((1UL << cpu) & mask)
->  			CPU_SET(cpu, &expected);
-
-Oh, that was my braino in how masks are stored.
-Thanks for correcting me!
-
-It should also extend the assert accordingly:
-  	assert(sizeof(mask) * 8 < CPU_SETSIZE);
-
-
-
-Michal
-
---fv4t7rj5joy2f4tw
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCal44QBsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AgYUQD/RwFDPT5dojDmOi5yECGJ
-IprD9iM22xQmyH+OoCnBNI8BAMIwfQVAJ5zs9gOhHp1zjsXnYdcyT9zILSDImEhL
-3EoH
-=xCZx
------END PGP SIGNATURE-----
-
---fv4t7rj5joy2f4tw--
+Otherwise, the change looks good. I just wanted to know what it was based
+on, in case I'm missing something. Thanks, have a great day!
+Joshua
