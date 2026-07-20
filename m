@@ -1,178 +1,128 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-wm2-f2.google.com (mail-wm2-f2.google.com [74.125.225.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19AD03DA7F3
-	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 10:42:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E431422E33
+	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 13:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784544150; cv=none; b=iv1VFrLMzpJGcOYdDi91f3OF1fHAFPOPXVJ7OEUPN4hI7C7AWl9sncriSaARbVPeMjfPHGJUT1HQKBdFz0LWm5YwVT24/bNkdlCFKW4S2ULbN9VVL3mzP45gnFAWguqnOx6dIO5XL7st0ztS45F1NztrWSZsBSA8jmJtEQQoLi0=
+	t=1784553394; cv=none; b=fdfLN0NNqihPl1iLWxBNtka31Vw/qUItTtwIuvyq7XWtvdA9pjk4eMO+z4WISayA46u8ZYbq8QXPieSQBYAHXfElsUUCay2tCPeCZtllh8tjls4sXhbPdHntl+LVnqyUM4JlHE+K2OCwzNK3FV6AKjazGPDo7d2mAze0G7Lv61E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784544150; c=relaxed/simple;
-	bh=6JPYsvz+kuqrxzxOte0jMvl3Z6TMqRpNZy7PzO7lDVg=;
+	s=arc-20240116; t=1784553394; c=relaxed/simple;
+	bh=vax+aFL0WSjB4okz2i0tD/egGJ5gksI/+/yOw6Xy4rk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lqp03957ldTI10wdhv2zcllCriaxRrdeUuV0V4dz+zVUkGBgMJOocgz2mweYz4h98btqo/DyWwpdUgjVfx3QdMgxA3Od+6ztlJqwVeiCvfKGOA/B4WkzCpZosCne5iECVq0fxefCxCb/eogUkDjDdYcxp0AdNuTibKKN5eYMHGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=jtQaI1T4; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=irzBSGxy; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=jtQaI1T4; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=irzBSGxy; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=Oz/F45xkxX+4y/d/WkaaN8nvh4ewMHrPIZp6+3ONS++lDJuja/5WvDUdRujmOUBj8XFJNkvemhcRPT2Wl46EExGDUvpSA8MEENWJw9i77YJzEW2+O8nv60s5VOOHg5H9swU6zLYOlGUJKXf0v072c6jap5Q1h8h2rp+MD6Nw7Vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=WQ8DjcgA; arc=none smtp.client-ip=74.125.225.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="jtQaI1T4";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="irzBSGxy";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="jtQaI1T4";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="irzBSGxy"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id F262379EDE;
-	Mon, 20 Jul 2026 10:42:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1784544144;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aqap3wdPva9/l6VNETK9i+qMdkB62Ft/1ZxEFof7ChI=;
-	b=jtQaI1T4n6R0UUo1+22JWN66cg+JsX33EFSvQxdLO+z/ukidOKrUlWsTFzLw9u5w/xmN7u
-	aSiw/Myip7rXPbbzRJqEzLCQBIVfCRaX2m2ngdrcNgchkQkb/O8G6UoE5xmLda+8131RL5
-	jjoEzaoaUb+60K2F4tE2sqoirMvlOuY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1784544144;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aqap3wdPva9/l6VNETK9i+qMdkB62Ft/1ZxEFof7ChI=;
-	b=irzBSGxyGWq64BLmlkqnrOdIxhHPNmLP4WuHGPapcQNxqfvwaxdiQ5tfj5WotMOvjC7wiK
-	O+2cBrYo+fGynHDw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=jtQaI1T4;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=irzBSGxy
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1784544144;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aqap3wdPva9/l6VNETK9i+qMdkB62Ft/1ZxEFof7ChI=;
-	b=jtQaI1T4n6R0UUo1+22JWN66cg+JsX33EFSvQxdLO+z/ukidOKrUlWsTFzLw9u5w/xmN7u
-	aSiw/Myip7rXPbbzRJqEzLCQBIVfCRaX2m2ngdrcNgchkQkb/O8G6UoE5xmLda+8131RL5
-	jjoEzaoaUb+60K2F4tE2sqoirMvlOuY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1784544144;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aqap3wdPva9/l6VNETK9i+qMdkB62Ft/1ZxEFof7ChI=;
-	b=irzBSGxyGWq64BLmlkqnrOdIxhHPNmLP4WuHGPapcQNxqfvwaxdiQ5tfj5WotMOvjC7wiK
-	O+2cBrYo+fGynHDw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C5CD7779AA;
-	Mon, 20 Jul 2026 10:42:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id qhMYMI/7XWpybAAAD6G6ig
-	(envelope-from <dsterba@suse.cz>); Mon, 20 Jul 2026 10:42:23 +0000
-Date: Mon, 20 Jul 2026 12:42:18 +0200
-From: David Sterba <dsterba@suse.cz>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
-	dgc@kernel.org, qi.zheng@linux.dev, baolin.wang@linux.alibaba.com,
-	brauner@kernel.org, cgroups@vger.kernel.org, clm@fb.com,
-	dsterba@suse.com, hannes@cmpxchg.org, hughd@google.com,
-	jack@suse.cz, linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, mhocko@kernel.org, muchun.song@linux.dev,
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	Al Viro <viro@zeniv.linux.org.uk>, kernel-team@meta.com
-Subject: Re: [PATCH v2] fs: push nr_cached_objects memcg gating into
- individual filesystems
-Message-ID: <20260720104218.GA10684@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <20260715103516.2410175-1-usama.arif@linux.dev>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="WQ8DjcgA"
+Received: by mail-wm2-f2.google.com with SMTP id 5b1f17b1804b1-49242309566so19881815e9.0
+        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 06:16:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1784553390; x=1785158190; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=vax+aFL0WSjB4okz2i0tD/egGJ5gksI/+/yOw6Xy4rk=;
+        b=WQ8DjcgAO72Yy/2lCYwIQ4z6f544jdFh+8rvtl6NJYVO4LfiBQUdvEjwH4ouDBC6BP
+         4NIa5TwQbj39zt9ddKGEWUzxUONrKHCifWcYuk50cND9lfcKbv+02UtBtrph0DPF9q03
+         wWElJ90a/VEQgUxTVYno1L5wiJpEkhUaZRv7wrBtj4Fpt6QiXjFqxvUr/LN6oiUMcwZZ
+         8MzoSsd8y3VaW7wEumErnTyjdQjraYWA8IYUyNkkvF4FRlhhD8BZUIWTtiyNbmOSNS+i
+         ly0evGo4Auci5In2htZQKXOVdtE4TO2BZAn4W3DfUhiOwxQ94yarHAkNFkjnmm81Elbx
+         22Fg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784553390; x=1785158190;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vax+aFL0WSjB4okz2i0tD/egGJ5gksI/+/yOw6Xy4rk=;
+        b=sboHlFERA4Mt6wfvwy0CNqf1cUjDpSBqmtBQ7LunyomjdcqujjhN5hOkkBp/0wSudR
+         fajTDwuTRd6djND37C0KeNL34ra1lshRh8er2jYqKfdn1g7t9y8VxhPaVHi9lVAvmXSG
+         CGRXsukcAbJlsVPJT26I/K8/lqPFFr5XVpeKsgdbE7a4yMt+V4Jmd6sVbRZ1RR5Xg2js
+         zdsxEJJw8JQvNF9XoOagyqQs3fTZGp911ibpGdVNuj+StE/KDWysVygWENwvXt1zpM5X
+         j8FtIxcCBi6hC9O0SVVJHfxDIay1Fl/LELCAkAS8a217mim7GhQ+WqW8QI/X7zdUYSTI
+         gVvA==
+X-Forwarded-Encrypted: i=1; AHgh+Rr8ENs/xUQx7Fzk3c/wYe+1gXA3NcJ1LYjzo+IFu24AupYJT39l1j7Tbve47l+7VWOHX9pBadvt@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywqb/DjXKa6n23aySKGBX7hGSaVMHhvjoPZBMvRUns5yPmzeGAY
+	/xEcEPeKTqRD5lIRIfF3WGYBMtlOEUDCWO8F+o7aRVElC2cKN6ay2H5urBuadUg0B3A=
+X-Gm-Gg: AfdE7cm8BI0D1NIsXgJfI1yq26WLbOx1Q/mZCf7R2Nrv/jCqXantLDRZb/HjcHhVyI3
+	kTLQ6AyW+nx2zSOovG95EzHXSKTsko0QFARp2sgOsnzg+l/+BKYUdIWuFhtELXmb9cINXW0S/6s
+	Lwli44+oHfREbkcQpwSswbr5tj161P9jFr6ROBUf+FsS3DH3HGcAhY/ylj43zHm03PuR6N2atpX
+	bEIuYiV8mj1kUXoUGI0cIoRXOR4ntHfS0SXfLEFtOMCKh4CPaitbgTyqLlatBQZ2htTxQcgr6GT
+	rbE91Vhvhyw9iY23t52FmRgs/4Qkhs5C5tRmPAEMpfuSD8jTkq+f1CbZWOTachsBB9XLitDmKf/
+	dq/35b9eUopUDF1z0uwWdF2udMiQ3A60p6tceapudiXXe/PO/sFV+Ma1BzSkE30yFWuZBhCzd/7
+	Uus9Dx7g==
+X-Received: by 2002:a05:600c:3ba5:b0:495:4b42:8677 with SMTP id 5b1f17b1804b1-4954b42873emr163787355e9.18.1784553390578;
+        Mon, 20 Jul 2026 06:16:30 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49564011868sm11989295e9.3.2026.07.20.06.16.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jul 2026 06:16:30 -0700 (PDT)
+Date: Mon, 20 Jul 2026 15:16:28 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Shaojie Sun <sunshaojie@kylinos.cn>
+Cc: tj@kernel.org, cgroups@vger.kernel.org, corbet@lwn.net, 
+	cui.tao@linux.dev, hannes@cmpxchg.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, skhan@linuxfoundation.org
+Subject: Re: PING [PATCH v3] cgroup/cpu: document cpu.stat.local and clarify
+ cpu.stat behavior
+Message-ID: <al4fAmim8rdPCKlB@localhost.localdomain>
+References: <20260629060636.200118-1-sunshaojie@kylinos.cn>
+ <20260720100941.230825-1-sunshaojie@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ybx5ijmegvcly32d"
 Content-Disposition: inline
-In-Reply-To: <20260715103516.2410175-1-usama.arif@linux.dev>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
-X-Spam-Flag: NO
-X-Rspamd-Action: no action
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.21 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	HAS_REPLYTO(0.30)[dsterba@suse.cz];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[23];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	REPLYTO_ADDR_EQ_FROM(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DWL_DNSWL_BLOCKED(0.00)[suse.cz:dkim];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,twin.jikos.cz:mid,suse.cz:email,suse.cz:dkim,suse.cz:replyto,linux.dev:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: F262379EDE
-X-Spam-Score: -4.21
+In-Reply-To: <20260720100941.230825-1-sunshaojie@kylinos.cn>
 
-On Wed, Jul 15, 2026 at 03:35:16AM -0700, Usama Arif wrote:
-> Commit 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects
-> in memcg slab shrink") added a check in fs/super.c that skipped every
-> ->nr_cached_objects() hook whenever the shrinker was invoked for a
-> non-root memcg, on the assumption that none of them honour sc->memcg.
-> 
-> That assumption is wrong for XFS, whose inode-reclaim hook is
-> intentionally driven from per-memcg contexts to free memcg-charged
-> slab. Encoding a blanket "never memcg-aware" policy in fs/super.c
-> short-circuits that path.
-> 
-> Push the check down into the callbacks whose counters really are
-> irrelevant to per-memcg reclaim - btrfs_nr_cached_objects() and
-> shmem_unused_huge_count() - and drop the fs/super.c gate. Each
-> filesystem can now lift the restriction independently if its counter
-> later grows memcg awareness, without touching fs/super.c.
-> 
-> Introduce mem_cgroup_shrink_is_root() in <linux/memcontrol.h> so the
-> callbacks don't open-code "sc->memcg is NULL or root".
-> 
-> Fixes: 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects in memcg slab shrink")
-> Acked-by: Qi Zheng <qi.zheng@linux.dev>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Reviewed-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Signed-off-by: Usama Arif <usama.arif@linux.dev>
-> ---
-> v1 -> v2:
-> - Do not gate xfs_fs_nr_cached_objects(); XFS's inode reclaim is
->   intentionally driven from per-memcg contexts to free memcg-charged
->   slab (Dave Chinner).
-> - Add mem_cgroup_shrink_is_root() helper in <linux/memcontrol.h> so the
->   filesystem callbacks don't open-code "sc->memcg is NULL or root".
->   (Dave Chinner)
-> - Add fixes tag (Dave Chinner)
-> ---
 
-For
+--ybx5ijmegvcly32d
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: PING [PATCH v3] cgroup/cpu: document cpu.stat.local and clarify
+ cpu.stat behavior
+MIME-Version: 1.0
 
->  fs/btrfs/super.c           | 10 ++++++++++
+Hi.
 
-Acked-by: David Sterba <dsterba@suse.com>
+On Mon, Jul 20, 2026 at 06:09:41PM +0800, Shaojie Sun <sunshaojie@kylinos.c=
+n> wrote:
+> Just a gentle ping on this documentation patch. It received an
+> Acked-by from Michal about three weeks ago. Any chance this could be
+> picked up for the next merge window, or is there anything else needed
+> from my side?
+>=20
+> The commit in linux-next is: 171569f8ee6724a4113a0100fea6ff83d9b70c6a
 
-Thanks.
+That's how linux-next works [1]:
+
+| The linux-next tree is, by design, a snapshot of what the mainline is
+| expected to look like after the next merge window closes.
+
+So that patch is currently heading for-7.3.
+
+HTH,
+Michal
+
+[1] https://www.kernel.org/doc/html/latest/process/2.Process.html#next-trees
+
+--ybx5ijmegvcly32d
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCal4fpxsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ag+OQEA7QVOo55uPncb1q3RxLA6
+eZ0HKmyB8oJPcD/lvV3W6k8BAOZtkzovQVeFXHW5v1X+aKubte1+Wyok4BcrQUdH
+M70G
+=Rl3J
+-----END PGP SIGNATURE-----
+
+--ybx5ijmegvcly32d--
