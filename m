@@ -1,122 +1,107 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-ot1-f53.google.com (mail-ot1-f53.google.com [209.85.210.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5A1D306743
-	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 15:26:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 697163126BC
+	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 15:27:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784561212; cv=none; b=EjL3SbiXqsL/ptJjypDFzPF2Ysu2mZH0JgNXdSuITSLllQc2+3LvJ6OsA+7S9FW7a4sCzFVZUiqZgj3XyXdi0wByruJfnyG2CA6FR4iXQBmo1ahDCgQ2JLOSIKCmuks9J/Hb8bybeO7AWQrafTv674567+1mJMZQPjISjdhIpM0=
+	t=1784561267; cv=none; b=sgXTkNd0UUBEeHP8FU229rbDqg1J8k8EwNPBbwqAZEniJfArdvLzKd4zV0APiKG+6ACr0nplLQU2/d3SjG6qEeHtZwND1f7S95w5IPdSy/T+1iGtnWY0AG1vI6puHIujCuOc5GKWBCm/sXYoEdeVNHhrTcs1DchBwz5gsDvoXLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784561212; c=relaxed/simple;
-	bh=ghK5za8aF1N6pu59Foh6V9T8x31sHIYSxEvCSet479c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EFOKILs2Tjfn+zQ4akaV90t5hyGk5nnfFFvb1GQbdF2GYIBjY5lbYmKmwGic2fC+gbaBChEsgRAIvczh0hlkriSqj4Oa1geODGbd7bjzpwoIwvHPSODezHMeeQrbYa+MJIJmc/ZXItrBDzwJb3hsVV4PcJUQi3OuP3+BFHvFFqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EODW0rM2; arc=none smtp.client-ip=209.85.128.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1784561267; c=relaxed/simple;
+	bh=jYD4X/IrsAEK+5o07FPNmQBo3eSfFnC1skMmyy2L3Kc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=swcfXtFqQWHfA3KlKrTOYgr5alew88Hbry0CEx7Bn7itY46OsxlGCoxAWe1m6y0P1/wUDdpfcZOm/05zSnSXPLetkihxEjLhPiO+cB1QSdgw/8CQBzzrNNCqji5xrL/J1R48feVzJkxZZWqBTFfhnOR8hJ0OE9UYx5y3K684ryQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=j8K5AavC; arc=none smtp.client-ip=209.85.210.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EODW0rM2"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4954afac04bso27573685e9.0
-        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 08:26:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j8K5AavC"
+Received: by mail-ot1-f53.google.com with SMTP id 46e09a7af769-7eb64371a2aso4237266a34.0
+        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 08:27:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1784561209; x=1785166009; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ghK5za8aF1N6pu59Foh6V9T8x31sHIYSxEvCSet479c=;
-        b=EODW0rM2HPV5v5jXus1d7KAZ9mo1j9TPtlIBiFreQgiElZjXszktq0p8r01pOxTADF
-         9cOtOrjCoKSFFDvpX8/HHtu3BCLRxlHKe+uKE5ZKg5J4nPOxZXRYL1If6O4FlfZMSug0
-         ftcJpm8AtbFt7FzxhQBY8+r/nEfcOMfuplJSnlCzkOOySkR1xTVqt0QwLIfoHqmjWveo
-         nziJmkQLDps+s3dK10Na80TWebbQLimIPSIlBe/ljLucc6yj7vjBpLar39UeIplHugzf
-         tk99l79OsRdIkxTA34txdLq/ipFyivs42MmbBiBAxToyPMm4fQ+q8bCyXB722ie8z7qH
-         OV5w==
+        d=gmail.com; s=20251104; t=1784561265; x=1785166065; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aJk23rYw9MlC3iHPJIfHt0WgssN79WwPx4RPlijn9kg=;
+        b=j8K5AavC6I44diIfapvexdoHkP4f/22kWNLAMc8yyyIfzfuG9t0q6G0KanA8ARxazx
+         NLjGsjbar8Z31z8lSRMdULpUmr8b3zJPxauHKWpTmvSv2SAt9AGMhSh9Ylc3jlL6jGyf
+         7oPuu35n0F3IETkWlzDIa6waFvFqgLP3d7o9sD9bhaO+OhwOgzlRcXKI5Zj3Ydzw7fwZ
+         uAI7sS0/AwfY1N7QeYJYw5f8YhUHkEHDNt+uQGrJ8YftyfXwnYoGOU9qL96tKsXLQTCy
+         2h3hYTwNhYu8rgtJrBVT4Ba8Wvaj5hYCpFpg5coNIMDCoIqtS9KuhsLoVdFmPrjzOGRH
+         FsZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784561209; x=1785166009;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ghK5za8aF1N6pu59Foh6V9T8x31sHIYSxEvCSet479c=;
-        b=Ji0gb9bLqeNPFM6otcXw2EnNi8sUgs5z9iobL5UBXtZOf6eaxrtw0i9oz8FexNXdOf
-         MtXsgpL48oDWD3TP/IpzfUGAsOctPkYrVbT3QenhRLZLJBPByXKiLtiOQzPQxhqZwQIw
-         9pvVNj0hX0bVOdwCJn9FyivgetShmefHD0Z8t6bNkdgKBv3olJ4PB31XBxFuY/50LrHo
-         Ktcf+EW6D0iW13WTBwoxr3fAINbpLRP8yNo7qMW19CpgJM4dEIND6zXb90zdkcvKWVrF
-         nhECUo5ohAYVccjwrk5MIUVFh9mkIMXdm/gEyPIQPclqRln6EEVdzkHv/DSzyLd+IMnN
-         pHfQ==
-X-Gm-Message-State: AOJu0Yz6Wvqkt0IbGYmAFF2YHLbi6EedG/Zg2SLMiRyfKDX/rtdq27Np
-	wP5k5BZGlhGJUbv1R5EDK/x3zX/z26K/Z/jiXM8ThAUVuqmUXi9dQhj3fhSn1NFGxS4=
-X-Gm-Gg: AfdE7ckLJIPtZ4MJeT/9ORUjIrI8fpcrZkWemCdv4raPk/dIIh/yva+PQSzmiDgwBNV
-	YPJ8eK5SrfgyKxGSKGrhsiDH+0hYW4KCzD8+9NGVBfLpsQhRKt0i/14Chdab6dQ4jfPuAZYt4kV
-	epT1DnUUFMVL25qq/ynaDO578I3cM1eYYSZ65qFC2RBcxctTm0zjp5qN2hxOWlPk1LbCGj5WevS
-	pU7V3k/6HnKB6zacjUC1ypa9ljCLdwRK1/Yd3PzR8riP7lqeqPavXXKMCRFjalJREWrtYovNyst
-	HbfIPC+ih432HT9v2qbrAUAvowJ9gHjiOJoVCwAQwHWdNYh6KEm595DoFiGN/Soyq38nXZEcinW
-	h4aOAjqlDoa2a2YkKr8W1MQNRTJIyc2SUczJR82PfXm1jxkCdJYWJm30c1nOYMDIt2XJDSKHBhQ
-	m+KX/4sg==
-X-Received: by 2002:a05:600c:3512:b0:495:4572:21af with SMTP id 5b1f17b1804b1-4954a3ef7dbmr155802875e9.9.1784561209104;
-        Mon, 20 Jul 2026 08:26:49 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4955de88951sm77982265e9.3.2026.07.20.08.26.48
+        d=1e100.net; s=20251104; t=1784561265; x=1785166065;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aJk23rYw9MlC3iHPJIfHt0WgssN79WwPx4RPlijn9kg=;
+        b=G/YTob9Eq/ZrmKpOtuXlkKnLbfoJWIrQUHFmLZdJQgyf/9VAGzPNcva3wCI0AelvnH
+         HL5bPmkbS5KwZFYLPU1EN4ZiR847DVwcV0uyjTgwFX6bhY6sH/zDIS+9Ua0Q51HOGKIr
+         movcZF6SlqRiNES5ccLsqV80XryrwyZwF8uezhcFfeiVMvedPMJVGz9SS7guakgs/5DH
+         DoW1srStsWR105dwVVxBnMo4KvdLDxwmxhnnOValLBzoolbaCL8vgJDFZE5VVdOA9WAW
+         nV+mmIG+C5/myRPuvx0bv8L30h4VI6Y5KFVrkaVXuoPMvGNEGzejbem1O1vUiU7ehbwG
+         BA/A==
+X-Forwarded-Encrypted: i=1; AHgh+RqZbRZ7fXtOWsd8eokGZolSwB+v7mxkm3yJz3uCkQrESgq5kQLiSEeobnMI/6VKMN0xlUlwH7Dd@vger.kernel.org
+X-Gm-Message-State: AOJu0YzXGGt9oTSA0JfW62iqT53YF4hDZ91Qw8WYEb2bJRSd6eoZh3l7
+	9ecKjIf9EjyGaBC8/8S4tXeWFvMdirpIrKheWmoQ+vbSpt8cpJngTQRQ
+X-Gm-Gg: AfdE7clZPFE+l/jy9Zt23CYuV36YcIi9ZHzgBPt+hJJ832c2DKOb22Q4VK61kYHtgKk
+	RYKRE5Lgu37Ml6rwr2BfG2NYkcFqHiYh0jLdDXBpZsINOGn87ulOrWgkb7bt/DMPk/c9juDTL1b
+	dqfVuPmWjDAyYikF9GdiB7kHNe+528IOjNu/QkA9rMpNgxC+cPKfZmCPFXNP7EwP29eeb4lNoPn
+	xiYxulpS4EBp54jk60iv2CL3OPMmWq9yrgcsDdaCNlVnZuWAnbDZ5Z8nnDXYTClJyF4mO1J5LqQ
+	sQi1Qt4yPZmaXHMZAbI+v3FK+zlxY6CQ+O86Sp92A+dYdVvgsnCIlXlYq0W7O7ozaDukF0L1lTG
+	znx9cn3c3yBsClk7/Vz2SAhPvt8DmLLfsBgR4h3pstpIz6G5O2joLVZHZ3Ua5etzWaycOxOB8uG
+	Z6735iDpz4VnhceA0tnVz+rBRrGZntoGL7
+X-Received: by 2002:a05:6808:180a:b0:495:f79d:8bd0 with SMTP id 5614622812f47-4a4d052058fmr8052656b6e.25.1784561265039;
+        Mon, 20 Jul 2026 08:27:45 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:73::])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4a4d3aade16sm7517236b6e.7.2026.07.20.08.27.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 08:26:48 -0700 (PDT)
-Date: Mon, 20 Jul 2026 17:26:46 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, cuitao@kylinos.cn
-Subject: Re: [PATCH] cgroup/cpu: document cpu.stat nice_usec and
- core_sched.force_idle_usec
-Message-ID: <al46ipavC-KCaoHv@localhost.localdomain>
-References: <20260718080100.2334415-1-cui.tao@linux.dev>
+        Mon, 20 Jul 2026 08:27:42 -0700 (PDT)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Tao Cui <cui.tao@linux.dev>,
+	cgroups@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cuitao@kylinos.cn
+Subject: Re: [PATCH] cgroup/cpu: document cpu.stat nice_usec and core_sched.force_idle_usec
+Date: Mon, 20 Jul 2026 08:27:40 -0700
+Message-ID: <20260720152741.1226695-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <al45RUAYKgGt5IYS@localhost.localdomain>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="w2bwicfq2kh5elpa"
-Content-Disposition: inline
-In-Reply-To: <20260718080100.2334415-1-cui.tao@linux.dev>
+Content-Transfer-Encoding: 8bit
 
+> On Mon, Jul 20, 2026 at 08:02:26AM -0700, Joshua Hahn <joshua.hahnjy@gmail.com> wrote:
+> > I have to ask, which tree is this based on? I can't seem to find a single
+> > tree that contains the "(including those in descendant cgroups)" section
+> > anywhere. 
+> 
+> It is most likely linux-next which contains a nearby modification from
+> [1] (or it was based on that regardless).
 
---w2bwicfq2kh5elpa
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH] cgroup/cpu: document cpu.stat nice_usec and
- core_sched.force_idle_usec
-MIME-Version: 1.0
+Hello Michal,
 
-On Sat, Jul 18, 2026 at 04:01:00PM +0800, Tao Cui <cui.tao@linux.dev> wrote:
-> From: Tao Cui <cuitao@kylinos.cn>
->=20
-> cgroup_base_stat_cputime_show() unconditionally prints a fourth base
-> stat, nice_usec, in addition to usage_usec/user_usec/system_usec, and
-> also prints core_sched.force_idle_usec when CONFIG_SCHED_CORE is enabled.
-> Neither field is currently described in the cpu.stat section of
-> cgroup-v2.rst, which still states it "always reports the following three
-> stats".
+Thank you, I must have missed linux-next in my searching... that makes
+a lot of sense! With that, Tao, please feel free to add my review tag:
 
-Just to better sense popularity of the fields -- have you found this out
-by:
-a) reading cpu.stat and being confused about semantics of the fields or
-b) scanning files/code vs docs looking for discrepancies?
+Reviewed-by: Joshua Hahn <joshua.hahnjy@gmail.com>
 
-Thanks,
-Michal
+Thanks, have a great day!
+Joshua
 
---w2bwicfq2kh5elpa
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCal4+MhsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ag3vwD9E1MC8njfG/ALqSIl0+J+
-vDpXYoCVjiKaSM/c4p3+facBAM1HnJky1cQzDzCmTg5mmKUbPFXANmVUH42v2ac9
-Y7MA
-=/WHZ
------END PGP SIGNATURE-----
-
---w2bwicfq2kh5elpa--
+> HTH,
+> Michal
+> 
+> [1] https://lore.kernel.org/lkml/20260629060636.200118-1-sunshaojie@kylinos.cn/
