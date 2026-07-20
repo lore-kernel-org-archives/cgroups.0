@@ -1,63 +1,63 @@
-Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B0D84A3412
-	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 19:35:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C753F4C6EF6
+	for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 19:35:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784576149; cv=none; b=qcI0yU99oSoZQqCn4Yx2ycnY40Q/vXtHzcgN3P/6qTTVhytjJ7daRtp7hh3OtDf1cIfomjVCkE3Pf85fvk0dxkqp7JTS06uwxg56Vb9ZyA2ySr8WoJj8Q5lxvuX5YbbQlMsEQdj+Z9YmkReLsIrIDq70cHj39G+O4lPYdySntJQ=
+	t=1784576151; cv=none; b=cXh8M+Z/a4ar5lI4OhkdbYQHdJBX5cxInHCVOEzf3ZLeU5AF7QoUNaMC4IDODfzBK98yBb/eCqipFo3fBsWszQyELDlqqUKi3dRErkKI+5LHlEbUQFw4Jrrjcn4cZkZBzAQH7gJqnRXFUbaZCKAx0O8kL92sL9ExBQ2kTPdAhEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784576149; c=relaxed/simple;
-	bh=yY8vdYfrcyLR9od9JeL4axrrxakrg2eLNX+2tZcvV5k=;
+	s=arc-20240116; t=1784576151; c=relaxed/simple;
+	bh=MF6HK8y8ZqLlSe/JUbwAjJuiKDLQb3nicgnVHHp//rk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=s7N2OXsHb/ZDvhfAPudx6R+CmjD4b9ef2O/m7oKpi1Ju2UQhnR+9eq+XzwVQ1iITnMllbKYT980IDemWfj9AnT+r/apo58Vj1d3HNpfAkrkT94BHEoO1Z0P9eRzq8GtiWJeHTFkB3UfFLEIqSdNcVC11rbZVS+iTQXjOtCWgiLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=cOdRJ92H; arc=none smtp.client-ip=209.85.222.169
+	 MIME-Version; b=ZFP0uyYwHSsx+9GJXJLCBmvUyv9a734+0D+46qdmaCrRWsr1aaBNWBhqReJ+7fGcujkTZYtrB+dApPv32qoLmg4qJ8EFDmGUoylE01yQp9NoPUpoa+D+ZX2uJSumG8MYSmuGIEeN/joDeQk+qEhVn+g+p0T+GTQUlJ880m9HHNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=Hwwba5+j; arc=none smtp.client-ip=209.85.222.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="cOdRJ92H"
-Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-92e50c5d14cso756414385a.2
-        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 12:35:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="Hwwba5+j"
+Received: by mail-qk1-f176.google.com with SMTP id af79cd13be357-92e6a434cabso541515285a.1
+        for <cgroups@vger.kernel.org>; Mon, 20 Jul 2026 12:35:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1784576141; x=1785180941; darn=vger.kernel.org;
+        d=gourry.net; s=google; t=1784576146; x=1785180946; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=QJBiGb0Mu/jlRkqoocYqUCBCgZwlU5de7y2L/NJU7rM=;
-        b=cOdRJ92HTJskBKi80yrroaw3+ol6Jwx0pfReBp5GlmnSgYRVyCxC9Co/9lXswJxI78
-         uqMoXKDXH4RCCdOhEEdxA4aZmMwpRb4mosMLeQO5QHlJ6f0uuLDvqCm1zJPgaBVgxssp
-         gEGJJjH4ImYbFKX0zhoUJh6O1o7OlAWZdqPmfugRAT4oW/z/UKd7CokYDMnVsmHjy4Zw
-         xGbhWtaFF+4huNZ6s29rbJwxjOYrMSX5vhUiXiEALklZsge8nNJ7wD9H+2huLqFJ1ydZ
-         aQnnFXjmfw5eOdOdS0g8LeGF9KQ4aeW+cibetXz/4l49RPlHBG+9Hr7mWOFIhwcYof9k
-         ZJNQ==
+        bh=QHpzVxGbRu/ZqTXED4yNVWfOYMqPg+CutdBll3xnb/c=;
+        b=Hwwba5+jWCjAx5Oh95CrvTY4+p+PyrmxHGh6Fz2buFznHvFQOxm6htQL+IdFYPxjU1
+         Y6NIncf5QH2UByqSVu7gOshOut/vqrEQaOeQhd8bnsF4mG4pp/9Nx4zhsC72c6fvbdOn
+         oFdTxC8FF45edcVAnoYlBNStRkwPHhvGgFUsocatptWmrQflPj2rLsL6S0mdWqSD5Z1q
+         lmQIxfX50a1YaNQpgaOGJRh9vbNatKLcuxKujx6XhlljeioUzSeU5oFM23KF1n3OkSue
+         lOGgYiNmAnEf4T6mdeaPJbTbTBEGCeseaDncekLpvWVOGDq59nKU0ZeBe/RsFnDWThMZ
+         U6wg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784576141; x=1785180941;
+        d=1e100.net; s=20251104; t=1784576146; x=1785180946;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=QJBiGb0Mu/jlRkqoocYqUCBCgZwlU5de7y2L/NJU7rM=;
-        b=lJimBBYv/qQf7QXSAzVYu3m/Yyy82XT/yHEPzhQfmDBdKb9hCT0G3mN6bzwYRihtIh
-         8lXVhkWUOHo6RjCY4u+ETabk++Ab641AbIYnCVTBh42U2zobqyI66gRCmIQo5Yrnn0G7
-         Dbx4jn8mqS7sKHrwomWLmncVUJandnNKv8F9Lk9B/423EOShNFBBasNVeJXgRY0aiy7J
-         tW9ZwDM8oU3Xdxl+qwYFO9sSziDPTcjW44LmHrCpQFQ6KUJhFl5olc3rGxJLa9VIc6dX
-         gmN6WD+voAvO3Jyt5cWbXOSlDxmsiy2CboVtQ/OKb4erFNPDSTWY1IU6ROyL+NCP4WPC
-         SbkQ==
-X-Forwarded-Encrypted: i=1; AHgh+RprfvoMbPKOFzBib6SNfWbjY9XCCXrctln5Q7Cs87JXCeefWeUThNJIDQYkGQCQtWzpklncSTfp@vger.kernel.org
-X-Gm-Message-State: AOJu0YxAvdqe5IZY4loiYVhAhAjf+1kxq7t9f7DhW0GqfxhFEanwBxmc
-	frUjCFRnzeLZbO1hFiiOO+8wmUaw/dbfGluvxg6dkBfwxGm/Y0zVNWVrAbPaqf8Ra78=
-X-Gm-Gg: AfdE7ckH9pymAi8yXF94cKAtHb55gU/AGf+scHEucHVj7Wr5JL6PR3dgP/wlh+MC/e6
-	MxKV1Cf7+mn/Yeb/VVi9PrfP1F/u5kWzQ831pK/oQXEYnuV2MezHwScTUzxWL2oyDGFeP5+Axa0
-	29BwZ1BCK093a4yAnw44ixROiA8LRejglOg8KyYqcWA6/f5RS++iC5dld7Ofp323phNyCEPP8pj
-	bPYr8NQ5XppyAIYCyukIlxCX/nDzlJDADj2vIf1/aUWcNPRAhaS+j4zBUtobnZJq4rJrCGdPTph
-	OmVdJrdIo78Jzmd1MIyple9Y6IwH/+KfBc+ajK30xfYKrvkLJ3FQFP79cSgVOG8FZ8kxJitUHsF
-	CksITuZY8ZpH3owp/yAh5rtS6o3PvQySwO9v/n3IizBn2G6sRXBKDta+Ife/fYb6gG+VUqa6oi5
-	+syvwe1ixuoNj9mPy1Qr7To5Wl7Hv90cEJieYB552PIayh+jfx8o7Nhjtz0/goHJw=
-X-Received: by 2002:a05:620a:370d:b0:930:ab28:945c with SMTP id af79cd13be357-930b41df2e2mr1633607185a.50.1784576140803;
-        Mon, 20 Jul 2026 12:35:40 -0700 (PDT)
+        bh=QHpzVxGbRu/ZqTXED4yNVWfOYMqPg+CutdBll3xnb/c=;
+        b=rSZ6n77tpQp7pinHx5ZtejLfGxLiWjFyv93vwZplxE//TsVFXtDOy40zPnYWV78q/y
+         zs2OK6K+oCaDVrORnde/g82cdp3b/pqp/nT17DxRbnVZxIdSDjRclpIp/dc9bYBjVbm3
+         md0QqXpU3JMFzKU1m/vgDc2a5+NyzUswMoLpJ0lsecdj/zsrq7xhhitn+6tmedj2zTBe
+         9p5KC++nIA065U9QoT1nDZrTLiLKcZPJpF98MBosW3v9M8JzLjt5QpjdfTUim6MwhENd
+         varYZ5rQIMX4MbDmV2NPspToNjuNkt4pnQtrDWLqJXMI6grbWg3CVNIWfQx9JJ1CBB9g
+         IzOA==
+X-Forwarded-Encrypted: i=1; AHgh+RryFmNkOcP5SU6fU7OWTJl0aL3s2LW3iQh93eLz7IvBdFpEANWad7Qp85GLmzsUKECSQYjlCbSN@vger.kernel.org
+X-Gm-Message-State: AOJu0YwdMowmWfr61wgX7gxV0IrN4+To7QkVd8LHQBUVoEz8uppO3IO0
+	/3LFVJ3ZB9OS0hWz8CBCicadOGSn0loG/4Uqfmp3HCQddSVTJWlufUzaHsvrtRSqJaM=
+X-Gm-Gg: AfdE7cl3YAgGwVbVIo/IjSD6V1+mNu4U7NSul1CtO+KcZcVk0EZxNrBBOPwEAN4B0+J
+	/9m5/Ny/+2U0p1CVvBlbIN564GQk5g3dVAbSgvbjThaNBs5xfWuv8GFaDEs2h48fkcpDTU3hIWP
+	qbqn4zctOM1LXHoVT9pv+Yv/9IO8Fl+zQjnKiUSYSIkxIlJLTkLkkADr2FPQbizPWl/psxC0v26
+	LXSaTElpI8PnmRjL89FvYy7xfC5voL7JyygAMlRAs+CHejP3j5H4GYbaJr+NsTFklOn+dO+kLgr
+	xPR+5mtQgOpR1TWT09Oz6jQb5L5XnPnGN+bh/ptCQCxSz822jz2rObGpE9Hl7q+PfD9WyQ5bbj2
+	gBKhgC4Dr8+n1irNoYNZpk1Z353YkayiQh6BiNeXhkUK2ldNNXitbrOwfYO/zUVauO0Qnu3Eavr
+	f0vVKJzto5H95hRr7c00kTBmgJ7FRsRNBjmTajYQ7Ez7B5uiO+p4SOOqIE7QzXS6A=
+X-Received: by 2002:a05:620a:27d5:b0:92e:5fe2:fd35 with SMTP id af79cd13be357-930b3f374aamr1435001285a.32.1784576146223;
+        Mon, 20 Jul 2026 12:35:46 -0700 (PDT)
 Received: from gourry-fedora-PF4VCD3F.lan (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-930b545e47bsm957792285a.35.2026.07.20.12.35.39
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-930b545e47bsm957792285a.35.2026.07.20.12.35.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 12:35:40 -0700 (PDT)
+        Mon, 20 Jul 2026 12:35:45 -0700 (PDT)
 From: Gregory Price <gourry@gourry.net>
 To: linux-mm@kvack.org
 Cc: Zhigang.Luo@amd.com,
@@ -137,9 +137,9 @@ Cc: Zhigang.Luo@amd.com,
 	damon@lists.linux.dev,
 	linux-kselftest@vger.kernel.org,
 	kernel-team@meta.com
-Subject: [PATCH v5 24/36] mm/mempolicy: add in-kernel MPOL_BIND interfaces for drivers/services
-Date: Mon, 20 Jul 2026 15:34:18 -0400
-Message-ID: <20260720193431.3841992-25-gourry@gourry.net>
+Subject: [PATCH v5 26/36] mm: add NODE_PRIVATE_CAP_RECLAIM for opted-in private node reclaim
+Date: Mon, 20 Jul 2026 15:34:20 -0400
+Message-ID: <20260720193431.3841992-27-gourry@gourry.net>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260720193431.3841992-1-gourry@gourry.net>
 References: <20260720193431.3841992-1-gourry@gourry.net>
@@ -151,200 +151,399 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add and export interfaces to enable modules to build a mempolicy with
-(MPOL_BIND | MPOL_F_PRIVATE) pinned to a private NUMA node, so the
-drivers can stamp it onto VMAs they control (via vma->vm_policy).
+Provide a mechanism to opt private nodes into the reclaim process.
 
-  mpol_bind_node()    - acts the same as a userland mbind()
-  mpol_private_bind() - bypasses the CAP_USER_NUMA check.
+Reclaim as a "singular service" is actually made up of:
 
-Export it to modules (private:kmem, bind:kvm).
+   - kswapd reclaim
+   - direct reclaim
+   - kcompactd compaction
+   - direct compaction
+   - both mglru / lru paths
+   - madvise reclaim hints
+   - damon reclaim operations
 
-Widen __mpol_put()'s module export to kmem so the driver can
-release the policy.
+CAP_RECLAIM gates whether the kernel may do inter-node placement
+(compaction) or swap for the folios on that private node.
 
-Adjust mpol_set_nodemask to check for a pre-set MPOL_F_PRIVATE flag
-to allow the mpol_private_bind() check to bypass the N_MEMORY filter.
+node_allows_reclaim() encapsulates the policy as a whole.  Ordinary
+nodes are always reclaimable, private nodes only when opted in.
+
+With the exception of madvise and DAMON, reclaim operations are
+highly integrated with one another, so they are opted in/out of
+together - otherwise reclaim becomes unpredictable.
+
+To prevent bisect debugging failures, this stays in a single commit.
+
+For example: reclaim without compaction will OOM on high-order
+allocation failure despite a large amount of free memory. Normally
+compaction would (potentially) resolve this issue.
+
+If a private node opts into reclaim, we create normal watermarks for
+that node - otherwise pgdat_balanced() is always true and reclaim
+thinks there is no work to do.
+
+Cross-node operations (demotion, promotion, khugepaged) are NOT
+included in CAP_RECLAIM because some workflows may desire different
+behaviors for this kind of operation:
+
+   - prefer direct-to-swap, do not demote
+   - remain resident and OOM
+   - __GFP_THISNODE: fail and let the driver augment reclaim
+
+Normal swap-out is allowed because there are clear userland controls
+(not registering swap, cgroup.swap, etc) to control that per-workload.
 
 Signed-off-by: Gregory Price <gourry@gourry.net>
 ---
- include/linux/mempolicy.h |  14 ++++++
- mm/mempolicy.c            | 102 +++++++++++++++++++++++++++++++++++++-
- 2 files changed, 114 insertions(+), 2 deletions(-)
+ include/linux/node_private.h | 33 +++++++++++++++++++++++++
+ mm/compaction.c              |  9 ++++---
+ mm/damon/paddr.c             |  4 +--
+ mm/huge_memory.c             |  2 +-
+ mm/internal.h                | 13 ++++++++++
+ mm/madvise.c                 |  6 ++---
+ mm/memory_hotplug.c          |  3 +--
+ mm/page_alloc.c              |  2 +-
+ mm/vmscan.c                  | 48 ++++++++++++++++++++++++++++++------
+ 9 files changed, 100 insertions(+), 20 deletions(-)
 
-diff --git a/include/linux/mempolicy.h b/include/linux/mempolicy.h
-index 65c732d440d2f..715951a5b03c1 100644
---- a/include/linux/mempolicy.h
-+++ b/include/linux/mempolicy.h
-@@ -7,6 +7,7 @@
- #define _LINUX_MEMPOLICY_H 1
+diff --git a/include/linux/node_private.h b/include/linux/node_private.h
+index 475496c84249f..f7cbae1309904 100644
+--- a/include/linux/node_private.h
++++ b/include/linux/node_private.h
+@@ -7,6 +7,13 @@
  
- #include <linux/sched.h>
-+#include <linux/err.h>
- #include <linux/mmzone.h>
- #include <linux/slab.h>
- #include <linux/rbtree.h>
-@@ -128,6 +129,9 @@ void mpol_free_shared_policy(struct shared_policy *sp);
- struct mempolicy *mpol_shared_policy_lookup(struct shared_policy *sp,
- 					    pgoff_t idx);
+ struct page;
  
-+struct mempolicy *mpol_private_bind(int nid);
-+struct mempolicy *mpol_bind_node(int nid);
++/*
++ * Per-node service opt-ins (node_private.caps).  A private node is isolated
++ * from all general mm services by default; the registering driver sets these
++ * to let specific services operate on its node.
++ */
++#define NODE_PRIVATE_CAP_RECLAIM	(1UL << 0)	/* allow mm reclaim */
 +
- struct mempolicy *get_task_policy(struct task_struct *p);
- struct mempolicy *__get_vma_policy(struct vm_area_struct *vma,
- 		unsigned long addr, pgoff_t *ilx);
-@@ -226,6 +230,16 @@ mpol_shared_policy_lookup(struct shared_policy *sp, pgoff_t idx)
- 	return NULL;
+ /**
+  * struct node_private - Per-node container for N_MEMORY_PRIVATE nodes
+  *
+@@ -41,6 +48,27 @@ static inline bool node_is_private(int nid)
+ 	return node_state(nid, N_MEMORY_PRIVATE);
  }
  
-+static inline struct mempolicy *mpol_private_bind(int nid)
++/**
++ * node_allows_reclaim - may the mm reclaim from this node?
++ * @nid: the node to test
++ *
++ * Only a private node is ever excluded.  Every other node can safely
++ * be operated on by reclaim.
++ */
++static inline bool node_allows_reclaim(int nid)
 +{
-+	return ERR_PTR(-EOPNOTSUPP);
++	struct node_private *np;
++	bool ret;
++
++	if (!node_state(nid, N_MEMORY_PRIVATE))
++		return true;
++	rcu_read_lock();
++	np = rcu_dereference(NODE_DATA(nid)->node_private);
++	ret = np && (np->caps & NODE_PRIVATE_CAP_RECLAIM);
++	rcu_read_unlock();
++	return ret;
 +}
 +
-+static inline struct mempolicy *mpol_bind_node(int nid)
+ #else /* !CONFIG_NUMA */
+ 
+ static inline bool folio_is_private_node(struct folio *folio)
+@@ -58,6 +86,11 @@ static inline bool node_is_private(int nid)
+ 	return false;
+ }
+ 
++static inline bool node_allows_reclaim(int nid)
 +{
-+	return ERR_PTR(-EOPNOTSUPP);
++	return true;
 +}
 +
- static inline struct mempolicy *get_vma_policy(struct vm_area_struct *vma,
- 				unsigned long addr, int order, pgoff_t *ilx)
+ #endif /* CONFIG_NUMA */
+ 
+ #if defined(CONFIG_NUMA) && defined(CONFIG_MEMORY_HOTPLUG)
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 8c1351cce7bcc..b9c25c599732f 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -25,6 +25,7 @@
+ #include <linux/psi.h>
+ #include <linux/cpuset.h>
+ #include "page_alloc.h"
++#include <linux/node_private.h>
+ #include "internal.h"
+ 
+ #ifdef CONFIG_COMPACTION
+@@ -2462,7 +2463,7 @@ bool compaction_zonelist_suitable(struct alloc_context *ac, int order,
+ 		    !__cpuset_zone_allowed(zone, gfp_mask))
+ 			continue;
+ 
+-		if (node_is_private(zone_to_nid(zone)))
++		if (!node_allows_reclaim(zone_to_nid(zone)))
+ 			continue;
+ 
+ 		/*
+@@ -2856,7 +2857,7 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
+ 			!__cpuset_zone_allowed(zone, gfp_mask))
+ 				continue;
+ 
+-		if (node_is_private(zone_to_nid(zone)))
++		if (!node_allows_reclaim(zone_to_nid(zone)))
+ 			continue;
+ 
+ 		if (prio > MIN_COMPACT_PRIORITY
+@@ -2928,7 +2929,7 @@ static int compact_node(pg_data_t *pgdat, bool proactive)
+ 		.proactive_compaction = proactive,
+ 	};
+ 
+-	if (node_is_private(pgdat->node_id))
++	if (!node_allows_reclaim(pgdat->node_id))
+ 		return 0;
+ 
+ 	for (zoneid = 0; zoneid < MAX_NR_ZONES; zoneid++) {
+@@ -3026,7 +3027,7 @@ static ssize_t compact_store(struct device *dev,
  {
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index e83c2c7a94c1d..a3ffb09897489 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -406,7 +406,7 @@ static int mpol_new_preferred(struct mempolicy *pol, const nodemask_t *nodes)
- static int mpol_set_nodemask(struct mempolicy *pol,
- 		     const nodemask_t *nodes, struct nodemask_scratch *nsc)
- {
--	int ret;
-+	int ret, nid;
+ 	int nid = dev->id;
+ 
+-	if (node_is_private(nid))
++	if (!node_allows_reclaim(nid))
+ 		return -EINVAL;
+ 
+ 	if (nid >= 0 && nid < nr_node_ids && node_online(nid)) {
+diff --git a/mm/damon/paddr.c b/mm/damon/paddr.c
+index c741a94319750..b668cf55d1b67 100644
+--- a/mm/damon/paddr.c
++++ b/mm/damon/paddr.c
+@@ -251,8 +251,8 @@ static unsigned long damon_pa_pageout(struct damon_region *r,
+ 			continue;
+ 		}
+ 
+-		/* private node memory is not reclaimable by default */
+-		if (folio_is_private_node(folio))
++		/* DAMOS pageout is reclaim; gate a private node on CAP_RECLAIM */
++		if (!node_allows_reclaim(folio_nid(folio)))
+ 			goto put_folio;
+ 
+ 		if (damos_pa_filter_out(s, folio))
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 1df91b4e5c2bc..cebc89eb0541f 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2340,7 +2340,7 @@ bool madvise_free_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
+ 
+ 	folio = pmd_folio(orig_pmd);
+ 
+-	if (folio_is_private_node(folio))
++	if (!node_allows_reclaim(folio_nid(folio)))
+ 		goto out;
  
  	/*
- 	 * Default (pol==NULL) resp. local memory policies are not a
-@@ -432,6 +432,18 @@ static int mpol_set_nodemask(struct mempolicy *pol,
- 	else
- 		pol->w.cpuset_mems_allowed = cpuset_current_mems_allowed;
- 
-+	/*
-+	 * Private nodes are not in cpuset.mems, so they're always stripped.
-+	 * Driver-allocated policies will already have MPOL_F_PRIVATE set,
-+	 * if that's the case, add back in the requested set of private nodes.
-+	 */
-+	for_each_node_mask(nid, *nodes) {
-+		if (!node_is_private(nid))
-+			continue;
-+		if (pol->flags & MPOL_F_PRIVATE)
-+			node_set(nid, nsc->mask2);
-+	}
-+
- 	/* If any private nodes left in the nodemask - add the private flag */
- 	if (nodes_intersects(nsc->mask2, node_states[N_MEMORY_PRIVATE]))
- 		pol->flags |= MPOL_F_PRIVATE;
-@@ -501,7 +513,7 @@ void __mpol_put(struct mempolicy *pol)
- 	 */
- 	kfree_rcu(pol, rcu);
- }
--EXPORT_SYMBOL_FOR_MODULES(__mpol_put, "kvm");
-+EXPORT_SYMBOL_FOR_MODULES(__mpol_put, "kvm,kmem");
- 
- static void mpol_rebind_default(struct mempolicy *pol, const nodemask_t *nodes)
- {
-@@ -1126,6 +1138,92 @@ static long do_set_mempolicy(unsigned short mode, unsigned short flags,
- 	return ret;
+diff --git a/mm/internal.h b/mm/internal.h
+index 85c460296cea1..8329034ae561f 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -110,6 +110,19 @@ static inline bool page_is_private_managed(struct page *page)
+ 	return folio_is_private_managed(page_folio(page));
  }
  
 +/*
-+ * Build a refcounted MPOL_BIND policy targeting the single node @nid,
-+ * contextualised to the caller's cpuset like a userspace mbind().
++ * folio_allows_madvise() - may madvise reclaim hints act on this folio?
 + *
-+ * @flags is MPOL_F_PRIVATE for the an explicit in-kernel user, letting
-+ * a private node be bound without checking CAP_USER_NUMA.  Otherwise,
-+ * CAP_USER_NUMA is enforced.
-+ *
-+ * The caller owns the reference and frees it with mpol_put().
++ * madvise reclaim hints (COLD/PAGEOUT/FREE) are userland-driven reclaim, so
++ * they follow reclaim opt-in: false for ZONE_DEVICE and for N_MEMORY_PRIVATE
++ * nodes without CAP_RECLAIM, true for all other normal folios.
 + */
-+static struct mempolicy *__mpol_bind_node(int nid, unsigned short flags)
++static inline bool folio_allows_madvise(struct folio *folio)
 +{
-+	struct mempolicy *pol;
-+	nodemask_t nodes;
-+	int err;
-+
-+	NODEMASK_SCRATCH(scratch);
-+
-+	if (!scratch)
-+		return ERR_PTR(-ENOMEM);
-+
-+	nodes_clear(nodes);
-+	node_set(nid, nodes);
-+
-+	pol = mpol_new(MPOL_BIND, flags, &nodes);
-+	if (IS_ERR(pol)) {
-+		NODEMASK_SCRATCH_FREE(scratch);
-+		return pol;
-+	}
-+
-+	err = mpol_set_nodemask(pol, &nodes, scratch);
-+	NODEMASK_SCRATCH_FREE(scratch);
-+	if (err) {
-+		mpol_put(pol);
-+		return ERR_PTR(err);
-+	}
-+	return pol;
++	return !folio_is_zone_device(folio) &&
++	       node_allows_reclaim(folio_nid(folio));
 +}
-+
-+/**
-+ * mpol_private_bind - build an MPOL_BIND policy pinned to a private node
-+ * @nid: an N_MEMORY_PRIVATE node
-+ *
-+ * Returns a refcounted mempolicy that binds allocations to @nid with the
-+ * private-placement intent (MPOL_F_PRIVATE).  This binds to @nid regardless
-+ * of the node's CAP_USER_NUMA, providing a privileged way for node-owners
-+ * to bind driver/service owned VMAs to the node.
-+ *
-+ * Like any MPOL_BIND it is relaxable: an unsatisfiable request falls back
-+ * rather than failing.
-+ *
-+ * Must be called while @nid is N_MEMORY_PRIVATE.
-+ *
-+ * The caller owns the reference and frees it with mpol_put().
-+ *
-+ * Return: the policy, or an ERR_PTR on failure.
-+ */
-+struct mempolicy *mpol_private_bind(int nid)
-+{
-+	if (!node_is_private(nid))
-+		return ERR_PTR(-EINVAL);
-+	return __mpol_bind_node(nid, MPOL_F_PRIVATE);
-+}
-+EXPORT_SYMBOL_FOR_MODULES(mpol_private_bind, "kmem");
-+
-+/**
-+ * mpol_bind_node - build an MPOL_BIND policy targeting @nid for in-kernel use
-+ * @nid: the node to bind to
-+ *
-+ * Returns a refcounted MPOL_BIND policy that places allocations on @nid,
-+ * contextualised to the caller's cpuset exactly like a userspace mbind().
-+ *
-+ * This interface should be used by services implenting mempolicy support with
-+ * user-provided node bindings. N_MEMORY_PRIVATE node bindings are honored if
-+ * the node has CAP_USER_NUMA, otherwise return -EINVAL.
-+ *
-+ * The caller owns the reference and frees it with mpol_put().
-+ *
-+ * Return: the policy, or an ERR_PTR on failure.
-+ */
-+struct mempolicy *mpol_bind_node(int nid)
-+{
-+	return __mpol_bind_node(nid, 0);
-+}
-+EXPORT_SYMBOL_FOR_MODULES(mpol_bind_node, "kvm");
 +
  /*
-  * Return nodemask for policy for get_mempolicy() query
+  * folio_allows_longterm_pin() - may this folio be long-term GUP-pinned?
   *
+diff --git a/mm/madvise.c b/mm/madvise.c
+index 29f35a23919a0..56ca974542707 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -396,7 +396,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 
+ 		folio = pmd_folio(orig_pmd);
+ 
+-		if (folio_is_private_node(folio))
++		if (!node_allows_reclaim(folio_nid(folio)))
+ 			goto huge_unlock;
+ 
+ 		/* Do not interfere with other mappings of this folio */
+@@ -478,7 +478,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 			continue;
+ 
+ 		folio = vm_normal_folio(vma, addr, ptent);
+-		if (!folio || folio_is_private_managed(folio))
++		if (!folio || !folio_allows_madvise(folio))
+ 			continue;
+ 
+ 		/*
+@@ -707,7 +707,7 @@ static int madvise_free_pte_range(pmd_t *pmd, unsigned long addr,
+ 		}
+ 
+ 		folio = vm_normal_folio(vma, addr, ptent);
+-		if (!folio || folio_is_private_managed(folio))
++		if (!folio || !folio_allows_madvise(folio))
+ 			continue;
+ 
+ 		/*
+diff --git a/mm/memory_hotplug.c b/mm/memory_hotplug.c
+index be230ac9efe5a..1f42ed303366c 100644
+--- a/mm/memory_hotplug.c
++++ b/mm/memory_hotplug.c
+@@ -1237,8 +1237,7 @@ int online_pages(unsigned long pfn, unsigned long nr_pages,
+ 	/* reinitialise watermarks and update pcp limits */
+ 	init_per_zone_wmark_min();
+ 
+-	/* Private nodes opt-out of reclaim/compaction by default */
+-	if (!node_is_private(nid)) {
++	if (node_allows_reclaim(nid)) {
+ 		kswapd_run(nid);
+ 		kcompactd_run(nid);
+ 	}
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 2b08bea2379a9..2667a4564b7ac 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -6667,7 +6667,7 @@ static void __setup_per_zone_wmarks(void)
+ 		u64 tmp;
+ 
+ 		spin_lock_irqsave(&zone->lock, flags);
+-		if (node_is_private(zone_to_nid(zone))) {
++		if (!node_allows_reclaim(zone_to_nid(zone))) {
+ 			zone->_watermark[WMARK_MIN] = 0;
+ 			zone->_watermark[WMARK_LOW] = 0;
+ 			zone->_watermark[WMARK_HIGH] = 0;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 86b2334c23b98..f1722693ac2db 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -5396,6 +5396,21 @@ static const struct attribute_group lru_gen_attr_group = {
+  *                          debugfs interface
+  ******************************************************************************/
+ 
++/*
++ * Nodes the lru_gen debugfs interface lists: ordinary memory nodes plus any
++ * N_MEMORY_PRIVATE nodes opted into reclaim.  run_cmd() already accepts the
++ * latter, so keep the listing in sync with what it accepts.
++ */
++static void lru_gen_seq_nodes(nodemask_t *nodes)
++{
++	int nid;
++
++	*nodes = node_states[N_MEMORY];
++	for_each_node_state(nid, N_MEMORY_PRIVATE)
++		if (node_allows_reclaim(nid))
++			node_set(nid, *nodes);
++}
++
+ static void *lru_gen_seq_start(struct seq_file *m, loff_t *pos)
+ {
+ 	struct mem_cgroup *memcg;
+@@ -5407,9 +5422,11 @@ static void *lru_gen_seq_start(struct seq_file *m, loff_t *pos)
+ 
+ 	memcg = mem_cgroup_iter(NULL, NULL, NULL);
+ 	do {
++		nodemask_t nodes;
+ 		int nid;
+ 
+-		for_each_node_state(nid, N_MEMORY) {
++		lru_gen_seq_nodes(&nodes);
++		for_each_node_mask(nid, nodes) {
+ 			if (!nr_to_skip--)
+ 				return get_lruvec(memcg, nid);
+ 		}
+@@ -5431,16 +5448,18 @@ static void *lru_gen_seq_next(struct seq_file *m, void *v, loff_t *pos)
+ {
+ 	int nid = lruvec_pgdat(v)->node_id;
+ 	struct mem_cgroup *memcg = lruvec_memcg(v);
++	nodemask_t nodes;
+ 
+ 	++*pos;
+ 
+-	nid = next_memory_node(nid);
++	lru_gen_seq_nodes(&nodes);
++	nid = next_node(nid, nodes);
+ 	if (nid == MAX_NUMNODES) {
+ 		memcg = mem_cgroup_iter(NULL, memcg, NULL);
+ 		if (!memcg)
+ 			return NULL;
+ 
+-		nid = first_memory_node;
++		nid = first_node(nodes);
+ 	}
+ 
+ 	return get_lruvec(memcg, nid);
+@@ -5509,10 +5528,12 @@ static int lru_gen_seq_show(struct seq_file *m, void *v)
+ 	struct lru_gen_folio *lrugen = &lruvec->lrugen;
+ 	int nid = lruvec_pgdat(lruvec)->node_id;
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
++	nodemask_t nodes;
+ 	DEFINE_MAX_SEQ(lruvec);
+ 	DEFINE_MIN_SEQ(lruvec);
+ 
+-	if (nid == first_memory_node) {
++	lru_gen_seq_nodes(&nodes);
++	if (nid == first_node(nodes)) {
+ 		const char *path = memcg ? m->private : "";
+ 
+ #ifdef CONFIG_MEMCG
+@@ -5612,7 +5633,9 @@ static int run_cmd(char cmd, u64 memcg_id, int nid, unsigned long seq,
+ 	int err = -EINVAL;
+ 	struct mem_cgroup *memcg = NULL;
+ 
+-	if (nid < 0 || nid >= MAX_NUMNODES || !node_state(nid, N_MEMORY))
++	if (nid < 0 || nid >= MAX_NUMNODES ||
++	    !(node_state(nid, N_MEMORY) ||
++	      (node_is_private(nid) && node_allows_reclaim(nid))))
+ 		return -EINVAL;
+ 
+ 	if (!mem_cgroup_disabled()) {
+@@ -6145,7 +6168,7 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 	 * Private nodes do not support reclaim by default, filtering here
+ 	 * captures all normal reclaim paths that may attempt eviction.
+ 	 */
+-	if (node_is_private(pgdat->node_id))
++	if (!node_allows_reclaim(pgdat->node_id))
+ 		return;
+ 
+ 	if ((lru_gen_enabled() || lru_gen_switching()) && root_reclaim(sc)) {
+@@ -6758,6 +6781,16 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+ 	return sc.nr_reclaimed;
+ }
+ 
++static struct zonelist *memcg_reclaim_zonelist(int nid, gfp_t gfp_mask)
++{
++	unsigned int aflags = ALLOC_DEFAULT;
++
++	if (unlikely(!nodes_empty(node_states[N_MEMORY_PRIVATE])))
++		aflags = ALLOC_ZONELIST_PRIVATE;
++
++	return select_zonelist(nid, gfp_mask, aflags);
++}
++
+ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 					   unsigned long nr_pages,
+ 					   gfp_t gfp_mask,
+@@ -6784,7 +6817,8 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 	 * equal pressure on all the nodes. This is based on the assumption that
+ 	 * the reclaim does not bail out early.
+ 	 */
+-	struct zonelist *zonelist = node_zonelist(numa_node_id(), sc.gfp_mask);
++	struct zonelist *zonelist = memcg_reclaim_zonelist(numa_node_id(),
++							   sc.gfp_mask);
+ 
+ 	set_task_reclaim_state(current, &sc.reclaim_state);
+ 	trace_mm_vmscan_memcg_reclaim_begin(sc.gfp_mask, 0, memcg);
 -- 
 2.53.0-Meta
 
