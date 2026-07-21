@@ -1,33 +1,33 @@
-Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+Received: from out-188.mta0.migadu.com (out-188.mta0.migadu.com [91.218.175.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB5F13F7875
-	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 01:27:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC7B73FCB11
+	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 01:44:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784597246; cv=none; b=H5BQOWWJWICsWK8MIBdKZzfhxcinpoT7BOoITT5WyWO96RxJRJy3MF29Y1jObPc5BTZOdC4ZIsnSRzWfbI2YuDqCujBZqYdahu3Ph+go9SPxnT4bVJn95aN4wfIao+YTtE1E6gM0VuSCQ8jUHfejHZXb3V5l6hTThZ+rShrRrWk=
+	t=1784598243; cv=none; b=XygZ8mzTpFtj/Y3B0hgfgIfvxMGI1F/w3uysGdRNlQ8lhxjN2sX/GWtV3s1eF9AcaLi2n3OXvKLhFyuP+tEKP4/Kx6e1mL+LWi6XZMRq6C1ey3e+dIU3To4a544o9DUYNP8p9ya6Ld1HEnmBubQR1DCbUsE8qCIQxRnP6uDAFeY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784597246; c=relaxed/simple;
-	bh=sCrZgc39KHy8TyGx5WNHCPk11mBF6wS4RYug+nc6V+I=;
+	s=arc-20240116; t=1784598243; c=relaxed/simple;
+	bh=ilevQ6bwsQLzh3JOzjacrhtuo5GRlSwbuOUHgEo4Mkg=;
 	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=cB5hZVCNDOSSqzWQYuu5Et/v7dkLVy/oYdhPlnqmO5o53drwqaMB2XD79I9BvILugac1XHUASq0Mjmfb3TmyPW1hL51UUJtMkZa2xpNjFQKLoa0WhgOBLvWo26N70kqfPeCRNf59+0fgATnrElKQZcfEiAP9l9c5rtBpJSrp/2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cQs2kF9u; arc=none smtp.client-ip=91.218.175.181
+	 In-Reply-To:Content-Type; b=s/+77TboltmOQXkOyltzIvKBEYzpg30Q8tpuy7LM42nAcZ65PkPz93u4n7bHKAK2BFXLtL5Y2aWWQVfP46BaBJwhqG8owhRz+PXuUAaPLOZSqp0EEUa6gWJ9l1aMLPEnVfPVD4Yz9zws4pJVFxb04pWFnyo/cQq6t4aAObLV7wM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=VeY/KVCW; arc=none smtp.client-ip=91.218.175.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cQs2kF9u"
-Message-ID: <f59cb798-05a6-437e-a245-046f1a088b72@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="VeY/KVCW"
+Message-ID: <6b74b3cc-849a-4a0b-8971-e591f6ca3dca@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784597232;
+	t=1784598239;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=S+lM8qOQE4WaqWeo2B6X7yANWnM1xqtKd8ZVywKa9FQ=;
-	b=cQs2kF9uNO7J2uQamii1cRozjTdYo8VB6/82kj2uEeKOwxvljRcXcu99Z8kp8yMZtuLyUr
-	tiKKpjxZKObbl5ZsFayK+BtFsx0kcbeAIIPoNqZhWz9GJYhAJxmv5Dnj3BcoyeolC+vxCA
-	SoVFf/CCXh1lHTzQ5oF1rcrhpxq4p9Q=
-Date: Tue, 21 Jul 2026 09:26:51 +0800
+	bh=qP7GoR0yPXAUHlXfNNC43mw+8vkPdP3SqsgqwzlleZY=;
+	b=VeY/KVCWjc9tx69DMreZ9TjyiVowIoVhcWQXCWRR8dOGiPYN9Zc2QUmrBSEPT2hxKL2eDM
+	ajeJR7FI9VEGWt7eE8/evaUUTlFfnVEi2iRCYoW9a2J8xyMs1BCc0gszCdgRFe1NNeRggV
+	lhVaHj52nTqqTA8akzGDbBmiGwe/OHw=
+Date: Tue, 21 Jul 2026 09:43:51 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -36,48 +36,53 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Cc: cui.tao@linux.dev, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>,
  Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>, linux-doc@vger.kernel.org,
+ Shuah Khan <skhan@linuxfoundation.org>, Joshua Hahn
+ <joshua.hahnjy@gmail.com>, linux-doc@vger.kernel.org,
  linux-kernel@vger.kernel.org, cuitao@kylinos.cn
 Subject: Re: [PATCH] cgroup/cpu: document cpu.stat nice_usec and
  core_sched.force_idle_usec
-To: Joshua Hahn <joshua.hahnjy@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>
-References: <20260720152741.1226695-1-joshua.hahnjy@gmail.com>
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+References: <20260718080100.2334415-1-cui.tao@linux.dev>
+ <al46ipavC-KCaoHv@localhost.localdomain>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20260720152741.1226695-1-joshua.hahnjy@gmail.com>
+In-Reply-To: <al46ipavC-KCaoHv@localhost.localdomain>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
 
 
-在 2026/7/20 23:27, Joshua Hahn 写道:
->> On Mon, Jul 20, 2026 at 08:02:26AM -0700, Joshua Hahn <joshua.hahnjy@gmail.com> wrote:
->>> I have to ask, which tree is this based on? I can't seem to find a single
->>> tree that contains the "(including those in descendant cgroups)" section
->>> anywhere. 
+在 2026/7/20 23:26, Michal Koutný 写道:
+> On Sat, Jul 18, 2026 at 04:01:00PM +0800, Tao Cui <cui.tao@linux.dev> wrote:
+>> From: Tao Cui <cuitao@kylinos.cn>
 >>
->> It is most likely linux-next which contains a nearby modification from
->> [1] (or it was based on that regardless).
+>> cgroup_base_stat_cputime_show() unconditionally prints a fourth base
+>> stat, nice_usec, in addition to usage_usec/user_usec/system_usec, and
+>> also prints core_sched.force_idle_usec when CONFIG_SCHED_CORE is enabled.
+>> Neither field is currently described in the cpu.stat section of
+>> cgroup-v2.rst, which still states it "always reports the following three
+>> stats".
 > 
-> Hello Michal,
+> Just to better sense popularity of the fields -- have you found this out
+> by:
+> a) reading cpu.stat and being confused about semantics of the fields or
+> b) scanning files/code vs docs looking for discrepancies?
 > 
-> Thank you, I must have missed linux-next in my searching... that makes
-> a lot of sense! With that, Tao, please feel free to add my review tag:
-> 
-> Reviewed-by: Joshua Hahn <joshua.hahnjy@gmail.com>
-> 
-Thanks Michal for the pointer, and Joshua for the tag.
-Based on linux-next (next-20260717).
+(b). I found it while auditing the cgroup cpu controller, comparing
+what cgroup_base_stat_cputime_show() prints against the cpu.stat docs.
+nice_usec is emitted unconditionally but not listed there, and the
+"three stats" count was stale.
 
-Thanks，
+The audit is groundwork for a prototype daemon that monitors
+per-cgroup resource usage and adjusts limits dynamically. The design
+is inspired by DAMON, but DAMON targets a single resource domain,
+whereas container workloads need coordinated control across several
+(cpu, memory, io) — which is why I'm going through the per-controller
+stat interfaces.
+
+Thanks,
 Tao
-> Thanks, have a great day!
-> Joshua
-> 
->> HTH,
->> Michal
->>
->> [1] https://lore.kernel.org/lkml/20260629060636.200118-1-sunshaojie@kylinos.cn/
+> Thanks,
+> Michal
 
