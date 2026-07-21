@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 816004028EE;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85AEE4028F7;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784602389; cv=none; b=HF/u06Zz/8jbP0v+tnt0ls2gSKZ2oa93k/ZZwf1JnmZRO74El1nLHxYlvPFxRVKhzKXuIauZP3IPn8uQRYatqvizi2q6bBBO1dHCs+ew9Swpthbo193as9RSdSsGcV5P5NOvRq+5BAzh/eHXTZH0a4koGQm/YrnKX5nAC1NkNSo=
+	t=1784602389; cv=none; b=LbOzW2wDiG01X6KzeCWIDVVclBA9Cc+l0j2YMzNSHFxbBevdGhyx5/ImGIBsolOn9YAPyBpwi1zDutdWWHp+6sshGAOk6M5W0JXR7/bOOVWAI26F3djXXsANbbCIYQkpPaP6G12ihUjY6Xz8nxlDVCo4xAyS6c5W7snw6TG816Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784602389; c=relaxed/simple;
-	bh=kSh9BQgS5QmHyKYjO89WZ2+3iTBXW5J+wxxG9vDVAJE=;
+	bh=g68oSCwzT15OMQimNW45wJYcvcPo4quFGfzqB+zzwcI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ByeBTkhczV81HC6cwaiNgHoHgjUdMnZFJ9jaerEfbvBWKi7hpvdDVp7cXcFY5H/SEtBo1qe1ZYsxloykB3iyDL0j7pv5BCygK4Yb7mWDZ/dpmCEwbbWqrMfbUPsTfhbgTviKN1z0mtxbIbn37+Dz/yzIcLNGt3K/3A+cXocamhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XEHybAo+; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=BHbReAIjdZ5q+LcdfCHydI3fIU+d2cl2VpyYuLQVmrbhxAoKJ95qABNJ/NLY9PQp7niiewX9PHtaGNDEp583QI1rbFKxkF25xxdhz3JOS16LZm4sSf5hXPBFPbo+6TmcC7tXyXjuqVqjDrISDWti3MUFKKIEVoshtp3xtB8OMt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MlNg/RAp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XEHybAo+"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 23057C2BCFF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MlNg/RAp"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 54D73C2BCFD;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1784602389;
-	bh=kSh9BQgS5QmHyKYjO89WZ2+3iTBXW5J+wxxG9vDVAJE=;
+	bh=g68oSCwzT15OMQimNW45wJYcvcPo4quFGfzqB+zzwcI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=XEHybAo+2kZNVVGNyUv5FLdCH48YFNU3aR9zcL663YF8cgoDm5tEZG8C6kZrrD9ZQ
-	 pUEKKPPhBB7T6MqJfWl8D1DxrKjorfKgwda1tcObkLEIva/ABl+y2OTShLxOpWAUfb
-	 QGduIUi/81ESq7KJdMoxhAiAHjQNOB0vy63QE/d3RLQf52zMHPqaeVLUSCIrxY8MWQ
-	 dda5HhbojUX3i6VuawQDBg8/VAFZfiNWnUISIbCVxcOkhCyA/wA09bHEvklUdRiWL1
-	 2w8kogzEW4PrGK1QROYUWNaocIGPYtbMtZS3DnV3h1H2Tc2VCrX22TRJsV3ZO2u6oe
-	 SKlAsthmOF/vg==
+	b=MlNg/RAplDNaPb6B7XrjBfgB8eW3yOcgJlJvX7BL0G09YFKuqHNP/4nPewX0AQgO7
+	 eDhNTLNuTDB0PCaO96TUEM8vZ+B6eQ+sXxmU92O6OEUIqQrcJj6SaSNOIrcVCvorcL
+	 0L40/v2oj/mqmSRuWL0DaTU8/gnsPCgbTN0+tzliOew4yBI1R2Fj3igEpDNmmC+Lzb
+	 oGzXMQR5/WEj4U/WtW2QwFft9saQpoMoY7/evIv6zAaN41Pt5b1tcsBSamTEQStM1h
+	 H2BU4Rvi3fnbRcCuOiB0zYIq6BsVZw+egex94yTJ8HH7qhG/MghtPOiyRSPZPnJZ4z
+	 UVIkCYVK1EwBw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF6AC44533;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43133C44531;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 From: Ackerley Tng via B4 Relay <devnull+ackerleytng.google.com@kernel.org>
-Date: Mon, 20 Jul 2026 17:25:08 -0700
-Subject: [PATCH v3 05/13] mm: hugetlb: Fix subpool usage leak on allocation
- failure
+Date: Mon, 20 Jul 2026 17:25:11 -0700
+Subject: [PATCH v3 08/13] WIP: mm: hugetlb: Make struct hugepage_subpool
+ private to hugetlb_subpool.c
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-5-7d2a169aa9ee@google.com>
+Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-8-7d2a169aa9ee@google.com>
 References: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
 In-Reply-To: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
 To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
@@ -54,13 +54,13 @@ To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
  Roman Gushchin <roman.gushchin@linux.dev>
 Cc: vannapurve@google.com, erdemaktas@google.com, linux-mm@kvack.org, 
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
- Ackerley Tng <ackerleytng@google.com>, stable@vger.kernel.org
+ Ackerley Tng <ackerleytng@google.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=2183;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=2362;
  i=ackerleytng@google.com; s=20260225; h=from:subject:message-id;
- bh=TxFD58wSA2jJAufxG4ptcnmkIwsdZTWOv5gzU++/HSs=;
- b=Cuw9IMu+njvxpvmnRk8QFmkwsKKjZPzSykOuLnRokUuqa3Z2CbGxGweoxUKCN7Lg7QoL0WSrH
- bxvolGurs8gCNt/+T6VZcrW5RuSxaR+OKnxfVIbStbxrn7DKeQ8rJkq
+ bh=M6CZbHlay9O7mPyDIiOB40w5xsbkP4SdrC/EYdyZfC0=;
+ b=EKSNPcPFErEcErK9ZdAcLB9AUma7YsDD5mhlF9ptqMRDEPyM8LE51vREzhRtzj/WSlU3plrqD
+ WQwh+ogZMhrC8TVS/THJDOBsQh9QXXvOAFq7sC5ey7BszOhs0v7FFYF
 X-Developer-Key: i=ackerleytng@google.com; a=ed25519;
  pk=sAZDYXdm6Iz8FHitpHeFlCMXwabodTm7p8/3/8xUxuU=
 X-Endpoint-Received: by B4 Relay for ackerleytng@google.com/20260225 with
@@ -70,60 +70,74 @@ Reply-To: ackerleytng@google.com
 
 From: Ackerley Tng <ackerleytng@google.com>
 
-When alloc_hugetlb_folio() fails early (e.g. buddy allocation failure or
-hugetlb cgroup charging failure) and gbl_chg == 1 (meaning a reservation
-was not used, but a global page was allocated instead), the subpool page
-acquired via hugepage_subpool_get_pages() must still be returned.
+Now that all filesystem and memory management subpool layout inspections across
+`fs/hugetlbfs/inode.c` and `mm/` leverage the exported, harmonized APIs, transition
+`struct hugepage_subpool` out of the public header `include/linux/hugetlb.h` and
+encapsulate it privately inside `mm/hugetlb_subpool.c`.
 
-Currently, the error path out_subpool_put: only calls
-hugepage_subpool_put_pages() if !gbl_chg is true. If gbl_chg is 1, it
-skips it, permanently leaking the subpool's used_hpages counter.
+Replace the header definition with a forward declaration, completely protecting the
+underlying subpool allocation counters, reservations, and spinlock boundaries.
 
-With the earlier patch to always track used_hpages in the subpool, always
-call hugepage_subpool_put_pages() if map_chg is true to consistently
-restore the page to the subpool. Only call hugetlb_acct_memory() to adjust
-global reservations if gbl_chg == 0 since gbl_chg == 0 indicates a
-subpool (and global) reservation was used.
-
-Fixes: a833a693a490e ("mm: hugetlb: fix incorrect fallback for subpool")
-Cc: stable@vger.kernel.org
 Signed-off-by: Ackerley Tng <ackerleytng@google.com>
 ---
- mm/hugetlb.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ include/linux/hugetlb.h | 13 ++-----------
+ mm/hugetlb_subpool.c    | 12 ++++++++++++
+ 2 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 061d7250c202d..3f6189d2d0188 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -2859,7 +2859,7 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
- 	struct hugepage_subpool *spool = subpool_vma(vma);
- 	struct hstate *h = hstate_vma(vma);
- 	struct folio *folio;
--	long retval, gbl_chg, gbl_reserve;
-+	long retval, gbl_chg;
- 	map_chg_state map_chg;
- 	int ret, idx;
- 	struct hugetlb_cgroup *h_cg = NULL;
-@@ -3009,13 +3009,11 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
- 		hugetlb_cgroup_uncharge_cgroup_rsvd(idx, pages_per_huge_page(h),
- 						    h_cg_rsvd);
- out_subpool_put:
--	/*
--	 * put page to subpool iff the quota of subpool's rsv_hpages is used
--	 * during hugepage_subpool_get_pages.
--	 */
--	if (map_chg && !gbl_chg) {
--		gbl_reserve = hugepage_subpool_put_pages(spool, 1);
--		hugetlb_acct_memory(h, -gbl_reserve);
-+	if (map_chg) {
-+		long gbl_reserve = hugepage_subpool_put_pages(spool, 1);
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index f36be371c6e88..074a45903973e 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -18,6 +18,7 @@
+ 
+ struct mmu_gather;
+ struct node;
++struct hstate;
+ 
+ void free_huge_folio(struct folio *folio);
+ 
+@@ -34,17 +35,7 @@ void free_huge_folio(struct folio *folio);
+  */
+ #define __NR_USED_SUBPAGE 3
+ 
+-struct hugepage_subpool {
+-	spinlock_t lock;
+-	long count;
+-	long max_hpages;	/* Maximum huge pages or -1 if no maximum. */
+-	long used_hpages;	/* Used page count, includes both */
+-				/* allocated and reserved pages. */
+-	struct hstate *hstate;
+-	long min_hpages;	/* Minimum huge pages or -1 if no minimum. */
+-	long rsv_hpages;	/* Pages reserved against global pool to */
+-				/* satisfy minimum size. */
+-};
++struct hugepage_subpool;
+ 
+ struct resv_map {
+ 	struct kref refs;
+diff --git a/mm/hugetlb_subpool.c b/mm/hugetlb_subpool.c
+index 99e7975911079..eb5472bdf2192 100644
+--- a/mm/hugetlb_subpool.c
++++ b/mm/hugetlb_subpool.c
+@@ -14,6 +14,18 @@
+ #include <linux/bug.h>
+ #include "hugetlb_subpool.h"
+ 
++struct hugepage_subpool {
++	spinlock_t lock;
++	long count;
++	long max_hpages;	/* Maximum huge pages or -1 if no maximum. */
++	long used_hpages;	/* Used page count, includes both */
++				/* allocated and reserved pages. */
++	struct hstate *hstate;
++	long min_hpages;	/* Minimum huge pages or -1 if no minimum. */
++	long rsv_hpages;	/* Pages reserved against global pool to */
++				/* satisfy minimum size. */
++};
 +
-+		if (!gbl_chg)
-+			hugetlb_acct_memory(h, -gbl_reserve);
- 	}
- 
- 
+ static inline bool subpool_is_free(struct hugepage_subpool *spool)
+ {
+ 	if (spool->count)
 
 -- 
 2.55.0.229.g6434b31f56-goog
