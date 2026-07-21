@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B969400E1A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA91401A01;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784602389; cv=none; b=DT+QiwDwMQmhZnPWi5nS83eLnySv2C5HzecZ0Up0SuM5h6NHPBCM8JdV/O3W9IUSx9qgQjhklaZmSc+c6SRoAjnWk6TDDUg9k036/n2RGsBmtF/CtoKOS2wJ34wQ1908NOji9JgzRSFnxWyLUeVMSwx9sgdoy4UYr+KoVITsVUM=
+	t=1784602389; cv=none; b=RnOhemTEogJ+a6tXliTLW6nFNLTIQb6enp0xVXF4D8/TcKjlbhqz0llE94yEI1L/3MT5P1UOLQaxairTMNKeix7/lDFrFFIrCx8dCPuh2OVrTRM9jI55I15XWwlMMenD7BKcVQqkYr/jqFhl7PLqqDj5Zp0oaE+0YSXvy+OCwA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784602389; c=relaxed/simple;
-	bh=9xYXc8cFALwl2scnPkDmoIcwhk2eGPLl2JPUNmDY2d0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=DqDEw9bJ12Zz6+ytt+N367tFeDpipL8XW+Gd69CpI3obQ+9oZu92g9mdB+o9L1/IjSQatTN9YxnHdQbW8w1HCRkj/5jl7xmCSw9xQbZArQGjJvIIAg5se208xPkLHh6Ax5YgnnyWyBVulG27X6WHcpZV3rv9x3PNDAQt+lsRyWE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RU5nIEo7; arc=none smtp.client-ip=10.30.226.201
+	bh=/b9ba+DuL1XbYBDfD0yTQkd8n1jGFBevhBO73RcsrOw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Ob1zLNVZil7xFyNYc62AXdXG7/ZnjND0lSPOto5ArL0w+cKrl6iSwEl84PIcHVYLeC/EPBeCesv8Dvl1Zlc4madaDnOAXAhNDFTffLs5YeHy7rR3KoFchE8CLlD4bqhZlpGwa8OwD0GYG75wPGF//CCY3oJldIdE2dvjKW8T4AQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N4prhHvb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RU5nIEo7"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id ED0F2C2BCC9;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N4prhHvb"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id CBBE1C2BCB8;
 	Tue, 21 Jul 2026 02:53:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1784602389;
-	bh=9xYXc8cFALwl2scnPkDmoIcwhk2eGPLl2JPUNmDY2d0=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=RU5nIEo7oWGGETmhUfdKPLm20rS3ih3Lz3nx7dwAbmJpFMYKLmt1sbPxm8M2BdFSb
-	 p+qcEBcKlKCYBeGTbYZvCWk0+kdvFH9uvPlxo+HCrjvzfA3TxKn/TSf+lvQK01A1dG
-	 6bCBamepBRssAXw7K2FZqZE+8Pq1xa652OychT7XIwjDIyD9SfXYw04rOq0bNNF1kL
-	 fY0DPpYdi2kqYt6agKYJjpZBpnTg75KDWOxMZ1teiVfjCiYXeav3kklKOSKGInqqeF
-	 KMnOIr1LMuDTplYR35a/9ljd8NETimAmPoZiEBsL5JeRUAahmv6rCmmCODVa3gC9rc
-	 018p7QpijnZRw==
+	s=k20201202; t=1784602388;
+	bh=/b9ba+DuL1XbYBDfD0yTQkd8n1jGFBevhBO73RcsrOw=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=N4prhHvbXa9zbxYxxFLrSirMBOit2L8pcrb0UOiOmG6k/SUJInGIwP5dlbxxLsO/+
+	 0iRHGyBc+rb3+xT3HCb0EXscU1AHuQvRIeW3PRwOAbEH2c18Z+mXcEYm2TEaN8tM2h
+	 Q9TGxslak3H74dfBwsbubJJiEoR208OYsMHpcBrYRy0Uenx0WzNHtDqx3WFiY7IIk5
+	 saFp2DxSp665ttlJU4WZN0i7qndeB3fOH0cUdn+S/CElbcRAG/hriFwo1biX+3thdZ
+	 Ll7DN5dUyzkF/tkLsAm+YQoWmyInUM2fE3L3FTLY4FXiFFuEc6xUg/m+XFhX6u2f1M
+	 HqVYuaAn+8RRA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCCBFC44524;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5AFFC4452F;
 	Tue, 21 Jul 2026 02:53:08 +0000 (UTC)
 From: Ackerley Tng via B4 Relay <devnull+ackerleytng.google.com@kernel.org>
-Date: Mon, 20 Jul 2026 17:25:05 -0700
-Subject: [PATCH v3 02/13] mm: hugetlb: Return -ENOSPC on memcg charge
- failure
+Subject: [PATCH v3 00/13] Fix bugs on HugeTLB folio allocation failure
+ paths
+Date: Mon, 20 Jul 2026 17:25:03 -0700
+Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,9 +41,11 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-2-7d2a169aa9ee@google.com>
-References: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
-In-Reply-To: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
+X-B4-Tracking: v=1; b=H4sIAF+8XmoC/33OSw7CIBCA4asY1o6h9EF15T2MC6ADJcFioCWap
+ neXNjHRTZf/TPLNzCRisBjJ5TCTgMlG64cc5fFAVC8Gg2C73IRR1lBOG+gng6OTIJzzCrSwbgo
+ I2r4wguKa8xqVYGdNsvAMuC0ycLvn7m0cfXhvx1KxTr8u33VTARRqKbtSVLItm+5qvDcOT8o/y
+ Aon9ou1+xjLWP6UcSVl1TD5hy3L8gH2imHdFAEAAA==
+X-Change-ID: 20260706-hugetlb-alloc-failure-fixes-c7f775eca29f
 To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
  David Hildenbrand <david@kernel.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, 
  Shakeel Butt <shakeel.butt@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
@@ -56,11 +58,11 @@ Cc: vannapurve@google.com, erdemaktas@google.com, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
  Ackerley Tng <ackerleytng@google.com>, stable@vger.kernel.org
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=2183;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=7782;
  i=ackerleytng@google.com; s=20260225; h=from:subject:message-id;
- bh=nuUhbZqkwDE9Ph8fILa8cD4bi/Ma9wFUhfWLAJKiQgk=;
- b=j57evNN0B3aJE2bGo4aYEop42SQgenXTgRg2PUpxRSDxLbx80RSNC2CSSJi9kG5+6PcjtSdOX
- U3od4V1MktRAPv3uMaKCMouffdnKbebP9hZr5h1kP/nwAVICniSzxVg
+ bh=/b9ba+DuL1XbYBDfD0yTQkd8n1jGFBevhBO73RcsrOw=;
+ b=u+DAtxRvaQBp3wEDBRcruWX7yr+brSFQ3qMVQftTlM5gUEZdbUYZ6FNBsCubXBh8z34NyIOJe
+ yDJ2EeTPmasDKEYWVrtqEz4Wg1LWCaDklIVDyLrG8h2NlcC3WGP4aQw
 X-Developer-Key: i=ackerleytng@google.com; a=ed25519;
  pk=sAZDYXdm6Iz8FHitpHeFlCMXwabodTm7p8/3/8xUxuU=
 X-Endpoint-Received: by B4 Relay for ackerleytng@google.com/20260225 with
@@ -68,66 +70,160 @@ X-Endpoint-Received: by B4 Relay for ackerleytng@google.com/20260225 with
 X-Original-From: Ackerley Tng <ackerleytng@google.com>
 Reply-To: ackerleytng@google.com
 
-From: Ackerley Tng <ackerleytng@google.com>
+This series fixes a few bugs on HugeTLB folio allocation failure paths.
 
-When mem_cgroup_charge_hugetlb() fails with -ENOMEM, alloc_hugetlb_folio()
-currently propagates this error. This results in the page fault handler
-returning VM_FAULT_OOM.
+Some of these issues were pointed out by Sashiko while I was working on
+[1], and others were revealed while fixing the original issues.
 
-Because HugeTLB allocations are high-order and use __GFP_RETRY_MAYFAIL,
-they bypass the OOM killer. Returning VM_FAULT_OOM to the #PF handler
-without triggering the OOM killer (or having it make progress) leads to
-an infinite loop of retrying the fault.
+1. subpool usage leak on allocation failure (Sashiko pointed this out
+   in [2])
 
-Avoid this loop by returning -ENOSPC when charging fails, which maps to
-VM_FAULT_SIGBUS, terminating the process cleanly.
+   When alloc_hugetlb_folio() fails early (e.g. buddy allocation failure or
+   hugetlb cgroup charging failure) and gbl_chg == 1, the error path skips
+   restoring the page to the subpool, leaking the subpool's used_hpages
+   counter. Fix this by calling hugepage_subpool_put_pages()
+   unconditionally if map_chg is true.
 
-Make mem_cgroup_charge_hugetlb() fault handling use a common error handling
-path, the same handling used for hugetlb_cgroup_uncharge_cgroup{,_rsvd}(),
-which also don't trigger the OOM killer and hence opt to terminate the
-process with a SIGBUS.
+2. Folio refcount mismatch on memcg charge failure leading to
+   VM_BUG_ON_FOLIO() (Sashiko pointed this out in [3])
 
-Fixes: 991135774c0e0 ("memcg/hugetlb: introduce mem_cgroup_charge_hugetlb")
-Cc: stable@vger.kernel.org
+   The error path in alloc_hugetlb_folio() calls free_huge_folio() directly
+   on a folio with a refcount of 1 (set via folio_ref_unfreeze() earlier).
+   This triggers VM_BUG_ON_FOLIO(folio_ref_count(folio), folio) if
+   CONFIG_DEBUG_VM is enabled, and can corrupt allocator state otherwise.
+   Fix this by using folio_put() instead of free_huge_folio() to correctly
+   drop the refcount before freeing.
+
+3. Returning -ENOMEM on memcg charge failure causes infinite loop
+
+   alloc_hugetlb_folio() propagates -ENOMEM on charge failure, which maps
+   to VM_FAULT_OOM. Because HugeTLB physical allocations are high-order and
+   use __GFP_RETRY_MAYFAIL, the OOM killer is bypassed. Returning
+   VM_FAULT_OOM leaks to the #PF handler, which cannot make progress and
+   retries the faulting instruction indefinitely. Fix this by returning
+   -ENOSPC instead of -ENOMEM on charge failure, which maps to
+   VM_FAULT_SIGBUS, terminating the process cleanly.
+
+4. vma reservation leak on mem_cgroup_charge_hugetlb() failure
+
+   When mem_cgroup_charge_hugetlb() fails, the error path historically
+   bypassed vma_end_reservation(). Since the reservation had already been
+   committed via vma_commit_reservation(), this left the reservation map in
+   an inconsistent state, leaking resv_huge_pages when the process
+   exited. Fix this by moving mem_cgroup_charge_hugetlb() earlier in
+   alloc_hugetlb_folio(), before vma_commit_reservation() is called.
+
+Main changes in this patch series
+
+1. subpool page tracking
+
+The subpool now tracks every page allocated via
+the subpool through used_hpages, regardless of whether min_hpages or
+max_hpages is requested by the user.
+
+When min_hpages is set, rsv_hpages is initialized to be equal to
+min_hpages. As reserved pages are used, the count is transferred from
+rsv_hpages to used_hpages. When reserved pages run out, as long as
+max_hpages is not requested or not yet met, used_hpages continues to be
+incremented. The following invariant holds true while used_hpages <=
+min_hpages:
+
+  used_hpages + rsv_hpages = min_hpages
+
+when used_hpages exceeds min_hpages, rsv_hpages must always be 0.
+
+With this, pages can and must always be returned to the subpool if there's
+some reservation or allocation failure after getting a page from the
+subpool. One thing I missed in v2 was in processing the returned page. In
+v2, the number of pages returned was compared to min_hpages, ignoring
+used_hpages if it exists. v3 limits the number of pages returned to
+min_hpages - used_hpages, upholding the invariant above.
+
+2. (Re-)introduction of the try-commit-cancel protocol for memcg charging.
+
+In v2, I took the shortcut where I moved mem_cgroup_charge_hugetlb() up
+above committing vma reservations, and jumped to subpool cleanup when the
+charging failed. With that, Sashiko pointed out that there are still issues
+with subpool tracking.
+
+In [4] I thought the issue was that gbl_chg == 0 (I flipped the condition
+in [4], omg) doesn't always mean a reservation was actually used, but after
+digging more, that doesn't seem to be true, since if gbl_chg == 0,
+restore_reserve is set on the folio, and free_huge_folio() would have done
+a h->resv_huge_pages++.
+
+In my opinion, calling free_huge_folio() in the middle of the cleanup does
+too much, and I think the cleaner approach would be to do all the charging
+symmetrically, so that the subpool cleanup will also be symmetric
+and (hopefully) easier to understand.
+
+v3 is posted with reproducers (not meant to be merged) and some refactoring
+of subpool-related code, which helped me check that the subpool stuff is
+working. I think the subpool-related refactoring and tests would be good to
+merge, but perhaps in another patch series? The refactoring was heavily
+AI-driven and should be considered RFC. Would like to have your feedback on
+that refactoring too.
+
+Testing:
+
++ libhugetlbfs tests pass
++ ./tools/testing/selftests/mm/ksft_hugetlb.sh passes
++ Reproducers all pass
+
+v1: https://lore.kernel.org/r/20260707-hugetlb-alloc-failure-fixes-v1-0-5bbd3a4b836d@google.com
+v2: https://lore.kernel.org/r/20260708-hugetlb-alloc-failure-fixes-v2-0-c7f27cbb462b@google.com
+
+The series [1] has some changes that are dependent on these fixes, so I'll wait
+for your reviews before continuing on [1].
+
+Thank you!
+
+[1] https://lore.kernel.org/all/20260702-hugetlb-open-up-v4-0-d53cefcccf34@google.com/T/
+[2] https://sashiko.dev/#/patchset/20260518-hugetlb-open-up-v3-0-e14b302477f8%40google.com?part=5
+[3] https://sashiko.dev/#/patchset/20260702-hugetlb-open-up-v4-0-d53cefcccf34%40google.com?part=6
+[4] https://lore.kernel.org/all/CAEvNRgGN0HSJ2iLSDD2haSKOxifa-uhkO9Hwossh0+Q_d9fzOw@mail.gmail.com/
+
 Signed-off-by: Ackerley Tng <ackerleytng@google.com>
-Reviewed-by: Muchun Song <muchun.song@linux.dev>
 ---
- mm/hugetlb.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+Ackerley Tng (13):
+      mm: hugetlb: Track used_hpages when getting/putting pages from subpool
+      mm: hugetlb: Return -ENOSPC on memcg charge failure
+      mm: hugetlb: Use try-commit-cancel protocol for memcg charge of folios
+      mm: hugetlb: Remove unused mem_cgroup_charge_hugetlb function
+      mm: hugetlb: Fix subpool usage leak on allocation failure
+      WIP: mm: hugetlb: Move subpool functions to hugetlb_subpool.c
+      WIP: fs: hugetlbfs: Refactor subpool getters and integrate with hugetlb_subpool API
+      WIP: mm: hugetlb: Make struct hugepage_subpool private to hugetlb_subpool.c
+      WIP: tools: testing: Add userspace unit tests for HugeTLB subpools
+      WIP: Reproducer for allocation failure due to cgroup v2 memory limits
+      WIP: Reproducer for subpool usage leak
+      WIP: Reproducer for false restoration on shared HugeTLB mappings
+      WIP: Reproducer for out_put_pages subpool reserve leakage
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index eef9610a0593c..b32735b092a0a 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -2997,7 +2997,7 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
- 
- 	if (ret == -ENOMEM) {
- 		free_huge_folio(folio);
--		return ERR_PTR(-ENOMEM);
-+		goto err;
- 	}
- 
- 	return folio;
-@@ -3022,6 +3022,17 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
- out_end_reservation:
- 	if (map_chg != MAP_CHG_ENFORCED)
- 		vma_end_reservation(h, vma, addr);
-+err:
-+	/*
-+	 * Return -ENOSPC when this function fails to allocate or
-+	 * charge a huge page. If a standard (PAGE_SIZE) page
-+	 * allocation fails, the OOM killer is given a chance to run,
-+	 * which may resolve the failure on retry. However, for
-+	 * HugeTLB allocations, the OOM killer is not triggered.
-+	 * Returning -ENOMEM (or anything resulting in VM_FAULT_OOM)
-+	 * would leak to the #PF handler, causing it to loop
-+	 * indefinitely retrying the fault.
-+	 */
- 	return ERR_PTR(-ENOSPC);
- }
- 
+ cgroup_v2_allocation_failure.c               | 160 +++++++++++
+ fs/hugetlbfs/inode.c                         |  25 +-
+ hugetlb_reserve_pages_out_put_pages.c        |  49 ++++
+ hugetlb_reserve_pages_out_put_pages.sh       | 153 ++++++++++
+ include/linux/hugetlb.h                      |  17 +-
+ include/linux/memcontrol.h                   |  30 +-
+ mm/Makefile                                  |   2 +-
+ mm/hugetlb.c                                 | 244 ++++------------
+ mm/hugetlb_subpool.c                         | 223 +++++++++++++++
+ mm/hugetlb_subpool.h                         |  21 ++
+ mm/memcontrol.c                              | 116 ++++++--
+ subpool_leak_max_size.sh                     |  71 +++++
+ subpool_shared_leak.c                        |  29 ++
+ subpool_shared_leak.sh                       |  86 ++++++
+ tools/testing/hugetlb_subpool/.gitignore     |   1 +
+ tools/testing/hugetlb_subpool/Makefile       |  18 ++
+ tools/testing/hugetlb_subpool/test_subpool.c | 400 +++++++++++++++++++++++++++
+ 17 files changed, 1399 insertions(+), 246 deletions(-)
+---
+base-commit: b95f03f04d475aa6719d15a636ddf32222d55657
+change-id: 20260706-hugetlb-alloc-failure-fixes-c7f775eca29f
 
--- 
-2.55.0.229.g6434b31f56-goog
+Best regards,
+--
+Ackerley Tng <ackerleytng@google.com>
 
 
