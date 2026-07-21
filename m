@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85AEE4028F7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3DC8402BB3;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784602389; cv=none; b=LbOzW2wDiG01X6KzeCWIDVVclBA9Cc+l0j2YMzNSHFxbBevdGhyx5/ImGIBsolOn9YAPyBpwi1zDutdWWHp+6sshGAOk6M5W0JXR7/bOOVWAI26F3djXXsANbbCIYQkpPaP6G12ihUjY6Xz8nxlDVCo4xAyS6c5W7snw6TG816Q=
+	t=1784602389; cv=none; b=dQXXzC1kfij/TgaBC0beXNH12z2NDUTfnr2cEYq4dcTPifx1njVj6ZOjkCYxxSNOjRqwM6I1B4i1v9CAPmQOMGHbCnmE9m+xtQVkesHFvejiueWo+z40ZddguG8ccVmSO60ujH1J8BRmODT1Bk3LnEgISWwD9j0nmurUIoSS0tk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784602389; c=relaxed/simple;
-	bh=g68oSCwzT15OMQimNW45wJYcvcPo4quFGfzqB+zzwcI=;
+	bh=kttlEIrRapL9va7fSljR3xrwSzOf2bb6snXuzZxqZ30=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=BHbReAIjdZ5q+LcdfCHydI3fIU+d2cl2VpyYuLQVmrbhxAoKJ95qABNJ/NLY9PQp7niiewX9PHtaGNDEp583QI1rbFKxkF25xxdhz3JOS16LZm4sSf5hXPBFPbo+6TmcC7tXyXjuqVqjDrISDWti3MUFKKIEVoshtp3xtB8OMt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MlNg/RAp; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=iMXzVgoVnb9MXWaGLBjf/mXvWD81s7NA63jg4L6F8mF000macsCL4V/86J53XhuJP693hzZanBcGlHOqvviAO6P+PHbI7MKxvqoXIsyWbV4fTqmevIWSr0Ub8oWxEKw8aNV2rBcbwLQIVnmZkPqI/KHIIYn5/FbGbOWX6Ae2OqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZOhggKih; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MlNg/RAp"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 54D73C2BCFD;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZOhggKih"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 881F8C2BCF7;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1784602389;
-	bh=g68oSCwzT15OMQimNW45wJYcvcPo4quFGfzqB+zzwcI=;
+	bh=kttlEIrRapL9va7fSljR3xrwSzOf2bb6snXuzZxqZ30=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=MlNg/RAplDNaPb6B7XrjBfgB8eW3yOcgJlJvX7BL0G09YFKuqHNP/4nPewX0AQgO7
-	 eDhNTLNuTDB0PCaO96TUEM8vZ+B6eQ+sXxmU92O6OEUIqQrcJj6SaSNOIrcVCvorcL
-	 0L40/v2oj/mqmSRuWL0DaTU8/gnsPCgbTN0+tzliOew4yBI1R2Fj3igEpDNmmC+Lzb
-	 oGzXMQR5/WEj4U/WtW2QwFft9saQpoMoY7/evIv6zAaN41Pt5b1tcsBSamTEQStM1h
-	 H2BU4Rvi3fnbRcCuOiB0zYIq6BsVZw+egex94yTJ8HH7qhG/MghtPOiyRSPZPnJZ4z
-	 UVIkCYVK1EwBw==
+	b=ZOhggKih7xOk/MyAuJWaa130N+z1Q9x1F+XEfuajwBORDjzg1QKcUta3uHiqj+QLu
+	 vXPnHaoq/uE8J/O1kfEKI1trcY97vfO1cjJWnRJ5bVIInHaZKKPS7o/onuZMvZHEl9
+	 LAwiKs1u5gGTP7z4Ryki0KHNtoZjge6VdqF30jE+gdXuNxEbmj1DVXW5r0C0RYOudc
+	 PD9DBKg7uiMcqKXwVe7X6R2Ql3/vjd9aXtc55UfZJYuLdnIEiRN7YRFPzHzeWx+1SX
+	 tNqIrk8XWy6dodqh62rbSfIA/XoCoKUGkTpjdK2cYvI0HZilpYvioLpoO72CBstkUT
+	 wYy9P+MUM4i7w==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43133C44531;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74A0BC44524;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 From: Ackerley Tng via B4 Relay <devnull+ackerleytng.google.com@kernel.org>
-Date: Mon, 20 Jul 2026 17:25:11 -0700
-Subject: [PATCH v3 08/13] WIP: mm: hugetlb: Make struct hugepage_subpool
- private to hugetlb_subpool.c
+Date: Mon, 20 Jul 2026 17:25:14 -0700
+Subject: [PATCH v3 11/13] WIP: Reproducer for subpool usage leak
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-8-7d2a169aa9ee@google.com>
+Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-11-7d2a169aa9ee@google.com>
 References: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
 In-Reply-To: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
 To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
@@ -56,11 +55,11 @@ Cc: vannapurve@google.com, erdemaktas@google.com, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
  Ackerley Tng <ackerleytng@google.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=2362;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=4607;
  i=ackerleytng@google.com; s=20260225; h=from:subject:message-id;
- bh=M6CZbHlay9O7mPyDIiOB40w5xsbkP4SdrC/EYdyZfC0=;
- b=EKSNPcPFErEcErK9ZdAcLB9AUma7YsDD5mhlF9ptqMRDEPyM8LE51vREzhRtzj/WSlU3plrqD
- WQwh+ogZMhrC8TVS/THJDOBsQh9QXXvOAFq7sC5ey7BszOhs0v7FFYF
+ bh=inX7G11YaaxbwEU3Aj5PB0crlLMuo9T1V2I+32/3MYg=;
+ b=2snhi0Fk67JboBtC3TcQ7c/BnoASl8jauKmvWjHDI4B5pTaAhEL4c/GXuRyTy283zI1c7EcHa
+ Em1FnEeYordAxOBRStKhF9bHrxmCLw+F4rYPMhqRBYEn6LJ0/c0I9V8
 X-Developer-Key: i=ackerleytng@google.com; a=ed25519;
  pk=sAZDYXdm6Iz8FHitpHeFlCMXwabodTm7p8/3/8xUxuU=
 X-Endpoint-Received: by B4 Relay for ackerleytng@google.com/20260225 with
@@ -70,74 +69,128 @@ Reply-To: ackerleytng@google.com
 
 From: Ackerley Tng <ackerleytng@google.com>
 
-Now that all filesystem and memory management subpool layout inspections across
-`fs/hugetlbfs/inode.c` and `mm/` leverage the exported, harmonized APIs, transition
-`struct hugepage_subpool` out of the public header `include/linux/hugetlb.h` and
-encapsulate it privately inside `mm/hugetlb_subpool.c`.
+(This reproducer was hacked up and not meant to be merged.)
 
-Replace the header definition with a forward declaration, completely protecting the
-underlying subpool allocation counters, reservations, and spinlock boundaries.
+The kernel leaks subpool usage and the subpool structure itself if a HugeTLBfs
+mount specifying size (which sets max_hpages on the subpool) is created.
+
+subpool_leak_max_size.sh reproduces this with the following steps:
+
+1. Create mount, specifying size=2M (1 page). This sets max_hpages = 1 on the
+   subpool, but does not reserve any pages.
+2. Set nr_hugepages = 0 and nr_overcommit_hugepages = 0 so that physical
+   allocations will fail.
+3. Run fallocate -l 2M on a file in the mount.
+     + This calls hugetlbfs_fallocate, which attempts to allocate a page by
+       calling alloc_hugetlb_folio.
+     + alloc_hugetlb_folio calls hugepage_subpool_get_pages to track the
+       allocation against the subpool limit. This increments used_hpages to 1.
+     + Physical allocation fails because nr_hugepages is 0.
+     + Before patch (Buggy):
+         + The error path in alloc_hugetlb_folio sees gbl_chg is 1 (indicating
+           we tried to allocate a global page) and incorrectly skips calling
+           hugepage_subpool_put_pages.
+         + fallocate fails and returns to userspace, but the subpool used_hpages
+           counter remains leaked at 1.
+     + After patch:
+         + The error path always calls hugepage_subpool_put_pages if map_chg is
+           true, restoring used_hpages to 0.
+
+4. Unmount the filesystem.
+     + During unmount, the kernel calls unlock_or_release_subpool to clean up
+       the subpool.
+     + It checks if the subpool is free using subpool_is_free, which returns
+       whether used_hpages is 0.
+     + Before patch (Buggy):
+         + Since used_hpages leaked and is 1, subpool_is_free returns false.
+         + The kernel skips freeing the subpool structure, leaking the
+           hugepage_subpool structure in kernel memory.
+     + After patch:
+         + Since used_hpages is 0, subpool_is_free returns true, and the subpool
+           structure is correctly freed.
 
 Signed-off-by: Ackerley Tng <ackerleytng@google.com>
 ---
- include/linux/hugetlb.h | 13 ++-----------
- mm/hugetlb_subpool.c    | 12 ++++++++++++
- 2 files changed, 14 insertions(+), 11 deletions(-)
+ subpool_leak_max_size.sh | 71 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 71 insertions(+)
 
-diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index f36be371c6e88..074a45903973e 100644
---- a/include/linux/hugetlb.h
-+++ b/include/linux/hugetlb.h
-@@ -18,6 +18,7 @@
- 
- struct mmu_gather;
- struct node;
-+struct hstate;
- 
- void free_huge_folio(struct folio *folio);
- 
-@@ -34,17 +35,7 @@ void free_huge_folio(struct folio *folio);
-  */
- #define __NR_USED_SUBPAGE 3
- 
--struct hugepage_subpool {
--	spinlock_t lock;
--	long count;
--	long max_hpages;	/* Maximum huge pages or -1 if no maximum. */
--	long used_hpages;	/* Used page count, includes both */
--				/* allocated and reserved pages. */
--	struct hstate *hstate;
--	long min_hpages;	/* Minimum huge pages or -1 if no minimum. */
--	long rsv_hpages;	/* Pages reserved against global pool to */
--				/* satisfy minimum size. */
--};
-+struct hugepage_subpool;
- 
- struct resv_map {
- 	struct kref refs;
-diff --git a/mm/hugetlb_subpool.c b/mm/hugetlb_subpool.c
-index 99e7975911079..eb5472bdf2192 100644
---- a/mm/hugetlb_subpool.c
-+++ b/mm/hugetlb_subpool.c
-@@ -14,6 +14,18 @@
- #include <linux/bug.h>
- #include "hugetlb_subpool.h"
- 
-+struct hugepage_subpool {
-+	spinlock_t lock;
-+	long count;
-+	long max_hpages;	/* Maximum huge pages or -1 if no maximum. */
-+	long used_hpages;	/* Used page count, includes both */
-+				/* allocated and reserved pages. */
-+	struct hstate *hstate;
-+	long min_hpages;	/* Minimum huge pages or -1 if no minimum. */
-+	long rsv_hpages;	/* Pages reserved against global pool to */
-+				/* satisfy minimum size. */
-+};
+diff --git a/subpool_leak_max_size.sh b/subpool_leak_max_size.sh
+new file mode 100755
+index 0000000000000..bfafa1ba074ea
+--- /dev/null
++++ b/subpool_leak_max_size.sh
+@@ -0,0 +1,71 @@
++#!/bin/bash
 +
- static inline bool subpool_is_free(struct hugepage_subpool *spool)
- {
- 	if (spool->count)
++if [ "$EUID" -ne 0 ]; then
++    echo "Please run as root"
++    exit 1
++fi
++
++MNT_PATH="/tmp/mnt_hugetlb"
++FILE_PATH="$MNT_PATH/test_file"
++
++# Save original values
++orig_nr=$(cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages)
++orig_overcommit=$(cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_overcommit_hugepages)
++
++cleanup() {
++    echo "Cleaning up..."
++    rm -f "$FILE_PATH"
++    umount "$MNT_PATH" 2>/dev/null
++    rmdir "$MNT_PATH" 2>/dev/null
++    echo "$orig_nr" > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
++    echo "$orig_overcommit" > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_overcommit_hugepages
++    echo "Cleanup done."
++}
++trap cleanup EXIT
++
++# 1. Mount hugetlbfs with size=2M (1 page)
++mkdir -p "$MNT_PATH"
++if ! mount -t hugetlbfs -o size=2M none "$MNT_PATH"; then
++    echo "Failed to mount hugetlbfs"
++    exit 1
++fi
++
++# 2. Set nr_hugepages to 0, overcommit to 0
++echo 0 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
++echo 0 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_overcommit_hugepages
++
++# Check subpool usage before running
++read total free < <(stat -f -c "%b %f" "$MNT_PATH")
++used_before=$((total - free))
++echo "Before test - Subpool total blocks: $total"
++echo "Before test - Subpool free blocks:  $free"
++echo "Before test - Subpool used blocks:  $used_before"
++if [ "$used_before" -ne 0 ]; then
++    echo "ERROR: Subpool is not clean before test starts!"
++    exit 1
++fi
++
++# Run fallocate (expecting failure)
++echo "Running fallocate (expecting failure)..."
++if fallocate -l 2M "$FILE_PATH" 2>/dev/null; then
++    echo "ERROR: fallocate succeeded but should have failed (nr_hugepages is 0)"
++    exit 1
++fi
++
++# Check subpool usage via statfs
++# %b: Total blocks
++# %f: Free blocks
++read total free < <(stat -f -c "%b %f" "$MNT_PATH")
++used=$((total - free))
++
++echo "Subpool total blocks: $total"
++echo "Subpool free blocks:  $free"
++echo "Subpool used blocks (leaked if > 0): $used"
++
++if [ "$used" -gt 0 ]; then
++    echo "RESULT: LEAK DETECTED (FAIL)"
++    exit 1
++else
++    echo "RESULT: NO LEAK (PASS)"
++    exit 0
++fi
 
 -- 
 2.55.0.229.g6434b31f56-goog
