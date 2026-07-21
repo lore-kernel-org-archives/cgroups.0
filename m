@@ -1,137 +1,212 @@
-Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E66E91FF1DA
-	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 04:09:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59C38386550;
+	Tue, 21 Jul 2026 05:43:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784606985; cv=none; b=XdQwNFzoWJ9GicUeIKu6JEeNid1UyNpQlgjbdHXG1VvltMPvkTx+p07wz08cl/ubkwkohbrNvWkVhU8PvLJ416JHgnhx4dhIx+XbgzSFd+R+gj4Rs/u+kX6W3PohEcqPIAXENbzDLIkELT2iMUq274iG4FzhCRPUZo716WdY4bU=
+	t=1784612629; cv=none; b=nS5l4gq2382w7I3IAp/Qopg2kA1zcThDpUohYt/P2iNWe7ae0Waern5tdPwzTssxKd6/KWvQcESczyK+Jlf6Zr1r38aWVUm3u9pux922y+ipbyUby4sjtet+3nuXBNbz5YNaEvR8KnxvdfpZNi/RwXdXoajS1ipaUuf4rTHsyuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784606985; c=relaxed/simple;
-	bh=TfHtN98F+C0beBAmQC91Qi2Fba7QSVBUL1zD90xob5U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VfururtGR6DkHEO5FKkMDb71/+XzdsWp/F7qkZrIL0Oc4WZunsx8s/5Ozc81XJnyHBBFy4EXAjAAH2ad7/bH+O8NRH/TijZSsCW5nXTMbm4vBQBHaVGQUwAnhx1zMMS7hbt4v/RgH/yZDc5vYA1Ve76bHP/v9In3xENrTA+AByg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Q2fj3TUk; arc=none smtp.client-ip=95.215.58.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784612629; c=relaxed/simple;
+	bh=1E5hrC0GLOtnEChmCYRZDrDcV/YPnPASbnuVNu1+9EU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ng3isEsYC9VTSK2qDqJ5zNn9Y+N76JpMkCkwPZNYIYwXRjSm819+ezkQIi41EzrlNlQXmyL1Le3ZjToK5gRfFjWTaxXgRpzMBJ4AeAMBqFAoc9q2m43DSbqcysjq/ysvZd+wxkKFeobOcHJMTAw4eB2dMzs/kkCBiyXA1yFajsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Foq28WPh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Q2fj3TUk"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784606967;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=7RH3/Rwf7tA6LTcRQBD8dH2kVM7pDy1c+3FZ4K3r3vw=;
-	b=Q2fj3TUkPE4a7UUD0FDxuB0mPANlCCFPRs6iya5K+S6c7MHuupWk1N97IZFYsnzY5xJagW
-	Il/S8t37gTok+qjPZA/KAME8dj/nUmLsuMmHs71Y+AaJ3ho31IZi/3PuJ6X26Rkbav+h45
-	HAUAnWppWVE6ykUj+Htb/QF7WaGIJhw=
-From: Tao Cui <cui.tao@linux.dev>
-To: tj@kernel.org,
-	axboe@kernel.dk
-Cc: linux-block@vger.kernel.org,
-	josef@toxicpanda.com,
-	yukuai3@huawei.com,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	david.laight.linux@gmail.com,
-	haris.iqbal@linux.dev,
-	cui.tao@linux.dev,
-	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH v3] blk-throttle: fix divide-by-zero on legacy iops limit of 0
-Date: Tue, 21 Jul 2026 12:08:50 +0800
-Message-ID: <20260721040850.90544-1-cui.tao@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Foq28WPh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7678B1F000E9;
+	Tue, 21 Jul 2026 05:43:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784612627;
+	bh=meJhmwUfnjOSp8m4k+erl7xb2QjuGv1a7LosgCLMC3w=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Foq28WPh8couwfB2Ljzyrr9Kv43HLtbC9JwcBZVDRIySK6OhX2CW8yIrUTFl0eomd
+	 TKAbM0LDTW45qhdiUR5wblr62ZILUSI2rPc2ZROEnG1ep8GfXwd6d0+BQYwSpyksLt
+	 b3GqPqfZZRA9eIjUDAX7m2uWCuTDZwNLGe5OB37hAkqKP5pBHstDkI/Mq8jY/ULPtz
+	 2B84OsXGn5IbZ5XaRXR2islFFPAK6K5v6J5Lk7MMkMSvFOP+FkpBVYghJStorOGDgq
+	 vot39Me7Gxt8+ZqY45mqWEDNAXQ2v1EnYgxNi/Vp9iwecX9YYYiHNrWPxgkoLBX6yb
+	 M4L1mGMGOoI7A==
+Message-ID: <da6ca31c-f97c-4cd1-9380-4fe50d797a7d@kernel.org>
+Date: Tue, 21 Jul 2026 14:43:40 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/13] mm/slab: skip kfence objects in allocation
+ profiling
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
+ Suren Baghdasaryan <surenb@google.com>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-1-2fa7c6f60dbe@kernel.org>
+Content-Language: en-US
+From: Harry Yoo <harry@kernel.org>
+In-Reply-To: <20260720-b4-objext_split-v2-1-2fa7c6f60dbe@kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------BcYzxlX3VPSEK1j5AEJfPS35"
 
-From: Tao Cui <cuitao@kylinos.cn>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------BcYzxlX3VPSEK1j5AEJfPS35
+Content-Type: multipart/mixed; boundary="------------2Fwu9gZK7PiMF1w25tWuNnKl";
+ protected-headers="v1"
+From: Harry Yoo <harry@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
+ Suren Baghdasaryan <surenb@google.com>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Message-ID: <da6ca31c-f97c-4cd1-9380-4fe50d797a7d@kernel.org>
+Subject: Re: [PATCH v2 01/13] mm/slab: skip kfence objects in allocation
+ profiling
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-1-2fa7c6f60dbe@kernel.org>
+In-Reply-To: <20260720-b4-objext_split-v2-1-2fa7c6f60dbe@kernel.org>
 
-Writing a multiple of 2^32 (e.g. 4294967296) to a legacy cgroup v1
-throttle iops file (blkio.throttle.{read,write}_iops_device) silently
-truncates to 0: tg_set_conf() stores the sscanf-parsed u64 value into
-an unsigned int field with no clamping. The cgroup v2 path,
-tg_set_limit(), already clamps the same kind of value with
-min_t(u64, val, UINT_MAX), but the legacy path never did. Note that
-the "!v -> U64_MAX" mapping only catches an explicit zero and does not
-catch a value that truncates to zero.
+--------------2Fwu9gZK7PiMF1w25tWuNnKl
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-With iops stored as 0, tg_update_has_rules() sets has_rules_iops[] and
-the next IO reaches tg_within_iops_limit(), which computes
 
-    jiffy_wait = max(jiffy_wait, HZ / iops_limit + 1);
 
-triggering a divide-by-zero oops. The unclamped write in tg_set_conf()
-is long-standing, but it only became a crash once the HZ / iops_limit
-divide was added.
+On 7/20/26 11:16 PM, Vlastimil Babka (SUSE) wrote:
+> struct kfence_metadata only contains struct slabobj_ext with
+> CONFIG_MEMCG, which is then used for the "fake" slab's obj_exts field.
+> If CONFIG_MEMCG is enabled, the struct can also end up used for memory
+> allocation profiling. If CONFIG_MEMCG is disabled but profiling is
+> enabled, it will end up allocating its obj_exts via
+> prepare_slab_obj_exts_hook() and assigning them to the fake struct slab=
+=2E
+> These will probably then never be freed.
+>=20
+> So things sorta work, but not always in the intended and optimal way.
+> The upcoming changes to slabobj_ext layout would additionally need a
+> proper refactoring to keep working.
+>=20
+> However, there's little benefit in accounting KFENCE objects. KFENCE
+> allocations are rare and there can be only CONFIG_KFENCE_NUM_OBJECTS
+> (default to 255) outstanding ones at any time. For any callsite
+> prominent enough in the memory allocation profiling stats, allocations
+> served from KFENCE will be lost in the noise.
 
-Fix it in two places:
+For a similar reason I wonder if we can drop obj_exts completely.
+The idea that kfence objects might have different slabobj_ext layout
+isn't really worth the extra complexity if we have very limited amount
+of kfence objects. The amount of objects that escape memcg accounting
+will be quite limited.
 
-  * tg_set_conf(): clamp the value to UINT_MAX, consistent with
-    tg_set_limit(). This closes the truncation root cause (and the
-    general silent truncation for any value above UINT_MAX).
+Any thoughts from KFENCE & MEMCG folks?
 
-  * tg_dispatch_iops_time(): treat iops_limit == 0 as unlimited so the
-    divide in tg_within_iops_limit() is never reached, defending
-    against any future path that could produce a zero limit.
+> Thus let's not complicate things and simply stop accounting KFENCE
+> objects in allocation profiling and skip them in the related slab hooks=
+=2E
+>=20
+> We also need to skip kfence objects in mark_obj_codetag_empty() in case=
 
-Fixes: 1beabab88ece ("blk-throttle: fix lower control under super low iops limit")
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+> a sheaf is allocated from kfence, per earlier sashiko review.
+>=20
+> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> ---
+>  Documentation/mm/allocation-profiling.rst |  7 +++++++
+>  mm/slub.c                                 | 11 +++++++++++
+>  2 files changed, 18 insertions(+)
+>=20
+> diff --git a/Documentation/mm/allocation-profiling.rst b/Documentation/=
+mm/allocation-profiling.rst
+> index 5389d241176a..d02eb54ee8f2 100644
+> --- a/Documentation/mm/allocation-profiling.rst
+> +++ b/Documentation/mm/allocation-profiling.rst
+> @@ -112,3 +112,10 @@ break it out by rhashtable type.
+> =20
+>  - Then, use the following form for your allocations:
+>    alloc_hooks_tag(ht->your_saved_tag, kmalloc_noprof(...))
+> +
+> +Notes
+> +=3D=3D=3D=3D=3D
+> +
+> +- When a slab object is allocated from KFENCE, its accounting is skipp=
+ed.
+> +  KFENCE allocations are rare and limited to a small number, so this o=
+mission
+> +  is negligible.
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 0337e60db5ac..76acb78f2655 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -2076,6 +2076,11 @@ static inline void mark_obj_codetag_empty(const =
+void *obj)
+>  		struct slabobj_ext *ext =3D slab_obj_ext(obj_slab,
+>  						       slab_exts, offs);
+> =20
+> +		if (is_kfence_address(obj)) {
+> +			put_slab_obj_exts(slab_exts);
+> +			return;
+> +		}
 
----
-Changes in v3:
-- Drop the (u64) cast on UINT_MAX: the kernel's type-checked min() accepts
-  two unsigned types of different width (both >= 4 bytes), so
-  min(v, UINT_MAX) compiles clean. (David Laight)
-- Add a Fixes: tag pointing at the commit that introduced the
-  HZ / iops_limit divide, which is also where the oops became reachable.
+I think we should check this before get_slab_obj_exts()?
 
-Changes in v2:
-- Use a "void *field" local for the config write so the assignment reads
-  *(u64 *)field / *(unsigned int *)field instead of the
-  (type *)((void *)tg + of_cft(of)->private) casts.
-- Use min(v, UINT_MAX) instead of min_t(u64, v, UINT_MAX).
----
- block/blk-throttle.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+Checking if the object is from kfence after slab_obj_ext_codetag_ref()
+looks bit weird.
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index ffc3b70065d4..e894852c3142 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -883,7 +883,12 @@ static unsigned long tg_dispatch_iops_time(struct throtl_grp *tg, struct bio *bi
- 	u32 iops_limit = tg_iops_limit(tg, rw);
- 	unsigned long iops_wait;
- 
--	if (iops_limit == UINT_MAX || tg->flags & THROTL_TG_CANCELING)
-+	/*
-+	 * iops_limit == 0 is not a valid limit. Treat it as unlimited so we
-+	 * never reach the HZ / iops_limit divide in tg_within_iops_limit().
-+	 */
-+	if (iops_limit == UINT_MAX || iops_limit == 0 ||
-+	    tg->flags & THROTL_TG_CANCELING)
- 		return 0;
- 
- 	tg_update_slice(tg, rw);
-@@ -1383,10 +1388,12 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
- 	tg = blkg_to_tg(ctx.blkg);
- 	tg_update_carryover(tg);
- 
-+	void *field = (void *)tg + of_cft(of)->private;
-+
- 	if (is_u64)
--		*(u64 *)((void *)tg + of_cft(of)->private) = v;
-+		*(u64 *)field = v;
- 	else
--		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
-+		*(unsigned int *)field = min(v, UINT_MAX);
- 
- 	tg_conf_updated(tg, false);
- 	ret = 0;
--- 
-2.43.0
+Otherwise LGTM.
 
+> +
+>  		if (unlikely(is_codetag_empty(&ext->ref))) {
+>  			put_slab_obj_exts(slab_exts);
+>  			return;
+> @@ -2352,6 +2357,9 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache=
+ *s, void *object, gfp_t flags,
+>  	if (alloc_flags & SLAB_ALLOC_NO_RECURSE)
+>  		return;
+> =20
+> +	if (is_kfence_address(object))
+> +		return;
+> +
+>  	slab =3D virt_to_slab(object);
+>  	obj_exts =3D prepare_slab_obj_exts_hook(s, slab, flags, alloc_flags, =
+object);
+>  	/*
+> @@ -2399,6 +2407,9 @@ __alloc_tagging_slab_free_hook(struct kmem_cache =
+*s, struct slab *slab, void **p
+>  	for (i =3D 0; i < objects; i++) {
+>  		unsigned int off =3D obj_to_index(s, slab, p[i]);
+> =20
+> +		if (is_kfence_address(p[i]))
+> +			continue;
+> +
+>  		alloc_tag_sub(&slab_obj_ext(slab, obj_exts, off)->ref, s->size);
+>  	}
+>  	put_slab_obj_exts(obj_exts);
+>=20
+
+--=20
+Cheers,
+Harry / Hyeonggon
+
+--------------2Fwu9gZK7PiMF1w25tWuNnKl--
+
+--------------BcYzxlX3VPSEK1j5AEJfPS35
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCal8HDAAKCRCGXBN6rc5S
+1inqAP9Xf5gpteIoCx+wRMSTfe3rUiOi1kgL0f7l+nIX7MTGvwEAoIuZmbTxNxGc
+ptiFK2CT0FBb+0PUFF6oYZruDcKjsA4=
+=QTRH
+-----END PGP SIGNATURE-----
+
+--------------BcYzxlX3VPSEK1j5AEJfPS35--
