@@ -1,245 +1,212 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50D41443E5F
-	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 08:15:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49D873D093F;
+	Tue, 21 Jul 2026 09:20:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784621736; cv=none; b=F94qGK9LPUVqudwtUxAcJJ8tRm7dFZDfhyivXD3Vo3dz0N02LeCl9HY+s2eVNA05SUQAYZztWs9EHXlwemcDvDyUdhTEhdanK0hA+ERBmUd41kwziMpJS7NRl5hU0v+2ENHT5s3aAzP1/W4jQwJgNMU7i9QUUheXksHLJZISGWs=
+	t=1784625618; cv=none; b=KUb8gZrlOxZD4YWj+kkwMJG6AmujPNjyvfeOl2oB+u5F3eYlSHJo206Zcx32KKKpJ69Px3gZJZTP+KAgd9p3WlUE5dcd69IWDTj5c3ZxtYOgPaUl2dJIb+fOyODV9M0WHFEstSy39dzlW5XJnrg5xZAeh4e7mM8ytVS91dMckls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784621736; c=relaxed/simple;
-	bh=/kqMlFpa3DH8uu2+N9Z8MWX5mtoM/86thU2mifGB5N8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cTpHtZEpAdBHG0sxrObBsqJPOnkfezx4TN8gisHdvjkdIgbY37o2oVe8rcdmZAM7IMpIu4uhRgXBil676YuW1czjgvcoYgR2t8zoqhjOPAIPFkAPnCCt6qYrG/rxg+aDRVeXY6N1LbjCkoEkDM3kLa10lG7D2GjtYS0/i+zB4ys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nCun/1IK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784625618; c=relaxed/simple;
+	bh=7Dbzz8SJLO1TuzmgZeg9FfFhp+dhbfV+gZupAJy3Dy0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UuoM16NYn5XgNOvUyj8W9HoG3k2/iHvtnV0sEBIZMuSii21bOorJc48ubHiwJVYnDtbd3gI50F5ZWSCt/Q1vI7N13tN1g55tzVMn+70BLwvvR960UrDxQTKi/0Fu3RtLfAxC/m0XzQZRPGO3WydbEgRTAxV6979Heb4rYYaerVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bw5OEAe2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nCun/1IK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D96A1F01563
-	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 08:15:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bw5OEAe2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A57911F00A3D;
+	Tue, 21 Jul 2026 09:20:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784621726;
-	bh=k6GIJgFDTy/vqDnytZl/JyP3muRYfZ+Zlb37RJw8cgk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=nCun/1IKrput9L6BJRQF82f66aGzVksi06wOOL9IFsA+jE5oaZ2+FIZtdu9cigQcc
-	 EmCPD4r2sTdNYZShrl2Nm/psCu2Mr03ip+5/zDcPF9C/JRkeusszyYH5Y/twrRzp5n
-	 LaD4V+E83ACDDM9cgEWHIfIEAqQ69N+x2aulXbwCYXjsqIWQrk4byX1J9df4FaHSLN
-	 +y9mYL7i37i3Tb6CDN6r3yNRFkROEhSpQqsF3a9NX5NG8xHpVANl3NrypPKtD8WX5G
-	 lMbLelPHPGnwpO3nxCyMz8iBjtHAVJnIhgwuVBMZmhdpophnZDDBg6wQCyw6uGtFGE
-	 LxfvOE/6+vztQ==
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-8eeb4508f29so111975176d6.0
-        for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 01:15:25 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RrdPhC1wosoiDV+M+VvwIoG8uEHD2VFyE6QuHKlMrjNHp9AzjPnZkFq/QBnc/Y0b9jAxdRQ+GqV@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxc80EvG3ss29konDIRN8t+qQB/W+RAsr8pR89AnijO4qYSzGTB
-	Xq8pVU0yHL36yAnWjK+d9rzopTj5D6zV183N2N97saFDi6Qp3WBOBj2aZfkIUs62hfuUbGBkV8w
-	eTXh5oeB+jmL41kexOMRvUn0mvOwYUQc=
-X-Received: by 2002:a05:620a:a489:b0:930:b867:4c9a with SMTP id
- af79cd13be357-930b8675a97mr1453716485a.56.1784621725297; Tue, 21 Jul 2026
- 01:15:25 -0700 (PDT)
+	s=k20260515; t=1784625617;
+	bh=RXbi65g0B2x3zSEY3/jiZ4q6NSDtzWd4WeQahT18Nm8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=bw5OEAe2QR/KdmtZ71poTClbJsrEiBVJ/goxjbCH9efpvu50jRYD8zq8hbUOwOYpA
+	 a3To6pkAdT8nhq3oTSkBuChpYOURbkETb6xN1sXW+hUy8Oqrfya5K5tdwkc5p4x4DY
+	 7C6Zk4NAUQJLSaI7MuvFQrK79x1JkZG5wk7soKjmyS/D6J6zaHfMpCDvCOEoignLiR
+	 x7ivuy/MsauqvrCuiCF1oGpDXoe/dOch98Ul8FuxUR3ebVEzEXjopke5FYmLw3jV/Z
+	 A4EFiXkvrqGM37n+66VmBl8OLX90+n8hzRaNfVAFps/cSf6U0Yxw/hv+2XklT1q12G
+	 veSMpIW1blnNg==
+Message-ID: <96468090-6b31-4f78-a813-c5729b53aa3d@kernel.org>
+Date: Tue, 21 Jul 2026 11:20:12 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260717122514.51514-1-xueyuan.chen21@gmail.com> <20260717122514.51514-3-xueyuan.chen21@gmail.com>
-In-Reply-To: <20260717122514.51514-3-xueyuan.chen21@gmail.com>
-From: Barry Song <baohua@kernel.org>
-Date: Tue, 21 Jul 2026 16:15:13 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4xv2AGrLY2PBA77fZiqctPEt_ERcUXUvFOdOG72LD_usQ@mail.gmail.com>
-X-Gm-Features: AUfX_mxDnJFvZOXGyq-1zLN4DNo65_cLn0W0QN8SJWGyzS-He2qedvUT5lVMyN4
-Message-ID: <CAGsJ_4xv2AGrLY2PBA77fZiqctPEt_ERcUXUvFOdOG72LD_usQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v3 2/4] mm: distinguish large folio swap allocation failures
-To: Xueyuan Chen <xueyuan.chen21@gmail.com>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, 
-	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
-	shakeel.butt@linux.dev, muchun.song@linux.dev, chrisl@kernel.org, 
-	kasong@tencent.com, shikemeng@huaweicloud.com, nphamcs@gmail.com, 
-	bhe@redhat.com, youngjun.park@lge.com, david@kernel.org, ljs@kernel.org, 
-	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
-	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
-	weixugc@google.com, baolin.wang@linux.alibaba.com, hughd@google.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/13] mm/slab: skip kfence objects in allocation
+ profiling
+Content-Language: en-US
+To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-1-2fa7c6f60dbe@kernel.org>
+ <da6ca31c-f97c-4cd1-9380-4fe50d797a7d@kernel.org>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <da6ca31c-f97c-4cd1-9380-4fe50d797a7d@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jul 17, 2026 at 8:25=E2=80=AFPM Xueyuan Chen <xueyuan.chen21@gmail.=
-com> wrote:
->
-> folio_alloc_swap() reports most allocation failures with a generic
-> negative error code. Reclaim cannot tell whether splitting a large folio
-> could make progress or whether there is no backing space at all.
->
-> Track the global free swap count around the allocation attempt and let th=
-e
-> memcg swap charge path cap it by the remaining hierarchical swap margin.
-> Return -E2BIG for large folios when a smaller allocation might still fit,
-> -ENOSPC when no swap space is available, and -ENOMEM when the failure is
-> not helped by splitting.
->
-> This only refines folio_alloc_swap() return codes. The reclaim caller is
-> updated separately.
->
-> Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
-> ---
->  include/linux/swap.h | 10 ++++++----
->  mm/memcontrol.c      | 10 +++++++++-
->  mm/swapfile.c        | 21 +++++++++++++++------
->  3 files changed, 30 insertions(+), 11 deletions(-)
->
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 7a09df6977a5..0695ac56457f 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -571,13 +571,14 @@ static inline void folio_throttle_swaprate(struct f=
-olio *folio, gfp_t gfp)
->  #endif
->
->  #if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
-> -int __mem_cgroup_try_charge_swap(struct folio *folio, swp_entry_t entry)=
-;
-> +int __mem_cgroup_try_charge_swap(struct folio *folio, swp_entry_t entry,
-> +                                long *nr_swap_pages);
->  static inline int mem_cgroup_try_charge_swap(struct folio *folio,
-> -               swp_entry_t entry)
-> +               swp_entry_t entry, long *nr_swap_pages)
->  {
->         if (mem_cgroup_disabled())
->                 return 0;
-> -       return __mem_cgroup_try_charge_swap(folio, entry);
-> +       return __mem_cgroup_try_charge_swap(folio, entry, nr_swap_pages);
->  }
->
->  extern void __mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int n=
-r_pages);
-> @@ -592,7 +593,8 @@ extern long mem_cgroup_get_nr_swap_pages(struct mem_c=
-group *memcg);
->  extern bool mem_cgroup_swap_full(struct folio *folio);
->  #else
->  static inline int mem_cgroup_try_charge_swap(struct folio *folio,
-> -                                            swp_entry_t entry)
-> +                                            swp_entry_t entry,
-> +                                            long *nr_swap_pages)
->  {
->         return 0;
->  }
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 1e10f493d2a9..7c9e7072fb39 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5472,12 +5472,14 @@ int __init mem_cgroup_init(void)
->   * __mem_cgroup_try_charge_swap - try charging swap space for a folio
->   * @folio: folio being added to swap
->   * @entry: swap entry to charge
-> + * @nr_swap_pages: optional swap availability to cap by memcg margin
->   *
->   * Try to charge @folio's memcg for the swap space at @entry.
->   *
->   * Returns 0 on success, -ENOMEM on failure.
->   */
-> -int __mem_cgroup_try_charge_swap(struct folio *folio, swp_entry_t entry)
-> +int __mem_cgroup_try_charge_swap(struct folio *folio, swp_entry_t entry,
-> +                                long *nr_swap_pages)
->  {
->         unsigned int nr_pages =3D folio_nr_pages(folio);
->         struct page_counter *counter;
-> @@ -5495,6 +5497,9 @@ int __mem_cgroup_try_charge_swap(struct folio *foli=
-o, swp_entry_t entry)
->         rcu_read_lock();
->         memcg =3D obj_cgroup_memcg(objcg);
->         if (!entry.val) {
-> +               if (nr_swap_pages && !mem_cgroup_is_root(memcg))
-> +                       *nr_swap_pages =3D min(*nr_swap_pages,
-> +                                            page_counter_margin(&memcg->=
-swap));
+On 7/21/26 07:43, Harry Yoo wrote:
+> On 7/20/26 11:16 PM, Vlastimil Babka (SUSE) wrote:
+>> struct kfence_metadata only contains struct slabobj_ext with
+>> CONFIG_MEMCG, which is then used for the "fake" slab's obj_exts field.
+>> If CONFIG_MEMCG is enabled, the struct can also end up used for memory
+>> allocation profiling. If CONFIG_MEMCG is disabled but profiling is
+>> enabled, it will end up allocating its obj_exts via
+>> prepare_slab_obj_exts_hook() and assigning them to the fake struct slab.
+>> These will probably then never be freed.
+>> 
+>> So things sorta work, but not always in the intended and optimal way.
+>> The upcoming changes to slabobj_ext layout would additionally need a
+>> proper refactoring to keep working.
+>> 
+>> However, there's little benefit in accounting KFENCE objects. KFENCE
+>> allocations are rare and there can be only CONFIG_KFENCE_NUM_OBJECTS
+>> (default to 255) outstanding ones at any time. For any callsite
+>> prominent enough in the memory allocation profiling stats, allocations
+>> served from KFENCE will be lost in the noise.
+> 
+> For a similar reason I wonder if we can drop obj_exts completely.
 
-This looks a bit odd. Could we decouple *nr_swap_pages from margin and
-have the function always return margin instead?
+To make it clear, you mean kfence objects wouldn't have objcg accounting and
+would essentially behave as if obj_exts for them could not be allocated.
 
-I don't think this function needs to care about the initial value returned =
-by
-get_nr_swap_pages(). While folio_alloc_swap() may depend on it, they're
-different software layers, and we shouldn't couple them together.
+> The idea that kfence objects might have different slabobj_ext layout
+> isn't really worth the extra complexity if we have very limited amount
+> of kfence objects. The amount of objects that escape memcg accounting
+> will be quite limited.
 
+Indeed. I think the main point wasn't to have everything accounted, but to
+avoid specially cased kfence paths.
 
->                 memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
->                 rcu_read_unlock();
->                 return 0;
-> @@ -5509,6 +5514,9 @@ int __mem_cgroup_try_charge_swap(struct folio *foli=
-o, swp_entry_t entry)
->                 memcg_memory_event(memcg, MEMCG_SWAP_MAX);
->                 memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
->                 mem_cgroup_private_id_put(memcg, nr_pages);
-> +               if (nr_swap_pages)
-> +                       *nr_swap_pages =3D min(*nr_swap_pages,
-> +                                            page_counter_margin(counter)=
-);
->                 return -ENOMEM;
->         }
->         mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
-> diff --git a/mm/swapfile.c b/mm/swapfile.c
-> index 9174f1eeffb0..53a921ca099a 100644
-> --- a/mm/swapfile.c
-> +++ b/mm/swapfile.c
-> @@ -1690,12 +1690,14 @@ static int swap_dup_entries_cluster(struct swap_i=
-nfo_struct *si,
->   * swap cache.
->   *
->   * Context: Caller needs to hold the folio lock.
-> - * Return: Whether the folio was added to the swap cache.
-> + * Return: 0 on success, -E2BIG if splitting the folio might allow swapo=
-ut,
-> + * or another negative error code if splitting would not help.
->   */
->  int folio_alloc_swap(struct folio *folio)
->  {
->         unsigned int order =3D folio_order(folio);
->         unsigned int size =3D 1 << order;
-> +       long nr_swap_pages;
->
->         VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
->         VM_BUG_ON_FOLIO(!folio_test_uptodate(folio), folio);
-> @@ -1706,7 +1708,7 @@ int folio_alloc_swap(struct folio *folio)
->                  * the caller should split the folio and try again.
->                  */
->                 if (!IS_ENABLED(CONFIG_THP_SWAP))
-> -                       return -EAGAIN;
-> +                       return -E2BIG;
+But I think this would probably just require adding is_kfence checks to
+objext allocation paths to fail them, so that's manageable. Should perhaps
+allow moving some of the checks added by this patch to more generic shared
+places.
 
-We could also have the case where we're running out of swap space and it's =
-not
-worth splitting, even when THP_SWAP is disabled.
+> Any thoughts from KFENCE & MEMCG folks?
+> 
+>> Thus let's not complicate things and simply stop accounting KFENCE
+>> objects in allocation profiling and skip them in the related slab hooks.
+>> 
+>> We also need to skip kfence objects in mark_obj_codetag_empty() in case
+>> a sheaf is allocated from kfence, per earlier sashiko review.
+>> 
+>> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+>> ---
+>>  Documentation/mm/allocation-profiling.rst |  7 +++++++
+>>  mm/slub.c                                 | 11 +++++++++++
+>>  2 files changed, 18 insertions(+)
+>> 
+>> diff --git a/Documentation/mm/allocation-profiling.rst b/Documentation/mm/allocation-profiling.rst
+>> index 5389d241176a..d02eb54ee8f2 100644
+>> --- a/Documentation/mm/allocation-profiling.rst
+>> +++ b/Documentation/mm/allocation-profiling.rst
+>> @@ -112,3 +112,10 @@ break it out by rhashtable type.
+>>  
+>>  - Then, use the following form for your allocations:
+>>    alloc_hooks_tag(ht->your_saved_tag, kmalloc_noprof(...))
+>> +
+>> +Notes
+>> +=====
+>> +
+>> +- When a slab object is allocated from KFENCE, its accounting is skipped.
+>> +  KFENCE allocations are rare and limited to a small number, so this omission
+>> +  is negligible.
+>> diff --git a/mm/slub.c b/mm/slub.c
+>> index 0337e60db5ac..76acb78f2655 100644
+>> --- a/mm/slub.c
+>> +++ b/mm/slub.c
+>> @@ -2076,6 +2076,11 @@ static inline void mark_obj_codetag_empty(const void *obj)
+>>  		struct slabobj_ext *ext = slab_obj_ext(obj_slab,
+>>  						       slab_exts, offs);
+>>  
+>> +		if (is_kfence_address(obj)) {
+>> +			put_slab_obj_exts(slab_exts);
+>> +			return;
+>> +		}
+> 
+> I think we should check this before get_slab_obj_exts()?
+> 
+> Checking if the object is from kfence after slab_obj_ext_codetag_ref()
+> looks bit weird.
 
->
->                 /*
->                  * Allocation size should never exceed cluster size
-> @@ -1714,10 +1716,12 @@ int folio_alloc_swap(struct folio *folio)
->                  */
->                 if (size > SWAPFILE_CLUSTER) {
->                         VM_WARN_ON_ONCE(1);
-> -                       return -EINVAL;
-> +                       return -E2BIG;
+Hm indeed.
 
-Similar to the above.
+> Otherwise LGTM.
 
->                 }
->         }
->
-> +       nr_swap_pages =3D get_nr_swap_pages();
-> +
->  again:
->         local_lock(&percpu_swap_cluster.lock);
->         if (!swap_alloc_fast(folio))
-> @@ -1730,11 +1734,16 @@ int folio_alloc_swap(struct folio *folio)
->         }
->
->         /* Need to call this even if allocation failed, for MEMCG_SWAP_FA=
-IL. */
-> -       if (unlikely(mem_cgroup_try_charge_swap(folio, folio->swap)))
-> +       if (unlikely(mem_cgroup_try_charge_swap(folio, folio->swap,
-> +                                               &nr_swap_pages))) {
+Thanks!
 
-As explained above, we shouldn't couple two different software layers.
-don't use nr_swap_pages() as the initial value of memcg charge.
+>> +
+>>  		if (unlikely(is_codetag_empty(&ext->ref))) {
+>>  			put_slab_obj_exts(slab_exts);
+>>  			return;
+>> @@ -2352,6 +2357,9 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags,
+>>  	if (alloc_flags & SLAB_ALLOC_NO_RECURSE)
+>>  		return;
+>>  
+>> +	if (is_kfence_address(object))
+>> +		return;
+>> +
+>>  	slab = virt_to_slab(object);
+>>  	obj_exts = prepare_slab_obj_exts_hook(s, slab, flags, alloc_flags, object);
+>>  	/*
+>> @@ -2399,6 +2407,9 @@ __alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p
+>>  	for (i = 0; i < objects; i++) {
+>>  		unsigned int off = obj_to_index(s, slab, p[i]);
+>>  
+>> +		if (is_kfence_address(p[i]))
+>> +			continue;
+>> +
+>>  		alloc_tag_sub(&slab_obj_ext(slab, obj_exts, off)->ref, s->size);
+>>  	}
+>>  	put_slab_obj_exts(obj_exts);
+>> 
+> 
 
-Best Regards
-Barry
