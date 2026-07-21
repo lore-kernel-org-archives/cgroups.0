@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49D873D093F;
-	Tue, 21 Jul 2026 09:20:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB316411690;
+	Tue, 21 Jul 2026 09:23:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784625618; cv=none; b=KUb8gZrlOxZD4YWj+kkwMJG6AmujPNjyvfeOl2oB+u5F3eYlSHJo206Zcx32KKKpJ69Px3gZJZTP+KAgd9p3WlUE5dcd69IWDTj5c3ZxtYOgPaUl2dJIb+fOyODV9M0WHFEstSy39dzlW5XJnrg5xZAeh4e7mM8ytVS91dMckls=
+	t=1784625799; cv=none; b=fT5sMpNfu0hiUJqOrrfCrXQ+o157mmYN6AEpP/TjyyfSZTDd2YqXiZmvYN7NSKPjxKfaFmXpraZfLsg3GXVPmLX7o4dPCtlcRcWfL2E201k9oD4dritstfIqe5kQXQ9AYXtrO1zktqRgqj6OaORlHnEG8zwouSsOuI5Kq59GZxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784625618; c=relaxed/simple;
-	bh=7Dbzz8SJLO1TuzmgZeg9FfFhp+dhbfV+gZupAJy3Dy0=;
+	s=arc-20240116; t=1784625799; c=relaxed/simple;
+	bh=bicqtGjQss9r404M6Na8dkSPa5rfX/N1tPNJLRu1sVs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UuoM16NYn5XgNOvUyj8W9HoG3k2/iHvtnV0sEBIZMuSii21bOorJc48ubHiwJVYnDtbd3gI50F5ZWSCt/Q1vI7N13tN1g55tzVMn+70BLwvvR960UrDxQTKi/0Fu3RtLfAxC/m0XzQZRPGO3WydbEgRTAxV6979Heb4rYYaerVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bw5OEAe2; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=RIeu/ligLu9X6t0sETvGp/nd2udEHoHHh6S1AHFEf7jEs2b/G9yOzZmKHcTBkbKBnTFG/eiUvJvPNwwwpw/3eoMDGv4+Nn+Ij1bXuVUxIjW3nhWDbtm1tSF47ArieEwmb4IIJDIIqkb/k30fY7lXjpM1gfnoiXZhpMrHNidRHs0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bI8/+VZ3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bw5OEAe2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A57911F00A3D;
-	Tue, 21 Jul 2026 09:20:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bI8/+VZ3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C25D1F00A3A;
+	Tue, 21 Jul 2026 09:23:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784625617;
-	bh=RXbi65g0B2x3zSEY3/jiZ4q6NSDtzWd4WeQahT18Nm8=;
+	s=k20260515; t=1784625798;
+	bh=AATOw6YQ1sIpEbY+KeCTcTRiayqedE1/R6uTPVHB/gA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=bw5OEAe2QR/KdmtZ71poTClbJsrEiBVJ/goxjbCH9efpvu50jRYD8zq8hbUOwOYpA
-	 a3To6pkAdT8nhq3oTSkBuChpYOURbkETb6xN1sXW+hUy8Oqrfya5K5tdwkc5p4x4DY
-	 7C6Zk4NAUQJLSaI7MuvFQrK79x1JkZG5wk7soKjmyS/D6J6zaHfMpCDvCOEoignLiR
-	 x7ivuy/MsauqvrCuiCF1oGpDXoe/dOch98Ul8FuxUR3ebVEzEXjopke5FYmLw3jV/Z
-	 A4EFiXkvrqGM37n+66VmBl8OLX90+n8hzRaNfVAFps/cSf6U0Yxw/hv+2XklT1q12G
-	 veSMpIW1blnNg==
-Message-ID: <96468090-6b31-4f78-a813-c5729b53aa3d@kernel.org>
-Date: Tue, 21 Jul 2026 11:20:12 +0200
+	b=bI8/+VZ3mWyeB/E6Z3Q4ZSlnsRIcq16tiBSwfW6RbFFtGhrAHc4o4lCmnQAmY2HIc
+	 6CBwSeN6fhTSyOvnVZH5YtxDkcORiiRoYOezxfCJK174jOoviLo3hYOd/1kwPzM1mc
+	 StD/fVAF/hnr3pvXdmbSy1cXLdPEEb6B6RWIeV5i5M7euryuNXUayTYfMhsyvHhlay
+	 chBgHTbl+wtJoPdtSZLJ2b3E7AVXZkbgY70pk4KYFDMqTg2/bomwr6vQP4AamD1DaE
+	 HykGvfuiQfro/3Vil7c72LtnEZI0Zx1eYHZ4h0mGfRnXC30fcduPAile8zfTnZmrhm
+	 amZNRn03nw5aQ==
+Message-ID: <392e6115-cc92-4c33-bbbe-1211c279a518@kernel.org>
+Date: Tue, 21 Jul 2026 11:23:14 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 01/13] mm/slab: skip kfence objects in allocation
- profiling
+Subject: Re: [PATCH v2 02/13] mm/slub: skip handle_failed_objexts_alloc() with
+ profiling disabled
 Content-Language: en-US
 To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
 Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
@@ -46,8 +46,8 @@ Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
  Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
- <20260720-b4-objext_split-v2-1-2fa7c6f60dbe@kernel.org>
- <da6ca31c-f97c-4cd1-9380-4fe50d797a7d@kernel.org>
+ <20260720-b4-objext_split-v2-2-2fa7c6f60dbe@kernel.org>
+ <d76d5e96-ccf7-44b1-9dc8-3246466f9640@kernel.org>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -88,125 +88,60 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <da6ca31c-f97c-4cd1-9380-4fe50d797a7d@kernel.org>
+In-Reply-To: <d76d5e96-ccf7-44b1-9dc8-3246466f9640@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/21/26 07:43, Harry Yoo wrote:
+On 7/21/26 07:51, Harry Yoo wrote:
+> 
+> 
 > On 7/20/26 11:16 PM, Vlastimil Babka (SUSE) wrote:
->> struct kfence_metadata only contains struct slabobj_ext with
->> CONFIG_MEMCG, which is then used for the "fake" slab's obj_exts field.
->> If CONFIG_MEMCG is enabled, the struct can also end up used for memory
->> allocation profiling. If CONFIG_MEMCG is disabled but profiling is
->> enabled, it will end up allocating its obj_exts via
->> prepare_slab_obj_exts_hook() and assigning them to the fake struct slab.
->> These will probably then never be freed.
+>> The function might get called with memory allocation profiling disabled,
+>> when the obj_ext array is allocated for objcg pointers only. The
+>> handling is however unnecessary in that case, so skip it.
 >> 
->> So things sorta work, but not always in the intended and optimal way.
->> The upcoming changes to slabobj_ext layout would additionally need a
->> proper refactoring to keep working.
+>> This would otherwise become a real bug later, as pointed out by sashiko.
+>> For now it's just an optimization.
 >> 
->> However, there's little benefit in accounting KFENCE objects. KFENCE
->> allocations are rare and there can be only CONFIG_KFENCE_NUM_OBJECTS
->> (default to 255) outstanding ones at any time. For any callsite
->> prominent enough in the memory allocation profiling stats, allocations
->> served from KFENCE will be lost in the noise.
-> 
-> For a similar reason I wonder if we can drop obj_exts completely.
-
-To make it clear, you mean kfence objects wouldn't have objcg accounting and
-would essentially behave as if obj_exts for them could not be allocated.
-
-> The idea that kfence objects might have different slabobj_ext layout
-> isn't really worth the extra complexity if we have very limited amount
-> of kfence objects. The amount of objects that escape memcg accounting
-> will be quite limited.
-
-Indeed. I think the main point wasn't to have everything accounted, but to
-avoid specially cased kfence paths.
-
-But I think this would probably just require adding is_kfence checks to
-objext allocation paths to fail them, so that's manageable. Should perhaps
-allow moving some of the checks added by this patch to more generic shared
-places.
-
-> Any thoughts from KFENCE & MEMCG folks?
-> 
->> Thus let's not complicate things and simply stop accounting KFENCE
->> objects in allocation profiling and skip them in the related slab hooks.
->> 
->> We also need to skip kfence objects in mark_obj_codetag_empty() in case
->> a sheaf is allocated from kfence, per earlier sashiko review.
->> 
+>> Link: https://sashiko.dev/#/patchset/20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org?part=10
 >> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 >> ---
->>  Documentation/mm/allocation-profiling.rst |  7 +++++++
->>  mm/slub.c                                 | 11 +++++++++++
->>  2 files changed, 18 insertions(+)
+>>  mm/slub.c | 7 ++++---
+>>  1 file changed, 4 insertions(+), 3 deletions(-)
 >> 
->> diff --git a/Documentation/mm/allocation-profiling.rst b/Documentation/mm/allocation-profiling.rst
->> index 5389d241176a..d02eb54ee8f2 100644
->> --- a/Documentation/mm/allocation-profiling.rst
->> +++ b/Documentation/mm/allocation-profiling.rst
->> @@ -112,3 +112,10 @@ break it out by rhashtable type.
->>  
->>  - Then, use the following form for your allocations:
->>    alloc_hooks_tag(ht->your_saved_tag, kmalloc_noprof(...))
->> +
->> +Notes
->> +=====
->> +
->> +- When a slab object is allocated from KFENCE, its accounting is skipped.
->> +  KFENCE allocations are rare and limited to a small number, so this omission
->> +  is negligible.
 >> diff --git a/mm/slub.c b/mm/slub.c
->> index 0337e60db5ac..76acb78f2655 100644
+>> index 76acb78f2655..95fa6fbad11a 100644
 >> --- a/mm/slub.c
 >> +++ b/mm/slub.c
->> @@ -2076,6 +2076,11 @@ static inline void mark_obj_codetag_empty(const void *obj)
->>  		struct slabobj_ext *ext = slab_obj_ext(obj_slab,
->>  						       slab_exts, offs);
->>  
->> +		if (is_kfence_address(obj)) {
->> +			put_slab_obj_exts(slab_exts);
->> +			return;
->> +		}
-> 
-> I think we should check this before get_slab_obj_exts()?
-> 
-> Checking if the object is from kfence after slab_obj_ext_codetag_ref()
-> looks bit weird.
-
-Hm indeed.
-
-> Otherwise LGTM.
-
-Thanks!
-
->> +
->>  		if (unlikely(is_codetag_empty(&ext->ref))) {
->>  			put_slab_obj_exts(slab_exts);
->>  			return;
->> @@ -2352,6 +2357,9 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags,
->>  	if (alloc_flags & SLAB_ALLOC_NO_RECURSE)
->>  		return;
->>  
->> +	if (is_kfence_address(object))
+>> @@ -2101,15 +2101,16 @@ static inline bool mark_failed_objexts_alloc(struct slab *slab)
+>>  static inline void handle_failed_objexts_alloc(unsigned long obj_exts,
+>>  			struct slabobj_ext *vec, unsigned int objects)
+>>  {
+>> +	if (!mem_alloc_profiling_enabled())
 >> +		return;
->> +
->>  	slab = virt_to_slab(object);
->>  	obj_exts = prepare_slab_obj_exts_hook(s, slab, flags, alloc_flags, object);
+> 
+> This looks racy.
+
+Indeed, not sure how I convinced myself it's ok.
+
+> Can we instead do this later in the series depending on
+> slab_obj_ext_has_codetag_key's value?
+
+Yeah.
+
 >>  	/*
->> @@ -2399,6 +2407,9 @@ __alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p
->>  	for (i = 0; i < objects; i++) {
->>  		unsigned int off = obj_to_index(s, slab, p[i]);
->>  
->> +		if (is_kfence_address(p[i]))
->> +			continue;
->> +
->>  		alloc_tag_sub(&slab_obj_ext(slab, obj_exts, off)->ref, s->size);
+>>  	 * If vector previously failed to allocate then we have live
+>>  	 * objects with no tag reference. Mark all references in this
+>>  	 * vector as empty to avoid warnings later on.
+>>  	 */
+>>  	if (obj_exts == OBJEXTS_ALLOC_FAIL) {
+>> -		unsigned int i;
+>> -
+>> -		for (i = 0; i < objects; i++)
+>> +		for (unsigned int i = 0; i < objects; i++)
+>>  			set_codetag_empty(&vec[i].ref);
 >>  	}
->>  	put_slab_obj_exts(obj_exts);
+>>  }
 >> 
 > 
 
