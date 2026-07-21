@@ -1,162 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187F525B0B5;
-	Tue, 21 Jul 2026 06:02:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCFF135E950
+	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 07:57:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784613761; cv=none; b=B5sXe4ztF3/ussCIM0UouIGwCPFrZx3VjxmOSoGJr2CJeuy5hE9Z0K5XZtoQb2r0YiFoXSBW5xfm0p/JYEmhH21wZt0ZCKL293MqBIBW/SSkszP4/5KvUyt8CurTbPbEbv0Dw9CCdjre+JtsOvd5GpJpqScuagH+DE72GhePR0s=
+	t=1784620661; cv=none; b=nEVZZC/b0H2gI+xTF+w2jrRnLMW6bH952EfJjQclKwp80SNY9SU196sVGBiNkuNbsKiVovdYG0L5VUmGBPN17wUBxyLDjzxWtzzVpKJPq2Hvri1vghOJNYSp82I8toMWLdxGVoYhtlrV3F/7fjMhKjM58Yy+AFLeQpbdQ68CT4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784613761; c=relaxed/simple;
-	bh=RLbT5goX1y5STYArX4GWOJyoBMEyMKHl4AnYityumOc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I2VkoF/CwkN132ngxlip07kFyp/yzqYDuP2IZ0Xin26VBocKHi+XWxLFkiHyGhyw9bFQg4wv9Vd05kDj45/CY/FlJH4Ch0RinGRINHhfWnLxT7FZHkoQKJpbEMCpcXLFk+7Ha/xFweZL8xvDzUDc8xSwSWDfSFTT/ntuxk8s7q0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ngrGxcDE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784620661; c=relaxed/simple;
+	bh=qzjkl3/1P8rKRZoynl0fXgu1+D718eC3IelA9LqFd2w=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=l5DvV/MgmUzVQInOYEIqPdtH3cb6vVimUhQFknG+xT87gid1lpCZOsJy5E+dsdDoJV9bNIU7hNP6eDu+dHiOdfjGccOQHd/YakO6I3Zaqid+7q/tXvpEKxFZMu4iSKGoljIta26FZr/GEtB20c2amKnqPcQBp3UwZiHmwFvxVAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=otTSCgQq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ngrGxcDE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63CD51F000E9;
-	Tue, 21 Jul 2026 06:02:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="otTSCgQq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4B7F1F01565
+	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 07:57:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784613759;
-	bh=kKkyegtZ304R/489xlRr5sH+Tyjz2ix8bm7f3RxMqJA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ngrGxcDEWmEPJC38OogpEeDM5ZcSy3kpbV/3+jpc20LHmFeBsssiuJOTK4Gvh1Is2
-	 X9JR1JO6le4pUSGQXyyO2a7n+rwdoW5Vf4OfrrpMLK+Ix1WXPp1NlT76zQiW3jWRr4
-	 5JB5xhmtU2txrqkvdCPPQIXTbE2xsINojTc5Hn//Fp8VeS4m18TjWcQ4NKjvkLyD2I
-	 tY+QuxZY/mvkirqrs3vByaOQ2IFCOl+az+8RatTTf21fkkz2VjZ5Q7kk4FyUzeyklK
-	 /zxAAScY84BY+aU2+4hrINVxEUnd/vuylmZg4MilqS+ZS8Xm3DflwQxji1KCS+th8m
-	 orZsxscdWE47w==
-Message-ID: <c6c64baa-9752-44c8-993b-20c9f9efe6fe@kernel.org>
-Date: Tue, 21 Jul 2026 15:02:31 +0900
+	s=k20260515; t=1784620660;
+	bh=67VeInvfg2059N6m643qkaKNMdL7mnmvi+qBizbLEU0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=otTSCgQqMLlbrvW2m893eQvJObUlIZJUTdI03GPpxD2A4rMXYHt7QPUh1NEo76K+3
+	 XsCuuN6Vgm9nheplVYdhDDRorMNF/cHOvDV+EGgIqjaFSgJRZ807MdIxAYSwDdI1my
+	 WXAMvycApGnVXgocZ26TSrtWVpqkEdz+IgGNZAofk0xCU+N6CRiLye0M3I2Y2vFaYP
+	 B9JilmWmBx4Fq9Tz0+h/XPZ7hQKAx731y0Uqg1Fn/GCvhqsnnrb0lNiC1m9rVRO2Lw
+	 Z1I0ZDzNVMau9zk8owbVG9ICdJXT3z2jEkVnE7NdZwU6boid6+76DRkAl39S26WB35
+	 xUUT+fCOmeWSw==
+Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-92e5cb052edso601002585a.2
+        for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 00:57:40 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+Rq4itRrcMaLBM0YlqxfR37kuYhhS/eOK/Ru7Lc3mE+750GgZR4qdqDTiaPuDTuumdfzEYQ6kikc@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4jY0iJ233UXPJVPY4a3gpBENd6v7p4MCJWWMjiam/hslTaiIU
+	hX4mOiihw6TBLpdJwjbrEtDaSibi5dz7//QUSdetpzXzlAv1t5wXeQphjygI4ejWn657GXCHkyy
+	OwpbT0I4ShO4phYQQuSqmlWMKrC2tdyw=
+X-Received: by 2002:a05:620a:4011:b0:92e:604f:909a with SMTP id
+ af79cd13be357-930b3ec8d71mr1812555785a.29.1784620660059; Tue, 21 Jul 2026
+ 00:57:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 05/13] mm/slab: make slab_obj_ext() determine object
- index
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
- Suren Baghdasaryan <surenb@google.com>
-Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
- <20260720-b4-objext_split-v2-5-2fa7c6f60dbe@kernel.org>
-Content-Language: en-US
-From: Harry Yoo <harry@kernel.org>
-In-Reply-To: <20260720-b4-objext_split-v2-5-2fa7c6f60dbe@kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------KASFJLXWn905HKRADjHgEPsb"
-
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------KASFJLXWn905HKRADjHgEPsb
-Content-Type: multipart/mixed; boundary="------------njQytaQwmIPUB4zfsP886UIB";
- protected-headers="v1"
-From: Harry Yoo <harry@kernel.org>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
- Suren Baghdasaryan <surenb@google.com>
-Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Message-ID: <c6c64baa-9752-44c8-993b-20c9f9efe6fe@kernel.org>
-Subject: Re: [PATCH v2 05/13] mm/slab: make slab_obj_ext() determine object
- index
-References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
- <20260720-b4-objext_split-v2-5-2fa7c6f60dbe@kernel.org>
-In-Reply-To: <20260720-b4-objext_split-v2-5-2fa7c6f60dbe@kernel.org>
-
---------------njQytaQwmIPUB4zfsP886UIB
-Content-Type: text/plain; charset=UTF-8
+References: <20260717122514.51514-1-xueyuan.chen21@gmail.com> <20260717122514.51514-5-xueyuan.chen21@gmail.com>
+In-Reply-To: <20260717122514.51514-5-xueyuan.chen21@gmail.com>
+From: Barry Song <baohua@kernel.org>
+Date: Tue, 21 Jul 2026 15:57:26 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4z+uw0YdWMwJzxHA6kbV1wPaqSXhFzwT65ffj1drSmnbw@mail.gmail.com>
+X-Gm-Features: AUfX_mwXoCUVj4Q581J7mLiAo59hEPI1kMXrhwsYQcD6VlJcdSV4gQgQI9BZuCo
+Message-ID: <CAGsJ_4z+uw0YdWMwJzxHA6kbV1wPaqSXhFzwT65ffj1drSmnbw@mail.gmail.com>
+Subject: Re: [RFC PATCH v3 4/4] mm/shmem: split large folios only on -E2BIG
+To: Xueyuan Chen <xueyuan.chen21@gmail.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, 
+	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	shakeel.butt@linux.dev, muchun.song@linux.dev, chrisl@kernel.org, 
+	kasong@tencent.com, shikemeng@huaweicloud.com, nphamcs@gmail.com, 
+	bhe@redhat.com, youngjun.park@lge.com, david@kernel.org, ljs@kernel.org, 
+	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
+	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
+	weixugc@google.com, baolin.wang@linux.alibaba.com, hughd@google.com
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-
-On 7/20/26 11:16 PM, Vlastimil Babka (SUSE) wrote:
-> All callers perform the same obj_to_index() calculation to pass the
-> index. Simplify by passing object pointer instead and determining the
-> index by slab_obj_ext().
-
-Nice!
-
-> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+On Fri, Jul 17, 2026 at 8:26=E2=80=AFPM Xueyuan Chen <xueyuan.chen21@gmail.=
+com> wrote:
+>
+> shmem_writeout() currently splits a large folio on every
+> folio_alloc_swap() failure. With the refined return-value contract, only
+> -E2BIG indicates that splitting might allow smaller folios to be swapped
+> out.
+>
+> Enter the split fallback only for -E2BIG. For -ENOSPC and -ENOMEM,
+> redirty and reactivate the folio as before.
+>
+> Suggested-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+> Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
 > ---
+>  mm/shmem.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/mm/shmem.c b/mm/shmem.c
+> index 3b5dc21b323c..d76812dd3cef 100644
+> --- a/mm/shmem.c
+> +++ b/mm/shmem.c
+> @@ -1599,6 +1599,7 @@ int shmem_writeout(struct folio *folio, struct swap=
+_iocb **plug,
+>         struct shmem_sb_info *sbinfo =3D SHMEM_SB(inode->i_sb);
+>         pgoff_t index;
+>         int nr_pages;
+> +       int ret;
+>         bool split =3D false;
+>
+>         if ((info->flags & SHMEM_F_LOCKED) || sbinfo->noswap)
+> @@ -1679,7 +1680,8 @@ int shmem_writeout(struct folio *folio, struct swap=
+_iocb **plug,
+>                 folio_mark_uptodate(folio);
+>         }
+>
+> -       if (!folio_alloc_swap(folio)) {
+> +       ret =3D folio_alloc_swap(folio);
+> +       if (!ret) {
+>                 bool first_swapped =3D shmem_recalc_inode(inode, 0, nr_pa=
+ges);
+>                 int error;
+>
+> @@ -1732,7 +1734,7 @@ int shmem_writeout(struct folio *folio, struct swap=
+_iocb **plug,
+>                 swap_cache_del_folio(folio);
+>                 goto redirty;
+>         }
+> -       if (nr_pages > 1)
+> +       if (ret =3D=3D -E2BIG)
 
-Looks good to me,
-Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
+I'd rather keep if (nr_pages > 1 && ret =3D=3D -E2BIG), as it makes the lar=
+ge
+folio case more explicit and easier to understand.
 
-with a nit on typo below
-
->  mm/memcontrol.c | 12 +++---------
->  mm/slab.h       | 19 +++++++++++--------
->  mm/slub.c       | 22 +++++++---------------
->  3 files changed, 21 insertions(+), 32 deletions(-)
-> diff --git a/mm/slab.h b/mm/slab.h
-> index 7bd361447c54..64cec02b5016 100644
-> --- a/mm/slab.h
-> +++ b/mm/slab.h
-> @@ -579,7 +579,7 @@ struct slabobj_ext {
->   * obj_exts =3D slab_obj_exts(slab);
->   * if (obj_exts) {
->   *         get_slab_obj_exts(obj_exts);
-> - *         obj_ext =3D slab_obj_ext(slab, obj_exts, obj_to_index(s, sl=
-ab, obj));
-> + *         obj_ext =3D slab_obj_ext(s, slab, obj_exts, obj);
->   *         // do something with obj_ext
->   *         put_slab_obj_exts(obj_exts);
->   * }
-> @@ -639,21 +639,24 @@ static inline unsigned int slab_get_stride(struct=
- slab *slab)
->  /*
->   * slab_obj_ext - get the pointer to the slab object extension metadat=
-a
->   * associated with an object in a slab.
-> + * @s: cache that the slab blongs to
-
-nit: blongs -> belongs
-
->   * @slab: a pointer to the slab struct
->   * @obj_exts: a pointer to the object extension vector
-> - * @index: an index of the object
-> + * @obj: a pointer to the object
->   *
->   * Returns a pointer to the object extension associated with the objec=
-t.
->   * Must be called within a section covered by get/put_slab_obj_exts().=
-
->   */
-> -static inline struct slabobj_ext *slab_obj_ext(struct slab *slab,
-> -					       unsigned long obj_exts,
-> -					       unsigned int index)
+>                 goto try_split;
+>  redirty:
+>         folio_mark_dirty(folio);
 
 
-
-
---=20
-Cheers,
-Harry / Hyeonggon
-
---------------njQytaQwmIPUB4zfsP886UIB--
-
---------------KASFJLXWn905HKRADjHgEPsb
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCal8LdwAKCRCGXBN6rc5S
-1saKAP0QWmanMNtSWcitc46wO43ObEN6jNyOb66yd+fWn/XwLgEAiqItNg9zJves
-jTKoV6pgZPlag6PNzqn5WPPHs+gXrw8=
-=GF5b
------END PGP SIGNATURE-----
-
---------------KASFJLXWn905HKRADjHgEPsb--
+Best Regards
+Barry
