@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B844221FB4;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5224028EB;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784602389; cv=none; b=DuxCd+r2LouCqBRscS6JR1n5RZO/c3BHRpQ0d2BVjvZSfw80G69FPS4h2KgsewrtLC6GR9xux0PqND9B0JVrGR7d1LY5S+lmKmgCkQwQERDtxt1CT+95zpi9ccy+tyGEwRsf+5INGOtQYRjkx4V0UfBt9lTllQMl1MC4AJS0k+w=
+	t=1784602389; cv=none; b=AGIMhm++TSF2xcNlllS7MwsYHgTsIHNy0Mnydtv022edT1Vu8uPrVFqSRsHoAjDo1391xmwIiyDr4Px8YZk+j/IJ/kNSUPN5VkIxKTaqhBNcvVCAje3/dGQbOXq5wPWlQz2qYAuPMT9SgX1LohtKf0aXuuPR7GtAii0MsiTLDSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784602389; c=relaxed/simple;
-	bh=Us68nlmiczQXSuV6e/jQLLsnNhiOlkPZQjCHR8+MEVg=;
+	bh=Wu07gWj3erS7hK5FPPelwtFUrfvOki8Pg8B+z3neeSc=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pfb3KdQ+6N1m9GLOqOc481OO4blHcFEWAJqRi0O0VBCJpuICjdI1JiHvqAWU0HBh0rn0KvpLrhQ7v9Ay57JLjQhRPrdnVwXVJQ9gxXjjjv7TnQpzAesuZbyD4SG+V0qmE5ysGTldrTyw2PzwrUW4jJkfjWededFIVT3bhWVPSz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gKJMT4Hu; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=pJtR/lFioE5AA/JY9QHjBXByUefhSIK49bVAwwG9L632LkzRq3dxO2I261OlJyXWMfr6CC/UEtOiLEqlcAMGon6rg9tOU/VYuH8bd2zBqQPVLrrlBZGipOWS7S+AbkK+4r0mgdWadH0TdjvSx3YKnDOIOCU3WEPU/e54EQ19e9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M/yiDBJ2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gKJMT4Hu"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 110A4C2BCFB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M/yiDBJ2"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 332BAC4AF0B;
 	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1784602389;
-	bh=Us68nlmiczQXSuV6e/jQLLsnNhiOlkPZQjCHR8+MEVg=;
+	bh=Wu07gWj3erS7hK5FPPelwtFUrfvOki8Pg8B+z3neeSc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=gKJMT4HuK026T3JHk7a9omtQ18OWp7GnSYZ76oYiGMUHyN/YdDGNNMYhGuVVLq99T
-	 qwlx0+DbEt+sMM7NZbLbAt9/O3iqNz4Ww/SdV+yYeA5n1sgHapjwFPQRWzD5hIz8gt
-	 k83Rew8CVsBVlBKrkMEYTm1H3mb5sU2Cc8CvsFGV+d9RlXFpOEwFlGLUnheMPenPZ8
-	 GXqkLWZSqbMTO7eXkIWGNAfzJxFsb1rzAEpVi4iywlm3zXttdHTptmhK2dS8uUQHWM
-	 oh17kGa0Pnr1DXUiiZKfE5+QXpQpC8nsihL8pMAN6bYUFTDt0p3m8t0VHabtieI0l1
-	 5cmNKkWJOJ8Ww==
+	b=M/yiDBJ2nGMs3YeIqFjgXDdqQaBtXuvBCS9Liqauek39MEy/kPmh5zzJIF5z9fd2O
+	 St7/2uvZpPVnOVnQOp/w3Ml6r3lHlj3nvEwul35ZGR9Hcqo0IDyJfoqOPBd6VNe1vi
+	 B0OcR2imFFVlMHCWsCl7i6Uu2tmo4lj54xjUeiyTYo+JzZUP/0cytjRdXZV+zk/whV
+	 nngHfIM/9oj3vyg3Oog4lRl1tmO7fch//zkmYoTdyqNK+DsoNFDhm0/Q+7TcXhKPca
+	 AI7Ad9J68yfVnRBn8ZLBO/YpNzD1qufpBr/0QGkRnmzFdBbnHuJC3qu7r2It6XKvzm
+	 cpDQkWhLQsGvA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F29B3C44532;
-	Tue, 21 Jul 2026 02:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F989C4452F;
+	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
 From: Ackerley Tng via B4 Relay <devnull+ackerleytng.google.com@kernel.org>
-Date: Mon, 20 Jul 2026 17:25:07 -0700
-Subject: [PATCH v3 04/13] mm: hugetlb: Remove unused
- mem_cgroup_charge_hugetlb function
+Date: Mon, 20 Jul 2026 17:25:09 -0700
+Subject: [PATCH v3 06/13] WIP: mm: hugetlb: Move subpool functions to
+ hugetlb_subpool.c
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-4-7d2a169aa9ee@google.com>
+Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-6-7d2a169aa9ee@google.com>
 References: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
 In-Reply-To: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
 To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
@@ -56,11 +56,11 @@ Cc: vannapurve@google.com, erdemaktas@google.com, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
  Ackerley Tng <ackerleytng@google.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=2906;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=13070;
  i=ackerleytng@google.com; s=20260225; h=from:subject:message-id;
- bh=YxYG1OGXEwJP8y6Z/IuFu/IygfIhB7TL//GqeViUvNo=;
- b=ODtz7IxzrmEVm8ITYNPhXWX2tkSFDb0Wo55iHcQRNwKOI1rX9vcyL7wqj2XEfXYcaIBA0galC
- iwpBY5zcPvkCL3uWuHWuJCKXlOZCeXKd8EuisExKDwVIE1ZR8hjkV60
+ bh=PqvaRfss4aqadaeJH8AH48w85toFWMCvvNrNEPaAyKc=;
+ b=6BBdWsqAWtEKlq9TQ6riYxZR+DYxf0X+5j+MmIiRrX5Qew2yTCc0lofrYvLoqZxxd15dJ9XzO
+ rp96xiTX4M0BBhoisnSQr1lEnbII6WuKTLr/kYov9HrK9LNWk5icisR
 X-Developer-Key: i=ackerleytng@google.com; a=ed25519;
  pk=sAZDYXdm6Iz8FHitpHeFlCMXwabodTm7p8/3/8xUxuU=
 X-Endpoint-Received: by B4 Relay for ackerleytng@google.com/20260225 with
@@ -70,87 +70,450 @@ Reply-To: ackerleytng@google.com
 
 From: Ackerley Tng <ackerleytng@google.com>
 
-Now that the alloc_hugetlb_folio path has been successfully migrated to
-the new try-commit-cancel memcg charging protocol, the old
-mem_cgroup_charge_hugetlb function and its associated header and
-static inline declarations are completely unused. Remove them to clean
-up the memory controller's codebase.
+Move all HugeTLB subpool lifecycle, page reservation, and accounting routines
+out of `mm/hugetlb.c` and into their own dedicated, encapsulated translation unit
+at `mm/hugetlb_subpool.c`.
+
+Also introduces the internal `mm/hugetlb_subpool.h` header for holding the
+subpool-local APIs, allowing `fs/hugetlbfs` and `mm/` to access the subpool functions cleanly.
+The subpool internal layout structures remain in `include/linux/hugetlb.h` until getters
+are introduced.
 
 Signed-off-by: Ackerley Tng <ackerleytng@google.com>
 ---
- include/linux/memcontrol.h |  6 ------
- mm/memcontrol.c            | 34 ----------------------------------
- 2 files changed, 40 deletions(-)
+ fs/hugetlbfs/inode.c    |   1 +
+ include/linux/hugetlb.h |   4 +-
+ mm/Makefile             |   2 +-
+ mm/hugetlb.c            | 156 +-------------------------------------------
+ mm/hugetlb_subpool.c    | 168 ++++++++++++++++++++++++++++++++++++++++++++++++
+ mm/hugetlb_subpool.h    |  17 +++++
+ 6 files changed, 191 insertions(+), 157 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index c4e63d0e03526..23fbbbc8e11f2 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -641,7 +641,6 @@ static inline int mem_cgroup_charge(struct folio *folio, struct mm_struct *mm,
- 	return __mem_cgroup_charge(folio, mm, gfp);
- }
+diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
+index 26c0187340636..8c1caad74c409 100644
+--- a/fs/hugetlbfs/inode.c
++++ b/fs/hugetlbfs/inode.c
+@@ -25,6 +25,7 @@
+ #include <linux/ctype.h>
+ #include <linux/backing-dev.h>
+ #include <linux/hugetlb.h>
++#include "../../mm/hugetlb_subpool.h"
+ #include <linux/folio_batch.h>
+ #include <linux/fs_parser.h>
+ #include <linux/mman.h>
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index 34b9a3e1be0fa..f36be371c6e88 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -114,9 +114,7 @@ extern int hugetlb_max_hstate __read_mostly;
+ #define for_each_hstate(h) \
+ 	for ((h) = hstates; (h) < &hstates[hugetlb_max_hstate]; (h)++)
  
--int mem_cgroup_charge_hugetlb(struct folio *folio, gfp_t gfp);
- int mem_cgroup_hugetlb_try_charge(unsigned int nr_pages, gfp_t gfp,
- 				  struct mem_cgroup **memcg_p,
- 				  struct obj_cgroup **objcg_p);
-@@ -1137,11 +1136,6 @@ static inline int mem_cgroup_charge(struct folio *folio,
- 	return 0;
- }
+-struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
+-						long min_hpages);
+-void hugepage_put_subpool(struct hugepage_subpool *spool);
++int hugetlb_acct_memory(struct hstate *h, long delta);
  
--static inline int mem_cgroup_charge_hugetlb(struct folio *folio, gfp_t gfp)
+ void hugetlb_dup_vma_private(struct vm_area_struct *vma);
+ void clear_vma_resv_huge_pages(struct vm_area_struct *vma);
+diff --git a/mm/Makefile b/mm/Makefile
+index eff9f9e7e061c..3965c959e5099 100644
+--- a/mm/Makefile
++++ b/mm/Makefile
+@@ -78,7 +78,7 @@ endif
+ obj-$(CONFIG_SWAP)	+= page_io.o swap_state.o swapfile.o
+ obj-$(CONFIG_ZSWAP)	+= zswap.o
+ obj-$(CONFIG_HAS_DMA)	+= dmapool.o
+-obj-$(CONFIG_HUGETLBFS)	+= hugetlb.o hugetlb_sysfs.o hugetlb_sysctl.o
++obj-$(CONFIG_HUGETLBFS)	+= hugetlb.o hugetlb_subpool.o hugetlb_sysfs.o hugetlb_sysctl.o
+ ifdef CONFIG_CMA
+ obj-$(CONFIG_HUGETLBFS)	+= hugetlb_cma.o
+ endif
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 3f6189d2d0188..e87f26a3e1f3e 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -39,6 +39,7 @@
+ #include <linux/padata.h>
+ #include <linux/pgalloc.h>
+ #include <linux/memcontrol.h>
++#include "hugetlb_subpool.h"
+ 
+ #include <asm/page.h>
+ #include <asm/tlb.h>
+@@ -114,8 +115,7 @@ __cacheline_aligned_in_smp DEFINE_SPINLOCK(hugetlb_lock);
+ static int num_fault_mutexes __ro_after_init;
+ struct mutex *hugetlb_fault_mutex_table __ro_after_init;
+ 
+-/* Forward declaration */
+-static int hugetlb_acct_memory(struct hstate *h, long delta);
++/* Forward declarations */
+ static void hugetlb_vma_lock_free(struct vm_area_struct *vma);
+ static void hugetlb_vma_lock_alloc(struct vm_area_struct *vma);
+ static void __hugetlb_vma_unlock_write_free(struct vm_area_struct *vma);
+@@ -126,156 +126,6 @@ static void hugetlb_unshare_pmds(struct vm_area_struct *vma,
+ 		unsigned long start, unsigned long end, bool take_locks);
+ static struct resv_map *vma_resv_map(struct vm_area_struct *vma);
+ 
+-static inline bool subpool_is_free(struct hugepage_subpool *spool)
 -{
--	return 0;
+-	if (spool->count)
+-		return false;
+-
+-	return spool->used_hpages == 0;
 -}
 -
- static inline int mem_cgroup_hugetlb_try_charge(unsigned int nr_pages, gfp_t gfp,
- 						struct mem_cgroup **memcg_p,
- 						struct obj_cgroup **objcg_p)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0beee5c0ce93b..6764ff041c196 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5146,40 +5146,6 @@ int __mem_cgroup_charge(struct folio *folio, struct mm_struct *mm, gfp_t gfp)
- 	return ret;
- }
- 
--/**
-- * mem_cgroup_charge_hugetlb - charge the memcg for a hugetlb folio
-- * @folio: folio being charged
-- * @gfp: reclaim mode
-- *
-- * This function is called when allocating a huge page folio, after the page has
-- * already been obtained and charged to the appropriate hugetlb cgroup
-- * controller (if it is enabled).
-- *
-- * Returns ENOMEM if the memcg is already full.
-- * Returns 0 if either the charge was successful, or if we skip the charging.
-- */
--int mem_cgroup_charge_hugetlb(struct folio *folio, gfp_t gfp)
+-static inline void unlock_or_release_subpool(struct hugepage_subpool *spool,
+-						unsigned long irq_flags)
 -{
--	struct mem_cgroup *memcg = get_mem_cgroup_from_current();
--	int ret = 0;
+-	spin_unlock_irqrestore(&spool->lock, irq_flags);
 -
--	/*
--	 * Even memcg does not account for hugetlb, we still want to update
--	 * system-level stats via lruvec_stat_mod_folio. Return 0, and skip
--	 * charging the memcg.
--	 */
--	if (mem_cgroup_disabled() || !memcg_accounts_hugetlb() ||
--		!memcg || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
--		goto out;
+-	/* If no pages are used, and no other handles to the subpool
+-	 * remain, give up any reservations based on minimum size and
+-	 * free the subpool */
+-	if (subpool_is_free(spool)) {
+-		if (spool->min_hpages != -1)
+-			hugetlb_acct_memory(spool->hstate,
+-						-spool->min_hpages);
+-		kfree(spool);
+-	}
+-}
 -
--	if (charge_memcg(folio, memcg, gfp))
+-struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
+-						long min_hpages)
+-{
+-	struct hugepage_subpool *spool;
+-
+-	spool = kzalloc_obj(*spool);
+-	if (!spool)
+-		return NULL;
+-
+-	spin_lock_init(&spool->lock);
+-	spool->count = 1;
+-	spool->max_hpages = max_hpages;
+-	spool->hstate = h;
+-	spool->min_hpages = min_hpages;
+-
+-	if (min_hpages != -1 && hugetlb_acct_memory(h, min_hpages)) {
+-		kfree(spool);
+-		return NULL;
+-	}
+-	spool->rsv_hpages = min_hpages;
+-
+-	return spool;
+-}
+-
+-void hugepage_put_subpool(struct hugepage_subpool *spool)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&spool->lock, flags);
+-	BUG_ON(!spool->count);
+-	spool->count--;
+-	unlock_or_release_subpool(spool, flags);
+-}
+-
+-/*
+- * Subpool accounting for allocating and reserving pages.
+- * Return -ENOMEM if there are not enough resources to satisfy the
+- * request.  Otherwise, return the number of pages by which the
+- * global pools must be adjusted (upward).  The returned value may
+- * only be different than the passed value (delta) in the case where
+- * a subpool minimum size must be maintained.
+- */
+-static long hugepage_subpool_get_pages(struct hugepage_subpool *spool,
+-				      long delta)
+-{
+-	long ret = delta;
+-
+-	if (!spool)
+-		return ret;
+-
+-	spin_lock_irq(&spool->lock);
+-
+-	if (spool->max_hpages != -1 &&
+-	    spool->used_hpages + delta > spool->max_hpages) {
 -		ret = -ENOMEM;
+-		goto unlock_ret;
+-	}
 -
--out:
--	mem_cgroup_put(memcg);
+-	spool->used_hpages += delta;
+-
+-	/* minimum size accounting */
+-	if (spool->min_hpages != -1 && spool->rsv_hpages) {
+-		if (delta > spool->rsv_hpages) {
+-			/*
+-			 * Asking for more reserves than those already taken on
+-			 * behalf of subpool.  Return difference.
+-			 */
+-			ret = delta - spool->rsv_hpages;
+-			spool->rsv_hpages = 0;
+-		} else {
+-			ret = 0;	/* reserves already accounted for */
+-			spool->rsv_hpages -= delta;
+-		}
+-	}
+-
+-unlock_ret:
+-	spin_unlock_irq(&spool->lock);
 -	return ret;
 -}
 -
- /**
-  * mem_cgroup_hugetlb_try_charge - Try to charge the memcg for a hugetlb folio
-  * @nr_pages: number of base pages to charge
+-/*
+- * Subpool accounting for freeing and unreserving pages.
+- * Return the number of global page reservations that must be dropped.
+- * The return value may only be different than the passed value (delta)
+- * in the case where a subpool minimum size must be maintained.
+- */
+-static long hugepage_subpool_put_pages(struct hugepage_subpool *spool,
+-				       long delta)
+-{
+-	long ret = delta;
+-	unsigned long flags;
+-
+-	if (!spool)
+-		return delta;
+-
+-	spin_lock_irqsave(&spool->lock, flags);
+-
+-	spool->used_hpages -= delta;
+-
+-	 /* minimum size accounting */
+-	if (spool->min_hpages != -1 && spool->used_hpages < spool->min_hpages) {
+-		/*
+-		 * limit is the maximum number of reservations that
+-		 * can be restored to this subpool.
+-		 */
+-		long limit = spool->min_hpages - spool->used_hpages;
+-
+-		if (spool->rsv_hpages + delta <= limit)
+-			ret = 0;
+-		else
+-			ret = spool->rsv_hpages + delta - limit;
+-
+-		spool->rsv_hpages += delta;
+-		if (spool->rsv_hpages > limit)
+-			spool->rsv_hpages = limit;
+-	}
+-
+-	/*
+-	 * If hugetlbfs_put_super couldn't free spool due to an outstanding
+-	 * quota reference, free it now.
+-	 */
+-	unlock_or_release_subpool(spool, flags);
+-
+-	return ret;
+-}
+-
+ static inline struct hugepage_subpool *subpool_vma(struct vm_area_struct *vma)
+ {
+ 	return subpool_inode(file_inode(vma->vm_file));
+@@ -4602,7 +4452,7 @@ unsigned long hugetlb_total_pages(void)
+ 	return nr_total_pages;
+ }
+ 
+-static int hugetlb_acct_memory(struct hstate *h, long delta)
++int hugetlb_acct_memory(struct hstate *h, long delta)
+ {
+ 	int ret = -ENOMEM;
+ 
+diff --git a/mm/hugetlb_subpool.c b/mm/hugetlb_subpool.c
+new file mode 100644
+index 0000000000000..b12c16aa7e4c5
+--- /dev/null
++++ b/mm/hugetlb_subpool.c
+@@ -0,0 +1,168 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Subpool and reserve accounting for HugeTLB folios.
++ * Extracted from mm/hugetlb.c
++ */
++
++#include <linux/types.h>
++#include <linux/kernel.h>
++#include <linux/slab.h>
++#ifdef __KERNEL__
++#include <linux/hugetlb.h>
++#endif
++#include <linux/spinlock.h>
++#include <linux/bug.h>
++
++#include "hugetlb_subpool.h"
++
++static inline bool subpool_is_free(struct hugepage_subpool *spool)
++{
++	if (spool->count)
++		return false;
++
++	return spool->used_hpages == 0;
++}
++
++static inline void unlock_or_release_subpool(struct hugepage_subpool *spool,
++						unsigned long irq_flags)
++{
++	spin_unlock_irqrestore(&spool->lock, irq_flags);
++
++	/*
++	 * If no pages are used, and no other handles to the subpool
++	 * remain, give up any reservations based on minimum size and
++	 * free the subpool.
++	 */
++	if (subpool_is_free(spool)) {
++		if (spool->min_hpages != -1)
++			hugetlb_acct_memory(spool->hstate,
++						-spool->min_hpages);
++		kfree(spool);
++	}
++}
++
++struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
++						long min_hpages)
++{
++	struct hugepage_subpool *spool;
++
++	spool = kzalloc_obj(*spool);
++	if (!spool)
++		return NULL;
++
++	spin_lock_init(&spool->lock);
++	spool->count = 1;
++	spool->max_hpages = max_hpages;
++	spool->hstate = h;
++	spool->min_hpages = min_hpages;
++
++	if (min_hpages != -1 && hugetlb_acct_memory(h, min_hpages)) {
++		kfree(spool);
++		return NULL;
++	}
++	spool->rsv_hpages = min_hpages;
++
++	return spool;
++}
++
++void hugepage_put_subpool(struct hugepage_subpool *spool)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&spool->lock, flags);
++	BUG_ON(!spool->count);
++	spool->count--;
++	unlock_or_release_subpool(spool, flags);
++}
++
++/*
++ * Subpool accounting for allocating and reserving pages.
++ * Return -ENOMEM if there are not enough resources to satisfy the
++ * request.  Otherwise, return the number of pages by which the
++ * global pools must be adjusted (upward).  The returned value may
++ * only be different than the passed value (delta) in the case where
++ * a subpool minimum size must be maintained.
++ */
++long hugepage_subpool_get_pages(struct hugepage_subpool *spool,
++				      long delta)
++{
++	long ret = delta;
++
++	if (!spool)
++		return ret;
++
++	spin_lock_irq(&spool->lock);
++
++	if (spool->max_hpages != -1 &&
++	    spool->used_hpages + delta > spool->max_hpages) {
++		ret = -ENOMEM;
++		goto unlock_ret;
++	}
++
++	spool->used_hpages += delta;
++
++	/* minimum size accounting */
++	if (spool->min_hpages != -1 && spool->rsv_hpages) {
++		if (delta > spool->rsv_hpages) {
++			/*
++			 * Asking for more reserves than those already taken on
++			 * behalf of subpool.  Return difference.
++			 */
++			ret = delta - spool->rsv_hpages;
++			spool->rsv_hpages = 0;
++		} else {
++			ret = 0;	/* reserves already accounted for */
++			spool->rsv_hpages -= delta;
++		}
++	}
++
++unlock_ret:
++	spin_unlock_irq(&spool->lock);
++	return ret;
++}
++
++/*
++ * Subpool accounting for freeing and unreserving pages.
++ * Return the number of global page reservations that must be dropped.
++ * The return value may only be different than the passed value (delta)
++ * in the case where a subpool minimum size must be maintained.
++ */
++long hugepage_subpool_put_pages(struct hugepage_subpool *spool,
++				       long delta)
++{
++	long ret = delta;
++	unsigned long flags;
++
++	if (!spool)
++		return delta;
++
++	spin_lock_irqsave(&spool->lock, flags);
++
++	spool->used_hpages -= delta;
++
++	 /* minimum size accounting */
++	if (spool->min_hpages != -1 && spool->used_hpages < spool->min_hpages) {
++		/*
++		 * limit is the maximum number of reservations that
++		 * can be restored to this subpool.
++		 */
++		long limit = spool->min_hpages - spool->used_hpages;
++
++		if (spool->rsv_hpages + delta <= limit)
++			ret = 0;
++		else
++			ret = spool->rsv_hpages + delta - limit;
++
++		spool->rsv_hpages += delta;
++		if (spool->rsv_hpages > limit)
++			spool->rsv_hpages = limit;
++	}
++
++	/*
++	 * If hugetlbfs_put_super couldn't free spool due to an outstanding
++	 * quota reference, free it now.
++	 */
++	unlock_or_release_subpool(spool, flags);
++
++	return ret;
++}
+diff --git a/mm/hugetlb_subpool.h b/mm/hugetlb_subpool.h
+new file mode 100644
+index 0000000000000..be1f1cf012c9c
+--- /dev/null
++++ b/mm/hugetlb_subpool.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _MM_HUGETLB_SUBPOOL_H
++#define _MM_HUGETLB_SUBPOOL_H
++
++#include <linux/spinlock.h>
++#include <linux/types.h>
++
++struct hstate;
++struct hugepage_subpool;
++
++struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
++						long min_hpages);
++void hugepage_put_subpool(struct hugepage_subpool *spool);
++long hugepage_subpool_get_pages(struct hugepage_subpool *spool, long delta);
++long hugepage_subpool_put_pages(struct hugepage_subpool *spool, long delta);
++
++#endif /* _MM_HUGETLB_SUBPOOL_H */
 
 -- 
 2.55.0.229.g6434b31f56-goog
