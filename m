@@ -1,105 +1,113 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
+Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D88B3FA5E6
-	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 02:00:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3D7F399892
+	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 02:36:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784599254; cv=none; b=E+wxqUfcwFY3y3TBOZqCVOtjpFokZj1XtqqsKYYmQLbGX397H03fFx5p1Kf34cecIKtn0dcm+u0NIX8JMf8OrjFGjmXJsL7BDd3zVVjw2tzCIRYI1xrL+7qzqPtgAdQwYaypENQ0Gd8z78zA5/66LhHNMC4FOI2ZaX1RSzQo0EY=
+	t=1784601394; cv=none; b=HWdB9+4JalkM4TwU5h30wNDsJMKTKPnUp5Z0ERpBPl+q/H3KgJkC++5OUfqA8zVmkL99zcGRUmFXIBiNrSoZEGPMLnmIhdFvyO4+f74TbQAmDtTT/L0Bmf7PiQ1YFMUpokoylpyU5ielVrIh9lDPgcqA8Qd+7Q5NeBtw0wdBlSA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784599254; c=relaxed/simple;
-	bh=uUHRz3rv6g++eb0Sd9SWlj9Mu+qkQRV5qu58HqYLdPM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VEaaVzvdpD/Kr5+b7zffcvBXdxoOJAj0mc4H6cmsBRYuJze3KRoZmGRMR4I4iZ/vPjoWNdQOGdP6x7ixzlVzj9GDPcZRRPEn9RuSmHczOuOKnAXqklLLWp3HT7dXrhWeR4KejwMnzn2WPXNi2JEbcRfuWrddPf7QHJM8UU5Mt5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XcxrCj/b; arc=none smtp.client-ip=91.218.175.185
+	s=arc-20240116; t=1784601394; c=relaxed/simple;
+	bh=Bcjr36qrjeZHprXpCoFh09aHa4pmC9UiEgqz8uIuQIo=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=YFQMa31SwTpNV7NTdQAbg/PTb8RQLrIuI1LtgGHR7dO1chCUOkHLsOnRTu/hnxPh/jxd8uYzZJI/EWvvGz9I0enXBCKXFPFK3rmMTZWDcbkJE3g/V2ZOXX0BsgVmr2HbzAFkUsupySF5YmPXJ80PDHkY7bXAwT0jwUzlynvJO9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CY648WXk; arc=none smtp.client-ip=91.218.175.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XcxrCj/b"
-Message-ID: <8f3a6021-0ef0-4ecc-bbe0-0be1c3c6834d@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CY648WXk"
+Message-ID: <49b87018-952e-4ec1-8c23-833c2cd88f3a@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784599249;
+	t=1784601380;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=hlysOoCIXjYG93rTZNcC0H9AwdEbo6YYMEzcZG/AOR0=;
-	b=XcxrCj/bUTneGioyG2EZFHXlkOr5sWmFJtrpdY5cXlbMtg9+xzmmkP7P/4yQ4DgrZgiwol
-	uqJ6unUEaSjvr9KUH3UMdFIFh5CPLJY8mAPPp6a0zklQ6HvZ8QznFjOgIfHJsDF6WcDLcj
-	03e/k3nnsStroxzenosktp8ixudVCzY=
-Date: Tue, 21 Jul 2026 10:00:37 +0800
+	bh=467IXcSrQPHtgxAsAnztPpkNUe8fIE7pYnj4OHkNsPU=;
+	b=CY648WXk+9vKwceZJHsEunWBv/fzxPZHGrpCsKsCm9uBO+al8efDiGzwEatlYRfxGQiguq
+	lnXN6VPZE2AUPzeYXPza0LTj4yXiSFK5mz6sskH0AMmdu67UCYQpcFDSnef6OUlpdcr5N+
+	0G3YFTs6DS3lHAHyxE/Da+KAd/4NKxM=
+Date: Tue, 21 Jul 2026 10:36:14 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH RFC 05/12] mm/slab: abstract slabobj_ext.objcg access
-To: Omar Sandoval <osandov@osandov.com>,
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, Hao Li <hao.li@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- Stephen Brennan <stephen.s.brennan@oracle.com>, SeongJae Park <sj@kernel.org>
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <20260715-b4-objext_split-v1-5-9a49c4ccf4c3@kernel.org>
- <976e4d7b-24d6-4047-a405-e86c2feb45d3@kernel.org>
- <1784596208654455.18988.seg@mailgw.kylinos.cn>
-Content-Language: en-US
+Cc: cui.tao@linux.dev, Tejun Heo <tj@kernel.org>,
+ Josef Bacik <josef@toxicpanda.com>, Omar Sandoval <osandov@fb.com>,
+ Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH] block/blk-stat: fix mean loss when re-summing aggregated
+ stats
+To: Tang Yizhou <tangyeechou@gmail.com>, Jens Axboe <axboe@kernel.dk>
+References: <20260720133813.45150-1-cui.tao@linux.dev>
+ <296cbf18-86da-4c1b-832d-a27a78881dd8@gmail.com>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Ye Liu <ye.liu@linux.dev>
-In-Reply-To: <1784596208654455.18988.seg@mailgw.kylinos.cn>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <296cbf18-86da-4c1b-832d-a27a78881dd8@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
 
-在 2026/7/21 03:58, Omar Sandoval 写道:
-> On Fri, Jul 17, 2026 at 12:00:29PM +0200, Vlastimil Babka (SUSE) wrote:
->> On 7/15/26 12:10, Vlastimil Babka (SUSE) wrote:
->>> In preparation for changes to the structure, abstract access to the
->>> objcg field with a slab_obj_ext_objcgp() function.
->>> Rename the field to _objcg to make an unexpected direct access a compile
->>> error.
->>>
->>> No functional change intended.
->>>
->>> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
->> Hm sashiko finds [1] that this is breaks tools/mm/show_page_info.py
->>
->> But I think it was already buggy. get_memcg_info() is supposed to return
->> memcg info for a page but in case of MEMCG_DATA_OBJEXTS there's no such info
->> for the whole page, there is only for individual slab objects and it doesn't
->> know which object so it effectively gets the first one. I think it should
->> just stop handling MEMCG_DATA_OBJEXTS, but that's a fix that should be sent
->> unrelated to this series.
->>
->> There's also tools/cgroup/memcg_slabinfo.py and that I think has been
->> already broken with memalloc profiling as it assuems slab.memcg_data is
->> still a raw struct obj_cgroup * and not struct slabobj_ext.
->>
->> I think it will be easier to fix it at once to handle the layout after this
->> series than trying to fix it first to handle the pre-series layout and then
->> update it with every relevant change.
->>
->> [1]
->> https://sashiko.dev/#/patchset/20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org?part=5
-> FWIW, if these scripts were in the drgn repo with test cases, these
-> breakages would be caught by our CI and someone (usually me) would fix
-> them up promptly :)
 
-When I first used the drgn tool, I noticed that some scripts were directly      
-merged into the kernel repository, so I merged show_page_info.py into the kernel
-repository as well. Later, I found that merging into the drgn repository was    
-also a good option, so I merged it into the drgn repository as well,            
-and maintain it there. Therefore, I currently use show_page_info.py regularly   
-and update it promptly if I find any issues.                                    
+在 2026/7/21 01:05, Tang Yizhou 写道:
+> On 20/7/26 9:38 pm, Tao Cui wrote:
+>> From: Tao Cui <cuitao@kylinos.cn>
+>>
+>> blk_rq_stat_sum() folds src into dst but only advances dst->mean and
+>> dst->nr_samples, leaving dst->batch untouched.  The mean is computed
+>> from src->batch (the raw per-cpu sum), so a stat that has already been
+>> through one sum carries batch=0; if that aggregated stat is then used
+>> as the src of another sum, its samples add nothing to the new mean.
+>>
+>> iolatency hits exactly that: iolatency_check_latencies() first sums the
+>> per-cpu stats into a local stat, then sums that local stat into
+>> iolat->cur_stat.  After the first sum the local stat has batch=0, so
+>> every later window drives cur_stat->mean toward zero.  On non-SSD
+> 
+> Good catch, this is indeed a real issue.
+> 
+>> devices it stays at 0, making the latency_sum_ok(&cur_stat) check that
+>> gates scaling up always true -- the scale-up hysteresis is effectively
+>> defeated.  SSD devices use the percentile path and are unaffected.
+>>
+>> Keep dst->batch in sync across sums so an aggregated stat can be reused
+>> as a src.  blk_rq_stat.batch is internal to blk_rq_stat_init/_add/_sum
+>> (no other reader in the tree), so the wbt and blk-mq consumers, which
+>> only read ->mean/->min/->nr_samples, behave as before.
+>>
+>> Fixes: 34dbad5d26e2 ("blk-stat: convert to callback-based statistics reporting")
+>> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+>>
+>> ---
+>>  block/blk-stat.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/block/blk-stat.c b/block/blk-stat.c
+>> index de126e1ea5ac..4d4781350083 100644
+>> --- a/block/blk-stat.c
+>> +++ b/block/blk-stat.c
+>> @@ -36,6 +36,7 @@ void blk_rq_stat_sum(struct blk_rq_stat *dst, struct blk_rq_stat *src)
+>>  	dst->mean = div_u64(src->batch + dst->mean * dst->nr_samples,
+>>  				dst->nr_samples + src->nr_samples);
+>>  
+>> +	dst->batch += src->batch;
+> 
+> This change doesn't actually fix the issue. As you already found, the local
+> stat's batch is 0. Also, according to the comment of blk_rq_stat_sum(), @src is
+> a per-CPU stat, so there is no issue in blk_stat_timer_fn(). Your change would
+> actually make this case look strange.
+> 
+You're right. blk_rq_stat_sum() is contracted on a raw per-cpu src,
+which blk_stat_timer_fn() honors; the actual misuse is iolatency
+feeding an already-aggregated stat at blk-iolatency.c. I'll drop
+the blk-stat.c change and fix it on the iolatency side — merging
+cur_stat with the per-window stat by their reconstructed totals, since
+both already carry a valid mean. Will send a v2.
 
--- 
 Thanks,
-Ye Liu
+Tao
 
