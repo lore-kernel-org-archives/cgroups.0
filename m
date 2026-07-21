@@ -1,113 +1,133 @@
-Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3D7F399892
-	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 02:36:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B969400E1A;
+	Tue, 21 Jul 2026 02:53:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784601394; cv=none; b=HWdB9+4JalkM4TwU5h30wNDsJMKTKPnUp5Z0ERpBPl+q/H3KgJkC++5OUfqA8zVmkL99zcGRUmFXIBiNrSoZEGPMLnmIhdFvyO4+f74TbQAmDtTT/L0Bmf7PiQ1YFMUpokoylpyU5ielVrIh9lDPgcqA8Qd+7Q5NeBtw0wdBlSA=
+	t=1784602389; cv=none; b=DT+QiwDwMQmhZnPWi5nS83eLnySv2C5HzecZ0Up0SuM5h6NHPBCM8JdV/O3W9IUSx9qgQjhklaZmSc+c6SRoAjnWk6TDDUg9k036/n2RGsBmtF/CtoKOS2wJ34wQ1908NOji9JgzRSFnxWyLUeVMSwx9sgdoy4UYr+KoVITsVUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784601394; c=relaxed/simple;
-	bh=Bcjr36qrjeZHprXpCoFh09aHa4pmC9UiEgqz8uIuQIo=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=YFQMa31SwTpNV7NTdQAbg/PTb8RQLrIuI1LtgGHR7dO1chCUOkHLsOnRTu/hnxPh/jxd8uYzZJI/EWvvGz9I0enXBCKXFPFK3rmMTZWDcbkJE3g/V2ZOXX0BsgVmr2HbzAFkUsupySF5YmPXJ80PDHkY7bXAwT0jwUzlynvJO9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CY648WXk; arc=none smtp.client-ip=91.218.175.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784602389; c=relaxed/simple;
+	bh=9xYXc8cFALwl2scnPkDmoIcwhk2eGPLl2JPUNmDY2d0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=DqDEw9bJ12Zz6+ytt+N367tFeDpipL8XW+Gd69CpI3obQ+9oZu92g9mdB+o9L1/IjSQatTN9YxnHdQbW8w1HCRkj/5jl7xmCSw9xQbZArQGjJvIIAg5se208xPkLHh6Ax5YgnnyWyBVulG27X6WHcpZV3rv9x3PNDAQt+lsRyWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RU5nIEo7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CY648WXk"
-Message-ID: <49b87018-952e-4ec1-8c23-833c2cd88f3a@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784601380;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=467IXcSrQPHtgxAsAnztPpkNUe8fIE7pYnj4OHkNsPU=;
-	b=CY648WXk+9vKwceZJHsEunWBv/fzxPZHGrpCsKsCm9uBO+al8efDiGzwEatlYRfxGQiguq
-	lnXN6VPZE2AUPzeYXPza0LTj4yXiSFK5mz6sskH0AMmdu67UCYQpcFDSnef6OUlpdcr5N+
-	0G3YFTs6DS3lHAHyxE/Da+KAd/4NKxM=
-Date: Tue, 21 Jul 2026 10:36:14 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RU5nIEo7"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id ED0F2C2BCC9;
+	Tue, 21 Jul 2026 02:53:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1784602389;
+	bh=9xYXc8cFALwl2scnPkDmoIcwhk2eGPLl2JPUNmDY2d0=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=RU5nIEo7oWGGETmhUfdKPLm20rS3ih3Lz3nx7dwAbmJpFMYKLmt1sbPxm8M2BdFSb
+	 p+qcEBcKlKCYBeGTbYZvCWk0+kdvFH9uvPlxo+HCrjvzfA3TxKn/TSf+lvQK01A1dG
+	 6bCBamepBRssAXw7K2FZqZE+8Pq1xa652OychT7XIwjDIyD9SfXYw04rOq0bNNF1kL
+	 fY0DPpYdi2kqYt6agKYJjpZBpnTg75KDWOxMZ1teiVfjCiYXeav3kklKOSKGInqqeF
+	 KMnOIr1LMuDTplYR35a/9ljd8NETimAmPoZiEBsL5JeRUAahmv6rCmmCODVa3gC9rc
+	 018p7QpijnZRw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCCBFC44524;
+	Tue, 21 Jul 2026 02:53:08 +0000 (UTC)
+From: Ackerley Tng via B4 Relay <devnull+ackerleytng.google.com@kernel.org>
+Date: Mon, 20 Jul 2026 17:25:05 -0700
+Subject: [PATCH v3 02/13] mm: hugetlb: Return -ENOSPC on memcg charge
+ failure
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Cc: cui.tao@linux.dev, Tejun Heo <tj@kernel.org>,
- Josef Bacik <josef@toxicpanda.com>, Omar Sandoval <osandov@fb.com>,
- Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- Tao Cui <cuitao@kylinos.cn>
-Subject: Re: [PATCH] block/blk-stat: fix mean loss when re-summing aggregated
- stats
-To: Tang Yizhou <tangyeechou@gmail.com>, Jens Axboe <axboe@kernel.dk>
-References: <20260720133813.45150-1-cui.tao@linux.dev>
- <296cbf18-86da-4c1b-832d-a27a78881dd8@gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <296cbf18-86da-4c1b-832d-a27a78881dd8@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260720-hugetlb-alloc-failure-fixes-v3-2-7d2a169aa9ee@google.com>
+References: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
+In-Reply-To: <20260720-hugetlb-alloc-failure-fixes-v3-0-7d2a169aa9ee@google.com>
+To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
+ David Hildenbrand <david@kernel.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
+ Andrew Morton <akpm@linux-foundation.org>, Peter Xu <peterx@redhat.com>, 
+ Wupeng Ma <mawupeng1@huawei.com>, fvdl@google.com, rientjes@google.com, 
+ jthoughton@google.com, Mike Kravetz <mike.kravetz@oracle.com>, 
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>
+Cc: vannapurve@google.com, erdemaktas@google.com, linux-mm@kvack.org, 
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+ Ackerley Tng <ackerleytng@google.com>, stable@vger.kernel.org
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1784602387; l=2183;
+ i=ackerleytng@google.com; s=20260225; h=from:subject:message-id;
+ bh=nuUhbZqkwDE9Ph8fILa8cD4bi/Ma9wFUhfWLAJKiQgk=;
+ b=j57evNN0B3aJE2bGo4aYEop42SQgenXTgRg2PUpxRSDxLbx80RSNC2CSSJi9kG5+6PcjtSdOX
+ U3od4V1MktRAPv3uMaKCMouffdnKbebP9hZr5h1kP/nwAVICniSzxVg
+X-Developer-Key: i=ackerleytng@google.com; a=ed25519;
+ pk=sAZDYXdm6Iz8FHitpHeFlCMXwabodTm7p8/3/8xUxuU=
+X-Endpoint-Received: by B4 Relay for ackerleytng@google.com/20260225 with
+ auth_id=649
+X-Original-From: Ackerley Tng <ackerleytng@google.com>
+Reply-To: ackerleytng@google.com
 
+From: Ackerley Tng <ackerleytng@google.com>
 
+When mem_cgroup_charge_hugetlb() fails with -ENOMEM, alloc_hugetlb_folio()
+currently propagates this error. This results in the page fault handler
+returning VM_FAULT_OOM.
 
-在 2026/7/21 01:05, Tang Yizhou 写道:
-> On 20/7/26 9:38 pm, Tao Cui wrote:
->> From: Tao Cui <cuitao@kylinos.cn>
->>
->> blk_rq_stat_sum() folds src into dst but only advances dst->mean and
->> dst->nr_samples, leaving dst->batch untouched.  The mean is computed
->> from src->batch (the raw per-cpu sum), so a stat that has already been
->> through one sum carries batch=0; if that aggregated stat is then used
->> as the src of another sum, its samples add nothing to the new mean.
->>
->> iolatency hits exactly that: iolatency_check_latencies() first sums the
->> per-cpu stats into a local stat, then sums that local stat into
->> iolat->cur_stat.  After the first sum the local stat has batch=0, so
->> every later window drives cur_stat->mean toward zero.  On non-SSD
-> 
-> Good catch, this is indeed a real issue.
-> 
->> devices it stays at 0, making the latency_sum_ok(&cur_stat) check that
->> gates scaling up always true -- the scale-up hysteresis is effectively
->> defeated.  SSD devices use the percentile path and are unaffected.
->>
->> Keep dst->batch in sync across sums so an aggregated stat can be reused
->> as a src.  blk_rq_stat.batch is internal to blk_rq_stat_init/_add/_sum
->> (no other reader in the tree), so the wbt and blk-mq consumers, which
->> only read ->mean/->min/->nr_samples, behave as before.
->>
->> Fixes: 34dbad5d26e2 ("blk-stat: convert to callback-based statistics reporting")
->> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
->>
->> ---
->>  block/blk-stat.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/block/blk-stat.c b/block/blk-stat.c
->> index de126e1ea5ac..4d4781350083 100644
->> --- a/block/blk-stat.c
->> +++ b/block/blk-stat.c
->> @@ -36,6 +36,7 @@ void blk_rq_stat_sum(struct blk_rq_stat *dst, struct blk_rq_stat *src)
->>  	dst->mean = div_u64(src->batch + dst->mean * dst->nr_samples,
->>  				dst->nr_samples + src->nr_samples);
->>  
->> +	dst->batch += src->batch;
-> 
-> This change doesn't actually fix the issue. As you already found, the local
-> stat's batch is 0. Also, according to the comment of blk_rq_stat_sum(), @src is
-> a per-CPU stat, so there is no issue in blk_stat_timer_fn(). Your change would
-> actually make this case look strange.
-> 
-You're right. blk_rq_stat_sum() is contracted on a raw per-cpu src,
-which blk_stat_timer_fn() honors; the actual misuse is iolatency
-feeding an already-aggregated stat at blk-iolatency.c. I'll drop
-the blk-stat.c change and fix it on the iolatency side — merging
-cur_stat with the per-window stat by their reconstructed totals, since
-both already carry a valid mean. Will send a v2.
+Because HugeTLB allocations are high-order and use __GFP_RETRY_MAYFAIL,
+they bypass the OOM killer. Returning VM_FAULT_OOM to the #PF handler
+without triggering the OOM killer (or having it make progress) leads to
+an infinite loop of retrying the fault.
 
-Thanks,
-Tao
+Avoid this loop by returning -ENOSPC when charging fails, which maps to
+VM_FAULT_SIGBUS, terminating the process cleanly.
+
+Make mem_cgroup_charge_hugetlb() fault handling use a common error handling
+path, the same handling used for hugetlb_cgroup_uncharge_cgroup{,_rsvd}(),
+which also don't trigger the OOM killer and hence opt to terminate the
+process with a SIGBUS.
+
+Fixes: 991135774c0e0 ("memcg/hugetlb: introduce mem_cgroup_charge_hugetlb")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ackerley Tng <ackerleytng@google.com>
+Reviewed-by: Muchun Song <muchun.song@linux.dev>
+---
+ mm/hugetlb.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index eef9610a0593c..b32735b092a0a 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -2997,7 +2997,7 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
+ 
+ 	if (ret == -ENOMEM) {
+ 		free_huge_folio(folio);
+-		return ERR_PTR(-ENOMEM);
++		goto err;
+ 	}
+ 
+ 	return folio;
+@@ -3022,6 +3022,17 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
+ out_end_reservation:
+ 	if (map_chg != MAP_CHG_ENFORCED)
+ 		vma_end_reservation(h, vma, addr);
++err:
++	/*
++	 * Return -ENOSPC when this function fails to allocate or
++	 * charge a huge page. If a standard (PAGE_SIZE) page
++	 * allocation fails, the OOM killer is given a chance to run,
++	 * which may resolve the failure on retry. However, for
++	 * HugeTLB allocations, the OOM killer is not triggered.
++	 * Returning -ENOMEM (or anything resulting in VM_FAULT_OOM)
++	 * would leak to the #PF handler, causing it to loop
++	 * indefinitely retrying the fault.
++	 */
+ 	return ERR_PTR(-ENOSPC);
+ }
+ 
+
+-- 
+2.55.0.229.g6434b31f56-goog
+
 
