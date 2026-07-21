@@ -1,153 +1,147 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5D77407576
-	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 18:16:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C917D46D2D9
+	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 18:37:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784657790; cv=none; b=OB33RT2iSc+eepjF2DaF3CTJP7eX6Oq8fsoNoiiKt6+IIp9e23s6AfRScHv6ICcRts7xUbSiG0UEI4vsTshSAyjt9Fpyqgv2sij5I0VM/czCLNwvBK7bRzkvAT51B5jlwxOwb+s3BXte0HwvkMPJQtOQVYjrA0wsAGoNtSJt0DE=
+	t=1784659076; cv=none; b=mmaTfDZzEhoqVY1M++hmZtdRw483sipi0CnRX4FmCQ+dW0J4Ee30dHRrH5i2VVRR+ZI4zU4JM0Y5A2s0opvTRPWlnzpzkqEw0hNjuFq/MtfvH2vzo4ojsOLBtRgo8K5UuyzvMnAE06zK7qD0QPJmQR0rw1r0N64/nirY2+8Ue+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784657790; c=relaxed/simple;
-	bh=oFlvw3giOtGQsSkXQn6VVdx6osu4tro2T3RPW7SBhU0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YQCtezcZ/SOWCOq3rg05b7r80aRDbuJoTY/k4CY2PFHherfWHbvo/nDbEbzQi8zRjnFlT3Hgi5oFhj114l48bmBpNy9Z8RZEnLG7KrQoVO2HWMeyMmdpEftvwv/d7GeDYoi2GvFc98Mi6kHVT8cD6wJSnNn2ZScGmh7tZI8ssmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=lWiMqNe1; arc=none smtp.client-ip=209.85.160.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	s=arc-20240116; t=1784659076; c=relaxed/simple;
+	bh=nobEXjEcT6afNEz0cGzi6KLep7xSnO8lTeBmCcWO99g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=i4QDnaGSuB3nqGkqro6s4VSSSkENyWO3ww1tiBwNcxYawPu0ENljurpO5KGEOSTUA/X1yknQ7yC7u3CokP9Khl6ZfiLrervvHmfPwSAuRdHDRaQpmwX5edDKhfA0WbeyWt1OzkdI7pBN8uYm08WhIt5iTRsnCLb3k+TFkJUUTCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=neRUdQxB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="lWiMqNe1"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-51c2a818fc4so99165621cf.2
-        for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 11:16:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1784657788; x=1785262588; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=tK6CpaworNApxpcs4ZRJbHY7w08bgOkmP8ipHWd1tq8=;
-        b=lWiMqNe1aGdlndmF0DEIX11ekT+kppi6ZCsdKP+nARwmUcbPRB2RiqFp9CcVZlrCMe
-         a7iQJIUlHGgwrTlgeBPrEB9RYw65vbDnpQS/W6FXlBeixFMzdS/zMQMhcf9prwyKh9Tg
-         zZM1P1+WyYLol3M86HhbDS8lLf0qvp8NnbVepemntzhrmA+vdbVuvJTjusRGwuudCrDN
-         IJnhW0U1qCJ9qu+q+c/HoRATkAolbkeQ7YmmUklTRfiHMdfAYBd7KPK3bsHOQiTqkD7y
-         nQk7+E507U93KpaB3JodhTTR0dnlAPaEgPrkM70sUwYbhPsJOnuOLMGTZLlANx5BWdjy
-         4gWA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784657788; x=1785262588;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=tK6CpaworNApxpcs4ZRJbHY7w08bgOkmP8ipHWd1tq8=;
-        b=TIvLdEhZu699/1WY1FfBHVSfKDTLHm7NG3HsptYtASGQjY/EvN9uoEn+qP7hU75jYl
-         xkWbBsT9LXrG7LsAVStcumFLKH/rwzpYGdICGZH1vrvEun79CR9s56jj9g/xEF6vCEn9
-         gZGtJ1U0Y9xxorMjsSNofBbunEkWEP5/Oo4FrDkK3H4Uw7SnYHkHA3+fR51vnWD5HHyE
-         4U9i4R36PCXqLM33+gO1Wrv5jeRbZ6XMNj5ju0HoRAak13CQ8rAkmjXvU2vLEWupSQNe
-         +kPyrmxUStupg2vKI33CSMBcXV8GEoL1dgC650KNlH2FrtXERLQv08g1glxRf4OTG/8+
-         psBQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrOyD4fRVQDiSFhxUn4M8Ce94FV/1NYn9WJr7pYCcMtOIc4CX7s2Wccb9xOAiXPhSmfoKmBS+WT@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx0HqyZkxoE286qB4RQvQfIZU1X2Hk3QWcCxx9YerDO8X69/GV1
-	fvonEMhXRz6oljhIMNan2mWOiMl5OagwzWICE7MWHBXqiJJwyDDTFYmLEjhR6T32R+c=
-X-Gm-Gg: AfdE7cmFWNOtWVvGVlBQf8O6mjtg0g8QFSM/WyJJMyQvVeZEByU7AGnowWEtCXoNi5y
-	jVJpa42BXf9lt3cEubvzwH6bv7EPXhLfHAKbW4Tu8PFjV7aWU+e1PAHdy0lr+t5lbj0onim5svi
-	5shP07B+mkieLKjqk3rQetiam2FmKUscxs2tli7etEyuE7kDjFMLU818Zv1+Y9BRtssppADp5pL
-	pdlxgiWEb9JGBVKjiy6Y351laAEAKTrA5FHl6hGjfmwp3FwpNXPJaJgD/AAPrg84Onbp3MWSaxB
-	5vkbt32O0plYUxdImY6tUZVdbgxH7I/2yRFyqr+1LWRmJqiKQBC0aiMzH/XuP4KcJIcubC280PT
-	CaNL0Zh78CdYVvxKBssWKUTJssCnj/1kd06rC9r8+qjSB1/pFRyio9i/DSiKlk1YboL1WCrMIQP
-	smQsa25KMro73cVs5TmT43HQgmE3k0Ispji5XZ5UoIOY9oEMbY/N/YrI0e2nFwAUN9auZd
-X-Received: by 2002:ac8:5845:0:b0:51c:7b12:600a with SMTP id d75a77b69052e-5213e881e44mr171868611cf.86.1784657787636;
-        Tue, 21 Jul 2026 11:16:27 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-527d066fa6asm463921cf.6.2026.07.21.11.16.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2026 11:16:27 -0700 (PDT)
-Date: Tue, 21 Jul 2026 14:16:21 -0400
-From: Gregory Price <gourry@gourry.net>
-To: Balbir Singh <balbirs@nvidia.com>
-Cc: linux-mm@kvack.org, Zhigang.Luo@amd.com, arun.george@samsung.com, 
-	brendan.jackman@linux.dev, yuzenghui@huawei.com, apopple@nvidia.com, alucerop@amd.com, 
-	matthew.brost@intel.com, akpm@linux-foundation.org, david@kernel.org, ljs@kernel.org, 
-	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
-	mhocko@suse.com, corbet@lwn.net, skhan@linuxfoundation.org, 
-	gregkh@linuxfoundation.org, rafael@kernel.org, dakr@kernel.org, djbw@kernel.org, 
-	vishal.l.verma@intel.com, dave.jiang@intel.com, alison.schofield@intel.com, 
-	osandov@osandov.com, jannh@google.com, pfalcato@suse.de, jackmanb@google.com, 
-	hannes@cmpxchg.org, ziy@nvidia.com, pbonzini@redhat.com, osalvador@suse.de, 
-	joshua.hahnjy@gmail.com, rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com, 
-	kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev, baohua@kernel.org, 
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, yury.norov@gmail.com, 
-	linux@rasmusvillemoes.dk, longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org, 
-	mkoutny@suse.com, sj@kernel.org, jgg@ziepe.ca, jhubbard@nvidia.com, 
-	peterx@redhat.com, baolin.wang@linux.alibaba.com, npache@redhat.com, 
-	ryan.roberts@arm.com, dev.jain@arm.com, lance.yang@linux.dev, usama.arif@linux.dev, 
-	xu.xin16@zte.com.cn, chengming.zhou@linux.dev, roman.gushchin@linux.dev, 
-	muchun.song@linux.dev, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	driver-core@lists.linux.dev, nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org, 
-	linux-debuggers@vger.kernel.org, linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, 
-	cgroups@vger.kernel.org, damon@lists.linux.dev, linux-kselftest@vger.kernel.org, 
-	kernel-team@meta.com
-Subject: Re: [PATCH v5 00/36] Private Memory NUMA Nodes
-Message-ID: <al-2D_7NcwMxqmsM@gourry-fedora-PF4VCD3F>
-References: <20260720193431.3841992-1-gourry@gourry.net>
- <6a7aaac3-e70d-4063-9c84-e643db1488e0@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="neRUdQxB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D06491F00A3E
+	for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 18:37:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784659072;
+	bh=8gCO/l330njD+stDZZDZMLF87f8BoqEZxyb0CUTX/00=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=neRUdQxBKLqQrRIQNz70wA2fddtdidhc9DCyd5fwMHfjrATKdfDGCWSzXMBQv6q7a
+	 Q0YHJz7VFDl91+kuoMq56voRfAJcoUifjQVtM92W2JR0NWrrlOYNNUoH8HeVgSb9/Z
+	 SEsqlyTy4THzgAU6Q0siiX6JtXI8UpzbW6YWpdmlQlYhwHbdJHQlobB13mvqfpyZ+L
+	 ymElO0NFDOP5+fz8g+DIRCXox+3fi3jbh5jlqbp8rGxWlVy2wqZOt2RCcLw/Vsz5ms
+	 o9o+wjt8oplkcUs8C7D2vU45y+DmduDw9sDCNuhY4IE8CEt0XOSF+vaVox4AljNqRh
+	 vOpYk91SANE6A==
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-80814edb536so87133837b3.2
+        for <cgroups@vger.kernel.org>; Tue, 21 Jul 2026 11:37:52 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RrU1ZNM61lEUGLpyas/0h5Azb/e91jeAlYc2Mlxz2m8aq49VEVdIJLA7xx+uUxHQR42x7MOzEKo@vger.kernel.org
+X-Gm-Message-State: AOJu0YxY/X3qwDmGAv5n3g9sErH1kqo50vagDqFG8kv8a8aSWlMdwqgS
+	Fyqb4pHEKVO/aVTxKAu7VVs988gsswQv52n8Pvhbxlb7relvoBOoV1W2+OjRTvQq778ebx8Xjh/
+	IMJWZDJWc9qIKgF9NdEcSiBz4RKoQwnYOoLWqV1k7bw==
+X-Received: by 2002:a05:690c:c4c3:b0:81e:9826:942c with SMTP id
+ 00721157ae682-81ef2174c78mr60414247b3.0.1784659072225; Tue, 21 Jul 2026
+ 11:37:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6a7aaac3-e70d-4063-9c84-e643db1488e0@nvidia.com>
+References: <20260713025644.170839-1-youngjun.park@lge.com>
+ <CAO9r8zNJfhirbzvJzDWRaBQOM7XZcf_Jk0Bz=Y4dB4QK4W-MwQ@mail.gmail.com>
+ <alUK8DWRy4LPxTpY@yjaykim-PowerEdge-T330> <CAO9r8zPvWKgQ8+ABxSnVnC452-enyMqCjBTA4pfNDVxsoJr25g@mail.gmail.com>
+ <alUQ0ksPP00PVwew@yjaykim-PowerEdge-T330> <alae-LIRwEFUjgs1@linux.dev>
+ <CAO9r8zNfp-T19cYyZxKHBY-FnmQ_9=fbP4JYPPFgYtUCo5fZyg@mail.gmail.com> <aluXhRMXkbPRsPcM@yjaykim-PowerEdge-T330>
+In-Reply-To: <aluXhRMXkbPRsPcM@yjaykim-PowerEdge-T330>
+From: Chris Li <chrisl@kernel.org>
+Date: Tue, 21 Jul 2026 11:37:40 -0700
+X-Gmail-Original-Message-ID: <CACePvbXZ44Bc0=cDTw=Cufr7Mv5794OLza+62P92f2Bt0tfUFQ@mail.gmail.com>
+X-Gm-Features: AUfX_myhvEmXsVXoszuyQLbanbBrOMNsp1yYWYSSVM3a0AG2ZrP7P8oBaaZl42c
+Message-ID: <CACePvbXZ44Bc0=cDTw=Cufr7Mv5794OLza+62P92f2Bt0tfUFQ@mail.gmail.com>
+Subject: Re: [PATCH v10 0/6] mm/swap, memcg: Introduce swap tiers for cgroup
+ based swap control
+To: Youngjun Park <youngjun.park@lge.com>
+Cc: Yosry Ahmed <yosry@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, akpm@linux-foundation.org, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
+	baoquan.he@linux.dev, baohua@kernel.org, joshua.hahnjy@gmail.com, 
+	gunho.lee@lge.com, taejoon.song@lge.com, hyungjun.cho@lge.com, 
+	baver.bae@lge.com, her0gyugyu@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 21, 2026 at 01:46:01PM +1000, Balbir Singh wrote:
-> On 7/21/26 5:33 AM, Gregory Price wrote:
-> > 
-> > Patch Layout
-> > ============
-> > The series is broken into two sections:
-> > 
-> > 1) N_MEMORY_PRIVATE Introduction.
-> >    Introduce the node state.
-> >    Opt those nodes out of mm/ services.
-> > 
-> > 2) NODE_PRIVATE_CAP_* features
-> >    A set of mm/ service opt-in flags that augment private
-> >    nodes to make them more useful (i.e. reclaim = overcommit).
-> > 
-> >    NODE_PRIVATE_CAP_LTPIN for private node folio pinning
-> >    NODE_PRIVATE_CAP_NUMA_BALANCING for private-node NUMA balancing
-> >    NODE_PRIVATE_CAP_DEMOTION for private-node tiering demotion
-> >    NODE_PRIVATE_CAP_HOTUNPLUG for opted-in private nodes
-> >    NODE_PRIVATE_CAP_USER_NUMA for userland numa controls
-> >    NODE_PRIVATE_CAP_RECLAIM for opted-in private node reclaim
-> > 
-> 
-> Looks reasonable, I wonder why USER_NUMA/HOTUNPUG is an opt-in?
-> 
+On Sat, Jul 18, 2026 at 8:11=E2=80=AFAM Youngjun Park <youngjun.park@lge.co=
+m> wrote:
+>
+> I tried to forbid this at the implementation level as you suggested
+> , and that is where I ran into trouble.
+> A few code paths can end up with zswap as the only
+> tier, and they are awkward to handle.  Below is each case and what
+> handling it would take:
+>
+> 1) A write turns off the last device tier while zswap stays on.
+>    -> rejected with -EINVAL.  The write does not take effect.
+>
+> 2) The last device tier is removed via /sys/kernel/mm/swap/tiers.
+>    -> the file goes empty, so zswap is not shown either.
+>
+> 3) A cgroup has zswap and one device tier on, and that tier is removed.
+>    -> the cgroup's zswap entry is reset to 0, which the user never
+>       asked for.
+>
+> 4) A cgroup has zswap and device tiers on, and swapoff empties them.
+>    -> the cgroup's zswap entry is reset to 0.
+>
+> So the problem is that in (3) and (4), memory.swap.tiers.max has to
+> change on its own independently of what the user wrote
+> and it is not like just error handling situation as (1).
 
-Ideologically: Private nodes default to fully isolated, why should any
-given feature be special?
+This kind of complexity is exactly the reason I object to having zswap
+as a tier in the first place. There is very little gain in having such
+control for zswap in the swap tier world and it introduces a lot of
+corner-case complexity.
 
-Concretely: 
+In my mind, we should introduce a separate swap tier native memory
+tier. e.g. xswap. which has a clean conceptual break from zswap
+(though code can be shared). The xswap will behave like zram in terms
+of tiering, but be more integrated with MM like zswap.
 
-User-numa
+I think the simplest answer is just to allow zswap as a special tier,
+meaning it only has an on/off control on the side. Allowing zswap as
+the only tier means the cgroup won't be able to use zswap because
+there are no real devices.
 
-   Some devices don't want the user to have control over placement.
-   I have been working on compressed memory, for example, which only
-   ever wants to be used as a reclaim-demotion target.
-   
-   (The reasoning for this is another thread, i plan on publishing
-    my research on this this year)
+> There is also a consistency point.  memory.swap.tiers.max already
+> accepts a child enabling a tier that its parent has disabled: the write
+> succeeds, no error is returned, and the difference is resolved
+> internally.  The user's setting is kept as written, and only the
+> effective behavior is constrained.  By that logic, accepting a
+> zswap-only setting and guaranteeing only that it cannot do anything
+> would fit how the interface already behaves.
+>
+> Having thought it over, I think one of these two directions would be
+> better than enforcing the rule as above.
+>
+> 1. Allow zswap-only in memory.swap.tiers.max.  As you say, it cannot
+>    work without vswap, so today the setting does nothing and there is
+>    nothing to prevent.  Once vswap/xswap lands it becomes meaningful on i=
+ts
+>    own, with no interface change needed.
 
-Hot-unplug:
+Allow it on paper and accept that zswap is not a real tier. It is just
+a cache in front of other swap devices.
+That is what I think as well.
 
-   Some devices can't necessarily handle unexpected migration, and
-   hot-unplug is fundamentally a migration.  So the HOTUNPLUG cap
-   actually means "hot-unplug can execute migrations".
+>
+> 2. Expose memory.swap.tiers.max.effective, like cpuset.  We already
+>    track the user-set and the effective-set separately.  Exposing
+>    the effective one would show that a zswap-only setting is not in
+>    effect, giving the user visibility instead of rewriting what they
+>    wrote.  It would also help the parent-off/child-on case, where the
+>    child could see from the effective value that the tier is off.
 
-   If the entire device has pre-drained the memory (all memory is free)
-   then unplug works - it's just not very hot (no migrations) :]
+Seems more complex than it is worth.
 
-   Maybe a naming issue?
+Chris
 
-~Gregory
-
+>
+> What do you think? or any other ideas?
+>
+> Thanks,
+> Youngjun
+>
