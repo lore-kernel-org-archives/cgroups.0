@@ -1,220 +1,614 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012035.outbound.protection.outlook.com [40.93.195.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 072F637E5F9;
-	Wed, 22 Jul 2026 08:30:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.35
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784709037; cv=fail; b=CBvDu0TCvXuUVLNzFGkTmEoSinAZfFdNETBAzEn+U5I/EncwqxHNKNOOiBVAdKHP3NcedlWi2c7K41xWOz+SjHxviCvf52uJJ2Rs3dnNTr09cYzZTybDxeKblh9s6N46zEKxBh5Yf8YoT1WxlpWH+9FTLajceVePbVcR3SrMv5g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784709037; c=relaxed/simple;
-	bh=fvjWkNKESje9YQeLZLB59OQElYgqgIYJuttQYUEkyw4=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=W5IHPlfE7KMH0dmimDBEy3yD92Llj5YIAToBAug5/xs2OfyXkv0DvXlk3dfQoBQVCuf0jcncO11HHfXosWYpqRAlO8VLxQHdElo/I3m3Cy32kt/D661Ns3RICKLJbFEVk5E0mkEornAuehgP2JCaBLhxbbDBa/mgqxYtXoZuIyE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=T5FtHmml; arc=fail smtp.client-ip=40.93.195.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18FD53E9F9D
+	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 09:43:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784713440; cv=none; b=ft0VXhoj3sEXqrdBlp9kdsXwSnzUZVRPYMdyP970eqj5/Iyt08ifSh5/E5F4fV1hVldjrP2csqZFYdPvry5ytPLUHCaE8xrLw7vV+8Kb44ebxJtqh7yeBPDqaTu5cEKVaqbEaZukatJtIgrweBhxiRLyiX8C10kSAbAk0uCSGFs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784713440; c=relaxed/simple;
+	bh=5zT1F/18SKmDcDLHECwvG+epTfeUkMU2/51GLqV8MvU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lvADq4GS+iA4eoFRj5VKqcW9yMOkwwkWYGuSl1mFiJNuloXm5OSW6SbRT9M7+Px/wrCi0vnydd330ZhPqG9ObppUpHR7IYYjZy8YOifgy7bHQGWlKgDMNR/d8Dn1cqpOEo7HLruOusYeQGkbXRAeJwcX3WVtAVPtK9i4RUcArsg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Lz3epi88; arc=none smtp.client-ip=209.85.221.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="T5FtHmml"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=WJBuRrC7NTHJj6+F/4EhXHxrhg+qFNPREZsbDwhEpCuhLKAAhMp/UAph0M9tUqWTQX1Yz7spRG5HQ63sHOA3HRfVw0m+h+vqMfAtiRDc2FC4MboZugQtNX2ZlOxQCb/5p2+bD+Q7UHc8ScuPnDlNkLlSsPUSNoTkEzKw9Ro38IB0vb7tS9i7YkOH+Mo1dAy4GrJi0vPeLi+2D9iQ8INsNrvm6OJaEA8jHrfSwPpQriYIavhuAWL6kvalix8gEnw0+BfMxk+PM9v09LuyIicuqSzNL+MKb3biUwOfZweJ78CO2vYu/bd24xOZ3A7q4AbOETq9oaIb8xWQQYm2LqIAVw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NOgl1m91rCfaTrJRtHwwbQnPxCIxDgsATs/KGuLzxaA=;
- b=Gx5F1uXutvRY1+rz8kxiO0xQ+texB53tuuZTwwZWYKlV6QtcxLP6U8p8bnC59AGit9yYz8bPRI5cjkQtaP3XhcMW+sS+b/ELUZXklFt0j9FWDKBnJhvRrjQywsNO1gkVK4lPjcGBvscq+LR6Q3NvCTiUBdV6FNwucVCwUwhW1MMgCJTCS1WQ0exLwhp5GOmxQ5Vo2raMw7py4n8iFzfzxEhCmVl9G6t3op5BQl3lH8+hmW/FfzEyxzRBpKqEBmz/c/QrZ5e8v7wWqKBNKLzDaq1nQdtaETXPsB7Ah7KJi+M6BuwNtTNKZWqOFUF1MbvGfMH0UL0OZiwMdfRBEyPYMg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NOgl1m91rCfaTrJRtHwwbQnPxCIxDgsATs/KGuLzxaA=;
- b=T5FtHmmlGW5EfPmi61zpEnJM0oY3DE/hlYznLEcJ95DTyPXsK0/3KUoftpuvdlaIQGUAHVIh0FznKQj9lXCxBkzjiyB46CgfcJdlDTaXD+vpFYWYKMOAAocSD4ZLrlCddBjW9WMdbAvrskZsGlPUTY5lSk3RZMyZewLDP5ubDBhnEa91A7QncPpBfaoLSys4ie0JITdw0myyxXT3CVHTDAamXyIgG0QkxPgAbrQhNBb8iXAGbSrcU5gShl3KOA0R3++AzHDdIxweILwF4qsDRqoaBU/Bk+L8SZrK+JL6h5JU4LQGjcp+BAgWiMbgUAQ/sMvmaidRpGoG//5HBDUrIw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB5001.namprd12.prod.outlook.com (2603:10b6:610:61::18)
- by SA1PR12MB7410.namprd12.prod.outlook.com (2603:10b6:806:2b4::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Wed, 22 Jul
- 2026 08:30:20 +0000
-Received: from CH2PR12MB5001.namprd12.prod.outlook.com
- ([fe80::89e3:6df0:de90:8dfe]) by CH2PR12MB5001.namprd12.prod.outlook.com
- ([fe80::89e3:6df0:de90:8dfe%3]) with mapi id 15.21.0245.009; Wed, 22 Jul 2026
- 08:30:20 +0000
-Message-ID: <1d8b6857-de1e-4807-8201-4f6a49a3b8f7@nvidia.com>
-Date: Wed, 22 Jul 2026 18:29:53 +1000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 00/36] Private Memory NUMA Nodes
-To: Gregory Price <gourry@gourry.net>
-Cc: linux-mm@kvack.org, Zhigang.Luo@amd.com, arun.george@samsung.com,
- brendan.jackman@linux.dev, yuzenghui@huawei.com, apopple@nvidia.com,
- alucerop@amd.com, matthew.brost@intel.com, akpm@linux-foundation.org,
- david@kernel.org, ljs@kernel.org, liam@infradead.org, vbabka@kernel.org,
- rppt@kernel.org, surenb@google.com, mhocko@suse.com, corbet@lwn.net,
- skhan@linuxfoundation.org, gregkh@linuxfoundation.org, rafael@kernel.org,
- dakr@kernel.org, djbw@kernel.org, vishal.l.verma@intel.com,
- dave.jiang@intel.com, alison.schofield@intel.com, osandov@osandov.com,
- jannh@google.com, pfalcato@suse.de, jackmanb@google.com, hannes@cmpxchg.org,
- ziy@nvidia.com, pbonzini@redhat.com, osalvador@suse.de,
- joshua.hahnjy@gmail.com, rakie.kim@sk.com, byungchul@sk.com,
- ying.huang@linux.alibaba.com, kasong@tencent.com, qi.zheng@linux.dev,
- shakeel.butt@linux.dev, baohua@kernel.org, axelrasmussen@google.com,
- yuanchu@google.com, weixugc@google.com, yury.norov@gmail.com,
- linux@rasmusvillemoes.dk, longman@redhat.com, ridong.chen@linux.dev,
- tj@kernel.org, mkoutny@suse.com, sj@kernel.org, jgg@ziepe.ca,
- jhubbard@nvidia.com, peterx@redhat.com, baolin.wang@linux.alibaba.com,
- npache@redhat.com, ryan.roberts@arm.com, dev.jain@arm.com,
- lance.yang@linux.dev, usama.arif@linux.dev, xu.xin16@zte.com.cn,
- chengming.zhou@linux.dev, roman.gushchin@linux.dev, muchun.song@linux.dev,
- linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
- driver-core@lists.linux.dev, nvdimm@lists.linux.dev,
- linux-cxl@vger.kernel.org, linux-debuggers@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, cgroups@vger.kernel.org,
- damon@lists.linux.dev, linux-kselftest@vger.kernel.org, kernel-team@meta.com
-References: <20260720193431.3841992-1-gourry@gourry.net>
- <6a7aaac3-e70d-4063-9c84-e643db1488e0@nvidia.com>
- <al-2D_7NcwMxqmsM@gourry-fedora-PF4VCD3F>
-Content-Language: en-US
-From: Balbir Singh <balbirs@nvidia.com>
-In-Reply-To: <al-2D_7NcwMxqmsM@gourry-fedora-PF4VCD3F>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MEWP282CA0082.AUSP282.PROD.OUTLOOK.COM
- (2603:10c6:220:1e1::16) To CH2PR12MB5001.namprd12.prod.outlook.com
- (2603:10b6:610:61::18)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Lz3epi88"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-472326ca506so9458089f8f.2
+        for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 02:43:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1784713432; x=1785318232; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=fsxdo4WU+Ra3Ii3+AJeiKBXkT5u+K5Jpj+4piFHrP8Q=;
+        b=Lz3epi88SvQIgTK0fS/2y4VEeef124KIlbi0y5hreOG7Q+qodwNSghZdOuebBxgNZZ
+         0Dce5Y5FsIsL7tj/GRthR8TvoHWjD+6eZwe2rXAddv5U/vlGhb2vXJA+YC/fju8jx1wB
+         +OI6xMuVYQT6/rt4cXE1nQpO/4KYJJlAupHhUyqem15f2xiCVQ4XMJmRQgJp5ql8bcsz
+         zdDHCnUkLg96X42HNev6NCRq8i2CbZX7Ys7/omg/AW2Sextr8dMwodnpy0oZBeUfLNlA
+         NF8CZPQ1GN+E3xArl8/QNHjeSLp3ihSTa5l3bvZCBteFz0rxbGxuSNhDNmFxcR2iR4PQ
+         q56g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784713432; x=1785318232;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=fsxdo4WU+Ra3Ii3+AJeiKBXkT5u+K5Jpj+4piFHrP8Q=;
+        b=BbJPLJUwrw3f7kZVh2ORi7Ef0t2a6LTKYKiQS7UdEhdnF6wJBf8bla5pVYHDCTLLa8
+         Zx1bji+YF0iJkV9eFHzMCzN0CrcRIAa5p0gZCCYUvWHfi1hfHqu1D52VAkZBX/OVQm59
+         Y0L6jCUadpqNsO06V8IVRfq6ymWiaru09TakMq4HzQZuiwVQnaOFharf6LskdVATs6SX
+         7YyAij7q6AkIv/V/fOEml4PScRW4sPmFMmZbtJNJriwiaa42YNif99xip6bZ/7eDMl/V
+         DVq5l6EamI/GmTjZz5DvZl5OoTcqVL3skUomI8cOMO6zqc5zaETMEX1GAuCEbyS4w+iT
+         FmOQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqNsxkZQwdC2i1g8xLV8vja2ISztCD1FVxmiosZjBG2pujryKP+PYwpvLtlMu1pczZDKT79eT7s@vger.kernel.org
+X-Gm-Message-State: AOJu0YylvWGmcpCgMYdVpUZX7n8p7cLogTDL1GM9YvpcekFJd4hGCEoG
+	GfhhBg9i0fSskcpYQ/cpr27aY/jRVigClGaa9LEL06FRzETprMY49xq13eV1O/qfuHk=
+X-Gm-Gg: AR+sD10kaVRI7ChxnPRfndMpPVyz3oNboGzKuRZNxbObRdJjtCJHsLh6uWmjL26pNhQ
+	f761vvRoIobUPTFaXowc4YlWy9qOCpMpivPUQCmjyHnidVKHlCHDuE0mVmkxcq3nRfwuR1CkAiR
+	r/AgE6K+z11RKkFffzun3lYq2vJc6gQZft0No5luG5Fi5UVuCzdVhzpcnDXc31k480BRx56U1YJ
+	dQxOMqWik57VNmQ9HKe1l1oaa1SA39kvbCMjyxmEGE12BhcjRMdcxKOpcMiy+JIGDhWHp7OOB2n
+	PqdBCqm32To8MDyalMeyN5MKzDmRChUz2p6vrWl6muJlo2ZxeRRPRu4sfB89EOzIC2CgmJxat9K
+	Q3gspVbypNoB8GeO83TLdkqJKqdwdgkvGYL4Qh6lwAM56jvUnhhkC7jzRPGZcNZI9RKokQxcm7F
+	NpbCjJTg==
+X-Received: by 2002:a05:6000:1acc:b0:47f:8309:8bac with SMTP id ffacd0b85a97d-47f83098c0amr6502172f8f.3.1784713432186;
+        Wed, 22 Jul 2026 02:43:52 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85bdac28sm4439266f8f.16.2026.07.22.02.43.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 02:43:51 -0700 (PDT)
+Date: Wed, 22 Jul 2026 11:43:49 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Ziyang Men <ziyang.meme@gmail.com>
+Cc: Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Jiri Kosina <jikos@kernel.org>, 
+	Benjamin Tissoires <bentiss@kernel.org>, David Vernet <void@manifault.com>, 
+	Eduard Zingerman <eddyz87@gmail.com>, Andrea Righi <arighi@nvidia.com>, 
+	Changwoo Min <changwoo@igalia.com>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	JP Kobryn <inwardvessel@gmail.com>, Mykola Lysenko <mykolal@meta.com>, 
+	Nathan Chancellor <nathan@kernel.org>, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, 
+	linux-input@vger.kernel.org, sched-ext@lists.linux.dev, linux-mm@kvack.org, 
+	kernel-team@meta.com, bpf@vger.kernel.org, llvm@lists.linux.dev, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] selftests/cgroup: add memcg_stat_cross_cpu
+ correctness test for flush
+Message-ID: <amCBeD8sGVdi1Nm4@localhost.localdomain>
+References: <20260721174833.1232771-1-ziyang.meme@gmail.com>
+ <20260721174833.1232771-3-ziyang.meme@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB5001:EE_|SA1PR12MB7410:EE_
-X-MS-Office365-Filtering-Correlation-Id: c1661963-f6d0-4ae8-619c-08dee7cb7786
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|23010399003|1800799024|11063799006|56012099006|4143699003|6133799003|10067099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	sUc07mWsimZBPGEp6bM3G+t1OqNj38TaG3c7T2SzOX0pCO/T7du+Y6yprg7l8vF3xOgZfNxp6BAX6FbNYEmLSkZyTJ0nPJoexw4clXLpdgQzpkDpFU3tiAr0WtUinyVqeAH8qnSTMpJ4v2cHsyh5Mlw0uhKm+ydazFWpHmPJrs0XJjpC5NsDHmaphKCH1KD29nKYFnmynl9j/s6JQuF14G3/ESLe8oEfAychvEwElVjFC03yUVobBfsT6PJ9YGP7x0M4Rojo4vc7gcM9BVa4br9ZvetCUDj7CW5a+agWfp4++47Ox+1dE4gq0Xxv40+Tlg0Laf4cy58BuSO6xqoNcm2Wi+0VABe8UIG2lc8DeKOYNFw7oogsf9lfoF17BVyzcDy+iIJZbL2gP7KENUvTEPkhx898iZoXnVgYipL48L5ffTg0qFBfHaoTCs9sKWycmW63dJVw7EJjlUrBwPwpyX5Jd77ZW6KdC7AVbvzrjv+IjY0qI8a5/Wd5nbbadl3pIe7XBjTJ2j+pFcloXn+6i8PHS+xmDueqxpXsm7DPuTP2yI2Kttr8bsX47hp5krA4KfFY0f8dDLdbgtuDz4tw7PRZaCLUqonN+M5wcVCRSvvs9gG7FotrMBTycmW9nieM7WTGeMJwGk17Mlbj94C5Ej0N+Hc6UGuoS94CxGUgEeY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB5001.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(23010399003)(1800799024)(11063799006)(56012099006)(4143699003)(6133799003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?L3ptUEIxYzBrUnpja3RQMG5qTXJJM3VETVRwUlI1blZiOS9VQitKVXVXMVJO?=
- =?utf-8?B?dU5RU2NSM0U3RExUZFVNbTFLNEx6YWJpVlBjS0g0ZldUeFkzbXBuVGg2d2ZL?=
- =?utf-8?B?Z1JtbUU5emRuTjB1RGlGVnVoTUhJVVgxQ3dIVkpOSGw0S0hKa3pKT3hmYlVP?=
- =?utf-8?B?QkJZazErdVFSWllvbGhiSEhDeWV5cjhxUTZtcFRnMzJ6OGFCUjFtVjUzS1BN?=
- =?utf-8?B?WnYyRjd1bTczTGNGNHBQUFJ4STBmY1JLWWFuQW5hR3o1QncwYkkvMnlyZFdG?=
- =?utf-8?B?cmdjOEs0Y1Q4aHhPVjdMQUE5R1N0UVo2TkdKV3JQRmdCRURxWEtFQ0pEOWpo?=
- =?utf-8?B?N3ZoUjJvYVo3LzJVcVNjNWsrT2VJY2orVW9kYTZRZkdqOUVlMHNVbCtaaXNi?=
- =?utf-8?B?N24wQjdILzJZZ0lTbm1paE9reEczTEErRlhFOGpKMlkzSkNvQ3k2YTJZYzMv?=
- =?utf-8?B?WHhuMkFpL2RXUXozaG9vRW9TYVNtNU9NV0MxT2NCUmFkWFJtNmt5dC9sSjRE?=
- =?utf-8?B?MUlwbHFDL29PcE1LdjMzMWsyOHh0UGpqNU1HbE5hL0Z6VjZIODZDSGxxdU9h?=
- =?utf-8?B?VGhHR041enVhNzJXWDRXT01jM0w3NjdCNFd4YU1iMlFMT3VaMk0zZzg3Y1ps?=
- =?utf-8?B?RElUNWRNL3NGRk8yNGR5L1ZJd0hjYXlPUVN3NlZhN3FzbUMzN0Q2cGNRby9o?=
- =?utf-8?B?bmZHYU5qbTRGSHhWcXVjWkd4WGFIU21HdHJDUEhKc1U1a29oMGwxV1pOWmZi?=
- =?utf-8?B?QlNKVEU2a1lSRmt1NFd5Wk5teEhhbHE1SkZUTVBWUUU2QXJTU1NHNWRISmFZ?=
- =?utf-8?B?RjlMczFDUC9wWUdDKy9NYjVEMWZCQ0syK3dxWHVINmFGc2I1NEJyMnkySzJm?=
- =?utf-8?B?TXFQR1Q5V0ZHSEZNMjNnSkZpTGhDU0VHV21QaDh0N0N4anBqRzR5aFJ0WFBH?=
- =?utf-8?B?OXJDdVRjYVhYSkZ4R2ZxeDlQWWo3Z29yRDl2WkxETy9BMlVZOTNYQVRRYStS?=
- =?utf-8?B?akFCWmRIbWYyTTNyeG96dXJFN3JPYzNOUzhpYXUzOXEwQVhXTmtLZWhYY2Ev?=
- =?utf-8?B?RjlzODdtTTVNcDB3T3VOV2lla2Rnd3c3RDFkSmZpNHNvUTQxdEdaSFIxZ0J6?=
- =?utf-8?B?MUNESUJlWFpnN3NuT21MM280SVUyVEhjYTBWaHJ5VXMvcUVjV3dIb2FDT2Fl?=
- =?utf-8?B?Z2haVjE1bktiN0wvLzZoZUZ3NzVqUDhtTmpsNnFnVlg5b1VweGFPbmlrSE93?=
- =?utf-8?B?a2dlLzVUcWt0S08wSTE1S3h2KzhxZTRuaHhHR3dJMWhFZGtBM2VvNmhNbFd0?=
- =?utf-8?B?RmlCejh6NWxQRkduMkNodlhaeEk1Y0doN1JuYXV2c2J5N29xQTRXRXEybHli?=
- =?utf-8?B?eUxRaTRQRmF4TStONVlBazhaaFpnTmFDU24xN0YxNjV2MFNxYXprc29oaWNB?=
- =?utf-8?B?TkpYTVErTUtVay9QL0xzUURvU2xBNENWYkpHbFdJZFFMeFl0amdETDZTY29I?=
- =?utf-8?B?dEJQTjlTazJNWFNnZzJJTlNzaEtkczZaRXk3ZFFCOG9kSDhXazVDR1JoWWN4?=
- =?utf-8?B?cXYxYmJsSXhkbi8vdFZlbk94OTdMSzROdTFyNEdGczhzZ1dGVjVFekxBTEgw?=
- =?utf-8?B?RDNTWlFUYW9KTTRpWXhRR3ArMldLYlAxZHU2bUs4dUlxdGVVTEh5Q0wwZVUx?=
- =?utf-8?B?YWxNZnBiVTJjOGhJZWZ5MjI1cDlQMVJvUzV0OUVSOXVkUFlxTkZEcFZTa2JC?=
- =?utf-8?B?Zmx1bXhybUhzQ3lSZWV6M1hPNVNySlpSd05aaEh2bnFOT3RZeFpZNkI1RU93?=
- =?utf-8?B?azFWaC80SlIyZnlhY0pPL1VENm8rcFVINk9rZDRpb2d5UGlmNysxWDc0SXBv?=
- =?utf-8?B?c2hVRGduOTg1SVFKVU1QY3NBYjZwaFQwR2NjSXpkbGl1Mm1LQkhmdXduU0s4?=
- =?utf-8?B?YlZhOWF0WHdWdkZZTlorVVBld0lrc2dxdWlzWTYxVm9nVkhRb1pNbU94dVN4?=
- =?utf-8?B?YlJta1VORFBTMXg5K1hzWU53Um0yVkdmUWJJVkI0QkJtOXlsTnZxamNBNytC?=
- =?utf-8?B?WS92eG1JS003cEl1SlROLy9nM2hFMGcyNCtRbGFCRjdQYXMrbVM5eTF0Kzlh?=
- =?utf-8?B?RXMyQUJuM0ZHZjNLZlhYcVNtenRzcFZvMXFkdUozTm5YKzNKWEhMblU1UkVG?=
- =?utf-8?B?bkpNRWp2Wlh6S0l0TEJWcWpETm52Sm1VWlNUUHE4MDlNNklUWmVtUlJ2RDVh?=
- =?utf-8?B?RGt3ZGJhSXhBTnRER2RlK0xEYkdKUWdZS1FlU0Jva3FjNmJ5cjNmV0c5Y0l1?=
- =?utf-8?B?WnZ0bm90RXhFOHc0c3R4UGpGaVhMTktoUEhqbTFESDd2MFlWYlFsUT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c1661963-f6d0-4ae8-619c-08dee7cb7786
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB5001.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2026 08:30:20.4440
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: N6uTeyt0ee/c1gf3dPXOzvO9id4GEtPIHvHnC4CuCnyQWtIoPcJMIWvucDIP7aO4cSDQVqITFPagzUVEO0leXw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7410
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ag6sewjdvm6sdw3b"
+Content-Disposition: inline
+In-Reply-To: <20260721174833.1232771-3-ziyang.meme@gmail.com>
 
-On 7/22/26 4:16 AM, Gregory Price wrote:
-> On Tue, Jul 21, 2026 at 01:46:01PM +1000, Balbir Singh wrote:
->> On 7/21/26 5:33 AM, Gregory Price wrote:
->>>
->>> Patch Layout
->>> ============
->>> The series is broken into two sections:
->>>
->>> 1) N_MEMORY_PRIVATE Introduction.
->>>    Introduce the node state.
->>>    Opt those nodes out of mm/ services.
->>>
->>> 2) NODE_PRIVATE_CAP_* features
->>>    A set of mm/ service opt-in flags that augment private
->>>    nodes to make them more useful (i.e. reclaim = overcommit).
->>>
->>>    NODE_PRIVATE_CAP_LTPIN for private node folio pinning
->>>    NODE_PRIVATE_CAP_NUMA_BALANCING for private-node NUMA balancing
->>>    NODE_PRIVATE_CAP_DEMOTION for private-node tiering demotion
->>>    NODE_PRIVATE_CAP_HOTUNPLUG for opted-in private nodes
->>>    NODE_PRIVATE_CAP_USER_NUMA for userland numa controls
->>>    NODE_PRIVATE_CAP_RECLAIM for opted-in private node reclaim
->>>
->>
->> Looks reasonable, I wonder why USER_NUMA/HOTUNPUG is an opt-in?
->>
-> 
-> Ideologically: Private nodes default to fully isolated, why should any
-> given feature be special?
-> 
-> Concretely: 
-> 
-> User-numa
-> 
->    Some devices don't want the user to have control over placement.
->    I have been working on compressed memory, for example, which only
->    ever wants to be used as a reclaim-demotion target.
->    
->    (The reasoning for this is another thread, i plan on publishing
->     my research on this this year)
-> 
 
-I don't fully understand, how do we allocate memory on these devices then? Is
-the driver expected to allocate and map via vm_insert_page()?
+--ag6sewjdvm6sdw3b
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2 2/4] selftests/cgroup: add memcg_stat_cross_cpu
+ correctness test for flush
+MIME-Version: 1.0
 
-> Hot-unplug:
-> 
->    Some devices can't necessarily handle unexpected migration, and
->    hot-unplug is fundamentally a migration.  So the HOTUNPLUG cap
->    actually means "hot-unplug can execute migrations".
-> 
->    If the entire device has pre-drained the memory (all memory is free)
->    then unplug works - it's just not very hot (no migrations) :]
-> 
->    Maybe a naming issue?
-> 
+Hello Ziyang.
 
-Yes, I would prefer MIGRATION in the name, HOTUNPLUG made me wonder how these
-devices come online and because it is a device, it can go offline while the
-system is still online
+On Tue, Jul 21, 2026 at 10:48:31AM -0700, Ziyang Men <ziyang.meme@gmail.com=
+> wrote:
+> Add a test_progs selftest that verifies the memory-cgroup BPF kfuncs
+> return values that agree with what userspace reads from cgroupfs, across
+> a whole cgroup subtree that has been charged on many CPUs.
+>=20
+> It complements the existing cgroup_iter_memcg test.  cgroup_iter_memcg
+> calls the memcg kfuncs on a single cgroup (BPF_CGROUP_ITER_SELF_ONLY) and
+> only asserts each value is greater than zero, so it never checks that a
+> value is actually correct.  This test compares the kfunc values against
+> what userspace reads from memory.stat, and checks every node in the
+> cgroup tree.
+>=20
+> Moreover, cgroup_iter_memcg does not exercise the rstat flush
+> (mem_cgroup_flush_stats()).  This test does: it launches a process on
+> each leaf that charges and holds memory across multiple CPUs (so the
+> leaf's rstat is dirty on K per-cpu trees), then confirms the flush works
+> for both the BPF and the file path by checking two properties:
+>=20
+>   1. after the flush, each leaf's anon is at least what the process
+>      charged there;
+>=20
+>   2. after the flush, the sum of the leaves' charged memory equals the
+>      amount at the root.
+>=20
+> The BPF reader and the file reader run in two separate rounds.  Each
+> round builds the same cgroup tree from scratch and charges the same
+> amount of memory, so both rounds start from the same state and the
+> numbers are comparable.  In detail:
+>=20
+>   - round 1 (BPF) builds the subtree, forks one child per leaf that
+>     charges the leaf across K CPUs and then blocks holding the charge,
+>     walks the tree with a SEC("iter.s/cgroup") program that flushes the
+>     subtree at the root and reads each cgroup via the memcg kfuncs
+>     (bpf_get_mem_cgroup, bpf_mem_cgroup_flush_stats,
+>     bpf_mem_cgroup_page_state, bpf_mem_cgroup_vm_events,
+>     bpf_put_mem_cgroup) into a hash map;
+>=20
+>   - round 2 (cgroupfs) builds and charges an identical tree the same way,
+>     then reads every cgroup's memory.stat / memory.current from
+>     userspace.
+>=20
+> The subtests differ in how many CPUs each leaf is charged on (a single
+> CPU or across K CPUs), and run on two cgroup tree sizes.  The charging
+> children pin CPUs and there is one per leaf, so the test is registered
+> serial.
+>=20
+> The traditional path reads memory.stat / memory.current through a new
+> read_cgroup_file() helper added to cgroup_helpers (the read counterpart
+> of write_cgroup_file).  When the memcg kfuncs are unavailable
+> (CONFIG_MEMCG=3Dn) the test skips cleanly; the base selftest config now
+> selects CONFIG_MEMCG=3Dy.
+>=20
+> Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Assisted-by: Claude:claude-opus-4-8
+> Signed-off-by: Ziyang Men <ziyang.meme@gmail.com>
 
-> ~Gregory
-> 
+On one hand, this migth be useful to ensure somewhat stable behavior of
+the reported stats, OTOH, it's exposing quite some implementation
+details (flushing, per-cpu charging).
+I'd say that flushing for BPF progs should work (which is what
+cgroup_iter_memcg() should test IIUC) and yield some precision effect,
+however, the comparison with memory.stat may be source of false
+positives due to noise.
+Also, this is supposed to measure convergence in some "static" situation
+but in reality the things are moving (memcg charges/uncharges) in
+various pace so some differences would still occur (IMO such deviations
+are OK, perhaps the test should spell out its preconditions and limitations=
+).
 
-Balbir
+As for the implementation in general -- it'd need some tighter
+connection with existing cgroup selftests (e.g. use integer types like
+cgroup selftest, utilization/adaptation of existing helpers to reduce
+copies of same/similar code).
+
+
+> --- a/tools/testing/selftests/cgroup/Makefile
+> +++ b/tools/testing/selftests/cgroup/Makefile
+> @@ -14,14 +14,29 @@ TEST_GEN_PROGS +=3D test_freezer
+>  TEST_GEN_PROGS +=3D test_hugetlb_memcg
+>  TEST_GEN_PROGS +=3D test_kill
+>  TEST_GEN_PROGS +=3D test_kmem
+> +TEST_GEN_PROGS +=3D test_memcg_stat_cross_cpu
+>  TEST_GEN_PROGS +=3D test_memcontrol
+
+Yeah, this is perhaps so much different from test_memcontrol that it
+deserves a separate prog, OTOH it'd be good to share some common
+cg/memcg functions across the two (some notes below).
+
+
+> +unsigned long long cg_get_id(const char *cgroup)
+
+This duplicates get_cgroup_id_from_path() from
+tools/testing/selftests/bpf/cgroup_helpers.c
+
+> +/* ---- allowed CPU set ------------------------------------------------=
+--- */
+> +
+> +static int *cpu_list; /* ids of the CPUs this process may run on */
+
+I think it'd be simpler to just use cpu_set_t and the standard helper
+macros/functions for this.
+
+> +/* Recursively create children of @path. @path must already exist and be=
+ recorded. */
+> +static int build_children(const char *path, int fanout, int depth)
+> +{
+> +	char child[PATH_MAX];
+> +	int i;
+> +
+> +	if (depth =3D=3D 0)
+> +		return 0;
+> +
+> +	/* Enable memory on this interior node so its children get a memcg. */
+> +	if (cg_write(path, "cgroup.subtree_control", "+memory"))
+> +		return -1;
+> +
+> +	for (i =3D 0; i < fanout; i++) {
+> +		snprintf(child, sizeof(child), "%s/c%d", path, i);
+> +		if (add_node(child, depth =3D=3D 1, NULL))
+> +			return -1;
+
+is_leaf :=3D depth =3D=3D 1
+doesn't look correct (I see below the test builds hierarchies with
+depth=A0>=A01)
+Ah, it's non-conventional meaning of "leaf", I'd suggest a subtree or
+partition or similar (IIUC the purpose).
+
+
+> +		if (build_children(child, fanout, depth - 1))
+> +			return -1;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static size_t tree_capacity(int fanout, int depth)
+> +{
+> +	size_t total =3D 1, level =3D 1;
+> +	int d;
+> +
+> +	for (d =3D 0; d < depth; d++) {
+> +		level *=3D fanout;
+> +		total +=3D level;
+> +	}
+> +	return total;
+> +}
+> +
+> +/* The tree is arranged in the DFS order within an array */
+> +static int build_tree(int fanout, int depth, int *root_fd)
+> +{
+> +	n_nodes =3D 0;
+> +	n_leaves =3D 0;
+> +	nodes =3D calloc(tree_capacity(fanout, depth), sizeof(*nodes));
+> +	if (!nodes)
+> +		return -1;
+> +
+> +	if (add_node(subtree_root, depth =3D=3D 0, root_fd))
+> +		return -1;
+> +	return build_children(subtree_root, fanout, depth);
+> +}
+> +
+> +/* ---- cross-CPU charge (one pinning child per leaf) ------------------=
+--- */
+> +
+> +static pid_t *charger_pids;
+> +static int n_chargers;
+> +/* parent pid, for the children's PR_SET_PDEATHSIG race check */
+> +static pid_t test_pid;
+> +static int charge_ready[2] =3D { -1, -1 };	/* child -> parent "ready" ba=
+rrier */
+> +static int charge_ctrl[2] =3D { -1, -1 };	/* parent -> child "exit" (clo=
+se to signal) */
+> +
+> +/*
+> + * One charging child, dedicated to a single leaf and spread over K CPUs=
+=2E  It
+> + * joins its leaf, maps a resident anon region, then faults the region i=
+n K
+> + * slices, each on a different CPU, so this leaf's rstat ends up dirty o=
+n K
+> + * per-cpu trees.  The region stays mapped, so the charge persists while=
+ the
+> + * parent reads.  After signalling readiness the child blocks (holding t=
+he
+> + * charge) until the parent closes the control pipe.  Never returns.
+> + *
+> + * @base is this child's starting index into cpu_list; its K CPUs are
+> + * (base + 0..K-1) mod n_cpu.
+> + */
+> +static void charger_child(const struct cg_node *leaf, int base, int k,
+> +			  size_t resident_bytes)
+> +{
+
+It'd be nicer if this shared alloc_* functions from test_memcontrol.c
+(module adjustoment to cater both users).
+
+> +static int file_read_node(const char *path, struct file_snap *o)
+> +{
+> +	char buf[8192];
+> +
+> +	memset(o, 0, sizeof(*o));
+> +
+> +	if (cg_read(path, "memory.stat", buf, sizeof(buf)))
+> +		return -1;
+> +	parse_stat(buf, o);
+
+We have cg_read_key_long() for such extractions.
+
+> +
+> +/* ---- correctness comparison -----------------------------------------=
+--- */
+> +
+> +static bool close_enough(__u64 a, __u64 b, __u64 tol)
+> +{
+> +	return (a > b ? a - b : b - a) <=3D tol;
+> +}
+
+See
+tools/testing/selftests/cgroup/lib/include/cgroup_util.h:values_close()
+
+
+> +
+> +/* Dump one node's bpf-vs-file stats; called when a mismatch is detected=
+=2E */
+> +static void dump_node(int i, const struct memcg_stat_snapshot *b,
+> +		      const struct file_snap *f)
+> +{
+> +	ksft_print_msg("node %d bpf : anon=3D%llu file=3D%llu shmem=3D%llu fmap=
+ped=3D%llu pgfault=3D%llu\n",
+> +		       i, b->anon, b->file, b->shmem, b->file_mapped, b->pgfault);
+> +	ksft_print_msg("node %d file: anon=3D%llu file=3D%llu shmem=3D%llu fmap=
+ped=3D%llu pgfault=3D%llu\n",
+> +		       i, f->anon, f->file, f->shmem, f->file_mapped, f->pgfault);
+> +}
+> +
+> +/*
+> + * Compare the BPF kfunc snapshots (round 1) against the memory.stat val=
+ues
+> + * (round 2), node by node.  The two rounds are independent, equivalently
+> + * charged trees, so the flushed stats are compared within a small toler=
+ance
+> + * that absorbs per-round overhead (i.e., a charging child's own stack p=
+ages).
+> + * A wrong unit, enum or field in the kfunc path would miss by far more.
+> + *
+> + * Two per-round checks verify the flush itself: each leaf was charged
+> + * resident_bytes of anon spread over K CPUs, so its flushed anon must b=
+e at
+> + * least that; and the root's recursive anon must equal the sum of the l=
+eaves'
+> + * anon (rstat propagated the charge up the tree).
+> + *
+> + * Returns 0 if every check passes, -1 otherwise.
+> + */
+> +static int check_correctness(const struct memcg_stat_snapshot *bpf,
+> +			     const struct file_snap *file, const bool *is_leaf,
+> +			     int n, size_t resident_bytes)
+> +{
+> +	__u64 stat_tol =3D 64 * page_size;
+> +	__u64 pgf_tol =3D 1024;
+
+These are central values of the test.  It's necessary to explain the
+choice of them.
+
+
+> +	__u64 broot =3D 0, bsum =3D 0, froot =3D 0, fsum =3D 0;
+> +	int i, mism =3D 0, flush_bad =3D 0;
+> +
+> +	for (i =3D 0; i < n; i++) {
+> +		const struct memcg_stat_snapshot *b =3D &bpf[i];
+> +		const struct file_snap *f =3D &file[i];
+> +		__u64 bcur =3D b->usage_pages * page_size;
+> +
+> +		/* kfunc path (round 1) compared with memory.stat path (round 2) */
+> +		if (!close_enough(b->anon, f->anon, stat_tol) ||
+> +		    !close_enough(b->file, f->file, stat_tol) ||
+> +		    !close_enough(b->shmem, f->shmem, stat_tol) ||
+> +		    !close_enough(b->file_mapped, f->file_mapped, stat_tol) ||
+> +		    !close_enough(b->pgfault, f->pgfault, pgf_tol)) {
+> +			mism++;
+> +			dump_node(i, b, f);
+> +		}
+> +
+> +		/* memory.current is live (no flush) and must bound the flushed anon */
+> +		if (b->anon =3D=3D 0 || b->anon > bcur) {
+> +			flush_bad++;
+> +			ksft_print_msg("node %d: anon=3D%llu exceeds current=3D%llu\n",
+> +				       i, b->anon, bcur);
+> +		}
+> +
+> +		/* each leaf's flush must have gathered the full cross-CPU charge */
+> +		if (is_leaf[i]) {
+> +			if (b->anon < resident_bytes || f->anon < resident_bytes) {
+> +				flush_bad++;
+> +				ksft_print_msg("node %d: short flush bpf=3D%llu file=3D%llu\n",
+> +					       i, b->anon, f->anon);
+> +			}
+> +			bsum +=3D b->anon;
+> +			fsum +=3D f->anon;
+> +		}
+> +		if (i =3D=3D 0) { /* nodes[0] =3D=3D subtree_root */
+> +			broot =3D b->anon;
+> +			froot =3D f->anon;
+> +		}
+> +	}
+> +
+> +	if (mism) {
+> +		ksft_print_msg("bpf (round 1) disagrees with memory.stat (round 2)\n");
+> +		return -1;
+> +	}
+> +	if (flush_bad) {
+> +		ksft_print_msg("flush did not aggregate the cross-cpu charge\n");
+> +		return -1;
+> +	}
+> +	if (broot !=3D bsum || froot !=3D fsum) {
+> +		ksft_print_msg("root anon !=3D sum of leaf anon: bpf %llu/%llu file %l=
+lu/%llu\n",
+> +			       broot, bsum, froot, fsum);
+> +		return -1;
+> +	}
+> +	if (bsum =3D=3D 0) {
+> +		ksft_print_msg("tree carries no anon\n");
+> +		return -1;
+> +	}
+> +	return 0;
+> +}
+> +
+> +/* ---- one case -------------------------------------------------------=
+--- */
+> +
+> +struct testcase {
+> +	const char *name;
+> +	int fanout;
+> +	int depth;
+> +	int cpus_per_leaf; /* K: CPUs each leaf is charged on; 0 =3D all CPUs */
+> +	size_t resident_bytes; /* anon charged per leaf */
+> +};
+> +
+> +/*
+> + * Remove the subtree in reverse creation order.  Nodes are recorded in =
+DFS
+> + * order (a parent precedes all its descendants), so iterating backwards
+> + * removes every child before its parent.
+> + */
+> +static void destroy_tree(void)
+> +{
+> +	int i;
+> +
+> +	if (!nodes)
+> +		return;
+> +	for (i =3D n_nodes - 1; i >=3D 0; i--)
+> +		cg_destroy(nodes[i].path);
+> +	free(nodes);
+> +	nodes =3D NULL;
+> +}
+> +
+> +/*
+> + * Round 1: build and charge a fresh tree, walk it with the BPF iterator=
+ (which
+> + * flushes and reads each cgroup via the memcg kfuncs), and capture one =
+snapshot
+> + * per node into @snap.  @is_leaf records the tree shape so the later co=
+mparison
+> + * can run after the tree is gone.  Returns the node count, or -1 on fai=
+lure.
+> + * The tree is always torn down before returning.
+> + */
+> +static int capture_bpf_round(const struct testcase *tc,
+> +			     struct memcg_stat_snapshot *snap, bool *is_leaf)
+> +{
+> +	struct memcg_stat_cross_cpu *skel =3D NULL;
+> +	struct bpf_link *link =3D NULL;
+> +	int root_fd =3D -1, ret =3D -1, i, mfd;
+> +
+> +	if (build_tree(tc->fanout, tc->depth, &root_fd)) {
+> +		ksft_print_msg("build tree (bpf) failed\n");
+> +		goto out;
+> +	}
+> +	if (start_chargers(tc->cpus_per_leaf, tc->resident_bytes))
+> +		goto out;
+> +
+> +	skel =3D memcg_stat_cross_cpu__open();
+> +	if (!skel) {
+> +		ksft_print_msg("skel open failed\n");
+> +		goto out;
+> +	}
+> +	if (bpf_map__set_max_entries(skel->maps.results, n_nodes + 8)) {
+> +		ksft_print_msg("set max_entries failed\n");
+> +		goto out;
+> +	}
+> +	if (memcg_stat_cross_cpu__load(skel)) {
+> +		ksft_print_msg("skel load failed\n");
+> +		goto out;
+> +	}
+> +
+> +	DECLARE_LIBBPF_OPTS(bpf_iter_attach_opts, opts);
+> +	union bpf_iter_link_info linfo =3D {};
+> +
+> +	linfo.cgroup.cgroup_fd =3D root_fd;
+> +	linfo.cgroup.order =3D BPF_CGROUP_ITER_DESCENDANTS_PRE;
+> +	opts.link_info =3D &linfo;
+> +	opts.link_info_len =3D sizeof(linfo);
+> +
+> +	link =3D bpf_program__attach_iter(skel->progs.cgroup_memcg_stat_cross_c=
+pu,
+> +					&opts);
+> +	if (!link) {
+> +		ksft_print_msg("attach iter failed\n");
+> +		goto out;
+> +	}
+> +
+> +	/* bpf walk through the cgroup tree and fetch result */
+> +	if (bpf_walk_once(link)) {
+> +		ksft_print_msg("bpf walk failed\n");
+> +		goto out;
+> +	}
+> +
+> +	mfd =3D bpf_map__fd(skel->maps.results);
+> +	for (i =3D 0; i < n_nodes; i++) {
+> +		/* Save the position for the leaf, used for later correctness check */
+> +		is_leaf[i] =3D nodes[i].is_leaf;
+> +		if (bpf_map_lookup_elem(mfd, &nodes[i].id, &snap[i])) {
+> +			ksft_print_msg("map lookup failed for node %d\n", i);
+> +			goto out;
+> +		}
+> +	}
+> +	ret =3D n_nodes;
+> +out:
+> +	bpf_link__destroy(link);
+> +	memcg_stat_cross_cpu__destroy(skel);
+> +	if (root_fd >=3D 0)
+> +		close(root_fd);
+> +	stop_chargers();
+> +	destroy_tree();
+> +	return ret;
+> +}
+> +
+> +/*
+> + * Round 2: build and charge an identical fresh tree, then read every cg=
+roup via
+> + * memory.stat / memory.current.  The tree is reset after bpf read, so e=
+ach
+> + * read does a real rstat flush.  Returns the node count, or -1 on failu=
+re.
+> + * The tree is always clear before returning.
+> + */
+> +static int capture_file_round(const struct testcase *tc, struct file_sna=
+p *snap)
+> +{
+> +	int root_fd =3D -1, ret =3D -1, i;
+> +
+> +	if (build_tree(tc->fanout, tc->depth, &root_fd)) {
+> +		ksft_print_msg("build tree (file) failed\n");
+> +		goto out;
+> +	}
+> +	if (start_chargers(tc->cpus_per_leaf, tc->resident_bytes))
+> +		goto out;
+> +
+> +	for (i =3D 0; i < n_nodes; i++)
+> +		if (file_read_node(nodes[i].path, &snap[i])) {
+> +			ksft_print_msg("file read failed for node %d\n", i);
+> +			goto out;
+> +		}
+> +	ret =3D n_nodes;
+> +out:
+> +	if (root_fd >=3D 0)
+> +		close(root_fd);
+> +	stop_chargers();
+> +	destroy_tree();
+> +	return ret;
+> +}
+> +
+> +static int run_case(const struct testcase *tc)
+> +{
+> +	struct memcg_stat_snapshot *bpf =3D NULL;
+> +	struct file_snap *file =3D NULL;
+> +	bool *is_leaf =3D NULL;
+> +	size_t cap =3D tree_capacity(tc->fanout, tc->depth);
+> +	int nb, nf, ret =3D KSFT_FAIL;
+> +
+> +	bpf =3D calloc(cap, sizeof(*bpf));
+> +	file =3D calloc(cap, sizeof(*file));
+> +	is_leaf =3D calloc(cap, sizeof(*is_leaf));
+
+(This caught my eye, it looks like those could be better members of
+struct cg_node. But I'm not 100% leaned to it.)
+
+> +	/* round 2: file reader flushes and reads a fresh, equivalent tree */
+
+Hm, I think that's quite a strong assumption that the 2nd tree would be
+equivalent (wrt memcg state). Could you back it up with some arguments
+if you want to rely on it?
+
+
+
+Thanks for an interesting comparer,
+Michal
+
+--ag6sewjdvm6sdw3b
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCamCQxRsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AiNbQD8C4AH4jaYi6gD1GbnB0sM
+NW9dxXz9+pvykaHfFRW+jh8BALbvddo6X3fXt4ct0hLvUV5MM/vXj9SRlLnqY08+
+fa8N
+=FVmc
+-----END PGP SIGNATURE-----
+
+--ag6sewjdvm6sdw3b--
