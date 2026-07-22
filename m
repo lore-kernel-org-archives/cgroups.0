@@ -1,137 +1,173 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16FEE3D348C
-	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 20:38:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8778E41686E
+	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 20:56:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784752705; cv=none; b=HeLzYtIIYrmiTE1sZ1blqgqvCsvdg7bEWQ5J9GrYRJ1QNP2kFpJYT5sO68FU46VA5RY4WXAXJ7/ibS4rkFev4RFdV7AcdJraxo62eE6WyZR1pGnnnynSSKajiN6RwM/PAC2SoFM8Z9Kuw1IS31MfeRvw7GR7nFrL27ABeY+GHZg=
+	t=1784753814; cv=none; b=Z+AmSq0DRm8k1OqY5CXeGvJZztWl5xEYXc1JSsNjL/LJeYjcMvjzyVO+u0vIo0p5nk1fKZk+THgeAfKpokkqFB403J7aZ6DxppiGqRQiOWIgzPlGDBXvpf7/uJR6YV1+0yBnJO6JV7zcXMDpIkKIe92MADGnutWbe4dyEkQHyek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784752705; c=relaxed/simple;
-	bh=Sv1yin451FNf9IBjRzFJe2OiUZg4U4oZrwcgx94tkak=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qhQfIneIa9FDRtYFJCwONURxpjvwIinjIlMG1YpRiWDrGjGPvH84pMCuH/MN2lApnXB+GzLopW6cg1jDZAx+vHO891I3FQKGRun4WeWW7NeiyTJe/6T6Ps+vAjT76iyNzcz/ExCCv6FX7Npv30ki1weB9OeKjGVegdp4Loudrk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X1BPvpNW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784753814; c=relaxed/simple;
+	bh=s8/wCDafUQ7pmN88abnD2Ydl0D4cpNmsjgZZBVN4G00=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I3G5a3i5D5MjoadszVbJdbS3p/xM/vf6rAeNGaUrYpvqiJK66SLPOSsceDEDHiV/FZrnpDOi659yvxr1+ngsxBMguz6YweI9UjTddvtTVLOoAPGtZ8HpSqeUIgQUSqUrHGuwvC/o1JW8CIBF402w+h81x6b064QQuOj34Fz8Xjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=BmbxhrHw; arc=none smtp.client-ip=209.85.160.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X1BPvpNW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C81F51F00ADB
-	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 20:38:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784752703;
-	bh=Sv1yin451FNf9IBjRzFJe2OiUZg4U4oZrwcgx94tkak=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=X1BPvpNWr7GEwW43TDS8VWCrIpskjHDIP2lT+X8LXuU6TwRlX9GTXQRXAjV//ySlM
-	 P5Lu7sD/gF+JeXFlOae/XeqcfP+gjOt8pq0x//nOHWZjnDJenxl7tLLEnugrPbNfBl
-	 B6V5IIzeTbFrjtrRf0vJYbNAoSa2ncA08zERRcd9IuaQsFSLa/QKr2O4wFMydSIco4
-	 8IC/KliAwPwYhCm88pXIc2occfPnzq0GmnPd+jPxa9QoxhM0T3oOcMXzxu6VqwKpdG
-	 jTyliNPWujiZNFaIo4q41fXhukRwIYSkKHfY3YKuqbbBlcWlqHnxzS2P9uHSa1UxnS
-	 plSglyu7GoDoQ==
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-c15e03c2763so1437499666b.0
-        for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 13:38:23 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Rq5ctp2mEFVWo2UCsy/FDAXkEnuGLJTb88R365EsuZvqU8C/k9HW9Hjj5qYF2Q9/xSJXSFIQPV2@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw4+J91TpJYyE+aiTPLgFKkhCXjfGSnEJ73YvHGjkCzLUIdeYSS
-	gXYqrUpX2JwYEptJc/h7LAlGTQY0B27e0IqIMThblM8pXzWlSDkoJtqYMlcPhrnmiF0Ix3PWAWP
-	WKb13yaIaEWkGzuhXqOfNH8A0mkJH/SI=
-X-Received: by 2002:a17:907:1c26:b0:c16:242a:4744 with SMTP id
- a640c23a62f3a-c1c30e5a414mr272454266b.17.1784752702639; Wed, 22 Jul 2026
- 13:38:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="BmbxhrHw"
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-52192509869so42557131cf.1
+        for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 13:56:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1784753811; x=1785358611; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=DrWtospFmR1X6Ml2Vs8JTWDG5C2VdzRczI8oq8UdJr8=;
+        b=BmbxhrHwS6SGD+DstaxN9aum0F+qVmFaCCLRCAesmHXK1x1tbM8o4VXAY3bTRgTam9
+         XN/lXuukJ8njiId9TQhkCaRPDHdLvVG/UbqfgTdVJ7GSf/bhXuLy1McqVIhavwwBnm+u
+         eH9ysztsnbb3Y0hPkS5OJzKx0qvgsrYFdGfqtYdAbumPyibsoupEOFlrVRXIIl2k70T3
+         EAOge8mNby2tH4tbCTbQnpGhXvpzaKnk8AB4lrEjLDfvD+NmiYvFPPRjv4XfQeD4YzrJ
+         ldCwOWXJsoNHETHoVs0VPJZNiN+TJ5HMUYIlSh7Q19XCK5ykMuHxhknCy8215sucxrl2
+         8/jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784753811; x=1785358611;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=DrWtospFmR1X6Ml2Vs8JTWDG5C2VdzRczI8oq8UdJr8=;
+        b=M88Y9YBP+s+xqBP4QW0mj7qAq+MFLs+2OJFSfAMbujf1CtVAlIDM8rYudzV3lDmVfX
+         yUNa4tQqNNUPmC1iTk58f1NBvgwdwrLZeXi97+rzjrJSl92JBSwFVsZM/mXiv/i/i2yC
+         nEmcIwqCyOJNeEXpIeOsfDeMQKTSBC5ILsI7WxTyMXFMF/TXuV3DJ/CYjKt4TGk9dRnp
+         f2a6xHNYOLdQmjrSJd3FXsxFsOuclIpcF8nNGrRbO9d/2Xp4SgDnb2kUMAzR58Ewwj00
+         XZHCjkF4g4hYRgdGjEc5plO/OCJaR9Yr5DA3rhtHKlG7Enng5nEqlvwBxWKcyg080e/c
+         b+Rg==
+X-Forwarded-Encrypted: i=1; AHgh+RqEM4wKrkWaWgxSzes+1gkNpHEV2aMtKD2cL4q6rX9cj2DoNaaytN8VOuBBCqZvHaErTG2tFP7d@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw3zRTaHxAYMJbfh/9H632iE+/z0ELxLWzOZ9SDLIh5Cey4U/5a
+	KcF7pDKlCUuhGfyW+f8GfeT3BXzQBw3Rv0D2OBHzDdH5/bqly4h+6rt8NHbCpUeL62c=
+X-Gm-Gg: AR+sD11LAk2+HsWucRx2k0/8Ik/iAF6DkPQasJlYrrbu60t6mmh5FZ0J3fie0GK6Y3f
+	qzWzRDM/P2hCsADqi/kCN00kofvwbxX41GdVwLk0/JUJquk72dAePiAF6eW77aJP7KeAFFa339Y
+	zaZe580o21ZD/fT7SMWCakQAdGmfijOqo6v1ohX7+g5OrYdeJ13kFnvDuyO/fmKYNYWRrxhNYE+
+	GFzS5a+k7hcjM67pHhpqXIthKwTeJm0tUtwLqSBraX15B5FXEX3vPq5PrDXlou66yrVcQtDpn68
+	j2zSaOM83Xh7uMB9e+DI+sart93NLcWrG19QVC09+CW4uxYEaU63BddDdGpCFZSCHGnVpxj7wxg
+	Jxzou9rsQaOi5YX6wkOIH4MvfefGKHdnQql+BHG7oNBfP5slDc0EFDQleLmmiOwSAziFRfpNS58
+	MdI0XnMjsxql6f+crSYWZYCAKpFUt7EGbYTII8PFniDFjhNVfqH1yi2P2qxhLGTN6tteu4
+X-Received: by 2002:a05:622a:997:b0:519:5680:1b5 with SMTP id d75a77b69052e-5283de4650emr1484841cf.21.1784753811471;
+        Wed, 22 Jul 2026 13:56:51 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-907ba672806sm29772246d6.0.2026.07.22.13.56.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 13:56:51 -0700 (PDT)
+Date: Wed, 22 Jul 2026 16:56:45 -0400
+From: Gregory Price <gourry@gourry.net>
+To: Richard Cheng <icheng@nvidia.com>
+Cc: linux-mm@kvack.org, Zhigang.Luo@amd.com, arun.george@samsung.com, 
+	balbirs@nvidia.com, brendan.jackman@linux.dev, yuzenghui@huawei.com, 
+	apopple@nvidia.com, alucerop@amd.com, matthew.brost@intel.com, 
+	akpm@linux-foundation.org, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
+	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com, 
+	corbet@lwn.net, skhan@linuxfoundation.org, gregkh@linuxfoundation.org, 
+	rafael@kernel.org, dakr@kernel.org, djbw@kernel.org, vishal.l.verma@intel.com, 
+	dave.jiang@intel.com, alison.schofield@intel.com, osandov@osandov.com, 
+	jannh@google.com, pfalcato@suse.de, jackmanb@google.com, hannes@cmpxchg.org, 
+	ziy@nvidia.com, pbonzini@redhat.com, osalvador@suse.de, joshua.hahnjy@gmail.com, 
+	rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com, 
+	kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev, baohua@kernel.org, 
+	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, yury.norov@gmail.com, 
+	linux@rasmusvillemoes.dk, longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org, 
+	mkoutny@suse.com, sj@kernel.org, jgg@ziepe.ca, jhubbard@nvidia.com, 
+	peterx@redhat.com, baolin.wang@linux.alibaba.com, npache@redhat.com, 
+	ryan.roberts@arm.com, dev.jain@arm.com, lance.yang@linux.dev, usama.arif@linux.dev, 
+	xu.xin16@zte.com.cn, chengming.zhou@linux.dev, roman.gushchin@linux.dev, 
+	muchun.song@linux.dev, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	driver-core@lists.linux.dev, nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org, 
+	linux-debuggers@vger.kernel.org, linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, 
+	cgroups@vger.kernel.org, damon@lists.linux.dev, linux-kselftest@vger.kernel.org, 
+	kernel-team@meta.com
+Subject: Re: [PATCH v5 00/36] Private Memory NUMA Nodes
+Message-ID: <amEpR83RtiqstjNs@gourry-fedora-PF4VCD3F>
+References: <20260720193431.3841992-1-gourry@gourry.net>
+ <amDL80BSEP6u9XfE@MWDK4CY14F>
+ <amDVQopyvolxfX8K@gourry-fedora-PF4VCD3F>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJnrk1bG6ddP6-dgXpGBRGnCH49oTMPwkJmF--+gefmy+zBo-w@mail.gmail.com>
- <oocwnxqgd4klrem6hkya3sddqoxkosml4ysz23if4j7wj2qdwi@5skgc4ftu7io>
- <CAJnrk1ZU40tRDq0z3yM0+yv=KhiZ-fNjUTO=ccv1tuc0xDx2Vg@mail.gmail.com>
- <4fsrafuhoqgoirlt2sy6vk2ljvb3tdps4hqbcrm5qc2pr6tlaf@tboejm2wdq2s>
- <CAJnrk1b65ypz4bdtd1rTQBYOpOEP+DcoZJUSL87jVDssW1A+pw@mail.gmail.com>
- <nv2h2dd2xoj4zjfvnhsxud2p5e2uw3og22ovqureik4pey72qb@i75tn5ttavfo>
- <ue5xd6f4nfggwodfhbqaispmr5aq2dyszezvy26bl4rtsk6xii@uceqazdioj3o>
- <CAJnrk1bwabyWY+rzzSKfKWp3rivcQm=zae3xzNSZc2hnLj6-Aw@mail.gmail.com>
- <aljxUvui60dm3yvj@linux.dev> <CAJnrk1aTx44=jy0ODHY2sHh16bKsYkwBKj_O-MsnZYjXGW2cCA@mail.gmail.com>
- <alpfQxaYs5hQ0BaU@google.com>
-In-Reply-To: <alpfQxaYs5hQ0BaU@google.com>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Wed, 22 Jul 2026 13:38:10 -0700
-X-Gmail-Original-Message-ID: <CAO9r8zMwp-wxJz6AjBSEuW+vn-7ff2VwAdHpVHFAqy0skgD2OA@mail.gmail.com>
-X-Gm-Features: AUfX_mzbIxhaji4ACa_s6MziyJYJfdhM5If0Ugu2QBVMrEAPT0o4Q-nTgVPbFwM
-Message-ID: <CAO9r8zMwp-wxJz6AjBSEuW+vn-7ff2VwAdHpVHFAqy0skgD2OA@mail.gmail.com>
-Subject: Re: [PATCH] fuse: disable default bdi strictlimiting
-To: Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>
-Cc: Joanne Koong <joannelkoong@gmail.com>, Jan Kara <jack@suse.cz>, 
-	Miklos Szeredi <miklos@szeredi.hu>, linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
-	fuse-devel <fuse-devel@lists.linux.dev>, Jingbo Xu <jefflexu@linux.alibaba.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	linux-mm <linux-mm@kvack.org>, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Jesper Dangaard Brouer <hawk@kernel.org>, Yunzhao Li <yunzhao@cloudflare.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <amDVQopyvolxfX8K@gourry-fedora-PF4VCD3F>
 
-> > > First let's see if the general solution is doable and simple otherwise we can
-> > > explore use-case specific solutions. In extreme case revert is an options as
-> > > well but I would prefer a more sophisticated ratelimiting (that Jan suggested)
-> > > than a revert.
-> > >
-> >
-> > Sounds good. I'll keep an eye out for the work Yosry's doing on this
-> > and look into hooking it up to writeback if/when his general solution
-> > becomes available.
->
-> I am not sure if I had in mind would generalize well. For zswap, I was
-> just going to replace rstat with per-memcg atomic counters, and simply
-> walk the cgroup parents in the update path, as the zswap load/store path
-> shouldn't be too hot.
->
-> However, looking at other in-kernel flushers (including
-> mem_cgroup_wb_stats()), I see they consume other stats like
-> NR_INACTIVE_FILE/NR_ACTIVE_FILE, which are updated in the page
-> allocation path. I am not sure if a cgroup parent walk with atomic
-> updates would fly there.
->
-> A more problematic one is count_shadow_nodes(), which consumes slab
-> object stats. I think we definitely cannot do atomic updates in the slab
-> allocation path. Although it seems like count_shadow_nodes() is a rough
-> estimate and perhaps we can forgoe using the stats there.
->
-> If we want a generic solution for in-kernel flushers to improve stats
-> accuracy without killing performance, I think we need a heavier lift to
-> rework rstat or move away from it completely.
+On Wed, Jul 22, 2026 at 11:40:06AM -0400, Gregory Price wrote:
+> On Wed, Jul 22, 2026 at 10:20:00PM +0800, Richard Cheng wrote:
+> > 
+> > I saw the reply in patch 5, so in fact there's not only one
+> > dedicate zonelist, but numerous ?
+> > I raise the question because zonelist was supposed to be a
+> > global, unbypasssable thing in MM design, but now what you
+> > are trying to do is to seperate the whole global list into several
+> > parts ?
+> > 
+> > Can you explain why in current design you don't consider to support
+> > something like ZONELIST_PRIVATE[n]={0, .. ,n-1} ? that's my imagination
+> > of what a global zonelist should look like, no matter private or non.
+> > 
+> 
+> First let me say that there's nothing that prevents us from doing this,
+> and we *could* make this the default case - but this decision was
+> intentional by me.
+> 
 
-(Adding a few more people and mailing lists)
+You caught me on something here - I am wrong about my own code.
 
-So I experimented with a per-memcg atomics in zswap (see [1] for
-context), and it appears to be too expensive even for updating the
-zswap stats during reclaim / swap faults. So I think zswap will need a
-similar approach to writeback and other in-kernel users.
+I described to you how I originally implemented zonelist isolation,
+which I walked back when I was testing mempolicy and demotion.
 
-One idea is to keep per-CPU per-cgroup counters, but on the update
-side we update all the parents' counters, instead of just updating the
-current cgroup's counters. Flushing the stats then only needs to
-iterate the per-CPU counters and doesn't need to walk the cgroup tree
-at all. There is added work on the update side, but hopefully it's
-cheap enough to update per-CPU counters, and cgroup hierarchies aren't
-usually too deep.
+The current code and the comments in the code are correct, we get
+the following zonelists.
 
-A more radical approach is to completely drop the per-CPU rstat trees.
-So instead of walking the parents to add them to the per-CPU tree, we
-just walk the parents and directly update the stat. The flush side
-will then always iterate the per-CPU counters to accumulate them. With
-this approach, the update cost roughly remains the same, but the flush
-cost changes. Instead of walking the trees and flushing all cgroups,
-but only doing it on CPUs/cgroups that actually have updates, we
-always iterate and sum the per-CPU counters. The average flush cost
-may become more expensive, but it should be more consistent and won't
-scale with the cgroup tree size. I am not sure if this would be a net
-win or not.
+N_MEMORY : 0,1
+N_MEMORY_PRIVATE: 2,3
 
-We can also choose to do the above for all the stats or only the ones
-used by in-kernel flushers, the latter would probably perform better
-but at the cost of more complexity.
+ZONELIST_PRIVATE[0]     = {0,1,2,3}
+ZONELIST_PRIVATE[1]     = {1,0,2,3}
+ZONELIST_PRIVATE[2]     = {2,0,1,3}
+ZONELIST_PRIVATE[3]     = {3,0,1,2}
 
-I honestly don't have any time to pursue any of these approaches, so
-this is mostly just a brain dump. But I do think we should try to more
-systematically solve the stats flushing problem as it has given us a
-lot of pain over the years.
+Meaning everything except for MPOL_F_RELATIVE_NODES works (because
+of cpuset isolation, but more on this in a moment).
 
-[1]https://lore.kernel.org/linux-mm/CAO9r8zP6JrZcBnzb8A3A9V8so4gJMWLvrJQ7VwPyyU417GikQg@mail.gmail.com/
+
+So what I shipped here is what you are describing.
+
+Looking back at my notes - I realized a few things that lead me to
+walk back that isolation:
+
+1) mempolicy makes more sense this way.
+2) reclaim/demotion is easier to implement without isolation.
+3) The individual service checks and nodelists handle the rest.
+4) It overally just makes more sense.  If something breaks isolation
+   it's because there's a bug, not because of a structural issue.
+
+For example in demotion we do this:
+
+demote_folio_list():
+    /* Get demotion targets, find the best one, and demote */
+    node_get_allowed_targets(pgdat, &allowed_mask);
+    target_nid = next_demotion_node(pgdat->node_id, &allowed_mask);
+    migrate_pages(demote_folios, alloc_demote_folio, ...);
+
+Where the first step already filters on CAP_DEMOTION.
+The result is still clean - no special iterators needed.
+
+What I realized from your questions here is that since i walked back the
+zonelist isolation, I think i can actually include any CAP_USER_NUMA
+node in cpuset.mems and allow parititioning fairly trivially.
+
+I think this might be the last majority complexity falling out.
+
+Thank you for the questions - this has helped.
+
+~Gregory
