@@ -1,50 +1,51 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D95C355F49
-	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 14:39:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD918366049
+	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 15:08:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784731147; cv=none; b=TuzWh0su71GtOgjaM1iv/aS7nYeqHTbp64nI91JQ9zUw9d+3fq7+vKXDlRdiqiRKxkmskFhoLZzLiHTlgf4eLNEo/uaFY1SqpaJBSUTTUxJiEi7KDXVujUD+43tPevUi1+CPnQA1//4Y+YtZH34xJCzugN/CKwI6Zm982ycv0r0=
+	t=1784732943; cv=none; b=O64x+OSjt30luQrygS+FFPUqdtCXOGwImCw5dY+ip72LkPzvxXup+Z4j+nAexeFsPTkAjoPFaSCcugzYp/XN4l+BYTtOBzsUHKcv/dHe0UBXM48Y0/jVTXj6GjDcRyJ3WeN8wTMwR0nT5qBHAtadxwLx9EsIm5uor7ooUcQdJxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784731147; c=relaxed/simple;
-	bh=8aOgLn46DVa4Y157P1gYH41efpVpSrdx03UoQnyu+q0=;
+	s=arc-20240116; t=1784732943; c=relaxed/simple;
+	bh=Fuh7j3i1hWPA2ST5wcZWSI4lxKim5UhpPM3nkNKc/fU=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=WmprTOUkrphFxydite9WYUpiWW7CDTDAPuusSl7zZRAYt+Z50Su7YQJPEOMF5l/qofCWqA+rLnIYphsJjJ58FeGQYUzk5R/ehV4F4F8y3P9OodvnfXTB4CElZ5TzJ/tTsKCL4D4fhJkNE3M7Fxu+hnQUgbDsRDP3DJct0QP6x1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mlBhTxfR; arc=none smtp.client-ip=198.175.65.15
+	 Content-Type:MIME-Version; b=tyswskF9DbSngSPxoLHhn1SZf6w7IkkyHpBRo+l62B22H7VZONb1FiD1JKausQhSdaeYanpCTPAA51DaC6CxM6I63zbl3gn/t6v2JmLpF6Oa3agY7RQ1vUpoEOECC7vzMbN9KLzVIsJA4+hIrciPY7USdsGj/yxVgQvKCqhR3oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=V/la5T4J; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mlBhTxfR"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="V/la5T4J"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784731145; x=1816267145;
+  t=1784732940; x=1816268940;
   h=message-id:subject:from:to:cc:date:in-reply-to:
    references:content-transfer-encoding:mime-version;
-  bh=8aOgLn46DVa4Y157P1gYH41efpVpSrdx03UoQnyu+q0=;
-  b=mlBhTxfRSy26AIG7Xg/bPzn4wBgpPPt4hVeyVF1Eu9J38ouNHj1u108V
-   k94ci7Q6V8xB1l4YbkREEENtEtPFO0efpAlMzgVHbPcBlfBsIWUvDIVkB
-   HL7nCgxjAGFNk2ePjCtPpzPwMMyiupUQUTEAUX9DdEpTZWZAU1/fig5c0
-   x35JNtiXQDHeW19ElC2E16zr5DJd+FdJUqbd50hyzHyDwMrbhHpszS3cR
-   SDWDhDgUsOP3t1p4yKJXqteLU7bwP3JgGcakydKOpSi2I/KlrE9RqP8Ge
-   M5ui7/1S19mW4mm5coVuxDwmo0TxUYTFe+6bhNIG9BZvzT6v8Szue+lyc
-   w==;
-X-CSE-ConnectionGUID: k3c2yfcCSOm4xyKCMOZYLA==
-X-CSE-MsgGUID: YuU5iz+BQW2q+HCwFWi4CA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11854"; a="89044779"
+  bh=Fuh7j3i1hWPA2ST5wcZWSI4lxKim5UhpPM3nkNKc/fU=;
+  b=V/la5T4Jd1eI7sBfp4E35d86TMlaUGarjcuQytXMDCavXx5kd6DoCC5b
+   YSmnInGx1tv1WycXhLJAzcI0la2bzKHYh4hD/FkWh+0Quexj9h4Zzv8gE
+   UUKOoZ42siW583CzGKte2d0sbhWMed2vvU27zjh9LeayVKFwl3PafPNQ1
+   EUwofmrzxZmIGyxrUBOz+M/NNmFjJ1sPDggXsRLpeZwKif65lt9nIboV/
+   448+Ovjvn/MpJagmWBPQIj+e1DAsxNLavKzAKdNnm/qzUMGYXuvfh592g
+   m39mmpUhVDaGLvAB/s30NGbbFiNtiiiWgt5kFrGB5giXjZLUMoLwBtmPR
+   A==;
+X-CSE-ConnectionGUID: yAkWSs06SlqOiw0rSumC4A==
+X-CSE-MsgGUID: tEO0jsp1R/GKaFhdSufQmw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11854"; a="110913416"
 X-IronPort-AV: E=Sophos;i="6.25,178,1779174000"; 
-   d="scan'208";a="89044779"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2026 07:39:05 -0700
-X-CSE-ConnectionGUID: fvKJnEMoTQKw1v7dYrSong==
-X-CSE-MsgGUID: +QNYQxmoS9iVVBJY7611+A==
+   d="scan'208";a="110913416"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2026 08:08:58 -0700
+X-CSE-ConnectionGUID: iU29KpU5TxCt+NLgMRzEkQ==
+X-CSE-MsgGUID: 0QD0nRCiQpSPTbNLxMR0qA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,178,1779174000"; 
-   d="scan'208";a="258781172"
+   d="scan'208";a="258181065"
 Received: from pgcooper-mobl3.ger.corp.intel.com (HELO [10.245.245.180]) ([10.245.245.180])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2026 07:39:01 -0700
-Message-ID: <7fdc1aa1d8c605a642a9b283ca60ec062842f139.camel@linux.intel.com>
-Subject: Re: [PATCH 01/10] memcg: add support for GPU page counters. (v5)
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2026 08:08:55 -0700
+Message-ID: <1c4e53bef3e6cdce4edf97352d9f5e04ce0c69a6.camel@linux.intel.com>
+Subject: Re: [PATCH 02/10] ttm: add a memcg accounting flag to the
+ alloc/populate APIs
 From: Thomas =?ISO-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>
 To: Dave Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org, 
 	tj@kernel.org, christian.koenig@amd.com, Johannes Weiner
@@ -53,10 +54,10 @@ To: Dave Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org,
  Song <muchun.song@linux.dev>
 Cc: cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>,
  simona@ffwll.ch, 	intel-xe@lists.freedesktop.org
-Date: Wed, 22 Jul 2026 16:38:58 +0200
-In-Reply-To: <20260706052330.1110909-2-airlied@gmail.com>
+Date: Wed, 22 Jul 2026 17:08:52 +0200
+In-Reply-To: <20260706052330.1110909-3-airlied@gmail.com>
 References: <20260706052330.1110909-1-airlied@gmail.com>
-	 <20260706052330.1110909-2-airlied@gmail.com>
+	 <20260706052330.1110909-3-airlied@gmail.com>
 Organization: Intel Sweden AB, Registration Number: 556189-6027
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
@@ -71,303 +72,768 @@ MIME-Version: 1.0
 On Mon, 2026-07-06 at 15:22 +1000, Dave Airlie wrote:
 > From: Dave Airlie <airlied@redhat.com>
 >=20
-> This introduces 2 new statistics and 3 new memcontrol APIs for
-> dealing
-> with GPU system memory allocations.
+> This flag does nothing yet, but this just changes the APIs to accept
+> it in the future across all users.
 >=20
-> The stats corresponds to the same stats in the global vmstat,
-> for number of active GPU pages, and number of pages in pools that
-> can be reclaimed.
->=20
-> The first API charges a order of pages to a objcg, and sets
-> the objcg on the pages like kmem does, and updates the active/reclaim
-> statistic.
->=20
-> The second API uncharges a page from the obj cgroup it is currently
-> charged
-> to.
->=20
-> The third API allows moving a page to/from reclaim and between obj
-> cgroups.
-> When pages are added to the pool lru, this just updates accounting.
-> When pages are being removed from a pool lru, they can be taken from
-> the parent objcg so this allows them to be uncharged from there and
-> transferred
-> to a new child objcg.
+> This flag will eventually be filled out with when to account a tt
+> populate to a memcg.
+
+I agree with Matt Brost's comment about the ttm_operation_ctx.
+
+There are also some sashiko comments that appear valid:
+https://sashiko.dev/#/message/20260706053512.D207E1F000E9%40smtp.kernel.org
+
+Thanks,
+Thomas
+
+
 >=20
 > Signed-off-by: Dave Airlie <airlied@redhat.com>
 > ---
-> v2: use memcg_node_stat_items
-> v3: fix null ptr dereference in uncharge
-> v4: AI review: fix parameter names, fix problem with reclaim moving
-> doing wrong thing
-> v5: fix the build with CONFIG_MEMCG=3Dn
-> ---
-> =C2=A0Documentation/admin-guide/cgroup-v2.rst |=C2=A0=C2=A0 6 ++
-> =C2=A0include/linux/memcontrol.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 34 ++++++++
-> =C2=A0mm/memcontrol.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+> =C2=A0drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 3 ++-
+> =C2=A0drivers/gpu/drm/i915/gem/i915_gem_ttm.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 5 +++--
+> =C2=A0drivers/gpu/drm/i915/gem/i915_gem_ttm_move.c=C2=A0=C2=A0=C2=A0=C2=
+=A0 |=C2=A0 2 +-
+> =C2=A0drivers/gpu/drm/i915/gem/i915_gem_ttm_pm.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 |=C2=A0 4 ++--
+> =C2=A0drivers/gpu/drm/loongson/lsdc_ttm.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 3 ++-
+> =C2=A0drivers/gpu/drm/nouveau/nouveau_bo.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 6 ++++--
+> =C2=A0drivers/gpu/drm/radeon/radeon_ttm.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 3 ++-
+> =C2=A0drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c |=C2=A0 2 +-
+> =C2=A0drivers/gpu/drm/ttm/tests/ttm_pool_test.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 | 16 ++++++++------
+> --
+> =C2=A0drivers/gpu/drm/ttm/tests/ttm_tt_test.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 | 12 ++++++------
+> =C2=A0drivers/gpu/drm/ttm/ttm_bo.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
 =A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 | 104
-> ++++++++++++++++++++++++
-> =C2=A03 files changed, 144 insertions(+)
-
-Looks like there are a couple of sashiko issues remaining for this
-patch:
-
-https://sashiko.dev/#/message/20260706052330.1110909-2-airlied%40gmail.com
-
+=C2=A0 |=C2=A0 7 ++++---
+> =C2=A0drivers/gpu/drm/ttm/ttm_bo_util.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 6 +++---
+> =C2=A0drivers/gpu/drm/ttm/ttm_bo_vm.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 =
+4 +++-
+> =C2=A0drivers/gpu/drm/ttm/ttm_pool.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=
+=C2=A0 6 ++++--
+> =C2=A0drivers/gpu/drm/ttm/ttm_tt.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 |=C2=A0 8 +++++---
+> =C2=A0drivers/gpu/drm/vmwgfx/vmwgfx_blit.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 4 ++--
+> =C2=A0drivers/gpu/drm/vmwgfx/vmwgfx_ttm_buffer.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 |=C2=A0 7 ++++---
+> =C2=A0drivers/gpu/drm/xe/xe_bo.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 |=C2=A0 5 +++--
+> =C2=A0include/drm/ttm/ttm_bo.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 1 +
+> =C2=A0include/drm/ttm/ttm_device.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 |=C2=A0 1 +
+> =C2=A0include/drm/ttm/ttm_pool.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 |=C2=A0 1 +
+> =C2=A0include/drm/ttm/ttm_tt.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 1 +
+> =C2=A022 files changed, 63 insertions(+), 44 deletions(-)
 >=20
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst
-> b/Documentation/admin-guide/cgroup-v2.rst
-> index 993446ab66d0..aa4f503770c5 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1573,6 +1573,12 @@ The following nested keys are defined.
-> =C2=A0	=C2=A0 vmalloc (npn)
-> =C2=A0		Amount of memory used for vmap backed memory.
-> =C2=A0
-> +	=C2=A0 gpu_active (npn)
-> +		Amount of system memory used for GPU devices.
-> +
-> +	=C2=A0 gpu_reclaim (npn)
-> +		Amount of system memory cached for GPU devices.
-> +
-> =C2=A0	=C2=A0 shmem
-> =C2=A0		Amount of cached filesystem data that is swap-
-> backed,
-> =C2=A0		such as tmpfs, shm segments, shared anonymous
-> mmap()s
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index e1f46a0016fc..9d057f58c9d0 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -1583,6 +1583,7 @@ static inline void
-> mem_cgroup_flush_foreign(struct bdi_writeback *wb)
-> =C2=A0#endif	/* CONFIG_CGROUP_WRITEBACK */
-> =C2=A0
-> =C2=A0struct sock;
-> +
-
-Unrelated
-
-
-> =C2=A0#ifdef CONFIG_MEMCG
-> =C2=A0extern struct static_key_false memcg_sockets_enabled_key;
-> =C2=A0#define mem_cgroup_sockets_enabled
-> static_branch_unlikely(&memcg_sockets_enabled_key)
-> @@ -1629,6 +1630,17 @@ static inline u64
-> mem_cgroup_get_socket_pressure(struct mem_cgroup *memcg)
-> =C2=A0}
-> =C2=A0#endif
-> =C2=A0
-> +bool mem_cgroup_charge_gpu_page(struct obj_cgroup *objcg, struct
-> page *page,
-> +			=C2=A0=C2=A0 unsigned int order,
-> +			=C2=A0=C2=A0 gfp_t gfp_mask, bool reclaim);
-> +void mem_cgroup_uncharge_gpu_page(struct page *page,
-> +				=C2=A0 unsigned int order,
-> +				=C2=A0 bool reclaim);
-> +bool mem_cgroup_move_gpu_page_reclaim(struct obj_cgroup *objcg,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct page *page,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int order,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool to_reclaim);
-> +
-> =C2=A0int alloc_shrinker_info(struct mem_cgroup *memcg);
-> =C2=A0void free_shrinker_info(struct mem_cgroup *memcg);
-> =C2=A0void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int
-> shrinker_id);
-> @@ -1665,6 +1677,28 @@ static inline void
-> mem_cgroup_sk_uncharge(const struct sock *sk,
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+> b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+> index 025625e7e800..8062b3d61157 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+> @@ -1220,6 +1220,7 @@ static struct ttm_tt
+> *amdgpu_ttm_tt_create(struct ttm_buffer_object *bo,
+> =C2=A0 */
+> =C2=A0static int amdgpu_ttm_tt_populate(struct ttm_device *bdev,
+> =C2=A0				=C2=A0 struct ttm_tt *ttm,
+> +				=C2=A0 bool memcg_account,
+> =C2=A0				=C2=A0 struct ttm_operation_ctx *ctx)
 > =C2=A0{
+> =C2=A0	struct amdgpu_device *adev =3D amdgpu_ttm_adev(bdev);
+> @@ -1243,7 +1244,7 @@ static int amdgpu_ttm_tt_populate(struct
+> ttm_device *bdev,
+> =C2=A0		pool =3D &adev->mman.ttm_pools[gtt->pool_id];
+> =C2=A0	else
+> =C2=A0		pool =3D &adev->mman.bdev.pool;
+> -	ret =3D ttm_pool_alloc(pool, ttm, ctx);
+> +	ret =3D ttm_pool_alloc(pool, ttm, memcg_account, ctx);
+> =C2=A0	if (ret)
+> =C2=A0		return ret;
+> =C2=A0
+> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_ttm.c
+> b/drivers/gpu/drm/i915/gem/i915_gem_ttm.c
+> index df3fcc2b1248..d45ccede78a4 100644
+> --- a/drivers/gpu/drm/i915/gem/i915_gem_ttm.c
+> +++ b/drivers/gpu/drm/i915/gem/i915_gem_ttm.c
+> @@ -317,6 +317,7 @@ static struct ttm_tt *i915_ttm_tt_create(struct
+> ttm_buffer_object *bo,
+> =C2=A0
+> =C2=A0static int i915_ttm_tt_populate(struct ttm_device *bdev,
+> =C2=A0				struct ttm_tt *ttm,
+> +				bool memcg_account,
+> =C2=A0				struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	struct i915_ttm_tt *i915_tt =3D container_of(ttm,
+> typeof(*i915_tt), ttm);
+> @@ -324,7 +325,7 @@ static int i915_ttm_tt_populate(struct ttm_device
+> *bdev,
+> =C2=A0	if (i915_tt->is_shmem)
+> =C2=A0		return i915_ttm_tt_shmem_populate(bdev, ttm, ctx);
+> =C2=A0
+> -	return ttm_pool_alloc(&bdev->pool, ttm, ctx);
+> +	return ttm_pool_alloc(&bdev->pool, ttm, memcg_account, ctx);
 > =C2=A0}
 > =C2=A0
-> +static inline bool mem_cgroup_charge_gpu_page(struct obj_cgroup
-> *objcg,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct page *page,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int order,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 gfp_t gfp_mask, bool
-> reclaim)
-> +{
-> +	return true;
-> +}
-> +
-> +static inline void mem_cgroup_uncharge_gpu_page(struct page *page,
-> +						unsigned int order,
-> +						bool reclaim)
-> +{
-> +}
-> +
-> +static inline bool mem_cgroup_move_gpu_page_reclaim(struct
-> obj_cgroup *objcg,
-> +						=C2=A0=C2=A0=C2=A0 struct page
-> *page,
-> +						=C2=A0=C2=A0=C2=A0 unsigned int
-> order,
-> +						=C2=A0=C2=A0=C2=A0 bool to_reclaim)
-> +{
-> +	return true;
-> +}
-> +
-> =C2=A0static inline void set_shrinker_bit(struct mem_cgroup *memcg,
-> =C2=A0				=C2=A0=C2=A0=C2=A0 int nid, int shrinker_id)
+> =C2=A0static void i915_ttm_tt_unpopulate(struct ttm_device *bdev, struct
+> ttm_tt *ttm)
+> @@ -815,7 +816,7 @@ static int __i915_ttm_get_pages(struct
+> drm_i915_gem_object *obj,
+> =C2=A0	}
+> =C2=A0
+> =C2=A0	if (bo->ttm && !ttm_tt_is_populated(bo->ttm)) {
+> -		ret =3D ttm_bo_populate(bo, &ctx);
+> +		ret =3D ttm_bo_populate(bo, false, &ctx);
+> =C2=A0		if (ret)
+> =C2=A0			return ret;
+> =C2=A0
+> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_ttm_move.c
+> b/drivers/gpu/drm/i915/gem/i915_gem_ttm_move.c
+> index 56489cc127d6..b81c9df2d7eb 100644
+> --- a/drivers/gpu/drm/i915/gem/i915_gem_ttm_move.c
+> +++ b/drivers/gpu/drm/i915/gem/i915_gem_ttm_move.c
+> @@ -624,7 +624,7 @@ int i915_ttm_move(struct ttm_buffer_object *bo,
+> bool evict,
+> =C2=A0
+> =C2=A0	/* Populate ttm with pages if needed. Typically system
+> memory. */
+> =C2=A0	if (ttm && (dst_man->use_tt || (ttm->page_flags &
+> TTM_TT_FLAG_SWAPPED))) {
+> -		ret =3D ttm_bo_populate(bo, ctx);
+> +		ret =3D ttm_bo_populate(bo, false, ctx);
+> =C2=A0		if (ret)
+> =C2=A0			return ret;
+> =C2=A0	}
+> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_ttm_pm.c
+> b/drivers/gpu/drm/i915/gem/i915_gem_ttm_pm.c
+> index 4824f948daed..d951e58f78ea 100644
+> --- a/drivers/gpu/drm/i915/gem/i915_gem_ttm_pm.c
+> +++ b/drivers/gpu/drm/i915/gem/i915_gem_ttm_pm.c
+> @@ -91,7 +91,7 @@ static int i915_ttm_backup(struct
+> i915_gem_apply_to_region *apply,
+> =C2=A0		goto out_no_lock;
+> =C2=A0
+> =C2=A0	backup_bo =3D i915_gem_to_ttm(backup);
+> -	err =3D ttm_bo_populate(backup_bo, &ctx);
+> +	err =3D ttm_bo_populate(backup_bo, false, &ctx);
+> =C2=A0	if (err)
+> =C2=A0		goto out_no_populate;
+> =C2=A0
+> @@ -190,7 +190,7 @@ static int i915_ttm_restore(struct
+> i915_gem_apply_to_region *apply,
+> =C2=A0	if (!backup_bo->resource)
+> =C2=A0		err =3D ttm_bo_validate(backup_bo,
+> i915_ttm_sys_placement(), &ctx);
+> =C2=A0	if (!err)
+> -		err =3D ttm_bo_populate(backup_bo, &ctx);
+> +		err =3D ttm_bo_populate(backup_bo, false, &ctx);
+> =C2=A0	if (!err) {
+> =C2=A0		err =3D i915_gem_obj_copy_ttm(obj, backup, pm_apply-
+> >allow_gpu,
+> =C2=A0					=C2=A0=C2=A0=C2=A0 false);
+> diff --git a/drivers/gpu/drm/loongson/lsdc_ttm.c
+> b/drivers/gpu/drm/loongson/lsdc_ttm.c
+> index d7441d96a0dc..bfb5f1b1ec91 100644
+> --- a/drivers/gpu/drm/loongson/lsdc_ttm.c
+> +++ b/drivers/gpu/drm/loongson/lsdc_ttm.c
+> @@ -111,6 +111,7 @@ lsdc_ttm_tt_create(struct ttm_buffer_object *tbo,
+> uint32_t page_flags)
+> =C2=A0
+> =C2=A0static int lsdc_ttm_tt_populate(struct ttm_device *bdev,
+> =C2=A0				struct ttm_tt *ttm,
+> +				bool memcg_account,
+> =C2=A0				struct ttm_operation_ctx *ctx)
 > =C2=A0{
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6dc4888a90f3..4c682b91cbbe 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -423,6 +423,8 @@ static const unsigned int memcg_node_stat_items[]
-> =3D {
-> =C2=A0#ifdef CONFIG_HUGETLB_PAGE
-> =C2=A0	NR_HUGETLB,
-> =C2=A0#endif
-> +	NR_GPU_ACTIVE,
-> +	NR_GPU_RECLAIM,
+> =C2=A0	bool slave =3D !!(ttm->page_flags & TTM_TT_FLAG_EXTERNAL);
+> @@ -123,7 +124,7 @@ static int lsdc_ttm_tt_populate(struct ttm_device
+> *bdev,
+> =C2=A0		return 0;
+> =C2=A0	}
+> =C2=A0
+> -	return ttm_pool_alloc(&bdev->pool, ttm, ctx);
+> +	return ttm_pool_alloc(&bdev->pool, ttm, memcg_account, ctx);
+> =C2=A0}
+> =C2=A0
+> =C2=A0static void lsdc_ttm_tt_unpopulate(struct ttm_device *bdev,
+> diff --git a/drivers/gpu/drm/nouveau/nouveau_bo.c
+> b/drivers/gpu/drm/nouveau/nouveau_bo.c
+> index 0e8de6d4b36f..a38c19f1d6dc 100644
+> --- a/drivers/gpu/drm/nouveau/nouveau_bo.c
+> +++ b/drivers/gpu/drm/nouveau/nouveau_bo.c
+> @@ -1417,7 +1417,9 @@ vm_fault_t
+> nouveau_ttm_fault_reserve_notify(struct ttm_buffer_object *bo)
+> =C2=A0
+> =C2=A0static int
+> =C2=A0nouveau_ttm_tt_populate(struct ttm_device *bdev,
+> -			struct ttm_tt *ttm, struct ttm_operation_ctx
+> *ctx)
+> +			struct ttm_tt *ttm,
+> +			bool memcg_account,
+> +			struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	struct ttm_tt *ttm_dma =3D (void *)ttm;
+> =C2=A0	struct nouveau_drm *drm;
+> @@ -1434,7 +1436,7 @@ nouveau_ttm_tt_populate(struct ttm_device
+> *bdev,
+> =C2=A0
+> =C2=A0	drm =3D nouveau_bdev(bdev);
+> =C2=A0
+> -	return ttm_pool_alloc(&drm->ttm.bdev.pool, ttm, ctx);
+> +	return ttm_pool_alloc(&drm->ttm.bdev.pool, ttm,
+> memcg_account, ctx);
+> =C2=A0}
+> =C2=A0
+> =C2=A0static void
+> diff --git a/drivers/gpu/drm/radeon/radeon_ttm.c
+> b/drivers/gpu/drm/radeon/radeon_ttm.c
+> index e7ab8162ac69..98b09463abc2 100644
+> --- a/drivers/gpu/drm/radeon/radeon_ttm.c
+> +++ b/drivers/gpu/drm/radeon/radeon_ttm.c
+> @@ -526,6 +526,7 @@ static struct radeon_ttm_tt
+> *radeon_ttm_tt_to_gtt(struct radeon_device *rdev,
+> =C2=A0
+> =C2=A0static int radeon_ttm_tt_populate(struct ttm_device *bdev,
+> =C2=A0				=C2=A0 struct ttm_tt *ttm,
+> +				=C2=A0 bool memcg_account,
+> =C2=A0				=C2=A0 struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	struct radeon_device *rdev =3D radeon_get_rdev(bdev);
+> @@ -547,7 +548,7 @@ static int radeon_ttm_tt_populate(struct
+> ttm_device *bdev,
+> =C2=A0		return 0;
+> =C2=A0	}
+> =C2=A0
+> -	return ttm_pool_alloc(&rdev->mman.bdev.pool, ttm, ctx);
+> +	return ttm_pool_alloc(&rdev->mman.bdev.pool, ttm,
+> memcg_account, ctx);
+> =C2=A0}
+> =C2=A0
+> =C2=A0static void radeon_ttm_tt_unpopulate(struct ttm_device *bdev, struc=
+t
+> ttm_tt *ttm)
+> diff --git a/drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c
+> b/drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c
+> index 2db221f6fc3a..0cbf732eebf3 100644
+> --- a/drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c
+> +++ b/drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c
+> @@ -538,7 +538,7 @@ static void
+> ttm_bo_validate_no_placement_signaled(struct kunit *test)
+> =C2=A0
+> =C2=A0	if (params->with_ttm) {
+> =C2=A0		old_tt =3D priv->ttm_dev->funcs->ttm_tt_create(bo, 0);
+> -		ttm_pool_alloc(&priv->ttm_dev->pool, old_tt, &ctx);
+> +		ttm_pool_alloc(&priv->ttm_dev->pool, old_tt, false,
+> &ctx);
+> =C2=A0		bo->ttm =3D old_tt;
+> =C2=A0	}
+> =C2=A0
+> diff --git a/drivers/gpu/drm/ttm/tests/ttm_pool_test.c
+> b/drivers/gpu/drm/ttm/tests/ttm_pool_test.c
+> index be75c8abf388..af235d64b970 100644
+> --- a/drivers/gpu/drm/ttm/tests/ttm_pool_test.c
+> +++ b/drivers/gpu/drm/ttm/tests/ttm_pool_test.c
+> @@ -89,7 +89,7 @@ static struct ttm_pool
+> *ttm_pool_pre_populated(struct kunit *test,
+> =C2=A0
+> =C2=A0	ttm_pool_init(pool, devs->dev, NUMA_NO_NODE,
+> TTM_ALLOCATION_POOL_USE_DMA_ALLOC);
+> =C2=A0
+> -	err =3D ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	err =3D ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> =C2=A0	ttm_pool_free(pool, tt);
+> @@ -157,7 +157,7 @@ static void ttm_pool_alloc_basic(struct kunit
+> *test)
+> =C2=A0	KUNIT_ASSERT_EQ(test, pool->nid, NUMA_NO_NODE);
+> =C2=A0	KUNIT_ASSERT_EQ(test, pool->alloc_flags, params-
+> >alloc_flags);
+> =C2=A0
+> -	err =3D ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	err =3D ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0	KUNIT_ASSERT_EQ(test, tt->num_pages, expected_num_pages);
+> =C2=A0
+> @@ -220,7 +220,7 @@ static void ttm_pool_alloc_basic_dma_addr(struct
+> kunit *test)
+> =C2=A0
+> =C2=A0	ttm_pool_init(pool, devs->dev, NUMA_NO_NODE,
+> TTM_ALLOCATION_POOL_USE_DMA_ALLOC);
+> =C2=A0
+> -	err =3D ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	err =3D ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0	KUNIT_ASSERT_EQ(test, tt->num_pages, expected_num_pages);
+> =C2=A0
+> @@ -253,7 +253,7 @@ static void
+> ttm_pool_alloc_order_caching_match(struct kunit *test)
+> =C2=A0	tt =3D ttm_tt_kunit_init(test, 0, caching, size);
+> =C2=A0	KUNIT_ASSERT_NOT_NULL(test, tt);
+> =C2=A0
+> -	err =3D ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	err =3D ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> =C2=A0	KUNIT_ASSERT_TRUE(test, !list_lru_count(&pt->pages));
+> @@ -285,7 +285,7 @@ static void
+> ttm_pool_alloc_caching_mismatch(struct kunit *test)
+> =C2=A0	KUNIT_ASSERT_FALSE(test, !list_lru_count(&pt_pool->pages));
+> =C2=A0	KUNIT_ASSERT_TRUE(test, !list_lru_count(&pt_tt->pages));
+> =C2=A0
+> -	err =3D ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	err =3D ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> =C2=A0	ttm_pool_free(pool, tt);
+> @@ -319,7 +319,7 @@ static void ttm_pool_alloc_order_mismatch(struct
+> kunit *test)
+> =C2=A0	KUNIT_ASSERT_FALSE(test, !list_lru_count(&pt_pool->pages));
+> =C2=A0	KUNIT_ASSERT_TRUE(test, !list_lru_count(&pt_tt->pages));
+> =C2=A0
+> -	err =3D ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	err =3D ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> =C2=A0	ttm_pool_free(pool, tt);
+> @@ -349,7 +349,7 @@ static void ttm_pool_free_dma_alloc(struct kunit
+> *test)
+> =C2=A0	KUNIT_ASSERT_NOT_NULL(test, pool);
+> =C2=A0
+> =C2=A0	ttm_pool_init(pool, devs->dev, NUMA_NO_NODE,
+> TTM_ALLOCATION_POOL_USE_DMA_ALLOC);
+> -	ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0
+> =C2=A0	pt =3D &pool->caching[caching].orders[order];
+> =C2=A0	KUNIT_ASSERT_TRUE(test, !list_lru_count(&pt->pages));
+> @@ -379,7 +379,7 @@ static void ttm_pool_free_no_dma_alloc(struct
+> kunit *test)
+> =C2=A0	KUNIT_ASSERT_NOT_NULL(test, pool);
+> =C2=A0
+> =C2=A0	ttm_pool_init(pool, devs->dev, NUMA_NO_NODE, 0);
+> -	ttm_pool_alloc(pool, tt, &simple_ctx);
+> +	ttm_pool_alloc(pool, tt, false, &simple_ctx);
+> =C2=A0
+> =C2=A0	ttm_pool_free(pool, tt);
+> =C2=A0	ttm_tt_fini(tt);
+> diff --git a/drivers/gpu/drm/ttm/tests/ttm_tt_test.c
+> b/drivers/gpu/drm/ttm/tests/ttm_tt_test.c
+> index bd5f7d0b9b62..dfa38bbfd829 100644
+> --- a/drivers/gpu/drm/ttm/tests/ttm_tt_test.c
+> +++ b/drivers/gpu/drm/ttm/tests/ttm_tt_test.c
+> @@ -262,7 +262,7 @@ static void ttm_tt_populate_null_ttm(struct kunit
+> *test)
+> =C2=A0	struct ttm_operation_ctx ctx =3D { };
+> =C2=A0	int err;
+> =C2=A0
+> -	err =3D ttm_tt_populate(devs->ttm_dev, NULL, &ctx);
+> +	err =3D ttm_tt_populate(devs->ttm_dev, NULL, false, &ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, -EINVAL);
+> =C2=A0}
+> =C2=A0
+> @@ -283,11 +283,11 @@ static void
+> ttm_tt_populate_populated_ttm(struct kunit *test)
+> =C2=A0	err =3D ttm_tt_init(tt, bo, 0, ttm_cached, 0);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> -	err =3D ttm_tt_populate(devs->ttm_dev, tt, &ctx);
+> +	err =3D ttm_tt_populate(devs->ttm_dev, tt, false, &ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0	populated_page =3D *tt->pages;
+> =C2=A0
+> -	err =3D ttm_tt_populate(devs->ttm_dev, tt, &ctx);
+> +	err =3D ttm_tt_populate(devs->ttm_dev, tt, false, &ctx);
+> =C2=A0	KUNIT_ASSERT_PTR_EQ(test, populated_page, *tt->pages);
+> =C2=A0}
+> =C2=A0
+> @@ -307,7 +307,7 @@ static void ttm_tt_unpopulate_basic(struct kunit
+> *test)
+> =C2=A0	err =3D ttm_tt_init(tt, bo, 0, ttm_cached, 0);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> -	err =3D ttm_tt_populate(devs->ttm_dev, tt, &ctx);
+> +	err =3D ttm_tt_populate(devs->ttm_dev, tt, false, &ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0	KUNIT_ASSERT_TRUE(test, ttm_tt_is_populated(tt));
+> =C2=A0
+> @@ -351,7 +351,7 @@ static void ttm_tt_swapin_basic(struct kunit
+> *test)
+> =C2=A0	err =3D ttm_tt_init(tt, bo, 0, ttm_cached, 0);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> -	err =3D ttm_tt_populate(devs->ttm_dev, tt, &ctx);
+> +	err =3D ttm_tt_populate(devs->ttm_dev, tt, false, &ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0	KUNIT_ASSERT_TRUE(test, ttm_tt_is_populated(tt));
+> =C2=A0
+> @@ -361,7 +361,7 @@ static void ttm_tt_swapin_basic(struct kunit
+> *test)
+> =C2=A0	KUNIT_ASSERT_TRUE(test, tt->page_flags &
+> TTM_TT_FLAG_SWAPPED);
+> =C2=A0
+> =C2=A0	/* Swapout depopulates TT, allocate pages and then swap them
+> in */
+> -	err =3D ttm_pool_alloc(&devs->ttm_dev->pool, tt, &ctx);
+> +	err =3D ttm_pool_alloc(&devs->ttm_dev->pool, tt, false, &ctx);
+> =C2=A0	KUNIT_ASSERT_EQ(test, err, 0);
+> =C2=A0
+> =C2=A0	err =3D ttm_tt_swapin(tt);
+> diff --git a/drivers/gpu/drm/ttm/ttm_bo.c
+> b/drivers/gpu/drm/ttm/ttm_bo.c
+> index bcd76f6bb7f0..cf4ab2b5521a 100644
+> --- a/drivers/gpu/drm/ttm/ttm_bo.c
+> +++ b/drivers/gpu/drm/ttm/ttm_bo.c
+> @@ -145,7 +145,7 @@ static int ttm_bo_handle_move_mem(struct
+> ttm_buffer_object *bo,
+> =C2=A0			goto out_err;
+> =C2=A0
+> =C2=A0		if (mem->mem_type !=3D TTM_PL_SYSTEM) {
+> -			ret =3D ttm_bo_populate(bo, ctx);
+> +			ret =3D ttm_bo_populate(bo, false, ctx);
+> =C2=A0			if (ret)
+> =C2=A0				goto out_err;
+> =C2=A0		}
+> @@ -1255,6 +1255,7 @@ void ttm_bo_tt_destroy(struct ttm_buffer_object
+> *bo)
+> =C2=A0 * is set to true.
+> =C2=A0 */
+> =C2=A0int ttm_bo_populate(struct ttm_buffer_object *bo,
+> +		=C2=A0=C2=A0=C2=A0 bool memcg_account,
+> =C2=A0		=C2=A0=C2=A0=C2=A0 struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	struct ttm_device *bdev =3D bo->bdev;
+> @@ -1268,7 +1269,7 @@ int ttm_bo_populate(struct ttm_buffer_object
+> *bo,
+> =C2=A0		return 0;
+> =C2=A0
+> =C2=A0	swapped =3D ttm_tt_is_swapped(tt);
+> -	ret =3D ttm_tt_populate(bdev, tt, ctx);
+> +	ret =3D ttm_tt_populate(bdev, tt, memcg_account, ctx);
+> =C2=A0	if (ret)
+> =C2=A0		return ret;
+> =C2=A0
+> @@ -1293,7 +1294,7 @@ int ttm_bo_setup_export(struct
+> ttm_buffer_object *bo,
+> =C2=A0	if (ret !=3D 0)
+> =C2=A0		return ret;
+> =C2=A0
+> -	ret =3D ttm_bo_populate(bo, ctx);
+> +	ret =3D ttm_bo_populate(bo, false, ctx);
+> =C2=A0	ttm_bo_unreserve(bo);
+> =C2=A0	return ret;
+> =C2=A0}
+> diff --git a/drivers/gpu/drm/ttm/ttm_bo_util.c
+> b/drivers/gpu/drm/ttm/ttm_bo_util.c
+> index 3e3c201a0222..62dad6c05dff 100644
+> --- a/drivers/gpu/drm/ttm/ttm_bo_util.c
+> +++ b/drivers/gpu/drm/ttm/ttm_bo_util.c
+> @@ -167,7 +167,7 @@ int ttm_bo_move_memcpy(struct ttm_buffer_object
+> *bo,
+> =C2=A0	src_man =3D ttm_manager_type(bdev, src_mem->mem_type);
+> =C2=A0	if (ttm && ((ttm->page_flags & TTM_TT_FLAG_SWAPPED) ||
+> =C2=A0		=C2=A0=C2=A0=C2=A0 dst_man->use_tt)) {
+> -		ret =3D ttm_bo_populate(bo, ctx);
+> +		ret =3D ttm_bo_populate(bo, false, ctx);
+> =C2=A0		if (ret)
+> =C2=A0			return ret;
+> =C2=A0	}
+> @@ -352,7 +352,7 @@ static int ttm_bo_kmap_ttm(struct
+> ttm_buffer_object *bo,
+> =C2=A0
+> =C2=A0	BUG_ON(!ttm);
+> =C2=A0
+> -	ret =3D ttm_bo_populate(bo, &ctx);
+> +	ret =3D ttm_bo_populate(bo, false, &ctx);
+> =C2=A0	if (ret)
+> =C2=A0		return ret;
+> =C2=A0
+> @@ -533,7 +533,7 @@ int ttm_bo_vmap(struct ttm_buffer_object *bo,
+> struct iosys_map *map)
+> =C2=A0		pgprot_t prot;
+> =C2=A0		void *vaddr;
+> =C2=A0
+> -		ret =3D ttm_bo_populate(bo, &ctx);
+> +		ret =3D ttm_bo_populate(bo, false, &ctx);
+> =C2=A0		if (ret)
+> =C2=A0			return ret;
+> =C2=A0
+> diff --git a/drivers/gpu/drm/ttm/ttm_bo_vm.c
+> b/drivers/gpu/drm/ttm/ttm_bo_vm.c
+> index a80510489c45..2e59836b6085 100644
+> --- a/drivers/gpu/drm/ttm/ttm_bo_vm.c
+> +++ b/drivers/gpu/drm/ttm/ttm_bo_vm.c
+> @@ -224,7 +224,9 @@ vm_fault_t ttm_bo_vm_fault_reserved(struct
+> vm_fault *vmf,
+> =C2=A0		};
+> =C2=A0
+> =C2=A0		ttm =3D bo->ttm;
+> -		err =3D ttm_bo_populate(bo, &ctx);
+> +		err =3D ttm_bo_populate(bo,
+> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 false,
+> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 &ctx);
+> =C2=A0		if (err) {
+> =C2=A0			if (err =3D=3D -EINTR || err =3D=3D -ERESTARTSYS ||
+> =C2=A0			=C2=A0=C2=A0=C2=A0 err =3D=3D -EAGAIN)
+> diff --git a/drivers/gpu/drm/ttm/ttm_pool.c
+> b/drivers/gpu/drm/ttm/ttm_pool.c
+> index 278bbe7a11ad..e4dbf4c93091 100644
+> --- a/drivers/gpu/drm/ttm/ttm_pool.c
+> +++ b/drivers/gpu/drm/ttm/ttm_pool.c
+> @@ -761,6 +761,7 @@ static unsigned int
+> ttm_pool_alloc_find_order(unsigned int highest,
+> =C2=A0}
+> =C2=A0
+> =C2=A0static int __ttm_pool_alloc(struct ttm_pool *pool, struct ttm_tt
+> *tt,
+> +			=C2=A0=C2=A0=C2=A0 bool memcg_account,
+> =C2=A0			=C2=A0=C2=A0=C2=A0 const struct ttm_operation_ctx *ctx,
+> =C2=A0			=C2=A0=C2=A0=C2=A0 struct ttm_pool_alloc_state *alloc,
+> =C2=A0			=C2=A0=C2=A0=C2=A0 struct ttm_pool_tt_restore *restore)
+> @@ -871,6 +872,7 @@ static int __ttm_pool_alloc(struct ttm_pool
+> *pool, struct ttm_tt *tt,
+> =C2=A0 * Returns: 0 on successe, negative error code otherwise.
+> =C2=A0 */
+> =C2=A0int ttm_pool_alloc(struct ttm_pool *pool, struct ttm_tt *tt,
+> +		=C2=A0=C2=A0 bool memcg_account,
+
+Regardless whether memcg_account is passed as a separate parameter or
+part of @ctx, needs kerneldoc update.
+
+
+Thanks,
+Thomas
+
+
+
+> =C2=A0		=C2=A0=C2=A0 struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	struct ttm_pool_alloc_state alloc;
+> @@ -880,7 +882,7 @@ int ttm_pool_alloc(struct ttm_pool *pool, struct
+> ttm_tt *tt,
+> =C2=A0
+> =C2=A0	ttm_pool_alloc_state_init(tt, &alloc);
+> =C2=A0
+> -	return __ttm_pool_alloc(pool, tt, ctx, &alloc, NULL);
+> +	return __ttm_pool_alloc(pool, tt, memcg_account, ctx,
+> &alloc, NULL);
+> =C2=A0}
+> =C2=A0EXPORT_SYMBOL(ttm_pool_alloc);
+> =C2=A0
+> @@ -935,7 +937,7 @@ int ttm_pool_restore_and_alloc(struct ttm_pool
+> *pool, struct ttm_tt *tt,
+> =C2=A0			return 0;
+> =C2=A0	}
+> =C2=A0
+> -	return __ttm_pool_alloc(pool, tt, ctx, &alloc, restore);
+> +	return __ttm_pool_alloc(pool, tt, false, ctx, &alloc,
+> restore);
+> =C2=A0}
+> =C2=A0
+> =C2=A0/**
+> diff --git a/drivers/gpu/drm/ttm/ttm_tt.c
+> b/drivers/gpu/drm/ttm/ttm_tt.c
+> index b645a1818184..aa0f17fca770 100644
+> --- a/drivers/gpu/drm/ttm/ttm_tt.c
+> +++ b/drivers/gpu/drm/ttm/ttm_tt.c
+> @@ -368,7 +368,9 @@ int ttm_tt_swapout(struct ttm_device *bdev,
+> struct ttm_tt *ttm,
+> =C2=A0EXPORT_SYMBOL_FOR_TESTS_ONLY(ttm_tt_swapout);
+> =C2=A0
+> =C2=A0int ttm_tt_populate(struct ttm_device *bdev,
+> -		=C2=A0=C2=A0=C2=A0 struct ttm_tt *ttm, struct ttm_operation_ctx
+> *ctx)
+> +		=C2=A0=C2=A0=C2=A0 struct ttm_tt *ttm,
+> +		=C2=A0=C2=A0=C2=A0 bool memcg_account,
+> +		=C2=A0=C2=A0=C2=A0 struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	int ret;
+> =C2=A0
+> @@ -397,9 +399,9 @@ int ttm_tt_populate(struct ttm_device *bdev,
+> =C2=A0	}
+> =C2=A0
+> =C2=A0	if (bdev->funcs->ttm_tt_populate)
+> -		ret =3D bdev->funcs->ttm_tt_populate(bdev, ttm, ctx);
+> +		ret =3D bdev->funcs->ttm_tt_populate(bdev, ttm,
+> memcg_account, ctx);
+> =C2=A0	else
+> -		ret =3D ttm_pool_alloc(&bdev->pool, ttm, ctx);
+> +		ret =3D ttm_pool_alloc(&bdev->pool, ttm,
+> memcg_account, ctx);
+> =C2=A0	if (ret)
+> =C2=A0		goto error;
+> =C2=A0
+> diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_blit.c
+> b/drivers/gpu/drm/vmwgfx/vmwgfx_blit.c
+> index 135b75a3e013..baa1c3fdb12c 100644
+> --- a/drivers/gpu/drm/vmwgfx/vmwgfx_blit.c
+> +++ b/drivers/gpu/drm/vmwgfx/vmwgfx_blit.c
+> @@ -569,13 +569,13 @@ int vmw_bo_cpu_blit(struct vmw_bo *vmw_dst,
+> =C2=A0		dma_resv_assert_held(src->base.resv);
+> =C2=A0
+> =C2=A0	if (!ttm_tt_is_populated(dst->ttm)) {
+> -		ret =3D dst->bdev->funcs->ttm_tt_populate(dst->bdev,
+> dst->ttm, &ctx);
+> +		ret =3D dst->bdev->funcs->ttm_tt_populate(dst->bdev,
+> dst->ttm, false, &ctx);
+> =C2=A0		if (ret)
+> =C2=A0			return ret;
+> =C2=A0	}
+> =C2=A0
+> =C2=A0	if (!ttm_tt_is_populated(src->ttm)) {
+> -		ret =3D src->bdev->funcs->ttm_tt_populate(src->bdev,
+> src->ttm, &ctx);
+> +		ret =3D src->bdev->funcs->ttm_tt_populate(src->bdev,
+> src->ttm, false, &ctx);
+> =C2=A0		if (ret)
+> =C2=A0			return ret;
+> =C2=A0	}
+> diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_ttm_buffer.c
+> b/drivers/gpu/drm/vmwgfx/vmwgfx_ttm_buffer.c
+> index dfd08ee19041..368701756119 100644
+> --- a/drivers/gpu/drm/vmwgfx/vmwgfx_ttm_buffer.c
+> +++ b/drivers/gpu/drm/vmwgfx/vmwgfx_ttm_buffer.c
+> @@ -360,7 +360,8 @@ static void vmw_ttm_destroy(struct ttm_device
+> *bdev, struct ttm_tt *ttm)
+> =C2=A0
+> =C2=A0
+> =C2=A0static int vmw_ttm_populate(struct ttm_device *bdev,
+> -			=C2=A0=C2=A0=C2=A0 struct ttm_tt *ttm, struct
+> ttm_operation_ctx *ctx)
+> +			=C2=A0=C2=A0=C2=A0 struct ttm_tt *ttm, bool memcg_account,
+> +			=C2=A0=C2=A0=C2=A0 struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	bool external =3D (ttm->page_flags & TTM_TT_FLAG_EXTERNAL) !=3D
+> 0;
+> =C2=A0
+> @@ -372,7 +373,7 @@ static int vmw_ttm_populate(struct ttm_device
+> *bdev,
+> =C2=A0						=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ttm-
+> >dma_address,
+> =C2=A0						=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ttm-
+> >num_pages);
+> =C2=A0
+> -	return ttm_pool_alloc(&bdev->pool, ttm, ctx);
+> +	return ttm_pool_alloc(&bdev->pool, ttm, memcg_account, ctx);
+> =C2=A0}
+> =C2=A0
+> =C2=A0static void vmw_ttm_unpopulate(struct ttm_device *bdev,
+> @@ -580,7 +581,7 @@ int vmw_bo_create_and_populate(struct vmw_private
+> *dev_priv,
+> =C2=A0	if (unlikely(ret !=3D 0))
+> =C2=A0		return ret;
+> =C2=A0
+> -	ret =3D vmw_ttm_populate(vbo->tbo.bdev, vbo->tbo.ttm, &ctx);
+> +	ret =3D vmw_ttm_populate(vbo->tbo.bdev, vbo->tbo.ttm, false,
+> &ctx);
+> =C2=A0	if (likely(ret =3D=3D 0)) {
+> =C2=A0		struct vmw_ttm_tt *vmw_tt =3D
+> =C2=A0			container_of(vbo->tbo.ttm, struct
+> vmw_ttm_tt, dma_ttm);
+> diff --git a/drivers/gpu/drm/xe/xe_bo.c b/drivers/gpu/drm/xe/xe_bo.c
+> index 4c80bac67622..20a10a174d1d 100644
+> --- a/drivers/gpu/drm/xe/xe_bo.c
+> +++ b/drivers/gpu/drm/xe/xe_bo.c
+> @@ -536,6 +536,7 @@ static struct ttm_tt *xe_ttm_tt_create(struct
+> ttm_buffer_object *ttm_bo,
+> =C2=A0}
+> =C2=A0
+> =C2=A0static int xe_ttm_tt_populate(struct ttm_device *ttm_dev, struct
+> ttm_tt *tt,
+> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool memcg_account,
+> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ttm_operation_ctx *ctx)
+> =C2=A0{
+> =C2=A0	struct xe_ttm_tt *xe_tt =3D container_of(tt, struct xe_ttm_tt,
+> ttm);
+> @@ -553,7 +554,7 @@ static int xe_ttm_tt_populate(struct ttm_device
+> *ttm_dev, struct ttm_tt *tt,
+> =C2=A0		err =3D ttm_tt_restore(ttm_dev, tt, ctx);
+> =C2=A0	} else {
+> =C2=A0		ttm_tt_clear_backed_up(tt);
+> -		err =3D ttm_pool_alloc(&ttm_dev->pool, tt, ctx);
+> +		err =3D ttm_pool_alloc(&ttm_dev->pool, tt,
+> memcg_account, ctx);
+> =C2=A0	}
+> =C2=A0	if (err)
+> =C2=A0		return err;
+> @@ -1926,7 +1927,7 @@ static int xe_bo_fault_migrate(struct xe_bo
+> *bo, struct ttm_operation_ctx *ctx,
+> =C2=A0	if (ttm_manager_type(tbo->bdev, tbo->resource->mem_type)-
+> >use_tt) {
+> =C2=A0		err =3D xe_bo_wait_usage_kernel(bo, ctx);
+> =C2=A0		if (!err)
+> -			err =3D ttm_bo_populate(&bo->ttm, ctx);
+> +			err =3D ttm_bo_populate(&bo->ttm, false, ctx);
+> =C2=A0	} else if (should_migrate_to_smem(bo)) {
+> =C2=A0		xe_assert(xe_bo_device(bo), bo->flags &
+> XE_BO_FLAG_SYSTEM);
+> =C2=A0		err =3D xe_bo_migrate(bo, XE_PL_TT, ctx, exec);
+> diff --git a/include/drm/ttm/ttm_bo.h b/include/drm/ttm/ttm_bo.h
+> index 8310bc3d55f9..535ba37aff88 100644
+> --- a/include/drm/ttm/ttm_bo.h
+> +++ b/include/drm/ttm/ttm_bo.h
+> @@ -475,6 +475,7 @@ pgprot_t ttm_io_prot(struct ttm_buffer_object
+> *bo, struct ttm_resource *res,
+> =C2=A0		=C2=A0=C2=A0=C2=A0=C2=A0 pgprot_t tmp);
+> =C2=A0void ttm_bo_tt_destroy(struct ttm_buffer_object *bo);
+> =C2=A0int ttm_bo_populate(struct ttm_buffer_object *bo,
+> +		=C2=A0=C2=A0=C2=A0 bool memcg_account,
+> =C2=A0		=C2=A0=C2=A0=C2=A0 struct ttm_operation_ctx *ctx);
+> =C2=A0int ttm_bo_setup_export(struct ttm_buffer_object *bo,
+> =C2=A0			struct ttm_operation_ctx *ctx);
+> diff --git a/include/drm/ttm/ttm_device.h
+> b/include/drm/ttm/ttm_device.h
+> index 5618aef462f2..a4bd23988ee0 100644
+> --- a/include/drm/ttm/ttm_device.h
+> +++ b/include/drm/ttm/ttm_device.h
+> @@ -85,6 +85,7 @@ struct ttm_device_funcs {
+> =C2=A0	 */
+> =C2=A0	int (*ttm_tt_populate)(struct ttm_device *bdev,
+> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ttm_tt *ttm,
+> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool memcg_account,
+> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ttm_operation_ctx *c=
+tx);
+> =C2=A0
+> =C2=A0	/**
+> diff --git a/include/drm/ttm/ttm_pool.h b/include/drm/ttm/ttm_pool.h
+> index 26ee592e1994..7f3f168c536c 100644
+> --- a/include/drm/ttm/ttm_pool.h
+> +++ b/include/drm/ttm/ttm_pool.h
+> @@ -78,6 +78,7 @@ struct ttm_pool {
 > =C2=A0};
 > =C2=A0
-> =C2=A0static const unsigned int memcg_stat_items[] =3D {
-> @@ -1553,6 +1555,8 @@ static const struct memory_stat memory_stats[]
-> =3D {
-> =C2=A0	{
-> "percpu",			MEMCG_PERCPU_B			},
-> =C2=A0	{
-> "sock",			MEMCG_SOCK			},
-> =C2=A0	{
-> "vmalloc",			NR_VMALLOC			},
-> +	{
-> "gpu_active",			NR_GPU_ACTIVE			},
-> +	{
-> "gpu_reclaim",		NR_GPU_RECLAIM	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 },
-> =C2=A0	{
-> "shmem",			NR_SHMEM			},
-> =C2=A0#ifdef CONFIG_ZSWAP
-> =C2=A0	{
-> "zswap",			MEMCG_ZSWAP_B			},
-> @@ -5508,6 +5512,106 @@ void mem_cgroup_flush_workqueue(void)
-> =C2=A0	flush_workqueue(memcg_wq);
-> =C2=A0}
+> =C2=A0int ttm_pool_alloc(struct ttm_pool *pool, struct ttm_tt *tt,
+> +		=C2=A0=C2=A0 bool memcg_account,
+> =C2=A0		=C2=A0=C2=A0 struct ttm_operation_ctx *ctx);
+> =C2=A0void ttm_pool_free(struct ttm_pool *pool, struct ttm_tt *tt);
 > =C2=A0
-> +/**
-> + * mem_cgroup_charge_gpu_page - charge a page to GPU memory tracking
-Nit: Patch guidelines call for ()
-
-> + * @objcg: objcg to charge, NULL charges root memcg
-> + * @page: page to charge
-> + * @order: page allocation order
-> + * @gfp_mask: gfp mode
-> + * @reclaim: charge the reclaim counter instead of the active one.
-
-Return:
-
->=20
-> + *
-> + * Charge the order sized @page to the objcg. Returns %true if the
-> charge fit within
-> + * @objcg's configured limit, %false if it doesn't.
-> + */
-> +bool mem_cgroup_charge_gpu_page(struct obj_cgroup *objcg, struct
-> page *page,
-> +				unsigned int order, gfp_t gfp_mask,
-> bool reclaim)
-> +{
-> +	unsigned int nr_pages =3D 1 << order;
-> +	struct mem_cgroup *memcg =3D NULL;
-> +	struct lruvec *lruvec;
-> +	int ret;
-> +
-> +	if (objcg) {
-> +		memcg =3D get_mem_cgroup_from_objcg(objcg);
-> +
-> +		ret =3D try_charge_memcg(memcg, gfp_mask, nr_pages);
-> +		if (ret) {
-> +			mem_cgroup_put(memcg);
-> +			return false;
-> +		}
-> +
-> +		obj_cgroup_get(objcg);
-> +		page_set_objcg(page, objcg);
-> +	}
-> +
-> +	lruvec =3D mem_cgroup_lruvec(memcg, page_pgdat(page));
-> +	mod_lruvec_state(lruvec, reclaim ? NR_GPU_RECLAIM :
-> NR_GPU_ACTIVE, nr_pages);
-> +
-> +	mem_cgroup_put(memcg);
-> +	return true;
-> +}
-> +EXPORT_SYMBOL_GPL(mem_cgroup_charge_gpu_page);
-> +
-> +/**
-> + * mem_cgroup_uncharge_gpu_page - uncharge a page from GPU memory
-> tracking
-> + * @page: page to uncharge
-> + * @order: order of the page allocation
-> + * @reclaim: uncharge the reclaim counter instead of the active.
-> + */
-> +void mem_cgroup_uncharge_gpu_page(struct page *page,
-> +				=C2=A0 unsigned int order, bool reclaim)
-> +{
-> +	struct obj_cgroup *objcg =3D page_objcg(page);
-> +	struct mem_cgroup *memcg;
-> +	struct lruvec *lruvec;
-> +	int nr_pages =3D 1 << order;
-> +
-> +	memcg =3D objcg ? get_mem_cgroup_from_objcg(objcg) : NULL;
-> +
-> +	lruvec =3D mem_cgroup_lruvec(memcg, page_pgdat(page));
-> +	mod_lruvec_state(lruvec, reclaim ? NR_GPU_RECLAIM :
-> NR_GPU_ACTIVE, -nr_pages);
-> +
-> +	if (memcg && !mem_cgroup_is_root(memcg))
-> +		refill_stock(memcg, nr_pages);
-> +	page->memcg_data =3D 0;
-> +	obj_cgroup_put(objcg);
-> +	mem_cgroup_put(memcg);
-> +}
-> +EXPORT_SYMBOL_GPL(mem_cgroup_uncharge_gpu_page);
-> +
-> +/**
-> + * mem_cgroup_move_gpu_reclaim - move pages from gpu to gpu reclaim
-> and back
-> + * @new_objcg: objcg to move page to, NULL if just stats update.
-> + * @nr_pages: number of pages to move
-> + * @to_reclaim: true moves pages into reclaim, false moves them back
-
-Return:
-
-> + */
-> +bool mem_cgroup_move_gpu_page_reclaim(struct obj_cgroup *new_objcg,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct page *page,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int order,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool to_reclaim)
-> +{
-> +	struct obj_cgroup *objcg =3D page_objcg(page);
-> +
-> +	if (!objcg || !new_objcg || objcg =3D=3D new_objcg) {
-> +		struct mem_cgroup *memcg =3D objcg ?
-> get_mem_cgroup_from_objcg(objcg) : NULL;
-> +		struct lruvec *lruvec;
-> +		unsigned long flags;
-> +		int nr_pages =3D 1 << order;
-> +
-> +		lruvec =3D mem_cgroup_lruvec(memcg, page_pgdat(page));
-> +		local_irq_save(flags);
-> +		mod_lruvec_state(lruvec, to_reclaim ? NR_GPU_RECLAIM
-> : NR_GPU_ACTIVE, nr_pages);
-> +		mod_lruvec_state(lruvec, to_reclaim ? NR_GPU_ACTIVE
-> : NR_GPU_RECLAIM, -nr_pages);
-> +		local_irq_restore(flags);
-> +		mem_cgroup_put(memcg);
-> +		return true;
-> +	} else {
-> +		mem_cgroup_uncharge_gpu_page(page, order, true);
-> +		return mem_cgroup_charge_gpu_page(new_objcg, page,
-> order, 0, false);
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(mem_cgroup_move_gpu_page_reclaim);
-> +
-> =C2=A0static int __init cgroup_memory(char *s)
-> =C2=A0{
-> =C2=A0	char *token;
+> diff --git a/include/drm/ttm/ttm_tt.h b/include/drm/ttm/ttm_tt.h
+> index 406437ad674b..15d4019685f6 100644
+> --- a/include/drm/ttm/ttm_tt.h
+> +++ b/include/drm/ttm/ttm_tt.h
+> @@ -250,6 +250,7 @@ int ttm_tt_swapout(struct ttm_device *bdev,
+> struct ttm_tt *ttm,
+> =C2=A0 * Calls the driver method to allocate pages for a ttm
+> =C2=A0 */
+> =C2=A0int ttm_tt_populate(struct ttm_device *bdev, struct ttm_tt *ttm,
+> +		=C2=A0=C2=A0=C2=A0 bool memcg_account,
+> =C2=A0		=C2=A0=C2=A0=C2=A0 struct ttm_operation_ctx *ctx);
+> =C2=A0
+> =C2=A0/**
