@@ -1,181 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA31A45A2A7;
-	Tue, 21 Jul 2026 23:46:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB72B29C35A;
+	Wed, 22 Jul 2026 00:13:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784677612; cv=none; b=jLRcGi0pCFUJbiOFsXKA8xBg40v3ll8I/z4Bm9tsTyyP7Iv25erGImf5N6dHvnXHujfM7lQh7xa9R/THnLgZ/gVjLY4Y85QIDiH2zDdYL6lAMBdjy+P4bHkSXhHnlnDgn6Njw5uJyo08DZd8t/JvkDmGD6o8IsuP4pZ1Nji0xl0=
+	t=1784679235; cv=none; b=tKij1KWyDZl6FVgST4ZKrzCK17CDGNVdcV1WqzLyG3ZZSRWaCks5EWof/dWvCT27OlW8APOpqlXPbU3DM7CVtg7Z+difQyElPG7Ae5wHuuTuL1rzjkZ3+jlP+E3qLkBSO3lVCG9u3AegOXdkP2I6jf3dgFDgsTt6lhuY2XKsGfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784677612; c=relaxed/simple;
-	bh=USHYKM2tLy4Y2ztkLZF6f9FmqFRcbaq9wg7QuwUAQTs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tC4xp5/aVjCSZPCXMKUOrh81eeHWljJYoFknvutngFgcdALNLN4aqH7kK6aSMyPYh3hFr+EcKpgSaaarGxm8vUnH0fZJ+XjgSBKQhciKByJ+7pa22cVc/4TwleDT/Ok5/IEJJEyJEtpL9X2Pg9M9/Fipl33E9o4ZWnYPgkbStwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mf7XqWOi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784679235; c=relaxed/simple;
+	bh=ZrpUHrE5e+W0FdqZLnSjY0xC2pCcZzrfX39HefQVfbA=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=sjeCBNyxu0KNFJ+oJcsWKrC52PjpZ003QbhdslfbtPx7xBOrQGrhunhKFR0nOekVqE05fHdLT9d84r/UmBUHsq1dA58Ygb3gIOytXjP5LkeEhMUkOzVc42nfFGWPHtTlfgYkk2Bm7G9FWnkakgJum/OI5YtmcJk6InqdUKG+Fqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=nJPZ26zo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mf7XqWOi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 028631F000E9;
-	Tue, 21 Jul 2026 23:46:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784677610;
-	bh=+0XfbMYAs+xVo8YgwGz2IArIgBM63GjQWpuSMnFC4C4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mf7XqWOi1rUqf2k7ey1aDXqzOKACKpcmAuKsBfr2jWONF2TMjeSDzMxVpjORRSRLo
-	 tJLrP4Ev455HyaiuyA6vyf+G3mnH2UZZhuBZY5goVpKoGAXG741JRTws0gCCVCRoyI
-	 iDsWfQ2T3xzfofEqGm4FFR1PI4AjbF6RuFR8pySoZwfx2gMG3Vh9pp2pwpXntxb7bE
-	 X1TK5weGK4xyqJJ6Zjr0lnMzVsQ5o3Y2X+mdOu2HU0hX9kVQ5ylnFUDQy9TC37hUH9
-	 cDRlgmF4QgxgkeN3r4i6WBCGdvrju3BwhQHkK2ItQ/gb2/mIWodaTaAr89dmjRF4Wt
-	 CX+3VUR36PjOg==
-From: SJ Park <sj@kernel.org>
-To: Gregory Price <gourry@gourry.net>
-Cc: SJ Park <sj@kernel.org>,
-	linux-mm@kvack.org,
-	arun.george@samsung.com,
-	balbirs@nvidia.com,
-	brendan.jackman@linux.dev,
-	yuzenghui@huawei.com,
-	apopple@nvidia.com,
-	alucerop@amd.com,
-	matthew.brost@intel.com,
-	akpm@linux-foundation.org,
-	david@kernel.org,
-	ljs@kernel.org,
-	liam@infradead.org,
-	vbabka@kernel.org,
-	rppt@kernel.org,
-	surenb@google.com,
-	mhocko@suse.com,
-	corbet@lwn.net,
-	skhan@linuxfoundation.org,
-	gregkh@linuxfoundation.org,
-	rafael@kernel.org,
-	dakr@kernel.org,
-	djbw@kernel.org,
-	vishal.l.verma@intel.com,
-	dave.jiang@intel.com,
-	alison.schofield@intel.com,
-	osandov@osandov.com,
-	jannh@google.com,
-	pfalcato@suse.de,
-	jackmanb@google.com,
-	hannes@cmpxchg.org,
-	ziy@nvidia.com,
-	pbonzini@redhat.com,
-	osalvador@suse.de,
-	joshua.hahnjy@gmail.com,
-	rakie.kim@sk.com,
-	byungchul@sk.com,
-	ying.huang@linux.alibaba.com,
-	kasong@tencent.com,
-	qi.zheng@linux.dev,
-	shakeel.butt@linux.dev,
-	baohua@kernel.org,
-	axelrasmussen@google.com,
-	yuanchu@google.com,
-	weixugc@google.com,
-	yury.norov@gmail.com,
-	linux@rasmusvillemoes.dk,
-	longman@redhat.com,
-	ridong.chen@linux.dev,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	jgg@ziepe.ca,
-	jhubbard@nvidia.com,
-	peterx@redhat.com,
-	baolin.wang@linux.alibaba.com,
-	npache@redhat.com,
-	ryan.roberts@arm.com,
-	dev.jain@arm.com,
-	lance.yang@linux.dev,
-	usama.arif@linux.dev,
-	xu.xin16@zte.com.cn,
-	chengming.zhou@linux.dev,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	nvdimm@lists.linux.dev,
-	linux-cxl@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	kvm@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	damon@lists.linux.dev,
-	linux-kselftest@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH v5 14/36] mm/damon: skip private node memory in DAMON migration and pageout
-Date: Tue, 21 Jul 2026 16:46:43 -0700
-Message-ID: <20260721234644.149401-1-sj@kernel.org>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260720193431.3841992-15-gourry@gourry.net>
-References: 
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="nJPZ26zo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B9CB1F000E9;
+	Wed, 22 Jul 2026 00:13:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1784679232;
+	bh=V+aY/Lsw2VDgBYyUllYNgRGhKE2XyNDmp9Ld83OgmxE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=nJPZ26zoK7PeHw+emQhxgCgwLn8YyeMkqi0Fd4RjQd5+al8q4OAvP9ctMVjqJe71s
+	 GXL9PO9z2mVWG0Uu2MmY07PnEZYg6BjBNgiLvcCure2j6YIlulDZFkgrI9SS+PwYlX
+	 5QVyAYDb2uhDygxWGjir4LpcpLmowxGRf3bDpgms=
+Date: Tue, 21 Jul 2026 17:13:51 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Hongfu Li <hongfu.li@linux.dev>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
+ shakeel.butt@linux.dev, muchun.song@linux.dev, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, Hongfu Li
+ <lihongfu@kylinos.cn>
+Subject: Re: [PATCH] mm/memcg: check kzalloc_node() return in memcg1_init()
+Message-Id: <20260721171351.ec213c13afab38b89c14f849@linux-foundation.org>
+In-Reply-To: <20260721100916.76822-1-hongfu.li@linux.dev>
+References: <20260721100916.76822-1-hongfu.li@linux.dev>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, 20 Jul 2026 15:34:08 -0400 Gregory Price <gourry@gourry.net> wrote:
+On Tue, 21 Jul 2026 18:09:16 +0800 Hongfu Li <hongfu.li@linux.dev> wrote:
 
-> DAMON operates on physical address ranges, which can cover private
-> node memory. Skip private-node folios in both DAMON's migration
-> and reclaim paths.
+> From: Hongfu Li <lihongfu@kylinos.cn>
 > 
-> Signed-off-by: Gregory Price <gourry@gourry.net>
-> ---
->  mm/damon/paddr.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
+> Add NULL check for per-node kzalloc_node() allocations in memcg1_init().
 > 
-> diff --git a/mm/damon/paddr.c b/mm/damon/paddr.c
-> index e4f98d67461f5..c741a94319750 100644
-> --- a/mm/damon/paddr.c
-> +++ b/mm/damon/paddr.c
-> @@ -12,6 +12,7 @@
->  #include <linux/swap.h>
->  #include <linux/memory-tiers.h>
->  #include <linux/mm_inline.h>
-> +#include <linux/node_private.h>
+> Skip the NUMA node when allocation fails. All users of
+> soft_limit_tree.rb_tree_per_node[] safely handle NULL entries, only losing
+> soft-limit tracking for that node.
+> 
+> ...
+>
+> --- a/mm/memcontrol-v1.c
+> +++ b/mm/memcontrol-v1.c
+> @@ -2566,6 +2566,8 @@ static int __init memcg1_init(void)
+>  		struct mem_cgroup_tree_per_node *rtpn;
 >  
->  #include "../internal.h"
->  #include "ops-common.h"
-> @@ -250,6 +251,10 @@ static unsigned long damon_pa_pageout(struct damon_region *r,
->  			continue;
->  		}
+>  		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
+> +		if (!rtpn)
+> +			continue;
 >  
-> +		/* private node memory is not reclaimable by default */
-> +		if (folio_is_private_node(folio))
-> +			goto put_folio;
-> +
+>  		rtpn->rb_root = RB_ROOT;
+>  		rtpn->rb_rightmost = NULL;
 
-"by default".  Does that mean it could be reclaimable in some situations?  If
-so, could we check if it is reclaimable?
+Thanks.  We assume that mamory allocations cannot fail within __init
+code.  Because if they do, the kernel has some ghastly problem and it
+cannot possibly run.
 
-Also, what happens if we just try paging out the private node memory?  Will it
-simply fail?  Or, make some problems?
-
->  		if (damos_pa_filter_out(s, folio))
->  			goto put_folio;
->  		else
-> @@ -344,6 +349,10 @@ static unsigned long damon_pa_migrate(struct damon_region *r,
->  		else
->  			*sz_filter_passed += folio_size(folio) / addr_unit;
->  
-> +		/* private nodes do not support migration by default */
-> +		if (folio_is_private_node(folio))
-> +			goto put_folio;
-> +
-
-Same questions.
-
->  		if (!folio_isolate_lru(folio))
->  			goto put_folio;
->  		list_add(&folio->lru, &folio_list);
-> -- 
-> 2.53.0-Meta
-
-
-Thanks,
-SJ
