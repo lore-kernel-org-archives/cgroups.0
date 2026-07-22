@@ -1,66 +1,70 @@
-Received: from out30-113.freemail.mail.aliyun.com (out30-113.freemail.mail.aliyun.com [115.124.30.113])
+Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D11938F642;
-	Wed, 22 Jul 2026 03:32:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.113
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 743562288D5
+	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 06:19:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784691180; cv=none; b=WbuRD14kxJjBJufvxhsNPhPJJXJhCO7hsJJKRt4LiqE2qzoriL7xO4im1e8mVXSIA4obQ7rp7Xi66zRTFBEniE1+RM3Wsj0YBq5vv+/D5dJuM0ymi+sagYxaTBpE0L7yZ/dEvRyUq5bPdGEl0KDiHsRCSuZy5C99016F3ezjh0E=
+	t=1784701164; cv=none; b=VBisKohNILttj1RbB43d2sGCHQ5qelSXBW3LXpGBgQ0TdavjVvGZGKffa6oLnp+dU5tsl0tPWtMSuwfvGgXz/ITvEGQgKJTBPif2U5jl2nma5YkPYfHVaIEssN09Duf4YF5lJiL0Hq/LXdGvwOs+YPKUoMqCCMLWebfnDkwSuCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784691180; c=relaxed/simple;
-	bh=QhNyKKBFfgTpbJew3FS/R0Y91szT85yfiI2KeIC+ib8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ipu67exF9hAjI77aDKPQdjPAGRgJIsiZHgmw44/PRzq9bEqXjQtjMRS00uhdGRP8U4yx4vAm2LT2/8c4GEf2Ll5OryTtrJ4MWb2AcBxnszwii0BLenlAO8UxfohBsp2fsM+gOKNias0cX8ITzrjfnX9rqgGH3U6ddNchE8ULyos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=aEDNjOm2; arc=none smtp.client-ip=115.124.30.113
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1784701164; c=relaxed/simple;
+	bh=GGiX++7YAUJeyvCrXZm01phSETb13inLegYM7jjxggU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=q3z0Qd0rIDDxOZNJiwgAsgr1PhFY83Cu9gq8v45qnbZ2tTFmvMlYIfuMIz1C6DhpFzmNpDDjSNoQ9UvR1fal4N2aTB2+exrr9AT+yd0ys894FbCRl2ySq5q6MsrRIfwoMvBbYg08P2RlDGgMfmhRQsITpb6KsZiS6pQZlPtxfw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oiJXS3Rv; arc=none smtp.client-ip=95.215.58.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="aEDNjOm2"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1784691171; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=IymiIrNVW1FFlvdve8LqbI7PLCHhrb0shwE+ClAe7nU=;
-	b=aEDNjOm20OHQHoF2Y4xjKAp9WkvIL3+kWk8Lgi6HqlDfPRzRG87i+vjPby4ZY1hbZwZ18p0kuOj1vRWSV+TEsQ1ZHKIj9MkRhOeCVDsXT4vmx35E9Pt3p3PcrUOBrB6qgs7d++pjk4rLlm5IgPRPdNrnPQUeWwJwxMzveJPFZgU=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R561e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=lulie@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0X7c1i-9_1784691170;
-Received: from 30.221.129.41(mailfrom:lulie@linux.alibaba.com fp:SMTPD_---0X7c1i-9_1784691170 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 22 Jul 2026 11:32:51 +0800
-Message-ID: <25b7479a-f594-4ca0-884b-309758bf1b52@linux.alibaba.com>
-Date: Wed, 22 Jul 2026 11:32:49 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oiJXS3Rv"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784701150;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sBd1yNpCs6DEPDiy6QcCkhl56XpCygWXGY0ZmzMftW8=;
+	b=oiJXS3RvBmLpkZ70nE/CNG3Ili7NzzGOWR5nSd9eF7xCldoEix/xiKw9+pfYK9hOcCjz3X
+	O4ccwmjZPXzo0kzzBonMYDy5a3aLhVhFyCz+onuvBBKWrbERF2RPPXYSfndNWIAHNquZ+t
+	WLcVpTGTZYjXE56y+jkUHpkmCw4XzSY=
+From: Hongfu Li <hongfu.li@linux.dev>
+To: akpm@linux-foundation.org
+Cc: cgroups@vger.kernel.org,
+	hannes@cmpxchg.org,
+	hongfu.li@linux.dev,
+	lihongfu@kylinos.cn,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	mhocko@kernel.org,
+	muchun.song@linux.dev,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev
+Subject: Re: [PATCH] mm/memcg: check kzalloc_node() return in memcg1_init()
+Date: Wed, 22 Jul 2026 14:18:26 +0800
+Message-ID: <20260722061826.43420-1-hongfu.li@linux.dev>
+In-Reply-To: <20260721171351.ec213c13afab38b89c14f849@linux-foundation.org>
+References: <20260721171351.ec213c13afab38b89c14f849@linux-foundation.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6.6.y 0/2] sched/psi: fix race in pressure_write
- (CVE-2026-52991)
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: stable@vger.kernel.org, tj@kernel.org, hannes@cmpxchg.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, eadavis@qq.com,
- surenb@google.com, akpm@linux-foundation.org, dust.li@linux.alibaba.com
-References: <20260715084256.43412-1-lulie@linux.alibaba.com>
- <2026072145-living-december-c5ac@gregkh>
-From: Philo Lu <lulie@linux.alibaba.com>
-In-Reply-To: <2026072145-living-december-c5ac@gregkh>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On 7/21/26 9:09 PM, Greg KH wrote:
-> On Wed, Jul 15, 2026 at 04:42:54PM +0800, Philo Lu wrote:
->> This patchset is same as that for 6.12.y.
+> >  		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
+> > +		if (!rtpn)
+> > +			continue;
+> >  
+> >  		rtpn->rb_root = RB_ROOT;
+> >  		rtpn->rb_rightmost = NULL;
 > 
-> Where is the 6.12.y version?
+> Thanks.  We assume that mamory allocations cannot fail within __init
+> code.  Because if they do, the kernel has some ghastly problem and it
+> cannot possibly run.
 
-It was sent as a new patchset:
-https://lore.kernel.org/stable/20260715083245.32115-1-lulie@linux.alibaba.com/
+Understood, thanks for the clarification. I'll drop this patch.
 
-As Sasha said in that thread. The patchset is waiting on a pending Tejun 
-fix (deadlock risk with cgroup_mutex). He'll queue 6.12/6.6/6.1 together 
-once it lands.
-
-Thanks.
--- 
-Philo
-
+Best regards,
+Hongfu
