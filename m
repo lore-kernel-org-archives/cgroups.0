@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A34245D5D3;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4D6459AF6;
 	Wed, 22 Jul 2026 23:41:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784763680; cv=none; b=XkzESrRCXnAdDPHGhoAUi7N4HoQgQkwLQRGJOZq5vxzlL99Jl9ZF9bQxyUx0zkV/HgHigcBmlxvVEI1VP6WEMDzW5aAheKNQD5RY8ggPZ5XokAD761fAeEKo6SyqoWPVTRi9U7XvrFdchUXklduTbOju1c1VUst4UfkgTvPgF04=
+	t=1784763680; cv=none; b=SKnEVpQTy5dpPTMY5ghaGHebLtTcmyBUPi8YwjzrKf9OTNwO7wSjA+mLbFsn9dRCdLs4I9OMFIlaRTa+qcFJvjMSywrmPBI74CI7f+83CafmqK2TCsN0NnCd8M501+bUi7UIeo7GlKOBum1A7tzS5aZXvIOyNLgurMGmRUavuvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784763680; c=relaxed/simple;
-	bh=5/iRF3xNqMsJsR53Yn485u1SJJR2JsiIiVvY2SQNe+s=;
+	bh=aGbga1PkXCpZ8ED5LqrkeQ+Fq62YN785kMo+rpYCbc8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=HX9WUdja1h9seS7Rbl1gmmYsQ21FOwIt0Z+fSOzAwaoa860MkVf6XCQM76dlPYz1mfjWK4G64sDJrkBCvPPJvwjaqCUbECdHWDNq9I9HksjJ9ZFucEeAdb5AZoLsijAVHybV8CnbHP9noX3plAgpT43CRDx1gL0vO5GB4jcKnuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c+SxcELL; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=Vy739bPt4DX5CVb2QZWWCv/SOQDUR1Ogi0sHWzL+9Jlwh5VrbQjVHh0TpW0bq2+H/ASqvNM2fllsn3EXUaHXUU6OMaDvhmnrEruC6akqNZNd/8N4zacxSmRj3fAUKPrF2SMloHAwtAc4TaaEiNLNANDnuloi8YJ+tyctSOUklhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LZxa0L4P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c+SxcELL"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 79314C2BCFB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LZxa0L4P"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2B23DC4AF0E;
 	Wed, 22 Jul 2026 23:41:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1784763680;
-	bh=5/iRF3xNqMsJsR53Yn485u1SJJR2JsiIiVvY2SQNe+s=;
+	bh=aGbga1PkXCpZ8ED5LqrkeQ+Fq62YN785kMo+rpYCbc8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=c+SxcELLjBmZdtQTreWKXPNovxnW3u7q1JQ10iW2wkifkQmxpZYDgskte5XeqvBNm
-	 PNrXcMFlRbxCeOEeollYUTgXaOl3GLV7G2H8Fow4XuQcOhzJunxXRuO6KG0AagMrXu
-	 U/2yO8njKtb97sVW68BEkxcMQtnKs5m60gsRABH4Tt5jmGeZq81q95djQnIbeZRAoJ
-	 iP38iUplPnQxQP+CCyoZYAOGksNwUFjs4DQEBDWTEh8YJ9W+q1VXmjCyoZOF7fGcfu
-	 Uf6Txk5Errh4Ckax4kGdHZ3MrnORlhH94SCSjIxC5/EUzMu3Tfn7SPOkyIKT+WrEhK
-	 NdtmrjAE0NuEw==
+	b=LZxa0L4POGfxU5e7iZ1UcLss+95VxKOFxH8x1G3dKJjbIRCBFNLJVK+UjPN7SWRvp
+	 tDCS99qneiWqx5MNNwIwGEwlNh83mxLAsd4eIbiPF1mnOXakLLMnUCzAV3pdYLzVL4
+	 TmhHGFW+R8YrQ0HM56Cr0LwgnI2Cl1++cRPBhL1+zkFNhfnMvTU/LU8i3QXugmBOVk
+	 +zH16pmplCubUvwrByZin0CbgdFKMSIuiRI0iYqGJ15PjQKtx1Rua9zM/CDVC/+a2h
+	 Vc7J71jFNi/67z33Rv6uFtUxRmJKe/vREwtEm/PZaEjcdAgAiaIwOPns7EOvuREfqo
+	 zpDcHEyzLfrMg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67147C44536;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1852AC44532;
 	Wed, 22 Jul 2026 23:41:20 +0000 (UTC)
 From: Ackerley Tng via B4 Relay <devnull+ackerleytng.google.com@kernel.org>
-Date: Wed, 22 Jul 2026 16:41:18 -0700
-Subject: [PATCH v4 10/16] WIP: fs: hugetlbfs: Refactor subpool getters and
- integrate with hugetlb_subpool API
+Date: Wed, 22 Jul 2026 16:41:14 -0700
+Subject: [PATCH v4 06/16] mm: hugetlb: Rename local variables for clarity
+ in hugetlb_reserve_pages()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260722-hugetlb-alloc-failure-fixes-v4-10-88e8b81970dc@google.com>
+Message-Id: <20260722-hugetlb-alloc-failure-fixes-v4-6-88e8b81970dc@google.com>
 References: <20260722-hugetlb-alloc-failure-fixes-v4-0-88e8b81970dc@google.com>
 In-Reply-To: <20260722-hugetlb-alloc-failure-fixes-v4-0-88e8b81970dc@google.com>
 To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
@@ -62,11 +62,11 @@ Cc: vannapurve@google.com, erdemaktas@google.com, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
  linux-doc@vger.kernel.org, Ackerley Tng <ackerleytng@google.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1784763678; l=5109;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1784763678; l=4405;
  i=ackerleytng@google.com; s=20260225; h=from:subject:message-id;
- bh=Rr0t6FQpLc5GBEHSOpDNGxRyeiM/tB/HQxHFWvewyxI=;
- b=r8aum4myXhKIuGOvNFNRV2xnP+sRjMi82PJGF7WGGuvumuJvvLXs2oRu08WpAjRrptqeMPkev
- cpDbibmLIwAB3MMC8TVRLPb2o/yYixAdK/+t9iAz2EISXgaiFArJ1q+
+ bh=YN6Ec4dryGn+lNCiGktVw2z+GkC+1qiWsI1wgmafaTw=;
+ b=2bILnGfpQYBpRme36koKemun0e04kP1hxT7XZpV0o3yJRaZSrtupWWZeQRckJ1ePGfhGs4qPM
+ 8BCX7oBBkyyAdb4/2/vTHjmS0gJZT/YU/XnuJHwl3Zt1scXLcXt/uJ9
 X-Developer-Key: i=ackerleytng@google.com; a=ed25519;
  pk=sAZDYXdm6Iz8FHitpHeFlCMXwabodTm7p8/3/8xUxuU=
 X-Endpoint-Received: by B4 Relay for ackerleytng@google.com/20260225 with
@@ -76,144 +76,115 @@ Reply-To: ackerleytng@google.com
 
 From: Ackerley Tng <ackerleytng@google.com>
 
-Refactor the direct field accesses to spool->max_hpages, spool->min_hpages,
-and calculate subpool properties using getters inside
-mm/hugetlb_subpool.c.
+In hugetlb_reserve_pages(), the return value of
+hugepage_subpool_get_pages() was named gbl_resv, while the return value of
+hugepage_subpool_put_pages() was named gbl_reserve. These variable names
+were inconsistent with the naming conventions established in
+alloc_hugetlb_folio().
 
-This will allow the definition of struct hugepage_subpool to be
-encapsulated and private to mm/hugetlb_subpool.c
+Rename local variables in hugetlb_reserve_pages() to match naming in
+alloc_hugetlb_folio().
+
++ Rename gbl_resv to gbl_resv_get, which is the number of global
+  reservations required from the global pool (because neither reservation
+  maps nor pre-existing subpool reservations could cover the request).
+
+  If gbl_resv_get is 0, the reservation request is fully covered by
+  pre-existing subpool reservations, so no additional global reservations
+  are requested. If gbl_resv_get > 0, it represents the number of
+  additional global reservations required, which are charged to global
+  memory via hugetlb_acct_memory(h, gbl_resv_get).
+
+  Note: gbl_resv_get in hugetlb_reserve_pages() is conceptually slightly
+  different from gbl_resv_get in alloc_hugetlb_folio():
+
+  + In hugetlb_reserve_pages(): additional _reservations_ required,
+                                accounted using hugetlb_acct_memory()
+  + In alloc_hugetlb_folio(): additional _pages_ required, no change to
+                              h->resv_huge_pages if gbl_resv_get > 0
+
++ Rename gbl_reserve to gbl_resv_put, which is the number of pages the
+  subpool could not absorb into its reservations during rollback (and are
+  thus returned to the global pool).
+
+In error rollback paths, hugetlb_acct_memory(h, gbl_resv_get -
+gbl_resv_put) adjusts global reservations using the difference between
+global pages requested (gbl_resv_get) and global pages returned
+(gbl_resv_put).
 
 Signed-off-by: Ackerley Tng <ackerleytng@google.com>
 ---
- fs/hugetlbfs/inode.c | 28 +++++++++-------------------
- mm/hugetlb_subpool.c | 39 ++++++++++++++++++++++++++++++++++++++-
- mm/hugetlb_subpool.h |  4 ++++
- 3 files changed, 51 insertions(+), 20 deletions(-)
+ mm/hugetlb.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
-index 86c21f8272470..b424afdedb3ee 100644
---- a/fs/hugetlbfs/inode.c
-+++ b/fs/hugetlbfs/inode.c
-@@ -1060,7 +1060,6 @@ static int hugetlbfs_show_options(struct seq_file *m, struct dentry *root)
- 	struct hugetlbfs_sb_info *sbinfo = HUGETLBFS_SB(root->d_sb);
- 	struct hugepage_subpool *spool = sbinfo->spool;
- 	unsigned long hpage_size = huge_page_size(sbinfo->hstate);
--	unsigned hpage_shift = huge_page_shift(sbinfo->hstate);
- 	char mod;
- 
- 	if (!uid_eq(sbinfo->uid, GLOBAL_ROOT_UID))
-@@ -1082,12 +1081,13 @@ static int hugetlbfs_show_options(struct seq_file *m, struct dentry *root)
- 	}
- 	seq_printf(m, ",pagesize=%lu%c", hpage_size, mod);
- 	if (spool) {
--		if (spool->max_hpages != -1)
--			seq_printf(m, ",size=%llu",
--				   (unsigned long long)spool->max_hpages << hpage_shift);
--		if (spool->min_hpages != -1)
--			seq_printf(m, ",min_size=%llu",
--				   (unsigned long long)spool->min_hpages << hpage_shift);
-+		unsigned long long max_size = hugepage_subpool_max_size(spool);
-+		unsigned long long min_size = hugepage_subpool_min_size(spool);
-+
-+		if (max_size != -1ULL)
-+			seq_printf(m, ",size=%llu", max_size);
-+		if (min_size != -1ULL)
-+			seq_printf(m, ",min_size=%llu", min_size);
- 	}
- 	return 0;
- }
-@@ -1106,18 +1106,8 @@ static int hugetlbfs_statfs(struct dentry *dentry, struct kstatfs *buf)
- 		/* If no limits set, just report 0 or -1 for max/free/used
- 		 * blocks, like simple_statfs() */
- 		if (sbinfo->spool) {
--			long free_pages;
--
--			spin_lock_irq(&sbinfo->spool->lock);
--			buf->f_blocks = sbinfo->spool->max_hpages;
--			if (sbinfo->spool->max_hpages == -1) {
--				free_pages = -1;
--			} else {
--				free_pages = sbinfo->spool->max_hpages -
--					     sbinfo->spool->used_hpages;
--			}
--			buf->f_bavail = buf->f_bfree = free_pages;
--			spin_unlock_irq(&sbinfo->spool->lock);
-+			buf->f_blocks = hugepage_subpool_max_hpages(sbinfo->spool);
-+			buf->f_bavail = buf->f_bfree = hugepage_subpool_free_hpages(sbinfo->spool);
- 			buf->f_files = sbinfo->max_inodes;
- 			buf->f_ffree = sbinfo->free_inodes;
- 		}
-diff --git a/mm/hugetlb_subpool.c b/mm/hugetlb_subpool.c
-index 6184860ed7374..ac0f9057b4921 100644
---- a/mm/hugetlb_subpool.c
-+++ b/mm/hugetlb_subpool.c
-@@ -12,7 +12,6 @@
- #endif
- #include <linux/spinlock.h>
- #include <linux/bug.h>
--
- #include "hugetlb_subpool.h"
- 
- static inline bool subpool_is_free(struct hugepage_subpool *spool)
-@@ -38,6 +37,44 @@ static inline void unlock_or_release_subpool(struct hugepage_subpool *spool,
- 	}
- }
- 
-+long hugepage_subpool_free_hpages(struct hugepage_subpool *spool)
-+{
-+	long free_pages;
-+
-+	spin_lock_irq(&spool->lock);
-+	if (spool->max_hpages == -1)
-+		free_pages = -1;
-+	else
-+		free_pages = spool->max_hpages - spool->used_hpages;
-+	spin_unlock_irq(&spool->lock);
-+
-+	return free_pages;
-+}
-+
-+static unsigned int hugepage_subpool_hpage_shift(struct hugepage_subpool *spool)
-+{
-+	return huge_page_shift(spool->hstate);
-+}
-+
-+unsigned long long hugepage_subpool_max_size(struct hugepage_subpool *spool)
-+{
-+	if (spool->max_hpages == -1)
-+		return -1ULL;
-+	return (unsigned long long)spool->max_hpages << hugepage_subpool_hpage_shift(spool);
-+}
-+
-+unsigned long long hugepage_subpool_min_size(struct hugepage_subpool *spool)
-+{
-+	if (spool->min_hpages == -1)
-+		return -1ULL;
-+	return (unsigned long long)spool->min_hpages << hugepage_subpool_hpage_shift(spool);
-+}
-+
-+long hugepage_subpool_max_hpages(struct hugepage_subpool *spool)
-+{
-+	return spool->max_hpages;
-+}
-+
- struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
- 						long min_hpages)
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 879e4640dc50d..8431c00d48267 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -6562,12 +6562,13 @@ long hugetlb_reserve_pages(struct inode *inode,
+ 		struct vm_area_struct *vma,
+ 		vma_flags_t vma_flags)
  {
-diff --git a/mm/hugetlb_subpool.h b/mm/hugetlb_subpool.h
-index be1f1cf012c9c..41d22239f2c3e 100644
---- a/mm/hugetlb_subpool.h
-+++ b/mm/hugetlb_subpool.h
-@@ -13,5 +13,9 @@ struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
- void hugepage_put_subpool(struct hugepage_subpool *spool);
- long hugepage_subpool_get_pages(struct hugepage_subpool *spool, long delta);
- long hugepage_subpool_put_pages(struct hugepage_subpool *spool, long delta);
-+long hugepage_subpool_free_hpages(struct hugepage_subpool *spool);
-+long hugepage_subpool_max_hpages(struct hugepage_subpool *spool);
-+unsigned long long hugepage_subpool_max_size(struct hugepage_subpool *spool);
-+unsigned long long hugepage_subpool_min_size(struct hugepage_subpool *spool);
+-	long chg = -1, add = -1, gbl_resv;
++	long chg = -1, add = -1;
+ 	struct hstate *h = hstate_inode(inode);
+ 	struct hugepage_subpool *spool = subpool_inode(inode);
+ 	struct resv_map *resv_map;
+ 	struct hugetlb_cgroup *h_cg = NULL;
+-	long gbl_reserve, regions_needed = 0;
++	long gbl_resv_get, gbl_resv_put;
++	long regions_needed = 0;
+ 	int err;
  
- #endif /* _MM_HUGETLB_SUBPOOL_H */
+ 	/* This should never happen */
+@@ -6642,9 +6643,9 @@ long hugetlb_reserve_pages(struct inode *inode,
+ 	 * the subpool has a minimum size, there may be some global
+ 	 * reservations already in place (gbl_reserve).
+ 	 */
+-	gbl_resv = hugepage_subpool_get_pages(spool, chg);
+-	if (gbl_resv < 0) {
+-		err = gbl_resv;
++	gbl_resv_get = hugepage_subpool_get_pages(spool, chg);
++	if (gbl_resv_get < 0) {
++		err = gbl_resv_get;
+ 		goto out_uncharge_cgroup;
+ 	}
+ 
+@@ -6652,7 +6653,7 @@ long hugetlb_reserve_pages(struct inode *inode,
+ 	 * Check enough hugepages are available for the reservation.
+ 	 * Hand the pages back to the subpool if there are not
+ 	 */
+-	err = hugetlb_acct_memory(h, gbl_resv);
++	err = hugetlb_acct_memory(h, gbl_resv_get);
+ 	if (err < 0)
+ 		goto out_put_pages;
+ 
+@@ -6671,7 +6672,7 @@ long hugetlb_reserve_pages(struct inode *inode,
+ 		add = region_add(resv_map, from, to, regions_needed, h, h_cg);
+ 
+ 		if (unlikely(add < 0)) {
+-			hugetlb_acct_memory(h, -gbl_resv);
++			hugetlb_acct_memory(h, -gbl_resv_get);
+ 			err = add;
+ 			goto out_put_pages;
+ 		} else if (unlikely(chg > add)) {
+@@ -6713,14 +6714,14 @@ long hugetlb_reserve_pages(struct inode *inode,
+ 	 * tell us the new number of reservations that need to be
+ 	 * returned to the global pool.
+ 	 */
+-	gbl_reserve = hugepage_subpool_put_pages(spool, chg);
++	gbl_resv_put = hugepage_subpool_put_pages(spool, chg);
+ 	/*
+ 	 * There may be a difference between the number of
+ 	 * reservations to consume and the number to restore now if
+ 	 * there are multiple threads interacting with the subpool -
+ 	 * restore the difference.
+ 	 */
+-	hugetlb_acct_memory(h, gbl_resv - gbl_reserve);
++	hugetlb_acct_memory(h, gbl_resv_get - gbl_resv_put);
+ 
+ out_uncharge_cgroup:
+ 	hugetlb_cgroup_uncharge_cgroup_rsvd(hstate_index(h),
 
 -- 
 2.55.0.229.g6434b31f56-goog
