@@ -1,96 +1,120 @@
-Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E13C27FB2A;
-	Wed, 22 Jul 2026 00:55:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB668360EC9
+	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 01:08:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784681757; cv=none; b=Ws2jKya4vOAT2Ugz+msHqUHQS2rz3Ltqi0y/jDCdzLS05L3zPGRBnQmabHKAVIMeTgwKBi2DeWWHlXvahO7r21amGV8U172OeHd8dR1jAdtPxdGSgLfoUYt92FE9Ng3tUwR+sv5kH9R4F+lJ8/ypaiFddiUvVU1yJ9CY4ecL84s=
+	t=1784682498; cv=none; b=dXNL+jz4bEUnNEz4p0HqAmqqAtUArQSmamz5/nqoQ8I+50I5WALkvaSt8qrc3Zg//ZOVpU9dCV6Fn2YF03BOynXhpfEU0S1Ox6ggQw15CD53PeE8y91XYT/f4jVHYyP2grVrlq6miWuEtzUCuJyALbwKueOQj8etHf5mqr8BLuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784681757; c=relaxed/simple;
-	bh=Rva2ORXpLsMvFlm4EI5twwolCZ+rBoFhZqgG9kuK82Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VO5cB64MNBe+MVOG23SpOCqQAE2GtDzjGRpZWgz65yHJ6ABGBS7okQRBSio2/n/YGjvc3rJwjEx+VBG+11NKmbFnZ0JIq0Wop/adOxM5vlkBr2JjiLlPDAXhladbR/4PTQXSKY1ltOvrA7ffHj1Dj1eHuGf6/2jUSt0zt4J1s7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FuAAY/yo; arc=none smtp.client-ip=91.218.175.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784682498; c=relaxed/simple;
+	bh=KdJSa06l3wNVkqY80xtCbGq5OkmIZeqJ+kN/UEeeBlw=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=U0uvHqVANopZPU7/k5Q5/AxXrj/EJE4XtT/6/g8soPPhmBsqFVwkUEWA4UyF9cgoDIkr246N0cGwQcZ7cyrg6VdZnLZgtNtgBGLtPRBhIT6zHATX0wZabw3CpFlqoKBCD6WrtufVr7G3eB0mZKlQChOw8urJYWYBIzLT3+18HsM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fwvOhfSb; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FuAAY/yo"
-Message-ID: <1d596a2a-f930-449a-b8e8-4349d95578e6@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784681752;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DRZCQburw7HgkreYBNUaHDCQ/ve0PWnL6l7wpHhXWFE=;
-	b=FuAAY/yoInt8FpHJSquoeDZ9NamAcZJ9YBXv6ftCfMNzSK5KJCEE0BLqmx4Jy9HyzKoqDQ
-	EzjpoKhahJcykPC1KM/nyCjngSwOjK3aTAqoivUbXjWPgHIRdY3S15bZ6eZ/wILM3dM3nt
-	fPmFob1DXt3NO+fHZQNKe7ncV6sb9TU=
-Date: Wed, 22 Jul 2026 08:55:37 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fwvOhfSb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784682494; x=1816218494;
+  h=date:from:to:cc:subject:message-id;
+  bh=KdJSa06l3wNVkqY80xtCbGq5OkmIZeqJ+kN/UEeeBlw=;
+  b=fwvOhfSbrziWdrqx84atTu+DLktUMvcao6EpELskDbl/lXovqsqU/jq+
+   9IRIxLpKZmOFH6t61V4y/9A8zzzGIEOcmvZVZLREVdlQCJoG8MHZkQ2+3
+   3KgJDWHp4vmSp6z+pOTcmiXNTOf4PX1uYB0h+V5qdM2ovJWUx/VzimwCQ
+   CPTQ/PZiDnB1QJNxcrA63E0eMmEarufEfJLdZD24YQ4AL7iOuhxSsAyK2
+   U9ZoL/NTboAfuWWladLYdf/12y5Hmpk5yrd37W12XFrvskoE6lsAUOGyN
+   akgh8j5aPG+v+bmrO5sdK4Yp3ix0HjlJwUfU7t6LhcuFR/mq33AHimtsZ
+   A==;
+X-CSE-ConnectionGUID: gZHRN04IQ8+FRCXklZ/TlA==
+X-CSE-MsgGUID: gCRRJd5vRyeWmdUwKFgUXA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11853"; a="95958406"
+X-IronPort-AV: E=Sophos;i="6.25,177,1779174000"; 
+   d="scan'208";a="95958406"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 18:08:14 -0700
+X-CSE-ConnectionGUID: bRrDCiaGSdia9byrER1qfQ==
+X-CSE-MsgGUID: QMvcMJsCRu+yeuXJM+UXkw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,177,1779174000"; 
+   d="scan'208";a="262873714"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by fmviesa005.fm.intel.com with ESMTP; 21 Jul 2026 18:08:13 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wmLRS-00000000YFw-40S0;
+	Wed, 22 Jul 2026 01:08:10 +0000
+Date: Wed, 22 Jul 2026 09:07:17 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 0ccf15cbb54ce4413e894fc9ed91abecc4f1017c
+Message-ID: <202607220902.chyLHBNc-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Subject: Re: [PATCH RFC 05/12] mm/slab: abstract slabobj_ext.objcg access
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
- Omar Sandoval <osandov@osandov.com>
-Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, Hao Li <hao.li@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- Stephen Brennan <stephen.s.brennan@oracle.com>, SeongJae Park <sj@kernel.org>
-References: <20260715-b4-objext_split-v1-0-9a49c4ccf4c3@kernel.org>
- <20260715-b4-objext_split-v1-5-9a49c4ccf4c3@kernel.org>
- <976e4d7b-24d6-4047-a405-e86c2feb45d3@kernel.org>
- <1784596208654455.18988.seg@mailgw.kylinos.cn>
- <8f3a6021-0ef0-4ecc-bbe0-0be1c3c6834d@linux.dev>
- <e72f54ee-2ab6-462c-a9b4-4e05c3e85266@kernel.org>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Ye Liu <ye.liu@linux.dev>
-In-Reply-To: <e72f54ee-2ab6-462c-a9b4-4e05c3e85266@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 0ccf15cbb54ce4413e894fc9ed91abecc4f1017c  Merge branch 'for-7.3' into for-next
 
+elapsed time: 5897m
 
-在 2026/7/21 21:20, Vlastimil Babka (SUSE) 写道:
-> On 7/21/26 04:00, Ye Liu wrote:
->>
->> 在 2026/7/21 03:58, Omar Sandoval 写道:
->>> On Fri, Jul 17, 2026 at 12:00:29PM +0200, Vlastimil Babka (SUSE) wrote:
->>>> On 7/15/26 12:10, Vlastimil Babka (SUSE) wrote:
->>> FWIW, if these scripts were in the drgn repo with test cases, these
->>> breakages would be caught by our CI and someone (usually me) would fix
->>> them up promptly :)
->>
->> When I first used the drgn tool, I noticed that some scripts were directly      
->> merged into the kernel repository, so I merged show_page_info.py into the kernel
->> repository as well. Later, I found that merging into the drgn repository was    
->> also a good option, so I merged it into the drgn repository as well,            
->> and maintain it there. Therefore, I currently use show_page_info.py regularly   
->> and update it promptly if I find any issues.                                    
-> 
-> Seems we could remove the in-kernel version then? Besides better regression
-> testing, I'd assume the scripts in drgn repository can also handle ranges of
-> kernel versions and not the single one as of the given kernel commit (and
-> often not really due to undiscovered breakages) which IMHO is much for
-> useful for using these scripts and tools.
-> 
-There are many drgn-based tools in the kernel repository. Should they all be removed?   
-Or should existing scripts be retained? Should new drgn scripts not be merged           
-into the kernel repository in the future, but instead directly merged into the          
-drgn repository? I think Omar Sandoval would be very willing to accept new drgn scripts.
+configs tested: 43
+configs skipped: 0
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
--- 
-Thanks,
-Ye Liu
+tested configs:
+alpha                  allnoconfig    gcc-16.1.0
+alpha                 allyesconfig    gcc-16.1.0
+alpha                    defconfig    gcc-16.1.0
+arc                   allmodconfig    gcc-16.1.0
+arc                   allyesconfig    gcc-16.1.0
+arc        randconfig-001-20260722    clang-24
+arc        randconfig-002-20260722    clang-24
+arm               ep93xx_defconfig    clang-24
+arm        randconfig-001-20260722    clang-24
+arm        randconfig-002-20260722    clang-24
+arm        randconfig-003-20260722    clang-24
+arm        randconfig-004-20260722    clang-24
+csky                  allmodconfig    gcc-16.1.0
+hexagon    randconfig-001-20260722    gcc-8.5.0
+hexagon    randconfig-002-20260722    gcc-8.5.0
+i386                  allmodconfig    gcc-14
+loongarch                defconfig    clang-24
+loongarch  randconfig-001-20260722    gcc-8.5.0
+loongarch  randconfig-002-20260722    gcc-8.5.0
+nios2                 allmodconfig    gcc-11.5.0
+nios2                  allnoconfig    gcc-11.5.0
+nios2      randconfig-001-20260722    gcc-8.5.0
+nios2      randconfig-002-20260722    gcc-8.5.0
+parisc                allmodconfig    gcc-16.1.0
+parisc                allyesconfig    gcc-16.1.0
+parisc                   defconfig    gcc-16.1.0
+riscv      randconfig-001-20260722    gcc-13.4.0
+riscv      randconfig-002-20260722    gcc-13.4.0
+s390       randconfig-001-20260722    gcc-13.4.0
+s390       randconfig-002-20260722    gcc-13.4.0
+sh                       defconfig    gcc-16.1.0
+sh         randconfig-001-20260722    gcc-13.4.0
+sh         randconfig-002-20260722    gcc-13.4.0
+sparc      randconfig-001-20260722    gcc-9.5.0
+sparc      randconfig-002-20260722    gcc-9.5.0
+sparc64    randconfig-001-20260722    gcc-9.5.0
+sparc64    randconfig-002-20260722    gcc-9.5.0
+um         randconfig-001-20260722    gcc-9.5.0
+um         randconfig-002-20260722    gcc-9.5.0
+x86_64                       kexec    clang-22
+x86_64                rhel-9.4-bpf    gcc-14
+xtensa     randconfig-001-20260722    gcc-9.5.0
+xtensa     randconfig-002-20260722    gcc-9.5.0
 
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
