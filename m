@@ -1,122 +1,119 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59EDD339371;
-	Wed, 22 Jul 2026 10:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C6A4C8FFA
+	for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 11:19:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784715924; cv=none; b=ckc47spqoTqwAKLU6Yv8VB96RPGdt7B5GZYdfexxSIvsCGeC15VuSJjwLN+TqBq4+e1dOWIc8ilxtLzC951rQRk52RUGpAd+U9manZ7aEV4XJvteBP4gQTAeTPEuIT1EwDmxwXamMA5uwiwxsHej0EiN26DaNajvziWB1zhXc3A=
+	t=1784719149; cv=none; b=qDYLzEU1MSWwbK+/w0bgsX9u+aKRx4smymn6SvOizJHZtVUWmOoiGcpCyj9TEz6Tl2EozOpPeFb1dT1RhT6sAOivkEAm+khL6TfDTCmYMnvlM8aQ5D+J6LJ+fTW+haXZf2+z1LI/YYyFU5FbQhyW9o9ROH4HJ/T1lx+zSxYnLdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784715924; c=relaxed/simple;
-	bh=1OcsFA5xETydKj/a/BPRbzK34nAsDcbpJ4tIWjpAfgQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CFnFU/iRbV7p78DZ7bTXryws4sYJ0gTbXaCW+vZMHAFGD7kUBvlbfM6etxu3mBbkoFJJqsJfJiXAVZFITLOEgGbv6AMSW8iMFwa8///KDEMANEQKirzmgG6NHG9ITUcKNJYHkHup3an/duOoah0+A9IxddkJSEvBDZnwU6S3ZyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=JmGuYE6+; arc=none smtp.client-ip=91.218.175.185
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784719149; c=relaxed/simple;
+	bh=K0lJdomABA220xXQvjPrABsUyrol06jwDg0S6PXXfsU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ieQO6TaBi75lMM4DxKUi4+1U+mpiK4047SDE4NEbmsgd7eEqvl6ipP7pT4jNqnlNXXZwbN8dmKR4upQlCdNxfxHsZVqdC5PsnE92q+VP5xwY3yoFuJC+IzTX7728KXBpBhqgB88FulnkK/BAIba1EPA+YaNrUsdx8051rYvjvnY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=resnulli.us; spf=none smtp.mailfrom=resnulli.us; dkim=pass (2048-bit key) header.d=resnulli-us.20251104.gappssmtp.com header.i=@resnulli-us.20251104.gappssmtp.com header.b=oh6xSitz; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=resnulli.us
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=resnulli.us
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="JmGuYE6+"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784715910;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=gi0rqPlLMNHpvuGTqnaQG76LXt2I74tCCqNp3y8hndw=;
-	b=JmGuYE6+CypZ8sKIfnhZ1RpivPmM3nHfhU1gFdVpdotYJKRZQIOO4g7n3Bk9pzBEWszVtY
-	ecTENsnbgkLi04GGuwWXEkYjKasLRexpCdQyGuM6qRyqid01gkgDSgSuoJu6Yw3Ypn7n6m
-	WQtGf1M50lqPoBc5Wek8cH8ubeKiJyA=
-From: Tao Cui <cui.tao@linux.dev>
-To: tj@kernel.org,
-	axboe@kernel.dk
-Cc: linux-block@vger.kernel.org,
-	josef@toxicpanda.com,
-	yu kuai <yukuai@fygo.io>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	david.laight.linux@gmail.com,
-	haris.iqbal@linux.dev,
-	cui.tao@linux.dev,
-	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH v4] blk-throttle: fix divide-by-zero on legacy iops limit of 0
-Date: Wed, 22 Jul 2026 18:24:59 +0800
-Message-ID: <20260722102459.253189-1-cui.tao@linux.dev>
+	dkim=pass (2048-bit key) header.d=resnulli-us.20251104.gappssmtp.com header.i=@resnulli-us.20251104.gappssmtp.com header.b="oh6xSitz"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4956242332dso25955935e9.2
+        for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 04:19:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=resnulli-us.20251104.gappssmtp.com; s=20251104; t=1784719145; x=1785323945; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=LRmXc9ZZ35HbKO4lnkGdwQFDA/KG04ApnL+4+6Y1E0E=;
+        b=oh6xSitzv14cXiEehnSpN/lNNwBLwRIos7nCfJe57HvhwV3Miu90A81J+FmVquFNeg
+         WZnf8kOuLCwtrpALmFC30uyKE36wRSwYfzjjcEIK+85FnFPpEgKTrlESpGNO8E93IqWT
+         iihMO0kPefOqHw7l0c+5fhZeMkKP20CON2O6UFEulprF03uO0lrJvBQrX/QYK3//ajlj
+         ECSFmXjhGAVuhRgrWYcsh9X7nHkCtxk0itlQpc0DHkrcqEFKmBKnEBeBIh6ZVWPI76Zv
+         dZq0q3WNs9FFUeopq+8FxcJKGS4CsiPB1bV3nq7jGX2rhhM7xBBVWpVP87+EnTxph9Jn
+         Tc7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784719145; x=1785323945;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LRmXc9ZZ35HbKO4lnkGdwQFDA/KG04ApnL+4+6Y1E0E=;
+        b=mKmfaL4Gck4MCZTFDkEfKy3QbfXxj8ReHael5bPjKcdf8WIZsAJ/M3LDfb681mmFXN
+         yhOwUHvKgdHSwTfVKmkRntv9C0CUjcZ9X/xPartMD9M5Radvqq9jGJmK3AhuHA5RpqO5
+         z9N8bFO419TyKnujwluhPPY0bJFhqWIO4rT+DwuKdqr2etuiIFpn6S29Ang5tWWlT87h
+         WbcwswwQ8NeOlQfpD51PUGp1a1GMLxXlZ4N92ofS9oA1MPGWimtVCpkFWZ6lUGMT6OhT
+         R8wMy0gh292mk1MVG7M3b1XHBeT98v854D7TrZFa1E8RHfP5nrIBb8Dd3o7G1BY8HUa8
+         7nyg==
+X-Gm-Message-State: AOJu0YyKHiSVYzWpN0VOW/67nDu8cFQeucNVc1FkwxYdOPEeGfd2rv2v
+	o6BlfkNbml39CUsN0kpSZl0++9BSEHGuOoSsr/Rjlg3zYxtQRHhvUZ5aBxId7e2+JgQ=
+X-Gm-Gg: AR+sD10BDg5AsQ0QeMUfk+ywg0CuOpjBw8xgwghhJqo7hN3LldZ2ULM8Lh31+IRZ9eQ
+	fr4vy5UH6u4W0aVYk0uOlJFoJbZh8EfJIraZYU18TS3/FF0XsMiEvzfZ9THqzoh8fqV3sO5cQK9
+	s9erUanb17aBvhafn10FupwfZLYXgJFCuZRMJOC7XfElD3wfRhsDJfJhMVnaygUg+mCjg1gRixO
+	CnXyMa1ag62sg+eKQ0nBWYCZLwWHZzjGHUlBPAEfbKGK2pI07yzpvc1hbrmkY6PCcayClpoMVkS
+	GoLD4lMGYD1yxZf1bh8dGCKuqBs1ISgB/+u5BNhQ959WwBPVNKDptaGiMWxwQP7eNFl1UTTCMe0
+	0f6O+Kwd4NQdgBpo3wseZ4dyowDYn/qcdNwkH8ptSefQEqkcbsawDFEkgd/kXCXXQE3TvvxW4i1
+	FZkZRFnpQSAY2cw++d5ih0KQ==
+X-Received: by 2002:a05:600c:4ed1:b0:495:6485:226b with SMTP id 5b1f17b1804b1-49566a820aamr70694565e9.22.1784719145296;
+        Wed, 22 Jul 2026 04:19:05 -0700 (PDT)
+Received: from localhost ([140.209.217.211])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4956b72fac1sm43347075e9.1.2026.07.22.04.19.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 04:19:04 -0700 (PDT)
+Date: Wed, 22 Jul 2026 13:19:00 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: linux-rdma@vger.kernel.org
+Cc: cgroups@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-s390@vger.kernel.org, linux-kselftest@vger.kernel.org, jgg@ziepe.ca, leon@kernel.org, 
+	parav@nvidia.com, mbloch@nvidia.com, cmeiohas@nvidia.com, roman.gushchin@linux.dev, 
+	bvanassche@acm.org, zyjzyj2000@gmail.com, shuah@kernel.org, tj@kernel.org, 
+	mkoutny@suse.com, hannes@cmpxchg.org, alibuda@linux.alibaba.com, 
+	dust.li@linux.alibaba.com, sidraya@linux.ibm.com, wenjia@linux.ibm.com, 
+	yanjun.zhu@linux.dev, cui.tao@linux.dev
+Subject: Re: [PATCH rdma-next v3 00/14] RDMA: Make device names unique per
+ net namespace
+Message-ID: <amCm6nW8IttsHGgY@FV6GYCPJ69>
+References: <20260716132316.1495242-1-jiri@resnulli.us>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260716132316.1495242-1-jiri@resnulli.us>
 
-From: Tao Cui <cuitao@kylinos.cn>
+Thu, Jul 16, 2026 at 03:23:01PM +0200, jiri@resnulli.us wrote:
+>From: Jiri Pirko <jiri@nvidia.com>
+>
+>RDMA device names are unique system-wide today:
+>__ib_device_get_by_name() checks a requested name against every
+>registered device regardless of the network namespace it lives in.
+>A device in one network namespace therefore cannot use a name already
+>taken in another, even in exclusive netns mode (netns_mode=0) where
+>the two are otherwise isolated. Net devices have no such restriction -
+>their names only need to be unique within a network namespace.
+>
+>This series makes RDMA device names unique per network namespace,
+>matching net device semantics, and adapts the users that assumed
+>system-wide unique names.
+>
+>Scoping reuses the existing rdma_dev_access_netns() predicate, so
+>behavior only changes in exclusive mode:
+>  - shared mode (default): names stay unique system-wide, no change;
+>  - exclusive mode: names only need to be unique within a namespace;
+>  - CONFIG_NET_NS=n: everything is init_net, names stay system-wide
+>    unique.
+>
+>There are two users that cannot be made per-namespace and are
+>documented as known limitations instead of changed:
+>  - the rdma_cm configfs tree: configfs has no network namespace
+>    support, so it cannot represent two same-named devices;
+>  - SELinux ibendport labelling: endports are labelled by (device
+>    name, port) from a global policy; distinguishing same-named
+>    devices would need net namespace support in the SELinux policy
+>    language and tooling.
+>
+>Tested with the new rxe_netns_names kselftest added in the last patch.
 
-Writing a multiple of 2^32 (e.g. 4294967296) to a legacy cgroup v1
-throttle iops file (blkio.throttle.{read,write}_iops_device) silently
-truncates to 0: tg_set_conf() stores the sscanf-parsed u64 value into
-an unsigned int field with no clamping. The cgroup v2 path,
-tg_set_limit(), already clamps the same kind of value with
-min_t(u64, val, UINT_MAX), but the legacy path never did. Note that
-the "!v -> U64_MAX" mapping only catches an explicit zero and does not
-catch a value that truncates to zero.
-
-With iops stored as 0, tg_update_has_rules() sets has_rules_iops[] and
-the next IO reaches tg_within_iops_limit(), which computes
-
-    jiffy_wait = max(jiffy_wait, HZ / iops_limit + 1);
-
-triggering a divide-by-zero oops.
-
-Fix it in tg_set_conf() by clamping the value to UINT_MAX, consistent
-with tg_set_limit(). This closes the truncation root cause: with 0 no
-longer reachable as a stored limit, the HZ / iops_limit divide is never
-hit.
-
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
-
----
-Changes in v4:
-- Drop the defensive "iops_limit == 0" check in tg_dispatch_iops_time():
-  with the tg_set_conf() clamp in place, 0 can never be stored as a limit,
-  so the runtime check only guards an unreachable state. (Yu Kuai)
-- Drop the Fixes: tag: the unclamped write -- and the iops=0 behavior it
-  can produce (calculate_io_allowed() returns 0, so no IO is issued) --
-  long predates the commit that added the HZ / iops_limit divide, so
-  attributing it there was incorrect. (Yu Kuai)
-
-Changes in v3:
-- Drop the (u64) cast on UINT_MAX: the kernel's type-checked min() accepts
-  two unsigned types of different width (both >= 4 bytes), so
-  min(v, UINT_MAX) compiles clean. (David Laight)
-
-Changes in v2:
-- Use a "void *field" local for the config write so the assignment reads
-  *(u64 *)field / *(unsigned int *)field instead of the
-  (type *)((void *)tg + of_cft(of)->private) casts.
-- Use min(v, UINT_MAX) instead of min_t(u64, v, UINT_MAX).
----
- block/blk-throttle.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index ffc3b70065d4..97ad7959d006 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1383,10 +1383,12 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
- 	tg = blkg_to_tg(ctx.blkg);
- 	tg_update_carryover(tg);
- 
-+	void *field = (void *)tg + of_cft(of)->private;
-+
- 	if (is_u64)
--		*(u64 *)((void *)tg + of_cft(of)->private) = v;
-+		*(u64 *)field = v;
- 	else
--		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
-+		*(unsigned int *)field = min(v, UINT_MAX);
- 
- 	tg_conf_updated(tg, false);
- 	ret = 0;
--- 
-2.43.0
-
+This looks like good to go. All Sashiko findings are false positive or
+unrelated. Care to merge? Thanks!
