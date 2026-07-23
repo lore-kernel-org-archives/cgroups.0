@@ -1,138 +1,393 @@
-Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B06DD43A808
-	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 11:39:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.23.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FE7A46AF03;
+	Thu, 23 Jul 2026 12:01:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784806774; cv=none; b=P2E5cMFBvd9XEIB0qIZCypOWWqpTMMVB92ywGvb+LyFH9WZ+wmQ3swWAAvJRAXYTiiNPn4fuwyEu8uFr9203s6yCIGFn3wojmZ2cEP2kykGV5g8vQrCAQT0Vf2i4VwIe1Vk5UkYoZf5oSEPJsaHEvFwJQS3orI6uYLI72DirZfU=
+	t=1784808085; cv=none; b=L5IvlhRKfLwvCPq+OoYE7EfedpKsc7h9hMSpvIfwcimIJ7l6mOXkAAbS6XuVkwfKLpca3txKslYOCRIQKyNScw0YCXoJ7CR+hsT0MxzrCH69QviCXZVVcJyJvPDuTa3FZDtCp4eQmBC1pp+qcx0M4dLomBZgHI9IGhHIblUHTtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784806774; c=relaxed/simple;
-	bh=beah4yPiJA7BeEtfLv4r45Ojuj4UkjS5TshRQRqSqmM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uEcNghlhNVu0+sqrINpMUqorai1DD32sg06K5EFJ1cJCNB0zg30Zr/FG5pjeCQAHVTlmQVGtvoGwjRtF/YQSRYayZYWNZ5Od/Cz0bfHvpNg49rFK9JQJ31HE3+0xagIiHEJn6w8Ne4J3DVGTtNpICoEOk7IzlZn1D7OI0gyWVyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.23.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
-Received: from unknown (HELO lgeamrelo04.lge.com) (156.147.1.127)
-	by 156.147.23.51 with ESMTP; 23 Jul 2026 20:39:22 +0900
-X-Original-SENDERIP: 156.147.1.127
-X-Original-MAILFROM: youngjun.park@lge.com
-Received: from unknown (HELO yjaykim-PowerEdge-T330) (10.177.112.156)
-	by 156.147.1.127 with ESMTP; 23 Jul 2026 20:39:22 +0900
-X-Original-SENDERIP: 10.177.112.156
-X-Original-MAILFROM: youngjun.park@lge.com
-Date: Thu, 23 Jul 2026 20:39:22 +0900
-From: Youngjun Park <youngjun.park@lge.com>
-To: Johannes Weiner <hannes@cmpxchg.org>, h@yjaykim-poweredge-t330
-Cc: akpm@linux-foundation.org, chrisl@kernel.org, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kasong@tencent.com, mhocko@kernel.org, roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev, muchun.song@linux.dev,
-	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org,
-	yosry@kernel.org, joshua.hahnjy@gmail.com, gunho.lee@lge.com,
-	taejoon.song@lge.com, hyungjun.cho@lge.com, baver.bae@lge.com,
-	her0gyugyu@gmail.com
-Subject: Re: [PATCH v10 0/6] mm/swap, memcg: Introduce swap tiers for cgroup
- based swap control
-Message-ID: <amH9alaO97YqT8pY@yjaykim-PowerEdge-T330>
-References: <20260713025644.170839-1-youngjun.park@lge.com>
- <amDCIl51NoNPL7Op@cmpxchg.org>
+	s=arc-20240116; t=1784808085; c=relaxed/simple;
+	bh=lwWTC4uqP8ZPyP0BwP/1aVHm/yUippzRxg9v7EZz6QY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hR1pjDstGYew0pNPlIdfPJVVKX5NV5i5ZX5O2IOOl22+VlmZ/vI6AYY6xbrcv/GDP7qj8/RNSjG3rUgKcbJ4R9XgLD+7DhwTICR7BofuQWMioz+B1o4MDl+eSOxf3KwJ44uY9pV6UECtOKYiyx4sAaD+7zilHM8un1rMRhEv6xk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iGi49SgO; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iGi49SgO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784808080; x=1816344080;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=lwWTC4uqP8ZPyP0BwP/1aVHm/yUippzRxg9v7EZz6QY=;
+  b=iGi49SgOMkbvdv6h99XqPbf019UyRBLefjCw2xXc63S4hlL7q0JsIW+4
+   OdJHZhM1Kxhi8anFvH3aiBfOe9Oo+JhSmdaVhlsuRTjk+DEp+64PL6s3B
+   3V26IAnojCZfP6wCsQIByaLCKxTmgI5WQpbX/3MoxbcyzyoWkt8oAFs9m
+   OqeVHIMfPBZvutjMxZYOvMx9COfUDowHhEIdV4sxRtl241tvi/A8nBBO0
+   jzfLT0TO0ulxzGvN/vNc/N+7iLhD68neUO7XYUzm+AhosUfcET0SuGvSq
+   NhivYai3EYXiFeaJ0mqiRhi3QKUvLSS2bpJ/AwLrAUKsDB7j0y67Lo+/s
+   g==;
+X-CSE-ConnectionGUID: 4P08LqF4SpeZZ3aGvhpYtg==
+X-CSE-MsgGUID: X0lN4PFrTDW3bbzznCRGrw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11854"; a="96049583"
+X-IronPort-AV: E=Sophos;i="6.25,180,1779174000"; 
+   d="scan'208";a="96049583"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2026 05:01:16 -0700
+X-CSE-ConnectionGUID: mFWsKu0YTOmGZqJdYEYupw==
+X-CSE-MsgGUID: 1m2QZhjFS6e2COZHFbG2nA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,180,1779174000"; 
+   d="scan'208";a="261941639"
+Received: from conormcd-mobl2.ger.corp.intel.com (HELO [10.245.244.104]) ([10.245.244.104])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2026 05:01:12 -0700
+Message-ID: <43e44b78-3a3f-425d-b327-1a7a90bc7f76@linux.intel.com>
+Date: Thu, 23 Jul 2026 14:02:05 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <amDCIl51NoNPL7Op@cmpxchg.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 4/6] drm/ttm: Hook up a cgroup-aware reclaim callback
+ for the dmem controller
+To: =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ intel-xe@lists.freedesktop.org
+Cc: Natalie Vock <natalie.vock@gmx.de>, Johannes Weiner <hannes@cmpxchg.org>,
+ Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, cgroups@vger.kernel.org, Huang Rui <ray.huang@amd.com>,
+ Matthew Brost <matthew.brost@intel.com>,
+ Matthew Auld <matthew.auld@intel.com>, Maxime Ripard <mripard@kernel.org>,
+ Thomas Zimmermann <tzimmermann@suse.de>, Simona Vetter <simona@ffwll.ch>,
+ David Airlie <airlied@gmail.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>,
+ Thadeu Lima de Souza Cascardo <cascardo@igalia.com>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, dri-devel@lists.freedesktop.org,
+ amd-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org
+References: <20260723100350.16895-1-thomas.hellstrom@linux.intel.com>
+ <20260723100350.16895-5-thomas.hellstrom@linux.intel.com>
+Content-Language: en-US
+From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+In-Reply-To: <20260723100350.16895-5-thomas.hellstrom@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jul 22, 2026 at 09:14:10AM -0400, Johannes Weiner wrote:
+Hey,
 
-Hello Johannes!
+On 7/23/26 12:03, Thomas Hellström wrote:
+> Add ttm_bo_evict_cgroup() to evict buffer objects charged to a specific
+> dmem cgroup pool from a resource manager's LRU until a byte target is
+> met.  Add ttm_resource_manager_set_dmem_region() to associate a dmem
+> cgroup region with a resource manager; drivers supply their own
+> dmem_cgroup_ops with ttm_resource_manager_dmem_reclaim as the reclaim
+> function and the manager pointer as reclaim_priv in the dmem_cgroup_init
+> to wire up TTM eviction as the reclaim callback.
+> 
+> The eviction context is interruptible; signals abort the operation and
+> propagate back through the write() syscall.
+> 
+> Introduce a new mode for the bo LRU walker so that sleeping locks
+> can be taken. This can be used when the caller doesn't hold any
+> previous dma_resv locks, and where it intends to hold at most
+> one lock at a time.
+> 
+> Like the rest of the TTM eviction this should sooner than later
+> be converted to full WW transactions.
+> 
+> v3:
+> - Fix ttm_resource_manager_set_dmem_region() storing an error pointer
+>   in man->cg unconditionally. (Sashiko-bot)
+> - Fix kernel-doc function name format for ttm_bo_evict_cgroup() and
+>   ttm_resource_manager_set_dmem_region().
+> 
+> v5:
+> - Rebased on the introduction of struct dmem_cgroup_init.
+> - Handle NULL region in ttm_resource_manager_set_dmem_region() to clear
+>   the reclaim callback, preventing use-after-free when the manager is
+>   torn down while the dmem region outlives it. (Sashiko-bot)
+> - Return 0 on any progress (even partial eviction), -ENOSPC only when
+>   nothing was freed; fixes callers that expected 0 on partial success.
+> - Document that the reclaim callback should return 0 if some progress
+>   was made, -ENOSPC if no progress at all, or another error for fatal
+>   failures.
+> 
+> v8:
+> - Fix ttm_resource_manager_set_dmem_region() using IS_ERR_OR_NULL(),
+>   which skipped the assignment for a NULL region and thus never
+>   cleared man->cg. Use IS_ERR() so that a NULL region detaches the
+>   region as the kernel-doc and the v5 changelog intended. (Sashiko-bot)
+> 
+> Assisted-by: GitHub_Copilot:claude-sonnet-4.6
+> Signed-off-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
+> Reviewed-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com> #v7
+> ---
+>  drivers/gpu/drm/ttm/ttm_bo.c       | 95 +++++++++++++++++++++++++++++-
+>  drivers/gpu/drm/ttm/ttm_bo_util.c  |  3 +-
+>  drivers/gpu/drm/ttm/ttm_resource.c | 52 ++++++++++++++++
+>  include/drm/ttm/ttm_bo.h           | 10 ++++
+>  include/drm/ttm/ttm_resource.h     |  7 +++
+>  5 files changed, 163 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
+> index 3980f376e3ba..b2bbbb69add3 100644
+> --- a/drivers/gpu/drm/ttm/ttm_bo.c
+> +++ b/drivers/gpu/drm/ttm/ttm_bo.c
+> @@ -515,12 +515,20 @@ static s64 ttm_bo_evict_cb(struct ttm_lru_walk *walk, struct ttm_buffer_object *
+>  {
+>  	struct ttm_bo_evict_walk *evict_walk =
+>  		container_of(walk, typeof(*evict_walk), walk);
+> +	/* Capture size before eviction in case res is cleared. */
+> +	s64 bo_size = bo->base.size;
 
-> Zswap is a first-order swap destination with writeback semantics. The
-> way the discussion around zswap has been going in this thread is
-> disappointing, and I don't feel comfortable adding permanent user
-> interfaces on this basis.
+I just noticed this comment, a bo's size should be fixed, even if the backing store is gone?
 
-I have given this a lot of thought. First, could you clarify exactly which
-part of the discussion or consensus makes you hesitate? Understanding this
-will help me re-evaluate my proposal.
+>  	s64 lret;
+>  
+>  	if (!dmem_cgroup_state_evict_valuable(evict_walk->limit_pool, bo->resource->css,
+>  					      evict_walk->try_low, &evict_walk->hit_low))
+>  		return 0;
+>  
+> +	/*
+> +	 * evict_walk->place is NULL in cgroup drain mode.  Drivers'
+> +	 * eviction_valuable() callbacks must handle a NULL place, treating it
+> +	 * as "any placement": the TTM base implementation already does so via
+> +	 * ttm_resource_intersects().
+> +	 */
+>  	if (bo->pin_count || !bo->bdev->funcs->eviction_valuable(bo, evict_walk->place))
+>  		return 0;
+>  
+> @@ -536,11 +544,15 @@ static s64 ttm_bo_evict_cb(struct ttm_lru_walk *walk, struct ttm_buffer_object *
+>  		goto out;
+>  
+>  	evict_walk->evicted++;
+> -	if (evict_walk->res)
+> +	if (evict_walk->res) {
+>  		lret = ttm_resource_alloc(evict_walk->evictor, evict_walk->place,
+>  					  evict_walk->res, NULL);
+> -	if (lret == 0)
+> -		return 1;
+> +		if (lret == 0)
+> +			return 1;
+> +	} else {
+> +		/* Cgroup drain: return bytes freed for byte-denominated progress. */
+> +		return bo_size;
+> +	}
+>  out:
+>  	/* Errors that should terminate the walk. */
+>  	if (lret == -ENOSPC)
+> @@ -614,6 +626,83 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
+>  	return 0;
+>  }
+>  
+> +/**
+> + * ttm_bo_evict_cgroup() - Evict buffer objects charged to a specific cgroup.
+> + * @bdev: The TTM device.
+> + * @man: The resource manager whose LRU to walk.
+> + * @limit_pool: The cgroup pool state whose members should be evicted.
+> + * @target_bytes: Number of bytes to free.
+> + * @ctx: The TTM operation context.
+> + *
+> + * Walk the LRU of @man and evict buffer objects that are charged to the
+> + * cgroup identified by @limit_pool, until at least @target_bytes have been
+> + * freed.  Mirrors the two-pass (trylock -> sleeping-lock, low-watermark)
+> + * strategy used by ttm_bo_evict_alloc().
+> + *
+> + * Return: >= @target_bytes on full success, 0..target_bytes-1 if partial,
+> + *         negative error code on fatal error.
+> + */
+> +s64 ttm_bo_evict_cgroup(struct ttm_device *bdev,
+> +			struct ttm_resource_manager *man,
+> +			struct dmem_cgroup_pool_state *limit_pool,
+> +			s64 target_bytes,
+> +			struct ttm_operation_ctx *ctx)
+> +{
+> +	struct ttm_bo_evict_walk evict_walk = {
+> +		.walk = {
+> +			.ops = &ttm_evict_walk_ops,
+> +			.arg = { .ctx = ctx },
+> +		},
+> +		.limit_pool = limit_pool,
+> +		/* place, evictor, res left NULL: selects cgroup drain mode */
+> +	};
+> +	s64 lret, pass;
+> +
+> +	evict_walk.walk.arg.trylock_only = true;
+> +	lret = ttm_lru_walk_for_evict(&evict_walk.walk, bdev, man, target_bytes);
+> +	if (lret < 0 || lret >= target_bytes)
+> +		return lret;
+> +
+> +	/* Second pass: also evict BOs at the low watermark. */
+> +	if (evict_walk.hit_low) {
+> +		evict_walk.try_low = true;
+> +		pass = ttm_lru_walk_for_evict(&evict_walk.walk, bdev, man,
+> +					      target_bytes - lret);
+> +		if (pass < 0)
+> +			return pass;
+> +		lret += pass;
+> +		if (lret >= target_bytes)
+> +			return lret;
+> +	}
+> +
+> +	/* Full sleeping-lock pass for remaining target. */
+> +	evict_walk.try_low = evict_walk.hit_low = false;
+> +	evict_walk.walk.arg.trylock_only = false;
+> +
+> +retry:
+> +	evict_walk.walk.arg.sleeping_lock = true;
+> +	do {
+> +		evict_walk.evicted = 0;
+> +		pass = ttm_lru_walk_for_evict(&evict_walk.walk, bdev, man,
+> +					      target_bytes - lret);
+> +		if (pass < 0) {
+> +			lret = pass;
+> +			goto out;
+> +		}
+> +		lret += pass;
+> +	} while (lret < target_bytes && evict_walk.evicted);
+> +
+> +	/* One more attempt if we hit the low limit during sleeping-lock pass. */
+> +	if (lret < target_bytes && evict_walk.hit_low && !evict_walk.try_low) {
+> +		evict_walk.try_low = true;
+> +		goto retry;
+> +	}
+> +
+> +out:
+> +	return lret;
+> +}
+> +EXPORT_SYMBOL(ttm_bo_evict_cgroup);
+> +
+>  /**
+>   * ttm_bo_pin - Pin the buffer object.
+>   * @bo: The buffer object to pin
+> diff --git a/drivers/gpu/drm/ttm/ttm_bo_util.c b/drivers/gpu/drm/ttm/ttm_bo_util.c
+> index 3e3c201a0222..bd0b23ac2cc4 100644
+> --- a/drivers/gpu/drm/ttm/ttm_bo_util.c
+> +++ b/drivers/gpu/drm/ttm/ttm_bo_util.c
+> @@ -999,7 +999,8 @@ __ttm_bo_lru_cursor_next(struct ttm_bo_lru_cursor *curs)
+>  		bo = res->bo;
+>  		if (ttm_lru_walk_trylock(curs, bo))
+>  			bo_locked = true;
+> -		else if (!arg->ticket || arg->ctx->no_wait_gpu || arg->trylock_only)
+> +		else if ((!arg->ticket && !arg->sleeping_lock) || arg->ctx->no_wait_gpu ||
+> +			 arg->trylock_only)
+>  			continue;
+>  
+>  		if (!ttm_bo_get_unless_zero(bo)) {
+> diff --git a/drivers/gpu/drm/ttm/ttm_resource.c b/drivers/gpu/drm/ttm/ttm_resource.c
+> index 154d6739256f..1ff4a470b083 100644
+> --- a/drivers/gpu/drm/ttm/ttm_resource.c
+> +++ b/drivers/gpu/drm/ttm/ttm_resource.c
+> @@ -953,3 +953,55 @@ void ttm_resource_manager_create_debugfs(struct ttm_resource_manager *man,
+>  #endif
+>  }
+>  EXPORT_SYMBOL(ttm_resource_manager_create_debugfs);
+> +
+> +/**
+> + * ttm_resource_manager_dmem_reclaim() - dmem cgroup reclaim callback for TTM
+> + *                                       resource managers.
+> + * @pool: The dmem cgroup pool state for the cgroup being reclaimed.
+> + * @target_bytes: Number of bytes to try to free.
+> + * @priv: The &ttm_resource_manager pointer, passed as @init.reclaim_priv to
+> + *        dmem_cgroup_register_region().
+> + *
+> + * Drivers should use this as the @reclaim member of their own
+> + * &struct dmem_cgroup_ops, with the &ttm_resource_manager pointer as
+> + * @init.reclaim_priv.
+> + *
+> + * Return: 0 if some memory was freed, -ENOSPC if nothing was freed, or
+> + *         another negative error code on fatal failure.
+> + */
+> +int ttm_resource_manager_dmem_reclaim(struct dmem_cgroup_pool_state *pool,
+> +				      u64 target_bytes, void *priv)
+> +{
+> +	struct ttm_resource_manager *man = priv;
+> +	struct ttm_operation_ctx ctx = { .interruptible = true };
+> +	s64 freed;
+> +
+> +	freed = ttm_bo_evict_cgroup(man->bdev, man, pool, target_bytes, &ctx);
+> +	if (freed < 0)
+> +		return freed;
+> +
+> +	return freed > 0 ? 0 : -ENOSPC;
+> +}
+> +EXPORT_SYMBOL(ttm_resource_manager_dmem_reclaim);
+> +
+> +/**
+> + * ttm_resource_manager_set_dmem_region() - Associate a dmem cgroup region with a
+> + *                                        resource manager.
+> + * @man: The resource manager.
+> + * @region: The dmem cgroup region to associate, may be NULL or IS_ERR().
+> + *
+> + * When @region is valid, stores it in @man->cg so that TTM can look up the
+> + * associated pool during charging and eviction-target selection.  When
+> + * @region is %NULL, clears @man->cg to detach the region before teardown.
+> + * An IS_ERR() @region is ignored, leaving @man->cg unchanged.
+> + * The reclaim callback must be wired up using ttm_resource_manager_dmem_reclaim()
+> + * in the driver's own &struct dmem_cgroup_ops, with the manager pointer as
+> + * @init.reclaim_priv.
+> + */
+> +void ttm_resource_manager_set_dmem_region(struct ttm_resource_manager *man,
+> +					  struct dmem_cgroup_region *region)
+> +{
+> +	if (!IS_ERR(region))
+> +		man->cg = region;
+> +}
+> +EXPORT_SYMBOL(ttm_resource_manager_set_dmem_region);
+> diff --git a/include/drm/ttm/ttm_bo.h b/include/drm/ttm/ttm_bo.h
+> index 8310bc3d55f9..32791c4db2a9 100644
+> --- a/include/drm/ttm/ttm_bo.h
+> +++ b/include/drm/ttm/ttm_bo.h
+> @@ -226,6 +226,11 @@ struct ttm_lru_walk_arg {
+>  	struct ww_acquire_ctx *ticket;
+>  	/** @trylock_only: Only use trylock for locking. */
+>  	bool trylock_only;
+> +	/**
+> +	 * @sleeping_lock: Use sleeping locks even with %NULL @ticket.
+> +	 * @trylock_only has precedence over this field.
+> +	 */
+> +	bool sleeping_lock;
+>  };
+>  
+>  /**
+> @@ -431,6 +436,11 @@ void ttm_bo_unpin(struct ttm_buffer_object *bo);
+>  int ttm_bo_evict_first(struct ttm_device *bdev,
+>  		       struct ttm_resource_manager *man,
+>  		       struct ttm_operation_ctx *ctx);
+> +s64 ttm_bo_evict_cgroup(struct ttm_device *bdev,
+> +			struct ttm_resource_manager *man,
+> +			struct dmem_cgroup_pool_state *limit_pool,
+> +			s64 target_bytes,
+> +			struct ttm_operation_ctx *ctx);
+>  int ttm_bo_access(struct ttm_buffer_object *bo, unsigned long offset,
+>  		  void *buf, int len, int write);
+>  vm_fault_t ttm_bo_vm_reserve(struct ttm_buffer_object *bo,
+> diff --git a/include/drm/ttm/ttm_resource.h b/include/drm/ttm/ttm_resource.h
+> index a5d386583fb6..32e485fdce9a 100644
+> --- a/include/drm/ttm/ttm_resource.h
+> +++ b/include/drm/ttm/ttm_resource.h
+> @@ -39,6 +39,7 @@
+>  
+>  struct dentry;
+>  struct dmem_cgroup_device;
+> +struct dmem_cgroup_region;
+>  struct drm_printer;
+>  struct ttm_device;
+>  struct ttm_resource_manager;
+> @@ -477,6 +478,12 @@ void ttm_resource_manager_init(struct ttm_resource_manager *man,
+>  			       struct ttm_device *bdev,
+>  			       uint64_t size);
+>  
+> +void ttm_resource_manager_set_dmem_region(struct ttm_resource_manager *man,
+> +					  struct dmem_cgroup_region *region);
+> +
+> +int ttm_resource_manager_dmem_reclaim(struct dmem_cgroup_pool_state *pool,
+> +				      u64 target_bytes, void *priv);
+> +
+>  int ttm_resource_manager_evict_all(struct ttm_device *bdev,
+>  				   struct ttm_resource_manager *man);
+>  
 
-To make sure we are on the same page, I would like to share my thoughts and
-vision for the present and future of the tier interface semantics for your
-further consideration.
-
-The interface should provide the swap amount allocated to a tier and allow
-the use of the swap device defined by that tier via swap.tiers.max.
-Currently, it would only support 0 and 'max' (essentially on/off for
-explicit usage). Auto-demotion is planned for the future, and specifying
-exact capacity limits is still to be determined. (I have also reviewed
-potential interface collisions and duplications based on Yosry's guidance.)
-
-From this perspective, zswap currently cannot exist as a standalone tier. It
-resides in RAM when allocated and borrows slots from other swap devices.
-(If all tiers except zswap are turned off, it is effectively the same as
-zswap being off, meaning there is no zswap-only tier.) The zswap writeback
-interface essentially leaves only the zswap first tier enabled by using
-other swap slots. Virtualized swap should solve this in the near future.
-
-On the other hand, in systems without zswap (like ours), this situation does
-not occur. Allocation and deallocation depend strictly on swap priority,
-avoiding this contradiction. (While it might be possible to implement the
-tier interface only for !CONFIG_ZSWAP first, I abandoned this idea as it
-seemed unpromising.)
-
-In my initial review, I considered creating the swap tier interface while
-excluding zswap configurations, even if zswap is present. From zswap's
-perspective, it acts as a first-order swap, and other tiers operate well
-according to their original tier semantics. Once virtualized swap arrives, we can
-open up the interface without any contradictions.
-
-However, virtualized swap might be toggled on or off (at runtime or
-compile time), we must still account for zswap without virtualized swap anyway.
-There is also a possibility that the initial overall picture might seem
-misaligned until zswap tiering is officially introduced. It looks like we must
-care this case on the first stage.
-
-Therefore, I decided to follow Yosry's suggestion. Since a zswap-only setup
-has contradictions, we initially considered removing user visibility
-as possible as we can (returning an error for unsupported interfaces).
-
-Because the implementation is a bit tricky, we agreed on an on/off toggle
-for this first baby step, accompanied by detailed documentation so users are
-fully aware of what a zswap-only tier means.
-
-As a result, I reviewed this direction and found it does not conflict with a
-future zswap tier. When virtualized swap arrives, the design will align
-perfectly, and we can consider making zswap a proper tier.
-
-One thing that remains undecided, however, is zswap tiering, which is not
-yet fully agreed upon by everyone and should be discussed at the next stage.
-
-> We will not be merging a memcg swap tier interface until the swap side
-> has a story for indirection and backend migration.
-
-Regarding this point, is your position that an indirect layer (I see
-this is virtualized swap) must be implemented first?
-Or do you mean we need community consensus on the overall design before proceeding?
-I believe our direction is set toward virtualized swap, but there are still some discussions regarding
-implementation details.
-
-I would love to hear your thoughts. In the meantime, my preference is to
-proceed as discussed if we can agree on the future direction. If more
-discussion and design verification are needed, I am happy to follow up and
-address any concerns you might have.
-
-However, if you feel the tier concept is premature, I would like to hear
-your thoughts and others' as well on a fallback option. We could add
-per-cgroup swap control in debugfs for now. If we need to scale back, we
-could either keep the swap tier design internally or drop it entirely,
-implementing per-swap control strictly for our specific use case. We could
-then revisit this as a primary use case when swap tier discussions resume.
-
-What do you think? I would appreciate hearing everyone's thoughts on this.
-
-Youngjun
