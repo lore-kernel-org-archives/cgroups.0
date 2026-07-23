@@ -1,280 +1,127 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A09B43747E;
-	Thu, 23 Jul 2026 10:04:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE8846D0AD
+	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 11:18:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784801089; cv=none; b=LvN2xFKTs4YeNepXymzgMkK1faZDxmSAc8Byq/2/9xjHtxJjPA7WPqFshOaQZE768Zl7REh08FPsYRXmc9hGpskeWYK6wjvHn2zJZg0EGu9ssVj6MZquFR7dBv5h0lRkoAbnPfILxu55RNWrlCMS5nXiKKHdwHSuxZOiGre3flw=
+	t=1784805489; cv=none; b=vBTV3tLekscT4m3Y6qCtFBuMFFwLGfg7JRjRMII/emS/yazYcJSNeDRjdbev52XCmytdH84dIjzBxGkbm5q/rRleNRmcX0ID4mSPgiRDoLDPOSyJ5BENyfmPIIe+1qLugxKeajNrIW0TXDbylcOuGrBjVBfu0q2rghVRwhyqxXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784801089; c=relaxed/simple;
-	bh=6XV+TYjbHbxeu/gbWXCTEltxt54qZbHDSHfKubeIWxU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IpJXaK+oM/6GMoBWujfBxSAN9wAp4R1VM+ehFDLpe5QxAYvBvRD2iMvuyV+x4wvd5ps+i78/1fnWDOJmuKUf0K/AiNWZjplXjlmlztN3TihWQ209w4SkcoadRmppQqOcYC2j0Z12Efeor6P0dlgJGeW073Y6CDCySjAFmhMf6UA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aBG2ZUce; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1784805489; c=relaxed/simple;
+	bh=+Wkaj4UHoena/1Gfc+0sVRsK85mXOaIe+VRpgEhw/+s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CkeSmxSK8GcfpPayt/tif7ERVJJbZBNsor6qFvmiqgg3dRQZ33NOMLB3L+DUo1FzPDrSpGZEmLP+qyl6YMROJdOaS2pZl4hGN0adZr1ltt1AE4CIfT0UPd1tTRxHB4SPeQM0Q6U1pa7pcTNmIe1CC8VqC8yuzE8GlP3oSxqd1fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VJwRFtML; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aBG2ZUce"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784801088; x=1816337088;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=6XV+TYjbHbxeu/gbWXCTEltxt54qZbHDSHfKubeIWxU=;
-  b=aBG2ZUcewFHEsAUm0KZQQFY0e2f4kGe8wtQFU+t8uM8mV5dYmJk1xNIh
-   EicyC3XhhMJLXrpbfeWBnP9kl+DttBSSeGDD8x0Q5qJg0+LZjBwk2JITO
-   /SNAIZMFChvwVtunpzrCXHj1I1YP947Ghw6Xm2hPNMZhKPuwovRCEqPNt
-   wMWAa99KLZKiZvJS0Bpdfd7jo8ULDwkp43oh4ox8Q4dpjYMqyA7myVmUv
-   7TeSUoDnDgEE2d30BrRrjbGGMkYzmrkqvPUr4fBYMNtb8LGvLZxwu4V46
-   Ed9BkjF+TOUI4Oj1LxuqiPVyjGu6Ug3J66Fo/iziqGjRH3Jt+1Fzml9X7
-   Q==;
-X-CSE-ConnectionGUID: AYmUqQbzQr2EiMKYZ5erMw==
-X-CSE-MsgGUID: LpICEiAaTg+N4i9tVm2dhQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11854"; a="87991945"
-X-IronPort-AV: E=Sophos;i="6.25,180,1779174000"; 
-   d="scan'208";a="87991945"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2026 03:04:47 -0700
-X-CSE-ConnectionGUID: mdznlXyOQYy6I39AlxNwTw==
-X-CSE-MsgGUID: SieKGp3kRY6Ws+PNs+jM9w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,180,1779174000"; 
-   d="scan'208";a="254985029"
-Received: from conormcd-mobl2.ger.corp.intel.com (HELO fedora) ([10.245.244.122])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2026 03:04:43 -0700
-From: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
-To: intel-xe@lists.freedesktop.org
-Cc: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	Natalie Vock <natalie.vock@gmx.de>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Tejun Heo <tj@kernel.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	cgroups@vger.kernel.org,
-	Huang Rui <ray.huang@amd.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Matthew Auld <matthew.auld@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Simona Vetter <simona@ffwll.ch>,
-	David Airlie <airlied@gmail.com>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	Thadeu Lima de Souza Cascardo <cascardo@igalia.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	dri-devel@lists.freedesktop.org,
-	amd-gfx@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v8 6/6] drm/amdgpu: Wire up dmem cgroup reclaim for VRAM manager
-Date: Thu, 23 Jul 2026 12:03:50 +0200
-Message-ID: <20260723100350.16895-7-thomas.hellstrom@linux.intel.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260723100350.16895-1-thomas.hellstrom@linux.intel.com>
-References: <20260723100350.16895-1-thomas.hellstrom@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VJwRFtML"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-384930ca5e2so488707a91.3
+        for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 04:18:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784805482; x=1785410282; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=5p4lXkdpnCsbltYcC1FVF7UTY1mmokYIoR5useAxszA=;
+        b=VJwRFtMLFtwwxQvdU515qnSw5GDF0xRHaRZPqHLtiYAZ1kKs/fHtLanrE0mejSMCYv
+         fYUmo8IFfMyi0DfmjI31y6BBGF8LGZiOAzYbA/Pg21l+JliazaifAzZ+zOgrDeEbDc+9
+         duGCgehvS4kJYIUSazDIv3/rw+dDGe17xPpdLXMbsCXTOWiooaM4NydPrUHDSOrJh6rk
+         gdbEbjGzuFugh1qisFhpyK3byWqJyuLWEdInGNquqey3jKjseaL1lTCIO3e15wF8sfi1
+         QHeuMZyp1/EDh2C78FZO0SqC6AuWcsMKqEP7jgII3qxGmaQuF1S0G0RZnIteAxcsKOte
+         R1sQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784805482; x=1785410282;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=5p4lXkdpnCsbltYcC1FVF7UTY1mmokYIoR5useAxszA=;
+        b=igj6P78qynYHzqEBoGG2g+2iX7tEFtzChLOOIp5vrPcJ5ecAAG2XGMKMM6D/o7jS/B
+         +XdimnxTZd5GGmEUcaNGhQziCZoxebiRXvUBq0DgvtS32SsL7riPGaRon/qdjxu2YCMi
+         JIvPtKdYUB6fhtiegM6k7HycT/eysoC1bV0BIfZgT7G94NNrHPhUuVZ1t/smGu8AdkW6
+         qQmXtaa7d4AsSC3exkMW+Lf1ubo3EU1x0ajc9YwoK+g27vS56RDV3oy1ZD7jDBsa6NAT
+         XctxoUahDTxcj0yUZKW/OVHVbAoG3bgLNvYoIGivzkQklE72GmZscOJ0bnZ/TdxDNbKh
+         swfg==
+X-Forwarded-Encrypted: i=1; AHgh+RriGEMkxauL68NYNIUjXL8cJs10eYGTvuOyQodBo7222mBJYGryJ0f1NHwI8VRDgvfBxcso8l0P@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzq9OuWywwLGeiazI2ByBp0aRc7UEy7LqjKgC/9kEeTSKlSTGkw
+	5J0yzUhND0zHXT3e3H61ieWqUU0Mgjw0GEpAcs45ngG5ZcA/tA4qRz3y
+X-Gm-Gg: AR+sD10zX1IslqQWysrZjlvtliCrUqSut9dP9PiHFC1tlC59OHjoOKfSzyvKfbwuAcA
+	Frwfbs2GGkzMl87PavWwxEjtA0aM1sMdLjrFVkgdSDPEL0AiXAqJsaJPfWjQQq3l6z5HJtOoTvy
+	RmQDxIRky9/tqQFe4RR3BmiebEY6MIIt3/vAy/Fotrh6DhaIARV2yqij9vqvjaOuH1lUn4Dy+LT
+	9WFBEpWzXf6Uu1ZTSYp8TUqQimtOZIoc2M/HT+RvqwNEsTj9w4xuT8/mQRUOEuRoCjDj2j1FY12
+	ato7Mu3j8XIG0KCbipO0Ws3AavtRnRvXjD76NjinR0zg0kh8qbZvW0UnWM7gnXUfRxWRTqTVtF3
+	x4XUmWuLSjQi77b7Grh/NhJgDR9TGBEnzo3wHIezuTiVSX/28HFp7i2PKOJRjMI6ooPvIp2GPs8
+	WBdPLXKDMDTgyUu5/tk3SIOG4x
+X-Received: by 2002:a17:90b:1d48:b0:387:e0db:3d8e with SMTP id 98e67ed59e1d1-38ec665050cmr2866538a91.41.1784805481916;
+        Thu, 23 Jul 2026 04:18:01 -0700 (PDT)
+Received: from [10.22.68.205] ([118.201.124.118])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38ea5966676sm1591924a91.2.2026.07.23.04.17.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jul 2026 04:18:01 -0700 (PDT)
+Message-ID: <51865f65-7b75-40a8-b7ba-7029065f5840@gmail.com>
+Date: Thu, 23 Jul 2026 19:17:57 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] blk-cgroup: remove unused blk_queue_for_each_rl stub
+To: Tao Cui <cui.tao@linux.dev>, axboe@kernel.dk
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, tj@kernel.org, yukuai@kernel.org,
+ yangxiuwei@kylinos.cn, cuitao@kylinos.cn
+References: <20260717102049.2080768-1-cui.tao@linux.dev>
+Content-Language: en-US
+From: Tang Yizhou <tangyeechou@gmail.com>
+In-Reply-To: <20260717102049.2080768-1-cui.tao@linux.dev>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-Register the VRAM manager with the dmem cgroup reclaim infrastructure
-so that lowering dmem.max below current VRAM usage triggers TTM
-eviction rather than failing with -EBUSY.
 
-Guard place->flags in amdgpu_ttm_bo_eviction_valuable() against NULL,
-as the TTM reclaim path passes a NULL place in cgroup drain mode.
+On 17/7/26 6:20 pm, Tao Cui wrote:
+> From: Tao Cui <cuitao@kylinos.cn>
+> 
+> blk_queue_for_each_rl() was added by commit a051661ca6d1 ("blkcg:
+> implement per-blkg request allocation") to iterate over the root request
+> list and per-blkg request lists for the legacy (non-blk-mq) request
+> allocation path.  The request_list code, including q->root_rl from
+> struct request_queue, was later removed in 2018 by commit db6d99523560
+> ("block: remove request_list code").
+> 
+> The macro definition left behind in the !CONFIG_BLK_CGROUP fallback
+> branch of the private block/blk-cgroup.h header now references the
+> removed q->root_rl field, and has no callers in-tree (it would fail to
+> compile if expanded, so it cannot have any out-of-tree users either).
+> 
+> Remove the dead stub.
+> 
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+> ---
+>  block/blk-cgroup.h | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+> index 615390f751aa..6a309d2d3db5 100644
+> --- a/block/blk-cgroup.h
+> +++ b/block/blk-cgroup.h
+> @@ -500,9 +500,6 @@ static inline void blkg_put(struct blkcg_gq *blkg) { }
+>  static inline void blk_cgroup_bio_start(struct bio *bio) { }
+>  static inline bool blk_cgroup_mergeable(struct request *rq, struct bio *bio) { return true; }
+>  
+> -#define blk_queue_for_each_rl(rl, q)	\
+> -	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
+> -
+>  #endif	/* CONFIG_BLK_CGROUP */
+>  
+>  #endif /* _BLK_CGROUP_PRIVATE_H */
 
-Use drmm_cgroup_register_region() so that the region is automatically
-unregistered at DRM device release, after drm_dev_unplug() has already
-made drm_dev_enter() return false.  The drm_dev_enter/exit guard in the
-reclaim callback ensures no reclaim work touches the TTM manager after
-driver unbind, closing the window between vram_mgr_fini() (called from
-drm_driver.release) and the drmm cleanup that unregisters the region.
+Reviewed-by: Tang Yizhou <yizhou.tang@shopee.com>
 
-v3:
-- Rebased on fix for uninitialized list and buddy allocator on the
-  drmm_cgroup_register_region() error path.
-
-v5:
-- Rebased on the introduction of struct dmem_cgroup_init.
-- Clear the reclaim callback in amdgpu_vram_mgr_fini() to prevent
-  use-after-free if cgroup reclaim is triggered after driver unbind
-  while userspace holds an open DRM file descriptor. (Sashiko-bot)
-- Switch from drmm_cgroup_register_region() to the raw
-  dmem_cgroup_register_region() and store the region in
-  amdgpu_vram_mgr.cg_region. Call dmem_cgroup_unregister_region()
-  in amdgpu_vram_mgr_fini() after ttm_resource_manager_evict_all()
-  to drain in-flight reclaim callbacks, and clear man->cg afterwards.
-  This is required because amdgpu's vram manager fini is called
-  explicitly during driver unbind, which may precede the DRM device
-  release and thus precede any drmm-based cleanup. (Sashiko-bot)
-
-v6:
-- Fix mgr->cg_region never being assigned, so
-  dmem_cgroup_unregister_region() in fini silently no-ops on NULL
-  and leaks the region. (Sashiko-bot)
-- Reorder fini to call set_used(false) and evict_all() before
-  dmem_cgroup_unregister_region(), so ttm_resource_free() can
-  uncharge via man->cg during eviction; clear man->cg after
-  unregister. (Sashiko-bot)
-
-v7:
-- Move dmem_cgroup_unregister_region() before the early return on
-  evict_all() failure; not doing so leaves a dangling reclaim callback
-  pointing to the partially-torn-down VRAM manager, causing a
-  use-after-free when the cgroup later triggers reclaim. (Sashiko-bot)
-- Switch back to drmm_cgroup_register_region() with a drm_dev_enter/
-  exit guard in the reclaim callback (matching xe), rather than manual
-  register/unregister.  drm_dev_unplug() fires before vram_mgr_fini(),
-  so drm_dev_enter() returning false prevents any reclaim from touching
-  the manager during teardown.  This also fixes the "vram" name
-  collision on multi-GPU systems, since drmm_cgroup_register_region()
-  automatically prefixes with "drm/<pci-addr>/". (Sashiko-bot)
-
-v8:
-- Move the dmem cgroup region teardown back into
-  amdgpu_vram_mgr_fini(): register the region with
-  dmem_cgroup_register_region() (keeping the "drm/<unique>/vram"
-  prefix), store it in amdgpu_vram_mgr.cg_region, and unregister it
-  explicitly after ttm_resource_manager_evict_all(). The v7
-  drmm-only approach left a use-after-free on the probe-error
-  teardown path: drm_dev_unplug() is not called there, so the
-  drm_dev_enter() guard stays open while drm_driver.release destroys
-  the manager before the drmm action unregisters the region. The
-  explicit unregister drains in-flight reclaim on every teardown
-  path; the drm_dev_enter() guard is kept as defense against reclaim
-  after unplug. (Sashiko-bot)
-
-Assisted-by: GitHub_Copilot:claude-sonnet-4.6
-Signed-off-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
----
- drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c      |  2 +-
- drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c | 51 ++++++++++++++++++--
- drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.h |  3 ++
- 3 files changed, 50 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
-index 7920675af1d1..b46b1d19349e 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
-@@ -1507,7 +1507,7 @@ static bool amdgpu_ttm_bo_eviction_valuable(struct ttm_buffer_object *bo,
- 	dma_resv_for_each_fence(&resv_cursor, bo->base.resv,
- 				DMA_RESV_USAGE_BOOKKEEP, f) {
- 		if (amdkfd_fence_check_mm(f, current->mm) &&
--		    !(place->flags & TTM_PL_FLAG_CONTIGUOUS))
-+		    !(place && (place->flags & TTM_PL_FLAG_CONTIGUOUS)))
- 			return false;
- 	}
- 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-index 08f05c3aed1d..8c62f4681d65 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-@@ -906,6 +906,28 @@ static const struct ttm_resource_manager_func amdgpu_vram_mgr_func = {
- 	.debug	= amdgpu_vram_mgr_debug
- };
- 
-+static const struct dmem_cgroup_ops amdgpu_vram_mgr_dmem_ops;
-+
-+static int amdgpu_vram_mgr_dmem_reclaim(struct dmem_cgroup_pool_state *pool,
-+					u64 target_bytes, void *priv)
-+{
-+	struct ttm_resource_manager *man = priv;
-+	struct amdgpu_device *adev = amdgpu_ttm_adev(man->bdev);
-+	int ret, idx;
-+
-+	if (!drm_dev_enter(adev_to_drm(adev), &idx))
-+		return -ENODEV;
-+
-+	ret = ttm_resource_manager_dmem_reclaim(pool, target_bytes, priv);
-+
-+	drm_dev_exit(idx);
-+	return ret;
-+}
-+
-+static const struct dmem_cgroup_ops amdgpu_vram_mgr_dmem_ops = {
-+	.reclaim = amdgpu_vram_mgr_dmem_reclaim,
-+};
-+
- /**
-  * amdgpu_vram_mgr_init - init VRAM manager and DRM MM
-  *
-@@ -917,6 +939,7 @@ int amdgpu_vram_mgr_init(struct amdgpu_device *adev)
- {
- 	struct amdgpu_vram_mgr *mgr = &adev->mman.vram_mgr;
- 	struct ttm_resource_manager *man = &mgr->manager;
-+	struct dmem_cgroup_region *cg;
- 	int err;
- 
- 	ttm_resource_manager_init(man, &adev->mman.bdev,
-@@ -933,12 +956,17 @@ int amdgpu_vram_mgr_init(struct amdgpu_device *adev)
- 	if (err)
- 		return err;
- 
--	man->cg = drmm_cgroup_register_region(adev_to_drm(adev), "vram",
--					      &(struct dmem_cgroup_init){
-+	cg = dmem_cgroup_register_region(&(struct dmem_cgroup_init){
- 						.size = adev->gmc.real_vram_size,
--					      });
--	if (IS_ERR(man->cg))
--		return PTR_ERR(man->cg);
-+						.ops = &amdgpu_vram_mgr_dmem_ops,
-+						.reclaim_priv = man,
-+					 },
-+					 "drm/%s/vram", adev_to_drm(adev)->unique);
-+	if (IS_ERR(cg))
-+		return PTR_ERR(cg);
-+
-+	mgr->cg_region = cg;
-+	ttm_resource_manager_set_dmem_region(man, cg);
- 
- 	ttm_set_driver_manager(&adev->mman.bdev, TTM_PL_VRAM, &mgr->manager);
- 	ttm_resource_manager_set_used(man, true);
-@@ -963,6 +991,19 @@ void amdgpu_vram_mgr_fini(struct amdgpu_device *adev)
- 	ttm_resource_manager_set_used(man, false);
- 
- 	ret = ttm_resource_manager_evict_all(&adev->mman.bdev, man);
-+
-+	/*
-+	 * Unregister the dmem cgroup region regardless of the evict_all()
-+	 * result and before any further teardown.  This drains in-flight
-+	 * reclaim callbacks and blocks new ones, so no reclaim can reference
-+	 * the manager once we start freeing it.  It must run after evict_all()
-+	 * so that ttm_resource_free() can still uncharge via man->cg during
-+	 * eviction.  Clear man->cg afterwards.
-+	 */
-+	dmem_cgroup_unregister_region(mgr->cg_region);
-+	mgr->cg_region = NULL;
-+	ttm_resource_manager_set_dmem_region(man, NULL);
-+
- 	if (ret)
- 		return;
- 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.h b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.h
-index 429a21a2e9b2..e581cbf52fcb 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.h
-@@ -26,6 +26,8 @@
- 
- #include <linux/gpu_buddy.h>
- 
-+struct dmem_cgroup_region;
-+
- struct amdgpu_vram_mgr {
- 	struct ttm_resource_manager manager;
- 	struct gpu_buddy mm;
-@@ -36,6 +38,7 @@ struct amdgpu_vram_mgr {
- 	atomic64_t vis_usage;
- 	u64 default_page_size;
- 	struct list_head allocated_vres_list;
-+	struct dmem_cgroup_region *cg_region;
- };
- 
- struct amdgpu_vres_task {
 -- 
-2.55.0
+Best Regards,
+Yi
 
