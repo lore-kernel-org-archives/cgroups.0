@@ -1,64 +1,113 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E65C5495508;
-	Thu, 23 Jul 2026 12:44:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC67D4DB557;
+	Thu, 23 Jul 2026 13:37:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784810673; cv=none; b=nWwecjGqK3yc4PNOKTUiVxcudTgVFm1MV/kp8CblDFjMFaM7j6k4be32aROD22LskNImzw5Pop/NB6iH/ZUOMdbLqLrncbmfRJJgLO4oERMfXYMWqp+GVnwVPDsFOVq/Iltgv8Dp0REIQAc9FhPM+CJ0+AGgOLN17ACzn0agF6w=
+	t=1784813839; cv=none; b=n/7zlLZTHjy/ghz3QIZZH+Ipf93Oh7DLARZwSsPrvm6wK1y2A0B3zECmyTKeXVv20N4DGBO3/I0dCoVIECaJ7FfPHj7mIGgA/DjNVb8joS0vv2NzOuqSHkTPlcN0WIt5eHwq0Yy0fqohTB1F+1SyDM3rfs17FDaQJ4cqC8rs7e8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784810673; c=relaxed/simple;
-	bh=y20GbONnNyuKw+7vArbPEka4I+fMxIbOkeCDoMe8B6Q=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=e7Gv3Bt7w2Kkl8VplVyoAtnlc5Wq0vRJEMFzU30AZj2kX6CnZ1kxGLbytwegScSHXcfMS6klAM2O+fHxmG3lcL5qjKGgJNVIN1Eoo4iwg/XcFfxLZvlABgWo3duobG8iYC/OvOmhN2XjPJAksCmLLrW/dgDj8G3+xPkPzZ9HLBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 3acce276869411f1aa26b74ffac11d73-20260723
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_UNTRUSTED, SN_LOWREP, SN_EXISTED, SPF_NOPASS
-	DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF
-	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:4de26a12-2f8f-4e05-ba31-e51b9de1fb90,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:4de26a12-2f8f-4e05-ba31-e51b9de1fb90,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:e4de632e7be81a5502e9212eb4c09649,BulkI
-	D:260723204423LDPBTZJP,BulkQuantity:0,Recheck:0,SF:10|38|66|78|102|127|850
-	|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:ni
-	l,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE
-	:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 3acce276869411f1aa26b74ffac11d73-20260723
-X-User: sunshaojie@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1538233980; Thu, 23 Jul 2026 20:44:22 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
+	s=arc-20240116; t=1784813839; c=relaxed/simple;
+	bh=eO9vT5YPysqOukd+jY+035D0z/zLeO1w4vN1NwNe2Qc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LYuwM562Fx4Cd0dk8jozvP6yRGrmEDu1z8Gpq3bIjg4+FkA+n4htgAwdYENx/B+vI4QJMPm/0QPDQFmjHyXvNJK0lFs4DN2l8gCAP7Nw9iEz+QfB6u86Xvkxv8Zio/0ifppV1+hpi3kVS371/yDWQ92G6ANI9249AJJ334ORHEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eXwPqfU5; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eXwPqfU5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A16401F000E9;
+	Thu, 23 Jul 2026 13:37:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784813825;
+	bh=tqvVeERBLT6ROkppBN4MEGfSa50o0lpYhxpdXTdGfSM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=eXwPqfU5+dyGmmARtvY9crMVwvGOsCAZ2Ru0lYpoOfgXEOQb2mMyZcg1q6u92yB0Z
+	 eZMN9cLTZ+yubZjVJ3wy4M7XG7fZikCsbl6f1040nSPNfNyH4meZZBsET+2pf6T6qH
+	 qq5izJpow7RoIotkR8UYgW6x+l2czIIn3yNVRVjPMN17oPO831Axfy1Rymb/HnXcNb
+	 XY24eVkU+jFNiKTi8CRFsGG3DyaUFKembWWsN5r8eTzYpjL4efTFMbO0xnASQRTvpI
+	 YnaQfcVtFoK4C7nDN/JU0FZvuMbAzBAbv7MBIkBFZsTw/0q7oFhQitlB8lVT412AvD
+	 YKt/asR4pMeRw==
+From: SJ Park <sj@kernel.org>
+To: Gregory Price <gourry@gourry.net>
+Cc: SJ Park <sj@kernel.org>,
+	balbirs@nvidia.com,
+	brendan.jackman@linux.dev,
+	yuzenghui@huawei.com,
+	apopple@nvidia.com,
+	alucerop@amd.com,
+	matthew.brost@intel.com,
+	akpm@linux-foundation.org,
+	david@kernel.org,
+	ljs@kernel.org,
+	liam@infradead.org,
+	vbabka@kernel.org,
+	rppt@kernel.org,
+	surenb@google.com,
+	mhocko@suse.com,
 	corbet@lwn.net,
-	skhan@linuxfoundation.org
-Cc: cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
+	skhan@linuxfoundation.org,
+	gregkh@linuxfoundation.org,
+	rafael@kernel.org,
+	dakr@kernel.org,
+	djbw@kernel.org,
+	vishal.l.verma@intel.com,
+	dave.jiang@intel.com,
+	alison.schofield@intel.com,
+	osandov@osandov.com,
+	jannh@google.com,
+	pfalcato@suse.de,
+	jackmanb@google.com,
+	hannes@cmpxchg.org,
+	ziy@nvidia.com,
+	pbonzini@redhat.com,
+	osalvador@suse.de,
+	joshua.hahnjy@gmail.com,
+	rakie.kim@sk.com,
+	byungchul@sk.com,
+	ying.huang@linux.alibaba.com,
+	kasong@tencent.com,
+	qi.zheng@linux.dev,
+	shakeel.butt@linux.dev,
+	baohua@kernel.org,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	yury.norov@gmail.com,
+	linux@rasmusvillemoes.dk,
+	longman@redhat.com,
+	ridong.chen@linux.dev,
+	tj@kernel.org,
+	mkoutny@suse.com,
+	jgg@ziepe.ca,
+	jhubbard@nvidia.com,
+	peterx@redhat.com,
+	baolin.wang@linux.alibaba.com,
+	npache@redhat.com,
+	ryan.roberts@arm.com,
+	dev.jain@arm.com,
+	lance.yang@linux.dev,
+	usama.arif@linux.dev,
+	xu.xin16@zte.com.cn,
+	chengming.zhou@linux.dev,
+	roman.gushchin@linux.dev,
+	muchun.song@linux.dev,
 	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH] Docs/admin-guide/cgroup-v1/memory: document memsw limit constraints
-Date: Thu, 23 Jul 2026 20:43:54 +0800
-Message-Id: <20260723124354.9472-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	linux-doc@vger.kernel.org,
+	driver-core@lists.linux.dev,
+	nvdimm@lists.linux.dev,
+	linux-cxl@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	kvm@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	damon@lists.linux.dev,
+	linux-kselftest@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [PATCH v5 14/36] mm/damon: skip private node memory in DAMON migration and pageout
+Date: Thu, 23 Jul 2026 06:36:53 -0700
+Message-ID: <20260723133654.86752-1-sj@kernel.org>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <amGHuputMNCFZ9CV@gourry-fedora-PF4VCD3F>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -67,42 +116,89 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The kernel enforces the invariant that memory.max <= memsw.max, and
-returns -EINVAL when writing an invalid memsw.limit_in_bytes without
-first configuring memory.limit_in_bytes.  However, this constraint
-is not documented anywhere, leaving users to discover it only through
--EINVAL errors.
+On Wed, 22 Jul 2026 23:25:15 -0400 Gregory Price <gourry@gourry.net> wrote:
 
-Add a Note section explaining:
-  - memory.limit_in_bytes must be set before memsw.limit_in_bytes
-  - memory.limit_in_bytes <= memsw.limit_in_bytes must always hold
-  - Violations result in -EINVAL
+> On Wed, Jul 22, 2026 at 05:19:42PM -0700, SJ Park wrote:
+> > On Wed, 22 Jul 2026 08:16:56 -0400 Gregory Price <gourry@gourry.net> wrote:
+> > 
+> > > > "by default".  Does that mean it could be reclaimable in some situations?  If
+> > > > so, could we check if it is reclaimable?
+> > > > 
+> > > 
+> > > See the damon changes in:
+> > > 
+> > > https://lore.kernel.org/linux-mm/al-pkvmgIxGu3LzM@gourry-fedora-PF4VCD3F/T/#mfb99303c85dd9d4c3f58832dc28fc55583a7217a
+> > 
+> > Summarizing what you want to say, quoting something from the patch, or at least
+> > calling it "26th patch of this series" would have made reviewing much easier.
+> > Cc-ing damon@ for only patches that toucing DAMON source files and the cover
+> > letter of the series could also be helpful.  Please consider doing some of
+> > these for future replies.
+> > 
+> 
+> I have been very much discouraged from this kind of trimming because it
+> removes the context of the series from the individual patches - making it
+> even more confusing.
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
- Documentation/admin-guide/cgroup-v1/memory.rst | 9 +++++++++
- 1 file changed, 9 insertions(+)
+That's fair and making sense.
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 7db63c002922..92e74ec28822 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -262,6 +262,15 @@ In this case, setting memsw.limit_in_bytes=3G will prevent bad use of swap.
- By using the memsw limit, you can avoid system OOM which can be caused by swap
- shortage.
- 
-+Note:
-+ - Since memsw is the sum of memory and swap, it must be at least the memory
-+   limit.  Therefore, ``memory.limit_in_bytes`` must be set before
-+   ``memory.memsw.limit_in_bytes``, and the relation
-+   ``memory.limit_in_bytes <= memory.memsw.limit_in_bytes`` must always hold.
-+ - If ``memory.memsw.limit_in_bytes`` is set without a properly configured
-+   ``memory.limit_in_bytes``, or if the above relation is violated, the write
-+   will fail with ``-EINVAL``.
-+
- 2.4.1 why 'memory+swap' rather than swap
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
--- 
-2.25.1
+> 
+> But I understand, I will try to remember to do this for you.
 
+Thank you, Gregory.  Nonetheless, I wouldn't insist selective Cc-ing.  I agree
+your point, and I expect doing that would be tedious if you don't have a script
+or tool (I use a tool).  It is just one of my suggestion to help reviewing in
+this context, insted of only lore link.  Just one among the other three
+suggestions (summarizing your thought, quoting, or simply calling it "26th
+patch of this series") should also suffice.
+
+> 
+> > So, I understand later patches will make it optionally reclaimable and update
+> > this restriction by the 26th patch?  That sounds fair.  But, could we drop "by
+> > default" from the above comment for reducing the confusion?
+> 
+> Yes, but you bring up a good point - I think this two-step process is
+> actually poor form and that I need to redo it.
+> 
+> Maybe this can be redone as node states (features?) such as:
+> 
+>    N_MEMORY_RECLAIMABLE
+>    N_MEMORY_DEMOTABLE
+>    N_MEMORY_TIERABLE
+> 
+> so these damon changes will forego this confusing intermediate step of:
+> 
+>    if (folio_is_private_node(folio))
+> 
+> and go straight to
+> 
+>    if (node_is_reclaimable(folio_nid(folio)))
+> 
+> In the first patch - without ever having to revisit damon again.
+
+Indeed that sounds better than my suggestion.
+
+> 
+> > > 
+> > > Technically there is nothing in migration core to prevent migration
+> > > operations, it's done on a service basis - hotunplug, reclaim/demotion,
+> > > user numa (mbind, migrate/move_pages) etc.
+> > > 
+> > > Operations on private nodes/private node folioes are refused if the
+> > > capability bit is not set.
+> > 
+> > I haven't had a chance to read the entire series, sorry about that.  So, do you
+> > mean the above blocking is not really needed, or that will conditionally be
+> > allowed by another later patch?
+> > 
+> 
+> I will reduce this all to a single patch in v6, I see where things can
+> be improved now based on a few pieces of feedback.
+
+Sounds good, thank you Gregory.  Looking forward to the next version!
+
+
+Thanks,
+SJ
+
+[...]
