@@ -1,185 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 676A24218AA;
-	Thu, 23 Jul 2026 09:30:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEC773B8139;
+	Thu, 23 Jul 2026 09:35:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784799055; cv=none; b=OVptxWecYJx08ekGTRT+Suga3aQ6vOCNfGfCDaJOmONL/O4ZHVcaJ/99Q7RfFRGNNWczPM/mgxSi9d2z3AiqQHO54nTfup7+Bzb2FnhVZEmBuD3XpLOvypQQ18Z9XRTfHvK8D7On/dNKyhvKOlh5C6yh595DPaN4Uwy5gnvu/34=
+	t=1784799334; cv=none; b=MP5rLc1jy9SYIN04hKyFvwHeuHSXk5ECw3it4/PWpd/QapMOqj0NZ2OR87+lt7/kFmZVVw/FleoWAYcmuYxMJv0AZ8OtxlWC9fLl/UC0EgLHHLKcvOtuDzqG8CH3mLmQOlOlppCfoCizXOahn3fO/fQkSVYYHuz3xG7keF7qO/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784799055; c=relaxed/simple;
-	bh=3gUxBV2SQPcfcXwQIMQGNzjvePZYFdC4nDfoTiwbtLs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qlE+jY+v2ijJdA/gXg4Y8pRVQe8yLJIQXnJVHpAtC2blHJDmGFzRXDUvRIJSZRaV3BXTSgtow/QWnlhBjHKrKlshhldHXqjXcjLaUZSNSuuZedRoIZ8dXKczL8P3swb8ftmJ40veECcoluzclfW5wCVO4NzPWoIXMgj2O6KZTlc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QrnqwayX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784799334; c=relaxed/simple;
+	bh=P1ri9jIlf5K46sMu+BdMRUHIR8r3nUqwsZr/hAYcuzA=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=ioAQbMkJjpxuEvXIF/BONMlD+4ZFA5bY9z85fFUuyRjRmTgUus93b6CthhnXmsN9FwpTEUv1PVTDmUyho5r7l0uUGx3HW34Yry1h0g4bwhL+I6OBHs8TllgRtu46YMAi3unAY4bv09HXS69eQFzsFHxSm3LCcVlWsFx1Pb3HT1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HJKTuk4Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QrnqwayX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C5431F00A3A;
-	Thu, 23 Jul 2026 09:30:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HJKTuk4Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B28F1F000E9;
+	Thu, 23 Jul 2026 09:35:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784799054;
-	bh=wt67XsmwkQaRLRB+uB5Oux958CHUJdn7g1FXjqMrLvE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=QrnqwayXlJrmoiZ0u1sB6zSrdj3atfwQyJsUJxcCMfxbHkmnZnv8ZLcdb4R9RpHBB
-	 FvQwOsQEGHluLfqGsSA6HgV0J27MWpP15ojOdmv22bKAWAx05QwuPO0y9xnXVC/WHN
-	 q3//A/panHvy6AOi4VBdoAtal6baa6STqbmSVoAwf0h5OCPvHSeDFREThUCsE/ZvIo
-	 GRywI7kYLfR2dIpMW0D1bgFxqn8o/tRVNyHirXRzQqQW2WEZhSTSeo1ZzAFdsEB1M7
-	 dWISBVl056PFk58nrAodqbCurGD+PmvhYzGuRKAY9SLP9i2Qas1pEnOC9/sI05LaIe
-	 zt6dFVgml2+Hg==
-Message-ID: <e8b503fe-c97f-4747-aa95-97be42cdd832@kernel.org>
-Date: Thu, 23 Jul 2026 11:30:49 +0200
+	s=k20260515; t=1784799333;
+	bh=aZZCZ/d/c3xLlwTJG317mBGnb8THEbPIiA7jBD/2pKc=;
+	h=From:To:In-Reply-To:References:Subject:Date;
+	b=HJKTuk4Y/BNCfJUH/Scq+NVzyNgpwaaMcN7elruFMLa6kysXsv3I7IxKHDCxBPw47
+	 DIuZcGDZYUIgna31G1KKOk3CIP/z9vxNh8AnE3qHOXZ/Ufk+9Rs7sBHfryT3TXEtxP
+	 B3dSRJRgiLuz5y8PlT/EWwZP+gSQKGMCWiHM4N6I+yuNPS3nuRq/xxb8CPgwy/3TRc
+	 8B4SOK5+OEL2aIws8L8TSCvwnXSwfi/DeYuEBBbEsiMAGRNbrn+Vw6VV7usFqaUAyz
+	 7X7qUJvSKXz/m6ZICFTxewrNh+FCRQfrlFmnyX8vNjoftu6SbwibBymgEQdUuze6W1
+	 FcOnthHcz5bzw==
+From: Christian Brauner <brauner@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com, 
+ dgc@kernel.org, qi.zheng@linux.dev, baolin.wang@linux.alibaba.com, 
+ cgroups@vger.kernel.org, clm@fb.com, dsterba@suse.com, hannes@cmpxchg.org, 
+ hughd@google.com, jack@suse.cz, linux-btrfs@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mm@kvack.org, mhocko@kernel.org, muchun.song@linux.dev, 
+ roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+ Al Viro <viro@zeniv.linux.org.uk>, kernel-team@meta.com, 
+ Usama Arif <usama.arif@linux.dev>
+In-Reply-To: <20260715103516.2410175-1-usama.arif@linux.dev>
+References: <20260715103516.2410175-1-usama.arif@linux.dev>
+Subject: Re: [PATCH v2] fs: push nr_cached_objects memcg gating into
+ individual filesystems
+Message-Id: <20260723-wuseln-nachwachsen-befeuern-82f31d54fd8d@brauner>
+Date: Thu, 23 Jul 2026 11:35:07 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 12/13] mm/slab: add cache_ and slab_needs_objcg()
- helpers
-Content-Language: en-US
-To: Hao Li <hao.li@linux.dev>
-Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
- <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
- <20260720-b4-objext_split-v2-12-2fa7c6f60dbe@kernel.org>
- <amHbnLLrpOmwmusv@fedora>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <amHbnLLrpOmwmusv@fedora>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.16-dev-0e65f
+X-Developer-Signature: v=1; a=openpgp-sha256; l=908; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=P1ri9jIlf5K46sMu+BdMRUHIR8r3nUqwsZr/hAYcuzA=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQlPkiQnrH6ltPc6U1T9m/Wnse0usZoz8KbU2fL2liV2
+ BxfrXrZt6OUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAiLtEM/zQieN+tus9Xurtw
+ 8eq2k9ft5mitPNCzuWpdxBxm1SV37vEwMtxc8rG3vvm1YUjMhOXBhREVpvKbmtaVHDmuHOx2KOJ
+ hMT8A
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-On 7/23/26 11:25, Hao Li wrote:
-> On Mon, Jul 20, 2026 at 04:16:26PM +0200, Vlastimil Babka (SUSE) wrote:
->> @@ -359,6 +359,13 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
->>  		goto out_unlock;
->>  	}
->>  
->> +	/*
->> +	 * For now we assume any cache can be used with __GFP_ACCOUNT and thus
->> +	 * may need to store objcg pointers for objects
->> +	 */
->> +	if (!mem_cgroup_kmem_disabled())
->> +		flags |= SLAB_MAY_ACCOUNT;
-> 
-> if memcg itself is disabled via `cgroup_disable`, mem_cgroup_kmem_disabled()
-> still return false, so maybe we can use:
+On Wed, 15 Jul 2026 03:35:16 -0700, Usama Arif wrote:
+> fs: push nr_cached_objects memcg gating into individual filesystems
 
-Aha, but then shouldn't rather mem_cgroup_kmem_disabled() take that into
-account on its own?
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-> if (!mem_cgroup_disabled() && !mem_cgroup_kmem_disabled())
-> 	flags |= SLAB_MAY_ACCOUNT;
-> 
->> +
->>  	/* Fail closed on bad usersize of useroffset values. */
->>  	if (!IS_ENABLED(CONFIG_HARDENED_USERCOPY) ||
->>  	    WARN_ON(!args->usersize && args->useroffset) ||
->> @@ -984,11 +991,19 @@ new_kmalloc_cache(int idx, enum kmalloc_cache_type type)
->>  #endif
->>  
->>  	/*
->> -	 * If CONFIG_MEMCG is enabled, disable cache merging for
->> -	 * KMALLOC_NORMAL caches.
->> +	 * If memcg_kmem is enabled and this is a KMALLOC_NORMAL cache and  not
->> +	 * aliased with any other type, make sure it's never merged with any other
->> +	 * cache.
->> +	 *
->> +	 * In other cases the kmalloc cache may end up being used for a
->> +	 * __GFP_ACCOUNT allocation so mark it as such
->>  	 */
->> -	if (IS_ENABLED(CONFIG_MEMCG) && (type == KMALLOC_NORMAL))
->> -		flags |= SLAB_NO_MERGE;
->> +	if (!mem_cgroup_kmem_disabled()) {
-> 
-> the same as above
-> 
-> Others look good to me.
-> 
-> Reviewed-by: Hao Li <hao.li@linux.dev>
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Thanks!
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-> 
->> +		if (type == KMALLOC_NORMAL && KMALLOC_RECLAIM != KMALLOC_NORMAL)
->> +			flags |= SLAB_NO_MERGE;
->> +		else
->> +			flags |= SLAB_MAY_ACCOUNT;
->> +	}
->>  
->>  	if (minalign > ARCH_KMALLOC_MINALIGN) {
->>  		aligned_size = ALIGN(aligned_size, minalign);
->> diff --git a/mm/slub.c b/mm/slub.c
->> index d78d3e50c877..30435e2509ea 100644
->> --- a/mm/slub.c
->> +++ b/mm/slub.c
->> @@ -2557,7 +2557,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags)
->>  	 * of slab_obj_exts being allocated from the same slab and thus the slab
->>  	 * becoming effectively unfreeable.
->>  	 */
->> -	if (is_kmalloc_normal(s))
->> +	if (!cache_needs_objcg(s))
->>  		return true;
->>  
->>  	/* Ignore already charged objects. */
->> @@ -3435,6 +3435,10 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags,
->>  
->>  	slab->objects = oo_objects(oo);
->>  
->> +#ifdef CONFIG_64BIT
->> +	if (cache_needs_objcg(s))
->> +		slab->obj_exts_needs_objcg = 1;
->> +#endif
->>  	slab->slab_cache = s;
->>  
->>  	kasan_poison_slab(slab);
->> 
->> -- 
->> 2.55.0
->> 
-> 
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/1] fs: push nr_cached_objects memcg gating into individual filesystems
+      https://git.kernel.org/vfs/vfs/c/d5233434ecd5
 
