@@ -1,46 +1,47 @@
-Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
+Received: from out-186.mta0.migadu.com (out-186.mta0.migadu.com [91.218.175.186])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D589C41A91F
-	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 09:57:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A16470E8F
+	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 10:01:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784800627; cv=none; b=SCxdzu9t/JbA3cFMPzex1JW1Urm+RFZGKCoJHcRn7+Ybq320s9ZI/92sSZrkYvbULLbwocFn/eopjJHIV0CwPtMH+yGJZXfWz7fcvM72GgwfmDkNh2m9JvGmSrlPLYpweRVTP4EokFS/asGLCNjpbjobWZ/6qTlbmEsu8SQP2ek=
+	t=1784800907; cv=none; b=rLPsoio+2iBRXvTnmZPXw8CmNI9yZYtRP6QywBg0nNT4JRH/NFc6CFkhQR0hjYyFtN/g4UV1Kc7WYg+PZc+SX1uaxZAb5p5sjt1PIaUi/Wwe88EMji0yWWS+t7VcnvmPXwE6zz4tStF412t2y5mjr3oUGAipfyQtIsOb6qFAY5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784800627; c=relaxed/simple;
-	bh=/3bs18c22En8Y6fmlGvcjNdT0MKJfjyKOwUI5z6JMLg=;
+	s=arc-20240116; t=1784800907; c=relaxed/simple;
+	bh=yfrEDFu9UaoMIQSZG9pCLNWhm9daxd4yc4e0cmU1nGI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BAmmSrDNnc99hWLlhfoc0Zbra4rrh97vs2Z9Wqz48bO5NJnDLzfSb+tzxaad1uJoCoCnj64qmeeGEMOD70w2t289aYgI8UYlVkccZsGYCEXgk8qht7vtNaIEEAOpaEqFvoJxzacbE5ox2Le/IxGSuyj4hNn8jtAmqLmDX+FOHfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gNalcYo6; arc=none smtp.client-ip=91.218.175.174
+	 Content-Type:Content-Disposition:In-Reply-To; b=fRabJd89XnI2qvetz/wJIRcEkTFlQOZYn1Yps8q18hm8iznoj53mqkVZcnc2rc5TuYrlPUBqoj864edwCau4bu90biQK+7LJ88QGLggxLcXYCzvEAmDMbHlGF8yQloqXZ12mT3289oNFTRcpbbynlY4PpnxI256ll0ZiD0CG/Pw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=B3tN3CMm; arc=none smtp.client-ip=91.218.175.186
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gNalcYo6"
-Date: Thu, 23 Jul 2026 17:56:56 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="B3tN3CMm"
+Date: Thu, 23 Jul 2026 18:01:07 +0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784800623;
+	t=1784800889;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=n5Va5xqbBf3fhekckmlcg2X0hrc0i9E9Xp9SI7nV9WM=;
-	b=gNalcYo6YMM9tSoRfU0ofQa40+wtblPqWAaxiKhOjK7x0Iw5UmBpQIa+Ye7cxVkj0Uy1AY
-	K8HBT+TUYv/ZuBNMD5oqNdRNgzbaPIpIpKgviQ+8wsbpbRtPTAbkQNVb6QPRn19tNCTtLx
-	TkfB7nEHflrI0sX2dTbbcAKderUB5iU=
+	bh=/IOPEWFyLCrkOKDL5TmCaxllcKhpBFa1PGm5TdS+JwA=;
+	b=B3tN3CMmCpKLZ3NrTYsrJ4RLkX3LFQJRJLgVEIuQsXk/GkMvH5ZafyBK62EAo0LIvT2D50
+	fAKJeIjSiLb7ygdHnxWK0DaWeYIXONIZaWgnhZYOEC7DvUfbyNhUa9RtOtJ0mXfO3rfymO
+	FwBtaicdmtSjfbwmIZf+DeT8vEaPrX4=
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Hao Li <hao.li@linux.dev>
-To: Harry Yoo <harry@kernel.org>
-Cc: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@gentwo.org>, 
-	David Rientjes <rientjes@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH v2 09/13] mm/slab: change struct slabobj_ext to a union
-Message-ID: <amHkbJsvOjcfUR3D@fedora>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
+	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH v2 12/13] mm/slab: add cache_ and slab_needs_objcg()
+ helpers
+Message-ID: <amHldYIo_-Bgm7Ek@fedora>
 References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
- <20260720-b4-objext_split-v2-9-2fa7c6f60dbe@kernel.org>
- <amGEY5w-cBm4_uhx@fedora>
- <9b2dadb7-8e3d-4b9b-a870-969be9a7a432@kernel.org>
+ <20260720-b4-objext_split-v2-12-2fa7c6f60dbe@kernel.org>
+ <amHbnLLrpOmwmusv@fedora>
+ <e8b503fe-c97f-4747-aa95-97be42cdd832@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,91 +50,105 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9b2dadb7-8e3d-4b9b-a870-969be9a7a432@kernel.org>
+In-Reply-To: <e8b503fe-c97f-4747-aa95-97be42cdd832@kernel.org>
 X-Migadu-Flow: FLOW_OUT
 
-On Thu, Jul 23, 2026 at 03:27:51PM +0900, Harry Yoo wrote:
-> 
-> 
-> On 7/23/26 12:05 PM, Hao Li wrote:
-> > On Mon, Jul 20, 2026 at 04:16:23PM +0200, Vlastimil Babka (SUSE) wrote:
-> >> Currently, struct slabobj_ext can hold both objcg pointer and
-> >> codetag_ref (when both are compile-enabled) and there is an array of as
-> >> many slabobj_ext instances as there are objects in a slab.
-> >>
-> >> This makes the layout fixed so even if codetag_ref is unused (because
-> >> memory allocation profiling is disabled), the space for them is
-> >> allocated and wasted. Similarly, some caches (currently kmalloc_normal)
-> >> do not ever need objcg pointers, leading to wasted memory with memory
-> >> allocation profiling enabled.
-> >>
-> >> To make this more flexible, change the layout so that struct slabobj_ext
-> >> becomes a union of objcg pointer and codetag_ref (to ensure uniform
-> >> size; in practice both are the same size anyway). The slabobj_ext array
-> >> then can have twice as many elements as before. For cache locality
-> >> purposes, the effective memory layout is unchanged, so objcg and codetag
-> >> ref for a given object are still adjacent.
-> >>
-> >> cache_obj_ext_size() returns the effective size of (0-2) struct
-> >> slabobj_ext's for a cache, slab_obj_ext_size() for a slab. Currently
-> >> both return a constant value derived from the config options, but will
-> >> be made dynamic later. Replace all sizeof(slabobj_ext) usage with these.
-> >>
-> >> No functional change intended, the layout is still effectively static.
-> >>
-> >> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-> >> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-> >> ---
-> >>  mm/slab.h | 49 +++++++++++++++++++++++++++++++++++++++----------
-> >>  mm/slub.c | 19 +++++++++++--------
-> >>  2 files changed, 50 insertions(+), 18 deletions(-)
-> >>
-> >> diff --git a/mm/slab.h b/mm/slab.h
-> >> index e586798e4f16..f8446167e175 100644
-> >> --- a/mm/slab.h
-> >> +++ b/mm/slab.h
-> >> @@ -550,18 +550,42 @@ static inline bool need_kmalloc_no_objext(void)
-> >>  }
+On Thu, Jul 23, 2026 at 11:30:49AM +0200, Vlastimil Babka (SUSE) wrote:
+> On 7/23/26 11:25, Hao Li wrote:
+> > On Mon, Jul 20, 2026 at 04:16:26PM +0200, Vlastimil Babka (SUSE) wrote:
+> >> @@ -359,6 +359,13 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
+> >>  		goto out_unlock;
+> >>  	}
 > >>  
-> >>  /*
-> >> - * Extended information for slab objects stored as an array in page->memcg_data
-> >> - * if MEMCG_DATA_OBJEXTS is set.
-> >> + * Extended information for slab objects stored as a pointer to an array in
-> >> + * slab->obj_exts (aliasing page->memcg_data) if MEMCG_DATA_OBJEXTS is set.
-> >>   */
-> >>  struct slabobj_ext {
 > >> +	/*
-> >> +	 * All elements of the union should be pointer-sized to avoid memory
-> >> +	 * waste
+> >> +	 * For now we assume any cache can be used with __GFP_ACCOUNT and thus
+> >> +	 * may need to store objcg pointers for objects
 > >> +	 */
-> >> +	union {
-> >>  #ifdef CONFIG_MEMCG
-> >> -	struct obj_cgroup *_objcg;
-> >> +		struct obj_cgroup *_objcg;
-> >>  #endif
-> >>  #ifdef CONFIG_MEM_ALLOC_PROFILING
-> >> -	union codetag_ref _ctref;
-> >> +		union codetag_ref _ctref;
-> >>  #endif
-> >> +	};
-> >>  } __aligned(8);
+> >> +	if (!mem_cgroup_kmem_disabled())
+> >> +		flags |= SLAB_MAY_ACCOUNT;
 > > 
-> > slabobj_ext is now acting as a generic struct, serving as either _objcg or
-> > _ctref. However, because it's set to __aligned(8), I'm wondering if this might
-> > waste half the memory on 32-bit?
+> > if memcg itself is disabled via `cgroup_disable`, mem_cgroup_kmem_disabled()
+> > still return false, so maybe we can use:
 > 
-> We could loosen the alignment to
-> max(__NR_OBJEXTS_FLAGS, alignof(void *))
-> 
-> and drop OBJEXT_FLAG_UNUSED.
+> Aha, but then shouldn't rather mem_cgroup_kmem_disabled() take that into
+> account on its own?
 
-Yes, this idea is insightful and I think it may need a standalone patch without
-blocking current patchset.
+Yeah, it's better to handle two cases in mem_cgroup_kmem_disabled!
+This could also be a standalone patch, but including it to this patchset it totally
+fine.
 
 > 
-> ...not sure how much we care about this on 32bit though.
-
-Yeah, 32bit is a rare arch today :)
+> > if (!mem_cgroup_disabled() && !mem_cgroup_kmem_disabled())
+> > 	flags |= SLAB_MAY_ACCOUNT;
+> > 
+> >> +
+> >>  	/* Fail closed on bad usersize of useroffset values. */
+> >>  	if (!IS_ENABLED(CONFIG_HARDENED_USERCOPY) ||
+> >>  	    WARN_ON(!args->usersize && args->useroffset) ||
+> >> @@ -984,11 +991,19 @@ new_kmalloc_cache(int idx, enum kmalloc_cache_type type)
+> >>  #endif
+> >>  
+> >>  	/*
+> >> -	 * If CONFIG_MEMCG is enabled, disable cache merging for
+> >> -	 * KMALLOC_NORMAL caches.
+> >> +	 * If memcg_kmem is enabled and this is a KMALLOC_NORMAL cache and  not
+> >> +	 * aliased with any other type, make sure it's never merged with any other
+> >> +	 * cache.
+> >> +	 *
+> >> +	 * In other cases the kmalloc cache may end up being used for a
+> >> +	 * __GFP_ACCOUNT allocation so mark it as such
+> >>  	 */
+> >> -	if (IS_ENABLED(CONFIG_MEMCG) && (type == KMALLOC_NORMAL))
+> >> -		flags |= SLAB_NO_MERGE;
+> >> +	if (!mem_cgroup_kmem_disabled()) {
+> > 
+> > the same as above
+> > 
+> > Others look good to me.
+> > 
+> > Reviewed-by: Hao Li <hao.li@linux.dev>
+> 
+> Thanks!
+> 
+> > 
+> >> +		if (type == KMALLOC_NORMAL && KMALLOC_RECLAIM != KMALLOC_NORMAL)
+> >> +			flags |= SLAB_NO_MERGE;
+> >> +		else
+> >> +			flags |= SLAB_MAY_ACCOUNT;
+> >> +	}
+> >>  
+> >>  	if (minalign > ARCH_KMALLOC_MINALIGN) {
+> >>  		aligned_size = ALIGN(aligned_size, minalign);
+> >> diff --git a/mm/slub.c b/mm/slub.c
+> >> index d78d3e50c877..30435e2509ea 100644
+> >> --- a/mm/slub.c
+> >> +++ b/mm/slub.c
+> >> @@ -2557,7 +2557,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags)
+> >>  	 * of slab_obj_exts being allocated from the same slab and thus the slab
+> >>  	 * becoming effectively unfreeable.
+> >>  	 */
+> >> -	if (is_kmalloc_normal(s))
+> >> +	if (!cache_needs_objcg(s))
+> >>  		return true;
+> >>  
+> >>  	/* Ignore already charged objects. */
+> >> @@ -3435,6 +3435,10 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags,
+> >>  
+> >>  	slab->objects = oo_objects(oo);
+> >>  
+> >> +#ifdef CONFIG_64BIT
+> >> +	if (cache_needs_objcg(s))
+> >> +		slab->obj_exts_needs_objcg = 1;
+> >> +#endif
+> >>  	slab->slab_cache = s;
+> >>  
+> >>  	kasan_poison_slab(slab);
+> >> 
+> >> -- 
+> >> 2.55.0
+> >> 
+> > 
+> 
 
 -- 
 Thanks,
