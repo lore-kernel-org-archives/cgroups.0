@@ -1,48 +1,41 @@
-Received: from va-2-55.ptr.blmpb.com (va-2-55.ptr.blmpb.com [209.127.231.55])
+Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33E6E28506C
-	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 06:46:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC8BC387588
+	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 06:47:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784789178; cv=none; b=uPpkDKI+tyZTbkB2Xp0rga9DlswMuusVo18RtR/hnpcQ+T6kxR6TRLvtyXRzwF06dWIaQ7LI7QJr2isJDME230gxQ72h3jNZNmvxXbufipIRSibnqrdQPUxb7J3TpFIos6Eu/CU7Jc7DR9LZi1wz8FEbevj6Ra2JkndzJUrw19c=
+	t=1784789262; cv=none; b=rmZT9bbRPKppBGMkB4Ex+CwRFR/HW2p6iJA5gfG0VvCyO3tGrbXnNneQgSFSSEAIjzUnRdpoaeh19en/vbdJivfkgW5Y/LZNhxZO8iII3Cz6t/dm1vleEnJd6plQ0DTFg9gHn0EDTe+2PldtPzvMKwFEOBf8c23VFIZ9it4fxQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784789178; c=relaxed/simple;
-	bh=BfuMpD0JejPvki+J2+J+6Z24bwpQM3FqEhh7Rz1xsmU=;
-	h=Subject:Date:In-Reply-To:Cc:Message-Id:References:To:From:
-	 Mime-Version:Content-Type; b=uIwZLYGVA/tm74/PN4ldpT0L6XFL1MgnQeA/GbNMjpbOywbDxkZfDAJ5UbdeheTFw5cPyAyewQMMN0xLoprGyv8DBN8qe9AwbtO0OgGSfv8OQT9wCPsruNlPp6HbnujLakhnxHs+hDMcX/Xwg4ZheFY9Omb4rMY6Sd5b7daNJx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=HqH3s36S; arc=none smtp.client-ip=209.127.231.55
+	s=arc-20240116; t=1784789262; c=relaxed/simple;
+	bh=YdzApvx5wWv8zrydjgZp0CCocv3EAfExkyadx6vI6Ig=;
+	h=From:Message-Id:In-Reply-To:Date:Mime-Version:Content-Type:To:Cc:
+	 Subject:References; b=q3t88fQ4gaF8WAQcIc985/VMD5+/xyGBawl9aSmQ/HYxURxeJan2MxeIRXWeiYn67i3oHvvbAci8AJ/4hYeUy3QfDde2qt7nvuSWVYKbRQSfemhU8j9oC3faBqzdHukPPqK74sOOPl58w2kKCx7044W9HfIVF9VoqgrYegzCXkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=C0yCcbeq; arc=none smtp.client-ip=209.127.231.60
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="HqH3s36S"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="C0yCcbeq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784789166;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784789246;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=1VSRY8DjQjQuIUS0pS4CSBluQaqfLAGbzI2985QqDtI=;
- b=HqH3s36SOfVG7JXnwBbQWU979NzuEpHDhQJnXuyWL7tsbzwpjNitHDMyeaKK9YsdGyn2UM
- len8eDYFCC/MdYIwMlYINsjKIigow4tEib70K3fkwn7sFP5rKEpSx04A+iD9mMyfp2oF7p
- kpjZR7S1BpPln+NZHmiByo/9hRcZ7IiBNfEYqm72OVwRpT15JvnqfBRcT4ppd9O4V/b7dY
- 4/KjNNM6Z4PEfIGAWfFlbp5w6CEJauhNDz7HHmSw+R+CJ8X+k+/6MhAyuuqfE0QWWEn4zO
- yY+ljvgbnw4MKBPQx0N/E8nMFi10EN1wQMe4MIUW4vVobl/tAhjezCVYhnjF5A==
-Subject: Re: [PATCH v4] blk-throttle: fix divide-by-zero on legacy iops limit of 0
-Date: Thu, 23 Jul 2026 14:46:01 +0800
-In-Reply-To: <20260722102459.253189-1-cui.tao@linux.dev>
+ bh=D7A4X1tgGoU46zA3yseHcKl2kFvINpyo6Rr9IDKr7x0=;
+ b=C0yCcbeqjxf6XLY2QmTR0ARgbllXu5XgcXCFXchY+tJ4bWGckSXBQFxlzp2/tbRjHsq6G9
+ RxtpbLjVMVKm8BT3WUb5M8mb8o/aP1ao+ZZMqGdfCduZcwHkFnNxqq5uQgleqCt3fXzq+Z
+ 93pitV1ccZJimWH8ZYrI5xCcUkf9dcAtOI1Z4zujIvnbluWk09h/wDeZOceiRyVD3O6er3
+ xUtHRkoHJMnaS85Fvj+a1Dk692wMeXVOVw/1/qJpzMwO2Ez+zRWTgCBg+ix7lCmFznmgHC
+ ApBRDaB+fO9hxRaiRj9G2szmDWB4Fti+1EGSucxZwZmkBP7SIeX3y+cZ6LZ9dA==
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <0261d326-138d-44b0-82f5-0d09dbda898b@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+X-Lms-Return-Path: <lba+26a61b8fd+aeba99+vger.kernel.org+yukuai@fygo.io>
+In-Reply-To: <20260717102049.2080768-1-cui.tao@linux.dev>
+Reply-To: yukuai@fygo.io
+Received: from [192.168.1.104] ([39.182.0.167]) by smtp.larksuite.com with ESMTPS; Thu, 23 Jul 2026 06:47:25 +0000
 User-Agent: Mozilla Thunderbird
 X-Original-From: yu kuai <yukuai@fygo.io>
-X-Lms-Return-Path: <lba+26a61b8ad+fe840b+vger.kernel.org+yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Cc: <linux-block@vger.kernel.org>, <josef@toxicpanda.com>, 
-	<cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<david.laight.linux@gmail.com>, <haris.iqbal@linux.dev>, 
-	"Tao Cui" <cuitao@kylinos.cn>
-Message-Id: <cac8989a-d097-4f50-be01-d26d95555e64@fygo.io>
-Content-Transfer-Encoding: quoted-printable
-References: <20260722102459.253189-1-cui.tao@linux.dev>
-To: "Tao Cui" <cui.tao@linux.dev>, <tj@kernel.org>, <axboe@kernel.dk>, 
-	"yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
+Date: Thu, 23 Jul 2026 14:47:21 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,62 +43,36 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.167]) by smtp.larksuite.com with ESMTPS; Thu, 23 Jul 2026 06:46:04 +0000
+To: "Tao Cui" <cui.tao@linux.dev>, <axboe@kernel.dk>, 
+	"yu kuai" <yukuai@fygo.io>
+Cc: <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<cgroups@vger.kernel.org>, <tj@kernel.org>, <yukuai@kernel.org>, 
+	<yangxiuwei@kylinos.cn>, <cuitao@kylinos.cn>
+Subject: Re: [PATCH] blk-cgroup: remove unused blk_queue_for_each_rl stub
+References: <20260717102049.2080768-1-cui.tao@linux.dev>
 
-=E5=9C=A8 2026/7/22 18:24, Tao Cui =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/7/17 18:20, Tao Cui =E5=86=99=E9=81=93:
 
 > From: Tao Cui<cuitao@kylinos.cn>
 >
-> Writing a multiple of 2^32 (e.g. 4294967296) to a legacy cgroup v1
-> throttle iops file (blkio.throttle.{read,write}_iops_device) silently
-> truncates to 0: tg_set_conf() stores the sscanf-parsed u64 value into
-> an unsigned int field with no clamping. The cgroup v2 path,
-> tg_set_limit(), already clamps the same kind of value with
-> min_t(u64, val, UINT_MAX), but the legacy path never did. Note that
-> the "!v -> U64_MAX" mapping only catches an explicit zero and does not
-> catch a value that truncates to zero.
+> blk_queue_for_each_rl() was added by commit a051661ca6d1 ("blkcg:
+> implement per-blkg request allocation") to iterate over the root request
+> list and per-blkg request lists for the legacy (non-blk-mq) request
+> allocation path.  The request_list code, including q->root_rl from
+> struct request_queue, was later removed in 2018 by commit db6d99523560
+> ("block: remove request_list code").
 >
-> With iops stored as 0, tg_update_has_rules() sets has_rules_iops[] and
-> the next IO reaches tg_within_iops_limit(), which computes
+> The macro definition left behind in the !CONFIG_BLK_CGROUP fallback
+> branch of the private block/blk-cgroup.h header now references the
+> removed q->root_rl field, and has no callers in-tree (it would fail to
+> compile if expanded, so it cannot have any out-of-tree users either).
 >
->      jiffy_wait =3D max(jiffy_wait, HZ / iops_limit + 1);
->
-> triggering a divide-by-zero oops.
->
-> Fix it in tg_set_conf() by clamping the value to UINT_MAX, consistent
-> with tg_set_limit(). This closes the truncation root cause: with 0 no
-> longer reachable as a stored limit, the HZ / iops_limit divide is never
-> hit.
+> Remove the dead stub.
 >
 > Signed-off-by: Tao Cui<cuitao@kylinos.cn>
->
 > ---
-> Changes in v4:
-> - Drop the defensive "iops_limit =3D=3D 0" check in tg_dispatch_iops_time=
-():
->    with the tg_set_conf() clamp in place, 0 can never be stored as a limi=
-t,
->    so the runtime check only guards an unreachable state. (Yu Kuai)
-> - Drop the Fixes: tag: the unclamped write -- and the iops=3D0 behavior i=
-t
->    can produce (calculate_io_allowed() returns 0, so no IO is issued) --
->    long predates the commit that added the HZ / iops_limit divide, so
->    attributing it there was incorrect. (Yu Kuai)
->
-> Changes in v3:
-> - Drop the (u64) cast on UINT_MAX: the kernel's type-checked min() accept=
-s
->    two unsigned types of different width (both >=3D 4 bytes), so
->    min(v, UINT_MAX) compiles clean. (David Laight)
->
-> Changes in v2:
-> - Use a "void *field" local for the config write so the assignment reads
->    *(u64 *)field / *(unsigned int *)field instead of the
->    (type *)((void *)tg + of_cft(of)->private) casts.
-> - Use min(v, UINT_MAX) instead of min_t(u64, v, UINT_MAX).
-> ---
->   block/blk-throttle.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
+>   block/blk-cgroup.h | 3 ---
+>   1 file changed, 3 deletions(-)
 Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
 --=20
