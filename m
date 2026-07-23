@@ -1,32 +1,32 @@
-Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
+Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22096360EC7
-	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 03:25:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCF483515FF;
+	Thu, 23 Jul 2026 03:25:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784777107; cv=none; b=ZYCZy48Hr1cD+SP6DaDzh5urTUrfm0KrGuaXYceYbSCKo4f9NyBZnx2C29jkLag1zfW1JAMVkT/gUB2KfiUjSFW6GWnb8fyUaWzu4XjWA4Cb4+hub3N3b1lyEVgoUxpVUwwrCP2Ecg2Z52XF41MTjX9r0czXok5rd+JzqkMluMw=
+	t=1784777113; cv=none; b=suiwAG5oT/IkZkAMldKGbmgA4TB941LCpq8o0gkCEI8E9dxgIp/Hims+j+X0g3n6bxyp/jxqL9IkIuDaBWrxcSqGtR6jQ8nGwkcgzbb0Yu+c3yLI8okG0yDG9T7NqlhSWDBbHk0/+FCTzCNfEIWDPIJ9+yxjvIfUgB/hGsgUADU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784777107; c=relaxed/simple;
-	bh=SyU1DDlB/XBi7CXYO/tA4ovJ4V4EbmjqW3jtRZ75R/A=;
+	s=arc-20240116; t=1784777113; c=relaxed/simple;
+	bh=GAXZV4f+lt9JBHVsH+ussiP0HD+QVVnHGCtB6CRKt14=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JhFPNg4R6U5Uw0DnGw3Mfzie2S18XH40q4GHFCwT+tnN04RUs6vMlQSZs32jUjsj0U9ujCh9FKNfTW8js/lJ873SOfKN3/3dpSL6CkYbG5i4sFlJbtNohREEIm3vHhYUijlV9C7g0zZc50m4QqSYzJlU2JJ8c610N98d25nL4MA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gykCpbqN; arc=none smtp.client-ip=91.218.175.184
+	 MIME-Version; b=Xq2PEkfwS/kwE7Vv8JeQ604JtORkBuIRteCYsTO9rfeRI3MKBnKE2+M78Fv28oreBxyjLo1jIU0pNz7+6JogTKB1opEzUC6vQsuMMFZzGxkg1W3QxhgJT6/8JfTxvvmsRoxGD3VNqZx9ZejKVOvo0pJjntLQCvizH51DrYGVCa8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=dWO4NxvV; arc=none smtp.client-ip=91.218.175.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gykCpbqN"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="dWO4NxvV"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784777102;
+	t=1784777108;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=t47mgjsy2KATKhTslu3AP/jd8ifMIeJbuWQDv9xr0N8=;
-	b=gykCpbqNsx4BiZ36b+UTQGtY+ftHVgYOSP8swT3LMfmfhdE0M4m4FkiWOu7gTEKoKrv/Nr
-	wKPC82RRw9bJ0XZNiur+JqNtAzBkesSdIgYJ8hUSDhf01VdoqTAAGATmEKcNmkMz4rouDE
-	iIuriFNDDi41duWXaSkBR/sMyyPEHJ4=
+	bh=Z8OTpiatQBHFhVb1kcbCtXbO04T0mIjzVEpsj33f5I8=;
+	b=dWO4NxvVnnjKGuqo3qzfxKzhUKo3sdjpaWPlrGNi6aOGIcZXw0WenQYF3Vs1M4OTZnArqC
+	9lcjRkm8zXCLDuvZf21/B6QEXLG3RPuuStjDBl8rvOEnAtYypC/wemgFHFpjWvOOdV8Q2Q
+	nNrovUKOq8dYSrn4gT/RZduAGdwZCZo=
 From: Ridong <ridong.chen@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
@@ -53,10 +53,11 @@ Cc: Muchun Song <muchun.song@linux.dev>,
 	linux-kernel@vger.kernel.org,
 	Song Hu <husong@kylinos.cn>,
 	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH -v4 1/2] memcg: move mem_cgroup_swappiness and vm_swappiness to mm/swap.h
-Date: Thu, 23 Jul 2026 11:24:33 +0800
-Message-Id: <20260723032434.2016749-2-ridong.chen@linux.dev>
+	Ridong Chen <chenridong@xiaomi.com>,
+	stable@vger.kernel.org
+Subject: [PATCH -v4 2/2] mm: vmscan: fix node reclaim ignoring swappiness parameter
+Date: Thu, 23 Jul 2026 11:24:34 +0800
+Message-Id: <20260723032434.2016749-3-ridong.chen@linux.dev>
 In-Reply-To: <20260723032434.2016749-1-ridong.chen@linux.dev>
 References: <20260723032434.2016749-1-ridong.chen@linux.dev>
 Precedence: bulk
@@ -70,146 +71,112 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Ridong Chen <chenridong@xiaomi.com>
 
-The per-memcg swappiness knob is v1-only; v2 always uses global
-vm_swappiness and ignores the per-cgroup field.
+sc_swappiness() had two separate definitions depending on
+CONFIG_MEMCG. The !CONFIG_MEMCG variant simply returned
+vm_swappiness, ignoring the proactive_swappiness value passed
+through scan_control. This caused the swappiness parameter
+written to /sys/devices/system/node/nodeX/reclaim to have no
+effect when CONFIG_MEMCG is disabled.
 
-Both mem_cgroup_swappiness() and vm_swappiness are only used within
-mm/ (memcontrol.c, memcontrol-v1.c, vmscan.c), so move them out of the
-public include/linux/swap.h into the mm-private mm/swap.h. This keeps
-unrelated declarations out of include/linux/swap.h.
+Fix this by consolidating sc_swappiness() into a single definition
+that checks sc->proactive_swappiness first, then falls back to
+mem_cgroup_swappiness() which already handles both CONFIG_MEMCG
+and !CONFIG_MEMCG.
 
-Guard memcg->swappiness with CONFIG_MEMCG_V1 as well, so v2-only
-kernels drop the unused field.
+Before fix (swappiness=max ignored, mostly file pages reclaimed):
 
-No functional change for v1; v2-only kernels drop the unused field.
+    # cat /proc/sys/vm/swappiness
+    60
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 1840
+    pgsteal_anon 25
+    pgsteal_file 1815
+    # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 18013
+    pgsteal_anon 337
+    pgsteal_file 17676
 
+After fix (swappiness=max honored, anon pages reclaimed as expected):
+
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 0
+    pgsteal_anon 0
+    pgsteal_file 0
+    # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 16283
+    pgsteal_anon 16283
+    pgsteal_file 0
+
+Cc: stable@vger.kernel.org # 6.17+
+Fixes: b980077899ea ("mm: introduce per-node proactive reclaim interface")
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 Reviewed-by: Barry Song <baohua@kernel.org>
+Acked-by: Qi Zheng <qi.zheng@linux.dev>
+Tested-by: Song Hu <husong@kylinos.cn>
 Reviewed-by: Song Hu <husong@kylinos.cn>
 Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
- include/linux/memcontrol.h |  4 ++--
- include/linux/swap.h       | 19 -------------------
- mm/memcontrol.c            |  4 ++--
- mm/swap.h                  | 13 +++++++++++++
- 4 files changed, 17 insertions(+), 23 deletions(-)
+ mm/vmscan.c | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 957260677678..e7a794dfb40e 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -239,8 +239,6 @@ struct mem_cgroup {
- 	 */
- 	bool oom_group;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 06e103f9781e..155167b3614b 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -199,6 +199,13 @@ struct scan_control {
+  */
+ int vm_swappiness = 60;
  
--	int swappiness;
--
- 	/* memory.events and memory.events.local */
- 	struct cgroup_file events_file;
- 	struct cgroup_file events_local_file;
-@@ -318,6 +316,8 @@ struct mem_cgroup {
- 	/* List of events which userspace want to receive */
- 	struct list_head event_list;
- 	spinlock_t event_list_lock;
++static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
++{
++	if (sc->proactive && sc->proactive_swappiness)
++		return *sc->proactive_swappiness;
++	return mem_cgroup_swappiness(memcg);
++}
 +
-+	int swappiness;
- #endif /* CONFIG_MEMCG_V1 */
- 
- 	struct mem_cgroup_per_node *nodeinfo[];
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 0544b2ec4c56..45f301d73e2a 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -309,7 +309,6 @@ static inline bool lru_cache_disabled(void)
- }
- 
- extern unsigned long shrink_all_memory(unsigned long nr_pages);
--extern int vm_swappiness;
- long remove_mapping(struct address_space *mapping, struct folio *folio);
- 
- #if defined(CONFIG_SYSFS) && defined(CONFIG_NUMA)
-@@ -473,25 +472,7 @@ static inline int add_swap_extent(struct swap_info_struct *sis,
- }
- #endif /* CONFIG_SWAP */
  #ifdef CONFIG_MEMCG
--static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
+ 
+ /* Returns true for reclaim through cgroup limits or cgroup interfaces. */
+@@ -239,13 +246,6 @@ static bool writeback_throttling_sane(struct scan_control *sc)
+ #endif
+ 	return false;
+ }
+-
+-static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
 -{
--	/* Cgroup2 doesn't have per-cgroup swappiness */
--	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
--		return READ_ONCE(vm_swappiness);
--
--	/* root ? */
--	if (mem_cgroup_disabled() || mem_cgroup_is_root(memcg))
--		return READ_ONCE(vm_swappiness);
--
--	return READ_ONCE(memcg->swappiness);
+-	if (sc->proactive && sc->proactive_swappiness)
+-		return *sc->proactive_swappiness;
+-	return mem_cgroup_swappiness(memcg);
 -}
+ #else
+ static bool cgroup_reclaim(struct scan_control *sc)
+ {
+@@ -261,11 +261,6 @@ static bool writeback_throttling_sane(struct scan_control *sc)
+ {
+ 	return true;
+ }
 -
- void lru_reparent_memcg(struct mem_cgroup *memcg, struct mem_cgroup *parent, int nid);
--#else
--static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
+-static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
 -{
 -	return READ_ONCE(vm_swappiness);
 -}
  #endif
  
- #if defined(CONFIG_SWAP) && defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8319ad8c5c23..6864b76456fb 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -63,6 +63,7 @@
- #include <linux/sched/isolation.h>
- #include <linux/kmemleak.h>
- #include "internal.h"
-+#include "swap.h"
- #include "swap_table.h"
- #include <net/sock.h>
- #include <net/ip.h>
-@@ -4176,11 +4177,10 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- #endif
- 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
- 	if (parent) {
--		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
--
- 		page_counter_init(&memcg->memory, &parent->memory, memcg_on_dfl);
- 		page_counter_init(&memcg->swap, &parent->swap, false);
- #ifdef CONFIG_MEMCG_V1
-+		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
- 		memcg->memory.track_failcnt = !memcg_on_dfl;
- 		WRITE_ONCE(memcg->oom_kill_disable, READ_ONCE(parent->oom_kill_disable));
- 		page_counter_init(&memcg->kmem, &parent->kmem, false);
-diff --git a/mm/swap.h b/mm/swap.h
-index abd26588abd2..d077e5893a42 100644
---- a/mm/swap.h
-+++ b/mm/swap.h
-@@ -4,6 +4,7 @@
- 
- #include <linux/atomic.h> /* for atomic_long_t */
- #include <linux/mm.h> /* for PAGE_SHIFT */
-+#include <linux/memcontrol.h> /* for mem_cgroup_swappiness() */
- 
- struct mempolicy;
- struct swap_iocb;
-@@ -99,6 +100,18 @@ struct swap_ops {
- 	void (*submit_read)(struct swap_io_ctx *ctx);
- };
- 
-+extern int vm_swappiness;
-+
-+static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
-+{
-+#ifdef CONFIG_MEMCG_V1
-+	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
-+	    !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg))
-+		return READ_ONCE(memcg->swappiness);
-+#endif
-+	return READ_ONCE(vm_swappiness);
-+}
-+
- #ifdef CONFIG_SWAP
- #include <linux/swapops.h> /* for swp_offset */
- #include <linux/blk_types.h> /* for bio_end_io_t */
+ static void set_task_reclaim_state(struct task_struct *task,
 -- 
 2.34.1
 
