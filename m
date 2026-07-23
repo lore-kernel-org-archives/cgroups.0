@@ -1,30 +1,32 @@
-Received: from out-188.mta0.migadu.com (out-188.mta0.migadu.com [91.218.175.188])
+Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E21E9347521
-	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 02:59:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446D43385A1
+	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 02:59:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784775574; cv=none; b=HloUXs5a4XSo8rKRKmneYEY2IZLw6jlC+SN/JevgZanxiaOPBf/1bUVVOfkLM0+KErhbr/Gt6yWgckGEPB92R4g1tOfW6auBzWUGqbz2OgcsxmWZDvTprRK2KyDCGlHsPR/F3kSu9tD/Pl26VtletCoqFdTsgNb0vU+VDyl2VOo=
+	t=1784775579; cv=none; b=m+sRMshBWm0FyP9OF915DnWqgqZxGsQCPMzSXX6qo2kvHQUfv2SzmSuTUjv3mu6W4A0LEQ+4RSB++ZDE19nWJTyH799FxNeiCBUo3KRy5rDqqMTuOnBu3Dss0KQPctAiA1Fth+1FIwuQ1FQxN+rusyQetH7y8k3o0G3ScKL72Rg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784775574; c=relaxed/simple;
-	bh=ZIglIw1XuGPV0FB+8lncHWoPzzxwkqMpBGwV16CW4WA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FybQzyGxUx8r/WEkeWD4XvIsq2MHWly9hf6W5/dtDhc88pAbl/tXUs2C7ig3FukT9l3vbjzefEYMn3qMVv8pDS1xszMoM15cz0ZHaXlZIB7JmUf38I5PeP407EcDLI5e2YOFwQmzyPvHNgWImpuTIHt0UTCj+O914dT/vivfQ+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=IvT+tuwv; arc=none smtp.client-ip=91.218.175.188
+	s=arc-20240116; t=1784775579; c=relaxed/simple;
+	bh=GAXZV4f+lt9JBHVsH+ussiP0HD+QVVnHGCtB6CRKt14=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=umHomhbEza+mpD/8eqtomDm5c8RHtqafjLaqXz1vsLXIScreU5dU2ysAOoWip0NMMGS7aOwk39FJv/qgj3uCtdZ0mwaMHYg1+Pq1bACVnl4gntVQo51sZOYyRVbIrGRw1QB1ZO12D5tRnVJvF5i1PVaT0I/zmHkzLVFtwCSMkXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=SQEcIDr2; arc=none smtp.client-ip=91.218.175.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="IvT+tuwv"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="SQEcIDr2"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784775560;
+	t=1784775574;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=lxnP6SUwergpNTfnZVhMNth7W47feWOp/n3K9KDqgX0=;
-	b=IvT+tuwvJNHdUbyD7+s3z1Z3+78G2kQUozmyyg3XdVZuRdm5rEjCKXQvTBYChs6T2lhGPV
-	vV15mlwODOefNbdR27GrCSMo9gfaX32qzMfzomG8HuHRbLgVyg1W5aFY2vsIz8ab+WOkzM
-	KZX4PToNn2LIZnvBxSNMoT+WGBQspKk=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z8OTpiatQBHFhVb1kcbCtXbO04T0mIjzVEpsj33f5I8=;
+	b=SQEcIDr2tw82PVukVDpkp/Udjvjce6EtsKMOY+rD1choFe5zG8AMa9uPXyGTujI7GyimE0
+	zWgRQLzJkCQL4sc59iUPNdKFMOrAi9rGiiIVEIp7O+pl4ZlC0t6ixczeZXmcKnwoD1jEOB
+	xBeJ1h+TgFRmmV58WTgs2bIwHG3nJ1Q=
 From: Ridong <ridong.chen@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
@@ -51,10 +53,13 @@ Cc: Muchun Song <muchun.song@linux.dev>,
 	linux-kernel@vger.kernel.org,
 	Song Hu <husong@kylinos.cn>,
 	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH -v3 0/2] mm: vmscan: fix node reclaim ignoring swappiness parameter
-Date: Thu, 23 Jul 2026 10:58:56 +0800
-Message-Id: <20260723025858.1956584-1-ridong.chen@linux.dev>
+	Ridong Chen <chenridong@xiaomi.com>,
+	stable@vger.kernel.org
+Subject: [PATCH -v3 2/2] mm: vmscan: fix node reclaim ignoring swappiness parameter
+Date: Thu, 23 Jul 2026 10:58:58 +0800
+Message-Id: <20260723025858.1956584-3-ridong.chen@linux.dev>
+In-Reply-To: <20260723025858.1956584-1-ridong.chen@linux.dev>
+References: <20260723025858.1956584-1-ridong.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -66,44 +71,112 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Ridong Chen <chenridong@xiaomi.com>
 
-The per-node proactive reclaim interface
-(/sys/devices/system/node/nodeX/reclaim) accepts a swappiness parameter,
-but it is silently ignored when CONFIG_MEMCG is disabled. The root cause
-is that sc_swappiness() has separate implementations for CONFIG_MEMCG and
-!CONFIG_MEMCG, and the latter never checks proactive_swappiness.
+sc_swappiness() had two separate definitions depending on
+CONFIG_MEMCG. The !CONFIG_MEMCG variant simply returned
+vm_swappiness, ignoring the proactive_swappiness value passed
+through scan_control. This caused the swappiness parameter
+written to /sys/devices/system/node/nodeX/reclaim to have no
+effect when CONFIG_MEMCG is disabled.
 
-Patch 1 moves mem_cgroup_swappiness() and vm_swappiness out of the public
-include/linux/swap.h into the mm-private mm/swap.h, and makes the helper
-handle both CONFIG_MEMCG and !CONFIG_MEMCG in a single inline function.
-This is a prerequisite for unifying sc_swappiness().
+Fix this by consolidating sc_swappiness() into a single definition
+that checks sc->proactive_swappiness first, then falls back to
+mem_cgroup_swappiness() which already handles both CONFIG_MEMCG
+and !CONFIG_MEMCG.
 
-Patch 2 consolidates sc_swappiness() into a single definition that works
-regardless of CONFIG_MEMCG, fixing the node reclaim swappiness bug.
+Before fix (swappiness=max ignored, mostly file pages reclaimed):
 
+    # cat /proc/sys/vm/swappiness
+    60
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 1840
+    pgsteal_anon 25
+    pgsteal_file 1815
+    # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 18013
+    pgsteal_anon 337
+    pgsteal_file 17676
+
+After fix (swappiness=max honored, anon pages reclaimed as expected):
+
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 0
+    pgsteal_anon 0
+    pgsteal_file 0
+    # echo "64M swappiness=max" > /sys/devices/system/node/node0/reclaim
+    # cat /proc/vmstat | grep pgsteal
+    pgsteal_kswapd 0
+    pgsteal_direct 0
+    pgsteal_khugepaged 0
+    pgsteal_proactive 16283
+    pgsteal_anon 16283
+    pgsteal_file 0
+
+Cc: stable@vger.kernel.org # 6.17+
+Fixes: b980077899ea ("mm: introduce per-node proactive reclaim interface")
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Barry Song <baohua@kernel.org>
+Acked-by: Qi Zheng <qi.zheng@linux.dev>
+Tested-by: Song Hu <husong@kylinos.cn>
+Reviewed-by: Song Hu <husong@kylinos.cn>
+Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
+ mm/vmscan.c | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
-v2 -> v3:
- - Simplify mem_cgroup_swappiness as suggested by Johannes.  
- - Rebase on the next-20260722
-
-v1 -> v2:
- - Move mem_cgroup_swappiness() and vm_swappiness to mm/swap.h instead of
-   include/linux/memcontrol.h. Suggested by Barry Song.
- - Correct fix tag for patch 2.
-
-v1: https://lore.kernel.org/all/20260711091157.306070-1-ridong.chen@linux.dev/
-
-Ridong Chen (2):
-  memcg: move mem_cgroup_swappiness and vm_swappiness to mm/swap.h
-  mm: vmscan: fix node reclaim ignoring swappiness parameter
-
- include/linux/memcontrol.h |  4 ++--
- include/linux/swap.h       | 19 -------------------
- mm/memcontrol.c            |  4 ++--
- mm/swap.h                  | 13 +++++++++++++
- mm/vmscan.c                | 19 +++++++------------
- 5 files changed, 24 insertions(+), 35 deletions(-)
-
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 06e103f9781e..155167b3614b 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -199,6 +199,13 @@ struct scan_control {
+  */
+ int vm_swappiness = 60;
+ 
++static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
++{
++	if (sc->proactive && sc->proactive_swappiness)
++		return *sc->proactive_swappiness;
++	return mem_cgroup_swappiness(memcg);
++}
++
+ #ifdef CONFIG_MEMCG
+ 
+ /* Returns true for reclaim through cgroup limits or cgroup interfaces. */
+@@ -239,13 +246,6 @@ static bool writeback_throttling_sane(struct scan_control *sc)
+ #endif
+ 	return false;
+ }
+-
+-static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
+-{
+-	if (sc->proactive && sc->proactive_swappiness)
+-		return *sc->proactive_swappiness;
+-	return mem_cgroup_swappiness(memcg);
+-}
+ #else
+ static bool cgroup_reclaim(struct scan_control *sc)
+ {
+@@ -261,11 +261,6 @@ static bool writeback_throttling_sane(struct scan_control *sc)
+ {
+ 	return true;
+ }
+-
+-static int sc_swappiness(struct scan_control *sc, struct mem_cgroup *memcg)
+-{
+-	return READ_ONCE(vm_swappiness);
+-}
+ #endif
+ 
+ static void set_task_reclaim_state(struct task_struct *task,
 -- 
 2.34.1
 
