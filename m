@@ -1,165 +1,191 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C1C2361656
-	for <cgroups@vger.kernel.org>; Thu, 23 Jul 2026 03:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CD1242D7B;
+	Thu, 23 Jul 2026 06:27:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784777125; cv=none; b=p3yC42DII8L1IFaSI0jxnJhpmxW15HKWDPu0gLKHV03sGn0XWNGPekVCK/WBrA/mhG/D+/htoAj/BtNHox6ZwIhqtsBIxgTBVEDpm1cO8S+f/pn4TFpHukjuA7IM7KMtn6FhFKmovs05zG7vha5NVB7FCiWRivXkLbl7QPwKI5M=
+	t=1784788080; cv=none; b=GotOi46UmiDzbIWOtq6UDr2Mt01MTgjP5qezwKcZmMOcAeBIn0FztM1haA683TpuU0EXbopN0ao3eBky379KPkgkbV0OQBNv52tlaFJGbadOH3XNEFBIILhj6ufg8wWgSlq2CUlxs0JrH3dPBA1e+r0Bkmet5Ed5L6Eq7MyzHPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784777125; c=relaxed/simple;
-	bh=gfT0G2h32Mgahppc0W5ji5WK8maIODJ9zFl+mqtZVuU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aBLmhHtTdGqyFhWTwTF63TWSso+9RLUzo/VVkBJUE/ElVPs+16owzEmf7J+B2XH0VnCjV/+0IugtzzGsIGOBPvVWcH0jNa+Ax58quo0/hoXHR3dpRDBhZBpU3XUoBPwVQTawUfheIwJ0DHCkyWgzp4/r9llLTY8kppVujlKUe5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=S5k+/km/; arc=none smtp.client-ip=209.85.222.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	s=arc-20240116; t=1784788080; c=relaxed/simple;
+	bh=q85OUQan+Ae0Q5TWBtVxvdxhCPGjznbxSgPKtKiAMfo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QBE4FDpTqWH1p2lUzphh69qTrj01/waC3X2nHfjKxDBuXK4DmMDSE1zDPXCpsOu4pAkZtCbAcFJZSJHdneNuNcFOPYcATZiwCd4IXsC8/wllTpPZwrjv0WdKyAPYE7kYKV/i4QTC9VlOCXDK/9lZhSUxdSVdupyuUIgMpiL/wpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YPjzG0HK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="S5k+/km/"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-92ed19f4d60so333785a.0
-        for <cgroups@vger.kernel.org>; Wed, 22 Jul 2026 20:25:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1784777122; x=1785381922; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Kd13UizLWaDa1rNXvY/PJ0N43yZ3Vd9IZn7XTlTXtfM=;
-        b=S5k+/km/W3hDbRibPNpOoB80+fMcI4MbaVCKgEaeGawR+FQWl9kNV2iUGzMuP5o587
-         /iaVfV9Jd+R4VNTdxnjkkgdz20NTR/Eu8b80hXADBRflMrWslncYyJ3SvD3gwvv5ngtC
-         ziCEhyqOck9EWcwsKAG1K0Fzc1bP7k6aIwfto2hePcg8FFQ5b1ILjIFtAueuSZJkiFL5
-         nYdguJXw90nDowVcfKGttiFdnF1n59L9sXbcemc/huQrcwmkhJfTVLcf0o+RBBzMGJDB
-         vgBWGT12txaO7gCP8wM5mTntpmBdTwxcjXyxbZfzrXl9J3a1TwC6EBaOEEphMqOrCOjK
-         FmPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784777122; x=1785381922;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Kd13UizLWaDa1rNXvY/PJ0N43yZ3Vd9IZn7XTlTXtfM=;
-        b=KMXVIjdS/fPv9bEDHhJthsUVaidVS2KHVea0H/pT01lNDr6XHBxujQh/iM5nFqiL8g
-         HBVWZV9RFWmsNjmXeTjcOCHku4M1nqmokEYcaQkNQBYjUAcL7spjjaKxtGOICg45gfVG
-         4FQeUMPT/C4Xp5QT6T23R5cqHlzGU7t/forjdUd/HKxxTbxs5DJ05M1IlTt7A8OYzH3+
-         k6dCWOHxQeqeZ/ye1S11KZREm3LDjEZyP3SfGpvTQcRmz6aZVHDGVyakmyTcJ5Ev1ap5
-         qPx95KIrseb0iGMt2DpvyHhVLFeQYWJFXzLWIeQLOgO5qb7nWpMKRGVguu4YnkLC9+Oj
-         7fpQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqxvAdL2/camuuHHqvLp4ire/GIa7W/DNCUc6x7PcQO7fdfe7/P26gX52Cbv7mLdwTrbU+HvsRO@vger.kernel.org
-X-Gm-Message-State: AOJu0YxsoTJFJl8pIVN7CY05YkKxgfz14Qgk3+BuX6i9kNSBUxSQVNz/
-	77Qc48B5IfcWJe8F1pGROY/5vFkmydUVGk4Oe0uMuUELbWMdNK8QMH6X7oy9o0Yx4TM=
-X-Gm-Gg: AR+sD11E1yc7IUaQB15DWVP5eyu/HI/MdvjrmCzWBtdZr0v3ROaRav5FKERo+wH86DV
-	E/7tTWFqusjtzPFYjnRg3L3F+93YxUdKYLiVy/SaJwQnqYQiuwS2F5rbh4u0q/Tfy2VBgqA7fqf
-	GHUr8jc8gUiES3L/jo4sAVvzty35+g7Zo7gnESot4UPKfWiocRS52KjSwUYvu0nh0fVSWuMSx6n
-	i7DtmaZm8YbZm+os52Q3A0t8ZpbD0GKv+EcquwjUKkeZF95nGS/6IQY7lYvbbtJJPR7qkXT0Sxi
-	upL+CEMy8RJ4XDByaiDtvOByBXDtsuHKG6e5kCTYAMEB++1ZaR8JkeyfTOqeli8VVHamf2UWBfE
-	cjSS8DoX/qKFEj/PsDshv76RZxJ4+tqX6HrDcmWTCh26NPMtXdGXFEMd+NN/vEYYVv3pkJ697MR
-	WV8oz33stfYW3Rvy6i7PB1VmAOhixpYxgnhUbVqSnxRgaM4ZJEsc8z5MY/EaFdJmd1zF2N
-X-Received: by 2002:a05:620a:808c:b0:92b:67e6:4b79 with SMTP id af79cd13be357-931048880c8mr90170685a.35.1784777122066;
-        Wed, 22 Jul 2026 20:25:22 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-931062c4ea8sm34465885a.28.2026.07.22.20.25.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Jul 2026 20:25:21 -0700 (PDT)
-Date: Wed, 22 Jul 2026 23:25:15 -0400
-From: Gregory Price <gourry@gourry.net>
-To: SJ Park <sj@kernel.org>
-Cc: arun.george@samsung.com, balbirs@nvidia.com, brendan.jackman@linux.dev, 
-	yuzenghui@huawei.com, apopple@nvidia.com, alucerop@amd.com, matthew.brost@intel.com, 
-	akpm@linux-foundation.org, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
-	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com, 
-	corbet@lwn.net, skhan@linuxfoundation.org, gregkh@linuxfoundation.org, 
-	rafael@kernel.org, dakr@kernel.org, djbw@kernel.org, vishal.l.verma@intel.com, 
-	dave.jiang@intel.com, alison.schofield@intel.com, osandov@osandov.com, 
-	jannh@google.com, pfalcato@suse.de, jackmanb@google.com, hannes@cmpxchg.org, 
-	ziy@nvidia.com, pbonzini@redhat.com, osalvador@suse.de, joshua.hahnjy@gmail.com, 
-	rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com, 
-	kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev, baohua@kernel.org, 
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, yury.norov@gmail.com, 
-	linux@rasmusvillemoes.dk, longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org, 
-	mkoutny@suse.com, jgg@ziepe.ca, jhubbard@nvidia.com, peterx@redhat.com, 
-	baolin.wang@linux.alibaba.com, npache@redhat.com, ryan.roberts@arm.com, dev.jain@arm.com, 
-	lance.yang@linux.dev, usama.arif@linux.dev, xu.xin16@zte.com.cn, 
-	chengming.zhou@linux.dev, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, driver-core@lists.linux.dev, 
-	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, cgroups@vger.kernel.org, 
-	damon@lists.linux.dev, linux-kselftest@vger.kernel.org, kernel-team@meta.com
-Subject: Re: [PATCH v5 14/36] mm/damon: skip private node memory in DAMON
- migration and pageout
-Message-ID: <amGHuputMNCFZ9CV@gourry-fedora-PF4VCD3F>
-References: <amCzmkdOr6AFv_kQ@gourry-fedora-PF4VCD3F>
- <20260723001943.95854-1-sj@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YPjzG0HK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81EFF1F000E9;
+	Thu, 23 Jul 2026 06:27:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784788078;
+	bh=BPGIxjg2fvOObq3ApTehOQxmp9hWxXn/JtuKKDwREDg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=YPjzG0HKWyOi7d9iOKzBWEMsrwb+6qVAvKGm3yO1k+hH8+8o3eYmS9GJiEkj5h2+A
+	 M3BlaNMoNz/bul/F/Pjc+6IFZq+yw2Lg+/Y+v8kpBB4Z7Gt0jxQ/9keLZ9e3535Xlr
+	 0TdsgFsM1DxgePRpFkjm1ycO3YNOti6AW9xayvlEJbhsR6Z2zaVn4jhu2N1L7nOsih
+	 as0FD4UqccGC0eQ4gzTouCYN9lAb8mYmSpQ0T9W9J+DtL1yIUAONyZJldae6z+OS0P
+	 rogcL4PDnA2aky0jiiV0m+nH60U0kONX743S23Gd4+aLFc5Co8M+mPbI79DF5kztY8
+	 H3L9TLPIn3SBg==
+Message-ID: <9b2dadb7-8e3d-4b9b-a870-969be9a7a432@kernel.org>
+Date: Thu, 23 Jul 2026 15:27:51 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260723001943.95854-1-sj@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 09/13] mm/slab: change struct slabobj_ext to a union
+To: Hao Li <hao.li@linux.dev>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Suren Baghdasaryan <surenb@google.com>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-9-2fa7c6f60dbe@kernel.org>
+ <amGEY5w-cBm4_uhx@fedora>
+Content-Language: en-US
+From: Harry Yoo <harry@kernel.org>
+In-Reply-To: <amGEY5w-cBm4_uhx@fedora>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------S1stg09klGnjKz70otvyV0jo"
 
-On Wed, Jul 22, 2026 at 05:19:42PM -0700, SJ Park wrote:
-> On Wed, 22 Jul 2026 08:16:56 -0400 Gregory Price <gourry@gourry.net> wrote:
-> 
-> > > "by default".  Does that mean it could be reclaimable in some situations?  If
-> > > so, could we check if it is reclaimable?
-> > > 
-> > 
-> > See the damon changes in:
-> > 
-> > https://lore.kernel.org/linux-mm/al-pkvmgIxGu3LzM@gourry-fedora-PF4VCD3F/T/#mfb99303c85dd9d4c3f58832dc28fc55583a7217a
-> 
-> Summarizing what you want to say, quoting something from the patch, or at least
-> calling it "26th patch of this series" would have made reviewing much easier.
-> Cc-ing damon@ for only patches that toucing DAMON source files and the cover
-> letter of the series could also be helpful.  Please consider doing some of
-> these for future replies.
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------S1stg09klGnjKz70otvyV0jo
+Content-Type: multipart/mixed; boundary="------------7Aat19BJ00A9a69ufvP0WjqI";
+ protected-headers="v1"
+From: Harry Yoo <harry@kernel.org>
+To: Hao Li <hao.li@linux.dev>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Suren Baghdasaryan <surenb@google.com>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Message-ID: <9b2dadb7-8e3d-4b9b-a870-969be9a7a432@kernel.org>
+Subject: Re: [PATCH v2 09/13] mm/slab: change struct slabobj_ext to a union
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-9-2fa7c6f60dbe@kernel.org>
+ <amGEY5w-cBm4_uhx@fedora>
+In-Reply-To: <amGEY5w-cBm4_uhx@fedora>
 
-I have been very much discouraged from this kind of trimming because it
-removes the context of the series from the individual patches - making it
-even more confusing.
+--------------7Aat19BJ00A9a69ufvP0WjqI
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-But I understand, I will try to remember to do this for you.
 
-> So, I understand later patches will make it optionally reclaimable and update
-> this restriction by the 26th patch?  That sounds fair.  But, could we drop "by
-> default" from the above comment for reducing the confusion?
 
-Yes, but you bring up a good point - I think this two-step process is
-actually poor form and that I need to redo it.
+On 7/23/26 12:05 PM, Hao Li wrote:
+> On Mon, Jul 20, 2026 at 04:16:23PM +0200, Vlastimil Babka (SUSE) wrote:=
 
-Maybe this can be redone as node states (features?) such as:
+>> Currently, struct slabobj_ext can hold both objcg pointer and
+>> codetag_ref (when both are compile-enabled) and there is an array of a=
+s
+>> many slabobj_ext instances as there are objects in a slab.
+>>
+>> This makes the layout fixed so even if codetag_ref is unused (because
+>> memory allocation profiling is disabled), the space for them is
+>> allocated and wasted. Similarly, some caches (currently kmalloc_normal=
+)
+>> do not ever need objcg pointers, leading to wasted memory with memory
+>> allocation profiling enabled.
+>>
+>> To make this more flexible, change the layout so that struct slabobj_e=
+xt
+>> becomes a union of objcg pointer and codetag_ref (to ensure uniform
+>> size; in practice both are the same size anyway). The slabobj_ext arra=
+y
+>> then can have twice as many elements as before. For cache locality
+>> purposes, the effective memory layout is unchanged, so objcg and codet=
+ag
+>> ref for a given object are still adjacent.
+>>
+>> cache_obj_ext_size() returns the effective size of (0-2) struct
+>> slabobj_ext's for a cache, slab_obj_ext_size() for a slab. Currently
+>> both return a constant value derived from the config options, but will=
 
-   N_MEMORY_RECLAIMABLE
-   N_MEMORY_DEMOTABLE
-   N_MEMORY_TIERABLE
+>> be made dynamic later. Replace all sizeof(slabobj_ext) usage with thes=
+e.
+>>
+>> No functional change intended, the layout is still effectively static.=
 
-so these damon changes will forego this confusing intermediate step of:
+>>
+>> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+>> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+>> ---
+>>  mm/slab.h | 49 +++++++++++++++++++++++++++++++++++++++----------
+>>  mm/slub.c | 19 +++++++++++--------
+>>  2 files changed, 50 insertions(+), 18 deletions(-)
+>>
+>> diff --git a/mm/slab.h b/mm/slab.h
+>> index e586798e4f16..f8446167e175 100644
+>> --- a/mm/slab.h
+>> +++ b/mm/slab.h
+>> @@ -550,18 +550,42 @@ static inline bool need_kmalloc_no_objext(void)
+>>  }
+>> =20
+>>  /*
+>> - * Extended information for slab objects stored as an array in page->=
+memcg_data
+>> - * if MEMCG_DATA_OBJEXTS is set.
+>> + * Extended information for slab objects stored as a pointer to an ar=
+ray in
+>> + * slab->obj_exts (aliasing page->memcg_data) if MEMCG_DATA_OBJEXTS i=
+s set.
+>>   */
+>>  struct slabobj_ext {
+>> +	/*
+>> +	 * All elements of the union should be pointer-sized to avoid memory=
 
-   if (folio_is_private_node(folio))
+>> +	 * waste
+>> +	 */
+>> +	union {
+>>  #ifdef CONFIG_MEMCG
+>> -	struct obj_cgroup *_objcg;
+>> +		struct obj_cgroup *_objcg;
+>>  #endif
+>>  #ifdef CONFIG_MEM_ALLOC_PROFILING
+>> -	union codetag_ref _ctref;
+>> +		union codetag_ref _ctref;
+>>  #endif
+>> +	};
+>>  } __aligned(8);
+>=20
+> slabobj_ext is now acting as a generic struct, serving as either _objcg=
+ or
+> _ctref. However, because it's set to __aligned(8), I'm wondering if thi=
+s might
+> waste half the memory on 32-bit?
 
-and go straight to
+We could loosen the alignment to
+max(__NR_OBJEXTS_FLAGS, alignof(void *))
 
-   if (node_is_reclaimable(folio_nid(folio)))
+and drop OBJEXT_FLAG_UNUSED.
 
-In the first patch - without ever having to revisit damon again.
+=2E..not sure how much we care about this on 32bit though.
 
-> > 
-> > Technically there is nothing in migration core to prevent migration
-> > operations, it's done on a service basis - hotunplug, reclaim/demotion,
-> > user numa (mbind, migrate/move_pages) etc.
-> > 
-> > Operations on private nodes/private node folioes are refused if the
-> > capability bit is not set.
-> 
-> I haven't had a chance to read the entire series, sorry about that.  So, do you
-> mean the above blocking is not really needed, or that will conditionally be
-> allowed by another later patch?
-> 
+--=20
+Cheers,
+Harry / Hyeonggon
 
-I will reduce this all to a single patch in v6, I see where things can
-be improved now based on a few pieces of feedback.
+--------------7Aat19BJ00A9a69ufvP0WjqI--
 
-Thanks SJ!
-~Gregory
+--------------S1stg09klGnjKz70otvyV0jo
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCamG0ZwAKCRCGXBN6rc5S
+1qvSAQD8ldDgjvd06RRWLX1ZE+QZB780OCmBJqOM3n4si+4IMgEAnr9xvjuton1b
++1ODJQBFyP54dvPyJNUOAoq7Bs43tQY=
+=Z9VW
+-----END PGP SIGNATURE-----
+
+--------------S1stg09klGnjKz70otvyV0jo--
