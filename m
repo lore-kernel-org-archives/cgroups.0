@@ -1,273 +1,265 @@
-Received: from esa10.hc1455-7.c3s2.iphmx.com (esa10.hc1455-7.c3s2.iphmx.com [139.138.36.225])
+Received: from out-170.mta1.migadu.com (out-170.mta1.migadu.com [95.215.58.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B02DB353A89;
-	Fri, 24 Jul 2026 09:42:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=139.138.36.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11F7441D239
+	for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 09:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784886123; cv=none; b=LCxSsFKNt86/nk2CSAAXoKyycGYZk49fWtOzGzrP8N1tTdoZGEUIjQcd/d0czLmjIwWh4ZyflM9Dc9KHbiK49TdvPIJdosStatOxdDXvknuWw3QsmGakGj60C0Z+GDQFSIXcUOwSappKac2pT+qYfwb9WvXF3IguFJJRxbET1is=
+	t=1784886124; cv=none; b=XTBLEKHADAPKd/waSr32TEh+pd/YWu2csORapv4rNnJYFwHGrXBhSPTCSv5bjmkjgjFxvkLyDEUyZkwcKkdhSz4rIMFJrCM0ZEQcURyHmWq+t4LPvDcYRcTNR+9HR89ISL2/erFVdNlN0KdJBXwGXIAY25XBfLSUXXgb5x91cAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784886123; c=relaxed/simple;
-	bh=RNkuio2LL2Nc30zjeKwe+1C7Rs23SB5prtaVUYCMtMo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u0Kp7PFMn2hkrun6uF82DhY5b/UyXNfYBF8jWPO59Io66OHyHz1qDQLvReMDE68c7CgmFY21kPgpD3ywZ/DUWED5sy+0OmrxTbhN6PUEupLyQCw9D0Dfsf8bRknbEgzPxa/SkNBBUKEP0XRmHM6Hryrmw/hmanagYPvHH+tA7aQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=lG5SXxU7; arc=none smtp.client-ip=139.138.36.225
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
+	s=arc-20240116; t=1784886124; c=relaxed/simple;
+	bh=eF+ZNa95G1XLHLWwA4ZSIYqH2NO20l0YLcqU4FvSNus=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tFo7shMlAHMePbN7FBZBryu+ydMLnFh7Oae8EzvW9cE8LZP8qfrizJSBFza+X3+sqkeHtKSHu7wC/EQrib5NKgVFwCCaJifTsyvYw2qmrcMGAwYCo2JD5/Q5p1wFfFTlUKHzUexE+jmo9+RAwv342HdAzIvIXGt7YAfdjpCTk7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XVMPfTgd; arc=none smtp.client-ip=95.215.58.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="lG5SXxU7"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
-  t=1784886124; x=1816422124;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=RNkuio2LL2Nc30zjeKwe+1C7Rs23SB5prtaVUYCMtMo=;
-  b=lG5SXxU7Cga6Op1XFbqwMZdv2ex0F1bSvsB+i9tTl13PoP3e/Gm+Frqc
-   TFwwvajCrQqLQI0uRD40tVZuRMX4+E3bhHEJkTRIQDkpk9QbZiO4ReYr0
-   8bBz/n8KApLoAUOY7/CViImxrsMd5InOBzCXy5Xhr/VVO9jXY3qoBcbJd
-   ILu2pCIGHX7oEFNFrBZkYSgjTeL/I+Ty02f51Btdt8Bw5P6/AJLBPXxAz
-   3DGzcmaZqmw28XoOC5Rmw7if7OkmuhfrU0kc4339O8J1+cx4UAM92AM+N
-   +JA2M09sccBTIb7qpkQbTqU/vE2PyqGrWwsr9bINoaa0nvc/omIQsgNT+
-   Q==;
-X-CSE-ConnectionGUID: v0DSeQeDQ1eCErNitH9H0Q==
-X-CSE-MsgGUID: NV9by4xPTTuAjs+CnkQJ1w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11854"; a="234661678"
-X-IronPort-AV: E=Sophos;i="6.25,182,1779116400"; 
-   d="scan'208";a="234661678"
-Received: from gmgwuk01.global.fujitsu.com ([172.187.114.235])
-  by esa10.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2026 18:41:57 +0900
-Received: from az2uksmgm4.o.css.fujitsu.com (unknown [10.151.22.201])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by gmgwuk01.global.fujitsu.com (Postfix) with ESMTPS id 7088CC0158C;
-	Fri, 24 Jul 2026 09:41:54 +0000 (UTC)
-Received: from az2uksmom4.o.css.fujitsu.com (unknown [10.151.22.204])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by az2uksmgm4.o.css.fujitsu.com (Postfix) with ESMTPS id 2B02B149CEE8;
-	Fri, 24 Jul 2026 09:41:54 +0000 (UTC)
-Received: from sm-arm-grace07.ssoft.mng.com (unknown [10.124.178.20])
-	by az2uksmom4.o.css.fujitsu.com (Postfix) with ESMTP id 7801A405AB7;
-	Fri, 24 Jul 2026 09:41:48 +0000 (UTC)
-From: Kohei Enju <enju.kohei@fujitsu.com>
-To: linux-arm-kernel@lists.infradead.org,
-	kvm@vger.kernel.org,
-	kvmarm@lists.linux.dev,
-	cgroups@vger.kernel.org,
-	linux-coco@lists.linux.dev
-Cc: Paolo Bonzini <pbonzini@redhat.com>,
-	Marc Zyngier <maz@kernel.org>,
-	Oliver Upton <oupton@kernel.org>,
-	Joey Gouly <joey.gouly@arm.com>,
-	Steffen Eiden <seiden@linux.ibm.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Zenghui Yu <yuzenghui@huawei.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Steven Price <steven.price@arm.com>,
-	Kohei Enju <enju.kohei@fujitsu.com>
-Subject: [RFC PATCH v1 2/2] cgroup/misc: Add support for Arm CCA MECIDs
-Date: Fri, 24 Jul 2026 18:40:56 +0900
-Message-ID: <20260724094120.166536-3-enju.kohei@fujitsu.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260724094120.166536-1-enju.kohei@fujitsu.com>
-References: <20260724094120.166536-1-enju.kohei@fujitsu.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XVMPfTgd"
+Date: Fri, 24 Jul 2026 17:41:32 +0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784886120;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1750c1eenHXo1TIdu8y/9O1bLDCeeNFo2oetdSlOqMc=;
+	b=XVMPfTgd4n6vEJPoJbULi1+7Zz7Ql9gOYYRxTaZpLm5MpL974cNHbvg8b8o7RnQY25b7/v
+	GV2s580tPnfaHFx8FKnLKQ3pCJXVbCAd2yf5LhInwuSzVnXByJ2whLadQj+jTI5/5hYt4a
+	m4NjtFDdDs+KM6vZMZYA8xziwAl55Os=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Hao Li <hao.li@linux.dev>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
+	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH v2 12/13] mm/slab: add cache_ and slab_needs_objcg()
+ helpers
+Message-ID: <amMt7baftCrU-OJq@fedora>
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-12-2fa7c6f60dbe@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260720-b4-objext_split-v2-12-2fa7c6f60dbe@kernel.org>
+X-Migadu-Flow: FLOW_OUT
 
-Arm CCA MECIDs are limited platform resources. Add a misc cgroup
-resource to allow the system administrator to account for and limit
-their use.
+On Mon, Jul 20, 2026 at 04:16:26PM +0200, Vlastimil Babka (SUSE) wrote:
+> Slabs of some caches never need the objcg part of struct slabobj_ext.
+> Introduce helpers to query this for a cache or a slab.
+> 
+> Introduce SLAB_MAY_ACCOUNT flag that is currently only internal and only
+> is_kmalloc_normal() caches don't have the flag.
 
-The cca_mec resource represents the number of Realm VMs using the
-private MEC policy. Each such Realm consumes one MECID. Charge the
-resource when the Realm is created, and uncharge it when the Realm is
-successfully destroyed.
+it seems this could be "only type == KMALLOC_NORMAL caches don't have this
+flag".
 
-Realms using the shared MEC policy don't consume this resource.
+> 
+> For named caches we currently can't derive SLAB_MAY_ACCOUNT from
+> SLAB_ACCOUNT because some caches might be created without SLAB_ACCOUNT
+> and then used both with and without __GFP_ACCOUNT concurrently,
+> allocating obj_ext arrays on demand. So just add the SLAB_MAY_ACCOUNT
+> to all kmem caches, unless kmem accounting is disabled.
+> 
+> This can be improved later by finding out all caches used with
+> __GFP_ACCOUNT, adding the SLAB_MAY_ACCOUNT flag to them explicitly and
+> then ignoring __GFP_ACCOUNT for all other caches (with possible
+> warning).
+> 
+> To make the evaluation of slab_needs_objcg() faster in the allocation
+> and free fast paths, add a obj_exts_needs_objcg flag into slab itself.
+> This optimization is only available on 64bit architectures where free
+> bits are available for the flag.
+> 
+> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> ---
+>  include/linux/slab.h |  3 +++
+>  mm/kfence/core.c     |  3 +++
+>  mm/slab.h            | 31 +++++++++++++++++++++++++++++--
+>  mm/slab_common.c     | 25 ++++++++++++++++++++-----
+>  mm/slub.c            |  6 +++++-
+>  5 files changed, 60 insertions(+), 8 deletions(-)
+> 
+> diff --git a/include/linux/slab.h b/include/linux/slab.h
+> index 3a14df50766a..f9132902c5a6 100644
+> --- a/include/linux/slab.h
+> +++ b/include/linux/slab.h
+> @@ -45,6 +45,7 @@ enum _slab_flag_bits {
+>  #endif
+>  #ifdef CONFIG_MEMCG
+>  	_SLAB_ACCOUNT,
+> +	_SLAB_MAY_ACCOUNT,
+>  #endif
+>  #ifdef CONFIG_KASAN_GENERIC
+>  	_SLAB_KASAN,
+> @@ -204,8 +205,10 @@ enum _slab_flag_bits {
+>   */
+>  #ifdef CONFIG_MEMCG
+>  # define SLAB_ACCOUNT		__SLAB_FLAG_BIT(_SLAB_ACCOUNT)
+> +# define SLAB_MAY_ACCOUNT	__SLAB_FLAG_BIT(_SLAB_MAY_ACCOUNT)
+>  #else
+>  # define SLAB_ACCOUNT		__SLAB_FLAG_UNUSED
+> +# define SLAB_MAY_ACCOUNT	__SLAB_FLAG_UNUSED
+>  #endif
+>  
+>  #ifdef CONFIG_KASAN_GENERIC
+> diff --git a/mm/kfence/core.c b/mm/kfence/core.c
+> index 05b5482c8150..897ecf2594fb 100644
+> --- a/mm/kfence/core.c
+> +++ b/mm/kfence/core.c
+> @@ -640,6 +640,9 @@ static unsigned long kfence_init_pool(void)
+>  		struct slab *slab = page_slab(page);
+>  		slab->obj_exts = (unsigned long)&kfence_metadata_init[i / 2 - 1].obj_exts |
+>  				 MEMCG_DATA_OBJEXTS;
+> +#ifdef CONFIG_64BIT
+> +		slab->obj_exts_needs_objcg = 1;
+> +#endif
+>  #endif
+>  	}
+>  
+> diff --git a/mm/slab.h b/mm/slab.h
+> index c5f37a46434e..65b44902c06e 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -81,10 +81,11 @@ struct freelist_counters {
+>  #ifdef CONFIG_64BIT
+>  					/*
+>  					 * Some optimizations use free bits in 'counters' field
+> -					 * to save memory. If these free bits are not available,
+> -					 * such optimizations are disabled.
+> +					 * to save memory or CPU. If these free bits are not
+> +					 * available, such optimizations are disabled.
+>  					 */
+>  					unsigned obj_exts_in_object:1;
+> +					unsigned obj_exts_needs_objcg:1;
+>  #endif
+>  				};
+>  			};
+> @@ -584,6 +585,32 @@ static inline bool slab_obj_ext_has_codetag(void)
+>  }
+>  #endif
+>  
+> +#ifdef CONFIG_MEMCG
+> +static inline bool cache_needs_objcg(struct kmem_cache *cache)
+> +{
+> +	return (cache->flags & SLAB_MAY_ACCOUNT);
+> +}
+> +
+> +static inline bool slab_needs_objcg(struct slab *slab)
+> +{
+> +#ifdef CONFIG_64BIT
+> +	return slab->obj_exts_needs_objcg;
+> +#else
+> +	return cache_needs_objcg(slab->slab_cache);
+> +#endif
+> +}
+> +#else
+> +static inline bool cache_needs_objcg(struct kmem_cache *cache)
+> +{
+> +	return false;
+> +}
+> +
+> +static inline bool slab_needs_objcg(struct slab *slab)
+> +{
+> +	return false;
+> +}
+> +#endif
+> +
+>  static inline size_t cache_obj_ext_size(struct kmem_cache *s)
+>  {
+>  	size_t sz = 0;
+> diff --git a/mm/slab_common.c b/mm/slab_common.c
+> index 03ecac12cd86..4e983e250338 100644
+> --- a/mm/slab_common.c
+> +++ b/mm/slab_common.c
+> @@ -52,7 +52,7 @@ struct kmem_cache *kmem_cache;
+>  		SLAB_OBJ_EXT_IN_OBJ)
+>  
+>  #define SLAB_MERGE_SAME (SLAB_RECLAIM_ACCOUNT | SLAB_CACHE_DMA | \
+> -			 SLAB_CACHE_DMA32 | SLAB_ACCOUNT)
+> +			 SLAB_CACHE_DMA32 | SLAB_ACCOUNT | SLAB_MAY_ACCOUNT)
+>  
+>  /*
+>   * Merge control. If this is set then no merging of slab caches will occur.
+> @@ -359,6 +359,13 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
+>  		goto out_unlock;
+>  	}
+>  
+> +	/*
+> +	 * For now we assume any cache can be used with __GFP_ACCOUNT and thus
+> +	 * may need to store objcg pointers for objects
+> +	 */
+> +	if (!mem_cgroup_kmem_disabled())
+> +		flags |= SLAB_MAY_ACCOUNT;
+> +
+>  	/* Fail closed on bad usersize of useroffset values. */
+>  	if (!IS_ENABLED(CONFIG_HARDENED_USERCOPY) ||
+>  	    WARN_ON(!args->usersize && args->useroffset) ||
+> @@ -984,11 +991,19 @@ new_kmalloc_cache(int idx, enum kmalloc_cache_type type)
+>  #endif
+>  
+>  	/*
+> -	 * If CONFIG_MEMCG is enabled, disable cache merging for
+> -	 * KMALLOC_NORMAL caches.
+> +	 * If memcg_kmem is enabled and this is a KMALLOC_NORMAL cache and  not
+> +	 * aliased with any other type, make sure it's never merged with any other
+> +	 * cache.
+> +	 *
+> +	 * In other cases the kmalloc cache may end up being used for a
+> +	 * __GFP_ACCOUNT allocation so mark it as such
+>  	 */
+> -	if (IS_ENABLED(CONFIG_MEMCG) && (type == KMALLOC_NORMAL))
+> -		flags |= SLAB_NO_MERGE;
+> +	if (!mem_cgroup_kmem_disabled()) {
+> +		if (type == KMALLOC_NORMAL && KMALLOC_RECLAIM != KMALLOC_NORMAL)
 
-Signed-off-by: Kohei Enju <enju.kohei@fujitsu.com>
----
- arch/arm64/include/asm/kvm_rmi.h |  2 ++
- arch/arm64/kvm/rmi.c             | 44 +++++++++++++++++++++++++++++++-
- drivers/firmware/arm_rmm/rmi.c   |  4 +++
- include/linux/misc_cgroup.h      |  4 +++
- kernel/cgroup/misc.c             |  4 +++
- 5 files changed, 57 insertions(+), 1 deletion(-)
+With only those checks, the dedicated KMALLOC_NO_OBJ_EXT cache will also have
+the SLAB_MAY_ACCOUNT flag, which might be a bit misleading. is it worth
+explicitly excluding SLAB_MAY_ACCOUNT for dedicated KMALLOC_NO_OBJ_EXT cache?
 
-diff --git a/arch/arm64/include/asm/kvm_rmi.h b/arch/arm64/include/asm/kvm_rmi.h
-index 721033b132e1..182bdd22014f 100644
---- a/arch/arm64/include/asm/kvm_rmi.h
-+++ b/arch/arm64/include/asm/kvm_rmi.h
-@@ -61,6 +61,7 @@ enum realm_state {
-  * @stage2_unmapped: The Realm stage-2 mappings have been removed
-  * @rtts_destroyed: The non-root RTTs have been torn down
-  * @mec_policy: MEC policy for the Realm VM
-+ * @misc_cg: Misc cgroup charged while the Realm owns a private MECID
-  */
- struct realm {
- 	void *rd;
-@@ -78,6 +79,7 @@ struct realm {
- 	bool stage2_unmapped;
- 	bool rtts_destroyed;
- 	unsigned int mec_policy;
-+	struct misc_cg *misc_cg;
- };
- 
- /**
-diff --git a/arch/arm64/kvm/rmi.c b/arch/arm64/kvm/rmi.c
-index 629dea5e8c47..505fa80f635d 100644
---- a/arch/arm64/kvm/rmi.c
-+++ b/arch/arm64/kvm/rmi.c
-@@ -5,6 +5,7 @@
- 
- #include <uapi/linux/psci.h>
- #include <linux/kvm_host.h>
-+#include <linux/misc_cgroup.h>
- 
- #include <asm/kvm_emulate.h>
- #include <asm/kvm_mmu.h>
-@@ -525,6 +526,36 @@ static int realm_init_sve_param(struct kvm *kvm, struct realm_params *params)
- 	return 0;
- }
- 
-+static int realm_mec_charge(struct realm *realm)
-+{
-+	struct misc_cg *misc_cg;
-+	int ret;
-+
-+	if (realm->mec_policy != ARM_RMI_MEC_POLICY_PRIVATE)
-+		return 0;
-+
-+	misc_cg = get_current_misc_cg();
-+
-+	ret = misc_cg_try_charge(MISC_CG_RES_CCA_MEC, misc_cg, 1);
-+	if (ret) {
-+		put_misc_cg(misc_cg);
-+		return ret;
-+	}
-+
-+	realm->misc_cg = misc_cg;
-+	return 0;
-+}
-+
-+static void realm_mec_uncharge(struct realm *realm)
-+{
-+	if (!realm->misc_cg)
-+		return;
-+
-+	misc_cg_uncharge(MISC_CG_RES_CCA_MEC, realm->misc_cg, 1);
-+	put_misc_cg(realm->misc_cg);
-+	realm->misc_cg = NULL;
-+}
-+
- static int realm_create_rd(struct kvm *kvm)
- {
- 	struct realm *realm = &kvm->arch.realm;
-@@ -579,11 +610,15 @@ static int realm_create_rd(struct kvm *kvm)
- 	if (r)
- 		goto out_undelegate_tables;
- 
-+	r = realm_mec_charge(realm);
-+	if (r)
-+		goto out_undelegate_tables;
-+
- 	params_phys = virt_to_phys(params);
- 
- 	if (rmi_realm_create(rd_phys, params_phys, realm->sro)) {
- 		r = -ENXIO;
--		goto out_undelegate_tables;
-+		goto out_uncharge_misc_cg;
- 	}
- 
- 	realm->rd = rd;
-@@ -594,6 +629,8 @@ static int realm_create_rd(struct kvm *kvm)
- 
- 	return 0;
- 
-+out_uncharge_misc_cg:
-+	realm_mec_uncharge(realm);
- out_undelegate_tables:
- 	if (WARN_ON(rmi_undelegate_range(kvm->arch.mmu.pgd_phys, top_delegated - kvm->arch.mmu.pgd_phys))) {
- 		/* Leak the pages if they cannot be returned */
-@@ -1478,10 +1515,15 @@ void kvm_destroy_realm(struct kvm *kvm)
- 		if (WARN_ON(realm_destroy_rtts(kvm)))
- 			return;
- 
-+		/*
-+		 * Keep the misc cgroup charge if RMI_REALM_DESTROY fails, as
-+		 * the corresponding MECID may still be allocated by the RMM.
-+		 */
- 		if (WARN_ON(rmi_realm_destroy(rd_phys, realm->sro)))
- 			return;
- 		free_delegated_page(rd_phys);
- 		realm->rd = NULL;
-+		realm_mec_uncharge(realm);
- 	}
- 
- 	if (WARN_ON(rmi_undelegate_range(kvm->arch.mmu.pgd_phys,
-diff --git a/drivers/firmware/arm_rmm/rmi.c b/drivers/firmware/arm_rmm/rmi.c
-index e9632c35e7db..85a7e6686d2b 100644
---- a/drivers/firmware/arm_rmm/rmi.c
-+++ b/drivers/firmware/arm_rmm/rmi.c
-@@ -6,6 +6,7 @@
- #include <linux/cpufeature.h>
- #include <linux/memblock.h>
- #include <linux/arm-rmi-cmds.h>
-+#include <linux/misc_cgroup.h>
- #include <linux/processor.h>
- #include <linux/slab.h>
- 
-@@ -714,6 +715,9 @@ static int __init arm64_init_rmi(void)
- 	if (ret)
- 		return ret;
- 
-+	WARN_ON_ONCE(misc_cg_set_capacity(MISC_CG_RES_CCA_MEC,
-+					  rmi_mec_count()));
-+
- 	arm64_rmi_is_available = true;
- 	pr_info("RMI configured");
- 
-diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index 0cb36a3ffc47..b542502dc52a 100644
---- a/include/linux/misc_cgroup.h
-+++ b/include/linux/misc_cgroup.h
-@@ -21,6 +21,10 @@ enum misc_res_type {
- #ifdef CONFIG_INTEL_TDX_HOST
- 	/** @MISC_CG_RES_TDX: Intel TDX HKIDs resource */
- 	MISC_CG_RES_TDX,
-+#endif
-+#ifdef CONFIG_ARM_RMM
-+	/** @MISC_CG_RES_CCA_MEC: ARM64 CCA MECIDs resource */
-+	MISC_CG_RES_CCA_MEC,
- #endif
- 	/** @MISC_CG_RES_TYPES: count of enum misc_res_type constants */
- 	MISC_CG_RES_TYPES
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 4a9e2557141c..69259085115e 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -28,6 +28,10 @@ static const char *const misc_res_name[] = {
- 	/* Intel TDX HKIDs resource */
- 	"tdx",
- #endif
-+#ifdef CONFIG_ARM_RMM
-+	/* ARM64 CCA MECIDs resource */
-+	"cca_mec",
-+#endif
- };
- 
- /* Root misc cgroup */
+> +			flags |= SLAB_NO_MERGE;
+> +		else
+> +			flags |= SLAB_MAY_ACCOUNT;
+> +	}
+>  
+>  	if (minalign > ARCH_KMALLOC_MINALIGN) {
+>  		aligned_size = ALIGN(aligned_size, minalign);
+> diff --git a/mm/slub.c b/mm/slub.c
+> index d78d3e50c877..30435e2509ea 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -2557,7 +2557,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags)
+>  	 * of slab_obj_exts being allocated from the same slab and thus the slab
+>  	 * becoming effectively unfreeable.
+>  	 */
+> -	if (is_kmalloc_normal(s))
+> +	if (!cache_needs_objcg(s))
+>  		return true;
+>  
+>  	/* Ignore already charged objects. */
+> @@ -3435,6 +3435,10 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags,
+>  
+>  	slab->objects = oo_objects(oo);
+>  
+> +#ifdef CONFIG_64BIT
+> +	if (cache_needs_objcg(s))
+> +		slab->obj_exts_needs_objcg = 1;
+> +#endif
+>  	slab->slab_cache = s;
+>  
+>  	kasan_poison_slab(slab);
+> 
+> -- 
+> 2.55.0
+> 
+
 -- 
-2.43.0
-
+Thanks,
+Hao
