@@ -1,144 +1,307 @@
-Received: from mail-wr2-f2.google.com (mail-wr2-f2.google.com [74.125.225.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74606395243
-	for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 12:52:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8292C394788
+	for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 13:29:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784897545; cv=none; b=rEA+WXq3v2XoCYb0PlCMndxwpnvCpKgnS24P7BtZeb8B4doYhBfd8XB0Zof4YPWw0hBEtI9V0v+JY/AsmVSlTSSCr5PElhxXsh9injoy+3WzDCPiXWhLht5qW4C7Zava4MMKuwEyDMSxaiaJ7pcPi32GmAJSoerrLSmvPeTdmYw=
+	t=1784899792; cv=none; b=lGtgUgqzRey43Nr0Dbh13D20GlaDKbyB/1nU07GcCgzYoveJ71V/nX1hB0VY44pBPy0INn8voBH0whWVsUfiIzUvmaw6Yq8uFKoAmgCW5d3Ib9kxYNFb3mFYJHALYE0OBF3eQWp0EioBkJ2k99BVxURaeiwBVBVeR0PkUd7qLO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784897545; c=relaxed/simple;
-	bh=mk1BQnZGtudR7XDj42PbREbR3Ki5M0tr3oqDAtI6TZQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sMkK7xsyjLlRa8zJzNrkykxctFS+y5Wq/rpbGQq5R+BWEjS/CxIF9NjQnVppwonQGsdcbzleJn6paiBl9B7MoBXz1crSjvilb/G0n8vYxxDNvM01wELck9vH6xq/5IiJwbx7RABP5GEjUyv0uBLSYDD5Y7OPqP36P4uhg3TlTfo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=b/NgON33; arc=none smtp.client-ip=74.125.225.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1784899792; c=relaxed/simple;
+	bh=IqV3IzLqPyBxX9pcrKUPN4sQ35QXFxjKdoJyu3+X9tk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mexH7JkFpDplfA0WBmiRb7kkVQ4wMIS3yxOsK58lefkMD4I5nLgC0nsliKQVIuG946vMubUkQE7u5YXPD6A7+0Pk2lltQe8DG6XKb1rmgiHvK95ioy1C4sEiObKEob0FqpnnWDl9zAq98IeQAOQSzO27gcx5VReZHjYjtrqiid4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=DSsA2Wny; arc=none smtp.client-ip=95.215.58.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="b/NgON33"
-Received: by mail-wr2-f2.google.com with SMTP id ffacd0b85a97d-4730b8edae6so134282f8f.0
-        for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 05:52:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1784897542; x=1785502342; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Mv5tWqGLGkHnf04eMqxVT5ugoOpACtQyu5RJWX4G6Hs=;
-        b=b/NgON33ojALkqd+RvRGUC8ybuq8FxJ9pcBWde0o3YNprY0w8v8IOCXiMLE8hOXvz+
-         I1S5Ex4xQl7ZbpHfJHl0LOZ7j0JeSakFMXOlOD2+BZ2tz14sd+pNgZwPkrGSkGZD9VxA
-         ftrhAdEd6dT8/flfEX+rDwYYid9+M0pf9/lwqV6b3upPEMoVO9cgUhd7/su+i5aFN+06
-         lzBMWjVAUC9OofKg7ajWfbdhhyCs72u+YsiUQzvn6JffT9W45/O9DVFHJZnkeVv6yOtc
-         B2eaAGYoOijr2ouDTpLHtctgUuXWMae5wtIy2MSEn2UZtD5YC6qT5oM/y33dMLraCD7U
-         UEBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784897542; x=1785502342;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Mv5tWqGLGkHnf04eMqxVT5ugoOpACtQyu5RJWX4G6Hs=;
-        b=eNcndS1GIy0QLhB6UYnIeG3Ovy8YMESXq2+zd9NLz9eIZ7mkR0r3eM1Sr7G7BX8FQs
-         B0e85mMszDiYawlt7qhVXoUCyaX9MFYrA0YCwxEuOmCXbMMs2yKpFBYH5WKI4i7NdpUA
-         PzqYCqQjcJcocSlglG5m1eOq9w+Q/7VHtgoo6H2BEYGbGBJylww0RMtZnnKHavNuNMoQ
-         os+V+4sQ+hodFBCZqKDdRNGhAa7GXq5d/K/RcREATW/OMffg6ZWDEuLFOKRSnXbuRVx6
-         2NX4E+BOG2Pm7UFXzZUdcUtLgiJxYvQHbtMOau7MkHJ3o9c6efPs9OIolSeK/FusMtWm
-         vSwA==
-X-Forwarded-Encrypted: i=1; AHgh+RrlR/KMQj0ItjdOP89vxmW9oOTv4cbK2UzIns5QpAYBprENvWUAhXQuJAVcMp0iHXkVnLPOCeYV@vger.kernel.org
-X-Gm-Message-State: AOJu0YycJy82YDtn5rMGY/HVoo6Qqyxh4C74Ac/olKoUGPL34qrOs/v4
-	S1aVIBp3oXj+Gn+wDT2ttN6rcI8VY7yXBzr9v4q/oT4wjKNTKlSlFJqsXBY5+WGLXA0=
-X-Gm-Gg: AR+sD13pu7FPg9LPKk471Uk+g4eij61d8gQKxSHj1GCkJecH6CynolthFufLTlzjGtD
-	/dRgd1BFCpBXepMojaJz+xlOBoc6nuyfXaIAgLNi6KY+EJgQXWVne2/hRwWQq4I67IoBEGTnPAc
-	UEBbAxuDivXr6GQ1pGpeb3o1MKcrg6aTazR43IEjmc/29L8YXquEPKvuFOlIKBnoA13dZznYiSx
-	wr+y4iUlTSB4QRWYEmQFs8Kv7SNKvaUsBedbh+f2xblZ56JVnXP+/0vL/g74u/JKYa17zykoFYJ
-	zZwiDuzWn8ThV9jhKzHv48I7HJKylRGdRPeSORP9yxzI6TIO6kMS3m/GZUWKGpuXYAwR+BcXfdP
-	2e+Ofzjqp7NheGNlrSKk5rgRW51fK0vtj4FQudA46j5sn0U2m3v61Cse8pdjAvGhxPGxCSvqgej
-	TOcia/Iw==
-X-Received: by 2002:a05:6000:2287:b0:477:3986:9b54 with SMTP id ffacd0b85a97d-47f8d77c2dbmr9048250f8f.20.1784897541667;
-        Fri, 24 Jul 2026 05:52:21 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c631fdsm23383475f8f.28.2026.07.24.05.52.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Jul 2026 05:52:21 -0700 (PDT)
-Date: Fri, 24 Jul 2026 14:52:19 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Kohei Enju <enju.kohei@fujitsu.com>
-Cc: linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org, 
-	kvmarm@lists.linux.dev, cgroups@vger.kernel.org, linux-coco@lists.linux.dev, 
-	Paolo Bonzini <pbonzini@redhat.com>, Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>, 
-	Joey Gouly <joey.gouly@arm.com>, Steffen Eiden <seiden@linux.ibm.com>, 
-	Suzuki K Poulose <suzuki.poulose@arm.com>, Zenghui Yu <yuzenghui@huawei.com>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Steven Price <steven.price@arm.com>
-Subject: Re: [RFC PATCH v1 2/2] cgroup/misc: Add support for Arm CCA MECIDs
-Message-ID: <amNfGkkI5OIBqpmZ@localhost.localdomain>
-References: <20260724094120.166536-1-enju.kohei@fujitsu.com>
- <20260724094120.166536-3-enju.kohei@fujitsu.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="DSsA2Wny"
+Message-ID: <32a85420-caac-477e-b371-8628ed28c428@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784899778;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zucbfngPhOG8+NfWm24EHKtd2gimDhzVjtuemjoJNMo=;
+	b=DSsA2WnyND/I6X0Gu06lHR30HIAj5CRkpTpduqBZJLueXi9jRtNuMc+kSezi9Y6wY/QGrQ
+	Bvq0U7HL+ALJVEFH4Oa5EfvBXPKk4Cvx6Cw0ft3RAISKyhNXtHCowfKZC3TV9Fcz2yFtLV
+	NdHeGecqFeQZAe9LRT/KPTTHfetvS4E=
+Date: Fri, 24 Jul 2026 14:29:23 +0100
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="ax7rchmwlrf277f6"
-Content-Disposition: inline
-In-Reply-To: <20260724094120.166536-3-enju.kohei@fujitsu.com>
+Subject: Re: [PATCH v4 2/2] mm/vmscan: reduce lru_lock contention via
+ vmstat-derived scan-balance cost
+To: Shakeel Butt <shakeel.butt@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, david@kernel.org,
+ ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, rppt@kernel.org,
+ surenb@google.com, mhocko@suse.com, kasong@tencent.com, qi.zheng@linux.dev,
+ axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
+ chrisl@kernel.org, nphamcs@gmail.com, baoquan.he@linux.dev,
+ youngjun.park@lge.com, hannes@cmpxchg.org, roman.gushchin@linux.dev,
+ muchun.song@linux.dev, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, rientjes@google.com, kernel-team@meta.com
+References: <20260720164207.450685-1-usama.arif@linux.dev>
+ <20260720164207.450685-3-usama.arif@linux.dev> <amK-ApfqfwkPheC5@linux.dev>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Usama Arif <usama.arif@linux.dev>
+In-Reply-To: <amK-ApfqfwkPheC5@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
 
---ax7rchmwlrf277f6
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [RFC PATCH v1 2/2] cgroup/misc: Add support for Arm CCA MECIDs
-MIME-Version: 1.0
 
-Hello Kohei.
+On 24/07/2026 02:53, Shakeel Butt wrote:
+> On Mon, Jul 20, 2026 at 09:41:23AM -0700, Usama Arif wrote:
+>> The anon/file scan balance in get_scan_count() is driven by two scalars
+>> in struct lruvec, anon_cost and file_cost, accumulated by every reclaim
+>> producer under lruvec->lru_lock. The acquisition sites for cost work
+>> specifically are:
+>>
+>>   - shrink_inactive_list() re-takes lru_lock at function exit purely
+>>     to call lru_note_cost_unlock_irq() with (nr_pageout, nr_scanned -
+>>     nr_reclaimed). One acquisition per inactive shrink.
+>>   - shrink_active_list() does the same with (0, nr_rotated). One
+>>     acquisition per active shrink.
+>>   - workingset_refault() takes the lock via folio_lruvec_lock_irq()
+>>     purely to record the refault cost. One acquisition per refault.
+>>   - prepare_scan_control() takes lru_lock just to snapshot the two
+>>     scalars into sc->{anon,file}_cost.
+>>   - lru_note_cost_unlock_irq() itself walks parent_lruvec and
+>>     re-acquires lru_lock on each ancestor to propagate the update,
+>>     adding O(memcg-depth) acquisitions per producer call.
+>>
+>> This hurts because lru_lock is already a heavy contention point on
+>> memory-heavy workloads: every isolate_lru_folios(), move_folios_to_lru()
+>> and folio_add_lru() takes it. The cost work itself is trivial (two
+>> scalar bumps and one comparison), but it contends with and causes
+>> contention for actual LRU manipulation. The parent_lruvec() walk also
+>> multiplies cost-update overhead by memcg hierarchy depth.
+>>
+>> Replace the producer-side accumulators with a read-side accumulator fed
+>> from per-LRU vmstat counters. The old producer formula was:
+>>
+>>   cost = nr_io * SWAP_CLUSTER_MAX + nr_rotated
+>>
+>> Reuse NR_VMSCAN_WRITE for reclaim-driven anon pageout submissions. It is
+>> already bumped by writeout() for the same successful outcome that fed
+>> reclaim_stat.nr_pageout. Reclaim does not submit filesystem folios from
+>> this path, so there is no file pageout term. Charge NR_VMSCAN_WRITE via
+>> lruvec_stat_mod_folio() and include it in memcg_node_stat_items so it can
+>> be sampled per lruvec and aggregated through the memcg hierarchy.
+>>
+>> Add explicit PGROTATE_{ANON,FILE} node_stat counters for the remaining
+>> producer-local input. They are bumped from shrink_inactive_list() by
+>> nr_scanned - nr_reclaimed and from shrink_active_list() by nr_rotated.
+>> WORKINGSET_RESTORE_{ANON,FILE} already captures the refault IO that
+>> lru_note_cost_refault() used to bill.
+>>
+>> Add a per-side struct lru_cost { count, last_rotated, last_io } to
+>> struct lruvec. In prepare_scan_control() the two monotonic inputs are
+>> sampled separately - rotated from PGROTATE_ANON/FILE, io from
+>> WORKINGSET_RESTORE_BASE + f plus (for anon) NR_VMSCAN_WRITE - and the
+>> raw per-side deltas are computed against cost->last_rotated and
+>> cost->last_io before the SWAP_CLUSTER_MAX IO weighting is applied.
+>> Extracting the deltas from the individual counters (rather than from a
+>> pre-weighted sum) keeps the unsigned modular subtraction bounded by the
+>> true per-counter growth, so a signed-long wraparound of any underlying
+>> vmstat still yields the correct delta on 32-bit. The weighted delta is
+>> folded into cost->count. Since one vmstat delta can cover many producer
+>> events between reclaim passes, halve cost->count on both sides until
+>> their sum is back within the lrusize/4 bound instead of halving only
+>> once.
+>>
+>> Moving accumulation and decay to the reclaim side also improves the cost
+>> model across reclaim gaps. With producer-side decay, events that happen
+>> while reclaim is idle still age each other before reclaim ever samples
+>> the costs. If a workload refaults a large anon set and then a smaller
+>> file set before reclaim runs again, the later file activity can age the
+>> earlier anon activity out of the cost model. The new scheme observes the
+>> whole between-reclaim delta and decays anon and file proportionally, so
+>> the scan-balance history better represents what happened since the last
+>> reclaim pass.
+>>
+>> A dedicated per-lruvec spinlock, cost_lock, serialises the delta
+>> extraction, the cost->count update and the halving loop against
+>> concurrent reclaimers in the same memcg+node.
+>>
+>> Hierarchy aggregation is now implicit in the vmstat accounting. The
+>> producer-side parent_lruvec() walk and lru_reparent_memcg() cost splice
+>> existed only because anon_cost/file_cost were private lruvec fields. With
+>> the cost expressed as lruvec vmstats, rstat propagates the underlying
+>> counters through the memcg hierarchy and prepare_scan_control() consumes
+>> the same ratelimited rstat view as the surrounding reclaim heuristics.
+>>
+>> NR_VMSCAN_WRITE is accounted at writeout(), so reclaim_stat.nr_pageout is
+>> no longer needed and is removed.
+>>
+>> memcg-v1's memory.stat anon_cost/file_cost is now sourced from
+>> cost[].count instead of the removed lruvec anon_cost/file_cost fields.
+>> The reported values only refresh when prepare_scan_control() runs and
+>> are bounded at ~lrusize/4 by the halving loop; the scan-balance signal
+>> they express is unchanged.
+>>
+>> Under pure MGLRU the scan-balance signal itself is not consumed (both
+>> prepare_scan_control() and get_scan_count() are short-circuited on the
+>> MGLRU paths, and MGLRU's own type/tier selection comes from read_ctrl_pos()
+>> on lrugen->{avg_refaulted,avg_total,refaulted,evicted}, not from
+>> anon_cost/file_cost). NR_VMSCAN_WRITE naturally covers writeout from
+>> either reclaim implementation, and PGROTATE_{ANON,FILE} are bumped from
+>> evict_folios() so per-memcg observability of rotation-driven reclaim work
+>> stays consistent across both implementations.
+>>
+>> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+> 
+> Oh man too long commit message, please follow Johannes's suggestion.
 
-On Fri, Jul 24, 2026 at 06:40:56PM +0900, Kohei Enju <enju.kohei@fujitsu.co=
-m> wrote:
-> Arm CCA MECIDs are limited platform resources. Add a misc cgroup
-> resource to allow the system administrator to account for and limit
-> their use.
->=20
-> The cca_mec resource represents the number of Realm VMs using the
-> private MEC policy. Each such Realm consumes one MECID. Charge the
-> resource when the Realm is created, and uncharge it when the Realm is
-> successfully destroyed.
->=20
-> Realms using the shared MEC policy don't consume this resource.
->=20
-> Signed-off-by: Kohei Enju <enju.kohei@fujitsu.com>
-> ---
->  arch/arm64/include/asm/kvm_rmi.h |  2 ++
->  arch/arm64/kvm/rmi.c             | 44 +++++++++++++++++++++++++++++++-
->  drivers/firmware/arm_rmm/rmi.c   |  4 +++
+Will do!
+> 
+> The patch looks good but I have one question. We already have concept of
+> pgrotated through /proc/vmstat which represents number of pages we have moved to
+> the tail of inactive LRU to make them next reclaim candidates. This patch is
+> exposing pgrotate_[anon|file] to userspace. Here these metrics represents either
+> the number of pages we scanned but didn't reclaim plus number of pages given one
+> more trip in the active LRU.
+> 
+> Older and newer pgrotate metrics kind of represent something different. It may
+> cause confusion. Now before suggesting to change the name, let me ask do we
+> really need to expose these to the userspace? How exactly users can use these
+> new metrics? I think you can use them here without exposing to userspace. So,
+> does it makes sense to delay userspace exposure later when we have a more solid
+> usecase for that unless you have it already.
+> 
 
-(mainly for this)
->  include/linux/misc_cgroup.h      |  4 +++
->  kernel/cgroup/misc.c             |  4 +++
->  5 files changed, 57 insertions(+), 1 deletion(-)
+I do think the userspace counters have diagnostic value. They can be another metric
+to show how much anon/file reclaim work is spent on pages that are not immediately
+reclaimed, including pages retained on actie LRU. It could help explain if there
+is elevated reclaim CPU usage.
 
-Conditional
-Acked-by: Michal Koutn=FD <mkoutny@suse.com>
-(it makes sense along the other arches' miscresurces)
+But tbf, I don't have a concrete usecase, and I wouldn't put up a patch to expose
+them to userspace if it werent for this patch itself.
 
-Why? I see this [1] (or followup) needs to be added first.
+I definitely dont want to create another hidden lruvec rstat infrastructure for this,
+it would be too much code churn. If the stats really shouldn't be exposed to userspace,
+would something like below be acceptable?
 
-Thanks,
-Michal
 
-[1] https://lore.kernel.org/r/20260715142739.80398-4-steven.price@arm.com/
+diff --git a/drivers/base/node.c b/drivers/base/node.c
+index 3da91929ad4e..3321d4e62234 100644
+--- a/drivers/base/node.c
++++ b/drivers/base/node.c
+@@ -612,7 +612,7 @@ static ssize_t node_read_vmstat(struct device *dev,
+ 				     sum_zone_numa_event_state(nid, i));
+ 
+ #endif
+-	for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
++	for (i = 0; i < NR_VM_NODE_STAT_ITEMS_PUBLIC; i++) {
+ 		unsigned long pages = node_page_state_pages(pgdat, i);
+ 
+ 		if (vmstat_item_print_in_thp(i))
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 85303c5867c8..ada3b136a65d 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -323,8 +323,6 @@ enum node_stat_item {
+ 	PGSCAN_PROACTIVE,
+ 	PGSCAN_ANON,
+ 	PGSCAN_FILE,
+-	PGROTATE_ANON,
+-	PGROTATE_FILE,
+ 	PGREFILL,
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	NR_HUGETLB,
+@@ -333,6 +331,10 @@ enum node_stat_item {
+ 	NR_KERNEL_FILE_PAGES,
+ 	NR_GPU_ACTIVE,	/* Pages assigned to GPU objects */
+ 	NR_GPU_RECLAIM,	/* Pages in shrinkable GPU pools */
++	NR_VM_NODE_STAT_ITEMS_PUBLIC,
++	/* Internal-only node stats must remain at the end. */
++	PGROTATE_ANON = NR_VM_NODE_STAT_ITEMS_PUBLIC,
++	PGROTATE_FILE,
+ 	NR_VM_NODE_STAT_ITEMS
+ };
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8693aad26ca2..fd1960eed732 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -420,12 +420,12 @@ static const unsigned int memcg_node_stat_items[] = {
+ 	PGSCAN_PROACTIVE,
+ 	PGSCAN_ANON,
+ 	PGSCAN_FILE,
+-	PGROTATE_ANON,
+-	PGROTATE_FILE,
+ 	PGREFILL,
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	NR_HUGETLB,
+ #endif
++	PGROTATE_ANON,
++	PGROTATE_FILE,
+ };
+ 
+ static const unsigned int memcg_stat_items[] = {
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 87d4a6781367..6b14136a6e51 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -1300,8 +1300,6 @@ const char * const vmstat_text[] = {
+ 	[I(PGSCAN_PROACTIVE)]			= "pgscan_proactive",
+ 	[I(PGSCAN_ANON)]			= "pgscan_anon",
+ 	[I(PGSCAN_FILE)]			= "pgscan_file",
+-	[I(PGROTATE_ANON)]			= "pgrotate_anon",
+-	[I(PGROTATE_FILE)]			= "pgrotate_file",
+ 	[I(PGREFILL)]				= "pgrefill",
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	[I(NR_HUGETLB)]				= "nr_hugetlb",
+@@ -1310,6 +1308,8 @@ const char * const vmstat_text[] = {
+ 	[I(NR_KERNEL_FILE_PAGES)]		= "nr_kernel_file_pages",
+ 	[I(NR_GPU_ACTIVE)]			= "nr_gpu_active",
+ 	[I(NR_GPU_RECLAIM)]			= "nr_gpu_reclaim",
++	[I(PGROTATE_ANON)]			= "pgrotate_anon",
++	[I(PGROTATE_FILE)]			= "pgrotate_file",
+ #undef I
+ 
+ 	/* system-wide enum vm_stat_item counters */
+@@ -1771,7 +1771,7 @@ static void zoneinfo_show_print(struct seq_file *m, pg_data_t *pgdat,
+ 	seq_printf(m, "Node %d, zone %8s", pgdat->node_id, zone->name);
+ 	if (is_zone_first_populated(pgdat, zone)) {
+ 		seq_printf(m, "\n  per-node stats");
+-		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
++		for (i = 0; i < NR_VM_NODE_STAT_ITEMS_PUBLIC; i++) {
+ 			unsigned long pages = node_page_state_pages(pgdat, i);
+ 
+ 			if (vmstat_item_print_in_thp(i))
+@@ -1948,6 +1948,11 @@ static int vmstat_show(struct seq_file *m, void *arg)
+ {
+ 	unsigned long *l = arg;
+ 	unsigned long off = l - (unsigned long *)m->private;
++	unsigned long node_off = NR_VM_ZONE_STAT_ITEMS + NR_VM_NUMA_EVENT_ITEMS;
++
++	if (off >= node_off + NR_VM_NODE_STAT_ITEMS_PUBLIC &&
++	    off < node_off + NR_VM_NODE_STAT_ITEMS)
++		return SEQ_SKIP;
+ 
+ 	seq_puts(m, vmstat_text[off]);
+ 	seq_put_decimal_ull(m, " ", *l);
+@@ -2025,7 +2030,7 @@ static int vmstat_refresh(const struct ctl_table *table, int write,
+ 				__func__, zone_stat_name(i), val);
+ 		}
+ 	}
+-	for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
++	for (i = 0; i < NR_VM_NODE_STAT_ITEMS_PUBLIC; i++) {
+ 		/*
+ 		 * Skip checking stats known to go negative occasionally.
+ 		 */
 
---ax7rchmwlrf277f6
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
+> BTW really awesome work and I really like how these patches have reduced the lru
+> lock contention drastically.
 
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCamNf+xsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AhXYAD/aF4cHB3u4Ztw+Epfxt6r
-owvtGiLz50NxCjHVwV+x/xAA/jW6M8nVIZ5COXi3AcXAaZ9Jg4Hbfex1q/uwG0FV
-VjUH
-=szup
------END PGP SIGNATURE-----
-
---ax7rchmwlrf277f6--
+Thank you!!
