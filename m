@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83ED84071E2;
-	Fri, 24 Jul 2026 12:30:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14FF41A79E;
+	Fri, 24 Jul 2026 12:31:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784896258; cv=none; b=ATlIcbdJhsIuths0gEWAJtIrBfUBGSCPzDk6gZ6U9fWIO+fPLneT5o6AQE1qIi53vADa7T1G43Rf2J1TxvpsBc69JTEcPtoSoIDM6/pL3lcxdliwqswqC+eE0+lPVFYiDAg5HgKBRQlDbi3xD+66ZgmxaGXWVc++LhFRAvN8pQM=
+	t=1784896265; cv=none; b=XF9UBTFadhHTf0qCbrY1BjVitTEfmF3bJRdXy/g+k8wO4GzPqDWa7wDu/ACEs5H9wmMW0kanzImIXEWN6z28SJAMP2wCfJF/Rc5qZN+svOj0diNdp8jm+w665Dk6iDnwFP8JeMKxtUpfnTmAY/hl7koCFveFJiFth6bPhfzSlSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784896258; c=relaxed/simple;
-	bh=8J0WmG9epTVAaLW03/Tcr2FUg5AkUKjue3YP6LuQ0ok=;
+	s=arc-20240116; t=1784896265; c=relaxed/simple;
+	bh=JhCwcu115MAGCYR9pYIwu2g8JdMZyMfQEghyJaimgfg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K+Zk7Xw0Guz6LSLJ+lt/P+fl+Kso5g95LPSbnjJlw4ggS0PWwaZgQL74Wvqzvxs+YP4vq425DayK54Qy3zwrVDesDqvw02dSwmbNDPHAbfxZG/NavnZ/yIcGA3K3yTd8+VlN+0l9PznN7i3MwuLkA1pgon9eReJ5qGbORekVdP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oCJX0T1F; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=tebik/R03Yg90jTrwX4Jc4K6kSMnMjHpg042TcSnSuUUq95YKxl2Himc44xcgCmMfJyMrnYcoiOVvWNe6JZe2IQzt0QzZYtjaAnNgHP+i1gEG1Q9i7j1gEr6BeKkG6QE8NxYEfJqXHlvgCkLcN9Jvzl+74VeNYCzKnCviWKf1tk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dS0c52ay; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oCJX0T1F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87A2C1F000E9;
-	Fri, 24 Jul 2026 12:30:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dS0c52ay"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5B311F00A3A;
+	Fri, 24 Jul 2026 12:30:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784896257;
-	bh=6N2EKzGhi9+4tCRJlL5oFA469fy3sjHXV5Ueo8Dujvk=;
+	s=k20260515; t=1784896263;
+	bh=9brV8EHs1XB3cVBkQXkrL51M4jRovqFzRidZQ3jum2E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oCJX0T1Funfqiv3lVNfAbrchk6eieumSt0eP/QWxpqwhzL+0WIdoHppzUYBEQE8qQ
-	 S3CRu6QgH1FGLds4V+5kd1uOQJDCaLWhuAwKvnNCh0RPbf/mmJZWUHzI3ie5WJqg99
-	 njEzfpz3OJT9GzYLfQyE6GFzv1hGhmLVC80afQHUnLa3oJSuKTOBD2jIt+FO2TtMKN
-	 kxSocYXQBLuCMnDNxqcdhKH12OKrnZAGunwT+D4wbJEjKpZV3t3jruE0c4d9p23SM6
-	 PcLN90I9bDd764kSsCi6bM6DH5BT82Dl91XWjybxtTAomN3YiqoEXqERFigV4V8zcE
-	 rva215u6KHjjg==
+	b=dS0c52ayqKn+65eYAG/NcXv24CwS+hC+ACp3bE1TnhgkP9kuCEoTQjXGuvPAeWQrn
+	 quxGS8Ao/k0Zm8SyIBT9NwE1gM2qehu83z/zUZOnc3ropIOVuVrfVbu6i98KY2iGTE
+	 izUGOAfM2ebUe/iDEbBU7/5cFCnsoIhJpKg9kqrbYsBVjyJOdsd7Ny26s/lBvSYhVT
+	 ST+OLjYQFqDdut6fQNl+qQZs+hNWyvOyC+oVLkd6+pizHRje8epY8fmVORAuNYBLaZ
+	 0Lr1xMMuKeQocUx9RU/ZgaCHB6Hbz5fT2QXUHAWTqERz2ww4g1sDFnxSo2j2WnbkPV
+	 8a5TCwXSpTuqA==
 From: Yu Kuai <yukuai@kernel.org>
 To: axboe@kernel.dk,
 	tj@kernel.org
@@ -38,9 +38,9 @@ Cc: hch@lst.de,
 	yukuai@fygo.io,
 	linux-block@vger.kernel.org,
 	cgroups@vger.kernel.org
-Subject: [RFC PATCH v2 1/8] block: associate blkg in submit_bio instead of bio_set_dev
-Date: Fri, 24 Jul 2026 20:30:30 +0800
-Message-ID: <20260724123037.3004560-2-yukuai@kernel.org>
+Subject: [RFC PATCH v2 2/8] blk-throttle: protect throttle state with td lock
+Date: Fri, 24 Jul 2026 20:30:31 +0800
+Message-ID: <20260724123037.3004560-3-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260724123037.3004560-1-yukuai@kernel.org>
 References: <20260724123037.3004560-1-yukuai@kernel.org>
@@ -54,196 +54,307 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-bio_set_dev(), bio_init() and bio_reset() associate a bio with a blkg for
-its target queue. That association may have to create a new blkg, and
-currently there are lots of callers that are under atomic context.
+Throttle currently uses queue_lock for both blkcg topology and its own
+runtime state. This blocks moving blkg topology protection to blkcg_mutex
+cleanly.
 
-Move the association out of those helpers and into the submit path, which
-is always sleepable (submit_bio_noacct() already does might_sleep()):
-
-  - submit_bio() associates new I/O before bio_set_ioprio(), whose
-    blkcg_set_ioprio() reads the policy from bio->bi_blkg.
-
-  - submit_bio_noacct() (re)associates when a bio has no blkg yet or was
-    remapped to a different queue.  blk_throtl_bio() and the rq_qos
-    throttlers (iocost, iolatency) pair bio->bi_blkg with the queue of
-    bio->bi_bdev, so a remapped bio must be reassociated to the new queue.
-
-  - bio_set_dev() no longer associates; instead it drops the existing blkg
-    when the device changes, since that blkg is tied to the old queue.
-    bio_init()/bio_reset() leave bi_blkg NULL.
-
-Introduce bio_disassociate_blkg() to drop a bio's blkg reference and use it
-from bio_set_dev(), bio_uninit() and the bio freeing path, replacing their
-open-coded blkg_put().
-
-This is the first step to convert protecting blkg with blkcg_mutex.
+Add a throttle-private spinlock and use it for throttle service queues,
+pending timers, runtime counters and config updates. Keep queue_lock only
+where the current intermediate code still walks blkcg topology.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- block/bio.c         | 18 ++----------------
- block/blk-cgroup.c  | 18 ++++++++++++++++++
- block/blk-core.c    | 21 +++++++++++++++++++++
- include/linux/bio.h |  7 +++++--
- 4 files changed, 46 insertions(+), 18 deletions(-)
+ block/blk-throttle.c | 87 ++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 67 insertions(+), 20 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 6a2f6fc3413e..ea030c5e39a4 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -179,12 +179,7 @@ static inline gfp_t try_alloc_gfp(gfp_t gfp)
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index ffc3b70065d4..7bca2805404f 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -30,6 +30,9 @@ static struct workqueue_struct *kthrotld_workqueue;
  
- void bio_uninit(struct bio *bio)
+ struct throtl_data
  {
--#ifdef CONFIG_BLK_CGROUP
--	if (bio->bi_blkg) {
--		blkg_put(bio->bi_blkg);
--		bio->bi_blkg = NULL;
--	}
--#endif
-+	bio_disassociate_blkg(bio);
- 	if (bio_integrity(bio))
- 		bio_integrity_free(bio);
++	/* protects throttle service queues and group runtime state */
++	spinlock_t lock;
++
+ 	/* service tree for active throtl groups */
+ 	struct throtl_service_queue service_queue;
  
-@@ -235,8 +230,6 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
- #ifdef CONFIG_BLK_CGROUP
- 	bio->bi_blkg = NULL;
- 	bio->issue_time_ns = 0;
--	if (bdev)
--		bio_associate_blkg(bio);
- #ifdef CONFIG_BLK_CGROUP_IOCOST
- 	bio->bi_iocost_cost = 0;
- #endif
-@@ -280,8 +273,6 @@ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf)
- 	atomic_set(&bio->__bi_remaining, 1);
- 	bio->bi_io_vec = bv;
- 	bio->bi_bdev = bdev;
--	if (bio->bi_bdev)
--		bio_associate_blkg(bio);
- 	bio->bi_opf = opf;
- }
- EXPORT_SYMBOL(bio_reset);
-@@ -1803,17 +1794,12 @@ void bio_endio(struct bio *bio)
- 		goto again;
- 	}
- 
--#ifdef CONFIG_BLK_CGROUP
+@@ -346,11 +349,16 @@ static void tg_update_has_rules(struct throtl_grp *tg)
+ static void throtl_pd_online(struct blkg_policy_data *pd)
+ {
+ 	struct throtl_grp *tg = pd_to_tg(pd);
++	struct throtl_data *td = tg->td;
++	unsigned long flags;
++
++	spin_lock_irqsave(&td->lock, flags);
  	/*
- 	 * Release cgroup info.  We shouldn't have to do this here, but quite
- 	 * a few callers of bio_init fail to call bio_uninit, so we cover up
- 	 * for that here at least for now.
+ 	 * We don't want new groups to escape the limits of its ancestors.
+ 	 * Update has_rules[] after a new group is brought online.
  	 */
--	if (bio->bi_blkg) {
--		blkg_put(bio->bi_blkg);
--		bio->bi_blkg = NULL;
--	}
--#endif
-+	bio_disassociate_blkg(bio);
- 
- 	if (bio->bi_end_io)
- 		bio->bi_end_io(bio);
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index d9676126c5b5..618e5566fa52 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -2170,6 +2170,24 @@ void bio_clone_blkg_association(struct bio *dst, struct bio *src)
+ 	tg_update_has_rules(tg);
++	spin_unlock_irqrestore(&td->lock, flags);
  }
- EXPORT_SYMBOL_GPL(bio_clone_blkg_association);
  
-+/**
-+ * bio_disassociate_blkg - disassociate a bio from its blkg
-+ * @bio: target bio
-+ *
-+ * Drop the blkg reference held by @bio and clear the association.  This is
-+ * used when a bio's target device changes (e.g. via bio_set_dev()): the old
-+ * blkg is tied to the previous request_queue, so it is dropped here and the
-+ * bio is reassociated to the new queue from the submit path.
-+ */
-+void bio_disassociate_blkg(struct bio *bio)
-+{
-+	if (bio->bi_blkg) {
-+		blkg_put(bio->bi_blkg);
-+		bio->bi_blkg = NULL;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
-+
- static int blk_cgroup_io_type(struct bio *bio)
+ static void tg_release(struct rcu_head *rcu)
+@@ -368,7 +376,7 @@ static void throtl_pd_free(struct blkg_policy_data *pd)
  {
- 	if (op_is_discard(bio->bi_opf))
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 365641266c9e..8103643b39fc 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -822,6 +822,20 @@ void submit_bio_noacct(struct bio *bio)
+ 	struct throtl_grp *tg = pd_to_tg(pd);
  
- 	might_sleep();
+-	timer_delete_sync(&tg->service_queue.pending_timer);
++	timer_shutdown_sync(&tg->service_queue.pending_timer);
+ 	call_rcu(&pd->rcu_head, tg_release);
+ }
  
-+	/*
-+	 * Associate the bio with a blkg for its target queue here, where it is
-+	 * safe to sleep, instead of in bio_set_dev()/bio_init() which may run
-+	 * under a spinlock.  bio_set_dev() no longer associates, so a freshly
-+	 * allocated or remapped bio has no blkg until it reaches the submit path.
-+	 * Reassociate only when the bio was remapped to a different queue since
-+	 * it was last associated; blk_throtl_bio() and the rq_qos throttlers
-+	 * rely on bio->bi_blkg matching the queue of bio->bi_bdev.
-+	 */
-+#ifdef CONFIG_BLK_CGROUP
-+	if (!bio->bi_blkg || bio->bi_blkg->q != q)
-+		bio_associate_blkg(bio);
-+#endif
-+
- 	/*
- 	 * For a REQ_NOWAIT based request, return -EOPNOTSUPP
- 	 * if queue does not support NOWAIT.
-@@ -958,6 +972,13 @@ void submit_bio(struct bio *bio)
- 		count_vm_events(PGPGOUT, bio_sectors(bio));
+@@ -1142,9 +1150,9 @@ static void throtl_pending_timer_fn(struct timer_list *t)
+ 	else
+ 		q = td->queue;
+ 
+-	spin_lock_irq(&q->queue_lock);
++	spin_lock_irq(&td->lock);
+ 
+-	if (!q->root_blkg)
++	if (!READ_ONCE(q->root_blkg))
+ 		goto out_unlock;
+ 
+ again:
+@@ -1168,9 +1176,9 @@ static void throtl_pending_timer_fn(struct timer_list *t)
+ 			break;
+ 
+ 		/* this dispatch windows is still open, relax and repeat */
+-		spin_unlock_irq(&q->queue_lock);
++		spin_unlock_irq(&td->lock);
+ 		cpu_relax();
+-		spin_lock_irq(&q->queue_lock);
++		spin_lock_irq(&td->lock);
  	}
  
-+	/*
-+	 * bio_set_ioprio() -> blkcg_set_ioprio() reads the policy from
-+	 * bio->bi_blkg, so associate the blkg (for new I/O, the first time) before
-+	 * it runs.  This is the sleepable entry point for new I/O; remapped bios
-+	 * that reach submit_bio_noacct() directly are reassociated there.
-+	 */
-+	bio_associate_blkg(bio);
- 	bio_set_ioprio(bio);
- 	submit_bio_noacct(bio);
- }
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 8f33f717b14f..7a7509c8a59a 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -507,6 +507,7 @@ void bio_associate_blkg(struct bio *bio);
- void bio_associate_blkg_from_css(struct bio *bio,
- 				 struct cgroup_subsys_state *css);
- void bio_clone_blkg_association(struct bio *dst, struct bio *src);
-+void bio_disassociate_blkg(struct bio *bio);
- void blkcg_punt_bio_submit(struct bio *bio);
- #else	/* CONFIG_BLK_CGROUP */
- static inline void bio_associate_blkg(struct bio *bio) { }
-@@ -515,6 +516,7 @@ static inline void bio_associate_blkg_from_css(struct bio *bio,
- { }
- static inline void bio_clone_blkg_association(struct bio *dst,
- 					      struct bio *src) { }
-+static inline void bio_disassociate_blkg(struct bio *bio) { }
- static inline void blkcg_punt_bio_submit(struct bio *bio)
- {
- 	submit_bio(bio);
-@@ -524,10 +526,11 @@ static inline void blkcg_punt_bio_submit(struct bio *bio)
- static inline void bio_set_dev(struct bio *bio, struct block_device *bdev)
- {
- 	bio_clear_flag(bio, BIO_REMAPPED);
--	if (bio->bi_bdev != bdev)
-+	if (bio->bi_bdev != bdev) {
- 		bio_clear_flag(bio, BIO_BPS_THROTTLED);
-+		bio_disassociate_blkg(bio);
-+	}
- 	bio->bi_bdev = bdev;
--	bio_associate_blkg(bio);
+ 	if (!dispatched)
+@@ -1193,7 +1201,7 @@ static void throtl_pending_timer_fn(struct timer_list *t)
+ 		queue_work(kthrotld_workqueue, &td->dispatch_work);
+ 	}
+ out_unlock:
+-	spin_unlock_irq(&q->queue_lock);
++	spin_unlock_irq(&td->lock);
  }
  
- /*
+ /**
+@@ -1209,7 +1217,6 @@ static void blk_throtl_dispatch_work_fn(struct work_struct *work)
+ 	struct throtl_data *td = container_of(work, struct throtl_data,
+ 					      dispatch_work);
+ 	struct throtl_service_queue *td_sq = &td->service_queue;
+-	struct request_queue *q = td->queue;
+ 	struct bio_list bio_list_on_stack;
+ 	struct bio *bio;
+ 	struct blk_plug plug;
+@@ -1217,11 +1224,11 @@ static void blk_throtl_dispatch_work_fn(struct work_struct *work)
+ 
+ 	bio_list_init(&bio_list_on_stack);
+ 
+-	spin_lock_irq(&q->queue_lock);
++	spin_lock_irq(&td->lock);
+ 	for (rw = READ; rw <= WRITE; rw++)
+ 		while ((bio = throtl_pop_queued(td_sq, NULL, rw)))
+ 			bio_list_add(&bio_list_on_stack, bio);
+-	spin_unlock_irq(&q->queue_lock);
++	spin_unlock_irq(&td->lock);
+ 
+ 	if (!bio_list_empty(&bio_list_on_stack)) {
+ 		blk_start_plug(&plug);
+@@ -1299,7 +1306,7 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
+ 	rcu_read_unlock();
+ 
+ 	/*
+-	 * We're already holding queue_lock and know @tg is valid.  Let's
++	 * We're already holding td->lock and know @tg is valid.  Let's
+ 	 * apply the new config directly.
+ 	 *
+ 	 * Restart the slices for both READ and WRITES. It might happen
+@@ -1327,6 +1334,7 @@ static int blk_throtl_init(struct gendisk *disk)
+ 		return -ENOMEM;
+ 
+ 	INIT_WORK(&td->dispatch_work, blk_throtl_dispatch_work_fn);
++	spin_lock_init(&td->lock);
+ 	throtl_service_queue_init(&td->service_queue);
+ 
+ 	memflags = blk_mq_freeze_queue(disk->queue);
+@@ -1381,6 +1389,7 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+ 		v = U64_MAX;
+ 
+ 	tg = blkg_to_tg(ctx.blkg);
++	spin_lock_irq(&tg->td->lock);
+ 	tg_update_carryover(tg);
+ 
+ 	if (is_u64)
+@@ -1389,6 +1398,7 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+ 		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
+ 
+ 	tg_conf_updated(tg, false);
++	spin_unlock_irq(&tg->td->lock);
+ 	ret = 0;
+ 
+ unprep:
+@@ -1563,6 +1573,7 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
+ 		goto close_bdev;
+ 
+ 	tg = blkg_to_tg(ctx.blkg);
++	spin_lock_irq(&tg->td->lock);
+ 	tg_update_carryover(tg);
+ 
+ 	v[0] = tg->bps[READ];
+@@ -1586,11 +1597,11 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
+ 		p = tok;
+ 		strsep(&p, "=");
+ 		if (!p || (sscanf(p, "%llu", &val) != 1 && strcmp(p, "max")))
+-			goto unprep;
++			goto unlock;
+ 
+ 		ret = -ERANGE;
+ 		if (!val)
+-			goto unprep;
++			goto unlock;
+ 
+ 		ret = -EINVAL;
+ 		if (!strcmp(tok, "rbps"))
+@@ -1602,7 +1613,7 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
+ 		else if (!strcmp(tok, "wiops"))
+ 			v[3] = min_t(u64, val, UINT_MAX);
+ 		else
+-			goto unprep;
++			goto unlock;
+ 	}
+ 
+ 	tg->bps[READ] = v[0];
+@@ -1611,7 +1622,11 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
+ 	tg->iops[WRITE] = v[3];
+ 
+ 	tg_conf_updated(tg, false);
++	spin_unlock_irq(&tg->td->lock);
+ 	ret = 0;
++	goto unprep;
++unlock:
++	spin_unlock_irq(&tg->td->lock);
+ unprep:
+ 	blkg_conf_unprep(&ctx);
+ close_bdev:
+@@ -1636,6 +1651,28 @@ static void throtl_shutdown_wq(struct request_queue *q)
+ 	cancel_work_sync(&td->dispatch_work);
+ }
+ 
++static void throtl_shutdown_timers(struct request_queue *q)
++{
++	struct throtl_data *td = q->td;
++	struct blkcg_gq *blkg;
++
++	/*
++	 * blkg_destroy_all() has already offlined the policy, but blkg policy
++	 * data is freed asynchronously.  Shut down per-group timers before
++	 * freeing td, as their callbacks still dereference tg->td.
++	 */
++	mutex_lock(&q->blkcg_mutex);
++	list_for_each_entry(blkg, &q->blkg_list, q_node) {
++		struct throtl_grp *tg = blkg_to_tg(blkg);
++
++		if (tg)
++			timer_shutdown_sync(&tg->service_queue.pending_timer);
++	}
++	mutex_unlock(&q->blkcg_mutex);
++
++	timer_shutdown_sync(&td->service_queue.pending_timer);
++}
++
+ static void tg_flush_bios(struct throtl_grp *tg)
+ {
+ 	struct throtl_service_queue *sq = &tg->service_queue;
+@@ -1669,7 +1706,13 @@ static void tg_flush_bios(struct throtl_grp *tg)
+ 
+ static void throtl_pd_offline(struct blkg_policy_data *pd)
+ {
+-	tg_flush_bios(pd_to_tg(pd));
++	struct throtl_grp *tg = pd_to_tg(pd);
++	struct throtl_data *td = tg->td;
++	unsigned long flags;
++
++	spin_lock_irqsave(&td->lock, flags);
++	tg_flush_bios(tg);
++	spin_unlock_irqrestore(&td->lock, flags);
+ }
+ 
+ struct blkcg_policy blkcg_policy_throtl = {
+@@ -1725,6 +1768,7 @@ static void tg_cancel_writeback_bios(struct throtl_grp *tg,
+ void blk_throtl_cancel_bios(struct gendisk *disk)
+ {
+ 	struct request_queue *q = disk->queue;
++	struct throtl_data *td = q->td;
+ 	struct cgroup_subsys_state *pos_css;
+ 	struct blkcg_gq *blkg;
+ 	struct bio_list cancel_bios[2] = { };
+@@ -1734,6 +1778,7 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
+ 		return;
+ 
+ 	spin_lock_irq(&q->queue_lock);
++	spin_lock(&td->lock);
+ 	/*
+ 	 * queue_lock is held, rcu lock is not needed here technically.
+ 	 * However, rcu lock is still held to emphasize that following
+@@ -1752,6 +1797,7 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
+ 		tg_cancel_writeback_bios(blkg_to_tg(blkg), cancel_bios);
+ 	}
+ 	rcu_read_unlock();
++	spin_unlock(&td->lock);
+ 	spin_unlock_irq(&q->queue_lock);
+ 
+ 	for (rw = READ; rw <= WRITE; rw++) {
+@@ -1791,7 +1837,6 @@ static bool tg_within_limit(struct throtl_grp *tg, struct bio *bio, bool rw)
+ 
+ bool __blk_throtl_bio(struct bio *bio)
+ {
+-	struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+ 	struct blkcg_gq *blkg = bio->bi_blkg;
+ 	struct throtl_qnode *qn = NULL;
+ 	struct throtl_grp *tg = blkg_to_tg(blkg);
+@@ -1801,7 +1846,7 @@ bool __blk_throtl_bio(struct bio *bio)
+ 	struct throtl_data *td = tg->td;
+ 
+ 	rcu_read_lock();
+-	spin_lock_irq(&q->queue_lock);
++	spin_lock_irq(&td->lock);
+ 	sq = &tg->service_queue;
+ 
+ 	while (true) {
+@@ -1877,7 +1922,7 @@ bool __blk_throtl_bio(struct bio *bio)
+ 	}
+ 
+ out_unlock:
+-	spin_unlock_irq(&q->queue_lock);
++	spin_unlock_irq(&td->lock);
+ 
+ 	rcu_read_unlock();
+ 	return throttled;
+@@ -1886,17 +1931,19 @@ bool __blk_throtl_bio(struct bio *bio)
+ void blk_throtl_exit(struct gendisk *disk)
+ {
+ 	struct request_queue *q = disk->queue;
++	struct throtl_data *td = q->td;
+ 
+ 	/*
+ 	 * blkg_destroy_all() already deactivate throtl policy, just check and
+ 	 * free throtl data.
+ 	 */
+-	if (!q->td)
++	if (!td)
+ 		return;
+ 
+-	timer_delete_sync(&q->td->service_queue.pending_timer);
++	throtl_shutdown_timers(q);
+ 	throtl_shutdown_wq(q);
+-	kfree(q->td);
++	q->td = NULL;
++	kfree(td);
+ }
+ 
+ static int __init throtl_init(void)
 -- 
 2.51.0
 
