@@ -1,134 +1,125 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 972913ACF10;
-	Fri, 24 Jul 2026 10:26:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2FB442A175
+	for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 11:21:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784888765; cv=none; b=cr3j+91iXvtKyNfu3M2/D19vEVX0YLKBZSddFT69XVrSE0/Br0h0z8ApHVXNfBrLuKYCEfla6E3ZS5kv8mBn4KSkbxvPYDnwd4g/Xnu9pJQp8IO+0FgT7gpsqf+EzzqISrggK/wQ/l9LkVat8XOc6DwF5vRHpAUMxydAXfqgdlU=
+	t=1784892112; cv=none; b=eP8rAGYqlgAk0nUG8Xne4fnVm9VcBaZeSTMh5eLlpG+MbnscgTjysr85q4nAs+TkRHyFjvtyXQGc77LG1Yv06ST5QtL4kq85cWXshlqxhMzm+eZamo6AoghnZ4JeXxZqn52nUj3XhFaTOyRG4lgyuWzQLQcf5tCTGjGY418zjv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784888765; c=relaxed/simple;
-	bh=22cB3O3ZCEGFjJr7ULZaHoFh3wLz+qZeSXcl9oN/0LI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QAhcP8uwCiIMCU/7gv46CgcU4+d4fxl3t6VqETywdENPpvo6rRjwXBHbbdxJDmq+HrPwsK7GuU78x9Sm53lLrLGJAsZqWXFQUHxxiFvs1z/zeY+1ujcsZEOsR0iCwIirIPMfs33wtV8V+D3NIJo9raYZwz+gdbgi6aICR7uh4Z0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 0d4399d8874a11f1aa26b74ffac11d73-20260724
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_UNTRUSTED, SN_LOWREP, SN_EXISTED, SPF_NOPASS
-	DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF
-	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:a57fc3df-b1ef-484c-9a4f-339eee21f165,IP:20,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:20
-X-CID-INFO: VERSION:1.3.12,REQID:a57fc3df-b1ef-484c-9a4f-339eee21f165,IP:20,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:20
-X-CID-META: VersionHash:e7bac3a,CLOUDID:545ba8ab6979f2a9ac6337e2f8038a54,BulkI
-	D:26072418255754PFTS93,BulkQuantity:0,Recheck:0,SF:10|38|66|78|102|127|850
-	|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:ni
-	l,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE
-	:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 0d4399d8874a11f1aa26b74ffac11d73-20260724
-X-User: sunshaojie@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1987956803; Fri, 24 Jul 2026 18:25:54 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: tj@kernel.org,
-	skhan@linuxfoundation.org,
-	mkoutny@suse.com,
-	hannes@cmpxchg.org,
-	corbet@lwn.net
-Cc: cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH] Docs/admin-guide/cgroup-v2: document hierarchical cpu.max throttling behavior
-Date: Fri, 24 Jul 2026 18:25:00 +0800
-Message-Id: <20260724102500.276525-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1784892112; c=relaxed/simple;
+	bh=YGGOVXEqea3GPNNbncSJ3TBlrL4MxJVLMV0LKqpWNwU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c7we2vx31odVtxDzSF2AP61Upf0diOTpInTcgl/g40PKzkNBLJIrVD27loaKR0QKesUDY5O7mfr3PWKYHk72CaTN8rz/QKAbDWAZ2EM/bD2SBFGwTpfL/ePD4PngNoYaNdwXZDZJC5K8JZsdLUHblIFXCdtOaHUjPIbdRzFSHOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Km21oI2G; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Km21oI2G"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4954afac04bso3577595e9.0
+        for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 04:21:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1784892109; x=1785496909; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=QbZk7VXNsE8q/TG/Qql8FFHe7uCMGrC8uJ2Nzsh+oeU=;
+        b=Km21oI2GY7dMvsxThkKgxh5Et8VjCQoWmgyuZfzmG9qA03HJlMkudxZZoHMR1mSP+E
+         jhaE0bi2laQc7ZngdWJf6RWZwz5eqtvc5jgp6kLHFiMzAQZY5B4tRW9SI0n7abuDu0xC
+         HD4nHuYlgFTxKgf7QBAbkSR3Wu3200XUHVDjkX5sa1JD2e4Qo5kSgAE3eXY/vLUtJRr1
+         1VdBLc+b+okwB/6LrvyMLvLJMje503ZPehUYEbsHcRDOrEtKJ3MhpTJ8Dprh/WfU8zpN
+         4uBUYBxs8wuWH6hSLejMXSA7C77zwJEz6tJotOTBu72xiuXOFWbDgNOPEs64V5ultfOu
+         MEmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784892109; x=1785496909;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=QbZk7VXNsE8q/TG/Qql8FFHe7uCMGrC8uJ2Nzsh+oeU=;
+        b=E6+/lN9oK99T76Us+3pRk6Im/28yMJPTVxcBEpurzVUWD7TLRD994LHBem364wx/QS
+         qSb+rDzcsAyQG64EMnQe+l9zM0X4JODf+rgUEP7yp2tTWjJvcqUZ71Z+gv1Wm2U5Vym1
+         yOjpovVN7pjaCHOzrQMRARcGUGOk8uDqpuwA5+vXbbQXproTGOwKbdLxRsvuxLk62Vzp
+         /zzs/+jVVe3U8xJPDAdsWZMKDLsaGWVTo4Xtz8aNsmfJJ6PhFwpEHiA+SHQrP7QXwEMC
+         3uJj8sIIjBC17QSBvHTOM4KyWk2rVIVVe2QsMWnlo6cMgx71IHXtu7zBxYLTUI40hXa8
+         jvKg==
+X-Forwarded-Encrypted: i=1; AHgh+RpKzW3TkzFgaEkgkyLjCJCYSL3oq+CD8Pkr4cms+dBv1sWRrgWn9Umm3+1V9yxJOYvraH6f+DCz@vger.kernel.org
+X-Gm-Message-State: AOJu0YxfrmE9v+BhvLfMcl/+0XA6yBWv0Rg0vjXUwdN4xFF3Be762mJw
+	FiJ3wkD14TRPif74e2zF2mYcUi5gN3vAvTXOzSw0iQZHfdlQdKfPPBdSK8ZXBDg80GQ=
+X-Gm-Gg: AR+sD11Z7RvvdDjcQq2cH9urAjdqYDbd9tNpU1sn6K69N3Gcm9ECf9jBq3zUMz0FErV
+	rva/So3V6ZvfGsLIYj1wsjgkzuNzMGznb8JhJiBoLXRckwJ5N2Q0by6AIn4OMKdJIHynmdqpJaG
+	7/H42GFUGuacyvhF1kfE5KX7KDDP5e9whjiMGvmIJEb0U0N019Ng5C5wM4cFomeFv0X4d4smhsk
+	6v+xROooCfMnCMOWMzUx24yVBmUlJwcNO+ruTlpYRZMketIvHlde/h+7HWK4GRMVrHfoi+3GSIB
+	KJzAfdWVGF1bAz1+V4uWsU8Qn+1gTKjtBMhsoSy3pLnHS6iIQR347/mPLxrWJloFr6RCLem1L8G
+	cJvalMPzx0X5ihhQKE5148jOJ6C3SlXCXZx5B9CTTr/6JEvU6kz2sgnKLYUpx4h/toRZoK6R5Sn
+	8HVlY9wQ==
+X-Received: by 2002:a05:600c:1914:b0:495:4d00:2fc0 with SMTP id 5b1f17b1804b1-49573ccb598mr84264935e9.12.1784892108828;
+        Fri, 24 Jul 2026 04:21:48 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4957af786e4sm63578405e9.8.2026.07.24.04.21.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2026 04:21:48 -0700 (PDT)
+Date: Fri, 24 Jul 2026 13:21:46 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Shaojie Sun <sunshaojie@kylinos.cn>
+Cc: tj@kernel.org, skhan@linuxfoundation.org, hannes@cmpxchg.org, 
+	corbet@lwn.net, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Docs/admin-guide/cgroup-v2: document hierarchical
+ cpu.max throttling behavior
+Message-ID: <amNJyZQj0p38zlDe@localhost.localdomain>
+References: <20260724102500.276525-1-sunshaojie@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="eeashxwvkr36aub6"
+Content-Disposition: inline
+In-Reply-To: <20260724102500.276525-1-sunshaojie@kylinos.cn>
 
-In a multi-level cgroup hierarchy, each level with cpu.max configured
-maintains independent bandwidth accounting.  Unlike other Limits-type
-controllers such as memory.max and io.max--where only the most
-restrictive limit along the hierarchy applies--cpu.max enforces limits
-at each level independently.  A process can thus be throttled
-simultaneously by multiple levels, and the resulting throttling may
-reflect the combined effect of all of them rather than any single
-level's limit alone.
 
-This behavior is already documented in the CFS bandwidth control
-documentation (sched-bwc.rst) but was not mentioned in the cgroup-v2
-interface description, which has led to confusion about unexpected
-throttling statistics when cpu.max is configured at multiple levels.
+--eeashxwvkr36aub6
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Subject: Re: [PATCH] Docs/admin-guide/cgroup-v2: document hierarchical
+ cpu.max throttling behavior
+MIME-Version: 1.0
 
-Add a note to the cpu.max interface documentation in cgroup-v2.rst to
-clarify the hierarchical enforcement semantics, and add a label to
-sched-bwc.rst so that it can be cross-referenced.
+Hi.
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
- Documentation/admin-guide/cgroup-v2.rst | 14 ++++++++++++++
- Documentation/scheduler/sched-bwc.rst   |  2 ++
- 2 files changed, 16 insertions(+)
+On Fri, Jul 24, 2026 at 06:25:00PM +0800, Shaojie Sun <sunshaojie@kylinos.cn> wrote:
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 14b8c571c0d1..3572d3e7f688 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 14b8c571c0d1..3572d3e7f688 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1204,6 +1204,20 @@ will be referred to. All time durations are in microseconds.
- 
- 	This file affects only processes under the fair-class scheduler.
- 
-+	In a multi-level hierarchy, each level with cpu.max configured
-+	maintains independent bandwidth accounting with its own period
-+	timer.  The cgroup's own quota and ancestor quotas are enforced
-+	independently rather than being mutually exclusive: when
-+	multiple levels along the path have cpu.max set, a process is
-+	subject to all of them simultaneously, and the resulting
-+	throttling may reflect the combined effect of multiple levels
-+	rather than any single level's limit alone (this differs from
-+	other Limits-type controllers such as memory.max and io.max,
-+	where the most restrictive limit along the hierarchy is
-+	applied).  See :ref:`Documentation/scheduler/sched-bwc.rst
-+	<sched-bwc>` for a description of the underlying CFS bandwidth
-+	control mechanism and the hierarchical throttling behavior.
-+
-   cpu.max.burst
- 	A read-write single value file which exists on non-root
- 	cgroups.  The default is "0".
-diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
-index e881a945c188..97c58739d8cf 100644
---- a/Documentation/scheduler/sched-bwc.rst
-+++ b/Documentation/scheduler/sched-bwc.rst
-@@ -2,6 +2,8 @@
- CFS Bandwidth Control
- =====================
- 
-+.. _sched-bwc:
-+
- .. note::
-    This document only discusses CPU bandwidth control for SCHED_NORMAL.
-    The SCHED_RT case is covered in Documentation/scheduler/sched-rt-group.rst
--- 
-2.25.1
+> +	                                       and the resulting
+> +	throttling may reflect the combined effect of multiple levels
+> +	rather than any single level's limit alone (this differs from
+> +	other Limits-type controllers such as memory.max and io.max,
+> +	where the most restrictive limit along the hierarchy is
+> +	applied).
 
+I'm not sure from the description what the "combined effect" is.
+Can you give an example where the cpu.max differs from that Limits-type
+semantics?
+
+Thanks,
+Michal
+
+--eeashxwvkr36aub6
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCamNKxhsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ahs0AD9E2MJd6AyaFbuNaCfPXmW
+S6gY1qooua7uU6SnpxVthncA/RwC5B6BM4buZiOSDvt0gD85O1/7fNIv0yv0Erkc
+JIsD
+=wpPc
+-----END PGP SIGNATURE-----
+
+--eeashxwvkr36aub6--
