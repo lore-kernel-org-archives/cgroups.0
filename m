@@ -1,44 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E94D93FD12A;
-	Thu, 23 Jul 2026 20:35:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E26618DB1A;
+	Fri, 24 Jul 2026 00:34:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784838961; cv=none; b=Wp9SvNgsxiNMb9fTh8geIOsVOIJVxcygqhADjITRlo7yB+iMNpWnQpUbfEBN1mdUwOrkmI2DuLGH7dDd2ycpjYVljF1IXtjVjVOkDtGxZXsiNdPpj9nx28eTFks6q9/0yRJOshMAd3Tb6qS5xWEscNWtZARpylzGOpmprPc+bZY=
+	t=1784853261; cv=none; b=UrstLPuSLiDkFLiE1Ch6ve39nbS7/oCG8mJn0HRYKg2dPfDodL9KNxkKdUkUGYICl6UHTBHp8Q7FOeQUQ9w94taBTvLwcPLpu3OWPD6v6hVqc/mxRphTLmevV09OE9qPVg/yzC3JT32t7Nad7JGbDA+lGpsnt4QW0nfeW39ertA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784838961; c=relaxed/simple;
-	bh=040CU0fTbz2clP5uNxYtwycGAOXuBzg9J45o0jsuH5Q=;
+	s=arc-20240116; t=1784853261; c=relaxed/simple;
+	bh=Us/biEOAa6we3J+jY5W04D2N+aXeXQ/gHeOB9O2ec4k=;
 	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=c3jB0Adtt4ve3aJvnsz4cS32sYX4OCEeQvQNUyF50juAiFM2+z6VIoLIsokIAgQOgGcNe7i6qglc6IbcMpLniQaMu/8mzWqOC1qZrO0c7eJEJMnTGR4TMsecJtr0JNuKYeCiKfBlsQ+3zP5sK9gOxHvR2UGixuj72hW/xgh0WRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=0XxJV5UF; arc=none smtp.client-ip=100.103.45.18
+	 Mime-Version:Content-Type; b=aOLJDNgptNS0ZQx6FZJifbH2ZvPJUojuD6N2XMVKiN2s3mcA0+Gk714PtJ2KssOOIdUaMN9TkDx18we50k4rd06+EeVKUfGMsPq3Tk2Ar0eaJ8/FI9F9g+i6EJclQlwTZY5fDrdDN5Qf30zlD7GxtWOZUo4J1affKNoimpukC5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=2N475bEU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="0XxJV5UF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70A6C1F000E9;
-	Thu, 23 Jul 2026 20:35:49 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="2N475bEU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 275F41F000E9;
+	Fri, 24 Jul 2026 00:34:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1784838950;
-	bh=Nac04wlAP2t3HqF9mb3TQViUemoTPGuh6MRheYC0KBE=;
+	d=linux-foundation.org; s=korg; t=1784853259;
+	bh=uFiuk9YnSrQ9gDttwKCFevREVVtLKrpsxcv5mAjS/Pk=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=0XxJV5UFLXYx3mOBaBVQS6f3P98xfPPk/e8U3/q0wpyVtYOnr/68ZMpaEz20HeB3N
-	 XXHt3Mz84hugaUifCCWikxxzLzdoUZvsYIx38HhALzbY5oT5oUaipF1Rao4U2KrIFg
-	 kMrjJye3gTwtjQZsXxkNVhIaFEufIEd4VxrAComg=
-Date: Thu, 23 Jul 2026 13:35:48 -0700
+	b=2N475bEUQDEIU440uwwra2wBt6wKRKr1mV5I3Z1Jnouas8x7jlTrSOLtKBGplsCzy
+	 dIpAe0zkYkdC3f3qPzGrprzpie8of66ajK00ElzN2YdHOIIO0GGvbQsNES6qIw5pr1
+	 Krhmdws8yXY79Cyscu1ngMxt5hicdceFEECwGq4o=
+Date: Thu, 23 Jul 2026 17:34:18 -0700
 From: Andrew Morton <akpm@linux-foundation.org>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: david@kernel.org, ljs@kernel.org, liam@infradead.org, vbabka@kernel.org,
- rppt@kernel.org, surenb@google.com, mhocko@suse.com, kasong@tencent.com,
- qi.zheng@linux.dev, shakeel.butt@linux.dev, axelrasmussen@google.com,
- yuanchu@google.com, weixugc@google.com, chrisl@kernel.org,
- nphamcs@gmail.com, baoquan.he@linux.dev, youngjun.park@lge.com,
- hannes@cmpxchg.org, roman.gushchin@linux.dev, muchun.song@linux.dev,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- rientjes@google.com, kernel-team@meta.com
-Subject: Re: [PATCH v4 0/2] mm/vmscan: reduce lru_lock contention via
- vmstat-derived scan-balance cost
-Message-Id: <20260723133548.2e12b638bd629ef63b935113@linux-foundation.org>
-In-Reply-To: <20260720164207.450685-1-usama.arif@linux.dev>
-References: <20260720164207.450685-1-usama.arif@linux.dev>
+To: Ridong <ridong.chen@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+ <shakeel.butt@linux.dev>, Chris Li <chrisl@kernel.org>, Kairui Song
+ <kasong@tencent.com>, Muchun Song <muchun.song@linux.dev>, Kemeng Shi
+ <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He
+ <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>, Youngjun Park
+ <youngjun.park@lge.com>, David Hildenbrand <david@kernel.org>, Qi Zheng
+ <qi.zheng@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, Axel Rasmussen
+ <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu
+ <weixugc@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Song Hu <husong@kylinos.cn>, Ridong Chen <chenridong@xiaomi.com>
+Subject: Re: [PATCH -v4 0/2] mm: vmscan: fix node reclaim ignoring
+ swappiness parameter
+Message-Id: <20260723173418.010e38f655f83850d92c2c8e@linux-foundation.org>
+In-Reply-To: <20260723032434.2016749-1-ridong.chen@linux.dev>
+References: <20260723032434.2016749-1-ridong.chen@linux.dev>
 X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -49,54 +53,63 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Mon, 20 Jul 2026 09:41:21 -0700 Usama Arif <usama.arif@linux.dev> wrote:
+On Thu, 23 Jul 2026 11:24:32 +0800 Ridong <ridong.chen@linux.dev> wrote:
 
-> The anon/file scan balance heuristic in get_scan_count() is fed by two
-> scalars in struct lruvec (anon_cost, file_cost) that every reclaim
-> producer updates under lruvec->lru_lock. The cost-recording work
-> itself is trivial, but it both contends for and contributes to
-> contention on lru_lock - which is often a contention point on
-> memory-pressured workloads. Specifically:
+> From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> - shrink_inactive_list() re-acquires lru_lock at function exit just
->   to call lru_note_cost_unlock_irq().
-> - shrink_active_list() does the same after rotation accounting.
-> - workingset_refault() takes folio_lruvec_lock_irq() purely to
->   record the refault cost.
-> - prepare_scan_control() snapshots anon_cost/file_cost under
->   lru_lock.
-> - lru_note_cost_unlock_irq() itself walks parent_lruvec() and
->   re-acquires lru_lock on every ancestor, multiplying the cost
->   of every update by memcg-hierarchy depth.
+> The per-node proactive reclaim interface
+> (/sys/devices/system/node/nodeX/reclaim) accepts a swappiness parameter,
+> but it is silently ignored when CONFIG_MEMCG is disabled. The root cause
+> is that sc_swappiness() has separate implementations for CONFIG_MEMCG and
+> !CONFIG_MEMCG, and the latter never checks proactive_swappiness.
 > 
-> This series removes those producer-side acquisitions entirely.
+> Patch 1 moves mem_cgroup_swappiness() and vm_swappiness out of the public
+> include/linux/swap.h into the mm-private mm/swap.h, and makes the helper
+> handle both CONFIG_MEMCG and !CONFIG_MEMCG in a single inline function.
+> This is a prerequisite for unifying sc_swappiness().
+> 
+> Patch 2 consolidates sc_swappiness() into a single definition that works
+> regardless of CONFIG_MEMCG, fixing the node reclaim swappiness bug.
 
-Thanks.  We're still awaiting review of [2/2].  I'll get this under
-test in order to parallelize things.
+Thanks, I updated mm.git to this version.
 
-> Measurement is a 30 s `perf lock record -a` window
-> over otherwise-idle hardware.
+> v3 -> v4:
+>  - READ_ONCE() was missed when reading memcg->swappiness, add it back.
 > 
-> Workload rates are identical on both kernels (the bench drives the
-> same memory pressure):
-> 
->                           baseline    patched      delta
->   pgscan_direct  / s      172,662     171,817      ~0%
->   pgsteal_direct / s       67,162      66,306      ~0%
->   workingset_refault_anon / s
->                            40,696      39,830      ~0%
-> 
-> perf lock contention (total wait per 30 s window):
-> 
->   Lock Name                Before      After     % change
->   shrink_lruvec+0x770     722.84 ms    0         -100% (eliminated)
->         (= lru_note_cost_unlock_irq)
->   workingset_refault+0x167 385.26 ms   0         -100% (eliminated)
->         (= lru_note_cost_refault)
->   shrink_node+0x4ad       689.43 ms    26.95 ms  -96%
->   shrink_active_list      208.34 ms    15.97 ms  -92%
->   lru_add_drain_cpu+0x34    1.96 s    917.71 ms  -53%
-> 
->   Total LRU lock wait      ~4.23 s     ~1.66 s   -61%
+> v2 -> v3:
+>  - Simplify mem_cgroup_swappiness as suggested by Johannes.  
+>  - Rebase on the next-20260722
 
-So it saves 2.5 seconds out of 30 seconds?
+Here's how v3 plus v4 altered mm.git:
+
+
+ mm/swap.h |   15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
+
+--- a/mm/swap.h~b
++++ a/mm/swap.h
+@@ -105,18 +105,11 @@ extern int vm_swappiness;
+ static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
+ {
+ #ifdef CONFIG_MEMCG_V1
+-	/* Cgroup2 doesn't have per-cgroup swappiness */
+-	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+-		return READ_ONCE(vm_swappiness);
+-
+-	/* root ? */
+-	if (mem_cgroup_disabled() || mem_cgroup_is_root(memcg))
+-		return READ_ONCE(vm_swappiness);
+-
+-	return READ_ONCE(memcg->swappiness);
+-#else
+-	return READ_ONCE(vm_swappiness);
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
++	    !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg))
++		return READ_ONCE(memcg->swappiness);
+ #endif
++	return READ_ONCE(vm_swappiness);
+ }
+ 
+ #ifdef CONFIG_SWAP
+_
+
