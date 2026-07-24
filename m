@@ -1,280 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr2-f2.google.com (mail-wr2-f2.google.com [74.125.225.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6037727FB1F;
-	Fri, 24 Jul 2026 12:31:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74606395243
+	for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 12:52:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784896300; cv=none; b=KH/sg7YPzj08ITIKLqfTpjzopCbMx3yJyD97z3lG99eZdaH6NMKMUewx8Zvg/7hqlfcRlh4PHZRVnxqlnFKU4ogMlPw7lzio/9sa7vujXukH1mpRvDRMn/zvipAPoty6Zm9F1Kvymkwxm96WRmVvjt0USpZJ8XmGgrNI+jlNrAw=
+	t=1784897545; cv=none; b=rEA+WXq3v2XoCYb0PlCMndxwpnvCpKgnS24P7BtZeb8B4doYhBfd8XB0Zof4YPWw0hBEtI9V0v+JY/AsmVSlTSSCr5PElhxXsh9injoy+3WzDCPiXWhLht5qW4C7Zava4MMKuwEyDMSxaiaJ7pcPi32GmAJSoerrLSmvPeTdmYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784896300; c=relaxed/simple;
-	bh=5tFNU4s28uw1wANodMzU4hTdWSbgrC5nMHuUbNAFV84=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mCFCvgPUHq3W9OuLovV3Nyyk0UF6OW0j0sj0QMWzMbr7h/QIkvEJuchUUAsf9ELnKCpfA/8Gk0CIkvqPfY8heJFka5r1wHCvZaK4UwfdGKFn7MRYbFozte5Vzp1HSpbO1snTUbxIjJuMdLrqPXefz1JnA6YgRAOYulL+Zg/eDpE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mpthSAjp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784897545; c=relaxed/simple;
+	bh=mk1BQnZGtudR7XDj42PbREbR3Ki5M0tr3oqDAtI6TZQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sMkK7xsyjLlRa8zJzNrkykxctFS+y5Wq/rpbGQq5R+BWEjS/CxIF9NjQnVppwonQGsdcbzleJn6paiBl9B7MoBXz1crSjvilb/G0n8vYxxDNvM01wELck9vH6xq/5IiJwbx7RABP5GEjUyv0uBLSYDD5Y7OPqP36P4uhg3TlTfo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=b/NgON33; arc=none smtp.client-ip=74.125.225.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mpthSAjp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23D2A1F000E9;
-	Fri, 24 Jul 2026 12:31:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784896299;
-	bh=VAZx5z6/Aznq0vRlWUGgoZ5pMoW/FyB0YAVfNh1mIbY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mpthSAjpFOjdjs955qqkv8W5L0jN1Zs9ASw3DWXOSwtM8OrET8zCu9mSNbdfedQmZ
-	 lFBH/3/2T+18TMuhjUYdH6N9jl2MGfbAMv2Cxy3dQ8+70PwO+KzTEijpbrtmS2zR9i
-	 mcZAY8ExZeP/aovkXVRTh7pvVttMK2nt3QKqBv4YSdENFxL1VrFE4yiUEzb0JmLxYQ
-	 stN6ZjDXJZgQJtT15ZJGf0c4H9pOIIiu5Sbitlkfapuy6WctVCgIoOoXZHJryM/dZr
-	 i/4Gik+Y9LxpnVew1GGb4EYCd/rNpYpe1BsdtnGR5oEtmhmbP6y2HfTCG1xSyE09JB
-	 joVuGe8/Dx+BQ==
-From: Yu Kuai <yukuai@kernel.org>
-To: axboe@kernel.dk,
-	tj@kernel.org
-Cc: hch@lst.de,
-	dongsheng.yang@linux.dev,
-	cengku@gmail.com,
-	josef@toxicpanda.com,
-	nilay@linux.ibm.com,
-	ming.lei@redhat.com,
-	yukuai@fygo.io,
-	linux-block@vger.kernel.org,
-	cgroups@vger.kernel.org
-Subject: [RFC PATCH v2 8/8] block: fail nowait bio submit if blkg allocation can't sleep
-Date: Fri, 24 Jul 2026 20:30:37 +0800
-Message-ID: <20260724123037.3004560-9-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260724123037.3004560-1-yukuai@kernel.org>
-References: <20260724123037.3004560-1-yukuai@kernel.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="b/NgON33"
+Received: by mail-wr2-f2.google.com with SMTP id ffacd0b85a97d-4730b8edae6so134282f8f.0
+        for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 05:52:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1784897542; x=1785502342; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Mv5tWqGLGkHnf04eMqxVT5ugoOpACtQyu5RJWX4G6Hs=;
+        b=b/NgON33ojALkqd+RvRGUC8ybuq8FxJ9pcBWde0o3YNprY0w8v8IOCXiMLE8hOXvz+
+         I1S5Ex4xQl7ZbpHfJHl0LOZ7j0JeSakFMXOlOD2+BZ2tz14sd+pNgZwPkrGSkGZD9VxA
+         ftrhAdEd6dT8/flfEX+rDwYYid9+M0pf9/lwqV6b3upPEMoVO9cgUhd7/su+i5aFN+06
+         lzBMWjVAUC9OofKg7ajWfbdhhyCs72u+YsiUQzvn6JffT9W45/O9DVFHJZnkeVv6yOtc
+         B2eaAGYoOijr2ouDTpLHtctgUuXWMae5wtIy2MSEn2UZtD5YC6qT5oM/y33dMLraCD7U
+         UEBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784897542; x=1785502342;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Mv5tWqGLGkHnf04eMqxVT5ugoOpACtQyu5RJWX4G6Hs=;
+        b=eNcndS1GIy0QLhB6UYnIeG3Ovy8YMESXq2+zd9NLz9eIZ7mkR0r3eM1Sr7G7BX8FQs
+         B0e85mMszDiYawlt7qhVXoUCyaX9MFYrA0YCwxEuOmCXbMMs2yKpFBYH5WKI4i7NdpUA
+         PzqYCqQjcJcocSlglG5m1eOq9w+Q/7VHtgoo6H2BEYGbGBJylww0RMtZnnKHavNuNMoQ
+         os+V+4sQ+hodFBCZqKDdRNGhAa7GXq5d/K/RcREATW/OMffg6ZWDEuLFOKRSnXbuRVx6
+         2NX4E+BOG2Pm7UFXzZUdcUtLgiJxYvQHbtMOau7MkHJ3o9c6efPs9OIolSeK/FusMtWm
+         vSwA==
+X-Forwarded-Encrypted: i=1; AHgh+RrlR/KMQj0ItjdOP89vxmW9oOTv4cbK2UzIns5QpAYBprENvWUAhXQuJAVcMp0iHXkVnLPOCeYV@vger.kernel.org
+X-Gm-Message-State: AOJu0YycJy82YDtn5rMGY/HVoo6Qqyxh4C74Ac/olKoUGPL34qrOs/v4
+	S1aVIBp3oXj+Gn+wDT2ttN6rcI8VY7yXBzr9v4q/oT4wjKNTKlSlFJqsXBY5+WGLXA0=
+X-Gm-Gg: AR+sD13pu7FPg9LPKk471Uk+g4eij61d8gQKxSHj1GCkJecH6CynolthFufLTlzjGtD
+	/dRgd1BFCpBXepMojaJz+xlOBoc6nuyfXaIAgLNi6KY+EJgQXWVne2/hRwWQq4I67IoBEGTnPAc
+	UEBbAxuDivXr6GQ1pGpeb3o1MKcrg6aTazR43IEjmc/29L8YXquEPKvuFOlIKBnoA13dZznYiSx
+	wr+y4iUlTSB4QRWYEmQFs8Kv7SNKvaUsBedbh+f2xblZ56JVnXP+/0vL/g74u/JKYa17zykoFYJ
+	zZwiDuzWn8ThV9jhKzHv48I7HJKylRGdRPeSORP9yxzI6TIO6kMS3m/GZUWKGpuXYAwR+BcXfdP
+	2e+Ofzjqp7NheGNlrSKk5rgRW51fK0vtj4FQudA46j5sn0U2m3v61Cse8pdjAvGhxPGxCSvqgej
+	TOcia/Iw==
+X-Received: by 2002:a05:6000:2287:b0:477:3986:9b54 with SMTP id ffacd0b85a97d-47f8d77c2dbmr9048250f8f.20.1784897541667;
+        Fri, 24 Jul 2026 05:52:21 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c631fdsm23383475f8f.28.2026.07.24.05.52.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2026 05:52:21 -0700 (PDT)
+Date: Fri, 24 Jul 2026 14:52:19 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Kohei Enju <enju.kohei@fujitsu.com>
+Cc: linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org, 
+	kvmarm@lists.linux.dev, cgroups@vger.kernel.org, linux-coco@lists.linux.dev, 
+	Paolo Bonzini <pbonzini@redhat.com>, Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>, 
+	Joey Gouly <joey.gouly@arm.com>, Steffen Eiden <seiden@linux.ibm.com>, 
+	Suzuki K Poulose <suzuki.poulose@arm.com>, Zenghui Yu <yuzenghui@huawei.com>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Steven Price <steven.price@arm.com>
+Subject: Re: [RFC PATCH v1 2/2] cgroup/misc: Add support for Arm CCA MECIDs
+Message-ID: <amNfGkkI5OIBqpmZ@localhost.localdomain>
+References: <20260724094120.166536-1-enju.kohei@fujitsu.com>
+ <20260724094120.166536-3-enju.kohei@fujitsu.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ax7rchmwlrf277f6"
+Content-Disposition: inline
+In-Reply-To: <20260724094120.166536-3-enju.kohei@fujitsu.com>
 
-From: Yu Kuai <yukuai@fygo.io>
 
-blkg association now happens from the submit path, which is allowed to sleep
-when creating a missing blkg.  REQ_NOWAIT I/O must not be made to sleep,
-though: if a nowait bio is the first I/O for its cgroup/queue pair and the
-blkg does not exist yet, creating it would require sleeping on
-q->blkcg_mutex and allocating with a sleeping GFP.
+--ax7rchmwlrf277f6
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [RFC PATCH v1 2/2] cgroup/misc: Add support for Arm CCA MECIDs
+MIME-Version: 1.0
 
-blkg_tryget_closest() derives the nowait mode from the bio's REQ_NOWAIT flag.
-For nowait, create the missing blkg without sleeping: mutex_trylock()
-q->blkcg_mutex and allocate with GFP_ATOMIC.  If that fails (atomic context,
-contended mutex, or allocation failure), leave the bio unassociated and
-return failure, so submit_bio()/submit_bio_noacct() complete the bio with
-BLK_STS_AGAIN and the submitter can retry once the blkg exists.
+Hello Kohei.
 
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- block/blk-cgroup.c  | 85 ++++++++++++++++++++++++++++++++++-----------
- block/blk-core.c    | 19 ++++++++--
- include/linux/bio.h | 11 +++---
- 3 files changed, 86 insertions(+), 29 deletions(-)
+On Fri, Jul 24, 2026 at 06:40:56PM +0900, Kohei Enju <enju.kohei@fujitsu.co=
+m> wrote:
+> Arm CCA MECIDs are limited platform resources. Add a misc cgroup
+> resource to allow the system administrator to account for and limit
+> their use.
+>=20
+> The cca_mec resource represents the number of Realm VMs using the
+> private MEC policy. Each such Realm consumes one MECID. Charge the
+> resource when the Realm is created, and uncharge it when the Realm is
+> successfully destroyed.
+>=20
+> Realms using the shared MEC policy don't consume this resource.
+>=20
+> Signed-off-by: Kohei Enju <enju.kohei@fujitsu.com>
+> ---
+>  arch/arm64/include/asm/kvm_rmi.h |  2 ++
+>  arch/arm64/kvm/rmi.c             | 44 +++++++++++++++++++++++++++++++-
+>  drivers/firmware/arm_rmm/rmi.c   |  4 +++
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index d611cf701f14..3c8efba2e69a 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -30,6 +30,7 @@
- #include <linux/resume_user_mode.h>
- #include <linux/psi.h>
- #include <linux/part_stat.h>
-+#include <linux/preempt.h>
- #include "blk.h"
- #include "blk-cgroup.h"
- #include "blk-ioprio.h"
-@@ -1984,6 +1985,30 @@ static inline struct blkcg_gq *blkg_tryget_closest(struct bio *bio,
- 	if (blkg)
- 		return blkg;
- 
-+	if (bio->bi_opf & REQ_NOWAIT) {
-+		int ret;
-+
-+		/*
-+		 * Nowait callers must not sleep on the mutex nor allocate with
-+		 * sleeping GFPs.  Trylock the mutex and create the missing blkg
-+		 * atomically; if the mutex is contended, the caller is atomic,
-+		 * or blkg allocation fails, return NULL so the caller can fail
-+		 * the bio and let the submitter retry once the blkg exists.
-+		 */
-+		if (!preemptible() || !mutex_trylock(&q->blkcg_mutex))
-+			return NULL;
-+
-+		ret = blkg_lookup_create(blkcg, bio->bi_bdev->bd_disk,
-+					 GFP_ATOMIC, &blkg);
-+		if (ret)
-+			blkg = NULL;
-+		else if (blkg)
-+			blkg = blkg_lookup_tryget(blkg);
-+		mutex_unlock(&q->blkcg_mutex);
-+
-+		return blkg;
-+	}
-+
- 	/*
- 	 * Fast path failed, we're probably issuing IO in this cgroup the first
- 	 * time, hold lock to create new blkg.
-@@ -2010,19 +2035,33 @@ static inline struct blkcg_gq *blkg_tryget_closest(struct bio *bio,
-  *
-  * A reference will be taken on the blkg and will be released when @bio is
-  * freed.
-+ *
-+ * If @bio is REQ_NOWAIT and associating requires creating a new blkg, this
-+ * function does not sleep; when the blkg cannot be created atomically it
-+ * returns %false with @bio left unassociated so the caller can fail the I/O.
-+ *
-+ * Return: %true if @bio is associated with a blkg, %false on nowait failure.
-  */
--void bio_associate_blkg_from_css(struct bio *bio,
-+bool bio_associate_blkg_from_css(struct bio *bio,
- 				 struct cgroup_subsys_state *css)
- {
--	if (bio->bi_blkg)
-+	struct blkcg_gq *blkg;
-+
-+	if (bio->bi_blkg) {
- 		blkg_put(bio->bi_blkg);
-+		bio->bi_blkg = NULL;
-+	}
- 
- 	if (css && css->parent) {
--		bio->bi_blkg = blkg_tryget_closest(bio, css);
-+		blkg = blkg_tryget_closest(bio, css);
-+		if (!blkg)
-+			return false;
-+		bio->bi_blkg = blkg;
- 	} else {
- 		blkg_get(bdev_get_queue(bio->bi_bdev)->root_blkg);
- 		bio->bi_blkg = bdev_get_queue(bio->bi_bdev)->root_blkg;
- 	}
-+	return true;
- }
- EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
- 
-@@ -2030,32 +2069,38 @@ EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
-  * bio_associate_blkg - associate a bio with a blkg
-  * @bio: target bio
-  *
-- * Associate @bio with the blkg found from the bio's css and request_queue.
-- * If one is not found, bio_lookup_blkg() creates the blkg.  If a blkg is
-- * already associated, the css is reused and association redone as the
-- * request_queue may have changed.
-+ * Associate @bio with the blkg found from the bio's css and request_queue,
-+ * creating it if necessary.  If a blkg is already associated, the css is
-+ * reused and association redone as the request_queue may have changed.
-+ *
-+ * If @bio is REQ_NOWAIT, association does not sleep; if the blkg cannot be
-+ * created without sleeping, %false is returned with @bio left unassociated.
-+ *
-+ * Return: %true on success, %false on nowait failure.
-  */
--void bio_associate_blkg(struct bio *bio)
-+bool bio_associate_blkg(struct bio *bio)
- {
- 	struct cgroup_subsys_state *css;
-+	bool ret;
- 
- 	if (blk_op_is_passthrough(bio->bi_opf))
--		return;
-+		return true;
- 
- 	if (bio->bi_blkg) {
- 		css = bio_blkcg_css(bio);
--		bio_associate_blkg_from_css(bio, css);
--	} else {
--		rcu_read_lock();
--		css = blkcg_css();
--		if (!css_tryget_online(css))
--			css = NULL;
--		rcu_read_unlock();
--
--		bio_associate_blkg_from_css(bio, css);
--		if (css)
--			css_put(css);
-+		return bio_associate_blkg_from_css(bio, css);
- 	}
-+
-+	rcu_read_lock();
-+	css = blkcg_css();
-+	if (!css_tryget_online(css))
-+		css = NULL;
-+	rcu_read_unlock();
-+
-+	ret = bio_associate_blkg_from_css(bio, css);
-+	if (css)
-+		css_put(css);
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(bio_associate_blkg);
- 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 0a1d2b09a5d9..9b96dd802c92 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -832,8 +832,16 @@ void submit_bio_noacct(struct bio *bio)
- 	 * rely on bio->bi_blkg matching the queue of bio->bi_bdev.
- 	 */
- #ifdef CONFIG_BLK_CGROUP
--	if (!bio->bi_blkg || bio->bi_blkg->q != q)
--		bio_associate_blkg(bio);
-+	if (!bio->bi_blkg || bio->bi_blkg->q != q) {
-+		/*
-+		 * For REQ_NOWAIT, do not sleep to create a new blkg: fail the
-+		 * bio so the submitter retries once the blkg exists.
-+		 */
-+		if (!bio_associate_blkg(bio)) {
-+			bio_endio_status(bio, BLK_STS_AGAIN);
-+			return;
-+		}
-+	}
- #endif
- 
- 	/*
-@@ -979,8 +987,13 @@ void submit_bio(struct bio *bio)
- 	 * bio->bi_blkg, so associate the blkg (for new I/O, the first time) before
- 	 * it runs.  This is the sleepable entry point for new I/O; remapped bios
- 	 * that reach submit_bio_noacct() directly are reassociated there.
-+	 * For REQ_NOWAIT I/O, fail the bio instead of sleeping if a new blkg
-+	 * cannot be allocated.
- 	 */
--	bio_associate_blkg(bio);
-+	if (!bio_associate_blkg(bio)) {
-+		bio_endio_status(bio, BLK_STS_AGAIN);
-+		return;
-+	}
- 	bio_set_ioprio(bio);
- 	submit_bio_noacct(bio);
- }
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 7a7509c8a59a..570b62e676dc 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -503,17 +503,16 @@ static inline void bio_release_pages(struct bio *bio, bool mark_dirty)
- 	disk_devt((bio)->bi_bdev->bd_disk)
- 
- #ifdef CONFIG_BLK_CGROUP
--void bio_associate_blkg(struct bio *bio);
--void bio_associate_blkg_from_css(struct bio *bio,
-+bool bio_associate_blkg(struct bio *bio);
-+bool bio_associate_blkg_from_css(struct bio *bio,
- 				 struct cgroup_subsys_state *css);
- void bio_clone_blkg_association(struct bio *dst, struct bio *src);
- void bio_disassociate_blkg(struct bio *bio);
- void blkcg_punt_bio_submit(struct bio *bio);
- #else	/* CONFIG_BLK_CGROUP */
--static inline void bio_associate_blkg(struct bio *bio) { }
--static inline void bio_associate_blkg_from_css(struct bio *bio,
--					       struct cgroup_subsys_state *css)
--{ }
-+static inline bool bio_associate_blkg(struct bio *bio) { return true; }
-+static inline bool bio_associate_blkg_from_css(struct bio *bio,
-+					       struct cgroup_subsys_state *css) { return true; }
- static inline void bio_clone_blkg_association(struct bio *dst,
- 					      struct bio *src) { }
- static inline void bio_disassociate_blkg(struct bio *bio) { }
--- 
-2.51.0
+(mainly for this)
+>  include/linux/misc_cgroup.h      |  4 +++
+>  kernel/cgroup/misc.c             |  4 +++
+>  5 files changed, 57 insertions(+), 1 deletion(-)
 
+Conditional
+Acked-by: Michal Koutn=FD <mkoutny@suse.com>
+(it makes sense along the other arches' miscresurces)
+
+Why? I see this [1] (or followup) needs to be added first.
+
+Thanks,
+Michal
+
+[1] https://lore.kernel.org/r/20260715142739.80398-4-steven.price@arm.com/
+
+--ax7rchmwlrf277f6
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCamNf+xsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AhXYAD/aF4cHB3u4Ztw+Epfxt6r
+owvtGiLz50NxCjHVwV+x/xAA/jW6M8nVIZ5COXi3AcXAaZ9Jg4Hbfex1q/uwG0FV
+VjUH
+=szup
+-----END PGP SIGNATURE-----
+
+--ax7rchmwlrf277f6--
