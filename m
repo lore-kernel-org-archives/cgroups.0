@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9F4B331ED1;
-	Fri, 24 Jul 2026 16:31:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB79D349B19;
+	Fri, 24 Jul 2026 16:38:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784910716; cv=none; b=USUyk1hD0xtMbLT1Zs6QO2ezWHfFuJUgigTVPPyFstP/H+uSLIWJEb2B2tk80ukfv+0PCiHUrROdGtW8oox1kODAOGMv4BtYkcSzGdCm6QKUNI1ESlVe4f1cOEBaMeO5P5xSwx2snvNpQ2GLU97CywNbnCpP39EecVhu4BttEVI=
+	t=1784911092; cv=none; b=HPC6lpUY5PaO5jLR7fGrPhHpp26JuP1nXErTYIstKttJpDbm5+ZYeSOM5gw3kcbsggMNC6FQckvmbYOjcmO5Xx4Zi+FXKP0vpgj2U/fckI/1VJdh74NWJWIG3M0yozK5JxRCma+Lp2YWdi0EsDMTFkaFFFWSYlap9cauQ8JLWUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784910716; c=relaxed/simple;
-	bh=G2w6iLsaatqZ7CNkfPD+AKadfkixJdvJIetvgvFapUM=;
+	s=arc-20240116; t=1784911092; c=relaxed/simple;
+	bh=6hKxzkBJRuU09ad5t2u9WIMh+QRP2pLVgQ1mN+XI7VU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NdIPk6IdmEZYCQV0tuF+E8jJ7UtFM6R5ietvTne3gWFHta1tk/9KnzxAmn8KeSc+KWCR2kDJ1R0t60BVAv7W6nyIFLpo8mC/kVL0Pgtj94zbZqd4bUCkVTLXNjow6gMecLQd2gXRPr5qrhjEtJELNp+/e7WJ0hxy316lsrZ+xHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WnAylZo5; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=ornpDavJODRQb2xCOK4YZo6dhNaVTS/Y0+x5JqMchbdkCkFi1Ghy++jvJ1El4TGM0Lhh4J6p4CFrEOYJuRsb62r68H3hBP+xjQQ+K9lwcb4wiBcA4gU55N2A+RDfy9QLVEq4AFzFuAuKW2SkchgdqLp3Ij058pFpW7mRfC36wdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BK5WT+u/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WnAylZo5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCA661F00A3D;
-	Fri, 24 Jul 2026 16:31:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BK5WT+u/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C181D1F000E9;
+	Fri, 24 Jul 2026 16:38:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784910715;
-	bh=ZGnfLXs8/3ZZXMJGYBJ/MC8/fm2UhceZPaA8h6BrZ2U=;
+	s=k20260515; t=1784911091;
+	bh=wd1DKhAbb8cJYdRWggg6oDhJJGI9y5gRdzf50Fk9NXk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=WnAylZo5Q+efUUv2o4we0ojdl5IB/PfmSC2SdGJXKGIWWSFyDS7DILVY8LlqYG7l1
-	 Sy8LG5Oem3ob7C49glLpBJGDH1xeGVyzdnsvKW2m79gw3cOs2eO88kJhfeTFI+w57W
-	 dPe2GKoxvgQZ9ggXMvvIpU++ahr/qkNS9XZRpKOHhCR/+AWiuVGuInFqXDPNRMer8w
-	 x7YFYzp84YlKN2m3i0itoRfgndqjaiOhHAiU8kh5CRtmuA4EPV799crK0fXIF8pU5l
-	 sn3L/tJZNS4cXZfCWA3sXJeZND7IDn0NpyqhbZd+aJqwQNmU7I3FWahBqq8JG2CM8t
-	 w9027hws69c3w==
-Message-ID: <df871664-09ea-4e83-bff0-bbd3ff9f3ccc@kernel.org>
-Date: Fri, 24 Jul 2026 18:31:51 +0200
+	b=BK5WT+u/jG/YwWgmMNVYKSRGAqq1RQ0cFEKg0ostULv8PBqUHRlYFc2FeAQsFwh9i
+	 hnkuxnvV0dz+TT4rsRVgjbLTIhUWTCCA3c7V1A6X7/onRZCq7fcKxeR/d5r0Wn9nii
+	 gI1eNkhyw95hn9TxvWoioE49yYasWGAeNidwt0mJAbeus3XAgKSzAGYtOv12lppLIB
+	 xFsHN3oxvvZrPcxsMTSxf/UB0Xq1zWm7r7aelvtfaZW5mhGc/bYezLgbQligXeG2cv
+	 kXp2Qx6r6i4GDVRvEcVwAoH+8uKiQ99iNCdNfKjj+6XCDi3nGuwe4pTtue0gordN1O
+	 68ug5cgnJCOiQ==
+Message-ID: <db6eab50-89ad-40bf-a276-8f038f5f116f@kernel.org>
+Date: Fri, 24 Jul 2026 18:38:07 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -95,18 +95,64 @@ Content-Transfer-Encoding: 7bit
 
 On 7/24/26 11:41, Hao Li wrote:
 > On Mon, Jul 20, 2026 at 04:16:26PM +0200, Vlastimil Babka (SUSE) wrote:
->> Slabs of some caches never need the objcg part of struct slabobj_ext.
->> Introduce helpers to query this for a cache or a slab.
->> 
->> Introduce SLAB_MAY_ACCOUNT flag that is currently only internal and only
->> is_kmalloc_normal() caches don't have the flag.
+>> @@ -984,11 +991,19 @@ new_kmalloc_cache(int idx, enum kmalloc_cache_type type)
+>>  #endif
+>>  
+>>  	/*
+>> -	 * If CONFIG_MEMCG is enabled, disable cache merging for
+>> -	 * KMALLOC_NORMAL caches.
+>> +	 * If memcg_kmem is enabled and this is a KMALLOC_NORMAL cache and  not
+>> +	 * aliased with any other type, make sure it's never merged with any other
+>> +	 * cache.
+>> +	 *
+>> +	 * In other cases the kmalloc cache may end up being used for a
+>> +	 * __GFP_ACCOUNT allocation so mark it as such
+>>  	 */
+>> -	if (IS_ENABLED(CONFIG_MEMCG) && (type == KMALLOC_NORMAL))
+>> -		flags |= SLAB_NO_MERGE;
+>> +	if (!mem_cgroup_kmem_disabled()) {
+>> +		if (type == KMALLOC_NORMAL && KMALLOC_RECLAIM != KMALLOC_NORMAL)
 > 
-> it seems this could be "only type == KMALLOC_NORMAL caches don't have this
-> flag".
+> With only those checks, the dedicated KMALLOC_NO_OBJ_EXT cache will also have
+> the SLAB_MAY_ACCOUNT flag, which might be a bit misleading. is it worth
+> explicitly excluding SLAB_MAY_ACCOUNT for dedicated KMALLOC_NO_OBJ_EXT cache?
 
-I think not, because with SLUB_TINY, a KMALLOC_NORMAL cache can have
-SLAB_RECLAIM_ACCOUNT flag and thus is not is_kmalloc_normal() and may need
-objcgs?
+Yeah good point, will do! Thanks!
 
-Yep it's subtle :/
+>> +			flags |= SLAB_NO_MERGE;
+>> +		else
+>> +			flags |= SLAB_MAY_ACCOUNT;
+>> +	}
+>>  
+>>  	if (minalign > ARCH_KMALLOC_MINALIGN) {
+>>  		aligned_size = ALIGN(aligned_size, minalign);
+>> diff --git a/mm/slub.c b/mm/slub.c
+>> index d78d3e50c877..30435e2509ea 100644
+>> --- a/mm/slub.c
+>> +++ b/mm/slub.c
+>> @@ -2557,7 +2557,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags)
+>>  	 * of slab_obj_exts being allocated from the same slab and thus the slab
+>>  	 * becoming effectively unfreeable.
+>>  	 */
+>> -	if (is_kmalloc_normal(s))
+>> +	if (!cache_needs_objcg(s))
+>>  		return true;
+>>  
+>>  	/* Ignore already charged objects. */
+>> @@ -3435,6 +3435,10 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags,
+>>  
+>>  	slab->objects = oo_objects(oo);
+>>  
+>> +#ifdef CONFIG_64BIT
+>> +	if (cache_needs_objcg(s))
+>> +		slab->obj_exts_needs_objcg = 1;
+>> +#endif
+>>  	slab->slab_cache = s;
+>>  
+>>  	kasan_poison_slab(slab);
+>> 
+>> -- 
+>> 2.55.0
+>> 
+> 
 
