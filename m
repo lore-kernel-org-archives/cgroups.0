@@ -1,242 +1,223 @@
-Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D116F44E660
-	for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 18:32:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F777395DAA;
+	Sat, 25 Jul 2026 10:01:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784917977; cv=none; b=hr1FybrFPgKsOjcXqJgdgCsSIG6IibDX9KBAMNT259ldJ9859XXZ8XFtQHAc3g+gbjxqj/eFuvb99fNIZaA7/1Oy6E68UWx0yrq8zqPHpgXBA8Mb0zcLaEzlvtmB0JnKShWPJJ4n33Tp3+uB79Z90G704AtmfB75EyusfrsOKLM=
+	t=1784973670; cv=none; b=fKEa0gibO6alR7VcaTSo0qPXHMtqe0cL3zrV/6taHR827fMt38/TNsbP4B3Sb/ZF/nd/pWfbgOjPvsazOR5eJ07S42rO8AwLzO/zVssxZFs7R9+WJzqH0FIaVZm7doOaTvHtzlI8LAYJLQYYdMrCLIs+XNYPs7yoIoxKJoMUktY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784917977; c=relaxed/simple;
-	bh=49BORHob0PSsoLTDI4uttqyoK+dUWT4F1j4eK8avkXE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NKxyhE0dgM5uCqsR3ASvX9TlEY34FRCCpuwHUehrV7jstkfiickj42Soufjlof4uljOJWKrXTyLJ5t2YZzsSN4sgQwzYb4SxOdy91mQfzjL3bPGf2ZcuY6bBPTpPODev5VOtchUVreD3d460Y71IW9RSZTM5cbsYeguLsCJLdYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=ABBktMGK; arc=none smtp.client-ip=209.85.219.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	s=arc-20240116; t=1784973670; c=relaxed/simple;
+	bh=gA50c+CvwdAGairtCEkeJ9X3yri7ssvixrrKg9NkZJs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=F2+srQfMhAESr59qvzz/odI84iWJ9GpHQg4t4ULLuYkobb/dPzwKQ311aCImX38i0VD+4Uh9mf6C5++p0eiSKs42sE+l3jTZIG6J93ZMaf+tiQe6/rNcr1mxq+AqMsdUOpq4nCfVdQK/vHdX0xUzdV+BrD5k3D26eLlhsr0d+y0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HHKSiv+N; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="ABBktMGK"
-Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-8efcef23d21so7631126d6.2
-        for <cgroups@vger.kernel.org>; Fri, 24 Jul 2026 11:32:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1784917972; x=1785522772; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=pXz8gdKZyjeAUSJH5WauhE2Y5aZihjLOBIOIDBnII0I=;
-        b=ABBktMGK1MlXRAZ2VyAhDq2V7G2a9xWYxxjqeyQcqhls12yOwEyRx0ybekoPigSb64
-         cpY+P5j/3udIl5Y8b6onbKL0/DxvFxLWUf0G/GYCYdJdDxthm+9XkFahsJNcuJnYqfDN
-         2AyUiFKYsqt2/2dOZLxQcFVzIEGgFRvmIwHH40covJ0l5qnHYXU6tWvXVi/2LV07KPQ9
-         vldRaIg4XeY7wB/IsaRxA7VAyakZ3AGb99zV51JOVIpcxGcdxeOILfE25yIHQdzXWEpf
-         SRQ2uYh/SHJlJD5sma2Z93gQC9vY1c4jdLIPPV6lGANd+em5vOt5AZEpWwegEjRuh78J
-         8XGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784917972; x=1785522772;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=pXz8gdKZyjeAUSJH5WauhE2Y5aZihjLOBIOIDBnII0I=;
-        b=rnThzUpu/I0gHrT7NjQ9bQjGLlGXP9HyFcc9DD4uKWKlAvRjbSjZricvZdzWpTOxbI
-         F+udoCDwTAlT47FQ0Z6IGEbFzZslEGbHWBluHsNg4DFoprNApfldjoBWd8/z79mIe3ZX
-         vJpKwo20fyItjrMY6EcJMGXKZHCY50hc9IrpL7iYRq9p5jVoFVdhdVbM1+tUzfY7gAV8
-         /m/J4ylhYACl9fnTCbfRouBWIxKhzjn3dw3wbVpOH5G7WxEWtMVJgnwoIK8jjEshZTDQ
-         ECjBjoWpbcQfAR0L+r8YAsycjdh6WZTuqvbwn0V2J30SgT1izsNnL4/+ei5prM10ZqAt
-         oOiw==
-X-Forwarded-Encrypted: i=1; AHgh+RrBPD85+JKXLU0GiT356dfSPUTiiPuf4E8BxGXhDrE4SrPZXAqLaL45cu/VHkt10HufXdDRbPAi@vger.kernel.org
-X-Gm-Message-State: AOJu0YxugY6vnNAAiMmYPdP9ml0CO6Vvdu7QQ61RfzIoRRSoz//nM5tL
-	5cmf7ydJTHTJhNRArPQIZxyO+h2nT3SzUsugEiVAWcQVJKlLZXuIpdaQUVBSiWN0t5Q=
-X-Gm-Gg: AR+sD11nrVOl43ohugmP2xVLYmhp1TBu7Ah8OUZiljiVqc32RT+d4VYK/ocbaEcZ8w+
-	cSRxCcJU7FV+5NyT3tKS29KgkAs7MK5lJcmAc6f14srJPJwQ7uHnrObk+1ns6RwuPBXwLhBUgDN
-	pOw1ZgoLrVdWA6IM/mDM+pdVBrULDPwDmyt5Xd15OKTdjHmb7peWJbqLQhCUgGpoLvF0sKGw/YK
-	969VuIjLxh3EkOaXimuRbA4YBbGCMIbHOWJccHR/FQlu57MFHpHoJmQ6OF2Sz2DYncL1295RYKo
-	0vheCuDB2evCzeYIzO3+NWVTVBoIlnxwf4xyv/fEvs2SkzY8y0OHQu/jT5Z2chhDzrOdwCGuWka
-	6jf0t6XZ66ngy99TxypqElqWcPkfTuUK5AG9bochwIPoKaw4A3ql51CsC15aP8sFsVRbpXZ8l1l
-	xL
-X-Received: by 2002:a05:6214:5191:b0:8e9:f62b:bee9 with SMTP id 6a1803df08f44-907ca8df69fmr99553356d6.57.1784917972296;
-        Fri, 24 Jul 2026 11:32:52 -0700 (PDT)
-Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-907e85241e7sm4261406d6.8.2026.07.24.11.32.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Jul 2026 11:32:51 -0700 (PDT)
-Date: Fri, 24 Jul 2026 14:32:48 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>, david@kernel.org,
-	ljs@kernel.org, liam@infradead.org, vbabka@kernel.org,
-	rppt@kernel.org, surenb@google.com, mhocko@suse.com,
-	kasong@tencent.com, qi.zheng@linux.dev, axelrasmussen@google.com,
-	yuanchu@google.com, weixugc@google.com, chrisl@kernel.org,
-	nphamcs@gmail.com, baoquan.he@linux.dev, youngjun.park@lge.com,
-	roman.gushchin@linux.dev, muchun.song@linux.dev, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rientjes@google.com, kernel-team@meta.com
-Subject: Re: [PATCH v4 2/2] mm/vmscan: reduce lru_lock contention via
- vmstat-derived scan-balance cost
-Message-ID: <amOv0MlF1S-oFZHX@cmpxchg.org>
-References: <20260720164207.450685-1-usama.arif@linux.dev>
- <20260720164207.450685-3-usama.arif@linux.dev>
- <amK-ApfqfwkPheC5@linux.dev>
- <32a85420-caac-477e-b371-8628ed28c428@linux.dev>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HHKSiv+N"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784973668; x=1816509668;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=gA50c+CvwdAGairtCEkeJ9X3yri7ssvixrrKg9NkZJs=;
+  b=HHKSiv+N8KzybaLO0/ia+yr6waSeRBFP9pBPpXDSeKOrnmchEs9xc5Fq
+   PjNPqrUygLoU+SdhvhltR7PybXvKO44y94P04Hqt+4kHsgdlcuB+PEc0Q
+   LRKceZERFd01qCv9xc8JeUHGCzJ5so1xYCsmTR/G5hztKKuXIsWYJjLVn
+   pS4D6s9quBosRsHMNUCm0UcReOihBO3rsT/bIsYPzqjtVeTuPCFCl6N0r
+   CVC6+0WBGJSrPyhSq8S7MEozBTUWz8/kA+TacSfT8gNe4dwzpmc6urj1u
+   3bsyK+ckYjiSUWmRD8FLTyKkJt5uzgdyCgHwzG9uGM+vPNVsvCIa4WAtm
+   A==;
+X-CSE-ConnectionGUID: oTntUcWcQv6o0HT3a1qbyA==
+X-CSE-MsgGUID: RLcGZCpjT92n1556h004aw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11855"; a="85565895"
+X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
+   d="scan'208";a="85565895"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 03:01:07 -0700
+X-CSE-ConnectionGUID: dPG/7mkzSyyZk/5tQg5YkQ==
+X-CSE-MsgGUID: GU1qqqzdTCWLaL8wS2fhQQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
+   d="scan'208";a="255013954"
+Received: from rvuia-mobl.ger.corp.intel.com (HELO fedora) ([10.245.245.106])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 03:01:01 -0700
+From: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
+To: intel-xe@lists.freedesktop.org
+Cc: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	Natalie Vock <natalie.vock@gmx.de>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Tejun Heo <tj@kernel.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	cgroups@vger.kernel.org,
+	Huang Rui <ray.huang@amd.com>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Matthew Auld <matthew.auld@intel.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Simona Vetter <simona@ffwll.ch>,
+	David Airlie <airlied@gmail.com>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	Thadeu Lima de Souza Cascardo <cascardo@igalia.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	dri-devel@lists.freedesktop.org,
+	amd-gfx@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v9 0/6] Add reclaim to the dmem cgroup controller
+Date: Sat, 25 Jul 2026 12:00:30 +0200
+Message-ID: <20260725100036.2372-1-thomas.hellstrom@linux.intel.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <32a85420-caac-477e-b371-8628ed28c428@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 24, 2026 at 02:29:23PM +0100, Usama Arif wrote:
-> 
-> 
-> On 24/07/2026 02:53, Shakeel Butt wrote:
-> > On Mon, Jul 20, 2026 at 09:41:23AM -0700, Usama Arif wrote:
-> >> The anon/file scan balance in get_scan_count() is driven by two scalars
-> >> in struct lruvec, anon_cost and file_cost, accumulated by every reclaim
-> >> producer under lruvec->lru_lock. The acquisition sites for cost work
-> >> specifically are:
-> >>
-> >>   - shrink_inactive_list() re-takes lru_lock at function exit purely
-> >>     to call lru_note_cost_unlock_irq() with (nr_pageout, nr_scanned -
-> >>     nr_reclaimed). One acquisition per inactive shrink.
-> >>   - shrink_active_list() does the same with (0, nr_rotated). One
-> >>     acquisition per active shrink.
-> >>   - workingset_refault() takes the lock via folio_lruvec_lock_irq()
-> >>     purely to record the refault cost. One acquisition per refault.
-> >>   - prepare_scan_control() takes lru_lock just to snapshot the two
-> >>     scalars into sc->{anon,file}_cost.
-> >>   - lru_note_cost_unlock_irq() itself walks parent_lruvec and
-> >>     re-acquires lru_lock on each ancestor to propagate the update,
-> >>     adding O(memcg-depth) acquisitions per producer call.
-> >>
-> >> This hurts because lru_lock is already a heavy contention point on
-> >> memory-heavy workloads: every isolate_lru_folios(), move_folios_to_lru()
-> >> and folio_add_lru() takes it. The cost work itself is trivial (two
-> >> scalar bumps and one comparison), but it contends with and causes
-> >> contention for actual LRU manipulation. The parent_lruvec() walk also
-> >> multiplies cost-update overhead by memcg hierarchy depth.
-> >>
-> >> Replace the producer-side accumulators with a read-side accumulator fed
-> >> from per-LRU vmstat counters. The old producer formula was:
-> >>
-> >>   cost = nr_io * SWAP_CLUSTER_MAX + nr_rotated
-> >>
-> >> Reuse NR_VMSCAN_WRITE for reclaim-driven anon pageout submissions. It is
-> >> already bumped by writeout() for the same successful outcome that fed
-> >> reclaim_stat.nr_pageout. Reclaim does not submit filesystem folios from
-> >> this path, so there is no file pageout term. Charge NR_VMSCAN_WRITE via
-> >> lruvec_stat_mod_folio() and include it in memcg_node_stat_items so it can
-> >> be sampled per lruvec and aggregated through the memcg hierarchy.
-> >>
-> >> Add explicit PGROTATE_{ANON,FILE} node_stat counters for the remaining
-> >> producer-local input. They are bumped from shrink_inactive_list() by
-> >> nr_scanned - nr_reclaimed and from shrink_active_list() by nr_rotated.
-> >> WORKINGSET_RESTORE_{ANON,FILE} already captures the refault IO that
-> >> lru_note_cost_refault() used to bill.
-> >>
-> >> Add a per-side struct lru_cost { count, last_rotated, last_io } to
-> >> struct lruvec. In prepare_scan_control() the two monotonic inputs are
-> >> sampled separately - rotated from PGROTATE_ANON/FILE, io from
-> >> WORKINGSET_RESTORE_BASE + f plus (for anon) NR_VMSCAN_WRITE - and the
-> >> raw per-side deltas are computed against cost->last_rotated and
-> >> cost->last_io before the SWAP_CLUSTER_MAX IO weighting is applied.
-> >> Extracting the deltas from the individual counters (rather than from a
-> >> pre-weighted sum) keeps the unsigned modular subtraction bounded by the
-> >> true per-counter growth, so a signed-long wraparound of any underlying
-> >> vmstat still yields the correct delta on 32-bit. The weighted delta is
-> >> folded into cost->count. Since one vmstat delta can cover many producer
-> >> events between reclaim passes, halve cost->count on both sides until
-> >> their sum is back within the lrusize/4 bound instead of halving only
-> >> once.
-> >>
-> >> Moving accumulation and decay to the reclaim side also improves the cost
-> >> model across reclaim gaps. With producer-side decay, events that happen
-> >> while reclaim is idle still age each other before reclaim ever samples
-> >> the costs. If a workload refaults a large anon set and then a smaller
-> >> file set before reclaim runs again, the later file activity can age the
-> >> earlier anon activity out of the cost model. The new scheme observes the
-> >> whole between-reclaim delta and decays anon and file proportionally, so
-> >> the scan-balance history better represents what happened since the last
-> >> reclaim pass.
-> >>
-> >> A dedicated per-lruvec spinlock, cost_lock, serialises the delta
-> >> extraction, the cost->count update and the halving loop against
-> >> concurrent reclaimers in the same memcg+node.
-> >>
-> >> Hierarchy aggregation is now implicit in the vmstat accounting. The
-> >> producer-side parent_lruvec() walk and lru_reparent_memcg() cost splice
-> >> existed only because anon_cost/file_cost were private lruvec fields. With
-> >> the cost expressed as lruvec vmstats, rstat propagates the underlying
-> >> counters through the memcg hierarchy and prepare_scan_control() consumes
-> >> the same ratelimited rstat view as the surrounding reclaim heuristics.
-> >>
-> >> NR_VMSCAN_WRITE is accounted at writeout(), so reclaim_stat.nr_pageout is
-> >> no longer needed and is removed.
-> >>
-> >> memcg-v1's memory.stat anon_cost/file_cost is now sourced from
-> >> cost[].count instead of the removed lruvec anon_cost/file_cost fields.
-> >> The reported values only refresh when prepare_scan_control() runs and
-> >> are bounded at ~lrusize/4 by the halving loop; the scan-balance signal
-> >> they express is unchanged.
-> >>
-> >> Under pure MGLRU the scan-balance signal itself is not consumed (both
-> >> prepare_scan_control() and get_scan_count() are short-circuited on the
-> >> MGLRU paths, and MGLRU's own type/tier selection comes from read_ctrl_pos()
-> >> on lrugen->{avg_refaulted,avg_total,refaulted,evicted}, not from
-> >> anon_cost/file_cost). NR_VMSCAN_WRITE naturally covers writeout from
-> >> either reclaim implementation, and PGROTATE_{ANON,FILE} are bumped from
-> >> evict_folios() so per-memcg observability of rotation-driven reclaim work
-> >> stays consistent across both implementations.
-> >>
-> >> Signed-off-by: Usama Arif <usama.arif@linux.dev>
-> > 
-> > Oh man too long commit message, please follow Johannes's suggestion.
-> 
-> Will do!
-> > 
-> > The patch looks good but I have one question. We already have concept of
-> > pgrotated through /proc/vmstat which represents number of pages we have moved to
-> > the tail of inactive LRU to make them next reclaim candidates. This patch is
-> > exposing pgrotate_[anon|file] to userspace. Here these metrics represents either
-> > the number of pages we scanned but didn't reclaim plus number of pages given one
-> > more trip in the active LRU.
-> > 
-> > Older and newer pgrotate metrics kind of represent something different. It may
-> > cause confusion. Now before suggesting to change the name, let me ask do we
-> > really need to expose these to the userspace? How exactly users can use these
-> > new metrics? I think you can use them here without exposing to userspace. So,
-> > does it makes sense to delay userspace exposure later when we have a more solid
-> > usecase for that unless you have it already.
-> > 
-> 
-> I do think the userspace counters have diagnostic value. They can be another metric
-> to show how much anon/file reclaim work is spent on pages that are not immediately
-> reclaimed, including pages retained on actie LRU. It could help explain if there
-> is elevated reclaim CPU usage.
+When writing a "max" limit lower than the current usage, the
+existing code silently failed. This series aims to improve
+on that by returning -EBUSY on failure and also attempt
+to synchronously reclaim device memory to push the usage
+under the new max limit to avoid the error.
 
-Hm, this is an interesting discussion.
+Patch 1 fixes a pre-existing amdgpu_vram_mgr_init() error path
+Patch 2 introduces struct dmem_cgroup_init for extensible region
+      registration.
+Patch 3 implements and documents a reclaim callback interface
+      for the dmem controller.
+Patch 4 implements a TTM reclaim callback.
+Patches 5-6 hook up the reclaim callback to the dmem cgroup-aware
+      drivers xe and amdgpu.
 
-The existing PGROTATED is kind of useless. When it's bumped:
+v2:
+- Remove the error propagation that was in a previous series (Maarten)
+- A number of updates in patch 1. See its commit message for
+  details (Maarten)
 
-- truncation fails and moves folios to the LRU tail for faster reclaim
-- writeback ends on folio that was tried to reclaim, moves to LRU tail for fast retry
+v3:
+- Add patch 1 fixing a pre-existing amdgpu_vram_mgr_init() error path
+  bug where drmm_cgroup_register_region() was called before
+  INIT_LIST_HEAD() and gpu_buddy_init(), causing a kernel panic on
+  failure. (Sashiko-bot)
+- Use an rwsem to protect reclaim callback registration and region
+  unregister against concurrent reclaim invocations. (Sashiko-bot)
+- Fix ttm_resource_manager_set_dmem_region() storing an error pointer
+  in man->cg unconditionally. (Sashiko-bot)
+- Fix kernel-doc function name format for ttm_bo_evict_cgroup() and
+  ttm_resource_manager_set_dmem_region().
 
-Ok, who needs to know this? The new counters you're adding, on the
-other hand, they capture the information you frequently need for
-understanding reclaim behavior.
+v4:
+- Rebased on drm-tip; dropped the XE_PL_STOLEN guard in the xe patch
+  as stolen memory uses a separate TTM manager.
 
-That said, looking closer at this one more time, you can already
-(almost) derive them fully from existing counters:
+v5:
+- Add patch 2 introducing struct dmem_cgroup_init to make the
+  dmem_cgroup_register_region() API extensible without adding positional
+  arguments in the future.
+- Use nonblock=true in reset_all_resource_limits() to avoid sleeping
+  inside rcu_read_lock() in dmemcs_offline(). (Sashiko-bot)
+- Compare usage against the truncated limit stored in cnt.max, not the
+  original u64. (Sashiko-bot)
+- Use DMEM_MAX_RECLAIM_RETRIES (16) retry budget instead of 5, matching
+  the memcg controller; only -ENOSPC (no progress) counts against the
+  budget, other errors abort immediately.
+- Handle NULL region in ttm_resource_manager_set_dmem_region() to clear
+  the reclaim callback, preventing use-after-free when the manager is
+  torn down while the dmem region outlives it. (Sashiko-bot)
+- Return 0 on any eviction progress; reserve -ENOSPC for zero progress.
+- Clear the reclaim callback in xe and amdgpu fini paths to prevent
+  use-after-free after driver unbind with open DRM file descriptors.
+  (Sashiko-bot)
+- Register xe fini devres action before drmm_cgroup_register_region()
+  so LIFO teardown runs unregister first, draining callbacks before the
+  manager is destroyed. (Sashiko-bot)
+- Switch amdgpu to explicit dmem_cgroup_unregister_region() at the top
+  of amdgpu_vram_mgr_fini() before any manager teardown, since amdgpu's
+  fini is called explicitly during driver unbind before drmm cleanup.
+  (Sashiko-bot)
+- Wrap the xe reclaim callback with drm_dev_enter()/drm_dev_exit() to
+  prevent TTM reclaim from running after driver unbind.
 
-drotated = (dPGSCAN_ANON - dPGSTEAL_ANON) + dPGDEACTIVATE_ANON
+v6:
+- Move the ops check inside down_read() in set_resource_max(), guarded
+  by region->unregistered, to close a UAF race against
+  dmem_cgroup_unregister_region(). (Sashiko-bot)
+- Fix dmem_cgroup_ops->reclaim docstring: -ENOSPC is retried up to
+  DMEM_MAX_RECLAIM_RETRIES times, not an immediate stop. (Sashiko-bot)
+- Fix mgr->cg_region never being assigned in amdgpu_vram_mgr_init(),
+  causing dmem_cgroup_unregister_region() in fini to silently no-op.
+  (Sashiko-bot)
+- Reorder amdgpu_vram_mgr_fini() to call set_used(false) and
+  evict_all() before dmem_cgroup_unregister_region(), so
+  ttm_resource_free() can uncharge via man->cg during eviction; clear
+  man->cg after unregister. (Sashiko-bot)
 
-The first two are already split by anon and file. The third you'd have
-to (1) split by type and (2) stop counting, or have a separate event,
-for MADV_COLD driven deactivations.
+v7:
+- Replace the per-region rw_semaphore with a static SRCU domain
+  (dmemcg_srcu). SRCU is a better fit: it avoids per-region lock
+  overhead on every reclaim call, and synchronize_srcu() at unregister
+  time is a rare, shutdown-time operation. (Maarten)
+- Trim in-function comments to focus on what rather than how.
+- Switch back to drmm_cgroup_register_region() with a drm_dev_enter/
+  exit guard in the reclaim callback (matching xe), rather than manual
+  register/unregister.  drm_dev_unplug() fires before vram_mgr_fini(),
+  so drm_dev_enter() returning false prevents any reclaim from touching
+  the manager during teardown.  This also fixes the "vram" name
+  collision on multi-GPU systems, since drmm_cgroup_register_region()
+  automatically prefixes with "drm/<pci-addr>/". (Sashiko-bot)
 
-And (2) seems overdue anyway. There is no point in maintaining counts
-for what userspace madvises. And it adds noise when it gets conflated
-with a stat tracking kernel reclaim behavior.
+v8:
+- Fix ttm_resource_manager_set_dmem_region() using IS_ERR_OR_NULL(),
+  which skipped the assignment for a NULL region and thus never cleared
+  man->cg. Use IS_ERR() so that a NULL region detaches the region as the
+  kernel-doc and the v5 changelog intended. (Sashiko-bot)
+- Move the amdgpu dmem cgroup region teardown back into
+  amdgpu_vram_mgr_fini() with an explicit dmem_cgroup_unregister_region()
+  after evict_all(), keeping the drm_dev_enter() guard. The v7 drmm-only
+  approach left a use-after-free on the probe-error teardown path, where
+  drm_dev_unplug() is never called so the drm_dev_enter() guard stays
+  open while drm_driver.release destroys the manager before the drmm
+  action unregisters the region. (Sashiko-bot)
+
+v9:
+- Init / fini race fixes. (Sashiko-bot, Thomas)
+- Drop a misleading comment. (Maarten)
+- Acquire runtime PM before reclaim. (Sashiko-bot) 
+
+User-space tests are at
+https://patchwork.freedesktop.org/series/163935/
+
+Test-with: 20260428065411.4222-1-thomas.hellstrom@linux.intel.com
+
+Thomas Hellström (6):
+  drm/amdgpu: Fix init ordering in amdgpu_vram_mgr_init()
+  cgroup/dmem: Introduce struct dmem_cgroup_init for region
+    initialization
+  cgroup/dmem: Add reclaim callback for lowering max below current usage
+  drm/ttm: Hook up a cgroup-aware reclaim callback for the dmem
+    controller
+  drm/xe: Wire up dmem cgroup reclaim for VRAM manager
+  drm/amdgpu: Wire up dmem cgroup reclaim for VRAM manager
+
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c      |  2 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c | 65 +++++++++++++-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.h |  3 +
+ drivers/gpu/drm/drm_drv.c                    |  8 +-
+ drivers/gpu/drm/ttm/ttm_bo.c                 | 94 +++++++++++++++++++-
+ drivers/gpu/drm/ttm/ttm_bo_util.c            |  3 +-
+ drivers/gpu/drm/ttm/ttm_resource.c           | 54 ++++++++++-
+ drivers/gpu/drm/xe/xe_ttm_vram_mgr.c         | 71 +++++++++++++--
+ include/drm/drm_drv.h                        |  4 +-
+ include/drm/ttm/ttm_bo.h                     | 10 +++
+ include/drm/ttm/ttm_resource.h               |  7 ++
+ include/linux/cgroup_dmem.h                  | 38 +++++++-
+ kernel/cgroup/dmem.c                         | 90 +++++++++++++++----
+ 13 files changed, 408 insertions(+), 41 deletions(-)
+
+-- 
+2.55.0
+
