@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC3EE39D6EC;
-	Sat, 25 Jul 2026 10:01:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE8E639D6E8;
+	Sat, 25 Jul 2026 10:01:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784973679; cv=none; b=QsC2trKsSn8AYNjx07Zy3pOce0A6EKW7+g7laKiNwbZhz/5BWkx9G0yNTuDbr2yl0CSNlDjqHkVMWCBOzXF5UXlblbJ6pikeU985RqJohZCWL+Y3Ui4LX5b9FMO/SMfoFnewmNqstIQ/4agpZogoqvxDhzwu0zra8P1EX5xnWmk=
+	t=1784973684; cv=none; b=mWbLAnFiCd6Ts2/mDvMIpYV+akW3u4+7X7U5kUz8hk4UbqcLAhbfj+HKzeTyQqR7ip/uFZ7P/QVdBRlfvGoko6pO7z/9DKekLLXkbFMIiQY7G4aUNX3uoZiU8VWT0B2B3K6RcKCyuFoZqnoIr/O4U5SqBzMtrxSicoFJGjV5qRk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784973679; c=relaxed/simple;
-	bh=1pcYpkpE8wTUGzh/ZJa9ebzBIY1MUPZSxx/EPaeAW5s=;
+	s=arc-20240116; t=1784973684; c=relaxed/simple;
+	bh=KnSrCD8IkGCp8afrGM3RBa3MGrE/Ni9eFzcNP/IHqL8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rFq1ZXIP+YDdjX5OGq19XYaX5vBASdLUKMt5UssiKVNxgXt/nxj5TvahiX+OqHfbBnisl+fCQs4nJBatn/2bXDkobWCJ3ztk34DMLQjTsbDbH8SZbMgTCXMTlqUDi1mSx4NHsvWQ6xiwnWCFBKuY1bC7UtqeTsNDt17zgOTZ1D0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=b6VhxxLn; arc=none smtp.client-ip=198.175.65.19
+	 MIME-Version:Content-Type; b=IlFqIruWVz0c2ffUY/j7hYRbZk6DvJHxAtvC0DrAuwzKsBt+yIMXzjq9yDNeWu51YgOq39SQMwpi9Di8uO9oYgHKPx0EpwmRN7cb+gyE3isXQvoP8xH/IecNKWn8QIRqu1OTYRjU2o4PAQk6dfbnGByRgfP1jLIbpY0ehN2P+D4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LfRabu8L; arc=none smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="b6VhxxLn"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LfRabu8L"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784973678; x=1816509678;
+  t=1784973683; x=1816509683;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=1pcYpkpE8wTUGzh/ZJa9ebzBIY1MUPZSxx/EPaeAW5s=;
-  b=b6VhxxLnAzolW1GY++jRCy8SVLGqWF8+csC4lTxlYdTlPOFE7AVA7hkU
-   avBkPtdHmYFh0uAEDqP4vicIx/ZtcfE63ufZUAHXPnkpku9uRjPL9SsIN
-   eurzJh2Lvu6Yz8DmyvgJ2x1zllKoSIMfX7y8SF0e6bESU+bHdxinvT5yb
-   3GMY9lz7OFSj1iYC7yYbddg93p+/rVAp/zdAGC22fjh49KHhDu66yFKES
-   8YxOk4bFi+Ou+3ZL4NDk+/mO90xAnmUqV0X8m7+9jAet9ghlpDfSHE/rG
-   QmF69fMVKNdXyZ6tN307M5rBUGybzymFQ6umpRoJBrBqkd96YaECliA8o
-   g==;
-X-CSE-ConnectionGUID: aqBkqEsWTS61jgjUShfrbw==
-X-CSE-MsgGUID: boDn/FqfSdKZRAMbwE1HMg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11855"; a="85565932"
+  bh=KnSrCD8IkGCp8afrGM3RBa3MGrE/Ni9eFzcNP/IHqL8=;
+  b=LfRabu8L13yM/pUl7RlNEHeVzcEOckb4L9ep+ezJ1DIpx93D4ZlZemuv
+   NaLXAGo8f1nBJpsPqTaG8jFnL2/d78XmWFPSC1zMYqnvr7T5ila/17WYa
+   E5SSFgKv6mN1mBoqtI7DP0RoV9bBmIx/KQWEPk1bunvhyVeK67HPZwB9z
+   0WhBhn7M4h84hMbcQhUQFjvms4pXgcCkqB0syDsEcHQNrNT0dx+55eqEI
+   I+heA+w7uGXT1w09WvRc1WhP50uyVyzCPFK83hmjgZOcSSo4jvM1rh804
+   VjqqMSZQTFLvZFqyW3SE3Ey+6cacxLMYFql0s7R3UteBp/H8uPSsFRfKS
+   A==;
+X-CSE-ConnectionGUID: HUDOMrcfRXCI51XQt5vJpg==
+X-CSE-MsgGUID: 9qS1d2TqS/WbUO83wuHFeQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11855"; a="85565948"
 X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
-   d="scan'208";a="85565932"
+   d="scan'208";a="85565948"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 03:01:18 -0700
-X-CSE-ConnectionGUID: TCnfBLhvTB2cnaN4P8Yq4w==
-X-CSE-MsgGUID: 563xaSQbQX6/ZLTSouGXIQ==
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 03:01:23 -0700
+X-CSE-ConnectionGUID: DUVEhRtlRtiiGX4gFdGk3Q==
+X-CSE-MsgGUID: TrSES3CYTTWzpCwSWkxSkg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,184,1779174000"; 
-   d="scan'208";a="255013980"
+   d="scan'208";a="255013989"
 Received: from rvuia-mobl.ger.corp.intel.com (HELO fedora) ([10.245.245.106])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 03:01:12 -0700
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2026 03:01:17 -0700
 From: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
 To: intel-xe@lists.freedesktop.org
 Cc: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
@@ -66,9 +66,9 @@ Cc: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
 	dri-devel@lists.freedesktop.org,
 	amd-gfx@lists.freedesktop.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v9 2/6] cgroup/dmem: Introduce struct dmem_cgroup_init for region initialization
-Date: Sat, 25 Jul 2026 12:00:32 +0200
-Message-ID: <20260725100036.2372-3-thomas.hellstrom@linux.intel.com>
+Subject: [PATCH v9 3/6] cgroup/dmem: Add reclaim callback for lowering max below current usage
+Date: Sat, 25 Jul 2026 12:00:33 +0200
+Message-ID: <20260725100036.2372-4-thomas.hellstrom@linux.intel.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260725100036.2372-1-thomas.hellstrom@linux.intel.com>
 References: <20260725100036.2372-1-thomas.hellstrom@linux.intel.com>
@@ -81,203 +81,271 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Replace the bare u64 size argument to dmem_cgroup_register_region() and
-drmm_cgroup_register_region() with a const struct dmem_cgroup_init *
-pointer. The struct currently carries only the size field, but using a
-struct makes the API extensible: future callers can supply additional
-initialization parameters without adding more positional arguments.
+Add an optional reclaim callback to struct dmem_cgroup_region. When
+dmem.max is set below the current usage of a cgroup pool, the new limit
+is applied immediately (so that concurrent allocations are throttled
+while reclaim is in progress) and then the driver is asked to evict
+memory to bring usage back below the limit.
 
-Update all in-tree callers (amdgpu, xe) to use a compound-literal
-initializer.
+Reclaim is attempted up to a bounded number of times. No error is
+returned to userspace if usage remains above the limit after reclaim,
+and a pending signal will abort the reclaim loop early. This matches
+the behavior of memory.max in the memory cgroup controller.
+
+Also honor O_NONBLOCK so that if that flag is set during the
+max value write, no reclaim is initiated. The idea is to avoid
+charging the reclaim cost to the writer of the max value.
+
+v2:
+- Write max before reclaim is attempted (Maarten)
+- Let signals abort the reclaim without error (Maarten)
+- If a new max value is written with the O_NONBLOCK flag,
+  reclaim is not attempted (Maarten)
+- Extract region from the pool parameter rather than
+  passing it explicitly to set_resource_xxx().
+
+v3:
+- Use an rw_semaphore (unregister_sem) to protect reclaim callbacks
+  against concurrent region unregistration: readers (reclaim) hold the
+  read side; dmem_cgroup_unregister_region() takes the write side to
+  drain in-flight callbacks before returning. (Sashiko-bot)
 
 v5:
-- Commit introduced.
+- Rebased on the introduction of struct dmem_cgroup_init.
+- Use nonblock=true in reset_all_resource_limits() to avoid sleeping
+  inside rcu_read_lock() in dmemcs_offline(). (Sashiko-bot)
+- Compare usage against the truncated limit value stored in cnt.max,
+  not the original u64. (Sashiko-bot)
+- Use a DMEM_MAX_RECLAIM_RETRIES (16) retry budget instead of 5, matching
+  the memcg controller's MAX_RECLAIM_RETRIES. Only -ENOSPC (no progress)
+  counts against the retry budget; other errors terminate the loop
+  immediately.
+
+v6:
+- Fix dmem_cgroup_ops->reclaim docstring: -ENOSPC does not stop reclaim
+  immediately but is retried up to DMEM_MAX_RECLAIM_RETRIES times; only
+  other negative errors terminate the loop. (Sashiko-bot)
+
+v7:
+- Replace the per-region rw_semaphore with a static SRCU domain
+  (dmemcg_srcu). SRCU is a better fit than rwsem for this use: it
+  avoids the per-region lock overhead on every reclaim call, and
+  synchronize_srcu() at unregister time is a rare operation. (Maarten)
+- Trim in-function comments to focus on what rather than how.
 
 Assisted-by: GitHub_Copilot:claude-sonnet-4.6
 Signed-off-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
 Reviewed-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c |  6 +++++-
- drivers/gpu/drm/drm_drv.c                    |  8 +++++---
- drivers/gpu/drm/xe/xe_ttm_vram_mgr.c         |  7 ++++++-
- include/drm/drm_drv.h                        |  4 +++-
- include/linux/cgroup_dmem.h                  | 16 +++++++++++++---
- kernel/cgroup/dmem.c                         | 10 ++++++----
- 6 files changed, 38 insertions(+), 13 deletions(-)
+ include/linux/cgroup_dmem.h | 22 ++++++++++
+ kernel/cgroup/dmem.c        | 80 +++++++++++++++++++++++++++++++------
+ 2 files changed, 90 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-index ac3f71d77140..08f05c3aed1d 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-@@ -23,6 +23,7 @@
-  */
- 
- #include <linux/dma-mapping.h>
-+#include <linux/cgroup_dmem.h>
- #include <drm/ttm/ttm_range_manager.h>
- #include <drm/drm_drv.h>
- #include <drm/drm_buddy.h>
-@@ -932,7 +933,10 @@ int amdgpu_vram_mgr_init(struct amdgpu_device *adev)
- 	if (err)
- 		return err;
- 
--	man->cg = drmm_cgroup_register_region(adev_to_drm(adev), "vram", adev->gmc.real_vram_size);
-+	man->cg = drmm_cgroup_register_region(adev_to_drm(adev), "vram",
-+					      &(struct dmem_cgroup_init){
-+						.size = adev->gmc.real_vram_size,
-+					      });
- 	if (IS_ERR(man->cg))
- 		return PTR_ERR(man->cg);
- 
-diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
-index e51ed959da89..c808958a2188 100644
---- a/drivers/gpu/drm/drm_drv.c
-+++ b/drivers/gpu/drm/drm_drv.c
-@@ -968,17 +968,19 @@ static void drmm_cg_unregister_region(struct drm_device *dev, void *arg)
-  * drmm_cgroup_register_region - Register a region of a DRM device to cgroups
-  * @dev: device for region
-  * @region_name: Region name for registering
-- * @size: Size of region in bytes
-+ * @init: Initialization parameters for the region.
-  *
-  * This decreases the ref-count of @dev by one. The device is destroyed if the
-  * ref-count drops to zero.
-  */
--struct dmem_cgroup_region *drmm_cgroup_register_region(struct drm_device *dev, const char *region_name, u64 size)
-+struct dmem_cgroup_region *
-+drmm_cgroup_register_region(struct drm_device *dev, const char *region_name,
-+			    const struct dmem_cgroup_init *init)
- {
- 	struct dmem_cgroup_region *region;
- 	int ret;
- 
--	region = dmem_cgroup_register_region(size, "drm/%s/%s", dev->unique, region_name);
-+	region = dmem_cgroup_register_region(init, "drm/%s/%s", dev->unique, region_name);
- 	if (IS_ERR_OR_NULL(region))
- 		return region;
- 
-diff --git a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-index b518f7dec680..308fda4248eb 100644
---- a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-+++ b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-@@ -4,6 +4,8 @@
-  * Copyright (C) 2021-2022 Red Hat
-  */
- 
-+#include <linux/cgroup_dmem.h>
-+
- #include <drm/drm_managed.h>
- #include <drm/drm_drv.h>
- #include <drm/drm_buddy.h>
-@@ -303,7 +305,10 @@ int __xe_ttm_vram_mgr_init(struct xe_device *xe, struct xe_ttm_vram_mgr *mgr,
- 	int err;
- 
- 	name = mem_type == XE_PL_VRAM0 ? "vram0" : "vram1";
--	man->cg = drmm_cgroup_register_region(&xe->drm, name, size);
-+	man->cg = drmm_cgroup_register_region(&xe->drm, name,
-+					      &(struct dmem_cgroup_init){
-+						.size = size,
-+					      });
- 	if (IS_ERR(man->cg))
- 		return PTR_ERR(man->cg);
- 
-diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
-index e09559495c5b..b23830494ed4 100644
---- a/include/drm/drm_drv.h
-+++ b/include/drm/drm_drv.h
-@@ -34,6 +34,7 @@
- 
- #include <drm/drm_device.h>
- 
-+struct dmem_cgroup_init;
- struct dmem_cgroup_region;
- struct drm_fb_helper;
- struct drm_fb_helper_surface_size;
-@@ -433,7 +434,8 @@ void *__devm_drm_dev_alloc(struct device *parent,
- 
- struct dmem_cgroup_region *
- drmm_cgroup_register_region(struct drm_device *dev,
--			    const char *region_name, u64 size);
-+			    const char *region_name,
-+			    const struct dmem_cgroup_init *init);
- 
- /**
-  * devm_drm_dev_alloc - Resource managed allocation of a &drm_device instance
 diff --git a/include/linux/cgroup_dmem.h b/include/linux/cgroup_dmem.h
-index dd4869f1d736..d9eab8a2c1ee 100644
+index d9eab8a2c1ee..8664321fa9f7 100644
 --- a/include/linux/cgroup_dmem.h
 +++ b/include/linux/cgroup_dmem.h
-@@ -14,8 +14,18 @@ struct dmem_cgroup_pool_state;
+@@ -14,12 +14,34 @@ struct dmem_cgroup_pool_state;
  /* Opaque definition of a cgroup region, used internally */
  struct dmem_cgroup_region;
  
 +/**
-+ * struct dmem_cgroup_init - Initialization parameters for a dmem cgroup region.
-+ * @size: Size of the region in bytes.
++ * struct dmem_cgroup_ops - Operations for a dmem cgroup region.
++ * @reclaim: Optional callback invoked when dmem.max is set below the current
++ *           usage of a pool. The driver should attempt to free at least
++ *           @target_bytes from @pool. May be called multiple times if usage
++ *           remains above the limit after returning.
++ *
++ *           Return: 0 if some progress was made (even if less than
++ *           @target_bytes was freed), -ENOSPC if no progress could be made
++ *           (the caller will retry up to a bounded number of times), or
++ *           another negative error code if a fatal error occurred (stops
++ *           further reclaim attempts immediately).
 + */
-+struct dmem_cgroup_init {
-+	u64 size;
++struct dmem_cgroup_ops {
++	int (*reclaim)(struct dmem_cgroup_pool_state *pool,
++		       u64 target_bytes, void *priv);
 +};
 +
- #if IS_ENABLED(CONFIG_CGROUP_DMEM)
--struct dmem_cgroup_region *dmem_cgroup_register_region(u64 size, const char *name_fmt, ...) __printf(2,3);
-+struct dmem_cgroup_region *
-+dmem_cgroup_register_region(const struct dmem_cgroup_init *init,
-+			    const char *name_fmt, ...) __printf(2, 3);
- void dmem_cgroup_unregister_region(struct dmem_cgroup_region *region);
- int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
- 			   struct dmem_cgroup_pool_state **ret_pool,
-@@ -27,8 +37,8 @@ bool dmem_cgroup_state_evict_valuable(struct dmem_cgroup_pool_state *limit_pool,
+ /**
+  * struct dmem_cgroup_init - Initialization parameters for a dmem cgroup region.
+  * @size: Size of the region in bytes.
++ * @ops: Optional operations for this region. May be NULL.
++ * @reclaim_priv: Opaque pointer passed to @ops->reclaim. May be NULL.
+  */
+ struct dmem_cgroup_init {
+ 	u64 size;
++	const struct dmem_cgroup_ops *ops;
++	void *reclaim_priv;
+ };
  
- void dmem_cgroup_pool_state_put(struct dmem_cgroup_pool_state *pool);
- #else
--static inline __printf(2,3) struct dmem_cgroup_region *
--dmem_cgroup_register_region(u64 size, const char *name_fmt, ...)
-+static inline __printf(2, 3) struct dmem_cgroup_region *
-+dmem_cgroup_register_region(const struct dmem_cgroup_init *init, const char *name_fmt, ...)
- {
- 	return NULL;
- }
+ #if IS_ENABLED(CONFIG_CGROUP_DMEM)
 diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
-index 39930c59cb76..eb46e99b7366 100644
+index eb46e99b7366..7e427895f23e 100644
 --- a/kernel/cgroup/dmem.c
 +++ b/kernel/cgroup/dmem.c
-@@ -502,7 +502,7 @@ EXPORT_SYMBOL_GPL(dmem_cgroup_unregister_region);
+@@ -17,6 +17,13 @@
+ #include <linux/refcount.h>
+ #include <linux/rculist.h>
+ #include <linux/slab.h>
++#include <linux/srcu.h>
++
++/* Maximum reclaim attempts before giving up when lowering dmem.max. */
++#define DMEM_MAX_RECLAIM_RETRIES 16
++
++/* SRCU domain serialising reclaim callbacks against region unregistration. */
++DEFINE_STATIC_SRCU(dmemcg_srcu);
  
- /**
-  * dmem_cgroup_register_region() - Register a regions for dev cgroup.
-- * @size: Size of region to register, in bytes.
-+ * @init: Initialization parameters for the region.
-  * @fmt: Region parameters to register
-  *
-  * This function registers a node in the dmem cgroup with the
-@@ -511,13 +511,15 @@ EXPORT_SYMBOL_GPL(dmem_cgroup_unregister_region);
-  *
-  * Return: NULL or a struct on success, PTR_ERR on failure.
-  */
--struct dmem_cgroup_region *dmem_cgroup_register_region(u64 size, const char *fmt, ...)
-+struct dmem_cgroup_region *
-+dmem_cgroup_register_region(const struct dmem_cgroup_init *init,
-+			    const char *fmt, ...)
+ struct dmem_cgroup_region {
+ 	/**
+@@ -48,9 +55,18 @@ struct dmem_cgroup_region {
+ 
+ 	/**
+ 	 * @unregistered: Whether the region is unregistered by its caller.
+-	 * No new pools should be added to the region afterwards.
++	 * No new pools should be added to the region afterwards, and no new
++	 * reclaim callbacks should be invoked.
+ 	 */
+ 	bool unregistered;
++
++	/**
++	 * @ops: Optional driver operations for this region.
++	 */
++	const struct dmem_cgroup_ops *ops;
++
++	/** @reclaim_priv: Private data passed to @ops->reclaim. */
++	void *reclaim_priv;
+ };
+ 
+ struct dmemcg_state {
+@@ -145,21 +161,52 @@ static void free_cg_pool(struct dmem_cgroup_pool_state *pool)
+ }
+ 
+ static void
+-set_resource_min(struct dmem_cgroup_pool_state *pool, u64 val)
++set_resource_min(struct dmem_cgroup_pool_state *pool, u64 val, bool nonblock)
  {
- 	struct dmem_cgroup_region *ret;
- 	char *region_name;
- 	va_list ap;
+ 	page_counter_set_min(&pool->cnt, val);
+ }
  
--	if (!size)
-+	if (!init || !init->size)
- 		return NULL;
+ static void
+-set_resource_low(struct dmem_cgroup_pool_state *pool, u64 val)
++set_resource_low(struct dmem_cgroup_pool_state *pool, u64 val, bool nonblock)
+ {
+ 	page_counter_set_low(&pool->cnt, val);
+ }
  
- 	va_start(ap, fmt);
-@@ -534,7 +536,7 @@ struct dmem_cgroup_region *dmem_cgroup_register_region(u64 size, const char *fmt
+ static void
+-set_resource_max(struct dmem_cgroup_pool_state *pool, u64 val)
++set_resource_max(struct dmem_cgroup_pool_state *pool, u64 val, bool nonblock)
+ {
+-	page_counter_set_max(&pool->cnt, val);
++	struct dmem_cgroup_region *region = pool->region;
++	unsigned long limit = (unsigned long)val;
++
++	/* Apply the new limit immediately so concurrent allocations are throttled. */
++	xchg(&pool->cnt.max, limit);
++
++	if (nonblock)
++		return;
++
++	int srcu_idx = srcu_read_lock(&dmemcg_srcu);
++
++	if (!READ_ONCE(region->unregistered) && region->ops && region->ops->reclaim) {
++		for (int retries = DMEM_MAX_RECLAIM_RETRIES; ; ) {
++			u64 usage = page_counter_read(&pool->cnt);
++			int ret;
++
++			if (usage <= limit)
++				break;
++
++			if (signal_pending(current))
++				break;
++
++			ret = region->ops->reclaim(pool, usage - limit, region->reclaim_priv);
++
++			/* -ENOSPC means no progress; other errors are fatal. */
++			if (ret && (ret != -ENOSPC || !retries--))
++				break;
++
++			cond_resched();
++		}
++	}
++	srcu_read_unlock(&dmemcg_srcu, srcu_idx);
+ }
  
+ static u64 get_resource_low(struct dmem_cgroup_pool_state *pool)
+@@ -189,9 +236,10 @@ static u64 get_resource_peak(struct dmem_cgroup_pool_state *pool)
+ 
+ static void reset_all_resource_limits(struct dmem_cgroup_pool_state *rpool)
+ {
+-	set_resource_min(rpool, 0);
+-	set_resource_low(rpool, 0);
+-	set_resource_max(rpool, PAGE_COUNTER_MAX);
++	set_resource_min(rpool, 0, false);
++	set_resource_low(rpool, 0, false);
++	/* nonblock: raising to max makes reclaim a no-op; sleeping is forbidden here. */
++	set_resource_max(rpool, PAGE_COUNTER_MAX, true);
+ }
+ 
+ static void dmemcs_offline(struct cgroup_subsys_state *css)
+@@ -468,7 +516,10 @@ static void dmemcg_free_region(struct kref *ref)
+  * dmem_cgroup_unregister_region() - Unregister a previously registered region.
+  * @region: The region to unregister.
+  *
+- * This function undoes dmem_cgroup_register_region.
++ * This function undoes dmem_cgroup_register_region.  It drains any
++ * in-flight reclaim callbacks before returning, so the caller may safely
++ * free the resources pointed to by the @reclaim_priv that was passed at
++ * registration time.
+  */
+ void dmem_cgroup_unregister_region(struct dmem_cgroup_region *region)
+ {
+@@ -493,9 +544,11 @@ void dmem_cgroup_unregister_region(struct dmem_cgroup_region *region)
+ 	 * no new pools should be added to the dead region
+ 	 * by get_cg_pool_unlocked.
+ 	 */
+-	region->unregistered = true;
++	WRITE_ONCE(region->unregistered, true);
+ 	spin_unlock(&dmemcg_lock);
+ 
++	synchronize_srcu(&dmemcg_srcu);
++
+ 	kref_put(&region->ref, dmemcg_free_region);
+ }
+ EXPORT_SYMBOL_GPL(dmem_cgroup_unregister_region);
+@@ -537,6 +590,8 @@ dmem_cgroup_register_region(const struct dmem_cgroup_init *init,
  	INIT_LIST_HEAD(&ret->pools);
  	ret->name = region_name;
--	ret->size = size;
-+	ret->size = init->size;
+ 	ret->size = init->size;
++	ret->ops = init->ops;
++	ret->reclaim_priv = init->reclaim_priv;
  	kref_init(&ret->ref);
  
  	spin_lock(&dmemcg_lock);
+@@ -733,11 +788,12 @@ static int dmemcg_parse_limit(char *options, u64 *new_limit)
+ 
+ static ssize_t dmemcg_limit_write(struct kernfs_open_file *of,
+ 				 char *buf, size_t nbytes, loff_t off,
+-				 void (*apply)(struct dmem_cgroup_pool_state *, u64))
++				 void (*apply)(struct dmem_cgroup_pool_state *, u64, bool))
+ {
+ 	struct dmemcg_state *dmemcs = css_to_dmemcs(of_css(of));
+ 	struct dmem_cgroup_pool_state *pool;
+ 	struct dmem_cgroup_region *region;
++	bool nonblock = of->file->f_flags & O_NONBLOCK;
+ 	char *region_name;
+ 	u64 new_limit;
+ 	int err;
+@@ -763,7 +819,7 @@ static ssize_t dmemcg_limit_write(struct kernfs_open_file *of,
+ 		goto out_put;
+ 	}
+ 
+-	apply(pool, new_limit);
++	apply(pool, new_limit, nonblock);
+ 	dmemcg_pool_put(pool);
+ 
+ out_put:
 -- 
 2.55.0
 
