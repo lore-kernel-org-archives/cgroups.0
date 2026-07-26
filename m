@@ -1,107 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D0BC625;
-	Sat, 25 Jul 2026 20:31:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9244B30EF94;
+	Sun, 26 Jul 2026 03:42:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785011472; cv=none; b=aTgBjb9cj0tsiNCIRNgwNLQgX0d4hZvqBukP+Rg2l7tWTaje0908uRIqsphDDLpNn90NS7itft0NcPZn0kT/lLzw0lkWg+AGJ+lbKUrBFyLPInQnST1u4p1GrXrFF2jSYORyEQQo4xyOyaRpTavkuvEMlc1C2OJHvum7JLtMtJs=
+	t=1785037373; cv=none; b=TMNfWsJKrdmsctCDgulpaUGDnbzTJFq9nno8w08pZotzV+vLBPATltej1DgVcHU3C+KGXxHqGCLsOJb38uKZxA9uwHAxOIumDPbTZB/P4bJKl5Eh3NPAtRtRGq3o05GLkxa/DmXJRUy1h3xL1j36icanR4KNOV1/xlNagMuQ0V4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785011472; c=relaxed/simple;
-	bh=e6KMoD3bd5/q6p3xQeg23qgiuejFXySUo/aGZ6esyCc=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=JKAGydDvVpvukxAV9Q1NF4vPSEA0b15yWfsrQ+p8Z/gHAJTBkG3dE+5eiVca8cKXSa3+Noh0ZRnip2j1grPveDwhnKx5JBqbrqP+cZ/zdtyC9p92rmeO423HfMKXTQCZvNPA2mBE33TwVY9FNnKOF7f2Gxtd/dBn9DwNGDP2Zzo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hAfTn9kP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785037373; c=relaxed/simple;
+	bh=IHVRDEnJ5xUsanLEqSKleAIxnUWY0qSSyXOyNQ1tJuE=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=azVlw4NwMTBVaViSV1jbWLFHtm68ZLo9tInk3UalxcsOOCJYMng1sHFo8ane48ViWq0fr2G/oaoXR8mfF2aN/qE5gMn+iM5ZjRXpMg/jgbskUeG1G9/1zCy+i+oHdjKn5FFheJbsYwHerlkCB63SPi8q/HDXDrYcJ4fp1bF+l4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=sj6+aXhx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hAfTn9kP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFFA01F000E9;
-	Sat, 25 Jul 2026 20:31:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785011470;
-	bh=e6KMoD3bd5/q6p3xQeg23qgiuejFXySUo/aGZ6esyCc=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=hAfTn9kP3ZABFKIwidJBkzkwUEnV03/r5N7p8kmUos3uDtUKUWtEJzQPpdypzC87s
-	 s8zXrjsDbl2M4eM1W7J86H4KiLLuZnMtxMMILtEw98qiQcngdzhm3Z933lwVaUuZ1u
-	 NLkyUWEUlaRXQiJD2BrV3+doGFNu5m2sLbsSq0EGZklaA6R4wtvLOLLa2OnPQe5qNl
-	 qRc/eqpUyUDjcyObmg1ruSpXH9PI078U1i4aarlF7k3SAVuPPwJdBfCiYHUHqv1JgK
-	 gHSHbd+Pb+4KEwvFVr0Xj05kVhoMd7+HPlRE8f80fEhbz02ckPWPFwbzdqixw/v4UL
-	 pVfAw00n8dMXA==
-From: Thomas Gleixner <tglx@kernel.org>
-To: Petr Pavlu <petr.pavlu@suse.com>, Tony Luck <tony.luck@intel.com>,
- Borislav Petkov <bp@alien8.de>, Ingo Molnar <mingo@redhat.com>, Dave
- Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
- <hpa@zytor.com>, Philipp Reisner <philipp.reisner@linbit.com>, Lars
- Ellenberg <lars.ellenberg@linbit.com>, Christoph =?utf-8?Q?B=C3=B6hmwalde?=
- =?utf-8?Q?r?=
- <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>, Johan
- Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, Michal Januszewski <spock@gentoo.org>, Helge Deller
- <deller@gmx.de>, Alexander Viro <viro@zeniv.linux.org.uk>, Christian
- Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Trond Myklebust
- <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, Chuck Lever
- <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown
- <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo
- <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Mark Fasheh
- <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, Joseph Qi
- <joseph.qi@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner
- <hannes@cmpxchg.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
- Luis Chamberlain
- <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, Daniel Gomez
- <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, Aaron
- Tomlin <atomlin@atomlin.com>, Pavel Machek <pavel@kernel.org>, Len Brown
- <lenb@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Danilo
- Krummrich <dakr@kernel.org>, Nikolay Aleksandrov <razor@blackwall.org>,
- Ido Schimmel <idosch@nvidia.com>, "David S. Miller" <davem@davemloft.net>,
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
- Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, David
- Howells <dhowells@redhat.com>, Jarkko Sakkinen <jarkko@kernel.org>, Paul
- Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, "Serge E.
- Hallyn" <serge@hallyn.com>, Kentaro Takeda <takedakn@nttdata.co.jp>,
- Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org,
- drbd-dev@lists.linux.dev, linux-block@vger.kernel.org,
- greybus-dev@lists.linaro.org, linuxppc-dev@lists.ozlabs.org,
- linux-acpi@vger.kernel.org, linux-fbdev@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
- linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
- cgroups@vger.kernel.org, linux-modules@vger.kernel.org,
- linux-pm@vger.kernel.org, driver-core@lists.linux.dev,
- bridge@lists.linux.dev, netdev@vger.kernel.org, keyrings@vger.kernel.org,
- linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] time/jiffies: Include linux/sysctl.h for
- proc_int_u2k_conv_uop(), ...
-In-Reply-To: <20260721131207.803760-3-petr.pavlu@suse.com>
-References: <20260721131207.803760-1-petr.pavlu@suse.com>
- <20260721131207.803760-3-petr.pavlu@suse.com>
-Date: Sat, 25 Jul 2026 22:31:07 +0200
-Message-ID: <874ihmke0k.ffs@fw13>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="sj6+aXhx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C71621F000E9;
+	Sun, 26 Jul 2026 03:42:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1785037372;
+	bh=3qyGbIXb519uDjoX4TpMXmvDySS+tkP5wly055S7W94=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=sj6+aXhxl37uZ5dhwMi0bnZSS4GxR4ATQ1YcldCJnihgPGbcuIsyon0dtoNQDe7Tz
+	 aL/CRp1Oo94ZoaKtHHih/7Jy4yRbay8z+cmBwmD516AoJ3DmcqqtYtDXcxOt2WQDPq
+	 /VkKXCzkpjwmsI6ZizLF5QTWSPtnwO6kuzPBBEKI=
+Date: Sat, 25 Jul 2026 20:42:51 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Guopeng Zhang <guopeng.zhang@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+ <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+Subject: Re: [PATCH] mm: memcg: stop reclaim when a limit update is
+ superseded
+Message-Id: <20260725204251.f96eddc5fbc8e965546cc292@linux-foundation.org>
+In-Reply-To: <20260724021805.1234583-1-guopeng.zhang@linux.dev>
+References: <20260724021805.1234583-1-guopeng.zhang@linux.dev>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jul 21 2026 at 15:11, Petr Pavlu wrote:
+On Fri, 24 Jul 2026 10:18:05 +0800 Guopeng Zhang <guopeng.zhang@linux.dev> wrote:
 
-> The kernel/time/jiffies.c file uses proc_int_u2k_conv_uop(),
+> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> 
+> kernfs serializes file operations only per open file, so separate open
+> files can update the same memory.high or memory.max file concurrently.
+> Both handlers store the new limit before synchronous reclaim, but
+> continue to use the writer's local target in the reclaim loop. If another
+> writer raises or removes the limit, the first writer can continue
+> reclaiming toward a stale target.
+> 
+> For memory.max, this can leave the writer looping indefinitely once
+> reclaim retries are exhausted. The OOM path sees sufficient margin under
+> the current limit and returns true without killing, while the writer
+> still compares usage against its stale target and records another OOM
+> event.
+> 
+> Check the current limit at the start of each reclaim iteration and stop
+> if it no longer matches the writer's target.
 
-jiffies.c uses ...
+Thanks.
 
-> proc_int_k2u_conv_kop(), proc_int_conv(), proc_dointvec_conv() and
-> proc_doulongvec_minmax_conv(), which are declared in linux/sysctl.h. It
-> currently relies on this header being included indirectly through
-> linux/module.h -> linux/kmod.h. Add the missing include in preparation for
-> removing the linux/sysctl.h include from linux/kmod.h.
+> Fixes: 8c8c383c04f6 ("mm: memcontrol: try harder to set a new memory.high")
 
-Can you please split that spaghetti sentence into paragraphs?
+Dec 2019
 
-https://docs.kernel.org/process/maintainer-tip.html#changelog
+> Fixes: b6e6edcfa405 ("mm: memcontrol: reclaim and OOM kill when shrinking memory.max below usage")
 
-> Signed-off-by: Petr Pavlu <petr.pavlu@suse.com>
+Mar 2016
 
-Other than that.
+Having two Fixes: targets is confusing.  The Fixes: identifies which
+kernel versions should be patched, so how is anyone to figure out
+whether their 2018 kernel actually needs the patch?
 
-Acked-by: Thomas Gleixner <tglx@kernel.org>
+I assume one of the two hunks is for 2019 and the other is for 2016, so
+two separate patches each with a single Fixes: would be more useful.
+
+That being said, both versions are so ancient that it probably doesn't
+matter.  In fact the bug seems so obscure that I'm not planning on
+adding cc:stable to this anyway.  Maintainers, please advise.
+
+> Reproducer:
+> 
+> Populate a cgroup with anonymous memory and disable swapping. Lower
+> memory.max from one open file, then restore it to "max" through another
+> open file after the new limit becomes visible.
+> 
+> Without the patch, the first writer remains blocked and repeatedly
+> increments the OOM event counter. With the patch, it returns normally.
+
+This is nice info - I'll promote it into the permanent changelog.
+
+
+I'll queue the patch for 7.3-rc1 and shall await maintainer input,
+please.
+
