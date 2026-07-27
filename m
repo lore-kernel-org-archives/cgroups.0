@@ -1,178 +1,258 @@
-Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
+Received: from out-179.mta0.migadu.com (out-179.mta0.migadu.com [91.218.175.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B63A33E47B
-	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 15:38:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 542FB423794
+	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 16:26:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785166739; cv=none; b=Sdl3x9ihHPCAl2a285WzY0ZKLrXqSHsUI4iY6qRPLEENOa7fkz7Jai1ELGs0Wji8vKnielNvuxQBiR1TEJohSU59+5IJ58lbnIprB5HNOASE7gmvaCEOTrTrX6JLL1Atw4UXIq0TyFqNUmytm68I+kqxQ4Yc99n8lQE+n57EMd4=
+	t=1785169571; cv=none; b=oX7wEdDwo+JqcTp0oOB0zF3LYIxboYEfOz6YQsP5bRNp3XwZWH4x+kRxtuabUoEVUCpZ/3HzeuA40W12v5WfeuUF+uQU4/PJ8V3NL4DClz+28DTS94PPmASCbcSPIHGC3Y7vcEG0qgiwmpK1yeL4UpEO22XW2qXG0Pth9/dWBxE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785166739; c=relaxed/simple;
-	bh=9GYD39912XUTCFDNJCkVCUoSOLyirKAaZ/mX0IP6O6Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WG+gfbZDXfKplMD+ByoXAOVokB3idxa8koe7ugrXHJF18L5G7Vi5MHRmG8+pvIwfPLeG17iOSu+/9mMDS2WMn/npHxj+97k4LLMzcV5dkx5CJ+2O+Ok8y9Xlhsq/hrqEx5F1A2bWyaM8EeDdEwIaru47FqSZiO5pbgam67Jm7bI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kDgJ6qV6; arc=none smtp.client-ip=95.215.58.172
+	s=arc-20240116; t=1785169571; c=relaxed/simple;
+	bh=4J+vE1gr5S2pT3Fa05tuOjBcZQCpZ0vdHokSC1cZ/E8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=C5x+1eLYHiEfbTDUiJjXaH+SEIrfwgozIjtWGemRu7N4oy5poHIQuTtjwQxcKFsH8iC1Vp0//3QwPSFpONLRimEObf/3wkJF1uhNgktHogY9k2GIOKgmAjxwkRhgxIRLRmz80TlpYMzl7cRqvlasuhbImJqHncJcOxtEoE5304Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rM13sHm+; arc=none smtp.client-ip=91.218.175.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kDgJ6qV6"
-Date: Mon, 27 Jul 2026 08:38:37 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785166725;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=a1lsZlrq00ZIeRzGocQiS21Kw0pb1EHsAJMo62alk8g=;
-	b=kDgJ6qV6z/P9vqTdFCOyqlojE6tx4hzyC1t5U0i+1nM+95V6/pLFg/UTd8f3V6bJvLKEE/
-	hAuqhebg7H8GzrlVOM+NeognpgaAvb2IHuEHv25Vg4mBU8Qx/+0h4l/XzGXJx4jtdPxttZ
-	HSRTsQLem2VoqBiC18+jTI/iCks1P8U=
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rM13sHm+"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Michal Hocko <mhocko@suse.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-	Suren Baghdasaryan <surenb@google.com>, Usama Arif <usama.arif@linux.dev>, 
-	Peter Zijlstra <peterz@infradead.org>, Darren Hart <dvhart@infradead.org>, 
-	Davidlohr Bueso <dave@stgolabs.net>, =?utf-8?B?QW5kcsOp?= Almeida <andrealmeid@igalia.com>, 
-	"Liam R . Howlett" <liam@infradead.org>, Yosry Ahmed <yosry@kernel.org>, Rik van Riel <riel@surriel.com>, 
-	Nhat Pham <nphamcs@gmail.com>, Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC] Robust futex causing memcg OOM storm on exit
-Message-ID: <amd6N4DVzZkl90cs@linux.dev>
-References: <20260723001908.4046643-1-shakeel.butt@linux.dev>
- <amds50dIVOiQNz0k@tiehlicka>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785169556;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ra9yHBirTJdVcJRt2PzI1Df5TxrhLhj87Z2KqNUXLRo=;
+	b=rM13sHm+PY2VgfpS5L6v/2uLlCxByJHWVm0f6YztYVumzPyM2hrjTzbCaVO+7afeUai/2l
+	RL2CWVKOtH1rZDAg8Zn5ljDcE12wx6CPhCU65kXjtRhJhJiZP5L49IDG9UgpYIU0pqNSBp
+	wX/QYvLvGo8FX9ZxIO27BzxG23MhRP8=
+From: Usama Arif <usama.arif@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	david@kernel.org,
+	ljs@kernel.org,
+	liam@infradead.org,
+	vbabka@kernel.org,
+	rppt@kernel.org,
+	surenb@google.com,
+	mhocko@suse.com,
+	kasong@tencent.com,
+	qi.zheng@linux.dev,
+	shakeel.butt@linux.dev,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	chrisl@kernel.org,
+	nphamcs@gmail.com,
+	baoquan.he@linux.dev,
+	youngjun.park@lge.com,
+	hannes@cmpxchg.org,
+	roman.gushchin@linux.dev,
+	muchun.song@linux.dev,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	rientjes@google.com,
+	kernel-team@meta.com
+Cc: Usama Arif <usama.arif@linux.dev>
+Subject: [PATCH v5 0/3] mm/vmscan: reduce lru_lock contention via vmstat-derived scan-balance cost
+Date: Mon, 27 Jul 2026 09:23:22 -0700
+Message-ID: <20260727162550.2032-1-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <amds50dIVOiQNz0k@tiehlicka>
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-On Mon, Jul 27, 2026 at 04:36:23PM +0200, Michal Hocko wrote:
-> On Wed 22-07-26 17:19:07, Shakeel Butt wrote:
-> > At Meta, we are seeing instances where an OOM killed job is stuck in the
-> > exit path for several hours. In one particular case, the job was stuck
-> > for more than 8 hours and I had to manually remove the memory.max limits
-> > to allow the process to exit.
-> > 
-> > The job was a single process job and had ~55 GiB memory.max and zswap
-> > enabled. It had almost 0 anon in memory and ~111 GiB in zswap compressed
-> > to ~51 GiB zswap pool (i.e. almost all of memory.current was zswap).
-> > Nothing was left on the LRUs to reclaim.
-> > 
-> > On further inspection, I observed ~20k threads of that process stuck
-> > with the following stack:
-> > 
-> > [<0>] mem_cgroup_out_of_memory+0x4e/0xa0
-> > [<0>] charge_memcg+0x8bf/0x990
-> > [<0>] mem_cgroup_swapin_charge_folio+0x4e/0x80
-> > [<0>] __read_swap_cache_async+0x10c/0x260
-> > [<0>] swapin_readahead+0x116/0x3f0
-> > [<0>] do_swap_page+0x13c/0x1ce0
-> > [<0>] handle_mm_fault+0x61d/0x11f0
-> > [<0>] do_user_addr_fault+0x3e7/0x6d0
-> > [<0>] exc_page_fault+0x8f/0x110
-> > [<0>] asm_exc_page_fault+0x22/0x30
-> > [<0>] __get_user_8+0x14/0x20
-> > [<0>] futex_cleanup+0x27/0x1c0
-> > [<0>] futex_exit_release+0x47/0x60
-> > [<0>] do_exit+0x107/0x940
-> > [<0>] do_group_exit+0x81/0xa0
-> > [<0>] get_signal+0x2b1/0x6e0
-> > [<0>] arch_do_signal_or_restart+0x1a/0x1c0
-> > [<0>] exit_to_user_mode_loop+0xa8/0x1c0
-> > [<0>] do_syscall_64+0x152/0x250
-> > [<0>] entry_SYSCALL_64_after_hwframe+0x4b/0x53
-> > 
-> > In addition the dmesg was filled with "Out of memory and no killable
-> > processes..." messages.
-> > 
-> > I have no idea why oom reaper was not able to reap/unmap the process. My
-> > guess is that since oom reaper tries to acquire mmap_lock in read mode
-> > limited number of times and then gives up, there might a thread of that
-> > process which had mmap_lock in write mode at that time.
-> > 
-> > My initial suspicion was the futex_cleanup and kernel page fault causing
-> > infinite fault and charge retries but that was put to rest in previous
-> > discussions happened on similar problem [1].
-> > 
-> > My current theory is that it is just a simple slow serialization behind
-> > the oom_lock. Unlike page allocator, memcg charge code takes the
-> > oom_lock without the "try". Though memcg oom code uses
-> > mutex_lock_killable(),  note that in the call stack get_stack() consumes
-> > SIGKILL (or sigdelset(SIGKILL)) before calling do_cgroup_exit(). So this
-> > mutex_lock_killable() is just a mutex_lock() here. Therefore 10s of
-> > thousands of threads are waiting on oom_lock and one by one they get
-> > -EFAULT from get_user() in the futex cleanup code and bails out.
-> > 
-> > Discussion from [1] lead to the commit a75ffa26122b ("memcg, oom: do not
-> > bypass oom killer for dying tasks") which routes dying tasks into the OOM
-> > path precisely so the oom_reaper can reap their mm and free the memory
-> > asynchronously. But the reaper is best-effort and one-shot: if it cannot
-> > take mmap_lock for read (e.g. a sibling thread holds it for write) it
-> > sets MMF_OOM_SKIP and never retries, leaving only the glacial
-> > oom_lock-serialized synchronous drain.
-> > 
-> > Let's short-circuit that path: once reclaim has failed, if current is
-> > dying, force the charge instead of invoking the OOM killer for it. A
-> > dying task frees its memory as soon as it finishes exiting, so running
-> > the (necessarily no-victim) OOM killer for it is pointless - and doing so
-> > for 10s of thousands of exiting threads is exactly what serializes them
-> > behind oom_lock. The dying task instead faults its page in, completes
-> > exit and releases its memory, including the zswap pool, so the memcg
-> > recovers on its own without the oom_lock serialization and dump_header
-> > storm.
-> 
-> TBH I am not entirely happy about this approach. It effectivelly reverts
-> a75ffa26122b ("memcg, oom: do not bypass oom killer for dying tasks").
-> It just makes it lockless. Assumption that a dying task will do so
-> quickly and with bounded resources has turned wrong on several
-> occasions.
+The actual code between v4 and v5 is the same. The last patch is
+now split into 2 commits and the commit messages are shorter and
+cleaner.
 
-That's why I kept it as RFC :)
+The anon/file scan balance heuristic in get_scan_count() is fed by two
+scalars in struct lruvec (anon_cost, file_cost) that every reclaim
+producer updates under lruvec->lru_lock. The cost-recording work
+itself is trivial, but it both contends for and contributes to
+contention on lru_lock - which is often a contention point on
+memory-pressured workloads. Specifically:
 
-> 
-> On the other hand I do undestand the contention issues and I can imagine
-> that the existing solution doesn't really work well for huge thread
-> groups that all end up lining up on the oom_lock just to learn there is
-> nothing really killable anymore because they are the oom victim...
-> 
-> Would it be just safer to bail out only for oom victim threads. This
-> would narrow down potential runaways for oom victims which should be
-> more limited than any killed/exiting task. It would also give the oom
-> killer/reaper chance to work. WDYT?
+- shrink_inactive_list() re-acquires lru_lock at function exit just
+  to call lru_note_cost_unlock_irq().
+- shrink_active_list() does the same after rotation accounting.
+- workingset_refault() takes folio_lruvec_lock_irq() purely to
+  record the refault cost.
+- prepare_scan_control() snapshots anon_cost/file_cost under
+  lru_lock.
+- lru_note_cost_unlock_irq() itself walks parent_lruvec() and
+  re-acquires lru_lock on every ancestor, multiplying the cost
+  of every update by memcg-hierarchy depth.
 
-I will give the following patch a try with the reproducer I have. I am still
-improving the reproducer as I am still not able to recreate multi hour slowdown
-yet. I will report back once I have some results. 
+This series removes those producer-side acquisitions entirely. The
+rotation inputs become per-LRU PGROTATE_{ANON,FILE} vmstat counters.
+NR_VMSCAN_WRITE already captures reclaim-driven pageout at writeout();
+charge it through lruvec_stat_mod_folio() so it is available per lruvec
+and aggregated through the memcg hierarchy. Reclaim does not submit
+filesystem folios for writeback from this path, so pageout contributes
+only to anon cost. WORKINGSET_RESTORE_* already captures the refault
+input.
 
-> --- 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6dc4888a90f3..3e0a6b601767 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2685,6 +2685,15 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	if (gfp_mask & __GFP_RETRY_MAYFAIL)
->  		goto nomem;
->  
-> +	/*
-> +	 * OOM victim still needs to charge memory to exit. OOM reaper should
-> +	 * help but it might fail on mmap_lock contention. If the victim is a
-> +	 * large thread group then all exiting threads might compete on oom_lock
-> +	 * just to learn that there is nothing really killable anymore. Bail
-> +	 * out early and force the charge to expedite their exit.
-> +	 */
-> +	if (tsk_is_oom_victim(current))
-> +		goto force
->  	/* Avoid endless loop for tasks bypassed by the oom killer */
->  	if (passed_oom && task_is_dying())
->  		goto nomem;
-> -- 
-> Michal Hocko
-> SUSE Labs
+PGROTATE_* are also useful independently of scan balancing. They are
+cumulative base-page events, not unique-page counts. Classic inactive
+reclaim records scan work that does not produce immediate reclaim or
+demotion, while active reclaim records referenced executable file folios
+retained on the active list. MGLRU records initially isolated pages that
+remain unreclaimed after its retry passes. Read alongside pgscan_* and
+pgsteal_*, their deltas identify which LRU type is consuming reclaim CPU
+without producing immediate yield. Unlike the existing pgrotated event,
+they do not imply a move to the inactive-list tail.
+
+prepare_scan_control() reads the raw cost signals without lru_lock:
+
+  anon = PGROTATE_ANON +
+         (NR_VMSCAN_WRITE + WORKINGSET_RESTORE_ANON) * SWAP_CLUSTER_MAX
+  file = PGROTATE_FILE +
+         WORKINGSET_RESTORE_FILE * SWAP_CLUSTER_MAX
+
+It folds the deltas into a per-lruvec accumulator. A dedicated
+per-lruvec cost_lock, not touched by isolate_lru_folios(),
+move_folios_to_lru(), or folio_add_lru(), serialises the accumulator
+RMW and the lrusize/4 halving check. Hierarchy aggregation is implicit
+in rstat propagation, so the parent_lruvec() walk and the
+lru_reparent_memcg() cost-splice both disappear.
+
+Moving accumulation and decay to the reclaim side also improves the
+cost model across reclaim gaps. With producer-side decay, events that
+happen while reclaim is idle still age each other before reclaim ever
+samples the costs. If a workload refaults a large anon set and then a
+smaller file set before reclaim runs again, the later file activity can
+age the earlier anon activity out of the cost model. The new scheme
+observes the whole between-reclaim delta and decays anon and file
+proportionally, so the scan-balance history better represents what
+happened since the last reclaim pass.
+
+Trade-offs:
+  - Cost reads see rstat-aggregated values that can lag until periodic /
+    reader-triggered flushing.
+  - Per-lruvec footprint grows by 4 unsigned longs + a spinlock (a
+    struct lru_cost { count, last_rotated, last_io } per side), which
+    is a small cost.
+  - NR_VMSCAN_WRITE now also updates the folio's lruvec/memcg stat,
+    adding memcg stat accounting to the reclaim writeout path while
+    preserving the existing node-level total.
+
+== Numbers ==
+
+Tested on a 176-core, 256 GB host. The benchmark drives sustained
+swap-out/refault inside a tight memcg using vm-scalability/usemem:
+
+  usemem -n 16 --prealloc --prefault --random $((256*1024*1024))
+
+run inside a two-level memcg with memory.max=512M on the leaf
+(4 GB anon working set has to fit in 512 MB -> continuous
+shrink_inactive_list + workingset_refault). A 16 GB swap file
+is used. Measurement is a 30 s `perf lock record -a` window
+over otherwise-idle hardware.
+
+Workload rates are identical on both kernels (the bench drives the
+same memory pressure):
+
+                          baseline    patched      delta
+  pgscan_direct  / s      172,662     171,817      ~0%
+  pgsteal_direct / s       67,162      66,306      ~0%
+  workingset_refault_anon / s
+                           40,696      39,830      ~0%
+
+perf lock contention (total wait per 30 s window):
+
+  Lock Name                Before      After     % change
+  shrink_lruvec+0x770     722.84 ms    0         -100% (eliminated)
+        (= lru_note_cost_unlock_irq)
+  workingset_refault+0x167 385.26 ms   0         -100% (eliminated)
+        (= lru_note_cost_refault)
+  shrink_node+0x4ad       689.43 ms    26.95 ms  -96%
+  shrink_active_list      208.34 ms    15.97 ms  -92%
+  lru_add_drain_cpu+0x34    1.96 s    917.71 ms  -53%
+
+  Total LRU lock wait      ~4.23 s     ~1.66 s   -61%
+
+The two specific contention sites the patch removes
+(shrink_lruvec+0x770 = lru_note_cost_unlock_irq;
+workingset_refault+0x167 = lru_note_cost_refault) are completely
+absent from the patched perf-lock-contention output.
+Secondary reductions in shrink_node, shrink_active_list,
+lru_add_drain_cpu and pgrefill/pgactivate look like knock-on
+effects from removing the cost-recording overhead and the
+parent_lruvec walk.
+
+The remaining ~1.66 s of LRU lock wait on the patched kernel is
+dominated by the per-CPU pagevec drain (lru_add_drain_cpu) and the
+main reclaim path in shrink_lruvec.
+
+The numbers above can be reproduced using the script in [1].
+
+[1] https://gist.github.com/uarif1/a4eb33a86c5b2d7bbc55b42f0956e884
+
+v4 -> v5: https://lore.kernel.org/all/20260720164207.450685-1-usama.arif@linux.dev/
+- Cleaner and shorter commit message (Johannes and Shakeel)
+- Split PGROTATE_{ANON,FILE} definitions and producer accounting into
+  a standalone patch, and document their public diagnostic value (Shakeel)
+
+v3 -> v4: https://lore.kernel.org/all/20260717135807.3476029-1-usama.arif@linux.dev/
+- Fold the two per-lruvec cost arrays (prev_cost[], cost_accum[]) into
+  a struct lru_cost { count, last_rotated, last_io } cost[ANON_AND_FILE]
+  in struct lruvec. (Johannes)
+- Sample rotated and io separately in prepare_scan_control() and
+  compute the raw per-counter deltas before applying the
+  SWAP_CLUSTER_MAX weighting, rather than sampling a pre-weighted sum
+  and taking a delta from it. Easier to reason about the overflow
+  behaviour. (Johannes)
+- Drop the per-side checks in the halving loop; anon > limit implies
+  anon + file > limit for unsigned counters, so only the sum check
+  is needed. (Johannes)
+- Trim the prepare_scan_control() comment back to something close to
+  the original wording. (Johannes)
+
+v2 -> v3: https://lore.kernel.org/all/20260713163443.3562378-1-usama.arif@linux.dev/
+- Reuse NR_VMSCAN_WRITE for anon pageout cost instead of adding
+  PGRECLAIM_PAGEOUT_{ANON,FILE}. Reclaim no longer writes filesystem
+  folios from this path, so there is no file pageout cost. (Johannes)
+- Charge NR_VMSCAN_WRITE through the lruvec/memcg stats and remove the
+  now-unused reclaim_stat.nr_pageout plumbing.
+- Account PGROTATE_{ANON,FILE} in the MGLRU eviction path so the new
+  counters remain meaningful regardless of the active LRU implementation.
+  (sashiko)
+- MGLRU updates PGROTATE_{ANON,FILE} so the counters remain meaningful
+  with it. (sashiko)
+
+v1 -> v2: https://lore.kernel.org/all/20260706122954.3552990-1-usama.arif@linux.dev/
+- Sample via the newly introduced lruvec_page_state_monotonic()
+  to fix a 32-bit delta underflow when the underlying signed
+  long wraps past LONG_MAX (Johannes and sashiko)
+
+RFC -> v1: https://lore.kernel.org/all/20260626122009.75334-1-usama.arif@linux.dev/
+- Document in coverletter and commit message  how the read-side vmstat accumulator
+  improves cost-model aging across reclaim gaps (Johannes)
+- Fully decay the cost_accum below lrusize / 4 using a while loop (sashiko)
+ 
+Usama Arif (3):
+  mm/vmstat, mm/memcontrol: add _monotonic vmstat readers
+  mm/vmscan: add pgrotate_anon and pgrotate_file vmstat counters
+  mm/vmscan: reduce lru_lock contention via vmstat-derived scan-balance
+    cost
+
+ include/linux/memcontrol.h |  8 ++++
+ include/linux/mmzone.h     | 15 +++++-
+ include/linux/swap.h       |  3 --
+ include/linux/vmstat.h     | 17 ++++++-
+ mm/memcontrol-v1.c         |  4 +-
+ mm/memcontrol.c            | 39 ++++++++++++++++
+ mm/mmzone.c                |  1 +
+ mm/swap.c                  | 69 ----------------------------
+ mm/vmscan.c                | 93 ++++++++++++++++++++++++++++++++------
+ mm/vmstat.c                | 13 ++++++
+ mm/workingset.c            |  5 --
+ 11 files changed, 171 insertions(+), 96 deletions(-)
+
+-- 
+2.53.0-Meta
+
