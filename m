@@ -1,153 +1,167 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4FAA41B8C8
-	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 13:58:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1A5931E84B;
+	Mon, 27 Jul 2026 14:07:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785160741; cv=none; b=bPmQfcRkZEh9TVzWyxK/wHATp1IZrGdwMwMeMyAbUpDmShikDyiSAxMwD6uyZWUOVKRQgOtM6QrOT5nQBNuaLsc2LzhjIET5CUitLORct/dqdS5MQBNovlWBEJr74rluPTbLpCfSNzi3UlRGeEDbVf82Q8RvIl2fOfIE63JDbrg=
+	t=1785161278; cv=none; b=O2NTNexKLEEPJDEF6tPVbklMtt6iIOZNCFW/Dys9theOoNb+figXJ95dZ7lZ1WQt5VgkCn2Pj9Y9/ApyKKafjvget3We73QQtPwmMFtj1HZDOZNh4pE9CaE2dnkjj+90rTHAYk5WofqsUXDqTDZsC1fkDNhduRw/5bNP2igoGQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785160741; c=relaxed/simple;
-	bh=muyPzWpTZnISbquf8T30N2+AdiH4JxtuSKf6VGHEv6U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fJwDOuVs7Zcjau0v4qkLzVH/9KbTQ+kKstfxIzw6EbcSAumZLIGq6430EnSAAdRn2z4oYNwRhgyGf3L+TMDQpYJJO95xJaJWFZ+GwGUna0URG3HohdhkyKGv9OlHGQbqTKAteMJLcMjcZm8cTHJboaWOfb+EavaKZ/USv+4rPNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=IuKzLZBN; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1785161278; c=relaxed/simple;
+	bh=fqhtf8/poTe76mGT0CEj6NkC+z6PYPtW4o/8YmagKFU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OvR1n3z8Ez5u49+KjHzWAGqRyepdadjGDmiog1OXLwmZav4WmhgVqo1qydqJVz6IXaPTYf8bnKflUf9F+GjbNxbVA9tafVnF9bR4LcGVb01hvfgRkoXL5Dw4ieLSb/IuvlDKrsA3KAdOgyh/Hcy9SqVG+Bya8Ws/r+fG3wQXXAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R3c9g3He; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="IuKzLZBN"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4954a9e8490so19268615e9.1
-        for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 06:58:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1785160736; x=1785765536; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=jeVBGviPg2kCaObeNUQhF3Ba7R7LGyRIaSNUXdzPkhk=;
-        b=IuKzLZBN/lL4S8Z2gP2QyMSt0x5b1UF9g6+PiBaSOxTTuTa3glShlM4OnVyLL79adM
-         RpHVp+PbuuMkaA7z+i8tdDimHeU1GLIGiSDmmfoHUFWS26fcC8WmrtDAwJ5WraRbdPaS
-         VaeviV9HXD6ZXb84OyILLnMIdS56Q6nX5bixPVpcofipDyb4DXcRhKByvAcyp+jXvG7c
-         i3yybO71wIvthfj6Pb8jvhgbpp2NxqyqEshPEtkx2UldETLwHKiVoinmXDCInV67pS5O
-         CSM030lXMrAgFVTocVHw8ZnxVUSkds8Uc0bSNVgdQEy/8NPn+cQWJ1hXcY8JVIffVTTF
-         Iy8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785160736; x=1785765536;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=jeVBGviPg2kCaObeNUQhF3Ba7R7LGyRIaSNUXdzPkhk=;
-        b=smTVqwt5ZEQMfrJ6z7yp1fKZJ9L8qtoDLCG66eS2wkdNXm+gyA4opDM+jfTUTGEj6A
-         usZwqLuiC868IApCjwuM6jfV1MZxOoiTKNsf4T8pRHXEJFRV10OHXYbi3Wijqn5vNP2n
-         mTWNXRYvry53Z7YJykUKfJOgVqLHDOLmcylgzmvO6bYj1HNQ2/iUpEJkjXw+gu3bOtn1
-         qwFMJEslsLeKdiW1I3yWiL05FZinjsoF17FJ41rQVXrgIXmzYh4hLKD5tJSJgcZHWEZj
-         MLpNhBe8n4KLkwHUptezKk/2fjUDzUBwxnAokr3bXu7QyVfyHWA/xlpp8ab2hXzzkfPS
-         NDKQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqmJas9vwHbT8GmHHOKM4YicstrtiDzsgWvQp9VFJeqGfJNVAiVBmbDSHqP0o7ciU9juRct7SZw@vger.kernel.org
-X-Gm-Message-State: AOJu0YxYoJLEY9HMQkCPluSUxGXcchiQ09+edzKQ7nu9Hb3jQlOfpmAT
-	pn8SclkFTvXL0s1wTaQb1dkiAd8PI78dCEO8xRlEvXGwl/Hmb5kymLut+/JAtwA83TC9W/2V/8N
-	10gi4ZZM=
-X-Gm-Gg: AR+sD12dBPWnYaI8eJhOEcHnhXUimPyen4UhJ38+yybuILsF2cRKk1YS7TBizBLQJTE
-	/8Wruj5Y3L+EH1FxCCOoD4cspqxUjisDlL+qHZvLhQ2yq/ZU7nlCugq+pD2JALUHwAg7EkcUzcQ
-	vgJzRm5biALGwS2D6F4kG5jLCVDb1LwcD69PjfOqcnjYzLWHVzSL+hGFXCyAd5ofkZhsSRSTFbo
-	igb+rkSeFWZrO392Vby/td8DGLit30jJyAv8QKBtv3XATpaBxO4E/gYyfJNIaY13Kj3GhD1oAmz
-	XnnAHN4p2/y7vDt+BPRHi3eqqFVMwwjnS0KlHBFeI/1eMe+KkerMic/XqkTLX10ZhMG65wJjEUv
-	YaO6GL0zmdVC83DwhQgMNiMB8gzeBanbfkXyvmFZJj3WHJQj3OMXTHaqP9/W+5edtvExQ62j7V6
-	jHS1GMO3BYOg==
-X-Received: by 2002:a05:600c:5253:b0:495:7016:b875 with SMTP id 5b1f17b1804b1-496b5c7ca38mr104189715e9.13.1785160735634;
-        Mon, 27 Jul 2026 06:58:55 -0700 (PDT)
-Received: from localhost (109-81-83-7.rct.o2.cz. [109.81.83.7])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4957f9ae5c3sm325139165e9.3.2026.07.27.06.58.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jul 2026 06:58:55 -0700 (PDT)
-Date: Mon, 27 Jul 2026 15:58:54 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Guopeng Zhang <guopeng.zhang@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: Re: [PATCH] mm: memcg: stop reclaim when a limit update is superseded
-Message-ID: <amdkHvSMj95DUri5@tiehlicka>
-References: <20260724021805.1234583-1-guopeng.zhang@linux.dev>
- <amcT75pLmA0hRUm1@tiehlicka>
- <615d091c-bd3b-4686-817e-5b29756542ff@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R3c9g3He"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7571D1F000E9;
+	Mon, 27 Jul 2026 14:07:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785161272;
+	bh=bFngan34C8XC/I/ltda4v335UXHHYW7UMmFonxgLfhA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=R3c9g3He0o5WGk89tpAUxBFjudEq92ibp7Txaa8h8Dv8i2Nl5HMUKdKm+/nf9WQmO
+	 tf9qs5WmWAqRopAYu/KGFIqJ8ktlm1CMEOOyp1inAjelI5h2UMk3RaHmUxpfDVS/Qy
+	 aamQ3Uu6sMJBxb3dwXkV5q1vwda0XDgo9aZpJSj/tpaUh1idk4zsvhai5LP/8jucsB
+	 DOA+3W+y1nIsegg+jr5MfIzL/I9NLUBXq+EY31BD4pLwuCGIEY0GnS4ee5h+eBpgqx
+	 CYpQcPYOH7VK16MaWwUF4LREkQfHzHZhsvOhJ3HPb9cHDnGXJEx/TnjM4hNy03lLTU
+	 38MXYiR/3rerA==
+Message-ID: <11f5028a-3fdc-47b4-9712-559c065b87ba@kernel.org>
+Date: Mon, 27 Jul 2026 16:07:48 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <615d091c-bd3b-4686-817e-5b29756542ff@linux.dev>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 10/13] mm/slab: reduce slabobj_ext memory with
+ allocation profiling disabled
+Content-Language: en-US
+To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
+ <20260727-b4-objext_split-v3-10-c29ef0f1f257@kernel.org>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <20260727-b4-objext_split-v3-10-c29ef0f1f257@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon 27-07-26 20:59:23, Guopeng Zhang wrote:
-> 
-> 
-> 在 2026/7/27 16:16, Michal Hocko 写道:
-> > On Fri 24-07-26 10:18:05, Guopeng Zhang wrote:
-> >> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> >>
-> >> kernfs serializes file operations only per open file, so separate open
-> >> files can update the same memory.high or memory.max file concurrently.
-> >> Both handlers store the new limit before synchronous reclaim, but
-> >> continue to use the writer's local target in the reclaim loop. If another
-> >> writer raises or removes the limit, the first writer can continue
-> >> reclaiming toward a stale target.
-> >>
-> >> For memory.max, this can leave the writer looping indefinitely once
-> >> reclaim retries are exhausted. The OOM path sees sufficient margin under
-> >> the current limit and returns true without killing, while the writer
-> >> still compares usage against its stale target and records another OOM
-> >> event.
-> > 
-> > The current behavior is deliberate as described in b6e6edcfa4056.
-> > What is an actual problem you are trying to fix?
-> 
-> Thanks for raising this. I agree that the behavior introduced by
-> b6e6edcfa405 is deliberate while the limit installed by the writer
-> remains current. The problem occurs when that limit is overwritten by a
-> later write through another open file.
->
-> Writer A stores a low memory.max and enters synchronous reclaim. Writer
-> B then restores memory.max to "max". A still compares usage against its
-> local old target, while mem_cgroup_out_of_memory() checks the current
-> memory.max. Since 1378b37d03e8, the current-margin check in
-> mem_cgroup_out_of_memory() sees sufficient margin and returns true
-> without selecting a victim. Once the reclaim retries are exhausted, A
-> therefore loops indefinitely and increments the oom counter in
-> memory.events on every iteration.
-> 
-> I reproduced this with a cgroup holding 128 MiB of anonymous memory and
-> with swapping disabled for the cgroup. Writer A lowered memory.max to
-> 32 MiB. After that value became visible, writer B restored memory.max
-> to "max" through another open file.
+Per sashiko [1], a fixed up version below. Couldn't trigger the issue
+although seems to me it's real. Perhaps can happen only with SLUB_TINY
+otherwise the sheaf can't have obj_exts allocated from objcg charge path.
 
-Is this trying to replicate any real workload? One would expect that
-writers to limit do some sort of coordination otherwise the exact
-behavior is not really well defined.
+[1] https://sashiko.dev/#/patchset/20260727-b4-objext_split-v3-0-c29ef0f1f257%40kernel.org?part=10
 
-> On the unpatched kernel, A remained blocked after B's write, and the oom
-> counter in memory.events increased from 37333 to 13512861 during the
-> reproducer's one-second sampling interval. With the patch, the same
-> reproducer observed A return after B superseded A's limit.
-> 
-> The new check does not change the behavior introduced by b6e6edcfa405
-> while the writer's target remains the active limit.  For the indefinite
-> loop described above, 1378b37d03e8 appears to be the more precise
-> Fixes: target for the memory.max hunk. Does that match your reading of
-> the history?
+----8<----
+From 905c6500e597a8ecf123ad167698f0a0c1a764bd Mon Sep 17 00:00:00 2001
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Date: Wed, 8 Jul 2026 17:04:36 +0200
+Subject: [PATCH] mm/slab: reduce slabobj_ext memory with allocation profiling
+ disabled
 
-Well, to be really honest I am not really convinced this needs fixing.
-And if yes, your patch changes a well established behavior existing
-userspace might already depend on. While your described case doesn't
-look great it doesn't seem really harmful and the looping task is
-killable.
+When memory allocation profiling is compiled in but permanently disabled
+on boot with (implicit or explicit) "never" parameter, stop allocating
+(thus wasting) memory for the codetag_ref parts of slabobj_ext metadata.
+
+Do this by using the new slab_obj_ext_has_codetag() helper in
+cache_obj_ext_size().
+
+Additionally add slab_obj_ext_has_codetag() checks in
+mark_obj_codetag_empty() and handle_failed_objexts_alloc(). The
+functions might get called with memory allocation profiling disabled,
+when the obj_ext array is allocated for objcg pointers only. Setting
+codetag refs as empty is unnecessary in that case, and with them not
+allocated anymore would now result in memory corruption.
+
+Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+---
+ mm/slab.h | 2 +-
+ mm/slub.c | 6 ++++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/mm/slab.h b/mm/slab.h
+index 8f352d9f4d91..f86d4ed3f2be 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -591,7 +591,7 @@ static inline size_t cache_obj_ext_size(struct kmem_cache *s)
+ 	if (IS_ENABLED(CONFIG_MEMCG))
+ 		sz += 1;
+ 
+-	if (IS_ENABLED(CONFIG_MEM_ALLOC_PROFILING))
++	if (slab_obj_ext_has_codetag())
+ 		sz += 1;
+ 
+ 	return sizeof(struct slabobj_ext) * sz;
+diff --git a/mm/slub.c b/mm/slub.c
+index 67958f2b3bab..ec3997582f31 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -2064,6 +2064,9 @@ static inline void mark_obj_codetag_empty(const void *obj)
+ 	struct slab *obj_slab;
+ 	unsigned long slab_exts;
+ 
++	if (!slab_obj_ext_has_codetag())
++		return;
++
+ 	if (is_kfence_address(obj))
+ 		return;
+ 
+@@ -2099,6 +2102,9 @@ static inline void handle_failed_objexts_alloc(struct slab *slab,
+ {
+ 	unsigned int stride;
+ 
++	if (!slab_obj_ext_has_codetag())
++		return;
++
+ 	/*
+ 	 * If vector previously failed to allocate then we have live
+ 	 * objects with no tag reference. Mark all references in this
 -- 
-Michal Hocko
-SUSE Labs
+2.55.0
+
