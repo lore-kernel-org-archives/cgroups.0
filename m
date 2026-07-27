@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05D1540C5A8;
-	Mon, 27 Jul 2026 12:54:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44AD940D56A;
+	Mon, 27 Jul 2026 12:54:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785156885; cv=none; b=NZwnr1CsOde7xcMYSRkeba6LRMHUJg4+1QwigFS9Q6g8NNGIZUhNv0ScbhwsQ849G1n4G+N//otrtAMvYd5Wi5PpMD3EYtRxonahGZSkZgWEiXaRtlBihFrVWVb752ZO6hkj8sMrTlzrBLCWdosnsOUBjlFwDdecuDY9FN2dWt8=
+	t=1785156888; cv=none; b=m7EJGBGnolhLok2esXA3sgWdq5fhRzRvHIndoLL7iTW2citUMumQjSWYUEJghTesAGmAZjF4A9tiVEWe9aIb0FYeaJxMFDgSP0ontU2HN9gm3IWFFJ6E+ZQUGPuvVWFMavfsFMZ9UK6JDP5S0Z6DBA3OGrzScvNUbYTC7dV00j8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785156885; c=relaxed/simple;
-	bh=pXWCkdAuufpbNk/IY7skmoX2obU2mEeQAWtLRVL0D0I=;
+	s=arc-20240116; t=1785156888; c=relaxed/simple;
+	bh=v6fVsIeCzU5YwU3G0Ime3MVsEnI7Vu82K3kzA+MYT7s=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=fJVOo9jDlTxwB5cxO4IXgdMpJEOdvaxJqvo0hqLKpNIwau+tXuQJpNxBKjMmWAOCuDoIfTHFANUimvLmpTtqr4sZnLau8AHGN/RhzZ9wt0m5DtJ/ToEnFVFd0E60oGt90LGbyxb2SJT5VSlEOr15RT6Agq2jRjub62O4ECDujkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ys30gj9Q; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=Fr7Ltl8dTN9E0/+QSzTZuxjndw02H+YbCx63fXwkjb0jzq1fWUuTcCV3Wp6On6Oc0yiVUodDoCHYuWde8R8aqjxDUBKaONtfxez0evWHkj/MO5aVjAu3s4PSHOc8IyJw40szksMZxmgq8s6DrSnn81Neg+zflB7WMVlHdvVz2+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UT7XURPD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ys30gj9Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 207C21F00A3A;
-	Mon, 27 Jul 2026 12:54:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UT7XURPD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E2331F000E9;
+	Mon, 27 Jul 2026 12:54:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785156883;
-	bh=+4BVCCpRyh+dfWWWvFXt23rJMo2Z9fT7meHI+4y2h98=;
+	s=k20260515; t=1785156887;
+	bh=aGp6l8pNN7WNTKPcSeBuJWHpMtYin9pxGaKm+CCO6NI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=Ys30gj9QzznigDITCv950Fj5OGVNRoPfLfjF65UT0E9VqQ3qZtoN/lP+BmUaoAqOk
-	 laCjKQwsIafEHIhLIXk0roSQLIMgwWxg4FTZqFQC6eZOHraMABy9eiuBOoQeuzn4+M
-	 ve5y8S0vOA+85zYc61MLt7EdCkxMbMXBWarWFpK9iy/ZSTOLH/m6llAPNAxthX4vxv
-	 1qgpz/8/6SajJGwRjfTW5wlRryRUrMpuBQ1eE79VJC0UTFJCcjeqQAUb8nRkPxPniz
-	 8Jr0ZmfWsjs0YGxzL3S+oNFKl8A2pABCjtWbiz4FXLF2NUNOwW7d90HPZAz5K8IAmB
-	 scQaPgmxpJBLA==
+	b=UT7XURPD6WCdpFBPaFw97mhbwUjd9PlShAr2/GsEXCn6ZQh3B9XiB9E22vOm4iesl
+	 Vbf1p/lY+Co8LPi/Q/RkejFT+I21fLFAAzodxDPTiMH4YuGfNeYg2z3HW0bXySVvKi
+	 hzRBlObSeVnYzdDsMnp8kAXqgVFQOgI7pKaUzHLpIZ0qvA/46d2neIIuh4DKsQQlr+
+	 p2w+SF+jXNMvy17CPh0CkCWPlAPXdZIL69lsJivvKAxf0YQHMVHLW9hGrWYoiqaZi2
+	 yD1NfKPSSWCi9jdgPzVj+l6xXtkM0F07i5WU5brohR54OzTPBMX7WtrzOAGH8K+Jm7
+	 fudr5KIAb0C2A==
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Date: Mon, 27 Jul 2026 14:54:05 +0200
-Subject: [PATCH v3 11/13] mm/slab: add cache_ and slab_needs_objcg()
- helpers
+Date: Mon, 27 Jul 2026 14:54:06 +0200
+Subject: [PATCH v3 12/13] mm/slab: stop allocating objcg pointers when
+ unnecessary
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260727-b4-objext_split-v3-11-c29ef0f1f257@kernel.org>
+Message-Id: <20260727-b4-objext_split-v3-12-c29ef0f1f257@kernel.org>
 References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
 In-Reply-To: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
 To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
@@ -51,205 +51,106 @@ Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
  "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 X-Mailer: b4 0.15.2
 
-Slabs of some caches never need the objcg part of struct slabobj_ext.
-Introduce helpers to query this for a cache or a slab.
+Start using the slab_needs_objcg() helper to calculate slabobj_ext size.
+Caches that we know to never need objcg pointers (currently
+KMALLOC_NORMAL caches) will thus stop wasting memory on them when memory
+allocation profiling is enabled.
 
-Introduce SLAB_MAY_ACCOUNT flag that is currently only internal and all
-caches have it set except:
+For things to work properly, we need to also add slab_needs_objcg()
+checks to mem_cgroup_from_obj_slab() and memcg_slab_free_hook(), because
+when obj_exts array exists for a slab only due to mem_alloc profiling,
+we would otherwise attempt to access a non-existing objcg pointer in
+that slab.
 
-- KMALLOC_NORMAL caches, as long as KMALLOC_RECLAIM caches are separate
-- KMALLOC_NO_OBJ_EXT caches, if they exist
-
-For named caches we currently can't derive SLAB_MAY_ACCOUNT from
-SLAB_ACCOUNT because some caches might be created without SLAB_ACCOUNT
-and then used both with and without __GFP_ACCOUNT concurrently,
-allocating obj_ext arrays on demand. So just add the SLAB_MAY_ACCOUNT
-to all kmem caches, unless kmem accounting is disabled.
-
-This can be improved later by finding out all caches used with
-__GFP_ACCOUNT, creating them with the SLAB_MAY_ACCOUNT flag explicitly,
-and then ignoring __GFP_ACCOUNT for all other caches (possibly with a
-warning).
-
-To make the evaluation of slab_needs_objcg() faster in the allocation
-and free fast paths, add a obj_exts_needs_objcg flag into slab itself.
-This optimization is only available on 64bit architectures where free
-bits are available for the flag.
+The function __memcg_slab_post_alloc_hook() should not be possible to
+call for a slab where slab_needs_objcg() is false, but add a DEBUG_VM
+check there to prevent breaking this assumption accidentally.
 
 Reviewed-by: Hao Li <hao.li@linux.dev>
 Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 ---
- include/linux/slab.h |  3 +++
- mm/kfence/core.c     |  3 +++
- mm/slab.h            | 31 +++++++++++++++++++++++++++++--
- mm/slab_common.c     | 26 +++++++++++++++++++++-----
- mm/slub.c            |  6 +++++-
- 5 files changed, 61 insertions(+), 8 deletions(-)
+ mm/memcontrol.c |  6 ++++++
+ mm/slab.h       | 14 +++++++++++---
+ mm/slub.c       |  3 +++
+ 3 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 32c9f8ed7ae2..e1915026e030 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -45,6 +45,7 @@ enum _slab_flag_bits {
- #endif
- #ifdef CONFIG_MEMCG
- 	_SLAB_ACCOUNT,
-+	_SLAB_MAY_ACCOUNT,
- #endif
- #ifdef CONFIG_KASAN_GENERIC
- 	_SLAB_KASAN,
-@@ -204,8 +205,10 @@ enum _slab_flag_bits {
-  */
- #ifdef CONFIG_MEMCG
- # define SLAB_ACCOUNT		__SLAB_FLAG_BIT(_SLAB_ACCOUNT)
-+# define SLAB_MAY_ACCOUNT	__SLAB_FLAG_BIT(_SLAB_MAY_ACCOUNT)
- #else
- # define SLAB_ACCOUNT		__SLAB_FLAG_UNUSED
-+# define SLAB_MAY_ACCOUNT	__SLAB_FLAG_UNUSED
- #endif
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index cb1e97b4edc1..aace85fb99f9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2871,6 +2871,9 @@ struct mem_cgroup *mem_cgroup_from_obj_slab(struct slab *slab, void *p)
+ 	if (!obj_exts)
+ 		return NULL;
  
- #ifdef CONFIG_KASAN_GENERIC
-diff --git a/mm/kfence/core.c b/mm/kfence/core.c
-index 05b5482c8150..897ecf2594fb 100644
---- a/mm/kfence/core.c
-+++ b/mm/kfence/core.c
-@@ -640,6 +640,9 @@ static unsigned long kfence_init_pool(void)
- 		struct slab *slab = page_slab(page);
- 		slab->obj_exts = (unsigned long)&kfence_metadata_init[i / 2 - 1].obj_exts |
- 				 MEMCG_DATA_OBJEXTS;
-+#ifdef CONFIG_64BIT
-+		slab->obj_exts_needs_objcg = 1;
-+#endif
- #endif
- 	}
++	if (!slab_needs_objcg(slab))
++		return NULL;
++
+ 	get_slab_obj_exts(obj_exts);
+ 	obj_ext = slab_obj_ext(slab->slab_cache, slab, obj_exts, p);
+ 	objcg = slab_obj_ext_objcg(obj_ext);
+@@ -3580,6 +3583,9 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
  
+ 		slab = virt_to_slab(p[i]);
+ 
++		if (IS_ENABLED(CONFIG_DEBUG_VM) && WARN_ON_ONCE(!slab_needs_objcg(slab)))
++			continue;
++
+ 		if (!slab_obj_exts(slab) &&
+ 		    alloc_slab_obj_exts(slab, s, flags, slab_alloc_flags)) {
+ 			continue;
 diff --git a/mm/slab.h b/mm/slab.h
-index f86d4ed3f2be..ad2a3ef34ecf 100644
+index ad2a3ef34ecf..44f9b2569e80 100644
 --- a/mm/slab.h
 +++ b/mm/slab.h
-@@ -81,10 +81,11 @@ struct freelist_counters {
- #ifdef CONFIG_64BIT
- 					/*
- 					 * Some optimizations use free bits in 'counters' field
--					 * to save memory. If these free bits are not available,
--					 * such optimizations are disabled.
-+					 * to save memory or CPU. If these free bits are not
-+					 * available, such optimizations are disabled.
- 					 */
- 					unsigned obj_exts_in_object:1;
-+					unsigned obj_exts_needs_objcg:1;
- #endif
- 				};
- 			};
-@@ -584,6 +585,32 @@ static inline bool slab_obj_ext_has_codetag(void)
- }
- #endif
- 
-+#ifdef CONFIG_MEMCG
-+static inline bool cache_needs_objcg(struct kmem_cache *cache)
-+{
-+	return (cache->flags & SLAB_MAY_ACCOUNT);
-+}
-+
-+static inline bool slab_needs_objcg(struct slab *slab)
-+{
-+#ifdef CONFIG_64BIT
-+	return slab->obj_exts_needs_objcg;
-+#else
-+	return cache_needs_objcg(slab->slab_cache);
-+#endif
-+}
-+#else
-+static inline bool cache_needs_objcg(struct kmem_cache *cache)
-+{
-+	return false;
-+}
-+
-+static inline bool slab_needs_objcg(struct slab *slab)
-+{
-+	return false;
-+}
-+#endif
-+
- static inline size_t cache_obj_ext_size(struct kmem_cache *s)
+@@ -615,7 +615,7 @@ static inline size_t cache_obj_ext_size(struct kmem_cache *s)
  {
  	size_t sz = 0;
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 03ecac12cd86..1e1d3feec353 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -52,7 +52,7 @@ struct kmem_cache *kmem_cache;
- 		SLAB_OBJ_EXT_IN_OBJ)
  
- #define SLAB_MERGE_SAME (SLAB_RECLAIM_ACCOUNT | SLAB_CACHE_DMA | \
--			 SLAB_CACHE_DMA32 | SLAB_ACCOUNT)
-+			 SLAB_CACHE_DMA32 | SLAB_ACCOUNT | SLAB_MAY_ACCOUNT)
+-	if (IS_ENABLED(CONFIG_MEMCG))
++	if (cache_needs_objcg(s))
+ 		sz += 1;
  
- /*
-  * Merge control. If this is set then no merging of slab caches will occur.
-@@ -359,6 +359,13 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
- 		goto out_unlock;
- 	}
+ 	if (slab_obj_ext_has_codetag())
+@@ -626,7 +626,15 @@ static inline size_t cache_obj_ext_size(struct kmem_cache *s)
  
-+	/*
-+	 * For now we assume any cache can be used with __GFP_ACCOUNT and thus
-+	 * may need to store objcg pointers for objects
-+	 */
-+	if (!mem_cgroup_kmem_disabled())
-+		flags |= SLAB_MAY_ACCOUNT;
+ static inline size_t slab_obj_ext_size(struct slab *slab)
+ {
+-	return cache_obj_ext_size(slab->slab_cache);
++	size_t sz = 0;
 +
- 	/* Fail closed on bad usersize of useroffset values. */
- 	if (!IS_ENABLED(CONFIG_HARDENED_USERCOPY) ||
- 	    WARN_ON(!args->usersize && args->useroffset) ||
-@@ -984,11 +991,20 @@ new_kmalloc_cache(int idx, enum kmalloc_cache_type type)
- #endif
++	if (slab_needs_objcg(slab))
++		sz += 1;
++
++	if (slab_obj_ext_has_codetag())
++		sz += 1;
++
++	return sizeof(struct slabobj_ext) * sz;
+ }
  
- 	/*
--	 * If CONFIG_MEMCG is enabled, disable cache merging for
--	 * KMALLOC_NORMAL caches.
-+	 * If memcg_kmem is enabled and this is a KMALLOC_NORMAL cache and not
-+	 * aliased with any other type, make sure it's never merged with any other
-+	 * cache.
-+	 *
-+	 * In other cases the kmalloc cache may end up being used for a
-+	 * __GFP_ACCOUNT allocation so mark it as such. The exception is a
-+	 * KMALLOC_NO_OBJ_EXT cache.
- 	 */
--	if (IS_ENABLED(CONFIG_MEMCG) && (type == KMALLOC_NORMAL))
--		flags |= SLAB_NO_MERGE;
-+	if (!mem_cgroup_kmem_disabled()) {
-+		if (type == KMALLOC_NORMAL && KMALLOC_RECLAIM != KMALLOC_NORMAL)
-+			flags |= SLAB_NO_MERGE;
-+		else if (!(flags & SLAB_NO_OBJ_EXT))
-+			flags |= SLAB_MAY_ACCOUNT;
-+	}
+ #ifdef CONFIG_SLAB_OBJ_EXT
+@@ -753,7 +761,7 @@ static inline void slab_obj_ext_set_objcg(struct slabobj_ext *obj_ext,
+ static inline union codetag_ref *
+ slab_obj_ext_codetag_ref(struct slab *slab, struct slabobj_ext *obj_ext)
+ {
+-	if (IS_ENABLED(CONFIG_MEMCG))
++	if (slab_needs_objcg(slab))
+ 		obj_ext += 1;
  
- 	if (minalign > ARCH_KMALLOC_MINALIGN) {
- 		aligned_size = ALIGN(aligned_size, minalign);
+ 	return &obj_ext->_ctref;
 diff --git a/mm/slub.c b/mm/slub.c
-index 6050fc08d8ee..ccce1faac6de 100644
+index ccce1faac6de..893a11abcc20 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -2555,7 +2555,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags)
- 	 * of slab_obj_exts being allocated from the same slab and thus the slab
- 	 * becoming effectively unfreeable.
- 	 */
--	if (is_kmalloc_normal(s))
-+	if (!cache_needs_objcg(s))
- 		return true;
+@@ -2510,6 +2510,9 @@ void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p,
+ 	if (likely(!obj_exts))
+ 		return;
  
- 	/* Ignore already charged objects. */
-@@ -3433,6 +3433,10 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags,
- 
- 	slab->objects = oo_objects(oo);
- 
-+#ifdef CONFIG_64BIT
-+	if (cache_needs_objcg(s))
-+		slab->obj_exts_needs_objcg = 1;
-+#endif
- 	slab->slab_cache = s;
- 
- 	kasan_poison_slab(slab);
++	if (!slab_needs_objcg(slab))
++		return;
++
+ 	get_slab_obj_exts(obj_exts);
+ 	__memcg_slab_free_hook(s, slab, p, objects, obj_exts);
+ 	put_slab_obj_exts(obj_exts);
 
 -- 
 2.55.0
