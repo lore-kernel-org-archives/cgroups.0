@@ -1,117 +1,155 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB40317715;
-	Mon, 27 Jul 2026 03:20:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD453BE62A
+	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 03:54:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785122418; cv=none; b=Ct5DOyGHsv296xz3QBH7z/NyVxnbfUPsZbMDRBOLCVUZThVrtp6d3+RJEEn25zXCvp/DSIouRP0N4cHNNc4/8ASa3Px4ZQDcJlykACdJoyHIOnb9wmlgpRpU27mFggSm+GJWHEpq1QCZAFNzBfEoR6Yb2cy8N5IYzgjA4Eh4wtQ=
+	t=1785124492; cv=none; b=VOR0Cus717oEWJchGTs9+EPJgRo7srtYkQrU7qo08/9xWMSi/dyKbc+AnD0+O9JaJYbBdfXoVBiyKJCpjDSSJv8B6270YmCyZT9Fyplec4WGnhGGGhchMF166lYrkGDTTmi3b/Blyqw9dSxqOFB0vXiX6NogMYcddSS9uXVIlbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785122418; c=relaxed/simple;
-	bh=9/7UxVeoeJ7B6K6+Qx+V9js9R0EaL5PAagkoNR7cizg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=usOaH6/q/WFgqGR/5C1dUxx+T+tdOdXRdvM0usDSbzbsqofMai3rm7r6jRNmWZM39YDUQWaerbRJ/DMZHYS0CmDI6Y+KqLC42PC1jFOzLU85DVY1njO7tLvOClIR5sZbVAnQc6FxqwKUyBvmBOrY1Vrro4YzXRfHoJ8AMNCaWGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 104743e2896a11f1aa26b74ffac11d73-20260727
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_TXT
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_PRE_RE, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:621dd92a-fb72-41ba-bcbc-17dc64d14437,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:621dd92a-fb72-41ba-bcbc-17dc64d14437,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:160f49203bc80cbfce275a43904d57ed,BulkI
-	D:260724192158HERI0N81,BulkQuantity:1,Recheck:0,SF:10|64|66|78|80|81|82|83
-	|102|127|841|850|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:ni
-	l,RT:nil,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,
-	DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 104743e2896a11f1aa26b74ffac11d73-20260727
-X-User: sunshaojie@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 2070163307; Mon, 27 Jul 2026 11:20:05 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	corbet@lwn.net,
-	hannes@cmpxchg.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	sunshaojie@kylinos.cn,
-	tj@kernel.org
-Subject: Re: [PATCH] Docs/admin-guide/cgroup-v2: document hierarchical cpu.max throttling behavior
-Date: Mon, 27 Jul 2026 11:18:55 +0800
-Message-Id: <20260727031855.63653-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <amNJyZQj0p38zlDe@localhost.localdomain>
-References: <amNJyZQj0p38zlDe@localhost.localdomain>
+	s=arc-20240116; t=1785124492; c=relaxed/simple;
+	bh=lMyOlwFH9ojHCoaUqhlCOyDhZe4zgJ37rWVmIxNhIAw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=eyFUmqIK4kNfK3MCLXpy7IG4Pe/SlQz5HR2J1yctyK405CI2E6NcGZ3GbbsjcUzRKX4AMRJ1b+Asx9VSlRroo0YSQPySkT3ZC8QHyKCK+poR/8dJ3XhvgBpHeKqYlBy609NhFMQzKjP+EKkdfK5AncWyQ7Eb1i4LTQQMybPl0/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YKN9vZLq; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YKN9vZLq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C6231F00ADE
+	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 03:54:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785124491;
+	bh=TDt6XRhHBziQBa/u0iomOboiTDHrthJqxaelhr7ao5s=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=YKN9vZLqnJJ7q87b9lUHfv/i4EC5YT4QIWKDJZTDDJz8evKyrlumbgRx7KDCP+u8q
+	 BkCsNa6ssFLofdZ0GWRxItd2Z1HiRo1NY9p6+yND2psKpnQHKtmf9dwZBbKlztxHst
+	 GA6m+/I3budEwzeov88L4yob4bpcyqnT1/Yo/qCAQqZE2zXC6qksOtpppeZ43JShRw
+	 /uBu0XI/OadQ9QhBPsT4L3YRehwzspndzDgNOq3G0cy1zcof6IDM4v6hhoIEto7J8s
+	 5oeznMGda5AtsCwvY1QMVEh0gSszSCN4ht7qlZC5xJ14/N9A0d+9tyscDCckVq5VIi
+	 uBlgTKobUdheQ==
+Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-930c0f9c1b1so154497285a.1
+        for <cgroups@vger.kernel.org>; Sun, 26 Jul 2026 20:54:51 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+Rqdx+1pd78fyiCbHuB/4JS1k2AcJ/FPu0lY207QVMsczp2Y2WOKuvPdpeUORF4kOMod/nDXt+JA@vger.kernel.org
+X-Gm-Message-State: AOJu0YxrrKyw02+dqxyIGxuCUZcarkYmXfzipVwwDhFGNDyNGcYp4uZ8
+	bS7B3pnd7Qk/pFpmlB0pougcv+ZlxhyyTwG1RHlmxSh4iM1Q+AkGkpziqedxkPiWXe/X3iJzABH
+	67MrwWxyO6H423GH25wzdguTDzhD1lMI=
+X-Received: by 2002:a05:620a:2546:b0:931:403:2442 with SMTP id
+ af79cd13be357-932df6576a9mr732957685a.18.1785124490445; Sun, 26 Jul 2026
+ 20:54:50 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=y
-Content-Transfer-Encoding: 8bit
+References: <20260714121529.2237261-1-wangzicheng@honor.com>
+In-Reply-To: <20260714121529.2237261-1-wangzicheng@honor.com>
+From: Barry Song <baohua@kernel.org>
+Date: Mon, 27 Jul 2026 11:54:38 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4xt6FhvRgmPyoSKdfHd12V+miOZe6SSkg7GGW6TzJFbdg@mail.gmail.com>
+X-Gm-Features: AUfX_mxeJtLVdMRlseYd3JXsOkBoHM_0YgC_24_IrWAn_07tj9FPGYqXiGkmRio
+Message-ID: <CAGsJ_4xt6FhvRgmPyoSKdfHd12V+miOZe6SSkg7GGW6TzJFbdg@mail.gmail.com>
+Subject: Re: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
+To: Zicheng Wang <wangzicheng@honor.com>
+Cc: akpm@linux-foundation.org, yuanchu@google.com, tj@kernel.org, 
+	hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net, kasong@tencent.com, 
+	qi.zheng@linux.dev, shakeel.butt@linux.dev, axelrasmussen@google.com, 
+	weixugc@google.com, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
+	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com, 
+	roman.gushchin@linux.dev, muchun.song@linux.dev, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	willy@infradead.org, denghaojie@honor.com, baoquan.he@linux.dev, 
+	kaleshsingh@google.com, tjmercier@google.com, tao.wangtao@honor.com, 
+	zhangji1@honor.com, wangzhen5@honor.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi, Michal.
-
-On Fri, 24 Jul 2026 13:21:46, Michal wrote:
->On Fri, Jul 24, 2026 at 06:25:00PM +0800, Shaojie Sun <sunshaojie@kylinos.cn> wrote:
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->> index 14b8c571c0d1..3572d3e7f688 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
+On Tue, Jul 14, 2026 at 8:15=E2=80=AFPM Zicheng Wang <wangzicheng@honor.com=
+> wrote:
 >
->> +	                                       and the resulting
->> +	throttling may reflect the combined effect of multiple levels
->> +	rather than any single level's limit alone (this differs from
->> +	other Limits-type controllers such as memory.max and io.max,
->> +	where the most restrictive limit along the hierarchy is
->> +	applied).
+> MGLRU inverts the reclaim order when anonymous memory is faulted in
+> bulk: anonymous pages sit in the young generations while file pages
+> sit in the oldest two, so reclaim evicts hot file pages before cold
+> anonymous pages.  swappiness cannot correct it.  This series adds a
+> per-cgroup proactive-aging operation, memory.aging, with the
+> observability to drive it as a closed loop, so userspace can rebalance
+> a cgroup's generations before reclaim runs.
 >
->I'm not sure from the description what the "combined effect" is.
->Can you give an example where the cpu.max differs from that Limits-type
->semantics?
+> The problem
+> -----------
+>
+> MGLRU places pages by access path, not hotness.  On the current tree
+> the entry rules in lru_gen_folio_seq() give:
+>
+>   - faulted-in pages (anonymous pages; the fault path sets the active
+>     mark) land at the 2nd youngest generation (max_seq - 1);
+>   - file pages from read()/fadvise() land in the oldest two
+>     generations: non-workingset at min_seq, workingset at min_seq + 1.
+>
+> Pictorially, for a full four-generation window::
+>
+>        youngest                          oldest
+>        max_seq   max_seq-1   min_seq+1   min_seq
+>        -------------------------------------------
+>  anon    .          X           .           .     (faulted in)
+>  file    .          .           X           X     (read/fadvise)
+>                                             ^
+>                               reclaim scans from here -> evicts file firs=
+t
+>
+> Reclaim scans from min_seq, so file pages are evicted before the
+> anonymous pages two generations younger, a hot/cold inversion.
+>
+> swappiness does not fix it: it only selects which type to scan, not
+> the ordering within a type, so reclaim can still evict hot pages.
+> swappiness=3D201 (SWAPPINESS_ANON_ONLY) just flips the inversion to the
+> other side: no value recovers a correct hot/cold order, because the
+> order comes from the access path, not access recency [1].  This is not
+> Android-specific; the same file over-reclaim is shown on servers and
+> worked around there by forcing an age iteration before reclaim.
+>
+> Why userspace-driven
+> --------------------
+>
+> The benefit is workload-dependent: file-cache-bound servers gain from
+> aging, anon-bound servers do not, so no kernel default is correct for
+> all.  The kernel also cannot know when to age: on Android the right
+> moment is the foreground-to-background transition, when the app's pages
+> are cold but their PTE accessed bits are still accurate from foreground
+> execution, a framework concept.  The kernel therefore provides the
+> mechanism; userspace runs the loop.
+>
 
-Here is an example to illustrate the difference. Consider:
-  Parent:  cpu.max = 50000 100000 (50%)
-  Child:   cpu.max = 20000 100000 (20%)
-With cpu.max, when the child's processes consume CPU, throttling can be 
-triggered by either the child's own limit or the parent's limit 
-independently — both levels participate in enforcement. This is visible
-in cpu.stat : the throttled_usec counter can accumulate non-zero values
-at both the child and parent level. Even when the child's quota is 
-smaller than the parent's (20 < 50), the parent's limit still
-participates; conversely, when a child's quota is larger than the
-parent's, the child's own limit still participates.
+Hi Zicheng,
 
-Compare this with memory.max. If we had:
-  Parent:  memory.max = 50M
-  Child:   memory.max = 20M
-The effective limit for the child is simply min(20M, 50M) = 20M — only the
-most restrictive limit along the path applies. The child will never see an
-OOM triggered by the parent's 50M limit before reaching its own 20M.
+The problem is that when an app transitions from the foreground to
+the background, it becomes inactive. As a result, you clear the PTE
+young bits accumulated while it was in the foreground.
 
-In short: cpu.max enforcement is per-level independent — every level with 
-cpu.max configured can independently throttle the group, and cpu.stat 
-counters at multiple levels can all accumulate throttled_usec for the same
-workload. memory.max only enforces the tightest limit along the path.
+We basically need at least two rounds of scanning to determine
+whether a folio is hot or cold. With only one round, many folios
+that are actually cold will still appear hot because their PTE
+young bits remain set. Nobody clears them while the app is
+running in the foreground.
 
-Thanks,
-Shaojie Sun
+So I'm really curious whether aging should be performed while the
+app is running in the foreground, rather than after it has switched
+to the background. If this significantly improves the distinction
+between hot and cold folios, allowing reclamation after the app
+moves to the background to reclaim genuinely cold folios, then it
+would provide a much stronger argument for an aging interface that
+only sorts folios in the LRU without reclaiming them.
+I have a feeling we may really need an aging interface that sorts
+folios without reclaiming them. We can then use the sorted LRU to
+reclaim cold folios whenever reclamation is needed.
+But your use cases don't convince me :-)
+
+If the goal is to work around MGLRU's swappiness behavior, we should
+fix the swappiness implementation itself rather than introduce an
+aging interface as a workaround. If the concern is swappiness=3D201,
+I believe swappiness=3D200 will be a good choice once my swappiness
+fixes are ready:
+
+https://lore.kernel.org/linux-mm/20260726122123.7614-1-baohua@kernel.org/
+
+Best Regards
+Barry
