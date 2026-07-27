@@ -1,82 +1,49 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-170.mta1.migadu.com (out-170.mta1.migadu.com [95.215.58.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4D504908DE
-	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 17:24:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E08B33DB325
+	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 20:49:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785173046; cv=none; b=RQkEgC3jUX43NasmtkGPq0cscKtkdLyVIsqHczPMAQ0V+RRh+0X25ur36OUBjfvF3ZVTTaoD0zl5Y6jknd/vcqUAxkWqEgVfqSznpyI4VsLuJgNEzGMYX0uiRrH2xDwEG0fIg3cTiaglnlxVY440NTPhhsuQXmPsUhGKniyrstQ=
+	t=1785185359; cv=none; b=XacaTSSHGUBJhRdAcz6tseCSUW8v+rvTV1PSBdp1yAlm6mI2rz2vvhs5ynqPdOfFl/OoCG9ikzMjKsvoDTO5Cy7HdaFUA09BP9OYYWpT+E8xc5N3/aUlT2FnV7/fNsmxuQLtzFxahOeNrFz+R4VcIWvCyAUCWG1BVhNNgMsM0I8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785173046; c=relaxed/simple;
-	bh=86xgqvGoiJYEvC6CRR4sg1jka1MinI8d71SGwIWWI4E=;
+	s=arc-20240116; t=1785185359; c=relaxed/simple;
+	bh=wQXEPIFUBWXynVGrnaYEE4WP4cs09MsZYHtKqFIJKWY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dQgYVhsSYIKckOY41WL9dp/jGrdMa7B8aP6UiEQf2Cg5NFQ7nf4W7t2bpcPENs4AXVUdP9p5Oq8f6b7bYsG7LHZNDsM2DURF9aywzNx1wZ2JiaFXoEJMjRsVDGAg8DN3Axnroh1Dftpufn5na/V2IGbFEtDMGspHLbJx1vmfN0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=Xi7pC9k5; arc=none smtp.client-ip=209.85.219.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=NrwVhBkjsf3sprZBUMQI1bg0eFjAPwvveatPvZ3YaA/OJ1yXf1WsV7VBT76BzCumNgQ/1jtx54KRcCfdhOywb3EdcC2pQrcTQtcDYPmrGkzCNxtpp7Q4IzUUNA1Zg5IWiEPNQbgdTL53xZAiI1ORYCcs7dfJ+N1kdRCoj62TCyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oFDB5P8n; arc=none smtp.client-ip=95.215.58.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="Xi7pC9k5"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8fcc43c48f7so33660256d6.2
-        for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 10:24:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1785173040; x=1785777840; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=5/ZbfBCCG0jHDBCNH9TydT1nctmDeBJrWwsqu8EzeJ4=;
-        b=Xi7pC9k5rYhfP1gTkYxi9O+6oip5EDkt/j9ELZmzPHuzj4G7HtJBF25x/IhTWSNlNR
-         cIrYaaD8gcnWcJkUJNhai/10rrQ3QinxonklmhL8jF8dhsnMau/s/zQenExEdT7VCCNu
-         cLMiew+jHP0yOELSxiOCW0cAjDXCsgb4Rl/eP0f1tEsSHpGezZ7X9r4z36G/f2cx4W/d
-         qrGVCjL4t+xpQ2iURUBsD7Jk1yCWUyLdnbnCPbUVoQVzjOaI+V0/0fxmaMLOC90R/OHp
-         lBessL5uQvY4DvPtbjp/L/uKbCioj97XvTsosnfB6B0ArNrtyNDY3hgB0LrJJorG40Ui
-         a0UA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785173040; x=1785777840;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5/ZbfBCCG0jHDBCNH9TydT1nctmDeBJrWwsqu8EzeJ4=;
-        b=RIiEMX0hKeeUI75GTIHVVKZ2hVjeSHMG0mRv77+l1rr9Ep/rp6cBueBT93NCFetRiR
-         yBG9e4QqkIkMQG4Pi3UFs8YIpjAq3zB2PN1s3yAdEoc5yUwDh52D0pThZMJGifccPltD
-         WAGBE9zWzjLnU7vcIIe3koEjQji7l/ic3Gzmcdx6GZgzMMtHKV9sf3Nu+2wDSscFTgeg
-         YXLiDk9EkqKL/ChAciL7tPNp15SWyHv3YR99om9S+HOh/5jMssjqsi+cPuamWiBxDEW9
-         HWpSXlO/IgX+fQq8zusBWKLmoEe5aLrpOOAbcSd8ssNEgC83LRLtaZNqBBmRP7/4H/E1
-         y2CA==
-X-Forwarded-Encrypted: i=1; AHgh+Rqd4mBgd00Fy74LaGRmiCzi7bEWkFZ80Mki652j3EIh2vyiwsYXFTFbN5ylaBdBtHYljZPzinYT@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzzpy01UmkkTo8H9ZBcat3/TcJBv0Y9mSNWxukmYSe+d3uo1TDE
-	7hDUVofJQsUiBROHx+pzvYq09S68Zuhtsw4qNMTfTCC+3mDp06XfXvEukdUfmOdt7c8=
-X-Gm-Gg: AR+sD11FjT5bqFdiweEM9L1ThZu5twgFITb6Z1VHcViVOmqXZR6B3uyjJ5ENosSENMc
-	7BM2pUAAl62FClb9kYXYVKqMU5oJsIusRrX+eDnee0+yRLvYwocF3cMM4ri9Zr7ToH1pyLk0NUJ
-	L2jZIseDnt6ov71aSMMP3A0O9c6kX1+dDud71TteLz8vZeze5JnSD/SEN7BirIGuQKYf3QPpK7P
-	0t1lBp3rY/bq2PZrLhBkNKQGNcVci/rFMeDGcGbxkdz4ADUPPNBhRDmQ0JGSGAgPtSKgmJe9oAh
-	NhScCdh9W+UDVcaMwQz9mRRNodMOpfzZCQX0MvTXxi/2CeDbWopin8LQ/MclolY416hvnocorey
-	zLtRay5SW1aZrKb2oZ5Kd1nM6jezc6XMhJWXt/ymuFWWDJtT9rftA6pBHWQtvRisA96YAz977M0
-	V3hecQr4zoditiozA8Pj79JpU6og1MVNCgzVr45Fgg3FNisqUhdww4szA06atyPICaJCR0jmU=
-X-Received: by 2002:a05:6214:e6f:b0:8df:93d1:ca18 with SMTP id 6a1803df08f44-90812689696mr6173636d6.3.1785173039676;
-        Mon, 27 Jul 2026 10:23:59 -0700 (PDT)
-Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-907e858c4c1sm69737366d6.22.2026.07.27.10.23.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jul 2026 10:23:59 -0700 (PDT)
-Date: Mon, 27 Jul 2026 13:23:55 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>, david@kernel.org,
-	ljs@kernel.org, liam@infradead.org, vbabka@kernel.org,
-	rppt@kernel.org, surenb@google.com, mhocko@suse.com,
-	kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev,
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
-	chrisl@kernel.org, nphamcs@gmail.com, baoquan.he@linux.dev,
-	youngjun.park@lge.com, roman.gushchin@linux.dev,
-	muchun.song@linux.dev, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rientjes@google.com, kernel-team@meta.com
-Subject: Re: [PATCH v5 2/3] mm/vmscan: add pgrotate_anon and pgrotate_file
- vmstat counters
-Message-ID: <ameUK827HSgx77kW@cmpxchg.org>
-References: <20260727162550.2032-1-usama.arif@linux.dev>
- <20260727162550.2032-3-usama.arif@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oFDB5P8n"
+Date: Mon, 27 Jul 2026 13:48:58 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785185344;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FFvaZkohkm528INkbN+EO7pcO2PxXj1dIjGSZDzFMIg=;
+	b=oFDB5P8n2pxOC9LeWJdqJfFQi0V+c/ConSiq6qsRnZqmzeEf4tmIRQU6+h264HoTbcAESP
+	JH6T+IX8GwIpDwVJGCjZWMThhb13j4eD5V5MvQBTIXkee1+lh62bvAeV6NYlHP2ij1hc5g
+	TfJmYfDldJRhnmE7pa1n2zDLdm9QByM=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Michal Hocko <mhocko@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+	Suren Baghdasaryan <surenb@google.com>, Usama Arif <usama.arif@linux.dev>, 
+	Peter Zijlstra <peterz@infradead.org>, Darren Hart <dvhart@infradead.org>, 
+	Davidlohr Bueso <dave@stgolabs.net>, =?utf-8?B?QW5kcsOp?= Almeida <andrealmeid@igalia.com>, 
+	"Liam R . Howlett" <liam@infradead.org>, Yosry Ahmed <yosry@kernel.org>, Rik van Riel <riel@surriel.com>, 
+	Nhat Pham <nphamcs@gmail.com>, Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC] Robust futex causing memcg OOM storm on exit
+Message-ID: <ame7Q-0eVRrtt34j@linux.dev>
+References: <20260723001908.4046643-1-shakeel.butt@linux.dev>
+ <amds50dIVOiQNz0k@tiehlicka>
+ <amd6N4DVzZkl90cs@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -85,34 +52,69 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260727162550.2032-3-usama.arif@linux.dev>
+In-Reply-To: <amd6N4DVzZkl90cs@linux.dev>
+X-Migadu-Flow: FLOW_OUT
 
-On Mon, Jul 27, 2026 at 09:23:24AM -0700, Usama Arif wrote:
-> Reclaim can spend substantial work on an LRU type without immediately
-> reclaiming or demoting a corresponding amount of memory. Record this
-> work in PGROTATE_ANON and PGROTATE_FILE.
-> 
-> For classic LRU reclaim:
-> 
->   - Inactive-list reclaim adds nr_scanned - nr_reclaimed to the
->     corresponding anon/file counter when isolation succeeds.
->   - Active-list reclaim adds referenced executable file folios that
->     are retained on the active list to PGROTATE_FILE. Active anon
->     reclaim does not contribute this component.
-> 
-> For MGLRU, add the number of initially isolated pages that remain
-> unreclaimed after both the initial and retry passes to the counter for
-> the selected anon/file type.
-> 
-> These counters are distinct from the existing pgrotated vm event.
-> pgrotated records an actual move to the inactive-list tail, primarily
-> after reclaim-marked writeback completes or failed invalidation leaves
-> a folio for accelerated reclaim. PGROTATE_ANON and PGROTATE_FILE
-> measure reclaim cost and do not imply that a folio moved to an LRU tail.
-> 
-> A subsequent patch will consume these counters for anon/file scan
-> balancing.
-> 
-> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+On Mon, Jul 27, 2026 at 08:38:37AM -0700, Shakeel Butt wrote:
+> On Mon, Jul 27, 2026 at 04:36:23PM +0200, Michal Hocko wrote:
+> > On Wed 22-07-26 17:19:07, Shakeel Butt wrote:
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+[...]
+
+> > 
+> > TBH I am not entirely happy about this approach. It effectivelly reverts
+> > a75ffa26122b ("memcg, oom: do not bypass oom killer for dying tasks").
+> > It just makes it lockless. Assumption that a dying task will do so
+> > quickly and with bounded resources has turned wrong on several
+> > occasions.
+> 
+> That's why I kept it as RFC :)
+> 
+> > 
+> > On the other hand I do undestand the contention issues and I can imagine
+> > that the existing solution doesn't really work well for huge thread
+> > groups that all end up lining up on the oom_lock just to learn there is
+> > nothing really killable anymore because they are the oom victim...
+> > 
+> > Would it be just safer to bail out only for oom victim threads. This
+> > would narrow down potential runaways for oom victims which should be
+> > more limited than any killed/exiting task. It would also give the oom
+> > killer/reaper chance to work. WDYT?
+> 
+> I will give the following patch a try with the reproducer I have. I am still
+> improving the reproducer as I am still not able to recreate multi hour slowdown
+> yet. I will report back once I have some results. 
+> 
+
+I have some results with the reproducer I (AI) wrote.
+
+Setup: 20k threads, each with its robust_list head on its own page in a
+large anon region pushed into a zswap pool (writeback off, so it's
+unreclaimable and pins the memcg at the limit). On the OOM-group-kill
+every thread faults that page in futex_cleanup() -> do_swap_page() ->
+swapin charge -> memcg OOM. A separate thread holds mmap_lock for write
+in a loop so the oom_reaper can't reap the pool -- matching the host,
+where the reaper was blocked and the memcg never fell below the limit.
+
+I tested on next-20260726 as baseline and then tested your suggestion over it.
+For baseline ~48k no-victim OOM invocations serialized on oom_lock; ~40s to
+drain the 20k threads in a VM (hours on the host, where each invocation
+was a dump_header over netconsole). With the patch the dying tasks stop
+entering out_of_memory and the storm is gone.
+
+With the following suggestion, the threads of dying tasks stop entering
+out_of_memory but the exit time doubled as each thread has to decompress the
+page from zswap.
+
+	if (tsk_is_oom_victim(current))
+		goto force;
+
+I also tested by replacing goto force with goto nomem and the exit time halved
+i.e. ~20 seconds. Looking deeper it seems like each thread is still going
+through the reclaim loops.
+
+Just for testing purpose I moved this check along with goto nomem just before
+the reclaim fuction i.e. try_to_free_mem_cgroup_pages() and the exit time falls
+below 1 second. I think what we need is to detect early that the cgroup is
+unreclaimable and the threads of exiting/reaped process should just return with
+enomem.
