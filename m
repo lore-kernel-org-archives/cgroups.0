@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BCF6408034;
-	Mon, 27 Jul 2026 12:54:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E5003E44EC;
+	Mon, 27 Jul 2026 12:54:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785156854; cv=none; b=jwYz6PzqfqeEVPzEalT+QzniGg6zUxB+LhP5J2sGCg96l3Cz/bP4978iS3ac/mgQT7yRpA+oNovstO1FVMts3qVQpmFAugtjyoprIyVOa6l/ZeDX0O6IlMkn/UWjdjEOB4msajdmz8XkszHhnCgWFe68l7SW1OdF7/AMN45IltY=
+	t=1785156859; cv=none; b=uWgjkvpDY1cuyS7jWp75s+ko1h6fSHhXGSs6s6SMVMPN8MdGiqR330gqXOGDw4lkjudi3MaUU4Vfe1lUN6pjctXXsViGdX+GbLNDlW9M20oKwqv0QqQ8XeUWCntxt9kKWL1Vp+Mf8FG6v4LBJMV4H80ExyH9m4hHXgHyH3DOJT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785156854; c=relaxed/simple;
-	bh=iXUz+z/RDOS7wGu05fpf/vjIx49I2ooYbaPNUIFlaKg=;
+	s=arc-20240116; t=1785156859; c=relaxed/simple;
+	bh=K0Y02sWTwKplUJPEEQWntKXQ0g6XO52I9NYyXnW8/O4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=cVBGT9sf7gr7n0Kw/awPUOQsEvYguCHKRTs55ZjFPeqzrPZ1Toa98ga7Uc7XX/DTU81o6XXi1Hzb8CMuCQF9bdWkozxeR0Vi9EvC0YCWx6z8YYwpdqp8esYifHRQTQNAw2eK5QmQNxukNJrC318d9SmVV8Nld6+OuhP/pr9kQiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B47qnmcg; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=nUKUJV8JYCPfW3yPooGB9lZKzGw6uSKuPQYW7dxoJZ1BcLg/cwWEeQKvfPfQ0BAIyy2cK1uQbUjQOt2OmXOOgd4HK9kCUAS2jun1En4+6J8cGIev/pYR/TxUTo6kwLPbOnfXsLDe8Vb6BdXOMxl9q4c6L3hi1WMHvUHlT/hP0xY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sl1IICew; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B47qnmcg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 939171F000E9;
-	Mon, 27 Jul 2026 12:54:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sl1IICew"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0DA41F00A3A;
+	Mon, 27 Jul 2026 12:54:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785156851;
-	bh=O/vImmk4nZ0kFMnvMNBhkco3GaYwW1/WU6MdK9cUjwU=;
+	s=k20260515; t=1785156854;
+	bh=AkNplhM/y3R+94Fey7CDvmc5bFFT4YcdBJTslgRYoxk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=B47qnmcgwRsFsMJxuSxk0f5mzdJZ+5GeKmwROVitFo0a9eMIXuTQYWq7XouWASSY5
-	 hRR5MbmSJFAj6MOsQApHxDUZJY8Cf55wzD7358Pg3C8Z2LDwSUPWa9pfMuUgoPSWGY
-	 ZK2JxlFppOqODg9RfawieUFDbfyGM9CqxK9CUuloqeioD4cFi+E50xOckjTdOXRa8b
-	 V798UEHVLhAH9eIVX1wr6/GqPRm3TifGFU4tMWI0+uIK3XJKvTg6VzkQvb02673Cg6
-	 6uwCCrDl7zT394Q8MQeKjy+JyHxCr+c7yhR/LzdnTqsZcPQnqmr/omHZl5+hGHirgx
-	 MhtojOWuoe8+w==
+	b=Sl1IICewU5fK/CFdCu+iGLgFr/fFrUa9aNFj7OSJINXRLQgNvIe2aAu1rP8r9YYQV
+	 4STcTsikq063EJKQuLl1rJyK5DrioXdkBKJV0unvCWHr8/Jq0PdhkpF/D+Eod3XUXc
+	 NLRzJHrxyttwxK8JeA1qh6Pdmdsh5TejMiQxEDIowmpecijin89SEbjwrPjuKGv/rY
+	 VcP5D78yCjxoIsEtP+VTVQKq9NhFq43iMPL36RD4BdBuaL6Cf3ld4ATp72l8/pRw4Z
+	 iYHIqiJ+AZzJ0jH/I4ocGrRMGuP2HgwuIOvAMhhkBc0918hNWZtPFsyMw4bPHQB4gw
+	 M68a92q4jC1BQ==
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Date: Mon, 27 Jul 2026 14:53:55 +0200
-Subject: [PATCH v3 01/13] mm/slab: skip kfence objects in allocation
- profiling
+Date: Mon, 27 Jul 2026 14:53:56 +0200
+Subject: [PATCH v3 02/13] mm/slab: remove objs_per_slab()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -37,8 +36,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260727-b4-objext_split-v3-1-c29ef0f1f257@kernel.org>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260727-b4-objext_split-v3-2-c29ef0f1f257@kernel.org>
 References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
 In-Reply-To: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
 To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
@@ -51,85 +50,73 @@ Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
  "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 X-Mailer: b4 0.15.2
 
-struct kfence_metadata only contains struct slabobj_ext with
-CONFIG_MEMCG, which is then used for the "fake" slab's obj_exts field.
-If CONFIG_MEMCG is enabled, the struct can also end up used for memory
-allocation profiling. If CONFIG_MEMCG is disabled but profiling is
-enabled, it will end up allocating its obj_exts via
-prepare_slab_obj_exts_hook() and assigning them to the fake struct slab.
-These will probably then never be freed.
+The function has an unused kmem_cache argument and almost nothing uses
+it anyway; doing slab->objects is simpler. Remove it with the last two
+users. KUNIT_EXPECT_EQ() needs a cast to avoid "error: ‘typeof’ applied
+to a bit-field" but we don't need to keep a wrapper just for that.
 
-So things sorta work, but not always in the intended and optimal way.
-The upcoming changes to slabobj_ext layout would additionally need a
-proper refactoring to keep working.
-
-However, there's little benefit in accounting KFENCE objects. KFENCE
-allocations are rare and there can be only CONFIG_KFENCE_NUM_OBJECTS
-(default to 255) outstanding ones at any time. For any callsite
-prominent enough in the memory allocation profiling stats, allocations
-served from KFENCE will be lost in the noise.
-
-Thus let's not complicate things and simply stop accounting KFENCE
-objects in allocation profiling and skip them in the related slab hooks.
-
-We also need to skip kfence objects in mark_obj_codetag_empty() in case
-a sheaf is allocated from kfence, per earlier sashiko review.
-
+Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
+Reviewed-by: Hao Li <hao.li@linux.dev>
+Reviewed-by: Suren Baghdasayan <surenb@google.com>
 Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 ---
- Documentation/mm/allocation-profiling.rst | 7 +++++++
- mm/slub.c                                 | 9 +++++++++
- 2 files changed, 16 insertions(+)
+ mm/kfence/kfence_test.c | 2 +-
+ mm/slab.h               | 6 ------
+ mm/slub.c               | 3 +--
+ 3 files changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/Documentation/mm/allocation-profiling.rst b/Documentation/mm/allocation-profiling.rst
-index 5389d241176a..d02eb54ee8f2 100644
---- a/Documentation/mm/allocation-profiling.rst
-+++ b/Documentation/mm/allocation-profiling.rst
-@@ -112,3 +112,10 @@ break it out by rhashtable type.
+diff --git a/mm/kfence/kfence_test.c b/mm/kfence/kfence_test.c
+index de2d0f7d62b1..9867c03ef0ae 100644
+--- a/mm/kfence/kfence_test.c
++++ b/mm/kfence/kfence_test.c
+@@ -295,7 +295,7 @@ static void *test_alloc(struct kunit *test, size_t size, gfp_t gfp, enum allocat
+ 			 * memcg accounting works correctly.
+ 			 */
+ 			KUNIT_EXPECT_EQ(test, obj_to_index(s, slab, alloc), 0U);
+-			KUNIT_EXPECT_EQ(test, objs_per_slab(s, slab), 1);
++			KUNIT_EXPECT_EQ(test, ((unsigned int)slab->objects), 1);
  
- - Then, use the following form for your allocations:
-   alloc_hooks_tag(ht->your_saved_tag, kmalloc_noprof(...))
-+
-+Notes
-+=====
-+
-+- When a slab object is allocated from KFENCE, its accounting is skipped.
-+  KFENCE allocations are rare and limited to a small number, so this omission
-+  is negligible.
+ 			if (policy == ALLOCATE_ANY)
+ 				return alloc;
+diff --git a/mm/slab.h b/mm/slab.h
+index f5e336b6b6b0..01535e1e2d3c 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -330,12 +330,6 @@ static inline unsigned int obj_to_index(const struct kmem_cache *cache,
+ 	return __obj_to_index(cache, slab_address(slab), obj);
+ }
+ 
+-static inline int objs_per_slab(const struct kmem_cache *cache,
+-				const struct slab *slab)
+-{
+-	return slab->objects;
+-}
+-
+ /*
+  * State of the slab allocator.
+  *
 diff --git a/mm/slub.c b/mm/slub.c
-index 0337e60db5ac..d702d273253c 100644
+index d702d273253c..b94482830637 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -2067,6 +2067,9 @@ static inline void mark_obj_codetag_empty(const void *obj)
- 	struct slab *obj_slab;
- 	unsigned long slab_exts;
+@@ -2130,7 +2130,6 @@ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
+ 			gfp_t gfp, unsigned int alloc_flags)
+ {
+ 	const bool allow_spin = alloc_flags_allow_spinning(alloc_flags);
+-	unsigned int objects = objs_per_slab(s, slab);
+ 	bool new_slab = alloc_flags & SLAB_ALLOC_NEW_SLAB;
+ 	unsigned long new_exts;
+ 	unsigned long old_exts;
+@@ -2186,7 +2185,7 @@ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
+ #endif
+ retry:
+ 	old_exts = READ_ONCE(slab->obj_exts);
+-	handle_failed_objexts_alloc(old_exts, vec, objects);
++	handle_failed_objexts_alloc(old_exts, vec, slab->objects);
  
-+	if (is_kfence_address(obj))
-+		return;
-+
- 	obj_slab = virt_to_slab(obj);
- 	slab_exts = slab_obj_exts(obj_slab);
- 	if (slab_exts) {
-@@ -2352,6 +2355,9 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags,
- 	if (alloc_flags & SLAB_ALLOC_NO_RECURSE)
- 		return;
- 
-+	if (is_kfence_address(object))
-+		return;
-+
- 	slab = virt_to_slab(object);
- 	obj_exts = prepare_slab_obj_exts_hook(s, slab, flags, alloc_flags, object);
- 	/*
-@@ -2399,6 +2405,9 @@ __alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p
- 	for (i = 0; i < objects; i++) {
- 		unsigned int off = obj_to_index(s, slab, p[i]);
- 
-+		if (is_kfence_address(p[i]))
-+			continue;
-+
- 		alloc_tag_sub(&slab_obj_ext(slab, obj_exts, off)->ref, s->size);
- 	}
- 	put_slab_obj_exts(obj_exts);
+ 	if (new_slab) {
+ 		/*
 
 -- 
 2.55.0
