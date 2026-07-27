@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B3240862E;
-	Mon, 27 Jul 2026 12:54:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BED3140A941;
+	Mon, 27 Jul 2026 12:54:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785156875; cv=none; b=lqJyShmxzNtvuTBc43d1wzBNQmI1ADA/9Wt0Km+fITiJz+KZ6/LYa2Uu2feKriKLaNkA+iJFXdZnrJWoGCR/UgDZ7F5ndbZ8ZAkM/Tv2CZF7WUpouUHUzw1CTdN5soRvlsnUl9R4Beg9a+6l+1IjXQyTGjC36yjdxzqmx27Zois=
+	t=1785156878; cv=none; b=WiB537ygY6Ar0WBDO11SGQSaX69myxwhnBcFDYksNFc5sL4ADceyI1rn3MTf86w82xFOkzJH4nxgU4DcPx1R58ztEIXGVbzHW2VBQ8Vlk1trKo9nFPN3ZzCmTcLFFI9FnIJvpfgpJ+L59jHv7ScdkZAD/1etcSfKEw5JhjQUA9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785156875; c=relaxed/simple;
-	bh=n62/JdOzgUOa7qa1oVb2Citbk2k0ys5rML9hy/eTtHA=;
+	s=arc-20240116; t=1785156878; c=relaxed/simple;
+	bh=rQwr2yaH2uuQLtKU5DaqUy9nnJ9f5dc5MK7EgTA5t64=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=IHiPWRbrfPBDUbj6/mn0FO4/ScC+ZIcOnCu+qPVxYTp+OJVzGNdPHvEuTWStqRN8GPexmrHYZsSgAkB6/XDa3AYwuU/ufTJcgJbebdGUuHK7XoGGnuujVtfRvgLXrqS/QOJB4yntwWlvyK8T6VITf65S2cgpXV7RbO05c5fF5To=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W73vUMpT; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=JTIHOWMYKsZThCdoS8NUtQLzKMKK/kkK9dRBjRJtYe+ioQa/PBolehffo4YC5Bp2JmO50xPF/2jpY9pHePZiLjQA0vZwW1sxOaaxDrdgedqt4AcBegUD1nqpK8cBMG15HYqgAau8GCjOPXhSZAmB8a4ciQoq8SlEaf30n9lNWF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PM7EE0wP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W73vUMpT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 598B01F00A3A;
-	Mon, 27 Jul 2026 12:54:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PM7EE0wP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98E021F00A3D;
+	Mon, 27 Jul 2026 12:54:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785156874;
-	bh=OpLA7OFU8RZEfIl2Ky2CyNJhgbcJGBk6hlXjRo9XjZ0=;
+	s=k20260515; t=1785156877;
+	bh=MMR10wzWOC3iWDE6DrvrWcfSrkQzPUkWCEv11fQdpQY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=W73vUMpTsx6e4HcrrjkMH7JYhlWN5/vB8deCMHSxhBd7cPPVPn4DbGt0CIbvJ7gSk
-	 Hs4XYqP4bRyN7lP/skw7el2qVMMLQAXLHUEPJElda65D6bJeDGr9XMSkBThugwPKhT
-	 GQR5OhabPfzeYxDp1kq0kaq9MJ6bAemO7zHuTnU9ufncNOzt8EtKhd1uzvZbZFgjTN
-	 KmbkkJg+8P9DH0oaxPqCGVVoTxwImkcxjWooImQC0ZZeg3zcEJXpPX1JVX+krj5jsp
-	 zsxcpGGgyii2toHfBScmgTIYjxMlPklFVpHmgeIzf1fAYSmCEXey+hpj8I/hAJ/Krj
-	 7uEGs8/+E8VlQ==
+	b=PM7EE0wP1nRdstfCP22TIZ3AP/RdJYjnz8S9dhp3/nIeUmgmQ7135ZWmfDKq7BYUa
+	 6Csn5N/TjSOe6cc/Px6PmatZc3+G6h8ez+r7PfrkZsXTRheOi0wRALbeyMCYR+dLq0
+	 r2s02WqAkJRNYi7+hY7Ahf9B864+ewdhAKs1o/dcJ4XvGYoUTGCLQcsUzkJO8+Fmz8
+	 J1euZnp/iBku9SqYOSxKkvgS8tmKlYCHPY5Mf3+FgUt7rR8Dw7mevSavJu/4gsAvcp
+	 PvMryzt6yLHhvVRORiCyXjmgSHrgrTtAaQRQN3FBK8/wdqaBBPB9+pJIeJV/siu+yH
+	 OsK5q5jk9ONjw==
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Date: Mon, 27 Jul 2026 14:54:02 +0200
-Subject: [PATCH v3 08/13] mm/slab: change struct slabobj_ext to a union
+Date: Mon, 27 Jul 2026 14:54:03 +0200
+Subject: [PATCH v3 09/13] mm/slab: introduce slab_obj_ext_has_codetag()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260727-b4-objext_split-v3-8-c29ef0f1f257@kernel.org>
+Message-Id: <20260727-b4-objext_split-v3-9-c29ef0f1f257@kernel.org>
 References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
 In-Reply-To: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
 To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
@@ -50,221 +50,119 @@ Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
  "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 X-Mailer: b4 0.15.2
 
-Currently, struct slabobj_ext can hold both objcg pointer and
-codetag_ref (when both are compile-enabled) and there is an array of as
-many slabobj_ext instances as there are objects in a slab.
+mem_alloc_profiling_enabled() allows evaluating (with a static key) if
+memory profiling is currently enabled. mem_profiling_support is a
+variable where false means it's not possible to enable it anymore,
+because the system was booted with "never" or it was later shut down.
+This is possible to query by mem_alloc_profiling_permanently_disabled().
 
-This makes the layout fixed so even if codetag_ref is unused (because
-memory allocation profiling is disabled), the space for them is
-allocated and wasted. Similarly, some caches (currently kmalloc_normal)
-do not ever need objcg pointers, leading to wasted memory with memory
-allocation profiling enabled.
+To make slabobj_ext array size handling dynamic, we need a snapshot of
+mem_alloc_profiling_permanently_disabled() early in boot, so that's not
+affected by a later shutdown. We also need it to be static key based for
+performance. Neither mem_alloc_profiling_enabled() nor
+mem_alloc_profiling_permanently_disabled() satisfy this.
 
-To make this more flexible, change the layout so that struct slabobj_ext
-becomes a union of objcg pointer and codetag_ref (to ensure uniform
-size; in practice both are the same size anyway). The slabobj_ext array
-then can have twice as many elements as before. For cache locality
-purposes, the effective memory layout is unchanged, so objcg and codetag
-ref for a given object are still adjacent.
-
-cache_obj_ext_size() returns the effective size of (0-2) struct
-slabobj_ext's for a cache, slab_obj_ext_size() for a slab. Currently
-both return a constant value derived from the config options, but will
-be made dynamic later. Replace all sizeof(slabobj_ext) usage with these.
-
-No functional change intended, the layout is still effectively static.
+Therefore introduce slab_obj_ext_has_codetag() with an underlying static
+key for that use case. Its state is made to reflect the result of
+mem_alloc_profiling_permanently_disabled() during kmem_cache_init(),
+which does happen after setup_early_mem_profiling().
 
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 ---
- mm/slab.h | 49 +++++++++++++++++++++++++++++++++++++++----------
- mm/slub.c | 19 +++++++++++--------
- 2 files changed, 50 insertions(+), 18 deletions(-)
+ mm/slab.h | 16 ++++++++++++++++
+ mm/slub.c | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
 diff --git a/mm/slab.h b/mm/slab.h
-index 79c758001f98..3f8144b9b9d8 100644
+index 3f8144b9b9d8..8f352d9f4d91 100644
 --- a/mm/slab.h
 +++ b/mm/slab.h
-@@ -550,18 +550,42 @@ static inline bool need_kmalloc_no_objext(void)
- }
- 
- /*
-- * Extended information for slab objects stored as an array in page->memcg_data
-- * if MEMCG_DATA_OBJEXTS is set.
-+ * Extended information for slab objects stored as a pointer to an array in
-+ * slab->obj_exts (aliasing page->memcg_data) if MEMCG_DATA_OBJEXTS is set.
-  */
- struct slabobj_ext {
-+	/*
-+	 * All elements of the union should be pointer-sized to avoid memory
-+	 * waste
-+	 */
-+	union {
- #ifdef CONFIG_MEMCG
--	struct obj_cgroup *_objcg;
-+		struct obj_cgroup *_objcg;
- #endif
- #ifdef CONFIG_MEM_ALLOC_PROFILING
--	union codetag_ref _ctref;
-+		union codetag_ref _ctref;
- #endif
-+	};
+@@ -568,6 +568,22 @@ struct slabobj_ext {
+ 	};
  } __aligned(8);
  
-+static inline size_t cache_obj_ext_size(struct kmem_cache *s)
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++DECLARE_STATIC_KEY_MAYBE(CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT,
++			 slab_obj_ext_has_codetag_key);
++
++static inline bool slab_obj_ext_has_codetag(void)
 +{
-+	size_t sz = 0;
-+
-+	if (IS_ENABLED(CONFIG_MEMCG))
-+		sz += 1;
-+
-+	if (IS_ENABLED(CONFIG_MEM_ALLOC_PROFILING))
-+		sz += 1;
-+
-+	return sizeof(struct slabobj_ext) * sz;
++	return static_branch_maybe(CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT,
++				   &slab_obj_ext_has_codetag_key);
 +}
-+
-+static inline size_t slab_obj_ext_size(struct slab *slab)
++#else
++static inline bool slab_obj_ext_has_codetag(void)
 +{
-+	return cache_obj_ext_size(slab->slab_cache);
++	return false;
 +}
++#endif
 +
- #ifdef CONFIG_SLAB_OBJ_EXT
- 
- /*
-@@ -651,18 +675,18 @@ slab_obj_ext(struct kmem_cache *s, struct slab *slab, unsigned long obj_exts,
+ static inline size_t cache_obj_ext_size(struct kmem_cache *s)
  {
- 	struct slabobj_ext *obj_ext;
- 	unsigned int index;
-+	unsigned int stride;
- 
- 	VM_WARN_ON_ONCE(obj_exts != slab_obj_exts(slab));
- 
- 	index = obj_to_index(s, slab, obj);
- 
--	if (!obj_exts_in_object(slab)) {
--		obj_ext = ((struct slabobj_ext *)obj_exts) + index;
--	} else {
--		unsigned int stride = s->size;
-+	if (!obj_exts_in_object(slab))
-+		stride = slab_obj_ext_size(slab);
-+	else
-+		stride = s->size;
- 
--		obj_ext = (struct slabobj_ext *)(obj_exts + index * stride);
--	}
-+	obj_ext = (struct slabobj_ext *)(obj_exts + index * stride);
- 
- 	return kasan_reset_tag(obj_ext);
- }
-@@ -670,12 +694,14 @@ slab_obj_ext(struct kmem_cache *s, struct slab *slab, unsigned long obj_exts,
- #ifdef CONFIG_MEMCG
- static inline struct obj_cgroup *slab_obj_ext_objcg(struct slabobj_ext *obj_ext)
- {
-+	/* if objcg exists, it comes first, so we don't need to do anything */
- 	return obj_ext->_objcg;
- }
- 
- static inline void slab_obj_ext_set_objcg(struct slabobj_ext *obj_ext,
- 					  struct obj_cgroup *objcg)
- {
-+	/* if objcg exists, it comes first, so we don't need to do anything */
- 	obj_ext->_objcg = objcg;
- }
- #endif
-@@ -684,6 +710,9 @@ static inline void slab_obj_ext_set_objcg(struct slabobj_ext *obj_ext,
- static inline union codetag_ref *
- slab_obj_ext_codetag_ref(struct slab *slab, struct slabobj_ext *obj_ext)
- {
-+	if (IS_ENABLED(CONFIG_MEMCG))
-+		obj_ext += 1;
-+
- 	return &obj_ext->_ctref;
- }
- #endif
+ 	size_t sz = 0;
 diff --git a/mm/slub.c b/mm/slub.c
-index f6ec3618dd1c..9079aaab3235 100644
+index 9079aaab3235..67958f2b3bab 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -803,7 +803,7 @@ static inline bool need_slab_obj_exts(struct kmem_cache *s)
- 
- static inline unsigned int obj_exts_size_in_slab(struct slab *slab)
- {
--	return sizeof(struct slabobj_ext) * slab->objects;
-+	return slab_obj_ext_size(slab) * slab->objects;
- }
- 
- static inline unsigned long obj_exts_offset_in_slab(struct kmem_cache *s,
-@@ -1199,7 +1199,7 @@ static void print_trailer(struct kmem_cache *s, struct slab *slab, u8 *p)
- 	off += kasan_metadata_size(s, false);
- 
- 	if (obj_exts_in_object(slab))
--		off += sizeof(struct slabobj_ext);
-+		off += slab_obj_ext_size(slab);
- 
- 	if (off != size_from_object(s))
- 		/* Beginning of the filler is the free pointer */
-@@ -1404,7 +1404,7 @@ static int check_pad_bytes(struct kmem_cache *s, struct slab *slab, u8 *p)
- 	off += kasan_metadata_size(s, false);
- 
- 	if (obj_exts_in_object(slab))
--		off += sizeof(struct slabobj_ext);
-+		off += slab_obj_ext_size(slab);
- 
- 	if (size_from_object(s) == off)
- 		return 1;
-@@ -2092,6 +2092,8 @@ static inline bool mark_failed_objexts_alloc(struct slab *slab)
- static inline void handle_failed_objexts_alloc(struct slab *slab,
- 		unsigned long obj_exts, struct slabobj_ext *vec)
- {
-+	unsigned int stride;
-+
- 	/*
- 	 * If vector previously failed to allocate then we have live
- 	 * objects with no tag reference. Mark all references in this
-@@ -2100,11 +2102,13 @@ static inline void handle_failed_objexts_alloc(struct slab *slab,
- 	if (obj_exts != OBJEXTS_ALLOC_FAIL)
- 		return;
- 
-+	stride = slab_obj_ext_size(slab) / sizeof(*vec);
-+
- 	for (unsigned int i = 0; i < slab->objects; i++) {
- 		union codetag_ref *ref = slab_obj_ext_codetag_ref(slab, vec);
- 
- 		set_codetag_empty(ref);
--		vec++;
-+		vec += stride;
- 	}
- }
- 
-@@ -2130,7 +2134,7 @@ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
- 	unsigned long new_exts;
- 	unsigned long old_exts;
- 	struct slabobj_ext *vec;
--	size_t sz = sizeof(struct slabobj_ext) * slab->objects;
-+	size_t sz = slab_obj_ext_size(slab) * slab->objects;
- 
- 	gfp &= ~OBJCGS_CLEAR_MASK;
- 	/*
-@@ -2273,8 +2277,7 @@ static void alloc_slab_obj_exts_early(struct kmem_cache *s, struct slab *slab)
- 
- 		get_slab_obj_exts(obj_exts);
- 		for_each_object(addr, s, slab_address(slab), slab->objects)
--			memset(kasan_reset_tag(addr) + offset, 0,
--			       sizeof(struct slabobj_ext));
-+			memset(kasan_reset_tag(addr) + offset, 0, slab_obj_ext_size(slab));
- 		put_slab_obj_exts(obj_exts);
- 
- #ifdef CONFIG_MEMCG
-@@ -7933,7 +7936,7 @@ static int calculate_sizes(struct kmem_cache_args *args, struct kmem_cache *s)
- 	aligned_size = ALIGN(size, s->align);
- #if defined(CONFIG_SLAB_OBJ_EXT) && defined(CONFIG_64BIT)
- 	if (slab_args_unmergeable(args, s->flags) &&
--			(aligned_size - size >= sizeof(struct slabobj_ext)))
-+			(aligned_size - size >= cache_obj_ext_size(s)))
- 		s->flags |= SLAB_OBJ_EXT_IN_OBJ;
+@@ -213,6 +213,11 @@ DEFINE_STATIC_KEY_FALSE(slub_debug_enabled);
+ static DEFINE_STATIC_KEY_FALSE(strict_numa);
  #endif
- 	size = aligned_size;
+ 
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++DEFINE_STATIC_KEY_MAYBE(CONFIG_MEM_ALLOC_PROFILING_ENABLED_BY_DEFAULT,
++			slab_obj_ext_has_codetag_key);
++#endif
++
+ /* Structure holding extra parameters for slab allocations */
+ struct slab_alloc_context {
+ 	unsigned long caller_addr;
+@@ -2420,6 +2425,25 @@ alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p,
+ 		__alloc_tagging_slab_free_hook(s, slab, p, objects);
+ }
+ 
++/*
++ * Make sure the static key used by slab_obj_ext_has_codetag() reflects the
++ * value of !mem_alloc_profiling_permanently_disabled()
++ *
++ * Any later mem alloc profiling shutdown won't be reflected in the static key
++ * because obj_exts with codetags might already exist.
++ */
++static void __init slab_obj_ext_has_codetag_init(void)
++{
++	bool need_codetag = !mem_alloc_profiling_permanently_disabled();
++
++	if (need_codetag != static_key_enabled(&slab_obj_ext_has_codetag_key)) {
++		if (need_codetag)
++			static_branch_enable(&slab_obj_ext_has_codetag_key);
++		else
++			static_branch_disable(&slab_obj_ext_has_codetag_key);
++	}
++}
++
+ #else /* CONFIG_MEM_ALLOC_PROFILING */
+ 
+ static inline void
+@@ -2434,6 +2458,10 @@ alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p,
+ {
+ }
+ 
++static inline void slab_obj_ext_has_codetag_init(void)
++{
++}
++
+ #endif /* CONFIG_MEM_ALLOC_PROFILING */
+ 
+ 
+@@ -8546,6 +8574,8 @@ void __init kmem_cache_init(void)
+ 		boot_kmem_cache_node;
+ 	int node;
+ 
++	slab_obj_ext_has_codetag_init();
++
+ 	if (debug_guardpage_minorder())
+ 		slub_max_order = 0;
+ 
 
 -- 
 2.55.0
