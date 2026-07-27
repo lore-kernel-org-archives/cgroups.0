@@ -1,253 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C91D540A934;
-	Mon, 27 Jul 2026 12:54:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 676D5409114
+	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 12:59:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785156892; cv=none; b=spr+lWUnzo/KQGrpImGeiHOBTIjO0rRYFAwwrhplY6kMcT2WAFhHlwe8IhmDb/7dXfvsFbEMbn97pO58St2XwJC4Ygl07dSEAbKBkUVyZ4h4QJnj4M4mcQrcthzwg/TYWbY9rPtrauptj6AYgA3ZEGa0BT3iSf3lRFYiZrRCLtg=
+	t=1785157192; cv=none; b=Lf3AGtdyHTuDlCiomp8XTa2FDMatZhgTbTRdKZQDHHYEk8Zfd+cDvKFX9wwBr4Kiyrwx9Kxf5zRk12N4rbiVoTkNxrkODQhrU92u1ZIKQo/qbeJMDfUVPbruPWpECjdo9Ws2edS94dHlNbI+J7vcVcq/npzNTet301/03+RbiPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785156892; c=relaxed/simple;
-	bh=lrHPuPOzk7DD+8v334REUR262DnadfyimU+SGntP9VI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ckgYJ8/D4AUPxLQOLOTeTNp0IJ8g2lPmN2/VtAz6bqGE8vJm/2wE76JE8WjVLfwTDmLLP2DLO3uPrRM+m2ykc3NT8ismfSTaBT6+Z4d4IU4cn/mmBdvFpR6FKfzaKfz3QytfOSQEpE7q6Fv/S2AisnRSMIl6yuxykrhSwgc53mA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GlOc/Hti; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785157192; c=relaxed/simple;
+	bh=P7BQGKSn82+DTsStxmUfYmZhLgtcAH+RPQExo0zQPAU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GVcFjcOt6ZxiOHo069DHs0+0EP1iHIs3aIib+PISNchecqob8APhe3a2hqONxF5VZWRou7Xp7vYhiyYCctrOjTtQpX8a5pP+//GvVskgL/RuVGbPC1b1FUMBuE66T3yGu8pXnXnlpaeAPU6hbcvkM3F3iTjawTVotC/89DciQnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pKx7nQjq; arc=none smtp.client-ip=95.215.58.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GlOc/Hti"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C6121F00A3D;
-	Mon, 27 Jul 2026 12:54:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785156890;
-	bh=Y993pIXua00WBWAIL/1Z7lFYMSFYvoH9IeLbXJAbVr8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=GlOc/Hti45wALWjtn6Haho+Objyxbrbt7jQkQI52f6WDWE6mQNDdVTCUx5xmIUySB
-	 IW9jvpBKPbL0IutvEOSTvfsIVLqUZjVPKPsPpYsqDse4sWKwjGAGgCAv+IRf/98wO6
-	 zZaFHX6HIs/YfteHIuMALmr0a+gc3U9q3q/4HKE5ir/6uXQ1rZ2+7CSOwq2tFvzNHU
-	 xX9glvhA3CwgJ86x7y7y4hZdK1qGqh4MLaxWsKoWJ6ddhsOW3tNuwBvWcCkoGLL62Z
-	 IX3czJRwF/un2vwPqYI8nw8sla4BzQHPFwqUytbZRDxwPhfRruQYiX/eIf8+qcgkau
-	 dwkPBfdDKgL6A==
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Date: Mon, 27 Jul 2026 14:54:07 +0200
-Subject: [PATCH v3 13/13] mm/slab, kfence, memcg: completely remove obj_ext
- for kfence objects
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pKx7nQjq"
+Message-ID: <615d091c-bd3b-4686-817e-5b29756542ff@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785157178;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UGm8K3HWHfu5g3506x1reX7/ao6GY/lBHJT4qsVrxm8=;
+	b=pKx7nQjqZ9OLuPkkD3nkGAiBOx+aCIzESNbsDurHU3vGAEJcnbnQZvAf9VBPxVJP/p3DHL
+	a9/4gu498oML3/ZQ34E2am3TOnX42/QkbSwEZRC2HPRtir028Bj+t2393tXc9pgRC2LJC5
+	T3mX4XRlIWqC5IszTJZm33uiQ2ysYV8=
+Date: Mon, 27 Jul 2026 20:59:23 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260727-b4-objext_split-v3-13-c29ef0f1f257@kernel.org>
-References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
-In-Reply-To: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
-To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
-Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
- Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>, 
- Andrew Morton <akpm@linux-foundation.org>, 
- Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
- Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, 
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-X-Mailer: b4 0.15.2
+Subject: Re: [PATCH] mm: memcg: stop reclaim when a limit update is superseded
+To: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260724021805.1234583-1-guopeng.zhang@linux.dev>
+ <amcT75pLmA0hRUm1@tiehlicka>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <amcT75pLmA0hRUm1@tiehlicka>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-We have already disabled memory allocation profiling for objects
-allocated for KFENCE to avoid complexity. KFENCE allocations are rare
-and there can be only CONFIG_KFENCE_NUM_OBJECTS (default to 255)
-outstanding ones at any time, so they are among noise in the profiling
-stats.
 
-For the same reasons, we can stop memcg_kmem accounting of kfence
-objects as their memory usage will be negligible wrt any practical
-memcg limits.
 
-This allows us simplifying the code and getting rid of
-is_kfence_address() checks in various places, including slab_obj_ext()'s
-usage of obj_to_index(). Instead we rely on the fact that slab_obj_exts()
-will now always return 0 for a kfence object's fake slab, which makes
-those places unreachable.
+在 2026/7/27 16:16, Michal Hocko 写道:
+> On Fri 24-07-26 10:18:05, Guopeng Zhang wrote:
+>> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>>
+>> kernfs serializes file operations only per open file, so separate open
+>> files can update the same memory.high or memory.max file concurrently.
+>> Both handlers store the new limit before synchronous reclaim, but
+>> continue to use the writer's local target in the reclaim loop. If another
+>> writer raises or removes the limit, the first writer can continue
+>> reclaiming toward a stale target.
+>>
+>> For memory.max, this can leave the writer looping indefinitely once
+>> reclaim retries are exhausted. The OOM path sees sufficient margin under
+>> the current limit and returns true without killing, while the writer
+>> still compares usage against its stale target and records another OOM
+>> event.
+> 
+> The current behavior is deliberate as described in b6e6edcfa4056.
+> What is an actual problem you are trying to fix?
 
-All we need to do to keep this assumption valid is not to allocate
-obj_exts for kfence objects, so the checks need to guard
-alloc_slab_obj_exts() where necessary.
+Thanks for raising this. I agree that the behavior introduced by
+b6e6edcfa405 is deliberate while the limit installed by the writer
+remains current. The problem occurs when that limit is overwritten by a
+later write through another open file.
 
-Suggested-by: Harry Yoo <harry@kernel.org>
-Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
----
- mm/kfence/core.c   | 15 ---------------
- mm/kfence/kfence.h |  3 ---
- mm/memcontrol.c    | 12 +++++++-----
- mm/slab.h          |  6 +++++-
- mm/slub.c          | 31 ++++++++++++++++---------------
- 5 files changed, 28 insertions(+), 39 deletions(-)
+Writer A stores a low memory.max and enters synchronous reclaim. Writer
+B then restores memory.max to "max". A still compares usage against its
+local old target, while mem_cgroup_out_of_memory() checks the current
+memory.max. Since 1378b37d03e8, the current-margin check in
+mem_cgroup_out_of_memory() sees sufficient margin and returns true
+without selecting a victim. Once the reclaim retries are exhausted, A
+therefore loops indefinitely and increments the oom counter in
+memory.events on every iteration.
 
-diff --git a/mm/kfence/core.c b/mm/kfence/core.c
-index 897ecf2594fb..90925c646c4c 100644
---- a/mm/kfence/core.c
-+++ b/mm/kfence/core.c
-@@ -636,14 +636,6 @@ static unsigned long kfence_init_pool(void)
- 
- 		page = pfn_to_page(start_pfn + i);
- 		__SetPageSlab(page);
--#ifdef CONFIG_MEMCG
--		struct slab *slab = page_slab(page);
--		slab->obj_exts = (unsigned long)&kfence_metadata_init[i / 2 - 1].obj_exts |
--				 MEMCG_DATA_OBJEXTS;
--#ifdef CONFIG_64BIT
--		slab->obj_exts_needs_objcg = 1;
--#endif
--#endif
- 	}
- 
- 	/*
-@@ -707,10 +699,6 @@ static unsigned long kfence_init_pool(void)
- 			continue;
- 
- 		page = pfn_to_page(start_pfn + i);
--#ifdef CONFIG_MEMCG
--		struct slab *slab = page_slab(page);
--		slab->obj_exts = 0;
--#endif
- 		__ClearPageSlab(page);
- 	}
- 
-@@ -1251,9 +1239,6 @@ void __kfence_free(void *addr)
- {
- 	struct kfence_metadata *meta = addr_to_metadata((unsigned long)addr);
- 
--#ifdef CONFIG_MEMCG
--	KFENCE_WARN_ON(slab_obj_ext_objcg(&meta->obj_exts));
--#endif
- 	/*
- 	 * If the objects of the cache are SLAB_TYPESAFE_BY_RCU, defer freeing
- 	 * the object, as the object page may be recycled for other-typed
-diff --git a/mm/kfence/kfence.h b/mm/kfence/kfence.h
-index 1f618f9b0d12..e6b4bf349ff7 100644
---- a/mm/kfence/kfence.h
-+++ b/mm/kfence/kfence.h
-@@ -102,9 +102,6 @@ struct kfence_metadata {
- 	struct kfence_track free_track __guarded_by(&lock);
- 	/* For updating alloc_covered on frees. */
- 	u32 alloc_stack_hash __guarded_by(&lock);
--#ifdef CONFIG_MEMCG
--	struct slabobj_ext obj_exts;
--#endif
- };
- 
- #define KFENCE_METADATA_SIZE PAGE_ALIGN(sizeof(struct kfence_metadata) * \
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index aace85fb99f9..6b51ddf6dfe0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3583,13 +3583,15 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
- 
- 		slab = virt_to_slab(p[i]);
- 
--		if (IS_ENABLED(CONFIG_DEBUG_VM) && WARN_ON_ONCE(!slab_needs_objcg(slab)))
--			continue;
-+		if (!slab_obj_exts(slab)) {
-+			if (is_kfence_address(p[i]))
-+				continue;
-+			if (alloc_slab_obj_exts(slab, s, flags, slab_alloc_flags))
-+				continue;
-+		}
- 
--		if (!slab_obj_exts(slab) &&
--		    alloc_slab_obj_exts(slab, s, flags, slab_alloc_flags)) {
-+		if (IS_ENABLED(CONFIG_DEBUG_VM) && WARN_ON_ONCE(!slab_needs_objcg(slab)))
- 			continue;
--		}
- 
- 		/*
- 		 * if we fail and size is 1, memcg_alloc_abort_single() will
-diff --git a/mm/slab.h b/mm/slab.h
-index 44f9b2569e80..04600f57b401 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -730,7 +730,11 @@ slab_obj_ext(struct kmem_cache *s, struct slab *slab, unsigned long obj_exts,
- 
- 	VM_WARN_ON_ONCE(obj_exts != slab_obj_exts(slab));
- 
--	index = obj_to_index(s, slab, obj);
-+	/*
-+	 * KFENCE objects have NULL obj_exts and thus can't reach this
-+	 * and we don't need obj_to_index()
-+	 */
-+	index = __obj_to_index(s, slab_address(slab), obj);
- 
- 	if (!obj_exts_in_object(slab))
- 		stride = slab_obj_ext_size(slab);
-diff --git a/mm/slub.c b/mm/slub.c
-index 893a11abcc20..94b744e5ac79 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -2064,9 +2064,6 @@ static inline void mark_obj_codetag_empty(const void *obj)
- 	struct slab *obj_slab;
- 	unsigned long slab_exts;
- 
--	if (is_kfence_address(obj))
--		return;
--
- 	obj_slab = virt_to_slab(obj);
- 	slab_exts = slab_obj_exts(obj_slab);
- 	if (slab_exts) {
-@@ -2329,11 +2326,15 @@ static inline unsigned long
- prepare_slab_obj_exts_hook(struct kmem_cache *s, struct slab *slab,
- 			   gfp_t flags, unsigned int alloc_flags, void *p)
- {
--	if (!slab_obj_exts(slab) &&
--	    alloc_slab_obj_exts(slab, s, flags, alloc_flags)) {
--		pr_warn_once("%s, %s: Failed to create slab extension vector!\n",
--			     __func__, s->name);
--		return 0;
-+	if (!slab_obj_exts(slab)) {
-+		if (is_kfence_address(p))
-+			return 0;
-+
-+		if (alloc_slab_obj_exts(slab, s, flags, alloc_flags)) {
-+			pr_warn_once("%s, %s: Failed to create slab extension vector!\n",
-+				     __func__, s->name);
-+			return 0;
-+		}
- 	}
- 
- 	return slab_obj_exts(slab);
-@@ -2358,9 +2359,6 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags,
- 	if (alloc_flags & SLAB_ALLOC_NO_RECURSE)
- 		return;
- 
--	if (is_kfence_address(object))
--		return;
--
- 	slab = virt_to_slab(object);
- 	obj_exts = prepare_slab_obj_exts_hook(s, slab, flags, alloc_flags, object);
- 	/*
-@@ -2380,7 +2378,13 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags,
- 
- 		put_slab_obj_exts(obj_exts);
- 	} else {
--		alloc_tag_set_inaccurate(current->alloc_tag);
-+		/*
-+		 * KFENCE allocations are rare and the amount of outstanding
-+		 * ones is limited to a small number so it's not worth setting
-+		 * tags as inaccurate because of them.
-+		 */
-+		if (!is_kfence_address(object))
-+			alloc_tag_set_inaccurate(current->alloc_tag);
- 	}
- }
- 
-@@ -2411,9 +2415,6 @@ __alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p
- 	for (int i = 0; i < objects; i++) {
- 		struct slabobj_ext *ext;
- 
--		if (is_kfence_address(p[i]))
--			continue;
--
- 		ext = slab_obj_ext(s, slab, obj_exts, p[i]);
- 		alloc_tag_sub(slab_obj_ext_codetag_ref(slab, ext), s->size);
- 	}
+I reproduced this with a cgroup holding 128 MiB of anonymous memory and
+with swapping disabled for the cgroup. Writer A lowered memory.max to
+32 MiB. After that value became visible, writer B restored memory.max
+to "max" through another open file.
 
--- 
-2.55.0
+On the unpatched kernel, A remained blocked after B's write, and the oom
+counter in memory.events increased from 37333 to 13512861 during the
+reproducer's one-second sampling interval. With the patch, the same
+reproducer observed A return after B superseded A's limit.
+
+The new check does not change the behavior introduced by b6e6edcfa405
+while the writer's target remains the active limit. For the indefinite
+loop described above, 1378b37d03e8 appears to be the more precise
+Fixes: target for the memory.max hunk. Does that match your reading of
+the history?
+
+Thanks,
+Guopeng
+
 
