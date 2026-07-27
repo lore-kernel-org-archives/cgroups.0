@@ -1,155 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD453BE62A
-	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 03:54:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD7F237F304;
+	Mon, 27 Jul 2026 05:41:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785124492; cv=none; b=VOR0Cus717oEWJchGTs9+EPJgRo7srtYkQrU7qo08/9xWMSi/dyKbc+AnD0+O9JaJYbBdfXoVBiyKJCpjDSSJv8B6270YmCyZT9Fyplec4WGnhGGGhchMF166lYrkGDTTmi3b/Blyqw9dSxqOFB0vXiX6NogMYcddSS9uXVIlbQ=
+	t=1785130887; cv=none; b=Iy6PREqXgvF2KghmEGGu2qRE85zevqWqtMZpx74QOHuHBq1FNEw+64gt8rbHYl7F2gL0xTqH/8hoDMaoyPENSfrvZ+v3GDFOkilRNnasMDpUIOtbFf27xrfyJxKufTeKx6cXfRxVOyKq9D6DC1Kb5hFFLu9sm3/ukiD5cubklyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785124492; c=relaxed/simple;
-	bh=lMyOlwFH9ojHCoaUqhlCOyDhZe4zgJ37rWVmIxNhIAw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=eyFUmqIK4kNfK3MCLXpy7IG4Pe/SlQz5HR2J1yctyK405CI2E6NcGZ3GbbsjcUzRKX4AMRJ1b+Asx9VSlRroo0YSQPySkT3ZC8QHyKCK+poR/8dJ3XhvgBpHeKqYlBy609NhFMQzKjP+EKkdfK5AncWyQ7Eb1i4LTQQMybPl0/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YKN9vZLq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785130887; c=relaxed/simple;
+	bh=KBGxVKBVcPUvP2K8Kq2m/WESxz8RXhfqZ6Mnq5IoEO4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qgdtsDcDvcUMtM0DPaKpM3BayqBDg83R3ebSW9z8/v4Qf154TcvPqROsvj0f1NQhS38lUViPyLL6cm+FJ3GnSSd9Sk82/18dk8GLSVIZD+SWWm7DOUXj7YCoaEpxnV74gUo1RFVPwG0yrsmPG83NCn8uuNaZJyU83NR2ktqTcTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CckjAe+u; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YKN9vZLq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C6231F00ADE
-	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 03:54:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CckjAe+u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3345C1F00A3A;
+	Mon, 27 Jul 2026 05:41:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785124491;
-	bh=TDt6XRhHBziQBa/u0iomOboiTDHrthJqxaelhr7ao5s=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=YKN9vZLqnJJ7q87b9lUHfv/i4EC5YT4QIWKDJZTDDJz8evKyrlumbgRx7KDCP+u8q
-	 BkCsNa6ssFLofdZ0GWRxItd2Z1HiRo1NY9p6+yND2psKpnQHKtmf9dwZBbKlztxHst
-	 GA6m+/I3budEwzeov88L4yob4bpcyqnT1/Yo/qCAQqZE2zXC6qksOtpppeZ43JShRw
-	 /uBu0XI/OadQ9QhBPsT4L3YRehwzspndzDgNOq3G0cy1zcof6IDM4v6hhoIEto7J8s
-	 5oeznMGda5AtsCwvY1QMVEh0gSszSCN4ht7qlZC5xJ14/N9A0d+9tyscDCckVq5VIi
-	 uBlgTKobUdheQ==
-Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-930c0f9c1b1so154497285a.1
-        for <cgroups@vger.kernel.org>; Sun, 26 Jul 2026 20:54:51 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Rqdx+1pd78fyiCbHuB/4JS1k2AcJ/FPu0lY207QVMsczp2Y2WOKuvPdpeUORF4kOMod/nDXt+JA@vger.kernel.org
-X-Gm-Message-State: AOJu0YxrrKyw02+dqxyIGxuCUZcarkYmXfzipVwwDhFGNDyNGcYp4uZ8
-	bS7B3pnd7Qk/pFpmlB0pougcv+ZlxhyyTwG1RHlmxSh4iM1Q+AkGkpziqedxkPiWXe/X3iJzABH
-	67MrwWxyO6H423GH25wzdguTDzhD1lMI=
-X-Received: by 2002:a05:620a:2546:b0:931:403:2442 with SMTP id
- af79cd13be357-932df6576a9mr732957685a.18.1785124490445; Sun, 26 Jul 2026
- 20:54:50 -0700 (PDT)
+	s=k20260515; t=1785130886;
+	bh=KBGxVKBVcPUvP2K8Kq2m/WESxz8RXhfqZ6Mnq5IoEO4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=CckjAe+u8aiFdiwdleeGwEQnEKVUjrWDcX6k3I3hMQkAvD/E6HfuB18CvzHDfuZzz
+	 idU7A9Z7y6qZNj9IWcFBzLD2rMv8kUbRNhhkgkKHcEjx1Bv52UG8RSIVwcTj3IfHPs
+	 zEe2fVv0Hv9fuoKUlUr5M8rQ8zqWioNndRBmaL/RQnqXQV06Q1g7MSka9/ljLUYB82
+	 6qHZIVFNsJwpAaoRlPiNOFv96kUqkNo9w3aP5h0VcQvwxXka0wP6C0RE57Vd+Iw8Oj
+	 Iaqn5NMjKrSxKNEMxBGwTeyOqP1ct0PWxOxwTUrutpaLFo7cFpV/f8g89eogppZ209
+	 nlbm5Wdef5Kdg==
+Message-ID: <89662cae-b3d9-4aa4-a7fa-cf5931781dbc@kernel.org>
+Date: Mon, 27 Jul 2026 14:41:20 +0900
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260714121529.2237261-1-wangzicheng@honor.com>
-In-Reply-To: <20260714121529.2237261-1-wangzicheng@honor.com>
-From: Barry Song <baohua@kernel.org>
-Date: Mon, 27 Jul 2026 11:54:38 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4xt6FhvRgmPyoSKdfHd12V+miOZe6SSkg7GGW6TzJFbdg@mail.gmail.com>
-X-Gm-Features: AUfX_mxeJtLVdMRlseYd3JXsOkBoHM_0YgC_24_IrWAn_07tj9FPGYqXiGkmRio
-Message-ID: <CAGsJ_4xt6FhvRgmPyoSKdfHd12V+miOZe6SSkg7GGW6TzJFbdg@mail.gmail.com>
-Subject: Re: [RFC v2 0/3] mm/mglru: proactive aging via memory.aging
-To: Zicheng Wang <wangzicheng@honor.com>
-Cc: akpm@linux-foundation.org, yuanchu@google.com, tj@kernel.org, 
-	hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net, kasong@tencent.com, 
-	qi.zheng@linux.dev, shakeel.butt@linux.dev, axelrasmussen@google.com, 
-	weixugc@google.com, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
-	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com, 
-	roman.gushchin@linux.dev, muchun.song@linux.dev, cgroups@vger.kernel.org, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	willy@infradead.org, denghaojie@honor.com, baoquan.he@linux.dev, 
-	kaleshsingh@google.com, tjmercier@google.com, tao.wangtao@honor.com, 
-	zhangji1@honor.com, wangzhen5@honor.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 09/13] mm/slab: change struct slabobj_ext to a union
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Hao Li <hao.li@linux.dev>
+Cc: Suren Baghdasaryan <surenb@google.com>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-9-2fa7c6f60dbe@kernel.org>
+ <amGEY5w-cBm4_uhx@fedora> <9b2dadb7-8e3d-4b9b-a870-969be9a7a432@kernel.org>
+ <amHkbJsvOjcfUR3D@fedora> <e3f283e3-27a4-4e3e-bc4c-39fafbcfe1ee@kernel.org>
+Content-Language: en-US
+From: Harry Yoo <harry@kernel.org>
+In-Reply-To: <e3f283e3-27a4-4e3e-bc4c-39fafbcfe1ee@kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------Mgwd0Ze9mOCZYycSnvRZAlba"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------Mgwd0Ze9mOCZYycSnvRZAlba
+Content-Type: multipart/mixed; boundary="------------xEDZ3aIuuqtyEFJe6gHUB0km";
+ protected-headers="v1"
+From: Harry Yoo <harry@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Hao Li <hao.li@linux.dev>
+Cc: Suren Baghdasaryan <surenb@google.com>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
+ <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Message-ID: <89662cae-b3d9-4aa4-a7fa-cf5931781dbc@kernel.org>
+Subject: Re: [PATCH v2 09/13] mm/slab: change struct slabobj_ext to a union
+References: <20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org>
+ <20260720-b4-objext_split-v2-9-2fa7c6f60dbe@kernel.org>
+ <amGEY5w-cBm4_uhx@fedora> <9b2dadb7-8e3d-4b9b-a870-969be9a7a432@kernel.org>
+ <amHkbJsvOjcfUR3D@fedora> <e3f283e3-27a4-4e3e-bc4c-39fafbcfe1ee@kernel.org>
+In-Reply-To: <e3f283e3-27a4-4e3e-bc4c-39fafbcfe1ee@kernel.org>
+
+--------------xEDZ3aIuuqtyEFJe6gHUB0km
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 14, 2026 at 8:15=E2=80=AFPM Zicheng Wang <wangzicheng@honor.com=
-> wrote:
->
-> MGLRU inverts the reclaim order when anonymous memory is faulted in
-> bulk: anonymous pages sit in the young generations while file pages
-> sit in the oldest two, so reclaim evicts hot file pages before cold
-> anonymous pages.  swappiness cannot correct it.  This series adds a
-> per-cgroup proactive-aging operation, memory.aging, with the
-> observability to drive it as a closed loop, so userspace can rebalance
-> a cgroup's generations before reclaim runs.
->
-> The problem
-> -----------
->
-> MGLRU places pages by access path, not hotness.  On the current tree
-> the entry rules in lru_gen_folio_seq() give:
->
->   - faulted-in pages (anonymous pages; the fault path sets the active
->     mark) land at the 2nd youngest generation (max_seq - 1);
->   - file pages from read()/fadvise() land in the oldest two
->     generations: non-workingset at min_seq, workingset at min_seq + 1.
->
-> Pictorially, for a full four-generation window::
->
->        youngest                          oldest
->        max_seq   max_seq-1   min_seq+1   min_seq
->        -------------------------------------------
->  anon    .          X           .           .     (faulted in)
->  file    .          .           X           X     (read/fadvise)
->                                             ^
->                               reclaim scans from here -> evicts file firs=
-t
->
-> Reclaim scans from min_seq, so file pages are evicted before the
-> anonymous pages two generations younger, a hot/cold inversion.
->
-> swappiness does not fix it: it only selects which type to scan, not
-> the ordering within a type, so reclaim can still evict hot pages.
-> swappiness=3D201 (SWAPPINESS_ANON_ONLY) just flips the inversion to the
-> other side: no value recovers a correct hot/cold order, because the
-> order comes from the access path, not access recency [1].  This is not
-> Android-specific; the same file over-reclaim is shown on servers and
-> worked around there by forcing an age iteration before reclaim.
->
-> Why userspace-driven
-> --------------------
->
-> The benefit is workload-dependent: file-cache-bound servers gain from
-> aging, anon-bound servers do not, so no kernel default is correct for
-> all.  The kernel also cannot know when to age: on Android the right
-> moment is the foreground-to-background transition, when the app's pages
-> are cold but their PTE accessed bits are still accurate from foreground
-> execution, a framework concept.  The kernel therefore provides the
-> mechanism; userspace runs the loop.
->
 
-Hi Zicheng,
 
-The problem is that when an app transitions from the foreground to
-the background, it becomes inactive. As a result, you clear the PTE
-young bits accumulated while it was in the foreground.
+On 7/25/26 12:42 AM, Vlastimil Babka (SUSE) wrote:
+> On 7/23/26 11:56, Hao Li wrote:
+>> On Thu, Jul 23, 2026 at 03:27:51PM +0900, Harry Yoo wrote:
+>>>
+>>> and drop OBJEXT_FLAG_UNUSED.
+>>
+>> Yes, this idea is insightful and I think it may need a standalone patc=
+h without
+>> blocking current patchset.
+>>
+>>>
+>>> ...not sure how much we care about this on 32bit though.
+>>
+>> Yeah, 32bit is a rare arch today :)
+>=20
+> Agreed with you both. Let's deal with it later.
 
-We basically need at least two rounds of scanning to determine
-whether a folio is hot or cold. With only one round, many folios
-that are actually cold will still appear hot because their PTE
-young bits remain set. Nobody clears them while the app is
-running in the foreground.
+Sounds reasonable.
 
-So I'm really curious whether aging should be performed while the
-app is running in the foreground, rather than after it has switched
-to the background. If this significantly improves the distinction
-between hot and cold folios, allowing reclamation after the app
-moves to the background to reclaim genuinely cold folios, then it
-would provide a much stronger argument for an aging interface that
-only sorts folios in the LRU without reclaiming them.
-I have a feeling we may really need an aging interface that sorts
-folios without reclaiming them. We can then use the sorted LRU to
-reclaim cold folios whenever reclamation is needed.
-But your use cases don't convince me :-)
+> Also AFAICS the memory was already wasted on 32bit prior this series wh=
+en
+> e.g. CONFIG_MEM_ALLOC_PROFILING was disabled, so there was just 4-byte =
+objcg
+> pointer in 8-byte aligned slabobj_ext, right?
 
-If the goal is to work around MGLRU's swappiness behavior, we should
-fix the swappiness implementation itself rather than introduce an
-aging interface as a workaround. If the concern is swappiness=3D201,
-I believe swappiness=3D200 will be a good choice once my swappiness
-fixes are ready:
+Right.
 
-https://lore.kernel.org/linux-mm/20260726122123.7614-1-baohua@kernel.org/
+--=20
+Cheers,
+Harry / Hyeonggon
 
-Best Regards
-Barry
+
+--------------xEDZ3aIuuqtyEFJe6gHUB0km--
+
+--------------Mgwd0Ze9mOCZYycSnvRZAlba
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQQQ1ub6gR5ogjaKRmOGXBN6rc5S1gUCambvgAAKCRCGXBN6rc5S
+1i+uAP4zMR6KAfExVASA33SIec4hOe1qPSAA+y6SvbztDbmuwwD+O9oxG/LJahjB
+u7CQFZJxg9HPyZTA9A2Q25sRF9mC3QA=
+=RYZd
+-----END PGP SIGNATURE-----
+
+--------------Mgwd0Ze9mOCZYycSnvRZAlba--
