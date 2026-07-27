@@ -1,32 +1,32 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3619042253D
-	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 16:26:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 071FF379ECD
+	for <cgroups@vger.kernel.org>; Mon, 27 Jul 2026 16:26:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785169573; cv=none; b=IafAoWOH1VhSTGC0PySCIK+ZZRseCon2YNFI9fI3bmdv0SmBf8DPdqQjOB0S9WRABWOalVX2rlVXIeckOA41Xu9SWpUmaWM/aQvemGC3Hvz6TUaW5AFd/PrJTxHHRwfID2RATcdk96Hf2cgTGYSMvWxLxbHsA/+Rw2WtZpMuXsw=
+	t=1785169581; cv=none; b=RiTXMUbyzcxyxyQb0wobT91wgywtFq+wmBwOHiqrsa5pZaFYP3UxwI/wmMW0FtyS6jmem6Kp9NN2Vui7j6l3iNiq37ZGcCuFdrosZX3EYwRyM1OoD3YpPGZw9QCPpMONAsDgVHy7hO9zOSXIUq3aHBIqzYR2mJlmmw6O6UqePWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785169573; c=relaxed/simple;
-	bh=EfLEpi28eRKsMbRkEKHZ+n2fAetUONCy1oUiKnqYgPA=;
+	s=arc-20240116; t=1785169581; c=relaxed/simple;
+	bh=5HAWywEc/D08fqoDgy/G9oScBrgYF4l60piI4KTJwpo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Rkys2smLczKzJyVuhzSFBbBUvGfnaG+ugy1JvvzSQPVeIcT/YM/oDK389eAAyiRSUKUi7PjOYLVfFqKiTI3yRgXAEkZV+9TNgsW822B6mgueMlMWZK9YfKJ2nRSqq4k11B5kXKGY053SN+dcNBqdvzRjW8kXSYRI5bfDM3Nnp4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ixQWk19v; arc=none smtp.client-ip=95.215.58.179
+	 MIME-Version; b=nIkLIpUeQLUGRSqesyzliPHyrkXxZptkd5Ph2lFrRq+uBOud5iw7clGCTg1vBNz8ouglfu8I6YS3bi+048oj/yKkBTZbPg26B4KLPOI75mSOAcachsf27Viha8MJvBV52ui10ZnaZDXjdEpA8qFxwbK/r/Bf8goG4/w1Z0rHTo0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kdejEm6p; arc=none smtp.client-ip=95.215.58.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ixQWk19v"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kdejEm6p"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785169569;
+	t=1785169577;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=GwLRE88/T88bbZWERmNBLA5mHYgHg0FYmvx8DEB65+s=;
-	b=ixQWk19vJRhPbhkajL5ZNMHVNzQTQjQ3BPzO6umHXfkwhwGDg2qk1X374bVkOpZcSS7cHX
-	frk6ANZ4tBsncXMwlK3Ar3BvzpYsLsVIPXPYqXIbGmJONsgGi6aQ57I+0LQ19zV0QmzyBM
-	gyknjNHi1n+HeCDaHl+YgCGSF01UHOY=
+	bh=hE5H8fckKPN/KybXJL2X3Y1zfiFpP0Zt/q6Odg6IVKY=;
+	b=kdejEm6pjVysh0JTY+T0jinI+6498rvPiWK2fDo94EXZ4LzXSYDWHVbBwQ1E0KnEDxhG87
+	rCOG6u+nAMj9VVffC5i37eJsvVYsYHsRgyRt23gppulNkrzHtisoY9CoP9bXZr4v3D2v7w
+	l72FsKiuD+UtEvkhiesox44uB5lRW6A=
 From: Usama Arif <usama.arif@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	david@kernel.org,
@@ -55,9 +55,9 @@ To: Andrew Morton <akpm@linux-foundation.org>,
 	rientjes@google.com,
 	kernel-team@meta.com
 Cc: Usama Arif <usama.arif@linux.dev>
-Subject: [PATCH v5 1/3] mm/vmstat, mm/memcontrol: add _monotonic vmstat readers
-Date: Mon, 27 Jul 2026 09:23:23 -0700
-Message-ID: <20260727162550.2032-2-usama.arif@linux.dev>
+Subject: [PATCH v5 2/3] mm/vmscan: add pgrotate_anon and pgrotate_file vmstat counters
+Date: Mon, 27 Jul 2026 09:23:24 -0700
+Message-ID: <20260727162550.2032-3-usama.arif@linux.dev>
 In-Reply-To: <20260727162550.2032-1-usama.arif@linux.dev>
 References: <20260727162550.2032-1-usama.arif@linux.dev>
 Precedence: bulk
@@ -69,188 +69,138 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-lruvec_page_state(), node_page_state(), and global_node_page_state()
-all clamp negative reads to zero on CONFIG_SMP so that a transient
-per-CPU delta skew presents as zero pages rather than
-as a garbage unsigned value. This is the right behaviour for
-non-monotonic page-count readers.
+Reclaim can spend substantial work on an LRU type without immediately
+reclaiming or demoting a corresponding amount of memory. Record this
+work in PGROTATE_ANON and PGROTATE_FILE.
 
-It is however incorrect for callers that snapshot a monotonically-
-incremented event counter and compute a delta from two samples.
-Once the underlying signed long wraps past LONG_MAX, the clamped read
-drops to zero while the previously-recorded snapshot still holds the
-pre-wrap value; the unsigned subtraction then underflows into a
-~2^31 spurious delta for 32-bit architecture and corrupts the
-caller's accumulator.
+For classic LRU reclaim:
 
-Add non-clamping siblings that return the underlying state value
-cast to unsigned long:
+  - Inactive-list reclaim adds nr_scanned - nr_reclaimed to the
+    corresponding anon/file counter when isolation succeeds.
+  - Active-list reclaim adds referenced executable file folios that
+    are retained on the active list to PGROTATE_FILE. Active anon
+    reclaim does not contribute this component.
 
-  global_node_page_state_monotonic()
-  node_page_state_monotonic()
-  lruvec_page_state_monotonic()
+For MGLRU, add the number of initially isolated pages that remain
+unreclaimed after both the initial and retry passes to the counter for
+the selected anon/file type.
 
-With both samples read via the _monotonic variant, unsigned modular
-subtraction stays correct across a signed-long wraparound as long
-as the true growth between two samples fits in unsigned long
-(< 2^32 on 32-bit, < 2^64 on 64-bit); the 32-bit bound is the
-practically-reachable one that motivates this helper.
+These counters are distinct from the existing pgrotated vm event.
+pgrotated records an actual move to the inactive-list tail, primarily
+after reclaim-marked writeback completes or failed invalidation leaves
+a folio for accelerated reclaim. PGROTATE_ANON and PGROTATE_FILE
+measure reclaim cost and do not imply that a folio moved to an LRU tail.
 
-The variants are only safe for monotonically-incremented counters.
-Non-monotonic page-count readers must keep using the existing
-clamped helpers so transient negative reads still present as zero.
+A subsequent patch will consume these counters for anon/file scan
+balancing.
 
-This is a prerequisite for a later patch which
-replaces the producer-side anon_cost/file_cost accumulators with a
-read-side accumulator in prepare_scan_control() that samples
-monotonic per-LRU vmstat counters (PGROTATE_*, NR_VMSCAN_WRITE,
-WORKINGSET_RESTORE_*) via lruvec_page_state_monotonic() and folds
-their unsigned modular deltas into lruvec->cost[].count.
-
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 Signed-off-by: Usama Arif <usama.arif@linux.dev>
 ---
- include/linux/memcontrol.h |  8 ++++++++
- include/linux/vmstat.h     | 16 ++++++++++++++++
- mm/memcontrol.c            | 36 ++++++++++++++++++++++++++++++++++++
- mm/vmstat.c                | 11 +++++++++++
- 4 files changed, 71 insertions(+)
+ include/linux/mmzone.h |  2 ++
+ mm/memcontrol.c        |  2 ++
+ mm/vmscan.c            | 14 +++++++++++++-
+ mm/vmstat.c            |  2 ++
+ 4 files changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index e1f46a0016fc..b40bc4f6fe4a 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -931,6 +931,8 @@ unsigned long memcg_page_state_output(struct mem_cgroup *memcg, int item);
- bool memcg_stat_item_valid(int idx);
- bool memcg_vm_event_item_valid(enum vm_event_item idx);
- unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx);
-+unsigned long lruvec_page_state_monotonic(struct lruvec *lruvec,
-+					  enum node_stat_item idx);
- unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 				      enum node_stat_item idx);
- 
-@@ -1378,6 +1380,12 @@ static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
- 	return node_page_state(lruvec_pgdat(lruvec), idx);
- }
- 
-+static inline unsigned long lruvec_page_state_monotonic(struct lruvec *lruvec,
-+							enum node_stat_item idx)
-+{
-+	return node_page_state_monotonic(lruvec_pgdat(lruvec), idx);
-+}
-+
- static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 						    enum node_stat_item idx)
- {
-diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
-index 3c9c266cf782..fb8c76289e02 100644
---- a/include/linux/vmstat.h
-+++ b/include/linux/vmstat.h
-@@ -194,6 +194,19 @@ unsigned long global_node_page_state_pages(enum node_stat_item item)
- 	return x;
- }
- 
-+/*
-+ * Non-clamping variant of global_node_page_state() intended for callers that
-+ * snapshot a monotonically-incremented counter and subtract two samples.
-+ * Returns the raw wrapping value so that unsigned modular subtraction stays
-+ * correct across a signed-long overflow (a real hazard on 32-bit) that the
-+ * clamp in global_node_page_state() would otherwise turn into a huge spurious
-+ * delta. Do NOT use for non-monotonic page-count reads.
-+ */
-+static inline unsigned long global_node_page_state_monotonic(enum node_stat_item item)
-+{
-+	return (unsigned long)atomic_long_read(&vm_node_stat[item]);
-+}
-+
- static inline unsigned long global_node_page_state(enum node_stat_item item)
- {
- 	VM_WARN_ON_ONCE(vmstat_item_in_bytes(item));
-@@ -259,11 +272,14 @@ extern unsigned long node_page_state(struct pglist_data *pgdat,
- 						enum node_stat_item item);
- extern unsigned long node_page_state_pages(struct pglist_data *pgdat,
- 					   enum node_stat_item item);
-+extern unsigned long node_page_state_monotonic(struct pglist_data *pgdat,
-+					       enum node_stat_item item);
- extern void fold_vm_numa_events(void);
- #else
- #define sum_zone_node_page_state(node, item) global_zone_page_state(item)
- #define node_page_state(node, item) global_node_page_state(item)
- #define node_page_state_pages(node, item) global_node_page_state_pages(item)
-+#define node_page_state_monotonic(node, item) global_node_page_state_monotonic(item)
- static inline void fold_vm_numa_events(void)
- {
- }
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index ca2712187147..aab06fb6c6d5 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -323,6 +323,8 @@ enum node_stat_item {
+ 	PGSCAN_PROACTIVE,
+ 	PGSCAN_ANON,
+ 	PGSCAN_FILE,
++	PGROTATE_ANON,
++	PGROTATE_FILE,
+ 	PGREFILL,
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	NR_HUGETLB,
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 56cd4af08232..de84c399cea2 100644
+index de84c399cea2..23adb698dadd 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -502,6 +502,42 @@ unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
- 	return x;
+@@ -419,6 +419,8 @@ static const unsigned int memcg_node_stat_items[] = {
+ 	PGSCAN_PROACTIVE,
+ 	PGSCAN_ANON,
+ 	PGSCAN_FILE,
++	PGROTATE_ANON,
++	PGROTATE_FILE,
+ 	PGREFILL,
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	NR_HUGETLB,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index e8a90911bf88..053f41584989 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2043,6 +2043,9 @@ static unsigned long shrink_inactive_list(unsigned long nr_to_scan,
+ 	item = PGSTEAL_KSWAPD + reclaimer_offset(sc);
+ 	mod_lruvec_state(lruvec, item, nr_reclaimed);
+ 	mod_lruvec_state(lruvec, PGSTEAL_ANON + file, nr_reclaimed);
++	if (nr_scanned > nr_reclaimed)
++		mod_lruvec_state(lruvec, PGROTATE_ANON + file,
++				 nr_scanned - nr_reclaimed);
+ 
+ 	lruvec_lock_irq(lruvec);
+ 	lru_note_cost_unlock_irq(lruvec, file, stat.nr_pageout,
+@@ -2152,6 +2155,8 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 	count_vm_events(PGDEACTIVATE, nr_deactivate);
+ 	count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_deactivate);
+ 	mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
++	if (nr_rotated)
++		mod_lruvec_state(lruvec, PGROTATE_ANON + file, nr_rotated);
+ 
+ 	lruvec_lock_irq(lruvec);
+ 	lru_note_cost_unlock_irq(lruvec, file, 0, nr_rotated);
+@@ -4815,7 +4820,8 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	struct reclaim_stat stat;
+ 	struct lru_gen_mm_walk *walk;
+ 	int scanned, reclaimed;
+-	int isolated = 0, type, type_scanned;
++	int isolated = 0, nr_isolated = 0, type, type_scanned;
++	unsigned long total_reclaimed = 0;
+ 	bool skip_retry = false;
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+@@ -4827,6 +4833,7 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 
+ 	scanned = isolate_folios(nr_to_scan, lruvec, sc, swappiness,
+ 				 &list, &isolated, &type, &type_scanned);
++	nr_isolated = isolated;
+ 
+ 	/* Scanning may have emptied the oldest gen, flush it */
+ 	if (scanned)
+@@ -4839,6 +4846,7 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ retry:
+ 	reclaimed = shrink_folio_list(&list, pgdat, sc, &stat, false, memcg);
+ 	sc->nr_reclaimed += reclaimed;
++	total_reclaimed += reclaimed;
+ 	/* Retry pass is only meant for clean folios without new isolation */
+ 	if (isolated)
+ 		handle_reclaim_writeback(isolated, pgdat, sc, &stat);
+@@ -4892,6 +4900,10 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 		goto retry;
+ 	}
+ 
++	if (nr_isolated > total_reclaimed)
++		mod_lruvec_state(lruvec, PGROTATE_ANON + type,
++				 nr_isolated - total_reclaimed);
++
+ 	return scanned;
  }
  
-+/**
-+ * lruvec_page_state_monotonic - non-clamping lruvec stat read for delta sampling
-+ * @lruvec: the LRU vector to read from
-+ * @idx: the node_stat_item to read
-+ *
-+ * Returns the raw state[idx] value cast to unsigned long, skipping the
-+ * clamp-negative-to-zero step in lruvec_page_state(). Intended for callers
-+ * that snapshot a monotonically-incremented counter and subtract two
-+ * samples: unsigned modular arithmetic then yields the correct delta across
-+ * a signed-long wraparound (a real hazard on 32-bit) that the clamp would
-+ * otherwise turn into a huge spurious delta.
-+ *
-+ * Do NOT use for non-monotonic page-count reads where a transient negative
-+ * reading from per-CPU delta skew must present as zero.
-+ *
-+ * XXX: This helper (and its node/global peers) exists because some
-+ * monotonically-incremented event counters are stored in
-+ * enum node_stat_item.
-+ */
-+unsigned long lruvec_page_state_monotonic(struct lruvec *lruvec,
-+					  enum node_stat_item idx)
-+{
-+	struct mem_cgroup_per_node *pn;
-+	int i;
-+
-+	if (mem_cgroup_disabled())
-+		return node_page_state_monotonic(lruvec_pgdat(lruvec), idx);
-+
-+	i = memcg_stats_index(idx);
-+	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
-+		return 0;
-+
-+	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-+	return (unsigned long)READ_ONCE(pn->lruvec_stats->state[i]);
-+}
-+
- unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 				      enum node_stat_item idx)
- {
 diff --git a/mm/vmstat.c b/mm/vmstat.c
-index f534972f517d..c4364f0eb08a 100644
+index c4364f0eb08a..87d4a6781367 100644
 --- a/mm/vmstat.c
 +++ b/mm/vmstat.c
-@@ -1024,6 +1024,17 @@ unsigned long node_page_state(struct pglist_data *pgdat,
- 
- 	return node_page_state_pages(pgdat, item);
- }
-+
-+/*
-+ * Non-clamping variant of node_page_state() intended for callers that
-+ * snapshot a monotonically-incremented counter and subtract two samples.
-+ * See global_node_page_state_monotonic() for the rationale.
-+ */
-+unsigned long node_page_state_monotonic(struct pglist_data *pgdat,
-+					enum node_stat_item item)
-+{
-+	return (unsigned long)atomic_long_read(&pgdat->vm_stat[item]);
-+}
- #endif
- 
- /*
+@@ -1300,6 +1300,8 @@ const char * const vmstat_text[] = {
+ 	[I(PGSCAN_PROACTIVE)]			= "pgscan_proactive",
+ 	[I(PGSCAN_ANON)]			= "pgscan_anon",
+ 	[I(PGSCAN_FILE)]			= "pgscan_file",
++	[I(PGROTATE_ANON)]			= "pgrotate_anon",
++	[I(PGROTATE_FILE)]			= "pgrotate_file",
+ 	[I(PGREFILL)]				= "pgrefill",
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	[I(NR_HUGETLB)]				= "nr_hugetlb",
 -- 
 2.53.0-Meta
 
