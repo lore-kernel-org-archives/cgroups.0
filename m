@@ -1,191 +1,401 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647423BB665
-	for <cgroups@vger.kernel.org>; Tue, 28 Jul 2026 07:27:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8488E257854
+	for <cgroups@vger.kernel.org>; Tue, 28 Jul 2026 08:38:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785223664; cv=none; b=FPtDBeZKDj7YvpkywUJHwukC7dWRnxlUfDfGYRYoxVS4Wegs02bJWhDCfsst2SJyC25v9mjE3gP0zym8WI/nqLnpapmUaq6eJgtQ5vPPY3vstdBGT3Qdy6c2/2+vNhO6PdKjUvtVtHZani0LrHI9oTe3wCXQp9cUOKx7srhdS8o=
+	t=1785227930; cv=none; b=aDCJrysb6oM6c799eO2yelCRTF71xEUgiLknoPiK9QmCw6PHmy8KzMHINqyCF0RB65tIqy2rXxJiHDy0wuZt1VLJ7+5dJFbX6XA3eblYKGIiKyYMYBqDJeFVbykvGP+IbOwXxz4YuTWeekR9zjnW3WQHAnaitJD9XQE0lv6C2UI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785223664; c=relaxed/simple;
-	bh=+VIdQB8Y6n1nzeewNmjmBI5PJhNouHzScrlj27XZY/A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KrqUsm25593mDae0Wky1jBAFWrG7DJtQ5n5bqMFDCQSEfuYVU3P8lqQVT981SZY5LKCjMwwFx3u0xd7wU2Q5pQvWXqONDsrbawyaG7L4j8zGH6y7tesQEhpxnKV9EDkGusu31cCuqfRgjWr7GnR0zBdPjCQaaORZpO1RRCQrDgE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=LTRfefHb; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1785227930; c=relaxed/simple;
+	bh=bUfnHhGxXNI9TF0TjXenconsZRV+LOrRxzgYTnurGik=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QpBXD8NL9cqEWtFkgprw6Vjmw3Em+Xw0h0HTCeaj4eUrEbFu7xp1sxZ1n2fND4m2+zq6PWspCTlctRYOe49L5zrmsaplhU8wf2o310LOWBHSjh75TGn/gUgmGQslGQVd7eY7fIQ47fQU4NVI/ZyF0VOd3pARg7o2UIPNNiyDmoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=QxnmviKD; arc=none smtp.client-ip=91.218.175.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="LTRfefHb"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4956869750eso26302615e9.2
-        for <cgroups@vger.kernel.org>; Tue, 28 Jul 2026 00:27:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1785223662; x=1785828462; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jftrX6lDinngHjdgigXRLobwfxyYWK7HW27rdPPfohU=;
-        b=LTRfefHbRgLiWX2B9em5mJXIh9FWpuqJlQpjiFIWY2LvKc7GUz3kdpXGuXjiwDaGXy
-         3E1UEaRnkA7EdaWH9p6I57jDZx+Kjl3qAZztcW/mssLVsXr9tqSjy6eYE7rClAZ/xREq
-         gA7CZiqupAN1/Y7edl11X7S6rnHsyuJ/3GwlXxa0+TC2OMA+zNs1YYOlVk8QPCbR7Dpq
-         LRAVBquL2zeYkEeG5+/3DLnf3MMj3jUoTN6xJDdLmlWfP4qiGHygvJVKPn8dzfsELR37
-         VUH64f69aO7xX/AjTzvY3QMv+dKi7PcX1QQ5yycXwx4RAn/7XSdnAgqLCkxlJL94z70I
-         qK0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785223662; x=1785828462;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jftrX6lDinngHjdgigXRLobwfxyYWK7HW27rdPPfohU=;
-        b=UJM+nrYuRk7msqhxrKM2zbk6Vn3xvQzhVPOiMHDcdhmHiw3mZ9xKVr3QVb3I5Mt0Dr
-         5ywncxoDYp/p/yy3B1oq67MWWRXqAsPytkTcYLiR7CqiQ0B7E8nf8EMZ+BVl6aU4foM7
-         F7LZAB2lvCSEWugvalCndyQOrVZKuj4/DJ2K2kRKj2PPpEuo4eHWPowJ8fI5H/lSB4eT
-         k90ujtI09rCzTxHAK4XzjvinbbD+mo87dj6zmZASGdR5NYb6KNXIeP2rvI6dUJbY2U3P
-         CurSlygviYIueAzfILAr3R/DS/z0zl7VnmEUNeSdF/GurfrWxskG3yJQmkSoIlqd8qWR
-         F5fw==
-X-Forwarded-Encrypted: i=1; AHgh+Rp8eDhZLVYJMBru4iUZgXAfawPYricwW0DkYtRn3qr+2UAJIf8B8nRo+Cr4Tqn3w4zvKmPDgHAc@vger.kernel.org
-X-Gm-Message-State: AOJu0YyXJf+hDOGMd/Y/x7M2v1+WLSY/i69A0xNHoQcuOAklN8K30Ece
-	ArWG1MA2TU75iaKOM1IVC1So/A4egfvkZMCv8X/FjE8r1qre+6Q2/Ao9Bg6GpQGlPXY=
-X-Gm-Gg: AR+sD10AcSzEXIv5QtNf+7j9QXSzRP6kTiXVyvAps5s//iOq/han/AD2oGyLvo9wWRq
-	V+zFV1knno/xjTFrMi6OUrfUzBGJEuitvw6wP8KLe3/X7bLMqd34eLYCG4cMXqjIwOFeG/eWQ4s
-	Pa6YlErRVkSZqm5UNrZu/X/Nz1nNdq9dLffIr+mUxO6DcLsGGhLY5P7Rmz0AIXai87jfwd8VViz
-	iuQM1FpWVoU6l78WDmWcZFBk7bO1YZxn9htkErnq1flSqVMmcBKQQPkOHKZhnQYnunUQEv5njRH
-	PhuhFYfBoRMiDVub4LkpJ7wakSZY+ikRSq+Hwfy4QzkRbAC5b57t/Ee+d9UGxd1oIiFOQtanDZc
-	n/eOYhsRASShLLFkozgtQLMBsEiEs+oyNNq79dIcgfeqWuHnaSG5tF7jlNUUV9wtIyDx0H4cpu8
-	EMcmWvBpejbg==
-X-Received: by 2002:a05:600c:1c27:b0:493:e974:41ac with SMTP id 5b1f17b1804b1-496c643c6f9mr11555145e9.16.1785223661467;
-        Tue, 28 Jul 2026 00:27:41 -0700 (PDT)
-Received: from localhost (109-81-83-7.rct.o2.cz. [109.81.83.7])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496c4632263sm58920795e9.15.2026.07.28.00.27.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 00:27:41 -0700 (PDT)
-Date: Tue, 28 Jul 2026 09:27:39 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	David Rientjes <rientjes@google.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="QxnmviKD"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785227926;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ZH4d5/BxOtrgAYDND11fz5q8aNdMt9i1KsWxLQi68Fo=;
+	b=QxnmviKDnk3nJpMvOLIUuZUSr0eplXoNARdBlgphihgIfxi85ajML0FlufiAU07SL9B2an
+	psaNGiSICUF/mPdYNBUHFxMcQfjxFoyII8uQSnXAtwNT1YxX8lZw7cfwLv2Zo6TYeAW5xo
+	57aKn+F8CVzpPd2inDip+HwxD53iObA=
+From: Tao Cui <cui.tao@linux.dev>
+To: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	Suren Baghdasaryan <surenb@google.com>,
-	Usama Arif <usama.arif@linux.dev>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Darren Hart <dvhart@infradead.org>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	=?iso-8859-1?Q?Andr=E9?= Almeida <andrealmeid@igalia.com>,
-	"Liam R . Howlett" <liam@infradead.org>,
-	Yosry Ahmed <yosry@kernel.org>, Rik van Riel <riel@surriel.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC] Robust futex causing memcg OOM storm on exit
-Message-ID: <amhZ645Nhj856JfO@tiehlicka>
-References: <20260723001908.4046643-1-shakeel.butt@linux.dev>
- <amds50dIVOiQNz0k@tiehlicka>
- <amd6N4DVzZkl90cs@linux.dev>
- <ame7Q-0eVRrtt34j@linux.dev>
+	Shuah Khan <shuah@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ziyang Men <ziyang.meme@gmail.com>,
+	Tao Cui <cuitao@kylinos.cn>,
+	cui.tao@linux.dev
+Subject: [PATCH v2] selftests/cgroup: add PSI pressure trigger and validation tests
+Date: Tue, 28 Jul 2026 16:37:42 +0800
+Message-ID: <20260728083742.2359320-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ame7Q-0eVRrtt34j@linux.dev>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Mon 27-07-26 13:48:58, Shakeel Butt wrote:
-> On Mon, Jul 27, 2026 at 08:38:37AM -0700, Shakeel Butt wrote:
-> > On Mon, Jul 27, 2026 at 04:36:23PM +0200, Michal Hocko wrote:
-> > > On Wed 22-07-26 17:19:07, Shakeel Butt wrote:
-> 
-> [...]
-> 
-> > > 
-> > > TBH I am not entirely happy about this approach. It effectivelly reverts
-> > > a75ffa26122b ("memcg, oom: do not bypass oom killer for dying tasks").
-> > > It just makes it lockless. Assumption that a dying task will do so
-> > > quickly and with bounded resources has turned wrong on several
-> > > occasions.
-> > 
-> > That's why I kept it as RFC :)
-> > 
-> > > 
-> > > On the other hand I do undestand the contention issues and I can imagine
-> > > that the existing solution doesn't really work well for huge thread
-> > > groups that all end up lining up on the oom_lock just to learn there is
-> > > nothing really killable anymore because they are the oom victim...
-> > > 
-> > > Would it be just safer to bail out only for oom victim threads. This
-> > > would narrow down potential runaways for oom victims which should be
-> > > more limited than any killed/exiting task. It would also give the oom
-> > > killer/reaper chance to work. WDYT?
-> > 
-> > I will give the following patch a try with the reproducer I have. I am still
-> > improving the reproducer as I am still not able to recreate multi hour slowdown
-> > yet. I will report back once I have some results. 
-> > 
-> 
-> I have some results with the reproducer I (AI) wrote.
-> 
-> Setup: 20k threads, each with its robust_list head on its own page in a
-> large anon region pushed into a zswap pool (writeback off, so it's
-> unreclaimable and pins the memcg at the limit). On the OOM-group-kill
-> every thread faults that page in futex_cleanup() -> do_swap_page() ->
-> swapin charge -> memcg OOM. A separate thread holds mmap_lock for write
-> in a loop so the oom_reaper can't reap the pool -- matching the host,
-> where the reaper was blocked and the memcg never fell below the limit.
-> 
-> I tested on next-20260726 as baseline and then tested your suggestion over it.
-> For baseline ~48k no-victim OOM invocations serialized on oom_lock; ~40s to
-> drain the 20k threads in a VM (hours on the host, where each invocation
-> was a dump_header over netconsole). With the patch the dying tasks stop
-> entering out_of_memory and the storm is gone.
-> 
-> With the following suggestion, the threads of dying tasks stop entering
-> out_of_memory but the exit time doubled as each thread has to decompress the
-> page from zswap.
-> 
-> 	if (tsk_is_oom_victim(current))
-> 		goto force;
-> 
-> I also tested by replacing goto force with goto nomem and the exit time halved
-> i.e. ~20 seconds. Looking deeper it seems like each thread is still going
-> through the reclaim loops.
-> 
-> Just for testing purpose I moved this check along with goto nomem just before
-> the reclaim fuction i.e. try_to_free_mem_cgroup_pages() and the exit time falls
-> below 1 second. I think what we need is to detect early that the cgroup is
-> unreclaimable and the threads of exiting/reaped process should just return with
-> enomem.
+From: Tao Cui <cuitao@kylinos.cn>
 
-Do you mean, something like this?
---- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6dc4888a90f3..66f1eebf8c22 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2648,6 +2648,18 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	if (!gfpflags_allow_blocking(gfp_mask))
- 		goto nomem;
+The cgroup selftests have no PSI coverage. Add test_psi.c: trigger
+smoke tests (one per fd, IRQ full-only), cgroup.pressure toggle, and a
+CPU-pressure trigger test using over-subscription. Skips when PSI is
+disabled or a resource is absent.
+
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+---
+Changes since v1 (Michal Koutny, sashiko review):
+- Trim errno checks to smoke level; loosen toggle range checks.
+- Switch trigger test from memory to CPU pressure (deterministic, no SKIP).
+- churn_memory() removed -- sysconf/shared-helper point is moot.
+- Runner stays out of the cgroup; hogs reaped via cg_killall().
+- Add PSI/IRQ skip-guards, zero-init buffers, .gitignore entry.
+---
+ tools/testing/selftests/cgroup/.gitignore |   1 +
+ tools/testing/selftests/cgroup/Makefile   |   2 +
+ tools/testing/selftests/cgroup/config     |   1 +
+ tools/testing/selftests/cgroup/test_psi.c | 280 ++++++++++++++++++++++
+ 4 files changed, 284 insertions(+)
+ create mode 100644 tools/testing/selftests/cgroup/test_psi.c
+
+diff --git a/tools/testing/selftests/cgroup/.gitignore b/tools/testing/selftests/cgroup/.gitignore
+index 952e4448bf07..ce2b907c57ea 100644
+--- a/tools/testing/selftests/cgroup/.gitignore
++++ b/tools/testing/selftests/cgroup/.gitignore
+@@ -8,5 +8,6 @@ test_kill
+ test_kmem
+ test_memcontrol
+ test_pids
++test_psi
+ test_zswap
+ wait_inotify
+diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
+index e01584c2189a..a8c69e37332a 100644
+--- a/tools/testing/selftests/cgroup/Makefile
++++ b/tools/testing/selftests/cgroup/Makefile
+@@ -16,6 +16,7 @@ TEST_GEN_PROGS += test_kill
+ TEST_GEN_PROGS += test_kmem
+ TEST_GEN_PROGS += test_memcontrol
+ TEST_GEN_PROGS += test_pids
++TEST_GEN_PROGS += test_psi
+ TEST_GEN_PROGS += test_zswap
  
-+	/*
-+	 * OOM victim still needs to charge memory to exit. OOM reaper should
-+	 * help but it might fail on mmap_lock contention. If the victim is a
-+	 * large thread group then all exiting threads might compete on oom_lock
-+	 * just to learn that there is nothing really killable anymore. Bail
-+	 * out early and fail the charge to expedite their exit. They are
-+	 * considered fully reclaimed by the oom reaper and they shouldn't contribute
-+	 * further charges.
-+	 */
-+	if (tsk_is_oom_victim(current) && mm_flags_test(current->signal->oom_mm))
-+		goto nomem;
+ LOCAL_HDRS += $(selfdir)/clone3/clone3_selftests.h $(selfdir)/pidfd/pidfd.h
+@@ -32,4 +33,5 @@ $(OUTPUT)/test_kill: $(LIBCGROUP_O)
+ $(OUTPUT)/test_kmem: $(LIBCGROUP_O)
+ $(OUTPUT)/test_memcontrol: $(LIBCGROUP_O)
+ $(OUTPUT)/test_pids: $(LIBCGROUP_O)
++$(OUTPUT)/test_psi: $(LIBCGROUP_O)
+ $(OUTPUT)/test_zswap: $(LIBCGROUP_O)
+diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
+index 39f979690dd3..8a3ef479e83d 100644
+--- a/tools/testing/selftests/cgroup/config
++++ b/tools/testing/selftests/cgroup/config
+@@ -4,3 +4,4 @@ CONFIG_CGROUP_FREEZER=y
+ CONFIG_CGROUP_SCHED=y
+ CONFIG_MEMCG=y
+ CONFIG_PAGE_COUNTER=y
++CONFIG_PSI=y
+diff --git a/tools/testing/selftests/cgroup/test_psi.c b/tools/testing/selftests/cgroup/test_psi.c
+new file mode 100644
+index 000000000000..51dc35e26013
+--- /dev/null
++++ b/tools/testing/selftests/cgroup/test_psi.c
+@@ -0,0 +1,280 @@
++// SPDX-License-Identifier: GPL-2.0
++#define _GNU_SOURCE
++#include <errno.h>
++#include <fcntl.h>
++#include <poll.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/wait.h>
++#include <unistd.h>
++#include <linux/limits.h>
 +
- 	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
- 	raised_max_event = true;
- 
-
++#include "kselftest.h"
++#include "cgroup_util.h"
++
++/* How long to wait for the CPU-pressure trigger before giving up. */
++#define PSI_POLL_TIMEOUT_MS	5000
++
++static int pressure_open(const char *resource)
++{
++	char path[PATH_MAX];
++
++	snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
++	return open(path, O_RDWR);
++}
++
++/* Write a trigger descriptor, including the trailing NUL the parser expects. */
++static ssize_t write_trigger(int fd, const char *trigger)
++{
++	return write(fd, trigger, strlen(trigger) + 1);
++}
++
++/* Trigger smoke test: second on same fd -> EBUSY; IRQ rejects "some". */
++static int test_proc_triggers(const char *root)
++{
++	static const char *const resources[] = { "io", "memory", "cpu" };
++	int ret = KSFT_FAIL;
++	int fd = -1;
++	int i;
++
++	(void)root;
++
++	for (i = 0; i < (int)ARRAY_SIZE(resources); i++) {
++		fd = pressure_open(resources[i]);
++		if (fd < 0) {
++			ksft_print_msg("open /proc/pressure/%s: %s\n",
++				       resources[i], strerror(errno));
++			goto cleanup;
++		}
++
++		errno = 0;
++		if (write_trigger(fd, "some 150000 2000000") <= 0) {
++			ksft_print_msg("%s: 'some' trigger rejected: %s\n",
++				       resources[i], strerror(errno));
++			goto cleanup;
++		}
++		/* A second trigger on the same fd must fail with EBUSY. */
++		errno = 0;
++		if (write_trigger(fd, "full 150000 2000000") != -1 || errno != EBUSY) {
++			ksft_print_msg("%s: second trigger expected EBUSY, got %s\n",
++				       resources[i], strerror(errno));
++			goto cleanup;
++		}
++
++		close(fd);
++		fd = -1;
++	}
++
++	/* IRQ is full-only, and only exists with CONFIG_IRQ_TIME_ACCOUNTING. */
++	fd = pressure_open("irq");
++	if (fd >= 0) {
++		errno = 0;
++		if (write_trigger(fd, "some 150000 1000000") != -1) {
++			ksft_print_msg("irq 'some': expected failure, got %s\n",
++				       strerror(errno));
++			goto cleanup;
++		}
++		close(fd);
++		fd = -1;
++	}
++
++	ret = KSFT_PASS;
++cleanup:
++	if (fd >= 0)
++		close(fd);
++	return ret;
++}
++
++/* cgroup.pressure 0/1 hides/shows the *.pressure files and round-trips. */
++static int test_cgroup_pressure_toggle(const char *root)
++{
++	char buf[BUF_SIZE] = { 0 };
++	char *cg = NULL;
++	int ret = KSFT_FAIL;
++
++	cg = cg_name(root, "psi_toggle_test");
++	if (!cg)
++		goto cleanup;
++	if (cg_create(cg))
++		goto cleanup;
++
++	if (cg_write(cg, "cgroup.pressure", "0")) {
++		ksft_print_msg("failed to disable cgroup.pressure\n");
++		goto cleanup;
++	}
++	if (cg_read(cg, "cgroup.pressure", buf, sizeof(buf)) < 0 || atoi(buf) != 0) {
++		ksft_print_msg("cgroup.pressure=0 readback: '%s'\n", buf);
++		goto cleanup;
++	}
++	if (cg_read(cg, "memory.pressure", buf, sizeof(buf)) >= 0) {
++		ksft_print_msg("memory.pressure visible while disabled\n");
++		goto cleanup;
++	}
++
++	if (cg_write(cg, "cgroup.pressure", "1")) {
++		ksft_print_msg("failed to re-enable cgroup.pressure\n");
++		goto cleanup;
++	}
++	if (cg_read(cg, "cgroup.pressure", buf, sizeof(buf)) < 0 || atoi(buf) != 1) {
++		ksft_print_msg("cgroup.pressure=1 readback: '%s'\n", buf);
++		goto cleanup;
++	}
++	if (cg_read(cg, "memory.pressure", buf, sizeof(buf)) < 0) {
++		ksft_print_msg("memory.pressure unreadable while enabled\n");
++		goto cleanup;
++	}
++
++	ret = KSFT_PASS;
++cleanup:
++	if (cg)
++		cg_destroy(cg);
++	free(cg);
++	return ret;
++}
++
++/* Induce deterministic CPU pressure (more hogs than CPUs). */
++static int test_cgroup_trigger_fire(const char *root)
++{
++	char *cg = NULL, *cpupress = NULL;
++	int fd = -1, ret = KSFT_FAIL;
++	struct pollfd pfd;
++	long ncpus, i;
++	pid_t pid;
++
++	cg = cg_name(root, "psi_trigger_test");
++	if (!cg)
++		goto cleanup;
++	if (cg_create(cg))
++		goto cleanup;
++
++	cpupress = cg_control(cg, "cpu.pressure");
++	if (!cpupress)
++		goto cleanup;
++	fd = open(cpupress, O_RDWR);
++	if (fd < 0) {
++		ksft_print_msg("open cpu.pressure: %s\n", strerror(errno));
++		goto cleanup;
++	}
++
++	/* 1us threshold in a 1s window: any cpu stall fires it. */
++	errno = 0;
++	if (write_trigger(fd, "some 1 1000000") <= 0) {
++		ksft_print_msg("arming trigger failed: %s\n", strerror(errno));
++		goto cleanup;
++	}
++
++	ncpus = sysconf(_SC_NPROCESSORS_ONLN);
++	if (ncpus <= 0)
++		ncpus = 1;
++
++	pid = fork();
++	if (pid < 0) {
++		ksft_print_msg("fork: %s\n", strerror(errno));
++		goto cleanup;
++	}
++	if (pid == 0) {
++		/* Enter the cgroup, then over-subscribe it with CPU hogs. */
++		if (cg_enter_current(cg))
++			_exit(KSFT_FAIL);
++		for (i = 0; i < ncpus; i++) {
++			if (fork() == 0) {
++				for (;;)
++					asm volatile("" ::: "memory");
++				_exit(0);
++			}
++		}
++		for (;;)
++			asm volatile("" ::: "memory");	/* child is also a hog */
++		_exit(0);
++	}
++
++	pfd.fd = fd;
++	pfd.events = POLLPRI;
++	switch (poll(&pfd, 1, PSI_POLL_TIMEOUT_MS)) {
++	case -1:
++		ksft_print_msg("poll: %s\n", strerror(errno));
++		break;
++	case 0:
++		ksft_print_msg("no trigger event; could not induce cpu pressure\n");
++		ret = KSFT_SKIP;
++		break;
++	default:
++		if (pfd.revents & POLLPRI)
++			ret = KSFT_PASS;
++		else
++			ksft_print_msg("poll returned 0x%x\n", pfd.revents);
++		break;
++	}
++
++	/* Stop the hogs (bounded, so waitpid can't hang) and reap the child. */
++	cg_killall(cg);
++	waitpid(pid, NULL, 0);
++
++cleanup:
++	if (fd >= 0)
++		close(fd);
++	if (cg) {
++		cg_killall(cg);
++		cg_destroy(cg);
++	}
++	free(cpupress);
++	free(cg);
++	return ret;
++}
++
++#define TEST(x) { #x, x }
++
++struct psi_test {
++	const char *name;
++	int (*fn)(const char *root);
++};
++
++static struct psi_test tests[] = {
++	TEST(test_proc_triggers),
++	TEST(test_cgroup_pressure_toggle),
++	TEST(test_cgroup_trigger_fire),
++};
++
++int main(int argc, char **argv)
++{
++	char root[PATH_MAX];
++	int mempress_fd;
++	int i;
++
++	(void)argc;
++
++	ksft_print_header();
++	ksft_set_plan(ARRAY_SIZE(tests));
++
++	if (cg_find_unified_root(root, sizeof(root), NULL))
++		ksft_exit_skip("cgroup v2 isn't mounted\n");
++
++	/* PSI must be enabled (CONFIG_PSI=y, not default-disabled). */
++	mempress_fd = open("/proc/pressure/memory", O_RDONLY);
++	if (mempress_fd < 0)
++		ksft_exit_skip("PSI unavailable (CONFIG_PSI=n or psi=0)\n");
++	close(mempress_fd);
++
++	if (cg_read_strstr(root, "cgroup.controllers", "memory"))
++		ksft_exit_skip("memory controller isn't available\n");
++	if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
++		if (cg_write(root, "cgroup.subtree_control", "+memory"))
++			ksft_exit_skip("failed to enable memory controller\n");
++
++	for (i = 0; i < (int)ARRAY_SIZE(tests); i++) {
++		switch (tests[i].fn(root)) {
++		case KSFT_PASS:
++			ksft_test_result_pass("%s\n", tests[i].name);
++			break;
++		case KSFT_SKIP:
++			ksft_test_result_skip("%s\n", tests[i].name);
++			break;
++		default:
++			ksft_test_result_fail("%s\n", tests[i].name);
++			break;
++		}
++	}
++
++	ksft_finished();
++}
 -- 
-Michal Hocko
-SUSE Labs
+2.43.0
+
