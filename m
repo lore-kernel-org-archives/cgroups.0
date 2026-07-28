@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F24C3ACA65;
-	Tue, 28 Jul 2026 17:41:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A57443A819;
+	Tue, 28 Jul 2026 17:46:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785260481; cv=none; b=FR5GHiASv2g6mc0kB5L7rYbsRUyni1ff1oYuaXN9zjE9+KRaqb4SaLXsUrWYRnBmVyWlchJx0MMxtJ/c45P0+NInPK8BAP340QSNSDBGEENBAeg4oUUpLPFGAM2C2BoMQuPgAdHYdz9jIKcSbRWfxRxgqN5Cim5ttMqEwmPAnyY=
+	t=1785260813; cv=none; b=cfqFH4RsUa69bPPSUoQPTcg+SZ64xApUUqjc7ibeoIeaKacQzYvPLLfCSyZph3VOxb0MLVsW3zxQyxAk9xJl076BgbBozRpzKQFFsAYBOpAqziNMxGeXmP4ykvu4w5cqInBD3XKWnlcbLmgWRvESbTsZh6tisqPUX2ytxQLnICY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785260481; c=relaxed/simple;
-	bh=BVTnpdIgE+twlr46r77gbUzYM6j1lVYDV2wgr+02qoI=;
+	s=arc-20240116; t=1785260813; c=relaxed/simple;
+	bh=sHsbfYU0MFlK7vKyxXyuorEJS/ZKPznQ/g678KXEQUw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dPGRzsoDgEWqriZqBS3Sn7rQo1zkXOhR8k1cpx8XUt4bAImhgkzMzDwSvk0Nhg+fbvYEGbpErzROcncg41GfxW6sexDBAImqNTzEUHR3e5fpScVaKVm6M5HlU2o7eNbv8qvWNRLc7Vd+Kn3VV8poL8ZBBzJ4memLvZIQTyEHqXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lQuCOS3d; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=dGxKuHJbb0hILs4sEiZ70ARHu9SmxRoAMf84ziRUbJJmZ4Qa2//bNwucEtxI56Gs3RTGwKi+6ZCP8TJqa3qtN4LRMXZKlRjUPhtpOFchMPvHau3md21aplVi2E/mt8fjXGolNy7kt1lizMoZgliMlUf7PY8xkQCqeIyKvj3hdF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IN1C/6TA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lQuCOS3d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87FDC1F000E9;
-	Tue, 28 Jul 2026 17:41:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IN1C/6TA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37DE41F000E9;
+	Tue, 28 Jul 2026 17:46:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785260480;
-	bh=BQDHHrPTm8wUA00SAU3tWeSEWOP+J5kB/jxB8HLfcPA=;
+	s=k20260515; t=1785260811;
+	bh=oGzCyBQVNAADahTS9j+taObDqgyrjdBmVF7/If3BszA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=lQuCOS3d1ws7UGlowjuxi/xIeEVlvuM4bUkrEBOZ6HkXbSiLWY26/U34wGWnYFniJ
-	 axYfRytTmC1LQ+BYWNolzK2224KO0LrAZ2rKKXxlY5FbBOsqYN7VsljtLj0FvniKxr
-	 LS/rMna4q5if94a2rREaCbeBLCVSl5PX+YLn7+YrtyqHzBi6Kuagxsjh8w7/OvitQD
-	 BIZkFRoUeUT9rwEWSTqu54KZUlz8lXSTrSUKXu59nSImUPgXD5pr56/hxYYaM92ynZ
-	 lMXpVgbnLfaCJ/pGaL10KWxrIT4yRU/QZixdsZMjzkeNiJnmGkzn4BDUC8TtlIb5nS
-	 2VkepP6EHTkaQ==
-Message-ID: <365d8e50-5aeb-45e9-97a3-87d0024cdc5f@kernel.org>
-Date: Tue, 28 Jul 2026 19:41:15 +0200
+	b=IN1C/6TABX8DJkmlH/pqQ3Gh9ymlJQAXHBqgl37UZuJxbsCwEPm0kfmtHidqBmwEl
+	 jWh7R+7qKBg/lB0fJrNNBM6NJIjRIdhVVlRUiIQGwWp6v+WR7PtBLQItV1bt+bW9z/
+	 dclDTxcN0nwp0N6cZuSALlo7luayIE3YE6m3x/ki2+lbsqSuoDBO356VcmVh67fnkR
+	 kkRbMdsnba+Vl7LPK5jOFZq+6iFRSHQR28znFUBw/PBuZJm1tEQWUNNvi/OulePmB0
+	 F8cWOEfewGKnP3E4anDlgWZQmbfa7Acp3+3cvp3JvQgiyHjev7Dy9XQ23UhEV2CkU/
+	 9eX7q8Ad/mkng==
+Message-ID: <53f59eaa-efd8-491c-ae12-510e2b675533@kernel.org>
+Date: Tue, 28 Jul 2026 19:46:47 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,19 +35,16 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 06/13] mm/slab: abstract slabobj_ext.ref access
+Subject: Re: [PATCH v3 00/13] mm/slab, alloc_tag: reduce obj_ext memory waste
 Content-Language: en-US
-To: Harry Yoo <harry@kernel.org>
-Cc: Suren Baghdasaryan <surenb@google.com>, Hao Li <hao.li@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
+To: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>
+Cc: Hao Li <hao.li@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
  Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>,
  Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter
  <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
  Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
- <20260727-b4-objext_split-v3-6-c29ef0f1f257@kernel.org>
- <amivCT7AaPux-GSK@thinkpad>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -88,59 +85,41 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <amivCT7AaPux-GSK@thinkpad>
+In-Reply-To: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/28/26 15:41, Harry Yoo wrote:
-> On Mon, Jul 27, 2026 at 02:54:00PM +0200, Vlastimil Babka (SUSE) wrote:
->> In preparation for changes to the structure, abstract access to the ref
->> field with a slab_obj_ext_codetag_ref() function. Rename the field to
->> _ctref to make an unexpected direct access a compile error.
->> 
->> No functional change intended.
->> 
->> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
->> Reviewed-by: Hao Li <hao.li@linux.dev>
->> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
->> ---
+On 7/27/26 14:53, Vlastimil Babka (SUSE) wrote:
+> ---
+> Vlastimil Babka (SUSE) (13):
+>       mm/slab: skip kfence objects in allocation profiling
+>       mm/slab: remove objs_per_slab()
+>       mm: move struct slabobj_ext to mm/slab.h
+>       mm/slab: make slab_obj_ext() determine object index
+>       mm/slab: abstract slabobj_ext.objcg access
+>       mm/slab: abstract slabobj_ext.ref access
+>       mm/slab: replace slab.stride with obj_exts_in_object
+>       mm/slab: change struct slabobj_ext to a union
+>       mm/slab: introduce slab_obj_ext_has_codetag()
+>       mm/slab: reduce slabobj_ext memory with allocation profiling disabled
+>       mm/slab: add cache_ and slab_needs_objcg() helpers
+>       mm/slab: stop allocating objcg pointers when unnecessary
+>       mm/slab, kfence, memcg: completely remove obj_ext for kfence objects
 > 
-> Looks good to me,
-> Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
-> 
-> With a suggestion: it would be nice to have debug warnings
-> that trigger when slab_obj_ext_codetag_ref() is compiled but
-> not supposed to be called.
-> 
-> e.g.) for kfence objects, or later in the series when we
-> reduce slabobj_ext memory (!slab_obj_ext_has_codetag()) 
-> 
-> Similarly, it would be nice (later in the series) to have a warning
-> in slab_obj_ext_objcg() when slab_needs_objcg() returns false.
+>  Documentation/mm/allocation-profiling.rst |   7 ++
+>  include/linux/memcontrol.h                |  13 --
+>  include/linux/slab.h                      |   3 +
+>  mm/kfence/core.c                          |  12 --
+>  mm/kfence/kfence.h                        |   3 -
+>  mm/kfence/kfence_test.c                   |   2 +-
+>  mm/memcontrol.c                           |  40 ++++---
+>  mm/slab.h                                 | 189 ++++++++++++++++++++++++------
+>  mm/slab_common.c                          |  26 +++-
+>  mm/slub.c                                 | 184 ++++++++++++++++++-----------
+>  10 files changed, 325 insertions(+), 154 deletions(-)
+> ---
+> base-commit: 5ff172f6c94d282d83cb88bdfec5f647ad9c6105
+> change-id: 20260714-b4-objext_split-da82426257d5
 
-OK good idea but we can't do it right now as the helpers are introduced
-later.
-
-So for 9/13 mm/slab: introduce slab_obj_ext_has_codetag():
-
-diff --git a/mm/slab.h b/mm/slab.h
-index 8f352d9f4d91..fbad99da093c 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -726,6 +726,8 @@ static inline void slab_obj_ext_set_objcg(struct slabobj_ext *obj_ext,
- static inline union codetag_ref *
- slab_obj_ext_codetag_ref(struct slab *slab, struct slabobj_ext *obj_ext)
- {
-+       VM_WARN_ON_ONCE(!slab_obj_ext_has_codetag());
-+
-        if (IS_ENABLED(CONFIG_MEMCG))
-                obj_ext += 1;
- 
-... and for objcg we would need to start passing slab pointer to
-slab_obj_ext_objcg() and slab_obj_ext_set_objcg(). Hmm...
-
-
->>  mm/slab.h | 10 +++++++++-
->>  mm/slub.c | 42 ++++++++++++++++++++++++++++--------------
->>  2 files changed, 37 insertions(+), 15 deletions(-)
-
+Applied (with fixed up 10/13 per sashiko, and 09/13 with a debug check per
+Harry). To slab.git slab/for-7.3/objext_split and merged to slab/for-next.
