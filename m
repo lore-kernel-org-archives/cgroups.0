@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D157C3B6C14;
-	Tue, 28 Jul 2026 13:24:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5DCC437859;
+	Tue, 28 Jul 2026 13:25:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785245079; cv=none; b=B8aD3C9cdAsvdknP/doQPuAn3RcZjqXl2jRzEl40HN0rZiWzlzIsksnXEAItBlGFzK8URQuzY1Xx2MpwLC49DYXtJKyW5nfc+2o6MmeJyrXILrpTZ29+ZAWaTM9bC9zc0i+ivFc10ZVU4YgkNE7tlhhWzLzJf/IMGLzaufWBdZ4=
+	t=1785245117; cv=none; b=SLJ8bhTfpuuoFq7Lmd4IwNpx/Vju1NaMfOSv2bFRZA+CMi3nVz0SPa83l1eIMjaCKgJutqRGCyJV7DhqH0qyIMEvZEIChXr2xELsJtEMsNQ/sk4JV5uQB+HLZeykOu6ACErlD79dtNP5cVzYxETvtwkTZrDJgrIuSQCsNNjvKsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785245079; c=relaxed/simple;
+	s=arc-20240116; t=1785245117; c=relaxed/simple;
 	bh=4glszNDGDkZCNUUib9wOB6hfAD9K8tlzhdm/to2C9Yc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TU7c6Isj69M7A+QuxsGeBqvnEF+2D3gG8pVVzn/qk4QDeiHqGD3tOmo6ZQOfDBy9qkxIoyR+FMGnCJElRzT1JPW2+0DW34yXbmQDUZIcTFNTNTUiMi/jfZUp2R85CpftTYxFpWNajecp80/068yhWmlFenKxut7BduXHyuBjIGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eKYfLsxN; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=PyYQdNPTDdoNgctGKOuNnFzuoXVF5xuWmdJqPqcoHQH3vVk10kTZ45bpfSVZHjix6zx7IHgVuFSLNqUrAJ7g3EcpvZFMDCQR0m/QBHwrHPZlUd3drD6StVJqMwkUPSe7SplP7HWySjvr6YbbDg13UIsZY6EU1a3o91Q6LbfNhOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VaJ4jUWV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eKYfLsxN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 280441F000E9;
-	Tue, 28 Jul 2026 13:24:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VaJ4jUWV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3936B1F000E9;
+	Tue, 28 Jul 2026 13:25:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785245078;
+	s=k20260515; t=1785245116;
 	bh=YJ6nTW8uRRvGa9uxb9XpHnqlyfY+CSFnQPSaLsTQkoQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=eKYfLsxNclt8oE+pNYIIZIi8pjlDWK/9foqXxg9TrlmLgmTasTk/l1juxhuMe4KFh
-	 r74dVpcD0ekm6fTkX3vxpxRUSUAh3K4RXTf1L+tVK8JR0GN96XAkFaDQT25rMuh6ou
-	 5sAN0XzViUQf7i6nUy6qGwGS/gAsIqvGKW/mHAmodvzWi//0Z49sIhWrnaWyMkEmPK
-	 9BSwHL2jvVc+hlgpOKqq8X3dakUvPvwbBBuxc6WbwdDJbPZfhQ0g+wBrQ+Gv9zsaAZ
-	 mYUkDGGsOyQYJ75sD0hP3TIDNNC3DcXG2Sla0JK2MGO6huo8htG009HntZtEXW5KHi
-	 oJAC4nIm5QtLg==
-Date: Tue, 28 Jul 2026 22:24:35 +0900
+	b=VaJ4jUWVuOmuzpDqjmybmjd+t76vdlUgJE4E5RC9QK/aLvtmgtBAF7/Jgny7U+PT8
+	 7zG16BN9At68+LTxJz+jBbFmu2bS3Fl4HHMk0ewnQeC/pVVJXVNDSoHmpAqo00iisl
+	 GuEUmHWXHt087Dza2+d6mpaTYTacALG0oTgh/k5NUYl5eo/6x9zuwPxcvr5twpx3oz
+	 o39/wu/NTJo8slYtSqJI7WQaldXhYgQV86x+LZIgCAgCsddpq+HDqd/CidxVQwzBjN
+	 JI8rnthiDC9cObvsUwgpXnj4Z7oW36vaEeQwnSuMv5SqqiCVPnl1vuJplgI3F87KZj
+	 15GjoMl7aCGgw==
+Date: Tue, 28 Jul 2026 22:25:14 +0900
 From: Harry Yoo <harry@kernel.org>
 To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Cc: Suren Baghdasaryan <surenb@google.com>, Hao Li <hao.li@linux.dev>, 
@@ -48,6 +48,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20260727-b4-objext_split-v3-5-c29ef0f1f257@kernel.org>
+Message-ID: <20260728132514.EQFEIa_TmuURcDcjuFzEEUVrRjWxrNyE1TUZyIWSV4A@z>
 
 On Mon, Jul 27, 2026 at 02:53:59PM +0200, Vlastimil Babka (SUSE) wrote:
 > In preparation for changes to the structure, abstract getting and
