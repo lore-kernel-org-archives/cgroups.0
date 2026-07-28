@@ -1,59 +1,89 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 843233876A7;
-	Tue, 28 Jul 2026 04:23:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C745632B104
+	for <cgroups@vger.kernel.org>; Tue, 28 Jul 2026 04:43:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785212599; cv=none; b=snrYsB/tO0NZ9YozFUq5NKh0bDMI7OMll0r7C7Vfe1luZ8nAsqDPMoRjYulUGYiy4PcRAELkqAsDM6cwrKgTm9lkicIneAHdr2T8rG9UrNOxd6SUa2KmtlIoHLgxVXT1CjHd/wtd2Hk/KmP7mEa30v6O3T4MqjdLJlYVkL3jD+s=
+	t=1785213804; cv=none; b=hKOcex+orkm91gPbCHMdDgTFZawjOyQAYfSQiRkoYMbeNLF8Z7KVtdOO9uID3iiIO9vroJhoAwuAKd0tWzNL7Rq+pDlxZLLFK8laqF6zu8ZNt1zK0kEYZJ27FVOspaDOXtTvwaZD1R8iZg/w6fAxhWgIvliUidGzt571X0vvBwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785212599; c=relaxed/simple;
-	bh=42o9dFVGi9O7tRM0rDfGcZmhyWRAn20kX1FOWgvKqSc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BHkVc80YnKn/Mk+4tk6JkN9/1Yp+rSniqP7rFK3uDQs8rd0k0Iu9RCUUvhnCbHHVlTOmhZ8Bar0jpfNFjghdshtZ8cZZr4jZ5YOpl6ZaOkVcVCf35nDEHn8A5mLgwwUYh7AKOUAdKzJBI+bjVa57UC9ZJ65ebtysGgSFqhOqcKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 24D9168AFE; Tue, 28 Jul 2026 06:23:14 +0200 (CEST)
-Date: Tue, 28 Jul 2026 06:23:13 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: yu kuai <yukuai@fygo.io>
-Cc: axboe@kernel.dk, tj@kernel.org, hch@lst.de, dongsheng.yang@linux.dev,
-	cengku@gmail.com, josef@toxicpanda.com, nilay@linux.ibm.com,
-	ming.lei@redhat.com, linux-block@vger.kernel.org,
-	cgroups@vger.kernel.org
-Subject: Re: [RFC PATCH v2 1/8] block: associate blkg in submit_bio instead
- of bio_set_dev
-Message-ID: <20260728042313.GA19817@lst.de>
-References: <20260724123037.3004560-1-yukuai@kernel.org> <20260724123037.3004560-2-yukuai@kernel.org> <933b4285-1c85-4076-831a-0501d5c38e16@fygo.io>
+	s=arc-20240116; t=1785213804; c=relaxed/simple;
+	bh=LPHJT6svHYE+a6KY8lDpS4mC8UwB0a/G2cw9cuz7sEY=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=bxp3E2cFg0X/mKC3YSNl/4+0qCWnf1z+UPzhN1/OknkyT9FAxDWomGQSHY0oXRrK1tOTxfUUBHlIz1G6mnxNffp090D4csqG5MBIesqAf9hkEhMZ25NWJNwmI9NLW0q1Ipz0zSTXBB3YwA7FVsPIUVHn3XFUchT2yVNRGqMpGVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OGjSNssB; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OGjSNssB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785213803; x=1816749803;
+  h=date:from:to:cc:subject:message-id;
+  bh=LPHJT6svHYE+a6KY8lDpS4mC8UwB0a/G2cw9cuz7sEY=;
+  b=OGjSNssBX9uhhBfOLAd7AQSqi1/a3yXCtDJBfK/3EWHaG2vtGuMfIkFH
+   DUy+vJfU9TgR8bUWmaZsDbomin9UfQq8QCVvVv1gQJC4mEt3dqxqtlrlE
+   dlh+2fjq7qO/FNPDkhsiziJBXs2pqllVBo9YCmEr4ZI75V5Hk5AmCg75J
+   ceBgzGHCfTwa29ncgpZit5w6y6MLD690phERr3dauLEIslkdb3/xw2iCn
+   wth8KCwHgAptEaJK9v1Nrra1s5Et6wgAA/NyWeAdfEZ1Eo36HLWvVQogK
+   9rod+i1+/UZVRPe86SIwC6ddNHDJlxqfYz78zaobC9Z0Fh4S9VZAVn6vN
+   g==;
+X-CSE-ConnectionGUID: 0PTjatxfTHiZbxRDSQ859A==
+X-CSE-MsgGUID: UulVDpT8TTSXP6li4/A2+Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11858"; a="96145469"
+X-IronPort-AV: E=Sophos;i="6.25,189,1779174000"; 
+   d="scan'208";a="96145469"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2026 21:43:22 -0700
+X-CSE-ConnectionGUID: H48M+u1lTk6NX4n7UPMjcw==
+X-CSE-MsgGUID: +xV6tIoHRyWpSYnHSEbsNQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,189,1779174000"; 
+   d="scan'208";a="284138014"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by fmviesa001.fm.intel.com with ESMTP; 27 Jul 2026 21:43:21 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1woZew-00000000dz7-3GBG;
+	Tue, 28 Jul 2026 04:43:18 +0000
+Date: Tue, 28 Jul 2026 12:43:14 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-7.3] BUILD SUCCESS
+ 3864c95587a4b487cf231ec0ab8c3d1c11764eb7
+Message-ID: <202607281259.937Sv1qK-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <933b4285-1c85-4076-831a-0501d5c38e16@fygo.io>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Jul 27, 2026 at 04:16:29PM +0800, yu kuai wrote:
-> > open-coded blkg_put().
-> 
-> Turns out bio will be submitted by kworker for some drivers and for
-> blkcg_punt_bio_submit(). Is it possible to record blkcg during bio initialization,
-> as blkcg must exist, and then covert it to blkg during submission? I can use union
-> for blkcg and blkg to avoid new field in struct bio.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.3
+branch HEAD: 3864c95587a4b487cf231ec0ab8c3d1c11764eb7  docs: cgroup-v2: mark memory.pressure and io.pressure as read-write
 
-Mixing the two up sounds like a receipt for a lot of problems
-unfortunately.  I wonder if we could switch to only store the blkcg in
-the bio and look up the blkg as needed.  This assumes we can get away
-with a relatively small numbers of lookups for typical setups.  I'm not
-really sure how much the different users are combined - if not much this
-might actually be a big net benefit, if on the other hand we'd have to
-do a lot of separate lookups it might not work very well.
+elapsed time: 1619m
 
-This could be combined with a way to do more efficient blkg lookups
-using e.g. a rhashtable.
+configs tested: 12
+configs skipped: 0
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha    allnoconfig    gcc-16.1.0
+alpha   allyesconfig    gcc-16.1.0
+arc     allmodconfig    gcc-16.1.0
+arc     allyesconfig    gcc-16.1.0
+csky    allmodconfig    gcc-16.1.0
+i386    allmodconfig    gcc-14
+nios2   allmodconfig    gcc-11.5.0
+nios2    allnoconfig    gcc-11.5.0
+parisc  allmodconfig    gcc-16.1.0
+parisc  allyesconfig    gcc-16.1.0
+x86_64         kexec    clang-22
+x86_64  rhel-9.4-bpf    gcc-14
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
