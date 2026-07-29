@@ -1,33 +1,33 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F0C041DED0;
-	Wed, 29 Jul 2026 07:24:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775D33F8ECD
+	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 07:29:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785309863; cv=none; b=nd7M5O7LnSfDV6RCFbH5nxTiW71bn64IY1ituzLFAmFuc4j4mhRt1+AcIFWyVoscZnZONei0b9ZwRv+C3DRnVVlOiOZn1Nb00mshWHJP1V+WT0BRBP/OJmkbP0NIf1UH3gkTfD0tJzwMXElPHLcjDBg2A9sqZrlviASNGC642Nc=
+	t=1785310156; cv=none; b=lvAP/jkvb9tnqbjGFXXhWK0cM9x9+W3OUXBv2MYXmaEz2UkKDxgcYMeIdqpeLUlwCurpZ9C2d/J2/J0o7R8b9v45Odlp5XB/AiIlHSsCb5p8AIM8ihieP9mGTr2FR1ITbn1aK2AUImP8vFphVrA0thoeZIJRtO5r7r9VP+a/zuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785309863; c=relaxed/simple;
-	bh=SoAJyejZXL0gCLwGRJfkqETnV4x7TO3pNvXZBPwiTSQ=;
+	s=arc-20240116; t=1785310156; c=relaxed/simple;
+	bh=+DmOJPfuCX3vvGB0fKvsjuigC8u6WgPCIx7kr9j7qPw=;
 	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ni9WoQ0uN2NnFbUH8gy4DkR5BqFz9HfykIyixoxCgHYoVUYD54sabCfSI98rlQrk9STRArwkiZdd5T6j3pmMvFB7u1Gtn4C6vzoJrLbEYWHJJ17HBFgwL0xKF7HRWd+GRzWR3VHdIyMfJsv2drDN/mIFtNqNdEVIL8gIYfCpdBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UY/LZLHn; arc=none smtp.client-ip=91.218.175.183
+	 In-Reply-To:Content-Type; b=D8eRbdt+MALG0E7EeMyCixULX4YMA9XIcR35Ky6ygDafXJ0BveKc8lW9ghjQHiLALx4tTXZy51FMovur9s1U5i6SGcy7np6Y17fQYe5JA1dFEWELlqik+XOBXKgG6niIznPvxx4q0dwhRmnLE9H0TJy4ZEvoJHzkZpgKCCGUG2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cc6+gqoj; arc=none smtp.client-ip=91.218.175.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UY/LZLHn"
-Message-ID: <166abc44-f725-4181-9fc9-f808f4894a17@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cc6+gqoj"
+Message-ID: <d093d6be-1399-4cb9-9b3a-25518d60e801@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785309846;
+	t=1785310147;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=OZtSbiAnS6rQTDFNl1WKWuT5KuTX1/3h5uLg/WVvQOo=;
-	b=UY/LZLHnfaubVs4/Z3UPrdU2csZYo5PVIhN49O7akvxqo2YH156NNrrUlYyGILviOqucCq
-	tEkRZM1B2gp7xJPGRVbUy0dRoQ0sqfBMwKuBQpZijjdVU4q3Z+3LS2d/dp1hfhZ9ThVrr5
-	zDA+ySs5o+2sUphVcgN0RzdInK5z/gM=
-Date: Wed, 29 Jul 2026 15:23:42 +0800
+	bh=N0rY00WgFW8q5HD83eAD2TlY7rhUVeyXSgsnE+RGOdU=;
+	b=cc6+gqojN5VJVqpALRNXQhL0SI2q9E62BkuEW+4OUGLSI7LIOfU+Y1piu6vtsNNfjB7Yor
+	PoRMvHumQND1xZKK/fZOrCQzL4KoBMJA7fBui/Fh5Eyy1SBrFIxH3AyPYh2wyKpX3JDG6h
+	J6P3zXJtG/XP/bWgXSy2hzWfHJ5TOyk=
+Date: Wed, 29 Jul 2026 15:29:00 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,14 +38,13 @@ Cc: cui.tao@linux.dev, hch@lst.de, dongsheng.yang@linux.dev,
  cengku@gmail.com, josef@toxicpanda.com, nilay@linux.ibm.com,
  ming.lei@redhat.com, yukuai@fygo.io, linux-block@vger.kernel.org,
  cgroups@vger.kernel.org
-Subject: Re: [RFC PATCH v2 1/8] block: associate blkg in submit_bio instead of
- bio_set_dev
+Subject: Re: [RFC PATCH v2 3/8] blk-cgroup: protect blkgs with blkcg_mutex
 To: Yu Kuai <yukuai@kernel.org>, axboe@kernel.dk, tj@kernel.org
 References: <20260724123037.3004560-1-yukuai@kernel.org>
- <20260724123037.3004560-2-yukuai@kernel.org>
+ <20260724123037.3004560-4-yukuai@kernel.org>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20260724123037.3004560-2-yukuai@kernel.org>
+In-Reply-To: <20260724123037.3004560-4-yukuai@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
@@ -55,219 +54,722 @@ X-Migadu-Flow: FLOW_OUT
 在 2026/7/24 20:30, Yu Kuai 写道:
 > From: Yu Kuai <yukuai@fygo.io>
 > 
-> bio_set_dev(), bio_init() and bio_reset() associate a bio with a blkg for
-> its target queue. That association may have to create a new blkg, and
-> currently there are lots of callers that are under atomic context.
+> queue_lock is still needed by block core users, but blkcg no longer needs
+> it for blkg topology now that throttle runtime state has a private lock.
 > 
-> Move the association out of those helpers and into the submit path, which
-> is always sleepable (submit_bio_noacct() already does might_sleep()):
+> Move queue-local blkg synchronization to q->blkcg_mutex.  Hold it while
+> looking up, creating and destroying blkgs, while preparing and undoing
+> configuration, and while activating or deactivating policies.
 > 
->   - submit_bio() associates new I/O before bio_set_ioprio(), whose
->     blkcg_set_ioprio() reads the policy from bio->bi_blkg.
+> Update the BFQ, iocost, iolatency and throttle paths which walk
+> q->blkg_list or access per-blkg policy state to use the same lock.
 > 
->   - submit_bio_noacct() (re)associates when a bio has no blkg yet or was
->     remapped to a different queue.  blk_throtl_bio() and the rq_qos
->     throttlers (iocost, iolatency) pair bio->bi_blkg with the queue of
->     bio->bi_bdev, so a remapped bio must be reassociated to the new queue.
+> blkcg->lock still protects blkcg-local radix tree and list updates.  Some
+> lookups under blkcg_mutex can race with blkcg updates done for other
+> queues, so keep those lookups in RCU read-side critical sections.  In
+> particular, protect the parent lookup in blkg_create() and the parent walk
+> in blkg_lookup_create().
 > 
->   - bio_set_dev() no longer associates; instead it drops the existing blkg
->     when the device changes, since that blkg is tied to the old queue.
->     bio_init()/bio_reset() leave bi_blkg NULL.
+> Now that blkg association happens from the sleepable submit path, the
+> queue_lock -> blkcg_mutex conversion lets blkg creation sleep properly.
+> Nowait bio handling (failing submit instead of sleeping) is added in a
+> follow-up patch.
 > 
-
 Hi Yu Kuai,
 
-Thanks for the v2 rework.  One thing I wanted to flag: with association
-moved out of bio_set_dev(), blkcg_punt_bio_submit() can be reached with
-bio->bi_blkg == NULL.  btrfs compressed writeback builds its bio without
-going through the generic submit_bio() (it uses btrfs_submit_bio()), so the
-new association never runs for it, and the bio_set_dev() in
-btrfs_submit_dev_bio() no longer fills bi_blkg in.
+Quick question on the async blkg free path: it now holds the new mutex
+across the per-policy teardown, which can sleep (iocost does timer shutdown
+in there, for instance).  Since first-IO blkg creation also takes this mutex
+now -- it used to be the queue spinlock -- could a first IO for a cgroup end
+up waiting on an unrelated cgroup's blkg being torn down on the workqueue?
+Not sure it matters in practice; just wondering whether that's a concern at
+all, or if I'm overreading how long the mutex is held.
 
-I reproduced it on this tree -- btrfs with compress=zstd, write dirty data
-from a non-root cgroup, sync:
-
-  BUG: kernel NULL pointer dereference, address 0x30
-  Workqueue: btrfs-worker btrfs_work_helper
-  RIP: 0010:blkcg_punt_bio_submit+0xf/0x80
-  Call Trace:
-   btrfs_submit_bio+0x79/0x1a0
-   btrfs_work_helper+0x141/0x360
-
-0x30 is the offset of ->parent in struct blkcg_gq, and RBX (bio->bi_blkg)
-is NULL at the fault, so it's the `if (blkg->parent)` read.  Regular
-buffered writeback looked fine -- wbc_init_bio() sets bi_blkg early -- so it
-seems limited to the compressed path.
-
-> Introduce bio_disassociate_blkg() to drop a bio's blkg reference and use it
-> from bio_set_dev(), bio_uninit() and the bio freeing path, replacing their
-> open-coded blkg_put().
-> 
-> This is the first step to convert protecting blkg with blkcg_mutex.
-> 
-> Signed-off-by: Yu Kuai <yukuai@fygo.io>
+Thanks,
+Tao> Signed-off-by: Yu Kuai <yukuai@fygo.io>
 > ---
->  block/bio.c         | 18 ++----------------
->  block/blk-cgroup.c  | 18 ++++++++++++++++++
->  block/blk-core.c    | 21 +++++++++++++++++++++
->  include/linux/bio.h |  7 +++++--
->  4 files changed, 46 insertions(+), 18 deletions(-)
+>  block/bfq-cgroup.c    |  10 +--
+>  block/blk-cgroup.c    | 182 ++++++++++++++++++++++--------------------
+>  block/blk-cgroup.h    |  16 ++--
+>  block/blk-core.c      |   2 +
+>  block/blk-iocost.c    |   5 +-
+>  block/blk-iolatency.c |   7 +-
+>  block/blk-throttle.c  |  10 +--
+>  7 files changed, 121 insertions(+), 111 deletions(-)
 > 
-> diff --git a/block/bio.c b/block/bio.c
-> index 6a2f6fc3413e..ea030c5e39a4 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -179,12 +179,7 @@ static inline gfp_t try_alloc_gfp(gfp_t gfp)
+> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+> index e82ff03bda02..42614aa78cd4 100644
+> --- a/block/bfq-cgroup.c
+> +++ b/block/bfq-cgroup.c
+> @@ -426,7 +426,7 @@ static void bfqg_stats_xfer_dead(struct bfq_group *bfqg)
 >  
->  void bio_uninit(struct bio *bio)
->  {
-> -#ifdef CONFIG_BLK_CGROUP
-> -	if (bio->bi_blkg) {
-> -		blkg_put(bio->bi_blkg);
-> -		bio->bi_blkg = NULL;
-> -	}
-> -#endif
-> +	bio_disassociate_blkg(bio);
->  	if (bio_integrity(bio))
->  		bio_integrity_free(bio);
+>  	parent = bfqg_parent(bfqg);
 >  
-> @@ -235,8 +230,6 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
->  #ifdef CONFIG_BLK_CGROUP
->  	bio->bi_blkg = NULL;
->  	bio->issue_time_ns = 0;
-> -	if (bdev)
-> -		bio_associate_blkg(bio);
->  #ifdef CONFIG_BLK_CGROUP_IOCOST
->  	bio->bi_iocost_cost = 0;
->  #endif
-> @@ -280,8 +273,6 @@ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf)
->  	atomic_set(&bio->__bi_remaining, 1);
->  	bio->bi_io_vec = bv;
->  	bio->bi_bdev = bdev;
-> -	if (bio->bi_bdev)
-> -		bio_associate_blkg(bio);
->  	bio->bi_opf = opf;
->  }
->  EXPORT_SYMBOL(bio_reset);
-> @@ -1803,17 +1794,12 @@ void bio_endio(struct bio *bio)
->  		goto again;
+> -	lockdep_assert_held(&bfqg_to_blkg(bfqg)->q->queue_lock);
+> +	lockdep_assert_held(&bfqg_to_blkg(bfqg)->q->blkcg_mutex);
+>  
+>  	if (unlikely(!parent))
+>  		return;
+> @@ -874,7 +874,7 @@ static void bfq_reparent_active_queues(struct bfq_data *bfqd,
+>   *		    and reparent its children entities.
+>   * @pd: descriptor of the policy going offline.
+>   *
+> - * blkio already grabs the queue_lock for us, so no need to use
+> + * blkio already grabs the blkcg_mutex for us, so no need to use
+>   * RCU-based magic
+>   */
+>  static void bfq_pd_offline(struct blkg_policy_data *pd)
+> @@ -947,8 +947,7 @@ void bfq_end_wr_async(struct bfq_data *bfqd)
+>  	struct blkcg_gq *blkg;
+>  
+>  	mutex_lock(&q->blkcg_mutex);
+> -	spin_lock_irq(&q->queue_lock);
+> -	spin_lock(&bfqd->lock);
+> +	spin_lock_irq(&bfqd->lock);
+>  
+>  	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+>  		struct bfq_group *bfqg = blkg_to_bfqg(blkg);
+> @@ -957,8 +956,7 @@ void bfq_end_wr_async(struct bfq_data *bfqd)
 >  	}
+>  	bfq_end_wr_async_queues(bfqd, bfqd->root_group);
 >  
-> -#ifdef CONFIG_BLK_CGROUP
->  	/*
->  	 * Release cgroup info.  We shouldn't have to do this here, but quite
->  	 * a few callers of bio_init fail to call bio_uninit, so we cover up
->  	 * for that here at least for now.
->  	 */
-> -	if (bio->bi_blkg) {
-> -		blkg_put(bio->bi_blkg);
-> -		bio->bi_blkg = NULL;
-> -	}
-> -#endif
-> +	bio_disassociate_blkg(bio);
+> -	spin_unlock(&bfqd->lock);
+> -	spin_unlock_irq(&q->queue_lock);
+> +	spin_unlock_irq(&bfqd->lock);
+>  	mutex_unlock(&q->blkcg_mutex);
+>  }
 >  
->  	if (bio->bi_end_io)
->  		bio->bi_end_io(bio);
 > diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index d9676126c5b5..618e5566fa52 100644
+> index 618e5566fa52..03e1d4d34921 100644
 > --- a/block/blk-cgroup.c
 > +++ b/block/blk-cgroup.c
-> @@ -2170,6 +2170,24 @@ void bio_clone_blkg_association(struct bio *dst, struct bio *src)
->  }
->  EXPORT_SYMBOL_GPL(bio_clone_blkg_association);
+> @@ -131,9 +131,7 @@ static void blkg_free_workfn(struct work_struct *work)
+>  			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
+>  	if (blkg->parent)
+>  		blkg_put(blkg->parent);
+> -	spin_lock_irq(&q->queue_lock);
+>  	list_del_init(&blkg->q_node);
+> -	spin_unlock_irq(&q->queue_lock);
+>  	mutex_unlock(&q->blkcg_mutex);
 >  
-> +/**
-> + * bio_disassociate_blkg - disassociate a bio from its blkg
-> + * @bio: target bio
-> + *
-> + * Drop the blkg reference held by @bio and clear the association.  This is
-> + * used when a bio's target device changes (e.g. via bio_set_dev()): the old
-> + * blkg is tied to the previous request_queue, so it is dropped here and the
-> + * bio is reassociated to the new queue from the submit path.
-> + */
-> +void bio_disassociate_blkg(struct bio *bio)
-> +{
-> +	if (bio->bi_blkg) {
-> +		blkg_put(bio->bi_blkg);
-> +		bio->bi_blkg = NULL;
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
-> +
->  static int blk_cgroup_io_type(struct bio *bio)
->  {
->  	if (op_is_discard(bio->bi_opf))
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 365641266c9e..8103643b39fc 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -822,6 +822,20 @@ void submit_bio_noacct(struct bio *bio)
->  
->  	might_sleep();
->  
-> +	/*
-> +	 * Associate the bio with a blkg for its target queue here, where it is
-> +	 * safe to sleep, instead of in bio_set_dev()/bio_init() which may run
-> +	 * under a spinlock.  bio_set_dev() no longer associates, so a freshly
-> +	 * allocated or remapped bio has no blkg until it reaches the submit path.
-> +	 * Reassociate only when the bio was remapped to a different queue since
-> +	 * it was last associated; blk_throtl_bio() and the rq_qos throttlers
-> +	 * rely on bio->bi_blkg matching the queue of bio->bi_bdev.
-> +	 */
-> +#ifdef CONFIG_BLK_CGROUP
-> +	if (!bio->bi_blkg || bio->bi_blkg->q != q)
-> +		bio_associate_blkg(bio);
-> +#endif
-> +
 >  	/*
->  	 * For a REQ_NOWAIT based request, return -EOPNOTSUPP
->  	 * if queue does not support NOWAIT.
-> @@ -958,6 +972,13 @@ void submit_bio(struct bio *bio)
->  		count_vm_events(PGPGOUT, bio_sectors(bio));
+> @@ -382,7 +380,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+>  	struct blkcg_gq *blkg;
+>  	int i, ret;
+>  
+> -	lockdep_assert_held(&disk->queue->queue_lock);
+> +	lockdep_assert_held(&disk->queue->blkcg_mutex);
+>  
+>  	/* request_queue is dying, do not create/recreate a blkg */
+>  	if (blk_queue_dying(disk->queue)) {
+> @@ -402,12 +400,15 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+>  
+>  	/* link parent */
+>  	if (blkcg_parent(blkcg)) {
+> +		rcu_read_lock();
+>  		blkg->parent = blkg_lookup(blkcg_parent(blkcg), disk->queue);
+>  		if (WARN_ON_ONCE(!blkg->parent)) {
+> +			rcu_read_unlock();
+>  			ret = -ENODEV;
+>  			goto err_free_blkg;
+>  		}
+>  		blkg_get(blkg->parent);
+> +		rcu_read_unlock();
 >  	}
 >  
-> +	/*
-> +	 * bio_set_ioprio() -> blkcg_set_ioprio() reads the policy from
-> +	 * bio->bi_blkg, so associate the blkg (for new I/O, the first time) before
-> +	 * it runs.  This is the sleepable entry point for new I/O; remapped bios
-> +	 * that reach submit_bio_noacct() directly are reassociated there.
-> +	 */
-> +	bio_associate_blkg(bio);
->  	bio_set_ioprio(bio);
->  	submit_bio_noacct(bio);
+>  	/* invoke per-policy init */
+> @@ -419,7 +420,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+>  	}
+>  
+>  	/* insert */
+> -	spin_lock(&blkcg->lock);
+> +	spin_lock_irq(&blkcg->lock);
+>  	ret = radix_tree_insert(&blkcg->blkg_tree, disk->queue->id, blkg);
+>  	if (likely(!ret)) {
+>  		hlist_add_head_rcu(&blkg->blkcg_node, &blkcg->blkg_list);
+> @@ -436,7 +437,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+>  		}
+>  		blkg->online = true;
+>  	}
+> -	spin_unlock(&blkcg->lock);
+> +	spin_unlock_irq(&blkcg->lock);
+>  
+>  	if (!ret)
+>  		return blkg;
+> @@ -459,7 +460,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+>   * Lookup blkg for the @blkcg - @disk pair.  If it doesn't exist, try to
+>   * create one.  blkg creation is performed recursively from blkcg_root such
+>   * that all non-root blkg's have access to the parent blkg.  This function
+> - * should be called under RCU read lock and takes @disk->queue->queue_lock.
+> + * must be called with @disk->queue->blkcg_mutex held.
+>   *
+>   * Returns the blkg or the closest blkg if blkg_create() fails as it walks
+>   * down from root.
+> @@ -491,6 +492,7 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+>  		struct blkcg *parent = blkcg_parent(blkcg);
+>  		struct blkcg_gq *ret_blkg = q->root_blkg;
+>  
+> +		rcu_read_lock();
+>  		while (parent) {
+>  			blkg = blkg_lookup(parent, q);
+>  			if (blkg) {
+> @@ -501,6 +503,7 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+>  			pos = parent;
+>  			parent = blkcg_parent(parent);
+>  		}
+> +		rcu_read_unlock();
+>  
+>  		blkg = blkg_create(pos, disk, NULL);
+>  		if (IS_ERR(blkg)) {
+> @@ -519,7 +522,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+>  	struct blkcg *blkcg = blkg->blkcg;
+>  	int i;
+>  
+> -	lockdep_assert_held(&blkg->q->queue_lock);
+> +	lockdep_assert_held(&blkg->q->blkcg_mutex);
+>  	lockdep_assert_held(&blkcg->lock);
+>  
+>  	/*
+> @@ -547,8 +550,8 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+>  	hlist_del_init_rcu(&blkg->blkcg_node);
+>  
+>  	/*
+> -	 * Both setting lookup hint to and clearing it from @blkg are done
+> -	 * under queue_lock.  If it's not pointing to @blkg now, it never
+> +	 * Both setting lookup hint to and clearing it from @blkg are done under
+> +	 * blkcg_mutex.  If it's not pointing to @blkg now, it never
+>  	 * will.  Hint assignment itself can race safely.
+>  	 */
+>  	if (rcu_access_pointer(blkcg->blkg_hint) == blkg)
+> @@ -569,24 +572,21 @@ static void blkg_destroy_all(struct gendisk *disk)
+>  	int i;
+>  
+>  restart:
+> -	spin_lock_irq(&q->queue_lock);
+> +	mutex_lock(&q->blkcg_mutex);
+>  	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+>  		struct blkcg *blkcg = blkg->blkcg;
+>  
+>  		if (hlist_unhashed(&blkg->blkcg_node))
+>  			continue;
+>  
+> -		spin_lock(&blkcg->lock);
+> +		spin_lock_irq(&blkcg->lock);
+>  		blkg_destroy(blkg);
+> -		spin_unlock(&blkcg->lock);
+> +		spin_unlock_irq(&blkcg->lock);
+>  
+> -		/*
+> -		 * in order to avoid holding the spin lock for too long, release
+> -		 * it when a batch of blkgs are destroyed.
+> -		 */
+> +		/* Avoid holding blkcg_mutex for too long. */
+>  		if (!(--count)) {
+>  			count = BLKG_DESTROY_BATCH_SIZE;
+> -			spin_unlock_irq(&q->queue_lock);
+> +			mutex_unlock(&q->blkcg_mutex);
+>  			cond_resched();
+>  			goto restart;
+>  		}
+> @@ -605,7 +605,7 @@ static void blkg_destroy_all(struct gendisk *disk)
+>  	}
+>  
+>  	q->root_blkg = NULL;
+> -	spin_unlock_irq(&q->queue_lock);
+> +	mutex_unlock(&q->blkcg_mutex);
+>  
+>  	wake_up_var(&q->root_blkg);
 >  }
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index 8f33f717b14f..7a7509c8a59a 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -507,6 +507,7 @@ void bio_associate_blkg(struct bio *bio);
->  void bio_associate_blkg_from_css(struct bio *bio,
->  				 struct cgroup_subsys_state *css);
->  void bio_clone_blkg_association(struct bio *dst, struct bio *src);
-> +void bio_disassociate_blkg(struct bio *bio);
->  void blkcg_punt_bio_submit(struct bio *bio);
->  #else	/* CONFIG_BLK_CGROUP */
->  static inline void bio_associate_blkg(struct bio *bio) { }
-> @@ -515,6 +516,7 @@ static inline void bio_associate_blkg_from_css(struct bio *bio,
->  { }
->  static inline void bio_clone_blkg_association(struct bio *dst,
->  					      struct bio *src) { }
-> +static inline void bio_disassociate_blkg(struct bio *bio) { }
->  static inline void blkcg_punt_bio_submit(struct bio *bio)
+> @@ -822,8 +822,8 @@ EXPORT_SYMBOL_GPL(blkg_conf_open_bdev);
+>   * @ctx->blkg to the blkg being configured.
+>   *
+>   * blkg_conf_open_bdev() must be called on @ctx beforehand. On success, this
+> - * function returns with queue lock held and must be followed by
+> - * blkg_conf_close_bdev().
+> + * function returns with blkcg_mutex held and must be followed by
+> + * blkg_conf_unprep().
+>   */
+>  int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+>  		   struct blkg_conf_ctx *ctx)
+> @@ -841,7 +841,6 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+>  
+>  	/* Prevent concurrent with blkcg_deactivate_policy() */
+>  	mutex_lock(&q->blkcg_mutex);
+> -	spin_lock_irq(&q->queue_lock);
+>  
+>  	if (!blkcg_policy_enabled(q, pol)) {
+>  		ret = -EOPNOTSUPP;
+> @@ -862,35 +861,34 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+>  		struct blkcg_gq *new_blkg;
+>  
+>  		parent = blkcg_parent(blkcg);
+> +		rcu_read_lock();
+>  		while (parent && !blkg_lookup(parent, q)) {
+>  			pos = parent;
+>  			parent = blkcg_parent(parent);
+>  		}
+> -
+> -		/* Drop locks to do new blkg allocation with GFP_KERNEL. */
+> -		spin_unlock_irq(&q->queue_lock);
+> +		rcu_read_unlock();
+>  
+>  		new_blkg = blkg_alloc(pos, disk, GFP_NOIO);
+>  		if (unlikely(!new_blkg)) {
+>  			ret = -ENOMEM;
+> -			goto fail_exit;
+> +			goto fail_unlock;
+>  		}
+>  
+>  		if (radix_tree_preload(GFP_KERNEL)) {
+>  			blkg_free(new_blkg);
+>  			ret = -ENOMEM;
+> -			goto fail_exit;
+> +			goto fail_unlock;
+>  		}
+>  
+> -		spin_lock_irq(&q->queue_lock);
+> -
+>  		if (!blkcg_policy_enabled(q, pol)) {
+>  			blkg_free(new_blkg);
+>  			ret = -EOPNOTSUPP;
+>  			goto fail_preloaded;
+>  		}
+>  
+> +		rcu_read_lock();
+>  		blkg = blkg_lookup(pos, q);
+> +		rcu_read_unlock();
+>  		if (blkg) {
+>  			blkg_free(new_blkg);
+>  		} else {
+> @@ -907,15 +905,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+>  			goto success;
+>  	}
+>  success:
+> -	mutex_unlock(&q->blkcg_mutex);
+>  	ctx->blkg = blkg;
+>  	return 0;
+>  
+>  fail_preloaded:
+>  	radix_tree_preload_end();
+>  fail_unlock:
+> -	spin_unlock_irq(&q->queue_lock);
+> -fail_exit:
+>  	mutex_unlock(&q->blkcg_mutex);
+>  	/*
+>  	 * If queue was bypassing, we should retry.  Do so after a
+> @@ -938,7 +933,7 @@ EXPORT_SYMBOL_GPL(blkg_conf_prep);
+>  void blkg_conf_unprep(struct blkg_conf_ctx *ctx)
 >  {
->  	submit_bio(bio);
-> @@ -524,10 +526,11 @@ static inline void blkcg_punt_bio_submit(struct bio *bio)
->  static inline void bio_set_dev(struct bio *bio, struct block_device *bdev)
->  {
->  	bio_clear_flag(bio, BIO_REMAPPED);
-> -	if (bio->bi_bdev != bdev)
-> +	if (bio->bi_bdev != bdev) {
->  		bio_clear_flag(bio, BIO_BPS_THROTTLED);
-> +		bio_disassociate_blkg(bio);
+>  	WARN_ON_ONCE(!ctx->blkg);
+> -	spin_unlock_irq(&ctx->bdev->bd_disk->queue->queue_lock);
+> +	mutex_unlock(&ctx->bdev->bd_disk->queue->blkcg_mutex);
+>  	ctx->blkg = NULL;
+>  }
+>  EXPORT_SYMBOL_GPL(blkg_conf_unprep);
+> @@ -1258,8 +1253,9 @@ static struct blkcg_gq *blkcg_get_first_blkg(struct blkcg *blkcg)
+>   * blkcg_destroy_blkgs - responsible for shooting down blkgs
+>   * @blkcg: blkcg of interest
+>   *
+> - * blkgs should be removed while holding both q and blkcg locks.  As blkcg lock
+> - * is nested inside q lock, this function performs reverse double lock dancing.
+> + * blkgs should be removed while holding both q->blkcg_mutex and blkcg->lock.
+> + * As blkcg->lock is nested inside q->blkcg_mutex, this function performs
+> + * reverse double lock dancing.
+>   * Destroying the blkgs releases the reference held on the blkcg's css allowing
+>   * blkcg_css_free to eventually be called.
+>   *
+> @@ -1274,13 +1270,13 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+>  	while ((blkg = blkcg_get_first_blkg(blkcg))) {
+>  		struct request_queue *q = blkg->q;
+>  
+> -		spin_lock_irq(&q->queue_lock);
+> -		spin_lock(&blkcg->lock);
+> +		mutex_lock(&q->blkcg_mutex);
+> +		spin_lock_irq(&blkcg->lock);
+>  
+>  		blkg_destroy(blkg);
+>  
+> -		spin_unlock(&blkcg->lock);
+> -		spin_unlock_irq(&q->queue_lock);
+> +		spin_unlock_irq(&blkcg->lock);
+> +		mutex_unlock(&q->blkcg_mutex);
+>  
+>  		blkg_put(blkg);
+>  		cond_resched();
+> @@ -1472,21 +1468,20 @@ int blkcg_init_disk(struct gendisk *disk)
+>  	preloaded = !radix_tree_preload(GFP_KERNEL);
+>  
+>  	/* Make sure the root blkg exists. */
+> -	/* spin_lock_irq can serve as RCU read-side critical section. */
+> -	spin_lock_irq(&q->queue_lock);
+> +	mutex_lock(&q->blkcg_mutex);
+>  	blkg = blkg_create(&blkcg_root, disk, new_blkg);
+>  	if (IS_ERR(blkg))
+>  		goto err_unlock;
+>  	q->root_blkg = blkg;
+> -	spin_unlock_irq(&q->queue_lock);
+>  
+>  	if (preloaded)
+>  		radix_tree_preload_end();
+> +	mutex_unlock(&q->blkcg_mutex);
+>  
+>  	return 0;
+>  
+>  err_unlock:
+> -	spin_unlock_irq(&q->queue_lock);
+> +	mutex_unlock(&q->blkcg_mutex);
+>  	if (preloaded)
+>  		radix_tree_preload_end();
+>  	return PTR_ERR(blkg);
+> @@ -1526,6 +1521,42 @@ struct cgroup_subsys io_cgrp_subsys = {
+>  };
+>  EXPORT_SYMBOL_GPL(io_cgrp_subsys);
+>  
+> +static void blkg_free_policy_data(struct blkcg_gq *blkg,
+> +				  const struct blkcg_policy *pol)
+> +{
+> +	struct blkcg *blkcg = blkg->blkcg;
+> +	struct blkg_policy_data *pd;
+> +	bool online = false;
+> +
+> +	lockdep_assert_held(&blkg->q->blkcg_mutex);
+> +
+> +	/*
+> +	 * ->pd_offline_fn() may need blkg->pd[] to stay installed, while
+> +	 * ->pd_free_fn() can sleep.  Mark offline under blkcg->lock, run
+> +	 * the offline callback, detach under blkcg->lock, then free.
+> +	 */
+> +	spin_lock_irq(&blkcg->lock);
+> +	pd = blkg->pd[pol->plid];
+> +	if (pd) {
+> +		online = pd->online;
+> +		pd->online = false;
 > +	}
->  	bio->bi_bdev = bdev;
-> -	bio_associate_blkg(bio);
+> +	spin_unlock_irq(&blkcg->lock);
+> +
+> +	if (!pd)
+> +		return;
+> +
+> +	if (online && pol->pd_offline_fn)
+> +		pol->pd_offline_fn(pd);
+> +
+> +	spin_lock_irq(&blkcg->lock);
+> +	WARN_ON_ONCE(blkg->pd[pol->plid] != pd);
+> +	WRITE_ONCE(blkg->pd[pol->plid], NULL);
+> +	spin_unlock_irq(&blkcg->lock);
+> +
+> +	pol->pd_free_fn(pd);
+> +}
+> +
+>  /**
+>   * blkcg_activate_policy - activate a blkcg policy on a gendisk
+>   * @disk: gendisk of interest
+> @@ -1535,9 +1566,9 @@ EXPORT_SYMBOL_GPL(io_cgrp_subsys);
+>   * bypass mode to populate its blkgs with policy_data for @pol.
+>   *
+>   * Activation happens with @disk bypassed, so nobody would be accessing blkgs
+> - * from IO path.  Update of each blkg is protected by both queue and blkcg
+> - * locks so that holding either lock and testing blkcg_policy_enabled() is
+> - * always enough for dereferencing policy data.
+> + * from IO path.  Update of each blkg is protected by q->blkcg_mutex and
+> + * blkcg->lock so that holding either lock and testing blkcg_policy_enabled()
+> + * is always enough for dereferencing policy data.
+>   *
+>   * The caller is responsible for synchronizing [de]activations and policy
+>   * [un]registerations.  Returns 0 on success, -errno on failure.
+> @@ -1563,8 +1594,9 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
+>  
+>  	if (queue_is_mq(q))
+>  		memflags = blk_mq_freeze_queue(q);
+> +
+>  retry:
+> -	spin_lock_irq(&q->queue_lock);
+> +	mutex_lock(&q->blkcg_mutex);
+>  
+>  	/* blkg_list is pushed at the head, reverse walk to initialize parents first */
+>  	list_for_each_entry_reverse(blkg, &q->blkg_list, q_node) {
+> @@ -1572,14 +1604,15 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
+>  
+>  		if (blkg->pd[pol->plid])
+>  			continue;
+> +		if (hlist_unhashed(&blkg->blkcg_node))
+> +			continue;
+>  
+> -		/* If prealloc matches, use it; otherwise try GFP_NOWAIT */
+> +		/* If prealloc matches, use it; otherwise try GFP_NOWAIT. */
+>  		if (blkg == pinned_blkg) {
+>  			pd = pd_prealloc;
+>  			pd_prealloc = NULL;
+>  		} else {
+> -			pd = pol->pd_alloc_fn(disk, blkg->blkcg,
+> -					      GFP_NOWAIT);
+> +			pd = pol->pd_alloc_fn(disk, blkg->blkcg, GFP_NOWAIT);
+>  		}
+>  
+>  		if (!pd) {
+> @@ -1592,7 +1625,7 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
+>  			blkg_get(blkg);
+>  			pinned_blkg = blkg;
+>  
+> -			spin_unlock_irq(&q->queue_lock);
+> +			mutex_unlock(&q->blkcg_mutex);
+>  
+>  			if (pd_prealloc)
+>  				pol->pd_free_fn(pd_prealloc);
+> @@ -1600,11 +1633,10 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
+>  						       GFP_KERNEL);
+>  			if (pd_prealloc)
+>  				goto retry;
+> -			else
+> -				goto enomem;
+> +			goto enomem;
+>  		}
+>  
+> -		spin_lock(&blkg->blkcg->lock);
+> +		spin_lock_irq(&blkg->blkcg->lock);
+>  
+>  		pd->blkg = blkg;
+>  		pd->plid = pol->plid;
+> @@ -1617,14 +1649,14 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
+>  			pol->pd_online_fn(pd);
+>  		pd->online = true;
+>  
+> -		spin_unlock(&blkg->blkcg->lock);
+> +		spin_unlock_irq(&blkg->blkcg->lock);
+>  	}
+>  
+>  	__set_bit(pol->plid, q->blkcg_pols);
+>  	ret = 0;
+>  
+> -	spin_unlock_irq(&q->queue_lock);
+>  out:
+> +	mutex_unlock(&q->blkcg_mutex);
+>  	if (queue_is_mq(q))
+>  		blk_mq_unfreeze_queue(q, memflags);
+>  	if (pinned_blkg)
+> @@ -1635,23 +1667,9 @@ int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
+>  
+>  enomem:
+>  	/* alloc failed, take down everything */
+> -	spin_lock_irq(&q->queue_lock);
+> -	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+> -		struct blkcg *blkcg = blkg->blkcg;
+> -		struct blkg_policy_data *pd;
+> -
+> -		spin_lock(&blkcg->lock);
+> -		pd = blkg->pd[pol->plid];
+> -		if (pd) {
+> -			if (pd->online && pol->pd_offline_fn)
+> -				pol->pd_offline_fn(pd);
+> -			pd->online = false;
+> -			pol->pd_free_fn(pd);
+> -			WRITE_ONCE(blkg->pd[pol->plid], NULL);
+> -		}
+> -		spin_unlock(&blkcg->lock);
+> -	}
+> -	spin_unlock_irq(&q->queue_lock);
+> +	mutex_lock(&q->blkcg_mutex);
+> +	list_for_each_entry(blkg, &q->blkg_list, q_node)
+> +		blkg_free_policy_data(blkg, pol);
+>  	ret = -ENOMEM;
+>  	goto out;
+>  }
+> @@ -1679,24 +1697,12 @@ void blkcg_deactivate_policy(struct gendisk *disk,
+>  		memflags = blk_mq_freeze_queue(q);
+>  
+>  	mutex_lock(&q->blkcg_mutex);
+> -	spin_lock_irq(&q->queue_lock);
+>  
+>  	__clear_bit(pol->plid, q->blkcg_pols);
+>  
+> -	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+> -		struct blkcg *blkcg = blkg->blkcg;
+> +	list_for_each_entry(blkg, &q->blkg_list, q_node)
+> +		blkg_free_policy_data(blkg, pol);
+>  
+> -		spin_lock(&blkcg->lock);
+> -		if (blkg->pd[pol->plid]) {
+> -			if (blkg->pd[pol->plid]->online && pol->pd_offline_fn)
+> -				pol->pd_offline_fn(blkg->pd[pol->plid]);
+> -			pol->pd_free_fn(blkg->pd[pol->plid]);
+> -			blkg->pd[pol->plid] = NULL;
+> -		}
+> -		spin_unlock(&blkcg->lock);
+> -	}
+> -
+> -	spin_unlock_irq(&q->queue_lock);
+>  	mutex_unlock(&q->blkcg_mutex);
+>  
+>  	if (queue_is_mq(q))
+> @@ -2087,11 +2093,11 @@ static inline struct blkcg_gq *blkg_tryget_closest(struct bio *bio,
+>  	 * Fast path failed, we're probably issuing IO in this cgroup the first
+>  	 * time, hold lock to create new blkg.
+>  	 */
+> -	spin_lock_irq(&q->queue_lock);
+> +	mutex_lock(&q->blkcg_mutex);
+>  	blkg = blkg_lookup_create(blkcg, bio->bi_bdev->bd_disk);
+>  	if (blkg)
+>  		blkg = blkg_lookup_tryget(blkg);
+> -	spin_unlock_irq(&q->queue_lock);
+> +	mutex_unlock(&q->blkcg_mutex);
+>  
+>  	return blkg;
+>  }
+> diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+> index 615390f751aa..5aaf2d54d17e 100644
+> --- a/block/blk-cgroup.h
+> +++ b/block/blk-cgroup.h
+> @@ -66,7 +66,7 @@ struct blkcg_gq {
+>  	/* reference count */
+>  	struct percpu_ref		refcnt;
+>  
+> -	/* is this blkg online? protected by both blkcg and q locks */
+> +	/* is this blkg online? protected by blkcg->lock and q->blkcg_mutex */
+>  	bool				online;
+>  
+>  	struct blkg_iostat_set __percpu	*iostat_cpu;
+> @@ -224,9 +224,9 @@ int blkg_conf_open_bdev(struct blkg_conf_ctx *ctx)
+>  	__cond_acquires(0, &ctx->bdev->bd_queue->rq_qos_mutex);
+>  int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+>  		   struct blkg_conf_ctx *ctx)
+> -	__cond_acquires(0, &ctx->bdev->bd_disk->queue->queue_lock);
+> +	__cond_acquires(0, &ctx->bdev->bd_disk->queue->blkcg_mutex);
+>  void blkg_conf_unprep(struct blkg_conf_ctx *ctx)
+> -	__releases(ctx->bdev->bd_disk->queue->queue_lock);
+> +	__releases(ctx->bdev->bd_disk->queue->blkcg_mutex);
+>  void blkg_conf_close_bdev(struct blkg_conf_ctx *ctx)
+>  	__releases(&ctx->bdev->bd_queue->rq_qos_mutex);
+>  
+> @@ -255,7 +255,7 @@ static inline bool bio_issue_as_root_blkg(struct bio *bio)
+>   *
+>   * Lookup blkg for the @blkcg - @q pair.
+>   *
+> - * Must be called in a RCU critical section.
+> + * Must be called in a RCU critical section or with q->blkcg_mutex held.
+>   */
+>  static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg,
+>  					   struct request_queue *q)
+> @@ -266,7 +266,7 @@ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg,
+>  		return q->root_blkg;
+>  
+>  	blkg = rcu_dereference_check(blkcg->blkg_hint,
+> -			lockdep_is_held(&q->queue_lock));
+> +			lockdep_is_held(&q->blkcg_mutex));
+>  	if (blkg && blkg->q == q)
+>  		return blkg;
+>  
+> @@ -350,9 +350,9 @@ static inline void blkg_put(struct blkcg_gq *blkg)
+>   * @p_blkg: target blkg to walk descendants of
+>   *
+>   * Walk @c_blkg through the descendants of @p_blkg.  Must be used with RCU
+> - * read locked.  If called under either blkcg or queue lock, the iteration
+> - * is guaranteed to include all and only online blkgs.  The caller may
+> - * update @pos_css by calling css_rightmost_descendant() to skip subtree.
+> + * read locked.  If called under either blkcg->lock or q->blkcg_mutex, the
+> + * iteration is guaranteed to include all and only online blkgs.  The caller
+> + * may update @pos_css by calling css_rightmost_descendant() to skip subtree.
+>   * @p_blkg is included in the iteration and the first node to be visited.
+>   */
+>  #define blkg_for_each_descendant_pre(d_blkg, pos_css, p_blkg)		\
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 8103643b39fc..0a1d2b09a5d9 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -965,6 +965,8 @@ static void bio_set_ioprio(struct bio *bio)
+>   */
+>  void submit_bio(struct bio *bio)
+>  {
+> +	might_sleep();
+> +
+>  	if (bio_op(bio) == REQ_OP_READ) {
+>  		task_io_account_read(bio->bi_iter.bi_size);
+>  		count_vm_events(PGPGIN, bio_sectors(bio));
+> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+> index 8b2aeba2e1e3..ae50d143e4fc 100644
+> --- a/block/blk-iocost.c
+> +++ b/block/blk-iocost.c
+> @@ -3143,6 +3143,7 @@ static ssize_t ioc_weight_write(struct kernfs_open_file *of, char *buf,
+>  	struct blkg_conf_ctx ctx;
+>  	struct ioc_now now;
+>  	struct ioc_gq *iocg;
+> +	unsigned long flags;
+>  	u32 v;
+>  	int ret;
+>  
+> @@ -3195,11 +3196,11 @@ static ssize_t ioc_weight_write(struct kernfs_open_file *of, char *buf,
+>  			goto unprep;
+>  	}
+>  
+> -	spin_lock(&iocg->ioc->lock);
+> +	spin_lock_irqsave(&iocg->ioc->lock, flags);
+>  	iocg->cfg_weight = v * WEIGHT_ONE;
+>  	ioc_now(iocg->ioc, &now);
+>  	weight_updated(iocg, &now);
+> -	spin_unlock(&iocg->ioc->lock);
+> +	spin_unlock_irqrestore(&iocg->ioc->lock, flags);
+>  
+>  	ret = 0;
+>  
+> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+> index cef02b6c5fa9..30e23fee4f15 100644
+> --- a/block/blk-iolatency.c
+> +++ b/block/blk-iolatency.c
+> @@ -639,6 +639,7 @@ static void blkcg_iolatency_exit(struct rq_qos *rqos)
+>  	timer_shutdown_sync(&blkiolat->timer);
+>  	flush_work(&blkiolat->enable_work);
+>  	blkcg_deactivate_policy(rqos->disk, &blkcg_policy_iolatency);
+> +	flush_work(&blkiolat->enable_work);
+>  	kfree(blkiolat);
 >  }
 >  
->  /*
+> @@ -811,16 +812,18 @@ static void iolatency_clear_scaling(struct blkcg_gq *blkg)
+>  	if (blkg->parent) {
+>  		struct iolatency_grp *iolat = blkg_to_lat(blkg->parent);
+>  		struct child_latency_info *lat_info;
+> +		unsigned long flags;
+> +
+>  		if (!iolat)
+>  			return;
+>  
+>  		lat_info = &iolat->child_lat;
+> -		spin_lock(&lat_info->lock);
+> +		spin_lock_irqsave(&lat_info->lock, flags);
+>  		atomic_set(&lat_info->scale_cookie, DEFAULT_SCALE_COOKIE);
+>  		lat_info->last_scale_event = 0;
+>  		lat_info->scale_grp = NULL;
+>  		lat_info->scale_lat = 0;
+> -		spin_unlock(&lat_info->lock);
+> +		spin_unlock_irqrestore(&lat_info->lock, flags);
+>  	}
+>  }
+>  
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 7bca2805404f..ef3edd5a4785 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -1777,10 +1777,10 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
+>  	if (!blk_throtl_activated(q))
+>  		return;
+>  
+> -	spin_lock_irq(&q->queue_lock);
+> -	spin_lock(&td->lock);
+> +	mutex_lock(&q->blkcg_mutex);
+> +	spin_lock_irq(&td->lock);
+>  	/*
+> -	 * queue_lock is held, rcu lock is not needed here technically.
+> +	 * blkcg_mutex is held, rcu lock is not needed here technically.
+>  	 * However, rcu lock is still held to emphasize that following
+>  	 * path need RCU protection and to prevent warning from lockdep.
+>  	 */
+> @@ -1797,8 +1797,8 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
+>  		tg_cancel_writeback_bios(blkg_to_tg(blkg), cancel_bios);
+>  	}
+>  	rcu_read_unlock();
+> -	spin_unlock(&td->lock);
+> -	spin_unlock_irq(&q->queue_lock);
+> +	spin_unlock_irq(&td->lock);
+> +	mutex_unlock(&q->blkcg_mutex);
+>  
+>  	for (rw = READ; rw <= WRITE; rw++) {
+>  		struct bio *bio;
 
