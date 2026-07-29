@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B8553BFE34;
-	Wed, 29 Jul 2026 09:27:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A8A72FDC28;
+	Wed, 29 Jul 2026 09:46:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785317234; cv=none; b=Ca3Bu4rYnnxK59+YvHBbhYSm0jYEO2JQHTxzijDZ9EAQw9IlWpAzmT5F7CxAZF2Vg4alIX0/7uiEcPjbJiRNSD/RXKRwa2MEW4rXEHejivUVgGAX4eKga/+EfSUyNxggYfUH3Le8SDGjospJuBUhERVcfr7kIjlD2Shq3ZvxZDg=
+	t=1785318376; cv=none; b=KLTvXLMHS03L3msghxshj0KaRgHdClnD05cCPKC+ROxImz5957COE7tYTWg/RKxRSgDU94zL7K2h7Ae5KgV6avg5dy0wRLrS1/YSUONAXuxdtHUgdy1Z8mH77BMfoUlTT0FceEhQJ5uZ08EXe+yM/y+X3Nhfxa268JDuPcP5nug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785317234; c=relaxed/simple;
-	bh=q7xIS+eUoBIC/ATETDyfJeV0KQkuKGU6BfzJ032wwxg=;
+	s=arc-20240116; t=1785318376; c=relaxed/simple;
+	bh=GMsoI8obxs7Jnu5IR0nC98YgWcF5sPTPGRv0HQMosoo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NurUggrs5q0Bm5gnza231CR5BHT5fDytfaohKSF5vSCLJCmk8nnvsCRVKPd+m5sAfvjwrDOsSipDeEflJM4cMW3s80MZxmI+Pbu33NTQ2Dkt+IPERyc4qq72ihvyNsyY4CoiltpyHiKhnkimtBhaxKoeWE3Ju+Ao/5PQPaj0DbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lRGtm4ZG; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=JT3KQAHm5A5YZlxgPLSVMrLWceIItQVQkADRnqLcn0PWhshYDnOyOMkPfjO60rRMdizFj3ZxfeMQA007LXplAAuFwemtT0VbtxIF7l3vTvOw3xNCsUdDGUqNcDoTGeSQXX+ggmsh5jvHD1dP7e0yv+KrpdHfnsI9jxcZcQrScDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V19wazKL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lRGtm4ZG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8843E1F00A3A;
-	Wed, 29 Jul 2026 09:27:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V19wazKL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC43A1F000E9;
+	Wed, 29 Jul 2026 09:46:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785317233;
-	bh=nEkM6tHdYvAmijWhRzhBNP+8NQIT97ZMVC9D6UXN+gI=;
+	s=k20260515; t=1785318375;
+	bh=E7rPxALTKK7Txz1MCTwebeGpX5bzL/i/vLYui1u0ffY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=lRGtm4ZGd7Di3ehxNoi+3eL7Fgoc1gHNi6kcJKeuVlAvImOajZ9Q6mr3gRJfZII3J
-	 xPNBMqf4XMsMHo7FLiqQU+FcA2fBytFdQuJu5fcvqLbhTQNWlSVjhT/pbJemPH96Q+
-	 iTuB1Zg8Y1HI7FuWjR96a68daX9m/tRpvOHefmP6G4ciZtkAE12nFtxthoYlxJmVBK
-	 QSBXTu5wjwplFXHTUvLtgW75EmCgA6Sfp5xB4Drgl929hGe0/cdkVXV73WnF+jZTTS
-	 wuX7oC+htDdcGVYGrs+lVfKN8y5+QGZbWgjyoDvPQ7etcQuHUpYrp0ZGZ75Nakjs0I
-	 pgtPY/0vsDHKw==
-Message-ID: <49d7454b-b76b-43e7-a359-b2182545dbcc@kernel.org>
-Date: Wed, 29 Jul 2026 11:27:08 +0200
+	b=V19wazKLOp6RZkUtSjNDmzHzKEfwQSNjcp6NByfAVngPZ0F6yzYVlqqkdelSC2hhG
+	 3QTantQ+D9kN69D1kwsFw1Wv6WID3xWN0+FMRT47gVBUUxqcpjBKhkbDotL7CWGf4z
+	 X+hgMNOwVcULaAja0DyLZI2q/w1HT/Ch6ZePWc1QO3SVlCCj1qCJKtXJuAquvmTFjA
+	 bD46Ggr+9OlrrRCk9dPF/JGcdBtsK8mvUES3FnHa+6u2Pj/Y2TXtuT9TK2pQAP67Pj
+	 bhoQrJAC9ebDHtFNz2dAN3FkGZzbRdAP8YwbLU2Q8mKMvFhcZZVZ2PwgUmpmvvl/nO
+	 kkQeyh+iGv7qw==
+Message-ID: <aa23851a-5f64-4f01-8804-07b735fc8afe@kernel.org>
+Date: Wed, 29 Jul 2026 11:46:11 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 07/13] mm/slab: replace slab.stride with
- obj_exts_in_object
+Subject: Re: [PATCH v3 06/13] mm/slab: abstract slabobj_ext.ref access
 Content-Language: en-US
 To: Harry Yoo <harry@kernel.org>
 Cc: Suren Baghdasaryan <surenb@google.com>, Hao Li <hao.li@linux.dev>,
@@ -47,8 +46,9 @@ Cc: Suren Baghdasaryan <surenb@google.com>, Hao Li <hao.li@linux.dev>,
  Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
- <20260727-b4-objext_split-v3-7-c29ef0f1f257@kernel.org>
- <ammbWxBtX7KxgJ5R@dev>
+ <20260727-b4-objext_split-v3-6-c29ef0f1f257@kernel.org>
+ <amivCT7AaPux-GSK@thinkpad> <365d8e50-5aeb-45e9-97a3-87d0024cdc5f@kernel.org>
+ <ammZpX_77SMsxvPz@dev>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -89,38 +89,178 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <ammbWxBtX7KxgJ5R@dev>
+In-Reply-To: <ammZpX_77SMsxvPz@dev>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/29/26 08:40, Harry Yoo wrote:
-> On Mon, Jul 27, 2026 at 02:54:01PM +0200, Vlastimil Babka (SUSE) wrote:
->> The stride field is used to convert object index to an slabobj_ext so
->> both compact arrays (kmalloc() or in-slab-leftover) and spread
->> in-object-padding obj_ext layouts are supported.
->> 
->> In practice thus the stride is always sizeof(slabobj_ext) or s->size.
->> 
->> This simplifies the calculations, but with the upcoming slabobj_ext
->> handling changes, it will be easier to stop storing the stride and
->> instead just have a flag whether obj_ext is in the object padding.
->> obj_exts_in_object() can then rely on this flag and slab_obj_ext()
->> can use that to determine the stride.
->> 
->> No functional change intended. Performance impact TBD, hopefully
->> in the noise.
+On 7/29/26 08:18, Harry Yoo wrote:
+>> diff --git a/mm/slab.h b/mm/slab.h
+>> index 8f352d9f4d91..fbad99da093c 100644
+>> --- a/mm/slab.h
+>> +++ b/mm/slab.h
+>> @@ -726,6 +726,8 @@ static inline void slab_obj_ext_set_objcg(struct slabobj_ext *obj_ext,
+>>  static inline union codetag_ref *
+>>  slab_obj_ext_codetag_ref(struct slab *slab, struct slabobj_ext *obj_ext)
+>>  {
+>> +       VM_WARN_ON_ONCE(!slab_obj_ext_has_codetag());
+>> +
+>>         if (IS_ENABLED(CONFIG_MEMCG))
+>>                 obj_ext += 1;
+>>  
+>> ... and for objcg we would need to start passing slab pointer to
+>> slab_obj_ext_objcg() and slab_obj_ext_set_objcg(). Hmm...
 > 
-> Performance impact is not TBD anymore?
+> But slab_obj_ext_codetag_ref() already takes the parameter to
+> calculate offset. I think it's worth as it'll be optimized away on
+> non-debug kerenels and there is no way to detect type confusion
+> due to subtle errors in the objext layout.
 
-Ah right, thanks. Since I didn't measure this commit separately, will remove
-the note completely and leave it to cover letter -> merge commit only.
+OK, so updated to this. VM_WARN_ON_ONCE() added later.
 
->> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
->> Reviewed-by: Hao Li <hao.li@linux.dev>
->> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
->> ---
-> 
-> Looks good to me,
-> Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
+From db9c3501c0f9747fda8fa92d4f640b6fac8050e0 Mon Sep 17 00:00:00 2001
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Date: Mon, 27 Jul 2026 14:53:59 +0200
+Subject: [PATCH] mm/slab: abstract slabobj_ext.objcg access
 
-Thanks!
+In preparation for changes to the structure, abstract getting and
+setting the objcg field with slab_obj_ext_objcg() and
+slab_obj_ext_set_objcg().
+Rename the field to _objcg to make an unexpected direct access a compile
+error.
+
+The helpers take a slab pointer, which is currently unused, but will be
+used by a debug check later.
+Since there is no slab pointer easily available in __kfence_free(), just
+drop the debug check there. The whole memcg_kmem accounting in kfence is
+to be removed later anyway.
+
+Otherwise, no functional change intended.
+
+Reviewed-by: Hao Li <hao.li@linux.dev>
+Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
+Link: https://patch.msgid.link/20260727-b4-objext_split-v3-5-c29ef0f1f257@kernel.org
+Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+---
+ mm/kfence/core.c |  3 ---
+ mm/memcontrol.c  | 14 ++++++++------
+ mm/slab.h        | 17 ++++++++++++++++-
+ mm/slub.c        |  2 +-
+ 4 files changed, 25 insertions(+), 11 deletions(-)
+
+diff --git a/mm/kfence/core.c b/mm/kfence/core.c
+index 6577bd76954e..5608a37f2b4d 100644
+--- a/mm/kfence/core.c
++++ b/mm/kfence/core.c
+@@ -1248,9 +1248,6 @@ void __kfence_free(void *addr)
+ {
+ 	struct kfence_metadata *meta = addr_to_metadata((unsigned long)addr);
+ 
+-#ifdef CONFIG_MEMCG
+-	KFENCE_WARN_ON(meta->obj_exts.objcg);
+-#endif
+ 	/*
+ 	 * If the objects of the cache are SLAB_TYPESAFE_BY_RCU, defer freeing
+ 	 * the object, as the object page may be recycled for other-typed
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 4e427286a88a..68e98fb3350e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2865,6 +2865,7 @@ struct mem_cgroup *mem_cgroup_from_obj_slab(struct slab *slab, void *p)
+ 	 */
+ 	unsigned long obj_exts;
+ 	struct slabobj_ext *obj_ext;
++	struct obj_cgroup *objcg;
+ 
+ 	obj_exts = slab_obj_exts(slab);
+ 	if (!obj_exts)
+@@ -2872,9 +2873,8 @@ struct mem_cgroup *mem_cgroup_from_obj_slab(struct slab *slab, void *p)
+ 
+ 	get_slab_obj_exts(obj_exts);
+ 	obj_ext = slab_obj_ext(slab->slab_cache, slab, obj_exts, p);
+-	if (obj_ext->objcg) {
+-		struct obj_cgroup *objcg = obj_ext->objcg;
+-
++	objcg = slab_obj_ext_objcg(slab, obj_ext);
++	if (objcg) {
+ 		put_slab_obj_exts(obj_exts);
+ 		return obj_cgroup_memcg(objcg);
+ 	}
+@@ -3614,8 +3614,10 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ 		obj_exts = slab_obj_exts(slab);
+ 		get_slab_obj_exts(obj_exts);
+ 		obj_ext = slab_obj_ext(s, slab, obj_exts, p[i]);
++
+ 		obj_cgroup_get(objcg);
+-		obj_ext->objcg = objcg;
++		slab_obj_ext_set_objcg(slab, obj_ext, objcg);
++
+ 		put_slab_obj_exts(obj_exts);
+ 	}
+ 
+@@ -3633,11 +3635,11 @@ void __memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ 		struct obj_stock_pcp *stock;
+ 
+ 		obj_ext = slab_obj_ext(s, slab, obj_exts, p[i]);
+-		objcg = obj_ext->objcg;
++		objcg = slab_obj_ext_objcg(slab, obj_ext);
+ 		if (!objcg)
+ 			continue;
+ 
+-		obj_ext->objcg = NULL;
++		slab_obj_ext_set_objcg(slab, obj_ext, NULL);
+ 
+ 		stock = trylock_stock();
+ 		__refill_obj_stock(objcg, stock, obj_size, true);
+diff --git a/mm/slab.h b/mm/slab.h
+index 451b50b7f237..ea014311e29f 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -555,7 +555,7 @@ static inline bool need_kmalloc_no_objext(void)
+  */
+ struct slabobj_ext {
+ #ifdef CONFIG_MEMCG
+-	struct obj_cgroup *objcg;
++	struct obj_cgroup *_objcg;
+ #endif
+ #ifdef CONFIG_MEM_ALLOC_PROFILING
+ 	union codetag_ref ref;
+@@ -662,6 +662,21 @@ slab_obj_ext(struct kmem_cache *s, struct slab *slab, unsigned long obj_exts,
+ 	return kasan_reset_tag(obj_ext);
+ }
+ 
++#ifdef CONFIG_MEMCG
++static inline struct obj_cgroup *
++slab_obj_ext_objcg(struct slab *slab, struct slabobj_ext *obj_ext)
++{
++	return obj_ext->_objcg;
++}
++
++static inline void
++slab_obj_ext_set_objcg(struct slab *slab, struct slabobj_ext *obj_ext,
++		       struct obj_cgroup *objcg)
++{
++	obj_ext->_objcg = objcg;
++}
++#endif
++
+ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
+ 			gfp_t gfp, unsigned int alloc_flags);
+ 
+diff --git a/mm/slub.c b/mm/slub.c
+index a74f1866c958..ed18860fa0fd 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -2526,7 +2526,7 @@ bool memcg_slab_post_charge(void *p, gfp_t flags)
+ 	if (obj_exts) {
+ 		get_slab_obj_exts(obj_exts);
+ 		obj_ext = slab_obj_ext(s, slab, obj_exts, p);
+-		if (unlikely(obj_ext->objcg)) {
++		if (unlikely(slab_obj_ext_objcg(slab, obj_ext))) {
+ 			put_slab_obj_exts(obj_exts);
+ 			return true;
+ 		}
+-- 
+2.55.0
+
+
