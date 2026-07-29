@@ -1,148 +1,119 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3F5A43E4BE;
-	Wed, 29 Jul 2026 08:06:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5B743C067
+	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 08:21:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785312371; cv=none; b=VOmf5FoqdavUEJdAaXYixuxedudEudO30abkfDnTVHUePCUg/4S/n4VQZPEtY/ezSaj2jkCcx887FMQsmMIdAtz9nV66X8QAvZxj7hTzcq9ABKxesN8PaD09tYj5AMDqFK73VnncFipYa1qgJGlRgTZQJI0+BVGX7hsbMoQ3uLU=
+	t=1785313318; cv=none; b=MMIQEFBbrmLTy4GNDKYQLlzAuWCOQ7w7W2CUlSl7ffEqBUMk/gHn1ULLYvprmnn+QJ/3vieut5Fr3l3FHIc5gEgIj+lRLB/mvzK9wrj5j6Y3ziXd0XL9MpFrwJX92wlvqU41FtMoWgKZO7mFQefz6bDECuAYlP5/6QdUDPltOwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785312371; c=relaxed/simple;
-	bh=+gFpqfNECcudvjPIbSesCeekyieNQi7IJcwBqeD03OQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=myOfKNEUE148cg8t+pvsDmjycdAUfY0mFWSmuJExXNUxqq8KLjTH87xPoZV3rENlQlGN+lNehaKyATglAZcj+83toQkWJQWDnZ8ncvACvj1qIwtIYOJl1tf0OLRkaBTApdM3U27yR45R6M7Ser/0EZaaP8vdq80/FM1hV4xkzk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=TfBV47ky; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1785313318; c=relaxed/simple;
+	bh=+8wOGBtVS4sbNe749HEkgNACNioF9ncWq7rqnq7Wl/Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N+WxE/T9ApylXHwJVlZfpL841TonLGyF1UAp3lipmXFn4u3C6ZTCvNZqFAEd8Fo68iGtTG6AO1WNVSCyYXzOcwOIF6q0wLzHfEtAL3ncBRBsMUuJI6K/PPZBOs4ItPMesJCGr4IvzTwCMKucb4g820RJYfLDYHbWMvW88woNf7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=HCcbdCxt; arc=none smtp.client-ip=209.85.221.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="TfBV47ky"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66T7lxhm3506989;
-	Wed, 29 Jul 2026 08:05:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=Hh6dlq
-	3s7Mv84Aptn3QUUc41SrWcBRIEjlF9t6u4gbc=; b=TfBV47kyMaF1dqOfYkYi47
-	KpRzf/TA3G/mT3jA5l+ODnZmYkHsRucecfE1BLa5ghiCBDM7Ed11l2BCqWr1gGqt
-	QcFxAf933x2skh0EE7vRnXNNbxHMXV7nosSN/vali06u1R3p+XTxS5Pn1OSU8Mtp
-	zy2tRlIUSIzB5/ziFlEhKsf0D4ruIoAzn9alQzg+lRxeeSwW50dBU0fiTHZVTceq
-	eQqVl3jeC/ORWEJKO41C+hMRyNvsmYRynvqbfPmp0EHckMQR+rS06AHtwmSvqzX9
-	CvOvXQybP3aPHgYdnif1jJRiDeqMvM46MYfJopdRx13XlX3n85blwnRdUlMBWQqg
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fmuyj8ue0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 29 Jul 2026 08:05:48 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66T7uFe3020041;
-	Wed, 29 Jul 2026 08:05:47 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fn7fqdy9w-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 29 Jul 2026 08:05:47 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66T85k6c13697764
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Jul 2026 08:05:47 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C9A6D5805F;
-	Wed, 29 Jul 2026 08:05:46 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id B2C205805C;
-	Wed, 29 Jul 2026 08:05:42 +0000 (GMT)
-Received: from [9.43.67.164] (unknown [9.43.67.164])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 29 Jul 2026 08:05:42 +0000 (GMT)
-Message-ID: <8d5f5b83-dea7-47cd-ab0f-61d85a3d7ed9@linux.ibm.com>
-Date: Wed, 29 Jul 2026 13:35:40 +0530
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="HCcbdCxt"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-47f81a3ccf9so507002f8f.0
+        for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 01:21:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1785313307; x=1785918107; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Kf3hEdsSYCZNTX5rn+lOkaFGwEn2EXdhe7ejyIAKxL4=;
+        b=HCcbdCxtTwGoucjNU9lvXHqmarl0kxkJlKUIjk9KW9gvUD00+zymykIIMzuE0TgOvg
+         MNSXBsw3VD/XxR+ejcmvSpuRDDtf8bAVT7X3EnpQxsTYpz8nsXfZ3FTUK9k5VVW7G5Tp
+         gA0U0Ld+Br5HzYyip88c++mhSYKqQWlvUHVJZs/sKOSZSAMjZ8guz0ItsQXscDRYlQyf
+         sv/w7gl1ApDELxeZPEgUo+Jmql699nKzPwcw/AiT4iFlifbZvj7duzi12rQcp15KVC+W
+         AJOewvx5I7mHoHofm/DVc0MQPUlkYwgIiqwjL/VJGeasY8vqXGBISIYF7iQm55u056Q/
+         j67Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785313307; x=1785918107;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Kf3hEdsSYCZNTX5rn+lOkaFGwEn2EXdhe7ejyIAKxL4=;
+        b=ceVyovHCedLQEDLacvzengA9DqRKQR+A9srEfk+s5v4+VMik5lPOYqi5GWuXcL7mBr
+         dbXk7vwyj/e4c+rIxg4XnFA1rZuMTfLxAZjfEFE7pVXzJcA/JhgmaZxZ7laABiAFTWZN
+         W4p+9qplcajEo0uE6m66tvwqATE1I2C1ECtnkK8ZOkxiUPw4rc04c+M0EbULW3iqOLjd
+         U3cUx2LpaC77roWx8b9WOo1n9DV0vkKfMrtiofnY4ob/3n6tLnOgGi4Rv4c9edFmWWtx
+         O6/cbrO/L0EbNQtcwXQ3+PI4TwPsWyJn49X+qoaZF3Xb2H1njzywDnfO4Cpp5S/Hyvy0
+         vfXQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrpvI+P4TxcnX6ELZheu5fKYb2/znc7BM79KPbjmBOY+lNj8exc/VoPQ3S4S+3zHJ/rUOnVQEOU@vger.kernel.org
+X-Gm-Message-State: AOJu0YzW2xacj6lwp45NnclypSBuzmFec4jKxhw2ABUUAC1vlVLAc8f4
+	bzS8+hlfkQj72tAUH66QRcoQLatn3wlzb4PDE4PT52qhooC0rUxHg6SOKsvwa7HyoeI=
+X-Gm-Gg: AR+sD119k3tajczNtOaf+yWUjIbE+XBflxChUc9+9XwqOGWJrM+xyI4TazQXOLAgIAT
+	AQ7jM3Xj+cWIzDNpz8GKfqI/MScBX/jID7JRIimgyBheQPWud0YBC6X1syykzYaKKlMBqIxLEEJ
+	a1ALY9AErs8v9dju/u6qEyByCtdVJqR8wSEUcyqN69vYjg5lk5qMhkMaMqyTQwpohlu+lKpvZ/W
+	gjOIZCLNuX8PI9aOk61X7mLxh2MWyVwLU3rjh3zZV1XBZYfYJWNbaTYRx5O0jxvgg2mRXTntL7u
+	GuncAnf7gzjj7U/uxrBMbxHV2cg7yfUvifSR8+Kj0E1IiGMT8GtbwvJ+Em9BsvVwtZqAoS3eiAJ
+	b3jJQI0RzBpjZoC307brLFZ94qMI+uVYdpYcec/wys2n7xtzio/VSnsV3kixF7ZWPYh132CPlBK
+	qboxqC78/sLhtpSVzTndrJuS+D8wQV+V0IWR9kOLCwkwTFQ7UON5zEhpr8k80ymwImXErM
+X-Received: by 2002:a05:6000:22c3:b0:47f:9567:e63b with SMTP id ffacd0b85a97d-47fb1f26115mr7562586f8f.55.1785313306843;
+        Wed, 29 Jul 2026 01:21:46 -0700 (PDT)
+Received: from localhost (109-81-83-7.rct.o2.cz. [109.81.83.7])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fb6b0ef1asm5812361f8f.19.2026.07.29.01.21.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jul 2026 01:21:46 -0700 (PDT)
+Date: Wed, 29 Jul 2026 10:21:45 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	David Rientjes <rientjes@google.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Usama Arif <usama.arif@linux.dev>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Darren Hart <dvhart@infradead.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	=?iso-8859-1?Q?Andr=E9?= Almeida <andrealmeid@igalia.com>,
+	"Liam R . Howlett" <liam@infradead.org>,
+	Yosry Ahmed <yosry@kernel.org>, Rik van Riel <riel@surriel.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC] Robust futex causing memcg OOM storm on exit
+Message-ID: <amm4GQP90D6Ho6Rw@tiehlicka>
+References: <20260723001908.4046643-1-shakeel.butt@linux.dev>
+ <amds50dIVOiQNz0k@tiehlicka>
+ <amd6N4DVzZkl90cs@linux.dev>
+ <ame7Q-0eVRrtt34j@linux.dev>
+ <amhZ645Nhj856JfO@tiehlicka>
+ <amjeUV3dAn7KPQgK@linux.dev>
+ <amkBvRSJm5rgiV5Q@tiehlicka>
+ <amkjTk7Jc1q4ubxj@linux.dev>
+ <amlkSmMZTWrT4rau@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 1/8] block: associate blkg in submit_bio instead of
- bio_set_dev
-To: yukuai@fygo.io, axboe@kernel.dk, tj@kernel.org
-Cc: hch@lst.de, dongsheng.yang@linux.dev, cengku@gmail.com,
-        josef@toxicpanda.com, ming.lei@redhat.com, linux-block@vger.kernel.org,
-        cgroups@vger.kernel.org
-References: <20260724123037.3004560-1-yukuai@kernel.org>
- <20260724123037.3004560-2-yukuai@kernel.org>
- <933b4285-1c85-4076-831a-0501d5c38e16@fygo.io>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <933b4285-1c85-4076-831a-0501d5c38e16@fygo.io>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDA2MiBTYWx0ZWRfX1vuUHFtY+Ljy
- HwEkGdSqobzBYOROGPy4LLisRFRc1lo0mZ4gouOQx4ZyDQDZaQBCQ6q+F9ZHSyzc7nhe2DuPaIX
- wNTTP367jgkBzPBN9C6C2c2w05xrV5M=
-X-Proofpoint-GUID: cTEejdunoxXQ2etS0MyiRQn0t0Z-L6zl
-X-Proofpoint-ORIG-GUID: R4R1nxelcaRTS2ilZOkj-XKyUvbJkGP5
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDA2MiBTYWx0ZWRfX4MirdZPFGc2c
- WOJGbHXXvLPO2AEHdGPm+yBTcgzr/K0yz4/p9S3cvloPwI14E/bXGFgsOwbWfdm9zrER7ztpCAq
- B314Jbja0in2QO6BS6G+43vs8dqvtia1ay5Z81pyVT5R7BYVyL7uW2eg4Q0e2V7/x7me39ZSoem
- 2+Xg47dgCdv0zZ13BkvPbErCU5oMuHmQTdI3alYSvd7j+5mzyvniy3YizSvsEEs+5hINa8akV1d
- EX/FdQOcHY8u58ifb3+3+aM9DHAePvZ3WxomPB78CX+PomJg2tFHj5l86uENLZqS6H9+629oy1m
- ZyRuAeJbmwc4KSVPH/Csth4Yq1nntm94l/84Wnm34aWuC6q0A8ITDk7YKR9gyvEhxCS28UcdfWN
- ra6Aq3FIyjCe7IUHSthhydvc/W6JdOVPmLV6dlM08F/D9O6iDK7pPEu/zm6kS7hasZM5pqx46V8
- sOAh0HQBAsfQPhTNPEA==
-X-Authority-Analysis: v=2.4 cv=X5Vi7mTe c=1 sm=1 tr=0 ts=6a69b45c cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=pkFYtQWUJMQnR_XrdBgA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-29_03,2026-07-28_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 lowpriorityscore=0 phishscore=0
- priorityscore=1501 malwarescore=0 spamscore=0 suspectscore=0 bulkscore=0
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607290062
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <amlkSmMZTWrT4rau@linux.dev>
 
-On 7/27/26 1:46 PM, yu kuai wrote:
-> Hi,
-> 
-> 在 2026/7/24 20:30, Yu Kuai 写道:
->> From: Yu Kuai<yukuai@fygo.io>
->>
->> bio_set_dev(), bio_init() and bio_reset() associate a bio with a blkg for
->> its target queue. That association may have to create a new blkg, and
->> currently there are lots of callers that are under atomic context.
->>
->> Move the association out of those helpers and into the submit path, which
->> is always sleepable (submit_bio_noacct() already does might_sleep()):
->>
->>     - submit_bio() associates new I/O before bio_set_ioprio(), whose
->>       blkcg_set_ioprio() reads the policy from bio->bi_blkg.
->>
->>     - submit_bio_noacct() (re)associates when a bio has no blkg yet or was
->>       remapped to a different queue.  blk_throtl_bio() and the rq_qos
->>       throttlers (iocost, iolatency) pair bio->bi_blkg with the queue of
->>       bio->bi_bdev, so a remapped bio must be reassociated to the new queue.
->>
->>     - bio_set_dev() no longer associates; instead it drops the existing blkg
->>       when the device changes, since that blkg is tied to the old queue.
->>       bio_init()/bio_reset() leave bi_blkg NULL.
->>
->> Introduce bio_disassociate_blkg() to drop a bio's blkg reference and use it
->> from bio_set_dev(), bio_uninit() and the bio freeing path, replacing their
->> open-coded blkg_put().
-> Turns out bio will be submitted by kworker for some drivers and for
-> blkcg_punt_bio_submit(). Is it possible to record blkcg during bio initialization,
-> as blkcg must exist, and then covert it to blkg during submission? I can use union
-> for blkcg and blkg to avoid new field in struct bio.
+On Tue 28-07-26 19:25:57, Shakeel Butt wrote:
+[...]
+> Now I have much better results. Previous numbers were on a VM and now I have
+> ran on a physical machine and the results are much better and consistent. The
+> baseline consistently shows ~90 seconds exit time while (tsk_is_oom_victim +
+> MMF_OOM_SKIP) consistently show ~3 seconds exit time. I will send the formal
+> patch soon.
 
-Since blkcg_punt_bio_submit() is the only deferred submission path, and it seems to
-me that all of its callers (btrfs mostly) appear to be in sleepable context, would
-it be sufficient to associate the blkg before punting the bio rather than changing the
-bio lifetime semantics?
+Thanks a lot for the testing Shakeel! We can always ease the check but
+if the more conservative approach helps already then this would be my
+preferred way.
 
-Thanks,
---Nilay
+Thanks!
+
+-- 
+Michal Hocko
+SUSE Labs
