@@ -1,119 +1,104 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+Received: from va-2-42.ptr.blmpb.com (va-2-42.ptr.blmpb.com [209.127.231.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5B743C067
-	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 08:21:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B75A442B0C
+	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 08:28:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785313318; cv=none; b=MMIQEFBbrmLTy4GNDKYQLlzAuWCOQ7w7W2CUlSl7ffEqBUMk/gHn1ULLYvprmnn+QJ/3vieut5Fr3l3FHIc5gEgIj+lRLB/mvzK9wrj5j6Y3ziXd0XL9MpFrwJX92wlvqU41FtMoWgKZO7mFQefz6bDECuAYlP5/6QdUDPltOwc=
+	t=1785313716; cv=none; b=X0EaaClFOs489AbwWlIk6TNhmeQFlYBFbVJkZBASvIcvfMoaBd3YQJNLGwFMzRLAiNhgTQNYW6jNP+soz6vr3aKq1ZGvjM2ogH2pLwSd/ghPvPNepNowVnHI7waHGo/9IilX9zZnYxJNSudIKWrJ6Ksc3XjHZ7EuJYyZ1XkG0YI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785313318; c=relaxed/simple;
-	bh=+8wOGBtVS4sbNe749HEkgNACNioF9ncWq7rqnq7Wl/Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N+WxE/T9ApylXHwJVlZfpL841TonLGyF1UAp3lipmXFn4u3C6ZTCvNZqFAEd8Fo68iGtTG6AO1WNVSCyYXzOcwOIF6q0wLzHfEtAL3ncBRBsMUuJI6K/PPZBOs4ItPMesJCGr4IvzTwCMKucb4g820RJYfLDYHbWMvW88woNf7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=HCcbdCxt; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1785313716; c=relaxed/simple;
+	bh=8DaMrQkwSOLSYeVcgfkY+Hx0LSQoJH+0MZz/vGq60yo=;
+	h=Content-Type:To:Cc:Subject:Date:Mime-Version:In-Reply-To:
+	 Message-Id:References:From; b=lKSPi+7G4rZxYO4s07y4g8u8iwZKtz1x17cDLIuVDGUhOxTnP5r930VJtfCL9/ZjMUlg4V8GO1uQeGtXeRRqY8BLr8UZOgPAnPURogFDOoimQuhi7xe/5e0q8V3xjBUtwcVvk/plb8mNudbPphskeUcvx2vkBW5U2axtV5LR+yA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=UKmrvVHf; arc=none smtp.client-ip=209.127.231.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="HCcbdCxt"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-47f81a3ccf9so507002f8f.0
-        for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 01:21:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1785313307; x=1785918107; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Kf3hEdsSYCZNTX5rn+lOkaFGwEn2EXdhe7ejyIAKxL4=;
-        b=HCcbdCxtTwGoucjNU9lvXHqmarl0kxkJlKUIjk9KW9gvUD00+zymykIIMzuE0TgOvg
-         MNSXBsw3VD/XxR+ejcmvSpuRDDtf8bAVT7X3EnpQxsTYpz8nsXfZ3FTUK9k5VVW7G5Tp
-         gA0U0Ld+Br5HzYyip88c++mhSYKqQWlvUHVJZs/sKOSZSAMjZ8guz0ItsQXscDRYlQyf
-         sv/w7gl1ApDELxeZPEgUo+Jmql699nKzPwcw/AiT4iFlifbZvj7duzi12rQcp15KVC+W
-         AJOewvx5I7mHoHofm/DVc0MQPUlkYwgIiqwjL/VJGeasY8vqXGBISIYF7iQm55u056Q/
-         j67Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785313307; x=1785918107;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Kf3hEdsSYCZNTX5rn+lOkaFGwEn2EXdhe7ejyIAKxL4=;
-        b=ceVyovHCedLQEDLacvzengA9DqRKQR+A9srEfk+s5v4+VMik5lPOYqi5GWuXcL7mBr
-         dbXk7vwyj/e4c+rIxg4XnFA1rZuMTfLxAZjfEFE7pVXzJcA/JhgmaZxZ7laABiAFTWZN
-         W4p+9qplcajEo0uE6m66tvwqATE1I2C1ECtnkK8ZOkxiUPw4rc04c+M0EbULW3iqOLjd
-         U3cUx2LpaC77roWx8b9WOo1n9DV0vkKfMrtiofnY4ob/3n6tLnOgGi4Rv4c9edFmWWtx
-         O6/cbrO/L0EbNQtcwXQ3+PI4TwPsWyJn49X+qoaZF3Xb2H1njzywDnfO4Cpp5S/Hyvy0
-         vfXQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrpvI+P4TxcnX6ELZheu5fKYb2/znc7BM79KPbjmBOY+lNj8exc/VoPQ3S4S+3zHJ/rUOnVQEOU@vger.kernel.org
-X-Gm-Message-State: AOJu0YzW2xacj6lwp45NnclypSBuzmFec4jKxhw2ABUUAC1vlVLAc8f4
-	bzS8+hlfkQj72tAUH66QRcoQLatn3wlzb4PDE4PT52qhooC0rUxHg6SOKsvwa7HyoeI=
-X-Gm-Gg: AR+sD119k3tajczNtOaf+yWUjIbE+XBflxChUc9+9XwqOGWJrM+xyI4TazQXOLAgIAT
-	AQ7jM3Xj+cWIzDNpz8GKfqI/MScBX/jID7JRIimgyBheQPWud0YBC6X1syykzYaKKlMBqIxLEEJ
-	a1ALY9AErs8v9dju/u6qEyByCtdVJqR8wSEUcyqN69vYjg5lk5qMhkMaMqyTQwpohlu+lKpvZ/W
-	gjOIZCLNuX8PI9aOk61X7mLxh2MWyVwLU3rjh3zZV1XBZYfYJWNbaTYRx5O0jxvgg2mRXTntL7u
-	GuncAnf7gzjj7U/uxrBMbxHV2cg7yfUvifSR8+Kj0E1IiGMT8GtbwvJ+Em9BsvVwtZqAoS3eiAJ
-	b3jJQI0RzBpjZoC307brLFZ94qMI+uVYdpYcec/wys2n7xtzio/VSnsV3kixF7ZWPYh132CPlBK
-	qboxqC78/sLhtpSVzTndrJuS+D8wQV+V0IWR9kOLCwkwTFQ7UON5zEhpr8k80ymwImXErM
-X-Received: by 2002:a05:6000:22c3:b0:47f:9567:e63b with SMTP id ffacd0b85a97d-47fb1f26115mr7562586f8f.55.1785313306843;
-        Wed, 29 Jul 2026 01:21:46 -0700 (PDT)
-Received: from localhost (109-81-83-7.rct.o2.cz. [109.81.83.7])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fb6b0ef1asm5812361f8f.19.2026.07.29.01.21.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 01:21:46 -0700 (PDT)
-Date: Wed, 29 Jul 2026 10:21:45 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	David Rientjes <rientjes@google.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Usama Arif <usama.arif@linux.dev>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Darren Hart <dvhart@infradead.org>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	=?iso-8859-1?Q?Andr=E9?= Almeida <andrealmeid@igalia.com>,
-	"Liam R . Howlett" <liam@infradead.org>,
-	Yosry Ahmed <yosry@kernel.org>, Rik van Riel <riel@surriel.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC] Robust futex causing memcg OOM storm on exit
-Message-ID: <amm4GQP90D6Ho6Rw@tiehlicka>
-References: <20260723001908.4046643-1-shakeel.butt@linux.dev>
- <amds50dIVOiQNz0k@tiehlicka>
- <amd6N4DVzZkl90cs@linux.dev>
- <ame7Q-0eVRrtt34j@linux.dev>
- <amhZ645Nhj856JfO@tiehlicka>
- <amjeUV3dAn7KPQgK@linux.dev>
- <amkBvRSJm5rgiV5Q@tiehlicka>
- <amkjTk7Jc1q4ubxj@linux.dev>
- <amlkSmMZTWrT4rau@linux.dev>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="UKmrvVHf"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785313695;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=Ghe50mnkLmufIA92uEj2+BeiwIEyCvYnepEvsaqXqN0=;
+ b=UKmrvVHfp0l0XvvMQNeEaztZ93Y5UMIwO4QXx/YxCRNGxoeULOCCjxW6PHDevdqyhdme2U
+ IJSG7MFRQ0dWCyDN7AOeHRamqhNojIOUE5XJn7Eq2tX7X3lHWhFUO+vG87Xy7WWhxhvF8t
+ YU+GgTZN7cZ0bToV2k6NTcXuU0DX3U4ERqnZMcAD73m37zxFDjAE1aQa5eMdp+WvZ9I4ql
+ b2xzlbb5a6x67GBPvf1/DZ+Tud5X8RgwQH0QsTK+RnDckiE4oXN8BURJQlYuhUZf0V5fqN
+ C0lAl/Cji+T83n8THM34/yMN7xK5lVtfaI3nPjOlhTbq4uDPL8T6ui18hXgnBg==
+User-Agent: Mozilla Thunderbird
+Content-Type: text/plain; charset=UTF-8
+To: "Christoph Hellwig" <hch@lst.de>, "yu kuai" <yukuai@fygo.io>
+Cc: <axboe@kernel.dk>, <tj@kernel.org>, <dongsheng.yang@linux.dev>, 
+	<cengku@gmail.com>, <josef@toxicpanda.com>, <nilay@linux.ibm.com>, 
+	<ming.lei@redhat.com>, <linux-block@vger.kernel.org>, 
+	<cgroups@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 1/8] block: associate blkg in submit_bio instead of bio_set_dev
+Date: Wed, 29 Jul 2026 16:28:10 +0800
+X-Lms-Return-Path: <lba+26a69b99e+696691+vger.kernel.org+yukuai@fygo.io>
+Reply-To: yukuai@fygo.io
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <amlkSmMZTWrT4rau@linux.dev>
+Mime-Version: 1.0
+Received: from [192.168.1.104] ([39.182.0.167]) by smtp.larksuite.com with ESMTPS; Wed, 29 Jul 2026 08:28:13 +0000
+In-Reply-To: <20260728042313.GA19817@lst.de>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Message-Id: <169a04be-2af6-4df3-9308-e2c0d5d4334a@fygo.io>
+References: <20260724123037.3004560-1-yukuai@kernel.org> <20260724123037.3004560-2-yukuai@kernel.org> <933b4285-1c85-4076-831a-0501d5c38e16@fygo.io> <20260728042313.GA19817@lst.de>
+From: "yu kuai" <yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
 
-On Tue 28-07-26 19:25:57, Shakeel Butt wrote:
-[...]
-> Now I have much better results. Previous numbers were on a VM and now I have
-> ran on a physical machine and the results are much better and consistent. The
-> baseline consistently shows ~90 seconds exit time while (tsk_is_oom_victim +
-> MMF_OOM_SKIP) consistently show ~3 seconds exit time. I will send the formal
-> patch soon.
+Hi,
 
-Thanks a lot for the testing Shakeel! We can always ease the check but
-if the more conservative approach helps already then this would be my
-preferred way.
+=E5=9C=A8 2026/7/28 12:23, Christoph Hellwig =E5=86=99=E9=81=93:
+> On Mon, Jul 27, 2026 at 04:16:29PM +0800, yu kuai wrote:
+>>> open-coded blkg_put().
+>> Turns out bio will be submitted by kworker for some drivers and for
+>> blkcg_punt_bio_submit(). Is it possible to record blkcg during bio initi=
+alization,
+>> as blkcg must exist, and then covert it to blkg during submission? I can=
+ use union
+>> for blkcg and blkg to avoid new field in struct bio.
+> Mixing the two up sounds like a receipt for a lot of problems
+> unfortunately.  I wonder if we could switch to only store the blkcg in
+> the bio and look up the blkg as needed.  This assumes we can get away
+> with a relatively small numbers of lookups for typical setups.  I'm not
+> really sure how much the different users are combined - if not much this
+> might actually be a big net benefit, if on the other hand we'd have to
+> do a lot of separate lookups it might not work very well.
 
-Thanks!
+This sounds interesting, take a quick look, some places are using bi_blkg t=
+o get blkcg and
+this can be optimized, while other places are all related to blkcg policies=
+. And I think
+the blkg slow path radix tree lookup should be fine, because when we enable=
+ blkcg policies,
+it's expected performance should already be affected.
 
--- 
-Michal Hocko
-SUSE Labs
+On the other hand, if no policies are enabled, looks like no blkg will be c=
+reated, and this
+will be beneficial as there should be many environments that blkcg policies=
+ are not enabled.
+
+The only problem I see is rq_qos_merge(), where bi_blkg is deference with e=
+levator spinlock
+held. However, I think this can be avoided as well, we can only do fast pat=
+h blkg lookup, and
+skip merge if blkg do not exist, as we only require same blkcg bio merge, t=
+here is no IO to merge
+if this bio is the first blkcg bio.
+
+If you agree, I'll start to cook a new pre-set to convert bi_blkg to bi_blk=
+cg, and then convert
+queuelock to blkcg_mutex.
+
+>
+> This could be combined with a way to do more efficient blkg lookups
+> using e.g. a rhashtable.
+>
+--=20
+Thanks,
+Kuai
