@@ -1,140 +1,115 @@
-Received: from va-2-59.ptr.blmpb.com (va-2-59.ptr.blmpb.com [209.127.231.59])
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E8F639CCFC
-	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 07:56:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E6B343A7F4
+	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 08:02:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785311795; cv=none; b=rcF66rBOuKUAwf8u6XQJMDm6PdCvRM4mLy1vwyCN/R0mGCctyMOklB0CH+eMG6wNvPgMVjPLeg7muWfSUFFPb2o0wmF9R5CGXz+MJ5YbHYH6haGaeAdnO3qiswRxKJFK6HZ1CCaQrM93RIWnlMmk09H9ybBSjgmItYga+aHzqmU=
+	t=1785312150; cv=none; b=m4WtRVK8yLO0o+WaO/vWng/flBh7jO8p7ucNUudtZGK1bXLx5XLcUAlEkh2EyKpVRemmNEg+4doMogCH/1wVe5KXTIAIlP21Mg9EKnhmOmlrOny9mdHG67HSm5bCNwEAf1+iC5M71W3pa9TDUihjQAQhGJRYPOPAmqs/JBmMlK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785311795; c=relaxed/simple;
-	bh=GFC6cvYFjCy8PcEpi9iezeUy+GTVK7D3TMjp65uxQPk=;
-	h=From:Message-Id:Mime-Version:In-Reply-To:References:To:Date:
-	 Content-Type:Cc:Subject; b=KPTj+sb1KobKReLag+6LcUGN64RmWF4me76HLZumbNLrgvoePL92OXDRpHgNBRBmkRSJTD3kRFWdNsemn//xNdHrUmg6Yl2+/AnInZs20x5V8Z+mCKpYPGbwxHZPponcMIt8oqBwPNVgo4GBRGnM+XPOsLmiKuMYR0yS/DkYkCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=lqqEy/uo; arc=none smtp.client-ip=209.127.231.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1785312150; c=relaxed/simple;
+	bh=uyRaigyWSLAjcFMA+4nW37Qzta9DLAn1JIfpSEoopaI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YVVJPHTMEV1uonVoVEqBe2GUBoTopeNttCFSarcjfwxURY7Rw4an4Dlwq5ENx84/Isz+yG2n38bds1XdL4pZ7GjcuNEfinfnCcUOkY1vkC89nHMHL6OqTz2g6KcxHK6sEdwZmEMVwnc+x/ARIkHgrz/dTzgftLYYVmRHBDwf2rM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=OMRGShBv; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="lqqEy/uo"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785311781;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=kMuVRy2VKQURb6Pvns2GhsmiAIEC+KLV2+/wuVD8+2w=;
- b=lqqEy/uo7EjZIfLXA6MOObVyXanQaAFlMpScOgGRtMGYw3FxS6bfy21K2IJEqBaadXKeqq
- RMa0gTwpL3VujajaqtajIuKU6ESJEMwcx9m8Tv6ehhDvkNQQ9lKhqxcYe/I3GJj2nebEwH
- zzqPaSG8IDNZ8xQDShXL5eJJuVCerMPp7MP6JmhRyO7jpLTuGWJ83DlU/pBi8u5kxZn1jX
- 0kJbj+mCpVQwkgrjArjoSGcYPnpnzy7ceNEyHXxyRbOYcOY/lQPMvFLZroi1Mb5Vs7i+1h
- VQ3Rsz4pkrKmLnO2lV9G7rF+M3MlB8u3K0rM9q9w6Hfz8jiuTAXMPkVDNFyLlA==
-X-Lms-Return-Path: <lba+26a69b224+a3cc13+vger.kernel.org+yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <4540fd5c-ecea-433a-9bfb-f314b3933e3f@fygo.io>
-Reply-To: yukuai@fygo.io
-User-Agent: Mozilla Thunderbird
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="OMRGShBv"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-4798bea72f9so435184f8f.1
+        for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 01:02:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1785312144; x=1785916944; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=xqNI7GzmVD+ON60PavI4uX979smGqBUstiCgQqn1YZU=;
+        b=OMRGShBvAMH4JQ8MjFRWT91Lwb5WLIokzuKVEevH4s6rXqI5rDGVUt8rCFoXCCWBV2
+         m1hzb9p/o/4+qZeiqe0Sgrejr612DR74ip5SnvLW4s05/jI5cJwnD7Y/XHQk3uicteZa
+         VP9M1ZcDiaIvYiL6jxzKyN0Hh7TWzJAaTk7ZThxQppkWJibigc30m2Hmca4IXrDp7Wo7
+         3HUqGlQ01Siqf6dkmIL9SYSqW3ivWTb+SgqOvAL1CrDeNk0pGU1+aS0wzLb0ExoJmikV
+         p93Z5hdSPm5788285nnu61NPetqLDYnJjDXsHQPVyAJ63hxbdTW/UEFh8pCikStDjFIp
+         w3hw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785312144; x=1785916944;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=xqNI7GzmVD+ON60PavI4uX979smGqBUstiCgQqn1YZU=;
+        b=aoOBatz2RlSmAx6qSY0tvPSTHxCGDHb15xkjENUfP+M8uwRNP7JSbVKbWP/GVzFo1D
+         EKHSwbxy0/XmzJG3u3QZkXaLftHwkoIdR6ZeMoD2EGpjjj+A09y/UcgmJCqNL1X+8McR
+         jQUKwWasJ5Luoon9MpL0qy2k28exTTj//PMHh/ijM8WzESw7jwRotJaBCfnwmeP5aKU8
+         3yXpQ502B+gkOwVNw1TXimKoWCDf1a5V1xTLYbzOiQQGn97bFNyAhkOPSz+xI22vFzhM
+         6RrlRp6vHVJ2kBhExwqsDGPcEUNbZSd7dynEVRPrdgkOYMQt9Qh9WqniJEX16jsm5reR
+         xorw==
+X-Forwarded-Encrypted: i=1; AHgh+RqHhF+nEC1hObkYRw9BgrIdh8se3neFlkOkfS3aY2qdFJZ0aWwrcBPs0ZA3DoV5fka3vcTbfCi6@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz2rE74dXVTI9eWDzpza0lJ9OywGVsMVODfVaIV+daj8mskNTAw
+	JYNMLlE9e28yoglP7sGoorJc57fHwrRY7cHXprCPnhRJQDB8n2vC/AGU41fWyGhUkRY=
+X-Gm-Gg: AR+sD12xMmCegEUDQ0cJCDtxSGFQvL/riCM+oAfCLBqUmUO+kvjTeSpV+wxNeuZWuO3
+	LhvPxgASPWCJopTnLMuyMPhwhizmRWBwKcW7Hzcp0dKqn2Yc9ZVn+lENnZlsJdmZw0YoKwNKS+N
+	aXopia2cjG7A0ApalC8NM9A3ErXXMRc7A80nsqtFWkDO8lNFrcVNSKWcHyCO5dDHrzDa8vStdLc
+	XjjO6MfGPXNmowlF2JXh3eTMrOyc0mVKPZU7pUxLHCrSW75oi12RAfDIPUIKEi4Hv2QvwrM96Pg
+	jWrBOTARvg8jHGMmlg7+Ac1T2y9PR7PAqGIotuJCq+VpK76bpmV6USCMiRz2O1TA8Bn1Odmp9ww
+	zS0TNhup/oowAGV9T5Vgmf99YMzkuN0/xC5P8O3HGxq70Duwc3ij4xFR7E3FhNXOHjciolYNF46
+	/FmS1th+p9VEeqqQCXeYYrd26Jqt3x9ahwRCwZciqI4L2EqZc+0sFsyygCmErhocQZEfwlZLCtJ
+	B2IldxM
+X-Received: by 2002:a05:6000:2011:b0:47f:97f6:d39a with SMTP id ffacd0b85a97d-47fb1ed839emr6971287f8f.17.1785312144463;
+        Wed, 29 Jul 2026 01:02:24 -0700 (PDT)
+Received: from localhost (109-81-83-7.rct.o2.cz. [109.81.83.7])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fb6b18a9fsm5229420f8f.32.2026.07.29.01.02.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jul 2026 01:02:23 -0700 (PDT)
+Date: Wed, 29 Jul 2026 10:02:22 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Guopeng Zhang <guopeng.zhang@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>
+Subject: Re: [PATCH] mm: memcg: stop reclaim when a limit update is superseded
+Message-ID: <ammzjkUIADCxO2mP@tiehlicka>
+References: <20260724021805.1234583-1-guopeng.zhang@linux.dev>
+ <amcT75pLmA0hRUm1@tiehlicka>
+ <615d091c-bd3b-4686-817e-5b29756542ff@linux.dev>
+ <amdkHvSMj95DUri5@tiehlicka>
+ <f706d139-53a7-436d-adc5-c691577ce53b@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: yu kuai <yukuai@fygo.io>
-In-Reply-To: <45ea6216-a6f6-4828-afd3-8acea8b949ab@linux.dev>
-References: <20260724123037.3004560-1-yukuai@kernel.org> <20260724123037.3004560-8-yukuai@kernel.org> <45ea6216-a6f6-4828-afd3-8acea8b949ab@linux.dev>
-To: "Tao Cui" <cui.tao@linux.dev>, <axboe@kernel.dk>, <tj@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Date: Wed, 29 Jul 2026 15:56:16 +0800
-Received: from [192.168.1.104] ([39.182.0.167]) by smtp.larksuite.com with ESMTPS; Wed, 29 Jul 2026 07:56:20 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Cc: <hch@lst.de>, <dongsheng.yang@linux.dev>, <cengku@gmail.com>, 
-	<josef@toxicpanda.com>, <nilay@linux.ibm.com>, <ming.lei@redhat.com>, 
-	<linux-block@vger.kernel.org>, <cgroups@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 7/8] bfq: avoid blkg lookup from locked cgroup update
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f706d139-53a7-436d-adc5-c691577ce53b@linux.dev>
 
-Hi,
+On Wed 29-07-26 14:15:25, Guopeng Zhang wrote:
+> 
+> 
+> 在 2026/7/27 21:58, Michal Hocko 写道:
+> > On Mon 27-07-26 20:59:23, Guopeng Zhang wrote:
+> >>
+> >>
+> >> 在 2026/7/27 16:16, Michal Hocko 写道:
+> >>> On Fri 24-07-26 10:18:05, Guopeng Zhang wrote:
+[...]
+> > Is this trying to replicate any real workload? One would expect that
+> > writers to limit do some sort of coordination otherwise the exact
+> > behavior is not really well defined.
+> > 
+> 
+> No, this was not motivated by a reported production workload. We found
+> it through automated randomized testing for our cgroup observability
+> work and reduced it to the reproducer above.
 
-=E5=9C=A8 2026/7/29 15:33, Tao Cui =E5=86=99=E9=81=93:
->
-> =E5=9C=A8 2026/7/24 20:30, Yu Kuai =E5=86=99=E9=81=93:
->> From: Yu Kuai <yukuai@fygo.io>
->>
->> bfq_bio_bfqg() is called while bfqd->lock is held from the merge and
->> request insertion paths.  It walks bio->bi_blkg and its parent chain to
->> find the closest online BFQ group, and re-associates the bio by looking
->> the chosen blkg up again through bio_associate_blkg_from_css().
->>
->> Now that blkg creation runs under q->blkcg_mutex from the sleepable subm=
-it
->> path, bio_associate_blkg_from_css() can sleep on a lookup miss, which BF=
-Q
->> must not do while holding bfqd->lock.  The blkg BFQ wants is already in
->> hand from the ancestry walk, so update bio->bi_blkg by swapping referenc=
-es
->> to that existing blkg directly instead of looking it up again by css.
->>
-> Just checking the new bfq helper that swaps a bio's blkg: it does the
-> blkg_put() without the NULL guard the old helper had.  Is there any path
-> where BFQ could see a bio that hasn't been associated yet (bi_blkg =3D=3D=
- NULL)?
-> The fallback branch calls it unconditionally, so if such a path exists it
-> would crash.  My reading is the bio is always associated before it reache=
-s
-> BFQ, so it can't happen -- but wanted to ask in case I'm missing a path.
-
-You're not missing. Bio must associate a blkg before submitting, you can se=
-e
-lots of places will deference bio's blkg directly.
-
->
-> Thanks,
-> Tao
->
->> Signed-off-by: Yu Kuai <yukuai@fygo.io>
->> ---
->>   block/bfq-cgroup.c | 16 +++++++++++++---
->>   1 file changed, 13 insertions(+), 3 deletions(-)
->>
->> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
->> index 42614aa78cd4..8a3ff9510386 100644
->> --- a/block/bfq-cgroup.c
->> +++ b/block/bfq-cgroup.c
->> @@ -604,6 +604,16 @@ static void bfq_link_bfqg(struct bfq_data *bfqd, st=
-ruct bfq_group *bfqg)
->>   	}
->>   }
->>  =20
->> +static void bfq_bio_update_blkg(struct bio *bio, struct blkcg_gq *blkg)
->> +{
->> +	if (bio->bi_blkg =3D=3D blkg)
->> +		return;
->> +
->> +	blkg_get(blkg);
->> +	blkg_put(bio->bi_blkg);
->> +	bio->bi_blkg =3D blkg;
->> +}
->> +
->>   struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
->>   {
->>   	struct blkcg_gq *blkg =3D bio->bi_blkg;
->> @@ -616,13 +626,13 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bf=
-qd, struct bio *bio)
->>   		}
->>   		bfqg =3D blkg_to_bfqg(blkg);
->>   		if (bfqg->pd.online) {
->> -			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
->> +			bfq_bio_update_blkg(bio, blkg);
->>   			return bfqg;
->>   		}
->>   		blkg =3D blkg->parent;
->>   	}
->> -	bio_associate_blkg_from_css(bio,
->> -				&bfqg_to_blkg(bfqd->root_group)->blkcg->css);
->> +	blkg =3D bfqg_to_blkg(bfqd->root_group);
->> +	bfq_bio_update_blkg(bio, blkg);
->>   	return bfqd->root_group;
->>   }
->>  =20
-
---=20
-Thanks,
-Kuai
+This is an important detail to be mentioned in the changelog. Describing
+motivation for a change is really important, especially if it has direct
+impact in user interface behavior.
+-- 
+Michal Hocko
+SUSE Labs
