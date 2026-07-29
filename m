@@ -1,32 +1,32 @@
-Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
+Received: from out-186.mta0.migadu.com (out-186.mta0.migadu.com [91.218.175.186])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E4F48096D
-	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 13:03:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AA984908DE
+	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 13:10:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785330192; cv=none; b=WOn4+g/OLSsAyBpRFl4CpCSNd2Xl7eaVB7HIkF1I8pg75bVkM/YvyGccPCITFlnR+qn4Z6edUA4c/lZFl0ZZwANBDE6gFGDOAM+kv8J0dkgZcg23qsE41Q/jRROuxvvVpbkDkjssaEMV0FzHAYlbVXaULf/dwRXmC/W+IvthELU=
+	t=1785330620; cv=none; b=nbQkAAjFnYcYMrE9zPK4FrxKNtO2qesyfk+H9XSVzMkZd7AOxvM0PTm2xTW1lkQ59ZAnlqpzMvnSBeDk9tpP1HCUN/Q220o38MRKfIODt/s0d824L8xjS2IAfdJnssNfeVD7F75eThjAHVFWjYq+uvHurz9njkRsbMyEWzNBabM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785330192; c=relaxed/simple;
-	bh=rtpuC1kAcabu11Pkr9RXzMXAbN25x2/xYqXcGMf/dnw=;
+	s=arc-20240116; t=1785330620; c=relaxed/simple;
+	bh=AId9DENR1a3jP5xUxQ+g0jHT9Xym2fxuN12VEQwjACg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=g41ZYR++8Ygq7Fg/mvhuvtOe58hfYoS5hmO1kY6n/cHyq6cTjpm86scO+qJrBY5Kz3pNiGehNqdt4QgbEHc/q+/EprkTjUESpvqoFxD8DC07UKd5SLIZ8jvIocuWfx4/P4SubW/nQrrJM8CIoWJCE9pBA4tAN4vj7MjrdEFYmMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xpiofwKc; arc=none smtp.client-ip=91.218.175.180
+	 MIME-Version; b=JhyFPN8oSyfDQEFAYCnUvt5P+Cb7WP0S0/hMtVNwQB34m2H2YMZ/0blDs1wL2BNCuufJfYtbrcH3WmNJ7vhJVyeZA6kJg5iWLRC8oRq8Mc91/hAl6uh5Toa+cMBlimhuzCnUd9OTLoHqyHuTu0s3s7/y6dpu9RNPmxiNuQZ3YsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=g1T5ekvL; arc=none smtp.client-ip=91.218.175.186
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xpiofwKc"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="g1T5ekvL"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785330168;
+	t=1785330605;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=AYCYMoKGlSePAhpgzn57nRJZKopSNamtJBqY3h7O8nU=;
-	b=xpiofwKcDxKVkpOf+qQ0LWsVqzVc9sBHfx8RoU8+3+3Fdi7XBQa0KJ4+2BfmzOtSmE3k5M
-	E62Cr1tmcgj9p1n1uc7LXZvwVZDu2ChM0b5+ycTaqa92spdi/8vpwzq7VzY8rlhv3vHd7U
-	PMeqskvakJNsvHkf4nC3IuBxnv9N7OY=
+	bh=zWBDvpD2lxRj16Xz0kQcWw+PNFk2I/UmPNdP3Qw4xio=;
+	b=g1T5ekvL+CSLqzeTNQQxWvE4/zmkHJt0Mb5cOMd9Diyx7nToR43X1gbDbceFRU7SOZN6DD
+	/pBPtCM80ZwPuhy+9SuYkSqLCZhC6uLs3i9AEDYx/YwS5VSNJTMBE4SSiOir+4aOsU7MMX
+	7SLA5RnDMbWlS7aY1Mu+s45qlXYF5GQ=
 From: Usama Arif <usama.arif@linux.dev>
 To: Usama Arif <usama.arif@linux.dev>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
@@ -55,10 +55,10 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	cgroups@vger.kernel.org,
 	rientjes@google.com,
 	kernel-team@meta.com
-Subject: Re: [PATCH v5 3/3] mm/vmscan: reduce lru_lock contention via vmstat-derived scan-balance cost
-Date: Wed, 29 Jul 2026 06:02:39 -0700
-Message-ID: <20260729130241.3327679-1-usama.arif@linux.dev>
-In-Reply-To: <20260727162550.2032-4-usama.arif@linux.dev>
+Subject: Re: [PATCH v5 2/3] mm/vmscan: add pgrotate_anon and pgrotate_file vmstat counters
+Date: Wed, 29 Jul 2026 06:09:57 -0700
+Message-ID: <20260729130958.3728209-1-usama.arif@linux.dev>
+In-Reply-To: <20260727162550.2032-3-usama.arif@linux.dev>
 References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -69,463 +69,44 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-On Mon, 27 Jul 2026 09:23:25 -0700 Usama Arif <usama.arif@linux.dev> wrote:
+On Mon, 27 Jul 2026 09:23:24 -0700 Usama Arif <usama.arif@linux.dev> wrote:
 
-> The anon/file scan balance in get_scan_count() is driven by two scalars
-> in struct lruvec, anon_cost and file_cost, accumulated by every reclaim
-> producer under lruvec->lru_lock. The acquisition sites for cost work
-> specifically are:
+> Reclaim can spend substantial work on an LRU type without immediately
+> reclaiming or demoting a corresponding amount of memory. Record this
+> work in PGROTATE_ANON and PGROTATE_FILE.
 > 
->   - shrink_inactive_list() re-takes lru_lock at function exit purely
->     to call lru_note_cost_unlock_irq() with (nr_pageout, nr_scanned -
->     nr_reclaimed). One acquisition per inactive shrink.
->   - shrink_active_list() does the same with (0, nr_rotated). One
->     acquisition per active shrink.
->   - workingset_refault() takes the lock via folio_lruvec_lock_irq()
->     purely to record the refault cost. One acquisition per refault.
->   - prepare_scan_control() takes lru_lock just to snapshot the two
->     scalars into sc->{anon,file}_cost.
->   - lru_note_cost_unlock_irq() itself walks parent_lruvec and
->     re-acquires lru_lock on each ancestor to propagate the update,
->     adding O(memcg-depth) acquisitions per producer call.
+> For classic LRU reclaim:
 > 
-> This hurts because lru_lock is already a heavy contention point on
-> memory-heavy workloads: every isolate_lru_folios(), move_folios_to_lru()
-> and folio_add_lru() takes it. The cost work itself is trivial (two
-> scalar bumps and one comparison), but it contends with and causes
-> contention for actual LRU manipulation. The parent_lruvec() walk also
-> multiplies cost-update overhead by memcg hierarchy depth.
+>   - Inactive-list reclaim adds nr_scanned - nr_reclaimed to the
+>     corresponding anon/file counter when isolation succeeds.
+>   - Active-list reclaim adds referenced executable file folios that
+>     are retained on the active list to PGROTATE_FILE. Active anon
+>     reclaim does not contribute this component.
 > 
-> The balance formula for anon and file, respectively, is this:
+> For MGLRU, add the number of initially isolated pages that remain
+> unreclaimed after both the initial and retry passes to the counter for
+> the selected anon/file type.
 > 
->     cost = nr_io * SWAP_CLUSTER_MAX + nr_rotated
+> These counters are distinct from the existing pgrotated vm event.
+> pgrotated records an actual move to the inactive-list tail, primarily
+> after reclaim-marked writeback completes or failed invalidation leaves
+> a folio for accelerated reclaim. PGROTATE_ANON and PGROTATE_FILE
+> measure reclaim cost and do not imply that a folio moved to an LRU tail.
 > 
-> Instead of recording cost and running averaging logic directly when
-> these events occur, snapshot running vmstat counters once per reclaim
-> cycle and derive the balance from event deltas since the last run.
+> A subsequent patch will consume these counters for anon/file scan
+> balancing.
 > 
-> Use PGROTATE_* from the preceding patch for the rotation input.
-> WORKINGSET_RESTORE_* and NR_VMSCAN_WRITE provide the remaining event
-> counters. Charge NR_VMSCAN_WRITE through lruvec stats so all inputs can
-> be sampled per lruvec and aggregated through the memcg hierarchy. This
-> is overall cheaper and has fewer lock acquisition sites.
-> 
-> Moving accumulation and decay to the reclaim side also improves the cost
-> model across reclaim gaps. With producer-side decay, events that happen
-> while reclaim is idle still age each other before reclaim ever samples
-> the costs. If a workload refaults a large anon set and then a smaller
-> file set before reclaim runs again, the later file activity can age the
-> earlier anon activity out of the cost model. The new scheme observes the
-> whole between-reclaim delta and decays anon and file proportionally, so
-> the scan-balance history better represents what happened since the last
-> reclaim pass.
-> 
-> A dedicated per-lruvec spinlock, cost_lock, serialises the delta
-> extraction, the cost->count update and the halving loop against
-> concurrent reclaimers in the same memcg+node.
-> 
-> NR_VMSCAN_WRITE is accounted at writeout(), so reclaim_stat.nr_pageout is
-> no longer needed and is removed.
-> 
-> memcg-v1's memory.stat anon_cost/file_cost is now sourced from
-> cost[].count instead of the removed lruvec anon_cost/file_cost fields.
-> The reported values only refresh when prepare_scan_control() runs and
-> are bounded at ~lrusize/4 by the halving loop; the scan-balance signal
-> they express is unchanged.
-> 
-> Under pure MGLRU the scan-balance signal itself is not consumed (both
-> prepare_scan_control() and get_scan_count() are short-circuited on the
-> MGLRU paths, and MGLRU's own type/tier selection comes from read_ctrl_pos()
-> on lrugen->{avg_refaulted,avg_total,refaulted,evicted}, not from
-> anon_cost/file_cost). NR_VMSCAN_WRITE naturally covers writeout from
-> either reclaim implementation. The preceding patch also bumps
-> PGROTATE_{ANON,FILE} from evict_folios(), so rotation-driven reclaim
-> work is accounted consistently across both implementations.
-> 
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 > Signed-off-by: Usama Arif <usama.arif@linux.dev>
 > ---
->  include/linux/mmzone.h | 13 +++++--
->  include/linux/swap.h   |  3 --
->  include/linux/vmstat.h |  1 -
->  mm/memcontrol-v1.c     |  4 +--
->  mm/memcontrol.c        |  1 +
->  mm/mmzone.c            |  1 +
->  mm/swap.c              | 69 ------------------------------------
->  mm/vmscan.c            | 79 +++++++++++++++++++++++++++++++++++-------
->  mm/workingset.c        |  5 ---
->  9 files changed, 81 insertions(+), 95 deletions(-)
-> 
-> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> index aab06fb6c6d5..85303c5867c8 100644
-> --- a/include/linux/mmzone.h
-> +++ b/include/linux/mmzone.h
-> @@ -757,6 +757,12 @@ void lru_gen_reparent_memcg(struct mem_cgroup *memcg, struct mem_cgroup *parent,
->  
->  #endif /* CONFIG_LRU_GEN */
->  
-> +struct lru_cost {
-> +	unsigned long		count;
-> +	unsigned long		last_rotated;
-> +	unsigned long		last_io;
-> +};
-> +
->  struct lruvec {
->  	struct list_head		lists[NR_LRU_LISTS];
->  	/* per lruvec lru_lock for memcg */
-> @@ -765,9 +771,12 @@ struct lruvec {
->  	 * These track the cost of reclaiming one LRU - file or anon -
->  	 * over the other. As the observed cost of reclaiming one LRU
->  	 * increases, the reclaim scan balance tips toward the other.
-> +	 * Updated and decayed at prepare_scan_control() time; cost_lock
-> +	 * serialises that update.
->  	 */
-> -	unsigned long			anon_cost;
-> -	unsigned long			file_cost;
-> +	struct lru_cost			cost[ANON_AND_FILE];
-> +	/* Protects cost[]. */
-> +	spinlock_t			cost_lock;
->  	/* Non-resident age, driven by LRU movement */
->  	atomic_long_t			nonresident_age;
->  	/* Refaults at the time of last reclaim cycle */
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 6d72778e6cc3..d35a4761ebd7 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -309,9 +309,6 @@ extern unsigned long totalreserve_pages;
->  
->  
->  /* linux/mm/swap.c */
-> -void lru_note_cost_unlock_irq(struct lruvec *lruvec, bool file,
-> -		unsigned int nr_io, unsigned int nr_rotated);
-> -void lru_note_cost_refault(struct folio *);
->  void folio_add_lru(struct folio *);
->  void folio_add_lru_vma(struct folio *, struct vm_area_struct *);
->  void mark_page_accessed(struct page *);
-> diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
-> index fb8c76289e02..5b31d8e7ae40 100644
-> --- a/include/linux/vmstat.h
-> +++ b/include/linux/vmstat.h
-> @@ -20,7 +20,6 @@ struct reclaim_stat {
->  	unsigned nr_congested;
->  	unsigned nr_writeback;
->  	unsigned nr_immediate;
-> -	unsigned nr_pageout;
->  	unsigned nr_activate[ANON_AND_FILE];
->  	unsigned nr_ref_keep;
->  	unsigned nr_unmap_fail;
-> diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
-> index 765069211567..091bc9ffee44 100644
-> --- a/mm/memcontrol-v1.c
-> +++ b/mm/memcontrol-v1.c
-> @@ -1988,8 +1988,8 @@ void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
->  		for_each_online_pgdat(pgdat) {
->  			mz = memcg->nodeinfo[pgdat->node_id];
->  
-> -			anon_cost += mz->lruvec.anon_cost;
-> -			file_cost += mz->lruvec.file_cost;
-> +			anon_cost += mz->lruvec.cost[WORKINGSET_ANON].count;
-> +			file_cost += mz->lruvec.cost[WORKINGSET_FILE].count;
->  		}
->  		seq_buf_printf(s, "anon_cost %lu\n", anon_cost);
->  		seq_buf_printf(s, "file_cost %lu\n", file_cost);
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 23adb698dadd..42f4351c69cc 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -393,6 +393,7 @@ static const unsigned int memcg_node_stat_items[] = {
->  	NR_SHMEM_THPS,
->  	NR_FILE_THPS,
->  	NR_ANON_THPS,
-> +	NR_VMSCAN_WRITE,
->  	NR_VMALLOC,
->  	NR_KERNEL_STACK_KB,
->  	NR_PAGETABLE,
-> diff --git a/mm/mmzone.c b/mm/mmzone.c
-> index 0c8f181d9d50..17139db4d291 100644
-> --- a/mm/mmzone.c
-> +++ b/mm/mmzone.c
-> @@ -78,6 +78,7 @@ void lruvec_init(struct lruvec *lruvec)
->  
->  	memset(lruvec, 0, sizeof(struct lruvec));
->  	spin_lock_init(&lruvec->lru_lock);
-> +	spin_lock_init(&lruvec->cost_lock);
->  	zswap_lruvec_state_init(lruvec);
->  
->  	for_each_lru(lru)
-> diff --git a/mm/swap.c b/mm/swap.c
-> index 588f50d8f1a8..74b281778cbc 100644
-> --- a/mm/swap.c
-> +++ b/mm/swap.c
-> @@ -272,73 +272,6 @@ void folio_rotate_reclaimable(struct folio *folio)
->  	folio_batch_add_and_move(folio, lru_move_tail);
->  }
->  
-> -void lru_note_cost_unlock_irq(struct lruvec *lruvec, bool file,
-> -		unsigned int nr_io, unsigned int nr_rotated)
-> -		__releases(lruvec->lru_lock)
-> -		__releases(rcu)
-> -{
-> -	unsigned long cost;
-> -
-> -	/*
-> -	 * Reflect the relative cost of incurring IO and spending CPU
-> -	 * time on rotations. This doesn't attempt to make a precise
-> -	 * comparison, it just says: if reloads are about comparable
-> -	 * between the LRU lists, or rotations are overwhelmingly
-> -	 * different between them, adjust scan balance for CPU work.
-> -	 */
-> -	cost = nr_io * SWAP_CLUSTER_MAX + nr_rotated;
-> -	if (!cost) {
-> -		spin_unlock_irq(&lruvec->lru_lock);
-> -		rcu_read_unlock();
-> -		return;
-> -	}
-> -
-> -	for (;;) {
-> -		unsigned long lrusize;
-> -
-> -		/* Record cost event */
-> -		if (file)
-> -			lruvec->file_cost += cost;
-> -		else
-> -			lruvec->anon_cost += cost;
-> -
-> -		/*
-> -		 * Decay previous events
-> -		 *
-> -		 * Because workloads change over time (and to avoid
-> -		 * overflow) we keep these statistics as a floating
-> -		 * average, which ends up weighing recent refaults
-> -		 * more than old ones.
-> -		 */
-> -		lrusize = lruvec_page_state(lruvec, NR_INACTIVE_ANON) +
-> -			  lruvec_page_state(lruvec, NR_ACTIVE_ANON) +
-> -			  lruvec_page_state(lruvec, NR_INACTIVE_FILE) +
-> -			  lruvec_page_state(lruvec, NR_ACTIVE_FILE);
-> -
-> -		if (lruvec->file_cost + lruvec->anon_cost > lrusize / 4) {
-> -			lruvec->file_cost /= 2;
-> -			lruvec->anon_cost /= 2;
-> -		}
-> -
-> -		spin_unlock_irq(&lruvec->lru_lock);
-> -		lruvec = parent_lruvec(lruvec);
-> -		if (!lruvec) {
-> -			rcu_read_unlock();
-> -			break;
-> -		}
-> -		spin_lock_irq(&lruvec->lru_lock);
-> -	}
-> -}
-> -
-> -void lru_note_cost_refault(struct folio *folio)
-> -{
-> -	struct lruvec *lruvec;
-> -
-> -	lruvec = folio_lruvec_lock_irq(folio);
-> -	lru_note_cost_unlock_irq(lruvec, folio_is_file_lru(folio),
-> -				folio_nr_pages(folio), 0);
-> -}
-> -
->  static void lru_activate(struct lruvec *lruvec, struct folio *folio)
->  {
->  	long nr_pages = folio_nr_pages(folio);
-> @@ -1164,8 +1097,6 @@ void lru_reparent_memcg(struct mem_cgroup *memcg, struct mem_cgroup *parent, int
->  
->  	child_lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
->  	parent_lruvec = mem_cgroup_lruvec(parent, NODE_DATA(nid));
-> -	parent_lruvec->anon_cost += child_lruvec->anon_cost;
-> -	parent_lruvec->file_cost += child_lruvec->file_cost;
->  
->  	for_each_lru(lru)
->  		lruvec_reparent_lru(child_lruvec, parent_lruvec, lru, nid);
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 053f41584989..0f6334005610 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -641,7 +641,7 @@ static pageout_t writeout(struct folio *folio, struct address_space *mapping,
->  		folio_clear_reclaim(folio);
->  
->  	trace_mm_vmscan_write_folio(folio);
-> -	node_stat_add_folio(folio, NR_VMSCAN_WRITE);
-> +	lruvec_stat_mod_folio(folio, NR_VMSCAN_WRITE, folio_nr_pages(folio));
->  	return PAGE_SUCCESS;
->  }
->  
-> @@ -1418,8 +1418,6 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
->  					sc->nr_scanned -= (nr_pages - 1);
->  					nr_pages = 1;
->  				}
-> -				stat->nr_pageout += nr_pages;
-> -
->  				if (folio_test_writeback(folio))
->  					goto keep;
->  				if (folio_test_dirty(folio))
-> @@ -2047,9 +2045,6 @@ static unsigned long shrink_inactive_list(unsigned long nr_to_scan,
->  		mod_lruvec_state(lruvec, PGROTATE_ANON + file,
->  				 nr_scanned - nr_reclaimed);
->  
-> -	lruvec_lock_irq(lruvec);
-> -	lru_note_cost_unlock_irq(lruvec, file, stat.nr_pageout,
-> -					nr_scanned - nr_reclaimed);
->  	handle_reclaim_writeback(nr_taken, pgdat, sc, &stat);
->  	trace_mm_vmscan_lru_shrink_inactive(pgdat->node_id,
->  			nr_scanned, nr_reclaimed, &stat, sc->priority, file);
-> @@ -2158,8 +2153,6 @@ static void shrink_active_list(unsigned long nr_to_scan,
->  	if (nr_rotated)
->  		mod_lruvec_state(lruvec, PGROTATE_ANON + file, nr_rotated);
->  
-> -	lruvec_lock_irq(lruvec);
-> -	lru_note_cost_unlock_irq(lruvec, file, 0, nr_rotated);
->  	trace_mm_vmscan_lru_shrink_active(pgdat->node_id, nr_taken, nr_activate,
->  			nr_deactivate, nr_rotated, sc->priority, file);
->  }
-> @@ -2292,8 +2285,10 @@ enum scan_balance {
->  
->  static void prepare_scan_control(pg_data_t *pgdat, struct scan_control *sc)
->  {
-> -	unsigned long file;
-> +	struct lru_cost *anon_cost, *file_cost;
->  	struct lruvec *target_lruvec;
-> +	unsigned long lrusize;
-> +	unsigned long file;
->  
->  	if (lru_gen_enabled() && !lru_gen_switching())
->  		return;
-> @@ -2309,11 +2304,69 @@ static void prepare_scan_control(pg_data_t *pgdat, struct scan_control *sc)
->  
->  	/*
->  	 * Determine the scan balance between anon and file LRUs.
-> +	 *
-> +	 * The cost model is based on rotations, refaults and
-> +	 * reclaim-driven writes (anon only) on each side.
-> +	 *
-> +	 * These event counters are monotonic, so each reclaim cycle
-> +	 * the delta since the last scan is extracted and incorporated
-> +	 * into a decaying average. This ensures currency, as workloads
-> +	 * change over time, and avoids overflow in the calculations.
-> +	 *
-> +	 * Use lruvec_page_state_monotonic() so unsigned subtraction
-> +	 * yields the correct delta across a signed-long wraparound of
-> +	 * the underlying counter (a real hazard on 32-bit that the
-> +	 * clamp in lruvec_page_state() would otherwise turn into a huge
-> +	 * spurious delta).
->  	 */
-> -	spin_lock_irq(&target_lruvec->lru_lock);
-> -	sc->anon_cost = target_lruvec->anon_cost;
-> -	sc->file_cost = target_lruvec->file_cost;
-> -	spin_unlock_irq(&target_lruvec->lru_lock);
-> +	spin_lock(&target_lruvec->cost_lock);
-> +
-> +	for (int f = 0; f <= 1; f++) {
-> +		struct lru_cost *cost = &target_lruvec->cost[f];
-> +		unsigned long rotated, io, nr_rotated, nr_io;
-> +
-> +		rotated = lruvec_page_state_monotonic(target_lruvec,
-> +						      PGROTATE_ANON + f);
-> +		io = lruvec_page_state_monotonic(target_lruvec,
-> +						 WORKINGSET_RESTORE_BASE + f);
-> +		if (f == WORKINGSET_ANON)
-> +			io += lruvec_page_state_monotonic(target_lruvec,
-> +							  NR_VMSCAN_WRITE);
-> +
-> +		nr_rotated = rotated - cost->last_rotated;
-> +		nr_io = io - cost->last_io;
-> +
-> +		/*
-> +		 * Reflect the relative cost of incurring IO and spending
-> +		 * CPU time on rotations. This doesn't attempt to make a
-> +		 * precise comparison, it just says: if reloads are about
-> +		 * comparable between the LRU lists, or rotations are
-> +		 * overwhelmingly different between them, adjust scan
-> +		 * balance for CPU work.
-> +		 */
-> +		cost->count += nr_io * SWAP_CLUSTER_MAX + nr_rotated;
+>  include/linux/mmzone.h |  2 ++
+>  mm/memcontrol.c        |  2 ++
+>  mm/vmscan.c            | 14 +++++++++++++-
+>  mm/vmstat.c            |  2 ++
+>  4 files changed, 19 insertions(+), 1 deletion(-)
+>
 
-Sashiko review:
----
-Can this calculation overflow on 32-bit architectures?
-...
-When global reclaim finally runs, nr_io can be a massive delta. Multiplyingi
-this by SWAP_CLUSTER_MAX (32) could silently overflow the 32-bit unsigned long,
-producing a random garbage cost.
+I do think the sashiko reviews in [1] about MGLRU are not correct.
 
----
+I am going to ignore those unless the MGLRU maintainers think its an issue.
 
-I dont think we need to worry about this.
-
-ULONG_MAX / SWAP_CLUSTER_MAX = 2^32 / 32 = 134,217,728
-
-nr_io is a per-lruvec, per-cycle delta of (WORKINGSET_RESTORE_{ANON,FILE} on the
-file side; those two plus NR_VMSCAN_WRITE on the anon side), in
-pages. So the multiplication wraps only when this lruvec has
-observed ~134 M new page-events since its own last
-prepare_scan_control() call.
-
-On 32-bit, addressable RAM tops out at ~4 GiB (~1 M pages), or ~64 GiB with
-PAE (~16 M pages) in the extreme. 134 M events therefore requires
-~130 full swap-and-refault turnovers of a 4 GiB LRU, or ~8
-turnovers of a full 64 GiB PAE LRU, without a single intervening
-prepare_scan_control() call on that lruvec.
-
-> +
-> +		cost->last_rotated = rotated;
-> +		cost->last_io = io;
-> +	}
-> +
-> +	anon_cost = &target_lruvec->cost[WORKINGSET_ANON];
-> +	file_cost = &target_lruvec->cost[WORKINGSET_FILE];
-> +
-> +	lrusize = lruvec_page_state(target_lruvec, NR_INACTIVE_ANON) +
-> +		  lruvec_page_state(target_lruvec, NR_ACTIVE_ANON) +
-> +		  lruvec_page_state(target_lruvec, NR_INACTIVE_FILE) +
-> +		  lruvec_page_state(target_lruvec, NR_ACTIVE_FILE);
-> +
-> +	while (anon_cost->count + file_cost->count > lrusize / 4) {
-
-Sashiko review:
-
----
-If the newly added garbage cost caused anon_cost->count + file_cost->count to
-wrap around and overflow to a small value (<= lrusize / 4), would this skip
-the decay loop entirely?
----
-
-The same 32-bit / ~134M events with no intervening scan reasoning from the
-previous finding gates when this can happen at all.
-
-Same as above, IMO safe to ignore.
-
-> +		anon_cost->count /= 2;
-> +		file_cost->count /= 2;
-> +	}
-> +
-> +	sc->anon_cost = anon_cost->count;
-> +	sc->file_cost = file_cost->count;
-> +
-> +	spin_unlock(&target_lruvec->cost_lock);
->  
->  	/*
->  	 * Target desirable inactive:active list ratios for the anon
-> diff --git a/mm/workingset.c b/mm/workingset.c
-> index f351798e723a..7ac2b88c80ae 100644
-> --- a/mm/workingset.c
-> +++ b/mm/workingset.c
-> @@ -584,11 +584,6 @@ void workingset_refault(struct folio *folio, void *shadow)
->  	/* Folio was active prior to eviction */
->  	if (workingset) {
->  		folio_set_workingset(folio);
-> -		/*
-> -		 * XXX: Move to folio_add_lru() when it supports new vs
-> -		 * putback
-> -		 */
-> -		lru_note_cost_refault(folio);
->  		mod_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + file, nr);
->  	}
->  out:
-> -- 
-> 2.53.0-Meta
-> 
-> 
+[1] https://sashiko.dev/#/patchset/20260727162550.2032-1-usama.arif%40linux.dev 
