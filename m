@@ -1,19 +1,20 @@
 Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D7F41C3BF7;
-	Wed, 29 Jul 2026 10:05:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97A64448393;
+	Wed, 29 Jul 2026 10:06:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785319561; cv=none; b=ir+dkFKeZj9Mz8BFcXEGQ2S43TphqXXsSgNUsBnkVvogKVIQ7CRRdxlCPtBRIZyuMHGJRJbDmfvWxhrBvMHTE+hTYFao0G+1TYQRkHmSPmg7PlMUYbU3wD6xt2J4sg/dMKEKLPk7u4J5nUYvs1d8HWSs8U0omvCjH/QS710GOW4=
+	t=1785319573; cv=none; b=YVobPTdJ+HvNESn2cohPHYDnNdjXDOIZgkp7kFdthhuwxUeOkoRxp26GwC+yRGPiSdxOt/Jgf9MshgUmkC2n1BkXMPvxQ+uCiV5fpeG2t0PVlkM4WdYIkgMATS78pV7Bf5juENSltK1O2hyJv8jYu3HOfhVCOmBFeC7RxNuXQfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785319561; c=relaxed/simple;
-	bh=J2iKHqC92XZvJzR98UQAuGDT5DVITDWw1wNLHigLCaw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TqWP/ulDDa0+PVrA0Eg5go+7lP36CMXgWQXn9dVl2MQB2RVdvOEx/NjQb5dlP4cCmzsUm0BQIWRcDyx3ThkAnOwo0zIhogjMQZDSOB0KtBrdchrhnGj5F1819PtPo6/Us2tA6+RolsZZOsIneUTwpG173vunQPH8xxi02/6ykAk=
+	s=arc-20240116; t=1785319573; c=relaxed/simple;
+	bh=q5PGayqO1cxnra60YcpOnTddVDCId9sEGUFq6fYN3VE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=BdJlpJOOUiOIp6aTdG31/TDN2KRoAN1x+TOXoqufwYxTCNcNf0qqaRb5w6LrgDZkHvPU8u7TA+Ez1FT1tKs8nDYlVIQQ045fsynIcVypbhUYS2C7RSD/9IrEs7ukQIG6ry5EC6WKXgyA30c6eKnFzyy0h8GbI6tWkPg0cPM9PXQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 13a5ebf28b3511f1aa26b74ffac11d73-20260729
+X-UUID: 17fbf6568b3511f1aa26b74ffac11d73-20260729
 X-CTIC-Tags:
 	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
 	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
@@ -24,27 +25,27 @@ X-CTIC-Tags:
 	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
 	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:f28ff21f-5b99-4a5b-b82f-66730e402871,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:f28ff21f-5b99-4a5b-b82f-66730e402871,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:40900feb8f4fa2fa4b5b0f0a428e46cf,BulkI
-	D:260729180552HHW0B8Z1,BulkQuantity:0,Recheck:0,SF:10|38|66|78|102|127|850
-	|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:ni
-	l,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE
-	:0,ARC:0
+X-CID-O-INFO: VERSION:1.3.12,REQID:df9effc3-3e46-4737-be21-1bef004ec78d,IP:10,
+	URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:5
+X-CID-INFO: VERSION:1.3.12,REQID:df9effc3-3e46-4737-be21-1bef004ec78d,IP:10,UR
+	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:5
+X-CID-META: VersionHash:e7bac3a,CLOUDID:b7353274edf2b3850e2c4cc96cae03a0,BulkI
+	D:260729180604ILPNQMZ4,BulkQuantity:0,Recheck:0,SF:10|38|66|78|81|82|102|1
+	27|850|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,B
+	ulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR
+	:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 13a5ebf28b3511f1aa26b74ffac11d73-20260729
+X-UUID: 17fbf6568b3511f1aa26b74ffac11d73-20260729
 X-User: sunshaojie@kylinos.cn
 Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
 	(envelope-from <sunshaojie@kylinos.cn>)
 	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 602126362; Wed, 29 Jul 2026 18:05:50 +0800
+	with ESMTP id 882353374; Wed, 29 Jul 2026 18:05:57 +0800
 From: Shaojie Sun <sunshaojie@kylinos.cn>
 To: tj@kernel.org,
 	hannes@cmpxchg.org,
@@ -54,10 +55,12 @@ Cc: cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH 0/2] selftests/cgroup: misc cleanups for test_cpu.c
-Date: Wed, 29 Jul 2026 18:04:49 +0800
-Message-Id: <20260729100451.689458-1-sunshaojie@kylinos.cn>
+Subject: [PATCH 1/2] selftests/cgroup: remove unused user_usec read in test_cpucg_nice
+Date: Wed, 29 Jul 2026 18:04:50 +0800
+Message-Id: <20260729100451.689458-2-sunshaojie@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260729100451.689458-1-sunshaojie@kylinos.cn>
+References: <20260729100451.689458-1-sunshaojie@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -66,25 +69,27 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series contains two minor cleanups to the cgroup cpu
-controller selftests:
+In test_cpucg_nice, after the child process exits, user_usec is read
+from cpu.stat but never used. Only nice_usec is validated against the
+expected value. Remove this redundant read.
 
-  - Patch 1 removes a redundant user_usec read in test_cpucg_nice
-    that is never used after being read.
+Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
+---
+ tools/testing/selftests/cgroup/test_cpu.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-  - Patch 2 makes test_cpucg_max and test_cpucg_max_nested write
-    both quota and period explicitly to cpu.max instead of relying
-    on the kernel default period, making the tests self-documenting
-    and the remainder calculation genuinely useful. Misleading
-    variable names are also cleaned up.
-
-Shaojie Sun (2):
-  selftests/cgroup: remove unused user_usec read in test_cpucg_nice
-  selftests/cgroup: write explicit period to cpu.max in max tests
-
- tools/testing/selftests/cgroup/test_cpu.c | 27 ++++++++++++-----------
- 1 file changed, 14 insertions(+), 13 deletions(-)
-
+diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
+index 7a40d76b9548..fe637e1d2fcd 100644
+--- a/tools/testing/selftests/cgroup/test_cpu.c
++++ b/tools/testing/selftests/cgroup/test_cpu.c
+@@ -289,7 +289,6 @@ static int test_cpucg_nice(const char *root)
+ 		if (!WIFEXITED(status))
+ 			goto cleanup;
+ 
+-		user_usec = cg_read_key_long(cpucg, "cpu.stat", "user_usec");
+ 		nice_usec = cg_read_key_long(cpucg, "cpu.stat", "nice_usec");
+ 		if (!values_close_report(nice_usec, expected_nice_usec, 1))
+ 			goto cleanup;
 -- 
 2.25.1
 
