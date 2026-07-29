@@ -1,180 +1,312 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45FAC448B83;
-	Wed, 29 Jul 2026 10:06:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2EBE3476060;
+	Wed, 29 Jul 2026 11:47:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785319587; cv=none; b=XOiMcuZv3SZlIPvPCgMVdnfXrJOlPaMzEGXmGvP+E4CDmjUlsMbeDfl6iLI0S/yR+vlDJxfa4wD7pmPTkOhOz5SySb0KwzagTD6thwoZnDo3vQFbVPnCVbvGi7Dj+ufv0+STr22UE0S1iu8hi4fPi8EC7qjg4jHlY8cEwiIvtFw=
+	t=1785325668; cv=none; b=qhiFSRJ+pOD91nlk1u3VSLkaN1rNWPXy7R2lPpSqW5XnRVfklQYTY4S7jLWzgLF1VdZcfi5UCWnerQeUBjHhnaMqJ1i7DEHIGo3U3NXuHc0mvQBK6kRMajvSPn2Lyx636l4ETCra6hddedEIUuOTHPa1ubZnTYvLi9tJ6DirBqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785319587; c=relaxed/simple;
-	bh=gJOgYRCOuA0AbLiDYwRuCXXKC4rjbK3t42Bgo1u8LX8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YOZiWsDyNomadcQEKXgmT+J+DFgKKCY7K9lPCKFAqHhbpRu3O4ZwoXrxmqUzToy+WkHMzz6YpFBsXeV2MfnvOYBNphzqgnPoevUnE0xIACC7BHRfaAo3+BkiM9F7BQK3nDZa0ghmr+jDTHFNZK3vSC161Md0df7DnrsZpexddcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 234a61d28b3511f1aa26b74ffac11d73-20260729
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:314e5a9b-9fc0-42df-ab27-8866f569af55,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:314e5a9b-9fc0-42df-ab27-8866f569af55,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:c655f3887c7eb55f4687e4a54898ab4c,BulkI
-	D:260729180619U0GM6UTH,BulkQuantity:0,Recheck:0,SF:10|38|66|78|81|82|102|1
-	27|850|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,B
-	ulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR
-	:1,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 234a61d28b3511f1aa26b74ffac11d73-20260729
-X-User: sunshaojie@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1264336520; Wed, 29 Jul 2026 18:06:16 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	shuah@kernel.org
-Cc: cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH 2/2] selftests/cgroup: write explicit period to cpu.max in max tests
-Date: Wed, 29 Jul 2026 18:04:51 +0800
-Message-Id: <20260729100451.689458-3-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260729100451.689458-1-sunshaojie@kylinos.cn>
-References: <20260729100451.689458-1-sunshaojie@kylinos.cn>
+	s=arc-20240116; t=1785325668; c=relaxed/simple;
+	bh=HkMBCAbmrFXEE9kGoDxmwgXunRUkZppUwPpF/BM2mLc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bUvF+cV2y20TPqRArRtbFZXhC64y+fOwIsTGdpUZyq6Q05xBMuXvDuyBnzXigXSwmjAx3pSgWO7cR984YdQujQhgCH1TJsBzIpehp2gJwbgR+xwrXRQlr/F7IaJcJUO3ubBOg6qmrc0FvjjQMc94FiChXyPhAmUk4OarSmIa34U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=foOyvk/Y; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="foOyvk/Y"
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C8E451688;
+	Wed, 29 Jul 2026 04:47:38 -0700 (PDT)
+Received: from [10.57.41.95] (unknown [10.57.41.95])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 4D41B3F86F;
+	Wed, 29 Jul 2026 04:47:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
+	t=1785325662; bh=HkMBCAbmrFXEE9kGoDxmwgXunRUkZppUwPpF/BM2mLc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=foOyvk/YD/P95lT4XBdQFEDSgKrdW1PrQdmQte8+Y35jd52iLmQuPsHa0I04DfSf3
+	 yi4Fav4yfIXUVnjQe94RgJknoDy3rZA2Z/wsaxmWL4A2FqTGl0Ss7YDQefTBxG7Pko
+	 FN0P5I3VJuZsYk/v0ht6CwjWiMuM25bgL1xmchfo=
+Message-ID: <46d78aa2-cacb-4efd-ae62-3026f5fe9b3f@arm.com>
+Date: Wed, 29 Jul 2026 12:47:38 +0100
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH v1 1/2] KVM: arm64: CCA: Add support for configuring
+ the Realm MEC policy
+Content-Language: en-GB
+To: Kohei Enju <enju.kohei@fujitsu.com>,
+ linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org,
+ kvmarm@lists.linux.dev, cgroups@vger.kernel.org, linux-coco@lists.linux.dev,
+ Marc Zyngier <maz@kernel.org>, Oliver Upton <oliver.upton@linux.dev>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, Joey Gouly <joey.gouly@arm.com>,
+ Steffen Eiden <seiden@linux.ibm.com>, Zenghui Yu <yuzenghui@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Steven Price <steven.price@arm.com>
+References: <20260724094120.166536-1-enju.kohei@fujitsu.com>
+ <20260724094120.166536-2-enju.kohei@fujitsu.com>
+From: Suzuki K Poulose <suzuki.poulose@arm.com>
+In-Reply-To: <20260724094120.166536-2-enju.kohei@fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The cpu.max interface accepts "quota period" as two values, but
-test_cpucg_max and test_cpucg_max_nested only wrote the quota,
-relying on the kernel default period of 100ms. Since the test
-duration is exactly divisible by the default period (1s / 100ms
-= 10, no remainder), the remainder calculation was effectively
-dead code.
+Hello
 
-Write both values explicitly so that the period can be easily
-adjusted for testing purposes and the remainder logic becomes
-genuinely useful.
+Thanks for sending the patch. Please find my comments inline below.
 
-While at it, rename misleading variable names:
-  - default_period_usec -> period_usec (no longer relying on a
-    kernel default, as it is now explicitly written to cpu.max)
-  - quota_buf -> max_param_buf (since the buffer holds both quota
-    and period)
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
- tools/testing/selftests/cgroup/test_cpu.c | 26 ++++++++++++-----------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+On 24/07/2026 10:40, Kohei Enju wrote:
+> Introduce the KVM_ARM_RMI_CONFIG ioctl to allow userspace to configure
+> Realm VM parameters before the Realm is created.
 
-diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
-index fe637e1d2fcd..10f9254cd08e 100644
---- a/tools/testing/selftests/cgroup/test_cpu.c
-+++ b/tools/testing/selftests/cgroup/test_cpu.c
-@@ -646,15 +646,16 @@ static int test_cpucg_max(const char *root)
- {
- 	int ret = KSFT_FAIL;
- 	long quota_usec = 1000;
--	long default_period_usec = 100000; /* cpu.max's default period */
-+	long period_usec = 100000;
- 	long duration_seconds = 1;
- 
- 	long duration_usec = duration_seconds * USEC_PER_SEC;
- 	long usage_usec, n_periods, remainder_usec, expected_usage_usec;
- 	char *cpucg;
--	char quota_buf[32];
-+	char max_param_buf[32];
- 
--	snprintf(quota_buf, sizeof(quota_buf), "%ld", quota_usec);
-+	snprintf(max_param_buf, sizeof(max_param_buf), "%ld %ld", quota_usec,
-+		 period_usec);
- 
- 	cpucg = cg_name(root, "cpucg_test");
- 	if (!cpucg)
-@@ -663,7 +664,7 @@ static int test_cpucg_max(const char *root)
- 	if (cg_create(cpucg))
- 		goto cleanup;
- 
--	if (cg_write(cpucg, "cpu.max", quota_buf))
-+	if (cg_write(cpucg, "cpu.max", max_param_buf))
- 		goto cleanup;
- 
- 	struct cpu_hog_func_param param = {
-@@ -685,8 +686,8 @@ static int test_cpucg_max(const char *root)
- 	 * The following calculation applies only since
- 	 * the cpu hog is set to run as per wall-clock time
- 	 */
--	n_periods = duration_usec / default_period_usec;
--	remainder_usec = duration_usec - n_periods * default_period_usec;
-+	n_periods = duration_usec / period_usec;
-+	remainder_usec = duration_usec - n_periods * period_usec;
- 	expected_usage_usec
- 		= n_periods * quota_usec + MIN(remainder_usec, quota_usec);
- 
-@@ -710,15 +711,16 @@ static int test_cpucg_max_nested(const char *root)
- {
- 	int ret = KSFT_FAIL;
- 	long quota_usec = 1000;
--	long default_period_usec = 100000; /* cpu.max's default period */
-+	long period_usec = 100000;
- 	long duration_seconds = 1;
- 
- 	long duration_usec = duration_seconds * USEC_PER_SEC;
- 	long usage_usec, n_periods, remainder_usec, expected_usage_usec;
- 	char *parent, *child;
--	char quota_buf[32];
-+	char max_param_buf[32];
- 
--	snprintf(quota_buf, sizeof(quota_buf), "%ld", quota_usec);
-+	snprintf(max_param_buf, sizeof(max_param_buf), "%ld %ld", quota_usec,
-+		 period_usec);
- 
- 	parent = cg_name(root, "cpucg_parent");
- 	child = cg_name(parent, "cpucg_child");
-@@ -734,7 +736,7 @@ static int test_cpucg_max_nested(const char *root)
- 	if (cg_create(child))
- 		goto cleanup;
- 
--	if (cg_write(parent, "cpu.max", quota_buf))
-+	if (cg_write(parent, "cpu.max", max_param_buf))
- 		goto cleanup;
- 
- 	struct cpu_hog_func_param param = {
-@@ -756,8 +758,8 @@ static int test_cpucg_max_nested(const char *root)
- 	 * The following calculation applies only since
- 	 * the cpu hog is set to run as per wall-clock time
- 	 */
--	n_periods = duration_usec / default_period_usec;
--	remainder_usec = duration_usec - n_periods * default_period_usec;
-+	n_periods = duration_usec / period_usec;
-+	remainder_usec = duration_usec - n_periods * period_usec;
- 	expected_usage_usec
- 		= n_periods * quota_usec + MIN(remainder_usec, quota_usec);
- 
--- 
-2.25.1
+This approach is something we tried in the past. Another option is to
+add these as kvm_device_attr for the KVM VM, under a new group, e.g.,
+KVM_ARM_VM_RMI_CTRL and add the following attributes :
+
+KVM_ARM_VM_RMI_CTRL_RPV 		-> Realm Personalization Value
+KVM_ARM_VM_RMI_CTRL_MEASUREMENT_ALGO	-> Measuerment algo
+KVM_ARM_VM_RMI_CTRL_MEC_PRIVATE		-> Private MEC Policy. By default to 
+shared ?
+
+
+Marc, Oliver, thoughts ?
+
+Cheers
+Suzuki
+
+> 
+> Currently, ARM_RMI_CFG_MEC_POLICY is the only supported configuration
+> item. Its value can be ARM_RMI_MEC_POLICY_SHARED or
+> ARM_RMI_MEC_POLICY_PRIVATE. Reject the private policy if the platform
+> does not support private MECs.
+> 
+> If userspace does not explicitly configure the MEC policy,
+> ARM_RMI_MEC_POLICY_SHARED is used by default.
+
+
+
+> 
+> Signed-off-by: Kohei Enju <enju.kohei@fujitsu.com>
+> ---
+>   Documentation/virt/kvm/api.rst   | 29 +++++++++++++++++++++++++++++
+>   arch/arm64/include/asm/kvm_rmi.h |  4 ++++
+>   arch/arm64/kvm/arm.c             |  9 +++++++++
+>   arch/arm64/kvm/rmi.c             | 29 +++++++++++++++++++++++++++++
+>   drivers/firmware/arm_rmm/rmi.c   |  8 ++++++--
+>   include/linux/arm-rmi-cmds.h     |  1 +
+>   include/uapi/linux/kvm.h         | 17 +++++++++++++++++
+>   7 files changed, 95 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/virt/kvm/api.rst b/Documentation/virt/kvm/api.rst
+> index 85bec9b4f021..e1c660e5eb34 100644
+> --- a/Documentation/virt/kvm/api.rst
+> +++ b/Documentation/virt/kvm/api.rst
+> @@ -6690,6 +6690,35 @@ populated data is hashed and added to the guest's Realm Initial Measurement
+>   (RIM) stored by the RMM. This can then be retrieved by the guest (using the RSI
+>   interface) to present to an attestation server.
+>   
+> +4.147 KVM_ARM_RMI_CONFIG
+> +------------------------
+> +
+> +:Capability: KVM_CAP_ARM_RMI
+> +:Architectures: arm64
+> +:Type: vm ioctl
+> +:Parameters: struct kvm_arm_rmi_config (in)
+> +:Returns: 0 on success, < 0 on error
+> +
+> +::
+> +
+> +  struct kvm_arm_rmi_config {
+> +       __u32 cfg;
+> +       union {
+> +               /* cfg == ARM_RMI_CFG_MEC_POLICY */
+> +               __u8 mec_policy;
+> +
+> +               /* Fix the size of the union */
+> +               __u8 reserved[256];
+> +       };
+> +  };
+> +
+> +Configures parameters of a Realm VM before the Realm is created.
+> +
+> +Currently, `ARM_RMI_CFG_MEC_POLICY` is the only supported configuration item.
+> +`mec_policy` must be either `ARM_RMI_MEC_POLICY_SHARED` or
+> +`ARM_RMI_MEC_POLICY_PRIVATE`. `ARM_RMI_MEC_POLICY_PRIVATE` is not supported if
+> +no private MEC is available on the platform.
+> +
+>   .. _kvm_run:
+>   
+>   5. The kvm_run structure
+> diff --git a/arch/arm64/include/asm/kvm_rmi.h b/arch/arm64/include/asm/kvm_rmi.h
+> index 420e99fca07e..721033b132e1 100644
+> --- a/arch/arm64/include/asm/kvm_rmi.h
+> +++ b/arch/arm64/include/asm/kvm_rmi.h
+> @@ -60,6 +60,7 @@ enum realm_state {
+>    * @ia_bits: Number of valid Input Address bits in the IPA
+>    * @stage2_unmapped: The Realm stage-2 mappings have been removed
+>    * @rtts_destroyed: The non-root RTTs have been torn down
+> + * @mec_policy: MEC policy for the Realm VM
+>    */
+>   struct realm {
+>   	void *rd;
+> @@ -76,6 +77,7 @@ struct realm {
+>   	unsigned int ia_bits;
+>   	bool stage2_unmapped;
+>   	bool rtts_destroyed;
+> +	unsigned int mec_policy;
+>   };
+>   
+>   /**
+> @@ -115,6 +117,8 @@ struct kvm_arm_rmi_populate;
+>   
+>   int kvm_arm_rmi_populate(struct kvm *kvm,
+>   			 struct kvm_arm_rmi_populate *arg);
+> +struct kvm_arm_rmi_config;
+> +int kvm_arm_rmi_config(struct kvm *kvm, struct kvm_arm_rmi_config *arg);
+>   void kvm_realm_unmap_range(struct kvm *kvm,
+>   			   unsigned long ipa,
+>   			   unsigned long size,
+> diff --git a/arch/arm64/kvm/arm.c b/arch/arm64/kvm/arm.c
+> index 3862db30779f..17302ba2844c 100644
+> --- a/arch/arm64/kvm/arm.c
+> +++ b/arch/arm64/kvm/arm.c
+> @@ -2169,6 +2169,15 @@ int kvm_arch_vm_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
+>   			return -EFAULT;
+>   		return ret;
+>   	}
+> +	case KVM_ARM_RMI_CONFIG: {
+> +		struct kvm_arm_rmi_config cfg;
+> +
+> +		if (!kvm_is_realm(kvm))
+> +			return -ENXIO;
+> +		if (copy_from_user(&cfg, argp, sizeof(cfg)))
+> +			return -EFAULT;
+> +		return kvm_arm_rmi_config(kvm, &cfg);
+> +	}
+>   	default:
+>   		return -EINVAL;
+>   	}
+> diff --git a/arch/arm64/kvm/rmi.c b/arch/arm64/kvm/rmi.c
+> index 06cc85fb5092..629dea5e8c47 100644
+> --- a/arch/arm64/kvm/rmi.c
+> +++ b/arch/arm64/kvm/rmi.c
+> @@ -572,6 +572,9 @@ static int realm_create_rd(struct kvm *kvm)
+>   	if (kvm_lpa2_is_enabled())
+>   		params->flags0 |= RMI_REALM_PARAM_FLAG_LPA2;
+>   
+> +	params->flags0 |= FIELD_PREP(RMI_REALM_PARAM_FLAG_MEC_POLICY,
+> +				     realm->mec_policy);
+> +
+>   	r = realm_init_sve_param(kvm, params);
+>   	if (r)
+>   		goto out_undelegate_tables;
+> @@ -1155,6 +1158,30 @@ int kvm_arm_rmi_populate(struct kvm *kvm,
+>   	return ret;
+>   }
+>   
+> +int kvm_arm_rmi_config(struct kvm *kvm, struct kvm_arm_rmi_config *cfg)
+> +{
+> +	guard(mutex)(&kvm->arch.config_lock);
+> +
+> +	if (kvm_realm_state(kvm) != REALM_STATE_NONE)
+> +		return -EBUSY;
+> +
+> +	switch (cfg->cfg) {
+> +	case ARM_RMI_CFG_MEC_POLICY:
+> +		if (cfg->mec_policy != ARM_RMI_MEC_POLICY_SHARED &&
+> +		    cfg->mec_policy != ARM_RMI_MEC_POLICY_PRIVATE)
+> +			return -EINVAL;
+> +
+> +		if (cfg->mec_policy == ARM_RMI_MEC_POLICY_PRIVATE &&
+> +		    rmi_mec_count() == 0)
+> +			return -EOPNOTSUPP;
+> +
+> +		kvm->arch.realm.mec_policy = cfg->mec_policy;
+> +		return 0;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +}
+> +
+>   static void kvm_complete_ripas_change(struct kvm_vcpu *vcpu)
+>   {
+>   	struct kvm *kvm = vcpu->kvm;
+> @@ -1474,6 +1501,8 @@ int kvm_init_realm(struct kvm *kvm)
+>   {
+>   	struct realm *realm = &kvm->arch.realm;
+>   
+> +	realm->mec_policy = ARM_RMI_MEC_POLICY_SHARED;
+> +
+>   	realm->params = (void *)get_zeroed_page(GFP_KERNEL_ACCOUNT);
+>   	realm->sro = kmalloc_obj(*realm->sro);
+>   	if (!realm->params || !realm->sro) {
+> diff --git a/drivers/firmware/arm_rmm/rmi.c b/drivers/firmware/arm_rmm/rmi.c
+> index d0c083bdf251..e9632c35e7db 100644
+> --- a/drivers/firmware/arm_rmm/rmi.c
+> +++ b/drivers/firmware/arm_rmm/rmi.c
+> @@ -14,8 +14,7 @@
+>   
+>   static bool arm64_rmi_is_available;
+>   
+> -/* Currently only the first 2 registers are used by Linux */
+> -#define RMI_FEAT_REG_COUNT	2
+> +#define RMI_FEAT_REG_COUNT	5
+>   static __ro_after_init unsigned long rmi_feat_reg_cache[RMI_FEAT_REG_COUNT];
+>   
+>   unsigned long rmi_feat_reg(unsigned long id)
+> @@ -27,6 +26,11 @@ unsigned long rmi_feat_reg(unsigned long id)
+>   }
+>   EXPORT_SYMBOL_GPL(rmi_feat_reg);
+>   
+> +u64 rmi_mec_count(void)
+> +{
+> +	return u64_get_bits(rmi_feat_reg(4), RMI_FEATURE_REGISTER_4_MEC_COUNT);
+> +}
+> +
+>   int rmi_delegate_range(phys_addr_t phys,
+>   		       unsigned long size,
+>   		       phys_addr_t *out_phys)
+> diff --git a/include/linux/arm-rmi-cmds.h b/include/linux/arm-rmi-cmds.h
+> index 138983ab4e3c..5236600421c6 100644
+> --- a/include/linux/arm-rmi-cmds.h
+> +++ b/include/linux/arm-rmi-cmds.h
+> @@ -28,6 +28,7 @@ struct rmi_sro_state {
+>   };
+>   
+>   unsigned long rmi_feat_reg(unsigned long id);
+> +u64 rmi_mec_count(void);
+>   
+>   int rmi_delegate_range(phys_addr_t phys, unsigned long size,
+>   		       phys_addr_t *out_phys);
+> diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+> index adee3936d6ae..46e62327957c 100644
+> --- a/include/uapi/linux/kvm.h
+> +++ b/include/uapi/linux/kvm.h
+> @@ -1704,4 +1704,21 @@ struct kvm_arm_rmi_populate {
+>   	__u32 reserved;
+>   };
+>   
+> +#define KVM_ARM_RMI_CONFIG     _IOW(KVMIO, 0xd8, struct kvm_arm_rmi_config)
+> +
+> +#define ARM_RMI_CFG_MEC_POLICY		0
+> +#define ARM_RMI_MEC_POLICY_SHARED	0
+> +#define ARM_RMI_MEC_POLICY_PRIVATE	1
+> +
+> +struct kvm_arm_rmi_config {
+> +	__u32 cfg;
+> +	union {
+> +		/* cfg == ARM_RMI_CFG_MEC_POLICY */
+> +		__u8 mec_policy;
+> +
+> +		/* Reserve space for future configuration payloads. */
+> +		__u8 reserved[256];
+> +	};
+> +};
+> +
+>   #endif /* __LINUX_KVM_H */
 
