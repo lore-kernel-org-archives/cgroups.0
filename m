@@ -1,74 +1,75 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C997C44E66A
-	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 11:53:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42BB247A88C
+	for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 11:58:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785325992; cv=none; b=YJVMY8gWstpEkhGWm+LbHWI4SailrNnjlnpKJBO5OmIjpAdMbXmt4kxeneu5YxsCQRv4HCLi1vHAtrViqnguZDMgCI0ptCNeqzDhHrfmAqDMnRRETe5MlO4QePrQBDj92ZDAUZoWtrxbLO9v4SviLOVEuBVNnqPhV1q4EQrGb0w=
+	t=1785326295; cv=none; b=uk8s/Jt//oIsS/T+YPJxkelBXsvNJJoCb509cLmtuBMSGWjl8iC3v6MmXcIRxhVXiAtB7meZdUcBrE+auph/ah8mro/POx/7Dj/0lfR/HRORp4lMMHaynqQgsKFJcmZbIK02JdiDzlB2ZCAk21hC6hRF4pnyRu1fENdclwkhXwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785325992; c=relaxed/simple;
-	bh=xn0A3G+imlHjwbqfECgVG5w3y8DU5IaW0X0jzxdqVrI=;
+	s=arc-20240116; t=1785326295; c=relaxed/simple;
+	bh=fx28yLsjMFBo29GVE+42E8T8wzXSd5A3fGv+1jc5AZA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lrd1sXKTUDpIzOIbBzFcYlsoNLbxgjI5yOZx1WeLyeFAd7VCL7+fiDZvbiGYtNPIP1DqZk2BCXPdq55jdYFQtD/byzM0zU7zgJwdVQjIVKGQj+z9A4WYWbpvSdPGDkSHEW9INByYqEFpByO3EXCgPKzfhe2XabT5VSeYLwmo3Xo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YzAB7CkW; arc=none smtp.client-ip=209.85.221.43
+	 Content-Type:Content-Disposition:In-Reply-To; b=HJarD1xDHCstPaWuwtgIH5CBVJCoEACwveAiqYS+vhq3KxbrjR3ULM2oygnJbqznSfZTzEdj+hPEw/Y4V1L4N0mtFSvA17YOz1FtlIXUJm/7JyIHL6AZX9icHhgh6BQawBmqJ6HVmb+J96IF4o4Pm9S02j5z0S1jQiNtktoV/VQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=T2h29NQk; arc=none smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YzAB7CkW"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-4798bea72f9so593799f8f.1
-        for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 04:53:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="T2h29NQk"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-49545ba3d4eso3838255e9.3
+        for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 04:58:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1785325989; x=1785930789; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1785326292; x=1785931092; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=xn0A3G+imlHjwbqfECgVG5w3y8DU5IaW0X0jzxdqVrI=;
-        b=YzAB7CkW391OXrZ5+bJrfWkj9d/BD97KmWpGFWSiQdd1dtnLaLSTd/JJzqwip2l7VE
-         yJhOA+PZ5lPEERw8pRQDG++qEjVRE/ToWJY3EkdmxGpI89akSpNo/kLob0nQkAcH99lm
-         3hqPPrVaIbmaRCt5YM31hg5ML2tO+ZOH4xdUaMtD7TMUiAlMCe0xIfrLMe7JItYE3Yt8
-         ta9TlVI+U9jxl9Y6MnD15Hz1npIQhQlLHk6P4H0F79zbn7BmmQEViRctW/3/d1HjetkE
-         DpoCGW/i8QKHaQxT/qNO/h0ltVopVeGpGwiaT+5txdcjQt3gLlbz/uXIxtQfUDjBJsA6
-         gNrg==
+        bh=BsRdjuLA+dOXNU1jaPBvSl5joX+2y8GNdlad/t56tTA=;
+        b=T2h29NQkmul440gqOJM7DuyUF0wG6AzhmgCdWl/fNu/JqUtfS5Kzjicjy6pKHRX9sT
+         pBwCRGOukttuqBo9y9qPI3nktn6sy8cRiouGfVsl9d560TiSzSyM2CTBdxWk92PdEc5E
+         1gBeiR60PgJtVO00fP+VKYiic/UmSMdRwGhRoECVRS1wZCguxB9CXsZf9CsRJ+6PCATc
+         GmytZ5wtlV3qrLyA50S/nLC5PLdXT5BtrGBCk813vThTRfTwMmTNbXP+HEjnMvsvrBk4
+         r14X1BR+PF9JsZueDb62KOKk/OeDNIaGSq5QpJNMcdiD1P63OWfPIVOrn06JKPq5We9N
+         qHiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785325989; x=1785930789;
+        d=1e100.net; s=20251104; t=1785326292; x=1785931092;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=xn0A3G+imlHjwbqfECgVG5w3y8DU5IaW0X0jzxdqVrI=;
-        b=PwAdpJ6RL3SV4QX9csBBkzcituTIK07DWMLRmn5ITUjoDLajzBP1+cIm0lvJPWkNDm
-         YSoH9p/jfGUxKhloRkD4PTjQQ8rQqLNUw+Z7i0srqB4g3IL32CZjrKjqgJXLDgOdcuAu
-         wV0KWuPe5fbg+E7kc3okJHwjqdfpNNXvsimFokbyN7MK1qbQX0neDFQ1CFSPk15xvM8f
-         0c2bWx7QpYyHmpThtMDYGffL/K2sy+O2zGSFDmZQubaWP/RuvXSqdpv2zK10ZeG78Y8h
-         mWVxc+UqtU/o4oxi/nblgrRwvovrTgE9g1VOgYnG/rr6aDv8Tiwugl2Yqq4YCdwM2MNL
-         qdTg==
-X-Forwarded-Encrypted: i=1; AHgh+RoLiFaqAN4vg9OXkTP4WcdM4TxLJocFif/0n6ERiVl8w9dhNwLiXYH+zrH4/6a1rcrtFgYK460V@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz363YSsexvDeLNMOmW6D36epytMGun60o2NyV5/4k6XpIFXHVj
-	gaMwT+bDgU5//lNnElj863Ma4Fda3wE530zNW1HB5HIlvUP8tSfDXopqvUS4TMWmwj0=
-X-Gm-Gg: AR+sD11EUxwr7Hf0qtvUFOItb7Hhlx+GYMwhOXfW6KmYZkHRD/7kR874q4zC7+SRDqi
-	pYceKtonDkgB2ar8uQ89kLvP0HAel8jyp0PD//hjogdWi0FBDRPdBhRRGN0swuqEleIZdtJhuO6
-	mH1Ojdhyr8fGtqw+qb3hD/ueFUsrnK1ZllSkxGtfgVLIS9YZAFdrjuhq1d+xWK2APN5/yBDqVqE
-	d22uICvVh7lhxCuj7bicKWgmZfzj/vXxxpD30L8FRmXYW5ZtK7LzpCFF7XPQA3Ic6CXn8ozr4jL
-	osD27xh885qtTrzTcpVi0uZlQCANkD10gB7Q2DrfRmhO0kl1dxebP82mSJfOY+BjhoXh/Z3M9Bf
-	UXO2mf6OzOHU/eofyI4agxvLG03UI8k3JKpszXdrgXn3sVKtWWzRKJ5nTWiOCJidRlJSIqqD0iq
-	fh4Frl8HoZ1fJOKL1y1La2T5DZjEiH1ZjnrctdaorLiIR5GCFBwo+hU8iYGYU8gjPM
-X-Received: by 2002:a05:6000:4716:b0:462:e086:35f with SMTP id ffacd0b85a97d-47fb1ed8339mr7235562f8f.21.1785325988938;
-        Wed, 29 Jul 2026 04:53:08 -0700 (PDT)
+        bh=BsRdjuLA+dOXNU1jaPBvSl5joX+2y8GNdlad/t56tTA=;
+        b=m5de9JvbRw/G5UAoAwLZXBAMZkweZGDMk/65sYfFtjdu2TWsa3OfwGd23u3rGP/Reu
+         lVoxgnd1+L1l2JrDP0gWJEf/79YGA2qoMfSUfbnEr2GAQJkcYXoYOMS/9ls2/s4BGQ84
+         Wfljvaxnoj7t2KEZget01vdNvQrwAQWS0di4C8rYP6Lk3GMF9Kx1rJS5BSaVu1YnU5jA
+         THKWSsUvNOMo8ZEmd/4xx0Wlb+ISS1qFWQnT3VxkVmoYaCuTSI3pXAlb6aLWR1voE5nB
+         NVUOnydwEwvV5GrNqJ2aWb4/WOmKpclbsAuLGKZcj5g/busS8wR+UArXjGMquiTPbe+E
+         UFoQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrnMSqQpDwk4PtLaiYGxd50r3J5ZRnYJrTo5zLogWRrzRB+pGscvzgt4o72OPEvmPh8uBmeqi4T@vger.kernel.org
+X-Gm-Message-State: AOJu0YxMcpCq3hEOhPgzyJ4fbvTZ99MY7KsEKGx/N3MgOKAGx5XQYxya
+	p59PC5NqnZc21icEpfTX8Xg7Yy1J7gwHJ20IbR6hpeOwL4MeNY/JFBGLwyzIhTaq15A=
+X-Gm-Gg: AR+sD10fTgZR/cMde0E1Ilr7NtjkJUkezTGODX0ERTMlsr3jW3N5WhaZY5pDmbpqgfa
+	WIIOW73TkNVAx4+nCSPSIetcW2nu6vsa9gNbeiSYL5FHE5Zm7AP/uEV18RNcUVqTLNgXkXhjsRo
+	aL3kLC5MnwFbUxYb8TXu4f4QxOSVO7faSa+Apuuc6Zu83tBtCk/SfyM2yVA+f9R5y6xFakYlATX
+	VYr7daKiydr6L89bFCNLH7msoyHfPWW6MsEwjX2XmYDHs90fgDz49mjB/B0i1rOkR5D+v8+QrnK
+	HpqPpHyOK/GqWSUx+pTWLfTs9f2KQP2WzhUgJrAefdJNOduLLouAVQbWk13N0wX4/tHivrzZC9t
+	ObhQ0u/V41W64TD9wDVivbtjopFdi8iqqoR4SIyZXi2XoLdSsiw8vd1WnyxiTCaomRdeoQfYaIj
+	CPxq4ux8R0Xvv+lxu0qWF8oJppWMct3y0ritR1RRHGA4+Ck+I3iCER3Ce3x6FV1Ap0/MBX2EBR0
+	szS
+X-Received: by 2002:a05:600c:6986:b0:495:6840:9728 with SMTP id 5b1f17b1804b1-496c659d6e2mr78781925e9.38.1785326292527;
+        Wed, 29 Jul 2026 04:58:12 -0700 (PDT)
 Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fb6b19653sm7730772f8f.30.2026.07.29.04.53.08
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496c45b1c2asm151064555e9.5.2026.07.29.04.58.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 04:53:08 -0700 (PDT)
-Date: Wed, 29 Jul 2026 13:53:06 +0200
+        Wed, 29 Jul 2026 04:58:11 -0700 (PDT)
+Date: Wed, 29 Jul 2026 13:58:10 +0200
 From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
 To: Shaojie Sun <sunshaojie@kylinos.cn>
 Cc: tj@kernel.org, hannes@cmpxchg.org, shuah@kernel.org, 
 	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] selftests/cgroup: write explicit period to cpu.max
- in max tests
-Message-ID: <amnocemHk8WMUnyi@localhost.localdomain>
+Subject: Re: [PATCH 1/2] selftests/cgroup: remove unused user_usec read in
+ test_cpucg_nice
+Message-ID: <amnqUlrPxhTobE1E@localhost.localdomain>
 References: <20260729100451.689458-1-sunshaojie@kylinos.cn>
- <20260729100451.689458-3-sunshaojie@kylinos.cn>
+ <20260729100451.689458-2-sunshaojie@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -76,50 +77,58 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="piybutfk75vjrsrz"
+	protocol="application/pgp-signature"; boundary="ifcqqrvh53udcnbk"
 Content-Disposition: inline
-In-Reply-To: <20260729100451.689458-3-sunshaojie@kylinos.cn>
+In-Reply-To: <20260729100451.689458-2-sunshaojie@kylinos.cn>
 
 
---piybutfk75vjrsrz
+--ifcqqrvh53udcnbk
 Content-Type: text/plain; protected-headers=v1; charset=us-ascii
 Content-Disposition: inline
-Subject: Re: [PATCH 2/2] selftests/cgroup: write explicit period to cpu.max
- in max tests
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 1/2] selftests/cgroup: remove unused user_usec read in
+ test_cpucg_nice
 MIME-Version: 1.0
 
-Hi.
+On Wed, Jul 29, 2026 at 06:04:50PM +0800, Shaojie Sun <sunshaojie@kylinos.c=
+n> wrote:
+> diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/se=
+lftests/cgroup/test_cpu.c
+> index 7a40d76b9548..fe637e1d2fcd 100644
+> --- a/tools/testing/selftests/cgroup/test_cpu.c
+> +++ b/tools/testing/selftests/cgroup/test_cpu.c
+> @@ -289,7 +289,6 @@ static int test_cpucg_nice(const char *root)
+>  		if (!WIFEXITED(status))
+>  			goto cleanup;
+> =20
+> -		user_usec =3D cg_read_key_long(cpucg, "cpu.stat", "user_usec");
+>  		nice_usec =3D cg_read_key_long(cpucg, "cpu.stat", "nice_usec");
 
-Here I cannot appreciate the changes.
+Good catch.
 
-On Wed, Jul 29, 2026 at 06:04:51PM +0800, Shaojie Sun <sunshaojie@kylinos.cn> wrote:
-> The cpu.max interface accepts "quota period" as two values, but
-> test_cpucg_max and test_cpucg_max_nested only wrote the quota,
-> relying on the kernel default period of 100ms.
+This test is anologous to test_cpucg_stats(), so the checks should be
+analogous too, like:
 
-Yes. Is that a problem?
+ 		user_usec =3D cg_read_key_long(cpucg, "cpu.stat", "user_usec");
+ 		nice_usec =3D cg_read_key_long(cpucg, "cpu.stat", "nice_usec");
+ 		if (user_usec <=3D 0)
+ 			goto cleanup; =20
 
-> Write both values explicitly so that the period can be easily
-> adjusted for testing purposes and the remainder logic becomes
-> genuinely useful.
-
-I have yet to see a system where the default period is modified.
-Therefore, I wouldn't open that box with non-default periods
-unnecessarily.
+instead of the removal.
 
 Thanks,
 Michal
 
---piybutfk75vjrsrz
+--ifcqqrvh53udcnbk
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCamnpnhsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ail5gD/fGsAYBJwbk2uztBZqwSE
-MMwWF6gfM7FfiSKb+4t7vcgBALL32jYxI+iP0Qwr9ps5a9eA/iQFxErZIKHCIWeF
-r4sG
-=8BAZ
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCamnqzRsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Aii9gD9GGP+0pSRf1z4ITK+SOed
+r5N8KWGml6r9WTyFcsoAvAUA/3ffWJbE9xPk9PpZcQa8oND7NB5OPWBG3a8zgEl8
+JKAO
+=rtSp
 -----END PGP SIGNATURE-----
 
---piybutfk75vjrsrz--
+--ifcqqrvh53udcnbk--
