@@ -1,83 +1,101 @@
-Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33021643B
-	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 12:41:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4CD419310;
+	Thu, 30 Jul 2026 13:07:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785415287; cv=none; b=LH3zGWD5a+KAyhKI/WRmTqI57fbmlTu3+/pl88OUowcRnjURQewG1IHqP8NoLNf2ouuLZKHxQ/v6P8wcDrYTSxlstz2XeCz/EEQ7STMpsU/veNPM5mbaK2xOnag54t4X7KiAWfORC0bjUQsmTrV0o7cEeqjLucCqFL1FYx1h17k=
+	t=1785416864; cv=none; b=Grtgp9GrwCdp76OBYHPxoVi96CXMe4FzNYWOdP3GkTlftau/I8qCuYmoHUaJ4JaqIL5FVb8EKLdjZR7H9sbhwGmtaKWEbEs/IfZRmCJlYgWi32y7Y9Yvbxcl49EJ+I5RUk0G5cCm/GafJO6TTfduFjPb9SSQCdcPkiO3W9MZsqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785415287; c=relaxed/simple;
-	bh=hS3IKyTqTg/hpHB+jNKR49p7frx5eoDh7PZqLLCO/EU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JGBS4JBztH7E99MOGU6hri/cLTcnBGtC7VKoXlYMAFyRY0ExBZkq3fJjyQiA97ZP014fvu/Thwa0QKvt7dx29yts/ExZsZiYtWLSmgnWgv9Y9thk3yRbFPClZnX6LR1GCRyd7xscl5E9IneSoHDwH1+SulUZDxVNWHzRHrwF8HI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KmNYeTuB; arc=none smtp.client-ip=91.218.175.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KmNYeTuB"
-Date: Thu, 30 Jul 2026 20:41:14 +0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785415283;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3Yn6zB4FyaoOlg1O+5S/R+uP7IqARiMq9a6Q5IJKpbk=;
-	b=KmNYeTuBY61Zd8qBvi5I7WRr5XPb7xsUl3E3K8/7mKm7457Qb0FUwKaz9ZsvAaWizpNg9l
-	ayDE0CAq8tIY57qHQL9Xf3oqg5Cj+4+7sbYMD5psOO+kk3UNCYAWIEk+vNOSinQvUR1AIg
-	E2dTua96p66XoI2NTAImSv4NHgVXBEU=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Hao Li <hao.li@linux.dev>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
-	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Subject: Re: [PATCH v3 13/13] mm/slab, kfence, memcg: completely remove
- obj_ext for kfence objects
-Message-ID: <amtGQIpVU4WoWiXf@fedora>
-References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
- <20260727-b4-objext_split-v3-13-c29ef0f1f257@kernel.org>
+	s=arc-20240116; t=1785416864; c=relaxed/simple;
+	bh=iI2iVuAgWWW+LXM2DwlZZV17MfsfBsP61WW2fOWo8XY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=EL8NyOOD+9+nXERyx69RmkzmGlhG5sR0jJ7qxMJQeDz/7BRXnwnIj85bEQRTAQbv9gazRBtFz1eN6mQ2MQdMFHbiWDS2JI9ZllmRYmZyV857dwQWbt5KxjCNHzEj4VKPGIbDlEAeY0/csQ6VL/VGgxMnst8FUqYR43GcMTCXepQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 9e43710c8c1711f1aa26b74ffac11d73-20260730
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
+	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
+	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD
+	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
+	AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:7e5adc1a-1d6e-4384-9149-c3ae899ac799,IP:10,
+	URL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:30
+X-CID-INFO: VERSION:1.3.12,REQID:7e5adc1a-1d6e-4384-9149-c3ae899ac799,IP:10,UR
+	L:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:30
+X-CID-META: VersionHash:e7bac3a,CLOUDID:39c320572c7efb317360af1dc3df1baa,BulkI
+	D:260730210734W7YZYM6M,BulkQuantity:0,Recheck:0,SF:10|66|78|81|82|102|127|
+	850|865|898,TC:nil,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:
+	nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,B
+	RE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 9e43710c8c1711f1aa26b74ffac11d73-20260730
+X-User: sunshaojie@kylinos.cn
+Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
+	(envelope-from <sunshaojie@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 352084493; Thu, 30 Jul 2026 21:07:29 +0800
+From: Shaojie Sun <sunshaojie@kylinos.cn>
+To: mkoutny@suse.com
+Cc: cgroups@vger.kernel.org,
+	hannes@cmpxchg.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	shuah@kernel.org,
+	sunshaojie@kylinos.cn,
+	tj@kernel.org
+Subject: [PATCH v2] selftests/cgroup: add user_usec sanity check in test_cpucg_nice
+Date: Thu, 30 Jul 2026 21:07:17 +0800
+Message-Id: <20260730130717.1236233-1-sunshaojie@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <amnqUlrPxhTobE1E@localhost.localdomain>
+References: <amnqUlrPxhTobE1E@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260727-b4-objext_split-v3-13-c29ef0f1f257@kernel.org>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jul 27, 2026 at 02:54:07PM +0200, Vlastimil Babka (SUSE) wrote:
-> We have already disabled memory allocation profiling for objects
-> allocated for KFENCE to avoid complexity. KFENCE allocations are rare
-> and there can be only CONFIG_KFENCE_NUM_OBJECTS (default to 255)
-> outstanding ones at any time, so they are among noise in the profiling
-> stats.
-> 
-> For the same reasons, we can stop memcg_kmem accounting of kfence
-> objects as their memory usage will be negligible wrt any practical
-> memcg limits.
-> 
-> This allows us simplifying the code and getting rid of
-> is_kfence_address() checks in various places, including slab_obj_ext()'s
-> usage of obj_to_index(). Instead we rely on the fact that slab_obj_exts()
-> will now always return 0 for a kfence object's fake slab, which makes
-> those places unreachable.
-> 
-> All we need to do to keep this assumption valid is not to allocate
-> obj_exts for kfence objects, so the checks need to guard
-> alloc_slab_obj_exts() where necessary.
-> 
-> Suggested-by: Harry Yoo <harry@kernel.org>
-> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+In test_cpucg_nice, after the child process exits, user_usec is
+read from cpu.stat but the value is not checked. Add a sanity check
+to ensure user_usec > 0, analogous to test_cpucg_stats(), so that
+the test fails early if CPU usage wasn't properly accounted.
 
-LGTM.
-Reviewed-by: Hao Li <hao.li@linux.dev>
+Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
+---
+v2: Instead of simply removing the unused user_usec read, add a sanity
+    check (if user_usec <= 0, goto cleanup) analogous to test_cpucg_stats(),
+    as suggested by Michal.
 
+ tools/testing/selftests/cgroup/test_cpu.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
+index 7a40d76b9548..5a44705ed3fd 100644
+--- a/tools/testing/selftests/cgroup/test_cpu.c
++++ b/tools/testing/selftests/cgroup/test_cpu.c
+@@ -291,6 +291,8 @@ static int test_cpucg_nice(const char *root)
+ 
+ 		user_usec = cg_read_key_long(cpucg, "cpu.stat", "user_usec");
+ 		nice_usec = cg_read_key_long(cpucg, "cpu.stat", "nice_usec");
++		if (user_usec <= 0)
++			goto cleanup;
+ 		if (!values_close_report(nice_usec, expected_nice_usec, 1))
+ 			goto cleanup;
+ 
 -- 
-Thanks,
-Hao
+2.25.1
+
