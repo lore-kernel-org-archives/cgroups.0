@@ -1,93 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A97B43451DA;
-	Thu, 30 Jul 2026 01:13:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D70B3655EC
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 01:48:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785374031; cv=none; b=s9vIbeSQMZd6Os1Xt0a9TRDSX9AaI0g4xwZ1yDPhe4J346U9Mcs6BkVEl0pqCJ4DW8SgLlFPZ+/wqi++2IiaeND3sus8x5wvrXOc+tOs8ukYk00aTxA4eEAZ3bEkZ+zLJm6tlw4XhuFbG9WlNCXZThDTioDo3KqVzV/AaTgMx8c=
+	t=1785376101; cv=none; b=RnJWTdjg3DHOMU3HzmSXs8YaXiMdfW3JwNOyEeAaYTzYHsTjPQIVZdoqzal171LTuly8wXyOO0gLJpvO2rN4ESj4wg8faZyN3Hh8ofY6xX2DSqo66qy1YW49CCwacgNsYGk5iWeFPUM7AOhDTAi0G0Uq5eigoOqCNWwGVLPI02k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785374031; c=relaxed/simple;
-	bh=GKvXwKnRunki1yk/D0dVmzRqZ3zgNBdiDPRR8jn4j6Y=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=CkkO1DrBMW3Gw6boS37aqs6jzgm0jvFQyPgvOxd143uoumyI2O9x6sXJ3ysemNE8dbUKjjzVd4eZwcpyzmAGTRUPMtCftQjVJ5+1bqV8F/6nozE72uWaA5c/jOuIqSDv6VTduDsyrI/Ycyn7l/zyUezcv6V8mC2HMoGDHnb9H7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=pPzXvTG6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785376101; c=relaxed/simple;
+	bh=KLDja6n4BKo/QrapPt4yWwqelwNdhgNa6lu6UQ9kO60=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LnoKUyBTgjZGI6brQLoy0UY4Q36EcZSQOLGIctjYNoYxA02+GId0wh0SIwOPkE15SwVUewj3FfMV6xuBp5QogJCIBQvKgoT3fq0zDB+K4i0ZqAZdgHaYyUsircVWTKIXL44trTNbkM0ncfC4xCDpJiASqnlJJrQvhy674XXsGEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=snIU8Z+v; arc=none smtp.client-ip=91.218.175.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="pPzXvTG6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA3C51F000E9;
-	Thu, 30 Jul 2026 01:13:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1785374030;
-	bh=lEKInAQKzOCXSMv2lRBe8VhnqO6M22pZNQ0AYXxYIyY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=pPzXvTG6+b362ZbsjEcde3W2xCG7KopSBKL8+bwuz790ugIjtB/TJOJtTtDvxMLzf
-	 7j/LkpPG+eoJ5aBQwNMJHqnaRsIuwJ/x2lQNiUjJTbTwo+ag5Ur3QpGu3w+qBMnoIe
-	 QbIwcdRR8su/kUzxlBikPvJeY0GGUfDHEvwG4MDc=
-Date: Wed, 29 Jul 2026 18:13:49 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Michal Hocko <mhocko@suse.com>, David Rientjes <rientjes@google.com>,
- Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin
- <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Suren
- Baghdasaryan <surenb@google.com>, Usama Arif <usama.arif@linux.dev>, Rik
- van Riel <riel@surriel.com>, Nhat Pham <nphamcs@gmail.com>, Meta kernel
- team <kernel-team@meta.com>, linux-mm@kvack.org, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] memcg: bypass the reclaim and oom killer for dying
- tasks once oom_reaper is done
-Message-Id: <20260729181349.fd41f1a09ec19c9cfb0c412f@linux-foundation.org>
-In-Reply-To: <20260729024612.3369005-1-shakeel.butt@linux.dev>
-References: <20260729024612.3369005-1-shakeel.butt@linux.dev>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="snIU8Z+v"
+Message-ID: <0710df28-5870-4d33-aba1-085756290856@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785376095;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=k2kUWZ0xcdYFc/4dDu905x5nCY+rKqCzP7jv+c5usrE=;
+	b=snIU8Z+vX8Ry3ANjvdEYi7mUuak8bA4lZ6UeOPKRCzKxibeH87AGjK/ZyBXsS4tMx9lBNK
+	Mzd0mnR5q8KJP5C42BVPKioszvVLq/1wsuvkovqsa7W4tXiAkmPFPsQZAYVC7FxWHp8kRD
+	dxlFXpx/Wgw/KKuhdz5ZbSnUHDWHtzs=
+Date: Thu, 30 Jul 2026 09:48:44 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Subject: Re: [PATCH] mm: memcg: stop reclaim when a limit update is superseded
+To: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260724021805.1234583-1-guopeng.zhang@linux.dev>
+ <amcT75pLmA0hRUm1@tiehlicka> <615d091c-bd3b-4686-817e-5b29756542ff@linux.dev>
+ <amdkHvSMj95DUri5@tiehlicka> <f706d139-53a7-436d-adc5-c691577ce53b@linux.dev>
+ <ammzjkUIADCxO2mP@tiehlicka>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <ammzjkUIADCxO2mP@tiehlicka>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Tue, 28 Jul 2026 19:46:12 -0700 Shakeel Butt <shakeel.butt@linux.dev> wrote:
 
-> At Meta, we are seeing instances where an OOM killed job is stuck in the
-> exit path for several hours. In one particular case, the job was stuck
-> for more than 8 hours and I had to manually remove the memory.max limits
-> to allow the process to exit.
 
-Not seeing the problem here - that sounds like normal kernel behavior ;)
+在 2026/7/29 16:02, Michal Hocko 写道:
+> On Wed 29-07-26 14:15:25, Guopeng Zhang wrote:
+>>
+>>
+>> 在 2026/7/27 21:58, Michal Hocko 写道:
+>>> On Mon 27-07-26 20:59:23, Guopeng Zhang wrote:
+>>>>
+>>>>
+>>>> 在 2026/7/27 16:16, Michal Hocko 写道:
+>>>>> On Fri 24-07-26 10:18:05, Guopeng Zhang wrote:
+> [...]
+>>> Is this trying to replicate any real workload? One would expect that
+>>> writers to limit do some sort of coordination otherwise the exact
+>>> behavior is not really well defined.
+>>>
+>>
+>> No, this was not motivated by a reported production workload. We found
+>> it through automated randomized testing for our cgroup observability
+>> work and reduced it to the reproducer above.
+> 
+> This is an important detail to be mentioned in the changelog. Describing
+> motivation for a change is really important, especially if it has direct
+> impact in user interface behavior.
 
-> Reproduced with 20k threads, each parking a robust futex head on
-> its own zswapped page, OOM-group-killed while a sibling holds mmap_lock
-> for write so the reaper gives up and sets MMF_OOM_SKIP. Tested on
-> next-20260728 and baseline show ~90 seconds exit time while with the
-> patch the exit time reduced to ~3 seconds.
+Thanks for the guidance. I will take the feedback from this patch into 
+account when preparing similar changes in the future.
 
-Very positive.
-
-But it doesn't sound like you're fully confident that the problem is
-fully solved?
-
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2653,6 +2653,19 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	if (!gfpflags_allow_blocking(gfp_mask))
->  		goto nomem;
->  
-> +	/*
-> +	 * OOM victim still needs to charge memory to exit. OOM reaper should
-> +	 * help but it might fail on mmap_lock contention. If the victim is a
-> +	 * large thread group then all exiting threads might compete on oom_lock
-> +	 * just to learn that there is nothing really killable anymore. Bail
-> +	 * out early and fail the charge to expedite their exit. They are
-> +	 * considered fully reclaimed by the oom reaper and they shouldn't
-> +	 * contribute further charges.
-> +	 */
-> +	if (tsk_is_oom_victim(current) &&
-> +	    mm_flags_test(MMF_OOM_SKIP, current->signal->oom_mm))
-> +		goto nomem;
-> +
->  	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
->  	raised_max_event = true;
-
-Should we backport this?
