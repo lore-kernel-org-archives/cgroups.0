@@ -1,79 +1,111 @@
-Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D41673D3305
-	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 11:43:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C54673FF1B5
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 11:54:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785411802; cv=none; b=HQDtknI1/nFBwW47B+JBXhqlPpCeLFpJdhwboEbsjUV4vrhAphX306Xhzob+WbscnCd0/XucFfrxryvEKxW2PjlOYYjdOpZkM3KeagN2JSU4Qrlg8zZI9tmeZFTE14aGCKOBKozycZgcT0MPi6JKjcp0pmQWAJzycc2rRKmUHuY=
+	t=1785412465; cv=none; b=hEdjabdoFIBXVLkTKsDGhVJ5nlsRVitfPABaDcc80L6vQ8TVIbZ3jhNpET1zw0YjOCDco1+JiZChK6vR708g0PIO7g7EINfRiEw9iahm8u/jWUClx+CA6JW8wLvFmI/zPdm9YZQOigCecXZUfc8C0gKCv2MWOIoUVbU7eC4NnpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785411802; c=relaxed/simple;
-	bh=AvG44hWfCpaxdBcz+S4YlDXxi9rjrWiYvGChV3tKSrk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NtX9OTWNFlKCxlj7SFKQ0JbRXK10tIXvDmugbxId/Z1dQrPX5NXBawirVylv0T/g+Lk3bQZbzk7ok52wFsVojKfjVHD0gtQStlMPm8j3/muCnSL0OlT5Pje2iQjuKfrZB4RSUwwV35JurOCWbvkTcJe7+F1bLfOTGC/wsBQJjcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=C/siyrsm; arc=none smtp.client-ip=95.215.58.171
+	s=arc-20240116; t=1785412465; c=relaxed/simple;
+	bh=h+sMLeZfRIlfDEbmZmcgzOyTDkuRoPMynSmmJE5AoBw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=bFkg0G+wg9b36z94KrYcvHyaaq/XjPnGsy0uQBSPU8JVNsnBYAUvec99f3jENS8qmM9Uv8MfV2W64UT1S3LY1gJgfZ0DG5iCMq7e06pJY8xSBLv4d5ezNG1eTcufKD2XZoXO0LzKrZp5mGDCXM1Uc7FBmc56WcpqFPcSsu6mxTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ltZxcP7t; arc=none smtp.client-ip=95.215.58.183
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="C/siyrsm"
-Date: Thu, 30 Jul 2026 19:42:39 +0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785411788;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lTqFA7K6MPk5apzin5nmxQMjq9hPrkBYRMuS0oyOFec=;
-	b=C/siyrsma3utDpfgdIXQWOQSCVE5HOZxSBg7SL58NypteKUNQgGSivRAcdNxR+MAV9mb0i
-	jA9bgnQhSoVJHMgVvznfvdgEr1KpaxmQQA/nazLq58jI6djhPEcGu0n5DQGR8DweYbvuCk
-	EJRRztuscKB/3kVpvRbH0h/I1eQpqTo=
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ltZxcP7t"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Hao Li <hao.li@linux.dev>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
-	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Subject: Re: [PATCH v3 09/13] mm/slab: introduce slab_obj_ext_has_codetag()
-Message-ID: <ams4ndW0HZGjhODA@fedora>
-References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
- <20260727-b4-objext_split-v3-9-c29ef0f1f257@kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785412460;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ti2bSmazGTeJeWuqEsKxELAbB2h/8DFLycOObfhZA2c=;
+	b=ltZxcP7t3+OjBynxx5eUHF4NPsMADw77gEwHiFN27N1wa/6uj5b0KtDS09qnl70esX3g/P
+	OfpcZ1n9roz4V4PhzDlvoAlEoque5p/Xel7rhYs3tlBwdc+xDsCo56T6y4Y0NrQbh5VrYA
+	p0n+Zb1zGpsF+8rNSKmuYp3ZeaJq6fU=
+From: Ridong <ridong.chen@linux.dev>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Muchun Song <muchun.song@linux.dev>,
+	David Finkel <davidf@vimeo.com>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Tejun Heo <tj@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: [PATCH] mm, memcg: fix memory.peak reset clobbering other fds' watermark
+Date: Thu, 30 Jul 2026 19:53:14 +0800
+Message-Id: <20260730115314.1069089-1-ridong.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260727-b4-objext_split-v3-9-c29ef0f1f257@kernel.org>
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-On Mon, Jul 27, 2026 at 02:54:03PM +0200, Vlastimil Babka (SUSE) wrote:
-> mem_alloc_profiling_enabled() allows evaluating (with a static key) if
-> memory profiling is currently enabled. mem_profiling_support is a
-> variable where false means it's not possible to enable it anymore,
-> because the system was booted with "never" or it was later shut down.
-> This is possible to query by mem_alloc_profiling_permanently_disabled().
-> 
-> To make slabobj_ext array size handling dynamic, we need a snapshot of
-> mem_alloc_profiling_permanently_disabled() early in boot, so that's not
-> affected by a later shutdown. We also need it to be static key based for
-> performance. Neither mem_alloc_profiling_enabled() nor
-> mem_alloc_profiling_permanently_disabled() satisfy this.
-> 
-> Therefore introduce slab_obj_ext_has_codetag() with an underlying static
-> key for that use case. Its state is made to reflect the result of
-> mem_alloc_profiling_permanently_disabled() during kmem_cache_init(),
-> which does happen after setup_early_mem_profiling().
-> 
-> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+From: Ridong Chen <chenridong@xiaomi.com>
 
-LGTM.
-Reviewed-by: Hao Li <hao.li@linux.dev>
+Writing to memory.peak resets the peak for that fd only. Each fd is a
+watcher and reads back max(its own value, the shared local_watermark).
 
+peak_write() resets by lowering local_watermark to the current usage.
+To keep the other watchers' peaks it then walks the watcher list, but it
+stores the current usage into them instead of the old watermark. So once
+usage has dropped from a peak, a reset on one fd wrongly drags every
+other fd's peak down too, even fds that never reset.
+
+Reproduced on 7.2.0-rc5-next under QEMU, two fds A and B on one cgroup:
+B sees the peak (410624 KB), usage drops, then A resets -- and B's peak
+collapses to 1060 KB although B never reset. With this patch B keeps
+reading 410624 KB.
+
+Fix: save the old watermark before lowering it and use that to floor the
+other watchers, so a reset only affects the fd that issued it.
+
+Fixes: c6f53ed8f213 ("mm, memcg: cg2 memory{.swap,}.peak write handlers")
+Assisted-by: Claude:claude-opus-4-8
+Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+---
+ mm/memcontrol.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 60145aadfc5e..881e7c459c64 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4692,7 +4692,7 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
+ 			  loff_t off, struct page_counter *pc,
+ 			  struct list_head *watchers)
+ {
+-	unsigned long usage;
++	unsigned long usage, old_watermark;
+ 	struct cgroup_of_peak *peer_ctx;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+ 	struct cgroup_of_peak *ofp = of_peak(of);
+@@ -4700,11 +4700,12 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
+ 	spin_lock(&memcg->peaks_lock);
+ 
+ 	usage = page_counter_read(pc);
++	old_watermark = READ_ONCE(pc->local_watermark);
+ 	WRITE_ONCE(pc->local_watermark, usage);
+ 
+ 	list_for_each_entry(peer_ctx, watchers, list)
+-		if (usage > peer_ctx->value)
+-			WRITE_ONCE(peer_ctx->value, usage);
++		if (peer_ctx != ofp && old_watermark > peer_ctx->value)
++			WRITE_ONCE(peer_ctx->value, old_watermark);
+ 
+ 	/* initial write, register watcher */
+ 	if (ofp->value == OFP_PEAK_UNSET)
 -- 
-Thanks,
-Hao
+2.34.1
+
