@@ -1,162 +1,147 @@
-Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B65C3E639E
-	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 08:58:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44A12408602
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 11:17:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785401936; cv=none; b=mSLIrs2zpr8TNAjRf43MwT9pC8/D83ACZ1uH6obo5+GVKyvQFCMSAFVGRwKsYrYzi3Bre45t/IL2jOczu8yGD2e7tOKebhb/RCJNHRhoOPIrCG372vZ4XStKeiLyCcxbELLtYE5/P/X/KqQz7PWXXnNy8ucG8+UR22iFiw0JPkc=
+	t=1785410239; cv=none; b=S1bBwMXILvrDvP6XUn/TV+t41EasJ4O+BxXy8HznW6Cl4XYNqKHwhu+i9Q3rYufPtmplzL96Ykuya0MaRv62SKey4DNpQbtwOtE8VWCWm3nbw00mawCxdOKAqOAc9rd78g6F3bj2oXovbPr2fJu4U2MZ3zarsLQaXgrHAA4iNbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785401936; c=relaxed/simple;
-	bh=ZxIeiGcu7J7kEbS9sdXzW0cciLD/THQQev7WdgxnqQw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=lduowPVHkBEYYGqKlyXXK27t8azkffyDQXBrou1J0CIJeAmJIylsrWoXJc9cJCkbwXMV5ElxxehG1p2EQ0cvePx+vwDDCk2kikvY/N7Vtv+eC2imcpNwCnKJ0fz+Cvj/i1UBMHV9bNIYy0bn4CZwkJSGxVI/Og4mgVGTEcKClGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=myBJjWXk; arc=none smtp.client-ip=91.218.175.173
+	s=arc-20240116; t=1785410239; c=relaxed/simple;
+	bh=pjYAvpv2B2aLitHM+e4dQq/B4BB5NzDpAN/fA/RPMf8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lrhce+8xEBncLLbSMBANZroqG0brmRnxt+ygCza2AX0WCngTQq7mjJPI2//cyplNNI1qUgP6o+jwTJHs870nSaEzVsDgDie06JeKNJ2R0zTB3bKxTmEkfUphoiDsxx2Bty+JZDuqoGPHZ7fT6K5kFysmTnz77d/CqWXhnEEgmKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YaPbCgjo; arc=none smtp.client-ip=95.215.58.183
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="myBJjWXk"
-Message-ID: <9c7efd5f-f8d3-4926-acb4-34c326ffb1c3@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YaPbCgjo"
+Date: Thu, 30 Jul 2026 19:16:47 +0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785401920;
+	t=1785410234;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=AFhMzfQqyefJXEYJAjFh+5rGJKRIhpAgY51DG4j2Pi0=;
-	b=myBJjWXkQnmr9W3gwI1XddrkrmhyZuAF6cALo5kfamQOvLGiTcGR6mEJjcBsosQO5yyInI
-	NBoyPGLMi6D7XYrlxORwUWUA4OGdgieRuwzm3yMz9sK3z/RFzmF3GdVb34DaR8pJVGgw43
-	2Wymy3dvUCJadYLPDxBg0KzYiKxOPhg=
-Date: Thu, 30 Jul 2026 16:58:03 +0800
+	bh=O62DfahAFLdgUNQd+mEROE3kc1IiFSoToX+T1c6EMNs=;
+	b=YaPbCgjoftbhSR29RzI9Advqe32g7LQ+h0mgAHtNfh88j26Di9HQPwtfZ2qZL8RShRsfg+
+	X9u9qjJROPUyXbjGsv9JAAGTvz08KdUC6F2SlIH/17UBk2C6BLlkTOvFewXBx3wMSD3Rkj
+	jWoAh/y38URdus2BcU5fMHYXHePLsaM=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Hao Li <hao.li@linux.dev>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
+	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH v3 01/13] mm/slab: skip kfence objects in allocation
+ profiling
+Message-ID: <amsxmCmsUTYM26Fh@fedora>
+References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
+ <20260727-b4-objext_split-v3-1-c29ef0f1f257@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] fs: push nr_cached_objects memcg gating into
- individual filesystems
-To: Usama Arif <usama.arif@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
- dgc@kernel.org, baolin.wang@linux.alibaba.com, brauner@kernel.org,
- cgroups@vger.kernel.org, clm@fb.com, dsterba@suse.com, hannes@cmpxchg.org,
- hughd@google.com, jack@suse.cz, linux-btrfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-mm@kvack.org, mhocko@kernel.org, muchun.song@linux.dev,
- roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- Al Viro <viro@zeniv.linux.org.uk>, kernel-team@meta.com
-References: <20260715103516.2410175-1-usama.arif@linux.dev>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Qi Zheng <qi.zheng@linux.dev>
-In-Reply-To: <20260715103516.2410175-1-usama.arif@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260727-b4-objext_split-v3-1-c29ef0f1f257@kernel.org>
 X-Migadu-Flow: FLOW_OUT
 
-
-
-On 7/15/26 6:35 PM, Usama Arif wrote:
-> Commit 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects
-> in memcg slab shrink") added a check in fs/super.c that skipped every
-> ->nr_cached_objects() hook whenever the shrinker was invoked for a
-> non-root memcg, on the assumption that none of them honour sc->memcg.
+On Mon, Jul 27, 2026 at 02:53:55PM +0200, Vlastimil Babka (SUSE) wrote:
+> struct kfence_metadata only contains struct slabobj_ext with
+> CONFIG_MEMCG, which is then used for the "fake" slab's obj_exts field.
+> If CONFIG_MEMCG is enabled, the struct can also end up used for memory
+> allocation profiling. If CONFIG_MEMCG is disabled but profiling is
+> enabled, it will end up allocating its obj_exts via
+> prepare_slab_obj_exts_hook() and assigning them to the fake struct slab.
+> These will probably then never be freed.
 > 
-> That assumption is wrong for XFS, whose inode-reclaim hook is
-> intentionally driven from per-memcg contexts to free memcg-charged
-> slab. Encoding a blanket "never memcg-aware" policy in fs/super.c
-> short-circuits that path.
+> So things sorta work, but not always in the intended and optimal way.
+> The upcoming changes to slabobj_ext layout would additionally need a
+> proper refactoring to keep working.
 > 
-> Push the check down into the callbacks whose counters really are
-> irrelevant to per-memcg reclaim - btrfs_nr_cached_objects() and
-> shmem_unused_huge_count() - and drop the fs/super.c gate. Each
-> filesystem can now lift the restriction independently if its counter
-> later grows memcg awareness, without touching fs/super.c.
+> However, there's little benefit in accounting KFENCE objects. KFENCE
+> allocations are rare and there can be only CONFIG_KFENCE_NUM_OBJECTS
+> (default to 255) outstanding ones at any time. For any callsite
+> prominent enough in the memory allocation profiling stats, allocations
+> served from KFENCE will be lost in the noise.
 > 
-> Introduce mem_cgroup_shrink_is_root() in <linux/memcontrol.h> so the
-> callbacks don't open-code "sc->memcg is NULL or root".
+> Thus let's not complicate things and simply stop accounting KFENCE
+> objects in allocation profiling and skip them in the related slab hooks.
 > 
-> Fixes: 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects in memcg slab shrink")
-> Acked-by: Qi Zheng <qi.zheng@linux.dev>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Reviewed-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+> We also need to skip kfence objects in mark_obj_codetag_empty() in case
+> a sheaf is allocated from kfence, per earlier sashiko review.
+> 
+> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 > ---
-> v1 -> v2:
-> - Do not gate xfs_fs_nr_cached_objects(); XFS's inode reclaim is
->    intentionally driven from per-memcg contexts to free memcg-charged
->    slab (Dave Chinner).
-> - Add mem_cgroup_shrink_is_root() helper in <linux/memcontrol.h> so the
->    filesystem callbacks don't open-code "sc->memcg is NULL or root".
->    (Dave Chinner)
-> - Add fixes tag (Dave Chinner)
-> ---
->   fs/btrfs/super.c           | 10 ++++++++++
->   fs/super.c                 | 19 ++-----------------
->   include/linux/memcontrol.h | 21 +++++++++++++++++++++
->   mm/shmem.c                 | 10 ++++++++++
->   4 files changed, 43 insertions(+), 17 deletions(-)
+>  Documentation/mm/allocation-profiling.rst | 7 +++++++
+>  mm/slub.c                                 | 9 +++++++++
+>  2 files changed, 16 insertions(+)
 > 
-> diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
-> index a7d804219bec..cc4537435399 100644
-> --- a/fs/btrfs/super.c
-> +++ b/fs/btrfs/super.c
-> @@ -22,6 +22,7 @@
->   #include <linux/namei.h>
->   #include <linux/miscdevice.h>
->   #include <linux/magic.h>
-> +#include <linux/memcontrol.h>
->   #include <linux/slab.h>
->   #include <linux/ratelimit.h>
->   #include <linux/crc32c.h>
-> @@ -2434,6 +2435,15 @@ static long btrfs_nr_cached_objects(struct super_block *sb, struct shrink_contro
->   	struct btrfs_fs_info *fs_info = btrfs_sb(sb);
->   	const s64 nr = percpu_counter_read_positive(&fs_info->evictable_extent_maps);
->   
-> +	/*
-> +	 * The evictable extent map counter is filesystem-global and does not
-> +	 * honour sc->memcg, so it is only meaningful on the global (kswapd or
-> +	 * root direct reclaim) shrink path. Skip the per-memcg iterations of
-> +	 * shrink_slab_memcg() to avoid queueing duplicate global work.
-> +	 */
-> +	if (!mem_cgroup_shrink_is_root(sc))
-> +		return 0;
+> diff --git a/Documentation/mm/allocation-profiling.rst b/Documentation/mm/allocation-profiling.rst
+> index 5389d241176a..d02eb54ee8f2 100644
+> --- a/Documentation/mm/allocation-profiling.rst
+> +++ b/Documentation/mm/allocation-profiling.rst
+> @@ -112,3 +112,10 @@ break it out by rhashtable type.
+>  
+>  - Then, use the following form for your allocations:
+>    alloc_hooks_tag(ht->your_saved_tag, kmalloc_noprof(...))
 > +
->   	trace_btrfs_extent_map_shrinker_count(fs_info, nr);
->   
->   	return nr;
-> diff --git a/fs/super.c b/fs/super.c
-> index d2d04a6f4f84..a8fd61136aaf 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -24,7 +24,6 @@
->   #include <linux/export.h>
->   #include <linux/slab.h>
->   #include <linux/blkdev.h>
-> -#include <linux/memcontrol.h>
->   #include <linux/mount.h>
->   #include <linux/security.h>
->   #include <linux/writeback.h>		/* for the emergency remount stuff */
-> @@ -170,19 +169,6 @@ static void super_wake(struct super_block *sb, unsigned int flag)
->   	wake_up_var(&sb->s_flags);
->   }
->   
-> -/*
-> - * The s_op->nr_cached_objects hooks (used for example by btrfs and xfs)
-> - * operate on filesystem-global state and ignore sc->memcg. Driving them
-> - * from per-memcg shrink_slab_memcg() invocations only burns CPU walking
-> - * per-cpu counters and queueing duplicate work: the actual reclaim happens on
-> - * the global path (kswapd or root direct reclaim) regardless. Restrict them
-> - * to that path.
-> - */
-> -static inline bool super_fs_objects_eligible(struct shrink_control *sc)
-> -{
-> -	return !sc->memcg || mem_cgroup_is_root(sc->memcg);
-> -}
-> -
+> +Notes
+> +=====
+> +
+> +- When a slab object is allocated from KFENCE, its accounting is skipped.
 
-Hi Christian, it looks like you missed this when pushing. The commit
-0ef8faff490be (next-20260729) doesn't include this part of the code.
+should this be 'allocation profiling is skipped' instead?
 
+Otherwise, looks good to me.
+Reviewed-by: Hao Li <hao.li@linux.dev>
+
+> +  KFENCE allocations are rare and limited to a small number, so this omission
+> +  is negligible.
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 0337e60db5ac..d702d273253c 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -2067,6 +2067,9 @@ static inline void mark_obj_codetag_empty(const void *obj)
+>  	struct slab *obj_slab;
+>  	unsigned long slab_exts;
+>  
+> +	if (is_kfence_address(obj))
+> +		return;
+> +
+>  	obj_slab = virt_to_slab(obj);
+>  	slab_exts = slab_obj_exts(obj_slab);
+>  	if (slab_exts) {
+> @@ -2352,6 +2355,9 @@ __alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags,
+>  	if (alloc_flags & SLAB_ALLOC_NO_RECURSE)
+>  		return;
+>  
+> +	if (is_kfence_address(object))
+> +		return;
+> +
+>  	slab = virt_to_slab(object);
+>  	obj_exts = prepare_slab_obj_exts_hook(s, slab, flags, alloc_flags, object);
+>  	/*
+> @@ -2399,6 +2405,9 @@ __alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p
+>  	for (i = 0; i < objects; i++) {
+>  		unsigned int off = obj_to_index(s, slab, p[i]);
+>  
+> +		if (is_kfence_address(p[i]))
+> +			continue;
+> +
+>  		alloc_tag_sub(&slab_obj_ext(slab, obj_exts, off)->ref, s->size);
+>  	}
+>  	put_slab_obj_exts(obj_exts);
+> 
+> -- 
+> 2.55.0
+> 
+
+-- 
 Thanks,
-Qi
-
+Hao
