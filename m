@@ -1,111 +1,280 @@
-Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
+Received: from out-189.mta1.migadu.com (out-189.mta1.migadu.com [95.215.58.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C54673FF1B5
-	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 11:54:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B28A420E71
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 11:58:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785412465; cv=none; b=hEdjabdoFIBXVLkTKsDGhVJ5nlsRVitfPABaDcc80L6vQ8TVIbZ3jhNpET1zw0YjOCDco1+JiZChK6vR708g0PIO7g7EINfRiEw9iahm8u/jWUClx+CA6JW8wLvFmI/zPdm9YZQOigCecXZUfc8C0gKCv2MWOIoUVbU7eC4NnpY=
+	t=1785412739; cv=none; b=SsM5kTp4p3o9eA/cVFrknkli7YdoayYL8ws4h1SMZ1ynpLS0g7D000VGGHPMjmGHlAg3MVmtOK1gyYTRTGhCITz6jKOdRJtid+MsK8kq/dfIYF4LolBpD9euvzcJVAXnywau9i9QNmR9PlymZmgih4oAsyJWGWA100mxlzmyVN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785412465; c=relaxed/simple;
-	bh=h+sMLeZfRIlfDEbmZmcgzOyTDkuRoPMynSmmJE5AoBw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=bFkg0G+wg9b36z94KrYcvHyaaq/XjPnGsy0uQBSPU8JVNsnBYAUvec99f3jENS8qmM9Uv8MfV2W64UT1S3LY1gJgfZ0DG5iCMq7e06pJY8xSBLv4d5ezNG1eTcufKD2XZoXO0LzKrZp5mGDCXM1Uc7FBmc56WcpqFPcSsu6mxTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ltZxcP7t; arc=none smtp.client-ip=95.215.58.183
+	s=arc-20240116; t=1785412739; c=relaxed/simple;
+	bh=q2GQNisyLbwea5nFOgCzTyNwACfb0o3AtY9ucEc+at0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EUCycUgV5js6+Bwsp6J8sKbk7sV1zdeUTLExO6COXP8fnm4+5w8vQ8K+R3v8FVcloS0EaKGjpjFMClSOGrT6rTuqr1rh979FyWIjdiGaMRSTn8Q8lNyVGmIMeDVssMQvR9MjKPuZTdvryy33pKAIUgRlDup/jTPknkSobwGWIKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=E3QVxGy8; arc=none smtp.client-ip=95.215.58.189
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ltZxcP7t"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="E3QVxGy8"
+Date: Thu, 30 Jul 2026 19:58:42 +0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785412460;
+	t=1785412735;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=ti2bSmazGTeJeWuqEsKxELAbB2h/8DFLycOObfhZA2c=;
-	b=ltZxcP7t3+OjBynxx5eUHF4NPsMADw77gEwHiFN27N1wa/6uj5b0KtDS09qnl70esX3g/P
-	OfpcZ1n9roz4V4PhzDlvoAlEoque5p/Xel7rhYs3tlBwdc+xDsCo56T6y4Y0NrQbh5VrYA
-	p0n+Zb1zGpsF+8rNSKmuYp3ZeaJq6fU=
-From: Ridong <ridong.chen@linux.dev>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Muchun Song <muchun.song@linux.dev>,
-	David Finkel <davidf@vimeo.com>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Tejun Heo <tj@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH] mm, memcg: fix memory.peak reset clobbering other fds' watermark
-Date: Thu, 30 Jul 2026 19:53:14 +0800
-Message-Id: <20260730115314.1069089-1-ridong.chen@linux.dev>
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pSaWUAy8Hpb/nee2DyjGbYSGsIFid4w4mDuqKohoXCU=;
+	b=E3QVxGy8yudhcFja0MKkdDMYzMnuhzcCSQSsdlE5e53wmdUdbFhHyolr+P668H4l+dajnE
+	RSswuz1ykSxW/Jdp1N8nXe6gLq9YjlhSVQCyGTW/fPAWXJ5WHvzg4fzPzfTzSHDlRdDDxC
+	EeV/MwBaUMd4HCo3dt0oeR49BEMi1Ug=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Hao Li <hao.li@linux.dev>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
+	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH v3 08/13] mm/slab: change struct slabobj_ext to a union
+Message-ID: <ams72G2rTkobk5Qk@fedora>
+References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
+ <20260727-b4-objext_split-v3-8-c29ef0f1f257@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260727-b4-objext_split-v3-8-c29ef0f1f257@kernel.org>
 X-Migadu-Flow: FLOW_OUT
 
-From: Ridong Chen <chenridong@xiaomi.com>
+On Mon, Jul 27, 2026 at 02:54:02PM +0200, Vlastimil Babka (SUSE) wrote:
+> Currently, struct slabobj_ext can hold both objcg pointer and
+> codetag_ref (when both are compile-enabled) and there is an array of as
+> many slabobj_ext instances as there are objects in a slab.
+> 
+> This makes the layout fixed so even if codetag_ref is unused (because
+> memory allocation profiling is disabled), the space for them is
+> allocated and wasted. Similarly, some caches (currently kmalloc_normal)
+> do not ever need objcg pointers, leading to wasted memory with memory
+> allocation profiling enabled.
+> 
+> To make this more flexible, change the layout so that struct slabobj_ext
+> becomes a union of objcg pointer and codetag_ref (to ensure uniform
+> size; in practice both are the same size anyway). The slabobj_ext array
+> then can have twice as many elements as before. For cache locality
+> purposes, the effective memory layout is unchanged, so objcg and codetag
+> ref for a given object are still adjacent.
+> 
+> cache_obj_ext_size() returns the effective size of (0-2) struct
+> slabobj_ext's for a cache, slab_obj_ext_size() for a slab. Currently
+> both return a constant value derived from the config options, but will
+> be made dynamic later. Replace all sizeof(slabobj_ext) usage with these.
+> 
+> No functional change intended, the layout is still effectively static.
+> 
+> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> ---
+>  mm/slab.h | 49 +++++++++++++++++++++++++++++++++++++++----------
+>  mm/slub.c | 19 +++++++++++--------
+>  2 files changed, 50 insertions(+), 18 deletions(-)
+> 
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 79c758001f98..3f8144b9b9d8 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -550,18 +550,42 @@ static inline bool need_kmalloc_no_objext(void)
+>  }
+>  
+>  /*
+> - * Extended information for slab objects stored as an array in page->memcg_data
+> - * if MEMCG_DATA_OBJEXTS is set.
+> + * Extended information for slab objects stored as a pointer to an array in
+> + * slab->obj_exts (aliasing page->memcg_data) if MEMCG_DATA_OBJEXTS is set.
+>   */
+>  struct slabobj_ext {
+> +	/*
+> +	 * All elements of the union should be pointer-sized to avoid memory
+> +	 * waste
+> +	 */
+> +	union {
+>  #ifdef CONFIG_MEMCG
+> -	struct obj_cgroup *_objcg;
+> +		struct obj_cgroup *_objcg;
+>  #endif
+>  #ifdef CONFIG_MEM_ALLOC_PROFILING
+> -	union codetag_ref _ctref;
+> +		union codetag_ref _ctref;
+>  #endif
+> +	};
+>  } __aligned(8);
+>  
+> +static inline size_t cache_obj_ext_size(struct kmem_cache *s)
+> +{
+> +	size_t sz = 0;
+> +
+> +	if (IS_ENABLED(CONFIG_MEMCG))
+> +		sz += 1;
+> +
+> +	if (IS_ENABLED(CONFIG_MEM_ALLOC_PROFILING))
+> +		sz += 1;
+> +
+> +	return sizeof(struct slabobj_ext) * sz;
+> +}
+> +
+> +static inline size_t slab_obj_ext_size(struct slab *slab)
+> +{
+> +	return cache_obj_ext_size(slab->slab_cache);
+> +}
+> +
+>  #ifdef CONFIG_SLAB_OBJ_EXT
+>  
+>  /*
+> @@ -651,18 +675,18 @@ slab_obj_ext(struct kmem_cache *s, struct slab *slab, unsigned long obj_exts,
+>  {
+>  	struct slabobj_ext *obj_ext;
+>  	unsigned int index;
+> +	unsigned int stride;
+>  
+>  	VM_WARN_ON_ONCE(obj_exts != slab_obj_exts(slab));
+>  
+>  	index = obj_to_index(s, slab, obj);
+>  
+> -	if (!obj_exts_in_object(slab)) {
+> -		obj_ext = ((struct slabobj_ext *)obj_exts) + index;
+> -	} else {
+> -		unsigned int stride = s->size;
+> +	if (!obj_exts_in_object(slab))
+> +		stride = slab_obj_ext_size(slab);
+> +	else
+> +		stride = s->size;
+>  
+> -		obj_ext = (struct slabobj_ext *)(obj_exts + index * stride);
+> -	}
+> +	obj_ext = (struct slabobj_ext *)(obj_exts + index * stride);
+>  
+>  	return kasan_reset_tag(obj_ext);
+>  }
+> @@ -670,12 +694,14 @@ slab_obj_ext(struct kmem_cache *s, struct slab *slab, unsigned long obj_exts,
+>  #ifdef CONFIG_MEMCG
+>  static inline struct obj_cgroup *slab_obj_ext_objcg(struct slabobj_ext *obj_ext)
+>  {
+> +	/* if objcg exists, it comes first, so we don't need to do anything */
+>  	return obj_ext->_objcg;
+>  }
+>  
+>  static inline void slab_obj_ext_set_objcg(struct slabobj_ext *obj_ext,
+>  					  struct obj_cgroup *objcg)
+>  {
+> +	/* if objcg exists, it comes first, so we don't need to do anything */
+>  	obj_ext->_objcg = objcg;
+>  }
+>  #endif
+> @@ -684,6 +710,9 @@ static inline void slab_obj_ext_set_objcg(struct slabobj_ext *obj_ext,
+>  static inline union codetag_ref *
+>  slab_obj_ext_codetag_ref(struct slab *slab, struct slabobj_ext *obj_ext)
+>  {
+> +	if (IS_ENABLED(CONFIG_MEMCG))
+> +		obj_ext += 1;
+> +
+>  	return &obj_ext->_ctref;
+>  }
+>  #endif
+> diff --git a/mm/slub.c b/mm/slub.c
+> index f6ec3618dd1c..9079aaab3235 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -803,7 +803,7 @@ static inline bool need_slab_obj_exts(struct kmem_cache *s)
+>  
+>  static inline unsigned int obj_exts_size_in_slab(struct slab *slab)
+>  {
+> -	return sizeof(struct slabobj_ext) * slab->objects;
+> +	return slab_obj_ext_size(slab) * slab->objects;
+>  }
+>  
+>  static inline unsigned long obj_exts_offset_in_slab(struct kmem_cache *s,
+> @@ -1199,7 +1199,7 @@ static void print_trailer(struct kmem_cache *s, struct slab *slab, u8 *p)
+>  	off += kasan_metadata_size(s, false);
+>  
+>  	if (obj_exts_in_object(slab))
+> -		off += sizeof(struct slabobj_ext);
+> +		off += slab_obj_ext_size(slab);
+>  
+>  	if (off != size_from_object(s))
+>  		/* Beginning of the filler is the free pointer */
+> @@ -1404,7 +1404,7 @@ static int check_pad_bytes(struct kmem_cache *s, struct slab *slab, u8 *p)
+>  	off += kasan_metadata_size(s, false);
+>  
+>  	if (obj_exts_in_object(slab))
+> -		off += sizeof(struct slabobj_ext);
+> +		off += slab_obj_ext_size(slab);
+>  
+>  	if (size_from_object(s) == off)
+>  		return 1;
+> @@ -2092,6 +2092,8 @@ static inline bool mark_failed_objexts_alloc(struct slab *slab)
+>  static inline void handle_failed_objexts_alloc(struct slab *slab,
+>  		unsigned long obj_exts, struct slabobj_ext *vec)
+>  {
+> +	unsigned int stride;
+> +
+>  	/*
+>  	 * If vector previously failed to allocate then we have live
+>  	 * objects with no tag reference. Mark all references in this
+> @@ -2100,11 +2102,13 @@ static inline void handle_failed_objexts_alloc(struct slab *slab,
+>  	if (obj_exts != OBJEXTS_ALLOC_FAIL)
+>  		return;
+>  
+> +	stride = slab_obj_ext_size(slab) / sizeof(*vec);
+> +
+>  	for (unsigned int i = 0; i < slab->objects; i++) {
+>  		union codetag_ref *ref = slab_obj_ext_codetag_ref(slab, vec);
+>  
+>  		set_codetag_empty(ref);
+> -		vec++;
+> +		vec += stride;
+>  	}
+>  }
+>  
+> @@ -2130,7 +2134,7 @@ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
+>  	unsigned long new_exts;
+>  	unsigned long old_exts;
+>  	struct slabobj_ext *vec;
+> -	size_t sz = sizeof(struct slabobj_ext) * slab->objects;
+> +	size_t sz = slab_obj_ext_size(slab) * slab->objects;
+>  
+>  	gfp &= ~OBJCGS_CLEAR_MASK;
+>  	/*
+> @@ -2273,8 +2277,7 @@ static void alloc_slab_obj_exts_early(struct kmem_cache *s, struct slab *slab)
+>  
+>  		get_slab_obj_exts(obj_exts);
+>  		for_each_object(addr, s, slab_address(slab), slab->objects)
+> -			memset(kasan_reset_tag(addr) + offset, 0,
+> -			       sizeof(struct slabobj_ext));
+> +			memset(kasan_reset_tag(addr) + offset, 0, slab_obj_ext_size(slab));
+>  		put_slab_obj_exts(obj_exts);
+>  
+>  #ifdef CONFIG_MEMCG
+> @@ -7933,7 +7936,7 @@ static int calculate_sizes(struct kmem_cache_args *args, struct kmem_cache *s)
+>  	aligned_size = ALIGN(size, s->align);
+>  #if defined(CONFIG_SLAB_OBJ_EXT) && defined(CONFIG_64BIT)
+>  	if (slab_args_unmergeable(args, s->flags) &&
+> -			(aligned_size - size >= sizeof(struct slabobj_ext)))
+> +			(aligned_size - size >= cache_obj_ext_size(s)))
 
-Writing to memory.peak resets the peak for that fd only. Each fd is a
-watcher and reads back max(its own value, the shared local_watermark).
+Nit: cache_obj_ext_size() could return 0, and the checking will always be true.
+But I think this is harmless.
 
-peak_write() resets by lowering local_watermark to the current usage.
-To keep the other watchers' peaks it then walks the watcher list, but it
-stores the current usage into them instead of the old watermark. So once
-usage has dropped from a peak, a reset on one fd wrongly drags every
-other fd's peak down too, even fds that never reset.
+>  		s->flags |= SLAB_OBJ_EXT_IN_OBJ;
+>  #endif
+>  	size = aligned_size;
+> 
+> -- 
+> 2.55.0
+> 
 
-Reproduced on 7.2.0-rc5-next under QEMU, two fds A and B on one cgroup:
-B sees the peak (410624 KB), usage drops, then A resets -- and B's peak
-collapses to 1060 KB although B never reset. With this patch B keeps
-reading 410624 KB.
-
-Fix: save the old watermark before lowering it and use that to floor the
-other watchers, so a reset only affects the fd that issued it.
-
-Fixes: c6f53ed8f213 ("mm, memcg: cg2 memory{.swap,}.peak write handlers")
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
----
- mm/memcontrol.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 60145aadfc5e..881e7c459c64 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4692,7 +4692,7 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
- 			  loff_t off, struct page_counter *pc,
- 			  struct list_head *watchers)
- {
--	unsigned long usage;
-+	unsigned long usage, old_watermark;
- 	struct cgroup_of_peak *peer_ctx;
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
- 	struct cgroup_of_peak *ofp = of_peak(of);
-@@ -4700,11 +4700,12 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
- 	spin_lock(&memcg->peaks_lock);
- 
- 	usage = page_counter_read(pc);
-+	old_watermark = READ_ONCE(pc->local_watermark);
- 	WRITE_ONCE(pc->local_watermark, usage);
- 
- 	list_for_each_entry(peer_ctx, watchers, list)
--		if (usage > peer_ctx->value)
--			WRITE_ONCE(peer_ctx->value, usage);
-+		if (peer_ctx != ofp && old_watermark > peer_ctx->value)
-+			WRITE_ONCE(peer_ctx->value, old_watermark);
- 
- 	/* initial write, register watcher */
- 	if (ofp->value == OFP_PEAK_UNSET)
 -- 
-2.34.1
-
+Thanks,
+Hao
