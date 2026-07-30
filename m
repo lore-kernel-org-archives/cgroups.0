@@ -1,155 +1,83 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 131A733FE1F
-	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 12:24:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33021643B
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 12:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785414255; cv=none; b=kopNx/4zSBSwLcHSJOvn7qbo3rODv4+ZNVFlqZt6G5dqQdMWQaKEgB+TD60r2q2eE3n/eAILb1QWr8Fmib9MGO1NioGcZBM4n3GXDfHdVIoqGVS3n6xLWy2WUB1m23e/aD43x6uV5Z3PC/x2beuMdK3UNYMEpLcbs2BHuCy+ZGU=
+	t=1785415287; cv=none; b=LH3zGWD5a+KAyhKI/WRmTqI57fbmlTu3+/pl88OUowcRnjURQewG1IHqP8NoLNf2ouuLZKHxQ/v6P8wcDrYTSxlstz2XeCz/EEQ7STMpsU/veNPM5mbaK2xOnag54t4X7KiAWfORC0bjUQsmTrV0o7cEeqjLucCqFL1FYx1h17k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785414255; c=relaxed/simple;
-	bh=/YLwAIx1IePtTLRpcEJB72jvYszfyQ9kOX87oJ92Qp8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SWnssuNT+HXiiIX89Tkr9HxOIFFRe+sFAsEb4mGKk+VfR2F+RlmCY8IT9FTneYjX7yyhZAleyJQWQon5D9o5dMnl5909KnCEtS9nR1EnhEi0rJ8lirPIiFo2fMvL1ki2MdQf15BadFhT0P6sfjoCER4DY+vEaFoFiekUdF+IsAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MUYYvj/E; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785415287; c=relaxed/simple;
+	bh=hS3IKyTqTg/hpHB+jNKR49p7frx5eoDh7PZqLLCO/EU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JGBS4JBztH7E99MOGU6hri/cLTcnBGtC7VKoXlYMAFyRY0ExBZkq3fJjyQiA97ZP014fvu/Thwa0QKvt7dx29yts/ExZsZiYtWLSmgnWgv9Y9thk3yRbFPClZnX6LR1GCRyd7xscl5E9IneSoHDwH1+SulUZDxVNWHzRHrwF8HI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KmNYeTuB; arc=none smtp.client-ip=91.218.175.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MUYYvj/E"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-848c995c29dso168716b3a.3
-        for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 05:24:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785414253; x=1786019053; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/RGpHiNOj0NcL67RlZfv7xKhE6bvWiukeFGqq8NSX9Y=;
-        b=MUYYvj/E7O5uJ0n1yDEct5uzYc56wpZy/YzIQgYSxddp2nW35SSHetjLmdUN94pkUl
-         WXD47H2ZxqwMQX7fqZCf0aZyhm7tNew0kguYxi7If0LHmTT7LIdiTjme/XCKl1RDTfiZ
-         rjHf4yX0krUNv7W5meCDpgqi591EZ/Hp72KICTFO5fFlNh7IrCMT0zNwlcnKgxylxCVs
-         a7T4JR/F3F98GgqZJ+dmp6iFtSwVaMPAc80V+cLBOvTzWuObb1QcxJzcw1nxZZjveVNr
-         G/P4/qD/4WgDbv8cYviWdZ78/m/KtyBe2c2DiIUbwkwKw/Q7LNltgsgHKatILNRZ37vL
-         nnSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785414253; x=1786019053;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/RGpHiNOj0NcL67RlZfv7xKhE6bvWiukeFGqq8NSX9Y=;
-        b=YaVs8mV/Z9ChDXoFkH4ipCC4jOEm0r1l701+6iWGegtYSH2Cn4lJ689+S1YmGSwY31
-         w9GfxuFv/5g/dHlo9Us5WOk9Y+G5hNN0qsz8yxDbDrpcdiSdYDN7SJFCi8bIMpk1VyI6
-         R+OgQRhYuNsaWhtRvadJS5x5vZNXkJ8Kjj1Lg7UsI6SZIztXYuh7XpcntHkmuA5fsTco
-         BgXfRiV9mJejS53SVWUW94DqRPVPZtnZtq09lS67d+iG3VNO8o+We/p9xmBFCDXVCJmr
-         rpyV008fuPaqL1RTZ1EYkZ+ogasYjAMVjukEtOi2DhnPApYa3EMSJcxqWi/H5stFwtzD
-         27Fw==
-X-Forwarded-Encrypted: i=1; AHgh+RqZnfI5a8YbVZmrxJQTI4SKcx1uHMbGM44q3bAPwZ3EyXUkzlsMoaolWWaJE/cpw4CFZwGowynb@vger.kernel.org
-X-Gm-Message-State: AOJu0YzcQurK3BCXnk0bRPbvAyZiVnb6yPHvOuPB8a52tFaE97qd3ald
-	+a+nDtosekqhn9Z4EB+jqxoGilPSuJWgCaKVk2klBaRGknZbbaoICv80
-X-Gm-Gg: AR+sD1255Rx8tKk9HUt1L4mHvo/CkP4absRU4az8rGdUj9kJYgIp8Rj1z4FW7QZcMqe
-	ZqmaESCJ+kNCyUBrskzG9Z1zD08jdUWIJr6jwPq+7vBBmQUb2jVozt0b/OzbkCdt93hmUnwNEVp
-	22lH505BHNHd+8mnHkiCr1tjXD1ARGswvD48F68OEOQoF0Zasnow1CpZbcqTlFGSOgEUWTwCqBg
-	Irsubc9vygnBC/okQqOsyV89OpgDXq8GVxhGJdWQvy51R5cjpteyWXrGBat0P/OUUChbRt8atEL
-	92DBWXoQ2r8i6Ozn62hT3PDErXOSvIEYBXiv5psxzryPHz3TjDT7tezE26uDrlL0GWmykdtkyB0
-	mgignEVJybXbRpRw0amf1pjLMGlfm1/0uq23SWdZk+S0J0vFqXuLiRXDrH5ewOLOC+JY4un2c6o
-	4FnPprVgkojGEhQilKLqswT5J5QE4pvO+bmCj7QaB01WOUVwve8T4vdLyNXzDmh58zlBpibLPnO
-	uikXtcCjyAk8u7RyXN9J2Fki5foSwFA+/kEA/GiOJvUnIYa5cd/
-X-Received: by 2002:a17:90b:33ce:b0:38e:549:9e04 with SMTP id 98e67ed59e1d1-38f9bd12949mr2653937a91.1.1785414253215;
-        Thu, 30 Jul 2026 05:24:13 -0700 (PDT)
-Received: from debian.lan ([155.117.85.23])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f9b72d243sm995698a91.10.2026.07.30.05.24.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 05:24:12 -0700 (PDT)
-From: Xueyuan Chen <xueyuan.chen21@gmail.com>
-To: akpm@linux-foundation.org,
-	linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	zhaonanzhe@xiaomi.com,
-	baohua@kernel.org,
-	hannes@cmpxchg.org,
-	youngjun.park@lge.com,
-	baolin.wang@linux.alibaba.com,
-	hughd@google.com,
-	chrisl@kernel.org,
-	kasong@tencent.com,
-	shikemeng@huaweicloud.com,
-	nphamcs@gmail.com,
-	baoquan.he@linux.dev,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	david@kernel.org,
-	ljs@kernel.org,
-	liam@infradead.org,
-	vbabka@kernel.org,
-	rppt@kernel.org,
-	surenb@google.com,
-	qi.zheng@linux.dev,
-	axelrasmussen@google.com,
-	yuanchu@google.com,
-	weixugc@google.com
-Subject: [RFC PATCH v5 4/4] mm/shmem: split large folios only on -E2BIG
-Date: Thu, 30 Jul 2026 20:23:04 +0800
-Message-ID: <20260730122304.2496440-5-xueyuan.chen21@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
-References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KmNYeTuB"
+Date: Thu, 30 Jul 2026 20:41:14 +0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785415283;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3Yn6zB4FyaoOlg1O+5S/R+uP7IqARiMq9a6Q5IJKpbk=;
+	b=KmNYeTuBY61Zd8qBvi5I7WRr5XPb7xsUl3E3K8/7mKm7457Qb0FUwKaz9ZsvAaWizpNg9l
+	ayDE0CAq8tIY57qHQL9Xf3oqg5Cj+4+7sbYMD5psOO+kk3UNCYAWIEk+vNOSinQvUR1AIg
+	E2dTua96p66XoI2NTAImSv4NHgVXBEU=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Hao Li <hao.li@linux.dev>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Harry Yoo <harry@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
+	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH v3 13/13] mm/slab, kfence, memcg: completely remove
+ obj_ext for kfence objects
+Message-ID: <amtGQIpVU4WoWiXf@fedora>
+References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
+ <20260727-b4-objext_split-v3-13-c29ef0f1f257@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260727-b4-objext_split-v3-13-c29ef0f1f257@kernel.org>
+X-Migadu-Flow: FLOW_OUT
 
-shmem_writeout() currently splits a large folio on every
-folio_alloc_swap() failure. With the refined return-value contract, only
--E2BIG indicates that splitting might allow smaller folios to be swapped
-out.
+On Mon, Jul 27, 2026 at 02:54:07PM +0200, Vlastimil Babka (SUSE) wrote:
+> We have already disabled memory allocation profiling for objects
+> allocated for KFENCE to avoid complexity. KFENCE allocations are rare
+> and there can be only CONFIG_KFENCE_NUM_OBJECTS (default to 255)
+> outstanding ones at any time, so they are among noise in the profiling
+> stats.
+> 
+> For the same reasons, we can stop memcg_kmem accounting of kfence
+> objects as their memory usage will be negligible wrt any practical
+> memcg limits.
+> 
+> This allows us simplifying the code and getting rid of
+> is_kfence_address() checks in various places, including slab_obj_ext()'s
+> usage of obj_to_index(). Instead we rely on the fact that slab_obj_exts()
+> will now always return 0 for a kfence object's fake slab, which makes
+> those places unreachable.
+> 
+> All we need to do to keep this assumption valid is not to allocate
+> obj_exts for kfence objects, so the checks need to guard
+> alloc_slab_obj_exts() where necessary.
+> 
+> Suggested-by: Harry Yoo <harry@kernel.org>
+> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
-Enter the split fallback only for -E2BIG. For -ENOSPC and -ENOMEM,
-redirty and reactivate the folio as before.
+LGTM.
+Reviewed-by: Hao Li <hao.li@linux.dev>
 
-Suggested-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
----
- mm/shmem.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 6641823bed16..eff38bb33d8a 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1608,7 +1608,7 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
- 	struct shmem_inode_info *info = SHMEM_I(inode);
- 	struct shmem_sb_info *sbinfo = SHMEM_SB(inode->i_sb);
- 	pgoff_t index;
--	int nr_pages;
-+	int nr_pages, ret;
- 	bool split = false;
- 
- 	if ((info->flags & SHMEM_F_LOCKED) || sbinfo->noswap)
-@@ -1689,7 +1689,8 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
- 		folio_mark_uptodate(folio);
- 	}
- 
--	if (!folio_alloc_swap(folio)) {
-+	ret = folio_alloc_swap(folio);
-+	if (!ret) {
- 		bool first_swapped = shmem_recalc_inode(inode, 0, nr_pages);
- 		int error;
- 
-@@ -1742,7 +1743,7 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
- 		swap_cache_del_folio(folio);
- 		goto redirty;
- 	}
--	if (nr_pages > 1)
-+	if (nr_pages > 1 && ret == -E2BIG)
- 		goto try_split;
- redirty:
- 	folio_mark_dirty(folio);
 -- 
-2.47.3
-
+Thanks,
+Hao
