@@ -1,66 +1,96 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f41.google.com (mail-oa1-f41.google.com [209.85.160.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4CD419310;
-	Thu, 30 Jul 2026 13:07:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EE6443801B
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 14:30:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785416864; cv=none; b=Grtgp9GrwCdp76OBYHPxoVi96CXMe4FzNYWOdP3GkTlftau/I8qCuYmoHUaJ4JaqIL5FVb8EKLdjZR7H9sbhwGmtaKWEbEs/IfZRmCJlYgWi32y7Y9Yvbxcl49EJ+I5RUk0G5cCm/GafJO6TTfduFjPb9SSQCdcPkiO3W9MZsqU=
+	t=1785421822; cv=none; b=lGU+wksF1lzejBS+e3Ro76Io2ZkrXcSeP+O5lx1rZ4f3wOZLoyKxnm/d52E78FXr+0U/AehzEC0klB0pikCm3kkEWl9Dg2IBoX95ITP1HOIESEfQcaD490+Oi9TbgowMAk4LtR35nUwxErm0snuPB3DuoAdbeMYiefmSRqtTkHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785416864; c=relaxed/simple;
-	bh=iI2iVuAgWWW+LXM2DwlZZV17MfsfBsP61WW2fOWo8XY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EL8NyOOD+9+nXERyx69RmkzmGlhG5sR0jJ7qxMJQeDz/7BRXnwnIj85bEQRTAQbv9gazRBtFz1eN6mQ2MQdMFHbiWDS2JI9ZllmRYmZyV857dwQWbt5KxjCNHzEj4VKPGIbDlEAeY0/csQ6VL/VGgxMnst8FUqYR43GcMTCXepQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 9e43710c8c1711f1aa26b74ffac11d73-20260730
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
-	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
-	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD
-	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
-	AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:7e5adc1a-1d6e-4384-9149-c3ae899ac799,IP:10,
-	URL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:30
-X-CID-INFO: VERSION:1.3.12,REQID:7e5adc1a-1d6e-4384-9149-c3ae899ac799,IP:10,UR
-	L:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:30
-X-CID-META: VersionHash:e7bac3a,CLOUDID:39c320572c7efb317360af1dc3df1baa,BulkI
-	D:260730210734W7YZYM6M,BulkQuantity:0,Recheck:0,SF:10|66|78|81|82|102|127|
-	850|865|898,TC:nil,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:
-	nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,B
-	RE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 9e43710c8c1711f1aa26b74ffac11d73-20260730
-X-User: sunshaojie@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 352084493; Thu, 30 Jul 2026 21:07:29 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	hannes@cmpxchg.org,
+	s=arc-20240116; t=1785421822; c=relaxed/simple;
+	bh=6zxsMNNBcnPilLYN0lpOH6oC8qH8IQaVIGoWa8512x4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LzB4efwQv5aV5jcbVGqQVPG+Dp1GuQmSDvXqF0YA/1jOrWeHo2UuzgOQf+983Z9MRAURrQtCWLAFtdEEFdQam3MUCbwyLuz30m8rF64Tp1eNMAzbDHdQT7JlVQAyIcoIX4aNn2HF2Q8s5GiAkr5AtVuNzfVAaPRP3P8W5SbMzzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jbUfHsAb; arc=none smtp.client-ip=209.85.160.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jbUfHsAb"
+Received: by mail-oa1-f41.google.com with SMTP id 586e51a60fabf-4583b1703d3so805764fac.3
+        for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 07:30:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785421820; x=1786026620; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=PziV63Nbks27UfV1soZbzQSjz5qZMrsSwS8b4MFid6w=;
+        b=jbUfHsAbVQouSfaVk1kNLikd+kdeEEeJcUrNu4bmOyo1T6vua7q4f2tm+JY4ROCSZp
+         VNwgLwUw0H74b2wFK+hTStGiWIiqvr6aRi8Q2oTXkPtYD5pUEyOVDPdaDt3s12CPgZJp
+         wr5zaIiOWygG24kFLUA7XwHnsD0k72plmdSfqeNU+toH7ctiQE8OXwUPHELN5wnMpyXM
+         7ePJHe+m1DiCv3BBBk3qrtuOBbmUY498CqGzhFEwAIQxfgB0PVjGw3CNO8peHuLyRSdN
+         cqIFeq+1DAtlvFwqKDCu5XpdIXSZ8GnKV83rkLfVO/+Vuq4NOoqrVkTz9yDbM+UyslFe
+         38MA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785421820; x=1786026620;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=PziV63Nbks27UfV1soZbzQSjz5qZMrsSwS8b4MFid6w=;
+        b=Ysgg7LHte4p/hBt5Y+yAtP+/kZZWqWG6TqkxFY7mcaVMR3TMYNmh6iy1o5lt4GEhgS
+         Ys7sd9tL251CcHAL3L5ONPStoAIRvqXcS9YKZ9+KVvh0GajXOh88OvCNrkp8CYWwfiJQ
+         p8diakc+FtAscvXg/eXdSf2WFXPpS/Fd64KHEnFFQwxNGXqRnlq/LUhQRK6+WQ/IvOn2
+         gSQvmu/ZV0rywS1cm0IdwgspmIICMKQxJ0P0m1TsCzW57riL4hzZ3dkwDWpfiWiS/3Xn
+         jmzKPDBvV3bCe+0D94EWMPH2boJi+VNkEtoLpmPWQqZtKhvrdi9r3AlahBajVzBR0dVw
+         NWfA==
+X-Forwarded-Encrypted: i=1; AHgh+Rq30cP1rsLovz1WVPYiQdiiBn88wan6JejlrUWKtASDjrjhBGqbr+F/4feMP5N+zfZ09Mug/lPf@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJetxpukQ7+8isTb15Qe3Bb7glIlXv5j68ZDMfSgELjtfhoy+L
+	0vPQdkdPT3snXsdQIic2SjVCID275WkMJd2pd/U8ubq7qmYYtyTGnT05
+X-Gm-Gg: AR+sD13G9daJeWq3SCmnJj/Wy55/xDMui5WOINpJdaRGZcgKL8hR8/QtrTeuoAPwe5u
+	X9XJOZ3PI5edcQz7NxC5qccYVntmyTH8YAs+7oUS5prbhBhGEwzLOVJcJ77jfhj6qTtuoPKjuHy
+	d0t/N57I2one7Atws1dQnep2sa7dX5PxaCNkOajWEdFJlzw407ar8y6DY8xq9+DyjzQniLnajd/
+	ik+wya9H4skaaVhBrJB26kDkdese7C6y7AGYRI4rkDxTQnMal/Ds+YcTDDlhYZtwF2f0LqqE7sn
+	dxMomm+7kYeZ+JqLF11eNz30VEWvdF4E6StXScwtR76HMzKsYVk0Bx5GJHM9fZnSIlVkWjLZC5M
+	VlSceVXGqo+0HjwobAH5W/sQBzmqYh5LvOWdoWY2UN6lSYPUX8gw0j9uRz5P/nGyCJYD0R3IxBJ
+	I0z/WGTA/I+KIbJsNgg/9eUCzWuRy91XyTDqHgNb/AvYe+zLABJgRbc0t7diolXUw/basQ3Bm2d
+	H/SP1VmM26BxLpU+a0R8rC4EyqQog==
+X-Received: by 2002:a05:6870:8263:b0:456:5582:19be with SMTP id 586e51a60fabf-458c1b24576mr1955115fac.38.1785421820045;
+        Thu, 30 Jul 2026 07:30:20 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:41::])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-458c2947cc5sm1964872fac.11.2026.07.30.07.30.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Jul 2026 07:30:19 -0700 (PDT)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: Oliver Sang <oliver.sang@intel.com>
+Cc: oe-lkp@lists.linux.dev,
+	lkp@intel.com,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	"Michal Hocko" <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	"Shakeel Butt" <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R . Howlett" <liam.howlett@oracle.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
 	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	shuah@kernel.org,
-	sunshaojie@kylinos.cn,
-	tj@kernel.org
-Subject: [PATCH v2] selftests/cgroup: add user_usec sanity check in test_cpucg_nice
-Date: Thu, 30 Jul 2026 21:07:17 +0800
-Message-Id: <20260730130717.1236233-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <amnqUlrPxhTobE1E@localhost.localdomain>
-References: <amnqUlrPxhTobE1E@localhost.localdomain>
+	kernel-team@meta.com,
+	tim.c.chen@intel.com,
+	vinicius.gomes@intel.com,
+	ehab.ababneh@intel.com,
+	thomas.falcon@intel.com,
+	yu.c.chen@intel.com,
+	philip.li@intel.com
+Subject: Re: [PATCH v4 4/5] mm/memcontrol: convert memcg to use page_counter_stock
+Date: Thu, 30 Jul 2026 07:30:16 -0700
+Message-ID: <20260730143017.1568456-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <amr1lhRiYC64kYNY@xsang-desk>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -69,33 +99,32 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In test_cpucg_nice, after the child process exits, user_usec is
-read from cpu.stat but the value is not checked. Add a sanity check
-to ensure user_usec > 0, analogous to test_cpucg_stats(), so that
-the test fails early if CPU usage wasn't properly accounted.
+On Thu, 30 Jul 2026 14:56:22 +0800 Oliver Sang <oliver.sang@intel.com> wrote:
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
-v2: Instead of simply removing the unused user_usec read, add a sanity
-    check (if user_usec <= 0, goto cleanup) analogous to test_cpucg_stats(),
-    as suggested by Michal.
+> hi, Joshua Hahn,
+> 
+> we are currently piloting AI integrations to help enhance 0-Day's performance
+> analysis and regression-detection capabilities. Since this is in an early trial
+> phase, we want to ensure we build features that genuinely support your workflow.
+> We would love to hear what you would like to see from AI-assisted reports, whether
+> it's specific bottleneck explanations, a cleaner format, or filtering ideas.
+> 
+> Please share your thoughts and suggestions with us to help guide our development!
+> 
 
- tools/testing/selftests/cgroup/test_cpu.c | 2 ++
- 1 file changed, 2 insertions(+)
+Hello Oliver,
 
-diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
-index 7a40d76b9548..5a44705ed3fd 100644
---- a/tools/testing/selftests/cgroup/test_cpu.c
-+++ b/tools/testing/selftests/cgroup/test_cpu.c
-@@ -291,6 +291,8 @@ static int test_cpucg_nice(const char *root)
- 
- 		user_usec = cg_read_key_long(cpucg, "cpu.stat", "user_usec");
- 		nice_usec = cg_read_key_long(cpucg, "cpu.stat", "nice_usec");
-+		if (user_usec <= 0)
-+			goto cleanup;
- 		if (!values_close_report(nice_usec, expected_nice_usec, 1))
- 			goto cleanup;
- 
--- 
-2.25.1
+Thank you for this sample fix, and thank you for the report. It helped me
+realize that uncharging should return stock, but only in the networking
+side (and not the lru side, since it's already batched there).
 
+This is a personal style preference but I like to keep reply context as
+minimal as possible, I think that the AI response might not need to keep
+all the performance statistics still in the reply at the end : -)
+
+Otherwise I am a big fan of this (for my patches, at least) as an author.
+I'm wondering if reviewers and maintainers may find this to be too noisy
+to be sent out in the mailing list.
+
+Thank you again, I hope you have a great day!
+Joshua
