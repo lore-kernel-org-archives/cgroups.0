@@ -1,130 +1,83 @@
-Received: from mail-oa1-f41.google.com (mail-oa1-f41.google.com [209.85.160.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EE6443801B
-	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 14:30:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FE083FADF1
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 14:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785421822; cv=none; b=lGU+wksF1lzejBS+e3Ro76Io2ZkrXcSeP+O5lx1rZ4f3wOZLoyKxnm/d52E78FXr+0U/AehzEC0klB0pikCm3kkEWl9Dg2IBoX95ITP1HOIESEfQcaD490+Oi9TbgowMAk4LtR35nUwxErm0snuPB3DuoAdbeMYiefmSRqtTkHg=
+	t=1785423361; cv=none; b=pQJ80wMkt18arY6Wuy3Z/JvqkxcocXEg3zOOxk4D+OPv8KiJTVSAI8kaqnwErWekAooqW3pkehMqciQcSBbyCCGvCJfS/yo/KtJ/iFY22dq43y63IRBZOCT08heHfnI2laGE58eRsQbSM5MXKqAkWqwgy8zml6/6L2adl8eWsWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785421822; c=relaxed/simple;
-	bh=6zxsMNNBcnPilLYN0lpOH6oC8qH8IQaVIGoWa8512x4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LzB4efwQv5aV5jcbVGqQVPG+Dp1GuQmSDvXqF0YA/1jOrWeHo2UuzgOQf+983Z9MRAURrQtCWLAFtdEEFdQam3MUCbwyLuz30m8rF64Tp1eNMAzbDHdQT7JlVQAyIcoIX4aNn2HF2Q8s5GiAkr5AtVuNzfVAaPRP3P8W5SbMzzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jbUfHsAb; arc=none smtp.client-ip=209.85.160.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785423361; c=relaxed/simple;
+	bh=kXcMxAJWsM4oAFeGyUQmH45nAj7AtZr0Z4ppu7c+hiI=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=T+9msxJS2VkIZSwjEqTpxxON8hLutieEwtDpi+vI933l4Dc+wxrXZJtqUX9wN7j4bGbI3lKDFnkjP9RE2cDHXtYGGKcmmboEErTm6vLTLFpyZ/Si+ECNDpExgjVkUsKuztWsjmu5CJiu3QUJ4Efuh1cmNrEN81aqvDVh1vvA6Sg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=erWz8uJv; arc=none smtp.client-ip=95.215.58.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jbUfHsAb"
-Received: by mail-oa1-f41.google.com with SMTP id 586e51a60fabf-4583b1703d3so805764fac.3
-        for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 07:30:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785421820; x=1786026620; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=PziV63Nbks27UfV1soZbzQSjz5qZMrsSwS8b4MFid6w=;
-        b=jbUfHsAbVQouSfaVk1kNLikd+kdeEEeJcUrNu4bmOyo1T6vua7q4f2tm+JY4ROCSZp
-         VNwgLwUw0H74b2wFK+hTStGiWIiqvr6aRi8Q2oTXkPtYD5pUEyOVDPdaDt3s12CPgZJp
-         wr5zaIiOWygG24kFLUA7XwHnsD0k72plmdSfqeNU+toH7ctiQE8OXwUPHELN5wnMpyXM
-         7ePJHe+m1DiCv3BBBk3qrtuOBbmUY498CqGzhFEwAIQxfgB0PVjGw3CNO8peHuLyRSdN
-         cqIFeq+1DAtlvFwqKDCu5XpdIXSZ8GnKV83rkLfVO/+Vuq4NOoqrVkTz9yDbM+UyslFe
-         38MA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785421820; x=1786026620;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=PziV63Nbks27UfV1soZbzQSjz5qZMrsSwS8b4MFid6w=;
-        b=Ysgg7LHte4p/hBt5Y+yAtP+/kZZWqWG6TqkxFY7mcaVMR3TMYNmh6iy1o5lt4GEhgS
-         Ys7sd9tL251CcHAL3L5ONPStoAIRvqXcS9YKZ9+KVvh0GajXOh88OvCNrkp8CYWwfiJQ
-         p8diakc+FtAscvXg/eXdSf2WFXPpS/Fd64KHEnFFQwxNGXqRnlq/LUhQRK6+WQ/IvOn2
-         gSQvmu/ZV0rywS1cm0IdwgspmIICMKQxJ0P0m1TsCzW57riL4hzZ3dkwDWpfiWiS/3Xn
-         jmzKPDBvV3bCe+0D94EWMPH2boJi+VNkEtoLpmPWQqZtKhvrdi9r3AlahBajVzBR0dVw
-         NWfA==
-X-Forwarded-Encrypted: i=1; AHgh+Rq30cP1rsLovz1WVPYiQdiiBn88wan6JejlrUWKtASDjrjhBGqbr+F/4feMP5N+zfZ09Mug/lPf@vger.kernel.org
-X-Gm-Message-State: AOJu0YwJetxpukQ7+8isTb15Qe3Bb7glIlXv5j68ZDMfSgELjtfhoy+L
-	0vPQdkdPT3snXsdQIic2SjVCID275WkMJd2pd/U8ubq7qmYYtyTGnT05
-X-Gm-Gg: AR+sD13G9daJeWq3SCmnJj/Wy55/xDMui5WOINpJdaRGZcgKL8hR8/QtrTeuoAPwe5u
-	X9XJOZ3PI5edcQz7NxC5qccYVntmyTH8YAs+7oUS5prbhBhGEwzLOVJcJ77jfhj6qTtuoPKjuHy
-	d0t/N57I2one7Atws1dQnep2sa7dX5PxaCNkOajWEdFJlzw407ar8y6DY8xq9+DyjzQniLnajd/
-	ik+wya9H4skaaVhBrJB26kDkdese7C6y7AGYRI4rkDxTQnMal/Ds+YcTDDlhYZtwF2f0LqqE7sn
-	dxMomm+7kYeZ+JqLF11eNz30VEWvdF4E6StXScwtR76HMzKsYVk0Bx5GJHM9fZnSIlVkWjLZC5M
-	VlSceVXGqo+0HjwobAH5W/sQBzmqYh5LvOWdoWY2UN6lSYPUX8gw0j9uRz5P/nGyCJYD0R3IxBJ
-	I0z/WGTA/I+KIbJsNgg/9eUCzWuRy91XyTDqHgNb/AvYe+zLABJgRbc0t7diolXUw/basQ3Bm2d
-	H/SP1VmM26BxLpU+a0R8rC4EyqQog==
-X-Received: by 2002:a05:6870:8263:b0:456:5582:19be with SMTP id 586e51a60fabf-458c1b24576mr1955115fac.38.1785421820045;
-        Thu, 30 Jul 2026 07:30:20 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:41::])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-458c2947cc5sm1964872fac.11.2026.07.30.07.30.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 07:30:19 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Oliver Sang <oliver.sang@intel.com>
-Cc: oe-lkp@lists.linux.dev,
-	lkp@intel.com,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	"Michal Hocko" <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	"Shakeel Butt" <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R . Howlett" <liam.howlett@oracle.com>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	linux-kernel@vger.kernel.org,
-	kernel-team@meta.com,
-	tim.c.chen@intel.com,
-	vinicius.gomes@intel.com,
-	ehab.ababneh@intel.com,
-	thomas.falcon@intel.com,
-	yu.c.chen@intel.com,
-	philip.li@intel.com
-Subject: Re: [PATCH v4 4/5] mm/memcontrol: convert memcg to use page_counter_stock
-Date: Thu, 30 Jul 2026 07:30:16 -0700
-Message-ID: <20260730143017.1568456-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <amr1lhRiYC64kYNY@xsang-desk>
-References: 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="erWz8uJv"
+Message-ID: <23996589-fe21-4f39-bcbb-91eb1df56bd7@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785423357;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zUUDKd2U6LDtxoRgmCJwB3udrKdBg0xqgfAlInbPBio=;
+	b=erWz8uJvvnGk0b/SFuwEq3Ug9fuf9+ZaNsBMPmXhZrUuUwf4yAAjBzDYA5/gqMNzSvx1iF
+	mmwb8n7vBuZq/LMWl5EOjdONqFzFImyUy0+cj9DaQWcIatr+D9tVeaSix6W8Nwod+BbMQd
+	pFhr+q+x93XnQJqVqKTHuAc1olyZqXw=
+Date: Thu, 30 Jul 2026 22:55:41 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Cc: cui.tao@linux.dev, cgroups@vger.kernel.org, hannes@cmpxchg.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ shuah@kernel.org, tj@kernel.org
+Subject: Re: [PATCH v2] selftests/cgroup: add user_usec sanity check in
+ test_cpucg_nice
+To: Shaojie Sun <sunshaojie@kylinos.cn>, mkoutny@suse.com
+References: <amnqUlrPxhTobE1E@localhost.localdomain>
+ <20260730130717.1236233-1-sunshaojie@kylinos.cn>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260730130717.1236233-1-sunshaojie@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, 30 Jul 2026 14:56:22 +0800 Oliver Sang <oliver.sang@intel.com> wrote:
 
-> hi, Joshua Hahn,
+
+在 2026/7/30 21:07, Shaojie Sun 写道:
+> In test_cpucg_nice, after the child process exits, user_usec is
+> read from cpu.stat but the value is not checked. Add a sanity check
+> to ensure user_usec > 0, analogous to test_cpucg_stats(), so that
+> the test fails early if CPU usage wasn't properly accounted.
 > 
-> we are currently piloting AI integrations to help enhance 0-Day's performance
-> analysis and regression-detection capabilities. Since this is in an early trial
-> phase, we want to ensure we build features that genuinely support your workflow.
-> We would love to hear what you would like to see from AI-assisted reports, whether
-> it's specific bottleneck explanations, a cleaner format, or filtering ideas.
+> Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
+> ---
+> v2: Instead of simply removing the unused user_usec read, add a sanity
+>     check (if user_usec <= 0, goto cleanup) analogous to test_cpucg_stats(),
+>     as suggested by Michal.
 > 
-> Please share your thoughts and suggestions with us to help guide our development!
+>  tools/testing/selftests/cgroup/test_cpu.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
+> diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
+> index 7a40d76b9548..5a44705ed3fd 100644
+> --- a/tools/testing/selftests/cgroup/test_cpu.c
+> +++ b/tools/testing/selftests/cgroup/test_cpu.c
+> @@ -291,6 +291,8 @@ static int test_cpucg_nice(const char *root)
+>  
+>  		user_usec = cg_read_key_long(cpucg, "cpu.stat", "user_usec");
+>  		nice_usec = cg_read_key_long(cpucg, "cpu.stat", "nice_usec");
+> +		if (user_usec <= 0)
+> +			goto cleanup;
+>  		if (!values_close_report(nice_usec, expected_nice_usec, 1))
+>  			goto cleanup;
+>  
+Acked-by: Tao Cui <cuitao@kylinos.cn>
 
-Hello Oliver,
-
-Thank you for this sample fix, and thank you for the report. It helped me
-realize that uncharging should return stock, but only in the networking
-side (and not the lru side, since it's already batched there).
-
-This is a personal style preference but I like to keep reply context as
-minimal as possible, I think that the AI response might not need to keep
-all the performance statistics still in the reply at the end : -)
-
-Otherwise I am a big fan of this (for my patches, at least) as an author.
-I'm wondering if reviewers and maintainers may find this to be too noisy
-to be sent out in the mailing list.
-
-Thank you again, I hope you have a great day!
-Joshua
