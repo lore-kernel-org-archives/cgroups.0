@@ -1,113 +1,104 @@
-Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
+Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 864DF37A498;
-	Thu, 30 Jul 2026 02:53:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8148145BE3
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 04:37:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785379989; cv=none; b=XAVrWOl3idvekHc4AYM26SKzIqvtM6nfkIBc4ipCeNMgUnyAOnceWCTMfJzDplgW+p1GiKHLsXYpffTP4ElV/pgBhxVD0RsaAbJwxMCDss2vDpAz1+/kSRPYi4bxJznJNnF4qiYqXAqetE5xZutt0Z7nyHidWrvL3Z1YLqdv5oM=
+	t=1785386240; cv=none; b=OKYtjcb+AoXBAZb5C1jIwVSZb1YHyCFT6ZZ78AaKQsnqNVfu+yFleoZ+3dyE3cgByo0BlIi72mPsmqU/k7TGQVoWL7v2RSDwi6udD3EKqktUejqWCY97koOZTn9T1NuD9megyJMcPI2ZZEiUPECX6CEsvCPTSW1UOGy8fs2jrAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785379989; c=relaxed/simple;
-	bh=t9LVtDM4B5f605B0mzcnlceBYrXqGuUemb2TwG4H8jA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aqGfW7jsjTWzCQmSsYeUfbfbsOA3L1Sot61e7BYRPEEFUqSoxILdLPc+fck+eRYkkFrOAHi/CeTGiLhGFpA7xXuKMX5l35UGXSvTIwvz8hD2ctobt57Pvd1Bh35X7C2nLFqrQ4CrvulYy9k5js+s35aO96kp/zkms6O/erwTPLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=NpA4In9j; arc=none smtp.client-ip=115.124.30.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1785386240; c=relaxed/simple;
+	bh=5FHUxzGMdV1pqnOsg8NMCY1ZWtE0VK9dJf8LxF7ro/g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U1xbUJV4Sx3ApjlhuFOdCwTsqqR43RTr7VOSduKjRV1hWCjTT1Qryk9ff7Mtl88IydL/yBLPOX0JPaN5i7cPjHvs0s5Cb2JEP3H+0iLm8YpSCRm/zz1BNaXIFHN+cyclPC1LEwSLPWp9FA61Xc9bAM5+5Vxrc4ch+osMxTd9TJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=aLag2t32; arc=none smtp.client-ip=91.218.175.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="NpA4In9j"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1785379983; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=pjx9IpZ8ImTKeEqYEWqNw8reCWkkI4bG3P98loavW/8=;
-	b=NpA4In9jqZOTjbiVYo0zyzWoNU9W86zSz2lItZwBnxv3mcvCWY8D3uiZllYEyx+TKELIez04NlK1J3By5mfSY0bI3BpvIRUhDZKlAd5yfbl7VSi7FHsOqs7GXMzDTfECYrYBLtU7KvNrnslVNXpY5uh7JtjoeYLDway59ggzCRA=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=baolin.wang@linux.alibaba.com;NM=1;PH=DS;RN=29;SR=0;TI=SMTPD_---0X83cfc2_1785379979;
-Received: from 30.74.144.124(mailfrom:baolin.wang@linux.alibaba.com fp:SMTPD_---0X83cfc2_1785379979 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Thu, 30 Jul 2026 10:53:01 +0800
-Message-ID: <f0bde6a0-d4be-48b3-abe2-28127a82a139@linux.alibaba.com>
-Date: Thu, 30 Jul 2026 10:52:59 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="aLag2t32"
+Date: Wed, 29 Jul 2026 21:37:08 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785386234;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Jt+GOWxdRbvsR3onEzesDNIgXdjOGzHQPiH/YZFcDak=;
+	b=aLag2t32vo0HfGP+4yMkIaDPGDwCBapLHur4aYP5Nt1ZKrQjTIqeEcs8OQeP5zD+rYiZL5
+	daMZ14jAhD8xRyrlmKNkle9b7uCgKjSB0rEktoDzU8GFT7zv+T7WQUEu3b0xZ0ymfU3Zy2
+	prKvb0ifiK/Vg7kjbGCDrxeVufDzBcY=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>, David Rientjes <rientjes@google.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Suren Baghdasaryan <surenb@google.com>, 
+	Usama Arif <usama.arif@linux.dev>, Rik van Riel <riel@surriel.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] memcg: bypass the reclaim and oom killer for dying tasks
+ once oom_reaper is done
+Message-ID: <amrUQZDNNJMdl_aP@linux.dev>
+References: <20260729024612.3369005-1-shakeel.butt@linux.dev>
+ <20260729181349.fd41f1a09ec19c9cfb0c412f@linux-foundation.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v4 4/4] mm/shmem: split large folios only on -E2BIG
-To: Xueyuan Chen <xueyuan.chen21@gmail.com>, akpm@linux-foundation.org,
- linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- zhaonanzhe@xiaomi.com, baohua@kernel.org, hannes@cmpxchg.org,
- youngjun.park@lge.com, hughd@google.com, chrisl@kernel.org,
- kasong@tencent.com, shikemeng@huaweicloud.com, nphamcs@gmail.com,
- baoquan.he@linux.dev, mhocko@kernel.org, roman.gushchin@linux.dev,
- shakeel.butt@linux.dev, muchun.song@linux.dev, david@kernel.org,
- ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, rppt@kernel.org,
- surenb@google.com, qi.zheng@linux.dev, axelrasmussen@google.com,
- yuanchu@google.com, weixugc@google.com
-References: <20260730021630.2235914-1-xueyuan.chen21@gmail.com>
- <20260730021630.2235914-5-xueyuan.chen21@gmail.com>
-From: Baolin Wang <baolin.wang@linux.alibaba.com>
-In-Reply-To: <20260730021630.2235914-5-xueyuan.chen21@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260729181349.fd41f1a09ec19c9cfb0c412f@linux-foundation.org>
+X-Migadu-Flow: FLOW_OUT
 
-
-
-On 7/30/26 10:16 AM, Xueyuan Chen wrote:
-> shmem_writeout() currently splits a large folio on every
-> folio_alloc_swap() failure. With the refined return-value contract, only
-> -E2BIG indicates that splitting might allow smaller folios to be swapped
-> out.
+On Wed, Jul 29, 2026 at 06:13:49PM -0700, Andrew Morton wrote:
+> On Tue, 28 Jul 2026 19:46:12 -0700 Shakeel Butt <shakeel.butt@linux.dev> wrote:
 > 
-> Enter the split fallback only for -E2BIG. For -ENOSPC and -ENOMEM,
-> redirty and reactivate the folio as before.
+> > At Meta, we are seeing instances where an OOM killed job is stuck in the
+> > exit path for several hours. In one particular case, the job was stuck
+> > for more than 8 hours and I had to manually remove the memory.max limits
+> > to allow the process to exit.
 > 
-> Suggested-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-> Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
-> ---
-
-LGTM. Thanks.
-Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-
->   mm/shmem.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
+> Not seeing the problem here - that sounds like normal kernel behavior ;)
 > 
-> diff --git a/mm/shmem.c b/mm/shmem.c
-> index 6641823bed16..6f959191ef70 100644
-> --- a/mm/shmem.c
-> +++ b/mm/shmem.c
-> @@ -1609,6 +1609,7 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
->   	struct shmem_sb_info *sbinfo = SHMEM_SB(inode->i_sb);
->   	pgoff_t index;
->   	int nr_pages;
-> +	int ret;
+> > Reproduced with 20k threads, each parking a robust futex head on
+> > its own zswapped page, OOM-group-killed while a sibling holds mmap_lock
+> > for write so the reaper gives up and sets MMF_OOM_SKIP. Tested on
+> > next-20260728 and baseline show ~90 seconds exit time while with the
+> > patch the exit time reduced to ~3 seconds.
+> 
+> Very positive.
+> 
+> But it doesn't sound like you're fully confident that the problem is
+> fully solved?
 
-Nit: can be in one line:
+Yes as I am not able to reproduce multi hour stall, so I might be missing
+something else. The patch at least fixes the issue which I am able to reproduce.
 
-int nr_pages, ret;
+> 
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2653,6 +2653,19 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> >  	if (!gfpflags_allow_blocking(gfp_mask))
+> >  		goto nomem;
+> >  
+> > +	/*
+> > +	 * OOM victim still needs to charge memory to exit. OOM reaper should
+> > +	 * help but it might fail on mmap_lock contention. If the victim is a
+> > +	 * large thread group then all exiting threads might compete on oom_lock
+> > +	 * just to learn that there is nothing really killable anymore. Bail
+> > +	 * out early and fail the charge to expedite their exit. They are
+> > +	 * considered fully reclaimed by the oom reaper and they shouldn't
+> > +	 * contribute further charges.
+> > +	 */
+> > +	if (tsk_is_oom_victim(current) &&
+> > +	    mm_flags_test(MMF_OOM_SKIP, current->signal->oom_mm))
+> > +		goto nomem;
+> > +
+> >  	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+> >  	raised_max_event = true;
+> 
+> Should we backport this?
 
->   	bool split = false;
->   
->   	if ((info->flags & SHMEM_F_LOCKED) || sbinfo->noswap)
-> @@ -1689,7 +1690,8 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
->   		folio_mark_uptodate(folio);
->   	}
->   
-> -	if (!folio_alloc_swap(folio)) {
-> +	ret = folio_alloc_swap(folio);
-> +	if (!ret) {
->   		bool first_swapped = shmem_recalc_inode(inode, 0, nr_pages);
->   		int error;
->   
-> @@ -1742,7 +1744,7 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
->   		swap_cache_del_folio(folio);
->   		goto redirty;
->   	}
-> -	if (nr_pages > 1)
-> +	if (nr_pages > 1 && ret == -E2BIG)
->   		goto try_split;
->   redirty:
->   	folio_mark_dirty(folio);
-
+I don't have any strong opinion. I wanted to deploy this patch in Meta fleet to
+get some exposure. Maybe backporting will give more exposure to it.
