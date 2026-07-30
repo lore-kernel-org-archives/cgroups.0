@@ -1,64 +1,64 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45942375F81
-	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 02:17:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A42E382F1C
+	for <cgroups@vger.kernel.org>; Thu, 30 Jul 2026 02:17:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785377858; cv=none; b=noIBmvqq7HLB4aBusXajv0gb56X+illTVERCe9YhQEMClGuERbHXB5mCRJkSeDVoC0juxti7AzMb+PnInHAjsqaqKaMseLUS19QH65aoQYkFDnxFWWrrxgRAXMbmYlXTM0Xp7X6TEcxKeqNzV2gZxrOZPAx7iQzirAykuK3z1R8=
+	t=1785377873; cv=none; b=NowOkWL8APUD0VxzUhn1XHIiGEIRewjU2Iod2EXFX/XfxQJQj3Pjk+SVjXspKas7QNX+ueLZyAkMysg3CNt3re0IblglhZpl2xzFDm02fPDeHu9tuzsJkFQH2FGnQG7Q6KRS6w/QVyDgrw/Azon/StCK8TyImPFTsBu6qdlfVQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785377858; c=relaxed/simple;
-	bh=SrO8m8JswAT8suAdpfXa2RGXk/+AtgAOmXnIBG8y1zc=;
+	s=arc-20240116; t=1785377873; c=relaxed/simple;
+	bh=1Y8TQLti/rJ09/6fHCHyxsM+mu9hpBi1CgEUMb7XmR0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rKAVw50VEHgsmOkaQ1EMT4iWTE+VcAAZwthIx883eVxFddbDLEZS3GFKUpl0CfA4mA4NPcaGoa9gqFiD04RGVLCHbGrpaiMvl3vbQo7VR0QvrDbjQFRKFOLZMe+vqxTKZ5UNZ+j2RmoWisU3KBrX6CfKxiyivO0BdDIrvR07o6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Pw3oIcHU; arc=none smtp.client-ip=209.85.215.177
+	 MIME-Version; b=DSp6e4kEWmjusPDVPLxxpsNSQ7kygX6o+MXW6ayUCqpuHdW2bQLViiGNHkp/IRd8vw0tdi6fHGlFXHZ54AHb1Em7auU10c/I+8o3lcUsmp92xnAs+NlO47iCbahLgJTHgnjTveIjy4lZ+Iyz6ssDVk+YQKgkzCZWLW+tmwjToiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nmdXiL8U; arc=none smtp.client-ip=209.85.210.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Pw3oIcHU"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-ca132e9c54aso153290a12.3
-        for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 19:17:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nmdXiL8U"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-84eb53344afso120183b3a.3
+        for <cgroups@vger.kernel.org>; Wed, 29 Jul 2026 19:17:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785377849; x=1785982649; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785377859; x=1785982659; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=FTwEzqeF97wumJIcsz5S3t64bdWHEEiMpofbG9ulZh0=;
-        b=Pw3oIcHUQwejTcoMkbqBErzgxtxGkzpI8wOeoEksmPb5NyjXPfSJ3lhHS8cblNzTTA
-         c7tUdYopnKBAC/DpmWXlGxHyWMgNLx8z40TGa/PmNGUe7saWBPGQsuWXIOveUvTK/ULd
-         ZgRpzHY2854gK4SKli7KjeUCMB4afsCaKDo3nkoBmm+vlwxMRkFjHFCpPBD8hrNcgUpT
-         kvUrcELoJt7Fuv04I4w32Hu4dotsJrD+TrcdUbR0SfIlUlON1fjEkuoec5AcgGv0BRFc
-         SuJGdXxm/C/Q+JD+9eKH0DMjSVHSCoCkwndsQUlhyemNPwVk2j8izYGy561Za/pZR28M
-         Bvkg==
+        bh=PmK9e5hF10OqnDZaWNEoqEbUdk/xAOPMzMn2ymShT8o=;
+        b=nmdXiL8UuIhxwYR9UiEU6ymbxCAEhQvMTDtnK0Ko6ld7aSJA6WBQHqPhRxEYuLEfNf
+         CnQjVwMELOaZXL5I916GUhr4UbaOYCOnvxCjDjXcIbpKqbE5P7MhSjXKW33T0oupc+Rg
+         NTXe1TQ8YHo0yQuPbtfxiGkVvHgR6MC9j2Y3tGadcdyxg843GF9r/ot3sGkwOyypyIMN
+         eJpVrpbMguUgYNWVdoBmXvMPw9IDznAfd7Oug5LmO+6KWzkbSD8ghrNC5373U3N+h0rW
+         9rQXrfP22fqyqoAKXCC4jLOIMIM+AMI5T3V4kSUNFEctYqYvR0NVCigDKogkWyTGpjZr
+         TJFg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785377849; x=1785982649;
+        d=1e100.net; s=20251104; t=1785377859; x=1785982659;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FTwEzqeF97wumJIcsz5S3t64bdWHEEiMpofbG9ulZh0=;
-        b=BnX8JFGpGsNlXoY00zMX7c3AFURuRhBirOe0F5gA8ypKySDl5HoIEUTfNwzj03zF7e
-         SEfJr+9beK0kcds/5O4Gv/1Gbm4bLhe68rpZk5dw3ehorxd3sa9k9aCwXqtTMvFz84Ky
-         AjyL6Sv68Kt11LMsEYvULdtmtFbrOpgd6s1M4LVRizUGmMY4xH4gdd6wzIeG5IHFJtyS
-         JPFdGBkM9kw00+ZZrAkuh0P7ikTeI0B01UlxsQstCqQMTG9HmKwZqimZRyv20nZTHP9A
-         qoYjhOijolIQUjG8iZNZ0BfSamIT8DOvigkei/SEkoVTPeBposHRsZZ6WYYGL9S5TNRZ
-         NRWQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqBUF/fBH/cce00XR9zTqYUW3pX6G548Z7YcBQ2QvXR8tGyHjvC3jTzqaL38t4PHxru+C8YchXa@vger.kernel.org
-X-Gm-Message-State: AOJu0YwGrUXBW1ySsbfsmlG7OEwqswIsp489uD8RHwPh2qIyH+eTsOZF
-	s0WXfBRMxrLhe8zJy6tBsJ++1qjmkFHn1W0oTM3UVhfStoS0YG7RehCGqOxZIkT1RLDbDDt3
-X-Gm-Gg: AR+sD13TpoxXtuhrnyiC8ldSBR6ya2aFoqhs3IE7TkIz8lMlbO2gTbh/UAOo7Etddbc
-	VHu5k4hAlva1BB9/J6Cijjk3T6w+ZhGOFrdSMfftpKyNyLRXbxYGZQvZJeMTwi3YckOBEvQY0bL
-	D/H5fESk+siy+8LX43Dn9o5N2JP2+J0hFyT706U9JZpp6qu6ew5T5vFoX+3TssHmd4dOFUWb1Ew
-	yE2Z7ptt4gVzygOb2jmtvan3EJQTMeOySgJHuMjKoE6VLNWgsXu0PHEQvgiBPSuk114FuNHyq/y
-	uTrCGU79yEhgGlpo1UR0Fb61qYtXJsZnsoFQCVbDMhtF4sQ9p6ALPkxeuIdzoUpo2uLcXH3uBH2
-	Fyc2iqDNy/5VAuMlL3ALjHOr+HDtEpWWIjDlG/St7ir9um5jp9qgd7lNudpaJ3orqE1vyUGEK6s
-	MNxVZgZG8zjvLH57eF+4G8Bt2rwnv4SssZea3HF9zTInFXhk5qOZtth5crmeqTkiVR8O1SrQ/4t
-	i1bSfu9rJmzo54GaFVaWii66HpsFFY9kq2eJ11X4VR+jhIzTFxL
-X-Received: by 2002:a05:6a00:2193:b0:842:732c:569a with SMTP id d2e1a72fcca58-84ebc3d1c4cmr1021107b3a.2.1785377848496;
-        Wed, 29 Jul 2026 19:17:28 -0700 (PDT)
+        bh=PmK9e5hF10OqnDZaWNEoqEbUdk/xAOPMzMn2ymShT8o=;
+        b=PNY+UeawBeVyzGTIbs3keRqvOh4xro4e+TvoAq+KZWsRFzOZISag9feTJf90QsN/87
+         1Q2umALBrI6R4Av7M+gDXDCjZfrVC9xry1gcqWulaBRM44n9SazuGNrHNhuOtKD6FEeh
+         D1AWzHfIwUH3jionRyYLd7WHbEk+XX+nF/7Yibe7i5nTHVDV+ZM3SLUcVBCY2VE6i9sC
+         FJm4dXdxJiFbDHPd0kYgbapMw0FCV0La7NpvM6xzyfQO2Jqg6XKA18sIbrQ3hbrje209
+         bjsGjM6p7Lh/avdru4EVjJzuYXorrZu0U0DLqc0GIaSsJeZm3WWbzbbL0a3yT1sGKUOr
+         RE7w==
+X-Forwarded-Encrypted: i=1; AHgh+Rrh2wTTbO45JiXT/YMsSP2gaGUHp7QxDEooq5/o33sBn52/EubNytAzo/to3v3mempk4S8Gfe4U@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7D6NySXUJZ9h+4ggoS8zLLCnF2cli22ud+mzcgh0XDmv+yyGO
+	7QoJvjOeAFebta4VD2FyloskC8VQtWjbCEh5xa0FfrOAdxlj83wppB83
+X-Gm-Gg: AR+sD10Z5xcG+w5tHrzJ/W9FA22xBAJv4WJnCrgj34A9HJuMxQi4zn7D3brDOe/7wlL
+	msRAfwLxnz4DyduojI3XJfI9nJHJJrXXMh+bnnJTT94ah39EgQLFMllNcivGkREbUPNaSLJjSIw
+	7nP9KdjRWjmLZmh4gbHEMzM1Zh4NvVEYXiOwJplhjr1EBzU305Kc7LDlFAkWrC8mEMqDAHTv/hr
+	CGH1Q8nzSdZAfCuhxkgdssdbZp3SLljQ9gKBsDQ0TuvWx+TflcMGclN0FVZE7WZWpw8oAiNl5s7
+	fD+UuSlfeuEXH7weIpEuXptaXm3jCtuC0bGMGTqKkMChq9CbSCZha9qm/Uj8YwLJD6G+d4sp4Db
+	ve36LFC9ilkTvwH7+h/CtTZt4qRLiQB3a2Lnh1kt4ZmfHdHmKUHc4mVhBBBKMCpnHMUJxanIb3c
+	g+9g1YBuPOs6R5i6jq5oLSxLwuGoMnB/wwpkfzSDykD4b5kreBT3MzDhXOS9gwrLk+SjvumlkM/
+	rEDVX2/6dHIcgE7BIb9SL3XZjFq3FvTh94gePJhgk6XXL3v0OFX
+X-Received: by 2002:a05:6a20:9e48:b0:3bf:b228:10b4 with SMTP id adf61e73a8af0-3c9007652c6mr1025922637.2.1785377859190;
+        Wed, 29 Jul 2026 19:17:39 -0700 (PDT)
 Received: from debian.lan ([155.117.85.23])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e9fe23143sm2159628b3a.2.2026.07.29.19.17.19
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e9fe23143sm2159628b3a.2.2026.07.29.19.17.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 19:17:28 -0700 (PDT)
+        Wed, 29 Jul 2026 19:17:38 -0700 (PDT)
 From: Xueyuan Chen <xueyuan.chen21@gmail.com>
 To: akpm@linux-foundation.org,
 	linux-mm@kvack.org
@@ -90,9 +90,9 @@ Cc: linux-kernel@vger.kernel.org,
 	yuanchu@google.com,
 	weixugc@google.com,
 	Xueyuan Chen <xueyuan.chen21@gmail.com>
-Subject: [RFC PATCH v4 3/4] mm/vmscan: avoid pointless large folio splits without swap
-Date: Thu, 30 Jul 2026 10:16:29 +0800
-Message-ID: <20260730021630.2235914-4-xueyuan.chen21@gmail.com>
+Subject: [RFC PATCH v4 4/4] mm/shmem: split large folios only on -E2BIG
+Date: Thu, 30 Jul 2026 10:16:30 +0800
+Message-ID: <20260730021630.2235914-5-xueyuan.chen21@gmail.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260730021630.2235914-1-xueyuan.chen21@gmail.com>
 References: <20260730021630.2235914-1-xueyuan.chen21@gmail.com>
@@ -104,56 +104,51 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: "Barry Song (Xiaomi)" <baohua@kernel.org>
+shmem_writeout() currently splits a large folio on every
+folio_alloc_swap() failure. With the refined return-value contract, only
+-E2BIG indicates that splitting might allow smaller folios to be swapped
+out.
 
-When swap is disabled, exhausted, or unavailable due to memcg swap
-limits, splitting a large anonymous folio cannot make swapout progress.
-The fallback only destroys the large folio and inflates split statistics.
+Enter the split fallback only for -E2BIG. For -ENOSPC and -ENOMEM,
+redirty and reactivate the folio as before.
 
-Use -E2BIG from folio_alloc_swap() as the explicit signal that splitting
-the folio might allow swapout of smaller pieces. For other allocation
-failures, keep the existing activation path and avoid the split.
-
-This preserves the split fallback for fragmented or partially available
-swap, while avoiding it when there is no backing space for any part of the
-folio.
-
-Reported-by: Nanzhe Zhao <zhaonanzhe@xiaomi.com>
-Signed-off-by: Barry Song (Xiaomi) <baohua@kernel.org>
+Suggested-by: Baolin Wang <baolin.wang@linux.alibaba.com>
 Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
 ---
- mm/vmscan.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ mm/shmem.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 26df81e773ff..e9110afad29f 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1263,6 +1263,8 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
- 		 */
- 		if (folio_test_anon(folio) && folio_test_swapbacked(folio) &&
- 				!folio_test_swapcache(folio)) {
-+			int ret;
-+
- 			if (!(sc->gfp_mask & __GFP_IO))
- 				goto keep_locked;
- 			if (folio_maybe_dma_pinned(folio))
-@@ -1281,11 +1283,14 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
- 				    split_folio_to_list(folio, folio_list))
- 					goto activate_locked;
- 			}
--			if (folio_alloc_swap(folio)) {
-+			ret = folio_alloc_swap(folio);
-+			if (ret) {
- 				int __maybe_unused order = folio_order(folio);
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 6641823bed16..6f959191ef70 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1609,6 +1609,7 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
+ 	struct shmem_sb_info *sbinfo = SHMEM_SB(inode->i_sb);
+ 	pgoff_t index;
+ 	int nr_pages;
++	int ret;
+ 	bool split = false;
  
- 				if (!folio_test_large(folio))
- 					goto activate_locked_split;
-+				if (ret != -E2BIG)
-+					goto activate_locked_split;
- 				/* Fallback to swap normal pages */
- 				if (split_folio_to_list(folio, folio_list))
- 					goto activate_locked;
+ 	if ((info->flags & SHMEM_F_LOCKED) || sbinfo->noswap)
+@@ -1689,7 +1690,8 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
+ 		folio_mark_uptodate(folio);
+ 	}
+ 
+-	if (!folio_alloc_swap(folio)) {
++	ret = folio_alloc_swap(folio);
++	if (!ret) {
+ 		bool first_swapped = shmem_recalc_inode(inode, 0, nr_pages);
+ 		int error;
+ 
+@@ -1742,7 +1744,7 @@ int shmem_writeout(struct swap_io_ctx *ctx, struct folio *folio,
+ 		swap_cache_del_folio(folio);
+ 		goto redirty;
+ 	}
+-	if (nr_pages > 1)
++	if (nr_pages > 1 && ret == -E2BIG)
+ 		goto try_split;
+ redirty:
+ 	folio_mark_dirty(folio);
 -- 
 2.47.3
 
