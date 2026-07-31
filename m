@@ -1,162 +1,331 @@
-Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
+Received: from esa10.hc1455-7.c3s2.iphmx.com (esa10.hc1455-7.c3s2.iphmx.com [139.138.36.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F5504C97
-	for <cgroups@vger.kernel.org>; Fri, 31 Jul 2026 01:46:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE9C114A60F;
+	Fri, 31 Jul 2026 05:09:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=139.138.36.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785462400; cv=none; b=l41Xr5Jvk1TdJAOe8bfJEFLc25gpfc3T5fIycC6Kf3KeVdq4fZbd9j5tNPd/GOAEg3q0WPUVoOOCmaqIMJAptYw9RS4MCI/21zBEjjtivrIstXIMKQLim6ukUg4paO4cxKxsWrp2eyWWtCXrbSlbL918LfxnfaMdj5U0fBfuPwU=
+	t=1785474563; cv=none; b=E3JI1dwv3gObv//JRptqDx+TzBG8hpLigq6xOHJFhvPKuSVMIKUzHQ4/FSHLrFtZ+bOoZHQ0CO0ZB7ZXceZd7VrVHPXUG4HvRReyXB8CBPa0ICZWyQCjVWVRbQMkPs3f27VXqmF0eXxiP3x9sYvTDK3bfPpNNOSEOmVC3OPA4yU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785462400; c=relaxed/simple;
-	bh=d7wDrgq5/SQzvRHR2hZLOz2rVDC43+bvaUYIDszxqVE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Gab2EllFM8YtfRaSZbxU2xh/2EwXCf+awosyAPTZ9l/emZoAlinPnWF8jgwtjSVCVWmvimcrE7GhMEwjzbwR/wBiKg1BEOePC6HySmE8yedTjtwk+JpTwiyzbvGZRTpr07fmwcW0fo7g+owF65lwmz4yPvn7yYQLvYokURPuaUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=V65hgF+X; arc=none smtp.client-ip=91.218.175.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785474563; c=relaxed/simple;
+	bh=rrV1ZuArq7jUJFUzuZdIkzToe/yL0yOxpBMWNWx//uc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SnZSZh5VaLYGAMHCCvyzpzRjZbSDK9WcTkkeNVaxfNEHCiG4/ZUFXy5Y+/bGXZK2TS25Gl62BAtd6BdVRkv8JWqWhIqT3XLDTibjbWOPNzEBiNzxiOvnGREnjFr3kJjWD9GSzUgvR3EopC/Tt65gu8lB0Njo3NFhJyqWVEgZmks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=evVm/y1P; arc=none smtp.client-ip=139.138.36.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="V65hgF+X"
-Message-ID: <d0fa85a4-53bd-4af9-b275-856ca073bc96@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785462395;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=dO3PkdIRMlkezl62as+Q47Bf7B4brhEm4xLqBToECdg=;
-	b=V65hgF+XXbx2tPBla+Wuz8xT9Y54R7Zr/SDapDPrGfg0JMMAg+szspXIoIhsNQMdGmEuEy
-	TyvjspXsx/f0HdoLsZZ5XwcwHi9XfjLXcxZ/fIXGgSVGSHKizWRaUTrmA7BnlLZoE7h76o
-	45W2UH6GaTcN/VDi96TczreZcCScRuI=
-Date: Fri, 31 Jul 2026 09:46:27 +0800
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="evVm/y1P"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
+  t=1785474562; x=1817010562;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=rrV1ZuArq7jUJFUzuZdIkzToe/yL0yOxpBMWNWx//uc=;
+  b=evVm/y1PjNCm0gxVrbIjI1JVPIR89Zv/GDKJQG8SB8SNL/YdXzyGVxiW
+   Fw7R7DNEKgHU2K1cxM3zwRUkqy8ypvTWclHm5Rsew4GMtbDZgHkIBMCus
+   SH6seatLur+mvqDjnyhZF0zgCuOqfG6BzwephpD8A+eZXwFgHUGlF58d0
+   Q2Xdy6eT2RDrcMLodaMWH1v9ZSrKzKS6lj0Hs3Z/LstodimihI3PhJvJ7
+   0sSWVkZjhANJBAErW6yBUq0yOmsl5QZU/8HA3AltgVA3rAfIjJyxWRV1m
+   LaujC4m+WrzMvC3pq8JpOTw6rP26h2TuB9i7cdl62wWeuA3aiduODqNcf
+   g==;
+X-CSE-ConnectionGUID: yH42wcAZQaiKKohLJN9P+g==
+X-CSE-MsgGUID: /Nrcb/4ETVewslEacfl+eA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11860"; a="235399180"
+X-IronPort-AV: E=Sophos;i="6.25,195,1779116400"; 
+   d="scan'208";a="235399180"
+Received: from gmgwnl01.global.fujitsu.com ([52.143.17.124])
+  by esa10.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Jul 2026 14:09:14 +0900
+Received: from az2nlsmgm2.o.css.fujitsu.com (unknown [10.150.26.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by gmgwnl01.global.fujitsu.com (Postfix) with ESMTPS id 439B810000C2;
+	Fri, 31 Jul 2026 05:09:14 +0000 (UTC)
+Received: from az2uksmom3.o.css.fujitsu.com (unknown [10.151.22.205])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by az2nlsmgm2.o.css.fujitsu.com (Postfix) with ESMTPS id EABED1C17444;
+	Fri, 31 Jul 2026 05:09:13 +0000 (UTC)
+Received: from FCCLS0092175.localdomain (unknown [10.10.122.81])
+	by az2uksmom3.o.css.fujitsu.com (Postfix) with SMTP id BBE931005AEA;
+	Fri, 31 Jul 2026 05:09:07 +0000 (UTC)
+Date: Fri, 31 Jul 2026 14:09:06 +0900
+From: Kohei Enju <enju.kohei@fujitsu.com>
+To: Suzuki K Poulose <suzuki.poulose@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org, 
+	kvmarm@lists.linux.dev, cgroups@vger.kernel.org, linux-coco@lists.linux.dev, 
+	Marc Zyngier <maz@kernel.org>, Oliver Upton <oliver.upton@linux.dev>, 
+	Paolo Bonzini <pbonzini@redhat.com>, Joey Gouly <joey.gouly@arm.com>, 
+	Steffen Eiden <seiden@linux.ibm.com>, Zenghui Yu <yuzenghui@huawei.com>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Steven Price <steven.price@arm.com>
+Subject: Re: [RFC PATCH v1 1/2] KVM: arm64: CCA: Add support for configuring
+ the Realm MEC policy
+Message-ID: <amwrnJ1KhllC-gVu@FCCLS0092175.localdomain>
+References: <20260724094120.166536-1-enju.kohei@fujitsu.com>
+ <20260724094120.166536-2-enju.kohei@fujitsu.com>
+ <46d78aa2-cacb-4efd-ae62-3026f5fe9b3f@arm.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mm, memcg: fix memory.peak reset clobbering other fds'
- watermark
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Muchun Song <muchun.song@linux.dev>, David Finkel <davidf@vimeo.com>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Tejun Heo
- <tj@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>
-References: <20260730115314.1069089-1-ridong.chen@linux.dev>
- <amt140aXu5tYZxln@cmpxchg.org>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <amt140aXu5tYZxln@cmpxchg.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <46d78aa2-cacb-4efd-ae62-3026f5fe9b3f@arm.com>
 
-On 7/31/2026 12:03 AM, Johannes Weiner wrote:
-> On Thu, Jul 30, 2026 at 07:53:14PM +0800, Ridong wrote:
->> From: Ridong Chen <chenridong@xiaomi.com>
->>
->> Writing to memory.peak resets the peak for that fd only. Each fd is a
->> watcher and reads back max(its own value, the shared local_watermark).
->>
->> peak_write() resets by lowering local_watermark to the current usage.
->> To keep the other watchers' peaks it then walks the watcher list, but it
->> stores the current usage into them instead of the old watermark. So once
->> usage has dropped from a peak, a reset on one fd wrongly drags every
->> other fd's peak down too, even fds that never reset.
->>
->> Reproduced on 7.2.0-rc5-next under QEMU, two fds A and B on one cgroup:
->> B sees the peak (410624 KB), usage drops, then A resets -- and B's peak
->> collapses to 1060 KB although B never reset. With this patch B keeps
->> reading 410624 KB.
->>
->> Fix: save the old watermark before lowering it and use that to floor the
->> other watchers, so a reset only affects the fd that issued it.
->>
->> Fixes: c6f53ed8f213 ("mm, memcg: cg2 memory{.swap,}.peak write handlers")
->> Assisted-by: Claude:claude-opus-4-8
->> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
->> ---
->>   mm/memcontrol.c | 7 ++++---
->>   1 file changed, 4 insertions(+), 3 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 60145aadfc5e..881e7c459c64 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -4692,7 +4692,7 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
->>   			  loff_t off, struct page_counter *pc,
->>   			  struct list_head *watchers)
->>   {
->> -	unsigned long usage;
->> +	unsigned long usage, old_watermark;
->>   	struct cgroup_of_peak *peer_ctx;
->>   	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
->>   	struct cgroup_of_peak *ofp = of_peak(of);
->> @@ -4700,11 +4700,12 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
->>   	spin_lock(&memcg->peaks_lock);
->>   
->>   	usage = page_counter_read(pc);
->> +	old_watermark = READ_ONCE(pc->local_watermark);
->>   	WRITE_ONCE(pc->local_watermark, usage);
->>   
->>   	list_for_each_entry(peer_ctx, watchers, list)
->> -		if (usage > peer_ctx->value)
->> -			WRITE_ONCE(peer_ctx->value, usage);
->> +		if (peer_ctx != ofp && old_watermark > peer_ctx->value)
->> +			WRITE_ONCE(peer_ctx->value, old_watermark);
+On 07/29 12:47, Suzuki K Poulose wrote:
+> Hello
 > 
-
-Hi Johannes,
-
-Thank you for your reply.
-
-> Ah, because B was previously reporting the higher local_watermark, and
-> its peer_ctx->value was actually low. Fixing it to current usage is
-> wrong in that case. It must remember local_watermark.
+> Thanks for sending the patch. Please find my comments inline below.
 > 
-> What about if usage is bigger than old_watermark? Then we don't update
-> the peer_ctx just yet. local_watermark is updated and propagated into
-> the peers on the next reset. I guess it's correct, but it's kind of
-> tricky to follow.
 > 
-
-IIUC, usage > old_watermark shouldn't actually happen, because local_watermark 
-is a running peak maintained by the charge path:
-
-page_counter_charge() {
-[...]
-	if (new > READ_ONCE(c->local_watermark))
-		WRITE_ONCE(c->local_watermark, new);
-[...]
-}
-
-> Would it be easier to understand if we mirrored the max() from
-> peak_show() here?
+> On 24/07/2026 10:40, Kohei Enju wrote:
+> > Introduce the KVM_ARM_RMI_CONFIG ioctl to allow userspace to configure
+> > Realm VM parameters before the Realm is created.
 > 
-> 	usage = page_counter_read(pc);
-> 	local_watermark = READ_ONCE(pc->local_watermark);
-> 	WRITE_ONCE(pc->local_watermark, usage);
+> This approach is something we tried in the past. Another option is to
+> add these as kvm_device_attr for the KVM VM, under a new group, e.g.,
+> KVM_ARM_VM_RMI_CTRL and add the following attributes :
 > 
-> 	peer_watermark = max(usage, local_watermark);
+> KVM_ARM_VM_RMI_CTRL_RPV 		-> Realm Personalization Value
+> KVM_ARM_VM_RMI_CTRL_MEASUREMENT_ALGO	-> Measuerment algo
+> KVM_ARM_VM_RMI_CTRL_MEC_PRIVATE		-> Private MEC Policy. By default to shared
+> ?
 
-In peak_show() the max we have is:
-	peak = max(fd_peak, local_watermark);
+Hi Suzuki, thanks for suggesting another option. That looks good to me,
+and I'd be happy with either approach.
+Anyway I'd like to wait for feedback from the maintainers and other
+reviewers.
 
-I'd like to clarify that fd_peak here is a different thing from usage. fd_peak 
-is the peak recorded by this fd (ofp->value), not the current usage. So 
-max(usage, local_watermark) isn't really mirroring the max() in peak_show(). 
-it's a different expression.
+Thanks,
+Kohei
 
-> 	list_for_each_entry(...)
-> 		if (peer_ctx != ofp && peer_watermark > peer_ctx->value)
-> 			WRITE_ONCE(peer_ctx->value, peer_watermark);
 > 
-> This code hurts my head. No strong feelings either way ;)
-
--- 
-Best regards
-Ridong
-
+> 
+> Marc, Oliver, thoughts ?
+> 
+> Cheers
+> Suzuki
+> 
+> > 
+> > Currently, ARM_RMI_CFG_MEC_POLICY is the only supported configuration
+> > item. Its value can be ARM_RMI_MEC_POLICY_SHARED or
+> > ARM_RMI_MEC_POLICY_PRIVATE. Reject the private policy if the platform
+> > does not support private MECs.
+> > 
+> > If userspace does not explicitly configure the MEC policy,
+> > ARM_RMI_MEC_POLICY_SHARED is used by default.
+> 
+> 
+> 
+> > 
+> > Signed-off-by: Kohei Enju <enju.kohei@fujitsu.com>
+> > ---
+> >   Documentation/virt/kvm/api.rst   | 29 +++++++++++++++++++++++++++++
+> >   arch/arm64/include/asm/kvm_rmi.h |  4 ++++
+> >   arch/arm64/kvm/arm.c             |  9 +++++++++
+> >   arch/arm64/kvm/rmi.c             | 29 +++++++++++++++++++++++++++++
+> >   drivers/firmware/arm_rmm/rmi.c   |  8 ++++++--
+> >   include/linux/arm-rmi-cmds.h     |  1 +
+> >   include/uapi/linux/kvm.h         | 17 +++++++++++++++++
+> >   7 files changed, 95 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/Documentation/virt/kvm/api.rst b/Documentation/virt/kvm/api.rst
+> > index 85bec9b4f021..e1c660e5eb34 100644
+> > --- a/Documentation/virt/kvm/api.rst
+> > +++ b/Documentation/virt/kvm/api.rst
+> > @@ -6690,6 +6690,35 @@ populated data is hashed and added to the guest's Realm Initial Measurement
+> >   (RIM) stored by the RMM. This can then be retrieved by the guest (using the RSI
+> >   interface) to present to an attestation server.
+> > +4.147 KVM_ARM_RMI_CONFIG
+> > +------------------------
+> > +
+> > +:Capability: KVM_CAP_ARM_RMI
+> > +:Architectures: arm64
+> > +:Type: vm ioctl
+> > +:Parameters: struct kvm_arm_rmi_config (in)
+> > +:Returns: 0 on success, < 0 on error
+> > +
+> > +::
+> > +
+> > +  struct kvm_arm_rmi_config {
+> > +       __u32 cfg;
+> > +       union {
+> > +               /* cfg == ARM_RMI_CFG_MEC_POLICY */
+> > +               __u8 mec_policy;
+> > +
+> > +               /* Fix the size of the union */
+> > +               __u8 reserved[256];
+> > +       };
+> > +  };
+> > +
+> > +Configures parameters of a Realm VM before the Realm is created.
+> > +
+> > +Currently, `ARM_RMI_CFG_MEC_POLICY` is the only supported configuration item.
+> > +`mec_policy` must be either `ARM_RMI_MEC_POLICY_SHARED` or
+> > +`ARM_RMI_MEC_POLICY_PRIVATE`. `ARM_RMI_MEC_POLICY_PRIVATE` is not supported if
+> > +no private MEC is available on the platform.
+> > +
+> >   .. _kvm_run:
+> >   5. The kvm_run structure
+> > diff --git a/arch/arm64/include/asm/kvm_rmi.h b/arch/arm64/include/asm/kvm_rmi.h
+> > index 420e99fca07e..721033b132e1 100644
+> > --- a/arch/arm64/include/asm/kvm_rmi.h
+> > +++ b/arch/arm64/include/asm/kvm_rmi.h
+> > @@ -60,6 +60,7 @@ enum realm_state {
+> >    * @ia_bits: Number of valid Input Address bits in the IPA
+> >    * @stage2_unmapped: The Realm stage-2 mappings have been removed
+> >    * @rtts_destroyed: The non-root RTTs have been torn down
+> > + * @mec_policy: MEC policy for the Realm VM
+> >    */
+> >   struct realm {
+> >   	void *rd;
+> > @@ -76,6 +77,7 @@ struct realm {
+> >   	unsigned int ia_bits;
+> >   	bool stage2_unmapped;
+> >   	bool rtts_destroyed;
+> > +	unsigned int mec_policy;
+> >   };
+> >   /**
+> > @@ -115,6 +117,8 @@ struct kvm_arm_rmi_populate;
+> >   int kvm_arm_rmi_populate(struct kvm *kvm,
+> >   			 struct kvm_arm_rmi_populate *arg);
+> > +struct kvm_arm_rmi_config;
+> > +int kvm_arm_rmi_config(struct kvm *kvm, struct kvm_arm_rmi_config *arg);
+> >   void kvm_realm_unmap_range(struct kvm *kvm,
+> >   			   unsigned long ipa,
+> >   			   unsigned long size,
+> > diff --git a/arch/arm64/kvm/arm.c b/arch/arm64/kvm/arm.c
+> > index 3862db30779f..17302ba2844c 100644
+> > --- a/arch/arm64/kvm/arm.c
+> > +++ b/arch/arm64/kvm/arm.c
+> > @@ -2169,6 +2169,15 @@ int kvm_arch_vm_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
+> >   			return -EFAULT;
+> >   		return ret;
+> >   	}
+> > +	case KVM_ARM_RMI_CONFIG: {
+> > +		struct kvm_arm_rmi_config cfg;
+> > +
+> > +		if (!kvm_is_realm(kvm))
+> > +			return -ENXIO;
+> > +		if (copy_from_user(&cfg, argp, sizeof(cfg)))
+> > +			return -EFAULT;
+> > +		return kvm_arm_rmi_config(kvm, &cfg);
+> > +	}
+> >   	default:
+> >   		return -EINVAL;
+> >   	}
+> > diff --git a/arch/arm64/kvm/rmi.c b/arch/arm64/kvm/rmi.c
+> > index 06cc85fb5092..629dea5e8c47 100644
+> > --- a/arch/arm64/kvm/rmi.c
+> > +++ b/arch/arm64/kvm/rmi.c
+> > @@ -572,6 +572,9 @@ static int realm_create_rd(struct kvm *kvm)
+> >   	if (kvm_lpa2_is_enabled())
+> >   		params->flags0 |= RMI_REALM_PARAM_FLAG_LPA2;
+> > +	params->flags0 |= FIELD_PREP(RMI_REALM_PARAM_FLAG_MEC_POLICY,
+> > +				     realm->mec_policy);
+> > +
+> >   	r = realm_init_sve_param(kvm, params);
+> >   	if (r)
+> >   		goto out_undelegate_tables;
+> > @@ -1155,6 +1158,30 @@ int kvm_arm_rmi_populate(struct kvm *kvm,
+> >   	return ret;
+> >   }
+> > +int kvm_arm_rmi_config(struct kvm *kvm, struct kvm_arm_rmi_config *cfg)
+> > +{
+> > +	guard(mutex)(&kvm->arch.config_lock);
+> > +
+> > +	if (kvm_realm_state(kvm) != REALM_STATE_NONE)
+> > +		return -EBUSY;
+> > +
+> > +	switch (cfg->cfg) {
+> > +	case ARM_RMI_CFG_MEC_POLICY:
+> > +		if (cfg->mec_policy != ARM_RMI_MEC_POLICY_SHARED &&
+> > +		    cfg->mec_policy != ARM_RMI_MEC_POLICY_PRIVATE)
+> > +			return -EINVAL;
+> > +
+> > +		if (cfg->mec_policy == ARM_RMI_MEC_POLICY_PRIVATE &&
+> > +		    rmi_mec_count() == 0)
+> > +			return -EOPNOTSUPP;
+> > +
+> > +		kvm->arch.realm.mec_policy = cfg->mec_policy;
+> > +		return 0;
+> > +	default:
+> > +		return -EINVAL;
+> > +	}
+> > +}
+> > +
+> >   static void kvm_complete_ripas_change(struct kvm_vcpu *vcpu)
+> >   {
+> >   	struct kvm *kvm = vcpu->kvm;
+> > @@ -1474,6 +1501,8 @@ int kvm_init_realm(struct kvm *kvm)
+> >   {
+> >   	struct realm *realm = &kvm->arch.realm;
+> > +	realm->mec_policy = ARM_RMI_MEC_POLICY_SHARED;
+> > +
+> >   	realm->params = (void *)get_zeroed_page(GFP_KERNEL_ACCOUNT);
+> >   	realm->sro = kmalloc_obj(*realm->sro);
+> >   	if (!realm->params || !realm->sro) {
+> > diff --git a/drivers/firmware/arm_rmm/rmi.c b/drivers/firmware/arm_rmm/rmi.c
+> > index d0c083bdf251..e9632c35e7db 100644
+> > --- a/drivers/firmware/arm_rmm/rmi.c
+> > +++ b/drivers/firmware/arm_rmm/rmi.c
+> > @@ -14,8 +14,7 @@
+> >   static bool arm64_rmi_is_available;
+> > -/* Currently only the first 2 registers are used by Linux */
+> > -#define RMI_FEAT_REG_COUNT	2
+> > +#define RMI_FEAT_REG_COUNT	5
+> >   static __ro_after_init unsigned long rmi_feat_reg_cache[RMI_FEAT_REG_COUNT];
+> >   unsigned long rmi_feat_reg(unsigned long id)
+> > @@ -27,6 +26,11 @@ unsigned long rmi_feat_reg(unsigned long id)
+> >   }
+> >   EXPORT_SYMBOL_GPL(rmi_feat_reg);
+> > +u64 rmi_mec_count(void)
+> > +{
+> > +	return u64_get_bits(rmi_feat_reg(4), RMI_FEATURE_REGISTER_4_MEC_COUNT);
+> > +}
+> > +
+> >   int rmi_delegate_range(phys_addr_t phys,
+> >   		       unsigned long size,
+> >   		       phys_addr_t *out_phys)
+> > diff --git a/include/linux/arm-rmi-cmds.h b/include/linux/arm-rmi-cmds.h
+> > index 138983ab4e3c..5236600421c6 100644
+> > --- a/include/linux/arm-rmi-cmds.h
+> > +++ b/include/linux/arm-rmi-cmds.h
+> > @@ -28,6 +28,7 @@ struct rmi_sro_state {
+> >   };
+> >   unsigned long rmi_feat_reg(unsigned long id);
+> > +u64 rmi_mec_count(void);
+> >   int rmi_delegate_range(phys_addr_t phys, unsigned long size,
+> >   		       phys_addr_t *out_phys);
+> > diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+> > index adee3936d6ae..46e62327957c 100644
+> > --- a/include/uapi/linux/kvm.h
+> > +++ b/include/uapi/linux/kvm.h
+> > @@ -1704,4 +1704,21 @@ struct kvm_arm_rmi_populate {
+> >   	__u32 reserved;
+> >   };
+> > +#define KVM_ARM_RMI_CONFIG     _IOW(KVMIO, 0xd8, struct kvm_arm_rmi_config)
+> > +
+> > +#define ARM_RMI_CFG_MEC_POLICY		0
+> > +#define ARM_RMI_MEC_POLICY_SHARED	0
+> > +#define ARM_RMI_MEC_POLICY_PRIVATE	1
+> > +
+> > +struct kvm_arm_rmi_config {
+> > +	__u32 cfg;
+> > +	union {
+> > +		/* cfg == ARM_RMI_CFG_MEC_POLICY */
+> > +		__u8 mec_policy;
+> > +
+> > +		/* Reserve space for future configuration payloads. */
+> > +		__u8 reserved[256];
+> > +	};
+> > +};
+> > +
+> >   #endif /* __LINUX_KVM_H */
+> 
