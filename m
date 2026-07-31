@@ -1,313 +1,112 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5596C40F72B;
-	Fri, 31 Jul 2026 10:59:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A30C23E358;
+	Fri, 31 Jul 2026 13:40:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785495556; cv=none; b=VQG5V3Qp+mPkTmE4fIvB+fhnk+RqyOaadxcwxMim0vWEeLrNLyEwi+t2/s/dF6i8XEFW7kBKBhkxDnQ8LGIArSw27I8DPhSRvbQ9s1Xsb4y0LPg6zCWC2Ve+4WHWlIDTAgsRANrjN+VIAoglWZ7VRJvCDfToMmc9ErmISyaDTKk=
+	t=1785505228; cv=none; b=Dkk/UR5F203T8vSmsUG3WAPB8qxFwo2hm0XjtQwoVjRNPPtzlw3/LiPn+tKKpK3NIMEdu9Byb6t60rCLDO2TpbXxOhWuHO67A1MHl3XAvzCOnzT2HfMxmJ+g0TbxaOyQPhmVvFBJZkqRr3QAny9bHKb/npj+TASqD5yBAHb2NNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785495556; c=relaxed/simple;
-	bh=K7B/JzewX4QxlTmtVeIzesbPDrCCGlVQ5xaSmXkC5Uc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cuHWNeU2Voq9lWV+bFej4sJu6N9TBm3BY/1OhW/G3hJxZ6sVOK6GcTxDOVgk6zf+ae00B4kJSPRcSx9iT5yrUyDY4L3OgFX+Z6efgWRUKxmmeGSispD0Qce9bbAIKssawQ+2xrO0ewonxtKvLA4qzTxesoW+6yEa8qnmKrse0nc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b=XIsE4Ln4; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+	s=arc-20240116; t=1785505228; c=relaxed/simple;
+	bh=+7++qRbgSPFM4c04QApbI8RaWFtmmqGmF2AT79jsF+4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uJBtNSj0GETYwVFwg1h1mzC1zJeg8Y1qBABUXnqXQMbOdN/9cH1Et9t6KLcrYu9cmyTuukzOj5M4gzJaQmpB7uEgqrJZM62i55OouWxOosYaIGeZp1oL99QLPeUVfHmXu3lB+Q/E68FP0LeqzLu/UhZjP06VO6nh0Z3MSwxBSgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=X+OXeudT; arc=none smtp.client-ip=95.215.58.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.b="XIsE4Ln4"
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 07DC7165C;
-	Fri, 31 Jul 2026 03:59:06 -0700 (PDT)
-Received: from [10.57.87.104] (unknown [10.57.87.104])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 363B03F86F;
-	Fri, 31 Jul 2026 03:59:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1785495550; bh=K7B/JzewX4QxlTmtVeIzesbPDrCCGlVQ5xaSmXkC5Uc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=XIsE4Ln4QXKjKS4MIFd4UibV+jyI6v7qV4OX0UwKKVr/Fdf7bz5e3qxSY6Vl2Sm2k
-	 VCzLkADNp5hx8VMwPSnvG/WroklZNsHuW3E1nd+8G6YysO/efon4qf3+Prnsjhzgbo
-	 oIDHqG1YWrlehgIy1R0i1s2yBxc5UGcp2R6AqS48=
-Message-ID: <a3db6519-f76a-433c-8c21-3286a038c584@arm.com>
-Date: Fri, 31 Jul 2026 11:59:03 +0100
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="X+OXeudT"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785505224;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=sPGSaNwMaHwGIch7Q+dDrYYkm9dxL9a2BQ2cqmUZOeI=;
+	b=X+OXeudTqXlirTIdsI1BhC4P0vfT8SxufcwttuehcQ5lNG6F3VIhkcFA+YnduMxhWMeZSf
+	0uochRTwJD2PD2gROOh7tA6pPd3atwppYD4uuBQIJGi83+eSyuHx7t+oB9vuv6iNwmfCGb
+	qDfxlfP0FmV/8zGlqqp0yCSezpscw4M=
+From: Tao Cui <cui.tao@linux.dev>
+To: tj@kernel.org,
+	axboe@kernel.dk
+Cc: josef@toxicpanda.com,
+	cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cui.tao@linux.dev,
+	Tao Cui <cuitao@kylinos.cn>
+Subject: [PATCH] block/blk-iocost: fix KCSAN data-race on iocg->cursor
+Date: Fri, 31 Jul 2026 21:40:00 +0800
+Message-ID: <20260731134000.70069-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v1 1/2] KVM: arm64: CCA: Add support for configuring
- the Realm MEC policy
-To: Kohei Enju <enju.kohei@fujitsu.com>,
- linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org,
- kvmarm@lists.linux.dev, cgroups@vger.kernel.org, linux-coco@lists.linux.dev
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Marc Zyngier <maz@kernel.org>,
- Oliver Upton <oupton@kernel.org>, Joey Gouly <joey.gouly@arm.com>,
- Steffen Eiden <seiden@linux.ibm.com>,
- Suzuki K Poulose <suzuki.poulose@arm.com>, Zenghui Yu
- <yuzenghui@huawei.com>, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will@kernel.org>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>
-References: <20260724094120.166536-1-enju.kohei@fujitsu.com>
- <20260724094120.166536-2-enju.kohei@fujitsu.com>
-From: Steven Price <steven.price@arm.com>
-Content-Language: en-GB
-In-Reply-To: <20260724094120.166536-2-enju.kohei@fujitsu.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Hi Kohei,
+From: Tao Cui <cuitao@kylinos.cn>
 
-Thanks for posting this - it looks good to me, but as Suzuki says it
-would be good to get some maintainer feedback. One bug I spotted below.
+iocg->cursor is read in calc_vtime_cost_builtin() and written per-bio
+in ioc_rqos_throttle()/ioc_rqos_merge() without a lock, which trips
+KCSAN:
 
-On 24/07/2026 10:40, Kohei Enju wrote:
-> Introduce the KVM_ARM_RMI_CONFIG ioctl to allow userspace to configure
-> Realm VM parameters before the Realm is created.
-> 
-> Currently, ARM_RMI_CFG_MEC_POLICY is the only supported configuration
-> item. Its value can be ARM_RMI_MEC_POLICY_SHARED or
-> ARM_RMI_MEC_POLICY_PRIVATE. Reject the private policy if the platform
-> does not support private MECs.
-> 
-> If userspace does not explicitly configure the MEC policy,
-> ARM_RMI_MEC_POLICY_SHARED is used by default.
-> 
-> Signed-off-by: Kohei Enju <enju.kohei@fujitsu.com>
-> ---
->  Documentation/virt/kvm/api.rst   | 29 +++++++++++++++++++++++++++++
->  arch/arm64/include/asm/kvm_rmi.h |  4 ++++
->  arch/arm64/kvm/arm.c             |  9 +++++++++
->  arch/arm64/kvm/rmi.c             | 29 +++++++++++++++++++++++++++++
->  drivers/firmware/arm_rmm/rmi.c   |  8 ++++++--
->  include/linux/arm-rmi-cmds.h     |  1 +
->  include/uapi/linux/kvm.h         | 17 +++++++++++++++++
->  7 files changed, 95 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/virt/kvm/api.rst b/Documentation/virt/kvm/api.rst
-> index 85bec9b4f021..e1c660e5eb34 100644
-> --- a/Documentation/virt/kvm/api.rst
-> +++ b/Documentation/virt/kvm/api.rst
-> @@ -6690,6 +6690,35 @@ populated data is hashed and added to the guest's Realm Initial Measurement
->  (RIM) stored by the RMM. This can then be retrieved by the guest (using the RSI
->  interface) to present to an attestation server.
->  
-> +4.147 KVM_ARM_RMI_CONFIG
-> +------------------------
-> +
-> +:Capability: KVM_CAP_ARM_RMI
-> +:Architectures: arm64
-> +:Type: vm ioctl
-> +:Parameters: struct kvm_arm_rmi_config (in)
-> +:Returns: 0 on success, < 0 on error
-> +
-> +::
-> +
-> +  struct kvm_arm_rmi_config {
-> +       __u32 cfg;
-> +       union {
-> +               /* cfg == ARM_RMI_CFG_MEC_POLICY */
-> +               __u8 mec_policy;
-> +
-> +               /* Fix the size of the union */
-> +               __u8 reserved[256];
-> +       };
-> +  };
-> +
-> +Configures parameters of a Realm VM before the Realm is created.
-> +
-> +Currently, `ARM_RMI_CFG_MEC_POLICY` is the only supported configuration item.
-> +`mec_policy` must be either `ARM_RMI_MEC_POLICY_SHARED` or
-> +`ARM_RMI_MEC_POLICY_PRIVATE`. `ARM_RMI_MEC_POLICY_PRIVATE` is not supported if
-> +no private MEC is available on the platform.
-> +
->  .. _kvm_run:
->  
->  5. The kvm_run structure
-> diff --git a/arch/arm64/include/asm/kvm_rmi.h b/arch/arm64/include/asm/kvm_rmi.h
-> index 420e99fca07e..721033b132e1 100644
-> --- a/arch/arm64/include/asm/kvm_rmi.h
-> +++ b/arch/arm64/include/asm/kvm_rmi.h
-> @@ -60,6 +60,7 @@ enum realm_state {
->   * @ia_bits: Number of valid Input Address bits in the IPA
->   * @stage2_unmapped: The Realm stage-2 mappings have been removed
->   * @rtts_destroyed: The non-root RTTs have been torn down
-> + * @mec_policy: MEC policy for the Realm VM
->   */
->  struct realm {
->  	void *rd;
-> @@ -76,6 +77,7 @@ struct realm {
->  	unsigned int ia_bits;
->  	bool stage2_unmapped;
->  	bool rtts_destroyed;
-> +	unsigned int mec_policy;
->  };
->  
->  /**
-> @@ -115,6 +117,8 @@ struct kvm_arm_rmi_populate;
->  
->  int kvm_arm_rmi_populate(struct kvm *kvm,
->  			 struct kvm_arm_rmi_populate *arg);
-> +struct kvm_arm_rmi_config;
-> +int kvm_arm_rmi_config(struct kvm *kvm, struct kvm_arm_rmi_config *arg);
->  void kvm_realm_unmap_range(struct kvm *kvm,
->  			   unsigned long ipa,
->  			   unsigned long size,
-> diff --git a/arch/arm64/kvm/arm.c b/arch/arm64/kvm/arm.c
-> index 3862db30779f..17302ba2844c 100644
-> --- a/arch/arm64/kvm/arm.c
-> +++ b/arch/arm64/kvm/arm.c
-> @@ -2169,6 +2169,15 @@ int kvm_arch_vm_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
->  			return -EFAULT;
->  		return ret;
->  	}
-> +	case KVM_ARM_RMI_CONFIG: {
-> +		struct kvm_arm_rmi_config cfg;
-> +
-> +		if (!kvm_is_realm(kvm))
-> +			return -ENXIO;
-> +		if (copy_from_user(&cfg, argp, sizeof(cfg)))
-> +			return -EFAULT;
-> +		return kvm_arm_rmi_config(kvm, &cfg);
-> +	}
->  	default:
->  		return -EINVAL;
->  	}
-> diff --git a/arch/arm64/kvm/rmi.c b/arch/arm64/kvm/rmi.c
-> index 06cc85fb5092..629dea5e8c47 100644
-> --- a/arch/arm64/kvm/rmi.c
-> +++ b/arch/arm64/kvm/rmi.c
-> @@ -572,6 +572,9 @@ static int realm_create_rd(struct kvm *kvm)
->  	if (kvm_lpa2_is_enabled())
->  		params->flags0 |= RMI_REALM_PARAM_FLAG_LPA2;
->  
-> +	params->flags0 |= FIELD_PREP(RMI_REALM_PARAM_FLAG_MEC_POLICY,
-> +				     realm->mec_policy);
-> +
+  BUG: KCSAN: data-race in calc_vtime_cost_builtin / ioc_rqos_throttle
 
-Not your bug, but I realised this could cause problems. If the attempt
-to create fails (perhaps due to the second patch and the cgroup charge
-failing) and the VMM then reconfigures the MEC_POLICY then flags0
-doesn't get reset. Technically that applies to a couple of other flags,
-but here (with the following patch) this becomes a way of bypassing the
-cgroups policy.
+Found via KCSAN (null_blk + sustained IO under CONFIG_KCSAN).
 
-I'll fix this by allocating realm->params directly in realm_create_rd()
-so that it always starts off zeroed (and removing the redundant member
-of the struct). I think in a previous version of the series the params
-was built piecemeal, but that's not true anymore.
+The races are intentional: cursor is a best-effort randio detector, so
+stale values only add minor cost-estimate noise. Mark the accesses with
+READ_ONCE()/WRITE_ONCE(), consistent with other racy iocost fields
+(active, inuse, abs_vdebt).
 
-The upshot is you don't need to do anything - it's my bug and I'll fix
-it in the next version ;)
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+---
+ block/blk-iocost.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-Thanks,
-Steve
-
->  	r = realm_init_sve_param(kvm, params);
->  	if (r)
->  		goto out_undelegate_tables;
-> @@ -1155,6 +1158,30 @@ int kvm_arm_rmi_populate(struct kvm *kvm,
->  	return ret;
->  }
->  
-> +int kvm_arm_rmi_config(struct kvm *kvm, struct kvm_arm_rmi_config *cfg)
-> +{
-> +	guard(mutex)(&kvm->arch.config_lock);
-> +
-> +	if (kvm_realm_state(kvm) != REALM_STATE_NONE)
-> +		return -EBUSY;
-> +
-> +	switch (cfg->cfg) {
-> +	case ARM_RMI_CFG_MEC_POLICY:
-> +		if (cfg->mec_policy != ARM_RMI_MEC_POLICY_SHARED &&
-> +		    cfg->mec_policy != ARM_RMI_MEC_POLICY_PRIVATE)
-> +			return -EINVAL;
-> +
-> +		if (cfg->mec_policy == ARM_RMI_MEC_POLICY_PRIVATE &&
-> +		    rmi_mec_count() == 0)
-> +			return -EOPNOTSUPP;
-> +
-> +		kvm->arch.realm.mec_policy = cfg->mec_policy;
-> +		return 0;
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +}
-> +
->  static void kvm_complete_ripas_change(struct kvm_vcpu *vcpu)
->  {
->  	struct kvm *kvm = vcpu->kvm;
-> @@ -1474,6 +1501,8 @@ int kvm_init_realm(struct kvm *kvm)
->  {
->  	struct realm *realm = &kvm->arch.realm;
->  
-> +	realm->mec_policy = ARM_RMI_MEC_POLICY_SHARED;
-> +
->  	realm->params = (void *)get_zeroed_page(GFP_KERNEL_ACCOUNT);
->  	realm->sro = kmalloc_obj(*realm->sro);
->  	if (!realm->params || !realm->sro) {
-> diff --git a/drivers/firmware/arm_rmm/rmi.c b/drivers/firmware/arm_rmm/rmi.c
-> index d0c083bdf251..e9632c35e7db 100644
-> --- a/drivers/firmware/arm_rmm/rmi.c
-> +++ b/drivers/firmware/arm_rmm/rmi.c
-> @@ -14,8 +14,7 @@
->  
->  static bool arm64_rmi_is_available;
->  
-> -/* Currently only the first 2 registers are used by Linux */
-> -#define RMI_FEAT_REG_COUNT	2
-> +#define RMI_FEAT_REG_COUNT	5
->  static __ro_after_init unsigned long rmi_feat_reg_cache[RMI_FEAT_REG_COUNT];
->  
->  unsigned long rmi_feat_reg(unsigned long id)
-> @@ -27,6 +26,11 @@ unsigned long rmi_feat_reg(unsigned long id)
->  }
->  EXPORT_SYMBOL_GPL(rmi_feat_reg);
->  
-> +u64 rmi_mec_count(void)
-> +{
-> +	return u64_get_bits(rmi_feat_reg(4), RMI_FEATURE_REGISTER_4_MEC_COUNT);
-> +}
-> +
->  int rmi_delegate_range(phys_addr_t phys,
->  		       unsigned long size,
->  		       phys_addr_t *out_phys)
-> diff --git a/include/linux/arm-rmi-cmds.h b/include/linux/arm-rmi-cmds.h
-> index 138983ab4e3c..5236600421c6 100644
-> --- a/include/linux/arm-rmi-cmds.h
-> +++ b/include/linux/arm-rmi-cmds.h
-> @@ -28,6 +28,7 @@ struct rmi_sro_state {
->  };
->  
->  unsigned long rmi_feat_reg(unsigned long id);
-> +u64 rmi_mec_count(void);
->  
->  int rmi_delegate_range(phys_addr_t phys, unsigned long size,
->  		       phys_addr_t *out_phys);
-> diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
-> index adee3936d6ae..46e62327957c 100644
-> --- a/include/uapi/linux/kvm.h
-> +++ b/include/uapi/linux/kvm.h
-> @@ -1704,4 +1704,21 @@ struct kvm_arm_rmi_populate {
->  	__u32 reserved;
->  };
->  
-> +#define KVM_ARM_RMI_CONFIG     _IOW(KVMIO, 0xd8, struct kvm_arm_rmi_config)
-> +
-> +#define ARM_RMI_CFG_MEC_POLICY		0
-> +#define ARM_RMI_MEC_POLICY_SHARED	0
-> +#define ARM_RMI_MEC_POLICY_PRIVATE	1
-> +
-> +struct kvm_arm_rmi_config {
-> +	__u32 cfg;
-> +	union {
-> +		/* cfg == ARM_RMI_CFG_MEC_POLICY */
-> +		__u8 mec_policy;
-> +
-> +		/* Reserve space for future configuration payloads. */
-> +		__u8 reserved[256];
-> +	};
-> +};
-> +
->  #endif /* __LINUX_KVM_H */
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 8b2aeba2e1e3..ae0d34609144 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -2552,9 +2552,13 @@ static void calc_vtime_cost_builtin(struct bio *bio, struct ioc_gq *iocg,
+ 		goto out;
+ 	}
+ 
+-	if (iocg->cursor) {
+-		seek_pages = abs(bio->bi_iter.bi_sector - iocg->cursor);
+-		seek_pages >>= IOC_SECT_TO_PAGE_SHIFT;
++	{
++		sector_t cursor = READ_ONCE(iocg->cursor);
++
++		if (cursor) {
++			seek_pages = abs(bio->bi_iter.bi_sector - cursor);
++			seek_pages >>= IOC_SECT_TO_PAGE_SHIFT;
++		}
+ 	}
+ 
+ 	if (!is_merge) {
+@@ -2708,7 +2712,7 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	if (!iocg_activate(iocg, &now))
+ 		return;
+ 
+-	iocg->cursor = bio_end_sector(bio);
++	WRITE_ONCE(iocg->cursor, bio_end_sector(bio));
+ 	vtime = atomic64_read(&iocg->vtime);
+ 	cost = adjust_inuse_and_calc_cost(iocg, vtime, abs_cost, &now);
+ 
+@@ -2797,8 +2801,8 @@ static void ioc_rqos_merge(struct rq_qos *rqos, struct request *rq,
+ 
+ 	/* update cursor if backmerging into the request at the cursor */
+ 	if (blk_rq_pos(rq) < bio_end &&
+-	    blk_rq_pos(rq) + blk_rq_sectors(rq) == iocg->cursor)
+-		iocg->cursor = bio_end;
++	    blk_rq_pos(rq) + blk_rq_sectors(rq) == READ_ONCE(iocg->cursor))
++		WRITE_ONCE(iocg->cursor, bio_end);
+ 
+ 	/*
+ 	 * Charge if there's enough vtime budget and the existing request has
+-- 
+2.43.0
 
