@@ -1,121 +1,85 @@
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail2-relais-roc.national.inria.fr (mail2-relais-roc.national.inria.fr [192.134.164.83])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BC6135957
-	for <cgroups@vger.kernel.org>; Sat,  1 Aug 2026 04:13:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DB153C1F3A;
+	Sat,  1 Aug 2026 19:10:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.134.164.83
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785557592; cv=none; b=Ykzff8yH+GpxO/Zx+6z5AqQmrU8xkUmemmU3cTWDCexRFSnQri6A/rmCXn3L/lxNodxMLRSGNiWx8MZdtWcoKXQgogOGnZ7AyOuEEkeO5sRGi8J4hsu91p65ya/n0hsc5M2Bt7Ve0FcB7p7ZnMMvFIsrN+6ggq58EJCbJqvLCtA=
+	t=1785611445; cv=none; b=TvymPukG41RtVOOIWYD92iJYjMroa78D95XJTp8o/ndCt0+LwgzIdabJQmStzpHbCEW6skETsMr3XWTm2acB2Ymf/vB9IVdko2wxetxEhHs+27tn7uTwSwXcw7rKhCNM3S1qPbGk6CGYYBONrTdRzQN00dOuuWtQVq9OG+sO9ZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785557592; c=relaxed/simple;
-	bh=tE4aHWnPmx88w/MUAY0jqP8Q0YG2GlCJjM4idzsJ7dc=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=jDKK+REhF+xY0WpYPyb00ZC+F/XfKmmv6xkTTEg+B7ldizxYFF1YYOGNxQbTocxDQqhZyKYcPOEiNZ6GL16M7nFTz317O+U+KxHgUsM4QEiz8RrPs1vfEH6BRY9PFW/Fkj0qMWOke1CelGb+MwmjhBPBrDFeGcJJFdkkhoZVZ04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=S5XtltjR; arc=none smtp.client-ip=209.85.216.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com
+	s=arc-20240116; t=1785611445; c=relaxed/simple;
+	bh=P3tZ6N4jfvIjmreQ/C1Nm8WD8ULfJ+rus7cOhDSIgr8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=SVbq827mC9Pibq5sylSq8GpKBSuz3Yz3ruB6xvyopRtj7ARJQz1nqPlNaTOrIqCfmhbNY9rpN9PeCFZeCxvD0Gy8FpJpPC1DJdq/E7EMKWbRnBVx25ofqCow+7QIULGiaWdOo+mT3PO0L/RVUMv8eZ2VN+XMqdn7ShTm8jYCmfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=inria.fr; spf=pass smtp.mailfrom=inria.fr; dkim=pass (1024-bit key) header.d=inria.fr header.i=@inria.fr header.b=f1OPetO9; arc=none smtp.client-ip=192.134.164.83
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=inria.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inria.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="S5XtltjR"
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38e4758ab46so2000799a91.0
-        for <cgroups@vger.kernel.org>; Fri, 31 Jul 2026 21:13:11 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=inria.fr header.i=@inria.fr header.b="f1OPetO9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1785557590; x=1786162390; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5XpdFy8Z6PUfDqbqo17LIsT1Kc72p948s1zae/y2clQ=;
-        b=S5XtltjRBhus4DoWBW/FIqp3+OfWKNA99ujo1x4jcIENDJltrIm0XgIO0xx8oMbVmS
-         dgZkDtS7wg4cwiGd5plXIskh39Le1co7AJpubBvOovVjyvVV4MNfLucbQcj6Gpi+Obq3
-         Zre0dqNegcaipBZbH9n62KUeJkXRkOXsWZtyn4+SvLnfg7V6hxUczQ3JrIIt1WklkEVX
-         equysbgaBOdLih3NJKDwDtpXemBOkDYQCAbdXoD+SjOy7zbTIX7PXJsc8l6NVlmWN6uF
-         lAKjrAxxBk88g/CdA6neMgI8CTIYzZ8gIvf9MIm7U0PYZ7ajdSnMaAeGO+sakEPyqT+1
-         DSMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785557590; x=1786162390;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5XpdFy8Z6PUfDqbqo17LIsT1Kc72p948s1zae/y2clQ=;
-        b=MRs+r82v/VN63F6H6LZSdxAUy9VLaZBwBEvY5KzJ7LiDgjnEkMzjXGROD7ScHvu8PL
-         QbIgvlW23CbdO6VIHSdhBhS17lDCUrLigtsSlqLL6XKPZ4CjTQRBo+qF/QjdrWKEldB+
-         KmOZAjcPu241SOk7XMeRH6jzoyVjqDVnI4pI9VIDgHtp4GoReQVaG5r6a+0JJjuNkhon
-         VGFjmr6S9lASk7EaHUM9MQLZbeZ02HV0lxk5PgSxV/dvoqSsjBQf+fCoMlGiSfARPSVV
-         SYOOy9QE5BLqHiY6UZ4sULbVuZf30fLHy9RkHuU1TGZS8sXsIA896ScMVQ4/nZXNBCvL
-         3L+w==
-X-Forwarded-Encrypted: i=1; AHgh+RqcVXqYp4f7mXnn0jvqcBK2X7Ly8/a4cAinBHBRrhvfXN34DQaGjS8z1vG5tuE4tb1Mhy9Ohqis@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy+VZQb02Bu8zgCaDYgNGbkjmoYiJ9hnxL15ePIG2eMhDQAJS1i
-	eAdj5x/S6oblRPoAq8mkVo4DYm43XljocF6eu/FGo/QpDq+cQmfry8TuNHaXYoKKcv9hFmjTvGU
-	NYdglBguAkg==
-X-Received: from pjgg7.prod.google.com ([2002:a17:90b:57c7:b0:37c:c540:67c4])
- (user=wfelipe job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:1c91:b0:387:e0db:bc26
- with SMTP id 98e67ed59e1d1-38fbc538106mr1983898a91.38.1785557590236; Fri, 31
- Jul 2026 21:13:10 -0700 (PDT)
-Date: Sat,  1 Aug 2026 04:12:46 +0000
+  d=inria.fr; s=dc;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Fg5ZBoBgQD/Kd4IP5851d3w/Ypie/cGCCmYEWrWBmJg=;
+  b=f1OPetO9CY/vFBhKFK9eps3SYYmfGe+Fbe2Gqh2KM2dyrHv7/2ta+CuP
+   ueI7sHE4VYiRnjvDS/ZmsDuKWY/hexGUaocw73qF0lSpJ5JTF7RMemPOl
+   eJ+TEY0hcASRlJ4Li69NHSRM2Hcsz4ErQL17T820a5yolQZIN0h356FLM
+   c=;
+X-CSE-ConnectionGUID: NeZmu1LFT52lR8/Z6HTLYg==
+X-CSE-MsgGUID: xE/8NFJxRr+H0rotXr+obg==
+Authentication-Results: mail2-relais-roc.national.inria.fr; dkim=none (message not signed) header.i=none; spf=SoftFail smtp.mailfrom=Julia.Lawall@inria.fr; dmarc=fail (p=none dis=none) d=inria.fr
+X-IronPort-AV: E=Sophos;i="6.25,198,1779141600"; 
+   d="scan'208";a="288769011"
+Received: from i80.paris.inria.fr (HELO i80.paris.inria.fr.) ([128.93.102.196])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Aug 2026 21:10:08 +0200
+From: Julia Lawall <Julia.Lawall@inria.fr>
+To: Tejun Heo <tj@kernel.org>
+Cc: kernel-janitors@vger.kernel.org,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] cgroup: drop unneeded semicolon
+Date: Sat,  1 Aug 2026 21:09:55 +0200
+Message-Id: <20260801191002.1383835-9-Julia.Lawall@inria.fr>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0.508.g3f0d502094-goog
-Message-ID: <20260801041255.752039-1-wfelipe@google.com>
-Subject: [PATCH] selftests/cgroup: test_zswap: skip test_no_kmem_bypass if
- debugfs is unavailable
-From: Wilson Felipe Pereira <wfelipe@google.com>
-To: Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Shuah Khan <shuah@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, "=?UTF-8?q?Michal=20Koutn=C3=BD?=" <mkoutny@suse.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, Wilson Felipe Pereira <wfelipe@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-test_no_kmem_bypass() needs to read
-/sys/kernel/debug/zswap/stored_pages via get_zswap_stored_pages() to
-verify that compressed pages are charged to the memcg.
+When a function-like macro expands to an expression, that expression
+doesn't need a semicolon after it.  All uses have been verified to
+have their own semicolons.
 
-When running in an environment where debugfs is not mounted or
-CONFIG_DEBUG_FS is disabled, get_zswap_stored_pages() fails, causing the
-loop to terminate early and report a false negative (KSFT_FAIL).
+This was found using the following Coccinelle semantic patch:
 
-Selftests should not fail when if debugfs is unavailable, and it
-should print a message when it is skipped.
+@r@
+identifier i : script:ocaml() { String.lowercase_ascii i = i };
+expression e;
+@@
 
-Signed-off-by: Wilson Felipe Pereira <wfelipe@google.com>
+*#define i(...) e;
+
+Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
+
 ---
- tools/testing/selftests/cgroup/test_zswap.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ kernel/cgroup/cgroup.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
-index 49b36ee791606..c4f7b66f1b206 100644
---- a/tools/testing/selftests/cgroup/test_zswap.c
-+++ b/tools/testing/selftests/cgroup/test_zswap.c
-@@ -566,12 +566,19 @@ static int test_no_kmem_bypass(const char *root)
- 	int child_status;
- 	char *test_group = NULL;
- 	pid_t child_pid;
-+	size_t stored_pages;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 38f8d9df8..f87fc4550 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -104,7 +104,7 @@ DEFINE_PERCPU_RWSEM(cgroup_threadgroup_rwsem);
+ #define cgroup_assert_mutex_or_rcu_locked()				\
+ 	RCU_LOCKDEP_WARN(!rcu_read_lock_held() &&			\
+ 			   !lockdep_is_held(&cgroup_mutex),		\
+-			   "cgroup_mutex or RCU read lock required");
++			   "cgroup_mutex or RCU read lock required")
  
- 	/* Read sys info and compute test values accordingly */
- 	if (sysinfo(&sys_info) != 0)
- 		return KSFT_FAIL;
--	if (sys_info.totalram > 5000000000)
-+	if (sys_info.totalram > 5000000000) {
-+		ksft_print_msg("requires less than 5000000000 total ram\n");
- 		return KSFT_SKIP;
-+	}
-+	if (get_zswap_stored_pages(&stored_pages)) {
-+		ksft_print_msg("debugfs at /sys/kernel/debug is required\n");
-+		return KSFT_SKIP;
-+	}
- 	values = mmap(0, sizeof(struct no_kmem_bypass_child_args), PROT_READ |
- 			PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
- 	if (values == MAP_FAILED)
-@@ -604,7 +611,6 @@ static int test_no_kmem_bypass(const char *root)
- 	/* Try to wakeup kswapd and let it push child memory to zswap */
- 	set_min_free_kb(min_free_kb_high);
- 	for (int i = 0; i < 20; i++) {
--		size_t stored_pages;
- 		char *trigger_allocation = malloc(trigger_allocation_size);
- 
- 		if (!trigger_allocation)
--- 
-2.55.0.508.g3f0d502094-goog
+ /*
+  * cgroup destruction makes heavy use of work items and there can be a lot
 
