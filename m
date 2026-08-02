@@ -1,96 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0377B3ACA61;
-	Sun,  2 Aug 2026 11:26:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA6963947B8;
+	Sun,  2 Aug 2026 11:45:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785669962; cv=none; b=H+JD+aBWJhesVXV3Nh4wkjJiBp8qim+lX4SLolVHMAuBM/yROQwo+mPBMUTB2Owy/B48U3rhq9A8F/gmY4UieU+JqEzpMDQr82G5nnH8TewcG2Mh5WsUIFU1mgDJRGwoRn4E2Z801TbWiMP1B5lrbI8SU3kYEnUFAxohSbX0nJ4=
+	t=1785671126; cv=none; b=ESZ6iNLjACMsFeDuFA8y0Qt7xXD0IbJqzC1GzE5OEJpnD28gAT3PU1SZT27lXnPIF+dn21gL+9VvuluKlFdcmTx60q2TutUqBVxqlvFgvTjOXmAGuIUhIfdHdOAQlO9XJX4/SbS/OmriHAj4T20o6ivi9vZUK9mEmy5eVOeuihg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785669962; c=relaxed/simple;
-	bh=dBrl1Pp9HQ4n78J1Ir0K119S/z+p2hrZdQg7yU7uW/k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=l7awa/w9T05X3jddVQrhaPRaFDQU1A0cLQ3khTkMNrklCCApoJ1cPpSx5bblXJKbX1l/5rP0bRkb0EV7KrrKDikpqhvywPUYj/8ETrtZKfDixM9tEsQSMm+SJmBbCivMuEWXZodUM5KMfWyNkDQiIq0hyPTL2qzu4vsuIV5zn7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MJdQENa3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785671126; c=relaxed/simple;
+	bh=39A3E7wJo16khZLOY2hMQifeGyc+3LA8sx4hDyNyyrg=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=Q+58dT8A+Tu+10UEIP/OSw8Pvx2PmDDUPnF1ZT/cVFTXSJHbl9LdcTvOIgL0jPhwcn0NWEW77Ygp+Ng11r5GZxMgKSCA1Udz7EfP1hbZpvyBLTCQdgNDBKjku/fDmW9jHx5w+LHU/lK1so8OWx/+3MPwNDxXEAxDkaVtHvFQ19E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lFNPmjkM; arc=none smtp.client-ip=91.218.175.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MJdQENa3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9157D1F000E9;
-	Sun,  2 Aug 2026 11:25:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785669960;
-	bh=mfWYTY/Qd1tUhLyp54yJEpcWt0Lp1lIRHIVNWZlerm4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=MJdQENa3gvXxFzb1ifGAgZFWH1Fs4NkjvxzI06IEm3p3yi//ZaALKOdXeNgKPenjZ
-	 hBPyQlsdyS58oFquIzbTiGufWyzgIeuUpe1CZqLrccryYZZ8rj9RKL0OY3NV8v5/iU
-	 Z2fStEmCMi+OEipXIJP855oZ3AQZYh4gUXHsQXTgIgwKtBtTBTNEEsNbcpyMQJzOQ6
-	 aDykoS0aRTCC8+AZfO4nWPE7T7pHefIxLi1swTAO0VOE3Kk4Q+WkFdJd7K1z8a97AG
-	 uEwwl1MSZr2cvmbSSsJx5stgJ7Ttc3vaYTeB2LnlZCf/B8TKDHrxgJ2/U/DFYne5da
-	 S95j6tGStPVtQ==
-From: Yu Kuai <yukuai@kernel.org>
-To: tj@kernel.org,
-	axboe@kernel.dk
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	zhengqixing@huawei.com,
-	hch@lst.de,
-	yizhou.tang@shopee.com,
-	yukuai@fygo.io,
-	nilay@linux.ibm.com
-Subject: [PATCH v4 0/4] blk-cgroup: fix blkg list and policy data races
-Date: Sun,  2 Aug 2026 19:25:21 +0800
-Message-ID: <20260802112525.3933753-6-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260802112525.3933753-1-yukuai@kernel.org>
-References: <20260802112525.3933753-1-yukuai@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lFNPmjkM"
+Date: Sun, 02 Aug 2026 19:45:10 +0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785671119;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+mDW7WpHG3ulNmaHGNLiaJxDMfEUyA2HyZwUhZmNgAs=;
+	b=lFNPmjkM8RufZnPTS9BrXnGW612+kF/ugKUnbVDMKxfcSFHIxgDtwBZom4T6OrtQGF81Z9
+	gAz7RNM8zTGJInVpKRIrnPHymB0jLqUaSdmJiaUxyuKA/chB5g0TEwZGNc450mGCyV5Xo7
+	kOQBibp/6mneUiQY+s4E5cHzvfFrcSk=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+To: Yu Kuai <yukuai@kernel.org>, tj@kernel.org, axboe@kernel.dk
+CC: cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, zhengqixing@huawei.com, hch@lst.de,
+ yizhou.tang@shopee.com, yukuai@fygo.io, nilay@linux.ibm.com
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4_1/4=5D_blk-cg?=
+ =?US-ASCII?Q?roup=3A_protect_q-=3Eblkg=5Flis?=
+ =?US-ASCII?Q?t_iteration_in_blkg=5Fdestroy=5Fall=28=29_with_blkcg=5Fmutex?=
+In-Reply-To: <20260802112525.3933753-2-yukuai@kernel.org>
+References: <20260802112525.3933753-1-yukuai@kernel.org> <20260802112525.3933753-2-yukuai@kernel.org>
+Message-ID: <CAE3254D-EDFA-4465-B215-34C4B61D427C@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Migadu-Flow: FLOW_OUT
 
-From: Yu Kuai <yukuai@fygo.io>
 
-This set fix some problems that are reported long time ago with minimal changes,
-the blkcg_mutex refactor I'm working on can fix these problems as well, but it's
-complicated and may not land in this merge window. So I think this set should land
-in this merge window first.
 
-Patch 1 protects blkg_destroy_all()'s q->blkg_list walk with
-blkcg_mutex.
-
-Patches 2-3 fix races between blkcg_activate_policy() and concurrent
-blkg destruction.
-
-Patch 4 factors the policy data teardown loop into a helper after the
-race fixes.
-
-Changes since v3:
-- Rebase on the latest for-7.3/block branch.
-
-Changes since v2:
-- Rebase on the latest block-7.2 branch.
-
-Changes since v1:
-- Drop the BFQ q->blkg_list patch because the current block tree already
-  has a stronger fix in commit 17b2d950a3c0 ("block, bfq: protect async
-  queue reset with blkcg locks").
-- Add Reviewed-by tags from Tang Yizhou.
-
-Yu Kuai (1):
-  blk-cgroup: protect q->blkg_list iteration in blkg_destroy_all() with
-    blkcg_mutex
-
-Zheng Qixing (3):
-  blk-cgroup: fix race between policy activation and blkg destruction
-  blk-cgroup: skip dying blkg in blkcg_activate_policy()
-  blk-cgroup: factor policy pd teardown loop into helper
-
- block/blk-cgroup.c | 65 +++++++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 30 deletions(-)
-
--- 
-2.51.0
-
+=E4=BA=8E 2026=E5=B9=B48=E6=9C=882=E6=97=A5 GMT+08:00 19:25:17=EF=BC=8CYu =
+Kuai <yukuai@kernel=2Eorg> =E5=86=99=E9=81=93=EF=BC=9A
+>From: Yu Kuai <yukuai@fygo=2Eio>
+>
+>blkg_destroy_all() iterates q->blkg_list without holding blkcg_mutex,
+>which can race with blkg_free_workfn() that removes blkgs from the list
+>while holding blkcg_mutex=2E
+>
+>Add blkcg_mutex protection around the q->blkg_list iteration to prevent
+>potential list corruption or use-after-free issues=2E
+>
+>Reviewed-by: Tang Yizhou <yizhou=2Etang@shopee=2Ecom>
+>Signed-off-by: Yu Kuai <yukuai@fygo=2Eio>
+>---
+> block/blk-cgroup=2Ec | 3 +++
+> 1 file changed, 3 insertions(+)
+>
+>diff --git a/block/blk-cgroup=2Ec b/block/blk-cgroup=2Ec
+>index d9676126c5b5=2E=2Eeb0cfb10b859 100644
+>--- a/block/blk-cgroup=2Ec
+>+++ b/block/blk-cgroup=2Ec
+>@@ -569,6 +569,7 @@ static void blkg_destroy_all(struct gendisk *disk)
+> 	int i;
+>=20
+> restart:
+>+	mutex_lock(&q->blkcg_mutex);
+> 	spin_lock_irq(&q->queue_lock);
+> 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+> 		struct blkcg *blkcg =3D blkg->blkcg;
+>@@ -587,6 +588,7 @@ static void blkg_destroy_all(struct gendisk *disk)
+> 		if (!(--count)) {
+> 			count =3D BLKG_DESTROY_BATCH_SIZE;
+> 			spin_unlock_irq(&q->queue_lock);
+>+			mutex_unlock(&q->blkcg_mutex);
+> 			cond_resched();
+> 			goto restart;
+> 		}
+>@@ -606,6 +608,7 @@ static void blkg_destroy_all(struct gendisk *disk)
+>=20
+> 	q->root_blkg =3D NULL;
+> 	spin_unlock_irq(&q->queue_lock);
+>+	mutex_unlock(&q->blkcg_mutex);
+>=20
+> 	wake_up_var(&q->root_blkg);
+> }
+Reviewed-by: Tao Cui <cuitao@kylinos=2Ecn>
