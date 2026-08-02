@@ -1,112 +1,313 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f80.google.com (mail-oa1-f80.google.com [209.85.160.80])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2913CFF72
-	for <cgroups@vger.kernel.org>; Sat,  1 Aug 2026 23:37:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D621184
+	for <cgroups@vger.kernel.org>; Sun,  2 Aug 2026 00:06:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785627444; cv=none; b=YsAZpXBkOxBKr32vmu6gD38wD/6prTdh4EChxoIQSXGF7fASNr3l2hYwTiJF1jGxa17PavKVBTzBK05UuQ7x3IY1NA/Pc2oya6U2b4qgr3O7pXzB0AehQ3dpg9thMwWY5fBT9h+sY84plrrhSep17APtzY/hHtauJ8sLSasIoGw=
+	t=1785629193; cv=none; b=bNGSQf6jcGdmJSDwN9/kaPAYQZumaT0uuVPNs9FMDTnisj+OiErKzCLE9MZVNSB2wPq1GQP6aonnOXoOiD50kxLltUA+au+hp5A+XXnsgwYauu784EA4XYxct1BMNYINKtrWqFR9VuEFE5AONM+gqj1kUpy0ZDfiDkiVCXbsiZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785627444; c=relaxed/simple;
-	bh=d9xH5lAA4l9r3jUGCP7Funb112YY5QCYc/j4qc4xJcQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gn2XtCyc7ZgiRDRRUjSK1BUuj2Km1Fkd6tHoT+9TdE8Zv1nBNlxG4zjlBZFQGyF88z4D+Mgvcf1db4oNcdZB5X/TgMnVOKLEI0g7ZKg4KYFr5wNIsjmb8ivyZRMEBW7J74MvlS7ycdWjQPDTAwUYM/Bru3Vvc7u1pDPjt0TtY8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F/0htqbZ; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F/0htqbZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1785627442;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=JuytdfVV/Gs8HgjVlOB35d5JRq5wHR5+r0iMGF1DKq4=;
-	b=F/0htqbZXCf1xFTHEUgt5nL5eTXZASNRNekgTaafK/+EFiDn7XbLiG0LDTpmUY3Lx4z6n/
-	PEgrOVqFDHl3i2OFsybIByaEa7whOXhtsuRODn38IPEGgNwRN3Gvn5gdfSPyFiQVHph2cs
-	0Toi1+D9niX0o5/N9d104kWfs6n/xVA=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-372-2faUNrUKOC60w-L5ghLw2A-1; Sat,
- 01 Aug 2026 19:37:17 -0400
-X-MC-Unique: 2faUNrUKOC60w-L5ghLw2A-1
-X-Mimecast-MFC-AGG-ID: 2faUNrUKOC60w-L5ghLw2A_1785627436
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0A4EE195608A;
-	Sat,  1 Aug 2026 23:37:16 +0000 (UTC)
-Received: from [10.22.64.35] (unknown [10.22.64.35])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CCC131800480;
-	Sat,  1 Aug 2026 23:37:14 +0000 (UTC)
-Message-ID: <8797e8b8-59ce-4934-ac0c-7f9731de454b@redhat.com>
-Date: Sat, 1 Aug 2026 19:37:13 -0400
+	s=arc-20240116; t=1785629193; c=relaxed/simple;
+	bh=MF3qNT5JzshShpOon7g/o1a6DDefgrhAn7k+5nhdDJQ=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=czvmqSnJ0n8SYq0uXrrlSA7YdudKWPAkaeNVaLVL0QRLhp8IgtGA6rzFeWOHa1i/rYq3vHI5Z6BK5fe8bWP31HvCKGcs950GZnrYa04GrC5LjaWMwmC8JjA2TOIBV51lU5oX8GqLN4/jYxuzCeaneKVBM5VSJTR3nb0FAAwoKFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oa1-f80.google.com with SMTP id 586e51a60fabf-451fd211101so1101544fac.1
+        for <cgroups@vger.kernel.org>; Sat, 01 Aug 2026 17:06:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785629190; x=1786233990;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=50u/CnI98VFK97GPV5K7XtkLtAPhB1tnW1eSYuEqTLg=;
+        b=GM6Ctkcqi5/8a1PhlaNZMYgj/xasorP5iUs3Vpt2Cr4gWnEXUNVPoK5XR7VBzI8ace
+         nVSaqqRAwBx4AA/g1bBZdxlya8RKOyB7TsVtQNB/uoehAfD29jHT0P+Ch5FEPuy8SX2g
+         g0LC2amJzojb98qB32W9HMjE0j8Wwyi4Ig2lOFBGwVMML7mu8Q9BKif4SWC4xdjMofG6
+         svvfFmOk4R5WjcpO3BB+CLHz22ygsMhzr++YaF62efKW7dHWt4dXF5k3jgrK6Pbj247O
+         LDIaZj4w8TKu15RxXwrm6SID6GN4MmDp/bXueYzhi6kvHyusan238jVKg8IlSwHwrSlO
+         uHGQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoikHi14SpXlrF+ZxwyEplKa9MbwgceVBoalKDJW1veJ0yHrRXm556rSvy78pMWg8XidPwUYR2w@vger.kernel.org
+X-Gm-Message-State: AOJu0YxsjGiIGoBBTzY0gDLDNeIpnG4/u2Arjzru19ERFkRkYrc8Prl5
+	vYNSeQQyVWiIEzxwCRtQnac0XgM6ObF0q8Q/XWNrliUqI98vckIjb3GDpHYpR1RJ9IgcGCUFPZM
+	rSPajzCQzASoTbOgjB1JkygbvPL9GQDBfq5xQAs3I3f0G8iOTd2Nibs68kIk=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] cgroup: drop unneeded semicolon
-To: Julia Lawall <Julia.Lawall@inria.fr>, Tejun Heo <tj@kernel.org>
-Cc: kernel-janitors@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260801191002.1383835-9-Julia.Lawall@inria.fr>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260801191002.1383835-9-Julia.Lawall@inria.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+X-Received: by 2002:a05:6808:1a21:b0:496:fd2:94e8 with SMTP id
+ 5614622812f47-4af5e1b5af2mr8007488b6e.12.1785629190418; Sat, 01 Aug 2026
+ 17:06:30 -0700 (PDT)
+Date: Sat, 01 Aug 2026 17:06:30 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a6e8a06.6ce73036.24301b.0015.GAE@google.com>
+Subject: [syzbot] [block?] [cgroups?] possible deadlock in blkcg_deactivate_policy
+ (2)
+From: syzbot <syzbot+14254d81dd19ba7d7e41@syzkaller.appspotmail.com>
+To: axboe@kernel.dk, cgroups@vger.kernel.org, josef@toxicpanda.com, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com, tj@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 8/1/26 3:09 PM, Julia Lawall wrote:
-> When a function-like macro expands to an expression, that expression
-> doesn't need a semicolon after it.  All uses have been verified to
-> have their own semicolons.
->
-> This was found using the following Coccinelle semantic patch:
->
-> @r@
-> identifier i : script:ocaml() { String.lowercase_ascii i = i };
-> expression e;
-> @@
->
-> *#define i(...) e;
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
->
-> ---
->   kernel/cgroup/cgroup.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 38f8d9df8..f87fc4550 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -104,7 +104,7 @@ DEFINE_PERCPU_RWSEM(cgroup_threadgroup_rwsem);
->   #define cgroup_assert_mutex_or_rcu_locked()				\
->   	RCU_LOCKDEP_WARN(!rcu_read_lock_held() &&			\
->   			   !lockdep_is_held(&cgroup_mutex),		\
-> -			   "cgroup_mutex or RCU read lock required");
-> +			   "cgroup_mutex or RCU read lock required")
->   
->   /*
->    * cgroup destruction makes heavy use of work items and there can be a lot
->
-The RCU_LOCKDEP_WARN() macro is basically a "do { ...} while (0...)" 
-statement. It doesn't have a ';' at the end.  So your commit log isn't 
-right.
+Hello,
 
-An additional semicolon at the end doesn't harm. By removing the 
-semicolon, even if not needed, may make people wonder if it is right 
-when reading the code wasting their time to figure out if it is all 
-right. So I don't see any advantage in removing it.
+syzbot found the following issue on:
 
-Cheers,
-Longman
+HEAD commit:    3708dd948844 Merge tag 'pm-7.2-rc6' of git://git.kernel.or..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11fa7a49580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=145fa60d73086782
+dashboard link: https://syzkaller.appspot.com/bug?extid=14254d81dd19ba7d7e41
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
 
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/aa997b3eeef4/disk-3708dd94.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/1ab7e579d11e/vmlinux-3708dd94.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/7038f45d2e15/bzImage-3708dd94.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+14254d81dd19ba7d7e41@syzkaller.appspotmail.com
+
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Tainted: G             L     
+------------------------------------------------------
+syz.9.12466/9015 is trying to acquire lock:
+ffff8880283a3bc0 (&q->blkcg_mutex){+.+.}-{4:4}, at: blkcg_deactivate_policy+0x167/0x600 block/blk-cgroup.c:1681
+
+but task is already holding lock:
+ffff8880553aa8b8 (&eq->sysfs_lock){+.+.}-{4:4}, at: elevator_exit+0x88/0xf0 block/elevator.c:160
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #5 (&eq->sysfs_lock){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5868 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5825
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       elevator_exit+0x88/0xf0 block/elevator.c:160
+       elevator_switch+0x3a7/0x7e0 block/elevator.c:580
+       elevator_change+0x352/0x530 block/elevator.c:681
+       elevator_set_none+0x92/0xf0 block/elevator.c:769
+       blk_unregister_queue+0x178/0x310 block/blk-sysfs.c:1073
+       __del_gendisk+0x2e3/0xb20 block/genhd.c:739
+       del_gendisk+0x10e/0x1b0 block/genhd.c:819
+       loop_remove drivers/block/loop.c:2112 [inline]
+       loop_control_remove drivers/block/loop.c:2171 [inline]
+       loop_control_ioctl+0x4f8/0x620 drivers/block/loop.c:2213
+       vfs_ioctl fs/ioctl.c:51 [inline]
+       __do_sys_ioctl fs/ioctl.c:597 [inline]
+       __se_sys_ioctl fs/ioctl.c:583 [inline]
+       __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+       do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+       do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #4 (&q->elevator_lock){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5868 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5825
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       elevator_change+0x1bc/0x530 block/elevator.c:679
+       elv_iosched_store+0x3be/0x460 block/elevator.c:826
+       queue_attr_store+0x25f/0x2f0 block/blk-sysfs.c:906
+       sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
+       kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+       new_sync_write fs/read_write.c:595 [inline]
+       vfs_write+0x6ac/0x1050 fs/read_write.c:687
+       ksys_write+0x12a/0x250 fs/read_write.c:739
+       do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+       do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #3 (&q->q_usage_counter(io)#17){++++}-{0:0}:
+       lock_acquire kernel/locking/lockdep.c:5868 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5825
+       blk_alloc_queue+0x610/0x790 block/blk-core.c:504
+       blk_mq_alloc_queue+0x174/0x290 block/blk-mq.c:4420
+       __blk_mq_alloc_disk+0x29/0x120 block/blk-mq.c:4467
+       loop_add+0x498/0xb60 drivers/block/loop.c:2041
+       loop_init+0x1d3/0x200 drivers/block/loop.c:2280
+       do_one_initcall+0x11d/0x700 init/main.c:1347
+       do_initcall_level init/main.c:1409 [inline]
+       do_initcalls init/main.c:1425 [inline]
+       do_basic_setup init/main.c:1445 [inline]
+       kernel_init_freeable+0x6ea/0x7b0 init/main.c:1658
+       kernel_init+0x1f/0x1e0 init/main.c:1548
+       ret_from_fork+0x72b/0xd50 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+-> #2 (fs_reclaim){+.+.}-{0:0}:
+       lock_acquire kernel/locking/lockdep.c:5868 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5825
+       __fs_reclaim_acquire mm/page_alloc.c:4329 [inline]
+       fs_reclaim_acquire+0xc4/0x100 mm/page_alloc.c:4343
+       might_alloc include/linux/sched/mm.h:317 [inline]
+       prepare_alloc_pages+0x166/0x5f0 mm/page_alloc.c:5048
+       __alloc_frozen_pages_noprof+0x1af/0x2dc0 mm/page_alloc.c:5293
+       __alloc_pages_noprof+0xb/0x110 mm/page_alloc.c:5338
+       __alloc_pages_node_noprof include/linux/gfp.h:291 [inline]
+       alloc_pages_node_noprof include/linux/gfp.h:318 [inline]
+       pcpu_alloc_pages mm/percpu-vm.c:95 [inline]
+       pcpu_populate_chunk+0x118/0x990 mm/percpu-vm.c:285
+       pcpu_alloc_noprof+0x881/0x1ca0 mm/percpu.c:1876
+       bpf_map_alloc_percpu+0x9a/0xf0 kernel/bpf/syscall.c:584
+       prealloc_init kernel/bpf/hashtab.c:339 [inline]
+       htab_map_alloc+0x1054/0x14e0 kernel/bpf/hashtab.c:639
+       map_create_alloc kernel/bpf/syscall.c:1523 [inline]
+       map_create+0x874/0x3120 kernel/bpf/syscall.c:1640
+       __sys_bpf+0x2a6e/0x4e80 kernel/bpf/syscall.c:6395
+       __do_sys_bpf kernel/bpf/syscall.c:6537 [inline]
+       __se_sys_bpf kernel/bpf/syscall.c:6534 [inline]
+       __x64_sys_bpf+0xce/0x140 kernel/bpf/syscall.c:6534
+       do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+       do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #1 (pcpu_alloc_mutex){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5868 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5825
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       pcpu_alloc_noprof+0xe87/0x1ca0 mm/percpu.c:1788
+       percpu_ref_init+0x37/0x3f0 lib/percpu-refcount.c:72
+       blkg_alloc+0xf0/0xf80 block/blk-cgroup.c:313
+       blkg_conf_prep+0x46e/0xf10 block/blk-cgroup.c:873
+       tg_set_conf.isra.0+0x1ed/0x500 block/blk-throttle.c:1373
+       cgroup_file_write+0x1e6/0x8a0 kernel/cgroup/cgroup.c:4316
+       kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+       new_sync_write fs/read_write.c:595 [inline]
+       vfs_write+0x6ac/0x1050 fs/read_write.c:687
+       ksys_write+0x12a/0x250 fs/read_write.c:739
+       do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+       do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #0 (&q->blkcg_mutex){+.+.}-{4:4}:
+       check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3165
+       check_prevs_add kernel/locking/lockdep.c:3284 [inline]
+       validate_chain kernel/locking/lockdep.c:3908 [inline]
+       __lock_acquire+0x136c/0x1a40 kernel/locking/lockdep.c:5237
+       lock_acquire kernel/locking/lockdep.c:5868 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5825
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       blkcg_deactivate_policy+0x167/0x600 block/blk-cgroup.c:1681
+       bfq_exit_queue+0x29d/0x430 block/bfq-iosched.c:7165
+       blk_mq_exit_sched+0x20e/0x4e0 block/blk-mq-sched.c:702
+       elevator_exit+0x93/0xf0 block/elevator.c:161
+       elevator_switch+0x3a7/0x7e0 block/elevator.c:580
+       elevator_change+0x352/0x530 block/elevator.c:681
+       elevator_set_none+0x92/0xf0 block/elevator.c:769
+       blk_unregister_queue+0x178/0x310 block/blk-sysfs.c:1073
+       __del_gendisk+0x2e3/0xb20 block/genhd.c:739
+       del_gendisk+0x10e/0x1b0 block/genhd.c:819
+       loop_remove drivers/block/loop.c:2112 [inline]
+       loop_control_remove drivers/block/loop.c:2171 [inline]
+       loop_control_ioctl+0x4f8/0x620 drivers/block/loop.c:2213
+       vfs_ioctl fs/ioctl.c:51 [inline]
+       __do_sys_ioctl fs/ioctl.c:597 [inline]
+       __se_sys_ioctl fs/ioctl.c:583 [inline]
+       __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+       do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+       do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+other info that might help us debug this:
+
+Chain exists of:
+  &q->blkcg_mutex --> &q->elevator_lock --> &eq->sysfs_lock
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&eq->sysfs_lock);
+                               lock(&q->elevator_lock);
+                               lock(&eq->sysfs_lock);
+  lock(&q->blkcg_mutex);
+
+ *** DEADLOCK ***
+
+3 locks held by syz.9.12466/9015:
+ #0: ffff8880283cc3a0 (&set->update_nr_hwq_lock){++++}-{4:4}, at: del_gendisk+0x106/0x1b0 block/genhd.c:818
+ #1: ffff8880283a3d68 (&q->elevator_lock){+.+.}-{4:4}, at: elevator_change+0x1bc/0x530 block/elevator.c:679
+ #2: ffff8880553aa8b8 (&eq->sysfs_lock){+.+.}-{4:4}, at: elevator_exit+0x88/0xf0 block/elevator.c:160
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 9015 Comm: syz.9.12466 Tainted: G             L      syzkaller #0 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/16/2026
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ print_circular_bug.cold+0x178/0x1c7 kernel/locking/lockdep.c:2043
+ check_noncircular+0x146/0x160 kernel/locking/lockdep.c:2175
+ check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3165
+ check_prevs_add kernel/locking/lockdep.c:3284 [inline]
+ validate_chain kernel/locking/lockdep.c:3908 [inline]
+ __lock_acquire+0x136c/0x1a40 kernel/locking/lockdep.c:5237
+ lock_acquire kernel/locking/lockdep.c:5868 [inline]
+ lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5825
+ __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+ __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+ blkcg_deactivate_policy+0x167/0x600 block/blk-cgroup.c:1681
+ bfq_exit_queue+0x29d/0x430 block/bfq-iosched.c:7165
+ blk_mq_exit_sched+0x20e/0x4e0 block/blk-mq-sched.c:702
+ elevator_exit+0x93/0xf0 block/elevator.c:161
+ elevator_switch+0x3a7/0x7e0 block/elevator.c:580
+ elevator_change+0x352/0x530 block/elevator.c:681
+ elevator_set_none+0x92/0xf0 block/elevator.c:769
+ blk_unregister_queue+0x178/0x310 block/blk-sysfs.c:1073
+ __del_gendisk+0x2e3/0xb20 block/genhd.c:739
+ del_gendisk+0x10e/0x1b0 block/genhd.c:819
+ loop_remove drivers/block/loop.c:2112 [inline]
+ loop_control_remove drivers/block/loop.c:2171 [inline]
+ loop_control_ioctl+0x4f8/0x620 drivers/block/loop.c:2213
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl fs/ioctl.c:583 [inline]
+ __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x115/0x870 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f266f39e019
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f2670208028 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f266f625fa0 RCX: 00007f266f39e019
+RDX: 0000000000000000 RSI: 0000000000004c81 RDI: 0000000000000003
+RBP: 00007f266f43500c R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f266f626038 R14: 00007f266f625fa0 R15: 00007ffd3333f748
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
