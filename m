@@ -1,52 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97E152D8DA8;
-	Sun,  2 Aug 2026 19:02:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C64703002B9;
+	Sun,  2 Aug 2026 19:52:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785697328; cv=none; b=siVoqC05whZKRlyASf4OW7Lfw3XZF+AlV+/sz3vm0yL7kymwhDa7sEWHLT+/bkuBkhhYr2k3GpN2JZAoYhFeXaI4Wup6+p1qk2EdvRs5vEBfilycNczUh4X4SUYdsaJ+KvQO0izRWFKBMLMerM5lbZdCSQbfeMBK7b0xXA1ra5M=
+	t=1785700376; cv=none; b=VvGp80Si36PPdA32xdYlgnjBNkHaNesU586MW7KMuosSstb6kGXtAANZaMUheYyKLDGoqPwkIXwvNBzExmnTFMnsLH7N8wOSqBuyUcOtfTcEi3ogIZrImVEDoi8YmIMZ3O9/uogzZIe75TZUv19uz54MsyFq9Q4ZW0/EkBFCsQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785697328; c=relaxed/simple;
-	bh=j81PfHVe3b9Xv/5l4yjSOJWV/a6C8p+zEU1hbw7X7hU=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=GVeUtpTd7VvYBZo1JLOQlC460eBzf+2nE6tvGCo73b018g726TMBpqI8Rkz36yuJKQgJDbTIFoUkc9AWj7Sc0A3Oly1w/jh1QXoTxZqH7UKjm309MuWBsVOKxq23yd2ze5VhaWxC7LjAVpEJw1x0wEgdo6Z1PoRhx5GW8sbT3hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RCPbWJl9; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785700376; c=relaxed/simple;
+	bh=80f55MEymxJ97xahmuJNfm39fzyieNdHdP5Dzw2Po3E=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=ewWZ8KDZs5C3CHXMAMQvolI8+tzCDC/FZYH6/vviO8DdeQn/SsSKC0GVvmSiOPaEla95OUbuwnKW/Fn9HYCRa+7oxSir9gFNVXm7dM0E35xLCbru3kk6yMCc88vWGh6dkqXTh4xSDdH9rNyB+a3tT4Zq7HZ6hfWMvwRF+0SlB5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HrLw+Dhc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RCPbWJl9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00A891F000E9;
-	Sun,  2 Aug 2026 19:02:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HrLw+Dhc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 227AB1F000E9;
+	Sun,  2 Aug 2026 19:52:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785697327;
-	bh=9LjIL49lJ8GTcSWX4hsT0es2Kgu8LgkuvjJCEEcVoDc=;
+	s=k20260515; t=1785700374;
+	bh=80f55MEymxJ97xahmuJNfm39fzyieNdHdP5Dzw2Po3E=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=RCPbWJl92C/UZ6jd5hlgRofS4KjdP6PawjPlJ2FkMzUqoMcnEJW2DefUrZ11X82bb
-	 ifw7LM8rOs+YB8Gz/0Thg4OQfT/UPNxnxP8ZSF7GTsJ9+1GgQRmDGj9bk7QdVAFbjM
-	 nxZov1dBSdnMtWvyfLFqSUU95qpW781d/Htm2nXbsDXb+2R4wKCUGHo9BmFaikroGx
-	 e9EtY+Hsi3OlxN+AXQZE5d0C+Em/FoO8SrI1Bk90eCTjbMH+I/h49xKKpxh8jmtuLl
-	 2Z/t0neqQ+syoycfn8q+ElgQDzbrcsd2U2HGugOARqT7aVHPQd4hmj7lIHH7muwIs1
-	 UnOChRCvoe7gg==
-Date: Sun, 02 Aug 2026 09:02:06 -1000
-Message-ID: <0b2b6806a23aa30ddec65253764bb014@kernel.org>
+	b=HrLw+DhcLDZqpKcSVtt0YzF/3MKEvRCxlmxZxO9x3X9goVJLj1jT5bV99ebwS7IFE
+	 +bksg0TR3JdbGhm2Nu3wdiJ+KXSojbdp08nSnAecr5Yu3JHDrfLkTMrlqkYADU/VJu
+	 kZmrHfot/hNnpxjvYup3wT4KFE3t/NMLwl7nFdXgZwfZw/TfDrNQeAuNcYlsx0O9vx
+	 +rP65cQsEQu3ZnH51SrMjouaJhIsFOwMLNC/ZCxa7EMfvitPVt7mSCW3XsHMnD5eEA
+	 URz1w5stMckDsolMhQDb8xrTiDKNj7v4HcRLxjurq4to+fVVJDly2HmD0ticBmJwDR
+	 SrLLC0hX4BdLw==
+Date: Sun, 02 Aug 2026 09:52:53 -1000
+Message-ID: <67759a7fcfb75858ffa0aeef43977f59@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Julia Lawall <Julia.Lawall@inria.fr>
-Cc: Waiman Long <longman@redhat.com>, kernel-janitors@vger.kernel.org,
- Johannes Weiner <hannes@cmpxchg.org>,
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cgroup: drop unneeded semicolon
-In-Reply-To: <20260801191002.1383835-9-Julia.Lawall@inria.fr>
-References: <20260801191002.1383835-9-Julia.Lawall@inria.fr>
+To: Shaojie Sun <sunshaojie@kylinos.cn>
+Cc: mkoutny@suse.com, hannes@cmpxchg.org, shuah@kernel.org,
+	cuitao@kylinos.cn, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] selftests/cgroup: add user_usec sanity check in
+ test_cpucg_nice
+In-Reply-To: <20260730130717.1236233-1-sunshaojie@kylinos.cn>
+References: <20260730130717.1236233-1-sunshaojie@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-Applied to cgroup/for-7.3 with the first paragraph of the description
-updated to:
+On Thu, Jul 30, 2026 at 09:07:17PM +0800, Shaojie Sun wrote:
+> In test_cpucg_nice, after the child process exits, user_usec is
+> read from cpu.stat but the value is not checked. Add a sanity check
+> to ensure user_usec > 0, analogous to test_cpucg_stats(), so that
+> the test fails early if CPU usage wasn't properly accounted.
 
-    The trailing semicolon belongs at the point of use, not in the macro
-    definition. All uses have been verified to have their own semicolons.
+Applied to cgroup/for-7.3.
 
 Thanks.
 
