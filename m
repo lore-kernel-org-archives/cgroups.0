@@ -1,108 +1,80 @@
-Received: from out-186.mta0.migadu.com (out-186.mta0.migadu.com [91.218.175.186])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D6B43644DE
-	for <cgroups@vger.kernel.org>; Sun,  2 Aug 2026 11:47:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.186
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCAF7397352
+	for <cgroups@vger.kernel.org>; Sun,  2 Aug 2026 12:49:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785671285; cv=none; b=eWHj+Dd9DEgnt5ZK+z5/2UKgh5Vx9dMNlexMPDGVGqzje7+KC8ML93Bnp3jPVio3oLeniKoAP8wnr4/hpS6qT87IeJcLGAZf0hr6xmR01zOHlkuuzmPzo4+rKUlH4lfWh7O055PPomwg2P0sO05VK7NTI8QmuwoxJFECpf9hwyY=
+	t=1785674974; cv=none; b=RDd/l13eluBqbLqYFS8sEbty0v+XwfE0Y1/PEFyfTeOcD/TeKjIKn0YCUDjlMZ3r5owrueMHsC91BNQ3D2Jrv1rJCcRxdjXOr+xACoRTdQFpPHV18mO84a1Km+z6pZUBI23biFeBD8DObMoDCDq7S7aYPPYhRe+v9K/Cu9ertV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785671285; c=relaxed/simple;
-	bh=lamWeViFHayGgbBOmssKq3rBTxlc1L0NT0QtTQpQ8E4=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=IzzHVYL4PhBsmcl9DEtH5ZecZFbBIuVjqdMQtn8pgqVOuZL7XcejECvEiN/XDLoMbcILG1rGy+gJmnOZqeVmHgTkXtShR/1l2v+YrlexqEbw3AUdWwgmU0iMcqlccWkhJmfM4qofj1IDzCiinoyM3UcRKb/YA9v74PPpqwIS51o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YlW/qsZR; arc=none smtp.client-ip=91.218.175.186
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785674974; c=relaxed/simple;
+	bh=GhyU+I4AObATmube0HVJJl5NTQHluwYkJadT+SOSx2g=;
+	h=Subject:Mime-Version:Cc:Content-Type:From:Message-Id:References:
+	 To:Date:In-Reply-To; b=nzJN8w6XVcjiQkoc7RqCYO/lEDXdb8xOuNUR8Sfnd8FLRPWH4CRDuk1NSy490XsSYfTeQbYSMU8C1UIHkQ4u4pRtEYYHWdh9qaEUwU5htjl5Ij4aYUxVeU5GfkqyUWdslULqjUwwnKfh1/RQgLu7l3DSvLkBKKMeGk7tTRsPyxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=HpzolgWz; arc=none smtp.client-ip=209.127.231.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YlW/qsZR"
-Date: Sun, 02 Aug 2026 19:47:45 +0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785671273;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h6AVqGf5a94spcOyJ9dEXCY0YzvZOaYH5szAroQdsLw=;
-	b=YlW/qsZRyrWSofJqrHb0nvADieHdIcpyfE3xGdDGj1ArEHM5DQkqvzb1ThvC21sLthlf75
-	Lefe1AIYnSa4XGC8pAGNh/0+Aqsn88etbZUw/MHBxkOmxyBV4OYf66gkHvEgfbrBztlpux
-	KlDjTAKf9fViIZ04eIpI2b0Hji0Omdo=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Tao Cui <cui.tao@linux.dev>
-To: Yu Kuai <yukuai@kernel.org>, tj@kernel.org, axboe@kernel.dk
-CC: cgroups@vger.kernel.org, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, zhengqixing@huawei.com, hch@lst.de,
- yizhou.tang@shopee.com, yukuai@fygo.io, nilay@linux.ibm.com
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4_3/4=5D_blk-cgroup=3A_skip_?=
- =?US-ASCII?Q?dying_blkg_in_blkcg=5Factivate=5Fpolicy=28=29?=
-In-Reply-To: <20260802112525.3933753-4-yukuai@kernel.org>
-References: <20260802112525.3933753-1-yukuai@kernel.org> <20260802112525.3933753-4-yukuai@kernel.org>
-Message-ID: <BC1AFBE0-B768-4D54-B6F0-94D4263878B8@linux.dev>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="HpzolgWz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785674960;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=n9lZR9qf3kptXY4+jbcwUniPvs3a4Q+wtE0w9TCgWJI=;
+ b=HpzolgWzd5pGnT2/ThxJoHKxhY8c7Z0myyXH35sZDkhMEO90bC3M8nyN/rirM9A6AVvfmP
+ Q+cXNt5nOFDinypumHjapeowlBJuPsncNbxvRGDVpSN4NpcOVTSSkKP0J7m5Ynt1XNBIhj
+ GmEoU36ca0EjEsjmO5qoExj4FNGfPLpKH5KpTVj8aaRKFW+cwvbSlx2lgVTZi/u97TvNoA
+ LZd+Ri4yN5WO66j32PoizbmTiEkD0Gm+Lt6ok9tQeni6D0qSskEjdU4idiLqyp8IrWgK2G
+ JHPnTxdXJwaeyJhfM/uNxpLyE21T7y8lDNzVckBesi3g0WDv14nwd5OByekXgA==
+X-Original-From: yu kuai <yukuai@fygo.io>
+Reply-To: yukuai@fygo.io
+Subject: Re: [PATCH] blk-throttle: remove dead field last_check_time from throtl_grp
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Mime-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: <tj@kernel.org>, <josef@toxicpanda.com>, <yukuai3@huawei.com>, 
+	<cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Tao Cui" <cuitao@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Sun, 02 Aug 2026 12:49:19 +0000
 Content-Transfer-Encoding: quoted-printable
-X-Migadu-Flow: FLOW_OUT
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <da74ba48-334f-4637-bebf-d394b72a13f7@fygo.io>
+X-Lms-Return-Path: <lba+26a6f3ccf+11c1d9+vger.kernel.org+yukuai@fygo.io>
+References: <20260717054855.2018578-1-cui.tao@linux.dev>
+To: "Tao Cui" <cui.tao@linux.dev>, <axboe@kernel.dk>, 
+	<linux-block@vger.kernel.org>
+Date: Sun, 2 Aug 2026 20:49:15 +0800
+In-Reply-To: <20260717054855.2018578-1-cui.tao@linux.dev>
 
-=E4=BA=8E 2026=E5=B9=B48=E6=9C=882=E6=97=A5 GMT+08:00 19:25:19=EF=BC=8CYu K=
-uai <yukuai@kernel=2Eorg> =E5=86=99=E9=81=93=EF=BC=9A
->From: Zheng Qixing <zhengqixing@huawei=2Ecom>
+=E5=9C=A8 2026/7/17 13:48, Tao Cui =E5=86=99=E9=81=93:
+
+> From: Tao Cui<cuitao@kylinos.cn>
 >
->When switching IO schedulers on a block device, blkcg_activate_policy()
->can race with concurrent blkcg deletion, leading to a use-after-free in
->rcu_accelerate_cbs=2E
+> The last_check_time field in throtl_grp was used by the
+> CONFIG_BLK_DEV_THROTTLING_LOW mechanism (in throtl_upgrade_check() and
+> the downgrade logic) to timestamp the last upgrade/downgrade check.
 >
->T1:                               T2:
->                                  blkg_destroy
->                                  kill(&blkg->refcnt) // blkg->refcnt=3D1=
-->0
->                                  blkg_release // call_rcu(__blkg_release=
+> Commit bf20ab538c81 ("blk-throttle: remove CONFIG_BLK_DEV_THROTTLING_LOW"=
 )
->                                  =2E=2E=2E
->                                  blkg_free_workfn
->                                  ->pd_free_fn(pd)
->elv_iosched_store
->elevator_switch
->=2E=2E=2E
->iterate blkg list
->blkg_get(blkg) // blkg->refcnt=3D0->1
->                                  list_del_init(&blkg->q_node)
->blkg_put(pinned_blkg) // blkg->refcnt=3D1->0
->blkg_release // call_rcu again
->rcu_accelerate_cbs // uaf
+> removed all five of its uses in blk-throttle.c and the surrounding LOW
+> fields (latency_target, last_finish_time, checked_last_finish_time,
+> avg_idletime, idletime_threshold, bio_cnt, bad_bio_cnt,
+> bio_cnt_reset_time), but missed the field definition itself.
 >
->Fix this by checking hlist_unhashed(&blkg->blkcg_node) before getting
->a reference to the blkg=2E This is the same check used in blkg_destroy()
->to detect if a blkg has already been destroyed=2E If the blkg is already
->unhashed, skip processing it since it's being destroyed=2E
+> It has been a dead field since then: zero references in blk-throttle.c
+> and the whole tree.  Remove it.
 >
->Fixes: f1c006f1c685 ("blk-cgroup: synchronize pd_free_fn() from blkg_free=
-_workfn() and blkcg_deactivate_policy()")
->Signed-off-by: Zheng Qixing <zhengqixing@huawei=2Ecom>
->Reviewed-by: Tang Yizhou <yizhou=2Etang@shopee=2Ecom>
->Signed-off-by: Yu Kuai <yukuai@fygo=2Eio>
->---
-> block/blk-cgroup=2Ec | 2 ++
-> 1 file changed, 2 insertions(+)
->
->diff --git a/block/blk-cgroup=2Ec b/block/blk-cgroup=2Ec
->index 047bb42c282b=2E=2Ed1895bc60fcf 100644
->--- a/block/blk-cgroup=2Ec
->+++ b/block/blk-cgroup=2Ec
->@@ -1577,6 +1577,8 @@ int blkcg_activate_policy(struct gendisk *disk, con=
-st struct blkcg_policy *pol)
->=20
-> 		if (blkg->pd[pol->plid])
-> 			continue;
->+		if (hlist_unhashed(&blkg->blkcg_node))
->+			continue;
->=20
-> 		/* If prealloc matches, use it; otherwise try GFP_NOWAIT */
-> 		if (blkg =3D=3D pinned_blkg) {
-Reviewed-by: Tao Cui <cuitao@kylinos=2Ecn>
+> Signed-off-by: Tao Cui<cuitao@kylinos.cn>
+> ---
+>   block/blk-throttle.h | 2 --
+>   1 file changed, 2 deletions(-)
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
+--=20
+Thanks,
+Kuai
