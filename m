@@ -1,80 +1,62 @@
-Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [217.70.183.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCAF7397352
-	for <cgroups@vger.kernel.org>; Sun,  2 Aug 2026 12:49:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A4A38F620
+	for <cgroups@vger.kernel.org>; Sun,  2 Aug 2026 13:40:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785674974; cv=none; b=RDd/l13eluBqbLqYFS8sEbty0v+XwfE0Y1/PEFyfTeOcD/TeKjIKn0YCUDjlMZ3r5owrueMHsC91BNQ3D2Jrv1rJCcRxdjXOr+xACoRTdQFpPHV18mO84a1Km+z6pZUBI23biFeBD8DObMoDCDq7S7aYPPYhRe+v9K/Cu9ertV0=
+	t=1785678032; cv=none; b=U3H4vzhGEZem0vpnAiju/lyUtNR8vYRl3bcjRVjBiFNC0kW6/yDkFdrV7UZGCCHaLTqIEWkhUGaqo2izDHbtKsK7Hx8rXUH9yw78waB2iT/1G1V5hZwEVJXez/1fRL5vuHgB70t3WplvfWIym9KRKhRt/WhLFTbkJE63I72Wi94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785674974; c=relaxed/simple;
-	bh=GhyU+I4AObATmube0HVJJl5NTQHluwYkJadT+SOSx2g=;
-	h=Subject:Mime-Version:Cc:Content-Type:From:Message-Id:References:
-	 To:Date:In-Reply-To; b=nzJN8w6XVcjiQkoc7RqCYO/lEDXdb8xOuNUR8Sfnd8FLRPWH4CRDuk1NSy490XsSYfTeQbYSMU8C1UIHkQ4u4pRtEYYHWdh9qaEUwU5htjl5Ij4aYUxVeU5GfkqyUWdslULqjUwwnKfh1/RQgLu7l3DSvLkBKKMeGk7tTRsPyxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=HpzolgWz; arc=none smtp.client-ip=209.127.231.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="HpzolgWz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785674960;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=n9lZR9qf3kptXY4+jbcwUniPvs3a4Q+wtE0w9TCgWJI=;
- b=HpzolgWzd5pGnT2/ThxJoHKxhY8c7Z0myyXH35sZDkhMEO90bC3M8nyN/rirM9A6AVvfmP
- Q+cXNt5nOFDinypumHjapeowlBJuPsncNbxvRGDVpSN4NpcOVTSSkKP0J7m5Ynt1XNBIhj
- GmEoU36ca0EjEsjmO5qoExj4FNGfPLpKH5KpTVj8aaRKFW+cwvbSlx2lgVTZi/u97TvNoA
- LZd+Ri4yN5WO66j32PoizbmTiEkD0Gm+Lt6ok9tQeni6D0qSskEjdU4idiLqyp8IrWgK2G
- JHPnTxdXJwaeyJhfM/uNxpLyE21T7y8lDNzVckBesi3g0WDv14nwd5OByekXgA==
-X-Original-From: yu kuai <yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Subject: Re: [PATCH] blk-throttle: remove dead field last_check_time from throtl_grp
+	s=arc-20240116; t=1785678032; c=relaxed/simple;
+	bh=pxv7uP1tEPccuwZjBPSg3jI9UmVBl3/FmdkcOZT12DM=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=CMdBMfxbv9FBUsVWOvUX10GiCIyNnJKM0esSPyRYjgennoN0I2jJLH1HcLkUM/bh3gJ8S3RT5X3bLmyaaLO3rNlQu/yJRZ019e6jld7m26KSZeUawmIKscdpO6ZE882qQIfbhkp6CFuEIaZEe1Iz1KgXRZsIOhTK1gV1vhC7lt4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=barrys-emacs.org; spf=pass smtp.mailfrom=barrys-emacs.org; arc=none smtp.client-ip=217.70.183.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=barrys-emacs.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=barrys-emacs.org
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 6ECBD3EC9C;
+	Sun,  2 Aug 2026 13:40:21 +0000 (UTC)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: <tj@kernel.org>, <josef@toxicpanda.com>, <yukuai3@huawei.com>, 
-	<cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Tao Cui" <cuitao@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Sun, 02 Aug 2026 12:49:19 +0000
-Content-Transfer-Encoding: quoted-printable
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <da74ba48-334f-4637-bebf-d394b72a13f7@fygo.io>
-X-Lms-Return-Path: <lba+26a6f3ccf+11c1d9+vger.kernel.org+yukuai@fygo.io>
-References: <20260717054855.2018578-1-cui.tao@linux.dev>
-To: "Tao Cui" <cui.tao@linux.dev>, <axboe@kernel.dk>, 
-	<linux-block@vger.kernel.org>
-Date: Sun, 2 Aug 2026 20:49:15 +0800
-In-Reply-To: <20260717054855.2018578-1-cui.tao@linux.dev>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
+Subject: Re: [systemd-devel] Purpose of init.scope
+From: Barry Scott <barry@barrys-emacs.org>
+In-Reply-To: <b6dd3b7a-18ba-4b0a-bc5f-9c92d8b2aa7f@gmail.com>
+Date: Sun, 2 Aug 2026 14:40:10 +0100
+Cc: systemd development <systemd-devel@lists.freedesktop.org>,
+ Linux cgroups development <cgroups@vger.kernel.org>,
+ Alyssa Ross <hi@alyssa.is>
+Content-Transfer-Encoding: 7bit
+Message-Id: <982063BA-EBF1-45FC-83BE-730C2569528B@barrys-emacs.org>
+References: <b6dd3b7a-18ba-4b0a-bc5f-9c92d8b2aa7f@gmail.com>
+To: Demi Marie Obenour <demiobenour@gmail.com>
+X-Mailer: Apple Mail (2.3864.600.51.1.1)
+X-GND-Sasl: barry@barrys-emacs.org
+X-GND-Score: -100
+X-GND-Cause: dmFkZTEkN6YVAMOSMQYkhr0PHqkZ9nb0SMdk1ZmnVFaSIQwg1Bp2ia5BCkC/98RgbWkOoz2BB9xYVz/Zg83+P9nybLIQiWsN6CqeYckAMS0bMiU03yWP+9uVU9XpwWsP5cq/CJIya5yecYAKbuy00Q409D5bJwOxLaYSp7SdIv545qHz8ckxsvLbosG4x9Lc9plgyp6ML8vhaJi5/k475kwAB1FSorH9kamWBgxwosHozB3XWPhdZYaYUsup1ZFKL/1gBhNFTxKOw+hQG28PNLb90uGq8xwTlQiVNFo+hze+pAZbSbyeSWpqpGJOwOn7WOyA1w8YCKFCG7ocPI0UcXsHrWwglQ8G5WwxjEWZyscwJcYmB+PlAlbRA0AfMbx+oA1vEkpgGbmWX4hrrARhaHg4cUxIr+DnppkmeJ3SxFdX4EEVkBjXg0AUJnfRa+OzQDoehMAU6Z2QkNeH+DkOxSSmCMd0Ltz5xiVrPO5YYh5ILd8+p+iy+GS5tLQaIDU6gusUvJhxnfVevwGmbqevhGYP0ZheqnFrjDiW22zZzewQv+kRgkmL0rV4ZUkEYTTKSrVgdF3ndx02HVCmA38OEXXm623MnMQM8zxSV6Oi9GAZ1+Zmk9poAVHEnmHhjdnA7WV+up/tdPUEJZawQ8D/m4IdAoxsT1A7bgZQ15yIqbKSvhjthw
+X-GND-State: clean
 
-=E5=9C=A8 2026/7/17 13:48, Tao Cui =E5=86=99=E9=81=93:
 
-> From: Tao Cui<cuitao@kylinos.cn>
->
-> The last_check_time field in throtl_grp was used by the
-> CONFIG_BLK_DEV_THROTTLING_LOW mechanism (in throtl_upgrade_check() and
-> the downgrade logic) to timestamp the last upgrade/downgrade check.
->
-> Commit bf20ab538c81 ("blk-throttle: remove CONFIG_BLK_DEV_THROTTLING_LOW"=
-)
-> removed all five of its uses in blk-throttle.c and the surrounding LOW
-> fields (latency_target, last_finish_time, checked_last_finish_time,
-> avg_idletime, idletime_threshold, bio_cnt, bad_bio_cnt,
-> bio_cnt_reset_time), but missed the field definition itself.
->
-> It has been a dead field since then: zero references in blk-throttle.c
-> and the whole tree.  Remove it.
->
-> Signed-off-by: Tao Cui<cuitao@kylinos.cn>
-> ---
->   block/blk-throttle.h | 2 --
->   1 file changed, 2 deletions(-)
-Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
---=20
-Thanks,
-Kuai
+> On 29 Jul 2026, at 21:13, Demi Marie Obenour <demiobenour@gmail.com> wrote:
+> 
+> What is the purpose of having PID 1 in init.scope?  Is it functionally
+> necessary, or is it solely for consistency with when systemd is
+> running in a container or as a user service manager?
+
+I assume it so that every process is in a cgroup container.
+But that is a guess.
+
+Barry
+
+
+> -- 
+> Sincerely,
+> Demi Marie Obenour (she/her/hers)
+> 
+
