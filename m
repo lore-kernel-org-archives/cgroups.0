@@ -1,64 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94DD238B15E;
-	Sun,  2 Aug 2026 21:32:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F64184;
+	Mon,  3 Aug 2026 01:13:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785706371; cv=none; b=mUbVPGgAvq15jCj6dcgUatXv8ccfkrG8Lba/sadgWbBKYyrmvfI19Q/NfTyK0ghljq/p3+Xsfv00AYMM56XAIJnvCHDX5IFXmSwIt22j8trRf8OmFl13r82rJHWYdMOexhFHegegKeD4nWKl5qZg4Xcxx6PpED7KPN0oIfOxGNk=
+	t=1785719602; cv=none; b=JCblcy4nvepFmtagRqpuJy54u/59sVnPfZ7gHEsSGLOH14QrVDavILgiNI81SUuzBduzCBcqhe6c55K2tHTKfbQWPBL/ggVYo8H624+u0bDuLBnI9qg3MaRME2e0E7VTAte41wEFP1SQJ9s648N4BE8MPlovYkarkSghThMUDaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785706371; c=relaxed/simple;
-	bh=KOljYON3jTRUwQm8eUqMu5CjveCeO2Eiom0kk+/OeRg=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=HfueIvj3iN7vvl2GcJGAOyw5dcHTPsZBOq2ztl/3jNRhnx+iPG3Sh9BAC5HfWBqqR6lz3S35Nu8ArVtpXVWKSXdbx3fV6JmXm5yA1t3WBBKYaZ9L01VgVFJMnste8h35X62HFpIKQBK4XN+TQdPxN+xjxCRoaNYgsDdWHTyytXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZPmjozn/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785719602; c=relaxed/simple;
+	bh=vg8JIz2FEAiVeQO2eUWUDFjUWby98HyFvUx/oJKKMxk=;
+	h=Date:Message-ID:From:To:Cc:Subject; b=oKuVMPekUD1+QttVoJBlTYJezHeoY5istZr0lDBr/xxOE3L6htGXyFrmHg3JHIfy68XbHPoD+WDJ3bz4WQS0eJM/l8P1LDkxQxTe8CLqtcsLmm/MOiir7xf9cke9ABcfDoZ0hxpMXb0tu7RuOG637GVPj8LMV/KKVIjog4IP9ns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oQq4qTYy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZPmjozn/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11F181F000E9;
-	Sun,  2 Aug 2026 21:32:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oQq4qTYy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21D9E1F000E9;
+	Mon,  3 Aug 2026 01:13:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785706370;
-	bh=cDzhkG1w+YnSNaNsYPGfzaniZU7En9exAEkV+7q0Dbc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=ZPmjozn/UqJ6ojT7xQXerEt+1sQb5lqXKF1qpwS9oCcKg9L7LOxssF7ng18B9nENp
-	 c3HiFce/7HjdmeFruI11cWzXwbmTuoEk7hXji7Njw94Dn43DTeSJGXuTGnf1QnPCcR
-	 DOI7PXDaEVtLEDWZkc1WuOVab1jDjlNiLtPKlvH5hh1MphQvEv2+PDTPgBgl7dQAlK
-	 cTk6yRmTsTSEwU5psGSY/Y8Mvdv9/2OZxbbOlGf1cZw/ULOslPsZOPRM23aXSFKFhd
-	 qwkLk3Sww4gjh9D/ikwQt/UfSnKjJQfU0XxhD47PueMXQ6mySwpVzSP80EvelnOpZ+
-	 9TK1cP27tGAEQ==
-Date: Sun, 02 Aug 2026 11:32:49 -1000
-Message-ID: <14bd63f0e59ce815ec1a1d066f578aa0@kernel.org>
+	s=k20260515; t=1785719601;
+	bh=/IeGYJGYdqBd6oXQeiHMbEi7Syh6d9ihghlHYbIPu5M=;
+	h=Date:From:To:Cc:Subject;
+	b=oQq4qTYyZBmq9jeUrNOcZkCT7hGJwhRBtiWzmxNMhL4mQeuwsG2caXevZMYwYaQ/h
+	 7yR1DaC4Ahb0ziHGK6bdCXHsErj6zWYLmlbuK1zWdRzHpcxGYq+J6/shqR8YCbk+yB
+	 tkzSolNilxSpN9C0TT2ii1RcMNkYo7xk2NNqmuA0xYKR4lzhPYvkjGS6RnJmFVUb8p
+	 gm7kz7Si95pbwFAIKI+ggMw+TePDl+I1nHI62T0UskhWBvdqp6Wv1wY/eZOAZu4s8Y
+	 3cdwnXIGZauwS9zM0J7tPMRereXfit2hxsMTaWze36kWTRE70M8bzWPUtPvJ6cyG6z
+	 9sKuveZd4xbkQ==
+Date: Sun, 02 Aug 2026 15:13:20 -1000
+Message-ID: <0f3381afd016a711c51e3c3b94a9eabb@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net,
-	skhan@linuxfoundation.org, josef@toxicpanda.com, axboe@kernel.dk,
-	cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	cuitao@kylinos.cn
-Subject: Re: [PATCH v4] Docs/admin-guide/cgroup-v2: document io.latency rotational vs non-rotational behavior
-In-Reply-To: <20260728095707.2398498-1-cui.tao@linux.dev>
-References: <20260728095707.2398498-1-cui.tao@linux.dev>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Waiman Long <longman@redhat.com>, Suren Baghdasaryan <surenb@google.com>,
+ Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [GIT PULL] cgroup: Fixes for v7.2-rc6
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-On Tue, Jul 28, 2026 at 05:57:07PM +0800, Tao Cui wrote:
-> io.latency is documented only in terms of average latency and the avg_lat
-> stat, which matches rotational devices.  On non-rotational devices a group
-> misses its target once enough of the IOs in the window individually exceed
-> it, and io.stat reports missed/total rather than avg_lat/win.
->
-> Describe both cases: how a miss is detected, note that the avg_lat tuning
-> guidance is rotational-only, and update the io.stat field list (mark
-> avg_lat/win as rotational-only, document missed/total).
->
-> Acked-by: Michal Koutný <mkoutny@suse.com>
-> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+Hello,
 
-Applied to cgroup/for-7.2-fixes.
+The following changes since commit 97fef602584458b100d383afed9d176c0bc689ab:
 
-Thanks.
+  Docs/admin-guide/cgroup-v2: note blkcg_debug_stats gates io.latency stats (2026-07-07 12:26:23 -1000)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.2-rc6-fixes
+
+for you to fetch changes up to 2fd9b4cfcefe30cb506072f78f2cd3b6dc8a29b1:
+
+  Docs/admin-guide/cgroup-v2: document io.latency rotational vs non-rotational behavior (2026-08-02 11:29:33 -1000)
+
+----------------------------------------------------------------
+cgroup: Fixes for v7.2-rc6
+
+- A pressure trigger's poll timer could be re-armed while the last trigger
+  was being torn down and then fire after the cgroup was freed. Tie the
+  timer to the cgroup's lifetime and shut it down when the cgroup is freed.
+
+- Writing to a pressure file forked a worker kthread while holding the
+  cgroup mutex, creating lock dependencies from the mutex to the whole fork
+  path. A pressure write racing a sched_ext scheduler enable, which blocks
+  forks before grabbing the mutex, deadlocked. Fork the worker with the
+  mutex dropped.
+
+- Documentation fix for io.latency behavior on non-rotational devices.
+
+----------------------------------------------------------------
+Tao Cui (1):
+      Docs/admin-guide/cgroup-v2: document io.latency rotational vs non-rotational behavior
+
+Tejun Heo (2):
+      sched/psi: Create the psimon kthread outside of cgroup_mutex
+      sched/psi: Shut down rtpoll_timer in psi_cgroup_free()
+
+ Documentation/admin-guide/cgroup-v2.rst | 50 ++++++++++++++++------
+ include/linux/psi.h                     |  4 +-
+ kernel/cgroup/cgroup.c                  | 23 +++++++++-
+ kernel/sched/psi.c                      | 75 ++++++++++++++++++++++++++-------
+ 4 files changed, 120 insertions(+), 32 deletions(-)
 
 --
 tejun
