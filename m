@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0EB3A544A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF35C3A1682;
 	Mon,  3 Aug 2026 19:47:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785786442; cv=none; b=CCR4P3wL/M5dbzXH7Fp31SDAocksv1KMhxCgGVXYu5VJEbHRRNCjDv478OAAGZF/DIJYgrD70yxgi7qh5ph4G76z1+DtMn0cYsUGtiYpwTcL3rripQQcDGARvTuvkTRiXxmUcfDhpQ1RbOBacohgwVeTIGsfrVoa8blgO0ZsoP8=
+	t=1785786442; cv=none; b=DvEy6BiB9DtZbfaR1/QqGaVkTjV7jG+H0mdO8XGy49ygzAJYHyCA02DHtkdb2WvIrmi1Lw1UWRbC6f0MFHQ/ixXMGamItd3rp9EYHkMhfFv3XsXK6CtpmmG+gTjnuomEtMeQRfA1wBxjtFM3U7TCk02nYwfzPhD7XH4VOG/A9yg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785786442; c=relaxed/simple;
-	bh=NO0EAYWsY2ldlhO3iQN1yFZTxIcpW5QnD5tDVs0IMKg=;
+	bh=SDJd3vW3qkKBS3CdNbHJyIAmbUP3QRPpQi1oINDrVZE=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=WA8vZtW+BCeO+ZUNsiTVsxIZGSBxXsni/LSzjB00RIQyskJgN2kS6RTqvs3ul3bhtM979UdfiApTdh6TPWywXBrJ/1WuidOV7PUd/bIcq6Y1+fErDk8ooPKJlOxCO2+cX4KPIRB1CJsSgQ3Kgk1A53Q4TvRwG4TIWjDUaFN5rhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=udvo/HNH; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=a3nNcah55niK6+ZQkO60XTjfh/JV3lS/BSXZmjxMNH58F6oUfJnqh2UVsOT1lQvgtMDYp73y+CeTrq/CEugnK4GDQMXhbLpmbsoAekztdH3kUYP2OmGvVlHYJPANZP2KUct0k4uHcxhzQiU95O4Y5pZjUTb20A6N3HVhu4JH6ag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nsHo+j7j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="udvo/HNH"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4D230C2BCB9;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nsHo+j7j"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7AC70C4AF11;
 	Mon,  3 Aug 2026 19:47:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1785786442;
-	bh=NO0EAYWsY2ldlhO3iQN1yFZTxIcpW5QnD5tDVs0IMKg=;
+	bh=SDJd3vW3qkKBS3CdNbHJyIAmbUP3QRPpQi1oINDrVZE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=udvo/HNHAcQodDJe4VeBYpgCYG+6cyZ5dGXMZLKK+zBmGUlId2GrM2uqxC+mbR9r1
-	 AwH4n2l0kIGVLI20cOsgLkpCTcDG2z95fCSZ590MWFVy1CzySezuJUfqRAdajLDeEu
-	 NLxbxiU4FrYvG7+oJpExh6UMxBJ71f/yrX0D+iy8G4BtTzcS6FodOdS7EpvXhDfFXU
-	 QW6a3qa2hMO4pVpti9hfkuEdXTnaohOuFXf3y8IWI6Z/iZ+ZDk3GcLg2HB2WORhanZ
-	 5GLUQNFbE14/9PoYuAKrFgq96MleabxwAzqCB4cnYHooFWsdqM+SGFWqhomOaJlIJl
-	 y39iVeyyRnbRQ==
+	b=nsHo+j7jd2vx98UxP4tyzOOtNN+FVFsQsoXSJloYLREMymCHSA4L03zFuvjoTcnDQ
+	 33yc8gdxMpla5D1wIL9JJj1tGx4BE8+q0pkzWpZRerE7yBVMaIQg7NXXTleRtDb43a
+	 nmTDNhEHccHHoHnGkTj87GK9aj3Ck1oy0rshvCCcY6lXgLYwVXgtq7624h7kni5KQC
+	 YmLNgVlrQfdJG4M3Rjr9i+MCZ/C0KgR97AuK+6qNwkzY0oCYHYLEe5RXzUr5mXSQxi
+	 sqhTSikM1KJDctKIRJDentqEpzDlGei0oKesll+47UrpMKKFqGs/PU2oL+uSOtt5ms
+	 IJn0+ERzT+lYg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B5DDC55182;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64A88C55AB9;
 	Mon,  3 Aug 2026 19:47:22 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 04 Aug 2026 03:46:57 +0800
-Subject: [PATCH RFC 01/15] mm/memcontrol: make lru_zone_size atomic and
- simplify sanity check
+Date: Tue, 04 Aug 2026 03:47:00 +0800
+Subject: [PATCH RFC 04/15] mm/mglru: make generation page counters atomic
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260804-mglru-fg-v1-1-4d8dad39dad6@tencent.com>
+Message-Id: <20260804-mglru-fg-v1-4-4d8dad39dad6@tencent.com>
 References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 In-Reply-To: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 To: linux-mm@kvack.org
@@ -71,11 +70,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Kairui Song <kasong@tencent.com>, Baoquan He <baoquan.he@linux.dev>, 
  Nico Pache <nico.pache@linux.dev>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=4666;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=5062;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=VmGMj3oQ5WlKjZNi9BvygZeEmYIa6a/WBZg5ksVdh2w=;
- b=a0JTNWuPi48o3Fm1tmk0HF76NfE1tnogbipupV7MsafExoMnGyTXKGtgtIoml53Gk31D5uRJs
- EGfJ/FlOQdeCuvTUuafmuiYvO38wQEj4NOhVPlp6aOqx5ZKeCI4/sef
+ bh=t4exwehi8Ei4/lRorOvsWBcZjkV0WY4vPQIntyWBAJ0=;
+ b=XbPr3kZEY7eYz5dQbFhpzZo36GfAY5LKWawkIw/5lYUPRWbkiMxoYdg7f0L3E4rW2cRtlhkF2
+ sNRk59Xa+OyCI1aHCtTsfGqGIryV/wtrtu+tPl7iFjY4mYLkqpEcW95
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -85,132 +84,115 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-commit ca707239e8a7 ("mm: update_lru_size warn and reset bad lru_size")
-introduced a sanity check to catch memcg counter underflow, which is
-more like a workaround for another bug: lru_zone_size is unsigned, so
-underflow will wrap it around and return an enormously large number,
-then the memcg shrinker will loop almost forever as the calculated
-number of folios to shrink is huge. That commit also checks if a zero
-value matches the empty LRU list, so we have to hold the LRU lock, and
-do the counter adding differently depending on whether the nr_pages is
-negative.
-
-But later commit b4536f0c829c ("mm, memcg: fix the active list aging for
-lowmem requests when memcg is enabled") already removed the LRU
-emptiness check, doing the adding differently is meaningless now. And if
-we just turn it into an atomic long, underflow isn't a big issue either,
-and can be checked at the reader side. The reader size is much less
-frequently called than the updater.
-
-So let's turn the counter into an atomic long and check at the
-reader side instead, which has a smaller overhead. Use atomic to avoid
-potential locking issue. The underflow correction is removed, which
-should be fine as if there is a mass leaking of the LRU size counter,
-something else may also have gone very wrong, and one should fix that
-leaking site instead. Besides, doing the sanity check in updater is
-unlikely to catch the leaking site, e.g. a folio was removed minutes ago
-without updating the counter, while there are still other folios on the
-LRU, the WARN won't be triggered until other folios are removed from a
-likely correct callsite.
-
-For now still keep the LRU lock context, in theory that can be removed
-too since the update is atomic, if we can tolerate a temporary
-inaccurate reading, but currently there is no benefit doing so yet.
+No feature change, convert them to atomic so we can update them without
+holding the LRU lock. There is no risk of overflow. The reader always
+compares and uses zero instead if the counter values are negative. It
+follows final consistency.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- include/linux/memcontrol.h |  9 +++++++--
- mm/memcontrol.c            | 18 +-----------------
- mm/vmscan.c                |  5 -----
- 3 files changed, 8 insertions(+), 24 deletions(-)
+ include/linux/mm_inline.h |  6 ++----
+ include/linux/mmzone.h    |  2 +-
+ mm/vmscan.c               | 20 ++++++++++----------
+ 3 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index e78bc98ab229..b13e3f056319 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -113,7 +113,7 @@ struct mem_cgroup_per_node {
- 	/* Fields which get updated often at the end. */
- 	struct lruvec		lruvec;
- 	CACHELINE_PADDING(_pad2_);
--	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
-+	atomic_long_t		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
- 	struct mem_cgroup_reclaim_iter	iter;
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 4076e3f7dcc8..018a2f54a5c9 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -245,11 +245,9 @@ static inline void lru_gen_update_size(struct lruvec *lruvec, struct folio *foli
+ 	VM_WARN_ON_ONCE(old_gen == -1 && new_gen == -1);
  
- 	/*
-@@ -897,10 +897,15 @@ static inline
- unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
- 		enum lru_list lru, int zone_idx)
- {
-+	long val;
- 	struct mem_cgroup_per_node *mz;
+ 	if (old_gen >= 0)
+-		WRITE_ONCE(lrugen->nr_pages[old_gen][type][zone],
+-			   lrugen->nr_pages[old_gen][type][zone] - delta);
++		atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type][zone]);
+ 	if (new_gen >= 0)
+-		WRITE_ONCE(lrugen->nr_pages[new_gen][type][zone],
+-			   lrugen->nr_pages[new_gen][type][zone] + delta);
++		atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][zone]);
  
- 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	return READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
-+	val = atomic_long_read(&mz->lru_zone_size[zone_idx][lru]);
-+	if (WARN_ON_ONCE(val < 0))
-+		return 0;
-+
-+	return val;
- }
- 
- void __mem_cgroup_handle_over_high(gfp_t gfp_mask);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1bde9d5af88a..7511773b3491 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1529,28 +1529,12 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
- 				int zid, long nr_pages)
- {
- 	struct mem_cgroup_per_node *mz;
--	unsigned long *lru_size;
--	long size;
- 
- 	if (mem_cgroup_disabled())
- 		return;
- 
- 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	lru_size = &mz->lru_zone_size[zid][lru];
--
--	if (nr_pages < 0)
--		*lru_size += nr_pages;
--
--	size = *lru_size;
--	if (WARN_ONCE(size < 0,
--		"%s(%p, %d, %ld): lru_size %ld\n",
--		__func__, lruvec, lru, nr_pages, size)) {
--		VM_BUG_ON(1);
--		*lru_size = 0;
--	}
--
--	if (nr_pages > 0)
--		*lru_size += nr_pages;
-+	atomic_long_add(nr_pages, &mz->lru_zone_size[zid][lru]);
- }
- 
- /**
+ 	/* addition */
+ 	if (old_gen < 0) {
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 8048c6b0544d..4225dab760ba 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -572,7 +572,7 @@ struct lru_gen_folio {
+ 	/* the multi-gen LRU lists, lazily sorted on eviction */
+ 	struct list_head folios[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+ 	/* the multi-gen LRU sizes, eventually consistent */
+-	long nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
++	atomic_long_t nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+ 	/* the exponential moving average of refaulted */
+ 	unsigned long avg_refaulted[ANON_AND_FILE][MAX_NR_TIERS];
+ 	/* the exponential moving average of evicted+protected */
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 17d2b793cbfc..fe7cf5d42e0c 100644
+index f5b0a7c63a3a..b02d2ec8ff4b 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -1636,10 +1636,6 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
- 	return nr_reclaimed;
- }
+@@ -3354,8 +3354,7 @@ static void reset_batch_size(struct lru_gen_mm_walk *walk)
+ 			continue;
  
--/*
-- * Update LRU sizes after isolating pages. The LRU size updates must
-- * be complete before mem_cgroup_update_lru_size due to a sanity check.
-- */
- static __always_inline void update_lru_sizes(struct lruvec *lruvec,
- 			enum lru_list lru, unsigned long *nr_zone_taken)
- {
-@@ -1651,7 +1647,6 @@ static __always_inline void update_lru_sizes(struct lruvec *lruvec,
+ 		walk->nr_pages[gen][type][zone] = 0;
+-		WRITE_ONCE(lrugen->nr_pages[gen][type][zone],
+-			   lrugen->nr_pages[gen][type][zone] + delta);
++		atomic_long_add(delta, &lrugen->nr_pages[gen][type][zone]);
  
- 		update_lru_size(lruvec, lru, zid, -nr_zone_taken[zid]);
+ 		if (lru_gen_is_active(lruvec, gen))
+ 			lru += LRU_ACTIVE;
+@@ -4044,8 +4043,8 @@ static bool inc_max_seq(struct lruvec *lruvec, unsigned long seq, int swappiness
+ 	for (type = 0; type < ANON_AND_FILE; type++) {
+ 		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
+ 			enum lru_list lru = type * LRU_INACTIVE_FILE;
+-			long delta = lrugen->nr_pages[prev][type][zone] -
+-				     lrugen->nr_pages[next][type][zone];
++			long delta = atomic_long_read(&lrugen->nr_pages[prev][type][zone]) -
++				     atomic_long_read(&lrugen->nr_pages[next][type][zone]);
+ 
+ 			if (!delta)
+ 				continue;
+@@ -4163,7 +4162,8 @@ static unsigned long lruvec_evictable_size(struct lruvec *lruvec, int swappiness
+ 		for (seq = min_seq[type]; seq <= max_seq; seq++) {
+ 			gen = lru_gen_from_seq(seq);
+ 			for (zone = 0; zone < MAX_NR_ZONES; zone++)
+-				total += max(READ_ONCE(lrugen->nr_pages[gen][type][zone]), 0L);
++				total += max(atomic_long_read(&lrugen->nr_pages[gen][type][zone]),
++					     0L);
+ 		}
  	}
--
- }
  
- /*
+@@ -4598,7 +4598,7 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+ 
+ 	for (i = 0; i < get_nr_gens(child_lruvec, type); i++) {
+ 		int gen = lru_gen_from_seq(child_lrugen->max_seq - i);
+-		long nr_pages = child_lrugen->nr_pages[gen][type][zone];
++		long nr_pages = atomic_long_read(&child_lrugen->nr_pages[gen][type][zone]);
+ 		int child_lru_active = lru_gen_is_active(child_lruvec, gen) ? LRU_ACTIVE : 0;
+ 		int parent_lru_active = lru_gen_is_active(parent_lruvec, gen) ? LRU_ACTIVE : 0;
+ 
+@@ -4606,9 +4606,8 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+ 		list_splice_tail_init(&child_lrugen->folios[gen][type][zone],
+ 				      &parent_lrugen->folios[gen][type][zone]);
+ 
+-		WRITE_ONCE(child_lrugen->nr_pages[gen][type][zone], 0);
+-		WRITE_ONCE(parent_lrugen->nr_pages[gen][type][zone],
+-			   parent_lrugen->nr_pages[gen][type][zone] + nr_pages);
++		atomic_long_set(&child_lrugen->nr_pages[gen][type][zone], 0);
++		atomic_long_add(nr_pages, &parent_lrugen->nr_pages[gen][type][zone]);
+ 
+ 		if (lru_gen_is_active(child_lruvec, gen) != lru_gen_is_active(parent_lruvec, gen)) {
+ 			__update_lru_size(child_lruvec, lru + child_lru_active, zone, -nr_pages);
+@@ -5650,7 +5649,8 @@ static int lru_gen_seq_show(struct seq_file *m, void *v)
+ 			char mark = full && seq < min_seq[type] ? 'x' : ' ';
+ 
+ 			for (zone = 0; zone < MAX_NR_ZONES; zone++)
+-				size += max(READ_ONCE(lrugen->nr_pages[gen][type][zone]), 0L);
++				size += max(atomic_long_read(&lrugen->nr_pages[gen][type][zone]),
++					    0L);
+ 
+ 			seq_printf(m, " %10lu%c", size, mark);
+ 		}
 
 -- 
 2.55.0
