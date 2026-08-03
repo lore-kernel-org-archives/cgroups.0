@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C1873A873B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5310C3A7F48;
 	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785786443; cv=none; b=mMcat7syzUVeaBpkD/BD0u4RTQncw3Jloqd/hzDmATjsg4kD6wbizoJYtSu7tsv51FWdKS3Ik4VvQWL2gTYVSdHNb0byd0e78D2E8LhE7BunapIFTh2/4XrzdkS/pHIw2DR2WbncfkQ4Jk7RyXqm55+YLLXbOcj88gmUBLA+efA=
+	t=1785786443; cv=none; b=DtfDY3/Pjlkzvff2y0f6qM1u//7xsLmQOjuj5/elb2G2F9rz8hZbPYMzALxta+9ekLc3WhOwoluLcVmv0ZQCWyXGYxnuagCGl0DevZ3ejXNsJfNNcQU9v/2BpWLdLzSWnkWTM9kSR2B3hGMN1aTuj4OEPL1rYU3+/r5KkQCN2RA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785786443; c=relaxed/simple;
-	bh=S5TdssiSZAp76+zKDFhJcytSk6RO5zBrHmYRHuO0F6E=;
+	bh=5Spxi6AE7pqNpQLt2qla4NEl4WlMj9DJOAfIyYr9o9A=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ZP3tJTFMSqb4b7xbKi/8uoJizNt9OR4ab3sb2hNN7Vxiuh2+9i0rE9UcBMed4Gm57vGfMs76n8CYJMccPH5MzVNQjsjasfhS/JcLkPCDXGGw9j2lMCvv6dZCo0LxIJMDb2WqrHY+NfbafUQdlENiRCQ8XChr6vNYxZ9uEfmyUmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Af+zpRdy; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=qqf9dfreYlcn6eloYg8iyGMsgM9qPdeLf6TfcHFHSEWqOxAchM1MDyVC20CPTmmyld8nWqQW7zq2tlSY6IYPcUQVUK2jdD2cHC8EdXIr+c9dYvRbVeHV0R6Nq5hD8+T+4KYO23GiQKkT9UFP+GXleRL0z8cT343BVusiDN3H4oU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pJliByqC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Af+zpRdy"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4C583C2BCFC;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pJliByqC"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 16D94C2BCFA;
 	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1785786443;
-	bh=S5TdssiSZAp76+zKDFhJcytSk6RO5zBrHmYRHuO0F6E=;
+	bh=5Spxi6AE7pqNpQLt2qla4NEl4WlMj9DJOAfIyYr9o9A=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=Af+zpRdydIutQ6SAx43Q3inKaMriMXd5MoFrCXgchJohl7fa4v3MGhkt426MP4s0B
-	 aBQe3XG1uMO90L4AN6ite34KW+M8twVLkYW8/PbaLgDGs8OgAEMKZ+jiZz0Cww+3HB
-	 KBOkMBc4plqjFAfjNVtfZofSlj8RpyhR1nErY1+QTGRRMdvCR+91CsjcB0S6eerdIb
-	 06tImMnTumDIpFJz1AW7oYqmRmY6K0RnADpsiUSMDdzuBua1JjiwSBZBSVXpHTUvt8
-	 kHWGffKCuAs4CV3fMPesksrzTepX8fdMVmBlXJARn76QLo2jxpQ67U3YSNZ5o48rYC
-	 fNOzrxASBVfNQ==
+	b=pJliByqCy5ody7eU79GVRSPSk+eexK73f7T9s2SBA49hSB0o4C8OvJINOuOy/0Jst
+	 Zf5hdfZyM3BmdZVlhGa9zwvPZ1qDpxZajvv36UNiDD9+TQyCF1PF3iKIS1IRw58cEH
+	 S1jWRFCCHZPkg9acN8GoaJYbQsmHXUvnFfAvmigjHZ72t6HDzavzGxtQJdRuRutMuI
+	 rit3kvALB2TShQJNLsrks/iT+tefbNu+yb5c9/D8oiZCntRW+LBOYSasZJZWzBXP0R
+	 2Wwz0shzNISUK1tDmHAqLUyuj0SooD4iiZRQSuup57dcIK3OXX/Bcpz2Hvd6o03mc+
+	 f8U0t7cC5Gh4g==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39035C55182;
-	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0079C55196;
+	Mon,  3 Aug 2026 19:47:22 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 04 Aug 2026 03:47:09 +0800
-Subject: [PATCH RFC 13/15] mm/huge_memory: mark file folio as accessed more
- accurately on split
+Date: Tue, 04 Aug 2026 03:47:06 +0800
+Subject: [PATCH RFC 10/15] mm/mglru: make folio lru referenced times count
+ a generic API
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260804-mglru-fg-v1-13-4d8dad39dad6@tencent.com>
+Message-Id: <20260804-mglru-fg-v1-10-4d8dad39dad6@tencent.com>
 References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 In-Reply-To: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 To: linux-mm@kvack.org
@@ -71,11 +71,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Kairui Song <kasong@tencent.com>, Baoquan He <baoquan.he@linux.dev>, 
  Nico Pache <nico.pache@linux.dev>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=1826;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=9394;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=CJ94TqcOoIUBLTvAe1Ubz/gZmv43vqcSsxqrYElZJYw=;
- b=VAOrM0iKC69AZ7qWggVe+gnW+wnbWJ/uxpCHJjI4Gjx+GlW4HXfap1IE5/CsinA+y3hXAUa+7
- vT7U8ic/6W3CGO/AEQt2ELX54Q2EI94FR/sfhb7iinRxP5+wthKZiST
+ bh=pavYdhuAU5OwgfCxwjbABkIxiu5hT6fbcrjm/x7ACsw=;
+ b=d3wg6Yy52t36UmlNDlDQoCaeid1WRHhSSSH1k9fIA07ImY/PrYXUV4Ynfyh44gvYQPVityi4D
+ GpazfrxHVV0APh8Tm1fpf0blBikgvUg/l5TmvuUwYEJSj4j9ENJVudp
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -85,48 +85,296 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-The behavior of updating the folio's access info isn't consistent for
-huge mapping splitting or ordinary unmapping. The page table's young
-flag has to be translated into folio's access info.
-
-Right now it only check and set folio's referenced flag, which isn't
-enough since folio flags update on access have its rules. Ordinary
-unmapping (zapping) calls folio_mark_accessed(), and it also checks
-if the VMA has recency to avoid false updates.
-
-So first just use the right helper here to be more consistent.
+To prepare for unifying the API for checking folio referenced status,
+expose the referenced times counting as a generic API. For MGLRU this
+helps to adapt other subsystem based on the referenced times counting,
+for non-MGLRU this is still bitwise compatible and there won't be
+major behavior change.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/huge_memory.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/linux/mm_inline.h | 233 ++++++++++++++++++++++++++++++----------------
+ mm/migrate.c              |   2 -
+ 2 files changed, 155 insertions(+), 80 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 21c92ee48e46..043c9ac963b4 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -3058,8 +3058,8 @@ static void __split_huge_pud_locked(struct vm_area_struct *vma, pud_t *pud,
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 944baa91bf18..a13b7d3c033a 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -94,6 +94,161 @@ static __always_inline enum lru_list folio_lru_list(const struct folio *folio)
+ 	return lru;
+ }
  
- 	if (!folio_test_dirty(folio) && pud_dirty(old_pud))
- 		folio_mark_dirty(folio);
--	if (!folio_test_referenced(folio) && pud_young(old_pud))
--		folio_set_referenced(folio);
-+	if (pud_young(old_pud) && vma_has_recency(vma))
-+		folio_mark_accessed(folio);
- 	folio_remove_rmap_pud(folio, page, vma);
- 	add_mm_counter(vma->vm_mm, mm_counter_file(folio),
- 		-HPAGE_PUD_NR);
-@@ -3181,8 +3181,8 @@ static void __split_huge_pmd_locked(struct vm_area_struct *vma, pmd_t *pmd,
- 			folio = page_folio(page);
- 			if (!folio_test_dirty(folio) && pmd_dirty(old_pmd))
- 				folio_mark_dirty(folio);
--			if (!folio_test_referenced(folio) && pmd_young(old_pmd))
--				folio_set_referenced(folio);
-+			if (pmd_young(old_pmd) && vma_has_recency(vma))
-+				folio_mark_accessed(folio);
- 			folio_remove_rmap_pmd(folio, page, vma);
- 			add_mm_counter(mm, mm_counter_file(folio), -HPAGE_PMD_NR);
- 			folio_put(folio);
++/**
++ * lru_refs_from_flags - Return LRU referenced / access count from folio flags.
++ * @flags: folio flags
++ */
++static inline int lru_refs_from_flags(unsigned long flags)
++{
++	int refs;
++
++	/*
++	 * Return the total number of accesses. Also see the comment on
++	 * LRU_REFS_FLAGS.
++	 */
++	refs = (flags & BIT(PG_referenced)) ? BIT(0) : 0;
++	refs += (flags & BIT(PG_workingset)) ? BIT(1) : 0;
++	refs += ((flags & LRU_REFS_MASK) >> LRU_REFS_PGOFF) << 2;
++	return refs;
++}
++
++/**
++ * lru_refs_set_flags - Set the LRU referenced / access count to specified folio flags.
++ * @flags: pointer to the folio flags
++ * @refs: referenced / access count number, between 0 and LRU_REFS_MAX, inclusive.
++ */
++static inline void lru_refs_set_flags(unsigned long *flags, unsigned int refs)
++{
++	VM_WARN_ON_ONCE(refs > LRU_REFS_MAX);
++	BUILD_BUG_ON((LRU_REFS_MAX >> 2) > (BIT(LRU_REFS_WIDTH) - 1));
++	*flags &= ~LRU_REFS_FLAGS;
++	if (refs & BIT(0))
++		*flags |= BIT(PG_referenced);
++	if (refs & BIT(1))
++		*flags |= BIT(PG_workingset);
++	*flags |= (((unsigned long)refs) >> 2) << LRU_REFS_PGOFF;
++}
++
++static inline int folio_lru_refs(const struct folio *folio)
++{
++	return lru_refs_from_flags(READ_ONCE(*const_folio_flags(folio, 0)));
++}
++
++static inline void folio_set_lru_refs(struct folio *folio, unsigned int refs)
++{
++	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
++
++	do {
++		new_flags = old_flags;
++		lru_refs_set_flags(&new_flags, refs);
++	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
++}
++
++int folio_inc_lru_refs(struct folio *folio, bool is_fault, bool is_exec);
++
++/**
++ * folio_is_referenced - Tell if a folio was accessed before.
++ * @folio: the folio.
++ *
++ * This helper currently only works as intended for MGLRU, as it checks
++ * all LRU_REFS_FLAGS. It might be fine for non-MGLRU to replace
++ * folio_test_referenced in some cases but the user should be careful.
++ *
++ * Returns: true if the folio's LRU referenced / accessed count > 0.
++ */
++static inline bool folio_is_referenced(const struct folio *folio)
++{
++	return folio_lru_refs(folio) >= LRU_REFS_REFERENCED;
++}
++
++/**
++ * folio_mark_referenced - Mark a folio as referenced.
++ * @folio: the folio.
++ *
++ * Ensures the folio's LRU referenced count is at least
++ * LRU_REFS_REFERENCED. Won't do anything if the count is already larger
++ * than that. This helper currently only works as intended for MGLRU.
++ * Not a drop-in replacement, but should be fine for non-MGLRU to replace
++ * folio_set_referenced with this after audit.
++ */
++static inline void folio_mark_referenced(struct folio *folio)
++{
++	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
++
++	do {
++		new_flags = old_flags;
++		if (lru_refs_from_flags(new_flags) >= LRU_REFS_REFERENCED)
++			return;
++		lru_refs_set_flags(&new_flags, LRU_REFS_REFERENCED);
++	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
++}
++
++/**
++ * folio_mark_referenced_by_bit - Mark a folio as referenced by bit.
++ * @folio: the folio.
++ *
++ * non-MGLRU may want to make use of the lowest LRU referenced count bit
++ * explicitly as a referenced mark.
++ */
++static inline void folio_mark_referenced_by_bit(struct folio *folio)
++{
++	set_bit(PG_referenced, folio_flags(folio, 0));
++}
++
++/**
++ * folio_clear_referenced_by_bit - Clear the referenced bit of a folio.
++ * @folio: the folio.
++ */
++static inline void folio_clear_referenced_by_bit(struct folio *folio)
++{
++	clear_bit(PG_referenced, folio_flags(folio, 0));
++}
++
++/**
++ * folio_test_clear_referenced_by_bit - Test and clear the referenced bit
++ * @folio: the folio.
++ */
++static inline bool folio_test_clear_referenced_by_bit(struct folio *folio)
++{
++	return test_and_clear_bit(PG_referenced, folio_flags(folio, 0));
++}
++
++/**
++ * folio_is_referenced_by_bit - Test if the referenced bit of a folio is set.
++ * @folio: the folio.
++ */
++static inline bool folio_is_referenced_by_bit(const struct folio *folio)
++{
++	return test_bit(PG_referenced, const_folio_flags(folio, 0));
++}
++
++/**
++ * folio_is_workingset - Tell if a folio is part of the workingset.
++ * @folio: the folio.
++ *
++ * Can be used to replace folio_test_workingset safely. For MGLRU the LRU
++ * referenced count tells if a folio is a workingset as intended. For non-MGLRU,
++ * the check below only holds true if the PG_workingset bit is set.
++ */
++static inline bool folio_is_workingset(const struct folio *folio)
++{
++	return folio_lru_refs(folio) >= LRU_REFS_WORKINGSET;
++}
++
++/**
++ * folio_mark_workingset_by_bit - Set the workingset bit of a folio.
++ * @folio: the folio.
++ */
++static inline void folio_mark_workingset_by_bit(struct folio *folio)
++{
++	set_bit(PG_workingset, folio_flags(folio, 0));
++}
++
++static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
++{
++	folio_set_lru_refs(new, folio_lru_refs(old));
++}
++
+ #ifdef CONFIG_LRU_GEN
+ 
+ static inline bool lru_gen_switching(void)
+@@ -171,58 +326,6 @@ static inline void lru_gen_set_flags(unsigned long *flags, int gen)
+ 	*flags |= (gen + 1UL) << LRU_GEN_PGOFF;
+ }
+ 
+-/**
+- * lru_refs_from_flags - Return LRU referenced / access count from folio flags.
+- * @flags: folio flags
+- */
+-static inline int lru_refs_from_flags(unsigned long flags)
+-{
+-	int refs;
+-
+-	/*
+-	 * Return the total number of accesses. Also see the comment on
+-	 * LRU_REFS_FLAGS.
+-	 */
+-	refs = (flags & BIT(PG_referenced)) ? BIT(0) : 0;
+-	refs += (flags & BIT(PG_workingset)) ? BIT(1) : 0;
+-	refs += ((flags & LRU_REFS_MASK) >> LRU_REFS_PGOFF) << 2;
+-	return refs;
+-}
+-
+-/**
+- * lru_refs_set_flags - Set the LRU referenced / access count to specified folio flags.
+- * @flags: pointer to the folio flags
+- * @refs: referenced / access count number, between 0 and LRU_REFS_MAX, inclusive.
+- */
+-static inline void lru_refs_set_flags(unsigned long *flags, unsigned int refs)
+-{
+-	VM_WARN_ON_ONCE(refs > LRU_REFS_MAX);
+-	BUILD_BUG_ON((LRU_REFS_MAX >> 2) > (BIT(LRU_REFS_WIDTH) - 1));
+-	*flags &= ~LRU_REFS_FLAGS;
+-	if (refs & BIT(0))
+-		*flags |= BIT(PG_referenced);
+-	if (refs & BIT(1))
+-		*flags |= BIT(PG_workingset);
+-	*flags |= (((unsigned long)refs) >> 2) << LRU_REFS_PGOFF;
+-}
+-
+-static inline int folio_lru_refs(const struct folio *folio)
+-{
+-	return lru_refs_from_flags(READ_ONCE(*const_folio_flags(folio, 0)));
+-}
+-
+-static inline void folio_set_lru_refs(struct folio *folio, unsigned int refs)
+-{
+-	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
+-
+-	do {
+-		new_flags = old_flags;
+-		lru_refs_set_flags(&new_flags, refs);
+-	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+-}
+-
+-int folio_inc_lru_refs(struct folio *folio, bool is_fault, bool is_exec);
+-
+ static inline int folio_lru_gen(const struct folio *folio)
+ {
+ 	return lru_gen_from_flags(READ_ONCE(*const_folio_flags(folio, 0)));
+@@ -369,11 +472,6 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ 	return true;
+ }
+ 
+-static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
+-{
+-	folio_set_lru_refs(new, folio_lru_refs(old));
+-}
+-
+ #else /* !CONFIG_LRU_GEN */
+ 
+ static inline bool lru_gen_enabled(void)
+@@ -401,27 +499,6 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ 	return false;
+ }
+ 
+-static inline int folio_lru_refs(const struct folio *folio)
+-{
+-	return 0;
+-}
+-
+-static inline void folio_set_lru_refs(struct folio *folio, unsigned int refs)
+-{
+-}
+-
+-static inline int folio_inc_lru_refs(struct folio *folio, bool promote, bool is_exec)
+-{
+-	return 0;
+-}
+-
+-static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
+-{
+-	if (folio_test_referenced(old))
+-		folio_set_referenced(new);
+-	if (folio_test_workingset(old))
+-		folio_set_workingset(new);
+-}
+ #endif /* CONFIG_LRU_GEN */
+ 
+ static __always_inline
+diff --git a/mm/migrate.c b/mm/migrate.c
+index c737d0682fa4..806f1e913a38 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -786,8 +786,6 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
+ 		folio_set_active(newfolio);
+ 	} else if (folio_test_clear_unevictable(folio))
+ 		folio_set_unevictable(newfolio);
+-	if (folio_test_workingset(folio))
+-		folio_set_workingset(newfolio);
+ 	if (folio_test_checked(folio))
+ 		folio_set_checked(newfolio);
+ 	/*
 
 -- 
 2.55.0
