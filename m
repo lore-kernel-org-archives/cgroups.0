@@ -1,55 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF08A5FDA7
-	for <cgroups@vger.kernel.org>; Mon,  3 Aug 2026 22:06:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0E72E8E09
+	for <cgroups@vger.kernel.org>; Mon,  3 Aug 2026 22:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785794812; cv=none; b=b/djCxb5RFUsADp0rvvQdu2egvMnvZ+wHSJDY8i4R3hROYK6n5+2cPreD01KQTQL46Wsx5bOlSUyEhyOfEaAlm4IZAWhA+BaUGAuY3Vq9HRyGgUPL3MesKYXWjHHK/cwpWG5q1jhpo72i6Vi4T57d+VxtjssiywirC3vwrm3erA=
+	t=1785794936; cv=none; b=ivemKY7FUtoNjnUrv9IJPGH6c7DzaRUj4xS+CPLAO8p79eAzkkdM6uO/4WWyHvYoiEJm/NFwo0IJ0C6W1SzOT08sZ1ZN9j8dulQSPdd0BX8IxTzDXVrrrby+umBk54MNbE4QmHEQFAqrDNafa9ddpW+0ZO28yN4X4plsBd+Drtg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785794812; c=relaxed/simple;
-	bh=/Xj/qddhP1NbbGGkAyM9GWZ3rsj8qHhYAcrIK32TpMI=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=o2r6iwBTVyYsl7D5pBXObPhSU80IF1xxSwvZx0XQXBagjT0m7Bo8GHu1LddGmMKd4RuO0GvbHP+iKn8MugvGJtzn+vXlxm/FIOF/XaFJgEuL8NbJocgowoEa6LirhQo+fbAl+LJ6gRtrgoyk+dg+AvU+0SrDZ88L+yTDseInYhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UWuiglD7; arc=none smtp.client-ip=198.175.65.11
+	s=arc-20240116; t=1785794936; c=relaxed/simple;
+	bh=Fswvsls2nW/VBsuG60aZMym8egLhK7A8l7uJstezVK8=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=huSGAPY1SxXdw3Rv8nA5rhUNo3yAMTn3a+USImcR3m31F0hkjdMpgRqCZIjfPJBZu6NTnLc0uVcLYa7jvOwjUaVXix7yqXPqthwh6xDCDmCpfl2HLcDudUrnl97OV0JSBkvTnE79SreXbFUstfQSW3JolaKkhrJLwCfYjNCKPVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E77E1cCV; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UWuiglD7"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E77E1cCV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785794811; x=1817330811;
+  t=1785794935; x=1817330935;
   h=date:from:to:cc:subject:message-id;
-  bh=/Xj/qddhP1NbbGGkAyM9GWZ3rsj8qHhYAcrIK32TpMI=;
-  b=UWuiglD7Zm35/XLAbp/Rxd28R+EwkRv2AkeRnSRE6Zq/3Op9Ipu+Lyjn
-   R0Vj/16IfH0upmV7wsQS5ehdkSawh2sqqzuTy5Q4I2kGDLIvKzpcdjr27
-   ECjnYeHILz27K5oJybQ5YBQfp2Oav5+kBymlgKnNl3Ky+qCf3+JP0VfGE
-   k0RU16a5c/cU7mXowwNUHtc+/ZOGF2LbPCVj6+mTQG1bd22YUTjJllVSh
-   eXO/gKJ2Ltozs1jPcXBtkS+NOjabidUfPslIF73Htb6jDYLIvi2VBTpEs
-   8Dz8oaj9idkgrRsbYv7MDO+RwsaTgXN4Vg6hy7lb+A37k4NlDAINEfqoS
-   A==;
-X-CSE-ConnectionGUID: Mv+jNfKUSlOhJKdMEY7mLg==
-X-CSE-MsgGUID: KsliHYPiRrG6iH79cbF6FA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="96702682"
+  bh=Fswvsls2nW/VBsuG60aZMym8egLhK7A8l7uJstezVK8=;
+  b=E77E1cCVKzFdPOECcO8u9N7xvuKCL0jrl16v4bPwHpintTP5+HD74Eie
+   7krmM9vY43dEJKXIS4cZGkjUFvWARm+u7MfA363Xb4xCIuUgZ0u/x1DOb
+   bi4gajYwnwzzX0DI8q36TvQUXT7M5OMsBTT+m7BTOtjstkOC+yBRFmdvb
+   y8lx1t3tCAWjEvlY6EOEtlmaAcxvTVMlk6xv9HOEb2TDikwolN/dNmWVl
+   f15j5G3/b5d+2MIBmZLEiWjOU15C3goS1z2gEzrySKYzJ+lWGdhDoJe+v
+   bsRrWreLbMiCp0tPNgVk78eFnoE3hfyKErwFcSo94L+HREj2FgI7LAxbx
+   Q==;
+X-CSE-ConnectionGUID: GEgFewwaSKuNpKDSW97+sA==
+X-CSE-MsgGUID: PwDTX/1DSKOBbLJ80PYdJg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="86350827"
 X-IronPort-AV: E=Sophos;i="6.25,203,1779174000"; 
-   d="scan'208";a="96702682"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 15:06:50 -0700
-X-CSE-ConnectionGUID: 3ejGOpE1SiORV7v7E6k98g==
-X-CSE-MsgGUID: wkOxU4xbTtaGaRUfNdiRmw==
+   d="scan'208";a="86350827"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 15:08:55 -0700
+X-CSE-ConnectionGUID: oT6Ok8osTxy1jI/zmkzbnQ==
+X-CSE-MsgGUID: PmwTDGoCQzKHjCtm/aC3xg==
 X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,203,1779174000"; 
+   d="scan'208";a="265167597"
 Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 03 Aug 2026 15:06:48 -0700
+  by orviesa004.jf.intel.com with ESMTP; 03 Aug 2026 15:08:53 -0700
 Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wr0o2-00000000853-1XD0;
-	Mon, 03 Aug 2026 22:06:46 +0000
-Date: Tue, 04 Aug 2026 06:06:40 +0800
+	id 1wr0q2-0000000085O-3slJ;
+	Mon, 03 Aug 2026 22:08:50 +0000
+Date: Tue, 04 Aug 2026 06:08:40 +0800
 From: kernel test robot <lkp@intel.com>
 To: Tejun Heo <tj@kernel.org>
 Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-7.2-fixes] BUILD SUCCESS
- 2fd9b4cfcefe30cb506072f78f2cd3b6dc8a29b1
-Message-ID: <202608040626.F5Q0T0EB-lkp@intel.com>
+Subject: [tj-cgroup:for-7.3] BUILD SUCCESS
+ 77bc7e952f660a7bab9741fe352f960f3675a650
+Message-ID: <202608040620.qs1Yc8N4-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -57,13 +59,13 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.2-fixes
-branch HEAD: 2fd9b4cfcefe30cb506072f78f2cd3b6dc8a29b1  Docs/admin-guide/cgroup-v2: document io.latency rotational vs non-rotational behavior
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.3
+branch HEAD: 77bc7e952f660a7bab9741fe352f960f3675a650  selftests/cgroup: add user_usec sanity check in test_cpucg_nice
 
-elapsed time: 733m
+elapsed time: 734m
 
-configs tested: 152
-configs skipped: 0
+configs tested: 166
+configs skipped: 1
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -128,17 +130,23 @@ i386                 randconfig-006-20260804    clang-22
 i386                 randconfig-007-20260803    gcc-13
 i386                 randconfig-007-20260804    clang-22
 i386                 randconfig-011-20260803    clang-22
+i386                 randconfig-011-20260803    gcc-14
 i386                 randconfig-012-20260803    clang-22
 i386                 randconfig-013-20260803    clang-22
+i386                 randconfig-013-20260803    gcc-14
 i386                 randconfig-014-20260803    clang-22
+i386                 randconfig-014-20260803    gcc-14
 i386                 randconfig-015-20260803    clang-22
+i386                 randconfig-015-20260803    gcc-14
 i386                 randconfig-016-20260803    clang-22
 i386                 randconfig-017-20260803    clang-22
+i386                 randconfig-017-20260803    gcc-14
 loongarch                          defconfig    clang-24
 loongarch            randconfig-001-20260803    clang-18
 loongarch            randconfig-001-20260804    gcc-16.1.0
 loongarch            randconfig-002-20260803    clang-18
 loongarch            randconfig-002-20260804    gcc-16.1.0
+mips                    decstation_defconfig    gcc-16.1.0
 nios2                           allmodconfig    gcc-11.5.0
 nios2                            allnoconfig    gcc-11.5.0
 nios2                randconfig-001-20260803    clang-18
@@ -172,15 +180,20 @@ sh                                 defconfig    gcc-16.1.0
 sh                   randconfig-001-20260803    gcc-8.5.0
 sh                   randconfig-002-20260803    gcc-8.5.0
 sparc                randconfig-001-20260803    gcc-16.1.0
+sparc                randconfig-001-20260803    gcc-8.5.0
 sparc                randconfig-001-20260804    gcc-16.1.0
 sparc                randconfig-002-20260803    gcc-16.1.0
 sparc                randconfig-002-20260804    gcc-16.1.0
+sparc64              randconfig-001-20260803    gcc-15.2.0
 sparc64              randconfig-001-20260803    gcc-16.1.0
 sparc64              randconfig-001-20260804    gcc-16.1.0
+sparc64              randconfig-002-20260803    clang-24
 sparc64              randconfig-002-20260803    gcc-16.1.0
 sparc64              randconfig-002-20260804    gcc-16.1.0
+um                   randconfig-001-20260803    gcc-13
 um                   randconfig-001-20260803    gcc-16.1.0
 um                   randconfig-001-20260804    gcc-16.1.0
+um                   randconfig-002-20260803    clang-24
 um                   randconfig-002-20260803    gcc-16.1.0
 um                   randconfig-002-20260804    gcc-16.1.0
 x86_64     buildonly-randconfig-001-20260803    clang-22
@@ -211,6 +224,7 @@ x86_64               randconfig-016-20260803    gcc-14
 x86_64               randconfig-016-20260804    clang-22
 x86_64                        randconfig-071    clang-22
 x86_64               randconfig-071-20260803    clang-22
+x86_64               randconfig-071-20260803    gcc-14
 x86_64               randconfig-072-20260803    clang-22
 x86_64               randconfig-073-20260803    clang-22
 x86_64               randconfig-074-20260803    clang-22
@@ -218,8 +232,10 @@ x86_64               randconfig-075-20260803    clang-22
 x86_64               randconfig-076-20260803    clang-22
 x86_64                          rhel-9.4-bpf    gcc-14
 xtensa               randconfig-001-20260803    gcc-16.1.0
+xtensa               randconfig-001-20260803    gcc-8.5.0
 xtensa               randconfig-001-20260804    gcc-16.1.0
 xtensa               randconfig-002-20260803    gcc-16.1.0
+xtensa               randconfig-002-20260803    gcc-8.5.0
 xtensa               randconfig-002-20260804    gcc-16.1.0
 
 --
