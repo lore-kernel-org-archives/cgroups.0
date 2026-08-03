@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E2923A718D;
-	Mon,  3 Aug 2026 19:47:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C66E3A7F45;
+	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785786443; cv=none; b=lQW0VFO+Hl5jXsxQuEdD6GLQ9sZMIQPh8gQBMCUBSE/3oEm5Bl64lxMPNQQ1hPSKdgMDzBroHkHajd7H6I4rIdlz3+bldySI/WB9xsrWjSYMPY3zy2VWKFnVtBKrrjUVChe4ikIjRoCmNjiLGVqTKMCTNC26qLMZGpddZHT6eeA=
+	t=1785786443; cv=none; b=ma/X/JB+NOmXS6LYGvDWDEjPznF2Hgr0RreLNFVm5bcOwsJivbNos2rHMw5rbL8mchh/DAjZ/TFPgFsyJA3dEw2P3r8g0NxPLYcSSRbMkkXGfRNz1haLWtMwWY02OHHaOvlxJWX3o6z0Gzz4s1W+8KVWsp6coF0swgzwcZhqwDs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785786443; c=relaxed/simple;
-	bh=7oMjq8JOU3eHb6zNoW7+5UIf8RcJuFNkmV1SUXaIj68=;
+	bh=9OIzYG9v5ayIbesiCljJXQsRCZ3b0ppcAUlzxbinN9A=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=H8yr2zOy4PzHVerwYFitfB3NvFzc5n+TOy/vwRN05x+rlE4c60+SLyK2deYPCeyI0j5f0GClJmkQxb+93AvJ7B/8SgrFu0xcgTqgiphEMN38LNxx6FtUBX3MyiBBgvS8m42QlzdlsISVFAPtkEFGFhulfl8XygDee0qv2oFSMwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kjJMqvJc; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=jpNHQcSnz0uT936F0FOcbX7n4VMwI6pP4EVsel+BktH9N8KPh36/8l2uiRoODNVzqCuEmYLCxTouXKoabE8pwU4WFuYmZPd/k6zlfs7JVfiNXU863A5yxx8RkmXOfbDuhTww58MULW4ogTczWYFcrjUTGFGZrplJ7LvVqRA8mhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uo+RiEy4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kjJMqvJc"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8E6A4C4AF1B;
-	Mon,  3 Aug 2026 19:47:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uo+RiEy4"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 271B3C2BD05;
+	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1785786442;
-	bh=7oMjq8JOU3eHb6zNoW7+5UIf8RcJuFNkmV1SUXaIj68=;
+	s=k20201202; t=1785786443;
+	bh=9OIzYG9v5ayIbesiCljJXQsRCZ3b0ppcAUlzxbinN9A=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=kjJMqvJcoxW6UFujRhq8Ekv2nNzw0LvezVEjFKCRIKjsCT+5GXzs7u6gy1yiHWEP3
-	 SkrKom0mDiWfg+AjcTMAAa0OWGbVcSwpCjs1qTfCY3Qk2iymoPrRnzznVK2TtjpBjU
-	 wF6uIqiCkPWTGdBPDFL7xUF1nqQ3qW1xawfTG1/Yvb55+xZRRvv0B+Ecl4d3lnf6oa
-	 3tesC7OUTMVURDnDNcFE8N2+WJNvw3naNwI64uu2B1ZM0GhTRNhS5/Xu8N8rYyH1dw
-	 zZ37M6qeq8ihBeiDpF0iGa+BQMx2ykFPljHIqpW9IDGWZ1L+AoFB5GItcGaRoK2waI
-	 7srdIPifotxzQ==
+	b=uo+RiEy4b/s/f7OV8igrBPb+6kmSRLVoYXNapHhJR9A0cHDGv9Mu1MZ+AAvGMPwN+
+	 zWbMdBQHs7Wg/yLxiDO1btNE6L9Kp6ZTESKJEfMoYeLw9wbNhk5208pQBV4FZrbAIZ
+	 Um1R58QjeGm3VFfflOatSM+BZI/mcz8vw95b3SCCixa3s3YXilW8eNZmgpyuudRaWj
+	 j8ux8M0UoDDVtzvLKzywZeH4DvMyxfoPCXx01eiiWLeajQiR8/1vxA9Vk8tmkZ4azd
+	 AjxEK50uddf3Xfhalntmw6DTdC6pTw/kL4sbZ8GvDOx4l5MzL1W1upf7RIBPsCUUZM
+	 uWPecPaa2MXHA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79284C55182;
-	Mon,  3 Aug 2026 19:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 121B6C55843;
+	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 04 Aug 2026 03:47:01 +0800
-Subject: [PATCH RFC 05/15] mm/mglru: move max_seq read into
- walk_update_folio
+Date: Tue, 04 Aug 2026 03:47:07 +0800
+Subject: [PATCH RFC 11/15] mm/mglru: replace folio workinset check and
+ update with new helper
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260804-mglru-fg-v1-5-4d8dad39dad6@tencent.com>
+Message-Id: <20260804-mglru-fg-v1-11-4d8dad39dad6@tencent.com>
 References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 In-Reply-To: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 To: linux-mm@kvack.org
@@ -71,11 +71,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Kairui Song <kasong@tencent.com>, Baoquan He <baoquan.he@linux.dev>, 
  Nico Pache <nico.pache@linux.dev>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=4925;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=7823;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=wSChZul1NmIryDYTKVLvOQpbv0SaiqhBZY/xmEybbCE=;
- b=1D47c3BXTihaaxXk5hhFvD/DLD/AcvdEQ6h35D1WEGFowZbRbvMRS5rfkKZOmT8jVlgf7xrkl
- UmLoLumuOA5DlyahcOpO0Xo67vojMx6kuNn57rXr4wHXutlCf/PRsKM
+ bh=ps3GPccJmNKKFg75e7bKrntkjE3H1Gau9WECQyN6J8c=;
+ b=SsYlfhIoI9qTSRrpCosoUsyZvOU0ul0m78d3Qr/DFKMMXzkq44g4dt3l0QbyqaioklkvikIIo
+ XQr9zDOideJDFLJAUTIr+IvQonmZ1XL5DQ4gdvvRSPbhot5/9ELDycb
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -85,139 +85,218 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
-each read lrugen->max_seq to compute the target generation for
-folio_update_gen(), then pass it as a parameter to
-walk_update_folio().  Move the read into walk_update_folio() itself
-so the callers no longer need to compute or pass the value.
+With the new folio LRU refs tracking API, when MGLRU enabled, a folio
+is considered a workingset folio if its referenced count > 1. This is
+compatible with classical LRU and reasonable in many ways:
 
-This is a pure refactoring: no functional change.
+The PG_referenced and PG_workingset are used as the lower bits of the
+LRU refs counter, and MGLRU will make use of extra bits as higher bits.
+
+So when MGLRU is disabled, all higher bits are always 0, making the
+check bit-wise equal to the old behavior. Active/inactive LRU sets
+PG_workingset explicitly for folios moved from active list to inactive
+list, and that makes the LRU refs tracking API (folio_is_workingset)
+report a referenced number > 1. Clearing PG_workingset will always
+return a value <= 1.
+
+When MGLRU is enabled, a folio referenced twice is considered a
+workingset folio, which is basically the same as how active/inactive LRU
+used to promote a file page to the active list. Note for
+active/inactive, the folio has to be marked inactive and PG_workingset
+before eviction, but MGLRU doesn't have a demotion process, so this
+simplified check ensures we have a stable definition and accurate
+readings in PSI and readaheads just like before.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/vmscan.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
+ fs/btrfs/compression.c | 3 ++-
+ mm/filemap.c           | 8 ++++----
+ mm/madvise.c           | 4 ++--
+ mm/page_io.c           | 3 ++-
+ mm/readahead.c         | 8 ++++----
+ mm/vmscan.c            | 2 +-
+ mm/workingset.c        | 4 ++--
+ 7 files changed, 17 insertions(+), 15 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index b02d2ec8ff4b..c2ea92c2b69e 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3511,13 +3511,15 @@ static bool suitable_to_scan(int total, int young)
+diff --git a/fs/btrfs/compression.c b/fs/btrfs/compression.c
+index ffb6b52863a7..e756403e8bd5 100644
+--- a/fs/btrfs/compression.c
++++ b/fs/btrfs/compression.c
+@@ -21,6 +21,7 @@
+ #include <linux/sched/mm.h>
+ #include <linux/log2.h>
+ #include <linux/shrinker.h>
++#include <linux/mm_inline.h>
+ #include "misc.h"
+ #include "ctree.h"
+ #include "fs.h"
+@@ -448,7 +449,7 @@ static noinline int add_ra_bio_folios(struct inode *inode, u64 compressed_end,
+ 			continue;
+ 		}
+ 
+-		if (!*memstall && folio_test_workingset(folio)) {
++		if (!*memstall && folio_is_workingset(folio)) {
+ 			psi_memstall_enter(pflags);
+ 			*memstall = 1;
+ 		}
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 6afec636881f..a88a6140ed09 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1259,7 +1259,7 @@ static inline int folio_wait_bit_common(struct folio *folio, int bit_nr,
+ 	bool in_thrashing;
+ 
+ 	if (bit_nr == PG_locked &&
+-	    !folio_test_uptodate(folio) && folio_test_workingset(folio)) {
++	    !folio_test_uptodate(folio) && folio_is_workingset(folio)) {
+ 		delayacct_thrashing_start(&in_thrashing);
+ 		psi_memstall_enter(&pflags);
+ 		thrashing = true;
+@@ -1414,7 +1414,7 @@ void softleaf_entry_wait_on_locked(softleaf_t entry, spinlock_t *ptl)
+ 	struct folio *folio = softleaf_to_folio(entry);
+ 
+ 	q = folio_waitqueue(folio);
+-	if (!folio_test_uptodate(folio) && folio_test_workingset(folio)) {
++	if (!folio_test_uptodate(folio) && folio_is_workingset(folio)) {
+ 		delayacct_thrashing_start(&in_thrashing);
+ 		psi_memstall_enter(&pflags);
+ 		thrashing = true;
+@@ -2510,7 +2510,7 @@ static void filemap_get_read_batch(struct address_space *mapping,
+ static int filemap_read_folio(struct file *file, filler_t filler,
+ 		struct folio *folio)
+ {
+-	bool workingset = folio_test_workingset(folio);
++	bool workingset = folio_is_workingset(folio);
+ 	unsigned long pflags;
+ 	int error;
+ 
+@@ -3981,7 +3981,7 @@ vm_fault_t filemap_map_pages(struct vm_fault *vmf,
+ 		 */
+ 		if ((map_ret & VM_FAULT_NOPAGE) &&
+ 		    !(vmf->flags & FAULT_FLAG_TRIED) &&
+-		    !folio_test_workingset(folio) &&
++		    !folio_is_workingset(folio) &&
+ 		    !(vma->vm_flags & (VM_SEQ_READ | VM_EXEC))) {
+ 			unsigned short mmap_miss;
+ 
+diff --git a/mm/madvise.c b/mm/madvise.c
+index 07a21ca31bad..abb17760b8b5 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -427,7 +427,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 		folio_clear_referenced(folio);
+ 		folio_test_clear_young(folio);
+ 		if (folio_test_active(folio))
+-			folio_set_workingset(folio);
++			folio_mark_workingset_by_bit(folio);
+ 		if (pageout) {
+ 			if (folio_isolate_lru(folio)) {
+ 				if (folio_test_unevictable(folio))
+@@ -542,7 +542,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 		folio_clear_referenced(folio);
+ 		folio_test_clear_young(folio);
+ 		if (folio_test_active(folio))
+-			folio_set_workingset(folio);
++			folio_mark_workingset_by_bit(folio);
+ 		if (pageout) {
+ 			if (folio_isolate_lru(folio)) {
+ 				if (folio_test_unevictable(folio))
+diff --git a/mm/page_io.c b/mm/page_io.c
+index e4fa7ffffe8b..e7efc5bff668 100644
+--- a/mm/page_io.c
++++ b/mm/page_io.c
+@@ -25,6 +25,7 @@
+ #include <linux/sched/task.h>
+ #include <linux/delayacct.h>
+ #include <linux/zswap.h>
++#include <linux/mm_inline.h>
+ #include "swap.h"
+ #include "swap_table.h"
+ 
+@@ -452,7 +453,7 @@ void swap_read_folio(struct swap_io_ctx *ctx, struct folio *folio)
+ {
+ 	struct swap_info_struct *sis = __swap_entry_to_info(folio->swap);
+ 	bool synchronous = sis->flags & SWP_SYNCHRONOUS_IO;
+-	bool workingset = folio_test_workingset(folio);
++	bool workingset = folio_is_workingset(folio);
+ 	unsigned long pflags;
+ 	bool in_thrashing;
+ 
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 558c92957518..3ab796af6490 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -302,7 +302,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+ 		}
+ 		if (i == mark)
+ 			folio_set_readahead(folio);
+-		ractl->_workingset |= folio_test_workingset(folio);
++		ractl->_workingset |= folio_is_workingset(folio);
+ 		ractl->_nr_pages += min_nrpages;
+ 		i += min_nrpages;
+ 	}
+@@ -474,7 +474,7 @@ static inline int ra_alloc_folio(struct readahead_control *ractl, pgoff_t index,
+ 	}
+ 
+ 	ractl->_nr_pages += 1UL << order;
+-	ractl->_workingset |= folio_test_workingset(folio);
++	ractl->_workingset |= folio_is_workingset(folio);
+ 	return 0;
  }
  
- static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
--		struct folio *folio, int new_gen, bool dirty)
-+			      struct lruvec *lruvec, struct folio *folio, bool dirty)
- {
--	int old_gen;
-+	int new_gen, old_gen;
+@@ -817,7 +817,7 @@ void readahead_expand(struct readahead_control *ractl,
+ 			folio_put(folio);
+ 			return;
+ 		}
+-		if (unlikely(folio_test_workingset(folio)) &&
++		if (unlikely(folio_is_workingset(folio)) &&
+ 				!ractl->_workingset) {
+ 			ractl->_workingset = true;
+ 			psi_memstall_enter(&ractl->_pflags);
+@@ -846,7 +846,7 @@ void readahead_expand(struct readahead_control *ractl,
+ 			folio_put(folio);
+ 			return;
+ 		}
+-		if (unlikely(folio_test_workingset(folio)) &&
++		if (unlikely(folio_is_workingset(folio)) &&
+ 				!ractl->_workingset) {
+ 			ractl->_workingset = true;
+ 			psi_memstall_enter(&ractl->_pflags);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 9c8d9e3af375..913e69eae534 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2268,7 +2268,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 		}
  
- 	if (!folio)
- 		return;
- 
-+	new_gen = lru_gen_from_seq(READ_ONCE(lruvec->lrugen.max_seq));
-+
- 	if (dirty && !folio_test_dirty(folio) &&
- 	    !(folio_test_anon(folio) && folio_test_swapbacked(folio) &&
- 	      !folio_test_swapcache(folio)))
-@@ -3548,8 +3550,6 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 	struct lru_gen_mm_walk *walk = args->private;
- 	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
- 	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
--	DEFINE_MAX_SEQ(walk->lruvec);
--	int gen = lru_gen_from_seq(max_seq);
- 	unsigned int nr;
- 	pmd_t pmdval;
- 
-@@ -3600,7 +3600,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 			continue;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, args->vma, last, gen, dirty);
-+			walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -3613,7 +3613,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 		walk->mm_stats[MM_LEAF_YOUNG] += nr;
+ 		folio_clear_active(folio);	/* we are de-activating */
+-		folio_set_workingset(folio);
++		folio_mark_workingset_by_bit(folio);
+ 		list_add(&folio->lru, &l_inactive);
  	}
  
--	walk_update_folio(walk, args->vma, last, gen, dirty);
-+	walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
- 	last = NULL;
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 452fe8554990..568a3e44cd5e 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -438,7 +438,7 @@ void *workingset_eviction(struct folio *folio, struct mem_cgroup *target_memcg)
+ 	eviction >>= bucket_order[file];
+ 	workingset_age_nonresident(lruvec, folio_nr_pages(folio));
+ 	return pack_shadow(memcgid, pgdat, eviction,
+-			   folio_test_workingset(folio), file);
++			   folio_is_workingset(folio), file);
+ }
  
- 	if (i < PTRS_PER_PTE && get_next_vma(PMD_MASK, PAGE_SIZE, args, &start, &end))
-@@ -3636,8 +3636,6 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 	struct lru_gen_mm_walk *walk = args->private;
- 	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
- 	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
--	DEFINE_MAX_SEQ(walk->lruvec);
--	int gen = lru_gen_from_seq(max_seq);
+ /**
+@@ -609,7 +609,7 @@ void workingset_refault(struct folio *folio, void *shadow)
  
- 	VM_WARN_ON_ONCE(pud_leaf(*pud));
- 
-@@ -3691,7 +3689,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 			goto next;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, vma, last, gen, dirty);
-+			walk_update_folio(walk, vma, walk->lruvec, last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -3705,7 +3703,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 		i = i > MIN_LRU_BATCH ? 0 : find_next_bit(bitmap, MIN_LRU_BATCH, i) + 1;
- 	} while (i <= MIN_LRU_BATCH);
- 
--	walk_update_folio(walk, vma, last, gen, dirty);
-+	walk_update_folio(walk, vma, walk->lruvec, last, dirty);
- 
- 	lazy_mmu_mode_disable();
- 	spin_unlock(ptl);
-@@ -4270,8 +4268,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 	struct pglist_data *pgdat = folio_pgdat(folio);
- 	struct lruvec *lruvec;
- 	struct lru_gen_mm_state *mm_state;
--	unsigned long max_seq;
--	int gen;
- 
- 	lockdep_assert_held(pvmw->ptl);
- 	VM_WARN_ON_ONCE_FOLIO(folio_test_lru(folio), folio);
-@@ -4308,8 +4304,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 
- 	memcg = get_mem_cgroup_from_folio(folio);
- 	lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	max_seq = READ_ONCE((lruvec)->lrugen.max_seq);
--	gen = lru_gen_from_seq(max_seq);
- 	mm_state = get_mm_state(lruvec);
- 
- 	lazy_mmu_mode_enable();
-@@ -4341,7 +4335,7 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 			continue;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, vma, last, gen, dirty);
-+			walk_update_folio(walk, vma, lruvec, last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -4353,13 +4347,14 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 		young += nr;
+ 	/* Folio was active prior to eviction */
+ 	if (workingset) {
+-		folio_set_workingset(folio);
++		folio_mark_workingset_by_bit(folio);
+ 		mod_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + file, nr);
  	}
- 
--	walk_update_folio(walk, vma, last, gen, dirty);
-+	walk_update_folio(walk, vma, lruvec, last, dirty);
- 
- 	lazy_mmu_mode_disable();
- 
- 	/* feedback from rmap walkers to page table walkers */
- 	if (mm_state && suitable_to_scan(i, young))
--		update_bloom_filter(mm_state, max_seq, pvmw->pmd);
-+		update_bloom_filter(mm_state, READ_ONCE(lruvec->lrugen.max_seq),
-+				    pvmw->pmd);
- 
- 	mem_cgroup_put(memcg);
- 
+ out:
 
 -- 
 2.55.0
