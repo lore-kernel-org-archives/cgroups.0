@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 840373A9605;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C1873A873B;
 	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785786443; cv=none; b=DzrzklzSx5UGROq7XsqTuwZv0p1d28eM/f6kc7txgjpfSy7E0J2ipFxWg3pLFPNFDw6joru5b3ZHS4s6md1L7J0GHdi+ghLx4GARN6We0ojmNXdt+kXIT+fjInE0W4+pdHIyh2a5E4pSfJI7SvcFWhQiZAyK9l9vzdWhyIKqD8g=
+	t=1785786443; cv=none; b=mMcat7syzUVeaBpkD/BD0u4RTQncw3Jloqd/hzDmATjsg4kD6wbizoJYtSu7tsv51FWdKS3Ik4VvQWL2gTYVSdHNb0byd0e78D2E8LhE7BunapIFTh2/4XrzdkS/pHIw2DR2WbncfkQ4Jk7RyXqm55+YLLXbOcj88gmUBLA+efA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785786443; c=relaxed/simple;
-	bh=KnWmpT9oaTCGf6Iw2Wd4BLWFdHkuktfOvH/1O23SoQ4=;
+	bh=S5TdssiSZAp76+zKDFhJcytSk6RO5zBrHmYRHuO0F6E=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Iu8Pw/1cPENUBGbtYWQieCKY3kvm3qEjokVzbKjPeo3YhGMMitcVRHOivEj00XGWSOqjIu+d3g0hN/sAYBIWtrShQXQXIrlMpnFpFWmDjhPv2kWup5KTjlgoE3oIIIFNJX8PbKn3SYnQHjvNbNjXsCn4b4+zg3kC7sP5MGyk/U4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vzi4z2uQ; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=ZP3tJTFMSqb4b7xbKi/8uoJizNt9OR4ab3sb2hNN7Vxiuh2+9i0rE9UcBMed4Gm57vGfMs76n8CYJMccPH5MzVNQjsjasfhS/JcLkPCDXGGw9j2lMCvv6dZCo0LxIJMDb2WqrHY+NfbafUQdlENiRCQ8XChr6vNYxZ9uEfmyUmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Af+zpRdy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vzi4z2uQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 61217C2BD00;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Af+zpRdy"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4C583C2BCFC;
 	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1785786443;
-	bh=KnWmpT9oaTCGf6Iw2Wd4BLWFdHkuktfOvH/1O23SoQ4=;
+	bh=S5TdssiSZAp76+zKDFhJcytSk6RO5zBrHmYRHuO0F6E=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=Vzi4z2uQBatDLSnAke9C7dGrFDH32+Nw8VbM64cqPyRHnSJVf4sNLTmTo+byjHoq5
-	 g12QYA+zrgxjU0zoYbN6Qb6Fi4sPXGLMOEbUq+5jhHxsJUcnSkwyYCuQL5SdqC5Hhe
-	 5Z4rKW3CuEoLFUq16XFgTOAB2zR8P4qPV8qnRAeItPxDh6DQj2lvnuWCvdjU/PM3DR
-	 +JKumL6fI8LU6o4U8A+sSv9+7GxY8MxBNCewE3p/ojT8q+3CBL2i0+lE3706up+xdC
-	 91j1xPPybG2pmacfz4OUkPm/F1jKGvpuKNkCljTxfMgADdcCecFuEFoE7Dnvm02qlJ
-	 aBwDsOXWAn9cw==
+	b=Af+zpRdydIutQ6SAx43Q3inKaMriMXd5MoFrCXgchJohl7fa4v3MGhkt426MP4s0B
+	 aBQe3XG1uMO90L4AN6ite34KW+M8twVLkYW8/PbaLgDGs8OgAEMKZ+jiZz0Cww+3HB
+	 KBOkMBc4plqjFAfjNVtfZofSlj8RpyhR1nErY1+QTGRRMdvCR+91CsjcB0S6eerdIb
+	 06tImMnTumDIpFJz1AW7oYqmRmY6K0RnADpsiUSMDdzuBua1JjiwSBZBSVXpHTUvt8
+	 kHWGffKCuAs4CV3fMPesksrzTepX8fdMVmBlXJARn76QLo2jxpQ67U3YSNZ5o48rYC
+	 fNOzrxASBVfNQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D1A9C55822;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39035C55182;
 	Mon,  3 Aug 2026 19:47:23 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 04 Aug 2026 03:47:10 +0800
-Subject: [PATCH RFC 14/15] mm/khugepaged: consider workingset folios as
- referenced
+Date: Tue, 04 Aug 2026 03:47:09 +0800
+Subject: [PATCH RFC 13/15] mm/huge_memory: mark file folio as accessed more
+ accurately on split
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260804-mglru-fg-v1-14-4d8dad39dad6@tencent.com>
+Message-Id: <20260804-mglru-fg-v1-13-4d8dad39dad6@tencent.com>
 References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 In-Reply-To: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
 To: linux-mm@kvack.org
@@ -71,11 +71,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Kairui Song <kasong@tencent.com>, Baoquan He <baoquan.he@linux.dev>, 
  Nico Pache <nico.pache@linux.dev>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=1957;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785786439; l=1826;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=HMlEqaXAqytxjGsOSQ1y0vS58P8dpXTZRRV+ITOk0K8=;
- b=hnHXcfL7XYuZF3ifhfyr250b99EXPZETH4Gh62F4nWF3Hz6MzoB9rwDrPS18A+Ns4mOMfBCXI
- K4dGqE5c7HxA0+8DZ2H8QLMV297MA/7uO9Suo8aKeXAAYU/OtiXsZ+E
+ bh=CJ94TqcOoIUBLTvAe1Ubz/gZmv43vqcSsxqrYElZJYw=;
+ b=VAOrM0iKC69AZ7qWggVe+gnW+wnbWJ/uxpCHJjI4Gjx+GlW4HXfap1IE5/CsinA+y3hXAUa+7
+ vT7U8ic/6W3CGO/AEQt2ELX54Q2EI94FR/sfhb7iinRxP5+wthKZiST
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -85,55 +85,48 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-The folio_test_referenced check here is clearly trying to test if the
-folio was ever referenced. It was first introduced by commit
-8ee53820edfd ("thp: mmu_notifier_test_young") as an supplement of the
-young bit check.
+The behavior of updating the folio's access info isn't consistent for
+huge mapping splitting or ordinary unmapping. The page table's young
+flag has to be translated into folio's access info.
 
-Folios are marked as PG_referenced on first access, but following access
-will clear their PG_referenced on second access. So checking only the
-referenced flag is not accurate enough.
+Right now it only check and set folio's referenced flag, which isn't
+enough since folio flags update on access have its rules. Ordinary
+unmapping (zapping) calls folio_mark_accessed(), and it also checks
+if the VMA has recency to avoid false updates.
 
-Switch to use the new helper, so we can cover the secondary and following
-access from MGLRU side. For non-MGLRU, this will make it return positve
-for workingset folios too though, which should be OK.
+So first just use the right helper here to be more consistent.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/khugepaged.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ mm/huge_memory.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-index b237f6e7662a..86c9b07dece6 100644
---- a/mm/khugepaged.c
-+++ b/mm/khugepaged.c
-@@ -809,7 +809,7 @@ static enum scan_result __collapse_huge_page_isolate(struct vm_area_struct *vma,
- 		 */
- 		if (cc->is_khugepaged &&
- 		    (pte_young(pteval) || folio_test_young(folio) ||
--		     folio_test_referenced(folio) ||
-+		     folio_is_referenced(folio) ||
- 		     mmu_notifier_test_young(vma->vm_mm, addr)))
- 			referenced++;
- 	}
-@@ -1767,7 +1767,7 @@ static enum scan_result collapse_scan_pmd(struct mm_struct *mm,
- 		 */
- 		if (cc->is_khugepaged &&
- 		    (pte_young(pteval) || folio_test_young(folio) ||
--		     folio_test_referenced(folio) ||
-+		     folio_is_referenced(folio) ||
- 		     mmu_notifier_test_young(vma->vm_mm, addr)))
- 			referenced++;
- 	}
-@@ -2752,7 +2752,7 @@ static enum scan_result collapse_scan_file(struct mm_struct *mm,
- 		/*
- 		 * We probably should check if the folio is referenced
- 		 * here, but nobody would transfer pte_young() to
--		 * folio_test_referenced() for us.  And rmap walk here
-+		 * folio_is_referenced() for us.  And rmap walk here
- 		 * is just too costly...
- 		 */
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 21c92ee48e46..043c9ac963b4 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3058,8 +3058,8 @@ static void __split_huge_pud_locked(struct vm_area_struct *vma, pud_t *pud,
  
+ 	if (!folio_test_dirty(folio) && pud_dirty(old_pud))
+ 		folio_mark_dirty(folio);
+-	if (!folio_test_referenced(folio) && pud_young(old_pud))
+-		folio_set_referenced(folio);
++	if (pud_young(old_pud) && vma_has_recency(vma))
++		folio_mark_accessed(folio);
+ 	folio_remove_rmap_pud(folio, page, vma);
+ 	add_mm_counter(vma->vm_mm, mm_counter_file(folio),
+ 		-HPAGE_PUD_NR);
+@@ -3181,8 +3181,8 @@ static void __split_huge_pmd_locked(struct vm_area_struct *vma, pmd_t *pmd,
+ 			folio = page_folio(page);
+ 			if (!folio_test_dirty(folio) && pmd_dirty(old_pmd))
+ 				folio_mark_dirty(folio);
+-			if (!folio_test_referenced(folio) && pmd_young(old_pmd))
+-				folio_set_referenced(folio);
++			if (pmd_young(old_pmd) && vma_has_recency(vma))
++				folio_mark_accessed(folio);
+ 			folio_remove_rmap_pmd(folio, page, vma);
+ 			add_mm_counter(mm, mm_counter_file(folio), -HPAGE_PMD_NR);
+ 			folio_put(folio);
 
 -- 
 2.55.0
