@@ -1,85 +1,80 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7615040801B
-	for <cgroups@vger.kernel.org>; Mon,  3 Aug 2026 13:41:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E3433937F;
+	Mon,  3 Aug 2026 16:47:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785764489; cv=none; b=cA0xlUZGvJF0zyC1Ef2cnbbP2oLCxbJkyNcDtDbn8/OFFA1ZLuLyJUEMSt+/nPY0XSD6YV23n1NC0ingHjzNkJHvzymI5NVMlrBXu+9ZULlJyBvnFN46cZ5XjwtIhC7FV9GKKV5/vuloxgiG/hevsaXBgoZRTVEr6OLwPc6WSfs=
+	t=1785775649; cv=none; b=tJ7mtykIXbadT1agaktetrty2bLuRMCNgH94Midg4sMkgkhSg00zEdZIQc2gbTz5NAZLeLuMVESR1ej2pvzYIsmu49MBU7P08nJ/iBrkNtCHaeW0NHdM2bxOjeM4PTTCsOaQWGMI4mHggapa7i769f+GNMQoB6CGPeocTfcclrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785764489; c=relaxed/simple;
-	bh=0ievkl6OufEmaYsxvAnISbhXXwxA78c1AnDi8dEBEh0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=egLNp1LzOqwgmnNkMpj8S0ZaWfu5uAfw1BR0JKZhWgenKkfzBtqtJH8/XDGeD0Gt4vuqJU7/U1AFwjEj6CrZSjlFWr/9tm2XLjW59hsAOwxcR6E8KNnqb/D0b3u6rTLUOM1JcUJUvcDAY9l2r2djF6dgwNRV2Vs+tqBP3ikKI0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=IfPOGCJ5; arc=none smtp.client-ip=91.218.175.185
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785775649; c=relaxed/simple;
+	bh=XaVgAirKIyKl8+QLIHE8n5rKN2g/v4X+DJNO+ye/eIY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qE9rFzCJiyuypqZmgsdacV1ZEt+nly7F3a8VCnD650H/QE7ls4a5KGu090Hvy9fPR8Vft9eIOnXL3Xin1CiUAeYd4boTiORVOPCxLTIOuFR3q8KX4TMtGfj74oDjeIsPLpl+i1rJpAbX//gSMHp3HMNjaLjvP/dHqeLJFbJIIpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E05zH6BF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="IfPOGCJ5"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785764475;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=FD1nmX4bovabO9SQhtw+dyJEIy94pdohczPGKx4uVr4=;
-	b=IfPOGCJ5HwqbJoh5wTsEFKHX6OhOPcN3Qq/qImEQlbkx7GsmFFkGY2VFPWjT5cDtQBb2Lo
-	vcRDg0UicEmPdUEnCBowUIjx0UBQ01/O8fpB7vWr0dRcgHyQYsiORjLmoYMHiIHtWj8bqm
-	l50mTWtFEq6oHUmfikj4FLp990r+xI8=
-From: Tao Cui <cui.tao@linux.dev>
-To: axboe@kernel.dk,
-	yukuai@fygo.io
-Cc: tj@kernel.org,
-	josef@toxicpanda.com,
-	cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	cui.tao@linux.dev,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E05zH6BF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 273611F000E9;
+	Mon,  3 Aug 2026 16:47:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785775648;
+	bh=jfuUCDNY0N9WBoJMJ3KO7FB3Ftw45T6HsMOdvvVFVj4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=E05zH6BF3SpEQuAI3Ii1PsAuT+DRR4mPjY/3wMn28rf1OC4+9cRxcQ5feC6e+K8+B
+	 9C9vZ3IxITIPD7qq8Atn1Of+D2xh53WGF9vE50QN/cDyRjwv+90MFmCaYpC5Lp+cEU
+	 c/j9PblPJIznLBA5hfve+Drx0k2RvC5OUynSjwAtjyT3Lhr9c3m2s84kqCilhp2geF
+	 HhMO+P+BOy/ld64kj4X2T2VvICfO/LGWPwnuG3uET7wrjZtsL9PUoumFucjikYn92r
+	 YvEXU0P5Bw/Qen51JS9ufE8Bc3mDzIyVBjD1N6n6jTc8YU9/LSV7Qoure+hZqMqSGY
+	 ksCdZg2BlTfXA==
+Date: Mon, 3 Aug 2026 06:47:27 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: axboe@kernel.dk, josef@toxicpanda.com, cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH] block/bfq-cgroup: use data_race() for online test
-Date: Mon,  3 Aug 2026 21:41:04 +0800
-Message-ID: <20260803134104.138411-1-cui.tao@linux.dev>
+Subject: Re: [PATCH v2] block/blk-iocost: read ioc_pd_stat params inside
+ ioc->lock
+Message-ID: <anDGH6An5b_HI8pj@slm.duckdns.org>
+References: <20260803132201.135355-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260803132201.135355-1-cui.tao@linux.dev>
 
-From: Tao Cui <cuitao@kylinos.cn>
+On Mon, Aug 03, 2026 at 09:22:01PM +0800, Tao Cui wrote:
+> @@ -3092,9 +3092,12 @@ static void ioc_pd_stat(struct blkg_policy_data *pd, struct seq_file *s)
+>  {
+>  	struct ioc_gq *iocg = pd_to_iocg(pd);
+>  	struct ioc *ioc = iocg->ioc;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&ioc->lock, flags);
+>  
+>  	if (!ioc->enabled)
+> -		return;
+> +		goto out;
+>  
+>  	if (iocg->level == 0) {
+>  		unsigned vp10k = DIV64_U64_ROUND_CLOSEST(
+> @@ -3110,6 +3113,8 @@ static void ioc_pd_stat(struct blkg_policy_data *pd, struct seq_file *s)
+>  			iocg->last_stat.wait_us,
+>  			iocg->last_stat.indebt_us,
+>  			iocg->last_stat.indelay_us);
+> +out:
+> +	spin_unlock_irqrestore(&ioc->lock, flags);
+>  }
 
-bfqg_prfill_stat_recursive() and bfq_bio_bfqg() read blkg->online
-locklessly, same as blkg_rwstat_recursive_sum().  Annotate with
-data_race() to silence KCSAN.
+There's nothing in this function that requires synchronized reads. Might as
+well just annotate them with data_race(). Otherwise, this can lead to a lot
+of lock operations when there are a lot of cgroups and high frequency stat
+reads.
 
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
----
- block/bfq-cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks.
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index e82ff03bda02..ef9d63e8542e 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -610,7 +610,7 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
- 	struct bfq_group *bfqg;
- 
- 	while (blkg) {
--		if (!blkg->online) {
-+		if (!data_race(blkg->online)) {
- 			blkg = blkg->parent;
- 			continue;
- 		}
-@@ -1168,7 +1168,7 @@ static u64 bfqg_prfill_stat_recursive(struct seq_file *sf,
- 		struct blkg_policy_data *pd;
- 		struct bfq_stat *stat;
- 
--		if (!pos_blkg->online)
-+		if (!data_race(pos_blkg->online))
- 			continue;
- 
- 		pd = blkg_to_pd(pos_blkg, &blkcg_policy_bfq);
 -- 
-2.43.0
-
+tejun
