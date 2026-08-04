@@ -1,146 +1,106 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB80939EF2B
-	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 02:11:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 768072D7DC6
+	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 02:17:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785809502; cv=none; b=IitESg3bnKfJ9gntU0QheK36rIRL0ll/uBVkhDb6AxbYaV+8TBzBxI9U7F3mMg98l0Qd99azPPLtVUfwGlhSCQepjoUPWcl8FLwi0V4eGjgL/3cbRLVRoiPK3zuzs+i0ykQ0iKdpXGI90u5qUZoa/9xjaE4tQm8RhCM1PGcEwVc=
+	t=1785809832; cv=none; b=quRR+7AfCeb+fkVyT+Xw5HWG65yvaIkKsrART6E9UOVG01Kl19NvB9nVBfZjlgUy5KeDbwaM0HnPXu7v8ECOLxuS6tSNEz80We2RfLRoRzCnkwT9NlIa1scXMIig7zHfXvf5TKea0MvKIdz2GRWc3L8aJMexHLUe0syHJxXzWNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785809502; c=relaxed/simple;
-	bh=zfEclrsYG5vOGszMKMLbEZ81QNfoN8o4EjK1qOVqQUs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fOfwxV5aDDbLk84shvscajamlWpO9OTOwLImrsoeSTaGnYdeWDpBWaU6qbcIpE6JqVAExIQJvS+TKClEzzxoikSM3lIQMUydOk0uEjww+WH3b1w/AXkYNIFU7L+WU+wsnCt9L4kYdOR0EEo3WpDR6230dK4x6jlRsqCg4kYt+Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dw/ncJrC; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785809832; c=relaxed/simple;
+	bh=kO7/CU1/RtwrDy8O6WI0itaSN6z2CSqn0cb6n8MGyQc=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=BaADJ74tWHVZD3ETfaNA0+sqjEn0o1tqA029sruQbljwoIIdPRUj6tm9LEQMtGnP6Yza4RJ1QpP9A7lQdIXaCYJ96cgzICzM/p0E4NS7j38wF4mm5QKZd+RzDfup6ZDEtHF15C3UbY4VEd9EvUNzdNOTcx490ElJK4wNGY2H6O8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=xFI1kUYG; arc=none smtp.client-ip=209.85.210.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dw/ncJrC"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-38a0c7e841fso4939258a91.2
-        for <cgroups@vger.kernel.org>; Mon, 03 Aug 2026 19:11:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="xFI1kUYG"
+Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-7eb42a2f5feso2019880a34.1
+        for <cgroups@vger.kernel.org>; Mon, 03 Aug 2026 19:17:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785809496; x=1786414296; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=8SYycNF3WUCSlS4WaCTVXd7p9H/S1LXP/nnaP+2x+nY=;
-        b=dw/ncJrCjhWsODPpFpqPYysAgILgTJRtYgV3qVaKAjnRiNNxqw+HJcpk295/y6dcsz
-         k7ELveudJHGprit/Vqxgqjdzl1r/9UppKclJLn/PRkoRTpKNd4zaA5LLiSxY9cqkoOvy
-         Burt7+FG4/EfgZ3rdZQYZHXilVPm/0ay+nP++wwg6d6qQOr3LTzq/MMq0TzZB1aEFi9u
-         wJ/fiv9AFqrasc22HAxvig/ZzfZPqjU4Gm4e8sxSuh9iXGRPyZyY6Lhsy9uZ+WbxpSM6
-         XjjABkQAzxHwTRrS+oo2ffGdiZRl1kjlewe03AajFnF/NIXE2OLHjV6DvIjFaAKabq25
-         ojMw==
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1785809829; x=1786414629; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=zO4To4ruNthAnXc9BweyqU2kP7hjI3Ya2Rj1EPxSfNg=;
+        b=xFI1kUYGfN5IozVtFnQ2111eZCSeGCT01naaiDsD8oXZskYN78anbjNUUcJUiWrwU+
+         v92Kz+53b3n+jlcpxFJUCGP8mRedHcIorAmT+JVbQ9ZavIz3N85YbMFl7qGIbKp+RT2L
+         ZzpCY5XzQN2M9n5sVbHZz76emmeHQDMty1OkgjDSL+1DHptTGl83eq4i+IpI4QIIJWEa
+         heg14pEh2StHDhD2WgSC7Y3euXYyNMGnGd9YCFIZfmLBvGslGdGHWiMC3jK29K07+zEL
+         eNJehkL9eL+anzNoQqOjM0//v212YV/taLw+pv0ashqE+RuTgRzPu7QQ4fABepb1it9A
+         cdQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785809496; x=1786414296;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1785809829; x=1786414629;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=8SYycNF3WUCSlS4WaCTVXd7p9H/S1LXP/nnaP+2x+nY=;
-        b=QB/5mAYfyB67pNAIstjp5Bnel0L8IL0B86CTSlI4oi7ysCgbuempsRZuUEePXMFY9N
-         D7VPYMDpYdS6fI7Nsb+nOGe7m62ZXYJp69Z/m4WVFW/KAzBVx4wSxTpwlnlPOOYViaE3
-         G1506VLAGBiuxDqNl9PYSGZzC+OCIhhyDn6Zgnn/0gEhLXLaGGqbmld9/b8Vc9qwRW/M
-         /S5cP7B5KBtApzlcK2id4V1+s3BfZhM4b6XSx8AGuwKW5avnhY73QBq6GJ75L6+rdMOC
-         CoZ4bMmBW3yjKBzyEe2+Wbo7RUXqCSj7y4jz8y+exrSGZOUb/vaPYaB0LkFFLneFjQCh
-         LAsQ==
-X-Forwarded-Encrypted: i=1; AHgh+Ro/AEB7XOnwM3pDvS77NRme3sxI6IEY/OTSoe6QB0jZZ5Pjjd5UqUl9NxJwuTVNfHUIbyTpIMcC@vger.kernel.org
-X-Gm-Message-State: AOJu0YzHwks72ZLOG+KRssJhu57VpRkZfjrfJdF/7sJjsOI1vCaXAMt2
-	VoDx9ENsce+ibLbglziLq6WveRMN92wAY1ArEMKNnMEFrrF7+nX+YKyDPnpk5GSYw/I=
-X-Gm-Gg: AR+sD113FHhq0MnCHqzH3yYWxRTEM58lE4mxBITeliSfBBeVz03dCj4BVffbXH82ADl
-	WLuv8GJiirLHy+8frAKj5bAP3Y/4dfLl6vjwgv3dSMhIarJ80TA15bO82MQTimbxbmtoxwBTrEl
-	MpIMx6ySYEF8yJIdbYJKd5CXzEOw3QW1UkpQLDfzCSgNQEyY6WNpwPBODYsFIcFeSJNE1EOmO5/
-	B69Ewjl4mUQRK2XYTKK6SO6ep7Z6wKqGPqIfkci6ixbyaWcn0LQKgMqtYGat4WWUlYEngPlZ5dX
-	3zvkfpS9AK0IDx2BM5YoNQGvGkfO4W2W5lU38oim9KfXjMPY8NyK9OooBwjX5u/NFEmNndHJKPa
-	8oCRLZb2qSC9KGg4RCXiBUP66M073F8g/vsAxOReDsqDwfsqszEUjYt4BwrfoJFNnoN/RR7s5sB
-	lGDYtvJo0L1H1HGRcKt8/DUTyMf8AlET0pQc+JWZMtWkkCmvBUk9yL/yg9008ak2LRr6j7ryAZn
-	2IIc6j6flOeLiUF3rs7OQXeWS7kB8vaUPA=
-X-Received: by 2002:a17:90b:4b02:b0:38e:bbf1:de34 with SMTP id 98e67ed59e1d1-38fbc3e7e39mr11745590a91.7.1785809495777;
-        Mon, 03 Aug 2026 19:11:35 -0700 (PDT)
-Received: from KASONG-MC4 ([43.132.141.21])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38febff7eedsm515509a91.5.2026.08.03.19.11.24
+        bh=zO4To4ruNthAnXc9BweyqU2kP7hjI3Ya2Rj1EPxSfNg=;
+        b=TR8rjEcbsAeaJ4szZddmmu+MrgF2d7nM0fNWRaMnfG1ind9/95mu7HJyZ/YI1jMIE6
+         haIYejhDjJE9EFZjnHq3Lsnd7kUWa69aocvzWPbY4nL/27R4BhqHDV4nFg7kNt/qF+p9
+         nBCTuat+/3nI2w4CY+gzcIkqNx8WYpb3hu9x3bwIVwfzJZ9hJqz49xNxfOVyqCWmENVV
+         UEtCqS7Ie1HkPV8O9whEFvPkANAKuFvcMzT8BQ/GzFOM4wMFYB8XHo1PjCSvyLag2U7S
+         v0fHLb7kMH6jVjz7U3serMU7NsvZQeiJLAAlkX19GAFqIGmmKSyIubZo5Y2Pcg+KLGtX
+         ycMg==
+X-Forwarded-Encrypted: i=1; AHgh+RqxncnAZP1Hg3NJyD1SgNm6lpe1GAxXkzi6Jndrdk+0dfkKqQTflxa4GefWa3D7A05qyDj7sKnx@vger.kernel.org
+X-Gm-Message-State: AOJu0YxshVhmo3qNu997OMiZYeAs/M6YSwJJha8wIUcEjbYs8bZfsWGO
+	h7i990X+X6zTT4kPsKHhQ7PfOFEBxhLXv07uWavPx1dm689t8rnt3zfll44pquyx5Mq5BOyZirw
+	Nw912lCmhaw==
+X-Gm-Gg: AR+sD11QlRZ/qsKRu9z3YRKGXShegdwa9IUqklFyhElQgCyjfAQ2j0nks316KE0gTLi
+	2W0J95/BIu2wvIbcJVeRG4QSNoqPgO3Jb7gPZk8+s4khgmKn/ZB7nEFyqXlNF2x3p7QQ7fuFGGV
+	i1vbDYvAEP4Da0jdzSQ78izk3fB7lAO3tiIv+tVI410pDTJFuuLDI5OuQ3U2Kk/Bz065LqtkT3F
+	28n4JaDSohmw/BLRWu+SkBtwRkECPu5Q57c/1p6jvQ4dFZ4w1lq1q0ADrZe1Pm5wcTGVhYaewBl
+	s5Y4pit2FL7up5GOoQWJR5gyCFpokaBuCdR9UxBupt/vTlrvdjv5hg1EKc9J9bBPLWtCbcjcKZU
+	WOnVT5netXnFdhB1q+fynsvMOJnTII3bifr2EmxFSNI53x2dnNByRxenMjFJ9fzQPfPmXboSM52
+	sra6x6mgmAvrJFerQhzYOuKaaFu7KkLk8aUUroRSu74FzBUb9FbrqSZgA0X+lQc5gDkbBizEasQ
+	XI8amPv5uFcrHoAynEaPW93nmaJ6CrAnB+cusuxdQ==
+X-Received: by 2002:a05:6830:440f:b0:7eb:3af8:8c03 with SMTP id 46e09a7af769-7f196f0d6ccmr20363818a34.11.1785809829046;
+        Mon, 03 Aug 2026 19:17:09 -0700 (PDT)
+Received: from [127.0.0.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f18f07a55asm8914812a34.13.2026.08.03.19.17.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2026 19:11:35 -0700 (PDT)
-Date: Tue, 4 Aug 2026 10:11:21 +0800
-From: Kairui Song <ryncsn@gmail.com>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: kasong@tencent.com, linux-mm@kvack.org, 
-	Andrew Morton <akpm@linux-foundation.org>, Muchun Song <muchun.song@linux.dev>, 
-	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
-	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
-	Hugh Dickins <hughd@google.com>, SeongJae Park <sj@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>, 
-	Zicheng Wang <wangzicheng@honor.com>, Chen Ridong <chenridong@xiaomi.com>, 
-	Tal Zussman <tz2294@columbia.edu>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH RFC 12/15] mm/smap: report workingset folios as referenced
-Message-ID: <anFJMBI5Q24BEdkn@KASONG-MC4>
-References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
- <20260804-mglru-fg-v1-12-4d8dad39dad6@tencent.com>
- <anE-nSqyXcG1g5zQ@cmpxchg.org>
+        Mon, 03 Aug 2026 19:17:08 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: tj@kernel.org, josef@toxicpanda.com, yukuai@fygo.io, 
+ cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+In-Reply-To: <20260803133400.137906-1-cui.tao@linux.dev>
+References: <20260803133400.137906-1-cui.tao@linux.dev>
+Subject: Re: [PATCH v2] block/blk-cgroup-rwstat: use data_race() for online
+ test
+Message-Id: <178580982757.518281.5036620938854770535.b4-ty@b4>
+Date: Mon, 03 Aug 2026 20:17:07 -0600
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <anE-nSqyXcG1g5zQ@cmpxchg.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-On Mon, Aug 03, 2026 at 09:21:33PM +0800, Johannes Weiner wrote:
-> On Tue, Aug 04, 2026 at 03:47:08AM +0800, Kairui Song via B4 Relay wrote:
-> > @@ -944,6 +944,22 @@ static void smaps_page_accumulate(struct mem_size_stats *mss,
-> >  	}
-> >  }
-> >  
-> > +static bool smap_check_folio_referenced(struct folio *folio)
-> > +{
-> > +	if (lru_gen_enabled())
-> > +		return folio_is_referenced(folio);
-> > +	else
-> > +		return folio_is_referenced_by_bit(folio);
-> > +}
-> > +
-> > +static void smap_clear_folio_referenced(struct folio *folio)
-> > +{
-> > +	if (lru_gen_enabled())
-> > +		folio_set_lru_refs(folio, 0);
-> > +	else
-> > +		folio_clear_referenced_by_bit(folio);
-> > +}
-> 
-> I don't really understand this and the preceding 2 patches.
-> 
-> What is the benefit of a "shared" ref/workingset state implementation
-> when you then still have separate APIs for querying & modifying?
-> 
-> Switching some these callers from folio_test_workingset() to
-> folio_is_workingset()? But both functions continue to exist?
-> 
-> Why not make versions of folio_test_workingset(),
-> folio_test_referenced(), folio_clear_referenced() etc. that do the
-> arbitration (bit ops on classic, refs ops on mglru) and leave callers
-> that are only interested in boolean states, like here, alone?
-> 
-> folio_test_anon(), folio_test_lazyfree(), folio_test_swapcache() -
-> there are many examples where they don't just test a raw bit but
-> assess more complex, composed state.
-> 
 
-Sound good, I just copied the folio_is/mark_workingset helper from
-my previous combined RFC, where I tried to drop PG_workingset hence
-used a standalone helper to convert the users one by one for easier
-audit and tracking.
+On Mon, 03 Aug 2026 21:34:00 +0800, Tao Cui wrote:
+> blkg_rwstat_recursive_sum() reads pos_blkg->online without the queue
+> lock that its doc comment requires, since blkcg_print_blkgs() stopped
+> holding it in 56cc24f59c14.  Concurrent blkg_create/destroy flips
+> ->online, tripping KCSAN.  The race is harmless (RCU-protected, stale
+> online only causes minor stat noise).  Use data_race() to annotate
+> the intentional lockless read.
+> 
+> [...]
 
-I think I can just replace the default helpers and have zero effect
-for CLRU. There are actually a few more helpers not used but introduced
-here, will drop these in V2. Thanks for the review!
+Applied, thanks!
+
+[1/1] block/blk-cgroup-rwstat: use data_race() for online test
+      (no commit info)
+
+Best regards,
+-- 
+Jens Axboe
+
+
+
