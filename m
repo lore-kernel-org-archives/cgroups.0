@@ -1,136 +1,140 @@
-Received: from va-2-42.ptr.blmpb.com (va-2-42.ptr.blmpb.com [209.127.231.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ED303F99F4
-	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 15:31:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 324543515C9;
+	Tue,  4 Aug 2026 15:33:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785857478; cv=none; b=uexiyVTBQiSuR599RVyotHmJcFg4YvS3Vs0HNaCZOPxho8s91c3PwptCXUVgw52r1x2R//xImDfTq7XG0Rbs+66GMg/rPWt1Lr5KgDjeUl26c3rmhs+Y3m6EyrF9RsolfsEAhSkwOgCGM992vu9n9G2qfUeOSZdtmsLdZAezMCE=
+	t=1785857590; cv=none; b=uV6k8tH1jjdXkL9FjvPKP7lZafmFUt3rnZh7IkoyEK7yutzSbPsae5/UfO+hufSUgtjDlze6q7/AUIF2BQfNCFwj6THd1VjYKX56qif6yoGQTdFITVTiKmcHwyt2AUOcllVGfCntP6Xt8CTzaWGn/FXQaPBV3qvQJ3V9NhNDuuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785857478; c=relaxed/simple;
-	bh=by/fcGncfc5OCuRW9skgJuC6t1LUujBBm0TnhfUwb/o=;
-	h=From:Content-Type:Mime-Version:In-Reply-To:Cc:Subject:References:
-	 To:Date:Message-Id; b=UEo0/IcEd3bht76npg+3aJqIkAGua22CWtK/WtcwU2CWKPMEPrUrVoqx3YfwkDo3ya81JturKdxbpFU8t7dtx0aolzG7OGrV6XWkETQj/7+Y45R3AMaRSlUfmBw/fchfh/hLW3EPcqb0wFKEnXVYUYeObDEwl1AAS8BCfZYUFuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=euw8Hfe9; arc=none smtp.client-ip=209.127.231.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1785857590; c=relaxed/simple;
+	bh=oXqu5CkAgTmUeweinC3Djt5R3DdkUMWMFL1HcVjqEVw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=u7oTRBldGclQ1uzBIU+gPubrr6Jp9LgU5zj3cwf9Gm5UPLWJIEeF2Dy7oczx/fDPJ959ZfBBxhSs1u6rc5qrwG/Qy5UfqKrk+5DrAtBDCq293DcKH75oV5FMPdU3+qT6MHuE+VGy5SaUAc3AqWwrFuVE9Qq+IuIZ2tcSRq6ZBoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R3oNVVsx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="euw8Hfe9"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785857464;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=LX/Wg0tks/cc/fTlAyp1t5QsfNTLQnLsZm1iWKs61Hs=;
- b=euw8Hfe9zlE4dKSwWSGjPHpD1X+DCz38LT6s0DsrO8ZRHaCJXTSXSCSLrs9bG3IF75n5nR
- nInnxDU4rVSUc5Phrmlu4bRo1Z9Ibr2/Kx628xpu0XqSc4GPlxgULOmSg6TuTBPLdgnIaB
- wZl/0JsxB9khWCAGOpkbHWQqVaJMpEaXdhX56YUVpJmiHyIIOR/mSYvICXyYkgehZM9CbT
- dNx+dxBY360Cdtd3bOWox8lgL6OEhDmi/FpZbNoArlEJC9QASuTTNvn7GMLexoeMO73U0S
- 1EH+YzRG+67JSLg5VbmhwIQZs56nqz59yMKX8wGnARnwTr57Om/1hK6HiwGz0A==
-From: "yu kuai" <yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Reply-To: yukuai@fygo.io
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R3oNVVsx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05A651F000E9;
+	Tue,  4 Aug 2026 15:33:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785857588;
+	bh=+B2tyHlxtOIYFFAEVjuBTTR4kj9wHrzaGATG1AU1+pI=;
+	h=Date:Subject:To:References:From:In-Reply-To;
+	b=R3oNVVsxuCEWsgVHp9L06whtvAu65m31eI7YTUDVmBGTciHjhmbGlv6QUnaWentP6
+	 iKLvzeiIIVg5Ghu1QbNkxlP7j4IS8pCBYrP2hqN5M3VwDO3VNlOGkYXUJZbP/QqIUY
+	 jDQEIQqJorCqz2ZmxeN9MyAQ4406Pc51zTU7Sf3uVL3FNPQ6V/gAqkzY9x567zrxhM
+	 bfstcUfhbLbTZldGnVZ+Xe+REaXQCRTAtHrfQNoDSivsMH8GjVZgEpiFVsUhWgRs6D
+	 Kj6Ww6zTa/zxFhnYHtMLGQpKCTNtF/CX24S8/PBlYm3B3hGjvCYaLeiw9n/12iBL7O
+	 avzTCd2u4JoOQ==
+Message-ID: <2a4423d6-7934-46b2-97da-a20c372b0d17@kernel.org>
+Date: Tue, 4 Aug 2026 17:33:02 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: yu kuai <yukuai@fygo.io>
-In-Reply-To: <20260804133208.GB8078@lst.de>
+MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: "Yu Kuai" <yukuai@kernel.org>, "Jens Axboe" <axboe@kernel.dk>, 
-	"Tejun Heo" <tj@kernel.org>, "Johannes Weiner" <hannes@cmpxchg.org>, 
-	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	"Jonathan Corbet" <corbet@lwn.net>, "Josef Bacik" <josef@toxicpanda.com>, 
-	"Coly Li" <colyli@fygo.io>, 
-	"Kent Overstreet" <kent.overstreet@linux.dev>, 
-	"Alasdair Kergon" <agk@redhat.com>, "Mike Snitzer" <snitzer@kernel.org>, 
-	"Mikulas Patocka" <mpatocka@redhat.com>, 
-	"Benjamin Marzinski" <bmarzins@redhat.com>, "Song Liu" <song@kernel.org>, 
-	"Dan Williams" <djbw@kernel.org>, 
-	"Vishal Verma" <vishal.l.verma@intel.com>, 
-	"Dave Jiang" <dave.jiang@intel.com>, 
-	"Alison Schofield" <alison.schofield@intel.com>, 
-	"Pankaj Gupta" <pankaj.gupta.linux@gmail.com>, 
-	"Andreas Gruenbacher" <agruenba@redhat.com>, 
-	"Matthew Wilcox" <willy@infradead.org>, "Jan Kara" <jack@suse.cz>, 
-	"Andrew Morton" <akpm@linux-foundation.org>, 
-	"Chris Li" <chrisl@kernel.org>, "Kairui Song" <kasong@tencent.com>, 
-	"Nilay Shroff" <nilay@linux.ibm.com>, <cgroups@vger.kernel.org>, 
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<linux-block@vger.kernel.org>, <linux-bcache@vger.kernel.org>, 
-	<dm-devel@lists.linux.dev>, <linux-raid@vger.kernel.org>, 
-	<nvdimm@lists.linux.dev>, <virtualization@lists.linux.dev>, 
-	<gfs2@lists.linux.dev>, <linux-fsdevel@vger.kernel.org>, 
-	<linux-mm@kvack.org>
-Subject: Re: [RFC PATCH v1 2/3] blk-cgroup: store blkcg in bio instead of blkg
-References: <20260804065313.2092022-1-yukuai@kernel.org> <20260804065313.2092022-3-yukuai@kernel.org> <a677f581-344b-4d99-846d-a00801e26033@linux.dev> <20260804133208.GB8078@lst.de>
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Tue, 04 Aug 2026 15:31:03 +0000
-To: "Christoph Hellwig" <hch@lst.de>, "Tao Cui" <cui.tao@linux.dev>, 
-	"yu kuai" <yukuai@fygo.io>
-Date: Tue, 4 Aug 2026 23:30:55 +0800
-Message-Id: <0fc5dd22-7a8d-43f0-8555-d2ca966efff6@fygo.io>
-X-Lms-Return-Path: <lba+26a7205b8+e473bc+vger.kernel.org+yukuai@fygo.io>
+Subject: Re: [PATCH v5 1/3] mm/vmstat, mm/memcontrol: add _monotonic vmstat
+ readers
+Content-Language: en-US
+To: Usama Arif <usama.arif@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>, david@kernel.org, ljs@kernel.org,
+ liam@infradead.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com,
+ kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev,
+ axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
+ chrisl@kernel.org, nphamcs@gmail.com, baoquan.he@linux.dev,
+ youngjun.park@lge.com, hannes@cmpxchg.org, roman.gushchin@linux.dev,
+ muchun.song@linux.dev, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, rientjes@google.com, kernel-team@meta.com
+References: <20260727162550.2032-1-usama.arif@linux.dev>
+ <20260727162550.2032-2-usama.arif@linux.dev>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <20260727162550.2032-2-usama.arif@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi,
+On 7/27/26 18:23, Usama Arif wrote:
+> lruvec_page_state(), node_page_state(), and global_node_page_state()
+> all clamp negative reads to zero on CONFIG_SMP so that a transient
+> per-CPU delta skew presents as zero pages rather than
+> as a garbage unsigned value. This is the right behaviour for
+> non-monotonic page-count readers.
+> 
+> It is however incorrect for callers that snapshot a monotonically-
+> incremented event counter and compute a delta from two samples.
+> Once the underlying signed long wraps past LONG_MAX, the clamped read
+> drops to zero while the previously-recorded snapshot still holds the
+> pre-wrap value; the unsigned subtraction then underflows into a
+> ~2^31 spurious delta for 32-bit architecture and corrupts the
+> caller's accumulator.
+> 
+> Add non-clamping siblings that return the underlying state value
+> cast to unsigned long:
+> 
+>   global_node_page_state_monotonic()
+>   node_page_state_monotonic()
+>   lruvec_page_state_monotonic()
+> 
+> With both samples read via the _monotonic variant, unsigned modular
+> subtraction stays correct across a signed-long wraparound as long
+> as the true growth between two samples fits in unsigned long
+> (< 2^32 on 32-bit, < 2^64 on 64-bit); the 32-bit bound is the
+> practically-reachable one that motivates this helper.
+> 
+> The variants are only safe for monotonically-incremented counters.
+> Non-monotonic page-count readers must keep using the existing
+> clamped helpers so transient negative reads still present as zero.
+> 
+> This is a prerequisite for a later patch which
+> replaces the producer-side anon_cost/file_cost accumulators with a
+> read-side accumulator in prepare_scan_control() that samples
+> monotonic per-LRU vmstat counters (PGROTATE_*, NR_VMSCAN_WRITE,
+> WORKINGSET_RESTORE_*) via lruvec_page_state_monotonic() and folds
+> their unsigned modular deltas into lruvec->cost[].count.
+> 
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Signed-off-by: Usama Arif <usama.arif@linux.dev>
 
-=E5=9C=A8 2026/8/4 21:32, Christoph Hellwig =E5=86=99=E9=81=93:
-> On Tue, Aug 04, 2026 at 05:19:24PM +0800, Tao Cui wrote:
->> While reading 2/3, one spot in bio_pinned_blkg() made me wonder, so I
->> gave it a try =E2=80=94 and the WARN_ON_ONCE triggers every time for me.
->>
->> I may well be missing something, but my worry is that the bio's ref on
->> the blkg keeps the object alive, not its entry in the radix tree.
->> blkg_destroy() runs throtl_pd_offline (which only schedules an async
->> flush) before radix_tree_delete(), so the queued bio ends up dispatched
->> (blk_throtl_dispatch_work_fn -> blk_cgroup_bio_start ->
->> bio_pinned_blkg) after the blkg is already gone from the tree, and
->> blkg_lookup() returns NULL.
->>
->> I applied the series and wrote a small reproducer:
->>
->>    - null_blk, cgroup v2, a child cgroup with io.max rbps=3D4096;
->>    - a read issued in the child cgroup gets throttled and queued, pinnin=
-g
->>      the blkg;
->>    - migrate the reader out and rmdir the cgroup; the queued bio is then
->>      flushed after the blkg has left the tree.
-> Can you add this to blktests?
->
->> Maybe keeping the pinned blkg pointer in the bio would sidestep this, so
->> the lookup can't miss?
+Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
-The problem here is that blkg_destroy can be called while blkg is still pin=
-ned
-by blkg_get, in this case remove the cgroup directly remove the blkg from r=
-adix
-tree, that's why blkg_lookup can't find this blkg anymore, and the extra bl=
-kg ref
-is leaked :(
-
-> That would grow the bio, which we try hard to avoid.  I think the way to
-> avoid this is to have active/passive refcounts on the blkg, where an
-> active one keeps it in the radix tree, but a 0 passive one would prevent
-> the caller from getting a new reference to it.  The users who rely on the
-> pin for the I/O completion path would then just keep the active reference
-> and use a pure lookup without getting a new passive reference in the
-> completion path.  This would remove the need for BIO_BLKG_REF which
-> feels a bit kludgy and eats up precious bio flag space.
-
-The problem here is that remove a cgroup can also remove the blkg from radi=
-x tree,
-even through it still has active refcounts. I think this can be fixed by ch=
-ecking
-the cgroup online_pin first, if it's zero, we can search the blkg from the
-request_queue blkg list, where blkg will not be removed until blkg_free_wor=
-kfn().
-What's better, if we can convert the blkg list to hash table with key as bl=
-k-cgroup,
-it will be much better as we can lookup from this table instead of blkcg ra=
-dix tree.
-
->
---=20
-Thanks,
-Kuai
