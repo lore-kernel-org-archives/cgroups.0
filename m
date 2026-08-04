@@ -1,298 +1,87 @@
-Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B633EFD1F
-	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 22:07:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F1F32E6BD
+	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 22:22:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785881257; cv=none; b=neZTrb5wTQ86DQygA2QtPM9xTUi5mgMqvmzZ26jQrWSfaREl/y/i6sMJE1nqm3p2SyYKp9EXCRHGb+h8cECEPa3+tfRi4kKmodJlC5wK074Hnfpei0xMXQSK0jZiDLv88I46itEVgOhEuZ/9rfA6kMWta6X7dGHmupJSB3mf6ME=
+	t=1785882126; cv=none; b=pvTl+azDS+yErrUxzNDZG296mhUHshokyMa2/DacIa4ns7TpmYvOp15EeE0xe5d1Yep7H+R5NsaRLBonFiN+mTFUXK+s7yke2fl1iTMRRERaCMsWOPLpPybyTpzYidqtzk2J15liy7VS6AyWYZd8q/QZvX7zsHbYljT5saBvWn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785881257; c=relaxed/simple;
-	bh=KwINHjjdvTkz6QMIprfTteYuI4SOuEttXU9aytnpuDE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KDSm2z/l8USEUHw4Nsp4S1PjpOJG5bThApzDqquZEDN1VMN6nT4A0DuqgGox0lGqeisxjkpFzTyjen0L+Xx5ZtW/DX+8cd6miqZtCvQrR10Pzc13h7i8vfyWC5x14x7zB9GUbXhvvsm1Kne1KkomWVYZFtFKlPMvsScn/Q9dRTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=P+qqcL41; arc=none smtp.client-ip=213.97.179.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
+	s=arc-20240116; t=1785882126; c=relaxed/simple;
+	bh=W12dzO7vgZVNKvjV4g3A7AtcxuECvisYvjLVJtUwhC0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=efI/7qQ2ZGdxgiyssttDwNVyzd1G+b3uFfvTpNOJriJRlhG3Wf59In7Ah57+xEzz2pziGgRwZej2NhTuW3b2EP3ddMfIOmoa4fZbWY0+Ac4A2o8xLvaUn8fGQ2eV6qa+k/XywbxEK1LAEc6ASGQ3b3tll8D0xYZInLVZoDKrdfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H6CJ6zNe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="P+qqcL41"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:
-	Subject:Cc:To:From:Date:From:Reply-To;
-	bh=xnTFs2XkWWlEN31dSWsOfqsVB5j9dMI7yOvfOj8iqAc=; b=P+qqcL41QaeCuoySqu01yaLDC8
-	bBficXWHSL47W/DvUtdO3qH/hiGhDkxCpUOliuI4+X6RrHc+z0XIiOJizOFdZxVcWgrefkn1kh4KO
-	7CzXhMIFFpI3hOmgpsDLS+6hxQwvffvK21QCEAUiR8iMcgG3bAkDnLv98a10GjSduGFhL8eAdKOwt
-	tH3DiGWF4vWUJtbh8o//eM0VJssORTnWgctTplxCNg9Z954qSrBl8gJLy8V7ccENtEGHRvVOC3BKj
-	dXJTKV1egOrCDNYVqq+xWWA8SmG5IzAxLErV8oK9NNKBaTrmPnRK4rkvzaxFwi+EYdftM/3txs7Op
-	Qc5vu8xA==;
-Received: from [187.70.48.61] (helo=quatroqueijos.cascardo.eti.br)
-	by fanzine2.igalia.com with esmtpsa 
-	(Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim)
-	id 1wrNHt-00E27L-6F; Wed, 05 Aug 2026 00:07:06 +0200
-Date: Tue, 4 Aug 2026 19:06:52 -0300
-From: Thadeu Lima de Souza Cascardo <cascardo@igalia.com>
-To: Natalie Vock <nat@pixelcluster.dev>
-Cc: Maarten Lankhorst <dev@lankhorst.se>,
-	Maxime Ripard <mripard@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Christian Koenig <christian.koenig@amd.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Matthew Auld <matthew.auld@intel.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	Timur =?iso-8859-1?Q?Krist=F3f?= <timur.kristof@gmail.com>,
-	cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v8 2/6] cgroup,cgroup/dmem: Add
- (dmem_)cgroup_common_ancestor helper
-Message-ID: <anJifFS8I23BudpO@quatroqueijos.cascardo.eti.br>
-References: <20260804-dmemcg-aggressive-protect-v8-0-07af96681bf8@gmx.de>
- <20260804-dmemcg-aggressive-protect-v8-2-07af96681bf8@gmx.de>
- <b5b80acd-feea-408b-87eb-4264ffc7e2cd@lankhorst.se>
- <7b2887b1-ecb7-4d6e-ad34-068ab1d7d41e@pixelcluster.dev>
- <bd7c2432-a34b-400a-8351-ca4398b24981@lankhorst.se>
- <anJSBu2zbo8_lG7N@quatroqueijos.cascardo.eti.br>
- <c16ab0f4-20c7-4c3a-ad6a-93cd67069ac8@pixelcluster.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H6CJ6zNe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2019A1F01563
+	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 22:22:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785882125;
+	bh=W12dzO7vgZVNKvjV4g3A7AtcxuECvisYvjLVJtUwhC0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=H6CJ6zNeAtAQ3czxPb2+pbEEI6hmiHWxWv9RE5aFyKKFrXkKk+QrAgTCmb/NTP43z
+	 8skLFk45BzQAwII5zXNbFtzkiI5KeiqBsA8YUczb7d+eonBtZdhWYWTri0hDsvO/B9
+	 Mb+saXeYdywjEhFHAWDWmuckw3XThl9b81viZbaX1Du+HSI71ByigszndUe3mD+ZqP
+	 NvKafAExsCN+oyB8rx6WASiBVqNfUEgF9hi8txdRXH3t5st5cWq5k7YxLHRTLLQRe4
+	 Qyc3S/02UY/2P9T56jF88VOFc3P3ecqLJnrSgwnKsKOt2JJBDIK4BXxLuE/qRPZ6v5
+	 BcD4KfKTAqSHA==
+Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-92e533aacf2so23486385a.2
+        for <cgroups@vger.kernel.org>; Tue, 04 Aug 2026 15:22:05 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RqnoIbnzR0G606206w1JtW7sTmLbS4HWwYDgZ32osD0eolCV+bOa+uhqW3uHMDdSZTpZ6CI9CDH@vger.kernel.org
+X-Gm-Message-State: AOJu0YympIwX+UzvM1I46E1UiyY7zrYPemT5qix4Gj9ks6klfIHijaAo
+	Ig9gSSztijNpkN2RH4ZPX4VG2K8e47ArIIqIA97PDdnuS4bQhYn8qxofVLXzP7YVAOCnbAYxhZy
+	iJlBnZDDexeLyfT2uJ+uB2Vx8sSvq/HA=
+X-Received: by 2002:a05:620a:270c:b0:92e:7cc9:a888 with SMTP id
+ af79cd13be357-93649119b9bmr199237785a.2.1785882124377; Tue, 04 Aug 2026
+ 15:22:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c16ab0f4-20c7-4c3a-ad6a-93cd67069ac8@pixelcluster.dev>
+References: <20260804-fix-some-local-headers-v1-1-a7beb173c116@kernel.org>
+In-Reply-To: <20260804-fix-some-local-headers-v1-1-a7beb173c116@kernel.org>
+From: Barry Song <baohua@kernel.org>
+Date: Wed, 5 Aug 2026 06:21:53 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4wcq5UXq1RAoD8iygnKV95o=D+nOd01ncz4GQJ8Bge3ow@mail.gmail.com>
+X-Gm-Features: AUfX_mybQ80Lx8PwialdKxVIhIqHFVhcCtwxrLLGtSQkGb3zGfEQ2A4Kq4si_Ec
+Message-ID: <CAGsJ_4wcq5UXq1RAoD8iygnKV95o=D+nOd01ncz4GQJ8Bge3ow@mail.gmail.com>
+Subject: Re: [PATCH] mm: add some missing includes to mm-local headers
+To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Muchun Song <muchun.song@linux.dev>, 
+	Oscar Salvador <osalvador@suse.de>, David Hildenbrand <david@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Brendan Jackman <brendan.jackman@linux.dev>, Zi Yan <ziy@nvidia.com>, 
+	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Youngjun Park <youngjun.park@lge.com>, 
+	Uladzislau Rezki <urezki@gmail.com>, Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 04, 2026 at 11:08:12PM +0200, Natalie Vock wrote:
-> On 8/4/26 22:56, Thadeu Lima de Souza Cascardo wrote:
-> > On Tue, Aug 04, 2026 at 10:41:25PM +0200, Maarten Lankhorst wrote:
-> > > Hey,
-> > > 
-> > > On 8/4/26 22:26, Natalie Vock wrote:
-> > > > On 8/4/26 22:18, Maarten Lankhorst wrote:
-> > > > > 
-> > > > > 
-> > > > > On 8/4/26 10:25, Natalie Vock wrote:
-> > > > > > This helps to find a common subtree of two resources, which is important
-> > > > > > when determining whether it's helpful to evict one resource in favor of
-> > > > > > another.
-> > > > > > 
-> > > > > > To facilitate this, add a common helper to find the ancestor of two
-> > > > > > cgroups using each cgroup's ancestor array.
-> > > > > > 
-> > > > > > Signed-off-by: Natalie Vock <natalie.vock@gmx.de>
-> > > > > > ---
-> > > > > >    include/linux/cgroup.h      | 21 +++++++++++++++++++++
-> > > > > >    include/linux/cgroup_dmem.h |  9 +++++++++
-> > > > > >    kernel/cgroup/dmem.c        | 41 +++++++++++++++++++++++++++++++++++++++++
-> > > > > >    3 files changed, 71 insertions(+)
-> > > > > > 
-> > > > > > diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> > > > > > index f2aa46a4f871e..83a17ded1c516 100644
-> > > > > > --- a/include/linux/cgroup.h
-> > > > > > +++ b/include/linux/cgroup.h
-> > > > > > @@ -623,6 +623,27 @@ static inline struct cgroup *cgroup_ancestor(struct cgroup *cgrp,
-> > > > > >        return cgrp->ancestors[ancestor_level];
-> > > > > >    }
-> > > > > >    +/**
-> > > > > > + * cgroup_common_ancestor - find common ancestor of two cgroups
-> > > > > > + * @a: first cgroup to find common ancestor of
-> > > > > > + * @b: second cgroup to find common ancestor of
-> > > > > > + *
-> > > > > > + * Find the first cgroup that is an ancestor of both @a and @b, if it exists
-> > > > > > + * and return a pointer to it. If such a cgroup doesn't exist, return NULL.
-> > > > > > + *
-> > > > > > + * This function is safe to call as long as both @a and @b are accessible.
-> > > > > > + */
-> > > > > > +static inline struct cgroup *cgroup_common_ancestor(struct cgroup *a,
-> > > > > > +                            struct cgroup *b)
-> > > > > > +{
-> > > > > > +    int level;
-> > > > > > +
-> > > > > > +    for (level = min(a->level, b->level); level >= 0; level--)
-> > > > > > +        if (a->ancestors[level] == b->ancestors[level])
-> > > > > > +            return a->ancestors[level];
-> > > > > > +    return NULL;
-> > > > > > +}
-> > > > > > +
-> > > > > >    /**
-> > > > > >     * task_under_cgroup_hierarchy - test task's membership of cgroup ancestry
-> > > > > >     * @task: the task to be tested
-> > > > > > diff --git a/include/linux/cgroup_dmem.h b/include/linux/cgroup_dmem.h
-> > > > > > index 1a88cd0c9eb00..9d72457c4cb9d 100644
-> > > > > > --- a/include/linux/cgroup_dmem.h
-> > > > > > +++ b/include/linux/cgroup_dmem.h
-> > > > > > @@ -28,6 +28,8 @@ bool dmem_cgroup_below_min(struct dmem_cgroup_pool_state *root,
-> > > > > >                   struct dmem_cgroup_pool_state *test);
-> > > > > >    bool dmem_cgroup_below_low(struct dmem_cgroup_pool_state *root,
-> > > > > >                   struct dmem_cgroup_pool_state *test);
-> > > > > > +struct dmem_cgroup_pool_state *dmem_cgroup_get_common_ancestor(struct dmem_cgroup_pool_state *a,
-> > > > > > +                                   struct dmem_cgroup_pool_state *b);
-> > > > > >      void dmem_cgroup_pool_state_put(struct dmem_cgroup_pool_state *pool);
-> > > > > >    #else
-> > > > > > @@ -75,6 +77,13 @@ static inline bool dmem_cgroup_below_low(struct dmem_cgroup_pool_state *root,
-> > > > > >        return false;
-> > > > > >    }
-> > > > > >    +static inline
-> > > > > > +struct dmem_cgroup_pool_state *dmem_cgroup_get_common_ancestor(struct dmem_cgroup_pool_state *a,
-> > > > > > +                                   struct dmem_cgroup_pool_state *b)
-> > > > > > +{
-> > > > > > +    return NULL;
-> > > > > > +}
-> > > > > > +
-> > > > > >    static inline void dmem_cgroup_pool_state_put(struct dmem_cgroup_pool_state *pool)
-> > > > > >    { }
-> > > > > >    diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
-> > > > > > index 9df3b33c65046..a587611ca2235 100644
-> > > > > > --- a/kernel/cgroup/dmem.c
-> > > > > > +++ b/kernel/cgroup/dmem.c
-> > > > > > @@ -762,6 +762,47 @@ bool dmem_cgroup_below_low(struct dmem_cgroup_pool_state *root,
-> > > > > >    }
-> > > > > >    EXPORT_SYMBOL_GPL(dmem_cgroup_below_low);
-> > > > > >    +/**
-> > > > > > + * dmem_cgroup_get_common_ancestor(): Find the first common ancestor of two pools.
-> > > > > > + * @a: First pool to find the common ancestor of.
-> > > > > > + * @b: First pool to find the common ancestor of.
-> > > > > > + *
-> > > > > > + * Return: The first pool that is a parent of both @a and @b, or NULL if either @a or @b are NULL,
-> > > > > > + * or if such a pool does not exist. A reference to the returned pool is grabbed and must be
-> > > > > > + * released by the caller when it is done using the pool.
-> > > > > > + */
-> > > > > > +struct dmem_cgroup_pool_state *dmem_cgroup_get_common_ancestor(struct dmem_cgroup_pool_state *a,
-> > > > > > +                                   struct dmem_cgroup_pool_state *b)
-> > > > > > +{
-> > > > > > +    struct cgroup *ancestor_cgroup;
-> > > > > > +    struct cgroup_subsys_state *ancestor_css;
-> > > > > > +    struct dmemcg_state *ancestor_dmemcs = NULL;
-> > > > > > +    struct dmem_cgroup_pool_state *pool = NULL;
-> > > > > > +
-> > > > > > +    if (!a || !b)
-> > > > > > +        return NULL;
-> > > > > > +
-> > > > > > +    ancestor_cgroup = cgroup_common_ancestor(a->cs->css.cgroup, b->cs->css.cgroup);
-> > > > > > +    if (!ancestor_cgroup)
-> > > > > > +        return NULL;
-> > > > > > +
-> > > > > > +    rcu_read_lock();
-> > > > > > +    ancestor_css = cgroup_e_css(ancestor_cgroup, &dmem_cgrp_subsys);
-> > > > > > +    if (css_tryget(ancestor_css))
-> > > > > > +        ancestor_dmemcs = css_to_dmemcs(ancestor_css);
-> > > > > > +    rcu_read_unlock();
-> > > > > > +
-> > > > > > +    if (ancestor_dmemcs) {
-> > > > > > +        pool = get_cg_pool_unlocked(css_to_dmemcs(ancestor_css),
-> > > > > > +                        a->region);
-> > > > > > +        if (IS_ERR(pool))
-> > > > > > +            pool = NULL;
-> > > > > This should probably be a warn_on as this can never happen, sashiko is wrong here.
-> > > > > 
-> > > > > If a and b are charged, all their ancestors are charged too. And when they share a
-> > > > > common ancestor, then the common ancestor has to have an existing charged pool as
-> > > > > well because there's a huge bug in the code otherwise.
-> > > > > 
-> > > > > > +        css_put(ancestor_css);
-> > > > > > +    }
-> > > > > > +    return pool;
-> > > > > > +}
-> > > > > > +EXPORT_SYMBOL_GPL(dmem_cgroup_get_common_ancestor);
-> > > > > > +
-> > > > > >    static int dmem_cgroup_region_capacity_show(struct seq_file *sf, void *v)
-> > > > > >    {
-> > > > > >        struct dmem_cgroup_region *region;
-> > > > > > 
-> > > > > 
-> > > > > Otherwise looks good, so feel free to extend my r-b to this patch too, and with that minor fix up commit it.
-> > > > 
-> > > > Thanks a lot! Correct me if I'm wrong here as it's been a while, but I think sashiko's current comment about the css_put(ancestor_css) being wrong seems to have merit too? Since dmem_cgroup_pool_state_put() also puts a css reference but get_cg_pool_unlocked does not get another reference to the css on its own? (Kind of a footgun if you ask me, but not something for this series)
-> > > > 
-> > > > Mind if I also drop the css_put() line while I'm at it and *then* (finally :D) commit?
-> > > I'd keep the css_put for the failure case then.
-> > > 
-> > > Since the get_cg_pool_unlocked() is a local function, it's less of an issue that it doesn't
-> > > obtain a reference itself, as all callers outside dmemcg.c never notice.
-> > > 
-> > > Maybe do a final round of testing too, in case it introduces new failures. :-)
-> > > 
-> > > Especially device unload/reload might show double puts. But otherwise looks good to me.
-> > > 
-> > > Kind regards,
-> > > ~Maarten
-> > 
-> > I wrote the fixup at [1] that included that css_put. I will look into the
-> > possibility of get_cg_pool_unlocked returning NULL or error. But I find
-> > that unconditionally calling css_put here is wrong. If pool is NULL, it
-> > needs to be called, because otherwise the css_tryget will be unbalanced.
-> > 
-> > The reason not to call it unconditionally is that it will be called when
-> > dmem_cgroup_pool_state_put is caled, hence, balancing the css_tryget.
-> > 
-> > I also need to consider whether doing it outside the RCU section is fine.
-> 
-> Why not? We acquire a reference within the RCU critical section, and if we
-> have that reference we're obviously safe against concurrent frees, because
-> the refcount is not zero (so it's invalid to free the object).
-> 
-> If css_tryget fails, the refcount was already zero and the css is about to
-> be freed, in which case this does nothing. (Your initial fixup dropped
-> another reference in that case, which is invalid as it pretty much
-> guarantees a refcount underflow.)
-> 
+On Tue, Aug 4, 2026 at 6:09=E2=80=AFPM Lorenzo Stoakes (ARM) <ljs@kernel.or=
+g> wrote:
+>
+> There are a number of internal headers local to mm/ which reference
+> functions and data types without including the relevant headers.
+>
+> mm/vma.h is a special case that intentionally does not include additional
+> headers, but the others are not.
+>
+> This breaks tooling like clangd (which is where I noticed this), though t=
+he
+> build is OK due to the C files including the headers happening to include
+> required dependencies.
+>
+> It's better to be explicit about dependencies anyway, so add the missing
+> includes and fix clangd as a bonus.
+>
+> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> ---
 
-Well, I meant that I was not sure about it. As my version did it under the
-RCU lock, I wanted to concede my past self some benefit of the doubt, but I
-could not reason about it while I was writing down this email. At least
-under my tests back then, I did not notice any issues, but I will revisit
-it and I even noticed that get_cg_pool_unlocked takes the RCU lock, so this
-seems to be fine from a first look. As you pointed out, we have already
-picked the css ref under the RCU lock.
-
-> > 
-> > I just looked here and one of the possibilities for pool to be NULL is that
-> > the region is unregistered in a race condition. region->unregistered is
-> > protected by dmemcg_lock, but that is taken by get_cg_pool_unlocked, so it
-> > seems possible.
-> > 
-> > By the way, while testing the whole series, I see many different issues
-> > here that I am still looking at as they may be otherwise hidden
-> > pre-existing bugs.
-> 
-> What's "many different" issues? I'm aware of your testing showing one
-> potential issue, which is that dmem.min protection may evict own cgroups
-> instead of others' cgroups. I didn't do anything about that in this series
-> because I think it's a pre-existing issue that I'm fairly sure is at least
-> theoretically triggerable without my patchset.
-> 
-> Are there any other issues I missed?
-> 
-
-Well, for one, there is:
-
-[ 1285.795196] ------------[ cut here ]------------
-[ 1285.795239] percpu ref (css_release) <= 0 (-13) after switching to atomic
-[ 1285.795244] WARNING: lib/percpu-refcount.c:197 at percpu_ref_switch_to_atomic_rcu+0x22f/0x280, CPU#4: ksoftirqd/4/31
-[...]
-[ 1285.799577] percpu_ref_switch_to_atomic_rcu: percpu_ref_switch_to_atomic_rcu(): percpu_ref underflow slab kmalloc-64 start ffff889279463dc0 pointer offset 0 size 64
-
-Which I now would attribute to this unconditional css_put. As I pointed
-out, dmem_cgroup_pool_state_put already puts it (which is why we also
-needed to get it in the first place).
-
-And, then, I am seeing hung tasks and kmemleaks, which could be the result
-of the failing VRAM allocations for VM BOs from a quick read of the stack.
-
-Cascardo.
-
-
-> Regards,
-> Natalie
-> 
-> > 
-> > Regards.
-> > Cascardo.
-> > 
-> > [1] https://lore.kernel.org/cgroups/ahW8MY4XBox_nsmB@quatroqueijos.cascardo.eti.br/
-> 
+Reviewed-by: Barry Song <baohua@kernel.org>
