@@ -1,77 +1,75 @@
-Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com [209.85.210.46])
+Received: from mail-ot1-f41.google.com (mail-ot1-f41.google.com [209.85.210.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9113F9F28
-	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 02:17:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505FA2D7DC6
+	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 02:18:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785809837; cv=none; b=XsfdMTlpndV7CA9Q9HTXDAi5jRISSlAVUzE5hk2LO38fhcq6coyeTWChRIgCuqcm5rWbiKJ1vMfKUp92I5fTiyCA4tfDDVzkXdyMj0B012V2wgH7EWTiGGHSOFeFO0gVP8BoTZSsZTjS3uqWBPv5fxly/vDstEj6Ds7JqSBZzHc=
+	t=1785809920; cv=none; b=ccT/+YWYVbrMnDpT7u6dcj49qMgQ4DVCBo8xY0Xy+JYWBMOqlTGHYmBydcqNFc4W49WxnmGpbi3/B5EUKYDf8whmDRD5aY6cISKC9FR0NrJPVvgbE0JXrhAlI4NEF9R16ulsjk4/MGImDj/YSaoxEDXc+1q6EYjHTA1g1SLWt4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785809837; c=relaxed/simple;
-	bh=ugd4ls8P5Ob2mAtM9nqRZHiYdUNlnITlBsPv5xzpvGA=;
+	s=arc-20240116; t=1785809920; c=relaxed/simple;
+	bh=pmJMriNBQCqUGHeZqy6wsbcjTG2fGf0Zyc7A1+GzgEU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=gE/+M/E4I/rNGUsUT2vyFmgcfWPMl9id7MbWmuC/C33Gti7oPShrlOZaZbNkO1McPu78Vqq4ZXXLanrEBfeDdzDphUxxA2cmLhP+y9n3MKvQkJ33Zy5yBy0HTd4fyotXqgUFqOXx1hNzjWmteSsBCOD0o9aln4UI540HXkmuUB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=zhJGm9dP; arc=none smtp.client-ip=209.85.210.46
+	 MIME-Version:Content-Type; b=cK7OwRa1RPE9D2boJQ3RGrU8VXZcZYVXXg9d+OgyhLogfGXTwOnN4fJ9tYLWzpaarndtwY/cogzVPfcdezcp/3/OcrRpKFdUmAcfTtPh19+5t3vmtnKY/lwMIVLXlMzZKIYHOsQEslNXA55GE4o+V5SOW0gXb4/PGSpmPxw8Lb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=l0Ak+XAd; arc=none smtp.client-ip=209.85.210.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="zhJGm9dP"
-Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-7eb63dbd229so357540a34.1
-        for <cgroups@vger.kernel.org>; Mon, 03 Aug 2026 19:17:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="l0Ak+XAd"
+Received: by mail-ot1-f41.google.com with SMTP id 46e09a7af769-7e6b5737bb2so3680557a34.1
+        for <cgroups@vger.kernel.org>; Mon, 03 Aug 2026 19:18:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1785809834; x=1786414634; darn=vger.kernel.org;
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1785809918; x=1786414718; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:date:message-id
          :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=9x4qFGP3981GI72cVLYj63qdKZK9LaH4l5mhfg8vJwI=;
-        b=zhJGm9dPx5WjuPfyMia4b+7ZIOFP8Ochr3tnOvbz2oG7s7d93bjJyxkO8yjSgUVxIF
-         7IdyKatN3l4QEx4bvnn/+YS/6Bpr9V7DoIOTGvtZjPnXi0EedeODLelEmiJ8w0As0tKK
-         obqFfr6SSBMqALIe+qqM44G9ZE66lAjV6eStgoeuVAUtctbta45qsL/FFCdYBbSSJy/8
-         7cUdJs51NQaL0IJZPsmEWHCEKRynZ/42vCmmx7EXazeMCpB0Sq2b+3JdMb4Nz/tqd2k6
-         m/x19SbRhPzoIGv3mRQMjj9WkJ1DE9L7ofZ/Rsi9mBCy/nueJAoVFpEaw/5/rtlOL4h0
-         TAnw==
+        bh=3Y7g3mGGhWdn70/LKwOlCWoCG1+0V5HkHLeaxW/1f5A=;
+        b=l0Ak+XAdg3po0nbcIjyPplfPeU7ORQI2z5QcvgJMHCVqRO+0zLHRXnQ6wWwKq48ujd
+         Z6MC2Oq5c1bSo2/BDS1lua0M/eQ/zxoAEIkBjBOs5+rvHk/hFxEg+efvLE4t2dwB6QcO
+         zH4yfDzxLR+ApKCmIg7MkECbIYcZTCywlFa+GbnXEsIy5oV+ppALAxa+E3OxCXzcjGNI
+         6EPzPQ9llM4fTBNnSW/H7lu/hSYuYd33qr8BisBQTiojFiHFpeoxpmNBu7MoYb3jbn9U
+         xe1xwoQgtvpfH08daNR6zDuEOapKnvkwXvT6D8wogKlfqznG/DTSlOMpau30Ql/B14iS
+         SJ0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785809834; x=1786414634;
+        d=1e100.net; s=20251104; t=1785809918; x=1786414718;
         h=content-transfer-encoding:content-type:mime-version:date:message-id
          :subject:references:in-reply-to:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=9x4qFGP3981GI72cVLYj63qdKZK9LaH4l5mhfg8vJwI=;
-        b=bZibtlUsGO1nJZZWEaRtdVFzPH/VhYpLr+G1EFia+M2H5SzsC8rpPBDm2h3XAo0hg+
-         lUkmJY9vj+JLRamd2+0Rgy05e8stKdFbMtlSr2FxFzZhTNGFYWivF0qhTszpZ7i1dI3y
-         Z++xV7xvph6pyPpcyzH+6lQXBYbAKC9J8hBmyYvlWiN3ldQZtornbtYm16g5kO7Puvm0
-         imqbZUW0SP/I+Qe88+ljeq4GnTbdHgmycn2ET6xbDT45MJLXpWTaCr6s529DxrncTY4o
-         aDFmlM3L2EbHihdXdl/8vJSw7Pr43PnawIg0W4NUzgOWWJ70xbskwZhBckr96wSY/Uut
-         6cxg==
-X-Forwarded-Encrypted: i=1; AHgh+Ro4Fc8uCjfi3uZA1P5mJmmUrGvpIc6+ZR+mkQG44NG4sjNTZFy+WG++GENvUwxxQxhb5H4mqgpl@vger.kernel.org
-X-Gm-Message-State: AOJu0YyCTce6SIJzanD7wzhMfE3uBecrgCmGvaH4tELQAONuQb+U8XJm
-	eXfNFNcCHp38KZ3YL6XMjt52FgBGNE+Ex5RGgEnCxBJlhy2bWeIURY4yzmWgzmzJd4HLRLmlz7t
-	1Wo6J9JYIFw==
-X-Gm-Gg: AR+sD11DFWv1IKmKABPnSQ8Tu2DNmJPGzfC5tB0RvJqMlTXd06qR8QTVJB1K1G5TOBX
-	d+Ix1xqxZYOP8qM447Qwh6E9S6YMtkDjoY5+ceQEZ5veRAvmxUOg/CcU6X7O+0s4vPHwNbLQOmm
-	2hJe+Db+rhd6Jq1fl9yBCF3ZSew5sZN8ta1K5TTooTwBg73YcMdLfveyEe/g2TeAXCujzr2STwI
-	rxFeDy/GejhQbKoHwLksQ/AeEVzrSugEcB0SFPuZErl2mztfKIWdbT1beAavAVcCXkdyRDNq/1R
-	gHB86EU2Mmrxr0Cj6fjzlxjKQlmeC/3CxD3unYcm/zGcX1naoxF4Ft8iffxUAyN6V7bt10rqAdk
-	q9WAcZq486232WkPY9wcPCb9xajITZ36y5r5hLLpXLzxStceLlle+lFuGBm0YTGabkUP3u5kow0
-	N5J1m0wVib4n1PPmRGVfZpIFxQ49Bv6FRBHHS2RKSPF/ZdLiBkovxFXxIUn92YxAKvzuLqZYRed
-	TWWUVzQqRsQDzLLqEHy1yIpgsa/MeKBfuQZF+pU6y1NU9m2n/xTJA==
-X-Received: by 2002:a05:6830:a15b:10b0:7e6:d7b3:76f4 with SMTP id 46e09a7af769-7f1d1f48765mr1019984a34.0.1785809833793;
-        Mon, 03 Aug 2026 19:17:13 -0700 (PDT)
+        bh=3Y7g3mGGhWdn70/LKwOlCWoCG1+0V5HkHLeaxW/1f5A=;
+        b=nJ6rYej3yRdgYliG1XEbvjhQLomeWwL0xZs93xh8FtyKFdypznMG3/2gYocU3X4ftL
+         qEW9D1xQRNjKPgzy6GJl9+YAc3J4s2yoQ/Pkgd5paojhaBrVWBAc+sbjonRIw8Ej0llv
+         hvGZOQ1Gv8XfHvhZuOMK1wNG4CqBMBhUp2QdK1llNbpI22rBX9NyyJN+86ZbSkASNgKj
+         rGQAUl4BCCM0i/X+IIlZgT5GNsxPtxa/B/msueMpzrJE8mDUEN01HPLfge5T/rH58qnZ
+         CtDsE0jY6cUs3uLEethKk4gAsk73E6p1/To4p8viNYIRtOCNosjChD26XN1uhjuLnP4B
+         VpGA==
+X-Forwarded-Encrypted: i=1; AHgh+RoliqhIPfLPdA5ZjA4MxOGVifdNa3AOJbvgkLM2EsfGU/cRGHhbUsSDVdb+kllNBpt+yZQMvvj0@vger.kernel.org
+X-Gm-Message-State: AOJu0YwZ2XsnfvKEU22wjcrCfMTagQ9Lah3W6292aZR4bI+92eesCv++
+	RVkCWQG78UdPlZgwstqwaOXDeldVqid1jD7iIOoUMtoJ80KVtrGLXzI/XwUXNw2sWVc=
+X-Gm-Gg: AR+sD11W1gouye/1K7TpeY/S8B1CTr9n1IqJ4sOLyL82XTeLwZa5ae2MAgr9fOXrtEU
+	UNdEnTht6sH1t966ObE1TnmMmMIARPRWJsgPRRPi83oBGXjpvzdTi3Qmt7vH2GK9keG1AeAZ2yR
+	apw1Z6g3P5RNjgr8Xro+5yVfR7BklRBCwD/v7diI7n2qOJXOyXhBTvT799/txV2aL4o0JjA6P/x
+	RswDlDO1Lm0maRMuQwKzKAyrNUnciYssJh0D/MKlGbnOQpUEN7wkDd/c1WvCrYEvuYHK3v2XaOS
+	QNx+3MR/al22xd8HqB+yJsFja4JdCqo/JD6hwAD7NqvHf7/aRO1cbARta65PpVVSQCKKfmw1wr9
+	JP7z+mThvnysGWFhKdGuMpOOD/vOqntwBUn1r5/5EiYFEep/DVX9rm7P5T1Vunu8pfLcD5nROVF
+	N+Z0+J2Yl8+v6HQoLfei5uJ/DFhrFndBc0DYJHajG+OkOD4iEFCz0wGAizHbGxkmDYPZgRl6I3D
+	67t4XVgkRGifybViPtYXS5jNofG2KYf44BAL9z97A==
+X-Received: by 2002:a05:6830:3691:b0:7eb:3af8:8c09 with SMTP id 46e09a7af769-7f196cb6591mr21082116a34.3.1785809918236;
+        Mon, 03 Aug 2026 19:18:38 -0700 (PDT)
 Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f18f07a55asm8914812a34.13.2026.08.03.19.17.12
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f18ed96df3sm8941838a34.9.2026.08.03.19.18.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2026 19:17:13 -0700 (PDT)
+        Mon, 03 Aug 2026 19:18:37 -0700 (PDT)
 From: Jens Axboe <axboe@kernel.dk>
-To: linux-block@vger.kernel.org, Tao Cui <cui.tao@linux.dev>
-Cc: tj@kernel.org, josef@toxicpanda.com, yukuai3@huawei.com, 
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+To: yukuai@fygo.io, Tao Cui <cui.tao@linux.dev>
+Cc: tj@kernel.org, josef@toxicpanda.com, cgroups@vger.kernel.org, 
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Tao Cui <cuitao@kylinos.cn>
-In-Reply-To: <20260717054855.2018578-1-cui.tao@linux.dev>
-References: <20260717054855.2018578-1-cui.tao@linux.dev>
-Subject: Re: [PATCH] blk-throttle: remove dead field last_check_time from
- throtl_grp
-Message-Id: <178580983269.518281.12242691821732111063.b4-ty@b4>
-Date: Mon, 03 Aug 2026 20:17:12 -0600
+In-Reply-To: <20260803134104.138411-1-cui.tao@linux.dev>
+References: <20260803134104.138411-1-cui.tao@linux.dev>
+Subject: Re: [PATCH] block/bfq-cgroup: use data_race() for online test
+Message-Id: <178580991680.519961.8800080646193720210.b4-ty@b4>
+Date: Mon, 03 Aug 2026 20:18:36 -0600
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -83,23 +81,15 @@ Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.2
 
 
-On Fri, 17 Jul 2026 13:48:55 +0800, Tao Cui wrote:
-> The last_check_time field in throtl_grp was used by the
-> CONFIG_BLK_DEV_THROTTLING_LOW mechanism (in throtl_upgrade_check() and
-> the downgrade logic) to timestamp the last upgrade/downgrade check.
-> 
-> Commit bf20ab538c81 ("blk-throttle: remove CONFIG_BLK_DEV_THROTTLING_LOW")
-> removed all five of its uses in blk-throttle.c and the surrounding LOW
-> fields (latency_target, last_finish_time, checked_last_finish_time,
-> avg_idletime, idletime_threshold, bio_cnt, bad_bio_cnt,
-> bio_cnt_reset_time), but missed the field definition itself.
-> 
-> [...]
+On Mon, 03 Aug 2026 21:41:04 +0800, Tao Cui wrote:
+> bfqg_prfill_stat_recursive() and bfq_bio_bfqg() read blkg->online
+> locklessly, same as blkg_rwstat_recursive_sum().  Annotate with
+> data_race() to silence KCSAN.
 
 Applied, thanks!
 
-[1/1] blk-throttle: remove dead field last_check_time from throtl_grp
-      (no commit info)
+[1/1] block/bfq-cgroup: use data_race() for online test
+      commit: cbe81d612038fa3fb986a1e31fe7b8f808079cf1
 
 Best regards,
 -- 
