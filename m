@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21E2A43B3FB;
-	Tue,  4 Aug 2026 11:11:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3375D33D6FC;
+	Tue,  4 Aug 2026 12:17:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785841873; cv=none; b=NsTYVFPio/OS2ih/lwAxV8VRb1UvdiIL1/BWumB8+Z+CYiDI0nT91Xv2I1FOBj6HUpvs86N2BDEUsbcFgFdePZOmKQWKv1imciz0n0nPZkRXsnTLsXP7umZAa7QTy8xg5YvPznj7NAE4BeVELXc9kW3tkE7vdwCoLfc5r12bQy0=
+	t=1785845840; cv=none; b=iNQcWg96+2NNmXyZZQva3wIyieGSbAupel4pLfC9OSmkqxUADub0A30BjTu5addW8clzY/XdoONuqgMrNGLArIZ3u7SEtzym3nsS6Q6pDTtBOkQD2bGhCkhRIW0Y1HIMj5gYfKZvNktiKq9qoiUGX9gsFsbGG0CRGFthiEWESWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785841873; c=relaxed/simple;
-	bh=mDj6z2gP8LuJmmBVqmLdm+TebT+TQgsosgCkAdj6IjM=;
+	s=arc-20240116; t=1785845840; c=relaxed/simple;
+	bh=cDuGT00cXzqX/iMVAVcpmC+P+fpsCCsnbZJvJMnzL/Y=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Wn81AQPfzfS0ePqsysw0IcH63zxFqb1WzGmes+KyE+IZQwvJlHGT4MAd+ErFUYW6jSBfswxqwGq91n5q2BIp9vvaQAsqvep1EnCER1mnBh9IivYT2yWsZyUj1W/Jtdof1k3z2VBLe9P8GfJGNlHUyNzRGZBGqsU06TXflfAPrRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G+5pAPYK; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Gs00yssp9zUkNMJa/iz1QQuUh89BLcYNY+RdEOFea8BRz7zF3y52uN31rYPTvdgtk3FfLniGCQRhh8huZopFud4IbNOA/1PRF07oUeneim79EdbqTKNBDYu4yllknNI/aRpubpC0tRQ1HgUaMvOhXLnZn3pONEPjggLtKbaraU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e+8HTirE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G+5pAPYK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43EDC1F000E9;
-	Tue,  4 Aug 2026 11:11:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e+8HTirE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4966F1F000E9;
+	Tue,  4 Aug 2026 12:17:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785841871;
-	bh=x9WTrnnkHbtsN+MZWjYTlUGilo8WkuVoi8BtyG1CVyc=;
+	s=k20260515; t=1785845838;
+	bh=kjIAdWjZ9as7VjsGONElYdUtkq4HftQ7u1xxJBq7cTA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=G+5pAPYK+UtORNM3sYcJFo94oS+gLZCs4XBiYmGGfFeHwS/SK9q2DYm7hyLcFvIU0
-	 fraYmEKWxnutqgnwVh1FyxQapPubGQbF2nho9kc9lJ8+hCsAG+NRgG0PbruRaxXJoW
-	 vYdxWr6VVAvzIQ/gVw/PE92V6stO3/tHUi9/ZHDnDps9Cllxr1OkDaOcSoOe0eBy1Y
-	 ZsbRrbpXe18U+ACn+kxOkvEGCyVukK137ErQTUo7tvSK8r8K0pK2YR/qom3af91OHh
-	 tHhBfVQtF+VRkokF0L6eIHv/pqfyVPvBiTLQpAxbgTuLCLy5Y1/U3SarcPaWlwoexQ
-	 Vd1OigOBjaV0w==
-Message-ID: <afa0ec96-3b85-4d6c-a89c-61366a10ca53@kernel.org>
-Date: Tue, 4 Aug 2026 13:11:04 +0200
+	b=e+8HTirEVHJSswDWwhadM9WMgP2w8lsiG18pttyT5hufK30y2zHjeIdGuIIgCLJh4
+	 DQP3LwEmYnaIf2vlujTDrSB+QYk0QWU/N0p5HdO5ek09L+ZIafngWBeWeVt+CuBAd9
+	 8HVwk7uT0BMWvKZuSeHuUE/W2WTRwBhvNQio4rrQn/jxO0qToXh8QqCJ2Zg1EKeiLf
+	 MjmBLS7x7osp3Cg2QEMX3yfqFtms8xsK+XsCqvEUCTxAEMIk0B4QdtUyarBSzsL5+y
+	 8fZZ12g3pPe9ytQ9a3odz2amfDVDz/F3K73oiDZobp3PZkeQvIKlYatyvsILOrOqWw
+	 6XpSSA75GhZDw==
+Message-ID: <22a540a9-9a48-4c77-a392-4d72a7a6b68b@kernel.org>
+Date: Tue, 4 Aug 2026 14:17:11 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,8 +52,7 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260804-fix-some-local-headers-v1-1-a7beb173c116@kernel.org>
- <8179be78-a35c-4d0f-8034-27f3154db0e7@kernel.org>
- <7e7c8e04-646f-4135-9ba5-e0c7fd6d8b41@kernel.org> <anHG7BcQ8EFrwvGm@lucifer>
+ <8179be78-a35c-4d0f-8034-27f3154db0e7@kernel.org> <anHDNwlcBlIfC-Hv@lucifer>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -100,56 +99,50 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <anHG7BcQ8EFrwvGm@lucifer>
+In-Reply-To: <anHDNwlcBlIfC-Hv@lucifer>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 8/4/26 13:05, Lorenzo Stoakes (ARM) wrote:
-> On Tue, Aug 04, 2026 at 12:51:40PM +0200, David Hildenbrand (Arm) wrote:
->> On 8/4/26 12:45, David Hildenbrand (Arm) wrote:
+On 8/4/26 13:02, Lorenzo Stoakes (ARM) wrote:
+> On Tue, Aug 04, 2026 at 12:45:22PM +0200, David Hildenbrand (Arm) wrote:
+>> On 8/4/26 12:08, Lorenzo Stoakes (ARM) wrote:
+>>> There are a number of internal headers local to mm/ which reference
+>>> functions and data types without including the relevant headers.
 >>>
->>> I'm curious, how did you identify these? The mm/vmalloc.h is rather easy, but I wonder about
->>> e.g., mm/shuffle.h including mmzone.h.
+>>> mm/vma.h is a special case that intentionally does not include additional
+>>> headers, but the others are not.
 >>>
+>>> This breaks tooling like clangd (which is where I noticed this), though the
+>>> build is OK due to the C files including the headers happening to include
+>>> required dependencies.
+>>>
+>>> It's better to be explicit about dependencies anyway, so add the missing
+>>> includes and fix clangd as a bonus.
 >>
->> To clarify, I have clangd running behind a vim plugin, and so far it just worked.
->>
->> I had to generate a weird XML at some point that does magical things for clangd.
+>> I'm curious, how did you identify these? The mm/vmalloc.h is rather easy, but I wonder about
+>> e.g., mm/shuffle.h including mmzone.h.
 > 
-> Well for me I get the kernel build to generate compiler_commands.json and use
-> that via:
+> Well I got AI to look them up ;) but I pared down what it gave me to a simpler
+> subset and checked everything so I don't consider myself in a state of
+> slopper-sin :)
 > 
-> 	scripts/clang-tools/gen_compile_commands.py vmlinux.a arch/x86/boot/
+> [this kind of check ideas, look things up stuff I don't consider warrants an
+> Assisted-by tag btw].
 > 
-> In a build script.
+> The headers for everything but shuffle.h are obvious, so that's the tricky one -
+> it's for pg_data_t and struct zone specifically.
 > 
-> But maybe I need your weird XML... I do get frustrated that it limits things to
-> what I happened to compile. It'd be nice to get it to index literally everything
-> somehow.
+> How I discovered this with clangd initially was - Do something like 'C-c l g r' or
+> 'C-c l g g' in emacs via LSP and it reports 'no symbols' for something I _know_ is
+> compiled in.
 
-Nah, it was that magical json I had in mind.
+emacs ...  there's your problem :P
 
-> 
->>
->> So I'm curious how to invoke clangd manually to actually get these reports.
-> 
-> See other reply, it's just that I noticed missing symbols.
-> 
-> Actually this happened with vma.h (I sloppily got AI to figure out any other
-> cases) which _intentionally_ doesn't have includes.
-> 
-> But clangd lets you work around that in .clangd:
-> 
-> If:
->   PathMatch: mm/vma\.h
-> CompileFlags:
->   Add: [-include, mm/vma_internal.h]
-> 
-> :)
-I was hoping for an easy-to-run script that complains, instead of people just randomly
-running into "missing symbols" and then having to fix it.
+Thanks for the explanation, I'm afraid this might become a whack-a-mole without
+a proper way to detect this automatically. But that does not really seem doable
+easily.
 
-But there doesn't seem to be a low hanging fruit.
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
