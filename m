@@ -1,90 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7B73911C0;
-	Tue,  4 Aug 2026 05:31:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF563EB107
+	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 05:41:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785821511; cv=none; b=QsnvbPkpYOnXkLdTm9ys16qHYZT37a6/d2V7n0777aoFGgYFgFFlGwDQG93pqKBPsYDOw3u12sIhwmxbFKnzfWG7pQkXz0h6N+4x5+a6ZAEkHOd2h1KQaQsmJ0xLrarpjp921P8ojS8VpftgF2kdLzGVwCUZIuO1FkFXRPyW9eA=
+	t=1785822106; cv=none; b=gayzP0asv44eiycW2yO8TpAEwtYwwps/eXheQFtqM+XyNSFwwZIyQiVP/TEVWQR91ju0S7xWwRRWw0Zw6+AHtqBi+eo7Ws83MtB/7IW4H7xQ1VPx6OFUDPpHU62sRGHlP5/Ht8Hlbkor0I9ns1KDdQNhwe+GL/OneJCxTd5rFyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785821511; c=relaxed/simple;
-	bh=30YaC0YdV0yibsriR2aAvFUZ1OoXZV0AqQt7Etp0lrM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ESKML8gEE7xl1HXl996dfIWyZK+Rbc8BDb5fOhjbjqBBXeIGJLYhynq0O/ssU7+xqx7QAoPXNWhkoE4zmlZZSjIO2cWe8ff5xwz8ipX/yG3BVhzGwcStCvAJ9W1YeoTU02wqfgtOBExSLCFIXW5Gekxzq+dUnRrXwrvyynJW6LA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WLddv5q0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785822106; c=relaxed/simple;
+	bh=9LfKyQfrbGnA2ELgqEBoSZcMckFFI0+09wJSO6E/B9Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BxVfPH1ZG1h141AMs7wGlmi+CFhaoxPX/60iSDU54VacDqIvrSrxKTUqQ1fKAsv0GfkKuLlET67rRz3PoDI6JLW2SiTdeoejfZLg2Buo0uNZe6R3ZYXWqAfHItO0SuAqdiisTfaeAzVhdRbuplnPvAS1U7somsl8lc/Roan3p+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=HU/+EQi3; arc=none smtp.client-ip=91.218.175.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WLddv5q0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABABF1F000E9;
-	Tue,  4 Aug 2026 05:31:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785821510;
-	bh=GWSze+JX/3oEYUyGGs8rb9z8sW7IoswLYKzyMOmhZZQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WLddv5q0vwdR2xYLraz9KR0veci9iSW5Po2rsbrxSyBMZxLXxJEngBcJeXpvdD/Ok
-	 0FZL+id0DfZ73BwBBIXVhd7921g2ZxPz2Gh0YNAhhNUot1rcaLm8Am0ffmf5Vtk5B+
-	 3GCYE4RcHpfZakp8hv0OffEosDPXVAFI5LyQjXbOBxOrJ7NpHwmzyOu0xjOescVjcz
-	 gx6pazGDhX/sVchNd5Lyf18AVcUyTC1+0QiaajafnxfzoQVUqvtHPNjTE+pRKqvxbR
-	 YBO+91cb3UfrYplkvtEQT8qB/AJUh4IjRX5MbelB00cFU98UBeMgMjv4ALS7gPZBkT
-	 rDI9rUVl3afqw==
-Date: Tue, 4 Aug 2026 05:31:48 +0000
-From: Harry Yoo <harry@kernel.org>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Suren Baghdasaryan <surenb@google.com>, Hao Li <hao.li@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Alexander Potapenko <glider@google.com>, 
-	Marco Elver <elver@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Subject: Re: [PATCH v3 06/13] mm/slab: abstract slabobj_ext.ref access
-Message-ID: <anF4v18W6-aKwuem@dev>
-References: <20260727-b4-objext_split-v3-0-c29ef0f1f257@kernel.org>
- <20260727-b4-objext_split-v3-6-c29ef0f1f257@kernel.org>
- <amivCT7AaPux-GSK@thinkpad>
- <365d8e50-5aeb-45e9-97a3-87d0024cdc5f@kernel.org>
- <ammZpX_77SMsxvPz@dev>
- <aa23851a-5f64-4f01-8804-07b735fc8afe@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="HU/+EQi3"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785822100;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=iNnbESC5ApGqSzB0x27jNNkxmlJXxLOjT5/nbE6X/uk=;
+	b=HU/+EQi3HpiA0xdE29JFezOpR4HA7LcB8xPJbkD6rojriNjV12SDGmJVN/dTSHpnnzAf/4
+	DhRlIUbMFn6nlhHjvsewDk9U9QSqZrXmzsHtgB26gHK1J9b9As8fDyMEcby9Oipj0OZQW0
+	JBnETCVxzLu5h2lWsFhOj4wCkOY/M14=
+From: Tao Cui <cui.tao@linux.dev>
+To: tj@kernel.org,
+	axboe@kernel.dk
+Cc: josef@toxicpanda.com,
+	cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cui.tao@linux.dev,
+	Tao Cui <cuitao@kylinos.cn>
+Subject: [PATCH v3] block/blk-iocost: annotate ioc_pd_stat reads with data_race()
+Date: Tue,  4 Aug 2026 13:41:20 +0800
+Message-ID: <20260804054120.161933-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aa23851a-5f64-4f01-8804-07b735fc8afe@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Wed, Jul 29, 2026 at 11:46:11AM +0200, Vlastimil Babka (SUSE) wrote:
-> 
-> OK, so updated to this. VM_WARN_ON_ONCE() added later.
-> 
-> From db9c3501c0f9747fda8fa92d4f640b6fac8050e0 Mon Sep 17 00:00:00 2001
-> From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-> Date: Mon, 27 Jul 2026 14:53:59 +0200
-> Subject: [PATCH] mm/slab: abstract slabobj_ext.objcg access
-> 
-> In preparation for changes to the structure, abstract getting and
-> setting the objcg field with slab_obj_ext_objcg() and
-> slab_obj_ext_set_objcg().
-> Rename the field to _objcg to make an unexpected direct access a compile
-> error.
-> 
-> The helpers take a slab pointer, which is currently unused, but will be
-> used by a debug check later.
-> Since there is no slab pointer easily available in __kfence_free(), just
-> drop the debug check there. The whole memcg_kmem accounting in kfence is
-> to be removed later anyway.
-> 
-> Otherwise, no functional change intended.
-> 
-> Reviewed-by: Hao Li <hao.li@linux.dev>
-> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-> Reviewed-by: Harry Yoo (Oracle) <harry@kernel.org>
-> Link: https://patch.msgid.link/20260727-b4-objext_split-v3-5-c29ef0f1f257@kernel.org
-> Signed-off-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-> ---
+From: Tao Cui <cuitao@kylinos.cn>
 
-Thanks, still looks good to me!
+ioc_pd_stat() reads ioc->enabled, ioc->vtime_base_rate, and
+iocg->last_stat without holding ioc->lock, which trips KCSAN since
+ioc_adjust_base_vrate() and iocg_flush_stat_upward() write those
+fields under ioc->lock.
 
+Commit 35198e323001 fixed the same issue in ioc_qos_prfill() and
+ioc_cost_model_prfill() by adding spin_lock_irq(&ioc->lock).  However,
+those functions read configuration parameters (qos/model) that need
+synchronized reads.  In contrast, ioc_pd_stat() only reads stat
+values (vrate, usage) where stale reads are harmless, so data_race()
+is more appropriate — it silences the KCSAN warning without adding
+lock contention during high-frequency stat reads.
+
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+
+---
+
+Changes in v3:
+- Use data_race() instead of spin_lock_irqsave/irqrestore, since
+  these are stat values that don't require synchronized reads — the
+  goal is just to silence KCSAN, not to guarantee consistency.
+  (Tejun Heo)
+
+Changes in v2:
+- Use spin_lock_irqsave/irqrestore instead of spin_lock_irq/irq,
+  since the caller (blkcg_print_stat) may already have IRQs disabled.
+
+Link: https://lore.kernel.org/all/20260802150913.31977-1-cui.tao@linux.dev/
+---
+ block/blk-iocost.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 8b2aeba2e1e3..bc47ed034b25 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -3093,23 +3093,23 @@ static void ioc_pd_stat(struct blkg_policy_data *pd, struct seq_file *s)
+ 	struct ioc_gq *iocg = pd_to_iocg(pd);
+ 	struct ioc *ioc = iocg->ioc;
+ 
+-	if (!ioc->enabled)
++	if (!data_race(ioc->enabled))
+ 		return;
+ 
+ 	if (iocg->level == 0) {
+ 		unsigned vp10k = DIV64_U64_ROUND_CLOSEST(
+-			ioc->vtime_base_rate * 10000,
++			data_race(ioc->vtime_base_rate) * 10000,
+ 			VTIME_PER_USEC);
+ 		seq_printf(s, " cost.vrate=%u.%02u", vp10k / 100, vp10k % 100);
+ 	}
+ 
+-	seq_printf(s, " cost.usage=%llu", iocg->last_stat.usage_us);
++	seq_printf(s, " cost.usage=%llu", data_race(iocg->last_stat.usage_us));
+ 
+ 	if (blkcg_debug_stats)
+ 		seq_printf(s, " cost.wait=%llu cost.indebt=%llu cost.indelay=%llu",
+-			iocg->last_stat.wait_us,
+-			iocg->last_stat.indebt_us,
+-			iocg->last_stat.indelay_us);
++			data_race(iocg->last_stat.wait_us),
++			data_race(iocg->last_stat.indebt_us),
++			data_race(iocg->last_stat.indelay_us));
+ }
+ 
+ static u64 ioc_weight_prfill(struct seq_file *sf, struct blkg_policy_data *pd,
 -- 
-Cheers,
-Harry / Hyeonggon
+2.43.0
+
