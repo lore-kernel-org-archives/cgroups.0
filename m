@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37610450407;
-	Tue,  4 Aug 2026 10:45:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74DD945349C;
+	Tue,  4 Aug 2026 10:51:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785840331; cv=none; b=sxRzzlQn0wYmF3cGAbv89tWv65qGtziA3d7vy4DOuzuPnGMok26vsTRm8PXj0bH9YhVnULn3D5kdAfxoL+MOLHTuNAeedAEz1Zg2bnocAFoaKMWnU54wT7V7Hyj+0A5aZPmsbyU9pQJqxHjBOAmtpzXGWlb0+8hq4DfatG2yhRw=
+	t=1785840714; cv=none; b=rNdxxOQcmtHkEsa/uIFqZjcKxFRF1UQGv+B0sx7+NPps9CtNjwWM10i57DmZ/mIN2R218/2n+Nsn+tnjQGYIeFyUNPA5NGO4rlDu4t9EKw6qI/FEPm8K3MnnSiRK6Vvfk3Wb8QWjZx6Wn+UXhnK1L2APT8MC6K3hOOPThZSYGis=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785840331; c=relaxed/simple;
-	bh=GcXIru8dsXYFlhQsTXKkAfPKHFCRQsvHNlHvMDN9Rek=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RsyHeKjamMju1HeTO44D0uQ1a68ijAbNP7VM6q1vaRfVMh0bDnbBk8XlmZoR0wDT+sm5BLWfpoKzzV0k/IA0pljc8X0B/HFSzNPOFmCafeVepjCyiUw/ak+SSAQlm/zMQ1QY2/n/F2AEoYklaxmZ4i859s80Cabbl7nwKetgdL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K42WXMEB; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785840714; c=relaxed/simple;
+	bh=wnmGimLYpYp+fcyKZ2lr+7fT2q3RIIBQBu6P4M3hk5Q=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=csk14NCfwnIBZcNutlYoP88ynxDKksbeYJ1gVX29R63ZhxarcYZ6Z1TcFlsXrtJOS4rOPs2OZnvxtuMmcohV8rRtSYGU3E6VD+JGFpnQyzKSmaCdEwHiG2Fd1+7J40KUleXqHobOjzpHPMO0fi12q43eGZRgs8MORUvBFDHZIQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aOYYkIbB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K42WXMEB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66C6C1F000E9;
-	Tue,  4 Aug 2026 10:45:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aOYYkIbB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DAF31F000E9;
+	Tue,  4 Aug 2026 10:51:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785840329;
-	bh=o0bU0sImQ5Arjr1CP4JdUMX37ZX+h5B7Htqo+jYn/f4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=K42WXMEBL50WD4D9EgXN6O5VojY5qJ5PjbXqTaief4fQ0dIkj4FRxWkmcRiP9g/8n
-	 0PpKwVCGrba5c9yS59k55YVqc8V54a5IhXBL99HnlHIUmJDRKhSQYEodoRLyhkHIdo
-	 r/wg6yYAfpW7+hDhtityKgunxN4y4Z5RvNHT3LPKeFN6bqZowP+2vFaqhMQ/3ewK8A
-	 WHNhho2GUrMJ/wOaKAPXQWUEraTxqujSHdtI/t/+cbV55LCveD1TrXok7uMUxqH+Zj
-	 CfKnla2fIwXmk9wtKeLZ3kTIjsxDfjK4t+7dnrXAUUENyl6/AQqpku6NPPR6CA8Y/0
-	 MjrfIFreTDf+w==
-Message-ID: <8179be78-a35c-4d0f-8034-27f3154db0e7@kernel.org>
-Date: Tue, 4 Aug 2026 12:45:22 +0200
+	s=k20260515; t=1785840707;
+	bh=/NttiqOgugVNUb9IMOOGaxK+WlfJLuYYZiJO+X40UaE=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To;
+	b=aOYYkIbBCkYpdjHAihW80XEF77mkuQiH2uHzMdBadkj4Xp5PoTJdhUYEIkn5n+8sQ
+	 EX/qkcbD2N9UrU9MJHkm8Rw5jyD1gdfmF0xA9go1BBqqIysmh+iKXxrIUTYC5/1AP3
+	 4wyXauCM6igkmfRARdDs/YC8ajxrGU1HyvC9xXRqjhyN3tVCuFn78EuSKM1OsYVixZ
+	 wltIbIhkr9cKoAICqbuzMteHvvfjRwPx7QrG2w7GOC9w+58DBV33EFHjo+d4xp0jj1
+	 CfRI7AmlFs4ItyKiixdtXCxGS1LEnhfD4v45gAjC3m9q+AfC0CSXm7tmO37+dZEVJW
+	 fKk11BuBFh/tQ==
+Message-ID: <7e7c8e04-646f-4135-9ba5-e0c7fd6d8b41@kernel.org>
+Date: Tue, 4 Aug 2026 12:51:40 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -36,6 +36,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] mm: add some missing includes to mm-local headers
+From: "David Hildenbrand (Arm)" <david@kernel.org>
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
@@ -52,7 +53,7 @@ To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
 Cc: Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 References: <20260804-fix-some-local-headers-v1-1-a7beb173c116@kernel.org>
-From: "David Hildenbrand (Arm)" <david@kernel.org>
+ <8179be78-a35c-4d0f-8034-27f3154db0e7@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
  xsFNBFXLn5EBEAC+zYvAFJxCBY9Tr1xZgcESmxVNI/0ffzE/ZQOiHJl6mGkmA1R7/uUpiCjJ
@@ -98,26 +99,34 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260804-fix-some-local-headers-v1-1-a7beb173c116@kernel.org>
+In-Reply-To: <8179be78-a35c-4d0f-8034-27f3154db0e7@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 8/4/26 12:08, Lorenzo Stoakes (ARM) wrote:
-> There are a number of internal headers local to mm/ which reference
-> functions and data types without including the relevant headers.
+On 8/4/26 12:45, David Hildenbrand (Arm) wrote:
+> On 8/4/26 12:08, Lorenzo Stoakes (ARM) wrote:
+>> There are a number of internal headers local to mm/ which reference
+>> functions and data types without including the relevant headers.
+>>
+>> mm/vma.h is a special case that intentionally does not include additional
+>> headers, but the others are not.
+>>
+>> This breaks tooling like clangd (which is where I noticed this), though the
+>> build is OK due to the C files including the headers happening to include
+>> required dependencies.
+>>
+>> It's better to be explicit about dependencies anyway, so add the missing
+>> includes and fix clangd as a bonus.
 > 
-> mm/vma.h is a special case that intentionally does not include additional
-> headers, but the others are not.
+> I'm curious, how did you identify these? The mm/vmalloc.h is rather easy, but I wonder about
+> e.g., mm/shuffle.h including mmzone.h.
 > 
-> This breaks tooling like clangd (which is where I noticed this), though the
-> build is OK due to the C files including the headers happening to include
-> required dependencies.
-> 
-> It's better to be explicit about dependencies anyway, so add the missing
-> includes and fix clangd as a bonus.
 
-I'm curious, how did you identify these? The mm/vmalloc.h is rather easy, but I wonder about
-e.g., mm/shuffle.h including mmzone.h.
+To clarify, I have clangd running behind a vim plugin, and so far it just worked.
+
+I had to generate a weird XML at some point that does magical things for clangd.
+
+So I'm curious how to invoke clangd manually to actually get these reports.
 
 -- 
 Cheers,
