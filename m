@@ -1,125 +1,255 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD833EC835;
-	Tue,  4 Aug 2026 15:36:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FEE84028EE
+	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 15:36:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785857771; cv=none; b=Ey8fvT84l2nkgfYf16N9aaNg3yAem+QbwAK8/SjecWnHlW8sRMs0KwLzfiQmBLYDBMsjMZsTvU4mvtEqUPIUncZD6hgAzGHK2yeBPX2MuxNDOfHAYmaE5JUDpzbCF2om9dm3oEgmBQAKapanxfCPcICZ3LqNWbR4+H7gYMb3qAY=
+	t=1785857777; cv=none; b=d4vCZBOEObxCB4zHdW4IKN7ez6jKJ8nSrnIfkC41TC+yvD6MMAdCBIH+KM0CA50jiYKILEXHqpbhgtn5PzubgQ7AKngQ8KdUyawvI1+/HI9UUYvBNj3xxqamrR0COz4saBrAgNFbfZec9TwHjx+DsHajd4OVbheSr1DDGtGsIv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785857771; c=relaxed/simple;
-	bh=1Ny1M5KDKWolvSF0yzMzgZwtTmI9Ycveau0uckF6uzY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=rz1facl5Kaq6qzUmEFY+Eud5oM4MIi5P7TrOHJDNeT+LGBt/quxfQov3jWGN1hJMbiyuBhTiZSAv5zcrP+IVyz6pcP3JBO0jc6PVj77stXbKD8OUHiNlWtCqI+wQY/nwPW4b9DMlH+0mjCqSvs6Ml4XKSRaJKJ7k2taW5+dQXuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UPcb9mrv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785857777; c=relaxed/simple;
+	bh=5ko/IN4VqNVbNXafBuViG/E2qQi37mwfDTUB4rQ8/U0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=t21pc0qkpAZW/j6ly8gSbOOcb8xvTTkQisx7qKixZrK2MnDIidnfwpBUwBzDdLmwxAG8rdsVxdxMYgukbrQwURGje3gTu8ShW4FnhCoclnPXuRgDSIjx96Lp7Tu5CSR4LEpw43oh0P5PAZNn9iG3f0tamyhtEo/b1kpjcdNq2Jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gtN2bBr6; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UPcb9mrv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 649881F000E9;
-	Tue,  4 Aug 2026 15:36:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785857770;
-	bh=LROdNJHis7fEqQDj/xQYIblbCNdRMuIDk82uS4/tPnU=;
-	h=Date:Subject:To:References:From:In-Reply-To;
-	b=UPcb9mrv7i37FYMvmlJE5STml8AaOU2toSGgMMJ19HfDV+qNDmEpZSEpUAX4uyzog
-	 CdcTsJIyF/F/98d6Q8SK4j+nVaq82sXIiWSBolZS0GCScKsH0UfjKAUvSBABQgYT2O
-	 yIP9xxhZVQG4t2mZB1lSWtGYnlcszN2FUGKMij1CWKUQTdw2gFM0oT1Kq2VdCseMkN
-	 I5t+gdAdMuyMjRyTz6ldO+Qyiov9XtGXxKbdbZCE/toQvBD0h1/5JM+XXdr0vw88Dh
-	 fLCqLhMEpz5QAtUl4D8QLfzjbf9qDA4voETEK1o4lo7QemrRFUcmx8pKXfIS7Ah25M
-	 JuGLwBp0T00fg==
-Message-ID: <88e636fe-3c29-4d8b-a752-d8b31c8181a2@kernel.org>
-Date: Tue, 4 Aug 2026 17:36:04 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gtN2bBr6"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-6a0a4aa99bdso5767832a12.1
+        for <cgroups@vger.kernel.org>; Tue, 04 Aug 2026 08:36:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785857774; x=1786462574; darn=vger.kernel.org;
+        h=content-type:content-transfer-encoding:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ksBlfHiQymAuiEvSzpwhdyj7GzYzB5CWn+8bkyQnsf0=;
+        b=gtN2bBr6kz9/c+bc5cQl+oc2DkRBHE9Q66seI/NUysCCDRWMNLUtBmIpj9MLIn538S
+         S+axzO21w2opDCBiEAcXIBU85XNDzrwuzmXCiFsz2vvIEFdXlcsYwSCDFEaj2+bJWg8q
+         94pRAZOd598STXEdn8k3/byQnGme2VtoQAT8LB3DROmGDJZk95TwJk806RqqPgjQawlD
+         LdMif738fanIZLJ36BP3z4g0toNZpGICTUxEr8KeU7BL2R7/XzAvHxtzm+b1zNqVg0cE
+         DPc4g7Ts25vDeYVvAOxaH1e8IFuHZc67RK7cVC1C8EjFhdpEzAY6wf0An2JGh9fv5OY7
+         N1Zg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785857774; x=1786462574;
+        h=content-type:content-transfer-encoding:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ksBlfHiQymAuiEvSzpwhdyj7GzYzB5CWn+8bkyQnsf0=;
+        b=LIroUKWDfletqCtRTDyFREMkHRRogj4RpRpAC6bJGF1xRlW0v8XrUL19rk8tx5RfGq
+         j2JQtF0GYyh7LZPaHpWtVT/l6ijTxfHJrnfVMI5HMyb/ngTWqfF/yYnEV1s03nxeacSL
+         GGFh8d/OVL7tZg+H56E7JAGLiOP4RUfRc0xS8FAY06uaRP/A9p5eGdMcZ3C9Gqi0mfsB
+         DVG6H2sXYFGZ1veyVa4iMMhyBfoRWhp287bjlOiBVUHCE2Xl7K8im7c6U/ZbWakCF/ma
+         UxYWjp4xyoQCQRT83i27R2+OreRDQZEG9bLXujwlWd343EfSkrSQeQ0z2pWb1YHGiX88
+         G6gQ==
+X-Gm-Message-State: AOJu0YykYCpM9agFYgumVlXZblpjbUXlhIKhInFo7VrrMzBQSkJO6q5A
+	qIMrxDjzuKJIMTSYyxNquZRsF3z9H9KTK6JEW1gUeNEIqdK/tTyR48uw
+X-Gm-Gg: AR+sD138UBqhXklWpbcUeIVrzFetRHUwwTm0kEQgC9hqAH26pXzRLx/cAvB5e5lfVhk
+	RfqXW0LUj2wOPvtC0iKgY9SG2JV0E1O4NvKpzFqZ/C7k7s+5JerLn6i/tHOvIoQqCklgHpJFo7i
+	4qM2MbMODRn7/fiLtQS0SctWhCH4UlBaULXlZMQTGlnNrKkjTnwfEu8T0ze0iKqtcblXbiDkO30
+	Zz3gsZ05wZ6RtfMSSNSAISCpOzAKkBT+xXIzugZoj1yhO/NngzJNySru0SlSCWSZhBKZrCJVNLf
+	iWM3aThqoKfg5zhBlcIp5T5NepH86dOO67mnLSKasI0+azuvbJFPcjMPzoLzkSji+nwMF8R3/+H
+	/Y+MGlhCO3A3oR8tHPmLp9USNxGUNjd/OhmMMad2CXpRs5cyspqlG2sOh07hevm7KYK8Tq2+144
+	Fjxna1/230eDc+fFz8PY7l60N5/gp4I7m1bvDsIhcdjluscdk2sYDc3dQTqv6ggMXvQY1sgzZyb
+	iU0qQrGV4z+8U1bcHntCGbsT55Oe2GsYiRX
+X-Received: by 2002:a05:6402:4541:b0:6a0:a505:1b54 with SMTP id 4fb4d7f45d1cf-6a0a7ca981bmr10891559a12.16.1785857773324;
+        Tue, 04 Aug 2026 08:36:13 -0700 (PDT)
+Received: from timur-hyperion.localnet (5401D2B5.dsl.pool.telekom.hu. [84.1.210.181])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a1462c4f8fsm265025a12.29.2026.08.04.08.36.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Aug 2026 08:36:11 -0700 (PDT)
+From: Timur =?UTF-8?B?S3Jpc3TDs2Y=?= <timur.kristof@gmail.com>
+To: Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal =?UTF-8?B?S291dG7DvQ==?= <mkoutny@suse.com>,
+ Christian Koenig <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>,
+ Matthew Auld <matthew.auld@intel.com>,
+ Matthew Brost <matthew.brost@intel.com>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>, Tvrtko Ursulin <tursulin@ursulin.net>,
+ Thadeu Lima de Souza Cascardo <cascardo@igalia.com>,
+ Natalie Vock <natalie.vock@gmx.de>
+Cc: cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ Tvrtko Ursulin <tvrtko.ursulin@igalia.com>
+Subject:
+ Re: [PATCH v8 0/6] cgroup/dmem,drm/ttm: Improve protection in contended cases
+Date: Tue, 04 Aug 2026 17:36:07 +0200
+Message-ID: <lpofhPXuQVOAKGLqOkO7sA@gmail.com>
+In-Reply-To: <20260804-dmemcg-aggressive-protect-v8-0-07af96681bf8@gmx.de>
+References: <20260804-dmemcg-aggressive-protect-v8-0-07af96681bf8@gmx.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] mm/vmscan: add pgrotate_anon and pgrotate_file
- vmstat counters
-Content-Language: en-US
-To: Usama Arif <usama.arif@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>, david@kernel.org, ljs@kernel.org,
- liam@infradead.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com,
- kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev,
- axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
- chrisl@kernel.org, nphamcs@gmail.com, baoquan.he@linux.dev,
- youngjun.park@lge.com, hannes@cmpxchg.org, roman.gushchin@linux.dev,
- muchun.song@linux.dev, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, rientjes@google.com, kernel-team@meta.com
-References: <20260727162550.2032-1-usama.arif@linux.dev>
- <20260727162550.2032-3-usama.arif@linux.dev>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <20260727162550.2032-3-usama.arif@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-On 7/27/26 18:23, Usama Arif wrote:
-> Reclaim can spend substantial work on an LRU type without immediately
-> reclaiming or demoting a corresponding amount of memory. Record this
-> work in PGROTATE_ANON and PGROTATE_FILE.
-> 
-> For classic LRU reclaim:
-> 
->   - Inactive-list reclaim adds nr_scanned - nr_reclaimed to the
->     corresponding anon/file counter when isolation succeeds.
->   - Active-list reclaim adds referenced executable file folios that
->     are retained on the active list to PGROTATE_FILE. Active anon
->     reclaim does not contribute this component.
-> 
-> For MGLRU, add the number of initially isolated pages that remain
-> unreclaimed after both the initial and retry passes to the counter for
-> the selected anon/file type.
-> 
-> These counters are distinct from the existing pgrotated vm event.
-> pgrotated records an actual move to the inactive-list tail, primarily
-> after reclaim-marked writeback completes or failed invalidation leaves
-> a folio for accelerated reclaim. PGROTATE_ANON and PGROTATE_FILE
-> measure reclaim cost and do not imply that a folio moved to an LRU tail.
-> 
-> A subsequent patch will consume these counters for anon/file scan
-> balancing.
-> 
-> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+On Tuesday, August 4, 2026 10:25:15=E2=80=AFAM Central European Summer Time=
+ Natalie=20
+Vock wrote:
+> Hi all,
+>=20
+> I've been looking into some cases where dmem protection fails to prevent
+> allocations from ending up in GTT when VRAM gets scarce and apps start
+> competing hard.
+>=20
+> In short, this is because other (unprotected) applications end up
+> filling VRAM before protected applications do. This causes TTM to back
+> off and try allocating in GTT before anything else, and that is where
+> the allocation is placed in the end. The existing eviction protection
+> cannot prevent this, because no attempt at evicting is ever made
+> (although you could consider the backing-off as an immediate eviction to
+> GTT).
+>=20
+> This series tries to alleviate this by adding a special case when the
+> allocation is protected by cgroups: Instead of backing off immediately,
+> TTM will try evicting unprotected buffers from the domain to make space
+> for the protected one. This ensures that applications can actually use
+> all the memory protection awarded to them by the system, without being
+> prone to ping-ponging (only protected allocations can evict unprotected
+> ones, never the other way around).
+>=20
+> The first two patches just add a few small utilities needed to implement
+> this to the dmem controller. The other patches are the TTM implementation:
+>=20
+> "drm/ttm: Be more aggressive..." decouples cgroup charging from resource
+> allocation to allow us to hold on to the charge even if allocation fails
+> on first try, and adds a path to call ttm_bo_evict_alloc when the
+> charged allocation falls within min/low protection limits.
+>=20
+> "drm/ttm: Use common ancestor..." is a more general improvement in
+> correctly implementing cgroup protection semantics. With recursive
+> protection rules, unused memory protection afforded to a parent node is
+> transferred to children recursively, which helps protect entire
+> subtrees from stealing each others' memory without needing to protect
+> each cgroup individually. This doesn't apply when considering direct
+> siblings inside the same subtree, so in order to not break
+> prioritization between these siblings, we need to consider the
+> relationship of evictor and evictee when calculating protection.
+> In practice, this fixes cases where a protected cgroup cannot steal
+> memory from unprotected siblings (which, in turn, leads to eviction
+> failures and new allocations being placed in GTT).
+>=20
+> Thanks,
+> Natalie
+>=20
+> Signed-off-by: Natalie Vock <natalie.vock@gmx.de>
 
-Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Very nice work!
+
+Reviewed-by: Timur Krist=C3=B3f <timur.kristof@gmail.com>
+
+for the whole series.
+
+> ---
+> Changes in v8:
+> - Fix a few Sashiko complaints
+> - Link to v7:
+> https://patch.msgid.link/20260721-dmemcg-aggressive-protect-v7-0-97c4b101=
+43
+> 15@gmx.de
+>=20
+> Changes in v7:
+> - Fix incorrect refcounting/locking around dmem_cgroup_common_ancestor
+>   (Cascardo)
+> - Rebase on latest drm-misc-next
+> - Link to v6:
+> https://lore.kernel.org/r/20260313-dmemcg-aggressive-protect-v6-0-7c71cc1=
+49
+> 2db@gmx.de
+>=20
+> Changes in v6:
+> - Rename dmem_cgroup_common_ancestor to dmem_cgroup_get_common_ancestor
+>   (Maarten)
+> - Use ttm_bo_alloc_at_place in eviction cb as well (Tvrtko)
+> - Clean up the more aggressive eviction logic (Tvrtko)
+> - Link to v5:
+> https://lore.kernel.org/r/20260302-dmemcg-aggressive-protect-v5-0-ffd3a26=
+02
+> 309@gmx.de
+>=20
+> Changes in v5:
+> - Added cgroup_common_ancestor helper to use with
+>   dmem_cgroup_common_ancestor (Tejun)
+> - Note: "drm/ttm: Use common ancestor..." needed minor changes since
+>   dmem_cgroup_common_ancestor now grabs a reference to the ancestor
+>   pool which needs to be dropped after use
+> - Removed extraneous whitespaces in "drm/ttm: Split cgroup charge..."
+>   and unnecessary changes done in "drm/ttm: Extract code..." (Tvrtko)
+> - Applied a comment from v3 about below_low not needing to be
+>   initialized in "drm/ttm: Be more aggressive..." (Tvrtko)
+> - Fixed uncharging the cgroup on allocation failure (Tvrtko)
+> - Fixed a typo in the message of "drm/ttm: Split cgroup charge..."
+>   (Tvrtko)
+> - Added case in ttm_bo_evict_cb for when charging fails, since we need
+>   to retry the charge (found myself)
+> - Link to v4:
+> https://lore.kernel.org/r/20260225-dmemcg-aggressive-protect-v4-0-de847ab=
+35
+> 184@gmx.de
+>=20
+> Changes in v4:
+> - Split cgroup charge decoupling and eviction logic changes into
+>   separate commits (Tvrtko)
+> - Fix two cases of errno handling in ttm_bo_alloc_place and its caller
+>   (Tvrtko)
+> - Improve commit message/description of "drm/ttm: Make a helper..." (now
+>   "drm/ttm: Extract code...") (Tvrtko)
+> - Documentation improvements for new TTM eviction logic (Tvrtko)
+> - Formatting fixes (Tvrtko)
+> - Link to v3:
+> https://lore.kernel.org/r/20251110-dmemcg-aggressive-protect-v3-0-219ffcf=
+c5
+> 4e9@gmx.de
+>=20
+> Changes in v3:
+> - Improved documentation around cgroup queries and TTM eviction helpers
+>   (Maarten)
+> - Fixed up ttm_alloc_at_place charge failure logic to return either
+>   -EBUSY or -ENOSPC, not -EAGAIN (found this myself)
+> - Link to v2:
+> https://lore.kernel.org/r/20251015-dmemcg-aggressive-protect-v2-0-36644fb=
+4e
+> 37f@gmx.de
+>=20
+> Changes in v2:
+> - Factored out the ttm logic for charging/allocating/evicting into a
+>   separate helper to keep things simpler
+> - Link to v1:
+> https://lore.kernel.org/r/20250915-dmemcg-aggressive-protect-v1-0-2f3353b=
+fc
+> dac@gmx.de
+>=20
+> ---
+> Natalie Vock (6):
+>       cgroup/dmem: Add queries for protection values
+>       cgroup,cgroup/dmem: Add (dmem_)cgroup_common_ancestor helper
+>       drm/ttm: Extract code for attempting allocation in a place
+>       drm/ttm: Split cgroup charge and resource allocation
+>       drm/ttm: Be more aggressive when allocating below protection limit
+>       drm/ttm: Use common ancestor of evictor and evictee as limit pool
+>=20
+>  drivers/gpu/drm/ttm/ttm_bo.c       | 223
+> ++++++++++++++++++++++++++++++++----- drivers/gpu/drm/ttm/ttm_resource.c =
+|=20
+> 51 ++++++---
+>  include/drm/ttm/ttm_resource.h     |   6 +-
+>  include/linux/cgroup.h             |  21 ++++
+>  include/linux/cgroup_dmem.h        |  25 +++++
+>  kernel/cgroup/dmem.c               | 103 +++++++++++++++++
+>  6 files changed, 383 insertions(+), 46 deletions(-)
+> ---
+> base-commit: 44e9eb5a762142a4aa46c0b5da7c39bfeb78910e
+> change-id: 20250915-dmemcg-aggressive-protect-5cf37f717cdb
+>=20
+> Best regards,
+> --
+> Natalie Vock <natalie.vock@gmx.de>
+
+
+
 
