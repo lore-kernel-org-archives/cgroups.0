@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 324543515C9;
-	Tue,  4 Aug 2026 15:33:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD833EC835;
+	Tue,  4 Aug 2026 15:36:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785857590; cv=none; b=uV6k8tH1jjdXkL9FjvPKP7lZafmFUt3rnZh7IkoyEK7yutzSbPsae5/UfO+hufSUgtjDlze6q7/AUIF2BQfNCFwj6THd1VjYKX56qif6yoGQTdFITVTiKmcHwyt2AUOcllVGfCntP6Xt8CTzaWGn/FXQaPBV3qvQJ3V9NhNDuuw=
+	t=1785857771; cv=none; b=Ey8fvT84l2nkgfYf16N9aaNg3yAem+QbwAK8/SjecWnHlW8sRMs0KwLzfiQmBLYDBMsjMZsTvU4mvtEqUPIUncZD6hgAzGHK2yeBPX2MuxNDOfHAYmaE5JUDpzbCF2om9dm3oEgmBQAKapanxfCPcICZ3LqNWbR4+H7gYMb3qAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785857590; c=relaxed/simple;
-	bh=oXqu5CkAgTmUeweinC3Djt5R3DdkUMWMFL1HcVjqEVw=;
+	s=arc-20240116; t=1785857771; c=relaxed/simple;
+	bh=1Ny1M5KDKWolvSF0yzMzgZwtTmI9Ycveau0uckF6uzY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=u7oTRBldGclQ1uzBIU+gPubrr6Jp9LgU5zj3cwf9Gm5UPLWJIEeF2Dy7oczx/fDPJ959ZfBBxhSs1u6rc5qrwG/Qy5UfqKrk+5DrAtBDCq293DcKH75oV5FMPdU3+qT6MHuE+VGy5SaUAc3AqWwrFuVE9Qq+IuIZ2tcSRq6ZBoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R3oNVVsx; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=rz1facl5Kaq6qzUmEFY+Eud5oM4MIi5P7TrOHJDNeT+LGBt/quxfQov3jWGN1hJMbiyuBhTiZSAv5zcrP+IVyz6pcP3JBO0jc6PVj77stXbKD8OUHiNlWtCqI+wQY/nwPW4b9DMlH+0mjCqSvs6Ml4XKSRaJKJ7k2taW5+dQXuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UPcb9mrv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R3oNVVsx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05A651F000E9;
-	Tue,  4 Aug 2026 15:33:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UPcb9mrv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 649881F000E9;
+	Tue,  4 Aug 2026 15:36:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785857588;
-	bh=+B2tyHlxtOIYFFAEVjuBTTR4kj9wHrzaGATG1AU1+pI=;
+	s=k20260515; t=1785857770;
+	bh=LROdNJHis7fEqQDj/xQYIblbCNdRMuIDk82uS4/tPnU=;
 	h=Date:Subject:To:References:From:In-Reply-To;
-	b=R3oNVVsxuCEWsgVHp9L06whtvAu65m31eI7YTUDVmBGTciHjhmbGlv6QUnaWentP6
-	 iKLvzeiIIVg5Ghu1QbNkxlP7j4IS8pCBYrP2hqN5M3VwDO3VNlOGkYXUJZbP/QqIUY
-	 jDQEIQqJorCqz2ZmxeN9MyAQ4406Pc51zTU7Sf3uVL3FNPQ6V/gAqkzY9x567zrxhM
-	 bfstcUfhbLbTZldGnVZ+Xe+REaXQCRTAtHrfQNoDSivsMH8GjVZgEpiFVsUhWgRs6D
-	 Kj6Ww6zTa/zxFhnYHtMLGQpKCTNtF/CX24S8/PBlYm3B3hGjvCYaLeiw9n/12iBL7O
-	 avzTCd2u4JoOQ==
-Message-ID: <2a4423d6-7934-46b2-97da-a20c372b0d17@kernel.org>
-Date: Tue, 4 Aug 2026 17:33:02 +0200
+	b=UPcb9mrv7i37FYMvmlJE5STml8AaOU2toSGgMMJ19HfDV+qNDmEpZSEpUAX4uyzog
+	 CdcTsJIyF/F/98d6Q8SK4j+nVaq82sXIiWSBolZS0GCScKsH0UfjKAUvSBABQgYT2O
+	 yIP9xxhZVQG4t2mZB1lSWtGYnlcszN2FUGKMij1CWKUQTdw2gFM0oT1Kq2VdCseMkN
+	 I5t+gdAdMuyMjRyTz6ldO+Qyiov9XtGXxKbdbZCE/toQvBD0h1/5JM+XXdr0vw88Dh
+	 fLCqLhMEpz5QAtUl4D8QLfzjbf9qDA4voETEK1o4lo7QemrRFUcmx8pKXfIS7Ah25M
+	 JuGLwBp0T00fg==
+Message-ID: <88e636fe-3c29-4d8b-a752-d8b31c8181a2@kernel.org>
+Date: Tue, 4 Aug 2026 17:36:04 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/3] mm/vmstat, mm/memcontrol: add _monotonic vmstat
- readers
+Subject: Re: [PATCH v5 2/3] mm/vmscan: add pgrotate_anon and pgrotate_file
+ vmstat counters
 Content-Language: en-US
 To: Usama Arif <usama.arif@linux.dev>,
  Andrew Morton <akpm@linux-foundation.org>, david@kernel.org, ljs@kernel.org,
@@ -48,7 +48,7 @@ To: Usama Arif <usama.arif@linux.dev>,
  muchun.song@linux.dev, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  cgroups@vger.kernel.org, rientjes@google.com, kernel-team@meta.com
 References: <20260727162550.2032-1-usama.arif@linux.dev>
- <20260727162550.2032-2-usama.arif@linux.dev>
+ <20260727162550.2032-3-usama.arif@linux.dev>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -89,52 +89,37 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <20260727162550.2032-2-usama.arif@linux.dev>
+In-Reply-To: <20260727162550.2032-3-usama.arif@linux.dev>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/27/26 18:23, Usama Arif wrote:
-> lruvec_page_state(), node_page_state(), and global_node_page_state()
-> all clamp negative reads to zero on CONFIG_SMP so that a transient
-> per-CPU delta skew presents as zero pages rather than
-> as a garbage unsigned value. This is the right behaviour for
-> non-monotonic page-count readers.
+> Reclaim can spend substantial work on an LRU type without immediately
+> reclaiming or demoting a corresponding amount of memory. Record this
+> work in PGROTATE_ANON and PGROTATE_FILE.
 > 
-> It is however incorrect for callers that snapshot a monotonically-
-> incremented event counter and compute a delta from two samples.
-> Once the underlying signed long wraps past LONG_MAX, the clamped read
-> drops to zero while the previously-recorded snapshot still holds the
-> pre-wrap value; the unsigned subtraction then underflows into a
-> ~2^31 spurious delta for 32-bit architecture and corrupts the
-> caller's accumulator.
+> For classic LRU reclaim:
 > 
-> Add non-clamping siblings that return the underlying state value
-> cast to unsigned long:
+>   - Inactive-list reclaim adds nr_scanned - nr_reclaimed to the
+>     corresponding anon/file counter when isolation succeeds.
+>   - Active-list reclaim adds referenced executable file folios that
+>     are retained on the active list to PGROTATE_FILE. Active anon
+>     reclaim does not contribute this component.
 > 
->   global_node_page_state_monotonic()
->   node_page_state_monotonic()
->   lruvec_page_state_monotonic()
+> For MGLRU, add the number of initially isolated pages that remain
+> unreclaimed after both the initial and retry passes to the counter for
+> the selected anon/file type.
 > 
-> With both samples read via the _monotonic variant, unsigned modular
-> subtraction stays correct across a signed-long wraparound as long
-> as the true growth between two samples fits in unsigned long
-> (< 2^32 on 32-bit, < 2^64 on 64-bit); the 32-bit bound is the
-> practically-reachable one that motivates this helper.
+> These counters are distinct from the existing pgrotated vm event.
+> pgrotated records an actual move to the inactive-list tail, primarily
+> after reclaim-marked writeback completes or failed invalidation leaves
+> a folio for accelerated reclaim. PGROTATE_ANON and PGROTATE_FILE
+> measure reclaim cost and do not imply that a folio moved to an LRU tail.
 > 
-> The variants are only safe for monotonically-incremented counters.
-> Non-monotonic page-count readers must keep using the existing
-> clamped helpers so transient negative reads still present as zero.
+> A subsequent patch will consume these counters for anon/file scan
+> balancing.
 > 
-> This is a prerequisite for a later patch which
-> replaces the producer-side anon_cost/file_cost accumulators with a
-> read-side accumulator in prepare_scan_control() that samples
-> monotonic per-LRU vmstat counters (PGROTATE_*, NR_VMSCAN_WRITE,
-> WORKINGSET_RESTORE_*) via lruvec_page_state_monotonic() and folds
-> their unsigned modular deltas into lruvec->cost[].count.
-> 
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 > Signed-off-by: Usama Arif <usama.arif@linux.dev>
 
-Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
