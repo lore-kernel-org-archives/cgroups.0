@@ -1,87 +1,136 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F1F32E6BD
-	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 22:22:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EBEC261B70;
+	Wed,  5 Aug 2026 00:59:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785882126; cv=none; b=pvTl+azDS+yErrUxzNDZG296mhUHshokyMa2/DacIa4ns7TpmYvOp15EeE0xe5d1Yep7H+R5NsaRLBonFiN+mTFUXK+s7yke2fl1iTMRRERaCMsWOPLpPybyTpzYidqtzk2J15liy7VS6AyWYZd8q/QZvX7zsHbYljT5saBvWn0=
+	t=1785891545; cv=none; b=pThNcwzxyI8URSR7MmDXDslv7WbB/se6gKoNTLGFPiZD+aUM0eTqhbuzI2tBcZupvJAge8obr+X4OpuAnhBTUCghP4uHgetrC7/4Q+/TL56kw8CQvAB8H3i35w8vw/glArC9WAFgPtv1ouHYY6g8P3onblHySZlOw7h5vz479+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785882126; c=relaxed/simple;
-	bh=W12dzO7vgZVNKvjV4g3A7AtcxuECvisYvjLVJtUwhC0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=efI/7qQ2ZGdxgiyssttDwNVyzd1G+b3uFfvTpNOJriJRlhG3Wf59In7Ah57+xEzz2pziGgRwZej2NhTuW3b2EP3ddMfIOmoa4fZbWY0+Ac4A2o8xLvaUn8fGQ2eV6qa+k/XywbxEK1LAEc6ASGQ3b3tll8D0xYZInLVZoDKrdfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H6CJ6zNe; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785891545; c=relaxed/simple;
+	bh=QXq+No4NCvplH5iP+cVU/DLqFEsEiO2ABlKqbYf8N0U=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=kqIpXP3C7i6Il3J96zQA2fgG46csQ5RfvI1c2puhoXuAu1ZyOa5ZQYqGA7Hr9udxNmq/kx2+WZ8AYwJAxQdJ33bhuSqJYuYJkbEPliaySy8S3iLRaDO/g+4vRPT76nsGh/4muZyQwd9jAaWLhIqhNJSWvv8QolM5spB/qsNdLDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UKD+o0Q9; arc=none smtp.client-ip=91.218.175.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H6CJ6zNe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2019A1F01563
-	for <cgroups@vger.kernel.org>; Tue,  4 Aug 2026 22:22:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785882125;
-	bh=W12dzO7vgZVNKvjV4g3A7AtcxuECvisYvjLVJtUwhC0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=H6CJ6zNeAtAQ3czxPb2+pbEEI6hmiHWxWv9RE5aFyKKFrXkKk+QrAgTCmb/NTP43z
-	 8skLFk45BzQAwII5zXNbFtzkiI5KeiqBsA8YUczb7d+eonBtZdhWYWTri0hDsvO/B9
-	 Mb+saXeYdywjEhFHAWDWmuckw3XThl9b81viZbaX1Du+HSI71ByigszndUe3mD+ZqP
-	 NvKafAExsCN+oyB8rx6WASiBVqNfUEgF9hi8txdRXH3t5st5cWq5k7YxLHRTLLQRe4
-	 Qyc3S/02UY/2P9T56jF88VOFc3P3ecqLJnrSgwnKsKOt2JJBDIK4BXxLuE/qRPZ6v5
-	 BcD4KfKTAqSHA==
-Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-92e533aacf2so23486385a.2
-        for <cgroups@vger.kernel.org>; Tue, 04 Aug 2026 15:22:05 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RqnoIbnzR0G606206w1JtW7sTmLbS4HWwYDgZ32osD0eolCV+bOa+uhqW3uHMDdSZTpZ6CI9CDH@vger.kernel.org
-X-Gm-Message-State: AOJu0YympIwX+UzvM1I46E1UiyY7zrYPemT5qix4Gj9ks6klfIHijaAo
-	Ig9gSSztijNpkN2RH4ZPX4VG2K8e47ArIIqIA97PDdnuS4bQhYn8qxofVLXzP7YVAOCnbAYxhZy
-	iJlBnZDDexeLyfT2uJ+uB2Vx8sSvq/HA=
-X-Received: by 2002:a05:620a:270c:b0:92e:7cc9:a888 with SMTP id
- af79cd13be357-93649119b9bmr199237785a.2.1785882124377; Tue, 04 Aug 2026
- 15:22:04 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UKD+o0Q9"
+Message-ID: <a340d525-5713-4cf4-b88c-77773ae349d7@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785891530;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kXCZx29YWK0KuSZTNZlcIo3NjcMPu1Ep/GSGxvMq9+g=;
+	b=UKD+o0Q9O0GP/b1+xVPt8DW6AJyHnKdGgtR0kNlepREPLrvPQUsgmz6uhTn2BgsnwwgsW7
+	6FERSa+9CQu0aEvQy/RHASDL9rD1MgLiRdBkudQn0F5tsVVNDL9YEXbEVMFS961KB/SsYE
+	mzNcNjONJWNh0bFcrOTll82xxRN0PX0=
+Date: Wed, 5 Aug 2026 08:58:09 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260804-fix-some-local-headers-v1-1-a7beb173c116@kernel.org>
-In-Reply-To: <20260804-fix-some-local-headers-v1-1-a7beb173c116@kernel.org>
-From: Barry Song <baohua@kernel.org>
-Date: Wed, 5 Aug 2026 06:21:53 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4wcq5UXq1RAoD8iygnKV95o=D+nOd01ncz4GQJ8Bge3ow@mail.gmail.com>
-X-Gm-Features: AUfX_mybQ80Lx8PwialdKxVIhIqHFVhcCtwxrLLGtSQkGb3zGfEQ2A4Kq4si_Ec
-Message-ID: <CAGsJ_4wcq5UXq1RAoD8iygnKV95o=D+nOd01ncz4GQJ8Bge3ow@mail.gmail.com>
-Subject: Re: [PATCH] mm: add some missing includes to mm-local headers
-To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Muchun Song <muchun.song@linux.dev>, 
-	Oscar Salvador <osalvador@suse.de>, David Hildenbrand <david@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Brendan Jackman <brendan.jackman@linux.dev>, Zi Yan <ziy@nvidia.com>, 
-	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Youngjun Park <youngjun.park@lge.com>, 
-	Uladzislau Rezki <urezki@gmail.com>, Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc: cui.tao@linux.dev, Yu Kuai <yukuai@kernel.org>,
+ Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
+ Josef Bacik <josef@toxicpanda.com>, Coly Li <colyli@fygo.io>,
+ Kent Overstreet <kent.overstreet@linux.dev>, Alasdair Kergon
+ <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
+ Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
+ Dave Jiang <dave.jiang@intel.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
+ Andreas Gruenbacher <agruenba@redhat.com>,
+ Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+ Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>, Nilay Shroff <nilay@linux.ibm.com>,
+ cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
+ virtualization@lists.linux.dev, gfs2@lists.linux.dev,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v1 2/3] blk-cgroup: store blkcg in bio instead of blkg
+To: yukuai@fygo.io, Christoph Hellwig <hch@lst.de>
+References: <20260804065313.2092022-1-yukuai@kernel.org>
+ <20260804065313.2092022-3-yukuai@kernel.org>
+ <a677f581-344b-4d99-846d-a00801e26033@linux.dev>
+ <20260804133208.GB8078@lst.de> <0fc5dd22-7a8d-43f0-8555-d2ca966efff6@fygo.io>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <0fc5dd22-7a8d-43f0-8555-d2ca966efff6@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Tue, Aug 4, 2026 at 6:09=E2=80=AFPM Lorenzo Stoakes (ARM) <ljs@kernel.or=
-g> wrote:
->
-> There are a number of internal headers local to mm/ which reference
-> functions and data types without including the relevant headers.
->
-> mm/vma.h is a special case that intentionally does not include additional
-> headers, but the others are not.
->
-> This breaks tooling like clangd (which is where I noticed this), though t=
-he
-> build is OK due to the C files including the headers happening to include
-> required dependencies.
->
-> It's better to be explicit about dependencies anyway, so add the missing
-> includes and fix clangd as a bonus.
->
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> ---
 
-Reviewed-by: Barry Song <baohua@kernel.org>
+Hi Kuai,Christoph,
+在 2026/8/4 23:30, yu kuai 写道:
+> Hi,
+> 
+> 在 2026/8/4 21:32, Christoph Hellwig 写道:
+>> On Tue, Aug 04, 2026 at 05:19:24PM +0800, Tao Cui wrote:
+>>> While reading 2/3, one spot in bio_pinned_blkg() made me wonder, so I
+>>> gave it a try — and the WARN_ON_ONCE triggers every time for me.
+>>>
+>>> I may well be missing something, but my worry is that the bio's ref on
+>>> the blkg keeps the object alive, not its entry in the radix tree.
+>>> blkg_destroy() runs throtl_pd_offline (which only schedules an async
+>>> flush) before radix_tree_delete(), so the queued bio ends up dispatched
+>>> (blk_throtl_dispatch_work_fn -> blk_cgroup_bio_start ->
+>>> bio_pinned_blkg) after the blkg is already gone from the tree, and
+>>> blkg_lookup() returns NULL.
+>>>
+>>> I applied the series and wrote a small reproducer:
+>>>
+>>>    - null_blk, cgroup v2, a child cgroup with io.max rbps=4096;
+>>>    - a read issued in the child cgroup gets throttled and queued, pinning
+>>>      the blkg;
+>>>    - migrate the reader out and rmdir the cgroup; the queued bio is then
+>>>      flushed after the blkg has left the tree.
+>> Can you add this to blktests?
+>>
+
+yes, I'll turn the reproducer into a blktests case and send
+it out. 
+
+>>> Maybe keeping the pinned blkg pointer in the bio would sidestep this, so
+>>> the lookup can't miss?
+> 
+> The problem here is that blkg_destroy can be called while blkg is still pinned
+> by blkg_get, in this case remove the cgroup directly remove the blkg from radix
+> tree, that's why blkg_lookup can't find this blkg anymore, and the extra blkg ref
+> is leaked :(
+> 
+>> That would grow the bio, which we try hard to avoid.  I think the way to
+>> avoid this is to have active/passive refcounts on the blkg, where an
+>> active one keeps it in the radix tree, but a 0 passive one would prevent
+>> the caller from getting a new reference to it.  The users who rely on the
+>> pin for the I/O completion path would then just keep the active reference
+>> and use a pure lookup without getting a new passive reference in the
+>> completion path.  This would remove the need for BIO_BLKG_REF which
+>> feels a bit kludgy and eats up precious bio flag space.
+> 
+> The problem here is that remove a cgroup can also remove the blkg from radix tree,
+> even through it still has active refcounts. I think this can be fixed by checking
+> the cgroup online_pin first, if it's zero, we can search the blkg from the
+> request_queue blkg list, where blkg will not be removed until blkg_free_workfn().
+> What's better, if we can convert the blkg list to hash table with key as blk-cgroup,
+> it will be much better as we can lookup from this table instead of blkcg radix tree.
+> 
+
+Both of your approaches go further than my store-the-pointer idea;
+looking forward to the next version.
+
+Thanks,
+Tao
+
+>>
+
