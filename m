@@ -1,109 +1,173 @@
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0FE2329E5D;
-	Thu,  6 Aug 2026 03:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A55C32F8EBE
+	for <cgroups@vger.kernel.org>; Thu,  6 Aug 2026 06:18:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785987021; cv=none; b=pVojs5U8/7zkadd3EUsvf1ELndj7iSsfCd6/tARrabbPqXwu8WB2ah9plU4Tm9m5gOHiKwqNX90CyRtO/N+OmPIU9AsI8mDRy8DWaW29sflpKcaWkaiOc4W4PZByYLR520pqLuB4nZyETISeuLAQfdAeXXSxj2C0Spo258afYw0=
+	t=1785997131; cv=none; b=Is4yje5BklP/MrZ0V6uYZ+z9Br4NxAukACmM8MkM1yD06hITBolQMcGVBQ7daojTDmQW1ggjRdgrRMl2rud7sNrhYUYqqoLvZdWTQIJrNfTy6RFN2EOn3OQdpRlq+cT1TXsM5E06fab2eh3mEFlwgOojIvy+uyjiqtzyATEJTzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785987021; c=relaxed/simple;
-	bh=5wus9n0+Mpv7rQWIuIFpoGHkgxM6w2e5wGqel/1cJaU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ky2L2dbAUfgHUcHtbUiToTlod9U4B2JjNeaoUCO1MH3c+LyLCHX6J2NNK5bViz2Oy3Flv99IrX2KyicdmgV3Epna5mGsEBK62GXJkPFRK2DK5GiBnVMc4lPPWPTh36N/TZ273I0opiAUY2CLYChmOPWhOpY5GUuyAqgOzNlvv4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=xvnedJmH; arc=none smtp.client-ip=113.46.200.222
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1785997131; c=relaxed/simple;
+	bh=zNYfZWs6B9QwBnV/bQWtsRnzagfVUjTdWYjnto/dGXw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NCJrtf4wgSBOLYId0aG9LfDvai4Q+jeF9cYiqQJYqif85odLD07AXvuhMwFYI1go/lcIZoKb4K4XYBK9Vbfh9AOxAzIE6KkoyEaySgjcrZfqNxAECbkDZy83L7+Y8+T4ReA1mxc8ee8WSBhUfLKHLc2DHan3CURiAGgYdFrS2mA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=AQRwtam9; arc=none smtp.client-ip=91.218.175.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="xvnedJmH"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=5wus9n0+Mpv7rQWIuIFpoGHkgxM6w2e5wGqel/1cJaU=;
-	b=xvnedJmHWhePXoOFObXkvLZJh87bx4MqXErY79eOEcbrJjXMeD32rgcW+e1+Mzp80DMGfqr0p
-	H5FXDNNf1FtCAkZtvN0zOyEW3ZqTIIFL63xHsatM7LYQOmJbAX0l/KDbPYMgxr2Fhy00WgHcfHo
-	1HBeTwRYcVunCQ6fWo8o/vc=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4hFsx51ybgzLlTg;
-	Thu,  6 Aug 2026 11:20:41 +0800 (CST)
-Received: from kwepemo500018.china.huawei.com (unknown [7.202.195.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id 14F5F4058A;
-	Thu,  6 Aug 2026 11:30:13 +0800 (CST)
-Received: from [10.174.176.101] (10.174.176.101) by
- kwepemo500018.china.huawei.com (7.202.195.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Thu, 6 Aug 2026 11:30:09 +0800
-Message-ID: <6840c720-8cb7-46bb-a652-040c130a4427@huawei.com>
-Date: Thu, 6 Aug 2026 11:30:08 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="AQRwtam9"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785997122;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=P+ldPohuWQENIni4PGzfc5Oh7ThBEFWNMfFXg+P+C+o=;
+	b=AQRwtam90kkDWgMb2odt6wcpqyfUKxMWoX9Vf7r6aS+bJeteNNI1oUoD9fT5pM8scVRXzb
+	dldgiO58uE7+sjGs0S8NeJ+dkK+wCJRVMFGqqCg3FI0qWMk1UdGBitt+IvvJo9d4FQ5QHr
+	m35uRuWc1EDZT1/STIfrFRsP5pBmYqk=
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Meta kernel team <kernel-team@meta.com>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Karl Erik Hofseth <karl.e.hofseth@opoint.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] memcg: keep folio's objcg same as its node
+Date: Wed,  5 Aug 2026 23:18:30 -0700
+Message-ID: <20260806061830.3294679-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 25/36] mm/memory_hotplug: support N_MEMORY_PRIVATE node
- hotplug
-To: Gregory Price <gourry@gourry.net>, <linux-mm@kvack.org>
-CC: <Zhigang.Luo@amd.com>, <arun.george@samsung.com>, <balbirs@nvidia.com>,
-	<brendan.jackman@linux.dev>, <yuzenghui@huawei.com>, <apopple@nvidia.com>,
-	<alucerop@amd.com>, <matthew.brost@intel.com>, <akpm@linux-foundation.org>,
-	<david@kernel.org>, <ljs@kernel.org>, <liam@infradead.org>,
-	<vbabka@kernel.org>, <rppt@kernel.org>, <surenb@google.com>,
-	<mhocko@suse.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
-	<gregkh@linuxfoundation.org>, <rafael@kernel.org>, <dakr@kernel.org>,
-	<djbw@kernel.org>, <vishal.l.verma@intel.com>, <dave.jiang@intel.com>,
-	<alison.schofield@intel.com>, <osandov@osandov.com>, <jannh@google.com>,
-	<pfalcato@suse.de>, <jackmanb@google.com>, <hannes@cmpxchg.org>,
-	<ziy@nvidia.com>, <pbonzini@redhat.com>, <osalvador@suse.de>,
-	<joshua.hahnjy@gmail.com>, <rakie.kim@sk.com>, <byungchul@sk.com>,
-	<ying.huang@linux.alibaba.com>, <kasong@tencent.com>, <qi.zheng@linux.dev>,
-	<shakeel.butt@linux.dev>, <baohua@kernel.org>, <axelrasmussen@google.com>,
-	<yuanchu@google.com>, <weixugc@google.com>, <yury.norov@gmail.com>,
-	<linux@rasmusvillemoes.dk>, <longman@redhat.com>, <ridong.chen@linux.dev>,
-	<tj@kernel.org>, <mkoutny@suse.com>, <sj@kernel.org>, <jgg@ziepe.ca>,
-	<jhubbard@nvidia.com>, <peterx@redhat.com>, <baolin.wang@linux.alibaba.com>,
-	<npache@redhat.com>, <ryan.roberts@arm.com>, <dev.jain@arm.com>,
-	<lance.yang@linux.dev>, <usama.arif@linux.dev>, <xu.xin16@zte.com.cn>,
-	<chengming.zhou@linux.dev>, <roman.gushchin@linux.dev>,
-	<muchun.song@linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <driver-core@lists.linux.dev>,
-	<nvdimm@lists.linux.dev>, <linux-cxl@vger.kernel.org>,
-	<linux-debuggers@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<kvm@vger.kernel.org>, <cgroups@vger.kernel.org>, <damon@lists.linux.dev>,
-	<linux-kselftest@vger.kernel.org>, <kernel-team@meta.com>
-References: <20260720193431.3841992-1-gourry@gourry.net>
- <20260720193431.3841992-26-gourry@gourry.net>
-From: Qiqi Li <liqiqi23@huawei.com>
-In-Reply-To: <20260720193431.3841992-26-gourry@gourry.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemo500018.china.huawei.com (7.202.195.199)
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Hi Gregory,
+memcg_reparent_objcgs() has an inherent assumption that a folio's objcg
+is the objcg of the folio's node.  Folio migration across nodes breaks
+that assumption: the new folio simply inherits the old folio's objcg
+while living on a different node.
 
-On 7/21/2026 3:34 AM, Gregory Price wrote:
+Once the assumption is broken, the reparenting of the folio's objcg and
+the reparenting of the folio's LRU list are no longer atomic.
+memcg_reparent_objcgs() handles one node per iteration and drops all the
+locks in between, so the objcg gets reparented in the iteration for the
+objcg's node while the LRU list gets spliced in the iteration for the
+folio's node.  Any LRU operation on that folio in between resolves its
+lruvec through the objcg, and thus takes the lru_lock of the wrong
+memcg, not the lru_lock of the list the folio is actually on.
 
-> Add add_private_memory_driver_managed() to let modules hotplug
-> memory onto an N_MEMORY_PRIVATE node they control.
+Fix this by selecting the objcg by folio_nid() at charge time, and by
+re-deriving it for the destination node in mem_cgroup_migrate() and
+mem_cgroup_replace_folio().
 
-I am trying to understand how the nid passed to
-add_private_memory_driver_managed() is expected to be provisioned.
+Reported-by: Karl Erik Hofseth <karl.e.hofseth@opoint.com>
+Closes: https://lore.kernel.org/all/anMmd1ADrDVwMO6v@work/
+Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of dying memory cgroup for LRU folios")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+---
+ mm/memcontrol.c | 33 +++++++++++++++++++++++++--------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
-From what I can see, both node_private_register() and
-__add_memory_resource() require the nid to already be present in
-node_possible_map. My understanding is therefore that this patch
-supports hotplugging private memory onto an existing possible node,
-rather than creating a new possible node ID at runtime.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3057396dda53..2e98788dc8bd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2966,10 +2966,9 @@ struct mem_cgroup *mem_cgroup_from_virt(void *p)
+ 	return folio_memcg_check(virt_to_folio(p));
+ }
+ 
+-static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
++static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg,
++						      int nid)
+ {
+-	int nid = numa_node_id();
+-
+ 	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+ 		struct obj_cgroup *objcg = rcu_dereference(memcg->nodeinfo[nid]->objcg);
+ 
+@@ -2980,12 +2979,13 @@ static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+ 	return NULL;
+ }
+ 
+-static inline struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
++static inline struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *memcg,
++							   int nid)
+ {
+ 	struct obj_cgroup *objcg;
+ 
+ 	rcu_read_lock();
+-	objcg = __get_obj_cgroup_from_memcg(memcg);
++	objcg = __get_obj_cgroup_from_memcg(memcg, nid);
+ 	rcu_read_unlock();
+ 
+ 	return objcg;
+@@ -3029,7 +3029,7 @@ static struct obj_cgroup *current_objcg_update(void)
+ 
+ 		rcu_read_lock();
+ 		memcg = mem_cgroup_from_task(current);
+-		objcg = __get_obj_cgroup_from_memcg(memcg);
++		objcg = __get_obj_cgroup_from_memcg(memcg, numa_node_id());
+ 		rcu_read_unlock();
+ 
+ 		/*
+@@ -5197,7 +5197,7 @@ static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
+ 	int ret = 0;
+ 	struct obj_cgroup *objcg;
+ 
+-	objcg = get_obj_cgroup_from_memcg(memcg);
++	objcg = get_obj_cgroup_from_memcg(memcg, folio_nid(folio));
+ 	/* Do not account at the root objcg level. */
+ 	if (!obj_cgroup_is_root(objcg))
+ 		ret = try_charge_memcg(memcg, gfp, folio_nr_pages(folio));
+@@ -5431,6 +5431,7 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+ 
+ 	rcu_read_lock();
+ 	memcg = obj_cgroup_memcg(objcg);
++
+ 	/* Force-charge the new page. The old one will be freed soon */
+ 	if (!obj_cgroup_is_root(objcg)) {
+ 		page_counter_charge(&memcg->memory, nr_pages);
+@@ -5438,7 +5439,12 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+ 			page_counter_charge(&memcg->memsw, nr_pages);
+ 	}
+ 
+-	obj_cgroup_get(objcg);
++	/* If replacing folio of different node, get objcg of that node. */
++	if (folio_nid(old) != folio_nid(new))
++		objcg = __get_obj_cgroup_from_memcg(memcg, folio_nid(new));
++	else
++		obj_cgroup_get(objcg);
++
+ 	commit_charge(new, objcg);
+ 	memcg1_commit_charge(new, memcg);
+ 	rcu_read_unlock();
+@@ -5478,6 +5484,17 @@ void mem_cgroup_migrate(struct folio *old, struct folio *new)
+ 	if (!objcg)
+ 		return;
+ 
++	/* If migrating to different node, get objcg of that node. */
++	if (folio_nid(old) != folio_nid(new)) {
++		struct obj_cgroup *old_objcg = objcg;
++
++		rcu_read_lock();
++		objcg = __get_obj_cgroup_from_memcg(obj_cgroup_memcg(old_objcg),
++						    folio_nid(new));
++		rcu_read_unlock();
++		obj_cgroup_put(old_objcg);
++	}
++
+ 	/* Transfer the charge and the objcg ref */
+ 	commit_charge(new, objcg);
+ 
+-- 
+2.53.0-Meta
 
-For example, in the use case I am looking at, the device's private
-node is not described by firmware. Would its nid need to be reserved
-during early NUMA initialization, or is there another mechanism that
-I may have missed?
-
-Also, could you please Cc me on future revisions of this series?
-I would appreciate it and would be happy to follow the work:)
-
-Thanks,
-Qiqi
