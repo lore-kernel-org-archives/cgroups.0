@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D84B63955FA;
-	Thu,  6 Aug 2026 13:51:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A38FD26C385;
+	Thu,  6 Aug 2026 13:56:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786024320; cv=none; b=Vncne8212RISpV5AOETa0fciOcrkwEgBdX+VpgobzVOeXkOGp0Gz/g0XwQ8XOfSrIqvonaBbtZf5TGGX/Qen4x4hBecvZKkTjtenDZU/QvWkD6CwgdO9OjHOPsWWqMSAc05VaVdCWMeK2lQMvBDwtIPTaO3RtTvyQTYMFVvDkTQ=
+	t=1786024608; cv=none; b=noc3ao946806NtqbzIpcFQ9CC87f0WVH7lfl9hK4lZEeIiiXTXAebM6TQNgp1W5N/4Y9lwvs1vgGy0aH9Zc7CVIqJthe6NRQF6DkcMwabyQEQ2spBdz8XPBTAPjdmutGS63TQTRzwdrXF134xRuYxJi0uah8iRCeN4lo1EXRWwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786024320; c=relaxed/simple;
-	bh=EKTMi4J+pUd1lF0ny3NBTxiRJRmuv4eWT856Dj2JS2U=;
+	s=arc-20240116; t=1786024608; c=relaxed/simple;
+	bh=ALY136eq9o3kgQ4G/vDF4wYJGUl/aKk6s2or5AVblv0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=o63Uh0s76FJjw/1gt/dRi3sPJ9QxzDuqn6LaHBEAF/M45ZjgkJmJ8b7TkC/vMKVieCzieoAVnh2Tujv46EAi1brfuoXvdoPbcWoNLSSbZQdCk7XVUXlfXd5bQ20vJ6VWzzImqsg2/k78P0sTD2VBreNxSnH3banmdkQCFTvaCxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Iuaa2ASF; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=NFVjll23bbQG7lFZ5LlgbHyq1pWVMEsLjoJx6BszviKkyhuligj+AeuF+nHI/c1WOooQYmtKfmI5Al0vTJ6F/K+Nd1wTsC9pzIr1Qa70qYox1Z3lwnoemiWSCcGGUJpP0oKeX8D0vM1Pm0o/C08X97WeBCLSk64thQ4gwfsUbcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DkGAyZHD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Iuaa2ASF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A36F51F000E9;
-	Thu,  6 Aug 2026 13:51:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DkGAyZHD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2DC41F000E9;
+	Thu,  6 Aug 2026 13:56:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786024319;
-	bh=mtOtoJPfPoNQ3lP/qAbd+1hDTx3C/med8KgZHUjbjqU=;
+	s=k20260515; t=1786024607;
+	bh=MC7T7ylhK/aLr9fs0E5SYbo5bCKm86oRgZDfYL13AS4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Iuaa2ASFYi8g49KLLXEzA+HefzGQsNEMIPsfpsoiouhzmRqgPB/QEBTXx9j312Y2E
-	 WckvlwtBI8SsH47XbWgM/D8zHxJZkBSYaGfjM7A46Hs3r70KUv3YlUJveZXw/Y10Hv
-	 xbGjFz/1sm543DrckGD9DHLiFnfZK6ch67XWAwKN1CWZrQoZ6ke4RKT/66f9bzpQD5
-	 9d8xXsynjcE0ruWoytE+WdKpGJmFjFrnoT0jjTKAz7IJABW+hKL5bLL49HWkr2hk42
-	 +g2/rNL6m41kLbrV2tkNeklAINFjBn/ju/xLaQDdCM7yYFDFRycGvTwV5Uyo/jkmal
-	 Pz0io5oi4CfNw==
-Message-ID: <1150896f-de20-4672-b498-6c9dd17e4aca@kernel.org>
-Date: Thu, 6 Aug 2026 15:51:49 +0200
+	b=DkGAyZHDVpHpzU+8ZKASQVokbVrEOI2Cii14k622zjZ3cwd+Ne0Csvoj1YN6XENG2
+	 H6pM+hFjLX144QIABtWKyQNdmRNlQqAo9KOZsuVMgPVI2HU+aYeTA9WBkxKJNTvsxl
+	 7lZChMbTyMO+ZcnZwpoSJDoGdnUcZbnQkAzLD6/tOGHXr0yGNSzKAn6ZkDwDMKs0a8
+	 0AR97NvqqDYbqVSd9DbVAOHVoj5q22bDD3m9UmUPN2nRhjMnbqYVKcDVrVMGzfrL1D
+	 yQUySxekwYv0qd9PjbpnVJzwEnJ7+7UZ1Avixh4y/xFPoppigmWx1aOBhr/5xfa9vZ
+	 Fxwf+avkzMfBQ==
+Message-ID: <77a27056-555e-4395-b71e-e777548750e0@kernel.org>
+Date: Thu, 6 Aug 2026 15:56:35 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v5 1/4] mm: add page_counter_margin()
+Subject: Re: [RFC PATCH v5 2/4] mm: distinguish large folio swap allocation
+ failures
 To: Xueyuan Chen <xueyuan.chen21@gmail.com>, akpm@linux-foundation.org,
  linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
@@ -48,7 +49,7 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
  surenb@google.com, qi.zheng@linux.dev, axelrasmussen@google.com,
  yuanchu@google.com, weixugc@google.com
 References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
- <20260730122304.2496440-2-xueyuan.chen21@gmail.com>
+ <20260730122304.2496440-3-xueyuan.chen21@gmail.com>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -95,25 +96,67 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260730122304.2496440-2-xueyuan.chen21@gmail.com>
+In-Reply-To: <20260730122304.2496440-3-xueyuan.chen21@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/30/26 14:23, Xueyuan Chen wrote:
-> From: Johannes Weiner <hannes@cmpxchg.org>
+> folio_alloc_swap() reports most allocation failures with a generic
+> negative error code. Reclaim cannot tell whether splitting a large folio
+> could make progress or whether there is no backing space at all.
 > 
-> mem_cgroup_get_nr_swap_pages() open-codes the remaining capacity across
-> the memcg swap counter hierarchy.
+> Keep the global free swap count and the remaining hierarchical memcg swap
+> margin as separate inputs. The memcg charge path reports only its own
+> margin; folio_alloc_swap() combines the two layers when classifying an
+> allocation failure.
 > 
-> Add page_counter_margin() to return the minimum usable space from a page
-> counter to the root, and use it in mem_cgroup_get_nr_swap_pages(). This
-> is a pure refactoring with no intended behavior change.
+> Return -E2BIG for large folios when a smaller allocation might still fit,
+> -ENOSPC when no global swap space is available, and -ENOMEM when the
+> failure is not helped by splitting.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> For early large-folio rejections, check global and memcg swap availability
+> instead of returning -E2BIG unconditionally. On a memcg charge failure,
+> swap slot allocation has already succeeded, so use the remaining memcg
+> margin to decide whether a smaller charge might fit.
+> 
+> This only refines folio_alloc_swap() return codes. The reclaim callers are
+> updated separately.
+> 
+> Suggested-by: Barry Song <baohua@kernel.org>
+> Suggested-by: Youngjun Park <youngjun.park@lge.com>
 > Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
 > ---
+>  include/linux/swap.h | 16 ++++++++++++----
+>  mm/memcontrol.c      | 32 +++++++++++++++++++++++++++++++-
+>  mm/swapfile.c        | 32 ++++++++++++++++++++++++--------
+>  3 files changed, 67 insertions(+), 13 deletions(-)
+> 
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 0544b2ec4c56..7d12058174ae 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -509,12 +509,13 @@ static inline void folio_throttle_swaprate(struct folio *folio, gfp_t gfp)
+>  #endif
+>  
+>  #if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
+> -int __mem_cgroup_try_charge_swap(struct folio *folio);
+> -static inline int mem_cgroup_try_charge_swap(struct folio *folio)
+> +int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margin);
+> +static inline int mem_cgroup_try_charge_swap(struct folio *folio,
+> +					     long *swap_margin)
 
-Reviewed-by: David Hildenbrand (Arm) <david@kernel.org>
+Nit: two tab indent
+
+[...]
+
+> -static inline int mem_cgroup_try_charge_swap(struct folio *folio)
+> +static inline int mem_cgroup_try_charge_swap(struct folio *folio,
+> +					     long *swap_margin)
+
+
+Nothing else jumped at me
+
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
