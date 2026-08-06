@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A38FD26C385;
-	Thu,  6 Aug 2026 13:56:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0DE62949E0;
+	Thu,  6 Aug 2026 13:58:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786024608; cv=none; b=noc3ao946806NtqbzIpcFQ9CC87f0WVH7lfl9hK4lZEeIiiXTXAebM6TQNgp1W5N/4Y9lwvs1vgGy0aH9Zc7CVIqJthe6NRQF6DkcMwabyQEQ2spBdz8XPBTAPjdmutGS63TQTRzwdrXF134xRuYxJi0uah8iRCeN4lo1EXRWwk=
+	t=1786024720; cv=none; b=gKh1ZqMSyxpIu06oEynFjuPnqCiqBikff1idPaT7V9iyxlAGvHeUObcl9OZWxSz+J0lT3o0w9armb+MzVz1XnHEqKDeirB8tWwLkH2jATdtAD4aioTM4xnkkLEZPmdRAOPWSyEEASjF+TVp74l4lRkj8k0MntR+Q9YMnlFpmjd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786024608; c=relaxed/simple;
-	bh=ALY136eq9o3kgQ4G/vDF4wYJGUl/aKk6s2or5AVblv0=;
+	s=arc-20240116; t=1786024720; c=relaxed/simple;
+	bh=/Pw8u1p6Zi7jNUDoze5GpbNpVFr7BAHkkCNPRnWltLY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NFVjll23bbQG7lFZ5LlgbHyq1pWVMEsLjoJx6BszviKkyhuligj+AeuF+nHI/c1WOooQYmtKfmI5Al0vTJ6F/K+Nd1wTsC9pzIr1Qa70qYox1Z3lwnoemiWSCcGGUJpP0oKeX8D0vM1Pm0o/C08X97WeBCLSk64thQ4gwfsUbcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DkGAyZHD; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Gsjd5aiaiH0Urf/2AB3aeIMxA4x8m88Hm8rN7pYvqgT2ur/vjJ4HnmjugRQ7qeBLyKBzQrVwDcc40cqw3kelBgjTxxrMR2RbMbitG/ZTRMkUtnVn1BZN1Jl5lw4xBDNncyD8EcN1rnMxGa3j2JXgTLQC7a5uoKcnlq+fdzKguoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfWtjqYf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DkGAyZHD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2DC41F000E9;
-	Thu,  6 Aug 2026 13:56:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfWtjqYf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B44221F000E9;
+	Thu,  6 Aug 2026 13:58:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786024607;
-	bh=MC7T7ylhK/aLr9fs0E5SYbo5bCKm86oRgZDfYL13AS4=;
+	s=k20260515; t=1786024718;
+	bh=9wRO74CcRIalo/k8pD9p1nvIQvOuxyVB7Ax6J3p+LFk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=DkGAyZHDVpHpzU+8ZKASQVokbVrEOI2Cii14k622zjZ3cwd+Ne0Csvoj1YN6XENG2
-	 H6pM+hFjLX144QIABtWKyQNdmRNlQqAo9KOZsuVMgPVI2HU+aYeTA9WBkxKJNTvsxl
-	 7lZChMbTyMO+ZcnZwpoSJDoGdnUcZbnQkAzLD6/tOGHXr0yGNSzKAn6ZkDwDMKs0a8
-	 0AR97NvqqDYbqVSd9DbVAOHVoj5q22bDD3m9UmUPN2nRhjMnbqYVKcDVrVMGzfrL1D
-	 yQUySxekwYv0qd9PjbpnVJzwEnJ7+7UZ1Avixh4y/xFPoppigmWx1aOBhr/5xfa9vZ
-	 Fxwf+avkzMfBQ==
-Message-ID: <77a27056-555e-4395-b71e-e777548750e0@kernel.org>
-Date: Thu, 6 Aug 2026 15:56:35 +0200
+	b=cfWtjqYfxsKZVa95uwGYkFOkF4656sllygFEOdMkS+9F6TRD9d2AZvKUYCyl8qOfV
+	 RPHyAblmhkJUXr6M22cEm35E1ew9IQJKJWGaVEcVai7iuZM6+FYmS8/jo59S2Q85mD
+	 /qMNFhb0QSFM32zF6zBR1Q1N7i8LtbX3YTq2iDRXAXfMy8BNUP9iRgMYDK2aJaTKwR
+	 nRAPTyvvG/8lhjbL7SgkSF1+DdKiI8CZUdizWC0vfWBXIDmUQ9JCwtROMOBC36lAQw
+	 N6gn/DCSR/u2P5N11sKhZS9nInHhUhymPJVEXPWV7WPUdxYc/dZebKkGn6BtCtRi7N
+	 VTgpKbGJJm/hg==
+Message-ID: <ee89226e-64b3-48e6-9be2-4934c23b729f@kernel.org>
+Date: Thu, 6 Aug 2026 15:58:29 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v5 2/4] mm: distinguish large folio swap allocation
- failures
+Subject: Re: [RFC PATCH v5 3/4] mm/vmscan: avoid pointless large folio splits
+ without swap
 To: Xueyuan Chen <xueyuan.chen21@gmail.com>, akpm@linux-foundation.org,
  linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
@@ -49,7 +49,7 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
  surenb@google.com, qi.zheng@linux.dev, axelrasmussen@google.com,
  yuanchu@google.com, weixugc@google.com
 References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
- <20260730122304.2496440-3-xueyuan.chen21@gmail.com>
+ <20260730122304.2496440-4-xueyuan.chen21@gmail.com>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -96,65 +96,66 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260730122304.2496440-3-xueyuan.chen21@gmail.com>
+In-Reply-To: <20260730122304.2496440-4-xueyuan.chen21@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/30/26 14:23, Xueyuan Chen wrote:
-> folio_alloc_swap() reports most allocation failures with a generic
-> negative error code. Reclaim cannot tell whether splitting a large folio
-> could make progress or whether there is no backing space at all.
+> From: "Barry Song (Xiaomi)" <baohua@kernel.org>
 > 
-> Keep the global free swap count and the remaining hierarchical memcg swap
-> margin as separate inputs. The memcg charge path reports only its own
-> margin; folio_alloc_swap() combines the two layers when classifying an
-> allocation failure.
+> When swap is disabled, exhausted, or unavailable due to memcg swap
+> limits, splitting a large anonymous folio cannot make swapout progress.
+> The fallback only destroys the large folio and inflates split statistics.
 > 
-> Return -E2BIG for large folios when a smaller allocation might still fit,
-> -ENOSPC when no global swap space is available, and -ENOMEM when the
-> failure is not helped by splitting.
+> Use -E2BIG from folio_alloc_swap() as the explicit signal that splitting
+> the folio might allow swapout of smaller pieces. For other allocation
+> failures, keep the existing activation path and avoid the split.
 > 
-> For early large-folio rejections, check global and memcg swap availability
-> instead of returning -E2BIG unconditionally. On a memcg charge failure,
-> swap slot allocation has already succeeded, so use the remaining memcg
-> margin to decide whether a smaller charge might fit.
+> This preserves the split fallback for fragmented or partially available
+> swap, while avoiding it when there is no backing space for any part of the
+> folio.
 > 
-> This only refines folio_alloc_swap() return codes. The reclaim callers are
-> updated separately.
-> 
-> Suggested-by: Barry Song <baohua@kernel.org>
-> Suggested-by: Youngjun Park <youngjun.park@lge.com>
+> Reported-by: Nanzhe Zhao <zhaonanzhe@xiaomi.com>
+
+Do you have a link to the report?
+
+I assume this is not Fixes-worthy.
+
+> Signed-off-by: Barry Song (Xiaomi) <baohua@kernel.org>
 > Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
 > ---
->  include/linux/swap.h | 16 ++++++++++++----
->  mm/memcontrol.c      | 32 +++++++++++++++++++++++++++++++-
->  mm/swapfile.c        | 32 ++++++++++++++++++++++++--------
->  3 files changed, 67 insertions(+), 13 deletions(-)
+>  mm/vmscan.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 0544b2ec4c56..7d12058174ae 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -509,12 +509,13 @@ static inline void folio_throttle_swaprate(struct folio *folio, gfp_t gfp)
->  #endif
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 26df81e773ff..457049e130df 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -1263,6 +1263,8 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
+>  		 */
+>  		if (folio_test_anon(folio) && folio_test_swapbacked(folio) &&
+>  				!folio_test_swapcache(folio)) {
+> +			int ret;
+> +
+>  			if (!(sc->gfp_mask & __GFP_IO))
+>  				goto keep_locked;
+>  			if (folio_maybe_dma_pinned(folio))
+> @@ -1281,11 +1283,14 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
+>  				    split_folio_to_list(folio, folio_list))
+>  					goto activate_locked;
+>  			}
+> -			if (folio_alloc_swap(folio)) {
+> +			ret = folio_alloc_swap(folio);
+> +			if (ret) {
+>  				int __maybe_unused order = folio_order(folio);
 >  
->  #if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
-> -int __mem_cgroup_try_charge_swap(struct folio *folio);
-> -static inline int mem_cgroup_try_charge_swap(struct folio *folio)
-> +int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margin);
-> +static inline int mem_cgroup_try_charge_swap(struct folio *folio,
-> +					     long *swap_margin)
-
-Nit: two tab indent
-
-[...]
-
-> -static inline int mem_cgroup_try_charge_swap(struct folio *folio)
-> +static inline int mem_cgroup_try_charge_swap(struct folio *folio,
-> +					     long *swap_margin)
-
-
-Nothing else jumped at me
+>  				if (!folio_test_large(folio))
+>  					goto activate_locked_split;
+> +				if (ret != -E2BIG)
+> +					goto activate_locked;
+>  				/* Fallback to swap normal pages */
+>  				if (split_folio_to_list(folio, folio_list))
+>  					goto activate_locked;
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
