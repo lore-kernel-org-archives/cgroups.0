@@ -1,71 +1,109 @@
-Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70EFF39DBE5
-	for <cgroups@vger.kernel.org>; Wed,  5 Aug 2026 19:07:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0FE2329E5D;
+	Thu,  6 Aug 2026 03:30:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785956846; cv=none; b=QGzQ4id67iRW7QB9xdzaml5HHOSkgezv1AnWoPnOdV+1Gq/iKF8BdImnOPLSeAM1n+oiqQciAf9+kfGip91swa+pGv8/57Keo8mmGv0jHv51e5YAL7Rxk13spjZ91on5ZY3Vs+fa0mW865LQYnfBrggrQ8IgMsHaVvPsq1wdTRA=
+	t=1785987021; cv=none; b=pVojs5U8/7zkadd3EUsvf1ELndj7iSsfCd6/tARrabbPqXwu8WB2ah9plU4Tm9m5gOHiKwqNX90CyRtO/N+OmPIU9AsI8mDRy8DWaW29sflpKcaWkaiOc4W4PZByYLR520pqLuB4nZyETISeuLAQfdAeXXSxj2C0Spo258afYw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785956846; c=relaxed/simple;
-	bh=7nyIhxGxbFU4lBeSeeeyv5x2vqV/gGGCBAV7FN/q55o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ezwIBqSIBZVqtNNCTzYppWkuXxTc7Taa5ATfyqWK/RfOMlmjj9DqxwnCqXCp+UQY8w5cW6bQ5efUcK3mcgIf9M0GgtzvCAZ3tYswpCB9wYM7g4a1aHB1LCx3b3T3ucwmQHJk8WOpHbFAnuXoha93Fr/DrrksNmL7V+Qb2ID5AV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=M60DEs3g; arc=none smtp.client-ip=91.218.175.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785987021; c=relaxed/simple;
+	bh=5wus9n0+Mpv7rQWIuIFpoGHkgxM6w2e5wGqel/1cJaU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ky2L2dbAUfgHUcHtbUiToTlod9U4B2JjNeaoUCO1MH3c+LyLCHX6J2NNK5bViz2Oy3Flv99IrX2KyicdmgV3Epna5mGsEBK62GXJkPFRK2DK5GiBnVMc4lPPWPTh36N/TZ273I0opiAUY2CLYChmOPWhOpY5GUuyAqgOzNlvv4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=xvnedJmH; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="M60DEs3g"
-Date: Wed, 5 Aug 2026 12:07:01 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785956831;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Bf4C1433YPmcAdrQ6UIsaaRwbBD1WIAriLgZrgKPaRQ=;
-	b=M60DEs3goINApcTnMMkH7P4umo5bL3SnRkEtbYYGALGh+oH0lBupYZjDycgk/IagkfGepL
-	ftVvRczp/9J8MF3oM8m9/oa3oKoX0fEXA0ad0EZq1tin8wO43dhv8WWnvZxLvPDKrxDYmL
-	TgKPs2JsYyQEOnIavmRToQ9s14v9tjg=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Karl Erik Hofseth <karl.e.hofseth@opoint.com>
-Cc: linux-mm@kvack.org, akpm@linux-foundation.org, qi.zheng@linux.dev, 
-	kasong@tencent.com, baohua@kernel.org, axelrasmussen@google.com, yuanchu@google.com, 
-	weixugc@google.com, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
-	muchun.song@linux.dev, david@kernel.org, ljs@kernel.org, cgroups@vger.kernel.org, 
-	regressions@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [REGRESSION] mm/memcg: folio/lruvec mismatch after cgroup
- offline: lru_size underflow and list_del corruption (7.1)
-Message-ID: <anOHDekdEne06P97@linux.dev>
-References: <anMmd1ADrDVwMO6v@work>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="xvnedJmH"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=5wus9n0+Mpv7rQWIuIFpoGHkgxM6w2e5wGqel/1cJaU=;
+	b=xvnedJmHWhePXoOFObXkvLZJh87bx4MqXErY79eOEcbrJjXMeD32rgcW+e1+Mzp80DMGfqr0p
+	H5FXDNNf1FtCAkZtvN0zOyEW3ZqTIIFL63xHsatM7LYQOmJbAX0l/KDbPYMgxr2Fhy00WgHcfHo
+	1HBeTwRYcVunCQ6fWo8o/vc=
+Received: from mail.maildlp.com (unknown [172.19.162.92])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4hFsx51ybgzLlTg;
+	Thu,  6 Aug 2026 11:20:41 +0800 (CST)
+Received: from kwepemo500018.china.huawei.com (unknown [7.202.195.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 14F5F4058A;
+	Thu,  6 Aug 2026 11:30:13 +0800 (CST)
+Received: from [10.174.176.101] (10.174.176.101) by
+ kwepemo500018.china.huawei.com (7.202.195.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 6 Aug 2026 11:30:09 +0800
+Message-ID: <6840c720-8cb7-46bb-a652-040c130a4427@huawei.com>
+Date: Thu, 6 Aug 2026 11:30:08 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <anMmd1ADrDVwMO6v@work>
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 25/36] mm/memory_hotplug: support N_MEMORY_PRIVATE node
+ hotplug
+To: Gregory Price <gourry@gourry.net>, <linux-mm@kvack.org>
+CC: <Zhigang.Luo@amd.com>, <arun.george@samsung.com>, <balbirs@nvidia.com>,
+	<brendan.jackman@linux.dev>, <yuzenghui@huawei.com>, <apopple@nvidia.com>,
+	<alucerop@amd.com>, <matthew.brost@intel.com>, <akpm@linux-foundation.org>,
+	<david@kernel.org>, <ljs@kernel.org>, <liam@infradead.org>,
+	<vbabka@kernel.org>, <rppt@kernel.org>, <surenb@google.com>,
+	<mhocko@suse.com>, <corbet@lwn.net>, <skhan@linuxfoundation.org>,
+	<gregkh@linuxfoundation.org>, <rafael@kernel.org>, <dakr@kernel.org>,
+	<djbw@kernel.org>, <vishal.l.verma@intel.com>, <dave.jiang@intel.com>,
+	<alison.schofield@intel.com>, <osandov@osandov.com>, <jannh@google.com>,
+	<pfalcato@suse.de>, <jackmanb@google.com>, <hannes@cmpxchg.org>,
+	<ziy@nvidia.com>, <pbonzini@redhat.com>, <osalvador@suse.de>,
+	<joshua.hahnjy@gmail.com>, <rakie.kim@sk.com>, <byungchul@sk.com>,
+	<ying.huang@linux.alibaba.com>, <kasong@tencent.com>, <qi.zheng@linux.dev>,
+	<shakeel.butt@linux.dev>, <baohua@kernel.org>, <axelrasmussen@google.com>,
+	<yuanchu@google.com>, <weixugc@google.com>, <yury.norov@gmail.com>,
+	<linux@rasmusvillemoes.dk>, <longman@redhat.com>, <ridong.chen@linux.dev>,
+	<tj@kernel.org>, <mkoutny@suse.com>, <sj@kernel.org>, <jgg@ziepe.ca>,
+	<jhubbard@nvidia.com>, <peterx@redhat.com>, <baolin.wang@linux.alibaba.com>,
+	<npache@redhat.com>, <ryan.roberts@arm.com>, <dev.jain@arm.com>,
+	<lance.yang@linux.dev>, <usama.arif@linux.dev>, <xu.xin16@zte.com.cn>,
+	<chengming.zhou@linux.dev>, <roman.gushchin@linux.dev>,
+	<muchun.song@linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <driver-core@lists.linux.dev>,
+	<nvdimm@lists.linux.dev>, <linux-cxl@vger.kernel.org>,
+	<linux-debuggers@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<kvm@vger.kernel.org>, <cgroups@vger.kernel.org>, <damon@lists.linux.dev>,
+	<linux-kselftest@vger.kernel.org>, <kernel-team@meta.com>
+References: <20260720193431.3841992-1-gourry@gourry.net>
+ <20260720193431.3841992-26-gourry@gourry.net>
+From: Qiqi Li <liqiqi23@huawei.com>
+In-Reply-To: <20260720193431.3841992-26-gourry@gourry.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemo500018.china.huawei.com (7.202.195.199)
 
-On Wed, Aug 05, 2026 at 02:03:03PM +0200, Karl Erik Hofseth wrote:
-> Hi,
-> 
-> The following KASAN slab-use-after-free comes from a Fedora debug kernel
-> build of 7.1.6 with de4660898b7a applied on top, provoked with the
-> attached script. Further down are OOPSes generated by workloads in
-> production on stock Fedora kernels. MGLRU on/off makes no difference.
+Hi Gregory,
 
-Hi Karl,
+On 7/21/2026 3:34 AM, Gregory Price wrote:
 
-Thanks a lot for the report and I think I understand the issue. We are not
-handling the case of folio migration causing folio having objcg different
-different from its node which breaks the assumption memcg_reparent_objcgs() have
-for its locking lru of child and parent per-node LRUs.
+> Add add_private_memory_driver_managed() to let modules hotplug
+> memory onto an N_MEMORY_PRIVATE node they control.
 
-Thanks for the reproducer and I was able to reproduce with inceased workers. I
-will send out the fixes soon.
+I am trying to understand how the nid passed to
+add_private_memory_driver_managed() is expected to be provisioned.
 
-thanks,
-Shakeel
+From what I can see, both node_private_register() and
+__add_memory_resource() require the nid to already be present in
+node_possible_map. My understanding is therefore that this patch
+supports hotplugging private memory onto an existing possible node,
+rather than creating a new possible node ID at runtime.
+
+For example, in the use case I am looking at, the device's private
+node is not described by firmware. Would its nid need to be reserved
+during early NUMA initialization, or is there another mechanism that
+I may have missed?
+
+Also, could you please Cc me on future revisions of this series?
+I would appreciate it and would be happy to follow the work:)
+
+Thanks,
+Qiqi
