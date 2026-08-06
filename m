@@ -1,270 +1,132 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE192BDC2A
-	for <cgroups@vger.kernel.org>; Thu,  6 Aug 2026 18:24:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8CB548B37F
+	for <cgroups@vger.kernel.org>; Thu,  6 Aug 2026 18:25:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786040682; cv=none; b=acBY7t+Q+HNUCnGVMp6s6TTmJ1lrE6rz1Wm0OGxpj7pVsJlpoqIaC89OIyNTCFXW+CUUX2Py1ZVcluDdWUEqoerGFZ7ypGn910xQ07Vdpx8oPQiQ8Hhi2qWo0XKcV97VfGP5BgTM6NZpedjXyYe0isnc7XiRUJbYN13EYzOD8o8=
+	t=1786040710; cv=none; b=ZoiQUuuyqhziT/IhDq1QF0aC2CuaW8tAn8NYa0G0UJOAeKJvRtmNyp3n5Yj5ZPp+ypoBrUc8I/y81Hv3do/+7FH6dJOZ9d75t/5m/dJU9ITu5I7/OhFiv3ER7xRZfEWMDj8UTA/S0Mno4qSYKvgMRH8rJ1R9S42nJCg9n9V79N4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786040682; c=relaxed/simple;
-	bh=Drl6pgIsG4MeakX++5WkDrM+xS1Z/CS0rRPzAlwNF8I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WBZsoHLSkL423TPU9RynAUBl3w69N700FkqHb+fXdkiXlJZFKInFoI7u5jLlpuHhefeGlhE0Z0jt5b4oPk7wgHTrS7lIWVkC0L5tIj6mVc0KRs8IBTDDQImRgId6OPw09wgJXj7GsK+OVQBH6SCz+XfdQMnV6HoAXxTA4OWfuOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Zbb95CYI; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1786040710; c=relaxed/simple;
+	bh=OAnGXhoMWN0VX4aRXp3qSN6EwUoruIJ70j69kxghWfM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GreeK/jo8q5119S9SnG68FUldJ02FnQ0wBGw7bVS+n4zn3oSCVjxFQstCZK3X42pULMdjaTLwqwhctElVknGIoF9ARq0aWy7kftMoPpA2r18apnL0fQxitk0Q/OrqnvBUVwWK2bWi1WgMcxUCWOno7PhT1sHB5cKB/zsc3wTP38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rNN3IMG1; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Zbb95CYI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786040679;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=eDz9E568MotxR3+S9hrXjCNiUKmMbJuSpoRSuTy9vwI=;
-	b=Zbb95CYIUkYrSDrLmqrwhLCPlAIg3WIQHMnFRrCy/y/Fp0mNQxMqXJEst9Kle5x4M62UCG
-	J39lu3OzqUIUJMmd0VRxDJfE288g5HrVKiqJWImXMyM4HrqjLTd57RgBpXi8Dz/6vYMJVz
-	Ash3hISD4hCJOtUxamVdXi7uGjvxE3U=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-677-cRadgUPLNM-vesmcECZ9Lg-1; Thu,
- 06 Aug 2026 14:24:36 -0400
-X-MC-Unique: cRadgUPLNM-vesmcECZ9Lg-1
-X-Mimecast-MFC-AGG-ID: cRadgUPLNM-vesmcECZ9Lg_1786040675
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 449A71800650;
-	Thu,  6 Aug 2026 18:24:34 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.22.64.255])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D1104180034C;
-	Thu,  6 Aug 2026 18:24:31 +0000 (UTC)
-From: Audra Mitchell <audra@redhat.com>
-To: david@kernel.org
-Cc: jocolema@redhat.com,
-	raquini@redhat.com,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rNN3IMG1"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-38e7109321dso1701560a91.3
+        for <cgroups@vger.kernel.org>; Thu, 06 Aug 2026 11:25:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786040708; x=1786645508; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=eRxIpMxQf2eH73MswyccHSNChNNfT/J5n/NCnkKxEHE=;
+        b=rNN3IMG1BNlGchnOjZlFZrkh2BI0nTwD6or5ACQrLo2bfQYsxI4LX8sKNjYEiew29w
+         d7NlyengXoAoaRY6LL8O8zFGtGG8r1dXVYGAr4hzEGxxYD8AH+Ojh00kISYTcYrQvwST
+         Pb3jXyPVZMU8MusBD+A0pIPluCWmxCH4Y9gfY3nLdG2RPWH9mzPXo1lxSeVFyTRasuV3
+         jI+iII9LvtQHQLRX5lilQEw2PrhRsj62shYDOvIGX+lIJCKoODd5h12wLoalfAw+qBEd
+         MsrtW4hsc0krY8hWLd88cS/kL0J1Iuj7Cnh2ngid9CB2RirbLRXCBopExXv2KwP/nOLp
+         h7GA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786040708; x=1786645508;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eRxIpMxQf2eH73MswyccHSNChNNfT/J5n/NCnkKxEHE=;
+        b=AsD4kfX+/NnMxPjmzgzRWi9MITKIbB6MdRhNR5odj4loQWWiKR5hxOyjL29gFz9YSX
+         IQoylOBXZekQj34l/uQ6e/aBp1xWYgo98TNC3UAPk+I8GVWj5iBKXTomlMNeYKxBcW4t
+         UOUCxwoHa8XmPRXM2aeMUgFzG4L6kKCYawlyB2Iyl+v62fPbriUSCxqgOq05+b2n/mlQ
+         UuIlUwodrDmMo/TBs9mXFoO5r7qBbfDYyxOLJ2iz+8T/sMTXmw4uOb4tt3azk3YA/uaE
+         OqoT5yruL87MYepkvdEDPFxhBhIO18ZD92g1GDzQQP4EDabAkXtjfnkB01kVu+aBWIq5
+         APDw==
+X-Forwarded-Encrypted: i=1; AHgh+RqPSK7aLyOH2tP9yRLsZnP6coDY978rwSll8ysFB1Bjnq/XY3AtVHUV5cNsVu28nBSgdWmXZpsQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YzAym6HQBUaJFJ/kq0McViIYcmkWtvUV4vlpU0DJxjSV5V+5CP0
+	ILFnZ/g6dY9WiTJHL9NGbgnR8/8V2J4FSLahZrg7jY1E4zeNiaHlwhz3
+X-Gm-Gg: AR+sD13XfnIrusxf4PMJJGnnPWf9c+J9SSYjvANboweybz4XjwOe/3RuNTWQfqY8W1h
+	nTRtjjpSk6UGnjjXH+XLWvFJTC7Nbn7spH+Y65XV2eN9P6nDozuHjcqVb4F0lBaAHTwZL4UoPqP
+	XnuB68aSXnK5AL2n1VaeeggvaokXWaq7aAmBdHFqEIZ6AcRCQzkDuXJQCj1oaxKka8ehclFZUgh
+	J+vYDRU0JwPAZJ6nT97srmTdtSfbGG41ZdEkiKVGFurhzfxssDM+L2F2gWa/0VkoriK5RmiMWAV
+	bgu1uvARekf9PbrR8vOi9+gP7QXrU5iVtTWyLzYChswCDytaNP4ta6u4qr+5eQzchp5saFpC2eM
+	80CF6tY/xzAUYSmqmDZBQL7k0pA4yNVck8Cx75AL9LO0THp8psE/Csoq9LhKQUWwieCMolpoEkD
+	+nOxhZkqN+w13TcWfze0Zt+YIsWInrZcRBYpijY7rcQQOxx2sdDGC3aopn033EtDgSb/0pUSh3T
+	J6eLiFc
+X-Received: by 2002:a17:90b:3889:b0:381:973e:fa08 with SMTP id 98e67ed59e1d1-3903c5cfba2mr14353244a91.18.1786040708017;
+        Thu, 06 Aug 2026 11:25:08 -0700 (PDT)
+Received: from devvm16600.scu0.facebook.com ([2a03:2880:9ff:6e::])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315867bc261sm29668669eec.28.2026.08.06.11.25.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Aug 2026 11:25:07 -0700 (PDT)
+Date: Thu, 6 Aug 2026 11:25:04 -0700
+From: Ziyang Men <ziyang.meme@gmail.com>
+To: JP Kobryn <jp.kobryn@linux.dev>
+Cc: Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	David Vernet <void@manifault.com>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Andrea Righi <arighi@nvidia.com>,
+	Changwoo Min <changwoo@igalia.com>,
 	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] Fix unbounded loop within try_charge_memcg
-Date: Thu,  6 Aug 2026 14:24:28 -0400
-Message-ID: <20260806182429.1841095-1-audra@redhat.com>
+	Mykola Lysenko <mykolal@meta.com>,
+	Nathan Chancellor <nathan@kernel.org>,
+	linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org,
+	linux-input@vger.kernel.org, sched-ext@lists.linux.dev,
+	linux-mm@kvack.org, kernel-team@meta.com, bpf@vger.kernel.org,
+	llvm@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] selftests/cgroup: add memcg_stat_cross_cpu
+ correctness test for flush
+Message-ID: <anTRgIZe5wgAsdCU@devvm16600.scu0.facebook.com>
+References: <20260721174833.1232771-1-ziyang.meme@gmail.com>
+ <20260721174833.1232771-3-ziyang.meme@gmail.com>
+ <f83b6c93-b32e-434a-94b7-68628a2e8527@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <f83b6c93-b32e-434a-94b7-68628a2e8527@linux.dev>
 
-Originally nr_retries was actually nr_oom_retries and we used it to track (and
-limit) the number of times we entered the mem_cgroup_oom path and then attempted
-a retry. The purpose of nr_retries counter changed with the introduction of
-9b1306192d33 ("mm: memcontrol: retry reclaim for oom-disabled and __GFP_NOFAIL
-charges") so that the oom-disabled and __GFP_NOFAIL charges would also continue
-to retry within the desired nr_retries threshold. Later d977aa939fca
-("mm, memcg: unify reclaim retry limits with page allocator") changed the
-nr_retries counter from 5 to 16.
+On Wed, Jul 22, 2026 at 11:42:58AM -0700, JP Kobryn wrote:
+>On 7/21/26 10:48 AM, Ziyang Men wrote:
+>>Add a test_progs selftest that verifies the memory-cgroup BPF kfuncs
+>>return values that agree with what userspace reads from cgroupfs, across
+>>a whole cgroup subtree that has been charged on many CPUs.
+>>
+>>It complements the existing cgroup_iter_memcg test.  cgroup_iter_memcg
+>>calls the memcg kfuncs on a single cgroup (BPF_CGROUP_ITER_SELF_ONLY) and
+>>only asserts each value is greater than zero, so it never checks that a
+>>value is actually correct.  This test compares the kfunc values against
+>>what userspace reads from memory.stat, and checks every node in the
+>>cgroup tree.
+>>
+>Can you extend the existing test instead of adding a new one?
 
-As the function has evolved we now have multiple paths that have a goto retry
-path and we have lost the original purpose of the nr_retries counter, allowing
-us to take a goto retry path an unbounded number of times.
+Hi JP,
 
-Fix the unbounded retries by nesting the code in a loop and decrementing the
-nr_retries counter correctly.
+Good suggestion. Actually extending the exisiting one was the plan in the v1.
+However, existing selftests with similar purpose is the cgroup_iter_memcg, which
+is in the bpf/. After discussed with the bpf reviewer in v1, we think this
+selftest may suit better in the cgroup/ rather than the bpf/, since 1) it tests
+the cgroup functionalities (bpf is a tool), and 2) together with the selftest,
+this patch serials also ships a common Makefile lib.bpf.mk for easily compiling
+selftests for other subsystems using bpf. Currently there is no other selftests
+in cgroup/ relies on BPF and we think it is good to put this selftest here as
+the first consumer.
 
-Signed-off-by: Audra Mitchell <audra@redhat.com>
----
- mm/memcontrol.c | 153 ++++++++++++++++++++++++------------------------
- 1 file changed, 76 insertions(+), 77 deletions(-)
+We appreciate any possible suggestions. Thanks very much!
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6dc4888a90f3..781bcced5848 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2607,98 +2607,97 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	unsigned long pflags;
- 	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
- 
--retry:
--	if (consume_stock(memcg, nr_pages))
--		return 0;
-+	for (; nr_retries >= 0; nr_retries--) {
- 
--	if (!allow_spinning)
--		/* Avoid the refill and flush of the older stock */
--		batch = nr_pages;
-+		if (consume_stock(memcg, nr_pages))
-+			return 0;
- 
--	reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
--	if (!do_memsw_account() ||
--	    page_counter_try_charge(&memcg->memsw, batch, &counter)) {
--		if (page_counter_try_charge(&memcg->memory, batch, &counter))
--			goto done_restock;
--		if (do_memsw_account())
--			page_counter_uncharge(&memcg->memsw, batch);
--		mem_over_limit = mem_cgroup_from_counter(counter, memory);
--	} else {
--		mem_over_limit = mem_cgroup_from_counter(counter, memsw);
--		reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
--	}
-+		if (!allow_spinning)
-+			/* Avoid the refill and flush of the older stock */
-+			batch = nr_pages;
- 
--	if (batch > nr_pages) {
--		batch = nr_pages;
--		goto retry;
--	}
-+		reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
-+		if (!do_memsw_account() ||
-+		    page_counter_try_charge(&memcg->memsw, batch, &counter)) {
-+			if (page_counter_try_charge(&memcg->memory, batch, &counter))
-+				goto done_restock;
-+			if (do_memsw_account())
-+				page_counter_uncharge(&memcg->memsw, batch);
-+			mem_over_limit = mem_cgroup_from_counter(counter, memory);
-+		} else {
-+			mem_over_limit = mem_cgroup_from_counter(counter, memsw);
-+			reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
-+		}
- 
--	/*
--	 * Prevent unbounded recursion when reclaim operations need to
--	 * allocate memory. This might exceed the limits temporarily,
--	 * but we prefer facilitating memory reclaim and getting back
--	 * under the limit over triggering OOM kills in these cases.
--	 */
--	if (unlikely(current->flags & PF_MEMALLOC))
--		goto force;
-+		if (batch > nr_pages) {
-+			batch = nr_pages;
-+			continue;
-+		}
- 
--	if (unlikely(task_in_memcg_oom(current)))
--		goto nomem;
-+		/*
-+		 * Prevent unbounded recursion when reclaim operations need to
-+		 * allocate memory. This might exceed the limits temporarily,
-+		 * but we prefer facilitating memory reclaim and getting back
-+		 * under the limit over triggering OOM kills in these cases.
-+		 */
-+		if (unlikely(current->flags & PF_MEMALLOC))
-+			goto force;
- 
--	if (!gfpflags_allow_blocking(gfp_mask))
--		goto nomem;
-+		if (unlikely(task_in_memcg_oom(current)))
-+			goto nomem;
- 
--	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
--	raised_max_event = true;
-+		if (!gfpflags_allow_blocking(gfp_mask))
-+			goto nomem;
- 
--	psi_memstall_enter(&pflags);
--	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
--						    gfp_mask, reclaim_options, NULL);
--	psi_memstall_leave(&pflags);
-+		__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
-+		raised_max_event = true;
- 
--	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
--		goto retry;
-+		psi_memstall_enter(&pflags);
-+		nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
-+						    gfp_mask, reclaim_options, NULL);
-+		psi_memstall_leave(&pflags);
- 
--	if (!drained) {
--		drain_all_stock(mem_over_limit);
--		drained = true;
--		goto retry;
--	}
-+		if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
-+			continue;
- 
--	if (gfp_mask & __GFP_NORETRY)
--		goto nomem;
--	/*
--	 * Even though the limit is exceeded at this point, reclaim
--	 * may have been able to free some pages.  Retry the charge
--	 * before killing the task.
--	 *
--	 * Only for regular pages, though: huge pages are rather
--	 * unlikely to succeed so close to the limit, and we fall back
--	 * to regular pages anyway in case of failure.
--	 */
--	if (nr_reclaimed && nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER))
--		goto retry;
-+		if (!drained) {
-+			drain_all_stock(mem_over_limit);
-+			drained = true;
-+			continue;
-+		}
- 
--	if (nr_retries--)
--		goto retry;
-+		if (gfp_mask & __GFP_NORETRY)
-+			goto nomem;
-+		/*
-+		 * Even though the limit is exceeded at this point, reclaim
-+		 * may have been able to free some pages.  Retry the charge
-+		 * before killing the task.
-+		 *
-+		 * Only for regular pages, though: huge pages are rather
-+		 * unlikely to succeed so close to the limit, and we fall back
-+		 * to regular pages anyway in case of failure.
-+		 */
-+		if (nr_reclaimed && nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER))
-+			continue;
- 
--	if (gfp_mask & __GFP_RETRY_MAYFAIL)
--		goto nomem;
-+		if (gfp_mask & __GFP_RETRY_MAYFAIL)
-+			goto nomem;
- 
--	/* Avoid endless loop for tasks bypassed by the oom killer */
--	if (passed_oom && task_is_dying())
--		goto nomem;
-+		/* Avoid endless loop for tasks bypassed by the oom killer */
-+		if (passed_oom && task_is_dying())
-+			goto nomem;
- 
--	/*
--	 * keep retrying as long as the memcg oom killer is able to make
--	 * a forward progress or bypass the charge if the oom killer
--	 * couldn't make any progress.
--	 */
--	if (mem_cgroup_oom(mem_over_limit, gfp_mask,
--			   get_order(nr_pages * PAGE_SIZE))) {
--		passed_oom = true;
--		nr_retries = MAX_RECLAIM_RETRIES;
--		goto retry;
-+		/*
-+		 * keep retrying as long as the memcg oom killer is able to make
-+		 * a forward progress or bypass the charge if the oom killer
-+		 * couldn't make any progress.
-+		 */
-+		if (mem_cgroup_oom(mem_over_limit, gfp_mask,
-+				   get_order(nr_pages * PAGE_SIZE))) {
-+			passed_oom = true;
-+			nr_retries = MAX_RECLAIM_RETRIES;
-+			continue;
-+		}
- 	}
- nomem:
- 	/*
--- 
-2.52.0
-
+Best,
+Ziyang
