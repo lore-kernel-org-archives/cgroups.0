@@ -1,30 +1,32 @@
-Received: from out-184.mta1.migadu.com (out-184.mta1.migadu.com [95.215.58.184])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34F238D401
-	for <cgroups@vger.kernel.org>; Thu,  6 Aug 2026 18:37:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17844388885
+	for <cgroups@vger.kernel.org>; Thu,  6 Aug 2026 18:38:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786041483; cv=none; b=onaujN7mmVvlXdDuDmKkpLDPbS/0nMmQHfAAetNrEuCyKCXEf+eqzrCIG9o1N4Nq3dNiE5krYAhRHw8TtJ1wRpVhFfH2L/euKdVf1lCBaGKfXwpT5F4qPbeZda2FqW1zZGYwDBRPVmfrb81eoFFoon1wG+9QkToG5A3c5Ut+XUU=
+	t=1786041485; cv=none; b=Pjv89lDBtUa2M4VfTExeMtZeVtpW0g2GI8rQulDi2gunBircDqfrcCgD6MvD79dieTHEWwbwyXdOEmhbk03lWQlT/pa125G1cDp7z4SILApH7uZnpys4U1a7dK2vYxCd5Ep8Qm1kgJNQ/8ovTm0N+mVLig8m9QsnPT/k5DaKgEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786041483; c=relaxed/simple;
-	bh=pATEb7+A37imqMe9bf+I3NwYXUwlnPI/rW+mU57goWs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LiYJ/Rs/9SJ/FbND4uD+V+NrhFzbBjaTISmlfazeGyfd6Zsma1+CBwFMKUIAobXOHHWsCuXwwwvJKWq0jDkZS2yZ8zDpI3FchlmUAFIU9VoSzwi2SODeI0c5qMBnK9W0bABXBpcaZogBmos+ct7nN0sn0673z7NQL+1NvwAQdFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=JehLxJuA; arc=none smtp.client-ip=95.215.58.184
+	s=arc-20240116; t=1786041485; c=relaxed/simple;
+	bh=Q5/zdQWz0Amn1o+/OUx4rATy9xjEBYqtx8W87l2OgSc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LVJPWDrfVW8lWYgTFYJyaaGDY9jPsP6LBltiGiZuWJEnISaMJFmGGRzX8l4dYFHXZcjhUK/2LnByH4r8nIh/ftSwP+EDo6FOx9uFNZ8oK9bpXrmK7S94gBokl+raA2VWyBSEiyUUTGZlxMXaQb5Yl5Xm1k97Qf0V1cFrjX4wFnY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uhqHgBpA; arc=none smtp.client-ip=91.218.175.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="JehLxJuA"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uhqHgBpA"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786041472;
+	t=1786041477;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=+UJ/qH6m8w+SsoyS5gEBbGmGoBm9dLVAYOMv5Qfn9kA=;
-	b=JehLxJuAPVsscMZe6Zw8hzRC1wOioAdbV7rwLWw3n+VGuTPkoYTrjYkGoUUodGKyG1QNru
-	a173htTGBJ2qQjj5g7BabXb/eWI91ps7bgw/f9bHY0sHfwqvydOhT9IRnZb7BGkBpZhNgm
-	SbS/+0+GTrFPAO3UK9rG2c0Mr8z2M50=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BIQUNegZUdNkWjWDpqB8PqELYCjKwKcvkduZflxil3A=;
+	b=uhqHgBpA56bOQjmfcTTs6gK8gKNMaTZia/sCKy2VVhR+/QHc9GQ8g9Dp5saCi2+ESEXpWQ
+	u/jeeMQ0u6O0k3zU7DZf+n2E3qz23uO/kh1tNPXSC5JU37/7xYvZxBqfn+Il0KVGOiiPR8
+	LNIBEA7Uq11NYQTGh9lpvvGUcFWAwrI=
 From: Usama Arif <usama.arif@linux.dev>
 To: axboe@kernel.dk,
 	cgroups@vger.kernel.org,
@@ -37,9 +39,11 @@ Cc: shakeel.butt@linux.dev,
 	riel@surriel.com,
 	kernel-team@meta.com,
 	Usama Arif <usama.arif@linux.dev>
-Subject: [PATCH 0/3] block: skip the blkcg walk in blk_cgroup_congested() when nothing is throttled
-Date: Thu,  6 Aug 2026 11:37:17 -0700
-Message-ID: <20260806183742.946953-1-usama.arif@linux.dev>
+Subject: [PATCH 1/3] blk-iolatency: clear delay state when freeing policy data
+Date: Thu,  6 Aug 2026 11:37:18 -0700
+Message-ID: <20260806183742.946953-2-usama.arif@linux.dev>
+In-Reply-To: <20260806183742.946953-1-usama.arif@linux.dev>
+References: <20260806183742.946953-1-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,38 +53,55 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-blk_cgroup_congested() walks the current task's blkcg ancestor chain on every
-readahead decision and, once swap is in use, on every anonymous and shmem
-folio allocation.  The answer is almost always "no", but finding that out
-costs two loads *per level* on two cold cache lines, plus an out-of-line
-kthread_blkcg() and an RCU read-side pair.  On a fleet profile of hosts
-running containers with 5-10 level hierarchies it costs about as much as all
-of mutex_lock(), 99.4% of it under __folio_throttle_swaprate().
+io.latency can throttle a group which has no latency target of its own.
+When a sibling misses its target, check_scale_change() scales down its
+peers, and a peer that reaches queue depth one gets blkcg_use_delay()
+called on it on every further scale-down, even with min_lat_nsec == 0.
 
-Patch 3 gates the walk on a global count of blkcgs with a non-zero
-congestion_count, so the common case is a load and a predicted branch.
+iolatency_pd_offline() resets the target through
+iolatency_set_min_lat_nsec(), which clears the delay only on a nonzero
+to zero transition, so it never clears such a peer.  Freeing the policy
+data then leaves blkg->use_delay set and blkcg->congestion_count
+elevated with nothing left that can drop it.
 
-That only works if the count is correctly maintained, currently two teardown
-paths can leave a blkcg permanently marked congested.  Today that only hurts
-tasks in the affected cgroup, but it hurts them for the life of the cgroup -
-readahead cut to a single page, async readahead skipped, and a throttle
-scheduled on every anonymous folio allocation.  With a global gate it would
-cost every other task on the machine the walk as well.  Patches 1 and 2 fix
-those two paths and stand on their own as bugfixes; patch 3 depends on them.
+blk_cgroup_congested() then returns true for every task in that cgroup
+and its descendants for as long as the cgroup lives: page_cache_sync_ra()
+cuts readahead to a single page, page_cache_async_ra() skips it
+altogether, and __folio_throttle_swaprate() takes swap_avail_lock and
+schedules a throttle on anonymous folio allocation.
+
+Clear the delay in iolatency_pd_free().  By then bio-held blkg
+references have drained, or the queue is frozen for policy
+deactivation, so check_scale_change() cannot re-arm it.  The free
+callback can also see policy data which was never attached to a blkg,
+hence the pd->blkg check.
+
+Fixes: d70675121546 ("block: introduce blk-iolatency io controller")
+Signed-off-by: Usama Arif <usama.arif@linux.dev>
+---
+ block/blk-iolatency.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 9eb69010c34e6..2caa79a008ad1 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -1043,6 +1043,15 @@ static void iolat_release(struct rcu_head *rcu)
  
-Usama Arif (3):
-  blk-iolatency: clear delay state when freeing policy data
-  blk-iocost: clear delay state when freeing policy data
-  block: skip blkcg walk in blk_cgroup_congested() when nothing
-    throttled
-
- block/blk-cgroup.c         | 15 ++++++++++++++-
- block/blk-cgroup.h         | 25 +++++++++++++++++++++----
- block/blk-iocost.c         |  7 +++++++
- block/blk-iolatency.c      |  9 +++++++++
- include/linux/blk-cgroup.h | 23 ++++++++++++++++++++++-
- 5 files changed, 73 insertions(+), 6 deletions(-)
-
+ static void iolatency_pd_free(struct blkg_policy_data *pd)
+ {
++	struct blkcg_gq *blkg = pd_to_blkg(pd);
++
++	/*
++	 * Groups throttled as collateral have min_lat_nsec == 0, so
++	 * iolatency_pd_offline() leaves their delay set.  Drop it here, where
++	 * no in-flight bio can re-arm it via check_scale_change().
++	 */
++	if (blkg)
++		blkcg_clear_delay(blkg);
+ 	call_rcu(&pd->rcu_head, iolat_release);
+ }
+ 
 -- 
 2.53.0-Meta
 
