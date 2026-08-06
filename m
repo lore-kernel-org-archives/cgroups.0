@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0DE62949E0;
-	Thu,  6 Aug 2026 13:58:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6378E3A873C;
+	Thu,  6 Aug 2026 13:59:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786024720; cv=none; b=gKh1ZqMSyxpIu06oEynFjuPnqCiqBikff1idPaT7V9iyxlAGvHeUObcl9OZWxSz+J0lT3o0w9armb+MzVz1XnHEqKDeirB8tWwLkH2jATdtAD4aioTM4xnkkLEZPmdRAOPWSyEEASjF+TVp74l4lRkj8k0MntR+Q9YMnlFpmjd0=
+	t=1786024798; cv=none; b=nKf285BVr9V4K+pEdEoiha2jzFWL/Ro5wYRzuyZc88dOiYWL+1imMmq9mmsvsvF0mCqEvcQKid64ids0s+TYSi4DO6FOkFDOlOKudYzg3BpoVrTwv5PTOtpRkpuw2Lvm7FKdbfkP2az/A00KF/H76/1vGiulOv01cD0QGin9gj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786024720; c=relaxed/simple;
-	bh=/Pw8u1p6Zi7jNUDoze5GpbNpVFr7BAHkkCNPRnWltLY=;
+	s=arc-20240116; t=1786024798; c=relaxed/simple;
+	bh=3iZuKffJE8R3fl5wE3O0siueY9Rzlb74ftZHG8VQnDs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Gsjd5aiaiH0Urf/2AB3aeIMxA4x8m88Hm8rN7pYvqgT2ur/vjJ4HnmjugRQ7qeBLyKBzQrVwDcc40cqw3kelBgjTxxrMR2RbMbitG/ZTRMkUtnVn1BZN1Jl5lw4xBDNncyD8EcN1rnMxGa3j2JXgTLQC7a5uoKcnlq+fdzKguoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfWtjqYf; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=cTC0lFAKwbYzGilHHytPkl+mlssa9myEztNWDgC+y4/UMudtBlrU1TB6Mgp3xnt4IIHM9HNITysfFLkzL+ZRcx928VGd396oIzB2tl7c60iRLGR0reLcVVgoNIeZDSUHUaVj0IBlTNn7j3HsP1OF8pnrZSpfdIvB3QwWDxng1Ew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O4xWYZCq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfWtjqYf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B44221F000E9;
-	Thu,  6 Aug 2026 13:58:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O4xWYZCq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B30A1F00A3E;
+	Thu,  6 Aug 2026 13:59:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786024718;
-	bh=9wRO74CcRIalo/k8pD9p1nvIQvOuxyVB7Ax6J3p+LFk=;
+	s=k20260515; t=1786024795;
+	bh=4sw8U9YfDFLEcwjMIF2sCsT+Tw/SwYWWnQdQB9Vxn/M=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=cfWtjqYfxsKZVa95uwGYkFOkF4656sllygFEOdMkS+9F6TRD9d2AZvKUYCyl8qOfV
-	 RPHyAblmhkJUXr6M22cEm35E1ew9IQJKJWGaVEcVai7iuZM6+FYmS8/jo59S2Q85mD
-	 /qMNFhb0QSFM32zF6zBR1Q1N7i8LtbX3YTq2iDRXAXfMy8BNUP9iRgMYDK2aJaTKwR
-	 nRAPTyvvG/8lhjbL7SgkSF1+DdKiI8CZUdizWC0vfWBXIDmUQ9JCwtROMOBC36lAQw
-	 N6gn/DCSR/u2P5N11sKhZS9nInHhUhymPJVEXPWV7WPUdxYc/dZebKkGn6BtCtRi7N
-	 VTgpKbGJJm/hg==
-Message-ID: <ee89226e-64b3-48e6-9be2-4934c23b729f@kernel.org>
-Date: Thu, 6 Aug 2026 15:58:29 +0200
+	b=O4xWYZCqQddxHiiTdAB6D2+Uhe5VooRnXLEXY8fQNGq+IWlmg1SXKapBr8RFWNjbq
+	 CGmk3rZ0zZ9IqhNz6lWu/8QqOhuDaL3gRIfmMJQGhQvedily2IXBPHPvTAUrCoeYg9
+	 9yrRoRpLraeXgyxlMAC+V0nWEA9qMQv2EwbzBcXuOilD3kdNaRbuNXgV6yLO7k/uaR
+	 R/d2Oy//qDgGpvyvvk3zaj/+K/tK3SQ7oe46fs4jgFYW9M7Gp4qJHXdbnabIHV2V8Q
+	 Lnf7PksBGss5j9wgPHCSkx05G9shkhoDPmsddc+2tlByQAs+TbZkLgMH3S2WTBTYWm
+	 KOdVFQugojJaQ==
+Message-ID: <2f1a505a-3568-47c7-8b6e-1fc8f02fb112@kernel.org>
+Date: Thu, 6 Aug 2026 15:59:46 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v5 3/4] mm/vmscan: avoid pointless large folio splits
- without swap
+Subject: Re: [RFC PATCH v5 4/4] mm/shmem: split large folios only on -E2BIG
 To: Xueyuan Chen <xueyuan.chen21@gmail.com>, akpm@linux-foundation.org,
  linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
@@ -49,7 +48,7 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
  surenb@google.com, qi.zheng@linux.dev, axelrasmussen@google.com,
  yuanchu@google.com, weixugc@google.com
 References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
- <20260730122304.2496440-4-xueyuan.chen21@gmail.com>
+ <20260730122304.2496440-5-xueyuan.chen21@gmail.com>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -96,66 +95,23 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260730122304.2496440-4-xueyuan.chen21@gmail.com>
+In-Reply-To: <20260730122304.2496440-5-xueyuan.chen21@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/30/26 14:23, Xueyuan Chen wrote:
-> From: "Barry Song (Xiaomi)" <baohua@kernel.org>
+> shmem_writeout() currently splits a large folio on every
+> folio_alloc_swap() failure. With the refined return-value contract, only
+> -E2BIG indicates that splitting might allow smaller folios to be swapped
+> out.
 > 
-> When swap is disabled, exhausted, or unavailable due to memcg swap
-> limits, splitting a large anonymous folio cannot make swapout progress.
-> The fallback only destroys the large folio and inflates split statistics.
+> Enter the split fallback only for -E2BIG. For -ENOSPC and -ENOMEM,
+> redirty and reactivate the folio as before.
 > 
-> Use -E2BIG from folio_alloc_swap() as the explicit signal that splitting
-> the folio might allow swapout of smaller pieces. For other allocation
-> failures, keep the existing activation path and avoid the split.
-> 
-> This preserves the split fallback for fragmented or partially available
-> swap, while avoiding it when there is no backing space for any part of the
-> folio.
-> 
-> Reported-by: Nanzhe Zhao <zhaonanzhe@xiaomi.com>
-
-Do you have a link to the report?
-
-I assume this is not Fixes-worthy.
-
-> Signed-off-by: Barry Song (Xiaomi) <baohua@kernel.org>
+> Suggested-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+> Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
 > Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
 > ---
->  mm/vmscan.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 26df81e773ff..457049e130df 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1263,6 +1263,8 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
->  		 */
->  		if (folio_test_anon(folio) && folio_test_swapbacked(folio) &&
->  				!folio_test_swapcache(folio)) {
-> +			int ret;
-> +
->  			if (!(sc->gfp_mask & __GFP_IO))
->  				goto keep_locked;
->  			if (folio_maybe_dma_pinned(folio))
-> @@ -1281,11 +1283,14 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
->  				    split_folio_to_list(folio, folio_list))
->  					goto activate_locked;
->  			}
-> -			if (folio_alloc_swap(folio)) {
-> +			ret = folio_alloc_swap(folio);
-> +			if (ret) {
->  				int __maybe_unused order = folio_order(folio);
->  
->  				if (!folio_test_large(folio))
->  					goto activate_locked_split;
-> +				if (ret != -E2BIG)
-> +					goto activate_locked;
->  				/* Fallback to swap normal pages */
->  				if (split_folio_to_list(folio, folio_list))
->  					goto activate_locked;
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
