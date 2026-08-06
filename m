@@ -1,238 +1,314 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD1773839BA
-	for <cgroups@vger.kernel.org>; Thu,  6 Aug 2026 17:13:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.175
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786036385; cv=pass; b=KmRN2Wtrfzz4KtA2kV6ouzB/Qa8IOp99CQHQNJABe6TzwLVg4Tjlbj0iS+GdPfNw5ifxWN9cpiZCKdLcge4ht21iwr9F22nFB/YebZFRA9nxsUFVNfQxuwVq9klxnSqgTxMzX7XYIihpoCXW24dF6VGhAxSc/1B0VKKaeASx1X0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786036385; c=relaxed/simple;
-	bh=bXUKWDUfgbn9sVNEKtlFWPHzFvLv4UFxp+9Iiunsy00=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rlHntGvsfSIzvhdEMhH7quaav0QmwpUETTVj2KdWB79yikiqw9T31MbgXcgFtWHKWbNLQMDugzKH3MY7Fe0CtSiUei/KL7Hh3HjNFrKn3RfjQK9YErKN3qYNYU5Cz6EIuXynT7aF25y4QyNom2UgIaBeFnaM6K1i12jP+/hXgwc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=N3sxl8N7; arc=pass smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4714486B80
+	for <cgroups@vger.kernel.org>; Thu,  6 Aug 2026 18:15:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786040135; cv=none; b=bePfAPKiiKU1odP1bVTjW0mQvOedDpXjhrW7494p+wSEgC4Rz+duFo9GnetcPQlumfnAIx3jlSERIly/RyIJDtkIBHzf0XWE+MoM8IHV6KDtapir+FFWqOOACMR9AKR7SZBrVSD1R/UqCIF7m6WEGwfhMqO+8YnIGyH8ddL90i4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786040135; c=relaxed/simple;
+	bh=Gxw0g0RRGV2WWXZn24VepuWr1o3Em88MOlPRHCcqBKg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TiDrlMgnH2Lq7dVTZJ8Rl5qk8Q0t/gEKE5rzh0adZSnp4rGTc4zhGN+c6RTsNFy+tClVy7fWHBNMzcOTj6Vp2WC25nMmzY4cuVH504dtSnNMZtOiEnJKiAVNgOz/PAD0Wn7Txv77rH3iP6zrxcrYMpHrJu3N7wwJ56cKSLjIiWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=pI/LcN2C; arc=none smtp.client-ip=209.85.160.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="N3sxl8N7"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-51c15a5b265so13141cf.0
-        for <cgroups@vger.kernel.org>; Thu, 06 Aug 2026 10:13:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786036383; cv=none;
-        d=google.com; s=arc-20260327;
-        b=gcxcBqMFG1hTFpowGwRVro4R5eS8BgiKRbUh/uR5KRuzH+WV65v3IQFjuhpk3jiFjr
-         jMQ8pyEtyvj3H2WePijXOV2DOVWabLwItFyQGZbUOy+t808nDAwo5GdN7jvDiCa4Sn6s
-         ogWQApBYIpMs6ivgAd/uKgxAi72sOZZOyQTojTvvHbfw4GVxCzOFVPQpc6tfc34pzk2T
-         dBbO7ICjmU9fU9AfSBEIUByVuCiHPYaE5K7MkwOs4yILIdt9bwn8R/+y4a106lrHPUzT
-         l6YQAjy5ny76MPYxXxvHGN8Chu8t4AuFKvpXuPystnldIhmwrERLNhkfie0UWSAlinuf
-         D/9Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=kOondB7zlLOm/USRZeEDNtNtm81Uo+XUZekrXkBxZ6g=;
-        fh=fQTZSVNOdpyipLmiuCSSOJCrF7wRPghbmOtINwXbDVc=;
-        b=BMCPaQ71zfdjSaorP8G29M6Qfza24IK1cnHNB+GTtlhfxGoL+MJYZww4s4IVrHgbfV
-         rKvr2D2coEWivXfu1gUSgDbI6+b+OJMQDdO7++bcbo/Z6HPCWiSQesEvwX06WaMjI0KR
-         nU/oexpzKshsU5Z9ZStgOhUIJntQWh9zuyyyFwRb0JEZk2AV9K68t6yV9vZJG+qnw2cP
-         /jL0fQSx+smqDKXC2+QRpxOed5yerpvsWvpjZbE3NJdymxtgQizoPtmMdUKSECtouZSw
-         Do2kYmFSIxHPzrXCY+mExUY+2hEPNFrLiG7IN1ZxepRelOqqkyr1VU4vDzF+4M8er7hl
-         HPVg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="pI/LcN2C"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-51bfe810293so13254001cf.1
+        for <cgroups@vger.kernel.org>; Thu, 06 Aug 2026 11:15:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1786036383; x=1786641183; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=cmpxchg.org; s=google; t=1786040130; x=1786644930; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=kOondB7zlLOm/USRZeEDNtNtm81Uo+XUZekrXkBxZ6g=;
-        b=N3sxl8N7xUHUgOJuAtDF4ECLmULfshPvKGF9lkXQ7HCElDVHXFLjMuAY2YGW8TAfCQ
-         TcNKiIVDOpNx7o/qatDeeCKXqbFxbzi+jPNpuX/KMbRkkUU4TpmJdrMsROYBbrfdbztx
-         p93i2X0RvCsmESZVeiP/UafhPdFJ03oisKqs/kw4Kr+Ldynf84jGylgis4XK9zF8bWj2
-         yenrLx9UJLkEH3ijWBFXBqP5VWCKNB+sVhuYklW5Ca4nRqhiRZecirnsmu2bjFRcP6pf
-         6inwhgHdLykg4DnJJ13a8DsHxiLKfCIdYrnhc6Gz2Rn/uMOGTusCGVy8Jorxo1LRMwiw
-         nJAw==
+        bh=k5UoSi/kRUvJ5D9A+qAnQzZgG/DBYzn7/rZxUaSi0lw=;
+        b=pI/LcN2ChUPnhQc0qPXQLPv2eYAKoB+VKWN1uVaWkAmwaJMUVoljWQJeIBoWBsQ+bO
+         ljrXDLi2/m+uIAeqUqJb5/rOb/rvGhBjg9yItEq9j8QubKviMOt1tH8h4fRep2r2eGJb
+         UlL7gBxuqjJCBMVnm/gEijOGG/QgrZThiccYtE/fU+mFb1ERywGvaPSbInnyP0kp4q3O
+         nK5zCxylnWWhR39EQdLLmhBM/Fipjm5Kooae9iy9isDlYEpt084nONbe4GMOxfSXXKmP
+         Bax/sGHGxpAef+92bzEjLY9RRyIMvUN/oISA/lE5OqCUTSSP19Xz9fXEwJ2eKZtnS2IC
+         q2ZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786036383; x=1786641183;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1786040130; x=1786644930;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=kOondB7zlLOm/USRZeEDNtNtm81Uo+XUZekrXkBxZ6g=;
-        b=XcuhofeWg5JUZjCo5RV7z63voVTsLmUP8rf1l9pyl7ORvZJ64BZXgDjAd/7xg16AH9
-         fUPFA8Ul467FUld/RZ0Iut3L4r5QYTLI7KC/vdKR3im9zmcqLA/JbxaRTWJb2KTAnELb
-         XiUP7FDGOtQEwa+7b78JmUj4vF+yyHuy1/TDW+2hxkgQ6ffWFqH6Zk2hwA/6AtC0N2se
-         31vTXSWpdzQOM2gdT69NtIXbh5AKHMWSHkiTatjJJSPo/pcE/KkjoIRD9eO7ihwylkNe
-         jx6HLj/LDzK/mf4dOE7j1k1PqAvUbCAmeynNCJvveKfO23L5k47rfniuEpNgKvnLmOba
-         hzgA==
-X-Forwarded-Encrypted: i=1; AHgh+Rp38yctLIBPyd0eXLoj0fknkf6SRiv0Ux8n4k37EBCI0//jCbjDbDKQ3w+2cx66Dc8HnxNe3LdQ@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywa5cXxtFLsqQq83bp5qOgoL7foSKDKLTJnA+hL71M0krb78QoD
-	TqoLOjKnNtu/25O7gC+m6HrcJh4m9nJFS5AZCXMTsiA1mYMcEE3YN775yg/wZLhXQxMwb1pe5bf
-	gYlHMPkLzuqSf0mbUPCaH3K2TGyoE5EDaQE2KQHso
-X-Gm-Gg: AR+sD11W2Vv3oJIQwD5RF1ttZ41bhuyE9DP3DDbaqmuSz73WGRI/OPt8YeR5p5yGpAg
-	5BNvx+jNLSL5CS3O6+XaWvyNVmOeJxO4OejZol6d7GoRSu5RI3+Tu9V+t7NOE1TcBi2UzREKUwO
-	hjS6uFBeAbXBawtgpTF5YNoUVRNr0pdX1T0r2H7iXqyQWMHKb1fn12WckELuUY9yaFY7TaaqzW1
-	IzXRogYN7gJbMjR1WgRYJWMaHLUX7g6yNFyxmd+y/KRQ2RpOoWtRKCl/kIk59/EBmtWJfWlnAJ9
-	4msM8acWyL59TlDDxpoWBB+tvzV4pDS9nZmP79WJkzW5H42C/AIynT2TrUt7PKS1v1MMmKEvPAs
-	=
-X-Received: by 2002:a05:622a:4885:b0:516:3f51:81cb with SMTP id
- d75a77b69052e-52cfea4c54fmr20988091cf.13.1786036381929; Thu, 06 Aug 2026
- 10:13:01 -0700 (PDT)
+        bh=k5UoSi/kRUvJ5D9A+qAnQzZgG/DBYzn7/rZxUaSi0lw=;
+        b=I1j3zfSY7WMeCSPFDg3T3/ftRB9ijdtkSY1wfHZZIyBYiwhZC7l02qqmqqTuV4DPpB
+         8pleg3VdE8uQA0u/ZzjoMaHROegLIWvpoIbPlHjvYNzncfVYzIawVmONN+fya/ET+qy0
+         gl6RWoBHSygaDEjNyCwCRfmnZUFdov4voNsfKOFl9Pqvxwe1167Q0oOOWyHNGnrjOQum
+         CoPYHpJeyFlIgJYM7gMNNW7lnZoJu98G6bEGDCDuRuzYh5v/1NDNV0H3f979OHkEHvzZ
+         rtWroAYnBuaE64BlFILjt8pd3rLHnEX4NKPA+W472jxzkxxXo00d1dh6FXhbM88sb4am
+         4bqQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoMVNSgZkNObDYtz30MT4jCNYBEpz7KTR5TcCQJhCSK/wiXhHn89xB7EbTH6YuwGh5XzqgPF79I@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzo9g08+xHbVPa/U0hGfvEHhQFoAXdgrYpFpBx69DTj+upR8o/j
+	s1VG4zAkfHU2ZQsZUv/pxD5DOg0NEzzfF5UwT8+/a+T0Vod8fQlfhFs/VXPKrtkKOwkxjyNHvpY
+	q+esG
+X-Gm-Gg: AR+sD130I3ClQ8qOWw15uhISICIVBIs+i5PvNzrLYayFXlY4BN8rMybFmC//2TIXRza
+	ZHLBBu8G8FHE4iasldILmeC7SAjq1Ddh5ZovQYnlnA+PuWZpAC/BRpypxYXIKCTNKMupAhSd00x
+	LVQn9I4LZ75l2l98ykwJn3lmvsOzWDw6/oHwdBRdiZHUxayuhvI+zXZtG+Nt8nOQrPRkbY9Cxbu
+	YtUj8HQ9kAPZEjPDIS8cYJByfoaAMDNn4TTtMKoMgmwRhdwHlUwOHp/GyYTXlwazbx3CTKM8m6Y
+	TgFDPMOGKWvuze/xkZpc/nh3yCHMmLDFN8yQMHklyDofcHnp8RqC+BP1nkP5TI6skvE23SMBZhU
+	I6mEVOEofU+0ArJOmNgnNywBETb7S/Qp1jPYzY1G1X6IIRyh66EX70V1ZQgmjUMMkktXKKOuE4E
+	uG9pc/ni43jQ2XFAlKI7aI0HZCwPBP51NZkPk4Gx7siC3uhngLHB8QLgLb5fw=
+X-Received: by 2002:ac8:5d16:0:b0:51c:92a0:b2ca with SMTP id d75a77b69052e-52ce617f426mr167955401cf.34.1786040130400;
+        Thu, 06 Aug 2026 11:15:30 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-908800cb14csm57278926d6.48.2026.08.06.11.15.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Aug 2026 11:15:29 -0700 (PDT)
+Date: Thu, 6 Aug 2026 14:15:26 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Michal Hocko <mhocko@suse.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Karl Erik Hofseth <karl.e.hofseth@opoint.com>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] memcg: keep folio's objcg same as its node
+Message-ID: <anTPPr5hVV4aQLRD@cmpxchg.org>
+References: <20260806165813.2526415-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260728083742.2359320-1-cui.tao@linux.dev> <anS3saMkFog89yxy@localhost.localdomain>
-In-Reply-To: <anS3saMkFog89yxy@localhost.localdomain>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Thu, 6 Aug 2026 10:12:51 -0700
-X-Gm-Features: AUfX_myBqmi3uQlB-HqUGfH-0Y4PN_2k2H_3hlPoqzbY_beS516q1vCa1M6xGG4
-Message-ID: <CAJuCfpGdVuY5L8+yMXEwQ-GuTB_PNb7Vkzp9w3CQKosaeE1aLQ@mail.gmail.com>
-Subject: Re: [PATCH v2] selftests/cgroup: add PSI pressure trigger and
- validation tests
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Tao Cui <cui.tao@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Ziyang Men <ziyang.meme@gmail.com>, Tao Cui <cuitao@kylinos.cn>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260806165813.2526415-1-shakeel.butt@linux.dev>
 
-On Thu, Aug 6, 2026 at 9:52=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.com=
-> wrote:
->
-> Hi,
-> thanks for continuing with this.
+On Thu, Aug 06, 2026 at 09:58:13AM -0700, Shakeel Butt wrote:
+> memcg_reparent_objcgs() has an inherent assumption that a folio's objcg
+> is the objcg of the folio's node.  Folio migration across nodes breaks
+> that assumption: the new folio simply inherits the old folio's objcg
+> while living on a different node.
+> 
+> Once the assumption is broken, the reparenting of the folio's objcg and
+> the reparenting of the folio's LRU list are no longer atomic.
+> memcg_reparent_objcgs() handles one node per iteration and drops all the
+> locks in between, so the objcg gets reparented in the iteration for the
+> objcg's node while the LRU list gets spliced in the iteration for the
+> folio's node.  Any LRU operation on that folio in between resolves its
+> lruvec through the objcg, and thus takes the lru_lock of the wrong
+> memcg, not the lru_lock of the list the folio is actually on.
+> 
+> Fix this by selecting the objcg by folio_nid() at charge time, and by
+> re-deriving it for the destination node in mem_cgroup_migrate() and
+> mem_cgroup_replace_folio().
+> 
+> Reported-by: Karl Erik Hofseth <karl.e.hofseth@opoint.com>
+> Closes: https://lore.kernel.org/all/anMmd1ADrDVwMO6v@work/
+> Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of dying memory cgroup for LRU folios")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> ---
+> 
+> Changes since v1: http://lore.kernel.org/20260806061830.3294679-1-shakeel.butt@linux.dev
+> 
+> - In mem_cgroup_migrate, do obj_cgroup_put at the end (Sashiko)
+> - Handle scenario where destination node has been reparented to the root but the
+>   source node's objcg has not yet (Sashiko)
+> - Add comment explaining the race between migration and reparenting (Johannes)
+> 
+>  mm/memcontrol.c | 66 ++++++++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 54 insertions(+), 12 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 3057396dda53..02c108cdd0f5 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2966,10 +2966,9 @@ struct mem_cgroup *mem_cgroup_from_virt(void *p)
+>  	return folio_memcg_check(virt_to_folio(p));
+>  }
+>  
+> -static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+> +static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg,
+> +						      int nid)
+>  {
+> -	int nid = numa_node_id();
+> -
+>  	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+>  		struct obj_cgroup *objcg = rcu_dereference(memcg->nodeinfo[nid]->objcg);
+>  
+> @@ -2980,12 +2979,13 @@ static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+>  	return NULL;
+>  }
+>  
+> -static inline struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+> +static inline struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *memcg,
+> +							   int nid)
+>  {
+>  	struct obj_cgroup *objcg;
+>  
+>  	rcu_read_lock();
+> -	objcg = __get_obj_cgroup_from_memcg(memcg);
+> +	objcg = __get_obj_cgroup_from_memcg(memcg, nid);
+>  	rcu_read_unlock();
+>  
+>  	return objcg;
+> @@ -3029,7 +3029,7 @@ static struct obj_cgroup *current_objcg_update(void)
+>  
+>  		rcu_read_lock();
+>  		memcg = mem_cgroup_from_task(current);
+> -		objcg = __get_obj_cgroup_from_memcg(memcg);
+> +		objcg = __get_obj_cgroup_from_memcg(memcg, numa_node_id());
+>  		rcu_read_unlock();
+>  
+>  		/*
+> @@ -5197,7 +5197,7 @@ static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
+>  	int ret = 0;
+>  	struct obj_cgroup *objcg;
+>  
+> -	objcg = get_obj_cgroup_from_memcg(memcg);
+> +	objcg = get_obj_cgroup_from_memcg(memcg, folio_nid(folio));
+>  	/* Do not account at the root objcg level. */
+>  	if (!obj_cgroup_is_root(objcg))
+>  		ret = try_charge_memcg(memcg, gfp, folio_nr_pages(folio));
+> @@ -5408,8 +5408,8 @@ void __mem_cgroup_uncharge_folios(struct folio_batch *folios)
+>   */
+>  void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+>  {
+> +	struct obj_cgroup *objcg, *new_objcg = NULL;
+>  	struct mem_cgroup *memcg;
+> -	struct obj_cgroup *objcg;
+>  	long nr_pages = folio_nr_pages(new);
+>  
+>  	VM_BUG_ON_FOLIO(!folio_test_locked(old), old);
+> @@ -5431,6 +5431,7 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+>  
+>  	rcu_read_lock();
+>  	memcg = obj_cgroup_memcg(objcg);
+> +
+>  	/* Force-charge the new page. The old one will be freed soon */
+>  	if (!obj_cgroup_is_root(objcg)) {
+>  		page_counter_charge(&memcg->memory, nr_pages);
+> @@ -5438,7 +5439,31 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+>  			page_counter_charge(&memcg->memsw, nr_pages);
+>  	}
+>  
+> -	obj_cgroup_get(objcg);
+> +	/*
+> +	 * memcg_reparent_objcgs() reparents a node's objcgs and its LRU lists
+> +	 * together, under that node's lru_locks. If a folio's objcg is on a
+> +	 * different node, the two happen in separate iterations with the locks
+> +	 * dropped in between, and an LRU operation in that window takes the
+> +	 * lru_lock of the wrong memcg. Keep the objcg on the folio's node.
+> +	 */
+> +	if (folio_nid(old) != folio_nid(new))
+> +		new_objcg = __get_obj_cgroup_from_memcg(memcg, folio_nid(new));
+> +
+> +	/*
+> +	 * LRU folios are not accounted at the root level: swapping a non-root
+> +	 * objcg for the root one would skip the uncharge and leak the charge.
+> +	 * Keep the old one, the root memcg never reparents. No put needed,
+> +	 * tryget takes no reference on the root objcg.
+> +	 */
+> +	if (new_objcg && obj_cgroup_is_root(new_objcg) &&
+> +	    !obj_cgroup_is_root(objcg))
+> +		new_objcg = NULL;
 
-Thanks for adding these tests and sorry I was not able to review them
-yet. I'll try to review them this weekend and will provide my
-feedback.
-Thanks,
-Suren.
+The two versions have quite some overlap. The refcounting is
+different, but IMO that part is also hard to square.
 
->
-> On Tue, Jul 28, 2026 at 04:37:42PM +0800, Tao Cui <cui.tao@linux.dev> wro=
-te:
-> > +/* Trigger smoke test: second on same fd -> EBUSY; IRQ rejects "some".=
- */
-> > +static int test_proc_triggers(const char *root)
-> > +{
-> > +     static const char *const resources[] =3D { "io", "memory", "cpu" =
-};
-> > +     int ret =3D KSFT_FAIL;
-> > +     int fd =3D -1;
-> > +     int i;
-> > +
-> > +     (void)root;
->
-> WTH?
->
-> > +
-> > +     for (i =3D 0; i < (int)ARRAY_SIZE(resources); i++) {
->
-> This (int) cast is quite uncommon, look around.
->
-> > +/* Induce deterministic CPU pressure (more hogs than CPUs). */
-> > +static int test_cgroup_trigger_fire(const char *root)
-> > +{
-> > +     char *cg =3D NULL, *cpupress =3D NULL;
-> > +     int fd =3D -1, ret =3D KSFT_FAIL;
-> > +     struct pollfd pfd;
-> > +     long ncpus, i;
-> > +     pid_t pid;
-> > +
-> > +     cg =3D cg_name(root, "psi_trigger_test");
-> > +     if (!cg)
-> > +             goto cleanup;
-> > +     if (cg_create(cg))
-> > +             goto cleanup;
-> > +
-> > +     cpupress =3D cg_control(cg, "cpu.pressure");
-> > +     if (!cpupress)
-> > +             goto cleanup;
-> > +     fd =3D open(cpupress, O_RDWR);
-> > +     if (fd < 0) {
-> > +             ksft_print_msg("open cpu.pressure: %s\n", strerror(errno)=
-);
-> > +             goto cleanup;
-> > +     }
-> > +
-> > +     /* 1us threshold in a 1s window: any cpu stall fires it. */
-> > +     errno =3D 0;
-> > +     if (write_trigger(fd, "some 1 1000000") <=3D 0) {
-> > +             ksft_print_msg("arming trigger failed: %s\n", strerror(er=
-rno));
-> > +             goto cleanup;
-> > +     }
->
-> When I see this, could you increase the window size to 2000000 (so that
-> it has potential to run for unprivileged users)?
->
-> > +
-> > +     ncpus =3D sysconf(_SC_NPROCESSORS_ONLN);
-> > +     if (ncpus <=3D 0)
-> > +             ncpus =3D 1;
-> > +
-> > +     pid =3D fork();
-> > +     if (pid < 0) {
-> > +             ksft_print_msg("fork: %s\n", strerror(errno));
-> > +             goto cleanup;
-> > +     }
-> > +     if (pid =3D=3D 0) {
-> > +             /* Enter the cgroup, then over-subscribe it with CPU hogs=
-. */
-> > +             if (cg_enter_current(cg))
-> > +                     _exit(KSFT_FAIL);
-> > +             for (i =3D 0; i < ncpus; i++) {
-> > +                     if (fork() =3D=3D 0) {
-> > +                             for (;;)
-> > +                                     asm volatile("" ::: "memory");
-> > +                             _exit(0);
-> > +                     }
-> > +             }
-> > +             for (;;)
-> > +                     asm volatile("" ::: "memory");  /* child is also =
-a hog */
-> > +             _exit(0);
-> > +     }
->
-> This part could be replaced with generalized hog_cpus_timed() from
-> test_cpu.c (after move to cgroup_util.c).
->
-> > +int main(int argc, char **argv)
-> > +{
-> > +     char root[PATH_MAX];
-> > +     int mempress_fd;
-> > +     int i;
-> > +
-> > +     (void)argc;
->
-> What's up with this?
->
-> > +
-> > +     ksft_print_header();
-> > +     ksft_set_plan(ARRAY_SIZE(tests));
-> > +
-> > +     if (cg_find_unified_root(root, sizeof(root), NULL))
-> > +             ksft_exit_skip("cgroup v2 isn't mounted\n");
-> > +
-> > +     /* PSI must be enabled (CONFIG_PSI=3Dy, not default-disabled). */
-> > +     mempress_fd =3D open("/proc/pressure/memory", O_RDONLY);
-> > +     if (mempress_fd < 0)
-> > +             ksft_exit_skip("PSI unavailable (CONFIG_PSI=3Dn or psi=3D=
-0)\n");
-> > +     close(mempress_fd);
-> > +
-> > +     if (cg_read_strstr(root, "cgroup.controllers", "memory"))
-> > +             ksft_exit_skip("memory controller isn't available\n");
-> > +     if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
-> > +             if (cg_write(root, "cgroup.subtree_control", "+memory"))
-> > +                     ksft_exit_skip("failed to enable memory controlle=
-r\n");
->
-> The memory controller is unnecessary now, right?
->
->
-> Regards,
-> Michal
+How about a helper that always returns a referenced objcg?
+
+static struct obj_cgroup *get_migration_objcg(struct folio *old, struct folio *new)
+{
+	struct obj_cgroup *old_objcg, *new_objcg;
+	int new_nid = folio_nid(new);
+	struct mem_cgroup *memcg;
+
+	old_objcg = get_obj_cgroup_from_folio(old);
+
+	if (folio_nid(old) == new_nid)
+		return old_objcg;
+
+	memcg = obj_cgroup_memcg(old_objcg);
+	new_objcg = __get_obj_cgroup_from_memcg(memcg, new_nid);
+
+	if (new_objcg && obj_cgroup_is_root(new_objcg) &&
+	    !obj_cgroup_is_root(old_objcg))
+		return old_objcg;
+
+	obj_cgroup_put(old_objcg);
+
+	return new_objcg;
+}
+
+In mem_cgroup_replace_folio(), this becomes:
+
+	rcu_read_lock();
+
+	... page counter update ...
+
+	objcg = get_migration_objcg(old, new);
+	commit_charge(new, objcg);
+	memcg1_commit_charge(new, memcg);
+
+	rcu_read_unlock();
+
+> +
+> +	if (new_objcg)
+> +		objcg = new_objcg;
+> +	else
+> +		obj_cgroup_get(objcg);
+> +
+>  	commit_charge(new, objcg);
+>  	memcg1_commit_charge(new, memcg);
+>  	rcu_read_unlock();
+> @@ -5457,7 +5482,7 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+>   */
+>  void mem_cgroup_migrate(struct folio *old, struct folio *new)
+>  {
+> -	struct obj_cgroup *objcg;
+> +	struct obj_cgroup *objcg, *new_objcg = NULL;
+>  
+>  	VM_BUG_ON_FOLIO(!folio_test_locked(old), old);
+>  	VM_BUG_ON_FOLIO(!folio_test_locked(new), new);
+> @@ -5478,12 +5503,29 @@ void mem_cgroup_migrate(struct folio *old, struct folio *new)
+>  	if (!objcg)
+>  		return;
+>  
+> -	/* Transfer the charge and the objcg ref */
+> -	commit_charge(new, objcg);
+> +	/* Keep the objcg on the folio's node, see mem_cgroup_replace_folio() */
+> +	if (folio_nid(old) != folio_nid(new)) {
+> +		rcu_read_lock();
+> +		new_objcg = __get_obj_cgroup_from_memcg(obj_cgroup_memcg(objcg),
+> +							folio_nid(new));
+> +		rcu_read_unlock();
+> +
+> +		/* No root swap, see mem_cgroup_replace_folio(). */
+> +		if (new_objcg && obj_cgroup_is_root(new_objcg) &&
+> +		    !obj_cgroup_is_root(objcg))
+> +			new_objcg = NULL;
+> +	}
+> +
+> +	/* Transfer the charge and, unless it was swapped, the objcg ref */
+> +	commit_charge(new, new_objcg ? : objcg);
+>  
+>  	/* Warning should never happen, so don't worry about refcount non-0 */
+>  	WARN_ON_ONCE(folio_unqueue_deferred_split(old));
+>  	old->memcg_data = 0;
+> +
+> +	/* @new took its own reference, drop @old's. */
+> +	if (new_objcg)
+> +		obj_cgroup_put(objcg);
+
+And here it becomes:
+
+	rcu_read_lock();
+	objcg = get_migration_objcg(old, new);
+	rcu_read_unlock();
+	commit_charge(new, objcg);
+
+	objcg = folio_objcg(old);
+	old->memcg_data = 0;
+	obj_cgroup_put(objcg);
