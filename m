@@ -1,64 +1,64 @@
-Received: from mail-oi1-f170.google.com (mail-oi1-f170.google.com [209.85.167.170])
+Received: from mail-oi1-f180.google.com (mail-oi1-f180.google.com [209.85.167.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CF0A4432FE
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 20:21:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0842F443E27
+	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 20:21:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786134067; cv=none; b=XYyoxSaNpGCF7zVQ9HyUd0IXOCFXEbtxHpUx4jSKa90GEbRu+Mt+Y5hpfht/ez96zgO7U7Db6Eqd23heynM85HTNOtv951QdGRXyRbL+Ly4qfmYcaopBJRkRo/vmKu//kPFCYWOLhGWq3IQr/40n5fKpInD8bxCWhhif063Q6xU=
+	t=1786134069; cv=none; b=a4fCwIT4TmV5pgdsiLThPyedDA4YYcYuks6TdXUBZKZnF+LFt71hX1dv9tMN2INcsQpI0XK/chSSMSHsQT7OUuzNlDVBJzECNIAaz6nfKCABpDZL9hSEkfwA5ZK0YQY4evdfIFHW01K9ijgUMpQ5cVYnFobHEB7bARzSH8mraDE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786134067; c=relaxed/simple;
-	bh=w0aiWvuXLSFHMY0mV8BwfkcBTVFPsPvUsMB0BenoBF8=;
+	s=arc-20240116; t=1786134069; c=relaxed/simple;
+	bh=HOogZ2bJZOmmIkJdY9y2MvQwya6iwHgtaiK7/Q90pew=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U6eec3ip4EewaNYA4CEhV1pFXPK4DKtBODCPItin5q0oNzJbqkpNBu6NrmKB4AY+7lKOdZAxVK9tnrixEd0Bzfo0sX3G2PA/CoJiDwscGkXn9RbEVneJDnINlPkep9kEiUMDuq5QPaZ9M+PfHgUut1960oX07PmKka6+uhrcnWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MuyuqUWP; arc=none smtp.client-ip=209.85.167.170
+	 MIME-Version; b=F7pyzRviEd1On7irgfajDmjElOLdyigZPzPEjrTFh2bt1wi16rje6EhFBcTiIRqDEjiw4MyTDV7JhiwDZ2/xy4G+1rXqEvdZ+EcGa6E6ZXrdS52j2tp0632LrrmqnScMV928FC4nFbcS6oV0jTruyNRgPQQwKPQRqcD9UEUFVy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M9hMxhB9; arc=none smtp.client-ip=209.85.167.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MuyuqUWP"
-Received: by mail-oi1-f170.google.com with SMTP id 5614622812f47-4af81963f35so1491085b6e.0
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 13:21:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M9hMxhB9"
+Received: by mail-oi1-f180.google.com with SMTP id 5614622812f47-4a4cb36ae00so2295565b6e.0
+        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 13:21:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786134065; x=1786738865; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786134067; x=1786738867; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Veey7tCntVTCDMITmGRXBJciLEPyIkZpuk6PEQ2O088=;
-        b=MuyuqUWP4oGSy3+zAazXy+q9CKwIC8LyAcpu0V/19RRT7ZAO+a9DOcZdhKYJoMsJER
-         E6c5I4wixJe9Qt3DN5tFVUbUsOKVK6lrMZZuJVC0y9jSFF10a67O4q++e0/PjSJRc68U
-         gOl4zF3W2TP2/Hez2yhA7b4ONvH7z86Nq2YWICmD58S07rcHePfL+eKExDcJacXnKNag
-         ESYAFNjaJ9wS0XCap1lcckAsKCcS7cXeDx7mVZoy3h8G3DWyw0yktS8acie9rWR3U7Y2
-         uTwTNBnvg+jdSNWhhq7+H5eOtBGFrn/7x3omHIoGh8XiB7frBr9JAEx0wZpCXEHDYEGL
-         1zaw==
+        bh=k/MfpY/lSQ8qNOiw/HDxNskiAGRLvzb2J5gjoLFAHE4=;
+        b=M9hMxhB9Mc0kTXstxl+cRR9/7LncgF70NavK4eY8cZqzmEnowNmrOIJXooDSIn3X1j
+         WhPqb/FVSXTJoWMRNIiB9aB5YI67OpqwzwNeXEP+EvzM3KICEGWAKHkkHCdJxu5nAv2f
+         1PMINmLpHOA50SfoEQa3qIwAr5EKSUE7F6IpOf7xDghkureoKdZVOhw+defdahYELp3U
+         UF1I4BDH82TnNKUOM9raSOLr3ec5ZceCH8D5jSNKgnLOTcekclZlcWgq5X11VUBOqW4m
+         dDl4ST52QN9Q107+haUtnsfR+TTlCOjAalYgKbMb4ShmanJJtE+vCV+uiMr0UO2EHHCI
+         rgxQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786134065; x=1786738865;
+        d=1e100.net; s=20251104; t=1786134067; x=1786738867;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Veey7tCntVTCDMITmGRXBJciLEPyIkZpuk6PEQ2O088=;
-        b=G2uNI6coIfjpPEXsIY2Xonsausk9oB499JFmsnhe+79zGjrVCMuGB1exYLig15Oamg
-         N6t3VJbd0PER8Johum02m2rFv/KRzRDO1xw2jbJw4DpxPQx8Waxj7qIVEE52LO/Tjx9L
-         ubKxP0aQRTMh4YAXQZMg9JMzGH6gmrCYjiNekxCDJv1RjQTAwyamJNmT/qOONC8/41Dq
-         13GN7QpvP1i52QlurzHQM2xhuBolcb81C86TFgqFYXssmeL+Hvx0BMW/OZROCIwigHgf
-         Gsd8UMofe6Ipl+lx8b6eNPx5kV9FOYxkJSX/G2/NsJQZjj0w7hDudeH22hT4Z7He5Tj1
-         tXtA==
-X-Forwarded-Encrypted: i=1; AHgh+Rr8bG6pXz9d3ynv5EP6sFyrAYGLxROpbx25ZESVlH4Oa1sDIUd21Dzoy4kahSAGPOE5fC9zWBOv@vger.kernel.org
-X-Gm-Message-State: AOJu0YxP7IGcb0dZAIkgmBsTSTAM1wVaxWn4mrXZjJNKu6RThOcSSBcd
-	50vg9XBm+MgkL/w71ADOrKw+Q4V+ssAlZJ5tGfZgDUx9gIoZBw2nqnel
-X-Gm-Gg: AR+sD12CQPUQosMzXTagAYE5dQTzghb4nmwjwqplCtILw+5Sgh5W8oiXJOAMLbUypyL
-	EuRlMjjfr65Omp9KqHIlrgYp3hwfN6ejpAQhs0zOq3eDXyDPahDQMq3+1eP/wdt7achb5gy8PMh
-	pBB5edp509hkuiVaQ7Bgxst7IdHrTn+Qgga8gXlKE3P8XxFif9kNvRf5nBXzYF/EfioWnX4ob2x
-	pUTRGkoNwNhAjwe2ADyPdaCzfrcC0MlKSGjUYUJ5hvWGnDcPuVTQ99Ia9P+QbehS5w9tFs/Kqv8
-	qL2hNvs2Bjl76xyYBrSh7dTssul4u/VUCyZGQya8i7tXi/IL/cUVxMANrCgMgbOJZS/J+ArmvRf
-	16iETPdsWOVohXFROU8LkFd2WKwT108QphgGewzdj4rURx8WMdslVE9Hdiol2c6Soz0l2JfR9sI
-	xPmlPPG9xDGzhxyvUQkt4EaZAd298nj6imY35zxwKo6J2+wwtU32b6XJmgFRpBlcZr5+g5+H2SH
-	+LdjCtEnBGzN23Auw==
-X-Received: by 2002:a05:6808:150b:b0:496:b7c:274b with SMTP id 5614622812f47-4afae16a91fmr12782189b6e.19.1786134065034;
-        Fri, 07 Aug 2026 13:21:05 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:1::])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4b1af5e4fc0sm422662b6e.11.2026.08.07.13.21.04
+        bh=k/MfpY/lSQ8qNOiw/HDxNskiAGRLvzb2J5gjoLFAHE4=;
+        b=j9enE0jVwIllO9xxR7eYcxm+UEEF3rndAKaqe6Fu7Z2I6ELSSGoHbzcjmIp4wDKpBf
+         LnhwFVKlifc72pmFge2vZ/7DhH8rVdR7HUAxc9Mwsjz9iKFZQLk6zfgDF1rGOqOIhYpt
+         V5/vTj/rxd9YcT8Tdw6r1PeCJEF5TDFBsmZiUQe/DDA8nEdJFR2Mt9DizJ7FoOcB9l5h
+         5blOFXrYWxF7uFN/68onzp9Nqvw8UjUERBpRJxhOyEnsyg4H9fn83elM2+Nm1+wphbHx
+         IUWBlwFdp4Flzm6G+f/yOJcudSlaiMol1hunIUrDdKyJ0FFaCNkmJfZgCcxf4EO0R4zG
+         UzJg==
+X-Forwarded-Encrypted: i=1; AHgh+RpEtBbESOyXI/3EHmewj0n4IrgKuK7JSoZ1bFsVAMR6H4RLeui15GXNy9TWCVsI0zlaqKHl4VuL@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzi7ZD6JamBQpQSvwwgwAbY2cdSdF+8FsSO9tlIkIWXvrHakzTD
+	AfjQWqU7BqSIe29NHV3VegNnkO9X7zgajoRCpuSRwz9BV7Lg7+IHyFWy
+X-Gm-Gg: AR+sD10eUWLX8w/AIu6rHVKa0eLqU4+hWu0jTFDJNjcAHA3lcZRoiUPIPRK3RdjOQqg
+	7GPk7sYFmlwYFWfab6zrVDONt/Uy4aq+Y0Xfb5KPqLOBQkimzsRj7jtuaCbSLxkKMozH22sO9lb
+	T+6kB6Jhy5fXn21CjDyerj3BbQ2ZAhhRXWi5MtY0D5/GSU02qxuf9czptaNqfPwLNoXfuzBsZpS
+	4A6+1ESqRcBzO2RuLfmYSh3TzbbfK5SX7lnWZ2lZG3DXi4XzBLbK1Ie69qI5mLG0eJ4PxUy3MHQ
+	wrftDgl7r1VbqfUGUr5BQZGAPNNujO+Afz3PLdmrTgBWQtfvXl+U9V6Fi02RmNkVpET4jDlZopq
+	1I1LGqi1cBP9R9hLFm7uf1bnWzTmxkh75vyRrXrVJ+AowBQhxUX6Xq/r7bVnEI5k/g5GEzVdtrd
+	E+CWXAc0xF2jA6lpfBI+UUVAbFk4jDEf880NDypjDLTQ0vyU6m16Ch705kmAKwIfLvBBW2rRrIi
+	LSEJtAbiaQkciXBRmk=
+X-Received: by 2002:a05:6808:15a6:b0:49b:c387:36c5 with SMTP id 5614622812f47-4afae16d6cfmr14165498b6e.17.1786134066779;
+        Fri, 07 Aug 2026 13:21:06 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:42::])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4b1af0b57f6sm442378b6e.5.2026.08.07.13.21.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Aug 2026 13:21:04 -0700 (PDT)
+        Fri, 07 Aug 2026 13:21:06 -0700 (PDT)
 From: Joshua Hahn <joshua.hahnjy@gmail.com>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Gregory Price <gourry@gourry.net>
@@ -105,9 +105,9 @@ Cc: Alistair Popple <apopple@nvidia.com>,
 	linux-kernel@vger.kernel.org,
 	linux-mm@kvack.org,
 	kernel-team@meta.com
-Subject: [RFC PATCH v3 03/14] mm/memory-tiers: Introduce a mapping from nid to tier_slot
-Date: Fri,  7 Aug 2026 13:20:46 -0700
-Message-ID: <20260807202059.2620949-4-joshua.hahnjy@gmail.com>
+Subject: [RFC PATCH v3 04/14] mm/memcontrol: Allocate per-tier page_counters
+Date: Fri,  7 Aug 2026 13:20:47 -0700
+Message-ID: <20260807202059.2620949-5-joshua.hahnjy@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260807202059.2620949-1-joshua.hahnjy@gmail.com>
 References: <20260807202059.2620949-1-joshua.hahnjy@gmail.com>
@@ -119,201 +119,144 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Establishing tiered memcg limits will require an ordering of tiers, as
-well as a way to account how much memory is present in each tier.
-This will need to be done starting at boot, so that all memory becomes
-properly accounted.
-
-However, tiers can come online and offline at runtime due to DAX memory
-whose nodes can be hotplugged / hot-unplugged, and these nodes' tiers
-are not available at boot.
-
-Therefore, to establish a fixed mapping from nid to tier that isn't
-sparse like the tier_ids, introduce a new "tier_slot" which is a dense
-index that does not change once a tier comes online.
-
-Also introduce a helper to retrieve the nodemask associated with a tier.
+Tier-aware limits need one page_counter per memory tier.  Add a
+page_counter array (memcg->tier) to struct mem_cgroup, sized to
+nr_node_ids (an upper bound on the number of tiers) and allocated only
+when tiered limits are enabled, so memcgs pay nothing when the feature is
+off.  Initialise and parent-link every slot in mem_cgroup_css_alloc(),
+and free the array in __mem_cgroup_free().
 
 Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
 ---
- include/linux/memory-tiers.h | 18 ++++++++
- mm/memory-tiers.c            | 86 +++++++++++++++++++++++++++++++++++-
- 2 files changed, 102 insertions(+), 2 deletions(-)
+ include/linux/memcontrol.h |  1 +
+ mm/memcontrol.c            | 23 +++++++++++++++++++++++
+ mm/memory-tiers.c          | 17 ++++++++++++++---
+ 3 files changed, 38 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/memory-tiers.h b/include/linux/memory-tiers.h
-index 7999c58629eeb..0e49645cdd1a9 100644
---- a/include/linux/memory-tiers.h
-+++ b/include/linux/memory-tiers.h
-@@ -41,6 +41,8 @@ extern struct memory_dev_type *default_dram_type;
- extern nodemask_t default_dram_nodes;
- struct memory_dev_type *alloc_memory_type(int adistance);
- void put_memory_type(struct memory_dev_type *memtype);
-+int mt_nr_tier_slots(void);
-+int nid_tier_slot(int nid);
- void init_node_memory_type(int node, struct memory_dev_type *default_type);
- void clear_node_memory_type(int node, struct memory_dev_type *memtype);
- int register_mt_adistance_algorithm(struct notifier_block *nb);
-@@ -52,6 +54,7 @@ int mt_perf_to_adistance(struct access_coordinate *perf, int *adist);
- struct memory_dev_type *mt_find_alloc_memory_type(int adist,
- 						  struct list_head *memory_types);
- void mt_put_memory_types(struct list_head *memory_types);
-+const nodemask_t *mt_tier_nodes(int slot);
- #ifdef CONFIG_NUMA_MIGRATION
- int next_demotion_node(int node, const nodemask_t *allowed_mask);
- void node_get_allowed_targets(pg_data_t *pgdat, nodemask_t *targets);
-@@ -151,5 +154,20 @@ static inline struct memory_dev_type *mt_find_alloc_memory_type(int adist,
- static inline void mt_put_memory_types(struct list_head *memory_types)
- {
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index dce03df7eae05..bb5bde87ac85a 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -207,6 +207,7 @@ struct mem_cgroup {
+ 
+ 	/* Accounted resources */
+ 	struct page_counter memory;		/* Both v1 & v2 */
++	struct page_counter *tier;		/* v2 only */
+ 
+ 	union {
+ 		struct page_counter swap;	/* v2 only */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ec28512de6a23..d096010366515 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -53,6 +53,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/vmpressure.h>
+ #include <linux/memremap.h>
++#include <linux/memory-tiers.h>
+ #include <linux/mm_inline.h>
+ #include <linux/cpu.h>
+ #include <linux/oom.h>
+@@ -4126,6 +4127,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ 	memcg1_free_events(memcg);
+ 	kfree(memcg->vmstats);
+ 	free_percpu(memcg->vmstats_percpu);
++	kfree(memcg->tier);
+ 	kfree(memcg);
  }
+ 
+@@ -4178,6 +4180,13 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
+ 		if (!alloc_mem_cgroup_per_node_info(memcg, node))
+ 			goto fail;
+ 
++	if (mem_cgroup_tiered_limits()) {
++		memcg->tier = kcalloc(nr_node_ids, sizeof(*memcg->tier),
++				      GFP_KERNEL);
++		if (!memcg->tier)
++			goto fail;
++	}
 +
-+static inline int mt_nr_tier_slots(void)
+ 	if (memcg_wb_domain_init(memcg, GFP_KERNEL))
+ 		goto fail;
+ 
+@@ -4206,6 +4215,16 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
+ 	return ERR_PTR(error);
+ }
+ 
++static void memcg_init_tier_counters(struct mem_cgroup *memcg,
++				     struct mem_cgroup *parent, bool protection)
 +{
-+	return 0;
++	for (int i = 0; i < nr_node_ids; i++) {
++		page_counter_init(&memcg->tier[i],
++				  parent ? &parent->tier[i] : NULL, protection);
++		page_counter_set_high(&memcg->tier[i], PAGE_COUNTER_MAX);
++	}
 +}
 +
-+static inline int nid_tier_slot(int nid)
-+{
-+	return -1;
-+}
-+
-+static inline const nodemask_t *mt_tier_nodes(int slot)
-+{
-+	return NULL;
-+}
- #endif	/* CONFIG_NUMA */
- #endif  /* _LINUX_MEMORY_TIERS_H */
+ static struct cgroup_subsys_state * __ref
+ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ {
+@@ -4231,6 +4250,8 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
+ 	if (parent) {
+ 		page_counter_init(&memcg->memory, &parent->memory, memcg_on_dfl);
++		if (mem_cgroup_tiered_limits())
++			memcg_init_tier_counters(memcg, parent, memcg_on_dfl);
+ 		page_counter_init(&memcg->swap, &parent->swap, false);
+ #ifdef CONFIG_MEMCG_V1
+ 		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
+@@ -4243,6 +4264,8 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		init_memcg_stats();
+ 		init_memcg_events();
+ 		page_counter_init(&memcg->memory, NULL, true);
++		if (mem_cgroup_tiered_limits())
++			memcg_init_tier_counters(memcg, NULL, true);
+ 		page_counter_init(&memcg->swap, NULL, false);
+ #ifdef CONFIG_MEMCG_V1
+ 		page_counter_init(&memcg->kmem, NULL, false);
 diff --git a/mm/memory-tiers.c b/mm/memory-tiers.c
-index 54851d8a195b0..36187c0ea9ded 100644
+index 36187c0ea9ded..bd5c78cd26ec4 100644
 --- a/mm/memory-tiers.c
 +++ b/mm/memory-tiers.c
-@@ -43,6 +43,16 @@ static LIST_HEAD(memory_tiers);
-  */
- static LIST_HEAD(default_memory_types);
- static struct node_memory_type_map node_memory_types[MAX_NUMNODES];
-+
-+/*
-+ * nr_tier_slots and tier_slot_ids are written with memory_tier_lock and
-+ * read locklessly. nr_tier_slots is monotonically increasing.
-+ */
-+static int nr_tier_slots;
-+static int tier_slot_ids[MAX_NUMNODES]   = {[0 ... MAX_NUMNODES - 1] = -1,};
-+static int node_tier_slots[MAX_NUMNODES] = {[0 ... MAX_NUMNODES - 1] = -1,};
-+static nodemask_t tier_nodemasks[MAX_NUMNODES];
-+
+@@ -52,6 +52,7 @@ static int nr_tier_slots;
+ static int tier_slot_ids[MAX_NUMNODES]   = {[0 ... MAX_NUMNODES - 1] = -1,};
+ static int node_tier_slots[MAX_NUMNODES] = {[0 ... MAX_NUMNODES - 1] = -1,};
+ static nodemask_t tier_nodemasks[MAX_NUMNODES];
++static unsigned long tier_capacity[MAX_NUMNODES];
+ 
  struct memory_dev_type *default_dram_type;
  nodemask_t default_dram_nodes __initdata = NODE_MASK_NONE;
+@@ -307,8 +308,10 @@ static void establish_tier_slots(void)
  
-@@ -273,6 +283,65 @@ static struct memory_tier *__node_get_memory_tier(int node)
- 				     lockdep_is_held(&memory_tier_lock));
- }
+ 	lockdep_assert_held_once(&memory_tier_lock);
  
-+/* Caller must hold memory_tier_lock */
-+static int tier_id_slot(int tier_id)
-+{
-+	int slot, free_slot = -1;
-+
-+	for (slot = 0; slot < nr_node_ids; slot++) {
-+		if (tier_slot_ids[slot] == tier_id)
-+			return slot;
-+		if (tier_slot_ids[slot] == -1 && free_slot == -1) {
-+			free_slot = slot;
-+			tier_slot_ids[slot] = tier_id;
-+		}
+-	for (int slot = 0; slot < old_nr_tier_slots; slot++)
++	for (int slot = 0; slot < old_nr_tier_slots; slot++) {
+ 		nodes_clear(tier_nodemasks[slot]);
++		WRITE_ONCE(tier_capacity[slot], 0);
 +	}
+ 
+ 	for (int nid = 0; nid < nr_node_ids; nid++) {
+ 		struct memory_tier *memtier = NULL;
+@@ -323,8 +326,16 @@ static void establish_tier_slots(void)
+ 
+ 		WRITE_ONCE(node_tier_slots[nid], slot);
+ 
+-		if (slot != -1)
+-			node_set(nid, tier_nodemasks[slot]);
++		if (slot < 0)
++			continue;
 +
-+	return free_slot;
-+}
++		node_set(nid, tier_nodemasks[slot]);
++		for (int i = 0; i < MAX_NR_ZONES; i++) {
++			struct zone *zone = &NODE_DATA(nid)->node_zones[i];
 +
-+static void establish_tier_slots(void)
-+{
-+	int old_nr_tier_slots = mt_nr_tier_slots();
-+	int highest_slot = old_nr_tier_slots;
-+
-+	lockdep_assert_held_once(&memory_tier_lock);
-+
-+	for (int slot = 0; slot < old_nr_tier_slots; slot++)
-+		nodes_clear(tier_nodemasks[slot]);
-+
-+	for (int nid = 0; nid < nr_node_ids; nid++) {
-+		struct memory_tier *memtier = NULL;
-+		int slot = -1;
-+
-+		if (node_state(nid, N_MEMORY))
-+			memtier = __node_get_memory_tier(nid);
-+		if (memtier) {
-+			slot = tier_id_slot(memtier->dev.id);
-+			highest_slot = max(highest_slot, slot + 1);
++			WRITE_ONCE(tier_capacity[slot],
++				tier_capacity[slot] + zone_managed_pages(zone));
 +		}
-+
-+		WRITE_ONCE(node_tier_slots[nid], slot);
-+
-+		if (slot != -1)
-+			node_set(nid, tier_nodemasks[slot]);
-+	}
-+	WRITE_ONCE(nr_tier_slots, highest_slot);
-+}
-+
-+int mt_nr_tier_slots(void)
-+{
-+	return READ_ONCE(nr_tier_slots);
-+}
-+
-+int nid_tier_slot(int nid)
-+{
-+	if (nid < 0 || nid >= MAX_NUMNODES)
-+		return -1;
-+
-+	return READ_ONCE(node_tier_slots[nid]);
-+}
-+
- #ifdef CONFIG_NUMA_MIGRATION
- bool node_is_toptier(int node)
- {
-@@ -729,6 +798,7 @@ static int __init memory_tier_late_init(void)
  	}
- 
- 	establish_demotion_targets();
-+	establish_tier_slots();
- 	put_online_mems();
- 
- 	return 0;
-@@ -878,6 +948,14 @@ int mt_calc_adistance(int node, int *adist)
+ 	WRITE_ONCE(nr_tier_slots, highest_slot);
  }
- EXPORT_SYMBOL_GPL(mt_calc_adistance);
- 
-+const nodemask_t *mt_tier_nodes(int slot)
-+{
-+	if (slot < 0)
-+		return NULL;
-+
-+	return &tier_nodemasks[slot];
-+}
-+
- static int __meminit memtier_hotplug_callback(struct notifier_block *self,
- 					      unsigned long action, void *_arg)
- {
-@@ -887,15 +965,19 @@ static int __meminit memtier_hotplug_callback(struct notifier_block *self,
- 	switch (action) {
- 	case NODE_REMOVED_LAST_MEMORY:
- 		mutex_lock(&memory_tier_lock);
--		if (clear_node_memory_tier(nn->nid))
-+		if (clear_node_memory_tier(nn->nid)) {
- 			establish_demotion_targets();
-+			establish_tier_slots();
-+		}
- 		mutex_unlock(&memory_tier_lock);
- 		break;
- 	case NODE_ADDED_FIRST_MEMORY:
- 		mutex_lock(&memory_tier_lock);
- 		memtier = set_node_memory_tier(nn->nid);
--		if (!IS_ERR(memtier))
-+		if (!IS_ERR(memtier)) {
- 			establish_demotion_targets();
-+			establish_tier_slots();
-+		}
- 		mutex_unlock(&memory_tier_lock);
- 		break;
- 	}
 -- 
 2.53.0-Meta
 
