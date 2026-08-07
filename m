@@ -1,297 +1,288 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97FC22777F3
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 09:17:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F450314A73;
+	Fri,  7 Aug 2026 14:24:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786094280; cv=none; b=dG8DSQc0sWVpSj/JH8tWFu3Sl+SAty+wpY1HX3JI3RaNtCWOUmnWkWPjAJqIzfgLshHtHYJ3ndREwPBWs8/0G6izFHa3AivLb5MYxL1iYKInDYNnEbr2Ii4G1Y/fWb8sghNWopEGImNcEq6y8UyRdQI5K3M56xO951oU1kx6QB4=
+	t=1786112679; cv=none; b=bnP5Y+c14Lm1njSwSgxNeQn22cCsll3Ez+D2rjui7KcjBMAbDWGz122/FHYgmoGVZum2Bt3cMkOPXFmUt2E9k2lh3kuS4/EFpTDSfSOvEu9kxtYCuwdT6oA6ljS1PkgJ4ICspLlEOmCl3LPpUEalVnYnbp8z/9FB5KXlmsdbyrQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786094280; c=relaxed/simple;
-	bh=0jD4KHxVATkkmMsT7BYrQsvJq/oa5s1lcY02ZrRrurk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SKUrfLGf61WI2SCEdkwVInWOvUZ/LlYgRxGVZR0A+jv9PV5EvNRdeJe+dAVQ/pVKiOq7IX2l/VK7k4QuWSuBhx3Sm9KdJJ/QLJI1gZ0sp5Z63iH/+zb/5ee9QyvkBdvKR+czrEd5xawgcQH3KOy4McmYXnju4QlYEe6IN3T0O1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=WuwdbVzI; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1786112679; c=relaxed/simple;
+	bh=hSbOOdxeh2c4aoqi8moa7i9RrmOM1aCgGf8VDLl4KeA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pS4fvyOHKQFuGEgI99MaTW+5WJcuHtvUTewHrmB5e5HMjxAXrwV8QxEKh283Q2MbcDxnFcn5kd0nXnR3ECIFDgHukWvKh8GYNXvoh8pWcImmqGaOm1xJWE2fv032MR0l5VlUbBELx2DJc5/kqoedvYXRGXGmloepgY5+3jg+pXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=r+npiZUa; arc=none smtp.client-ip=91.218.175.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="WuwdbVzI"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-496b7622a83so26355125e9.2
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 02:17:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1786094277; x=1786699077; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=nE9EpAT+paxZNLOvuqRoG+/4E3IKgvzJcMoz26cdk1M=;
-        b=WuwdbVzIj4jmWAaKuPundeJ0K0xTMNcEvgzr1VDopEvwJ9K6pMjnFl8EMFZqYR4l7o
-         cc69/PuZMtykAt6If5nSUZ/Sizeyu05ePJebf16lwOPy/bTOBpPLwdhn7rz2i0P2Nzyo
-         fGUy1vVLFwlFDPGADoAL2Mix80VYp/YNbwuSfYTe7X+YEK3fxc4uzeY9BrGZSIcY3c0E
-         /RLYIXmCf2Yt9Z+eOfJXxgfF3VMqTm49caf8z/QkyHxRK74q548kmTIaEiU3LG92mi1e
-         7fxHZ/DtMJsirK1Sv0MxMWWUjDBs2I9FOJEsH5nIXraj8NggRoAGnwnNOoocFrMjH3ZI
-         4M/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786094277; x=1786699077;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=nE9EpAT+paxZNLOvuqRoG+/4E3IKgvzJcMoz26cdk1M=;
-        b=b5WJFpcVqIIq6pzvhNrSKxVdIur1W5lUt4/dACDta4vSINA3jBPRkxTZ1hvPn8sKXg
-         Imig2+y3AaVO06nI/UmgkpNSlmnvVLbkspZiLe1mxzU0nfdWdSKqtsLW6nI3d+fCokTC
-         WFpx7GqigX27SiZCoafAcqtBzPGXQExBj9d+qBYAeQimE1pPT07JO98lx1hY0ySWzMiV
-         lJUxSZixs0eLBWcf2JBZxOusAzfSx1Z3Ob6g1LNpMYrMGQ467fScOm7VulRMfYg6m+bX
-         yi8Oz8kyloWUcoLUVmK68tDiaG+iN/Hxf8kRcKCMrzHY6d4icN1VN0ta+8bJzwM0Qedm
-         8vfw==
-X-Forwarded-Encrypted: i=1; AHgh+RqlsR9Tf2P+CQDYYEzXUGXbjYFXUsdEmyVCi+F3TRwbW4tMnHYdgtsUI6AXBqyOue6OrHAhhRJu@vger.kernel.org
-X-Gm-Message-State: AOJu0YzU9FCGxqwREZPrNFKwhL6QELQXB2D+5NSTBdaH7JGoHf4NC9z9
-	Wf31+5c2uQ3WJRLEmF813RSh/4nbxvdbJbfKHvwTdZhzfHXRX8O1lhpsvkPZA/Afeys=
-X-Gm-Gg: AR+sD10x3fGpnME5Ub6VJzJ7zvtmiofk95f6Vf38Ia9ruk7+yhSo7aTdYY/6zp1rI84
-	cevxFa3Wh/2+D41ikhPXUhizeyj4yZNK/eRd5ocSOae67XSbNagh5MicR/zfLhay1ioFzcj8Zl4
-	ru4W58OpwUuROlSp4okDuebERp5L3ddEFJN/JOOwBJfwe5fuG8kQwf7QttSiX/bDZ7NokOwbsd7
-	K/xbrmNKC7vGeykaVyWCPdV/otiXLXM4ignZEt9t4U4RXBAY/rSQhGrM1i4byBiP7RJ8UhpSyT0
-	i7STnvko0duwShkCOdqQr13Gaa6KxFZ7sYcf2uXJ1Pc0xzUa67Ef8p9jLnHw0kqavAG1uL3xSO6
-	2Ri8pWuQsps3d82nWDGcczII9MvSbNB2EmpTUlSVWUfIjG80vfZRl14GxutRx7ALYcpG9+VAubU
-	0df8t/ibupNIUeM6oIGkFM7OSnnAPBYabP9qnH2uEalkgJpwOBMR6ZuUcAhNd+/g7zM6VFvlO0+
-	Oc=
-X-Received: by 2002:a05:600c:3586:b0:499:49f3:77b1 with SMTP id 5b1f17b1804b1-4994e728283mr284725245e9.3.1786094276825;
-        Fri, 07 Aug 2026 02:17:56 -0700 (PDT)
-Received: from localhost (109-81-83-166.rct.o2.cz. [109.81.83.166])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4800215078asm3937193f8f.12.2026.08.07.02.17.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Aug 2026 02:17:56 -0700 (PDT)
-Date: Fri, 7 Aug 2026 11:17:55 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Audra Mitchell <audra@redhat.com>
-Cc: david@kernel.org, jocolema@redhat.com, raquini@redhat.com,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="r+npiZUa"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1786112674;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=S04di+PU+lv41Su7yR6P9olfkoO2azm7hS2v5N1fSOs=;
+	b=r+npiZUaeM6FZHODkg/p10zCEgVTxdiHOpcEv//SMiYw6+98pojPyGy0NSWiaZDZxjW4sz
+	A/4jJf3I+QCQGVks/R1KycB4MquoAO1yAFAjErMJdFU52yEwOVnPP8YDdRef5kUGHCapfc
+	0O/1nCbZLFqV5rSt5cX0ofHGtMS37aE=
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Fix unbounded loop within try_charge_memcg
-Message-ID: <anWiw0Zb66jyhzBU@tiehlicka>
-References: <20260806182429.1841095-1-audra@redhat.com>
+	Qi Zheng <qi.zheng@linux.dev>,
+	Meta kernel team <kernel-team@meta.com>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Karl Erik Hofseth <karl.e.hofseth@opoint.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v3] memcg: keep folio's objcg same as its node
+Date: Fri,  7 Aug 2026 07:24:05 -0700
+Message-ID: <20260807142406.443516-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260806182429.1841095-1-audra@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Thu 06-08-26 14:24:28, Audra Mitchell wrote:
-> Originally nr_retries was actually nr_oom_retries and we used it to track (and
-> limit) the number of times we entered the mem_cgroup_oom path and then attempted
-> a retry. The purpose of nr_retries counter changed with the introduction of
-> 9b1306192d33 ("mm: memcontrol: retry reclaim for oom-disabled and __GFP_NOFAIL
-> charges") so that the oom-disabled and __GFP_NOFAIL charges would also continue
-> to retry within the desired nr_retries threshold. Later d977aa939fca
-> ("mm, memcg: unify reclaim retry limits with page allocator") changed the
-> nr_retries counter from 5 to 16.
-> 
-> As the function has evolved we now have multiple paths that have a goto retry
-> path and we have lost the original purpose of the nr_retries counter, allowing
-> us to take a goto retry path an unbounded number of times.
-> 
-> Fix the unbounded retries by nesting the code in a loop and decrementing the
-> nr_retries counter correctly.
+memcg_reparent_objcgs() has an inherent assumption that a folio's objcg
+is the objcg of the folio's node.  Folio migration across nodes breaks
+that assumption: the new folio simply inherits the old folio's objcg
+while living on a different node.
 
-Are you trying to fix a theoretical problem spotted by the code review
-or is there any actual problem that you are trying to fix?
+Once the assumption is broken, the reparenting of the folio's objcg and
+the reparenting of the folio's LRU list are no longer atomic.
+memcg_reparent_objcgs() handles one node per iteration and drops all the
+locks in between, so the objcg gets reparented in the iteration for the
+objcg's node while the LRU list gets spliced in the iteration for the
+folio's node.  Any LRU operation on that folio in between resolves its
+lruvec through the objcg, and thus takes the lru_lock of the wrong
+memcg, not the lru_lock of the list the folio is actually on.
 
-> 
-> Signed-off-by: Audra Mitchell <audra@redhat.com>
-> ---
->  mm/memcontrol.c | 153 ++++++++++++++++++++++++------------------------
->  1 file changed, 76 insertions(+), 77 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6dc4888a90f3..781bcced5848 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2607,98 +2607,97 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	unsigned long pflags;
->  	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
->  
-> -retry:
-> -	if (consume_stock(memcg, nr_pages))
-> -		return 0;
-> +	for (; nr_retries >= 0; nr_retries--) {
->  
-> -	if (!allow_spinning)
-> -		/* Avoid the refill and flush of the older stock */
-> -		batch = nr_pages;
-> +		if (consume_stock(memcg, nr_pages))
-> +			return 0;
->  
-> -	reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
-> -	if (!do_memsw_account() ||
-> -	    page_counter_try_charge(&memcg->memsw, batch, &counter)) {
-> -		if (page_counter_try_charge(&memcg->memory, batch, &counter))
-> -			goto done_restock;
-> -		if (do_memsw_account())
-> -			page_counter_uncharge(&memcg->memsw, batch);
-> -		mem_over_limit = mem_cgroup_from_counter(counter, memory);
-> -	} else {
-> -		mem_over_limit = mem_cgroup_from_counter(counter, memsw);
-> -		reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
-> -	}
-> +		if (!allow_spinning)
-> +			/* Avoid the refill and flush of the older stock */
-> +			batch = nr_pages;
->  
-> -	if (batch > nr_pages) {
-> -		batch = nr_pages;
-> -		goto retry;
-> -	}
-> +		reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
-> +		if (!do_memsw_account() ||
-> +		    page_counter_try_charge(&memcg->memsw, batch, &counter)) {
-> +			if (page_counter_try_charge(&memcg->memory, batch, &counter))
-> +				goto done_restock;
-> +			if (do_memsw_account())
-> +				page_counter_uncharge(&memcg->memsw, batch);
-> +			mem_over_limit = mem_cgroup_from_counter(counter, memory);
-> +		} else {
-> +			mem_over_limit = mem_cgroup_from_counter(counter, memsw);
-> +			reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
-> +		}
->  
-> -	/*
-> -	 * Prevent unbounded recursion when reclaim operations need to
-> -	 * allocate memory. This might exceed the limits temporarily,
-> -	 * but we prefer facilitating memory reclaim and getting back
-> -	 * under the limit over triggering OOM kills in these cases.
-> -	 */
-> -	if (unlikely(current->flags & PF_MEMALLOC))
-> -		goto force;
-> +		if (batch > nr_pages) {
-> +			batch = nr_pages;
-> +			continue;
-> +		}
->  
-> -	if (unlikely(task_in_memcg_oom(current)))
-> -		goto nomem;
-> +		/*
-> +		 * Prevent unbounded recursion when reclaim operations need to
-> +		 * allocate memory. This might exceed the limits temporarily,
-> +		 * but we prefer facilitating memory reclaim and getting back
-> +		 * under the limit over triggering OOM kills in these cases.
-> +		 */
-> +		if (unlikely(current->flags & PF_MEMALLOC))
-> +			goto force;
->  
-> -	if (!gfpflags_allow_blocking(gfp_mask))
-> -		goto nomem;
-> +		if (unlikely(task_in_memcg_oom(current)))
-> +			goto nomem;
->  
-> -	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
-> -	raised_max_event = true;
-> +		if (!gfpflags_allow_blocking(gfp_mask))
-> +			goto nomem;
->  
-> -	psi_memstall_enter(&pflags);
-> -	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
-> -						    gfp_mask, reclaim_options, NULL);
-> -	psi_memstall_leave(&pflags);
-> +		__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
-> +		raised_max_event = true;
->  
-> -	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
-> -		goto retry;
-> +		psi_memstall_enter(&pflags);
-> +		nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
-> +						    gfp_mask, reclaim_options, NULL);
-> +		psi_memstall_leave(&pflags);
->  
-> -	if (!drained) {
-> -		drain_all_stock(mem_over_limit);
-> -		drained = true;
-> -		goto retry;
-> -	}
-> +		if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
-> +			continue;
->  
-> -	if (gfp_mask & __GFP_NORETRY)
-> -		goto nomem;
-> -	/*
-> -	 * Even though the limit is exceeded at this point, reclaim
-> -	 * may have been able to free some pages.  Retry the charge
-> -	 * before killing the task.
-> -	 *
-> -	 * Only for regular pages, though: huge pages are rather
-> -	 * unlikely to succeed so close to the limit, and we fall back
-> -	 * to regular pages anyway in case of failure.
-> -	 */
-> -	if (nr_reclaimed && nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER))
-> -		goto retry;
-> +		if (!drained) {
-> +			drain_all_stock(mem_over_limit);
-> +			drained = true;
-> +			continue;
-> +		}
->  
-> -	if (nr_retries--)
-> -		goto retry;
-> +		if (gfp_mask & __GFP_NORETRY)
-> +			goto nomem;
-> +		/*
-> +		 * Even though the limit is exceeded at this point, reclaim
-> +		 * may have been able to free some pages.  Retry the charge
-> +		 * before killing the task.
-> +		 *
-> +		 * Only for regular pages, though: huge pages are rather
-> +		 * unlikely to succeed so close to the limit, and we fall back
-> +		 * to regular pages anyway in case of failure.
-> +		 */
-> +		if (nr_reclaimed && nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER))
-> +			continue;
->  
-> -	if (gfp_mask & __GFP_RETRY_MAYFAIL)
-> -		goto nomem;
-> +		if (gfp_mask & __GFP_RETRY_MAYFAIL)
-> +			goto nomem;
->  
-> -	/* Avoid endless loop for tasks bypassed by the oom killer */
-> -	if (passed_oom && task_is_dying())
-> -		goto nomem;
-> +		/* Avoid endless loop for tasks bypassed by the oom killer */
-> +		if (passed_oom && task_is_dying())
-> +			goto nomem;
->  
-> -	/*
-> -	 * keep retrying as long as the memcg oom killer is able to make
-> -	 * a forward progress or bypass the charge if the oom killer
-> -	 * couldn't make any progress.
-> -	 */
-> -	if (mem_cgroup_oom(mem_over_limit, gfp_mask,
-> -			   get_order(nr_pages * PAGE_SIZE))) {
-> -		passed_oom = true;
-> -		nr_retries = MAX_RECLAIM_RETRIES;
-> -		goto retry;
-> +		/*
-> +		 * keep retrying as long as the memcg oom killer is able to make
-> +		 * a forward progress or bypass the charge if the oom killer
-> +		 * couldn't make any progress.
-> +		 */
-> +		if (mem_cgroup_oom(mem_over_limit, gfp_mask,
-> +				   get_order(nr_pages * PAGE_SIZE))) {
-> +			passed_oom = true;
-> +			nr_retries = MAX_RECLAIM_RETRIES;
-> +			continue;
-> +		}
->  	}
->  nomem:
->  	/*
-> -- 
-> 2.52.0
-> 
+Fix this by selecting the objcg by folio_nid() at charge time, and by
+re-deriving it for the destination node in mem_cgroup_migrate() and
+mem_cgroup_replace_folio().
 
+Reported-by: Karl Erik Hofseth <karl.e.hofseth@opoint.com>
+Closes: https://lore.kernel.org/all/anMmd1ADrDVwMO6v@work/
+Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of dying memory cgroup for LRU folios")
+Cc: stable@vger.kernel.org
+Co-developed-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+---
+
+Changes since v2:
+http://lore.kernel.org/20260806165813.2526415-1-shakeel.butt@linux.dev
+
+- Refactor common code between mem_cgroup_replace_folio and mem_cgroup_migrate
+  (Johannes)
+- Always commit the destination node's objcg. (Johannes)
+- In mem_cgroup_replace_folio, force charge based on committed objcg (Johannes)
+- In mem_cgroup_migrate, if destination node's objcg is root, uncharge the
+  source node's objcg. (Johannes)
+
+
+Changes since v1:
+http://lore.kernel.org/20260806061830.3294679-1-shakeel.butt@linux.dev
+
+- In mem_cgroup_migrate, do obj_cgroup_put at the end (Sashiko)
+- Handle scenario where destination node has been reparented to the root but the
+  source node's objcg has not yet (Sashiko)
+- Add comment explaining the race between migration and reparenting (Johannes)
+
+ mm/memcontrol.c | 100 ++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 83 insertions(+), 17 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3057396dda53..7248e7aa4069 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2966,10 +2966,9 @@ struct mem_cgroup *mem_cgroup_from_virt(void *p)
+ 	return folio_memcg_check(virt_to_folio(p));
+ }
+ 
+-static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
++static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg,
++						      int nid)
+ {
+-	int nid = numa_node_id();
+-
+ 	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+ 		struct obj_cgroup *objcg = rcu_dereference(memcg->nodeinfo[nid]->objcg);
+ 
+@@ -2980,12 +2979,13 @@ static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+ 	return NULL;
+ }
+ 
+-static inline struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
++static inline struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *memcg,
++							   int nid)
+ {
+ 	struct obj_cgroup *objcg;
+ 
+ 	rcu_read_lock();
+-	objcg = __get_obj_cgroup_from_memcg(memcg);
++	objcg = __get_obj_cgroup_from_memcg(memcg, nid);
+ 	rcu_read_unlock();
+ 
+ 	return objcg;
+@@ -3029,7 +3029,7 @@ static struct obj_cgroup *current_objcg_update(void)
+ 
+ 		rcu_read_lock();
+ 		memcg = mem_cgroup_from_task(current);
+-		objcg = __get_obj_cgroup_from_memcg(memcg);
++		objcg = __get_obj_cgroup_from_memcg(memcg, numa_node_id());
+ 		rcu_read_unlock();
+ 
+ 		/*
+@@ -5197,7 +5197,7 @@ static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
+ 	int ret = 0;
+ 	struct obj_cgroup *objcg;
+ 
+-	objcg = get_obj_cgroup_from_memcg(memcg);
++	objcg = get_obj_cgroup_from_memcg(memcg, folio_nid(folio));
+ 	/* Do not account at the root objcg level. */
+ 	if (!obj_cgroup_is_root(objcg))
+ 		ret = try_charge_memcg(memcg, gfp, folio_nr_pages(folio));
+@@ -5396,6 +5396,46 @@ void __mem_cgroup_uncharge_folios(struct folio_batch *folios)
+ 		uncharge_batch(&ug);
+ }
+ 
++/*
++ * An LRU folio must hold the objcg belonging to its own node.
++ *
++ * memcg_reparent_objcgs() reparents a dying cgroup one node at a time: the
++ * folios on that node's LRU lists move to the parent and that node's objcg is
++ * redirected to the parent, atomically under the node's lru_lock.
++ * folio_lruvec_lock() relies on this to provide a stable folio<->lruvec
++ * binding. If a folio holds another node's objcg, its list membership and its
++ * lruvec resolution change in separate lock sections, and an LRU operation in
++ * between can re-add the folio to, and strand it on, the LRU list of a dead
++ * memcg.
++ *
++ * So when migration transfers the memcg state to a folio on another node,
++ * re-derive the objcg for the destination node. If the memcg is dying and the
++ * destination node has already been reparented, the lookup walks up to the
++ * nearest live ancestor - which is also where that node's LRU lists went.
++ *
++ * Returns the objcg to commit to @new, with a reference for the caller.
++ */
++static struct obj_cgroup *get_migration_objcg(struct folio *old,
++					      struct folio *new)
++{
++	struct obj_cgroup *old_objcg, *new_objcg;
++	int new_nid = folio_nid(new);
++
++	old_objcg = get_obj_cgroup_from_folio(old);
++
++	if (folio_nid(old) == new_nid)
++		return old_objcg;
++
++	rcu_read_lock();
++	new_objcg = __get_obj_cgroup_from_memcg(obj_cgroup_memcg(old_objcg),
++						new_nid);
++	rcu_read_unlock();
++
++	obj_cgroup_put(old_objcg);
++
++	return new_objcg;
++}
++
+ /**
+  * mem_cgroup_replace_folio - Charge a folio's replacement.
+  * @old: Currently circulating folio.
+@@ -5424,21 +5464,28 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+ 	if (folio_memcg_charged(new))
+ 		return;
+ 
+-	objcg = folio_objcg(old);
+-	VM_WARN_ON_ONCE_FOLIO(!objcg, old);
+-	if (!objcg)
++	VM_WARN_ON_ONCE_FOLIO(!folio_objcg(old), old);
++	if (!folio_objcg(old))
+ 		return;
+ 
++	objcg = get_migration_objcg(old, new);
++
+ 	rcu_read_lock();
+ 	memcg = obj_cgroup_memcg(objcg);
+-	/* Force-charge the new page. The old one will be freed soon */
++
++	/*
++	 * Force-charge the new page. The old one will be freed soon.
++	 *
++	 * The rootness of the committed objcg decides whether the final
++	 * uncharge of @new goes through the page counters (see
++	 * uncharge_folio()); charge them only if the uncharge will.
++	 */
+ 	if (!obj_cgroup_is_root(objcg)) {
+ 		page_counter_charge(&memcg->memory, nr_pages);
+ 		if (do_memsw_account())
+ 			page_counter_charge(&memcg->memsw, nr_pages);
+ 	}
+ 
+-	obj_cgroup_get(objcg);
+ 	commit_charge(new, objcg);
+ 	memcg1_commit_charge(new, memcg);
+ 	rcu_read_unlock();
+@@ -5450,14 +5497,15 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
+  * @new: Replacement folio.
+  *
+  * Transfer the memcg data from the old folio to the new folio for migration.
+- * The old folio's data info will be cleared. Note that the memory counters
+- * will remain unchanged throughout the process.
++ * The old folio's data info will be cleared. The memory counters remain
++ * unchanged, unless the charge moves out of a fully reparented ancestry
++ * and has to be settled (see below).
+  *
+  * Both folios must be locked, @new->mapping must be set up.
+  */
+ void mem_cgroup_migrate(struct folio *old, struct folio *new)
+ {
+-	struct obj_cgroup *objcg;
++	struct obj_cgroup *objcg, *new_objcg;
+ 
+ 	VM_BUG_ON_FOLIO(!folio_test_locked(old), old);
+ 	VM_BUG_ON_FOLIO(!folio_test_locked(new), new);
+@@ -5478,12 +5526,30 @@ void mem_cgroup_migrate(struct folio *old, struct folio *new)
+ 	if (!objcg)
+ 		return;
+ 
+-	/* Transfer the charge and the objcg ref */
+-	commit_charge(new, objcg);
++	new_objcg = get_migration_objcg(old, new);
++
++	/*
++	 * @old was charged through a non-root objcg, so its charge is in the
++	 * page counters. If the re-derivation walked up to the root objcg -
++	 * @old's entire ancestry is dying and already reparented - the final
++	 * uncharge of @new will skip the page counters (see uncharge_folio()).
++	 * Settle them now: this is @old's eventual uncharge, moved up to the
++	 * point where its charge record ends.
++	 */
++	if (obj_cgroup_is_root(new_objcg) && !obj_cgroup_is_root(objcg)) {
++		rcu_read_lock();
++		memcg_uncharge(obj_cgroup_memcg(objcg), folio_nr_pages(old));
++		rcu_read_unlock();
++	}
++
++	commit_charge(new, new_objcg);
+ 
+ 	/* Warning should never happen, so don't worry about refcount non-0 */
+ 	WARN_ON_ONCE(folio_unqueue_deferred_split(old));
+ 	old->memcg_data = 0;
++
++	/* @new holds its own reference now, drop @old's */
++	obj_cgroup_put(objcg);
+ }
+ 
+ DEFINE_STATIC_KEY_FALSE(memcg_sockets_enabled_key);
 -- 
-Michal Hocko
-SUSE Labs
+2.53.0-Meta
+
