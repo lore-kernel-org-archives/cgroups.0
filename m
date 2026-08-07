@@ -1,64 +1,64 @@
-Received: from mail-oo1-f41.google.com (mail-oo1-f41.google.com [209.85.161.41])
+Received: from mail-oo1-f42.google.com (mail-oo1-f42.google.com [209.85.161.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DBA0443AA3
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 20:21:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2A05443E21
+	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 20:21:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786134083; cv=none; b=hSP+zGZKTdkkKWslGQUBQlu5TZgGtHriPYFzrFfu0kdvfZH2oukoraqY51JrOYrbER3L6Tu4XtZO1wA+87zJq/BgfEjsS0FbO4WlWG7pugS5pA4JE1pgxAABYTDNfWn1BpIOi42M+K1IbEkQ3F+61mKFXgRa2yeSl88NrJZ2LPI=
+	t=1786134084; cv=none; b=gx6GwevL/6qOho8ZrYhzkiMcaQU0n7osTrDMNrRWHiTCReRZTuFTjZGI9nkNcCDnMJI0D7XA7OwrBvdDausUrhl7q/bFiinBb1vzCedlNkd/zNEkXrLD0GXDNTzcz+Y627p1IBRqKc8EWjlr7jAAhFCGyium/QanptXfGK4PLzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786134083; c=relaxed/simple;
-	bh=4YHmAs4imI5gKBDc4Wehbn5cIF5tjkqbuwyC0X3KRSI=;
+	s=arc-20240116; t=1786134084; c=relaxed/simple;
+	bh=m1j3khm0CttzgXKBo/Rg7T/3ykhCkrLJzu6QmUaFGDY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iPp87rsZuIzA2A8aBPj55wZ2XYahxPedsFoG70XhXTZ5DctpMUy03Z0UemQazNwQZRxrlklhjOh4XeLavt/brwKLYQLyotAwdYiwufj2rbNbC9McVed9HmiiwGaP0cv6lOgCAq3la9EFPPGgmiOWksNk9nVEBARH6ejKtCCiah8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aJaHmT5o; arc=none smtp.client-ip=209.85.161.41
+	 MIME-Version; b=YVgtSVCFYkg9XdE/5WVsUppsPEvbearfoIsz6H0qzV7IYs+alo/qyZuui9W6ClGEC9Ef8/9X51x8UlfUZp1hR/Zxt8gKZPC1IIjN8TkcV7Weqs0TcI/BPSNJ/k6156bMNtPGsm0auCXxMtL2hS6Ui7sZ02gesD2PXAwHDrLYeU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jaALfnBw; arc=none smtp.client-ip=209.85.161.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aJaHmT5o"
-Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-6ae50ba83efso1424560eaf.0
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 13:21:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jaALfnBw"
+Received: by mail-oo1-f42.google.com with SMTP id 006d021491bc7-6afcf32fb65so1025668eaf.2
+        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 13:21:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786134080; x=1786738880; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786134081; x=1786738881; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=7/o7PyJxYr/auJmws9zryGpCICrELhYgOPRDbTKuSBc=;
-        b=aJaHmT5oyPYDad1NKHaiW0BNFW2HugGkOZeSpMyYtJcyrz8nLE1vCoKTznIdZxMOvB
-         IQQ09H8e404BOub7VB+I13fSbKSpz/AZ1APhY+eYPW5ElLF6PYoC3O1jaKcnA8D9ffs/
-         lpYGA6WXdRgwoBRgQxa/vYKbPUcPTOiXtmle4UssWrHguNwpJyeqPqFFWPnAMqpbgXP8
-         u+wabKckWHK1lj1MZ2LsULNxenxpZp7G6yJ41nke79Z9qOVITz7uPZOhSKHZIAB8eZ/X
-         hpQSNPlGD5Xw3azQ+oueJfiAh6EEol4mWa5cG3RABNOXWqYwcJpWymBCnmhat76uPqGw
-         UISQ==
+        bh=gNurNSPYyJZesKOZSqzZdKIcfvAei88zp/AV04IWMMU=;
+        b=jaALfnBw5s6tdC8C0YBmMa/B4zG27HBNqxv0gNLThRJZrMFL2qrNJ1z1rpRyfTmtbb
+         N55DHFRC9E7L02IskqpOv589uUkfDrWq4ctWIVZp+i3pYmTJ1+ZpxDAb/yHdveLku9Yb
+         H1xktTDLEricz9APSFVSMBumSasz/1LRpgE9x+73kR61FWum2U42QbOsLXny++QeT1zg
+         +1X1eR+wrDkv+gPP5suuPNujALcEGvjnhG/Zz4NWgASmDp3Tx4FRhK9tldj1vyMlcPRq
+         rxugOymphuuiU4Ro5+ZDMDj2c4ussDFp4K9sPBWBYyNb9FMOfVMVkIZFt9G67CPvEZAK
+         HE9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786134080; x=1786738880;
+        d=1e100.net; s=20251104; t=1786134081; x=1786738881;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7/o7PyJxYr/auJmws9zryGpCICrELhYgOPRDbTKuSBc=;
-        b=Rt3SA0oJ6t/3tS6yspkHnTFx/WlcjRb2vqFj6U0R1oUOYFfnRopGRd0vn5K9N385A/
-         /Mb/553G0X/XzGXZvNeqMYv7hwaFwE9g5/7EahMBuKMCGiT45IIBZ/DaUjIpZUFvWqTv
-         ApSBYq8mLuIPCggZpxHrFw7O2LjXc7/07LXhMYlNPzgBc/nQI1z83AvIZdXHVcMzC48A
-         MM9FCpZWwUtfqLap/84F0HETMhFBfNbokojD/qAn11JUb0zr+UT2xLrvIzGhqg6oPAOt
-         CSQ3/aZDId0p2b2xHh+m40tC8ayW2WOhTfNkmogdUSI4v9AMjpKkQvcS5YiSlNOlvL75
-         Nclw==
-X-Forwarded-Encrypted: i=1; AHgh+RoS/tClZVBCjd+a4RXa2CUipJ8jvbbRZXZBkC9Af5DMuiJSV7YBp19ODDYI7vMzyAVgyjyWt/tZ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxs6ODSuJNT74Nnoh+mfgezI3AS5pKJhNttvvDUnZ9p4R1TNfIw
-	AqPiYJhZJzfFLmLNcIkoB+yrsm5e/FUjAdpuUYWrskaciKOP/9tVcW8s
-X-Gm-Gg: AR+sD12qpVioGXCH/x1jBvz4H9Nj+5rmtsqBeY/2g2rj6gY7SF3b1cypBa85KxGEhDj
-	pIRIbgbs5qJSKnRtJfvKhLV0S67fff/QktLjJAAA45Bf+xz37WDx/TjANjAe4zL6iVOmMXY/m2N
-	mDH5cE3de4xwUnaVwaeDG/SiJWfLqGYQcjOOWWG01dkFpdn1FillJXklOXDEEAO6dUGlPbI2os9
-	oNYL3DpAG4CvGCkMdHHc9PgTQPwLDll4Ap0XmXk9Cz35tuC8aah8C0QjX6b0Xuj7dlUBnlRLM7e
-	pLOOtU0zGXphtuq0vH2zT7+4CGY/vbcZwTyZW7hxet58UV5Mge91VTwqAXS1KoItDcb3/37A3TH
-	J6F4h2zA9mKYoG85EblF/C1zLe7YewKsIFDwidZv1Spsa8e3Vo5HoAw9lmOp1rjSv9hgEfhoI+R
-	AyoOKlAcNmlJtIBAXu0B+1gWAJx7SJK0VJnpmid5sS6+sS/iZ62EqNAub5+FimuXZSvgm58w4vX
-	lHMrjf/gX6GsnQx9zY=
-X-Received: by 2002:a05:6820:8c7:b0:6a3:6f5d:4d6c with SMTP id 006d021491bc7-6b044e7bbdfmr825692eaf.6.1786134080128;
-        Fri, 07 Aug 2026 13:21:20 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:12::])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-459f1a9d9b9sm2606796fac.7.2026.08.07.13.21.19
+        bh=gNurNSPYyJZesKOZSqzZdKIcfvAei88zp/AV04IWMMU=;
+        b=h9xaT21QF3SguqagJBKFsoEax2Nm8dJZhp4+/bB8nTapw5KdUnry+klmL2y+L32pzp
+         v8fiqEsP/5icYvDpF5LdI7gnG3yOvWr+vVj2NoP62zSf6q7iLLrL5MGqAbFjuTTSxfZa
+         5nnY7JEujeP4VvCKgDFBX8HMV/osO7d59VJTMSoH6Hug3fV7W/S4YU4EXG7tiJ1ouTrc
+         RddbR9gTaRmeDpXJ9/x1f3ba+imhSCCd0rUWIvPnpBtYTowuEk7qYn/7xEsJ11egyN3O
+         dB5ZucGI/r+wYYarqh/go/JuKTfAm6niJpNCcOmRM34zUB/0bhX2uF3qpIt/WDalSw13
+         KTJw==
+X-Forwarded-Encrypted: i=1; AHgh+Rr27VbmN355Bozj5IXEzS+9wNDdE8AFebaLxgHDEWM6DspWty3eUwPNtHRsrdlbmBKnXuJtygD2@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXfKle/HGC7IcvmMCAaD5sVRX/Xn7Ug9X14J0OyRW5wCntQ74O
+	pzlVXRaHLapuxlyCH2lXx0dyo8FV7TNrzLzWjCfU9LyyFEutEvFlA6HD
+X-Gm-Gg: AR+sD13m6d9euyML/lTddBVE0OrEL4iBKd6ksWqe25xvP6BmP9VQ+TvVegE9G7b22jf
+	Vj2IIbe0wf3SM1dMCprfKSMTMR7RqEDrAOiOEoD3uUtcEjolV/Gqul8xUjR4lHLs8YQc2U7UH1j
+	TKVrdBbS0S5vjWT2XSGFRMqOiFZqjOm6TWqUX513pbg71mQe+V9DdYz83+pOAGx2A2xES6g/2oD
+	UXYFUxK7XNzvN9s0zA6TrH/w24hCws9GeDto/jLsx9Siu39x41uCARW0tbAcwb1+YekffEyMeUP
+	HyDZzvCzqy69iG+FAjrvK5ZMvl3E6+HBxwzS0aslFWCDbG9ZCn+uidgEJhN0e8/C2L+MsTMFta7
+	Bv0y1z1Ngm2Nf5bgNLadNwImlh339Y0KwZccxYLpKFnvEk8SZuPbWt/ZcQKY1cIAqgXs9SlH+98
+	hjKc66tt+zL3iStLViIzpDBMOfyhq//BsJOgubd/lxbnAz4FQuH39haWWBrcEbKFx53oTWxq8kn
+	Elsa2JX+njn2etJwa0=
+X-Received: by 2002:a05:6820:150f:b0:6ab:3c7:da56 with SMTP id 006d021491bc7-6ae96f6cfdbmr12464583eaf.24.1786134081584;
+        Fri, 07 Aug 2026 13:21:21 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:1c::])
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-6b02be475b6sm3130491eaf.11.2026.08.07.13.21.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Aug 2026 13:21:19 -0700 (PDT)
+        Fri, 07 Aug 2026 13:21:21 -0700 (PDT)
 From: Joshua Hahn <joshua.hahnjy@gmail.com>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Gregory Price <gourry@gourry.net>
@@ -105,9 +105,9 @@ Cc: Alistair Popple <apopple@nvidia.com>,
 	linux-kernel@vger.kernel.org,
 	linux-mm@kvack.org,
 	kernel-team@meta.com
-Subject: [RFC PATCH v3 13/14] mm/memcontrol, sched/numa: Gate NUMA promotions into memcg tiers
-Date: Fri,  7 Aug 2026 13:20:56 -0700
-Message-ID: <20260807202059.2620949-14-joshua.hahnjy@gmail.com>
+Subject: [RFC PATCH v3 14/14] mm/page_alloc: steer allocations away from exhausted memory tiers
+Date: Fri,  7 Aug 2026 13:20:57 -0700
+Message-ID: <20260807202059.2620949-15-joshua.hahnjy@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260807202059.2620949-1-joshua.hahnjy@gmail.com>
 References: <20260807202059.2620949-1-joshua.hahnjy@gmail.com>
@@ -119,48 +119,56 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Memory promotions that go through should_numa_migrate_memory determine
-if a promotion should be ratelimited / throttled by checking how much
-headroom there is in the destination node. If there is enough headroom,
-there is no reason to be throttling promotions.
+A memcg only finds out that it is over a tier's limit at
+try_charge_memcg time, after the page has already been allocated on the
+full tier's node. This triggers reclaim to push memory to lower tiers or
+to swap, much like how zone_reclaim_mode triggers reclaim when a node is
+full.
 
-On tiered systems, however, a promotion may trigger reclaim on a node
-that has plenty of promotion headroom since the memcg tier may be at
-the limit. For these allocations, we should make sure that memcg tier
-fullness is also considered when determining whether a promotion should
-be able to go through without getting limited.
+This causes a lot of unnecessary churn. Instead of allocating a page on
+a full tier only to immediately reclaim, make the page allocator
+aware of tier limits at allocation time and steer the first allocation
+attempt to nodes belonging to tiers with tiered limit headroom.
 
-Add an additional condition to check before letting a promotion
-candidate go through un-ratelimited, by checking if the memcg tier is
-already at its limit.
+This only affects the ac->nodemask for the fastpath, meaning if no
+node can satisfy this allocation, it falls back to the caller's nodemask
+and places a page on a full tier, triggering reclaim. Moreover, if it
+turns out that the intersection of the allocation context nodemask and
+the under-limit nodemask is empty, skip the steering.
+
+This steering only affects MIGRATE_MOVABLE allocations. We try not to
+steer kernel allocations using NUMA_NO_NODE which would prefer to remain
+on higher tiers, even if they are full.
+
+This steering also does not affect alloc_pages_bulk_noprof, since
+its callers do not charge their memory allocations to a tier.
 
 No-op unless the system has tiered memcg limits enabled.
 
 Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
 ---
- include/linux/memcontrol.h |  7 +++++++
- kernel/sched/fair.c        |  3 ++-
- mm/memcontrol.c            | 35 +++++++++++++++++++++++++++++++++++
- 3 files changed, 44 insertions(+), 1 deletion(-)
+ include/linux/memcontrol.h |  6 +++++
+ mm/memcontrol.c            | 46 ++++++++++++++++++++++++++++++++++++++
+ mm/page_alloc.c            | 19 +++++++++++++---
+ 3 files changed, 68 insertions(+), 3 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 9c2f11191a499..a7c366b431a0e 100644
+index a7c366b431a0e..b700f3224cbaa 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -654,6 +654,8 @@ static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
- 		page_counter_read(&memcg->memory);
+@@ -655,6 +655,7 @@ static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
  }
  
-+bool mem_cgroup_tier_over_limit(struct folio *folio, int dst_nid);
-+
+ bool mem_cgroup_tier_over_limit(struct folio *folio, int dst_nid);
++bool mem_cgroup_tier_allowed_nodemask(nodemask_t *mask);
+ 
  int __mem_cgroup_charge(struct folio *folio, struct mm_struct *mm, gfp_t gfp);
  
- /**
-@@ -1172,6 +1174,11 @@ static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
+@@ -1179,6 +1180,11 @@ static inline bool mem_cgroup_tier_over_limit(struct folio *folio, int dst_nid)
  	return false;
  }
  
-+static inline bool mem_cgroup_tier_over_limit(struct folio *folio, int dst_nid)
++static inline bool mem_cgroup_tier_allowed_nodemask(nodemask_t *mask)
 +{
 +	return false;
 +}
@@ -168,66 +176,121 @@ index 9c2f11191a499..a7c366b431a0e 100644
  static inline int mem_cgroup_charge(struct folio *folio,
  		struct mm_struct *mm, gfp_t gfp)
  {
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index d78467ec6ee13..397b0f3e67f5f 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -2697,7 +2697,8 @@ bool should_numa_migrate_memory(struct task_struct *p, struct folio *folio,
- 		long nr = folio_nr_pages(folio);
- 
- 		pgdat = NODE_DATA(dst_nid);
--		if (pgdat_free_space_enough(pgdat)) {
-+		if (pgdat_free_space_enough(pgdat) &&
-+		    !mem_cgroup_tier_over_limit(folio, dst_nid)) {
- 			/* workload changed, reset hot threshold */
- 			pgdat->nbp_threshold = 0;
- 			mod_node_page_state(pgdat, PGPROMOTE_CANDIDATE_NRL, nr);
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4dce7c6fefd98..05611a01aa082 100644
+index 05611a01aa082..e499e58baa287 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2590,6 +2590,41 @@ static u64 swap_find_max_overage(struct mem_cgroup *memcg)
- 	return max_overage;
+@@ -2625,6 +2625,52 @@ bool mem_cgroup_tier_over_limit(struct folio *folio, int dst_nid)
+ 	return false;
  }
  
-+bool mem_cgroup_tier_over_limit(struct folio *folio, int dst_nid)
++/*
++ * Returns whether a mem_cgroup is above a tier's limit.
++ * The nodemask becomes populated with nodes that are under their limits.
++ */
++bool mem_cgroup_tier_allowed_nodemask(nodemask_t *mask)
 +{
 +	struct mem_cgroup *memcg;
-+	int dst_slot;
++	int nr_tier_slots;
++	bool restricted = false;
 +
 +	if (!mem_cgroup_tiered_limits())
 +		return false;
 +
-+	dst_slot = nid_tier_slot(dst_nid);
-+	if (nid_tier_slot(folio_nid(folio)) == dst_slot)
-+		return false;
++	nr_tier_slots = mt_nr_tier_slots();
++	*mask = node_states[N_MEMORY];
 +
-+	guard(rcu)();
-+	memcg = folio_memcg(folio);
-+	if (!memcg || mem_cgroup_is_root(memcg))
-+		return false;
++	rcu_read_lock();
++	memcg = active_memcg();
++	if (!memcg && in_task() && current->mm)
++		memcg = mem_cgroup_from_task(rcu_dereference(current->mm->owner));
 +
-+	do {
-+		struct page_counter *tier_counter;
-+		unsigned long limit;
-+
-+		tier_counter = mem_cgroup_tier_counter(memcg, dst_slot);
-+		if (!tier_counter)
++	for (; memcg && !mem_cgroup_is_root(memcg);
++	     memcg = parent_mem_cgroup(memcg)) {
++		if (READ_ONCE(memcg->memory.max) == PAGE_COUNTER_MAX &&
++		    READ_ONCE(memcg->memory.high) == PAGE_COUNTER_MAX)
 +			continue;
 +
-+		limit = min(READ_ONCE(tier_counter->max),
-+			    READ_ONCE(tier_counter->high));
-+		if (page_counter_read(tier_counter) > limit)
-+			return true;
-+	} while ((memcg = parent_mem_cgroup(memcg)) &&
-+		  !mem_cgroup_is_root(memcg));
++		for (int slot = 0; slot < nr_tier_slots; slot++) {
++			struct page_counter *tier = &memcg->tier[slot];
++			unsigned long limit;
 +
-+	return false;
++			limit = min(READ_ONCE(tier->high),
++				    READ_ONCE(tier->max));
++
++			if (page_counter_read(tier) <= limit)
++				continue;
++
++			restricted = true;
++			nodes_andnot(*mask, *mask, *mt_tier_nodes(slot));
++		}
++	}
++	rcu_read_unlock();
++
++	return restricted;
 +}
 +
  /*
   * Get the number of jiffies that we should penalise a mischievous cgroup which
   * is exceeding its memory.high by checking both it and its ancestors.
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 0aeca106a4fde..7ca0acc37d2af 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -5153,7 +5153,7 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
+ 		int preferred_nid, nodemask_t *nodemask,
+ 		struct alloc_context *ac, gfp_t *alloc_gfp,
+-		unsigned int *alloc_flags)
++		unsigned int *alloc_flags, nodemask_t *tier_nodes)
+ {
+ 	ac->highest_zoneidx = gfp_zone(gfp_mask);
+ 	ac->zonelist = node_zonelist(preferred_nid, gfp_mask);
+@@ -5187,6 +5187,17 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
+ 	/* Dirty zone balancing only done in the fast path */
+ 	ac->spread_dirty_pages = (gfp_mask & __GFP_WRITE);
+ 
++	if (mem_cgroup_tiered_limits() && tier_nodes &&
++	    !(gfp_mask & __GFP_THISNODE) &&
++	    ac->migratetype == MIGRATE_MOVABLE &&
++	    mem_cgroup_tier_allowed_nodemask(tier_nodes)) {
++		if (ac->nodemask)
++			nodes_and(*tier_nodes, *tier_nodes, *ac->nodemask);
++		/* tier_nodes must outlive the function call since ac uses it */
++		if (!nodes_empty(*tier_nodes))
++			ac->nodemask = tier_nodes;
++	}
++
+ 	/*
+ 	 * The preferred zone is used for statistics but crucially it is
+ 	 * also used as the starting point for the zonelist iterator. It
+@@ -5269,7 +5280,8 @@ unsigned long alloc_pages_bulk_noprof(gfp_t gfp, int preferred_nid,
+ 
+ 	/* May set ALLOC_NOFRAGMENT, fragmentation will return 1 page. */
+ 	gfp &= gfp_allowed_mask;
+-	if (!prepare_alloc_pages(gfp, 0, preferred_nid, nodemask, &ac, &gfp, &alloc_flags))
++	if (!prepare_alloc_pages(gfp, 0, preferred_nid, nodemask, &ac, &gfp,
++				 &alloc_flags, NULL))
+ 		goto out;
+ 
+ 	/* Find an allowed local zone that meets the low watermark. */
+@@ -5451,6 +5463,7 @@ struct page *__alloc_frozen_pages_noprof(gfp_t gfp, unsigned int order,
+ 		.alloc_flags = alloc_flags,
+ 	};
+ 	unsigned int fastpath_alloc_flags = alloc_flags;
++	nodemask_t tier_nodes;
+ 
+ 	/* Other flags could be supported later if needed. */
+ 	if (WARN_ON(alloc_flags & ~(ALLOC_NOLOCK | ALLOC_NO_CODETAG)))
+@@ -5481,7 +5494,7 @@ struct page *__alloc_frozen_pages_noprof(gfp_t gfp, unsigned int order,
+ 	gfp = current_gfp_context(gfp);
+ 	alloc_gfp = gfp;
+ 	if (!prepare_alloc_pages(gfp, order, preferred_nid, nodemask, &ac,
+-			&alloc_gfp, &fastpath_alloc_flags))
++			&alloc_gfp, &fastpath_alloc_flags, &tier_nodes))
+ 		return NULL;
+ 
+ 	if (!(alloc_flags & ALLOC_NOLOCK)) {
 -- 
 2.53.0-Meta
 
