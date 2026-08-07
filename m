@@ -1,195 +1,373 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68E673B8D70
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 07:21:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3387446E01C
+	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 08:29:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786087307; cv=none; b=YA3Im2PferD+KYS8qbqnHCvcYDVG4RQw3nvxHhXa/b7BnP3/eZIU9tTYQmM2rNvE1OeJeuzkBpY5DqzRmXUB/Juhwdatv7aoktbuop+rTftZMH9z6nizGDtpCPZpFXfG1RXCfF5fULGg65NfedSrdgefMQRXw/nUPkC9PZwZ1vY=
+	t=1786091370; cv=none; b=fBiRAFKu0xxS+7WdmSzJdn7fZjfxHdRHtK4zllVCaaR924nF+XsnLw3NMP2/nsuXtjZuc28ViC8ARiH2FsxRiGTnTpYv+JkrNBsd8+D8cpDVvIaRH2sFT4xkDgjjzc65gtArZ1Uf7/rFrSlL3YmgX0vv+5UwFdtpxdkJGbWQCgs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786087307; c=relaxed/simple;
-	bh=sODOpdzjCpH/tq/ElSBVsdqLUkhfKBufQNYjtkcKSoY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=U7lQYteEBDAIgumIsJsdlwyJXyeH7B3wqJ9wqSfE8Vgs/v4Gk7cOH+sV0aGJ8SePGgkRKKm38NOC12HvkeHVcN0qgCQoPjMcrftXXpsn9PlSf9SLJImJc2JzZNjiz0M5S7QJ5gt+i9NciorlTRGwxIfGpbcetinvbT5XKEGsiPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HNRCUnbF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786091370; c=relaxed/simple;
+	bh=bqt9Yz87RU5nN1l0lkue9RQy5n80oAqd3eB6vqo+x58=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iK0EAWjH+AAh3W6Tszfle61bIa6IaCiEJ/S6waCBIiEJ17X+JQvXW0pCp39fKFCNLDokWJB9mWR87HjwnOCxrENLTI5Jld244FsUSrbN0J2yPwmIsVImlLimuX46QpfJuBrRcd2adn/jkantQE4JgH0kAkiQFZcCdvyWowMzMHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PwRrNkZx; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HNRCUnbF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 359521F00ADF
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 07:21:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786087305;
-	bh=6knPXuawpByGmHYtyjqi3P0YpFZD/HtTUFoZPvYRqx8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=HNRCUnbFaam/k5LgBTYP/e6dtJ7kDEWtYzOhDewwe8Er1hfweJSQYSRyo6dzVkgJQ
-	 eRnrcNOVLNuuVWsQ1aqV5NJ0uAIEDfHGGh+d3ylc39ThDzBeTR0teEYM8wCIJp+SV6
-	 zQ1xH5NBr/Pcs6NuIT1ZoteqSlS8sATsjlD5a+zsl7d/W6wsJjx9AR5C8YfpXVixTq
-	 IYg/kMlenwslbTydnxz5YRtD1jbi6IgpmhtBeYK8h+1oG+UKtsZYeO8kDpPCmJ1w4n
-	 HEXdAMYl6Yio7PLL4ivbbqGxn1hCEXhwMQm8OjUD620gFi38aNjmn+FMP0NRD9VCHm
-	 OSJOF8KAVMxjQ==
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-80e24970f1dso25596897b3.0
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 00:21:45 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RoL18rl6eufgnRbKMfhK6yEsgHJqJ6B5hpUG585bPuVS7sHJa0AmqTZAad5MzH2EMJDj0Q6GFKW@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6hqH5IJq+AjQpe2GlGyD/Imk9uBAvCwB5GY/xV247qRz2wWND
-	wwpHDsg2Id41YMDJBkPZOHfS8SrNzfrXiQ6pE08BptamJYC+zhyl+3tHPNaLhxz2iVuEwQOu8dH
-	fY6R0gA/jqAWUxJRpDtereGqxBCowZgrz8dOUwbjbaQ==
-X-Received: by 2002:a05:690c:b98:b0:820:b24:27c7 with SMTP id
- 00721157ae682-82258a8f2e6mr43057887b3.14.1786087304379; Fri, 07 Aug 2026
- 00:21:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PwRrNkZx"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-3811f512167so3748338a91.3
+        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 01:29:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786091366; x=1786696166; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=jSdehXnGw+ibRHaOVjI8Ioi7JL8VFOTG325yque/uGM=;
+        b=PwRrNkZxxr7ZAIN4c8mDz5cJgDL4UlHoySvCD8ocecXo19/s1vWiJOzs00q3oqcuws
+         1qrr3gmi75RKzZs8GLa30QSUL/4eXH2d0yvJ2PjWl5xW6ndeGLAhAwUqh4PdAwfiavMe
+         3OwOHeyh/m1Yr9Gv62Tb7VoXkyqS3eORFN5Hanh+0uPLkzbX5YbC9r1NVI3NMdBpyBDp
+         wLyo46Xa0fPT8MrgPvufpOjrywysvw83e3JkLkvziBglrukIRY9pxc5rYe0CM/9TVf1u
+         IotZvn6PO+8E1XiU4AiCNxnp7f3AS/0WBOLNM1lR4TuqsP1dw1+T+eD9tRPtZT2+imJN
+         fJng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786091366; x=1786696166;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jSdehXnGw+ibRHaOVjI8Ioi7JL8VFOTG325yque/uGM=;
+        b=RH/L5k6Fbj/sPwNHP7elal07sKVe4xDvM40F3Lyw02rbtiZYTxzhAOmGH5uHg/LYMb
+         weW02xRoXkVNLMvOjqpnMsMElMdndKUwb9z4sLwvlIRHRg+iQb4ltrX+uCGFwc7OS5CQ
+         ttcSkCGCtk84PnkghTjAVWJI7eBNJNNPZA0p28mAnqy4BQcYpp660gRNDORPnnO8uE1v
+         5cxvZX8efWJJ4Kdx3JFqmxr4SAFC0FegdHQyIFyk36XwAFPk4Z2y7/3eYmHl8dAtsalk
+         hLavgxbQlsF5koK6QBX08BamtALz8JgtT+OWAKUoQgDV8dOL7odd+t56TV6VU9xSBYc9
+         cveg==
+X-Forwarded-Encrypted: i=1; AHgh+Rr5XTKUZWE9k2ezyHV7FsPXm24uJtzJKRw916YwjfV6Ie7mVX5tZCjb/Bqsyl8tmnhPlIJ2w3R4@vger.kernel.org
+X-Gm-Message-State: AOJu0YxHJ0ZsXhIUcA1I2JNN8xssAX0BHqD7yFByxnomQOe9DDqlBnnh
+	jWKmDkquN4ORgLso5MrTNcC4wIGUMpOeJENhsvRnZE6rVAo0PU1Kl4qB
+X-Gm-Gg: AR+sD11blyx82g0Bh7xkbXERqOtB326P9uOAEEBgNWNkh3tGahqTeD53PDUuqq1Mve6
+	WvSbjVuEWrrIDadEJomWGhQW/s0QtDYcl7jQusUbn3E3uE8jj3e0Y2AjTLQTY/MF9UIwvL0ax48
+	UG2/mTqkXc6ySKYVbCz930SsNVC5gt/dOXCZRhlmSIvVehWwtbqQ7kWgNvTrWbvM2DU7ZnveWwB
+	oebwSYNJpMfabHX3WAmdT6ML4XCL9BKuPu2XpnzE8ibyM7dprorL+77Hb+/BvAz/rg/U1RsAtLv
+	p8dbXS6tDJc+Su3caKmoIh/88PkIxqBadKaLIe+McHSLxlTXZhO9CGk0/e25B6/rejanjRLhpha
+	3JdjGEQM5Lp+hwra9as4uKWvHh4aVuiyNWWpkCDouAz4yKuaOGjga4wvJrFy6aZzy7XPNaUvsu7
+	aWwgAjPOJN4Sy8BaD+f2AcNMJP2Oc19mX8LVAXnc+T6X6a7MAGJaAGbHMOjAI8dyBH5IZ+CUilO
+	ivogTXML+AFjiDMGx6E0tsj34o1itSHkQ==
+X-Received: by 2002:a17:90b:41:b0:37f:ed7e:7e42 with SMTP id 98e67ed59e1d1-3903c5bd850mr22010506a91.14.1786091366383;
+        Fri, 07 Aug 2026 01:29:26 -0700 (PDT)
+Received: from KASONG-MC4 ([43.132.141.24])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3925ff23539sm1569505a91.11.2026.08.07.01.29.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Aug 2026 01:29:25 -0700 (PDT)
+Date: Fri, 7 Aug 2026 16:29:17 +0800
+From: Kairui Song <ryncsn@gmail.com>
+To: Xueyuan Chen <xueyuan.chen21@gmail.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, 
+	baohua@kernel.org, hannes@cmpxchg.org, youngjun.park@lge.com, 
+	baolin.wang@linux.alibaba.com, hughd@google.com, chrisl@kernel.org, kasong@tencent.com, 
+	shikemeng@huaweicloud.com, nphamcs@gmail.com, baoquan.he@linux.dev, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev, david@kernel.org, 
+	ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, 
+	surenb@google.com, qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
+	weixugc@google.com
+Subject: Re: [RFC PATCH v5 2/4] mm: distinguish large folio swap allocation
+ failures
+Message-ID: <anWAZ3T6Sz8bsKSo@KASONG-MC4>
+References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
+ <20260730122304.2496440-3-xueyuan.chen21@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260806184254.3790858-1-nphamcs@gmail.com> <6a756c71.01d0871a.3a0d52.003a.GAE@google.com>
-In-Reply-To: <6a756c71.01d0871a.3a0d52.003a.GAE@google.com>
-From: Chris Li <chrisl@kernel.org>
-Date: Fri, 7 Aug 2026 00:21:33 -0700
-X-Gmail-Original-Message-ID: <CACePvbVKpkyV7KpUoiYPTUN0MgEcRUzZL71qTL5ePyjHTA3Kbg@mail.gmail.com>
-X-Gm-Features: AUfX_mztVbvHM-WKo6lxh0LLm1G5XKwrWW650OzZbqB3e06Q5YutiaN72WNICvM
-Message-ID: <CACePvbVKpkyV7KpUoiYPTUN0MgEcRUzZL71qTL5ePyjHTA3Kbg@mail.gmail.com>
-Subject: Re: [syzbot ci] Re: Virtual Swap Space (Swap Table Edition)
-To: Nhat Pham <nphamcs@gmail.com>
-Cc: akpm@linux-foundation.org, axelrasmussen@google.com, baohua@kernel.org, 
-	baoquan.he@linux.dev, cgroups@vger.kernel.org, chengming.zhou@linux.dev, 
-	corbet@lwn.net, david@kernel.org, gourry@gourry.net, hannes@cmpxchg.org, 
-	haowenchao22@gmail.com, kasong@tencent.com, kernel-team@meta.com, 
-	liam@infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, ljs@kernel.org, mhocko@kernel.org, muchun.song@linux.dev, 
-	qi.zheng@linux.dev, riel@surriel.com, roman.gushchin@linux.dev, 
-	rppt@kernel.org, shakeel.butt@linux.dev, shikemeng@huaweicloud.com, 
-	surenb@google.com, vbabka@kernel.org, weixugc@google.com, yosry@kernel.org, 
-	youngjun.park@lge.com, yuanchu@google.com, syzbot@lists.linux.dev, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260730122304.2496440-3-xueyuan.chen21@gmail.com>
 
-Hi Nhat,
-
-On Thu, Aug 6, 2026 at 10:26=E2=80=AFPM syzbot ci
-<syzbot+cif942a042aaa8793c@syzkaller.appspotmail.com> wrote:
->
-> syzbot ci has tested the following series
->
-> [v3] Virtual Swap Space (Swap Table Edition)
-> https://lore.kernel.org/all/20260806184254.3790858-1-nphamcs@gmail.com
-> * [PATCH v3 01/11] mm, swap: add virtual swap device infrastructure
-> * [PATCH v3 02/11] mm, swap: support zswap and zeroswap as vswap backends
-> * [PATCH v3 03/11] mm, swap: prepare the swap IO path for vswap
-> * [PATCH v3 04/11] mm, swap: support physical swap as a vswap backend
-> * [PATCH v3 05/11] mm, swap: enable THP swapin for vswap entries
-> * [PATCH v3 06/11] mm, swap: write back vswap zswap entries to physical s=
-wap
-> * [PATCH v3 07/11] mm, swap: reclaim physical slots backing cache-only vs=
-wap entries
-> * [PATCH v3 08/11] mm, swap: only charge physical swap entries
-> * [PATCH v3 09/11] mm, swap: add debugfs counters for vswap
-> * [PATCH v3 10/11] mm, swap: defer memcg_table allocation for physical sw=
-ap clusters
-> * [PATCH v3 11/11] mm, swap: widen swap_info_struct max/pages to unsigned=
- long
->
-> and found the following issue:
-> KASAN: null-ptr-deref Read in swap_entry_backend_has_flag
->
-> Full report is available here:
-> https://ci.syzbot.org/series/e7da1097-3230-4e50-80cb-1dfafeebea40
-
-Please take a look at the syzbot report and let us know what you think.
-
-Chris
-
->
-> ***
->
-> KASAN: null-ptr-deref Read in swap_entry_backend_has_flag
->
-> tree:      linux-next
-> URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/next/=
-linux-next
-> base:      bacc32cc7de65ffff70080a48eb294f89e434d5e
-> arch:      amd64
-> compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~e=
-xp1~20260613092250.77), Debian LLD 22.1.8
-> config:    https://ci.syzbot.org/builds/4f943657-9481-4637-9b1f-9be1bff18=
-f92/config
-> syz repro: https://ci.syzbot.org/findings/f6c4f1ab-951c-4759-b397-e22c23c=
-3bf32/syz_repro
->
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> BUG: KASAN: null-ptr-deref in instrument_atomic_read include/linux/instru=
-mented.h:82 [inline]
-> BUG: KASAN: null-ptr-deref in atomic_long_read include/linux/atomic/atomi=
-c-instrumented.h:3188 [inline]
-> BUG: KASAN: null-ptr-deref in __vtable_get mm/vswap.h:147 [inline]
-> BUG: KASAN: null-ptr-deref in vswap_to_phys mm/vswap.h:197 [inline]
-> BUG: KASAN: null-ptr-deref in swap_entry_backend_has_flag+0xfe/0x220 mm/v=
-swap.h:441
-> Read of size 8 at addr 0000000000000000 by task syz.2.20/5818
->
-> CPU: 1 UID: 0 PID: 5818 Comm: syz.2.20 Not tainted syzkaller #0 PREEMPT(f=
-ull)
-> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.=
-16.2-1 04/01/2014
-> Call Trace:
->  <TASK>
->  dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
->  kasan_report+0x117/0x150 mm/kasan/report.c:595
->  check_region_inline mm/kasan/generic.c:-1 [inline]
->  kasan_check_range+0x264/0x2c0 mm/kasan/generic.c:200
->  instrument_atomic_read include/linux/instrumented.h:82 [inline]
->  atomic_long_read include/linux/atomic/atomic-instrumented.h:3188 [inline=
-]
->  __vtable_get mm/vswap.h:147 [inline]
->  vswap_to_phys mm/vswap.h:197 [inline]
->  swap_entry_backend_has_flag+0xfe/0x220 mm/vswap.h:441
->  do_swap_page+0x3c0/0x5620 mm/memory.c:4975
->  __collapse_huge_page_swapin mm/khugepaged.c:1202 [inline]
->  collapse_huge_page mm/khugepaged.c:1325 [inline]
->  mthp_collapse mm/khugepaged.c:1524 [inline]
->  collapse_scan_pmd mm/khugepaged.c:1786 [inline]
->  collapse_single_pmd+0x24c6/0x3da0 mm/khugepaged.c:2803
->  madvise_collapse+0x2cf/0x790 mm/khugepaged.c:3237
->  madvise_vma_behavior+0x115f/0x4170 mm/madvise.c:1363
->  madvise_walk_vmas+0x576/0xb00 mm/madvise.c:1712
->  madvise_do_behavior+0x385/0x540 mm/madvise.c:1907
->  do_madvise+0x327/0x3a0 mm/madvise.c:2005
->  __do_sys_madvise mm/madvise.c:2014 [inline]
->  __se_sys_madvise mm/madvise.c:2012 [inline]
->  __x64_sys_madvise+0xa6/0xc0 mm/madvise.c:2012
->  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->  do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> RIP: 0033:0x7fbcad79e019
-> Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f=
-7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff=
- ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-> RSP: 002b:00007fbcae5c4028 EFLAGS: 00000246 ORIG_RAX: 000000000000001c
-> RAX: ffffffffffffffda RBX: 00007fbcada25fa0 RCX: 00007fbcad79e019
-> RDX: 0000000000000019 RSI: 0000000000c00000 RDI: 0000200000000000
-> RBP: 00007fbcad83500c R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-> R13: 00007fbcada26038 R14: 00007fbcada25fa0 R15: 00007fff095fa0b8
->  </TASK>
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->
->
-> ***
->
-> If these findings have caused you to resend the series or submit a
-> separate fix, please add the following tag to your commit message:
->   Tested-by: syzbot@syzkaller.appspotmail.com
->
+On Thu, Jul 30, 2026 at 08:23:02PM +0800, Xueyuan Chen wrote:
+> folio_alloc_swap() reports most allocation failures with a generic
+> negative error code. Reclaim cannot tell whether splitting a large folio
+> could make progress or whether there is no backing space at all.
+> 
+> Keep the global free swap count and the remaining hierarchical memcg swap
+> margin as separate inputs. The memcg charge path reports only its own
+> margin; folio_alloc_swap() combines the two layers when classifying an
+> allocation failure.
+> 
+> Return -E2BIG for large folios when a smaller allocation might still fit,
+> -ENOSPC when no global swap space is available, and -ENOMEM when the
+> failure is not helped by splitting.
+> 
+> For early large-folio rejections, check global and memcg swap availability
+> instead of returning -E2BIG unconditionally. On a memcg charge failure,
+> swap slot allocation has already succeeded, so use the remaining memcg
+> margin to decide whether a smaller charge might fit.
+> 
+> This only refines folio_alloc_swap() return codes. The reclaim callers are
+> updated separately.
+> 
+> Suggested-by: Barry Song <baohua@kernel.org>
+> Suggested-by: Youngjun Park <youngjun.park@lge.com>
+> Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
 > ---
-> This report is generated by a bot. It may contain errors.
-> syzbot ci engineers can be reached at syzkaller@googlegroups.com.
->
-> To test a patch for this bug, please reply with `#syz test`
-> (should be on a separate line).
->
-> The patch should be attached to the email.
-> Note: arguments like custom git repos and branches are not supported.
+>  include/linux/swap.h | 16 ++++++++++++----
+>  mm/memcontrol.c      | 32 +++++++++++++++++++++++++++++++-
+>  mm/swapfile.c        | 32 ++++++++++++++++++++++++--------
+>  3 files changed, 67 insertions(+), 13 deletions(-)
+> 
+
+Hello Xueyuan,
+
+Thanks for the patch!
+
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 0544b2ec4c56..7d12058174ae 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -509,12 +509,13 @@ static inline void folio_throttle_swaprate(struct folio *folio, gfp_t gfp)
+>  #endif
+>  
+>  #if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
+> -int __mem_cgroup_try_charge_swap(struct folio *folio);
+> -static inline int mem_cgroup_try_charge_swap(struct folio *folio)
+> +int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margin);
+> +static inline int mem_cgroup_try_charge_swap(struct folio *folio,
+> +					     long *swap_margin)
+
+Am I the only one that feel this returning argument is a bit ugly? See below..
+
+> +/**
+> + * mem_cgroup_get_folio_swap_margin - get a folio's memcg swap margin
+> + * @folio: folio whose memcg margin is queried
+> + *
+> + * Return: Remaining chargeable pages in the folio's memcg hierarchy.
+> + */
+> +long mem_cgroup_get_folio_swap_margin(struct folio *folio)
+> +{
+> +	long swap_margin = PAGE_COUNTER_MAX;
+> +	struct mem_cgroup *memcg;
+> +	struct obj_cgroup *objcg;
+> +
+> +	if (mem_cgroup_disabled() || do_memsw_account())
+> +		return swap_margin;
+> +
+> +	objcg = folio_objcg(folio);
+> +	if (!objcg)
+> +		return swap_margin;
+> +
+> +	rcu_read_lock();
+> +	memcg = obj_cgroup_memcg(objcg);
+> +	swap_margin = page_counter_margin(&memcg->swap);
+> +	rcu_read_unlock();
+> +
+> +	return swap_margin;
+> +}
+> +
+
+Will is be good if we just always check the margin use this helper
+on alloc failure? Alloc failure should be a rather cold path I think?
+
+>  bool mem_cgroup_swap_full(struct folio *folio)
+>  {
+>  	struct mem_cgroup *memcg;
+> diff --git a/mm/swapfile.c b/mm/swapfile.c
+> index 70b90fa9c2a0..ae62c9f9c0f2 100644
+> --- a/mm/swapfile.c
+> +++ b/mm/swapfile.c
+> @@ -1735,23 +1735,28 @@ static int swap_dup_entries_cluster(struct swap_info_struct *si,
+>   * swap cache.
+>   *
+>   * Context: Caller needs to hold the folio lock.
+> - * Return: Whether the folio was added to the swap cache.
+> + * Return: %0 on success, %-E2BIG if splitting the folio might allow swapout,
+> + * %-ENOSPC if no global swap space is available, or %-ENOMEM if splitting
+> + * would not help.
+>   */
+>  int folio_alloc_swap(struct folio *folio)
+>  {
+>  	unsigned int order = folio_order(folio);
+>  	unsigned int size = 1 << order;
+> +	long swap_margin = PAGE_COUNTER_MAX;
+>  
+>  	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+>  	VM_BUG_ON_FOLIO(!folio_test_uptodate(folio), folio);
+>  
+>  	if (order) {
+>  		/*
+> -		 * Reject large allocation when THP_SWAP is disabled,
+> -		 * the caller should split the folio and try again.
+> +		 * Reject large allocation when THP_SWAP is disabled. Check below
+> +		 * whether splitting and retrying can make progress.
+>  		 */
+> -		if (!IS_ENABLED(CONFIG_THP_SWAP))
+> -			return -EAGAIN;
+> +		if (!IS_ENABLED(CONFIG_THP_SWAP)) {
+> +			swap_margin = mem_cgroup_get_folio_swap_margin(folio);
+> +			goto failed;
+> +		}
+>  
+>  		/*
+>  		 * Allocation size should never exceed cluster size
+> @@ -1759,7 +1764,8 @@ int folio_alloc_swap(struct folio *folio)
+>  		 */
+>  		if (size > SWAPFILE_CLUSTER) {
+>  			VM_WARN_ON_ONCE(1);
+> -			return -EINVAL;
+> +			swap_margin = mem_cgroup_get_folio_swap_margin(folio);
+> +			goto failed;
+>  		}
+>  	}
+>  
+> @@ -1775,13 +1781,23 @@ int folio_alloc_swap(struct folio *folio)
+>  	}
+>  
+>  	/* Need to call this even if allocation failed, for MEMCG_SWAP_FAIL. */
+> -	if (unlikely(mem_cgroup_try_charge_swap(folio)))
+> +	if (unlikely(mem_cgroup_try_charge_swap(folio, &swap_margin))) {
+>  		swap_cache_del_folio(folio);
+> +		return order && swap_margin > 0 ? -E2BIG : -ENOMEM;
+> +	}
+>  
+>  	if (unlikely(!folio_test_swapcache(folio)))
+> -		return -ENOMEM;
+> +		goto failed;
+>  
+>  	return 0;
+> +
+> +failed:
+> +	if (get_nr_swap_pages() <= 0)
+> +		return -ENOSPC;
+> +	if (swap_margin <= 0)
+> +		return -ENOMEM;
+> +
+> +	return order ? -E2BIG : -ENOMEM;
+>  }
+
+How do you think if we apply this on top of this? (Not tested)
+Should be no behavior change but outside the existing races, the margin
+read moves from charge time to failure classification time, a small
+TOCTOU, which the original also has but in a different way.
+
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 7d6216c8b830..dcf01d4c5e1b 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -490,13 +490,12 @@ static inline void folio_throttle_swaprate(struct folio *folio, gfp_t gfp)
+ #endif
+ 
+ #if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
+-int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margin);
+-static inline int mem_cgroup_try_charge_swap(struct folio *folio,
+-					     long *swap_margin)
++int __mem_cgroup_try_charge_swap(struct folio *folio);
++static inline int mem_cgroup_try_charge_swap(struct folio *folio)
+ {
+ 	if (mem_cgroup_disabled())
+ 		return 0;
+-	return __mem_cgroup_try_charge_swap(folio, swap_margin);
++	return __mem_cgroup_try_charge_swap(folio);
+ }
+ 
+ extern void __mem_cgroup_uncharge_swap(unsigned short id, unsigned int nr_pages);
+@@ -511,8 +510,7 @@ long mem_cgroup_get_folio_swap_margin(struct folio *folio);
+ extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+ extern bool mem_cgroup_swap_full(struct folio *folio);
+ #else
+-static inline int mem_cgroup_try_charge_swap(struct folio *folio,
+-					     long *swap_margin)
++static inline int mem_cgroup_try_charge_swap(struct folio *folio)
+ {
+ 	return 0;
+ }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b4c65ccf3538..d89054dd96a8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5650,13 +5650,12 @@ int __init mem_cgroup_init(void)
+ /**
+  * __mem_cgroup_try_charge_swap - try charging swap space for a folio
+  * @folio: folio being added to swap
+- * @swap_margin: remaining memcg swap margin if allocation or charge fails
+  *
+  * Try to charge @folio's memcg for the swap space at folio->swap.
+  *
+  * Returns 0 on success, -ENOMEM on failure.
+  */
+-int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margin)
++int __mem_cgroup_try_charge_swap(struct folio *folio)
+ {
+ 	unsigned int nr_pages = folio_nr_pages(folio);
+ 	struct swap_cluster_info *ci;
+@@ -5675,7 +5674,6 @@ int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margin)
+ 	rcu_read_lock();
+ 	memcg = obj_cgroup_memcg(objcg);
+ 	if (!folio_test_swapcache(folio)) {
+-		*swap_margin = page_counter_margin(&memcg->swap);
+ 		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
+ 		rcu_read_unlock();
+ 		return 0;
+@@ -5689,7 +5687,6 @@ int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margin)
+ 	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
+ 		memcg_memory_event(memcg, MEMCG_SWAP_MAX);
+ 		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
+-		*swap_margin = page_counter_margin(counter);
+ 		mem_cgroup_private_id_put(memcg, nr_pages);
+ 		return -ENOMEM;
+ 	}
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 5d8d04576c13..09760985b911 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -1756,7 +1756,6 @@ int folio_alloc_swap(struct folio *folio)
+ {
+ 	unsigned int order = folio_order(folio);
+ 	unsigned int size = 1 << order;
+-	long swap_margin = PAGE_COUNTER_MAX;
+ 
+ 	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+ 	VM_BUG_ON_FOLIO(!folio_test_uptodate(folio), folio);
+@@ -1766,10 +1765,8 @@ int folio_alloc_swap(struct folio *folio)
+ 		 * Reject large allocation when THP_SWAP is disabled. Check below
+ 		 * whether splitting and retrying can make progress.
+ 		 */
+-		if (!IS_ENABLED(CONFIG_THP_SWAP)) {
+-			swap_margin = mem_cgroup_get_folio_swap_margin(folio);
++		if (!IS_ENABLED(CONFIG_THP_SWAP))
+ 			goto failed;
+-		}
+ 
+ 		/*
+ 		 * Allocation size should never exceed cluster size
+@@ -1777,7 +1774,6 @@ int folio_alloc_swap(struct folio *folio)
+ 		 */
+ 		if (size > SWAPFILE_CLUSTER) {
+ 			VM_WARN_ON_ONCE(1);
+-			swap_margin = mem_cgroup_get_folio_swap_margin(folio);
+ 			goto failed;
+ 		}
+ 	}
+@@ -1794,10 +1790,8 @@ int folio_alloc_swap(struct folio *folio)
+ 	}
+ 
+ 	/* Need to call this even if allocation failed, for MEMCG_SWAP_FAIL. */
+-	if (unlikely(mem_cgroup_try_charge_swap(folio, &swap_margin))) {
++	if (unlikely(mem_cgroup_try_charge_swap(folio)))
+ 		swap_cache_del_folio(folio);
+-		return order && swap_margin > 0 ? -E2BIG : -ENOMEM;
+-	}
+ 
+ 	if (unlikely(!folio_test_swapcache(folio)))
+ 		goto failed;
+@@ -1807,7 +1801,7 @@ int folio_alloc_swap(struct folio *folio)
+ failed:
+ 	if (get_nr_swap_pages() <= 0)
+ 		return -ENOSPC;
+-	if (swap_margin <= 0)
++	if (mem_cgroup_get_folio_swap_margin(folio) <= 0)
+ 		return -ENOMEM;
+ 
+ 	return order ? -E2BIG : -ENOMEM;
+
