@@ -1,100 +1,162 @@
-Received: from mail-qv1-f47.google.com (mail-qv1-f47.google.com [209.85.219.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C063876D7
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 21:06:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B023F328B
+	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 23:11:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786136811; cv=none; b=n+JYfQ2t61Es0w87BG0ILaTeKTwnDUlJZt4GaJcTOuMjxxaSw9sX22gxf6AL2zfmfyeqfLM2mDU0luzU4N5p2LSVFAm0avQnTQ4cB/Ww5fd8O5QV3XtUrtsKjgScUa5DVvq+vohQtTJYz3D+ePUxDPHSaCG03KN/3UB8y/4R1Tg=
+	t=1786144265; cv=none; b=J/IERcI2o27nU//QuvvJPuAuE7rBA1aiDQmIZroWsigM803Q4AiSnkGa7EY7XoG/mAtfbJzu0kbAxXVZVSctlBml4AOiuEmAu4xZbp6FMrOU0SIQMSFe/C+IEtAQqJLeKnKOyb086Ydp9rbcQN7DcTyhT5HD+GFG39D2RfNfXMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786136811; c=relaxed/simple;
-	bh=4HDxV8AOnVYHdrgs0ibOVVOJXW1dukzUfV+AYeW4k1U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SbfIvrjRbknptrVlw0LgULFgejyVfXALtzTZWKV8CRM1SRaRgqIwlQFn3uJ2FIv+VF/FE7bsCBvEcOCeY03L/PeVLHN2uTXhEqbD0orZ4/Zw0/Nwb8z6i7LSJEySfsaQpg9IOGPhD4sfswfmqVJVncb9q8DOhUsM3W28t+J5M2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=gcaMQRk+; arc=none smtp.client-ip=209.85.219.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	s=arc-20240116; t=1786144265; c=relaxed/simple;
+	bh=hswY0Dk1EOwpmmuqdfk2+MSA4QFgXsp064Ua4y3+Zng=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QGtN+hgcUU5vupEzN2hqci5m6F3Cwn/MRmTg9SnKeOUQZW0hjCsBGM6rRD2XfQg1BExQ9j4Tm5gNr4BoPKkXcJePHkDMPPaH7NoY4oYhs83lMaikzuK2kF4rCZwTJ1dRtn5xWgr/XfjTa2cU6cHy5Iks6nJ0Gfimd9nWhMOX/gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HWMWqjWG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="gcaMQRk+"
-Received: by mail-qv1-f47.google.com with SMTP id 6a1803df08f44-8f18d92172aso38778186d6.2
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 14:06:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1786136808; x=1786741608; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=4HDxV8AOnVYHdrgs0ibOVVOJXW1dukzUfV+AYeW4k1U=;
-        b=gcaMQRk+/mKYs2TS/2kOOMwl9eaubMLIg8e54DEz+SU3tWtdJ9Kb2Z4gKrZXQRCUP2
-         wsJo3WABgMXO8eZ6MxUf/mZHBPFsPpTvLf0P/SyPAIelL5Wj8sQ+SQ9yUaRGvn6C2MeO
-         yMftjsgYDp0oDbDfxvcmlq6dTVxDl2ygVI0eZ1B+oFS0Fz8RE2LATY8NY/pQgqXDUOt6
-         8qdIH4qbxmzv93rxf0cdhJFP9H8RRupBNh0hUFqRQsp0STNtWbeN3ohBK17rfWrwPAg3
-         ymwhE4c8s7XhjXUfxlXidOg3jEOUNQqe4fPURQtzEYJ027AuCrFT8eftLlVRjqHtBw86
-         p1DQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786136808; x=1786741608;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=4HDxV8AOnVYHdrgs0ibOVVOJXW1dukzUfV+AYeW4k1U=;
-        b=DrrFaZWrDYKHlnCC1sTaTLtfDiB9aXDbTYwVtIALbZKgLPu+TGgFX+VQVkLHCwKhBM
-         jXdJ2dgUTz08HNP732L+WSN5yX3ySlLhVf2NJo9UhWg1W5tmrRHYrXEJyOSaXqTcl+Hr
-         3VPBoDwmp9CeYCWRWR466vKYWG/tzjVbUK/QT3Z6RaRg4UNWt31lq579yy/qqCqpJJqE
-         eoem8a2/YYPHhA45jTVgF+Sl6YaN4mabVZnOwEAzupylVl9Hqz0pKsuxbFK4cC5dzjo3
-         NU/GWZeVlwHZEPZO/5Eo2hr4COpjMBTIvAQ4BJxy4QYjq62/xh5pwCI/zzSMuGsIuIWn
-         k4tA==
-X-Forwarded-Encrypted: i=1; AHgh+RrTGZ5mKJeBuBVkwSD+385gqtlbHrKCIe5N8OUaMde4yNT8yaM5RMW7l4T5IXtpt8XyD1wC31Ch@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy2RL4QSI3mnXyo3OmkHivyvl+aEX5BkVYyjPhhNzVNL44vts88
-	pyY8RcyK83CfVQeknaWTq50frbIwaxMvbjNA0UWVQoFDU31MpypaTsLNhzzvmtrO8ac=
-X-Gm-Gg: AR+sD10kIqiC0PAbi/F7Jadva3m94M1bb6HS/orPousmW9Y/4mZ9af62NALxkMFhkzd
-	YfXeBZayDLeIBDh+SxW2pA5quiAxY2d1fS+ejdYXPvlu05Lu7dKDPn9aw00P8z7xac3+Azgw85b
-	hgeGq8MeRQ9oYLvMeg0XWhH6ZfyAZO762jT0IwPp0Hfiww55KZpdSHtXz1MzoCgzK89Nifg3kGo
-	Oe4lgIi0dUhEMja3K1qUTNnWT+8IifGVA4KGV0+8JV16wcCv4TioB6/Kybr2o2vW5w2O/MXybY8
-	h7qiyE3i6wGew9yrc7JTa779pjbRw1C2hdpTcY6yYDpr0Q1Lh0aUgs+gyR+pAu/DdxOFkZ2p4d6
-	yOIV6ET/gB4txjqIBc/X/UeZmceoZ94wARACWNzO7SPfHIpAbp3tfD1qtuNEH7dIFkefbEmLM+F
-	AnvKVjicGteYY4MEpRdg5OkGfvPkVmErEPeW6HCxe1OY0L5DwYw88Tvzh+3VQ=
-X-Received: by 2002:a05:622a:2448:b0:51c:1117:c79 with SMTP id d75a77b69052e-52d0b193284mr158320901cf.24.1786136807783;
-        Fri, 07 Aug 2026 14:06:47 -0700 (PDT)
-Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52d165fc55fsm19974341cf.25.2026.08.07.14.06.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Aug 2026 14:06:46 -0700 (PDT)
-Date: Fri, 7 Aug 2026 17:06:45 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Kairui Song <ryncsn@gmail.com>
-Cc: Xueyuan Chen <xueyuan.chen21@gmail.com>, akpm@linux-foundation.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, baohua@kernel.org,
-	youngjun.park@lge.com, baolin.wang@linux.alibaba.com,
-	hughd@google.com, chrisl@kernel.org, kasong@tencent.com,
-	shikemeng@huaweicloud.com, nphamcs@gmail.com, baoquan.he@linux.dev,
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, david@kernel.org, ljs@kernel.org,
-	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org,
-	surenb@google.com, qi.zheng@linux.dev, axelrasmussen@google.com,
-	yuanchu@google.com, weixugc@google.com
-Subject: Re: [RFC PATCH v5 2/4] mm: distinguish large folio swap allocation
- failures
-Message-ID: <anZI5dXe2YhLoR1a@cmpxchg.org>
-References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
- <20260730122304.2496440-3-xueyuan.chen21@gmail.com>
- <anWAZ3T6Sz8bsKSo@KASONG-MC4>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HWMWqjWG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1A431F01559
+	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 23:11:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786144262;
+	bh=GjEUQuQkEGtfQk63ntfLN6GvmM6krYsFGwZAiVs7jkg=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=HWMWqjWGaQvrvtZg4yyYY+2UhEMePhzJsXIWpCe0IpuymIFKD8Dykdgjh69pg8Yyn
+	 zG535S42E8iw6Z48r4VJGV7uj3N1pRruMJCiIIDM1Neb4eMg4PlTRMFBksypPwLSjq
+	 U/YkLHcJYa2vwgKmwRorQksoW535WcEPrXz9dM8Q+QWAOIqNGGs1aOwe0CCTq3WtUW
+	 Mgsg9njBgpCtdRuP/qRWmuSgzVHrFXxWMQ34QZfjg64NLWsaX7+VXsYBkoJneyTkzC
+	 Mw6cz0lTNb+JcntVHU5YIfFzg0od7fJNqKCrndBL0EFCT9cWGuIuU1WPfvL2pxkI6v
+	 24e0hCwlLhkSg==
+Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-92f03daaa97so3226385a.2
+        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 16:11:02 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RosjbXniW7gEG4uEtnskL5kHu/UKDOeKAMFY5KuFyCmAdbKRIo+KtYZv5MRhbEdO3pmarZgZ9QS@vger.kernel.org
+X-Gm-Message-State: AOJu0YxRE07TSmoTujyIm9tTcHpDUPqLB39zjlsFenwIcOA5q2iZG1nQ
+	lVB0xorfPcv39c79vDx/I44r5mX8YSsurB8j/aOpsYWMGhycOVjMqMQNgjTQ33ee5pBzASVGZPp
+	XxtasGEHK5J2fN429JHNKLvGWENNL5bU=
+X-Received: by 2002:a05:620a:28cd:b0:925:56bc:b8bb with SMTP id
+ af79cd13be357-93648fafb5bmr2749977885a.9.1786144262076; Fri, 07 Aug 2026
+ 16:11:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
+ <20260730122304.2496440-3-xueyuan.chen21@gmail.com> <anWAZ3T6Sz8bsKSo@KASONG-MC4>
 In-Reply-To: <anWAZ3T6Sz8bsKSo@KASONG-MC4>
+From: Barry Song <baohua@kernel.org>
+Date: Sat, 8 Aug 2026 07:10:48 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4wL0fiVji16XCb37XYZh3s8RetndxPq76d=whhaxH4tcA@mail.gmail.com>
+X-Gm-Features: AUfX_mxeQ7BnSG0as7KL-BR2yRh5hwB974upCVTv4g3-H2SP8bkySwta4PXLc40
+Message-ID: <CAGsJ_4wL0fiVji16XCb37XYZh3s8RetndxPq76d=whhaxH4tcA@mail.gmail.com>
+Subject: Re: [RFC PATCH v5 2/4] mm: distinguish large folio swap allocation failures
+To: Kairui Song <ryncsn@gmail.com>
+Cc: Xueyuan Chen <xueyuan.chen21@gmail.com>, akpm@linux-foundation.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, 
+	hannes@cmpxchg.org, youngjun.park@lge.com, baolin.wang@linux.alibaba.com, 
+	hughd@google.com, chrisl@kernel.org, kasong@tencent.com, 
+	shikemeng@huaweicloud.com, nphamcs@gmail.com, baoquan.he@linux.dev, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	muchun.song@linux.dev, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
+	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, qi.zheng@linux.dev, 
+	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Aug 07, 2026 at 04:29:17PM +0800, Kairui Song wrote:
-> Am I the only one that feel this returning argument is a bit ugly? See below..
-
+On Fri, Aug 7, 2026 at 4:29=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrote=
+:
+>
+> On Thu, Jul 30, 2026 at 08:23:02PM +0800, Xueyuan Chen wrote:
+> > folio_alloc_swap() reports most allocation failures with a generic
+> > negative error code. Reclaim cannot tell whether splitting a large foli=
+o
+> > could make progress or whether there is no backing space at all.
+> >
+> > Keep the global free swap count and the remaining hierarchical memcg sw=
+ap
+> > margin as separate inputs. The memcg charge path reports only its own
+> > margin; folio_alloc_swap() combines the two layers when classifying an
+> > allocation failure.
+> >
+> > Return -E2BIG for large folios when a smaller allocation might still fi=
+t,
+> > -ENOSPC when no global swap space is available, and -ENOMEM when the
+> > failure is not helped by splitting.
+> >
+> > For early large-folio rejections, check global and memcg swap availabil=
+ity
+> > instead of returning -E2BIG unconditionally. On a memcg charge failure,
+> > swap slot allocation has already succeeded, so use the remaining memcg
+> > margin to decide whether a smaller charge might fit.
+> >
+> > This only refines folio_alloc_swap() return codes. The reclaim callers =
+are
+> > updated separately.
+> >
+> > Suggested-by: Barry Song <baohua@kernel.org>
+> > Suggested-by: Youngjun Park <youngjun.park@lge.com>
+> > Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
+> > ---
+> >  include/linux/swap.h | 16 ++++++++++++----
+> >  mm/memcontrol.c      | 32 +++++++++++++++++++++++++++++++-
+> >  mm/swapfile.c        | 32 ++++++++++++++++++++++++--------
+> >  3 files changed, 67 insertions(+), 13 deletions(-)
+> >
+>
+> Hello Xueyuan,
+>
+> Thanks for the patch!
+>
+> > diff --git a/include/linux/swap.h b/include/linux/swap.h
+> > index 0544b2ec4c56..7d12058174ae 100644
+> > --- a/include/linux/swap.h
+> > +++ b/include/linux/swap.h
+> > @@ -509,12 +509,13 @@ static inline void folio_throttle_swaprate(struct=
+ folio *folio, gfp_t gfp)
+> >  #endif
+> >
+> >  #if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
+> > -int __mem_cgroup_try_charge_swap(struct folio *folio);
+> > -static inline int mem_cgroup_try_charge_swap(struct folio *folio)
+> > +int __mem_cgroup_try_charge_swap(struct folio *folio, long *swap_margi=
+n);
+> > +static inline int mem_cgroup_try_charge_swap(struct folio *folio,
+> > +                                          long *swap_margin)
+>
+> Am I the only one that feel this returning argument is a bit ugly? See be=
+low..
+>
+> > +/**
+> > + * mem_cgroup_get_folio_swap_margin - get a folio's memcg swap margin
+> > + * @folio: folio whose memcg margin is queried
+> > + *
+> > + * Return: Remaining chargeable pages in the folio's memcg hierarchy.
+> > + */
+> > +long mem_cgroup_get_folio_swap_margin(struct folio *folio)
+> > +{
+> > +     long swap_margin =3D PAGE_COUNTER_MAX;
+> > +     struct mem_cgroup *memcg;
+> > +     struct obj_cgroup *objcg;
+> > +
+> > +     if (mem_cgroup_disabled() || do_memsw_account())
+> > +             return swap_margin;
+> > +
+> > +     objcg =3D folio_objcg(folio);
+> > +     if (!objcg)
+> > +             return swap_margin;
+> > +
+> > +     rcu_read_lock();
+> > +     memcg =3D obj_cgroup_memcg(objcg);
+> > +     swap_margin =3D page_counter_margin(&memcg->swap);
+> > +     rcu_read_unlock();
+> > +
+> > +     return swap_margin;
+> > +}
+> > +
+>
 > Will is be good if we just always check the margin use this helper
 > on alloc failure? Alloc failure should be a rather cold path I think?
+>
 
-Works for me!
-
-Sorry, I may have been the main instigator of that complication.
+The only disadvantage is that we don't get the margin together with
+the charging failure. If this happens infrequently, it may not matter.
