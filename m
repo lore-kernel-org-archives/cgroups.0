@@ -1,63 +1,63 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29D833A6B8A
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 19:37:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03BA341835F
+	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 19:37:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786131459; cv=none; b=H9x34eGCgztZp/4NnHZsTgmRuxCfxH+aAFvS4+3xNgjj+FRE3omnU3/MEeLN/Q2iZlWoSwkuKzlBsKv/QvIHPuN9fTUAA7xBZlKsCdwFgrLtuCjcNcHtiAi177xBNY0EW3lEZqauVzgeOf+8HOib03OSTYZnGCwYTgwmA2oiJ1A=
+	t=1786131461; cv=none; b=cBQBuFk6Gj8JDrbkL8qtJ5ZnWetoy0ubocgQONjywT/4ca35AcmeQMpB+k2XIwF8SOqONvHb65tg+hlEjbSQ/UY4nZsS7DEzpiNK2NSwuZ1R4Fr6QYvXSc9tezSoQaqU7UStv/dGrP07klpo371WTFByszsq++dmyOosIttr2M0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786131459; c=relaxed/simple;
-	bh=LY1zudeQGpKe93Wm1RjYLV4w4I6hRdLzm8Tu6l8oMRA=;
+	s=arc-20240116; t=1786131461; c=relaxed/simple;
+	bh=8L2jNqqneTrWjIhxBAyTlYEDrqUxG5JMpaCEtZLJpN8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rHDBEx8VsfQfZgS/UjtG7gBwIh1WuRb2wiHz0aQnvhBbLafCkcNOZlziEbpapGqjf7U3ZNm11YhURcprf4L3fkt4M2zP0+1WA0e6z19rT+2Z0qt6MNgpuWtwkaHtBQu/rZ+opaGVLkGMiIjdJ0YBqSeZK+M+rbADCLgj2YGmtxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bOoEnoKB; arc=none smtp.client-ip=209.85.215.176
+	 MIME-Version; b=eQNA5lVxkvEzzJGoI7WunDQbQHBX7QoObs9dXqxgOSCqH8D5QJV5Tjp2Ztcqu83Tt8k4jwwDg2mmIM4UZd/DMuSU8unn3Q6I/x8frQqtxvzZHZbE4kCZfhyY81Yrhg587OvnhPhhc2SOq4CypMbwRPt4wPJM30LKLGnN/ht4lac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lyh7K97d; arc=none smtp.client-ip=209.85.215.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bOoEnoKB"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-c999f162c9aso2731022a12.3
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 12:37:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lyh7K97d"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-ca88130e09aso2934199a12.3
+        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 12:37:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786131456; x=1786736256; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786131458; x=1786736258; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=oyaDPzZxAYZ6dkJ1RtbEqn7iDEULJIHV8/+9+Tra4y8=;
-        b=bOoEnoKB+sUbVvsTr/PHFYuU2ucycPs6Xse04sWmn42rdI6T6ORcpgPO1XQTCw0v/I
-         eyEnfdiVsvf2gcQ2NR5r2OAm2rS6Je34MlzNFGYXNsmEKtBN5skgQsd5JKh2bmOEHMSO
-         fwdUhggBadPEIIyEAjFbTkwHzbFRvrQJre7IwmeZwyGK7/vc0zDM2PszMoxrFtD4Rtft
-         OA3YlddsEb+nDOIHV1i7rJUo8m2S3L0cV/5Oa2qLX6i4x2BU51OIS64y0vSWHJEHumoE
-         EURFTVy9UXc13eS6pWE8nj1WYHFWGjYje/88JROJbocrUcyL+uQHCL7UAhdyTmbbFFAq
-         Q7zA==
+        bh=516fNSEVFZidFTbnujDBUpNRDc+xNXskAxbQE+m29cc=;
+        b=Lyh7K97dEOnrAUVmkZ3bm2ItCwlZiM8HfVOkM92N9L+eJnTQ7DmiJzm2v05gFaRC4Y
+         Rje5IB/6lNYNAtxqkvMdEZ0faE/cjUzfRTmgvqPzxb6Q/GI/5/qirKs5Bmxygd6e8ly+
+         Y6TzYCHsYO110blHkHcuKG5orOYxcgmVEHou7G1DRA294YJXJEKIZgl8d3IIw1BA89m2
+         vqIvX/VvOoL6KnxdFppfm/7xNSlTuBKsiBYmI+Pe3B0N8MYxJRzTYAlBtFa+xOonr8wQ
+         /2N6vSgsAzBVL5gDDU/3B1PftkOaMfATvGNWa9jtoubi+oalaM9krrT21+zubbIqkWgN
+         4Mog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786131456; x=1786736256;
+        d=1e100.net; s=20251104; t=1786131458; x=1786736258;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=oyaDPzZxAYZ6dkJ1RtbEqn7iDEULJIHV8/+9+Tra4y8=;
-        b=hUPTlRibwoMAmeLI3qjIgaWO/RLDxbrixmsp72XrVo+pFLsoqHs6I5PRD4i9enIyjy
-         dtg57FUvx1wGmhsvw/wS/d4lcajv97w858rsKVcVhHJpLd3wS0fDC5a3FgrUFs2WUYNn
-         MAEiVTRuWfFISeYFPbCq0sKECSrnNM5DdFU4AOcwZcQ1Vs8Ik/f7vLW0lNYddpwuzqVP
-         NEUsCFOOOcwx4iLXoi43CNNzhlhqAO8wgKSGsHdZ+i8UfkLGujVxwkIw46csnmv5R+Wb
-         mxBAlYACPn22hMHZkw9bJUYGcVmhpefIB0zNvdhyPdjuMin7VuR6J2p84ACOru+LsRQ8
-         uQSw==
-X-Forwarded-Encrypted: i=1; AHgh+RpdNDNbhBRq89aJarZCzATI9bY1J8OISKtF23wyiw2XwX5Gy7OzD/4y2dT/Op9y+gUX19nPoc/f@vger.kernel.org
-X-Gm-Message-State: AOJu0YzVewL7Gcz3k4pKK7co8BOAZpzlpiF+1mArXPNQVe5c57MF+6yM
-	GcfP+aws8L5lDWeTTzT0u7MC6ZzhFyBhaJYhNVZfuKd24GLyRGJ0JvFW
-X-Gm-Gg: AR+sD10OQSmjEi37o424fqvVC7LEZ8OkgLWyX8G6QYU8P5Fwxz2zTmEH/Qp+jCqDK5V
-	ZtjEvX1ZgfqTFsKxPj/CA9raZdGmaS5kYxGtt3SDx8YIuPgNzmO0abiMmHi7QDsK9wxiVmUcObY
-	Z0+656ciP/pBWkM0ml8WFhD/EfV5M0JW36Q8Z94lORku7fjkWXSYpet7jlpHsBPHaHtmc76/HE8
-	+b1TPrqSZdOb0y0XpXaKugceKgV9+DKAVWfbV3MaBodABEHVx2laUTqd0TEdL1uKar8W4JEMd9/
-	KaucsI10jmX863kGyKs+imDCWYCQV+SjXTgMSUw9W5LScLIxE6YNYngn72Mp6MSFvMpcGNqD4T9
-	VvbcPxVKARriIApyW8P+ATx7GSsAwrEkfxDY2XxwZXg88oHnWxIKS8ztw2w2VNbsgy3PSEp6gaz
-	YmaNGfAhoEs0G2cbzKZN2Ao3wuo6388TLJ6YRKOFLruqViJbrhKPOTKhM=
-X-Received: by 2002:a05:6a20:6f02:b0:3c4:511e:26ab with SMTP id adf61e73a8af0-3cb85ded984mr34425035637.3.1786131456465;
-        Fri, 07 Aug 2026 12:37:36 -0700 (PDT)
-Received: from localhost ([2a03:2880:9ff:43::])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1410199bfd8sm9547703c88.2.2026.08.07.12.37.35
+        bh=516fNSEVFZidFTbnujDBUpNRDc+xNXskAxbQE+m29cc=;
+        b=ML/WKlVqie8abbgNOcWsVD8g8dew/5jL7B2k2qIisDy7BdPI564WYMrOwCklievibU
+         nIbHZ8jlAjxyoz9Ka7fDLAET1xFiFFEnvZlnigFrmndK49cBe6akvdFvRUnLEjSXRSCc
+         2wANTzOgkvn1tcqoWBppwlagD1DnTysX/9YAAw+d4jg+bq2BVPIZ5PokwwpwHcqXNtnB
+         pzEfzHb8MYxawj1nbo/0r01WnH+yqQxMDeXPadgBfUWYx90WxXv3yJcAP0IKEaYwysmf
+         P2hTTF4KnBU0RHeJ3xP/ZvbJcWqe5wuh8+po6L8fYy++crP5OVIQC0nQtiRT5Y29aQ3+
+         qzVg==
+X-Forwarded-Encrypted: i=1; AHgh+RqRQ5nmBLKJ/zGtOUoa4pd7wjGSfWAdXyctpcjdIDfEqg73xf0/VzNB0rXLsNtVSSxvXxN9+oNY@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJUEdzl3G0DzeDAoGLTCtqEPlG3cvn4hH7dTnC4hcwF7PrfHiu
+	hfFEdnHOsh79j8D2N1yiZYIOuAZmGDUYFjVaQiUhe5ae4xgHZqDBkw0s
+X-Gm-Gg: AR+sD12GRTzoYhvcIGOpBvSe2yFwoZdEhaEfxtzqXNbQlSChFDeUAopIfkGWLqcFKtN
+	Wp7gWzmL9iY0hxFCRApQEurt2BgIZ5vmeISrIDJUHsQC613oG11kzgRaa394JHnioeorcglj88U
+	6TLar2DinFAXe/0Hq/+YvDFigJYhLH9LFFxzfHrI8dwcqN0X/Oba9xKpDgSEH0VujAFcPd5R5OP
+	pjPDGP5XwhDUDYXo66vX0l69eLJS0P9j6Iz+BivGVDJ+H+ojVe1eQvCdRhqcKpp6Pjw8808mcaQ
+	IE5qcVkbqWQLFwrAHRdHSibhK/YGg4hOAfPCViEBgBikVB5j5h7PtSmWO4kruTmkDbE+3yCKLip
+	vbhHnsitSURCusLiz1wr8j3CkVh6T8M0JYR6WChCE+lwYIDg+UhUgkCMShS4uBZ3MY/hzR45LrX
+	E9FF3tl3ZA7SoHGDZ/HyyL+q1yEirfGWHL9XjrZvU23BTfhpGomDOMvNzjJid4/iMnKw==
+X-Received: by 2002:a05:6a20:9183:b0:3bf:63af:855 with SMTP id adf61e73a8af0-3cb85dee60cmr28788437637.1.1786131458255;
+        Fri, 07 Aug 2026 12:37:38 -0700 (PDT)
+Received: from localhost ([2a03:2880:9ff:72::])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315bebde308sm10594920eec.20.2026.08.07.12.37.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Aug 2026 12:37:36 -0700 (PDT)
+        Fri, 07 Aug 2026 12:37:37 -0700 (PDT)
 From: Ziyang Men <ziyang.meme@gmail.com>
 To: Jens Axboe <axboe@kernel.dk>,
 	Tejun Heo <tj@kernel.org>,
@@ -86,9 +86,9 @@ Cc: Martin KaFai Lau <martin.lau@linux.dev>,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Ziyang Men <ziyang.meme@gmail.com>
-Subject: [PATCH 1/2] block: add BPF kfuncs to read blkcg io.stat
-Date: Fri,  7 Aug 2026 12:37:31 -0700
-Message-ID: <20260807193732.4073299-2-ziyang.meme@gmail.com>
+Subject: [PATCH 2/2] selftests/bpf: add test for blkcg io.stat BPF kfuncs
+Date: Fri,  7 Aug 2026 12:37:32 -0700
+Message-ID: <20260807193732.4073299-3-ziyang.meme@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260807193732.4073299-1-ziyang.meme@gmail.com>
 References: <20260807193732.4073299-1-ziyang.meme@gmail.com>
@@ -100,430 +100,503 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Expose the block I/O controller's per-device statistics to BPF,
-mirroring the memory controller kfuncs in mm/bpf_memcontrol.c.
+Add cgroup_iter_io, a test_progs test for the block I/O controller BPF
+kfuncs.  A SEC("iter.s/cgroup") program acquires the cgroup's blkcg,
+flushes stats, iterates its blkgs and reads the io.stat counters for a
+target device.
 
-A BPF program gets a blkcg from a cgroup's css with bpf_get_blkcg()
-(or bpf_get_root_blkcg() for the root), flushes the stats with
-bpf_blkcg_flush_stats(), then walks the cgroup's per-device blkgs with
-the bpf_iter_blkg open-coded iterator and reads each device's counters
-with bpf_blkg_iostat_bytes() and bpf_blkg_iostat_ios().  bpf_blkg_dev()
-returns the device id for labelling.  The reference is released with
-bpf_put_blkcg().
+The userspace side attaches a loop device, generates O_DIRECT read and
+write I/O charged to a test cgroup, and then:
 
-Unlike the memory controller, blkcg keeps one blkg (and one io.stat
-line) per block device, so the reader kfuncs take a blkg and the
-iterator yields them under RCU.  The counters are read under the same
-u64_stats seqlock the io.stat file uses, so the kfuncs add no fast-path
-cost: accounting stays in the per-cpu blkg iostat and is only folded on
-flush.
+  - checks the write and read byte/io counters are nonzero,
+  - checks the reported device id,
+  - compares every kfunc-read value against the cgroup's io.stat file
+    for the same device and requires an exact match,
+  - reads the same device through bpf_get_root_blkcg() and checks the
+    root counters are at or above the test cgroup's.
 
-bpf_blkcg_flush_stats() branches the way blkcg_print_stat() does.  A
-non-root cgroup is flushed through rstat.  The root cgroup is not
-accounted through rstat at all - blkcg_rstat_flush() returns early for
-it and __blkcg_rstat_flush() stops propagating one level short - so its
-per-device aggregates are refilled from the disks' own statistics
-instead, by blkcg_fill_root_iostats(), which is no longer static for
-that reason.  Without this a program reading the root cgroup would see
-zeroes.  Those numbers cover every cgroup's I/O, exactly as the root
-io.stat file reports them.
+The measured device is pinned to the loop device, which has no
+asynchronous writeback, so the kfunc snapshot and the io.stat file
+snapshot are identical rather than merely close.  The root cgroup's
+numbers for a device come from the disk itself and so cover every
+cgroup's I/O to it, which is why the root check is "at or above" rather
+than an exact match.
 
-Two details are worth calling out:
-
-bpf_iter_blkg_next() forgets the list head once the walk ends, not just
-the position.  process_iter_next_call() in the verifier requires an
-iterator to keep returning NULL once it has returned it, and stops
-checking the loop for termination at that point; restarting the walk
-would let such a loop spin forever.
-
-The counter readers give up instead of retrying when called from NMI on
-32-bit.  There the u64_stats read is a real seqcount loop, every writer
-of blkg->iostat keeps interrupts off, and a perf event program can call
-these kfuncs from NMI, where the loop would never end.  On 64-bit the
-loop compiles away.
+CONFIG_BLK_CGROUP is added to the test config; CONFIG_BLK_DEV_LOOP is
+already present.
 
 Signed-off-by: Ziyang Men <ziyang.meme@gmail.com>
 ---
- MAINTAINERS        |   1 +
- block/Makefile     |   3 +
- block/blk-cgroup.c |   2 +-
- block/blk-cgroup.h |   1 +
- block/bpf_blkcg.c  | 315 +++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 321 insertions(+), 1 deletion(-)
- create mode 100644 block/bpf_blkcg.c
+ tools/testing/selftests/bpf/cgroup_iter_io.h  |  17 +
+ tools/testing/selftests/bpf/config            |   1 +
+ .../selftests/bpf/prog_tests/cgroup_iter_io.c | 310 ++++++++++++++++++
+ .../selftests/bpf/progs/cgroup_iter_io.c      | 107 ++++++
+ 4 files changed, 435 insertions(+)
+ create mode 100644 tools/testing/selftests/bpf/cgroup_iter_io.h
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_iter_io.c
+ create mode 100644 tools/testing/selftests/bpf/progs/cgroup_iter_io.c
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2f9472c1a090..87c56e955577 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6617,6 +6617,7 @@ F:	block/blk-cgroup.c
- F:	block/blk-iocost.c
- F:	block/blk-iolatency.c
- F:	block/blk-throttle.c
-+F:	block/bpf_blkcg.c
- F:	include/linux/blk-cgroup.h
- 
- CONTROL GROUP - CPUSET
-diff --git a/block/Makefile b/block/Makefile
-index e7bd320e3d69..572e49988c8e 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -17,6 +17,9 @@ obj-$(CONFIG_BLK_ERROR_INJECTION) += error-injection.o
- obj-$(CONFIG_BLK_DEV_BSG_COMMON) += bsg.o
- obj-$(CONFIG_BLK_DEV_BSGLIB)	+= bsg-lib.o
- obj-$(CONFIG_BLK_CGROUP)	+= blk-cgroup.o
-+ifdef CONFIG_BPF_SYSCALL
-+obj-$(CONFIG_BLK_CGROUP)	+= bpf_blkcg.o
-+endif
- obj-$(CONFIG_BLK_CGROUP_RWSTAT)	+= blk-cgroup-rwstat.o
- obj-$(CONFIG_BLK_CGROUP_FC_APPID) += blk-cgroup-fc-appid.o
- obj-$(CONFIG_BLK_DEV_THROTTLING)	+= blk-throttle.o
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index d9676126c5b5..8d538ad4e861 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1086,7 +1086,7 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
-  * flushing the root cgroup's stats by explicitly filling in the iostat
-  * with disk level statistics.
-  */
--static void blkcg_fill_root_iostats(void)
-+void blkcg_fill_root_iostats(void)
- {
- 	struct class_dev_iter iter;
- 	struct device *dev;
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 615390f751aa..8c9c2a1adfaa 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -205,6 +205,7 @@ void blkcg_deactivate_policy(struct gendisk *disk,
- 			     const struct blkcg_policy *pol);
- 
- const char *blkg_dev_name(struct blkcg_gq *blkg);
-+void blkcg_fill_root_iostats(void);
- void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
- 		       u64 (*prfill)(struct seq_file *,
- 				     struct blkg_policy_data *, int),
-diff --git a/block/bpf_blkcg.c b/block/bpf_blkcg.c
+diff --git a/tools/testing/selftests/bpf/cgroup_iter_io.h b/tools/testing/selftests/bpf/cgroup_iter_io.h
 new file mode 100644
-index 000000000000..48a86f07e198
+index 000000000000..f4bbaaccdf71
 --- /dev/null
-+++ b/block/bpf_blkcg.c
-@@ -0,0 +1,315 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Block I/O Controller-related BPF kfuncs and auxiliary code.
-+ *
-+ * These let a BPF program read a cgroup's io.stat counters. A program turns a
-+ * cgroup's css into a struct blkcg with bpf_get_blkcg(), flushes the stats with
-+ * bpf_blkcg_flush_stats(), then walks the cgroup's per-device blkgs with the
-+ * bpf_iter_blkg open-coded iterator, reading each device's counters with
-+ * bpf_blkg_iostat_bytes()/bpf_blkg_iostat_ios(). It mirrors the memory
-+ * controller kfuncs in mm/bpf_memcontrol.c, but adds a per-device dimension:
-+ * unlike memcg, blkcg keeps one blkg (and one io.stat line) per block device.
-+ *
-+ * This file lives in block/ because the blkcg/blkg struct layouts are private
-+ * to block/blk-cgroup.h.
-+ */
++++ b/tools/testing/selftests/bpf/cgroup_iter_io.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (c) 2025 Meta Platforms, Inc. and affiliates. */
++#ifndef __CGROUP_ITER_IO_H
++#define __CGROUP_ITER_IO_H
 +
-+#include "blk-cgroup.h"
++struct io_query {
++	/* one device's io.stat counters */
++	__u64 rbytes;
++	__u64 wbytes;
++	__u64 rios;
++	__u64 wios;
++	__u64 dbytes;
++	__u64 dios;
++	__u64 dev;	/* dev_t of the device the counters belong to */
++};
 +
-+#include <linux/bpf.h>
-+#include <linux/btf_ids.h>
-+#include <linux/preempt.h>
-+#include <linux/rculist.h>
++#endif /* __CGROUP_ITER_IO_H */
+diff --git a/tools/testing/selftests/bpf/config b/tools/testing/selftests/bpf/config
+index ea7044f30adc..270e6bf9194d 100644
+--- a/tools/testing/selftests/bpf/config
++++ b/tools/testing/selftests/bpf/config
+@@ -1,3 +1,4 @@
++CONFIG_BLK_CGROUP=y
+ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BOOTPARAM_HARDLOCKUP_PANIC=y
+ CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC=1
+diff --git a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_io.c b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_io.c
+new file mode 100644
+index 000000000000..32cda8243318
+--- /dev/null
++++ b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_io.c
+@@ -0,0 +1,310 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (c) 2025 Meta Platforms, Inc. and affiliates. */
++#define _GNU_SOURCE
++#include <test_progs.h>
++#include <bpf/libbpf.h>
++#include <fcntl.h>
++#include <linux/loop.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/ioctl.h>
++#include <sys/stat.h>
++#include <sys/sysmacros.h>
++#include <unistd.h>
++#include "cgroup_helpers.h"
++#include "cgroup_iter_io.h"
++#include "cgroup_iter_io.skel.h"
 +
-+__bpf_kfunc_start_defs();
++#define IO_SIZE (4 * 1024 * 1024)
 +
-+/**
-+ * bpf_get_root_blkcg - Returns a pointer to the root block cgroup
-+ *
-+ * The function has KF_ACQUIRE semantics, even though the root block cgroup is
-+ * never destroyed and doesn't require reference counting. It's safe to pass it
-+ * to bpf_put_blkcg().
-+ *
-+ * Note that the root cgroup is special: its counters are the disks' own
-+ * statistics, so they cover every cgroup's I/O rather than only the root's.
-+ * This matches what the root io.stat file prints.
-+ *
-+ * Return: A pointer to the root block cgroup.
-+ */
-+__bpf_kfunc struct blkcg *bpf_get_root_blkcg(void)
++static int read_stats(struct bpf_link *link)
 +{
-+	/* css_get() is not needed */
-+	return &blkcg_root;
++	int fd, ret = 0;
++	ssize_t bytes;
++
++	fd = bpf_iter_create(bpf_link__fd(link));
++	if (!ASSERT_OK_FD(fd, "bpf_iter_create"))
++		return 1;
++
++	/* Results land in skel->data_query; the read itself returns no data. */
++	bytes = read(fd, NULL, 0);
++	if (!ASSERT_EQ(bytes, 0, "read fd"))
++		ret = 1;
++
++	close(fd);
++	return ret;
 +}
 +
-+/**
-+ * bpf_get_blkcg - Get a reference to a block cgroup
-+ * @css: pointer to the css structure
-+ *
-+ * It's fine to pass a css which belongs to any cgroup controller,
-+ * e.g. unified hierarchy's main css.
-+ *
-+ * Implements KF_ACQUIRE semantics.
-+ *
-+ * Return: A pointer to a blkcg structure after bumping the corresponding css's
-+ * reference counter, or NULL if the io controller is not enabled on the cgroup.
++/*
++ * Attach a loop device to an anonymous temp file so we have a real block
++ * device to generate cgroup-charged I/O against. Returns 0 on success, or -1
++ * if loop devices are unavailable (non-root / no CONFIG_BLK_DEV_LOOP) so the
++ * caller can skip.
 + */
-+__bpf_kfunc struct blkcg *bpf_get_blkcg(struct cgroup_subsys_state *css)
++static int loop_setup(char *loop_path, size_t sz, int *ctl_fd, int *loop_fd,
++		      int *back_fd)
 +{
-+	struct blkcg *blkcg = NULL;
++	char back_path[] = "/tmp/cgroup_iter_io.XXXXXX";
++	int nr;
 +
-+	if (css->ss == &io_cgrp_subsys)
-+		return css_tryget(css) ? css_to_blkcg(css) : NULL;
++	*ctl_fd = *loop_fd = *back_fd = -1;
++
++	*ctl_fd = open("/dev/loop-control", O_RDWR | O_CLOEXEC);
++	if (*ctl_fd < 0)
++		return -1;
++
++	nr = ioctl(*ctl_fd, LOOP_CTL_GET_FREE);
++	if (nr < 0)
++		goto err;
++	snprintf(loop_path, sz, "/dev/loop%d", nr);
++
++	*back_fd = mkstemp(back_path);
++	if (*back_fd < 0)
++		goto err;
++	unlink(back_path);
++	if (ftruncate(*back_fd, (off_t)IO_SIZE * 4))
++		goto err;
++
++	*loop_fd = open(loop_path, O_RDWR | O_CLOEXEC);
++	if (*loop_fd < 0)
++		goto err;
++	if (ioctl(*loop_fd, LOOP_SET_FD, *back_fd))
++		goto err;
++
++	return 0;
++err:
++	if (*loop_fd >= 0)
++		close(*loop_fd);
++	if (*back_fd >= 0)
++		close(*back_fd);
++	close(*ctl_fd);
++	*ctl_fd = *loop_fd = *back_fd = -1;
++	return -1;
++}
++
++static void loop_teardown(const char *loop_path, int ctl_fd, int loop_fd,
++			  int back_fd)
++{
++	int nr = -1;
++
++	if (loop_fd >= 0) {
++		ioctl(loop_fd, LOOP_CLR_FD, 0);
++		close(loop_fd);
++	}
++	if (back_fd >= 0)
++		close(back_fd);
++	if (ctl_fd >= 0) {
++		if (sscanf(loop_path, "/dev/loop%d", &nr) == 1 && nr >= 0)
++			ioctl(ctl_fd, LOOP_CTL_REMOVE, nr);
++		close(ctl_fd);
++	}
++}
++
++/* O_DIRECT I/O to the loop device, charged to the current cgroup. */
++static int do_direct_io(const char *loop_path)
++{
++	void *buf;
++	int fd, ret = -1;
++
++	fd = open(loop_path, O_RDWR | O_DIRECT | O_CLOEXEC);
++	if (fd < 0)
++		return -1;
++	if (posix_memalign(&buf, 4096, IO_SIZE))
++		goto out_fd;
++	memset(buf, 0xab, IO_SIZE);
++
++	if (pwrite(fd, buf, IO_SIZE, 0) != IO_SIZE)
++		goto out_buf;
++	fsync(fd);
++	if (pread(fd, buf, IO_SIZE, 0) != IO_SIZE)
++		goto out_buf;
++	ret = 0;
++out_buf:
++	free(buf);
++out_fd:
++	close(fd);
++	return ret;
++}
++
++/*
++ * Parse the io.stat line for device @dev out of the cgroup's io.stat file and
++ * fill @out. @dev is a kernel dev_t (as returned by bpf_blkg_dev), whose
++ * major:minor split matches how io.stat prints the device. Returns 0 if the
++ * device's line was found.
++ */
++static int parse_io_stat(int cgroup_fd, __u64 dev, struct io_query *out)
++{
++	unsigned int want_maj = dev >> 20, want_min = dev & ((1U << 20) - 1);
++	char buf[4096], *line, *saveptr;
++	int fd, n, ret = -1;
++
++	fd = openat(cgroup_fd, "io.stat", O_RDONLY);
++	if (fd < 0)
++		return -1;
++	n = read(fd, buf, sizeof(buf) - 1);
++	close(fd);
++	if (n <= 0)
++		return -1;
++	buf[n] = '\0';
++
++	for (line = strtok_r(buf, "\n", &saveptr); line;
++	     line = strtok_r(NULL, "\n", &saveptr)) {
++		unsigned long long rb = 0, wb = 0, ri = 0, wi = 0, db = 0, di = 0;
++		unsigned int maj, min;
++
++		/*
++		 * The "maj:min" token is always present; the field block is
++		 * optional (the kernel omits it for a device with no read/write
++		 * I/O), so a match of >= 2 is enough and absent fields stay 0.
++		 */
++		if (sscanf(line,
++			   "%u:%u rbytes=%llu wbytes=%llu rios=%llu wios=%llu dbytes=%llu dios=%llu",
++			   &maj, &min, &rb, &wb, &ri, &wi, &db, &di) < 2)
++			continue;
++		if (maj != want_maj || min != want_min)
++			continue;
++
++		out->rbytes = rb;
++		out->wbytes = wb;
++		out->rios = ri;
++		out->wios = wi;
++		out->dbytes = db;
++		out->dios = di;
++		ret = 0;
++		break;
++	}
++	return ret;
++}
++
++void test_cgroup_iter_io(void)
++{
++	char *cgroup_rel_path = "/cgroup_iter_io_test";
++	int ctl_fd = -1, loop_fd = -1, back_fd = -1;
++	struct cgroup_iter_io *skel = NULL;
++	struct bpf_link *link = NULL;
++	char loop_path[64];
++	struct io_query *q;
++	int cgroup_fd;
++
++	cgroup_fd = cgroup_setup_and_join(cgroup_rel_path);
++	if (!ASSERT_OK_FD(cgroup_fd, "cgroup_setup_and_join"))
++		return;
++
++	if (loop_setup(loop_path, sizeof(loop_path), &ctl_fd, &loop_fd, &back_fd)) {
++		test__skip();	/* needs root + CONFIG_BLK_DEV_LOOP */
++		goto cleanup_cgroup_fd;
++	}
++
++	skel = cgroup_iter_io__open_and_load();
++	if (!ASSERT_OK_PTR(skel, "cgroup_iter_io__open_and_load"))
++		goto cleanup_loop;
 +
 +	/*
-+	 * Some other controller's css, or the cgroup's own one. Look up the io
-+	 * controller's css; rcu keeps it alive between the load and the tryget.
-+	 * Acquire and release rcu on one straight path, so that block/'s lock
-+	 * context analysis can follow it.
++	 * Pin the read to the loop device so the measured device is stable and
++	 * quiesced. Convert the glibc-encoded st_rdev to the kernel dev_t
++	 * encoding (major << 20 | minor) that bpf_blkg_dev returns.
 +	 */
-+	rcu_read_lock();
-+	css = rcu_dereference_raw(css->cgroup->subsys[io_cgrp_id]);
-+	if (css && css_tryget(css))
-+		blkcg = css_to_blkcg(css);
-+	rcu_read_unlock();
++	{
++		struct stat lst;
 +
-+	return blkcg;
-+}
++		if (!ASSERT_OK(fstat(loop_fd, &lst), "fstat loop"))
++			goto cleanup_skel;
++		skel->data_query->target_dev =
++			((__u64)major(lst.st_rdev) << 20) | minor(lst.st_rdev);
++	}
 +
-+/**
-+ * bpf_put_blkcg - Put a reference to a block cgroup
-+ * @blkcg: block cgroup to release
-+ *
-+ * Releases a previously acquired blkcg reference.
-+ * Implements KF_RELEASE semantics.
-+ */
-+__bpf_kfunc void bpf_put_blkcg(struct blkcg *blkcg)
-+{
-+	css_put(&blkcg->css);
-+}
++	DECLARE_LIBBPF_OPTS(bpf_iter_attach_opts, opts);
++	union bpf_iter_link_info linfo = {
++		.cgroup.cgroup_fd = cgroup_fd,
++		.cgroup.order = BPF_CGROUP_ITER_SELF_ONLY,
++	};
++	opts.link_info = &linfo;
++	opts.link_info_len = sizeof(linfo);
 +
-+/**
-+ * bpf_blkcg_flush_stats - Flush a block cgroup's io statistics
-+ * @blkcg: block cgroup
-+ *
-+ * Call this before reading counters for up-to-date values. Sleepable.
-+ *
-+ * It does what reading the io.stat file does, which differs by cgroup. For a
-+ * non-root cgroup it folds the per-cpu deltas into the per-device aggregates
-+ * and up the cgroup tree. The root cgroup is not accounted through rstat at
-+ * all, so for it the per-device aggregates are refilled from the disks'
-+ * own statistics, which count every cgroup's I/O.
-+ *
-+ * The root branch is not self-limiting the way the rstat one is: it rereads
-+ * every disk on every call, while a second rstat flush finds nothing left to
-+ * fold. The numbers it produces are the same for every cgroup, so read them
-+ * once rather than once per cgroup of a walk.
-+ */
-+__bpf_kfunc void bpf_blkcg_flush_stats(struct blkcg *blkcg)
-+{
-+	if (!blkcg->css.parent)
-+		blkcg_fill_root_iostats();
-+	else
-+		css_rstat_flush(&blkcg->css);
-+}
++	link = bpf_program__attach_iter(skel->progs.cgroup_io_query, &opts);
++	if (!ASSERT_OK_PTR(link, "bpf_program__attach_iter"))
++		goto cleanup_skel;
 +
-+struct bpf_iter_blkg {
-+	__u64 __opaque[2];
-+} __attribute__((aligned(8)));
++	/* This process is in the test cgroup, so the loop I/O is charged here. */
++	if (!ASSERT_OK(do_direct_io(loop_path), "do_direct_io"))
++		goto cleanup_link;
 +
-+struct bpf_iter_blkg_kern {
-+	struct blkcg *blkcg;
-+	struct blkcg_gq *pos;
-+} __attribute__((aligned(8)));
++	if (!ASSERT_OK(read_stats(link), "read stats"))
++		goto cleanup_link;
 +
-+/**
-+ * bpf_iter_blkg_new - Start iterating a block cgroup's per-device blkgs
-+ * @it: iterator to initialize
-+ * @blkcg: block cgroup whose devices to walk
-+ *
-+ * Each yielded blkg holds one block device's counters, the same ones behind a
-+ * per-device line of the io.stat file. Offline blkgs are skipped, as the file
-+ * skips them. One case differs: the file prints no line for a blkg whose disk
-+ * is gone, while the walk still yields it, and bpf_blkg_dev() returns 0 for
-+ * it. Must be used inside an RCU read section.
-+ *
-+ * Return: 0 on success.
-+ */
-+__bpf_kfunc int bpf_iter_blkg_new(struct bpf_iter_blkg *it, struct blkcg *blkcg)
-+{
-+	struct bpf_iter_blkg_kern *kit = (void *)it;
++	/*
++	 * Weak check: we did I/O, so the numbers must be non-zero. Follows the
++	 * pattern in cgroup_iter_memcg.
++	 */
++	q = &skel->data_query->io_query;
++	if (test__start_subtest("cgroup_iter_io__write")) {
++		ASSERT_GT(q->wbytes, 0, "wbytes");
++		ASSERT_GT(q->wios, 0, "wios");
++	}
++	if (test__start_subtest("cgroup_iter_io__read")) {
++		ASSERT_GT(q->rbytes, 0, "rbytes");
++		ASSERT_GT(q->rios, 0, "rios");
++	}
++	if (test__start_subtest("cgroup_iter_io__dev"))
++		ASSERT_GT(q->dev, 0, "dev");
 +
-+	BUILD_BUG_ON(sizeof(struct bpf_iter_blkg_kern) > sizeof(struct bpf_iter_blkg));
-+	BUILD_BUG_ON(__alignof__(struct bpf_iter_blkg_kern) !=
-+		     __alignof__(struct bpf_iter_blkg));
++	/*
++	 * Stronger check: the kfunc-read values must equal what the io.stat
++	 * file reports for the same device. Refresh via the prog, then read
++	 * the file with no I/O in between, so both flushed snapshots match
++	 * exactly.
++	 */
++	if (test__start_subtest("cgroup_iter_io__match")) {
++		struct io_query filev = {};
 +
-+	kit->blkcg = blkcg;
-+	kit->pos = NULL;
-+	return 0;
-+}
-+
-+/**
-+ * bpf_iter_blkg_next - Return the next online blkg of the iterated block cgroup
-+ * @it: iterator
-+ *
-+ * Return: the next online blkg, or NULL when the walk is done.
-+ */
-+__bpf_kfunc struct blkcg_gq *bpf_iter_blkg_next(struct bpf_iter_blkg *it)
-+{
-+	struct bpf_iter_blkg_kern *kit = (void *)it;
-+	struct blkcg_gq *blkg = kit->pos;
-+	struct hlist_node *node;
-+
-+	/* Cleared once the walk is done, see below. */
-+	if (!kit->blkcg)
-+		return NULL;
-+
-+	if (!blkg)
-+		node = rcu_dereference(hlist_first_rcu(&kit->blkcg->blkg_list));
-+	else
-+		node = rcu_dereference(hlist_next_rcu(&blkg->blkcg_node));
-+
-+	/* Skip offline blkgs, matching the io.stat file. */
-+	while (node) {
-+		blkg = hlist_entry(node, struct blkcg_gq, blkcg_node);
-+		if (blkg->online) {
-+			kit->pos = blkg;
-+			return blkg;
++		if (ASSERT_OK(read_stats(link), "read stats") &&
++		    ASSERT_OK(parse_io_stat(cgroup_fd, q->dev, &filev),
++			      "parse io.stat")) {
++			ASSERT_EQ(q->rbytes, filev.rbytes, "rbytes");
++			ASSERT_EQ(q->wbytes, filev.wbytes, "wbytes");
++			ASSERT_EQ(q->rios, filev.rios, "rios");
++			ASSERT_EQ(q->wios, filev.wios, "wios");
++			ASSERT_EQ(q->dbytes, filev.dbytes, "dbytes");
++			ASSERT_EQ(q->dios, filev.dios, "dios");
 +		}
-+		node = rcu_dereference(hlist_next_rcu(&blkg->blkcg_node));
 +	}
 +
 +	/*
-+	 * Forget the list head as well. The verifier assumes that an iterator
-+	 * which returned NULL keeps returning NULL, and stops checking the
-+	 * loop for termination once it has; starting the walk over would let
-+	 * such a loop spin forever.
++	 * Separate program for the root block cgroup. Its counters do not come
++	 * from rstat, they are refilled from the disks themselves, so this
++	 * covers the other half of bpf_blkcg_flush_stats(). They cover every
++	 * cgroup's I/O to the loop device, and only this test touches it, so
++	 * they must be at or above what the test cgroup was charged.
 +	 */
-+	kit->pos = NULL;
-+	kit->blkcg = NULL;
-+	return NULL;
-+}
++	if (test__start_subtest("cgroup_iter_io__root")) {
++		struct bpf_link *root_link;
++		struct io_query *r;
 +
-+/**
-+ * bpf_iter_blkg_destroy - Tear down a blkg iterator
-+ * @it: iterator
-+ */
-+__bpf_kfunc void bpf_iter_blkg_destroy(struct bpf_iter_blkg *it)
-+{
++		skel->data_query->got_root_blkcg = 0;
++		root_link = bpf_program__attach_iter(skel->progs.cgroup_root_blkcg_query,
++						     &opts);
++		if (ASSERT_OK_PTR(root_link, "attach root iter")) {
++			if (ASSERT_OK(read_stats(root_link), "read root stats")) {
++				r = &skel->data_query->root_query;
++				ASSERT_EQ(skel->data_query->got_root_blkcg, 1,
++					  "got_root_blkcg");
++				ASSERT_EQ(r->dev, q->dev, "root dev");
++				ASSERT_GE(r->wbytes, q->wbytes, "root wbytes");
++				ASSERT_GE(r->wios, q->wios, "root wios");
++				ASSERT_GE(r->rbytes, q->rbytes, "root rbytes");
++				ASSERT_GE(r->rios, q->rios, "root rios");
++			}
++			bpf_link__destroy(root_link);
++		}
++	}
++
++cleanup_link:
++	bpf_link__destroy(link);
++cleanup_skel:
++	cgroup_iter_io__destroy(skel);
++cleanup_loop:
++	loop_teardown(loop_path, ctl_fd, loop_fd, back_fd);
++cleanup_cgroup_fd:
++	close(cgroup_fd);
++	cleanup_cgroup_environment();
 +}
+diff --git a/tools/testing/selftests/bpf/progs/cgroup_iter_io.c b/tools/testing/selftests/bpf/progs/cgroup_iter_io.c
+new file mode 100644
+index 000000000000..b839def94508
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/cgroup_iter_io.c
+@@ -0,0 +1,107 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (c) 2025 Meta Platforms, Inc. and affiliates. */
++#include <vmlinux.h>
++#include <bpf/bpf_helpers.h>
++#include <bpf/bpf_core_read.h>
++#include "bpf_experimental.h"
++#include "cgroup_iter_io.h"
++
++char _license[] SEC("license") = "GPL";
++
++/* The counters of the device named by target_dev are stored here. */
++struct io_query io_query SEC(".data.query");
++
++/* The same device's counters read through the root block cgroup. */
++struct io_query root_query SEC(".data.query");
++
++/* Set to 1 by cgroup_root_blkcg_query when bpf_get_root_blkcg() succeeds. */
++__u64 got_root_blkcg SEC(".data.query");
++
++/* Device to read, set by userspace (kernel dev_t). Pinning the device keeps
++ * the read deterministic and lets the value be compared to io.stat exactly.
++ */
++__u64 target_dev SEC(".data.query");
 +
 +/*
-+ * Read one counter out of @blkg's flushed io.stat aggregate. @counters is one
-+ * of the two arrays in blkg->iostat.cur; both are guarded by that struct's
-+ * seqlock, the one the io.stat file uses. Returns (u64)-1 if the counter
-+ * cannot be read.
++ * Flush @blkcg and copy the target device's counters into @out. Reading only
++ * the one pinned device keeps the result deterministic: that device is
++ * quiesced, so its counters match io.stat exactly, while picking "any device
++ * with I/O" would race with backing-store writeback.
 + */
-+static u64 blkg_iostat_read(struct blkcg_gq *blkg, const u64 *counters,
-+			    enum blkg_iostat_type rw)
++static __always_inline void read_target_dev(struct blkcg *blkcg,
++					    struct io_query *out)
 +{
-+	struct blkg_iostat_set *bis = &blkg->iostat;
-+	unsigned int seq;
-+	u64 val;
++	struct blkcg_gq *pos;
 +
-+	if ((unsigned int)rw >= BLKG_IOSTAT_NR)
-+		return (u64)-1;
++	/* io.stat needs a flush before it can be read (sleepable). */
++	bpf_blkcg_flush_stats(blkcg);
 +
-+	/*
-+	 * On 32-bit the loop below really is a seqcount retry loop. Every
-+	 * writer of blkg->iostat keeps interrupts off, so only an NMI can land
-+	 * inside an update, and then the loop would never end. These kfuncs
-+	 * are reachable from a perf event program, which does run in NMI, so
-+	 * give up rather than spin. On 64-bit the loop compiles away.
-+	 */
-+	if (BITS_PER_LONG == 32 && in_nmi())
-+		return (u64)-1;
++	/* The per-device blkg walk needs an RCU section. */
++	bpf_rcu_read_lock();
++	bpf_for_each(blkg, pos, blkcg) {
++		if (bpf_blkg_dev(pos) != target_dev)
++			continue;
 +
-+	do {
-+		seq = u64_stats_fetch_begin(&bis->sync);
-+		val = counters[rw];
-+	} while (u64_stats_fetch_retry(&bis->sync, seq));
-+
-+	return val;
++		out->dev = bpf_blkg_dev(pos);
++		out->rbytes = bpf_blkg_iostat_bytes(pos, BLKG_IOSTAT_READ);
++		out->wbytes = bpf_blkg_iostat_bytes(pos, BLKG_IOSTAT_WRITE);
++		out->rios = bpf_blkg_iostat_ios(pos, BLKG_IOSTAT_READ);
++		out->wios = bpf_blkg_iostat_ios(pos, BLKG_IOSTAT_WRITE);
++		out->dbytes = bpf_blkg_iostat_bytes(pos, BLKG_IOSTAT_DISCARD);
++		out->dios = bpf_blkg_iostat_ios(pos, BLKG_IOSTAT_DISCARD);
++		break;
++	}
++	bpf_rcu_read_unlock();
 +}
 +
-+/**
-+ * bpf_blkg_iostat_bytes - Read a device's io.stat byte counter
-+ * @blkg: block group (one device of a block cgroup)
-+ * @rw: which counter (BLKG_IOSTAT_READ / _WRITE / _DISCARD)
-+ *
-+ * Reads the flushed aggregate, so call bpf_blkcg_flush_stats() first for
-+ * up-to-date values. The read uses the u64_stats seqlock, like the io.stat
-+ * file.
-+ *
-+ * Return: the number of bytes, or (u64)-1 if @rw is out of range or the
-+ * counter cannot be read.
-+ */
-+__bpf_kfunc u64 bpf_blkg_iostat_bytes(struct blkcg_gq *blkg,
-+				      enum blkg_iostat_type rw)
++SEC("iter.s/cgroup")
++int cgroup_io_query(struct bpf_iter__cgroup *ctx)
 +{
-+	return blkg_iostat_read(blkg, blkg->iostat.cur.bytes, rw);
-+}
++	struct cgroup *cgrp = ctx->cgroup;
++	struct blkcg *blkcg;
 +
-+/**
-+ * bpf_blkg_iostat_ios - Read a device's io.stat I/O count
-+ * @blkg: block group (one device of a block cgroup)
-+ * @rw: which counter (BLKG_IOSTAT_READ / _WRITE / _DISCARD)
-+ *
-+ * Return: the number of I/Os, or (u64)-1 if @rw is out of range or the
-+ * counter cannot be read.
-+ */
-+__bpf_kfunc u64 bpf_blkg_iostat_ios(struct blkcg_gq *blkg,
-+				    enum blkg_iostat_type rw)
-+{
-+	return blkg_iostat_read(blkg, blkg->iostat.cur.ios, rw);
-+}
++	/* The last iteration has a NULL cgroup, skip it. */
++	if (!cgrp)
++		return 1;
 +
-+/**
-+ * bpf_blkg_dev - Return a blkg's device id
-+ * @blkg: block group
-+ *
-+ * Return: the device's dev_t (use MAJOR()/MINOR() to split), or 0 if the blkg
-+ * has no disk.
-+ */
-+__bpf_kfunc u64 bpf_blkg_dev(struct blkcg_gq *blkg)
-+{
-+	if (!blkg->q || !blkg->q->disk)
++	/* Start fresh so a device that is not found stays all-zero. */
++	__builtin_memset(&io_query, 0, sizeof(io_query));
++
++	blkcg = bpf_get_blkcg(&cgrp->self);
++	if (!blkcg)
 +		return 0;
 +
-+	return blkg->q->disk->part0->bd_dev;
++	read_target_dev(blkcg, &io_query);
++
++	bpf_put_blkcg(blkcg);
++	return 0;
 +}
 +
-+__bpf_kfunc_end_defs();
-+
-+BTF_KFUNCS_START(bpf_blkcg_kfuncs)
-+BTF_ID_FLAGS(func, bpf_get_root_blkcg, KF_ACQUIRE | KF_RET_NULL)
-+BTF_ID_FLAGS(func, bpf_get_blkcg, KF_ACQUIRE | KF_RET_NULL | KF_RCU)
-+BTF_ID_FLAGS(func, bpf_put_blkcg, KF_RELEASE)
-+BTF_ID_FLAGS(func, bpf_blkcg_flush_stats, KF_SLEEPABLE)
-+
-+BTF_ID_FLAGS(func, bpf_iter_blkg_new, KF_ITER_NEW | KF_RCU_PROTECTED)
-+BTF_ID_FLAGS(func, bpf_iter_blkg_next, KF_ITER_NEXT | KF_RET_NULL)
-+BTF_ID_FLAGS(func, bpf_iter_blkg_destroy, KF_ITER_DESTROY)
-+
-+BTF_ID_FLAGS(func, bpf_blkg_iostat_bytes, KF_RCU)
-+BTF_ID_FLAGS(func, bpf_blkg_iostat_ios, KF_RCU)
-+BTF_ID_FLAGS(func, bpf_blkg_dev, KF_RCU)
-+BTF_KFUNCS_END(bpf_blkcg_kfuncs)
-+
-+static const struct btf_kfunc_id_set bpf_blkcg_kfunc_set = {
-+	.owner		= THIS_MODULE,
-+	.set		= &bpf_blkcg_kfuncs,
-+};
-+
-+static int __init bpf_blkcg_init(void)
++SEC("iter.s/cgroup")
++int cgroup_root_blkcg_query(struct bpf_iter__cgroup *ctx)
 +{
-+	int err;
++	struct cgroup *cgrp = ctx->cgroup;
++	struct blkcg *blkcg;
 +
-+	err = register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC,
-+					&bpf_blkcg_kfunc_set);
-+	if (err)
-+		pr_warn("error while registering bpf blkcg kfuncs: %d\n", err);
++	/* The last iteration has a NULL cgroup, skip it. */
++	if (!cgrp)
++		return 1;
 +
-+	return err;
++	__builtin_memset(&root_query, 0, sizeof(root_query));
++
++	blkcg = bpf_get_root_blkcg();
++	if (!blkcg)
++		return 0;
++
++	/*
++	 * The root cgroup takes its numbers from the disks themselves rather
++	 * than from rstat, so this also covers the root side of
++	 * bpf_blkcg_flush_stats(). The counters cover every cgroup's I/O, so
++	 * they can only be at or above what this test's own cgroup did.
++	 */
++	read_target_dev(blkcg, &root_query);
++
++	got_root_blkcg = 1;
++	bpf_put_blkcg(blkcg);
++	return 0;
 +}
-+late_initcall(bpf_blkcg_init);
 -- 
 2.53.0-Meta
 
