@@ -1,64 +1,64 @@
-Received: from mail-oa1-f42.google.com (mail-oa1-f42.google.com [209.85.160.42])
+Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBDEF445AFE
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 20:21:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A8F446064
+	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 20:21:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786134074; cv=none; b=OnDJRAf7TR7fiz+l9fKqjk7hw2DHwJggHUCKI1ME5PPemMeAI9vb+iLc2Mrhw3pLlxT5x/g6JDQpL2JlqSGRdz7TZHFJBsf/oX15X3oO3WSmP5pSFQ7CqkFeF66DVyOfJVd9sOqDhr9IIn03WpAEYkRWM8+mi0dNe3LK3B6zRQk=
+	t=1786134075; cv=none; b=f6Ft9aHieehM6TUwovjycJieWNdfPSmr1mWu4aebCgDSTDMC66ZPdBTYYVByKCCTgLpcKWC0d16EUfjJMrMkSlZJ1VB0IRw6GNHJ7+sEMSMoZOPtby7r3b0GO+qs9FRXX1ofgIzWP8OU3B3Xq75PPQdSRw1t6yofKJTsj0S6U6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786134074; c=relaxed/simple;
-	bh=+IzWGgaNbj6Y02X6WE/c6I/buYlv0yEEBkp/xShOgGQ=;
+	s=arc-20240116; t=1786134075; c=relaxed/simple;
+	bh=REawthIeH+7C0lmHL+f/QK7bxBDTbcKr3jAoxiOaBOs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H/Rg6EMLVrwXVW8pHSuRpjsBSJ0snvRWWENCKYNmE6PiMNRPppxcq4mT8tphtFhAkmVHEefaIBz0sr62RSv5eweU/txTCEyuCPmKi/td7pbkeKvPaiuoFduh1PUBgXfJWmxT2cuImpwfNrZN/eRbk+yrBSkxl2oR+njQZbIzQc0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sc4SzZ0h; arc=none smtp.client-ip=209.85.160.42
+	 MIME-Version; b=kG636eZe2Tf/CGl9ZaChZAgOd/XadkLYCTMHCs9wVol02NzKVKqzQBAGnbl8TXEwR4FA34tt4EgRUW3/kp4tgs6vt2zzceT0b/fUm93o4yXSu6Y+oKT3iPSpRKZcFqhCpaKKc3H9cgPy7VCXOnWfvlmuTSAFB7+qzxOHpg2KAZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=phSnllFw; arc=none smtp.client-ip=209.85.160.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sc4SzZ0h"
-Received: by mail-oa1-f42.google.com with SMTP id 586e51a60fabf-45691990234so2410980fac.3
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 13:21:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="phSnllFw"
+Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-456395f4e7bso2717537fac.0
+        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 13:21:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20251104; t=1786134072; x=1786738872; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=lxxJcfOvuS2DiwqIjrqP14riK8k/np3VBj64PdkOyLA=;
-        b=sc4SzZ0hWlHxRydlGqtK6Iwsz0JMmjpThjdRZ//Bw7660Vd9ueHOacG4d984f4V1Fy
-         /xx1LRTgLX0y1k5+OhZ7NAmRdAGPrwIKKdhA80gNiur6xeXH937tSeZDwgqUy1Ijn4hE
-         DQjncRVO64HYESqynNfoIB3PoXsp96zl5vgwP/uGWUlZRR77WWYh0ttoKG2tb3xwIqr2
-         kECE8zjQC7S8U3Dm/AgOeJQKklfPc/GzH1lGD84+/oPfF59iBVRnsyKu9lBTRYGMC7ih
-         TV0T2hJgmH5J6Qe6dVX0Yltkxp+3/Ld2LN0Q9shKqDZHc4g0ySfoSIuadpaf6tLvUxlu
-         gzVg==
+        bh=PmLOPzI7usjs7Qmnspd34ZMOrobza2FnhZDO80Oyo7g=;
+        b=phSnllFwKWfjOo/wzy5MD2OXQvxwhFGBU6Sib/Cx5jJJeSswL5h720is5v7ual5QfK
+         WX5C+aFU2zbA6co05x9t6ZdK1OmfAWcQpiqMEXzQBCUNgobMVYTQLNHxxCGs/+c6o3C3
+         YQnZ/SxavZ4dFXJqGrAyc9gnkN+DjXK3bMCj/hOt+2FGjZCCeRmBybWyS7M6hXfWkIOg
+         UI47jYN/McIMlcZtztDEU+fZO4wekpZWZPh2sPsOcuCkBkOTAayUP3EwBz7HGWLhIgir
+         dH+ZFhQQnPc8dYJ2JqBpEI1+LgMCSSmtb1V4OGuqMwtVArfcixaeMeKa22FiYUeGr/30
+         D+eQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20251104; t=1786134072; x=1786738872;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lxxJcfOvuS2DiwqIjrqP14riK8k/np3VBj64PdkOyLA=;
-        b=q0/Zc/KLMN4Z2Jzc+WHvvfe4czscM9H+tishyscgMw8X1fk2cTTDNTYhMa+N3aYFZx
-         q2hijawLPYnU+Fm/EI8OQ/AzHgN1tJGq0MbaM7rzHbjMnJQ7Kl4jf1JsOQPihjmN9L4M
-         h+Yb4zac7UQa6qDi82hw6coVDmrXSs/YMMUcZB4kXv2mXZumz5sGpCE/0+4AaOe/TBRr
-         zEtLaOEQJFIKMZQmTnZCODeE1oKVanNQNQ1ZNKIeOiCqvC2bpkcDT+tnkMZSeoSHtTeq
-         1tnPgmnK/Dvf7BqpV4rsHZvxZsiGINcAAA3XZuAcbLOP1KRi8pBaEKHvepN/Yl4sA9Ry
-         oozw==
-X-Forwarded-Encrypted: i=1; AHgh+RrTwHlbXpj3rWkHiLZjZySEB3z33WXHo9v5PKLfvUTJ+L/YNGDZWBenGCnernE1GbolTtqMUqUA@vger.kernel.org
-X-Gm-Message-State: AOJu0YzAgANUXmKDzu48Ycufk8JtlU8Qns0ocWzZ1sDPB9uqa/mfS1+7
-	C21SR5wUMbY4KihJHMbfjyNAABkfJ1/DUqFdgv+xHEOOFKAiGCyYeI4+
-X-Gm-Gg: AR+sD12IPfAMgELpbFQT5lkYYUx/83bG2UMv8SAPjQoTyOnaNiJT0b8yB3MSUTwgP67
-	G1X6/enkVV/PpEQmhRJQMAtTzV+eRSZp5WMtYJ4qzu2A5kRoY2yTCvhCVzqZcuIQZvEiGdZBb4f
-	Z8eVTdVVn2pQ8CHimypiaPehF/I2zB7PexvVD0i4hhdn2nJW7D8OAT4UbM4rvzJ/CXioYAIBUSd
-	TzB/YPEtGZZmF+1m1uGvynLCflP/1p+yFzP4d4QgygPsXz0tlaycexOf+CU5d1jiCFP8/cazMXg
-	WQzAtyWvuIU1JdPLzU0yI5k22FHbvwVqOEygPp7WmQ8LcusauR8F0WYe+2cENLwtfaWQFNosUMm
-	IlSsRcUbW1Du4ZsM1ULdRFojG2ah28sx6zJs/RATCqqdMbC7YwP7JcutoDioxgjzAjSq5292aV2
-	FN0ZQ0fhQE4w9/gvXI23qIBsDAz7QwWHdzdgPRlqvZFdi8dSaY1/UvoEYdUszqPrjE0Q7KPbRQy
-	mGOgVhHZnArNgij/O8vyeO5qtldIA==
-X-Received: by 2002:a05:6808:1a0b:b0:490:af61:8830 with SMTP id 5614622812f47-4afadf217ccmr13020013b6e.3.1786134070676;
-        Fri, 07 Aug 2026 13:21:10 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:73::])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4b1af63b441sm422380b6e.14.2026.08.07.13.21.09
+        bh=PmLOPzI7usjs7Qmnspd34ZMOrobza2FnhZDO80Oyo7g=;
+        b=szN2N1exfcM7A4OwUM5OWGBi0BCZa1N89eHmKhvTxl/7GJMwilQlpBldxTlXUOa+DY
+         LcDd/AeUc9cApqps8DOBpxeKNmHgRVtoJmf1Wh/329EXl0I2bCBggNXLoGIagI02mv35
+         ttbDvqVtYIhhdX5utMMoy8xwg9tukQJNMr2TQ9Ef8yDKGodB9wzoOOH4aNsDdCD5Pmjp
+         g5ybWd2GYs8XzS1vkpwO21icqnhv1XBudJs+EvySWRBtqnNCvCFbK0HzrtGD05PMSX/A
+         ntlgPDVvXdi/juBHTVttxa/JQcu/3ChoZ8fuKObMA+HRZDEx1jBB5XtmI7wlfW48bobQ
+         0RmA==
+X-Forwarded-Encrypted: i=1; AHgh+RqgeTSB4iXWwKHqljSSQOTv4FHWyI5usYdnClwHxiCGwmFtuRG9hf7lkm4XUDuC7s4WasPm/UY7@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6yx0Y07asKEm+OhYl5doaH3lF5YXCeI1PkH/WB1zkrsMfE3Fu
+	iSDz/OlgidJzDinPOMRcoElfvS1S5YvGADVnWI9o6DALwxyCjkobX30T
+X-Gm-Gg: AR+sD13V8l7Qqlgci7UnuwG6MJdgOPARmEdngV7l8yC4pxzfsvf63MJNbUwWpZ5Maqf
+	hEepbmDUiSTzyMRk0NWssrQNWuwvHR8ZU2KTx3VIYmgezsWQFbUekezsteOYaq2Jf9HJe7OQvUd
+	d5PhFX/DcDtlTxsG/3aDBd6zcx9XynzSRVRCzDnwKyNYJvVM51ifVc3rbadkdMisELWBfkPvPYV
+	0p3f8ob/o/5HUV3lYcfzsG3etUW1fP7cFYw11IBL67ob3zLxXiMwgHDcOOfrWhwrFbKxd1UpLa8
+	50MR73o7WsyFPNEyiz5g+mEYVjqmgFvMSg3Ck4BkcHYC8wwEXZMGVnai/1m584RXPpEZHpqHgJD
+	6KKhIUpE58+TP1zuOEJGf6D0xmF0YE8MeGc/ZHR2FauQ49sMfl5uNyx0O4nVfOgcxWpmTt1jmc6
+	qHgBtYvlLWjTiHFe2vLv+xYKq45mdLP40R+BuYjf4IcslKCZJBbE+DpQJfID6+oWV050Ig+XgPt
+	UOPK6/OalCoxKlavUM=
+X-Received: by 2002:a05:6871:79a9:b0:455:d6a6:6fdf with SMTP id 586e51a60fabf-4599f0ef42dmr14021135fac.21.1786134072221;
+        Fri, 07 Aug 2026 13:21:12 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:42::])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-459f1e348d0sm2692743fac.16.2026.08.07.13.21.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Aug 2026 13:21:10 -0700 (PDT)
+        Fri, 07 Aug 2026 13:21:11 -0700 (PDT)
 From: Joshua Hahn <joshua.hahnjy@gmail.com>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Gregory Price <gourry@gourry.net>
@@ -105,9 +105,9 @@ Cc: Alistair Popple <apopple@nvidia.com>,
 	linux-kernel@vger.kernel.org,
 	linux-mm@kvack.org,
 	kernel-team@meta.com
-Subject: [RFC PATCH v3 07/14] mm/memcontrol: Charge/uncharge tiered memory to mem_cgroup
-Date: Fri,  7 Aug 2026 13:20:50 -0700
-Message-ID: <20260807202059.2620949-8-joshua.hahnjy@gmail.com>
+Subject: [RFC PATCH v3 08/14] mm/memcontrol: Make memory.low and memory.min tier-aware
+Date: Fri,  7 Aug 2026 13:20:51 -0700
+Message-ID: <20260807202059.2620949-9-joshua.hahnjy@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260807202059.2620949-1-joshua.hahnjy@gmail.com>
 References: <20260807202059.2620949-1-joshua.hahnjy@gmail.com>
@@ -119,277 +119,190 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Memory cgroup limits isolate memory as a resource, but treat all
-memory as equally valuable regardless of which memory tier it
-resides in.
+On machines serving multiple workloads whose memory is isolated via
+the memory cgroup controller, it is currently impossible to enforce a
+fair distribution of tiered memory among the workloads, as the only
+enforceable limits have to do with total memory footprint, but not where
+that memory resides.
 
-Account tiered memory usage in parallel with existing memory
-accounting. Add an nid parameter to try_charge_memcg(); callers
-resolve it to a tier slot with nid_tier_slot() and charge
-memcg->tier[slot] alongside memcg->memory.
+This makes ensuring a consistent and baseline performance difficult, as
+each workload's performance is heavily impacted by workload-external
+factors such as which other workloads are co-located in the same host,
+and the order at which different workloads are started.
 
-Uncharging reuses uncharge_gather to batch. Because the high-volume
-free path reclaims per-node, a batch is normally single-tier; if a
-folio in a different tier appears mid-batch, flush the accumulated
-uncharge and start accumulating for the new tier. Folios on
-different nodes within the same tier do not force a flush.
-
-Also, mem_cgroup_migrate() and mem_cgroup_replace_folio() now move the
-tier charge when the folio changes tier.
-
-Currently this only tracks LRU folios (try_charge_memcg() callers
-from charge_memcg()). The other two sites, obj_cgroup_charge_pages()
-and mem_cgroup_sk_charge(), will be handled by a future series that
-transitions enum memcg_stat_item to a per-lruvec counter
-(enum node_stat_item).
-
-The per-tier limits computed in the previous patch are not consulted
-yet, this patch only acounts the memory. Enforcement will come in the
-following patches.
+Extend the existing memory.{low, min} protection to be tier-aware in
+order to enforce proportional best-effort and guaranteed memory
+protection of higher-tier memory.
 
 No-op unless the system has tiered memcg limits enabled.
 
 Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
 ---
- mm/memcontrol.c | 116 ++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 108 insertions(+), 8 deletions(-)
+ include/linux/memcontrol.h | 25 +++++++++++++++++++++----
+ mm/memcontrol.c            | 11 ++++++++++-
+ mm/vmscan.c                | 15 +++++++++------
+ 3 files changed, 40 insertions(+), 11 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index f7a92b66330ec..ceba0fd6de184 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -18,6 +18,7 @@
+ #include <linux/page_counter.h>
+ #include <linux/vmpressure.h>
+ #include <linux/eventfd.h>
++#include <linux/memory-tiers.h>
+ #include <linux/mm.h>
+ #include <linux/vmstat.h>
+ #include <linux/writeback.h>
+@@ -618,21 +619,37 @@ static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
+ }
+ 
+ static inline bool mem_cgroup_below_low(struct mem_cgroup *target,
+-					struct mem_cgroup *memcg)
++					struct mem_cgroup *memcg, int nid)
+ {
+ 	if (mem_cgroup_unprotected(target, memcg))
+ 		return false;
+ 
++	if (mem_cgroup_tiered_limits()) {
++		int slot = nid_tier_slot(nid);
++
++		if (slot >= 0)
++			return READ_ONCE(memcg->tier[slot].elow) >=
++				page_counter_read(&memcg->tier[slot]);
++	}
++
+ 	return READ_ONCE(memcg->memory.elow) >=
+ 		page_counter_read(&memcg->memory);
+ }
+ 
+ static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
+-					struct mem_cgroup *memcg)
++					struct mem_cgroup *memcg, int nid)
+ {
+ 	if (mem_cgroup_unprotected(target, memcg))
+ 		return false;
+ 
++	if (mem_cgroup_tiered_limits()) {
++		int slot = nid_tier_slot(nid);
++
++		if (slot >= 0)
++			return READ_ONCE(memcg->tier[slot].emin) >=
++				page_counter_read(&memcg->tier[slot]);
++	}
++
+ 	return READ_ONCE(memcg->memory.emin) >=
+ 		page_counter_read(&memcg->memory);
+ }
+@@ -1142,13 +1159,13 @@ static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
+ 	return true;
+ }
+ static inline bool mem_cgroup_below_low(struct mem_cgroup *target,
+-					struct mem_cgroup *memcg)
++					struct mem_cgroup *memcg, int nid)
+ {
+ 	return false;
+ }
+ 
+ static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
+-					struct mem_cgroup *memcg)
++					struct mem_cgroup *memcg, int nid)
+ {
+ 	return false;
+ }
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6c67d9d2c9ac7..f3714dfd85aa0 100644
+index f3714dfd85aa0..025496794cb91 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1561,6 +1561,15 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
- 		*lru_size += nr_pages;
- }
+@@ -5310,7 +5310,16 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
+ 	if (!root)
+ 		root = root_mem_cgroup;
  
-+static struct page_counter *mem_cgroup_tier_counter(struct mem_cgroup *memcg,
-+						    int slot)
-+{
-+	if (slot < 0)
-+		return NULL;
-+
-+	return &memcg->tier[slot];
-+}
-+
- /**
-  * mem_cgroup_margin - calculate chargeable space of a memory cgroup
-  * @memcg: the memory cgroup
-@@ -2645,13 +2654,32 @@ void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
- 	css_put(&memcg->css);
- }
- 
-+static void mem_cgroup_uncharge_tier(struct mem_cgroup *memcg,
-+				     int slot, unsigned int nr_pages)
-+{
-+	struct page_counter *tier_counter = mem_cgroup_tier_counter(memcg, slot);
-+
-+	if (tier_counter)
-+		page_counter_uncharge(tier_counter, nr_pages);
-+}
-+
-+static void mem_cgroup_charge_tier(struct mem_cgroup *memcg,
-+				   int slot, unsigned int nr_pages)
-+{
-+	struct page_counter *tier_counter = mem_cgroup_tier_counter(memcg, slot);
-+
-+	if (tier_counter)
-+		page_counter_charge(tier_counter, nr_pages);
-+}
-+
- static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
--			    unsigned int nr_pages)
-+			    unsigned int nr_pages, int nid)
- {
- 	unsigned int batch = max(MEMCG_CHARGE_BATCH, nr_pages);
- 	int nr_retries = MAX_RECLAIM_RETRIES;
- 	struct mem_cgroup *mem_over_limit;
- 	struct page_counter *counter;
-+	struct page_counter *tier_counter = NULL;
- 	unsigned long nr_reclaimed;
- 	bool passed_oom = false;
- 	unsigned int reclaim_options;
-@@ -2659,10 +2687,19 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	bool raised_max_event = false;
- 	unsigned long pflags;
- 	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
-+	int slot = -1;
+-	page_counter_calculate_protection(&root->memory, &memcg->memory, recursive_protection);
++	page_counter_calculate_protection(&root->memory, &memcg->memory,
++					  recursive_protection);
 +
 +	if (mem_cgroup_tiered_limits()) {
-+		slot = nid_tier_slot(nid);
-+		tier_counter = mem_cgroup_tier_counter(memcg, slot);
++		int nr_tier_slots = mt_nr_tier_slots();
++
++		for (int slot = 0; slot < nr_tier_slots; slot++)
++			page_counter_calculate_protection(&root->tier[slot],
++				&memcg->tier[slot], recursive_protection);
 +	}
- 
- retry:
--	if (consume_stock(memcg, nr_pages))
-+	if (consume_stock(memcg, nr_pages)) {
-+		if (tier_counter)
-+			page_counter_charge(tier_counter, nr_pages);
- 		return 0;
-+	}
- 
- 	if (!allow_spinning)
- 		/* Avoid the refill and flush of the older stock */
-@@ -2677,8 +2714,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 		goto reclaim;
- 	}
- 
--	if (page_counter_try_charge(&memcg->memory, batch, &counter))
-+	if (page_counter_try_charge(&memcg->memory, batch, &counter)) {
-+		if (tier_counter)
-+			page_counter_charge(tier_counter, nr_pages);
- 		goto done_restock;
-+	}
- 
- 	if (do_memsw_account())
- 		page_counter_uncharge(&memcg->memsw, batch);
-@@ -2781,6 +2821,8 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	 * temporarily by force charging it.
- 	 */
- 	page_counter_charge(&memcg->memory, nr_pages);
-+	if (tier_counter)
-+		page_counter_charge(tier_counter, nr_pages);
- 	if (do_memsw_account())
- 		page_counter_charge(&memcg->memsw, nr_pages);
- 
-@@ -2852,7 +2894,7 @@ static inline int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	if (mem_cgroup_is_root(memcg))
- 		return 0;
- 
--	return try_charge_memcg(memcg, gfp_mask, nr_pages);
-+	return try_charge_memcg(memcg, gfp_mask, nr_pages, NUMA_NO_NODE);
  }
  
- static void commit_charge(struct folio *folio, struct obj_cgroup *objcg)
-@@ -3152,7 +3194,7 @@ static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
+ static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index ffe7ea3c5aff6..29f3f12042650 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4190,7 +4190,7 @@ static bool lruvec_is_reclaimable(struct lruvec *lruvec, struct scan_control *sc
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	DEFINE_MIN_SEQ(lruvec);
  
- 	memcg = get_mem_cgroup_from_objcg(objcg);
+-	if (mem_cgroup_below_min(NULL, memcg))
++	if (mem_cgroup_below_min(NULL, memcg, lruvec_pgdat(lruvec)->node_id))
+ 		return false;
  
--	ret = try_charge_memcg(memcg, gfp, nr_pages);
-+	ret = try_charge_memcg(memcg, gfp, nr_pages, NUMA_NO_NODE);
- 	if (ret)
- 		goto out;
+ 	if (!lruvec_is_sizable(lruvec, sc))
+@@ -5057,6 +5057,7 @@ static bool try_to_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
+ 	bool need_rotate = false, should_age = false;
+ 	long nr_batch, nr_to_scan;
+ 	int swappiness = get_swappiness(lruvec, sc);
++	int nid = lruvec_pgdat(lruvec)->node_id;
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
  
-@@ -5280,7 +5322,8 @@ static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
- 	objcg = get_obj_cgroup_from_memcg(memcg);
- 	/* Do not account at the root objcg level. */
- 	if (!obj_cgroup_is_root(objcg))
--		ret = try_charge_memcg(memcg, gfp, folio_nr_pages(folio));
-+		ret = try_charge_memcg(memcg, gfp, folio_nr_pages(folio),
-+				       folio_nid(folio));
- 	if (ret) {
- 		obj_cgroup_put(objcg);
- 		return ret;
-@@ -5376,6 +5419,8 @@ struct uncharge_gather {
- 	unsigned long pgpgout;
- 	unsigned long nr_kmem;
- 	int nid;
-+	int tier_slot;
-+	unsigned long tier_nr;
- };
+ 	nr_to_scan = get_nr_to_scan(lruvec, sc, memcg, swappiness);
+@@ -5064,7 +5065,7 @@ static bool try_to_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
+ 		int delta;
+ 		DEFINE_MAX_SEQ(lruvec);
  
- static inline void uncharge_gather_clear(struct uncharge_gather *ug)
-@@ -5383,6 +5428,34 @@ static inline void uncharge_gather_clear(struct uncharge_gather *ug)
- 	memset(ug, 0, sizeof(*ug));
- }
- 
-+static void flush_tier_charge(struct mem_cgroup *memcg,
-+			      const struct uncharge_gather *ug)
-+{
-+	struct page_counter *tier_counter;
-+
-+	tier_counter = &memcg->tier[ug->tier_slot];
-+	page_counter_uncharge(tier_counter, ug->tier_nr);
-+}
-+
-+static void gather_tier_charge(struct uncharge_gather *ug, struct folio *folio,
-+			       unsigned long nr_pages)
-+{
-+	int slot = nid_tier_slot(folio_nid(folio));
-+
-+	if (slot < 0)
-+		return;
-+
-+	if (ug->tier_nr && slot != ug->tier_slot) {
-+		rcu_read_lock();
-+		flush_tier_charge(obj_cgroup_memcg(ug->objcg), ug);
-+		rcu_read_unlock();
-+		ug->tier_nr = 0;
-+	}
-+
-+	ug->tier_slot = slot;
-+	ug->tier_nr += nr_pages;
-+}
-+
- static void uncharge_batch(const struct uncharge_gather *ug)
- {
- 	struct mem_cgroup *memcg;
-@@ -5395,6 +5468,8 @@ static void uncharge_batch(const struct uncharge_gather *ug)
- 			mod_memcg_state(memcg, MEMCG_KMEM, -ug->nr_kmem);
- 			memcg1_account_kmem(memcg, -ug->nr_kmem);
+-		if (mem_cgroup_below_min(sc->target_mem_cgroup, memcg)) {
++		if (mem_cgroup_below_min(sc->target_mem_cgroup, memcg, nid)) {
+ 			need_rotate = true;
+ 			break;
  		}
-+		if (ug->tier_nr)
-+			flush_tier_charge(memcg, ug);
- 		memcg1_oom_recover(memcg);
- 	}
+@@ -5104,12 +5105,13 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+ 	unsigned long reclaimed = sc->nr_reclaimed;
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
++	int nid = pgdat->node_id;
  
-@@ -5440,8 +5515,11 @@ static void uncharge_folio(struct folio *folio, struct uncharge_gather *ug)
- 		ug->nr_kmem += nr_pages;
- 	} else {
- 		/* LRU pages aren't accounted at the root level */
--		if (!obj_cgroup_is_root(objcg))
-+		if (!obj_cgroup_is_root(objcg)) {
- 			ug->nr_memory += nr_pages;
-+			if (mem_cgroup_tiered_limits())
-+				gather_tier_charge(ug, folio, nr_pages);
-+		}
- 		ug->pgpgout++;
+ 	/* lru_gen_age_node() called mem_cgroup_calculate_protection() */
+-	if (mem_cgroup_below_min(NULL, memcg))
++	if (mem_cgroup_below_min(NULL, memcg, nid))
+ 		return MEMCG_LRU_YOUNG;
  
- 		WARN_ON_ONCE(folio_unqueue_deferred_split(folio));
-@@ -5514,6 +5592,11 @@ void mem_cgroup_replace_folio(struct folio *old, struct folio *new)
- 	/* Force-charge the new page. The old one will be freed soon */
- 	if (!obj_cgroup_is_root(objcg)) {
- 		page_counter_charge(&memcg->memory, nr_pages);
-+		if (mem_cgroup_tiered_limits()) {
-+			int slot = nid_tier_slot(folio_nid(new));
-+
-+			mem_cgroup_charge_tier(memcg, slot, nr_pages);
-+		}
- 		if (do_memsw_account())
- 			page_counter_charge(&memcg->memsw, nr_pages);
- 	}
-@@ -5558,6 +5641,23 @@ void mem_cgroup_migrate(struct folio *old, struct folio *new)
- 	if (!objcg)
- 		return;
+-	if (mem_cgroup_below_low(NULL, memcg)) {
++	if (mem_cgroup_below_low(NULL, memcg, nid)) {
+ 		/* see the comment on MEMCG_NR_GENS */
+ 		if (READ_ONCE(lruvec->lrugen.seg) != MEMCG_LRU_TAIL)
+ 			return MEMCG_LRU_TAIL;
+@@ -6168,6 +6170,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 	};
+ 	struct mem_cgroup_reclaim_cookie *partial = &reclaim;
+ 	struct mem_cgroup *memcg;
++	int nid = pgdat->node_id;
  
-+	if (!obj_cgroup_is_root(objcg) && mem_cgroup_tiered_limits()) {
-+		struct mem_cgroup *memcg;
-+		unsigned long nr_pages = folio_nr_pages(old);
-+		int old_slot, new_slot;
-+
-+		rcu_read_lock();
-+		memcg = obj_cgroup_memcg(objcg);
-+		old_slot = nid_tier_slot(folio_nid(old));
-+		new_slot = nid_tier_slot(folio_nid(new));
-+
-+		if (old_slot != new_slot) {
-+			mem_cgroup_uncharge_tier(memcg, old_slot, nr_pages);
-+			mem_cgroup_charge_tier(memcg, new_slot, nr_pages);
-+		}
-+		rcu_read_unlock();
-+	}
-+
- 	/* Transfer the charge and the objcg ref */
- 	commit_charge(new, objcg);
+ 	/*
+ 	 * In most cases, direct reclaimers can do partial walks
+@@ -6197,13 +6200,13 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
  
-@@ -5633,7 +5733,7 @@ bool mem_cgroup_sk_charge(const struct sock *sk, unsigned int nr_pages,
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
- 		return memcg1_charge_skmem(memcg, nr_pages, gfp_mask);
+ 		mem_cgroup_calculate_protection(target_memcg, memcg);
  
--	if (try_charge_memcg(memcg, gfp_mask, nr_pages) == 0) {
-+	if (try_charge_memcg(memcg, gfp_mask, nr_pages, NUMA_NO_NODE) == 0) {
- 		mod_memcg_state(memcg, MEMCG_SOCK, nr_pages);
- 		return true;
- 	}
+-		if (mem_cgroup_below_min(target_memcg, memcg)) {
++		if (mem_cgroup_below_min(target_memcg, memcg, nid)) {
+ 			/*
+ 			 * Hard protection.
+ 			 * If there is no reclaimable memory, OOM.
+ 			 */
+ 			continue;
+-		} else if (mem_cgroup_below_low(target_memcg, memcg)) {
++		} else if (mem_cgroup_below_low(target_memcg, memcg, nid)) {
+ 			/*
+ 			 * Soft protection.
+ 			 * Respect the protection only as long as
 -- 
 2.53.0-Meta
 
