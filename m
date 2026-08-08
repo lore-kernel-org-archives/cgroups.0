@@ -1,97 +1,83 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B23C1F8723
-	for <cgroups@vger.kernel.org>; Sat,  8 Aug 2026 01:36:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE97B1F16B
+	for <cgroups@vger.kernel.org>; Sat,  8 Aug 2026 04:32:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786152987; cv=none; b=RPqNGK7g91n7GIfeT4/RZgv8ATOBe8OZd+0groJQGmO2CktBMIVUJbf6t4iJeKYcpRbEZQT2ZQDz4fbwOsJolrOQTunyMaPZyxt/2hbq2TrvuE4I7VQs2WXna3RWLMtgII73s+aMGi5owCC4q00qHWhbvU1gWrfYcV2NC3rNLuk=
+	t=1786163551; cv=none; b=M4I/DIV8EPYQnxq1saxZ9c0mhDswbr1r+pFDgsdgz0hExZGWFAiPRYXbmsgF+Cy5uqybwEiMyyGvV5ZQnLt2+EJL0AAPcOpEWLC21RBbUnlob6YLX3hQlKZXKw6uJYRJZo6LdLBjXndx25cLzhhHeuvhnWc1Wjy/EjY70NNj798=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786152987; c=relaxed/simple;
-	bh=VqJ/5vx1+/Tgbi7U14FnSG+i7R5Bb0mRyNoBP8I9kMo=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=dFjEiZpae9DYZ5AvPqiWYMT6fobgEJahWvBhqmzBQZtcIwfmFya+oIs5JDRMmQLv3QhWSVNklbfxt9b4Oumd3LJjN/H7dezXkHp8dtXnz78UjVPmI6EPu8lOgQMN5uGfcwc7t2dEVhl8IDkz12l8YpfHebys2dj44F0Dao6HAyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LI/AXB+s; arc=none smtp.client-ip=95.215.58.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LI/AXB+s"
-Content-Type: text/plain;
-	charset=us-ascii
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786152971;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mBze6R+Yde21iZRthxsluHvPvQaZpfZt7IhiN6kDbGs=;
-	b=LI/AXB+sl/lAsfXlZgmEG1cRftwk6gDS1C1hOcW1gnixTb7sKudbdP/f+F4XA2F7tLCXnF
-	e6sGu5pPc2E6cB4241E+FS8cHpWkWeVlOdYK7nVO+Y0KFRjnp2wcHfJhfjzfj4EZURu/jw
-	/XzeJHn5jY4kzwNsJMVweKHyhZ5XDBA=
+	s=arc-20240116; t=1786163551; c=relaxed/simple;
+	bh=Si2iV1ncOrhWKubNhcy6h1G/aWKwiMzaS+E6TmXN4L0=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=MRjBgoNU6i/gOkIlJNCuTWUJhy6Oe8shDhBnRlE7rigKmEroSQ+d3qdtA17mOw4Abybf04sJibJnm6jNC0mOekagf71wv7PurC7htB1TXWc06CEi7EbuwbL0m/A8kDMZZwqKXDOXU/NSqxyd9CbEMOoCm456GADL4TW0ZfRJu2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.210.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-7eb64224fd2so527054a34.0
+        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 21:32:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786163548; x=1786768348;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IBJSZ9Cisut9NNIGmF//TXPWbjHN6sOudO3TBgsh03s=;
+        b=mim7mjwUQbMH8GCZLRNOF+iAakCG+s6jeDspvT9yRZolm/vhrkgHZAto1v9h+u72Iz
+         a2lddKtFxubQnx5espTEvNURnMnIM7p4v7sGuPq4h5dviam0Ayp0MTQXs98BZTFgtG0+
+         q+37wZ3ovtnoHDh78m1INN8iqSItYXsPKF6l5mpGtrCRrl5dLdgdHVP6yzCmtBfnZbv6
+         nul34IbyDN66oYTnxooEaDn7J9ttkprPnJ0oPgjEQ58tErwVNBI12hoR+USaA2znu73J
+         GEa4ftQ2w4RQlmlRicYS42Ix7LuZzk3CItBp0H8E55xMC9w9f6siqd03vxQoVY5FbaqQ
+         tftg==
+X-Gm-Message-State: AOJu0YyaLZcGa3GVoc7JM3ZF8JfBr8dEh2/g/BYkbzS651XgS451OJX5
+	bjat1KlUYilns8lZCxuL5qsDCNJK0xcnfd8PRAumQ2Xlbhr3rqS0AdfkyQ7QuUJ3Cgn+v8C0Uh7
+	mmWkDiB2uLKi7rgEGa9GtT9S00cHVTaZvQAZlsLRzhTRDg/2sTp1BkoSA3Ro=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: Re: [PATCH v3] memcg: keep folio's objcg same as its node
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20260807142406.443516-1-shakeel.butt@linux.dev>
-Date: Sat, 8 Aug 2026 09:35:36 +0800
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- Michal Hocko <mhocko@suse.com>,
- Johannes Weiner <hannes@cmpxchg.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Qi Zheng <qi.zheng@linux.dev>,
- Meta kernel team <kernel-team@meta.com>,
- linux-mm@kvack.org,
- cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Karl Erik Hofseth <karl.e.hofseth@opoint.com>,
- stable@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <9B30927B-4154-4FA4-B62E-425F6EC4FA89@linux.dev>
-References: <20260807142406.443516-1-shakeel.butt@linux.dev>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-X-Migadu-Flow: FLOW_OUT
+MIME-Version: 1.0
+X-Received: by 2002:a05:6820:2916:b0:6ac:aa4c:5d93 with SMTP id
+ 006d021491bc7-6ae97038ea5mr14953752eaf.36.1786163548675; Fri, 07 Aug 2026
+ 21:32:28 -0700 (PDT)
+Date: Fri, 07 Aug 2026 21:32:28 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a76b15c.b50370da.49fe0.0022.GAE@google.com>
+Subject: [syzbot] Monthly cgroups report (Aug 2026)
+From: syzbot <syzbot+list4457f47fe6c2e84981e7@syzkaller.appspotmail.com>
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
+Hello cgroups maintainers/developers,
 
+This is a 31-day syzbot report for the cgroups subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/cgroups
 
-> On Aug 7, 2026, at 22:24, Shakeel Butt <shakeel.butt@linux.dev> wrote:
->=20
-> memcg_reparent_objcgs() has an inherent assumption that a folio's =
-objcg
-> is the objcg of the folio's node.  Folio migration across nodes breaks
-> that assumption: the new folio simply inherits the old folio's objcg
-> while living on a different node.
->=20
-> Once the assumption is broken, the reparenting of the folio's objcg =
-and
-> the reparenting of the folio's LRU list are no longer atomic.
-> memcg_reparent_objcgs() handles one node per iteration and drops all =
-the
-> locks in between, so the objcg gets reparented in the iteration for =
-the
-> objcg's node while the LRU list gets spliced in the iteration for the
-> folio's node.  Any LRU operation on that folio in between resolves its
-> lruvec through the objcg, and thus takes the lru_lock of the wrong
-> memcg, not the lru_lock of the list the folio is actually on.
->=20
-> Fix this by selecting the objcg by folio_nid() at charge time, and by
-> re-deriving it for the destination node in mem_cgroup_migrate() and
-> mem_cgroup_replace_folio().
->=20
-> Reported-by: Karl Erik Hofseth <karl.e.hofseth@opoint.com>
-> Closes: https://lore.kernel.org/all/anMmd1ADrDVwMO6v@work/
-> Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of dying =
-memory cgroup for LRU folios")
-> Cc: stable@vger.kernel.org
-> Co-developed-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+During the period, 2 new issues were detected and 0 were fixed.
+In total, 4 issues are still open and 51 have already been fixed.
+There are also 2 low-priority issues.
 
-Acked-by: Muchun Song <muchun.song@linux.dev>
+Some of the still happening issues:
 
-Thanks.
+Ref Crashes Repro Title
+<1> 3916    Yes   possible deadlock in console_flush_all (4)
+                  https://syzkaller.appspot.com/bug?extid=d10e9d53059eb8aed654
+<2> 458     Yes   INFO: task hung in cgroup_subtree_control_write (2)
+                  https://syzkaller.appspot.com/bug?extid=bb2e19a1190a556c01b1
+<3> 2       No    possible deadlock in _task_rq_lock
+                  https://syzkaller.appspot.com/bug?extid=e8aac527b30cc7380cf3
 
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
