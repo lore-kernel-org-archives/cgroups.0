@@ -1,83 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1E42D2397
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 23:26:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B23C1F8723
+	for <cgroups@vger.kernel.org>; Sat,  8 Aug 2026 01:36:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786145207; cv=none; b=kyhprzw4B9lvQ4i4EsK+EoDVjXtV61Vqs40XIUJVWjJUicx4/PeC3kpp+9dgXYVv03v7RN77DvJ0ep+WtX97tFTHGbSC1gy7Vgc/C2tZLnDaFFpV3W6EiOi24/D4DBI1k39weDTg7s8aS6CFL9oqRABOwGo/VzCdDB0Y9C1lWpM=
+	t=1786152987; cv=none; b=RPqNGK7g91n7GIfeT4/RZgv8ATOBe8OZd+0groJQGmO2CktBMIVUJbf6t4iJeKYcpRbEZQT2ZQDz4fbwOsJolrOQTunyMaPZyxt/2hbq2TrvuE4I7VQs2WXna3RWLMtgII73s+aMGi5owCC4q00qHWhbvU1gWrfYcV2NC3rNLuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786145207; c=relaxed/simple;
-	bh=i4cxxvp0f8cy854qggvftBeZLtacFW5iIDEQ/J+cwkI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nHvrLILGynPGavdMVqzTWDO0z9Pevg61u3Z62m8I6kzGr6ALdwDw1Ss+DTXuFTcGH3cXT1cd4J1TrX+HpklfVnXAkiIptRLUQBGagiOK2J27gCuZ+PIstHozJyWf2qy590bhSFrEeADItC0K+8hS364wL/zWh5+E1307Sxq0PaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hPCm+Yt4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786152987; c=relaxed/simple;
+	bh=VqJ/5vx1+/Tgbi7U14FnSG+i7R5Bb0mRyNoBP8I9kMo=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=dFjEiZpae9DYZ5AvPqiWYMT6fobgEJahWvBhqmzBQZtcIwfmFya+oIs5JDRMmQLv3QhWSVNklbfxt9b4Oumd3LJjN/H7dezXkHp8dtXnz78UjVPmI6EPu8lOgQMN5uGfcwc7t2dEVhl8IDkz12l8YpfHebys2dj44F0Dao6HAyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LI/AXB+s; arc=none smtp.client-ip=95.215.58.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hPCm+Yt4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F0E81F01559
-	for <cgroups@vger.kernel.org>; Fri,  7 Aug 2026 23:26:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786145206;
-	bh=i4cxxvp0f8cy854qggvftBeZLtacFW5iIDEQ/J+cwkI=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=hPCm+Yt4Vch5BSbQ0ClvEdx2L8AV+Rh6Da8o+gwueR9dldOfuvXngqs4keglQl8OR
-	 u7RWoO72wuF7YIYPC6ffVgLfc5FDc3BKaPuUv52oQPKS4ZaJVYVfrI5vjN5jSlD6EL
-	 DZi7V34+9toqGMXqvaG7PXsAnRacOOw3ZE9sD0g2n+7qrDQylkaMM3E9ct/OIm50ao
-	 aRyTscTK/89ZPH5ZT63xlalYGAD8aOIYK1zRS42B6hx+XqCMw1cCApzjL8uZ+pVPnk
-	 P22RkGoBQOJaucsY1oXieEexYBjvdngnk0KR5PdlZgBf+5zkKbtPz6MuEyHJNL82v3
-	 9P3Ru7YX73FJw==
-Received: by mail-qk1-f179.google.com with SMTP id af79cd13be357-92e7632b193so5453985a.2
-        for <cgroups@vger.kernel.org>; Fri, 07 Aug 2026 16:26:46 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RrU8NPQgVgoo5DyChN286SGi1+EUtEpsDcVE7C0FRqgEwmF3SznykERnkLaROuzBnOSGXI+Sllj@vger.kernel.org
-X-Gm-Message-State: AOJu0YwGKB5JSs9NjfpXJBpD5XMdgoQih0cq/zqlA2ShNxOGJqk/Bd7O
-	EJbZUb4f59RpiaTSsbbVJ4uhgfUtwWBM6UAqMfg9KEWjWlh5cWKjfY4KrKcRbR9O+o5OsGzAiEb
-	5xCX1Zmrc2pz+bmfpX2eX/uXWbh9o4j4=
-X-Received: by 2002:a05:620a:372c:b0:92f:199:b035 with SMTP id
- af79cd13be357-9367973f161mr458105485a.3.1786145205525; Fri, 07 Aug 2026
- 16:26:45 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LI/AXB+s"
+Content-Type: text/plain;
+	charset=us-ascii
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1786152971;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=mBze6R+Yde21iZRthxsluHvPvQaZpfZt7IhiN6kDbGs=;
+	b=LI/AXB+sl/lAsfXlZgmEG1cRftwk6gDS1C1hOcW1gnixTb7sKudbdP/f+F4XA2F7tLCXnF
+	e6sGu5pPc2E6cB4241E+FS8cHpWkWeVlOdYK7nVO+Y0KFRjnp2wcHfJhfjzfj4EZURu/jw
+	/XzeJHn5jY4kzwNsJMVweKHyhZ5XDBA=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com> <20260730122304.2496440-5-xueyuan.chen21@gmail.com>
-In-Reply-To: <20260730122304.2496440-5-xueyuan.chen21@gmail.com>
-From: Barry Song <baohua@kernel.org>
-Date: Sat, 8 Aug 2026 07:26:34 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4zAWOQXzGv-4SAmCsWqDtpJNuZ=SMcX2e7Xp0QEU2DFBg@mail.gmail.com>
-X-Gm-Features: AUfX_mwMd3f5s4Yz6hb8nRTt6VgnEA6ch5mYz8OPOzoAMZHEcwXwwG8U9wt5VXs
-Message-ID: <CAGsJ_4zAWOQXzGv-4SAmCsWqDtpJNuZ=SMcX2e7Xp0QEU2DFBg@mail.gmail.com>
-Subject: Re: [RFC PATCH v5 4/4] mm/shmem: split large folios only on -E2BIG
-To: Xueyuan Chen <xueyuan.chen21@gmail.com>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, 
-	hannes@cmpxchg.org, youngjun.park@lge.com, baolin.wang@linux.alibaba.com, 
-	hughd@google.com, chrisl@kernel.org, kasong@tencent.com, 
-	shikemeng@huaweicloud.com, nphamcs@gmail.com, baoquan.he@linux.dev, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	muchun.song@linux.dev, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
-	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, qi.zheng@linux.dev, 
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
+Subject: Re: [PATCH v3] memcg: keep folio's objcg same as its node
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20260807142406.443516-1-shakeel.butt@linux.dev>
+Date: Sat, 8 Aug 2026 09:35:36 +0800
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Michal Hocko <mhocko@suse.com>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Qi Zheng <qi.zheng@linux.dev>,
+ Meta kernel team <kernel-team@meta.com>,
+ linux-mm@kvack.org,
+ cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Karl Erik Hofseth <karl.e.hofseth@opoint.com>,
+ stable@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <9B30927B-4154-4FA4-B62E-425F6EC4FA89@linux.dev>
+References: <20260807142406.443516-1-shakeel.butt@linux.dev>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, Jul 30, 2026 at 8:24=E2=80=AFPM Xueyuan Chen <xueyuan.chen21@gmail.=
-com> wrote:
->
-> shmem_writeout() currently splits a large folio on every
-> folio_alloc_swap() failure. With the refined return-value contract, only
-> -E2BIG indicates that splitting might allow smaller folios to be swapped
-> out.
->
-> Enter the split fallback only for -E2BIG. For -ENOSPC and -ENOMEM,
-> redirty and reactivate the folio as before.
->
-> Suggested-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-> Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-> Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
-> ---
 
-LGTM,
 
-Reviewed-by: Barry Song <baohua@kernel.org>
+> On Aug 7, 2026, at 22:24, Shakeel Butt <shakeel.butt@linux.dev> wrote:
+>=20
+> memcg_reparent_objcgs() has an inherent assumption that a folio's =
+objcg
+> is the objcg of the folio's node.  Folio migration across nodes breaks
+> that assumption: the new folio simply inherits the old folio's objcg
+> while living on a different node.
+>=20
+> Once the assumption is broken, the reparenting of the folio's objcg =
+and
+> the reparenting of the folio's LRU list are no longer atomic.
+> memcg_reparent_objcgs() handles one node per iteration and drops all =
+the
+> locks in between, so the objcg gets reparented in the iteration for =
+the
+> objcg's node while the LRU list gets spliced in the iteration for the
+> folio's node.  Any LRU operation on that folio in between resolves its
+> lruvec through the objcg, and thus takes the lru_lock of the wrong
+> memcg, not the lru_lock of the list the folio is actually on.
+>=20
+> Fix this by selecting the objcg by folio_nid() at charge time, and by
+> re-deriving it for the destination node in mem_cgroup_migrate() and
+> mem_cgroup_replace_folio().
+>=20
+> Reported-by: Karl Erik Hofseth <karl.e.hofseth@opoint.com>
+> Closes: https://lore.kernel.org/all/anMmd1ADrDVwMO6v@work/
+> Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of dying =
+memory cgroup for LRU folios")
+> Cc: stable@vger.kernel.org
+> Co-developed-by: Johannes Weiner <hannes@cmpxchg.org>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+
+Acked-by: Muchun Song <muchun.song@linux.dev>
+
+Thanks.
+
