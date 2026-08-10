@@ -1,162 +1,150 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C904840A928
-	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 16:33:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786379626; cv=pass; b=cDn9SVe5jKgh5ydQyWZlOqiZdQS8uVsj5M9NU88Dd8Ui24T4iYmPTphv0igL9g1YTa84Njynk0xegx9Q/e20k6bNn3neFWytsDkuptsq5lYH7hbd8nCnmhr1xOHUJ0L+Jhza4G3gPAz8fa62fk1iZ5q9X3I+AaLTA4hpyfy1tFY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786379626; c=relaxed/simple;
-	bh=92IdV19r0TDh/ZZaldtV1bjlAmTbuJX6DPtxnWcUDvU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NrTg7z/wqCniXy9Now2vxFIJdN5xZl21RQaZ5Zw0O1Dj6exNEQUXPCvk+yNrYL4uE+nkn6MU3Tl3D1dCmgu2mKWIA5demMG0WrVwajTQblxvlxWvz7JCXI1XLRDAn+a09XEI3KgZMzR2yHCEkWZrn/NRTCU6kFcaEfrp2bUkadQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A8nkiV09; arc=pass smtp.client-ip=209.85.221.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC8A6415F2C
+	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 16:44:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786380254; cv=none; b=Un0fqdoXrYXW/JeziJQaOBkFESFmF0mYCKc3qZYrBFi5jFXjDA3a0KOh213BQI6lje3ULARMWbIXydjET4gmIAhgmF9pfiutC/qGpJEQ8qi7NGIT+IQNc6VMnWIZwRQ1CDUQa7S0RucYVnfTYJyzTBJQaepz2WIlYQ145QlwfsA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786380254; c=relaxed/simple;
+	bh=xH2TjijH4L0pZUaO19L4oc/fwZHipDZXW4i/CUti4JQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jdFWQs+VcidICmjWad/Do1nyL4BgwisYQMnj+ftZnycJr8/tc4QmtWbxC12WqBA6uBXL11FHKH1CnRb7sVOBkRpBo3p6XNlzJmF3DbO0FPz3j/UMV9XhswpLiq9DrQXP9nmQqCjkys6K8zXlP3mOs42eetdZzajtwUTcw5mGeEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=eYPHbJ5C; arc=none smtp.client-ip=91.218.175.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A8nkiV09"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-476a130c138so1999260f8f.0
-        for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 09:33:44 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786379623; cv=none;
-        d=google.com; s=arc-20260327;
-        b=IFfOLYDHBRokomTwfDU1R0uia6lGtprO/+fAjLoOU8Mqvg7RNdxsUnpG9PYAjXWw8p
-         W6ZGygb2wFcr1sroVzWnAPFLpVSkRM1xWpnnZvOwQYVjkgs2BHUaKf6zL4vdzKLX4KYu
-         CJESomaYxQWQFvUkEl+KiYSXkaZ1hp6ZHS2cgU2MDl8i0R3dB33xFHqW+94jvz9lHIG2
-         W/BYo6DLh7hqr2uKE8x5AO7gm40e9quL9vcEBroffF94wGA0JednLGjZejwgTDJJMbrL
-         NLQwa80t2lG6V2ZcXWztumAArdfr16H4Dc+qGAY3/e18KEFt1THErtogV4vlHCPl1oMr
-         cMoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=92IdV19r0TDh/ZZaldtV1bjlAmTbuJX6DPtxnWcUDvU=;
-        fh=C1CIfPTUIzXbSg2M0w9Jki7NqZFl4n9bXDGVz9l9RYQ=;
-        b=cIlv4jaNDmZJGI8PEB7U+c5fkR0gPPwl1PqfoRSmHbXDZG4relFGHCLSTrcurUfPNR
-         jgkK8c5ExrrU2VpiAj657+Fj3nsjeMnwGbo/s8HpCzqbFSu3CWeAYyYfOrRWyTIEd3UZ
-         rUuUcY17hELrgrHAHihIw6/qBxPosJ2e5B9hTpFL5V7CqCDOQQadzQQNluRKuuc/a6bm
-         dEi0yjf+QfUHQYQ8XwwdPDhiTIc/7gBohc79zVamcI/9BFBRuSldR8qTcuzO8qY50Ow/
-         hI+ghmYaCtw3V2jRabL6wtycR+6dmgfGzIZOAl9EQteaSWrsBnGUfz9YkYJR94JeFZIu
-         u0/Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786379623; x=1786984423; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=92IdV19r0TDh/ZZaldtV1bjlAmTbuJX6DPtxnWcUDvU=;
-        b=A8nkiV09mUMVaZGn1g6ZmAv/VBnKw+90bPl8eOV5UL0+5cLisIR16/CTIvY4uWRWKg
-         k46P1Up/l3E2F+v1Af2QpJ1dtIVaCUdyCVMaP8N+jDyC4r+/1jjBLgGWGWfr2PiyTlpo
-         yO8SQ1oGEI4zJ/AHG7tAtraUmjG33aBFPsZxw7mxUckVT4jV0M5OhgZsmKn3phguqK2q
-         vT7jmyO2YajscjBl09EaXZ68Fv5JK14077LWaLVnlvR/7hhNTzPu5XuoHakWVFsr6658
-         mS2DB621jYV+H945yn7UXEcLVEWHh7S9wLrAbZSz/uGkaOuihfDehLaLuGMqcOAhhohl
-         RbNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786379623; x=1786984423;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=92IdV19r0TDh/ZZaldtV1bjlAmTbuJX6DPtxnWcUDvU=;
-        b=RVYz+tVIByxnOAuKjhJQYOHNWboGKndSabz0haD8lmjTXUwi6dZW1/GNtke0ufcErG
-         LbIBEx4eJtpC45SGHhNof433Y8RP6ZZ4gqf46EZyfBhTAAlM8/j1eNcJJ8EZ6tvKhoBi
-         Jg+PrPl0glGik1syhFtJIDQYFy5ag6hHIKtju/fbzKIaXImTQLyzO+AF11a5p86a9gXy
-         hA33PgAhS6m2egyvL/akSANbP78Tq6wweDv+EZkIIZJMuQnNBhAPB2XSFjE7oQQECD4R
-         YnyvQfH0mldKXsy58Z/zCyax31dr0aGq7sjSe8zBCwhysw8mHN0qqbj17QDZ0dDEo4Ka
-         pMtA==
-X-Forwarded-Encrypted: i=1; AHgh+RooCknUUePLeHi1PC99kLDLQ5w6f12ISR9b/RQ1+3/5w6sPtMEv0irUMH59tsvOR0sVrmI/qKJD@vger.kernel.org
-X-Gm-Message-State: AOJu0YyU4LZu481MtwFKLyAfOC9QGe3Td9pFrxazzeLvmtK32P6VTXwg
-	9H1OnGyxgXmRcxBOmyAsA2BZ2GKM80XpO8zIfEGoxrI9uBRTZ3cGMX9Yzt0BnCJqhp2CyaLhHY2
-	kO8QUIFfMctliCqCe5Ld9bV7wxOnULJk=
-X-Gm-Gg: AR+sD12ck3+KNiUvGwK/4X4ZHDqJPRnt5z4P7CJDtUPS/1/CdyOVYtHTxNgjpjV8lwS
-	iKcBAflvX2ZylLB/md+4SrLs6Fk9x9Lpx85i5O6+z+1Y4SrjeaI404J8m7aBOCLLt8KiP415qyq
-	MiKq/Tgbh+gY1KyxDazZnmfWeIqtRTN27kgD3jldozKMsz0g4sz82KL5Bt63uDw922YHKF+Qc7w
-	PKZOLV4RGbPh1kalxHqXENrwXKsBjut1Ya2BfeY3n0EKtks7ijuWQ7gLRcHTubeLTTHJdE7X8vM
-	MQZm80HokV5Qoc0Cb/ZAlyYqrWNPM0520s9ZO9HrNpv+q9jUtMQWB3k4PyOUHE1sMmRZCsyEOmi
-	EOdZCjZ74kcdD
-X-Received: by 2002:a05:6000:c50:b0:47f:7c50:2222 with SMTP id
- ffacd0b85a97d-47ffd967728mr37586913f8f.24.1786379622849; Mon, 10 Aug 2026
- 09:33:42 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="eYPHbJ5C"
+Message-ID: <0326caea-07e7-43bf-8fe9-f2b97186e2ad@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1786380249;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dvRKUz02zwA8HyH/n0hNXFDDKNnkkQlJlIi+qS6R+7c=;
+	b=eYPHbJ5Cg2bGa2NrHt+xPTgN6hhvKRlI94T6nx6BfE9HUEhYLaxWR79Idod5AaH7vUPv+t
+	58pAboHnuRPAKW1NtT+vLSsCgDp3QdS9+LI4aevuuqawXsMj+e3IMcZhQw7cQg4fOqbg8M
+	2MH7Z34wShqCDedZyQXEtPekt9YpPRU=
+Date: Mon, 10 Aug 2026 17:43:59 +0100
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260806184254.3790858-1-nphamcs@gmail.com> <6a756c71.01d0871a.3a0d52.003a.GAE@google.com>
- <CACePvbVKpkyV7KpUoiYPTUN0MgEcRUzZL71qTL5ePyjHTA3Kbg@mail.gmail.com>
-In-Reply-To: <CACePvbVKpkyV7KpUoiYPTUN0MgEcRUzZL71qTL5ePyjHTA3Kbg@mail.gmail.com>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Mon, 10 Aug 2026 09:33:31 -0700
-X-Gm-Features: AUfX_mzZKBGWa5jQHBx4faGYg8WQuFE8t_gvjrXgkg0wPeZavX_nvUNwRzCJVmE
-Message-ID: <CAKEwX=M=08W43G3dSjRh1p7Z0QFSDQZWuNWguon1yETvxW+89A@mail.gmail.com>
-Subject: Re: [syzbot ci] Re: Virtual Swap Space (Swap Table Edition)
-To: Chris Li <chrisl@kernel.org>
-Cc: akpm@linux-foundation.org, axelrasmussen@google.com, baohua@kernel.org, 
-	baoquan.he@linux.dev, cgroups@vger.kernel.org, chengming.zhou@linux.dev, 
-	corbet@lwn.net, david@kernel.org, gourry@gourry.net, hannes@cmpxchg.org, 
-	haowenchao22@gmail.com, kasong@tencent.com, kernel-team@meta.com, 
-	liam@infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, ljs@kernel.org, mhocko@kernel.org, muchun.song@linux.dev, 
-	qi.zheng@linux.dev, riel@surriel.com, roman.gushchin@linux.dev, 
-	rppt@kernel.org, shakeel.butt@linux.dev, shikemeng@huaweicloud.com, 
-	surenb@google.com, vbabka@kernel.org, weixugc@google.com, yosry@kernel.org, 
-	youngjun.park@lge.com, yuanchu@google.com, syzbot@lists.linux.dev, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 2/3] blk-iocost: clear delay state when freeing policy
+ data
+To: axboe@kernel.dk, cgroups@vger.kernel.org, josef@toxicpanda.com,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org
+Cc: shakeel.butt@linux.dev, hannes@cmpxchg.org, riel@surriel.com,
+ kernel-team@meta.com
+References: <20260806183742.946953-1-usama.arif@linux.dev>
+ <20260806183742.946953-3-usama.arif@linux.dev>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Usama Arif <usama.arif@linux.dev>
+In-Reply-To: <20260806183742.946953-3-usama.arif@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, Aug 7, 2026 at 12:21=E2=80=AFAM Chris Li <chrisl@kernel.org> wrote:
->
-> Hi Nhat,
->
-> On Thu, Aug 6, 2026 at 10:26=E2=80=AFPM syzbot ci
-> <syzbot+cif942a042aaa8793c@syzkaller.appspotmail.com> wrote:
-> >
-> > syzbot ci has tested the following series
-> >
-> > [v3] Virtual Swap Space (Swap Table Edition)
-> > https://lore.kernel.org/all/20260806184254.3790858-1-nphamcs@gmail.com
-> > * [PATCH v3 01/11] mm, swap: add virtual swap device infrastructure
-> > * [PATCH v3 02/11] mm, swap: support zswap and zeroswap as vswap backen=
-ds
-> > * [PATCH v3 03/11] mm, swap: prepare the swap IO path for vswap
-> > * [PATCH v3 04/11] mm, swap: support physical swap as a vswap backend
-> > * [PATCH v3 05/11] mm, swap: enable THP swapin for vswap entries
-> > * [PATCH v3 06/11] mm, swap: write back vswap zswap entries to physical=
- swap
-> > * [PATCH v3 07/11] mm, swap: reclaim physical slots backing cache-only =
-vswap entries
-> > * [PATCH v3 08/11] mm, swap: only charge physical swap entries
-> > * [PATCH v3 09/11] mm, swap: add debugfs counters for vswap
-> > * [PATCH v3 10/11] mm, swap: defer memcg_table allocation for physical =
-swap clusters
-> > * [PATCH v3 11/11] mm, swap: widen swap_info_struct max/pages to unsign=
-ed long
-> >
-> > and found the following issue:
-> > KASAN: null-ptr-deref Read in swap_entry_backend_has_flag
-> >
-> > Full report is available here:
-> > https://ci.syzbot.org/series/e7da1097-3230-4e50-80cb-1dfafeebea40
->
-> Please take a look at the syzbot report and let us know what you think.
->
-> Chris
->
 
-Oh it's a real bug. Not too hard to fix though.
 
-Basically, before adding the folio to the swap cache, all bets are
-off. If you don't lock the PTE ("and pte mapped but not yet locked"),
-the swap entry can even go away under you. With the old code and no
-indirection, it's fine - we pin the swap device, and we only need that
-swap device's property here (for the sync IO dispatch). With vswap
-though, you need to also check vswap's entry backend device. I need to
-add proper rcu/null check here in the case the vswap entry (and its
-cluster) goes away.
+On 06/08/2026 19:37, Usama Arif wrote:
+> iocg_kick_delay() turns sufficiently large debt into an explicit
+> block-cgroup delay with blkcg_set_delay(), setting blkg->use_delay to
+> -1 and incrementing blkcg->congestion_count.  Clearing it again depends
+> on iocg_kick_delay() running from the period timer, the waitq timer or
+> the issue path.
+> 
+> ioc_pd_free() removes the iocg from active_iocgs and cancels its waitq
+> timer, and no further bios can arrive, so once it has run nothing is
+> left which can reduce the debt and clear the delay.  The blkcg stays
+> marked congested for the rest of its life.
+> 
+> blk_cgroup_congested() then returns true for every task in that cgroup
+> and its descendants: page_cache_sync_ra() cuts readahead to a single
+> page, page_cache_async_ra() skips it altogether, and
+> __folio_throttle_swaprate() takes swap_avail_lock and schedules a
+> throttle on anonymous folio allocation.
+> 
+> Clear it explicitly, after the list removal and the synchronous
+> hrtimer_cancel() so that neither timer processing nor an I/O path can
+> re-arm it.  The free callback can also see policy data which was never
+> attached to a blkg, hence the pd->blkg check.
+> 
+> Fixes: 7caa47151ab2 ("blkcg: implement blk-iocost")
+> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+> ---
+>  block/blk-iocost.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+> index b60625613e095..64b92aa3e5d48 100644
+> --- a/block/blk-iocost.c
+> +++ b/block/blk-iocost.c
+> @@ -3063,6 +3063,7 @@ static void iocg_release(struct rcu_head *rcu)
+>  static void ioc_pd_free(struct blkg_policy_data *pd)
+>  {
+>  	struct ioc_gq *iocg = pd_to_iocg(pd);
+> +	struct blkcg_gq *blkg = pd_to_blkg(pd);
+>  	struct ioc *ioc = iocg->ioc;
+>  	unsigned long flags;
+>  
+> @@ -3085,6 +3086,12 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
+>  		hrtimer_cancel(&iocg->waitq_timer);
+>  	}
+>  
+> +	/* off ->active_iocgs and timer gone, so nothing can re-arm the delay */
+> +	iocg->delay = 0;
+> +	iocg->indelay_since = 0;
+> +	if (blkg)
+> +		blkcg_clear_delay(blkg);
+> +
 
-Ironically, I think I got this correct in the pre-swap-table version
-:) I was way, way overly defensive over there (I think I add one extra
-pin for the vswap entry, and then pin the backend device to just for
-good measures, which is not really necessary).
+
+Sashiko reported:
+
+---
+[Severity: High]
+Does this unconditional call to blkcg_clear_delay() overwrite state managed
+by other policies?
+
+Since use_delay is shared among block cgroup policies, if iocost never
+actually applied a delay, this might forcefully zero out the delay state
+managed by other active policies like blk-iolatency. 
+
+Would it be safer to check if iocost had actually set a delay before clearing
+it here?
+---
+
+
+My understanding is that this requires both policies to coexist on the same
+device/blkg?
+
+I believe the main problematic sequence would be:
+
+  1. io.latency owns positive use_delay.
+  2. io.cost policy data exists but may never have delayed anything.
+  3. io.cost policy data is freed while the blkg survives.
+  4. Its unconditional clear removes io.latency’s state.
+
+With only one policy, the terminal clear is correct and clearing zero is harmless.
+
+The concern is narrower still: ordinary disk/cgroup destruction removes the whole
+blkg, so the main observable case is one-policy activation rollback or deactivation
+while the other remains active.
+
+I am not sure if this is something that is done by users? So might not need
+to be addressed?
+
+Thanks,
+Usama
+
+
+>  	call_rcu(&pd->rcu_head, iocg_release);
+>  }
+>  
+
