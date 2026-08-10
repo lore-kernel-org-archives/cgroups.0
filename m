@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 565673793BF;
-	Mon, 10 Aug 2026 18:50:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E551042BC4C;
+	Mon, 10 Aug 2026 18:56:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786387860; cv=none; b=VgkgRzId1TCQWGhafqq/q676OahlJtX5YoLh7x7C3BKRap7aC/7ynEImKGL1HskB2cubvQXK/t+5l7YoBUWQMYXQ6C0A6nHz4M/TkMEs1qaRKJNiOgm6KBb+mVcUrhYTmRmExm6f6u3CvQrSpbwieIsyO7/j5rssTQgbR6DeTyI=
+	t=1786388206; cv=none; b=NTF/CE1YmD2ACKI0WJz3Hw/6quai80/TLhTJ+2lP3QCYZV6fYqbMcyWjrYIwCfcF/ns0/1hL2lvlBSpigPINPyciFnKo5v1YayYFYALrkkHPue+SH6OQtFUeuCtf40D7U4YoWHQ4+OZ5WlPSTVW8NK0uF/WurviSowEZiD1GiMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786387860; c=relaxed/simple;
-	bh=3Zw9wU81RyPWTeoFC8OUN+I81RWlM6c+ubyCdDUkMfU=;
+	s=arc-20240116; t=1786388206; c=relaxed/simple;
+	bh=4LV/mJR6TeGHuPRon/C2txUf8EHSmOTtmTLr6HUDSfc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fvRyCHOqRWdFU8dlhf8AcXNe9FWcz6aivo7xqLYjsyLJ5/g+pwxRrswsaD2UrdJv1EucfunxE0/ovSYBx1BUD0yneHhHAzrKJvJ4DY97g1HaDQ8PhZz/AsgY3dE6ilNJho5R5Bu3oqjb+k/FQNZJpSRrKMerI9ANiosTofE/rZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dnqOppQL; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=M0tOsYRPRdEy8ILVvCQHAFEf36EObFpsMFha3B2z87MRjTEOM0hRUiAKbcag0vCFsX1i0lhjplPQ+YjzUlgYWbVNH52SSP+YtgzQLp5Z7WxENmj8E7jTUEykCFItx9Qg90KDbcSu+40/M9YkZkDW0TkL5xK4BBhdovJiW5xdGBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SITU7f0G; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dnqOppQL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDFBF1F000E9;
-	Mon, 10 Aug 2026 18:50:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SITU7f0G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E3631F000E9;
+	Mon, 10 Aug 2026 18:56:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786387858;
-	bh=dXxGU1gfavW+fBsQ0TYTzr6e/Ch8i6VLsSGQhqNBGnQ=;
+	s=k20260515; t=1786388204;
+	bh=CrXS5cfcSX3rQcokSH2I1+pGA8otnhTdGTrve404Y8M=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dnqOppQLC0TaQirgoHK+54j67C7VZzZtahfD04fXz16BUr94ts7h5Gh38+ubUZCKE
-	 jA4Arn4rgTnq7I/791ibpAsQZDD9R2UFz2ol6muYvC5fmOei4/b4Lxu3qGP/8WoCq4
-	 GfdVVqixln81RSjiS58NPbAzmi5hsNC5Adwy6+Uve+MpVIW5vEiKey1OsiTZuQU6pq
-	 B4dru1rajCfoTnUL7XJBcBfKkc+Rk5DZUqocvIZBnVAg/0nU+TYc28HlbgEgfRJY1R
-	 xProwYtFQkV9YUp84Re88SW2L/IJfImK9RKSh4MhgSrzURHPE8/ZUntcGpGoPKKNI0
-	 J+iHD22gJqnvg==
-Date: Mon, 10 Aug 2026 08:50:58 -1000
+	b=SITU7f0Ge0Xzjpdl40vHwNuuTD9ZOcPVZ9lA/isZ2Nbdc8siHDm00A+MFkL2Ixjv8
+	 mLI3pAfYfnxFHTpU6lVYBUuWgKOFTsbGOkOxRLwqxNbh2Of57zTqSUG7WG9GCTSQHs
+	 cQa1UeEWpUDJ79AV0e10v6ryOpFXPmSF9qLh6uaBL3xeP7PcovGX38HU3+fmZ4sVPz
+	 orJWAO15/UUa2+3UqNiHxUX3s59N6bXfotzXLSi+xgvtcKhh9hRUXhSrxvN/AVsh9d
+	 T4zuG5bb3E97rxPTtvmj6f8lfYK1il37HKIuaPlTg6a2uvg1clBaRFjBl0x/y0901q
+	 tZgV0X7ceQ8cQ==
+Date: Mon, 10 Aug 2026 08:56:43 -1000
 From: Tejun Heo <tj@kernel.org>
 To: Usama Arif <usama.arif@linux.dev>
 Cc: axboe@kernel.dk, cgroups@vger.kernel.org, josef@toxicpanda.com,
 	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
 	shakeel.butt@linux.dev, hannes@cmpxchg.org, riel@surriel.com,
 	kernel-team@meta.com
-Subject: Re: [PATCH 2/3] blk-iocost: clear delay state when freeing policy
- data
-Message-ID: <anodkhEpanZPbwxu@slm.duckdns.org>
+Subject: Re: [PATCH 3/3] block: skip blkcg walk in blk_cgroup_congested()
+ when nothing throttled
+Message-ID: <anoe61mtiBJL3ofn@slm.duckdns.org>
 References: <20260806183742.946953-1-usama.arif@linux.dev>
- <20260806183742.946953-3-usama.arif@linux.dev>
- <0326caea-07e7-43bf-8fe9-f2b97186e2ad@linux.dev>
+ <20260806183742.946953-4-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -47,21 +46,42 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0326caea-07e7-43bf-8fe9-f2b97186e2ad@linux.dev>
+In-Reply-To: <20260806183742.946953-4-usama.arif@linux.dev>
 
-> Does this unconditional call to blkcg_clear_delay() overwrite state managed
-> by other policies?
-> 
-> Since use_delay is shared among block cgroup policies, if iocost never
-> actually applied a delay, this might forcefully zero out the delay state
-> managed by other active policies like blk-iolatency. 
-> 
-> Would it be safer to check if iocost had actually set a delay before clearing
-> it here?
+Hello,
 
-Yeah, this is fine. The two mechanisms aren't usually used together and even
-when they step on each other, use_delay being cleared spuriously is
-transient and nothing really breaks.
+On Thu, Aug 06, 2026 at 11:37:20AM -0700, Usama Arif wrote:
+> @@ -53,6 +53,9 @@ EXPORT_SYMBOL_GPL(blkcg_root);
+>  struct cgroup_subsys_state * const blkcg_root_css = &blkcg_root.css;
+>  EXPORT_SYMBOL_GPL(blkcg_root_css);
+>  
+> +/* number of blkcgs with a non-zero congestion_count */
+> +atomic_t blkcg_congested_blkcgs __read_mostly = ATOMIC_INIT(0);
+
+Maybe name it to clarify that this is a count. nr_ or _cnt or whatever.
+
+> @@ -1350,6 +1353,16 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
+>  	struct blkcg *blkcg = css_to_blkcg(css);
+>  	int i;
+>  
+> +	/*
+> +	 * Every blkg holds a reference on this css and drops any delay it
+> +	 * still has from pd_free_fn(), so this is expected to be zero.  Should
+> +	 * a policy ever leave one behind, drop it here rather than let it pin
+> +	 * blkcg_congested_blkcgs and disable the fast path for the rest of the
+> +	 * boot.  Nothing can race with us at this point.
+> +	 */
+> +	if (atomic_xchg(&blkcg->congestion_count, 0) > 0)
+> +		atomic_dec(&blkcg_congested_blkcgs);
+
+Maybe put WARN_ON_ONCE() on it?
+
+> +static inline void blkcg_dec_congestion_count(struct blkcg *blkcg)
+> +{
+> +	if (atomic_dec_return(&blkcg->congestion_count) == 0)
+> +		atomic_dec(&blkcg_congested_blkcgs);
+
+atomic_dec_and_test() is minutely more efficient.
 
 Thanks.
 
