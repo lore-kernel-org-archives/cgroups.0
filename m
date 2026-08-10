@@ -1,168 +1,120 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A32A2D2487
-	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 14:12:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786371130; cv=pass; b=n6W5VNYIWVb52ZjtvjsjX1OlSuWNQRwGa1yKIQfOFdIiJgXaiBZ4+U4a8tPTAobLtrCmu3H5tZDDfuC01VD2Ua2hjPAEuVgF6l3SeNVgKazZa7PfXqyYt/V3RzL+ym9oU+/rniOctVlc6ysSH3508ShsmPfXub6P4hhmbqhSHv4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786371130; c=relaxed/simple;
-	bh=buETODvHchsbz9QCOGYwQZtIf1tlc9xFyXSpm4aNJos=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Zm7x3fI/Eb97l1FwIMN4GYOcCbQxrIICzEYwIiCl2Gal4D3rNeonRpX9exz9tTz47OGw9L5RahEJ1Zku0GvDGxf9fUJz+ERTd9FTmKp8H3vGwGMYwO9JX2/EyQVq4IpCHTgpu0K8/iNZd2EGhmtp5Yz0vH26PRas+cho4imQuHo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h478xdt+; arc=pass smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3CF44189AD
+	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 14:50:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786373405; cv=none; b=Oa1GlcxmhAmHEpHo/GNNY+NgHMoRLENEo5GdOMx4+Cjbo0gzYlcPzsNgf2ljeGgdyxYR9jc1ge//yyE8RiiEtTZn3WOywD34NStzBb8/2A59ChtmSUv+cs9p08AUPhMKr/F7HHHINVWikaOtmaByovOhWPBVkTJwsG4GT///cJ0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786373405; c=relaxed/simple;
+	bh=BUKRM5UNVrjcwfigAkAdTCB4TpOi9su7mFoaox95Fsg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=e70TDYiKiX+RX3agltQEBFUNkz/omb02S7yKwGbk+Bt+B+yOR+Lvp6CyZhTeMlPgwGZIzYbYLAoOb/5ZJp330ruy5SFG9iMK7YmMIc0VlO7alXtF6l2ixmKhNWcX7BpNvyZXktSOPVfwfgRIyeSsnkV0dMWks3FQkr+urTw5kzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Wd2pcaFL; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h478xdt+"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-49967f24eedso2658565e9.0
-        for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 07:12:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786371127; cv=none;
-        d=google.com; s=arc-20260327;
-        b=n0NlB3r6a67W0AR/oYtE1Mxwo77x0iOkg5EdhkLu/vEWrGfJFOfP4QPINMwsxO5Gtx
-         ksQsmViMKisD34osEOtiOvF6Jkf3PeX8bY+KTgtQoAPyeji0SFNaSC08IYgw9FRJCIFF
-         mL3Cd1lyrvpxdyts4Sb/bQGH370EcLfduKXyWpKaCueuCDMb2lWH+Vc70tSRB94FU/0V
-         rnzOZF8elwNMnYvzFO7yQoCabUj+nkjHaLiuLDs5cFmQGsVxEugCtTmBtYGUmuCmASBQ
-         I/xrsS3lyhbe1G+ahgUF+sVXgcNRUtGI64gqlMv0VT3FiThS3a5l1hwm5dz8ESqCt00k
-         IzLw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=n4T+gwRZDRIShJR4gZnLC0NVnW6k5s6US28LrwcXeY4=;
-        fh=xz2jBJjZHW8v2MObxXiBuVoTHQ6XN8zA2bqITCAMR80=;
-        b=G8jvY+Dvy+Pq89ZM9VfwukxzRhjaZgdbFNZnOdZP046ij3nMyO7SQCjGBl7mI6QeY4
-         K2sbkX3qUW1GEmoHrXpT8r840RNOFnkgOHxwW6HG9UsM22HSwlMVjqRq6SFUw543kVj2
-         z9ueMUuQ2zUNrCgrkyvMtZMHoEqKiPIJlxQloSsn7H+xyjMsLr4N7mQRBMoudH0j80QC
-         T/ifxBp/OZqjt3ZYY3kj16DFgbTAMDwI2hs2gQGYv8vEDq0gXMQSnOBMrxbfzLReUZ2g
-         7dzH+D5gWvLYCtv7NLqN8lxK+bc6RxXLKZc7ijjAM30+4M+t69UELaqSTRaL8gO+/3Jj
-         rZMw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786371127; x=1786975927; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=n4T+gwRZDRIShJR4gZnLC0NVnW6k5s6US28LrwcXeY4=;
-        b=h478xdt+8rU0chKMfY34awgG0U26366ytHeFUpYkjSqGeequZOLVirJhLOIq8c+oIS
-         TFenLlOn+qo792CMLyTAg0CNiLHZgmKaiKzvCx41ahMmsS+SnXhUzFn7sN4B8eL4GAq/
-         GuHCjEMLYnhILd7xaT5RwSXI5ODl/I7PnaCt28tnMEV6A+450bTsu+AF2KRjx88pC3AD
-         9scgT3HL3DKc5bT2RBT4HofnO49iLsMa1Vnw56IoDycFzshUcFZFi1sJSRJHUxsuLLCJ
-         TZPKeXvX/lQkR0rDet+haTvqArgw6zcoLN9be/C+s0LU2P+aJ/mVcvTDqhy++pH4arXH
-         mOaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786371127; x=1786975927;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=n4T+gwRZDRIShJR4gZnLC0NVnW6k5s6US28LrwcXeY4=;
-        b=A/1zsOk19M7LvD59ScMcJKmg6ITTGjhBr86Je5Sm7qy78zZ36HXgfSyaHwJoiwkO95
-         MydZLNCYkepxlEOeLqfWcn/AtGfMs7kXP4radVV/BWoV6YzSTMRE7SsxMX7ZcZ30FCL2
-         HFMX5vGMffQFaD9i8uGTta9KKXBTSTKBPEiZ0V6PyeUCKiDRubnhD7K6eetPlmx6gSoV
-         G0K53jXZ40rPoBQ9XMpVEXnJYSbChJW2eU0n4caK6PRLDRkvPfOvxB411JnMoWgW6+eT
-         FOPbgea+t0x0c5y8vrL5vZxaNUg5Oc+1Cwi4E3LcpJOpaq9PBfFEy3dCLrYZGWQGrYnP
-         xPYQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rox/z+lDXUqqOz5zeePAZZQztbt8lNsZFUJMY7BCMHe+68ECkI/CULqBYqZmlr1PQpLivc81pzG@vger.kernel.org
-X-Gm-Message-State: AOJu0YwA2Fs9BY/O1JhBzA4e1vSfBecpOF6FGpOdlb+CPAArw5RDNoJQ
-	ywfDVLQjEFZq9k5eldfcslbp3uPkz2p//r61DXAixhGu5s1Ka0gOzqZsdIASgrSa1gcmzPFhDHY
-	YlrJQcugdL3HR7/WDMRsav0Dk5gNyHWM=
-X-Gm-Gg: AR+sD10ioxeDKUhhPgM1In5eYCtIgep5xAg4LbocZ0SL7I2/lRP8oSD4vwwMYhElCzf
-	J9xnYP2UoJBh2HGoB19deajIOsH5rQO91CWoNcqXBR2yK8g9X17s6oZpNqjX5bQYFR8/ZqnbQrQ
-	9ceLFlEVd2Zd8dD+XlUreRiSJmB4XxwHDIAFltIIxxqt26uauLVqnNEGNNaQcFZWOue3uAg5p9+
-	ngsVSjFU9zPPYGjWBT+BRgrzLK5SMAlfnGEOfevCEw0gau8g1eGIi9hs0VpULLTvO0RNOLYJcZH
-	SlWaAVnocD7aswCGrfB44GfUdGljXqT0O85N+W9+FO/QOlTOLBlGMqRO9qBm2DktmaRBkEE/pmH
-	7Obb193VTrDfdo/jA9EdqZZYdFpooaA==
-X-Received: by 2002:a05:600c:1387:b0:495:3eb4:3c6d with SMTP id
- 5b1f17b1804b1-4994e7b810bmr274599375e9.2.1786371126190; Mon, 10 Aug 2026
- 07:12:06 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Wd2pcaFL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786373398;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2Q6+029G7RX00+t8jXWjA93xlFFwy4mUEXvvA9ZvLWg=;
+	b=Wd2pcaFLJ+kvyJxEjSsA/hiqHBeLP976/eG1n3/C0HiATGEL02RR0yPUbnH7EPVISQa5DK
+	wOe4EvF+7p7fKaYk/TBRtKXfQ83WO+/TswB8wRfA7qA7mZpMrQTD+GiH+9RLS6IUmNYxZK
+	VlxEgjJMVp7IabczrZ1Q5FdzfWehlOE=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-32-yDBOBY94NviefHAlFhblyw-1; Mon,
+ 10 Aug 2026 10:49:57 -0400
+X-MC-Unique: yDBOBY94NviefHAlFhblyw-1
+X-Mimecast-MFC-AGG-ID: yDBOBY94NviefHAlFhblyw_1786373396
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C0BDC1800611;
+	Mon, 10 Aug 2026 14:49:55 +0000 (UTC)
+Received: from [10.22.80.220] (unknown [10.22.80.220])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2AFA9195DF95;
+	Mon, 10 Aug 2026 14:49:53 +0000 (UTC)
+Message-ID: <afd8ff90-4c70-40b2-ac98-ecd2552e981d@redhat.com>
+Date: Mon, 10 Aug 2026 10:49:53 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260730122304.2496440-1-xueyuan.chen21@gmail.com>
- <20260730122304.2496440-3-xueyuan.chen21@gmail.com> <CAGsJ_4zo_uya7-iFS85W78+mpvjhmfxp7HfxTPKDD=Aiw2c1vQ@mail.gmail.com>
-In-Reply-To: <CAGsJ_4zo_uya7-iFS85W78+mpvjhmfxp7HfxTPKDD=Aiw2c1vQ@mail.gmail.com>
-From: Xueyuan Chen <xueyuan.chen21@gmail.com>
-Date: Mon, 10 Aug 2026 22:11:54 +0800
-X-Gm-Features: AUfX_myzk3L8tu8iuyY3KCv2aKO9j3yll3zHn2I8kTwXhIPWsgZ1D2l0l_IZSoo
-Message-ID: <CA+qSx6w_EY23GzgfaypXz5pd=h9JoBjiyX5+4Po487QYb4R=aQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v5 2/4] mm: distinguish large folio swap allocation failures
-To: Barry Song <baohua@kernel.org>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, 
-	hannes@cmpxchg.org, youngjun.park@lge.com, baolin.wang@linux.alibaba.com, 
-	hughd@google.com, chrisl@kernel.org, kasong@tencent.com, 
-	shikemeng@huaweicloud.com, nphamcs@gmail.com, baoquan.he@linux.dev, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	muchun.song@linux.dev, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
-	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, qi.zheng@linux.dev, 
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] selftests/cgroup: Avoid awk -e in cpuset tests
+To: Rui Qi <qirui.001@bytedance.com>, Tejun Heo <tj@kernel.org>
+Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner
+ <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260809082111.3827531-1-qirui.001@bytedance.com>
+ <20260809082111.3827531-2-qirui.001@bytedance.com>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260809082111.3827531-2-qirui.001@bytedance.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Sat, Aug 8, 2026 at 7:12=E2=80=AFAM Barry Song <baohua@kernel.org> wrote=
-:
+On 8/9/26 4:21 AM, Rui Qi wrote:
+> The cpuset selftests use awk -e to parse cgroup mount points. This
+> works with gawk, but mawk rejects the option. In test_cpuset_prs.sh,
+> this leaves CGROUP2 empty and causes the test to skip as if cgroup v2
+> were not mounted. The same non-portable invocation exists in the cpuset
+> v1 hotplug test.
 >
-> On Thu, Jul 30, 2026 at 8:23=E2=80=AFPM Xueyuan Chen <xueyuan.chen21@gmai=
-l.com> wrote:
-> >
-> > folio_alloc_swap() reports most allocation failures with a generic
-> > negative error code. Reclaim cannot tell whether splitting a large foli=
-o
-> > could make progress or whether there is no backing space at all.
-> >
-> > Keep the global free swap count and the remaining hierarchical memcg sw=
-ap
-> > margin as separate inputs. The memcg charge path reports only its own
-> > margin; folio_alloc_swap() combines the two layers when classifying an
-> > allocation failure.
-> >
-> > Return -E2BIG for large folios when a smaller allocation might still fi=
-t,
-> > -ENOSPC when no global swap space is available, and -ENOMEM when the
-> > failure is not helped by splitting.
-> >
-> > For early large-folio rejections, check global and memcg swap availabil=
-ity
-> > instead of returning -E2BIG unconditionally. On a memcg charge failure,
-> > swap slot allocation has already succeeded, so use the remaining memcg
-> > margin to decide whether a smaller charge might fit.
-> >
-> > This only refines folio_alloc_swap() return codes. The reclaim callers =
-are
-> > updated separately.
-> >
-> [...]
-> > +
-> > +failed:
-> > +       if (get_nr_swap_pages() <=3D 0)
-> > +               return -ENOSPC;
+> The scripts only need to pass a single awk program. Use the standard awk
+> invocation without -e so mount point detection works with awk
+> implementations that do not support the gawk extension.
 >
-> I wonder if we can do this earlier when swap is full or disabled.
-> We could exit immediately and avoid trying many redundant paths.
-> Have you tried this?
+> Fixes: a8c52eba880a ("kselftest/cgroup: Add cpuset v2 partition root state test")
+> Fixes: 812c5945bdb8 ("cgroup/cpuset: Add test_cpuset_v1_hp.sh")
+> Signed-off-by: Rui Qi <qirui.001@bytedance.com>
+> ---
+>   tools/testing/selftests/cgroup/test_cpuset_prs.sh   | 2 +-
+>   tools/testing/selftests/cgroup/test_cpuset_v1_hp.sh | 2 +-
+>   2 files changed, 2 insertions(+), 2 deletions(-)
 >
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> index 400a696a0d21..16c38eb11e63 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> @@ -20,7 +20,7 @@ skip_test() {
+>   WAIT_INOTIFY=$(cd $(dirname $0); pwd)/wait_inotify
+>   
+>   # Find cgroup v2 mount point
+> -CGROUP2=$(mount -t cgroup2 | head -1 | awk -e '{print $3}')
+> +CGROUP2=$(mount -t cgroup2 | head -1 | awk '{print $3}')
+>   [[ -n "$CGROUP2" ]] || skip_test "Cgroup v2 mount point not found!"
+>   SUBPARTS_CPUS=$CGROUP2/.__DEBUG__.cpuset.cpus.subpartitions
+>   CPULIST=$(cat $CGROUP2/cpuset.cpus.effective)
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_v1_hp.sh b/tools/testing/selftests/cgroup/test_cpuset_v1_hp.sh
+> index 7406c24be1ac..da97f1643f9a 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_v1_hp.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_v1_hp.sh
+> @@ -14,7 +14,7 @@ skip_test() {
+>   [[ $(id -u) -eq 0 ]] || skip_test "Test must be run as root!"
+>   
+>   # Find cpuset v1 mount point
+> -CPUSET=$(mount -t cgroup | grep cpuset | head -1 | awk -e '{print $3}')
+> +CPUSET=$(mount -t cgroup | grep cpuset | head -1 | awk '{print $3}')
+>   [[ -n "$CPUSET" ]] || skip_test "cpuset v1 mount point not found!"
+>   
+>   #
 
-Hi Barry,
+The test systems that I used have gawk. That is why I don't have this 
+problem. Anyway, I support to make it more usable with other systems 
+that use mawk.
 
-Regarding moving the check earlier, I currently have two concerns:
-1. It would add an extra get_nr_swap_pages() atomic read to every
-    successful allocation path.
-2. If the failure-time check is removed, the earlier snapshot could
-    become stale while the allocation is attempted. The failure path
-    could then return -E2BIG even if global swap has since been exhausted.
+Acked-by: Waiman Long <longman@redhat.com>
 
-Thanks,
-Xueyuan
-
-> > +       if (swap_margin <=3D 0)
-> > +               return -ENOMEM;
-> > +
-> > +       return order ? -E2BIG : -ENOMEM;
->
-> Best Regards
-> Barry
