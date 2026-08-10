@@ -1,157 +1,166 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 330AA3B27CF
-	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 22:28:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786400882; cv=pass; b=GRqYjogdpdEz26McUDgDKwTK2MOM/B3+7qQoPfsQ67LtS3lW1qbMsC+vKUaminrK1ipxb6+fy8prXcTUcqs99UtvmXT7WR+et5/YcjaxoHbGO6/zp9P5Cql3ZLrMmQ7U3TWedXsiT97Hob7I4kVdOVxqx5R9FhmdMttSKeCD0xw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786400882; c=relaxed/simple;
-	bh=tG00cln/EZfmDZKyIkZr1KbYylCCT00dXhW/ufTCbgc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Ehr1taXp6VRwMk3gvIC/T6CLxGzS2y/cffAzjbD8ExWk2GJjNuePPOsNK9LuN68fel6NvL3z3KCVFIO+/qFTa4W+aRDVyqjfT0JigfYFPHedztQGrMe51RY3LfRJN8+h6DthjXnEsvoMOCwk2EOg52mv+GMJ1PrlZtH4ziSjcLY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V1R4LTDM; arc=pass smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B4A52F0C62
+	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 22:47:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786402023; cv=none; b=b6myWjGE0RE4OtY9K5l6TvOM/7h34LLQ5vE6G5ARdASzk8YNLFq0ELZ1s+SiLNCSe153vHCBb0NgS8AaXqFEFFoB2nIeqmzVABK0hh/chWkRQDj6uYckEQkZ53/T+KQ7Q/qw6Yjsgkrbpgwx24K0vqvkvPld65BSSnP+scC1Wu4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786402023; c=relaxed/simple;
+	bh=j0OQmT53umZb7i6H00ow16BYQr6XaIiq74a3wXvSmQc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bpWi+yHqMAZPRTTDSftt4IHXLQstBIcj0avjZkw5ObVwKVtN+pbIIa1SJeepPtjVvrHG8EoKJgBeTHUAmB1tf2uH/haAJD8IfehjCpX3tgRRCwRIUTM1ILEuW4wEucgoSBIVm/0JVkJOFognlj5EesSt/kC6jv6jA6UM3FBkzok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P4xuI4HE; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V1R4LTDM"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-490cf322ed0so16527915e9.1
-        for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 15:28:00 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786400879; cv=none;
-        d=google.com; s=arc-20260327;
-        b=KBlr1LYtT6YTvpS/1+JwX5lsHfygzSWL6uw56TWJnaMwS5KTSJpbaaFTvinE2nADxS
-         0zG1LEm0c2PeCgFdvFa8sXDRov9j1peePj+hKgDNOxGAfbDmbQLEzYIgVC/0eRdMdiE9
-         LCzjYc7V4LDbWNt2iUKeuaDMAYeonWQ0hdfLvX943iHFKuziXW7nUZ3I/WVreC9yLmqi
-         6Tizz+n0K3PnRjISDRsFBVSgdGVN4d/IrxIG71IAjnC0iyhJXFUNjx2oFG8w/Od+jg04
-         MpsTW5/bOif0wiLnnluXQgEqyM7EPXXNU9834wab82/cZWSdKwYhy352GFBbzTJN5zQr
-         kviA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=tG00cln/EZfmDZKyIkZr1KbYylCCT00dXhW/ufTCbgc=;
-        fh=1rX8UaebcWDtsdb4lgpGxucQuc1ZE+IHX7b3wT4/OQ4=;
-        b=CFgXq6orgUnfto8HICFI+9/Kkjsuh4hKM56MnAYCLgl5c666UAgK8/mnGUHbnVKcGB
-         9sapiZSftEIocVXqg4Q4NE0XaTweU7fwiVK+uzeZP/mdnJMkYM32Eg0n7RZEMJXQMhS+
-         ZEZjec1A66b4qzi0b7+DKH6kmpBr2hrLLyhw4NBdxdAxXlR+D4Io20t5f4546+Tp42Pr
-         xwyEYHkY1tzDKBUIneCVK73+r4+PkWwUItN/b25X+e9dkDQgiNgJz5XT4tphHtx5V8ve
-         sDF4Pf/SLQPNjjMYLtJRgpJMSqw5PFI9UoqUwYgRUhVw/8bvtb3fLAnnOEeCSTd8mo/X
-         bu/w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P4xuI4HE"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2cc7e86e7aeso27140205ad.2
+        for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 15:47:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786400879; x=1787005679; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1786402021; x=1787006821; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=tG00cln/EZfmDZKyIkZr1KbYylCCT00dXhW/ufTCbgc=;
-        b=V1R4LTDM2MRY6S+1o8cNQLHcERSXU8wtoei3zeKyEE4doN5Pw1jlG/EEeDy3MRc/vG
-         A7F1kquZ2y1eNGZK9yLkqqjaLebiPDmK3KC6Slmu2C30lUDHJehP6k2qAFqXeQZ0UAm+
-         Bju4wR6uPxtKw5gvPEZedzNFHaei1w3zT5/bQzJWqbSpX4RpqJUHgna8S0m88Mz4lUAq
-         NuNiu3i96Emu0uoM6LFN4rMo9AANddFUH85jGoppZK+iuxCBAUTuLO7+26NB0/PMd2xu
-         8KQYthLkWLYrK+uaedFpE4QmEMUOj3q0Ie4IQPB44NdWizdIt0Bl231fzeArmffRp+RC
-         3eAg==
+        bh=GSgLjB/IGBoUiOT3dGu6Xr2ioiybikIeSufKLnKV+5A=;
+        b=P4xuI4HElZe7p0IfsOkFrq6eCDodfYTXhFcQNQWxoRUuTeBDMCKOZsPq46j3udl9gD
+         CCfBbGrzAs/UmB3BootdJTmI5qcwMC1cQq214S0kDof/0IrinaO8MFYcMv0QG8TNjKY2
+         8jjOwMLeSwOd4o9MviyO/Lu49ePL46ifdbBcbCfRdnq0x9PlmUzyLSjk0hUmTsipmBdy
+         UD698jqBj1XhCKFGnJdDN1EwhwFQU+3BkNjozdSxDhyRF7Jv4UZlnDtpEP6Of/DJzBXe
+         SGhYkBnkAlA01IRiwATSvei8pEZ5NEbwiYjr19E3z4KZG+DysjOsuzv1RXjleJQc8Vhx
+         FI7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786400879; x=1787005679;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1786402021; x=1787006821;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=tG00cln/EZfmDZKyIkZr1KbYylCCT00dXhW/ufTCbgc=;
-        b=TSYB7b1Eeh9+YFeDKyGZEpCijqJfO7gU6Meag0yocdZ7VoN2hTDLe7fJTA82yrjvFw
-         iVbyugV9tN0nM9Qq/VOmAE/axo0pKdEhQVYcHTM1qZ0CS5Uav0aXkKYfNslHBMLacROW
-         UDBApKVzhahjh2FuxR0yVANcuWguwVX9nY5K5643RIY75KUcDQOmPNWJ16wgeXNMhaG8
-         Mbtcn2DqlL9QyaYVZpcuDZ0PewfGdKxR/LgAzcGthrebjgS+4I+FklNSNUacbrxQoZoE
-         Na+28hMPYPzLGHFykVfTTsk8eZR7qaPkzWzJ3OoEPMZeoCtB4iYwFK3u9qoACD4uqUWP
-         4UkQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpWSGlw9IOcxZFswb2tMTmsOZ+GAKtkr75H2EtVL3jX2l5nLa3VaivFwkU6DPHVPwFYSXNNcVuk@vger.kernel.org
-X-Gm-Message-State: AOJu0YzhSoJTtb0eKqGuGIBS5C59pV0UxRbbRPqwSN9nGvNNv81FMxga
-	88Npla6Vj8LFpjfmQMNlHB3UxsAuV+p5JozS/VKF5ZUyJwEYpze53pC+JPUQtuY56uLfo36UsqW
-	twnpXLXNQFns3ueoWQwJ5Zi9VBzj8Nhk=
-X-Gm-Gg: AR+sD11a6NkXbdVfU0EqnDw8quD8dM2LwgvvbsM5XoBg3KidW1oBBKSt2QfrmQSLt8T
-	Tstob67v3ElGauHRhvvBnA7a3ZXKXkGW+3WVUGYRqhXI4geIB2OeQui3AJMVs1J25XXJYenWvz/
-	iYNle3emZU9XCuSQjGNo00WCrku9G+kLQOPaKb8g2YnxX0ahfSRy2Zm7YBhV7YSu4uYX3Lxcbch
-	mCdyziLK1QPKE19Ll14zbMx3TVrxdesyE7QjhK4FMIdPeG8zBRrSxGZMWcqVXWNvFM3laCHusAo
-	UFh7yORaUbzIhlykmnyi1LD7tWNo+bWYt3ifUIuwJvxGivi8hjkOG/pS26K5b55CukCxuXaAAPs
-	Bvtrcte5TtF4C
-X-Received: by 2002:a05:600c:4fc3:b0:499:4892:d022 with SMTP id
- 5b1f17b1804b1-4996194cf28mr264737515e9.8.1786400879152; Mon, 10 Aug 2026
- 15:27:59 -0700 (PDT)
+        bh=GSgLjB/IGBoUiOT3dGu6Xr2ioiybikIeSufKLnKV+5A=;
+        b=O1oKTgeCPpmEj0yfm1+Z+u+dkWYsmURg9b1AplqKCwFHyczjv7keNHTjPqoguqgQ2P
+         U4jyA7nFht8QGwSQf12jAlmqtWA0RVqLxGh+6LsbkHWeHCbmnz8c/saYj8OtMdiC6arS
+         +gTrT1d582qolDylJY6538LnMi/djfDLgqNJLHHtOOsfxszjtxQi4uQGmkO5VL3swBgE
+         M3X+UpBz50FfZIF6IJGn3fuVnYYFWXj44v/E51m8q8r8SkuyWaWda7Esp8BU4xB1CqTk
+         Tn6ddqaVCzv5RSaTqchMNUysCiQujmh9/OkZkgiPgM6G8Y92VTfndr0F6rsiRv6VMdHi
+         n+qQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpMS/kPsZr9Wp3A4tBCkXCRkjZ1rZE9szV5QBqXqq68wN12hmAXEP+VYQjR6SMdj8nrTeoW4siY@vger.kernel.org
+X-Gm-Message-State: AOJu0YwlGdmeGbzIRNwWg7W4/RIytV9B5YiIEFuAoeO+LaycsrVMJcBc
+	6JtvDL+FBAx4/7hIchYRDCju/KUf2j/zYjbjet75UTEz5clsAR4eAIAN
+X-Gm-Gg: AR+sD13nVhat7GQJjFd1tlu/bJKnoed1aqud2+PbOFIJorxeUX901/kmfY8p2E2MiQ3
+	Cttg9S+v/gQBdxkvunoResdASc0uyTqWvmTqtfNb5RJGhmgsQZtgXinNjv2V9N0zquZLcroqe4k
+	W+GxA/eNluVtOcxjjgtSe+Cfl6R8wk4g/Kh/YNhuliqkOONvnCm0dFbT7H6ewKShCG1pRgK7OPf
+	Fr+Px5Hm2FXCVtt/UX89EnzqjSzvNQ1pkDC9HFYB/7Q6OCyJr3FL63Lk+705ocoORmW50C/UOtE
+	LYmCswMvEVR6meXlimXPgdpYjODcvYMr1Ri8tPNjSncYCO0N4BsmxzMv22qhzcdm2ir/jYLtipK
+	nXJ8OqaIn5HlOQ9I7r6HXtgSv4U6LhmSq8ZzqF/Z/MxqHjmBTAXhwOpgTZBHllQLfbHAu/bkspF
+	zrBg/KSE9+6i9VHOm9qguq4UcFNR7dBFIvzZMI4OR1GBRhEIGExcwO1NjDNOyq0Uk3O7gdw9U4N
+	scNO4Gk
+X-Received: by 2002:a17:90b:590e:b0:38e:6a44:671b with SMTP id 98e67ed59e1d1-3909d301d9cmr33764302a91.0.1786402021510;
+        Mon, 10 Aug 2026 15:47:01 -0700 (PDT)
+Received: from devvm16600.scu0.facebook.com ([2a03:2880:9ff:68::])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315bec26a46sm47194173eec.27.2026.08.10.15.46.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Aug 2026 15:47:00 -0700 (PDT)
+Date: Mon, 10 Aug 2026 15:46:58 -0700
+From: Ziyang Men <ziyang.meme@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
+	Shuah Khan <shuah@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	JP Kobryn <inwardvessel@gmail.com>,
+	Mykola Lysenko <mykolal@meta.com>, kernel-team@meta.com,
+	linux-block@vger.kernel.org, bpf@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] block: add BPF kfuncs to read blkcg io.stat
+Message-ID: <anpU4oV46MDVDixj@devvm16600.scu0.facebook.com>
+References: <20260807193732.4073299-1-ziyang.meme@gmail.com>
+ <20260807193732.4073299-2-ziyang.meme@gmail.com>
+ <anot9w6mg9538RWm@slm.duckdns.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260806184254.3790858-1-nphamcs@gmail.com> <20260806184254.3790858-9-nphamcs@gmail.com>
- <anYIboHEUZb4fhHv@cmpxchg.org>
-In-Reply-To: <anYIboHEUZb4fhHv@cmpxchg.org>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Mon, 10 Aug 2026 15:27:46 -0700
-X-Gm-Features: AUfX_mw7dY0-F9-Ej-FIs5p3N5Vk4fr4DFsdoOHN23XY9uPiTQmxJlkSPfIPaBs
-Message-ID: <CAKEwX=Pcr7a1Pfu2U=JQ3fw7k_u9LbCkNZgDh6ySH=JMN3HXOA@mail.gmail.com>
-Subject: Re: [PATCH v3 08/11] mm, swap: only charge physical swap entries
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: akpm@linux-foundation.org, chrisl@kernel.org, kasong@tencent.com, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	yosry@kernel.org, david@kernel.org, muchun.song@linux.dev, 
-	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
-	youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org, 
-	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
-	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
-	weixugc@google.com, riel@surriel.com, gourry@gourry.net, 
-	haowenchao22@gmail.com, corbet@lwn.net, kernel-team@meta.com, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <anot9w6mg9538RWm@slm.duckdns.org>
 
-On Fri, Aug 7, 2026 at 9:31=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org>=
- wrote:
->
-> On Thu, Aug 06, 2026 at 11:42:51AM -0700, Nhat Pham wrote:
-> > Charge memcg->swap when a vswap entry acquires physical backing rather
-> > than when it is allocated, so memory.swap.current tracks on-disk swap
-> > usage. Zswap-backed and zero-filled pages occupy no swap space but were
-> > charged as though they did.
-> >
-> > memory.swap.current therefore no longer counts them, and a cgroup whose
-> > pages all land in zswap can now reclaim anon memory with memory.swap.ma=
-x
-> > set to 0.
-> >
-> > Direct-mapped physical swap charging is unchanged.
-> >
-> > Signed-off-by: Nhat Pham <nphamcs@gmail.com>
->
-> To head off any uncertainty about this: this is exactly what needs to
-> happen in terms of cgroup semantics.
->
-> memory.swap.* are about physical swap space. They track, control, and
-> enforce fairness for a finite resource that is separate from memory.
->
-> When a user switches on vswsap and a bunch of empty pages are stored
-> inside the zeromap without consuming swapfile space, these counters
-> must be 0.
->
-> When a user switches on vswap to use zswap without a backing file,
-> these counters must be 0.
->
-> When a user switches on vswap to use zswap with writeback, only the
-> pages that get written to the swapfile must be tracked and controlled
-> by these counters.
+Hi Tejun,
 
-I agree, and yeah I should have been clearer about the reasoning in
-this patch commit message itself. I made the argument in a response to
-Kairui's inquiry in the past, but forgot to include it here. My
-apologies - will expand on this in the next version.
+Thanks for your review and suggestions!
 
-It really does not make sense to make zswap and phys swap competes for
-the same limit, when they don't compete for a tangible resource (zswap
-consumes memory, where as phys swap consumes storage space).
+On Mon, Aug 10, 2026 at 10:00:55AM -1000, Tejun Heo wrote:
+>Hello,
+>
+>On Fri, Aug 07, 2026 at 12:37:31PM -0700, Ziyang Men wrote:
+>> +__bpf_kfunc struct blkcg *bpf_get_root_blkcg(void)
+>> +__bpf_kfunc struct blkcg *bpf_get_blkcg(struct cgroup_subsys_state *css)
+>> +__bpf_kfunc void bpf_put_blkcg(struct blkcg *blkcg)
+>> +__bpf_kfunc void bpf_blkcg_flush_stats(struct blkcg *blkcg)
+>
+>I wonder whether making the above deal with css's would make more sense so
+>that we don't end up with per-subsystem iterators. If casting to per-subsys
+>type is necessary, we can provide RCU protected cast kfucns.
+>
+
+Good idea! These do nothing block specific and we already have some common
+helpers for it such as the bpf_get_root_blkcg(). What is missing is a way to get
+one controller's css from a cgroup with a reference held, and the cast. So
+I would add in kernel/cgroup/
+
+   struct cgroup_subsys_state *bpf_cgroup_css(struct cgroup *cgrp, int ssid);
+   void bpf_css_release(struct cgroup_subsys_state *css);
+
+where the @ssid is an enum cgroup_subsys_id value. Afterwards, the only piece for
+blkcg left is:
+   struct blkcg *bpf_css_to_blkcg(struct cgroup_subsys_state *css);
+
+Note the bpf_blkcg_flush_stats may keep its current shape as it mirrors the
+blkcg_print_stat() which skips the root.
+
+With these helpers we can also replace the existing ones in
+mm/bpf_memcontrol.c as well:
+	bpf_get_mem_cgroup()
+	bpf_put_mem_cgroup()
+	bpf_mem_cgroup_flush_stats()
+
+they map onto bpf_cgroup_css() plus a bpf_css_to_memcg() cast the same way.
+
+Hi Roman, JP, Shakeel: Do you think it is worth applying above changes for
+the memory controller as well? If you are happy with the direction I am glad to
+send the conversion as a follow-up once the generic kfuncs are in. Would you
+take it?
+
+>> +__bpf_kfunc u64 bpf_blkg_iostat_bytes(struct blkcg_gq *blkg,
+>> +				      enum blkg_iostat_type rw)
+>> +__bpf_kfunc u64 bpf_blkg_iostat_ios(struct blkcg_gq *blkg,
+>> +				    enum blkg_iostat_type rw)
+>> +__bpf_kfunc u64 bpf_blkg_dev(struct blkcg_gq *blkg)
+>
+>Ignoring 32bit split reads (do we really care for BPF accesses?), the above
+>can easily be done with BPF_CORE_READ(), right?
+
+Agree, these parts will be removed in the next version.
 
 >
-> A few inline comments on the implementation:
+>Thanks.
+>
+>-- 
+>tejun
 
-Acked. I'm trying to implement this. Will report back if something
-doesn't work, but otherwise it will be in the next version.
+Please let me know whether the above ideas works. Thanks very much!
+
+Best,
+Ziyang
