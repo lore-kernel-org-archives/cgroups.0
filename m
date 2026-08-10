@@ -1,30 +1,30 @@
-Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+Received: from out-182.mta1.migadu.com (mta1.migadu.com [37.59.57.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60DE23B27D6
-	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 09:56:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DF83380FC5
+	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 10:03:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.59.57.117
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786355817; cv=none; b=t0qa7mhT3Yi9oYBvluojWWHL63kMlH+nHiVnB4EyTamHUHlPQbtlfc0YKqjgAtaAWUE/aw9Z29RVw6Kk/YoZ/4imeby78CjSSkuRaQ7XcleOrMdGxZ8h/BSxfYys8SF75g+ePk7o5ORhwvRMk4JrGuUjWICYlsasomVlHj5M0qE=
+	t=1786356193; cv=none; b=P5oQiLWlj8RlKy2j9JdJDGWNnXlR88IpueFrdVFKpILUJYA8TtA6uvId9utN7Gu3LV7oVoch3KBelBrPqUw/x48bMRWHbiFIhcd6a6srs33pV33EPWPzEYOaiwD9Nrx/1MK1yBnbc3Q+Gfzp8reDkdjl8XK30ZFGq/Br/6yPY2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786355817; c=relaxed/simple;
-	bh=N98Glw7fzm+si6a/JEfOpfgOIRv6Hi/ePenpOsg3CJs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jbt20XYCvr2r8D0zWXomMDJHIm6XWBe2cpMKkpyZ9jdLrus/aCPjLIjqdkJOA2X4d5tCfRG4/XQ0/8y9HP+nqbD5HekOJqRYDBhFl+PqvwNsJhkxSyKyk6MiQ7hAW8pd2eEix4QYOTwxTnAsRJ6JsEs6I+iCcr8rjlnBqHK0TcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jsTnHhJc; arc=none smtp.client-ip=91.218.175.173
+	s=arc-20240116; t=1786356193; c=relaxed/simple;
+	bh=10PrNCiUqf7MFfhmFCMTznji5GTBy7odo1AXC+FKaCE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Gb/cg8/p3ixdBwMJZ8r43rWiMD5Zz4uRxjanwEv8mDfO3wU1aJgiR2c4VPu9Za4IGELc6S4w+e6JFjqKme8L2KdtqoMppuKt5Usgx03KbTAxth4mZjq6S5T7pa4NY+jlU0tcEMMrlPXioGvMe267Dsg9u3RQRvez3yfeX/lGUqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=v1wsTj9z; arc=none smtp.client-ip=37.59.57.117
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jsTnHhJc"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="v1wsTj9z"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786355813;
+	t=1786356179;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding;
-	bh=sIUdxZwJbsMGly/QpWlxTdxLz5Bu0i7T/uXcG2nnb2Y=;
-	b=jsTnHhJcAmnsjrP0OP+HJOoteyIOFLfN8kJ7tMqYesX7YcyJ8s9k9QT9oDkiK4MDTvjtnf
-	U280FwGwZYf+69BrnL3lyxgxUjmyzVn85rkzbDNXIXivtk6vANJBP1MH/IwBhJTIao//bx
-	shcGWMy8Rm9RVDr4YTkPY5A4QCbua18=
+	bh=ZOk+5BLcXsTf1sIgyFEEL/riyjLwUZTSDU+26n2J4Eg=;
+	b=v1wsTj9zUkv9wZQRiDbb4EQSdPav4EA4HFtdxAwvfRU3czfkFuOk67/w4bADGoad6Oni/c
+	s400B6JVBgjNAyCypItNzVBmnp0Jxp1WCWAuUE1h5m7WBeZv4JOBb9YgBScyChK3ySyrUA
+	39vKsOfddXgsaWK6c3Gl2XnT5Vu4yr0=
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: longman@redhat.com,
 	ridong.chen@linux.dev,
@@ -32,11 +32,14 @@ To: longman@redhat.com,
 Cc: tj@kernel.org,
 	hannes@cmpxchg.org,
 	mkoutny@suse.com,
+	peterz@infradead.org,
+	corbet@lwn.net,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH] cgroup/cpuset: Use WRITE_ONCE() for shared prs_err updates
-Date: Mon, 10 Aug 2026 17:55:59 +0800
-Message-ID: <20260810095559.77345-1-guopeng.zhang@linux.dev>
+Subject: [PATCH] cgroup/cpuset: Remove obsolete PFA_SPREAD_SLAB task flag
+Date: Mon, 10 Aug 2026 18:02:34 +0800
+Message-ID: <20260810100234.78144-1-guopeng.zhang@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -48,97 +51,235 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-cpuset_partition_show() reads cs->prs_err without cpuset_mutex using
-READ_ONCE(). The field is documented as not lock protected, but several
-updates to live cpusets still use plain stores.
+Commit 16a1d968358a ("mm/slab: remove mm/slab.c and slab_def.h")
+removed the SLAB allocator, the only allocator that implemented cpuset
+slab spreading. Commit 61a182ab61a6 ("cgroup/cpuset: Remove
+cpuset_do_slab_mem_spread()") then removed the last task_spread_slab()
+caller. Commit 3ab67a9ce82f ("cgroup/cpuset: Mark memory_spread_slab as
+obsolete") marked the legacy control obsolete.
 
-Convert the remaining prs_err stores on live cpusets to WRITE_ONCE().
+cpuset still updates PFA_SPREAD_SLAB when tasks attach to a legacy
+cpuset and walks all tasks in a cpuset when memory_spread_slab changes.
+Remove the unused task flag and its helpers, and make spread task
+updates depend only on memory_spread_page.
 
-Fixes: 0c7f293efc87 ("cgroup/cpuset: Add cpuset.cpus.exclusive.effective for v2")
+Keep the memory_spread_slab control and CS_SPREAD_SLAB state so legacy
+users retain the existing write, readback and inheritance behavior.
+Update the comments and documentation to describe only page-cache
+spreading as functional.
+
 Assisted-by: LLM
 Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
- kernel/cgroup/cpuset.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ .../admin-guide/cgroup-v1/cpusets.rst         | 39 +++++++------------
+ include/linux/sched.h                         |  5 ---
+ kernel/cgroup/cpuset-v1.c                     | 13 ++-----
+ kernel/cgroup/cpuset.c                        | 23 ++++-------
+ 4 files changed, 26 insertions(+), 54 deletions(-)
 
+diff --git a/Documentation/admin-guide/cgroup-v1/cpusets.rst b/Documentation/admin-guide/cgroup-v1/cpusets.rst
+index 52a213aff04e..434612780074 100644
+--- a/Documentation/admin-guide/cgroup-v1/cpusets.rst
++++ b/Documentation/admin-guide/cgroup-v1/cpusets.rst
+@@ -179,7 +179,7 @@ files describing that cpuset:
+  - cpuset.mem_hardwall flag:  is memory allocation hardwalled
+  - cpuset.memory_pressure: measure of how much paging pressure in cpuset
+  - cpuset.memory_spread_page flag: if set, spread page cache evenly on allowed nodes
+- - cpuset.memory_spread_slab flag: OBSOLETE. Doesn't have any function.
++ - cpuset.memory_spread_slab flag: OBSOLETE. Has no effect on allocation behavior.
+  - cpuset.sched_load_balance flag: if set, load balance within CPUs on that cpuset
+  - cpuset.sched_relax_domain_level: the searching range when migrating tasks
+ 
+@@ -318,26 +318,20 @@ times 1000.
+ 
+ 1.6 What is memory spread ?
+ ---------------------------
+-There are two boolean flag files per cpuset that control where the
+-kernel allocates pages for the file system buffers and related in
+-kernel data structures.  They are called 'cpuset.memory_spread_page' and
+-'cpuset.memory_spread_slab'.
++The 'cpuset.memory_spread_page' boolean flag file controls where the kernel
++allocates page-cache pages.
++The 'cpuset.memory_spread_slab' file is obsolete and has no effect on
++allocation behavior, but is retained for compatibility.
+ 
+ If the per-cpuset boolean flag file 'cpuset.memory_spread_page' is set, then
+ the kernel will spread the file system buffers (page cache) evenly
+ over all the nodes that the faulting task is allowed to use, instead
+ of preferring to put those pages on the node where the task is running.
+ 
+-If the per-cpuset boolean flag file 'cpuset.memory_spread_slab' is set,
+-then the kernel will spread some file system related slab caches,
+-such as for inodes and dentries evenly over all the nodes that the
+-faulting task is allowed to use, instead of preferring to put those
+-pages on the node where the task is running.
+-
+-The setting of these flags does not affect anonymous data segment or
++The setting of this flag does not affect anonymous data segment or
+ stack segment pages of a task.
+ 
+-By default, both kinds of memory spreading are off, and memory
++By default, page cache memory spreading is off, and memory
+ pages are allocated on the node local to where the task is running,
+ except perhaps as modified by the task's NUMA mempolicy or cpuset
+ configuration, so long as sufficient free memory pages are available.
+@@ -345,18 +339,17 @@ configuration, so long as sufficient free memory pages are available.
+ When new cpusets are created, they inherit the memory spread settings
+ of their parent.
+ 
+-Setting memory spreading causes allocations for the affected page
+-or slab caches to ignore the task's NUMA mempolicy and be spread
+-instead.    Tasks using mbind() or set_mempolicy() calls to set NUMA
+-mempolicies will not notice any change in these calls as a result of
+-their containing task's memory spread settings.  If memory spreading
++Setting page cache memory spreading causes affected allocations to ignore the
++task's NUMA mempolicy and be spread instead. Tasks using mbind() or
++set_mempolicy() to set NUMA mempolicies will not notice any change as a
++result of their containing task's memory spread settings.  If memory spreading
+ is turned off, then the currently specified NUMA mempolicy once again
+ applies to memory page allocations.
+ 
+ Both 'cpuset.memory_spread_page' and 'cpuset.memory_spread_slab' are boolean flag
+-files.  By default they contain "0", meaning that the feature is off
+-for that cpuset.  If a "1" is written to that file, then that turns
+-the named feature on.
++files whose values are inherited by newly created cpusets. The value of
++'cpuset.memory_spread_slab' is retained and can be read back, but it does not
++affect allocation behavior.
+ 
+ The implementation is simple.
+ 
+@@ -367,10 +360,6 @@ is modified to perform an inline check for this PFA_SPREAD_PAGE task
+ flag, and if set, a call to a new routine cpuset_mem_spread_node()
+ returns the node to prefer for the allocation.
+ 
+-Similarly, setting 'cpuset.memory_spread_slab' turns on the flag
+-PFA_SPREAD_SLAB, and appropriately marked slab caches will allocate
+-pages from the node returned by cpuset_mem_spread_node().
+-
+ The cpuset_mem_spread_node() routine is also simple.  It uses the
+ value of a per-task rotor cpuset_mem_spread_rotor to select the next
+ node in the current task's mems_allowed to prefer for the allocation.
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 499943987c1a..8b3d47a325cc 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1869,7 +1869,6 @@ static __always_inline bool is_user_task(struct task_struct *task)
+ /* Per-process atomic flags. */
+ #define PFA_NO_NEW_PRIVS		0	/* May not gain new privileges. */
+ #define PFA_SPREAD_PAGE			1	/* Spread page cache over cpuset */
+-#define PFA_SPREAD_SLAB			2	/* Spread some slab caches over cpuset */
+ #define PFA_SPEC_SSB_DISABLE		3	/* Speculative Store Bypass disabled */
+ #define PFA_SPEC_SSB_FORCE_DISABLE	4	/* Speculative Store Bypass force disabled*/
+ #define PFA_SPEC_IB_DISABLE		5	/* Indirect branch speculation restricted */
+@@ -1895,10 +1894,6 @@ TASK_PFA_TEST(SPREAD_PAGE, spread_page)
+ TASK_PFA_SET(SPREAD_PAGE, spread_page)
+ TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
+ 
+-TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
+-TASK_PFA_SET(SPREAD_SLAB, spread_slab)
+-TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
+-
+ TASK_PFA_TEST(SPEC_SSB_DISABLE, spec_ssb_disable)
+ TASK_PFA_SET(SPEC_SSB_DISABLE, spec_ssb_disable)
+ TASK_PFA_CLEAR(SPEC_SSB_DISABLE, spec_ssb_disable)
+diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
+index 3e9968dd91e9..562ad35f00d0 100644
+--- a/kernel/cgroup/cpuset-v1.c
++++ b/kernel/cgroup/cpuset-v1.c
+@@ -204,7 +204,7 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ }
+ 
+ /*
+- * update task's spread flag if cpuset's page/slab spread flag is set
++ * Update a task's spread flag if the cpuset's page spread flag is set.
+  *
+  * Call with callback_lock or cpuset_mutex held. The check can be skipped
+  * if on default hierarchy.
+@@ -219,18 +219,13 @@ void cpuset1_update_task_spread_flags(struct cpuset *cs,
+ 		task_set_spread_page(tsk);
+ 	else
+ 		task_clear_spread_page(tsk);
+-
+-	if (is_spread_slab(cs))
+-		task_set_spread_slab(tsk);
+-	else
+-		task_clear_spread_slab(tsk);
+ }
+ 
+ /**
+- * cpuset1_update_tasks_flags - update the spread flags of tasks in the cpuset.
+- * @cs: the cpuset in which each task's spread flags needs to be changed
++ * cpuset1_update_tasks_flags - update the page spread flag of cpuset tasks
++ * @cs: the cpuset whose tasks need their page spread flag updated
+  *
+- * Iterate through each task of @cs updating its spread flags.  As this
++ * Iterate through each task of @cs updating its page spread flag.  As this
+  * function is called with cpuset_mutex held, cpuset membership stays
+  * stable.
+  */
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 0a0fffb5673c..2f7faa795664 100644
+index 0a0fffb5673c..9761a5dd006f 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1587,7 +1587,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 	cpumask_copy(cs->effective_xcpus, tmp->new_cpus);
- 	spin_unlock_irq(&callback_lock);
- 	cpuset_force_rebuild();
--	cs->prs_err = 0;
-+	WRITE_ONCE(cs->prs_err, 0);
+@@ -2862,7 +2862,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ {
+ 	struct cpuset *trialcs;
+ 	int balance_flag_changed;
+-	int spread_flag_changed;
++	int spread_page_changed;
+ 	int err;
  
- 	/*
- 	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
-@@ -1661,7 +1661,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
- 	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus));
+ 	trialcs = dup_or_alloc_cpuset(cs);
+@@ -2881,8 +2881,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 	balance_flag_changed = (is_sched_load_balance(cs) !=
+ 				is_sched_load_balance(trialcs));
  
- 	if (cpumask_empty(excpus)) {
--		cs->prs_err = PERR_CPUSEMPTY;
-+		WRITE_ONCE(cs->prs_err, PERR_CPUSEMPTY);
- 		goto invalidate;
+-	spread_flag_changed = ((is_spread_slab(cs) != is_spread_slab(trialcs))
+-			|| (is_spread_page(cs) != is_spread_page(trialcs)));
++	spread_page_changed = is_spread_page(cs) != is_spread_page(trialcs);
+ 
+ 	spin_lock_irq(&callback_lock);
+ 	cs->flags = trialcs->flags;
+@@ -2895,7 +2894,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 			rebuild_sched_domains_locked();
  	}
  
-@@ -1676,13 +1676,13 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
- 	if (adding) {
- 		WARN_ON_ONCE(cpumask_intersects(tmp->addmask, subpartitions_cpus));
- 		if (!capable(CAP_SYS_ADMIN))
--			cs->prs_err = PERR_ACCESS;
-+			WRITE_ONCE(cs->prs_err, PERR_ACCESS);
- 		else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
- 			 cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
--			cs->prs_err = PERR_NOCPUS;
-+			WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
- 		else if ((prs == PRS_ISOLATED) &&
- 			 !isolated_cpus_can_update(tmp->addmask, tmp->delmask))
--			cs->prs_err = PERR_HKEEPING;
-+			WRITE_ONCE(cs->prs_err, PERR_HKEEPING);
- 		if (cs->prs_err)
- 			goto invalidate;
- 	}
-@@ -2110,13 +2110,13 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
- 		 * partition root.
- 		 */
- 		WARN_ON_ONCE(is_remote_partition(child));
--		child->prs_err = 0;
-+		WRITE_ONCE(child->prs_err, 0);
- 		if (!cpumask_subset(child->effective_xcpus,
- 				    cs->effective_xcpus))
--			child->prs_err = PERR_INVCPUS;
-+			WRITE_ONCE(child->prs_err, PERR_INVCPUS);
- 		else if (populated &&
- 			 cpumask_subset(new_ecpus, child->effective_xcpus))
--			child->prs_err = PERR_NOCPUS;
-+			WRITE_ONCE(child->prs_err, PERR_NOCPUS);
- 
- 		if (child->prs_err) {
- 			int old_prs = child->partition_root_state;
-@@ -2420,8 +2420,10 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
- 		return;
- 
- 	prs_err = validate_partition(cs, trialcs);
--	if (prs_err)
--		trialcs->prs_err = cs->prs_err = prs_err;
-+	if (prs_err) {
-+		WRITE_ONCE(cs->prs_err, prs_err);
-+		trialcs->prs_err = prs_err;
-+	}
- 
- 	if (is_remote_partition(cs)) {
- 		if (trialcs->prs_err)
-@@ -3944,7 +3946,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
- 	if (remote && (cpumask_empty(subpartitions_cpus) ||
- 			(cpumask_empty(&new_cpus) &&
- 			 partition_is_populated(cs, NULL)))) {
--		cs->prs_err = PERR_HOTPLUG;
-+		WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
- 		remote_partition_disable(cs, tmp);
- 		compute_effective_cpumask(&new_cpus, cs, parent);
- 		remote = false;
+-	if (spread_flag_changed)
++	if (spread_page_changed)
+ 		cpuset1_update_tasks_flags(cs);
+ out:
+ 	free_cpuset(trialcs);
+@@ -4484,14 +4483,10 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
+  * cpuset_spread_node() - On which node to begin search for a page
+  * @rotor: round robin rotor
+  *
+- * If a task is marked PF_SPREAD_PAGE or PF_SPREAD_SLAB (as for
+- * tasks in a cpuset with is_spread_page or is_spread_slab set),
+- * and if the memory allocation used cpuset_mem_spread_node()
+- * to determine on which node to start looking, as it will for
+- * certain page cache or slab cache pages such as used for file
+- * system buffers and inode caches, then instead of starting on the
+- * local node to look for a free page, rather spread the starting
+- * node around the tasks mems_allowed nodes.
++ * If a task is marked PFA_SPREAD_PAGE and a page cache allocation uses
++ * cpuset_mem_spread_node() to determine where to start looking, spread the
++ * starting node around the task's mems_allowed nodes instead of starting on
++ * the local node.
+  *
+  * We don't have to worry about the returned node being offline
+  * because "it can't happen", and even if it did, it would be ok.
+@@ -4502,9 +4497,7 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
+  * offline node.  But if it did, that would be ok, as this routine
+  * is not returning the node where the allocation must be, only
+  * the node where the search should start.  The zonelist used by
+- * the allocator will include all nodes.  If the slab allocator
+- * is passed an offline node, it will fall back to the local node.
+- * See kmem_cache_alloc_node().
++ * the allocator will include all nodes.
+  */
+ static int cpuset_spread_node(int *rotor)
+ {
 -- 
 2.43.0
 
