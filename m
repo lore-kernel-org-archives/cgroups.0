@@ -1,85 +1,95 @@
-Received: from sg-3-111.ptr.tlmpb.com (sg-3-111.ptr.tlmpb.com [101.45.255.111])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F67837A49D
-	for <cgroups@vger.kernel.org>; Sun,  9 Aug 2026 08:22:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.111
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CFC631355D
+	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 02:58:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786263742; cv=none; b=gZ9uPy1DD5jUcwHxgPG2ZcFDat+j1JjJg9Ci884jyh6EPB+1HSpcvCgjCjObkmdvhirRyGqBoNXBw7N/z3OT7gu2Yi1JC7CPIvDK8soM9r+FMqM8nWP1Mptam26ah8+NgtWcIGacov9pSMpFmRXjDrHNzxTPpHdxXECdSSt6mrk=
+	t=1786330724; cv=none; b=PFTGHtB5MuNcmxs46yAoROcsXJ3iMO2S97Tk6sFs9wpCQsPswVPA+vAJj4wC0ekAaJ1o5eTZKF3fPVsTxSEV1FIlruYIphJBibHEtaTePyge+iWQYRmccYjCPnItRaycknPb94s1YCLGHryJFgvNA8L5f7bEL79YnwxhNvNI4hA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786263742; c=relaxed/simple;
-	bh=pt81hSYU0uNijNHu5ZELRxHBAX8+VKfxS0ahcYAgjgE=;
-	h=Message-Id:Mime-Version:Date:Subject:Content-Type:To:Cc:From; b=ThzskrEwK7BBsDdbJ3Bc7MRhSJ5zwV/BUmWU1LD1RZg4JICQvIT2Tbe3p4KQ78mCbIT0UzhZoSzRvPAStE0OaGiOIkT0CxrlykBVKfO8ZjxWqnE+ApuCS0Jr/dQ4RtZTtHGYy3lS4clkGyy74nUOmlR9Qly9Y+1eNGhn3FKhT+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=G5tSWqxz; arc=none smtp.client-ip=101.45.255.111
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1786330724; c=relaxed/simple;
+	bh=fLbFNKQqVjzAv7A+qACZCj+ArQCHtzn58jrOki8wUN0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=l413j8lbTNyweMR+jEFyvk10PkIlMTIlA4ALb2LCKG/0Nu5EsLwtJvp67Dy7SlpzwyIC6Ukl1ZlbDZ/JqTg58dQlAYLuBdbB39V9mFgGGIWkMCu9fgnE57TxNLLnq9d7KSI7fQOn9jzhT96WRgBxpYlpy2F/pl1sHGwcaNg4OYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=B9mm7QNK; arc=none smtp.client-ip=91.218.175.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="G5tSWqxz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1786263687; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=LZZiQX0XmIhwEqqHMCjXxFT3Oz1zfPeaBqcjQXnh1qE=;
- b=G5tSWqxzA+wKxmDxRtb3Mwc4oIVIQeQc/da/30YgcWrpXdHeT0JWBZaWEgNY/YP6LfBRoZ
- TKQqDZcYBb543NHXjVfOzxH47ICCH6X6e7trSBC3JFLor728d1ygp+r0eUlxhP7XajzSq8
- EuS0BIzrh4BfHYZ2JVWeQz6Sq7vRrgQgtl3NoZMJfgjMWwm+SBIEwUwNN0kYUFMGythKXj
- MxbylVPesKcjixV+MrnS3k9zfbFA2IJEpgOcI+vmkJGXK2Q5WXJhUMTRMMZoZ1Dk3b6Gru
- oLJD8flkqg2bB6geyLYeT2DUo0jCQa8F/0HeHvPMSqHuWykRG0HkAZ1RaUfsjw==
-Message-Id: <20260809082111.3827531-1-qirui.001@bytedance.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="B9mm7QNK"
+Message-ID: <a318c942-0776-4678-a9cd-504e713d25f5@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1786330720;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uXCqoFJf3vzt1oImCMxR6zmmit+AxyUiAUJr9XJhOUs=;
+	b=B9mm7QNK+NF8m3aikMjvabUf1QLFVjL+JiUZe7E5cZsfAzNPm2RoIgKOzfwhVFGJrK951b
+	DF7hseUMQVA+MQEfEepP/3pN9a5HrdRkoJ74CxmW/dqGcL+HN0TzhmAzHb3YgIPtnjZGNq
+	MCVx4jiKDFGhtbmUZkeYcEVVDYEM/8k=
+Date: Mon, 10 Aug 2026 10:58:31 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Rui Qi <qirui.001@bytedance.com>
-Date: Sun,  9 Aug 2026 16:21:09 +0800
-X-Lms-Return-Path: <lba+26a783885+fd4497+vger.kernel.org+qirui.001@bytedance.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v2 0/2] mm, memcg: fix memory.peak reset clobbering other
+ fds' watermark
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cui.tao@linux.dev,
+ Ridong Chen <chenridong@xiaomi.com>
+References: <20260807090000.1532495-1-ridong.chen@linux.dev>
+ <20260807132241.147c758d2904e00daf28ba4e@linux-foundation.org>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20260807132241.147c758d2904e00daf28ba4e@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Subject: [PATCH 0/2] selftests/cgroup: Fix cpuset test portability and hotplug error handling
-X-Mailer: git-send-email 2.20.1
-Content-Type: text/plain; charset=UTF-8
-To: "Tejun Heo" <tj@kernel.org>
-Cc: "Waiman Long" <longman@redhat.com>, 
-	"Ridong Chen" <ridong.chen@linux.dev>, 
-	"Johannes Weiner" <hannes@cmpxchg.org>, 
-	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	"Shuah Khan" <shuah@kernel.org>, <cgroups@vger.kernel.org>, 
-	<linux-kselftest@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Rui Qi" <qirui.001@bytedance.com>
-From: "Rui Qi" <qirui.001@bytedance.com>
+X-Migadu-Flow: FLOW_OUT
 
-Hi,
 
-This series fixes two cpuset selftest issues.
 
-Patch 1 removes awk -e from cpuset selftests. The option is accepted by
-gawk, but rejected by mawk, causing mount point detection to fail on
-systems where awk is provided by mawk.
+On 8/8/2026 4:22 AM, Andrew Morton wrote:
+> On Fri,  7 Aug 2026 16:59:58 +0800 Ridong <ridong.chen@linux.dev> wrote:
+> 
+>> Two fixes for the per-fd memory.peak / memory.swap.peak handlers added in
+>> c6f53ed8f213. Each open fd reads back max(its own value, the shared
+>> local_watermark), and both bugs live in that scheme.
+> 
+> Thanks.
+> 
+> We're missing the preferred description of the worst-case
+> userspace-visible effects of the bug.  It appears they're quite minor
+> so I'll assume this series is a post-7.2 thing.
+> 
 
-Patch 2 preserves CPU hotplug write failures in test_cpuset_prs.sh. The
-helper currently returns the status of pause after the write, hiding the
-write failure from callers. Moving the write before the bookkeeping also
-keeps OFFLINE_CPUS aligned with hotplug operations that actually
-succeeded.
+Agreed, post-7.2 is fine and neither is stable material.
 
-Testing:
-- git apply --check the two patches in this series
-- scripts/checkpatch.pl --strict on each patch
-- bash -n tools/testing/selftests/cgroup/test_cpuset_prs.sh
-- bash -n tools/testing/selftests/cgroup/test_cpuset_v1_hp.sh
-- mawk 'BEGIN {print 1}'
+Worst case for both: a reader of memory.peak (or memory.swap.peak)
+gets a value lower than the true peak, so a tool that sizes or bills a
+cgroup by peak usage under-reports it.
 
-The full cpuset hotplug selftests were not run because they offline and
-online CPUs.
+- Patch 1 (reader side, take peaks_lock in peak_show): a reader that
+   races an unrelated reset briefly gets the low value. Transient.
 
-Rui Qi (2):
-  selftests/cgroup: Avoid awk -e in cpuset tests
-  selftests/cgroup: Preserve CPU hotplug write errors
+- Patch 2 (writer side, peak_write reset): a reset on one fd stores
+   the current usage into the other watchers instead of the old
+   watermark, dragging every other fd's peak down.
 
- tools/testing/selftests/cgroup/test_cpuset_prs.sh   | 5 +++--
- tools/testing/selftests/cgroup/test_cpuset_v1_hp.sh | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+I'll spell this out in both changelogs in v2.
+
+> Sashiko might have found a similar race on the writer side:
+> 	https://sashiko.dev/#/patchset/20260807090000.1532495-1-ridong.chen@linux.dev
+
+Yes, that's the writer side that patch 2 fixes;
 
 -- 
-2.20.1
+Best regards
+Ridong
+
