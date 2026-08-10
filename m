@@ -1,45 +1,61 @@
-Received: from out-182.mta1.migadu.com (mta1.migadu.com [37.59.57.117])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DF83380FC5
-	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 10:03:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.59.57.117
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFFFE3AE187
+	for <cgroups@vger.kernel.org>; Mon, 10 Aug 2026 10:20:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786356193; cv=none; b=P5oQiLWlj8RlKy2j9JdJDGWNnXlR88IpueFrdVFKpILUJYA8TtA6uvId9utN7Gu3LV7oVoch3KBelBrPqUw/x48bMRWHbiFIhcd6a6srs33pV33EPWPzEYOaiwD9Nrx/1MK1yBnbc3Q+Gfzp8reDkdjl8XK30ZFGq/Br/6yPY2k=
+	t=1786357215; cv=none; b=pykqnV7uaVug36dTu/CkL1Ll66zs2OSrSUK0o/n2VZZQQukSjpqWbfXBhimH0ZyBdCEXU589qQM4BpJhLdgM5f6foFQ+e2LKH7dyc/6NwyZhbGJrJXQGod0VSM42upCZVTFLCEnUj+mp+8vOJCR47pcENPJdhs3BjguyamVXfPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786356193; c=relaxed/simple;
-	bh=10PrNCiUqf7MFfhmFCMTznji5GTBy7odo1AXC+FKaCE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Gb/cg8/p3ixdBwMJZ8r43rWiMD5Zz4uRxjanwEv8mDfO3wU1aJgiR2c4VPu9Za4IGELc6S4w+e6JFjqKme8L2KdtqoMppuKt5Usgx03KbTAxth4mZjq6S5T7pa4NY+jlU0tcEMMrlPXioGvMe267Dsg9u3RQRvez3yfeX/lGUqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=v1wsTj9z; arc=none smtp.client-ip=37.59.57.117
+	s=arc-20240116; t=1786357215; c=relaxed/simple;
+	bh=S3tC3XwyCQIlqsXvJZnXU3u+9DkFlQbCtiIWEShahuE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=seosJJv64T5hXZdQEACHVr1dLL5zDQ+/9K1iA9Y8zY8K9fp0Ne7hK5Yy0gMDInwd+KX9uNlOVpzOrGmcDeSzsM0yI2Pe1XGOzKazEGrYX3FEEnLDQHw8Gc2+e25i9YKgPXaMgYUVFGDpmfFzuEL5cEuLH/Kdwq2oZGPEGSz6HeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fGXDlnyO; arc=none smtp.client-ip=91.218.175.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="v1wsTj9z"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fGXDlnyO"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786356179;
+	t=1786357201;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=ZOk+5BLcXsTf1sIgyFEEL/riyjLwUZTSDU+26n2J4Eg=;
-	b=v1wsTj9zUkv9wZQRiDbb4EQSdPav4EA4HFtdxAwvfRU3czfkFuOk67/w4bADGoad6Oni/c
-	s400B6JVBgjNAyCypItNzVBmnp0Jxp1WCWAuUE1h5m7WBeZv4JOBb9YgBScyChK3ySyrUA
-	39vKsOfddXgsaWK6c3Gl2XnT5Vu4yr0=
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-To: longman@redhat.com,
-	ridong.chen@linux.dev,
-	cgroups@vger.kernel.org
-Cc: tj@kernel.org,
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2kxNcoz88gUTv2RyDdUD2oJ4g9y+1zQ1kNSN4EE2fzA=;
+	b=fGXDlnyOZW78tBnMnlQ1tn0gaqx7mSxN8jnpxd3X5ZBs5A+AHB+T0i5Ka2ATUkpwOgnsv1
+	KMqRp0Augsx1/HsaVXbYVEtsd6TD99UKyuJ+3mT8utVuks9GQoMS+0WK8+l44Y4crMrbtQ
+	xIGnFQ0O2uyU8LD3THLBVtNK7IeoZsw=
+From: Usama Arif <usama.arif@linux.dev>
+To: Usama Arif <usama.arif@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	david@fromorbit.com,
+	dgc@kernel.org,
+	qi.zheng@linux.dev,
+	baolin.wang@linux.alibaba.com,
+	brauner@kernel.org,
+	cgroups@vger.kernel.org,
+	clm@fb.com,
+	dsterba@suse.com,
 	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	peterz@infradead.org,
-	corbet@lwn.net,
-	linux-doc@vger.kernel.org,
+	hughd@google.com,
+	jack@suse.cz,
+	linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH] cgroup/cpuset: Remove obsolete PFA_SPREAD_SLAB task flag
-Date: Mon, 10 Aug 2026 18:02:34 +0800
-Message-ID: <20260810100234.78144-1-guopeng.zhang@linux.dev>
+	linux-mm@kvack.org,
+	mhocko@kernel.org,
+	muchun.song@linux.dev,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	kernel-team@meta.com
+Subject: Re: [PATCH v2] fs: push nr_cached_objects memcg gating into individual filesystems
+Date: Mon, 10 Aug 2026 03:19:52 -0700
+Message-ID: <20260810101954.822260-1-usama.arif@linux.dev>
+In-Reply-To: <20260715103516.2410175-1-usama.arif@linux.dev>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,237 +65,136 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+On Wed, 15 Jul 2026 03:35:16 -0700 Usama Arif <usama.arif@linux.dev> wrote:
 
-Commit 16a1d968358a ("mm/slab: remove mm/slab.c and slab_def.h")
-removed the SLAB allocator, the only allocator that implemented cpuset
-slab spreading. Commit 61a182ab61a6 ("cgroup/cpuset: Remove
-cpuset_do_slab_mem_spread()") then removed the last task_spread_slab()
-caller. Commit 3ab67a9ce82f ("cgroup/cpuset: Mark memory_spread_slab as
-obsolete") marked the legacy control obsolete.
+> Commit 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects
+> in memcg slab shrink") added a check in fs/super.c that skipped every
+> ->nr_cached_objects() hook whenever the shrinker was invoked for a
+> non-root memcg, on the assumption that none of them honour sc->memcg.
+> 
+> That assumption is wrong for XFS, whose inode-reclaim hook is
+> intentionally driven from per-memcg contexts to free memcg-charged
+> slab. Encoding a blanket "never memcg-aware" policy in fs/super.c
+> short-circuits that path.
+> 
+> Push the check down into the callbacks whose counters really are
+> irrelevant to per-memcg reclaim - btrfs_nr_cached_objects() and
+> shmem_unused_huge_count() - and drop the fs/super.c gate. Each
+> filesystem can now lift the restriction independently if its counter
+> later grows memcg awareness, without touching fs/super.c.
+> 
+> Introduce mem_cgroup_shrink_is_root() in <linux/memcontrol.h> so the
+> callbacks don't open-code "sc->memcg is NULL or root".
+> 
+> Fixes: 0baad6f9b997 ("fs/super: skip non-memcg-aware nr_cached_objects in memcg slab shrink")
+> Acked-by: Qi Zheng <qi.zheng@linux.dev>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> Reviewed-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+> ---
+> v1 -> v2:
+> - Do not gate xfs_fs_nr_cached_objects(); XFS's inode reclaim is
+>   intentionally driven from per-memcg contexts to free memcg-charged
+>   slab (Dave Chinner).
+> - Add mem_cgroup_shrink_is_root() helper in <linux/memcontrol.h> so the
+>   filesystem callbacks don't open-code "sc->memcg is NULL or root".
+>   (Dave Chinner)
+> - Add fixes tag (Dave Chinner)
+> ---
+>  fs/btrfs/super.c           | 10 ++++++++++
+>  fs/super.c                 | 19 ++-----------------
+>  include/linux/memcontrol.h | 21 +++++++++++++++++++++
+>  mm/shmem.c                 | 10 ++++++++++
+>  4 files changed, 43 insertions(+), 17 deletions(-)
+> 
+> diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
+> index a7d804219bec..cc4537435399 100644
+> --- a/fs/btrfs/super.c
+> +++ b/fs/btrfs/super.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/namei.h>
+>  #include <linux/miscdevice.h>
+>  #include <linux/magic.h>
+> +#include <linux/memcontrol.h>
+>  #include <linux/slab.h>
+>  #include <linux/ratelimit.h>
+>  #include <linux/crc32c.h>
+> @@ -2434,6 +2435,15 @@ static long btrfs_nr_cached_objects(struct super_block *sb, struct shrink_contro
+>  	struct btrfs_fs_info *fs_info = btrfs_sb(sb);
+>  	const s64 nr = percpu_counter_read_positive(&fs_info->evictable_extent_maps);
+>  
+> +	/*
+> +	 * The evictable extent map counter is filesystem-global and does not
+> +	 * honour sc->memcg, so it is only meaningful on the global (kswapd or
+> +	 * root direct reclaim) shrink path. Skip the per-memcg iterations of
+> +	 * shrink_slab_memcg() to avoid queueing duplicate global work.
+> +	 */
+> +	if (!mem_cgroup_shrink_is_root(sc))
+> +		return 0;
+> +
+>  	trace_btrfs_extent_map_shrinker_count(fs_info, nr);
+>  
+>  	return nr;
+> diff --git a/fs/super.c b/fs/super.c
+> index d2d04a6f4f84..a8fd61136aaf 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -24,7 +24,6 @@
+>  #include <linux/export.h>
+>  #include <linux/slab.h>
+>  #include <linux/blkdev.h>
+> -#include <linux/memcontrol.h>
+>  #include <linux/mount.h>
+>  #include <linux/security.h>
+>  #include <linux/writeback.h>		/* for the emergency remount stuff */
+> @@ -170,19 +169,6 @@ static void super_wake(struct super_block *sb, unsigned int flag)
+>  	wake_up_var(&sb->s_flags);
+>  }
+>  
+> -/*
+> - * The s_op->nr_cached_objects hooks (used for example by btrfs and xfs)
+> - * operate on filesystem-global state and ignore sc->memcg. Driving them
+> - * from per-memcg shrink_slab_memcg() invocations only burns CPU walking
+> - * per-cpu counters and queueing duplicate work: the actual reclaim happens on
+> - * the global path (kswapd or root direct reclaim) regardless. Restrict them
+> - * to that path.
+> - */
+> -static inline bool super_fs_objects_eligible(struct shrink_control *sc)
+> -{
+> -	return !sc->memcg || mem_cgroup_is_root(sc->memcg);
+> -}
+> -
+>  /*
+>   * One thing we have to be careful of with a per-sb shrinker is that we don't
+>   * drop the last active reference to the superblock from within the shrinker.
+> @@ -212,7 +198,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
+>  	if (!super_trylock_shared(sb))
+>  		return SHRINK_STOP;
+>  
+> -	if (sb->s_op->nr_cached_objects && super_fs_objects_eligible(sc))
+> +	if (sb->s_op->nr_cached_objects)
+>  		fs_objects = sb->s_op->nr_cached_objects(sb, sc);
+>  
+>  	inodes = list_lru_shrink_count(&sb->s_inode_lru, sc);
+> @@ -273,8 +259,7 @@ static unsigned long super_cache_count(struct shrinker *shrink,
+>  		return 0;
+>  	smp_rmb();
+>  
+> -	if (sb->s_op && sb->s_op->nr_cached_objects &&
+> -	    super_fs_objects_eligible(sc))
+> +	if (sb->s_op && sb->s_op->nr_cached_objects)
+>  		total_objects = sb->s_op->nr_cached_objects(sb, sc);
+>  
+>  	total_objects += list_lru_shrink_count(&sb->s_dentry_lru, sc);
 
-cpuset still updates PFA_SPREAD_SLAB when tasks attach to a legacy
-cpuset and walks all tasks in a cpuset when memory_spread_slab changes.
-Remove the unused task flag and its helpers, and make spread task
-updates depend only on memory_spread_page.
+Hi Christian,
 
-Keep the memory_spread_slab control and CS_SPREAD_SLAB state so legacy
-users retain the existing write, readback and inheritance behavior.
-Update the comments and documentation to describe only page-cache
-spreading as functional.
 
-Assisted-by: LLM
-Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
----
- .../admin-guide/cgroup-v1/cpusets.rst         | 39 +++++++------------
- include/linux/sched.h                         |  5 ---
- kernel/cgroup/cpuset-v1.c                     | 13 ++-----
- kernel/cgroup/cpuset.c                        | 23 ++++-------
- 4 files changed, 26 insertions(+), 54 deletions(-)
+It looks like the changes in fs/super.c didnt make it into the patch that was
+merged in vfs.fixes [1]. Just wanted to check how we could correct this?
+Should Qi (or I) send a followup patch?
 
-diff --git a/Documentation/admin-guide/cgroup-v1/cpusets.rst b/Documentation/admin-guide/cgroup-v1/cpusets.rst
-index 52a213aff04e..434612780074 100644
---- a/Documentation/admin-guide/cgroup-v1/cpusets.rst
-+++ b/Documentation/admin-guide/cgroup-v1/cpusets.rst
-@@ -179,7 +179,7 @@ files describing that cpuset:
-  - cpuset.mem_hardwall flag:  is memory allocation hardwalled
-  - cpuset.memory_pressure: measure of how much paging pressure in cpuset
-  - cpuset.memory_spread_page flag: if set, spread page cache evenly on allowed nodes
-- - cpuset.memory_spread_slab flag: OBSOLETE. Doesn't have any function.
-+ - cpuset.memory_spread_slab flag: OBSOLETE. Has no effect on allocation behavior.
-  - cpuset.sched_load_balance flag: if set, load balance within CPUs on that cpuset
-  - cpuset.sched_relax_domain_level: the searching range when migrating tasks
- 
-@@ -318,26 +318,20 @@ times 1000.
- 
- 1.6 What is memory spread ?
- ---------------------------
--There are two boolean flag files per cpuset that control where the
--kernel allocates pages for the file system buffers and related in
--kernel data structures.  They are called 'cpuset.memory_spread_page' and
--'cpuset.memory_spread_slab'.
-+The 'cpuset.memory_spread_page' boolean flag file controls where the kernel
-+allocates page-cache pages.
-+The 'cpuset.memory_spread_slab' file is obsolete and has no effect on
-+allocation behavior, but is retained for compatibility.
- 
- If the per-cpuset boolean flag file 'cpuset.memory_spread_page' is set, then
- the kernel will spread the file system buffers (page cache) evenly
- over all the nodes that the faulting task is allowed to use, instead
- of preferring to put those pages on the node where the task is running.
- 
--If the per-cpuset boolean flag file 'cpuset.memory_spread_slab' is set,
--then the kernel will spread some file system related slab caches,
--such as for inodes and dentries evenly over all the nodes that the
--faulting task is allowed to use, instead of preferring to put those
--pages on the node where the task is running.
--
--The setting of these flags does not affect anonymous data segment or
-+The setting of this flag does not affect anonymous data segment or
- stack segment pages of a task.
- 
--By default, both kinds of memory spreading are off, and memory
-+By default, page cache memory spreading is off, and memory
- pages are allocated on the node local to where the task is running,
- except perhaps as modified by the task's NUMA mempolicy or cpuset
- configuration, so long as sufficient free memory pages are available.
-@@ -345,18 +339,17 @@ configuration, so long as sufficient free memory pages are available.
- When new cpusets are created, they inherit the memory spread settings
- of their parent.
- 
--Setting memory spreading causes allocations for the affected page
--or slab caches to ignore the task's NUMA mempolicy and be spread
--instead.    Tasks using mbind() or set_mempolicy() calls to set NUMA
--mempolicies will not notice any change in these calls as a result of
--their containing task's memory spread settings.  If memory spreading
-+Setting page cache memory spreading causes affected allocations to ignore the
-+task's NUMA mempolicy and be spread instead. Tasks using mbind() or
-+set_mempolicy() to set NUMA mempolicies will not notice any change as a
-+result of their containing task's memory spread settings.  If memory spreading
- is turned off, then the currently specified NUMA mempolicy once again
- applies to memory page allocations.
- 
- Both 'cpuset.memory_spread_page' and 'cpuset.memory_spread_slab' are boolean flag
--files.  By default they contain "0", meaning that the feature is off
--for that cpuset.  If a "1" is written to that file, then that turns
--the named feature on.
-+files whose values are inherited by newly created cpusets. The value of
-+'cpuset.memory_spread_slab' is retained and can be read back, but it does not
-+affect allocation behavior.
- 
- The implementation is simple.
- 
-@@ -367,10 +360,6 @@ is modified to perform an inline check for this PFA_SPREAD_PAGE task
- flag, and if set, a call to a new routine cpuset_mem_spread_node()
- returns the node to prefer for the allocation.
- 
--Similarly, setting 'cpuset.memory_spread_slab' turns on the flag
--PFA_SPREAD_SLAB, and appropriately marked slab caches will allocate
--pages from the node returned by cpuset_mem_spread_node().
--
- The cpuset_mem_spread_node() routine is also simple.  It uses the
- value of a per-task rotor cpuset_mem_spread_rotor to select the next
- node in the current task's mems_allowed to prefer for the allocation.
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 499943987c1a..8b3d47a325cc 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1869,7 +1869,6 @@ static __always_inline bool is_user_task(struct task_struct *task)
- /* Per-process atomic flags. */
- #define PFA_NO_NEW_PRIVS		0	/* May not gain new privileges. */
- #define PFA_SPREAD_PAGE			1	/* Spread page cache over cpuset */
--#define PFA_SPREAD_SLAB			2	/* Spread some slab caches over cpuset */
- #define PFA_SPEC_SSB_DISABLE		3	/* Speculative Store Bypass disabled */
- #define PFA_SPEC_SSB_FORCE_DISABLE	4	/* Speculative Store Bypass force disabled*/
- #define PFA_SPEC_IB_DISABLE		5	/* Indirect branch speculation restricted */
-@@ -1895,10 +1894,6 @@ TASK_PFA_TEST(SPREAD_PAGE, spread_page)
- TASK_PFA_SET(SPREAD_PAGE, spread_page)
- TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
- 
--TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
--TASK_PFA_SET(SPREAD_SLAB, spread_slab)
--TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
--
- TASK_PFA_TEST(SPEC_SSB_DISABLE, spec_ssb_disable)
- TASK_PFA_SET(SPEC_SSB_DISABLE, spec_ssb_disable)
- TASK_PFA_CLEAR(SPEC_SSB_DISABLE, spec_ssb_disable)
-diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
-index 3e9968dd91e9..562ad35f00d0 100644
---- a/kernel/cgroup/cpuset-v1.c
-+++ b/kernel/cgroup/cpuset-v1.c
-@@ -204,7 +204,7 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
- }
- 
- /*
-- * update task's spread flag if cpuset's page/slab spread flag is set
-+ * Update a task's spread flag if the cpuset's page spread flag is set.
-  *
-  * Call with callback_lock or cpuset_mutex held. The check can be skipped
-  * if on default hierarchy.
-@@ -219,18 +219,13 @@ void cpuset1_update_task_spread_flags(struct cpuset *cs,
- 		task_set_spread_page(tsk);
- 	else
- 		task_clear_spread_page(tsk);
--
--	if (is_spread_slab(cs))
--		task_set_spread_slab(tsk);
--	else
--		task_clear_spread_slab(tsk);
- }
- 
- /**
-- * cpuset1_update_tasks_flags - update the spread flags of tasks in the cpuset.
-- * @cs: the cpuset in which each task's spread flags needs to be changed
-+ * cpuset1_update_tasks_flags - update the page spread flag of cpuset tasks
-+ * @cs: the cpuset whose tasks need their page spread flag updated
-  *
-- * Iterate through each task of @cs updating its spread flags.  As this
-+ * Iterate through each task of @cs updating its page spread flag.  As this
-  * function is called with cpuset_mutex held, cpuset membership stays
-  * stable.
-  */
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 0a0fffb5673c..9761a5dd006f 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2862,7 +2862,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- {
- 	struct cpuset *trialcs;
- 	int balance_flag_changed;
--	int spread_flag_changed;
-+	int spread_page_changed;
- 	int err;
- 
- 	trialcs = dup_or_alloc_cpuset(cs);
-@@ -2881,8 +2881,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 	balance_flag_changed = (is_sched_load_balance(cs) !=
- 				is_sched_load_balance(trialcs));
- 
--	spread_flag_changed = ((is_spread_slab(cs) != is_spread_slab(trialcs))
--			|| (is_spread_page(cs) != is_spread_page(trialcs)));
-+	spread_page_changed = is_spread_page(cs) != is_spread_page(trialcs);
- 
- 	spin_lock_irq(&callback_lock);
- 	cs->flags = trialcs->flags;
-@@ -2895,7 +2894,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 			rebuild_sched_domains_locked();
- 	}
- 
--	if (spread_flag_changed)
-+	if (spread_page_changed)
- 		cpuset1_update_tasks_flags(cs);
- out:
- 	free_cpuset(trialcs);
-@@ -4484,14 +4483,10 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
-  * cpuset_spread_node() - On which node to begin search for a page
-  * @rotor: round robin rotor
-  *
-- * If a task is marked PF_SPREAD_PAGE or PF_SPREAD_SLAB (as for
-- * tasks in a cpuset with is_spread_page or is_spread_slab set),
-- * and if the memory allocation used cpuset_mem_spread_node()
-- * to determine on which node to start looking, as it will for
-- * certain page cache or slab cache pages such as used for file
-- * system buffers and inode caches, then instead of starting on the
-- * local node to look for a free page, rather spread the starting
-- * node around the tasks mems_allowed nodes.
-+ * If a task is marked PFA_SPREAD_PAGE and a page cache allocation uses
-+ * cpuset_mem_spread_node() to determine where to start looking, spread the
-+ * starting node around the task's mems_allowed nodes instead of starting on
-+ * the local node.
-  *
-  * We don't have to worry about the returned node being offline
-  * because "it can't happen", and even if it did, it would be ok.
-@@ -4502,9 +4497,7 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
-  * offline node.  But if it did, that would be ok, as this routine
-  * is not returning the node where the allocation must be, only
-  * the node where the search should start.  The zonelist used by
-- * the allocator will include all nodes.  If the slab allocator
-- * is passed an offline node, it will fall back to the local node.
-- * See kmem_cache_alloc_node().
-+ * the allocator will include all nodes.
-  */
- static int cpuset_spread_node(int *rotor)
- {
--- 
-2.43.0
+Thanks,
+Usama
 
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=vfs.fixes&id=0ef8faff490be6aa1a1e5dfcb0c8492689e91c0f 
