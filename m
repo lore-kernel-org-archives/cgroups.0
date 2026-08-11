@@ -1,32 +1,32 @@
-Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
+Received: from out-188.mta0.migadu.com (out-188.mta0.migadu.com [91.218.175.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED38402BAA
-	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 20:32:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51EFA3E2AD8
+	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 20:32:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786480356; cv=none; b=HD/rMS8dXpQ2FEpGygofeqmV/BYsEvpjKK0ppRyPeLxaGrZi8H5jNj3OrNaXfUjQY51SXA9t7lzpotS/DC7/VxkQPOmYCVZduCOpQ3pWvDgl9U8Q0gHH+T6RkkwMej0IGBD765B2d/gD4z7SfPdkwDDJRsWLmhlfDdT2AzJCb+8=
+	t=1786480362; cv=none; b=FIXiqW9419ebmckOopJhrC5olRW5Fr7G1ISc+aryNGHWWp5//NJfj6j1565ehMoZzgJReQJungh8EPDDY8Qog9LoNAVoWrjKCDlT3jXdcFU7cHp4sXTt1/hyzs5+bZgV+Rh0+belGr+rarfrMCFOlrV3jWCVER6iRGXWJER3Mgc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786480356; c=relaxed/simple;
-	bh=U9K7f0QJFSHjM3kZX+nRyD7KRwwpOhhPRYAfnJjDSoo=;
+	s=arc-20240116; t=1786480362; c=relaxed/simple;
+	bh=YqMU9RNZUNzFsU+YziNRY+pkIuQVvc6LRzjzYDGTFVA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RKzeLB89hv4jL7DHnodRzmO3O4eOTcsJgG4jX/nPvGGk8HjB1+rshfjbI4NfDai26/YcsaTdVIuItA/iWH7QJ6AHkJ67i9xiIh/CAHdWNgDO2nnQydfIVHModUM7jcS9aN1AmV0cy9U165AytfiI9VTLVo8MGd4D42DrMeFl598=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=q4KemcBI; arc=none smtp.client-ip=91.218.175.170
+	 MIME-Version; b=Cz0EmrfzziWMCoDYubCjrW3EJnNKo52nrxDMMoIZbCWxToMWQUBwWDIofgxfcN3MfXKxaaykFLPqqVXFOKWQt/8nDFVsL0ZfYsg5+V85UHsxxtoxVetuOkV9Wn7BlbSe5Za4EIk2FUYWTlmiZHu3gXIA9n7zcYwAZxqvYtosusk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uN9AUmp6; arc=none smtp.client-ip=91.218.175.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="q4KemcBI"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uN9AUmp6"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786480353;
+	t=1786480358;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kMaHE95s1N2ro/hCTjeuWjiZbKrQjnsN0zD3VNnyWTQ=;
-	b=q4KemcBI3JXk3fWT/q8wUMtoNfqZJlPmQG1Me6eNlskfW+iCFIzGJNVvpEBAagPzCazkqR
-	7ouS09BROAyYGe5iZK9V1kMaN3WFVRXDwVzGHJdmOnVN3t8huWXWZkz6iU6N6bskDEjHJb
-	rATBlfgk6qxpHPSnQq6bmoh3y+Lo5WQ=
+	bh=mfoSEEh1wmZsAndftJOLrD9wrMxUb9iE4ebdJd4337w=;
+	b=uN9AUmp6oVwQ9Y1xltyPWBsey4c26TsO6lpQJe3mzugLda498cXA4sDAqL0xIPmFpYHhrF
+	baUc0Yc7yojMKFA+kP4oF9WjOnBtnr74qoSCWjFglB9iVM+arTO+dlCqlzityWDxbV9BFX
+	Hc+5lXXRt8MPFJZqpySkmpMUr20fD6U=
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.com>,
@@ -43,9 +43,9 @@ Cc: Michal Hocko <mhocko@suse.com>,
 	linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/9] memcg: remove the soft limit reclaim tracepoints
-Date: Tue, 11 Aug 2026 13:31:58 -0700
-Message-ID: <20260811203203.3456029-5-shakeel.butt@linux.dev>
+Subject: [PATCH 5/9] memcg: remove the soft limit rbtree
+Date: Tue, 11 Aug 2026 13:31:59 -0700
+Message-ID: <20260811203203.3456029-6-shakeel.butt@linux.dev>
 In-Reply-To: <20260811203203.3456029-1-shakeel.butt@linux.dev>
 References: <20260811203203.3456029-1-shakeel.butt@linux.dev>
 Precedence: bulk
@@ -57,47 +57,264 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-mm_vmscan_memcg_softlimit_reclaim_begin and
-mm_vmscan_memcg_softlimit_reclaim_end were only emitted by
-mem_cgroup_shrink_node(), which is gone, so they can never fire again.
+With soft limit reclaim gone, the per-node rbtree of cgroups in excess
+has no readers left. Remove the tree, the helpers maintaining it, and
+the subsys_initcall that existed only to allocate it. memcg1_check_events()
+no longer needs to feed it, which also drops the last caller of
+lru_gen_soft_reclaim().
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- include/trace/events/vmscan.h | 14 --------------
- 1 file changed, 14 deletions(-)
+ mm/memcontrol-v1.c | 176 +--------------------------------------------
+ mm/memcontrol-v1.h |   2 -
+ mm/memcontrol.c    |   1 -
+ 3 files changed, 2 insertions(+), 177 deletions(-)
 
-diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
-index b4bf7b8def1f..8a872990b4be 100644
---- a/include/trace/events/vmscan.h
-+++ b/include/trace/events/vmscan.h
-@@ -214,13 +214,6 @@ DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_memcg_reclaim_be
+diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+index b38b8d0f7f51..475f998b7643 100644
+--- a/mm/memcontrol-v1.c
++++ b/mm/memcontrol-v1.c
+@@ -17,23 +17,6 @@
+ #include "swap_table.h"
+ #include "memcontrol-v1.h"
  
- 	TP_ARGS(gfp_flags, order, memcg)
- );
+-/*
+- * Cgroups above their limits are maintained in a RB-Tree, independent of
+- * their hierarchy representation
+- */
 -
--DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_memcg_softlimit_reclaim_begin,
+-struct mem_cgroup_tree_per_node {
+-	struct rb_root rb_root;
+-	struct rb_node *rb_rightmost;
+-	spinlock_t lock;
+-};
 -
--	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
+-struct mem_cgroup_tree {
+-	struct mem_cgroup_tree_per_node *rb_tree_per_node[MAX_NUMNODES];
+-};
 -
--	TP_ARGS(gfp_flags, order, memcg)
--);
- #endif /* CONFIG_MEMCG */
+-static struct mem_cgroup_tree soft_limit_tree __read_mostly;
+-
+ /* for OOM */
+ struct mem_cgroup_eventfd_list {
+ 	struct list_head list;
+@@ -99,133 +82,6 @@ static struct lockdep_map memcg_oom_lock_dep_map = {
  
- DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_end_template,
-@@ -260,13 +253,6 @@ DEFINE_EVENT(mm_vmscan_direct_reclaim_end_template, mm_vmscan_memcg_reclaim_end,
+ DEFINE_SPINLOCK(memcg_oom_lock);
  
- 	TP_ARGS(nr_reclaimed, memcg)
- );
+-static void __mem_cgroup_insert_exceeded(struct mem_cgroup_per_node *mz,
+-					 struct mem_cgroup_tree_per_node *mctz,
+-					 unsigned long new_usage_in_excess)
+-{
+-	struct rb_node **p = &mctz->rb_root.rb_node;
+-	struct rb_node *parent = NULL;
+-	struct mem_cgroup_per_node *mz_node;
+-	bool rightmost = true;
 -
--DEFINE_EVENT(mm_vmscan_direct_reclaim_end_template, mm_vmscan_memcg_softlimit_reclaim_end,
+-	if (mz->on_tree)
+-		return;
 -
--	TP_PROTO(unsigned long nr_reclaimed, struct mem_cgroup *memcg),
+-	mz->usage_in_excess = new_usage_in_excess;
+-	if (!mz->usage_in_excess)
+-		return;
+-	while (*p) {
+-		parent = *p;
+-		mz_node = rb_entry(parent, struct mem_cgroup_per_node,
+-					tree_node);
+-		if (mz->usage_in_excess < mz_node->usage_in_excess) {
+-			p = &(*p)->rb_left;
+-			rightmost = false;
+-		} else {
+-			p = &(*p)->rb_right;
+-		}
+-	}
 -
--	TP_ARGS(nr_reclaimed, memcg)
--);
- #endif /* CONFIG_MEMCG */
+-	if (rightmost)
+-		mctz->rb_rightmost = &mz->tree_node;
+-
+-	rb_link_node(&mz->tree_node, parent, p);
+-	rb_insert_color(&mz->tree_node, &mctz->rb_root);
+-	mz->on_tree = true;
+-}
+-
+-static void __mem_cgroup_remove_exceeded(struct mem_cgroup_per_node *mz,
+-					 struct mem_cgroup_tree_per_node *mctz)
+-{
+-	if (!mz->on_tree)
+-		return;
+-
+-	if (&mz->tree_node == mctz->rb_rightmost)
+-		mctz->rb_rightmost = rb_prev(&mz->tree_node);
+-
+-	rb_erase(&mz->tree_node, &mctz->rb_root);
+-	mz->on_tree = false;
+-}
+-
+-static void mem_cgroup_remove_exceeded(struct mem_cgroup_per_node *mz,
+-				       struct mem_cgroup_tree_per_node *mctz)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&mctz->lock, flags);
+-	__mem_cgroup_remove_exceeded(mz, mctz);
+-	spin_unlock_irqrestore(&mctz->lock, flags);
+-}
+-
+-static unsigned long soft_limit_excess(struct mem_cgroup *memcg)
+-{
+-	unsigned long nr_pages = page_counter_read(&memcg->memory);
+-	unsigned long soft_limit = READ_ONCE(memcg->soft_limit);
+-	unsigned long excess = 0;
+-
+-	if (nr_pages > soft_limit)
+-		excess = nr_pages - soft_limit;
+-
+-	return excess;
+-}
+-
+-static void memcg1_update_tree(struct mem_cgroup *memcg, int nid)
+-{
+-	unsigned long excess;
+-	struct mem_cgroup_per_node *mz;
+-	struct mem_cgroup_tree_per_node *mctz;
+-
+-	if (lru_gen_enabled()) {
+-		if (soft_limit_excess(memcg))
+-			lru_gen_soft_reclaim(memcg, nid);
+-		return;
+-	}
+-
+-	mctz = soft_limit_tree.rb_tree_per_node[nid];
+-	if (!mctz)
+-		return;
+-	/*
+-	 * Necessary to update all ancestors when hierarchy is used.
+-	 * because their event counter is not touched.
+-	 */
+-	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+-		mz = memcg->nodeinfo[nid];
+-		excess = soft_limit_excess(memcg);
+-		/*
+-		 * We have to update the tree if mz is on RB-tree or
+-		 * mem is over its softlimit.
+-		 */
+-		if (excess || mz->on_tree) {
+-			unsigned long flags;
+-
+-			spin_lock_irqsave(&mctz->lock, flags);
+-			/* if on-tree, remove it */
+-			if (mz->on_tree)
+-				__mem_cgroup_remove_exceeded(mz, mctz);
+-			/*
+-			 * Insert again. mz->usage_in_excess will be updated.
+-			 * If excess is 0, no tree ops.
+-			 */
+-			__mem_cgroup_insert_exceeded(mz, mctz, excess);
+-			spin_unlock_irqrestore(&mctz->lock, flags);
+-		}
+-	}
+-}
+-
+-void memcg1_remove_from_trees(struct mem_cgroup *memcg)
+-{
+-	struct mem_cgroup_tree_per_node *mctz;
+-	struct mem_cgroup_per_node *mz;
+-	int nid;
+-
+-	for_each_node(nid) {
+-		mz = memcg->nodeinfo[nid];
+-		mctz = soft_limit_tree.rb_tree_per_node[nid];
+-		if (mctz)
+-			mem_cgroup_remove_exceeded(mz, mctz);
+-	}
+-}
+-
+ static u64 mem_cgroup_move_charge_read(struct cgroup_subsys_state *css,
+ 				struct cftype *cft)
+ {
+@@ -336,7 +192,7 @@ static void mem_cgroup_threshold(struct mem_cgroup *memcg)
+ 	}
+ }
  
- TRACE_EVENT(mm_shrink_slab_start,
+-/* Cgroup1: threshold notifications & softlimit tree updates */
++/* Cgroup1: threshold notifications */
+ 
+ /*
+  * Per memcg event counter is incremented at every pagein/pageout. With THP,
+@@ -405,17 +261,8 @@ static void memcg1_check_events(struct mem_cgroup *memcg, int nid)
+ 	if (IS_ENABLED(CONFIG_PREEMPT_RT))
+ 		return;
+ 
+-	/* threshold event is triggered in finer grain than soft limit */
+-	if (unlikely(memcg1_event_ratelimit(memcg,
+-						MEM_CGROUP_TARGET_THRESH))) {
+-		bool do_softlimit;
+-
+-		do_softlimit = memcg1_event_ratelimit(memcg,
+-						MEM_CGROUP_TARGET_SOFTLIMIT);
++	if (unlikely(memcg1_event_ratelimit(memcg, MEM_CGROUP_TARGET_THRESH)))
+ 		mem_cgroup_threshold(memcg);
+-		if (unlikely(do_softlimit))
+-			memcg1_update_tree(memcg, nid);
+-	}
+ }
+ 
+ void memcg1_commit_charge(struct folio *folio, struct mem_cgroup *memcg)
+@@ -2391,22 +2238,3 @@ void memcg1_free_events(struct mem_cgroup *memcg)
+ {
+ 	free_percpu(memcg->events_percpu);
+ }
+-
+-static int __init memcg1_init(void)
+-{
+-	int node;
+-
+-	for_each_node(node) {
+-		struct mem_cgroup_tree_per_node *rtpn;
+-
+-		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
+-
+-		rtpn->rb_root = RB_ROOT;
+-		rtpn->rb_rightmost = NULL;
+-		spin_lock_init(&rtpn->lock);
+-		soft_limit_tree.rb_tree_per_node[node] = rtpn;
+-	}
+-
+-	return 0;
+-}
+-subsys_initcall(memcg1_init);
+diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+index 1e394269c613..fd611e66859a 100644
+--- a/mm/memcontrol-v1.h
++++ b/mm/memcontrol-v1.h
+@@ -41,7 +41,6 @@ bool memcg1_alloc_events(struct mem_cgroup *memcg);
+ void memcg1_free_events(struct mem_cgroup *memcg);
+ 
+ void memcg1_memcg_init(struct mem_cgroup *memcg);
+-void memcg1_remove_from_trees(struct mem_cgroup *memcg);
+ 
+ static inline void memcg1_soft_limit_reset(struct mem_cgroup *memcg)
+ {
+@@ -98,7 +97,6 @@ static inline bool memcg1_alloc_events(struct mem_cgroup *memcg) { return true;
+ static inline void memcg1_free_events(struct mem_cgroup *memcg) {}
+ 
+ static inline void memcg1_memcg_init(struct mem_cgroup *memcg) {}
+-static inline void memcg1_remove_from_trees(struct mem_cgroup *memcg) {}
+ static inline void memcg1_soft_limit_reset(struct mem_cgroup *memcg) {}
+ static inline void memcg1_css_offline(struct mem_cgroup *memcg) {}
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1d3339520809..b68f1f16ae54 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4394,7 +4394,6 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ 
+ 	vmpressure_cleanup(&memcg->vmpressure);
+ 	cancel_work_sync(&memcg->high_work);
+-	memcg1_remove_from_trees(memcg);
+ 	free_shrinker_info(memcg);
+ 	mem_cgroup_free(memcg);
+ }
 -- 
 2.53.0-Meta
 
