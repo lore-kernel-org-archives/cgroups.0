@@ -1,82 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50B4C3F9F22
-	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 16:41:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFCD2931E2;
+	Tue, 11 Aug 2026 16:54:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786466497; cv=none; b=mwLQwmth+lou90v9xdyOxVEP4pcuZ5j7lRmfmg4zf/lxbuI1ZyitzWS+0zQY1XHQ90bW+AcGTQK+F5cHFiVPQS57LjwhoW+KcjADScm83/3l0HJfK6uiM1qlfZiHqiy9ivu9tHiTov3xGVyaT0EwfmX8US3SO12XJmjOflp4cnA=
+	t=1786467289; cv=none; b=anOJ7TZznYP98YpdKUhwxAiURCMexnjO14GWV6yYVaKNRtAjPLbxN6J+NvW2GTHah6YfYqFUa0NLebuCK4+8766R7szku6o2WGB6lOwuslvxw8j9jnV/PfI93/FfJNaTW+uy+9OY+1ZSgu5wabuS5Fm+PbK55UiuPY9Jg1rUjgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786466497; c=relaxed/simple;
-	bh=x+Epx2wcjNexkVxBVXOqQ5cvsB3ppFKz/3DXfzrT9Jk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ofsRpjlX8xUObj2KOOnHLw4g4PACJbk2NcER6WSxLKdg+ctoasboo9GxbKIiTqSLX4wcIxx0ELZiL4jKS2WdwjKkHHQ1Ss5kssgzFmyaKXUWmu1jT5PcXLiHgodqv8NXeZdEWCpn1F47I19tKqAQ83PWxeG9s7cF6yGJlIVLIVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GTpKkC4R; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786467289; c=relaxed/simple;
+	bh=30LKNeNd4i8Elpft8MpybJD3r2hXHB7da18wxz4zo7s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aErrMQzh8bOcKI5Fh0WfxGc4P7Flm4Cux/pRl/xP5y9hEI1CRESoF/HzyubfUW+1uinCHjBYBIRgCp+ORgFt7rUJmBtrIzu4WLe3pCgUPFi3HER67/caLOL4C0Wvy+rvs1DA1VCT4MaNe6WWarN0n6iq2zFuK3HUqvsfoVzPGLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lb/zXqFF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GTpKkC4R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0481A1F00ACF
-	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 16:41:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lb/zXqFF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F20A71F000E9;
+	Tue, 11 Aug 2026 16:54:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786466496;
-	bh=x+Epx2wcjNexkVxBVXOqQ5cvsB3ppFKz/3DXfzrT9Jk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=GTpKkC4Rq+5o1GLM67JrgD5Ts2W14rznWSwUh7c6Sg0ce76FoteLtiJimwgpdwR1R
-	 vhJ1dpIXdCmcNKrfF7tvG6J9trkTfyJyo5dm+fmQ/wRh3AAhzR/izfi9cGhUwmnVFf
-	 M6aVZBMrjMRqPXKq3m4UMB31d6enh/3+wqqPB9lXYjHMhdkBOoBnC6Pb50Pd0I1iET
-	 ynKQ04DjY3yxYtvn8MpBaECWT4hVVVilpiGxds/0z1HVJB8P6gDEdpxbnIHh3PdKEt
-	 eEoVxoVg3haiTGKfidC2aqkWomiWcNHs5O0yEV23q6X1o911qySiozztxRtsiP9EDw
-	 C6g7V9Otm5PTg==
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6a10b20634fso12029a12.3
-        for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 09:41:35 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Rqnk7IQ7IPESuqZWdmjAcE9xVaT1SbP2BU+G34Eq5dXlt8EgPfUV7VXyWS1GlC4wYZDao8s3POG@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkC9hSsVYnZhmzBVoD61pmE1jpfD/K196+AFBWzm1Y+zXjAXTV
-	3ow2s1Ao+N6x8b6qQbKFkOHQ8fYqdv2LQv1zUTbPSauZqw0+2hb0xtCXjDsn/lz8QHlpJuTuun4
-	Wlrx08qcQplmyvGHILVSe3nSbLOdJNPM=
-X-Received: by 2002:a17:907:d23:b0:c16:3074:657f with SMTP id
- a640c23a62f3a-c20eca2225emr84178166b.9.1786466494869; Tue, 11 Aug 2026
- 09:41:34 -0700 (PDT)
+	s=k20260515; t=1786467288;
+	bh=Z2TXg7aZhG/KrelMhIYVJ99hwjE63n3U7HIFuhBajkY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=lb/zXqFFP7B4P6AJvYySOls7y5MVu/gyDEHC+8hQqAxjmcIVfBmEi7CUjvJfbSA4X
+	 U9IyNeDtDulGYBYj7Sra7AdBq6fRofOlSj8wO2NoWYig59yuOkvM0nAdfjbYxHKcKt
+	 wF6Bs2D+x2a9S/XnqJf2FjvQI1Be9wKIn/mQCepQ4RXp4loOVx7sTRjRPQlsV9Of+Z
+	 ZNeX7hqCuhimvkIucEKB2Gx0scaWdpKzLz1Cbwo6D97CX1JrVZV6LNtMTdsqjj3Vwt
+	 kSiIKMFUS6gg8MArFb09BL1h+PzSlLLlGtsqUUg/iBNPPibFgVQHbmugfGLcHy3CBH
+	 +iS/9a4/xIdIg==
+Date: Tue, 11 Aug 2026 06:54:47 -1000
+From: Tejun Heo <tj@kernel.org>
+To: JP Kobryn <jp.kobryn@linux.dev>
+Cc: Ziyang Men <ziyang.meme@gmail.com>, Jens Axboe <axboe@kernel.dk>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
+	Shuah Khan <shuah@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Mykola Lysenko <mykolal@meta.com>, kernel-team@meta.com,
+	linux-block@vger.kernel.org, bpf@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] block: add BPF kfuncs to read blkcg io.stat
+Message-ID: <antT1wtJEZ02CDx1@slm.duckdns.org>
+References: <20260807193732.4073299-1-ziyang.meme@gmail.com>
+ <20260807193732.4073299-2-ziyang.meme@gmail.com>
+ <anot9w6mg9538RWm@slm.duckdns.org>
+ <anpU4oV46MDVDixj@devvm16600.scu0.facebook.com>
+ <4306439e-a00f-4b10-b8a0-9be6e046873d@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260811051434.3805648-1-wfelipe@google.com>
-In-Reply-To: <20260811051434.3805648-1-wfelipe@google.com>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Tue, 11 Aug 2026 09:41:22 -0700
-X-Gmail-Original-Message-ID: <CAO9r8zM0K_--=jMxuapkFxnbqBj6zqvz3GB9wmEjgDThQpzZkw@mail.gmail.com>
-X-Gm-Features: AUfX_mznkferW2-XpPGZ2Jv6GhtHO1zTusbpGxdHEOAp7Q0jgcIPVx3r3MKO9os
-Message-ID: <CAO9r8zM0K_--=jMxuapkFxnbqBj6zqvz3GB9wmEjgDThQpzZkw@mail.gmail.com>
-Subject: Re: [PATCH v2] selftests/cgroup: test_zswap: skip test_no_kmem_bypass
- if debugfs is unavailable
-To: Wilson Felipe Pereira <wfelipe@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Shuah Khan <shuah@kernel.org>, 
-	Anshuman Khandual <anshuman.khandual@arm.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4306439e-a00f-4b10-b8a0-9be6e046873d@linux.dev>
 
-On Mon, Aug 10, 2026 at 10:14=E2=80=AFPM Wilson Felipe Pereira
-<wfelipe@google.com> wrote:
->
-> test_no_kmem_bypass() needs to read
-> /sys/kernel/debug/zswap/stored_pages via get_zswap_stored_pages() to
-> verify that compressed pages are charged to the memcg.
->
-> When running in an environment where debugfs is not mounted or
-> CONFIG_DEBUG_FS is disabled, get_zswap_stored_pages() fails, causing the
-> loop to terminate early and report a false negative (KSFT_FAIL).
->
-> Selftests should not fail if debugfs is unavailable, and it should print
-> a message when it is skipped.
->
-> While I'm here, also add a warning message if the test is being skipped
-> due to totalram size and make the check for totalram more readable.
->
-> Signed-off-by: Wilson Felipe Pereira <wfelipe@google.com>
+Hello,
 
-Acked-by: Yosry Ahmed <yosry@kernel.org>
+On Mon, Aug 10, 2026 at 05:17:26PM -0700, JP Kobryn wrote:
+...
+> The get/put kfuncs above use KF_ACQUIRE/RELEASE so the verifier can
+> reject memcg access after the put. Replacing them with a generic API
+> would call for tracking a new lifetime relationship between the css and
+> memcg (or other derived) pointer.
+
+So, if you need css -> memcg casting, I think that can just be RCU
+protected. In fact, even for the iteration and access, RCU protection
+probably makes more sense then KF_ACQUIRE/RELEASE. It's simpler and less
+overhead especially given that most bpf progs that people care about are
+non-sleepable and already in RCU critical section anyway.
+
+Thanks.
+
+-- 
+tejun
