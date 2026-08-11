@@ -1,100 +1,123 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 634BE38330B
-	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 18:34:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786473257; cv=none; b=FbYwxu7DV49l6UfwjfpnJ44Gbc14flABfnCkZWv511m+JUPTfadJQUi8hzb3B/s5HL9n7Qh/bSHSiekZ0YIdwt+IUadPX4Wm7b0ClS/qrUBsy852tWrWHpjOFnUjKZJe7yfBa0nz8rrW0KZgYa78HKA4UIjv0DCWca7C2uGv1D4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786473257; c=relaxed/simple;
-	bh=dvRoLetg55z8gdKVyUlSTPIl76+Yh2w/FgWJ3VAuuDE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s7ImKNW2tO03Eslh/o1zz9LEuBTsKOds7JkbMQCbCs//uApLaHN5a3xUHuuuXzynHVcALpd3GMxka77LfQplmE1L2a4CuHuxgEs6v7yBguL3wM0EyH7cyCofj4EWhOfZMnj+bnLzpfd66TZrKaBerJdy+qWnrmUqxrlTGolNI10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aJ9Xt50z; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1BB63E16A0
+	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 19:20:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786476024; cv=pass; b=JZSMA2mEPHbXLLsLp+mjlIw0iIHOq/pLkFRi/jwbXMlRjSwniKRxXqjhKfEesfWRAXVArLk1KULZz4RgJQazDdToenkoYRLVLV5Q6EfOhV3hh9PuTZT/WK4NU8VPcPjay3hBuPtnRIwrqyEbW1dtxE0eYgImfnh2p65u5Qjk8cg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786476024; c=relaxed/simple;
+	bh=C0tI9qUXL0/pdjc8WBu7cnqr0pTI/K9DzaSGDO9Uh+8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oxFnd4z20wsbdolfU3hnU7lOKOKMJtuQzZD03kSaydguZ/HhzMjrvJbSJEVFz051+iiODmq8VYWSn9Ob9x6eD0d7IzXCC7yCsNhkr7rqSo+V0FygP5WiDZ3OL7keoWliHWT2TXJQbU1kvqZWVyZjyHHeV22u0VbET6dJzxz5g2g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KCU4SOrz; arc=pass smtp.client-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aJ9Xt50z"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786473254;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0RVrHzwVzUXZyRLBgFRaa8g3siFTJyPwqFQjqZP67bo=;
-	b=aJ9Xt50ztXkeoGgZuYfHl4JDIePI3dAvP3JsvP3QSsqGxpmSfcAPD80v3N4O5zX7lsXNUx
-	Q45H8ZIW2NvoxHRFwNRsGinegdnJ4/RekdcW/RqS2l6efS+vEnUfVC6K8GsH5uatLGLQl6
-	POEXqnWMtrnjP5HmeY6p5w5i6Eyb4II=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-10-H53hdvBiO86fJH7i9Q7wZA-1; Tue,
- 11 Aug 2026 14:34:01 -0400
-X-MC-Unique: H53hdvBiO86fJH7i9Q7wZA-1
-X-Mimecast-MFC-AGG-ID: H53hdvBiO86fJH7i9Q7wZA_1786473240
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6F6FE1800EFF;
-	Tue, 11 Aug 2026 18:33:59 +0000 (UTC)
-Received: from [10.22.65.157] (unknown [10.22.65.157])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ADBC8180034F;
-	Tue, 11 Aug 2026 18:33:57 +0000 (UTC)
-Message-ID: <19c86abc-feb7-409c-b2f6-6eafdcaa4c76@redhat.com>
-Date: Tue, 11 Aug 2026 14:33:56 -0400
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KCU4SOrz"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-47f6609c657so57619f8f.2
+        for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 12:20:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786476021; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pIFKNiqWysVYTZhI9H2hAphMPgcJJxLewW8i7A+bXooT3rgPh/juZFXMO/bUDkELGa
+         PpmuYEiN9y4p1dSybSyGiahtcd+O4Nmy5ALaBEE2xqfu6HUzb64jWiIZhbrp5cDJMafD
+         cf+RWITh1Z7nf5B5NfOgEFJqwAIOXvGBjPF+KpVGteI7CC7xaHCGFTikBiGM9sMGkI4A
+         MRx9W80bY/roa8NpCoJdPF5Mq0Zy0zQ/XNsK9rGea6vnOcruBqANxkkY/y32Gv9axF/2
+         +uduHbuhdHF9JiPSRAgjGY3VvNHpsKmuxg/I1qLxb/IeNXu7YWd4D634NGm+jROICypG
+         jKKA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=C0tI9qUXL0/pdjc8WBu7cnqr0pTI/K9DzaSGDO9Uh+8=;
+        fh=LszG14FfcUS+X0M7D0uaLrnwsTV+6lACx3lk+gO884s=;
+        b=QfREPG0MlWXjnsiynFVaARMvj3JrKUqhxcXbYQNDQx7Bdk7gR44jI2DM5lyeQUDzl1
+         mBrPhgvU9saGYtT/ETHj2CIqpgKVkbjOzS7Rv2wyt1g6NfEHmyVJ6tpFrSgpTIy3788e
+         i5zz7+8a6LimxgdJNRQckIuUvoZai7IZJvPGhYc+5ZnA129bsZDE0AYNUChQYTJMakWV
+         uOA0KPsjRUv+1/FwGQM+iANNHRDprCPfjoWs2Rz3eJ71uKF+GuVmYbR29H8TfRf0vMI0
+         ClYxgpInTM61JI5h1x1cEJmgGWGC/YmsvPe39c+MZF0K6HoNgIi/PHMezQjbc1TUjDaC
+         rP3g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786476021; x=1787080821; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=C0tI9qUXL0/pdjc8WBu7cnqr0pTI/K9DzaSGDO9Uh+8=;
+        b=KCU4SOrzWqy2IGPAUvIoWgHGsdDmjZ0xtWdy+5OE8QtINqkuG6paayEDj8fYQvSmXN
+         YkkVQtJ1jFHmAacvjitdXL+xZKfHTEoTrmAkxF1Td3cYwMlCoFNrs/g5SjpuAKE44x1k
+         tH61+/ZoFzsOPDph9OIZVftPAtYTcyyZc1EED1WTDTC0DSBj4X3I8mYtl3tX6zxvPu6u
+         oa3DG34cEkOTn3Q6gT/pXl5j8FHnku5qqMhYlJp9t3eZdnqO3JylhnGWy1wy5Iy9ZagL
+         J1WyueYEoVJzO9ob54fIZBR6LOe/reYlkMriCXjWywLxwNi27ykGILPw05o62TG8+50H
+         C/kg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786476021; x=1787080821;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=C0tI9qUXL0/pdjc8WBu7cnqr0pTI/K9DzaSGDO9Uh+8=;
+        b=CAO3XK5jxjB4ijXDRhG6hEmc/v7QTHFgK6PTDdT3LfIdS8Bv+KFjmNSnM2vlXzvBdj
+         UhwS2dpN6KRhx88f928r/bFRopSL6FCYD8lgieLV44Vb24vQr8QMMo+O7OJ3vq4B/zgx
+         N/etzpfjRkrhmUuKSw/IAZBhZD9AZgysmkdkP/c/arVBj8s3P9SfjbIve0Qc6sItHD3B
+         LsFFNZfWdPP8xkxOR+SCEQvno9YzU98aHDhUMAc0gI5JOCEsOkKtA1fw+6d5vMyz8glj
+         D3fVvL7sczH2WqokbvDmIEWaWquZIZfK5ZmcT6OREcsk8r1m2+Hli7jhOoYX/DDQlTA0
+         0WpQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rq/1CziGOWQtjhpivM7sSU+IfkrZTYTQbdX6d8FAus8qxuEy9HAHH0H+VQ1XWNJn/ivv4vgxuft@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5yB2QRwIh+rQKPKS0JZ7Qdb6xTOXFXSWh4o5LlW/C7ue/G8yM
+	dTZV8QA9TbiB/v8W/IlgZeiTtC1ZNQ+LkeL+o+evMDuRELD3PMNagg19vueLcepLIQzqdFemP0q
+	F5DaFgjdr5JkseROO1UzuQO3L/yWD+JE=
+X-Gm-Gg: AR+sD11ZnG83pBKrVYWwmjQ5q3litVj/UhWG4OKqJrnRykr55eULE5hBp6QQdn2cLyq
+	4ER4UNWf/3cB82vYIqZR0zrsF06LMPcCUyV1dvIQcqs/CJrO5pcz/SqOWi9Oss+H7eVAZK5JmFN
+	/ZOJcZiRvjnZE+fZONIRV1RlY5ry2J4N+ksaEAZztxU1Htsr3zE1svilifF5C4rcF1vXJYiDV0i
+	6/wS8yRcVcSQq5kERZ5AsBpfoNfs+r9hOys6wT9OvxjwpKLMOEq7OBjhf2HJhLghYTLypk6fs91
+	w4jazueeURZsGvF72lIv4vSEeXE/RhYRAQTXjyu4aPl8ub07Udnvauy4+nb0IIBSCsJ+OLZdFf7
+	B
+X-Received: by 2002:a05:6000:2687:b0:47f:d072:87d7 with SMTP id
+ ffacd0b85a97d-4814ad8531cmr9844062f8f.9.1786476020845; Tue, 11 Aug 2026
+ 12:20:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] cgroup/cpuset: Add test for partition root
- invalidation returning wrong CPUs
-To: Shaojie Sun <sunshaojie@kylinos.cn>
-Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- mkoutny@suse.com, ridong.chen@linux.dev, shuah@kernel.org, tj@kernel.org
-References: <4a8cec73-0b25-424d-9f0a-314e221211fa@redhat.com>
- <20260811095848.365138-1-sunshaojie@kylinos.cn>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260811095848.365138-1-sunshaojie@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+References: <20260811051434.3805648-1-wfelipe@google.com>
+In-Reply-To: <20260811051434.3805648-1-wfelipe@google.com>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Tue, 11 Aug 2026 12:20:09 -0700
+X-Gm-Features: AUfX_mxREYM0a5ro6axfuWwtuNUtoNVGyXynzVlYalBNbqZUMOkUoPV4WEi7gaY
+Message-ID: <CAKEwX=PW8D6z3Oq7o9OYGXV1YF3g8mxq8rGDU-Tjn2FQQZ-XZg@mail.gmail.com>
+Subject: Re: [PATCH v2] selftests/cgroup: test_zswap: skip test_no_kmem_bypass
+ if debugfs is unavailable
+To: Wilson Felipe Pereira <wfelipe@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, 
+	Andrew Morton <akpm@linux-foundation.org>, Shuah Khan <shuah@kernel.org>, 
+	Anshuman Khandual <anshuman.khandual@arm.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 8/11/26 5:58 AM, Shaojie Sun wrote:
-> Add a test case to REMOTE_TEST_MATRIX covering the bug fixed by
-> commit 345f40166694 ("cgroup/cpuset: Return only actually allocated
-> CPUs during partition invalidation"). The test verifies that when a
-> sibling partition root changes its cpuset.cpus to overlap with another
-> partition root, only actually allocated CPUs (effective_xcpus) are
-> returned to the parent, not all CPUs in cpus_allowed.
+On Mon, Aug 10, 2026 at 10:14=E2=80=AFPM Wilson Felipe Pereira
+<wfelipe@google.com> wrote:
 >
-> Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
-> ---
->   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 6 ++++++
->   1 file changed, 6 insertions(+)
+> test_no_kmem_bypass() needs to read
+> /sys/kernel/debug/zswap/stored_pages via get_zswap_stored_pages() to
+> verify that compressed pages are charged to the memcg.
 >
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index 0d41aa0d343d..236cb1b38178 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -502,6 +502,12 @@ REMOTE_TEST_MATRIX=(
->   	"  C1-4:P1   .   C1-2:P1  C1-3:P2  .       .  \
->   	      .      .      P0     C2-3    .       .     p1:1,4|c11:1|c12:2-3 \
->   							 p1:P1|c11:P0|c12:P2 2-3"
-> +	# Changing a sibling partition's cpuset.cpus to overlap with another
-> +	# sibling partition should invalidate itself and return only actually
-> +	# allocated CPUs (effective_xcpus) to the parent.
-> +	"  C1-4:P1   .   C1-2:P1  C2-4:P2  .       .  \
-> +	      .      .     .         C1-2  .       .     p1:3-4|c11:1-2|c12:3-4 \
-> +							 p1:P1|c11:P1|c12:P-2"
->   )
->   
->   #
-Reviewed-by: Waiman Long <longman@redhat.com>
+> When running in an environment where debugfs is not mounted or
+> CONFIG_DEBUG_FS is disabled, get_zswap_stored_pages() fails, causing the
+> loop to terminate early and report a false negative (KSFT_FAIL).
+>
+> Selftests should not fail if debugfs is unavailable, and it should print
+> a message when it is skipped.
+>
+> While I'm here, also add a warning message if the test is being skipped
+> due to totalram size and make the check for totalram more readable.
+>
+> Signed-off-by: Wilson Felipe Pereira <wfelipe@google.com>
 
+Acked-by: Nhat Pham <nphamcs@gmail.com>
