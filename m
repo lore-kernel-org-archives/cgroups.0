@@ -1,280 +1,292 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A337C3921FA;
-	Tue, 11 Aug 2026 06:51:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A2873F39CD
+	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 06:55:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786431106; cv=none; b=C98bmsqU+jtiqDWxil3RDYiC2AE47L7Fmt9LNWTSRmFUAWSSkezW9YAQSry09bHt42i60vM3phLBTW5+KoMZAwWxAXKI7G8OK9KMdHdM5v+6l8armiCQ/8NlG1CDpSQwP3wbcyp2gdTWdjjzjQadHffWxyKmzlLRdyt35QsSbVc=
+	t=1786431309; cv=none; b=SWH2aezmnsOwEIDGEPb6QAAAz7C4PHyXSnOk/6dpTy7aFdyzb0BVUqXEdY9gYhREBzyPUisIKR+I6ussLCkZglfS0iBCz0GlMAcGZGVsAGoIcDTLcnPKu1QN1XIDAN+accdX3lQ/AS1Nlh1y7rJQWgdIE6vgw39iOPYdZIBFfRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786431106; c=relaxed/simple;
-	bh=R5vbx5TW9uZArHfFmDM2Vbf3lvk8FCMvkPXbapp6onc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AVppqlV+1IStZHjkPJH4n+spUMov66RJSuVZzWtyOffHzpJ0hZoLRYUJXSZuxdcpKmV3tsTkhIQm4zX/qbNfg8+4YNZZZhfb2FDDwFKEJgSUy9V1kClqzTIGVH8x4Rbfoiy7ivLcYlBDSqx6IM6FT8qCqg3MZuU5gEFXCzGMmbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Iczf3uij; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786431309; c=relaxed/simple;
+	bh=fBJdYOM8b5cNVs4nQavtlaUXXvDarmlY4HCkJLsBuAw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=W3rVhqRcs8jLeUXI2Kg0wY15pvcL1aQoBGArt8IwFMD6NelblqddhQCgdVauj5/mfX6p4V0c0E3shltK8qQv7sEfcAYIjHhUD1xcf+5vNSyYfALL9Vz583KFU4MANvRf/93ZGG03aD6gkvP+HZXRhZacM+bByZ8JFt8vY03pHag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=N4jGYd1o; arc=none smtp.client-ip=91.218.175.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Iczf3uij"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 097C91F000E9;
-	Tue, 11 Aug 2026 06:51:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786431104;
-	bh=Z0ui+uRBvO4M0yd8KG2s22NLotks3BCDPbqh+26w/yM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Iczf3uijRgzjcA6B/j/Tqrmvx+RsfZ3ic3oyBMPLcYvnCHOsXKyP9Uc1mt+/kKnnw
-	 aCg+5WRQK3xX+vxyURFmuUZHcSElN7klIvjPQE6mDsVw1YZ5AFDf1AAtA0XwzjL8wn
-	 +V2QyfyO6vno/fnpnsGTHl2ZEAO2dG8ITTJty28KpY7y6myWHuzx9uKF6XML/6ocWn
-	 xvqP6MKXEWsqi/kbkY12AbVGGUnwkZKeU30q1clDS3JVvAqF5/4amoYAcBdl8PAJcy
-	 L5zGAiYTsbSph5NkP7VwbiyncINSGTTNYAtDbuitLlkDswP1sKH01tBnohL9UMffqh
-	 dcTwXOi8G8ajw==
-From: Yu Kuai <yukuai@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	Tejun Heo <tj@kernel.org>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Christoph Hellwig <hch@lst.de>,
-	Tao Cui <cui.tao@linux.dev>,
-	Jan Kara <jack@suse.cz>,
-	Ming Lei <ming.lei@redhat.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Coly Li <colyli@fygo.io>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Alasdair Kergon <agk@redhat.com>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
-	Dan Williams <djbw@kernel.org>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Ira Weiny <iweiny@kernel.org>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Youngjun Park <youngjun.park@lge.com>,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org,
-	nvdimm@lists.linux.dev,
-	virtualization@lists.linux.dev,
-	gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [RFC PATCH v2 4/4] blk-cgroup: move async bio punt state to blkcg
-Date: Tue, 11 Aug 2026 14:47:44 +0800
-Message-ID: <20260811064744.1139446-5-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260811064744.1139446-1-yukuai@kernel.org>
-References: <20260811064744.1139446-1-yukuai@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="N4jGYd1o"
+Message-ID: <e2bdbc1f-9a51-4195-b4d2-c4f2eb3d74ae@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1786431303;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=R4wj55OycU0seMEzLO2toBDaqflH+H9Az1nuYCB0ous=;
+	b=N4jGYd1o2u9hnOdBzALEG1MEhzGMXdlNbAmCkoNn3hXrVpxfd5ar6l2axXKsyktHClIatn
+	gqOK5dYv/NVMxVkUgugu96P6iOqr/Z+o+lxx5AGAQM9BOssOvqmUVZMJZdJbeJcs63p5Oq
+	HUxvODTEhhksHnfdqJ4bKD11htBGHgw=
+Date: Tue, 11 Aug 2026 14:54:34 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Subject: Re: [PATCH] cgroup/cpuset: Remove obsolete PFA_SPREAD_SLAB task flag
+To: Waiman Long <longman@redhat.com>, ridong.chen@linux.dev,
+ cgroups@vger.kernel.org
+Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
+ peterz@infradead.org, corbet@lwn.net, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260810100234.78144-1-guopeng.zhang@linux.dev>
+ <093753d0-70b8-4442-a12a-155eaeff9ebb@redhat.com>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <093753d0-70b8-4442-a12a-155eaeff9ebb@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-From: Yu Kuai <yukuai@fygo.io>
 
-blkcg_punt_bio_submit() currently queues punted bios on blkg->async_bios,
-so it has to call bio_blkg() to find or create a queue-local blkg.  Bios
-now carry and pin the blkcg css, so punted bio lifetime no longer needs to
-be anchored by a blkg.
 
-Keeping the punt state in blkg can instantiate a blkg even when no blkcg
-policy is enabled, just to bounce submission from a shared kthread.  Move
-async_bio_lock, async_bios and async_bio_work to struct blkcg, and queue
-punted bios on bio_blkcg() for non-root cgroups.  Root or unassociated bios
-are submitted directly.
+在 2026/8/10 23:46, Waiman Long 写道:
+> On 8/10/26 6:02 AM, Guopeng Zhang wrote:
+>> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>>
+>> Commit 16a1d968358a ("mm/slab: remove mm/slab.c and slab_def.h")
+>> removed the SLAB allocator, the only allocator that implemented cpuset
+>> slab spreading. Commit 61a182ab61a6 ("cgroup/cpuset: Remove
+>> cpuset_do_slab_mem_spread()") then removed the last task_spread_slab()
+>> caller. Commit 3ab67a9ce82f ("cgroup/cpuset: Mark memory_spread_slab as
+>> obsolete") marked the legacy control obsolete.
+>>
+>> cpuset still updates PFA_SPREAD_SLAB when tasks attach to a legacy
+>> cpuset and walks all tasks in a cpuset when memory_spread_slab changes.
+>> Remove the unused task flag and its helpers, and make spread task
+>> updates depend only on memory_spread_page.
+>>
+>> Keep the memory_spread_slab control and CS_SPREAD_SLAB state so legacy
+>> users retain the existing write, readback and inheritance behavior.
+>> Update the comments and documentation to describe only page-cache
+>> spreading as functional.
+>>
+>> Assisted-by: LLM
+>> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>> ---
+>>   .../admin-guide/cgroup-v1/cpusets.rst         | 39 +++++++------------
+>>   include/linux/sched.h                         |  5 ---
+>>   kernel/cgroup/cpuset-v1.c                     | 13 ++-----
+>>   kernel/cgroup/cpuset.c                        | 23 ++++-------
+>>   4 files changed, 26 insertions(+), 54 deletions(-)
+>>
+>> diff --git a/Documentation/admin-guide/cgroup-v1/cpusets.rst b/Documentation/admin-guide/cgroup-v1/cpusets.rst
+>> index 52a213aff04e..434612780074 100644
+>> --- a/Documentation/admin-guide/cgroup-v1/cpusets.rst
+>> +++ b/Documentation/admin-guide/cgroup-v1/cpusets.rst
+>> @@ -179,7 +179,7 @@ files describing that cpuset:
+>>    - cpuset.mem_hardwall flag:  is memory allocation hardwalled
+>>    - cpuset.memory_pressure: measure of how much paging pressure in cpuset
+>>    - cpuset.memory_spread_page flag: if set, spread page cache evenly on allowed nodes
+>> - - cpuset.memory_spread_slab flag: OBSOLETE. Doesn't have any function.
+>> + - cpuset.memory_spread_slab flag: OBSOLETE. Has no effect on allocation behavior.
+>>    - cpuset.sched_load_balance flag: if set, load balance within CPUs on that cpuset
+>>    - cpuset.sched_relax_domain_level: the searching range when migrating tasks
+>>   @@ -318,26 +318,20 @@ times 1000.
+>>     1.6 What is memory spread ?
+>>   ---------------------------
+>> -There are two boolean flag files per cpuset that control where the
+>> -kernel allocates pages for the file system buffers and related in
+>> -kernel data structures.  They are called 'cpuset.memory_spread_page' and
+>> -'cpuset.memory_spread_slab'.
+>> +The 'cpuset.memory_spread_page' boolean flag file controls where the kernel
+>> +allocates page-cache pages.
+>> +The 'cpuset.memory_spread_slab' file is obsolete and has no effect on
+>> +allocation behavior, but is retained for compatibility.
+>>     If the per-cpuset boolean flag file 'cpuset.memory_spread_page' is set, then
+>>   the kernel will spread the file system buffers (page cache) evenly
+>>   over all the nodes that the faulting task is allowed to use, instead
+>>   of preferring to put those pages on the node where the task is running.
+>>   -If the per-cpuset boolean flag file 'cpuset.memory_spread_slab' is set,
+>> -then the kernel will spread some file system related slab caches,
+>> -such as for inodes and dentries evenly over all the nodes that the
+>> -faulting task is allowed to use, instead of preferring to put those
+>> -pages on the node where the task is running.
+>> -
+>> -The setting of these flags does not affect anonymous data segment or
+>> +The setting of this flag does not affect anonymous data segment or
+>>   stack segment pages of a task.
+>>   -By default, both kinds of memory spreading are off, and memory
+>> +By default, page cache memory spreading is off, and memory
+>>   pages are allocated on the node local to where the task is running,
+>>   except perhaps as modified by the task's NUMA mempolicy or cpuset
+>>   configuration, so long as sufficient free memory pages are available.
+>> @@ -345,18 +339,17 @@ configuration, so long as sufficient free memory pages are available.
+>>   When new cpusets are created, they inherit the memory spread settings
+>>   of their parent.
+>>   -Setting memory spreading causes allocations for the affected page
+>> -or slab caches to ignore the task's NUMA mempolicy and be spread
+>> -instead.    Tasks using mbind() or set_mempolicy() calls to set NUMA
+>> -mempolicies will not notice any change in these calls as a result of
+>> -their containing task's memory spread settings.  If memory spreading
+>> +Setting page cache memory spreading causes affected allocations to ignore the
+>> +task's NUMA mempolicy and be spread instead. Tasks using mbind() or
+>> +set_mempolicy() to set NUMA mempolicies will not notice any change as a
+>> +result of their containing task's memory spread settings.  If memory spreading
+>>   is turned off, then the currently specified NUMA mempolicy once again
+>>   applies to memory page allocations.
+>>     Both 'cpuset.memory_spread_page' and 'cpuset.memory_spread_slab' are boolean flag
+>> -files.  By default they contain "0", meaning that the feature is off
+>> -for that cpuset.  If a "1" is written to that file, then that turns
+>> -the named feature on.
+>> +files whose values are inherited by newly created cpusets. The value of
+>> +'cpuset.memory_spread_slab' is retained and can be read back, but it does not
+>> +affect allocation behavior.
+> I think you should keep the statement about the default value of the flag files.
 
-This preserves the priority-inversion avoidance while preventing
-blkcg_punt_bio_submit() from creating blkgs that are not needed by any
-policy.
+Good point, thanks for pointing this out. I will restore the default-value 
+description and clarify the write semantics.
 
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- block/blk-cgroup.c | 44 +++++++++++++++++++++-----------------------
- block/blk-cgroup.h | 14 ++++++--------
- 2 files changed, 27 insertions(+), 31 deletions(-)
+>>     The implementation is simple.
+>>   @@ -367,10 +360,6 @@ is modified to perform an inline check for this PFA_SPREAD_PAGE task
+>>   flag, and if set, a call to a new routine cpuset_mem_spread_node()
+>>   returns the node to prefer for the allocation.
+>>   -Similarly, setting 'cpuset.memory_spread_slab' turns on the flag
+>> -PFA_SPREAD_SLAB, and appropriately marked slab caches will allocate
+>> -pages from the node returned by cpuset_mem_spread_node().
+>> -
+>>   The cpuset_mem_spread_node() routine is also simple.  It uses the
+>>   value of a per-task rotor cpuset_mem_spread_rotor to select the next
+>>   node in the current task's mems_allowed to prefer for the allocation.
+>> diff --git a/include/linux/sched.h b/include/linux/sched.h
+>> index 499943987c1a..8b3d47a325cc 100644
+>> --- a/include/linux/sched.h
+>> +++ b/include/linux/sched.h
+>> @@ -1869,7 +1869,6 @@ static __always_inline bool is_user_task(struct task_struct *task)
+>>   /* Per-process atomic flags. */
+>>   #define PFA_NO_NEW_PRIVS        0    /* May not gain new privileges. */
+>>   #define PFA_SPREAD_PAGE            1    /* Spread page cache over cpuset */
+>> -#define PFA_SPREAD_SLAB            2    /* Spread some slab caches over cpuset */
+>>   #define PFA_SPEC_SSB_DISABLE        3    /* Speculative Store Bypass disabled */
+>>   #define PFA_SPEC_SSB_FORCE_DISABLE    4    /* Speculative Store Bypass force disabled*/
+>>   #define PFA_SPEC_IB_DISABLE        5    /* Indirect branch speculation restricted */
+>> @@ -1895,10 +1894,6 @@ TASK_PFA_TEST(SPREAD_PAGE, spread_page)
+>>   TASK_PFA_SET(SPREAD_PAGE, spread_page)
+>>   TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
+>>   -TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
+>> -TASK_PFA_SET(SPREAD_SLAB, spread_slab)
+>> -TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
+>> -
+>>   TASK_PFA_TEST(SPEC_SSB_DISABLE, spec_ssb_disable)
+>>   TASK_PFA_SET(SPEC_SSB_DISABLE, spec_ssb_disable)
+>>   TASK_PFA_CLEAR(SPEC_SSB_DISABLE, spec_ssb_disable)
+>> diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
+>> index 3e9968dd91e9..562ad35f00d0 100644
+>> --- a/kernel/cgroup/cpuset-v1.c
+>> +++ b/kernel/cgroup/cpuset-v1.c
+>> @@ -204,7 +204,7 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+>>   }
+>>     /*
+>> - * update task's spread flag if cpuset's page/slab spread flag is set
+>> + * Update a task's spread flag if the cpuset's page spread flag is set.
+>>    *
+>>    * Call with callback_lock or cpuset_mutex held. The check can be skipped
+>>    * if on default hierarchy.
+>> @@ -219,18 +219,13 @@ void cpuset1_update_task_spread_flags(struct cpuset *cs,
+>>           task_set_spread_page(tsk);
+>>       else
+>>           task_clear_spread_page(tsk);
+>> -
+>> -    if (is_spread_slab(cs))
+>> -        task_set_spread_slab(tsk);
+>> -    else
+>> -        task_clear_spread_slab(tsk);
+>>   }
+>>     /**
+>> - * cpuset1_update_tasks_flags - update the spread flags of tasks in the cpuset.
+>> - * @cs: the cpuset in which each task's spread flags needs to be changed
+>> + * cpuset1_update_tasks_flags - update the page spread flag of cpuset tasks
+>> + * @cs: the cpuset whose tasks need their page spread flag updated
+>>    *
+>> - * Iterate through each task of @cs updating its spread flags.  As this
+>> + * Iterate through each task of @cs updating its page spread flag.  As this
+>>    * function is called with cpuset_mutex held, cpuset membership stays
+>>    * stable.
+>>    */
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 0a0fffb5673c..9761a5dd006f 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -2862,7 +2862,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+>>   {
+>>       struct cpuset *trialcs;
+>>       int balance_flag_changed;
+>> -    int spread_flag_changed;
+>> +    int spread_page_changed;
+>>       int err;
+>>         trialcs = dup_or_alloc_cpuset(cs);
+>> @@ -2881,8 +2881,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+>>       balance_flag_changed = (is_sched_load_balance(cs) !=
+>>                   is_sched_load_balance(trialcs));
+>>   -    spread_flag_changed = ((is_spread_slab(cs) != is_spread_slab(trialcs))
+>> -            || (is_spread_page(cs) != is_spread_page(trialcs)));
+>> +    spread_page_changed = is_spread_page(cs) != is_spread_page(trialcs);
+>>         spin_lock_irq(&callback_lock);
+>>       cs->flags = trialcs->flags;
+>> @@ -2895,7 +2894,7 @@ int cpuset_update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+>>               rebuild_sched_domains_locked();
+>>       }
+>>   -    if (spread_flag_changed)
+>> +    if (spread_page_changed)
+>>           cpuset1_update_tasks_flags(cs);
+>>   out:
+>>       free_cpuset(trialcs);
+>> @@ -4484,14 +4483,10 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
+>>    * cpuset_spread_node() - On which node to begin search for a page
+>>    * @rotor: round robin rotor
+>>    *
+>> - * If a task is marked PF_SPREAD_PAGE or PF_SPREAD_SLAB (as for
+>> - * tasks in a cpuset with is_spread_page or is_spread_slab set),
+>> - * and if the memory allocation used cpuset_mem_spread_node()
+>> - * to determine on which node to start looking, as it will for
+>> - * certain page cache or slab cache pages such as used for file
+>> - * system buffers and inode caches, then instead of starting on the
+>> - * local node to look for a free page, rather spread the starting
+>> - * node around the tasks mems_allowed nodes.
+>> + * If a task is marked PFA_SPREAD_PAGE and a page cache allocation uses
+>> + * cpuset_mem_spread_node() to determine where to start looking, spread the
+>> + * starting node around the task's mems_allowed nodes instead of starting on
+>> + * the local node.
+>>    *
+>>    * We don't have to worry about the returned node being offline
+>>    * because "it can't happen", and even if it did, it would be ok.
+>> @@ -4502,9 +4497,7 @@ void cpuset_nodes_allowed(struct cgroup *cgroup, nodemask_t *mask)
+>>    * offline node.  But if it did, that would be ok, as this routine
+>>    * is not returning the node where the allocation must be, only
+>>    * the node where the search should start.  The zonelist used by
+>> - * the allocator will include all nodes.  If the slab allocator
+>> - * is passed an offline node, it will fall back to the local node.
+>> - * See kmem_cache_alloc_node().
+>> + * the allocator will include all nodes.
+> 
+> The slab allocator here is the general term that can refer to slub. Is the statement about passing an offline node no longer true?
+> 
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 1de2f2433d11..e76e9a52f95d 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -177,14 +177,10 @@ static void blkg_free(struct blkcg_gq *blkg)
- 
- static void __blkg_release(struct rcu_head *rcu)
- {
- 	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
- 
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	WARN_ON(!bio_list_empty(&blkg->async_bios));
--#endif
--
- 	blkg_free(blkg);
- }
- 
- /*
-  * A group is RCU protected, but having an rcu lock does not mean that one
-@@ -218,23 +214,22 @@ static void blkg_release(struct percpu_ref *ref)
- }
- 
- #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
- static struct workqueue_struct *blkcg_punt_bio_wq;
- 
--static void blkg_async_bio_workfn(struct work_struct *work)
-+static void blkcg_async_bio_workfn(struct work_struct *work)
- {
--	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
--					     async_bio_work);
-+	struct blkcg *blkcg = container_of(work, struct blkcg, async_bio_work);
- 	struct bio_list bios = BIO_EMPTY_LIST;
- 	struct bio *bio;
- 	struct blk_plug plug;
- 	bool need_plug = false;
- 
--	/* as long as there are pending bios, @blkg can't go away */
--	spin_lock(&blkg->async_bio_lock);
--	bio_list_merge_init(&bios, &blkg->async_bios);
--	spin_unlock(&blkg->async_bio_lock);
-+	/* as long as there are pending bios, @blkcg can't go away */
-+	spin_lock(&blkcg->async_bio_lock);
-+	bio_list_merge_init(&bios, &blkcg->async_bios);
-+	spin_unlock(&blkcg->async_bio_lock);
- 
- 	/* start plug only when bio_list contains at least 2 bios */
- 	if (bios.head && bios.head->bi_next) {
- 		need_plug = true;
- 		blk_start_plug(&plug);
-@@ -251,19 +246,19 @@ static void blkg_async_bio_workfn(struct work_struct *work)
-  * cgroup.  Use this helper instead of submit_bio to punt the actual issuing to
-  * a dedicated per-blkcg work item to avoid such priority inversions.
-  */
- void blkcg_punt_bio_submit(struct bio *bio)
- {
--	struct blkcg_gq *blkg = bio_blkg(bio);
-+	struct blkcg *blkcg = bio_blkcg(bio);
- 
--	if (blkg && blkg->parent) {
--		spin_lock(&blkg->async_bio_lock);
--		bio_list_add(&blkg->async_bios, bio);
--		spin_unlock(&blkg->async_bio_lock);
--		queue_work(blkcg_punt_bio_wq, &blkg->async_bio_work);
-+	if (blkcg && cgroup_parent(blkcg->css.cgroup)) {
-+		spin_lock(&blkcg->async_bio_lock);
-+		bio_list_add(&blkcg->async_bios, bio);
-+		spin_unlock(&blkcg->async_bio_lock);
-+		queue_work(blkcg_punt_bio_wq, &blkcg->async_bio_work);
- 	} else {
--		/* Never bounce if there is no non-root blkg to queue on. */
-+		/* Never bounce if there is no non-root blkcg to queue on. */
- 		submit_bio(bio);
- 	}
- }
- EXPORT_SYMBOL_GPL(blkcg_punt_bio_submit);
- 
-@@ -342,15 +337,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	blkg->q = disk->queue;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
- 	blkg->blkcg_id = blkcg->css.id;
- 	blkg->iostat.blkg = blkg;
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spin_lock_init(&blkg->async_bio_lock);
--	bio_list_init(&blkg->async_bios);
--	INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
--#endif
- 
- 	u64_stats_init(&blkg->iostat.sync);
- 	for_each_possible_cpu(cpu) {
- 		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
- 		per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
-@@ -1370,10 +1360,13 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
- 		if (blkcg->cpd[i])
- 			blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
- 
- 	mutex_unlock(&blkcg_pol_mutex);
- 
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	WARN_ON(!bio_list_empty(&blkcg->async_bios));
-+#endif
- 	free_percpu(blkcg->lhead);
- 	kfree(blkcg);
- }
- 
- static struct cgroup_subsys_state *
-@@ -1418,10 +1411,15 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 	}
- 
- 	spin_lock_init(&blkcg->lock);
- 	refcount_set(&blkcg->online_pin, 1);
- 	INIT_HLIST_HEAD(&blkcg->blkg_list);
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spin_lock_init(&blkcg->async_bio_lock);
-+	bio_list_init(&blkcg->async_bios);
-+	INIT_WORK(&blkcg->async_bio_work, blkcg_async_bio_workfn);
-+#endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	INIT_LIST_HEAD(&blkcg->cgwb_list);
- #endif
- 	list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
- 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 3d113f6f6d25..efef0967d39e 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -74,18 +74,11 @@ struct blkcg_gq {
- 
- 	struct blkg_iostat_set __percpu	*iostat_cpu;
- 	struct blkg_iostat_set		iostat;
- 
- 	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spinlock_t			async_bio_lock;
--	struct bio_list			async_bios;
--#endif
--	union {
--		struct work_struct	async_bio_work;
--		struct work_struct	free_work;
--	};
-+	struct work_struct		free_work;
- 
- 	atomic_t			use_delay;
- 	atomic64_t			delay_nsec;
- 	atomic64_t			delay_start;
- 	u64				last_delay;
-@@ -110,10 +103,15 @@ struct blkcg {
- 	/*
- 	 * List of updated percpu blkg_iostat_set's since the last flush.
- 	 */
- 	struct llist_head __percpu	*lhead;
- 
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spinlock_t			async_bio_lock; /* protects async_bios */
-+	struct bio_list			async_bios;
-+	struct work_struct		async_bio_work;
-+#endif
- #ifdef CONFIG_BLK_CGROUP_FC_APPID
- 	char                            fc_app_id[FC_APPID_LEN];
- #endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct list_head		cgwb_list;
--- 
-2.51.0
+You are right. Although no slab allocation path currently uses
+cpuset_spread_node(), this general fallback statement still applies to
+SLUB when __GFP_THISNODE is not set. I will retain it in the next
+version. Thanks for pointing this out.
+
+Thanks,
+Guopeng
+
+> Cheers,
+> Longman
+> 
+>>    */
+>>   static int cpuset_spread_node(int *rotor)
+>>   {
+> 
 
