@@ -1,32 +1,32 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E12A38C2BF;
-	Tue, 11 Aug 2026 20:32:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED38402BAA
+	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 20:32:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786480351; cv=none; b=DC8b3JRL2i9kED0WIDU2uFcAZ8cAdIlb52S64afR0twUeCv8zUMEHpx9MZaDwLgnXSAWA3Y6S3TrDc7EBUKA/CBkpkZHyuuFRtcz6rWGkdD/dbrPNXVrfwdba1E1eBu4RzdE2A/1IsTb60zK/YtI1eT1vDB+wwqfCbVoPTievB8=
+	t=1786480356; cv=none; b=HD/rMS8dXpQ2FEpGygofeqmV/BYsEvpjKK0ppRyPeLxaGrZi8H5jNj3OrNaXfUjQY51SXA9t7lzpotS/DC7/VxkQPOmYCVZduCOpQ3pWvDgl9U8Q0gHH+T6RkkwMej0IGBD765B2d/gD4z7SfPdkwDDJRsWLmhlfDdT2AzJCb+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786480351; c=relaxed/simple;
-	bh=Qu4TLEITm3F7E4hKsZQWmQFX+kD67VWRsH9jTq8HbYY=;
+	s=arc-20240116; t=1786480356; c=relaxed/simple;
+	bh=U9K7f0QJFSHjM3kZX+nRyD7KRwwpOhhPRYAfnJjDSoo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JmmqpJwzs5ugxWcRVu4fOsyD5NE6DFhWa+D+Ixftmz/JoK8g8KM2E0Nt5e0aE9i9QSGRuUMNa1MPSRHgLG7Q/66CCDcWfyy4tpQNHlM/WG8MYwN0cNXhrGRfyR+QWFQtTeFO+tA1P9pVEdzNsoLEQfe2C/+h8yiC94jR2gGotjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jnixA1Lb; arc=none smtp.client-ip=91.218.175.183
+	 MIME-Version; b=RKzeLB89hv4jL7DHnodRzmO3O4eOTcsJgG4jX/nPvGGk8HjB1+rshfjbI4NfDai26/YcsaTdVIuItA/iWH7QJ6AHkJ67i9xiIh/CAHdWNgDO2nnQydfIVHModUM7jcS9aN1AmV0cy9U165AytfiI9VTLVo8MGd4D42DrMeFl598=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=q4KemcBI; arc=none smtp.client-ip=91.218.175.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jnixA1Lb"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="q4KemcBI"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786480348;
+	t=1786480353;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Iz9pq9nN+pdRG2ifYD8weZHP3Mu9osKE7mH+dgefD54=;
-	b=jnixA1LbmTaxkzgar3JKuaJ4k1vUWWyf7VEGK8rae8kCoq1f3oexACKpQ7r+bDe6+dKL3K
-	RqBk78yFC/7Y/qhBF1y28UcuSmr0hRfRkmOknSvcbVpGSio38zp8SRfhMHhp6BWZSAcSu7
-	1Am0QQuHpJuo03Fodg5Ph06odqaUi/c=
+	bh=kMaHE95s1N2ro/hCTjeuWjiZbKrQjnsN0zD3VNnyWTQ=;
+	b=q4KemcBI3JXk3fWT/q8wUMtoNfqZJlPmQG1Me6eNlskfW+iCFIzGJNVvpEBAagPzCazkqR
+	7ouS09BROAyYGe5iZK9V1kMaN3WFVRXDwVzGHJdmOnVN3t8huWXWZkz6iU6N6bskDEjHJb
+	rATBlfgk6qxpHPSnQq6bmoh3y+Lo5WQ=
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.com>,
@@ -43,9 +43,9 @@ Cc: Michal Hocko <mhocko@suse.com>,
 	linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/9] memcg: remove mem_cgroup_shrink_node()
-Date: Tue, 11 Aug 2026 13:31:57 -0700
-Message-ID: <20260811203203.3456029-4-shakeel.butt@linux.dev>
+Subject: [PATCH 4/9] memcg: remove the soft limit reclaim tracepoints
+Date: Tue, 11 Aug 2026 13:31:58 -0700
+Message-ID: <20260811203203.3456029-5-shakeel.butt@linux.dev>
 In-Reply-To: <20260811203203.3456029-1-shakeel.butt@linux.dev>
 References: <20260811203203.3456029-1-shakeel.butt@linux.dev>
 Precedence: bulk
@@ -57,81 +57,47 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-Its only caller was soft limit reclaim, which is gone.
+mm_vmscan_memcg_softlimit_reclaim_begin and
+mm_vmscan_memcg_softlimit_reclaim_end were only emitted by
+mem_cgroup_shrink_node(), which is gone, so they can never fire again.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- mm/internal.h |  4 ----
- mm/vmscan.c   | 41 -----------------------------------------
- 2 files changed, 45 deletions(-)
+ include/trace/events/vmscan.h | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-diff --git a/mm/internal.h b/mm/internal.h
-index 678ce8d03515..b2315bdb7350 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -85,10 +85,6 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 					   gfp_t gfp_mask,
- 					   unsigned int reclaim_options,
- 					   int *swappiness);
--unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
--				     gfp_t gfp_mask, bool noswap,
--				     pg_data_t *pgdat,
--				     unsigned long *nr_scanned);
+diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+index b4bf7b8def1f..8a872990b4be 100644
+--- a/include/trace/events/vmscan.h
++++ b/include/trace/events/vmscan.h
+@@ -214,13 +214,6 @@ DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_memcg_reclaim_be
  
- #ifdef CONFIG_NUMA
- extern int sysctl_min_unmapped_ratio;
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 032b14793d91..790b50c78a2e 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -6795,47 +6795,6 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 	TP_ARGS(gfp_flags, order, memcg)
+ );
+-
+-DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_memcg_softlimit_reclaim_begin,
+-
+-	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
+-
+-	TP_ARGS(gfp_flags, order, memcg)
+-);
+ #endif /* CONFIG_MEMCG */
  
- #ifdef CONFIG_MEMCG
+ DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_end_template,
+@@ -260,13 +253,6 @@ DEFINE_EVENT(mm_vmscan_direct_reclaim_end_template, mm_vmscan_memcg_reclaim_end,
  
--/* Only used by soft limit reclaim. Do not reuse for anything else. */
--unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
--						gfp_t gfp_mask, bool noswap,
--						pg_data_t *pgdat,
--						unsigned long *nr_scanned)
--{
--	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	struct scan_control sc = {
--		.nr_to_reclaim = SWAP_CLUSTER_MAX,
--		.target_mem_cgroup = memcg,
--		.may_writepage = 1,
--		.may_unmap = 1,
--		.reclaim_idx = MAX_NR_ZONES - 1,
--		.may_swap = !noswap,
--	};
+ 	TP_ARGS(nr_reclaimed, memcg)
+ );
 -
--	WARN_ON_ONCE(!current->reclaim_state);
+-DEFINE_EVENT(mm_vmscan_direct_reclaim_end_template, mm_vmscan_memcg_softlimit_reclaim_end,
 -
--	sc.gfp_mask = (gfp_mask & GFP_RECLAIM_MASK) |
--			(GFP_HIGHUSER_MOVABLE & ~GFP_RECLAIM_MASK);
+-	TP_PROTO(unsigned long nr_reclaimed, struct mem_cgroup *memcg),
 -
--	trace_mm_vmscan_memcg_softlimit_reclaim_begin(sc.gfp_mask,
--						      sc.order,
--						      memcg);
--
--	/*
--	 * NOTE: Although we can get the priority field, using it
--	 * here is not a good idea, since it limits the pages we can scan.
--	 * if we don't reclaim here, the shrink_node from balance_pgdat
--	 * will pick up pages from other mem cgroup's as well. We hack
--	 * the priority and make it zero.
--	 */
--	shrink_lruvec(lruvec, &sc);
--
--	trace_mm_vmscan_memcg_softlimit_reclaim_end(sc.nr_reclaimed, memcg);
--
--	*nr_scanned = sc.nr_scanned;
--
--	return sc.nr_reclaimed;
--}
--
- unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 					   unsigned long nr_pages,
- 					   gfp_t gfp_mask,
+-	TP_ARGS(nr_reclaimed, memcg)
+-);
+ #endif /* CONFIG_MEMCG */
+ 
+ TRACE_EVENT(mm_shrink_slab_start,
 -- 
 2.53.0-Meta
 
