@@ -1,57 +1,53 @@
-Received: from out-186.mta0.migadu.com (out-186.mta0.migadu.com [91.218.175.186])
+Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31DE30C157
-	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 04:14:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.186
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AA7D22173D
+	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 04:32:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786421664; cv=none; b=gD06TO4z+hpBKBA8LPS4RH0JUfrFfhFts0wnQZxRTMIW6BNrQkEZAfdCD99EIGDWSAodYaXgj9sJsYjmu/Yx/HrZtNODhxZXUlg0BZjWQBWzRIC+oLjzXy6sAsxoBGsunpAcZT1Vu78F9EpOurFIHdGcRMIN2MVMKfHnUyD6uVM=
+	t=1786422726; cv=none; b=pFrYq4PJ4PBLKMYq5Ly+WHK4oq0MGcKop73A0qGOHecNZbvq1Bgg9cbc3h13tROlME+ehITrw+Drx2nYGv676UJJWQiy0PAjm5ULzrmkYg2HFi+Mz8+2UBe84Kk0LANFxix8aAPZX9XtLRtvsBr3VrAxf0y/EGxbtjyjgL5UxBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786421664; c=relaxed/simple;
-	bh=6Sq7HFt1juFO8o84F0wK9ElES3E0LdvFk237gwVws98=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=AlBPYdpUz7cfZnIxt3lez/+yVxQk0+8jY/pZdi48evFBRtMGl3Zh2sQI/BppaDhA3qLOYtTIxWg4Bof+42+2jKxJiH0MX/e719HMRGvcV7zF/3/67hsvSwz0CUgodKhoEEtjEB3S4q62dZvO7WsSbOXmhAMHg0u+JSyirVHwXHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RisPRFYq; arc=none smtp.client-ip=91.218.175.186
+	s=arc-20240116; t=1786422726; c=relaxed/simple;
+	bh=T0FyM1LYqn+vS7SpXSEHVKG7ZVE3w/UPZSJUtHqjM+I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LoOd/B2RjntT+BNaFJkAkb4CPMyRy+s823s0zXv72TvTts11uEC7IEQ827OHoAFwXTg6TjUQAYoerk8lvjvgCo75fxTmQFRQTPPM8x9LkxWwN19wR/ZfRlQ/j3RcIBti68h8HTvr+idbKsWRiDNSoKsGQ2u1xdoMBGwZeKjALAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=okguh+11; arc=none smtp.client-ip=95.215.58.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RisPRFYq"
-Message-ID: <7864bd62-7289-4741-a905-23593130cea9@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="okguh+11"
+Date: Mon, 10 Aug 2026 21:31:39 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786421650;
+	t=1786422722;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=GgnpJ28vans1RntJYD4IuvfP0AmT4NAbCO4b8APJluQ=;
-	b=RisPRFYqIgCnz1LNYTT0ra4MLK5/CZN+AT1pr362E9KitMbGDyIDueq/I2NNKXdddpBG2X
-	3wg30r2zPOtmIzV3VzBc/WVympEASKLpvXX2afZeR53fDSVgIsUf7Ki0N7Dpcq2uItR+e4
-	CaO1NWARimcCBTFCMHyyjeCz27w2EPY=
-Date: Tue, 11 Aug 2026 12:13:56 +0800
+	bh=GTngnHPe1Gqy+5LwJJcOK53VCVVuZACNEtnsThA2J0k=;
+	b=okguh+11lTwJyUXg1H+ENk09yn1C4YYv5gcEpnnolfNwEFUvN58y81/ZkqPfzgCGfrSsVP
+	fLapUNRsoeWLcidPHwRgv3+/8wJ+BX1K5FATo71VLkXXpU33P4R2FXIvJs5xP1co+XPgF/
+	3IQ/lenlFf7PZDCarqOjSbgleKCLuSQ=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Guopeng Zhang <guopeng.zhang@linux.dev>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, akpm@linux-foundation.org, 
+	roman.gushchin@linux.dev, muchun.song@linux.dev, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	Guopeng Zhang <zhangguopeng@kylinos.cn>, Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v2] mm: memcg-v1: fix memsw and TCP failcnt accounting
+Message-ID: <anqlhbQ8BSJ1AKQ4@linux.dev>
+References: <20260811030843.109104-1-guopeng.zhang@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Cc: cui.tao@linux.dev, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>,
- Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v2] mm: memcg-v1: fix memsw and TCP failcnt accounting
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, hannes@cmpxchg.org,
- mhocko@kernel.org, akpm@linux-foundation.org
-References: <20260811030843.109104-1-guopeng.zhang@linux.dev>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Tao Cui <cui.tao@linux.dev>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20260811030843.109104-1-guopeng.zhang@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-
-
-在 2026/8/11 11:08, Guopeng Zhang 写道:
+On Tue, Aug 11, 2026 at 11:08:43AM +0800, Guopeng Zhang wrote:
 > From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 > 
 > Commit 0e2759afcaf9 ("page_counter: track failcnt only for legacy
@@ -104,33 +100,6 @@ X-Migadu-Flow: FLOW_OUT
 > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 > Acked-by: Michal Hocko <mhocko@suse.com>
 > Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> ---
-> Changes in v2:
-> - Enable failcnt tracking for tcpmem as suggested by Johannes Weiner.
-> - Add the memory.kmem.tcp.failcnt reproducer and test result.
-> - Update the subject and changelog to cover both counters.
-> - Add Cc: stable@vger.kernel.org and the received Acked-by tags.
-> 
-> Link to v1: https://lore.kernel.org/r/20260810074247.52747-1-guopeng.zhang@linux.dev
-> 
->  mm/memcontrol.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 70806373d5a9..17da1f43b7d3 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4235,9 +4235,11 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  #ifdef CONFIG_MEMCG_V1
->  		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
->  		memcg->memory.track_failcnt = !memcg_on_dfl;
-> +		memcg->memsw.track_failcnt = !memcg_on_dfl;
->  		WRITE_ONCE(memcg->oom_kill_disable, READ_ONCE(parent->oom_kill_disable));
->  		page_counter_init(&memcg->kmem, &parent->kmem, false);
->  		page_counter_init(&memcg->tcpmem, &parent->tcpmem, false);
-> +		memcg->tcpmem.track_failcnt = !memcg_on_dfl;
->  #endif
->  	} else {
->  		init_memcg_stats();
-Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 
