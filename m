@@ -1,132 +1,136 @@
-Received: from va-1-115.ptr.blmpb.com (va-1-115.ptr.blmpb.com [209.127.230.115])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-186.mta0.migadu.com (out-186.mta0.migadu.com [91.218.175.186])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DAB539F174
-	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 03:25:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.115
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31DE30C157
+	for <cgroups@vger.kernel.org>; Tue, 11 Aug 2026 04:14:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786418753; cv=none; b=DoASFsFg2paTGyQ/G8mqCW72mxLjzIEk66tSeuCf7EV+NqvX9pJX/Pd27/zdUMOoOz10fVWEhTV3OlNgKCUjvvkPX/9Yox57YJ5UFMuN/S8lRgudC4zZq/HE8+WbOg2Y0Mhl3PF6aZQUGiwFZWUy5jjJgHxYp2QWwv0TuwPTzzs=
+	t=1786421664; cv=none; b=gD06TO4z+hpBKBA8LPS4RH0JUfrFfhFts0wnQZxRTMIW6BNrQkEZAfdCD99EIGDWSAodYaXgj9sJsYjmu/Yx/HrZtNODhxZXUlg0BZjWQBWzRIC+oLjzXy6sAsxoBGsunpAcZT1Vu78F9EpOurFIHdGcRMIN2MVMKfHnUyD6uVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786418753; c=relaxed/simple;
-	bh=kECOHwHKQgh4B5VkySFLF0/IRGMolKmIBslP/P0gRqY=;
-	h=Subject:Date:References:From:Mime-Version:Cc:In-Reply-To:
-	 Content-Type:Message-Id:To; b=ukrc1QfnusEIMzLuSjxqEFONwOz2ccTl9CdzMuIpwRjysTwBp3daQR5reYTslKyu/TUTuejx5NfwBAwqql10RZBHaYHfugtNFigSLAPn2e6heMcy2/3sBEqJ3k4AL0cdqqzaoNbM5MSz7LwhjKo0Q17B9AmRKdiD7GgLp8U8JSo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=N5sHtGGu; arc=none smtp.client-ip=209.127.230.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1786421664; c=relaxed/simple;
+	bh=6Sq7HFt1juFO8o84F0wK9ElES3E0LdvFk237gwVws98=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=AlBPYdpUz7cfZnIxt3lez/+yVxQk0+8jY/pZdi48evFBRtMGl3Zh2sQI/BppaDhA3qLOYtTIxWg4Bof+42+2jKxJiH0MX/e719HMRGvcV7zF/3/67hsvSwz0CUgodKhoEEtjEB3S4q62dZvO7WsSbOXmhAMHg0u+JSyirVHwXHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RisPRFYq; arc=none smtp.client-ip=91.218.175.186
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="N5sHtGGu"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1786418741; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=qPR1rYC4fKK5DIdoWCF2oZpyWzNVREt+yryVJfl8CQQ=;
- b=N5sHtGGu+XQmLBoqlVJPvWbuH61PlNCcs9nL6KWe0W4Miy/oK3Yxipxyp8WbfodSTJFR7L
- fkZZ7C1gv/mZZ8HsHyBlYogxAPPIlPKDBIyw02F9QZU68BS1QoXWxiRjfbglGX0pvKIw2E
- i71IupOqi+N9YM0+rY5qeJVKRVSYuLQTQOchPEhuEZV8G6QBbkIwjXh6tXg0W3LT3uVA1e
- avS58TxwVGGLN+fAZJ2mNSPQj2Apk+7CZaeXTPpOkc92Jy97VexfVc3aMU3IqecYrBFS0J
- ABXbajf/ChJ+l2s3Ml0+pL1VgLaAOTXZidB/DYsMzapremPa0i5P4s8BoVDbGg==
-Subject: Re: [PATCH 2/2] selftests/cgroup: Preserve CPU hotplug write errors
-Date: Tue, 11 Aug 2026 11:25:22 +0800
-References: <20260809082111.3827531-1-qirui.001@bytedance.com> <20260809082111.3827531-3-qirui.001@bytedance.com> <1ddd2e4a-ef12-4e9d-b589-28ddb4f46fb3@redhat.com>
-From: "Rui Qi" <qirui.001@bytedance.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RisPRFYq"
+Message-ID: <7864bd62-7289-4741-a905-23593130cea9@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1786421650;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GgnpJ28vans1RntJYD4IuvfP0AmT4NAbCO4b8APJluQ=;
+	b=RisPRFYqIgCnz1LNYTT0ra4MLK5/CZN+AT1pr362E9KitMbGDyIDueq/I2NNKXdddpBG2X
+	3wg30r2zPOtmIzV3VzBc/WVympEASKLpvXX2afZeR53fDSVgIsUf7Ki0N7Dpcq2uItR+e4
+	CaO1NWARimcCBTFCMHyyjeCz27w2EPY=
+Date: Tue, 11 Aug 2026 12:13:56 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Rui Qi <qirui.001@bytedance.com>
-Cc: "Ridong Chen" <ridong.chen@linux.dev>, 
-	"Johannes Weiner" <hannes@cmpxchg.org>, 
-	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	"Shuah Khan" <shuah@kernel.org>, <cgroups@vger.kernel.org>, 
-	<linux-kselftest@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-X-Lms-Return-Path: <lba+26a7a9632+bd6603+vger.kernel.org+qirui.001@bytedance.com>
-In-Reply-To: <1ddd2e4a-ef12-4e9d-b589-28ddb4f46fb3@redhat.com>
-User-Agent: Mozilla Thunderbird
+MIME-Version: 1.0
+Cc: cui.tao@linux.dev, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+ muchun.song@linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>,
+ Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v2] mm: memcg-v1: fix memsw and TCP failcnt accounting
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, hannes@cmpxchg.org,
+ mhocko@kernel.org, akpm@linux-foundation.org
+References: <20260811030843.109104-1-guopeng.zhang@linux.dev>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260811030843.109104-1-guopeng.zhang@linux.dev>
 Content-Type: text/plain; charset=UTF-8
-Message-Id: <45c558ac-8397-46a7-b3c9-755f272be685@bytedance.com>
-Content-Transfer-Encoding: 7bit
-To: "Waiman Long" <longman@redhat.com>, "Tejun Heo" <tj@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On 8/10/26 10:53 PM, Waiman Long wrote:
-> On 8/9/26 4:21 AM, Rui Qi wrote:
->> The cpuset partition root state selftest checks several CPU hotplug
->> transitions. If writing to a CPU online file fails, the helper still
->> runs pause afterwards and returns the status of pause instead of the
->> failed write.
->>
->> This hides the real hotplug failure and can make later checks run
->> against expectations for a transition that never happened. Move the
->> write before the bookkeeping and return when it fails, so callers can
->> observe the hotplug error and the test does not record a CPU as offline
->> unless the offline operation actually succeeded.
->>
->> Fixes: a8c52eba880a ("kselftest/cgroup: Add cpuset v2 partition root state test")
->> Signed-off-by: Rui Qi <qirui.001@bytedance.com>
+
+
+在 2026/8/11 11:08, Guopeng Zhang 写道:
+> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 > 
-> I am aware that on x86-64, cpu0/online may not exist. Other than that, 
-> under what condition will the write fail as only root is allowed to run 
-> the script?
+> Commit 0e2759afcaf9 ("page_counter: track failcnt only for legacy
+> cgroups") made failcnt accounting conditional on track_failcnt. It
+> enabled the flag for memcg->memory, but not for memcg->memsw or
+> memcg->tcpmem.
 > 
-> Cheers,
-> Longman
-
-Hi Longman,
-
-Right, the failure I wanted to preserve is not the normal permission
-case. Running as root only gets us past the sysfs file permission check;
-the write can still fail in the CPU hotplug path.
-
-For example, cpu_down() can return -EBUSY when trying to offline the last
-online CPU, when CPU hotplug is temporarily disabled, or when offlining
-would leave no housekeeping CPU. cpu_up() can also fail if the CPU is not
-possible/present, if hotplug is disabled, or if the CPU is not bootable
-under the current SMT control state. Arch or registered cpuhp callbacks
-may also reject the transition and return an error.
-
-The current helper hides all of those cases because it does the write and
-then calls pause(), so the function returns the status of pause rather
-than the failed sysfs write. It also updates OFFLINE_CPUS before knowing
-whether the offline request succeeded. So this change is mainly to avoid
-continuing the test with bookkeeping that says a CPU was offlined when the
-kernel actually rejected the hotplug operation.
-
-
-Thanks,
-Rui
-
+> Consequently, memory.memsw.failcnt remains zero when the memory+swap
+> limit is hit. memory.kmem.tcp.limit_in_bytes still sets
+> memcg->tcpmem.max, but TCP charge failures are not reflected in
+> memory.kmem.tcp.failcnt.
 > 
->> ---
->>   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->> index 16c38eb11e63..a2f7208633bc 100755
->> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->> @@ -412,6 +412,7 @@ write_cpu_online()
->>   	CPU=${1%=*}
->>   	VAL=${1#*=}
->>   	CPUFILE=//sys/devices/system/cpu/cpu${CPU}/online
->> +	echo $VAL > $CPUFILE || return 1
->>   	if [[ $VAL -eq 0 ]]
->>   	then
->>   		OFFLINE_CPUS="$OFFLINE_CPUS $CPU"
->> @@ -421,7 +422,6 @@ write_cpu_online()
->>   					sort | uniq -u)
->>   		}
->>   	fi
->> -	echo $VAL > $CPUFILE
->>   	pause 0.05
->>   }
->>   
->> @@ -493,6 +493,7 @@ set_ctrl_state()
->>   			eval $COMM $REDIRECT
->>   			;;
->>   		    O*) VAL=${CMD#?}
->> +			COMM="write_cpu_online $VAL"
->>   			write_cpu_online $VAL
->>   			;;
->>   		    T*) COMM="echo 0 > $TFILE"
+> Enable failcnt accounting for both v1 counters.
+> 
+> To reproduce memory.memsw.failcnt:
+> 
+>     CG=/sys/fs/cgroup/memory/memsw-test
+>     LIMIT=33554432
+>     mkdir "$CG"
+>     echo "$LIMIT" > "$CG/memory.limit_in_bytes"
+>     echo "$LIMIT" > "$CG/memory.memsw.limit_in_bytes"
+> 
+> Start a child process in the cgroup and make it allocate and touch 96 MiB
+> of memory, causing a memcg OOM.
+> 
+>     cat "$CG/memory.memsw.failcnt"
+> 
+> Without the patch, memory.memsw.failcnt is 0. With the patch,
+> memory.memsw.failcnt is greater than 0.
+> 
+> To reproduce memory.kmem.tcp.failcnt:
+> 
+>     CG=/sys/fs/cgroup/memory/tcpmem-test
+>     LIMIT=65536
+>     mkdir "$CG"
+>     echo "$LIMIT" > "$CG/memory.kmem.tcp.limit_in_bytes"
+> 
+> Start a child process in the cgroup, create a TCP socket, and reserve
+> 1 MiB of socket memory with SO_RESERVE_MEM. The reservation fails with
+> ENOMEM.
+> 
+>     cat "$CG/memory.kmem.tcp.failcnt"
+> 
+> Without the patch, memory.kmem.tcp.failcnt is 0. With the patch,
+> memory.kmem.tcp.failcnt is greater than 0.
+> 
+> Closes: https://sashiko.dev/#/patchset/20260810074247.52747-1-guopeng.zhang@linux.dev?part=1
+> Fixes: 0e2759afcaf9 ("page_counter: track failcnt only for legacy cgroups")
+> Cc: stable@vger.kernel.org
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> ---
+> Changes in v2:
+> - Enable failcnt tracking for tcpmem as suggested by Johannes Weiner.
+> - Add the memory.kmem.tcp.failcnt reproducer and test result.
+> - Update the subject and changelog to cover both counters.
+> - Add Cc: stable@vger.kernel.org and the received Acked-by tags.
+> 
+> Link to v1: https://lore.kernel.org/r/20260810074247.52747-1-guopeng.zhang@linux.dev
+> 
+>  mm/memcontrol.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 70806373d5a9..17da1f43b7d3 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4235,9 +4235,11 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+>  #ifdef CONFIG_MEMCG_V1
+>  		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
+>  		memcg->memory.track_failcnt = !memcg_on_dfl;
+> +		memcg->memsw.track_failcnt = !memcg_on_dfl;
+>  		WRITE_ONCE(memcg->oom_kill_disable, READ_ONCE(parent->oom_kill_disable));
+>  		page_counter_init(&memcg->kmem, &parent->kmem, false);
+>  		page_counter_init(&memcg->tcpmem, &parent->tcpmem, false);
+> +		memcg->tcpmem.track_failcnt = !memcg_on_dfl;
+>  #endif
+>  	} else {
+>  		init_memcg_stats();
+Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+
