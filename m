@@ -1,95 +1,148 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-117.mta0.migadu.com [91.218.175.117])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE5FF3101A2;
-	Wed, 12 Aug 2026 13:31:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F054334C3
+	for <cgroups@vger.kernel.org>; Wed, 12 Aug 2026 13:48:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.117
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786541474; cv=none; b=e15pbuj6Br3vuqGATNFPu6CtdHHMEKN43ASqzdGsmJWi6AwQJkRG78X6OhHKM4202kj/10PnixamOyec3eE7O5pvKifVoNWe0eCez9f5nYXOoDelxrU/lIpQb7H17rz8ocALV8ExhYiTPMbnwLiGxEdx2GIdJUSjIjbGWc1eyyc=
+	t=1786542521; cv=none; b=fJuj0sjKgiirNBftU6zaAxOF3KZIU+b8am2KhtMPoMYtlRp1ikGGA/K6lliO3PWkSh2eSecJFJPCnarNejWr2WPOAatWDxETo/FSAh2mT6nYyREn2P8cmY5Z7herQ+XwcLB5BJqrUxIXDNFNeaMps2V+imNnJv+yRTYF53BQMEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786541474; c=relaxed/simple;
-	bh=bVTeeLdlPguoHzAex8PzDY+Kj2oTk1+7BbW5uMLf2ws=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fL+0muPlpDheN6Z/3q2EBsrh9yxQt7CTRi46YILam2DefogCImhjH9ybRADsfW2oNZjweSFI9dMytSQALE9ZRn5FUzoWqhyVk+p+R27Sr0HZ8QaTGVTd64IQHzwSU+9FL++/OB7Klw3HJYpU7zpnrmJUknitJqK9ypBPvzTPSqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BaSuBiuk; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1786542521; c=relaxed/simple;
+	bh=ASMCgRYWFh1U8hGKVOolQ/aTQ/PK231J3u3FwxsWacs=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=b/XkMOjzJmzc/H/P32nNH9RIXGTjq6NwYv16wnMgYyI1wFjpcbtO0DOb0CcprT4b/BwBCj/LjamJhLvVFrnH9KIWQJXIYBN9MCn9uS4yWb1ONYNxO2SNOH77OtEQf4YtDSuLNk603GnEfDABMdYvCo4x12eXB6A9ILPAJOarHzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=bqt6VLL2; arc=none smtp.client-ip=91.218.175.117
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BaSuBiuk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=6nJTH52gwMT1OzAJGmwX3x01ddsSLslou0JS60sTZVA=; b=BaSuBiukJkGliGKpSlCxWLjMgE
-	rblYAha6hMD3H4l4aXyyXWbBxM2OQ1VjZ5upj3uQ4jV2yWA1g9EmclqdWrPg8IADcvpPf8WR4OCoB
-	dVp0+Fg1Agsy7PUW8hbNSwgKebmc/GxHfWMTVAzibYm4wZqR1EZneTFV0A5bVd3MzrhCTkAdMEX+n
-	POaDC+38JFJCNXSqOca2zihHJ+sDTWRTQKEyDbfZ3WiAUNxtjbe8aDTBEbIO/L6TF/EEYK2mPV+R5
-	hkL55uV3Xo8/7yFPriZ82MuhLGe5DZaHt+DzdNXAaHH1Cf9VMz9aN/uEUxgCFUoSdv+H8EjPpemI9
-	R1W0/GeQ==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wu92m-000000022FB-3smL;
-	Wed, 12 Aug 2026 13:30:57 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 02065300382; Wed, 12 Aug 2026 15:30:56 +0200 (CEST)
-Date: Wed, 12 Aug 2026 15:30:55 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: shisiyuan <shisiyuan19870131@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
-	Michal Koutny <mkoutny@suse.com>, Ingo Molnar <mingo@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	shisiyuan <shisiyuan@lixiang.com>
-Subject: Re: [PATCH] sched/psi: add cpu_prio pressure metric for
- high-priority task stalls
-Message-ID: <20260812133055.GM776954@noisy.programming.kicks-ass.net>
-References: <20260811104610.100617-1-shisiyuan19870131@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="bqt6VLL2"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ASMCgRYWFh1U8hGKVOolQ/aTQ/PK231J3u3FwxsWacs=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786542517; v=1; x=1787147317;
+ b=bqt6VLL2oPMWtajSw0sxl/NU0Mo2Oiu8rit8fZeSxMtlJERaEfHNKZKZGumb5o1F/v0QRCK2
+ qUUzXNLihvi8GGJFN+FA5creF05Y21skfBl4r/uq1Rk1GluMrGOYCYW47E7+tLQu4EMtBrQmm9x
+ 8hNvs/6pH89NGSVYK7fZ3GIY=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from [192.168.1.116] (111.162.215.50)
+	by smtp.migadu.com with ESMTPS id 18dd0f5011e94cb8;
+	Wed, 12 Aug 2026 13:48:37 +0000
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <3ab5e2cb-0660-4b20-9e67-cb47e17ae554@linux.dev>
+Date: Wed, 12 Aug 2026 21:48:26 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260811104610.100617-1-shisiyuan19870131@gmail.com>
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, Michal Hocko <mhocko@kernel.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Harry Yoo <harry@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>,
+ Ran Xiaokai <ran.xiaokai@zte.com.cn>
+Subject: Re: [PATCH] mm: memcg: fix slab over-accounting for in-object objcg
+ metadata
+To: Guopeng Zhang <guopeng.zhang@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Vlastimil Babka <vbabka@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>
+References: <20260812124858.73487-1-guopeng.zhang@linux.dev>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260812124858.73487-1-guopeng.zhang@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Aug 11, 2026 at 06:46:10PM +0800, shisiyuan wrote:
-> From: shisiyuan <shisiyuan@lixiang.com>
-> 
-> Introduce a new PSI (Pressure Stall Information) indicator that
-> measures how much walltime priority-sensitive tasks spend waiting
-> for CPU, exposed as /proc/pressure/cpu_prio alongside the existing
-> io/memory/cpu/irq metrics.
-> 
-> A task is considered "high priority" when its static priority is
-> at or below CONFIG_PSI_TASK_PRIO_THLD (default 118). The scheduler
-> tracks a dedicated task count and state bit for such tasks,
-> mirroring the existing CPU SOME/FULL accounting, so CPU contention
-> affecting latency-sensitive workloads can be observed independently
-> of overall CPU pressure. Both 'some' and 'full' states are tracked;
-> 'full' is undefined at the system level (always reported as zero),
-> same as regular CPU pressure, but is meaningful at the cgroup level,
-> where it reflects the share of time no high-priority task in that
-> cgroup is able to run.
-> 
-> To keep the metric accurate across priority changes, ENQUEUE_PSI/
-> DEQUEUE_PSI flags are added and set by set_user_nice(),
-> sched_setscheduler() and rt_mutex_setprio(), forcing PSI state to
-> be re-evaluated whenever a task's priority is adjusted rather than
-> only on enqueue/dequeue.
-> 
-> The priority threshold is exported as a Kconfig knob
-> (CONFIG_PSI_TASK_PRIO_THLD) so it can be tuned per platform without
-> touching source code.
 
-Yeah, I think not.
+
+在 2026/8/12 20:48, Guopeng Zhang 写道:
+> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> 
+> obj_full_size() adds the size of an obj_cgroup pointer to s->size to
+> account for slabobj_ext storage, which normally resides outside the
+> object.
+> 
+> Since commit a77d6d338685 ("mm/slab: place slabobj_ext metadata in
+> unused space within s->size"), slabobj_ext can reside in object padding
+> already covered by s->size. The extra charge then accounts for the same
+> memory twice.
+> 
+> The per-slab obj_exts_in_object bit introduced by commit b5bc35ace2c5
+> ("mm/slab: replace slab.stride with obj_exts_in_object") identifies this
+> layout. Use it to omit the extra charge only for in-object metadata.
+> Unlike in-object metadata, slab-leftover and separately allocated metadata
+> are not covered by the per-object s->size charge, so retain the existing
+> charge for those cases.
+> 
+> Reported-by: Ran Xiaokai <ran.xiaokai@zte.com.cn>
+> Link: https://lore.kernel.org/all/20260310113804.245647-1-ranxiaokai627@163.com/
+> Fixes: a77d6d338685 ("mm/slab: place slabobj_ext metadata in unused space within s->size")
+> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> ---
+>  mm/memcontrol.c | 14 ++++++++++----
+>  1 file changed, 10 insertions(+), 4 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d1312441a02b..aef480f46891 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3526,12 +3526,16 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
+>  	refill_obj_stock(objcg, size, true);
+>  }
+>  
+> -static inline size_t obj_full_size(struct kmem_cache *s)
+> +static inline size_t obj_full_size(struct kmem_cache *s, struct slab *slab)
+>  {
+>  	/*
+>  	 * For each accounted object there is an extra space which is used
+> -	 * to store obj_cgroup membership. Charge it too.
+> +	 * to store obj_cgroup membership. Charge it too, unless it is stored
+> +	 * in object padding already covered by s->size.
+>  	 */
+> +	if (obj_exts_in_object(slab))
+> +		return s->size;
+> +
+>  	return s->size + sizeof(struct obj_cgroup *);
+>  }
+>  
+> @@ -3539,7 +3543,6 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+>  				  gfp_t flags, unsigned int slab_alloc_flags,
+>  				  size_t size, void **p)
+>  {
+> -	size_t obj_size = obj_full_size(s);
+>  	struct obj_cgroup *objcg;
+>  	struct slab *slab;
+>  	size_t i;
+> @@ -3580,6 +3583,7 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+>  		unsigned long obj_exts;
+>  		struct slabobj_ext *obj_ext;
+>  		struct obj_stock_pcp *stock;
+> +		size_t obj_size;
+>  
+>  		slab = virt_to_slab(p[i]);
+>  
+> @@ -3590,6 +3594,8 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+>  				continue;
+>  		}
+>  
+> +		obj_size = obj_full_size(s, slab);
+> +
+>  		/*
+>  		 * if we fail and size is 1, memcg_alloc_abort_single() will
+>  		 * just free the object, which is ok as we have not assigned
+> @@ -3632,7 +3638,7 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+>  void __memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+>  			    void **p, int objects, unsigned long obj_exts)
+>  {
+> -	size_t obj_size = obj_full_size(s);
+> +	size_t obj_size = obj_full_size(s, slab);
+>  
+>  	for (int i = 0; i < objects; i++) {
+>  		struct obj_cgroup *objcg;
+> 
+> base-commit: e7f630142df2afccce90555e4972e60008222311
+Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+
