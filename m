@@ -1,110 +1,143 @@
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com [209.85.167.197])
+Received: from mta0.migadu.com (out-64.mta0.migadu.com [91.218.175.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EE033B9DAB
-	for <cgroups@vger.kernel.org>; Wed, 12 Aug 2026 12:26:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10A6A352034
+	for <cgroups@vger.kernel.org>; Wed, 12 Aug 2026 12:49:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786537586; cv=none; b=XQdPR761dYjYpgWSJ/wv5zfDE//xGCxImDQFIx/e5EmpjU3PmKf22crps1PgOS46BhB4WoY9hq1oI81hrpEBNvakIKmUcxcHgrA3u3pmVhFANZpkBYqrYnXOFuZaLFpFlqdabpj3rzDKgVQKWgopncNDiLMXpzBBQ1pJPMu1+hQ=
+	t=1786538969; cv=none; b=QnK/s9L50Prg/EW9pa9vommnVfpZD9U17WC3WNcaFBbsv8TzHuPRjr/PEXHlAuh7EJhgDDi9mQTJ97PmiVo/x/7yVvQ2B7o9ViCFDx3UA7D57czVc83BKiTpoqRyp19WSjEe2L/lSaaQlOa0KNDedykX31uwXPd/lfkCurnl9GQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786537586; c=relaxed/simple;
-	bh=7ZduRDunxHw1mtqWL3NsN5nl9wm9FP+HW5oAwo3ok+4=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=bSKfFLzxSswguvXr3NgwdkVnvx/Q9ZjWYsoDYJDt2a0282XAaJ59BpU5TMwFny/ueq92lZAUoHXHcmPpciQTluZX6Ad1TxR+OWUvfS9tZscc6mkZ9utLzNx1neXoOhDOuPaUk258LgdXh6f0vMYynKaKALU8mkoONnkDTz3u4TA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-4b1bc2e44e0so1058066b6e.0
-        for <cgroups@vger.kernel.org>; Wed, 12 Aug 2026 05:26:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786537584; x=1787142384;
-        h=content-type:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=KwBwo9L8xQyqtv/i2/6defD8MNdrwToASIU8rpL79rQ=;
-        b=sdcUn4tvmYLr9n5BMAMgkxIEWXliz8+Yf4UhqwnZO9XFf31v0shR1XpK07Tcy5lwdS
-         iRI4mckkK+/08v6PUj6MMDqbY62k98biBj3c+KRZDDH4yP5TiZGKCczpsTtRtBet4k06
-         1WjwBXXh+1/OeWzNCNwFdhcgOccqP7xNS8pYdC/7ujBwXMXyntWa4JbF7UwUF8Pj0J0M
-         KZlJElKgPkNc9RXHMEFvKh0k+otTaTit1f7H/yXwWX/EWTQOa4YbTn5D0s9DK5I0nGRe
-         VxO+/Oy2lOnzpQQ+6pvzQuERT37SCbJVtm0aBlWQ4FJKhm6Fi7H4kM/n9K0PU6c+M1W1
-         ITBA==
-X-Forwarded-Encrypted: i=1; AHgh+RrhCOgDCaSokQ4skcjxRN83nOLnlxhEva5tEb1GXjMggAVgn2N7g9z5zBUwEurZnJQadbiEgaWH@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy8qcCPYX9L/GSUKD8SD82esdNFpUP5yRgMADVvFQ8oF1y2O8QC
-	KoKkZUE/vQi2SkZxF00nDrjjGytxYA7AFGnT1z+KE77CCQUJBW4X4KAU1Qr+YK2aBSoEsffHcuP
-	eGGNykcPiI0WfqBtJoQXkfO3cnoWt3aGRtiPfUdy9BO5m3D4hgUzvDZBVBd4=
+	s=arc-20240116; t=1786538969; c=relaxed/simple;
+	bh=T3euLRUWi5X4en4gbGyeNy19X/iP7P5qMnlk87Y3JzU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lxKOHWDzdp0ADFaTNOcyWv/SYe8hxZnKKy8cBTikKhv9h7GkU+nrjLpX+TcHR0l2l55sFYghs2cjDQkx8ai3AjEASokm9uahZP2ovnzjqjQ10lPEDjdsqtsPc7Fbv1C/Dz7FBV3wUOAukT/oymudhVoQpLRaiyiDOvBNf+eV6iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cJNpiUxz; arc=none smtp.client-ip=91.218.175.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cJNpiUxz"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=T3euLRUWi5X4en4gbGyeNy19X/iP7P5qMnlk87Y3JzU=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786538964; v=1; x=1787143764;
+ b=cJNpiUxzrSq3A5+7llRRqpKNporOSA/pwvc1DR13ALr/S8ODWk4sPhxaZZcRbcOF1Ei77mXs
+ B3cz5tpS/xMHsuU/KDq9JJRCMenH/g2Wm1gJ6QV6H9IzYfJNEk4I0cdy9ITvZd61uV6ZXuPiOJt
+ 0HPYQymNIgyqjGHzVvO6wmIE=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from zgp.. (240a:4280:d800:21e:3f98:c0ba:a57d:551c)
+	by smtp.migadu.com with ESMTPS id 8d02885b92efdee5;
+	Wed, 12 Aug 2026 12:49:14 +0000
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@kernel.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Harry Yoo <harry@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>,
+	Ran Xiaokai <ran.xiaokai@zte.com.cn>
+Subject: [PATCH] mm: memcg: fix slab over-accounting for in-object objcg metadata
+Date: Wed, 12 Aug 2026 20:48:58 +0800
+Message-ID: <20260812124858.73487-1-guopeng.zhang@linux.dev>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:c97:b0:69e:98c0:4bd6 with SMTP id
- 006d021491bc7-6b0b2490e00mr3827700eaf.1.1786537584398; Wed, 12 Aug 2026
- 05:26:24 -0700 (PDT)
-Date: Wed, 12 Aug 2026 05:26:24 -0700
-In-Reply-To: <6a7a6929.b50370da.49fe0.005e.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a7c6670.3668565d.e8814.0012.GAE@google.com>
-Subject: Re: [syzbot] [mm?] WARNING in set_mm_walk
-From: syzbot <syzbot+12ee2725d5fde63a9c96@syzkaller.appspotmail.com>
-To: akpm@linux-foundation.org, axelrasmussen@google.com, baohua@kernel.org, 
-	baolin.wang@linux.alibaba.com, cgroups@vger.kernel.org, david@kernel.org, 
-	hannes@cmpxchg.org, kasong@tencent.com, kernel-team@meta.com, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, ljs@kernel.org, 
-	mhocko@kernel.org, mhocko@suse.com, muchun.song@linux.dev, qi.zheng@linux.dev, 
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	syzkaller-bugs@googlegroups.com, weixugc@google.com, yuanchu@google.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-syzbot has found a reproducer for the following issue on:
+From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-HEAD commit:    f5bbbfec59b4 Merge tag 'probes-fixes-v7.2-rc7' of git://gi..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=11f44c79580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=c44651ea7dd2f307
-dashboard link: https://syzkaller.appspot.com/bug?extid=12ee2725d5fde63a9c96
-compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10d11149580000
+obj_full_size() adds the size of an obj_cgroup pointer to s->size to
+account for slabobj_ext storage, which normally resides outside the
+object.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+12ee2725d5fde63a9c96@syzkaller.appspotmail.com
+Since commit a77d6d338685 ("mm/slab: place slabobj_ext metadata in
+unused space within s->size"), slabobj_ext can reside in object padding
+already covered by s->size. The extra charge then accounts for the same
+memory twice.
 
-------------[ cut here ]------------
-current_is_kswapd()
-WARNING: mm/vmscan.c:3800 at set_mm_walk+0x210/0x270 mm/vmscan.c:3800, CPU#2: kswapd0/111
-Modules linked in:
-CPU: 2 UID: 0 PID: 111 Comm: kswapd0 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:set_mm_walk+0x210/0x270 mm/vmscan.c:3800
-Code: 13 00 00 4d 8d 7d 08 e9 f7 fe ff ff e8 19 f7 2a 00 e9 b7 fe ff ff e8 7f 68 ba ff 90 0f 0b 90 e9 d2 fe ff ff e8 71 68 ba ff 90 <0f> 0b 90 e9 74 ff ff ff 4c 89 ff e8 20 f7 2a 00 e9 4e fe ff ff 48
-RSP: 0018:ffffc9000272f2b8 EFLAGS: 00010293
-RAX: 0000000000000000 RBX: ffff888023f04a80 RCX: ffffffff82500a88
-RDX: ffff888023f04a80 RSI: ffffffff82500b0f RDI: ffff888023f04a80
-RBP: 0000000000020000 R08: 0000000000000005 R09: 0000000000000000
-R10: 0000000000020000 R11: 0000000000000000 R12: 0000000000000000
-R13: ffffc9000272fc38 R14: 0000000000000001 R15: ffffc9000272fc40
-FS:  0000000000000000(0000) GS:ffff8880d5fec000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00005643a2ed4168 CR3: 000000003c7ec000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- try_to_inc_max_seq+0xf0/0x1090 mm/vmscan.c:4023
- try_to_shrink_lruvec+0x4bd/0x6b0 mm/vmscan.c:4977
- lru_gen_shrink_lruvec mm/vmscan.c:5128 [inline]
- shrink_lruvec+0x31e/0x25b0 mm/vmscan.c:5888
- mem_cgroup_shrink_node+0x227/0x6a0 mm/vmscan.c:6753
- mem_cgroup_soft_reclaim mm/memcontrol-v1.c:312 [inline]
- memcg1_soft_limit_reclaim+0x2d5/0x830 mm/memcontrol-v1.c:362
- balance_pgdat+0xa11/0x1f00 mm/vmscan.c:7177
- kswapd+0x556/0xb50 mm/vmscan.c:7462
- kthread+0x370/0x450 kernel/kthread.c:436
- ret_from_fork+0x72b/0xd50 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
+The per-slab obj_exts_in_object bit introduced by commit b5bc35ace2c5
+("mm/slab: replace slab.stride with obj_exts_in_object") identifies this
+layout. Use it to omit the extra charge only for in-object metadata.
+Unlike in-object metadata, slab-leftover and separately allocated metadata
+are not covered by the per-object s->size charge, so retain the existing
+charge for those cases.
 
-
+Reported-by: Ran Xiaokai <ran.xiaokai@zte.com.cn>
+Link: https://lore.kernel.org/all/20260310113804.245647-1-ranxiaokai627@163.com/
+Fixes: a77d6d338685 ("mm/slab: place slabobj_ext metadata in unused space within s->size")
+Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+ mm/memcontrol.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d1312441a02b..aef480f46891 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3526,12 +3526,16 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
+ 	refill_obj_stock(objcg, size, true);
+ }
+ 
+-static inline size_t obj_full_size(struct kmem_cache *s)
++static inline size_t obj_full_size(struct kmem_cache *s, struct slab *slab)
+ {
+ 	/*
+ 	 * For each accounted object there is an extra space which is used
+-	 * to store obj_cgroup membership. Charge it too.
++	 * to store obj_cgroup membership. Charge it too, unless it is stored
++	 * in object padding already covered by s->size.
+ 	 */
++	if (obj_exts_in_object(slab))
++		return s->size;
++
+ 	return s->size + sizeof(struct obj_cgroup *);
+ }
+ 
+@@ -3539,7 +3543,6 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ 				  gfp_t flags, unsigned int slab_alloc_flags,
+ 				  size_t size, void **p)
+ {
+-	size_t obj_size = obj_full_size(s);
+ 	struct obj_cgroup *objcg;
+ 	struct slab *slab;
+ 	size_t i;
+@@ -3580,6 +3583,7 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ 		unsigned long obj_exts;
+ 		struct slabobj_ext *obj_ext;
+ 		struct obj_stock_pcp *stock;
++		size_t obj_size;
+ 
+ 		slab = virt_to_slab(p[i]);
+ 
+@@ -3590,6 +3594,8 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ 				continue;
+ 		}
+ 
++		obj_size = obj_full_size(s, slab);
++
+ 		/*
+ 		 * if we fail and size is 1, memcg_alloc_abort_single() will
+ 		 * just free the object, which is ok as we have not assigned
+@@ -3632,7 +3638,7 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ void __memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ 			    void **p, int objects, unsigned long obj_exts)
+ {
+-	size_t obj_size = obj_full_size(s);
++	size_t obj_size = obj_full_size(s, slab);
+ 
+ 	for (int i = 0; i < objects; i++) {
+ 		struct obj_cgroup *objcg;
+
+base-commit: e7f630142df2afccce90555e4972e60008222311
+-- 
+2.43.0
+
