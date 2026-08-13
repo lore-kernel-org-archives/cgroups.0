@@ -1,112 +1,120 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-48.mta0.migadu.com [91.218.175.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 882953B893F;
-	Thu, 13 Aug 2026 09:09:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 568B6351C31
+	for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 09:20:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786612201; cv=none; b=IkdUTUyCxofhP0u+wr4JtOAyLh1bPzwoJwvVERznlIAqobt6NhgLKMUDFWWE/Z3i2NGJtO2gzG1WXktImfcDoEsp7P73qbSUalEYjuaJr0kaY4zNaoogFFM4p8+xrJr2/6h3iJl17fsC7lRZ2ThaGmymhYQVaiU/ur2ObA1kNmo=
+	t=1786612832; cv=none; b=cY6sZhNko95di/7oz/emGPCsfyczntQvnuLb4ZY63oV+gUyKwq4r9IHugrosjt5lyblUzhByxQ/I6L2gfMNJcP29I9LNFNrgSdO3EWx25lJh4FzgmcywuGA4iChxqfqdYqMiXjMwEmYr9VnuuBg6P2smODz6N1Zj2EqO1r72TBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786612201; c=relaxed/simple;
-	bh=nUTXvCxOgXf/FBYKi2zPekPbpaeUCcRilIOXspTAmwM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hmMAJemOgLBYEJoLceonBNZ/GeLNALdfWWPhGDOlHBEgqodO5JvYEe9FAvJlXEyMmhJqQ2jP54fNHwjshOA6QweSaPOph+rcPS/b2qMlm0XVfQI+4k8qe9MHhEuSY8rYbOpfh2Coi/0r/lrJYXdgqwnpWoCrUriRGAek7z1v0HU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: ba84154496f611f1aa26b74ffac11d73-20260813
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CHARSET
-	HR_CHARSET_NUM, HR_CTE_8B, HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD
-	HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
-	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_CHARSET
-	HR_TO_CHARSET_NUM, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NAME, IP_TRUSTED
-	SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED, SN_EXISTED
-	SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF
-	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:c142f4ca-c165-438e-8df9-f2af5b44b334,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:c142f4ca-c165-438e-8df9-f2af5b44b334,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:71e8a00946f9e40ad7379828b967b691,BulkI
-	D:260813170950TQXJIW6H,BulkQuantity:0,Recheck:0,SF:10|38|66|78|102|127|850
-	|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:ni
-	l,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE
-	:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: ba84154496f611f1aa26b74ffac11d73-20260813
-X-User: sunshaojie@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 418094760; Thu, 13 Aug 2026 17:09:46 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH] selftests/cgroup: remove redundant chown in test_cgcore_lesser_ns_open
-Date: Thu, 13 Aug 2026 17:09:14 +0800
-Message-Id: <20260813090914.690350-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1786612832; c=relaxed/simple;
+	bh=Lo3/ZNPFnO4hYBRp4f8wYgQkvGkM9mHLpTJup77ntrA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oSGEK21dKobZ/W9KtTFiCoGVt9sIk6NLUlpNnMHyyjm7BM6wCvZOTLCn/VrEM/T6hcLBhqXUiZRe8diofyiNLnMe7POogWqxG8Ry9wOzb/M/J0FIqkhAYW+RYpSbDpwdR/XZdiDbjM5LZ4HBhak5Ts7MrCXtSEZBX9Jnl6T/90o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=eZYcj/Cm; arc=none smtp.client-ip=91.218.175.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="eZYcj/Cm"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Lo3/ZNPFnO4hYBRp4f8wYgQkvGkM9mHLpTJup77ntrA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786612828; v=1; x=1787217628;
+ b=eZYcj/Cm3Uts6sgflxEfvxNLqpQP51lG5Az5InPWkeQN8Eb2YaZ/EmZtiFOxgon4GZzdVzmd
+ sobDyStRHohud38SFaVZf4nIUFx+Oto3/gCr/iW5rK4mfAEnvWD+wV+VsdMZ17V4cHM2Cuegdja
+ c0gQuWCfbkD8vpIS2MtwrAXc=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from three-body (240e:398:91:37f0:2e7e:cdf5:29fd:7e8)
+	by smtp.migadu.com with ESMTPS id 17acceac5a5fa4bb;
+	Thu, 13 Aug 2026 09:20:28 +0000
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 13 Aug 2026 17:20:08 +0800
+From: Chen Yu <chen.yu@linux.dev>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	Ben Segall <bsegall@google.com>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Mel Gorman <mgorman@suse.de>, Peter Zijlstra <peterz@infradead.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Tim Chen <tim.c.chen@linux.intel.com>,
+	Valentin Schneider <vschneid@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	"Chen, Yu C" <yu.c.chen@intel.com>,
+	Waiman Long <longman@redhat.com>,
+	Ridong Chen <ridong.chen@linux.dev>
+Subject: Re: [PATCH v2] sched/topology: Add a cpus_read_lock to
+ rebuild_sched_domains()
+Message-ID: <an2MSP557dUZvzHr@three-body>
+References: <20260813073855.ji2UrtVh@linutronix.de>
+ <20260813074817.t8IQTgfx@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260813074817.t8IQTgfx@linutronix.de>
 
-test_cgcore_lesser_ns_open runs as root throughout and never changes its
-euid, so chowning the two cgroup.procs files to a non-root uid has no
-effect on the test.
+On Thu, Aug 13, 2026 at 09:48:17AM +0200, Sebastian Andrzej Siewior wrote:
+> 
+> + CPUSET maintainer which I missed because re-used the CCs from v1.
+> 
+> On 2026-08-13 09:38:56 [+0200], To linux-kernel@vger.kernel.org wrote:
+> > A read from /proc/sys/kernel/sched_rt_runtime_us leads to backtrace due
+> > to missing cpu_hotplug_lock with CONFIG_CPUSETS=n. The callchain is
+> > sched_rt_handler() -> partition_sched_domains() -> sched_cache_set() ->
+> > static_key_enable_cpuslocked(&sched_cache_present).
+> > 
+> > sched_cache_set() itself is also invoked from sched_init_domains() which
+> > is early during the boot, holding just the sched_domains_mutex_lock().
+> > Here is no warning because it happens before user space is running (and
+> > hotplug operations are not possible).
+> > 
+> > There is also sched_cache_active_set() which acquires the hotplug lock
+> > before invoking any of the _cpuslocked() functions.
+> > 
+> > This is only a problem with CONFIG_CPUSETS=n because in the =y case the
+> > other implementation of rebuild_sched_domains acquires the CPU-hotplug
+> > lock.
+> > 
+> > Acquire CPU hotplug lock before in rebuild_sched_domains(), before
+> > partition_sched_domains() is invoked for the CONFIG_CPUSETS=n case.
+> > 
+> > Fixes: a7660ce1590fc ("sched/cache: Fix has_multi_llcs iff at least one partition has multiple LLCs")
+> > Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The ENOENT the test expects comes from the cgroup namespace delegation
-check in cgroup_procs_write_permission(): the source and destination
-cgroups must both be descendants of the namespace root captured at open
-time.  That check does not depend on file ownership.  In addition, the
-permission check only examines the common ancestor's cgroup.procs file
-(the test root here), which the chown calls do not touch.
+Reviewed-by: Chen Yu <yu.c.chen@intel.com>
 
-Remove the redundant chown calls and the now unused test_euid variable.
+thanks,
+Chenyu
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
- tools/testing/selftests/cgroup/test_core.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
-index 88ca832d4fc1..483e8b063f12 100644
---- a/tools/testing/selftests/cgroup/test_core.c
-+++ b/tools/testing/selftests/cgroup/test_core.c
-@@ -795,7 +795,6 @@ static int lesser_ns_open_thread_fn(void *arg)
- static int test_cgcore_lesser_ns_open(const char *root)
- {
- 	static char stack[65536];
--	const uid_t test_euid = 65534;	/* usually nobody, any !root is fine */
- 	int ret = KSFT_FAIL;
- 	char *cg_test_a = NULL, *cg_test_b = NULL;
- 	char *cg_test_a_procs = NULL, *cg_test_b_procs = NULL;
-@@ -825,10 +824,6 @@ static int test_cgcore_lesser_ns_open(const char *root)
- 	if (cg_enter_current(cg_test_b))
- 		goto cleanup;
- 
--	if (chown(cg_test_a_procs, test_euid, -1) ||
--	    chown(cg_test_b_procs, test_euid, -1))
--		goto cleanup;
--
- 	targ.path = cg_test_b_procs;
- 	pid = clone(lesser_ns_open_thread_fn, stack + sizeof(stack),
- 		    CLONE_NEWCGROUP | CLONE_FILES | CLONE_VM | SIGCHLD,
--- 
-2.25.1
-
+> > ---
+> > v1…v2: https://lore.kernel.org/all/20260812095800.gl06ANul@linutronix.de/
+> >   - Move the lock from partition_sched_domains() to
+> >     rebuild_sched_domains() in the CONFIG_CPUSETS=n since this is the
+> >     only affected case. Noticed by Yu C Chen and Tim Chen.
+> > 
+> >  include/linux/cpuset.h | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+> > index 65d76a38974ba..bf3999daa080a 100644
+> > --- a/include/linux/cpuset.h
+> > +++ b/include/linux/cpuset.h
+> > @@ -273,6 +273,7 @@ static inline void dl_rebuild_rd_accounting(void)
+> >  
+> >  static inline void rebuild_sched_domains(void)
+> >  {
+> > +	guard(cpus_read_lock)();
+> >  	partition_sched_domains(1, NULL, NULL);
+> >  }
+> >  
+> > -- 
+> > 2.55.0
+> > 
