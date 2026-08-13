@@ -1,171 +1,150 @@
-Received: from mta1.migadu.com (out-144.mta1.migadu.com [95.215.58.144])
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CE2F349CF3
-	for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 18:43:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 297023AEF3B
+	for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 18:58:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786646627; cv=none; b=QQQJth6tiVcKoeUwVogdKkZ3hlwNUp9paZ1hZEHCGGJv8bevpFLVjLR3etMQc5FVukDyZFV0qWh6kPsWMWruZmFMfNpTd+t8rf++RW74PW3qKo7/tvK89DGifmkfaMlRrjCDT1FJ9ypENIiVIHM60QZGUXGDP1GBwQicOUeSNoU=
+	t=1786647531; cv=none; b=hfyivKCbTT6QLk3BCYFtBBrfn1jDeEws1f5R5NcMGCmAGP+BZxWuChOVLlR9+1KPvJAlpYEakClG0EcxecB27fQi+PO83NDeu55TJ+3X6csG2Vv4LbB6eo8YoTYFTW+BgYMERZhjBCUrYJRk6zP8rtnylvQ5tagycn3lgmWMCP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786646627; c=relaxed/simple;
-	bh=jDzUtJv+bm4xBlAKD9OaG1FnQWn+8Dk7PeYCuphZl9o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iqz8Cuz8koZYv42BDpEgOG+ceuUpl/YlXVerAOFMrWigB2pXqVEX7MwfDTNy6iHV0elelhfXiZITyUasHWVdsUfObazW2jJCkdEEU2vPsBqMdvuk4WYj7b2sJmVHFC3pp+7e6GK0ZDvDTytpaC4hO+oA7DLaCZ5EJTIRxKIprl8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jyo6LvZ/; arc=none smtp.client-ip=95.215.58.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1786647531; c=relaxed/simple;
+	bh=ieT3j4ATm+VvwOP6ZEo+gWzrvv6Thjmvaatd82ACSEs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=he/jMpHHxVlG0ZYJQrOax/0ZBkPULLwtZR5DlsQgFdow4Tvr0c0nd0kPKwsK1QjGkyPUBGUGZINUZw17e1qTj462I4cq1VQG4Pkm5CmCfghLW1thn76qJj/nscXBqlDFGjWluAMc41k/nL9Jk2+9LJMoE49ZA0xwENLO/xu9+xQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pHabd6FV; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jyo6LvZ/"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=jDzUtJv+bm4xBlAKD9OaG1FnQWn+8Dk7PeYCuphZl9o=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1786646622; v=1; x=1787251422;
- b=jyo6LvZ/f5UKUobyjePfXS1x4NzwZbFYmSXuT8AEgZ6dLm1+fqh4rUBF8U23D0UCLbHfL4XX
- f1YCkL7iR7soaFOPGwdK6heuuuvR/nBhXotBFiLbyMmk0UfzL0/9jN8liWkIVKV4OYBxUjrC6tH
- M+ZuY/OSHmP2OlKHC98yaIS8=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: from localhost (2a03:2880:10ff:b::)
-	by smtp.migadu.com with ESMTPS id f89b51daf9b6a4b4;
-	Thu, 13 Aug 2026 18:43:36 +0000
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 13 Aug 2026 11:43:31 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Hui Zhu <hui.zhu@linux.dev>
-Cc: Alexei Starovoitov <ast@kernel.org>, 
-	Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, 
-	Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, 
-	Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, 
-	Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, 
-	Jiri Olsa <jolsa@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, JP Kobryn <inwardvessel@gmail.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Shuah Khan <shuah@kernel.org>, davem@davemloft.net, 
-	Jakub Kicinski <kuba@kernel.org>, Jesper Dangaard Brouer <hawk@kernel.org>, 
-	Stanislav Fomichev <sdf@fomichev.me>, KP Singh <kpsingh@kernel.org>, Tao Chen <chen.dylane@linux.dev>, 
-	Mykyta Yatsenko <yatsenko@meta.com>, Leon Hwang <leon.hwang@linux.dev>, 
-	Anton Protopopov <a.s.protopopov@gmail.com>, Amery Hung <ameryhung@gmail.com>, 
-	Tobias Klauser <tklauser@distanz.ch>, Eyal Birger <eyal.birger@gmail.com>, Rong Tao <rongtao@cestc.cn>, 
-	Hao Luo <haoluo@google.com>, Peter Zijlstra <peterz@infradead.org>, 
-	Miguel Ojeda <ojeda@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Xu <jeffxu@chromium.org>, 
-	mkoutny@suse.com, Jan Hendrik Farr <kernel@jfarr.cc>, 
-	Christian Brauner <brauner@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	Brian Gerst <brgerst@gmail.com>, Masahiro Yamada <masahiroy@kernel.org>, 
-	Willem de Bruijn <willemb@google.com>, Jason Xing <kerneljasonxing@gmail.com>, 
-	Paul Chaignon <paul.chaignon@gmail.com>, Lance Yang <lance.yang@linux.dev>, 
-	Jiayuan Chen <jiayuan.chen@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>, 
-	Ihor Solodrai <ihor.solodrai@linux.dev>, Barry Song <baohua@kernel.org>, 
-	Geliang Tang <geliang@kernel.org>, linux-kernel@vger.kernel.org, bpf@vger.kernel.org, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, Hui Zhu <zhuhui@kylinos.cn>
-Subject: Re: [PATCH bpf-next 1/4] mm/bpf: Add
- bpf_try_to_free_mem_cgroup_pages kfunc
-Message-ID: <an4GCBl_c4ub5Iit@linux.dev>
-References: <cover.1786086076.git.zhuhui@kylinos.cn>
- <5cd3efa9a4c614ba0b03cf4a3bd459dea67a9f61.1786086076.git.zhuhui@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pHabd6FV"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-384930ca5e2so198339a91.3
+        for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 11:58:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786647529; x=1787252329; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=DNrC+JRTptWjKfS940kfYbykFXy92wCoTM6c2X2KQos=;
+        b=pHabd6FVq2kM0yDo4CRUVorADTmvSqg5lj/4DjK+t4U/plVyYl7ek1uXqLmdEupZwV
+         01RsgIsv9gfd9sLvpr8c1iKzJIjrL1yuVkP6DmsVv4YxGCtINv4hDYTgZB3aycZSbcnY
+         NgEXCzcCMa91DeVOAAnGusdhRLPSV9joXjVRg8vHRMtdBHuedHHcoViT6uzU2K4i/lKR
+         dDRjWOn0mzTP7ph8bCKyJt/V29ihKqURYZrf5wXxXODGB0huyUowwxeeMNBaIhQywcIe
+         aN25LOiANQRCUEO/NEuyEe4Mm91KM/y34L4NJbw0gRzqkl7ZlGm1l6zP5Yib4Gqo9wbF
+         J4Rw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786647529; x=1787252329;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=DNrC+JRTptWjKfS940kfYbykFXy92wCoTM6c2X2KQos=;
+        b=lHSXnnjw9wXh2VCCAS74al2mx+ikIEPbLeuft3DmfkjdGb6jCQHE0vRZJ3NFmCfnDV
+         Os7377qJLdOu2Uq6XiCRvSqwx8umWwLSQm/kjJb3igg/CmAuNBkw8WizDe0oQCR2vbjO
+         D+R+mCrX/I6EQGhLVPrgcmM66SFuAqTria5mAcWiA0fkPh5e5mcGKnb5FW89U24J9Z01
+         Duo7qZ++KAt09OWK4q52/W4vMMRu4kZi+xEo/+bw38g5Mumz2MVqg5UPHR85ISOdtUSL
+         GgaNEkDiXbE8+1WGQxqgG7wT5R7Q7uxubrdw66xE9NQbht1BG82B+fdgB4r8Xwd57HWR
+         WxMA==
+X-Forwarded-Encrypted: i=1; AHgh+RrcR6/f3BI5WCgYgT37Vq2a77B1v5STTEL7N4qXnOXw+zVSMSlO2McELuEwGV7op6ZCO4ztA5aT@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzn19OR4hi3Oy3hXzw5/Z8/JtIxZ/U2D+GL45MpOb05aKWp/ccp
+	l+LDW+bLBUzIWLtJVvsOetCyglMqZMIzbfwOdzF/8jN8EEhlOLkdqhm6
+X-Gm-Gg: AR+sD11PTd2eE/hVBuZXWuiIlwY58/kG47jHdSeRbXMpPfQTuDEATMO71ywszv1dzUK
+	99cghFy+Kda7J1PbHyyaT/i2G0oGLVtakiUim5TQ6NpRm7vF83GBl7JWdYvKVqWzCNaXZszejQS
+	AyssJ8wb2WhUeSNh0qNjsiCH/1MHsVcfIqlRxJ7VeGFPmuU8LLN5q4Go2o8kxGAv2dmwBvO1x+n
+	Npsn+pjQwrXc+HrvletlaeAksUXnTrMpb6PrHrylofjEBgcF+LKEzHnMyLxrPv1nGKNGNpxD2Nk
+	iluR/nC0lr4EhXoZJT/0x1OqH6FlmFLKfb745ZsQkw/HmyQQucE2TVCgCK+T5lZSvp/FEUB9HIt
+	3pCEP4jSjZCfFf+Kr21AqkBt0tQ4Vmz7ispTO63toqID9IhYYJwir5bqBhYleT9FCfXVl/PMcW3
+	7ZSU9YQDWKE/p5RVHE+RVz4i5DrSLYDeO2SQ2442eRz5zfXRTK43StihHfbxcnHIlDgHo=
+X-Received: by 2002:a17:90b:5447:b0:38e:2860:253f with SMTP id 98e67ed59e1d1-3933e5c8557mr24629a91.12.1786647529381;
+        Thu, 13 Aug 2026 11:58:49 -0700 (PDT)
+Received: from localhost ([2a03:2880:9ff:6f::])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-141387ac9b1sm943437c88.2.2026.08.13.11.58.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Aug 2026 11:58:48 -0700 (PDT)
+From: Ziyang Men <ziyang.meme@gmail.com>
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>
+Cc: Ben Segall <bsegall@google.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
+	Shuah Khan <shuah@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	JP Kobryn <inwardvessel@gmail.com>,
+	Mykola Lysenko <mykolal@meta.com>,
+	Ziyang Men <ziyang.meme@gmail.com>,
+	kernel-team@meta.com,
+	bpf@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] cgroup, sched: add bpf for cgroup cpu controller
+Date: Thu, 13 Aug 2026 11:58:44 -0700
+Message-ID: <20260813185846.1216892-1-ziyang.meme@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5cd3efa9a4c614ba0b03cf4a3bd459dea67a9f61.1786086076.git.zhuhui@kylinos.cn>
+Content-Transfer-Encoding: 8bit
 
-Hi Hui,
+As the title suggests, this series adds bpf kfuncs for the cgroup CPU
+controller.
 
-Please narrow down your CC list, I would suggest to CC only memcg and bpf
-folks.
+Motivation:
+Collecting cgroup statistics is expensive: the existing
+method is to open and parse a cgroup file. memcg already has an
+efficient alternative through BPF; this series extends that idea to cpu.
 
-On Fri, Aug 07, 2026 at 03:01:49PM +0800, Hui Zhu wrote:
-> From: Hui Zhu <zhuhui@kylinos.cn>
+Design:
+- Leave reading the CFS bandwidth counters to the BPF program. They are
+  plain fields of tg->cfs_bandwidth, so they need no kernel code.
+- Add one kfunc to compute the throttled time. This is necessary because
+  it is a sum over every possible cpu, which a user cannot do itself.
 
-[...]
+The only part it touches the scheduler part is to discard the static for
+throttled_time_self() in order to use externally.
 
-First of all, good decision to decouple this series from the struct_ops for
-memcg as the struct_ops for cgroup series is still in flux and I have different
-plans on how memcg struct_ops should look like. We can discuss and collaborate
-on how that should look like which satisfies the real use-cases we have instead
-of arbitrary or imaginery use-cases.
+Patch 1 adds the kfuncs (kernel/cgroup/bpf_cpu.c); patch 2 adds a
+test_progs selftest.
 
-Others are already discussing the bpf side of things, so let me focus on the
-memcg side.
+Tested on VM with v7.2-rc5. 
 
-> 
-> +/**
-> + * bpf_try_to_free_mem_cgroup_pages - attempt to reclaim pages from
-> + *                                    a memory cgroup
-> + * @memcg:           the target memory cgroup to reclaim from
-> + * @nr_pages:        the number of pages to reclaim
-> + * @gfp_mask:        GFP flags controlling the reclaim behavior
-> + * @reclaim_options: bitmask of MEMCG_RECLAIM_* flags to tune
-> + *                   reclaim strategy
-> + * @swappiness:      swappiness override value, or a sentinel to use
-> + *                   the default
-> + *
-> + * BPF-facing wrapper around try_to_free_mem_cgroup_pages() that
-> + * validates and translates the @swappiness argument before
-> + * delegating to the core reclaim path.
-> + *
-> + * The @swappiness parameter follows these semantics:
-> + *   - Values in [MIN_SWAPPINESS, SWAPPINESS_ANON_ONLY] are passed
-> + *     through as an explicit swappiness override.
-> + *   - Values below MIN_SWAPPINESS are treated as "use the system
-> + *     default"; the override pointer is set to NULL and the cgroup's
-> + *     own swappiness setting takes effect.
-> + *   - Values above SWAPPINESS_ANON_ONLY are rejected as invalid.
-> + *   - If @reclaim_options does not include MEMCG_RECLAIM_PROACTIVE,
-> + *     the @swappiness override is ignored entirely by the core
-> + *     reclaim path and the system default is used regardless.
-> + *
-> + * Swap usage during reclaim is gated on @reclaim_options: swap is
-> + * considered only when MEMCG_RECLAIM_MAY_SWAP is set.  Without this
-> + * flag, reclaim is restricted to file-backed pages regardless of the
-> + * @swappiness value or the cgroup's swappiness setting.
-> + *
-> + * Return:
-> + *   The number of pages actually reclaimed on success, or 0
-> + *   if @swappiness exceeds SWAPPINESS_ANON_ONLY.
-> + */
-> +__bpf_kfunc unsigned long
-> +bpf_try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
-> +				 unsigned long nr_pages,
-> +				 gfp_t gfp_mask,
-> +				 unsigned int reclaim_options,
-> +				 int swappiness)
-> +{
-> +	int *swapiness_ptr;
-> +
-> +	if (swappiness > SWAPPINESS_ANON_ONLY)
-> +		return 0;
-> +	else if (swappiness < MIN_SWAPPINESS)
-> +		swapiness_ptr = NULL;
-> +	else
-> +		swapiness_ptr = &swappiness;
-> +
-> +	return try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask,
-> +					    reclaim_options, swapiness_ptr);
-> +}
+Ziyang Men (2):
+  cgroup, sched: add BPF kfuncs to read a cpu cgroup's stats
+  selftests/bpf: add cgroup_iter_cpu test for cpu cgroup kfuncs
 
-This is just a wrapper on try_to_free_mem_cgroup_pages. We don't want that. At
-the moment try_to_free_mem_cgroup_pages is used by limit reclaims (memory and
-memsw, high) and proactive reclaim and has become a weird looking interface. We
-should not expose it as is to the bpf programs.
+ include/linux/cgroup.h                        |  15 +
+ kernel/cgroup/Makefile                        |   2 +
+ kernel/cgroup/bpf_cpu.c                       |  80 ++++++
+ kernel/cgroup/cgroup-internal.h               |   3 +
+ kernel/cgroup/rstat.c                         |  42 +++
+ kernel/sched/core.c                           |   2 +-
+ tools/testing/selftests/bpf/cgroup_iter_cpu.h |  22 ++
+ tools/testing/selftests/bpf/config            |   3 +
+ .../bpf/prog_tests/cgroup_iter_cpu.c          | 259 ++++++++++++++++++
+ .../selftests/bpf/progs/cgroup_iter_cpu.c     |  53 ++++
+ 10 files changed, 480 insertions(+), 1 deletion(-)
+ create mode 100644 kernel/cgroup/bpf_cpu.c
+ create mode 100644 tools/testing/selftests/bpf/cgroup_iter_cpu.h
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_iter_cpu.c
+ create mode 100644 tools/testing/selftests/bpf/progs/cgroup_iter_cpu.c
 
-Let's go back to the use-case for which you want to expose this interface. Your
-cover letter says proactive reclaim. Let's focus on (existing) proactive reclaim
-use-case (in future we may want more functionality). Proactive reclaim is done
-on a given memcg, amount of memory to reclaim and swappiness.
+-- 
+2.53.0-Meta
 
-Let's start with just:
-unsigned long bpf_proactive_reclaim(memcg, size);
-
-And if we clearly have a swappiness use-case then let's add one more kfunc:
-unsigned long bpf_proactive_reclaim_swappiness(memcg, size, swappiness);
-
-So, my main point is let's drive the kfuncs from the real use-cases.
-
-thanks,
-Shakeel
