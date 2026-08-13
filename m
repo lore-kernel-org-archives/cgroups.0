@@ -1,105 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-50.mta1.migadu.com [95.215.58.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F0C3B3C03;
-	Thu, 13 Aug 2026 09:27:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADE4E448D0D
+	for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 09:43:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786613254; cv=none; b=O5YD3crj6XtY/BaKyZLZBdxioAgMIZ/LQQAQTmFi4R2NGeAcqckftoK5nzlbAzOcSjd/JnBP57V/Pq3Uuts3ESxN1Yv4QItlGOnrxJPoa1YdhzH4HMjGr/6iEgT3UCnDjGKmKcNBU39gnYhWtUYYzw0WnMryx/8zwpYErHrFF8s=
+	t=1786614219; cv=none; b=E83tODLXCkzj/P4sJGgUGYUqoR28u+FlRvb6fO3+TBBTqIjVkpZcWmAoyZj4bch44Cx+BNtwlcprHfSsJ0Wk2mYOHU4WXXijf3ZwTbfilHu72idmVNvsc60dwsh9LtSFr4wDZrI72CXzz1JHtC84OhpUtnKUopnAEzguL50lyK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786613254; c=relaxed/simple;
-	bh=EKKHgSs8yZh6+u9oH06JQBe1jVKZ/DCCbiTqpOIy7QM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n0WjLrLO1bfoehC4CVYjeigzz6C2pNJHqrjxH6tBePPTIrXswAJ4jzG7cywZhah1kBpV1vjrMjCnfOji+qeFlV2XNvNLzkUWUayJiw8S06Yf65f88h50q2pWxzjjcEneoCxS+HYqz/vH5t/MsacTYOvoYMundwoeT0fPo1IKCiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fKKP0aaf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786614219; c=relaxed/simple;
+	bh=OTRzmvvffm7aT3+VVHP4OIpeoThkQTqhAzsCjj7zWxE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iIh0ppwJIHEIfHbfjgzhYgOBgPTXSoleKjwuSU14PgRHL7vOmJlH1+VnXRhRePr5WalMwb0kSTJxD/nwn6pxae2q8jEOaeapn6XF/cKQZTeOhGNvZ+cJI0cQ0wAwGiRixbb3GOr2G2aiBSLE1kKqbdoQGGkcVwtopMBOUL6PMNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=f97+rMSv; arc=none smtp.client-ip=95.215.58.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fKKP0aaf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E3771F00A3A;
-	Thu, 13 Aug 2026 09:27:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786613250;
-	bh=J0WfG9LtUU7qIATkbY9c7VbNU4tFX7Iam6iBGsEbqBM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fKKP0aaflcesVE16gmCdIUQZXRadXKPNnorPID/XlTMeQNeLHsIR28CRvP+c6tv0J
-	 GiCgXFFIpH2jQffDALJEoRKtEpNvFEK/wsgTFqXso/t6JYdOaw2xjsePWdkwspBvrk
-	 LAcdnbsVjFw2Rq9h4BiQ69Sk4X/EaJA7hQhJhbvTOuMR9DA8JqwLBB99tjjrjz34o6
-	 D8XYz0iZ4U515IRFaGmbyVSZ6WyRGrmMhaMfYv25FKZTceSb2wGwabvOSN6HmubtGj
-	 ND6iPTXtl32xcMeLHue7tZns05qcKFHWgznrw+8cFKUft+K5WGYP2xuRtxkRyswykU
-	 0DapLWAEcv6qQ==
-Date: Thu, 13 Aug 2026 10:27:09 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	David Hildenbrand <david@kernel.org>, Kairui Song <kasong@tencent.com>, Qi Zheng <qi.zheng@linux.dev>, 
-	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH for-7.4 0/9] memcg: remove the v1 soft limit
-Message-ID: <an2HYmJ57BCY_Zwt@lucifer>
-References: <20260811203203.3456029-1-shakeel.butt@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="f97+rMSv"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=OTRzmvvffm7aT3+VVHP4OIpeoThkQTqhAzsCjj7zWxE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786614215; v=1; x=1787219015;
+ b=f97+rMSvPB/LWssfBqiHhyCOJhp4KhabLKDJERjmluFw3rWs2Tful4D5fsGeNgQfk34uJIw8
+ AI0/gHxJSnj1aGhgMGJttjd3ATSyFTpALbAtaST75ELvzAEbiLKB7gYhJ9HhGGOr6TLt8qbITWl
+ NttWO0ORpZBUlNOmHCHyjkOU=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from [10.63.123.245] (14.29.108.90)
+	by smtp.migadu.com with ESMTPS id f185781b4bc5a6ac;
+	Thu, 13 Aug 2026 09:43:25 +0000
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <d7129d5a-c9ec-421c-84e9-d227cd10ec32@linux.dev>
+Date: Thu, 13 Aug 2026 17:43:13 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260811203203.3456029-1-shakeel.butt@linux.dev>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] sched/topology: Add a cpus_read_lock to
+ rebuild_sched_domains()
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Ben Segall <bsegall@google.com>,
+ Dietmar Eggemann <dietmar.eggemann@arm.com>, Ingo Molnar <mingo@redhat.com>,
+ Juri Lelli <juri.lelli@redhat.com>, K Prateek Nayak
+ <kprateek.nayak@amd.com>, Mel Gorman <mgorman@suse.de>,
+ Peter Zijlstra <peterz@infradead.org>, Steven Rostedt <rostedt@goodmis.org>,
+ Tim Chen <tim.c.chen@linux.intel.com>,
+ Valentin Schneider <vschneid@redhat.com>,
+ Vincent Guittot <vincent.guittot@linaro.org>,
+ "chen.yu@linux.dev" <chen.yu@linux.dev>, "Chen, Yu C" <yu.c.chen@intel.com>,
+ Waiman Long <longman@redhat.com>
+References: <20260813073855.ji2UrtVh@linutronix.de>
+ <20260813074817.t8IQTgfx@linutronix.de>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20260813074817.t8IQTgfx@linutronix.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Aug 11, 2026 at 01:31:54PM -0700, Shakeel Butt wrote:
-> Syzbot reported [1] a set_mm_walk() warning from kswapd. Soft limit
-> reclaim is the only thing that runs shrink_lruvec() from kswapd with a
-> target memcg set, and thus the only way kswapd can reach
-> lru_gen_shrink_lruvec() and in turn set_mm_walk(). The offender,
-> mem_cgroup_shrink_node(), has long carried a "Only used by soft limit
-> reclaim. Do not reuse for anything else." comment and a priority hack,
-> and it simply never got taught about MGLRU.
->
-> Rather than teach it, let's delete it. The v1 soft limit was deprecated
-> in v6.12 by commit 569c4f62d84a ("memcg: initiate deprecation of v1
-> soft limit"). Nobody has reported depending on it in the ~21 months
-> since, and v2 has covered the same ground for a long time with
-> memory.low and memory.min.
->
-> Link: https://lore.kernel.org/all/6a7a6929.b50370da.49fe0.005e.GAE@google.com/ [1]
->
-> Shakeel Butt (9):
->   memcg: make the v1 soft limit knob inert
->   memcg: remove v1 soft limit reclaim
->   memcg: remove mem_cgroup_shrink_node()
->   memcg: remove the soft limit reclaim tracepoints
->   memcg: remove the soft limit rbtree
->   memcg: remove lru_gen_soft_reclaim()
->   memcg: remove the per-node soft limit tree fields
->   memcg: remove mem_cgroup->soft_limit
->   memcg: simplify v1 event ratelimiting
->
->  .../admin-guide/cgroup-v1/memory.rst          |  49 +-
->  include/linux/memcontrol.h                    |  27 --
->  include/linux/mmzone.h                        |  30 +-
->  include/trace/events/vmscan.h                 |  14 -
->  mm/internal.h                                 |   4 -
->  mm/memcontrol-v1.c                            | 435 ++----------------
->  mm/memcontrol-v1.h                            |  12 +-
->  mm/memcontrol.c                               |   7 +-
->  mm/vmscan.c                                   |  96 +---
->  9 files changed, 66 insertions(+), 608 deletions(-)
 
-This is a gorgeous diffstat :)
 
-Obviously not my area but looking over it, all LGTM so feel free to add:
+On 8/13/2026 3:48 PM, Sebastian Andrzej Siewior wrote:
+> + CPUSET maintainer which I missed because re-used the CCs from v1.
+> 
+> On 2026-08-13 09:38:56 [+0200], To linux-kernel@vger.kernel.org wrote:
+>> A read from /proc/sys/kernel/sched_rt_runtime_us leads to backtrace due
+>> to missing cpu_hotplug_lock with CONFIG_CPUSETS=n. The callchain is
+>> sched_rt_handler() -> partition_sched_domains() -> sched_cache_set() ->
+>> static_key_enable_cpuslocked(&sched_cache_present).
+>>
+>> sched_cache_set() itself is also invoked from sched_init_domains() which
+>> is early during the boot, holding just the sched_domains_mutex_lock().
+>> Here is no warning because it happens before user space is running (and
+>> hotplug operations are not possible).
+>>
+>> There is also sched_cache_active_set() which acquires the hotplug lock
+>> before invoking any of the _cpuslocked() functions.
+>>
+>> This is only a problem with CONFIG_CPUSETS=n because in the =y case the
+>> other implementation of rebuild_sched_domains acquires the CPU-hotplug
+>> lock.
+>>
+>> Acquire CPU hotplug lock before in rebuild_sched_domains(), before
+>> partition_sched_domains() is invoked for the CONFIG_CPUSETS=n case.
+>>
+>> Fixes: a7660ce1590fc ("sched/cache: Fix has_multi_llcs iff at least one partition has multiple LLCs")
+>> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+>> ---
+>> v1…v2: https://lore.kernel.org/all/20260812095800.gl06ANul@linutronix.de/
+>>    - Move the lock from partition_sched_domains() to
+>>      rebuild_sched_domains() in the CONFIG_CPUSETS=n since this is the
+>>      only affected case. Noticed by Yu C Chen and Tim Chen.
+>>
+>>   include/linux/cpuset.h | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+>> index 65d76a38974ba..bf3999daa080a 100644
+>> --- a/include/linux/cpuset.h
+>> +++ b/include/linux/cpuset.h
+>> @@ -273,6 +273,7 @@ static inline void dl_rebuild_rd_accounting(void)
+>>   
+>>   static inline void rebuild_sched_domains(void)
+>>   {
+>> +	guard(cpus_read_lock)();
+>>   	partition_sched_domains(1, NULL, NULL);
+>>   }
+>>   
+>> -- 
+>> 2.55.0
+>>
 
-Acked-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+LGTM. Thanks.
 
-To the whole series!
+Reivewed-by: Ridong Chen <ridong.chen@linux.dev>
 
->
-> --
-> 2.53.0-Meta
->
+-- 
+Best regards
+Ridong
 
---
-Cheers, Lorenzo
