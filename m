@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFEA330E83F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFFCD32E151;
 	Thu, 13 Aug 2026 08:52:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786611133; cv=none; b=c026n7H/Jz3e4210dNK8SpDPHLsYB22a2Hd9D2xCPsJp+0u/NbtJtXn8vWwr2mFREskWKdQYDe+efn6uvjb8OpE1G8Bjeu39/8gF6XQWnXaBmY8R6KKDY78Bq+X1eBSZVJSj6jgtU/fr49X6UtHdpo69gP0uMIQu87MdJrQfy7M=
+	t=1786611133; cv=none; b=tSjglGwR5GKGm48kNvePPzPX3QfeA1P9DgXoAM5N6idGosS1NYoi1UkEIelK6WmcDqqJYpNesWgUN3ZVN44J36dVBM1f1RsrNbO0lZjvav4/1SfxzBYov9MNfwuNBTBeTd8DlF5I2dBt8fjAmEnuWpelhhy4VMsk/V1+vpYxjNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1786611133; c=relaxed/simple;
-	bh=YuyPCd/TXGvgbAvhPChGeYw4WxnJWp82+drwUmZOF3s=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=GY5wQn7zmayXQbgrhffSlnjh1qs+WN7iwQcjZGR68NykcKyJfE4vAa3XeSdY4CwoIRuvHwASlVj+Ck5ELzHos0YgmcSVStw3Q6L8BWC+XzndhXU+7gp92xmJR+C/XeKMe3wny5VOFf7nJJ6b70AfO/uNJ3EPkim3wAyA9VANXQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QEPWjCtG; arc=none smtp.client-ip=10.30.226.201
+	bh=KF0xDds5w/g3aR4DwwjXLrfgHcalIYAD5qSFXpEkNZo=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=SUpOePJtMPrM0wVOFkvQ/E0uxWrLla0QBWI/h33Ka0mqfPfcnQGtAYJUs1//aBmQDeu9wwbBRP0dPrD7flmorsjKaMIUAQhvaJ5Ac+PRmUOhTUDxolvrjP53UK8Du/JEZUOvTUfbo3rmlKLaY9AMmRdRx7d7IjhJcb9QOf32g9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZmubVdxz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QEPWjCtG"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B5D4DC2BCF5;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZmubVdxz"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7ECC3C19425;
 	Thu, 13 Aug 2026 08:52:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1786611132;
-	bh=YuyPCd/TXGvgbAvhPChGeYw4WxnJWp82+drwUmZOF3s=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=QEPWjCtGG8O34+4NMiSIXqSwp4U5bnOEDqslYKlj0rvgdylZpAcndqddK2iVtTx6u
-	 zmgM0y2ji/Zd8ehQPJGGnCmGFWuD/4Psth4bG9a8TeJovlALBwehTzCvCUANWoizMh
-	 e1VAHRWscZw11V8E3A/rk6ciwW1Tgy9w8YBH7LTxA3qDQPw1hFy91XyGGHVhRNkSVy
-	 lpBFDJMkMJfksU54MNE7ok6EAEBHbFXb08Tm2iSssx0wSApAfcD8XUpj3IPDWS2cij
-	 lJ/5814zGkTbUKkOjnqN0/bmMGQhO/HgBfUMJ0B7k1t8+FUxPIZKc9+r6mR53inH3r
-	 QIyzUIdctyb2g==
+	bh=KF0xDds5w/g3aR4DwwjXLrfgHcalIYAD5qSFXpEkNZo=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=ZmubVdxz9PvR78VwNZN9dI8t+pCcbr17Uw6NOD5C4hUenogFMlJbEEk5DMzsd76nV
+	 nWucf13kMBKzNuQEJ/VDYSlW8RO/3HcYLUTBn1gu8jxsohTdfsTe4UXDGzDM/v+mOd
+	 MROcreMGooBVcsg3iicgnrihFGupArSM6THEaJ+gKtyA/NznYLSm12dfguSCjtfZO9
+	 5zELh7GRDZGdTi95tdfD2aNurj1YArXahTM62tzOgcUq2sVOvtbL+ImGABA8wCcwXg
+	 9vkdxH2YobcgTNFnFVOf3wZVLeQgyLWqo4mekm7kdzdm6hvs1ZBBi5xgRzcJbl/OxZ
+	 hYlNHF1N4thcw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ECC6C5DF66;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B42C5B572;
 	Thu, 13 Aug 2026 08:52:12 +0000 (UTC)
 From: Bingfang Guo via B4 Relay <devnull+bingfangguo.tencent.com@kernel.org>
-Date: Thu, 13 Aug 2026 16:52:04 +0800
-Subject: [PATCH RFC 3/5] memcg: remove retry logic in
- mem_cgroup_private_id_get_online
+Subject: [PATCH RFC 0/5] memcg: fix dying memcg pinned by swapped out shmem
+ pages
+Date: Thu, 13 Aug 2026 16:52:01 +0800
+Message-Id: <20260813-memcgid-objcg-v1-0-83d21c685b77@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,9 +41,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260813-memcgid-objcg-v1-3-83d21c685b77@tencent.com>
-References: <20260813-memcgid-objcg-v1-0-83d21c685b77@tencent.com>
-In-Reply-To: <20260813-memcgid-objcg-v1-0-83d21c685b77@tencent.com>
+X-B4-Tracking: v=1; b=H4sIALGFfWoC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzMDC0Mj3dzU3OT0zBTd/KSs5HTdlFTLNFNzi9Q0QyMLJaCegqLUtMwKsHn
+ RSkFuzkqxtbUAC7c3uGQAAAA=
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
  Roman Gushchin <roman.gushchin@linux.dev>, 
  Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
@@ -57,11 +57,11 @@ Cc: cgroups@vger.kernel.org, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, Bingfang Guo <bfguo@icloud.com>, 
  Bingfang Guo <bingfangguo@tencent.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1786611130; l=3214;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786611130; l=8802;
  i=bingfangguo@tencent.com; s=20260812; h=from:subject:message-id;
- bh=5i2b3adAqDemDU/NAVoq8sK/uF2LIbB9NIx+Y5tqrZ8=;
- b=R9G5tW/eOsF1fEjMg6cHo6RdBDAD5yzOljC1iwmE4ddG37Cg5xTgcu5n+bSnG4To3/L8nTiny
- eDLxTl9DEDGAgfNU01C5tFnLzDpgWesTl3zgcaES2tabu+sgDAb5DeH
+ bh=KF0xDds5w/g3aR4DwwjXLrfgHcalIYAD5qSFXpEkNZo=;
+ b=hUrUDZC9vcOK4OhNBfILovwU//i4z7hYvRM++jGf52u9aDMx/T9svF5e/5e6H0/Vo6vuGcDvg
+ 617UoZDI/mGCGlGwEbZl9RhW3tXxl9pF2W2iefCg3lfi/SV4y/rTPQ6
 X-Developer-Key: i=bingfangguo@tencent.com; a=ed25519;
  pk=q7u9S7d5e7VijWrYF9O+vv9/XvqWduVGtwGtuCObAHE=
 X-Endpoint-Received: by B4 Relay for bingfangguo@tencent.com/20260812 with
@@ -69,95 +69,264 @@ X-Endpoint-Received: by B4 Relay for bingfangguo@tencent.com/20260812 with
 X-Original-From: Bingfang Guo <bingfangguo@tencent.com>
 Reply-To: bingfangguo@tencent.com
 
-From: Bingfang Guo <bingfangguo@tencent.com>
+Currently the private ID of a memory cgroup holds a reference to its
+css, so that users such as list_lru and swap entries can look the memcg
+up by ID even after it has gone offline.
+
+This has a downside: a memcg that still owns swapped out shmem pages is
+pinned via its private ID and is never released until those pages are
+swapped back in. Workloads that create and destroy many cgroups can
+accumulate a large number of dying memcgs.
+
+This series fixes that by moving the memcg private ID reference count
+from the memcg to its object cgroup. The objcg is cheap to keep alive
+and is reparented to an online ancestor when its memcg goes offline, so
+holding the ID no longer pins the css.
+
+Patch 1 (memcg: move memcg private ID refcount to objcg)
+
+Move the ID refcount from the memcg to its objcg, so swapped out pages
+no longer pin the dying memcg. The online state pins the objcg, and the
+ID is released in css_released() after reparenting; this guarantees the
+id refcount is alive for any caller holding a memcg reference. After
+reparenting, mem_cgroup_from_private_id() returns a live ancestor
+instead of the original memcg; callers that need the exact memcg are
+fixed in patch 5.
+
+Patch 2 (memcg: get stable memcg first before getting memcgid reference)
+
+Both __memcg1_swapout() and __mem_cgroup_try_charge_swap() now take a
+stable memcg reference first via get_mem_cgroup_from_objcg() and pin
+the ID afterwards, dropping the rcu_read_lock() usage and the
+get-error-put handling, and recording exactly the memcg the folio
+belongs to in the swap entry.
+
+Patch 3 (memcg: remove retry logic in mem_cgroup_private_id_get_online)
 
 With the ID released only in css_released() (patch 1) and every caller
-holding a stable reference obtained from get_mem_cgroup_from_objcg()
-(patch 2), the id refcount is guaranteed to be non-zero whenever the ID
-is taken, so the retry loop that walked up the parent chain can never
-trigger.
+holding a stable reference (patch 2), the retry loop that walked up the
+parent chain can never trigger. Remove it, rename the function to
+mem_cgroup_private_id_get().
 
-Remove the retry logic, rename the function to
-mem_cgroup_private_id_get() and turn the fallible return value into a
-VM_WARN_ON() that documents the invariant.
+Patch 4 (memcg: add a helper to get online memcg from memcgid)
+
+Add mem_cgroup_from_private_id_online(), which looks the ID up and
+takes a reference through the objcg. Since the objcg is always
+reparented to an online memcg, this guarantees an online memcg. Use it
+in mem_cgroup_swapin_charge_folio(), dropping the manual id lookup and
+css_tryget_online() check under the RCU read lock.
+
+Patch 5 (memcg: filter out reparented memcgs got using memcgid)
+
+After reparenting, mem_cgroup_from_private_id() can return a memcg that
+no longer owns the ID. Callers such as list_lru and workingset refault
+expect exactly the memcg the ID refers to, so check that the returned
+memcg still owns the ID and return NULL otherwise, letting the callers
+skip the entry.
+
+The following program reproduces the problem: it repeatedly creates a
+memcg, dirties one shared shmem page, pushes it to swap, and destroys
+the cgroup. Each iteration leaves a dying memcg pinned by the swapped
+out page.
+
+shmem_dying_memcg.c:
+
+```c
+
+static int write_str(const char *path, const char *val) {
+    int fd = open(path, O_WRONLY);
+    if (fd < 0) return -1;
+    int rc = write(fd, val, strlen(val)) < 0 ? -1 : 0;
+    close(fd);
+    return rc;
+}
+
+static long long dying_memcgs(void) {
+    FILE *f = fopen(CG_ROOT "/cgroup.stat", "r");
+    if (!f) return -1;
+    char k[64];
+    long long v = -1;
+    while (fscanf(f, "%63s %lld", k, &v) == 2)
+        if (!strcmp(k, "nr_dying_subsys_memory")) break;
+    fclose(f);
+    return v;
+}
+
+// worker: join the memcg, dirty one shared shmem page, swap it out, exit.
+static void worker(const char *cgdir, const char *shmfile) {
+    char pid[16];
+    snprintf(pid, sizeof pid, "%d", getpid());
+    if (write_str(cgdir, pid) < 0) _exit(1);           // cgroup.procs
+
+    int fd = open(shmfile, O_CREAT | O_RDWR | O_TRUNC, 0644);
+    if (fd < 0 || ftruncate(fd, PAGE) < 0) _exit(2);
+    char *p = mmap(NULL, PAGE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (p == MAP_FAILED) _exit(3);
+    close(fd);
+
+    p[0] = 1;                                          // fault in + dirty
+    if (madvise(p, PAGE, MADV_PAGEOUT) < 0) _exit(4);  // push to swap
+    _exit(0);
+}
+
+static void one_iter(long i) {
+    char cgdir[256], procs[300], shmfile[300];
+    snprintf(cgdir,   sizeof cgdir,   "%s/m%ld", CG_BASE, i);
+    snprintf(procs,   sizeof procs,   "%s/cgroup.procs", cgdir);
+    snprintf(shmfile, sizeof shmfile, "%s/f%ld", SHM_DIR, i);
+
+    if (mkdir(cgdir, 0755) < 0 && errno != EEXIST) return;
+
+    pid_t pid = fork();
+    if (pid == 0) worker(procs, shmfile);
+    waitpid(pid, NULL, 0);
+
+    rmdir(cgdir);   // memcg goes dying; swapped page pins its id
+}
+
+static void cleanup(void) {
+    struct dirent *de;
+    char p[512];
+    DIR *d = opendir(CG_BASE);
+    if (d) {
+        while ((de = readdir(d)))
+            if (de->d_name[0] == 'm') {
+                snprintf(p, sizeof p, "%s/%s", CG_BASE, de->d_name);
+                rmdir(p);
+            }
+        closedir(d);
+    }
+    d = opendir(SHM_DIR);
+    if (d) {
+        while ((de = readdir(d)))
+            if (de->d_name[0] != '.') {
+                snprintf(p, sizeof p, "%s/%s", SHM_DIR, de->d_name);
+                unlink(p);
+            }
+        closedir(d);
+    }
+    rmdir(CG_BASE);
+    rmdir(SHM_DIR);
+    printf("cleanup done; nr_dying_subsys_memory = %lld\n", dying_memcgs());
+}
+
+int main(int argc, char **argv) {
+    if (geteuid() != 0) { fprintf(stderr, "run as root\n"); return 1; }
+
+    if (argc > 1 && !strcmp(argv[1], "--cleanup")) { cleanup(); return 0; }
+    long n = argc > 1 ? atol(argv[1]) : 1000;
+
+    mkdir(CG_BASE, 0755);
+    write_str(CG_ROOT "/cgroup.subtree_control", "+memory");
+    if (write_str(CG_BASE "/cgroup.subtree_control", "+memory") < 0) {
+        fprintf(stderr, "enable +memory: %s\n", strerror(errno));
+        return 1;
+    }
+    mkdir(SHM_DIR, 0755);
+
+    printf("before: nr_dying_subsys_memory = %lld\n", dying_memcgs());
+    for (long i = 0; i < n; i++) one_iter(i);
+    printf("after:  nr_dying_subsys_memory = %lld  (created %ld memcgs)\n",
+           dying_memcgs(), n);
+    printf("release with: sudo %s --cleanup\n", argv[0]);
+    return 0;
+}
+```
+
+Run with:
+
+```bash
+echo "=== before ==="
+grep dying /sys/fs/cgroup/cgroup.stat
+
+sudo ./shmem_dying_memcg "$@"
+
+sleep 1
+
+echo
+echo "=== after (root cgroup.stat) ==="
+grep dying /sys/fs/cgroup/cgroup.stat
+```
+
+To release the pinned memcgs:
+$ sudo ./shmem_dying_memcg --cleanup
+
+Results on my machine (20000 iterations):
+
+Before this series, all 20000 destroyed memcgs stay dying:
+```
+=== before ===
+nr_dying_descendants 20002
+nr_dying_subsys_cpuset 0
+nr_dying_subsys_cpu 0
+nr_dying_subsys_io 2
+nr_dying_subsys_memory 20002
+nr_dying_subsys_perf_event 0
+nr_dying_subsys_hugetlb 0
+nr_dying_subsys_pids 0
+before: nr_dying_subsys_memory = 20002
+after:  nr_dying_subsys_memory = 20002  (created 20000 memcgs)
+release with: sudo ./shmem_dying_memcg --cleanup
+
+=== after (root cgroup.stat) ===
+nr_dying_descendants 20002
+nr_dying_subsys_cpuset 0
+nr_dying_subsys_cpu 0
+nr_dying_subsys_io 2
+nr_dying_subsys_memory 20002
+nr_dying_subsys_perf_event 0
+nr_dying_subsys_hugetlb 0
+nr_dying_subsys_pids 0
+```
+
+After this series, dying memcgs no longer accumulate:
+```
+=== before ===
+nr_dying_descendants 0
+nr_dying_subsys_cpuset 0
+nr_dying_subsys_cpu 0
+nr_dying_subsys_io 0
+nr_dying_subsys_memory 0
+nr_dying_subsys_perf_event 0
+nr_dying_subsys_hugetlb 0
+nr_dying_subsys_pids 0
+before: nr_dying_subsys_memory = 0
+after:  nr_dying_subsys_memory = 314  (created 20000 memcgs)
+release with: sudo ./shmem_dying_memcg --cleanup
+
+=== after (root cgroup.stat) ===
+nr_dying_descendants 0
+nr_dying_subsys_cpuset 0
+nr_dying_subsys_cpu 0
+nr_dying_subsys_io 0
+nr_dying_subsys_memory 0
+nr_dying_subsys_perf_event 0
+nr_dying_subsys_hugetlb 0
+nr_dying_subsys_pids 0
+```
 
 Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
 ---
- mm/memcontrol-v1.c |  2 +-
- mm/memcontrol-v1.h |  3 +--
- mm/memcontrol.c    | 20 +++++---------------
- 3 files changed, 7 insertions(+), 18 deletions(-)
+Bingfang Guo (5):
+      memcg: move memcg private ID refcount to objcg
+      memcg: get stable memcg first before getting memcgid reference
+      memcg: remove retry logic in mem_cgroup_private_id_get_online
+      memcg: add a helper to get online memcg from memcgid
+      memcg: filter out reparented memcgs got using memcgid
 
-diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
-index a913d32ad1e17..e5161e061bd11 100644
---- a/mm/memcontrol-v1.c
-+++ b/mm/memcontrol-v1.c
-@@ -648,7 +648,7 @@ void __memcg1_swapout(struct folio *folio, struct swap_cluster_info *ci)
- 	mod_memcg_state(memcg, MEMCG_SWAP, nr_entries);
- 
- 	/* we have a reference to it, so we should get exact memcg itself */
--	mem_cgroup_private_id_get_online(memcg, nr_entries);
-+	mem_cgroup_private_id_get(memcg, nr_entries);
- 
- 	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_entries,
- 			  mem_cgroup_private_id(memcg));
-diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
-index 0f703f239c80f..9c74400aa7ddb 100644
---- a/mm/memcontrol-v1.h
-+++ b/mm/memcontrol-v1.h
-@@ -21,8 +21,7 @@ void drain_all_stock(struct mem_cgroup *root_memcg);
- 
- int memory_stat_show(struct seq_file *m, void *v);
- 
--struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg,
--						    unsigned int n);
-+void mem_cgroup_private_id_get(struct mem_cgroup *memcg, unsigned int n);
- 
- /* Cgroup v1-specific declarations */
- #ifdef CONFIG_MEMCG_V1
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a210fe2501219..12545ca48194d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3985,23 +3985,13 @@ static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned
- 	__mem_cgroup_private_id_put(memcg->id_objcg, memcg->id, n);
- }
- 
--struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg, unsigned int n)
-+void mem_cgroup_private_id_get(struct mem_cgroup *memcg, unsigned int n)
- {
-+	bool success;
- 	struct obj_cgroup *objcg = memcg->id_objcg;
- 
--	while (!refcount_add_not_zero(n, &objcg->id_ref)) {
--		/*
--		 * The root cgroup cannot be destroyed, so it's refcount must
--		 * always be >= 1.
--		 */
--		if (WARN_ON_ONCE(mem_cgroup_is_root(memcg))) {
--			VM_BUG_ON(1);
--			break;
--		}
--		memcg = parent_mem_cgroup(memcg);
--		objcg = memcg->id_objcg;
--	}
--	return memcg;
-+	success = refcount_add_not_zero(n, &objcg->id_ref);
-+	VM_WARN_ON(!success);
- }
- 
- /**
-@@ -5673,7 +5663,7 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
- 	mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
- 
- 	/* we have a reference to it, so we should get exact memcg itself */
--	mem_cgroup_private_id_get_online(memcg, nr_pages);
-+	mem_cgroup_private_id_get(memcg, nr_pages);
- 
- 	ci = swap_cluster_get_and_lock(folio);
- 	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages,
+ include/linux/memcontrol.h |  11 +++-
+ mm/list_lru.c              |   2 +-
+ mm/memcontrol-v1.c         |  23 +++----
+ mm/memcontrol-v1.h         |   3 +-
+ mm/memcontrol.c            | 151 ++++++++++++++++++++++++++++++---------------
+ mm/workingset.c            |   6 +-
+ 6 files changed, 126 insertions(+), 70 deletions(-)
+---
+base-commit: 288058d8db5d35623228d84f48d9bea3707d5c85
+change-id: 20260812-memcgid-objcg-de9f578ef128
 
+Best regards,
 -- 
-2.43.7
+Bingfang Guo <bingfangguo@tencent.com>
 
 
