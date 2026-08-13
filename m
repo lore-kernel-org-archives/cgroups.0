@@ -1,157 +1,171 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-144.mta1.migadu.com [95.215.58.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642B0387348
-	for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 17:39:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CE2F349CF3
+	for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 18:43:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786642800; cv=none; b=fKPHyAUpQN37v955TshOvV9VB8C/jlu9zYKAPpu2JnjJec/551solBYR8Kp/Qi8kisUqRwkxj6v7WzQPcpz9WvlOuuDexvl6FeU+nHYm+z6oGyCugfrsuApMje77hB9urk23WD6hZ5arDX8wrjdEKHrrvpPBBS3qZmjKkhLJPOw=
+	t=1786646627; cv=none; b=QQQJth6tiVcKoeUwVogdKkZ3hlwNUp9paZ1hZEHCGGJv8bevpFLVjLR3etMQc5FVukDyZFV0qWh6kPsWMWruZmFMfNpTd+t8rf++RW74PW3qKo7/tvK89DGifmkfaMlRrjCDT1FJ9ypENIiVIHM60QZGUXGDP1GBwQicOUeSNoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786642800; c=relaxed/simple;
-	bh=TMyVY2Yjtx2vzXBqZP98/9o4YPOopQg7n6FlQVMtaE0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Jeb7lyxdfoTokfgwQ1X8UXkSoIUyly7mSUGMc+D6PEND9jxBM/49EPO7Sx6ymUcz1j+ffnLlDnGToc83oEp5NDN4WPTrrM6CebzNAXbH+wEYyLwBgyj4Jjb5hVDGZhm78tFN1DngUbHBGU1ZQiBsRY7v/A8UeWoKEwZTTbCHyzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=W+B0WKJH; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1786646627; c=relaxed/simple;
+	bh=jDzUtJv+bm4xBlAKD9OaG1FnQWn+8Dk7PeYCuphZl9o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iqz8Cuz8koZYv42BDpEgOG+ceuUpl/YlXVerAOFMrWigB2pXqVEX7MwfDTNy6iHV0elelhfXiZITyUasHWVdsUfObazW2jJCkdEEU2vPsBqMdvuk4WYj7b2sJmVHFC3pp+7e6GK0ZDvDTytpaC4hO+oA7DLaCZ5EJTIRxKIprl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jyo6LvZ/; arc=none smtp.client-ip=95.215.58.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W+B0WKJH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786642797;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=tf4bBsiUF4uMHfT/1INPqkz0hIrJY4UyX/JZyBTN9hs=;
-	b=W+B0WKJHd7Spi8xoboopg1WKE1k+MEqSmx+poqfSkrJ7ippNc/sDDVoovp8TOOuzY/nJqW
-	pXMrlyC4JOJ6+qaKtO/MukGjvJ8FclVAfFqHkQUBnu75EmqxSIOkBLKB76g0u0zCGJdn2D
-	haCnIL+5J6mjWJstkuET1NgG+AE5r7A=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-84--VWWd4S2Mi2PPrXHBoWNRw-1; Thu,
- 13 Aug 2026 13:39:55 -0400
-X-MC-Unique: -VWWd4S2Mi2PPrXHBoWNRw-1
-X-Mimecast-MFC-AGG-ID: -VWWd4S2Mi2PPrXHBoWNRw_1786642794
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E6CC5195609E;
-	Thu, 13 Aug 2026 17:39:53 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 25018195DF98;
-	Thu, 13 Aug 2026 17:39:52 +0000 (UTC)
-Message-ID: <5cb4fef8-536e-4124-9678-0cafe1aa1228@redhat.com>
-Date: Thu, 13 Aug 2026 13:39:51 -0400
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jyo6LvZ/"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=jDzUtJv+bm4xBlAKD9OaG1FnQWn+8Dk7PeYCuphZl9o=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786646622; v=1; x=1787251422;
+ b=jyo6LvZ/f5UKUobyjePfXS1x4NzwZbFYmSXuT8AEgZ6dLm1+fqh4rUBF8U23D0UCLbHfL4XX
+ f1YCkL7iR7soaFOPGwdK6heuuuvR/nBhXotBFiLbyMmk0UfzL0/9jN8liWkIVKV4OYBxUjrC6tH
+ M+ZuY/OSHmP2OlKHC98yaIS8=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from localhost (2a03:2880:10ff:b::)
+	by smtp.migadu.com with ESMTPS id f89b51daf9b6a4b4;
+	Thu, 13 Aug 2026 18:43:36 +0000
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 13 Aug 2026 11:43:31 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Hui Zhu <hui.zhu@linux.dev>
+Cc: Alexei Starovoitov <ast@kernel.org>, 
+	Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, 
+	Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, 
+	Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, 
+	Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, 
+	Jiri Olsa <jolsa@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, JP Kobryn <inwardvessel@gmail.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Shuah Khan <shuah@kernel.org>, davem@davemloft.net, 
+	Jakub Kicinski <kuba@kernel.org>, Jesper Dangaard Brouer <hawk@kernel.org>, 
+	Stanislav Fomichev <sdf@fomichev.me>, KP Singh <kpsingh@kernel.org>, Tao Chen <chen.dylane@linux.dev>, 
+	Mykyta Yatsenko <yatsenko@meta.com>, Leon Hwang <leon.hwang@linux.dev>, 
+	Anton Protopopov <a.s.protopopov@gmail.com>, Amery Hung <ameryhung@gmail.com>, 
+	Tobias Klauser <tklauser@distanz.ch>, Eyal Birger <eyal.birger@gmail.com>, Rong Tao <rongtao@cestc.cn>, 
+	Hao Luo <haoluo@google.com>, Peter Zijlstra <peterz@infradead.org>, 
+	Miguel Ojeda <ojeda@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
+	Kees Cook <kees@kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Xu <jeffxu@chromium.org>, 
+	mkoutny@suse.com, Jan Hendrik Farr <kernel@jfarr.cc>, 
+	Christian Brauner <brauner@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	Brian Gerst <brgerst@gmail.com>, Masahiro Yamada <masahiroy@kernel.org>, 
+	Willem de Bruijn <willemb@google.com>, Jason Xing <kerneljasonxing@gmail.com>, 
+	Paul Chaignon <paul.chaignon@gmail.com>, Lance Yang <lance.yang@linux.dev>, 
+	Jiayuan Chen <jiayuan.chen@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>, 
+	Ihor Solodrai <ihor.solodrai@linux.dev>, Barry Song <baohua@kernel.org>, 
+	Geliang Tang <geliang@kernel.org>, linux-kernel@vger.kernel.org, bpf@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, Hui Zhu <zhuhui@kylinos.cn>
+Subject: Re: [PATCH bpf-next 1/4] mm/bpf: Add
+ bpf_try_to_free_mem_cgroup_pages kfunc
+Message-ID: <an4GCBl_c4ub5Iit@linux.dev>
+References: <cover.1786086076.git.zhuhui@kylinos.cn>
+ <5cd3efa9a4c614ba0b03cf4a3bd459dea67a9f61.1786086076.git.zhuhui@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] selftests/cgroup: Preserve CPU hotplug write errors
-To: Rui Qi <qirui.001@bytedance.com>, Tejun Heo <tj@kernel.org>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner
- <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260809082111.3827531-1-qirui.001@bytedance.com>
- <20260809082111.3827531-3-qirui.001@bytedance.com>
- <1ddd2e4a-ef12-4e9d-b589-28ddb4f46fb3@redhat.com>
- <45c558ac-8397-46a7-b3c9-755f272be685@bytedance.com>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <45c558ac-8397-46a7-b3c9-755f272be685@bytedance.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5cd3efa9a4c614ba0b03cf4a3bd459dea67a9f61.1786086076.git.zhuhui@kylinos.cn>
 
+Hi Hui,
 
-On 8/10/26 11:25 PM, Rui Qi wrote:
-> On 8/10/26 10:53 PM, Waiman Long wrote:
->> On 8/9/26 4:21 AM, Rui Qi wrote:
->>> The cpuset partition root state selftest checks several CPU hotplug
->>> transitions. If writing to a CPU online file fails, the helper still
->>> runs pause afterwards and returns the status of pause instead of the
->>> failed write.
->>>
->>> This hides the real hotplug failure and can make later checks run
->>> against expectations for a transition that never happened. Move the
->>> write before the bookkeeping and return when it fails, so callers can
->>> observe the hotplug error and the test does not record a CPU as offline
->>> unless the offline operation actually succeeded.
->>>
->>> Fixes: a8c52eba880a ("kselftest/cgroup: Add cpuset v2 partition root state test")
->>> Signed-off-by: Rui Qi <qirui.001@bytedance.com>
->> I am aware that on x86-64, cpu0/online may not exist. Other than that,
->> under what condition will the write fail as only root is allowed to run
->> the script?
->>
->> Cheers,
->> Longman
-> Hi Longman,
->
-> Right, the failure I wanted to preserve is not the normal permission
-> case. Running as root only gets us past the sysfs file permission check;
-> the write can still fail in the CPU hotplug path.
->
-> For example, cpu_down() can return -EBUSY when trying to offline the last
-> online CPU, when CPU hotplug is temporarily disabled, or when offlining
-> would leave no housekeeping CPU. cpu_up() can also fail if the CPU is not
-> possible/present, if hotplug is disabled, or if the CPU is not bootable
-> under the current SMT control state. Arch or registered cpuhp callbacks
-> may also reject the transition and return an error.
->
-> The current helper hides all of those cases because it does the write and
-> then calls pause(), so the function returns the status of pause rather
-> than the failed sysfs write. It also updates OFFLINE_CPUS before knowing
-> whether the offline request succeeded. So this change is mainly to avoid
-> continuing the test with bookkeeping that says a CPU was offlined when the
-> kernel actually rejected the hotplug operation.
+Please narrow down your CC list, I would suggest to CC only memcg and bpf
+folks.
 
-Thank for the clarification. You are right that cpu_down() can be 
-blocked in the hotplug path. That should rarely happen, but I agree that 
-we catch that special case too.
+On Fri, Aug 07, 2026 at 03:01:49PM +0800, Hui Zhu wrote:
+> From: Hui Zhu <zhuhui@kylinos.cn>
 
-Cheers,
-Longman
+[...]
 
->
-> Thanks,
-> Rui
->
->>> ---
->>>    tools/testing/selftests/cgroup/test_cpuset_prs.sh | 3 ++-
->>>    1 file changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->>> index 16c38eb11e63..a2f7208633bc 100755
->>> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->>> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->>> @@ -412,6 +412,7 @@ write_cpu_online()
->>>    	CPU=${1%=*}
->>>    	VAL=${1#*=}
->>>    	CPUFILE=//sys/devices/system/cpu/cpu${CPU}/online
->>> +	echo $VAL > $CPUFILE || return 1
->>>    	if [[ $VAL -eq 0 ]]
->>>    	then
->>>    		OFFLINE_CPUS="$OFFLINE_CPUS $CPU"
->>> @@ -421,7 +422,6 @@ write_cpu_online()
->>>    					sort | uniq -u)
->>>    		}
->>>    	fi
->>> -	echo $VAL > $CPUFILE
->>>    	pause 0.05
->>>    }
->>>    
->>> @@ -493,6 +493,7 @@ set_ctrl_state()
->>>    			eval $COMM $REDIRECT
->>>    			;;
->>>    		    O*) VAL=${CMD#?}
->>> +			COMM="write_cpu_online $VAL"
->>>    			write_cpu_online $VAL
->>>    			;;
->>>    		    T*) COMM="echo 0 > $TFILE"
+First of all, good decision to decouple this series from the struct_ops for
+memcg as the struct_ops for cgroup series is still in flux and I have different
+plans on how memcg struct_ops should look like. We can discuss and collaborate
+on how that should look like which satisfies the real use-cases we have instead
+of arbitrary or imaginery use-cases.
 
+Others are already discussing the bpf side of things, so let me focus on the
+memcg side.
+
+> 
+> +/**
+> + * bpf_try_to_free_mem_cgroup_pages - attempt to reclaim pages from
+> + *                                    a memory cgroup
+> + * @memcg:           the target memory cgroup to reclaim from
+> + * @nr_pages:        the number of pages to reclaim
+> + * @gfp_mask:        GFP flags controlling the reclaim behavior
+> + * @reclaim_options: bitmask of MEMCG_RECLAIM_* flags to tune
+> + *                   reclaim strategy
+> + * @swappiness:      swappiness override value, or a sentinel to use
+> + *                   the default
+> + *
+> + * BPF-facing wrapper around try_to_free_mem_cgroup_pages() that
+> + * validates and translates the @swappiness argument before
+> + * delegating to the core reclaim path.
+> + *
+> + * The @swappiness parameter follows these semantics:
+> + *   - Values in [MIN_SWAPPINESS, SWAPPINESS_ANON_ONLY] are passed
+> + *     through as an explicit swappiness override.
+> + *   - Values below MIN_SWAPPINESS are treated as "use the system
+> + *     default"; the override pointer is set to NULL and the cgroup's
+> + *     own swappiness setting takes effect.
+> + *   - Values above SWAPPINESS_ANON_ONLY are rejected as invalid.
+> + *   - If @reclaim_options does not include MEMCG_RECLAIM_PROACTIVE,
+> + *     the @swappiness override is ignored entirely by the core
+> + *     reclaim path and the system default is used regardless.
+> + *
+> + * Swap usage during reclaim is gated on @reclaim_options: swap is
+> + * considered only when MEMCG_RECLAIM_MAY_SWAP is set.  Without this
+> + * flag, reclaim is restricted to file-backed pages regardless of the
+> + * @swappiness value or the cgroup's swappiness setting.
+> + *
+> + * Return:
+> + *   The number of pages actually reclaimed on success, or 0
+> + *   if @swappiness exceeds SWAPPINESS_ANON_ONLY.
+> + */
+> +__bpf_kfunc unsigned long
+> +bpf_try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+> +				 unsigned long nr_pages,
+> +				 gfp_t gfp_mask,
+> +				 unsigned int reclaim_options,
+> +				 int swappiness)
+> +{
+> +	int *swapiness_ptr;
+> +
+> +	if (swappiness > SWAPPINESS_ANON_ONLY)
+> +		return 0;
+> +	else if (swappiness < MIN_SWAPPINESS)
+> +		swapiness_ptr = NULL;
+> +	else
+> +		swapiness_ptr = &swappiness;
+> +
+> +	return try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask,
+> +					    reclaim_options, swapiness_ptr);
+> +}
+
+This is just a wrapper on try_to_free_mem_cgroup_pages. We don't want that. At
+the moment try_to_free_mem_cgroup_pages is used by limit reclaims (memory and
+memsw, high) and proactive reclaim and has become a weird looking interface. We
+should not expose it as is to the bpf programs.
+
+Let's go back to the use-case for which you want to expose this interface. Your
+cover letter says proactive reclaim. Let's focus on (existing) proactive reclaim
+use-case (in future we may want more functionality). Proactive reclaim is done
+on a given memcg, amount of memory to reclaim and swappiness.
+
+Let's start with just:
+unsigned long bpf_proactive_reclaim(memcg, size);
+
+And if we clearly have a swappiness use-case then let's add one more kfunc:
+unsigned long bpf_proactive_reclaim_swappiness(memcg, size, swappiness);
+
+So, my main point is let's drive the kfuncs from the real use-cases.
+
+thanks,
+Shakeel
