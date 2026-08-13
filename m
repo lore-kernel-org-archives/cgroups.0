@@ -1,227 +1,163 @@
-Received: from mta0.migadu.com (out-77.mta0.migadu.com [91.218.175.77])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E3A39DBE0
-	for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 08:48:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.77
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFEA330E83F;
+	Thu, 13 Aug 2026 08:52:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786610920; cv=none; b=lekh1afhn7f78z/h+A++ECA8dgzt093/rdohLgZ+l0jmr1O9xKuuZOhCgK9q6CqOe15ZFQ5fQb+USucUiZYZFmtNHh+QEAEJv7aDz4LwCgEJrBDbbwKVoFBzBMKXsRpGYlrAzxq274yQJiU0TYe/Hj5K57GENS6jrL9631Z6Emo=
+	t=1786611133; cv=none; b=c026n7H/Jz3e4210dNK8SpDPHLsYB22a2Hd9D2xCPsJp+0u/NbtJtXn8vWwr2mFREskWKdQYDe+efn6uvjb8OpE1G8Bjeu39/8gF6XQWnXaBmY8R6KKDY78Bq+X1eBSZVJSj6jgtU/fr49X6UtHdpo69gP0uMIQu87MdJrQfy7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786610920; c=relaxed/simple;
-	bh=p/XR4dg0T6N6IfkAMZsaBbcOqjAF0woNribrNFPWFpw=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=Uuupu4nE9PcEM2uBo6SU3ACvWTfED6HV9coCV8zBgOM85yttDlc1+YQGJTrKAy4DbXb76LX4IBi+JZbcCwSTYwAs9d4gmVS6ISm924Wl/4gOq1A5PYmAYYGHcv+BdXwkY1kDVOxE6Wz2eG5E8c1pSr04rHg1ITGAVj4S5286+KY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gWPrhjFc; arc=none smtp.client-ip=91.218.175.77
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1786611133; c=relaxed/simple;
+	bh=YuyPCd/TXGvgbAvhPChGeYw4WxnJWp82+drwUmZOF3s=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=GY5wQn7zmayXQbgrhffSlnjh1qs+WN7iwQcjZGR68NykcKyJfE4vAa3XeSdY4CwoIRuvHwASlVj+Ck5ELzHos0YgmcSVStw3Q6L8BWC+XzndhXU+7gp92xmJR+C/XeKMe3wny5VOFf7nJJ6b70AfO/uNJ3EPkim3wAyA9VANXQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QEPWjCtG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gWPrhjFc"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=p/XR4dg0T6N6IfkAMZsaBbcOqjAF0woNribrNFPWFpw=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1786610915; v=1; x=1787215715;
- b=gWPrhjFcy/OvwV5S+26LkK6yZVrPhXS7urmZBanQZUcX+IDLdxHymuWt8a0wdrQoM4qxj18H
- xg1vser9KsP6KJmDdwDajOEqXywP2ZKPh2O752Ag9Rnby518qFBi1Bk517cOT/3PoUixyBy3kHr
- v3iktNl4iEg1PlSiIfx+q6jU=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: from webmail.migadu.com (2001:41d0:303:fc7a::)
-	by mta12.migadu.com with ESMTPS id 1be4d382c922c9e0;
-	Thu, 13 Aug 2026 08:48:34 +0000
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QEPWjCtG"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B5D4DC2BCF5;
+	Thu, 13 Aug 2026 08:52:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1786611132;
+	bh=YuyPCd/TXGvgbAvhPChGeYw4WxnJWp82+drwUmZOF3s=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=QEPWjCtGG8O34+4NMiSIXqSwp4U5bnOEDqslYKlj0rvgdylZpAcndqddK2iVtTx6u
+	 zmgM0y2ji/Zd8ehQPJGGnCmGFWuD/4Psth4bG9a8TeJovlALBwehTzCvCUANWoizMh
+	 e1VAHRWscZw11V8E3A/rk6ciwW1Tgy9w8YBH7LTxA3qDQPw1hFy91XyGGHVhRNkSVy
+	 lpBFDJMkMJfksU54MNE7ok6EAEBHbFXb08Tm2iSssx0wSApAfcD8XUpj3IPDWS2cij
+	 lJ/5814zGkTbUKkOjnqN0/bmMGQhO/HgBfUMJ0B7k1t8+FUxPIZKc9+r6mR53inH3r
+	 QIyzUIdctyb2g==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ECC6C5DF66;
+	Thu, 13 Aug 2026 08:52:12 +0000 (UTC)
+From: Bingfang Guo via B4 Relay <devnull+bingfangguo.tencent.com@kernel.org>
+Date: Thu, 13 Aug 2026 16:52:04 +0800
+Subject: [PATCH RFC 3/5] memcg: remove retry logic in
+ mem_cgroup_private_id_get_online
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Thu, 13 Aug 2026 08:48:34 +0000
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Hui Zhu" <hui.zhu@linux.dev>
-Message-ID: <93e42fc2cd73bb1dd93fac74670899366ea58947@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH bpf-next 2/4] bpf: add bpf_thread_wq kthread-backed
- workqueue with cgroup placement
-To: "Kumar Kartikeya Dwivedi" <memxor@gmail.com>, "Alexei Starovoitov"
- <ast@kernel.org>, "Daniel Borkmann" <daniel@iogearbox.net>, "John
- Fastabend" <john.fastabend@gmail.com>, "Andrii Nakryiko"
- <andrii@kernel.org>, "Martin  KaFai Lau" <martin.lau@linux.dev>, "Eduard
- Zingerman" <eddyz87@gmail.com>, "Song Liu" <song@kernel.org>, "Yonghong
- Song" <yonghong.song@linux.dev>, "Jiri Olsa" <jolsa@kernel.org>,
- "Johannes Weiner" <hannes@cmpxchg.org>, "Michal Hocko"
- <mhocko@kernel.org>, "Roman Gushchin" <roman.gushchin@linux.dev>,
- "Shakeel Butt" <shakeel.butt@linux.dev>, "Muchun Song"
- <muchun.song@linux.dev>, "JP Kobryn" <inwardvessel@gmail.com>, "Andrew
- Morton" <akpm@linux-foundation.org>, "Shuah Khan" <shuah@kernel.org>,
- davem@davemloft.net, "Jakub Kicinski" <kuba@kernel.org>, "Jesper Dangaard
- Brouer" <hawk@kernel.org>, "Stanislav  Fomichev" <sdf@fomichev.me>, "KP
- Singh" <kpsingh@kernel.org>, "Tao Chen" <chen.dylane@linux.dev>, "Mykyta
- Yatsenko" <yatsenko@meta.com>, "Leon  Hwang" <leon.hwang@linux.dev>,
- "Anton Protopopov" <a.s.protopopov@gmail.com>, "Amery Hung"
- <ameryhung@gmail.com>, "Tobias  Klauser" <tklauser@distanz.ch>, "Eyal
- Birger" <eyal.birger@gmail.com>, "Rong Tao" <rongtao@cestc.cn>, "Hao Luo"
- <haoluo@google.com>, "Peter  Zijlstra" <peterz@infradead.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Nathan Chancellor" <nathan@kernel.org>, "Kees
- Cook" <kees@kernel.org>, "Tejun Heo" <tj@kernel.org>, "Jeff Xu"
- <jeffxu@chromium.org>, mkoutny@suse.com, "Jan Hendrik Farr"
- <kernel@jfarr.cc>, "Christian  Brauner" <brauner@kernel.org>, "Randy
- Dunlap" <rdunlap@infradead.org>, "Brian Gerst" <brgerst@gmail.com>,
- "Masahiro Yamada" <masahiroy@kernel.org>, "Willem de Bruijn"
- <willemb@google.com>, "Jason  Xing" <kerneljasonxing@gmail.com>, "Paul
- Chaignon" <paul.chaignon@gmail.com>, "Lance Yang" <lance.yang@linux.dev>,
- "Jiayuan  Chen" <jiayuan.chen@linux.dev>, "Emil Tsalapatis"
- <emil@etsalapatis.com>, "Ihor Solodrai" <ihor.solodrai@linux.dev>, "Barry
- Song" <baohua@kernel.org>, "Geliang Tang" <geliang@kernel.org>,
- linux-kernel@vger.kernel.org, bpf@vger.kernel.org,
- cgroups@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-Cc: "Hui Zhu" <zhuhui@kylinos.cn>
-In-Reply-To: <DKNHV09PBQZP.IRQL20BY574I@gmail.com>
-References: <cover.1786086076.git.zhuhui@kylinos.cn>
- <cfb06f2626062fa60efbbd9d34089819b1a34522.1786086076.git.zhuhui@kylinos.cn>
- <DKNHV09PBQZP.IRQL20BY574I@gmail.com>
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260813-memcgid-objcg-v1-3-83d21c685b77@tencent.com>
+References: <20260813-memcgid-objcg-v1-0-83d21c685b77@tencent.com>
+In-Reply-To: <20260813-memcgid-objcg-v1-0-83d21c685b77@tencent.com>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, 
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+ Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>, 
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+ Wei Xu <weixugc@google.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, 
+ linux-kernel@vger.kernel.org, Bingfang Guo <bfguo@icloud.com>, 
+ Bingfang Guo <bingfangguo@tencent.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786611130; l=3214;
+ i=bingfangguo@tencent.com; s=20260812; h=from:subject:message-id;
+ bh=5i2b3adAqDemDU/NAVoq8sK/uF2LIbB9NIx+Y5tqrZ8=;
+ b=R9G5tW/eOsF1fEjMg6cHo6RdBDAD5yzOljC1iwmE4ddG37Cg5xTgcu5n+bSnG4To3/L8nTiny
+ eDLxTl9DEDGAgfNU01C5tFnLzDpgWesTl3zgcaES2tabu+sgDAb5DeH
+X-Developer-Key: i=bingfangguo@tencent.com; a=ed25519;
+ pk=q7u9S7d5e7VijWrYF9O+vv9/XvqWduVGtwGtuCObAHE=
+X-Endpoint-Received: by B4 Relay for bingfangguo@tencent.com/20260812 with
+ auth_id=942
+X-Original-From: Bingfang Guo <bingfangguo@tencent.com>
+Reply-To: bingfangguo@tencent.com
 
->=20
->=20On Fri Aug 7, 2026 at 9:01 AM CEST, Hui Zhu wrote:
->=20
->=20>=20
->=20> From: Hui Zhu <zhuhui@kylinos.cn>
-> >=20
->=20>  Introduce bpf_thread_wq, a new BPF embedded map field similar to
-> >  bpf_wq but backed by a dedicated kthread_worker instead of a system
-> >  workqueue. The worker kthread can be attached to a specific cgroup a=
-t
-> >  init time so BPF-deferred callbacks run under the resource limits of
-> >  the target cgroup.
-> >=20
->=20>  Three kfuncs are exposed:
-> >  bpf_thread_wq_init(twq, map, cgroup_id, flags) [KF_SLEEPABLE]
-> >  bpf_thread_wq_set_callback(twq, cb, flags, aux)
-> >  bpf_thread_wq_start(twq, flags)
-> >=20
->=20>  bpf_thread_wq_init() is registered only for BPF_PROG_TYPE_SYSCALL
-> >  programs. It creates a kthread worker and may attach it to a cgroup;
-> >  those paths can sleep and acquire kthread and cgroup locks. Restrict=
-ing
-> >  init to syscall programs prevents it from running in BPF contexts th=
-at
-> >  may already hold locks which could deadlock with those paths.
-> >=20
->=20>  bpf_thread_wq intentionally avoids the bpf_async infrastructure us=
-ed by
-> >  bpf_timer and bpf_wq. That infrastructure drives cleanup from irq_wo=
-rk
-> >  in hardirq context, while bpf_thread_wq cancellation and final teard=
-own
-> >  may need to sleep through kthread_cancel_work_sync(),
-> >  kthread_destroy_worker() and a final cgroup_put().
-> >  bpf_thread_wq_cancel_and_free() therefore cancels work synchronously=
- and
-> >  drops the context reference; the last put waits for tasks-trace RCU
-> >  readers and then schedules process-context work to run bpf_prog_put(=
-),
-> >  cgroup_put(), kthread_destroy_worker() and kfree().
-> >=20
->=20>  Add BTF/map support for bpf_thread_wq fields, map teardown hooks,
-> >  verifier handling for the callback kfunc, and cgroup_kthread_attach(=
-) to
-> >  move the worker into the requested cgroup.
-> >=20
->=20>  Supported map types are BPF_MAP_TYPE_HASH, BPF_MAP_TYPE_LRU_HASH, =
-and
-> >  BPF_MAP_TYPE_ARRAY, consistent with bpf_wq and bpf_task_work.
-> >=20
->=20>  Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
-> >  ---
-> >=20
->=20Hi Hui,
->=20
->=20Thanks for sharing the patches. I think Sashiko and Mykyta already po=
-inted out a
-> couple of issues with the current implementation, but I would like to c=
-omment on
-> the higher-level approach.
->=20
->=20If I understood the past discussions and current set correctly, the r=
-eason for
-> your choice to move from bpf_wq to bpf_thread_wq was primarily to enabl=
-e correct
-> CPU accounting of the work done by threads to specific cgroups.
->=20
->=20I think this is a step in the right direction, but looking at the big=
-ger
-> picture, I feel we need a more flexible solution.
->=20
->=20In practice, users deciding to do async reclaim through such a BPF in=
-terface
-> would want to scale and compact the number of threads doing reclaim-rel=
-ated work
-> dynamically, based on available idle resources, but also application-sp=
-ecific
-> metrics, and I do not think the bpf_thread_wq abstraction provides enou=
-gh
-> flexibility in managing work scheduling related aspects precisely.
->=20
->=20What we probably should expose is the ability for programs to manage =
-their own
-> wait queues and subscribe kthreads managed by BPF programs dynamically =
-to them.
-> User-defined policies can dictate how many threads remain active, wheth=
-er they
-> busy poll, and when they go to sleep, completely under the program's co=
-ntrol.
->=20
->=20Looking beyond this particular example, there are cases where work is=
- stashed in
-> queues, and threads draw items from the pool and process them. In such =
-cases
-> having flexibility in deciding the mapping between threads and queues i=
-s also
-> important. We want to thus allow management of the work item queues fro=
-m the
-> program itself, and not hide it behind the API to offer the desired lev=
-el of
-> control. The order in which items are ranked in individual queues, and =
-the
-> order in which queues are processed horizontally by threads is also a d=
-esirable
-> property.
->=20
->=20Correctly associating the BPF-managed kthread to a cgroup should stil=
-l be
-> possible in a manner similar to what you did in this set. But the amoun=
-t of
-> control programs can exert over how work is scheduled and the level of
-> concurrency will be much higher if we disaggregate and generalize each =
-part of
-> the picture (wait queues, kthreads, and work item queues, which can be
-> implemented in BPF itself).
->=20
->=20I am not aware of ways to back charge time spent to remote cgroups, b=
-ut if
-> desired we could also explore that option when a single thread does wor=
-k on
-> behalf of multiple cgroups. It is something to be explored.
->=20
->=20I've been working on related patches, and will post RFC set for bpf_k=
-thread and
-> bpf_waitq management in due time. Until then I recommend that you conti=
-nue
-> experimenting with the existing async execution primitives for now.
+From: Bingfang Guo <bingfangguo@tencent.com>
 
-Hi Kumar,
+With the ID released only in css_released() (patch 1) and every caller
+holding a stable reference obtained from get_mem_cgroup_from_objcg()
+(patch 2), the id refcount is guaranteed to be non-zero whenever the ID
+is taken, so the retry loop that walked up the parent chain can never
+trigger.
 
-Agreed, the disaggregated design sounds like the right direction.
+Remove the retry logic, rename the function to
+mem_cgroup_private_id_get() and turn the fallible return value into a
+VM_WARN_ON() that documents the invariant.
 
-I'll keep updating the remaining commits of this series, and wait
-for your bpf_kthread/bpf_waitq RFC.
+Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
+---
+ mm/memcontrol-v1.c |  2 +-
+ mm/memcontrol-v1.h |  3 +--
+ mm/memcontrol.c    | 20 +++++---------------
+ 3 files changed, 7 insertions(+), 18 deletions(-)
 
-Best,
-Hui
+diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+index a913d32ad1e17..e5161e061bd11 100644
+--- a/mm/memcontrol-v1.c
++++ b/mm/memcontrol-v1.c
+@@ -648,7 +648,7 @@ void __memcg1_swapout(struct folio *folio, struct swap_cluster_info *ci)
+ 	mod_memcg_state(memcg, MEMCG_SWAP, nr_entries);
+ 
+ 	/* we have a reference to it, so we should get exact memcg itself */
+-	mem_cgroup_private_id_get_online(memcg, nr_entries);
++	mem_cgroup_private_id_get(memcg, nr_entries);
+ 
+ 	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_entries,
+ 			  mem_cgroup_private_id(memcg));
+diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+index 0f703f239c80f..9c74400aa7ddb 100644
+--- a/mm/memcontrol-v1.h
++++ b/mm/memcontrol-v1.h
+@@ -21,8 +21,7 @@ void drain_all_stock(struct mem_cgroup *root_memcg);
+ 
+ int memory_stat_show(struct seq_file *m, void *v);
+ 
+-struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg,
+-						    unsigned int n);
++void mem_cgroup_private_id_get(struct mem_cgroup *memcg, unsigned int n);
+ 
+ /* Cgroup v1-specific declarations */
+ #ifdef CONFIG_MEMCG_V1
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a210fe2501219..12545ca48194d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3985,23 +3985,13 @@ static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned
+ 	__mem_cgroup_private_id_put(memcg->id_objcg, memcg->id, n);
+ }
+ 
+-struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg, unsigned int n)
++void mem_cgroup_private_id_get(struct mem_cgroup *memcg, unsigned int n)
+ {
++	bool success;
+ 	struct obj_cgroup *objcg = memcg->id_objcg;
+ 
+-	while (!refcount_add_not_zero(n, &objcg->id_ref)) {
+-		/*
+-		 * The root cgroup cannot be destroyed, so it's refcount must
+-		 * always be >= 1.
+-		 */
+-		if (WARN_ON_ONCE(mem_cgroup_is_root(memcg))) {
+-			VM_BUG_ON(1);
+-			break;
+-		}
+-		memcg = parent_mem_cgroup(memcg);
+-		objcg = memcg->id_objcg;
+-	}
+-	return memcg;
++	success = refcount_add_not_zero(n, &objcg->id_ref);
++	VM_WARN_ON(!success);
+ }
+ 
+ /**
+@@ -5673,7 +5663,7 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
+ 	mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
+ 
+ 	/* we have a reference to it, so we should get exact memcg itself */
+-	mem_cgroup_private_id_get_online(memcg, nr_pages);
++	mem_cgroup_private_id_get(memcg, nr_pages);
+ 
+ 	ci = swap_cluster_get_and_lock(folio);
+ 	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages,
 
->=20
->=20>=20
->=20> [...]
-> >
->
+-- 
+2.43.7
+
+
