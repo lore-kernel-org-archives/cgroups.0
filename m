@@ -1,315 +1,368 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 495DE46C4A0;
-	Fri, 14 Aug 2026 17:21:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1675A490BE3;
+	Fri, 14 Aug 2026 17:21:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786728071; cv=none; b=Ah3qJ/VjrJdqZd0SzsW7AChPZc5u6HzR5vUuEmB8RpgObX38ejtWKelvgdScyGuM9bJBYUdyDYfwGwMDPY1MRMF7FOci9eLMsZtdkZzrVZhMBVTEK36Ub8o1TZXQ5OXJBDyoOEul++XnS0HjMOM+8ZjTW45TgA2aCpwnR7dLH7M=
+	t=1786728074; cv=none; b=bX87uBwNsadNmZ0bp5F06jW5QnIKokHrbUb08JEHqE9gXWxM+VQ+sh790CmfGoxiZDVATq8W8R49dNYocO3XMKoU7wvvBvHO+cEcc8HL7sX6CRGvM4/Q2jBtszwvsZRsEoHKbuXczSuFNgRoDEiUlmbDEqIBHpnL+1rbO9SmtmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786728071; c=relaxed/simple;
-	bh=NlaRhEj0QeROPl949pM7+Tsw0V5g8Y9QEoFbk6I9PvQ=;
+	s=arc-20240116; t=1786728074; c=relaxed/simple;
+	bh=vMpgoOz+p2ujp7Er4C/MiQeSNTJxo4gZojuIIbKJndk=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=gpVbfFRb/BY3S9FZgMwF9bt2bIGF5MmSDRXPmvgYcMMt2b0p9S36NyJqLKxBiqPyfJuhyV5KOUupmQBUeixF77azWv2PwNRxyzgm38ZLx7dj5uPO1DqSmQH9pzCnnHezxDy827nk+b51Y1vD/eHNCqdDVOoaRxc/9aJ+1Mrt8js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZi0XuuD; arc=none smtp.client-ip=100.103.45.18
+	 Subject:From:To:Cc:Date; b=sviiRB95cqlPD3n7BP4sniXuMQn1LIyYmNeBorvOKRA3usDEeTLusBkW+xBzD7QHMon0wdqaCeU01x7kGYp9aflvgHnTIFhKf4LMDH30a3QGz8EUb5zUqrs2cP3/j1wWmaLyjDnK6PJ6zocIrAB7wbmhRCtHU1QycFSt7cGmZM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gtgY7SnU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZi0XuuD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4C4D1F000E9;
-	Fri, 14 Aug 2026 17:21:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gtgY7SnU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 756A61F00A3A;
+	Fri, 14 Aug 2026 17:21:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786728070;
-	bh=a7Gn1L4Vt09NGwq/6A9esmcFIUrJ4Ih2A50WIYYLKts=;
+	s=k20260515; t=1786728073;
+	bh=BRL/PSO1BC0vvlDljyLXfI9OVmFFb4IneOZPFgBEPj8=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=XZi0XuuDJtxpNuBeQBsOSEEnR0amsX6avrlyBrSl7F8xaUB7jvL8rzCwRR/yQJ+4I
-	 Ise69z3gVTObogKGNdTPlKHOhJhNPjW2fqOLUBg816M5jqq9M6PUw5gPsotW25aa4q
-	 6fFc8Gt/MojQTnCLceWvL9tzkfsHDAIXU/36JQJRXjWWKBuyxa5+Xp70U8HIS7s3pP
-	 GtppXJuNQHb1caF1oERfuSvy3wzuIh2Yp2Rdb9Sl95e5D2Yw3iZOCDtOIWWfga3APQ
-	 zyCFM3Iic71dLlqM/JvlfvCq48EnXU7Ocfcnc/b79Q/hLlXsi4mQJAZ/L0yGpc2CaQ
-	 LJ3AXzdkTArwA==
-Content-Type: multipart/mixed; boundary="===============4448923700193765925=="
+	b=gtgY7SnUZh0xl3EBMF0kIXyX21CWe9oYi8qA4wg9vGLe21bsaqy7Dy98bmfH4z/TF
+	 G2S0FzURzQsIovd6I5gLbqZbHuw9V3P8+6og2bofp5MTNeJz6k1Sp+vGTL9SX4e/OJ
+	 wrx8J00UBCamLm+toy8zCmMG0OMWZrBB9+o+NgdAtGndUqxXY6Q7wjwob9n5kxf7AK
+	 3IEdsN3PDJlfGHXQEk7M/qFDaRwW9KHEn2A8/CN59GNaHRb3VarIzswPmDvqEZ0A6r
+	 4qLoSAYiGF8TJXaQzNjrEov+EUlZALlqOCZ5yIkCGRn5+W6O5SKe58KL7eZ69eNqs6
+	 wvZ4f7KlVgsIg==
+Content-Type: multipart/mixed; boundary="===============7566751797017694167=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <0ab4b02e666d8964b30c09510e801fa83a3a9af11ee2233a69193934e62a24e8@mail.kernel.org>
-In-Reply-To: <20260814075054.507089-2-ziyang.meme@gmail.com>
-References: <20260814075054.507089-2-ziyang.meme@gmail.com>
-Subject: Re: [PATCH v3 1/4] selftests: add shared lib.bpf.mk to build BPF progs and skeletons
+Message-Id: <cb7504a8500fe771ca5abeb9eeedb194e4cf5d4859a031caa27e2ddeeba6964c@mail.kernel.org>
+In-Reply-To: <20260814075054.507089-3-ziyang.meme@gmail.com>
+References: <20260814075054.507089-3-ziyang.meme@gmail.com>
+Subject: Re: [PATCH v3 2/4] selftests/cgroup: add memcg_stat_cross_cpu correctness test for flush
 From: bot+bpf-ci@kernel.org
 To: ziyang.meme@gmail.com,shuah@kernel.org,tj@kernel.org,hannes@cmpxchg.org,mkoutny@suse.com,jikos@kernel.org,bentiss@kernel.org,void@manifault.com,eddyz87@gmail.com
 Cc: vmalik@redhat.com,arighi@nvidia.com,changwoo@igalia.com,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,akpm@linux-foundation.org,inwardvessel@gmail.com,mykolal@meta.com,nathan@kernel.org,ziyang.meme@gmail.com,kernel-team@meta.com,linux-kselftest@vger.kernel.org,cgroups@vger.kernel.org,linux-input@vger.kernel.org,sched-ext@lists.linux.dev,linux-mm@kvack.org,bpf@vger.kernel.org,llvm@lists.linux.dev,linux-kernel@vger.kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
-Date: Fri, 14 Aug 2026 17:21:08 +0000 (UTC)
+Date: Fri, 14 Aug 2026 17:21:11 +0000 (UTC)
 
---===============4448923700193765925==
+--===============7566751797017694167==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> diff --git a/tools/testing/selftests/lib.bpf.mk b/tools/testing/selftests/lib.bpf.mk
-> new file mode 100644
-> index 000000000000..433a26a36960
-> --- /dev/null
-> +++ b/tools/testing/selftests/lib.bpf.mk
-> @@ -0,0 +1,296 @@
-> +# SPDX-License-Identifier: GPL-2.0
-> +#
-> +# Build BPF programs and skeleton headers for selftests, then link them into
-> +# test binaries.
-> +#
-> +# Use it from a test Makefile like this:
-> +#
-> +#     BPF_SRCS         := foo.bpf.c bar.bpf.c
-> +#     TEST_GEN_PROGS   := foo_test
-> +#     OVERRIDE_TARGETS := 1              # set before lib.mk
-> +#     include ../lib.mk
-> +#     include ../lib.bpf.mk
-> +#
-> +#     $(OUTPUT)/foo_test: foo_test.c $(BPF_SKELS) $(BPFOBJ)
-> +#         $(call bpf_link,$@,$<)
-> +#
-> +# Keep $(BPFOBJ) in the dependencies so make relinks the test when libbpf.a
-> +# changes.
-> +#
-> +# Options to set before including lib.bpf.mk:
-> +#   BPF_PROG_EXT     - source ending; default .bpf.c. Use .c for progs/foo.c.
-> +#   BPF_EXTRA_HDRS   - more headers needed by the BPF objects.
-> +#   BPF_EXTRA_CFLAGS - more flags for compiling BPF programs.
-> +#   BPF_SKEL_EXT     - skeleton header ending; default .skel.h.
-> +#   BPF_GEN_SUBSKEL  - also create a subskeleton header when set.
-> +#   BPF_OBJ_DIR      - folder for BPF objects; default $(OUTPUT).
-> +#   BPF_SKEL_DIR     - folder for skeleton headers; default $(OUTPUT).
-> +#
-> +# You may replace BPF_CFLAGS after including this file. Make reads it when each
-> +# object is built. Sources may be in subfolders, but generated files use only
-> +# the source filename and are placed directly in their output folder.
-> +#
-> +# Include lib.mk first. This file uses OUTPUT, top_srcdir, CC, CLANG, Q and msg.
-> +# OVERRIDE_TARGETS stops lib.mk from adding its normal link rule. This file sets
-> +# BPFOBJ, BPFTOOL, BPF_OBJS, BPF_SKELS and BPF_LDLIBS, and adds to CFLAGS and
-> +# EXTRA_CLEAN.
+> diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
+> index 39f979690dd3..356b6a533d88 100644
+> --- a/tools/testing/selftests/cgroup/config
+> +++ b/tools/testing/selftests/cgroup/config
+> @@ -4,3 +4,8 @@ CONFIG_CGROUP_FREEZER=y
+>  CONFIG_CGROUP_SCHED=y
+>  CONFIG_MEMCG=y
+>  CONFIG_PAGE_COUNTER=y
+> +CONFIG_BPF=y
+> +CONFIG_BPF_SYSCALL=y
+> +CONFIG_DEBUG_INFO=y
+> +CONFIG_DEBUG_INFO_BTF=y
+> +CONFIG_DEBUG_INFO_DWARF4=y
 
-The documented contract lists five variables that this file sets (BPFOBJ,
-BPFTOOL, BPF_OBJS, BPF_SKELS, BPF_LDLIBS), but the fragment unconditionally
-assigns about twenty more with ':=', several having generic names that an
-existing test Makefile might already use: TOOLSDIR, LIBDIR, BPFDIR,
-TOOLSINCDIR, BPFTOOLDIR, APIDIR, SCRATCH_DIR, BUILD_DIR, INCLUDE_DIR,
-HOST_BUILD_DIR, HOST_SCRATCH_DIR, HOST_BPFOBJ, DEFAULT_BPFTOOL, MAKE_DIRS,
-BPF_CFLAGS, CLANG_SYS_INCLUDES, IS_LITTLE_ENDIAN, MENDIAN, CLANG_BPF_CPU,
-BPF_SUBSKEL_EXT, submake_extras.
+A subsystem pattern flags this as potentially concerning: CONFIG_BPF_EVENTS=y
+is missing. The new program is SEC("iter.s/cgroup"), which is
+BPF_PROG_TYPE_TRACING, and that program type is only registered inside
+'#ifdef CONFIG_BPF_EVENTS' in include/linux/bpf_types.h:38. Without it
+find_prog_type() returns -EINVAL and the skeleton load fails at runtime
+even though the build succeeded.
 
-It also defines rules for $(MAKE_DIRS), appends to the phony 'all', and via
-'include $(top_srcdir)/tools/scripts/Makefile.arch' it sets ARCH (with the
-'override' keyword when ARCH is empty), SRCARCH, HOSTARCH, LP64 and
-IS_64_BIT.
+CONFIG_BPF_EVENTS is 'default y' but has 'depends on (KPROBE_EVENTS ||
+UPROBE_EVENTS) && PERF_EVENTS' (kernel/trace/Kconfig:853), so a kselftest
+kernel configured only from the merged fragments can easily end up without
+it. tools/testing/selftests/bpf/config:5 sets CONFIG_BPF_EVENTS=y
+explicitly for exactly this reason.
 
-The sched_ext conversion already had to rework its own INCLUDE_DIR,
-OBJ_DIR, SCXOBJ_DIR and MAKE_DIRS precisely because the names collide.
+Note also that CONFIG_DEBUG_INFO is not promptable (it is selected by the
+DEBUG_INFO_* choice), so that line is a no-op.
 
-There's also an asymmetry in assignment operators: BPF_PROG_EXT,
-BPF_SKEL_EXT, BPF_OBJ_DIR, BPFTOOL and VMLINUX_BTF* use '?=' so a caller
-can influence them, but SCRATCH_DIR, BUILD_DIR and INCLUDE_DIR use ':=', so
-a caller cannot relocate the libbpf/bpftool scratch tree even though it
-lands inside the test's own directory.
-
-Could the 'This file sets ...' list be completed (and the collision risk
-called out), or should the internal names be prefixed to reduce the
-collision surface?
-
->
-> +include $(top_srcdir)/tools/scripts/Makefile.arch	# ARCH / SRCARCH / HOSTARCH
+> diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
+> index e01584c2189a..01927511c059 100644
+> --- a/tools/testing/selftests/cgroup/Makefile
+> +++ b/tools/testing/selftests/cgroup/Makefile
 
 [ ... ]
 
-> +# vmlinux.h can contain anonymous struct and union members. Clang needs
-> +# -fms-extensions to accept them.
-> +BPF_CFLAGS = -g -Wall -Werror -D__TARGET_ARCH_$(SRCARCH) $(MENDIAN)	\
-> +	     -I$(INCLUDE_DIR) -I$(APIDIR) -I$(TOOLSINCDIR)		\
-> +	     -std=gnu11							\
-> +	     -fno-strict-aliasing					\
-> +	     -fms-extensions -Wno-microsoft-anon-tag			\
-> +	     -Wno-compare-distinct-pointer-types			\
-> +	     $(CLANG_SYS_INCLUDES) $(BPF_EXTRA_CFLAGS)
-
-A subsystem pattern flags this as potentially concerning: -I$(TOOLSINCDIR)
-(tools/include) is added to the BPF-program include path. None of the three
-Makefiles this fragment replaces do that, and selftests/bpf/Makefile
-deliberately does not either.
-
-It has -I$(TOOLSINCDIR) only in COMMON_CFLAGS for the userspace test
-binaries, while its BPF_CFLAGS includes only -I$(INCLUDE_DIR) -I$(CURDIR)
--I$(APIDIR) with no tools/include.
-
-tools/include/linux/ holds 81 host-tool shim headers (err.h, filter.h,
-kernel.h, mm.h, module.h, mutex.h, atomic.h, compiler.h, bitops.h, list.h)
-whose contents are meant for userspace tools and conflict with vmlinux.h.
-
-Because $(CLANG_SYS_INCLUDES) uses -idirafter, these shims also sort ahead
-of /usr/include, so a BPF program that includes any non-uapi <linux/...>
-name silently picks up a host shim instead of failing or getting the real
-header.
-
-This is currently harmless for all three consumers: -I$(APIDIR) precedes
--I$(TOOLSINCDIR), and the only <linux/...> names actually reached today are
-<linux/const.h> (hid/progs/hid_bpf_helpers.h, present in
-tools/include/uapi/linux/) and <linux/errno.h> (tools/lib/bpf/*.bpf.h,
-present in neither, so it resolves via -idirafter). sched_ext escapes
-entirely because it replaces BPF_CFLAGS after the include.
-
-So this is a latent hazard for future consumers rather than a current
-breakage, but since no consumer needs it and it diverges from the file's
-own stated model (selftests/bpf/Makefile), would dropping -I$(TOOLSINCDIR)
-from BPF_CFLAGS be safer?
-
->
-> +# $1 = source, $2 = object. -MMD -MP records every included header, including
-> +# headers included by other headers.
-
-[ ... ]
-
-> +# ---- build vmlinux.h ------------------------------------------------------
-> +# Replace vmlinux.h only when its contents change. A new timestamp alone would
-> +# rebuild every BPF object and skeleton.
-> +$(INCLUDE_DIR)/vmlinux.h: $(VMLINUX_BTF) $(BPFTOOL) | $(INCLUDE_DIR)
-> +ifeq ($(VMLINUX_H),)
-> +	$(call msg,GEN,,$@)
-> +	$(Q)test -n "$(VMLINUX_BTF)" || { \
-> +		echo "lib.bpf.mk: no vmlinux with BTF at any of \"$(VMLINUX_BTF_PATHS)\"" >&2; \
-> +		exit 1; }
-> +	$(Q)$(BPFTOOL) btf dump file $(VMLINUX_BTF) format c > $@.tmp
-> +else
-> +	$(call msg,CP,,$@)
-> +	$(Q)cp "$(VMLINUX_H)" $@.tmp
-> +endif
-> +	$(Q)cmp -s $@.tmp $@ || mv $@.tmp $@
-> +	$(Q)rm -f $@.tmp
-
-A subsystem pattern flags this as potentially concerning: when the dumped
-BTF is byte-identical to the existing vmlinux.h, the recipe leaves $@
-untouched so its mtime stays older than $(VMLINUX_BTF), and make re-runs
-the whole recipe on every subsequent invocation.
-
-'bpftool btf dump file <vmlinux> format c' on a full kernel is a
-multi-second, ~100k-line dump, so once the BTF source is newer than the
-generated header (after any kernel rebuild, or a fresh
-/boot/vmlinux-$(uname -r)) every no-op 'make' in the test directory pays
-that cost, permanently.
-
-Both hid and sched_ext previously redirected straight into $@, so the dump
-ran once and then the target was up to date. The idiom is inherited from
-selftests/bpf/Makefile and the comment correctly explains why the content
-check exists, but would 'cmp -s $@.tmp $@ && touch $@ || mv $@.tmp $@' keep
-the no-rebuild property while also stopping the repeated dump?
-
->
-> +# ---- BPF objects and skeletons --------------------------------------------
-> +BPF_PROG_EXT ?= .bpf.c
-> +# Each source must end with BPF_PROG_EXT so Make can remove that ending.
-> +bpf_bad_srcs := $(filter-out %$(BPF_PROG_EXT),$(BPF_SRCS))
-> +ifneq ($(bpf_bad_srcs),)
-> +$(error lib.bpf.mk: BPF_SRCS entries must end in $(BPF_PROG_EXT): $(bpf_bad_srcs))
-> +endif
-> +bpf_stems := $(patsubst %$(BPF_PROG_EXT),%,$(notdir $(BPF_SRCS)))
-> +# Reject any dot left after removing BPF_PROG_EXT. For example, foo.bpf.c leaves
-> +# foo.bpf when the ending is set to .c.
-> +bpf_dotted_stems := $(filter-out $(basename $(bpf_stems)),$(bpf_stems))
-> +ifneq ($(bpf_dotted_stems),)
-> +$(error lib.bpf.mk: BPF_SRCS basenames must not contain a dot: $(bpf_dotted_stems))
-> +endif
-> +# Generated files use only the source filename. Reject equal filenames instead
-> +# of letting one replace another.
-> +ifneq ($(words $(bpf_stems)),$(words $(sort $(bpf_stems))))
-> +$(error lib.bpf.mk: BPF_SRCS has colliding basenames: $(BPF_SRCS))
-> +endif
-
-[ ... ]
-
-> +BPF_OBJS  := $(addprefix $(BPF_OBJ_DIR)/,$(addsuffix .bpf.o,$(bpf_stems)))
-> +BPF_SKELS := $(addprefix $(BPF_SKEL_DIR)/,$(addsuffix $(BPF_SKEL_EXT),$(bpf_stems)))
-
-[ ... ]
-
-> +# Link three times and compare the last two outputs. A correct linker must not
-> +# change an object that it already linked.
-> +$(BPF_SKELS): $(BPF_SKEL_DIR)/%$(BPF_SKEL_EXT): $(BPF_OBJ_DIR)/%.bpf.o $(BPFTOOL) | $(BPF_SKEL_DIR)
-
-BPF_SRCS is the fragment's one mandatory input, and the validation above
-checks three different ways it can be malformed (wrong extension, dotted
-basename, colliding basenames) with a clear $(error) message. The one
-remaining malformed value - empty - is not checked, and it is the case that
-degrades worst.
-
-With an empty BPF_SRCS, bpf_stems, BPF_OBJS and BPF_SKELS are all empty,
-and the static pattern rule above is read by make as a rule whose target
-list is empty - a rule with nothing before the first colon. GNU make
-rejects this outright, so the *include* of ../lib.bpf.mk aborts with a
-generic parse error naming lib.bpf.mk:252 rather than with one of the
-fragment's own diagnostics, and it does so for 'make clean' and 'make
-install' too. This is the failure mode the author deliberately avoided for
-the missing-vmlinux case (see the comment at lines 105-106 and the runtime
-guard at line 199).
-
-This is reachable through the way the fragment is actually being adopted:
-two of the three consumers in this series derive BPF_SRCS from a wildcard
-whose expansion depends on the working tree - 'BPF_SRCS := $(wildcard
-progs/*.c)' (selftests/hid) and 'BPF_SRCS := $(wildcard *.bpf.c)'
-(selftests/sched_ext). Any tree where that glob comes back empty (a partial
-copy, a directory whose programs were removed or renamed, or a future user
-who sets BPF_SRCS from a variable that is not set) turns a
-should-be-obvious configuration mistake into an unexplained make failure in
-a shared file.
-
-Would a fourth guard next to the existing three, e.g.
-
-    ifeq ($(BPF_SRCS),)
-    $(error lib.bpf.mk: BPF_SRCS is empty; set it before including lib.bpf.mk)
-    endif
-
-make it self-describing and consistent with the checks immediately above?
-
-> +	$(call msg,GEN-SKEL,,$@)
-
-[ ... ]
-
-> +# Read the header dependencies written by -MMD.
-> +-include $(BPF_OBJS:.o=.d)
+> @@ -33,3 +75,13 @@ $(OUTPUT)/test_kmem: $(LIBCGROUP_O)
+>  $(OUTPUT)/test_memcontrol: $(LIBCGROUP_O)
+>  $(OUTPUT)/test_pids: $(LIBCGROUP_O)
+>  $(OUTPUT)/test_zswap: $(LIBCGROUP_O)
 > +
-> +# ---- values for the test Makefile -----------------------------------------
-> +# Add paths for generated skeletons and vmlinux.h. Put the new libbpf headers
-> +# first so an older copy under BPF_SKEL_DIR cannot be used by mistake.
-> +CFLAGS += -I$(INCLUDE_DIR) -I$(OUTPUT) -I$(BPF_SKEL_DIR)
+> +ifneq ($(HAVE_BPF),)
+> +# Links cgroup_util and the skeleton against the libbpf lib.bpf.mk built.  The
+> +# uapi include is private to this binary: the other tests here must keep
+> +# resolving <linux/*.h> against the system headers.
+> +$(OUTPUT)/test_memcg_stat_cross_cpu: private CFLAGS += -I$(top_srcdir)/tools/include/uapi
+> +$(OUTPUT)/test_memcg_stat_cross_cpu: test_memcg_stat_cross_cpu.c \
+> +					$(BPF_SKELS) $(LIBCGROUP_O) $(BPFOBJ)
+> +	$(call bpf_link,$@,$< $(LIBCGROUP_O))
+> +endif
 
-The comment does not describe what the line does, and the stated hazard
-cannot occur.
+A subsystem pattern flags this as potentially concerning:
+memcg_stat_cross_cpu.h is not listed as a prerequisite of the userspace
+binary, and BPF_EXTRA_HDRS (documented by the new
+tools/testing/selftests/lib.bpf.mk as 'more headers needed by the BPF
+objects') is left unset, so the BPF object does not depend on it either.
 
-BPF_SKEL_DIR is the directory this fragment writes skeleton headers into -
-the only things placed there are *$(BPF_SKEL_EXT) and *$(BPF_SUBSKEL_EXT).
-libbpf's headers are installed elsewhere: 'install_headers' in
-tools/lib/bpf/Makefile writes only to $(DESTDIR)$(prefix)/include/bpf/,
-which with 'DESTDIR=$(SCRATCH_DIR) prefix=' is $(INCLUDE_DIR)/bpf/.
-Nothing in this fragment can ever put a libbpf header under BPF_SKEL_DIR,
-so there is no stale copy for the ordering to protect against. The ordering
-rationale is not inherited from the code being consolidated either -
-selftests/bpf/Makefile has the opposite order, '-I$(CURDIR)
--I$(INCLUDE_DIR) ...'.
+That header defines struct memcg_stat_snapshot, which is the wire format
+shared between the BPF program and the test binary. Editing it therefore
+rebuilds neither side, and an incremental build can silently produce a
+binary whose struct layout disagrees with the loaded skeleton.
 
-The comment also explains a two-element ordering while the line adds three
-paths, and silently skips the middle one. -I$(OUTPUT) is unexplained and
-does no work in either configuration: with the default 'BPF_SKEL_DIR ?=
-$(OUTPUT)' it is an exact duplicate of the -I$(BPF_SKEL_DIR) that follows
-it, and when a consumer overrides BPF_SKEL_DIR (sched_ext sets
-'$(OUTPUT)/build/include') nothing this fragment generates lives in
-$(OUTPUT) for it to find.
+The sibling conversion commit ef5ceab9d440 (selftests/hid) does set
+BPF_EXTRA_HDRS for its shared header, so the mechanism was available.
+LOCAL_HDRS would cover the C side.
 
-For a new shared file whose comments are the interface documentation for
-future consumers, would it be worth either dropping -I$(OUTPUT) and the
-invented rationale, or replacing the comment with the real reason the order
-was chosen?
+> diff --git a/tools/testing/selftests/cgroup/memcg_stat_cross_cpu.bpf.c b/tools/testing/selftests/cgroup/memcg_stat_cross_cpu.bpf.c
+> new file mode 100644
+> index 000000000000..3c2acd49c16b
+> --- /dev/null
+> +++ b/tools/testing/selftests/cgroup/memcg_stat_cross_cpu.bpf.c
 
->
-> +# Add target zstd when pkg-config finds it. A cross build must use the target
-> +# pkg-config, not the host one.
+[ ... ]
+
+> +/*
+> + * Flush once at the subtree root, then read each cgroup through the kfuncs.
+> + * iter.s because the flush kfunc may sleep.
+> + */
+> +SEC("iter.s/cgroup")
+> +int cgroup_memcg_stat_cross_cpu(struct bpf_iter__cgroup *ctx)
+> +{
+> +	struct cgroup *cgrp = ctx->cgroup;
+> +	struct memcg_stat_snapshot snap = {};
+> +	struct cgroup_subsys_state *css;
+> +	struct mem_cgroup *memcg;
+> +	int idx_anon, idx_file, idx_shmem, idx_fmapped, idx_pgfault;
+> +	__u64 cg_id;
+> +
+> +	/* The walk ends with a NULL element; return 0 so it runs to the end. */
+> +	if (!cgrp)
+> +		return 0;
+
+A subsystem pattern flags this as potentially concerning: the comment
+misstates the mechanism and will mislead the next reader. The NULL element
+is the epilogue: cgroup_iter_seq_stop() invokes
+__cgroup_iter_seq_show(seq, NULL, true) only after cgroup_unlock() and
+only once the walk has already finished, and it sets p->visited_all = true
+immediately afterwards.
+
+__cgroup_iter_seq_show() converts a non-zero return into p->terminate =
+true, but nothing reads p->terminate after that point, so returning 0
+rather than non-zero for the NULL element has no effect on how far the
+walk gets. The pre-existing comparable program
+tools/testing/selftests/bpf/progs/cgroup_iter_memcg.c returns 1 for the
+NULL element. The code is functionally correct; only the stated rationale
+is wrong.
+
+> diff --git a/tools/testing/selftests/cgroup/test_memcg_stat_cross_cpu.c b/tools/testing/selftests/cgroup/test_memcg_stat_cross_cpu.c
+> new file mode 100644
+> index 000000000000..9946c41c7a90
+> --- /dev/null
+> +++ b/tools/testing/selftests/cgroup/test_memcg_stat_cross_cpu.c
+
+[ ... ]
+
+> +static size_t leaf_charge(size_t want, int k)
+> +{
+> +	long online = sysconf(_SC_NPROCESSORS_ONLN);
+> +	size_t floor;
+> +
+> +	floor = (size_t)FLUSH_MARGIN * MEMCG_CHARGE_BATCH * online *
+> +		page_size / n_leaves;
+> +	if (want < floor)
+> +		want = floor;
+> +	if (want < (size_t)k * page_size)
+> +		want = (size_t)k * page_size;
+> +
+> +	return (want + page_size - 1) / page_size * page_size;
+> +}
+
+Does this handle the sysconf(_SC_NPROCESSORS_ONLN) failure case correctly?
+The return value is not checked, and the expression it feeds is unsigned.
+Because of the leading (size_t) cast, online is converted to size_t, so a
+-1 return makes floor ~= (2^64 - 1048576)/n_leaves instead of a small byte
+count.
+
+want is then clamped up to that value and returned, and start_chargers()
+passes it to charge_leaf(), where malloc(ca->bytes) fails, the charger
+exits, and the test reports the misleading "%s never reached its charge"
+failure. The same file already guards the analogous call: main() does
+'page_size = sysconf(_SC_PAGESIZE); if (page_size <= 0) page_size =
+BUF_SIZE;' (lines 947-949), and this is the only unchecked sysconf() in
+the whole cgroup selftest directory.
+
+> +static int start_chargers(int k, size_t bytes)
+> +{
+> +	struct charge_args ca = { .bytes = bytes, .k = k };
+> +	long prev, cur;
+> +	int i, retries;
+> +
+> +	for (i = 0; i < n_nodes; i++) {
+> +		if (!nodes[i].is_leaf)
+> +			continue;
+> +		if (cg_run_nowait(nodes[i].path, charge_leaf, &ca) < 0) {
+> +			ksft_print_msg("cannot start a charger on %s\n",
+> +				       nodes[i].path);
+> +			return -1;
+> +		}
+> +		ca.base += k;
+> +	}
+
+Can the per-leaf charge sizing in leaf_charge() cause memory pressure? The
+per-leaf charge is raised to at least k * page_size, and run_case() sets k
+= n_cpu for the 'cross_cpu' cases, so the total anon the test pins is
+n_leaves * n_cpu * page_size with no ceiling. For the two large-tree cases
+(fanout 10, depth 3) n_leaves is 1000, which is 1000 * n_cpu * 4K: 256 MB
+on a 64-CPU host, 1 GB at 256 CPUs, 4 GB at 1024 CPUs, held simultaneously
+by 1000 live processes.
+
+The file's own header comment states the requirement this violates: "The
+comparison is exact, which needs the subtree quiesced ... Global reclaim
+would move the numbers and the test would report a mismatch", and
+check_tree() runs with STAT_TOLERANCE_PCT 0, so any reclaim during the run
+turns into a hard KSFT_FAIL rather than a skip. Nothing in the test
+compares the computed footprint against MemAvailable or caps it.
+
+The same sizing also feeds the charge-completion deadline in
+start_chargers(): CHARGE_WAIT_RETRIES (100) * DEFAULT_WAIT_INTERVAL_US/10
+(10 ms) gives each leaf only ~1 s to both reach bytes and read the same
+memory.current twice in a row, while up to 1000 chargers are concurrently
+performing k sched_setaffinity() migrations each.
+
+> +	for (i = 0; i < n_nodes; i++) {
+> +		if (!nodes[i].is_leaf)
+> +			continue;
+> +		/*
+> +		 * Wait for the charge to both cover the region and stop
+> +		 * moving.
+> +		 */
+> +		prev = -1;
+> +		for (retries = CHARGE_WAIT_RETRIES; retries; retries--) {
+> +			cur = cg_read_long(nodes[i].path, "memory.current");
+> +			if (cur >= (long)bytes && cur == prev)
+> +				break;
+> +			prev = cur;
+> +			usleep(DEFAULT_WAIT_INTERVAL_US / 10);
+> +		}
+> +		if (!retries) {
+> +			ksft_print_msg("%s never reached its charge\n",
+> +				       nodes[i].path);
+> +			return -1;
+> +		}
+> +	}
+> +	return 0;
+> +}
+
+A subsystem pattern flags this as potentially concerning: start_chargers()
+open-codes a retry/poll loop over a cgroup control file instead of using
+(or extending) the cgroup selftest library's polling helpers.
+
+lib/include/cgroup_util.h already exports cg_read_key_long_poll(cgroup,
+control, key, expected, retries, wait_interval_us),
+cg_wait_for()/cg_prepare_for_wait() and cg_wait_for_proc_count(), and this
+loop also silently treats cg_read_long()'s -1 error return as "not charged
+yet" and burns a retry on it, which the shared helper does not do (it
+returns the error).
+
+The existing helper is not a drop-in substitute: cg_read_key_long_poll()
+polls a memory.stat key for exact equality against expected and returns on
+the first read error, whereas this loop needs 'memory.current >= bytes AND
+unchanged across two reads' on a different file. So the semantics genuinely
+differ and a bespoke loop is defensible; the guide's underlying point still
+applies in that this series already extends the shared library
+(cg_get_id/cg_touch_pages/cg_alloc_anon), so a 'wait until >= X and stable'
+helper could live there too and pick up the missing error handling for
+free.
+
+> +/*
+> + * Collect what the kfuncs report.  The program flushes at the first cgroup it
+> + * sees, the subtree root in DESCENDANTS_PRE order.
+> + */
+> +static int read_bpf(int root_fd)
+> +{
+> +	DECLARE_LIBBPF_OPTS(bpf_iter_attach_opts, opts);
+> +	struct memcg_stat_cross_cpu *skel = NULL;
+> +	union bpf_iter_link_info linfo = {};
+> +	struct bpf_link *link = NULL;
+> +	int ret = -1, i, mfd, fd;
+> +	char buf[4096];
+> +	ssize_t r;
+> +
+> +	skel = memcg_stat_cross_cpu__open();
+> +	if (!skel) {
+> +		ksft_print_msg("skel open failed\n");
+> +		return -1;
+> +	}
+> +	if (bpf_map__set_max_entries(skel->maps.results, n_nodes + 8)) {
+> +		ksft_print_msg("set max_entries failed\n");
+> +		goto out;
+> +	}
+> +	if (memcg_stat_cross_cpu__load(skel)) {
+> +		ksft_print_msg("skel load failed\n");
+> +		goto out;
+> +	}
+> +
+> +	linfo.cgroup.cgroup_fd = root_fd;
+> +	linfo.cgroup.order = BPF_CGROUP_ITER_DESCENDANTS_PRE;
+> +	opts.link_info = &linfo;
+> +	opts.link_info_len = sizeof(linfo);
+> +
+> +	link = bpf_program__attach_iter(skel->progs.cgroup_memcg_stat_cross_cpu,
+> +					&opts);
+> +	if (!link) {
+> +		ksft_print_msg("attach iter failed\n");
+> +		goto out;
+> +	}
+> +
+> +	fd = bpf_iter_create(bpf_link__fd(link));
+> +	if (fd < 0) {
+> +		ksft_print_msg("bpf_iter_create failed\n");
+> +		goto out;
+> +	}
+> +	while ((r = read(fd, buf, sizeof(buf))) > 0)
+> +		;
+> +	close(fd);
+> +	if (r) {
+> +		ksft_print_msg("bpf walk failed\n");
+> +		goto out;
+> +	}
+
+A subsystem pattern flags this as potentially concerning: every BPF
+capability shortfall in read_bpf() is reported as a test FAILURE rather
+than a SKIP.
+
+The feature gate is narrow. memcg_kfuncs_available() (line 907) probes
+exactly one symbol:
+
+  ok = btf__find_by_name_kind(btf, "bpf_get_mem_cgroup", BTF_KIND_FUNC) > 0;
+
+but memcg_stat_cross_cpu.bpf.c additionally requires bpf_put_mem_cgroup,
+bpf_mem_cgroup_flush_stats, bpf_mem_cgroup_page_state and
+bpf_mem_cgroup_vm_events, plus kernel support for a sleepable cgroup
+iterator (SEC("iter.s/cgroup")). On a kernel that exports
+bpf_get_mem_cgroup but not the rest of the set (a partial backport, or a
+future kernel that renames/retires one of them),
+memcg_stat_cross_cpu__load() fails with a capability-absent errno (-ENOENT
+for an unresolvable __ksym kfunc, -EOPNOTSUPP/-EINVAL for an unsupported
+sleepable iter). The same applies to bpf_program__attach_iter() and
+bpf_iter_create(), which also fail with -EOPNOTSUPP/-EPERM when the
+capability or privilege is absent.
+
+All three paths take 'goto out' and return -1. run_case() initialises 'ret
+= KSFT_FAIL' and only ever upgrades it to KSFT_PASS, so it has no
+KSFT_SKIP or ksft_test_result_skip() path at all. The result is a hard
+"not ok" in the TAP output for a machine that simply lacks the
+prerequisite. The diagnostics also make this indistinguishable from a
+genuine failure: none of the four messages ("skel load failed", "attach
+iter failed", "bpf_iter_create failed", "bpf walk failed") carry errno or
+strerror(errno), so a CI operator cannot tell a missing-capability
+environment from a real flush regression.
+
+> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+> index 0ebf796f3cff..15ba46879504 100644
+> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
+> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
 
 [ ... ]
 
@@ -319,4 +372,4 @@ AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
 See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/31820214629
---===============4448923700193765925==--
+--===============7566751797017694167==--
