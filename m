@@ -1,67 +1,45 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D9A3672A0;
-	Fri, 14 Aug 2026 10:00:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761B5423764;
+	Fri, 14 Aug 2026 10:21:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786701645; cv=none; b=oW+UayllbWxv6QCz2z7i1C79lwzbKnYV6gvfAWt0KkV7WQ2FkBmVuoIDjeH388BFs5tJl4okcrmSoOSbFHpBO50D0WJfUbD1HwawmSI6Qxp/dLgV/mQk60UwxL2kFgIJq+w3jH2IMdiuHGChhKhFEuy6beFBpu/U2NnFJsY2dak=
+	t=1786702894; cv=none; b=MBINpuYYmyWaHy2kBIWGx5gwYsMiuE6Mrgq7KO0gP5FX0rhAYYAVF/2VC48Sa9ERMG1l+0pXVP00NPo2OwC1teeegvI+xiozCXLUzDXmerfVqJNqQqIUc6MAQabm/Edg8DZ9vnfMSbUKMovkajpmo/0WvhbrxA9UhR+w0HbUeTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786701645; c=relaxed/simple;
-	bh=61BfVamzKHgQdUYSAiqfAhDqJTjNb5s8eUQKFu8E5P4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HYhmVNo6zGkt4mT6lK/a9zb0fJe66zBCmZQlaKjRei/xtzQlTSs4FoY1WniayCSYoVbOYkMSN3naBLEntZ9dFfEB676MPq3IiTtW/ZQRk77Ng8BlXNHLR7nEY0KwXDlE5dX1M8i7ZJ7kK2xlN74Y0k6i3jvZ2bh3nZ52/Nv8X8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: f76a112c97c611f1aa26b74ffac11d73-20260814
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CHARSET
-	HR_CHARSET_NUM, HR_CTE_8B, HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD
-	HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN
-	HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS
-	HR_TO_CHARSET, HR_TO_CHARSET_NUM, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NAME
-	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
-	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_GOOD
-	CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD
-	ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:6facda73-7d98-427a-8386-a3930e161c6f,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:6facda73-7d98-427a-8386-a3930e161c6f,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:56aa920ffbc03c0e04e54e80fc69931a,BulkI
-	D:260814180027EH7NOZMQ,BulkQuantity:0,Recheck:0,SF:10|38|66|78|81|82|102|1
-	27|850|865|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,B
-	ulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR
-	:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: f76a112c97c611f1aa26b74ffac11d73-20260814
-X-User: sunshaojie@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 619974505; Fri, 14 Aug 2026 18:00:23 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
+	s=arc-20240116; t=1786702894; c=relaxed/simple;
+	bh=dFhtZgD1piRpddfEMWF7eGzsbeBOObV4TBH7AssNP9Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pB4VQcKUaWaEnggRYWYvNSkKCTj60vdE0AaXv4ZjzV7S2VJL+2c9HoKwxMEIhf351yLcUH39prE44uwSGECV/6BVYNhdcdlKfLvdLp6h/hAyQL5JStJJz4zz+PZw6KrLU2UOj/5gWx/u269MeAiy9A3o+l3qyySZMuHeipSU2zo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=KXGpWr4I; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="KXGpWr4I"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Du
+	pWwdEkfpiGHlnzP82RzaheeaZpWsb+7g8CoR7iJik=; b=KXGpWr4I3iSh5CPS+R
+	vsn44UVL2FTdyZEBhgbvzN5yzXhhlVcbenNICZaNu4hC4KYtIdP52/yjfXzuVQoQ
+	JD/DxjRcLTjJgIdG3t9IBz7niCibKqLX9QjcbKjuDPDtkjb+653Fa6moLQXs6Yhg
+	hRceY+GSvmPYlbtu/s9jjqJg0=
+Received: from sky.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wAXNgsJ7H5qkWIGPw--.60595S2;
+	Fri, 14 Aug 2026 18:20:57 +0800 (CST)
+From: Junnan Zhang <zhangjn_dev@163.com>
+To: tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
 Cc: cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH v2] selftests/cgroup: remove redundant chown in test_cgcore_lesser_ns_open
-Date: Fri, 14 Aug 2026 18:00:02 +0800
-Message-Id: <20260814100002.1007394-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260813090914.690350-1-sunshaojie@kylinos.cn>
-References: <20260813090914.690350-1-sunshaojie@kylinos.cn>
+	zhangjn_dev@163.com,
+	Junnan Zhang <zhangjn11@chinatelecom.cn>,
+	Shouxin Sun <sunshx@chinatelecom.cn>
+Subject: [PATCH v3] cgroup: avoid flushing global workqueue in cgroup1_pidlist_destroy_all
+Date: Fri, 14 Aug 2026 18:20:52 +0800
+Message-ID: <20260814102052.147408-1-zhangjn_dev@163.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260814084016.123741-1-zhangjn_dev@163.com>
+References: <20260814084016.123741-1-zhangjn_dev@163.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -69,77 +47,149 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wAXNgsJ7H5qkWIGPw--.60595S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxWryxJw13JF4rKF18Wr4kZwb_yoW7Jry3pa
+	s0k343Jw4rJry0kFWIy342gFyrKa18Ja17Kr1furWUJr43Jr4qqFy29FyjgF98GFZ3XrW0
+	vF45ZF9Ivr4qqr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEveHDUUUUU=
+X-CM-SenderInfo: x2kd0wxmqbvvry6rljoofrz/xtbCxQl3DWp+7AnMqwAA3g
 
-test_cgcore_lesser_ns_open runs as root throughout and never changes its
-euid, so chowning the two cgroup.procs files to a non-root uid has no
-effect on the test.
+From: Junnan Zhang <zhangjn11@chinatelecom.cn>
 
-The ENOENT the test expects comes from the cgroup namespace delegation
-check in cgroup_procs_write_permission(): the source and destination
-cgroups must both be descendants of the namespace root captured at open
-time.  That check does not depend on file ownership.  In addition, the
-permission check only examines the common ancestor's cgroup.procs file
-(the test root here), which the chown calls do not touch.
+cgroup1_pidlist_destroy_all() flushes the global
+cgroup_pidlist_destroy_wq while destroying a cgroup. Because all cgroup
+v1 pidlist destruction work items are queued on the same shared workqueue,
+a single slow or stuck work item (e.g. waiting for pidlist_mutex held by a
+user-space reader) blocks every concurrent cgroup destruction path.
 
-Remove the redundant chown calls and the now unused test_euid and
-cg_test_a_procs variables.
+This can lead to kworker tasks stuck in flush_workqueue() for over
+hung_task_timeout seconds, as observed on busy systems running Docker or
+Kubernetes workloads.
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
+  INFO: task kworker/0:1:1438499 blocked for more than 120 seconds.
+  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+  kworker/0:1 D 0 1438499 2 0x80000080
+  Workqueue: cgroup_destroy css_free_rwork_fn
+  ? __schedule+0x296/0x900
+  schedule+0x28/0x80
+  schedule_timeout+0x1ee/0x3a0
+  ? kvm_sched_clock_read+0xd/0x20
+  wait_for_completion+0x12c/0x190
+  ? wake_up_q+0x70/0x70
+  flush_workqueue+0x132/0x430
+  ? cgroup1_pidlist_destroy_all+0x7c/0xa0
+  cgroup1_pidlist_destroy_all+0x7c/0xa0
+  css_free_rwork_fn+0xb5/0x390
+  process_one_work+0x195/0x3e0
+  worker_thread+0x30/0x390
+  ? process_one_work+0x3e0/0x3e0
+  kthread+0x113/0x130
+  ? kthread_create_worker_on_cpu+0x70/0x70
+  ret_from_fork+0x1f/0x40
+
+Fix it by moving the cgroup's pidlists to a local orphan list under
+pidlist_mutex, clearing their ->owner pointer, and then cancelling each
+pidlist's delayed work outside the lock. The destroy work function now
+checks ->owner and skips freeing orphaned pidlists, so
+cgroup1_pidlist_destroy_all() can free them safely without flushing the
+whole shared workqueue.
+
+Signed-off-by: Junnan Zhang <zhangjn11@chinatelecom.cn>
+Signed-off-by: Shouxin Sun <sunshx@chinatelecom.cn>
+
 ---
-Changes in v2:
-- Remove the now unused cg_test_a_procs variable, as suggested by
-  sashiko-bot.
+v1 -> v2:
+ - Fix a NULL pointer dereference in cgroup_pidlist_destroy_work_fn():
+   use the cached owner pointer for mutex_unlock(), as ->owner may have
+   been cleared concurrently by cgroup1_pidlist_destroy_all(). Spotted
+   by Sashiko AI review.
 
- tools/testing/selftests/cgroup/test_core.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+v2 -> v3:
+ - Use READ_ONCE()/WRITE_ONCE() for the ->owner field shared between
+   cgroup1_pidlist_destroy_all() and cgroup_pidlist_destroy_work_fn() to
+   prevent data races. Spotted by Sashiko AI review.
+---
+ kernel/cgroup/cgroup-v1.c | 53 ++++++++++++++++++++++++++++-----------
+ 1 file changed, 38 insertions(+), 15 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
-index 88ca832d4fc1..5501be9912c0 100644
---- a/tools/testing/selftests/cgroup/test_core.c
-+++ b/tools/testing/selftests/cgroup/test_core.c
-@@ -795,10 +795,9 @@ static int lesser_ns_open_thread_fn(void *arg)
- static int test_cgcore_lesser_ns_open(const char *root)
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index a4337c9b5287..9abe8b791bb1 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -206,13 +206,31 @@ struct cgroup_pidlist {
+ void cgroup1_pidlist_destroy_all(struct cgroup *cgrp)
  {
- 	static char stack[65536];
--	const uid_t test_euid = 65534;	/* usually nobody, any !root is fine */
- 	int ret = KSFT_FAIL;
- 	char *cg_test_a = NULL, *cg_test_b = NULL;
--	char *cg_test_a_procs = NULL, *cg_test_b_procs = NULL;
-+	char *cg_test_b_procs = NULL;
- 	int cg_test_b_procs_fd = -1;
- 	struct lesser_ns_open_thread_arg targ = { .fd = -1 };
- 	pid_t pid;
-@@ -813,10 +812,9 @@ static int test_cgcore_lesser_ns_open(const char *root)
- 	if (!cg_test_a || !cg_test_b)
- 		goto cleanup;
+ 	struct cgroup_pidlist *l, *tmp_l;
++	LIST_HEAD(orphan);
++
++	/*
++	 * Move pidlists to a local orphan list and mark them as owner-less.
++	 * The destroy work function will see ->owner == NULL and skip freeing.
++	 * We then cancel and free them outside pidlist_mutex to avoid
++	 * flush_workqueue() blocking on the shared workqueue.
++	 */
  
--	cg_test_a_procs = cg_name(cg_test_a, "cgroup.procs");
- 	cg_test_b_procs = cg_name(cg_test_b, "cgroup.procs");
+ 	mutex_lock(&cgrp->pidlist_mutex);
+-	list_for_each_entry_safe(l, tmp_l, &cgrp->pidlists, links)
+-		mod_delayed_work(cgroup_pidlist_destroy_wq, &l->destroy_dwork, 0);
++	list_for_each_entry_safe(l, tmp_l, &cgrp->pidlists, links) {
++		list_del(&l->links);
++		WRITE_ONCE(l->owner, NULL);
++		list_add(&l->links, &orphan);
++	}
+ 	mutex_unlock(&cgrp->pidlist_mutex);
  
--	if (!cg_test_a_procs || !cg_test_b_procs)
-+	if (!cg_test_b_procs)
- 		goto cleanup;
+-	flush_workqueue(cgroup_pidlist_destroy_wq);
++	list_for_each_entry_safe(l, tmp_l, &orphan, links) {
++		list_del(&l->links);
++		cancel_delayed_work_sync(&l->destroy_dwork);
++		kvfree(l->list);
++		put_pid_ns(l->key.ns);
++		kfree(l);
++	}
++
+ 	BUG_ON(!list_empty(&cgrp->pidlists));
+ }
  
- 	if (cg_create(cg_test_a) || cg_create(cg_test_b))
-@@ -825,10 +823,6 @@ static int test_cgcore_lesser_ns_open(const char *root)
- 	if (cg_enter_current(cg_test_b))
- 		goto cleanup;
+@@ -222,21 +240,26 @@ static void cgroup_pidlist_destroy_work_fn(struct work_struct *work)
+ 	struct cgroup_pidlist *l = container_of(dwork, struct cgroup_pidlist,
+ 						destroy_dwork);
+ 	struct cgroup_pidlist *tofree = NULL;
++	struct cgroup *owner;
  
--	if (chown(cg_test_a_procs, test_euid, -1) ||
--	    chown(cg_test_b_procs, test_euid, -1))
--		goto cleanup;
--
- 	targ.path = cg_test_b_procs;
- 	pid = clone(lesser_ns_open_thread_fn, stack + sizeof(stack),
- 		    CLONE_NEWCGROUP | CLONE_FILES | CLONE_VM | SIGCHLD,
-@@ -863,7 +857,6 @@ static int test_cgcore_lesser_ns_open(const char *root)
- 	if (cg_test_a)
- 		cg_destroy(cg_test_a);
- 	free(cg_test_b_procs);
--	free(cg_test_a_procs);
- 	free(cg_test_b);
- 	free(cg_test_a);
- 	return ret;
+-	mutex_lock(&l->owner->pidlist_mutex);
++	owner = READ_ONCE(l->owner);
++	if (owner) {
++		mutex_lock(&owner->pidlist_mutex);
+ 
+-	/*
+-	 * Destroy iff we didn't get queued again.  The state won't change
+-	 * as destroy_dwork can only be queued while locked.
+-	 */
+-	if (!delayed_work_pending(dwork)) {
+-		list_del(&l->links);
+-		kvfree(l->list);
+-		put_pid_ns(l->key.ns);
+-		tofree = l;
+-	}
++		/*
++		 * Destroy iff we didn't get queued again and we're still
++		 * owned by the cgroup.  If ->owner was cleared by
++		 * cgroup1_pidlist_destroy_all(), it will free us.
++		 */
++		if (READ_ONCE(l->owner) == owner && !delayed_work_pending(dwork)) {
++			list_del(&l->links);
++			kvfree(l->list);
++			put_pid_ns(l->key.ns);
++			tofree = l;
++		}
+ 
+-	mutex_unlock(&l->owner->pidlist_mutex);
++		mutex_unlock(&owner->pidlist_mutex);
++	}
+ 	kfree(tofree);
+ }
+ 
 -- 
-2.25.1
+2.43.0
 
