@@ -1,57 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B58CC3E0082;
-	Fri, 14 Aug 2026 21:01:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B5223EB104
+	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 21:43:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786741297; cv=none; b=jceAHCXoTBu6HUbdbmryNz68nJfnYlcb+HfB9iitYKsvqRYZ364ARgIgJMQ8u7YmOne0nASIOaleshxp9SEqchCEQNczgHg6kmQaPiGeT3BpnJyWls9vtNhE267IWfSjfiQZIsmg/2nlHGL1dWbJsakT4XHVA+e7QWoa1vuXd1E=
+	t=1786743792; cv=none; b=J5eX/czx3a8poouluhsiYAfyxP9h+3BK+T+88hADGIQk8H4U0PX7/EH3CSJwfYzDTBjB1mUkxUtINvfK8FozlrTT5cK/FgRSmtp6lXZc2LP78GUNNgroQsxYS4h3qIpzipSK46BeKM5G67X4R2ME1vYDux9YDbf2MGf5mhIGMrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786741297; c=relaxed/simple;
-	bh=XErEDBOP207n+Ndjqy5kTE9QV7VAhkciKj6EOgwKM4s=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=tYV/OtzEQ2tMzNnFtbgnOpD4zCJV6CkUXRs+XDBtHTHAmY1me02/QF3jlpz/HkSXzO3CxJ3IWrbZu+aNNzKHKfpcelsv7ADaqHxxEJgr7bXhkn470LviMjzHB+MTIL0o+HlSBjgs+zTxB8bE+kW3lP+R4flUvBuiw9Wg2yHHxAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oZDM84je; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786743792; c=relaxed/simple;
+	bh=CrqedTfEiKJ05RbouOSj390zU83KUFoMMxOoYWpSi8c=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=azR/QABaTIw8uiKEn/47RAN6W1bvZ+uO0DjR4Zgvs6icp6H1JNXBRULrFW2dGSmjQAXWNrzKTU5fJXkJFtSbzZ/7U/xErFNiSBUnHD9NxMg7/z0d4aWKhUYiPYH9gNjxlbhCSs1N5skLMj18thffimJwY6bjwKZ+WvUpJK8vEBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WS8TRLin; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oZDM84je"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60B061F000E9;
-	Fri, 14 Aug 2026 21:01:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786741290;
-	bh=XErEDBOP207n+Ndjqy5kTE9QV7VAhkciKj6EOgwKM4s=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=oZDM84je7xOL/eOkFrnYNt7tvwgbGoBTYGlt70tYq0VL3nVbXjvbaN1ZUMUFqoUxv
-	 /DvA0yjIrRsXz6pWGs3ohJeNN4lAXZxylIVAkZU14H0bi4XNSk9WmhD4nTS53V1emP
-	 1l9AcRUpACx4vOrZdUWxbJEPXsj7y4vIuIvafaA3d7uLe0AuNKmqQSWGofpflBHAMn
-	 fcUPCQpr8afrVKKy7IGTvfSI6+1ziQRfVYF9cCIBAmqNziIqf0CTiX7S6Cl3TnQlTm
-	 64IRzy0Qq2sJZ2ML87UYBg34JyOSGLIgM+LpIRqN67D8cVBDZx3+cTR1mAalP0KEGX
-	 103ffwM3QRRRg==
-Date: Fri, 14 Aug 2026 11:01:29 -1000
-Message-ID: <601d82e5ffacffeb1b402dad471998ed@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Shaojie Sun <sunshaojie@kylinos.cn>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>, Tao Cui <cui.tao@linux.dev>,
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] selftests/cgroup: remove redundant chown in
- test_cgcore_lesser_ns_open
-In-Reply-To: <20260814100002.1007394-1-sunshaojie@kylinos.cn>
-References: <20260813090914.690350-1-sunshaojie@kylinos.cn>
- <20260814100002.1007394-1-sunshaojie@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WS8TRLin"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1786743791; x=1818279791;
+  h=date:from:to:cc:subject:message-id;
+  bh=CrqedTfEiKJ05RbouOSj390zU83KUFoMMxOoYWpSi8c=;
+  b=WS8TRLinmPX3ePBndy326Ak4Er1y09DaMvvqUn6QG4VQEH4XzB+cR94O
+   Uw/eDcxjr76NaG95u1E0WIwuEB57BUPjMh9ZNR1TbbVx0munsrKpE+UWl
+   dI1ecFk9LfXhoyYv44u++OjE67hLlQbW1fevfmCeao6vafOx89HVP+bqQ
+   ki4k2AF76quxgWsnWjwIWOsEBPnOypj27w1E8GLgyQT0Ex3VQJ8kDsJjw
+   IC52b5UnNX6dfIUI1SSFfE6Eancx1ZzrzCTDDvCx18qxD63a6Z9Wz2FZ5
+   +FByQyIOtM7/ixo199dYsw9RwugXksPuoeldmLIHZnqGQrbX4XtIUf1bP
+   A==;
+X-CSE-ConnectionGUID: z4dJAaTsSzCC4Fa+5KkrVw==
+X-CSE-MsgGUID: d9BoOJs9QIeD3egZx50taQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11875"; a="98839759"
+X-IronPort-AV: E=Sophos;i="6.25,224,1779174000"; 
+   d="scan'208";a="98839759"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Aug 2026 14:43:11 -0700
+X-CSE-ConnectionGUID: sMSIVQjcTVO9zBeHXIoNfg==
+X-CSE-MsgGUID: lknEho4bS2yb1RvuOTIuWQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,224,1779174000"; 
+   d="scan'208";a="262995912"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 14 Aug 2026 14:43:09 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wuzgB-00000000aHX-0XET;
+	Fri, 14 Aug 2026 21:43:07 +0000
+Date: Sat, 15 Aug 2026 05:42:15 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-7.3] BUILD SUCCESS
+ ddabc5dbd262f3ca981e679ddae99ed7a9adb279
+Message-ID: <202608150504.5gQXsA5i-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-On Fri, Aug 14, 2026 at 06:00:02PM +0800, Shaojie Sun wrote:
-> test_cgcore_lesser_ns_open runs as root throughout and never changes its
-> euid, so chowning the two cgroup.procs files to a non-root uid has no
-> effect on the test.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.3
+branch HEAD: ddabc5dbd262f3ca981e679ddae99ed7a9adb279  selftests/cgroup: Preserve CPU hotplug write errors
 
-Applied to cgroup/for-7.3 with the subject capitalized.
+elapsed time: 792m
 
-Thanks.
+configs tested: 15
+configs skipped: 1
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha             allnoconfig    gcc-16.1.0
+alpha            allyesconfig    gcc-16.1.0
+alpha               defconfig    gcc-16.1.0
+arc              allmodconfig    gcc-16.1.0
+arc              allyesconfig    gcc-16.1.0
+csky             allmodconfig    gcc-16.1.0
+i386             allmodconfig    gcc-14
+loongarch           defconfig    clang-24
+nios2            allmodconfig    gcc-11.5.0
+nios2             allnoconfig    gcc-11.5.0
+parisc           allmodconfig    gcc-16.1.0
+parisc           allyesconfig    gcc-16.1.0
+parisc              defconfig    gcc-16.1.0
+powerpc    amigaone_defconfig    gcc-16.1.0
+sh                  defconfig    gcc-16.1.0
 
 --
-tejun
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
