@@ -1,138 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f43.google.com (mail-yx1-f43.google.com [74.125.224.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D30E845DF63
-	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 11:23:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66684470110
+	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 13:27:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786706639; cv=none; b=R/daODlLO/HafWWSvHQT5jzscT6GPZUpMWhMtr56vPPIvbwRIL/XYSy1fvprMjdiVVTKQ2/qdRGuMKHS9FU1GMsjudYh8xVxj1Zyft0glM90AOBFO1lJ2+qK+O/V1CUppO6h8WKNaEeW1UdZ6hRVQZpovikaRPH1sl3V7J/w6RI=
+	t=1786714041; cv=none; b=FAMsj/ZHnR0Hi8p+v9/icuIphvI4ZviyRDMjwt+qTvvMFy749MqrXq3pjz+GyHNKedZzoR2VJY0i7463SD8yP2NEB62Ta/o/SFAFjRtwZx58UbacCTmJkYix3/UVfS87BdLhfaP0pGpHUWgjMgwo34JqmoNalg+cJvcBxBrIIvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786706639; c=relaxed/simple;
-	bh=LrBZvHrwrXM0R1lVgGgVnfZgn4AmW0zo3cE10Pz7gjs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QeHLkiaXodiC/t7J463B6lgpDl1wyDd3msXFOdBScKXzK7V1VbZ18TGzYf0xHXFBLnOetX86UpxjJ9CWdwGMFk+KexG4unMNN8amJGkDnlpZR7PoZBXyKhj3duxxw+Y54Hzm91FIpA6SufcSd1u/8a+tU/LO94Z/+Ke1itfdEK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NZwVPNWd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786714041; c=relaxed/simple;
+	bh=CChEzwWKHqvAbDe82pqB+EpRVBOCxUp7FVLoHlKhGNU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NADRigT+W+M3LHH8DGBhtfNoEpujtdOdAp7sXRX8QwT67RNOWP30yOQTilZTzDQTAbinc9X6ltiienfR157uDWwiB1dZLLZ9p70IaHmiQLC5TCFan+88Z80yEoDlKg3VHcZfJr7TZzsauqBiy4P5gPm7/h5cuGFBHe+zozPsA7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=TCpeiH/x; arc=none smtp.client-ip=74.125.224.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NZwVPNWd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 327A81F00AC4
-	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 11:23:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786706633;
-	bh=rfADc6/R72hwdaY25fr6WLriArvVrwd+ff7yRnwVQRk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=NZwVPNWdgl5G6msuqZL9Mkx1Bop2gkMomPd9lMJEeesesx6ly6TLavXoZW/bkVkek
-	 HYGjgpPPIA5N7evtMozSBVC3pHLDLs+zGvALr3Bledk8VgcnNZiGIW1+5+heax77Rz
-	 3dSenU7yBh0xYNLUZaBAMkJ96NpwMBQh135gaQ0FMZ/Ne/rZ+CeXGbxnaBbYOf0Ld+
-	 MlrlOSXDPXFvHs/HbpjNli1SKLqAHV6eCt6z8OiKn0bVFID7AfBBtOJrCMMwfE7Qlx
-	 2KY5pVL41kHgFKxe3QgvV7IK304Xb0eTfd9e7x8UMIA3Ltqdb9QFGRypCM6L8SoNmB
-	 S6S5YTyV+zFHw==
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-934a3d14924so86106785a.2
-        for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 04:23:53 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RpyYdiRljj4cKvoyH/5i1gntNdVFZsOknnhzhD9tWjWsFWYlY9xAzXanmbA9SthnH8gePcUcy6v@vger.kernel.org
-X-Gm-Message-State: AOJu0YxXQhknfsjJFx7yVhM0pRgkcNruBCQyArS1IdyfHJbit7wMfJB1
-	cZ03gyUneXXMzyVO0y43yEtua80VgTokjlWf1HzJ+B4cs3bpOcV5dAuaPMAGExGn6jXfSOLf8Po
-	SPU9zGOQFchFs2bbGClQakZPuZvRrTYw=
-X-Received: by 2002:a05:620a:45a0:b0:92e:7533:ef63 with SMTP id
- af79cd13be357-936d2021e07mr461450885a.13.1786706632605; Fri, 14 Aug 2026
- 04:23:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="TCpeiH/x"
+Received: by mail-yx1-f43.google.com with SMTP id 956f58d0204a3-66b13ee8801so1346299d50.1
+        for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 06:27:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1786714037; x=1787318837; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=n4ArN/eG59F6/a+Z1l3n9inh5iDgTQHyg71JvETU2wM=;
+        b=TCpeiH/xCWeDcYJotQrUKR+96UF0MG/Njhh1rbUlHRGBrpdQAImKs6oRWI41Q8Eczj
+         +mTDkleatlsNeXhOUaGWaFyd3U50OBJvlvu77XCYcYzSq7ARn4Or8iIhiP8w6JBZAK8W
+         oAd1trrpj6Ef0CklV1H2zSfBzIviHXmk2sB71HcaujcqJrFDI2zHP23dmMR4YDojp+3v
+         GBSdAv+vPbaIHQHbjNZQzTtWNO8h2nh2HWBKxy6PVDPoHfw/brhOp2p2xqx48wXcX9eT
+         697sKEtDAhvD4AyqB7mtbV3UuRSbV7yerIPuq30uagL3Wo2jyOy2OULMcp8X/mprik3I
+         2+ug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786714037; x=1787318837;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=n4ArN/eG59F6/a+Z1l3n9inh5iDgTQHyg71JvETU2wM=;
+        b=Wm8d5vrvZQYIo3wSPAh8KuPWG9uo7cJVL1/rp0LBA5OZzZn7GC3uSJnnIKIemoytfM
+         QDNou88yfsjuKyHs16OPdO+t8ynERCJWm6cDfb6NllQ2jwrVmAJ+Enf+7Og35QkOFaGp
+         oQeGNW2mqrG1aeCoTqm3/CEFX1eUu2KhcBmmi7HmeS3nVgOqPNwj5U2ixFl6T1ppq0t/
+         4wM+vX5bKZt+5XohfOm57GnHhOf00GZR2jt2zBypOC3D4C8aZ4oq2NQhy66DG3BB9aG8
+         JSC49G2+pOQJYUUpJ8DZN7gAlDTDwstFM5WfNDIpsQG+D6XUZw8zZ2Taxp3wbOMyVQuO
+         uTHw==
+X-Forwarded-Encrypted: i=1; AHgh+Rolx5NmFyZPUaUuO6FFCRbicxCmjJoAmvJClfEAc2IQhTAYiJxQCJIWnlB9uYx1aH+zeGlcGXwd@vger.kernel.org
+X-Gm-Message-State: AOJu0YxymZzBUdro7USaSiTnosUwPp5+YyEPIk+fU/uBJnPjHocbLAs4
+	3O09frXY//zlmd0fjn9enIDh5nn4hlwDKgDHwbpOoBrORtVNe9h5vFZTVZz6veIqEls=
+X-Gm-Gg: AR+sD11NS/+BrKrueGewJlT8GFCww6pp6XwSmB3TeF5lwa8qf9WBK00ty7JLlMG0rT5
+	8MVgt4Xn99pe6qcPx19fPpaBzCV/jXs7Ipa4SlwfgYCyQkhtT+2lnaKf1bIq6DYncQJqHTMfQiV
+	cL/yAWsdkaBDFltvUMQQ6Rxcx2tSDCbCUjBz9gqKb0z/30Dv2bFTl0rksqUmvUEEtyB7d4r+dAq
+	b3tcmmWouITEKiLkXxRjRWZ/Gq+yltXl2Y1x2mYd3sN1xCy1Xs6dgOy1Kx8ci3lWnCgMN+ThXAK
+	vxP7igA4ZK7iSQ2UkZrY6EbOJuzqfPm5wwuuzEdfSz2ZOrXLmb0ZrKcrrABAZfO7DrchV3HiN1R
+	r3NGCsTp13VO1NWVFIAXyyTh131kc+nFO71HdPP2bjSSV+jSF+G1jybGIQJiC3AQUX2FC1twQfI
+	HufM25jY0dDXNe7uJhY+X90Sab4Oe3YfDTClk=
+X-Received: by 2002:a53:c584:0:b0:66a:3662:409f with SMTP id 956f58d0204a3-66c72ba0d10mr1917799d50.10.1786714036424;
+        Fri, 14 Aug 2026 06:27:16 -0700 (PDT)
+Received: from fedora ([2601:19e:8500:d3c0::28fe])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-66c75c9d90bsm1010793d50.8.2026.08.14.06.27.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Aug 2026 06:27:15 -0700 (PDT)
+Date: Fri, 14 Aug 2026 09:27:09 -0400
+From: Gregory Price <gourry@gourry.net>
+To: Pankaj Gupta <pankaj.gupta.linux@gmail.com>
+Cc: linux-mm@kvack.org, Zhigang.Luo@amd.com, arun.george@samsung.com,
+	balbirs@nvidia.com, brendan.jackman@linux.dev, yuzenghui@huawei.com,
+	apopple@nvidia.com, alucerop@amd.com, matthew.brost@intel.com,
+	akpm@linux-foundation.org, david@kernel.org, ljs@kernel.org,
+	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org,
+	surenb@google.com, mhocko@suse.com, corbet@lwn.net,
+	skhan@linuxfoundation.org, gregkh@linuxfoundation.org,
+	rafael@kernel.org, dakr@kernel.org, djbw@kernel.org,
+	"Gupta, Pankaj" <pankaj.gupta@amd.com>, vishal.l.verma@intel.com,
+	dave.jiang@intel.com, alison.schofield@intel.com,
+	osandov@osandov.com, jannh@google.com, pfalcato@suse.de,
+	jackmanb@google.com, hannes@cmpxchg.org, ziy@nvidia.com,
+	pbonzini@redhat.com, osalvador@suse.de, joshua.hahnjy@gmail.com,
+	rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com,
+	kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev,
+	baohua@kernel.org, axelrasmussen@google.com, yuanchu@google.com,
+	weixugc@google.com, yury.norov@gmail.com, linux@rasmusvillemoes.dk,
+	longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org,
+	mkoutny@suse.com, sj@kernel.org, jgg@ziepe.ca, jhubbard@nvidia.com,
+	peterx@redhat.com, baolin.wang@linux.alibaba.com, npache@redhat.com,
+	ryan.roberts@arm.com, dev.jain@arm.com, lance.yang@linux.dev,
+	usama.arif@linux.dev, xu.xin16@zte.com.cn, chengming.zhou@linux.dev,
+	roman.gushchin@linux.dev, muchun.song@linux.dev,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	driver-core@lists.linux.dev, nvdimm@lists.linux.dev,
+	linux-cxl@vger.kernel.org, linux-debuggers@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org,
+	cgroups@vger.kernel.org, damon@lists.linux.dev,
+	linux-kselftest@vger.kernel.org, kernel-team@meta.com
+Subject: Re: [PATCH v5 00/36] Private Memory NUMA Nodes
+Message-ID: <an8Xrb5Phmvs0xE4@fedora>
+References: <20260720193431.3841992-1-gourry@gourry.net>
+ <CAM9Jb+jpJ-Ui4qDHxsp2WiERiv8gmrQfKQ8Z0BmabefeQ6pg4A@mail.gmail.com>
+ <an0cAMh_m8ZhGIm2@fedora>
+ <CAM9Jb+jmxPdL-CdWQHYMT5G=qmjB6z2WFg+4K8Fod5n=2N6YCQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260814074705.939721-2-mambaxin@163.com>
-In-Reply-To: <20260814074705.939721-2-mambaxin@163.com>
-From: Barry Song <baohua@kernel.org>
-Date: Fri, 14 Aug 2026 19:23:41 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4y+kGUH7TjKEGU+hbwCotHeubNdbJtoBExP+Ya-Wf3fWA@mail.gmail.com>
-X-Gm-Features: AUfX_mxn4RXlpo4fupbSBD57H9Nh3esjr7Y2wqN9hyd0KIKiCgDKSWpkR8DcuIQ
-Message-ID: <CAGsJ_4y+kGUH7TjKEGU+hbwCotHeubNdbJtoBExP+Ya-Wf3fWA@mail.gmail.com>
-Subject: Re: [PATCH] mm: swap_cgroup: fix NULL deref in lookup_swap_cgroup_id
- on swapless host
-To: mambaxin@163.com
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
-	shakeelb@google.com, muchun.song@linux.dev, akpm@linux-foundation.org, 
-	david@redhat.com, v-songbaohua@oppo.com, hughd@google.com, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	gregkh@linuxfoundation.org, jose.fernandez@linux.dev, stable@vger.kernel.org, 
-	syzbot+e12bd9ca48157add237a@syzkaller.appspotmail.com, 
-	David Hildenbrand <david@kernel.org>, Kairui Song <ryncsn@gmail.com>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Sasha Levin <sashal@kernel.org>, 
-	chenxin <chenxinxin@xiaomi.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAM9Jb+jmxPdL-CdWQHYMT5G=qmjB6z2WFg+4K8Fod5n=2N6YCQ@mail.gmail.com>
 
-On Fri, Aug 14, 2026 at 3:48=E2=80=AFPM <mambaxin@163.com> wrote:
+On Thu, Aug 13, 2026 at 10:55:13AM +0200, Pankaj Gupta wrote:
+> >
+> > A device driver could very well just call memory-hotplug directly,
+> > or its memory could be brought up as a private node via a boot
+> > paremeter (which I have sculpted for v7).  The former is preferred,
+> > but there's a bit of a chicken/egg scenario for bootstrapping.
+> 
+> I find this interesting as this appears to be evolving towards a vendor
+> agnostic framework for hotplugging memory directly to private nodes.
+> 
+
+Agnostic would depend on a common standard for such devices.  Otherwise,
+there is still a need for per-device drivers - but hopefully the
+interaction itself can be generalized.
+
+> How you see this working? In particular, How would the kernel know which
+> memory ranges correspond to HBM or other device memory?
+> 
+
+Device marks the region reserved at boot, driver hotplugs.
+
+or
+
+Device marks the region normal, but boot param sets the node private.
+
+> Please also CC me when you post v7: pankaj.gupta@amd.com
 >
-> From: "Jose Fernandez (Anthropic)" <jose.fernandez@linux.dev>
->
-> [ Upstream commit 63b02a9409cb5180398491b093e48bcb5315f5fb ]
->
-> lookup_swap_cgroup_id() passes swap_cgroup_ctrl[type].map to
-> __swap_cgroup_id_lookup() without checking that the type was ever
-> registered via swap_cgroup_swapon().  On a swapless host every ctrl->map
-> is NULL, so __swap_cgroup_id_lookup() dereferences NULL + a scaled
-> swp_offset().
->
-> Since commit bea67dcc5eea ("mm: attempt to batch free swap entries for
-> zap_pte_range()"), zap_pte_range() -> swap_pte_batch() calls
-> lookup_swap_cgroup_id() on any non-present, non-none PTE that decodes as =
-a
-> real swap entry, without first validating it against swap_info[].  A
-> single PTE corrupted into a type-0 swap entry takes the host down at
-> process exit.
 
-Thanks for the patch. However, we have a strict check to ensure that
-this is only done for valid swap entries:
+Sure
 
-static inline int swap_pte_batch(pte_t *start_ptep, int max_nr, pte_t pte)
-{
-        pte_t expected_pte =3D pte_next_swp_offset(pte);
-        const pte_t *end_ptep =3D start_ptep + max_nr;
-        pte_t *ptep =3D start_ptep + 1;
-
-        VM_WARN_ON(max_nr < 1);
-        VM_WARN_ON(!softleaf_is_swap(softleaf_from_pte(pte)));
-
-        while (ptep < end_ptep) {
-                pte =3D ptep_get(ptep);
-
-                if (!pte_same(pte, expected_pte))
-                        break;
-                expected_pte =3D pte_next_swp_offset(expected_pte);
-                ptep++;
-        }
-
-        return ptep - start_ptep;
-}
-
-I don't know why this can happen on a swapless system.
-
->
-> We hit this in production on a swapless 6.12.58 host: ~1s of
-> "get_swap_device: Bad swap file entry 3f800204222bb" (do_swap_page() bein=
-g
-> correctly defensive about the same entry) followed by
->
->   BUG: unable to handle page fault for address: 000003f800204220
->   RIP: 0010:lookup_swap_cgroup_id+0x2b/0x60
->   Call Trace:
->    swap_pte_batch+0xbf/0x230
->    zap_pte_range+0x4c8/0x780
->    unmap_page_range+0x190/0x3e0
->    exit_mmap+0xd9/0x3c0
->    do_exit+0x20c/0x4b0
->
-> syzbot has reported the identical stack.
->
-> The source of the PTE corruption is a separate bug; this change makes the
-> teardown path as robust as the fault path already is.  Every other caller
-> of lookup_swap_cgroup_id() is downstream of a get_swap_device() that has
-> already validated the entry, so the new branch is cold.
-
-If the source is PTE corruption, I think we should fix the corruption
-itself rather than work around it here.
-
-Best Regards
-Barry
+~Gregory
