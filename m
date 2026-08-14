@@ -1,182 +1,317 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D3A4908C9;
-	Fri, 14 Aug 2026 17:05:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 495DE46C4A0;
+	Fri, 14 Aug 2026 17:21:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786727115; cv=none; b=kXhg8oUKbenIt7vCKveifvnAyUbyW15HWME7zN9nHeqcINZflMp5Gu+NVzoLjfy36C86Pj4gp61Zmtw4RzFkf1lOS3Nsm1WGtJwgyE7zBjp0nsw1oTorNJ4yxFia9ougqNJOJtzoVzwD+lBtaciC9coedU5paH5jIzwtyqthWJM=
+	t=1786728071; cv=none; b=Ah3qJ/VjrJdqZd0SzsW7AChPZc5u6HzR5vUuEmB8RpgObX38ejtWKelvgdScyGuM9bJBYUdyDYfwGwMDPY1MRMF7FOci9eLMsZtdkZzrVZhMBVTEK36Ub8o1TZXQ5OXJBDyoOEul++XnS0HjMOM+8ZjTW45TgA2aCpwnR7dLH7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786727115; c=relaxed/simple;
-	bh=6cKee+4bgf6gp2FRs4ttpp0+QLTW27WA6IEw4JzOP20=;
+	s=arc-20240116; t=1786728071; c=relaxed/simple;
+	bh=NlaRhEj0QeROPl949pM7+Tsw0V5g8Y9QEoFbk6I9PvQ=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=T+CjYOAo/bE3126LulBtbii//y+N6NjHdVqEvTUis6tlRHWYUkjcPWYDKhmFxSENLe+298S1qk16SXOd0kuKg3rlI9W4fop4meB59F689m3pfjPDNQuvdWs0ziPEwZLS0Go218upA/LJo1Z2ZHxqfVI3d9lkanqPX1Ts/hGrEjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TmbZodsj; arc=none smtp.client-ip=100.103.45.18
+	 Subject:From:To:Cc:Date; b=gpVbfFRb/BY3S9FZgMwF9bt2bIGF5MmSDRXPmvgYcMMt2b0p9S36NyJqLKxBiqPyfJuhyV5KOUupmQBUeixF77azWv2PwNRxyzgm38ZLx7dj5uPO1DqSmQH9pzCnnHezxDy827nk+b51Y1vD/eHNCqdDVOoaRxc/9aJ+1Mrt8js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZi0XuuD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TmbZodsj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56D351F00A3A;
-	Fri, 14 Aug 2026 17:05:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZi0XuuD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4C4D1F000E9;
+	Fri, 14 Aug 2026 17:21:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786727113;
-	bh=nTcDVPb9lc0nxETTOrYdaxHGm4RZ3gRaGaYQ2F0hvPE=;
+	s=k20260515; t=1786728070;
+	bh=a7Gn1L4Vt09NGwq/6A9esmcFIUrJ4Ih2A50WIYYLKts=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=TmbZodsjt9oMaWZBMu0XySo46nKHdB1ITiU3ozRdXsJZy+evrN4Y9Hk8w9qYcQEJL
-	 1mJITTo3mhPAfmql+Z1h/kmJyoege82jjuv7PAoHgwGLSQB3R5XJAYTtMYlmljEUa+
-	 rm692nVl54BOJhZ1QqasYHf6dOYA3QtkDicqSOuydT547RbTpEIhaUPMnUEMuPmV6I
-	 X4/1N0wPody7SndkO6SpjTBACTs1ORupSXV3ncyp8Q9yP4x/9ho8wcnTijabuXKCCb
-	 8qm/tJba6RWOVNwHcFOxxVfNr925Pw9TofbxwZOwFHAZZsBtojcXNx938RV7hnb9Dx
-	 YTpX71qDalB+w==
-Content-Type: multipart/mixed; boundary="===============2223739720343807470=="
+	b=XZi0XuuDJtxpNuBeQBsOSEEnR0amsX6avrlyBrSl7F8xaUB7jvL8rzCwRR/yQJ+4I
+	 Ise69z3gVTObogKGNdTPlKHOhJhNPjW2fqOLUBg816M5jqq9M6PUw5gPsotW25aa4q
+	 6fFc8Gt/MojQTnCLceWvL9tzkfsHDAIXU/36JQJRXjWWKBuyxa5+Xp70U8HIS7s3pP
+	 GtppXJuNQHb1caF1oERfuSvy3wzuIh2Yp2Rdb9Sl95e5D2Yw3iZOCDtOIWWfga3APQ
+	 zyCFM3Iic71dLlqM/JvlfvCq48EnXU7Ocfcnc/b79Q/hLlXsi4mQJAZ/L0yGpc2CaQ
+	 LJ3AXzdkTArwA==
+Content-Type: multipart/mixed; boundary="===============4448923700193765925=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <516ec49a2bff8ffb9142aa02957bcea1ade0398a778eadd1c9277a83782407b4@mail.kernel.org>
-In-Reply-To: <20260814075054.507089-5-ziyang.meme@gmail.com>
-References: <20260814075054.507089-5-ziyang.meme@gmail.com>
-Subject: Re: [PATCH v3 4/4] selftests/sched_ext: build BPF schedulers via the shared lib.bpf.mk
+Message-Id: <0ab4b02e666d8964b30c09510e801fa83a3a9af11ee2233a69193934e62a24e8@mail.kernel.org>
+In-Reply-To: <20260814075054.507089-2-ziyang.meme@gmail.com>
+References: <20260814075054.507089-2-ziyang.meme@gmail.com>
+Subject: Re: [PATCH v3 1/4] selftests: add shared lib.bpf.mk to build BPF progs and skeletons
 From: bot+bpf-ci@kernel.org
 To: ziyang.meme@gmail.com,shuah@kernel.org,tj@kernel.org,hannes@cmpxchg.org,mkoutny@suse.com,jikos@kernel.org,bentiss@kernel.org,void@manifault.com,eddyz87@gmail.com
 Cc: vmalik@redhat.com,arighi@nvidia.com,changwoo@igalia.com,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,akpm@linux-foundation.org,inwardvessel@gmail.com,mykolal@meta.com,nathan@kernel.org,ziyang.meme@gmail.com,kernel-team@meta.com,linux-kselftest@vger.kernel.org,cgroups@vger.kernel.org,linux-input@vger.kernel.org,sched-ext@lists.linux.dev,linux-mm@kvack.org,bpf@vger.kernel.org,llvm@lists.linux.dev,linux-kernel@vger.kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
-Date: Fri, 14 Aug 2026 17:05:12 +0000 (UTC)
+Date: Fri, 14 Aug 2026 17:21:08 +0000 (UTC)
 
---===============2223739720343807470==
+--===============4448923700193765925==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> diff --git a/tools/testing/selftests/sched_ext/Makefile b/tools/testing/selftests/sched_ext/Makefile
-> index 3cfe90e0f34f..a2df47b300d0 100644
-> --- a/tools/testing/selftests/sched_ext/Makefile
-> +++ b/tools/testing/selftests/sched_ext/Makefile
-> @@ -14,48 +14,32 @@ CURDIR := $(abspath .)
->  REPOROOT := $(abspath ../../../..)
->  TOOLSDIR := $(REPOROOT)/tools
->  LIBDIR := $(TOOLSDIR)/lib
-> -BPFDIR := $(LIBDIR)/bpf
->  TOOLSINCDIR := $(TOOLSDIR)/include
-> -BPFTOOLDIR := $(TOOLSDIR)/bpf/bpftool
->  APIDIR := $(TOOLSINCDIR)/uapi
->  GENDIR := $(REPOROOT)/include/generated
->  GENHDR := $(GENDIR)/autoconf.h
-> -SCXTOOLSDIR := $(TOOLSDIR)/sched_ext
->  SCXTOOLSINCDIR := $(TOOLSDIR)/sched_ext/include
+> diff --git a/tools/testing/selftests/lib.bpf.mk b/tools/testing/selftests/lib.bpf.mk
+> new file mode 100644
+> index 000000000000..433a26a36960
+> --- /dev/null
+> +++ b/tools/testing/selftests/lib.bpf.mk
+> @@ -0,0 +1,296 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +#
+> +# Build BPF programs and skeleton headers for selftests, then link them into
+> +# test binaries.
+> +#
+> +# Use it from a test Makefile like this:
+> +#
+> +#     BPF_SRCS         := foo.bpf.c bar.bpf.c
+> +#     TEST_GEN_PROGS   := foo_test
+> +#     OVERRIDE_TARGETS := 1              # set before lib.mk
+> +#     include ../lib.mk
+> +#     include ../lib.bpf.mk
+> +#
+> +#     $(OUTPUT)/foo_test: foo_test.c $(BPF_SKELS) $(BPFOBJ)
+> +#         $(call bpf_link,$@,$<)
+> +#
+> +# Keep $(BPFOBJ) in the dependencies so make relinks the test when libbpf.a
+> +# changes.
+> +#
+> +# Options to set before including lib.bpf.mk:
+> +#   BPF_PROG_EXT     - source ending; default .bpf.c. Use .c for progs/foo.c.
+> +#   BPF_EXTRA_HDRS   - more headers needed by the BPF objects.
+> +#   BPF_EXTRA_CFLAGS - more flags for compiling BPF programs.
+> +#   BPF_SKEL_EXT     - skeleton header ending; default .skel.h.
+> +#   BPF_GEN_SUBSKEL  - also create a subskeleton header when set.
+> +#   BPF_OBJ_DIR      - folder for BPF objects; default $(OUTPUT).
+> +#   BPF_SKEL_DIR     - folder for skeleton headers; default $(OUTPUT).
+> +#
+> +# You may replace BPF_CFLAGS after including this file. Make reads it when each
+> +# object is built. Sources may be in subfolders, but generated files use only
+> +# the source filename and are placed directly in their output folder.
+> +#
+> +# Include lib.mk first. This file uses OUTPUT, top_srcdir, CC, CLANG, Q and msg.
+> +# OVERRIDE_TARGETS stops lib.mk from adding its normal link rule. This file sets
+> +# BPFOBJ, BPFTOOL, BPF_OBJS, BPF_SKELS and BPF_LDLIBS, and adds to CFLAGS and
+> +# EXTRA_CLEAN.
+
+The documented contract lists five variables that this file sets (BPFOBJ,
+BPFTOOL, BPF_OBJS, BPF_SKELS, BPF_LDLIBS), but the fragment unconditionally
+assigns about twenty more with ':=', several having generic names that an
+existing test Makefile might already use: TOOLSDIR, LIBDIR, BPFDIR,
+TOOLSINCDIR, BPFTOOLDIR, APIDIR, SCRATCH_DIR, BUILD_DIR, INCLUDE_DIR,
+HOST_BUILD_DIR, HOST_SCRATCH_DIR, HOST_BPFOBJ, DEFAULT_BPFTOOL, MAKE_DIRS,
+BPF_CFLAGS, CLANG_SYS_INCLUDES, IS_LITTLE_ENDIAN, MENDIAN, CLANG_BPF_CPU,
+BPF_SUBSKEL_EXT, submake_extras.
+
+It also defines rules for $(MAKE_DIRS), appends to the phony 'all', and via
+'include $(top_srcdir)/tools/scripts/Makefile.arch' it sets ARCH (with the
+'override' keyword when ARCH is empty), SRCARCH, HOSTARCH, LP64 and
+IS_64_BIT.
+
+The sched_ext conversion already had to rework its own INCLUDE_DIR,
+OBJ_DIR, SCXOBJ_DIR and MAKE_DIRS precisely because the names collide.
+
+There's also an asymmetry in assignment operators: BPF_PROG_EXT,
+BPF_SKEL_EXT, BPF_OBJ_DIR, BPFTOOL and VMLINUX_BTF* use '?=' so a caller
+can influence them, but SCRATCH_DIR, BUILD_DIR and INCLUDE_DIR use ':=', so
+a caller cannot relocate the libbpf/bpftool scratch tree even though it
+lands inside the test's own directory.
+
+Could the 'This file sets ...' list be completed (and the collision risk
+called out), or should the internal names be prefixed to reduce the
+collision surface?
+
 >
-> -OUTPUT_DIR := $(OUTPUT)/build
-> -OBJ_DIR := $(OUTPUT_DIR)/obj
-> -INCLUDE_DIR := $(OUTPUT_DIR)/include
-> -BPFOBJ_DIR := $(OBJ_DIR)/libbpf
-> -SCXOBJ_DIR := $(OBJ_DIR)/sched_ext
-> -BPFOBJ := $(BPFOBJ_DIR)/libbpf.a
-> -LIBBPF_OUTPUT := $(OBJ_DIR)/libbpf/libbpf.a
-> -
-> -DEFAULT_BPFTOOL := $(OUTPUT_DIR)/host/sbin/bpftool
-> -HOST_OBJ_DIR := $(OBJ_DIR)/host/bpftool
-> -HOST_LIBBPF_OUTPUT := $(OBJ_DIR)/host/libbpf/
-> -HOST_LIBBPF_DESTDIR := $(OUTPUT_DIR)/host/
-> -HOST_DESTDIR := $(OUTPUT_DIR)/host/
-> -
-> -VMLINUX_BTF_PATHS ?= $(if $(O),$(O)/vmlinux)					\
-> -		     $(if $(KBUILD_OUTPUT),$(KBUILD_OUTPUT)/vmlinux)		\
-> -		     ../../../../vmlinux					\
-> -		     /sys/kernel/btf/vmlinux					\
-> -		     /boot/vmlinux-$(shell uname -r)
-> -VMLINUX_BTF ?= $(abspath $(firstword $(wildcard $(VMLINUX_BTF_PATHS))))
-> -ifeq ($(VMLINUX_BTF),)
-> -$(error Cannot find a vmlinux for VMLINUX_BTF at any of "$(VMLINUX_BTF_PATHS)")
-> -endif
-> +# The schedulers are built by ../lib.bpf.mk: modern *.bpf.c layout, a
-> +# .bpf.skel.h suffix, and subskeletons.
-> +BPF_SRCS        := $(wildcard *.bpf.c)
-> +BPF_SKEL_EXT    := .bpf.skel.h
-> +BPF_GEN_SUBSKEL := 1
-> +# Keep the generated files under build/ as before.  SCXOBJ_DIR (userspace
-> +# objects) reuses the BPF object dir.
-> +BPF_OBJ_DIR  := $(OUTPUT)/build/obj/sched_ext
-> +BPF_SKEL_DIR := $(OUTPUT)/build/include
-> +SCXOBJ_DIR   := $(BPF_OBJ_DIR)
-
-The comment says generated files stay 'under build/ as before', but only
-two of the five generated-output locations do. lib.bpf.mk hardcodes its own
-scratch tree from $(OUTPUT):
-
-tools/testing/selftests/lib.bpf.mk defines:
-  SCRATCH_DIR := $(OUTPUT)/tools
-  BUILD_DIR   := $(SCRATCH_DIR)/build
-  INCLUDE_DIR := $(SCRATCH_DIR)/include
-  BPFOBJ      := $(BUILD_DIR)/libbpf/libbpf.a
-  HOST_SCRATCH_DIR := $(OUTPUT)/host-tools
-  DEFAULT_BPFTOOL := $(HOST_SCRATCH_DIR)/sbin/bpftool
-
-So relative to the pre-conversion layout:
-
-  build/obj/sched_ext/         BPF + userspace objects   unchanged
-  build/include/               skeletons and subskeletons unchanged
-  build/obj/libbpf/libbpf.a -> tools/build/libbpf/libbpf.a       moved out
-  build/include/vmlinux.h   -> tools/include/vmlinux.h           moved out
-  build/include/bpf/*.h     -> tools/include/bpf/*.h             moved out
-  build/host/sbin/bpftool   -> tools/sbin/bpftool or host-tools/sbin/bpftool
-
-The layout change itself is fine and is not a leak: lib.bpf.mk already adds
-$(SCRATCH_DIR) and $(HOST_SCRATCH_DIR) to EXTRA_CLEAN, so 'make clean'
-still removes everything the deleted 'override define CLEAN' used to
-remove.
-
-Could the comment be more precise by naming what actually stays put, namely
-the BPF objects and the skeleton headers?
+> +include $(top_srcdir)/tools/scripts/Makefile.arch	# ARCH / SRCARCH / HOSTARCH
 
 [ ... ]
 
+> +# vmlinux.h can contain anonymous struct and union members. Clang needs
+> +# -fms-extensions to accept them.
+> +BPF_CFLAGS = -g -Wall -Werror -D__TARGET_ARCH_$(SRCARCH) $(MENDIAN)	\
+> +	     -I$(INCLUDE_DIR) -I$(APIDIR) -I$(TOOLSINCDIR)		\
+> +	     -std=gnu11							\
+> +	     -fno-strict-aliasing					\
+> +	     -fms-extensions -Wno-microsoft-anon-tag			\
+> +	     -Wno-compare-distinct-pointer-types			\
+> +	     $(CLANG_SYS_INCLUDES) $(BPF_EXTRA_CFLAGS)
+
+A subsystem pattern flags this as potentially concerning: -I$(TOOLSINCDIR)
+(tools/include) is added to the BPF-program include path. None of the three
+Makefiles this fragment replaces do that, and selftests/bpf/Makefile
+deliberately does not either.
+
+It has -I$(TOOLSINCDIR) only in COMMON_CFLAGS for the userspace test
+binaries, while its BPF_CFLAGS includes only -I$(INCLUDE_DIR) -I$(CURDIR)
+-I$(APIDIR) with no tools/include.
+
+tools/include/linux/ holds 81 host-tool shim headers (err.h, filter.h,
+kernel.h, mm.h, module.h, mutex.h, atomic.h, compiler.h, bitops.h, list.h)
+whose contents are meant for userspace tools and conflict with vmlinux.h.
+
+Because $(CLANG_SYS_INCLUDES) uses -idirafter, these shims also sort ahead
+of /usr/include, so a BPF program that includes any non-uapi <linux/...>
+name silently picks up a host shim instead of failing or getting the real
+header.
+
+This is currently harmless for all three consumers: -I$(APIDIR) precedes
+-I$(TOOLSINCDIR), and the only <linux/...> names actually reached today are
+<linux/const.h> (hid/progs/hid_bpf_helpers.h, present in
+tools/include/uapi/linux/) and <linux/errno.h> (tools/lib/bpf/*.bpf.h,
+present in neither, so it resolves via -idirafter). sched_ext escapes
+entirely because it replaces BPF_CFLAGS after the include.
+
+So this is a latent hazard for future consumers rather than a current
+breakage, but since no consumer needs it and it diverges from the file's
+own stated model (selftests/bpf/Makefile), would dropping -I$(TOOLSINCDIR)
+from BPF_CFLAGS be safer?
+
 >
->  ################
->  # C schedulers #
->  ################
->
-> -override define CLEAN
-> -	rm -rf $(OUTPUT_DIR)
-> -	rm -f $(TEST_GEN_PROGS)
-> -endef
-> -
-> -# Every testcase takes all of the BPF progs are dependencies by default. This
-> +# Every testcase takes all of the BPF progs as dependencies by default. This
+> +# $1 = source, $2 = object. -MMD -MP records every included header, including
+> +# headers included by other headers.
 
 [ ... ]
 
+> +# ---- build vmlinux.h ------------------------------------------------------
+> +# Replace vmlinux.h only when its contents change. A new timestamp alone would
+> +# rebuild every BPF object and skeleton.
+> +$(INCLUDE_DIR)/vmlinux.h: $(VMLINUX_BTF) $(BPFTOOL) | $(INCLUDE_DIR)
+> +ifeq ($(VMLINUX_H),)
+> +	$(call msg,GEN,,$@)
+> +	$(Q)test -n "$(VMLINUX_BTF)" || { \
+> +		echo "lib.bpf.mk: no vmlinux with BTF at any of \"$(VMLINUX_BTF_PATHS)\"" >&2; \
+> +		exit 1; }
+> +	$(Q)$(BPFTOOL) btf dump file $(VMLINUX_BTF) format c > $@.tmp
+> +else
+> +	$(call msg,CP,,$@)
+> +	$(Q)cp "$(VMLINUX_H)" $@.tmp
+> +endif
+> +	$(Q)cmp -s $@.tmp $@ || mv $@.tmp $@
+> +	$(Q)rm -f $@.tmp
+
+A subsystem pattern flags this as potentially concerning: when the dumped
+BTF is byte-identical to the existing vmlinux.h, the recipe leaves $@
+untouched so its mtime stays older than $(VMLINUX_BTF), and make re-runs
+the whole recipe on every subsequent invocation.
+
+'bpftool btf dump file <vmlinux> format c' on a full kernel is a
+multi-second, ~100k-line dump, so once the BTF source is newer than the
+generated header (after any kernel rebuild, or a fresh
+/boot/vmlinux-$(uname -r)) every no-op 'make' in the test directory pays
+that cost, permanently.
+
+Both hid and sched_ext previously redirected straight into $@, so the dump
+ran once and then the target was up to date. The idiom is inherited from
+selftests/bpf/Makefile and the comment correctly explains why the content
+check exists, but would 'cmp -s $@.tmp $@ && touch $@ || mv $@.tmp $@' keep
+the no-rebuild property while also stopping the repeated dump?
+
 >
->  .DEFAULT_GOAL := all
+> +# ---- BPF objects and skeletons --------------------------------------------
+> +BPF_PROG_EXT ?= .bpf.c
+> +# Each source must end with BPF_PROG_EXT so Make can remove that ending.
+> +bpf_bad_srcs := $(filter-out %$(BPF_PROG_EXT),$(BPF_SRCS))
+> +ifneq ($(bpf_bad_srcs),)
+> +$(error lib.bpf.mk: BPF_SRCS entries must end in $(BPF_PROG_EXT): $(bpf_bad_srcs))
+> +endif
+> +bpf_stems := $(patsubst %$(BPF_PROG_EXT),%,$(notdir $(BPF_SRCS)))
+> +# Reject any dot left after removing BPF_PROG_EXT. For example, foo.bpf.c leaves
+> +# foo.bpf when the ending is set to .c.
+> +bpf_dotted_stems := $(filter-out $(basename $(bpf_stems)),$(bpf_stems))
+> +ifneq ($(bpf_dotted_stems),)
+> +$(error lib.bpf.mk: BPF_SRCS basenames must not contain a dot: $(bpf_dotted_stems))
+> +endif
+> +# Generated files use only the source filename. Reject equal filenames instead
+> +# of letting one replace another.
+> +ifneq ($(words $(bpf_stems)),$(words $(sort $(bpf_stems))))
+> +$(error lib.bpf.mk: BPF_SRCS has colliding basenames: $(BPF_SRCS))
+> +endif
 
+[ ... ]
 
-Separately, the commit message states:
+> +BPF_OBJS  := $(addprefix $(BPF_OBJ_DIR)/,$(addsuffix .bpf.o,$(bpf_stems)))
+> +BPF_SKELS := $(addprefix $(BPF_SKEL_DIR)/,$(addsuffix $(BPF_SKEL_EXT),$(bpf_stems)))
 
->     sched_ext carried its own ~130 lines of libbpf + bpftool + vmlinux.h +
->     BPF-object + skeleton build machinery.  Replace it with an include of the
->     shared tools/testing/selftests/lib.bpf.mk, making sched_ext the third
->     in-tree consumer of that fragment, after selftests/cgroup and
->     selftests/hid.
+[ ... ]
+
+> +# Link three times and compare the last two outputs. A correct linker must not
+> +# change an object that it already linked.
+> +$(BPF_SKELS): $(BPF_SKEL_DIR)/%$(BPF_SKEL_EXT): $(BPF_OBJ_DIR)/%.bpf.o $(BPFTOOL) | $(BPF_SKEL_DIR)
+
+BPF_SRCS is the fragment's one mandatory input, and the validation above
+checks three different ways it can be malformed (wrong extension, dotted
+basename, colliding basenames) with a clear $(error) message. The one
+remaining malformed value - empty - is not checked, and it is the case that
+degrades worst.
+
+With an empty BPF_SRCS, bpf_stems, BPF_OBJS and BPF_SKELS are all empty,
+and the static pattern rule above is read by make as a rule whose target
+list is empty - a rule with nothing before the first colon. GNU make
+rejects this outright, so the *include* of ../lib.bpf.mk aborts with a
+generic parse error naming lib.bpf.mk:252 rather than with one of the
+fragment's own diagnostics, and it does so for 'make clean' and 'make
+install' too. This is the failure mode the author deliberately avoided for
+the missing-vmlinux case (see the comment at lines 105-106 and the runtime
+guard at line 199).
+
+This is reachable through the way the fragment is actually being adopted:
+two of the three consumers in this series derive BPF_SRCS from a wildcard
+whose expansion depends on the working tree - 'BPF_SRCS := $(wildcard
+progs/*.c)' (selftests/hid) and 'BPF_SRCS := $(wildcard *.bpf.c)'
+(selftests/sched_ext). Any tree where that glob comes back empty (a partial
+copy, a directory whose programs were removed or renamed, or a future user
+who sets BPF_SRCS from a variable that is not set) turns a
+should-be-obvious configuration mistake into an unexplained make failure in
+a shared file.
+
+Would a fourth guard next to the existing three, e.g.
+
+    ifeq ($(BPF_SRCS),)
+    $(error lib.bpf.mk: BPF_SRCS is empty; set it before including lib.bpf.mk)
+    endif
+
+make it self-describing and consistent with the checks immediately above?
+
+> +	$(call msg,GEN-SKEL,,$@)
+
+[ ... ]
+
+> +# Read the header dependencies written by -MMD.
+> +-include $(BPF_OBJS:.o=.d)
+> +
+> +# ---- values for the test Makefile -----------------------------------------
+> +# Add paths for generated skeletons and vmlinux.h. Put the new libbpf headers
+> +# first so an older copy under BPF_SKEL_DIR cannot be used by mistake.
+> +CFLAGS += -I$(INCLUDE_DIR) -I$(OUTPUT) -I$(BPF_SKEL_DIR)
+
+The comment does not describe what the line does, and the stated hazard
+cannot occur.
+
+BPF_SKEL_DIR is the directory this fragment writes skeleton headers into -
+the only things placed there are *$(BPF_SKEL_EXT) and *$(BPF_SUBSKEL_EXT).
+libbpf's headers are installed elsewhere: 'install_headers' in
+tools/lib/bpf/Makefile writes only to $(DESTDIR)$(prefix)/include/bpf/,
+which with 'DESTDIR=$(SCRATCH_DIR) prefix=' is $(INCLUDE_DIR)/bpf/.
+Nothing in this fragment can ever put a libbpf header under BPF_SKEL_DIR,
+so there is no stale copy for the ordering to protect against. The ordering
+rationale is not inherited from the code being consolidated either -
+selftests/bpf/Makefile has the opposite order, '-I$(CURDIR)
+-I$(INCLUDE_DIR) ...'.
+
+The comment also explains a two-element ordering while the line adds three
+paths, and silently skips the middle one. -I$(OUTPUT) is unexplained and
+does no work in either configuration: with the default 'BPF_SKEL_DIR ?=
+$(OUTPUT)' it is an exact duplicate of the -I$(BPF_SKEL_DIR) that follows
+it, and when a consumer overrides BPF_SKEL_DIR (sched_ext sets
+'$(OUTPUT)/build/include') nothing this fragment generates lives in
+$(OUTPUT) for it to find.
+
+For a new shared file whose comments are the interface documentation for
+future consumers, would it be worth either dropping -I$(OUTPUT) and the
+invented rationale, or replacing the comment with the real reason the order
+was chosen?
+
 >
->     All 28 skeletons and 28 subskeletons keep a same public API before and
->     after, the runner builds and links the same way.
+> +# Add target zstd when pkg-config finds it. A cross build must use the target
+> +# pkg-config, not the host one.
 
-The '28 skeletons and 28 subskeletons' count looks off. The directory holds
-29 BPF sources at this commit, so the conversion generates 29 skeletons and
-29 subskeletons, not 28:
-
-  $ git ls-tree --name-only f71f601c6ade:tools/testing/selftests/sched_ext \
-      | grep '\.bpf\.c$' | wc -l
-  29
-
-Both the old wildcard rule and the new BPF_SRCS enumerate the same 29 files,
-and the skeleton rule emits one .bpf.skel.h plus one .bpf.subskel.h per
-file. The two easy-to-miss sources are maybe_null_fail_dsp.bpf.c and
-maybe_null_fail_yld.bpf.c, which have no matching userspace .c file and so
-do not appear in auto-test-targets. A count taken from the test list rather
-than from *.bpf.c comes out one or two short.
-
-Should this read '29 skeletons and 29 subskeletons'? Also, the same sentence
-reads oddly: 'keep a same public API' should be 'keep the same public API',
-and the two clauses after it look like a comma splice.
+[ ... ]
 
 
 ---
@@ -184,4 +319,4 @@ AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
 See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/31820214629
---===============2223739720343807470==--
+--===============4448923700193765925==--
