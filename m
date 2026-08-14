@@ -1,132 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C10AA409286
-	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 07:19:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FFDA422521;
+	Fri, 14 Aug 2026 07:48:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786691966; cv=none; b=A2JxtqJ0z6ArD4toGYLXpC9KIPw8K8gjXCx25hYahZ4dUpaHpSo4f9orXHDup6h+VdCnavBg5h5DvGwwpgKhLb+z/th3Y3uoIfomOqoSbOtmrNnUc48PXq/Z73ddZrxz7+/k8Z7+BNQIbyxcLV2OqovaMnyvJHJwleg0eOlIeu0=
+	t=1786693748; cv=none; b=BcZEovGuiUOmsfAUQVyzjWS9IVgdN1/2WP5/sQUlErNqszWwmuaNgCKJ/CXwKxWwzBBNfeYiSa/j2Ab5rKX61tTaRVd3cE+PIjOO5FW6mkOAv5Q2/ge1aCtY3KTlPZ1Nm+ZkOOSUYWphUJf+zg30nu6b7zQxgO9LS/oNR4ymnGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786691966; c=relaxed/simple;
-	bh=4q031WC5EBVLwKa6MI3sKwBac5U/JZ2v6p8q5p3t/gs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=G5IotwePPA1q6TxCluOEpaDSJId2bs8VeT1hwP6Q9PqbqthTqruL04h4dqI6IYeYJOQqPYf8UtFt9jhUqhCVxG6whhQ6t44Jx3kB7RR/Q1XqchLnc6nNdebpCqkLnvX4uL8DxEZMyfna3CRNRq/KzwKv9zqj6F3azMmRabeejnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EufttVzY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786693748; c=relaxed/simple;
+	bh=OdyEdAbGrReWfF+9Bg5n9e1DlCuZbJG/3fgOF4VkI1Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Kw/HUcrI5VLjeb/BtgVjL81cCwyxK7Bt1ok5lj0BcHWFA4+O1ziF6xYTw/FoMY0gn+VvZn7HJ6QdrFQXUEYdG6WCswgL9dR5D4+EI3kKE10SPQG9YtboAWJTVcXmUARdIKvUCarLmgbBIYr3PesH/UPaASISedCN2FVboJO8D2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YRZOO0yd; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EufttVzY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EC061F00A3F
-	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 07:19:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786691963;
-	bh=Od/M0sS38B/IAHXIIur4KlaDShFpToMSCwBEwlqqN4w=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=EufttVzYSD4hOq2ld3LMwDFdOYGxvuwOB3FBSW6GFLaOcLMWHpHPWBcjrfGvynUGb
-	 UGj2Ljd++nUZslpco8vP8EcpCqcnLXxVZ4kjfzTqSZhMGrnyUtdtp4g2iLTb7r8hPb
-	 rVXLmpe+OWDrLXj3KL7hmveNr1tb+IhElZbifanzSXFheJTXiGpTTCl7klVUKYSnJz
-	 lNEF0vlm/bnpgZdfcZ6OtI1qr6NRN9E3brVOaTJVuk9ovCH6py9iZMj8+kuz9G6PTL
-	 16XkV5kJVADwU8R3/EbvYfaOq9ePgBoukw5WKCl+C1b+B33EEuUSJtVxxwtkqtVtQY
-	 uScdEjx3s9Hgw==
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8ef1dc934d1so4629346d6.0
-        for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 00:19:23 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RqguVyeaEvpXHfWga1Tihqr0Uobnb1sYXGssQf/d7MdrIjjDL+2UcWrLyXUpi8yxnrnYCdk9Bbn@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw0YbB6/bG9eq0n9rsnzyZ1Tav2m79rkcAKcGx6O9ndnQU5EcE0
-	sL7UL2+Tqop4OffLjIgXw8G2bpU58p2bKV6MGDUlHGS/fYWN0l3KkoSecvdmigiYGVSACvGx7DH
-	l45ZZkFMNnJor126WIBsWoijnD7VLmd0=
-X-Received: by 2002:a05:6214:459c:b0:90a:5779:d30a with SMTP id
- 6a1803df08f44-90a809e7e4fmr129248456d6.6.1786691962682; Fri, 14 Aug 2026
- 00:19:22 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YRZOO0yd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=FI
+	ECsLjOcFQ4t6j1nI62wLXm7hufJJ5ekbHLc3/zpck=; b=YRZOO0ydDBW69njRGY
+	i72odduzj/kBXY3UjVmE12Y/HVkUzkv6i0HbItjmIN9nNpy8Zq88417ZmcgzFySx
+	k32Oys9K8tYfL0uLw4tgWee5YWaOgtLi75uR3eVWoT0CKSNKZ5P1KE2biH46dA7a
+	E1YDqEUmmfRCbnl1AkArUP8+I=
+Received: from localhost (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDX5yYOyH5qLnA+Ng--.54207S3;
+	Fri, 14 Aug 2026 15:47:29 +0800 (CST)
+From: mambaxin@163.com
+To: hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeelb@google.com,
+	muchun.song@linux.dev,
+	akpm@linux-foundation.org,
+	david@redhat.com,
+	v-songbaohua@oppo.com,
+	hughd@google.com,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org
+Cc: gregkh@linuxfoundation.org,
+	jose.fernandez@linux.dev,
+	stable@vger.kernel.org,
+	syzbot+e12bd9ca48157add237a@syzkaller.appspotmail.com,
+	Barry Song <baohua@kernel.org>,
+	David Hildenbrand <david@kernel.org>,
+	Kairui Song <ryncsn@gmail.com>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Sasha Levin <sashal@kernel.org>,
+	chenxin <chenxinxin@xiaomi.com>
+Subject: [PATCH] mm: swap_cgroup: fix NULL deref in lookup_swap_cgroup_id on swapless host
+Date: Fri, 14 Aug 2026 15:47:06 +0800
+Message-ID: <20260814074705.939721-2-mambaxin@163.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com> <20260804-mglru-fg-v1-9-4d8dad39dad6@tencent.com>
-In-Reply-To: <20260804-mglru-fg-v1-9-4d8dad39dad6@tencent.com>
-From: Barry Song <baohua@kernel.org>
-Date: Fri, 14 Aug 2026 15:19:10 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4zVhK9SvHEd+OFAHSu-OgTiAtk-ZU5OQVx5RwBYmc9r7w@mail.gmail.com>
-X-Gm-Features: AUfX_mz2XV1v1iX3UNY8IBmbo0jYMTf1B8XkecPKEj6nl8GXRPWB8QN2pO8GcTc
-Message-ID: <CAGsJ_4zVhK9SvHEd+OFAHSu-OgTiAtk-ZU5OQVx5RwBYmc9r7w@mail.gmail.com>
-Subject: Re: [PATCH RFC 09/15] mm/mglru: frequency guided workingset promotion (MGLRU-FG)
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
-	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
-	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
-	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
-	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
-	SeongJae Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
-	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
-	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
-	Kairui Song <ryncsn@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDX5yYOyH5qLnA+Ng--.54207S3
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZFy3JF4rGr17Cw1fAr17trb_yoW5ur45pF
+	95WFnIgryUGr97Kw40ya40ga48ua1rWr47JrWvk3WY9a13Jr15WryI9F1UWryqvanI9Fyj
+	qFnIyw1xKw1jvFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jShFxUUUUU=
+X-CM-SenderInfo: xpdputx0lqqiywtou0bp/xtbCwhFwemp+yBGO2AAA3C
 
-On Tue, Aug 4, 2026 at 3:47=E2=80=AFAM Kairui Song via B4 Relay
-<devnull+kasong.tencent.com@kernel.org> wrote:
->
-> From: Kairui Song <kasong@tencent.com>
->
-> Complement MGLRU's eviction-time tier-PID protection with access-time
-> frequency-guided promotion.  Introduce a unified set of helpers built bas=
-ed
-> on referenced (access) count of a folio.
->
-> Each access increments a folio's referenced count stored in folio flags
-> (refs), refs still mappes to a logarithmic tier just like before, but wit=
-h
-> more formal bit definitions, a few special thresholds are introduced:
-> LRU_REFS_REFERENCED (1), LRU_REFS_WORKINGSET (2), LRU_REFS_PROTECTED (3),
-> and LRU_REFS_MAX(7). When it reaches certain threshold, the folio is
-> promoted proactively instead of wait for the PID controller to kick in.
->
-> Also simplify MGLRU's usage of PG_workingset and PG_referenced, now
-> these 2 flags are purely used as the lower 2 bit of refs for MGLRU. This
-> doesn't effect classical LRU in any way. This will actually simplify and
-> make MGLRU's certain metric reading more accurate, and reduced MGLRU's
-> original tier / referenced count bit by one since only one extra bit is
-> now needed to record a max referenced count of 7 (previously 2 extra bits
-> are needed). This changes make sense because MGLRU doesn't have demotion
-> so these 2 flags are never separately useful for MGLRU.
->
-> This addresses several shortcomings of the old model:
-[...]
+From: "Jose Fernandez (Anthropic)" <jose.fernandez@linux.dev>
 
-> + * Update the folio's lru refs indicator without taking the folio lock,
-> + * isolation, or lruvec lock. Used by both page table access (@is_fault=
-=3Dtrue)
-> + * and by file access (@is_fault=3Dfalse).
-> + */
-> +int folio_inc_lru_refs(struct folio *folio, bool is_fault, bool is_exec)
-> +{
+[ Upstream commit 63b02a9409cb5180398491b093e48bcb5315f5fb ]
 
+lookup_swap_cgroup_id() passes swap_cgroup_ctrl[type].map to
+__swap_cgroup_id_lookup() without checking that the type was ever
+registered via swap_cgroup_swapon().  On a swapless host every ctrl->map
+is NULL, so __swap_cgroup_id_lookup() dereferences NULL + a scaled
+swp_offset().
 
-This is really hard to follow, especially with call sites like:
+Since commit bea67dcc5eea ("mm: attempt to batch free swap entries for
+zap_pte_range()"), zap_pte_range() -> swap_pte_batch() calls
+lookup_swap_cgroup_id() on any non-present, non-none PTE that decodes as a
+real swap entry, without first validating it against swap_info[].  A
+single PTE corrupted into a type-0 swap entry takes the host down at
+process exit.
 
-folio_inc_lru_refs(folio, true, false);
-folio_inc_lru_refs(folio, false, false);
+We hit this in production on a swapless 6.12.58 host: ~1s of
+"get_swap_device: Bad swap file entry 3f800204222bb" (do_swap_page() being
+correctly defensive about the same entry) followed by
 
-The reader needs to remember what the first true and the second
-false represent, which makes the call sites quite opaque.
+  BUG: unable to handle page fault for address: 000003f800204220
+  RIP: 0010:lookup_swap_cgroup_id+0x2b/0x60
+  Call Trace:
+   swap_pte_batch+0xbf/0x230
+   zap_pte_range+0x4c8/0x780
+   unmap_page_range+0x190/0x3e0
+   exit_mmap+0xd9/0x3c0
+   do_exit+0x20c/0x4b0
 
-Could we have something like this instead?
+syzbot has reported the identical stack.
 
-#define LRU_REFS_FAULT BIT(0)
-#define LRU_REFS_EXEC BIT(1)
+The source of the PTE corruption is a separate bug; this change makes the
+teardown path as robust as the fault path already is.  Every other caller
+of lookup_swap_cgroup_id() is downstream of a get_swap_device() that has
+already validated the entry, so the new branch is cold.
 
-folio_inc_lru_refs(folio, LRU_REFS_FAULT);
-folio_inc_lru_refs(folio, 0);
-folio_inc_lru_refs(folio, LRU_REFS_EXEC);
-folio_inc_lru_refs(folio, LRU_REFS_EXEC | LRU_REFS_FAULT);
+Link: https://lore.kernel.org/20260504-swap-cgroup-fix-7-0-v1-1-f53ff41ee553@linux.dev
+Fixes: bea67dcc5eea ("mm: attempt to batch free swap entries for zap_pte_range()")
+Signed-off-by: Jose Fernandez (Anthropic) <jose.fernandez@linux.dev>
+Reported-by: syzbot+e12bd9ca48157add237a@syzkaller.appspotmail.com
+Link: https://lore.kernel.org/r/69859728.050a0220.3b3015.0033.GAE@google.com
+Assisted-by: Claude:unspecified
+Cc: Barry Song <baohua@kernel.org>
+Cc: David Hildenbrand <david@kernel.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Kairui Song <ryncsn@gmail.com>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Muchun Song <muchun.song@linux.dev>
+Cc: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: chenxin <chenxinxin@xiaomi.com>
+---
+ mm/swap_cgroup.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-BTW
+diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+index db6c4a26cf59..2d0425f4a6b9 100644
+--- a/mm/swap_cgroup.c
++++ b/mm/swap_cgroup.c
+@@ -161,6 +161,11 @@ unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
+  */
+ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
+ {
++	struct swap_cgroup_ctrl *ctrl;
++
++	ctrl = &swap_cgroup_ctrl[swp_type(ent)];
++	if (unlikely(!ctrl->map))
++		return 0;
+ 	return lookup_swap_cgroup(ent, NULL)->id;
+ }
+ 
+-- 
+2.50.1
+
