@@ -1,147 +1,139 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-30.ptr.blmpb.com (va-2-30.ptr.blmpb.com [209.127.231.30])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FFDA422521;
-	Fri, 14 Aug 2026 07:48:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6F4142BE94
+	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 07:50:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786693748; cv=none; b=BcZEovGuiUOmsfAUQVyzjWS9IVgdN1/2WP5/sQUlErNqszWwmuaNgCKJ/CXwKxWwzBBNfeYiSa/j2Ab5rKX61tTaRVd3cE+PIjOO5FW6mkOAv5Q2/ge1aCtY3KTlPZ1Nm+ZkOOSUYWphUJf+zg30nu6b7zQxgO9LS/oNR4ymnGE=
+	t=1786693828; cv=none; b=VPyBwDcB9f3Q6EoNvLslysU8A1tAL3l67bzy0YYS/xmAEhY/VDjfyWIaXNm+ZVUbl16eQUIKHvo0c/e2gclc5++Yy7DHc4gfZLF+LPk5GseGgZg3Aqa90A4pionQAcm7DTvvjeqiXE6pYAhi1Xywl7piQ8SjkRenPRsoTXPNFM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786693748; c=relaxed/simple;
-	bh=OdyEdAbGrReWfF+9Bg5n9e1DlCuZbJG/3fgOF4VkI1Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Kw/HUcrI5VLjeb/BtgVjL81cCwyxK7Bt1ok5lj0BcHWFA4+O1ziF6xYTw/FoMY0gn+VvZn7HJ6QdrFQXUEYdG6WCswgL9dR5D4+EI3kKE10SPQG9YtboAWJTVcXmUARdIKvUCarLmgbBIYr3PesH/UPaASISedCN2FVboJO8D2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YRZOO0yd; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1786693828; c=relaxed/simple;
+	bh=Y2jZkZG5IdEinfxaABKa1bNtQfxrrDOJa1w7kxN9I5Y=;
+	h=Content-Type:References:In-Reply-To:To:Message-Id:Mime-Version:Cc:
+	 From:Subject:Date; b=pSxWFQ4YE6UrpkA+6YXQ6ktqbc+UH28xLwIHFIGMlObx8ZfTSPGgzPwwOVqKB2I0y7W+rnHaak5fw0B3ohGiV5WI+4G+cyZN+ure8FGESpY03sLiH/vaDlwHE3Q3mKIoaNP9P6ixu1NPTJKWF3pfvD0yIXpNMJe8/RiTTJuQAx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=L7/Sqr2Y; arc=none smtp.client-ip=209.127.231.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YRZOO0yd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=FI
-	ECsLjOcFQ4t6j1nI62wLXm7hufJJ5ekbHLc3/zpck=; b=YRZOO0ydDBW69njRGY
-	i72odduzj/kBXY3UjVmE12Y/HVkUzkv6i0HbItjmIN9nNpy8Zq88417ZmcgzFySx
-	k32Oys9K8tYfL0uLw4tgWee5YWaOgtLi75uR3eVWoT0CKSNKZ5P1KE2biH46dA7a
-	E1YDqEUmmfRCbnl1AkArUP8+I=
-Received: from localhost (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDX5yYOyH5qLnA+Ng--.54207S3;
-	Fri, 14 Aug 2026 15:47:29 +0800 (CST)
-From: mambaxin@163.com
-To: hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeelb@google.com,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org,
-	david@redhat.com,
-	v-songbaohua@oppo.com,
-	hughd@google.com,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Cc: gregkh@linuxfoundation.org,
-	jose.fernandez@linux.dev,
-	stable@vger.kernel.org,
-	syzbot+e12bd9ca48157add237a@syzkaller.appspotmail.com,
-	Barry Song <baohua@kernel.org>,
-	David Hildenbrand <david@kernel.org>,
-	Kairui Song <ryncsn@gmail.com>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Sasha Levin <sashal@kernel.org>,
-	chenxin <chenxinxin@xiaomi.com>
-Subject: [PATCH] mm: swap_cgroup: fix NULL deref in lookup_swap_cgroup_id on swapless host
-Date: Fri, 14 Aug 2026 15:47:06 +0800
-Message-ID: <20260814074705.939721-2-mambaxin@163.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="L7/Sqr2Y"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1786693811;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=JbnLgklqOUcOfZtgfE8qoZAa4WQi1t4pHM8VNSJ95PY=;
+ b=L7/Sqr2YloWcCd+CLuHsctvb17T7wRA1u8EeyL71rexTLznirImCcRNGShoamsifvNP838
+ CY/EyFMwObsNum1JoF8LIjq/RFrSC8vStettKoF6i51yLAW07hcudtN3mivQCrsafYgAl4
+ KkT7BYhMbbM5oNRcU+Nh6x34Y1KgWh9in+oxdMjmqF45CRc0eLxrise6z06fzJ7uQc/NuN
+ 0y1mz0aUe8jnT/KsiQ+e1V3qFagpdJUZGm3swFRJLfIImlS3w1nJI9e2LTDiiVEW9uIaYp
+ UatwlhWuY5fbRtuq6gNXTOQ7brg2wieqFZPdJEkCgsBRf04R6+onPRRTelpNfw==
+Reply-To: yukuai@fygo.io
+User-Agent: Mozilla Thunderbird
+Received: from [192.168.1.104] ([39.182.0.156]) by smtp.feishu.cn with ESMTPS; Fri, 14 Aug 2026 15:50:07 +0800
+X-Lms-Return-Path: <lba+26a7ec8b1+cb17c5+vger.kernel.org+yukuai@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20260811064744.1139446-1-yukuai@kernel.org> <20260811064744.1139446-3-yukuai@kernel.org> <20260814071232.GA9784@lst.de>
+In-Reply-To: <20260814071232.GA9784@lst.de>
+Content-Transfer-Encoding: quoted-printable
+To: "Christoph Hellwig" <hch@lst.de>, "yu kuai" <yukuai@fygo.io>
+Message-Id: <f7350050-062a-4ced-9396-05ac33ac3e60@fnnas.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDX5yYOyH5qLnA+Ng--.54207S3
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZFy3JF4rGr17Cw1fAr17trb_yoW5ur45pF
-	95WFnIgryUGr97Kw40ya40ga48ua1rWr47JrWvk3WY9a13Jr15WryI9F1UWryqvanI9Fyj
-	qFnIyw1xKw1jvFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jShFxUUUUU=
-X-CM-SenderInfo: xpdputx0lqqiywtou0bp/xtbCwhFwemp+yBGO2AAA3C
+Mime-Version: 1.0
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Cc: "Jens Axboe" <axboe@kernel.dk>, "Tejun Heo" <tj@kernel.org>, 
+	"Josef Bacik" <josef@toxicpanda.com>, 
+	"Johannes Weiner" <hannes@cmpxchg.org>, 
+	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	"Yu Kuai" <yukuai@fygo.io>, "Tao Cui" <cui.tao@linux.dev>, 
+	"Jan Kara" <jack@suse.cz>, "Ming Lei" <ming.lei@redhat.com>, 
+	"Jonathan Corbet" <corbet@lwn.net>, 
+	"Shuah Khan" <skhan@linuxfoundation.org>, "Coly Li" <colyli@fygo.io>, 
+	"Kent Overstreet" <kent.overstreet@linux.dev>, 
+	"Alasdair Kergon" <agk@redhat.com>, "Mike Snitzer" <snitzer@kernel.org>, 
+	"Mikulas Patocka" <mpatocka@redhat.com>, 
+	"Benjamin Marzinski" <bmarzins@redhat.com>, "Song Liu" <song@kernel.org>, 
+	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"Pankaj Gupta" <pankaj.gupta.linux@gmail.com>, 
+	"Dan Williams" <djbw@kernel.org>, 
+	"Vishal Verma" <vishal.l.verma@intel.com>, 
+	"Dave Jiang" <dave.jiang@intel.com>, 
+	"Alison Schofield" <alison.schofield@intel.com>, 
+	"Ira Weiny" <iweiny@kernel.org>, 
+	"Andreas Gruenbacher" <agruenba@redhat.com>, 
+	"Matthew Wilcox" <willy@infradead.org>, 
+	"Andrew Morton" <akpm@linux-foundation.org>, 
+	"Chris Li" <chrisl@kernel.org>, "Kairui Song" <kasong@tencent.com>, 
+	"Kemeng Shi" <shikemeng@huaweicloud.com>, 
+	"Nhat Pham" <nphamcs@gmail.com>, "Baoquan He" <baoquan.he@linux.dev>, 
+	"Barry Song" <baohua@kernel.org>, 
+	"Youngjun Park" <youngjun.park@lge.com>, <cgroups@vger.kernel.org>, 
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-block@vger.kernel.org>, <linux-bcache@vger.kernel.org>, 
+	<dm-devel@lists.linux.dev>, <linux-raid@vger.kernel.org>, 
+	<nvdimm@lists.linux.dev>, <virtualization@lists.linux.dev>, 
+	<gfs2@lists.linux.dev>, <linux-fsdevel@vger.kernel.org>, 
+	<linux-mm@kvack.org>
+From: "Yu Kuai" <yukuai@fnnas.com>
+Subject: Re: [RFC PATCH v2 2/4] blk-cgroup: use a request_queue rhashtable for blkg lookup
+Date: Fri, 14 Aug 2026 15:50:04 +0800
 
-From: "Jose Fernandez (Anthropic)" <jose.fernandez@linux.dev>
+Hi=EF=BC=8C
 
-[ Upstream commit 63b02a9409cb5180398491b093e48bcb5315f5fb ]
+=E5=9C=A8 2026/8/14 15:12, Christoph Hellwig =E5=86=99=E9=81=93:
+> On Tue, Aug 11, 2026 at 02:47:42PM +0800, Yu Kuai wrote:
+>> Keep q->blkg_list for ordered policy and scheduler walks. Initialize and
+>> destroy the hash with request_queue, and remove the radix-tree preload
+>> paths which are no longer needed.
+> Are these fast path operations?  Otherwise we can walk all rhashtable
+> entries without an extra list, but it might be slower.
 
-lookup_swap_cgroup_id() passes swap_cgroup_ctrl[type].map to
-__swap_cgroup_id_lookup() without checking that the type was ever
-registered via swap_cgroup_swapon().  On a swapless host every ctrl->map
-is NULL, so __swap_cgroup_id_lookup() dereferences NULL + a scaled
-swp_offset().
+All users are from sysfs/cgroupfs API, I think they can be considered slow =
+path,
+however currently spinlock is held in these procedures, I think it's better=
+ to
+convert them to blkg_lookup based iterate after spinlock is converted to th=
+e
+blkcg_mutex.
 
-Since commit bea67dcc5eea ("mm: attempt to batch free swap entries for
-zap_pte_range()"), zap_pte_range() -> swap_pte_batch() calls
-lookup_swap_cgroup_id() on any non-present, non-none PTE that decodes as a
-real swap entry, without first validating it against swap_info[].  A
-single PTE corrupted into a type-0 swap entry takes the host down at
-process exit.
+>
+>> @@ -191,10 +198,15 @@ static void blkg_release(struct percpu_ref *ref)
+>>   {
+>>   	struct blkcg_gq *blkg =3D container_of(ref, struct blkcg_gq, refcnt);
+>>   	struct blkcg *blkcg =3D blkg->blkcg;
+>>   	int cpu;
+>>  =20
+>> +	if (!list_empty(&blkg->q_node))
+>> +		WARN_ON_ONCE(rhashtable_remove_fast(&blkg->q->blkg_hash,
+>> +						    &blkg->q_hash_node,
+>> +						    blkg_hash_params));
+>> +
+> The list_empty case is for initialization failure?  Or can we end up
+> with that by other means?
 
-We hit this in production on a swapless 6.12.58 host: ~1s of
-"get_swap_device: Bad swap file entry 3f800204222bb" (do_swap_page() being
-correctly defensive about the same entry) followed by
+Yes, this is for initialization failure, blkg_alloc() failure after percpu_=
+ref_init(),
+or blkg_create() failure before rhashtable_insert succeed.
 
-  BUG: unable to handle page fault for address: 000003f800204220
-  RIP: 0010:lookup_swap_cgroup_id+0x2b/0x60
-  Call Trace:
-   swap_pte_batch+0xbf/0x230
-   zap_pte_range+0x4c8/0x780
-   unmap_page_range+0x190/0x3e0
-   exit_mmap+0xd9/0x3c0
-   do_exit+0x20c/0x4b0
+>
+>> + * Lookup a blkg for the @blkcg - @q pair, whether it is online or dyin=
+g.
+>> + *
+>> + * Must be called in a RCU critical section.
+>> + */
+> Please add must_hold and/or lockdep annotations for this instead of just
+> a comment.
+>
+> Also maybe mention that this does not acquire a reference and the caller
+> must already hold one?
 
-syzbot has reported the identical stack.
+Perhaps it's more accurate that the blkg is pinned by IO or caller already
+hold one?
 
-The source of the PTE corruption is a separate bug; this change makes the
-teardown path as robust as the fault path already is.  Every other caller
-of lookup_swap_cgroup_id() is downstream of a get_swap_device() that has
-already validated the entry, so the new branch is cold.
-
-Link: https://lore.kernel.org/20260504-swap-cgroup-fix-7-0-v1-1-f53ff41ee553@linux.dev
-Fixes: bea67dcc5eea ("mm: attempt to batch free swap entries for zap_pte_range()")
-Signed-off-by: Jose Fernandez (Anthropic) <jose.fernandez@linux.dev>
-Reported-by: syzbot+e12bd9ca48157add237a@syzkaller.appspotmail.com
-Link: https://lore.kernel.org/r/69859728.050a0220.3b3015.0033.GAE@google.com
-Assisted-by: Claude:unspecified
-Cc: Barry Song <baohua@kernel.org>
-Cc: David Hildenbrand <david@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Kairui Song <ryncsn@gmail.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Muchun Song <muchun.song@linux.dev>
-Cc: Roman Gushchin <roman.gushchin@linux.dev>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: chenxin <chenxinxin@xiaomi.com>
----
- mm/swap_cgroup.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
-index db6c4a26cf59..2d0425f4a6b9 100644
---- a/mm/swap_cgroup.c
-+++ b/mm/swap_cgroup.c
-@@ -161,6 +161,11 @@ unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
-  */
- unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
- {
-+	struct swap_cgroup_ctrl *ctrl;
-+
-+	ctrl = &swap_cgroup_ctrl[swp_type(ent)];
-+	if (unlikely(!ctrl->map))
-+		return 0;
- 	return lookup_swap_cgroup(ent, NULL)->id;
- }
- 
--- 
-2.50.1
-
+>
+>
+--=20
+Thanks,
+Kuai
