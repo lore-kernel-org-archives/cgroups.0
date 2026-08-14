@@ -1,127 +1,103 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mta0.migadu.com (out-164.mta0.migadu.com [91.218.175.164])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44969198A17
-	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 01:03:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786669390; cv=pass; b=UgIvk30e1KjgNHcLXemdpA2059/6Q2utJQXy6+4ml3U0YQ+FwkkRC+UHiA0WIGM8p8JRh0T9nu6y9is2TIZYRCdYelFpXT5hbqudZgLNXuNS5jD4EZOYjPcy9FCRlRnPSahmeHK0URHeN+Azz64jS3cqhSdZRG6C+kMJ3KoYkdc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786669390; c=relaxed/simple;
-	bh=Hh8/sxZJsiFQsSNx/FrNwcbh0HywcYbRQSc2GZhuiDs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HNosM+5H7r8Fwtl0kQp+EvvEk/5LMfrJjjJD7ZbbRTKiCw4CSAgLHSZdzf0TsDpuyCdrhtEcsV+KKNiY1ZFmy+g4TXE35lAyuh1gLr7/s2qd8j8ZogY+MsTscSI+ZuTWrI/ZUGNDrvS9mkQZxZpJV6mYUcQ1ENMOoXi75RaO+W0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l39l5yhR; arc=pass smtp.client-ip=209.85.128.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B9B93148C9
+	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 01:29:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.164
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786670987; cv=none; b=jY5AUDahs53EHTmuL0Zz1ou5p05mPru2H3b18oFyge3UNehcycB8Z1He65HwzqZjLfLbhnL71wuZmbmbHwFiUb4PshTJmr+Q06YxEbevyo/m9CPN96JpBqjJdX2UHFuffWuxn+9zqSfg2z4mXSF3VCWAWsmOAdRlATqr46KZLAw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786670987; c=relaxed/simple;
+	bh=ek42tK/WchC2oA1PHIRS4QtmcmVuTZv2hEePGmd7yqE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JdTDhQrqgmiyNTc1jm1+mY+VNqc7yslycXNDkcJKcYtdaZLE6yNowqC8jxhAmlAqhD/hTep/z65r1I9IvXGYQpUNd0FeHct2m1NszT56FT6Vap5E6kzixt1xnlsLyGITGQpPc4MxhTy/HHt8nLrBi/453+WPdSlba+k6ERqcMTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Q18HdAys; arc=none smtp.client-ip=91.218.175.164
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l39l5yhR"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4996c452e95so520035e9.0
-        for <cgroups@vger.kernel.org>; Thu, 13 Aug 2026 18:03:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786669387; cv=none;
-        d=google.com; s=arc-20260327;
-        b=fgMraHq/Z67NqNhCwTq++4+wtCBXJbnZyAiliMEEeX9XFlAWFhJreRgkmVu9jXjb6X
-         pmkid0pDuZx2+AeShCPufKl/xGTNlcidS7eLakseuoTXxfs81Wcmgif0xA6+TEJJX0Xe
-         tjQEau6HFV+OzZUWEp40Mxov+1P6zbYlQAHJdf5v9NHQUjvdzsbY3v9HrfK1JAaBENr8
-         qP+6Yu+oCAuyBXKVjtIgZ8VjwfUO1PkDENTO0RK8BQmlOcQtaNpB+n+m573x8epVb/rj
-         1InDD6/CHN6C2Khh7ouQMjUg7QrEt39w/ZTcyb0/oQ6OfO558m8fQx2XmMtSbjMh5KV+
-         izEA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=eKtuG6jGikRVQqJP0ZyZYZl79OB5GjG68NlKzeTaNwU=;
-        fh=pcVY6/eg5Tv3619f/s5JkxpqZsJC/iTLM/oiCk+E65M=;
-        b=lRDkOk/o732VqveRlyTfkHhwWxthdAxc3IgBdD8KFFTjfUoJ4Y0DeiC7WwT2czPM21
-         gIZuRACe//wfivuQX3fCXA34RxDQmAcjIl1l4tFec/KJA0rrUUbtcfHMwkO0oiPeWIJ5
-         lGMC68QRDdYLVW/b4GT7+tHr/xhfJh6mdsq8bHHf/qSgv/Tsuc+bgYIR6NppEI00TkKo
-         xhM6abNN8K53zotF7ge87i/ZUbMmOjkIA1DIYQVnbqSHSWhSnDGtOXD5y7mOHugpJ3Sn
-         pAeMFUsXXPtskTNY4nnbq2k+PVhPMZeJy9adxirrRUkWjY0brPR276XZZ8Yq58dgQg9J
-         E1dw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786669387; x=1787274187; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=eKtuG6jGikRVQqJP0ZyZYZl79OB5GjG68NlKzeTaNwU=;
-        b=l39l5yhR0UfZ8rfEFSzPEH1tWklxHAQWtOynFp6mMlDfNy0wZo2e3k+ZsCphXXg0hS
-         vAfMjKhZAG1Zr3W0DBOkH9DdchpNTJ/teDKedMdMaBEjp0Vz6hTLvoMwnAvD0JVcOWWn
-         KZHaaQYN88vf1b7YtV99ULQkSLlE1MiBjOT2n9mdxScm7bFOovg7uiagKDHC5jY5qZ2i
-         Gf29p/zkpCSWCOHuyG0tSVLQ89hyPDpCN6EzICCCVAcf6VsZut6jkqSwPm3v6eR2vjWl
-         j8OJKXvl5dSwQB/oQaRCyPrqv5AMzJwgIB/Nl4j0IBIIXVN0XZD6MHh4GGeFz6SsGfCE
-         Vp7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786669387; x=1787274187;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=eKtuG6jGikRVQqJP0ZyZYZl79OB5GjG68NlKzeTaNwU=;
-        b=Gz/EsfDla18aa7BLW2mB86ZfW2+Al3Ms2zD/u0RYjqOybDii46mmOg0XEVU9wTHLH1
-         hZM2RBNsBFZ4bIIu4bCA/t+v65WvQ0EQcFbAoYPvbZ7AOv6Z3C5mEhhVi0glgftIunYM
-         rNHy9pSwX4De4+2OIAGLYvFWhBOAfNOhsoT2FyY9OEZQBJEVGUjYKVeVp1tBtgkO4Z7E
-         sKdonmpUOldxPqQiu0dX8Lgpwq0h/1lFKJwgej5U5MN5JyZbg4oWSXUJp9+/cQ4qWxwT
-         eN0thv9D8gWOa0IzEeEp4hrqrnXnyiW8t5cnFz6W7j7RRoIpCA2c7hr2nrq4nGKYoUXh
-         Gqag==
-X-Forwarded-Encrypted: i=1; AHgh+Rq/nOXT284QZu20zHX6oSR0vkEK2966ImLORYADqf0+/Fxqbd3ic6G5A40cYwRRGm30MEwQo1Ng@vger.kernel.org
-X-Gm-Message-State: AOJu0YxMtKqFGd50bKCk56E5QIgnAHJvLTyJvxF024KWlvTCfg1PfjTT
-	M5hGTc40vOJsM3OzU7cN/3FpVhuuOdxXZ6/NDOT6o7v97u9dTGdq5nj8JnJ5Pt+HvsjfWeFyQ+A
-	oB2s6f41lQAap0pMqx3fchEXdQylYz24=
-X-Gm-Gg: AR+sD11DPI56drU1lLHeFGXtc2GExg9JVqNfNhUgkU10rjnwqXStY2b5IgCBPclrUiy
-	65FSUl4xzFTPUTtwd7qzbqFrPtq70fxZkzdFAodaBa7h5DOGIehctDzogDaxfztVPsLeCXrJYo4
-	cFkJFkIKyeDeICc6KIetXDmPDCiH6+nCe48kM9pxnDA1gFb3kXmI2txhH0QUZfxu4bFEeOeMFTH
-	juA9wC402Jqt+hDUhfdpaNsCeQNAyh2qbEBCMsHtY0a/oXMIr2SZuo93OxF0nPTHWFhJ9LX6sAY
-	+n9lacW5UwypKj+DJYjkTibLumo2g6wY4H1ibPq8sO4sv2UIJro9VaLWB0O9TDa5Zggr7lil7d4
-	nge0P5cezEA8yIy6Ldf0zpOnmOnlqLQA=
-X-Received: by 2002:a05:600c:6206:b0:495:4126:1e55 with SMTP id
- 5b1f17b1804b1-499879543c7mr12992215e9.2.1786669387186; Thu, 13 Aug 2026
- 18:03:07 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Q18HdAys"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ek42tK/WchC2oA1PHIRS4QtmcmVuTZv2hEePGmd7yqE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786670980; v=1; x=1787275780;
+ b=Q18HdAysD+lsrITUMZl1XAAKoqwSH84122i8rprLh+1ilqPnV4wjDkzvVCWYdU25PGdwhGwM
+ P75B1BjSl9YvvqRlD2NisU4l8dEhx4HFHip6YIamoDhO9zEtt90EEgRZ3C/3Uz2ztuv4r6Xb6sd
+ r8PEVd8RpIuYAs0icMbk0kD0=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from mi-ThinkCentre-M760t.mioffice.cn (14.29.108.92)
+	by smtp.migadu.com with ESMTPS id 8baf117ec7468f79;
+	Fri, 14 Aug 2026 01:29:40 +0000
+X-Migadu-Flow: FLOW_OUT
+From: Ridong Chen <ridong.chen@linux.dev>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Muchun Song <muchun.song@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	David Finkel <davidf@vimeo.com>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	cgroups@vger.kernel.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
+	linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
+	linux-kernel@vger.kernel.org,
+	Tao Cui <cuitao@kylinos.cn>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: [PATCH v3 0/2] mm, memcg: fix memory.peak reset clobbering other fds' watermark
+Date: Fri, 14 Aug 2026 09:29:22 +0800
+Message-Id: <20260814012924.2388613-1-ridong.chen@linux.dev>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260813075025.1406585-1-xueyuan.chen21@gmail.com> <20260813134401.a1fb632936fa3b91e454c82d@linux-foundation.org>
-In-Reply-To: <20260813134401.a1fb632936fa3b91e454c82d@linux-foundation.org>
-From: Xueyuan Chen <xueyuan.chen21@gmail.com>
-Date: Fri, 14 Aug 2026 09:02:55 +0800
-X-Gm-Features: AUfX_mylOzV5S1BtiT-kri0MP_i865uLQASBKaj342mBheeet48cW-Q-PIEvuho
-Message-ID: <CA+qSx6xnAKa+Wa214tbBqXx2onA9QyUANUuzEcceEyvvsoHmng@mail.gmail.com>
-Subject: Re: [PATCH v6 0/4] mm: avoid large folio splits when swap is unavailable
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	zhaonanzhe@xiaomi.com, baohua@kernel.org, hannes@cmpxchg.org, 
-	ryncsn@gmail.com, youngjun.park@lge.com, baolin.wang@linux.alibaba.com, 
-	hughd@google.com, chrisl@kernel.org, shikemeng@huaweicloud.com, 
-	nphamcs@gmail.com, baoquan.he@linux.dev, mhocko@kernel.org, 
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev, 
-	david@kernel.org, ljs@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Aug 14, 2026 at 4:44=E2=80=AFAM Andrew Morton <akpm@linux-foundatio=
-n.org> wrote:
->
-> On Thu, 13 Aug 2026 15:50:21 +0800 Xueyuan Chen <xueyuan.chen21@gmail.com=
-> wrote:
->
-> > This is v6 of Barry's original RFC patch, "mm: Avoiding split large
-> > folios if swap has no space":
->
-> Thanks.  It looks like a nice patchset and it comes well-reviewed.
->
-> However it's super late in the cycle so I'd prefer to defer this until
-> after 7.3-rc1.
->
-> The changelogs aren't very clear on the overall benefit to our users
-> (please address this), but I'm thinking "minor".  If I'm wrong then
-> lets consider -stable backports and suitable Fixes: targets.
->
+From: Ridong Chen <chenridong@xiaomi.com>
 
-I'll improve the changelogs and run some tests to quantify
-the impact.  If it turns out more than minor, I'll add a
-Fixes: tag.
+The memory.peak / memory.swap.peak per-fd watermark tracking has two
+issues. Each open fd is a watcher and reads back max(its own value, the
+shared local_watermark); both bugs live in that scheme.
 
-Thanks.
+Worst case for both is the same and is userspace-visible: a reader of
+memory.peak (or memory.swap.peak) gets a value lower than the true peak,
+so a tool that sizes or bills a cgroup by its peak usage under-reports it.
+
+Patch 1 (read side) fixes the race Sashiko pointed out in the v1 review
+[1]: peak_show() inspects local_watermark and the per-fd values without
+holding peaks_lock, so a reader that races an unrelated peak_write()
+reset briefly observes the lowered value. Transient. It takes peaks_lock
+in the show path.
+
+Patch 2 (write side) fixes peak_write(): on a reset it stores the
+current usage into the other watchers instead of the old watermark, so
+once usage has dropped from a peak a reset on one fd drags every other
+fd's peak down too, even fds that never reset.
+
+---
+
+Changes since v2:
+- Spell out the worst-case userspace-visible effect, per Andrew's
+  Go back to v1 [2].
+
+Changes since v1:
+ - New patch 1: hold peaks_lock in the peak readers (Sashiko).
+ - Patch 2: floor the peers with max(usage, local_watermark), mirroring
+   peak_show(), and skip the writing fd (Johannes Weiner).
+
+[1] https://sashiko.dev/#/patchset/20260730115314.1069089-1-ridong.chen@linux.dev?part=1
+[2] https://lore.kernel.org/all/20260730115314.1069089-1-ridong.chen@linux.dev/
+
+Ridong Chen (2):
+  memcg: acquire peaks_lock when reading memory.peak
+  mm, memcg: fix memory.peak reset clobbering other fds' watermark
+
+ mm/memcontrol.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
+
+-- 
+2.34.1
+
