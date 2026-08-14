@@ -1,109 +1,202 @@
-Received: from mta0.migadu.com (out-249.mta0.migadu.com [91.218.175.249])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 333821A23A6
-	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 03:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.249
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E08543AB0
+	for <cgroups@vger.kernel.org>; Fri, 14 Aug 2026 05:19:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786678946; cv=none; b=W+P8TmLsbLmFPLnylEiAIJaQePwbdUrrdPYKB4ain/kEV3wRIOFY7JHwUhtPCQv04wmsrEvdsV84wzyVoJ3X1fd5cLb9a0K1OmJuV5UKVykrZBNa1ZAvHVQE/Tjc5sYXaXqvbbeh7UOTE8D88ZPxSPN+1GIQK/RoRvzAt4HSR8A=
+	t=1786684797; cv=none; b=VV5X704mjfyyHE55q6c4v/yx4FA/UUpn1nkkMqhR81Esndg3kuH7GgEvNvqSdaQsOrebiesncRiVJSRyuFD+bn3rzl6F3jCKNZAKttjyHIj58bwa7VxCjL5wacjF2J7Z52sy9SO3Eu0BBEuZs0ZC2iT1GYSMt7GFgUCAg1CrguI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786678946; c=relaxed/simple;
-	bh=SEkZgSN+NXcDybe67t2nMJKIlyyWBLCG1dqID552C8M=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=JQDFctUmIXp3quDdhgTe1D2wx57NH48gLucJgsmLyr8V37wR41DaK5oShMhGrEuqMV93Htz/5QZ1DKUERMcKu/H69PFor1OCwa9iI6i2g7D05L/Kb/iBhjuLD1abOEdN4FCZmhYGdNHRKQQKRo9Bnq6kk0Wpszz/w1MMvb9s0RU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=sSfvSPgA; arc=none smtp.client-ip=91.218.175.249
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1786684797; c=relaxed/simple;
+	bh=Sqr6Rhdj9jH5m28b+hPS7W9/gCOptJ43rjWICzbn2Iw=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=TucaJb9sm6IS90ZR2C438YxMViKW73xkpr/lk3mKT3KZC2sekfAzcPEOOUzLfurI0VSrmEdPJcn09i/yKGSQsOejCJJ017OxjI1P8XOp+lLM9+/MIOdbxZOikH4LM3f5GUQOB7W0ewNOiaq9H5/Y3enx6ywri3TuVFI4MGox8VE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kcnyPiT7; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="sSfvSPgA"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=SEkZgSN+NXcDybe67t2nMJKIlyyWBLCG1dqID552C8M=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1786678942; v=1; x=1787283742;
- b=sSfvSPgAIlegcteFvyTTCEhNa5dtpER5JoZBySjm9A8v+sA9otQPvs8+4kPu9KyL/kmtbmus
- NSzbAEbEcCoPnugZOnZzbasFC4BPLmLaUZLxkg4afKMIcD+BliHJAFcUQE6rKZtBA7GyxHv7vNd
- UvlJ9fIPqPwVw42sp+BD6uLc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: from smtpclient.apple (114.251.196.97)
-	by mta10.migadu.com with ESMTPS id e9ad8cb527641a7c;
-	Fri, 14 Aug 2026 03:42:22 +0000
-X-Migadu-Flow: FLOW_OUT
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kcnyPiT7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1786684794; x=1818220794;
+  h=date:from:to:cc:subject:message-id;
+  bh=Sqr6Rhdj9jH5m28b+hPS7W9/gCOptJ43rjWICzbn2Iw=;
+  b=kcnyPiT7WleRiouwvSA4E9UvqUjd3XvyxNYIeLqH85I4u1jjxYaD4RzS
+   jpZBwJVhYdKlMNJSpeWR64pj5xRRArG80ceA0KGwXv5WNorVgwI02cXfg
+   s5bJgj3wLqsoAPKg55L1tpew5588kwQsYg7hPdhMjSPjCl0VeOoi8LGtA
+   uZndLRCuzaJSIxh33F1ewbu6cVlQoegOsnL/NCqXSGbNDkM8OTtVo47Wi
+   mOyNqsSlyJOcfy9aF5CLGJpv+m1bQyXKZPFSgI25pEf6A93KKf36bYFNl
+   asqQQxJmttoy4iC+fUH0B/DZsJygsf5f1IvF9C08cLgfAUn1C6IqzRtEB
+   g==;
+X-CSE-ConnectionGUID: 5yFdJYzeQ9i4PwnYYL6ZKg==
+X-CSE-MsgGUID: wVsOoN/1Q1igyKIFKmbysw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11874"; a="97929341"
+X-IronPort-AV: E=Sophos;i="6.25,222,1779174000"; 
+   d="scan'208";a="97929341"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2026 22:19:52 -0700
+X-CSE-ConnectionGUID: bu5zxGJ3TrGvsWF5s4VQqQ==
+X-CSE-MsgGUID: YDR0/3RGTOuA+LdGkhpIGA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,222,1779174000"; 
+   d="scan'208";a="302370954"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by orviesa001.jf.intel.com with ESMTP; 13 Aug 2026 22:19:51 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wukKa-00000000XqE-3aCV;
+	Fri, 14 Aug 2026 05:19:48 +0000
+Date: Fri, 14 Aug 2026 13:19:18 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-7.3] BUILD SUCCESS
+ 44f57a2b1b9fabe3735a9b2669bb146ddb571fce
+Message-ID: <202608141306.25kSUp8y-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: Re: [PATCH v4 1/2] memcg: acquire peaks_lock when reading memory.peak
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20260814033005.2481920-2-ridong.chen@linux.dev>
-Date: Fri, 14 Aug 2026 11:42:02 +0800
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- David Finkel <davidf@vimeo.com>,
- Tejun Heo <tj@kernel.org>,
- "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
- "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>,
- linux-kernel@vger.kernel.org,
- Tao Cui <cuitao@kylinos.cn>,
- Ridong Chen <chenridong@xiaomi.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <5511E37E-62E7-43E5-8A0D-BE95CC88359C@linux.dev>
-References: <20260814033005.2481920-1-ridong.chen@linux.dev>
- <20260814033005.2481920-2-ridong.chen@linux.dev>
-To: Ridong Chen <ridong.chen@linux.dev>
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.3
+branch HEAD: 44f57a2b1b9fabe3735a9b2669bb146ddb571fce  cgroup/cpuset: Add test for partition root invalidation returning wrong CPUs
 
+elapsed time: 2516m
 
-> On Aug 14, 2026, at 11:30, Ridong Chen <ridong.chen@linux.dev> wrote:
->=20
-> From: Ridong Chen <chenridong@xiaomi.com>
->=20
-> Sashiko reported that a reader can transiently observe a lower peak
-> within a race window [1]. peak_show() returns
-> max(local_watermark, ofp->value), but peak_write() updates those two
-> under peaks_lock while the reader takes no lock. The interleaving is:
->=20
->  writer (reset on fd A)                 reader (fd B)
->  ----------------------                 -------------
->  usage =3D page_counter_read(pc)
->  WRITE_ONCE(local_watermark, usage)
->  // watermark lowered to usage
->                                         lw  =3D =
-READ_ONCE(local_watermark)
->                                         // sees the lowered usage
->                                         val =3D READ_ONCE(ofp->value)
->                                         // B's value not updated yet
->                                         return max(lw, val)
->                                         // both low -> low peak
->  WRITE_ONCE(peer_ctx->value, usage)
->  // B updated, but too late
->=20
-> Fix it by acquiring peaks_lock when reading the peak, so the reader =
-sees
-> a consistent snapshot of local_watermark and the per-fd values. The =
-same
-> race applies to memory.swap.peak, which shares peaks_lock and the
-> peak_write() path, so take the lock there as well.
->=20
-> [1] =
-https://sashiko.dev/#/patchset/20260730115314.1069089-1-ridong.chen@linux.=
-dev?part=3D1
-> Fixes: c6f53ed8f213 ("mm, memcg: cg2 memory{.swap,}.peak write =
-handlers")
-> Assisted-by: Claude:claude-opus-4-8
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+configs tested: 125
+configs skipped: 8
 
-Reviewed-by: Muchun Song <muchun.song@linux.dev>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Thanks
+tested configs:
+alpha                            allnoconfig    gcc-16.1.0
+alpha                           allyesconfig    gcc-16.1.0
+alpha                              defconfig    gcc-16.1.0
+arc                             allmodconfig    gcc-16.1.0
+arc                             allyesconfig    gcc-16.1.0
+arc                  randconfig-001-20260813    gcc-13.4.0
+arc                  randconfig-001-20260814    gcc-10.5.0
+arc                  randconfig-002-20260813    gcc-13.4.0
+arc                  randconfig-002-20260814    gcc-10.5.0
+arm                       keystone_defconfig    gcc-16.1.0
+arm                  randconfig-001-20260813    gcc-13.4.0
+arm                  randconfig-001-20260814    gcc-10.5.0
+arm                  randconfig-002-20260813    gcc-13.4.0
+arm                  randconfig-002-20260814    gcc-10.5.0
+arm                  randconfig-003-20260813    gcc-13.4.0
+arm                  randconfig-003-20260814    gcc-10.5.0
+arm                  randconfig-004-20260813    gcc-13.4.0
+arm                  randconfig-004-20260814    gcc-10.5.0
+arm64                randconfig-001-20260813    gcc-16.1.0
+arm64                randconfig-002-20260813    gcc-16.1.0
+arm64                randconfig-003-20260813    gcc-16.1.0
+arm64                randconfig-004-20260813    gcc-16.1.0
+csky                            allmodconfig    gcc-16.1.0
+csky                 randconfig-001-20260813    gcc-16.1.0
+csky                 randconfig-002-20260813    gcc-16.1.0
+hexagon              randconfig-001-20260813    gcc-11.5.0
+hexagon              randconfig-002-20260813    gcc-11.5.0
+i386                            allmodconfig    gcc-14
+i386       buildonly-randconfig-001-20260813    gcc-14
+i386       buildonly-randconfig-001-20260814    clang-22
+i386       buildonly-randconfig-002-20260813    gcc-14
+i386       buildonly-randconfig-002-20260814    clang-22
+i386       buildonly-randconfig-003-20260813    gcc-14
+i386       buildonly-randconfig-003-20260814    clang-22
+i386       buildonly-randconfig-004-20260813    gcc-14
+i386       buildonly-randconfig-004-20260814    clang-22
+i386       buildonly-randconfig-005-20260813    gcc-14
+i386       buildonly-randconfig-005-20260814    clang-22
+i386       buildonly-randconfig-006-20260813    gcc-14
+i386       buildonly-randconfig-006-20260814    clang-22
+i386                 randconfig-001-20260813    clang-22
+i386                 randconfig-002-20260813    clang-22
+i386                 randconfig-003-20260813    clang-22
+i386                 randconfig-004-20260813    clang-22
+i386                 randconfig-005-20260813    clang-22
+i386                 randconfig-006-20260813    clang-22
+i386                 randconfig-007-20260813    clang-22
+i386                 randconfig-011-20260813    clang-22
+i386                 randconfig-012-20260813    clang-22
+i386                 randconfig-013-20260813    clang-22
+i386                 randconfig-014-20260813    clang-22
+i386                 randconfig-015-20260813    clang-22
+i386                 randconfig-016-20260813    clang-22
+i386                 randconfig-017-20260813    clang-22
+loongarch                          defconfig    clang-24
+loongarch            randconfig-001-20260813    gcc-11.5.0
+loongarch            randconfig-002-20260813    gcc-11.5.0
+nios2                           allmodconfig    gcc-11.5.0
+nios2                            allnoconfig    gcc-11.5.0
+nios2                randconfig-001-20260813    gcc-11.5.0
+nios2                randconfig-002-20260813    gcc-11.5.0
+parisc                          allmodconfig    gcc-16.1.0
+parisc                          allyesconfig    gcc-16.1.0
+parisc                             defconfig    gcc-16.1.0
+parisc                        randconfig-001    gcc-10.5.0
+parisc               randconfig-001-20260813    gcc-10.5.0
+parisc               randconfig-002-20260813    gcc-10.5.0
+powerpc                   adder875_defconfig    gcc-16.1.0
+powerpc              randconfig-001-20260813    gcc-10.5.0
+powerpc              randconfig-002-20260813    gcc-10.5.0
+powerpc                    taishan_defconfig    clang-21
+powerpc64            randconfig-001-20260813    gcc-10.5.0
+powerpc64            randconfig-002-20260813    gcc-10.5.0
+riscv                         randconfig-001    gcc-10.5.0
+riscv                randconfig-001-20260813    gcc-10.5.0
+riscv                randconfig-001-20260814    gcc-13.4.0
+riscv                randconfig-002-20260813    gcc-10.5.0
+riscv                randconfig-002-20260814    gcc-13.4.0
+s390                 randconfig-001-20260813    gcc-10.5.0
+s390                 randconfig-001-20260814    gcc-13.4.0
+s390                 randconfig-002-20260813    gcc-10.5.0
+s390                 randconfig-002-20260814    gcc-13.4.0
+sh                                 defconfig    gcc-16.1.0
+sh                   randconfig-001-20260813    gcc-10.5.0
+sh                   randconfig-001-20260814    gcc-13.4.0
+sh                   randconfig-002-20260813    gcc-10.5.0
+sh                   randconfig-002-20260814    gcc-13.4.0
+sh                          se7712_defconfig    gcc-16.1.0
+sparc                         randconfig-001    clang-20
+sparc                randconfig-001-20260813    clang-20
+sparc                randconfig-001-20260814    clang-24
+sparc                randconfig-002-20260813    clang-20
+sparc                randconfig-002-20260814    clang-24
+sparc64              randconfig-001-20260813    clang-20
+sparc64              randconfig-001-20260814    clang-24
+sparc64              randconfig-002-20260813    clang-20
+sparc64              randconfig-002-20260814    clang-24
+um                   randconfig-001-20260813    clang-20
+um                   randconfig-001-20260814    clang-24
+um                   randconfig-002-20260813    clang-20
+um                   randconfig-002-20260814    clang-24
+x86_64                                 kexec    clang-22
+x86_64               randconfig-001-20260813    gcc-13
+x86_64               randconfig-002-20260813    gcc-13
+x86_64               randconfig-003-20260813    gcc-13
+x86_64               randconfig-004-20260813    gcc-13
+x86_64               randconfig-005-20260813    gcc-13
+x86_64               randconfig-006-20260813    gcc-13
+x86_64               randconfig-011-20260813    gcc-14
+x86_64               randconfig-012-20260813    gcc-14
+x86_64               randconfig-013-20260813    gcc-14
+x86_64               randconfig-014-20260813    gcc-14
+x86_64               randconfig-015-20260813    gcc-14
+x86_64               randconfig-016-20260813    gcc-14
+x86_64               randconfig-071-20260813    gcc-14
+x86_64               randconfig-072-20260813    gcc-14
+x86_64               randconfig-073-20260813    gcc-14
+x86_64               randconfig-074-20260813    gcc-14
+x86_64               randconfig-075-20260813    gcc-14
+x86_64               randconfig-076-20260813    gcc-14
+x86_64                          rhel-9.4-bpf    gcc-14
+xtensa               randconfig-001-20260813    clang-20
+xtensa               randconfig-001-20260814    clang-24
+xtensa               randconfig-002-20260813    clang-20
+xtensa               randconfig-002-20260814    clang-24
 
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
