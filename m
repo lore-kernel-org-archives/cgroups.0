@@ -1,276 +1,150 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34A8829B77E
-	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 05:58:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786773519; cv=none; b=qGjyeDWxF+jNxIPOJOXY6SJW2F1QY7oHtD95aX/+9ajgIZYw+qzT3CKis6E9yMZT3CICXfwY8/CvTjT02t4WpKaRk3IUzmnDNB/ZtmURjDyXyR6YgSzbIrWUGZJrQuaN42OpZHU5nxYDk10tdoy6fRrrLSuIy/pxOTbF7Gj53Jk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786773519; c=relaxed/simple;
-	bh=gjNgyi75mKSLP0qFZKF47roDus09J1ZqRh7z5MgfQmQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F0MDC3OXiCl+rO1y+YfkWKdpSEcF+yoE73GuwqzjwHzq1hwqjYgJTLA1al7OW0XReGoqMpK+G2YBKYRv3Qe8GxYcR89+FwFojRDFHpr6sD35DXHfRmXraeJqku8HTmP6KKFoKtZu+Rj6wpDGBLcEf/aMYuy12+e1lZmCvIMUb6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=f1dq3FUr; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C46EEA8
+	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 09:20:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786785641; cv=pass; b=dcCELI73jRPBWRTKbOyKZgMGq7ttjFK9J+DY+6WZ0osMs55P/f8FknoNZ4WqASzUd1D7wx+8BIl/HdmrEZ7M2qSsprVBdua5V28ZZW3qWODG+as8rOOU+Knh4AvexxB+sXKc5m/5FGKUSRLXEV3Ub287T7UC1LaK+KFpwJ9NSSc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786785641; c=relaxed/simple;
+	bh=CLKiohUTLkZ3vOg3O+B/65s3DGhrq9fg5gml/HppUi8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=RG1B1dVGE3sj6sAZ3GqzZI8VNA1EawAFdauQHs5WKKctOnfv7WVOSja42VQr4Fxbmbe4jN+w5STG5/fgfWMGD1kGO4Pl5+UX4kWVOmIVegj9pvLY5cJOeHTkfwmg+Z+oDmCsrInofcPL/aXl+AlTu8nzcLTKM1GUwfsBmp3kpqo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QvopY5Z9; arc=pass smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f1dq3FUr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786773518; x=1818309518;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=gjNgyi75mKSLP0qFZKF47roDus09J1ZqRh7z5MgfQmQ=;
-  b=f1dq3FUrVgslrL13wGwTpueqXjWdKVVqCtCOQTeFqqdq/eVlTiCSAJod
-   3kyb1AVfkYnMxdLiQ5MkZ8RoARvCxGLjKxQorghcbM6JMYfKFQD3q0/ME
-   vLM0g/MY4Uqclt+f+ZFtF2u/UgsjU4yA5qreuMwfyiUZosL5wVyWAab+D
-   CmV/iaiAvsPoAl/iUzx9SrzxgnbRwUUqx6JO5S5dptKVHKn+d2A1UNh6/
-   raEhCyHv3oaAWT7f6DPwtRoHF2DciXZdB5UElEtQbe25Fge8+BpNGSP5J
-   E6qQ3qCzgP4oSAQt8JGfEf+qZC780X2oGZ4RL05gAYDp5q4GhFz3qsO4X
-   g==;
-X-CSE-ConnectionGUID: 0G+LFR2ISLm/QZRwJblpwA==
-X-CSE-MsgGUID: R6mAcFCRSbOL8aKCXzV5IA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11875"; a="87264103"
-X-IronPort-AV: E=Sophos;i="6.25,224,1779174000"; 
-   d="scan'208";a="87264103"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Aug 2026 22:58:37 -0700
-X-CSE-ConnectionGUID: uehPhlSGQi6zUjC9n0w1tA==
-X-CSE-MsgGUID: 4PqaEcKTS7G8yfZBQqcEMQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,224,1779174000"; 
-   d="scan'208";a="302647734"
-Received: from ly-workstation.sh.intel.com (HELO ly-workstation) ([10.239.182.64])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Aug 2026 22:58:33 -0700
-Date: Sat, 15 Aug 2026 13:58:29 +0800
-From: kernel test robot <yi1.lai@intel.com>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>, oe-lkp@lists.linux.dev,
-	lkp@intel.com, Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	Lorenzo Stoakes <ljs@kernel.org>, Michal Hocko <mhocko@suse.com>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Mike Rapoport <rppt@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
-	Vlastimil Babka <vbabka@kernel.org>, linux-mm@kvack.org,
-	cgroups@vger.kernel.org
-Subject: Re: [linux-next:master] [mm/vmpressure] ea928e9e18:
- stress-ng.mremap.ops_per_sec 36.2% regression
-Message-ID: <aoAABX59IzUXz/Rv@ly-workstation>
-References: <202608131743.c6a7dda4-lkp@intel.com>
- <an34C2N-yqfok2Nn@linux.dev>
- <017721a3-5eae-449e-8b86-75cffb503dd3@linux.dev>
- <an3-aksL0MZPM3ZJ@linux.dev>
- <f330dd75-d9b8-4259-a02f-9e3ff4bcdc1e@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QvopY5Z9"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c197eaaab00so346261866b.0
+        for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 02:20:39 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786785638; cv=none;
+        d=google.com; s=arc-20260327;
+        b=GkjzN6X5VqakYnP4RIQygjDfLnCwoMqWbRpa7XMcg+MKLKd1V34esQx1c3EBvoPpYo
+         ZaiI/rWqc1by8oW0OoB+DU8bGkWvr6XioP4F16fkL/eU5GoGUDyhvvAnSG6G2u4NNH5W
+         XNUSjOIsAr32a4TqF29mQdzxpAPLJXn+q1OFmm0NhNqMN72Rh8XUZ+HCLsKRCg5dyof9
+         5G8gVJHKNtImBFULZ/gaWh4Wwu5vtM/Epp7RGmIQxUMA92q6Ic3cQZc9loR8O3eo+RsR
+         bDmE4Vqexj67cCEk6YgArlBsofaYC2yIUWhoqR4lv53dkgXRGp57yxVOzDUGj7eNXkzu
+         S2/w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=cGIHvMdb6k99fqHGsYD8RBx3vvRhyGoxqfHlvr/UKEI=;
+        fh=E2XmqNDw3pq2oSahqsAjtN0lISkel6H2GrWpJemqZr8=;
+        b=gXXp3ffMzhIbGsEO+RsG3ZecHWRj6H91tRbJoTlOUPfwj4CxE8Gg6KcXGXSYNtsad2
+         TCPErajx8CcZxl03AdHrY4meShAKHDWcsI6ueB0O2OJPW/WIX6EOz7iByJ5kKuMV6JAf
+         kxTPnx/UHv/9f9FqijJ8gtFeWQtMUqTdIKAq8BVbetyWCvFjMMJO+fRJKdY+J373Yrs7
+         ZYT7mGWwxUwyo/5+/8PR2+7DhDYmg6z0AoFWe38jp7RST3o1QxJyuwwphpoPZQjDGutf
+         kP/oWHC1yluYwyuWgfG5PuAlkNQayOyFoK/9gDXg/phMOtkxub+fnRlGlKOix1RhV/+K
+         Z5Jg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786785638; x=1787390438; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=cGIHvMdb6k99fqHGsYD8RBx3vvRhyGoxqfHlvr/UKEI=;
+        b=QvopY5Z9qNiAG/yLiTa3XOKaqzeVl9XLKtB2UQwU1mL23c87Gz/l66XsFkmvTY7eX+
+         DvjLMNJ0mOrVpoFByxvzvZDzdbP8MQoU9KQzLPzShcCPHO/3i00FaifsHjestDz/YJ1Z
+         QchMFtH013QlsSh5/FVOjNsrT2/A7FZoFxymGQ5G4QoA3lrhNiCRnG/on4kPsBr3JP6u
+         iGikWbrbtIB1YI3z/2Rtw9FVI0FVrdlqI4I1s6TBcWgfMq/4D6loo3HH+qBqIuI18Jgp
+         RorOyPQosereAMSEoaLw1n5FEJFc/cFjuvjO/urazZERyj5jNu8tPfQTeL1zlQACfIf/
+         Xv2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786785638; x=1787390438;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=cGIHvMdb6k99fqHGsYD8RBx3vvRhyGoxqfHlvr/UKEI=;
+        b=mlawupM09m6zWwcTlwG2Ibedqxt55i4xt33WRnn+qnB2jlV3t3vzfLiHy5z7lFtr4n
+         zwyJy1c87K1kXWT4fhjzIdBEE3GAG2eUulG0P9bRvzZv6czx/j+Gfmkx+QkSESqIVj84
+         bkhqTl7O+8304efcBgln51xizSchHy6ACCjETRQWTKDwnsydvwgeaNP54fkznFW0Bugo
+         TSbsXrBqhbPm8ROwKfIPgzbGr+JkiL3Dm7DK/5DrA1rOvDaZziSJuznTgEXselNrvIHM
+         nxZSoJqzI0oerR+Mk/oNHF1Bdqki0SW44tlcrHYdRA+I9MTo0CHBsaWY352mid9Jqwkp
+         d9/A==
+X-Forwarded-Encrypted: i=1; AHgh+Rrhby4ay9gFJmuxvxg/oTnhudj/isEsEb9PHwrGBOgP9LLrIry6+g8UzXoPAetEC6Mc0U8Y5f1+@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLRQMCIbvddQQOeFcydY55z4kzgx39F3xkuLT3ejL7t45CTyjH
+	sIWSfxF8YbdDKzBOZEj3MLuZ5Fi4Dv+08LmO0pC417MYeWou3WSryxEoT7GPTr7OyinEe4J5rS1
+	koa/de/qXvr6j18aXjdL9l3i8pGqRjDE=
+X-Gm-Gg: AR+sD10Af+rUWOJvCLlbwzSRva8tf0fZwScwCLVbvraVWJXpY1Gx14hzUviAPHmPYP/
+	7SEMa3gVXOgbCueNRJABq6fGbh4vCB1gtFaBNpy4tHlCDOSXIL4JzwdfVTt7mKrz6M5yywa4A8j
+	ihlGT6yS4A4mLDfSDkaDRuYhEZz5X/E4VmoR/zqkS1SRo30CI4j5G/VPbZmcuVCzdJR8xG68MVc
+	5PVxUvdtHEh3ORM/6CzgnR92KG3poy2PHaAiVAkgBidQuxp75cRygYm1WSnNe66zGWC+TQAsHg8
+	vRXnAoqlmw0j8GwnbHlG7/ZV7ZalAtQOfdnDqzMhQgvT01+Rgj60GL2CXfZ4gmMpVVZshGPQ4AR
+	Shg==
+X-Received: by 2002:a17:907:c02:b0:c1f:c061:569a with SMTP id
+ a640c23a62f3a-c2129b5b0fbmr558940366b.7.1786785637644; Sat, 15 Aug 2026
+ 02:20:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f330dd75-d9b8-4259-a02f-9e3ff4bcdc1e@linux.dev>
+References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
+ <20260804-mglru-fg-v1-9-4d8dad39dad6@tencent.com> <CAGsJ_4zVhK9SvHEd+OFAHSu-OgTiAtk-ZU5OQVx5RwBYmc9r7w@mail.gmail.com>
+ <CAMgjq7DupViQ_MbZCMRSb_Bw57C+Lcg2fFnpaJ1xsjftzYHUSA@mail.gmail.com> <CAGsJ_4xhxELewwy=X+K8WurSnLDzaz2kD384gt93Ha=uVpyHDA@mail.gmail.com>
+In-Reply-To: <CAGsJ_4xhxELewwy=X+K8WurSnLDzaz2kD384gt93Ha=uVpyHDA@mail.gmail.com>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Sat, 15 Aug 2026 17:20:00 +0800
+X-Gm-Features: AcwNN1UD6wlSIq4Zi3TIXvS0pqcdHhg-sYrZC--Sr_V-rOxVKiGYqZ0gVdl_kYo
+Message-ID: <CAMgjq7DYpcA9Xu+NTzHk=N--CC_oPV=1Wj9ZcJRjDonZA9iqWg@mail.gmail.com>
+Subject: Re: [PATCH RFC 09/15] mm/mglru: frequency guided workingset promotion (MGLRU-FG)
+To: Barry Song <baohua@kernel.org>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
+	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
+	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
+	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
+	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
+	SeongJae Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
+	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
+	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Aug 14, 2026 at 11:32:09AM +0100, Usama Arif wrote:
-> 
-> 
-> On 13/08/2026 18:29, Shakeel Butt wrote:
-> > On Thu, Aug 13, 2026 at 06:14:50PM +0100, Usama Arif wrote:
-> >>
-> >>
-> >> On 13/08/2026 18:01, Shakeel Butt wrote:
-> >>> On Thu, Aug 13, 2026 at 09:16:22PM +0800, kernel test robot wrote:
-> >>>>
-> >>>>
-> >>>> Hello,
-> >>>>
-> >>>> kernel test robot noticed a 36.2% regression of stress-ng.mremap.ops_per_sec on:
-> >>>>
-> >>>> commit: ea928e9e18da682e9a5bc40aa862bff7ce5ae42e ("mm/vmpressure: move v1 userspace eventfd code into memcontrol-v1.c") https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
-> >>>>
-> >>>> in testcase: stress-ng
-> >>>> version: stress-ng-x86_64-29ce10a2c-1_20260712
-> >>>> with following parameters:
-> >>>>
-> >>>> 	nr_threads: 100%
-> >>>> 	testtime: 60s
-> >>>> 	test: mremap
-> >>>> 	cpufreq_governor: performance
-> >>>>
-> >>>>
-> >>>>
-> >>>> config: x86_64-rhel-9.4 (CONFIG_MEMCG=y and CONFIG_MEMCG_V1 is not set)
-> >>>> compiler: gcc-14
-> >>>> test machine: 256 threads 4 sockets INTEL(R) XEON(R) PLATINUM 8592+ (Emerald Rapids) with 256G memory
-> >>>>
-> >>>> (please refer to attached dmesg/kmsg for entire log/backtrace)
-> >>>>
-> >>>
-> >>> Hi there,
-> >>>
-> >>> Can you please test the following patch and see if it fixes the regression?
-> >>>
-> >>>
-> >>> From 84c0b05b3bc5cf73ee66ead75aafb1ad684462c3 Mon Sep 17 00:00:00 2001
-> >>> From: Shakeel Butt <shakeel.butt@linux.dev>
-> >>> Date: Thu, 13 Aug 2026 09:38:28 -0700
-> >>> Subject: [PATCH] memcg: keep vmstats_percpu off the memory_events[] cacheline
-> >>>
-> >>> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> >>> ---
-> >>>  include/linux/memcontrol.h | 10 ++++++----
-> >>>  1 file changed, 6 insertions(+), 4 deletions(-)
-> >>>
-> >>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> >>> index e78bc98ab229..e25d5b9a1db8 100644
-> >>> --- a/include/linux/memcontrol.h
-> >>> +++ b/include/linux/memcontrol.h
-> >>> @@ -246,8 +246,13 @@ struct mem_cgroup {
-> >>>  	/* handle for "memory.swap.events" */
-> >>>  	struct cgroup_file swap_events_file;
-> >>>  
-> >>> -	/* memory.stat */
-> >>> +	/* Read-mostly. */
-> >>>  	struct memcg_vmstats	*vmstats;
-> >>> +	struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> >>> +	int			kmemcg_id;
-> >>> +
-> >>> +	/* Write-hot from here on; do not let it share with the above. */
-> >>> +	CACHELINE_PADDING(_pad_);
-> >>>  
-> >>>  	/* memory.events */
-> >>>  	atomic_long_t		memory_events[MEMCG_NR_MEMORY_EVENTS];
-> >>> @@ -266,9 +271,6 @@ struct mem_cgroup {
-> >>>  #if BITS_PER_LONG < 64
-> >>>  	seqlock_t		socket_pressure_seqlock;
-> >>>  #endif
-> >>> -	int kmemcg_id;
-> >>> -
-> >>> -	struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> >>>  
-> >>>  #ifdef CONFIG_CGROUP_WRITEBACK
-> >>>  	struct list_head cgwb_list;
-> >>
-> >>
-> >> I was currently testing this diff, not sure which one would be better.
-> > 
-> > I was just checking if false sharing of vmstats_percpu is the cause. If your
-> > patch does not increase the struct size, we can go with that as a backportable
-> > fix. I am planning to rearrange fields of struct mem_cgroup more drastically and
-> > have it more stable as future work as we continuously see these regressions keep
-> > popping up.
-> > 
-> 
-> 
-> Yes this makes sense. I did not expect such a big change in a benchmark
-> with my patch, although I feel like the microbenchmark is probably not
-> that realistic.
-> 
-> I think another issue is that its a 4 socket system.
-> I only have access to a single socket system, and I see a 4.38% regression.
-> 
-> Do you know if there a way for kernel test robot to test the below patch
-> on its host?
-> 
-> 
-> >From b862e84e7bd6a54b1546b7f21a6cf991253def18 Mon Sep 17 00:00:00 2001
-> From: Usama Arif <usama.arif@linux.dev>
-> Date: Thu, 13 Aug 2026 11:42:05 -0700
-> Subject: [PATCH] mm/memcontrol: avoid false sharing between vmstats and events
-> 
-> Moving v1 userspace eventfd handling into memcontrol-v1.c shrank
-> struct vmpressure from 112 to 24 bytes when CONFIG_MEMCG_V1 is disabled.
-> This moved memory_events_local[MEMCG_SWAP_FAIL] and the hot
-> vmstats_percpu pointer onto the same cacheline.
-> 
-> The stress-ng mremap stressor exercises MADV_PAGEOUT with swap
-> disabled, generating about 20 million MEMCG_SWAP_FAIL updates per
-> 60-second run on a 176-CPU test system.  Those writes bounce the line
-> while memcg statistics paths load vmstats_percpu.
-> 
-> Move cgwb_list into the existing alignment gap and cacheline-align
-> vmstats_percpu.  This separates the pointer from the event counters
-> without increasing the size of struct mem_cgroup in the tested
-> configuration.
-> 
-> The blamed commit reduced median mremap throughput by 4.38% on the
-> test system with one socket. The patched kernel brings the performance
-> to within 0.5% of the parent which is within the observed boot-to-boot
-> spread (up to 1.2%).
-> 
-> Fixes: ea928e9e18da ("mm/vmpressure: move v1 userspace eventfd code into memcontrol-v1.c")
-> Reported-by: kernel test robot <yi1.lai@intel.com>
-> Closes: https://lore.kernel.org/oe-lkp/202608131743.c6a7dda4-lkp@intel.com
-> Signed-off-by: Usama Arif <usama.arif@linux.dev>
-> ---
->  include/linux/memcontrol.h | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index e78bc98ab229b..215e2e87f42b2 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -268,10 +268,15 @@ struct mem_cgroup {
->  #endif
->  	int kmemcg_id;
->  
-> -	struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> -
->  #ifdef CONFIG_CGROUP_WRITEBACK
->  	struct list_head cgwb_list;
-> +#endif
-> +
-> +	/* Keep the hot per-CPU stats pointer away from memory event counters. */
-> +	struct memcg_vmstats_percpu __percpu *vmstats_percpu
-> +		____cacheline_aligned_in_smp;
-> +
-> +#ifdef CONFIG_CGROUP_WRITEBACK
->  	struct wb_domain cgwb_domain;
->  	struct memcg_cgwb_frn cgwb_frn[MEMCG_CGWB_FRN_CNT];
->  #endif
-> -- 
-> 2.53.0-Meta
-> 
+On Sat, Aug 15, 2026 at 8:13=E2=80=AFAM Barry Song <baohua@kernel.org> wrot=
+e:
 >
+> On Sat, Aug 15, 2026 at 2:06=E2=80=AFAM Kairui Song <ryncsn@gmail.com> wr=
+ote:
+> >
+> > Thanks very much for the review and suggestion!
+> >
+> > Good idea, but to distinguish from macros like LRU_REFS_PROTECTED and
+> > LRU_REFS_WORKINGSET, which are special referenced count number, maybe
+> > LRU_REF_EXEC and LRU_REF_FAULT? BTW we have macros like
+> > FOLIOREF_RECLAIM_CLEAN, FOLIOREF_KEEP, and folio_referenced, etc.,
+> > which are commonly used already, that's one main hint behind the name
+> > choice here.
+>
+> Yep, LRU_REF_FAULT and LRU_REF_EXEC sound good to me.
+>
+> BTW, is FAULT really the right term here? It looks like you're
+> actually using it to indicate the result of PTE scanning.
+>
+> In the other place, you use "promote" instead:
+>
+> +static inline int folio_inc_lru_refs(struct folio *folio, bool
+> promote, bool is_exec)
+> +{
+> +       return 0;
+> +}
+>
+> So perhaps LRU_REF_MAPPED  would be more appropriate?
 
-Tested the patch on the same test machine. Here are the test results
-from stress-ng mremap benchmark (60s, 256 instances):
-
-	Commit Avg.ops_per_sec
-Base	a33b5c91	57311.85
-Reregression ea928e9e	36542.09
-Fix	582a7676	57089.22
-
-The performance regression introduced by ea928e9e is resolved.
-
-> 
-> >>
-> >> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> >> index e78bc98ab229b..215e2e87f42b2 100644
-> >> --- a/include/linux/memcontrol.h
-> >> +++ b/include/linux/memcontrol.h
-> >> @@ -268,10 +268,15 @@ struct mem_cgroup {
-> >>  #endif
-> >>         int kmemcg_id;
-> >>
-> >> -       struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> >> -
-> >>  #ifdef CONFIG_CGROUP_WRITEBACK
-> >>         struct list_head cgwb_list;
-> >> +#endif
-> >> +
-> >> +       /* Keep the hot per-CPU stats pointer away from memory event counters. */
-> >> +       struct memcg_vmstats_percpu __percpu *vmstats_percpu
-> >> +               ____cacheline_aligned_in_smp;
-> >> +
-> >> +#ifdef CONFIG_CGROUP_WRITEBACK
-> >>         struct wb_domain cgwb_domain;
-> >>         struct memcg_cgwb_frn cgwb_frn[MEMCG_CGWB_FRN_CNT];
-> >>  #endif
-> >>
-> 
+Sound reasonalbe, it idea behind that name is that if the folio is
+evicted, that access will cause a major fault. I'm fine with both
+name.
