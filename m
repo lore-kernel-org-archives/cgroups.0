@@ -1,253 +1,86 @@
-Received: from mta0.migadu.com (out-75.mta0.migadu.com [91.218.175.75])
+Received: from mta1.migadu.com (out-96.mta1.migadu.com [95.215.58.96])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E06FE3C1A
-	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 00:25:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D4017B50A
+	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 00:36:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.96
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786753546; cv=none; b=QPGxtIPORl/PAu8eH55Q0XPra7yxUasrc8xSx0ekE34e6ciHDHNZXmzlGLMifmq21ZtawoqkDGdYMeFhAnqjR9ebfYeV4k7em5Z4zRtmlSPjspgnd9yCc2uxTAfMbJCaGv6qmUUKRSfTDpeTjGW0d8T0BTLN3jcrcoNh2Ctl+Uk=
+	t=1786754198; cv=none; b=IndKp8M1doCODrfnBxLjPrsPmhUAk1XBzoO1cWvmbtCSn2BJh0SAVDVw4YJRpzZDJ6K5FDVg1jxG3i14Ye4iuWEuT/O0w5LhY4szj50pd5KUXXhRyGQdEvk+z1aEzruzkzgc+klK7vc38g9QAXS9UfxiO1s0UDtd5iegSBZiW/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786753546; c=relaxed/simple;
-	bh=GYuFv7CQYkZCd17N/+SeP2Qi4r1CM+EVfUZM03WzySo=;
+	s=arc-20240116; t=1786754198; c=relaxed/simple;
+	bh=tQFdd/qDklLAKb6V+af2UY+3ml4uiTf2rWfzA7UGu7k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tBsYxm15lRFA689OY230Y3zmk4fn6KIfU4FU4GCOZh4IxCUOt8xeUv9+ikTR1Fj4dC0kOWMPXxUsFQZTQiK6bcfVM4KA7MopAuzTp1pP9Fzi25ZqMrUWbOjucO/qDv/6cCNC2ki/faWSJjCZDE+iw2wqE4DnJCz8T0NRMFuVTKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Eu7uF+EZ; arc=none smtp.client-ip=91.218.175.75
+	 Content-Type:Content-Disposition:In-Reply-To; b=RDhAlTBG21hVQniCA8RtFfb6O4j+og8Y4NKYgPjEEIcq6Qo6yQ638S9BASyLhvcvhuXbFJ6DbSoWkhplvyJs5acBmJwLYKm9JxWQBebaHL1wjsRh87iJw+4whdAEwMrAvezgWD4bTNpSU10c+6xPcrNcQY5+UtcdmQkhfQUde2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ZXtZQSeP; arc=none smtp.client-ip=95.215.58.96
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Eu7uF+EZ"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ZXtZQSeP"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=GYuFv7CQYkZCd17N/+SeP2Qi4r1CM+EVfUZM03WzySo=;
+DKIM-Signature: a=rsa-sha256; bh=tQFdd/qDklLAKb6V+af2UY+3ml4uiTf2rWfzA7UGu7k=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1786753541; v=1; x=1787358341;
- b=Eu7uF+EZUCsY1M8UchM7uP64hCh58Fd58ixSWPXIPj77Vk4FD/ElfoyCr7fYwxHWCHLkZS7s
- 6gvEDUWK9VaL7+w0zZ4hCvgO81mSIUxUmzkKdh4/nnnRGxWcovgn9FI4smVQPfOB2kRXAa4MbNe
- h2kltY+QOq2OMIWNRsq6Myfg=
+ t=1786754194; v=1; x=1787358994;
+ b=ZXtZQSePINP6hmH8ZHrgbAbxxJ2mLa41IjkEm2dUXKLUcHfyBWppffUu/E0xWfmOvbyNqyjl
+ PMkAD5Vn2TlQSod2eMCZxJVzzu/dffreRYPoVDTYh2IlWXVKeV4T66p8x4by9Bnx6lFNO6eGS19
+ /HpysRbRvp2+SrfXcqgXh5EE=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from localhost (2a03:2880:10ff:7::)
-	by smtp.migadu.com with ESMTPS id b7d206ee5502d7bd;
-	Sat, 15 Aug 2026 00:25:41 +0000
+Received: from localhost (2a03:2880:10ff:6::)
+	by smtp.migadu.com with ESMTPS id eb90bf85938a14c4;
+	Sat, 15 Aug 2026 00:36:34 +0000
 X-Migadu-Flow: FLOW_OUT
-Date: Fri, 14 Aug 2026 17:25:39 -0700
+Date: Fri, 14 Aug 2026 17:36:32 -0700
 From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Usama Arif <usama.arif@linux.dev>
-Cc: kernel test robot <yi1.lai@intel.com>, oe-lkp@lists.linux.dev, 
-	lkp@intel.com, Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Lorenzo Stoakes <ljs@kernel.org>, Michal Hocko <mhocko@suse.com>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Mike Rapoport <rppt@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Suren Baghdasaryan <surenb@google.com>, 
-	Tejun Heo <tj@kernel.org>, Vlastimil Babka <vbabka@kernel.org>, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, oliver.sang@intel.com
-Subject: Re: [linux-next:master] [mm/vmpressure] ea928e9e18:
- stress-ng.mremap.ops_per_sec 36.2% regression
-Message-ID: <an-w9UJy6y9Wg11J@linux.dev>
-References: <202608131743.c6a7dda4-lkp@intel.com>
- <an34C2N-yqfok2Nn@linux.dev>
- <017721a3-5eae-449e-8b86-75cffb503dd3@linux.dev>
- <an3-aksL0MZPM3ZJ@linux.dev>
- <f330dd75-d9b8-4259-a02f-9e3ff4bcdc1e@linux.dev>
+To: Barry Song <baohua@kernel.org>
+Cc: mambaxin@163.com, hannes@cmpxchg.org, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, 
+	akpm@linux-foundation.org, david@redhat.com, v-songbaohua@oppo.com, hughd@google.com, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	gregkh@linuxfoundation.org, jose.fernandez@linux.dev, stable@vger.kernel.org, 
+	syzbot+e12bd9ca48157add237a@syzkaller.appspotmail.com, David Hildenbrand <david@kernel.org>, 
+	Kairui Song <ryncsn@gmail.com>, Sasha Levin <sashal@kernel.org>, chenxin <chenxinxin@xiaomi.com>
+Subject: Re: [PATCH] mm: swap_cgroup: fix NULL deref in lookup_swap_cgroup_id
+ on swapless host
+Message-ID: <an-yt4a6td75VvHw@linux.dev>
+References: <20260814074705.939721-2-mambaxin@163.com>
+ <CAGsJ_4y+kGUH7TjKEGU+hbwCotHeubNdbJtoBExP+Ya-Wf3fWA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <f330dd75-d9b8-4259-a02f-9e3ff4bcdc1e@linux.dev>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAGsJ_4y+kGUH7TjKEGU+hbwCotHeubNdbJtoBExP+Ya-Wf3fWA@mail.gmail.com>
 
-On Fri, Aug 14, 2026 at 11:32:09AM +0100, Usama Arif wrote:
+On Fri, Aug 14, 2026 at 07:23:41PM +0800, Barry Song wrote:
+> On Fri, Aug 14, 2026 at 3:48 PM <mambaxin@163.com> wrote:
+> >
+> > From: "Jose Fernandez (Anthropic)" <jose.fernandez@linux.dev>
+> >
+> > [ Upstream commit 63b02a9409cb5180398491b093e48bcb5315f5fb ]
+> >
+> > lookup_swap_cgroup_id() passes swap_cgroup_ctrl[type].map to
+> > __swap_cgroup_id_lookup() without checking that the type was ever
+> > registered via swap_cgroup_swapon().  On a swapless host every ctrl->map
+> > is NULL, so __swap_cgroup_id_lookup() dereferences NULL + a scaled
+> > swp_offset().
+> >
+> > Since commit bea67dcc5eea ("mm: attempt to batch free swap entries for
+> > zap_pte_range()"), zap_pte_range() -> swap_pte_batch() calls
+> > lookup_swap_cgroup_id() on any non-present, non-none PTE that decodes as a
+> > real swap entry, without first validating it against swap_info[].  A
+> > single PTE corrupted into a type-0 swap entry takes the host down at
+> > process exit.
 > 
-> 
-> On 13/08/2026 18:29, Shakeel Butt wrote:
-> > On Thu, Aug 13, 2026 at 06:14:50PM +0100, Usama Arif wrote:
-> >>
-> >>
-> >> On 13/08/2026 18:01, Shakeel Butt wrote:
-> >>> On Thu, Aug 13, 2026 at 09:16:22PM +0800, kernel test robot wrote:
-> >>>>
-> >>>>
-> >>>> Hello,
-> >>>>
-> >>>> kernel test robot noticed a 36.2% regression of stress-ng.mremap.ops_per_sec on:
-> >>>>
-> >>>> commit: ea928e9e18da682e9a5bc40aa862bff7ce5ae42e ("mm/vmpressure: move v1 userspace eventfd code into memcontrol-v1.c") https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
-> >>>>
-> >>>> in testcase: stress-ng
-> >>>> version: stress-ng-x86_64-29ce10a2c-1_20260712
-> >>>> with following parameters:
-> >>>>
-> >>>> 	nr_threads: 100%
-> >>>> 	testtime: 60s
-> >>>> 	test: mremap
-> >>>> 	cpufreq_governor: performance
-> >>>>
-> >>>>
-> >>>>
-> >>>> config: x86_64-rhel-9.4 (CONFIG_MEMCG=y and CONFIG_MEMCG_V1 is not set)
-> >>>> compiler: gcc-14
-> >>>> test machine: 256 threads 4 sockets INTEL(R) XEON(R) PLATINUM 8592+ (Emerald Rapids) with 256G memory
-> >>>>
-> >>>> (please refer to attached dmesg/kmsg for entire log/backtrace)
-> >>>>
-> >>>
-> >>> Hi there,
-> >>>
-> >>> Can you please test the following patch and see if it fixes the regression?
-> >>>
-> >>>
-> >>> From 84c0b05b3bc5cf73ee66ead75aafb1ad684462c3 Mon Sep 17 00:00:00 2001
-> >>> From: Shakeel Butt <shakeel.butt@linux.dev>
-> >>> Date: Thu, 13 Aug 2026 09:38:28 -0700
-> >>> Subject: [PATCH] memcg: keep vmstats_percpu off the memory_events[] cacheline
-> >>>
-> >>> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> >>> ---
-> >>>  include/linux/memcontrol.h | 10 ++++++----
-> >>>  1 file changed, 6 insertions(+), 4 deletions(-)
-> >>>
-> >>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> >>> index e78bc98ab229..e25d5b9a1db8 100644
-> >>> --- a/include/linux/memcontrol.h
-> >>> +++ b/include/linux/memcontrol.h
-> >>> @@ -246,8 +246,13 @@ struct mem_cgroup {
-> >>>  	/* handle for "memory.swap.events" */
-> >>>  	struct cgroup_file swap_events_file;
-> >>>  
-> >>> -	/* memory.stat */
-> >>> +	/* Read-mostly. */
-> >>>  	struct memcg_vmstats	*vmstats;
-> >>> +	struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> >>> +	int			kmemcg_id;
-> >>> +
-> >>> +	/* Write-hot from here on; do not let it share with the above. */
-> >>> +	CACHELINE_PADDING(_pad_);
-> >>>  
-> >>>  	/* memory.events */
-> >>>  	atomic_long_t		memory_events[MEMCG_NR_MEMORY_EVENTS];
-> >>> @@ -266,9 +271,6 @@ struct mem_cgroup {
-> >>>  #if BITS_PER_LONG < 64
-> >>>  	seqlock_t		socket_pressure_seqlock;
-> >>>  #endif
-> >>> -	int kmemcg_id;
-> >>> -
-> >>> -	struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> >>>  
-> >>>  #ifdef CONFIG_CGROUP_WRITEBACK
-> >>>  	struct list_head cgwb_list;
-> >>
-> >>
-> >> I was currently testing this diff, not sure which one would be better.
-> > 
-> > I was just checking if false sharing of vmstats_percpu is the cause. If your
-> > patch does not increase the struct size, we can go with that as a backportable
-> > fix. I am planning to rearrange fields of struct mem_cgroup more drastically and
-> > have it more stable as future work as we continuously see these regressions keep
-> > popping up.
-> > 
-> 
-> 
-> Yes this makes sense. I did not expect such a big change in a benchmark
-> with my patch, although I feel like the microbenchmark is probably not
-> that realistic.
-> 
-> I think another issue is that its a 4 socket system.
-> I only have access to a single socket system, and I see a 4.38% regression.
-> 
-> Do you know if there a way for kernel test robot to test the below patch
-> on its host?
+> Thanks for the patch. However, we have a strict check to ensure that
+> this is only done for valid swap entries:
 
-+Oliver
+This patch is already in the upstream linus tree.
 
-I used to request Oliver to test a patch for performance regressions reported by
-intel test robot.
+Mambaxin, what do you want to do with this patch? Are you requesting to backport
+this to stable tree? Which one? It already had stable CCed, so I would expect
+the stable tree maintainers would pick this up automatically.
 
-> 
-> 
-> From b862e84e7bd6a54b1546b7f21a6cf991253def18 Mon Sep 17 00:00:00 2001
-> From: Usama Arif <usama.arif@linux.dev>
-> Date: Thu, 13 Aug 2026 11:42:05 -0700
-> Subject: [PATCH] mm/memcontrol: avoid false sharing between vmstats and events
-> 
-> Moving v1 userspace eventfd handling into memcontrol-v1.c shrank
-> struct vmpressure from 112 to 24 bytes when CONFIG_MEMCG_V1 is disabled.
-> This moved memory_events_local[MEMCG_SWAP_FAIL] and the hot
-> vmstats_percpu pointer onto the same cacheline.
-> 
-> The stress-ng mremap stressor exercises MADV_PAGEOUT with swap
-> disabled, generating about 20 million MEMCG_SWAP_FAIL updates per
-> 60-second run on a 176-CPU test system.  Those writes bounce the line
-> while memcg statistics paths load vmstats_percpu.
-> 
-> Move cgwb_list into the existing alignment gap and cacheline-align
-> vmstats_percpu.  This separates the pointer from the event counters
-> without increasing the size of struct mem_cgroup in the tested
-> configuration.
-> 
-> The blamed commit reduced median mremap throughput by 4.38% on the
-> test system with one socket. The patched kernel brings the performance
-> to within 0.5% of the parent which is within the observed boot-to-boot
-> spread (up to 1.2%).
-> 
-> Fixes: ea928e9e18da ("mm/vmpressure: move v1 userspace eventfd code into memcontrol-v1.c")
-> Reported-by: kernel test robot <yi1.lai@intel.com>
-> Closes: https://lore.kernel.org/oe-lkp/202608131743.c6a7dda4-lkp@intel.com
-> Signed-off-by: Usama Arif <usama.arif@linux.dev>
-> ---
->  include/linux/memcontrol.h | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index e78bc98ab229b..215e2e87f42b2 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -268,10 +268,15 @@ struct mem_cgroup {
->  #endif
->  	int kmemcg_id;
->  
-> -	struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> -
->  #ifdef CONFIG_CGROUP_WRITEBACK
->  	struct list_head cgwb_list;
-> +#endif
-> +
-> +	/* Keep the hot per-CPU stats pointer away from memory event counters. */
-> +	struct memcg_vmstats_percpu __percpu *vmstats_percpu
-> +		____cacheline_aligned_in_smp;
-> +
-> +#ifdef CONFIG_CGROUP_WRITEBACK
->  	struct wb_domain cgwb_domain;
->  	struct memcg_cgwb_frn cgwb_frn[MEMCG_CGWB_FRN_CNT];
->  #endif
-> -- 
-> 2.53.0-Meta
-> 
-> 
-> 
-> >>
-> >> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> >> index e78bc98ab229b..215e2e87f42b2 100644
-> >> --- a/include/linux/memcontrol.h
-> >> +++ b/include/linux/memcontrol.h
-> >> @@ -268,10 +268,15 @@ struct mem_cgroup {
-> >>  #endif
-> >>         int kmemcg_id;
-> >>
-> >> -       struct memcg_vmstats_percpu __percpu *vmstats_percpu;
-> >> -
-> >>  #ifdef CONFIG_CGROUP_WRITEBACK
-> >>         struct list_head cgwb_list;
-> >> +#endif
-> >> +
-> >> +       /* Keep the hot per-CPU stats pointer away from memory event counters. */
-> >> +       struct memcg_vmstats_percpu __percpu *vmstats_percpu
-> >> +               ____cacheline_aligned_in_smp;
-> >> +
-> >> +#ifdef CONFIG_CGROUP_WRITEBACK
-> >>         struct wb_domain cgwb_domain;
-> >>         struct memcg_cgwb_frn cgwb_frn[MEMCG_CGWB_FRN_CNT];
-> >>  #endif
-> >>
-> 
