@@ -1,48 +1,48 @@
-Received: from mta0.migadu.com (out-151.mta0.migadu.com [91.218.175.151])
+Received: from mta1.migadu.com (out-165.mta1.migadu.com [95.215.58.165])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF35517B50A
-	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 00:38:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F6D41E5B9A
+	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 00:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.165
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786754319; cv=none; b=pXwBv4/XEMNeKqogAasL2NXkK6/uAj5iORcB7xfThgC6zf0X+J11aR74sppiNqDw+dS3xjFICWYxAHYcPRGC8H23f36/u9EEAHykKNxe6YukKx0X4qgNteLbO9nCZK4TPKQtPuhLPg9baHrpdCxRbBbxlbEmvGPunNH5KGrFFGA=
+	t=1786754934; cv=none; b=R1emT0oW9U8UUeh0V6bm+cSbiPGq9507R4IVzDD2vqhHiSbev0LG9ILNXuy20sITLWmC88WHqU79UA11pSXn6PV66fKBc2VyUa41F4lJ/e78vjaqxsuQitBw0O2jEx3o5mqWdUAi+khWwUQPj8H5TuyfzRPZHhxdahVgBzW3+5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786754319; c=relaxed/simple;
-	bh=sM7q98Dlk5XbykTDQiACBDmjl2R/gtu/mzNUYNNIq/w=;
+	s=arc-20240116; t=1786754934; c=relaxed/simple;
+	bh=D2tHr41vvRZOGh8CfotiS63LZpn9WEESIso0qi3hUnc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gjp/TDCJBqg2g+NGisoekeBVn8Lz+sOgssAEe68edxS7THZNbzjtQdGAssuTl0AwhnBhSTwIEdjDQCAt6+lOTCVy6VsH/UTSgqW68Yha1MNkyGBd+Qlro3vwzCdmVwqQRvxAq/PpPwX3eq4Ze8/szZdDwPWTRUvXnNfFNnpohdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tWfwiQO6; arc=none smtp.client-ip=91.218.175.151
+	 Content-Type:Content-Disposition:In-Reply-To; b=gzSzWj9ddi5YT6IgPu1dRtoU6vb72rw2M+pacx1TmN4yLbDCqqQ76cESai0nW5Vrj08H4q1za3hqLLVlqTsOc3X5X7pTgi+TZMIIAkUWKteGKDdXW9abB+2QJozm0iwI4dotsJLFnl3+NpPLToodDR/nlpjDPgaP+1Bv/zvWjC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=M/iz1KRZ; arc=none smtp.client-ip=95.215.58.165
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tWfwiQO6"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="M/iz1KRZ"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=sM7q98Dlk5XbykTDQiACBDmjl2R/gtu/mzNUYNNIq/w=;
+DKIM-Signature: a=rsa-sha256; bh=D2tHr41vvRZOGh8CfotiS63LZpn9WEESIso0qi3hUnc=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1786754315; v=1; x=1787359115;
- b=tWfwiQO67aZItcVWXNy4V8/jTq4Mzo8GJnnmRKvlHYY3uLIyOrlbPkSmQDR3nW8jiCLEIkXw
- RQLWjQXBpiWmH62OgXfhGrFBwmYE1k2aZzAiWCQKW5BXOv5zDUI/ndqksUAQcp6SA5kmrwOAyrk
- uBKhbNPMRX4HgZXE+mRhTCAk=
+ t=1786754928; v=1; x=1787359728;
+ b=M/iz1KRZ0lTqKQZPuHWE8x3SeGdOLunKWprCkF0Dgj/TsGb/fkncKsgqGHuMZGCmzFBiyPnL
+ cT21e0jdaxqQPpW59MxViYonn4zSWPT7iufa4AqAiBX7/jlJZR9VmmN7AJgK46C5NETt0zUn2Ny
+ 9VpinGuAWToyq70d7paTn19U=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from localhost (2a03:2880:10ff:5::)
-	by smtp.migadu.com with ESMTPS id de1cbddc7a5009cc;
-	Sat, 15 Aug 2026 00:38:35 +0000
+Received: from localhost (2a03:2880:10ff:12::)
+	by smtp.migadu.com with ESMTPS id f2405bb7f12b9bff;
+	Sat, 15 Aug 2026 00:48:48 +0000
 X-Migadu-Flow: FLOW_OUT
-Date: Fri, 14 Aug 2026 17:38:30 -0700
+Date: Fri, 14 Aug 2026 17:48:47 -0700
 From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Ridong Chen <ridong.chen@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Muchun Song <muchun.song@linux.dev>, David Finkel <davidf@vimeo.com>, Tejun Heo <tj@kernel.org>, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>, linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>, 
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: Re: [PATCH v4 2/2] mm, memcg: fix memory.peak reset clobbering other
- fds' watermark
-Message-ID: <an-073JtSRWeyhr8@linux.dev>
-References: <20260814033005.2481920-1-ridong.chen@linux.dev>
- <20260814033005.2481920-3-ridong.chen@linux.dev>
+To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	David Hildenbrand <david@kernel.org>, Kairui Song <kasong@tencent.com>, Qi Zheng <qi.zheng@linux.dev>, 
+	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH for-7.4 0/9] memcg: remove the v1 soft limit
+Message-ID: <an-3Ssc22Gm4J_Mb@linux.dev>
+References: <20260811203203.3456029-1-shakeel.butt@linux.dev>
+ <an2HYmJ57BCY_Zwt@lucifer>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,33 +51,54 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260814033005.2481920-3-ridong.chen@linux.dev>
+In-Reply-To: <an2HYmJ57BCY_Zwt@lucifer>
 
-On Fri, Aug 14, 2026 at 11:30:05AM +0800, Ridong Chen wrote:
-> From: Ridong Chen <chenridong@xiaomi.com>
+On Thu, Aug 13, 2026 at 10:27:09AM +0100, Lorenzo Stoakes (ARM) wrote:
+> On Tue, Aug 11, 2026 at 01:31:54PM -0700, Shakeel Butt wrote:
+> > Syzbot reported [1] a set_mm_walk() warning from kswapd. Soft limit
+> > reclaim is the only thing that runs shrink_lruvec() from kswapd with a
+> > target memcg set, and thus the only way kswapd can reach
+> > lru_gen_shrink_lruvec() and in turn set_mm_walk(). The offender,
+> > mem_cgroup_shrink_node(), has long carried a "Only used by soft limit
+> > reclaim. Do not reuse for anything else." comment and a priority hack,
+> > and it simply never got taught about MGLRU.
+> >
+> > Rather than teach it, let's delete it. The v1 soft limit was deprecated
+> > in v6.12 by commit 569c4f62d84a ("memcg: initiate deprecation of v1
+> > soft limit"). Nobody has reported depending on it in the ~21 months
+> > since, and v2 has covered the same ground for a long time with
+> > memory.low and memory.min.
+> >
+> > Link: https://lore.kernel.org/all/6a7a6929.b50370da.49fe0.005e.GAE@google.com/ [1]
+> >
+> > Shakeel Butt (9):
+> >   memcg: make the v1 soft limit knob inert
+> >   memcg: remove v1 soft limit reclaim
+> >   memcg: remove mem_cgroup_shrink_node()
+> >   memcg: remove the soft limit reclaim tracepoints
+> >   memcg: remove the soft limit rbtree
+> >   memcg: remove lru_gen_soft_reclaim()
+> >   memcg: remove the per-node soft limit tree fields
+> >   memcg: remove mem_cgroup->soft_limit
+> >   memcg: simplify v1 event ratelimiting
+> >
+> >  .../admin-guide/cgroup-v1/memory.rst          |  49 +-
+> >  include/linux/memcontrol.h                    |  27 --
+> >  include/linux/mmzone.h                        |  30 +-
+> >  include/trace/events/vmscan.h                 |  14 -
+> >  mm/internal.h                                 |   4 -
+> >  mm/memcontrol-v1.c                            | 435 ++----------------
+> >  mm/memcontrol-v1.h                            |  12 +-
+> >  mm/memcontrol.c                               |   7 +-
+> >  mm/vmscan.c                                   |  96 +---
+> >  9 files changed, 66 insertions(+), 608 deletions(-)
 > 
-> Writing to memory.peak resets the peak for that fd only. Each fd is a
-> watcher and reads back max(its own value, the shared local_watermark).
+> This is a gorgeous diffstat :)
 > 
-> peak_write() resets by lowering local_watermark to the current usage.
-> To keep the other watchers' peaks it then walks the watcher list, but it
-> stores the current usage into them instead of the old watermark. So once
-> usage has dropped from a peak, a reset on one fd wrongly drags every
-> other fd's peak down too, even fds that never reset.
+> Obviously not my area but looking over it, all LGTM so feel free to add:
 > 
-> Reproduced on 7.2.0-rc5-next under QEMU, two fds A and B on one cgroup:
-> B sees the peak (410624 KB), usage drops, then A resets -- and B's peak
-> collapses to 1060 KB although B never reset. With this patch B keeps
-> reading 410624 KB.
+> Acked-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > 
-> Fix: save the old watermark before lowering it and use that to floor the
-> other watchers, so a reset only affects the fd that issued it.
-> 
-> Fixes: c6f53ed8f213 ("mm, memcg: cg2 memory{.swap,}.peak write handlers")
-> Closes: https://sashiko.dev/#/patchset/20260807090000.1532495-1-ridong.chen@linux.dev
-> Assisted-by: Claude:claude-opus-4-8
-> Acked-by: Tao Cui <cuitao@kylinos.cn>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> To the whole series!
 
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+Thanks for the review.
