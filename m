@@ -1,82 +1,82 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C46EEA8
-	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 09:20:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 350B13A875B
+	for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 10:36:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.45
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786785641; cv=pass; b=dcCELI73jRPBWRTKbOyKZgMGq7ttjFK9J+DY+6WZ0osMs55P/f8FknoNZ4WqASzUd1D7wx+8BIl/HdmrEZ7M2qSsprVBdua5V28ZZW3qWODG+as8rOOU+Knh4AvexxB+sXKc5m/5FGKUSRLXEV3Ub287T7UC1LaK+KFpwJ9NSSc=
+	t=1786790216; cv=pass; b=QnfAlRbOULclQUR0Du2yp+tDmw9su7GhdOacKjTJGDYft/K0sRHZneI3bW7P8Rf5tyfDMNES4Huiu7r0O0HO0FhRwnIlBmJY9QINCxHdgq4ggzBhsBctFE4QFhoEXkV1gKUDGSvamNc+lOV9lBMTFibbyL2HfQXqdwtDbscyj0U=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786785641; c=relaxed/simple;
-	bh=CLKiohUTLkZ3vOg3O+B/65s3DGhrq9fg5gml/HppUi8=;
+	s=arc-20240116; t=1786790216; c=relaxed/simple;
+	bh=DS6yB2qeQqbi7FySMxFQ+9vfVEdMwSKHStU8l98tnh4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RG1B1dVGE3sj6sAZ3GqzZI8VNA1EawAFdauQHs5WKKctOnfv7WVOSja42VQr4Fxbmbe4jN+w5STG5/fgfWMGD1kGO4Pl5+UX4kWVOmIVegj9pvLY5cJOeHTkfwmg+Z+oDmCsrInofcPL/aXl+AlTu8nzcLTKM1GUwfsBmp3kpqo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QvopY5Z9; arc=pass smtp.client-ip=209.85.218.53
+	 To:Cc:Content-Type; b=hU2qaXqDQNMpF82gWkALpPubDz4jnFfCPEVjLOomZmun05Ei49pgyaIW+UIFNFVYVkc2+obsK5BYa8G2eRrrAyzlRuktwORZfBYQDjrw96nNbH9/vVqWtfm7hIekMQRPW96khnZDE4BfXi6M64aLeYEnloQn3HSxowjEZoJvCyQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PSK8CkPj; arc=pass smtp.client-ip=209.85.218.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QvopY5Z9"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c197eaaab00so346261866b.0
-        for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 02:20:39 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786785638; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PSK8CkPj"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-c15cf78d1a2so199522766b.1
+        for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 03:36:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786790213; cv=none;
         d=google.com; s=arc-20260327;
-        b=GkjzN6X5VqakYnP4RIQygjDfLnCwoMqWbRpa7XMcg+MKLKd1V34esQx1c3EBvoPpYo
-         ZaiI/rWqc1by8oW0OoB+DU8bGkWvr6XioP4F16fkL/eU5GoGUDyhvvAnSG6G2u4NNH5W
-         XNUSjOIsAr32a4TqF29mQdzxpAPLJXn+q1OFmm0NhNqMN72Rh8XUZ+HCLsKRCg5dyof9
-         5G8gVJHKNtImBFULZ/gaWh4Wwu5vtM/Epp7RGmIQxUMA92q6Ic3cQZc9loR8O3eo+RsR
-         bDmE4Vqexj67cCEk6YgArlBsofaYC2yIUWhoqR4lv53dkgXRGp57yxVOzDUGj7eNXkzu
-         S2/w==
+        b=g0GfrU5l/l4OU2w7rAh/6PHh6PPxNc3GZR5nYZjfWgWk0uboz76Mo9fdw/4qi9yKWl
+         LXNHMUCHkPuBNpJNaOgjl8rnmWDiWvUGHoiejTWFcWFvPmnPbcSKZ1ETlYQzgAbI08LQ
+         6NnlbOM/3XCN/R6Gc9IZz1ZvsoRcgUxgZX4hgtTk1dlSP+ZJH30HqJdt20EmnbM+zMgM
+         XAoUFhEfEvUoPtgR+y4kzp4hNxZo2sDPQfFbriGgWe7dkj4mesLLuNWBqDWRDcNrxSU0
+         MRPh1+nrlojv3mL0oN5t5khOzXOLPrCWaurBlZJfOouV+UOfC9SgsrV+fdXqd2yQqhG9
+         6QEg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=cGIHvMdb6k99fqHGsYD8RBx3vvRhyGoxqfHlvr/UKEI=;
-        fh=E2XmqNDw3pq2oSahqsAjtN0lISkel6H2GrWpJemqZr8=;
-        b=gXXp3ffMzhIbGsEO+RsG3ZecHWRj6H91tRbJoTlOUPfwj4CxE8Gg6KcXGXSYNtsad2
-         TCPErajx8CcZxl03AdHrY4meShAKHDWcsI6ueB0O2OJPW/WIX6EOz7iByJ5kKuMV6JAf
-         kxTPnx/UHv/9f9FqijJ8gtFeWQtMUqTdIKAq8BVbetyWCvFjMMJO+fRJKdY+J373Yrs7
-         ZYT7mGWwxUwyo/5+/8PR2+7DhDYmg6z0AoFWe38jp7RST3o1QxJyuwwphpoPZQjDGutf
-         kP/oWHC1yluYwyuWgfG5PuAlkNQayOyFoK/9gDXg/phMOtkxub+fnRlGlKOix1RhV/+K
-         Z5Jg==;
+        bh=vnZiTFKSAoocFhTo8McUVPhAmeid+C6lDN1zJfSeDFc=;
+        fh=lvgL9+W9QJMS0H6kAEiegDkK8qPZ3yfm+DrtwcBizfA=;
+        b=RdYFh8uQLaCjWKand9VoQE6BZcDBiGkuyICzWecCI56jnfKLRvPvEtyxLy7yq16SR7
+         P2iJY4c0F1lZpOpyVX98Ms17mhPtE8fDzXMjYhWPsvqCOUeNIOGtYA6rQ9aOuxaupVQK
+         R6RXvFNxSYt9hk/Jv3m4KHCRxSP/fjluoX11JiYAkcU5lsn/Or2DJVgEZBxV+PRJJupN
+         RnTFcpZ6/l1cdPLKKJcl74bwGZgoMzFtQ1ymfTKlGs+xpaOaoZnYXxoBB+ReLgMrKDzk
+         g/t546Xg4xY9aPB1s4skPAdylT5Y+2e1cnIBxoVT0Vlr8jDMD9RrqHllIdUm8PK8kXVe
+         J+bg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786785638; x=1787390438; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786790213; x=1787395013; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=cGIHvMdb6k99fqHGsYD8RBx3vvRhyGoxqfHlvr/UKEI=;
-        b=QvopY5Z9qNiAG/yLiTa3XOKaqzeVl9XLKtB2UQwU1mL23c87Gz/l66XsFkmvTY7eX+
-         DvjLMNJ0mOrVpoFByxvzvZDzdbP8MQoU9KQzLPzShcCPHO/3i00FaifsHjestDz/YJ1Z
-         QchMFtH013QlsSh5/FVOjNsrT2/A7FZoFxymGQ5G4QoA3lrhNiCRnG/on4kPsBr3JP6u
-         iGikWbrbtIB1YI3z/2Rtw9FVI0FVrdlqI4I1s6TBcWgfMq/4D6loo3HH+qBqIuI18Jgp
-         RorOyPQosereAMSEoaLw1n5FEJFc/cFjuvjO/urazZERyj5jNu8tPfQTeL1zlQACfIf/
-         Xv2A==
+        bh=vnZiTFKSAoocFhTo8McUVPhAmeid+C6lDN1zJfSeDFc=;
+        b=PSK8CkPj9/jrTffXAcLl1A7WeN4N3qXMraMbfNgbk76CjauLI18cie/a5g0XyAMWAw
+         EQl2VB68TMAqTtztFwnpFmfgS2vDYziS5DTJMM5g0fRGANIdZEHd0i1g4vEQB3Lj2vFD
+         aaO8sWdPdn+2kyzVtkk9l4o6ILEop3SsMiiK3BAxvT8fxJ7AhnQiCbkIAlOfqY1LigJI
+         XdM683plcSuJczGdyf6TFE5AqcB5yTLiNOHD2bf2dEzWXfSnJw7LNC4I+voVEMNtTz2o
+         V+gpJj8OvLMMARwKOFXnX8+pLGvq2o3BX89+35o9n6c55iij6DXNGga3V2NfYTWp528E
+         givg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786785638; x=1787390438;
+        d=1e100.net; s=20251104; t=1786790213; x=1787395013;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=cGIHvMdb6k99fqHGsYD8RBx3vvRhyGoxqfHlvr/UKEI=;
-        b=mlawupM09m6zWwcTlwG2Ibedqxt55i4xt33WRnn+qnB2jlV3t3vzfLiHy5z7lFtr4n
-         zwyJy1c87K1kXWT4fhjzIdBEE3GAG2eUulG0P9bRvzZv6czx/j+Gfmkx+QkSESqIVj84
-         bkhqTl7O+8304efcBgln51xizSchHy6ACCjETRQWTKDwnsydvwgeaNP54fkznFW0Bugo
-         TSbsXrBqhbPm8ROwKfIPgzbGr+JkiL3Dm7DK/5DrA1rOvDaZziSJuznTgEXselNrvIHM
-         nxZSoJqzI0oerR+Mk/oNHF1Bdqki0SW44tlcrHYdRA+I9MTo0CHBsaWY352mid9Jqwkp
-         d9/A==
-X-Forwarded-Encrypted: i=1; AHgh+Rrhby4ay9gFJmuxvxg/oTnhudj/isEsEb9PHwrGBOgP9LLrIry6+g8UzXoPAetEC6Mc0U8Y5f1+@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLRQMCIbvddQQOeFcydY55z4kzgx39F3xkuLT3ejL7t45CTyjH
-	sIWSfxF8YbdDKzBOZEj3MLuZ5Fi4Dv+08LmO0pC417MYeWou3WSryxEoT7GPTr7OyinEe4J5rS1
-	koa/de/qXvr6j18aXjdL9l3i8pGqRjDE=
-X-Gm-Gg: AR+sD10Af+rUWOJvCLlbwzSRva8tf0fZwScwCLVbvraVWJXpY1Gx14hzUviAPHmPYP/
-	7SEMa3gVXOgbCueNRJABq6fGbh4vCB1gtFaBNpy4tHlCDOSXIL4JzwdfVTt7mKrz6M5yywa4A8j
-	ihlGT6yS4A4mLDfSDkaDRuYhEZz5X/E4VmoR/zqkS1SRo30CI4j5G/VPbZmcuVCzdJR8xG68MVc
-	5PVxUvdtHEh3ORM/6CzgnR92KG3poy2PHaAiVAkgBidQuxp75cRygYm1WSnNe66zGWC+TQAsHg8
-	vRXnAoqlmw0j8GwnbHlG7/ZV7ZalAtQOfdnDqzMhQgvT01+Rgj60GL2CXfZ4gmMpVVZshGPQ4AR
-	Shg==
-X-Received: by 2002:a17:907:c02:b0:c1f:c061:569a with SMTP id
- a640c23a62f3a-c2129b5b0fbmr558940366b.7.1786785637644; Sat, 15 Aug 2026
- 02:20:37 -0700 (PDT)
+        bh=vnZiTFKSAoocFhTo8McUVPhAmeid+C6lDN1zJfSeDFc=;
+        b=ZMEh2pBvK/KwWVvkCulawvmhy/L6aa0Gbq6/spQjEz/bqcRvZYCJAUC7g08JHYQC73
+         sh0uLen+U3wwGSByBS0Wn8T/fEAXA9gbjgMQsU2VqMFkEuCAULPamda0bzVBV9fplxz8
+         JJalnHE0NijehP3UyvCwNv6BKWTyYlf1/seyE0vKGbPFs04JUNG4SfbFweT5TpDK+4VD
+         U/ShMkviZUePqA55KfXF1dMGWsO5+B4+S4F/vFKwTt08u5iE5OQQR+HYw545wg7so/q3
+         puIr/Q3/9lbN8Z2DTR4vsWW/JXdlp5nNlC88m4q2Fk2A/JcoKKmrUlbxO/pjf6J+vVoN
+         wtfg==
+X-Forwarded-Encrypted: i=1; AHgh+RpiMsthImhesrHZSqQPI/MLiBWdvPCjVWhNFJn/XySk0VJmUtdIp7yJlK9nSvHpoMv2f66SBhw0@vger.kernel.org
+X-Gm-Message-State: AOJu0YyusBy24FUJPAOoG2ick6uNVe4GEZr0jCmT7MOgD0AubgGEF6r5
+	bgiNCUHD3Wkg3vMLc8HLevebxQl5WCJMH0oe/CYEBtL4CGhm/AJA2R0Pm6KUQ7z9aAF0/oJZY4Z
+	S/NaGfD/rbKw9lPV6J2CX8w6DWhsB1JI=
+X-Gm-Gg: AR+sD11rRRfT3LO/ZNowkskPbVDKR2J5XKjT9VsHWl3ll+1ifb2/JWolh/FZHSoW3CE
+	oPtcfXk5+vRBKeXXWqzFv7prxBxyqzlHRbL1xJRBC8OPkvgoHuE65AfAfhpSDhZuDEw+6P8U3V5
+	BxLR2B/7WxtKbK8uQdflVXHQGx6Ob7iUhXi2s2UNnbiJRdf0yjuQk2RgRKW9RA8cMkvJSmMQyPX
+	TUUEiJJV02aL37dWP7cU+Y/nBSeMgRoIfEBo7y3dVqB3bPGZppmpp2jlnlBNFlYJ3c5PuC/MNfO
+	ZEUamSFbl0HplyYn3+YrnKYsmf1cTcjthQihyUOlq8jn8YmXvOAOUhfCtYmbGuQ7SXGSkiogjyT
+	NRA==
+X-Received: by 2002:a17:906:ee8d:b0:c21:792:8257 with SMTP id
+ a640c23a62f3a-c212a1d6bd0mr501209266b.15.1786790213101; Sat, 15 Aug 2026
+ 03:36:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -84,14 +84,13 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
- <20260804-mglru-fg-v1-9-4d8dad39dad6@tencent.com> <CAGsJ_4zVhK9SvHEd+OFAHSu-OgTiAtk-ZU5OQVx5RwBYmc9r7w@mail.gmail.com>
- <CAMgjq7DupViQ_MbZCMRSb_Bw57C+Lcg2fFnpaJ1xsjftzYHUSA@mail.gmail.com> <CAGsJ_4xhxELewwy=X+K8WurSnLDzaz2kD384gt93Ha=uVpyHDA@mail.gmail.com>
-In-Reply-To: <CAGsJ_4xhxELewwy=X+K8WurSnLDzaz2kD384gt93Ha=uVpyHDA@mail.gmail.com>
+ <20260804-mglru-fg-v1-6-4d8dad39dad6@tencent.com> <CAGsJ_4yBJVpHO09HNP7cRyt4NH0AX77Sz0W4ppdQcc9fY1bAZw@mail.gmail.com>
+In-Reply-To: <CAGsJ_4yBJVpHO09HNP7cRyt4NH0AX77Sz0W4ppdQcc9fY1bAZw@mail.gmail.com>
 From: Kairui Song <ryncsn@gmail.com>
-Date: Sat, 15 Aug 2026 17:20:00 +0800
-X-Gm-Features: AcwNN1UD6wlSIq4Zi3TIXvS0pqcdHhg-sYrZC--Sr_V-rOxVKiGYqZ0gVdl_kYo
-Message-ID: <CAMgjq7DYpcA9Xu+NTzHk=N--CC_oPV=1Wj9ZcJRjDonZA9iqWg@mail.gmail.com>
-Subject: Re: [PATCH RFC 09/15] mm/mglru: frequency guided workingset promotion (MGLRU-FG)
+Date: Sat, 15 Aug 2026 18:36:16 +0800
+X-Gm-Features: AcwNN1XEDc-Qh3T6u4zhkGsXahR_kqoZIfVrMMEdKsYYSFr5PwD4n2Kn-yhytdE
+Message-ID: <CAMgjq7Bg9wHC0MS8DGNzU7WFxHd2Lz5OrerUh=TLYYbiUppiQA@mail.gmail.com>
+Subject: Re: [PATCH RFC 06/15] mm/mglru: use explicit tier range in read_ctrl_pos()
 To: Barry Song <baohua@kernel.org>
 Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
 	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
@@ -115,36 +114,119 @@ Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Aug 15, 2026 at 8:13=E2=80=AFAM Barry Song <baohua@kernel.org> wrot=
+On Fri, Aug 14, 2026 at 1:25=E2=80=AFPM Barry Song <baohua@kernel.org> wrot=
 e:
 >
-> On Sat, Aug 15, 2026 at 2:06=E2=80=AFAM Kairui Song <ryncsn@gmail.com> wr=
-ote:
+> On Tue, Aug 4, 2026 at 3:47=E2=80=AFAM Kairui Song via B4 Relay
+> <devnull+kasong.tencent.com@kernel.org> wrote:
 > >
-> > Thanks very much for the review and suggestion!
+> > From: Kairui Song <kasong@tencent.com>
 > >
-> > Good idea, but to distinguish from macros like LRU_REFS_PROTECTED and
-> > LRU_REFS_WORKINGSET, which are special referenced count number, maybe
-> > LRU_REF_EXEC and LRU_REF_FAULT? BTW we have macros like
-> > FOLIOREF_RECLAIM_CLEAN, FOLIOREF_KEEP, and folio_referenced, etc.,
-> > which are commonly used already, that's one main hint behind the name
-> > choice here.
+> > read_ctrl_pos() encodes the tier range in a single "tier" parameter
+> > via "tier % MAX_NR_TIERS" as the start and "min(tier, MAX_NR_TIERS-1)"
+> > as the end.  This is hard to follow or maintain or extend. Tier
+> > values 0..3 select a single tier, while tier =3D=3D MAX_NR_TIERS select=
+s
+> > the full range.
+> >
+> > Replace it with explicit (tier_min, tier_max) parameters using a
+> > half-open [tier_min, tier_max) interval, which is the conventional C
+> > idiom.  The call sites become self-documenting:
+> >
+> >   - get_tier_idx:   (0, 1) for tier 0, (tier, tier+1) for each tier
+> >   - get_type_to_scan: (0, MAX_NR_TIERS) for the full range
 >
-> Yep, LRU_REF_FAULT and LRU_REF_EXEC sound good to me.
+> I agree, this is a nice cleanup. The existing code is really hard to
+> read. The magic is in i =3D tier % MAX_NR_TIERS, but I've been bitten
+> by this magic a couple of times.
 >
-> BTW, is FAULT really the right term here? It looks like you're
-> actually using it to indicate the result of PTE scanning.
+> But could we make the range inclusive? Right now, it still feels a bit
+> difficult to follow.
 >
-> In the other place, you use "promote" instead:
+> Since tier_min and tier_max are tier indices rather than a typical
+> array range, would an inclusive [tier_min, tier_max] range be easier
+> to read here? In particular, tier, tier + 1 at the call sites still
+> requires the reader to know that tier_max is exclusive.
 >
-> +static inline int folio_inc_lru_refs(struct folio *folio, bool
-> promote, bool is_exec)
-> +{
-> +       return 0;
-> +}
+> >
+> > No functional change.
+> >
+> > Signed-off-by: Kairui Song <kasong@tencent.com>
+> > ---
+> >  mm/vmscan.c | 14 +++++++-------
+> >  1 file changed, 7 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index c2ea92c2b69e..a359d5a1ff41 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -3192,8 +3192,8 @@ struct ctrl_pos {
+> >         int gain;
+> >  };
+> >
+> > -static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier, i=
+nt gain,
+> > -                         struct ctrl_pos *pos)
+> > +static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier_mi=
+n,
+> > +                         int tier_max, int gain, struct ctrl_pos *pos)
+> >  {
+> >         int i;
+> >         struct lru_gen_folio *lrugen =3D &lruvec->lrugen;
+> > @@ -3202,7 +3202,7 @@ static void read_ctrl_pos(struct lruvec *lruvec, =
+int type, int tier, int gain,
+> >         pos->gain =3D gain;
+> >         pos->refaulted =3D pos->total =3D 0;
+> >
+> > -       for (i =3D tier % MAX_NR_TIERS; i <=3D min(tier, MAX_NR_TIERS -=
+ 1); i++) {
+> > +       for (i =3D tier_min; i < tier_max; i++) {
+> >                 pos->refaulted +=3D lrugen->avg_refaulted[type][i] +
+> >                                   atomic_long_read(&lrugen->refaulted[h=
+ist][type][i]);
+> >                 pos->total +=3D lrugen->avg_total[type][i] +
+> > @@ -4805,9 +4805,9 @@ static int get_tier_idx(struct lruvec *lruvec, in=
+t type)
+> >          * This value is chosen because any other tier would have at le=
+ast twice
+> >          * as many refaults as the first tier.
+> >          */
+> > -       read_ctrl_pos(lruvec, type, 0, 2, &sp);
+> > +       read_ctrl_pos(lruvec, type, 0, 1, 2, &sp);
 >
-> So perhaps LRU_REF_MAPPED  would be more appropriate?
+> It's still a bit of a headache when three integers are put together.
+> Could we somehow make the 0 more self-explanatory, such as using
+> TIER_MIN or a named constant?
+>
+> >         for (tier =3D 1; tier < MAX_NR_TIERS; tier++) {
+> > -               read_ctrl_pos(lruvec, type, tier, 3, &pv);
+> > +               read_ctrl_pos(lruvec, type, tier, tier + 1, 3, &pv);
+> >                 if (!positive_ctrl_err(&sp, &pv))
+> >                         break;
+> >         }
+> > @@ -4828,8 +4828,8 @@ static int get_type_to_scan(struct lruvec *lruvec=
+, int swappiness)
+> >          * Compare the sum of all tiers of anon with that of file to de=
+termine
+> >          * which type to scan.
+> >          */
+> > -       read_ctrl_pos(lruvec, LRU_GEN_ANON, MAX_NR_TIERS, swappiness, &=
+sp);
+> > -       read_ctrl_pos(lruvec, LRU_GEN_FILE, MAX_NR_TIERS, MAX_SWAPPINES=
+S - swappiness, &pv);
+> > +       read_ctrl_pos(lruvec, LRU_GEN_ANON, 0, MAX_NR_TIERS, swappiness=
+, &sp);
+> > +       read_ctrl_pos(lruvec, LRU_GEN_FILE, 0, MAX_NR_TIERS, MAX_SWAPPI=
+NESS - swappiness, &pv);
+> >
+>
+> Maybe we could introduce macros such as TIER_MIN and TIER_MAX to
+> make the intent clearer?
+>
+> #define TIER_MIN 0
+> #define TIER_MAX (MAX_NR_TIERS - 1)
+>
+> Best Regards
+> Barry
 
-Sound reasonalbe, it idea behind that name is that if the folio is
-evicted, that access will cause a major fault. I'm fine with both
-name.
+Sounds good to me. Thanks for the review!
