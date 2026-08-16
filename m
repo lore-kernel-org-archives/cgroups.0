@@ -1,92 +1,111 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f41.google.com (mail-ot1-f41.google.com [209.85.210.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06D2F3FFD
-	for <cgroups@vger.kernel.org>; Sun, 16 Aug 2026 00:01:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C0871386C9
+	for <cgroups@vger.kernel.org>; Sun, 16 Aug 2026 00:01:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786838485; cv=none; b=olYMXnNUs9DG8DJ2IStV1OajFutp2at2kKTQoeokwpG1ehAh5eK29LJZyCeErAlJIA20wb5n8oi5VlZxwWciMixlJjjBQoYFI6xeEjo2jmIJaM0VEzsWg9Qp2U7E4Lt8ieCiIxDRerBjlpSLrw/jzpB6sTDOgXrxsjTCMTtY/yQ=
+	t=1786838511; cv=none; b=eM1D60v50vO8tBfwssnmRNfT3Wv5NbELbNeEl1KFj8mi9zJt/Xlz5UnBwoB991K9ELkwHpLuVuv9Q+B9PRi8lUQuL7HAunC32JF+MiNGfTUni4RaVo9LuYEZmgRscBxHEME1nbLLfYFCmiTmP7vhSRngu+sJ5QopNLyfj5W7szc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786838485; c=relaxed/simple;
-	bh=RCwa3g7FtGVuSA84GtWN7s2+0mvZR/VmrVJl3AV3jRA=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=XNkcUzNkODnKEv8qdJ6JytOZJo91vAAsh3iHo+tJvNOaiWAFK0gDKxaz7toexekXRw80kcgGhapZC8I97D+ugSuGhZaV4AyRtMK9lk66OLzxQqji6eqbNi0LIQyRg58tZd62p/A9zsaI3VlDKoxv9GRCCs2Nm1SfDRYt1d3C+e0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JX1vUBE8; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1786838511; c=relaxed/simple;
+	bh=feTf3gDPxpTJ7EucbapPKXU/Ow8t1YDYYEeMpkX4irY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=WK+U0JowNDxIsieSpMJ+m5Ra6RgSE4t4boXavPnIpNsyFGBJV+RcX3b47p8Wb+JhH6NYWs3YJxzsyE9lfBotlTpw+fFURmvzMJkbDpNLBy5BcVjCpkPlSUSp9wmXU8txSuw7xFnVX/hHSJEV499kCbLuvlyTPX+AxllJaEmDpdc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=lNRBRjVT; arc=none smtp.client-ip=209.85.210.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JX1vUBE8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786838484; x=1818374484;
-  h=date:from:to:cc:subject:message-id;
-  bh=RCwa3g7FtGVuSA84GtWN7s2+0mvZR/VmrVJl3AV3jRA=;
-  b=JX1vUBE882BzKzClb64sAMPkBCvC85gf36BP6+3Jqlb+eP7mhK8y047y
-   nBdbbjyXyB0VYkoSpKS/4dhiYLMh0B8PKBqksBBu4Y5tvnwZy/hCz8SWl
-   ybksmOhi6/rTQzQKN7K5i2TKNHW88pv+pQocep44p4zSsLNYKGfO8NUUf
-   rWCCqr12LCfgauxIYdN6fSEZdigfpJn7kOz+uBnZUMnrZH7sFpJGL0gE/
-   lAEtk1o0ytCKNrVTUA/j4PBPGZoKWIDlPbkfAmWUKUbGr6J2gl6Carejw
-   MQslIc2Pg5Kg9D39j+Zv47kHwn1FSK28+reo0cDNymnT9/lzCepEcc25O
-   g==;
-X-CSE-ConnectionGUID: /0oXqpgOS6afsgOITO6rlw==
-X-CSE-MsgGUID: /SSmikyfTP6B+UyZj3iVEQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11876"; a="98727498"
-X-IronPort-AV: E=Sophos;i="6.25,226,1779174000"; 
-   d="scan'208";a="98727498"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Aug 2026 17:01:21 -0700
-X-CSE-ConnectionGUID: vH8MWr1ORaeI45IFJMFPUg==
-X-CSE-MsgGUID: cj4xDwvKTcy8prF36PrO7Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,226,1779174000"; 
-   d="scan'208";a="302794955"
-Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by orviesa001.jf.intel.com with ESMTP; 15 Aug 2026 17:01:21 -0700
-Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wvOJS-00000000cY5-2dr9;
-	Sun, 16 Aug 2026 00:01:18 +0000
-Date: Sun, 16 Aug 2026 08:01:09 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- dc2aa1e1be68af29e7088d3dcfec9ce57d0f3a1d
-Message-ID: <202608160858.JZb17Kcw-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="lNRBRjVT"
+Received: by mail-ot1-f41.google.com with SMTP id 46e09a7af769-7e6b5737bb2so2787322a34.1
+        for <cgroups@vger.kernel.org>; Sat, 15 Aug 2026 17:01:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1786838508; x=1787443308; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=fOy7gSHvO9zPI/lOB2xKGNQPh6roFIkY+cj7vJXmC3Y=;
+        b=lNRBRjVTwvIpZWZHn/A+hdaQ59Prizm9I5XVh+j+QiSg0q+ShXz9sJe8+FcZqm6sm7
+         IwtxNivqlZGItXmAZgOVOUS7uQ5rsY+we4dzmuLZXGncojerh/hGmXXMuFOuZN//joAB
+         8GU/6W4dSC5KtCHldV/aVE6zLygs63wmhXVoPZL0D6nOTuZfeAk51UwcG6HO/sKVY/56
+         hmCVcJAwq0Il3hGuhBpUDkoeEBFzM1gFWs42ZRRYX8CJTYpwzAPGJ39kS1WZvZNqL865
+         /7L8AJ9s46x6cYt3VFpZ8GpcCjui0XiTOcb29eIST5sPrhezMZ4mI0aaQ21GG/E6pGxX
+         vzUQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786838508; x=1787443308;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=fOy7gSHvO9zPI/lOB2xKGNQPh6roFIkY+cj7vJXmC3Y=;
+        b=GA9P4BxKqKKFNR8cSMLBQRAKEGdCUN4Dpk+dBvsXBNmgOn+3XtRzHS8mWfbuujBzli
+         OX5C5uN0Zf8fJwvuhH6FB4RJlme6rJx7uVxhLqbfQNd4+t0Qvy+k7cqiNU7TBAZyWGFl
+         QTTz6keEKNWh7OgeYkwujVgrGB7RGQP7KcmQdRt46HnXOfcNL6lG1SqZK74R6Anne7fN
+         QjSmenHCLuej3fDv+R5AQJ5/uYynaVUv2Wdrg4rm61AxFjYNDagw51aAqU5C2oDuvRT+
+         d0cGXl7B0iBmWN+mAlJBUmlQvESrO35VoqxNraghL2ACeQ84fj9kqTmfzWrRqfkvHRV9
+         OVbw==
+X-Forwarded-Encrypted: i=1; AHgh+Rq3l67S0hfUI/8rApjOSZhND1r+kPX/851bVT114htcnAiMjF5ybNIbKOiQYvJoQ6maJPNqNyTI@vger.kernel.org
+X-Gm-Message-State: AOJu0YxmXeJNwbfilrglKp1o8yGyPn2MCepbOfu3WWfYUdOPRWXO7Qnh
+	KlcFfnbcSP3pOEO4GWRiDsloZRsd7oap689TZAFlfius7nZCkMqq+JLjsKqtz4ww+pA=
+X-Gm-Gg: AR+sD13PMXrSx1XktTpMGFnG/B8pIAttlJTehQCrAyde7YS9EBAxllDbmcVcsHuW+wP
+	JnWadNR8bLcQeb4RmhyaFHwpG6eE6ETaeMDTjfU0XsWQCvbYktr0seRs8SwhLHuHICgLnKyc6EJ
+	8MQoQQHGwS/8p2wcqSjG6T1wNzmLAJxrQ8++pLEyjyjo4+qgdvTIWRWJZqMo0axCT6Sm9U1S2aF
+	bbsfZZSK2wVwkwFfLDE1EoiyTopa41G2CN5oQz8Kpwb6Zx7K4qVVywf2RjHjdnX0dsaVMTpkX/C
+	6iWE920XYXl+SjV+muPhmdngn7wCR8Uid5EcU62XRXiKG4R1d7Er1hYUrA6JjLfK/x+LV3aTPfZ
+	40G/Dy+YgjGljw60MhqAG+uHo7EC8uXNaskmIeo+jRheWJ9dN62OrGxP3/5Fv+SwfPkYDD/rQAM
+	dWtvYjYuLp5jEZBAAPSRus/zTJ+U7bMAwjG5HWageJGj/LN+uPnXvroLgXDBP3AIJn08Q8ZE1rp
+	gBGSUcjQKbyWOLZv5Ukl8HnQASFbGDetWS+mk3JGVcmwZq7mvYi7A==
+X-Received: by 2002:a05:6808:c3f2:b0:497:8f1:df07 with SMTP id 5614622812f47-4b241995a69mr13578476b6e.7.1786838508515;
+        Sat, 15 Aug 2026 17:01:48 -0700 (PDT)
+Received: from [127.0.0.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4b24d92462dsm4347729b6e.5.2026.08.15.17.01.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 15 Aug 2026 17:01:46 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: tj@kernel.org, cgroups@vger.kernel.org, josef@toxicpanda.com, 
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Usama Arif <usama.arif@linux.dev>
+Cc: shakeel.butt@linux.dev, hannes@cmpxchg.org, riel@surriel.com, 
+ kernel-team@meta.com
+In-Reply-To: <20260814165712.510132-1-usama.arif@linux.dev>
+References: <20260814165712.510132-1-usama.arif@linux.dev>
+Subject: Re: [PATCH v2 0/3] block: skip the blkcg walk in
+ blk_cgroup_congested() when nothing is throttled
+Message-Id: <178683850494.1984298.9181884544120135376.b4-ty@b4>
+Date: Sat, 15 Aug 2026 18:01:44 -0600
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: dc2aa1e1be68af29e7088d3dcfec9ce57d0f3a1d  Merge branch 'for-7.3' into for-next
 
-elapsed time: 771m
+On Fri, 14 Aug 2026 09:56:36 -0700, Usama Arif wrote:
+> blk_cgroup_congested() walks the current task's blkcg ancestor chain on every
+> readahead decision and, once swap is in use, on every anonymous and shmem
+> folio allocation.  The answer is almost always "no", but finding that out
+> costs two loads per level on two cold cache lines, plus an out-of-line
+> kthread_blkcg() and an RCU read-side pair.  On a fleet profile of hosts
+> running containers with 5-10 level hierarchies it costs about as much as all
+> of mutex_lock(), 99.4% of it under __folio_throttle_swaprate().
+> 
+> [...]
 
-configs tested: 15
-configs skipped: 1
+Applied, thanks!
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+[1/3] blk-iolatency: clear delay state when freeing policy data
+      commit: 8935bf22c0a0db517a7f72f7097300e05dd852f5
+[2/3] blk-iocost: clear delay state when freeing policy data
+      commit: 97cb95d2148835ae86ff916b145aef332d40439d
+[3/3] block: skip blkcg walk in blk_cgroup_congested() when nothing throttled
+      commit: 4febfe7d98948bf6693f5c6a0a7e198e8fb4e584
 
-tested configs:
-alpha        allnoconfig    gcc-16.1.0
-alpha       allyesconfig    gcc-16.1.0
-alpha          defconfig    gcc-16.1.0
-arc         allmodconfig    gcc-16.1.0
-arc         allyesconfig    gcc-16.1.0
-arm        pxa_defconfig    gcc-16.1.0
-csky        allmodconfig    gcc-16.1.0
-i386        allmodconfig    gcc-14
-loongarch      defconfig    clang-24
-nios2       allmodconfig    gcc-11.5.0
-nios2        allnoconfig    gcc-11.5.0
-parisc      allmodconfig    gcc-16.1.0
-parisc      allyesconfig    gcc-16.1.0
-parisc         defconfig    gcc-16.1.0
-sh             defconfig    gcc-16.1.0
+Best regards,
+-- 
+Jens Axboe
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+
+
