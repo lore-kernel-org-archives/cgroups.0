@@ -1,97 +1,148 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FA353C3792
-	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 08:31:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C8853AFD16
+	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 10:34:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786955476; cv=none; b=oqy06WwVGza1Cmcy5tw1C6uyCYGcCCKup1pe/dD7J2e1vf84BAcHc262TT6Bit/nX4/b/rkBoE5YI4wTMuZbpyUNjOSOPsPpO8dQTyH2FG4AUs+7gPgoYMb2cFU8WfZPISe+wwDo4eVoEoNkAXBoGf2Hf5IvrvQn53XXQPyb7/Q=
+	t=1786962880; cv=none; b=aUr2Dy1Z4IfG2XENa3nBQ8a7WfkpEEy233gLpHtGHI0TccUgGpRu3V26+Uzi8lxViJWNASjceJltR5gnR9Q0CP7VWymE9SCZPLqN3I6DxlGJuNg7GbTwxR87m8dU/XUM9RKUZKwxTLFE6cHdd2vgcXMzWYvnpTDC55AR0TBvm0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786955476; c=relaxed/simple;
-	bh=Bt4/ejq02Ba4wIvtouSRDrqIFpiGmw1ZYb1G6e+d5a8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nCrEFKTw9vCkl49rWfvO+QSh7as+ZYuSsGR9f8eQ0WufmwJqThpjdGw+74eppTMq5iH/IpgjuRnuqGVEH4ASO9YWzZy7kPBnGz5pivTVhyRVR1ecZLkfmyi+K4PO/1oJ4WBQYC4PAV+e9tQZo8h16ANVCRCO/HvsKxkgjpxg1as=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=aJ2dBSFW; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1786962880; c=relaxed/simple;
+	bh=gKrpg8U7j7EBMwRqFOyixJHjTHd8xe+nJDZuRrGLG4M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kztjt/gt35ihhs216RCxFvs4Cg+/L+t4T9UbiXVIenEc6j2uRNhe5dBooLo+JCGaxotsmf49SDXr3/8mXzlfWwfPtsLv/KZcQdPH//uO6XQUxlwIqlsNqjm3jvxorZnfP31fxBMjGlpMwTP8k3JgqiNyPz5bDYuISDsd71jlbpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nwb7HJ9p; arc=none smtp.client-ip=209.85.208.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="aJ2dBSFW"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-47fecbb7000so1587748f8f.2
-        for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 01:31:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nwb7HJ9p"
+Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-39c86ce9e29so25555351fa.3
+        for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 03:34:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1786955471; x=1787560271; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ah5ew8DbE5Myy/gE+eNiI8cy5Ie1ItfK1DXj0IGZCH8=;
-        b=aJ2dBSFWCmD3hkOD+SjumQsuddf1LCg3b4GfwkYxvQx9H9ENpK+D2ilg8s91/cjnBw
-         bkMcY8Qt0CDr/tgRxJ6gCKQ2c4qGakST+fqLgCJ9+Y3UxLyyK+z8TKYi+XpKgLHzR+J6
-         w+XxvbKi8ZwUUbeUgXOFKixm61ptLAmlovhmShhbpXpLBq/0ZvA+OIex/rwrZFwYMIPk
-         OdP4TFb/xpvo/JSTU9gyfPO5/+xgKjcMbNIS2+XxGu78NsKQu1VC4b2c9UXYAZJAnmKe
-         eTMp26Hm6hrXpwTXwlNbjeSYiLOh0N5ZCGkn1g4lx7Zb1OX13BVkv06cOZGUkGYQKDXp
-         uhAA==
+        d=gmail.com; s=20251104; t=1786962877; x=1787567677; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Z4LaCEquN0Z047/3Rwp1z8GkQCCa4hzM+M2Iotc0RKY=;
+        b=nwb7HJ9pkRaFVLMDAQYQRLL6fZzGL0c0VPeMIKX4QnL9vzCWv6GJ6MOsotQvORlsJa
+         Ete0I3OhIMaGt/WsOkfQTdFvvJCM1re2IK5o60KvaMGH/pqLgVvkj75do3n3XYLp+xxN
+         YmDY7+d943oeFFmkOtMF2Iu5/OB6V27F3lzj2uPS/bKufFdDX4Fz902H6LzT20wmJyxC
+         pmkZU8I+eUXXS0M3ayJ8lOLjpti7XFrpuieG9+OmhdNWm1tUKrt6ZQOX3+x0oMZCa9bB
+         JPFdPRxNlw0ug5Hyx85GyP5y61/iKF3KF/8EiGKD70wtUZJnDDdD+T2BWyJTe7/vHrBf
+         fOIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786955471; x=1787560271;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ah5ew8DbE5Myy/gE+eNiI8cy5Ie1ItfK1DXj0IGZCH8=;
-        b=FGzPgtSRhhauCCb8Es+hlJuu7Pe3sT3NKTtHXuj/sJMdMtydvDoNQ3fj3RHZxLhcCV
-         fzy03ulGJUsY3kXaC30XvZfM5+3YTvupJ+TMFKqFx8LFWn0M8K++eIUJQQJg9eW/+zhE
-         tu6sG7YTss0Q6r5CKZwFDT0Ia1IS7aEdgYoiZfwDSyAyFnD6KMZpbwNOsYb9mmbOABE8
-         Civetdsgc/+uE+uy3GyVx/n7ZGiP3KxFtLLgJ5HK8CdbgBvvUmErn88UKaOp0Xi92Nu2
-         eRv2tW37p+rA1tknVzKKDfxT/F6udFZ+CdpHGawiC5etKnsmP9k1pCX0C/AXk2SE7K1N
-         8wqQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrZAX/tiIbZBqB3RP7zw+5UcZrTXdgzoo/lJz5o7HfhIE7a1aAaf6Fnjchb92clFoVotzaQ3MTP@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx014EESQdnBws2h+1YZaPv0f+SHPDjUE5gBFW/8nvNCatjmxte
-	TfjmowLozDMODOqi+gt45n2kMzAGrA2P4SnFvLtx5lGUVyL/4ooFMjIVLpv0svtaR9A=
-X-Gm-Gg: AR+sD124pFcvpmO5X9ZKQjr2HWhGBknpUC5w18IPpTc1D4W9wkhYedFU6aHXHAcKEWM
-	g5eN3o5iscp2HfvpS/mMmnozzEO3UXZUDKy9qIRAke/JpVksDM8H6KxtevHXK76H1GU/OMTLOqe
-	m363g1jNMP9Bo/Cy3OTMhp/sCjMmCMQWz1jDTAOyTwhGYJZtDuEIdk+3ebcR6rBQds+SsnQGqP+
-	GppLQl1aLm1Ogw4848mBer9m4xsa15kKZYQsE/kwDPguIM3X/ztJ0fs+UWS89t0xmuEfv+1MJUK
-	e8xYw0HfihUbE9v5YKMNuICuK/DBjQ+UcREaryldhw5/QVVVC1ziZBh9/IH8zETcGKli6qFarVJ
-	Ee7nyuF5FVqBuiJhGVM/4L4oo+YMho3AJsocke7wzI/XEvX/y1n6aHu51xI3Urr43f+jwV7yhKU
-	RBf2pyA19feNTve+NfUDnutAo1Ifwu4vMmNRllkI/eg18ZfCqHBnUNmT/7F1PG2sAIb9iEPWY=
-X-Received: by 2002:a05:6000:460c:b0:47f:e886:6dff with SMTP id ffacd0b85a97d-481606f67e3mr39202641f8f.4.1786955470859;
-        Mon, 17 Aug 2026 01:31:10 -0700 (PDT)
-Received: from localhost (109-81-86-48.rct.o2.cz. [109.81.86.48])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482a5b816c0sm1827065f8f.33.2026.08.17.01.31.10
+        d=1e100.net; s=20251104; t=1786962877; x=1787567677;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Z4LaCEquN0Z047/3Rwp1z8GkQCCa4hzM+M2Iotc0RKY=;
+        b=eiK0YOnKLlgkGrY6fG7iB2rbsGcIca52h/OI56qyby4vIGvG4TFWnmFrZI/X1r1HpD
+         ptGVXWhpI+ViosepdHaGvPfnyeIjuOw5DMYPzaZ0L7OdATMrHRpH4IEb1bTFBVGz38Bf
+         4puqEqz0lBGJ6EhZizmPcCm9bDVG4KeiU5Xm1brEJEMx8TWlDsEwxCeRMyTHG+5nlSF9
+         Pl2z6qLG3GC3p1K3HgcOiXW72i6PYj1fzkjtCZEY8zGayTnviY3/ruo7gj7Cc7tNjQAq
+         cQ0K7hKf0gq6M1VS8cxHNBcatYNdZyTdvgbQQI1UjUQrmxcL5wiRL3A9bnOXMdcJEwv1
+         N88Q==
+X-Forwarded-Encrypted: i=1; AHgh+RoQAiX80jIHJcfWsXC2t2CMK6/V6De1FpRu9Y2Ih68unhsSXIQebqYuvUOBTLewefl2Z8Jm9Ln1@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywty8Cx26z2yF5DKx/2fTRaJa/viYSirLYrpUwyCDHhBQWOJkgP
+	quP/UOqn/lX7hKFMfgIDSUOna01W0qzBg7zLftpO/1UAUPiIjOEElyes
+X-Gm-Gg: AR+sD12cc5pBZVo1M9qYhMc3DR9jWxW+2h/t41GNWfIsDCrTgXqrJ9Z4rcCLr70sI26
+	+zKPqk0PKKzETBDWaeNkUtYuadnN4/V6FPIuZ6jI8HNPi5HLih5hMuDFDhuHozILoS1aCFUlwBJ
+	g5lsUY/n7v8BWKEY7mliFzYibpCxvIiYg7yU585YbJLAb9IgAo9FKjYGhsobnMr1e3o/76xhyHe
+	/vT7eUw4v7KuudEFY17KjuiQHVFvpBxiTReIlRHjLsGLA7NghzfajooCtMmK+kdGS0AJAbciz8Y
+	HMQgYYrUBIAi2GVMGHcSCYgt9NssPbtGeRSIYrqfkkHQfxc2pyUYWz1j6I053SP5iJMES0Qcfoo
+	rE9igPJ3n4Az8F4oeTFbM/HR08Nf8D5UhRdhLOqOYuhPPve11gPaLUVAICbdwcJNSNvnEqwa8L0
+	7GCVv7HkHXGyPFJM8cXSiAsuCRjEhST0i4aGsKtYS21XbZ
+X-Received: by 2002:a05:651c:220c:b0:3a1:4f33:f625 with SMTP id 38308e7fff4ca-3a14f340463mr12014321fa.31.1786962877044;
+        Mon, 17 Aug 2026 03:34:37 -0700 (PDT)
+Received: from c.. ([213.165.253.80])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a16b1a98dfsm3389391fa.21.2026.08.17.03.34.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2026 01:31:10 -0700 (PDT)
-Date: Mon, 17 Aug 2026 10:31:09 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Song Hu <husong@kylinos.cn>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, zhuhui@kylinos.cn, joshua.hahnjy@gmail.com,
-	audra@redhat.com, bingfangguo@tencent.com
-Subject: Re: [PATCH] mm: memcg: flush empty per-cpu stock slots on memcg
- offlining
-Message-ID: <aoLGzZHS8kj53-ey@tiehlicka>
-References: <20260817025917.66233-1-husong@kylinos.cn>
+        Mon, 17 Aug 2026 03:34:35 -0700 (PDT)
+From: Narek Jilavyan <njilav@gmail.com>
+To: Muchun Song <muchun.song@linux.dev>,
+	Oscar Salvador <osalvador@suse.de>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: David Hildenbrand <david@kernel.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Narek Jilavyan <njilav@gmail.com>
+Subject: [PATCH] mm/hugetlb_cgroup: call page_counter_set_max() outside VM_BUG_ON()
+Date: Mon, 17 Aug 2026 10:34:33 +0000
+Message-ID: <20260817103433.191266-1-njilav@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260817025917.66233-1-husong@kylinos.cn>
+Content-Transfer-Encoding: 8bit
 
-On Mon 17-08-26 10:59:17, Song Hu wrote:
-> refill_stock() takes a css reference for each cached memcg slot and
-> mem_cgroup_css_offline() relies on drain_all_stock() to release those
-> references before the cgroup can finish dying.
-> 
-> consume_stock() can drive a slot's nr_pages to zero while its cached[]
-> pointer stays set.
+hugetlb_cgroup_css_alloc() rounds the counter limit down to a multiple of
+the huge page size and then applies it inside an assertion:
 
-Is there any specific reason why the memcg stays in the cache slot
-without any pages?
+	VM_BUG_ON(page_counter_set_max(fault, limit));
+	VM_BUG_ON(page_counter_set_max(rsvd, limit));
 
+With CONFIG_DEBUG_VM=n, VM_BUG_ON(cond) is BUILD_BUG_ON_INVALID(cond),
+i.e. ((void)(sizeof((__force long)(cond)))), whose operand is never
+evaluated.  page_counter_set_max() is not a predicate - it performs
+xchg(&counter->max, nr_pages) - so on every non-debug kernel the limit is
+never applied and the counters keep page_counter_init()'s
+PAGE_COUNTER_MAX.
+
+That is user-visible, because hugetlb_cgroup_read_u64_max() recomputes
+the same rounded value and uses equality as its "unlimited" sentinel.
+PAGE_COUNTER_MAX is LONG_MAX / PAGE_SIZE = 2251799813685247, which is
+odd, so round_down() really does change it and the two sides disagree.
+With CONFIG_DEBUG_VM=n:
+
+	$ cat /sys/fs/cgroup/t/hugetlb.2MB.max
+	9223372036854771712
+
+and with this patch:
+
+	$ cat /sys/fs/cgroup/t/hugetlb.2MB.max
+	max
+
+A debug option should not change cgroup output.
+
+Call the function, then assert the result, as v6.12 did.  Use
+VM_WARN_ON_ONCE() rather than restoring VM_BUG_ON(): the two are
+identical under CONFIG_DEBUG_VM=n, and checkpatch asks that new code not
+use BUG() variants.
+
+Fixes: 0e2759afcaf9 ("page_counter: track failcnt only for legacy cgroups")
+Signed-off-by: Narek Jilavyan <njilav@gmail.com>
+---
+ mm/hugetlb_cgroup.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index e0083de1ca..ecb6e0b781 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -97,6 +97,7 @@ static void hugetlb_cgroup_init(struct hugetlb_cgroup *h_cgroup,
+ 		struct page_counter *fault, *fault_parent = NULL;
+ 		struct page_counter *rsvd, *rsvd_parent = NULL;
+ 		unsigned long limit;
++		int ret;
+ 
+ 		if (parent_h_cgroup) {
+ 			fault_parent = hugetlb_cgroup_counter_from_cgroup(
+@@ -118,8 +119,10 @@ static void hugetlb_cgroup_init(struct hugetlb_cgroup *h_cgroup,
+ 		limit = round_down(PAGE_COUNTER_MAX,
+ 				   pages_per_huge_page(&hstates[idx]));
+ 
+-		VM_BUG_ON(page_counter_set_max(fault, limit));
+-		VM_BUG_ON(page_counter_set_max(rsvd, limit));
++		ret = page_counter_set_max(fault, limit);
++		VM_WARN_ON_ONCE(ret);
++		ret = page_counter_set_max(rsvd, limit);
++		VM_WARN_ON_ONCE(ret);
+ 	}
+ }
+ 
 -- 
-Michal Hocko
-SUSE Labs
+2.43.0
+
