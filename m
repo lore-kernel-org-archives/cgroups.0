@@ -1,171 +1,97 @@
-Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E18B18B0A
-	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 04:30:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FA353C3792
+	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 08:31:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786941051; cv=none; b=kqyxisSzWefyj5ngr9aK86vF1gM5zRF1APAXc/TUVYJ2GGlx2zWH71nG0hwQXZA57EUHY1nUz+WhKMznIA+a6S6sNJedsSZofU1xjMpZySC1/GIqnlMtthbuLd9434wz1LvBOw9bFurBiq5phXxQe0zl+nYD2gMl8Sqbx6XQ0kw=
+	t=1786955476; cv=none; b=oqy06WwVGza1Cmcy5tw1C6uyCYGcCCKup1pe/dD7J2e1vf84BAcHc262TT6Bit/nX4/b/rkBoE5YI4wTMuZbpyUNjOSOPsPpO8dQTyH2FG4AUs+7gPgoYMb2cFU8WfZPISe+wwDo4eVoEoNkAXBoGf2Hf5IvrvQn53XXQPyb7/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786941051; c=relaxed/simple;
-	bh=dfWYSuiUAiueZVM08DAYOsI7XXNJhmiSC34xDHS08nk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QR2GYTeiGewSCFno7MsBPEeBB1giDPn2vJyYuRFXAdVr4ghF1HHJs1S/D5gAY6TREtY6e+qoOdG4jjEcCyXQsG6SIKG5qwKuxr5qJyHp5JzWgZspRvF4Ool28hxu5z7WMfJAOZTdERsjwzBy0vleH+aUrnbokJ6th7mqYaXpuz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lOQAc8Ra; arc=none smtp.client-ip=209.85.160.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786955476; c=relaxed/simple;
+	bh=Bt4/ejq02Ba4wIvtouSRDrqIFpiGmw1ZYb1G6e+d5a8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nCrEFKTw9vCkl49rWfvO+QSh7as+ZYuSsGR9f8eQ0WufmwJqThpjdGw+74eppTMq5iH/IpgjuRnuqGVEH4ASO9YWzZy7kPBnGz5pivTVhyRVR1ecZLkfmyi+K4PO/1oJ4WBQYC4PAV+e9tQZo8h16ANVCRCO/HvsKxkgjpxg1as=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=aJ2dBSFW; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lOQAc8Ra"
-Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-4518ad44e83so1849730fac.0
-        for <cgroups@vger.kernel.org>; Sun, 16 Aug 2026 21:30:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="aJ2dBSFW"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-47fecbb7000so1587748f8f.2
+        for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 01:31:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786941049; x=1787545849; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=XzHa46yoeqtsHFObqgwtZinJ/lnkplRZ68OVnoGli10=;
-        b=lOQAc8Ra8L2UrnGY+OawyjFF4LOZ3JqTKUt9dG+vNf4IFkSaL3lLNPXLXYWwWf0WUJ
-         vb+V7YNsC+yX7wDicNW/DCS80vEzNodzR2qCuRLsQ2DVFUpRqkc6RWE8KiAgzk+k1wnM
-         9gBxpbAMUp9nlmhKCWDIMitE6XG89+FErqBmizGOVCT9EFoFyKzwfbHaxDXB663RmCe3
-         /ll09gL9WvppHYyTGrcgyGpWoSDM0Az17EI60S3v7A+5Onr7lZb2lqCt5YTNVJOOmErV
-         SJisTmjckd4pxF0YAz63TKvhSDLmrKSeQ51pTjHPXTch8tzjRGtZssZPAUGIOj27w9sc
-         NCzw==
+        d=suse.com; s=google; t=1786955471; x=1787560271; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ah5ew8DbE5Myy/gE+eNiI8cy5Ie1ItfK1DXj0IGZCH8=;
+        b=aJ2dBSFWCmD3hkOD+SjumQsuddf1LCg3b4GfwkYxvQx9H9ENpK+D2ilg8s91/cjnBw
+         bkMcY8Qt0CDr/tgRxJ6gCKQ2c4qGakST+fqLgCJ9+Y3UxLyyK+z8TKYi+XpKgLHzR+J6
+         w+XxvbKi8ZwUUbeUgXOFKixm61ptLAmlovhmShhbpXpLBq/0ZvA+OIex/rwrZFwYMIPk
+         OdP4TFb/xpvo/JSTU9gyfPO5/+xgKjcMbNIS2+XxGu78NsKQu1VC4b2c9UXYAZJAnmKe
+         eTMp26Hm6hrXpwTXwlNbjeSYiLOh0N5ZCGkn1g4lx7Zb1OX13BVkv06cOZGUkGYQKDXp
+         uhAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786941049; x=1787545849;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=XzHa46yoeqtsHFObqgwtZinJ/lnkplRZ68OVnoGli10=;
-        b=PWjujfsra17tywc8ivfxrF1hDxgFZXQlsxKihHcL1QmHRKjWg0jleD+4FfnjiOI5mn
-         JgfJuO2ZPqkm70O7KbXrEEJXGZzJx88PGJZNaqp/9zh2yHiP21VN0sU70+PTtBVIaTY8
-         NrVV2OJ6tGWvVri4SYF/p52+exRVUJw8EhIsqo7U+tCqnOklkz5am1JehzxIkTMrU+zd
-         ljeJVtzirLw/dke9YY7DIRMJcSOGCWb6b3l0Mvz9tVZlyNvauZ2XmDlV2kvaROTLDKG+
-         dL92IwxIeJAPYH0blW90ipkF+h/WB9UKBKMirqGwp4RZlekasDYcFQwxzz02G551pz2C
-         5NnA==
-X-Forwarded-Encrypted: i=1; AHgh+Ronrrp42brOPNDgSt0lSO9Pu9lYJpCkAvRDKli5qlAdnVjcdFuOCffbZodpXEsBA3p5l93LrVMk@vger.kernel.org
-X-Gm-Message-State: AOJu0YyvSopxu9UZawwHH/hxqFT9z3h7UpHBVVI5maqNeza3j7+/QzIh
-	vFTKnOP6hBtE0I50+hZjMKgLvt/s8br3/ksY5sxIZOoBhgBla+8g9Jd7
-X-Gm-Gg: AR+sD1181E8SZzw9QMnRbbA0G3uW5TSjI5Ll0X0gQxYduKKSeJAJVaSLQTV99bbwUr1
-	LM/U7LuzAntxSp78tPvp+jtIzHlkzn7XZPoravn+SIim39sKyFHVy1l8AjAWpf6ZlRyXX0QmcDh
-	z57qlikKAJWpJUcIyITPFGQXV+Zs2Kf+7+IGx85ATqpL1Q2xDRLVxpSplGpFH1GsmAODhcMTQCf
-	KnpDyinnSpFrR9irBYZHD9iMEhTzGF3KV0H9xa+qQVRHX5XTG/p6kgb9y3I/Km+5yvUXO6hgxLF
-	lEdamJkDORwl4oBhnMNJzyvVNX8ZSJilsyxBF7kkdla4owZ/N0iFZzsVKIE3Snumsvz2/900J/y
-	L01qWTGQTehGIav2y+rDrHX63dUkxQgqEIcR9sE02YjvqdhltBIDNA1VodkgB9UQK4EB1/KBr47
-	iSvVUYatubpjsRqG/nIfHgdLzFVlDtvMz5wp7IZBTI3ir2r/d7ltizTukvlC3qbdBwM7nnEx3Fg
-	muzS29eW3+IZy8o/rIAh9PBR50+/yjaew==
-X-Received: by 2002:a05:6870:a085:b0:442:175:cea9 with SMTP id 586e51a60fabf-45e91df60e8mr22649897fac.7.1786941049279;
-        Sun, 16 Aug 2026 21:30:49 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:7::])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-45f22a7f3dbsm274098fac.1.2026.08.16.21.30.48
+        d=1e100.net; s=20251104; t=1786955471; x=1787560271;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ah5ew8DbE5Myy/gE+eNiI8cy5Ie1ItfK1DXj0IGZCH8=;
+        b=FGzPgtSRhhauCCb8Es+hlJuu7Pe3sT3NKTtHXuj/sJMdMtydvDoNQ3fj3RHZxLhcCV
+         fzy03ulGJUsY3kXaC30XvZfM5+3YTvupJ+TMFKqFx8LFWn0M8K++eIUJQQJg9eW/+zhE
+         tu6sG7YTss0Q6r5CKZwFDT0Ia1IS7aEdgYoiZfwDSyAyFnD6KMZpbwNOsYb9mmbOABE8
+         Civetdsgc/+uE+uy3GyVx/n7ZGiP3KxFtLLgJ5HK8CdbgBvvUmErn88UKaOp0Xi92Nu2
+         eRv2tW37p+rA1tknVzKKDfxT/F6udFZ+CdpHGawiC5etKnsmP9k1pCX0C/AXk2SE7K1N
+         8wqQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrZAX/tiIbZBqB3RP7zw+5UcZrTXdgzoo/lJz5o7HfhIE7a1aAaf6Fnjchb92clFoVotzaQ3MTP@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx014EESQdnBws2h+1YZaPv0f+SHPDjUE5gBFW/8nvNCatjmxte
+	TfjmowLozDMODOqi+gt45n2kMzAGrA2P4SnFvLtx5lGUVyL/4ooFMjIVLpv0svtaR9A=
+X-Gm-Gg: AR+sD124pFcvpmO5X9ZKQjr2HWhGBknpUC5w18IPpTc1D4W9wkhYedFU6aHXHAcKEWM
+	g5eN3o5iscp2HfvpS/mMmnozzEO3UXZUDKy9qIRAke/JpVksDM8H6KxtevHXK76H1GU/OMTLOqe
+	m363g1jNMP9Bo/Cy3OTMhp/sCjMmCMQWz1jDTAOyTwhGYJZtDuEIdk+3ebcR6rBQds+SsnQGqP+
+	GppLQl1aLm1Ogw4848mBer9m4xsa15kKZYQsE/kwDPguIM3X/ztJ0fs+UWS89t0xmuEfv+1MJUK
+	e8xYw0HfihUbE9v5YKMNuICuK/DBjQ+UcREaryldhw5/QVVVC1ziZBh9/IH8zETcGKli6qFarVJ
+	Ee7nyuF5FVqBuiJhGVM/4L4oo+YMho3AJsocke7wzI/XEvX/y1n6aHu51xI3Urr43f+jwV7yhKU
+	RBf2pyA19feNTve+NfUDnutAo1Ifwu4vMmNRllkI/eg18ZfCqHBnUNmT/7F1PG2sAIb9iEPWY=
+X-Received: by 2002:a05:6000:460c:b0:47f:e886:6dff with SMTP id ffacd0b85a97d-481606f67e3mr39202641f8f.4.1786955470859;
+        Mon, 17 Aug 2026 01:31:10 -0700 (PDT)
+Received: from localhost (109-81-86-48.rct.o2.cz. [109.81.86.48])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482a5b816c0sm1827065f8f.33.2026.08.17.01.31.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Aug 2026 21:30:48 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
+        Mon, 17 Aug 2026 01:31:10 -0700 (PDT)
+Date: Mon, 17 Aug 2026 10:31:09 +0200
+From: Michal Hocko <mhocko@suse.com>
 To: Song Hu <husong@kylinos.cn>
-Cc: akpm@linux-foundation.org,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	zhuhui@kylinos.cn,
-	joshua.hahnjy@gmail.com,
-	audra@redhat.com,
-	bingfangguo@tencent.com
-Subject: Re: [PATCH] mm: memcg: flush empty per-cpu stock slots on memcg offlining
-Date: Sun, 16 Aug 2026 21:30:45 -0700
-Message-ID: <20260817043047.1553572-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260817025917.66233-1-husong@kylinos.cn>
-References: 
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, zhuhui@kylinos.cn, joshua.hahnjy@gmail.com,
+	audra@redhat.com, bingfangguo@tencent.com
+Subject: Re: [PATCH] mm: memcg: flush empty per-cpu stock slots on memcg
+ offlining
+Message-ID: <aoLGzZHS8kj53-ey@tiehlicka>
+References: <20260817025917.66233-1-husong@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260817025917.66233-1-husong@kylinos.cn>
 
-On Mon, 17 Aug 2026 10:59:17 +0800 Song Hu <husong@kylinos.cn> wrote:
-
+On Mon 17-08-26 10:59:17, Song Hu wrote:
 > refill_stock() takes a css reference for each cached memcg slot and
 > mem_cgroup_css_offline() relies on drain_all_stock() to release those
 > references before the cgroup can finish dying.
 > 
 > consume_stock() can drive a slot's nr_pages to zero while its cached[]
-> pointer stays set.  is_memcg_drain_needed() skips such empty slots, so
-> the offlining drain is a no-op for them: the pinned css reference is
-> released only if the slot happens to be evicted by later unrelated
-> charges on the same CPU, or by CPU hotplug.  The memcg then lingers
-> in the dying state indefinitely.  On a CPU with container churn, a
-> per-cpu stock can pin up to NR_MEMCG_STOCK (7) zombie memcgs.
-> 
-> The sibling obj_stock_flush_required() has no such gate: a cached
-> objcgs slot is flushed regardless of its byte count.  Drop the
-> nr_pages gate from is_memcg_drain_needed() accordingly.  Draining an
-> empty slot is a single css_put() and a NULL store, and it happens at
-> most once per slot per drain, so the extra work is negligible.
+> pointer stays set.
 
-Hi Song,
+Is there any specific reason why the memcg stays in the cache slot
+without any pages?
 
-I feel that this above statement is quite misleading.
-Scheduling a drain on a memcg that doesn't have stock eventually
-performs a drain operation on every memcg cached in that CPU.
-
-drain_local_memcg_stock
-  drain_stock_fully
-  {
-    for (i = 0; i < NR_MEMCG_STOCK; ++i)
-      drain_stock(stock, i);
-  {
-
-Sure, for any empty stock during this iteration drain_stock is trivial,
-but for nonempty stock that happen to co-exist on the CPU, it's forcing
-a cache miss on the next charge.
-
-The problem that you note does seem quite real though. I think a less
-invasive solution could be something like
-
-if (mem_cgroup_is_descendant(memcg, root_memct) &&
-    (READ_ONCE(stock->nr_pages[i]) || css_is_dying(&memcg->css))
-
-By the way, I think the argument that "obj_stock_flush_required has no
-such gate so is_memcg_drain_needed doesn't need one too" is also not
-really correct since a dying objcg doesn't flush anyways. 
-
-I hope you have a great day,
-Joshua
-
-> This is easily reproduced with short-lived cgroups pinned to one CPU:
-> 12 charge/exit/rmdir cycles leave nr_dying_subsys_memory at +2, stable
-> across later slot displacement.
-> 
-> Fixes: d1a05b6973c7 ("memcg: do not try to drain per-cpu caches without pages")
-> Signed-off-by: Song Hu <husong@kylinos.cn>
-> ---
->  mm/memcontrol.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 17da1f43b7d3..b931ec16bb82 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2291,8 +2291,12 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
->  		if (!memcg)
->  			continue;
->  
-> -		if (READ_ONCE(stock->nr_pages[i]) &&
-> -		    mem_cgroup_is_descendant(memcg, root_memcg)) {
-> +		/*
-> +		 * An empty slot still pins a css reference which
-> +		 * mem_cgroup_css_offline() relies on drain_all_stock()
-> +		 * to release.
-> +		 */
-> +		if (mem_cgroup_is_descendant(memcg, root_memcg)) {
->  			flush = true;
->  			break;
->  		}
-> -- 
-> 2.43.0
+-- 
+Michal Hocko
+SUSE Labs
