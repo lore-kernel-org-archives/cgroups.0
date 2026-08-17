@@ -1,118 +1,103 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-138.mta1.migadu.com [95.215.58.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3378D274FD0;
-	Mon, 17 Aug 2026 03:27:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09027314A73
+	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 04:27:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786937269; cv=none; b=AMKhimWtlfcr3z/fQCRSNDMBuREh//DpuagxwLuO9iZwNKj1z56q+WW407utE9dPMv8ePc29nytVGa8eJU3DGCGYY3JhCg5BCe6I+QGMSFc5PlBo5YXTGvgvorsym23oVUepDAiGpL9K5+GljDKzHLgRYK6Zk+Z7uZJhT1PeUeU=
+	t=1786940860; cv=none; b=fZsuLxknonAPubXeK2/gv35JKUKtEquSVOhPp25I5TVbUsPFxYZdf/vB2i6nN78e3SKPyNQBfA7CqewdJCZZl9EsK8vQrKDfxPgWY6f7vwOa6Lzu7zEW/UMYs3+eQbA6SB428weUD2AswJzI9vifsHSW5dyBoZNR+liRLQ+MqLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786937269; c=relaxed/simple;
-	bh=VVolysXLoWy18qGySXXaNw29/bQB5p1TiMd7mDZT48o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KOHLXqo/WQW0Eo2XBB/NtVYTtZe9qMd240QysCB9wV3bnx3Q7e2TSN4ocU/okXla9GUWmULUgz9uOXHC9c3nOkSfzY76Um9XsfeA4r5AdjGA1uFl2/S0K+ykCloQXpJ61K27UwLvUeKnQ4b2u64V5AD0uk80fyR+WoM+dPhSUwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=o1ClP4Mq; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1786940860; c=relaxed/simple;
+	bh=jb1gQEt9X3ic1kv0Ym8M4A7fGjG8QJ0gQBiay9KXRsU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ouJJrs+JnN7S/WBOqL4F+ypza1a3inDzBl0Gp/D8dHhN4bgvVyIWkaO4p6ZhS8KF6xEpPikekdOBKgClufWDWE19kB+L8i1NTv6X1SHu8vR8GMpVaTMgnOMPv4e96S9igUSjAiNbTTyil/drrbX6uBAdXRdFHcwMlz8D2JEd38s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=H26i4V5o; arc=none smtp.client-ip=95.215.58.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="o1ClP4Mq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=jm
-	UlmtGTb4gVi/IDEHbLDTYOtz1T8CJBO+NBBDn380E=; b=o1ClP4Mqj77ZrliAXF
-	c2FViRDOp+8kKI798/qcsVA14TvC84/8WHzQQnLrU57h0hnDvQk1wse53UQhRog5
-	KsNisreYI3HQQjaezj7RHNReUb6iSMfnadjymBsEvbmjJsSibNGcPtml4IWUqJJx
-	gYqYStlMHodZs6YloIAbAfk6w=
-Received: from localhost (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgD3mfBef4JqlrSwLg--.26496S3;
-	Mon, 17 Aug 2026 11:26:23 +0800 (CST)
-From: mambaxin@163.com
-To: shakeel.butt@linux.dev
-Cc: akpm@linux-foundation.org,
-	baohua@kernel.org,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="H26i4V5o"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=jb1gQEt9X3ic1kv0Ym8M4A7fGjG8QJ0gQBiay9KXRsU=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786940855; v=1; x=1787545655;
+ b=H26i4V5oxquRXIE8cVjZEVd5yqamMFwFpMgLcdISuwHwQBX+pr8lvUzdovJH48Ux8WQC9xvQ
+ rcUTdPdQSFPf0mflPlZg7ObfbA4iAT7w7SLNfWJmW2NRvN1LwxP5qo61pHPBTHq/mLsd/npWHJH
+ PNM4b5yL3nwvfZOFTrfGi5w4=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from ctao-book.. (223.70.159.239)
+	by smtp.migadu.com with ESMTPS id 0453194cf996fbf3;
+	Mon, 17 Aug 2026 04:27:25 +0000
+X-Migadu-Flow: FLOW_OUT
+From: Tao Cui <cui.tao@linux.dev>
+To: akpm@linux-foundation.org
+Cc: linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
-	chenxinxin@xiaomi.com,
-	david@kernel.org,
-	david@redhat.com,
-	gregkh@linuxfoundation.org,
-	hannes@cmpxchg.org,
-	hughd@google.com,
-	jose.fernandez@linux.dev,
 	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	mambaxin@163.com,
+	hannes@cmpxchg.org,
 	mhocko@kernel.org,
-	muchun.song@linux.dev,
 	roman.gushchin@linux.dev,
-	ryncsn@gmail.com,
-	sashal@kernel.org,
-	shakeelb@google.com,
-	stable@vger.kernel.org,
-	syzbot+e12bd9ca48157add237a@syzkaller.appspotmail.com,
-	v-songbaohua@oppo.com
-Subject: Re: [PATCH] mm: swap_cgroup: fix NULL deref in lookup_swap_cgroup_id on swapless host
-Date: Mon, 17 Aug 2026 11:26:22 +0800
-Message-ID: <20260817032622.1135640-1-mambaxin@163.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <an-yt4a6td75VvHw@linux.dev>
-References: <an-yt4a6td75VvHw@linux.dev>
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	cui.tao@linux.dev,
+	Tao Cui <cuitao@kylinos.cn>
+Subject: [PATCH] mm: page_counter: reject empty string in page_counter_memparse()
+Date: Mon, 17 Aug 2026 12:26:52 +0800
+Message-ID: <20260817042652.74136-1-cui.tao@linux.dev>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-CM-TRANSID:PSgvCgD3mfBef4JqlrSwLg--.26496S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7urW5ZFy8ZFyxCr4UCr4fuFg_yoW8CrWxpF
-	yrWas3tF4rJryxtr4I9w1rta4F9a1fW3y5trn5Kry5Zan0vryaqr1xuFyj9F9F9ws3GrW2
-	vFnFy34xWr1jvFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piN6pfUUUUU=
-X-CM-SenderInfo: xpdputx0lqqiywtou0bp/xtbCwR8yPGqCf186cQAA3T
+Content-Transfer-Encoding: 8bit
 
-> On Fri, Aug 14, 2026 at 07:23:41PM +0800, Barry Song wrote:=0D
-> > On Fri, Aug 14, 2026 at 3:48=E2=80=AFPM <mambaxin@163.com> wrote:=0D
-> > >=0D
-> > > From: "Jose Fernandez (Anthropic)" <jose.fernandez@linux.dev>=0D
-> > >=0D
-> > > [ Upstream commit 63b02a9409cb5180398491b093e48bcb5315f5fb ]=0D
-> > >=0D
-> > > lookup_swap_cgroup_id() passes swap_cgroup_ctrl[type].map to=0D
-> > > __swap_cgroup_id_lookup() without checking that the type was ever=0D
-> > > registered via swap_cgroup_swapon().  On a swapless host every ctrl->=
-map=0D
-> > > is NULL, so __swap_cgroup_id_lookup() dereferences NULL + a scaled=0D
-> > > swp_offset().=0D
-> > >=0D
-> > > Since commit bea67dcc5eea ("mm: attempt to batch free swap entries fo=
-r=0D
-> > > zap_pte_range()"), zap_pte_range() -> swap_pte_batch() calls=0D
-> > > lookup_swap_cgroup_id() on any non-present, non-none PTE that decodes=
- as a=0D
-> > > real swap entry, without first validating it against swap_info[].  A=
-=0D
-> > > single PTE corrupted into a type-0 swap entry takes the host down at=
-=0D
-> > > process exit.=0D
-> > =0D
-> > Thanks for the patch. However, we have a strict check to ensure that=0D
-> > this is only done for valid swap entries:=0D
-> =0D
-> This patch is already in the upstream linus tree.=0D
-> =0D
-> Mambaxin, what do you want to do with this patch? Are you requesting to b=
-ackport=0D
-> this to stable tree? Which one? It already had stable CCed, so I would ex=
-pect=0D
-> the stable tree maintainers would pick this up automatically.=0D
-=0D
-Hi Shakeel,Yes, we would like to backport this patch to the 6.6.y stable tr=
-ee. =0D
-We have encountered the same issue on a product running the Android GKI 6.6=
- kernel. =0D
-We are still investigating the underlying PTE corruption using various debu=
-gging approaches, =0D
-but the reproduction rate is low. Given the constraints of our product rele=
-ase schedule, =0D
-we would like to first bring in this fix from upstream so that we can subse=
-quently pull it into the Android GKI kernel.=0D
+From: Tao Cui <cuitao@kylinos.cn>
+
+memparse() consumes no characters on an empty input and leaves the
+end pointer at the terminating NUL.  The only validation in
+page_counter_memparse() checks for trailing characters, so an empty
+input slips through and the limit becomes 0.
+
+All limit write callbacks of the memory controller strstrip() the
+input before calling this helper, so a script that writes an unset
+variable hits this path:
+
+  LIMIT=
+  echo "$LIMIT" > $CG/memory.max
+  echo $?
+  0
+  cat $CG/memory.max
+  0
+
+Nothing reports the mistake: the limit is now 0 and the OOM killer
+goes after every task in the cgroup.  The same happens for
+memory.min, memory.low, memory.high, memory.swap.high,
+memory.swap.max and memory.zswap.max, where 0 silently removes the
+protection or disables swap and zswap.
+
+Reject the input when no characters were consumed, which is the one
+case the trailing-character check cannot catch.
+
+Fixes: 3e32cb2e0a12 ("mm: memcontrol: lockless page counters")
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+---
+ mm/page_counter.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mm/page_counter.c b/mm/page_counter.c
+index 661e0f2a5127..d14db705b04f 100644
+--- a/mm/page_counter.c
++++ b/mm/page_counter.c
+@@ -281,7 +281,7 @@ int page_counter_memparse(const char *buf, const char *max,
+ 	}
+ 
+ 	bytes = memparse(buf, &end);
+-	if (*end != '\0')
++	if (*end != '\0' || end == buf)
+ 		return -EINVAL;
+ 
+ 	*nr_pages = min(bytes / PAGE_SIZE, (u64)PAGE_COUNTER_MAX);
+-- 
+2.43.0
 
