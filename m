@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40A0246AEFE;
-	Mon, 17 Aug 2026 17:39:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BE9275AFD;
+	Mon, 17 Aug 2026 17:43:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786988394; cv=none; b=RTVLxWx+DYiVMjNb6IEIR7EKn+heh0GhqIexNHYWF5sf4LTnR7a2W9aOgxXoOo2XPRhMS+Lv87bWKx8F8Zu2SMtZcFqa08luv025y3KA6pd23wI4lusxN6uFkw41oFUyLoWp54YtcC3j4izFvcx6NMjiv6V4QbUvpqgYdS2z3c8=
+	t=1786988623; cv=none; b=MATdM2XFrjdkm3uM1rljycPDZ46E3I02gIVAnqX0VXyYvpE5J/JjPVgvd/1E2NeCb+yvTwv7bUKUFIQHNiCkuK/mPmAb5qnzkCgIi9l92kcBqJkjX/xjRF+IYjO1wSu8csFRMQrsqXLrfvfubVKNkz0aa588xwhibleLXNaVJmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786988394; c=relaxed/simple;
-	bh=sZWhXmRFzc6KnyYUwUU7QSqkVs5Py0h6yaeJqxZzeYc=;
+	s=arc-20240116; t=1786988623; c=relaxed/simple;
+	bh=q2U33ppGzZLHqMJv8GbdK0iRGZq+sl5FL9ofjRkoavE=;
 	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=fIfXWLgcFkcgy82COmBdcoGBrSq6oqRem7DYx3+Q/+LcVWCtVPlN6tNOncXjmEQYGpbl2o5h3ZoNlWCq0R8RCigrXzn85TxffmqjYESF5Xczy/SINl2pv42+gJhe6atfQdmOZyXZJC+LDP17GLTLEBSUM6qaeTLsC2d0K1KY0Mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=uiu93YaO; arc=none smtp.client-ip=100.103.45.18
+	 Mime-Version:Content-Type; b=W8LW2Bp3hV7QQBV6LrUwRwkaxrcTlJEIeqQz3hdCrpzCVHmZJjEt+zGeb3R78dO89wOjUzkHCaEGAUvpEiJeIgMcmnflwQdflW/BlGzYpYaBTfl+8SRDaagFOT22C6p1DMZgDaikkMjSNY34WPYbtrsdFy7mmdJIdozYTqlerTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=eKkxo1KR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="uiu93YaO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBA511F000E9;
-	Mon, 17 Aug 2026 17:39:50 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="eKkxo1KR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CA561F000E9;
+	Mon, 17 Aug 2026 17:43:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1786988391;
-	bh=EldLsYcfZqfCW5hxzb5tOUJDz+gGEDI1z/tkTtJs2mE=;
+	d=linux-foundation.org; s=korg; t=1786988621;
+	bh=ljlKfunao6ScN++sYA+g1iZ+XV/2BXLfKcwWuV93qQQ=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=uiu93YaOjew7mOLo84HKnQddyWvyyyNomIDx6TMOcHvXfDf5Hr0qsINLC8oVt1LO9
-	 +6mCdT3sP9qcuc1LI/TSrR9sIkWpI26014R49EWcYkv5XwVMOofMRo44q7f5aSQAqo
-	 ZCXsJ3fyIA35kNh4on92A1QlnxIDCiB427Panfnk=
-Date: Mon, 17 Aug 2026 10:39:50 -0700
+	b=eKkxo1KRikpizP51WbuqCMzjbpsMC2EB66RDsQvKs8ZF6hUQ2yzOxhKRJwpwRk0RM
+	 SvRpNBy0qrEWJRYHQvfYbb1gFQvJzRVbAKrWOX+MYnlTSghqalzzxK+zA3VajtvzZO
+	 mx/iPyqBLKgzIfRv2Gax1+Ob7z8N7wH2yITp70mc=
+Date: Mon, 17 Aug 2026 10:43:40 -0700
 From: Andrew Morton <akpm@linux-foundation.org>
-To: Narek Jilavyan <njilav@gmail.com>
-Cc: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
- David Hildenbrand <david@kernel.org>, Shakeel Butt
- <shakeel.butt@linux.dev>, linux-mm@kvack.org, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mm/hugetlb_cgroup: call page_counter_set_max() outside
- VM_BUG_ON()
-Message-Id: <20260817103950.5ff58d6ebe536e6ed6e7098c@linux-foundation.org>
-In-Reply-To: <20260817103433.191266-1-njilav@gmail.com>
-References: <20260817103433.191266-1-njilav@gmail.com>
+To: Usama Arif <usama.arif@linux.dev>
+Cc: shakeel.butt@linux.dev, cgroups@vger.kernel.org, hannes@cmpxchg.org,
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org,
+ muchun.song@linux.dev, roman.gushchin@linux.dev, david@kernel.org,
+ kernel-team@meta.com, kernel test robot <yi1.lai@intel.com>
+Subject: Re: [PATCH] mm/memcontrol: avoid false sharing between vmstats and
+ events
+Message-Id: <20260817104340.c9bd2dae70d4fa31fd66b216@linux-foundation.org>
+In-Reply-To: <20260817103835.2937733-1-usama.arif@linux.dev>
+References: <20260817103835.2937733-1-usama.arif@linux.dev>
 X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -45,42 +45,33 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Mon, 17 Aug 2026 10:34:33 +0000 Narek Jilavyan <njilav@gmail.com> wrote:
+On Mon, 17 Aug 2026 03:38:35 -0700 Usama Arif <usama.arif@linux.dev> wrote:
 
-> hugetlb_cgroup_css_alloc() rounds the counter limit down to a multiple of
-> the huge page size and then applies it inside an assertion:
+> Moving v1 userspace eventfd handling into memcontrol-v1.c shrank
+> struct vmpressure from 112 to 24 bytes when CONFIG_MEMCG_V1 is disabled.
+> This moved memory_events_local[MEMCG_SWAP_FAIL] and the hot
+> vmstats_percpu pointer onto the same cacheline.
 > 
-> 	VM_BUG_ON(page_counter_set_max(fault, limit));
-> 	VM_BUG_ON(page_counter_set_max(rsvd, limit));
+> The stress-ng mremap stressor exercises MADV_PAGEOUT with swap
+> disabled, generating about 20 million MEMCG_SWAP_FAIL updates per
+> 60-second run on a 176-CPU test system.  Those writes bounce the line
+> while memcg statistics paths load vmstats_percpu.
 > 
-> With CONFIG_DEBUG_VM=n, VM_BUG_ON(cond) is BUILD_BUG_ON_INVALID(cond),
-> i.e. ((void)(sizeof((__force long)(cond)))), whose operand is never
-> evaluated.  page_counter_set_max() is not a predicate - it performs
-> xchg(&counter->max, nr_pages) - so on every non-debug kernel the limit is
-> never applied and the counters keep page_counter_init()'s
-> PAGE_COUNTER_MAX.
+> Move cgwb_list into the existing alignment gap and cacheline-align
+> vmstats_percpu.  This separates the pointer from the event counters
+> without increasing the size of struct mem_cgroup in the tested
+> configuration.
 > 
-> That is user-visible, because hugetlb_cgroup_read_u64_max() recomputes
-> the same rounded value and uses equality as its "unlimited" sentinel.
-> PAGE_COUNTER_MAX is LONG_MAX / PAGE_SIZE = 2251799813685247, which is
-> odd, so round_down() really does change it and the two sides disagree.
-> With CONFIG_DEBUG_VM=n:
-> 
-> 	$ cat /sys/fs/cgroup/t/hugetlb.2MB.max
-> 	9223372036854771712
-> 
-> and with this patch:
-> 
-> 	$ cat /sys/fs/cgroup/t/hugetlb.2MB.max
-> 	max
-> 
-> A debug option should not change cgroup output.
-> 
-> Call the function, then assert the result, as v6.12 did.  Use
-> VM_WARN_ON_ONCE() rather than restoring VM_BUG_ON(): the two are
-> identical under CONFIG_DEBUG_VM=n, and checkpatch asks that new code not
-> use BUG() variants.
+> The blamed commit reduced median mremap throughput by 4.38% on the
+> test system with one socket. The patched kernel brings the performance
+> to within 0.5% of the parent which is within the observed boot-to-boot
+> spread (up to 1.2%).
 
-Nice, thanks, I'll add cc:stable to this, to help ensure that users of
-earlier kernels get to enjoy it.
+Cool, thanks.
+
+> Fixes: ea928e9e18da ("mm/vmpressure: move v1 userspace eventfd code into memcontrol-v1.c")
+
+That's in mm-stable so I'll squeeze this fix into next week's 7.3-rc1
+merge pile.
+
 
