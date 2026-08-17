@@ -1,101 +1,109 @@
-Received: from mta0.migadu.com (out-89.mta0.migadu.com [91.218.175.89])
+Received: from mta0.migadu.com (out-149.mta0.migadu.com [91.218.175.149])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A1744A3EC
-	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 16:11:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.89
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D0173EEAC2
+	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 16:16:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786983104; cv=none; b=Rhze9GTF5ESxClLtPkqoafJfzjd0f4f/kkoce8sw1Gqlyh/c2EgXPo6okVZdVwgf+JYVnJMxOXTW98E7WfKizovLt1U66UFcqNrNkKh9aL1aBVwbSg/f7oYxHDBxF/K0V9DsSF2L9PNYCCYngAVSgdAO6ps6ZPJM1KQE4HsA3Ac=
+	t=1786983409; cv=none; b=WZOF3Bc7l1RAYu4UswbJVYWEmDS0731YymzruCFx7KlzsKWCHnODoD29ACHXiBgeFz4yESUdHG2lYEHbVgoCE2M5yOhnm1EyS9scVRkHCXqxKICRIH+i9qJRmR9NfqJd6ij/Ht4ftWKvGRgIb1+iZvc2lj851MSohGZTMIqCzUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786983104; c=relaxed/simple;
-	bh=nJBhheWJDTvysjCU7dK7qU5OWfmrA02NtKHvbmLvCZU=;
+	s=arc-20240116; t=1786983409; c=relaxed/simple;
+	bh=i6bQMq/DC00QCcuw75mN4wCsOIuCzDBMfmplOIXgDzk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tRwILs/mZFqzynzlxjpnhob8M8XVZlyCUPFN2qmf+OcOZ5exDPgNoHn/d2SKw/17DJtqzlI5KYQr5nqbTEw5cwRxkxF2hnM5JCxcCnxrH87ShBt4CjpxTTPxCWwBzox5uvbmkhVtq8uZZ+GJe7O05FenJzTGN6e9XJ/t2aDBjmo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=SCS2Ilz/; arc=none smtp.client-ip=91.218.175.89
+	 Content-Type:Content-Disposition:In-Reply-To; b=HYYdV/0+RYW8iJmjouRlEYPrQY/XcnlGjyHabO89pjs2QN+4UNDmC5E6eUsyytmeKTabANU5rprypmzMsyDAsMPzc54oOKEwzxiVk7yia8P1/KOgzLO6hJ69v3HcyRSj3RZH4qdmsNh59lpu+8tUjzQqLramsDjTP7JjFW2fkJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=S3wbMJnR; arc=none smtp.client-ip=91.218.175.149
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="SCS2Ilz/"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="S3wbMJnR"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=nJBhheWJDTvysjCU7dK7qU5OWfmrA02NtKHvbmLvCZU=;
+DKIM-Signature: a=rsa-sha256; bh=i6bQMq/DC00QCcuw75mN4wCsOIuCzDBMfmplOIXgDzk=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1786983099; v=1; x=1787587899;
- b=SCS2Ilz/ELUk1LkJ+3hzOJb3wH4n7pWX9AQzeF+fllFAku+J5Q7r6AfIVlAdCcuHexeDGZDn
- 9bxuvljSe38/A22OiRXPUIb+Y0Fcdq0AXcrnJ02d9kdTNZSFTtrIUphUh/H5CLvQ26MfepSOtKA
- orih1CfY1x4QcH5HizsXkt8E=
+ t=1786983406; v=1; x=1787588206;
+ b=S3wbMJnRGCslnNbTCuupNF4iThPC3hCIaT4dcz/TttxVbErzmNazm2zKWEgOcC3McYiMrCvA
+ U9xYIHbx8ezn2IRl6XF7tAGQaiBsFpSXE+ACepnFo/JuyJkQJ4G+VaPEundGlELAk0d5J2/Kw1p
+ u3wxtnaY/9ZPeiwA68nSEcWI=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from localhost (2a03:2880:10ff:16::)
-	by smtp.migadu.com with ESMTPS id 266e50a251363352;
-	Mon, 17 Aug 2026 16:11:39 +0000
+Received: from localhost (2a03:2880:10ff:d::)
+	by smtp.migadu.com with ESMTPS id 2099e86e7d174f0f;
+	Mon, 17 Aug 2026 16:16:46 +0000
 X-Migadu-Flow: FLOW_OUT
-Date: Mon, 17 Aug 2026 09:11:38 -0700
+Date: Mon, 17 Aug 2026 09:16:40 -0700
 From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Song Hu <husong@kylinos.cn>
-Cc: Michal Hocko <mhocko@suse.com>, akpm@linux-foundation.org, 
-	audra@redhat.com, bingfangguo@tencent.com, cgroups@vger.kernel.org, 
-	hannes@cmpxchg.org, joshua.hahnjy@gmail.com, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, muchun.song@linux.dev, roman.gushchin@linux.dev, 
-	zhuhui@kylinos.cn
-Subject: Re: [PATCH] mm: memcg: flush empty per-cpu stock slots on memcg
- offlining
-Message-ID: <aoMyk4JvnSPeVz8b@linux.dev>
-References: <aoLGzZHS8kj53-ey@tiehlicka>
- <20260817131221.44761-1-husong@kylinos.cn>
- <aoMMr6kEX7pW1dSF@tiehlicka>
- <eef3b61a-a8c2-4b2e-b560-c2dae129bb7a@kylinos.cn>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	muchun.song@linux.dev, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH] mm: page_counter: reject empty string in
+ page_counter_memparse()
+Message-ID: <aoMzchLCCz5hiFHp@linux.dev>
+References: <20260817042652.74136-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <eef3b61a-a8c2-4b2e-b560-c2dae129bb7a@kylinos.cn>
+In-Reply-To: <20260817042652.74136-1-cui.tao@linux.dev>
 
-On Mon, Aug 17, 2026 at 09:58:39PM +0800, Song Hu wrote:
-> Hi,Michal
+On Mon, Aug 17, 2026 at 12:26:52PM +0800, Tao Cui wrote:
+> From: Tao Cui <cuitao@kylinos.cn>
 > 
-> 在 2026/8/17 21:29, Michal Hocko 写道:
-> > On Mon 17-08-26 21:12:21, Song Hu wrote:
-> >> On Mon 17-08-26, Michal Hocko wrote:
-> >>> Is there any specific reason why the memcg stays in the cache slot
-> >>> without any pages?
-> >>
-> >> consume_stock() doesn't release the slot when nr_pages hits zero.  It
-> >> is kept for the next charge of the same task and only gets displaced
-> >> by a charge under a different memcg or by CPU hotplug.  The problem is
-> >> that the offlining drain skips empty slots, so the css reference they
-> >> hold is never dropped unless something unrelated displaces them.
-> > 
-> > This doesn't answer my question, really, does it? Is there any good
-> > reason for this implementation? Why do we need to drop references
-> > remotely when we can do so when the last cached charge is consumed?
-> > 
+> memparse() consumes no characters on an empty input and leaves the
+> end pointer at the terminating NUL.  The only validation in
+> page_counter_memparse() checks for trailing characters, so an empty
+> input slips through and the limit becomes 0.
 > 
-> Fair enough.  There is no strong reason.  Keeping the slot
-> populated after the last page is consumed only saves a
-> css_get()/css_put() pair when the same memcg charges again on that
-> CPU - a micro-optimization from the original single-slot
-> implementation.
+> All limit write callbacks of the memory controller strstrip() the
+> input before calling this helper, so a script that writes an unset
+> variable hits this path:
 > 
-> Dropping the reference in consume_stock() when the slot empties is
-> the better place.  Empty slots stop existing, so the offlining drain
-> has nothing left to miss and is_memcg_drain_needed() stays as it
-> is.  This also makes Joshua's concern about the full-stock drain go
-> away entirely.  The cost is one refcount pair per emptied slot, at
-> most once per MEMCG_CHARGE_BATCH pages.
+>   LIMIT=
+>   echo "$LIMIT" > $CG/memory.max
+>   echo $?
+>   0
+>   cat $CG/memory.max
+>   0
 > 
-> Joshua, this supersedes the css_is_dying gating you suggested and
-> that I said I would do - with no empty slots left, the check would
-> never fire, and the kill_css_sync() ordering argument becomes moot
-> as well.  Since you are reworking this code, I'd appreciate a
-> sanity check on releasing from consume_stock().
+> Nothing reports the mistake: the limit is now 0 and the OOM killer
+> goes after every task in the cgroup.  The same happens for
+> memory.min, memory.low, memory.high, memory.swap.high,
+> memory.swap.max and memory.zswap.max, where 0 silently removes the
+> protection or disables swap and zswap.
 > 
-> If this direction works for you both, I'll rework the patch
-> accordingly.
+> Reject the input when no characters were consumed, which is the one
+> case the trailing-character check cannot catch.
+> 
+> Fixes: 3e32cb2e0a12 ("mm: memcontrol: lockless page counters")
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+> ---
+>  mm/page_counter.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/page_counter.c b/mm/page_counter.c
+> index 661e0f2a5127..d14db705b04f 100644
+> --- a/mm/page_counter.c
+> +++ b/mm/page_counter.c
+> @@ -281,7 +281,7 @@ int page_counter_memparse(const char *buf, const char *max,
+>  	}
+>  
+>  	bytes = memparse(buf, &end);
+> -	if (*end != '\0')
+> +	if (*end != '\0' || end == buf)
+>  		return -EINVAL;
 
-Yes, this seems reasonable. Go ahead with the rework.
+I wonder if someone started depending on this behavior. In that case it is
+better to return error instead of silently ignore, so we will hear complains
+loudly. This looks good to me.
 
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+
+
+>  
+>  	*nr_pages = min(bytes / PAGE_SIZE, (u64)PAGE_COUNTER_MAX);
+> -- 
+> 2.43.0
+> 
