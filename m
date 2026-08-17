@@ -1,138 +1,123 @@
-Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A3D1EA7DB
-	for <cgroups@vger.kernel.org>; Mon, 17 Aug 2026 00:49:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81D392E8DEF;
+	Mon, 17 Aug 2026 03:00:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786927770; cv=none; b=lO1KIigGDwJfBETYEo9yIRKf8K8vVyyf+3eMoMv3hCogGoJCaFasbb1yWmvhvRZ57leyDstOrvjMSo7gJP8q6npdf2qtB+OBaabZLbGm2TDSOqErKBRPX/5L2q3v/mluwIAoBOMYKCj7WGSL2EDHND4ZnHYGA2iTDRA4nTRxOXY=
+	t=1786935606; cv=none; b=twn9lsWgByJ98uJPHfk5gMsTyXc2ovhn7Yb5BVxMNNgWNE9YzoYTorP41XR9hlucq382KFfWMtDD4RJSoBxfKC1QQPJTwWZk6//IB372UtHdpAGssMPqbmgFnqFkKvseEgR8noTLzXTfMKyugp3fv5TnOTU5pf7gAKEysi3G/vY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786927770; c=relaxed/simple;
-	bh=Q2AJHfOQlhxmo4d6xkSdfftND9W8OwOWU4sIuscydGg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m0r/7J4YdWqgAIhT89XfDBAzzTK9M4mQi8++ntNZt+8vbY2pAETeFMB9Prt2+lN1bU1vZPFyiuH16J+IrtfgoLqfnPa26zv5IiimmQkaokD9S6pzAOX+h/Ur/ViWjij1gGhVfOvS5F93MCfOHGBwtJARk7eWBgcb2LH3s89+9Ro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=ckMtfNP/; arc=none smtp.client-ip=209.85.160.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="ckMtfNP/"
-Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-517dc520840so21913441cf.3
-        for <cgroups@vger.kernel.org>; Sun, 16 Aug 2026 17:49:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1786927768; x=1787532568; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FcQdr0dRPL3xWk5ZJ+WEqnlvhAK6C+Y9UAGkoGf2Ky8=;
-        b=ckMtfNP/26mDYWEYvnUuKZj+OlJs4rtBqOCTkvgUC2mso3L1qBV4UevATxAcuXcr59
-         t3iNEjatomJQrmfd0qmVsl3BjaW6RqJLwsIjj72/eWYrRlfTWeZnYquwPe7qoSJdQ3uw
-         g88uZqv47V0VT2fcXb9InChXDCkM8CDWy83shOxcv+0xTEFY14jjWUHpeLQyJn/Eu1+C
-         4ygQiiuxj/3pUiyIOY1sjivSzmhc0YEFbIZMcRYKoMzp9C0LbmrFDK4Fu4Uo2z3EnsYd
-         hX7wjASGY+5NqmkbdDYqrOgM1h4IrDlgQi9GwqxPZvEyT20eWdaV+AZ8i2avJDfhnijE
-         oOMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786927768; x=1787532568;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FcQdr0dRPL3xWk5ZJ+WEqnlvhAK6C+Y9UAGkoGf2Ky8=;
-        b=eWG24eZCUfX9FEtpppBGIygvyIJkTgZVmRbqw8tjo5msZxejWTyU5W1bdQ376A7Mrw
-         HbxK5O5MZ5v2hweIMPCwprslF5w6YxCFqNnY9/4Lm16ZT5yY+7V34rIRj1nfa8VTRS2G
-         +vQ4OyuNhE5hrYl8lvGC/PGJXBZSNlTvyy2cIRRn7HRyczm+txCJSbVeWJ3AxrvRcZXZ
-         BmcHqzFVeeJQzOahjmXqzLgPvJk66cL8b1BrPVJCHVPz9vtUJ0NX1D/ks1hqrSl7L8qV
-         DEqlAQZ3mOMzzM3bMp6a6hFsHLokAxW8YBS3nh2ga200b+/dRQxUr25f3GIminsWEa2y
-         gDiA==
-X-Forwarded-Encrypted: i=1; AHgh+RrOmST9dGDZsn+iAiyY3rNLoujX/R7Bn26j9wVLTidxyFre0d3WzU5MfVfbFHICxYo7jSEXyNg3@vger.kernel.org
-X-Gm-Message-State: AOJu0YxHGCRFVoshBQyuAdjv86iSRcEbw2GlPEcuMPZHeHWEH1gSnpN4
-	0DGiQh4g1QLeB6MvzUOKOxMy5+GGyDGelT4/sx/mdFvXLsoe+R2ez/8QG1iiGkQ4X2M=
-X-Gm-Gg: AR+sD13EGUZapXrrcZ5QO/fdL5ofRYnoo/iXyzOQC7pY8CRbJHbr2XRJwa0uZvviNdy
-	4as0RjbppDJI9RkBM81o1t+5ajIh8QB+tnBs7PXM2hCxPWQd9/jihjRltzhrq0gA/Qx7KAy5/AO
-	QLwYb6i0HE9QvcbdGNTO8u0clP2l800kVvruzKr6RR/WbrgJegoa2xW+PCLpQIGxVM6wi6TkIAO
-	+OvkKpDWUeRtiAMd4meuWq0D6QyvgliK2Z/gif4iDST9WLy77Ox8O6pZJub4bXKRTj/tXyIgUlx
-	aYd0nnvJHmsGbqEqfjqjrS9iSxz4f/DVouW9i6+NP03wswvFd/3tfviRDZ9zGDTfanjtDf1C5mP
-	Q+BZ85KVpo6AY7YRc3PSv9z1YvvWksbbOr9eR2KMPvlI33yl2hTQpbG9wEDWeJ4tc0YS97lEWQh
-	YbyVOnPAYleMA+zwaLetXNkyMorsnAF4Xa+U8lOt33WA++BW9xHeLxIfuZgOO1PV41QEH7Y/uoa
-	mwhes2N4t9rINw6ZMM9VoGCvPXe7hPJW7etTusr/EoM
-X-Received: by 2002:a05:622a:2b4b:b0:52d:a151:10f5 with SMTP id d75a77b69052e-52da15111admr97787241cf.22.1786927767788;
-        Sun, 16 Aug 2026 17:49:27 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52db62764f2sm1152051cf.30.2026.08.16.17.49.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Aug 2026 17:49:27 -0700 (PDT)
-Date: Sun, 16 Aug 2026 20:49:24 -0400
-From: Gregory Price <gourry@gourry.net>
-To: Qiqi Li <liqiqi23@huawei.com>
-Cc: linux-mm@kvack.org, Zhigang.Luo@amd.com, arun.george@samsung.com, 
-	balbirs@nvidia.com, brendan.jackman@linux.dev, yuzenghui@huawei.com, 
-	apopple@nvidia.com, alucerop@amd.com, matthew.brost@intel.com, 
-	akpm@linux-foundation.org, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
-	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com, 
-	corbet@lwn.net, skhan@linuxfoundation.org, gregkh@linuxfoundation.org, 
-	rafael@kernel.org, dakr@kernel.org, djbw@kernel.org, vishal.l.verma@intel.com, 
-	dave.jiang@intel.com, alison.schofield@intel.com, osandov@osandov.com, 
-	jannh@google.com, pfalcato@suse.de, jackmanb@google.com, hannes@cmpxchg.org, 
-	ziy@nvidia.com, pbonzini@redhat.com, osalvador@suse.de, joshua.hahnjy@gmail.com, 
-	rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com, 
-	kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev, baohua@kernel.org, 
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, yury.norov@gmail.com, 
-	linux@rasmusvillemoes.dk, longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org, 
-	mkoutny@suse.com, sj@kernel.org, jgg@ziepe.ca, jhubbard@nvidia.com, 
-	peterx@redhat.com, baolin.wang@linux.alibaba.com, npache@redhat.com, 
-	ryan.roberts@arm.com, dev.jain@arm.com, lance.yang@linux.dev, usama.arif@linux.dev, 
-	xu.xin16@zte.com.cn, chengming.zhou@linux.dev, roman.gushchin@linux.dev, 
-	muchun.song@linux.dev, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	driver-core@lists.linux.dev, nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org, 
-	linux-debuggers@vger.kernel.org, linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, 
-	cgroups@vger.kernel.org, damon@lists.linux.dev, linux-kselftest@vger.kernel.org, 
-	kernel-team@meta.com
-Subject: Re: [PATCH v5 25/36] mm/memory_hotplug: support N_MEMORY_PRIVATE
- node hotplug
-Message-ID: <aoJaaYp30LnKLj1w@gourry-fedora-PF4VCD3F>
-References: <20260720193431.3841992-1-gourry@gourry.net>
- <20260720193431.3841992-26-gourry@gourry.net>
- <6840c720-8cb7-46bb-a652-040c130a4427@huawei.com>
+	s=arc-20240116; t=1786935606; c=relaxed/simple;
+	bh=gYHoZ9AdYiI4wapYAVvGN+pxpseZPHxhWzyZc+pEzHQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CH70ZRGueg9qh8RgCMMmv+5Z5wyDmgYkSYkcW9HlG01jSml3+FCcnm3aJHBbqq/UWBeP1HSzmx/bMtFntQ8OckY23YVSGusOdBwLh8FDUPwbLvHKEWM99z75pRz/UmYbfdBMF8lVBlQUpsHyQY+YShMgMYtMIdDh05eohsgUxfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: b951159899e711f19a56ed5b684f684d-20260817
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED, SA_EXISTED
+	SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
+	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
+	AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:2d6cb092-b4d7-425c-bba2-8622327e898d,IP:10,
+	URL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:30
+X-CID-INFO: VERSION:1.3.19,REQID:2d6cb092-b4d7-425c-bba2-8622327e898d,IP:10,UR
+	L:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:30
+X-CID-META: VersionHash:7db8b62,CLOUDID:e7b039aea4d664cd40d109712db20148,BulkI
+	D:2608171059588DXYCQ5Y,BulkQuantity:0,SF:17|19|66|78|102|127|865|898,TC:ni
+	l,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:ni
+	l,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: b951159899e711f19a56ed5b684f684d-20260817
+X-User: husong@kylinos.cn
+Received: from ctao-book.. [(223.70.159.239)] by mailgw.kylinos.cn
+	(envelope-from <husong@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 581254986; Mon, 17 Aug 2026 10:59:55 +0800
+From: Song Hu <husong@kylinos.cn>
+To: akpm@linux-foundation.org
+Cc: linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	zhuhui@kylinos.cn,
+	joshua.hahnjy@gmail.com,
+	audra@redhat.com,
+	bingfangguo@tencent.com,
+	Song Hu <husong@kylinos.cn>
+Subject: [PATCH] mm: memcg: flush empty per-cpu stock slots on memcg offlining
+Date: Mon, 17 Aug 2026 10:59:17 +0800
+Message-ID: <20260817025917.66233-1-husong@kylinos.cn>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6840c720-8cb7-46bb-a652-040c130a4427@huawei.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Aug 06, 2026 at 11:30:08AM +0800, Qiqi Li wrote:
-> Hi Gregory,
-> 
-> On 7/21/2026 3:34 AM, Gregory Price wrote:
-> 
-> > Add add_private_memory_driver_managed() to let modules hotplug
-> > memory onto an N_MEMORY_PRIVATE node they control.
-> 
-> I am trying to understand how the nid passed to
-> add_private_memory_driver_managed() is expected to be provisioned.
-> 
-> From what I can see, both node_private_register() and
-> __add_memory_resource() require the nid to already be present in
-> node_possible_map. My understanding is therefore that this patch
-> supports hotplugging private memory onto an existing possible node,
-> rather than creating a new possible node ID at runtime.
-> 
-> For example, in the use case I am looking at, the device's private
-> node is not described by firmware. Would its nid need to be reserved
-> during early NUMA initialization, or is there another mechanism that
-> I may have missed?
-> 
+refill_stock() takes a css reference for each cached memcg slot and
+mem_cgroup_css_offline() relies on drain_all_stock() to release those
+references before the cgroup can finish dying.
 
-It would need to be reserved, and you could use numa emulation but
-that's clunky.  I have an RFC for exactly this issue - though i haven't
-pushed it further yet.
+consume_stock() can drive a slot's nr_pages to zero while its cached[]
+pointer stays set.  is_memcg_drain_needed() skips such empty slots, so
+the offlining drain is a no-op for them: the pinned css reference is
+released only if the slot happens to be evicted by later unrelated
+charges on the same CPU, or by CPU hotplug.  The memcg then lingers
+in the dying state indefinitely.  On a CPU with container churn, a
+per-cpu stock can pin up to NR_MEMCG_STOCK (7) zombie memcgs.
 
-https://lore.kernel.org/all/20260610014517.253609-1-gourry@gourry.net/
+The sibling obj_stock_flush_required() has no such gate: a cached
+objcgs slot is flushed regardless of its byte count.  Drop the
+nr_pages gate from is_memcg_drain_needed() accordingly.  Draining an
+empty slot is a single css_put() and a NULL store, and it happens at
+most once per slot per drain, so the extra work is negligible.
 
-> Also, could you please Cc me on future revisions of this series?
-> I would appreciate it and would be happy to follow the work:)
-> 
-> Thanks,
-> Qiqi
+This is easily reproduced with short-lived cgroups pinned to one CPU:
+12 charge/exit/rmdir cycles leave nr_dying_subsys_memory at +2, stable
+across later slot displacement.
+
+Fixes: d1a05b6973c7 ("memcg: do not try to drain per-cpu caches without pages")
+Signed-off-by: Song Hu <husong@kylinos.cn>
+---
+ mm/memcontrol.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 17da1f43b7d3..b931ec16bb82 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2291,8 +2291,12 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
+ 		if (!memcg)
+ 			continue;
+ 
+-		if (READ_ONCE(stock->nr_pages[i]) &&
+-		    mem_cgroup_is_descendant(memcg, root_memcg)) {
++		/*
++		 * An empty slot still pins a css reference which
++		 * mem_cgroup_css_offline() relies on drain_all_stock()
++		 * to release.
++		 */
++		if (mem_cgroup_is_descendant(memcg, root_memcg)) {
+ 			flush = true;
+ 			break;
+ 		}
+-- 
+2.43.0
+
