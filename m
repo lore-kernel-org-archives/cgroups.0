@@ -1,151 +1,168 @@
-Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com [209.85.161.71])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5008D3BE14A
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 08:24:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B54C32ED55;
+	Tue, 18 Aug 2026 09:05:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787041499; cv=none; b=isFzXUv+YT7uXUf6W5pjPgED9RZxMv8v3xP2UDCFUjD/I6mfI9jhkexhPF/t1BbCvjH7clQ0pX/Uu/WcuwOql93/LTn0GrnuKtWiKDv7VU1lj+nOtEKOk7jQrXJ/v/XRWnwaBiJFxlng5Huq7w3KMyZfcrzh/CSox+rAw5/bvB4=
+	t=1787043941; cv=none; b=li6SDVNJ6sBXZuPTyUfnj/HxzEX5yLE20bOfYM/E3dOEZM9DoW/drjjP61GTDol9ZT7etOj3ALOIMF0OGjaX67vBrFKceI7xcU6st+6iAbjU8RxNwaUxQvHH/k9OK4rret1VQKtk9AwluOlr6nCh1QqK1AYmvXCgdn8SLECDoco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787041499; c=relaxed/simple;
-	bh=UMr1CLopxxuJm7wYCh2Fq3SXhAnNT3ZAigk8SIR7qkA=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=Evlpe4xnhol04+fElT0whK+x8Pco0BY3kNb1uxthyHKC0PlN9ne9SWFixNQK6kbp9Sw+wZy8obqPVKyhGYS79OgIioGl/Z+VvfX3BIhXo6Dx5hMq0eGJIuBbhiIZmfeaFO5NofsuRgpMcsmMPhknc9K2uS4Kp8r0GH8NODAOL64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f71.google.com with SMTP id 006d021491bc7-6acaccb8b0cso1581174eaf.0
-        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 01:24:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787041497; x=1787646297;
-        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=O58fmBB+gdrGTSPuDeyTUQq/CrJ5CHQIBvvW90VjttQ=;
-        b=Qjgo/nnKMVjGMiZRje/9LcpY8IH5uIYjQ3zNRrUo95yuVvBy1SSnOQGro9+F66sn+e
-         t6eHgnG5uThlMDLhnHjcGwM58/FI13NrsMwzEuOrumradTnKW+riQz6KLAkaHb+Ha1dj
-         eB+LEDkwFqbAx1glPRMj3o2w3J3qmu508Xy8JpSnW1vcIHVp1zPUF4xZASr9SdBhtW1z
-         NOnIOsXUSjvSGF74+AG7If5obQMTB39kDZa9yiMNgWKih3eZACGXE/Mm192bEfp9kzgT
-         ZVH0TiFzUu43SGQLoD5V1MIpIu1ZcsX5h25DIHu014ai9FHfBI/IXhQjswCMADdkbnwM
-         V/eA==
-X-Forwarded-Encrypted: i=1; AHgh+RoFIM3QoE2zzHFFUQvHaJgpw+s3OPMzG7UWlkCV3XNh0MRC7MI8UINlxiamFJcF2OKnpn7NMYnj@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEw+R0zy45NaCM1aZ9rtNw3VtJ67fIKtneX5f/pKDilMtYsuPk
-	tyU9v+Ul+HX7EziqjpIQd4CFo+13OGFirnQ5DYp8gTjBRhY+f4rjyxV57JRBLvs/1yjUemc5k6n
-	N1T9ld7OX8v/GDCPumYMzKAt3HMulQuOGo0P7nRS3T8ddEnrKB06NDdK4YKs=
+	s=arc-20240116; t=1787043941; c=relaxed/simple;
+	bh=vku7d9m/M4LH1nzjmwUtmQZIMy3akYMlGE3p+l95Ckw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=n1o9vE65Qq0Wnen27RsOyRBCLZaI8gqyJahxYjDnuaGRWy/vpGcUsj8kDnxOZNUnlz3JaTq1au1CjuueOc4HOH8H2CRAkIAJZYiHYkdRM85z9bepOfH0ZS/44/eD/I+7OsjdJ94jkO0vcZH/HGoZ2GlggZAX3vi4Ow0l93hWMeg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EGp7blGC; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EGp7blGC"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67HM1atI758709;
+	Tue, 18 Aug 2026 09:05:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=vku7d9
+	m/M4LH1nzjmwUtmQZIMy3akYMlGE3p+l95Ckw=; b=EGp7blGCFJ7zKRyYC9dhrT
+	VB1wq+heD8+yMi/6gGM7HPNKLWjiUkfECSZpCbQ9desmh9D1gopM4KK9y1V2GaZ6
+	trFGtUmGOoFPuXSqi/CtCPcLK+Z1ZP5pPf/+WZNuMwAY0Dbc4VoJ/QY+axVGx8tL
+	xnLWO9TVL6H5olE8Vxw5pnhwc30y9oWpLA0NwojjyM3PWfZuLVagYIHr9KOaQh1v
+	S7tkoYo6mKqBhkha3kJD7cyW2XuUWzzugq6sZH20nkqSEM5r2q70vPoQmj/p6hsI
+	968C3UMp92mAxvKeGKTsMlRV2kRDBNLNOnd4G2NtcVliH2xhg8ts0dIobMfbFp3w
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4g2fsqq5c7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 18 Aug 2026 09:05:03 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 67I8uLdp015175;
+	Tue, 18 Aug 2026 09:05:02 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4g32tw2fh9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 18 Aug 2026 09:05:02 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 67I94wAE42860898
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 18 Aug 2026 09:04:58 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 237D72004B;
+	Tue, 18 Aug 2026 09:04:58 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4B0D320040;
+	Tue, 18 Aug 2026 09:04:57 +0000 (GMT)
+Received: from li-4c4c4544-0039-5810-8039-c8c04f434234.ibm.com (unknown [9.111.9.19])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 18 Aug 2026 09:04:57 +0000 (GMT)
+Message-ID: <ef9f077a6faafc747b3e144400dd3f5ad10e8e0a.camel@linux.ibm.com>
+Subject: Re: [PATCH v3 0/7] sched: Flatten the pick
+From: Szabina Korbai <szkorbai@linux.ibm.com>
+To: K Prateek Nayak <kprateek.nayak@amd.com>,
+        Peter Zijlstra
+	 <peterz@infradead.org>, mingo@kernel.org
+Cc: longman@redhat.com, chenridong@huaweicloud.com, juri.lelli@redhat.com,
+        vincent.guittot@linaro.org, dietmar.eggemann@arm.com,
+        rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de,
+        vschneid@redhat.com, tj@kernel.org, hannes@cmpxchg.org,
+        mkoutny@suse.com, cgroups@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jstultz@google.com, qyousef@layalina.io,
+        euan@linux.ibm.com, huschle@linux.ibm.com
+Date: Tue, 18 Aug 2026 10:04:57 +0100
+In-Reply-To: <d690a668-7bb2-4cd1-a229-295e556d4f28@amd.com>
+References: <20260605105513.354837583@infradead.org>
+	 <fecf5eb215b4b86bec11ca47eb6b5b17f5e0fea5.camel@linux.ibm.com>
+	 <d690a668-7bb2-4cd1-a229-295e556d4f28@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:1c8a:b0:6b0:f389:da5a with SMTP id
- 006d021491bc7-6b11dd3244amr5374544eaf.8.1787041497264; Tue, 18 Aug 2026
- 01:24:57 -0700 (PDT)
-Date: Tue, 18 Aug 2026 01:24:57 -0700
-In-Reply-To: <20260818023121.100613-1-liuqiqi@kylinos.cn>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a8416d9.f7a79266.2f965f.0033.GAE@google.com>
-Subject: [syzbot ci] Re: mm/memcontrol: introduce per-tier memory accounting
- and control
-From: syzbot ci <syzbot+cid780730586e082da@syzkaller.appspotmail.com>
-To: akpm@linux-foundation.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, liuqiqi@kylinos.cn, 
-	mhocko@kernel.org, mkoutny@suse.com, muchun.song@linux.dev, 
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev, tj@kernel.org
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE4MDA2NiBTYWx0ZWRfX5sspVmhCuK3Y
+ zHSI38v8n2cnZjvfT6DOQhxPLgB3A/A/sclF+mPy9nXrXlY19LlbeMNgfJ4qT5lCGTUoHcb04o8
+ uYT8omkwavfdwMKo+ynOvKJm+FsMFHtQn2ADrKyD0UxQxnkfG/nPDNdhIJpJOAcpvQ4Uq/p61gw
+ NvfdO0h+HDBktWC8kKvwMSTuzSJgJhNbjodLkPmoWZs7HPyXt7DAZ1AICdF+mcjt6y7KQl5CaLL
+ b8AbFiLAZNfvkf4d9LBHpWx65X0d9hfNUnOHU9IURSVdLClzWUSAx8Eq5xqA7gJWFKHz5zfMdr7
+ 5e+e1aIzlJahvpHGlh0s8MKVPBaWOLAgBz0xr1FE3ARwCLqdALJeLk7zy1VECdI2P0o6j1uGLa6
+ rXapIpuIro2GOF0/6Xp7ZXQYdbs7gm1LjZtK9lHtQYRV8YnBL1NxBkQu6d3ccy5OvAlfmBD8Ch2
+ GXnvToKsxw8Pw683KGg==
+X-Proofpoint-ORIG-GUID: HgC3zz5kuieepGgpfXIhXn_YazUdOdsv
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODE4MDA2NiBTYWx0ZWRfX3by2WI2SKw+N
+ Vk4wMBnzEtOzmC770ds0cWQX8c7+aPDA4sQw7BSSmQtq2QSyd/dFdOBO65kQISNw7QX+3eCWaoB
+ aqgJrrj9VTAWm+w4dGlQasJuOq9fN3s=
+X-Authority-Analysis: v=2.4 cv=DJe/JSNb c=1 sm=1 tr=0 ts=6a842040 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8
+ a=iUiB7RZVDRUJM2x9xO4A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: 5Fi71tcEzR7BK4mU0cbSznpZYYJp6k4y
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-17_04,2026-08-12_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 impostorscore=0 spamscore=0 clxscore=1015 bulkscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 adultscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608180066
 
-syzbot ci has tested the following series
-
-[v1] mm/memcontrol: introduce per-tier memory accounting and control
-https://lore.kernel.org/all/20260818023121.100613-1-liuqiqi@kylinos.cn
-* [RFC PATCH 1/8] mm/memory-tiers: add node_to_tier_id and tier_id_to_nodemask
-* [RFC PATCH 2/8] mm/vmscan: add try_to_free_mem_cgroup_pages_nodemask
-* [RFC PATCH 3/8] mm/memcontrol: add per-tier page counter infrastructure and lifecycle
-* [RFC PATCH 4/8] mm/memcontrol: add per-tier charge and uncharge
-* [RFC PATCH 5/8] mm/memcontrol: add per-cpu stock for tier charge/uncharge
-* [RFC PATCH 6/8] mm/memcontrol: add memory.tier control file
-* [RFC PATCH 7/8] mm/memcontrol: auto-derive tier high/max from memory.high/max
-* [RFC PATCH 8/8] cgroup: add memory_tiered_limits cgroup mount option
-
-and found the following issue:
-WARNING in uncharge_folio
-
-Full report is available here:
-https://ci.syzbot.org/series/9db711d8-d389-45d1-b245-7e8b316a8432
-
-***
-
-WARNING in uncharge_folio
-
-tree:      torvalds
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux
-base:      dcacab904fe78d60840ba947a104993ee9ded887
-arch:      amd64
-compiler:  Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-config:    https://ci.syzbot.org/builds/bf213e6f-1b40-41fa-a938-385807688eec/config
-
-------------[ cut here ]------------
-debug_locks && !(rcu_read_lock_held() || lock_is_held(&(&cgroup_mutex)->dep_map))
-WARNING: ./include/linux/memcontrol.h:391 at uncharge_folio+0x459/0x5b0, CPU#1: udevd/5681
-Modules linked in:
-CPU: 1 UID: 0 PID: 5681 Comm: udevd Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:uncharge_folio+0x459/0x5b0
-Code: c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 cc cc cc cc cc 48 8b 3c 24 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d e9 88 79 00 00 90 <0f> 0b 90 e9 c9 fe ff ff 89 e9 80 e1 07 80 c1 03 38 c1 0f 8c 49 fc
-RSP: 0018:ffffc90004ff7210 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: ffffc90004ff72a0 RCX: 0000000080000001
-RDX: 0000000000000000 RSI: ffffffff8e4a6d0d RDI: ffffffff8c4bb280
-RBP: ffffc90004ff72a8 R08: ffffea0006e7a7c7 R09: 1ffffd4000dcf4f8
-R10: dffffc0000000000 R11: fffff94000dcf4f9 R12: ffffea0006e7a7f8
-R13: 1ffffd4000dcf4f8 R14: 0000000000000001 R15: ffffea0006e7a7c0
-FS:  00007f1ec7ce0c80(0000) GS:ffff8882a8f6a000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f0cdf670000 CR3: 000000017358a000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- __mem_cgroup_uncharge_folios+0xfd/0x1d0
- folio_batch_move_lru+0x86f/0xa60
- lru_add_drain_cpu+0xbc/0x750
- lru_add_drain+0x121/0x3e0
- __folio_batch_release+0x48/0x90
- shmem_undo_range+0x4e6/0x15d0
- shmem_evict_inode+0x280/0xa80
- evict+0x624/0xb50
- dentry_kill+0x1b9/0x880
- finish_dput+0x1a/0x260
- filename_renameat2+0x61b/0x9a0
- __se_sys_rename+0x55/0x2c0
- do_syscall_64+0x174/0x580
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f1ec789a93b
-Code: 48 8b 15 f0 64 15 00 83 c8 ff 64 83 3a 15 75 0e 48 8b 7c 24 08 e8 d5 d4 07 00 f7 d8 19 c0 48 83 c4 18 c3 b8 52 00 00 00 0f 05 <48> 3d 00 f0 ff ff 76 10 48 8b 15 be 64 15 00 f7 d8 64 89 02 48 83
-RSP: 002b:00007ffcb336cd08 EFLAGS: 00000202 ORIG_RAX: 0000000000000052
-RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f1ec789a93b
-RDX: 0000558c622ea032 RSI: 00007ffcb336cd28 RDI: 00007ffcb336d128
-RBP: 000055893abc0910 R08: 0000000000000006 R09: f80f8ce6f311cb22
-R10: 00000000000001b6 R11: 0000000000000202 R12: 000055893aba2730
-R13: 00007ffcb336cd28 R14: 00007ffcb336d128 R15: 0000558926efb160
- </TASK>
+On Mon, 2026-08-17 at 22:05 +0530, K Prateek Nayak wrote:
+> Hello Szabina,
+>=20
+> On 8/17/2026 9:35 PM, Szabina Korbai wrote:
+> > Hello Peter,
+> >=20
+> > We ran the same benchmarks (schbench, sysbench, hackbench) as
+> > Shubhang
+> > has on s390 on an LPAR running fedora 43 with 32 vCPUs.
+> >=20
+> > We ran the benchmarks for each of the cgroup modes, and for the
+> > baseline, we chose the commit prior to the patches (f666241e6bd5 -
+> > sched/fair: Unify cfs_rq throttling via account_cfs_rq_runtime() ).
+> >=20
+> > We have also tried running stress-ng in parallel with the
+> > benchmarks
+> > (set to generate 50% or 90% utilization for each vCPU).
+> >=20
+> > Compared to simply running the benchmarks on their own, this has
+> > revealed some performance trade-offs that the move to a single
+> > runqueue
+> > can introduce.
+>=20
+> Are you using tip:sched/core at commit 68e3748781 ("sched/fair: Fix
+> flat
+> hierarchy") for the flat_cg numbers or did you checkout at
+> 85570f10a4c6
+> ("sched/eevdf: Move to a single runqueue")?
+>=20
+> There are a couple fixes for vruntime update and Vincent's
+> optimizations
+> for preemption bits which might make a difference to the overall
+> results.
 
 
-***
+Hi Prateek,
 
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
+thank you, that's a good call. I did checkout at "Move to a single
+runqueue". Let me try it with the fix included, see how the results are
+affected.
 
----
-This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
+Regards,
 
-To test a fix for this bug, please reply with `#syz test`
-(on a separate line) and attach the patch to the email.
+--=20
+Szabina Korbai
 
-Notes:
-- The patch will be applied on top of the tested series (as an
-  incremental fix).
-- To test a new version of the whole series, please send it directly
-  to syzbot@lists.linux.dev.
-- Arguments like custom git repos and branches are not supported.
+Linux on Z development
+Software Labs Campus Unlimited Company
+25 North Wall Quay,
+Dublin 1,
+D01 H104,
+Ireland
+
+szkorbai@linux.ibm.com
+
+
+IBM
