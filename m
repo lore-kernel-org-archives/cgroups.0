@@ -1,223 +1,225 @@
-Received: from mta1.migadu.com (out-191.mta1.migadu.com [95.215.58.191])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16BA64207A
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 02:24:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B25F8381AE7;
+	Tue, 18 Aug 2026 02:34:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787019844; cv=none; b=uQnoRFB7+EoxFC4AAPtdFSZEnD9mlGly4XBgdAMQcUGfTBYT5xT9Et9wnc8jTfgryUyn51H2Oq6tj4Xhjx/ZI7PlmnTQU85Yur2ULp19L5K5wiIt1PsUrN3Oq0ClB98QHcBez3HbuPSpOEZmPKYQ0HxLynU6O8wuRz1rxHTt9zQ=
+	t=1787020470; cv=none; b=BoSzXpBmQs/bAxZDHNu4+M9bSeAeDZ7VndZY9fGOtwtmqOJQs+8Zpps57kiQf/vKnEOh5C8Jp1BZq2QrrBNCTzkZ3/u893hpmaCvjaf8vi+1T0kLYBU31xNlgKLF7CM4LBuyL1VTXL/EZ7xKiVSU3BaNoGFVCsMfRAkZrT8VKis=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787019844; c=relaxed/simple;
-	bh=Kj2l2s2b8Q7rDIIPhTRWO4Dg9LJTGn1lCoLDlO7EmgE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ro1NQK3O0BxHv1FmdJ46Uz1/NIjuXkCYNRi5mE9oAQAntV2so3juJbIAZDPGMxvpDlDhHb24auVZhPtn94LqCKg2c0sNpLWgloyCXVJM8u4xJKEqdzSt21b3f/Ia4v1QbG+seXnUfnX23++GmxGkzoZdn5u+sb7UTCZIKPcpTMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=C9jlnSUc; arc=none smtp.client-ip=95.215.58.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="C9jlnSUc"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Kj2l2s2b8Q7rDIIPhTRWO4Dg9LJTGn1lCoLDlO7EmgE=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787019839; v=1; x=1787624639;
- b=C9jlnSUcGwHDmE3s0RPE+SKlAINM3jlE5a6QqyqzjIKdxichgmfnsI+SL6J0WHAjxrbjmKMM
- rGbpa39424hV5xrfQ2P68GOCZ91kxcwcZuEomTWz8LVpeeEp6bf6/aU8O3aSHYsFCDmA3TTj3CJ
- fheAYhQupPSsZxyS0C190b8o=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: from localhost (3.112.29.171)
-	by mta10.migadu.com with ESMTPS id d2aa8026bf3fbfef;
-	Tue, 18 Aug 2026 02:23:59 +0000
-X-Migadu-Flow: FLOW_OUT
-Date: Tue, 18 Aug 2026 10:23:51 +0800
-From: Baoquan He <baoquan.he@linux.dev>
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
-	Ying Huang <ying.huang@linux.alibaba.com>,
-	Chris Li <chrisl@kernel.org>, Nico Pache <nico.pache@linux.dev>,
-	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>,
-	Gregory Price <gourry@gourry.net>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
-	Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
-	SeongJae Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
-	Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
-	Zicheng Wang <wangzicheng@honor.com>,
-	Chen Ridong <chenridong@xiaomi.com>,
-	Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH RFC 05/15] mm/mglru: move max_seq read into
- walk_update_folio
-Message-ID: <aoPCNxyRVpQFulwS@MiWiFi-R3L-srv>
-References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
- <20260804-mglru-fg-v1-5-4d8dad39dad6@tencent.com>
+	s=arc-20240116; t=1787020470; c=relaxed/simple;
+	bh=uaRBqcR9lHQHawpp7+rRKsRE1Rn90J8ljpANikUIZeU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oYX33N4bbdHkandoCmEoUL4SNN2i/x39TyZSX9zm4/jw4QOcDZLkJzTttXBOy5Q3Al2VeHhMuds1AccCfbtTuskWV1D0PA6qn3HnpvZkGptE+U6i+H7S94NQtgq/AFV8e5RbthtagdTWhLhwlpf4/qCxHT8C6fxAKoNuppFfzCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 508344ca9aad11f19a56ed5b684f684d-20260818
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_SJ_DIGIT_LEN
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_EXISTED, SPF_NOPASS
+	DKIM_NOPASS, DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS
+	GTI_C_CI, GTI_FG_IT, GTI_RG_INFO, GTI_C_BU, AMN_T1
+	AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:54965268-4203-4b57-b4ff-b1cd1b4b2efd,IP:20,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:20
+X-CID-INFO: VERSION:1.3.19,REQID:54965268-4203-4b57-b4ff-b1cd1b4b2efd,IP:20,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:20
+X-CID-META: VersionHash:7db8b62,CLOUDID:f6d94200ad9876474a8648ca9f656496,BulkI
+	D:260818103421R58TZA7K,BulkQuantity:0,SF:10|66|78|102|123|127|136|850|865|
+	898,TC:nil,Content:0|15|50,EDM:-3|-100,IP:-2,URL:99|1,File:nil,RT:nil,Bulk
+	:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,
+	BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 508344ca9aad11f19a56ed5b684f684d-20260818
+X-User: liuqiqi@kylinos.cn
+Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
+	(envelope-from <liuqiqi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 896177119; Tue, 18 Aug 2026 10:34:19 +0800
+From: liuqiqi@kylinos.cn
+To: linux-mm@kvack.org
+Cc: tj@kernel.org,
+	mkoutny@suse.com,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	akpm@linux-foundation.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Qiqi Liu <liuqiqi@kylinos.cn>
+Subject: [RFC PATCH 0/8] mm/memcontrol: introduce per-tier memory accounting and control
+Date: Tue, 18 Aug 2026 10:31:13 +0800
+Message-Id: <20260818023121.100613-1-liuqiqi@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260804-mglru-fg-v1-5-4d8dad39dad6@tencent.com>
+Content-Transfer-Encoding: 8bit
 
-On 08/04/26 at 03:47am, Kairui Song via B4 Relay wrote:
-> From: Kairui Song <kasong@tencent.com>
-> 
-> walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
-> each read lrugen->max_seq to compute the target generation for
-> folio_update_gen(), then pass it as a parameter to
-> walk_update_folio().  Move the read into walk_update_folio() itself
-> so the callers no longer need to compute or pass the value.
-> 
-> This is a pure refactoring: no functional change.
-> 
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
->  mm/vmscan.c | 29 ++++++++++++-----------------
->  1 file changed, 12 insertions(+), 17 deletions(-)
+From: Qiqi Liu <liuqiqi@kylinos.cn>
 
-Nice clean up.
+This RFC introduces per-tier memory cgroup accounting. Each cgroup
+tracks its memory usage per memory tier (e.g. DRAM, CXL), exposed
+through a new memory.tier control file that reports per-tier usage
+and accepts independent high (soft) and max (hard) limits per tier.
+By default these limits are auto-derived from memory.high / memory.max
+based on per-tier capacity ratios, and can be manually overridden.
 
-Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+The implementation integrates with the existing memory tiering and
+demotion infrastructure. Per-tier usage (anonymous and file) is tracked
+via dedicated page counters, and cross-tier migrations (e.g. demotion
+from DRAM to CXL) correctly re-account charges. When a tier hits its
+high limit, async reclaim is triggered within that tier's NUMA nodes;
+exceeding max enforces reclaim scoped to the tier's own nodes, or OOM.
 
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index b02d2ec8ff4b..c2ea92c2b69e 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -3511,13 +3511,15 @@ static bool suitable_to_scan(int total, int young)
->  }
->  
->  static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
-> -		struct folio *folio, int new_gen, bool dirty)
-> +			      struct lruvec *lruvec, struct folio *folio, bool dirty)
->  {
-> -	int old_gen;
-> +	int new_gen, old_gen;
->  
->  	if (!folio)
->  		return;
->  
-> +	new_gen = lru_gen_from_seq(READ_ONCE(lruvec->lrugen.max_seq));
-> +
->  	if (dirty && !folio_test_dirty(folio) &&
->  	    !(folio_test_anon(folio) && folio_test_swapbacked(folio) &&
->  	      !folio_test_swapcache(folio)))
-> @@ -3548,8 +3550,6 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
->  	struct lru_gen_mm_walk *walk = args->private;
->  	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
->  	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
-> -	DEFINE_MAX_SEQ(walk->lruvec);
-> -	int gen = lru_gen_from_seq(max_seq);
->  	unsigned int nr;
->  	pmd_t pmdval;
->  
-> @@ -3600,7 +3600,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
->  			continue;
->  
->  		if (last != folio) {
-> -			walk_update_folio(walk, args->vma, last, gen, dirty);
-> +			walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
->  
->  			last = folio;
->  			dirty = false;
-> @@ -3613,7 +3613,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
->  		walk->mm_stats[MM_LEAF_YOUNG] += nr;
->  	}
->  
-> -	walk_update_folio(walk, args->vma, last, gen, dirty);
-> +	walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
->  	last = NULL;
->  
->  	if (i < PTRS_PER_PTE && get_next_vma(PMD_MASK, PAGE_SIZE, args, &start, &end))
-> @@ -3636,8 +3636,6 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
->  	struct lru_gen_mm_walk *walk = args->private;
->  	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
->  	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
-> -	DEFINE_MAX_SEQ(walk->lruvec);
-> -	int gen = lru_gen_from_seq(max_seq);
->  
->  	VM_WARN_ON_ONCE(pud_leaf(*pud));
->  
-> @@ -3691,7 +3689,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
->  			goto next;
->  
->  		if (last != folio) {
-> -			walk_update_folio(walk, vma, last, gen, dirty);
-> +			walk_update_folio(walk, vma, walk->lruvec, last, dirty);
->  
->  			last = folio;
->  			dirty = false;
-> @@ -3705,7 +3703,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
->  		i = i > MIN_LRU_BATCH ? 0 : find_next_bit(bitmap, MIN_LRU_BATCH, i) + 1;
->  	} while (i <= MIN_LRU_BATCH);
->  
-> -	walk_update_folio(walk, vma, last, gen, dirty);
-> +	walk_update_folio(walk, vma, walk->lruvec, last, dirty);
->  
->  	lazy_mmu_mode_disable();
->  	spin_unlock(ptl);
-> @@ -4270,8 +4268,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
->  	struct pglist_data *pgdat = folio_pgdat(folio);
->  	struct lruvec *lruvec;
->  	struct lru_gen_mm_state *mm_state;
-> -	unsigned long max_seq;
-> -	int gen;
->  
->  	lockdep_assert_held(pvmw->ptl);
->  	VM_WARN_ON_ONCE_FOLIO(folio_test_lru(folio), folio);
-> @@ -4308,8 +4304,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
->  
->  	memcg = get_mem_cgroup_from_folio(folio);
->  	lruvec = mem_cgroup_lruvec(memcg, pgdat);
-> -	max_seq = READ_ONCE((lruvec)->lrugen.max_seq);
-> -	gen = lru_gen_from_seq(max_seq);
->  	mm_state = get_mm_state(lruvec);
->  
->  	lazy_mmu_mode_enable();
-> @@ -4341,7 +4335,7 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
->  			continue;
->  
->  		if (last != folio) {
-> -			walk_update_folio(walk, vma, last, gen, dirty);
-> +			walk_update_folio(walk, vma, lruvec, last, dirty);
->  
->  			last = folio;
->  			dirty = false;
-> @@ -4353,13 +4347,14 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
->  		young += nr;
->  	}
->  
-> -	walk_update_folio(walk, vma, last, gen, dirty);
-> +	walk_update_folio(walk, vma, lruvec, last, dirty);
->  
->  	lazy_mmu_mode_disable();
->  
->  	/* feedback from rmap walkers to page table walkers */
->  	if (mm_state && suitable_to_scan(i, young))
-> -		update_bloom_filter(mm_state, max_seq, pvmw->pmd);
-> +		update_bloom_filter(mm_state, READ_ONCE(lruvec->lrugen.max_seq),
-> +				    pvmw->pmd);
->  
->  	mem_cgroup_put(memcg);
->  
-> 
-> -- 
-> 2.55.0
-> 
-> 
+The feature is fully opt-in. When disabled, no extra counters or
+charge/uncharge paths are created, memory.tier reads empty, and there
+is no measurable overhead.
+
+Why per-tier limits?
+-------------------
+
+On tiered memory systems, memory.max constrains total usage but cannot
+express "keep fast-tier usage under X". Without per-tier limits, a
+workload can monopolise DRAM, pushing other cgroups onto slower tiers.
+This series gives each cgroup independent high (soft) and max (hard)
+limits per tier, exposed and set through a new memory.tier file.
+
+By default those limits auto-derive from memory.high / memory.max by
+capacity ratio; writing memory.tier pins a tier.
+
+This series takes a different approach from Joshua Hahn's toptier RFC [1],
+tracking a separate page_counter per (memcg, tier) for N-tier support and
+exposing writable per-tier limits under a cgroup mount option.
+
+Patch structure
+---------------
+
+  1/8  mm/memory-tiers: add node_to_tier_id and tier_id_to_nodemask
+  2/8  mm/vmscan: add try_to_free_mem_cgroup_pages_nodemask
+  3/8  mm/memcontrol: add per-tier page counter infrastructure and lifecycle
+  4/8  mm/memcontrol: add per-tier charge and uncharge
+  5/8  mm/memcontrol: add per-cpu stock for tier charge/uncharge
+  6/8  mm/memcontrol: add memory.tier control file
+  7/8  mm/memcontrol: auto-derive tier high/max from memory.high/max
+  8/8  cgroup: add memory_tiered_limits cgroup mount option
+
+Patches 1-2 are infrastructure (helpers in memory-tiers and vmscan).
+Patches 3-5 add the core accounting: counter lifecycle (3),
+per-page charge/uncharge (4), and stock batching (5).
+Patch 6 adds the userspace file. Patch 7 adds auto-derivation. Patch 8
+gates everything behind a mount option + kernel cmdline, so the feature
+adds no measurable overhead when not opted in.
+
+Usage
+-----
+
+Boot with:
+
+  cgroup_memory_tiered_limits=1
+
+Or remount at runtime (affects newly created cgroups only):
+
+  mount -o remount,memory_tiered_limits /sys/fs/cgroup
+
+Per-tier limits and usage can then be read from and written to
+memory.tier.
+
+Scope and limitations
+---------------------
+
+- Only LRU folios (anonymous and file pages) are tier-accounted. Kernel
+  memory and socket buffers are not yet accounted per tier; support for
+  these is planned as follow-up work.
+- Per-tier memory.min and memory.low protections are not implemented.
+  These can be added later by extending the per-tier interface to
+  expose and enforce min/low protection.
+- The command-line parameter mirrors cgroup_favordynmods; automatic
+  enablement via the cgroup mount path is left to userspace.
+
+Testing
+-------
+
+Tested on QEMU with fake NUMA (DRAM tier 4 + CXL tier 22), with
+cgroup_memory_tiered_limits=1 on the kernel command line and demotion
+enabled.
+
+Set up a cgroup, apply per-tier limits, and run a memory-intensive
+workload:
+
+  $ mkdir /sys/fs/cgroup/mycgroup
+  $ cd /sys/fs/cgroup/mycgroup
+  $ echo "tier4.high=200000000" > memory.tier
+  $ echo "tier4.max=300000000" > memory.tier
+  $ echo 1 > /sys/kernel/mm/numa/demotion_enabled
+  $ cgexec -g memory:/mycgroup ~/stream --ntimes 5 --malloc &
+  $ cat memory.tier
+  tier4.current=296488960
+  tier4.high=199999488
+  tier4.max=299999232
+  tier22.current=1625464832
+  tier22.high=max
+  tier22.max=max
+
+DRAM (tier4) usage stays under tier4.max (hard limit, no OOM) but exceeds
+tier4.high (soft limit, suggesting that async reclaim is in progress);
+CXL (tier22) absorbs the overflow via demotion.
+
+Also verified:
+  - tierN.current tracks per-tier usage (anon + file).
+  - Cross-tier migration (demotion) correctly re-accounts.
+  - memory.high / memory.max auto-derives tierN.high / tierN.max.
+  - Manual override (writing a number to memory.tier) pins the limit.
+  - Tier max enforcement triggers reclaim scoped to the tier's nodes.
+  - Feature fully off (no mount option): no counters, no charge/uncharge,
+    memory.tier exists but reads empty.
+
+Open questions
+--------------
+
+- Should kmem/slab tier accounting be included in this series or deferred
+  to a follow-up?
+- Should per-tier memory.min and memory.low protection be part of this
+  series or left for later?
+
+[1] https://lore.kernel.org/all/20260423203445.2914963-1-joshua.hahnjy@gmail.com/
+
+Signed-off-by: Qiqi Liu <liuqiqi@kylinos.cn>
+
+Qiqi Liu (8):
+  mm/memory-tiers: add node_to_tier_id and tier_id_to_nodemask
+  mm/vmscan: add try_to_free_mem_cgroup_pages_nodemask
+  mm/memcontrol: add per-tier page counter infrastructure and lifecycle
+  mm/memcontrol: add per-tier charge and uncharge
+  mm/memcontrol: add per-cpu stock for tier charge/uncharge
+  mm/memcontrol: add memory.tier control file
+  mm/memcontrol: auto-derive tier high/max from memory.high/max
+  cgroup: add memory_tiered_limits cgroup mount option
+
+ include/linux/cgroup-defs.h  |   5 +
+ include/linux/memcontrol.h   |  26 ++
+ include/linux/memory-tiers.h |  12 +
+ include/linux/swap.h         |   6 +
+ kernel/cgroup/cgroup.c       |  21 +
+ mm/memcontrol.c              | 786 ++++++++++++++++++++++++++++++++++-
+ mm/memory-tiers.c            |  58 +++
+ mm/vmscan.c                  |  26 +-
+ 8 files changed, 936 insertions(+), 4 deletions(-)
+
+-- 
+2.43.0
+
