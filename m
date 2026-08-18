@@ -1,77 +1,47 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mta0.migadu.com (out-36.mta0.migadu.com [91.218.175.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E64537E5E1
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 14:29:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AEAB332EC8
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 15:06:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787063394; cv=none; b=ZOFmipNED/wVEWJ3tBNub0FZ4vAugZMLIxU39NcQI872xELATynh3fb5K8v4yC8B7iYaGnH8yGfVeVaiZI67QDsOU4Mij1Evn8DFMT/KCUoUm6xEAKSWRptUi54ow4m3t/O6LtAwKcrm18qDCvTSgrI49Axlyg7z3pGlTxpd1Gw=
+	t=1787065599; cv=none; b=DbsbXr4tbeZc25D4KD1M6mHI4TWHmtIetdu8KHFeQXJPvWXIbhbGOfhEzMy2jDiE46UxfxFOmnCvfuEkMbsYqP14RZbxVkNT4QFDz22qOU0zduP93lJR5zp5QOFB2JhHBAO2K05tOKG+Tkyfq9azYslC70Dt7S2s6UjWHZVH6Kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787063394; c=relaxed/simple;
-	bh=Nhk/TpmrrdzGGpQVRKKiJc+WJRrpAIFK2udf3IVnMPY=;
+	s=arc-20240116; t=1787065599; c=relaxed/simple;
+	bh=cPHeBY5KTM96nrxv4hgyFw1PuHSjJCWzO7Hqsh/Ysd0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u63EWIwEFtSy5lWl6QEIwdxb0Jbacbc76O6Aflb7Rjlwyr6LJp5oHfg3R4DSSYUKEvsy+35ZYAH6KN9B8uTjxL5RUZkz3mIfJQue7hi6l2wweDIEfFIAG5ldT0q7KW4z6yzEYTdwJ4zE/PAUp9Cvq9kEsntV7q8a86shF0u/cSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Zbcb8Rq+; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=rIMISh3ayRWa49DlDmYXOhApmHOwOIyGCBHKhfftLPpLsucNwugm+U/xWJEgAtkzRtO6zPPK01Q8mz8zUYJemonhFirdRQDsJo7goNl+YEEVlbHXWUvuTQgk18JqAZGw0/ogL3iccQK6zGUKyxuk5Rjph06mXnMiI3PRB01wPpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RDFrwmnC; arc=none smtp.client-ip=91.218.175.36
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Zbcb8Rq+"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-49558ce01afso36460365e9.1
-        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 07:29:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1787063391; x=1787668191; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=d7NrMCatC8ufvSDl+4wuR3/sLG8+OS++07jlkcNtqeY=;
-        b=Zbcb8Rq+4Hltyos/V26v3GwnBdRZbr9Dttbks+fyhAlP9n4uyzDslbCjtl/T1E3URW
-         fQQ538gJHvFNzmb+XStyUe1XnTPW/x7xT1HZfZpQvHfx9Pd55YPt1NPZQr4JBW6QQ8ux
-         TqzDwlSCYuuD0+xts0hcqYDLyzNaAHeacr72En9AXkTwQpg6GCwOy0ZHnSPLHQnN7IDV
-         UxUD5TAF9GQfMcktV/C01527kaxRb+MWiHuTUGQxqyMrutBKNzHW02BIW/ByPvnof7kI
-         cqZiFcPM571dBqnCqmeZ9obyXF1cFWs3uZ/T4G5ZAfb8Y5rupF1lQwNj3FRm4H3MAr7r
-         SuSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787063391; x=1787668191;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=d7NrMCatC8ufvSDl+4wuR3/sLG8+OS++07jlkcNtqeY=;
-        b=Qbymb1DWvUURhXCbcG5pLwvaZcZZiaug5Lxf/bfPOP1zipobOEhKkz6gn6G74uC8zp
-         mhr5uqKUzAOzaZQRCKPgK4Iedo3KrKm2vcq5c4tIJ2QxmIt/7ZxLpTR8MRlNDk6dRQnE
-         zx+tC0EQHJBoO9NRTjhjDgQl0CVB9YBh6hKggbHMlgdYmqybuGHi9SAuALBMeyD78hGO
-         rznInUFHIIg2M0EUotDj9sTiYDnHjqAdUahdDQXo6o4qcnVei4vizpxBu/F9Fj+q8DhQ
-         dhqPuWWAs7XJZQKOgPD0gf0s6VsHnrq1o2rcjMoNjO6ZBQxxov7VK9z3HGYNdbOj9Hsk
-         aVBw==
-X-Forwarded-Encrypted: i=1; AHgh+Rptj5R1luLsqYcWR/zyXFgmF8bRYLzYwWFFnyztRRepbrE7AG6meQlx1ofc0LZB68wSrPR1sbyA@vger.kernel.org
-X-Gm-Message-State: AOJu0YzZt0DWi0FZV8N0HziGz8Vl2g6wkK1+XepURZRRGHxAPtf7Nkfx
-	qj9VGVK8C0qOrGe2Icg27PacPpGf1Flp4veVZJThvto92la2HNci1/8gTK1WfIxcP3g=
-X-Gm-Gg: AR+sD12BYXhw9tW5jvc4z7NwhiBhl6r+6yBft1nHqOue8RmIsQoz9kD8VeXww9QFgAX
-	JfmKnTw+cJqDAp+WPgcma1/ZgRDivAjpj78ZkDr6Lz0BdLpnqIGiD86hITpQNBs9kxKHxEA4YB8
-	Eg0wMl+1TsYK6qCJTXTDmig7taUZIUZie+TRGl5xKDn4/Cy7yxyg0F8o3JWHxMzP5WrMfQofSJA
-	EePe2lALhMTXmJSJVLPVqSj9V4O5vNmSx4THpQ/Q09qCT8VODcvwstCD+wK4qQ152vrTpVsffUZ
-	y3LrWIUp6YH+HiICywiyo/s5AMHofraq+Vnq6V3ftfNVuGu9SE1U9jIHgg/cLMUeNJ+3gfukg9N
-	3n41VDLKytHuyvh6LQdsA/wlKRxI8rqGSpM6SvEuZVi3amlyJ7SHlKuMvMqq3mdpkFW09rXyFNj
-	lCxqMar80NR5eMhoKFoE3E16zz6s2SSLKhvaohr9ON7iWM2VG6x/y0kLPE5Xarjvm9XH3Nwj+fo
-	A==
-X-Received: by 2002:a05:600c:c171:b0:499:7f38:d77 with SMTP id 5b1f17b1804b1-4999fb2e1dbmr169268255e9.6.1787063391240;
-        Tue, 18 Aug 2026 07:29:51 -0700 (PDT)
-Received: from localhost (109-81-87-166.rct.o2.cz. [109.81.87.166])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4999d0876b8sm189990045e9.8.2026.08.18.07.29.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Aug 2026 07:29:50 -0700 (PDT)
-Date: Tue, 18 Aug 2026 16:29:49 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Song Hu <husong@kylinos.cn>
-Cc: akpm@linux-foundation.org, joshua.hahnjy@gmail.com, willy@infradead.org,
-	shakeel.butt@linux.dev, linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
-	roman.gushchin@linux.dev, muchun.song@linux.dev, zhuhui@kylinos.cn,
-	audra@redhat.com, bingfangguo@tencent.com
-Subject: Re: [PATCH v2] mm: memcg: release the css reference when a stock
- slot empties
-Message-ID: <aoRsXafoUYxFccQr@tiehlicka>
-References: <20260818130135.154315-1-husong@kylinos.cn>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RDFrwmnC"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=cPHeBY5KTM96nrxv4hgyFw1PuHSjJCWzO7Hqsh/Ysd0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787065593; v=1; x=1787670393;
+ b=RDFrwmnC4ZcelxCWWFpLf+K1TP6VLaNw/HWd6Lo9F4HSqcntST6xDw/IBr5jRgBuM3epJNll
+ +CZyQO8aIS7Xo7qtFUY0iWdC4bQqrg9KuIqyeQcNwQHXDhEwDr+FlugwQwCMNoRqY7xfR2qVsbU
+ jv7YRb7iLq+ZmKonJ9vegl34=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from localhost (2a03:2880:10ff:17::)
+	by smtp.migadu.com with ESMTPS id 5b5f1f43086e936f;
+	Tue, 18 Aug 2026 15:06:23 +0000
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 18 Aug 2026 08:06:22 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Michal Hocko <mhocko@suse.com>
+Cc: Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	hannes@cmpxchg.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
+	Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH] mm: page_counter: reject empty string in
+ page_counter_memparse()
+Message-ID: <aoRz72_zdMai_RNV@linux.dev>
+References: <20260817042652.74136-1-cui.tao@linux.dev>
+ <aoMzchLCCz5hiFHp@linux.dev>
+ <aoQNtIRvqXRh-x4u@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -80,68 +50,69 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260818130135.154315-1-husong@kylinos.cn>
+In-Reply-To: <aoQNtIRvqXRh-x4u@tiehlicka>
 
-On Tue 18-08-26 21:01:35, Song Hu wrote:
-> consume_stock() can drive a stock slot's nr_pages to zero while its
-> cached[] pointer stays set, so the slot keeps pinning the css
-> reference that refill_stock() took.  The offlining drain only
-> flushes slots with cached pages, so the reference is never released
-> unless the slot happens to be displaced by an unrelated charge or
-> by CPU hotplug, and the memcg lingers in the dying state - up to
-> NR_MEMCG_STOCK (7) of them per CPU under container churn.
+On Tue, Aug 18, 2026 at 09:45:56AM +0200, Michal Hocko wrote:
+> On Mon 17-08-26 09:16:40, Shakeel Butt wrote:
+> > On Mon, Aug 17, 2026 at 12:26:52PM +0800, Tao Cui wrote:
+> > > From: Tao Cui <cuitao@kylinos.cn>
+> > > 
+> > > memparse() consumes no characters on an empty input and leaves the
+> > > end pointer at the terminating NUL.  The only validation in
+> > > page_counter_memparse() checks for trailing characters, so an empty
+> > > input slips through and the limit becomes 0.
+> > > 
+> > > All limit write callbacks of the memory controller strstrip() the
+> > > input before calling this helper, so a script that writes an unset
+> > > variable hits this path:
+> > > 
+> > >   LIMIT=
+> > >   echo "$LIMIT" > $CG/memory.max
+> > >   echo $?
+> > >   0
+> > >   cat $CG/memory.max
+> > >   0
+> > > 
+> > > Nothing reports the mistake: the limit is now 0 and the OOM killer
+> > > goes after every task in the cgroup.  The same happens for
+> > > memory.min, memory.low, memory.high, memory.swap.high,
+> > > memory.swap.max and memory.zswap.max, where 0 silently removes the
+> > > protection or disables swap and zswap.
+> > > 
+> > > Reject the input when no characters were consumed, which is the one
+> > > case the trailing-character check cannot catch.
+> > > 
+> > > Fixes: 3e32cb2e0a12 ("mm: memcontrol: lockless page counters")
+> > > Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+> > > ---
+> > >  mm/page_counter.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/mm/page_counter.c b/mm/page_counter.c
+> > > index 661e0f2a5127..d14db705b04f 100644
+> > > --- a/mm/page_counter.c
+> > > +++ b/mm/page_counter.c
+> > > @@ -281,7 +281,7 @@ int page_counter_memparse(const char *buf, const char *max,
+> > >  	}
+> > >  
+> > >  	bytes = memparse(buf, &end);
+> > > -	if (*end != '\0')
+> > > +	if (*end != '\0' || end == buf)
+> > >  		return -EINVAL;
+> > 
+> > I wonder if someone started depending on this behavior. In that case it is
+> > better to return error instead of silently ignore, so we will hear complains
+> > loudly. This looks good to me.
 > 
-> Keeping the slot populated past the last page only saves a
-> css_get()/css_put() pair on the next charge of the same memcg, and
-> costs more than that: the offlining drain has to know about empty
-> slots, and refill_stock() cannot reuse them either, so a charge
-> under a different memcg evicts a live batch through the drain_idx
-> rotation instead.
-> 
-> Drop the reference in consume_stock() when the slot empties.
-> Empty slots stop existing, so is_memcg_drain_needed() and the drain
-> path stay as they are, and refill_stock() reuses emptied slots
-> directly.  The cost is one refcount pair per emptied slot, at most
-> once per MEMCG_CHARGE_BATCH pages.
-> 
-> Fixes: d1a05b6973c7 ("memcg: do not try to drain per-cpu caches without pages")
-> Signed-off-by: Song Hu <husong@kylinos.cn>
+> This is backward incompatible change and I am wondering why should we
+> even risk regression.
 
-Acked-by: Michal Hocko <mhocko@suse.com>
-Thanks!
+Mainly I was wondering if this is intentional or unintentional. If this us
+unintentional, can we fix it without anyone noticing?
 
-> ---
-> 
-> Changes since v1: drop the reference at consume time instead of flushing
-> empty slots from the offlining drain, as discussed with Michal Hocko and
-> Joshua Hahn (full-stock drain cost, refill reuse).
-> 
-> v1: https://lore.kernel.org/all/20260817025917.66233-1-husong@kylinos.cn/
-> 
->  mm/memcontrol.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 17da1f43b7d3..1271d390b617 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2140,7 +2140,12 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
->  
->  		stock_pages = READ_ONCE(stock->nr_pages[i]);
->  		if (stock_pages >= nr_pages) {
-> -			WRITE_ONCE(stock->nr_pages[i], stock_pages - nr_pages);
-> +			stock_pages -= nr_pages;
-> +			WRITE_ONCE(stock->nr_pages[i], stock_pages);
-> +			if (!stock_pages) {
-> +				css_put(&memcg->css);
-> +				WRITE_ONCE(stock->cached[i], NULL);
-> +			}
->  			ret = true;
->  		}
->  		break;
-> -- 
-> 2.43.0
+However if we are ok with this then let's make is formal and make this a
+documented behavior. I don't have any strong opinion either way but I think you
+are saying it safer to just assume this is intentional. Fine with me.
 
--- 
-Michal Hocko
-SUSE Labs
+Tao, can you send a patch to Documentation/admin-guide/cgroup-v2.rst which
+explicitly mention this behavior?
