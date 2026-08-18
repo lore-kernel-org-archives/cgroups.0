@@ -1,242 +1,200 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-46.mta1.migadu.com [95.215.58.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B2433ACA40;
-	Tue, 18 Aug 2026 02:34:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ACC1265621
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 02:40:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787020497; cv=none; b=nMzPUOzyQ6MGFxVaKqfAkCOrJWR1jDTiWrVti1+cIvYGRDTnkOKlbDj+z/BcT11SuXB9RhhIRMoxefghrh+7uuCL9xmN7f2mMHwMjUkannu/fWZ2YpAQc0Z+fToQQXZZZVNNd25fy8iLGw18XY1Vz60cbqvI5gKCohfRA4RlhdI=
+	t=1787020845; cv=none; b=lzRMt8R2ioaUk+i/NJfC+QFLetRFpzqswPH2kZUVAl/yit2XM9Fn6rtX3VDG0QY5jzUkPu2g1txG5Cntimg/VagslOVgRjVuzhqGL9QAafupHAlGYIOR0a3MjDnVmU82GFskKQ/C9dCVERf1+1y1jIkxsMoPAQoQNKywMOga8tA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787020497; c=relaxed/simple;
-	bh=92uJx17oQwt8gUraMF0LQUVa8Koxh+Eq2UAYSFy8T8k=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oZSc1qAbnYPZypxQg0i396QdkFBBNEqW3jhW1t/pFKTRcbc9Dkjb8CSvz02v/HMLW+PbNl+Wh0DezO/PPf2B11OY6U96mV7zxEQ/taXWe3IxQN809HuguTBclibnHDiHShrX/AznMIx0TlUo3HTnex39wG+QWJSJJ2hvozKGWwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 5dc877189aad11f19a56ed5b684f684d-20260818
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_SJ_DIGIT_LEN
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
-	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_EXISTED, SPF_NOPASS
-	DKIM_NOPASS, DMARC_NOPASS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:40fbb603-83d4-40e4-93d7-8c15ea63e4fb,IP:20,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:20
-X-CID-INFO: VERSION:1.3.19,REQID:40fbb603-83d4-40e4-93d7-8c15ea63e4fb,IP:20,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:20
-X-CID-META: VersionHash:7db8b62,CLOUDID:2ac71e1d8fe337a34aa18802dbdd9618,BulkI
-	D:260818103445VLMWCMQC,BulkQuantity:0,SF:10|66|78|81|82|102|123|127|850|86
-	5|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,Q
-	S:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,
-	ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5dc877189aad11f19a56ed5b684f684d-20260818
-X-User: liuqiqi@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <liuqiqi@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 906498104; Tue, 18 Aug 2026 10:34:41 +0800
-From: liuqiqi@kylinos.cn
-To: linux-mm@kvack.org
-Cc: tj@kernel.org,
-	mkoutny@suse.com,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Qiqi Liu <liuqiqi@kylinos.cn>
-Subject: [RFC PATCH 6/8] mm/memcontrol: add memory.tier control file
-Date: Tue, 18 Aug 2026 10:31:19 +0800
-Message-Id: <20260818023121.100613-7-liuqiqi@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260818023121.100613-1-liuqiqi@kylinos.cn>
-References: <20260818023121.100613-1-liuqiqi@kylinos.cn>
+	s=arc-20240116; t=1787020845; c=relaxed/simple;
+	bh=VjTzbzJ5U7fulfyPD/S6iBjuQ+IHP/erX76i5LQT7Og=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NpbXmW3JJN9swHKhqaKkniQbJo02JlHow1muCHAWPlh4Rk1y9+/aGaz4Jpz20RgAkGcJ1vpmKfQxdak7B+xaIJYP2NpccV0t6QKenQ+rDCe+SMHU53/JFaSsYR0T1xVsqwzrxG2FLsSW65Wmjq6DM7pzZz2lFS1E5ejeBl8Geyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=c2dFeVSl; arc=none smtp.client-ip=95.215.58.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="c2dFeVSl"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=VjTzbzJ5U7fulfyPD/S6iBjuQ+IHP/erX76i5LQT7Og=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787020839; v=1; x=1787625639;
+ b=c2dFeVSlgzJ1LnSRu8P9fBpSd4jqTo2vYQvM6hdrbUFBIIDrVmSnSro3n02v+JSv8ezhn66w
+ plwXV3TZatHPXhHqounD+WSYxk87PcuyIo6T6F6zBqMuG36jem8Kzo8YAQChd6LWLmnna+X4SMr
+ u+88g73pEEggZp4uzZs6Gf6Y=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from localhost (3.112.29.171)
+	by mta11.migadu.com with ESMTPS id 0adc373bf01fa8f4;
+	Tue, 18 Aug 2026 02:40:39 +0000
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 18 Aug 2026 10:40:35 +0800
+From: Baoquan He <baoquan.he@linux.dev>
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+	Ying Huang <ying.huang@linux.alibaba.com>,
+	Chris Li <chrisl@kernel.org>, Nico Pache <nico.pache@linux.dev>,
+	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>,
+	Gregory Price <gourry@gourry.net>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
+	Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
+	SeongJae Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
+	Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
+	Zicheng Wang <wangzicheng@honor.com>,
+	Chen Ridong <chenridong@xiaomi.com>,
+	Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Subject: Re: [PATCH RFC 04/15] mm/mglru: make generation page counters atomic
+Message-ID: <aoPGI__XtDJ08I96@MiWiFi-R3L-srv>
+References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
+ <20260804-mglru-fg-v1-4-4d8dad39dad6@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260804-mglru-fg-v1-4-4d8dad39dad6@tencent.com>
 
-From: Qiqi Liu <liuqiqi@kylinos.cn>
+On 08/04/26 at 03:47am, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
+> 
+> No feature change, convert them to atomic so we can update them without
+> holding the LRU lock. There is no risk of overflow. The reader always
+> compares and uses zero instead if the counter values are negative. It
+> follows final consistency.
 
-Introduce the memory.tier control file to expose per-tier usage and limits.
-Counters are pre-allocated during css_alloc or memory hotplug:
+It's better to tell this is a preparation patch, and who will use them
+in the coming patch or function. Otherwise we can't see why we need it
+if it's no feature change.
 
-  tierN.current=<bytes> (read-only)
-  tierN.high=<bytes|max> (default: max)
-  tierN.max=<bytes|max>  (default: max)
+The code change looks good to me.
 
-Writes are parsed via page_counter_memparse():
-  - high: Sets page_counter_set_high() and reclaims down to the new limit,
-    scoped to the tier's nodes, mirroring memory_high_write().
-  - max: Sets the limit via xchg() and reclaims or OOMs down to the new
-    limit, mirroring memory_max_write().
-
-Since counters are pre-allocated for all online tiers, updates require
-no memory allocation and return -ENOENT for unknown tiers.
-
-Example:
-  # cat memory.tier
-  tier4.current=1048576
-  tier4.high=max
-  tier4.max=536870912
-  # echo "tier4.high=268435456" > memory.tier
-
-Signed-off-by: Qiqi Liu <liuqiqi@kylinos.cn>
----
- mm/memcontrol.c | 104 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 104 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3aa55c287248..a6c6057f0e4f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4822,6 +4822,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+	struct memcg_tier_counter *tc;
- 
- 	page_counter_set_max(&memcg->memory, PAGE_COUNTER_MAX);
- 	page_counter_set_max(&memcg->swap, PAGE_COUNTER_MAX);
-@@ -4835,6 +4836,13 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- 	memcg1_soft_limit_reset(memcg);
- 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
- 	memcg_wb_domain_size_changed(memcg);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(tc, &memcg->tier_counters, list) {
-+		page_counter_set_max(&tc->counter, PAGE_COUNTER_MAX);
-+		page_counter_set_high(&tc->counter, PAGE_COUNTER_MAX);
-+	}
-+	rcu_read_unlock();
- }
- 
- struct aggregate_control {
-@@ -5331,6 +5339,96 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
- 	return nbytes;
- }
- 
-+static int memory_tier_show(struct seq_file *m, void *v)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
-+	struct memcg_tier_counter *tc;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(tc, &memcg->tier_counters, list) {
-+		seq_printf(m, "tier%d.current=%llu\n", tc->tier_id,
-+			(u64)page_counter_read(&tc->counter) * PAGE_SIZE);
-+		seq_printf(m, "tier%d.high=", tc->tier_id);
-+		seq_puts_memcg_tunable(m, READ_ONCE(tc->counter.high));
-+		seq_printf(m, "tier%d.max=", tc->tier_id);
-+		seq_puts_memcg_tunable(m, READ_ONCE(tc->counter.max));
-+	}
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
-+static ssize_t memory_tier_write(struct kernfs_open_file *of,
-+	char *buf, size_t nbytes, loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	struct memcg_tier_counter *tc;
-+	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
-+	bool drained = false;
-+	nodemask_t nodes, *nmp = NULL;
-+	unsigned long val;
-+	char knob[8], *p;
-+	int tier_id, err;
-+
-+	buf = strstrip(buf);
-+	if (sscanf(buf, "tier%d.%7[^=]", &tier_id, knob) != 2)
-+		return -EINVAL;
-+	if (strcmp(knob, "high") && strcmp(knob, "max"))
-+		return -EINVAL;
-+	p = strchr(buf, '=');
-+	if (!p)
-+		return -EINVAL;
-+	err = page_counter_memparse(p + 1, "max", &val);
-+	if (err)
-+		return err;
-+
-+	rcu_read_lock();
-+	tc = memcg_tier_counter_find(memcg, tier_id);
-+	rcu_read_unlock();
-+	if (!tc)
-+		return -ENOENT;
-+
-+	if (!tier_id_to_nodemask(tier_id, &nodes) && !nodes_empty(nodes))
-+		nmp = &nodes;
-+
-+	if (!strcmp(knob, "high"))
-+		page_counter_set_high(&tc->counter, val);
-+	else
-+		xchg(&tc->counter.max, val);
-+
-+	if (of->file->f_flags & O_NONBLOCK)
-+		return nbytes;
-+
-+	for (;;) {
-+		unsigned long nr_pages = page_counter_read(&tc->counter);
-+
-+		if (nr_pages <= val)
-+			break;
-+		if (signal_pending(current))
-+			break;
-+		if (!drained) {
-+			drain_all_tier_stock(memcg);
-+			drained = true;
-+			continue;
-+		}
-+		if (reclaim_tier(memcg, nr_pages - val, GFP_KERNEL, nmp))
-+			continue;
-+		if (nr_retries) {
-+			nr_retries--;
-+			continue;
-+		}
-+		if (!strcmp(knob, "max")) {
-+			memcg_memory_event(memcg, MEMCG_OOM);
-+			if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
-+				break;
-+			cond_resched();
-+		} else {
-+			break;
-+		}
-+	}
-+
-+	return nbytes;
-+}
-+
- /*
-  * Note: don't forget to update the 'samples/cgroup/memcg_event_listener'
-  * if any new events become available.
-@@ -5500,6 +5598,12 @@ static struct cftype memory_files[] = {
- 		.seq_show = memory_max_show,
- 		.write = memory_max_write,
- 	},
-+	{
-+		.name = "tier",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = memory_tier_show,
-+		.write = memory_tier_write,
-+	},
- 	{
- 		.name = "events",
- 		.flags = CFTYPE_NOT_ON_ROOT,
--- 
-2.43.0
-
+> 
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>  include/linux/mm_inline.h |  6 ++----
+>  include/linux/mmzone.h    |  2 +-
+>  mm/vmscan.c               | 20 ++++++++++----------
+>  3 files changed, 13 insertions(+), 15 deletions(-)
+> 
+> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> index 4076e3f7dcc8..018a2f54a5c9 100644
+> --- a/include/linux/mm_inline.h
+> +++ b/include/linux/mm_inline.h
+> @@ -245,11 +245,9 @@ static inline void lru_gen_update_size(struct lruvec *lruvec, struct folio *foli
+>  	VM_WARN_ON_ONCE(old_gen == -1 && new_gen == -1);
+>  
+>  	if (old_gen >= 0)
+> -		WRITE_ONCE(lrugen->nr_pages[old_gen][type][zone],
+> -			   lrugen->nr_pages[old_gen][type][zone] - delta);
+> +		atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type][zone]);
+>  	if (new_gen >= 0)
+> -		WRITE_ONCE(lrugen->nr_pages[new_gen][type][zone],
+> -			   lrugen->nr_pages[new_gen][type][zone] + delta);
+> +		atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][zone]);
+>  
+>  	/* addition */
+>  	if (old_gen < 0) {
+> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> index 8048c6b0544d..4225dab760ba 100644
+> --- a/include/linux/mmzone.h
+> +++ b/include/linux/mmzone.h
+> @@ -572,7 +572,7 @@ struct lru_gen_folio {
+>  	/* the multi-gen LRU lists, lazily sorted on eviction */
+>  	struct list_head folios[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+>  	/* the multi-gen LRU sizes, eventually consistent */
+> -	long nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+> +	atomic_long_t nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+>  	/* the exponential moving average of refaulted */
+>  	unsigned long avg_refaulted[ANON_AND_FILE][MAX_NR_TIERS];
+>  	/* the exponential moving average of evicted+protected */
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index f5b0a7c63a3a..b02d2ec8ff4b 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3354,8 +3354,7 @@ static void reset_batch_size(struct lru_gen_mm_walk *walk)
+>  			continue;
+>  
+>  		walk->nr_pages[gen][type][zone] = 0;
+> -		WRITE_ONCE(lrugen->nr_pages[gen][type][zone],
+> -			   lrugen->nr_pages[gen][type][zone] + delta);
+> +		atomic_long_add(delta, &lrugen->nr_pages[gen][type][zone]);
+>  
+>  		if (lru_gen_is_active(lruvec, gen))
+>  			lru += LRU_ACTIVE;
+> @@ -4044,8 +4043,8 @@ static bool inc_max_seq(struct lruvec *lruvec, unsigned long seq, int swappiness
+>  	for (type = 0; type < ANON_AND_FILE; type++) {
+>  		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
+>  			enum lru_list lru = type * LRU_INACTIVE_FILE;
+> -			long delta = lrugen->nr_pages[prev][type][zone] -
+> -				     lrugen->nr_pages[next][type][zone];
+> +			long delta = atomic_long_read(&lrugen->nr_pages[prev][type][zone]) -
+> +				     atomic_long_read(&lrugen->nr_pages[next][type][zone]);
+>  
+>  			if (!delta)
+>  				continue;
+> @@ -4163,7 +4162,8 @@ static unsigned long lruvec_evictable_size(struct lruvec *lruvec, int swappiness
+>  		for (seq = min_seq[type]; seq <= max_seq; seq++) {
+>  			gen = lru_gen_from_seq(seq);
+>  			for (zone = 0; zone < MAX_NR_ZONES; zone++)
+> -				total += max(READ_ONCE(lrugen->nr_pages[gen][type][zone]), 0L);
+> +				total += max(atomic_long_read(&lrugen->nr_pages[gen][type][zone]),
+> +					     0L);
+>  		}
+>  	}
+>  
+> @@ -4598,7 +4598,7 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+>  
+>  	for (i = 0; i < get_nr_gens(child_lruvec, type); i++) {
+>  		int gen = lru_gen_from_seq(child_lrugen->max_seq - i);
+> -		long nr_pages = child_lrugen->nr_pages[gen][type][zone];
+> +		long nr_pages = atomic_long_read(&child_lrugen->nr_pages[gen][type][zone]);
+>  		int child_lru_active = lru_gen_is_active(child_lruvec, gen) ? LRU_ACTIVE : 0;
+>  		int parent_lru_active = lru_gen_is_active(parent_lruvec, gen) ? LRU_ACTIVE : 0;
+>  
+> @@ -4606,9 +4606,8 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+>  		list_splice_tail_init(&child_lrugen->folios[gen][type][zone],
+>  				      &parent_lrugen->folios[gen][type][zone]);
+>  
+> -		WRITE_ONCE(child_lrugen->nr_pages[gen][type][zone], 0);
+> -		WRITE_ONCE(parent_lrugen->nr_pages[gen][type][zone],
+> -			   parent_lrugen->nr_pages[gen][type][zone] + nr_pages);
+> +		atomic_long_set(&child_lrugen->nr_pages[gen][type][zone], 0);
+> +		atomic_long_add(nr_pages, &parent_lrugen->nr_pages[gen][type][zone]);
+>  
+>  		if (lru_gen_is_active(child_lruvec, gen) != lru_gen_is_active(parent_lruvec, gen)) {
+>  			__update_lru_size(child_lruvec, lru + child_lru_active, zone, -nr_pages);
+> @@ -5650,7 +5649,8 @@ static int lru_gen_seq_show(struct seq_file *m, void *v)
+>  			char mark = full && seq < min_seq[type] ? 'x' : ' ';
+>  
+>  			for (zone = 0; zone < MAX_NR_ZONES; zone++)
+> -				size += max(READ_ONCE(lrugen->nr_pages[gen][type][zone]), 0L);
+> +				size += max(atomic_long_read(&lrugen->nr_pages[gen][type][zone]),
+> +					    0L);
+>  
+>  			seq_printf(m, " %10lu%c", size, mark);
+>  		}
+> 
+> -- 
+> 2.55.0
+> 
+> 
