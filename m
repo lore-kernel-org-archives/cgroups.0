@@ -1,101 +1,205 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 535044477E8
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 09:52:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D483C3F71
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 10:03:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787046746; cv=none; b=g23/G0MX9R5JKfRfJQfaKqSxajfC6RH50+bB0QoStFGB0S52IZHV4mHQYVlx9PHQ+HJ91B76cxtKv1cbZLyAPGcd9WLLOfpTESSNNN092kZ6+5r+Wc7aXV9mhIeIbTJaJ/vRDh4ecUapnb4QSFuQTpReMqPoe6Tj2ojP6wXn2Ww=
+	t=1787047396; cv=none; b=kYCfXudKjsKVV6Z6+sStNmdfg89vWTJ666A6JF3Ij8uMQ2bLXo8pypd9+LcT9x4io5wRLqggGm+MHfjVIR22SCdCc2HDGbzn5GyGyvnKqtsLpKAWtakZW9ezv4v78dX4PRidajfVPG2gpRRURSNlH7IgegcrPPVNhOreSJowPpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787046746; c=relaxed/simple;
-	bh=V+D/8GWaVoFr6lP9vCYb9JERaqL8Hy7u1uNy8umu5HQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QTagSJO6fG4H12alYbIqFDSs49YQTxicm4YHTtg+uSxZcdRn8PaRtIMO+PFYFFP2n30OYUX5SajnZaHzWnlq42TS52iVz1vtK2GsEMjgbCinoC+meIO6mw74WvWHCyjThy3PPFIwjnxJUz0JdM81eQ3By/SqFFpFxI/Qa/7qVBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=e3pN03fb; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1787047396; c=relaxed/simple;
+	bh=BvmaXazGKW5MZujZ8tTzbOk2WnfCXozE0UgtGky7/6g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cLrVkU62ufiWQvVBAFtvvw0i2t5W/51tKzRKOPbI+uhlCgwVHxA61qQQB9GsMTkp6nEeLN+l1yx0yaAqZ0W/OtvHez04+CGz/2I3BouGW1CMOLAL4vcXwZP2/XMCX3U1Nvq4TMjrhY7NXamh8cmKJ3hxJ/GWvWCmTyaD0sSsGzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=L4CqqfzF; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="e3pN03fb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787046745; x=1818582745;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=V+D/8GWaVoFr6lP9vCYb9JERaqL8Hy7u1uNy8umu5HQ=;
-  b=e3pN03fbk7W7QrDpd0/yZHWbmSQ65k6cvITmJDeNLdD8keBescQSV77m
-   L1ZmSWlrK/Ofn3HCda5qBPDcRTXY2Wj98Vf9duWQJRh7a7aO2CA9F7+Uc
-   hOQPmMfyOw4giGSZ1NeAAiFXbhi34mZyoUFsdflssDE1xHKfMfa7oluBV
-   zj4EbIKFuenikHd/2PGxV+pMjbvRLxh8vMXnrXznMez8oEkxd3qfO0xvI
-   JF6vGXjxuEqKoOLgH+U9uaYjiOgPuMnblgOdmZfi1zvgMqPaiTH2lI9V9
-   Y3x2WiCzD4iEW9jAoXCfo2Q/ZXYd4zKFcAlX7iVFN8aD4LnQaeJW+ocV3
-   w==;
-X-CSE-ConnectionGUID: j3gBSeNFTle2Gn0gopdgvA==
-X-CSE-MsgGUID: 8XYQp64tShy14uGvGIkeKw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11878"; a="87409529"
-X-IronPort-AV: E=Sophos;i="6.25,230,1779174000"; 
-   d="scan'208";a="87409529"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2026 02:51:53 -0700
-X-CSE-ConnectionGUID: a/kComlGTwu9KQTR8YbPGA==
-X-CSE-MsgGUID: 5WDSmiQaTGuKOTIR8p5TwA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,230,1779174000"; 
-   d="scan'208";a="270398236"
-Received: from pgcooper-mobl3.ger.corp.intel.com (HELO [10.245.244.14]) ([10.245.244.14])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Aug 2026 02:51:50 -0700
-Message-ID: <66ff58b7b0396106898cfc54c73240a0dcaaf049.camel@linux.intel.com>
-Subject: Re: [RFC] dmisc cgroups controller
-From: Thomas =?ISO-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: maarten.lankhorst@linux.intel.com, intel-xe@lists.freedesktop.org, 
-	cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	pallavi.mishra@intel.com
-Date: Tue, 18 Aug 2026 11:51:48 +0200
-In-Reply-To: <aoILQuck_EuxQgVh@slm.duckdns.org>
-References: <894f9d44eae62aee5762495b4f90f9bdd2b5585d.camel@linux.intel.com>
-	 <aoILQuck_EuxQgVh@slm.duckdns.org>
-Organization: Intel Sweden AB, Registration Number: 556189-6027
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="L4CqqfzF"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4998e0916faso24833105e9.2
+        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 03:03:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1787047389; x=1787652189; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=BTSEVb32olrehgQ8+kMO9r1tytqXhQqOIt2PkeskveQ=;
+        b=L4CqqfzF20ocJSB8PMQKafWEdTt/NqV6uMingimvrvSCj5QPgdFsP5jHfksPSYSmwy
+         +YBXg5naCecliuizrv8nXfsSw2vA9amnJPlVEKI4KzSmqQ7xB/ixie5OvjMwWJdI9yOt
+         KBPI4h5K2NU7hUnZXvfI/POFl/U9MFtjUqHNehf3FiBrXzDtT1QeVvBRgy0BKLzj6r0z
+         V9NELbLHAs5JCfdoKxgDP4Cfl96B5i2f2sdUMKESImTPcB1cXYjOUb4VCW3Rv9yGGf5C
+         fo1/MWCrXhTuZ8Uxnr4AIUOFkLTiEaP93AKzKYcBcCfhCMBEM3Ej9iHPIvKfvi2OS18X
+         n5Kw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787047389; x=1787652189;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=BTSEVb32olrehgQ8+kMO9r1tytqXhQqOIt2PkeskveQ=;
+        b=s/osViJ6jSqihMa0fxveP5zeMrwMYu5nVYvUznDW2azrVp4PImObb62zRseiVr+A2O
+         FTUjrt2BrzdvaIRQyiMRHuIF8lmZYegC8nrR/k+P3ilRh42YP5yBRdBlYVe/K2aAoPbO
+         MsghzRxgBWHYwYGmfa0jKBaLsvTe9WnhJ7arZszb1jS6YSdOfUIDBun+L1V3/skt4PUE
+         UDF9cSUr9zfZOcTXiM+FeauQd4nsRHDYatMOBC+BWkZElJDc1vus8xlnnUfgM3tzJAy6
+         9S0mlz0uqfoRawqbtRZC3Ug5+oiZlKaPWWgQQj+Tcu0jM7fZrP3GhYXSa/B4udmYcqc8
+         qQbA==
+X-Forwarded-Encrypted: i=1; AHgh+RolBWt6LUhSYO9fzCairBhlRjs3km6HPpLG/B+HZx4WDjdoJNoncYQvjn3pFo6iGnAK+K050VcK@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyft6AmkxOtB7UgHA/R/dgXuCMeImc8ee7fd9yiSRa8hkmRtvO4
+	c4hTM/UTre2bSerPB1kebftcVNbrUp0apDYQwn4XGrYelqwpyaXHKT+KAXKEwm1Vyvw=
+X-Gm-Gg: AR+sD12/IcZGMufr1IfDwx71mu8prMRpMWSLH6uu+rtEcliSzEzcvTDrwP/e1JkJa1h
+	GrGfb1AfcVqWYtoGvLE1hPSEBIUBqjNquhsS2zx5c199mgWOeDgXnL4DzuGt+D8f57gIi8g+yoz
+	ja22zVlZDW4DtwlI6ilwOe6earF/QMCArbR6R5VE1ViUICg2StlCdMDnmlQO1VoCCW/7L+g+KUN
+	OKtZkWYiiTYqnSqSpMcEurnzAuP++On/c+IMNmqosPDLqrMGpSAhr1pcaeFpqnMxCDJ4n/pko8G
+	IJWvEo7PL+VA26AWzd88it/7Zur7OUGnWr056m1Lg4ltgKzHKw8sLHUm5812oqBVrfJGah7nWeD
+	+yOi4ljJbbYYCmzKx+o0mE60jFEyei2e1TLdIgL2ARySk9fAGHtQc76LRwOK6H1eikf79EOlW9Y
+	oMrF9QLkhSSfqJQVpTwL7n94UPgIYKCcsfpuGYldLg51uSu282Nt0jRsGl7v54B+a3+BFAO0H3D
+	Q==
+X-Received: by 2002:a05:600c:1d0e:b0:495:7888:281c with SMTP id 5b1f17b1804b1-499878cd5bcmr458829475e9.0.1787047389481;
+        Tue, 18 Aug 2026 03:03:09 -0700 (PDT)
+Received: from localhost (109-81-87-166.rct.o2.cz. [109.81.87.166])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499906aaf1dsm213884115e9.4.2026.08.18.03.03.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Aug 2026 03:03:09 -0700 (PDT)
+Date: Tue, 18 Aug 2026 12:03:07 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joy Chaoyue Xiong <joyxiong@yahoo.com>
+Subject: Re: [PATCH] memcg: trim the per-cpu charge stock instead of draining
+ it
+Message-ID: <aoQt2zKsQT-rvjd6@tiehlicka>
+References: <20260817234651.666540-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260817234651.666540-1-shakeel.butt@linux.dev>
 
-On Sun, 2026-08-16 at 09:10 -1000, Tejun Heo wrote:
-> On Fri, Aug 14, 2026 at 11:32:54AM +0200, Thomas Hellstr=C3=B6m wrote:
-> > Hi!
-> >=20
-> > We (drm/xe GPU driver) have a use-case where we have a very limited
-> > number of a particular device resource (CLOS slots) that we
-> > potentially
-> > want to expose to unprivlieged processes for reservation /
-> > allocation.
-> > We want to be able to restrict per cgroups the number of CLOS slots
-> > that are available for reservation / allocation.
-> >=20
-> > This is not a good fit for the misc controller since these resource
-> > types may be added and removed similar to dmem regions. Neither is
-> > it a
-> > good fit for the dmem controller.
-> >=20
-> > Would a dmisc controller be suitable here? It would be similar to
-> > the
-> > misc countroller but with dynamic addition and removal of resource
-> > types similar to the dmem controller.
-> >=20
-> > Any input greatly appreciated.
->=20
-> Would extending the existing misc controller be an option?
+On Mon 17-08-26 16:46:51, Shakeel Butt wrote:
+> Joy reported that an application generating a request/response traffic
+> pattern spends 44.6% to 57.0% of CPU in the memcg charge/uncharge path
+> for a range of message sizes, against 0.27% to 0.71% outside that range.
+> Running from the root memcg, where socket memory accounting is skipped,
+> recovers the performance.
+> 
+> Tracing the charge path showed that the application generates a pattern
+> where the write syscall charges one page and the read syscall uncharges
+> two pages on the same CPU. This hits a corner case in the memcg percpu
+> stock code that thrashes the stock continuously.
+> 
+> In the memcg percpu stock code, MEMCG_CHARGE_BATCH (64) is both the high
+> watermark and the emptying target, i.e. on a request to charge one page
+> the kernel charges MEMCG_CHARGE_BATCH pages and caches
+> (MEMCG_CHARGE_BATCH - 1) of them in the percpu stock. The following
+> uncharge of 2 pages takes the cached count to (MEMCG_CHARGE_BATCH + 1),
+> and refill_stock() then empties the cache completely. With such a
+> pattern the percpu stock becomes completely ineffective.
+> 
+> Instead of a single boundary point for charges, use the technique the
+> page allocator uses for its own percpu caches, which keeps the watermark
+> and the emptying target apart: nr_pcp_free() frees between batch and
+> high - batch pages, leaving at least pcp->batch on the list. Add a high
+> watermark MEMCG_STOCK_HIGH and, once the cached count goes over it,
+> return only the pages above MEMCG_STOCK_LOW. The watermarks are
+> MEMCG_CHARGE_BATCH apart, so a page_counter update still covers a full
+> batch. Peak cached pages per memcg grows from 64 to 96, the same
+> high-versus-batch tradeoff the page allocator makes.
 
-Certainly. I think a main concern though would be testing of the
-existing use-cases. But anyway I'll take a look in that direction.
+The idea is sound. I would just not increase the overall stock size in
+the same patch. Fine tuning can be done independently and ideally with
+some numbers.
+Would it make sense to start with MEMCG_STOCK_HIGH := MEMCG_CHARGE_BATCH 
+and  MEMCG_CHARGE_BATCH := MEMCG_CHARGE_BATCH / 2. That would preserve
+the maximum stock size while preventing all or nothing behavior which is
+indeed suboptimal and pushing charging path to a slower path way too
+aggressively.
 
-Thanks,
-Thomas
+WDYT?
 
->=20
-> Thanks.
+> Reported-by: Joy Chaoyue Xiong <joyxiong@yahoo.com>
+> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> ---
+>  mm/memcontrol.c | 31 +++++++++++++++++++++++++------
+>  1 file changed, 25 insertions(+), 6 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 17da1f43b7d3..ff7fbcd27422 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2048,6 +2048,21 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
+>   * nr_pages in a single cacheline. This may change in future.
+>   */
+>  #define NR_MEMCG_STOCK 7
+> +
+> +/*
+> + * Watermarks for a charge stock slot, in the spirit of pcp->high and
+> + * pcp->batch: MEMCG_STOCK_HIGH is the high watermark at which a slot is
+> + * trimmed, and it is trimmed down to MEMCG_STOCK_LOW rather than emptied.
+> + *
+> + * Using MEMCG_CHARGE_BATCH as both high watermark and emptying target
+> + * thrashes: charging one page stocks 63, an uncharge of 2 takes the count
+> + * to 65 and empties the slot, and the next charge misses. The watermarks
+> + * are MEMCG_CHARGE_BATCH apart, so a page_counter update still covers a
+> + * full batch.
+> + */
+> +#define MEMCG_STOCK_LOW		(MEMCG_CHARGE_BATCH / 2)
+> +#define MEMCG_STOCK_HIGH	(MEMCG_STOCK_LOW + MEMCG_CHARGE_BATCH)
+> +
+>  #define FLUSHING_CACHED_CHARGE	0
+>  struct memcg_stock_pcp {
+>  	local_trylock_t lock;
+> @@ -2223,17 +2238,18 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>  {
+>  	struct memcg_stock_pcp *stock;
+>  	struct mem_cgroup *cached;
+> -	uint8_t stock_pages;
+> +	unsigned int stock_pages;
+>  	bool success = false;
+>  	int empty_slot = -1;
+>  	int i;
+>  
+>  	/*
+> -	 * For now limit MEMCG_CHARGE_BATCH to 127 and less. In future if we
+> -	 * decide to increase it more than 127 then we will need more careful
+> -	 * handling of nr_pages[] in struct memcg_stock_pcp.
+> +	 * nr_pages[] is a uint8_t and a slot's count is capped at
+> +	 * MEMCG_STOCK_HIGH. Raising MEMCG_CHARGE_BATCH beyond 127 would need
+> +	 * more careful handling of nr_pages[] in struct memcg_stock_pcp.
+>  	 */
+>  	BUILD_BUG_ON(MEMCG_CHARGE_BATCH > S8_MAX);
+> +	BUILD_BUG_ON(MEMCG_STOCK_HIGH > U8_MAX);
+>  
+>  	VM_WARN_ON_ONCE(mem_cgroup_is_root(memcg));
+>  
+> @@ -2254,9 +2270,12 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>  			empty_slot = i;
+>  		if (memcg == READ_ONCE(stock->cached[i])) {
+>  			stock_pages = READ_ONCE(stock->nr_pages[i]) + nr_pages;
+> +			if (stock_pages > MEMCG_STOCK_HIGH) {
+> +				memcg_uncharge(memcg,
+> +					       stock_pages - MEMCG_STOCK_LOW);
+> +				stock_pages = MEMCG_STOCK_LOW;
+> +			}
+>  			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+> -			if (stock_pages > MEMCG_CHARGE_BATCH)
+> -				drain_stock(stock, i);
+>  			success = true;
+>  			break;
+>  		}
+> -- 
+> 2.53.0-Meta
+
+-- 
+Michal Hocko
+SUSE Labs
