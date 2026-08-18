@@ -1,20 +1,20 @@
 Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382DB3ACA45;
-	Tue, 18 Aug 2026 02:34:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69FFE3AB276;
+	Tue, 18 Aug 2026 02:34:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787020496; cv=none; b=obZClpV1leAFq8BrFxiS9sApmTBmiKW7tkMH+u9XqkZvCES1K4nIvK1S87+TYDYox90XWh98OAu5A2RMRxqBuQ/2fTlyq0DigbnhLIXqqRjF7EceJMHp09M/pgPXLhQF2FtGWyHEoNO9piTR10lWsvPyIuhtV/TwlVkhZ/GI94c=
+	t=1787020496; cv=none; b=AxOon4v+JudG7Qqdi1BPCrLAP5izDkCEPX8wrY3rC0MNdNFxh+pgiULcMFROwteYPE3gzJ9JCVjpYx20v4JcIor6PfUsD9E1/1OcobMlNc1QnUezdvr9vzUQMRs0BxLTJUbUmW6gvvDyk3ybR2rHEplUDanvc4Nfrju3NOOZ72c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787020496; c=relaxed/simple;
-	bh=EUCYV5WLerLnWTIW5wSUpOElTxXpodXJKYlmLSK4cAs=;
+	bh=wZV+KewsRgic+CD/5FIL2+TTMw3wSZ8iB6ir94bgiy4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iCpm16IMBT5I5aqJFAxSIVztj+fix14rn1yjGow23yz1Kfl5yQaOSr+W9Xg05EjOhKaklJ0JJ7KYOND7L13KYKTrn5WsL9+pVJAEQvg2WloCL4H7GOxoJSCwthL7otPNebdliYwvYYPfllUt+QKj1c0ecA5/k1Co9AKURKJfNNg=
+	 MIME-Version; b=GTlyBhnb93QRBK8bMHErQWLNWUCHp4wPYYZYwGVa4p96gJ9EBlsWAgZqZPBO32Nrg1x1FXgcK+NG6tyDx4htomH7OedrrQgd95aWCspS7ZbKVTybHHuVThD8GFhYl53i+0uprpTdUK3WGblA9PYc8k/clCT3t0wcLjgdvd/0nYs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 5eb877b89aad11f19a56ed5b684f684d-20260818
+X-UUID: 5fe496089aad11f19a56ed5b684f684d-20260818
 X-CTIC-Tags:
 	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
 	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_SJ_DIGIT_LEN
@@ -23,14 +23,14 @@ X-CTIC-Tags:
 	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_EXISTED, SPF_NOPASS
 	DKIM_NOPASS, DMARC_NOPASS
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:47b39f94-5733-4409-ade2-c20ebd433867,IP:20,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:20
-X-CID-INFO: VERSION:1.3.19,REQID:47b39f94-5733-4409-ade2-c20ebd433867,IP:20,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:20
-X-CID-META: VersionHash:7db8b62,CLOUDID:526b657b963702cc31f9e22cb15c8b3c,BulkI
-	D:260818103445NRLI4JDV,BulkQuantity:0,SF:10|66|78|81|82|102|123|127|850|86
+X-CID-O-INFO: VERSION:1.3.19,REQID:c7719b35-c094-417e-bc13-1e9966fa1b7d,IP:20,
+	URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:15
+X-CID-INFO: VERSION:1.3.19,REQID:c7719b35-c094-417e-bc13-1e9966fa1b7d,IP:20,UR
+	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:15
+X-CID-META: VersionHash:7db8b62,CLOUDID:73bca6833ccae5fbc10dbdc037161fd1,BulkI
+	D:2608181034484JTE4WQJ,BulkQuantity:0,SF:10|66|78|81|82|102|123|127|850|86
 	5|898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,Q
 	S:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,
 	ARC:0
@@ -38,12 +38,12 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5eb877b89aad11f19a56ed5b684f684d-20260818
+X-UUID: 5fe496089aad11f19a56ed5b684f684d-20260818
 X-User: liuqiqi@kylinos.cn
 Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
 	(envelope-from <liuqiqi@kylinos.cn>)
 	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1131665455; Tue, 18 Aug 2026 10:34:43 +0800
+	with ESMTP id 1068612023; Tue, 18 Aug 2026 10:34:45 +0800
 From: liuqiqi@kylinos.cn
 To: linux-mm@kvack.org
 Cc: tj@kernel.org,
@@ -57,9 +57,9 @@ Cc: tj@kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Qiqi Liu <liuqiqi@kylinos.cn>
-Subject: [RFC PATCH 7/8] mm/memcontrol: auto-derive tier high/max from memory.high/max
-Date: Tue, 18 Aug 2026 10:31:20 +0800
-Message-Id: <20260818023121.100613-8-liuqiqi@kylinos.cn>
+Subject: [RFC PATCH 8/8] cgroup: add memory_tiered_limits cgroup mount option
+Date: Tue, 18 Aug 2026 10:31:21 +0800
+Message-Id: <20260818023121.100613-9-liuqiqi@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260818023121.100613-1-liuqiqi@kylinos.cn>
 References: <20260818023121.100613-1-liuqiqi@kylinos.cn>
@@ -73,266 +73,245 @@ Content-Transfer-Encoding: 8bit
 
 From: Qiqi Liu <liuqiqi@kylinos.cn>
 
-Per-tier limits are derived by default from the cgroup-wide memory.high
-and memory.max knobs based on the tier's capacity ratio:
+Introduce the memory_tiered_limits cgroup v2 mount option to enable
+tier-aware memory control. The option follows the same pattern as
+memory_recursiveprot and memory_hugetlb_accounting.
 
-  tierN.high = memory.high * tierN_capacity / total_capacity
-  tierN.max  = memory.max  * tierN_capacity / total_capacity
+When enabled, per-tier accounting, charging, stock batching, auto-
+derivation, and the memory.tier control file are active. When disabled
+(default), all tier-specific code is gated at entry points: no counters
+are created, no charge/uncharge occurs, and memory.tier remains empty.
+This ensures no measurable overhead for systems that do not opt in.
 
-This provides zero-config tier partitioning. Setting memory.high or
-memory.max automatically splits the budget across tiers proportionally
-to their physical size. For instance, a 4G cgroup on a system with a
-75%/25% DRAM/CXL split automatically receives ~3G DRAM and ~1G CXL.
+Usage:
+  mount -t cgroup2 none /sys/fs/cgroup -o memory_tiered_limits
 
-The capacity cache and the derived limits are refreshed on node memory
-hotplug, both when node memory is added and when it is removed.
-
-Writing an explicit value pins the limit and disables auto-derivation
-for that tier, decoupling it from subsequent memory.high/max updates.
+Because the cgroup2 mount is owned by the init system, early-boot
+cgroups are created before userspace can specify mount options. To
+cover these boot-time cgroups, mirror the cgroup_favordynmods approach
+and add a kernel command-line parameter,
+cgroup_memory_tiered_limits=<bool>.
+This sets CGRP_ROOT_MEMORY_TIERED_LIMITS on all cgroup2 mounts by
+default. The mount option remains available for runtime, per-mount
+control.
 
 Signed-off-by: Qiqi Liu <liuqiqi@kylinos.cn>
 ---
- include/linux/memcontrol.h |   2 +
- mm/memcontrol.c            | 162 +++++++++++++++++++++++++++++++++----
- 2 files changed, 150 insertions(+), 14 deletions(-)
+ include/linux/cgroup-defs.h |  5 +++++
+ include/linux/memcontrol.h  | 12 ++++++++++++
+ kernel/cgroup/cgroup.c      | 21 +++++++++++++++++++++
+ mm/memcontrol.c             | 22 ++++++++++++++++++----
+ 4 files changed, 56 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index fa944e4bc5ad..8848bc5eeb24 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -205,6 +205,8 @@ struct memcg_tier_counter {
- 	int tier_id;
- 	struct list_head list;
- 	struct rcu_head rcu;
-+	bool max_derived;	/* true: derive from memory.max by capacity ratio */
-+	bool high_derived;	/* true: derive from memory.high by capacity ratio */
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index de2cd6238c2a..4324d68dbce9 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -129,6 +129,11 @@ enum {
+ 	 * Enable legacy local pids.events.
+ 	 */
+ 	CGRP_ROOT_PIDS_LOCAL_EVENTS = (1 << 20),
++
++	/*
++	 * Enable tier-aware limits for the memory controller.
++	 */
++	CGRP_ROOT_MEMORY_TIERED_LIMITS = (1 << 21),
  };
  
- struct mem_cgroup {
+ /* cftype->flags */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 8848bc5eeb24..094b9a839977 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -544,6 +544,18 @@ static inline bool mem_cgroup_disabled(void)
+ 	return !cgroup_subsys_enabled(memory_cgrp_subsys);
+ }
+ 
++#ifdef CONFIG_NUMA
++static inline bool mem_cgroup_tiered_limits(void)
++{
++	return cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_TIERED_LIMITS;
++}
++#else
++static inline bool mem_cgroup_tiered_limits(void)
++{
++	return false;
++}
++#endif
++
+ static inline void mem_cgroup_protection(struct mem_cgroup *root,
+ 					 struct mem_cgroup *memcg,
+ 					 unsigned long *min,
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 38f8d9df8fbc..da94bcda0859 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -231,6 +231,7 @@ static u32 have_release_callback __read_mostly;
+ static u32 have_canfork_callback __read_mostly;
+ 
+ static bool have_favordynmods __ro_after_init = IS_ENABLED(CONFIG_CGROUP_FAVOR_DYNMODS);
++static bool have_memory_tiered_limits __ro_after_init;
+ 
+ /*
+  * Write protected by cgroup_mutex and write-lock of cgroup_threadgroup_rwsem,
+@@ -1985,6 +1986,7 @@ enum cgroup2_param {
+ 	Opt_memory_recursiveprot,
+ 	Opt_memory_hugetlb_accounting,
+ 	Opt_pids_localevents,
++	Opt_memory_tiered_limits,
+ 	nr__cgroup2_params
+ };
+ 
+@@ -1995,6 +1997,7 @@ static const struct fs_parameter_spec cgroup2_fs_parameters[] = {
+ 	fsparam_flag("memory_recursiveprot",	Opt_memory_recursiveprot),
+ 	fsparam_flag("memory_hugetlb_accounting", Opt_memory_hugetlb_accounting),
+ 	fsparam_flag("pids_localevents",	Opt_pids_localevents),
++	fsparam_flag("memory_tiered_limits",	Opt_memory_tiered_limits),
+ 	{}
+ };
+ 
+@@ -2027,6 +2030,9 @@ static int cgroup2_parse_param(struct fs_context *fc, struct fs_parameter *param
+ 	case Opt_pids_localevents:
+ 		ctx->flags |= CGRP_ROOT_PIDS_LOCAL_EVENTS;
+ 		return 0;
++	case Opt_memory_tiered_limits:
++		ctx->flags |= CGRP_ROOT_MEMORY_TIERED_LIMITS;
++		return 0;
+ 	}
+ 	return -EINVAL;
+ }
+@@ -2068,6 +2074,11 @@ static void apply_cgroup_root_flags(unsigned int root_flags)
+ 			cgrp_dfl_root.flags |= CGRP_ROOT_PIDS_LOCAL_EVENTS;
+ 		else
+ 			cgrp_dfl_root.flags &= ~CGRP_ROOT_PIDS_LOCAL_EVENTS;
++
++		if (root_flags & CGRP_ROOT_MEMORY_TIERED_LIMITS)
++			cgrp_dfl_root.flags |= CGRP_ROOT_MEMORY_TIERED_LIMITS;
++		else
++			cgrp_dfl_root.flags &= ~CGRP_ROOT_MEMORY_TIERED_LIMITS;
+ 	}
+ }
+ 
+@@ -2085,6 +2096,8 @@ static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root
+ 		seq_puts(seq, ",memory_hugetlb_accounting");
+ 	if (cgrp_dfl_root.flags & CGRP_ROOT_PIDS_LOCAL_EVENTS)
+ 		seq_puts(seq, ",pids_localevents");
++	if (cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_TIERED_LIMITS)
++		seq_puts(seq, ",memory_tiered_limits");
+ 	return 0;
+ }
+ 
+@@ -2363,6 +2376,8 @@ static int cgroup_init_fs_context(struct fs_context *fc)
+ 
+ 	if (have_favordynmods)
+ 		ctx->flags |= CGRP_ROOT_FAVOR_DYNMODS;
++	if (have_memory_tiered_limits)
++		ctx->flags |= CGRP_ROOT_MEMORY_TIERED_LIMITS;
+ 
+ 	return 0;
+ }
+@@ -7214,6 +7229,12 @@ static int __init cgroup_favordynmods_setup(char *str)
+ }
+ __setup("cgroup_favordynmods=", cgroup_favordynmods_setup);
+ 
++static int __init cgroup_memory_tiered_limits_setup(char *str)
++{
++	return (kstrtobool(str, &have_memory_tiered_limits) == 0);
++}
++__setup("cgroup_memory_tiered_limits=", cgroup_memory_tiered_limits_setup);
++
+ /**
+  * css_tryget_online_from_dir - get corresponding css from a cgroup dentry
+  * @dentry: directory dentry of interest
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a6c6057f0e4f..f39a702d2301 100644
+index f39a702d2301..891051f164ff 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2443,6 +2443,8 @@ static int memcg_tier_counter_create(struct mem_cgroup *memcg,
- 	page_counter_init(&new->counter, parent_cnt, false);
- 	page_counter_set_high(&new->counter, PAGE_COUNTER_MAX);
- 	INIT_LIST_HEAD(&new->list);
-+	new->max_derived = true;
-+	new->high_derived = true;
+@@ -2462,7 +2462,7 @@ static void memcg_charge_tier_id(struct mem_cgroup *memcg, int tier_id,
+ {
+ 	struct memcg_tier_counter *tc;
  
- 	spin_lock(&memcg->tier_lock);
- 	if (memcg_tier_counter_find(memcg, tier_id)) {
-@@ -2514,6 +2516,115 @@ reclaim_tier(struct mem_cgroup *memcg, unsigned int nr_pages, gfp_t gfp_mask,
- 	return nr_reclaimed;
- }
+-	if (tier_id < 0)
++	if (!mem_cgroup_tiered_limits() || tier_id < 0)
+ 		return;
+ 	rcu_read_lock();
+ 	tc = memcg_tier_counter_find(memcg, tier_id);
+@@ -2476,7 +2476,7 @@ static void memcg_uncharge_tier_id(struct mem_cgroup *memcg, int tier_id,
+ {
+ 	struct memcg_tier_counter *tc;
  
-+/* Global per-tier capacity cache.
-+ * Populated at boot and on node hotplug (walks online nodes only, no memcg touch).
-+ * Stores (tier_id, capacity) pairs to support sparse tier IDs (e.g., 4, 22, 52)
-+ * without requiring a dense index.
-+ */
-+#define NR_TIER_CAP_ENTRIES 16
-+struct tier_cap_entry {
-+	int tier_id;
-+	unsigned long capacity;
-+};
-+static struct tier_cap_entry tier_cap_entries[NR_TIER_CAP_ENTRIES];
-+static int nr_tier_entries;
-+static unsigned long tier_total_capacity;
-+/* Guards the per-tier capacity cache. */
-+static DEFINE_SPINLOCK(tier_cap_lock);
-+
-+static void update_tier_capacity_cache(void)
-+{
-+	int nid;
-+	int i;
-+
-+	spin_lock(&tier_cap_lock);
-+	nr_tier_entries = 0;
-+	tier_total_capacity = 0;
-+	for (i = 0; i < NR_TIER_CAP_ENTRIES; i++) {
-+		tier_cap_entries[i].tier_id = -1;
-+		tier_cap_entries[i].capacity = 0;
-+	}
-+
-+	for_each_online_node(nid) {
-+		int tid = node_to_tier_id(nid);
-+		unsigned long cap;
-+
-+		if (tid < 0)
-+			continue;
-+		cap = node_present_pages(nid);
-+		for (i = 0; i < nr_tier_entries; i++)
-+			if (tier_cap_entries[i].tier_id == tid) {
-+				tier_cap_entries[i].capacity += cap;
-+				tier_total_capacity += cap;
-+				break;
-+			}
-+		if (i == nr_tier_entries && nr_tier_entries < NR_TIER_CAP_ENTRIES) {
-+			tier_cap_entries[nr_tier_entries].tier_id = tid;
-+			tier_cap_entries[nr_tier_entries].capacity = cap;
-+			nr_tier_entries++;
-+			tier_total_capacity += cap;
-+		} else if (i == nr_tier_entries) {
-+			pr_warn_ratelimited("memcg: tier capacity cache full (>%d tiers), tier %d not tracked\n",
-+					    NR_TIER_CAP_ENTRIES, tid);
-+		}
-+	}
-+	spin_unlock(&tier_cap_lock);
-+}
-+
-+/* Push derived high/max limits to tier counters of @memcg.
-+ * Invoked on memory.high/max writes and capacity changes (hotplug).
-+ */
-+static void tier_update_derived_limits(struct mem_cgroup *memcg)
-+{
-+	struct memcg_tier_counter *tc;
-+	struct tier_cap_entry local_entries[NR_TIER_CAP_ENTRIES];
-+	unsigned long total;
-+	int i, nr_entries;
-+
-+	spin_lock(&tier_cap_lock);
-+	total = tier_total_capacity;
-+	nr_entries = nr_tier_entries;
-+	memcpy(local_entries, tier_cap_entries, sizeof(local_entries));
-+	spin_unlock(&tier_cap_lock);
-+
-+	if (total == 0)
+-	if (tier_id < 0)
++	if (!mem_cgroup_tiered_limits() || tier_id < 0)
+ 		return;
+ 	rcu_read_lock();
+ 	tc = memcg_tier_counter_find(memcg, tier_id);
+@@ -2581,6 +2581,9 @@ static void tier_update_derived_limits(struct mem_cgroup *memcg)
+ 	unsigned long total;
+ 	int i, nr_entries;
+ 
++	if (!mem_cgroup_tiered_limits())
 +		return;
 +
-+	/* Serialize flag check + limit store against memory.tier writes. */
-+	spin_lock(&memcg->tier_lock);
-+	list_for_each_entry_rcu(tc, &memcg->tier_counters, list,
-+				lockdep_is_held(&memcg->tier_lock)) {
-+		unsigned long cap = 0;
+ 	spin_lock(&tier_cap_lock);
+ 	total = tier_total_capacity;
+ 	nr_entries = nr_tier_entries;
+@@ -3198,6 +3201,9 @@ static void refill_tier_stock(struct mem_cgroup *memcg, int tier_id,
+ 	uint8_t pages;
+ 	int i;
+ 
++	if (!mem_cgroup_tiered_limits())
++		return;
 +
-+		for (i = 0; i < nr_entries; i++)
-+			if (local_entries[i].tier_id == tc->tier_id) {
-+				cap = local_entries[i].capacity;
-+				break;
-+			}
-+		if (cap == 0)
-+			continue;
-+		if (READ_ONCE(tc->max_derived)) {
-+			unsigned long mem_max = READ_ONCE(memcg->memory.max);
-+
-+			if (mem_max == PAGE_COUNTER_MAX)
-+				xchg(&tc->counter.max, PAGE_COUNTER_MAX);
-+			else
-+				xchg(&tc->counter.max,
-+				     mul_u64_u64_div_u64(mem_max, cap, total));
-+		}
-+		if (READ_ONCE(tc->high_derived)) {
-+			unsigned long mem_high = READ_ONCE(memcg->memory.high);
-+
-+			if (mem_high == PAGE_COUNTER_MAX)
-+				xchg(&tc->counter.high, PAGE_COUNTER_MAX);
-+			else
-+				xchg(&tc->counter.high,
-+				     mul_u64_u64_div_u64(mem_high, cap, total));
-+		}
-+	}
-+	spin_unlock(&memcg->tier_lock);
-+}
-+
- static void tier_high_work_func(struct work_struct *work)
- {
- 	struct mem_cgroup *memcg;
-@@ -4841,6 +4952,8 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+ 	/* Too big to cache: direct uncharge, leave the stock untouched. */
+ 	if (nr_pages > MEMCG_CHARGE_BATCH) {
+ 		rcu_read_lock();
+@@ -3252,7 +3258,7 @@ static int try_charge_memcg_tier(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	bool drained = false;
+ 	nodemask_t nodes, *nmp = NULL;
+ 
+-	if (tier_id < 0)
++	if (!mem_cgroup_tiered_limits() || tier_id < 0)
+ 		return 0;
+ 
+ 	rcu_read_lock();
+@@ -4736,7 +4742,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		page_counter_init(&memcg->memory, &parent->memory, memcg_on_dfl);
+ 		page_counter_init(&memcg->swap, &parent->swap, false);
+ 
+-		{
++		if (mem_cgroup_tiered_limits()) {
+ 			int nid, tid;
+ 
+ 			for_each_online_node(nid) {
+@@ -5459,6 +5465,8 @@ static int memory_tier_show(struct seq_file *m, void *v)
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+ 	struct memcg_tier_counter *tc;
+ 
++	if (!mem_cgroup_tiered_limits())
++		return 0;
+ 	rcu_read_lock();
  	list_for_each_entry_rcu(tc, &memcg->tier_counters, list) {
- 		page_counter_set_max(&tc->counter, PAGE_COUNTER_MAX);
- 		page_counter_set_high(&tc->counter, PAGE_COUNTER_MAX);
-+		WRITE_ONCE(tc->max_derived, true);
-+		WRITE_ONCE(tc->high_derived, true);
- 	}
- 	rcu_read_unlock();
- }
-@@ -5251,6 +5364,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
- 		return err;
+ 		seq_printf(m, "tier%d.current=%llu\n", tc->tier_id,
+@@ -5484,6 +5492,9 @@ static ssize_t memory_tier_write(struct kernfs_open_file *of,
+ 	char knob[8], *p;
+ 	int tier_id, err;
  
- 	page_counter_set_high(&memcg->memory, high);
-+	tier_update_derived_limits(memcg);
- 
- 	if (of->file->f_flags & O_NONBLOCK)
- 		goto out;
-@@ -5303,6 +5417,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
- 		return err;
- 
- 	xchg(&memcg->memory.max, max);
-+	tier_update_derived_limits(memcg);
- 
- 	if (of->file->f_flags & O_NONBLOCK)
- 		goto out;
-@@ -5390,10 +5505,17 @@ static ssize_t memory_tier_write(struct kernfs_open_file *of,
- 	if (!tier_id_to_nodemask(tier_id, &nodes) && !nodes_empty(nodes))
- 		nmp = &nodes;
- 
--	if (!strcmp(knob, "high"))
-+	if (!strcmp(knob, "high")) {
-+		spin_lock(&memcg->tier_lock);
-+		WRITE_ONCE(tc->high_derived, false);
- 		page_counter_set_high(&tc->counter, val);
--	else
-+		spin_unlock(&memcg->tier_lock);
-+	} else {
-+		spin_lock(&memcg->tier_lock);
-+		WRITE_ONCE(tc->max_derived, false);
- 		xchg(&tc->counter.max, val);
-+		spin_unlock(&memcg->tier_lock);
-+	}
- 
- 	if (of->file->f_flags & O_NONBLOCK)
- 		return nbytes;
-@@ -6145,18 +6267,28 @@ static int __meminit memcg_tier_hotplug_cb(struct notifier_block *self,
++	if (!mem_cgroup_tiered_limits())
++		return -EOPNOTSUPP;
++
+ 	buf = strstrip(buf);
+ 	if (sscanf(buf, "tier%d.%7[^=]", &tier_id, knob) != 2)
+ 		return -EINVAL;
+@@ -6267,6 +6278,9 @@ static int __meminit memcg_tier_hotplug_cb(struct notifier_block *self,
  	struct mem_cgroup *memcg;
  	int tid;
  
--	if (action != NODE_ADDED_FIRST_MEMORY)
--		return notifier_from_errno(0);
--
--	tid = node_to_tier_id(nn->nid);
--	if (tid < 0)
--		return notifier_from_errno(0);
--
--	for_each_mem_cgroup(memcg) {
--		if (!mem_cgroup_is_root(memcg) &&
--		    memcg_tier_counter_create(memcg, parent_mem_cgroup(memcg), tid))
--			pr_warn_ratelimited("memcg: tier %d counter alloc failed;"
--					     " tier accounting degraded\n", tid);
-+	switch (action) {
-+	case NODE_ADDED_FIRST_MEMORY:
-+		tid = node_to_tier_id(nn->nid);
-+		if (tid < 0)
-+			return notifier_from_errno(0);
++	if (!mem_cgroup_tiered_limits())
++		return notifier_from_errno(0);
 +
-+		update_tier_capacity_cache();
-+		for_each_mem_cgroup(memcg) {
-+			if (!mem_cgroup_is_root(memcg) &&
-+			    memcg_tier_counter_create(memcg, parent_mem_cgroup(memcg), tid))
-+				pr_warn_ratelimited("memcg: tier %d counter alloc failed;"
-+						     " tier accounting degraded\n", tid);
-+		}
-+		for_each_mem_cgroup(memcg)
-+			tier_update_derived_limits(memcg);
-+		break;
-+	case NODE_REMOVED_LAST_MEMORY:
-+		/* Node memory removed: refresh capacity and derived limits. */
-+		update_tier_capacity_cache();
-+		for_each_mem_cgroup(memcg)
-+			tier_update_derived_limits(memcg);
-+		break;
- 	}
- 	return notifier_from_errno(0);
- }
-@@ -6181,6 +6313,8 @@ int __init mem_cgroup_init(void)
- 	memcg_wq = alloc_workqueue("memcg", WQ_PERCPU, 0);
- 	WARN_ON(!memcg_wq);
- 
-+	update_tier_capacity_cache();
-+
- #if defined(CONFIG_MEMORY_HOTPLUG) && defined(CONFIG_NUMA)
- 	hotplug_node_notifier(memcg_tier_hotplug_cb, MEMCG_TIER_NODE_PRI);
- #endif
+ 	switch (action) {
+ 	case NODE_ADDED_FIRST_MEMORY:
+ 		tid = node_to_tier_id(nn->nid);
 -- 
 2.43.0
 
