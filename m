@@ -1,78 +1,75 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A93D3A9D9C
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 07:45:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D833341D112
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 08:12:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787039163; cv=none; b=H9I5gX7apZVKnPK6GW8fYxbFaITinM3nITk5U6nP61buEdWp2FUkN9b/TeiCgmGldll4noM+y7p230drLPK7N5uy8MLy5QzKeLUBVv4/+HNGtKNYg13DyWoUNMR4rXTZEhC1inIc914F4bZqVKHYfQaE5ulW5chksAOSKeG1SWA=
+	t=1787040744; cv=none; b=iT3APuxkZ45y1LVWpTVP9pje3VrUCSw/601H0YWwdN9PM0kIS9rObA/ovgD8JzsYCe1cbOfuywQUSLSYgjnHPU8BB0s0lLOw621jouVC1o/nrkgVB7zUlzNpf9TyvgUlz/zqzipiHmU0ak7yyU1/JwlTj612XjlyId0/5SX3Rpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787039163; c=relaxed/simple;
-	bh=bohRl9TUaRTqMRjXrawVRxnM/0uh7YvaAyzKfG4nqLY=;
+	s=arc-20240116; t=1787040744; c=relaxed/simple;
+	bh=/O5o1FHjVH37EIJy88MmF697mrTbkLgyx5ASqlKRYB8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PphPJzeATi9JoUaQ9yXsHgnKE+E6GXDHXiGp0QZoDwGorc3kjvSmOl3s6kKXPe7sjbVpyb8SUc1G0KNR3QrORlVR9deNQx6taPhhlWsN1Hz1BNv/Qy4OvTH1fWSGj+5q+10QBsyTHdf3BLFl1hFBC6yNO9eMMh+5weSVWFhFieQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=FFuDYEKf; arc=none smtp.client-ip=209.85.128.49
+	 Content-Type:Content-Disposition:In-Reply-To; b=EuJen5d0oDlFmNicnZeUW2EGYVaNsqtAZDs18Tz+pNbYLsGY7bBCC+FDiJqqNAFaNgSjRVweWEJw3sBC+woifcYy6Ct1yPPbyolKcy4HN6mwCliG82Ke72YHNCCI+ECn0qf9cex0q/Dy7GM7pDHUgc0ypdmXVUPteKUXx5dT56Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=dI0XtZkC; arc=none smtp.client-ip=209.85.221.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="FFuDYEKf"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4954dff6536so31543225e9.0
-        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 00:45:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="dI0XtZkC"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-47fecbb7000so2314604f8f.2
+        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 01:12:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1787039158; x=1787643958; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1787040741; x=1787645541; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Y8DtTDcSzfGuvLMZ1kDSosdRxVmDTPGGThapUM2N22w=;
-        b=FFuDYEKfibV4+DMORliNvP13R44rv3u7rYIWWvwbVEaDfdVXaItosni/vCfPYNWP5+
-         EQNN0pzFofXDWgYgk7xf/abPA018bnCG+wJ0XLlQog9wFJ9j1Rh+r+1r4VX/ybtFE2LL
-         orcM8fumXclzJnz111jKFtUUhSnHoKHgOm7yMzyiVH+eVc/ZvBAVVmdYR+xW0lZQKsmW
-         cnE9pv2SDicoCgbfWZn++xvc6O8Yisx28YXAEm2URA2OCdUtfeEtwDnUhcTPwtHUAshu
-         jKEO+2v86yNXkQNXSKvWbp2fpFwauP1tGMs+zhhuXHQCYI4FhStmTVNbCXLGREnkJv2/
-         Al5w==
+        bh=Ut+xbTDj7ZhkvGJB+feKg7bYPoIX3tceZd+RikWwvEg=;
+        b=dI0XtZkC+N2NEZ8HGRLM4oH5jVR+MxKMAfjrG4uzVEbZk+cBHgovLR9sJpXZ41+THh
+         mpeNNcS9CQu4eb5OdtGRyOnZ8v8Zsx1nI3DXtvwCN+Sy2AepbIpVMyU6IArBM7I7LP6g
+         L2AP2BpiM3Cs3FWsHvzuFtEttLGVPmGSgOkbFsU1mM2zKPyFscYX6Jmc2XAu7ZMEE6AL
+         u+Y2/ariTJJ2b9I5JcA4EkT/bvp5WBuAvBXUYGW8sV8aDJ27NkG4bfu8xbKovK0JbQUr
+         0mI9FdEnVL7FKxOiiTohDI9iIFS7YTjjsCy2QL0GEaUZOlTGIwrTofUEiFcofSltola7
+         5LJg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787039158; x=1787643958;
+        d=1e100.net; s=20251104; t=1787040741; x=1787645541;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Y8DtTDcSzfGuvLMZ1kDSosdRxVmDTPGGThapUM2N22w=;
-        b=G3fUICdV5sGejo0+qIqRzk9H3LaAh2BfdAHpQIvcf6NKduGwqNn+PrTBQG0akG+yMp
-         yE3GHZdESyo19yzO29HmZoim1Gb1GR1FAX5dmipohbxB/QwaSXKBZUkTT2jrvmXO0wYt
-         abFWGCrNSQ+jRDcJDnvJ534y3SGYqAR2leqxurpkCpTl585Yadl+W1WGWcJnCLo8o90E
-         OgYuWOFEQxRyVUxrOC3tTNFmQAJvFdjVv7w5qQnJBa1TJPucgr4amI1PSIGsV+uird5o
-         oFFQrlNhYtlxdXtyY66zIHraV9hjt0BYiLTZkeBd/2XLugvVKIi7GKBL5BA3erIsK0HV
-         pkHw==
-X-Forwarded-Encrypted: i=1; AHgh+RrEUd+AqjQQD/W6eTzUV6wQxM6M56skPiYClcEk7jxckxOoVIgcQ8+MQ9M01ZQbOLlcRyhH7fnL@vger.kernel.org
-X-Gm-Message-State: AOJu0YxlYOivxXJMA9yeOgL2pqINIYARdCWiVvEOV0l6NEEigA2pxwg1
-	z/Ngj1JDxHtHdHk0mO85fc2nXU+yg+E1HtdEN1kU7RrwXlaxpOFdt50BO2gMfkXM0S8=
-X-Gm-Gg: AR+sD12db54HNIlg0JQsnma+R9L5LH+PSjsmMSpO4w6hWsv+lvoOzKLwSkqqKhlg6E8
-	CcZYbUOcpp8AXto+9lroTx/eV26Go7PwGID+AWec+Aj9eX7A3VNC2BAm9W0AAMQe4/rgv1p8QtT
-	AVqLhXLNeMDY2LaNA5P8bCnQJvd47XzaQ2ysNWMJ5QW9S8/gJpXvye9SqN78C6YAl53tWIYFwCC
-	yixQgVOpGjVZM+QoYI6EzUDtLs4BsLf/flU61QWUYnreg2+r1jCp2T9OVunLhx/4nm188QmqLqu
-	X8ljwQfyGxk8NsScuxjc2N8Iqg3rFkl0kp4Ujlh2kMwPPL1b1n/pRMx0x0aT79Zis5infia9C9L
-	LOoig+EPLcHPJUgCtEVLEivk2ctxrhsNAukV2s72cKDH9jzMy9no/42clUidEm/CEjPXVfpYMqm
-	Y64ZpVPnaQkTY6UtmrWKcuUOjcMQpqIQKzWvSExKxwT4exvCKahOAdvC9ViI6qGwCQdNsg3rgVB
-	gCfGQS8Dw==
-X-Received: by 2002:a05:600c:8714:b0:499:8704:242c with SMTP id 5b1f17b1804b1-499878ca13bmr557228035e9.0.1787039157680;
-        Tue, 18 Aug 2026 00:45:57 -0700 (PDT)
+        bh=Ut+xbTDj7ZhkvGJB+feKg7bYPoIX3tceZd+RikWwvEg=;
+        b=n3CeJHhoO0G7JGiyb9C8nGT36ejKbtFWtcjtUvTPXcJca/TrmGcjrDIOjRsZP8YE54
+         DO1xNfc6LNBtAkXs0AMnxeDI35eAh+Z8fo8U1+w0uxZ9DO/UbOa2pEit0C4/9On4M2nC
+         UksjrDICqTUaw1Wl5tk8Whk9tAiNGApN6tP2YKvyq1QHG9gljvXrG15xUEaQX0N63J/E
+         3IABI2pW3HOTTV1bbZfy5BeWdR4FQFtisuWJUCEJhltilacidkFJXdOo7yi236aW0EZZ
+         AYB5j3G5Dzzt8ZSxmjJhxlwZIsYi/k/fO4W0qGKE9H4u8qiDe9mfPOO7sFk2CBnQDzKp
+         ZfVg==
+X-Forwarded-Encrypted: i=1; AHgh+RotMjc98Jm4wzVun0VwDrcWGHnhJ7ODZeZJh0BfyFYUufugma6PTSWFhfUlrQ1JcdhcUyMqpTGw@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4e15COOEum1Y0eoHAFHUY+w8SLTWbPn0WMyDXUUI8Wc5AuUNX
+	OflB2MY+TVTYQkLLYerlmvV+3jhOY0nAZnggomdc7Ho5MhbdkvUAFYr+Mbil4T7jaho=
+X-Gm-Gg: AR+sD10uEwO7R7SX0GVqOxlylIV5ma9v1Uh2mjfkDfGDQeHtJMJwBy5SlHr3EJL9N3q
+	X8oPw+y6bIVSpziXxo8i54EtweFJYXi9F2V3mRKDXb0IqXjizwiavTmErrh50piq8ex1ltLjUof
+	x2MExHjJiA/+x7OyxSZyAvbPCDXMMHSKVegr/HVsaAKrbM+ymhOxzMYfBD+LzFKSnOe3IV77bSw
+	SsVyPaEbFasWdD29eL1kUjupGhnmBvENoBjcHf4Vvn6OkLftKTcMqnsdox4K4K6Z/j4a1l8yVQk
+	4F+wZcIhSROqBETNJPU52HFpqXfhRXHLKgpOW1wAgqMub2vX8APrjqees9B/XvL6MSoudhtesKu
+	qJel/7kz/mNH+t/htF/HGWCQhpgRXu057gDRrG5KpXhdkd0OT6mbmkJQzkF6RcRR4U6CDF2In4+
+	DJJZG9zIG76nKTo5pnMgVJhB1XrkjW/Hs8FiR2BY/cgBu9i4692AIVQgYrS6bORAQj7EJ+/qs=
+X-Received: by 2002:adf:f708:0:b0:47f:aead:f81b with SMTP id ffacd0b85a97d-48160756569mr38056944f8f.21.1787040740958;
+        Tue, 18 Aug 2026 01:12:20 -0700 (PDT)
 Received: from localhost (109-81-86-48.rct.o2.cz. [109.81.86.48])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4998ca63e5csm129781225e9.2.2026.08.18.00.45.57
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482a5b77fa3sm9726073f8f.26.2026.08.18.01.12.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Aug 2026 00:45:57 -0700 (PDT)
-Date: Tue, 18 Aug 2026 09:45:56 +0200
+        Tue, 18 Aug 2026 01:12:20 -0700 (PDT)
+Date: Tue, 18 Aug 2026 10:12:19 +0200
 From: Michal Hocko <mhocko@suse.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org,
-	linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
-	roman.gushchin@linux.dev, muchun.song@linux.dev,
-	Tao Cui <cuitao@kylinos.cn>
-Subject: Re: [PATCH] mm: page_counter: reject empty string in
- page_counter_memparse()
-Message-ID: <aoQNtIRvqXRh-x4u@tiehlicka>
-References: <20260817042652.74136-1-cui.tao@linux.dev>
- <aoMzchLCCz5hiFHp@linux.dev>
+To: liuqiqi@kylinos.cn, Joshua Hahn <joshua.hahnjy@gmail.com>
+Cc: linux-mm@kvack.org, tj@kernel.org, mkoutny@suse.com, hannes@cmpxchg.org,
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, akpm@linux-foundation.org,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 0/8] mm/memcontrol: introduce per-tier memory
+ accounting and control
+Message-ID: <aoQT45_Vu8KZ9rjk@tiehlicka>
+References: <20260818023121.100613-1-liuqiqi@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -81,63 +78,172 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aoMzchLCCz5hiFHp@linux.dev>
+In-Reply-To: <20260818023121.100613-1-liuqiqi@kylinos.cn>
 
-On Mon 17-08-26 09:16:40, Shakeel Butt wrote:
-> On Mon, Aug 17, 2026 at 12:26:52PM +0800, Tao Cui wrote:
-> > From: Tao Cui <cuitao@kylinos.cn>
-> > 
-> > memparse() consumes no characters on an empty input and leaves the
-> > end pointer at the terminating NUL.  The only validation in
-> > page_counter_memparse() checks for trailing characters, so an empty
-> > input slips through and the limit becomes 0.
-> > 
-> > All limit write callbacks of the memory controller strstrip() the
-> > input before calling this helper, so a script that writes an unset
-> > variable hits this path:
-> > 
-> >   LIMIT=
-> >   echo "$LIMIT" > $CG/memory.max
-> >   echo $?
-> >   0
-> >   cat $CG/memory.max
-> >   0
-> > 
-> > Nothing reports the mistake: the limit is now 0 and the OOM killer
-> > goes after every task in the cgroup.  The same happens for
-> > memory.min, memory.low, memory.high, memory.swap.high,
-> > memory.swap.max and memory.zswap.max, where 0 silently removes the
-> > protection or disables swap and zswap.
-> > 
-> > Reject the input when no characters were consumed, which is the one
-> > case the trailing-character check cannot catch.
-> > 
-> > Fixes: 3e32cb2e0a12 ("mm: memcontrol: lockless page counters")
-> > Signed-off-by: Tao Cui <cuitao@kylinos.cn>
-> > ---
-> >  mm/page_counter.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/mm/page_counter.c b/mm/page_counter.c
-> > index 661e0f2a5127..d14db705b04f 100644
-> > --- a/mm/page_counter.c
-> > +++ b/mm/page_counter.c
-> > @@ -281,7 +281,7 @@ int page_counter_memparse(const char *buf, const char *max,
-> >  	}
-> >  
-> >  	bytes = memparse(buf, &end);
-> > -	if (*end != '\0')
-> > +	if (*end != '\0' || end == buf)
-> >  		return -EINVAL;
+Are you aware of a similar work in this area by Joshua
+https://lore.kernel.org/all/20260807202059.2620949-1-joshua.hahnjy@gmail.com/T/#u?
+We owe Joshua review feedback for quite some time but if I have to be
+honest the most impeding factor on my end is that I am not really
+convinced tier aware controlling is the right direction. I have
+expressed some concerns on one of the earlier proposal by Joshua
+https://lore.kernel.org/all/aZ2LC0KPF0xsAwAL@tiehlicka/T/#u
+
+In any way it would be great to talk and compare your approaches see
+where they align and the discuss further.
+
+On Tue 18-08-26 10:31:13, liuqiqi@kylinos.cn wrote:
+> From: Qiqi Liu <liuqiqi@kylinos.cn>
 > 
-> I wonder if someone started depending on this behavior. In that case it is
-> better to return error instead of silently ignore, so we will hear complains
-> loudly. This looks good to me.
-
-This is backward incompatible change and I am wondering why should we
-even risk regression.
- 
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+> This RFC introduces per-tier memory cgroup accounting. Each cgroup
+> tracks its memory usage per memory tier (e.g. DRAM, CXL), exposed
+> through a new memory.tier control file that reports per-tier usage
+> and accepts independent high (soft) and max (hard) limits per tier.
+> By default these limits are auto-derived from memory.high / memory.max
+> based on per-tier capacity ratios, and can be manually overridden.
+> 
+> The implementation integrates with the existing memory tiering and
+> demotion infrastructure. Per-tier usage (anonymous and file) is tracked
+> via dedicated page counters, and cross-tier migrations (e.g. demotion
+> from DRAM to CXL) correctly re-account charges. When a tier hits its
+> high limit, async reclaim is triggered within that tier's NUMA nodes;
+> exceeding max enforces reclaim scoped to the tier's own nodes, or OOM.
+> 
+> The feature is fully opt-in. When disabled, no extra counters or
+> charge/uncharge paths are created, memory.tier reads empty, and there
+> is no measurable overhead.
+> 
+> Why per-tier limits?
+> -------------------
+> 
+> On tiered memory systems, memory.max constrains total usage but cannot
+> express "keep fast-tier usage under X". Without per-tier limits, a
+> workload can monopolise DRAM, pushing other cgroups onto slower tiers.
+> This series gives each cgroup independent high (soft) and max (hard)
+> limits per tier, exposed and set through a new memory.tier file.
+> 
+> By default those limits auto-derive from memory.high / memory.max by
+> capacity ratio; writing memory.tier pins a tier.
+> 
+> This series takes a different approach from Joshua Hahn's toptier RFC [1],
+> tracking a separate page_counter per (memcg, tier) for N-tier support and
+> exposing writable per-tier limits under a cgroup mount option.
+> 
+> Patch structure
+> ---------------
+> 
+>   1/8  mm/memory-tiers: add node_to_tier_id and tier_id_to_nodemask
+>   2/8  mm/vmscan: add try_to_free_mem_cgroup_pages_nodemask
+>   3/8  mm/memcontrol: add per-tier page counter infrastructure and lifecycle
+>   4/8  mm/memcontrol: add per-tier charge and uncharge
+>   5/8  mm/memcontrol: add per-cpu stock for tier charge/uncharge
+>   6/8  mm/memcontrol: add memory.tier control file
+>   7/8  mm/memcontrol: auto-derive tier high/max from memory.high/max
+>   8/8  cgroup: add memory_tiered_limits cgroup mount option
+> 
+> Patches 1-2 are infrastructure (helpers in memory-tiers and vmscan).
+> Patches 3-5 add the core accounting: counter lifecycle (3),
+> per-page charge/uncharge (4), and stock batching (5).
+> Patch 6 adds the userspace file. Patch 7 adds auto-derivation. Patch 8
+> gates everything behind a mount option + kernel cmdline, so the feature
+> adds no measurable overhead when not opted in.
+> 
+> Usage
+> -----
+> 
+> Boot with:
+> 
+>   cgroup_memory_tiered_limits=1
+> 
+> Or remount at runtime (affects newly created cgroups only):
+> 
+>   mount -o remount,memory_tiered_limits /sys/fs/cgroup
+> 
+> Per-tier limits and usage can then be read from and written to
+> memory.tier.
+> 
+> Scope and limitations
+> ---------------------
+> 
+> - Only LRU folios (anonymous and file pages) are tier-accounted. Kernel
+>   memory and socket buffers are not yet accounted per tier; support for
+>   these is planned as follow-up work.
+> - Per-tier memory.min and memory.low protections are not implemented.
+>   These can be added later by extending the per-tier interface to
+>   expose and enforce min/low protection.
+> - The command-line parameter mirrors cgroup_favordynmods; automatic
+>   enablement via the cgroup mount path is left to userspace.
+> 
+> Testing
+> -------
+> 
+> Tested on QEMU with fake NUMA (DRAM tier 4 + CXL tier 22), with
+> cgroup_memory_tiered_limits=1 on the kernel command line and demotion
+> enabled.
+> 
+> Set up a cgroup, apply per-tier limits, and run a memory-intensive
+> workload:
+> 
+>   $ mkdir /sys/fs/cgroup/mycgroup
+>   $ cd /sys/fs/cgroup/mycgroup
+>   $ echo "tier4.high=200000000" > memory.tier
+>   $ echo "tier4.max=300000000" > memory.tier
+>   $ echo 1 > /sys/kernel/mm/numa/demotion_enabled
+>   $ cgexec -g memory:/mycgroup ~/stream --ntimes 5 --malloc &
+>   $ cat memory.tier
+>   tier4.current=296488960
+>   tier4.high=199999488
+>   tier4.max=299999232
+>   tier22.current=1625464832
+>   tier22.high=max
+>   tier22.max=max
+> 
+> DRAM (tier4) usage stays under tier4.max (hard limit, no OOM) but exceeds
+> tier4.high (soft limit, suggesting that async reclaim is in progress);
+> CXL (tier22) absorbs the overflow via demotion.
+> 
+> Also verified:
+>   - tierN.current tracks per-tier usage (anon + file).
+>   - Cross-tier migration (demotion) correctly re-accounts.
+>   - memory.high / memory.max auto-derives tierN.high / tierN.max.
+>   - Manual override (writing a number to memory.tier) pins the limit.
+>   - Tier max enforcement triggers reclaim scoped to the tier's nodes.
+>   - Feature fully off (no mount option): no counters, no charge/uncharge,
+>     memory.tier exists but reads empty.
+> 
+> Open questions
+> --------------
+> 
+> - Should kmem/slab tier accounting be included in this series or deferred
+>   to a follow-up?
+> - Should per-tier memory.min and memory.low protection be part of this
+>   series or left for later?
+> 
+> [1] https://lore.kernel.org/all/20260423203445.2914963-1-joshua.hahnjy@gmail.com/
+> 
+> Signed-off-by: Qiqi Liu <liuqiqi@kylinos.cn>
+> 
+> Qiqi Liu (8):
+>   mm/memory-tiers: add node_to_tier_id and tier_id_to_nodemask
+>   mm/vmscan: add try_to_free_mem_cgroup_pages_nodemask
+>   mm/memcontrol: add per-tier page counter infrastructure and lifecycle
+>   mm/memcontrol: add per-tier charge and uncharge
+>   mm/memcontrol: add per-cpu stock for tier charge/uncharge
+>   mm/memcontrol: add memory.tier control file
+>   mm/memcontrol: auto-derive tier high/max from memory.high/max
+>   cgroup: add memory_tiered_limits cgroup mount option
+> 
+>  include/linux/cgroup-defs.h  |   5 +
+>  include/linux/memcontrol.h   |  26 ++
+>  include/linux/memory-tiers.h |  12 +
+>  include/linux/swap.h         |   6 +
+>  kernel/cgroup/cgroup.c       |  21 +
+>  mm/memcontrol.c              | 786 ++++++++++++++++++++++++++++++++++-
+>  mm/memory-tiers.c            |  58 +++
+>  mm/vmscan.c                  |  26 +-
+>  8 files changed, 936 insertions(+), 4 deletions(-)
+> 
+> -- 
+> 2.43.0
 
 -- 
 Michal Hocko
