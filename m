@@ -1,118 +1,159 @@
-Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1963928BAB9
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 15:57:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A09847A0B5
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 16:43:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787068637; cv=none; b=GjCSPr0i002rb+RVDIwVENArcfx1nhX7Ydc14zqV9RIP9f8b047z56HGl+lcyWDJLM5+rSN6rN/GeIeCgO1sMrNe99FS9sfZA36qP5CPoy4DNDWDrHyY/XFyRi+BoQRkGrzAFJ3X4Yej3DU8c2Kzs2RSTqpyQ00Cg1LnG7kuAec=
+	t=1787071434; cv=none; b=fHxaIuiUgqTqRUzo2uRUAHA4hM4AFouPymdSXRsOpDqAOgm+8ABw8D6Q5EAC8HpW3WhG79su2bOMddJ/k0pt85jWVUBv1s2jBjqbZIMki0Yqwx1jhvbGDA1lgrCP57pnipZLGKoh1aI8tVPxLs01888WQ2anfspFnhv2rrziFig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787068637; c=relaxed/simple;
-	bh=jtRz0mEP4MuJi9M2/9rT3uxb5eFSZpck7/GTTf9Nkgo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RU9P8zqZ7xrKqLPvhgGOeUHo8SjF6d08RNmJAGMeP3OCdPlikyTdlBwR+LC4bqKZTV3BmQzkt4plGF8Ozdq8+ekNsdvZrzZYcCrunVvfr3it46bmEIALejT3vgZnW3EPDTadb8bwqX/XnGnjtBx3+JPWUJrk03K0hJAfUntzCn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oX6R/VMh; arc=none smtp.client-ip=209.85.210.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787071434; c=relaxed/simple;
+	bh=x3yO1Xhzyjwg82TfFc4FISY/jp4ChnURfQzQ6iT7l7M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o6SuB4LdDrcJBCtAaWWGHhw+eSx54HB8nlgmCN2A4sbrxfO/jblO7qtaWDaQqe5hL5G2bt2WB4/1pPYyzI3ab3PaQDvgqU8p/avU+9sTLw39X4PZMdGbflLK/niUxZ+fmZ8VtGJlBBrRDDbAa7278Kb15YiDavXDy4rOIrzoX2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=OOCwQwMb; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oX6R/VMh"
-Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-7e6b5737bb2so5564524a34.1
-        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 08:57:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="OOCwQwMb"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-496bb7cdf51so574525e9.2
+        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 09:43:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787068635; x=1787673435; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=aJsNbFhcAvc23yP9oB4/NO35b1/oluJDB0GRajdvh5k=;
-        b=oX6R/VMhJ5Pq2MuLM53VrxN7l/zzB7kiIArUgA/YpvuR45nfyf9T5xYSmzP6gUfETd
-         T+7SCKC8xbaiPPsARX7JNZS3qddUZ1LN6lRdSwIquit7skG7473b1CVwLYoKPyqaImW5
-         tre03gKrabsorvJ0muPW8erM6rFHQSrJ2AHE4q16k0aKO31uCUlJmWDEghuIpu/4Ieb8
-         pHE8uMu898yd0Ssiz62x6fEf7wXsYzPifN68u4L3Lk4XnA87tG9irq3pM8I5Cr9EBK8x
-         w2Bg9AUKiGYMo7vhRS2DW4v2XIPhX5Mk3+Wy6VvqyNpV5Uln/kSv70up7kLtRwwgrINq
-         GIMw==
+        d=suse.com; s=google; t=1787071431; x=1787676231; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=hSPw/8r8Y7BIh1YcWJP4P9upFW6BW+TUQ3tuOxC68Hc=;
+        b=OOCwQwMbW3gptgdjQBG3hOms5/l3scjuJiraazFIN+ej4JvnlyVKZeVQBy/hotMx0M
+         Zb6HuIBliXePI0GQWXuwfMZJF4B6+UJgTCMuKVglKBqXy/ZUk6cYqwvfZ0mN0PT2dib7
+         +HreEyFI7+mZ+lLsQaheGjM9O8BTXlJiITTxTP3+z2K6XSGRcey7AI9OTDGsSo5Adk+y
+         CIHyJ2f8kCQcMyylH/dxyquHZAzC/RujpCST1S1PyL5DTQOly0SqfePF6oNavolkvg0a
+         /pIIYgBSMi7AYrZmZOwdildzVOlIeMhCHi7ZAxOzl889Z547g/dQoKU6RPjLs8B4B+cL
+         DH/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787068635; x=1787673435;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aJsNbFhcAvc23yP9oB4/NO35b1/oluJDB0GRajdvh5k=;
-        b=FbcNY+Bvp/7z2V7D+9RgvFskibfqK6yfl4a3Ju03Q10adF68E7WbdSJs+dYRUfuXM1
-         7Nw0Tk69cxOJT4tRzk44TyHjXPWSLC0tJJ592gsyQ/GWnzLHU72SXKm81dIfwZggwE8n
-         uJ41hS2h8tcUaR0ngoj0qiRSvd6vEDZJ+t05XQj0JeiYZStSOdhZPAbeIVVg0J3Yxdkc
-         e6ffOnnFHFhR6txvPp7nMBSTVcqir4CZYZt2NMyM0drJ0spw8202CL1r9zsCPT7j/DmU
-         YyiWlP7i4spyCFDlByP5AXYQwL5uYeyXdKjKpZ1xHo+jGYh54AGSE7gffbcmhaB/Y7Ql
-         YpUQ==
-X-Forwarded-Encrypted: i=1; AHgh+RobfwRaA3MFmPL6jEzZ2uFep0iMZg28yBHJHM3vIG0oEXXx0+e5kO76c53vqgDLLbbPlMh9NerT@vger.kernel.org
-X-Gm-Message-State: AOJu0YwMKo2Nr45WJDebpgsN5HqFrcwPuhVZPjoV+a1aV+p3qvb96KW7
-	1JFbKvW/xOFuU2KQD6Aq5GCvp8XPi0a3Z5/Vc1sNpSeo++DkLUubm8LP
-X-Gm-Gg: AR+sD11Cl5sfEGzMsd44s4hG40VfI0QoNbysYDHlN3XSOVSyLEnayc2Yg9dwbneqodi
-	XC5gzsPRHoTfFPZnO3RA3hXizpl+aUzO/qcKHSL2EN1SjDRuazNiRd/I391YuiiL+RgVOSmfZ+s
-	wTJ1DOGssMcVKhL3zxi/KziHBTcNEJbG0PN+AYtrxLzYU378uvRWWnnBuIdz8vpSjDXlrQbNgTY
-	viUX2Qe+jooKxuwyd1gq0S9OvbhA8PVy4nmNWz7sJQwVHmx99V7SmOoo+3GLcMwk3y6+tDwEung
-	FWjWxI1SRFCOjAjS4+YYCfv22fNwiEFVc12Exgc6InHz4M6ZhgGVkysuM++AWhvdvqIv2gbBcnN
-	VThvTjwxJ7NGYTJIEol1R18BL3415NINY6Liq16VVJF/DX+unj+zYM0LulZfgSP+q0N8EfEWayk
-	n/6+XormGbkpg48cb2bN2/bsBb9tC+J0aslSdgBNwTXb93kRtUnPNAlQxp22w/fO2+yncgA1Hl+
-	y7R22wb5d7TP6k5n4KYvOFBMGLsoI9hhdxOq55pbSI5
-X-Received: by 2002:a05:6830:63cc:b0:7e6:f7fb:9678 with SMTP id 46e09a7af769-7f423c38469mr9469536a34.1.1787068634964;
-        Tue, 18 Aug 2026 08:57:14 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:49::])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f41c0f3598sm5379975a34.20.2026.08.18.08.57.14
+        d=1e100.net; s=20251104; t=1787071431; x=1787676231;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=hSPw/8r8Y7BIh1YcWJP4P9upFW6BW+TUQ3tuOxC68Hc=;
+        b=d/o9by9DQ4SRsnYTV+OxqtICw5kgKBGm5Xt8GeRP583Skrfw5VgNqH5K1yk608VsMx
+         1YVBzppAcETACqdW3rNGd2lDXptxmbR6v/S0RAvZUdG3ARxF9OfJNHWru/uoQyvgNy2+
+         0vn+A4K7iw+p/7/E8nKi4PXTm11S5yVLVgbg9jfQnC12LkE0VBNI02HMKmeFdGRlN4sO
+         T2ZDZCqnqRF+BQyoPmUB/T2svCcyVcn+Kz9N7H04jo2snTMvY860trgzSSPMZX3sH5zv
+         jNBSv2iKErPb7Afewyd4b2gG+QZeFfJDDZpBVcjyhFGp2riZusR/MMvbhbhkpq4oRYnk
+         vlBQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rrmau27iGBe1xJlmY8rUpRyUgkazi8wRhRvTGn1r4vrUR4TCl5iWeREUhpKvABTXr/worksFfqt@vger.kernel.org
+X-Gm-Message-State: AOJu0YxJ/wS43YNQzqaZ78ODP5MKxqR114bNLx2u+/kF6y2PjNufLf3w
+	vKShf3QBRzlLpJQBblBMLVMzF0F5hD5qxvXq4uLcwjDdU/o6ughd/esxBbFHj9YO6F8=
+X-Gm-Gg: AR+sD122hvUGLJQtyz38VEnuWm43yfWv7sGfYHwCi3vSOKvv2jyckdiOamjv2f++6q1
+	PYApMhLK8riIQ73BnfvoO1fdHEzD/0YHhjebDgiM+jczv7SBdBMpeP4ZNDLGfWs7TX3bXkIGLar
+	p5hFQOOEny6nTlYskwgnbLF4B74iVj+zmn6uiz6rsBo2+1swy0efcDVQBKYJ/2Dskj5CyYKyoXq
+	rWRCFvvlv/1LymHx+xOJgsHhfz3scUkMiab+hn8wWk9oxbRungzNGOSDAHQpDSQPEGP+8JwYzga
+	Cv6Zwsszqek+v5XrIECbvaQPMelWEOtor12xZnVYlynSSyQzlbPxaAsBw0j0JaD5UE24ivPusk7
+	AGHGEaWfF5anCzUrzO2iloLGonEU9RwsH3zFtE3kFDseNC3ongPs0mfO3Kj0NFOshQ9qTljAdwj
+	48LUUkqRrZ9EeTu2M7fXW2omI5fbKGwFPFJeV2TS72LJPHU5UDY37UsEjFxZOTQyOKsCZf/Ks8J
+	w==
+X-Received: by 2002:a05:600c:528d:b0:499:48be:3189 with SMTP id 5b1f17b1804b1-4999fa84b7dmr197625135e9.0.1787071431027;
+        Tue, 18 Aug 2026 09:43:51 -0700 (PDT)
+Received: from localhost (109-81-87-166.rct.o2.cz. [109.81.87.166])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49996176b8asm225801765e9.11.2026.08.18.09.43.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Aug 2026 08:57:14 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Michal Hocko <mhocko@suse.com>
-Cc: liuqiqi@kylinos.cn,
-	linux-mm@kvack.org,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	hannes@cmpxchg.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/8] mm/memcontrol: introduce per-tier memory accounting and control
-Date: Tue, 18 Aug 2026 08:57:12 -0700
-Message-ID: <20260818155712.882286-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <aoQT45_Vu8KZ9rjk@tiehlicka>
-References: 
+        Tue, 18 Aug 2026 09:43:50 -0700 (PDT)
+Date: Tue, 18 Aug 2026 18:43:49 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org,
+	linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
+	roman.gushchin@linux.dev, muchun.song@linux.dev,
+	Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH] mm: page_counter: reject empty string in
+ page_counter_memparse()
+Message-ID: <aoSLxSBUPbEqimJq@tiehlicka>
+References: <20260817042652.74136-1-cui.tao@linux.dev>
+ <aoMzchLCCz5hiFHp@linux.dev>
+ <aoQNtIRvqXRh-x4u@tiehlicka>
+ <aoRz72_zdMai_RNV@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aoRz72_zdMai_RNV@linux.dev>
 
-On Tue, 18 Aug 2026 10:12:19 +0200 Michal Hocko <mhocko@suse.com> wrote:
-
-> Are you aware of a similar work in this area by Joshua
-> https://lore.kernel.org/all/20260807202059.2620949-1-joshua.hahnjy@gmail.com/T/#u?
-> We owe Joshua review feedback for quite some time but if I have to be
-> honest the most impeding factor on my end is that I am not really
-> convinced tier aware controlling is the right direction. I have
-> expressed some concerns on one of the earlier proposal by Joshua
-> https://lore.kernel.org/all/aZ2LC0KPF0xsAwAL@tiehlicka/T/#u
+On Tue 18-08-26 08:06:22, Shakeel Butt wrote:
+> On Tue, Aug 18, 2026 at 09:45:56AM +0200, Michal Hocko wrote:
+> > On Mon 17-08-26 09:16:40, Shakeel Butt wrote:
+> > > On Mon, Aug 17, 2026 at 12:26:52PM +0800, Tao Cui wrote:
+> > > > From: Tao Cui <cuitao@kylinos.cn>
+> > > > 
+> > > > memparse() consumes no characters on an empty input and leaves the
+> > > > end pointer at the terminating NUL.  The only validation in
+> > > > page_counter_memparse() checks for trailing characters, so an empty
+> > > > input slips through and the limit becomes 0.
+> > > > 
+> > > > All limit write callbacks of the memory controller strstrip() the
+> > > > input before calling this helper, so a script that writes an unset
+> > > > variable hits this path:
+> > > > 
+> > > >   LIMIT=
+> > > >   echo "$LIMIT" > $CG/memory.max
+> > > >   echo $?
+> > > >   0
+> > > >   cat $CG/memory.max
+> > > >   0
+> > > > 
+> > > > Nothing reports the mistake: the limit is now 0 and the OOM killer
+> > > > goes after every task in the cgroup.  The same happens for
+> > > > memory.min, memory.low, memory.high, memory.swap.high,
+> > > > memory.swap.max and memory.zswap.max, where 0 silently removes the
+> > > > protection or disables swap and zswap.
+> > > > 
+> > > > Reject the input when no characters were consumed, which is the one
+> > > > case the trailing-character check cannot catch.
+> > > > 
+> > > > Fixes: 3e32cb2e0a12 ("mm: memcontrol: lockless page counters")
+> > > > Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+> > > > ---
+> > > >  mm/page_counter.c | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/mm/page_counter.c b/mm/page_counter.c
+> > > > index 661e0f2a5127..d14db705b04f 100644
+> > > > --- a/mm/page_counter.c
+> > > > +++ b/mm/page_counter.c
+> > > > @@ -281,7 +281,7 @@ int page_counter_memparse(const char *buf, const char *max,
+> > > >  	}
+> > > >  
+> > > >  	bytes = memparse(buf, &end);
+> > > > -	if (*end != '\0')
+> > > > +	if (*end != '\0' || end == buf)
+> > > >  		return -EINVAL;
+> > > 
+> > > I wonder if someone started depending on this behavior. In that case it is
+> > > better to return error instead of silently ignore, so we will hear complains
+> > > loudly. This looks good to me.
+> > 
+> > This is backward incompatible change and I am wondering why should we
+> > even risk regression.
 > 
-> In any way it would be great to talk and compare your approaches see
-> where they align and the discuss further.
+> Mainly I was wondering if this is intentional or unintentional. If this us
+> unintentional, can we fix it without anyone noticing?
 
-Hi Michal,
+My guess would be this was just omission. Those happen and over years we
+have learned that userspace is quite creative at using those.
 
-I hope you have been doing well! Maybe this is a good opportunity to
-squash concerns about the series : -) I've sent a new version which
-addresses a lot of the concerns that David Hildenbrand had previously
-brought up [1]. This implementation is as transparent as can be to the
-user. I hope that this makes sense to you! 
+> However if we are ok with this then let's make is formal and make this a
+> documented behavior. I don't have any strong opinion either way but I think you
+> are saying it safer to just assume this is intentional. Fine with me.
 
-IIRC you had some concerns about getting the interface right the first
-time we introduce this feature. Hopefully with no user-visible features
-(and only a mount option) your concerns there are resolved and hopefully
-we can work to figure out what remaining concerns there are.
-
-Thank you as always for your time. I hope you have a great day!
-Joshua
-
-[1] https://lore.kernel.org/all/20260807202059.2620949-1-joshua.hahnjy@gmail.com/
+My main question is why should we even bother to change this in the
+first place? Is that reason stronger than a theoretical breakage of
+userspace that we might learn much later?
+-- 
+Michal Hocko
+SUSE Labs
