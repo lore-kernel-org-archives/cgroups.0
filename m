@@ -1,130 +1,147 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE2C2BE7A7;
-	Tue, 18 Aug 2026 13:02:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E64537E5E1
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 14:29:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787058148; cv=none; b=MgjbsqTm1ylXJDYEJN2FdOAaoFHndUVPOO73PGWoCRueTSmefVVCtz+oS2GbdQc0oKCz9+YAPJNIsU1tc+YnQT5sjCq1KXjzzX6+mYSdIEivTGvcKKca8qG6oz7AVhVUxeUGrwVYZBzB6EJhM9PgjLJkE0GM5z2XJRuzFWhisik=
+	t=1787063394; cv=none; b=ZOFmipNED/wVEWJ3tBNub0FZ4vAugZMLIxU39NcQI872xELATynh3fb5K8v4yC8B7iYaGnH8yGfVeVaiZI67QDsOU4Mij1Evn8DFMT/KCUoUm6xEAKSWRptUi54ow4m3t/O6LtAwKcrm18qDCvTSgrI49Axlyg7z3pGlTxpd1Gw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787058148; c=relaxed/simple;
-	bh=8PlVB2Jwf1buwFO76bi8ZJiAj7WsYCR0dz5XZXhimJ0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Od1WpBU3hYfyjc95mR9GWCZasTxRuvlelbDomVoA+je7jmwrDsY63RJn8ciFFZznWiJqGkIH/n1KTLlReBaNF1lxAHH1XxvhWHSK1wjYKnAy1fs69tbxmeVYWn3MpHvO4RY5ThIVeuiVeZKPXL5DImHljTEnQ083Ngj8jfyzd7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 067491609b0511f19a56ed5b684f684d-20260818
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_T1, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:5b11598d-57da-4644-8347-efbc18028d8d,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:35
-X-CID-INFO: VERSION:1.3.19,REQID:5b11598d-57da-4644-8347-efbc18028d8d,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:35
-X-CID-META: VersionHash:7db8b62,CLOUDID:9cdabe40f9b50419632787e2e413e574,BulkI
-	D:260818210214G3XWLUVL,BulkQuantity:0,SF:17|19|38|66|78|102|127|865|898,TC
-	:nil,Content:0|15|50,EDM:5,IP:-2,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,
-	BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_ULS,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 067491609b0511f19a56ed5b684f684d-20260818
-X-User: husong@kylinos.cn
-Received: from ctao-book.. [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <husong@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1956968772; Tue, 18 Aug 2026 21:02:11 +0800
-From: Song Hu <husong@kylinos.cn>
-To: akpm@linux-foundation.org,
-	mhocko@suse.com,
-	mhocko@kernel.org,
-	joshua.hahnjy@gmail.com,
-	willy@infradead.org,
-	shakeel.butt@linux.dev
-Cc: linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	hannes@cmpxchg.org,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	zhuhui@kylinos.cn,
-	audra@redhat.com,
-	bingfangguo@tencent.com,
-	Song Hu <husong@kylinos.cn>
-Subject: [PATCH v2] mm: memcg: release the css reference when a stock slot empties
-Date: Tue, 18 Aug 2026 21:01:35 +0800
-Message-ID: <20260818130135.154315-1-husong@kylinos.cn>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1787063394; c=relaxed/simple;
+	bh=Nhk/TpmrrdzGGpQVRKKiJc+WJRrpAIFK2udf3IVnMPY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u63EWIwEFtSy5lWl6QEIwdxb0Jbacbc76O6Aflb7Rjlwyr6LJp5oHfg3R4DSSYUKEvsy+35ZYAH6KN9B8uTjxL5RUZkz3mIfJQue7hi6l2wweDIEfFIAG5ldT0q7KW4z6yzEYTdwJ4zE/PAUp9Cvq9kEsntV7q8a86shF0u/cSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Zbcb8Rq+; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Zbcb8Rq+"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-49558ce01afso36460365e9.1
+        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 07:29:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1787063391; x=1787668191; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=d7NrMCatC8ufvSDl+4wuR3/sLG8+OS++07jlkcNtqeY=;
+        b=Zbcb8Rq+4Hltyos/V26v3GwnBdRZbr9Dttbks+fyhAlP9n4uyzDslbCjtl/T1E3URW
+         fQQ538gJHvFNzmb+XStyUe1XnTPW/x7xT1HZfZpQvHfx9Pd55YPt1NPZQr4JBW6QQ8ux
+         TqzDwlSCYuuD0+xts0hcqYDLyzNaAHeacr72En9AXkTwQpg6GCwOy0ZHnSPLHQnN7IDV
+         UxUD5TAF9GQfMcktV/C01527kaxRb+MWiHuTUGQxqyMrutBKNzHW02BIW/ByPvnof7kI
+         cqZiFcPM571dBqnCqmeZ9obyXF1cFWs3uZ/T4G5ZAfb8Y5rupF1lQwNj3FRm4H3MAr7r
+         SuSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787063391; x=1787668191;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=d7NrMCatC8ufvSDl+4wuR3/sLG8+OS++07jlkcNtqeY=;
+        b=Qbymb1DWvUURhXCbcG5pLwvaZcZZiaug5Lxf/bfPOP1zipobOEhKkz6gn6G74uC8zp
+         mhr5uqKUzAOzaZQRCKPgK4Iedo3KrKm2vcq5c4tIJ2QxmIt/7ZxLpTR8MRlNDk6dRQnE
+         zx+tC0EQHJBoO9NRTjhjDgQl0CVB9YBh6hKggbHMlgdYmqybuGHi9SAuALBMeyD78hGO
+         rznInUFHIIg2M0EUotDj9sTiYDnHjqAdUahdDQXo6o4qcnVei4vizpxBu/F9Fj+q8DhQ
+         dhqPuWWAs7XJZQKOgPD0gf0s6VsHnrq1o2rcjMoNjO6ZBQxxov7VK9z3HGYNdbOj9Hsk
+         aVBw==
+X-Forwarded-Encrypted: i=1; AHgh+Rptj5R1luLsqYcWR/zyXFgmF8bRYLzYwWFFnyztRRepbrE7AG6meQlx1ofc0LZB68wSrPR1sbyA@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZt0DWi0FZV8N0HziGz8Vl2g6wkK1+XepURZRRGHxAPtf7Nkfx
+	qj9VGVK8C0qOrGe2Icg27PacPpGf1Flp4veVZJThvto92la2HNci1/8gTK1WfIxcP3g=
+X-Gm-Gg: AR+sD12BYXhw9tW5jvc4z7NwhiBhl6r+6yBft1nHqOue8RmIsQoz9kD8VeXww9QFgAX
+	JfmKnTw+cJqDAp+WPgcma1/ZgRDivAjpj78ZkDr6Lz0BdLpnqIGiD86hITpQNBs9kxKHxEA4YB8
+	Eg0wMl+1TsYK6qCJTXTDmig7taUZIUZie+TRGl5xKDn4/Cy7yxyg0F8o3JWHxMzP5WrMfQofSJA
+	EePe2lALhMTXmJSJVLPVqSj9V4O5vNmSx4THpQ/Q09qCT8VODcvwstCD+wK4qQ152vrTpVsffUZ
+	y3LrWIUp6YH+HiICywiyo/s5AMHofraq+Vnq6V3ftfNVuGu9SE1U9jIHgg/cLMUeNJ+3gfukg9N
+	3n41VDLKytHuyvh6LQdsA/wlKRxI8rqGSpM6SvEuZVi3amlyJ7SHlKuMvMqq3mdpkFW09rXyFNj
+	lCxqMar80NR5eMhoKFoE3E16zz6s2SSLKhvaohr9ON7iWM2VG6x/y0kLPE5Xarjvm9XH3Nwj+fo
+	A==
+X-Received: by 2002:a05:600c:c171:b0:499:7f38:d77 with SMTP id 5b1f17b1804b1-4999fb2e1dbmr169268255e9.6.1787063391240;
+        Tue, 18 Aug 2026 07:29:51 -0700 (PDT)
+Received: from localhost (109-81-87-166.rct.o2.cz. [109.81.87.166])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4999d0876b8sm189990045e9.8.2026.08.18.07.29.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Aug 2026 07:29:50 -0700 (PDT)
+Date: Tue, 18 Aug 2026 16:29:49 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Song Hu <husong@kylinos.cn>
+Cc: akpm@linux-foundation.org, joshua.hahnjy@gmail.com, willy@infradead.org,
+	shakeel.butt@linux.dev, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
+	roman.gushchin@linux.dev, muchun.song@linux.dev, zhuhui@kylinos.cn,
+	audra@redhat.com, bingfangguo@tencent.com
+Subject: Re: [PATCH v2] mm: memcg: release the css reference when a stock
+ slot empties
+Message-ID: <aoRsXafoUYxFccQr@tiehlicka>
+References: <20260818130135.154315-1-husong@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260818130135.154315-1-husong@kylinos.cn>
 
-consume_stock() can drive a stock slot's nr_pages to zero while its
-cached[] pointer stays set, so the slot keeps pinning the css
-reference that refill_stock() took.  The offlining drain only
-flushes slots with cached pages, so the reference is never released
-unless the slot happens to be displaced by an unrelated charge or
-by CPU hotplug, and the memcg lingers in the dying state - up to
-NR_MEMCG_STOCK (7) of them per CPU under container churn.
+On Tue 18-08-26 21:01:35, Song Hu wrote:
+> consume_stock() can drive a stock slot's nr_pages to zero while its
+> cached[] pointer stays set, so the slot keeps pinning the css
+> reference that refill_stock() took.  The offlining drain only
+> flushes slots with cached pages, so the reference is never released
+> unless the slot happens to be displaced by an unrelated charge or
+> by CPU hotplug, and the memcg lingers in the dying state - up to
+> NR_MEMCG_STOCK (7) of them per CPU under container churn.
+> 
+> Keeping the slot populated past the last page only saves a
+> css_get()/css_put() pair on the next charge of the same memcg, and
+> costs more than that: the offlining drain has to know about empty
+> slots, and refill_stock() cannot reuse them either, so a charge
+> under a different memcg evicts a live batch through the drain_idx
+> rotation instead.
+> 
+> Drop the reference in consume_stock() when the slot empties.
+> Empty slots stop existing, so is_memcg_drain_needed() and the drain
+> path stay as they are, and refill_stock() reuses emptied slots
+> directly.  The cost is one refcount pair per emptied slot, at most
+> once per MEMCG_CHARGE_BATCH pages.
+> 
+> Fixes: d1a05b6973c7 ("memcg: do not try to drain per-cpu caches without pages")
+> Signed-off-by: Song Hu <husong@kylinos.cn>
 
-Keeping the slot populated past the last page only saves a
-css_get()/css_put() pair on the next charge of the same memcg, and
-costs more than that: the offlining drain has to know about empty
-slots, and refill_stock() cannot reuse them either, so a charge
-under a different memcg evicts a live batch through the drain_idx
-rotation instead.
+Acked-by: Michal Hocko <mhocko@suse.com>
+Thanks!
 
-Drop the reference in consume_stock() when the slot empties.
-Empty slots stop existing, so is_memcg_drain_needed() and the drain
-path stay as they are, and refill_stock() reuses emptied slots
-directly.  The cost is one refcount pair per emptied slot, at most
-once per MEMCG_CHARGE_BATCH pages.
+> ---
+> 
+> Changes since v1: drop the reference at consume time instead of flushing
+> empty slots from the offlining drain, as discussed with Michal Hocko and
+> Joshua Hahn (full-stock drain cost, refill reuse).
+> 
+> v1: https://lore.kernel.org/all/20260817025917.66233-1-husong@kylinos.cn/
+> 
+>  mm/memcontrol.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 17da1f43b7d3..1271d390b617 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2140,7 +2140,12 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>  
+>  		stock_pages = READ_ONCE(stock->nr_pages[i]);
+>  		if (stock_pages >= nr_pages) {
+> -			WRITE_ONCE(stock->nr_pages[i], stock_pages - nr_pages);
+> +			stock_pages -= nr_pages;
+> +			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+> +			if (!stock_pages) {
+> +				css_put(&memcg->css);
+> +				WRITE_ONCE(stock->cached[i], NULL);
+> +			}
+>  			ret = true;
+>  		}
+>  		break;
+> -- 
+> 2.43.0
 
-Fixes: d1a05b6973c7 ("memcg: do not try to drain per-cpu caches without pages")
-Signed-off-by: Song Hu <husong@kylinos.cn>
----
-
-Changes since v1: drop the reference at consume time instead of flushing
-empty slots from the offlining drain, as discussed with Michal Hocko and
-Joshua Hahn (full-stock drain cost, refill reuse).
-
-v1: https://lore.kernel.org/all/20260817025917.66233-1-husong@kylinos.cn/
-
- mm/memcontrol.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 17da1f43b7d3..1271d390b617 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2140,7 +2140,12 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 
- 		stock_pages = READ_ONCE(stock->nr_pages[i]);
- 		if (stock_pages >= nr_pages) {
--			WRITE_ONCE(stock->nr_pages[i], stock_pages - nr_pages);
-+			stock_pages -= nr_pages;
-+			WRITE_ONCE(stock->nr_pages[i], stock_pages);
-+			if (!stock_pages) {
-+				css_put(&memcg->css);
-+				WRITE_ONCE(stock->cached[i], NULL);
-+			}
- 			ret = true;
- 		}
- 		break;
 -- 
-2.43.0
-
+Michal Hocko
+SUSE Labs
