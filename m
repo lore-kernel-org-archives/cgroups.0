@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9998D331A5B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB29B3AD52E;
 	Tue, 18 Aug 2026 05:38:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787031504; cv=none; b=qkkv0vExO1zszz1HKbojIXxLaBSlX9WQCHOJk9Unmspreq2DA0YKl+e6jC3YIMDjW3ECFSuJpQws13xDzKm01T8pu9gNyYaEc2iIjwCaXEAC/oKxRmz+IKDQeSr7yGGyz5XyFdS/4GxnRKm7/VHBAn0X/FJkyo99OvKZDwOaa4s=
+	t=1787031504; cv=none; b=MbhMWgIr6/qSPD+0BtLXV7N+7yr83v841sHgbYM/QlIgoPvKSLcSu/WRWa5NEBIr/1xNAHHJEjd4cXbCB1QX2IQgrF/+ytJJ40b1+nkyoBh5i3YSqnK+Y2jUgnOEf/RSS6evkmkxxlBKaqzsA6+DcaVWsGMMShOzBNyyiV8Gr5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787031504; c=relaxed/simple;
-	bh=/Dap8HX+JALspR15co61JO/ZEe5sgXMBY1Lvt6lrf0U=;
+	bh=OAEYAHvRDn/KTY3S+lBibMczmqVpBxMms7NDi/kgmjY=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=qWIs7ELeGzwfPx1rBqZPn/Ag5hZcZYc9OWxOHMOJoGvDStiHvPhvqjvLdFlSHLS+QxZGt3NVMLiQn4LsEsZh7Ezg9yw7czA7c00C93JkmugtTXgFuLGjqoc9V0fnBAY83J6ETxx+TF73T8BhZybmrhcCc3MBYdZVlJqIGoApuVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KpA3xO6c; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=M6sj+jCuPaJHrNSy2Y/SrNHzJgPBdTf3G/QD9SSX8ckXrCZdhTtC8dt5Sxts5AnCWLKz347qF2HnSARX4fZBqPz7TJ/woepcxk4vRoZWEBJqOzW+hSfMYazhMvUBz4TEHkBEO52t2sK3USkxOMQYAodows8sKUSjQSuieHNDyN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CDhDxJ/+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KpA3xO6c"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 41221C2BCFD;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CDhDxJ/+"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 54B7EC32786;
 	Tue, 18 Aug 2026 05:38:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1787031504;
-	bh=/Dap8HX+JALspR15co61JO/ZEe5sgXMBY1Lvt6lrf0U=;
+	bh=OAEYAHvRDn/KTY3S+lBibMczmqVpBxMms7NDi/kgmjY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=KpA3xO6c41IaXbmqmCFFQNGgoiKoADBI9iIN5v1UtOj5mM5iCtENnL3NuKy0jae6Y
-	 saGmVezGKNIRYu8komaX1eDr3C+spdAJdi1wB6tPXleDN8/7T++ZqESkDbPfmhxYuI
-	 Cvk4cqMjQuRFLZjUHLHHWHfUWGXHRka/450fgn2lPYrZCMSNGaXWmxd/gieSKlnhFG
-	 9N+cxxdoUt9gHa38bAozYxLZRWsDp0JirwdS5lk1u73wU9CUy9IP3HKh1y1g/W3NCK
-	 M7Bc01TLYjpmzv/bWS4ZONcjF/ZmpCnl9/bf/VsWH6VDXHgoPn9FL5tnT/6nm9ZeaN
-	 ZQPFwMA/qgt9A==
+	b=CDhDxJ/+TQh30FoHM+NxivNH1JG2DRH7QhmDrXC7BbvEHeEYqm1kd5bkAtfmZUOlp
+	 pVKjvVKLQ8TFB3gq9QUN8rW5NpwPX1sfImb5wvZS0WMvF7pPMUyRUWC9RSPHXypCHZ
+	 /3EhppiEwOKBJERmLnPf/0sOYpLgHf9THs10LlFtm4BKbMittHzwA52pkI3rIPzZHx
+	 A12xUaMLDV2/jYO9/FHyJ4QM+XVS90Xsl1w5x+0eYdlX3zMvzoAKNhWZnFURADtSjO
+	 drVDEP5RpM0xqykVEhCQENQmrJnvnURtCcZWtS44I7eOErJmtSQa+FA8jeb77KeioM
+	 m98o1MqooY7Ng==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A8CCC5DF82;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F0C3C5DF70;
 	Tue, 18 Aug 2026 05:38:24 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 18 Aug 2026 13:38:05 +0800
-Subject: [PATCH 3/7] mm/migrate: copy the referenced state via
- folio_migrate_refs()
+Date: Tue, 18 Aug 2026 13:38:06 +0800
+Subject: [PATCH 4/7] mm/mglru: move max_seq read into walk_update_folio
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260818-mglru-flags-cleanup-v1-3-8dbbdac0d28c@tencent.com>
+Message-Id: <20260818-mglru-flags-cleanup-v1-4-8dbbdac0d28c@tencent.com>
 References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
 In-Reply-To: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
 To: linux-mm@kvack.org
@@ -60,11 +59,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>, 
  Kairui Song <kasong@tencent.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787031500; l=2602;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787031500; l=5056;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=MnXqCrD+kNnVgk+e93wC9DHznJeWbyePZC5TTqXqepo=;
- b=11ce+XvCl2hD19O2/CuCgrvBrmVTUm6nz/9U0YfjPuhZy1wZ8IJb0amYtFNhwztQfIB/4LtWh
- dx0NKZPYnYMBdFtD1f5AZ3c3/MzE+JFMBVWgnVPkcoVz/2/dB4v2kvE
+ bh=xJliWtARqDMjztdZd0y51LBdqAE6bS5BXiS6nqiKTh0=;
+ b=kE0rlnG7UORkiVh+WKvTvRn6/woWdPxys4/uv7e6m4BR0rOIriUl/7Jmyu83XFDkyjHEt/8J9
+ jJA7X49biR3Byh4lQigV51i9AyJdJFqg1Wh0jt7fQA0jhva1/yKtx9D
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -74,77 +73,142 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-folio_migrate_flags() copies PG_referenced separately, while
-folio_migrate_refs() copies the rest of the reference state. Make
-folio_migrate_refs() copy the complete state, i.e., PG_referenced plus
-the MGLRU refs counter, in both LRU implementations, and drop the
-open-coded copy so the reference state is transferred in one place.
+walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
+each read lrugen->max_seq to compute the target generation used by
+walk_update_folio(), then pass it as a parameter. Move the read into
+walk_update_folio() itself so the callers no longer need to compute
+or pass the value.
+
+The max_seq read now happens once per folio update rather than once
+per walk range, so folios always get promoted to the current youngest
+generation.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
+Reviewed-by: Baoquan He <baoquan.he@linux.dev>
 ---
- include/linux/mm_inline.h | 16 +++++++++++++---
- mm/migrate.c              |  4 ++--
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ mm/vmscan.c | 29 ++++++++++++-----------------
+ 1 file changed, 12 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index 93bf3fa221f8..df62daaa2ee7 100644
---- a/include/linux/mm_inline.h
-+++ b/include/linux/mm_inline.h
-@@ -366,11 +366,19 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
- 	return true;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 080132997d87..a819be6b7ae9 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3517,13 +3517,15 @@ static bool suitable_to_scan(int total, int young)
  }
  
-+/**
-+ * folio_migrate_refs - copy the reference state to a new folio
-+ * @new: the destination folio
-+ * @old: the source folio
-+ *
-+ * Transfer the reference state to @new during migration: the MGLRU
-+ * refs count, including PG_referenced, or just PG_referenced for the
-+ * active/inactive LRU.
-+ */
- static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
+ static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
+-		struct folio *folio, int new_gen, bool dirty)
++			      struct lruvec *lruvec, struct folio *folio, bool dirty)
  {
--	unsigned long refs = READ_ONCE(old->flags.f) & LRU_REFS_MASK;
--
--	set_mask_bits(&new->flags.f, LRU_REFS_MASK, refs);
-+	BUILD_BUG_ON(LRU_REFS_MASK & BIT(PG_referenced));
-+	folio_set_lru_refs(new, folio_lru_refs(old));
- }
- #else /* !CONFIG_LRU_GEN */
+-	int old_gen;
++	int new_gen, old_gen;
  
-@@ -401,6 +409,8 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ 	if (!folio)
+ 		return;
  
- static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
- {
-+	if (folio_test_referenced(old))
-+		folio_set_referenced(new);
- }
- #endif /* CONFIG_LRU_GEN */
- 
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 15b45832bcfa..82307332711f 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -776,8 +776,6 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
- {
- 	int cpupid;
- 
--	if (folio_test_referenced(folio))
--		folio_set_referenced(newfolio);
- 	if (folio_test_uptodate(folio))
- 		folio_mark_uptodate(newfolio);
- 	if (folio_test_clear_active(folio)) {
-@@ -807,7 +805,9 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
- 	if (folio_test_idle(folio))
- 		folio_set_idle(newfolio);
- 
-+	/* Copy the reference state, including PG_referenced */
- 	folio_migrate_refs(newfolio, folio);
++	new_gen = lru_gen_from_seq(READ_ONCE(lruvec->lrugen.max_seq));
 +
- 	/*
- 	 * Copy NUMA information to the new page, to prevent over-eager
- 	 * future migrations of this same page.
+ 	if (dirty && !folio_test_dirty(folio) &&
+ 	    !(folio_test_anon(folio) && folio_test_swapbacked(folio) &&
+ 	      !folio_test_swapcache(folio)))
+@@ -3554,8 +3556,6 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
+ 	struct lru_gen_mm_walk *walk = args->private;
+ 	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
+-	DEFINE_MAX_SEQ(walk->lruvec);
+-	int gen = lru_gen_from_seq(max_seq);
+ 	unsigned int nr;
+ 	pmd_t pmdval;
+ 
+@@ -3606,7 +3606,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
+ 			continue;
+ 
+ 		if (last != folio) {
+-			walk_update_folio(walk, args->vma, last, gen, dirty);
++			walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
+ 
+ 			last = folio;
+ 			dirty = false;
+@@ -3619,7 +3619,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
+ 		walk->mm_stats[MM_LEAF_YOUNG] += nr;
+ 	}
+ 
+-	walk_update_folio(walk, args->vma, last, gen, dirty);
++	walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
+ 	last = NULL;
+ 
+ 	if (i < PTRS_PER_PTE && get_next_vma(PMD_MASK, PAGE_SIZE, args, &start, &end))
+@@ -3642,8 +3642,6 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
+ 	struct lru_gen_mm_walk *walk = args->private;
+ 	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
+-	DEFINE_MAX_SEQ(walk->lruvec);
+-	int gen = lru_gen_from_seq(max_seq);
+ 
+ 	VM_WARN_ON_ONCE(pud_leaf(*pud));
+ 
+@@ -3697,7 +3695,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
+ 			goto next;
+ 
+ 		if (last != folio) {
+-			walk_update_folio(walk, vma, last, gen, dirty);
++			walk_update_folio(walk, vma, walk->lruvec, last, dirty);
+ 
+ 			last = folio;
+ 			dirty = false;
+@@ -3711,7 +3709,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
+ 		i = i > MIN_LRU_BATCH ? 0 : find_next_bit(bitmap, MIN_LRU_BATCH, i) + 1;
+ 	} while (i <= MIN_LRU_BATCH);
+ 
+-	walk_update_folio(walk, vma, last, gen, dirty);
++	walk_update_folio(walk, vma, walk->lruvec, last, dirty);
+ 
+ 	lazy_mmu_mode_disable();
+ 	spin_unlock(ptl);
+@@ -4275,8 +4273,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+ 	struct pglist_data *pgdat = folio_pgdat(folio);
+ 	struct lruvec *lruvec;
+ 	struct lru_gen_mm_state *mm_state;
+-	unsigned long max_seq;
+-	int gen;
+ 
+ 	lockdep_assert_held(pvmw->ptl);
+ 	VM_WARN_ON_ONCE_FOLIO(folio_test_lru(folio), folio);
+@@ -4313,8 +4309,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+ 
+ 	memcg = get_mem_cgroup_from_folio(folio);
+ 	lruvec = mem_cgroup_lruvec(memcg, pgdat);
+-	max_seq = READ_ONCE((lruvec)->lrugen.max_seq);
+-	gen = lru_gen_from_seq(max_seq);
+ 	mm_state = get_mm_state(lruvec);
+ 
+ 	lazy_mmu_mode_enable();
+@@ -4346,7 +4340,7 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+ 			continue;
+ 
+ 		if (last != folio) {
+-			walk_update_folio(walk, vma, last, gen, dirty);
++			walk_update_folio(walk, vma, lruvec, last, dirty);
+ 
+ 			last = folio;
+ 			dirty = false;
+@@ -4358,13 +4352,14 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+ 		young += nr;
+ 	}
+ 
+-	walk_update_folio(walk, vma, last, gen, dirty);
++	walk_update_folio(walk, vma, lruvec, last, dirty);
+ 
+ 	lazy_mmu_mode_disable();
+ 
+ 	/* feedback from rmap walkers to page table walkers */
+ 	if (mm_state && suitable_to_scan(i, young))
+-		update_bloom_filter(mm_state, max_seq, pvmw->pmd);
++		update_bloom_filter(mm_state, READ_ONCE(lruvec->lrugen.max_seq),
++				    pvmw->pmd);
+ 
+ 	mem_cgroup_put(memcg);
+ 
 
 -- 
 2.55.0
