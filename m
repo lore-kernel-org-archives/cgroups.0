@@ -1,131 +1,169 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 209A732E13B;
-	Tue, 18 Aug 2026 01:22:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 852E48834;
+	Tue, 18 Aug 2026 01:28:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787016128; cv=none; b=asPwNjdoFyEi0b0cCT/xDh9LVj8yiLiL6Pde7w6NX/BNG0wTVGvV8UToqfwJrjey60yU0owVwBMSSlVp0Qmq2z4255rcm70qtJcbWPzxqE3v/Veu7WMKZ51+LEq8hlCVlJcIYoLcI1B6sxvpP++TdQTxo8vjZseHlfrUGV4OF+I=
+	t=1787016530; cv=none; b=f+W9rhZBeZA2Mp7lV9aOtDmGY7NB6WQMyY4FHl02iyRG08iy6W0KVNIPB0PvJvbNlPF1J54C7FOIMgfthYuAMPLGtRFfnRaUcxE7q0U+tu3ATJmEHOA3Uudt3O6QF4siMSYr2eKp+JfGf7yFrPkvjZI0K0G1JFzUbOd+G6Is/FE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787016128; c=relaxed/simple;
-	bh=fI4XsC5BRQo9zG/wirUL6EJlTZeqgexhtkMwCr3WwZ4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PsVIo6Jy3EhcSXa9mctzk5/Rxu9oILQb7pVpqx8y51phrTSYz2ZryvzE2ar12HOVScc/WNlnpB20xo/sA2nTqVgyzwBH+jMFBHlyrVemivDHt1Ijl/xoZ1B2HICFZLWKbsQMFoXbTzMHQfcpWqH+b4OtnlhviqwF9Z1HrOE36xU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 3386d1849aa311f19a56ed5b684f684d-20260818
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_PRE_RE, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:95ddea70-7988-4cc8-adf0-a1985ffdd238,IP:10,
-	URL:0,TC:0,Content:32,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:67
-X-CID-INFO: VERSION:1.3.19,REQID:95ddea70-7988-4cc8-adf0-a1985ffdd238,IP:10,UR
-	L:0,TC:0,Content:32,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTI
-	ON:quarantine,TS:67
-X-CID-META: VersionHash:7db8b62,CLOUDID:d9bb3ca6ae86ca470bf3cccdf54fcecc,BulkI
-	D:260818092159OUBCKOM3,BulkQuantity:0,SF:17|19|66|78|81|82|83|127|865|898,
-	TC:nil,Content:4|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,B
-	EC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_SNR,TF_CID_SPAM_ASC,TF_CID_SPAM_FAS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 3386d1849aa311f19a56ed5b684f684d-20260818
-X-User: husong@kylinos.cn
-Received: from ctao-book.. [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <husong@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 621905450; Tue, 18 Aug 2026 09:21:56 +0800
-From: Song Hu <husong@kylinos.cn>
-To: joshua.hahnjy@gmail.com
-Cc: akpm@linux-foundation.org,
-	apopple@nvidia.com,
-	axelrasmussen@google.com,
-	baohua@kernel.org,
-	bsegall@google.com,
-	byungchul@sk.com,
-	cgroups@vger.kernel.org,
-	david@kernel.org,
-	dietmar.eggemann@arm.com,
-	gourry@gourry.net,
-	hannes@cmpxchg.org,
-	harry@kernel.org,
-	jackmanb@google.com,
-	juri.lelli@redhat.com,
-	kasong@tencent.com,
-	kernel-team@meta.com,
-	kprateek.nayak@amd.com,
-	liam@infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	ljs@kernel.org,
-	matthew.brost@intel.com,
-	mgorman@suse.de,
-	mhocko@kernel.org,
-	mhocko@suse.com,
-	mingo@redhat.com,
-	muchun.song@linux.dev,
-	peterz@infradead.org,
-	qi.zheng@linux.dev,
-	rakie.kim@sk.com,
-	rientjes@google.com,
-	roman.gushchin@linux.dev,
-	rostedt@goodmis.org,
-	rppt@kernel.org,
-	shakeel.butt@linux.dev,
-	surenb@google.com,
-	tjmercier@google.com,
-	vbabka@kernel.org,
-	vincent.guittot@linaro.org,
-	vschneid@redhat.com,
-	weixugc@google.com,
-	ying.huang@linux.alibaba.com,
-	yosry@kernel.org,
-	yuanchu@google.com,
-	ziy@nvidia.com,
-	husong@kylinos.cn
-Subject: Re: [RFC PATCH v3 09/14] mm/memcontrol: Make memory.high tier-aware
-Date: Tue, 18 Aug 2026 09:21:15 +0800
-Message-ID: <20260818012115.65838-1-husong@kylinos.cn>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260807202059.2620949-10-joshua.hahnjy@gmail.com>
-References: <20260807202059.2620949-10-joshua.hahnjy@gmail.com>
+	s=arc-20240116; t=1787016530; c=relaxed/simple;
+	bh=og5xkeICHTXYTm7Wwls2dvjb5/fe9gky8XSFG+OTibs=;
+	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
+	 Subject:From:To:Cc:Date; b=STHSyfhG/c9DIqcRimbpkKlSF0hkk6UbvArO5Fc1mMOMqIPntKKqrVqHJvpSFn4l/XlDPdaBmTDBeXdonamuDSnRtQJxrL/y5TxfmR8guF/dQDfEZmRe+tg/zmw+DnnWlBmzCG0QouIfAWgeHJ1oWM07pXt0wyHqlrzObKAK3Qk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HHf9Dbme; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HHf9Dbme"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E4A21F000E9;
+	Tue, 18 Aug 2026 01:28:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787016529;
+	bh=fBoCeUoxD98xjMKeJ6JPNt69lnp6W0TuVpy5iPOOoOA=;
+	h=In-Reply-To:References:Subject:From:To:Cc:Date;
+	b=HHf9DbmeCAQBVHVfHXTsbrBFrX559HoBW0tgOqX46ZuckjIPKImVmY7AtIdyxpqZF
+	 s7Un6GfPcaT/VL0UoIKNpFKyBXy3b2O5V555Efx4Isv2T/nnBGFNHSGrbEmCrGr4xZ
+	 j6FwKxK/ADJrAgHLbKgtwZ6I+VidUk8lAjvwRC7ZsOUnupHcMcZg4DM/C0v8Y8G02u
+	 dKbcBFUmyXd9LJlitx9Dpg2a3Oday3Q6QWOFa279fCf3paYjze8OskAdijsv2Oew6X
+	 tcOO245SvACJ9zeYjib7fp7wfxg3N9YhuL09M+vXoUVVHS0ob8hlutmWB2MZyLXY2b
+	 BRtkhrmCsmrrQ==
+Content-Type: multipart/mixed; boundary="===============2544612169039222862=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-Id: <a075bb6f6a05290bd2d0a9caafe7d612b836031676de3ac8f03b232bb5a4ecb5@mail.kernel.org>
+In-Reply-To: <20260818002450.3071325-3-ziyang.meme@gmail.com>
+References: <20260818002450.3071325-3-ziyang.meme@gmail.com>
+Subject: Re: [PATCH v2 2/2] selftests/bpf: add cgroup_iter_cpu test for cpu cgroup kfuncs
+From: bot+bpf-ci@kernel.org
+To: ziyang.meme@gmail.com,tj@kernel.org,hannes@cmpxchg.org,mkoutny@suse.com,ast@kernel.org,daniel@iogearbox.net,andrii@kernel.org,eddyz87@gmail.com,memxor@gmail.com,shuah@kernel.org,kernel-team@meta.com
+Cc: mingo@redhat.com,peterz@infradead.org,vincent.guittot@linaro.org,bsegall@google.com,dietmar.eggemann@arm.com,martin.lau@linux.dev,song@kernel.org,yonghong.song@linux.dev,jolsa@kernel.org,emil@etsalapatis.com,roman.gushchin@linux.dev,shakeel.butt@linux.dev,inwardvessel@gmail.com,ziyang.meme@gmail.com,bpf@vger.kernel.org,cgroups@vger.kernel.org,linux-kselftest@vger.kernel.org,linux-kernel@vger.kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
+Date: Tue, 18 Aug 2026 01:28:47 +0000 (UTC)
 
-(pre-existing, not from this series - mentioning it here because
-it reworks memory.high behaviour)
+--===============2544612169039222862==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-The penalty computation in calculate_high_delay() can overflow:
+> commit 0dbd10c9717fb724b55b28346bbbbe9e5e570bc6
+> Author: Ziyang Men <ziyang.meme@gmail.com>
+> Date:   Mon Aug 17 17:24:50 2026 -0700
+>
+>     selftests/bpf: add cgroup_iter_cpu test for cpu cgroup kfuncs
+>
+>     Add cgroup_iter_cpu, a selftest for the CPU controller BPF kfuncs.
+>
+>     The userspace side runs a CPU hog in a test cgroup with cpu.max settled
+>     then:
+>
+>       - checks the CPU-time and throttling counters are nonzero,
+>       - compares whether all values the program read are same as those
+>         reading from cgroup file.
+>
+>     Enable CONFIG_CGROUP_SCHED, CONFIG_FAIR_GROUP_SCHED and
+>     CONFIG_CFS_BANDWIDTH in the selftest config.
+>
+>     Tested on VM with v7.2-rc5.
+>
+>     Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
+>     Assisted-by: Claude:claude-opus-5
+>     Signed-off-by: Ziyang Men <ziyang.meme@gmail.com>
 
-	penalty_jiffies = max_overage * max_overage * HZ;
+This isn't a bug, but could the changelog body be split into paragraphs
+so it's clearer what state the cgroup is put in and which values are
+compared?
 
-max_overage is a fixed-point relative overage:
-calculate_overage() returns (usage - high) << 20 / high, so the
-square times HZ wraps once (usage - high) / high reaches
-4096 / sqrt(HZ).  That is roughly 130x at HZ=1000 and 259x at
-HZ=250 - reachable when memory.high is tightened far below the
-current usage of a large working set.
+The sentence "with cpu.max settled" doesn't say what quota is written
+(the test writes "10000 100000"), and "compares whether all values the
+program read are same as those reading from cgroup file" is missing
+words that would indicate which side is being read from where.
 
-Most wrapped values are still caught by the 2s clamp in
-mem_cgroup_handle_over_high(), but residues below the clamp pass
-through, and some of them produce far less throttling than
-intended - down to no sleep at all.
+Rewording might help, something like: "runs a CPU hog in a test cgroup
+with a cpu.max quota set, then checks that the CPU-time and throttling
+counters are nonzero and that every value the BPF program reports
+matches the corresponding value read from cpu.stat and cpu.stat.local."
 
-check_mul_overflow() with a clamp would saturate the penalty
-instead of wrapping it.  Could be folded in while memory.high is
-being reworked, or a standalone fix.
+> diff --git a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_cpu.c b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_cpu.c
+> new file mode 100644
+> index 000000000000..cd7e92ababfb
+
+[ ... ]
+
+> +/* Read cgroup file @name into @buf. */
+> +static int read_cgroup_file(int cgroup_fd, const char *name, char *buf,
+> +			    size_t size)
+> +{
+> +	ssize_t n;
+> +	int fd;
+> +
+> +	fd = openat(cgroup_fd, name, O_RDONLY);
+> +	if (fd < 0)
+> +		return -1;
+> +	n = read(fd, buf, size - 1);
+> +	close(fd);
+> +	if (n <= 0)
+> +		return -1;
+> +	buf[n] = '\0';
+> +	return 0;
+> +}
+
+This isn't a bug, but since cgroup_helpers.h already has
+write_cgroup_file() but no reader, would read_cgroup_file() be better
+placed next to it in cgroup_helpers.c so other tests can use it?
+
+It's a generic "read any cgroup file into a buffer" helper with nothing
+cpu-specific in it.
+
+> diff --git a/tools/testing/selftests/bpf/progs/cgroup_iter_cpu.c b/tools/testing/selftests/bpf/progs/cgroup_iter_cpu.c
+> new file mode 100644
+> index 000000000000..22b9bb62d910
+
+[ ... ]
+
+> +	if (tg && bpf_core_field_exists(tg->cfs_rq) &&
+> +	    bpf_core_field_exists(struct cfs_rq, throttled_clock_self_time)) {
+> +		__u32 mask_bytes = bpf_core_type_size(struct cpumask);
+> +		__u32 full_words = mask_bytes / sizeof(__u64);
+> +		int *cpu;
+> +
+> +		if (full_words)
+> +			bpf_for_each(bits, cpu,
+> +				     (const __u64 *)&__cpu_possible_mask,
+> +				     full_words)
+> +				throttled_self += read_throttled_self(tg, *cpu);
+> +
+> +		if (mask_bytes & (sizeof(__u64) - 1)) {
+> +			__u32 tail = 0;
+> +			const void *src = (const char *)&__cpu_possible_mask +
+> +					  full_words * sizeof(__u64);
+> +			int bit;
+> +
+> +			if (!bpf_probe_read_kernel(&tail, sizeof(tail), src))
+> +				bpf_for(bit, 0, 32)
+> +					if (tail & (1U << bit)) {
+> +						__u32 tail_cpu = full_words * 64 + bit;
+> +
+> +						throttled_self +=
+> +							read_throttled_self(tg, tail_cpu);
+> +					}
+> +		}
+> +	}
+
+This isn't a bug, but since struct cpumask is an array of unsigned long,
+sizeof() is always a multiple of 8 on 64-bit, so the `mask_bytes &
+(sizeof(__u64) - 1)` tail path never fires there - is 32-bit coverage
+the intent here, and if so would a comment saying so help?
+
+The `if (full_words)` guard also looks droppable given
+bpf_for_each(bits, ..., 0) is already a valid no-op
+(verifier_bits_iter.c:zero_words).
+
+
+---
+AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
+See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
+
+CI run summary: https://github.com/kernel-patches/bpf/actions/runs/32085852351
+--===============2544612169039222862==--
