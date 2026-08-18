@@ -1,92 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A5453438AD;
-	Tue, 18 Aug 2026 22:47:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 693CE33BBCC
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 23:02:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787093234; cv=none; b=rUHkDuuwpyxMOm6GVh5kOOEiXdp7Jl8BtI6IwU3rkNxiQ1A5SxFDoPbHffuAGhRjZqTFKDXG8tDXQL/mCFWH5IIX1nrxZcNxJpGdwYbuBSmZZc0WgwkBr1XCu+FSF9O9E22n4IE080n8c1D2MpIaEadMAShPWwaQDBKxh8O0Xu0=
+	t=1787094123; cv=none; b=RlwTB/JQAzIPfUumwaGY+FQx+xKd69PsOKErm53+eYdjWkV+U3Xw/wshd+T5lVJJ3Aiisix/yjIUW6RpGO05Z+6s3QO2Y53nX2qepswlXAiDHMGXm6yR/RYr0Jza8AZBoCyTwX3ZdAv7vdpwpCg/tjzkKpzm73P4JQRKQ38oAEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787093234; c=relaxed/simple;
-	bh=D+D3n/MHHwa/wZuKxcdIa1S+VEfAHrl3hOCkdawxaOU=;
+	s=arc-20240116; t=1787094123; c=relaxed/simple;
+	bh=LFNPoDeeTwavqXDYvxKz/k1t7gN3cxa/PZ/r6DBfaz4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PUJgOlPmsaaj+8cbKx/Tpw9N9Vadw/BgUKXqcNxlZU4CfM7wCsqGokD77R/1qM9x+a4JpsLV5bSDB813fQCfhj32tP//fYBeGqnnqnyYff4Wd0Qe4EutOAwOShuFPUp9ufmRtHvow8HtcPD0wPvd1GXURe+Ff1Ddc2avmd/I3uQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FMRySoef; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=XUelhcvjxTENF8jN2IGwia4u0iJpockLfpzV1sKCyk662jUbdK9JSu5Yg8N6iiAbTgja9LZMSRFyr9Vnokk0vdIskt5JkEHzbSWgv9pvjLe5ExpQAGzQte0d28sx4zjRYMK4w2RvJKk1w8fb7XrDmfOuW97sPjVJ3XH31C1z8X0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B/xOsERq; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FMRySoef"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F07721F000E9;
-	Tue, 18 Aug 2026 22:47:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787093232;
-	bh=6y3O9NvZg0DpM/RYLdDOGlq1iJ/HDAF2Ji2AF3eh7ww=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FMRySoefaxPPKHyYckE7+qgXLbpo+ZKMH5wDCLr1TTVKRwOv3158zd8TIKtx0NeWc
-	 VPGzL99RzQFLG5etYP7Dbkq7xGCxvuEotDR9YuCsZXc34C9uR+twabUI9nNcKvBJSS
-	 BERBTNQu9IiDfttQ6TMNRda37JAbBdvbJ+EDmrLaDykgEl3/7m5mnLh67VArG6aPXt
-	 FX6XqXzbEcyOjdqdKyQVza7x2atotkKu4YRdrw0A9L6fhsPuqJq2Gxp1llEpm2ngci
-	 VX3YVdqr6erCHlvgC6ArDVSvAoh9F4fIfuHFq1kUjYuALPWYe2hZoSUK9TbURvMP0+
-	 PZRe2On7cgIbw==
-Date: Tue, 18 Aug 2026 12:47:11 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Ziyang Men <ziyang.meme@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B/xOsERq"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2cc7e86e7aeso4035355ad.2
+        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 16:02:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787094122; x=1787698922; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=jjfWQTULW6kpWj4uQcqe65fiA3Rop9X8RDu4HH8k3wc=;
+        b=B/xOsERqIgCHWDOaMzy5GePw25OdJ9GeVqYJEzDQPsIyPRuRHWsfBJ7iAwZE4fZGC/
+         l3fsT0PvL4SjsE49AnYsX1JiOi5gMeLe+nEvZK0AKBn+gx1GEp+8VJq2pHAGJjVqBS2n
+         g/pasXB8FcgNvFReysZ8YVJQ91XHEnZEL9mnrSttJnjRKA9Kp5XDI+e6mYtqYk3/Wck0
+         0Zr6QDaU9O20NrnyZCccqQYHXVpQePtC9oAum1JpSCQCiwFUBTFV4TsznhIz0wLeQ2lb
+         jXRBR1ntij6h0j4ZYa8UtmMX/Oeq5dRwpSZTEHh1NOusZmHE/L/1SH66/yKgK8PMFVNG
+         vUdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787094122; x=1787698922;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jjfWQTULW6kpWj4uQcqe65fiA3Rop9X8RDu4HH8k3wc=;
+        b=Jc3SPwqYYmhEt1LYsgxDlX5aGXR13xtDrtg/azf6Zohq3YBYS8PAC4UlkPgeytCcG+
+         dpFPtcal18YAF8TiFaR9uTTDc7GTaInKO2GGnXeNe5FjLKiVycu14BELyOLbyz8taUX7
+         1JQJoqr68Pfnv2cE+4pqIGOGbNHNwBVFEMqLYNx2/DpDmqjqB/Byd6qxaUsdTgxiDPvX
+         41+CHFzsKRWRNHknQq3T2tuCYrjk//eSdKBw1ulXjLK1wzTRZGoPoLcWCDDBI9mi4z5b
+         KnjtUZFLcoI7DjZ0ewOXyMffeEcQQZNJvsPg0TvuAkz4V631BxYD5yQ0kmBgeYz/0KGY
+         HgTQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrUMJmmn+banTAaL0myhvrQtFbec+/jf/LfOJAtkD7HA6Pt1KEVPd3eGIbMNMK9fzi9A4IaqxdW@vger.kernel.org
+X-Gm-Message-State: AOJu0YxzYecQ5aA28wM3qoPhoMjBoXZJBdKWyIJXq/uaROTu/lUAHYfq
+	pHKMPkE5W/AYiID1YKf7rwxisWa8JS1/ICi1/pW93A7sz9VgXQI6V+ug
+X-Gm-Gg: AR+sD11z1J+RJ3DpqVUtlRNcw91E0eQtxdtcop9PAICc1Qh3nQMrZeIPH39nFQaoAoC
+	LPE4/IX5IUuFjvuAjYsRCLuDTVTwXcH/2BQM+oNrGJzhuy9C4hgwMmWmu36aoMqWg7jBsCWxA8J
+	axNI25j4tICvEb0rAxeDa4RLg1WA2OKpPjiyHCiThd/KVHSy7Fv5fCta2FL9P2Vdh4YaH+KZuTY
+	j1Jtj9iZSlltweHS5I9K8MWGtXteY56Z7i+khuhJmJQrryRtghNFHrNgP/W25uxCDk/N2THRVxR
+	F/ane0ws+BvTPg9OBqGcLi5fFL9qEW+jb5ymm6yxN1xbi2jVddUEmiigL5WcGz+cv9wAGcgapqc
+	rvRPPXwu6AgCU6MPiOnPgt/tD4xGq/iptdZWkFPSYcBKEHxQ71au5q4W5gApGPc0WJt+dT8wIyG
+	H4r9ZIparVsuCH8msnkneki3ihSH05UUSXcPsTj/khsCMEEFM9jgYIMDC6CyGZbeE9VgCo8jsE4
+	MZWjnwV
+X-Received: by 2002:a17:902:f682:b0:2b2:67ca:5ff9 with SMTP id d9443c01a7336-2d5fd41d626mr5840475ad.0.1787094121673;
+        Tue, 18 Aug 2026 16:02:01 -0700 (PDT)
+Received: from devvm16600.scu0.facebook.com ([2a03:2880:9ff:64::])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bef3bb51sm456874eec.6.2026.08.18.16.02.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Aug 2026 16:02:01 -0700 (PDT)
+Date: Tue, 18 Aug 2026 16:01:58 -0700
+From: Ziyang Men <ziyang.meme@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: kernel-team@meta.com, Jens Axboe <axboe@kernel.dk>,
+	Josef Bacik <josef@toxicpanda.com>,
 	Alexei Starovoitov <ast@kernel.org>,
 	Daniel Borkmann <daniel@iogearbox.net>,
 	Andrii Nakryiko <andrii@kernel.org>,
 	Eduard Zingerman <eddyz87@gmail.com>,
 	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Shuah Khan <shuah@kernel.org>, kernel-team@meta.com,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Ben Segall <bsegall@google.com>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
 	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
 	Yonghong Song <yonghong.song@linux.dev>,
 	Jiri Olsa <jolsa@kernel.org>,
 	Emil Tsalapatis <emil@etsalapatis.com>,
+	Shuah Khan <shuah@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
-	JP Kobryn <inwardvessel@gmail.com>, bpf@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] cgroup: add BPF kfuncs to read a cpu cgroup's
- stats
-Message-ID: <aoTg7ybddqzoZbz7@slm.duckdns.org>
-References: <20260818002450.3071325-1-ziyang.meme@gmail.com>
- <20260818002450.3071325-2-ziyang.meme@gmail.com>
- <aoSTaFwsVEoNW01D@slm.duckdns.org>
- <aoTgVOTxsEbFXTp2@devvm16600.scu0.facebook.com>
+	JP Kobryn <inwardvessel@gmail.com>,
+	Mykola Lysenko <mykolal@meta.com>, linux-block@vger.kernel.org,
+	bpf@vger.kernel.org, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] block: add BPF kfuncs to read blkcg io.stat
+Message-ID: <aoTkZhQDoaQKpPe3@devvm16600.scu0.facebook.com>
+References: <20260817214205.723267-1-ziyang.meme@gmail.com>
+ <20260817214205.723267-2-ziyang.meme@gmail.com>
+ <aoSUob1s8WBQ3buO@slm.duckdns.org>
+ <aoTdQeLZZuRirNHE@devvm16600.scu0.facebook.com>
+ <aoTf7u20mo9s6ADj@slm.duckdns.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <aoTgVOTxsEbFXTp2@devvm16600.scu0.facebook.com>
+In-Reply-To: <aoTf7u20mo9s6ADj@slm.duckdns.org>
 
-On Tue, Aug 18, 2026 at 03:44:36PM -0700, Ziyang Men wrote:
-> > > +BTF_KFUNCS_START(bpf_rstat_common_kfunc_ids)
-> > > +BTF_ID_FLAGS(func, bpf_css_flush_rstat, KF_SLEEPABLE)
-> > > +BTF_ID_FLAGS(func, bpf_cgroup_base_stat, KF_SLEEPABLE)
-> > 
-> > Why are these SLEEPABLE?
-> > 
-> 
-> The css_rstat_flush() calls might_sleep() and cond_resched().
+Hi Tejun,
 
-I see.
+On Tue, Aug 18, 2026 at 12:42:54PM -1000, Tejun Heo wrote:
+>On Tue, Aug 18, 2026 at 03:31:29PM -0700, Ziyang Men wrote:
+>> Ok I will add the casts bpf_get_blkcg() and bpf_put_blkcg(), and remove the
+>> check of css->ss in above functoins.
+>
+>RCU_PROTECTED is probably better than get/put().
 
-> The bpf_cgroup_base_stat() takes an rstat spinlock_t, which can sleep on
-> PREEMPT_RT.
+Yes we can make the blkcg* RCU_PROTECTED but then the bpf_blkcg_flush_stats()
+needs to take the @cgroup* since it is SLEEPABLE. Does this work for you?
 
-Is this actually required? This doesn't really make sense to me. Shouldn't
-what SLEEPABLE mean change on RT kernels instead?
+Best,
+Ziyang
 
-Thanks.
-
--- 
-tejun
+>
+>Thanks.
+>
+>-- 
+>tejun
