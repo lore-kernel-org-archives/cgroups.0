@@ -1,161 +1,223 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-191.mta1.migadu.com [95.215.58.191])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082CB377558;
-	Tue, 18 Aug 2026 01:53:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16BA64207A
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 02:24:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787018018; cv=none; b=mKK2d4xbpZVWN0CAJa9XoQFbmN2ZR644A0EmF8a5JVoJF5LcHkC1ZYaA9i9ZgeCIG6eUO2S9/mytkdhRfAjfG6lWDYd3EautkkvtSWiZJnPiD+LIB2a8C1yMv63T/v9TncoeDrdlK7dSbYsdQ6aS4gOKchMnWUEqGYbuEm99sK8=
+	t=1787019844; cv=none; b=uQnoRFB7+EoxFC4AAPtdFSZEnD9mlGly4XBgdAMQcUGfTBYT5xT9Et9wnc8jTfgryUyn51H2Oq6tj4Xhjx/ZI7PlmnTQU85Yur2ULp19L5K5wiIt1PsUrN3Oq0ClB98QHcBez3HbuPSpOEZmPKYQ0HxLynU6O8wuRz1rxHTt9zQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787018018; c=relaxed/simple;
-	bh=0UYXK6BymdpKknPrzkNn0UNxNmcL/J3raMI16/7b+og=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=RS2V+MJjyzB540+8Pi3IM3Kf7axVT1e7Ssl5nZSMbmePatXvq6nQf8FcHNBzP8YffVudkTApuwS5gdG61UQt74Qz3LGDwZaAlzkKby5Rub2bIqpADiwQ3XHpX5yQIMs4I1D3RmIpTWgj6SnOuecQBpTaxQJXDIuMxymiB6UrnFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 98f26d409aa711f19a56ed5b684f684d-20260818
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_TXT
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_MAILER_MTBG
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_PRE_RE, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:3467a7b8-6acd-4bba-98ca-171a139c49ab,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.19,REQID:3467a7b8-6acd-4bba-98ca-171a139c49ab,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:7db8b62,CLOUDID:82d02ce816d1a340e5eda7bf45feaeec,BulkI
-	D:260817213154BZG2GML9,BulkQuantity:2,SF:17|19|64|66|78|80|81|82|83|101|10
-	2|127|841|865|898,TC:nil,Content:0|15|52,EDM:-3,IP:-2,URL:0,File:nil,RT:ni
-	l,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,B
-	RR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 98f26d409aa711f19a56ed5b684f684d-20260818
-X-User: husong@kylinos.cn
-Received: from [192.168.110.173] [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <husong@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_128_GCM_SHA256 128/128)
-	with ESMTP id 839497270; Tue, 18 Aug 2026 09:53:24 +0800
-Message-ID: <0689d805-45c6-4bb2-8eb2-f065457c45bf@kylinos.cn>
-Date: Tue, 18 Aug 2026 09:53:10 +0800
+	s=arc-20240116; t=1787019844; c=relaxed/simple;
+	bh=Kj2l2s2b8Q7rDIIPhTRWO4Dg9LJTGn1lCoLDlO7EmgE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ro1NQK3O0BxHv1FmdJ46Uz1/NIjuXkCYNRi5mE9oAQAntV2so3juJbIAZDPGMxvpDlDhHb24auVZhPtn94LqCKg2c0sNpLWgloyCXVJM8u4xJKEqdzSt21b3f/Ia4v1QbG+seXnUfnX23++GmxGkzoZdn5u+sb7UTCZIKPcpTMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=C9jlnSUc; arc=none smtp.client-ip=95.215.58.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="C9jlnSUc"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Kj2l2s2b8Q7rDIIPhTRWO4Dg9LJTGn1lCoLDlO7EmgE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787019839; v=1; x=1787624639;
+ b=C9jlnSUcGwHDmE3s0RPE+SKlAINM3jlE5a6QqyqzjIKdxichgmfnsI+SL6J0WHAjxrbjmKMM
+ rGbpa39424hV5xrfQ2P68GOCZ91kxcwcZuEomTWz8LVpeeEp6bf6/aU8O3aSHYsFCDmA3TTj3CJ
+ fheAYhQupPSsZxyS0C190b8o=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from localhost (3.112.29.171)
+	by mta10.migadu.com with ESMTPS id d2aa8026bf3fbfef;
+	Tue, 18 Aug 2026 02:23:59 +0000
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 18 Aug 2026 10:23:51 +0800
+From: Baoquan He <baoquan.he@linux.dev>
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+	Ying Huang <ying.huang@linux.alibaba.com>,
+	Chris Li <chrisl@kernel.org>, Nico Pache <nico.pache@linux.dev>,
+	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>,
+	Gregory Price <gourry@gourry.net>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
+	Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
+	SeongJae Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
+	Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
+	Zicheng Wang <wangzicheng@honor.com>,
+	Chen Ridong <chenridong@xiaomi.com>,
+	Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Subject: Re: [PATCH RFC 05/15] mm/mglru: move max_seq read into
+ walk_update_folio
+Message-ID: <aoPCNxyRVpQFulwS@MiWiFi-R3L-srv>
+References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
+ <20260804-mglru-fg-v1-5-4d8dad39dad6@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: husong@kylinos.cn, akpm@linux-foundation.org, linux-mm@kvack.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
- nphamcs@gmail.com, yosry@kernel.org, chengming.zhou@linux.dev,
- yunzhao@cloudflare.com
-Subject: Re: [PATCH] mm: memcg: use ratelimited stats flush in
- obj_cgroup_may_zswap()
-To: Shakeel Butt <shakeel.butt@linux.dev>
-References: <20260817131843.45121-1-husong@kylinos.cn>
- <1787017182353556.21.seg@mailgw.kylinos.cn>
-From: Song Hu <husong@kylinos.cn>
-In-Reply-To: <1787017182353556.21.seg@mailgw.kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260804-mglru-fg-v1-5-4d8dad39dad6@tencent.com>
 
-
-
-在 2026/8/18 00:04, Shakeel Butt 写道:
-> On Mon, Aug 17, 2026 at 09:18:43PM +0800, Song Hu wrote:
->> obj_cgroup_may_zswap() runs on every folio swapped out through
->> zswap.  For each ancestor with a non-max zswap.max, it flushes the
->> cgroup rstat hierarchy synchronously with force=true, which skips
->> the ratelimit inside __mem_cgroup_flush_stats().  In a swap storm
->> with zswap.max configured, a container takes the global rstat lock
->> on every swapped-out folio.
+On 08/04/26 at 03:47am, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
 > 
-> Any reason you are limiting zswap through zswap.max?
+> walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
+> each read lrugen->max_seq to compute the target generation for
+> folio_update_gen(), then pass it as a parameter to
+> walk_update_folio().  Move the read into walk_update_folio() itself
+> so the callers no longer need to compute or pass the value.
 > 
-
-Mostly fairness on a shared pool: zswap.max_pool_percent is global
-only, so on a multi-tenant host one cgroup's cold anonymous memory
-can soak the pool and crowd out the others.  zswap.max is the only
-per-cgroup control over that share; memory.max bounds the total
-footprint, not the share of the pool.
-
->>
->> zswap_shrinker_count() had the same pattern and switched to
->> mem_cgroup_flush_stats_ratelimited() in commit ea80da363a1f
->> ("mm/zswap: use ratelimited stats flush in zswap_shrinker_count()"),
->> where the same flush on the shrinker side showed up at 2.88% of
->> kernel cycles under osq_lock on a 96-core machine.
->>
->> Measured on a KVM guest with a swap storm under a cgroup with
->> zswap.max set: obj_cgroup_may_zswap() was entered 198,977 times
->> before the patch and 198,968 times after, while
->> __mem_cgroup_flush_stats() was entered 281,017 times before and
->> 80,445 times after.  The removed 200,572 flushes match the store
->> attempt count almost exactly; the remainder comes from other stats
->> readers in the swap path.
+> This is a pure refactoring: no functional change.
 > 
-> This is a known issue. Using ratelimited interface also comes with a drawback
-> that the kernel may react on stale information and the consequences might be
-> unneeded oom-kills.
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>  mm/vmscan.c | 29 ++++++++++++-----------------
+>  1 file changed, 12 insertions(+), 17 deletions(-)
+
+Nice clean up.
+
+Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+
 > 
-> There was orthogonal discussion on moving zswap limit enforcement away from
-> rstat. Yosry, any updates on that?
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index b02d2ec8ff4b..c2ea92c2b69e 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3511,13 +3511,15 @@ static bool suitable_to_scan(int total, int young)
+>  }
+>  
+>  static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
+> -		struct folio *folio, int new_gen, bool dirty)
+> +			      struct lruvec *lruvec, struct folio *folio, bool dirty)
+>  {
+> -	int old_gen;
+> +	int new_gen, old_gen;
+>  
+>  	if (!folio)
+>  		return;
+>  
+> +	new_gen = lru_gen_from_seq(READ_ONCE(lruvec->lrugen.max_seq));
+> +
+>  	if (dirty && !folio_test_dirty(folio) &&
+>  	    !(folio_test_anon(folio) && folio_test_swapbacked(folio) &&
+>  	      !folio_test_swapcache(folio)))
+> @@ -3548,8 +3550,6 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
+>  	struct lru_gen_mm_walk *walk = args->private;
+>  	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
+>  	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
+> -	DEFINE_MAX_SEQ(walk->lruvec);
+> -	int gen = lru_gen_from_seq(max_seq);
+>  	unsigned int nr;
+>  	pmd_t pmdval;
+>  
+> @@ -3600,7 +3600,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
+>  			continue;
+>  
+>  		if (last != folio) {
+> -			walk_update_folio(walk, args->vma, last, gen, dirty);
+> +			walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
+>  
+>  			last = folio;
+>  			dirty = false;
+> @@ -3613,7 +3613,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
+>  		walk->mm_stats[MM_LEAF_YOUNG] += nr;
+>  	}
+>  
+> -	walk_update_folio(walk, args->vma, last, gen, dirty);
+> +	walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
+>  	last = NULL;
+>  
+>  	if (i < PTRS_PER_PTE && get_next_vma(PMD_MASK, PAGE_SIZE, args, &start, &end))
+> @@ -3636,8 +3636,6 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
+>  	struct lru_gen_mm_walk *walk = args->private;
+>  	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
+>  	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
+> -	DEFINE_MAX_SEQ(walk->lruvec);
+> -	int gen = lru_gen_from_seq(max_seq);
+>  
+>  	VM_WARN_ON_ONCE(pud_leaf(*pud));
+>  
+> @@ -3691,7 +3689,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
+>  			goto next;
+>  
+>  		if (last != folio) {
+> -			walk_update_folio(walk, vma, last, gen, dirty);
+> +			walk_update_folio(walk, vma, walk->lruvec, last, dirty);
+>  
+>  			last = folio;
+>  			dirty = false;
+> @@ -3705,7 +3703,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
+>  		i = i > MIN_LRU_BATCH ? 0 : find_next_bit(bitmap, MIN_LRU_BATCH, i) + 1;
+>  	} while (i <= MIN_LRU_BATCH);
+>  
+> -	walk_update_folio(walk, vma, last, gen, dirty);
+> +	walk_update_folio(walk, vma, walk->lruvec, last, dirty);
+>  
+>  	lazy_mmu_mode_disable();
+>  	spin_unlock(ptl);
+> @@ -4270,8 +4268,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  	struct pglist_data *pgdat = folio_pgdat(folio);
+>  	struct lruvec *lruvec;
+>  	struct lru_gen_mm_state *mm_state;
+> -	unsigned long max_seq;
+> -	int gen;
+>  
+>  	lockdep_assert_held(pvmw->ptl);
+>  	VM_WARN_ON_ONCE_FOLIO(folio_test_lru(folio), folio);
+> @@ -4308,8 +4304,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  
+>  	memcg = get_mem_cgroup_from_folio(folio);
+>  	lruvec = mem_cgroup_lruvec(memcg, pgdat);
+> -	max_seq = READ_ONCE((lruvec)->lrugen.max_seq);
+> -	gen = lru_gen_from_seq(max_seq);
+>  	mm_state = get_mm_state(lruvec);
+>  
+>  	lazy_mmu_mode_enable();
+> @@ -4341,7 +4335,7 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  			continue;
+>  
+>  		if (last != folio) {
+> -			walk_update_folio(walk, vma, last, gen, dirty);
+> +			walk_update_folio(walk, vma, lruvec, last, dirty);
+>  
+>  			last = folio;
+>  			dirty = false;
+> @@ -4353,13 +4347,14 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  		young += nr;
+>  	}
+>  
+> -	walk_update_folio(walk, vma, last, gen, dirty);
+> +	walk_update_folio(walk, vma, lruvec, last, dirty);
+>  
+>  	lazy_mmu_mode_disable();
+>  
+>  	/* feedback from rmap walkers to page table walkers */
+>  	if (mm_state && suitable_to_scan(i, young))
+> -		update_bloom_filter(mm_state, max_seq, pvmw->pmd);
+> +		update_bloom_filter(mm_state, READ_ONCE(lruvec->lrugen.max_seq),
+> +				    pvmw->pmd);
+>  
+>  	mem_cgroup_put(memcg);
+>  
 > 
-
-Fair point.  The direction I had considered is the benign one -
-stale low after a burst of stores overshoots admission for a cycle.
-But after a burst of writebacks the folded value can be stale high
-too, and premature rejection with zswap.writeback off or swap.max
-tight ends in a memcg OOM kill that accurate stats would have
-avoided.  may_zswap() is admission control rather than a hint, so
-the guarantee matters more here than for the shrinker side
-of ea80da363a1f.
-
-If moving the limit enforcement off rstat is happening, that
-supersedes this patch and I am happy to drop it.  Otherwise it can
-serve as a stopgap for the per-folio lock cost - your call, and
-curious where Yosry's discussion stands.
-
-Thanks,
-Song
-
->>
->> The stats can now be up to one flusher cycle stale, so zswap.max
->> admission can overshoot for one cycle in a storm; the overshoot is
->> corrected as soon as the next flush lands and later stores see it,
->> the same tradeoff the shrinker side made.
->>
->> Fixes: f4840ccfca25 ("zswap: memcg accounting")
->> Signed-off-by: Song Hu <husong@kylinos.cn>
->> ---
->>  mm/memcontrol.c | 3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 17da1f43b7d3..7a8f689055c6 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -6000,8 +6000,7 @@ bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
->>  			break;
->>  		}
->>  
->> -		/* Force flush to get accurate stats for charging */
->> -		__mem_cgroup_flush_stats(memcg, true);
->> +		mem_cgroup_flush_stats_ratelimited(memcg);
->>  		pages = memcg_page_state(memcg, MEMCG_ZSWAP_B) / PAGE_SIZE;
->>  		if (pages < max)
->>  			continue;
->> -- 
->> 2.43.0
->>
-
+> -- 
+> 2.55.0
+> 
+> 
