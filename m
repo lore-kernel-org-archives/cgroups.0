@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 907483290A6;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9998D331A5B;
 	Tue, 18 Aug 2026 05:38:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787031504; cv=none; b=Ks0Utkr8otlcuNOhurqM4KDR/OXZQ3H4iRICm1bbkCB4ebKVg6+r+DZXMZvzOisN9KqjzANXog/ZwQsS4cJdvX0Im1dWmIs++oDixDEiGPTswsnRYz5lj0az3M8PzFoGX5rz7KSCVqGvOfIPgFTeCSuNZqA6Vb2ITbmXzaKXxBY=
+	t=1787031504; cv=none; b=qkkv0vExO1zszz1HKbojIXxLaBSlX9WQCHOJk9Unmspreq2DA0YKl+e6jC3YIMDjW3ECFSuJpQws13xDzKm01T8pu9gNyYaEc2iIjwCaXEAC/oKxRmz+IKDQeSr7yGGyz5XyFdS/4GxnRKm7/VHBAn0X/FJkyo99OvKZDwOaa4s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787031504; c=relaxed/simple;
-	bh=2gRxy25hnembdVhYLwRZncDSQOFGYsoukSzLF39j9ZU=;
+	bh=/Dap8HX+JALspR15co61JO/ZEe5sgXMBY1Lvt6lrf0U=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=FUhdkEotoyAR8Ii8XNsJ/mYU65w5vxhJSNOkOAlR3MaKNrKVLBv+NJn9hkQj+0lv9VcFEyXJY1Qo4Fe3Kzk2JcphFM2Tozaf/owogg1G+eRdAvSEywuGXRTJoRmxqc006KFNUfG9UMuvfjFlN3z3dXQGOjVpRmgRmf73eUfsZxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YxaW6lZi; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=qWIs7ELeGzwfPx1rBqZPn/Ag5hZcZYc9OWxOHMOJoGvDStiHvPhvqjvLdFlSHLS+QxZGt3NVMLiQn4LsEsZh7Ezg9yw7czA7c00C93JkmugtTXgFuLGjqoc9V0fnBAY83J6ETxx+TF73T8BhZybmrhcCc3MBYdZVlJqIGoApuVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KpA3xO6c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YxaW6lZi"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 1DAF8C2BCF7;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KpA3xO6c"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 41221C2BCFD;
 	Tue, 18 Aug 2026 05:38:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1787031504;
-	bh=2gRxy25hnembdVhYLwRZncDSQOFGYsoukSzLF39j9ZU=;
+	bh=/Dap8HX+JALspR15co61JO/ZEe5sgXMBY1Lvt6lrf0U=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=YxaW6lZinIMHZU5k8okndOkUM+44MLlwH4XKPA/n2SQtOh00509sra1motCX6yPLb
-	 v303PCaLott/IN8Y9Mxvoif0JOAC3NzgFkyFlFiMYPHTDFik/VKnjovSp6Mu9/AwzS
-	 SbIjaGWqpfmi6BZUIQQeBWtDMLHY+gQ0v21BBucNC/MhvtdCsBiPDtuO/c0BAe+28O
-	 syxICUizu05TX5YVNN3ynL03nKj3L/4Wwf5gzOuAYe0TOpe2Yx/eauSamHItpoiTZ/
-	 ZdO5IasUTVc+eVfxWULRZUux8AjPrTMmv3JTxz+qUtCoDDHhOOFXJctygz/ei1BtG0
-	 HK+Q81jqOTysQ==
+	b=KpA3xO6c41IaXbmqmCFFQNGgoiKoADBI9iIN5v1UtOj5mM5iCtENnL3NuKy0jae6Y
+	 saGmVezGKNIRYu8komaX1eDr3C+spdAJdi1wB6tPXleDN8/7T++ZqESkDbPfmhxYuI
+	 Cvk4cqMjQuRFLZjUHLHHWHfUWGXHRka/450fgn2lPYrZCMSNGaXWmxd/gieSKlnhFG
+	 9N+cxxdoUt9gHa38bAozYxLZRWsDp0JirwdS5lk1u73wU9CUy9IP3HKh1y1g/W3NCK
+	 M7Bc01TLYjpmzv/bWS4ZONcjF/ZmpCnl9/bf/VsWH6VDXHgoPn9FL5tnT/6nm9ZeaN
+	 ZQPFwMA/qgt9A==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD9EC5DF67;
-	Tue, 18 Aug 2026 05:38:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A8CCC5DF82;
+	Tue, 18 Aug 2026 05:38:24 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 18 Aug 2026 13:38:03 +0800
-Subject: [PATCH 1/7] mm/memcontrol: make lru_zone_size atomic and simplify
- sanity check
+Date: Tue, 18 Aug 2026 13:38:05 +0800
+Subject: [PATCH 3/7] mm/migrate: copy the referenced state via
+ folio_migrate_refs()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260818-mglru-flags-cleanup-v1-1-8dbbdac0d28c@tencent.com>
+Message-Id: <20260818-mglru-flags-cleanup-v1-3-8dbbdac0d28c@tencent.com>
 References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
 In-Reply-To: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
 To: linux-mm@kvack.org
@@ -60,11 +60,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>, 
  Kairui Song <kasong@tencent.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787031500; l=3566;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787031500; l=2602;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=/T+OKeuJl3olH2b22zrXZqywkoz/djv44CIgkgQ7VaQ=;
- b=i+2Ei8YdqwDPFssEabm+WHT0ilQlC8IDHXtxYrZA1/QkexYde2gP0a8PvqjROPnzKpImG2i9Y
- ylZAtICzyIeApv5ta641aTQM6nqveZq6AQ9GZ+1AADs+c31OLcPr2CK
+ bh=MnXqCrD+kNnVgk+e93wC9DHznJeWbyePZC5TTqXqepo=;
+ b=11ce+XvCl2hD19O2/CuCgrvBrmVTUm6nz/9U0YfjPuhZy1wZ8IJb0amYtFNhwztQfIB/4LtWh
+ dx0NKZPYnYMBdFtD1f5AZ3c3/MzE+JFMBVWgnVPkcoVz/2/dB4v2kvE
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -74,101 +74,77 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-commit ca707239e8a7 ("mm: update_lru_size warn and reset bad lru_size")
-introduced a sanity check to catch memcg counter underflow, which was
-more of a workaround for another bug: lru_zone_size is unsigned, so
-underflow wraps it around and returns an enormously large number, then
-the memcg shrinker loops almost forever as the calculated number of
-folios to shrink is huge. That commit also checked if a zero value
-matches the empty LRU list, so we have to hold the LRU lock, and
-handle the positive and negative deltas separately.
-
-But later commit b4536f0c829c ("mm, memcg: fix the active list aging
-for lowmem requests when memcg is enabled") already removed the LRU
-emptiness check, so handling the deltas separately is no longer
-needed. And if we just turn it into an atomic long, underflow isn't a
-big issue either, and can be checked at the reader side, which is
-called much less frequently than the updater.
-
-So let's turn the counter into an atomic long and check at the reader
-side instead, which has a smaller overhead. The underflow correction
-is removed: a massive leak of the LRU size counter would indicate
-that something else has gone very wrong, and one should fix that
-leaking site instead. Besides, the updater-side sanity check is
-unlikely to catch the leaking site anyway: if a folio was removed
-without updating the counter while other folios remain on the LRU,
-the WARN only triggers much later, from a likely innocent callsite.
+folio_migrate_flags() copies PG_referenced separately, while
+folio_migrate_refs() copies the rest of the reference state. Make
+folio_migrate_refs() copy the complete state, i.e., PG_referenced plus
+the MGLRU refs counter, in both LRU implementations, and drop the
+open-coded copy so the reference state is transferred in one place.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- include/linux/memcontrol.h |  9 +++++++--
- mm/memcontrol.c            | 18 +-----------------
- 2 files changed, 8 insertions(+), 19 deletions(-)
+ include/linux/mm_inline.h | 16 +++++++++++++---
+ mm/migrate.c              |  4 ++--
+ 2 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index e78bc98ab229..b13e3f056319 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -113,7 +113,7 @@ struct mem_cgroup_per_node {
- 	/* Fields which get updated often at the end. */
- 	struct lruvec		lruvec;
- 	CACHELINE_PADDING(_pad2_);
--	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
-+	atomic_long_t		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
- 	struct mem_cgroup_reclaim_iter	iter;
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 93bf3fa221f8..df62daaa2ee7 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -366,11 +366,19 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ 	return true;
+ }
  
- 	/*
-@@ -897,10 +897,15 @@ static inline
- unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
- 		enum lru_list lru, int zone_idx)
++/**
++ * folio_migrate_refs - copy the reference state to a new folio
++ * @new: the destination folio
++ * @old: the source folio
++ *
++ * Transfer the reference state to @new during migration: the MGLRU
++ * refs count, including PG_referenced, or just PG_referenced for the
++ * active/inactive LRU.
++ */
+ static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
  {
-+	long val;
- 	struct mem_cgroup_per_node *mz;
+-	unsigned long refs = READ_ONCE(old->flags.f) & LRU_REFS_MASK;
+-
+-	set_mask_bits(&new->flags.f, LRU_REFS_MASK, refs);
++	BUILD_BUG_ON(LRU_REFS_MASK & BIT(PG_referenced));
++	folio_set_lru_refs(new, folio_lru_refs(old));
+ }
+ #else /* !CONFIG_LRU_GEN */
  
- 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	return READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
-+	val = atomic_long_read(&mz->lru_zone_size[zone_idx][lru]);
-+	if (WARN_ON_ONCE(val < 0))
-+		return 0;
+@@ -401,6 +409,8 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ 
+ static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
+ {
++	if (folio_test_referenced(old))
++		folio_set_referenced(new);
+ }
+ #endif /* CONFIG_LRU_GEN */
+ 
+diff --git a/mm/migrate.c b/mm/migrate.c
+index 15b45832bcfa..82307332711f 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -776,8 +776,6 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
+ {
+ 	int cpupid;
+ 
+-	if (folio_test_referenced(folio))
+-		folio_set_referenced(newfolio);
+ 	if (folio_test_uptodate(folio))
+ 		folio_mark_uptodate(newfolio);
+ 	if (folio_test_clear_active(folio)) {
+@@ -807,7 +805,9 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
+ 	if (folio_test_idle(folio))
+ 		folio_set_idle(newfolio);
+ 
++	/* Copy the reference state, including PG_referenced */
+ 	folio_migrate_refs(newfolio, folio);
 +
-+	return val;
- }
- 
- void __mem_cgroup_handle_over_high(gfp_t gfp_mask);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1d3339520809..9d0ee3d3bda7 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1529,28 +1529,12 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
- 				int zid, long nr_pages)
- {
- 	struct mem_cgroup_per_node *mz;
--	unsigned long *lru_size;
--	long size;
- 
- 	if (mem_cgroup_disabled())
- 		return;
- 
- 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	lru_size = &mz->lru_zone_size[zid][lru];
--
--	if (nr_pages < 0)
--		*lru_size += nr_pages;
--
--	size = *lru_size;
--	if (WARN_ONCE(size < 0,
--		"%s(%p, %d, %ld): lru_size %ld\n",
--		__func__, lruvec, lru, nr_pages, size)) {
--		VM_BUG_ON(1);
--		*lru_size = 0;
--	}
--
--	if (nr_pages > 0)
--		*lru_size += nr_pages;
-+	atomic_long_add(nr_pages, &mz->lru_zone_size[zid][lru]);
- }
- 
- /**
+ 	/*
+ 	 * Copy NUMA information to the new page, to prevent over-eager
+ 	 * future migrations of this same page.
 
 -- 
 2.55.0
