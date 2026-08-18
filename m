@@ -1,47 +1,48 @@
-Received: from mta0.migadu.com (out-36.mta0.migadu.com [91.218.175.36])
+Received: from mta0.migadu.com (out-75.mta0.migadu.com [91.218.175.75])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AEAB332EC8
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 15:06:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.36
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CCE93AD522
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 15:08:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.75
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787065599; cv=none; b=DbsbXr4tbeZc25D4KD1M6mHI4TWHmtIetdu8KHFeQXJPvWXIbhbGOfhEzMy2jDiE46UxfxFOmnCvfuEkMbsYqP14RZbxVkNT4QFDz22qOU0zduP93lJR5zp5QOFB2JhHBAO2K05tOKG+Tkyfq9azYslC70Dt7S2s6UjWHZVH6Kg=
+	t=1787065723; cv=none; b=QhnwmSW8ltzFCxjIeednRgfhuAnyCqJ5rLMK0kF7VY0RlZpN24jaCBMh1gdmS8iAh0SdxxD3WgadAw0Ve7tzAVyuTs0GhRZC+Qs7E7w4m/M59YHwCw57kw22LnJIbk1bOj3mHJNPVPmiE8Q8UaSLua9EaMx/rkamjkGyaHPtQCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787065599; c=relaxed/simple;
-	bh=cPHeBY5KTM96nrxv4hgyFw1PuHSjJCWzO7Hqsh/Ysd0=;
+	s=arc-20240116; t=1787065723; c=relaxed/simple;
+	bh=0FsRmWGrp3IBrt0AhnQA/jZLSq4jcxcIf2nihiOFFb4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rIMISh3ayRWa49DlDmYXOhApmHOwOIyGCBHKhfftLPpLsucNwugm+U/xWJEgAtkzRtO6zPPK01Q8mz8zUYJemonhFirdRQDsJo7goNl+YEEVlbHXWUvuTQgk18JqAZGw0/ogL3iccQK6zGUKyxuk5Rjph06mXnMiI3PRB01wPpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RDFrwmnC; arc=none smtp.client-ip=91.218.175.36
+	 Content-Type:Content-Disposition:In-Reply-To; b=BmPgna8a+KAZr/pJD6OIVChvMjs9DlR2XL2CjNm/AP+lxsknNUGsgD+dxRfFqMq5+8gRxM6cUnmrbdJT7bLv4kXQZ3iDYA+jybYbSgnjUiVZsLD8OIm+/h/xkC8f49Akgi5cTKHwn7B7Y5MkLkKRamI19Y2YmsfCiVNfj5/mwLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MtXo2V57; arc=none smtp.client-ip=91.218.175.75
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RDFrwmnC"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MtXo2V57"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=cPHeBY5KTM96nrxv4hgyFw1PuHSjJCWzO7Hqsh/Ysd0=;
+DKIM-Signature: a=rsa-sha256; bh=0FsRmWGrp3IBrt0AhnQA/jZLSq4jcxcIf2nihiOFFb4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787065593; v=1; x=1787670393;
- b=RDFrwmnC4ZcelxCWWFpLf+K1TP6VLaNw/HWd6Lo9F4HSqcntST6xDw/IBr5jRgBuM3epJNll
- +CZyQO8aIS7Xo7qtFUY0iWdC4bQqrg9KuIqyeQcNwQHXDhEwDr+FlugwQwCMNoRqY7xfR2qVsbU
- jv7YRb7iLq+ZmKonJ9vegl34=
+ t=1787065719; v=1; x=1787670519;
+ b=MtXo2V57bPU+QFfVBvnqEoE5Qm1/MW2gFIUDa46SiFiPpmxo8DEEhCxLhdlSbJFHRYOUjyq4
+ SPbLVqSCHkkeEmkTeISoFUz8peDQ4gar4l2GE5WFGa1bwHgH3+wkkphxC1GUYD5Ys+5i1ASERsD
+ 4L0VwfqGtlCrzJbNiNhMsQPU=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from localhost (2a03:2880:10ff:17::)
-	by smtp.migadu.com with ESMTPS id 5b5f1f43086e936f;
-	Tue, 18 Aug 2026 15:06:23 +0000
+Received: from localhost (2a03:2880:10ff:59::)
+	by smtp.migadu.com with ESMTPS id e04d93166a86feda;
+	Tue, 18 Aug 2026 15:08:39 +0000
 X-Migadu-Flow: FLOW_OUT
-Date: Tue, 18 Aug 2026 08:06:22 -0700
+Date: Tue, 18 Aug 2026 08:08:37 -0700
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Michal Hocko <mhocko@suse.com>
-Cc: Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org, 
-	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	hannes@cmpxchg.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	Tao Cui <cuitao@kylinos.cn>
-Subject: Re: [PATCH] mm: page_counter: reject empty string in
- page_counter_memparse()
-Message-ID: <aoRz72_zdMai_RNV@linux.dev>
-References: <20260817042652.74136-1-cui.tao@linux.dev>
- <aoMzchLCCz5hiFHp@linux.dev>
- <aoQNtIRvqXRh-x4u@tiehlicka>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Joshua Hahn <joshua.hahnjy@gmail.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Joy Chaoyue Xiong <joyxiong@yahoo.com>
+Subject: Re: [PATCH] memcg: trim the per-cpu charge stock instead of draining
+ it
+Message-ID: <aoR1ClkKofp0l9Cs@linux.dev>
+References: <20260817234651.666540-1-shakeel.butt@linux.dev>
+ <aoQt2zKsQT-rvjd6@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,69 +51,51 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aoQNtIRvqXRh-x4u@tiehlicka>
+In-Reply-To: <aoQt2zKsQT-rvjd6@tiehlicka>
 
-On Tue, Aug 18, 2026 at 09:45:56AM +0200, Michal Hocko wrote:
-> On Mon 17-08-26 09:16:40, Shakeel Butt wrote:
-> > On Mon, Aug 17, 2026 at 12:26:52PM +0800, Tao Cui wrote:
-> > > From: Tao Cui <cuitao@kylinos.cn>
-> > > 
-> > > memparse() consumes no characters on an empty input and leaves the
-> > > end pointer at the terminating NUL.  The only validation in
-> > > page_counter_memparse() checks for trailing characters, so an empty
-> > > input slips through and the limit becomes 0.
-> > > 
-> > > All limit write callbacks of the memory controller strstrip() the
-> > > input before calling this helper, so a script that writes an unset
-> > > variable hits this path:
-> > > 
-> > >   LIMIT=
-> > >   echo "$LIMIT" > $CG/memory.max
-> > >   echo $?
-> > >   0
-> > >   cat $CG/memory.max
-> > >   0
-> > > 
-> > > Nothing reports the mistake: the limit is now 0 and the OOM killer
-> > > goes after every task in the cgroup.  The same happens for
-> > > memory.min, memory.low, memory.high, memory.swap.high,
-> > > memory.swap.max and memory.zswap.max, where 0 silently removes the
-> > > protection or disables swap and zswap.
-> > > 
-> > > Reject the input when no characters were consumed, which is the one
-> > > case the trailing-character check cannot catch.
-> > > 
-> > > Fixes: 3e32cb2e0a12 ("mm: memcontrol: lockless page counters")
-> > > Signed-off-by: Tao Cui <cuitao@kylinos.cn>
-> > > ---
-> > >  mm/page_counter.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/mm/page_counter.c b/mm/page_counter.c
-> > > index 661e0f2a5127..d14db705b04f 100644
-> > > --- a/mm/page_counter.c
-> > > +++ b/mm/page_counter.c
-> > > @@ -281,7 +281,7 @@ int page_counter_memparse(const char *buf, const char *max,
-> > >  	}
-> > >  
-> > >  	bytes = memparse(buf, &end);
-> > > -	if (*end != '\0')
-> > > +	if (*end != '\0' || end == buf)
-> > >  		return -EINVAL;
+On Tue, Aug 18, 2026 at 12:03:07PM +0200, Michal Hocko wrote:
+> On Mon 17-08-26 16:46:51, Shakeel Butt wrote:
+> > Joy reported that an application generating a request/response traffic
+> > pattern spends 44.6% to 57.0% of CPU in the memcg charge/uncharge path
+> > for a range of message sizes, against 0.27% to 0.71% outside that range.
+> > Running from the root memcg, where socket memory accounting is skipped,
+> > recovers the performance.
 > > 
-> > I wonder if someone started depending on this behavior. In that case it is
-> > better to return error instead of silently ignore, so we will hear complains
-> > loudly. This looks good to me.
+> > Tracing the charge path showed that the application generates a pattern
+> > where the write syscall charges one page and the read syscall uncharges
+> > two pages on the same CPU. This hits a corner case in the memcg percpu
+> > stock code that thrashes the stock continuously.
+> > 
+> > In the memcg percpu stock code, MEMCG_CHARGE_BATCH (64) is both the high
+> > watermark and the emptying target, i.e. on a request to charge one page
+> > the kernel charges MEMCG_CHARGE_BATCH pages and caches
+> > (MEMCG_CHARGE_BATCH - 1) of them in the percpu stock. The following
+> > uncharge of 2 pages takes the cached count to (MEMCG_CHARGE_BATCH + 1),
+> > and refill_stock() then empties the cache completely. With such a
+> > pattern the percpu stock becomes completely ineffective.
+> > 
+> > Instead of a single boundary point for charges, use the technique the
+> > page allocator uses for its own percpu caches, which keeps the watermark
+> > and the emptying target apart: nr_pcp_free() frees between batch and
+> > high - batch pages, leaving at least pcp->batch on the list. Add a high
+> > watermark MEMCG_STOCK_HIGH and, once the cached count goes over it,
+> > return only the pages above MEMCG_STOCK_LOW. The watermarks are
+> > MEMCG_CHARGE_BATCH apart, so a page_counter update still covers a full
+> > batch. Peak cached pages per memcg grows from 64 to 96, the same
+> > high-versus-batch tradeoff the page allocator makes.
 > 
-> This is backward incompatible change and I am wondering why should we
-> even risk regression.
+> The idea is sound. I would just not increase the overall stock size in
+> the same patch. Fine tuning can be done independently and ideally with
+> some numbers.
+> Would it make sense to start with MEMCG_STOCK_HIGH := MEMCG_CHARGE_BATCH 
+> and  MEMCG_CHARGE_BATCH := MEMCG_CHARGE_BATCH / 2. That would preserve
+> the maximum stock size while preventing all or nothing behavior which is
+> indeed suboptimal and pushing charging path to a slower path way too
+> aggressively.
+> 
+> WDYT?
 
-Mainly I was wondering if this is intentional or unintentional. If this us
-unintentional, can we fix it without anyone noticing?
+Yes, this makes sense. Let me run the experiment with that workload to make sure
+the newer number works and resend the patch.
 
-However if we are ok with this then let's make is formal and make this a
-documented behavior. I don't have any strong opinion either way but I think you
-are saying it safer to just assume this is intentional. Fine with me.
-
-Tao, can you send a patch to Documentation/admin-guide/cgroup-v2.rst which
-explicitly mention this behavior?
+Thanks for the review.
