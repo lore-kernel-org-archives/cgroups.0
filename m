@@ -1,35 +1,35 @@
-Received: from mta1.migadu.com (out-46.mta1.migadu.com [95.215.58.46])
+Received: from mta1.migadu.com (out-126.mta1.migadu.com [95.215.58.126])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ACC1265621
-	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 02:40:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFD9E149C7B
+	for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 02:52:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.126
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787020845; cv=none; b=lzRMt8R2ioaUk+i/NJfC+QFLetRFpzqswPH2kZUVAl/yit2XM9Fn6rtX3VDG0QY5jzUkPu2g1txG5Cntimg/VagslOVgRjVuzhqGL9QAafupHAlGYIOR0a3MjDnVmU82GFskKQ/C9dCVERf1+1y1jIkxsMoPAQoQNKywMOga8tA=
+	t=1787021541; cv=none; b=CAEmoC6UT6F/NkaIeOjoc/3SKm/PPgWuZLagvi/f4Y08b4/C1xwUcc5JPTwSxwSr09OaqdiUOKiNtVrITGi6O7NUGzELNvRIhbr4b2NawnzFFCjihjDs4v5/n+GNnuRtq6HWxv6wZLb/Mriy8BRnoHY9XRjtDIkBHhwCTDr68g0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787020845; c=relaxed/simple;
-	bh=VjTzbzJ5U7fulfyPD/S6iBjuQ+IHP/erX76i5LQT7Og=;
+	s=arc-20240116; t=1787021541; c=relaxed/simple;
+	bh=+tjcYmM4+1lY/ufxesPT9Adlqs9FR04NAEFsPbm6s8c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NpbXmW3JJN9swHKhqaKkniQbJo02JlHow1muCHAWPlh4Rk1y9+/aGaz4Jpz20RgAkGcJ1vpmKfQxdak7B+xaIJYP2NpccV0t6QKenQ+rDCe+SMHU53/JFaSsYR0T1xVsqwzrxG2FLsSW65Wmjq6DM7pzZz2lFS1E5ejeBl8Geyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=c2dFeVSl; arc=none smtp.client-ip=95.215.58.46
+	 Content-Type:Content-Disposition:In-Reply-To; b=c4b15E7dOwOpuu4raj6Dp21iYceCBEbjKn38+Ilf4F56dP/j6LEJDq1plI9OAIPcdhbC3kP22g4w65oEVmXy/scjrDNjGTcrsggfVpxwGu+agQcNJWwMV17JKSoiM1cTtXrA0VOikXsdqDwrWTyZoJiEHT45ZU/+mtAVZ9xWlwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=SpY6/shO; arc=none smtp.client-ip=95.215.58.126
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="c2dFeVSl"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="SpY6/shO"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=VjTzbzJ5U7fulfyPD/S6iBjuQ+IHP/erX76i5LQT7Og=;
+DKIM-Signature: a=rsa-sha256; bh=+tjcYmM4+1lY/ufxesPT9Adlqs9FR04NAEFsPbm6s8c=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787020839; v=1; x=1787625639;
- b=c2dFeVSlgzJ1LnSRu8P9fBpSd4jqTo2vYQvM6hdrbUFBIIDrVmSnSro3n02v+JSv8ezhn66w
- plwXV3TZatHPXhHqounD+WSYxk87PcuyIo6T6F6zBqMuG36jem8Kzo8YAQChd6LWLmnna+X4SMr
- u+88g73pEEggZp4uzZs6Gf6Y=
+ t=1787021536; v=1; x=1787626336;
+ b=SpY6/shOZ3utvqYsXQXYPFvHPOv51bEh6uJjaMySYjay6u1j3+cknzXzsrfUlK0/x6Q0DSa9
+ 9oYN+U75Mi8SLfb8gwmt7wzcMC6UJrT9cJXVP2e6JPatAoSTZ2MjkBeWuKTouvo+xhnCwp4IYAH
+ ItZnps/mpdDhpqu4/H6ItHkA=
 X-Envelope-To: cgroups@vger.kernel.org
 Received: from localhost (3.112.29.171)
-	by mta11.migadu.com with ESMTPS id 0adc373bf01fa8f4;
-	Tue, 18 Aug 2026 02:40:39 +0000
+	by mta11.migadu.com with ESMTPS id 9923006abc1b77f9;
+	Tue, 18 Aug 2026 02:52:06 +0000
 X-Migadu-Flow: FLOW_OUT
-Date: Tue, 18 Aug 2026 10:40:35 +0800
+Date: Tue, 18 Aug 2026 10:52:02 +0800
 From: Baoquan He <baoquan.he@linux.dev>
 To: kasong@tencent.com
 Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
@@ -60,10 +60,11 @@ Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
 	Chen Ridong <chenridong@xiaomi.com>,
 	Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>,
 	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH RFC 04/15] mm/mglru: make generation page counters atomic
-Message-ID: <aoPGI__XtDJ08I96@MiWiFi-R3L-srv>
+Subject: Re: [PATCH RFC 06/15] mm/mglru: use explicit tier range in
+ read_ctrl_pos()
+Message-ID: <aoPI0hlFe1uOPeFO@MiWiFi-R3L-srv>
 References: <20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com>
- <20260804-mglru-fg-v1-4-4d8dad39dad6@tencent.com>
+ <20260804-mglru-fg-v1-6-4d8dad39dad6@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -72,127 +73,84 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260804-mglru-fg-v1-4-4d8dad39dad6@tencent.com>
+In-Reply-To: <20260804-mglru-fg-v1-6-4d8dad39dad6@tencent.com>
 
 On 08/04/26 at 03:47am, Kairui Song via B4 Relay wrote:
 > From: Kairui Song <kasong@tencent.com>
 > 
-> No feature change, convert them to atomic so we can update them without
-> holding the LRU lock. There is no risk of overflow. The reader always
-> compares and uses zero instead if the counter values are negative. It
-> follows final consistency.
+> read_ctrl_pos() encodes the tier range in a single "tier" parameter
+> via "tier % MAX_NR_TIERS" as the start and "min(tier, MAX_NR_TIERS-1)"
+> as the end.  This is hard to follow or maintain or extend. Tier
+> values 0..3 select a single tier, while tier == MAX_NR_TIERS selects
+> the full range.
+> 
+> Replace it with explicit (tier_min, tier_max) parameters using a
+> half-open [tier_min, tier_max) interval, which is the conventional C
+> idiom.  The call sites become self-documenting:
+> 
+>   - get_tier_idx:   (0, 1) for tier 0, (tier, tier+1) for each tier
+>   - get_type_to_scan: (0, MAX_NR_TIERS) for the full range
 
-It's better to tell this is a preparation patch, and who will use them
-in the coming patch or function. Otherwise we can't see why we need it
-if it's no feature change.
+I agree with the complexity, while I am starting to like the original
+style once I understand it. Maybe add sentences to explain it?
 
-The code change looks good to me.
+Anyway, leave this to other reviewers.
 
+> 
+> No functional change.
 > 
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 > ---
->  include/linux/mm_inline.h |  6 ++----
->  include/linux/mmzone.h    |  2 +-
->  mm/vmscan.c               | 20 ++++++++++----------
->  3 files changed, 13 insertions(+), 15 deletions(-)
+>  mm/vmscan.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
 > 
-> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> index 4076e3f7dcc8..018a2f54a5c9 100644
-> --- a/include/linux/mm_inline.h
-> +++ b/include/linux/mm_inline.h
-> @@ -245,11 +245,9 @@ static inline void lru_gen_update_size(struct lruvec *lruvec, struct folio *foli
->  	VM_WARN_ON_ONCE(old_gen == -1 && new_gen == -1);
->  
->  	if (old_gen >= 0)
-> -		WRITE_ONCE(lrugen->nr_pages[old_gen][type][zone],
-> -			   lrugen->nr_pages[old_gen][type][zone] - delta);
-> +		atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type][zone]);
->  	if (new_gen >= 0)
-> -		WRITE_ONCE(lrugen->nr_pages[new_gen][type][zone],
-> -			   lrugen->nr_pages[new_gen][type][zone] + delta);
-> +		atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][zone]);
->  
->  	/* addition */
->  	if (old_gen < 0) {
-> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> index 8048c6b0544d..4225dab760ba 100644
-> --- a/include/linux/mmzone.h
-> +++ b/include/linux/mmzone.h
-> @@ -572,7 +572,7 @@ struct lru_gen_folio {
->  	/* the multi-gen LRU lists, lazily sorted on eviction */
->  	struct list_head folios[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
->  	/* the multi-gen LRU sizes, eventually consistent */
-> -	long nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
-> +	atomic_long_t nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
->  	/* the exponential moving average of refaulted */
->  	unsigned long avg_refaulted[ANON_AND_FILE][MAX_NR_TIERS];
->  	/* the exponential moving average of evicted+protected */
 > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index f5b0a7c63a3a..b02d2ec8ff4b 100644
+> index c2ea92c2b69e..a359d5a1ff41 100644
 > --- a/mm/vmscan.c
 > +++ b/mm/vmscan.c
-> @@ -3354,8 +3354,7 @@ static void reset_batch_size(struct lru_gen_mm_walk *walk)
->  			continue;
+> @@ -3192,8 +3192,8 @@ struct ctrl_pos {
+>  	int gain;
+>  };
 >  
->  		walk->nr_pages[gen][type][zone] = 0;
-> -		WRITE_ONCE(lrugen->nr_pages[gen][type][zone],
-> -			   lrugen->nr_pages[gen][type][zone] + delta);
-> +		atomic_long_add(delta, &lrugen->nr_pages[gen][type][zone]);
+> -static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier, int gain,
+> -			  struct ctrl_pos *pos)
+> +static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier_min,
+> +			  int tier_max, int gain, struct ctrl_pos *pos)
+>  {
+>  	int i;
+>  	struct lru_gen_folio *lrugen = &lruvec->lrugen;
+> @@ -3202,7 +3202,7 @@ static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier, int gain,
+>  	pos->gain = gain;
+>  	pos->refaulted = pos->total = 0;
 >  
->  		if (lru_gen_is_active(lruvec, gen))
->  			lru += LRU_ACTIVE;
-> @@ -4044,8 +4043,8 @@ static bool inc_max_seq(struct lruvec *lruvec, unsigned long seq, int swappiness
->  	for (type = 0; type < ANON_AND_FILE; type++) {
->  		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
->  			enum lru_list lru = type * LRU_INACTIVE_FILE;
-> -			long delta = lrugen->nr_pages[prev][type][zone] -
-> -				     lrugen->nr_pages[next][type][zone];
-> +			long delta = atomic_long_read(&lrugen->nr_pages[prev][type][zone]) -
-> +				     atomic_long_read(&lrugen->nr_pages[next][type][zone]);
->  
->  			if (!delta)
->  				continue;
-> @@ -4163,7 +4162,8 @@ static unsigned long lruvec_evictable_size(struct lruvec *lruvec, int swappiness
->  		for (seq = min_seq[type]; seq <= max_seq; seq++) {
->  			gen = lru_gen_from_seq(seq);
->  			for (zone = 0; zone < MAX_NR_ZONES; zone++)
-> -				total += max(READ_ONCE(lrugen->nr_pages[gen][type][zone]), 0L);
-> +				total += max(atomic_long_read(&lrugen->nr_pages[gen][type][zone]),
-> +					     0L);
->  		}
+> -	for (i = tier % MAX_NR_TIERS; i <= min(tier, MAX_NR_TIERS - 1); i++) {
+> +	for (i = tier_min; i < tier_max; i++) {
+>  		pos->refaulted += lrugen->avg_refaulted[type][i] +
+>  				  atomic_long_read(&lrugen->refaulted[hist][type][i]);
+>  		pos->total += lrugen->avg_total[type][i] +
+> @@ -4805,9 +4805,9 @@ static int get_tier_idx(struct lruvec *lruvec, int type)
+>  	 * This value is chosen because any other tier would have at least twice
+>  	 * as many refaults as the first tier.
+>  	 */
+> -	read_ctrl_pos(lruvec, type, 0, 2, &sp);
+> +	read_ctrl_pos(lruvec, type, 0, 1, 2, &sp);
+>  	for (tier = 1; tier < MAX_NR_TIERS; tier++) {
+> -		read_ctrl_pos(lruvec, type, tier, 3, &pv);
+> +		read_ctrl_pos(lruvec, type, tier, tier + 1, 3, &pv);
+>  		if (!positive_ctrl_err(&sp, &pv))
+>  			break;
 >  	}
+> @@ -4828,8 +4828,8 @@ static int get_type_to_scan(struct lruvec *lruvec, int swappiness)
+>  	 * Compare the sum of all tiers of anon with that of file to determine
+>  	 * which type to scan.
+>  	 */
+> -	read_ctrl_pos(lruvec, LRU_GEN_ANON, MAX_NR_TIERS, swappiness, &sp);
+> -	read_ctrl_pos(lruvec, LRU_GEN_FILE, MAX_NR_TIERS, MAX_SWAPPINESS - swappiness, &pv);
+> +	read_ctrl_pos(lruvec, LRU_GEN_ANON, 0, MAX_NR_TIERS, swappiness, &sp);
+> +	read_ctrl_pos(lruvec, LRU_GEN_FILE, 0, MAX_NR_TIERS, MAX_SWAPPINESS - swappiness, &pv);
 >  
-> @@ -4598,7 +4598,7 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
->  
->  	for (i = 0; i < get_nr_gens(child_lruvec, type); i++) {
->  		int gen = lru_gen_from_seq(child_lrugen->max_seq - i);
-> -		long nr_pages = child_lrugen->nr_pages[gen][type][zone];
-> +		long nr_pages = atomic_long_read(&child_lrugen->nr_pages[gen][type][zone]);
->  		int child_lru_active = lru_gen_is_active(child_lruvec, gen) ? LRU_ACTIVE : 0;
->  		int parent_lru_active = lru_gen_is_active(parent_lruvec, gen) ? LRU_ACTIVE : 0;
->  
-> @@ -4606,9 +4606,8 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
->  		list_splice_tail_init(&child_lrugen->folios[gen][type][zone],
->  				      &parent_lrugen->folios[gen][type][zone]);
->  
-> -		WRITE_ONCE(child_lrugen->nr_pages[gen][type][zone], 0);
-> -		WRITE_ONCE(parent_lrugen->nr_pages[gen][type][zone],
-> -			   parent_lrugen->nr_pages[gen][type][zone] + nr_pages);
-> +		atomic_long_set(&child_lrugen->nr_pages[gen][type][zone], 0);
-> +		atomic_long_add(nr_pages, &parent_lrugen->nr_pages[gen][type][zone]);
->  
->  		if (lru_gen_is_active(child_lruvec, gen) != lru_gen_is_active(parent_lruvec, gen)) {
->  			__update_lru_size(child_lruvec, lru + child_lru_active, zone, -nr_pages);
-> @@ -5650,7 +5649,8 @@ static int lru_gen_seq_show(struct seq_file *m, void *v)
->  			char mark = full && seq < min_seq[type] ? 'x' : ' ';
->  
->  			for (zone = 0; zone < MAX_NR_ZONES; zone++)
-> -				size += max(READ_ONCE(lrugen->nr_pages[gen][type][zone]), 0L);
-> +				size += max(atomic_long_read(&lrugen->nr_pages[gen][type][zone]),
-> +					    0L);
->  
->  			seq_printf(m, " %10lu%c", size, mark);
->  		}
+>  	return positive_ctrl_err(&sp, &pv);
+>  }
 > 
 > -- 
 > 2.55.0
