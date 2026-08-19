@@ -1,179 +1,146 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E671148C3E9
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 16:46:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787157993; cv=pass; b=Cjg/4jo+GJVIu6CXxAAiJUMPGvvofp9JTA87QHjm6o1HVREsU9hJ3WXwgBJobJGfE00f8tC4OYxd/9lX4ourWrAnvzMa1SO/O/qZYQmXl8OOi/7n2IIgbmm5mQAJEw4t8c8LAdQ7JW9qJRyZh+JeNJ0tV4qegTFDY6W5xAAzxDI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787157993; c=relaxed/simple;
-	bh=bm4ASoBKtUmJHUk2zSNZG8bG7KON1caZaOXDl2aDwUM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZUsrlT18o9gYVQdjHO81ofs/4yN2pKN1kvR433q/M+3UdzP73fAuXwyZjdSWwbfGLK8seWIW+QC6p6SCCT5LTv5jqnDKjLKjdg9tkXitRi4ee4pjfLaHFctykrl7bFtoe7BvAvxSbJWQq7IU74rhHYaFKgsWYForHOQZwQcc0/4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sVPozzVe; arc=pass smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 944C83C13E5;
+	Wed, 19 Aug 2026 17:14:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787159682; cv=none; b=QY5ML0MlSl2V+M/nqawQCEx8VgMUqdulso2EIN2g44kRf1lqQ3Ozn6U1gJ3aBTrp64mQF/CCYoPx/2Xc2CXoagTypwYDnKOwpLhovj4DUrCkOMcwbXPQxebBWbsVDQGj94lKrjB54GQgQitPbgodWAJwF+1ZLv1RGmCy+xlTWrw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787159682; c=relaxed/simple;
+	bh=G2az3kMaKEVhL2SBJG2o50oNa+isI1FJN0rhDo3+L8M=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=q1K4d6e0/jwigHJUkuPUxqfdAQ7g+nk5nWTAL5rnNJkLnwyYSBVcs65fF1Ve7RbFKHU0vsivufTthUxVdSm39i/BR+tdvyFknnwF1ikezArnJzKGlu3iSl6KvJVN373Rq5oh4OZ5BcdiSEAPXf93+tb6LpVn1qlxV8TBWdC2Iac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Zp1n/BVI; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sVPozzVe"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-482938466a7so1039655f8f.1
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 09:46:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787157990; cv=none;
-        d=google.com; s=arc-20260327;
-        b=jhVi5wXrZFg8dBn6EFHe8QpJ8/UaE72jE/yqmEKuLtiV/tWzRCIKX3paYwI329xhBs
-         YBMVj5bda93dPR+QKs82ZFofEYZTgLqSMhvZRppdpzbbF9+D4xPD3NiLIxqZrfvcKm/3
-         9kka2+pOpk4+ZN95XpOW8IWdQHLUwmKji6mhkLkKmDZOwx2h0VTNoBrP9KeQJhs0cxP6
-         TbNVQX+XZhUxIK9BG4PDbOZFlAja+DVxhfl/K4XXPSfMIVzj5B4Y6Tiu/Zpa9YL09io9
-         bc3wrZQnkG447t1FxGckdMffrmnFEKpwFgp3Crgs17W2FtTPyqxrtL5PJc7x7J0KNNGs
-         xHVQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=KGaMY+nZBc9mwPhVBSJIQVYoXkNeMf257X9LmQBSnFU=;
-        fh=ixqwTg9uBf8BUjK6l7y7ioFuBerIDeptDPySfw1MgpU=;
-        b=KE4RLMR/ob+NOpLOs/ZRz7BC1WmoKA5MGzsgHkspVn48toJO0NKXiOkUKQxsM2mA+f
-         GDRAyodq2LFzXJtGIbTca5OTOoel5uuhg+jaowzmlIBWrNcIUHZOy3dAfHFY4gtyyYOb
-         QT8264aXPHvVUzcIsDkmaIcVKKSJtLk3kPVjp8FsuBc1XD22nqK/3N1gda23teGjrg1Q
-         coDh94QV67Ww/GiHijCxzWdJ3R7QRDv3FjlbGv64zgmENyz5NG9M+e2ThKYNcZ4R2SvJ
-         MEzWFjtFfCmqZ6/HnkBmHS6ggK8/da8IMk3BBBErDs32necT2caUdtN4nQP6UcU9Fa61
-         rI2A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787157990; x=1787762790; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=KGaMY+nZBc9mwPhVBSJIQVYoXkNeMf257X9LmQBSnFU=;
-        b=sVPozzVecTITBkKuvfayI7txQF8rWRsy+IU0J9m6uVV6YM4NSyAk3JFUGU9RhHrhyQ
-         j0qfyDK/dvFmpvOpr0JlSNW8V0soQobuxS1JdQDhqONJKKWLm5NanByKEEzMlkML8Ar9
-         fh57Gdi9Ykqu+X8w/+S4tGQ7dce/26nb3IU1ZiD7m3l5suZZGePlatkK1+e9R6XWpQ0F
-         7nST1oNClGH+PHQ27wGfXeqzfbw6fEPY5LKo2srlLWjvz5QitF5yAF27shqF19VXRf/a
-         +kRGfWjTodZml167noIrOrbP64RuX6Mkl9tl8MAZZGJqSoFsn71LOyesB8kKqAXjG9cz
-         hKww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787157990; x=1787762790;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KGaMY+nZBc9mwPhVBSJIQVYoXkNeMf257X9LmQBSnFU=;
-        b=WS63EdwmhfK/uCz8S1yCAlkd/4qI9VkkLanZkbkwlXLnl9OTCINmeatuwC5ZT7QaJN
-         w9vbIg6J7UEIdyuculJYxtuvLXz6gzIMrd+UaMrUePZRzKNfGUAj9634uMJ54xGmiTPh
-         2COE87MEvcNWroISLI/4cXfZq+NNQxlv7oC+vZGMnjvG15S/78X6KtIrqT7O0uZSvqs+
-         uGSJt5Hyc2JjWSfVUUFa+Ab5IZf+cOIxvPkgJ4uspmJbaJ0/x1GS11mzJ6DoFAsRpKZP
-         8U9rfhnn/Y8k4+OcvuGJneihKsKu2tjt6vhXx2saQekIIkm0bVyx1iPSL6QkNFgykDTh
-         XfMg==
-X-Forwarded-Encrypted: i=1; AHgh+RqN/VN4nYsWVQAKsKM7QEmibWZNgcgj0wa04A+K8oMS1eY8681+0F5EXxw00fgkUCE3aM6ZOL2s@vger.kernel.org
-X-Gm-Message-State: AFuF++kfs+oRHRBgqBDXf56xsBBuNd6F/9uZI0F1veGoSNPqx+3zN7Uh
-	JzGmIArudhNvvQy3l740m02QANVu0azeGdeG4t1zaP8D/ZoewP4utBLS8IvEZ4pE9woUGagJDeY
-	3BFsUzn2A07zLMyNs+SzOGIZXhhDB6N8=
-X-Gm-Gg: AR+sD13z6HhnhsRU7azivr5pBOFvdLPP7JQ9f0rDeiCmJLCiJtl5fnN58W6M8I2W9pp
-	bTlRdP+2jR3unNb0FhwVImb6hkxf0Plkdwkk5JwO1doO1GinxvVt3ktoHW0jcvzKBtJPDRn3BRS
-	pDXzp5+tVmHQcFaRhn6rXfIf+aI1jCqrcXASP8FTjxtVTgkDRCBdyARqxTxGQjGSX+qItHO6Xd9
-	htIGpc9lXwlqKyD3iDU8+vMRMjeargsRqp24JPmEyhlU4H91YDXQefxN3pLB6weK6K1mVyXDeuD
-	JxxaogDv2rIdyJ0RhcmKiIVB6Smsh7K6Dfin3R8nSsuSrD3dISrDe3wKPeu54ruWfQrGVIDF+eI
-	w
-X-Received: by 2002:a05:6000:25f3:b0:47f:8ac0:ccb4 with SMTP id
- ffacd0b85a97d-482b1e9df5fmr12803729f8f.10.1787157989811; Wed, 19 Aug 2026
- 09:46:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Zp1n/BVI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787159681; x=1818695681;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=G2az3kMaKEVhL2SBJG2o50oNa+isI1FJN0rhDo3+L8M=;
+  b=Zp1n/BVIUYNjJWNuLXPN9hd20Vi3nj3Yn+nLXQM7P4GL+054XoY5Aaia
+   Fo6q2HfbIrRjZ7jaif83j7+TSttp0F+ysGqfuAOy6L7bCK4Aj2L6O6RH/
+   bq901Hh+GNBAk2q6uK3LeqdOgDD4em2ilwELEjjEwiR4XOeKDfeRiIX7H
+   WWLX5Jc67ntFYlu53s9lmGYhPdHlcIn+bgXEav8TEvLJwZhb+1mCH6wLJ
+   gTsApYjPyoUIUxWTZnm+03dkir70JGR5765Fh4NZP+h3UnLgaChDRnEYT
+   iR75JV7sCF01CZapzQ4Q4DHmJPLaUK28HxUO8UPR1Y8a2CgFu80KgdfKB
+   w==;
+X-CSE-ConnectionGUID: HBvsTbq1QPCN/WPJBvIDGg==
+X-CSE-MsgGUID: fidyHryrTXCVUPQvutgr8g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11880"; a="91561107"
+X-IronPort-AV: E=Sophos;i="6.25,231,1779174000"; 
+   d="scan'208";a="91561107"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2026 10:14:40 -0700
+X-CSE-ConnectionGUID: DqhfA6knSzKbQizUUgDOFA==
+X-CSE-MsgGUID: kiuO5Lh5QfS5kLcaViSxPA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,231,1779174000"; 
+   d="scan'208";a="290404560"
+Received: from unknown (HELO [10.241.243.185]) ([10.241.243.185])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2026 10:14:39 -0700
+Message-ID: <ac36ff70f74b5e071e80a5df89d9979afa7b9956.camel@linux.intel.com>
+Subject: Re: [PATCH v2] sched/topology: Add a cpus_read_lock to
+ rebuild_sched_domains()
+From: Tim Chen <tim.c.chen@linux.intel.com>
+To: Ridong Chen <ridong.chen@linux.dev>, Sebastian Andrzej Siewior	
+ <bigeasy@linutronix.de>, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org
+Cc: Ben Segall <bsegall@google.com>, Dietmar Eggemann
+ <dietmar.eggemann@arm.com>,  Ingo Molnar <mingo@redhat.com>, Juri Lelli
+ <juri.lelli@redhat.com>, K Prateek Nayak <kprateek.nayak@amd.com>,  Mel
+ Gorman <mgorman@suse.de>, Peter Zijlstra <peterz@infradead.org>, Steven
+ Rostedt <rostedt@goodmis.org>,  Valentin Schneider	 <vschneid@redhat.com>,
+ Vincent Guittot <vincent.guittot@linaro.org>,  "chen.yu@linux.dev"	
+ <chen.yu@linux.dev>, "Chen, Yu C" <yu.c.chen@intel.com>, Waiman Long	
+ <longman@redhat.com>
+Date: Wed, 19 Aug 2026 10:14:38 -0700
+In-Reply-To: <d7129d5a-c9ec-421c-84e9-d227cd10ec32@linux.dev>
+References: <20260813073855.ji2UrtVh@linutronix.de>
+	 <20260813074817.t8IQTgfx@linutronix.de>
+	 <d7129d5a-c9ec-421c-84e9-d227cd10ec32@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.1 (3.58.1-1.fc43) 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260806184254.3790858-1-nphamcs@gmail.com> <20260806184254.3790858-2-nphamcs@gmail.com>
- <anX-ga41DMNWF6-2@cmpxchg.org> <CAKEwX=MmqyWdqfrp8kxeuucNFhU2e6Hk2TdANUGhNFHhvtSPwg@mail.gmail.com>
-In-Reply-To: <CAKEwX=MmqyWdqfrp8kxeuucNFhU2e6Hk2TdANUGhNFHhvtSPwg@mail.gmail.com>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Wed, 19 Aug 2026 09:46:17 -0700
-X-Gm-Features: AcwNN1VW1IFOK11rd1UcYSUArFyDXGImTjTFPjh0sY0B1rB0YRzMpSnPt4Jbiig
-Message-ID: <CAKEwX=PjvsAOv8rvp+mz_aPqDLm6iRy6URRW2EMFvFrgD2HEgA@mail.gmail.com>
-Subject: Re: [PATCH v3 01/11] mm, swap: add virtual swap device infrastructure
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: akpm@linux-foundation.org, chrisl@kernel.org, kasong@tencent.com, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	yosry@kernel.org, david@kernel.org, muchun.song@linux.dev, 
-	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
-	youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org, 
-	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
-	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
-	weixugc@google.com, riel@surriel.com, gourry@gourry.net, 
-	haowenchao22@gmail.com, corbet@lwn.net, kernel-team@meta.com, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 18, 2026 at 11:41=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrot=
-e:
->
-> >
-> > Can you make this a pure allocation function - vswap_alloc_cluster()
-> > or something - that links it to &si->free_clusters, then jump back and
-> > use the existing alloc_swap_scan_list() sites?
->
-> That name was vestigial from Kairui's RFC, but yeah I agree
-> vswap_alloc_cluster sounds better.
->
-> Regarding the linkage of the newly allocated cluster to the free list
-> - I'm a bit hesitant to introduce new surface for these clusters,
-> mostly because I'm afraid I might mess up the handling of these
-> clusters (when I unlink them from the free list), but I can give it a
-> shot.
->
-> >
-> > There is a new_cluster: label upstream you could use for the retry.
+On Thu, 2026-08-13 at 17:43 +0800, Ridong Chen wrote:
+>=20
+> On 8/13/2026 3:48 PM, Sebastian Andrzej Siewior wrote:
+> > + CPUSET maintainer which I missed because re-used the CCs from v1.
+> >=20
+> > On 2026-08-13 09:38:56 [+0200], To linux-kernel@vger.kernel.org wrote:
+> > > A read from /proc/sys/kernel/sched_rt_runtime_us leads to backtrace d=
+ue
+> > > to missing cpu_hotplug_lock with CONFIG_CPUSETS=3Dn. The callchain is
+> > > sched_rt_handler() -> partition_sched_domains() -> sched_cache_set() =
+->
+> > > static_key_enable_cpuslocked(&sched_cache_present).
+> > >=20
+> > > sched_cache_set() itself is also invoked from sched_init_domains() wh=
+ich
+> > > is early during the boot, holding just the sched_domains_mutex_lock()=
+.
+> > > Here is no warning because it happens before user space is running (a=
+nd
+> > > hotplug operations are not possible).
+> > >=20
+> > > There is also sched_cache_active_set() which acquires the hotplug loc=
+k
+> > > before invoking any of the _cpuslocked() functions.
+> > >=20
+> > > This is only a problem with CONFIG_CPUSETS=3Dn because in the =3Dy ca=
+se the
+> > > other implementation of rebuild_sched_domains acquires the CPU-hotplu=
+g
+> > > lock.
+> > >=20
+> > > Acquire CPU hotplug lock before in rebuild_sched_domains(), before
+> > > partition_sched_domains() is invoked for the CONFIG_CPUSETS=3Dn case.
+> > >=20
+> > > Fixes: a7660ce1590fc ("sched/cache: Fix has_multi_llcs iff at least o=
+ne partition has multiple LLCs")
+> > > Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> > > ---
+> > > v1=E2=80=A6v2: https://lore.kernel.org/all/20260812095800.gl06ANul@li=
+nutronix.de/
+> > >    - Move the lock from partition_sched_domains() to
+> > >      rebuild_sched_domains() in the CONFIG_CPUSETS=3Dn since this is =
+the
+> > >      only affected case. Noticed by Yu C Chen and Tim Chen.
+> > >=20
+> > >   include/linux/cpuset.h | 1 +
+> > >   1 file changed, 1 insertion(+)
+> > >=20
+> > > diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+> > > index 65d76a38974ba..bf3999daa080a 100644
+> > > --- a/include/linux/cpuset.h
+> > > +++ b/include/linux/cpuset.h
+> > > @@ -273,6 +273,7 @@ static inline void dl_rebuild_rd_accounting(void)
+> > >  =20
+> > >   static inline void rebuild_sched_domains(void)
+> > >   {
+> > > +	guard(cpus_read_lock)();
+> > >   	partition_sched_domains(1, NULL, NULL);
+> > >   }
+> > >  =20
+> > > --=20
+> > > 2.55.0
+> > >=20
+>=20
+> LGTM. Thanks.
+>=20
+> Reivewed-by: Ridong Chen <ridong.chen@linux.dev>
 
-Actually, I stared at it a bit more. I don't think we should jump to
-new_cluster here - it's not what physical swap allocator does in the
-first place (we never do any backward jump to retry).
+Thanks for the  patch.
 
-So basically, this is the old code:
-
-new_cluster:
-if (discard)
-    alloc_swap_scan_list(free list);  /* not taken by vswap */
-
-if (alloc_swap_scan_list(nonfull)) return;
-
-/*
- * Added by me. vswap (almost) always succeeds here
- */
-if (alloc_swap_scan_dynamic()) return;
-
-/*
- * not taken by vswap, because we succeeds above
- * and free list is always empty.
- */
-if (not discard)
-    alloc_swap_scan_list(free list);
-
-/* if free list scan fail, keep going */
-
-etc. etc.
-
-The new code becomes:
-
-new_cluster:
-if (discard)
-    alloc_swap_scan_list(free list) /* still not taken by vswap */
-
-if (alloc_swap_scan_list(nonfull)) return;
-
-/* vswap puts new cluster into free list, then falls through */
-if (si is vswap)
-    vswap_cluster_alloc();
-
-/* vswap now scans free list to get the cluster it just allocated */
-if (not discard)
-    alloc_swap_scan_list(free list)
-
-/* if free list scan fail, keep going */
-
-This works, but I'm not sure if putting the new cluster on free list
-buy us much other than more lock contention points (we need si->lock
-to scan free list) :/
-
-I'll just rename alloc_swap_scan_dynamic to vswap_cluster_alloc(), for now?
+Reviewed-by: Tim Chen <tim.c.chen@linux.intel.com>
