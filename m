@@ -1,87 +1,59 @@
-Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BDE4396B9D
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 13:22:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F29A396B9D;
+	Wed, 19 Aug 2026 13:22:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787145740; cv=none; b=WQ/2y+MnGhlLuuZOsJac4EA5Q/4yAj7msT9wL8D2Salzb2yxyE+UBWVf3iBxIK3nqno/D9oca06xDY+VHfSInKeBf5G3ovkncEwhsFs0ZzXfWzGuH8ZOKLFHlH1GPcEaAuDTgsuAYhpM87Sp3ay1EYff7MpT8M6yq4QPJwZS+i8=
+	t=1787145754; cv=none; b=k2X0RWrVT7eyqys6jNUWch7Ki6f21IjX5lWDtjoAcqClwIYj5H4vROF6oOdzjcYs0gT8sZ0o6Bc771EKA6CX2CipVaSfB3sSt1RR7ckIIqI8Br+bb7emY1Liy8y0eG6ihEXNzhDKgBwc4PtfVbSAD9MMuJnm1WF3bdS0iGCsRFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787145740; c=relaxed/simple;
-	bh=OqXWEupomjk/a4YDz57WaB65dru+lxF67oQz5/x4HUY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dfiPiJfUh1JjUNq4T56S0rN/vDSxL7/b/4GqSJSFlrLMsFkqeGGC6UDb3msM6YYSMEca0GXcN7fBOcBmTZiiELEAjERrcgZir6gPGtX8yYZtnTUD6AfCYhWeEsgMmQ/PUpkgE7scuugF03VTeFMe6n/t8OitUJnLafiRLV94dz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca; spf=pass smtp.mailfrom=metarealtyinc.ca; dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b=ldKLBdRC; arc=none smtp.client-ip=209.85.160.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=metarealtyinc.ca
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b="ldKLBdRC"
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-52d8748cde5so5041341cf.0
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 06:22:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=metarealtyinc-ca.20251104.gappssmtp.com; s=20251104; t=1787145731; x=1787750531; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=S80AkclMqzdL0HTjNa/cN/+fUF8iAZr9z93NDZp/QlY=;
-        b=ldKLBdRCHcEJ8siLgaAVWDNlCTbg8QspQAiNSdMdX/Yr6mOaT/GIEk02qrQ3FCW2q8
-         sbnzC5gJz2GhiIKkc34vdupp9uiMx/T/0U8tdx872EY7BAUHWhKBTP/qQH1zhukqyEkm
-         YBCzuqCPv4pDy6MzC+i0uICs0GdCL0Bo6FjocNPR/HNnIAFExlM32muTpjX+o3muFDRw
-         eo7y8b94eSHVYyEITLiux6tozl9JAnQjTmSlugbvon9ei0d3cI/fNNCH+k6xeTqw+trt
-         7EYZFsnHTpx1NolOMBBcib3kO/SN81txbhyULEoXB09Pe9Fbqnzyt/SQRYE7YJr6OvZn
-         nZxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787145731; x=1787750531;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=S80AkclMqzdL0HTjNa/cN/+fUF8iAZr9z93NDZp/QlY=;
-        b=JsNyWizbr268pmqZZdqoJL+q8DqNLUI6z3UT9qMO3gscX/5ZXOmbZN7qdw1szfDToM
-         QlQJULnLPFAs6xkbdgCeFdDmtAJWM+IysPwrS+75y5FIJb+vIWx6FjFlNT/O/jn5inUB
-         V/Ji4SKXbLb4pe1UYl7qZu3mre0cOg5V2BnjNrnzZ1NVibHg7q3zFi/doSL12TguX336
-         uRXFWemF8X9dOy94G6b+PXEZxIYbw8FwY2VZZMCiP6G40UdUR8t42Ore+n59SzDrSvCR
-         Y8NdSR8SvrjCTSKdmqQAKvMWdmmSjhb3C2GErG9TYymhouJ43dCxggDbkr9+5gZxo1OJ
-         sU6Q==
-X-Forwarded-Encrypted: i=1; AHgh+RorM/WSwniSTQIZ8ey5fs8XaHOb2//+zHpjmXCmf5w3iogf66VjVYP5hkeGSS/V6l+L/ZTr0inB@vger.kernel.org
-X-Gm-Message-State: AOJu0YxI8HH4MZjzzWn21MMI8xI18R0iCJHzDnF66SpPrIM6BoI8YcXA
-	N6TWesyRub/Du2oL7DMznoX3G/0tuSDr8p2vWprBXHWZTEsmp2FBeJbz3LHudKvzzMg=
-X-Gm-Gg: AR+sD13IGBa529riVouRQ61r+2UjtAXlSbFgSQokQe94xT9AMhSgMM9uzRVyrSvoCjb
-	iyYVY8SsrVo8Kx0ydGUE1jlSviAK2xqGZsDOE4hRBdixtrvLKDlzpMNfGj0aSl5R6rpY4awpW3t
-	MAFnt7jH/eUtMwyz1haCvbmlukpoxXgcydCGGQfO7wxDrpDAeyU65eRAqigII78IXwCHgZ+qlw3
-	L6Ub0Mraza2q8njTwr472J3eZwUZdu8UZOXbC8VmonmGlo08W0uy0twJw83NWzaSZJa4fgsto1p
-	N+908MD+ocQXZ/H1+HFDxUQLaT7YlpQ4dZreBMlvkw2tBFpHZrsLpUufwiYr2FowR8xa7TQyncb
-	VbX2wNns7/7gTepRJoQ3psuIWH5TODHWLJrEmYMPzl7viV4hG13CWXfo/5WtEVmH2o+3wLS/bV4
-	eqhZ8pLaUyvEc/put3/MKEs5hcGNLC+B+aTflN9lsaXe66IA8n1waWEQ5Yx/RCQbFKDEfFIGuXY
-	zDL/igkq8sjRymYDMU3A09L05CXzEt/sHQdQBZ6Pp17hIvXxloPzcfJhN1XhQs9zvvo0lmra5fA
-	7mKTxQuygS9nrO/2rAEFpG+nRx5Vs+9JHf7KlQ0632s=
-X-Received: by 2002:ac8:6909:0:b0:52d:8256:ac33 with SMTP id d75a77b69052e-52dd5c8b620mr41901041cf.28.1787145731031;
-        Wed, 19 Aug 2026 06:22:11 -0700 (PDT)
-Received: from jake-laptop ([2607:fea8:e5:500::95b9])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52dd859cebasm10571201cf.11.2026.08.19.06.22.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 06:22:10 -0700 (PDT)
-From: Jake Steinman <j@metarealtyinc.ca>
-To: K Prateek Nayak <kprateek.nayak@amd.com>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	Waiman Long <longman@redhat.com>,
-	Tejun Heo <tj@kernel.org>,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org
-Subject: Re: [BUG] sched/fair: divide error in __calc_prop_weight() from the enqueue path (flat-hierarchy series)
-Date: Wed, 19 Aug 2026 09:22:07 -0400
-Message-ID: <20260819132207.2149185-1-j@metarealtyinc.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260818231333.1441757-1-j@metarealtyinc.ca>
-References: <20260818231333.1441757-1-j@metarealtyinc.ca>
+	s=arc-20240116; t=1787145754; c=relaxed/simple;
+	bh=0B+MY6T4G46mvzSbsdpm6pM9o7FAKPKaDqjKbz525Ik=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=ed4N0dkXq8PFpV1QYTPOfu7pV3YeqxX2WFtr78mhWV3SMBiM42akEU2YlXX4vdkJRLcG4NxD8nWTqFX/NTgBuEJvdhnca+1DPZ/YU5i5pdWyJbJHRprqQ5FqlmRtqZfh+lf7mvhuPwJaQIpQXEy+3UmAcpiOkfvMWdbPHehYFX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 011ad8569bd111f19a56ed5b684f684d-20260819
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:d9e7c4d5-9b1d-4595-9b93-d731a7ebd762,IP:0,U
+	RL:0,TC:0,Content:0,EDM:-25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:7db8b62,CLOUDID:11e6ee3dfcb512015faf57493ec09a9a,BulkI
+	D:nil,BulkQuantity:0,SF:81|82|83|102|123|136|850|865|898,TC:nil,Content:0|
+	15|50,EDM:2|44|-100,IP:nil,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:ni
+	l,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_EDM_RNO,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 011ad8569bd111f19a56ed5b684f684d-20260819
+X-User: liuqiqi@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <liuqiqi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 982613573; Wed, 19 Aug 2026 21:22:19 +0800
+From: liuqiqi@kylinos.cn
+To: joshua.hahnjy@gmail.com
+Cc: Qiqi Liu <liuqiqi@kylinos.cn>,
+	mhocko@suse.com,
+	shakeel.butt@linux.dev,
+	linux-mm@kvack.org,
+	tj@kernel.org,
+	mkoutny@suse.com,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	muchun.song@linux.dev,
+	akpm@linux-foundation.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 0/8] mm/memcontrol: introduce per-tier memory accounting and control
+Date: Wed, 19 Aug 2026 21:22:11 +0800
+Message-Id: <20260819132211.366064-1-liuqiqi@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260818154954.805958-1-joshua.hahnjy@gmail.com>
+References: <20260818154954.805958-1-joshua.hahnjy@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -90,64 +62,76 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Prateek,
+From: Qiqi Liu <liuqiqi@kylinos.cn>
 
-> Was your laptop suspended at that point?
+Hi all,
 
-No -- awake, but it had been through a suspend/resume cycle earlier in
-the same boot. From the journal of the boot that died:
+Thank you all for your replies. I am not very familiar with the
+community's workflow and should have reviewed the mailing list
+archives and existing implementations more carefully. I sincerely
+apologize for any inconvenience this may have caused.
 
-  15:32:43  Lid closed
-  15:32:44  PM: suspend entry (s2idle)
-  16:25:55  Lid opened
-  16:25:55  PM: suspend exit
-  16:42:54  Lid closed
-  20:17:49  Lid opened
-  20:31:59  Lid closed
-  21:10:16  <last log line -- crash>
+My work is based on
+https://lore.kernel.org/all/20260528134212.240492-1-liuqiqi@kylinos.cn/
+aiming to develop memory tiering limits for cgroups. During
+development, I referenced Joshua's v2, but failed to notice that
+v3 had already been posted when I submitted my series.
 
-So the s2idle cycle ended 4h44m before the fault. At 21:10 the lid had
-been shut for ~38 minutes, but the machine was on AC with
-LidAction=TurnOffScreen, so it was awake with the display off, not
-suspended -- the wallpaper daemon was still rendering once a minute
-right up to the final log line, and the fork that tripped the divide
-happened then.
+I have studied Joshua's v3, and our core mechanisms are largely
+consistent. However, there are two differences:
 
-Also relevant to the freeze_secondary_cpus() angle: that boot logged
-zero CPU hotplug events. No smpboot lines, no "Disabling non-boot CPUs".
-Caveat: s2idle's freeze path may not log at my loglevel, so I would not
-read that as proof it never happened -- only that nothing surfaced.
+1. Read/write per-tier interface (memory.tier): each cgroup
+   tracks its memory usage by tier (e.g., DRAM, CXL), exposed
+   via a new memory.tier control file. This file reports
+   per-tier usage and accepts per-tier high (soft limit) and
+   max (hard limit) settings. By default, these limits are
+   automatically derived from memory.high/max based on each
+   tier's capacity ratio, but manual overrides are supported,
+   allowing administrators to constrain specific tiers on a
+   per-cgroup basis.
 
-> I think your current instrumentation from "Proposed guard" is good
-> enough to tell where the problem is if it reproduces. Are you running
-> with it on your setup currently?
+   Its advantages are:
+   - It can express allocations that fixed capacity ratios
+     cannot.
+   - Latency-sensitive tenants can be given a larger share of
+     the fast tier.
+   - High-capacity tenants can have their soft limits removed
+     for the slow tier.
 
-Yes. All three hunks have been in the running kernel since 2026-08-18,
-now on 7.2.0. Current status:
+   Whether or not to constrain a specific tier should be a
+   decision made by the administrator on a per-cgroup basis.
+   This serves as an answer to Michal's earlier question in
+   the thread regarding "do you intend to limit memory
+   consumption on particular tier even without an external
+   pressure?"
 
-  7.2.0-1, 17.3 h uptime with the guards in
-  "sched: tg_cpus() == 0, empty cpuset"        -- 0 hits
-  "sched: cfs_rq->load.weight == 0"            -- 0 hits
+2. Per-tier stock: I have implemented and tested per-tier
+   stock -- it batches atomic operations on tier counters from
+   per-page to every 32 pages. Joshua's patch (moving the stock
+   down to the page_counter level) takes a more generic
+   approach, and I believe we should continue with his
+   direction here.
 
-So nothing has reproduced yet. Given the original took 11.7 h of mostly
-idle uptime to hit once and has not recurred in the days since, I read
-17 h of silence as "not yet", not as evidence against the cpuset route.
-I will report either way -- and if the tg_cpus() WARN is the one that
-fires, that settles the mechanism on the spot.
+Memory hardware is becoming increasingly diverse (DRAM, CXL,
+and further remote tiers), and the performance gaps between
+tiers are significant. Different workloads have different
+requirements -- some demand low latency, while others need
+capacity. When the fast tier cannot accommodate the working
+sets of all workloads, it should be the administrator's
+scheduling decision to determine fast-tier allocations. I
+believe tier-aware control is a direction worth pursuing, and
+the differences above are where we can contribute.
 
-I have sent the tg_cpus() floor as a separate patch per Peter's request.
-I deliberately kept it to that one hunk: with tg_cpus() floored and
-tg_tasks() already flooring at 1, nr >= 1, so shares_max >= tg_shares
-and the inverted clamp in __calc_smp_shares() becomes unreachable. The
-other two hunks are belt-and-braces and I did not want to bundle them
-into something Peter offered to take on symmetry grounds.
+As Shakeel suggested, and given that Joshua's v3 already
+contains the core mechanism, I am dropping my current
+standalone patchset. I would like to ask if Joshua would be
+willing to collaborate with me on this, treating memory.tier
+as an extension to the patch series and proposing it as
+follow-up patches based on v3.
 
-@Guopeng: thanks, the isolcpus=domain reproducer is interesting. I am
-not using isolcpus here and have no domain isolation configured, so my
-case is not that exact path, but if you want a second machine to test
-either of your series on I am happy to run them -- this box reproduces
-suspend/resume cycles all day and has 16 CPUs with a P/E/LP-E split,
-which may be a useful shape for hotplug edge cases.
+PS: I have already subscribed to the mailing list to avoid
+such misunderstandings in the future.
 
-Thanks,
-Jake
+Best regards,
+Qiqi Liu
+
