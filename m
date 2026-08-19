@@ -1,54 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DBCF374A13
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 21:24:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 167FB370AF8
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 21:31:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787174694; cv=none; b=NDfuHlB+oVQcdySfclAdUzpJCX8Gjh0w7JyD3NmPssGImqLODwRIv5Gk+POIqb1V3p4jSac+tvT86a643X4YuKed6IyeJIPDkfqiU7RZH2i2Ua5LGKoL55pEddofDB52l0FR562UCGuOCEmPNJJ62Tbqs700Z8gZ7V/TZeatgDE=
+	t=1787175070; cv=none; b=TRu49fIPAGr72MgMH7+EnICL988q0Kpz7zMwDb5qU4m6o48kxuO9SI2wZgF1QdtLBpD3LnR7lg+zrVx9piBQJxLU1ErqcoOpADNBIf8C09wU2R3qtR/R1YgrPPAnVnNIKlC1Ri6oPDFdqkuvF2NIP2h/uY+flAcef4xUDgiFCTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787174694; c=relaxed/simple;
-	bh=nRWXUpoK1riuDr09d1SLNDyGfy5p32SSzQg+dsb0d/8=;
+	s=arc-20240116; t=1787175070; c=relaxed/simple;
+	bh=ghs6iPSRrZGeJwUGIyYt5eVaUbmSLLAA1KH//Wk5utk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rkvASlgJXa4JYVTchGPXk+G+pz+Kxp8UcE3vFb6Ir+4KQ3ERiZ1nNZZHXQyVJSU6Pr/2uFaCUadm4HXZ6WEsGo6wpzHg91hIRamy+BcCPKYT49S6GaPIRhLK/JazypRXGm+DV3k60oySHlctTk/nPFPDapNQ4H/KNW5zWpv402E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUI3IiA/; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=Ba7dVFFDq0WrS1pEA3rmWxjqMIRsYma1LmqfmDECaEYo/wchHqrnbvgNhid2DjqCIB3GBHUf3hq0/dm7wEyFdQydYbYVdasetoma+ewJLYTdywKTS7A+QmD/V8cKmEznL4hN6tOiRtlBLTqEN7NEKQzxwRCBKfiXvOJygyO0kfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BYQfE0qB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUI3IiA/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5802B1F00A3F
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 21:24:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BYQfE0qB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF9771F00ADE
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 21:31:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787174693;
-	bh=zNqmDH6Jq1rIZyagW0x3hDwfycUXlIykI4fUBBHVlfw=;
+	s=k20260515; t=1787175067;
+	bh=ghs6iPSRrZGeJwUGIyYt5eVaUbmSLLAA1KH//Wk5utk=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=SUI3IiA/1vevgZp9vqFX8HwwBHOS2iwj0lvrt/dLO/QHDWVPR7WoxRa3vauhhymbt
-	 FmZlir2JsgFBd0JtVWMWcrPR2o3EI35HCIZWJJrOHitsWT2xnLydWu3POjklIYSRLP
-	 LREGAlvahABDbjFU6PZqVPco+hD6HQhu7ULgtECMbNE0sCwYLk8rsKXuICPGQ+GJHS
-	 S4E1KE2b3mSUCEgFoIAqrZcOPogRMgtlqVL0uhpabsbDRsvd2bbjGPFT0WKAD8QlyC
-	 pzXq7siuDG91CfPYh1ttNNgq687VMtRHU5JOBg5ULNtaoUCHVHjRZcDXpT12E+wRkk
-	 ZHREQEj6jG6AQ==
-Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-92e512a9a6bso87346785a.2
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 14:24:53 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RovpsaPSIcOCwrXHx1LvQJSC2OLDeDxaRavjFOnLi4EXOuUn2Y3hmTHV1B//i+TQG6rCA9Yek2I@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5SfcNK8gQk9KVbjqfaWhl9SxAoUHdAcjkwdZVU9Ej0yIzIooR
-	tiYR0vssM3A3FTOsF/fZrk+sR5O9k1+hfHCDOQVPbGEPhUqp7uqeIgNwXgcoR1SCyYu0MhxUey+
-	7eG3rvtcSwogMA4woo45MNmtXslVEY3Y=
-X-Received: by 2002:a05:620a:1a02:b0:936:eb7f:d2c7 with SMTP id
- af79cd13be357-9371e309725mr741046285a.27.1787174692543; Wed, 19 Aug 2026
- 14:24:52 -0700 (PDT)
+	b=BYQfE0qBn6RQTOJEi/H5ED7wk4DSJu3aU94pOT1Ga3wT9ZlVjFXZz66cHn/I6HI6U
+	 gXkI80jZOhcbS8ofV9XsokHHtoW6uK5HUpY+WeC+3clBY5wAd/SP38zgm9C/0o0O8e
+	 zhkVBzKH3CbLe9ZQgK+JfaIGSbG47BlPa58qgl6EmMCbBfp6j6d+3ckmn2h0TxXRiv
+	 r2kM2SeSfWg91KwMSWTothUM68f6KEbl7atEnG5y3bW8ypnzzJ2jxqInVGZs+vKvT+
+	 eQnk3S0AeDx6HynmdtoB8lq1KdAmFkOJaw5Ai4CPzw/hG3nP1+3hMCMKfb2bcsDEG+
+	 R3K70Ysw19s4A==
+Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-9349ad9c857so148453785a.1
+        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 14:31:07 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RpUHQGnE8TDNzDhnpVC6SIK09YQPybeuPTbXgR9E/c/9qn/bc3mZM27AMN8DofUPin+pENf44US@vger.kernel.org
+X-Gm-Message-State: AOJu0YyWImGbrM7UXKOjGvZ4GtTs0OVtyaPpzZVFmfZ2psarPrWbuNqK
+	EoEERDgBJLVBYe8M4Ufvm+GPHPnPdLLLC/pEiMsNZtHmWQxbk1zhcqPg/r3DSDmIvRzneTTMFqO
+	oDk3bFB6w1aUduwSZoIHv8+BS3FVIgu8=
+X-Received: by 2002:a05:620a:404a:b0:932:d9c4:3bec with SMTP id
+ af79cd13be357-9371e74b03cmr764971685a.38.1787175067210; Wed, 19 Aug 2026
+ 14:31:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com> <20260818-mglru-flags-cleanup-v1-5-8dbbdac0d28c@tencent.com>
-In-Reply-To: <20260818-mglru-flags-cleanup-v1-5-8dbbdac0d28c@tencent.com>
+References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com> <20260818-mglru-flags-cleanup-v1-7-8dbbdac0d28c@tencent.com>
+In-Reply-To: <20260818-mglru-flags-cleanup-v1-7-8dbbdac0d28c@tencent.com>
 From: Barry Song <baohua@kernel.org>
-Date: Thu, 20 Aug 2026 05:24:41 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4zC7-8OgMEep58TEt0gfcShUSsKeYBGUW5BGEk8U+m8Jw@mail.gmail.com>
-X-Gm-Features: AcwNN1UbkL73D6-D0dw7N0OHp_q_gWFKVpfZWkoMrTN9W6bJic7KHpRg9Xi_EFw
-Message-ID: <CAGsJ_4zC7-8OgMEep58TEt0gfcShUSsKeYBGUW5BGEk8U+m8Jw@mail.gmail.com>
-Subject: Re: [PATCH 5/7] mm/mglru: use explicit tier range in read_ctrl_pos()
+Date: Thu, 20 Aug 2026 05:30:55 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4zNZLOs_w1XazV471d66BVaNq9bVj5=2ZjT2u_NX=XmAg@mail.gmail.com>
+X-Gm-Features: AcwNN1WZoGwAs-dfgWVX34j6qNueiuUcgi24sPh1f1Z4XRF1e7IHP_M-JHHISY4
+Message-ID: <CAGsJ_4zNZLOs_w1XazV471d66BVaNq9bVj5=2ZjT2u_NX=XmAg@mail.gmail.com>
+Subject: Re: [PATCH 7/7] mm/mglru: improve code readability and harden folio_inc_gen
 To: kasong@tencent.com
 Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
 	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
@@ -69,24 +69,29 @@ On Tue, Aug 18, 2026 at 1:38=E2=80=AFPM Kairui Song via B4 Relay
 >
 > From: Kairui Song <kasong@tencent.com>
 >
-> read_ctrl_pos() encodes the tier range in a single "tier" parameter
-> via "tier % MAX_NR_TIERS" as the start and "min(tier, MAX_NR_TIERS-1)"
-> as the end. This is hard to follow, maintain, or extend. Tier values
-> 0..3 select a single tier, while tier =3D=3D MAX_NR_TIERS selects the
-> full range.
+> The helper should never be called for an off-list folio, and it always
+> expects the folio to be in the oldest generation before doing any
+
+I'm really not sure whether that's true. Could the folios have been
+found to be young more than once during the last two or three (or more)
+aging cycles?
+
+> cmpxchg. Add a sanity check for the off-list case: if it is ever
+> violated, bail out and keep the folio flags untouched to minimize the
+> damage, instead of silently treating the folio as if it were in the
+> oldest generation and promoting it updating the flags to an unexpected
+> status.
+
+My printk shows that a folio can be promoted two or three times.
+If a folio is promoted too many times, is that the cold/hot inversion
+you are trying to fix?
+
 >
-> Replace it with explicit (tier_min, tier_max) parameters using a
-> closed [tier_min, tier_max] interval, and add LRU_TIER_MIN and
-> LRU_TIER_MAX for the tier bounds. The call sites now become
-> self-documenting:
->
->   - get_tier_idx:   (LRU_TIER_MIN, LRU_TIER_MIN) for the first tier,
->                     (tier, tier) for each subsequent tier
->   - get_type_to_scan: (LRU_TIER_MIN, LRU_TIER_MAX) for the full range
->
-> No functional change.
+> Also rename the variables to clearly distinguish the folio's current
+> gen from the oldest gen.
 >
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 > ---
 
-Reviewed-by: Barry Song <baohua@kernel.org>
+Best Regards
+Barry
