@@ -1,82 +1,86 @@
-Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
+Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 034B67E0E4
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 04:17:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D3AE304BB2
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 04:24:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787113072; cv=none; b=u5d6iZ6VsemxZL4FsYB4S+Sk+oy3uqgCnh0QZorU4HXzMFraU7Dkb7kscuIkH5cnCbSa2HZ1e2HUXf5627Sog7Nzk9TsoMHE0rc41PjmFKJSegGT8C4YOy9Z7X/XeoUS4zhHt8GmUibx83OCjIRN/htrYD/3Au7D8nyASs/EIKg=
+	t=1787113493; cv=none; b=EICx5On/40vSb0AIA/oOQ7Zs2WR2ocRkLtNYMQ35GJi3jE5ECFDgJzQ+SMAWnDROm5iuvncYALJX10d0KZv2VB1ef0/374p5vxE96q0jwKYgTfF9AvbrkE30t5vrjbCqZ8qCCIDpgryCvdJBzfY5DkXQGKT2HtiUhwpS4QNkBMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787113072; c=relaxed/simple;
-	bh=Q+PLboonZfwRxCT+BhYUeKFrPbFMM0JQG6QWMalmcG8=;
+	s=arc-20240116; t=1787113493; c=relaxed/simple;
+	bh=RYQTa1hrf7BHlBvXKhQUW1ZoCIiiUpqe4RbhABx7XmE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TShXzt8bwJHQFK/fwoVyH3xddlcdJsVcNXojwovIO8C0cMzMolIH219XYP/NZhqWq8ong/NGX/EL8ESu9NGK1BG2GhMGnm1edbcn+xkhAZpu5pMJ9DN8eNU+r85NHLr7+F+hV3Lv0kowj3JH8SvJtyg1RQJig5yOyjH7VkNQN4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VuFJz85W; arc=none smtp.client-ip=209.85.210.43
+	 MIME-Version; b=Gw68MItyXSQEfBlV7UJ1br65QqnrrflXYQlv685YRNAh4PyxCWgFqsj4YMvm6Ko0iUL9JTEzkIW+xrxDfJDUQYvWFmzNpANIj+gEd5vNBUVZ7jWgH+gft2hCsFagADocegni5Y8BRsqXmd7UNwx1foOeji3pCbq2eRm6Thibdzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CEelV7ms; arc=none smtp.client-ip=209.85.210.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VuFJz85W"
-Received: by mail-ot1-f43.google.com with SMTP id 46e09a7af769-7f3fd905828so438911a34.1
-        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 21:17:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CEelV7ms"
+Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-7eb29ed2bbdso383428a34.2
+        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 21:24:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787113070; x=1787717870; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1787113491; x=1787718291; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=FIurJflnvFF91DRPSkKVXaQAGarfbqju+vgf+4SCSCM=;
-        b=VuFJz85WWA4WTFqqaikQvq5DYUmO51HK9Y+OJ8e9kWWquFFeV6In0DKd9MF3hoGDHD
-         /x1JpWvzgd90XWZ0o4i1TAzoV30kdMlnpHP/J60ejrapALyPVmTepZcXbVoB/54jkty3
-         R9cBWWKYRukFvx9BOQzTdB26fRUrGiV5pY89rApYGg9SVOIC0CtcRuqgSTvQXKbjODGh
-         AQ8SNnzmbCNh3FDrI1qfcj7MAWEraeHYhabyavyuZvugbztle9ZDH2yxvWdQl3rCrPsg
-         feXPlTLaZFGdk5uVwjEjPSUAA72njN8R3IKOFhUx3AoAxmL3tZJOnyQfLIU7T1EHRsh3
-         L5JA==
+        bh=iexIkc1Tg7Z+y3wVDAMXzgQEyxhlozvlc08yKQPDJNI=;
+        b=CEelV7msUaPx0YlW67F3EJZL1og3j28Vb5BeHrCADUIUpzrtXq9SmLeN8FYvlFn3Uz
+         /DYsa3rk2j/iH5T2rpkM3uw9uPuxfMkRb5+hn33IdgURgWFbMKdKLUUTEjAISx74uj3v
+         H0xLUjIlJPFFWxgoxPSDmaRLaaZM2x4LxtWefDQg8hUt2gYeHRdHBGZhAanH1WkcdKdD
+         ++Od1HLL24sZX/MmR0ccJLy736seV9t+2qPs+gEptSjU8aWJp9ajfx8AGkYybGv/iF7G
+         liLX5sXzGfjXpys/+fsBLhz3z/vw5CydHqyCtw/sYVsQNSZWUEYI8l8Sv4uwiSms+9On
+         eDhQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787113070; x=1787717870;
+        d=1e100.net; s=20251104; t=1787113491; x=1787718291;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FIurJflnvFF91DRPSkKVXaQAGarfbqju+vgf+4SCSCM=;
-        b=H5jFD57uNretiYCoBcldgjRdlb/jqHZVFEfKR/13r2mBWtLWBJK/7uNIAKMAYDLKdH
-         BwLUl7I6xoinDeK5P4l1+bl2Fsk+cwlGpHelt9/s+EGt+O2bTy0+SJqOhhiJ5ilZAZLk
-         o82lN4jQUYKXwkHmvSrmr7yAqzpSvT7xWFaVWr0LUL89W9wHJnLXjFXsLD8FUZ8fLqHA
-         r5D1r3Mfz+6ECFx0nqBzy8VTXC/2OQoZ8SMaR5G81tMxSBErFO3VBPwHxPYsx5PRJNN+
-         CmQ7haFsA1I/9uimQyKTDBHMMPIsDlJpcHCHQvqpDv9nVzHAE0ciCprPWHZNaRvawj+y
-         UoaA==
-X-Forwarded-Encrypted: i=1; AHgh+Ro/Jn+LprXhjEOvhqZ3L925UCWYcHU34pgQRPQEjV6PuJy5z6mXu9ySsUX3wo7V2k07q9OH5ONG@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkFZkFtQfTYaD2ifrvfYlFyJMlJ3EpsKnQi9mMmY0Q6DnLHatv
-	1CWK0inl/jPllmedOV48vosTmeWaCy+G8yPg2l9x7BNh4DyFmJbwgkSa4EE/FQ==
-X-Gm-Gg: AR+sD11GicBhnmHt2LxaXm7Ctzs98LznhvblRkvTGQdixQj6j2A2LAEaqZbb36X+5bX
-	DILfpTDicaq8JKCO2LA+PZCSBN5a9dnJxnBaB654xVhLaVFx2BtFEB6dR9QhrG5DsbRmad2D2ZK
-	OcFTdHQ6fCF3KpaU6qh3Z/Jz+mGHL5BA/NGZXw483BnQg3EOdFkz4usY/OWRjn/Fnm/1zvjnHEO
-	cJWAdgw39p7VjB+uGVHcUVDxBhQlFViSbcvFYtoRwB8PVSNS9bvXLJ6luiqSFNbrPIMeMxsuM65
-	eEoGPQcWMmocJQ9fK2MfB2M7WNjxTBGQkzXTs1WDR5jV1gTvMSx7Ca/Qn1qyfkEXXr6akGbJV13
-	zH68XpDDbA758XfXxcMvCEWrnErm1nXjFtPmYaewJ/mnyY9R9kdU1kHMAewXVlWLBOXyLaiMmfR
-	x/GLQd50rj+4cClQJUwfKIayUguKbe9eR/wEaPj+KibKfP1v3hA6LnXmY5mkDnJ2NFyZV2qVdPl
-	0UyT6DWku1qskpUkA==
-X-Received: by 2002:a05:6830:83b9:b0:7f4:922:ee8 with SMTP id 46e09a7af769-7f43fae4861mr1800325a34.10.1787113069803;
-        Tue, 18 Aug 2026 21:17:49 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:d::])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f440022fdasm708924a34.13.2026.08.18.21.17.48
+        bh=iexIkc1Tg7Z+y3wVDAMXzgQEyxhlozvlc08yKQPDJNI=;
+        b=PtkU1ssVyuYst0ka4246N+uZ1Of+st3ed10EhIIDG2NIPGK4tHXxwn3kcqvqQDzfKD
+         xwrmckNSnQarA8w0GFd+mTKQLkNSZ5ioflTF4qfEnBopdf46Apdeuzmp8xFZaUP0sZAC
+         zUJ5WQpUv8Tv/D/d7ZDz9t1nyyaZe93231vuHpQ0fmnPzJeJAHuq6uY5j4INJ9TU1zJJ
+         ntJoYs1EMy7dDogwicxGmIZ6K3gYUPYf4Vf7RIk0YghnnYcafg5lYzmR0D8scpymlrga
+         dxD4kAr/dxhDmh7sw+h4h3jTOfC2rK9tcOQCG0snogcTsT2ww+V+Lj4HMm7AZwTozzDQ
+         hijQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoBPmXShpqKTmv44fVGuo5zXZN6F2DZjaj/a6LP4qnp2qApy/3h6a9rBzUKPFUX6Jcl/yODrXX9@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxb8kXlMbQt0epkHzdK3fzdRSsGSbAblFUYR3S2vaYfVKsLASMJ
+	CIUXZ6fIkdH7rguygjJgRo2JEuZKtcB4TxOrAJkEWn7PdYqqtR8hdNitDbLHkg==
+X-Gm-Gg: AR+sD13eGRlkyNBerdq93BanG+Y2J+NsHxdJdYN0r/c/BPpLGexVm1D1Aoatkrpw1oK
+	aeo81NYztGLIwP0g7OLO/RcDGnTwjctQ/gRJ8LvPLy/MMNP36eMm8Pm7Mw13x9qcC8q14WUuEqP
+	GVwRawO+CCe/ZQb09Vbgnk++z+0drgAvBZX7Hr+H5qYj1YTcjnZbe6PUHpL7mCD8ZTCCTcHxVcH
+	oHanq+pSN15Y04dF05JDjnGgiJg5lX20iOIr9ttTqg8l/uRaMjxuuLfFIXy4OZcpDIdZad/e9P8
+	Y/PM8WL/oN2lQxRyjU9QHDeZxV4HVmLO1ZegKpwmt5mfNyLGFlFUTrMac6qZWV9eeHu11PBzs9r
+	x6djrR8ZnXXOjJqAZqvm5WYXNtpdkYPYYGc+VXigEPZ19EzbuCfQeJX3TyqOPAgaIVU6FErMjD9
+	4XNljZB8RefW6O65u/sW/1TtdBM5NVFKD0Wrg56sj4uqqvbLh0ZEhACx07ohKUye0AQwaGblo1P
+	3LM+YXomqjTlR18rA==
+X-Received: by 2002:a05:6830:258f:b0:7d7:fbe2:9725 with SMTP id 46e09a7af769-7f43f95b60cmr1996975a34.5.1787113491046;
+        Tue, 18 Aug 2026 21:24:51 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:b::])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f43fc6c89dsm654187a34.0.2026.08.18.21.24.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Aug 2026 21:17:49 -0700 (PDT)
+        Tue, 18 Aug 2026 21:24:50 -0700 (PDT)
 From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Michal Hocko <mhocko@suse.com>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Meta kernel team <kernel-team@meta.com>,
+To: Song Hu <husong@kylinos.cn>
+Cc: akpm@linux-foundation.org,
+	mhocko@suse.com,
+	mhocko@kernel.org,
+	joshua.hahnjy@gmail.com,
+	willy@infradead.org,
+	shakeel.butt@linux.dev,
 	linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Joy Chaoyue Xiong <joyxiong@yahoo.com>
-Subject: Re: [PATCH] memcg: trim the per-cpu charge stock instead of draining it
-Date: Tue, 18 Aug 2026 21:17:46 -0700
-Message-ID: <20260819041747.1111965-1-joshua.hahnjy@gmail.com>
+	hannes@cmpxchg.org,
+	roman.gushchin@linux.dev,
+	muchun.song@linux.dev,
+	zhuhui@kylinos.cn,
+	audra@redhat.com,
+	bingfangguo@tencent.com
+Subject: Re: [PATCH v2] mm: memcg: release the css reference when a stock slot empties
+Date: Tue, 18 Aug 2026 21:24:48 -0700
+Message-ID: <20260819042449.1209042-1-joshua.hahnjy@gmail.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <aoQt2zKsQT-rvjd6@tiehlicka>
+In-Reply-To: <20260818130135.154315-1-husong@kylinos.cn>
 References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -86,139 +90,62 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Tue, 18 Aug 2026 12:03:07 +0200 Michal Hocko <mhocko@suse.com> wrote:
+On Tue, 18 Aug 2026 21:01:35 +0800 Song Hu <husong@kylinos.cn> wrote:
 
-> On Mon 17-08-26 16:46:51, Shakeel Butt wrote:
-> > Joy reported that an application generating a request/response traffic
-> > pattern spends 44.6% to 57.0% of CPU in the memcg charge/uncharge path
-> > for a range of message sizes, against 0.27% to 0.71% outside that range.
-> > Running from the root memcg, where socket memory accounting is skipped,
-> > recovers the performance.
-> > 
-> > Tracing the charge path showed that the application generates a pattern
-> > where the write syscall charges one page and the read syscall uncharges
-> > two pages on the same CPU. This hits a corner case in the memcg percpu
-> > stock code that thrashes the stock continuously.
-> > 
-> > In the memcg percpu stock code, MEMCG_CHARGE_BATCH (64) is both the high
-> > watermark and the emptying target, i.e. on a request to charge one page
-> > the kernel charges MEMCG_CHARGE_BATCH pages and caches
-> > (MEMCG_CHARGE_BATCH - 1) of them in the percpu stock. The following
-> > uncharge of 2 pages takes the cached count to (MEMCG_CHARGE_BATCH + 1),
-> > and refill_stock() then empties the cache completely. With such a
-> > pattern the percpu stock becomes completely ineffective.
-
-To be honest I never really understood why returning the stock and
-making the nr_pages go over the batch size completely drained the stock.
-One theory that I had was that if one uncharging is indicative that there
-will be more future uncharges coming and we want to make room for those
-uncharges to deposit their stocks, but now that I'm looking through the
-code I'm pretty sure that sequential stock uncharges are not that
-common, since we use uncharge_gather to batch up the LRU batch uncharging
-area.
-
-> > Instead of a single boundary point for charges, use the technique the
-> > page allocator uses for its own percpu caches, which keeps the watermark
-> > and the emptying target apart: nr_pcp_free() frees between batch and
-> > high - batch pages, leaving at least pcp->batch on the list. Add a high
-> > watermark MEMCG_STOCK_HIGH and, once the cached count goes over it,
-> > return only the pages above MEMCG_STOCK_LOW. The watermarks are
-> > MEMCG_CHARGE_BATCH apart, so a page_counter update still covers a full
-> > batch. Peak cached pages per memcg grows from 64 to 96, the same
-> > high-versus-batch tradeoff the page allocator makes.
-
-> The idea is sound. I would just not increase the overall stock size in
-> the same patch. Fine tuning can be done independently and ideally with
-> some numbers.
-> Would it make sense to start with MEMCG_STOCK_HIGH := MEMCG_CHARGE_BATCH 
-> and  MEMCG_CHARGE_BATCH := MEMCG_CHARGE_BATCH / 2. That would preserve
-> the maximum stock size while preventing all or nothing behavior which is
-> indeed suboptimal and pushing charging path to a slower path way too
-> aggressively.
-
-I like this idea and I think you meant { MEMCG_CHARGE_LOW :=
-MEMCG_CHARGE_BATCH / 2 } right? That way the only new change we
-reintroduce is to always drain to a level when we return too many
-pages to the stock.
-
-Have a great day, Michal and Shakeel!
-Joshua
-
-> WDYT?
+> consume_stock() can drive a stock slot's nr_pages to zero while its
+> cached[] pointer stays set, so the slot keeps pinning the css
+> reference that refill_stock() took.  The offlining drain only
+> flushes slots with cached pages, so the reference is never released
+> unless the slot happens to be displaced by an unrelated charge or
+> by CPU hotplug, and the memcg lingers in the dying state - up to
+> NR_MEMCG_STOCK (7) of them per CPU under container churn.
 > 
-> > Reported-by: Joy Chaoyue Xiong <joyxiong@yahoo.com>
-> > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> > ---
-> >  mm/memcontrol.c | 31 +++++++++++++++++++++++++------
-> >  1 file changed, 25 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 17da1f43b7d3..ff7fbcd27422 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -2048,6 +2048,21 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
-> >   * nr_pages in a single cacheline. This may change in future.
-> >   */
-> >  #define NR_MEMCG_STOCK 7
-> > +
-> > +/*
-> > + * Watermarks for a charge stock slot, in the spirit of pcp->high and
-> > + * pcp->batch: MEMCG_STOCK_HIGH is the high watermark at which a slot is
-> > + * trimmed, and it is trimmed down to MEMCG_STOCK_LOW rather than emptied.
-> > + *
-> > + * Using MEMCG_CHARGE_BATCH as both high watermark and emptying target
-> > + * thrashes: charging one page stocks 63, an uncharge of 2 takes the count
-> > + * to 65 and empties the slot, and the next charge misses. The watermarks
-> > + * are MEMCG_CHARGE_BATCH apart, so a page_counter update still covers a
-> > + * full batch.
-> > + */
-> > +#define MEMCG_STOCK_LOW		(MEMCG_CHARGE_BATCH / 2)
-> > +#define MEMCG_STOCK_HIGH	(MEMCG_STOCK_LOW + MEMCG_CHARGE_BATCH)
-> > +
-> >  #define FLUSHING_CACHED_CHARGE	0
-> >  struct memcg_stock_pcp {
-> >  	local_trylock_t lock;
-> > @@ -2223,17 +2238,18 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
-> >  {
-> >  	struct memcg_stock_pcp *stock;
-> >  	struct mem_cgroup *cached;
-> > -	uint8_t stock_pages;
-> > +	unsigned int stock_pages;
-> >  	bool success = false;
-> >  	int empty_slot = -1;
-> >  	int i;
-> >  
-> >  	/*
-> > -	 * For now limit MEMCG_CHARGE_BATCH to 127 and less. In future if we
-> > -	 * decide to increase it more than 127 then we will need more careful
-> > -	 * handling of nr_pages[] in struct memcg_stock_pcp.
-> > +	 * nr_pages[] is a uint8_t and a slot's count is capped at
-> > +	 * MEMCG_STOCK_HIGH. Raising MEMCG_CHARGE_BATCH beyond 127 would need
-> > +	 * more careful handling of nr_pages[] in struct memcg_stock_pcp.
-> >  	 */
-> >  	BUILD_BUG_ON(MEMCG_CHARGE_BATCH > S8_MAX);
-> > +	BUILD_BUG_ON(MEMCG_STOCK_HIGH > U8_MAX);
-> >  
-> >  	VM_WARN_ON_ONCE(mem_cgroup_is_root(memcg));
-> >  
-> > @@ -2254,9 +2270,12 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
-> >  			empty_slot = i;
-> >  		if (memcg == READ_ONCE(stock->cached[i])) {
-> >  			stock_pages = READ_ONCE(stock->nr_pages[i]) + nr_pages;
-> > +			if (stock_pages > MEMCG_STOCK_HIGH) {
-> > +				memcg_uncharge(memcg,
-> > +					       stock_pages - MEMCG_STOCK_LOW);
-> > +				stock_pages = MEMCG_STOCK_LOW;
-> > +			}
-> >  			WRITE_ONCE(stock->nr_pages[i], stock_pages);
-> > -			if (stock_pages > MEMCG_CHARGE_BATCH)
-> > -				drain_stock(stock, i);
-> >  			success = true;
-> >  			break;
-> >  		}
-> > -- 
-> > 2.53.0-Meta
+> Keeping the slot populated past the last page only saves a
+> css_get()/css_put() pair on the next charge of the same memcg, and
+> costs more than that: the offlining drain has to know about empty
+> slots, and refill_stock() cannot reuse them either, so a charge
+> under a different memcg evicts a live batch through the drain_idx
+> rotation instead.
 > 
+> Drop the reference in consume_stock() when the slot empties.
+> Empty slots stop existing, so is_memcg_drain_needed() and the drain
+> path stay as they are, and refill_stock() reuses emptied slots
+> directly.  The cost is one refcount pair per emptied slot, at most
+> once per MEMCG_CHARGE_BATCH pages.
+
+Thakns for the v2, Song. This looks good to me. Have a great day!
+Reviewed-by: Joshua Hahn <joshua.hahnjy@gmail.com>
+
+> Fixes: d1a05b6973c7 ("memcg: do not try to drain per-cpu caches without pages")
+> Signed-off-by: Song Hu <husong@kylinos.cn>
+> ---
+> 
+> Changes since v1: drop the reference at consume time instead of flushing
+> empty slots from the offlining drain, as discussed with Michal Hocko and
+> Joshua Hahn (full-stock drain cost, refill reuse).
+> 
+> v1: https://lore.kernel.org/all/20260817025917.66233-1-husong@kylinos.cn/
+> 
+>  mm/memcontrol.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 17da1f43b7d3..1271d390b617 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2140,7 +2140,12 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>  
+>  		stock_pages = READ_ONCE(stock->nr_pages[i]);
+>  		if (stock_pages >= nr_pages) {
+> -			WRITE_ONCE(stock->nr_pages[i], stock_pages - nr_pages);
+> +			stock_pages -= nr_pages;
+> +			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+> +			if (!stock_pages) {
+> +				css_put(&memcg->css);
+> +				WRITE_ONCE(stock->cached[i], NULL);
+> +			}
+>  			ret = true;
+>  		}
+>  		break;
 > -- 
-> Michal Hocko
-> SUSE Labs
+> 2.43.0
