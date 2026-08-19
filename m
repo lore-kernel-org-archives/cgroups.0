@@ -1,305 +1,222 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99181412C12
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 08:36:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7475E2D593E;
+	Wed, 19 Aug 2026 09:03:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787128582; cv=none; b=VDhqKx35mD2O3euybZmEVxvoN9pCjfL2L03sLUSzQrMf/lFZU4sqYM5iXyFGhCoV3eAwOvjer3Od83GEw6eNHViAYZVW/D+V923y/12WFAsO3QTzFkjTin6AGGla4yimSjFMhUCyRoD7/f+UV4MkCRM6nPHXuAP06dZIIC6f/v8=
+	t=1787130199; cv=none; b=CUzQ2x5T2nZYbIh7Q0qY6i7+k6WCqLCptezAC2gyzakZ0VQd7aj4eHvlNJ61cxpkxZntYlDOcFOQ/H4Ax9iQAskNuHgwmEXkG8slTKKyg/pLj22jhiZtubT6DvzIzFBTzPrW9aGhz39tqjr+SnbEjefJ+15/WSYWlXpnlmrHqR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787128582; c=relaxed/simple;
-	bh=3UXWrQt3nPal1M5oiy154T5Gr08VLE54jxv0n6xnO+8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pw0L9D//cYgoF3QLxbZOUlS1k6iX5kAGc4e6NEOgVY67eLvCqLUcyVkGueqfuNzOTNJ3Pk6/6IuMOSlwctuHSX0zR/vGAGzAhfd6riiSy5X95OvkrHIGXX6tcJQZq34m+AXTe/CXeGupTkAw2Wh6jjH65iLHShHC77J9SH6ad10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OANRdORJ; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787130199; c=relaxed/simple;
+	bh=FXhm+INXl6pRraNDbGN9idJd9TVgy36Mb6mOirGTX9U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Mm+m4N5MD2pSEsZyhX8Q8Xgtunorrgj+cbfPGL9AJcYOaU/2GWaL/smC08l7IIjdWvdk4D82114MYyg6EEYI3mptYG0vss4ZkynchGwu7Amj6p0MElNfrfmc+u1cpZfxnDHFO25nYpZz2Q80I5x7xQy0usvmtlHS9Z0wUAY/szY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=VN3rR5hI; arc=none smtp.client-ip=115.124.30.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OANRdORJ"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2d58efc7356so8408045ad.1
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 01:36:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787128580; x=1787733380; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=NjK48y+gInVL/DFMKlcFgreu40jMGHPWay1upkkwKro=;
-        b=OANRdORJEtwOwZBAlZjSKB3zK8qW6QKLbASy9A3Yd7FeiJESUIpG9OFKiz56I5Tr3S
-         u8rYZESD1j4sgvfXUzBuPRnGGp8P7yeVald3svwZGEeZEw3TgqatckQb/sylxXKyOfHs
-         Z5r7xL1byDE3ozBKzu5GzlSCb56x/3Wnixtoj0+P0rZ1szJD7eg21WFE0Gyz4slnPzMh
-         90GBsnRQfw1TdzaZ0xPpxrKyf0YoypujGsXQqC7gjmF3MQ7+SFRYhsfG5lCKBbPaU5h4
-         nNynvebsFHMlMxa9C2+/KedtFsCcKYHt4H7OPQCH83Fh++5uDG/sCwJ1o6Vg/nvA08r1
-         0Dlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787128580; x=1787733380;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=NjK48y+gInVL/DFMKlcFgreu40jMGHPWay1upkkwKro=;
-        b=eVuaR/kLYpxV0bsjbGZwpWHa2K6LGHYjXHl72cydlA6S5uQLCGdWeiZ8rEXoURP1UF
-         9m8nx1oRmgF/GJDt6QEQQ+6i915/LQqZm62yO6ybkRh0CPsskBprma/r49VdGtvVNlpT
-         YoyY4KH1hU19JYBSfRuAzqZXC0PSl6oBfRjGY0h8vhBb7ah7mjDrgRSvGmCCo3UGv/Xk
-         tbLbdDetKrKGMs1+KKuTBdxlCcOf5DRXU0XhJQsl0hX+f2Wt6CjIjaC80Bpisco+iMbe
-         cfQAwrUYycm1v+Sr46oraW/SWUwTQXems2Ucz7Ki963UnV4UN58So+T9ld8OzTCa+tKt
-         qhIw==
-X-Forwarded-Encrypted: i=1; AHgh+RrIl5FG+YnsHPDuCzQ3JHPubN/2NfwS20E6kxjzisDbtrHT4xHY7LpEP0hOkdgztwlWQRdTJiNq@vger.kernel.org
-X-Gm-Message-State: AOJu0YzswelYA19gWzb7/q+nqAqBvZ0EdGn5DH0cWCmnlIkqMDljwcKM
-	nd5NizH5ISnpLwE6awLYMpCrKfCvHmNVSoPJXxONRXwMM2E7fPjABaqm
-X-Gm-Gg: AR+sD13vuE1vN+SkFcNSdJmz9QU7FWgwfLHwZ1legJgGS2TREYOuwuT33IaWVogvpAS
-	Cwg2mIyZ37DcKOK1cllaa98+ztQ5hOtrmem3Ih0y3rY/eHMB+rrvrJO2xQQ//3g2T6TwlTvPEDQ
-	TP3f+IKHiWjhpngBcF9tdPISfEdpozzRDSHmYUFLu2o6jC70nGTpn866kbb/G8T6v0fyECiFt4s
-	Ao/v0CeQna3imlGoBH3WzVxkho3ZLlFF7xnYBYTAcRXxjMpgm64iKIh6NKCyxt2EndfK6yvg0l5
-	ke6I3Q3ULx6gc/1VzzzPkpJunUXA2U+Ua5jdVxiW/mZbk6G2Ly76mrswpdDzp976YJVbH9NK6cP
-	UlDKX64m0rbjJkZqotv22MZ40m5JmSvUaIaxLsKnpKTgpJvXoiL50TFvMmr8iV3rB2IPouYxJvV
-	dqUEeTmYQnXaO2BrLgFBwe9NEPjqV/2ZDKrOpv/+a5JvQIVf0/pq4o58bejhhY3MM2fRWL166vy
-	cscUS//umg=
-X-Received: by 2002:a17:903:2bce:b0:2d5:ccb7:12c3 with SMTP id d9443c01a7336-2d5fd59f837mr58430075ad.2.1787128579467;
-        Wed, 19 Aug 2026 01:36:19 -0700 (PDT)
-Received: from volcano9f8e-host.amd.com ([165.204.217.251])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bf143775sm5089413eec.23.2026.08.19.01.36.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 01:36:19 -0700 (PDT)
-From: Hemanth Selam <hemanth.selam@gmail.com>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Koutny <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>,
-	Sebastian Chlad <sebastian.chlad@suse.com>,
-	Waiman Long <longman@redhat.com>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Yosry Ahmed <yosry@kernel.org>,
-	Nhat Pham <nphamcs@gmail.com>,
-	cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	Hemanth Selam <hemanth.selam@gmail.com>
-Subject: [PATCH] selftests/cgroup: set the test plan after the setup checks
-Date: Wed, 19 Aug 2026 14:06:00 +0530
-Message-ID: <20260819083600.1351711-1-hemanth.selam@gmail.com>
-X-Mailer: git-send-email 2.43.7
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="VN3rR5hI"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1787130187; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=mD/Cl50XWzys0id4X5RVAR1gGagtP2IYMFAaW4ejKq4=;
+	b=VN3rR5hIe2U2m+praqeDru6HfciQ+HdGqhDfWO/Rm+dz4aC7fACGfbM60HJzEOSiaQdGBpMexIJyglKmNxgGkkUDQsqrC7cRCdiQ3V7lF+8bjFwQRAij/RRTzdsKqN/X6UW+TecwEDkLndibAornQEYXBywSjn0J/4OXImofnVs=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=baolin.wang@linux.alibaba.com;NM=1;PH=DS;RN=24;SR=0;TI=SMTPD_---0X9GF3bp_1787130184;
+Received: from 30.74.144.121(mailfrom:baolin.wang@linux.alibaba.com fp:SMTPD_---0X9GF3bp_1787130184 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 19 Aug 2026 17:03:05 +0800
+Message-ID: <167ad235-253b-4bfe-9b60-265262be34f8@linux.alibaba.com>
+Date: Wed, 19 Aug 2026 17:03:04 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/7] mm/mglru: introduce helpers for manipulating gen and
+ refs flags
+To: kasong@tencent.com, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Barry Song
+ <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
+ Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>,
+ Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>
+References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
+ <20260818-mglru-flags-cleanup-v1-2-8dbbdac0d28c@tencent.com>
+From: Baolin Wang <baolin.wang@linux.alibaba.com>
+In-Reply-To: <20260818-mglru-flags-cleanup-v1-2-8dbbdac0d28c@tencent.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The cgroup tests announce their plan before checking whether cgroup v2 is
-available, so on a host without it they promise a number of results and
-then skip out after the first one:
 
-	TAP version 13
-	1..3
-	ok 1 # SKIP cgroup v2 isn't mounted
-	# Planned tests != run tests (3 != 1)
-	# Totals: pass:0 fail:0 xfail:0 xpass:0 skip:1 error:0
 
-ksft_exit_skip() can only emit a well formed "1..0 # SKIP" line while no
-plan has been printed, as the comment above it in kselftest.h points out.
+On 8/18/26 1:38 PM, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
+> 
+> Instead of doing bit ops on folio->flags.f, introduce helpers for
+> adjusting folio's refs and gen info, make the code easier to debug and
+> understand.
+> 
+> No functional change is intended: some combined atomic operations are
+> split into two, which only creates harmless transient states.
+> 
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
 
-Move ksft_set_plan() below the setup checks that can skip, so that a
-skipped run reports:
+Thanks for the cleanups. One comment below.
 
-	TAP version 13
-	1..0 # SKIP cgroup v2 isn't mounted
+>   include/linux/mm_inline.h | 79 +++++++++++++++++++++++++++++++++++++++++------
+>   include/linux/mmzone.h    |  2 ++
+>   mm/folio.c                | 19 +++++++-----
+>   mm/vmscan.c               | 61 ++++++++++++++++++++----------------
+>   4 files changed, 117 insertions(+), 44 deletions(-)
+> 
+> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> index 621c8653d8f7..93bf3fa221f8 100644
+> --- a/include/linux/mm_inline.h
+> +++ b/include/linux/mm_inline.h
+> @@ -142,10 +142,43 @@ static inline int lru_tier_from_refs(int refs, bool workingset)
+>   	return workingset ? MAX_NR_TIERS - 1 : order_base_2(refs);
+>   }
+>   
+> -static inline int folio_lru_refs(const struct folio *folio)
+> +/**
+> + * lru_gen_from_flags - Return the LRU generation number from folio flags.
+> + * @flags: folio flags
+> + *
+> + * Returns: A number between 0 and LRU_GEN_MAX, inclusive. Returns -1 if the
+> + * flags indicate the folio is off the list (e.g., isolated).
+> + */
+> +static inline int lru_gen_from_flags(unsigned long flags)
+> +{
+> +	int gen = ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF);
+> +
+> +	BUILD_BUG_ON(LRU_GEN_MASK & LRU_REFS_MASK);
+> +	gen -= 1;
+> +	VM_WARN_ON_ONCE(gen != -1 && gen > LRU_GEN_MAX);
+> +	return gen;
+> +}
+> +
+> +/**
+> + * lru_gen_set_flags - Set the LRU generation number to specified folio flags.
+> + * @flags: pointer to the folio flags
+> + * @gen: generation number, between 0 and LRU_GEN_MAX, inclusive.
+> + */
+> +static inline void lru_gen_set_flags(unsigned long *flags, int gen)
+>   {
+> -	unsigned long flags = READ_ONCE(folio->flags.f);
+> +	VM_WARN_ON_ONCE(gen > LRU_GEN_MAX || gen < 0);
+> +	BUILD_BUG_ON((LRU_GEN_MAX + 1) != MAX_NR_GENS);
+> +
+> +	*flags &= ~LRU_GEN_MASK;
+> +	*flags |= (gen + 1UL) << LRU_GEN_PGOFF;
+> +}
+>   
+> +/**
+> + * lru_refs_from_flags - Return LRU referenced / access count from folio flags.
+> + * @flags: folio flags
+> + */
+> +static inline int lru_refs_from_flags(unsigned long flags)
+> +{
+>   	if (!(flags & BIT(PG_referenced)))
+>   		return 0;
+>   	/*
+> @@ -155,18 +188,47 @@ static inline int folio_lru_refs(const struct folio *folio)
+>   	return ((flags & LRU_REFS_MASK) >> LRU_REFS_PGOFF) + 1;
+>   }
+>   
+> -static inline int folio_lru_gen(const struct folio *folio)
+> +/**
+> + * lru_refs_set_flags - Set the LRU referenced / access count to specified folio flags.
+> + * @flags: pointer to the folio flags
+> + * @refs: referenced / access count number, between 0 and LRU_REFS_MAX, inclusive.
+> + */
+> +static inline void lru_refs_set_flags(unsigned long *flags, unsigned int refs)
+> +{
+> +	VM_WARN_ON_ONCE(refs > LRU_REFS_MAX);
+> +	BUILD_BUG_ON(LRU_REFS_MAX != (LRU_REFS_MASK >> LRU_REFS_PGOFF) + 1);
+> +
+> +	*flags &= ~LRU_REFS_FLAGS;
+> +	if (!refs)
+> +		return;
+> +	*flags |= (BIT(PG_referenced) | ((refs - 1UL) << LRU_REFS_PGOFF));
+> +}
+> +
+> +static inline int folio_lru_refs(const struct folio *folio)
+>   {
+> -	unsigned long flags = READ_ONCE(folio->flags.f);
+> +	return lru_refs_from_flags(READ_ONCE(*const_folio_flags(folio, 0)));
+> +}
+> +
+> +static inline void folio_set_lru_refs(struct folio *folio, unsigned int refs)
+> +{
+> +	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
+> +
+> +	do {
+> +		new_flags = old_flags;
+> +		lru_refs_set_flags(&new_flags, refs);
+> +	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+> +}
+>   
+> -	return ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF) - 1;
+> +static inline int folio_lru_gen(const struct folio *folio)
+> +{
+> +	return lru_gen_from_flags(READ_ONCE(*const_folio_flags(folio, 0)));
+>   }
+>   
+>   static inline bool lru_gen_is_active(const struct lruvec *lruvec, int gen)
+>   {
+>   	unsigned long max_seq = lruvec->lrugen.max_seq;
+>   
+> -	VM_WARN_ON_ONCE(gen >= MAX_NR_GENS);
+> +	VM_WARN_ON_ONCE(gen > LRU_GEN_MAX);
+>   
+>   	/* see the comment on MIN_NR_GENS */
+>   	return gen == lru_gen_from_seq(max_seq) || gen == lru_gen_from_seq(max_seq - 1);
+> @@ -270,7 +332,7 @@ static inline bool lru_gen_add_folio(struct lruvec *lruvec, struct folio *folio,
+>   	gen = lru_gen_from_seq(seq);
+>   	flags = (gen + 1UL) << LRU_GEN_PGOFF;
+>   	/* see the comment on MIN_NR_GENS about PG_active */
+> -	set_mask_bits(&folio->flags.f, LRU_GEN_MASK | BIT(PG_active), flags);
+> +	set_mask_bits(folio_flags(folio, 0), LRU_GEN_MASK | BIT(PG_active), flags);
+>   
+>   	lru_gen_update_size(lruvec, folio, -1, gen);
+>   	/* for folio_rotate_reclaimable() */
+> @@ -295,7 +357,7 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+>   
+>   	/* for folio_migrate_flags() */
+>   	flags = !reclaiming && lru_gen_is_active(lruvec, gen) ? BIT(PG_active) : 0;
+> -	flags = set_mask_bits(&folio->flags.f, LRU_GEN_MASK, flags);
+> +	flags = set_mask_bits(folio_flags(folio, 0), LRU_GEN_MASK, flags);
+>   	gen = ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF) - 1;
+>   
+>   	lru_gen_update_size(lruvec, folio, gen, -1);
+> @@ -339,7 +401,6 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+>   
+>   static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
+>   {
+> -
+>   }
+>   #endif /* CONFIG_LRU_GEN */
+>   
+> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> index 94f9c3ff5416..32d9354a754f 100644
+> --- a/include/linux/mmzone.h
+> +++ b/include/linux/mmzone.h
+> @@ -496,7 +496,9 @@ enum lruvec_flags {
+>   #ifndef __GENERATING_BOUNDS_H
+>   
+>   #define LRU_GEN_MASK		((BIT(LRU_GEN_WIDTH) - 1) << LRU_GEN_PGOFF)
+> +#define LRU_GEN_MAX		(BIT(LRU_GEN_WIDTH - 1) - 1)
 
-Several of the tests skip more than once while setting up, for a missing
-or unwritable controller as well, so the plan goes after the last of
-them.  test_core joins its two setup paths at the post_v2_setup label and
-sets the plan there.
-
-Reporting each planned test as skipped instead would keep the plan where
-it is, but the setup failures here mean the whole test cannot run rather
-than its individual cases being skipped, which is what "1..0 # SKIP" is
-for.
-
-Fixes: 1dc830ee4c15 ("selftests/cgroup: conform test to KTAP format output")
-Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
----
- tools/testing/selftests/cgroup/test_core.c       | 2 +-
- tools/testing/selftests/cgroup/test_cpu.c        | 2 +-
- tools/testing/selftests/cgroup/test_cpuset.c     | 2 +-
- tools/testing/selftests/cgroup/test_freezer.c    | 2 +-
- tools/testing/selftests/cgroup/test_kill.c       | 2 +-
- tools/testing/selftests/cgroup/test_kmem.c       | 2 +-
- tools/testing/selftests/cgroup/test_memcontrol.c | 2 +-
- tools/testing/selftests/cgroup/test_pids.c       | 2 +-
- tools/testing/selftests/cgroup/test_zswap.c      | 2 +-
- 9 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
-index 88ca832d4fc1..64f4962a4659 100644
---- a/tools/testing/selftests/cgroup/test_core.c
-+++ b/tools/testing/selftests/cgroup/test_core.c
-@@ -927,7 +927,6 @@ int main(int argc, char *argv[])
- 	int i;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), &nsdelegate)) {
- 		if (setup_named_v1_root(root, sizeof(root), CG_NAMED_NAME))
- 			ksft_exit_skip("cgroup v2 isn't mounted and could not setup named v1 hierarchy\n");
-@@ -940,6 +939,7 @@ int main(int argc, char *argv[])
- 			ksft_exit_skip("Failed to set memory controller\n");
- 
- post_v2_setup:
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
-index 7a40d76b9548..8f96bfd19ab9 100644
---- a/tools/testing/selftests/cgroup/test_cpu.c
-+++ b/tools/testing/selftests/cgroup/test_cpu.c
-@@ -799,7 +799,6 @@ int main(int argc, char *argv[])
- 	int i;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
- 
-@@ -807,6 +806,7 @@ int main(int argc, char *argv[])
- 		if (cg_write(root, "cgroup.subtree_control", "+cpu"))
- 			ksft_exit_skip("Failed to set cpu controller\n");
- 
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_cpuset.c b/tools/testing/selftests/cgroup/test_cpuset.c
-index c5cf8b56ceb8..52ed8fba685a 100644
---- a/tools/testing/selftests/cgroup/test_cpuset.c
-+++ b/tools/testing/selftests/cgroup/test_cpuset.c
-@@ -250,7 +250,6 @@ int main(int argc, char *argv[])
- 	int i;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
- 
-@@ -258,6 +257,7 @@ int main(int argc, char *argv[])
- 		if (cg_write(root, "cgroup.subtree_control", "+cpuset"))
- 			ksft_exit_skip("Failed to set cpuset controller\n");
- 
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_freezer.c b/tools/testing/selftests/cgroup/test_freezer.c
-index 0569e93fa6b0..f28bb02e9783 100644
---- a/tools/testing/selftests/cgroup/test_freezer.c
-+++ b/tools/testing/selftests/cgroup/test_freezer.c
-@@ -1491,9 +1491,9 @@ int main(int argc, char *argv[])
- 	int i;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_kill.c b/tools/testing/selftests/cgroup/test_kill.c
-index f6cd23a8ecc7..99cafd9dc013 100644
---- a/tools/testing/selftests/cgroup/test_kill.c
-+++ b/tools/testing/selftests/cgroup/test_kill.c
-@@ -278,9 +278,9 @@ int main(int argc, char *argv[])
- 	int i;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
-index 1db0ba1226b9..cb47561b4b44 100644
---- a/tools/testing/selftests/cgroup/test_kmem.c
-+++ b/tools/testing/selftests/cgroup/test_kmem.c
-@@ -426,7 +426,6 @@ int main(int argc, char **argv)
- 	int i;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
- 
-@@ -441,6 +440,7 @@ int main(int argc, char **argv)
- 		if (cg_write(root, "cgroup.subtree_control", "+memory"))
- 			ksft_exit_skip("Failed to set memory controller\n");
- 
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 0ebf796f3cff..3a84d068fbf3 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -1798,7 +1798,6 @@ int main(int argc, char **argv)
- 		page_size = BUF_SIZE;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
- 
-@@ -1823,6 +1822,7 @@ int main(int argc, char **argv)
- 		ksft_exit_skip("Failed to query cgroup mount option\n");
- 	has_localevents = proc_status;
- 
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_pids.c b/tools/testing/selftests/cgroup/test_pids.c
-index 9a387c815d2c..710109b53dfe 100644
---- a/tools/testing/selftests/cgroup/test_pids.c
-+++ b/tools/testing/selftests/cgroup/test_pids.c
-@@ -148,7 +148,6 @@ int main(int argc, char **argv)
- 	char root[PATH_MAX];
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
- 
-@@ -163,6 +162,7 @@ int main(int argc, char **argv)
- 		if (cg_write(root, "cgroup.subtree_control", "+pids"))
- 			ksft_exit_skip("Failed to set pids controller\n");
- 
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (int i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
-diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
-index 49b36ee79160..6e7b89315bbf 100644
---- a/tools/testing/selftests/cgroup/test_zswap.c
-+++ b/tools/testing/selftests/cgroup/test_zswap.c
-@@ -810,7 +810,6 @@ int main(int argc, char **argv)
- 		page_size = BUF_SIZE;
- 
- 	ksft_print_header();
--	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
- 
-@@ -827,6 +826,7 @@ int main(int argc, char **argv)
- 		if (cg_write(root, "cgroup.subtree_control", "+memory"))
- 			ksft_exit_skip("Failed to set memory controller\n");
- 
-+	ksft_set_plan(ARRAY_SIZE(tests));
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
--- 
-2.43.7
-
+There are still many places using MAX_NR_GENS to compare gen counters, 
+so I'm concerned that introducing a new macro would make the use of the 
+max gen counter even more confusing.
