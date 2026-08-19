@@ -1,579 +1,322 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013001.outbound.protection.outlook.com [40.93.196.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FEF03A7189
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 05:47:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 608FE3C09E0;
+	Wed, 19 Aug 2026 05:49:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.1
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787118473; cv=pass; b=N2XOfTSatNW9TjbVqfB5eJGBfWRnQTCLVXkDv5pPjUU81TNSmWG/psEj0L608fKfSJl1Stn8LLCOvCi1AKbC1sKYGJhd0oksEG/OOuEx62c1HfoTpSQ0nmv7xIyhRjPlKlFNNhS+1SBtj+bDx3JzsQ/U8RgPvLwL2yv1WZacgwo=
+	t=1787118573; cv=fail; b=SKjFZOJtVutGJi4ztZQ+xoJs5+K9OmDtXkPD76YgfK69a36sXPYWdHitN7fRCOdyRXY4bq2mZJW+3FIMuFFIV/JcXPDPVkoaxqhpw4SL3QpGxd62aj0YWt3ji1o4t7cgBDBA1WHuBbx+QcI+bqpsfLONqQwIDe/IeCSQeNX3BEo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787118473; c=relaxed/simple;
-	bh=QqGG9zg2g0po8JmQMzYcP4aUxzwp1FRZdlQ+QuGD8sA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZvTnMHKfaXTRq8prAEvpm92Q/Yw4dkH5tSMxlnYo/VHeis5fR3cvk+nJDeGI6UJbGdIVZKD6VgvAvTxosKGvUZMl1fA67DPbFEY7YUXIXs0mCzBj6u6OcZE6AsUE0yH2GLq5OwYYsx+ueZTh7otrz33WNzTcnkYInMjFjD3ftMo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=jDUf/8ma; arc=pass smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1787118573; c=relaxed/simple;
+	bh=9W5lLY5al+uRfAf/UKWxRVbjrNF9XS/8bXbHTieAVxY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=jhGdJoO+4ver9V/Swv19engjbzG9Ol2SnTEdUB7A6z7xQH9vN0jguug7QZ+8yzJbQSXYwqw+N6Uq9JqHAT/1l7DTtenmJ1N/5iawz5Javf8lwDoEvKZqkAlo+ii+6ltMiEN7BkX5ggQ2kB9wkL3PyJznVaddZX8oiFIji/9KYiU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Nz0ini5j; arc=fail smtp.client-ip=40.93.196.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jDUf/8ma"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-51c01c79467so159261cf.0
-        for <cgroups@vger.kernel.org>; Tue, 18 Aug 2026 22:47:51 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787118470; cv=none;
-        d=google.com; s=arc-20260327;
-        b=EbiLE38HvxLGqMWVZzknx5HWHpbQjQ0Sr5Qrwx4HyBTR5h9IGwjLflLjkqyljD53Wg
-         LujEJhmXna6iCRkKTBLjmS4LnSIt6jw0zMmldz0LWljC1Yjbk8V51ssiDY74bxiYfzW5
-         QAawWgP1+zi0e9t6zN8X1AMDru1GBjAWKeboD1/vkoGd//ATWUUQy62htU/ABNPQOz1g
-         CtEz6RXxCXPJyFwQayptXk6sVfZ8wGTqP3pmxGghq1fxLfsON6JzXizKeqKTV7IIoo90
-         nyVN5tSkM0DkaGKmT6cZds635q6AhNRgss1iqmqWxNFhX+w6qWakygFq7HXQdqQRkLjk
-         jEUQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=eAikeRUtrk2w//RLMQmTPI70kjePGXV7Mxow/7ryR7Q=;
-        fh=xIepkWIpa5kQWt43Q3Pe1nsU6s+ofOlx38H6OrgLKe4=;
-        b=rYDShxxB3dZZNkjG5np0oiFY/dUcDpjEQ2Rn1jOt8JnsBFvndO5MJjZPxYXfqrg+pY
-         LYP0ljBLyjCO79RZIy0Hq2SXCvG6U70LtTJwOiJB4ULE/B/B04MzkPL5TJVY7MMc0K4p
-         Qe8do/LzoQ9FsDLf75IOfblOLZbNtvYTrcvkrE8R+n1EAAb2pqux7UOEaT8nE9WRCId6
-         Tp67UPTNEOumZTZO1XvCdnj/SRyLRiXHSzOC6Su7HMtzUzFA69s47xdVdhw63b5cvDJQ
-         0gMPyZWU1gVDbx9rWebt+0NjBC5QuzEYw+1KTwq0tn2YBbK/gfBlCBa4vJd6LIorTzH1
-         NBgw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787118470; x=1787723270; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=eAikeRUtrk2w//RLMQmTPI70kjePGXV7Mxow/7ryR7Q=;
-        b=jDUf/8map2O20/uAyygHbv+tizTrQynZ1XVTi+wg4GFSTaQLoiQ4llnFgPHwMfNYqL
-         WX2lkQeVWPlYixBvNoim2cimfdJiq5Jcst6EHzL0pDpdGktrBleYwX/8Zxti4ZE4CmrP
-         w1nvg+lNRRk6Tyxhqn2mofs2QkIMlW2W8HCK3IMJSGVw2hkQc1vX5mYQDEfGm0DekeFg
-         BO5+62ZZunoh3+3LBIN5fSnw6PtGAY2xQ6cc0l4OF2Bs2tQJ2A0xLvSVGxjFKkHmoMxZ
-         MpWFcpL/ONKZjSPZioEJoKbYSlnbvpw4+ZpCVOkMYfntu+0L/4h3y2wqBgNezGzH+iXV
-         xOmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787118470; x=1787723270;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=eAikeRUtrk2w//RLMQmTPI70kjePGXV7Mxow/7ryR7Q=;
-        b=rBM96m0fUNMwlnqIGK+5zTEEUqNyeOWEYdemC4h17yDjvsy/aI7HlcRLw1xUprdqBf
-         bmOlgqHD9Xv87xjptEkSY/Hr6y4zN9eS9OMqqv+WhXmdYqEi3Uz0bZ2FAiM0MwKh2qDV
-         Gny6eWzloWTDJxzmLN9Oe/SwEyMpUVZOD0JJ9NBS69qm6MSpLALdKDFaUH+SKicv7Fgn
-         eNJDEdspHA1ydmyZNBIk98bB/NDYIpcm7LMs1fcQP4e6sYgvN7xAq59iN1IzloCo9fUj
-         0hE3GpDBRctJQj74+B9tBUGAdyX+dqvLiqPBFG+iPjHFLqyQGfiOKyOxzqRKHV3zSFIS
-         a15w==
-X-Forwarded-Encrypted: i=1; AHgh+RrXorPLF7hIOEl055iEdXHlWCoVxn3w7L8z1gGRPMVLdXtpQnlBfah+XDE1TG9psW7f+nhbuU4a@vger.kernel.org
-X-Gm-Message-State: AOJu0YwWwofLml2OJJmaxHLDdnlDUEz6N4NUhmMbT1MqC+je8r/rAUZS
-	DJeU1tVIZ0z4nEXv3Z6Lflc5qFfuhRlnDxG1J0VVHIQ1dXSLDBJaa2X+LqpOidvidjYFJItFRiL
-	lI8uqWF90stL9KP1Ji4BcEsB3Pz4Uijh4MV4lWR5iSXvw08U11R7bcupQPjg=
-X-Gm-Gg: AR+sD10en8OVS679NUvdRK7wswkrh2O2v1PG9BydMiK5zfAlezuKexUPK4/U7Ejetoj
-	GPntzFE2ZCy4RiCWefedZ0bfDrZGs80Efv25FPSs1WguhsD4N8OgqJxAFu41e4PlfdOn2XbK4AZ
-	5uSohTczRob9tMoct9dvYr5X4SsLlH8MvLjif1fIUc43sA7YCaG7HTpwkkHBXQ19oWvyTxp5GFV
-	+UygRBJRN56TMpj54nGV7QAjEVPlcBJmAFztwJr3hRgZWBNOsQI/v8zgLxTtrZ9R25uDJSVAhqW
-	S4Rr5gp/G4zRFKvlimcb06is/KYJGcaZ5BqSHkP3iqt+WHWB6rDHMLk=
-X-Received: by 2002:a05:622a:2618:b0:51c:ca9:3d15 with SMTP id
- d75a77b69052e-52dd680e44bmr7427291cf.12.1787118460911; Tue, 18 Aug 2026
- 22:47:40 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Nz0ini5j"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=QTMcxSSPyCCcG/K1tFPUzlz0NVDBAe5R7hetDkw4YPCIf8iH+4H+5q22LlwZMbOsHO2QemXAV41t+heFCroE6J0sAFI/jWLYNR6sSiDmuiipDDsNHAVj1MkAKuXLT86et1UckQZlI7Ie/CcvW7IoRJ0ZaRpj2cZSXDq4IEsWmNWvTSyQEO3/ztQirCDJNxg/ePcstSO+MgJ+X6Doy8tDkMLB9PnGXDeVfm3Dh6t2KFBCBis5EDZ5L091wEEaVpKLjeK7Gjn40mswtMk0px706iQK2cDtZmDRep9JhshcJJ6XQGE1BPzLxx/uC8aUf9AYRIz7RLR2F98zERQg6B/lCQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=IMYvKorHiY4fYdhmS1QCO7XFZx0OaQ10ZXIkHvRX9BY=;
+ b=IWpZTEijgekiQJRt3qBg6EmP41fMrVm3lYLkKPsowxKxWg7xBldaLLUVTlHZtlIextw0SD4RpLdsy5X+CzbNhvC8IMVjY9f8YyKFN1K9Fdn9CWmIXzD01drwVddLqz5U1dLO0F/BSEfaDj5pqu+Qe4kIjSSqljTrH7hllVfceI3wL6Aet2U7vFDgxz8Lz6Qt5Bfbwciq5SDcg4gHqEni2BUgJ9rXZ7c3lPH8s66jR9gV0u7ehCcFwDScZTqNVGkhnzKyU9KSxWzVinPq7XWYRNWBSSAooXN38U1xyYLrw3bKvcYBk/RNfNmdYDHSJYGPMP8P9xhMXSRdN3m5jYl6Fw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=metarealtyinc.ca smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IMYvKorHiY4fYdhmS1QCO7XFZx0OaQ10ZXIkHvRX9BY=;
+ b=Nz0ini5j72MwTq5KMBcMd1tCDlQDAH5NVZUM2aBUdktECC1bsaTzKcp7SJpGwIgVr46jPwjnxPIyqhKI6Tv+B1bhxp+GiNA1Kq++xg3qm4cmNRDwNJfahTiGuWZxvM8WG4YleBLxSgEMAfwFGQR27rKCzko13dlnNPzImEUjnFk=
+Received: from BY3PR03CA0021.namprd03.prod.outlook.com (2603:10b6:a03:39a::26)
+ by CH8PR12MB9840.namprd12.prod.outlook.com (2603:10b6:610:271::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.8; Wed, 19 Aug
+ 2026 05:49:25 +0000
+Received: from MWH0EPF000A672F.namprd04.prod.outlook.com
+ (2603:10b6:a03:39a:cafe::2c) by BY3PR03CA0021.outlook.office365.com
+ (2603:10b6:a03:39a::26) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.339.8 via Frontend Transport; Wed, 19
+ Aug 2026 05:49:24 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
+Received: from satlexmb08.amd.com (165.204.84.17) by
+ MWH0EPF000A672F.mail.protection.outlook.com (10.167.249.21) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.339.3 via Frontend Transport; Wed, 19 Aug 2026 05:49:24 +0000
+Received: from Satlexmb09.amd.com (10.181.42.218) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 19 Aug
+ 2026 00:49:23 -0500
+Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb09.amd.com
+ (10.181.42.218) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 19 Aug
+ 2026 00:49:23 -0500
+Received: from [10.136.39.179] (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.45 via Frontend
+ Transport; Wed, 19 Aug 2026 00:49:16 -0500
+Message-ID: <dc72965d-b6d6-409f-a96a-c841eec5e16c@amd.com>
+Date: Wed, 19 Aug 2026 11:19:10 +0530
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260813133723.1663605-1-cui.tao@linux.dev>
-In-Reply-To: <20260813133723.1663605-1-cui.tao@linux.dev>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Tue, 18 Aug 2026 22:47:29 -0700
-X-Gm-Features: AcwNN1Ww-2AUdmi3cNzwwoRYAHg__BmITPjdT4wg_3f7OUWF7SILjlo5EEjtKuc
-Message-ID: <CAJuCfpGxK62YWGS+0Ht63h-CZtiY+WPkvqTnYw+4W4Yna0onmg@mail.gmail.com>
-Subject: Re: [PATCH v3] selftests/cgroup: add PSI pressure trigger and
- validation tests
-To: Tao Cui <cui.tao@linux.dev>
-Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, 
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Ziyang Men <ziyang.meme@gmail.com>, 
-	Tao Cui <cuitao@kylinos.cn>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [BUG] sched/fair: divide error in __calc_prop_weight() from the
+ enqueue path (flat-hierarchy series)
+To: Jake S <j@metarealtyinc.ca>, Ingo Molnar <mingo@redhat.com>, "Peter
+ Zijlstra" <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>,
+	"Vincent Guittot" <vincent.guittot@linaro.org>
+CC: Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt
+	<rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman
+	<mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>, Waiman Long
+	<longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <cgroups@vger.kernel.org>
+References: <20260818231333.1441757-1-j@metarealtyinc.ca>
+Content-Language: en-US
+From: K Prateek Nayak <kprateek.nayak@amd.com>
+In-Reply-To: <20260818231333.1441757-1-j@metarealtyinc.ca>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWH0EPF000A672F:EE_|CH8PR12MB9840:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8f087c55-fe46-403d-ef64-08defdb59fec
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|376014|1800799024|7416014|82310400026|23010399003|10067099003|56012099006|6133799003|22082099003|11063799006|18002099003|13003099007;
+X-Microsoft-Antispam-Message-Info:
+	pmUpC5q2i5h9tf5bL2TBHAV/djPmMAzgOrA7sKcqJ2Rp3Fo5Jxw3dYcHWd+5+x4VmHh5/Kv6BAfDUieBNzB2gVY9tw3nYuKc84Ng+sP0Cior6R7kkas7lbWoRQSZ7UQic0uvCg1g1i6FCFBKCDcQ4YOoqnsRVlHA0fWJVBv/BczcYCkudsDKqGbCyRNSzsT5PElYnXqFTOO0HGiFtwBjUMqj4MEbgDv9GXEUtwuSBPPQ4uxJUkO1vaQu9DC6299bIabwNSKH7AfNWomyakYDp6Y1vRzOSSQ1AffmHeX6EhNdv/U9LFCRzGLGSiZ3X8JfTkICKVLRlS204Wg/ip0KZJ4JfTmDeha/EcGSYwH6Le0SkwxmkZ1DohxofQu1jdbfNhCGB2pWGiUkaw6CJcRKt28W+tlqJvNx0l/808mgRXi8rRX38nhLsUNFa/Cf+2mLz3iTg+bh4fBVprWTC4bqdB7j6UU1KZ1R6Uaq7lvxP6Y+TiObhC3nYAOqM1uYHxzo5Q/k0xDfoAd6+jFQBMoPSMasviY1aaEIUMmoRHisCaD628HZlHZCFy9vYgSc39zB1P4ehyOcj4Z4cc1vb+f3D+0nTtDSFhSV2BIMkgHt2fnakxTmLHeIbMz0eYMHHpMes09vXrRLx5Yu6/VmUI/bQGiHTqaep/JFdBqXiN5b5+S8yKSuM1l27zOInNKPabincTof8mfeZpTFZ83NKZ6adg==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(376014)(1800799024)(7416014)(82310400026)(23010399003)(10067099003)(56012099006)(6133799003)(22082099003)(11063799006)(18002099003)(13003099007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	wqeWKxIqT/2CKjAdI8+rgXcFwavb0oHssWcRly6dDEOypj1a0JUsTrejzjvnsBPOXkzui1kzZRuS3swIZK6QU8UyeDcZ7mN+o3Q0xvtLeK222AANs1X4lmvrF5qa6TZX5e/0HEZdJfg625V4bbeBeTBRDFEagx/qIt7GvdEBbChjO2NvJ5qz7VK9deZPUet/6vAWg0RWxpyhHyXDANPxPd0GKomhjYG4CRHIFBdIWqh2RT0PIC6Z2YRsZJ4MHr2YLV9uzOuTV7gQI2IbghNW9jANlKD+pdsooYHov2yAuAwjyaVR65knl4clQ8/r91+t2VDDVmskBFtUU31YdGgoR2m57jr4DHJb3r+CAQ5rJyfcE2dJsB0qi2RjD6Z8aqoLrd0p+Nc8mi5/JIewMRGVWTCEpBlUsj7VIlK+gfsKdnZ0TiTYGgfLnLeylebGajQ2
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Aug 2026 05:49:24.5843
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8f087c55-fe46-403d-ef64-08defdb59fec
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MWH0EPF000A672F.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH8PR12MB9840
 
-On Thu, Aug 13, 2026 at 6:37=E2=80=AFAM Tao Cui <cui.tao@linux.dev> wrote:
->
-> From: Tao Cui <cuitao@kylinos.cn>
->
-> The cgroup selftests have no PSI coverage. Add test_psi.c: per-resource
-> trigger smoke tests (one trigger per fd, IRQ full-only), a
-> cgroup.pressure hide/show toggle test, and a CPU-pressure trigger test
-> using over-subscription. Skips when PSI is disabled or a resource is
-> absent.
->
-> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
->
-> ---
-> Changes since v2 (Suren Baghdasaryan, Michal Koutny review):
-> - Restructure the trigger test into per-resource cases (io, memory, cpu,
->   irq) so a failure points at the specific resource; irq is skipped when
->   /proc/pressure/irq is absent.
-> - Spawn the CPU hogs with cg_run_nowait() instead of open-coding fork(),
->   and arm the trigger with a 2s window so unprivileged users can set it.
-> - Address the remaining review comments on cleanup and robustness:
->   guard teardown with a "created" flag, use cg_read_strcmp() instead of
->   atoi(), report strerror() on errors, and fix the unused-parameter and
->   sign-compare nits.
->
-> Changes since v1 (Michal Koutny, sashiko review):
-> - Keep trigger tests smoke-level; switch the firing test from memory to
->   CPU pressure; drop churn_memory().
-> - Keep the runner out of the cgroup; add PSI/IRQ skip-guards and a
->   .gitignore entry.
->
-> Link: https://lore.kernel.org/all/20260724025826.504586-1-cui.tao@linux.d=
-ev/
-> Link: https://lore.kernel.org/all/20260728083742.2359320-1-cui.tao@linux.=
-dev/
-> ---
->  tools/testing/selftests/cgroup/.gitignore |   1 +
->  tools/testing/selftests/cgroup/Makefile   |   2 +
->  tools/testing/selftests/cgroup/config     |   1 +
->  tools/testing/selftests/cgroup/test_psi.c | 296 ++++++++++++++++++++++
->  4 files changed, 300 insertions(+)
->  create mode 100644 tools/testing/selftests/cgroup/test_psi.c
->
-> diff --git a/tools/testing/selftests/cgroup/.gitignore b/tools/testing/se=
-lftests/cgroup/.gitignore
-> index 952e4448bf07..ce2b907c57ea 100644
-> --- a/tools/testing/selftests/cgroup/.gitignore
-> +++ b/tools/testing/selftests/cgroup/.gitignore
-> @@ -8,5 +8,6 @@ test_kill
->  test_kmem
->  test_memcontrol
->  test_pids
-> +test_psi
->  test_zswap
->  wait_inotify
-> diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/self=
-tests/cgroup/Makefile
-> index e01584c2189a..a8c69e37332a 100644
-> --- a/tools/testing/selftests/cgroup/Makefile
-> +++ b/tools/testing/selftests/cgroup/Makefile
-> @@ -16,6 +16,7 @@ TEST_GEN_PROGS +=3D test_kill
->  TEST_GEN_PROGS +=3D test_kmem
->  TEST_GEN_PROGS +=3D test_memcontrol
->  TEST_GEN_PROGS +=3D test_pids
-> +TEST_GEN_PROGS +=3D test_psi
->  TEST_GEN_PROGS +=3D test_zswap
->
->  LOCAL_HDRS +=3D $(selfdir)/clone3/clone3_selftests.h $(selfdir)/pidfd/pi=
-dfd.h
-> @@ -32,4 +33,5 @@ $(OUTPUT)/test_kill: $(LIBCGROUP_O)
->  $(OUTPUT)/test_kmem: $(LIBCGROUP_O)
->  $(OUTPUT)/test_memcontrol: $(LIBCGROUP_O)
->  $(OUTPUT)/test_pids: $(LIBCGROUP_O)
-> +$(OUTPUT)/test_psi: $(LIBCGROUP_O)
->  $(OUTPUT)/test_zswap: $(LIBCGROUP_O)
-> diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selfte=
-sts/cgroup/config
-> index 39f979690dd3..8a3ef479e83d 100644
-> --- a/tools/testing/selftests/cgroup/config
-> +++ b/tools/testing/selftests/cgroup/config
-> @@ -4,3 +4,4 @@ CONFIG_CGROUP_FREEZER=3Dy
->  CONFIG_CGROUP_SCHED=3Dy
->  CONFIG_MEMCG=3Dy
->  CONFIG_PAGE_COUNTER=3Dy
-> +CONFIG_PSI=3Dy
-> diff --git a/tools/testing/selftests/cgroup/test_psi.c b/tools/testing/se=
-lftests/cgroup/test_psi.c
-> new file mode 100644
-> index 000000000000..cfb412f61458
-> --- /dev/null
-> +++ b/tools/testing/selftests/cgroup/test_psi.c
-> @@ -0,0 +1,296 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +#define _GNU_SOURCE
-> +#include <errno.h>
-> +#include <fcntl.h>
-> +#include <poll.h>
-> +#include <stdbool.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <unistd.h>
-> +#include <linux/limits.h>
+Hello Jake,
+
+Thank you for the report.
+
+On 8/19/2026 4:43 AM, Jake S wrote:
+> [You don't often get email from j@metarealtyinc.ca. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+> 
+> Hi,
+> 
+> I hit a divide-by-zero panic in __calc_prop_weight(), reached from
+> enqueue_hierarchy() inside enqueue_task_fair(). This is the *enqueue*
+> path, not the task_tick_fair() variant reported in May and addressed by
+> the se->on_rq guard folded into 85570f10a4c6 -- enqueue_hierarchy() and
+> dequeue_hierarchy() carry no equivalent check.
+> 
+> The code is from the tip sched/core flat-hierarchy rework; it is not in
+> Linus' tree. I am running it via a distro kernel (CachyOS) that carries
+> the series, on 7.2-rc7 and 7.2.0.
+> 
+> I have separated what I verified from what I am guessing. The last link
+> in the causal chain is unexplained and I am asking about it rather than
+> asserting it.
+> 
+> === The oops ===
+> 
+>   Oops: divide error: 0000 [#1] SMP NOPTI
+>   CPU: 12 UID: 1000 PID: 312907 Comm: bash
+>   Tainted: G     U   C OE       7.2.0-rc7-2-cachyos-rc #1 PREEMPT(full)
+>   Hardware name: Dell Inc. XPS 16 DA16260/0RMV2Y, BIOS 1.5.1 04/01/2026
+>   RIP: 0010:enqueue_task_fair.llvm.6536700009857788019+0x422/0x950
+>   Code: 0f 84 74 01 00 00 83 bd 68 01 00 00 00 45 0f 4f f4 48 8b 4d 00
+>         4c 89 e8 48 09 c8 48 c1 e8 20 0f 85 53 fd ff ff 44 89 e8 31 d2
+>         <f7> f1 41 89 c5 e9 4f fd ff ff 0f 0b e9 1d fe ff ff 4c 89 e6
+>   RAX: 0000000000000000 RBX: 0000000000000001 RCX: 0000000000000000
+>   RDX: 0000000000000000 RSI: fffff46fbf98e680 RDI: fffff46fbf98ffc0
+>   RBP: fffff46fbf98ffc0 R08: ffff8ee25f9b2a80 R09: 0000000000000000
+>   R10: 0000000000000000 R11: 0000000000000110 R12: 0000000000000001
+>   R13: 0000000000000000 R14: 0000000000000001 R15: fffff46fbf9901c0
+>   Call Trace:
+>    <TASK>
+>    enqueue_task+0x8e/0x250
+>    wake_up_new_task+0x148/0x2e0
+>    kernel_clone+0x1c6/0x390
+>    __x64_sys_clone+0xcc/0x100
+>    do_syscall_64+0x147/0x3c0
+>    asm_fred_entrypoint_user+0x41/0x41
+>    </TASK>
+> 
+> Machine was idle, lid closed, 11.66 h into the boot. bash forked, the
+> new task was enqueued, div trapped.
+
+Was your laptop suspended at that point?
+
+> 
+> It is not survivable in practice. panic_on_oops was 0, so the kernel
+> took the first #DE, printed the oops and continued for 476 ms. It then
+> faulted at the same RIP with byte-identical registers and an identical
+> RSP (ffffd46fff53bbb0):
+> 
+>   Kernel panic - not syncing: Fatal exception
+>   Shutting down cpus with NMI
+> 
+> i.e. the oops-recovery path (kill task -> schedule()) re-entered the
+> same enqueue with the rq lock already held mid-enqueue.
+> 
+> === Where it divides (confirmed) ===
+> 
+> kernel/sched/fair.c, __calc_prop_weight(), inlined into
+> enqueue_hierarchy() -> enqueue_task_fair():
+> 
+>         weight *= se->load.weight;
+>         if (parent_entity(se))
+>                 weight /= cfs_rq->load.weight;  /* <-- #DE */
+> 
+> RCX = cfs_rq->load.weight = 0. R13 = 0 means se->load.weight was 0 as
+> well, i.e. a group sched_entity carrying zero weight.
+> 
+> Not a miscompile: this is clang 22.1.8 + ThinLTO, hence the .llvm.<hash>
+> suffix. The 32-bit "div %ecx" against 64-bit C operands is clang's
+> BypassSlowDivision -- the preceding "or %rcx,%rax; shr $32,%rax; jne"
+> is its guard. The 64-bit slow path is present in the same function.
+> 
+> === How the weight can reach zero (mechanism, partly inferred) ===
+> 
+> __calc_smp_shares() ends:
+> 
+>         return clamp_t(long, shares, MIN_SHARES, shares_max);
+> 
+> clamp() yields hi when hi < lo, so shares_max == 0 silently defeats the
+> MIN_SHARES floor and returns 0 -- exactly the case the comment directly
+> above it says must yield MIN_SHARES instead of 0. Note __clamp_once()
+> already carries
+> 
+>         BUILD_BUG_ON_MSG(statically_true(ulo > uhi), ...)
+> 
+> so lo > hi is considered a bug upstream; it just cannot fire on a
+> runtime-computed shares_max.
+> 
+> shares_max arrives from calc_concur_shares() as nr * tg_shares, where
+> nr = min(tg_tasks(tg), tg_cpus(tg)). tg_cpus() returns
+> cpuset_num_cpus(cgrp) unfloored, while its sibling tg_tasks() already
+> floors at 1. That asymmetry is the hole.
+> 
+> concur is the live mode here:
+> 
+>   $ cat /sys/kernel/debug/sched/cgroup_mode
+>   up smp (concur) max tasks
+> 
+> What I could NOT establish: that tg_cpus() actually returned 0, or what
+> would produce an empty effective cpuset. update_cpumasks_hier()
+> substitutes the parent's effective_cpus before storing; on this machine
+> no cgroup has an empty cpuset.cpus.effective and every
+> cpuset.cpus.partition reads "member". Twelve cgroups here have an empty
+> cpuset.cpus and all report effective = 0-15. I suspected a power daemon
+> that rewrites AllowedCPUs on the top-level systemd slices using an
+> empty-then-set idiom, but I could not make that yield an empty effective
+> mask, so I am not claiming it.
+> 
+> The missing floor looks like a hole regardless of what trips it, and I
+> would rather ask than guess: is there a path where cpuset_num_cpus() can
+> legitimately return 0, or should tg_cpus() simply floor at 1 the way
+> tg_tasks() does?
+
+Since you mentioned idle + lid closed, and
+pm_sleep_disable_secondary_cpus() -> freeze_secondary_cpus() on the
+suspend path, I'm wondering if that path can have any effect here but
+afaict, sc->effective_cpus should be unaffected on that path and I'm
+not sure if we can even get a fork() + wakeup before we thaw all the
+process.
+
+That said I do see a bunch of cpumask_empty(cs->effective_cpus) in
+kernel/cgroup/cpuset.c so I'm not sure if that might be at play here.
+I'll defer to folks who understand cpusets better.
+
+> 
+> === Proposed guard ===
+> 
+> Running locally on 7.2.0 for the past day. The WARN_ONCE in tg_cpus() is
+> deliberately diagnostic -- it confirms or refutes the cpuset route the
+> moment anyone reproduces this.
+> 
+> --- a/kernel/sched/fair.c
+> +++ b/kernel/sched/fair.c
+> @@ __calc_prop_weight
+> +       unsigned long div;
 > +
-> +#include "kselftest.h"
-> +#include "cgroup_util.h"
-> +
-> +#define PSI_POLL_TIMEOUhas this check T_MS    5000
-> +
-> +/* PSI triggers are written with a trailing NUL the kernel parser expect=
-s. */
-> +static ssize_t write_trigger(int fd, const char *trigger)
-> +{
-> +       return write(fd, trigger, strlen(trigger) + 1);
-> +}
-> +
-> +static int pressure_open(const char *resource)
-> +{
-> +       char path[PATH_MAX];
-> +       int fd;
-> +
-> +       snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
-> +       fd =3D open(path, O_RDWR);
-> +       if (fd < 0)
-> +               ksft_print_msg("open %s: %s\n", path, strerror(errno));
-> +       return fd;
-> +}
-> +
-> +/*
-> + * /proc/pressure/<resource> accepts exactly one trigger per file
-> + * descriptor. For io, memory and cpu verify that a "some" trigger arms
-> + * and that a second trigger on the same fd is rejected with EBUSY. For
-> + * irq, which only tracks "full", verify that "some" is rejected and
-> + * "full" arms. irq is optional -- it only exists with IRQ-time
-> + * accounting -- so a missing /proc/pressure/irq is SKIP, not FAIL.
-> + */
-> +static int test_proc_trigger(const char *resource, bool full_only)
-> +{
-> +       int fd, ret =3D KSFT_FAIL;
-> +
-> +       fd =3D pressure_open(resource);
-> +       if (fd < 0)
-> +               return full_only ? KSFT_SKIP : KSFT_FAIL;
-> +
-> +       if (!full_only) {
-> +               if (write_trigger(fd, "some 150000 2000000") <=3D 0) {
-> +                       ksft_print_msg("%s: 'some' trigger rejected: %s\n=
-",
-> +                                      resource, strerror(errno));
-> +                       goto out;
+>         weight *= se->load.weight;
+> -       if (parent_entity(se))
+> -               weight /= cfs_rq->load.weight;
+> -       else
+> +       if (parent_entity(se)) {
+> +               div = cfs_rq->load.weight;
+> +               if (unlikely(!div)) {
+> +                       WARN_ONCE(1, "sched: cfs_rq->load.weight == 0 (se->load.weight=%lu)\n",
+> +                                 se->load.weight);
+> +                       return MIN_SHARES;
 > +               }
-> +               if (write_trigger(fd, "full 150000 2000000") !=3D -1 ||
-> +                   errno !=3D EBUSY) {
-> +                       ksft_print_msg("%s: second trigger not EBUSY\n",
-> +                                      resource);
-> +                       goto out;
-> +               }
+> +               weight /= div;
 > +       } else {
-> +               if (write_trigger(fd, "some 150000 2000000") !=3D -1) {
-> +                       ksft_print_msg("irq: 'some' trigger unexpectedly =
-accepted\n");
-> +                       goto out;
-> +               }
-> +               if (write_trigger(fd, "full 150000 2000000") <=3D 0) {
-> +                       ksft_print_msg("irq: 'full' trigger rejected: %s\=
-n",
-> +                                      strerror(errno));
-> +                       goto out;
-> +               }
+>                 weight /= NICE_0_LOAD;
 > +       }
-> +
-> +       ret =3D KSFT_PASS;
-> +out:
-> +       close(fd);
-> +       return ret;
+> 
+>         return max(weight, MIN_SHARES);
+> 
+> @@ __calc_smp_shares
+> -       return clamp_t(long, shares, MIN_SHARES, shares_max);
+> +       /* clamp() yields hi when hi < lo, defeating the MIN_SHARES floor. */
+> +       return clamp_t(long, shares, MIN_SHARES,
+> +                      max_t(long, shares_max, MIN_SHARES));
+> 
+> @@ tg_cpus
+> +       if (WARN_ONCE(nr < 1, "sched: tg_cpus() == 0, empty cpuset\n"))
+> +               nr = 1;
+>         return nr;
+> 
+> === Reproducer / caveats ===
+> 
+> Not reliably reproducible: one occurrence in ~11.7 h of idle uptime, and
+> none since. I have no better trigger than "leave it running".
+> 
+> The kernel is tainted G U C OE -- out-of-tree camera drivers are loaded
+> on this machine. I cannot categorically exclude memory corruption from
+> those. Against that: no prior WARNs, no slab or list corruption, no DMAR
+> faults, no EDAC events, and the two oopses 476 ms apart had byte-identical
+> register state, which a wild write would not reproduce exactly. I mention
+> it so nobody wastes time on a report I cannot fully vouch for.
+> 
+> Happy to test patches or run instrumented builds on the affected machine.
 
-You don't really need "ret" variable. Just "return KSFT_FAIL;" here is enou=
-gh.
+I think your current instrumentation from "Proposed guard" is good
+enough to tell where the problem is if it reproduces. Are you running
+with it on your setup currently?
 
-> +}
-> +
-> +/*
-> + * cgroup.pressure gates visibility of the per-resource *.pressure files
-> + * inside a cgroup: writing 0 hides them, writing 1 shows them again.
-> + * Drive one hide/show cycle and check that memory.pressure appears and
-> + * disappears along with it.
-> + */
-> +static int test_cgroup_pressure_toggle(const char *root)
-> +{
-> +       char buf[BUF_SIZE];
-> +       char *cg =3D NULL;
-> +       int ret =3D KSFT_FAIL, created =3D 0;
+> 
+> Config: CONFIG_FAIR_GROUP_SCHED=y, CONFIG_SCHED_AUTOGROUP=y,
+> CONFIG_SCHED_CLASS_EXT=y (sched_ext disabled, not in use),
+> CONFIG_X86_NATIVE_CPU=y, no CONFIG_SCHED_BORE, no SCHED_ALT.
+> Hardware: Intel Core Ultra X7 358H (Panther Lake), 16 CPUs.
+> 
+> Thanks,
+> Jake
 
-Again, you don't need "ret" variable here.
+-- 
+Thanks and Regards,
+Prateek
 
-> +
-> +       cg =3D cg_name(root, "psi_toggle_test");
-> +       if (!cg)
-> +               goto cleanup;
-> +       if (cg_create(cg)) {
-> +               ksft_print_msg("cg_create: %s\n", strerror(errno));
-> +               goto cleanup;
-> +       }
-> +       created =3D 1;
-
-Nope. The way we usually do the cleanup is by jumping to the
-appropriate label instead of adding extra state flags. In this case
-that would look something like this:
-
-       cg =3D cg_name(root, "psi_toggle_test");
-       if (!cg)
-               return KSFT_FAIL;
-
-       if (cg_create(cg)) {
-               ksft_print_msg("cg_create: %s\n", strerror(errno));
-               goto free_cg;
-       }
-
-       if (cg_write(cg, "cgroup.pressure", "0")) {
-               ksft_print_msg("write cgroup.pressure=3D0: %s\n", strerror(e=
-rrno));
-               goto cleanup;
-       }
-...
-       return KSFT_PASS;
-cleanup:
-       cg_destroy(cg);
-free_cg:
-       free(cg);
-       return KSFT_FAIL;
-}
-
-> +
-> +       if (cg_write(cg, "cgroup.pressure", "0")) {
-> +               ksft_print_msg("write cgroup.pressure=3D0: %s\n", strerro=
-r(errno));
-> +               goto cleanup;
-> +       }
-> +       if (cg_read_strcmp(cg, "cgroup.pressure", "0\n")) {
-> +               ksft_print_msg("cgroup.pressure readback !=3D 0\n");
-> +               goto cleanup;
-> +       }
-> +       if (cg_read(cg, "memory.pressure", buf, sizeof(buf)) >=3D 0) {
-> +               ksft_print_msg("memory.pressure readable while hidden\n")=
-;
-> +               goto cleanup;
-> +       }
-> +
-> +       if (cg_write(cg, "cgroup.pressure", "1")) {
-> +               ksft_print_msg("write cgroup.pressure=3D1: %s\n", strerro=
-r(errno));
-> +               goto cleanup;
-> +       }
-> +       if (cg_read_strcmp(cg, "cgroup.pressure", "1\n")) {
-> +               ksft_print_msg("cgroup.pressure readback !=3D 1\n");
-> +               goto cleanup;
-> +       }
-> +       if (cg_read(cg, "memory.pressure", buf, sizeof(buf)) < 0) {
-> +               ksft_print_msg("memory.pressure unreadable after enabling=
-\n");
-> +               goto cleanup;
-> +       }
-> +
-> +       ret =3D KSFT_PASS;
-> +cleanup:
-> +       if (created)
-> +               cg_destroy(cg);
-> +       free(cg);
-> +       return ret;
-> +}
-> +
-> +/* A child that burns CPU forever; stopped by cg_killall() in the parent=
-. */
-> +static int hog_cpu(const char *cgroup, void *arg)
-> +{
-> +       for (;;)
-> +               ;
-
-This loop looks strange. Maybe:
-
-       for (;;) {}
-
-> +       return 0;
-> +}
-> +
-> +/*
-> + * Arm a "some" trigger on a cgroup's cpu.pressure, oversubscribe the
-> + * cgroup with more spinning hogs than there are CPUs, and check that th=
-e
-> + * trigger fires once the cgroup stalls on CPU.
-> + */
-> +static int test_cgroup_trigger_fire(const char *root)
-> +{
-> +       char *cg =3D NULL, *cpupress =3D NULL;
-> +       int fd =3D -1, ret =3D KSFT_FAIL, created =3D 0, i;
-
-Please define each variable on a separate line.
-
-> +       long ncpus;
-> +
-> +       cg =3D cg_name(root, "psi_trigger_test");
-> +       if (!cg)
-> +               goto cleanup;
-> +       if (cg_create(cg)) {
-> +               ksft_print_msg("cg_create: %s\n", strerror(errno));
-> +               goto cleanup;
-> +       }
-> +       created =3D 1;
-
-Same as above. Jump to the appropriate label.
-
-> +
-> +       cpupress =3D cg_control(cg, "cpu.pressure");
-> +       if (!cpupress)
-> +               goto cleanup;
-> +       fd =3D open(cpupress, O_RDWR);
-> +       if (fd < 0) {
-> +               ksft_print_msg("open cpu.pressure: %s\n", strerror(errno)=
-);
-> +               goto cleanup;
-> +       }
-> +
-> +       /*
-> +        * 1usec threshold over a 2s window: any CPU stall fires it. The =
-2s
-> +        * window is the smallest unprivileged users are allowed to arm.
-> +        */
-> +       if (write_trigger(fd, "some 1 2000000") <=3D 0) {
-> +               ksft_print_msg("arm trigger: %s\n", strerror(errno));
-> +               goto cleanup;
-> +       }
-> +
-> +       ncpus =3D sysconf(_SC_NPROCESSORS_ONLN);
-> +       if (ncpus <=3D 0) {
-
-I don't think this syscall will ever return 0, so you just need to
-check for -1. Also reporting -1 in the error log isn't very
-informative. Instead report strerror(errno).
-
-> +               ksft_print_msg("sysconf(_SC_NPROCESSORS_ONLN) returned %l=
-d\n",
-> +                              ncpus);
-> +               goto cleanup;
-> +       }
-> +
-> +       /* ncpus+1 hogs guarantee CPU contention inside the cgroup. */
-> +       for (i =3D 0; i < ncpus + 1; i++) {
-> +               if (cg_run_nowait(cg, hog_cpu, NULL) < 0) {
-> +                       ksft_print_msg("spawn hog %d: %s\n", i, strerror(=
-errno));
-> +                       goto cleanup;
-> +               }
-> +       }
-> +
-> +       struct pollfd pfd =3D { .fd =3D fd, .events =3D POLLPRI };
-> +
-> +       switch (poll(&pfd, 1, PSI_POLL_TIMEOUT_MS)) {
-> +       case -1:
-> +               ksft_print_msg("poll: %s\n", strerror(errno));
-> +               goto cleanup;
-
-So, goto cleanup here but break everywhere else? Consistency would be
-nice, so please use break here as well.
-
-> +       case 0:
-> +               ksft_print_msg("trigger did not fire (could not induce CP=
-U pressure)\n");
-> +               ret =3D KSFT_SKIP;
-
-This means your trigger timed out. Why is this treated as KSFT_SKIP
-and not as KSFT_FAIL?
-
-> +               break;
-> +       default:
-> +               if (pfd.revents & POLLPRI)
-> +                       ret =3D KSFT_PASS;
-> +               else
-> +                       ksft_print_msg("poll returned 0x%x\n", pfd.revent=
-s);
-> +               break;
-> +       }
-> +
-> +cleanup:
-> +       if (fd >=3D 0)
-> +               close(fd);
-> +       if (created) {
-> +               cg_killall(cg);
-> +               cg_destroy(cg);
-> +       }
-> +       free(cpupress);
-> +       free(cg);
-> +       return ret;
-> +}
-> +
-> +struct psi_proc_test {
-> +       const char *name;
-> +       const char *resource;
-> +       bool full_only;
-> +};
-> +static const struct psi_proc_test proc_tests[] =3D {
-> +       { "proc_trigger_io",     "io",     false },
-> +       { "proc_trigger_memory", "memory", false },
-> +       { "proc_trigger_cpu",    "cpu",    false },
-> +       { "proc_trigger_irq",    "irq",    true  },
-> +};
-> +
-> +struct psi_cg_test {
-> +       const char *name;
-> +       int (*fn)(const char *root);
-> +};
-> +static const struct psi_cg_test cg_tests[] =3D {
-> +       { "cgroup_pressure_toggle", test_cgroup_pressure_toggle },
-> +       { "cgroup_trigger_fire",    test_cgroup_trigger_fire },
-> +};
-> +
-> +int main(int argc, char **argv)
-> +{
-> +       char root[PATH_MAX];
-> +       int psi_fd, i;
-> +
-> +       ksft_print_header();
-> +       ksft_set_plan(ARRAY_SIZE(proc_tests) + ARRAY_SIZE(cg_tests));
-> +
-> +       if (cg_find_unified_root(root, sizeof(root), NULL))
-> +               ksft_exit_skip("cgroup v2 isn't mounted\n");
-> +
-> +       /* PSI must be enabled (CONFIG_PSI=3Dy, not disabled on the cmdli=
-ne). */
-> +       psi_fd =3D open("/proc/pressure/memory", O_RDONLY);
-> +       if (psi_fd < 0)
-> +               ksft_exit_skip("PSI unavailable (CONFIG_PSI=3Dn or psi=3D=
-0)\n");
-> +       close(psi_fd);
-> +
-> +       for (i =3D 0; i < ARRAY_SIZE(proc_tests); i++) {
-> +               switch (test_proc_trigger(proc_tests[i].resource,
-> +                                         proc_tests[i].full_only)) {
-> +               case KSFT_PASS:
-> +                       ksft_test_result_pass("%s\n", proc_tests[i].name)=
-;
-> +                       break;
-> +               case KSFT_SKIP:
-> +                       ksft_test_result_skip("%s\n", proc_tests[i].name)=
-;
-> +                       break;
-> +               default:
-> +                       ksft_test_result_fail("%s\n", proc_tests[i].name)=
-;
-> +                       break;
-> +               }
-> +       }
-> +
-> +       for (i =3D 0; i < ARRAY_SIZE(cg_tests); i++) {
-> +               switch (cg_tests[i].fn(root)) {
-> +               case KSFT_PASS:
-> +                       ksft_test_result_pass("%s\n", cg_tests[i].name);
-> +                       break;
-> +               case KSFT_SKIP:
-> +                       ksft_test_result_skip("%s\n", cg_tests[i].name);
-> +                       break;
-> +               default:
-> +                       ksft_test_result_fail("%s\n", cg_tests[i].name);
-> +                       break;
-> +               }
-> +       }
-
-Please convert this to use
-https://docs.kernel.org/dev-tools/kselftest.html#test-harness as I
-suggested before. This code will look much simpler. Even if some other
-tests are not using it, there is no reason for new tests not to take
-advantage of the existing harness. You will find planty of examples
-which use them.
-
-> +
-> +       ksft_finished();
-> +}
-> --
-> 2.43.0
->
