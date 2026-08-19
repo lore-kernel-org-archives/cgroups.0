@@ -1,144 +1,289 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B39E3A0E8A
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 14:34:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787150066; cv=none; b=MFZgpkK6Jj57JUw+DjWUZR0WpU3w8G+l0Nb9pVjwcc452MthYWf//6mK/qcLFiXMXqjoAhKIRTo/rXsMUfwRDGo7qtAmjmoiAHwTf40kCCgAMgXxq66OYDMuFPUpZpXdZ9S71AWi8cwKLglX3e4Wo9pxPXQSC5OCGZIiTGhRyms=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787150066; c=relaxed/simple;
-	bh=HU+qPdUQS0BEZD7n5Bfk9KiA3akMlx3J74BeJkMhjxQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AI/9UloR+Vt5eX1HItBk60Ql3KtT1HoE4sepCUCgK5xEd6nkdvicdjQ/+R6QeEKXG0UVlLbJ15x7+mAHuBxMisn7nBTKO23vRMPNNWh9N+tRJmZ7Wqa9E4JHiRGjAlfdJWoM9/EzaK2Nfl0N40Sl8+g9YRSgzX7fO7zulkJjpYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SUabsjI3; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F37C13AEF4A
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 15:18:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.44
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787152685; cv=pass; b=XRXIjEyUJGXMdB+29z7Zg8WEDZhPml++UwkvVkEM6PbXrKwUH7FCKDVBPhJxGNaGukM+2vZeFAX/lgp4iKvb9q0leEa8FJpcOeiatUH8JuruJyLn1o0LMGmDKr6lf7o+QzG0F+S5OIIw2vJG9cpxPW0ZmlEvEps8/qpZr6uMdG0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787152685; c=relaxed/simple;
+	bh=NU6wj9ISozWZRp7egmiutUSvHkVcvPJYoAsvt9E0p9g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ucEk7fqoi99jewnLrPoANXihH/qTU8E6RgFVT70OA8/pybfCNTLFvoo7XrpsT2IotXUzzOGeVMySlfmeAV0CQXor1Yzsr5s9Kxdt+2gqwFrAAd4Y4TFA/qOGJoRe8SyZ8ixsSkCmbCypryp3X+JEKEeX1BsthP6+rU8l8c3pGL4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=lON5DuV4; arc=pass smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SUabsjI3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787150063;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=nL5TdQYFTc+LhqgfFIL8+rQklS1IicuWMxunD/2jpt8=;
-	b=SUabsjI3huxqJLvXY95F3DDTgFs3YhW7o5ikGJHKA0dnA6ZU7PG5HVND6yp2J/ePP8tFmE
-	40WGQB4OwZBkuUQaWTa6bZsFkI8qpO+qqtFDh7sYL73HZk+akNPZWUFyv1PrH9gFrhx+Gw
-	z26wjE/oreLi4MqedK2cIWfgAkTk89U=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-678-oY19yZ_SNtymbl_oIIFBfg-1; Wed,
- 19 Aug 2026 10:34:21 -0400
-X-MC-Unique: oY19yZ_SNtymbl_oIIFBfg-1
-X-Mimecast-MFC-AGG-ID: oY19yZ_SNtymbl_oIIFBfg_1787150060
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 832251800D8D;
-	Wed, 19 Aug 2026 14:34:19 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A7506180034F;
-	Wed, 19 Aug 2026 14:34:17 +0000 (UTC)
-Message-ID: <e5433074-5d95-4991-96be-eb03e7173900@redhat.com>
-Date: Wed, 19 Aug 2026 10:34:16 -0400
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="lON5DuV4"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-495509b08ebso52145e9.1
+        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 08:18:02 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787152681; cv=none;
+        d=google.com; s=arc-20260327;
+        b=P0zkc4+6Zw+mWHbcVq2AfD8SxsIbUzEVivhfLeCLC3cyZLadkylmzmX78vuV5MQWTA
+         oGCqSoG8d1Lz4kKpWvwH3+4XFlR45xC6WmgymaAbcT9ZjLSDyscoPMiF34V/4tv/01zc
+         aBH2R5aFyQ63TXYVsclj7v9Jkn/JjApZYOqA1dJn5gjqtjQcboxVxOX2kT5zUV5fz98L
+         rntjM85Z3RbVy/74F9Rz+HxkU1iUaFA9JUHKn/ZJEa9E2tlvTNGsGQXpVOLWq+OT9GQy
+         b1OqTaTon+0OdZyVIocIOtPuNUTZjq0htBeBA6XIDRWmctydEPcwbzp3FpU+7F7HmWCY
+         aDOQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=dA7U2ubhCpnou09rJaye2RELeJzotdjrKQldD8EV4vw=;
+        fh=0tf+c+5ywPVK+0/y9JMMyrhU49G/Ib+VPk751c/ao+g=;
+        b=b9LOZYPX97TsTKGmPQwp0eIFXshsKzNEIgbx3twm/CD06VUxnJiZ98HaF8B4ytPVuS
+         QFpVcwRD1Oy+azQ8SpOsJ/emH/R2pvBNIJyF+HHO1BQD3IZef8yCHpDDjvDxexQivy2D
+         dMRE7GY6Ed8JTsYLtcbxSsxtPnrRrVZ4H+sGO+q7sZ5TZipMrL1TJZghaiO5C82VW904
+         dLD1amRZrUpzvdFu7Nk6XDzdfT+/wjpLD33bNnFYUtF/kfoHpCMpEP8BhNzOYfQ//RB8
+         MwcVmDvd4dDOQKbaSWIXGX0QEANswJAWyTzNq0X4u2Ci2d7zvdytE2Q5Wv13oRrRg/vw
+         ToUQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1787152681; x=1787757481; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=dA7U2ubhCpnou09rJaye2RELeJzotdjrKQldD8EV4vw=;
+        b=lON5DuV47dj72tVQ2UDXx7eyCueIB7/AhVrNkHPWq+pkxiqc1uoiKnbod581E0Zfi2
+         QfQhP7eOftCmT0t4kdJ8f13fgFIzcCU/AMylnbuUuUJ14qB8YojqbfpWxfPl2VEUu4X8
+         F6z3sFjeCTD8GWosToBy49DQwv+O4u3dlnzmvmtlrvf+H1RW4jM7DfPZSYmePoAHHZRI
+         lghcciiBJIpxUIAXrR/6/QIuUo8nZjhAUSbG8IDIXWyggzasSHJTHS/aupLNmw0va+fN
+         kfy06PsTOzV4Yb90spnsXnM2tc7V3N0gWSRrfQWEj9DRAWkrPr3t1OrxfT8rZ1RpCqy5
+         qBEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787152681; x=1787757481;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=dA7U2ubhCpnou09rJaye2RELeJzotdjrKQldD8EV4vw=;
+        b=S0gZKg5354p7G4XRuwExUv8OOMqzqMjhcoobMqhsHfKp6bEPZsaIZG3Ki0IpZlECHt
+         /54tUN2c87hf4ZCQDg9SURIF5qRcWeQHNrUSeQQD+tJCMPamPawMskc5/TccCuVsUGfW
+         CG48lA3i/+grBe8mC6cqt3cFll2jcDPUuesZhFXUmVwVg5P1vwu9TqGT/RoRUS4s7ZMm
+         r2qCRgBOhz/Pl0iS69nhSL4svbge8jVnlyGzYAHponLBHZbjbxADFz4KWSyF0PHGlTfD
+         JZLZRfaF0nXCg1tYaZ0IGFuIsUyqPULPJZud+ArBFItdVukBdCD0YO6br+QbHzM4rFSq
+         QBQw==
+X-Forwarded-Encrypted: i=1; AHgh+RrR22KsUWQMckA9ywa4bvx3jUC94XxkdgxgHWty63U8KFrEx83XPOFu2TFrjDDJ3PiDi1v/d4TK@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxp5iyj7ff+AU2xXinGNb4G1Azit7agnHof24TF6UVHJNOs/qUP
+	d8v2A0twzyuQdScRFgQxi/3atGsTkigF+nmavOvg0LicMJ0xwrQXfSLyv5Vg8dackT+9u8erHy+
+	KNjEuFRZC5RLpcPLfB4SazdcTamZQ+dwbrXWkZTdT
+X-Gm-Gg: AR+sD11Mb1knbVoy74durGHxjt2RklmKdC8HekvOhhain8Y3KJX9xiwLEX8x3jTH/h/
+	FuOMbW6qrE0Pf77bB1iOv9HtBFNsNaF40nrAbyL/HSr+gyLdnYvEiV09ugn3znUmwZHwohk49oJ
+	ctMnxEzXWQW0J34HklitISDY5vqaCi/spc2I7OUkDAQGxmNvmKGHR77PLTO9ejPzJR1Rc4F1Qyq
+	Tw/1+Ykfd6SE4CSPxq0Ev75Z6el5Gls+WtpDwgxbgmTUExtadtt6qHANcITpRnL7r7ISCRzxjwW
+	W0Tzmo1e0YxJ6QPbGWwxHxvHNZLfYaiFwl5U6L7bp40/g2jSilW06nAHGzE/s31AkFBhFI8Kjag
+	=
+X-Received: by 2002:a05:600c:4d0e:b0:495:5515:3c00 with SMTP id
+ 5b1f17b1804b1-499abd0b9damr816445e9.9.1787152680616; Wed, 19 Aug 2026
+ 08:18:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] selftests: cgroup: simplify cpuset subtree permissions
- test
-To: Shaojie Sun <sunshaojie@kylinos.cn>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260819103152.767771-1-sunshaojie@kylinos.cn>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260819103152.767771-1-sunshaojie@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+References: <20260811203203.3456029-1-shakeel.butt@linux.dev>
+ <20260811203203.3456029-7-shakeel.butt@linux.dev> <an1_z6V5l7CNaCSb@tiehlicka>
+In-Reply-To: <an1_z6V5l7CNaCSb@tiehlicka>
+From: "T.J. Mercier" <tjmercier@google.com>
+Date: Wed, 19 Aug 2026 08:17:48 -0700
+X-Gm-Features: AcwNN1Ulg1tGco4bBKbK_ME6II0uAPH6pfpMeFoRn8Pigcnf9zHc2CjVhJLZ3VQ
+Message-ID: <CABdmKX2EXGEX3wNnsKa15hzZ1-VXWVHDJOwhWbD+co31iZoHZg@mail.gmail.com>
+Subject: Re: [PATCH 6/9] memcg: remove lru_gen_soft_reclaim()
+To: Michal Hocko <mhocko@suse.com>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, Kairui Song <kasong@tencent.com>, Qi Zheng <qi.zheng@linux.dev>, 
+	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 8/19/26 6:31 AM, Shaojie Sun wrote:
-> Simplify test_cpuset_perms_subtree by removing unnecessary chown of
-> cgroup.procs files. The test verifies implicit migration triggered by
-> enabling/disabling the cpuset controller via cgroup.subtree_control.
+On Thu, Aug 13, 2026 at 1:27=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrot=
+e:
 >
-> Implicit migration is handled internally by the kernel through
-> cgroup_update_dfl_csses() when subtree_control is modified, and does
-> not require cgroup.procs write permission. Only cgroup.subtree_control
-> permission is needed to trigger the controller state change.
+> On Tue 11-08-26 13:32:00, Shakeel Butt wrote:
+> > The soft limit rbtree was the only caller. Dropping it leaves
+> > MEMCG_LRU_HEAD unreachable, since nothing else ever rotates a memcg wit=
+h
+> > that op, so remove the op too and update the memcg LRU comment.
+> >
+> > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 >
-> Remove the allocation and cleanup of parent_procs and child_procs
-> variables that are no longer needed.
->
-> Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
-> ---
->   tools/testing/selftests/cgroup/test_cpuset.c | 16 +++-------------
->   1 file changed, 3 insertions(+), 13 deletions(-)
->
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset.c b/tools/testing/selftests/cgroup/test_cpuset.c
-> index c5cf8b56ceb8..b323addcc519 100644
-> --- a/tools/testing/selftests/cgroup/test_cpuset.c
-> +++ b/tools/testing/selftests/cgroup/test_cpuset.c
-> @@ -167,7 +167,7 @@ static int test_cpuset_perms_object_deny(const char *root)
->   static int test_cpuset_perms_subtree(const char *root)
->   {
->   	char *parent = NULL, *child = NULL;
-> -	char *parent_procs = NULL, *parent_subctl = NULL, *child_procs = NULL;
-> +	char *parent_subctl = NULL;
->   	const uid_t test_euid = TEST_UID;
->   	int object_pid = 0;
->   	int ret = KSFT_FAIL;
-> @@ -175,9 +175,6 @@ static int test_cpuset_perms_subtree(const char *root)
->   	parent = cg_name(root, "cpuset_test_0");
->   	if (!parent)
->   		goto cleanup;
-> -	parent_procs = cg_name(parent, "cgroup.procs");
-> -	if (!parent_procs)
-> -		goto cleanup;
->   	parent_subctl = cg_name(parent, "cgroup.subtree_control");
->   	if (!parent_subctl)
->   		goto cleanup;
-> @@ -187,16 +184,11 @@ static int test_cpuset_perms_subtree(const char *root)
->   	child = cg_name(parent, "cpuset_test_1");
->   	if (!child)
->   		goto cleanup;
-> -	child_procs = cg_name(child, "cgroup.procs");
-> -	if (!child_procs)
-> -		goto cleanup;
->   	if (cg_create(child))
->   		goto cleanup;
->   
-> -	/* Enable permissions as in a delegated subtree */
-> -	if (chown(parent_procs, test_euid, -1) ||
-> -	    chown(parent_subctl, test_euid, -1) ||
-> -	    chown(child_procs, test_euid, -1))
-> +	/* Grant minimal subtree_control permission to trigger implicit migration */
-> +	if (chown(parent_subctl, test_euid, -1))
->   		goto cleanup;
->   
->   	/* Put a privileged child in the subtree and modify controller state
-> @@ -221,12 +213,10 @@ static int test_cpuset_perms_subtree(const char *root)
->   	}
->   
->   	cg_destroy(child);
-> -	free(child_procs);
->   	free(child);
->   
->   	cg_destroy(parent);
->   	free(parent_subctl);
-> -	free(parent_procs);
->   	free(parent);
->   
->   	return ret;
-Reviewed-by: Waiman Long <longman@redhat.com>
+> I am not deeply familiar with MGLRU to give my ack but from a quick look
+> this looks right.
 
+This looks good to me.
+
+Reviewed-by: T.J. Mercier <tjmercier@google.com>
+
+>
+> > ---
+> >  include/linux/mmzone.h | 30 +++++++++++-------------------
+> >  mm/vmscan.c            | 16 ++--------------
+> >  2 files changed, 13 insertions(+), 33 deletions(-)
+> >
+> > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> > index 94f9c3ff5416..01fabd0ece0d 100644
+> > --- a/include/linux/mmzone.h
+> > +++ b/include/linux/mmzone.h
+> > @@ -635,35 +635,32 @@ struct lru_gen_mm_walk {
+> >   * For each node, memcgs are divided into two generations: the old and=
+ the
+> >   * young. For each generation, memcgs are randomly sharded into multip=
+le bins
+> >   * to improve scalability. For each bin, the hlist_nulls is virtually =
+divided
+> > - * into three segments: the head, the tail and the default.
+> > + * into two segments: the tail and the default.
+> >   *
+> >   * An onlining memcg is added to the tail of a random bin in the old g=
+eneration.
+> >   * The eviction starts at the head of a random bin in the old generati=
+on. The
+> >   * per-node memcg generation counter, whose reminder (mod MEMCG_NR_GEN=
+S) indexes
+> >   * the old generation, is incremented when all its bins become empty.
+> >   *
+> > - * There are four operations:
+> > - * 1. MEMCG_LRU_HEAD, which moves a memcg to the head of a random bin =
+in its
+> > - *    current generation (old or young) and updates its "seg" to "head=
+";
+> > - * 2. MEMCG_LRU_TAIL, which moves a memcg to the tail of a random bin =
+in its
+> > + * There are three operations:
+> > + * 1. MEMCG_LRU_TAIL, which moves a memcg to the tail of a random bin =
+in its
+> >   *    current generation (old or young) and updates its "seg" to "tail=
+";
+> > - * 3. MEMCG_LRU_OLD, which moves a memcg to the head of a random bin i=
+n the old
+> > + * 2. MEMCG_LRU_OLD, which moves a memcg to the head of a random bin i=
+n the old
+> >   *    generation, updates its "gen" to "old" and resets its "seg" to "=
+default";
+> > - * 4. MEMCG_LRU_YOUNG, which moves a memcg to the tail of a random bin=
+ in the
+> > + * 3. MEMCG_LRU_YOUNG, which moves a memcg to the tail of a random bin=
+ in the
+> >   *    young generation, updates its "gen" to "young" and resets its "s=
+eg" to
+> >   *    "default".
+> >   *
+> >   * The events that trigger the above operations are:
+> > - * 1. Exceeding the soft limit, which triggers MEMCG_LRU_HEAD;
+> > - * 2. The first attempt to reclaim a memcg below low, which triggers
+> > + * 1. The first attempt to reclaim a memcg below low, which triggers
+> >   *    MEMCG_LRU_TAIL;
+> > - * 3. The first attempt to reclaim a memcg offlined or below reclaimab=
+le size
+> > + * 2. The first attempt to reclaim a memcg offlined or below reclaimab=
+le size
+> >   *    threshold, which triggers MEMCG_LRU_TAIL;
+> > - * 4. The second attempt to reclaim a memcg offlined or below reclaima=
+ble size
+> > + * 3. The second attempt to reclaim a memcg offlined or below reclaima=
+ble size
+> >   *    threshold, which triggers MEMCG_LRU_YOUNG;
+> > - * 5. Attempting to reclaim a memcg below min, which triggers MEMCG_LR=
+U_YOUNG;
+> > - * 6. Finishing the aging on the eviction path, which triggers MEMCG_L=
+RU_YOUNG;
+> > - * 7. Offlining a memcg, which triggers MEMCG_LRU_OLD.
+> > + * 4. Attempting to reclaim a memcg below min, which triggers MEMCG_LR=
+U_YOUNG;
+> > + * 5. Finishing the aging on the eviction path, which triggers MEMCG_L=
+RU_YOUNG;
+> > + * 6. Offlining a memcg, which triggers MEMCG_LRU_OLD.
+> >   *
+> >   * Notes:
+> >   * 1. Memcg LRU only applies to global reclaim, and the round-robin in=
+crementing
+> > @@ -696,7 +693,6 @@ void lru_gen_exit_memcg(struct mem_cgroup *memcg);
+> >  void lru_gen_online_memcg(struct mem_cgroup *memcg);
+> >  void lru_gen_offline_memcg(struct mem_cgroup *memcg);
+> >  void lru_gen_release_memcg(struct mem_cgroup *memcg);
+> > -void lru_gen_soft_reclaim(struct mem_cgroup *memcg, int nid);
+> >  void max_lru_gen_memcg(struct mem_cgroup *memcg, int nid);
+> >  bool recheck_lru_gen_max_memcg(struct mem_cgroup *memcg, int nid);
+> >  void lru_gen_reparent_memcg(struct mem_cgroup *memcg, struct mem_cgrou=
+p *parent, int nid);
+> > @@ -737,10 +733,6 @@ static inline void lru_gen_release_memcg(struct me=
+m_cgroup *memcg)
+> >  {
+> >  }
+> >
+> > -static inline void lru_gen_soft_reclaim(struct mem_cgroup *memcg, int =
+nid)
+> > -{
+> > -}
+> > -
+> >  static inline void max_lru_gen_memcg(struct mem_cgroup *memcg, int nid=
+)
+> >  {
+> >  }
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index 790b50c78a2e..71244cf33d59 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -4373,7 +4373,6 @@ bool lru_gen_look_around(struct page_vma_mapped_w=
+alk *pvmw, unsigned int nr)
+> >  /* see the comment on MEMCG_NR_GENS */
+> >  enum {
+> >       MEMCG_LRU_NOP,
+> > -     MEMCG_LRU_HEAD,
+> >       MEMCG_LRU_TAIL,
+> >       MEMCG_LRU_OLD,
+> >       MEMCG_LRU_YOUNG,
+> > @@ -4395,9 +4394,7 @@ static void lru_gen_rotate_memcg(struct lruvec *l=
+ruvec, int op)
+> >       new =3D old =3D lruvec->lrugen.gen;
+> >
+> >       /* see the comment on MEMCG_NR_GENS */
+> > -     if (op =3D=3D MEMCG_LRU_HEAD)
+> > -             seg =3D MEMCG_LRU_HEAD;
+> > -     else if (op =3D=3D MEMCG_LRU_TAIL)
+> > +     if (op =3D=3D MEMCG_LRU_TAIL)
+> >               seg =3D MEMCG_LRU_TAIL;
+> >       else if (op =3D=3D MEMCG_LRU_OLD)
+> >               new =3D get_memcg_gen(pgdat->memcg_lru.seq);
+> > @@ -4411,7 +4408,7 @@ static void lru_gen_rotate_memcg(struct lruvec *l=
+ruvec, int op)
+> >
+> >       hlist_nulls_del_rcu(&lruvec->lrugen.list);
+> >
+> > -     if (op =3D=3D MEMCG_LRU_HEAD || op =3D=3D MEMCG_LRU_OLD)
+> > +     if (op =3D=3D MEMCG_LRU_OLD)
+> >               hlist_nulls_add_head_rcu(&lruvec->lrugen.list, &pgdat->me=
+mcg_lru.fifo[new][bin]);
+> >       else
+> >               hlist_nulls_add_tail_rcu(&lruvec->lrugen.list, &pgdat->me=
+mcg_lru.fifo[new][bin]);
+> > @@ -4489,15 +4486,6 @@ void lru_gen_release_memcg(struct mem_cgroup *me=
+mcg)
+> >       }
+> >  }
+> >
+> > -void lru_gen_soft_reclaim(struct mem_cgroup *memcg, int nid)
+> > -{
+> > -     struct lruvec *lruvec =3D get_lruvec(memcg, nid);
+> > -
+> > -     /* see the comment on MEMCG_NR_GENS */
+> > -     if (READ_ONCE(lruvec->lrugen.seg) !=3D MEMCG_LRU_HEAD)
+> > -             lru_gen_rotate_memcg(lruvec, MEMCG_LRU_HEAD);
+> > -}
+> > -
+> >  bool recheck_lru_gen_max_memcg(struct mem_cgroup *memcg, int nid)
+> >  {
+> >       struct lruvec *lruvec =3D get_lruvec(memcg, nid);
+> > --
+> > 2.53.0-Meta
+>
+> --
+> Michal Hocko
+> SUSE Labs
+>
