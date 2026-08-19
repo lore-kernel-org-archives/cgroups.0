@@ -1,85 +1,84 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52E6139A7E0
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 13:21:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BDE4396B9D
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 13:22:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787145673; cv=none; b=o87Y0M9SN1q8kk0QsCO9BD7DChf5EJxJi5yaUjuh4YBaFXeszH0Mfmpgr3Jm7L1XT40Hoyo3tXJYHsokl6eFigIWwVZ9wlKfPY9w5G0UsRF60g3GP1qVESTutGxFpWMauOhszqaR9dOSBEukYOF9IeAeOema3c+vJ6hnBuFscww=
+	t=1787145740; cv=none; b=WQ/2y+MnGhlLuuZOsJac4EA5Q/4yAj7msT9wL8D2Salzb2yxyE+UBWVf3iBxIK3nqno/D9oca06xDY+VHfSInKeBf5G3ovkncEwhsFs0ZzXfWzGuH8ZOKLFHlH1GPcEaAuDTgsuAYhpM87Sp3ay1EYff7MpT8M6yq4QPJwZS+i8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787145673; c=relaxed/simple;
-	bh=Jim1wAXD4iHFPChMBC10PwuxmAUKP76/FI9HT614/wU=;
+	s=arc-20240116; t=1787145740; c=relaxed/simple;
+	bh=OqXWEupomjk/a4YDz57WaB65dru+lxF67oQz5/x4HUY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y930IWNED+JtHHexWO2fvPA+CoTCf9DSTRt7i5HLsX8z2GVszd80m/+dj+zdrgI/Rijapk0+XvUKHPaYPd+4GzFp6FxDjhrHeQtRuWkPlOXqGDihNzMREpn3iPD8+/oFZfsMsOuYWsJpmEj8d27iHZYscBC8sOe1skIGG8kBjp0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca; spf=pass smtp.mailfrom=metarealtyinc.ca; dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b=e99h6wuq; arc=none smtp.client-ip=209.85.160.176
+	 MIME-Version; b=dfiPiJfUh1JjUNq4T56S0rN/vDSxL7/b/4GqSJSFlrLMsFkqeGGC6UDb3msM6YYSMEca0GXcN7fBOcBmTZiiELEAjERrcgZir6gPGtX8yYZtnTUD6AfCYhWeEsgMmQ/PUpkgE7scuugF03VTeFMe6n/t8OitUJnLafiRLV94dz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca; spf=pass smtp.mailfrom=metarealtyinc.ca; dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b=ldKLBdRC; arc=none smtp.client-ip=209.85.160.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=metarealtyinc.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b="e99h6wuq"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-52d7ef16f91so4935141cf.3
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 06:21:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b="ldKLBdRC"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-52d8748cde5so5041341cf.0
+        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 06:22:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=metarealtyinc-ca.20251104.gappssmtp.com; s=20251104; t=1787145668; x=1787750468; darn=vger.kernel.org;
+        d=metarealtyinc-ca.20251104.gappssmtp.com; s=20251104; t=1787145731; x=1787750531; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=rV8o38P8L7ym1wIEKuZA4cI3zO+vMhOv6I+Do+Xml2k=;
-        b=e99h6wuq4viGZ6fgsyggXlRjuRcZJU6aa15/MVo4YUnMKnptyE64d0zzFmNxERw8P1
-         hqZEWiMKnfHMDUXbztuw8OI/o3zDWXIgCTTULWfXLwqrrIKnd8biDuor2KOS/F8R4cGm
-         CmYXSOqohsQi4fwYvlJE7oxLeZCq20riM4GAdsp2b0q3Vg0hNMlitteobk9Q0ddn4xf+
-         eNGYCW/RbGcubjTPMiErgRzkR/p3Zt0A9VrOcQKS2uY+h04cBFWjPoyGUz0ScnpP6f1r
-         RyRmQ4JcHFxu2ufFceH7iMyEbigWHIDRU15Pcgidhe9uqyVaIvKn/yFwKDxAK9IGMeYD
-         ENjg==
+        bh=S80AkclMqzdL0HTjNa/cN/+fUF8iAZr9z93NDZp/QlY=;
+        b=ldKLBdRCHcEJ8siLgaAVWDNlCTbg8QspQAiNSdMdX/Yr6mOaT/GIEk02qrQ3FCW2q8
+         sbnzC5gJz2GhiIKkc34vdupp9uiMx/T/0U8tdx872EY7BAUHWhKBTP/qQH1zhukqyEkm
+         YBCzuqCPv4pDy6MzC+i0uICs0GdCL0Bo6FjocNPR/HNnIAFExlM32muTpjX+o3muFDRw
+         eo7y8b94eSHVYyEITLiux6tozl9JAnQjTmSlugbvon9ei0d3cI/fNNCH+k6xeTqw+trt
+         7EYZFsnHTpx1NolOMBBcib3kO/SN81txbhyULEoXB09Pe9Fbqnzyt/SQRYE7YJr6OvZn
+         nZxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787145668; x=1787750468;
+        d=1e100.net; s=20251104; t=1787145731; x=1787750531;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=rV8o38P8L7ym1wIEKuZA4cI3zO+vMhOv6I+Do+Xml2k=;
-        b=sjGZ0SHFtPxIW2RhsVsXGRQkJE6UAlIiMNHoO6y+3giaTY07X1mxY9rzxUb6QFPiT6
-         gAaVO0bapzqitPCIirAiuoJrKEgJ6usGh6MMfAaLlyUZz6dVDLlUOTFaUHwkTjJ8vwmK
-         qCuNneFPjHvR9jGjBRxvtmdYa1Z9FVTlk57nItK+noMN9zbyIKAnj7yh1c10mnXeIaw0
-         J9LP5ZyiSUNatafKP0sdxU5n9T2O7ycHAJfnjK1SOt5ENKpSvLTba7r0mOQhssePFSLR
-         QLselO3rbhGdDRGjbBq7NjapdZZY4/RBtfjVt7dMMdnXs8qZG9ZKv3eqt37TKE9fHFbI
-         rW9g==
-X-Forwarded-Encrypted: i=1; AHgh+RpSa0b7e2Bw4DnUmZ5NPzxspw/oy97SY+OLVOOFBCepP0XEVcNAzv8NGwUc5PvS+lDrQtzkeM//@vger.kernel.org
-X-Gm-Message-State: AFuF++npj/Ohllocv1grnE7Fby8JqS9uA8cWvKP5si+l5c3vWCe8ipy4
-	uSIBgvB32gyHyLbNkqFeKPAkeyUv62D40o/4UuZNZWRlqswmkgFIiSnALwUJVEUvQwk=
-X-Gm-Gg: AR+sD13JJ5Comnl0UT4wlcvC+m+ABDEgQuCMk0zzmi8btbtRHP0Pa/jsmnReY6VK0+Y
-	7VsvqeQE0VhA8Shrn1MQ3V80QnakMYRQHLBlhc3ceSBD3E/BANCqtMMlhAbI6PVI6G0gW1FcWYQ
-	qjDoJUaPVliaXyd1n+UFZBpK2Y/VK1zjZ1DW+bf4f1Vk6+Nnxvb9SjyXyRWLCVYmcqbXKDDOT+Y
-	b1Wbi2PSMNEvixOK1mxcnX8B0Z/b1cIXvCOh/GVnk30o+/XJ3TCltj9EFU5yGbHFCchVstC9E5y
-	A9/Klxd1wpLU4tBwrUnAybgOWQ89kibaAjAfjpgj55VCURsRmk9KWDPPAFrLPdT1L1g9oQRDFfl
-	KupsX9fOCve0ZArOaVVIfhhplTyVHPBrl4XHFeSLOMsC0ZiaCyc873Zdb2yAWjB3MtDm37ADj9Z
-	WoQA4QYoTS/oXPhqshi59DFAc99CVOxnlq9QMnB/gBW7i2R5A6hPfBF0Q23O7aCI42siDa2NaPg
-	w1KLRtbuycL7dxpv5hCx96UCpEmMcfVvsqBu3NHPmJ9St6Wrfio6vEtjKahNYSZHFvVl2yl3gGj
-	YkrEj0MxizuCSQUxypw7thmQC96SbZahYugzmUDWZvs=
-X-Received: by 2002:a05:6214:d4d:b0:8e7:d752:ab34 with SMTP id 6a1803df08f44-90c5e6fdb7dmr43203476d6.12.1787145668202;
-        Wed, 19 Aug 2026 06:21:08 -0700 (PDT)
+        bh=S80AkclMqzdL0HTjNa/cN/+fUF8iAZr9z93NDZp/QlY=;
+        b=JsNyWizbr268pmqZZdqoJL+q8DqNLUI6z3UT9qMO3gscX/5ZXOmbZN7qdw1szfDToM
+         QlQJULnLPFAs6xkbdgCeFdDmtAJWM+IysPwrS+75y5FIJb+vIWx6FjFlNT/O/jn5inUB
+         V/Ji4SKXbLb4pe1UYl7qZu3mre0cOg5V2BnjNrnzZ1NVibHg7q3zFi/doSL12TguX336
+         uRXFWemF8X9dOy94G6b+PXEZxIYbw8FwY2VZZMCiP6G40UdUR8t42Ore+n59SzDrSvCR
+         Y8NdSR8SvrjCTSKdmqQAKvMWdmmSjhb3C2GErG9TYymhouJ43dCxggDbkr9+5gZxo1OJ
+         sU6Q==
+X-Forwarded-Encrypted: i=1; AHgh+RorM/WSwniSTQIZ8ey5fs8XaHOb2//+zHpjmXCmf5w3iogf66VjVYP5hkeGSS/V6l+L/ZTr0inB@vger.kernel.org
+X-Gm-Message-State: AOJu0YxI8HH4MZjzzWn21MMI8xI18R0iCJHzDnF66SpPrIM6BoI8YcXA
+	N6TWesyRub/Du2oL7DMznoX3G/0tuSDr8p2vWprBXHWZTEsmp2FBeJbz3LHudKvzzMg=
+X-Gm-Gg: AR+sD13IGBa529riVouRQ61r+2UjtAXlSbFgSQokQe94xT9AMhSgMM9uzRVyrSvoCjb
+	iyYVY8SsrVo8Kx0ydGUE1jlSviAK2xqGZsDOE4hRBdixtrvLKDlzpMNfGj0aSl5R6rpY4awpW3t
+	MAFnt7jH/eUtMwyz1haCvbmlukpoxXgcydCGGQfO7wxDrpDAeyU65eRAqigII78IXwCHgZ+qlw3
+	L6Ub0Mraza2q8njTwr472J3eZwUZdu8UZOXbC8VmonmGlo08W0uy0twJw83NWzaSZJa4fgsto1p
+	N+908MD+ocQXZ/H1+HFDxUQLaT7YlpQ4dZreBMlvkw2tBFpHZrsLpUufwiYr2FowR8xa7TQyncb
+	VbX2wNns7/7gTepRJoQ3psuIWH5TODHWLJrEmYMPzl7viV4hG13CWXfo/5WtEVmH2o+3wLS/bV4
+	eqhZ8pLaUyvEc/put3/MKEs5hcGNLC+B+aTflN9lsaXe66IA8n1waWEQ5Yx/RCQbFKDEfFIGuXY
+	zDL/igkq8sjRymYDMU3A09L05CXzEt/sHQdQBZ6Pp17hIvXxloPzcfJhN1XhQs9zvvo0lmra5fA
+	7mKTxQuygS9nrO/2rAEFpG+nRx5Vs+9JHf7KlQ0632s=
+X-Received: by 2002:ac8:6909:0:b0:52d:8256:ac33 with SMTP id d75a77b69052e-52dd5c8b620mr41901041cf.28.1787145731031;
+        Wed, 19 Aug 2026 06:22:11 -0700 (PDT)
 Received: from jake-laptop ([2607:fea8:e5:500::95b9])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90c5eec1f31sm14392726d6.13.2026.08.19.06.21.06
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52dd859cebasm10571201cf.11.2026.08.19.06.22.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 06:21:07 -0700 (PDT)
+        Wed, 19 Aug 2026 06:22:10 -0700 (PDT)
 From: Jake Steinman <j@metarealtyinc.ca>
-To: Peter Zijlstra <peterz@infradead.org>,
+To: K Prateek Nayak <kprateek.nayak@amd.com>
+Cc: Peter Zijlstra <peterz@infradead.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>
-Cc: Jake Steinman <j@metarealtyinc.ca>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
 	Dietmar Eggemann <dietmar.eggemann@arm.com>,
 	Steven Rostedt <rostedt@goodmis.org>,
 	Ben Segall <bsegall@google.com>,
 	Mel Gorman <mgorman@suse.de>,
 	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
 	Waiman Long <longman@redhat.com>,
 	Tejun Heo <tj@kernel.org>,
 	Guopeng Zhang <guopeng.zhang@linux.dev>,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org
-Subject: [PATCH] sched/fair: floor tg_cpus() at 1
-Date: Wed, 19 Aug 2026 09:20:59 -0400
-Message-ID: <20260819132104.2148918-1-j@metarealtyinc.ca>
+Subject: Re: [BUG] sched/fair: divide error in __calc_prop_weight() from the enqueue path (flat-hierarchy series)
+Date: Wed, 19 Aug 2026 09:22:07 -0400
+Message-ID: <20260819132207.2149185-1-j@metarealtyinc.ca>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260818231333.1441757-1-j@metarealtyinc.ca>
 References: <20260818231333.1441757-1-j@metarealtyinc.ca>
@@ -91,77 +90,64 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-tg_cpus() returns cpuset_num_cpus() unfloored, while its sibling
-tg_tasks() already floors its result at 1. calc_concur_shares() feeds
+Hi Prateek,
 
-	nr = min(tg_tasks(tg), tg_cpus(tg))
+> Was your laptop suspended at that point?
 
-into __calc_smp_shares() as shares_max, so an nr of 0 makes shares_max 0.
-__calc_smp_shares() ends with
+No -- awake, but it had been through a suspend/resume cycle earlier in
+the same boot. From the journal of the boot that died:
 
-	return clamp_t(long, shares, MIN_SHARES, shares_max);
+  15:32:43  Lid closed
+  15:32:44  PM: suspend entry (s2idle)
+  16:25:55  Lid opened
+  16:25:55  PM: suspend exit
+  16:42:54  Lid closed
+  20:17:49  Lid opened
+  20:31:59  Lid closed
+  21:10:16  <last log line -- crash>
 
-and clamp() yields hi when hi < lo, so a zero shares_max silently defeats
-the MIN_SHARES floor and returns 0 -- the exact case the comment above
-that line says must return MIN_SHARES instead of 0.
+So the s2idle cycle ended 4h44m before the fault. At 21:10 the lid had
+been shut for ~38 minutes, but the machine was on AC with
+LidAction=TurnOffScreen, so it was awake with the display off, not
+suspended -- the wallpaper daemon was still rendering once a minute
+right up to the final log line, and the fork that tripped the divide
+happened then.
 
-That leaves a group sched_entity with load.weight == 0, and
-__calc_prop_weight() then divides by cfs_rq->load.weight:
+Also relevant to the freeze_secondary_cpus() angle: that boot logged
+zero CPU hotplug events. No smpboot lines, no "Disabling non-boot CPUs".
+Caveat: s2idle's freeze path may not log at my loglevel, so I would not
+read that as proof it never happened -- only that nothing surfaced.
 
-	weight *= se->load.weight;
-	if (parent_entity(se))
-		weight /= cfs_rq->load.weight;
+> I think your current instrumentation from "Proposed guard" is good
+> enough to tell where the problem is if it reproduces. Are you running
+> with it on your setup currently?
 
-which takes a #DE inside enqueue_task_fair():
+Yes. All three hunks have been in the running kernel since 2026-08-18,
+now on 7.2.0. Current status:
 
-  Oops: divide error: 0000 [#1] SMP NOPTI
-  RIP: 0010:enqueue_task_fair+0x422/0x950
-  Call Trace:
-   <TASK>
-   enqueue_task+0x8e/0x250
-   wake_up_new_task+0x148/0x2e0
-   kernel_clone+0x1c6/0x390
-   __x64_sys_clone+0xcc/0x100
-   do_syscall_64+0x147/0x3c0
-   </TASK>
+  7.2.0-1, 17.3 h uptime with the guards in
+  "sched: tg_cpus() == 0, empty cpuset"        -- 0 hits
+  "sched: cfs_rq->load.weight == 0"            -- 0 hits
 
-This is not survivable in practice: with panic_on_oops=0 the kernel took
-the first #DE and continued for 476 ms, then faulted at the same RIP with
-identical register state and an identical RSP, because the oops recovery
-path (kill task -> schedule()) re-enters the same enqueue while the rq
-lock is held mid-enqueue. The second fault escalates to a panic.
+So nothing has reproduced yet. Given the original took 11.7 h of mostly
+idle uptime to hit once and has not recurred in the days since, I read
+17 h of silence as "not yet", not as evidence against the cpuset route.
+I will report either way -- and if the tg_cpus() WARN is the one that
+fires, that settles the mechanism on the spot.
 
-Flooring tg_cpus() at 1 makes it symmetric with tg_tasks() and keeps
-shares_max >= tg_shares, so the MIN_SHARES floor in __calc_smp_shares()
-can no longer be bypassed.
+I have sent the tg_cpus() floor as a separate patch per Peter's request.
+I deliberately kept it to that one hunk: with tg_cpus() floored and
+tg_tasks() already flooring at 1, nr >= 1, so shares_max >= tg_shares
+and the inverted clamp in __calc_smp_shares() becomes unreachable. The
+other two hunks are belt-and-braces and I did not want to bundle them
+into something Peter offered to take on symmetry grounds.
 
-Note this only removes the division hazard. Whether cpuset_num_cpus() can
-legitimately return 0 -- via the cpu hotplug/suspend path where a v2
-cpuset may transiently become empty, or via an RCU race -- is a separate
-question still open on the report thread.
+@Guopeng: thanks, the isolcpus=domain reproducer is interesting. I am
+not using isolcpus here and have no domain isolation configured, so my
+case is not that exact path, but if you want a second machine to test
+either of your series on I am happy to run them -- this box reproduces
+suspend/resume cycles all day and has 16 CPUs with a P/E/LP-E split,
+which may be a useful shape for hotplug edge cases.
 
-Link: https://lore.kernel.org/all/20260818231333.1441757-1-j@metarealtyinc.ca/
-Signed-off-by: Jake Steinman <j@metarealtyinc.ca>
----
- kernel/sched/fair.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -4895,7 +4895,12 @@ static int tg_cpus(struct task_group *tg)
- 			nr = cpuset_num_cpus(cgrp);
- 	}
-
--	return nr;
-+	/*
-+	 * An empty cpuset would propagate a 0 shares_max into
-+	 * __calc_smp_shares(), where clamp() yields hi when hi < lo and so
-+	 * defeats the MIN_SHARES floor. Match tg_tasks(), which floors at 1.
-+	 */
-+	return max(nr, 1);
- }
-
- static inline int tg_tasks(struct task_group *tg)
---
-2.55.0
+Thanks,
+Jake
