@@ -1,95 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F2AE32A3FE;
-	Wed, 19 Aug 2026 20:56:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DBCF374A13
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 21:24:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787172961; cv=none; b=VEWht/NHDOqLDQ4Dv2UDrExOeP5TPvJxtaxkdfcq/UWJkncCRa+DSNkPvH9T8XyutXwxbijLAJQqpthx9OQMu9oG1vnU1c26Ee4y9AECbBjETK3+JibdLp7Mj/ze4kjYYzUL5DKWyARWAHslJ+pdgjLybOreeE1vV9XCKBRVdA0=
+	t=1787174694; cv=none; b=NDfuHlB+oVQcdySfclAdUzpJCX8Gjh0w7JyD3NmPssGImqLODwRIv5Gk+POIqb1V3p4jSac+tvT86a643X4YuKed6IyeJIPDkfqiU7RZH2i2Ua5LGKoL55pEddofDB52l0FR562UCGuOCEmPNJJ62Tbqs700Z8gZ7V/TZeatgDE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787172961; c=relaxed/simple;
-	bh=3fMlJ5q4zJl8LSi+24VIiJMReeJUbFu+/qPmIwhhfZY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ezIyjB09s4ThRbl1KV7umWPvq4ximhSRC96UXUIP4WJmtGzTg7w/lW66Ivs4zJRicK009RXX/RJfssNuvP0LztySRI3cFQY/OlT68928YxrYUWr4H2qaCdxdmG5VZJlBB8OPYWyLgF+6bQsnvioaB1uK/lirOiQ/Qj5SkIfRwR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WsqfidD1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787174694; c=relaxed/simple;
+	bh=nRWXUpoK1riuDr09d1SLNDyGfy5p32SSzQg+dsb0d/8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=rkvASlgJXa4JYVTchGPXk+G+pz+Kxp8UcE3vFb6Ir+4KQ3ERiZ1nNZZHXQyVJSU6Pr/2uFaCUadm4HXZ6WEsGo6wpzHg91hIRamy+BcCPKYT49S6GaPIRhLK/JazypRXGm+DV3k60oySHlctTk/nPFPDapNQ4H/KNW5zWpv402E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUI3IiA/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WsqfidD1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDCF01F000E9;
-	Wed, 19 Aug 2026 20:55:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUI3IiA/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5802B1F00A3F
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 21:24:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787172959;
-	bh=VeFgLXE0eOoS7AHpMF3PhMjzRNqkuytehVXLwAv1H7M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WsqfidD12kj8bghrIGixK9B+HlQujU9bxPPYkzi8ejdZ3OroUueKiyhya4LuzyL90
-	 IF3lujhfR8qL4zqTmSy3td+xzNRQO+DMKGOlPmAqP0gXXP0V7gPsv/uG1lrDMMGfJb
-	 TwzKQaXcqNQincreKdL0Bq5ECcUIVTpgak/5p2PkEAklBHsGaVbF7MpZvq1bc5nqzO
-	 taYY1PNe/e5/Dto/QMBw2CkQtCrDGyCMlkbvPeUA5uxtMmcUCOlcyScsDeLYLi9SRV
-	 ZVRpWuY37efAaXlSaQFhqsOZwgu25Au33e7IpQ1blcTnDHGrW4xd4sh6WgYgU9/NG7
-	 DVZcOQ4aJHPbg==
-Date: Wed, 19 Aug 2026 10:55:59 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Ziyang Men <ziyang.meme@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Shuah Khan <shuah@kernel.org>, kernel-team@meta.com,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Ben Segall <bsegall@google.com>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
-	Yonghong Song <yonghong.song@linux.dev>,
-	Jiri Olsa <jolsa@kernel.org>,
-	Emil Tsalapatis <emil@etsalapatis.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	JP Kobryn <inwardvessel@gmail.com>, bpf@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] cgroup: add BPF kfuncs to read a cpu cgroup's
- stats
-Message-ID: <aoYYX60TCD6cd601@slm.duckdns.org>
-References: <20260818002450.3071325-1-ziyang.meme@gmail.com>
- <20260818002450.3071325-2-ziyang.meme@gmail.com>
- <aoSTaFwsVEoNW01D@slm.duckdns.org>
- <aoTgVOTxsEbFXTp2@devvm16600.scu0.facebook.com>
- <aoTg7ybddqzoZbz7@slm.duckdns.org>
- <aoTx1eaNNJ+xrUq1@devvm16600.scu0.facebook.com>
+	s=k20260515; t=1787174693;
+	bh=zNqmDH6Jq1rIZyagW0x3hDwfycUXlIykI4fUBBHVlfw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=SUI3IiA/1vevgZp9vqFX8HwwBHOS2iwj0lvrt/dLO/QHDWVPR7WoxRa3vauhhymbt
+	 FmZlir2JsgFBd0JtVWMWcrPR2o3EI35HCIZWJJrOHitsWT2xnLydWu3POjklIYSRLP
+	 LREGAlvahABDbjFU6PZqVPco+hD6HQhu7ULgtECMbNE0sCwYLk8rsKXuICPGQ+GJHS
+	 S4E1KE2b3mSUCEgFoIAqrZcOPogRMgtlqVL0uhpabsbDRsvd2bbjGPFT0WKAD8QlyC
+	 pzXq7siuDG91CfPYh1ttNNgq687VMtRHU5JOBg5ULNtaoUCHVHjRZcDXpT12E+wRkk
+	 ZHREQEj6jG6AQ==
+Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-92e512a9a6bso87346785a.2
+        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 14:24:53 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RovpsaPSIcOCwrXHx1LvQJSC2OLDeDxaRavjFOnLi4EXOuUn2Y3hmTHV1B//i+TQG6rCA9Yek2I@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5SfcNK8gQk9KVbjqfaWhl9SxAoUHdAcjkwdZVU9Ej0yIzIooR
+	tiYR0vssM3A3FTOsF/fZrk+sR5O9k1+hfHCDOQVPbGEPhUqp7uqeIgNwXgcoR1SCyYu0MhxUey+
+	7eG3rvtcSwogMA4woo45MNmtXslVEY3Y=
+X-Received: by 2002:a05:620a:1a02:b0:936:eb7f:d2c7 with SMTP id
+ af79cd13be357-9371e309725mr741046285a.27.1787174692543; Wed, 19 Aug 2026
+ 14:24:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aoTx1eaNNJ+xrUq1@devvm16600.scu0.facebook.com>
+References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com> <20260818-mglru-flags-cleanup-v1-5-8dbbdac0d28c@tencent.com>
+In-Reply-To: <20260818-mglru-flags-cleanup-v1-5-8dbbdac0d28c@tencent.com>
+From: Barry Song <baohua@kernel.org>
+Date: Thu, 20 Aug 2026 05:24:41 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4zC7-8OgMEep58TEt0gfcShUSsKeYBGUW5BGEk8U+m8Jw@mail.gmail.com>
+X-Gm-Features: AcwNN1UbkL73D6-D0dw7N0OHp_q_gWFKVpfZWkoMrTN9W6bJic7KHpRg9Xi_EFw
+Message-ID: <CAGsJ_4zC7-8OgMEep58TEt0gfcShUSsKeYBGUW5BGEk8U+m8Jw@mail.gmail.com>
+Subject: Re: [PATCH 5/7] mm/mglru: use explicit tier range in read_ctrl_pos()
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+	Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Kairui Song <ryncsn@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On Tue, Aug 18, 2026 at 1:38=E2=80=AFPM Kairui Song via B4 Relay
+<devnull+kasong.tencent.com@kernel.org> wrote:
+>
+> From: Kairui Song <kasong@tencent.com>
+>
+> read_ctrl_pos() encodes the tier range in a single "tier" parameter
+> via "tier % MAX_NR_TIERS" as the start and "min(tier, MAX_NR_TIERS-1)"
+> as the end. This is hard to follow, maintain, or extend. Tier values
+> 0..3 select a single tier, while tier =3D=3D MAX_NR_TIERS selects the
+> full range.
+>
+> Replace it with explicit (tier_min, tier_max) parameters using a
+> closed [tier_min, tier_max] interval, and add LRU_TIER_MIN and
+> LRU_TIER_MAX for the tier bounds. The call sites now become
+> self-documenting:
+>
+>   - get_tier_idx:   (LRU_TIER_MIN, LRU_TIER_MIN) for the first tier,
+>                     (tier, tier) for each subsequent tier
+>   - get_type_to_scan: (LRU_TIER_MIN, LRU_TIER_MAX) for the full range
+>
+> No functional change.
+>
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
 
-On Tue, Aug 18, 2026 at 04:59:17PM -0700, Ziyang Men wrote:
-> > > The bpf_cgroup_base_stat() takes an rstat spinlock_t, which can sleep on
-> > > PREEMPT_RT.
-> > 
-> > Is this actually required? This doesn't really make sense to me. Shouldn't
-> > what SLEEPABLE mean change on RT kernels instead?
-> 
-> Oh sorry, I didn't notice that.
-> 
-> I might be wrong: this function calls the cputime_adjust(), which in turn
-> acquires raw_spin_lock_irqsave(), so there would be NMI deadlock in the
-> perf_event program. The __css_rstat_lock() take the spin_lock_irq() as well. So
-> maybe a SLEEPABLE tag is still necessary?
-
-I think this is for BPF folks to answer. I don't think SLEEPABLE is needed
-because of RT but yeah it wouldn't be safe to be called from nmi context.
-
-Thanks.
-
--- 
-tejun
+Reviewed-by: Barry Song <baohua@kernel.org>
