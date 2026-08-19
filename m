@@ -1,137 +1,144 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F29A396B9D;
-	Wed, 19 Aug 2026 13:22:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B39E3A0E8A
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 14:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787145754; cv=none; b=k2X0RWrVT7eyqys6jNUWch7Ki6f21IjX5lWDtjoAcqClwIYj5H4vROF6oOdzjcYs0gT8sZ0o6Bc771EKA6CX2CipVaSfB3sSt1RR7ckIIqI8Br+bb7emY1Liy8y0eG6ihEXNzhDKgBwc4PtfVbSAD9MMuJnm1WF3bdS0iGCsRFg=
+	t=1787150066; cv=none; b=MFZgpkK6Jj57JUw+DjWUZR0WpU3w8G+l0Nb9pVjwcc452MthYWf//6mK/qcLFiXMXqjoAhKIRTo/rXsMUfwRDGo7qtAmjmoiAHwTf40kCCgAMgXxq66OYDMuFPUpZpXdZ9S71AWi8cwKLglX3e4Wo9pxPXQSC5OCGZIiTGhRyms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787145754; c=relaxed/simple;
-	bh=0B+MY6T4G46mvzSbsdpm6pM9o7FAKPKaDqjKbz525Ik=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ed4N0dkXq8PFpV1QYTPOfu7pV3YeqxX2WFtr78mhWV3SMBiM42akEU2YlXX4vdkJRLcG4NxD8nWTqFX/NTgBuEJvdhnca+1DPZ/YU5i5pdWyJbJHRprqQ5FqlmRtqZfh+lf7mvhuPwJaQIpQXEy+3UmAcpiOkfvMWdbPHehYFX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 011ad8569bd111f19a56ed5b684f684d-20260819
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:d9e7c4d5-9b1d-4595-9b93-d731a7ebd762,IP:0,U
-	RL:0,TC:0,Content:0,EDM:-25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:7db8b62,CLOUDID:11e6ee3dfcb512015faf57493ec09a9a,BulkI
-	D:nil,BulkQuantity:0,SF:81|82|83|102|123|136|850|865|898,TC:nil,Content:0|
-	15|50,EDM:2|44|-100,IP:nil,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:ni
-	l,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_EDM_RNO,TF_CID_SPAM_ULS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 011ad8569bd111f19a56ed5b684f684d-20260819
-X-User: liuqiqi@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <liuqiqi@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 982613573; Wed, 19 Aug 2026 21:22:19 +0800
-From: liuqiqi@kylinos.cn
-To: joshua.hahnjy@gmail.com
-Cc: Qiqi Liu <liuqiqi@kylinos.cn>,
-	mhocko@suse.com,
-	shakeel.butt@linux.dev,
-	linux-mm@kvack.org,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/8] mm/memcontrol: introduce per-tier memory accounting and control
-Date: Wed, 19 Aug 2026 21:22:11 +0800
-Message-Id: <20260819132211.366064-1-liuqiqi@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260818154954.805958-1-joshua.hahnjy@gmail.com>
-References: <20260818154954.805958-1-joshua.hahnjy@gmail.com>
+	s=arc-20240116; t=1787150066; c=relaxed/simple;
+	bh=HU+qPdUQS0BEZD7n5Bfk9KiA3akMlx3J74BeJkMhjxQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AI/9UloR+Vt5eX1HItBk60Ql3KtT1HoE4sepCUCgK5xEd6nkdvicdjQ/+R6QeEKXG0UVlLbJ15x7+mAHuBxMisn7nBTKO23vRMPNNWh9N+tRJmZ7Wqa9E4JHiRGjAlfdJWoM9/EzaK2Nfl0N40Sl8+g9YRSgzX7fO7zulkJjpYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SUabsjI3; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SUabsjI3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1787150063;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nL5TdQYFTc+LhqgfFIL8+rQklS1IicuWMxunD/2jpt8=;
+	b=SUabsjI3huxqJLvXY95F3DDTgFs3YhW7o5ikGJHKA0dnA6ZU7PG5HVND6yp2J/ePP8tFmE
+	40WGQB4OwZBkuUQaWTa6bZsFkI8qpO+qqtFDh7sYL73HZk+akNPZWUFyv1PrH9gFrhx+Gw
+	z26wjE/oreLi4MqedK2cIWfgAkTk89U=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-678-oY19yZ_SNtymbl_oIIFBfg-1; Wed,
+ 19 Aug 2026 10:34:21 -0400
+X-MC-Unique: oY19yZ_SNtymbl_oIIFBfg-1
+X-Mimecast-MFC-AGG-ID: oY19yZ_SNtymbl_oIIFBfg_1787150060
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 832251800D8D;
+	Wed, 19 Aug 2026 14:34:19 +0000 (UTC)
+Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A7506180034F;
+	Wed, 19 Aug 2026 14:34:17 +0000 (UTC)
+Message-ID: <e5433074-5d95-4991-96be-eb03e7173900@redhat.com>
+Date: Wed, 19 Aug 2026 10:34:16 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] selftests: cgroup: simplify cpuset subtree permissions
+ test
+To: Shaojie Sun <sunshaojie@kylinos.cn>, Ridong Chen <ridong.chen@linux.dev>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260819103152.767771-1-sunshaojie@kylinos.cn>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260819103152.767771-1-sunshaojie@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-From: Qiqi Liu <liuqiqi@kylinos.cn>
-
-Hi all,
-
-Thank you all for your replies. I am not very familiar with the
-community's workflow and should have reviewed the mailing list
-archives and existing implementations more carefully. I sincerely
-apologize for any inconvenience this may have caused.
-
-My work is based on
-https://lore.kernel.org/all/20260528134212.240492-1-liuqiqi@kylinos.cn/
-aiming to develop memory tiering limits for cgroups. During
-development, I referenced Joshua's v2, but failed to notice that
-v3 had already been posted when I submitted my series.
-
-I have studied Joshua's v3, and our core mechanisms are largely
-consistent. However, there are two differences:
-
-1. Read/write per-tier interface (memory.tier): each cgroup
-   tracks its memory usage by tier (e.g., DRAM, CXL), exposed
-   via a new memory.tier control file. This file reports
-   per-tier usage and accepts per-tier high (soft limit) and
-   max (hard limit) settings. By default, these limits are
-   automatically derived from memory.high/max based on each
-   tier's capacity ratio, but manual overrides are supported,
-   allowing administrators to constrain specific tiers on a
-   per-cgroup basis.
-
-   Its advantages are:
-   - It can express allocations that fixed capacity ratios
-     cannot.
-   - Latency-sensitive tenants can be given a larger share of
-     the fast tier.
-   - High-capacity tenants can have their soft limits removed
-     for the slow tier.
-
-   Whether or not to constrain a specific tier should be a
-   decision made by the administrator on a per-cgroup basis.
-   This serves as an answer to Michal's earlier question in
-   the thread regarding "do you intend to limit memory
-   consumption on particular tier even without an external
-   pressure?"
-
-2. Per-tier stock: I have implemented and tested per-tier
-   stock -- it batches atomic operations on tier counters from
-   per-page to every 32 pages. Joshua's patch (moving the stock
-   down to the page_counter level) takes a more generic
-   approach, and I believe we should continue with his
-   direction here.
-
-Memory hardware is becoming increasingly diverse (DRAM, CXL,
-and further remote tiers), and the performance gaps between
-tiers are significant. Different workloads have different
-requirements -- some demand low latency, while others need
-capacity. When the fast tier cannot accommodate the working
-sets of all workloads, it should be the administrator's
-scheduling decision to determine fast-tier allocations. I
-believe tier-aware control is a direction worth pursuing, and
-the differences above are where we can contribute.
-
-As Shakeel suggested, and given that Joshua's v3 already
-contains the core mechanism, I am dropping my current
-standalone patchset. I would like to ask if Joshua would be
-willing to collaborate with me on this, treating memory.tier
-as an extension to the patch series and proposing it as
-follow-up patches based on v3.
-
-PS: I have already subscribed to the mailing list to avoid
-such misunderstandings in the future.
-
-Best regards,
-Qiqi Liu
+On 8/19/26 6:31 AM, Shaojie Sun wrote:
+> Simplify test_cpuset_perms_subtree by removing unnecessary chown of
+> cgroup.procs files. The test verifies implicit migration triggered by
+> enabling/disabling the cpuset controller via cgroup.subtree_control.
+>
+> Implicit migration is handled internally by the kernel through
+> cgroup_update_dfl_csses() when subtree_control is modified, and does
+> not require cgroup.procs write permission. Only cgroup.subtree_control
+> permission is needed to trigger the controller state change.
+>
+> Remove the allocation and cleanup of parent_procs and child_procs
+> variables that are no longer needed.
+>
+> Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
+> ---
+>   tools/testing/selftests/cgroup/test_cpuset.c | 16 +++-------------
+>   1 file changed, 3 insertions(+), 13 deletions(-)
+>
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset.c b/tools/testing/selftests/cgroup/test_cpuset.c
+> index c5cf8b56ceb8..b323addcc519 100644
+> --- a/tools/testing/selftests/cgroup/test_cpuset.c
+> +++ b/tools/testing/selftests/cgroup/test_cpuset.c
+> @@ -167,7 +167,7 @@ static int test_cpuset_perms_object_deny(const char *root)
+>   static int test_cpuset_perms_subtree(const char *root)
+>   {
+>   	char *parent = NULL, *child = NULL;
+> -	char *parent_procs = NULL, *parent_subctl = NULL, *child_procs = NULL;
+> +	char *parent_subctl = NULL;
+>   	const uid_t test_euid = TEST_UID;
+>   	int object_pid = 0;
+>   	int ret = KSFT_FAIL;
+> @@ -175,9 +175,6 @@ static int test_cpuset_perms_subtree(const char *root)
+>   	parent = cg_name(root, "cpuset_test_0");
+>   	if (!parent)
+>   		goto cleanup;
+> -	parent_procs = cg_name(parent, "cgroup.procs");
+> -	if (!parent_procs)
+> -		goto cleanup;
+>   	parent_subctl = cg_name(parent, "cgroup.subtree_control");
+>   	if (!parent_subctl)
+>   		goto cleanup;
+> @@ -187,16 +184,11 @@ static int test_cpuset_perms_subtree(const char *root)
+>   	child = cg_name(parent, "cpuset_test_1");
+>   	if (!child)
+>   		goto cleanup;
+> -	child_procs = cg_name(child, "cgroup.procs");
+> -	if (!child_procs)
+> -		goto cleanup;
+>   	if (cg_create(child))
+>   		goto cleanup;
+>   
+> -	/* Enable permissions as in a delegated subtree */
+> -	if (chown(parent_procs, test_euid, -1) ||
+> -	    chown(parent_subctl, test_euid, -1) ||
+> -	    chown(child_procs, test_euid, -1))
+> +	/* Grant minimal subtree_control permission to trigger implicit migration */
+> +	if (chown(parent_subctl, test_euid, -1))
+>   		goto cleanup;
+>   
+>   	/* Put a privileged child in the subtree and modify controller state
+> @@ -221,12 +213,10 @@ static int test_cpuset_perms_subtree(const char *root)
+>   	}
+>   
+>   	cg_destroy(child);
+> -	free(child_procs);
+>   	free(child);
+>   
+>   	cg_destroy(parent);
+>   	free(parent_subctl);
+> -	free(parent_procs);
+>   	free(parent);
+>   
+>   	return ret;
+Reviewed-by: Waiman Long <longman@redhat.com>
 
