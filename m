@@ -1,240 +1,179 @@
-Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE6A33BADA5
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 15:30:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787153458; cv=none; b=qFNmCRndHjtzCLcwGwRgFvebIVSPmVrb/id4nqbZo9ET4xUyz5VLMypfL1I2dyzXR0jz4/U4VgP0NElaVQ5f2YynSKMbVRXIqwxdUqDIqoMGdWGh5hXa5f6/aY7sCKPV+rVcWhA0Cf2DrIe+01QTOhZ6WXiKsNrJFjDQqtSOR2g=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787153458; c=relaxed/simple;
-	bh=CdEet1rWwmQcFrN0OVffIqtncv13ORRiSKE+nSWH8+0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tY+o0lAOvCWrXVeLH4Zhhc27BR4MMHg+LWzgK+dk+uEdzkx8KneM73d5aGZFESo09zClSUB4hv4rE0oR/mXV1h62hC4N+R9wLNXSRI6c2C0QRjzuOdWUxnqFmLlUoVvCtG+Z376u81raJnpdITXHHlx8QZNfcMYfiBG6YnmsC3A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=N5x0E+Wd; arc=none smtp.client-ip=209.85.219.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E671148C3E9
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 16:46:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787157993; cv=pass; b=Cjg/4jo+GJVIu6CXxAAiJUMPGvvofp9JTA87QHjm6o1HVREsU9hJ3WXwgBJobJGfE00f8tC4OYxd/9lX4ourWrAnvzMa1SO/O/qZYQmXl8OOi/7n2IIgbmm5mQAJEw4t8c8LAdQ7JW9qJRyZh+JeNJ0tV4qegTFDY6W5xAAzxDI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787157993; c=relaxed/simple;
+	bh=bm4ASoBKtUmJHUk2zSNZG8bG7KON1caZaOXDl2aDwUM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ZUsrlT18o9gYVQdjHO81ofs/4yN2pKN1kvR433q/M+3UdzP73fAuXwyZjdSWwbfGLK8seWIW+QC6p6SCCT5LTv5jqnDKjLKjdg9tkXitRi4ee4pjfLaHFctykrl7bFtoe7BvAvxSbJWQq7IU74rhHYaFKgsWYForHOQZwQcc0/4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sVPozzVe; arc=pass smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="N5x0E+Wd"
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-8efb708b1a0so8884036d6.3
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 08:30:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sVPozzVe"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-482938466a7so1039655f8f.1
+        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 09:46:31 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787157990; cv=none;
+        d=google.com; s=arc-20260327;
+        b=jhVi5wXrZFg8dBn6EFHe8QpJ8/UaE72jE/yqmEKuLtiV/tWzRCIKX3paYwI329xhBs
+         YBMVj5bda93dPR+QKs82ZFofEYZTgLqSMhvZRppdpzbbF9+D4xPD3NiLIxqZrfvcKm/3
+         9kka2+pOpk4+ZN95XpOW8IWdQHLUwmKji6mhkLkKmDZOwx2h0VTNoBrP9KeQJhs0cxP6
+         TbNVQX+XZhUxIK9BG4PDbOZFlAja+DVxhfl/K4XXPSfMIVzj5B4Y6Tiu/Zpa9YL09io9
+         bc3wrZQnkG447t1FxGckdMffrmnFEKpwFgp3Crgs17W2FtTPyqxrtL5PJc7x7J0KNNGs
+         xHVQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=KGaMY+nZBc9mwPhVBSJIQVYoXkNeMf257X9LmQBSnFU=;
+        fh=ixqwTg9uBf8BUjK6l7y7ioFuBerIDeptDPySfw1MgpU=;
+        b=KE4RLMR/ob+NOpLOs/ZRz7BC1WmoKA5MGzsgHkspVn48toJO0NKXiOkUKQxsM2mA+f
+         GDRAyodq2LFzXJtGIbTca5OTOoel5uuhg+jaowzmlIBWrNcIUHZOy3dAfHFY4gtyyYOb
+         QT8264aXPHvVUzcIsDkmaIcVKKSJtLk3kPVjp8FsuBc1XD22nqK/3N1gda23teGjrg1Q
+         coDh94QV67Ww/GiHijCxzWdJ3R7QRDv3FjlbGv64zgmENyz5NG9M+e2ThKYNcZ4R2SvJ
+         MEzWFjtFfCmqZ6/HnkBmHS6ggK8/da8IMk3BBBErDs32necT2caUdtN4nQP6UcU9Fa61
+         rI2A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1787153455; x=1787758255; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1787157990; x=1787762790; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=73Guz/TIbEzOujSIckuYru9856ZGn+H/xGETeqkPBLw=;
-        b=N5x0E+WdIwP234nRafLOCEjHvcOZ7kdf6ab/0WBkhDcaJdd2KTtMvCbeV/0f5Y6z8i
-         6QziCmC8/8cnebn7MV/y2JD2bFaSKwAEuT9gJuJ+rqWL5O51yi250ENCrxzod5vF6vyC
-         57sdYJUC/eksGf1tgiJlsszyItIF4w0TemtvwNyLhpxno+QlmuQxcre+lVEpLemO1T2S
-         FIav9rB/rQRpC8ptXCMY62iEvKfeevNnnTT1UrJcjul5toiHXKunJZ//1adqeduB/AnD
-         8ydIt2s9e+7q4BsejlMu3jP+Xnk/rsjEQn9733eIijhGjMk9pDWpxBYt2Ii1G+asGEf8
-         9PiA==
+        bh=KGaMY+nZBc9mwPhVBSJIQVYoXkNeMf257X9LmQBSnFU=;
+        b=sVPozzVecTITBkKuvfayI7txQF8rWRsy+IU0J9m6uVV6YM4NSyAk3JFUGU9RhHrhyQ
+         j0qfyDK/dvFmpvOpr0JlSNW8V0soQobuxS1JdQDhqONJKKWLm5NanByKEEzMlkML8Ar9
+         fh57Gdi9Ykqu+X8w/+S4tGQ7dce/26nb3IU1ZiD7m3l5suZZGePlatkK1+e9R6XWpQ0F
+         7nST1oNClGH+PHQ27wGfXeqzfbw6fEPY5LKo2srlLWjvz5QitF5yAF27shqF19VXRf/a
+         +kRGfWjTodZml167noIrOrbP64RuX6Mkl9tl8MAZZGJqSoFsn71LOyesB8kKqAXjG9cz
+         hKww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787153455; x=1787758255;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1787157990; x=1787762790;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=73Guz/TIbEzOujSIckuYru9856ZGn+H/xGETeqkPBLw=;
-        b=Gjpsba6oLt6f75knXDznb6AvV32h5EFYUMKhIruYIdVqAeOrNMhWV0ZedwLtkBjp7F
-         CJ8snIicEx5lwWP7u/BflrS3cKaPIAqNsNFDbO1FpEg/gW4M2W1qS3dWSYEyUHUX7uPu
-         QY7fHg1EmeLPP0xMKawMe6GKaionUn176w7UbwYKrLarUnxv2OOIOt6IVaEBxlPudQS7
-         F+p5uwsOowARo+yCSO6LYKXvE6/w7HjLDCR+ThHcSLL9wbcosGRRPbT0RXAvgX9SCbVf
-         5fp1fRVgOq3N4IiEkSNRncXgfOTRK7pmnw75fYAQI7v+hHpXLZV7YglamUOcB45sfgr/
-         3o3g==
-X-Forwarded-Encrypted: i=1; AHgh+Ro7djKXcSxiFBlPjk0RNa/w/MOB6o+E5onaZCyu7L9oKHbrNnKzjLMJOVOyVxuIo1JHEdEVbmPw@vger.kernel.org
-X-Gm-Message-State: AFuF++kAzc4lbvLR0bOvrlkIUmkbtFuuRBTCZP0LLyHiZ3zL2Aue505I
-	oMzZmCNgWJqXv0WnLi3D/FiWjg9WXSgVyT5NQpohSWaZLPhgQLL+xMzaRJSKjnIDpdM=
-X-Gm-Gg: AR+sD13FW5Hz3yu+4fRFxXZLq4coZK5SO1RKohBz4nuvDWGufU3yu613xrY0iUmH+P5
-	Dv4+d2g9rDzXR7FpKyMcoTa7Qqs1J2zcNYdk+ijouIbaMJHPzGbETG6VHPZ6V2plIAviF8q0p8e
-	hi3YzcQ/dyqP2Q5KsN4Jg3pAOYZ6fjW5aEpxOe9o+EsLSl8gR3exh8EK9RVv8uvBpD1lh2bMaJ7
-	btZ4Byn0hk8lFbIEoJkR4zfedUbm75IspD4SNzc5veuCWSiwZ6g87SF5sE0L5Y2iEOIU4xlg487
-	yM3m8mjVdfX31jD4V1cG/ERVznJJFKJfHXQLMAnPOYyC7sgEC5JXVQNffMERpSPkJ4oVDuClWe8
-	h3tYiaAk4bhU3Sc4wuM/tv7Y6pTTrJHWIg7AVStm6nC1hPhraW3wo+XvYcDS9sodug2KrSz+7k9
-	hm3sfpY8/2ocvfjvMnEJw9pxnD59Oc2iZ4/4Izo02+bIOPAPa6h58mQQRSCM/zy6tRJ6QndSyIL
-	zgVypyQam/M4ia5/BNP1iBJK+0WezgB/gmQmn7H8lnRbmuqjBmhKmyQ
-X-Received: by 2002:a05:6214:3217:b0:908:9045:217a with SMTP id 6a1803df08f44-90c5eaec0d3mr57812636d6.29.1787153455181;
-        Wed, 19 Aug 2026 08:30:55 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90c5f2905d6sm16697626d6.29.2026.08.19.08.30.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 08:30:54 -0700 (PDT)
-Date: Wed, 19 Aug 2026 11:30:53 -0400
-From: Gregory Price <gourry@gourry.net>
-To: liuqiqi@kylinos.cn
-Cc: joshua.hahnjy@gmail.com, mhocko@suse.com, shakeel.butt@linux.dev, 
-	linux-mm@kvack.org, tj@kernel.org, mkoutny@suse.com, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/8] mm/memcontrol: introduce per-tier memory
- accounting and control
-Message-ID: <aoW9roOicxJoCKCP@gourry-fedora-PF4VCD3F>
-References: <20260818154954.805958-1-joshua.hahnjy@gmail.com>
- <20260819132211.366064-1-liuqiqi@kylinos.cn>
+        bh=KGaMY+nZBc9mwPhVBSJIQVYoXkNeMf257X9LmQBSnFU=;
+        b=WS63EdwmhfK/uCz8S1yCAlkd/4qI9VkkLanZkbkwlXLnl9OTCINmeatuwC5ZT7QaJN
+         w9vbIg6J7UEIdyuculJYxtuvLXz6gzIMrd+UaMrUePZRzKNfGUAj9634uMJ54xGmiTPh
+         2COE87MEvcNWroISLI/4cXfZq+NNQxlv7oC+vZGMnjvG15S/78X6KtIrqT7O0uZSvqs+
+         uGSJt5Hyc2JjWSfVUUFa+Ab5IZf+cOIxvPkgJ4uspmJbaJ0/x1GS11mzJ6DoFAsRpKZP
+         8U9rfhnn/Y8k4+OcvuGJneihKsKu2tjt6vhXx2saQekIIkm0bVyx1iPSL6QkNFgykDTh
+         XfMg==
+X-Forwarded-Encrypted: i=1; AHgh+RqN/VN4nYsWVQAKsKM7QEmibWZNgcgj0wa04A+K8oMS1eY8681+0F5EXxw00fgkUCE3aM6ZOL2s@vger.kernel.org
+X-Gm-Message-State: AFuF++kfs+oRHRBgqBDXf56xsBBuNd6F/9uZI0F1veGoSNPqx+3zN7Uh
+	JzGmIArudhNvvQy3l740m02QANVu0azeGdeG4t1zaP8D/ZoewP4utBLS8IvEZ4pE9woUGagJDeY
+	3BFsUzn2A07zLMyNs+SzOGIZXhhDB6N8=
+X-Gm-Gg: AR+sD13z6HhnhsRU7azivr5pBOFvdLPP7JQ9f0rDeiCmJLCiJtl5fnN58W6M8I2W9pp
+	bTlRdP+2jR3unNb0FhwVImb6hkxf0Plkdwkk5JwO1doO1GinxvVt3ktoHW0jcvzKBtJPDRn3BRS
+	pDXzp5+tVmHQcFaRhn6rXfIf+aI1jCqrcXASP8FTjxtVTgkDRCBdyARqxTxGQjGSX+qItHO6Xd9
+	htIGpc9lXwlqKyD3iDU8+vMRMjeargsRqp24JPmEyhlU4H91YDXQefxN3pLB6weK6K1mVyXDeuD
+	JxxaogDv2rIdyJ0RhcmKiIVB6Smsh7K6Dfin3R8nSsuSrD3dISrDe3wKPeu54ruWfQrGVIDF+eI
+	w
+X-Received: by 2002:a05:6000:25f3:b0:47f:8ac0:ccb4 with SMTP id
+ ffacd0b85a97d-482b1e9df5fmr12803729f8f.10.1787157989811; Wed, 19 Aug 2026
+ 09:46:29 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260819132211.366064-1-liuqiqi@kylinos.cn>
+References: <20260806184254.3790858-1-nphamcs@gmail.com> <20260806184254.3790858-2-nphamcs@gmail.com>
+ <anX-ga41DMNWF6-2@cmpxchg.org> <CAKEwX=MmqyWdqfrp8kxeuucNFhU2e6Hk2TdANUGhNFHhvtSPwg@mail.gmail.com>
+In-Reply-To: <CAKEwX=MmqyWdqfrp8kxeuucNFhU2e6Hk2TdANUGhNFHhvtSPwg@mail.gmail.com>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Wed, 19 Aug 2026 09:46:17 -0700
+X-Gm-Features: AcwNN1VW1IFOK11rd1UcYSUArFyDXGImTjTFPjh0sY0B1rB0YRzMpSnPt4Jbiig
+Message-ID: <CAKEwX=PjvsAOv8rvp+mz_aPqDLm6iRy6URRW2EMFvFrgD2HEgA@mail.gmail.com>
+Subject: Re: [PATCH v3 01/11] mm, swap: add virtual swap device infrastructure
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: akpm@linux-foundation.org, chrisl@kernel.org, kasong@tencent.com, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	yosry@kernel.org, david@kernel.org, muchun.song@linux.dev, 
+	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
+	youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org, 
+	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
+	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
+	weixugc@google.com, riel@surriel.com, gourry@gourry.net, 
+	haowenchao22@gmail.com, corbet@lwn.net, kernel-team@meta.com, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Aug 19, 2026 at 09:22:11PM +0800, liuqiqi@kylinos.cn wrote:
-> From: Qiqi Liu <liuqiqi@kylinos.cn>
-> 
-> Hi all,
+On Tue, Aug 18, 2026 at 11:41=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrot=
+e:
+>
+> >
+> > Can you make this a pure allocation function - vswap_alloc_cluster()
+> > or something - that links it to &si->free_clusters, then jump back and
+> > use the existing alloc_swap_scan_list() sites?
+>
+> That name was vestigial from Kairui's RFC, but yeah I agree
+> vswap_alloc_cluster sounds better.
+>
+> Regarding the linkage of the newly allocated cluster to the free list
+> - I'm a bit hesitant to introduce new surface for these clusters,
+> mostly because I'm afraid I might mess up the handling of these
+> clusters (when I unlink them from the free list), but I can give it a
+> shot.
+>
+> >
+> > There is a new_cluster: label upstream you could use for the retry.
 
-Hi! Thank you for following up.  A few things.
+Actually, I stared at it a bit more. I don't think we should jump to
+new_cluster here - it's not what physical swap allocator does in the
+first place (we never do any backward jump to retry).
 
-> 
-> Thank you all for your replies. I am not very familiar with the
-> community's workflow and should have reviewed the mailing list
-> archives and existing implementations more carefully. I sincerely
-> apologize for any inconvenience this may have caused.
-> 
+So basically, this is the old code:
 
-Less of an inconvience, we want to save you time as much as we want to
-save the larger community's time.  Having multiple interested parties
-vet common work - rather than propose differing solutions - does that.
+new_cluster:
+if (discard)
+    alloc_swap_scan_list(free list);  /* not taken by vswap */
 
-Welcome to the discussion, glad to have more eyes on the problem!
+if (alloc_swap_scan_list(nonfull)) return;
 
-Hopefully I can provide some context on the history here, since I've
-been working with Joshua for a while on this in the background.
+/*
+ * Added by me. vswap (almost) always succeeds here
+ */
+if (alloc_swap_scan_dynamic()) return;
 
-> My work is based on
-> https://lore.kernel.org/all/20260528134212.240492-1-liuqiqi@kylinos.cn/
+/*
+ * not taken by vswap, because we succeeds above
+ * and free list is always empty.
+ */
+if (not discard)
+    alloc_swap_scan_list(free list);
 
-On this patch, It's not clear why an RCU-protected pointer is
-unsuitable.  RCU is hot-path safe, it's just not stable nor
-sleep-safe, which should be sufficient for any operation which
-may be looking up this particular mapping.
+/* if free list scan fail, keep going */
 
-These values are not expected to be aggressively written to, so RCU
-essentially becomes a NOP on the reader side - it's extremely cheap.
+etc. etc.
 
-More ideologically - adding a cached value of an RCU protected value
-is somewhat anti-thetical to the entire purpose of using RCU in the
-first place - it creates more footguns than it solves.
+The new code becomes:
 
-That aside, getting to the tier-aware memcg limits...
+new_cluster:
+if (discard)
+    alloc_swap_scan_list(free list) /* still not taken by vswap */
 
-> aiming to develop memory tiering limits for cgroups. During
-> development, I referenced Joshua's v2, but failed to notice that
-> v3 had already been posted when I submitted my series.
-> 
-> I have studied Joshua's v3, and our core mechanisms are largely
-> consistent. However, there are two differences:
-> 
-> 1. Read/write per-tier interface (memory.tier): each cgroup
->    tracks its memory usage by tier (e.g., DRAM, CXL), exposed
->    via a new memory.tier control file. This file reports
->    per-tier usage and accepts per-tier high (soft limit) and
->    max (hard limit) settings. By default, these limits are
->    automatically derived from memory.high/max based on each
->    tier's capacity ratio, but manual overrides are supported,
->    allowing administrators to constrain specific tiers on a
->    per-cgroup basis.
-> 
+if (alloc_swap_scan_list(nonfull)) return;
 
-There's two levels of operation we need to think about here:
+/* vswap puts new cluster into free list, then falls through */
+if (si is vswap)
+    vswap_cluster_alloc();
 
-1) What the kernel does by default without tuning
-2) What the kernel enables admins to tune
+/* vswap now scans free list to get the cluster it just allocated */
+if (not discard)
+    alloc_swap_scan_list(free list)
 
-If we don't have a cogent story around how #1 should occur for
-this feature - then every knob you expose for #2 is just creating
-a mess of tunables no one can possibly understand (let alone maintain).
+/* if free list scan fail, keep going */
 
-That's why Joshua's series has no tunable knobs - any such knob is
-simply unwarranted at this point.  (This decision was born from both
-on-list and in-person feedback).
+This works, but I'm not sure if putting the new cluster on free list
+buy us much other than more lock contention points (we need si->lock
+to scan free list) :/
 
->    Its advantages are:
->    - It can express allocations that fixed capacity ratios
->      cannot.
-
-Which should come from a use case born out of demonstrating fixed ratios
-are actually insufficient and cannot be made to self-tune.
-
-But we don't even have those yet.
-
->    - Latency-sensitive tenants can be given a larger share of
->      the fast tier.
->    - High-capacity tenants can have their soft limits removed
->      for the slow tier.
-> 
-
-These are the same issue as the first bullet, just differently shaped.
-
->    Whether or not to constrain a specific tier should be a
->    decision made by the administrator on a per-cgroup basis.
-
-This is an opinion, not a fact, and should be based on data that
-demonstrates the kernel is incapable of making the (or a) "right"
-decision in a sufficiently common scenario.
-
-> When the fast tier cannot accommodate the working sets of all
-> workloads, it should be the administrator's scheduling decision to
-> determine fast-tier allocations.
-
-There's basically 3 use-cases that have been collected that I've seen
-which tier-aware memcg looks to address:
-
-
-1) Self-policed fairness
-
-   Stiff per-tier limits that cgroups impose on themselves.
-   i.e. proactively applying tier(memory.high/max) to ensure no
-   container's tier(memory.min) is ever violated.
-
-   This creates reduced variance in exchange for lower throughput.
-
-   This is paradigm essentially does not exist today except via
-   cpuset.mems (e.g. putting everything for a task on CXL). This
-   is intended for things that want stronger QoS controls.
-
-2) Opportunistic fairness
-
-   While there is sufficient space on a higher tier, cgroups should
-   be allowed to "over-use" the upper tier opportunistically to maximize
-   thoughput - but when someone's tier(memory.min) is violated because
-   another container is over-using, we nudge everyone toward fairness.
-
-   This creates higher throughput in exchange for increase variance.
-
-   This is milder modification to the existing global opportunistic
-   behavior.  Think of it like trying to apply a soft memory QoS.
-
-   It's unclear whether this actually has value, but can probably
-   be accomplished via existing min/high/max, rather than needing new
-   sysfs toggles.
-
-3) Per-cgroup adjustable tier limits.
-
-   A scheduler knows something about the workloads it wants to
-   have custom tier limits per-workload.
-
-   This should be seen as an evolution born out of finding where
-   1 and 2 are insufficient.  It's putting the cart before the horse
-   to go directly to this point.
-
-   Very few of us are convinced such complexity is actually warranted,
-   especially because the simpler (and less ABI-permanent) #1 and #2
-   haven't even been fully explored.
-
-> As Shakeel suggested, and given that Joshua's v3 already
-> contains the core mechanism, I am dropping my current
-> standalone patchset. I would like to ask if Joshua would be
-> willing to collaborate with me on this, treating memory.tier
-> as an extension to the patch series and proposing it as
-> follow-up patches based on v3.
-> 
-
-Joshua can speak for himself, but more eyes and testing and data is
-always welcome.
-
-~Gregory
+I'll just rename alloc_swap_scan_dynamic to vswap_cluster_alloc(), for now?
