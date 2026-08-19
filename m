@@ -1,32 +1,32 @@
-Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C696F437448;
-	Wed, 19 Aug 2026 09:18:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 734863F822A;
+	Wed, 19 Aug 2026 09:25:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787131148; cv=none; b=rY23IUeYG3D4hdPhuP101EQRFLGqNVO4sx3bFKyjYnGr5zJT0kbVE1NW8//IVGn4P5RySKD3McVlpafTwoJREQ9FIBgsEkNhszc4Id7+LXP+GqoDyoTG/BpkS/zDmzZOxLFCQ+vskN8W5w5JpwPh2sHLTW5cZRoSl2TVWr3YLAU=
+	t=1787131549; cv=none; b=iBbGT9zNMZ1/aVVGU4A9HWhdImLp56Gj/7RaEgtKqQYneSPK+5zhxZ2m1ww3iZaI9zpTBmSbWG1mQxykCt9bLdfyNpJ5osq6LHufdRQAixFLXICXbq7rUVIX8Y8+lsWCeQ0/xNWzPzLnBFVE2RpJmeUI2s+NCpTIKVGV8QGIbIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787131148; c=relaxed/simple;
-	bh=iiPy2e8hJGY5e2XDsk2naZ8ySfGm2RtaOuIEJ6nlqrg=;
+	s=arc-20240116; t=1787131549; c=relaxed/simple;
+	bh=EbRQ2x/5Ng0ZG0ed9boH8GIirTWBzIzif7MmqDOeoC0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KruI5iuUR9W655bvt5rWULvXwB8YhAyrqIWUeQ5h+LWoFKdq/pXHZrbU2sjU8ClZhuYVvpGOVgI1NTcsuEMst+qqeIMgIA26SyWSh2+bIvM7ANnOBF39hl92DdnaFSFcLKJHUZomLYaPNJ4c0OCytawUE0EZKzLonihvqQWP50U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=wZljpv/f; arc=none smtp.client-ip=115.124.30.132
+	 In-Reply-To:Content-Type; b=nqOKLQQKT9dZSeMbKVLGBiDHZY4WaHgX4og6EstUEMIVvQeiS2NUMxgvxH6Ofi8/lQ9hKpUObK3nhuUEbMupeIGU9l8haLRmdAX6R+8962Jgs7igd3jpbvGrSielbnbkHn+HW3pUZn+efG2HI4cOVAlQDhKEvPkCEr+MNr4I4rg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=r71dKfSH; arc=none smtp.client-ip=115.124.30.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="wZljpv/f"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="r71dKfSH"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1787131135; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=UUkUEVNocOa8i2pwhU3EAXuYAIwF7UnAwk/Wn4nSKBQ=;
-	b=wZljpv/fTzReYGIFfan7cw/kncZiSh5j3/979vJngITOFvKkUsTVSAQLe24b851tOCj4QG739ZEddIfsCScKUN8ghrWkAnMG+CnlzGc0bD1NoKmQYAL/oZmbWNiuq+h93idr4OmXZI8D8A4phQiUsjK83Z+vS4kOUtyH8suTAE8=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=baolin.wang@linux.alibaba.com;NM=1;PH=DS;RN=24;SR=0;TI=SMTPD_---0X9GGcxy_1787131132;
-Received: from 30.74.144.121(mailfrom:baolin.wang@linux.alibaba.com fp:SMTPD_---0X9GGcxy_1787131132 cluster:ay36)
+	t=1787131537; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=cfZIfo/SEd42BidWWjniFI4c8yolrhYimg9M2l4ITjM=;
+	b=r71dKfSHr369KEn8VsZpOjxE8qxSzDj6GqFVGx8osmAF9CuMhM1naReBmJOpmsypfIeluPuN+2ojMXXsuq96eV/qPD5JjDe7pWzWlg/T+rvVbP8ud7l/MSUseYPlJF9D/jX22i6FfLOToOGjzVHDVT6f78iSTegJxg/BlXB1evM=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R401e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=baolin.wang@linux.alibaba.com;NM=1;PH=DS;RN=24;SR=0;TI=SMTPD_---0X9G8Y5l_1787131534;
+Received: from 30.74.144.121(mailfrom:baolin.wang@linux.alibaba.com fp:SMTPD_---0X9G8Y5l_1787131534 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Wed, 19 Aug 2026 17:18:53 +0800
-Message-ID: <52215f41-9297-4197-982c-bec01b485bb7@linux.alibaba.com>
-Date: Wed, 19 Aug 2026 17:18:51 +0800
+          Wed, 19 Aug 2026 17:25:35 +0800
+Message-ID: <50e3710a-b63c-4460-b3a8-f9f98ad7e7ff@linux.alibaba.com>
+Date: Wed, 19 Aug 2026 17:25:33 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -34,7 +34,7 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/7] mm/mglru: move max_seq read into walk_update_folio
+Subject: Re: [PATCH 5/7] mm/mglru: use explicit tier range in read_ctrl_pos()
 To: kasong@tencent.com, linux-mm@kvack.org
 Cc: Andrew Morton <akpm@linux-foundation.org>, Barry Song
  <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
@@ -49,9 +49,9 @@ Cc: Andrew Morton <akpm@linux-foundation.org>, Barry Song
  Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org,
  linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>
 References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
- <20260818-mglru-flags-cleanup-v1-4-8dbbdac0d28c@tencent.com>
+ <20260818-mglru-flags-cleanup-v1-5-8dbbdac0d28c@tencent.com>
 From: Baolin Wang <baolin.wang@linux.alibaba.com>
-In-Reply-To: <20260818-mglru-flags-cleanup-v1-4-8dbbdac0d28c@tencent.com>
+In-Reply-To: <20260818-mglru-flags-cleanup-v1-5-8dbbdac0d28c@tencent.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
@@ -60,35 +60,25 @@ Content-Transfer-Encoding: 7bit
 On 8/18/26 1:38 PM, Kairui Song via B4 Relay wrote:
 > From: Kairui Song <kasong@tencent.com>
 > 
-> walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
-> each read lrugen->max_seq to compute the target generation used by
-> walk_update_folio(), then pass it as a parameter. Move the read into
-> walk_update_folio() itself so the callers no longer need to compute
-> or pass the value.
+> read_ctrl_pos() encodes the tier range in a single "tier" parameter
+> via "tier % MAX_NR_TIERS" as the start and "min(tier, MAX_NR_TIERS-1)"
+> as the end. This is hard to follow, maintain, or extend. Tier values
+> 0..3 select a single tier, while tier == MAX_NR_TIERS selects the
+> full range.
 > 
-> The max_seq read now happens once per folio update rather than once
-> per walk range, so folios always get promoted to the current youngest
-> generation.
+> Replace it with explicit (tier_min, tier_max) parameters using a
+> closed [tier_min, tier_max] interval, and add LRU_TIER_MIN and
+> LRU_TIER_MAX for the tier bounds. The call sites now become
+> self-documenting:
+> 
+>    - get_tier_idx:   (LRU_TIER_MIN, LRU_TIER_MIN) for the first tier,
+>                      (tier, tier) for each subsequent tier
+>    - get_type_to_scan: (LRU_TIER_MIN, LRU_TIER_MAX) for the full range
+> 
+> No functional change.
 > 
 > Signed-off-by: Kairui Song <kasong@tencent.com>
-> Reviewed-by: Baoquan He <baoquan.he@linux.dev>
 > ---
 
-LGTM. One nit below.
+Yes. More readable.
 Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-
->   mm/vmscan.c | 29 ++++++++++++-----------------
->   1 file changed, 12 insertions(+), 17 deletions(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 080132997d87..a819be6b7ae9 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -3517,13 +3517,15 @@ static bool suitable_to_scan(int total, int young)
->   }
->   
->   static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
-> -		struct folio *folio, int new_gen, bool dirty)
-> +			      struct lruvec *lruvec, struct folio *folio, bool dirty)
-
-IIRC, MM maintainers prefer 2 tabs, which is why I changed this earlier:)
