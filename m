@@ -1,36 +1,36 @@
-Received: from mta1.migadu.com (out-197.mta1.migadu.com [95.215.58.197])
+Received: from mta1.migadu.com (out-77.mta1.migadu.com [95.215.58.77])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF2D2E888A
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 02:05:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115D438C426
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 03:00:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.77
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787105119; cv=none; b=q0HF4W6U/8nA0q3ZES6bcDmDpZMkKtKXQNsbDF2pAgcWOkCaFa73/ziZ5FLfwvbmUu28A3wzfaxCjk9H5FdmY/AY3R6Dtf2vAhGbmS62jXLG7SLV8tqdUfAnxwNhBFEdAX/1Igmm4yP6Xib6M1oBmHXw1RQ075PdqCa37U3uIe4=
+	t=1787108418; cv=none; b=JQnFe64vg4Uz8ctoabCLogVc8bVylDDr6U4vR9JHslZ2Dz9TZkL7f6DUWMJh4bHqGUB4y8NaKgcvcPGj74vUiPYdYCUubQxdO+miU1vp3kNe2Qck9Oi/0MREFFxOzcW4UjqOFeLf4OF3wNz7JQN5V409GId35GYOucbpNmNKUyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787105119; c=relaxed/simple;
-	bh=22tSUCGFrD68K1lRH+RPcG9Hyj3wJxpH/fb0Ypvsvz0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uqtPDCnPhIVnIkCEbWjLTqVNkWUcwIDZBEMn5RMdo8GKQ17MBBO2W+gxeMuQk2MS5q6I65kJgCdAJpc8qTwRgrS1mUctoEErF8renInvt1MqEbKs2Q7NF+HLdxh/JRhA3+5wuN9GTlcgqighlI3+CSHSbb4V23MpH/zLpYhfSgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xLFujGOX; arc=none smtp.client-ip=95.215.58.197
+	s=arc-20240116; t=1787108418; c=relaxed/simple;
+	bh=xPmnBPJ28zrY6uvYpdGY3wel6+VuX1OFUcFOxEaeTdU=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=c7Ci3pRwz+OyZ2eyIldFK6JcV2W+KNvmQKj6Eti+aWkPaSBxYQyqWuOt07TdkX780UZe2W9zn0shn92FwErEFOJdqn1zGBR1ZxHIUQW279iwGYY8v1mgSDxYQKGjOpJvMC3c8RGdo7sFf4dyy0EU1mRV9g+JLIdWnkawWY6yzmQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=F8MdRUmZ; arc=none smtp.client-ip=95.215.58.77
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xLFujGOX"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="F8MdRUmZ"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=22tSUCGFrD68K1lRH+RPcG9Hyj3wJxpH/fb0Ypvsvz0=;
+DKIM-Signature: a=rsa-sha256; bh=xPmnBPJ28zrY6uvYpdGY3wel6+VuX1OFUcFOxEaeTdU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787105114; v=1; x=1787709914;
- b=xLFujGOXICQk37IC4fJ7m0O5ky9LFXhV0/Lrhy8rntsZuUmtQH9B4IniEWFc9IPnYc76blFP
- lbdOwBmzp4bfvTkmhxXuuPa0LWO/7G0a8PKh+Pdo20joRr1fUm4DcNd9i75En+7zbk6XOS5vu6i
- 3rF9VE5xJCGdD1vxg9qNSYTo=
+ t=1787108413; v=1; x=1787713213;
+ b=F8MdRUmZC8v4mx9zU/ExpMgxZWjgn/2JB4G+w534apYpqubjDJ9+M200HPU64H/iC5sgqUsr
+ aVK4Jhk2S9GAl9y5XJlg8KPKXU/Csckd2S2M7fSVyv5Nmaa8sdznULH0N5Xo+++UhzvjJEtvy3y
+ oAH+Hw3136hvXtK1uayD+uhY=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from [10.63.107.123] (14.29.108.92)
-	by smtp.migadu.com with ESMTPS id 6217c15f338751e5;
-	Wed, 19 Aug 2026 02:05:14 +0000
+Received: from [192.168.110.173] (223.70.159.239)
+	by smtp.migadu.com with ESMTPS id a0a07108882060cb;
+	Wed, 19 Aug 2026 03:00:13 +0000
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <aa2507d8-8476-4090-b4a9-1cbd7225009b@linux.dev>
-Date: Wed, 19 Aug 2026 10:05:04 +0800
+Message-ID: <9bd74181-2ce4-4d69-a353-614685559ceb@linux.dev>
+Date: Wed, 19 Aug 2026 11:00:09 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,141 +38,142 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/7] mm/memcontrol: make lru_zone_size atomic and simplify
- sanity check
-To: kasong@tencent.com, linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Barry Song
- <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>,
- Baolin Wang <baolin.wang@linux.alibaba.com>,
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
- Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>,
- Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>
-References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
- <20260818-mglru-flags-cleanup-v1-1-8dbbdac0d28c@tencent.com>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <20260818-mglru-flags-cleanup-v1-1-8dbbdac0d28c@tencent.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Cc: cui.tao@linux.dev, akpm@linux-foundation.org, linux-mm@kvack.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org,
+ roman.gushchin@linux.dev, muchun.song@linux.dev, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH] mm: page_counter: reject empty string in
+ page_counter_memparse()
+To: Michal Hocko <mhocko@suse.com>, Shakeel Butt <shakeel.butt@linux.dev>
+References: <20260817042652.74136-1-cui.tao@linux.dev>
+ <aoMzchLCCz5hiFHp@linux.dev> <aoQNtIRvqXRh-x4u@tiehlicka>
+ <aoRz72_zdMai_RNV@linux.dev> <aoSLxSBUPbEqimJq@tiehlicka>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <aoSLxSBUPbEqimJq@tiehlicka>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+Hi, Michal, Shakeel
 
-
-On 8/18/2026 1:38 PM, Kairui Song via B4 Relay wrote:
-> From: Kairui Song <kasong@tencent.com>
+在 2026/8/19 00:43, Michal Hocko 写道:
+> On Tue 18-08-26 08:06:22, Shakeel Butt wrote:
+>> On Tue, Aug 18, 2026 at 09:45:56AM +0200, Michal Hocko wrote:
+>>> On Mon 17-08-26 09:16:40, Shakeel Butt wrote:
+>>>> On Mon, Aug 17, 2026 at 12:26:52PM +0800, Tao Cui wrote:
+>>>>> From: Tao Cui <cuitao@kylinos.cn>
+>>>>>
+>>>>> memparse() consumes no characters on an empty input and leaves the
+>>>>> end pointer at the terminating NUL.  The only validation in
+>>>>> page_counter_memparse() checks for trailing characters, so an empty
+>>>>> input slips through and the limit becomes 0.
+>>>>>
+>>>>> All limit write callbacks of the memory controller strstrip() the
+>>>>> input before calling this helper, so a script that writes an unset
+>>>>> variable hits this path:
+>>>>>
+>>>>>   LIMIT=
+>>>>>   echo "$LIMIT" > $CG/memory.max
+>>>>>   echo $?
+>>>>>   0
+>>>>>   cat $CG/memory.max
+>>>>>   0
+>>>>>
+>>>>> Nothing reports the mistake: the limit is now 0 and the OOM killer
+>>>>> goes after every task in the cgroup.  The same happens for
+>>>>> memory.min, memory.low, memory.high, memory.swap.high,
+>>>>> memory.swap.max and memory.zswap.max, where 0 silently removes the
+>>>>> protection or disables swap and zswap.
+>>>>>
+>>>>> Reject the input when no characters were consumed, which is the one
+>>>>> case the trailing-character check cannot catch.
+>>>>>
+>>>>> Fixes: 3e32cb2e0a12 ("mm: memcontrol: lockless page counters")
+>>>>> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+>>>>> ---
+>>>>>  mm/page_counter.c | 2 +-
+>>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git a/mm/page_counter.c b/mm/page_counter.c
+>>>>> index 661e0f2a5127..d14db705b04f 100644
+>>>>> --- a/mm/page_counter.c
+>>>>> +++ b/mm/page_counter.c
+>>>>> @@ -281,7 +281,7 @@ int page_counter_memparse(const char *buf, const char *max,
+>>>>>  	}
+>>>>>  
+>>>>>  	bytes = memparse(buf, &end);
+>>>>> -	if (*end != '\0')
+>>>>> +	if (*end != '\0' || end == buf)
+>>>>>  		return -EINVAL;
+>>>>
+>>>> I wonder if someone started depending on this behavior. In that case it is
+>>>> better to return error instead of silently ignore, so we will hear complains
+>>>> loudly. This looks good to me.
+>>>
+>>> This is backward incompatible change and I am wondering why should we
+>>> even risk regression.
+>>
+>> Mainly I was wondering if this is intentional or unintentional. If this us
+>> unintentional, can we fix it without anyone noticing?
 > 
-> commit ca707239e8a7 ("mm: update_lru_size warn and reset bad lru_size")
-> introduced a sanity check to catch memcg counter underflow, which was
-> more of a workaround for another bug: lru_zone_size is unsigned, so
-> underflow wraps it around and returns an enormously large number, then
-> the memcg shrinker loops almost forever as the calculated number of
-> folios to shrink is huge. That commit also checked if a zero value
-> matches the empty LRU list, so we have to hold the LRU lock, and
-> handle the positive and negative deltas separately.
+> My guess would be this was just omission. Those happen and over years we
+> have learned that userspace is quite creative at using those.
 > 
-> But later commit b4536f0c829c ("mm, memcg: fix the active list aging
-> for lowmem requests when memcg is enabled") already removed the LRU
-> emptiness check, so handling the deltas separately is no longer
-> needed. And if we just turn it into an atomic long, underflow isn't a
-> big issue either, and can be checked at the reader side, which is
-> called much less frequently than the updater.
+>> However if we are ok with this then let's make is formal and make this a
+>> documented behavior. I don't have any strong opinion either way but I think you
+>> are saying it safer to just assume this is intentional. Fine with me.
 > 
-> So let's turn the counter into an atomic long and check at the reader
-> side instead, which has a smaller overhead. The underflow correction
-> is removed: a massive leak of the LRU size counter would indicate
-> that something else has gone very wrong, and one should fix that
-> leaking site instead. Besides, the updater-side sanity check is
-> unlikely to catch the leaking site anyway: if a folio was removed
-> without updating the counter while other folios remain on the LRU,
-> the WARN only triggers much later, from a likely innocent callsite.
-> 
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
->   include/linux/memcontrol.h |  9 +++++++--
->   mm/memcontrol.c            | 18 +-----------------
->   2 files changed, 8 insertions(+), 19 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index e78bc98ab229..b13e3f056319 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -113,7 +113,7 @@ struct mem_cgroup_per_node {
->   	/* Fields which get updated often at the end. */
->   	struct lruvec		lruvec;
->   	CACHELINE_PADDING(_pad2_);
-> -	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
-> +	atomic_long_t		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
->   	struct mem_cgroup_reclaim_iter	iter;
->   
->   	/*
-> @@ -897,10 +897,15 @@ static inline
->   unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
->   		enum lru_list lru, int zone_idx)
->   {
-> +	long val;
->   	struct mem_cgroup_per_node *mz;
->   
->   	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-> -	return READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
-> +	val = atomic_long_read(&mz->lru_zone_size[zone_idx][lru]);
-> +	if (WARN_ON_ONCE(val < 0))
-> +		return 0;
-> +
-> +	return val;
->   }
->   
->   void __mem_cgroup_handle_over_high(gfp_t gfp_mask);
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 1d3339520809..9d0ee3d3bda7 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1529,28 +1529,12 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
->   				int zid, long nr_pages)
->   {
->   	struct mem_cgroup_per_node *mz;
-> -	unsigned long *lru_size;
-> -	long size;
->   
->   	if (mem_cgroup_disabled())
->   		return;
->   
->   	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-> -	lru_size = &mz->lru_zone_size[zid][lru];
-> -
-> -	if (nr_pages < 0)
-> -		*lru_size += nr_pages;
-> -
-> -	size = *lru_size;
-> -	if (WARN_ONCE(size < 0,
-> -		"%s(%p, %d, %ld): lru_size %ld\n",
-> -		__func__, lruvec, lru, nr_pages, size)) {
-> -		VM_BUG_ON(1);
-> -		*lru_size = 0;
-> -	}
-> -
+> My main question is why should we even bother to change this in the
+> first place? Is that reason stronger than a theoretical breakage of
+> userspace that we might learn much later?
 
-This code is confusing, I used to try to remove it.
+Since you asked "why bother", here's how I ran into it.
 
-Well done.
+The patch actually came from a production incident rather than a code
+audit.
 
+A maintenance script on a cluster accidentally wrote an unset variable
+into memory.max of a workload cgroup. The write succeeded, and the
+workload in the cgroup was subsequently OOM-killed. There was no
+indication that the successful write had caused it, so it took quite
+some time to trace the OOMs back to that script.
 
-> -	if (nr_pages > 0)
-> -		*lru_size += nr_pages;
-> +	atomic_long_add(nr_pages, &mz->lru_zone_size[zid][lru]);
->   }
->   
->   /**
-> 
+When I checked the documentation, I noticed that the cpuset controller
+explicitly documents the semantics of empty writes ("An empty value
+indicates that the cgroup is using the same setting as the nearest
+cgroup ancestor..."), while the memory controller documentation says
+nothing about empty input.
 
-Looks good to me.
+I reproduced the same behavior in isolation on a Kubernetes cluster
+(v1.29, cgroup v2, two-container pod, 384M pod limit):
 
-Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
--- 
-Best regards
-Ridong
+  # LIMIT=
+  # echo "$LIMIT" > $CG/memory.max
+  # echo $?
+  0
 
+  m6demo   0/2     OOMKilled   0
+
+  oom-kill: constraint=CONSTRAINT_MEMCG,
+            oom_memcg=/kubepods.slice/.../kubepods-burstable-pod....slice
+  Memory cgroup out of memory: Killed process 339529 (sleep) ...
+            anon-rss:32kB, file-rss:452kB
+
+The process selected by the OOM killer had less than 1 MB resident
+under a 384M pod limit, but the empty write was accepted as 0,
+immediately triggering a memcg OOM. From the caller's perspective, the
+write simply succeeded.
+
+One caveat is that kubelet reconciles the pod-level memory.max within
+seconds, so the window is short there, although container-level files
+are not reconciled.
+
+So the patch came out of that incident and the documentation gap it
+exposed. My thinking was that rejecting an empty input would make such
+mistakes fail immediately instead of silently changing the limit to 0.
+
+Whether that benefit outweighs the compatibility risk is not mine to
+decide. If it doesn't, then documenting the current empty-write
+behavior, similar to cpuset, would also address the ambiguity that led
+me to investigate this in the first place.
+
+Thanks,
+Tao
