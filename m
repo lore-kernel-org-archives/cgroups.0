@@ -1,197 +1,305 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9445338736F;
-	Wed, 19 Aug 2026 07:37:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99181412C12
+	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 08:36:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787125038; cv=none; b=lPGtJVK15AUyDouTkEYndm8nVcSMDup7McDDlYvbTp0dxjpRUmtYLCXPIOlaVbB7kOov6ZhqWbiLdDHiIk+omBFfkGKx5nQlukAI7OLsCQ8h7UbLJsMl+pi5nQp3d8ghzXTc4mqX3Dl7WiqubiDM7SWnOPpimO12l0Jo8/lgnM0=
+	t=1787128582; cv=none; b=VDhqKx35mD2O3euybZmEVxvoN9pCjfL2L03sLUSzQrMf/lFZU4sqYM5iXyFGhCoV3eAwOvjer3Od83GEw6eNHViAYZVW/D+V923y/12WFAsO3QTzFkjTin6AGGla4yimSjFMhUCyRoD7/f+UV4MkCRM6nPHXuAP06dZIIC6f/v8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787125038; c=relaxed/simple;
-	bh=FZi+cpGhQ6FrxVlpJBfzb4QK+XLcQ0ptZcmdTMv+aZE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=itJ7MPocL3qQeFWKWRHmrFJ1cA0MQ3QMv+Wdb0rTD9CnbmhQKxNAcAYzobYwm/ispMI29G0chHmNXMciwg5Nzi4ZYL5ExHxfiRLN4oR9we/0jvY7Rt1EcMIRfScWvkgsJ+OOeaoFtOneZC7rGU7svtgwZXR8Oqs2Goj9+ly/OGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Gu9M2uqP; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1787128582; c=relaxed/simple;
+	bh=3UXWrQt3nPal1M5oiy154T5Gr08VLE54jxv0n6xnO+8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pw0L9D//cYgoF3QLxbZOUlS1k6iX5kAGc4e6NEOgVY67eLvCqLUcyVkGueqfuNzOTNJ3Pk6/6IuMOSlwctuHSX0zR/vGAGzAhfd6riiSy5X95OvkrHIGXX6tcJQZq34m+AXTe/CXeGupTkAw2Wh6jjH65iLHShHC77J9SH6ad10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OANRdORJ; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gu9M2uqP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=BAI9skatQtcwLFtDH7I+qCURbQQ9w1c+9LkqWD63J+U=; b=Gu9M2uqPZhUknsY1Ba1aAq00z7
-	x9/dKEeNJcu/BHZte5hqp0bgYY/8Y/rBBueIqeVQNqqyPYDMZfvdyQaPhCRTH+wYXbL+V3K7Uixtv
-	uDNkmazmVj2pSH1VUgCaHrhFe6yrMt8CsrH9/jtFQRkcOxYkHlCwUAKk7YHMIXqj+qKkZDAVfQGfq
-	EkH0GtSATv6FFj6a3EYi/4IwPj8AdP0jZsljHhPkR9ovDrnpzePw5vytm56Ueq863Bq7ZBnOryYvE
-	7MP0p3lH0U0wVbku5QUzwtBXxyDXiJwe+ZQMCi4NV9GV4Jprz5ybx3HNCzfY6zAr2jJHUEdjxPZoy
-	1YtqxOrg==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wwar4-0000000DIzD-1nBF;
-	Wed, 19 Aug 2026 07:36:59 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 5599630030F; Wed, 19 Aug 2026 09:36:57 +0200 (CEST)
-Date: Wed, 19 Aug 2026 09:36:57 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Jake S <j@metarealtyinc.ca>, Waiman Long <longman@redhat.com>
-Cc: Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [BUG] sched/fair: divide error in __calc_prop_weight() from the
- enqueue path (flat-hierarchy series)
-Message-ID: <20260819073657.GE1247881@noisy.programming.kicks-ass.net>
-References: <20260818231333.1441757-1-j@metarealtyinc.ca>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OANRdORJ"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2d58efc7356so8408045ad.1
+        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 01:36:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787128580; x=1787733380; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=NjK48y+gInVL/DFMKlcFgreu40jMGHPWay1upkkwKro=;
+        b=OANRdORJEtwOwZBAlZjSKB3zK8qW6QKLbASy9A3Yd7FeiJESUIpG9OFKiz56I5Tr3S
+         u8rYZESD1j4sgvfXUzBuPRnGGp8P7yeVald3svwZGEeZEw3TgqatckQb/sylxXKyOfHs
+         Z5r7xL1byDE3ozBKzu5GzlSCb56x/3Wnixtoj0+P0rZ1szJD7eg21WFE0Gyz4slnPzMh
+         90GBsnRQfw1TdzaZ0xPpxrKyf0YoypujGsXQqC7gjmF3MQ7+SFRYhsfG5lCKBbPaU5h4
+         nNynvebsFHMlMxa9C2+/KedtFsCcKYHt4H7OPQCH83Fh++5uDG/sCwJ1o6Vg/nvA08r1
+         0Dlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787128580; x=1787733380;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=NjK48y+gInVL/DFMKlcFgreu40jMGHPWay1upkkwKro=;
+        b=eVuaR/kLYpxV0bsjbGZwpWHa2K6LGHYjXHl72cydlA6S5uQLCGdWeiZ8rEXoURP1UF
+         9m8nx1oRmgF/GJDt6QEQQ+6i915/LQqZm62yO6ybkRh0CPsskBprma/r49VdGtvVNlpT
+         YoyY4KH1hU19JYBSfRuAzqZXC0PSl6oBfRjGY0h8vhBb7ah7mjDrgRSvGmCCo3UGv/Xk
+         tbLbdDetKrKGMs1+KKuTBdxlCcOf5DRXU0XhJQsl0hX+f2Wt6CjIjaC80Bpisco+iMbe
+         cfQAwrUYycm1v+Sr46oraW/SWUwTQXems2Ucz7Ki963UnV4UN58So+T9ld8OzTCa+tKt
+         qhIw==
+X-Forwarded-Encrypted: i=1; AHgh+RrIl5FG+YnsHPDuCzQ3JHPubN/2NfwS20E6kxjzisDbtrHT4xHY7LpEP0hOkdgztwlWQRdTJiNq@vger.kernel.org
+X-Gm-Message-State: AOJu0YzswelYA19gWzb7/q+nqAqBvZ0EdGn5DH0cWCmnlIkqMDljwcKM
+	nd5NizH5ISnpLwE6awLYMpCrKfCvHmNVSoPJXxONRXwMM2E7fPjABaqm
+X-Gm-Gg: AR+sD13vuE1vN+SkFcNSdJmz9QU7FWgwfLHwZ1legJgGS2TREYOuwuT33IaWVogvpAS
+	Cwg2mIyZ37DcKOK1cllaa98+ztQ5hOtrmem3Ih0y3rY/eHMB+rrvrJO2xQQ//3g2T6TwlTvPEDQ
+	TP3f+IKHiWjhpngBcF9tdPISfEdpozzRDSHmYUFLu2o6jC70nGTpn866kbb/G8T6v0fyECiFt4s
+	Ao/v0CeQna3imlGoBH3WzVxkho3ZLlFF7xnYBYTAcRXxjMpgm64iKIh6NKCyxt2EndfK6yvg0l5
+	ke6I3Q3ULx6gc/1VzzzPkpJunUXA2U+Ua5jdVxiW/mZbk6G2Ly76mrswpdDzp976YJVbH9NK6cP
+	UlDKX64m0rbjJkZqotv22MZ40m5JmSvUaIaxLsKnpKTgpJvXoiL50TFvMmr8iV3rB2IPouYxJvV
+	dqUEeTmYQnXaO2BrLgFBwe9NEPjqV/2ZDKrOpv/+a5JvQIVf0/pq4o58bejhhY3MM2fRWL166vy
+	cscUS//umg=
+X-Received: by 2002:a17:903:2bce:b0:2d5:ccb7:12c3 with SMTP id d9443c01a7336-2d5fd59f837mr58430075ad.2.1787128579467;
+        Wed, 19 Aug 2026 01:36:19 -0700 (PDT)
+Received: from volcano9f8e-host.amd.com ([165.204.217.251])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bf143775sm5089413eec.23.2026.08.19.01.36.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Aug 2026 01:36:19 -0700 (PDT)
+From: Hemanth Selam <hemanth.selam@gmail.com>
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>,
+	Sebastian Chlad <sebastian.chlad@suse.com>,
+	Waiman Long <longman@redhat.com>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Yosry Ahmed <yosry@kernel.org>,
+	Nhat Pham <nphamcs@gmail.com>,
+	cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	Hemanth Selam <hemanth.selam@gmail.com>
+Subject: [PATCH] selftests/cgroup: set the test plan after the setup checks
+Date: Wed, 19 Aug 2026 14:06:00 +0530
+Message-ID: <20260819083600.1351711-1-hemanth.selam@gmail.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260818231333.1441757-1-j@metarealtyinc.ca>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Aug 18, 2026 at 07:13:31PM -0400, Jake S wrote:
-> Hi,
-> 
-> I hit a divide-by-zero panic in __calc_prop_weight(), reached from
-> enqueue_hierarchy() inside enqueue_task_fair(). This is the *enqueue*
-> path, not the task_tick_fair() variant reported in May and addressed by
-> the se->on_rq guard folded into 85570f10a4c6 -- enqueue_hierarchy() and
-> dequeue_hierarchy() carry no equivalent check.
-> 
-> The code is from the tip sched/core flat-hierarchy rework; it is not in
-> Linus' tree. I am running it via a distro kernel (CachyOS) that carries
-> the series, on 7.2-rc7 and 7.2.0.
-> 
-> I have separated what I verified from what I am guessing. The last link
-> in the causal chain is unexplained and I am asking about it rather than
-> asserting it.
-> 
-> === The oops ===
-> 
->   Oops: divide error: 0000 [#1] SMP NOPTI
->   CPU: 12 UID: 1000 PID: 312907 Comm: bash
->   Tainted: G     U   C OE       7.2.0-rc7-2-cachyos-rc #1 PREEMPT(full)
->   Hardware name: Dell Inc. XPS 16 DA16260/0RMV2Y, BIOS 1.5.1 04/01/2026
->   RIP: 0010:enqueue_task_fair.llvm.6536700009857788019+0x422/0x950
->   Code: 0f 84 74 01 00 00 83 bd 68 01 00 00 00 45 0f 4f f4 48 8b 4d 00
->         4c 89 e8 48 09 c8 48 c1 e8 20 0f 85 53 fd ff ff 44 89 e8 31 d2
->         <f7> f1 41 89 c5 e9 4f fd ff ff 0f 0b e9 1d fe ff ff 4c 89 e6
->   RAX: 0000000000000000 RBX: 0000000000000001 RCX: 0000000000000000
->   RDX: 0000000000000000 RSI: fffff46fbf98e680 RDI: fffff46fbf98ffc0
->   RBP: fffff46fbf98ffc0 R08: ffff8ee25f9b2a80 R09: 0000000000000000
->   R10: 0000000000000000 R11: 0000000000000110 R12: 0000000000000001
->   R13: 0000000000000000 R14: 0000000000000001 R15: fffff46fbf9901c0
->   Call Trace:
->    <TASK>
->    enqueue_task+0x8e/0x250
->    wake_up_new_task+0x148/0x2e0
->    kernel_clone+0x1c6/0x390
->    __x64_sys_clone+0xcc/0x100
->    do_syscall_64+0x147/0x3c0
->    asm_fred_entrypoint_user+0x41/0x41
->    </TASK>
-> 
-> Machine was idle, lid closed, 11.66 h into the boot. bash forked, the
-> new task was enqueued, div trapped.
-> 
-> It is not survivable in practice. panic_on_oops was 0, so the kernel
-> took the first #DE, printed the oops and continued for 476 ms. It then
-> faulted at the same RIP with byte-identical registers and an identical
-> RSP (ffffd46fff53bbb0):
-> 
->   Kernel panic - not syncing: Fatal exception
->   Shutting down cpus with NMI
-> 
-> i.e. the oops-recovery path (kill task -> schedule()) re-entered the
-> same enqueue with the rq lock already held mid-enqueue.
-> 
-> === Where it divides (confirmed) ===
-> 
-> kernel/sched/fair.c, __calc_prop_weight(), inlined into
-> enqueue_hierarchy() -> enqueue_task_fair():
-> 
-> 	weight *= se->load.weight;
-> 	if (parent_entity(se))
-> 		weight /= cfs_rq->load.weight;	/* <-- #DE */
-> 
-> RCX = cfs_rq->load.weight = 0. R13 = 0 means se->load.weight was 0 as
-> well, i.e. a group sched_entity carrying zero weight.
+The cgroup tests announce their plan before checking whether cgroup v2 is
+available, so on a host without it they promise a number of results and
+then skip out after the first one:
 
-Durr, 0 weight not good, in any scheme. Much of the code strives to
-never let it get below 2 or so.
+	TAP version 13
+	1..3
+	ok 1 # SKIP cgroup v2 isn't mounted
+	# Planned tests != run tests (3 != 1)
+	# Totals: pass:0 fail:0 xfail:0 xpass:0 skip:1 error:0
 
-> Not a miscompile: this is clang 22.1.8 + ThinLTO, hence the .llvm.<hash>
-> suffix. The 32-bit "div %ecx" against 64-bit C operands is clang's
-> BypassSlowDivision -- the preceding "or %rcx,%rax; shr $32,%rax; jne"
-> is its guard. The 64-bit slow path is present in the same function.
-> 
-> === How the weight can reach zero (mechanism, partly inferred) ===
-> 
-> __calc_smp_shares() ends:
-> 
-> 	return clamp_t(long, shares, MIN_SHARES, shares_max);
-> 
-> clamp() yields hi when hi < lo, so shares_max == 0 silently defeats the
-> MIN_SHARES floor and returns 0 -- exactly the case the comment directly
-> above it says must yield MIN_SHARES instead of 0. Note __clamp_once()
-> already carries
+ksft_exit_skip() can only emit a well formed "1..0 # SKIP" line while no
+plan has been printed, as the comment above it in kselftest.h points out.
 
-Moo..
+Move ksft_set_plan() below the setup checks that can skip, so that a
+skipped run reports:
 
-> 
-> 	BUILD_BUG_ON_MSG(statically_true(ulo > uhi), ...)
-> 
-> so lo > hi is considered a bug upstream; it just cannot fire on a
-> runtime-computed shares_max.
-> 
-> shares_max arrives from calc_concur_shares() as nr * tg_shares, where
-> nr = min(tg_tasks(tg), tg_cpus(tg)). tg_cpus() returns
-> cpuset_num_cpus(cgrp) unfloored, while its sibling tg_tasks() already
-> floors at 1. That asymmetry is the hole.
-> 
-> concur is the live mode here:
-> 
->   $ cat /sys/kernel/debug/sched/cgroup_mode
->   up smp (concur) max tasks
-> 
-> What I could NOT establish: that tg_cpus() actually returned 0, or what
-> would produce an empty effective cpuset. update_cpumasks_hier()
-> substitutes the parent's effective_cpus before storing; on this machine
-> no cgroup has an empty cpuset.cpus.effective and every
-> cpuset.cpus.partition reads "member". Twelve cgroups here have an empty
-> cpuset.cpus and all report effective = 0-15. I suspected a power daemon
-> that rewrites AllowedCPUs on the top-level systemd slices using an
-> empty-then-set idiom, but I could not make that yield an empty effective
-> mask, so I am not claiming it.
-> 
-> The missing floor looks like a hole regardless of what trips it, and I
-> would rather ask than guess: is there a path where cpuset_num_cpus() can
-> legitimately return 0, or should tg_cpus() simply floor at 1 the way
-> tg_tasks() does?
+	TAP version 13
+	1..0 # SKIP cgroup v2 isn't mounted
 
-tg_cpus() should probably floor at 1, just to be both symmetric and
-avoid this. But I too was under the impression a cpuset would never have
-an empty set.
+Several of the tests skip more than once while setting up, for a missing
+or unwritable controller as well, so the plan goes after the last of
+them.  test_core joins its two setup paths at the post_v2_setup label and
+sets the plan there.
 
-However, now that I think about it, IIRC there is a cpu hotplug (and
-suspect I suppose) case where cpuset-v2 allows a cpuset to become empty
-like this, *however* it would then take the parent cgroup until it would
-find one that is non empty.
+Reporting each planned test as skipped instead would keep the plan where
+it is, but the setup failures here mean the whole test cannot run rather
+than its individual cases being skipped, which is what "1..0 # SKIP" is
+for.
 
-Now, cpuset_num_cpus() uses RCU, so perhaps there is a race somewhere.
-Waiman, you know this cpuset stuff beter than me, did I get it wrong?
+Fixes: 1dc830ee4c15 ("selftests/cgroup: conform test to KTAP format output")
+Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
+---
+ tools/testing/selftests/cgroup/test_core.c       | 2 +-
+ tools/testing/selftests/cgroup/test_cpu.c        | 2 +-
+ tools/testing/selftests/cgroup/test_cpuset.c     | 2 +-
+ tools/testing/selftests/cgroup/test_freezer.c    | 2 +-
+ tools/testing/selftests/cgroup/test_kill.c       | 2 +-
+ tools/testing/selftests/cgroup/test_kmem.c       | 2 +-
+ tools/testing/selftests/cgroup/test_memcontrol.c | 2 +-
+ tools/testing/selftests/cgroup/test_pids.c       | 2 +-
+ tools/testing/selftests/cgroup/test_zswap.c      | 2 +-
+ 9 files changed, 9 insertions(+), 9 deletions(-)
 
-Anyway, if you send a patch adding the floow to tg_cpus(), I'll apply
-that just on symmetry grounds. If Waiman spots a fail with the cpuset
-bits we can fix that too.
+diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
+index 88ca832d4fc1..64f4962a4659 100644
+--- a/tools/testing/selftests/cgroup/test_core.c
++++ b/tools/testing/selftests/cgroup/test_core.c
+@@ -927,7 +927,6 @@ int main(int argc, char *argv[])
+ 	int i;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), &nsdelegate)) {
+ 		if (setup_named_v1_root(root, sizeof(root), CG_NAMED_NAME))
+ 			ksft_exit_skip("cgroup v2 isn't mounted and could not setup named v1 hierarchy\n");
+@@ -940,6 +939,7 @@ int main(int argc, char *argv[])
+ 			ksft_exit_skip("Failed to set memory controller\n");
+ 
+ post_v2_setup:
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
+index 7a40d76b9548..8f96bfd19ab9 100644
+--- a/tools/testing/selftests/cgroup/test_cpu.c
++++ b/tools/testing/selftests/cgroup/test_cpu.c
+@@ -799,7 +799,6 @@ int main(int argc, char *argv[])
+ 	int i;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
+ 
+@@ -807,6 +806,7 @@ int main(int argc, char *argv[])
+ 		if (cg_write(root, "cgroup.subtree_control", "+cpu"))
+ 			ksft_exit_skip("Failed to set cpu controller\n");
+ 
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_cpuset.c b/tools/testing/selftests/cgroup/test_cpuset.c
+index c5cf8b56ceb8..52ed8fba685a 100644
+--- a/tools/testing/selftests/cgroup/test_cpuset.c
++++ b/tools/testing/selftests/cgroup/test_cpuset.c
+@@ -250,7 +250,6 @@ int main(int argc, char *argv[])
+ 	int i;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
+ 
+@@ -258,6 +257,7 @@ int main(int argc, char *argv[])
+ 		if (cg_write(root, "cgroup.subtree_control", "+cpuset"))
+ 			ksft_exit_skip("Failed to set cpuset controller\n");
+ 
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_freezer.c b/tools/testing/selftests/cgroup/test_freezer.c
+index 0569e93fa6b0..f28bb02e9783 100644
+--- a/tools/testing/selftests/cgroup/test_freezer.c
++++ b/tools/testing/selftests/cgroup/test_freezer.c
+@@ -1491,9 +1491,9 @@ int main(int argc, char *argv[])
+ 	int i;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_kill.c b/tools/testing/selftests/cgroup/test_kill.c
+index f6cd23a8ecc7..99cafd9dc013 100644
+--- a/tools/testing/selftests/cgroup/test_kill.c
++++ b/tools/testing/selftests/cgroup/test_kill.c
+@@ -278,9 +278,9 @@ int main(int argc, char *argv[])
+ 	int i;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index 1db0ba1226b9..cb47561b4b44 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -426,7 +426,6 @@ int main(int argc, char **argv)
+ 	int i;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
+ 
+@@ -441,6 +440,7 @@ int main(int argc, char **argv)
+ 		if (cg_write(root, "cgroup.subtree_control", "+memory"))
+ 			ksft_exit_skip("Failed to set memory controller\n");
+ 
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 0ebf796f3cff..3a84d068fbf3 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -1798,7 +1798,6 @@ int main(int argc, char **argv)
+ 		page_size = BUF_SIZE;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
+ 
+@@ -1823,6 +1822,7 @@ int main(int argc, char **argv)
+ 		ksft_exit_skip("Failed to query cgroup mount option\n");
+ 	has_localevents = proc_status;
+ 
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_pids.c b/tools/testing/selftests/cgroup/test_pids.c
+index 9a387c815d2c..710109b53dfe 100644
+--- a/tools/testing/selftests/cgroup/test_pids.c
++++ b/tools/testing/selftests/cgroup/test_pids.c
+@@ -148,7 +148,6 @@ int main(int argc, char **argv)
+ 	char root[PATH_MAX];
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
+ 
+@@ -163,6 +162,7 @@ int main(int argc, char **argv)
+ 		if (cg_write(root, "cgroup.subtree_control", "+pids"))
+ 			ksft_exit_skip("Failed to set pids controller\n");
+ 
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (int i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
+index 49b36ee79160..6e7b89315bbf 100644
+--- a/tools/testing/selftests/cgroup/test_zswap.c
++++ b/tools/testing/selftests/cgroup/test_zswap.c
+@@ -810,7 +810,6 @@ int main(int argc, char **argv)
+ 		page_size = BUF_SIZE;
+ 
+ 	ksft_print_header();
+-	ksft_set_plan(ARRAY_SIZE(tests));
+ 	if (cg_find_unified_root(root, sizeof(root), NULL))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
+ 
+@@ -827,6 +826,7 @@ int main(int argc, char **argv)
+ 		if (cg_write(root, "cgroup.subtree_control", "+memory"))
+ 			ksft_exit_skip("Failed to set memory controller\n");
+ 
++	ksft_set_plan(ARRAY_SIZE(tests));
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+-- 
+2.43.7
 
-Thanks for the excellent report!
