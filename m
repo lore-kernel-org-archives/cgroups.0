@@ -1,34 +1,34 @@
-Received: from mta1.migadu.com (out-56.mta1.migadu.com [95.215.58.56])
+Received: from mta0.migadu.com (out-87.mta0.migadu.com [91.218.175.87])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5EAD44064B
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE2994457D3
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.87
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787229776; cv=none; b=KMes4sLPPYS7xSfmj8lEHuLJrWLvtwWaf74qru05brPlOVlA3bM1h67SYFdbLtpSrgdrK3GfYxStQ789IV4RXLmrsdatx3n/8vvI0M34QMv99aieJnqS5qrDD5Bs20yIbZnOYa7O6/mvNJ92Ze7AXHEvlOPmjQYJV0Wa7guoSxc=
+	t=1787229781; cv=none; b=mXWNrp6f8MH+ZzfJ+KxicTn1I6sUMWlB5StWGWMM5OXJPtY+hrl7Y0gIEWNQ4Lg1l1IRl9hfnjm77xbphwIGQQUhez97/bv7xNVNl/wnoXVLh7kltyhPeuurpWG8u/LlM/wSdwFuMeFzYiXl/pI0dK2OhXerVRLFSS97Yj6Y+Kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787229776; c=relaxed/simple;
-	bh=8NOSCQyZWZCO7r3LDcjs74rZ9SleA3lk8hhhzRFnsWI=;
+	s=arc-20240116; t=1787229781; c=relaxed/simple;
+	bh=6JU0p/Mbmxgk7gewp7yNkURQEZbjwDYnQ6iCJMjybt0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TEnKYnw1I5vaEtwyome8qw7+dF8mS3a0qOIblXDHuz5QHPLhfzittm8mN5FoCvrGAz7kZxcJ8B7/xpLY2QoLJEGQ3mxZgVwTvSLt8VvBmNd/ywGRuN/6r2gYSZv3Khfp63cZyKKNVyzN9e71bqyFT55TDLX7r125Ohnz8tsJadI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=u1eCZ3gC; arc=none smtp.client-ip=95.215.58.56
+	 MIME-Version; b=Kykj7PQ7Ez3mOqM+hVzw+OKQNbfrFnEUKA8EFleYtedzJEaBudEcRc2XmHRpJ/X4zs8lHQB8XSc3AWLSV144K2ktUbOEv60j7p6328/OhnpqXKARZBxhWTVOBovzQCuDxOoWqfOveRVxkAf2qtAmfedASEvo4r7slf5ANefY4iM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=brlgC4g1; arc=none smtp.client-ip=91.218.175.87
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="u1eCZ3gC"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="brlgC4g1"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=8NOSCQyZWZCO7r3LDcjs74rZ9SleA3lk8hhhzRFnsWI=;
+DKIM-Signature: a=rsa-sha256; bh=6JU0p/Mbmxgk7gewp7yNkURQEZbjwDYnQ6iCJMjybt0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787229772; v=1; x=1787834572;
- b=u1eCZ3gC5IFZ7MjbxfmiofXcLzAaJdQSnvP6KNt7cPoyksoOv0RV3iZ/8e3qp0Y2J8XH9Nqh
- HjfmAGGBaqAN5R9EkN07dVC+rgfQIFZjdiLeHhr2jud+3V+jgwWbyAsYoxCzs49fLPTGL3/sl1p
- kye+w4CkXF6+161SVxcWTqZM=
+ t=1787229776; v=1; x=1787834576;
+ b=brlgC4g1GR4ejqYtVLuGEs8dJzqMx5kOkE5rte3sUc8rUek2DlFbzowetUnY+EN1yam9Dw6c
+ lpJDlZEWHb3WfuEqokRsaO1MnVivIOvCFqgEO/GlwvBUDb7hKeFlWqftCn1AeYLPHGK6gp2kNGQ
+ U3WvHg5fN4KUuTRpdR+fYb5A=
 X-Envelope-To: cgroups@vger.kernel.org
 Received: from zgp.. (223.70.159.239)
-	by smtp.migadu.com with ESMTPS id 443e87af351c599e;
-	Thu, 20 Aug 2026 12:42:52 +0000
-X-Mizu-Trace-ID: 443e87af351c599e
+	by smtp.migadu.com with ESMTPS id 0ba0aa442e9239da;
+	Thu, 20 Aug 2026 12:42:56 +0000
+X-Mizu-Trace-ID: 0ba0aa442e9239da
 X-Migadu-Flow: FLOW_OUT
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: longman@redhat.com,
@@ -41,9 +41,9 @@ Cc: ridong.chen@linux.dev,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH 08/17] cgroup/cpuset: Release CPUs when a type change is rejected
-Date: Thu, 20 Aug 2026 20:41:53 +0800
-Message-ID: <20260820124202.517160-9-guopeng.zhang@linux.dev>
+Subject: [PATCH 09/17] selftests/cgroup: Test rejected partition type changes
+Date: Thu, 20 Aug 2026 20:41:54 +0800
+Message-ID: <20260820124202.517160-10-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260820124202.517160-1-guopeng.zhang@linux.dev>
 References: <20260820124202.517160-1-guopeng.zhang@linux.dev>
@@ -57,51 +57,125 @@ Content-Transfer-Encoding: 8bit
 
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-When a housekeeping check rejects a root-to-isolated or isolated-to-root
-change, update_prstate() marks the partition invalid but leaves its
-effective_xcpus allocated. Those CPUs remain missing from the partition
-which owns the invalidated subtree.
+Exercise housekeeping rejection for local and remote partition type
+changes. Check the invalid state, the CPUs returned to the top cpuset and
+the boot-time isolation state of those CPUs.
 
-Disable a rejected remote partition with remote_partition_disable().
-For a local partition, return effective_xcpus to its parent before
-recording the invalid state. Use the complete mask because descendants
-are invalidated along with the parent and their CPUs return at the same
-time.
-
-Fixes: 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full don't leave any housekeeping")
 Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
- kernel/cgroup/cpuset.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ .../selftests/cgroup/test_cpuset_prs.sh       | 93 +++++++++++++++++++
+ 1 file changed, 93 insertions(+)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 853942c1afeb..a616012927be 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3020,10 +3020,21 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		compute_partition_owned_cpumask(cs, tmpmask.new_cpus);
- 		if (((new_prs == PRS_ISOLATED) &&
- 		     !isolated_cpus_can_update(tmpmask.new_cpus, NULL)) ||
--		    prstate_housekeeping_conflict(new_prs, tmpmask.new_cpus))
-+		    prstate_housekeeping_conflict(new_prs, tmpmask.new_cpus)) {
- 			err = PERR_HKEEPING;
--		else
-+			if (is_remote_partition(cs)) {
-+				WRITE_ONCE(cs->prs_err, err);
-+				remote_partition_disable(cs, &tmpmask);
-+			} else {
-+				spin_lock_irq(&callback_lock);
-+				partition_xcpus_del(old_prs, parent, cs->effective_xcpus);
-+				spin_unlock_irq(&callback_lock);
-+				cpuset_update_tasks_cpumask(parent, tmpmask.new_cpus);
-+				update_sibling_cpumasks(parent, cs, &tmpmask);
-+			}
-+		} else {
- 			isolcpus_updated = true;
-+		}
- 	} else {
- 		/*
- 		 * Switching back to member is always allowed even if it
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index bc8dbb724d5c..35c19738aaa4 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -1260,6 +1260,97 @@ test_owned_cpus_housekeeping()
+ 	echo "$TEST_NAME test PASSED."
+ }
+ 
++#
++# A local type change rejected by the boot housekeeping constraint must release
++# the partition CPUs and preserve their boot-isolated state.
++#
++test_partition_type_failure()
++{
++	TEST_NAME="Rejected local partition type change"
++	get_boot_isolated_cpu "$TEST_NAME" || return 0
++	echo "Running $TEST_NAME test ..."
++
++	cd $CGROUP2/test
++	echo member > cpuset.cpus.partition
++	echo $BOOT_CPU > cpuset.cpus
++	[[ $(cat cpuset.cpus.effective) = "$BOOT_CPU" ]] || {
++		echo "$TEST_NAME test SKIPPED: CPU $BOOT_CPU is unavailable"
++		echo "" > cpuset.cpus
++		cd $CGROUP2
++		return 0
++	}
++	test_partition isolated
++	echo root > cpuset.cpus.partition
++	grep -q '^root invalid (partition config conflicts with housekeeping setup)$' \
++		cpuset.cpus.partition || {
++		echo "Partition type failure did not produce the expected state"
++		exit 1
++	}
++	[[ $(cat $CGROUP2/cpuset.cpus.effective) = "$CPULIST" ]] || {
++		echo "Partition type failure did not release CPU $BOOT_CPU"
++		exit 1
++	}
++	check_isolcpus "." || {
++		echo "Partition type failure lost boot-isolated CPU $BOOT_CPU"
++		exit 1
++	}
++	echo member > cpuset.cpus.partition
++	echo "" > cpuset.cpus
++	cd $CGROUP2
++	echo "$TEST_NAME test PASSED."
++}
++
++#
++# Exercise the same rejected type change for a remote partition.
++#
++test_remote_partition_type_failure()
++{
++	TEST_NAME="Rejected remote partition type change"
++	get_boot_isolated_cpu "$TEST_NAME" || return 0
++	echo "Running $TEST_NAME test ..."
++
++	cd $CGROUP2/test
++	echo member > cpuset.cpus.partition
++	echo +cpuset > cgroup.subtree_control
++	echo $BOOT_CPU > cpuset.cpus
++	echo $BOOT_CPU > cpuset.cpus.exclusive
++	[[ $(cat cpuset.cpus.effective) = "$BOOT_CPU" ]] || {
++		echo "$TEST_NAME test SKIPPED: CPU $BOOT_CPU is unavailable"
++		echo "" > cpuset.cpus.exclusive
++		echo "" > cpuset.cpus
++		cd $CGROUP2
++		return 0
++	}
++	mkdir A1
++	cd A1
++	echo $BOOT_CPU > cpuset.cpus
++	echo $BOOT_CPU > cpuset.cpus.exclusive
++	test_partition isolated
++	echo root > cpuset.cpus.partition
++	grep -q '^root invalid (partition config conflicts with housekeeping setup)$' \
++		cpuset.cpus.partition || {
++		echo "Remote type failure did not produce the expected state"
++		exit 1
++	}
++	[[ $(cat $CGROUP2/cpuset.cpus.effective) = "$CPULIST" ]] || {
++		echo "Remote type failure did not release CPU $BOOT_CPU"
++		exit 1
++	}
++	check_isolcpus "." || {
++		echo "Remote type failure lost boot-isolated CPU $BOOT_CPU"
++		exit 1
++	}
++	echo member > cpuset.cpus.partition
++	echo "" > cpuset.cpus.exclusive
++	echo "" > cpuset.cpus
++	cd ..
++	rmdir A1
++	echo "" > cpuset.cpus.exclusive
++	echo "" > cpuset.cpus
++	cd $CGROUP2
++	echo "$TEST_NAME test PASSED."
++}
++
+ #
+ # Wait for inotify event for the given file and read it
+ # $1: cgroup file to wait for
+@@ -1333,5 +1424,7 @@ run_remote_state_test REMOTE_TEST_MATRIX
+ test_isolated
+ test_boot_isolated
+ test_owned_cpus_housekeeping
++test_partition_type_failure
++test_remote_partition_type_failure
+ test_inotify
+ echo "All tests PASSED."
 -- 
 2.43.0
 
