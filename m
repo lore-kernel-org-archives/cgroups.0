@@ -1,63 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A50397338;
-	Thu, 20 Aug 2026 18:34:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FF993976BE
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 18:44:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787250877; cv=none; b=IeMf3mrF7SG8LDDkXHhVf/zAcwKe9eHHMeQBGCX/8bcnb519D+Dy+wm1+GF7eQR0eVVLE//Rj/RVfeH4dGiArYIEFtv5Ga1BBpFBynI7faq0FPiFBpBvoh0HUXj10oKucXwMcVwv7hG5zOHaHj2U944tOW0uhRcaSNFHC4G5KEQ=
+	t=1787251481; cv=none; b=V5+UQu1xb2XJ8lpRCTus3pqZJcO/A0LvhPHafmisR6oEdK5DUW4756RtuPRa0CKv+KSwecNKttJVF7WelznBwmOqyf1oqpekNBYq91QX1QhEgeECIJbbprfe/SIY8rFdv1lT/XtMl8Prvt2PlVNPLsmPHxsFYmc7EwsJJNxdET4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787250877; c=relaxed/simple;
-	bh=xkrCldl/RNm5VmCEk7ifpUGku4pQ+z3vFxeOn1N9HDI=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=Ryhg8mENxAynv+MhTy014Pw51PCin3vKr9sijIiL/8N79oeWwhEkTLOntbF9Byip8N/MChC1V2ts1TAoqtOBTtpMRLqLeaoRMqfbvOTnH2el3nHM1PfVlZ9PCK6yLWzbenATThTtySi2ud15l5Whv3Qpc8+9SipfAtxZAu6GxTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bnw9cTXh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787251481; c=relaxed/simple;
+	bh=9JBRNzkMw2Coc7qA8yiJwk2/I20m/GL1O6pTM3+vxV4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YeqBFCO1Q+35FBFxtxgez/JQWd0o5N4SBXQE71vXtb01JmA1ZeXqDeZHVubtwfXckhchB+Je3OrNknvNwUmz+TQmXbyWWmqUb768+/PsPnVvEeOcshZuAbFRMr3Wq7tXJrbp4z5ymhpKibp/QOqdaZW4izBiYu3lfS+KtnvdHLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Dvu5hZVa; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bnw9cTXh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97DCE1F00A3A;
-	Thu, 20 Aug 2026 18:34:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787250873;
-	bh=wxJ47V+4yjGnRjBUpHsM+XD634NCu/TF4m6ztDdpyBI=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc;
-	b=Bnw9cTXh9P5i7VSJmq5tNEKn0nBWQruPGCvxEs1WBTxiYC4G8hOMMSXwfYwZyoVIC
-	 R9MKPZeMCIytLmTzyCGA9z2L8ekERE9nX5wnXDLAeQwf5vSu+bKd/6p8Aq7BeSK8Yb
-	 +2w7KrKWc36vJW6vHp+Zj/Iash1nz0CBtCWaB+1NfdMwKpRTiGZwulnFTup/EqTKep
-	 kIJ1G0DvlqfL/6bwWsIk7hLav3IanaPMNNIKKfecNefQB2F8KRyQPmsW/i1alyWtWl
-	 iooHGj6/PtQC9++3qAJONkII3GhOpP4xMQFzUG9/DNjQ1Z1jg5zEpvyfoFwpQ8WW5i
-	 16oCiboRhQwDg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 198493822D60;
-	Thu, 20 Aug 2026 18:33:45 +0000 (UTC)
-Subject: Re: [GIT PULL] cgroup: Changes for v7.3
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <e066a6c46c8b345bbb78c50ee9de81d3@kernel.org>
-References: <e066a6c46c8b345bbb78c50ee9de81d3@kernel.org>
-X-PR-Tracked-List-Id: <cgroups.vger.kernel.org>
-X-PR-Tracked-Message-Id: <e066a6c46c8b345bbb78c50ee9de81d3@kernel.org>
-X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.3
-X-PR-Tracked-Commit-Id: 2d19207f3fc8e08bab3270af2e3835358ab1473a
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 40d8c81577db09b71ee5402ba336b642d32d6a82
-Message-Id: <178725082353.422553.2681841377163768489.pr-tracker-bot@kernel.org>
-Date: Thu, 20 Aug 2026 18:33:43 +0000
-To: Tejun Heo <tj@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Dvu5hZVa"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-47fd66a094eso93760f8f.3
+        for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 11:44:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1787251477; x=1787856277; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0GLmbH5SyGlm3QykfKRyFPNaJnpHjEPWRCdCFLcGOXY=;
+        b=Dvu5hZVaCYw79sIVK5EPsSQfufQIlDPo2zcnb7zTMM8cULJjGj1ar27MUc5vBDcIoB
+         RNySU0VJVEaeuV25EtUzqqcF+xTz7xi+enyQ+cZlCzHz5pNZgcCLZuBB4N7eUcsZAtVn
+         USSp0yKZ0phhF4b81DiTzzM+HYds0jaJgu8QQTmvbdxtC4vNkxCg2/IWJbSogBZu/kNz
+         pwOgcjs3idW4eAb6hk6COfZb890Kr0zzzyjIjHoLcb12K990wtFd5yE0QEhAhtU4l0v/
+         LEBX4nzBn7Wa0qncwm3ciAl+CpUwOqfLUaW/RR8u9XXLxXgyodxtLaPFg5z0XlxR5Lx3
+         CoQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787251477; x=1787856277;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0GLmbH5SyGlm3QykfKRyFPNaJnpHjEPWRCdCFLcGOXY=;
+        b=sAcatca/m5nG4KYVHuwe32/cjeWDAqK4Zc+kwoPl2790vC0pr130ea3VnNOwHruKOd
+         fItoiHWWe4SPmZsXVB1FGSZbxD8n8Q+r6Jg0yqXzo1qUuW0dQ2T+PPpiPAO6vjqQPjph
+         2QW0d/POngIFHyMSUK4DHP4o56tUt2Ya1tX23oGWyAWSjpBEzL1yYx6vJwHqcmXGruo+
+         zAQRXXTi/v1/cxYe2DBTwOC/427cS7NB7oW2fvzn9wOWvVpak+cvCVWVHNl1n5B1nhTN
+         k94J3NavtfXE3qhQYKF36sPW0dBiosgCwr6DyUI0kDm9sv//CK+1qXQHBQXA9yioHXgR
+         Mkiw==
+X-Forwarded-Encrypted: i=1; AHgh+RrYkmdrCdZK3QnDhJBJUYzz2Ke9kSNB0LyaiKTQ3x7oBG7mKYlu2/wdLSNiBkcwAWJAKC/c8vFz@vger.kernel.org
+X-Gm-Message-State: AFuF++kRwDel9sE2+7m9bODNg9/h8jvNhU58wCFqVFCkwr3CG0+q6Oqw
+	KnhZYTSHtKptuo8UmnKVr+49TQHKd921Jl8gZPlOz7cTjE5Il2dNTTJPdpzTDkO5HxY=
+X-Gm-Gg: AR+sD10ka2RBOwB32RCKmraBFa3J7G0YP4UusfETrp32QXno6047I1sJu8czUDCv4Za
+	T2r2vlZn3ofO5h2nzeBhbcK3aC+v69yUKIVRq1EkjjWhkdivPc/AsjR036iWigNiQB4FVUPZkSr
+	Z6X05gAGzTURcYf9WLLJI0W+6YSD96anayc1lIi/72jx3MNsrYigqXdlZHTZ+TvXHSqCjkzahkN
+	U7SrNZlc0JPeIQWy2GddDlSC9BifIZlX1NaUJKPXQOapdchU5MOddUR1RoGFnjZFJU9WYpXcxa+
+	J01kraInn4JBtgUHL2mywhxG1/CYfR1mgvIgvIFgg0a3IA2z0FK3mKZSvTRqELy7PdCmtX8PtPa
+	9SyarzZUx43wnIm+JanBFV8/iYQPZmFoZPptg/HA9jY4ELtXTU7KHiPzilJ13ucS152giMXBAYl
+	iY+iR2AwEXyUr67x3H+/H5+SmduxkYtAyCIKVkRAGqezAfKl8NL4wwDrncVty7/PGpKeKPXdpub
+	Q==
+X-Received: by 2002:a05:6000:605:b0:47f:9096:3ef1 with SMTP id ffacd0b85a97d-482c0b62092mr1209538f8f.9.1787251476739;
+        Thu, 20 Aug 2026 11:44:36 -0700 (PDT)
+Received: from localhost (109-81-81-112.rct.o2.cz. [109.81.81.112])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482b1441748sm15311174f8f.8.2026.08.20.11.44.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Aug 2026 11:44:36 -0700 (PDT)
+Date: Thu, 20 Aug 2026 20:44:34 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joy Chaoyue Xiong <cxiong@meta.com>
+Subject: Re: [PATCH v2] memcg: trim the per-cpu charge stock instead of
+ draining it
+Message-ID: <aodLEmCg76oRHY2j@tiehlicka>
+References: <20260820012010.2016086-1-shakeel.butt@linux.dev>
+ <aoanalsTiGmL69LN@tiehlicka>
+ <aoclMssJAyYw2aCn@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aoclMssJAyYw2aCn@linux.dev>
 
-The pull request you sent on Mon, 17 Aug 2026 11:49:42 -1000:
+On Thu 20-08-26 09:06:29, Shakeel Butt wrote:
+> On Thu, Aug 20, 2026 at 09:06:18AM +0200, Michal Hocko wrote:
+> > On Wed 19-08-26 18:20:10, Shakeel Butt wrote:
+> > > @@ -2254,9 +2264,12 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+> > >  			empty_slot = i;
+> > >  		if (memcg == READ_ONCE(stock->cached[i])) {
+> > >  			stock_pages = READ_ONCE(stock->nr_pages[i]) + nr_pages;
+> > > +			if (stock_pages > MEMCG_STOCK_HIGH) {
+> > > +				memcg_uncharge(memcg,
+> > > +					       stock_pages - MEMCG_STOCK_LOW);
+> > > +				stock_pages = MEMCG_STOCK_LOW;
+> > 
+> > I would find it easier to read to keep the update in sync with
+> > memcg_uncharge, i.e.
+> > 				stock_pages = WRITE_ONCE(stock_pages - MEMCG_STOCK_LOW)
+> 
+> Sorry I am not sure I understand your suggestion. The WRITE_ONCE() is throwing
+> me off.
 
-> https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.3
+Sorry, brainfarth on my end. I meant to say that stock_pages should be
+updated by the uncharged decrement rather than capping it at MEMCG_STOCK_LOW.
+So in fact I meant this
+				stock_pages = stock_pages - MEMCG_STOCK_LOW;
+but then shortcuted it to a nonsense.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/40d8c81577db09b71ee5402ba336b642d32d6a82
-
-Thank you!
+> > > +			}
+> > >  			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+> > > -			if (stock_pages > MEMCG_CHARGE_BATCH)
+> > > -				drain_stock(stock, i);
+> > >  			success = true;
+> > >  			break;
+> > >  		}
+> > > -- 
+> > > 2.53.0-Meta
+> > 
+> > -- 
+> > Michal Hocko
+> > SUSE Labs
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Michal Hocko
+SUSE Labs
