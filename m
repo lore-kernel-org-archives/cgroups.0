@@ -1,192 +1,108 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+Received: from mta1.migadu.com (out-246.mta1.migadu.com [95.215.58.246])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F2633FCB37
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 09:40:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787218852; cv=pass; b=Aq5iVv4z4EwqrCqRmnH0my7NRDNpqlCilvmqQ9aByzqK/KX29WrbfvB4by5E+f0gO7UG4CSmB8OpM4fJcTdrsQxOgjvAsxdbTOFBbkD0Q5636laNEaxaVW0Qm3SyyACnfNUuJ/NDzsQAQT16nUSpV4Awy5CY8BHlRhHz7FTcB4E=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787218852; c=relaxed/simple;
-	bh=nanuFHVsBgqG7a7fke7k4nJlowtVRnvIUDcYf2o+0hE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=G4w8Eo/gxHmuYikuNEos1wbG1lMeGA3154Pw1/Bsy7ch/hwexDaNlflFfP7jwVNmU/gFwVbKJlbR7YwuivQ4Kb8pLuuXqh0CiI8E2pU9XXPWpxbvfb8tmgdY7GIOyrkCPOY7Kft+e1ZzrOEKf+FUQjliaakGQgO3PlQBilxg6Wc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BtQOu2zn; arc=pass smtp.client-ip=209.85.218.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89A563CB91E
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 09:58:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.246
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787219888; cv=none; b=VmJB1qIIeZ/1xquUxj4SQiSY8RsbyVwoU7zgDeKNgQ0Z+ZtMYZ1TFCgLYxPIMMQSnzLkLdqoZrvrEethog0nWr+x3fF5+1gCjTjZvR+rhdr7PAJuC/RBUCg9Amhcu3WB/XMxS7Y4bTGCsWQtJ7Ik2a0EXeOgQ4QiSIpPmpgy2Bg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787219888; c=relaxed/simple;
+	bh=ploZAqY/D2hnRbV7P/iJz6tixE4616igwYG3fSAUDUQ=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=uS+M1jlKVbsz58cKmFcfkFp5DrzRHTBydC4k1RmzQ5DtbszAfzChLK1mRQoaAAKnSQBcWS8+Swv9mWgxGttC0sktDHuVwbYVXZp/LVBol0WFaJiUSVcGPm7wYCv6smjcR3LffTwcZzDBroIFw2dNkMTSSOcCNWKeX5P+viflCng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=sfnF2BCp; arc=none smtp.client-ip=95.215.58.246
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BtQOu2zn"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-c167aa9500dso286249266b.3
-        for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 02:40:47 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787218842; cv=none;
-        d=google.com; s=arc-20260327;
-        b=RKGfae6an+5GM5+8eq0t+SR+pqftcSfdNkCJWRykpHC3rqNzWFG255CFAGht7Wm0ZH
-         gncAMXV7FxSTXwslloTGV9GrmJdVjH3Zcf6hVpIJSXLcNizFF1GJQUbLTzVOUByLgtZY
-         D6+i5JjfZmYQW/jdY1QiyuizHLMo2fTl5xZJFcaQ0str+3GiDnCGbcmBLqj3Y5MsNUoz
-         dHZoaPSj608TI2lR0dIqUp4eP6D7rsHF4I1aqcMKO3SO6gdKcLQRjvfrmtBoGkaH2zuM
-         W0ZbJzrJOSl3ZyPlHsyvMQ5lt/SP5y28fNvNec8jx/tqwNgRqZQ8kY3yg7RC10TCrQC0
-         awHw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=yBtmafbOayxaPZWLoQ+wO4hHf1gY8nYnCw9TiJ7qd/c=;
-        fh=i/OT1g3wOUkfwaDBjWUhO/dDn++R80wKsfv/6JuWug4=;
-        b=WTYAsmm9zLOKtnwi9Us+fq9YyzIYB2HrmEYxG4mjNmU7liS8sZGacMgbbPSPiyjndN
-         THVFTLSUzNDoFkK9gAGbkXjMICRLCK6KtwmjtMcLG0k8rNbUNd1jt41AhI/C5vP4nMW1
-         IBdBRJfNe0jgYs+hcg8KfcKVNb+ePDqtsOyV1gggl0ylctT7GgmGT1sTB25Z9gDLzW4h
-         oKlY2aWqMKh6mnPPCN5W7BF2qrJ++jARsKYUgBJ2P5NwpdDw6kP+zY6NRF+j9JkIiF9K
-         pUeD3tbQXrw1wTW1F4XYJ7Jdc5RuHhbGKmHIfyBPHZws1Vipv4ZX7g8LGRGAzKPOBm3I
-         sAAw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787218842; x=1787823642; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=yBtmafbOayxaPZWLoQ+wO4hHf1gY8nYnCw9TiJ7qd/c=;
-        b=BtQOu2znA4k3SUW95AKCcpQvrJ8ipNRVz86r+ncjkfClpzgoZ2Kx0xOhp7ynxfBiN2
-         8sCXSH7o/OoaydpQxFQfSa3GQ3GNQQq8YN7qmavD3mBUENA8JXtGI3W64oIGI6C5Q66t
-         Nv6VLrsQbnSWOR2s7ftPRkzPNRNnG+XXK5vMrvRVAuv4L9g1ivdmZl7ULUDU8slIdzjx
-         N3o5MrYCgNaFlbehEE5sRl1RV2cWy1MdBUYJfU+t8VmJZi3iyXpVNsHl93HSluR/XYb3
-         +2smNcmmOIp5vLm9Ob4kA+kX3jcchVMRKQtAcBTaSg5gJTOuCAe4W3lm06gZdaaNj070
-         VA3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787218842; x=1787823642;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yBtmafbOayxaPZWLoQ+wO4hHf1gY8nYnCw9TiJ7qd/c=;
-        b=pE4pyhPG5m389TrRIf1wj4/u2ts+mhBH/q1KCYxwXMgvTEeAsjLFRyjCnDstbXLKpA
-         wUyZDPJvmgEh51gzt3YaZjHPX7POuFIT/EDQQ7dUQmkjMKwxL0XHwYxzHR5iRLvpQLKY
-         OpIOixMQVAMhjwSCFoo177ER2Ab3g3k5YrOe8Y8G+w9H03u+o7iPhiQIKTKwFFxBawbp
-         zEFKDjyX6W/TcUhb1LhlrRLELLWu9eyg2vDIu9qUPoe+hfy3ow26KcWZCEsluXDMHwq5
-         6+hfXuSUH5ugYZVkwzediEDkReN3bQIp21NlOU435jrQPzUpHuocmOTNQGnTroWYjnNA
-         qJFQ==
-X-Forwarded-Encrypted: i=1; AHgh+RovGDOHxdSv2jQW7EH56k6H1ExIgbZYwhNTzvQDqJDnIksuuIEKxtmBA/MKlYbMUevDYOW0kNwc@vger.kernel.org
-X-Gm-Message-State: AOJu0YxhzSfx6HJaEPUWtSZctX8SrWAaMJriz+xmYoWhDqg5BuvXkTLD
-	btvMUSOBwXRRXZkTWF1fl8XTOCN7do92n2psEGKvEQ7lX25ahKrwERAPqJsllbPJbvuA9JB+iN2
-	SIVCx0nHezm8GZkf4wN1jO6c+uAxW2AU=
-X-Gm-Gg: AR+sD12kvt/1tvjexCjydnEFuu7UoaPTWJOIfZpZNoU+ymOYqOrmmjRWhFirrohoWCB
-	0mMTowFjalDpaD6nbI/2XUCH8w1f7JIvzUbKT32UtVRPvagb+Ax32Ijhbryn7Oj5fVuttmJf7aC
-	w0eMi8V1c7coAME6phh7yv4Rw2TulpB/4NxzSE9lIfPkeM+PO1vbhydiEeBUyQAkSyqdBhL1EHD
-	IJ1+D0KrslkZMQUNg6hJimtkQl1upuClmyse2UVX6/pKLYy7sp9oNlCpAAi+6Ol43vRcYkxAhas
-	skDBRH0XRU5veAXvg4v2rZIQAuDRBUfSCgZ1p72FVU8ie4ZaRXCW64JOMMCiOwd4u9vXpn1w3VK
-	H
-X-Received: by 2002:a17:907:3ea8:b0:c21:3fa7:5a6f with SMTP id
- a640c23a62f3a-c242e3eadf0mr738216466b.24.1787218841867; Thu, 20 Aug 2026
- 02:40:41 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="sfnF2BCp"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ploZAqY/D2hnRbV7P/iJz6tixE4616igwYG3fSAUDUQ=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787219884; v=1; x=1787824684;
+ b=sfnF2BCped+jyf3PRpPzWg9vqwTDJJt/G77kBAYEimhgBNMrXjAjpD9Y1q39Y7RVJZIgHVDF
+ dP3uOTlhH0NWBOeZD26tkFr79yLOS8u50QQQsR79HARIiD5vn/XFm2aNigQbOJgSyK2sBQZDgh4
+ YWHkgVFGG3nvg4rNpjKYEpBw=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from [192.168.110.173] (223.70.159.239)
+	by smtp.migadu.com with ESMTPS id e22b78b065807185;
+	Thu, 20 Aug 2026 09:58:04 +0000
+X-Mizu-Trace-ID: e22b78b065807185
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <f9ab386b-fe45-49ef-8e7a-c8544ef3241a@linux.dev>
+Date: Thu, 20 Aug 2026 17:57:50 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
- <20260818-mglru-flags-cleanup-v1-6-8dbbdac0d28c@tencent.com>
- <5db7dbfe-ec22-4a25-a85d-497e6ed1f8b1@linux.alibaba.com> <CAMgjq7Bz5Kz0YxFcVwbWV4bh_T4qQH0vZYbxFCXDtLzeX5hjtQ@mail.gmail.com>
- <43bbc1de-039d-422d-9119-c7392e0229c6@linux.alibaba.com>
-In-Reply-To: <43bbc1de-039d-422d-9119-c7392e0229c6@linux.alibaba.com>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Thu, 20 Aug 2026 17:40:04 +0800
-X-Gm-Features: AcwNN1VA46_KpTMs79ty-j9XeTd7zcF2C5_Wk1dEwysbQv0vrgYxQy3Z5NAPDZQ
-Message-ID: <CAMgjq7DiEYvURA_jykn=s20mr-cOAtJcmdau+byJ_qX_+-YqXg@mail.gmail.com>
-Subject: Re: [PATCH 6/7] mm/mglru: fix potential generation folio number leak
-To: Baolin Wang <baolin.wang@linux.alibaba.com>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Chris Li <chrisl@kernel.org>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, 
-	Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, Yu Kuai <yukuai@fygo.io>,
+ Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
+ Ming Lei <ming.lei@redhat.com>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Coly Li <colyli@fygo.io>,
+ Kent Overstreet <kent.overstreet@linux.dev>, Alasdair Kergon
+ <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
+ Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+ Pankaj Gupta <pankaj.gupta.linux@gmail.com>, Dan Williams <djbw@kernel.org>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Alison Schofield <alison.schofield@intel.com>, Ira Weiny
+ <iweiny@kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>,
+ Matthew Wilcox <willy@infradead.org>,
+ Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>,
+ Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>,
+ Barry Song <baohua@kernel.org>, Youngjun Park <youngjun.park@lge.com>,
+ cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
+ virtualization@lists.linux.dev, gfs2@lists.linux.dev,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v3 1/3] blk-cgroup: use a request_queue rhashtable for
+ blkg lookup
+To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+References: <20260818070641.756747-1-yukuai@kernel.org>
+ <20260818070641.756747-2-yukuai@kernel.org>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260818070641.756747-2-yukuai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Thu, Aug 20, 2026 at 4:53=E2=80=AFPM Baolin Wang
-<baolin.wang@linux.alibaba.com> wrote:
-> On 8/20/26 11:45 AM, Kairui Song wrote:
-> > On Thu, Aug 20, 2026 at 9:52=E2=80=AFAM Baolin Wang
-> > <baolin.wang@linux.alibaba.com> wrote:
-> >> On 8/18/26 1:38 PM, Kairui Song via B4 Relay wrote:
-> >>> From: Kairui Song <kasong@tencent.com>
-> >>>
-> >>> Each generation of MGLRU accounts anon and file folio numbers
-> >>> separately. The page table walker's update_batch_size() derives the
-> >>> anon / file type of a folio from its current flags, but the page tabl=
-e
-> >>> walk holds neither the lruvec lock nor the folio lock, so the type ca=
-n
-> >>> change during that period.
-> >>
-> >> Right.
-> >>
-> >>> MADV_FREE's lazyfree path clears PG_swapbacked under the lruvec lock,
-> >>> so the folio is no longer considered on the anon LRU list. Lazyfreed
-> >>> folios can also be changed back to the anon list again. If the flip
-> >>> lands between folio_update_gen()'s cmpxchg and the type read in
-> >>> update_batch_size(), the batched delta pair is applied to the wrong
-> >>> type. The anon and file generation counters then carry phantom deltas
-> >>> that nothing reconciles, permanently skewing lrugen->nr_pages and the
-> >>> reclaim budgets derived from it.
-> >>
-> >> But I think the problem occurs between update_batch_size() and
-> >> sort_folio(). update_batch_size() only updates the anon or file folio
-> >> statistics, while sort_folio() moves promoted folios to the
-> >> corresponding type's list:
-> >>
-> >> /* promoted */
-> >> if (gen !=3D lru_gen_from_seq(lrugen->min_seq[type])) {
-> >>          list_move(&folio->lru, &lrugen->folios[gen][type][zone]);
-> >>          return true;
-> >> }
-> >>
-> >> If the folio's anon/file type changes between these two steps (e.g., a
-> >> lazyfree folio), it would lead to what you described: "The anon and fi=
-le
-> >> generation counters then carry phantom deltas that nothing reconciles,
-> >> permanently skewing lrugen->nr_pages and the reclaim budgets derived
-> >> from it."
-> >
-> > Actually no, the counters follow eventual consistency (note the word
-> > "permanently"), we are fine with a drift as long as it will eventually
-> > be corrected. Lazy promotions creates counter drift from the physical
-> > location, but that is actually fixed by the sort_folio.
-> >
-> > Now, for the type issue, use the lazyfree case as example (I think
-> > that's actually the only place,), lru_lazyfree will remove the folio
-> > form lruvec before marking it !PG_swapbacked, so during that removal
-> > period, the gen bits are zero (folio's gen =3D=3D -1), so any lazy
-> > promotion CAS won't touch the counter, and only folio_update_gen will
-> > do it since folio_inc_gen only handles on list folios. The
-> > PG_swapbacked clearing in lazyfree only happens on folio wich has gen
-> > =3D=3D -1 (off-list). And it makes sense since update PG_swapbacked nee=
-d
-> > to update the counter and move the folio.
-> >
-> > And if the CAS happends before the list removal, the list removal, the
-> > folio is on the anon list, so the CAS is moving a folio in the anon
-> > list, folio_update_gen will call update_batch_size asking it to update
-> > the anon counters, we are fine after this commit. (Before this commit,
-> > the CAS is moving a folio in the anon list but update_batch_size may
-> > occur on file coutners). The list removal will update the anon
-> > counter, and the subsequent list addition will account for the right
-> > file counter.
-> >
-> > And if the CAS happens after the list add, we are still fine since the
-> > file counter is charged and sees a file type here.
->
-> Thanks for the expalnation. Now I see the problem and I think your are
-> right.
->
-> (This involves the combination of the gen counter and the folio's type,
-> so it would be better to have a diagram describing the race, otherwise
-> it's indeed hard to follow.)
 
-Thanks for the confirmation, I'll try my best but that's hard to
-describe :(, will also try send a proper cleanup later maybe also
-clean up and merge PG_lru if doable to make the convention cleaner.
+
+在 2026/8/18 15:06, Yu Kuai 写道:
+> blkg lookup currently uses a per-blkcg radix tree keyed by request queue
+> ID, plus a lookup hint for the common case. This spreads the queue-local
+> blkcg association index across every blkcg and requires radix-tree
+> preloading before creating a blkg while holding q->queue_lock.
+> 
+> Replace the radix tree and lookup hint with a request_queue-owned
+> rhashtable keyed by the blkcg CSS ID. Cache the ID in each blkg; the blkg
+> holds a CSS reference until after it leaves the hash, so the ID cannot be
+> reused while it is hash-visible. The integer key also reduces hashing and
+> comparison work relative to a pointer-sized key on 64-bit systems.
+> 
+> Keep entries until blkg_release() and provide blkg_lookup_any() for callers
+> which need to find dying entries. blkg_lookup() filters offline entries so
+> existing lookup semantics remain unchanged.
+> 
+> Keep q->blkg_list for ordered policy and scheduler walks. All current
+> walkers are cgroupfs or sysfs slow paths, so they can move to rhashtable
+> iteration once the q->queue_lock to q->blkcg_mutex conversion lands.
+> Initialize and destroy the hash with request_queue, and remove the
+> radix-tree preload paths which are no longer needed.
+> 
+> blkg_release() removes the hash entry only when the blkg was successfully
+> inserted into q->blkg_list; the list_empty case covers allocation or
+> creation failure before insertion.
+
+Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+
