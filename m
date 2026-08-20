@@ -1,133 +1,131 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6319F32B120
-	for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 23:59:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F2117557E
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 00:53:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787184000; cv=none; b=dFVDHlEYFPLrpEbW4EBK8fzvq/pH0yMkSNuc7Gd1tFRejkbxZeX+f3DLK6kKGEHca7RrI6lMaxvED3629Ey1MZJzFU9ynkI7Gss9xw5NYNmcavAGXnn2aKDgKuy/Pjk3JN+LuMtovekkTXYrzbyDFytTs9e9A9BS718Ksj9/WIc=
+	t=1787187224; cv=none; b=PGh2w6dupu3tWiAsvrnTPtZIdDa2s2FxSRSZUWapc8u7HNU+VirhvTMLleB+6NEbqa3tpDrP/bVqCnBm/Nzbj/MAadXGGR5Sa27pEJny8vTwdM+avPBGpTuG/B3Upwhit4eKBLitIeHSyt7wj4UTLoLF0eIG3iQreT0zMWB8ZgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787184000; c=relaxed/simple;
-	bh=NGp/aL9J6o0WYmHnohWsvAE5IdAJbRwI8aWJlovJsXQ=;
+	s=arc-20240116; t=1787187224; c=relaxed/simple;
+	bh=5IsuarZfSd5llKVGh9q2wBsTwYfZwdg1wFWVV1JFi6c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H0SxLMP+lf4MaQpeNnGuraLSSLuDtC2PrTjqBs8OFIETSnBy0Vf6ueanPISnCmPlUzRl148lwINaYbenNJN/SAkAiS9QGKJIMVCbybfni19Hyk6W9tm1930FfBC0JAYIh7hdMtvRXnk5FxcEIinP7JykZ+whwqs8mqUcqTSku9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UOo4Affm; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=d59rCe82GSJh1fmPBHtyoeOV6EFA0DAdgHEHY2OBhrWDfMheKknD9Jtxxe5x27TWY0GcLWLnIse6e9iTi4rsvL1YKcv4J1VWtsbEHbU24yUM3MzQp2o0q1M0/C7nqqdzo5unkYKUJWsDWINuqH/tE6Xq471UJX0p8TYZ0w1vLKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=SXBOL+Vd; arc=none smtp.client-ip=95.215.58.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UOo4Affm"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-c9cf07d2df6so906420a12.2
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 16:59:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787183999; x=1787788799; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=sLv4USOHSGhU+T0T1FSL7i8gQWx1GCa8Cf4zSXBJYXM=;
-        b=UOo4AffmBRNzbrzeIGhyS9M+DR3r68ADGTp0Ohq7tgP9DAdDWXa62tsUBF8f3vanYM
-         G1kni+ApT+WrhlibrZr5aJHzcww9D+Djuy6yXjK0/ZQHlN8Bvy9hmeRspLcS/mky+9aQ
-         Kq8qNuLX+LeRoA3wNntmNHgPaQn0S7AU4/osJv13dN8egm3wIFb5QdA2oB8o01+07EZ3
-         ujCa0smf3o0KdVsDDuuWcKKX0V5t8BVJPr18KfLQrwrVIEbzwpANKc4MXQFQbss/FOiv
-         i+mquYQeSYBMCDZHSSfqUDEryfW15Rxj0Mw4w0/huCdoK7khE/pZAjKB+q7iaUrp6jNR
-         8L4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787183999; x=1787788799;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=sLv4USOHSGhU+T0T1FSL7i8gQWx1GCa8Cf4zSXBJYXM=;
-        b=pkxFyyf6+y2sI3jassteOIsKRdqvo3E4dqUG5vmFQRggkNu3uSYWAsNUGvVcLymkIq
-         LNDti+lj8oS3mBQJNrL7cwt2V2b58hnqL7U2zL67quVFpBAQuju4hxM9jgY9YbEUGU/P
-         WmKtiq1UFidmD5Zyzj5PDQLnZzEnChc7tOp5kRiJ3e+fXuhxgNav10EbPgHDBtJ/grjf
-         LYJmjHsP9IECZwXq/qCC7WTp3mgCw9fT204G0ctenFq9ITw+98o3ON37SUk0STIHdoqX
-         9hLfTLK4ARmAckfK86KfFmOnR5VP82G/LLabfsZIAwfDpCoBpjdsO/geIQRcZN2as9vo
-         Y1xA==
-X-Forwarded-Encrypted: i=1; AHgh+RrffXKJ1qgqp9L/0Uj1zwIeQS6zOvz9T5PCeXr2n2jbG6cgdPLNfwdJPZtMm2ntDINUOZ4pTbS3@vger.kernel.org
-X-Gm-Message-State: AOJu0YwsjsMtDL8MHyJ25K+sLMZq5yC0XQCMBCwa1FHfbDsCCktYSNIY
-	5fKyVsk68SwjXjVNvSRGu+XVF/ODyR59VunMyLZF4t1K5wEvAVQfcI6y
-X-Gm-Gg: AR+sD11YQUJbezua4D112PqXcOqfuwOM9jvttAOhwEVt59U35UR9AZGtDy2OEdc+4W+
-	VBayIYk1YKRA4IkXx1tU493ExwAttoUykmXzfuOmHUlllCBoWYfPGjTTY859UVP1GDNc0IITBRY
-	obA7uxwOQzyOlW9FQ/WjfXuK5TFI5cTPw/wJYkNQTprUVEuPk81lD30ZPAG3tpnOcOqRqwvq4hP
-	FEvSEZvDH/NOfk9TNRJXZEadQsrD+cofCgCWJwgng/7TWPG8gODsmhAguFBlrdUev7UD2521dLw
-	BRhieFhOnoH2wTnvGbjaRPEqAnL4aNGagqC4DttFifeY/Wr0WnpFlxW9qomTX+qlsr7A93vlegY
-	1A2JcYw1tT2sNHd4Hxc3azB5dl550ChTb7HVEWb0BrtATDzxoK1lOl7vxcCKIwRlbxzUxjWAtA+
-	wwwYqkAlsVfG+kPNFmluKL3b434MUkkm8o0rz4YxfbiJUmCZo9EpKZmFRG5oIFCoe+cbFsEPpWg
-	1XjB2pg
-X-Received: by 2002:a05:6a20:734e:b0:3c3:954d:278d with SMTP id adf61e73a8af0-3cd010ff4b9mr13863807637.9.1787183998514;
-        Wed, 19 Aug 2026 16:59:58 -0700 (PDT)
-Received: from devvm16600.scu0.facebook.com ([2a03:2880:9ff:66::])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bef3ce17sm15822174eec.1.2026.08.19.16.59.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 16:59:58 -0700 (PDT)
-Date: Wed, 19 Aug 2026 16:59:55 -0700
-From: Ziyang Men <ziyang.meme@gmail.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@meta.com, Jens Axboe <axboe@kernel.dk>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
-	Yonghong Song <yonghong.song@linux.dev>,
-	Jiri Olsa <jolsa@kernel.org>,
-	Emil Tsalapatis <emil@etsalapatis.com>,
-	Shuah Khan <shuah@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="SXBOL+Vd"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=5IsuarZfSd5llKVGh9q2wBsTwYfZwdg1wFWVV1JFi6c=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787187220; v=1; x=1787792020;
+ b=SXBOL+VdiIb1J5uXt3vYlPcDd+SGdhvb79yMu4nPEOiK37coHBh4jdjDCqaAnAhu1oE3o1fQ
+ bsbcKHIXVVgm7UsZNktSuOZtyUYT7dsAMtgPnQl2vkAKoLW06R27OJd3N9gIepYnfSvH1EO5sAJ
+ yz2y0QvdeWFFZamh6VxSAU5I=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from localhost (3.112.29.171)
+	by mta12.migadu.com with ESMTPS id 07c8e31ddffe1a8d;
+	Thu, 20 Aug 2026 00:53:40 +0000
+X-Mizu-Trace-ID: 07c8e31ddffe1a8d
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 20 Aug 2026 08:53:35 +0800
+From: Baoquan He <baoquan.he@linux.dev>
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
+	Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
-	JP Kobryn <inwardvessel@gmail.com>,
-	Mykola Lysenko <mykolal@meta.com>, linux-block@vger.kernel.org,
-	bpf@vger.kernel.org, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] block: add BPF kfuncs to read blkcg io.stat
-Message-ID: <aoZDe0yvb49flaOs@devvm16600.scu0.facebook.com>
-References: <20260817214205.723267-1-ziyang.meme@gmail.com>
- <20260817214205.723267-2-ziyang.meme@gmail.com>
- <aoSUob1s8WBQ3buO@slm.duckdns.org>
- <aoTdQeLZZuRirNHE@devvm16600.scu0.facebook.com>
- <aoTf7u20mo9s6ADj@slm.duckdns.org>
- <aoTkZhQDoaQKpPe3@devvm16600.scu0.facebook.com>
- <aoYVh1ihBH-TWvi3@slm.duckdns.org>
- <aoYsIYnoFDvjkzKp@devvm16600.scu0.facebook.com>
- <aoYzjaXQNmm9bDcE@slm.duckdns.org>
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>,
+	Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Kairui Song <ryncsn@gmail.com>
+Subject: Re: [PATCH 7/7] mm/mglru: improve code readability and harden
+ folio_inc_gen
+Message-ID: <aoZQD3b6q8s-pXU0@MiWiFi-R3L-srv>
+References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
+ <20260818-mglru-flags-cleanup-v1-7-8dbbdac0d28c@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aoYzjaXQNmm9bDcE@slm.duckdns.org>
+In-Reply-To: <20260818-mglru-flags-cleanup-v1-7-8dbbdac0d28c@tencent.com>
 
-Hi Tejun,
+On 08/18/26 at 01:38pm, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
+> 
+> The helper should never be called for an off-list folio, and it always
+> expects the folio to be in the oldest generation before doing any
+> cmpxchg. Add a sanity check for the off-list case: if it is ever
+> violated, bail out and keep the folio flags untouched to minimize the
+> damage, instead of silently treating the folio as if it were in the
+> oldest generation and promoting it updating the flags to an unexpected
+> status.
+> 
+> Also rename the variables to clearly distinguish the folio's current
+> gen from the oldest gen.
+> 
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>  mm/vmscan.c | 14 +++++++++-----
+>  1 file changed, 9 insertions(+), 5 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 7169cac60869..7e3ae0c6cba3 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3308,18 +3308,22 @@ static int folio_inc_gen(struct lruvec *lruvec, struct folio *folio)
+>  {
+>  	int type = folio_is_file_lru(folio);
+>  	struct lru_gen_folio *lrugen = &lruvec->lrugen;
+> -	int new_gen, old_gen = lru_gen_from_seq(lrugen->min_seq[type]);
+> +	int new_gen, old_gen, min_gen = lru_gen_from_seq(lrugen->min_seq[type]);
+>  	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
+>  
+>  	do {
+> -		new_gen = lru_gen_from_flags(old_flags);
+> +		old_gen = lru_gen_from_flags(old_flags);
+> +		/* This helper should never be called for off-list folios */
+> +		VM_WARN_ON_ONCE(old_gen < 0);
+> +		if (old_gen < 0)
+> +			return min_gen;
 
-On Wed, Aug 19, 2026 at 12:51:57PM -1000, Tejun Heo wrote:
->Hello,
->
->On Wed, Aug 19, 2026 at 03:20:17PM -0700, Ziyang Men wrote:
->> Yes the css_rstat_flush() is exposed but currently it is marked as SLEEPABLE, so
->> it doesn't accept a RCU_PROTECTED css we proposed. This is not a problem for cpu
->> ones since &cgrp->self is a trusted pointer.
->
->Yeah, bummer, so we get ref on cgroups but the subsys pointers are RCU, so
->that means those refs are only RCU protected. I guess we can't avoid a kfunc
->to get acquire a subsys css from cgroup. I wish css_rstat_flush() didn't
->schedule but it does need that cond_resched().
+As Barry doubted, I think this change is wrong. old_gen < 0 in folio_inc_gen()
+could only happen inc_min_seq() call it. While inc_min_seq() call it
+because inc_max_seq() need increase max_gen to max_gen + 1 and found
+get_nr_gens(lruvec, type) == MAX_NR_GENS, it has to move the oldest gen to
+2nd old oldest gen. Here returning min_gen for old_gen < 0 means it will
+be put in the lastest max_gen. It may not be expected.
 
-Yeah that would be a pity. I will add kfuncs bpf_cgroup_css() and
-bpf_css_release() to handle the reference for the css.
-
-The bpf_blkcg_flush_stats() will be removed as well.
-
-Thanks,
-Ziyang
-
->
->Thanks.
->
->-- 
->tejun
+>  
+>  		/* folio_update_gen() has promoted this page? */
+> -		if (new_gen >= 0 && new_gen != old_gen)
+> -			return new_gen;
+> +		if (old_gen != min_gen)
+> +			return old_gen;
+>  
+>  		new_flags = old_flags;
+> -		new_gen = (old_gen + 1) % MAX_NR_GENS;
+> +		new_gen = (min_gen + 1) % MAX_NR_GENS;
+>  		lru_gen_set_flags(&new_flags, new_gen);
+>  		lru_refs_set_flags(&new_flags, 0);
+>  	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+> 
+> -- 
+> 2.55.0
+> 
+> 
