@@ -1,199 +1,187 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6044A18DB2A
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 03:46:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787197599; cv=pass; b=fssQFk2Z6/goX2HrDmw2sZjMFVL0Vhsi17PLNPPx4e0K2SyLvZnEQbCA7aSIiWoPl99z5pcHb//BoUqjwZpAkBiVaQKJHTFXCEDCBonWQYbs4ej2Vn8bo7/OI25Scot+N11NkMC5MDkeKeH810L65IdcAtYh0M4j3nrwxjtHRaA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787197599; c=relaxed/simple;
-	bh=jPOYo4tGUzzo2c7GtQONFKrQdV1HgGAZBhYQofY6kyE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ddJfgoU5rP5bcPZTBr6W2xca/0wyiy2+H1uF3JSyCDe0f3dQXMWehOH6KvWIF8gnMR3/Fa1IOiNjms+AddejgZtuX9nxBax8dDBMX1nCHLEXz9UqWazdiqUUC4mZja0SjDr9tW/4LRJj3Hd2bc5HEZELsW2VSOXeqLj2BdRRR3U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YGIP/ZP4; arc=pass smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29A2C3845A6
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 04:21:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787199670; cv=none; b=dPy04fI4YVkSy6js2A0wprRk6+ktdU7y59GD8h5F0svYc4/t0BPPZd84tjaOrMAYevNGRlZs/zsby22qBaxGj3HrO0dbqYtMEuJT9jg+uKphi8FlUWzhyGofsNZvwip+JkdW2hxokx7vGMzrD5Ue3W+0kQI+rBAwpgo6tLjX7Rg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787199670; c=relaxed/simple;
+	bh=RLyUExN8fVPgQWYI7kpPw9+TUlnM1EtUbY0W7IeaZw4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=EfXyBVh9IPSj38ppv303rBW6CJxsDtRirv3P2uC7YcUzQpEnwRg2zxGIsGCqjCYFWfzfiNnVK0ylar/YkYw+3dCB6fvlLJ78bhiBPXfoBYwbQokYRo2Tfi35Js7e/Kg6u9Ns6BRMfEQqKvxDIShbah4cEXaDu3tr+hvRA2NXYcY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dxg72U0A; arc=none smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YGIP/ZP4"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-69f7fa1c548so3077600a12.2
-        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 20:46:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787197595; cv=none;
-        d=google.com; s=arc-20260327;
-        b=d3UgNJOt08yPHh5qvuwgf4nYXpfJA3gSwZsIH4okWUCct3Qma8DnSD6O4CoSE1jUhX
-         9ToIA37ZnIyyg6NTNemg9uhBlUN7RkSJxjdp0AjXCFvbWc9vPT4wVvaOqYOkgOwkIY/w
-         mMTNjxpgkuT1vGbvfs1Mjt7IklMzyHVgvmjt7Sq/RhxFJMsjCiKrAQv9GG9U+8TB+3Eh
-         EeUZ9u0m1hcO1kDJfeffzQgB1atOrdNFpNKfIWgP9uWARjL/Qj5wQpnZonsXwE20P+RG
-         Y0KT50P8wfR0mYl/x9bLC0vh2PJcHXlWynNS3pMtquNT9VS3rBQq/O2eEbVvgwrAATB0
-         CT+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=jC8fCaKvIcrP9K//y/TQg06sbF5Whw3fEjhEvbmxngs=;
-        fh=7HQBG4gTQpdFluurP9GJJE0ruzeDArFYupSb9hcQhiU=;
-        b=afZ+xMgtGdrMTftjil5MMv04h5P5Jt5di2vavU+GQAmF4QyTPJJFOpibMa/e7MTiVn
-         IFXs9KierAKx+M6XYLOGZ5YJ82qP+M0bGz2G4wIHrEEVg/3UcqUnX/agHL8NxbtM283f
-         b4cjvtbHysal7O9PoTj5Ec3UOr8+J1/kghjH9OwQmkXcXYNQgHMdXyA61ezHiugEq+Na
-         B7bscQ8e2c68sARQrhXkw6WfvvmaT+GL3jveYfaQL2WCjEXBCQ4eiqisW7c8V9zS4ZCl
-         jWickbeyeQQCsQuQfe7X/0qptkvjfGKFBy2e5FnHTDCVc10YeY0FhN48k0rFa5GwV49Y
-         4MOA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dxg72U0A"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2ced3386430so15317445ad.1
+        for <cgroups@vger.kernel.org>; Wed, 19 Aug 2026 21:21:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787197595; x=1787802395; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jC8fCaKvIcrP9K//y/TQg06sbF5Whw3fEjhEvbmxngs=;
-        b=YGIP/ZP4nA9v8DO/dVEQLvAdehhyCF9RL45q8zibuTZFstRTIfOmtygAf5++JmK8zE
-         cYn/d48FY2BJh1QhLl1qcftgcHgxKNKbPrvpk+a8THxhlpJ/SRwmdDXJcIDfrGD2kbA7
-         5nEHH88yVX4HlYOXROTRugTtWwAXSYrJEXQh2+CMavXBth8fwdvFZsNysM3aW036CJCN
-         ZOGK9J/b06jdirlbKECTEM6U5tb4id7Bm35Vf8hzFQzMh1aPV79sXD2BpRsctU2/Ra86
-         OACr3+IDbtbtDcxE65ERFUW7u95TuzErMECNs2NHks1oIeCvrl4gDIaHMBvltyUL0nf/
-         cqog==
+        d=gmail.com; s=20251104; t=1787199668; x=1787804468; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=34TzclDonaRBC/uFBFwYDupP16pmzizlO9UWq1m3bXE=;
+        b=dxg72U0AnpILDfaZYKLe17PeRt83KWq575kOIBxWboK5k8fL8Pbu1UZNnMWC3nHbha
+         NhJ2iGtJxusDXfzU1zgjS9SbBAyhForovS3gzQz6a2hJHbYcFDIvtI3ZgM2B/bzIOlJe
+         V9V0zLupKRFc5FNKP1Ol609XQwg8hzgfx2UcPnd4EVkMoAR4rzFKaf9Psl5uVEv0tvCJ
+         EZ1FQ5Ct4gGU49/AEsziYImyja3NrfeOnbX6qtBtL5Ly8UdiOpYl6U0kWuDQ6IlgSumj
+         qG3jgVN80qRJVJHts7ib8MteY2y4VqbMM1WjIlXKHIZ8tGl6G3peIKgOKyVM37HxAvbo
+         SsBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787197595; x=1787802395;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jC8fCaKvIcrP9K//y/TQg06sbF5Whw3fEjhEvbmxngs=;
-        b=CRUUSyBn6p3aMrPESoAaW82DX2rHqvWgn4MQfZnuKJsGaNRqyoe+i2yAIRn5tMeNFe
-         t9J6WRxKdExysp1grPrY90rHzCGtj4R6rcJjCnsTlu0c+d+bHMpEgLPfc0uHgr+wm9by
-         joGWpJUYZM02N8NB/1Uq31x4WG+6732ttB0r+BP062nM1cejNM9ozpVuY+QI2SYZVYmR
-         9Kk27zmePscKE7u5WeS5v0qMUqXFYDyRt32GzfAFCdYqu0rvt63+ivbCqijT/sw3xdtC
-         qtm+QRKZCHGkwInHAndLJvUUb9VaMazAkwj8ZFe8jW+J5ZEnFkfEheG6gWWmGXnS3TwO
-         DcGg==
-X-Forwarded-Encrypted: i=1; AHgh+RoLP2OBsTJg8O3f+ZFQRPZF+xOy9KVK+5zwgEtBRje1iuqSYvTGLJFiwJ2gukWXzSVPXpLxgxBV@vger.kernel.org
-X-Gm-Message-State: AOJu0YyKu+W/7Zc9IWs97igwiddcPXnpyYHBekiNBvTg+qMRfODlGuNG
-	wjgQutlyXEZNVPzHyQz+4ezj6jnMqKLGIvYfZyQud1GTm4pL1URBwcXfLoqRueLvQH5hEQyRNjp
-	sgLA3rakm6g7tpmhsn4YK+vyDPFhYNueaavTYGjk=
-X-Gm-Gg: AR+sD137mRcih2+mBxvP55QcJjTRgLMunwDDgfjwHLk6wZCpxWXffltYhgMabWyO2cc
-	h1fNi90aRAWHkx2JUJB0Q3xqcMP1pWd07s+l4Db+CoqsNU3VCtFT+IZONtQ244UtcQuupn3BSHB
-	34suQ4gVHhypg4r2OMO0UTxJloJKl1UPUJEWXN30GK7K1WNGtKI56q6N1vMKx2IVnUZ5eAkAmad
-	DXnFnc8OhlyPF8CNYOz1NgQ75sXGfGJ80DfYHf+iJp2KQIXJ19d5VkqNrvHr7ghscor7TF2ZNMJ
-	dTsBUBmO74hZlqC21JpI3+gk7dUvqQ+1lNzTUOniGb8komEMjCSmn+6ibt5ElAb1951eeHplfYM
-	6
-X-Received: by 2002:a17:907:3e8a:b0:c20:f871:1018 with SMTP id
- a640c23a62f3a-c242e3f1f87mr631019766b.21.1787197595256; Wed, 19 Aug 2026
- 20:46:35 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1787199668; x=1787804468;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=34TzclDonaRBC/uFBFwYDupP16pmzizlO9UWq1m3bXE=;
+        b=Z6YFHCtv8TjKCAfB/CyKd3i9EW52Lr64DYC1qdJulC7kDe++q9VhQdmL8e4yahjdF3
+         iRkNkBijPJHtEv+zWqAoX+U/p6Jl9V3oBMK+gm775KSr4GPXBIUiAkh9VEXS9F0J8eQw
+         Trh5BHPQCbtpVy7Z585cqNIbXd9rqOhrZ3qaQKeXlhpejJ/elkQf3doCd0erT2jlpjVs
+         aIY1Ah5LQQyDzf84rKljhg6O7ce3MskDfK6Djjx3W3QnrEQs8uWNDPgn4nB1oJy14l1g
+         8Y4vCdVF3q5tyQTDb+M+QNYztwIyU4/Uj3PJyjlnp2Sr0g98XczTeJhrud2oBt4NF/Bs
+         bgGA==
+X-Forwarded-Encrypted: i=1; AHgh+Rr4QdDSdP0OU6clbLlMulS8C/m/P4q6yjkm81q8mGsYdXEuOjv+lOl3/qjFIqKjOqL8JsUbNyhZ@vger.kernel.org
+X-Gm-Message-State: AFuF++mJrYEvC0QBjm07O0UX7T81JOlpQ/TnvPrrjEBa4PDjFVuBz7EA
+	OVwbZkl6t3yZ9QCXUmR0jVM+L1oNBS0XU+63L6W58Lzhl2dCkRTyk758
+X-Gm-Gg: AR+sD12rCditDFiRbycGlzpBeia1cG3bHw0LSIFrBpbLs5Y1KjWg6dfdnlggjhuXaLK
+	O8tYC9TpgL7tH5P+bzdzFxxE3KYAlJa4sr7hkbszfD8fuvOWfOHGEbkuNPC/vE2KP7GZHj10BTY
+	ryDShQQlbX6XtGm8ihUBfOBFmmAv0r80ywLsyEqjEXsyHHb0xACIPb90ITCBBxiHkgnzkmV9mFv
+	mPmrPdX/69uqDNurTyQfAnkdCKGtvFsmonAXvjullNZOCCHgcGYsTVIVkQ+f6/uDUPH42+tQNOn
+	AK5w1QQbKIcHja/P+V5/3m4dFErXIY+tSwNqIALqMiJAU1cEzzoNAfbicZxMsTWUdYOJeMa8MyK
+	YVtYkQX3IM0yiiMwglIujGYTxft6V7GyvNLQighMgSlwzgzjCAYr9oZE1o95y+L4rL7pPSPzVi8
+	+bNHNURRmsT+XJAQprS+hJhtCd+pwGxvI7cTxpEa5DsZZkl32W/Z/oAKZIq2Id9Wnpwus5nfr2M
+	Wonwiw=
+X-Received: by 2002:a17:90b:1e49:b0:38d:ef48:b04 with SMTP id 98e67ed59e1d1-39580f6c037mr16864194a91.10.1787199667842;
+        Wed, 19 Aug 2026 21:21:07 -0700 (PDT)
+Received: from kernel.tail6741c6.ts.net ([116.128.244.169])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-395a9e1d336sm349605a91.1.2026.08.19.21.20.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Aug 2026 21:21:07 -0700 (PDT)
+From: Kunwu Chan <kunwu.chan@gmail.com>
+X-Google-Original-From: Kunwu Chan <kunwu.chan@linux.dev>
+To: Nhat Pham <nphamcs@gmail.com>
+Cc: Kunwu Chan <kunwu.chan@linux.dev>,
+	akpm@linux-foundation.org,
+	chrisl@kernel.org,
+	kasong@tencent.com,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	yosry@kernel.org,
+	david@kernel.org,
+	muchun.song@linux.dev,
+	shikemeng@huaweicloud.com,
+	baoquan.he@linux.dev,
+	baohua@kernel.org,
+	youngjun.park@lge.com,
+	chengming.zhou@linux.dev,
+	ljs@kernel.org,
+	liam@infradead.org,
+	vbabka@kernel.org,
+	rppt@kernel.org,
+	surenb@google.com,
+	qi.zheng@linux.dev,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	riel@surriel.com,
+	gourry@gourry.net,
+	haowenchao22@gmail.com,
+	corbet@lwn.net,
+	kernel-team@meta.com,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH v3 02/11] mm, swap: support zswap and zeroswap as vswap backends
+Date: Thu, 20 Aug 2026 12:19:38 +0800
+Message-ID: <20260820041940.443214-1-kunwu.chan@linux.dev>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260806184254.3790858-3-nphamcs@gmail.com>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
- <20260818-mglru-flags-cleanup-v1-6-8dbbdac0d28c@tencent.com> <5db7dbfe-ec22-4a25-a85d-497e6ed1f8b1@linux.alibaba.com>
-In-Reply-To: <5db7dbfe-ec22-4a25-a85d-497e6ed1f8b1@linux.alibaba.com>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Thu, 20 Aug 2026 11:45:57 +0800
-X-Gm-Features: AcwNN1XL5ZeMYmgyzc-pNkBGMiqarLr5xzciKiSSwUAgpFOLuAjN7e42AmOrbIA
-Message-ID: <CAMgjq7Bz5Kz0YxFcVwbWV4bh_T4qQH0vZYbxFCXDtLzeX5hjtQ@mail.gmail.com>
-Subject: Re: [PATCH 6/7] mm/mglru: fix potential generation folio number leak
-To: Baolin Wang <baolin.wang@linux.alibaba.com>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Chris Li <chrisl@kernel.org>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, 
-	Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Aug 20, 2026 at 9:52=E2=80=AFAM Baolin Wang
-<baolin.wang@linux.alibaba.com> wrote:
-> On 8/18/26 1:38 PM, Kairui Song via B4 Relay wrote:
-> > From: Kairui Song <kasong@tencent.com>
-> >
-> > Each generation of MGLRU accounts anon and file folio numbers
-> > separately. The page table walker's update_batch_size() derives the
-> > anon / file type of a folio from its current flags, but the page table
-> > walk holds neither the lruvec lock nor the folio lock, so the type can
-> > change during that period.
->
-> Right.
->
-> > MADV_FREE's lazyfree path clears PG_swapbacked under the lruvec lock,
-> > so the folio is no longer considered on the anon LRU list. Lazyfreed
-> > folios can also be changed back to the anon list again. If the flip
-> > lands between folio_update_gen()'s cmpxchg and the type read in
-> > update_batch_size(), the batched delta pair is applied to the wrong
-> > type. The anon and file generation counters then carry phantom deltas
-> > that nothing reconciles, permanently skewing lrugen->nr_pages and the
-> > reclaim budgets derived from it.
->
-> But I think the problem occurs between update_batch_size() and
-> sort_folio(). update_batch_size() only updates the anon or file folio
-> statistics, while sort_folio() moves promoted folios to the
-> corresponding type's list:
->
-> /* promoted */
-> if (gen !=3D lru_gen_from_seq(lrugen->min_seq[type])) {
->         list_move(&folio->lru, &lrugen->folios[gen][type][zone]);
->         return true;
-> }
->
-> If the folio's anon/file type changes between these two steps (e.g., a
-> lazyfree folio), it would lead to what you described: "The anon and file
-> generation counters then carry phantom deltas that nothing reconciles,
-> permanently skewing lrugen->nr_pages and the reclaim budgets derived
-> from it."
+On Thu,  6 Aug 2026 11:42:45 -0700 Nhat Pham <nphamcs@gmail.com> wrote:
 
-Actually no, the counters follow eventual consistency (note the word
-"permanently"), we are fine with a drift as long as it will eventually
-be corrected. Lazy promotions creates counter drift from the physical
-location, but that is actually fixed by the sort_folio.
+Hi Nhat,
+[...]
+syzbot reported a NULL dereference in the v3 series:
 
-Now, for the type issue, use the lazyfree case as example (I think
-that's actually the only place,), lru_lazyfree will remove the folio
-form lruvec before marking it !PG_swapbacked, so during that removal
-period, the gen bits are zero (folio's gen =3D=3D -1), so any lazy
-promotion CAS won't touch the counter, and only folio_update_gen will
-do it since folio_inc_gen only handles on list folios. The
-PG_swapbacked clearing in lazyfree only happens on folio wich has gen
-=3D=3D -1 (off-list). And it makes sense since update PG_swapbacked need
-to update the counter and move the folio.
+  __vtable_get()
+    vswap_to_phys()
+      swap_entry_backend_has_flag()
 
-And if the CAS happends before the list removal, the list removal, the
-folio is on the anon list, so the CAS is moving a folio in the anon
-list, folio_update_gen will call update_batch_size asking it to update
-the anon counters, we are fine after this commit. (Before this commit,
-the CAS is moving a folio in the anon list but update_batch_size may
-occur on file coutners). The list removal will update the anon
-counter, and the subsequent list addition will account for the right
-file counter.
+Seems like the underlying issue is introduced by this patch's
+`virtual_table` lifetime management.
 
-And if the CAS happens after the list add, we are still fine since the
-file counter is charged and sees a file type here.
+This patch adds:
 
->
-> If you agree that this is where the problem lies, I don't see a good way
-> to fix it, since the state of a lazyfree folio can change between
-> update_batch_size() and sort_folio().
+> @@ -70,6 +70,7 @@ struct swap_cluster_info_dynamic {
+>       struct swap_cluster_info ci;
+>       unsigned int index;             /* for cluster_index() */
+>       struct rcu_head rcu;
+> +     atomic_long_t *virtual_table;   /* Backing pointers for vswap slots */
+>  };
 
-That's the tricky part and I struggled a lot with it since MGLRU-FG
-will rely on this kind of lazy promotion very aggressively :)
+[...]
 
-I plan to do a proper cleanup of MGLRU's gen bits and PG_lru flag, and
-introduce a cleaner convention later for all of this, and I think
-maybe PG_lru can be merged with the GEN bits. But for now we are still
-fine. The CAS change always explicitly checks for gen > 0: so as long
-as we don't touch PG_swapbacked for gen >=3D 0 folios, we are fine. So
-far every user is following this. We can fix that if an offending user
-appears, and it's not hard to add a sanity check to catch
-folio_clear/set_swapbacked that happens for gen >=3D 0 folios (maybe
-check PG_lru too).
+while the read side does:
 
->
-> A simple approach would be to skip checking the access flag for lazyfree
-> folios during the page table walk, and let shrink_folio_list()
-> reactivate accessed lazyfree folios instead. What do you think?
+> +static inline unsigned long __vtable_get(struct swap_cluster_info_dynamic *ci_dyn,
+> +                                      unsigned int off)
+> +{
+> +     VM_WARN_ON_ONCE(off >= SWAPFILE_CLUSTER);
+> +     return atomic_long_read(&ci_dyn->virtual_table[off]);
+> +}
+> +
 
-The thing is it can go from !PG_swapbacked to PG_swapbacked, or
-PG_swapbacked to !PG_swapbacked. Or maybe lazy free isn't set the
-moment you look at it but it got set the next moment?
+`atomic_long_read()` only makes the access atomic; it does not protect
+the lifetime of the allocation being accessed.
+
+[...]
+
+> +static inline void vswap_cluster_free_vtable(struct swap_cluster_info *ci)
+> +{
+> +     struct swap_cluster_info_dynamic *ci_dyn;
+> +
+
+and frees it synchronously:
+
+> +     ci_dyn = container_of(ci, struct swap_cluster_info_dynamic, ci);
+> +     kfree(ci_dyn->virtual_table);
+> +     ci_dyn->virtual_table = NULL;
+> +}
+> +
+
+The existing `ci->table` already has an RCU-aware lifetime: readers use
+the corresponding RCU access rules, and the storage is not freed until
+after the appropriate grace period. `virtual_table` introduced here does
+not have an equivalent lifetime rule.
+
+The syzbot crash shows that the current teardown/read-side synchronization
+is insufficient: `__vtable_get()` can observe a torn-down
+`virtual_table` and dereference NULL.
+
+I don't think a NULL check in `__vtable_get()` alone would be the right
+fix. The NULL dereference is a symptom of the missing lifetime guarantee.
+`virtual_table` needs to remain valid for as long as a reader can reach
+and access the corresponding dynamic cluster.
+
+It probably makes sense to make `virtual_table` follow the same lifetime
+scheme as the existing cluster table, or otherwise tie its freeing to the
+lifetime of `swap_cluster_info_dynamic`.
+
+[...]
+
+
+Thanks,
+KunWu
