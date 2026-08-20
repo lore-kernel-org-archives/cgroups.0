@@ -1,33 +1,34 @@
-Received: from mta0.migadu.com (out-44.mta0.migadu.com [91.218.175.44])
+Received: from mta0.migadu.com (out-49.mta0.migadu.com [91.218.175.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C75344064B
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 690FC44064B
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787229741; cv=none; b=PSMzvxXp+JEahN2JkBEapnKlmVxUSzi3BnuQqdYUz1ABAvy1DIy+K1eK1VuwWIVBWdQrQkJNboMuMQcIFRcls2lydb4EjPvAOuZnL7Q9sLVDBDlZCLIBwiSS4Ruml2aJ+zyZo6QKR0h7RBdK/eq4LJvnlBu4MYxu9TyXCvne190=
+	t=1787229746; cv=none; b=Y5+imzgqOhKo98gF6IJPE7f6BwNFT9y2KJVSLL+nrZ8fLF7B1S6JaipDxB4IKqFv2B4nx6KCREkoHzcgyv+1Z9V/mI0lDpU8O2vEcow69/cs0cSDGkwrQbfd7cmzBAo2NmqtbpcgESvF+CSY54BSL+TYywFRIvh/9hzYf7vlWOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787229741; c=relaxed/simple;
-	bh=NtCwpw6pTJcQl9m5fqZIXoMRk0VT+F99Mjx7WfVdmKI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AIMFvqiByihuX5K4YLKd3ZV2+ZbzNix/aUJuUb5eRb6rrAPqb5++wUvbzWgwRlrZxNM9ia29fWZOZa8KbUoS62qhjc2sbU+X08xWIzcTXpVKhtf7P2SGyfwZbik9RHrc6mTCgBXEc+P7pTED66QzuBljOy45y82dqHX+6uhOYIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PhyTClXj; arc=none smtp.client-ip=91.218.175.44
+	s=arc-20240116; t=1787229746; c=relaxed/simple;
+	bh=+SgWMGaA7CDQAMPHI+yux+D8sc7tgzO72UDAwsRv8ow=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qHDoMcDyCYd34/5f6gh+cGN1LyESLzrwDoL2f+PMdLUcPdQKWHhtzwTf3jYPYkTICw3Hb7UQJfTKXYZUiFwtN/oBAgcCxVElngtHyiKDLhTTNO6zmbk6L/l6UYQ93xOv0f9LljYW2HnyQ2nXyTmVoqBgd5WT6NEHR5YeCVrj4zA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=aGBooXZy; arc=none smtp.client-ip=91.218.175.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PhyTClXj"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="aGBooXZy"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=NtCwpw6pTJcQl9m5fqZIXoMRk0VT+F99Mjx7WfVdmKI=;
+DKIM-Signature: a=rsa-sha256; bh=+SgWMGaA7CDQAMPHI+yux+D8sc7tgzO72UDAwsRv8ow=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787229736; v=1; x=1787834536;
- b=PhyTClXj+7i9YeKoO9XGsXxz6wG7BnMd3ID+XXgMxc0/5ceG67KOm8V2EYNDOcCYEo8WEJQj
- vTrPSnlpX7A2q0JHWNDI+VUs5t6uxnwwBzY86dxmaIhQ9w+lCTDBP4v1Iiy0uWwt8zSCc1I+uBH
- svhEW6CDiOC+WmhnMaiWlp80=
+ t=1787229741; v=1; x=1787834541;
+ b=aGBooXZyi3L2+WFmlQKjvD8HZRUOXkPV7MZxalfNTL7BlSuDYLKeywiBKZeMGiY+2weAlY7Z
+ D7uG3wfp+KNwmLhe12vXi6nXVZjaDM9qIR8NAHz1idxYhrMSCAd6P5ClliGDw9mzcK15qBt2rSX
+ Bv37AJ0RCTvTrRWN4gEkGPTw=
 X-Envelope-To: cgroups@vger.kernel.org
 Received: from zgp.. (223.70.159.239)
-	by smtp.migadu.com with ESMTPS id b262bd0701bfd5d0;
-	Thu, 20 Aug 2026 12:42:16 +0000
-X-Mizu-Trace-ID: b262bd0701bfd5d0
+	by smtp.migadu.com with ESMTPS id ce2966af263b7a65;
+	Thu, 20 Aug 2026 12:42:21 +0000
+X-Mizu-Trace-ID: ce2966af263b7a65
 X-Migadu-Flow: FLOW_OUT
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: longman@redhat.com,
@@ -40,10 +41,12 @@ Cc: ridong.chen@linux.dev,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH 00/17] cgroup/cpuset: Fix partition CPU ownership and isolation accounting
-Date: Thu, 20 Aug 2026 20:41:45 +0800
-Message-ID: <20260820124202.517160-1-guopeng.zhang@linux.dev>
+Subject: [PATCH 01/17] selftests/cgroup: Drop invalid boot isolation comparison
+Date: Thu, 20 Aug 2026 20:41:46 +0800
+Message-ID: <20260820124202.517160-2-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260820124202.517160-1-guopeng.zhang@linux.dev>
+References: <20260820124202.517160-1-guopeng.zhang@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -54,57 +57,45 @@ Content-Transfer-Encoding: 8bit
 
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-update_prstate() uses effective_xcpus for isolation accounting and
-housekeeping checks when switching a partition between root and
-isolated. The mask also includes CPUs granted to valid child partitions.
-Such a type change can alter isolation accounting for child-owned CPUs
-or fail a housekeeping check because of a CPU the parent does not own.
+check_isolcpus() clears ISOLCPUS before rebuilding it from sched domain
+data. Comparing that empty value with
+/sys/devices/system/cpu/isolated makes the test fail whenever
+isolcpus=domain is present.
 
-A rejected type change can leave CPUs assigned to the invalidated
-partition instead of returning them to the partition that owns the
-invalidated subtree. When cpuset.cpus changes, child validation can use
-the old parent mask, and a remote update can observe stale cpus_allowed
-when it revisits a cpuset. Direct and propagated invalidation can leave
-isolated_cpus reflecting the released partition's type instead of the
-type of the partition receiving its CPUs. Releasing an isolated
-partition can clear boot-isolated CPUs from isolated_cpus.
+The cpuset.cpus.isolated check above and the sched domain check below
+already validate their respective interfaces. Remove the comparison and
+the unused HKICPUS read.
 
-Limit type-change checks and accounting to CPUs owned directly by the
-partition. Preserve boot-isolated CPUs when a partition is released,
-return CPUs after rejected type changes, validate children against the
-new parent mask, and publish cpus_allowed before a partition update can
-revisit the cpuset. Fix isolation accounting during direct and
-propagated invalidation.
+Fixes: 6df415aa46ec ("cgroup/cpuset: Defer housekeeping_update() calls from CPU hotplug to workqueue")
+Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+---
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Patch 1 removes an invalid selftest comparison that makes
-test_cpuset_prs.sh fail when boot-time domain isolation is configured.
-Each kernel fix is followed by a focused selftest update.
-
-Guopeng Zhang (17):
-  selftests/cgroup: Drop invalid boot isolation comparison
-  cgroup/cpuset: Preserve boot-isolated CPUs on partition release
-  selftests/cgroup: Test boot-isolated CPU partition release
-  cgroup/cpuset: Limit type-change accounting to owned CPUs
-  selftests/cgroup: Test isolated CPU accounting on type changes
-  cgroup/cpuset: Validate type changes against owned CPUs
-  selftests/cgroup: Test type-change validation with child-owned CPUs
-  cgroup/cpuset: Release CPUs when a type change is rejected
-  selftests/cgroup: Test rejected partition type changes
-  cgroup/cpuset: Fix isolated accounting on direct child invalidation
-  selftests/cgroup: Test isolation accounting on direct child
-    invalidation
-  cgroup/cpuset: Invalidate children outside the new CPU mask
-  selftests/cgroup: Test child invalidation after shrinking cpuset.cpus
-  cgroup/cpuset: Publish cpus_allowed before partition updates
-  selftests/cgroup: Test shrinking cpuset.cpus in a remote partition
-  cgroup/cpuset: Fix isolated accounting on propagated invalidation
-  selftests/cgroup: Test isolation accounting on propagated invalidation
-
- kernel/cgroup/cpuset.c                        | 162 ++++++++++--
- .../selftests/cgroup/test_cpuset_prs.sh       | 231 +++++++++++++++++-
- 2 files changed, 361 insertions(+), 32 deletions(-)
-
-
-base-commit: 6a746cd265aed59107ebdaa9ce039bb832922969
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index da8f7b920178..fdb3185570d4 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -797,7 +797,6 @@ check_isolcpus()
+ 	EXPECTED_ISOLCPUS=$1
+ 	ISCPUS=${CGROUP2}/cpuset.cpus.isolated
+ 	ISOLCPUS=$(cat $ISCPUS)
+-	HKICPUS=$(cat /sys/devices/system/cpu/isolated)
+ 	LASTISOLCPU=
+ 	SCHED_DOMAINS=/sys/kernel/debug/sched/domains
+ 	if [[ $EXPECTED_ISOLCPUS = . ]]
+@@ -835,11 +834,6 @@ check_isolcpus()
+ 	ISOLCPUS=
+ 	EXPECTED_ISOLCPUS=$EXPECTED_SDOMAIN
+ 
+-	#
+-	# The inverse of HK_TYPE_DOMAIN cpumask in $HKICPUS should match $ISOLCPUS
+-	#
+-	[[ "$ISOLCPUS" != "$HKICPUS" ]] && return 1
+-
+ 	#
+ 	# Use the sched domain in debugfs to check isolated CPUs, if available
+ 	#
 -- 
 2.43.0
+
