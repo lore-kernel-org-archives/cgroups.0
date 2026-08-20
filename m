@@ -1,34 +1,34 @@
-Received: from mta1.migadu.com (out-38.mta1.migadu.com [95.215.58.38])
+Received: from mta0.migadu.com (out-64.mta0.migadu.com [91.218.175.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8035B4457DE
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.38
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BB68443E53
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787229754; cv=none; b=O41EbxZdbqNDbOaOOVJAJBoHNWJwWNMW+Fx4j4el95q0N37xngZGNlGhE+LVBe1C2tr4NuGzTSzuTCX2BcTCN5lEiRY2XvgVrdwiVEYAiOdIyVInZt1HQUvjlClYajtiPjaWrxMqkTI+2752G5PT5DiNJmc/AjuKaVSb0NMvtkE=
+	t=1787229758; cv=none; b=o0fx3DJsD3mH2KtmNuRCxMVDlS5T2eaLU80cryIELF4rta/7t6GsndUA7J1RGic6CuHG2126zTSLpAvdxLFBNV+eBEk6ZuqOfUhVKTASIVG2XEOpQkuV1ZQLFknCwXOxEHkP7OvvlNcoecmreDlPxuHnvY+ecwkawzKzs8ZduLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787229754; c=relaxed/simple;
-	bh=xzuiCyOQkUshOw/dQoqpJd4cRH9nvcLkQjfLEBLwDso=;
+	s=arc-20240116; t=1787229758; c=relaxed/simple;
+	bh=oFZgfIMHevFj2+IBJHSs6dHXo5XbyNHl4nAKqNst6ug=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZSUDJWxjakOrUOcoZ/TTCCPR8ogCu7sd4GQGFK3Xj9qyYcJqZ8tjSmA8ZZA8fo0q+wxPJUEDZ1kiXF2qB2ouvpizpmd7dc/D1QF6Xxt6Y5PK4VaAmXllRx4JadfBz1RRL/I+wJk3EpGCsrr3ZVdQypImApBBgBIloHaZM55iA20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pw4q/B8Y; arc=none smtp.client-ip=95.215.58.38
+	 MIME-Version; b=AvPiFwTl51b0yCKKnKq20X4N5tlFpTmuU+qqgWZfgaidw5GarMs4c1qIQ08IzhVPZSXqjsz2MnShGnfulltYoAihGLQDfXJiepTtWeDH04cwFRwdF78SOpSpyFj6NgVg7xGg0ujNz3RpZMpg+lNIHbYpjYE9LYhIP/rqkW4TH2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Ie/9Qw2B; arc=none smtp.client-ip=91.218.175.64
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pw4q/B8Y"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Ie/9Qw2B"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=xzuiCyOQkUshOw/dQoqpJd4cRH9nvcLkQjfLEBLwDso=;
+DKIM-Signature: a=rsa-sha256; bh=oFZgfIMHevFj2+IBJHSs6dHXo5XbyNHl4nAKqNst6ug=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787229750; v=1; x=1787834550;
- b=pw4q/B8Yr/DahBGnAs2/z9A6qeFb9DTCnbFKVy0F69whTIjperD6LyewZUvInvoadYqi7c1H
- rvJyNWoFW7XgIfvIOGo+tGck7IdkRV4ZsAOFLthBdO2VOBydgrQrWlxbZUthgsvC01MvLp+Qjr7
- mMhXOQZAziZ5oEp9/rLH7rlQ=
+ t=1787229754; v=1; x=1787834554;
+ b=Ie/9Qw2Budo1m8OcowcXyg9PoqHauwxldP/Z384d61wMt767dIcUFQRiS5/AXgnCMVgTUf3r
+ wn5wYqb7A2MYwZnRJMf77B9v4aQU8x1qsBWvlLk9SThJJJUA8g+PSDr4c9qYfUSjN6diwAevAUH
+ j/B5nnwk0kHdL6WUW3RacIWg=
 X-Envelope-To: cgroups@vger.kernel.org
 Received: from zgp.. (223.70.159.239)
-	by smtp.migadu.com with ESMTPS id e10e27d3da9d99c5;
-	Thu, 20 Aug 2026 12:42:30 +0000
-X-Mizu-Trace-ID: e10e27d3da9d99c5
+	by smtp.migadu.com with ESMTPS id 0f29dd2d16ed27f9;
+	Thu, 20 Aug 2026 12:42:34 +0000
+X-Mizu-Trace-ID: 0f29dd2d16ed27f9
 X-Migadu-Flow: FLOW_OUT
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: longman@redhat.com,
@@ -41,9 +41,9 @@ Cc: ridong.chen@linux.dev,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH 03/17] selftests/cgroup: Test boot-isolated CPU partition release
-Date: Thu, 20 Aug 2026 20:41:48 +0800
-Message-ID: <20260820124202.517160-4-guopeng.zhang@linux.dev>
+Subject: [PATCH 04/17] cgroup/cpuset: Limit type-change accounting to owned CPUs
+Date: Thu, 20 Aug 2026 20:41:49 +0800
+Message-ID: <20260820124202.517160-5-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260820124202.517160-1-guopeng.zhang@linux.dev>
 References: <20260820124202.517160-1-guopeng.zhang@linux.dev>
@@ -57,89 +57,77 @@ Content-Transfer-Encoding: 8bit
 
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-Put a CPU isolated at boot into an isolated partition, change the
-partition back to member and check that the CPU remains isolated.
+effective_xcpus includes CPUs granted to valid child partitions. Passing
+the whole mask to isolated_cpus_update() during a root-to-isolated or
+isolated-to-root change applies the parent's new state to child-owned
+CPUs as well.
 
+Build a mask of CPUs owned by the partition by subtracting the
+effective_xcpus of valid children. Use this mask when updating
+isolated_cpus for a partition type change.
+
+Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
 Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
- .../selftests/cgroup/test_cpuset_prs.sh       | 58 +++++++++++++++++++
- 1 file changed, 58 insertions(+)
+ kernel/cgroup/cpuset.c | 30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index fdb3185570d4..131d8b4551ef 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -1155,6 +1155,63 @@ test_isolated()
- 	pause 0.05
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 2538faac9aba..468272baadb2 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2155,6 +2155,30 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+ 	rcu_read_unlock();
  }
  
-+#
-+# Select an online CPU isolated from scheduler domains at boot.
-+# $1: test name used in the skip message
-+#
-+get_boot_isolated_cpu()
++/*
++ * Compute CPUs owned directly by a partition.
++ *
++ * effective_xcpus includes CPUs granted to valid child partitions. Exclude
++ * those CPUs when changing only this partition's type.
++ */
++static void compute_partition_owned_cpumask(struct cpuset *cs,
++					    struct cpumask *owned_cpus)
 +{
-+	TEST_NAME=$1
-+	BOOT_ISOLATED_FILE=/sys/devices/system/cpu/isolated
++	struct cgroup_subsys_state *css;
++	struct cpuset *child;
 +
-+	[[ -r $BOOT_ISOLATED_FILE ]] || {
-+		echo "$TEST_NAME test SKIPPED: boot isolation state unavailable"
-+		return 1
-+	}
-+	BOOT_CPUS=$(cat $BOOT_ISOLATED_FILE)
-+	[[ -n "$BOOT_CPUS" ]] || {
-+		echo "$TEST_NAME test SKIPPED: no boot-isolated CPU"
-+		return 1
-+	}
++	lockdep_assert_held(&cpuset_mutex);
++	cpumask_copy(owned_cpus, cs->effective_xcpus);
 +
-+	BOOT_CPU=$(echo "$BOOT_CPUS" | sed -e 's/[,-].*//')
-+	CPU_ONLINE=/sys/devices/system/cpu/cpu${BOOT_CPU}/online
-+	[[ ! -e $CPU_ONLINE || $(cat $CPU_ONLINE) -eq 1 ]] || {
-+		echo "$TEST_NAME test SKIPPED: CPU $BOOT_CPU is offline"
-+		return 1
++	rcu_read_lock();
++	cpuset_for_each_child(child, css, cs) {
++		if (is_partition_valid(child))
++			cpumask_andnot(owned_cpus, owned_cpus,
++				       child->effective_xcpus);
 +	}
++	rcu_read_unlock();
 +}
 +
-+#
-+# A CPU isolated at boot must stay isolated after it is released by a dynamic
-+# isolated partition.
-+#
-+test_boot_isolated()
-+{
-+	TEST_NAME="Boot-isolated CPU partition release"
-+	get_boot_isolated_cpu "$TEST_NAME" || return 0
-+	echo "Running $TEST_NAME test ..."
-+
-+	cd $CGROUP2/test
-+	echo member > cpuset.cpus.partition
-+	echo $BOOT_CPU > cpuset.cpus
-+	[[ $(cat cpuset.cpus.effective) = "$BOOT_CPU" ]] || {
-+		echo "$TEST_NAME test SKIPPED: CPU $BOOT_CPU is unavailable"
-+		echo "" > cpuset.cpus
-+		cd $CGROUP2
-+		return 0
-+	}
-+	test_partition isolated
-+	test_partition member
-+	check_isolcpus "." || {
-+		echo "Boot-isolated CPU $BOOT_CPU was lost after partition release"
-+		exit 1
-+	}
-+	echo "" > cpuset.cpus
-+	cd $CGROUP2
-+	echo "$TEST_NAME test PASSED."
-+}
-+
- #
- # Wait for inotify event for the given file and read it
- # $1: cgroup file to wait for
-@@ -1226,5 +1283,6 @@ trap cleanup 0 2 3 6
- run_state_test TEST_MATRIX
- run_remote_state_test REMOTE_TEST_MATRIX
- test_isolated
-+test_boot_isolated
- test_inotify
- echo "All tests PASSED."
+ /*
+  * update_cpumasks_hier - Update effective cpumasks and tasks in the subtree
+  * @cs:  the cpuset to consider
+@@ -2990,8 +3014,10 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	} else if (old_prs && new_prs) {
+ 		/*
+ 		 * A change in load balance state only, no change in cpumasks.
+-		 * Need to update isolated_cpus.
++		 * Need to update isolated_cpus for CPUs owned by this partition,
++		 * excluding CPUs distributed to valid child partitions.
+ 		 */
++		compute_partition_owned_cpumask(cs, tmpmask.new_cpus);
+ 		if (((new_prs == PRS_ISOLATED) &&
+ 		     !isolated_cpus_can_update(cs->effective_xcpus, NULL)) ||
+ 		    prstate_housekeeping_conflict(new_prs, cs->effective_xcpus))
+@@ -3030,7 +3056,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	if (!is_partition_valid(cs))
+ 		reset_partition_data(cs);
+ 	else if (isolcpus_updated)
+-		isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
++		isolated_cpus_update(old_prs, new_prs, tmpmask.new_cpus);
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	/* Force update if switching back to member & update effective_xcpus */
 -- 
 2.43.0
 
