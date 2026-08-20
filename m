@@ -1,132 +1,139 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FF993976BE
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 18:44:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2F3D3C1D48
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 20:05:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787251481; cv=none; b=V5+UQu1xb2XJ8lpRCTus3pqZJcO/A0LvhPHafmisR6oEdK5DUW4756RtuPRa0CKv+KSwecNKttJVF7WelznBwmOqyf1oqpekNBYq91QX1QhEgeECIJbbprfe/SIY8rFdv1lT/XtMl8Prvt2PlVNPLsmPHxsFYmc7EwsJJNxdET4=
+	t=1787256308; cv=none; b=llGtBuLREARrsks86O/aH2FQk/bxRsMaot7SKdiBuLCq742HEZWPI8/GOERJA8JUcGpQu1S093gdklvePceejqlTzS/ai0t6qkiM/8Z2cvrSE3KHDLp/TysZtCs7bpQriBQf5obg+dAQ5ejPYLiEc4yokjQAXSUlLgmuw1hhLVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787251481; c=relaxed/simple;
-	bh=9JBRNzkMw2Coc7qA8yiJwk2/I20m/GL1O6pTM3+vxV4=;
+	s=arc-20240116; t=1787256308; c=relaxed/simple;
+	bh=Aw/ofYSmMq/hCctkdEPZ9sneab2XTminwcfhlt6xz3g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YeqBFCO1Q+35FBFxtxgez/JQWd0o5N4SBXQE71vXtb01JmA1ZeXqDeZHVubtwfXckhchB+Je3OrNknvNwUmz+TQmXbyWWmqUb768+/PsPnVvEeOcshZuAbFRMr3Wq7tXJrbp4z5ymhpKibp/QOqdaZW4izBiYu3lfS+KtnvdHLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Dvu5hZVa; arc=none smtp.client-ip=209.85.221.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=gWhu+qy2B24Q8mAgNSeHvuNbejAWlXsq5u3kqQ9V3CXrKo+i/zoAfv9v3S92+u6u1Zo5uhEGrcdrrcg1o45XKI6CO+aALzwlg1zIsOQs34Mj9uQcNtD0YVVm3kfbiY+Tq1h0xeJ87wSZOvcJDEYiBtW6cZ+k85LKXhFFrkbG4sk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CspOK5+8; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Dvu5hZVa"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-47fd66a094eso93760f8f.3
-        for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 11:44:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CspOK5+8"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2caced6038eso1859615ad.0
+        for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 13:05:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1787251477; x=1787856277; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1787256305; x=1787861105; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=0GLmbH5SyGlm3QykfKRyFPNaJnpHjEPWRCdCFLcGOXY=;
-        b=Dvu5hZVaCYw79sIVK5EPsSQfufQIlDPo2zcnb7zTMM8cULJjGj1ar27MUc5vBDcIoB
-         RNySU0VJVEaeuV25EtUzqqcF+xTz7xi+enyQ+cZlCzHz5pNZgcCLZuBB4N7eUcsZAtVn
-         USSp0yKZ0phhF4b81DiTzzM+HYds0jaJgu8QQTmvbdxtC4vNkxCg2/IWJbSogBZu/kNz
-         pwOgcjs3idW4eAb6hk6COfZb890Kr0zzzyjIjHoLcb12K990wtFd5yE0QEhAhtU4l0v/
-         LEBX4nzBn7Wa0qncwm3ciAl+CpUwOqfLUaW/RR8u9XXLxXgyodxtLaPFg5z0XlxR5Lx3
-         CoQA==
+        bh=W+ttLV2jMb/uOUdRDGthE1WHXT4FvT3P7ffiAV7gUtI=;
+        b=CspOK5+8rXyfrhCiSkiXDpyCsuBHQUUYtm7NREaRjf48p5mXd9uLLSVBLzWt8FhdhD
+         BvnzmGQPVmFq306Hsl5npy8DBYOYjaDGv5QFOnbTLAfQ5SNcTr75xEbDurQBBN9pbd6W
+         YQllygYUNyDq0gU3ia79PycvUh1QerCAbwF1JMM/h45ovXt8JMnacYRtJasKMV7CZX5A
+         PjvDVoo0AyrQVRddbTO7t1cDHdtYx6eY8d8IEqQRB1nLbL4w6yNSbXl3LJGEV70t4EZ7
+         b8UZGipq+Yu8zxh4/f+J7xwa5Ttrgq+wkiNocoCHGNbsIwnBFWz3uOL8B93MmQJMfb35
+         Jycw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787251477; x=1787856277;
+        d=1e100.net; s=20251104; t=1787256305; x=1787861105;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=0GLmbH5SyGlm3QykfKRyFPNaJnpHjEPWRCdCFLcGOXY=;
-        b=sAcatca/m5nG4KYVHuwe32/cjeWDAqK4Zc+kwoPl2790vC0pr130ea3VnNOwHruKOd
-         fItoiHWWe4SPmZsXVB1FGSZbxD8n8Q+r6Jg0yqXzo1qUuW0dQ2T+PPpiPAO6vjqQPjph
-         2QW0d/POngIFHyMSUK4DHP4o56tUt2Ya1tX23oGWyAWSjpBEzL1yYx6vJwHqcmXGruo+
-         zAQRXXTi/v1/cxYe2DBTwOC/427cS7NB7oW2fvzn9wOWvVpak+cvCVWVHNl1n5B1nhTN
-         k94J3NavtfXE3qhQYKF36sPW0dBiosgCwr6DyUI0kDm9sv//CK+1qXQHBQXA9yioHXgR
-         Mkiw==
-X-Forwarded-Encrypted: i=1; AHgh+RrYkmdrCdZK3QnDhJBJUYzz2Ke9kSNB0LyaiKTQ3x7oBG7mKYlu2/wdLSNiBkcwAWJAKC/c8vFz@vger.kernel.org
-X-Gm-Message-State: AFuF++kRwDel9sE2+7m9bODNg9/h8jvNhU58wCFqVFCkwr3CG0+q6Oqw
-	KnhZYTSHtKptuo8UmnKVr+49TQHKd921Jl8gZPlOz7cTjE5Il2dNTTJPdpzTDkO5HxY=
-X-Gm-Gg: AR+sD10ka2RBOwB32RCKmraBFa3J7G0YP4UusfETrp32QXno6047I1sJu8czUDCv4Za
-	T2r2vlZn3ofO5h2nzeBhbcK3aC+v69yUKIVRq1EkjjWhkdivPc/AsjR036iWigNiQB4FVUPZkSr
-	Z6X05gAGzTURcYf9WLLJI0W+6YSD96anayc1lIi/72jx3MNsrYigqXdlZHTZ+TvXHSqCjkzahkN
-	U7SrNZlc0JPeIQWy2GddDlSC9BifIZlX1NaUJKPXQOapdchU5MOddUR1RoGFnjZFJU9WYpXcxa+
-	J01kraInn4JBtgUHL2mywhxG1/CYfR1mgvIgvIFgg0a3IA2z0FK3mKZSvTRqELy7PdCmtX8PtPa
-	9SyarzZUx43wnIm+JanBFV8/iYQPZmFoZPptg/HA9jY4ELtXTU7KHiPzilJ13ucS152giMXBAYl
-	iY+iR2AwEXyUr67x3H+/H5+SmduxkYtAyCIKVkRAGqezAfKl8NL4wwDrncVty7/PGpKeKPXdpub
-	Q==
-X-Received: by 2002:a05:6000:605:b0:47f:9096:3ef1 with SMTP id ffacd0b85a97d-482c0b62092mr1209538f8f.9.1787251476739;
-        Thu, 20 Aug 2026 11:44:36 -0700 (PDT)
-Received: from localhost (109-81-81-112.rct.o2.cz. [109.81.81.112])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482b1441748sm15311174f8f.8.2026.08.20.11.44.36
+        bh=W+ttLV2jMb/uOUdRDGthE1WHXT4FvT3P7ffiAV7gUtI=;
+        b=CQ4SBh7GZqSaQo0MSGdtfAQ/CpTYnjNybAsNoDOGdaC24XKuQDsSw+lHrmGhuwSrMN
+         /ebgUCufPTXZeOPWHV22USQZ6FuZBvk9hA6BpsScfQD32UNuAgmzV/ahSrQsnhpWTSxO
+         /lGZgCjHAdAT4+VN1qarW41DR+Wfo4v0hHJ5bVjmRumNPEp+j4v9tY7+tF0zKVdolJXG
+         tTzjSjmSbjI08vJI35wOEt8wf9VV9IigLNLbEd/Bc4dwsmDRcT6lYmSUErMmgupN/dLb
+         DDIkctwf+DHpLi7XftkhNtyMrHbhI44P8RgwKTwhF4/hnc0kpseGHykLEtXSXJHhCDT6
+         x8mw==
+X-Forwarded-Encrypted: i=1; AHgh+RqM6vwigTlwg0a5UjalDj5tz1ZzikMomST4wewUeGaG9vzxtBnqjY78znCDY2L5Zkaf34TZE376@vger.kernel.org
+X-Gm-Message-State: AFuF++nhrO4nYVa21fN+ZkMMRm67JpF0W/H2auweE3K16KsmQLmYeX63
+	s4XsgsF8Bb+vXHy89fLlE418oCfuAnNW0DlWiuW1W3EkFpFz6bOoUS2K
+X-Gm-Gg: AR+sD12MMK0k69RaX91A8PQKeBwh4ClAZ9izVV7va7jmWyLfdIFXRQLzRaGCkz0gZOf
+	eh3xTvIkA012GV+4EXimV4rAbRuEEH5Ea81jA05iZ652MjJ8yHIQz0vaRhKsLyYnvG6fU/Kq2Cx
+	fs35U+rVdhcDLdDDKWOQElU+vMRqDKAT6bHZ2mPrJAH4xsjeJ2Z0RxlKRvRGfrwbVyfSeg30A6G
+	+a1XvnQ6Tma4QMIqf2/oeIM2qGg+W253m+s1dcmhyXp4UrxIK/i+k79/J9U1JOob6VaH/kgiPsp
+	84F21BlP1cAXJmfFpJI6aG3jYmBhh/YqtAeLNwz+GbXdKwtTHB5IY67IycgqszNIoihGSzAM1+9
+	riYtm/vWDNRPC4P8/ga2CXjZtDAPVNEKKsdBDRmSlESWyNPp+b3XJ9Mw675yiJGKDqvEw+tDTTv
+	ms7NdOOjb5iEtr7jiApxIdjVFCE/3f5vtzNotJ28FP1FGmPUVfm2dMGBSNTRZSBoa7gdc6qo9mL
+	BjlfoKW
+X-Received: by 2002:a17:902:fc48:b0:2cf:7ea3:7cf1 with SMTP id d9443c01a7336-2d61a078e1amr118047715ad.5.1787256305116;
+        Thu, 20 Aug 2026 13:05:05 -0700 (PDT)
+Received: from devvm16600.scu0.facebook.com ([2a03:2880:9ff:6b::])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bf191821sm18740151eec.28.2026.08.20.13.05.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Aug 2026 11:44:36 -0700 (PDT)
-Date: Thu, 20 Aug 2026 20:44:34 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
+        Thu, 20 Aug 2026 13:05:04 -0700 (PDT)
+Date: Thu, 20 Aug 2026 13:05:01 -0700
+From: Ziyang Men <ziyang.meme@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Shuah Khan <shuah@kernel.org>, kernel-team@meta.com,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Ben Segall <bsegall@google.com>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Joshua Hahn <joshua.hahnjy@gmail.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joy Chaoyue Xiong <cxiong@meta.com>
-Subject: Re: [PATCH v2] memcg: trim the per-cpu charge stock instead of
- draining it
-Message-ID: <aodLEmCg76oRHY2j@tiehlicka>
-References: <20260820012010.2016086-1-shakeel.butt@linux.dev>
- <aoanalsTiGmL69LN@tiehlicka>
- <aoclMssJAyYw2aCn@linux.dev>
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	JP Kobryn <inwardvessel@gmail.com>, bpf@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] cgroup: add BPF kfuncs to read a cpu cgroup's
+ stats
+Message-ID: <aodd7S4Broor2oHt@devvm16600.scu0.facebook.com>
+References: <20260818002450.3071325-1-ziyang.meme@gmail.com>
+ <20260818002450.3071325-2-ziyang.meme@gmail.com>
+ <aoSTaFwsVEoNW01D@slm.duckdns.org>
+ <aoTgVOTxsEbFXTp2@devvm16600.scu0.facebook.com>
+ <aoTg7ybddqzoZbz7@slm.duckdns.org>
+ <aoTx1eaNNJ+xrUq1@devvm16600.scu0.facebook.com>
+ <aoYYX60TCD6cd601@slm.duckdns.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <aoclMssJAyYw2aCn@linux.dev>
+In-Reply-To: <aoYYX60TCD6cd601@slm.duckdns.org>
 
-On Thu 20-08-26 09:06:29, Shakeel Butt wrote:
-> On Thu, Aug 20, 2026 at 09:06:18AM +0200, Michal Hocko wrote:
-> > On Wed 19-08-26 18:20:10, Shakeel Butt wrote:
-> > > @@ -2254,9 +2264,12 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
-> > >  			empty_slot = i;
-> > >  		if (memcg == READ_ONCE(stock->cached[i])) {
-> > >  			stock_pages = READ_ONCE(stock->nr_pages[i]) + nr_pages;
-> > > +			if (stock_pages > MEMCG_STOCK_HIGH) {
-> > > +				memcg_uncharge(memcg,
-> > > +					       stock_pages - MEMCG_STOCK_LOW);
-> > > +				stock_pages = MEMCG_STOCK_LOW;
-> > 
-> > I would find it easier to read to keep the update in sync with
-> > memcg_uncharge, i.e.
-> > 				stock_pages = WRITE_ONCE(stock_pages - MEMCG_STOCK_LOW)
-> 
-> Sorry I am not sure I understand your suggestion. The WRITE_ONCE() is throwing
-> me off.
+Hi Tejun,
 
-Sorry, brainfarth on my end. I meant to say that stock_pages should be
-updated by the uncharged decrement rather than capping it at MEMCG_STOCK_LOW.
-So in fact I meant this
-				stock_pages = stock_pages - MEMCG_STOCK_LOW;
-but then shortcuted it to a nonsense.
+On Wed, Aug 19, 2026 at 10:55:59AM -1000, Tejun Heo wrote:
+>Hello,
+>
+>On Tue, Aug 18, 2026 at 04:59:17PM -0700, Ziyang Men wrote:
+>> > > The bpf_cgroup_base_stat() takes an rstat spinlock_t, which can sleep on
+>> > > PREEMPT_RT.
+>> >
+>> > Is this actually required? This doesn't really make sense to me. Shouldn't
+>> > what SLEEPABLE mean change on RT kernels instead?
+>>
+>> Oh sorry, I didn't notice that.
+>>
+>> I might be wrong: this function calls the cputime_adjust(), which in turn
+>> acquires raw_spin_lock_irqsave(), so there would be NMI deadlock in the
+>> perf_event program. The __css_rstat_lock() take the spin_lock_irq() as well. So
+>> maybe a SLEEPABLE tag is still necessary?
+>
+>I think this is for BPF folks to answer. I don't think SLEEPABLE is needed
+>because of RT but yeah it wouldn't be safe to be called from nmi context.
 
-> > > +			}
-> > >  			WRITE_ONCE(stock->nr_pages[i], stock_pages);
-> > > -			if (stock_pages > MEMCG_CHARGE_BATCH)
-> > > -				drain_stock(stock, i);
-> > >  			success = true;
-> > >  			break;
-> > >  		}
-> > > -- 
-> > > 2.53.0-Meta
-> > 
-> > -- 
-> > Michal Hocko
-> > SUSE Labs
+Ok I see, let's remove the SLEEPABLE for now. 
 
--- 
-Michal Hocko
-SUSE Labs
+Thanks,
+Ziyang
+
+>
+>Thanks.
+>
+>-- 
+>tejun
