@@ -1,34 +1,34 @@
-Received: from mta0.migadu.com (out-64.mta0.migadu.com [91.218.175.64])
+Received: from mta1.migadu.com (out-44.mta1.migadu.com [95.215.58.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BB68443E53
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C619443E3A
+	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 12:42:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787229758; cv=none; b=o0fx3DJsD3mH2KtmNuRCxMVDlS5T2eaLU80cryIELF4rta/7t6GsndUA7J1RGic6CuHG2126zTSLpAvdxLFBNV+eBEk6ZuqOfUhVKTASIVG2XEOpQkuV1ZQLFknCwXOxEHkP7OvvlNcoecmreDlPxuHnvY+ecwkawzKzs8ZduLg=
+	t=1787229764; cv=none; b=taIcpbq0IHYKlknlky68POmtcmBYHhjhtVRwPxpOo0aENffQ06u3gIkDpP0g4xv8RIqa2GzLb/v4lZFXxvojIa9+PEX0cmB1XiMXjFA3BwdJFP+oiCJkvx8u0+7xWgfH9WKsd8DnOIIrlJQuiWE3KHS3Znt4VlyuY6zh2WCqC/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787229758; c=relaxed/simple;
-	bh=oFZgfIMHevFj2+IBJHSs6dHXo5XbyNHl4nAKqNst6ug=;
+	s=arc-20240116; t=1787229764; c=relaxed/simple;
+	bh=H6Kjnog+dQT7tN4C/3rC+dGe+xz2UZJm2VHn1zFbXB4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AvPiFwTl51b0yCKKnKq20X4N5tlFpTmuU+qqgWZfgaidw5GarMs4c1qIQ08IzhVPZSXqjsz2MnShGnfulltYoAihGLQDfXJiepTtWeDH04cwFRwdF78SOpSpyFj6NgVg7xGg0ujNz3RpZMpg+lNIHbYpjYE9LYhIP/rqkW4TH2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Ie/9Qw2B; arc=none smtp.client-ip=91.218.175.64
+	 MIME-Version; b=HkSCuzbUvTBQnItSPizq9opI/cmx+kqvwURhZhFn+FEkD+Iqi4/644Inz3UsYg36gmeg8UskLtJ7dbALA2z1P0oSFCNM5FNmnxUMRu5DklQHNWqH8pcbPRAfvNI0HhIv6L4Ji4FstmHe76HaBDcAHRCpxPnYvdtLWDuzza6VePg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=O2ohWaeN; arc=none smtp.client-ip=95.215.58.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Ie/9Qw2B"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="O2ohWaeN"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=oFZgfIMHevFj2+IBJHSs6dHXo5XbyNHl4nAKqNst6ug=;
+DKIM-Signature: a=rsa-sha256; bh=H6Kjnog+dQT7tN4C/3rC+dGe+xz2UZJm2VHn1zFbXB4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787229754; v=1; x=1787834554;
- b=Ie/9Qw2Budo1m8OcowcXyg9PoqHauwxldP/Z384d61wMt767dIcUFQRiS5/AXgnCMVgTUf3r
- wn5wYqb7A2MYwZnRJMf77B9v4aQU8x1qsBWvlLk9SThJJJUA8g+PSDr4c9qYfUSjN6diwAevAUH
- j/B5nnwk0kHdL6WUW3RacIWg=
+ t=1787229759; v=1; x=1787834559;
+ b=O2ohWaeNEOCr1kGLYHQFXDRPjw9DiWgibmb1cp805Ngqxkuz9hD7jlUs5iMEA/zo8Xy/Je7/
+ GrRrI8tfPAG8Tabm4OqMxVTqUdzvJEYv6JFYIA6NQus1EnI+qNE3NQ1ZgN9NCuEcMf12ZFiohJR
+ TiTpM1x3bWp99+bYTYIhspFM=
 X-Envelope-To: cgroups@vger.kernel.org
 Received: from zgp.. (223.70.159.239)
-	by smtp.migadu.com with ESMTPS id 0f29dd2d16ed27f9;
-	Thu, 20 Aug 2026 12:42:34 +0000
-X-Mizu-Trace-ID: 0f29dd2d16ed27f9
+	by smtp.migadu.com with ESMTPS id 2f77a85c6204a7d8;
+	Thu, 20 Aug 2026 12:42:39 +0000
+X-Mizu-Trace-ID: 2f77a85c6204a7d8
 X-Migadu-Flow: FLOW_OUT
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: longman@redhat.com,
@@ -41,9 +41,9 @@ Cc: ridong.chen@linux.dev,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH 04/17] cgroup/cpuset: Limit type-change accounting to owned CPUs
-Date: Thu, 20 Aug 2026 20:41:49 +0800
-Message-ID: <20260820124202.517160-5-guopeng.zhang@linux.dev>
+Subject: [PATCH 05/17] selftests/cgroup: Test isolated CPU accounting on type changes
+Date: Thu, 20 Aug 2026 20:41:50 +0800
+Message-ID: <20260820124202.517160-6-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260820124202.517160-1-guopeng.zhang@linux.dev>
 References: <20260820124202.517160-1-guopeng.zhang@linux.dev>
@@ -57,77 +57,27 @@ Content-Transfer-Encoding: 8bit
 
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-effective_xcpus includes CPUs granted to valid child partitions. Passing
-the whole mask to isolated_cpus_update() during a root-to-isolated or
-isolated-to-root change applies the parent's new state to child-owned
-CPUs as well.
+Switch a parent between root and isolated while a child has the opposite
+type. Check that CPUs owned by the child keep their isolation state.
 
-Build a mask of CPUs owned by the partition by subtracting the
-effective_xcpus of valid children. Use this mask when updating
-isolated_cpus for a partition type change.
-
-Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
 Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
- kernel/cgroup/cpuset.c | 30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 2538faac9aba..468272baadb2 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2155,6 +2155,30 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
- 	rcu_read_unlock();
- }
- 
-+/*
-+ * Compute CPUs owned directly by a partition.
-+ *
-+ * effective_xcpus includes CPUs granted to valid child partitions. Exclude
-+ * those CPUs when changing only this partition's type.
-+ */
-+static void compute_partition_owned_cpumask(struct cpuset *cs,
-+					    struct cpumask *owned_cpus)
-+{
-+	struct cgroup_subsys_state *css;
-+	struct cpuset *child;
-+
-+	lockdep_assert_held(&cpuset_mutex);
-+	cpumask_copy(owned_cpus, cs->effective_xcpus);
-+
-+	rcu_read_lock();
-+	cpuset_for_each_child(child, css, cs) {
-+		if (is_partition_valid(child))
-+			cpumask_andnot(owned_cpus, owned_cpus,
-+				       child->effective_xcpus);
-+	}
-+	rcu_read_unlock();
-+}
-+
- /*
-  * update_cpumasks_hier - Update effective cpumasks and tasks in the subtree
-  * @cs:  the cpuset to consider
-@@ -2990,8 +3014,10 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	} else if (old_prs && new_prs) {
- 		/*
- 		 * A change in load balance state only, no change in cpumasks.
--		 * Need to update isolated_cpus.
-+		 * Need to update isolated_cpus for CPUs owned by this partition,
-+		 * excluding CPUs distributed to valid child partitions.
- 		 */
-+		compute_partition_owned_cpumask(cs, tmpmask.new_cpus);
- 		if (((new_prs == PRS_ISOLATED) &&
- 		     !isolated_cpus_can_update(cs->effective_xcpus, NULL)) ||
- 		    prstate_housekeeping_conflict(new_prs, cs->effective_xcpus))
-@@ -3030,7 +3056,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	if (!is_partition_valid(cs))
- 		reset_partition_data(cs);
- 	else if (isolcpus_updated)
--		isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
-+		isolated_cpus_update(old_prs, new_prs, tmpmask.new_cpus);
- 	spin_unlock_irq(&callback_lock);
- 
- 	/* Force update if switching back to member & update effective_xcpus */
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index 131d8b4551ef..9a1cce4807b4 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -224,6 +224,8 @@ TEST_MATRIX=(
+ 	"   C0-1     .      .   C2-3:P1   .      .      .     C2     0 "
+ 	"   C0-1     .      .   C2-3:P1   .      .      .    C4-5    0 B1:4-5"
+ 	"  C0-3:P1 C2-3:P1  .      .      .      .      .      .     0 A1:0-1|A2:2-3|XA2:2-3"
++	"  C0-3:P1 C2-3:P1  .      .     P2      .      .      .     0 A1:0-1|A2:2-3 A1:P2|A2:P1 0-1"
++	"  C0-3:P2 C2-3:P2  .      .     P1      .      .      .     0 A1:0-1|A2:2-3 A1:P1|A2:P2 2-3"
+ 	"  C0-3:P1 C2-3:P1  .      .     C1-3    .      .      .     0 A1:1|A2:2-3|XA2:2-3"
+ 	"  C2-3:P1  C3:P1   .      .     C3      .      .      .     0 A1:|A2:3|XA2:3 A1:P1|A2:P1"
+ 	"  C2-3:P1  C3:P1   .      .     C3      P0     .      .     0 A1:3|A2:3 A1:P1|A2:P0"
 -- 
 2.43.0
 
