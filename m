@@ -1,136 +1,118 @@
-Received: from mta0.migadu.com (out-233.mta0.migadu.com [91.218.175.233])
+Received: from mta1.migadu.com (out-128.mta1.migadu.com [95.215.58.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB51B367298
-	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 03:17:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DD9137267E
+	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 05:05:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787282267; cv=none; b=Kq7W+kJrPnmNq+LwkWmHLu3lTUK/G/fNMvEXEu89h3YPZhTAjs+FhwXLB0wAmOLP48pwlPkNcHN7JlK6qIZjE4CTTVwnucIUSFA0RcMEJ0EpRwCYnpLEQcVgvfM/qy5xH8gomf6Ni08u4rLw1RSzhVfwYZdAKAaZFCmgF58EDX0=
+	t=1787288717; cv=none; b=O2An2KbhZ/c+fJJAAW21lIuap4tB+WNasH6x9cWUT0IwTKF+8UOzPOa+tYFAuUQv/XIxgV6beFYaij3wqC+Zhqxgj0r95SP3320theGSTrJ87HC284oasewrT+eUdP++QRHFnRs1eXdHjnYMy4xryVf15gTDzzanh++Fb76DVeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787282267; c=relaxed/simple;
-	bh=YzsViyV7hREnhdjE4oNJsni3zuIximevjl7gdibbQeg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DYVfuYA+EnGYBlcTJASdxkrSba7gQ3WlA+R8exQnAm5/Up/Ci4MkA7wtznnWe4FKG8uoeAMmgXDrmQe+njGdmtOgBX0lbuejUxOjkM8bdaftZFUzvTSMj8Ui4QQzmwpx+YTI8vu8v7IQ8KKz2KoUDBHV+bcKSHaK1lpZ3UNEuRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oTkBQyQF; arc=none smtp.client-ip=91.218.175.233
+	s=arc-20240116; t=1787288717; c=relaxed/simple;
+	bh=l5idBfOCsttOVVmfmLkwG1q+MlHBMS77pst0UKAT4Jo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WfcqA1+2NUrnEaI9f3Rw2o18Cdc7F5orri30mr+Us+E4L92qrLXCSXw+hjd2aPdYigwqqpbCdzvfpQkCKxY4SzTxl4Q6OZXVANp8LI9DH3nnCN1MP3p41J3vjQoqG9NVHk/HrPDASqJEdXwZiCkdgFrbCzbb+6XZy6myawnNNtg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=A/oQkiSt; arc=none smtp.client-ip=95.215.58.128
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oTkBQyQF"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="A/oQkiSt"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=YzsViyV7hREnhdjE4oNJsni3zuIximevjl7gdibbQeg=;
+DKIM-Signature: a=rsa-sha256; bh=l5idBfOCsttOVVmfmLkwG1q+MlHBMS77pst0UKAT4Jo=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787282259; v=1; x=1787887059;
- b=oTkBQyQFt2MpJ7ujdkTYYSezyTBJQ2Tst5gB6e9VC4QJvNd/wxscuWU041T+5lO8KeT09Jvy
- a+DkXCJn5VhKHh5ErkH8QavDgMnAdY2+rSYQlKBjjxfpfkai7mCeA3xMdxmfj7G95wlQ5libdx7
- QxNBr1VwhC6YzH+G3ofE3Odw=
+ t=1787288714; v=1; x=1787893514;
+ b=A/oQkiSt9jGsi3YvP4zjvjWflfel4S3gsaM/XA1v4RsLG0GE5s3l4bBJ06YUXRyciFZIMN+O
+ NYspWoymK4pKbdj2EE4wkrVe5keF0KeT1ZkBdZ3c9A30CmoIH9dK+TMCMNee+/dnwSJAodXP9W7
+ 2B1le81tVJPGLAp+IZ6M9ciE=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from [192.168.109.140] (223.70.159.239)
-	by smtp.migadu.com with ESMTPS id da191edad99e2e12;
-	Fri, 21 Aug 2026 03:17:39 +0000
-X-Mizu-Trace-ID: da191edad99e2e12
+Received: from localhost (2a03:2880:10ff:44::)
+	by smtp.migadu.com with ESMTPS id 60ca7f2cd437be0e;
+	Fri, 21 Aug 2026 05:05:13 +0000
+X-Mizu-Trace-ID: 60ca7f2cd437be0e
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <ab6c9042-f359-41b9-854c-c8a22bdce7f1@linux.dev>
-Date: Fri, 21 Aug 2026 11:17:32 +0800
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Tejun Heo <tj@kernel.org>
+Cc: Christian Brauner <christian@brauner.io>,
+	Meta kernel team <kernel-team@meta.com>,
+	driver-core@lists.linux.dev,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/4] kernfs: remove kernfs_rwsem from dentry revalidation
+Date: Thu, 20 Aug 2026 22:05:03 -0700
+Message-ID: <20260821050507.2161607-1-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/17] cgroup/cpuset: Fix partition CPU ownership and
- isolation accounting
-To: Ridong Chen <ridong.chen@linux.dev>, longman@redhat.com,
- cgroups@vger.kernel.org
-Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
- linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org,
- Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20260820124202.517160-1-guopeng.zhang@linux.dev>
- <5a16ddf0-2b22-449d-84e8-1605c195ea41@linux.dev>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <5a16ddf0-2b22-449d-84e8-1605c195ea41@linux.dev>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+At Meta, we are seeing important system daemons that poll cgroupfs and
+sysfs geth stuck in kernfs_dop_revalidate() for minutes. The two that
+hurt most are the ones we can least afford to lose: oomd, which decides
+what to kill when a machine runs out of memory, and below[1], which
+records the telemetry used to understand what happened afterwards.
+
+kernfs_dop_revalidate() takes kernfs_rwsem for read once per path component
+of every walk into a kernfs mount. Linux rwsems do not permit reader lock
+stealing once a writer is queued, so one writer -- a cgroup created or
+destroyed, a device renamed -- parks the entire incoming reader stream in
+uninterruptible sleep. Daemons polling cgroup files in a loop are exactly
+the workload that turns this into a convoy, and cgroup churn is exactly
+what a busy machine does.
+
+Nothing the callback reads needs the semaphore. kn->active is an atomic_t
+already tested lock-free elsewhere, kn->__parent and kn->name are RCU
+pointers, kn->ns can be compared rather than dereferenced, and
+parent->dir.rev is a plain counter.
+
+  1/4 uses the parent inode and name the VFS already passes to
+      ->d_revalidate() rather than recovering them from mutable dentry
+      fields, comparing the name by explicit length
+  2/4 annotates the directory revision counter for lockless access
+  3/4 compares namespace tags by pointer
+  4/4 removes kernfs_rwsem from the callback
+
+LOOKUP_RCU still returns -ECHILD. kernfs_iop_permission() forces every walk
+out of RCU-walk before children are revalidated, so lifting it here would
+have no effect until that path is fixed; left to a separate series.
+
+Readers walking cgroupfs and sysfs while another thread churns cgroups,
+renames netdevs and adds/removes devices, on an 8-CPU VM:
+
+                    kernfs_rwsem read   contentions   revalidate among
+                        acquisitions                  top call sites
+  before                  48,593,360     1,744,517    #1 and #2
+  after                    1,280,280       429,846    absent
+
+Reader path-walk throughput improved 35-53% over the same workload.
+
+Tested against an unpatched control of the same tree, built and booted with
+KASAN, KCSAN (default and STRICT), PROVE_LOCKING, PROVE_RCU,
+DEBUG_ATOMIC_SLEEP and LOCK_STAT. The deactivated, renamed and
+namespace-moved reject paths and negative-dentry invalidation all behave as
+before. KCSAN_STRICT over 180s reports no data race involving
+kernfs_dop_revalidate() or any field it reads, and there are no KASAN,
+lockdep or might-sleep reports across millions of concurrent path walks.
+The only kernfs KCSAN reports are in kernfs_refresh_inode(), present
+identically on the control and addressed separately.
+
+Link: https://github.com/facebookincubator/below [1]
+
+Shakeel Butt (4):
+  kernfs: Use VFS lookup context in d_revalidate()
+  kernfs: Prepare directory revisions for lockless reads
+  kernfs: Avoid namespace dereference in d_revalidate()
+  kernfs: Remove kernfs_rwsem from dentry revalidation
+
+ fs/kernfs/dir.c             | 76 +++++++++++++++----------------------
+ fs/kernfs/kernfs-internal.h |  9 ++---
+ 2 files changed, 35 insertions(+), 50 deletions(-)
 
 
-在 2026/8/21 10:48, Ridong Chen 写道:
-> 
-> 
-> On 8/20/2026 8:41 PM, Guopeng Zhang wrote:
->> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
->>
->> update_prstate() uses effective_xcpus for isolation accounting and
->> housekeeping checks when switching a partition between root and
->> isolated. The mask also includes CPUs granted to valid child partitions.
->> Such a type change can alter isolation accounting for child-owned CPUs
->> or fail a housekeeping check because of a CPU the parent does not own.
->>
->> A rejected type change can leave CPUs assigned to the invalidated
->> partition instead of returning them to the partition that owns the
->> invalidated subtree. When cpuset.cpus changes, child validation can use
->> the old parent mask, and a remote update can observe stale cpus_allowed
->> when it revisits a cpuset. Direct and propagated invalidation can leave
->> isolated_cpus reflecting the released partition's type instead of the
->> type of the partition receiving its CPUs. Releasing an isolated
->> partition can clear boot-isolated CPUs from isolated_cpus.
->>
->> Limit type-change checks and accounting to CPUs owned directly by the
->> partition. Preserve boot-isolated CPUs when a partition is released,
->> return CPUs after rejected type changes, validate children against the
->> new parent mask, and publish cpus_allowed before a partition update can
->> revisit the cpuset. Fix isolation accounting during direct and
->> propagated invalidation.
->>
->> Patch 1 removes an invalid selftest comparison that makes
->> test_cpuset_prs.sh fail when boot-time domain isolation is configured.
->> Each kernel fix is followed by a focused selftest update.
->>
->> Guopeng Zhang (17):
->>    selftests/cgroup: Drop invalid boot isolation comparison
->>    cgroup/cpuset: Preserve boot-isolated CPUs on partition release
->>    selftests/cgroup: Test boot-isolated CPU partition release
->>    cgroup/cpuset: Limit type-change accounting to owned CPUs
->>    selftests/cgroup: Test isolated CPU accounting on type changes
->>    cgroup/cpuset: Validate type changes against owned CPUs
->>    selftests/cgroup: Test type-change validation with child-owned CPUs
->>    cgroup/cpuset: Release CPUs when a type change is rejected
->>    selftests/cgroup: Test rejected partition type changes
->>    cgroup/cpuset: Fix isolated accounting on direct child invalidation
->>    selftests/cgroup: Test isolation accounting on direct child
->>      invalidation
->>    cgroup/cpuset: Invalidate children outside the new CPU mask
->>    selftests/cgroup: Test child invalidation after shrinking cpuset.cpus
->>    cgroup/cpuset: Publish cpus_allowed before partition updates
->>    selftests/cgroup: Test shrinking cpuset.cpus in a remote partition
->>    cgroup/cpuset: Fix isolated accounting on propagated invalidation
->>    selftests/cgroup: Test isolation accounting on propagated invalidation
->>
->>   kernel/cgroup/cpuset.c                        | 162 ++++++++++--
->>   .../selftests/cgroup/test_cpuset_prs.sh       | 231 +++++++++++++++++-
->>   2 files changed, 361 insertions(+), 32 deletions(-)
->>
->>
->> base-commit: 6a746cd265aed59107ebdaa9ce039bb832922969
-> 
-> Hi Guopeng,
-> 
-> This is a fairly large series, which may make the review process challenging. I would suggest splitting it into smaller, more focused patches. It would also be very helpful if you could provide a reproducer for each bug you are trying to fix, so that we can verify the issue and the fix more effectively.
-> 
-
-Hi Ridong,
-
-Thanks for the suggestion. The current series is indeed fairly large, which makes the individual issues harder to review.
-
-I initially kept these patches in one series because some of the later fixes depend on changes introduced by earlier patches. However, while preserving the necessary dependencies, I can group the fixes by issue, split them into several smaller, more focused series, and submit them separately.
-
-I will also add a reproducer to the changelog of each relevant patch, together with the actual behavior before the fix and the expected behavior.
-
-Sashiko has raised a few additional points that I am still reviewing. I will go through those first, and then reorganize and split the series for the next submission.
-
-Thanks,
-Guopeng
-
+base-commit: 7079a12d7506b07fb53b54a664bfad5fa9b16d70
+-- 
+2.53.0-Meta
 
