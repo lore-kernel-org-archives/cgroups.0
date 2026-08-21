@@ -1,161 +1,123 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mta0.migadu.com (out-246.mta0.migadu.com [91.218.175.246])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 439B3380FF6
-	for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 23:39:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787269173; cv=pass; b=YM2qWwKUcC4W4VIyNschf6UGcaGdf2qieDd61jLo9Oj8w1x2kkRnH/DzXt+V06ZKKk1QJnM3pBZOP4tWk3QGGq/P2wdhZrVE02CGG+XhAv+XhVwNezSy4lG1SXkYdv4fDeSKgrLXHFL/sMCT61HVhuR2DN1GW/Y2dmpIZTjpmhk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787269173; c=relaxed/simple;
-	bh=uakSqtDmfHirt56Ih9c2dlFS7k35p9i6DyOchGy5ecg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=a76HnTPQfL2kVugmHiaWncQlKeu5dvjCBPGns3yI+yxTApiBUgSCj9+QsmkdTUqDkU1H3Xnc3FFoO+xlpLGS+xm54Hk2At18Po/EYHdZvkbOePdX+v4qg+XsRjTWzNTR1YN/dVc48UX6YfbAe8KzeolTt/FebKqRsKqZ3CXkdOM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K+eJHeHQ; arc=pass smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5A1A1AF0BB
+	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 02:46:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.246
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787280370; cv=none; b=q10PTvG92ZELAVPvQ7D7IlJMm0xTowxvIjK2ifI1dZxHevKLQoLtjy8+4jeqErxLHCpM6ByBllsnFWZJAF0QbuajnIC88ZGMv/ugKq/WIJCNu9BwGveW0DRFGzCgvmabp+4Kj92o5x5+lNN533sLbZ/N4KJz33i95YH232DAiDU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787280370; c=relaxed/simple;
+	bh=9rDVrRfzZBCC9jJ3URnpdQEQQOnaj//MJ7Ba1g2oMqc=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=mUO33JTSoFCZ0mQVmHeVfq+ugI5aPunpaGmg5xpIhk3w22qwKTlkrfTpuYGGsB2PLkzNvBnr+3jZgU0RfIA0MQHE5g0QhjG+2t94uTr4WDYRyTbF1SxJBh55bCL52yGQs1ie40qKELQ2b7q27ztm0PWkfm/2Gq2gMmVgqT1kOmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=G0UWbhnr; arc=none smtp.client-ip=91.218.175.246
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K+eJHeHQ"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4996f1ee4a4so2889295e9.2
-        for <cgroups@vger.kernel.org>; Thu, 20 Aug 2026 16:39:32 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787269170; cv=none;
-        d=google.com; s=arc-20260327;
-        b=RGcQI0QOr5Hdd47tvuguqMu0yfzLOmVqf3/ALtk0nEmqwmN3od8OZfL5xFJ01Osm78
-         6sijw+TpmwUnSWWtM96LQ89a8C+vU45Yts8Mvm2KJsUHGqfGDV7/rmzCjhKKmHX6q1/3
-         WF3v9J8zLQ2vaYmgqWJ6UCH0fBjs/q4lK40dWCjeb4GWFmbPQ5dxy/+Dxwpb/XowgGTd
-         MbnUh57Km76lXzvWYbgKJDh71qh97E2aB5i6bPFMEqEdgECuL2Z96uZPBlHDAFSB5/P7
-         PEY/OUASW827RYJcHJ+EprqEeWSZ+NJSo6WfidR3QxDElD330b4Dnwakzyqa+4+9xI4p
-         JKjw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=6FWGDnWimdEuyVbIhKTlp9NOezQCpG6klu9pcGU95pc=;
-        fh=0L7WYGlsbrmWAi3Sf8E2VSkyxKQIktR63wN+bl/F3eA=;
-        b=ImX2H6QoYDUNU6IsbWDmgUfHzaToh0or6lrho2Kxpt7mhq2uGoM8Kdc2d11lRWCSBu
-         /poFKbAGWnx1zW/pmU/DGFR9o8jZ3eFY+Qwbvi2+ZjoGiChczhHLECrGFKQgnFTLNTgp
-         02IFfDZFW4WpJ7XolRw+04scFN+OVuE8YOhXMLDiBw9kCGfxToE64/7EPQ03MjdqaDjv
-         fIXtMGPLRF8xvx337KGQS+tpScvMlkY59zLMEIdC/ERW4j2kgXJ63NAXt5R2BI8cjdCB
-         b9fQa2n7kf3H+Pj8BDu2VYPS03l1/dK3u/08N5FUvL6d8DBVVc3jqVx1CjC9QbA2fzfw
-         QJCA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787269170; x=1787873970; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=6FWGDnWimdEuyVbIhKTlp9NOezQCpG6klu9pcGU95pc=;
-        b=K+eJHeHQU99iLKRGTN0zGvU89hQbR5fMukf7LfPYLI6MgeGXRqkgKovCXx83n1H4qp
-         l9ZUshx9CZ0tniQKrYTGdaOfHuXdaqmcm8ryDpfEZl48P7qTMcE7mVGvMRVJNfwSz7gI
-         TWjTzCQI5fZ1r9TULeSSP6gHG8JAz15iuTmlnXEtVEcyfIq1MDLsen1I0/RxpYg/t6uP
-         BlcOSlhQDeYmBYJFSzoWunJPBSrYIgw8UmoRs7Y3zCILdD3NJfzxLADZhz4YaMjnu0wW
-         H8coLAMpb0uI78x/jtl2oD5AI/uqAh9TS8mqz+3ImPeF/pIUSs7WebIKpFICjRZhtHJn
-         3+tQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787269170; x=1787873970;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6FWGDnWimdEuyVbIhKTlp9NOezQCpG6klu9pcGU95pc=;
-        b=nqHQ9IQN+O6cFcS2GK79P5Jt9K+JHUUaNuU1hFC4Vn4AvsJy2G2N7YOdG/zCpTcVQl
-         na7IT5RcjqPwYWFg4sfiWAD43GV5K2WA5mjNSXDYZVfdgMBzoUmrhRVvRoI/Dco0U3E3
-         6UbpVo4N4/bHjPRrutSmB7E2bW0ZDInPxfdTqyxxmMDM3imC17l4/Yd50wJsGARlRME9
-         tEyTh3OTbMKzAoabNP1WqESIfOsx5KfKfU0jiI3N1VTiBNk3nleZSCHAVeFYdDfAbmY8
-         bbPVi3GtupHCl7av1nbxJP2yERblt2BYXegJ0I9NFqMzBseemTgKtezzQv0XKcYrfUk5
-         Aj+w==
-X-Forwarded-Encrypted: i=1; AHgh+RpCr4OWy7hU+gfYZQ8c+uB0tQ3eteabFdVQBojekQGXdqzi5vRoJoirBpnAPy7RltSbzk/waFyR@vger.kernel.org
-X-Gm-Message-State: AOJu0YynGVbQSO/jDuEjMF4zSTbI+rGy+XhVW1cTwHAX/0fHCDanvU7G
-	O/oxcPAyXsvY1eQxrd8pNo/2b9T1cc+6rkinWqx/HNX+Hm5h0wVp8Jtb2ORtbj9Cs19zl18KhxI
-	wWj+bypMcr9Y2fcq3z266O6uM92ol9+4=
-X-Gm-Gg: AR+sD13j8aV5t1bBR9Cm2S3KFU4cJIZ474qOX4b7f6nc1tP5JZNIjSMEu1uDFwyuiR7
-	ODxhNj/7MobeOQygY6FOHUuvwUVOxnScDPaesHpEn8AKHH3Qd5tdXjLK+w6mCpL5YxzC+akzi9B
-	j9JtSIhM3CQep9YXPCJXN8N+5amnQPD1Oj7DiKQefIkKy4/GpBFNf2uFh7+81jbDtse1ndBq4Oc
-	ffaERz+DRQnyq5RXFbmIJZNz+W4/KsprxoBj+LlNrTNCXYpO6LDjk5yZZpYXxr0dgPEWe08E/hN
-	g1C2y6EUfc6elu1xH2wg3EAvFJF04LTeaV2BiB74x41rLy94XaggF+mjyoP4s/VtrcliqVDNiU+
-	bWft+C/KpICoiZIIiUtb85wut
-X-Received: by 2002:a05:600c:3588:b0:496:c18c:f9a3 with SMTP id
- 5b1f17b1804b1-499b83184eamr33065975e9.5.1787269170200; Thu, 20 Aug 2026
- 16:39:30 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="G0UWbhnr"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=9rDVrRfzZBCC9jJ3URnpdQEQQOnaj//MJ7Ba1g2oMqc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787280366; v=1; x=1787885166;
+ b=G0UWbhnrTkPt/YSv5A0+9VoG3tQUDbENvWAWTITwE7AczNn47I73U7BDFlTjdl6rup+zR8n4
+ aS5u902niJDMot7L31f/L4rRvGFIcJek6d0v28hORcGsNW9wlE5Be0uw3uzPZuma35+45xP49E9
+ gO6Mb+6aE7P3ZCxROlxFBqMk=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from [192.168.110.173] (223.70.159.239)
+	by smtp.migadu.com with ESMTPS id ab17684995f18d63;
+	Fri, 21 Aug 2026 02:45:56 +0000
+X-Mizu-Trace-ID: ab17684995f18d63
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <b382ca10-090e-411a-afd9-37d84b6c7281@linux.dev>
+Date: Fri, 21 Aug 2026 10:45:48 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJnrk1bk66ZhRAS7mojSnD5RBfFS+0ChAPymE3ObRWr0C_udWg@mail.gmail.com>
- <CAO9r8zPpe6fWOSXtRUjFB8WNMroeBqvLT+2QtAU4E27AtLUXMQ@mail.gmail.com>
- <CAJnrk1YifN22mA5PFRVrh3m_ygxax6x4_8nraG2hPqCzyzBj7A@mail.gmail.com>
- <anpsLy_pCanocgS1@google.com> <CAJnrk1Yoj7fqbzurmHkbA-vegpQu3cf-_dfvKor_VxuNhPR-AA@mail.gmail.com>
- <CAO9r8zPLipVW6bvyDK1ypSawbo=LHKvmLqWH0xA6WMR9GYNJpg@mail.gmail.com>
-In-Reply-To: <CAO9r8zPLipVW6bvyDK1ypSawbo=LHKvmLqWH0xA6WMR9GYNJpg@mail.gmail.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 20 Aug 2026 16:39:17 -0700
-X-Gm-Features: AcwNN1W2WwOZ6oRwPRAG9dZBaGHXMlGuhp9w5dO0dP8YLHD19Z4QrM5cxrAENkE
-Message-ID: <CAJnrk1ai-TqcudPoK-qFRYAJnUjBmg1kVa6Vxg3eDm5w5ivqSA@mail.gmail.com>
-Subject: Re: memcg stats flushing (WAS "Re: [PATCH] fuse: disable default bdi strictlimiting")
-To: Yosry Ahmed <yosry@kernel.org>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Miklos Szeredi <miklos@szeredi.hu>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, kernel-team@meta.com, 
-	fuse-devel <fuse-devel@lists.linux.dev>, Jingbo Xu <jefflexu@linux.alibaba.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	linux-mm <linux-mm@kvack.org>, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Jesper Dangaard Brouer <hawk@kernel.org>, Yunzhao Li <yunzhao@cloudflare.com>, Song Hu <husong@kylinos.cn>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, linux-block@vger.kernel.org, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] blk-throttle: Remove dead check in tg_conf_updated()
+To: Tang Yizhou <yizhou.tang@shopee.com>, yukuai@fygo.io, tj@kernel.org,
+ axboe@kernel.dk
+References: <20260820160547.357682-1-yizhou.tang@shopee.com>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260820160547.357682-1-yizhou.tang@shopee.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Aug 18, 2026 at 11:40=E2=80=AFAM Yosry Ahmed <yosry@kernel.org> wro=
-te:
->
-> On Wed, Aug 12, 2026 at 1:59=E2=80=AFPM Joanne Koong <joannelkoong@gmail.=
-com> wrote:
-> >
-> > d) vmscan (prepare_scan_control()): for determining whether reclaim
-> > can deactivate, there's this logic
-> >
-> >                 /*
-> >                  * When refaults are being observed, it means a new
-> >                  * workingset is being established. Deactivate to get
-> >                  * rid of any stale active pages quickly.
-> >                  */
-> >                 refaults =3D lruvec_page_state(target_lruvec,
-> >                                 WORKINGSET_ACTIVATE_ANON);
-> >                 if (refaults !=3D target_lruvec->refaults[WORKINGSET_AN=
-ON] ||
-> >                         inactive_is_low(target_lruvec, LRU_INACTIVE_ANO=
-N))
-> >                         sc->may_deactivate |=3D DEACTIVATE_ANON;
-> >                 else
-> >                         sc->may_deactivate &=3D ~DEACTIVATE_ANON;
-> >
-> > (and same for DEACTIVATE_FILE for file-backed folios)
-> >
-> > target_lruvec->refaults[] gets set at the end of the reclaim pass. It
-> > stores the same lruvec_page_state() value that prepare_scan_control()
-> > will read at the start of the next reclaim pass, which means if
-> > reclaim passes happen more frequently than the 2s flushes (eg under
-> > sustained/heavy memory pressure), this logic will incorrectly assume
-> > no refaults occurred and deactivation is disabled, which afaict means
-> > folios won't be moved from the active -> inactive list, and reclaim
-> > will start evicting pages from the inactive list that are hot (eg more
-> > refaults).
-> >
-> > This is from reading the code rather than a reproducer though, so I
-> > don't know how much this matters in practice. Unlike for the writeback
-> > case, I don't think flushign more frequently solves the problem. It
-> > would shrink the staleness window but not eliminate it. Maybe one
-> > solution is to keep the deactivation state for a period of time if
-> > refaults were observed.
->
-> We do have an internal test that runs a VM under memory pressure and
-> we started observing OOM kills after the ratelimited flush was added
-> in vmscan, so I think it's more problematic than just reclaiming hot
-> memory, but I didn't look too closely.
->
 
-Would you be able to share the test you're using? I've been trying to
-repro it locally without much luck.
 
-Thanks,
-Joanne
+在 2026/8/21 00:05, Tang Yizhou 写道:
+> From: Tang Yizhou <yizhou.tang@shopee.com>
+> 
+> The check in tg_conf_updated() was introduced for io.low, so remove it.
+> 
+> global ? tg->td->queue->root_blkg : tg_to_blkg(tg) was introduced in
+> commit 9bb67aeb9678 ("blk-throttle: respect 0 bps/iops settings for
+> io.low"). Remove it, too.
+> 
+> Fixes: bf20ab538c81 ("blk-throttle: remove CONFIG_BLK_DEV_THROTTLING_LOW")
+> Signed-off-by: Tang Yizhou <yizhou.tang@shopee.com>
+> ---
+>  block/blk-throttle.c | 18 +++++-------------
+>  1 file changed, 5 insertions(+), 13 deletions(-)
+> 
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index ffc3b70065d4..fa742e63807d 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -1267,7 +1267,7 @@ static int tg_print_conf_uint(struct seq_file *sf, void *v)
+>  	return 0;
+>  }
+>  
+> -static void tg_conf_updated(struct throtl_grp *tg, bool global)
+> +static void tg_conf_updated(struct throtl_grp *tg)
+>  {
+>  	struct throtl_service_queue *sq = &tg->service_queue;
+>  	struct cgroup_subsys_state *pos_css;
+> @@ -1286,16 +1286,8 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
+>  	 * restrictions in the whole hierarchy and allows them to bypass
+>  	 * blk-throttle.
+>  	 */
+> -	blkg_for_each_descendant_pre(blkg, pos_css,
+> -			global ? tg->td->queue->root_blkg : tg_to_blkg(tg)) {
+> -		struct throtl_grp *this_tg = blkg_to_tg(blkg);
+> -
+> -		tg_update_has_rules(this_tg);
+> -		/* ignore root/second level */
+> -		if (!cgroup_subsys_on_dfl(io_cgrp_subsys) || !blkg->parent ||
+> -		    !blkg->parent->parent)
+> -			continue;
+> -	}
+> +	blkg_for_each_descendant_pre(blkg, pos_css, tg_to_blkg(tg))
+> +		tg_update_has_rules(blkg_to_tg(blkg));
+>  	rcu_read_unlock();
+>  
+>  	/*
+> @@ -1388,7 +1380,7 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+>  	else
+>  		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
+>  
+> -	tg_conf_updated(tg, false);
+> +	tg_conf_updated(tg);
+>  	ret = 0;
+>  
+>  unprep:
+> @@ -1610,7 +1602,7 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
+>  	tg->iops[READ] = v[2];
+>  	tg->iops[WRITE] = v[3];
+>  
+> -	tg_conf_updated(tg, false);
+> +	tg_conf_updated(tg);
+>  	ret = 0;
+>  unprep:
+>  	blkg_conf_unprep(&ctx);
+
+Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+
+
