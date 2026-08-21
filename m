@@ -1,34 +1,34 @@
-Received: from mta0.migadu.com (out-145.mta0.migadu.com [91.218.175.145])
+Received: from mta1.migadu.com (out-137.mta1.migadu.com [95.215.58.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCDBE3EC817
-	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 05:05:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86493F4DDB
+	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 05:05:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787288729; cv=none; b=Sb1J8lNb+u223LB8XFwo8H8v551Q0k41ZIqzIJsy9T4zfkTOGtETaFq48kaI4TkjuCw085jfxd8IpU26lZxwaas8stPALgoilykB7drtiOmFsqqeKTy5m7cAo3k7tblfxkEVbK8fiTRkdLH6XXa58qkXLJIPPHx6MG1PxXxjbUk=
+	t=1787288731; cv=none; b=L7vIqyClixUm1eW3SlPRJQQL6T201LI5FrqTqIsKiqDl1t7FbYAX+BujWTQYNX3NU49KKCS88SiVabZRtY7xVaQPLbhSegZCNRCD/jJpyekWSkjLoaPo7dSM/y0zsPj56cZYlCTsqEST2+A4BR4jQufri1HFdn9X8EZPm8wOCmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787288729; c=relaxed/simple;
-	bh=U1l/0x7ZD0ZfGu+oDn4yhMeqTklxKFrZPzWL2YzeyXk=;
+	s=arc-20240116; t=1787288731; c=relaxed/simple;
+	bh=LIUw7uKUV9KhIrN1qzokJl5Rc/EjHIF80hcbDXs5RD0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Yq07hthXrmbiXlXjrN7cQRGY0rEhpxwQ9CILMNRwToMG6D3iGNAxHoTPc94PP3YQKDw6r/v16JV0yRJU8ADM+qBf5zv6hs9iHqK4tPXVQPa35Ip0TYA5qZsIPaA7QP/Zo7GvNTXOk0ygJgkb8Zw3Zfltm0GlPs1LBTmmLxnDOWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wF0yiLrV; arc=none smtp.client-ip=91.218.175.145
+	 MIME-Version; b=M+Z0d3J9+X4UfH71XI2bouboafOIjK8/YupxiR0l+zvyPPyElEjCEtIrSwFoOUgMC7LyfBjVALKVSVEan+Wku0t78TnboRM6ohQcmkkAZ/dW2BsbAHURTwa585BFpD/FQefzAOr1QBwQb7bP5lxskOA2ZOU3JfJAzc2Rd4SB5tA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ZpnJkXFw; arc=none smtp.client-ip=95.215.58.137
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wF0yiLrV"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ZpnJkXFw"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=U1l/0x7ZD0ZfGu+oDn4yhMeqTklxKFrZPzWL2YzeyXk=;
+DKIM-Signature: a=rsa-sha256; bh=LIUw7uKUV9KhIrN1qzokJl5Rc/EjHIF80hcbDXs5RD0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787288725; v=1; x=1787893525;
- b=wF0yiLrVOpnBsKe4eMBPDn3RBgWM3jufS+sCCLKrIJ4wsdWdZPM7HrReZCKmip1zCxDINRlU
- anE5Fa7dYk3NNwV0Q6focM73CgJqcVWBwKbaZyv4+mVBN1VP1nax9/fmPk38zSr4JejpCgoPzXQ
- o/4CUG3axHcv5Dif21GlM2xY=
+ t=1787288727; v=1; x=1787893527;
+ b=ZpnJkXFwxTnzV/HT1kRS2Qv1Mj3gEVRGJhOLrytTSI1otvj07C1OXyc7C7Gq4fBM0CH/2jO5
+ M82s0klc/R4g1a38+Bsi8c26qvT25zY5ANPSqllU3K6w13rnJGyI78zndOcO1CDY5qTQhRiWlJo
+ KMcyYuOAADd63r9fE8bgOBq8=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from localhost (2a03:2880:10ff:2::)
-	by smtp.migadu.com with ESMTPS id af484d0623c2cb60;
-	Fri, 21 Aug 2026 05:05:25 +0000
-X-Mizu-Trace-ID: af484d0623c2cb60
+Received: from localhost (2a03:2880:10ff:4::)
+	by smtp.migadu.com with ESMTPS id fc17124732d1a8a7;
+	Fri, 21 Aug 2026 05:05:27 +0000
+X-Mizu-Trace-ID: fc17124732d1a8a7
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -38,9 +38,9 @@ Cc: Christian Brauner <christian@brauner.io>,
 	driver-core@lists.linux.dev,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/4] kernfs: Prepare directory revisions for lockless reads
-Date: Thu, 20 Aug 2026 22:05:05 -0700
-Message-ID: <20260821050507.2161607-3-shakeel.butt@linux.dev>
+Subject: [PATCH 3/4] kernfs: Avoid namespace dereference in d_revalidate()
+Date: Thu, 20 Aug 2026 22:05:06 -0700
+Message-ID: <20260821050507.2161607-4-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260821050507.2161607-1-shakeel.butt@linux.dev>
 References: <20260821050507.2161607-1-shakeel.butt@linux.dev>
@@ -52,49 +52,59 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Negative dentry revalidation only needs to sample the parent directory
-generation and compare it with the value recorded at lookup time.
-Annotate those accesses with READ_ONCE() and WRITE_ONCE() so the
-comparison can safely move outside kernfs_rwsem.
+Commit 1fe989e1c42a ("kernfs: use namespace id instead of pointer for
+hashing and comparison") changed dentry revalidation to compare namespace
+IDs along with the comparisons that determine visible directory ordering.
 
-Revision updates remain serialized by kernfs_rwsem. Assert that writer
-contract in kernfs_inc_rev(); the read half of the increment stays plain
-because the semaphore excludes other writers.
+Dereferencing a namespace tag that kernfs_rename_ns() can replace is not
+suitable once dentry revalidation stops taking kernfs_rwsem. Use pointer
+equality for this non-user-visible equality check instead. Namespace IDs
+uniquely identify namespace objects, so pointer and ID equality cannot
+disagree for valid tags. Hashing and directory ordering continue to use
+IDs.
+
+kn->ns becomes a lockless read in the next commit, so mark both sides of
+it now. The read is in kernfs_dop_revalidate(); the stores that can run
+while the node is visible are the two in kernfs_rename_ns(). The remaining
+stores, in kernfs_create_dir_ns(), kernfs_create_empty_dir() and
+kernfs_create_link(), all precede kernfs_add_one() and need no marking.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- fs/kernfs/kernfs-internal.h | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/kernfs/dir.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
-index aa784b540b36..20a0cf42ba8d 100644
---- a/fs/kernfs/kernfs-internal.h
-+++ b/fs/kernfs/kernfs-internal.h
-@@ -147,20 +147,19 @@ static inline struct kernfs_node *kernfs_dentry_node(struct dentry *dentry)
- static inline void kernfs_set_rev(struct kernfs_node *parent,
- 				  struct dentry *dentry)
- {
--	dentry->d_time = parent->dir.rev;
-+	WRITE_ONCE(dentry->d_time, READ_ONCE(parent->dir.rev));
- }
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index 541bb5525437..27949b0e027c 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -1226,7 +1226,7 @@ static int kernfs_dop_revalidate(struct inode *dir, const struct qstr *name,
  
- static inline void kernfs_inc_rev(struct kernfs_node *parent)
- {
--	parent->dir.rev++;
-+	lockdep_assert_held_write(&parent->dir.root->kernfs_rwsem);
-+	WRITE_ONCE(parent->dir.rev, parent->dir.rev + 1);
- }
+ 	/* The kernfs node has been moved to a different namespace */
+ 	if (kn_parent && kernfs_ns_enabled(kn_parent) &&
+-	    kernfs_ns_id(kernfs_info(dir->i_sb)->ns) != kernfs_ns_id(kn->ns))
++	    kernfs_info(dir->i_sb)->ns != READ_ONCE(kn->ns))
+ 		goto out_bad;
  
- static inline bool kernfs_dir_changed(struct kernfs_node *parent,
- 				      struct dentry *dentry)
- {
--	if (parent->dir.rev != dentry->d_time)
--		return true;
--	return false;
-+	return READ_ONCE(parent->dir.rev) != READ_ONCE(dentry->d_time);
- }
+ 	up_read(&root->kernfs_rwsem);
+@@ -1873,7 +1873,7 @@ int kernfs_rename_ns(struct kernfs_node *kn, struct kernfs_node *new_parent,
  
- extern const struct super_operations kernfs_sops;
+ 		rcu_assign_pointer(kn->__parent, new_parent);
+ 
+-		kn->ns = new_ns;
++		WRITE_ONCE(kn->ns, new_ns);
+ 		if (new_name)
+ 			rcu_assign_pointer(kn->name, new_name);
+ 
+@@ -1881,7 +1881,7 @@ int kernfs_rename_ns(struct kernfs_node *kn, struct kernfs_node *new_parent,
+ 		kernfs_put(old_parent);
+ 	} else {
+ 		/* name assignment is RCU protected, parent is the same */
+-		kn->ns = new_ns;
++		WRITE_ONCE(kn->ns, new_ns);
+ 		if (new_name)
+ 			rcu_assign_pointer(kn->name, new_name);
+ 	}
 -- 
 2.53.0-Meta
 
