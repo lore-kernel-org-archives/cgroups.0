@@ -1,198 +1,198 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EBD83242BD
-	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 16:59:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787331574; cv=none; b=aAJXNpKUGNFsmED8ATqtPbEzntnXdipwQaN0xhKPAjc4jV2w1f+D111pEdz8u502k33+j5wn+wVdx87ij+28mu2n8+/8N4BKtTEb3/jItXT9GFAfE0nixVFUGxjS2SypGOryohYgHK8aYHAycxePuay9KPLKTYHjTxNDaJt6A7U=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787331574; c=relaxed/simple;
-	bh=EsfepmfSMGtC33MRHAs4PmLvOsXAz+kfpxNfNQvy8FU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oAXFJZ9/X+6RyFnH3czilWz9p7yPaCN2Bt751huQ6Z8pnkcWfXtqkgJYdX5tEGhRiZfVrcPW5p4+Q8GrLX6+rkWWeKh0pIMGn6GQDrAnANCWXKsbav/EME/gPioHBQuj23CbMjT7FQJfIff91VFt/ciw7rzfgjqx6N4ksmHev4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=F5xNC3RS; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9613815D9
+	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 17:09:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787332188; cv=pass; b=eZIGQYdj+oUwRAWAgDhVNrIOig+S3IHbSfZu0zPFAr5+xHN9f8WKlpz3X19tcO3Yuu2mh/+fMK/9+MjUM8BLfGE2NN4sYYBnbylm4x1djr80tNznZzmYDagycCi/ceBM50+FXVVgsSS3/7m82carWVF00iDyIhd3HjK/WbZmN+g=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787332188; c=relaxed/simple;
+	bh=xudCWQpjT5lp5cYm05GhPWn57VEG+OCVRyJHd/J1yaM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SQSLDLOraGjONi9LDkC3yHBNQG9B7O3pTTg7CsIp8oMFqr3zlY8XPKEvCPmQoo7pDKyilQ4iY9kh2mJ3LMinUV8W9xO7um+EC+0Mw6ZnUAjBoMpA7jMbzpflwRboCTofG03/oTDWZ0ZPvhKvZkv0jMUyVHrU1DVSuEulZWqm8wY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rrPEhqvo; arc=pass smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="F5xNC3RS"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c15ca7a7ca9so147214666b.0
-        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 09:59:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rrPEhqvo"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-47f7872abb6so720094f8f.3
+        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 10:09:46 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787332185; cv=none;
+        d=google.com; s=arc-20260327;
+        b=rja/2HG6RhIEUACwgCF9sXo/w/po/hMwiDWY7023+0FlfRC5MuEp1/bscvJRIgRoFy
+         qL+MAEQyHMEpX0ZOGqgdTb2kVgAONgSuCT7HLDCI1erZFrvO/XFkXhWt/6EiFyWwo56e
+         gPXSbh5S9cMTsYF0oL2lcAmkmQIwvD+qYrxfnZfYALZ9qxgThCDEC3xSgUQ37e8M+ziv
+         vhY3vVNUA7gyhpDVRHrG3y2mWhAhORErKWy8Faha6/5uu0L2tTIICdP/zcLbCyYvhoPG
+         hSkx+cwTEeFKPTM88yF23tT1D6BQh9r4ERalKi9fE++X2/546i+rG6xTmbOnJAX2o+Bp
+         0SYA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=veZnyf/dfYhbTVP9YeELLr3c4PfKlTUdiQo55s2EN7I=;
+        fh=gz48+Uimd06aNF68qPlMxd/oSjbbFfGj+E24UMhysY0=;
+        b=Z+IQcrHPUvP4PuxBJw2wOmJf5IJH+zcmiX3fNllbYpJf5Yf1uv1jnPM1w+31e85b+d
+         2dJZ+F2ZRG6QX0oipue/8LYpMUvyQ7ZgP+Csg0FwzWkPWqu5Kc69TE4oWiVlEooMACn8
+         YyJAIFGgez7PQHkMABDUXDBQMVqbqd2Ra8KK72fql2FUMPUZKVVilCX8jwSwbCIR47BY
+         dx3xa/8XyMj3VzS9Neldod7VfzkDUYiGnXhp8/knOI2XdhvJcrhyJ3Na+vttuAwFZt4y
+         2t+O3lU2wwggQSLjvlcy4mIFtViZ3/XNwo2DJu/QqSkJZf/F2tY/Yokx5cZ7ujAVPDPA
+         rL3g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1787331569; x=1787936369; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1787332185; x=1787936985; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=xokLfb8L2ciLmaqOTXaVllobp4qCHV51wagGKoc3yqE=;
-        b=F5xNC3RSrHsWv7Aw5nTkZym5AjECh3IEw6E0UIdRqEdR2ll0oqZlhgYI/fBtf01ZMn
-         q6tUNGoajogKT24+/JajkwtsqG8tFj/wNPE+Jtet2jdHFAuFiuFDLNzszHqLbyC/gpMr
-         QLFZGF3U2CH/FjQd4gklI9meS7uNTrCxbLvXJ5Nrr1TIqtIKP5bDU2Cafey5YeJR0BkW
-         0+uFESkPLv6GAjQARfmmmG1zUDVfeTshku14MMjVUKXTG+4A68w9+YpJSrqhwLhv+8uE
-         /fqmqRBBRUp3HXcn9ZAGSvYRyHGlHoO0CbYoaonXB7kBeL/p7BoUEdlPJSZauq/tikej
-         61VQ==
+        bh=veZnyf/dfYhbTVP9YeELLr3c4PfKlTUdiQo55s2EN7I=;
+        b=rrPEhqvo0fFBadj7+ZkJlh9iOBHTQ1Dn/9R//IjfMy0vkbfiT6bwADsYzuhc/ekkbr
+         xjT5tsad+QZEwpfp7d2HW6UKHuuscGGkiXLKRjQW3dhNSmW9/HB4zTwDm8N7IUV6CuzK
+         CqVHoS2YYx2QjOzu69GhHcwBSz2WrQvfRZZ58zT6g658ghUNeV7VSjj7uU5uiNTy/GuM
+         tUKF3wFn+/LjzIScmEM13ePa87/iTYtC7ll74EbF+9n92Njqe84xNN8rTmBYawMAmLi+
+         F27XpCRDHWbBYh1JvMs0m1BNvVEVVujdHalyUavd4aYZ9QXsyGF8P0AES1GYqmWKSFvy
+         2Rsw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787331569; x=1787936369;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1787332185; x=1787936985;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=xokLfb8L2ciLmaqOTXaVllobp4qCHV51wagGKoc3yqE=;
-        b=hphvYo7OaCcw8O2QAB7S0cHevgUeUfiNP+h6yNUCGsR9G/uZQMItrqp1WU54g39urm
-         0GMuACw+MjITl39u1lqBaI7Xn4sy1taqoemFKVOGV/e3qxrsCIYKKAfyUiy7W5MhpMq1
-         LKDPNDHg0eW5VttJcJJtfeggkT0G/BBbbdwO/wDNOs9ssUrXWZE6EGCBuB273qyGfACY
-         fujw9ZFmhwUnMj65RBlAkCd7QZctx3dpfeCXLYCsT+DcVL5cxTnbOvBWYt4Ey38uUcYr
-         BW9+ObmhAkV5g0upM4qNEph8hbsY+qBM1kKJAWULIoAAQU3WTyLJazDxxIkdKQGftkfX
-         Jjsw==
-X-Forwarded-Encrypted: i=1; AHgh+Rqulyo4IYzIUnS+k5hISincO7wlwlQ5498FSoNeurnizItrRIcuLNmy2oXLsGhC9Pma4MeQ3+W/@vger.kernel.org
-X-Gm-Message-State: AFuF++lZ/8ytGYJtqMTgpYXg7m9LmSBzcxIpKaKRWMvs/7wzNtN4Z+7y
-	l6rbdC/PKtaJRYYCpVDXtBHJT3vrG/bskhMGpq3wivwVFzdSgqN3GOmJuivi+Ra3jujd1bgZKei
-	89yabTkY=
-X-Gm-Gg: AR+sD12WwEpAMcQXwSUmASdK5K4660VouNaeKrmSzRGxJJYaJ9tCUOUB6O39RTI2UxR
-	VhnENi0AymZ6rniRK71t5CrE5Nf/3NEp8ZApG9kmdQypTyYbK8fQommNECwY7zxmPiTOhfb62GL
-	W7kqbcQWuGVL6xKFg3ujFXiSAfXfEjn3sXk3kh8PVucovD6Xc4iLIf1hCk+PkXZEfVuSEybQa3P
-	iRueuDUjQ4zU4HqH3ckQkBjPBntLj4Xv/bleU7IWaYHhptnZWXqUmezUnxuoIr8l3W0xoU2rr55
-	8/3OXnH6TpQ/sCVEO2MS+XbM/yat3R6vXr3hvASJytDAdNpAZv8HGvuLZ8qpyBj2WgSKuM6MqJd
-	aeG3QUKO9Tx+6DMq4USJlD0eVbSLBjRBEBN+yg9nzK4ulXYklkncq9QSYbCBeJ6e/r4rWKlg3Uj
-	B+Kzio/ngm0cxOofcDbOfYwhta57d1z1f+Wk74Cc/GoXyI5yf+4HTcxbvsptZUqQixtpWR5zpma
-	Q==
-X-Received: by 2002:a17:907:9602:b0:c1f:e9d9:64d4 with SMTP id a640c23a62f3a-c246a60c587mr751214166b.11.1787331569333;
-        Fri, 21 Aug 2026 09:59:29 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a3ff178289sm7713116a12.30.2026.08.21.09.59.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2026 09:59:28 -0700 (PDT)
-Date: Fri, 21 Aug 2026 18:59:26 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Salvatore Bonaccorso <carnil@debian.org>
-Cc: Noah Elias Feldt <N.Feldt@mittwald.de>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Dan Schatzberg <dschatzberg@meta.com>, 
-	Peter Zijlstra <peterz@infradead.org>, 1144314@bugs.debian.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, regressions@lists.linux.dev, stable@vger.kernel.org
-Subject: Re: refcount_t: addition on 0; use-after-free, regression from
- 260fbcb92bbe ("cgroup: Move dying_tasks cleanup from cgroup_task_release()
- to cgroup_task_free()")
-Message-ID: <aoh7Kbt_WbUcfUxh@localhost.localdomain>
-References: <FR6P281MB6118B1A758F3278BC9BA795AF0DB2@FR6P281MB6118.DEUP281.PROD.OUTLOOK.COM>
- <178682274912.1759826.11422695267451330087@eldamar.lan>
+        bh=veZnyf/dfYhbTVP9YeELLr3c4PfKlTUdiQo55s2EN7I=;
+        b=hAtRSa1mazm9fd9vCd4UiO21qkPW1Sfe3EAmDKdC5zLf0XR1ghNg2BrrdP2MjMwqwI
+         2FdbC5OEv1ebWqn2hIirMQjxnVxC4jaU+oS2Y+5lwQ9P9bats87ysd9azpfMyjmcLJ8v
+         /5cN+nWJpIaPEYSSKMyWfZdkdgdg+SrDUPovohII9Qk95dESWY1aM40cHcZeAjGv6FrA
+         Hze43r15+gzUcTwJoBmhjjV/9SEp5XNcUJctpWfKXnv8zJP4D2gFju/D5zIiy4zpqlC9
+         RFGu7ISrHXFdE3JfxP+Ie1el5GUcG3omGQ/fF1uf1IKGG90hPKLrOtaZ8eCwey2NZKvP
+         PxNA==
+X-Forwarded-Encrypted: i=1; AHgh+RpurhyPhZ+UR7tuVbk2ZzS7cO6sIZ7wMXAsR3oQwEkQSxw4UJnuakM0zRn1jnkiOGZ6Q87SyuFI@vger.kernel.org
+X-Gm-Message-State: AFuF++kWaXsukxBxjz7QIZbYdh+Rk6kFyoRRZcUy+mwFvk5SfdrEuANI
+	/mL0vFGOtYt5wB61/FhOeC963GB5H88GMrMt/UttBWF1xMiy1n8uz07RQygtbx7Nx11GoODDGOk
+	a5hv3fY4H5ht/JBWv4UQCvN5FUVRe5/4=
+X-Gm-Gg: AR+sD12uC37kegxyj+ZJ75GnKP9qg7NKZEKoG8L3m30EfPEL964fLpqeh7E+j5Z1TI+
+	nmT7f65bUh3mSrUuTp/B8cjaM9mALURFJ+lDlJ4zqNQEgTyLA9bvFGFND2lPzJnhIi/X6ewqmF7
+	5gkKraahm5z92MAA/weCGk8gNCOmMSVRxB83GHuAFw+X2+ge7jrBwiZ9c4sfexp6R7yNGQFTkDj
+	o5O2/TrN6VcVRWsNGVPGUJUZtlvhNurZJOv1mJjo+AKrKQrCTHBsfnxl3oKKZKcFXJGjAe0+ts4
+	zbw0imHsYnvDPY3RuGfuSRYZqicZvevZPpq9NHlhCWZtEheFwYCwTw98j5Qu5owoIRk74y1Mvbj
+	y
+X-Received: by 2002:a05:6000:1acb:b0:47f:71a6:970e with SMTP id
+ ffacd0b85a97d-482c0b55d3fmr11033799f8f.2.1787332184426; Fri, 21 Aug 2026
+ 10:09:44 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="dtl76bd5brgzohej"
-Content-Disposition: inline
-In-Reply-To: <178682274912.1759826.11422695267451330087@eldamar.lan>
-
-
---dtl76bd5brgzohej
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
+References: <20260806184254.3790858-3-nphamcs@gmail.com> <20260820041940.443214-1-kunwu.chan@linux.dev>
+In-Reply-To: <20260820041940.443214-1-kunwu.chan@linux.dev>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Fri, 21 Aug 2026 10:09:32 -0700
+X-Gm-Features: AcwNN1Ugn_Yvgh2BA7rl2-6Ryj849JsdlpzstMFnk3QEm_uy8ugTFY1jdBeldW4
+Message-ID: <CAKEwX=Mj7QVArjKVvKOKnuQoTmN1Wu=vXe4jkLshnzKoYF4XkA@mail.gmail.com>
+Subject: Re: [PATCH v3 02/11] mm, swap: support zswap and zeroswap as vswap backends
+To: Kunwu Chan <kunwu.chan@gmail.com>
+Cc: Kunwu Chan <kunwu.chan@linux.dev>, akpm@linux-foundation.org, chrisl@kernel.org, 
+	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev, yosry@kernel.org, 
+	david@kernel.org, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
+	baoquan.he@linux.dev, baohua@kernel.org, youngjun.park@lge.com, 
+	chengming.zhou@linux.dev, ljs@kernel.org, liam@infradead.org, 
+	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, qi.zheng@linux.dev, 
+	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, 
+	riel@surriel.com, gourry@gourry.net, haowenchao22@gmail.com, corbet@lwn.net, 
+	kernel-team@meta.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	linux-doc@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: refcount_t: addition on 0; use-after-free, regression from
- 260fbcb92bbe ("cgroup: Move dying_tasks cleanup from cgroup_task_release()
- to cgroup_task_free()")
-MIME-Version: 1.0
 
-Hi Salvatore,
+On Wed, Aug 19, 2026 at 9:21=E2=80=AFPM Kunwu Chan <kunwu.chan@gmail.com> w=
+rote:
+>
+> On Thu,  6 Aug 2026 11:42:45 -0700 Nhat Pham <nphamcs@gmail.com> wrote:
+>
+> Hi Nhat,
+> [...]
+> syzbot reported a NULL dereference in the v3 series:
+>
+>   __vtable_get()
+>     vswap_to_phys()
+>       swap_entry_backend_has_flag()
+>
+> Seems like the underlying issue is introduced by this patch's
+> `virtual_table` lifetime management.
+>
+> This patch adds:
+>
+> > @@ -70,6 +70,7 @@ struct swap_cluster_info_dynamic {
+> >       struct swap_cluster_info ci;
+> >       unsigned int index;             /* for cluster_index() */
+> >       struct rcu_head rcu;
+> > +     atomic_long_t *virtual_table;   /* Backing pointers for vswap slo=
+ts */
+> >  };
+>
+> [...]
+>
+> while the read side does:
+>
+> > +static inline unsigned long __vtable_get(struct swap_cluster_info_dyna=
+mic *ci_dyn,
+> > +                                      unsigned int off)
+> > +{
+> > +     VM_WARN_ON_ONCE(off >=3D SWAPFILE_CLUSTER);
+> > +     return atomic_long_read(&ci_dyn->virtual_table[off]);
+> > +}
+> > +
+>
+> `atomic_long_read()` only makes the access atomic; it does not protect
+> the lifetime of the allocation being accessed.
+>
+> [...]
+>
+> > +static inline void vswap_cluster_free_vtable(struct swap_cluster_info =
+*ci)
+> > +{
+> > +     struct swap_cluster_info_dynamic *ci_dyn;
+> > +
+>
+> and frees it synchronously:
+>
+> > +     ci_dyn =3D container_of(ci, struct swap_cluster_info_dynamic, ci)=
+;
+> > +     kfree(ci_dyn->virtual_table);
+> > +     ci_dyn->virtual_table =3D NULL;
+> > +}
+> > +
+>
+> The existing `ci->table` already has an RCU-aware lifetime: readers use
+> the corresponding RCU access rules, and the storage is not freed until
+> after the appropriate grace period. `virtual_table` introduced here does
+> not have an equivalent lifetime rule.
+>
+> The syzbot crash shows that the current teardown/read-side synchronizatio=
+n
+> is insufficient: `__vtable_get()` can observe a torn-down
+> `virtual_table` and dereference NULL.
+>
+> I don't think a NULL check in `__vtable_get()` alone would be the right
+> fix. The NULL dereference is a symptom of the missing lifetime guarantee.
+> `virtual_table` needs to remain valid for as long as a reader can reach
+> and access the corresponding dynamic cluster.
 
-thanks for the nice report and sorry for not so prompt response.
+Thanks for taking a look, Kunwu.
 
-On Sat, Aug 15, 2026 at 09:41:14PM +0200, Salvatore Bonaccorso <carnil@debi=
-an.org> wrote:
-> With an additional reproducer provided by Noah, I could bisect the
-> change down to=20
+Null-check by itself is not sufficient, correct. But I think a full
+dance of: rcu read section + spin_lock + checking for
+CLUSTER_FLAG_DEAD should suffice. As long as cluster is valid inside
+this rcu read section, we can get the lock. Once we have the lock, no
+one can free the cluster under us. and as long as the
+"CLUSTER_FLAG_DEAD" flag checks out under the lock, we can exit the
+rcu_read_section(), and proceed with reading the vtable. I already
+fixed this in (to-be-sent) v4.
 
-Good job.
-
->=20
-> 	commit 260fbcb92bbeacfcd050410fdc2d24ab15044400
-> 	Author: Tejun Heo <tj@kernel.org>
-> 	Date:   Tue Oct 28 20:19:16 2025 -1000
->=20
-> 	    cgroup: Move dying_tasks cleanup from cgroup_task_release() to cgrou=
-p_task_free()
->=20
-> 	    Currently, cgroup_task_exit() adds thread group leaders with live me=
-mber
-> 	    threads to their css_set's dying_tasks list (so cgroup.procs iterati=
-on can
-> 	    still see the leader), and cgroup_task_release() later removes them =
-with
-> 	    list_del_init(&task->cg_list).
->=20
-> 	    An upcoming patch will defer the dying_tasks list addition, moving i=
-t from
-> 	    cgroup_task_exit() (called from do_exit()) to a new function called =
-=66rom
-> 	    finish_task_switch(). However, release_task() (which calls
-> 	    cgroup_task_release()) can run either before or after finish_task_sw=
-itch(),
-> 	    creating a race where cgroup_task_release() might try to remove the =
-task from
-> 	    dying_tasks before or while it's being added.
->=20
-> 	    Move the list_del_init() from cgroup_task_release() to cgroup_task_f=
-ree() to
-> 	    fix this race. cgroup_task_free() runs from __put_task_struct(), whi=
-ch is
-> 	    always after both paths, making the cleanup safe.
->=20
-> 	    Cc: Dan Schatzberg <dschatzberg@meta.com>
-> 	    Cc: Peter Zijlstra <peterz@infradead.org>
-> 	    Signed-off-by: Tejun Heo <tj@kernel.org>
->=20
-> But there was the suspect that the matching commit might be
-> d245698d727a ("cgroup: Defer task cgroup unlink until after the task
-> is done switching out").
-
-I see that after 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from
-cgroup_task_release() to cgroup_task_free()") it may be possible that
-tasks on the dying_tasks list may drop their ->usage to zero (since the
-actual unlinking only happens in __put_task_struct).
-Most often those would be skipped due to PF_EXITING except for the case
-of thread group leaders (which the reproducer stresses) whose refcount
-apparently can drop to zero after task->signal->live > 0 made them
-iterable :-/
-
-A band-aid fix could be to use tryget_task_struct() in
-css_task_iter_next() (I got that hint from a LLM) and "skip" zeroed
-tasks. I see that commit fbe3fb103596b ("sched_ext: Replace
-tryget_task_struct() with get_task_struct()"), assumes the iterator
-always succeeds in obtaining the task reference (which was the
-justification of tryget removal). I expect that sched_ext should still
-be fine if dying_tasks with zero references are skipped. (What are they?
-Tasks which literally no one should be interested in and they're only
-waiting for __put_task_struct_rcu_cb() to be called [*]).
-
-(I'm calling that band-aid because it'd resurrect usage of
-tryget_task_struct() and it keeps the dying_tasks list a weird place to
-be. If anyone has a better idea?)
-
-The commit d245698d727a ("cgroup: Defer task cgroup unlink until after
-the task is done switching out") seems a reasonable separation of the
-stages to me.
-
-Regards,
-Michal
-
-
-[*] Except for io_uring_drop_tctx_refs() that calls __put_task_struct()
-directly (no RCU) but I'd argue the same, that those should not be
-possibly iterated.
-
-
---dtl76bd5brgzohej
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaoiD6hsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AiB/QD/Qx0ZJRbpqviaym2eUhdy
-AMfR99jU7RJJ+BnLU3zCy5oA/0JzSShj4XvDjSj7Pk9/fS4IW6CghDVOxoYWP5Od
-1XkA
-=22up
------END PGP SIGNATURE-----
-
---dtl76bd5brgzohej--
+Note that this is actually only required where we don't have any
+reference pin. One example is the one syzbot detected phys swap device
+backend flag check, because at do_swap_time() we don't actually have
+any reference pins. The PTE is not locked, so swap entry can gets
+released underneath us. But if we have a pin - for e.g if we own the
+swap cache folio, then we don't really need this dance.
