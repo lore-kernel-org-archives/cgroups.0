@@ -1,86 +1,86 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 624473DDB09
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A863E0097
 	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 18:58:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787338682; cv=none; b=Wu8FvmJzJIJzyatCmFoyo5qk3YGYE9xY02+7t9DSR+h57W6yMFtH8z4QpUZQ36zLhokXbGTx/adv2JLRzZbgZaG7iaag29KvMumuNUTiKsyZLxAcEQcPZ9EICSe2qjejQh96bb5PAO/tVYLGEeaMbaO0/jcPYisqojuGdWOtDB0=
+	t=1787338683; cv=none; b=TBE6SWZ+Qcgpr74mgkTUGHfrrALWb6Vu1AA52Kmv9zP5VieNMrSST+kEvLywWXggY1WA3fDpKH/F2T7v7ZYvfkOLjGzNYKgbAGgetBsrbsztQsssXX43PHhdSn/pJnzvsO7sOhB1Aly7E9LuLSGfOsdYYM6QM6jXK2nLOhxW++k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787338682; c=relaxed/simple;
-	bh=zN4YwsmDvSboy8SYR2KDjDfnHBrzsib8W3G8GkLnsrU=;
+	s=arc-20240116; t=1787338683; c=relaxed/simple;
+	bh=p4E4Ct3IlFbTeWS21yt/A9ZhhZobTV3W1Jsfzz388+Y=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=CZI+xSMtanfMus3mYE/Lw4Jr8RZ7QsE2yDJEgou1DWXu/dack8ikfIknHBog34Hiuk0wfQMb6VyZuVR1vAdJwTFLJsUx1p3WUyaLg5X/H8j20lWqFIL7+wqbdUebDyAibYl/r+Rka/sxjiMmGFRNLvMhIBJxKb4vGOUhHXmgN0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iiNeq7Xo; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=UDqmU3tc; arc=none smtp.client-ip=170.10.133.124
+	 In-Reply-To:To:Cc; b=nrhPcRd2NeHUbekMFQvw2OuwvBS+9ZLkMV646XsHrlgoQ2Gc4ZLf/LiUo2CUcKSBipRcSzzi1KfYLUInqL7he+WQXMjSpFB6e8jtUnu2u9wrQe0Yll0XcyFqr81TgTO87b8C9+tGm/pNsAeyAVtocN/jXtSXq23MqPf/tB75nz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bA2DGEKB; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Trc6mrBD; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iiNeq7Xo";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="UDqmU3tc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bA2DGEKB";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Trc6mrBD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787338679;
+	s=mimecast20190719; t=1787338678;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cQingZcA8JY9invl4rfVqQH3WLMP3iU/vTSgNWsiPjc=;
-	b=iiNeq7Xo/llk7jQ/U08KjprLv/+KV7jdk/4Ajva1K4AZDPcayuv+7GsidDZr7U7ww0CXma
-	fXCaH0WYwXUWOTThc4kPOlns9LFRCX4swMwZ0E/zqUWu6ru2ZeghUJ8s8Q1YkbcKI7bWIx
-	AXQEvdHUMdLYYpeTouR6ft9NtqkfzlA=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=e2V2mpWvyYuIz7GKVVHxUcELAybMhQQsAX/9av2OZxM=;
+	b=bA2DGEKB8b34WuDI1LSSAxtAxbWOnOFVVykKlynNz/Hohm6b46uWhCmSkrU60sOjYC+n5j
+	ucm49vOUsN/RN+PUjwkPhpp8ipB8OPEalZc6ifMxRDQGXviD3J2lMFDUbLikmnsy13DFYI
+	kGk3pfRQCCnU7kX5OhqeJf6W/It/Ej4=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-618-dTmPUh4MOK2B0vBXsakq5g-1; Fri, 21 Aug 2026 14:57:53 -0400
-X-MC-Unique: dTmPUh4MOK2B0vBXsakq5g-1
-X-Mimecast-MFC-AGG-ID: dTmPUh4MOK2B0vBXsakq5g_1787338672
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-92ec3146553so239544685a.1
-        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 11:57:52 -0700 (PDT)
+ us-mta-28-Q3Mth6ClM1yYjluNJ78gHg-1; Fri, 21 Aug 2026 14:57:56 -0400
+X-MC-Unique: Q3Mth6ClM1yYjluNJ78gHg-1
+X-Mimecast-MFC-AGG-ID: Q3Mth6ClM1yYjluNJ78gHg_1787338676
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-92e5e38fbc5so154225785a.2
+        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 11:57:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1787338672; x=1787943472; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1787338676; x=1787943476; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=cQingZcA8JY9invl4rfVqQH3WLMP3iU/vTSgNWsiPjc=;
-        b=UDqmU3tcJpZtpwfjZKqEFCQi/5+ZVaE3mtudf8tbck29CC21rTcHwt7q/VL45p7JDn
-         FmWvd+E3k7OunbMvSP8nrogF9at02YHUeV9QddnvAIIuREGa82UuOWBVt6Zi2Mi5OPTj
-         uTVMcqEPBWAWfgwTqPpobqelkOMrnxTko2y+j3GMxtYD5HnZtwjdpYZCLW+Ws0QqRdBo
-         ICYKDpycMQ+fBm7Vvixva83uDSc8vTJi8VgfrMEXCC5KhnK4CJrqLqdWqGY79Oe3d7bC
-         q/EzRKKmqiMmGvJ5dx4ROuUVC/u3gdC9GxgECuCLZkXtIQfnrnKBsK4CcvJErs92MNZv
-         0IGQ==
+        bh=e2V2mpWvyYuIz7GKVVHxUcELAybMhQQsAX/9av2OZxM=;
+        b=Trc6mrBDX+zo4KJit944vd4EryF8ogDzd0zttSoaT5gO3/kZsiVh55oFO+OCMFOXdZ
+         sbn61iyY+B1KSMphNhazGcTIp/5DaN3LGV0wey10B13v0tbWDJXG0pPmjmNKH4bGkQh4
+         qaMivl+tt/YgzdNCjFtePnO/n5uZenMAU8jvBqXAeAY1UqvxDsWiNEwc71LyWt531AxH
+         +LRSTiMR0PQIIEAG654GF52CIOnj64u/FilaR1QMMaBRNxQZDcIuwyTZqJBKMyL5t4rM
+         w7schtzJ/CaA5StrI4I9zTMJL9LPfZ06J2XdPrwpEf5+PZE5FE3TAEJJ8X6NN/AQFUyS
+         uOnQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787338672; x=1787943472;
+        d=1e100.net; s=20251104; t=1787338676; x=1787943476;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=cQingZcA8JY9invl4rfVqQH3WLMP3iU/vTSgNWsiPjc=;
-        b=bXiUQl0bi81ZVgS8qtPXhtdDidCz7Sc1GF9mYcN/DAUleQfiYSqQIkRA8o+GdEQ/eg
-         AjiC52LVC3aSn6jxz0LUm+5F7yZAhepvqxsxetnie2E8dXZL0I6fdmJehtPsPG/Fx/Mo
-         UGOXqhdPkF+VbyYf9QLzSvmztSuTpZUMnj7+fObPhT/wnEdtTs9BAT8J+Layg2X46kVe
-         DjAnihM3vEvwCntB/EjYOU/xq7t0ZSYZh1dXmeAHnfmIsjUhZQEDbihBY3VlNWOyuljH
-         hquvvUZCdN5Y3szkoP0sOdJaxV7hqEfD0AnJJCWopjTPq9OcDWy3jSD+lHp+avftMB9k
-         PYOA==
-X-Forwarded-Encrypted: i=1; AHgh+RqqysC97askfWQZgbOeC6xudw0T5R5PCcWkBQwdSPvKvPVxUrxgd3UYDIcgDsRlnb/z+/WnaKDZ@vger.kernel.org
-X-Gm-Message-State: AFuF++nq6rnWx5ragWAjMA6BQpg7WpSh2kCROI8K9w3Dl10nOulnBl42
-	SOb7KBMmDTCOrjFnyxmHd8Wkgx1dK8Q4Lk3m+zO/Lfocan51rra9Pj3taM+UjLMIVL4aqijj+WO
-	WK+xmVWxQB/6VVB4k592xm9PI69ex+YGCpfbOPi5/ghsOHln43aZ9naS8gkA=
-X-Gm-Gg: AR+sD12U7f5Q8VBmOAV0PNI8Kd9qk0yrO3TFlUdJuMB/41ERM5DDUhrmR1h+QnXzDR4
-	HEvMl7T4wXlc72DqGgnIW5yc+j27OuZjAv4ESW8+wzVDus/ZJuJaIyqECDYa4sG52MW8gIaNJi4
-	jj6b4m3hbTqCKNoHQ+AVRQoOQA5BZbY+w38QAOxbK2B2WFJzDtkwXtbCXTRdIq2iE0wrNNw8TRy
-	eAnh7pHKhjaEKTqnnHgPcDztEmkbLEDc1o0ZYDokFmdx8QrNbZWeAfZskAFINMj5Ct0xSrAypRH
-	oDaWiNm9Zts9QdIdHyT+NnAXjNwRYUoG1CJnPQ8IPVJweI2KB7Snz7Z3KpxJqVIR8Hx/RwGYITs
-	FsT5QPETj6prPQGxlIVKXZhJ5Kh9MhvVHmssN2g027c5d
-X-Received: by 2002:ae9:f115:0:b0:937:26c3:747f with SMTP id af79cd13be357-937468baea7mr97629385a.15.1787338672423;
-        Fri, 21 Aug 2026 11:57:52 -0700 (PDT)
-X-Received: by 2002:ae9:f115:0:b0:937:26c3:747f with SMTP id af79cd13be357-937468baea7mr97623985a.15.1787338671990;
-        Fri, 21 Aug 2026 11:57:51 -0700 (PDT)
+        bh=e2V2mpWvyYuIz7GKVVHxUcELAybMhQQsAX/9av2OZxM=;
+        b=qaDkAGlH71mDjaY5lZmpY9wkQ5r/77/dV9lWTmuOMBeJB5nzUiCOHwx33QYgUcPDjv
+         OaVRzZDhnpF/wKbxJ/imZTL4eBKtFJPQNhMWHQuol94FYvSOjehH7H26hiah5OfAKo4H
+         z04XVIAJoq1sylJ7RM33q+xsMKnCClyWBVCErfw2N/UzoVNuy7JcBWIbtYqO7eFd0efT
+         kP8ZI/j90uFFSCGLMUO8EOOSFNmmXciJmSbKcZ06i2bci3vaG7A4Umt3OiY/e0zrE7qx
+         tfyZVQhI6V2kTnN7Rzc+p56uYuUE7P2tze1q409VWoQ37M5WY+Rx/Y1b/L8rYVxALkos
+         m8gw==
+X-Forwarded-Encrypted: i=1; AHgh+RqBKv1kZRpXwOHwROvfkELOwlXUbMWuMi/dmYCll0BmhkQ8RaiBzxQvI+Zaf5QT8VzD1rp3Zi9m@vger.kernel.org
+X-Gm-Message-State: AFuF++l7WXeGOdn5WMi7qy2G7dBx0rYhZ0xuBYxaqZ6mTcI1f23It2ae
+	lbQmfd5tJR2MngF1r/BvPorS9rQNU5HLYcXv2dZ0z6XCgXix1BeeGJQz3KbRPJD28yjdLHtcvjA
+	snSnrk1eq1Pk3qcGjn4IArS9RdZ8Iw96uMTQ0PMPvf7X6S5HIB9J7QX1+xp8=
+X-Gm-Gg: AR+sD12C/7/WiaQ0ovsohoNkUAK2eHkd7fLRUj1gZ3O4TQenlue+anv9kC1VksnrAwY
+	RMK4D3arqtkPn6lIXpp6jpA+jBxklrnc31VlgXYbiUgDrn+apbrosNUEJSPynj9GmvP9GrQjyEr
+	0qMjQLiJ63SfSlQPEqb7f80+LvS++y6wLjCIWTGlx0Ll24CnQ3W64VWePJP16FBxa+PrTwY7yjo
+	AQN3Z2HTcKZ6If6hyvJRath7jcY7z0z7zX9Fzg3LwTVWLiXmr6fwtA+9LoxWFKheXXmWpSnHYbh
+	EW2XaD9zO7498qaWwY/j8uzrb9a+RuSAtXqpQ4Fd2QK8sdM0T3KI2poLwgAcn7fNi54WB0hqAiG
+	Q9z09blfqyfP7zFJ26S/471TNfLine2Vhf7Kaf7R2Wo4Y
+X-Received: by 2002:a05:620a:29d6:b0:914:bd3f:b6db with SMTP id af79cd13be357-937394278e8mr807010285a.10.1787338675674;
+        Fri, 21 Aug 2026 11:57:55 -0700 (PDT)
+X-Received: by 2002:a05:620a:29d6:b0:914:bd3f:b6db with SMTP id af79cd13be357-937394278e8mr807005485a.10.1787338675183;
+        Fri, 21 Aug 2026 11:57:55 -0700 (PDT)
 Received: from localhost (pool-100-17-17-231.bstnma.fios.verizon.net. [100.17.17.231])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-937205998ddsm651971585a.44.2026.08.21.11.57.50
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93720586ea5sm655734185a.38.2026.08.21.11.57.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2026 11:57:50 -0700 (PDT)
+        Fri, 21 Aug 2026 11:57:52 -0700 (PDT)
 From: Eric Chanudet <echanude@redhat.com>
-Date: Fri, 21 Aug 2026 14:56:53 -0400
-Subject: [PATCH 01/11] mm/cma: drop const for struct page on release API
+Date: Fri, 21 Aug 2026 14:56:54 -0400
+Subject: [PATCH 02/11] mm/cma: include linux/cma.h in cma.h
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -89,7 +89,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260821-cma-memcg-regions-v1-1-d21b165b8440@redhat.com>
+Message-Id: <20260821-cma-memcg-regions-v1-2-d21b165b8440@redhat.com>
 References: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
 In-Reply-To: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -109,70 +109,66 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  Albert Esteve <aesteve@redhat.com>, Eric Chanudet <echanude@redhat.com>
 X-Mailer: b4 0.14.3
 
-The const is not honored. Both cma_release and cma_release_frozen do a
-struct page -> pfn -> struct page round-trip to convert the const struct
-page pointer to struct page and modify it:
-cma_release calls put_page_testzero() directly, which modifies the page;
-cma_release_frozen calls free_contig_frozen_range(pfn),
-__free_contig_frozen_range, then __free_contig_range_common which
-modifies the page as well.
+cma.h needs definitions from linux/cma.h (e.g, MAX_CMA_AREAS,
+CMA_MAX_NAME), so including mm/cma.h requires including linux/cma.h.
+Make the dependency explicit by including the header directly.
 
 Signed-off-by: Eric Chanudet <echanude@redhat.com>
 ---
- include/linux/cma.h | 4 ++--
- mm/cma.c            | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ mm/cma.c       | 1 -
+ mm/cma.h       | 1 +
+ mm/cma_debug.c | 1 -
+ mm/cma_sysfs.c | 1 -
+ 4 files changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/include/linux/cma.h b/include/linux/cma.h
-index 8555d38a97b1..16e2136421b7 100644
---- a/include/linux/cma.h
-+++ b/include/linux/cma.h
-@@ -49,12 +49,12 @@ extern int cma_init_reserved_mem(phys_addr_t base, phys_addr_t size,
- 					struct cma **res_cma);
- extern struct page *cma_alloc(struct cma *cma, unsigned long count, unsigned int align,
- 			      bool no_warn);
--extern bool cma_release(struct cma *cma, const struct page *pages, unsigned long count);
-+extern bool cma_release(struct cma *cma, struct page *pages, unsigned long count);
- 
- struct page *cma_alloc_frozen(struct cma *cma, unsigned long count,
- 		unsigned int align, bool no_warn);
- struct page *cma_alloc_frozen_compound(struct cma *cma, unsigned int order);
--bool cma_release_frozen(struct cma *cma, const struct page *pages,
-+bool cma_release_frozen(struct cma *cma, struct page *pages,
- 		unsigned long count);
- 
- extern int cma_for_each_area(int (*it)(struct cma *cma, void *data), void *data);
 diff --git a/mm/cma.c b/mm/cma.c
-index a13ce4999b39..e1820fb451e4 100644
+index e1820fb451e4..03f98f6d45a5 100644
 --- a/mm/cma.c
 +++ b/mm/cma.c
-@@ -992,7 +992,7 @@ static struct cma_memrange *find_cma_memrange(struct cma *cma,
- }
+@@ -25,7 +25,6 @@
+ #include <linux/string.h>
+ #include <linux/string_choices.h>
+ #include <linux/log2.h>
+-#include <linux/cma.h>
+ #include <linux/highmem.h>
+ #include <linux/io.h>
+ #include <linux/kmemleak.h>
+diff --git a/mm/cma.h b/mm/cma.h
+index c70180c36559..0c9de38d6bff 100644
+--- a/mm/cma.h
++++ b/mm/cma.h
+@@ -4,6 +4,7 @@
  
- static void __cma_release_frozen(struct cma *cma, struct cma_memrange *cmr,
--		const struct page *pages, unsigned long count)
-+		struct page *pages, unsigned long count)
- {
- 	unsigned long pfn = page_to_pfn(pages);
+ #include <linux/debugfs.h>
+ #include <linux/kobject.h>
++#include <linux/cma.h>
  
-@@ -1014,7 +1014,7 @@ static void __cma_release_frozen(struct cma *cma, struct cma_memrange *cmr,
-  * It returns false when provided pages do not belong to contiguous area and
-  * true otherwise.
+ struct cma_kobject {
+ 	struct kobject kobj;
+diff --git a/mm/cma_debug.c b/mm/cma_debug.c
+index 523ba4a0f9f7..70bfc6fbeeca 100644
+--- a/mm/cma_debug.c
++++ b/mm/cma_debug.c
+@@ -7,7 +7,6 @@
+ 
+ 
+ #include <linux/debugfs.h>
+-#include <linux/cma.h>
+ #include <linux/list.h>
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+diff --git a/mm/cma_sysfs.c b/mm/cma_sysfs.c
+index d5bf792c6245..e4ee35bc682b 100644
+--- a/mm/cma_sysfs.c
++++ b/mm/cma_sysfs.c
+@@ -5,7 +5,6 @@
+  * Copyright (c) 2021 Minchan Kim <minchan@kernel.org>
   */
--bool cma_release(struct cma *cma, const struct page *pages,
-+bool cma_release(struct cma *cma, struct page *pages,
- 		 unsigned long count)
- {
- 	struct cma_memrange *cmr;
-@@ -1037,7 +1037,7 @@ bool cma_release(struct cma *cma, const struct page *pages,
- }
- EXPORT_SYMBOL_GPL(cma_release);
  
--bool cma_release_frozen(struct cma *cma, const struct page *pages,
-+bool cma_release_frozen(struct cma *cma, struct page *pages,
- 		unsigned long count)
- {
- 	struct cma_memrange *cmr;
+-#include <linux/cma.h>
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+ 
 
 -- 
 2.53.0
