@@ -1,197 +1,176 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E06F93769ED
-	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 17:52:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534C53DDB15
+	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 18:57:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787334727; cv=none; b=Kod1WmTpmZ6CE1SYu8vM3FO9Lcv8iD2LyGMn9XdoGA9I3xuhBRtt8agAwqoB9FnnTJgjISUy6qlGUx5JKgLDIhNcS4L8x48UWJg40BOAjaXU0ajUjWwTOobZdVfu9tAChVQcPUIPqiRzf/vL7g222TnVnjyT2mc4WYCMNZo+JQE=
+	t=1787338674; cv=none; b=lBjme9uhVqev5W2QGJkhgA6HYjajq0iZ7Q8qXDI41gHIUyTh72IULB2zy599YqimV6qf1iJU8qULWfXKK8yl44yPkoEbKu9hVnwO7HIIa7oMxaHtGtTywmKeHKpOq5tQidjqq0DjMT5BKIQeWKgwygi8G88RzHcmIUlJ0xrY6z0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787334727; c=relaxed/simple;
-	bh=1pvGTs3ZuXmXJcXyBInIycLsQJ5XhcmpJ2/G1c6L4ao=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XggE6dKq4HmKf6U1zlNB5LbBZ2hZlXaFGJNMMNkg8K4GpOzl+IZXlCItizfAhtXLGO9caSQX8uS7CxAYETeYcbTMKExGAW+b1Cd2zgKyYY9wuyB97TVc4zqKbhiaU25r2SobLRTsho6U3lpneChUuNGKdHJTIihxhKvrTE43ZoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=MoxSiwjz; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	s=arc-20240116; t=1787338674; c=relaxed/simple;
+	bh=S1+AOOCO+x8P/REZAh+d8jQSHgoqsnPS3Vwsod8b5LE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=bGvFOEOKFgUf6yFWzgokyg7e0JxGlOTUUwyKYMrTvp/t+evWD73OGChUUj28Y/yijFGn/WRT1l+5YM3FIWlO3H42LZLYOsw8drEFhrOEHtPG0FjMrzZrMUGaygiQ+nzspkv0UJXMC69nXVus4uoENAi2UAvLdY27p5YNjFSxg7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BGseqZ7w; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=esLxkPs1; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="MoxSiwjz"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-51c0cea8883so10605601cf.1
-        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 10:52:04 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BGseqZ7w";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="esLxkPs1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1787338672;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=g7+NxbGivt12D871ywA3vXdCtRMIy1dH4uv3I74lADM=;
+	b=BGseqZ7w3iKycabokBueXBw8eVrkCklVZHGm6OBy6DdmC9wBk0fkrbMfAGAkLCHo2hes0C
+	lbL0u7Fp0Z6lTNb1lN4k7e25DKfO4PmMMCE9Ofu8YdF42BQcvvKYxSFVY7b/IoongEw0dz
+	Ot7ZnDqUrNbT/cdyHuCeG7Ozfibu2AY=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-481-i_7PBJA9OSS69VYXsU-jUA-1; Fri, 21 Aug 2026 14:57:51 -0400
+X-MC-Unique: i_7PBJA9OSS69VYXsU-jUA-1
+X-Mimecast-MFC-AGG-ID: i_7PBJA9OSS69VYXsU-jUA_1787338670
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-936708f129aso112526585a.0
+        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 11:57:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1787334723; x=1787939523; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=z4r9Jbt/bO7UeLYNwfXFrbJjchGvrclBSzHl6eH4LNA=;
-        b=MoxSiwjzzip8dSfzw97CKcJ2gBCYHMtPQvNLQVXkZd9ORlig1x6szzPG19rFI5v9Op
-         TCG6nT1nyYHrYk3H56E7q3a3kEgMVc/DcL2C9ckyogg3SRuB9QImLNpspXDGMGJLsOjG
-         rwOmN0+odKBdmSWZbNEfPfKO3iZQOhxRSdTJerpY9A3H7makdmNOViAYVgV7cPSknj2Y
-         +5DtVkO45mAqEaNAthJGTwa2Wj4g2LBIdhO2JFYz4ajdnBwdCQ3FYAF2aA/IdCROKit7
-         RzlBqyJ7f7eHAEbdPCEXy6i1rMzCHKmVnTEcw4/23FqlwNT1s8+bEMUjwsmey85OOHh0
-         gwNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787334723; x=1787939523;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=redhat.com; s=google; t=1787338670; x=1787943470; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=z4r9Jbt/bO7UeLYNwfXFrbJjchGvrclBSzHl6eH4LNA=;
-        b=bhrs4LoiY+Ek8hQslfAO36zQY+0D7NYXsZ5FlyQVwrXddO3q4U9aPhATVCjtWkX/Bg
-         HzS+7Miflfj/fRBpskGBFyyfZGo3W2xbyoEc79zULbwwg+wUetbTgpwfAor3wSqNQx+y
-         dh1dp04nGGL2clw465fCgVu0WgOWWIE2EqMqtQeBHt8b2gl7VE/dwm3bh32HciKqbavA
-         Bvr0xhmyfnWNrKwBtdmbktRCwfDEAqiM9FWvBYNOZLUrrBQCr7yf2TVi+YrAIvYX1evb
-         XYPz16inXAeYyVjFzUgKXVqfy3LX464tvzJTnTL1u6UnfcqNwNzK29OCflblHfj1LOHH
-         QmFA==
-X-Forwarded-Encrypted: i=1; AHgh+RpUs7iJ/Z94h93h6uiGBchVzqccbv0On+w3IaovS3tkwQdm9eYBifVf+T8Nknf4F6s02tFRaFWi@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJ7TsRBFySwI1SR+Odgw+6q7D9fMeNmsM3Wzqg4UFKdUQOTxGW
-	vRcAJGLRfauZUKKxmWyzJFgTwu7BWToXjEotoBc+aw+Ix0IbM8x7SpthG9yE1bUrxss=
-X-Gm-Gg: AR+sD10IWu7mWwusB631IDpM3NZLMp2rGEX+hGyoj40henRkosKeVAGeKvgTaNWqYbo
-	+T/hl9/XmhHaJQ2UikQgjKKJdZvdiXNh/YVg/cp3e70LeApuZJLOV1UsZQen+hCZAvD3nteMEew
-	6hxADduUaRRNSFOlGbQdRXOXjmJn9tzZQ41ruVzql9KoF11rDUitsThWaVc4a0lrMfJEDagjQo/
-	/d2jmFyupV/xMN40IF33fgZ7gmw2p+I6H+fKmKWtondnde+NJiVnK8eyyLXo+AYQpYQ68g1D3zx
-	SUtDxuu3B7T6ZNfwS0LWRQpbNZa8OBMBSqcmElNDAloV85yv1CtawQnLgLnSdaxQYWvAPlEBx19
-	Smj7hAsHHhhrqeMSAEGgKhC+e3tHdMjy4F3rI/rOK1VH3zwprFQZkzfK6qH7z4r7h8g8XCH5yU+
-	YCB0cz1lPv/cQ3DtG50nM8V4jvYKJIonVOaUFBdw7zHg7fv8Y8X0qOIpKQs98p0Kb4pJJEDQ==
-X-Received: by 2002:a05:622a:8603:b0:52e:1e5:45d6 with SMTP id d75a77b69052e-52e01e57d27mr28511781cf.6.1787334723252;
-        Fri, 21 Aug 2026 10:52:03 -0700 (PDT)
-Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90c5f2906afsm67569666d6.25.2026.08.21.10.52.02
+        bh=g7+NxbGivt12D871ywA3vXdCtRMIy1dH4uv3I74lADM=;
+        b=esLxkPs1Rx3z5LUsnZ9ZJF+OODcjOIv+cWb+hMZRtsTejwyNT7+5JRqFP0GWYnWT6i
+         sD6h5g1pnfGJZlgJ06FN7YRfhJ70BUBefr135zSE2MT2rvyZ4x9yYTDap4HCbBOZ0udK
+         PmUeKZFvOk31a5iili5i32Yfo+lW044mSTzFYY6YFmAQbjkR7faVFRhLKc/fjZCAi9lb
+         ulKSejZ+aMHAJhrGhT/u6tFlC8kBo2xogtHMFjd7zelSRQmZIoCkawDSx9t9UeIIFFWt
+         Cb+ypyhaP1DIpTw6mCX7p9SF14VfAB9E/9haOSJ3/4uR8tpNJWih+FmEFTJ22XdpQMCk
+         w8LA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787338670; x=1787943470;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=g7+NxbGivt12D871ywA3vXdCtRMIy1dH4uv3I74lADM=;
+        b=Wj+E81iU9u3vp9WCgITP8SF/WuG2Xs6dJfUVwbOnvI9OjpAKvzX2f0eYN+J4E3VJbV
+         00pzTEpn90Q74dim4UDmDAUJpItqOO181sEkEE1cB8MIM/KP/LIQ6GIg3yvRkaCQYDrI
+         TC5/ofkHxw2bmzf78bQhyUXdSfcGug/Rj3KGUf5+NCXGVExy+TMW4bftno59YTNn+9xy
+         +gWTsCAdwqywyEfA48DseAjwGXDYp9HJ0g0PXnRvRwug760G5fGoDe/z6XdPV/+NW8y8
+         zn3XdI6n04V+zDUL/zjpfp4VuXcllSaFqlSYAE0E5VgdqqFx7uy2Cep7Bw5sM9/n1Jeu
+         u8xg==
+X-Forwarded-Encrypted: i=1; AHgh+Rq4s5orxjkw9wCWx37HZ/d3gv2uzbnsj7qxQI+XMiYDXgMM5KWTHyx7Pba4HD9njsf1W3Ixe9MC@vger.kernel.org
+X-Gm-Message-State: AFuF++lnS1Y/80jaWPIfhz9FCcKlHJtzD6ydiXmrVGFgvRvFWiVuICWk
+	avMXgVmdISn4fndOT7T+iJZbGiG4NE9/8NuVkt7SX0Dw1FsGu55eeqivmlQVfjzahyqn4VmhW39
+	yLxMzt95RHURfPjcrfDTiJrZsGNmlDFunyyrZAdTaGMFKCHBQPLde1oldlDI=
+X-Gm-Gg: AR+sD101hCLfXSc6YSk0VYv6Gt/Z0L7y+Uyv2dL0OuB9xkn9WDxmE2nG3h4BUKLcl0V
+	V4195mzjQ5QE9CkzXwxCqpvi/kJdb1On8vHfGoboXsRF2HSChdwLo2YAYjVoGs+EhMDRP4ZVzrw
+	jPJE5xUcJRupqsDYE587hPgoSLkXqsxZY+BGcg5ljcMU4PH46pzvgxYNGqMGxHh/tGor0b7utEt
+	5Zv5AggYcwrMU/VeUX1F9xLY80ArPqGjtmZdJVY5+k2JTLiu8kkwLJXZowcRhdtPGoa6NweX1bV
+	EwgCVb8Y9sa18ni4tOk7nYx6USCOOz9pJndVzBX4z5DboCdcJ9VZiMhx+p8VsDvGQWTEKsOq6QH
+	zseOov2D2wnk/LU5BLNDXVzKMMB0A5OHl5lZ6mXHVZ+ZM
+X-Received: by 2002:a05:620a:6306:20b0:930:9585:e08e with SMTP id af79cd13be357-9373954280emr603127185a.10.1787338670388;
+        Fri, 21 Aug 2026 11:57:50 -0700 (PDT)
+X-Received: by 2002:a05:620a:6306:20b0:930:9585:e08e with SMTP id af79cd13be357-9373954280emr603122285a.10.1787338669904;
+        Fri, 21 Aug 2026 11:57:49 -0700 (PDT)
+Received: from localhost (pool-100-17-17-231.bstnma.fios.verizon.net. [100.17.17.231])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-937205817f1sm658045085a.32.2026.08.21.11.57.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2026 10:52:02 -0700 (PDT)
-Date: Fri, 21 Aug 2026 13:51:58 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: Yosry Ahmed <yosry@kernel.org>, Song Hu <husong@kylinos.cn>,
-	Shakeel Butt <shakeel.butt@linux.dev>, akpm@linux-foundation.org,
-	linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, nphamcs@gmail.com,
-	chengming.zhou@linux.dev, yunzhao@cloudflare.com
-Subject: Re: [PATCH] mm: memcg: use ratelimited stats flush in
- obj_cgroup_may_zswap()
-Message-ID: <aoiQPrudvYZ76ZSD@cmpxchg.org>
-References: <20260817131843.45121-1-husong@kylinos.cn>
- <1787017182353556.21.seg@mailgw.kylinos.cn>
- <0689d805-45c6-4bb2-8eb2-f065457c45bf@kylinos.cn>
- <CAO9r8zNxnVYpwrsuB1Ofcwf-Lks2e+DL1Ys9CXZ5jozBug_ybQ@mail.gmail.com>
- <CAJnrk1bFq7J7K0=X67voeZVkAb0dmiLkqomuQ+VcXBLyP5hMVg@mail.gmail.com>
+        Fri, 21 Aug 2026 11:57:49 -0700 (PDT)
+From: Eric Chanudet <echanude@redhat.com>
+Subject: [PATCH 00/11] mm/cma: charge cma allocation to memcg using per
+ area counters
+Date: Fri, 21 Aug 2026 14:56:52 -0400
+Message-Id: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJnrk1bFq7J7K0=X67voeZVkAb0dmiLkqomuQ+VcXBLyP5hMVg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x2MQQqAIBAAvyJ7bsGENPtKdDBbbQ9WKEQg/T3pO
+ DAzFQplpgKTqJDp5sLn0aDvBPjdHZGQt8agpNLSSI0+OUyUfMRMsckFtdV+HSgYa0do3ZUp8PM
+ /5+V9P4pyRQdjAAAA
+X-Change-ID: 20260706-cma-memcg-regions-696cb5ef7998
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+ Michal Hocko <mhocko@suse.com>, Tejun Heo <tj@kernel.org>, 
+ Johannes Weiner <hannes@cmpxchg.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Shuah Khan <shuah@kernel.org>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+ cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
+ linux-kselftest@vger.kernel.org, Maxime Ripard <mripard@redhat.com>, 
+ Albert Esteve <aesteve@redhat.com>, Eric Chanudet <echanude@redhat.com>
+X-Mailer: b4 0.14.3
 
-On Thu, Aug 20, 2026 at 03:18:39PM -0700, Joanne Koong wrote:
-> On Tue, Aug 18, 2026 at 11:35 AM Yosry Ahmed <yosry@kernel.org> wrote:
-> >
-> > On Mon, Aug 17, 2026 at 6:53 PM Song Hu <husong@kylinos.cn> wrote:
-> > >
-> > >
-> > >
-> > > 在 2026/8/18 00:04, Shakeel Butt 写道:
-> > > > On Mon, Aug 17, 2026 at 09:18:43PM +0800, Song Hu wrote:
-> > > >> obj_cgroup_may_zswap() runs on every folio swapped out through
-> > > >> zswap.  For each ancestor with a non-max zswap.max, it flushes the
-> > > >> cgroup rstat hierarchy synchronously with force=true, which skips
-> > > >> the ratelimit inside __mem_cgroup_flush_stats().  In a swap storm
-> > > >> with zswap.max configured, a container takes the global rstat lock
-> > > >> on every swapped-out folio.
-> > > >
-> > > > Any reason you are limiting zswap through zswap.max?
-> > > >
-> > >
-> > > Mostly fairness on a shared pool: zswap.max_pool_percent is global
-> > > only, so on a multi-tenant host one cgroup's cold anonymous memory
-> > > can soak the pool and crowd out the others.  zswap.max is the only
-> > > per-cgroup control over that share; memory.max bounds the total
-> > > footprint, not the share of the pool.
-> > >
-> > > >>
-> > > >> zswap_shrinker_count() had the same pattern and switched to
-> > > >> mem_cgroup_flush_stats_ratelimited() in commit ea80da363a1f
-> > > >> ("mm/zswap: use ratelimited stats flush in zswap_shrinker_count()"),
-> > > >> where the same flush on the shrinker side showed up at 2.88% of
-> > > >> kernel cycles under osq_lock on a 96-core machine.
-> > > >>
-> > > >> Measured on a KVM guest with a swap storm under a cgroup with
-> > > >> zswap.max set: obj_cgroup_may_zswap() was entered 198,977 times
-> > > >> before the patch and 198,968 times after, while
-> > > >> __mem_cgroup_flush_stats() was entered 281,017 times before and
-> > > >> 80,445 times after.  The removed 200,572 flushes match the store
-> > > >> attempt count almost exactly; the remainder comes from other stats
-> > > >> readers in the swap path.
-> > > >
-> > > > This is a known issue. Using ratelimited interface also comes with a drawback
-> > > > that the kernel may react on stale information and the consequences might be
-> > > > unneeded oom-kills.
-> > > >
-> > > > There was orthogonal discussion on moving zswap limit enforcement away from
-> > > > rstat. Yosry, any updates on that?
-> >
-> > I am not actively looking into that, but Joanne was looking into
-> > AFAICT. I will respond to the thread there and CC Song as well.
-> >
-> 
-> For this zswap stat, I ran some benchmarks comparing 4 approaches
-> (switchable behind a runtime knob [1]):
-> a) rstat + forced flush       (baseline aka what the tree does today)
-> b) rstat + ratelimited         (Song's proposal)
-> c) hierarchical per-CPU   (Yosry's idea from [2])
-> d) page counters              (following what all the other memcg limits do)
-> 
-> For the setup, the benchmark creates a cgroup chain at depth X with
-> memory.max set to 1G on the leaf and memory.zswap.max set to 512M on
-> every level, and spins up 20 processes there that each allocate 100
-> MiB, fault it in, and touch every page four more times. With that 2000
-> MiB against the 1 GiB memory.max, it triggers reclaim continuously and
-> makes the swap traffic go through zswap. The machine I ran this on had
-> 80 CPUs.
-> 
-> I also ran it with no memory.zswap.max set (ie no reads triggered,
-> only update path runs) - as I understand it, this is the configuration
-> that is more often used in practice.
-> 
-> These are the results I saw:
-> 
-> kernel cpu time (in ns) per zswap store, zswap.max set
->                       a)                     b)            c)                d)
-> depth 1        567,116          35,604     35,841     34,995
-> depth 2      1,082,007          35,507     37,803     36,209
-> depth 4      2,153,329          37,591     40,117     39,893
-> depth 8      4,211,692          34,963     41,070     44,211
-> depth 32    15,728,220       53,575     94,685     65,946
-> 
-> kernel cpu time (in ns) per zswap store, no zswap.max (update path only):
->                         a)                  b)              c)            d)
-> depth 1         34,787          34,062     34,930     35,630
-> depth 2         34,913          35,061     36,404     36,360
-> depth 4         36,422          36,809     36,922     37,483
-> depth 8         42,177          34,440     36,679     40,793
-> depth 32        55,309          55,321     57,671     59,190
-> 
-> c) and d) are for the most part pretty comparable to b) without
-> introducing the staleness problem of b). Between c) and d), I think d)
-> ends up outperforming c) as the # of cpus and depth gets larger.
-> 
-> I'm seeing that all the other memory limits (eg memory.swap.max,
-> memory.max, etc) are already using page counters. Is there a reason
-> the zswap stat can't? If not, does it make sense for the zswap stat to
-> switch over to using page counters?
+CMA allocations are currently unaccounted for by cgroup memory
+controllers. As system resources, they should fall under memcg, but CMA
+areas partition the available space for different purposes and memcg
+doesn't have a good representation for that.
 
-Thanks for running these.
+Add a memory_cma_accounting cgroupfs option in preparation for the
+following new behavior. Make it disabled by default since it will
+account for CMA allocations in memcg which may affect existing systems.
 
-I used the vmstat counter on the assumption that setting zswap.max is
-rare and the counter is maintained anyway for memory.stat.
+Provide CMA charge/uncharge functions to memcg that introduce a CMA area
+specific counter per CMA area. Charges are issued to memcg and to a page
+counter for the CMA area used. The allocation's folios are marked with
+the cgroup via commit_charge() (once for large folios, per-page for
+0-order ones) so they can be later uncharged correctly.
 
-But I never actually tested it. The assumption was that surely walking
-ancestors on a quick if (max == PAGE_COUNTER_MAX) continue would be
-much cheaper than page counter atomics at every level. And so I'm
-surprised by your results.
+Add the new memcg calls into the cma allocator under __cma_alloc_frozen,
+for both cma and hugetlb_cma allocations accounting.
 
-But that was the sole reason. If it doesn't stand up to benchmarking,
-no objection to streamlining the control to a standard implementation.
+Finally register the per-area usage counters in the cgroupfs. Each CMA
+area creates a memory.cma.<area>.{current,max} pair for reporting and
+limitation for each area.
+
+Selftests and a vmtest script are added to this series for convenience.
+The tests are simple accounting and limit enforcement verification using
+the default reserved CMA area (cma=) and hugetlb_cma.
+
+Signed-off-by: Eric Chanudet <echanude@redhat.com>
+---
+Eric Chanudet (11):
+      mm/cma: drop const for struct page on release API
+      mm/cma: include linux/cma.h in cma.h
+      cgroup: add memory_cma_accounting mount option
+      memcg: add cma charge/uncharge functions for area counters
+      mm/cma: charge cma allocation to memcg per area counters
+      memcg: register per-area usage counters in cgroupfs
+      selftests: cgroup: add cma configs for cgroup selftest suite
+      selftests: cgroup: add memcg cma tests
+      selftests: cgroup: add a vmtest script for memcg
+      selftests: cgroup: add memcg hugetlb_cma tests
+      selftests: cgroup: amend vmtest-memcg to run the hugetlb cma tests
+
+ Documentation/admin-guide/cgroup-v2.rst         |  35 +++
+ include/linux/cgroup-defs.h                     |   5 +
+ include/linux/cma.h                             |   4 +-
+ include/linux/memcontrol.h                      |  19 ++
+ kernel/cgroup/cgroup.c                          |  15 +-
+ mm/cma.c                                        |  14 +-
+ mm/cma.h                                        |   6 +
+ mm/cma_debug.c                                  |   1 -
+ mm/cma_sysfs.c                                  |   1 -
+ mm/memcontrol.c                                 | 205 ++++++++++++
+ tools/testing/selftests/cgroup/.gitignore       |   1 +
+ tools/testing/selftests/cgroup/Makefile         |   2 +
+ tools/testing/selftests/cgroup/config           |   5 +
+ tools/testing/selftests/cgroup/test_cma_memcg.c | 402 ++++++++++++++++++++++++
+ tools/testing/selftests/cgroup/vmtest-memcg.sh  | 197 ++++++++++++
+ 15 files changed, 903 insertions(+), 9 deletions(-)
+---
+base-commit: 98f21c54f99519329c18e2625b0ea6db14524d09
+change-id: 20260706-cma-memcg-regions-696cb5ef7998
+
+Best regards,
+-- 
+Eric Chanudet <echanude@redhat.com>
+
