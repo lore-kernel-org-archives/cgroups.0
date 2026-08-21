@@ -1,198 +1,197 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9613815D9
-	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 17:09:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787332188; cv=pass; b=eZIGQYdj+oUwRAWAgDhVNrIOig+S3IHbSfZu0zPFAr5+xHN9f8WKlpz3X19tcO3Yuu2mh/+fMK/9+MjUM8BLfGE2NN4sYYBnbylm4x1djr80tNznZzmYDagycCi/ceBM50+FXVVgsSS3/7m82carWVF00iDyIhd3HjK/WbZmN+g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787332188; c=relaxed/simple;
-	bh=xudCWQpjT5lp5cYm05GhPWn57VEG+OCVRyJHd/J1yaM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SQSLDLOraGjONi9LDkC3yHBNQG9B7O3pTTg7CsIp8oMFqr3zlY8XPKEvCPmQoo7pDKyilQ4iY9kh2mJ3LMinUV8W9xO7um+EC+0Mw6ZnUAjBoMpA7jMbzpflwRboCTofG03/oTDWZ0ZPvhKvZkv0jMUyVHrU1DVSuEulZWqm8wY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rrPEhqvo; arc=pass smtp.client-ip=209.85.221.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E06F93769ED
+	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 17:52:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787334727; cv=none; b=Kod1WmTpmZ6CE1SYu8vM3FO9Lcv8iD2LyGMn9XdoGA9I3xuhBRtt8agAwqoB9FnnTJgjISUy6qlGUx5JKgLDIhNcS4L8x48UWJg40BOAjaXU0ajUjWwTOobZdVfu9tAChVQcPUIPqiRzf/vL7g222TnVnjyT2mc4WYCMNZo+JQE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787334727; c=relaxed/simple;
+	bh=1pvGTs3ZuXmXJcXyBInIycLsQJ5XhcmpJ2/G1c6L4ao=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XggE6dKq4HmKf6U1zlNB5LbBZ2hZlXaFGJNMMNkg8K4GpOzl+IZXlCItizfAhtXLGO9caSQX8uS7CxAYETeYcbTMKExGAW+b1Cd2zgKyYY9wuyB97TVc4zqKbhiaU25r2SobLRTsho6U3lpneChUuNGKdHJTIihxhKvrTE43ZoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=MoxSiwjz; arc=none smtp.client-ip=209.85.160.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rrPEhqvo"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-47f7872abb6so720094f8f.3
-        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 10:09:46 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787332185; cv=none;
-        d=google.com; s=arc-20260327;
-        b=rja/2HG6RhIEUACwgCF9sXo/w/po/hMwiDWY7023+0FlfRC5MuEp1/bscvJRIgRoFy
-         qL+MAEQyHMEpX0ZOGqgdTb2kVgAONgSuCT7HLDCI1erZFrvO/XFkXhWt/6EiFyWwo56e
-         gPXSbh5S9cMTsYF0oL2lcAmkmQIwvD+qYrxfnZfYALZ9qxgThCDEC3xSgUQ37e8M+ziv
-         vhY3vVNUA7gyhpDVRHrG3y2mWhAhORErKWy8Faha6/5uu0L2tTIICdP/zcLbCyYvhoPG
-         hSkx+cwTEeFKPTM88yF23tT1D6BQh9r4ERalKi9fE++X2/546i+rG6xTmbOnJAX2o+Bp
-         0SYA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=veZnyf/dfYhbTVP9YeELLr3c4PfKlTUdiQo55s2EN7I=;
-        fh=gz48+Uimd06aNF68qPlMxd/oSjbbFfGj+E24UMhysY0=;
-        b=Z+IQcrHPUvP4PuxBJw2wOmJf5IJH+zcmiX3fNllbYpJf5Yf1uv1jnPM1w+31e85b+d
-         2dJZ+F2ZRG6QX0oipue/8LYpMUvyQ7ZgP+Csg0FwzWkPWqu5Kc69TE4oWiVlEooMACn8
-         YyJAIFGgez7PQHkMABDUXDBQMVqbqd2Ra8KK72fql2FUMPUZKVVilCX8jwSwbCIR47BY
-         dx3xa/8XyMj3VzS9Neldod7VfzkDUYiGnXhp8/knOI2XdhvJcrhyJ3Na+vttuAwFZt4y
-         2t+O3lU2wwggQSLjvlcy4mIFtViZ3/XNwo2DJu/QqSkJZf/F2tY/Yokx5cZ7ujAVPDPA
-         rL3g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="MoxSiwjz"
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-51c0cea8883so10605601cf.1
+        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 10:52:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787332185; x=1787936985; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=veZnyf/dfYhbTVP9YeELLr3c4PfKlTUdiQo55s2EN7I=;
-        b=rrPEhqvo0fFBadj7+ZkJlh9iOBHTQ1Dn/9R//IjfMy0vkbfiT6bwADsYzuhc/ekkbr
-         xjT5tsad+QZEwpfp7d2HW6UKHuuscGGkiXLKRjQW3dhNSmW9/HB4zTwDm8N7IUV6CuzK
-         CqVHoS2YYx2QjOzu69GhHcwBSz2WrQvfRZZ58zT6g658ghUNeV7VSjj7uU5uiNTy/GuM
-         tUKF3wFn+/LjzIScmEM13ePa87/iTYtC7ll74EbF+9n92Njqe84xNN8rTmBYawMAmLi+
-         F27XpCRDHWbBYh1JvMs0m1BNvVEVVujdHalyUavd4aYZ9QXsyGF8P0AES1GYqmWKSFvy
-         2Rsw==
+        d=cmpxchg.org; s=google; t=1787334723; x=1787939523; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=z4r9Jbt/bO7UeLYNwfXFrbJjchGvrclBSzHl6eH4LNA=;
+        b=MoxSiwjzzip8dSfzw97CKcJ2gBCYHMtPQvNLQVXkZd9ORlig1x6szzPG19rFI5v9Op
+         TCG6nT1nyYHrYk3H56E7q3a3kEgMVc/DcL2C9ckyogg3SRuB9QImLNpspXDGMGJLsOjG
+         rwOmN0+odKBdmSWZbNEfPfKO3iZQOhxRSdTJerpY9A3H7makdmNOViAYVgV7cPSknj2Y
+         +5DtVkO45mAqEaNAthJGTwa2Wj4g2LBIdhO2JFYz4ajdnBwdCQ3FYAF2aA/IdCROKit7
+         RzlBqyJ7f7eHAEbdPCEXy6i1rMzCHKmVnTEcw4/23FqlwNT1s8+bEMUjwsmey85OOHh0
+         gwNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787332185; x=1787936985;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=veZnyf/dfYhbTVP9YeELLr3c4PfKlTUdiQo55s2EN7I=;
-        b=hAtRSa1mazm9fd9vCd4UiO21qkPW1Sfe3EAmDKdC5zLf0XR1ghNg2BrrdP2MjMwqwI
-         2FdbC5OEv1ebWqn2hIirMQjxnVxC4jaU+oS2Y+5lwQ9P9bats87ysd9azpfMyjmcLJ8v
-         /5cN+nWJpIaPEYSSKMyWfZdkdgdg+SrDUPovohII9Qk95dESWY1aM40cHcZeAjGv6FrA
-         Hze43r15+gzUcTwJoBmhjjV/9SEp5XNcUJctpWfKXnv8zJP4D2gFju/D5zIiy4zpqlC9
-         RFGu7ISrHXFdE3JfxP+Ie1el5GUcG3omGQ/fF1uf1IKGG90hPKLrOtaZ8eCwey2NZKvP
-         PxNA==
-X-Forwarded-Encrypted: i=1; AHgh+RpurhyPhZ+UR7tuVbk2ZzS7cO6sIZ7wMXAsR3oQwEkQSxw4UJnuakM0zRn1jnkiOGZ6Q87SyuFI@vger.kernel.org
-X-Gm-Message-State: AFuF++kWaXsukxBxjz7QIZbYdh+Rk6kFyoRRZcUy+mwFvk5SfdrEuANI
-	/mL0vFGOtYt5wB61/FhOeC963GB5H88GMrMt/UttBWF1xMiy1n8uz07RQygtbx7Nx11GoODDGOk
-	a5hv3fY4H5ht/JBWv4UQCvN5FUVRe5/4=
-X-Gm-Gg: AR+sD12uC37kegxyj+ZJ75GnKP9qg7NKZEKoG8L3m30EfPEL964fLpqeh7E+j5Z1TI+
-	nmT7f65bUh3mSrUuTp/B8cjaM9mALURFJ+lDlJ4zqNQEgTyLA9bvFGFND2lPzJnhIi/X6ewqmF7
-	5gkKraahm5z92MAA/weCGk8gNCOmMSVRxB83GHuAFw+X2+ge7jrBwiZ9c4sfexp6R7yNGQFTkDj
-	o5O2/TrN6VcVRWsNGVPGUJUZtlvhNurZJOv1mJjo+AKrKQrCTHBsfnxl3oKKZKcFXJGjAe0+ts4
-	zbw0imHsYnvDPY3RuGfuSRYZqicZvevZPpq9NHlhCWZtEheFwYCwTw98j5Qu5owoIRk74y1Mvbj
-	y
-X-Received: by 2002:a05:6000:1acb:b0:47f:71a6:970e with SMTP id
- ffacd0b85a97d-482c0b55d3fmr11033799f8f.2.1787332184426; Fri, 21 Aug 2026
- 10:09:44 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1787334723; x=1787939523;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=z4r9Jbt/bO7UeLYNwfXFrbJjchGvrclBSzHl6eH4LNA=;
+        b=bhrs4LoiY+Ek8hQslfAO36zQY+0D7NYXsZ5FlyQVwrXddO3q4U9aPhATVCjtWkX/Bg
+         HzS+7Miflfj/fRBpskGBFyyfZGo3W2xbyoEc79zULbwwg+wUetbTgpwfAor3wSqNQx+y
+         dh1dp04nGGL2clw465fCgVu0WgOWWIE2EqMqtQeBHt8b2gl7VE/dwm3bh32HciKqbavA
+         Bvr0xhmyfnWNrKwBtdmbktRCwfDEAqiM9FWvBYNOZLUrrBQCr7yf2TVi+YrAIvYX1evb
+         XYPz16inXAeYyVjFzUgKXVqfy3LX464tvzJTnTL1u6UnfcqNwNzK29OCflblHfj1LOHH
+         QmFA==
+X-Forwarded-Encrypted: i=1; AHgh+RpUs7iJ/Z94h93h6uiGBchVzqccbv0On+w3IaovS3tkwQdm9eYBifVf+T8Nknf4F6s02tFRaFWi@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJ7TsRBFySwI1SR+Odgw+6q7D9fMeNmsM3Wzqg4UFKdUQOTxGW
+	vRcAJGLRfauZUKKxmWyzJFgTwu7BWToXjEotoBc+aw+Ix0IbM8x7SpthG9yE1bUrxss=
+X-Gm-Gg: AR+sD10IWu7mWwusB631IDpM3NZLMp2rGEX+hGyoj40henRkosKeVAGeKvgTaNWqYbo
+	+T/hl9/XmhHaJQ2UikQgjKKJdZvdiXNh/YVg/cp3e70LeApuZJLOV1UsZQen+hCZAvD3nteMEew
+	6hxADduUaRRNSFOlGbQdRXOXjmJn9tzZQ41ruVzql9KoF11rDUitsThWaVc4a0lrMfJEDagjQo/
+	/d2jmFyupV/xMN40IF33fgZ7gmw2p+I6H+fKmKWtondnde+NJiVnK8eyyLXo+AYQpYQ68g1D3zx
+	SUtDxuu3B7T6ZNfwS0LWRQpbNZa8OBMBSqcmElNDAloV85yv1CtawQnLgLnSdaxQYWvAPlEBx19
+	Smj7hAsHHhhrqeMSAEGgKhC+e3tHdMjy4F3rI/rOK1VH3zwprFQZkzfK6qH7z4r7h8g8XCH5yU+
+	YCB0cz1lPv/cQ3DtG50nM8V4jvYKJIonVOaUFBdw7zHg7fv8Y8X0qOIpKQs98p0Kb4pJJEDQ==
+X-Received: by 2002:a05:622a:8603:b0:52e:1e5:45d6 with SMTP id d75a77b69052e-52e01e57d27mr28511781cf.6.1787334723252;
+        Fri, 21 Aug 2026 10:52:03 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90c5f2906afsm67569666d6.25.2026.08.21.10.52.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 Aug 2026 10:52:02 -0700 (PDT)
+Date: Fri, 21 Aug 2026 13:51:58 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Yosry Ahmed <yosry@kernel.org>, Song Hu <husong@kylinos.cn>,
+	Shakeel Butt <shakeel.butt@linux.dev>, akpm@linux-foundation.org,
+	linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, nphamcs@gmail.com,
+	chengming.zhou@linux.dev, yunzhao@cloudflare.com
+Subject: Re: [PATCH] mm: memcg: use ratelimited stats flush in
+ obj_cgroup_may_zswap()
+Message-ID: <aoiQPrudvYZ76ZSD@cmpxchg.org>
+References: <20260817131843.45121-1-husong@kylinos.cn>
+ <1787017182353556.21.seg@mailgw.kylinos.cn>
+ <0689d805-45c6-4bb2-8eb2-f065457c45bf@kylinos.cn>
+ <CAO9r8zNxnVYpwrsuB1Ofcwf-Lks2e+DL1Ys9CXZ5jozBug_ybQ@mail.gmail.com>
+ <CAJnrk1bFq7J7K0=X67voeZVkAb0dmiLkqomuQ+VcXBLyP5hMVg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260806184254.3790858-3-nphamcs@gmail.com> <20260820041940.443214-1-kunwu.chan@linux.dev>
-In-Reply-To: <20260820041940.443214-1-kunwu.chan@linux.dev>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Fri, 21 Aug 2026 10:09:32 -0700
-X-Gm-Features: AcwNN1Ugn_Yvgh2BA7rl2-6Ryj849JsdlpzstMFnk3QEm_uy8ugTFY1jdBeldW4
-Message-ID: <CAKEwX=Mj7QVArjKVvKOKnuQoTmN1Wu=vXe4jkLshnzKoYF4XkA@mail.gmail.com>
-Subject: Re: [PATCH v3 02/11] mm, swap: support zswap and zeroswap as vswap backends
-To: Kunwu Chan <kunwu.chan@gmail.com>
-Cc: Kunwu Chan <kunwu.chan@linux.dev>, akpm@linux-foundation.org, chrisl@kernel.org, 
-	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org, 
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev, yosry@kernel.org, 
-	david@kernel.org, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
-	baoquan.he@linux.dev, baohua@kernel.org, youngjun.park@lge.com, 
-	chengming.zhou@linux.dev, ljs@kernel.org, liam@infradead.org, 
-	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, qi.zheng@linux.dev, 
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, 
-	riel@surriel.com, gourry@gourry.net, haowenchao22@gmail.com, corbet@lwn.net, 
-	kernel-team@meta.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1bFq7J7K0=X67voeZVkAb0dmiLkqomuQ+VcXBLyP5hMVg@mail.gmail.com>
 
-On Wed, Aug 19, 2026 at 9:21=E2=80=AFPM Kunwu Chan <kunwu.chan@gmail.com> w=
-rote:
->
-> On Thu,  6 Aug 2026 11:42:45 -0700 Nhat Pham <nphamcs@gmail.com> wrote:
->
-> Hi Nhat,
-> [...]
-> syzbot reported a NULL dereference in the v3 series:
->
->   __vtable_get()
->     vswap_to_phys()
->       swap_entry_backend_has_flag()
->
-> Seems like the underlying issue is introduced by this patch's
-> `virtual_table` lifetime management.
->
-> This patch adds:
->
-> > @@ -70,6 +70,7 @@ struct swap_cluster_info_dynamic {
-> >       struct swap_cluster_info ci;
-> >       unsigned int index;             /* for cluster_index() */
-> >       struct rcu_head rcu;
-> > +     atomic_long_t *virtual_table;   /* Backing pointers for vswap slo=
-ts */
-> >  };
->
-> [...]
->
-> while the read side does:
->
-> > +static inline unsigned long __vtable_get(struct swap_cluster_info_dyna=
-mic *ci_dyn,
-> > +                                      unsigned int off)
-> > +{
-> > +     VM_WARN_ON_ONCE(off >=3D SWAPFILE_CLUSTER);
-> > +     return atomic_long_read(&ci_dyn->virtual_table[off]);
-> > +}
-> > +
->
-> `atomic_long_read()` only makes the access atomic; it does not protect
-> the lifetime of the allocation being accessed.
->
-> [...]
->
-> > +static inline void vswap_cluster_free_vtable(struct swap_cluster_info =
-*ci)
-> > +{
-> > +     struct swap_cluster_info_dynamic *ci_dyn;
-> > +
->
-> and frees it synchronously:
->
-> > +     ci_dyn =3D container_of(ci, struct swap_cluster_info_dynamic, ci)=
-;
-> > +     kfree(ci_dyn->virtual_table);
-> > +     ci_dyn->virtual_table =3D NULL;
-> > +}
-> > +
->
-> The existing `ci->table` already has an RCU-aware lifetime: readers use
-> the corresponding RCU access rules, and the storage is not freed until
-> after the appropriate grace period. `virtual_table` introduced here does
-> not have an equivalent lifetime rule.
->
-> The syzbot crash shows that the current teardown/read-side synchronizatio=
-n
-> is insufficient: `__vtable_get()` can observe a torn-down
-> `virtual_table` and dereference NULL.
->
-> I don't think a NULL check in `__vtable_get()` alone would be the right
-> fix. The NULL dereference is a symptom of the missing lifetime guarantee.
-> `virtual_table` needs to remain valid for as long as a reader can reach
-> and access the corresponding dynamic cluster.
+On Thu, Aug 20, 2026 at 03:18:39PM -0700, Joanne Koong wrote:
+> On Tue, Aug 18, 2026 at 11:35 AM Yosry Ahmed <yosry@kernel.org> wrote:
+> >
+> > On Mon, Aug 17, 2026 at 6:53 PM Song Hu <husong@kylinos.cn> wrote:
+> > >
+> > >
+> > >
+> > > 在 2026/8/18 00:04, Shakeel Butt 写道:
+> > > > On Mon, Aug 17, 2026 at 09:18:43PM +0800, Song Hu wrote:
+> > > >> obj_cgroup_may_zswap() runs on every folio swapped out through
+> > > >> zswap.  For each ancestor with a non-max zswap.max, it flushes the
+> > > >> cgroup rstat hierarchy synchronously with force=true, which skips
+> > > >> the ratelimit inside __mem_cgroup_flush_stats().  In a swap storm
+> > > >> with zswap.max configured, a container takes the global rstat lock
+> > > >> on every swapped-out folio.
+> > > >
+> > > > Any reason you are limiting zswap through zswap.max?
+> > > >
+> > >
+> > > Mostly fairness on a shared pool: zswap.max_pool_percent is global
+> > > only, so on a multi-tenant host one cgroup's cold anonymous memory
+> > > can soak the pool and crowd out the others.  zswap.max is the only
+> > > per-cgroup control over that share; memory.max bounds the total
+> > > footprint, not the share of the pool.
+> > >
+> > > >>
+> > > >> zswap_shrinker_count() had the same pattern and switched to
+> > > >> mem_cgroup_flush_stats_ratelimited() in commit ea80da363a1f
+> > > >> ("mm/zswap: use ratelimited stats flush in zswap_shrinker_count()"),
+> > > >> where the same flush on the shrinker side showed up at 2.88% of
+> > > >> kernel cycles under osq_lock on a 96-core machine.
+> > > >>
+> > > >> Measured on a KVM guest with a swap storm under a cgroup with
+> > > >> zswap.max set: obj_cgroup_may_zswap() was entered 198,977 times
+> > > >> before the patch and 198,968 times after, while
+> > > >> __mem_cgroup_flush_stats() was entered 281,017 times before and
+> > > >> 80,445 times after.  The removed 200,572 flushes match the store
+> > > >> attempt count almost exactly; the remainder comes from other stats
+> > > >> readers in the swap path.
+> > > >
+> > > > This is a known issue. Using ratelimited interface also comes with a drawback
+> > > > that the kernel may react on stale information and the consequences might be
+> > > > unneeded oom-kills.
+> > > >
+> > > > There was orthogonal discussion on moving zswap limit enforcement away from
+> > > > rstat. Yosry, any updates on that?
+> >
+> > I am not actively looking into that, but Joanne was looking into
+> > AFAICT. I will respond to the thread there and CC Song as well.
+> >
+> 
+> For this zswap stat, I ran some benchmarks comparing 4 approaches
+> (switchable behind a runtime knob [1]):
+> a) rstat + forced flush       (baseline aka what the tree does today)
+> b) rstat + ratelimited         (Song's proposal)
+> c) hierarchical per-CPU   (Yosry's idea from [2])
+> d) page counters              (following what all the other memcg limits do)
+> 
+> For the setup, the benchmark creates a cgroup chain at depth X with
+> memory.max set to 1G on the leaf and memory.zswap.max set to 512M on
+> every level, and spins up 20 processes there that each allocate 100
+> MiB, fault it in, and touch every page four more times. With that 2000
+> MiB against the 1 GiB memory.max, it triggers reclaim continuously and
+> makes the swap traffic go through zswap. The machine I ran this on had
+> 80 CPUs.
+> 
+> I also ran it with no memory.zswap.max set (ie no reads triggered,
+> only update path runs) - as I understand it, this is the configuration
+> that is more often used in practice.
+> 
+> These are the results I saw:
+> 
+> kernel cpu time (in ns) per zswap store, zswap.max set
+>                       a)                     b)            c)                d)
+> depth 1        567,116          35,604     35,841     34,995
+> depth 2      1,082,007          35,507     37,803     36,209
+> depth 4      2,153,329          37,591     40,117     39,893
+> depth 8      4,211,692          34,963     41,070     44,211
+> depth 32    15,728,220       53,575     94,685     65,946
+> 
+> kernel cpu time (in ns) per zswap store, no zswap.max (update path only):
+>                         a)                  b)              c)            d)
+> depth 1         34,787          34,062     34,930     35,630
+> depth 2         34,913          35,061     36,404     36,360
+> depth 4         36,422          36,809     36,922     37,483
+> depth 8         42,177          34,440     36,679     40,793
+> depth 32        55,309          55,321     57,671     59,190
+> 
+> c) and d) are for the most part pretty comparable to b) without
+> introducing the staleness problem of b). Between c) and d), I think d)
+> ends up outperforming c) as the # of cpus and depth gets larger.
+> 
+> I'm seeing that all the other memory limits (eg memory.swap.max,
+> memory.max, etc) are already using page counters. Is there a reason
+> the zswap stat can't? If not, does it make sense for the zswap stat to
+> switch over to using page counters?
 
-Thanks for taking a look, Kunwu.
+Thanks for running these.
 
-Null-check by itself is not sufficient, correct. But I think a full
-dance of: rcu read section + spin_lock + checking for
-CLUSTER_FLAG_DEAD should suffice. As long as cluster is valid inside
-this rcu read section, we can get the lock. Once we have the lock, no
-one can free the cluster under us. and as long as the
-"CLUSTER_FLAG_DEAD" flag checks out under the lock, we can exit the
-rcu_read_section(), and proceed with reading the vtable. I already
-fixed this in (to-be-sent) v4.
+I used the vmstat counter on the assumption that setting zswap.max is
+rare and the counter is maintained anyway for memory.stat.
 
-Note that this is actually only required where we don't have any
-reference pin. One example is the one syzbot detected phys swap device
-backend flag check, because at do_swap_time() we don't actually have
-any reference pins. The PTE is not locked, so swap entry can gets
-released underneath us. But if we have a pin - for e.g if we own the
-swap cache folio, then we don't really need this dance.
+But I never actually tested it. The assumption was that surely walking
+ancestors on a quick if (max == PAGE_COUNTER_MAX) continue would be
+much cheaper than page counter atomics at every level. And so I'm
+surprised by your results.
+
+But that was the sole reason. If it doesn't stand up to benchmarking,
+no objection to streamlining the control to a standard implementation.
