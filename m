@@ -1,85 +1,86 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534C53DDB15
-	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 18:57:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 624473DDB09
+	for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 18:58:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787338674; cv=none; b=lBjme9uhVqev5W2QGJkhgA6HYjajq0iZ7Q8qXDI41gHIUyTh72IULB2zy599YqimV6qf1iJU8qULWfXKK8yl44yPkoEbKu9hVnwO7HIIa7oMxaHtGtTywmKeHKpOq5tQidjqq0DjMT5BKIQeWKgwygi8G88RzHcmIUlJ0xrY6z0=
+	t=1787338682; cv=none; b=Wu8FvmJzJIJzyatCmFoyo5qk3YGYE9xY02+7t9DSR+h57W6yMFtH8z4QpUZQ36zLhokXbGTx/adv2JLRzZbgZaG7iaag29KvMumuNUTiKsyZLxAcEQcPZ9EICSe2qjejQh96bb5PAO/tVYLGEeaMbaO0/jcPYisqojuGdWOtDB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787338674; c=relaxed/simple;
-	bh=S1+AOOCO+x8P/REZAh+d8jQSHgoqsnPS3Vwsod8b5LE=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=bGvFOEOKFgUf6yFWzgokyg7e0JxGlOTUUwyKYMrTvp/t+evWD73OGChUUj28Y/yijFGn/WRT1l+5YM3FIWlO3H42LZLYOsw8drEFhrOEHtPG0FjMrzZrMUGaygiQ+nzspkv0UJXMC69nXVus4uoENAi2UAvLdY27p5YNjFSxg7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BGseqZ7w; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=esLxkPs1; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1787338682; c=relaxed/simple;
+	bh=zN4YwsmDvSboy8SYR2KDjDfnHBrzsib8W3G8GkLnsrU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=CZI+xSMtanfMus3mYE/Lw4Jr8RZ7QsE2yDJEgou1DWXu/dack8ikfIknHBog34Hiuk0wfQMb6VyZuVR1vAdJwTFLJsUx1p3WUyaLg5X/H8j20lWqFIL7+wqbdUebDyAibYl/r+Rka/sxjiMmGFRNLvMhIBJxKb4vGOUhHXmgN0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iiNeq7Xo; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=UDqmU3tc; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BGseqZ7w";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="esLxkPs1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iiNeq7Xo";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="UDqmU3tc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787338672;
+	s=mimecast20190719; t=1787338679;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=g7+NxbGivt12D871ywA3vXdCtRMIy1dH4uv3I74lADM=;
-	b=BGseqZ7w3iKycabokBueXBw8eVrkCklVZHGm6OBy6DdmC9wBk0fkrbMfAGAkLCHo2hes0C
-	lbL0u7Fp0Z6lTNb1lN4k7e25DKfO4PmMMCE9Ofu8YdF42BQcvvKYxSFVY7b/IoongEw0dz
-	Ot7ZnDqUrNbT/cdyHuCeG7Ozfibu2AY=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cQingZcA8JY9invl4rfVqQH3WLMP3iU/vTSgNWsiPjc=;
+	b=iiNeq7Xo/llk7jQ/U08KjprLv/+KV7jdk/4Ajva1K4AZDPcayuv+7GsidDZr7U7ww0CXma
+	fXCaH0WYwXUWOTThc4kPOlns9LFRCX4swMwZ0E/zqUWu6ru2ZeghUJ8s8Q1YkbcKI7bWIx
+	AXQEvdHUMdLYYpeTouR6ft9NtqkfzlA=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-481-i_7PBJA9OSS69VYXsU-jUA-1; Fri, 21 Aug 2026 14:57:51 -0400
-X-MC-Unique: i_7PBJA9OSS69VYXsU-jUA-1
-X-Mimecast-MFC-AGG-ID: i_7PBJA9OSS69VYXsU-jUA_1787338670
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-936708f129aso112526585a.0
-        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 11:57:51 -0700 (PDT)
+ us-mta-618-dTmPUh4MOK2B0vBXsakq5g-1; Fri, 21 Aug 2026 14:57:53 -0400
+X-MC-Unique: dTmPUh4MOK2B0vBXsakq5g-1
+X-Mimecast-MFC-AGG-ID: dTmPUh4MOK2B0vBXsakq5g_1787338672
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-92ec3146553so239544685a.1
+        for <cgroups@vger.kernel.org>; Fri, 21 Aug 2026 11:57:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1787338670; x=1787943470; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=g7+NxbGivt12D871ywA3vXdCtRMIy1dH4uv3I74lADM=;
-        b=esLxkPs1Rx3z5LUsnZ9ZJF+OODcjOIv+cWb+hMZRtsTejwyNT7+5JRqFP0GWYnWT6i
-         sD6h5g1pnfGJZlgJ06FN7YRfhJ70BUBefr135zSE2MT2rvyZ4x9yYTDap4HCbBOZ0udK
-         PmUeKZFvOk31a5iili5i32Yfo+lW044mSTzFYY6YFmAQbjkR7faVFRhLKc/fjZCAi9lb
-         ulKSejZ+aMHAJhrGhT/u6tFlC8kBo2xogtHMFjd7zelSRQmZIoCkawDSx9t9UeIIFFWt
-         Cb+ypyhaP1DIpTw6mCX7p9SF14VfAB9E/9haOSJ3/4uR8tpNJWih+FmEFTJ22XdpQMCk
-         w8LA==
+        d=redhat.com; s=google; t=1787338672; x=1787943472; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=cQingZcA8JY9invl4rfVqQH3WLMP3iU/vTSgNWsiPjc=;
+        b=UDqmU3tcJpZtpwfjZKqEFCQi/5+ZVaE3mtudf8tbck29CC21rTcHwt7q/VL45p7JDn
+         FmWvd+E3k7OunbMvSP8nrogF9at02YHUeV9QddnvAIIuREGa82UuOWBVt6Zi2Mi5OPTj
+         uTVMcqEPBWAWfgwTqPpobqelkOMrnxTko2y+j3GMxtYD5HnZtwjdpYZCLW+Ws0QqRdBo
+         ICYKDpycMQ+fBm7Vvixva83uDSc8vTJi8VgfrMEXCC5KhnK4CJrqLqdWqGY79Oe3d7bC
+         q/EzRKKmqiMmGvJ5dx4ROuUVC/u3gdC9GxgECuCLZkXtIQfnrnKBsK4CcvJErs92MNZv
+         0IGQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787338670; x=1787943470;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=g7+NxbGivt12D871ywA3vXdCtRMIy1dH4uv3I74lADM=;
-        b=Wj+E81iU9u3vp9WCgITP8SF/WuG2Xs6dJfUVwbOnvI9OjpAKvzX2f0eYN+J4E3VJbV
-         00pzTEpn90Q74dim4UDmDAUJpItqOO181sEkEE1cB8MIM/KP/LIQ6GIg3yvRkaCQYDrI
-         TC5/ofkHxw2bmzf78bQhyUXdSfcGug/Rj3KGUf5+NCXGVExy+TMW4bftno59YTNn+9xy
-         +gWTsCAdwqywyEfA48DseAjwGXDYp9HJ0g0PXnRvRwug760G5fGoDe/z6XdPV/+NW8y8
-         zn3XdI6n04V+zDUL/zjpfp4VuXcllSaFqlSYAE0E5VgdqqFx7uy2Cep7Bw5sM9/n1Jeu
-         u8xg==
-X-Forwarded-Encrypted: i=1; AHgh+Rq4s5orxjkw9wCWx37HZ/d3gv2uzbnsj7qxQI+XMiYDXgMM5KWTHyx7Pba4HD9njsf1W3Ixe9MC@vger.kernel.org
-X-Gm-Message-State: AFuF++lnS1Y/80jaWPIfhz9FCcKlHJtzD6ydiXmrVGFgvRvFWiVuICWk
-	avMXgVmdISn4fndOT7T+iJZbGiG4NE9/8NuVkt7SX0Dw1FsGu55eeqivmlQVfjzahyqn4VmhW39
-	yLxMzt95RHURfPjcrfDTiJrZsGNmlDFunyyrZAdTaGMFKCHBQPLde1oldlDI=
-X-Gm-Gg: AR+sD101hCLfXSc6YSk0VYv6Gt/Z0L7y+Uyv2dL0OuB9xkn9WDxmE2nG3h4BUKLcl0V
-	V4195mzjQ5QE9CkzXwxCqpvi/kJdb1On8vHfGoboXsRF2HSChdwLo2YAYjVoGs+EhMDRP4ZVzrw
-	jPJE5xUcJRupqsDYE587hPgoSLkXqsxZY+BGcg5ljcMU4PH46pzvgxYNGqMGxHh/tGor0b7utEt
-	5Zv5AggYcwrMU/VeUX1F9xLY80ArPqGjtmZdJVY5+k2JTLiu8kkwLJXZowcRhdtPGoa6NweX1bV
-	EwgCVb8Y9sa18ni4tOk7nYx6USCOOz9pJndVzBX4z5DboCdcJ9VZiMhx+p8VsDvGQWTEKsOq6QH
-	zseOov2D2wnk/LU5BLNDXVzKMMB0A5OHl5lZ6mXHVZ+ZM
-X-Received: by 2002:a05:620a:6306:20b0:930:9585:e08e with SMTP id af79cd13be357-9373954280emr603127185a.10.1787338670388;
-        Fri, 21 Aug 2026 11:57:50 -0700 (PDT)
-X-Received: by 2002:a05:620a:6306:20b0:930:9585:e08e with SMTP id af79cd13be357-9373954280emr603122285a.10.1787338669904;
-        Fri, 21 Aug 2026 11:57:49 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1787338672; x=1787943472;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=cQingZcA8JY9invl4rfVqQH3WLMP3iU/vTSgNWsiPjc=;
+        b=bXiUQl0bi81ZVgS8qtPXhtdDidCz7Sc1GF9mYcN/DAUleQfiYSqQIkRA8o+GdEQ/eg
+         AjiC52LVC3aSn6jxz0LUm+5F7yZAhepvqxsxetnie2E8dXZL0I6fdmJehtPsPG/Fx/Mo
+         UGOXqhdPkF+VbyYf9QLzSvmztSuTpZUMnj7+fObPhT/wnEdtTs9BAT8J+Layg2X46kVe
+         DjAnihM3vEvwCntB/EjYOU/xq7t0ZSYZh1dXmeAHnfmIsjUhZQEDbihBY3VlNWOyuljH
+         hquvvUZCdN5Y3szkoP0sOdJaxV7hqEfD0AnJJCWopjTPq9OcDWy3jSD+lHp+avftMB9k
+         PYOA==
+X-Forwarded-Encrypted: i=1; AHgh+RqqysC97askfWQZgbOeC6xudw0T5R5PCcWkBQwdSPvKvPVxUrxgd3UYDIcgDsRlnb/z+/WnaKDZ@vger.kernel.org
+X-Gm-Message-State: AFuF++nq6rnWx5ragWAjMA6BQpg7WpSh2kCROI8K9w3Dl10nOulnBl42
+	SOb7KBMmDTCOrjFnyxmHd8Wkgx1dK8Q4Lk3m+zO/Lfocan51rra9Pj3taM+UjLMIVL4aqijj+WO
+	WK+xmVWxQB/6VVB4k592xm9PI69ex+YGCpfbOPi5/ghsOHln43aZ9naS8gkA=
+X-Gm-Gg: AR+sD12U7f5Q8VBmOAV0PNI8Kd9qk0yrO3TFlUdJuMB/41ERM5DDUhrmR1h+QnXzDR4
+	HEvMl7T4wXlc72DqGgnIW5yc+j27OuZjAv4ESW8+wzVDus/ZJuJaIyqECDYa4sG52MW8gIaNJi4
+	jj6b4m3hbTqCKNoHQ+AVRQoOQA5BZbY+w38QAOxbK2B2WFJzDtkwXtbCXTRdIq2iE0wrNNw8TRy
+	eAnh7pHKhjaEKTqnnHgPcDztEmkbLEDc1o0ZYDokFmdx8QrNbZWeAfZskAFINMj5Ct0xSrAypRH
+	oDaWiNm9Zts9QdIdHyT+NnAXjNwRYUoG1CJnPQ8IPVJweI2KB7Snz7Z3KpxJqVIR8Hx/RwGYITs
+	FsT5QPETj6prPQGxlIVKXZhJ5Kh9MhvVHmssN2g027c5d
+X-Received: by 2002:ae9:f115:0:b0:937:26c3:747f with SMTP id af79cd13be357-937468baea7mr97629385a.15.1787338672423;
+        Fri, 21 Aug 2026 11:57:52 -0700 (PDT)
+X-Received: by 2002:ae9:f115:0:b0:937:26c3:747f with SMTP id af79cd13be357-937468baea7mr97623985a.15.1787338671990;
+        Fri, 21 Aug 2026 11:57:51 -0700 (PDT)
 Received: from localhost (pool-100-17-17-231.bstnma.fios.verizon.net. [100.17.17.231])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-937205817f1sm658045085a.32.2026.08.21.11.57.48
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-937205998ddsm651971585a.44.2026.08.21.11.57.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Aug 2026 11:57:49 -0700 (PDT)
+        Fri, 21 Aug 2026 11:57:50 -0700 (PDT)
 From: Eric Chanudet <echanude@redhat.com>
-Subject: [PATCH 00/11] mm/cma: charge cma allocation to memcg using per
- area counters
-Date: Fri, 21 Aug 2026 14:56:52 -0400
-Message-Id: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
+Date: Fri, 21 Aug 2026 14:56:53 -0400
+Subject: [PATCH 01/11] mm/cma: drop const for struct page on release API
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -88,10 +89,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x2MQQqAIBAAvyJ7bsGENPtKdDBbbQ9WKEQg/T3pO
- DAzFQplpgKTqJDp5sLn0aDvBPjdHZGQt8agpNLSSI0+OUyUfMRMsckFtdV+HSgYa0do3ZUp8PM
- /5+V9P4pyRQdjAAAA
-X-Change-ID: 20260706-cma-memcg-regions-696cb5ef7998
+Message-Id: <20260821-cma-memcg-regions-v1-1-d21b165b8440@redhat.com>
+References: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
+In-Reply-To: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
 To: Andrew Morton <akpm@linux-foundation.org>, 
  David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
@@ -109,68 +109,71 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  Albert Esteve <aesteve@redhat.com>, Eric Chanudet <echanude@redhat.com>
 X-Mailer: b4 0.14.3
 
-CMA allocations are currently unaccounted for by cgroup memory
-controllers. As system resources, they should fall under memcg, but CMA
-areas partition the available space for different purposes and memcg
-doesn't have a good representation for that.
-
-Add a memory_cma_accounting cgroupfs option in preparation for the
-following new behavior. Make it disabled by default since it will
-account for CMA allocations in memcg which may affect existing systems.
-
-Provide CMA charge/uncharge functions to memcg that introduce a CMA area
-specific counter per CMA area. Charges are issued to memcg and to a page
-counter for the CMA area used. The allocation's folios are marked with
-the cgroup via commit_charge() (once for large folios, per-page for
-0-order ones) so they can be later uncharged correctly.
-
-Add the new memcg calls into the cma allocator under __cma_alloc_frozen,
-for both cma and hugetlb_cma allocations accounting.
-
-Finally register the per-area usage counters in the cgroupfs. Each CMA
-area creates a memory.cma.<area>.{current,max} pair for reporting and
-limitation for each area.
-
-Selftests and a vmtest script are added to this series for convenience.
-The tests are simple accounting and limit enforcement verification using
-the default reserved CMA area (cma=) and hugetlb_cma.
+The const is not honored. Both cma_release and cma_release_frozen do a
+struct page -> pfn -> struct page round-trip to convert the const struct
+page pointer to struct page and modify it:
+cma_release calls put_page_testzero() directly, which modifies the page;
+cma_release_frozen calls free_contig_frozen_range(pfn),
+__free_contig_frozen_range, then __free_contig_range_common which
+modifies the page as well.
 
 Signed-off-by: Eric Chanudet <echanude@redhat.com>
 ---
-Eric Chanudet (11):
-      mm/cma: drop const for struct page on release API
-      mm/cma: include linux/cma.h in cma.h
-      cgroup: add memory_cma_accounting mount option
-      memcg: add cma charge/uncharge functions for area counters
-      mm/cma: charge cma allocation to memcg per area counters
-      memcg: register per-area usage counters in cgroupfs
-      selftests: cgroup: add cma configs for cgroup selftest suite
-      selftests: cgroup: add memcg cma tests
-      selftests: cgroup: add a vmtest script for memcg
-      selftests: cgroup: add memcg hugetlb_cma tests
-      selftests: cgroup: amend vmtest-memcg to run the hugetlb cma tests
+ include/linux/cma.h | 4 ++--
+ mm/cma.c            | 6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
- Documentation/admin-guide/cgroup-v2.rst         |  35 +++
- include/linux/cgroup-defs.h                     |   5 +
- include/linux/cma.h                             |   4 +-
- include/linux/memcontrol.h                      |  19 ++
- kernel/cgroup/cgroup.c                          |  15 +-
- mm/cma.c                                        |  14 +-
- mm/cma.h                                        |   6 +
- mm/cma_debug.c                                  |   1 -
- mm/cma_sysfs.c                                  |   1 -
- mm/memcontrol.c                                 | 205 ++++++++++++
- tools/testing/selftests/cgroup/.gitignore       |   1 +
- tools/testing/selftests/cgroup/Makefile         |   2 +
- tools/testing/selftests/cgroup/config           |   5 +
- tools/testing/selftests/cgroup/test_cma_memcg.c | 402 ++++++++++++++++++++++++
- tools/testing/selftests/cgroup/vmtest-memcg.sh  | 197 ++++++++++++
- 15 files changed, 903 insertions(+), 9 deletions(-)
----
-base-commit: 98f21c54f99519329c18e2625b0ea6db14524d09
-change-id: 20260706-cma-memcg-regions-696cb5ef7998
+diff --git a/include/linux/cma.h b/include/linux/cma.h
+index 8555d38a97b1..16e2136421b7 100644
+--- a/include/linux/cma.h
++++ b/include/linux/cma.h
+@@ -49,12 +49,12 @@ extern int cma_init_reserved_mem(phys_addr_t base, phys_addr_t size,
+ 					struct cma **res_cma);
+ extern struct page *cma_alloc(struct cma *cma, unsigned long count, unsigned int align,
+ 			      bool no_warn);
+-extern bool cma_release(struct cma *cma, const struct page *pages, unsigned long count);
++extern bool cma_release(struct cma *cma, struct page *pages, unsigned long count);
+ 
+ struct page *cma_alloc_frozen(struct cma *cma, unsigned long count,
+ 		unsigned int align, bool no_warn);
+ struct page *cma_alloc_frozen_compound(struct cma *cma, unsigned int order);
+-bool cma_release_frozen(struct cma *cma, const struct page *pages,
++bool cma_release_frozen(struct cma *cma, struct page *pages,
+ 		unsigned long count);
+ 
+ extern int cma_for_each_area(int (*it)(struct cma *cma, void *data), void *data);
+diff --git a/mm/cma.c b/mm/cma.c
+index a13ce4999b39..e1820fb451e4 100644
+--- a/mm/cma.c
++++ b/mm/cma.c
+@@ -992,7 +992,7 @@ static struct cma_memrange *find_cma_memrange(struct cma *cma,
+ }
+ 
+ static void __cma_release_frozen(struct cma *cma, struct cma_memrange *cmr,
+-		const struct page *pages, unsigned long count)
++		struct page *pages, unsigned long count)
+ {
+ 	unsigned long pfn = page_to_pfn(pages);
+ 
+@@ -1014,7 +1014,7 @@ static void __cma_release_frozen(struct cma *cma, struct cma_memrange *cmr,
+  * It returns false when provided pages do not belong to contiguous area and
+  * true otherwise.
+  */
+-bool cma_release(struct cma *cma, const struct page *pages,
++bool cma_release(struct cma *cma, struct page *pages,
+ 		 unsigned long count)
+ {
+ 	struct cma_memrange *cmr;
+@@ -1037,7 +1037,7 @@ bool cma_release(struct cma *cma, const struct page *pages,
+ }
+ EXPORT_SYMBOL_GPL(cma_release);
+ 
+-bool cma_release_frozen(struct cma *cma, const struct page *pages,
++bool cma_release_frozen(struct cma *cma, struct page *pages,
+ 		unsigned long count)
+ {
+ 	struct cma_memrange *cmr;
 
-Best regards,
 -- 
-Eric Chanudet <echanude@redhat.com>
+2.53.0
 
