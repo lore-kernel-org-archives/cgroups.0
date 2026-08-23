@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62B3D38BF7F;
-	Sun, 23 Aug 2026 15:30:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADB0E3803C7;
+	Sun, 23 Aug 2026 15:30:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787499015; cv=none; b=ccS4ywHwehd3oLoqK6ujG/P0UH7YU1rvMi+69v4fujdDExI2RyjDxpXc7KcK2NcobgiWchY6meVZkSlDadIGHn1RUUoOzRk/Ee173GSQYnKG8Hc3FFA6o2n9FBCktjAT+aULnD44Ohv+3xAkkEQI6vWjDBWuSeLgpx1a9555X3o=
+	t=1787499022; cv=none; b=l9eHt1SjdAM+m7EPwBbt+xn8h4J8NvmtVfA3AjmY+9jMybEzTSodovfm4TpkG2kImzmD3OSVmCRlnTaxX5y2/goW1hpnNhhw6JfhSIR73G7qAXATv9QOdmAppcpZw+od2p1q5TIU4y/IRjLpPXt6GMB2MfrtcfTaRK1Gao7xXMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787499015; c=relaxed/simple;
-	bh=lZLXyzGI3BPPufsSN+QptIf0HcFnvcIkm/66+VsJYs8=;
+	s=arc-20240116; t=1787499022; c=relaxed/simple;
+	bh=4WVHel4pOdtiOTMyEKBQUpuaFKs5xSVxjmqmqLqy7vk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RqL9qsY2W1sh4HbZUto9s+LWXGeCkr/rN74YQmrgE4zprMGTC/+lDh7yJdRXpAPjdYLLPKgb2UcGSt8AjCh9bhLAwxeEPlxpbTFGBtlY4aQzMmZA4FKtI9LnTY4/sQTGzswji0ljjRBAnaucB2Qiz7zuKjusZMBD3bpgp3JctyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MT7emHK4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=eNPQ5Xo4YzumkoOoXZii3P0B4TjuOd/Bd9fox+vuIDxThr8S11rfuEPd2idbsD6bXM6eMW64E91XeB9uKmeOaxmxr4FMfjtwz7I7rWNiTUVS+nZBT9aHkEwrLrCo+/RnWzHKXXj4V/UuwnwsAnsf6Pih6WaCXYyfchfyC5YaHxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bkLp3g46; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MT7emHK4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35E711F00A3D;
-	Sun, 23 Aug 2026 15:30:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bkLp3g46"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4E5F1F000E9;
+	Sun, 23 Aug 2026 15:30:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787499009;
-	bh=QZpqZ1N6Q8eI05SmOt+SeVXizm3rCf2SBy2S4yV0Ajk=;
+	s=k20260515; t=1787499018;
+	bh=+2h2b9GZqMfRQ8idPJK/91YPZMHFjGy6V7Lv0AmS1VE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=MT7emHK4/o8bo/uYiquUF2bNOXCMkt/ntv6GyPL/3y6sqhQOs8joOq2kImmAkja04
-	 3k47GPz4NCjcPgyC7ACWsauTcUgKrcy8Gg3vQVnR3nCRvuQyszKP+4+PfnLC3pSFaP
-	 GBmo8U7zN+KzhPk2wiSNbTcczc7K57Byt4i0V4fxKmfrvR0KwgP/z4Gb0oAHqL6kUf
-	 rVxSvLAsu/3RiI/0N+kWYZdOZJeTPfy1JbNWwSl947uSTB+t1kBFXP13/ZIp5yKQBf
-	 lll5JmHLIDhPc1wRz4Dp7Oi+3Y+gg8WlfTI9JuBK75HtLiUgg4bOTnD/G4OEMi0ejK
-	 KI9rh/34WTcrw==
+	b=bkLp3g462ZQuOKw3UmciKrFB1EBx5ynpzxxKW1G/wfmMOaBkcFczqrT6Jp4A8fehN
+	 dEMd5QR7ZkbQIlgwnMoGz2MT5tdIN7/dh+/cjKbpYwai+V9tocU2aNMLN5/lzXrR/a
+	 sDaWUu1gGXmeHUTZG8HXoMn+trStGH4HgxPB1ZsnPpTGGpQjYA+aFOdEk0VE6zB2Un
+	 O2tJx5hdTngCJfK1MmUsT5uc9A3ASBsaNqorjeLamJR4XEPqcCZ7qZ115nTAXiu0Xg
+	 9Zu3YSG7rzaJ54HGUKEQfm5g/D6krMNy4zWsu1j1b0C9B0T8r2/A+6A77/P7pB3F5y
+	 SrQA7urefmyKw==
 From: Yu Kuai <yukuai@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	Tejun Heo <tj@kernel.org>,
@@ -42,9 +42,9 @@ Cc: Yu Kuai <yukuai@fygo.io>,
 	cgroups@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH v3 5/6] blk-cgroup: share blkg creation between lookup and config prep
-Date: Sun, 23 Aug 2026 23:29:24 +0800
-Message-ID: <20260823152926.1043863-6-yukuai@kernel.org>
+Subject: [RFC PATCH v3 6/6] blk-cgroup: make policy blkg creation nowait-safe
+Date: Sun, 23 Aug 2026 23:29:25 +0800
+Message-ID: <20260823152926.1043863-7-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260823152926.1043863-1-yukuai@kernel.org>
 References: <20260823152926.1043863-1-yukuai@kernel.org>
@@ -58,167 +58,104 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-blkg_conf_prep() open-codes the same parent walk and blkg creation that
-blkg_lookup_create() now performs. Give blkg_lookup_create() an out
-parameter for the created/found blkg and have it report whether the target
-blkg was created or found (returning the closest existing blkg in the out
-parameter on failure), then have blkg_conf_prep() use the helper and treat
-errors as config failures.
+bio_blkg() is called by blkcg policy paths when they need a queue-local
+blkg. Keep that allocation lazy instead of preparing every REQ_NOWAIT bio
+from submit_bio_noacct().
 
-This keeps the bio association path's closest-blkg fallback and removes the
-duplicate config path loop.
+If a policy first needs a blkg for a REQ_NOWAIT bio, use mutex_trylock()
+and GFP_ATOMIC so the lookup never sleeps. If the mutex cannot be acquired,
+look up and pin the closest existing blkg in the hierarchy under RCU. The
+creation helper provides the same fallback if atomic allocation fails, so
+valid policy I/O always gets a blkg without blocking.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- block/blk-cgroup.c | 77 +++++++++++++---------------------------------
- 1 file changed, 21 insertions(+), 56 deletions(-)
+ block/blk-cgroup.c | 35 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 33fba781017b..31afb433ab18 100644
+index 31afb433ab18..9895d6661070 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -473,34 +473,36 @@ static struct blkcg_gq *blkg_lookup_tryget(struct blkcg_gq *blkg)
+@@ -28,10 +28,11 @@
+ #include <linux/atomic.h>
+ #include <linux/ctype.h>
+ #include <linux/resume_user_mode.h>
+ #include <linux/psi.h>
+ #include <linux/part_stat.h>
++#include <linux/preempt.h>
+ #include "blk.h"
+ #include "blk-cgroup.h"
+ #include "blk-ioprio.h"
+ #include "blk-throttle.h"
  
+@@ -469,10 +470,24 @@ static struct blkcg_gq *blkg_lookup_tryget(struct blkcg_gq *blkg)
+ 	while (!blkg_tryget(blkg))
+ 		blkg = blkg->parent;
+ 	return blkg;
+ }
+ 
++static struct blkcg_gq *blkg_lookup_closest(struct blkcg *blkcg,
++					    struct request_queue *q)
++{
++	struct blkcg_gq *blkg;
++
++	rcu_read_lock();
++	while (!(blkg = blkg_lookup(blkcg, q)))
++		blkcg = blkcg_parent(blkcg);
++	blkg = blkg_lookup_tryget(blkg);
++	rcu_read_unlock();
++
++	return blkg;
++}
++
  /**
   * blkg_lookup_create - lookup blkg, try to create one if not there
   * @blkcg: blkcg of interest
   * @disk: gendisk of interest
-+ * @gfp_mask: allocation mask to use
-+ * @blkgp: out parameter for the target blkg, or closest blkg on failure
-  *
-  * Lookup blkg for the @blkcg - @disk pair.  If it doesn't exist, try to
-  * create one.  blkg creation is performed recursively from blkcg_root such
-  * that all non-root blkg's have access to the parent blkg.  This function
-  * must be called with @disk->queue->blkcg_mutex held.
-  *
-- * Returns the closest blkg with an extra reference acquired.  If
-- * blkg_create() fails while walking down from root, the returned blkg may
-- * belong to an ancestor of @blkcg.  This function never returns %NULL.
-+ * On success, *@blkgp points to the target blkg and 0 is returned.  On
-+ * failure, *@blkgp points to the closest blkg and the errno is returned.
-+ * The returned blkg does not have an extra reference acquired.
-  */
--static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
--		struct gendisk *disk)
-+static int blkg_lookup_create(struct blkcg *blkcg, struct gendisk *disk,
-+			      gfp_t gfp_mask, struct blkcg_gq **blkgp)
+  * @gfp_mask: allocation mask to use
+@@ -2066,11 +2081,10 @@ struct blkcg_gq *bio_blkg(struct bio *bio)
  {
- 	struct request_queue *q = disk->queue;
+ 	struct blkcg *blkcg = bio_blkcg(bio);
+ 	struct gendisk *disk;
+ 	struct request_queue *q;
  	struct blkcg_gq *blkg;
+-	int ret;
  
- 	lockdep_assert_held(&q->blkcg_mutex);
+ 	if (!blkcg || !bio->bi_bdev)
+ 		return NULL;
  
- 	rcu_read_lock();
- 	blkg = blkg_lookup(blkcg, q);
+ 	if (bio_flagged(bio, BIO_BLKG_REF))
+@@ -2087,10 +2101,29 @@ struct blkcg_gq *bio_blkg(struct bio *bio)
  	if (blkg) {
--		blkg = blkg_lookup_tryget(blkg);
-+		*blkgp = blkg;
- 		rcu_read_unlock();
--		return blkg;
-+		return 0;
- 	}
- 	rcu_read_unlock();
- 
- 	/*
- 	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
-@@ -523,20 +525,20 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
- 			pos = parent;
- 			parent = blkcg_parent(parent);
- 		}
- 		rcu_read_unlock();
- 
--		blkg = blkg_create(pos, disk, GFP_NOIO);
-+		blkg = blkg_create(pos, disk, gfp_mask);
- 		if (IS_ERR(blkg)) {
--			blkg = ret_blkg;
--			break;
-+			*blkgp = ret_blkg;
-+			return PTR_ERR(blkg);
-+		}
-+		if (pos == blkcg) {
-+			*blkgp = blkg;
-+			return 0;
- 		}
--		if (pos == blkcg)
--			break;
- 	}
--
--	return blkg_lookup_tryget(blkg);
- }
- 
- static void blkg_destroy(struct blkcg_gq *blkg)
- {
- 	struct blkcg *blkcg = blkg->blkcg;
-@@ -844,52 +846,14 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 	if (!blkcg_policy_enabled(q, pol)) {
- 		ret = -EOPNOTSUPP;
- 		goto fail_unlock;
- 	}
- 
--	rcu_read_lock();
--	blkg = blkg_lookup(blkcg, q);
--	rcu_read_unlock();
--	if (blkg)
--		goto success;
--
--	/*
--	 * Create blkgs walking down from blkcg_root to @blkcg, so that all
--	 * non-root blkgs have access to their parents.
--	 */
--	while (true) {
--		struct blkcg *pos = blkcg;
--		struct blkcg *parent;
--
--		parent = blkcg_parent(blkcg);
--		rcu_read_lock();
--		while (parent && !blkg_lookup(parent, q)) {
--			pos = parent;
--			parent = blkcg_parent(parent);
--		}
--		rcu_read_unlock();
--
--		if (!blkcg_policy_enabled(q, pol)) {
--			ret = -EOPNOTSUPP;
--			goto fail_unlock;
--		}
--
--		rcu_read_lock();
--		blkg = blkg_lookup(pos, q);
--		rcu_read_unlock();
--		if (!blkg) {
--			blkg = blkg_create(pos, disk, GFP_NOIO);
--			if (IS_ERR(blkg)) {
--				ret = PTR_ERR(blkg);
--				goto fail_unlock;
--			}
--		}
-+	ret = blkg_lookup_create(blkcg, disk, GFP_NOIO, &blkg);
-+	if (ret)
-+		goto fail_unlock;
- 
--		if (pos == blkcg)
--			goto success;
--	}
--success:
- 	ctx->blkg = blkg;
- 	return 0;
- 
- fail_unlock:
- 	mutex_unlock(&q->blkcg_mutex);
-@@ -2124,11 +2088,12 @@ struct blkcg_gq *bio_blkg(struct bio *bio)
  		bio_set_blkg_ref(bio, blkg);
  		return blkg;
  	}
  
++	if (bio->bi_opf & REQ_NOWAIT) {
++		/*
++		 * Nowait callers must not sleep on the mutex nor allocate with
++		 * sleeping GFPs.  Trylock the mutex and create the missing blkg
++		 * atomically.  If the mutex cannot be acquired, skip allocation
++		 * and pin the closest existing blkg instead.  blkg_lookup_create()
++		 * provides the same fallback if allocation fails.
++		 */
++		if (!preemptible() || !mutex_trylock(&q->blkcg_mutex)) {
++			blkg = blkg_lookup_closest(blkcg, q);
++		} else {
++			blkg_lookup_create(blkcg, disk, GFP_ATOMIC, &blkg);
++			blkg = blkg_lookup_tryget(blkg);
++			mutex_unlock(&q->blkcg_mutex);
++		}
++		bio_set_blkg_ref(bio, blkg);
++		return blkg;
++	}
++
  	mutex_lock(&q->blkcg_mutex);
--	blkg = blkg_lookup_create(blkcg, disk);
-+	blkg_lookup_create(blkcg, disk, GFP_NOIO, &blkg);
-+	blkg = blkg_lookup_tryget(blkg);
+ 	blkg_lookup_create(blkcg, disk, GFP_NOIO, &blkg);
+ 	blkg = blkg_lookup_tryget(blkg);
  	mutex_unlock(&q->blkcg_mutex);
  
- 	bio_set_blkg_ref(bio, blkg);
- 	return blkg;
- }
 -- 
 2.51.0
 
