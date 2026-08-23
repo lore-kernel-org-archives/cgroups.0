@@ -1,220 +1,158 @@
-Received: from mta0.migadu.com (out-227.mta0.migadu.com [91.218.175.227])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD3223911A2
-	for <cgroups@vger.kernel.org>; Sun, 23 Aug 2026 14:52:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DA662D322E;
+	Sun, 23 Aug 2026 15:29:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787496756; cv=none; b=NWsr2MN7Pmnt62rZTHVbF3gkt9teBl8f6sj7oRzAaantvRTYvtr/YqVnPwzNGJtRxw3CrwKqZcQfz9uqjmNNc3/vJLHnIaUl9hxgMM0ppn2vgJ9G7ymYjDHSgXusGY5p16sxu5vTjLCeeb7P6tM6DyegnAw8MVl2zoJnMgWwXxs=
+	t=1787498979; cv=none; b=bYWKTcpSS7kUq5/2fQVRqztpeqtB94HxJxhf54RIs8GV8jh+dQXyUmpDdRislvnukUDiBF8GJIHQ2iVCLt8vdwIU/jqdlHxZF+c8jBU+aSl9ZTZvMvPExfLrZeIt6JL274tWBeKCa7KBVdfRLuowVyPbC+YrGtDXTbEfqEv8LN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787496756; c=relaxed/simple;
-	bh=9oZ/GVF5ZnkfYq+PeS7hkUQ12oaf6Pk7QpDnKjKc234=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tD6iaihJ4LUUkWeiCuH3CDHCkGr6GJH784YiOzEPULo4UFr0RhVxYDCKFEfC/tCKM600D5et5gc2SCmR8umUY0goSoA9cO+pxwxbo8TXiB8FCDn8iF8b5kocKaoRv2tAD9RzStVR3/WBswXbavwIje0lbyGcF3EhfBkANQHSfHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PmsjAZCj; arc=none smtp.client-ip=91.218.175.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787498979; c=relaxed/simple;
+	bh=34+mb1KkGdUdZcVmTZk/4A0ySjkpKEi5Sa6JYo2pJGc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=map+ftFe/D1m2/Y62oebVYSFbRetdlUijmD2ecoa3xkjlNebm7EcvJJVDadlP94Lty+tmJ7Hjp+ElRAjW6qY1zBoY6mEwzzlTSmQEX5jZdP+RB/DXqm7vZwBsEq08kGhZbs1mFWJRKrgSYlVgyVeX3bm09C5Q69eRrybShPfsfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oyPWA5yY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PmsjAZCj"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=9oZ/GVF5ZnkfYq+PeS7hkUQ12oaf6Pk7QpDnKjKc234=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787496751; v=1; x=1788101551;
- b=PmsjAZCjeEhYTAYSW2SvlvqBwCZGLzX2/Kh+CuZoJALZDw1xA9jAe6gvXCii2v05AS5+m2FJ
- fvQgWxfkyUDbzzZWzQ/xp3xuaucDs9yXGGSVVfY9TivLXquCPTycWYi+u1HHMp3BbsXYU6J3e9g
- f6R3oE1rhrpBhDIle51TRLHc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: from three-body (240e:398:90:76f0:87b1:670e:21af:efaf)
-	by smtp.migadu.com with ESMTPS id 2aef8cd3afc152ee;
-	Sun, 23 Aug 2026 14:52:21 +0000
-X-Mizu-Trace-ID: 2aef8cd3afc152ee
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 24 Aug 2026 22:51:51 +0800
-From: Chen Yu <chen.yu@linux.dev>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Szabina Korbai <szkorbai@linux.ibm.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>, mingo@kernel.org,
-	longman@redhat.com, chenridong@huaweicloud.com,
-	juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
-	mgorman@suse.de, vschneid@redhat.com, tj@kernel.org,
-	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jstultz@google.com,
-	qyousef@layalina.io, euan@linux.ibm.com, huschle@linux.ibm.com,
-	yu.c.chen@intel.com, tim.c.chen@intel.com, philip.li@intel.com
-Subject: Re: [PATCH v3 0/7] sched: Flatten the pick
-Message-ID: <aoxah90s0bQ4tcUW@three-body>
-References: <20260605105513.354837583@infradead.org>
- <fecf5eb215b4b86bec11ca47eb6b5b17f5e0fea5.camel@linux.ibm.com>
- <d690a668-7bb2-4cd1-a229-295e556d4f28@amd.com>
- <ef9f077a6faafc747b3e144400dd3f5ad10e8e0a.camel@linux.ibm.com>
- <20260818091649.GC1247881@noisy.programming.kicks-ass.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oyPWA5yY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D8EF1F000E9;
+	Sun, 23 Aug 2026 15:29:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787498978;
+	bh=gJTlw9pG0iF77MWoDrbfyd9wd1A8GKfOoxlkht66Vv8=;
+	h=From:To:Cc:Subject:Date;
+	b=oyPWA5yYEsdMkuhrmrnedKtFDPvFXkjP2uCU8DuOnb3FBz0+0c9VNiVuTzdMMRs/7
+	 dpTXVwB2zKrzybq/XQ2SySR3duHMdewyYQZCDTKUA/KNw6UzN2Qr5OYwmJWDiF9ebT
+	 RArh4zDn6EjQT0MiO3nbYNEh3Em3YWfNYINZ36Gq0RVSQveDlKdBQltgPJ/hB6jzMK
+	 Eth3wIdRxiwWYLzFQgsjxy4cdh7Wg2TmBtiYbBpKYms95qFZdAq//L4pS5f4jOpY+l
+	 s13BsAUnU6r2hrZKY5+iLXLiLyuyz6ywoMclReh5zmiENJ3/xeALoI9jXbWFgEU+kA
+	 uZMVle9yAWzeg==
+From: Yu Kuai <yukuai@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	Tejun Heo <tj@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Clark Williams <clrkwllms@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>
+Cc: Yu Kuai <yukuai@fygo.io>,
+	Christoph Hellwig <hch@lst.de>,
+	Nilay Shroff <nilay@linux.ibm.com>,
+	Tao Cui <cui.tao@linux.dev>,
+	Hannes Reinecke <hare@suse.de>,
+	linux-block@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-rt-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: [RFC PATCH v3 0/6] blk-cgroup: protect blkgs with blkcg_mutex
+Date: Sun, 23 Aug 2026 23:29:19 +0800
+Message-ID: <20260823152926.1043863-1-yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260818091649.GC1247881@noisy.programming.kicks-ass.net>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Aug 18, 2026 at 11:16:49AM +0200, Peter Zijlstra wrote:
-> > > 
-> > > Are you using tip:sched/core at commit 68e3748781 ("sched/fair: Fix
-> > > flat
-> > > hierarchy") for the flat_cg numbers or did you checkout at
-> > > 85570f10a4c6
-> > > ("sched/eevdf: Move to a single runqueue")?
-> > > 
-> > > There are a couple fixes for vruntime update and Vincent's
-> > > optimizations
-> > > for preemption bits which might make a difference to the overall
-> > > results.
-> > 
-> > 
-> > Hi Prateek,
-> > 
-> > thank you, that's a good call. I did checkout at "Move to a single
-> > runqueue". Let me try it with the fix included, see how the results are
-> > affected.
-> 
-> I've not yet managed to digest your various benchmark results, but also
-> double check that patch 6/7 from this series is not to 'blame' for the
-> some of the changes.
-> 
-> The 0day robot fingered that patch for at least one issue.
-> 
-> In that case the benchmark threads ended up 'heavier' than before, which
-> resulted in less preemptions. Probably ksoftirqd getting ran less and
-> causing a regression in network throughput for that thing.
-> 
+From: Yu Kuai <yukuai@fygo.io>
 
-The 0day' regression was triggered by running netperf/netserver using loopback,
-so ksoftirqd was not really running very frequently IMO.
+This RFC moves queue-local blkg topology synchronization from
+q->queue_lock to q->blkcg_mutex.  It is based on the preparatory series
+which stores a queue-independent blkcg in each bio and uses a
+request_queue-owned rhashtable for blkg lookup.
 
-> I did suggest trying to change the slice of ksoftirqd down, such that it
-> might be ran more readily, but I'm not sure that ever got tried.
+q->queue_lock also protects block core state and is taken from atomic
+contexts.  Keeping blkg creation, destruction, configuration and policy
+lifecycle operations under that lock prevents those paths from using
+sleepable operations and couples blkcg policy state to unrelated queue
+locking.
 
-The 0day regression was triggered by running netperf/netserver over loopback,
-so ksoftirqd was not running very frequently IIUC.
+Before switching locks, patch 1 moves pd_free_fn() calls outside spinlocks;
+iocost's free callback can wait for an hrtimer callback on PREEMPT_RT.
+Patch 2 gives throttle runtime state a private spinlock and shuts down its
+timers before freeing their state.  Patch 3 then moves blkg topology and
+policy synchronization to blkcg_mutex while retaining an RCU fast path for
+existing-blkg I/O.  Patches 4 and 5 move allocation into blkg_create() and
+share hierarchy creation with the configuration path.  Patch 6 keeps blkg
+creation lazy for policy users and handles REQ_NOWAIT without sleeping,
+falling back to the closest existing blkg when creation cannot proceed.
 
-I borrowed a similar machine(no-SMT, every 4 Cores share L2, 192 Cores) as 0day used.
-I asked AI to generate a simple test script based on 0day's reproducer
-(attached at the end of this email), and successfully reproduced the regression.
+A git branch is available at:
+  https://git.kernel.org/pub/scm/linux/kernel/git/yukuai/linux.git/log/?h=block-7.3-blkcg_mutex-v3
 
-TL;DR,
-The decision made by wake_affine_weight() seems to be affected by the increased
-weight of the wakee under concur mode. As a result, wake_affine_weight() became less
-likely to select this_cpu. This reduced preference for this_cpu leads to a higher
-L2 miss rate on this platform, and consequently lower throughput.
+Changes since RFC v2:
 
-Test summary:
+  - Base the series on the bio/blkcg preparatory series instead of moving
+    blkg association into submit_bio().  Drop old patch 1 accordingly.
+  - Drop old patch 4 because the preparatory series replaces the per-blkcg
+    radix tree with a request_queue rhashtable, so radix-tree preloading no
+    longer exists.
+  - Drop old patch 7 because bios now retain their blkcg independently and
+    BFQ can use the blkg already pinned by the bio.
+  - Add patch 1 to detach policy data under the existing spinlocks but call
+    pd_free_fn() after dropping them.  Keep this fix separate so the mutex
+    conversion does not redesign generic policy teardown.
+  - In patch 2, shut down all per-group and top-level throttle timers
+    before freeing throtl_data.  Use timer_shutdown_sync() for final
+    teardown so a concurrent callback cannot rearm a timer after shutdown.
+  - In patch 3, keep bio_blkg() on an RCU fast path when the target blkg
+    already exists, taking blkcg_mutex only when hierarchy creation is
+    needed.
+  - In patch 3, hold blkcg_mutex for the complete blkg_destroy_all() walk
+    and remove the spinlock-era batch counter and cond_resched() restart.
+  - Adapt patches 4 and 5 to the rhashtable-based lookup and make
+    blkg_lookup_create() return the closest existing blkg through an out
+    parameter without acquiring a reference.
+  - Rewrite old patch 8 as patch 6.  Keep allocation lazy in bio_blkg()
+    instead of preparing every REQ_NOWAIT bio in submit_bio_noacct().  Use
+    mutex_trylock() and GFP_ATOMIC when creation is possible; otherwise
+    lookup and pin the closest existing blkg under RCU.  Valid policy I/O
+    therefore does not fail with BLK_STS_AGAIN or receive a NULL blkg.
+  - Do not add nowait-specific changes to blk-throttle, blk-iocost or
+    blk-iolatency because bio_blkg() retains its non-NULL result for valid
+    policy I/O.
 
-| Config | Throughput (Mbps) | **L2 miss%** | **LLC miss%** |
-| smp + WA_WEIGHT | **470249** | **19.37%** | 60.08% |
-| smp + NO_WA_WEIGHT | 305360 | 32.67% | 60.46% |
-| concur + WA_WEIGHT | 338770 | 31.45% | 62.85% |
-| concur + NO_WA_WEIGHT | 259358 | 36.24% | 61.95% |
+Changes since RFC v1:
 
-We can see if WA_WEIGHT is disabled in smp mode, the performance drops to concur. One
-possible reason is that task_h_load(p) returns a very small value in smp mode(just the
-issue that concur wants to fix), whereas it returns a "normal" value in concur mode.
+  - Rework the series on top of "associate blkg in submit_bio instead of
+    bio_set_dev".
+  - Drop the per-subsystem bio_set_dev() workarounds: NVMe multipath
+    retarget (v1 patch 1), dm-thin (v1 patch 2), dm-snapshot (v1 patch 3),
+    bcache (v1 patch 8), dm-bufio (v1 patch 9), dm-pcache (v1 patch 10) and
+    DM NOWAIT remaps (v1 patch 12).  They are no longer needed because
+    bio_set_dev() no longer associates a blkg.
+  - Drop atomic bio allocation: bio_alloc_atomic() (v1 patch 5) and
+    non-blocking bio allocation with a bdev (v1 patch 7).  The
+    nd_virtio/ocfs2 callers are handled separately.
+  - Drop the nowait-bio-allocation association helpers (v1 patches 6 and
+    11).  Nowait is handled once at submission by failing the bio.
+  - Keep and adapt the blk-throttle private runtime lock (v1 patch 4), the
+    blkcg_mutex conversion (v1 patch 14), radix preload removal (v1 patch
+    15), blkg_create() allocation (v1 patch 16), shared creation (v1 patch
+    17) and the BFQ locked-cgroup-update fix (v1 patch 13).
 
-In smp mode, the extremly small value returned by task_h_load(p) can be effectively ignored
-in the comparison in wake_affine_weight(). As a result, the condition for returning this_cpu
-becomes:
+Previous versions:
+  RFC v2:
+    https://lore.kernel.org/r/20260724123037.3004560-1-yukuai@kernel.org
+  RFC v1:
+    https://lore.kernel.org/r/20260704195124.1375075-1-yukuai@kernel.org
 
-cpu_load(cpu_rq(this_cpu)) * 100 < cpu_load(cpu_rq(prev_cpu) * 108
+Yu Kuai (6):
+  blk-cgroup: call pd_free_fn() outside spinlocks
+  blk-throttle: protect throttle state with td lock
+  blk-cgroup: protect blkgs with blkcg_mutex
+  blk-cgroup: allocate blkgs in blkg_create
+  blk-cgroup: share blkg creation between lookup and config prep
+  blk-cgroup: make policy blkg creation nowait-safe
 
-As a result, this_cpu has a higher chance of being selected in smp mode. In concur mode,
-task_h_load(p) is on par with cpu_load(), so it cannot be simply ignored and provides a fairer
-basis for choosing between this_cpu and prev_cpu. Since netperf/netserver is a sync wakeup, it
-prefers to be co-located on the same CPU/L2 domain for better L2 cache locality.
-
-I'm not sure if this is the expected behavior before I further digging into the details,
-a hack patch could restore part of the performance, because it increases the ratio to
-return this_cpu:
-
-thanks,
-Chenyu
-
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 6d881e530f89..8bff8b6698a9 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -8385,6 +8385,7 @@ wake_affine_weight(struct sched_domain *sd, struct task_struct *p,
-        unsigned long task_load;
- 
-        this_eff_load = cpu_load(cpu_rq(this_cpu));
-+       task_load = task_h_load(p);
- 
-        if (sync) {
-                unsigned long current_load = task_h_load(current);
-@@ -8392,11 +8393,13 @@ wake_affine_weight(struct sched_domain *sd, struct task_struct *p,
-                if (current_load > this_eff_load)
-                        return this_cpu;
- 
-+               /* replace current load with wakee load does no harm */
-+               if (sched_feat(WA_SYNC_WEIGHT) && current_load >= task_load)
-+                       return this_cpu;
-+
-                this_eff_load -= current_load;
-        }
- 
--       task_load = task_h_load(p);
--
-        this_eff_load += task_load;
-        if (sched_feat(WA_BIAS))
-                this_eff_load *= 100;
-diff --git a/kernel/sched/features.h b/kernel/sched/features.h
-index 8f0dee8fc475..99fabe53fb22 100644
---- a/kernel/sched/features.h
-+++ b/kernel/sched/features.h
-@@ -129,6 +129,7 @@ SCHED_FEAT(ATTACH_AGE_LOAD, true)
- SCHED_FEAT(WA_IDLE, true)
- SCHED_FEAT(WA_WEIGHT, true)
- SCHED_FEAT(WA_BIAS, true)
-+SCHED_FEAT(WA_SYNC_WEIGHT, true)
+ block/bfq-cgroup.c    |  10 +-
+ block/blk-cgroup.c    | 270 ++++++++++++++++++------------------------
+ block/blk-cgroup.h    |  11 +-
+ block/blk-iocost.c    |   8 +-
+ block/blk-iolatency.c |   7 +-
+ block/blk-throttle.c  |  93 +++++++++++----
+ 6 files changed, 207 insertions(+), 192 deletions(-)
 
 
-test command:
-
-NR=$(( $(nproc) * 2 ))
-run() {
-local mode=$1 waw=$2 tag=$3
-echo $mode | sudo -n tee /sys/kernel/debug/sched/cgroup_mode >/dev/null
-echo $waw  | sudo -n tee /sys/kernel/debug/sched/features    >/dev/null
-sudo -n pkill -x netserver; sleep 1
-netserver -4 >/dev/null 2>&1; sleep 1
-rm -f /tmp/m4.$tag
-for i in $(seq $NR); do
-netperf -4 -H 127.0.0.1 -t TCP_MAERTS -l 70 -P 0 >> /tmp/m4.$tag 
-2>/dev/null &
-done
-sleep 15
-sudo -n ./tools/perf/perf stat -a \
--e 
-l2_request.hit,l2_request.miss,longest_lat_cache.reference,longest_lat_cache.miss 
-\
--x, -o /tmp/p4.$tag -- sleep 20
-wait
-} >/dev/null 2>&1
-run smp    WA_WEIGHT    smp_waw
-run smp    NO_WA_WEIGHT smp_nowaw
-run concur WA_WEIGHT    con_waw
-run concur NO_WA_WEIGHT con_nowaw
-echo WA_WEIGHT | sudo -n tee /sys/kernel/debug/sched/features >/dev/null
-
-
-printf "%-12s %10s %8s %10s %10s\n" CONFIG Mbps streams L2miss% LLCmiss%
-for t in smp_waw smp_nowaw con_waw con_nowaw; do
-   read TP NS < <(awk '{s+=$NF;n++} END{print s, n}' /tmp/m4.$t)
-   awk -F, -v t=$t -v tp=$TP -v ns=$NS '
-     $3=="l2_request.hit"{h=$1} $3=="l2_request.miss"{m=$1}
-     $3=="longest_lat_cache.reference"{r=$1} 
-$3=="longest_lat_cache.miss"{lm=$1}
-     END{printf "%-12s %10.0f %8d %9.2f%% %9.2f%%\n", t, tp, ns, 
-100*m/(h+m), 100*lm/r}' /tmp/p4.$t
-done
+base-commit: 81a5d989c04055860a66923e41151fd7faf4c295
+-- 
+2.51.0
