@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7997D43B3C6;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 839F143B3D5;
 	Mon, 24 Aug 2026 15:26:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787585192; cv=none; b=Bsvj/JIh3YlEbLNKuU87kwPwauGONchBevJXOm2T8YNO1MuiSR2323b7w0upKVtTNAhjrdNJtWILcEPbNRwEI+53EorUiJtoq60jZ1Tsm3RXfj7Oa0YlBUg62YZXI/JZMY3TErSnmDIuH4ez3mC9WFzoKTakOLFa5V4Frt3nBSE=
+	t=1787585192; cv=none; b=pPCS8Y31Htk7WaJ4zTMuCKhdb2l6rQi5HezOZb3NfIb7t3MDvX6zGKbYBU17XNEfE/6d/ATfXmtHndm7xuQtPA9NySvTnkZDGW7tbDyqvRxfbu/4Wd506HQTg+ORtAw/DX284JVi+UdXwtCNJFH7KMYvhbHq3wvphxeaD8fh81w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787585192; c=relaxed/simple;
-	bh=dpmYkQOyU/63g41Wz5LkJjXAI/RubSJlPh6+4gkd8v8=;
+	bh=mQEI7l7Cq0I+IgVoWLBWri2Jyk4zZGhg0P6mQGe2AKU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=byW+XD7NzOnjtiikvnkvpjwql8QECr/G8hfWRfXR09dmUlcS9XsZMHeRtaX1fU8l9J+QPRa3W5eWu6iMiENSLErh2E3LstIhzRuIK6oXPmWrmyY6GyKTK3ncHOtcbajuPY5ZZaWatZ3MgYXF6yHriBTeIhJ8bs/h59mfrrbL3x8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fFwWL5qy; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=sU5dq4+ZidmRbNT0cHplUsCgbKciAAyQnjwf1xfxRRSRZuRx1eTAVXzpMAJhEnDWIgPdezUd49TI+cEJXHksTz7CjggctJ2jcv+fuYefuU4V2Re+bha1PhcraA1lUdM1v2QJIJpMTCvJ5YYXXiTGSMmI8kzmWw3twETFYnaJM0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ht9i7wUn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fFwWL5qy"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 10ED8C32782;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ht9i7wUn"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 25F9EC4AF0C;
 	Mon, 24 Aug 2026 15:26:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1787585192;
-	bh=dpmYkQOyU/63g41Wz5LkJjXAI/RubSJlPh6+4gkd8v8=;
+	bh=mQEI7l7Cq0I+IgVoWLBWri2Jyk4zZGhg0P6mQGe2AKU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=fFwWL5qyjQ2sDGsOcuVqWIWL9cnJGxjGq2x4vlVELteMSRpd64+DYvDELQFUluY7P
-	 kfyY1wT8crg8KgYYtRNb5n8wa/th532Ddbn0aH9a8XyVQHa2e45LCVZd393H+MaLJl
-	 jKRyn9tl+qjRNdQQitULSxbdsUxg1fimdWx20Yv9ggW97xO8+vTJ/+vG4e5xKuSGC1
-	 /a1KpUCxexeWjJ/i+7g2fJfrxp/zRs7ijyGy58A79CBhsxX1emJVmbfUiLkPh46is5
-	 YcujKuMTxFLFz3TKjOWndbvhN10rXrSDfuEKZqRhFIaUPjpSXIbBxr3GfZQA/aEQWY
-	 rgoE5l4oXUDEA==
+	b=ht9i7wUnH8etcN27Ts3xRBEhfGWk8yxmhu1zyHJW9LGSYqurglmDx8RwXHYg4KJFf
+	 z2KHduPXoaB8FF58xtffkDV1Q0a7vqzxq36ZEfYc+QXsNtqN7lQ7ABSX6wFPZO1tAJ
+	 o5eup5wnjtD8lV8KR1D6BVFAvtr1M1Bh2Jgze/iFvslNi89UlZ7BC6e7/edm6lHcug
+	 2CzMV0jWn8YASfIYNXOdprkU1mO8kpnbymPbvpm6KbCVfgJ86Eir1I0kNEjCYMJY49
+	 MOJc2d3uo0hA3tKN9VukXYgV2Vjy0OFzE6PP4BVk04XsGJMoUvu3lIOLzjkEubcHJr
+	 c/Syri+mFVWfw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F139BC61CE3;
-	Mon, 24 Aug 2026 15:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11DF4C61DB6;
+	Mon, 24 Aug 2026 15:26:32 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Mon, 24 Aug 2026 23:26:31 +0800
-Subject: [PATCH v2 4/6] mm/mglru: move max_seq read into walk_update_folio
+Date: Mon, 24 Aug 2026 23:26:32 +0800
+Subject: [PATCH v2 5/6] mm/mglru: use explicit tier range in
+ read_ctrl_pos()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -40,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260824-mglru-flags-cleanup-v2-4-0104132114ae@tencent.com>
+Message-Id: <20260824-mglru-flags-cleanup-v2-5-0104132114ae@tencent.com>
 References: <20260824-mglru-flags-cleanup-v2-0-0104132114ae@tencent.com>
 In-Reply-To: <20260824-mglru-flags-cleanup-v2-0-0104132114ae@tencent.com>
 To: linux-mm@kvack.org
@@ -59,11 +60,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Kairui Song <ryncsn@gmail.com>, Kairui Song <kasong@tencent.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787585189; l=5157;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787585189; l=3599;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=dIFhd9ek4+se0CLteaNFAXeBhV2iEYvheQuV+FpkZJ8=;
- b=ILIf9yWr8WDVruprF6y5ipPLOwRchwpqZ0QcFLxl3FxIhy/GFqzlb7HRxzazOhfW1R6GrnPy5
- aGusfe3+SarC4HDHoaw+F9Co30AhK0q/JfeqyPFE/6Qza533ssU1M3w
+ bh=F4Gku0HzSaxpr5vUbexfrLyrBNocoQzHGkkgGGw70CY=;
+ b=PZykz2Q/M9MgVmYuwCevSKyf2Ua8qd0n2vPVt4NypGyLX1ZWWF0KtD6b/i6LAUaArsVkCRhAz
+ EatgnbIiJXODaIuKBhJOtS8ErTHwNbFu75Ut9Mb27O9WIgPfUI4WDQJ
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -73,144 +74,95 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
-each read lrugen->max_seq to compute the target generation used by
-walk_update_folio(), then pass it as a parameter. Move the read into
-walk_update_folio() itself so the callers no longer need to compute
-or pass the value.
+read_ctrl_pos() encodes the tier range in a single "tier" parameter
+via "tier % MAX_NR_TIERS" as the start and "min(tier, MAX_NR_TIERS-1)"
+as the end. This is hard to follow, maintain, or extend. Tier values
+0..3 select a single tier, while tier == MAX_NR_TIERS selects the
+full range.
 
-The max_seq read now happens once per folio update rather than once
-per walk range, so folios always get promoted to the current youngest
-generation.
+Replace it with explicit (tier_min, tier_max) parameters using a
+closed [tier_min, tier_max] interval, and add LRU_TIER_MIN and
+LRU_TIER_MAX for the tier bounds. The call sites now become
+self-documenting:
 
-Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+  - get_tier_idx:   (LRU_TIER_MIN, LRU_TIER_MIN) for the first tier,
+                    (tier, tier) for each subsequent tier
+  - get_type_to_scan: (LRU_TIER_MIN, LRU_TIER_MAX) for the full range
+
+No functional change.
+
 Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+Reviewed-by: Barry Song <baohua@kernel.org>
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/vmscan.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
+ include/linux/mmzone.h |  2 ++
+ mm/vmscan.c            | 18 ++++++++++--------
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index c9ecf370cd9f..9b27cf53bdbc 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -492,6 +492,8 @@ enum lruvec_flags {
+  * folio->flags, masked by LRU_REFS_MASK.
+  */
+ #define MAX_NR_TIERS		4U
++#define LRU_TIER_MIN		0U
++#define LRU_TIER_MAX		(MAX_NR_TIERS - 1)
+ 
+ #ifndef __GENERATING_BOUNDS_H
+ 
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 080132997d87..557927b498fa 100644
+index 557927b498fa..f8e291968342 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -3517,13 +3517,15 @@ static bool suitable_to_scan(int total, int young)
- }
+@@ -3198,8 +3198,8 @@ struct ctrl_pos {
+ 	int gain;
+ };
  
- static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
--		struct folio *folio, int new_gen, bool dirty)
-+		struct lruvec *lruvec, struct folio *folio, bool dirty)
+-static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier, int gain,
+-			  struct ctrl_pos *pos)
++static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier_min,
++			  int tier_max, int gain, struct ctrl_pos *pos)
  {
--	int old_gen;
-+	int new_gen, old_gen;
+ 	int i;
+ 	struct lru_gen_folio *lrugen = &lruvec->lrugen;
+@@ -3208,7 +3208,7 @@ static void read_ctrl_pos(struct lruvec *lruvec, int type, int tier, int gain,
+ 	pos->gain = gain;
+ 	pos->refaulted = pos->total = 0;
  
- 	if (!folio)
- 		return;
- 
-+	new_gen = lru_gen_from_seq(READ_ONCE(lruvec->lrugen.max_seq));
-+
- 	if (dirty && !folio_test_dirty(folio) &&
- 	    !(folio_test_anon(folio) && folio_test_swapbacked(folio) &&
- 	      !folio_test_swapcache(folio)))
-@@ -3554,8 +3556,6 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 	struct lru_gen_mm_walk *walk = args->private;
- 	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
- 	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
--	DEFINE_MAX_SEQ(walk->lruvec);
--	int gen = lru_gen_from_seq(max_seq);
- 	unsigned int nr;
- 	pmd_t pmdval;
- 
-@@ -3606,7 +3606,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 			continue;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, args->vma, last, gen, dirty);
-+			walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -3619,7 +3619,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 		walk->mm_stats[MM_LEAF_YOUNG] += nr;
+-	for (i = tier % MAX_NR_TIERS; i <= min(tier, MAX_NR_TIERS - 1); i++) {
++	for (i = tier_min; i <= tier_max; i++) {
+ 		pos->refaulted += lrugen->avg_refaulted[type][i] +
+ 				  atomic_long_read(&lrugen->refaulted[hist][type][i]);
+ 		pos->total += lrugen->avg_total[type][i] +
+@@ -4804,9 +4804,9 @@ static int get_tier_idx(struct lruvec *lruvec, int type)
+ 	 * This value is chosen because any other tier would have at least twice
+ 	 * as many refaults as the first tier.
+ 	 */
+-	read_ctrl_pos(lruvec, type, 0, 2, &sp);
+-	for (tier = 1; tier < MAX_NR_TIERS; tier++) {
+-		read_ctrl_pos(lruvec, type, tier, 3, &pv);
++	read_ctrl_pos(lruvec, type, LRU_TIER_MIN, LRU_TIER_MIN, 2, &sp);
++	for (tier = LRU_TIER_MIN + 1; tier <= LRU_TIER_MAX; tier++) {
++		read_ctrl_pos(lruvec, type, tier, tier, 3, &pv);
+ 		if (!positive_ctrl_err(&sp, &pv))
+ 			break;
  	}
+@@ -4827,8 +4827,10 @@ static int get_type_to_scan(struct lruvec *lruvec, int swappiness)
+ 	 * Compare the sum of all tiers of anon with that of file to determine
+ 	 * which type to scan.
+ 	 */
+-	read_ctrl_pos(lruvec, LRU_GEN_ANON, MAX_NR_TIERS, swappiness, &sp);
+-	read_ctrl_pos(lruvec, LRU_GEN_FILE, MAX_NR_TIERS, MAX_SWAPPINESS - swappiness, &pv);
++	read_ctrl_pos(lruvec, LRU_GEN_ANON, LRU_TIER_MIN, LRU_TIER_MAX,
++		      swappiness, &sp);
++	read_ctrl_pos(lruvec, LRU_GEN_FILE, LRU_TIER_MIN, LRU_TIER_MAX,
++		      MAX_SWAPPINESS - swappiness, &pv);
  
--	walk_update_folio(walk, args->vma, last, gen, dirty);
-+	walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
- 	last = NULL;
- 
- 	if (i < PTRS_PER_PTE && get_next_vma(PMD_MASK, PAGE_SIZE, args, &start, &end))
-@@ -3642,8 +3642,6 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 	struct lru_gen_mm_walk *walk = args->private;
- 	struct mem_cgroup *memcg = lruvec_memcg(walk->lruvec);
- 	struct pglist_data *pgdat = lruvec_pgdat(walk->lruvec);
--	DEFINE_MAX_SEQ(walk->lruvec);
--	int gen = lru_gen_from_seq(max_seq);
- 
- 	VM_WARN_ON_ONCE(pud_leaf(*pud));
- 
-@@ -3697,7 +3695,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 			goto next;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, vma, last, gen, dirty);
-+			walk_update_folio(walk, vma, walk->lruvec, last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -3711,7 +3709,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 		i = i > MIN_LRU_BATCH ? 0 : find_next_bit(bitmap, MIN_LRU_BATCH, i) + 1;
- 	} while (i <= MIN_LRU_BATCH);
- 
--	walk_update_folio(walk, vma, last, gen, dirty);
-+	walk_update_folio(walk, vma, walk->lruvec, last, dirty);
- 
- 	lazy_mmu_mode_disable();
- 	spin_unlock(ptl);
-@@ -4275,8 +4273,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 	struct pglist_data *pgdat = folio_pgdat(folio);
- 	struct lruvec *lruvec;
- 	struct lru_gen_mm_state *mm_state;
--	unsigned long max_seq;
--	int gen;
- 
- 	lockdep_assert_held(pvmw->ptl);
- 	VM_WARN_ON_ONCE_FOLIO(folio_test_lru(folio), folio);
-@@ -4313,8 +4309,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 
- 	memcg = get_mem_cgroup_from_folio(folio);
- 	lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	max_seq = READ_ONCE((lruvec)->lrugen.max_seq);
--	gen = lru_gen_from_seq(max_seq);
- 	mm_state = get_mm_state(lruvec);
- 
- 	lazy_mmu_mode_enable();
-@@ -4346,7 +4340,7 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 			continue;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, vma, last, gen, dirty);
-+			walk_update_folio(walk, vma, lruvec, last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -4358,13 +4352,14 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 		young += nr;
- 	}
- 
--	walk_update_folio(walk, vma, last, gen, dirty);
-+	walk_update_folio(walk, vma, lruvec, last, dirty);
- 
- 	lazy_mmu_mode_disable();
- 
- 	/* feedback from rmap walkers to page table walkers */
- 	if (mm_state && suitable_to_scan(i, young))
--		update_bloom_filter(mm_state, max_seq, pvmw->pmd);
-+		update_bloom_filter(mm_state, READ_ONCE(lruvec->lrugen.max_seq),
-+				    pvmw->pmd);
- 
- 	mem_cgroup_put(memcg);
- 
+ 	return positive_ctrl_err(&sp, &pv);
+ }
 
 -- 
 2.55.0
