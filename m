@@ -1,128 +1,108 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFF762F7F07
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 03:23:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B21713777E
+	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 03:35:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787541824; cv=none; b=OpGzPqA5ovqdEeu+7XzIncm6WAufVC+ONfLsjU7DQ7Sk2MfJILmdnkDeGq+GW/adEzXyvg4By3aQDuDuxMeoqeW2bbGKheg0eeYsgeChu1YkMzu+3J2PN8L+SDelGlilk4l+FZToosya8k9jo4WL3SEIU1DMIzp0j7Fur0Cgxaw=
+	t=1787542544; cv=none; b=Z6jjqvjEECyJjqB3giDqyBNGG6Fg15FBUUKzFRiEQzKS9uVCTYAHYif/nNzRf5Nhx+5hEo6xssH89UKvEA70SZM5damFdDNPvA2a8d44w6BW5AXLjB11JUby7us004wBT+h7694jmCGPR4V/CdTg9/+4KGrXbkPpFWthrRzJVhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787541824; c=relaxed/simple;
-	bh=zSzxzmyO/fbt5TXO5SH7GheeONpcTwtNS2YgN0J1KMU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F5ZS/vkllThz9lHwczdHzKgOlw4Ej4eEePWtgOLGmIbmv/WRa9X1A3FVsleHdF8CgtPuS0pe7DrqgG3KJFIFT4J74sVV1LzQhLiqySuCPidGdR7UW/fibQRLytePKOUx4nOXad+Yop9fWyxNzdV5iqlqdZU7nOUHc5GxXZNAVZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BTbSP6jL; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1787542544; c=relaxed/simple;
+	bh=kbgCodxyQTaxxkxIo0FUrwNH41ZTUr4K/1wkJGxMPuo=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=aMTZdLj7hKPo9925J1VJKNIok6Ry1NTtLAVIrzzEgai/jsGP8gonThNIM7R1t8c+RI4Wau02EwqwgzvzfhiQ35hYssVQYX/3tq6NRjvYyXC5GY9fQ3tblS63xfvWTDGgCF+smYBBcLZ9BZv0u9iBxuIC30W1Gq1sbojREaaFQkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=CQ69D3AW; arc=none smtp.client-ip=209.85.214.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BTbSP6jL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787541822;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=dx3iauYGB2wh5SOGuiI8wNYp9ILiPQCebTLiJWu4GvA=;
-	b=BTbSP6jL0OVTZrFWqiGVv+s234yKe2LcoujdgAx8zuhxn5sLCoOlXD1VkXJgX14b7HAp/i
-	wz+WQCDFdqWGs8sjfcEtF2yrJlBB88lkhCIOvaU2HnMXyQgilzujTfCFC9FcriFoQHpTDx
-	+fV27xM8JfJcA5d6Y4dMdvP7wT8dKDQ=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-328-fkp6jIw4MDKbEi1xftEUbQ-1; Sun,
- 23 Aug 2026 23:23:38 -0400
-X-MC-Unique: fkp6jIw4MDKbEi1xftEUbQ-1
-X-Mimecast-MFC-AGG-ID: fkp6jIw4MDKbEi1xftEUbQ_1787541816
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 04251195C24D;
-	Mon, 24 Aug 2026 03:23:36 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 09CB018005BB;
-	Mon, 24 Aug 2026 03:23:33 +0000 (UTC)
-Message-ID: <69a0e8e7-199f-4e99-aa21-0c888680a037@redhat.com>
-Date: Sun, 23 Aug 2026 23:23:32 -0400
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CQ69D3AW"
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2d6c166bafcso4511085ad.2
+        for <cgroups@vger.kernel.org>; Sun, 23 Aug 2026 20:35:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1787542542; x=1788147342; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=xxIn6wRkBnBvygNlVhjjksdALrlKyZQyyugm0lI7tMA=;
+        b=CQ69D3AWW6HqoCoWr3QXKYEYidW/JhwFcL7aijHB6MaYJBvM4ydWchC5XvVTtvLJtk
+         ydbgSD7iiuuJH0/8Jx6RPdFv5E2PPc0/yYRyIO2vYDLIkcfKjj/eQJIiYoBMV+wE/0tc
+         6qrkqLOOE4TkTa4pk4+pPtN1Z+FpUkMiCjrNugQeVUA6d/Ka3/EJlAE9pUZGG0JlrM0n
+         y6QedXrP/dsLG13EqnrBHTud82jhfECtQL4ImklBsU+HwKD968Pl2Oaf1EAPqm7pnkNX
+         8iM34ixZ7f9o5y2UXjRDCAUMB4UPxKSt8+LsbVNwuCgJY9ZJw1/gIQbePQKn4uBjy0nD
+         95EA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787542542; x=1788147342;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=xxIn6wRkBnBvygNlVhjjksdALrlKyZQyyugm0lI7tMA=;
+        b=NPnewnp+cGyIZT9N4MHfxTd2L3mzIdgcZnxoV/PY6JbvT91dlPUQgG9prxn/Nz2UId
+         SOfUopdX4LzkGzKdgPOUpiszlEho/YtrOinxi58pLrvJKA0Z2Ex0Xg0ti4aJw+QR2ik0
+         mUs02t61ZGBMiko8GfVJ8e9Lw0JzM2H62EqyQeaDUNu/Q1fPle/OiOZ4rD3G7mvWUCPR
+         LHZS4vuzG1bqSsi5VhhWAON2JezMqxWhrRO7T+LiLX7OUnuNFmc/l1aB73eQTqhv2nZ6
+         rRX/CTJKn+0z9D/R5yYzUuMmViT4T0sYtwuDLNJlW6jPzo03G9jbwBK04h+EOXbQQepL
+         xgYw==
+X-Forwarded-Encrypted: i=1; AHgh+Rqq2Zy4L6iP+dqhWHqXQaTECf2znHa8xjuHaISpaQh7VoWXCdpvlBPvQXDyyObG/6NtviR0zQvf@vger.kernel.org
+X-Gm-Message-State: AFuF++l5aYiRrPeHpsGH4CgDmTd6nKhVvJNZsd2bnrqRqsiugy9crRYD
+	Yq10wX4jdrEWYIVaL7tX4Sr25sz78pdxj4obduQfbUEsU/HUlbQkueljN5uj3y/MfZPnK9rPPai
+	wGGreVHY1ig==
+X-Received: from pldc11.prod.google.com ([2002:a17:902:d98b:b0:2ca:c3ac:bb34])
+ (user=wfelipe job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:f686:b0:2d0:cc92:f7af
+ with SMTP id d9443c01a7336-2d670c96265mr233860275ad.9.1787542542407; Sun, 23
+ Aug 2026 20:35:42 -0700 (PDT)
+Date: Mon, 24 Aug 2026 03:33:56 +0000
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] selftests/cgroup: Drop invalid boot isolation
- comparison
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
- Ridong Chen <ridong.chen@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20260824020140.21130-1-guopeng.zhang@linux.dev>
- <20260824020140.21130-2-guopeng.zhang@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260824020140.21130-2-guopeng.zhang@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.766.g2966f0265a-goog
+Message-ID: <20260824033533.2147900-1-wfelipe@google.com>
+Subject: [PATCH v2 0/2] selftests/cgroup: fixes for test_zswap on single core VM
+From: Wilson Felipe Pereira <wfelipe@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Tejun Heo <tj@kernel.org>, 
+	"=?UTF-8?q?Michal=20Koutn=C3=BD?=" <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Wilson Felipe Pereira <wfelipe@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 8/23/26 10:01 PM, Guopeng Zhang wrote:
-> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
->
-> check_isolcpus() clears ISOLCPUS before rebuilding it from sched domain
-> data. Comparing that empty value with
-> /sys/devices/system/cpu/isolated makes the test fail whenever
-> isolcpus=domain is present.
->
-> That sysfs file is generated from HK_TYPE_DOMAIN_BOOT and does not change
-> when cpuset updates HK_TYPE_DOMAIN. Re-reading it cannot validate dynamic
-> housekeeping updates. The cpuset.cpus.isolated and sched domain checks
-> already cover the two dynamic interfaces, so remove the invalid comparison.
->
-> This can be reproduced on a kernel booted with isolcpus=domain,15:
->
->      # tools/testing/selftests/cgroup/test_cpuset_prs.sh
->
-> The test fails its first state-matrix isolation check before the change and
-> continues past that check afterward.
->
-> Fixes: 6df415aa46ec ("cgroup/cpuset: Defer housekeeping_update() calls from CPU hotplug to workqueue")
-> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> ---
->   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 6 ------
->   1 file changed, 6 deletions(-)
->
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index da8f7b920178..fdb3185570d4 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -797,7 +797,6 @@ check_isolcpus()
->   	EXPECTED_ISOLCPUS=$1
->   	ISCPUS=${CGROUP2}/cpuset.cpus.isolated
->   	ISOLCPUS=$(cat $ISCPUS)
-> -	HKICPUS=$(cat /sys/devices/system/cpu/isolated)
->   	LASTISOLCPU=
->   	SCHED_DOMAINS=/sys/kernel/debug/sched/domains
->   	if [[ $EXPECTED_ISOLCPUS = . ]]
-> @@ -835,11 +834,6 @@ check_isolcpus()
->   	ISOLCPUS=
->   	EXPECTED_ISOLCPUS=$EXPECTED_SDOMAIN
->   
-> -	#
-> -	# The inverse of HK_TYPE_DOMAIN cpumask in $HKICPUS should match $ISOLCPUS
-> -	#
-> -	[[ "$ISOLCPUS" != "$HKICPUS" ]] && return 1
-> -
->   	#
->   	# Use the sched domain in debugfs to check isolated CPUs, if available
->   	#
+This series fixes two test failures in test_zswap observed when running on
+a single-core VM (-smp 1) with 4GB of RAM.
 
-The /sys/devices/system/cpu/isolated had recently be changed to report 
-the boot time isolcpus=domain value. So the check is no longer valid and 
-should be removed. Of course the position of the check is also 
-problematic. So it should be removed.
+Patch 1 addresses a race condition in test_zswap_writeback() where
+waitpid() returns before the exiting child process is switched away by the
+kernel, causing an immediate write of "+memory" to cgroup.subtree_control
+to fail with -EBUSY. We fix this by waiting for cgroup.events to report
+"populated 0".
 
-Reviewed-by: Waiman Long <longman@redhat.com>
+Patch 2 fixes an implicit unsigned conversion bug in test_no_kmem_bypass()
+where small negative timing differences between debugfs stored_pages and
+cgroup zswapped bytes caused the comparison to falsely fail due to
+unsigned promotion.
+
+v1 -> v2:
+- Patch 1: Replace EBUSY retry loop with cg_read_strcmp_wait() waiting for
+  cgroup.events "populated 0" (Michal Koutn=C3=BD).
+- Patch 1: Clarify task lifecycle in commit description (Yosry Ahmed).
+- Patch 2: Remove abs() and declare delta/zswapped as signed longs with a
+  signed threshold comparison (Michal Koutn=C3=BD).
+- Patch 2: Add Fixes tag (Michal Koutn=C3=BD).
+
+v1: https://lore.kernel.org/all/20260804042053.56940-1-wfelipe@google.com/
+
+Wilson Felipe Pereira (2):
+  selftests/cgroup: test_zswap: wait for cgroup to unpopulate in
+    test_zswap_writeback
+  selftests/cgroup: test_zswap: fix implicit unsigned promotion bug in
+    test_no_kmem_bypass
+
+ tools/testing/selftests/cgroup/test_zswap.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+--=20
+2.55.0.766.g2966f0265a-goog
 
