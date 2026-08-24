@@ -1,168 +1,131 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0067936AB57
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 12:37:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A73241A517
+	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 12:45:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787575036; cv=none; b=rkIU1wKUgSS1UbnvQzEx4lVtjT0H2NRjDJlFNyjnrkvQ6dJvxoiwOpra9jk4BgrK6zcJ4byW7NqPr+tI1TW/1kRW4YV2sw3Y3cavrXxk8qn3kZD2JLfvLzedyPDQ3cNXv5RGqA0cAgYbbCPxuoSEK2YLAzfVi8P2W3NP53XSeOo=
+	t=1787575502; cv=none; b=fVZ+ljuMxejnrHjFVS+3a3mmwwKQyP0CHTGajfixWLFKnXEBywy6bzMRSA8V/LWs4Qqm0e1J3t4I8GbZBFcglCHUT9GGxwLVeE08P7FXGKo7KEZo6rIVESv15zUmX/QP1JMn3q55kZGKZ4p7aADhpyqa6oRVyYNDSArLNGzr7VY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787575036; c=relaxed/simple;
-	bh=b360NDSCJoVo8HT1M4LG/4YMGXJ1Fxz2kG4E+dBWl/Q=;
+	s=arc-20240116; t=1787575502; c=relaxed/simple;
+	bh=DW3UtFqD/zu7mAy58si3FQbh8UaK2UOfbrSUpkOwrLI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QuLRONXQfx7lAu31VCS3erOwHTr3Iy0v8xRns9gO8JSkZqHjxyJN7sljkxo3lC3GiHXp8B6jvUk6WuXmFRrNLfBV0Pvr40wNKrT2PhU8CmSpKKa2gDl8j5eHQ2edYFBPCyReN+7QTBwC4mVEN4tJF6/nq61fRSe5ohrs0jTLJZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=aY/HGNNh; arc=none smtp.client-ip=209.85.218.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=sgT5ujTAyI9fZ+j0B+ZrooXugEEl4vOPJJfDr5N5z3y8pvdrCk3JJyVn4RDPO1/0yyhfhBAoR7I8tYNNhp9fgIJcsOQNRUR0CskZm3KM+MABLA57kWnOLTNFSgcWtliNblVUZsUnI2/u3pcIPwNZTm9SEfiPUwRi1gs/Cf2uNuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E0ryj8B2; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="aY/HGNNh"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-c20fb91ed0fso518594566b.3
-        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 05:37:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E0ryj8B2"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-848761b5897so1291529b3a.3
+        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 05:45:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1787575033; x=1788179833; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1787575501; x=1788180301; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=xFe7CZrh/NKPQiBuCvoXHDZxKc/OI1NirTgmnI07Xf4=;
-        b=aY/HGNNhDDoQUhlu//mHisAb1rBEnGx1EjDLE0HX5CU/KIDRza+9DCnm9Aucn6Utha
-         rcICODpsLNSt3plDu971QUf8cHlUkCaPSKkU2DSZpwX+zhojCLwqTybUvXO2da5A7XFv
-         4LP5alfB0Q970LR5mD2+qimagw1M7O3vSBHWSFrWOEhhqGW7bw7kfURFtqVD4zUcsm8E
-         R/j7Pc7b/xthnlAFaIIdu1saP3SFhZwRXDYAjP0DPeoowz3+A5g+hqcJPtIoGAGgWLLO
-         2qPANwUBVpYGKZtGFikMcPV1vR7PaNb0d3vKyQSEmfCj9F66RLVq+iONZpErzVodK0Ol
-         vQaw==
+        bh=E2yHo0M2FJBuTCpqN8VZyJQ8Wot3WXvI786J1PIQoT0=;
+        b=E0ryj8B2muDgi6S5xmFrd3XU9eXVxvuX6mEsoaaGAXFez5obMYEuGIVvsVpwQio6q/
+         JMG4CBfGu2cUq3uKS6KKZ4s+5sf5Tpbz4Q7y7LAJ2G+OV721Q8JAcPcOHUWobRX+2C9d
+         Yx9hlVkpLuzrpZRl8vh9I2bsNqETxztDhnrOuNGfQopjwwUwI/VaJl42OnjfUcsQ1loQ
+         76FNF1SulznMRN/UVYZJg6BSk57//X05LdyZBRyEAyZ9WUAlKxTHlfRPRnyAw3FuZy3b
+         zNabhPe7bhL1HHttbczIUNpBo2VSxXa9Bzvr7HH2B0uYQcL2hJxRaQGJo1NN6eYabNFt
+         77Bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787575033; x=1788179833;
+        d=1e100.net; s=20251104; t=1787575501; x=1788180301;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=xFe7CZrh/NKPQiBuCvoXHDZxKc/OI1NirTgmnI07Xf4=;
-        b=TevypxTb5VfneQEu0gvD1IPxMET8pHL3evwlMWF2CWWteDkUW45CYY/M/LjhiO3OL2
-         3bia+AXrwp5DioJHzuC62p06JIQrt5yxnpDOeY9mNAS3+6PntPfKMxm+r2jucQuG+/dS
-         QfdH/4IRdhvmeUgxRegxz/yKcGwkFFmUNP9vhVOzR6ghV7TNJkdDRe0NrL9pEY3tpi2c
-         RK/w9z809Cgewt9ydeCqo66tILbtqtG2qCIM6SE0mfSZs3fomsYQWf4Bi+lPu4F6SrAP
-         tphHIMJ6esYm5zcfY9ar1WMJmBrxNffezhTkkCusdcGhe+OXPr4CjLUvpYM8CBW8XFm+
-         aBzg==
-X-Forwarded-Encrypted: i=1; AHgh+Rp7Km3TAEe6wkpUT1Vr6fY150U8l6R/NQ9h8uiJcLMVIf/lqqId+GJ0Q4N1yoS80AV7y2MjDx6C@vger.kernel.org
-X-Gm-Message-State: AFuF++nzLVqyoaMAZVfKWMDhKYgW3odhfp7TvOI9/axuBudifs5ono27
-	deFFpTSjuEdLfzGs1IKWLlwXrkU335uMvnFeUPtXZJ3xz5Sqlk2FkP7+lzvZIif8G7s=
-X-Gm-Gg: AR+sD11YhFJivCy8zd/pfqsQnAr1E+uvhJmSI0F9rfzBSBgQ3stXo0dDivUozSFFgq3
-	yhm81LC1fCpCrfOAi1+rLdxhNLbgXahhsQQX/xXWNBqn2lqrXzmfNMsFNakSkPoXNW5vJTcs4Pi
-	CH7EjtxEGLR69xBGj6g373A+t7wBvhbWU3ORC9RBHBjbgHK/Vo0fYSUi792QTRwjVo8HTZwyB6J
-	YQJlQ0TKfjeBQYQ9u1MI6mvGgrrrECS9MDlqWElPIwEbmWL4DkC7DjaqPgdI5+yF7yJ+RaTsIit
-	6Ol0auRHKyim5Y/pN6NLp5XMo/uxdjygaHSmaTu8U7IW0gE0QXgt+TmWPwQVpAia3x+F/vwMAaF
-	H1PLLE0OThHqxKwNMwjgf5soSBMxz2/FyGDmOurI1rcHjt9eEW1g8DcSSQp4lW2qnyo26XiESW9
-	fU3bfz1LXierz8mVbOvdyaoKNnJPM6IWw8WZCCnwtzbWFm6V/y2uFId4gqi5JW3meXcIvb5/4sF
-	A==
-X-Received: by 2002:a17:907:7b93:b0:c20:5213:56f1 with SMTP id a640c23a62f3a-c246a60348emr2798113866b.13.1787575033111;
-        Mon, 24 Aug 2026 05:37:13 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249606b5aasm1253429866b.4.2026.08.24.05.37.12
+        bh=E2yHo0M2FJBuTCpqN8VZyJQ8Wot3WXvI786J1PIQoT0=;
+        b=nJAZdA7YNmBDEX7mHFXHZy+uyDK10o+NdoGk8FKmVXfGBhzjg5opqqRhKjVNlJl/MQ
+         3ydAERbM1G90qx4e21Yu7PLWm3gS59yRMQWZyVN73G/uarPr3DmS7vAs8DCCHGSZA8/T
+         ABxx2fsjckyH6xoiS3+Uh6w1LQg7Q71lTD/oPsDK4AzJOALnODVaZO7JG/hz9C/ejPEU
+         EFafs3yd44ruwZpeIeYVYM++8gc2pAOfTE9Wyf5Za07CX5YsiqQZO4bYlrmYFM8ubgc+
+         cx2MUSQhdMNmIIU0c85p/T8BpnS7P3uCpKCKN2MroHS7ulMmshprA2ePQ1A5nQWCvFLh
+         /45g==
+X-Forwarded-Encrypted: i=1; AHgh+RowKFXjXn8sgzCRVLYt2QBZiCkBtehFw5FlQ4WH85g7Lx3++BVP4H1wwY2bXVWQ7ycSgdSURuB7@vger.kernel.org
+X-Gm-Message-State: AFuF++k2srnVUOJkjXQMWnLzsIel/fVkHFpT2Xld3xsigNhIbp/eu/4r
+	rw97Y/SkR2DqqAmC/Lph2Sykz3YwAsM+FxsoskGPCYljqJ1sT3m4e4h+
+X-Gm-Gg: AR+sD13h/fdW5svjTswRUDtvljceB2tTfF/DVaUBEA9BJYq8+7t993mN/NshnYD2zBc
+	yCwDpLNS4yjTkXahdbQ6jZzZUO/d4lRb1n9ld6tckvqGk0ioOP3PAXs9FMkk2tlz2lddWkma5VO
+	SrjiP5Rb8H5vjD8i7JaHr3eJZr40db1/hur9zH+yVxr6Us1+6yjRCMMmuVXGweYh6qbhQ15RqZU
+	CCcZzC/WN/QAw6cyekSa0L1gWy8daiPTc4HpPSlIdd+KjJpL/cNdYpO7bGZdLzTA7By4Dgfq2pc
+	bOqBL/3KNy/ybYjaz4RxiUasL9Xg9oBweRCCRLoICtFvqcinsE4p7VuC/5luo83nl53zSvCUJKt
+	10pwe5E30kEwqqNMRq7vPWoOKBbPdy8eu65mTfk3cd9LYrlLZaTD3fIp5afQs7pD6aARcYHsz9d
+	j1TEGOC5CYQ3i+0/ySmyRlWOY0yVBmEK5b9g1JQoRjBElkZWvSMB4pIL/GBn0ik3Xu1qts+GOO7
+	PN1ZVyWq7JwHrF2dU6CWGK6
+X-Received: by 2002:a05:6a00:2998:b0:848:2ab3:ddeb with SMTP id d2e1a72fcca58-851f9fc70e9mr45280869b3a.14.1787575500815;
+        Mon, 24 Aug 2026 05:45:00 -0700 (PDT)
+Received: from KASONG-MC4 ([101.32.222.185])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8520f03b014sm1911847b3a.36.2026.08.24.05.44.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 05:37:12 -0700 (PDT)
-Date: Mon, 24 Aug 2026 14:37:11 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Wilson Felipe Pereira <wfelipe@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Tejun Heo <tj@kernel.org>, Shuah Khan <shuah@kernel.org>, 
-	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] selftests/cgroup: test_zswap: fix implicit
- unsigned promotion bug in test_no_kmem_bypass
-Message-ID: <aow4tSYssWJRjzm-@localhost.localdomain>
-References: <20260824033533.2147900-1-wfelipe@google.com>
- <20260824033533.2147900-3-wfelipe@google.com>
+        Mon, 24 Aug 2026 05:45:00 -0700 (PDT)
+Date: Mon, 24 Aug 2026 20:44:51 +0800
+From: Kairui Song <ryncsn@gmail.com>
+To: Baolin Wang <baolin.wang@linux.alibaba.com>
+Cc: kasong@tencent.com, linux-mm@kvack.org, 
+	Andrew Morton <akpm@linux-foundation.org>, Barry Song <baohua@kernel.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Chris Li <chrisl@kernel.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/7] mm/mglru: move max_seq read into walk_update_folio
+Message-ID: <aow8Z-fdVhy6mQ0x@KASONG-MC4>
+References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
+ <20260818-mglru-flags-cleanup-v1-4-8dbbdac0d28c@tencent.com>
+ <52215f41-9297-4197-982c-bec01b485bb7@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="pfcylgei2cxs7jeq"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260824033533.2147900-3-wfelipe@google.com>
+In-Reply-To: <52215f41-9297-4197-982c-bec01b485bb7@linux.alibaba.com>
 
+On Wed, Aug 19, 2026 at 05:18:51PM +0800, Baolin Wang wrote:
+> 
+> 
+> On 8/18/26 1:38 PM, Kairui Song via B4 Relay wrote:
+> > From: Kairui Song <kasong@tencent.com>
+> > 
+> > walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
+> > each read lrugen->max_seq to compute the target generation used by
+> > walk_update_folio(), then pass it as a parameter. Move the read into
+> > walk_update_folio() itself so the callers no longer need to compute
+> > or pass the value.
+> > 
+> > The max_seq read now happens once per folio update rather than once
+> > per walk range, so folios always get promoted to the current youngest
+> > generation.
+> > 
+> > Signed-off-by: Kairui Song <kasong@tencent.com>
+> > Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+> > ---
+> 
+> LGTM. One nit below.
+> Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+> 
+> >   mm/vmscan.c | 29 ++++++++++++-----------------
+> >   1 file changed, 12 insertions(+), 17 deletions(-)
+> > 
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index 080132997d87..a819be6b7ae9 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -3517,13 +3517,15 @@ static bool suitable_to_scan(int total, int young)
+> >   }
+> >   static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
+> > -		struct folio *folio, int new_gen, bool dirty)
+> > +			      struct lruvec *lruvec, struct folio *folio, bool dirty)
+> 
+> IIRC, MM maintainers prefer 2 tabs, which is why I changed this earlier:)
 
---pfcylgei2cxs7jeq
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v2 2/2] selftests/cgroup: test_zswap: fix implicit
- unsigned promotion bug in test_no_kmem_bypass
-MIME-Version: 1.0
-
-On Mon, Aug 24, 2026 at 03:33:58AM +0000, Wilson Felipe Pereira <wfelipe@go=
-ogle.com> wrote:
-> In test_no_kmem_bypass(), delta (stored_pages * page_size - zswapped) is
-> checked against stored_pages * page_size / 4 to verify that the pages
-> pushed to zswap belong to the test memory cgroup.
->=20
-> Due to slight stat update timing differences, delta can evaluate to a sma=
-ll
-> negative number (e.g. -5MB out of 1GB). Because delta is declared as a
-> signed int and stored_pages is an unsigned size_t, C's usual arithmetic
-> conversions implicitly promote a negative delta to a large unsigned 64-bit
-> integer, causing `delta < stored_pages * page_size / 4` to falsely evalua=
-te
-> to 0 and fail the test.
->=20
-> Fix this by declaring zswapped and delta as signed longs and comparing
-> against a signed threshold, ensuring negative deltas correctly evaluate
-> to true.
->=20
-> Fixes: a549f9f31561a ("selftests: cgroup: add test_zswap with no kmem byp=
-ass test")
-> Signed-off-by: Wilson Felipe Pereira <wfelipe@google.com>
-> ---
->  tools/testing/selftests/cgroup/test_zswap.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
->=20
-> diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/=
-selftests/cgroup/test_zswap.c
-> index a7ff525c1267..15cc1dfdd1f4 100644
-> --- a/tools/testing/selftests/cgroup/test_zswap.c
-> +++ b/tools/testing/selftests/cgroup/test_zswap.c
-> @@ -621,9 +621,11 @@ static int test_no_kmem_bypass(const char *root)
->  			break;
->  		/* If memory was pushed to zswap, verify it belongs to memcg */
->  		if (stored_pages > stored_pages_threshold) {
-> -			int zswapped =3D cg_read_key_long(test_group, "memory.stat", "zswappe=
-d ");
-> -			int delta =3D stored_pages * page_size - zswapped;
-> -			int result_ok =3D delta < stored_pages * page_size / 4;
-> +			long zswapped =3D cg_read_key_long(
-> +				test_group, "memory.stat", "zswapped ");
-> +			long delta =3D stored_pages * page_size - zswapped;
-> +			long max_delta =3D (long)(stored_pages * page_size / 4);
-> +			int result_ok =3D delta < max_delta;
-
-I'd rewrite it like below for higher type confidence (mainly, an explict
-cast of stored_pages so that subtraction is signed; possibly, implicit
-cast of expression assinged to max_delta):
-
-			long delta =3D (long)stored_pages * page_size - zswapped;
-			long max_delta =3D stored_pages * page_size / 4;
-
-
-> =20
->  			ret =3D result_ok ? KSFT_PASS : KSFT_FAIL;
-			ret =3D (delta < max_delta) ? KSFT_PASS : KSFT_FAIL;
-
-Thanks,
-Michal
-
---pfcylgei2cxs7jeq
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaow68xsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ah3wQEAkD4CY79HnHFL3zUOh2xO
-fMcsSq7vsvnmYX7s4mYh8CsBAMi2iZwoDAROyEEUXSL3lUZmgimfzFx6ViqPPxyO
-Z8UD
-=UNwY
------END PGP SIGNATURE-----
-
---pfcylgei2cxs7jeq--
+Thanks for the info! I'll keep this line untouched then, my editors auto
+indent always align any code I touched to the open bracket that's why this
+line is changed :)
