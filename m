@@ -1,541 +1,108 @@
-Received: from mta0.migadu.com (out-104.mta0.migadu.com [91.218.175.104])
+Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86C3E339363
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 08:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2BBA361DCB
+	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 08:58:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787561346; cv=none; b=qZOSB43/1ssjn9qxN2MJaFjGRE04/D7KCgko5VkkyRCk2TN7yYYwtqjajZldUx6Itr0LPfOAosvt+HR6zmcRBzkZ8Dpf8WwzYAaNH02FnbdOpR+do33NrO/loEqjHcx+GQu/vFOWnGGSMFePztbH+IzYLvmKm5kuiHnwML5ujRM=
+	t=1787561904; cv=none; b=pdPngo+Tbgf3le3kRSuJPdWVLTFVMh4C1XTnJprC+Ce1qDhC3VL5YcktNuWYtBwUfE6Ush9lAx3y3ndcFTW0csikq6RARJJqTAgorvppTQ26gsVRi7UC+z+iVIS6bUeGveyWbPG172jl6TFRBQVtv24OetoVbIrEg75aiydbDOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787561346; c=relaxed/simple;
-	bh=75Ksn/cs08wyOV7Q0Zudxrs8sQ4HVk2JeQdJPRNNbIE=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=WtOijjwNnhDAK7b/91q9azZczy98i3bgDg54EmT7Qdydycw7kZZoyVaEKPlg6TZhqbpxgWuXpvCXSmH3ozx9sGF4v44Xw0n0G+3p2bSobgHyIOMrIpQM+TUk7/8EQap4+ExFmONVfW1FJoWxPMv8rCnYrBDYSbx2JN+78lvYl8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PCiU8Mft; arc=none smtp.client-ip=91.218.175.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787561904; c=relaxed/simple;
+	bh=k52Sj14Jj+NVrAXLRzqT3/I8Ww3yjqE9TM1mqYo0HcA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kER0GjxNYc+KaWUafhWTVh/FM4alVs+ASKA/NCcIpEh3qGj4lcX0sViZxS5ucon/vJEt0EdIONNxWyPusPUIftGfGkMphrXZ26ElQSNhopYaJiDUpCKlLBfcpby0tl1y4W+LvqrLLalUaNnlSuZifAJcuIYapMcVAFrhUn1s8jM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gNcLNJxF; arc=none smtp.client-ip=209.85.208.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PCiU8Mft"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=75Ksn/cs08wyOV7Q0Zudxrs8sQ4HVk2JeQdJPRNNbIE=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787561342; v=1; x=1788166142;
- b=PCiU8Mft/hS0gzWU03zqGpM0DC9EJvv+qDnXRDZAscuxRXwXlRCYS1IUM0fKJbxcdIsGOGdu
- Mi/sJsC+85u/PldUXOQNDb3ja5exi8AeMOtKcExFVETuHC01dhW0r8jA4UbsfoNI0F/7EsmqGdn
- qMEyqtJWjPQPEVIaCVITt+h8=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: from [192.168.110.173] (223.70.159.239)
-	by smtp.migadu.com with ESMTPS id 285f800f49b92321;
-	Mon, 24 Aug 2026 08:49:02 +0000
-X-Mizu-Trace-ID: 285f800f49b92321
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <6fed7a10-0201-4ea9-803b-6d8b1b725106@linux.dev>
-Date: Mon, 24 Aug 2026 16:48:54 +0800
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gNcLNJxF"
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6a17211b9ecso8154132a12.2
+        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 01:58:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1787561901; x=1788166701; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=qn4kqe1cwjM1TB4a/1ctVx91SSia6iTv/sEyLh8sQjg=;
+        b=gNcLNJxF+vPOU87prp5xTBI3gZ5Ki9Bvka9JSdrQV8a4QAagPtULIl0+Iv19AQsy2V
+         lcC+WM4JDQUPWxZ7OXMRe/SPgI6Hd/ZOXsQFi0DL6eqUnTobjo4T7dUn0jsVakoaD1N6
+         BrwUE9Qhre4FqJRlTOdAPwIxivBOY2PtRD2YV+VGCE3d5V9iWZ8STdVXuvYnMUKO+xbS
+         1KntjIM8t2kbPQyvZKqL6NsnOkqh+Aevs8RLO2p65cXWqoTAbF5uOklFNGFSDCmS6/P0
+         a4MxTRaR9R9nodO3FOX3pbUq31eyJ41zVIkvyo8ES8XAo5JlGBFWWRXyU8dFlJEaPfPd
+         ZQfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787561901; x=1788166701;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qn4kqe1cwjM1TB4a/1ctVx91SSia6iTv/sEyLh8sQjg=;
+        b=HjigIslyXXqBtcxiv2WY7i/cstAH1Ous3FcdBHyL5XcrO51RNrKOrqixj180lSTOtR
+         Vkxj4gIs4BuWb9/6+Rud1GcZm/oc4rUa4pUD9DuwFNQlTq+YkZ/JBlJCzqFE/6e9leal
+         R26S14wzjpael2eBokKuB7CAbKfb6Q09by/PLR9ARxba2so7utRAaoubCFIldIWU4ENz
+         1ICHRjavo8lZvgilBmacAiIB2ea/k8/L5QWv8xnOtNA5qHAMp3K5BVUxpUSMvM+34VlF
+         rLjTNYB9SefWd++8pYZqZyDPFEy77ZEK/RajId6MuJmrlN81+ofkexgmiIZdCco39RI/
+         KRxw==
+X-Forwarded-Encrypted: i=1; AHgh+RrhE1zLejgfMmFxpODdRPIpKCqeSYyM9/pAkpLPUjxMcfp6zjdJRK829nZE3R6puV6R/F0FZcd8@vger.kernel.org
+X-Gm-Message-State: AFuF++l0EuMhkBAtd4Rcanzn4njPUGw88xZYRSt7lwVqZsjx5H1FRc7j
+	8Ogqth4TrjJDwJc97sf8Tsyfw+2PCHPPnlnP+7ellAeT22d31BDa0nZqckjiXnTm4VM=
+X-Gm-Gg: AR+sD11ySnm8XjKvR5NCgcQfEtR/QatNU9I3PM78RK0FgdlzOdnRQzyG6sKquLSP6wP
+	TOnLmC0f0LAE3eFmpbUZoTLQACw4rr3EvxruJzBqI737oJQGnnyw8se7u2yo7h6snA7C2LI5S7I
+	7s+0pTIk+kQPfx1onGMM3ZkcS/RQt+pQv5NAf8/LkabajnL3Q9YW7B+tNbGWo8loDthqOTD+cNj
+	Xi8VVRTlNaKP6iO/KxsmNAJh2Ir8xBMoT0gZxejYEKO9Jf9wlf4/Oy3lEKWzMIuyD6fuZE+lKzx
+	vGEq6wTj8Ig+h8zxVuM6+4NxYTez/DaaDy3rdrQ+LWbGoUw+D4Ehg6iuwwb4gywDHbyTSF7fPSf
+	Zx6tsbBdc+QxZqyzib+SOT50invn3bkBhKYxb9DDl69TQEt1VfqA9pNN6BzVVW0+0VVPEQQTSXL
+	RpHd7Gu8ndb3RIr4Gw+3MP/x1drfK4IH2ltUAmvCOu6iXNjUBX8R/4ztIVYXNrZQM8sqUZ1K/Ke
+	1V/JWHau7JN
+X-Received: by 2002:a05:6402:2187:b0:6a3:905b:3c40 with SMTP id 4fb4d7f45d1cf-6a42f1d0649mr28255228a12.8.1787561901277;
+        Mon, 24 Aug 2026 01:58:21 -0700 (PDT)
+Received: from localhost (109-81-81-112.rct.o2.cz. [109.81.81.112])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a59e02a8fbsm10819638a12.13.2026.08.24.01.58.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Aug 2026 01:58:20 -0700 (PDT)
+Date: Mon, 24 Aug 2026 10:58:18 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Eric Chanudet <echanude@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Shuah Khan <shuah@kernel.org>,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, Maxime Ripard <mripard@redhat.com>,
+	Albert Esteve <aesteve@redhat.com>
+Subject: Re: [PATCH 00/11] mm/cma: charge cma allocation to memcg using per
+ area counters
+Message-ID: <aowHqqaqK7TeexQH@tiehlicka>
+References: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ziyang Men <ziyang.meme@gmail.com>, Tao Cui <cuitao@kylinos.cn>
-Subject: Re: [PATCH v3] selftests/cgroup: add PSI pressure trigger and
- validation tests
-To: Suren Baghdasaryan <surenb@google.com>
-References: <20260813133723.1663605-1-cui.tao@linux.dev>
- <CAJuCfpGxK62YWGS+0Ht63h-CZtiY+WPkvqTnYw+4W4Yna0onmg@mail.gmail.com>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <CAJuCfpGxK62YWGS+0Ht63h-CZtiY+WPkvqTnYw+4W4Yna0onmg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
 
-Hi, Suren
+On Fri 21-08-26 14:56:52, Eric Chanudet wrote:
+> CMA allocations are currently unaccounted for by cgroup memory
+> controllers. As system resources, they should fall under memcg, but CMA
+> areas partition the available space for different purposes and memcg
+> doesn't have a good representation for that.
 
-在 2026/8/19 13:47, Suren Baghdasaryan 写道:
-> On Thu, Aug 13, 2026 at 6:37 AM Tao Cui <cui.tao@linux.dev> wrote:
->>
->> From: Tao Cui <cuitao@kylinos.cn>
->>
->> The cgroup selftests have no PSI coverage. Add test_psi.c: per-resource
->> trigger smoke tests (one trigger per fd, IRQ full-only), a
->> cgroup.pressure hide/show toggle test, and a CPU-pressure trigger test
->> using over-subscription. Skips when PSI is disabled or a resource is
->> absent.
->>
->> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
->>
->> ---
->> Changes since v2 (Suren Baghdasaryan, Michal Koutny review):
->> - Restructure the trigger test into per-resource cases (io, memory, cpu,
->>   irq) so a failure points at the specific resource; irq is skipped when
->>   /proc/pressure/irq is absent.
->> - Spawn the CPU hogs with cg_run_nowait() instead of open-coding fork(),
->>   and arm the trigger with a 2s window so unprivileged users can set it.
->> - Address the remaining review comments on cleanup and robustness:
->>   guard teardown with a "created" flag, use cg_read_strcmp() instead of
->>   atoi(), report strerror() on errors, and fix the unused-parameter and
->>   sign-compare nits.
->>
->> Changes since v1 (Michal Koutny, sashiko review):
->> - Keep trigger tests smoke-level; switch the firing test from memory to
->>   CPU pressure; drop churn_memory().
->> - Keep the runner out of the cgroup; add PSI/IRQ skip-guards and a
->>   .gitignore entry.
->>
->> Link: https://lore.kernel.org/all/20260724025826.504586-1-cui.tao@linux.dev/
->> Link: https://lore.kernel.org/all/20260728083742.2359320-1-cui.tao@linux.dev/
->> ---
->>  tools/testing/selftests/cgroup/.gitignore |   1 +
->>  tools/testing/selftests/cgroup/Makefile   |   2 +
->>  tools/testing/selftests/cgroup/config     |   1 +
->>  tools/testing/selftests/cgroup/test_psi.c | 296 ++++++++++++++++++++++
->>  4 files changed, 300 insertions(+)
->>  create mode 100644 tools/testing/selftests/cgroup/test_psi.c
->>
->> diff --git a/tools/testing/selftests/cgroup/.gitignore b/tools/testing/selftests/cgroup/.gitignore
->> index 952e4448bf07..ce2b907c57ea 100644
->> --- a/tools/testing/selftests/cgroup/.gitignore
->> +++ b/tools/testing/selftests/cgroup/.gitignore
->> @@ -8,5 +8,6 @@ test_kill
->>  test_kmem
->>  test_memcontrol
->>  test_pids
->> +test_psi
->>  test_zswap
->>  wait_inotify
->> diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
->> index e01584c2189a..a8c69e37332a 100644
->> --- a/tools/testing/selftests/cgroup/Makefile
->> +++ b/tools/testing/selftests/cgroup/Makefile
->> @@ -16,6 +16,7 @@ TEST_GEN_PROGS += test_kill
->>  TEST_GEN_PROGS += test_kmem
->>  TEST_GEN_PROGS += test_memcontrol
->>  TEST_GEN_PROGS += test_pids
->> +TEST_GEN_PROGS += test_psi
->>  TEST_GEN_PROGS += test_zswap
->>
->>  LOCAL_HDRS += $(selfdir)/clone3/clone3_selftests.h $(selfdir)/pidfd/pidfd.h
->> @@ -32,4 +33,5 @@ $(OUTPUT)/test_kill: $(LIBCGROUP_O)
->>  $(OUTPUT)/test_kmem: $(LIBCGROUP_O)
->>  $(OUTPUT)/test_memcontrol: $(LIBCGROUP_O)
->>  $(OUTPUT)/test_pids: $(LIBCGROUP_O)
->> +$(OUTPUT)/test_psi: $(LIBCGROUP_O)
->>  $(OUTPUT)/test_zswap: $(LIBCGROUP_O)
->> diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
->> index 39f979690dd3..8a3ef479e83d 100644
->> --- a/tools/testing/selftests/cgroup/config
->> +++ b/tools/testing/selftests/cgroup/config
->> @@ -4,3 +4,4 @@ CONFIG_CGROUP_FREEZER=y
->>  CONFIG_CGROUP_SCHED=y
->>  CONFIG_MEMCG=y
->>  CONFIG_PAGE_COUNTER=y
->> +CONFIG_PSI=y
->> diff --git a/tools/testing/selftests/cgroup/test_psi.c b/tools/testing/selftests/cgroup/test_psi.c
->> new file mode 100644
->> index 000000000000..cfb412f61458
->> --- /dev/null
->> +++ b/tools/testing/selftests/cgroup/test_psi.c
->> @@ -0,0 +1,296 @@
->> +// SPDX-License-Identifier: GPL-2.0
->> +#define _GNU_SOURCE
->> +#include <errno.h>
->> +#include <fcntl.h>
->> +#include <poll.h>
->> +#include <stdbool.h>
->> +#include <stdio.h>
->> +#include <stdlib.h>
->> +#include <string.h>
->> +#include <unistd.h>
->> +#include <linux/limits.h>
->> +
->> +#include "kselftest.h"
->> +#include "cgroup_util.h"
->> +
->> +#define PSI_POLL_TIMEOUhas this check T_MS    5000
->> +
->> +/* PSI triggers are written with a trailing NUL the kernel parser expects. */
->> +static ssize_t write_trigger(int fd, const char *trigger)
->> +{
->> +       return write(fd, trigger, strlen(trigger) + 1);
->> +}
->> +
->> +static int pressure_open(const char *resource)
->> +{
->> +       char path[PATH_MAX];
->> +       int fd;
->> +
->> +       snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
->> +       fd = open(path, O_RDWR);
->> +       if (fd < 0)
->> +               ksft_print_msg("open %s: %s\n", path, strerror(errno));
->> +       return fd;
->> +}
->> +
->> +/*
->> + * /proc/pressure/<resource> accepts exactly one trigger per file
->> + * descriptor. For io, memory and cpu verify that a "some" trigger arms
->> + * and that a second trigger on the same fd is rejected with EBUSY. For
->> + * irq, which only tracks "full", verify that "some" is rejected and
->> + * "full" arms. irq is optional -- it only exists with IRQ-time
->> + * accounting -- so a missing /proc/pressure/irq is SKIP, not FAIL.
->> + */
->> +static int test_proc_trigger(const char *resource, bool full_only)
->> +{
->> +       int fd, ret = KSFT_FAIL;
->> +
->> +       fd = pressure_open(resource);
->> +       if (fd < 0)
->> +               return full_only ? KSFT_SKIP : KSFT_FAIL;
->> +
->> +       if (!full_only) {
->> +               if (write_trigger(fd, "some 150000 2000000") <= 0) {
->> +                       ksft_print_msg("%s: 'some' trigger rejected: %s\n",
->> +                                      resource, strerror(errno));
->> +                       goto out;
->> +               }
->> +               if (write_trigger(fd, "full 150000 2000000") != -1 ||
->> +                   errno != EBUSY) {
->> +                       ksft_print_msg("%s: second trigger not EBUSY\n",
->> +                                      resource);
->> +                       goto out;
->> +               }
->> +       } else {
->> +               if (write_trigger(fd, "some 150000 2000000") != -1) {
->> +                       ksft_print_msg("irq: 'some' trigger unexpectedly accepted\n");
->> +                       goto out;
->> +               }
->> +               if (write_trigger(fd, "full 150000 2000000") <= 0) {
->> +                       ksft_print_msg("irq: 'full' trigger rejected: %s\n",
->> +                                      strerror(errno));
->> +                       goto out;
->> +               }
->> +       }
->> +
->> +       ret = KSFT_PASS;
->> +out:
->> +       close(fd);
->> +       return ret;
-> 
-> You don't really need "ret" variable. Just "return KSFT_FAIL;" here is enough.
-> 
-Done. The harness conversion took care of this one: the switch/case
-reporting is gone and the failure paths are just ASSERTs now.
->> +}
->> +
->> +/*
->> + * cgroup.pressure gates visibility of the per-resource *.pressure files
->> + * inside a cgroup: writing 0 hides them, writing 1 shows them again.
->> + * Drive one hide/show cycle and check that memory.pressure appears and
->> + * disappears along with it.
->> + */
->> +static int test_cgroup_pressure_toggle(const char *root)
->> +{
->> +       char buf[BUF_SIZE];
->> +       char *cg = NULL;
->> +       int ret = KSFT_FAIL, created = 0;
-> 
-> Again, you don't need "ret" variable here.
-> 
->> +
->> +       cg = cg_name(root, "psi_toggle_test");
->> +       if (!cg)
->> +               goto cleanup;
->> +       if (cg_create(cg)) {
->> +               ksft_print_msg("cg_create: %s\n", strerror(errno));
->> +               goto cleanup;
->> +       }
->> +       created = 1;
-> 
-> Nope. The way we usually do the cleanup is by jumping to the
-> appropriate label instead of adding extra state flags. In this case
-> that would look something like this:
-> 
->        cg = cg_name(root, "psi_toggle_test");
->        if (!cg)
->                return KSFT_FAIL;
-> 
->        if (cg_create(cg)) {
->                ksft_print_msg("cg_create: %s\n", strerror(errno));
->                goto free_cg;
->        }
-> 
->        if (cg_write(cg, "cgroup.pressure", "0")) {
->                ksft_print_msg("write cgroup.pressure=0: %s\n", strerror(errno));
->                goto cleanup;
->        }
-> ...
->        return KSFT_PASS;
-> cleanup:
->        cg_destroy(cg);
-> free_cg:
->        free(cg);
->        return KSFT_FAIL;
-> }
-> 
-You're right, that reads better. I ended up going one step further and
-moving the teardown into FIXTURE_TEARDOWN() instead: the cgroup is
-created inside the test and self->cg is NULL until then, so the
-teardown is a no-op for the tests that don't create one. That way
-there are no labels and no state flags left.
-
->> +
->> +       if (cg_write(cg, "cgroup.pressure", "0")) {
->> +               ksft_print_msg("write cgroup.pressure=0: %s\n", strerror(errno));
->> +               goto cleanup;
->> +       }
->> +       if (cg_read_strcmp(cg, "cgroup.pressure", "0\n")) {
->> +               ksft_print_msg("cgroup.pressure readback != 0\n");
->> +               goto cleanup;
->> +       }
->> +       if (cg_read(cg, "memory.pressure", buf, sizeof(buf)) >= 0) {
->> +               ksft_print_msg("memory.pressure readable while hidden\n");
->> +               goto cleanup;
->> +       }
->> +
->> +       if (cg_write(cg, "cgroup.pressure", "1")) {
->> +               ksft_print_msg("write cgroup.pressure=1: %s\n", strerror(errno));
->> +               goto cleanup;
->> +       }
->> +       if (cg_read_strcmp(cg, "cgroup.pressure", "1\n")) {
->> +               ksft_print_msg("cgroup.pressure readback != 1\n");
->> +               goto cleanup;
->> +       }
->> +       if (cg_read(cg, "memory.pressure", buf, sizeof(buf)) < 0) {
->> +               ksft_print_msg("memory.pressure unreadable after enabling\n");
->> +               goto cleanup;
->> +       }
->> +
->> +       ret = KSFT_PASS;
->> +cleanup:
->> +       if (created)
->> +               cg_destroy(cg);
->> +       free(cg);
->> +       return ret;
->> +}
->> +
->> +/* A child that burns CPU forever; stopped by cg_killall() in the parent. */
->> +static int hog_cpu(const char *cgroup, void *arg)
->> +{
->> +       for (;;)
->> +               ;
-> 
-> This loop looks strange. Maybe:
-> 
->        for (;;) {}
-> 
-Fixed.
->> +       return 0;
->> +}
->> +
->> +/*
->> + * Arm a "some" trigger on a cgroup's cpu.pressure, oversubscribe the
->> + * cgroup with more spinning hogs than there are CPUs, and check that the
->> + * trigger fires once the cgroup stalls on CPU.
->> + */
->> +static int test_cgroup_trigger_fire(const char *root)
->> +{
->> +       char *cg = NULL, *cpupress = NULL;
->> +       int fd = -1, ret = KSFT_FAIL, created = 0, i;
-> 
-> Please define each variable on a separate line.
-> 
-Fixed.
->> +       long ncpus;
->> +
->> +       cg = cg_name(root, "psi_trigger_test");
->> +       if (!cg)
->> +               goto cleanup;
->> +       if (cg_create(cg)) {
->> +               ksft_print_msg("cg_create: %s\n", strerror(errno));
->> +               goto cleanup;
->> +       }
->> +       created = 1;
-> 
-> Same as above. Jump to the appropriate label.
-> 
->> +
->> +       cpupress = cg_control(cg, "cpu.pressure");
->> +       if (!cpupress)
->> +               goto cleanup;
->> +       fd = open(cpupress, O_RDWR);
->> +       if (fd < 0) {
->> +               ksft_print_msg("open cpu.pressure: %s\n", strerror(errno));
->> +               goto cleanup;
->> +       }
->> +
->> +       /*
->> +        * 1usec threshold over a 2s window: any CPU stall fires it. The 2s
->> +        * window is the smallest unprivileged users are allowed to arm.
->> +        */
->> +       if (write_trigger(fd, "some 1 2000000") <= 0) {
->> +               ksft_print_msg("arm trigger: %s\n", strerror(errno));
->> +               goto cleanup;
->> +       }
->> +
->> +       ncpus = sysconf(_SC_NPROCESSORS_ONLN);
->> +       if (ncpus <= 0) {
-> 
-> I don't think this syscall will ever return 0, so you just need to
-> check for -1. Also reporting -1 in the error log isn't very
-> informative. Instead report strerror(errno).
-> 
-Agreed, now checks only for -1 and reports strerror(errno) via TH_LOG.
-
->> +               ksft_print_msg("sysconf(_SC_NPROCESSORS_ONLN) returned %ld\n",
->> +                              ncpus);
->> +               goto cleanup;
->> +       }
->> +
->> +       /* ncpus+1 hogs guarantee CPU contention inside the cgroup. */
->> +       for (i = 0; i < ncpus + 1; i++) {
->> +               if (cg_run_nowait(cg, hog_cpu, NULL) < 0) {
->> +                       ksft_print_msg("spawn hog %d: %s\n", i, strerror(errno));
->> +                       goto cleanup;
->> +               }
->> +       }
->> +
->> +       struct pollfd pfd = { .fd = fd, .events = POLLPRI };
->> +
->> +       switch (poll(&pfd, 1, PSI_POLL_TIMEOUT_MS)) {
->> +       case -1:
->> +               ksft_print_msg("poll: %s\n", strerror(errno));
->> +               goto cleanup;
-> 
-> So, goto cleanup here but break everywhere else? Consistency would be
-> nice, so please use break here as well.
-> 
-The switch is gone along with the ret bookkeeping, so this is moot
-now: poll() collapsed into a single ASSERT_EQ(1, poll(...)).
-
->> +       case 0:
->> +               ksft_print_msg("trigger did not fire (could not induce CPU pressure)\n");
->> +               ret = KSFT_SKIP;
-> 
-> This means your trigger timed out. Why is this treated as KSFT_SKIP
-> and not as KSFT_FAIL?
-
-Fair point, I agree. With ncpus+1 hogs and a 1usec threshold over a 2s
-window the cgroup must stall, so if the trigger doesn't fire something
-is actually broken. I made it a FAIL.
-> 
->> +               break;
->> +       default:
->> +               if (pfd.revents & POLLPRI)
->> +                       ret = KSFT_PASS;
->> +               else
->> +                       ksft_print_msg("poll returned 0x%x\n", pfd.revents);
->> +               break;
->> +       }
->> +
->> +cleanup:
->> +       if (fd >= 0)
->> +               close(fd);
->> +       if (created) {
->> +               cg_killall(cg);
->> +               cg_destroy(cg);
->> +       }
->> +       free(cpupress);
->> +       free(cg);
->> +       return ret;
->> +}
->> +
->> +struct psi_proc_test {
->> +       const char *name;
->> +       const char *resource;
->> +       bool full_only;
->> +};
->> +static const struct psi_proc_test proc_tests[] = {
->> +       { "proc_trigger_io",     "io",     false },
->> +       { "proc_trigger_memory", "memory", false },
->> +       { "proc_trigger_cpu",    "cpu",    false },
->> +       { "proc_trigger_irq",    "irq",    true  },
->> +};
->> +
->> +struct psi_cg_test {
->> +       const char *name;
->> +       int (*fn)(const char *root);
->> +};
->> +static const struct psi_cg_test cg_tests[] = {
->> +       { "cgroup_pressure_toggle", test_cgroup_pressure_toggle },
->> +       { "cgroup_trigger_fire",    test_cgroup_trigger_fire },
->> +};
->> +
->> +int main(int argc, char **argv)
->> +{
->> +       char root[PATH_MAX];
->> +       int psi_fd, i;
->> +
->> +       ksft_print_header();
->> +       ksft_set_plan(ARRAY_SIZE(proc_tests) + ARRAY_SIZE(cg_tests));
->> +
->> +       if (cg_find_unified_root(root, sizeof(root), NULL))
->> +               ksft_exit_skip("cgroup v2 isn't mounted\n");
->> +
->> +       /* PSI must be enabled (CONFIG_PSI=y, not disabled on the cmdline). */
->> +       psi_fd = open("/proc/pressure/memory", O_RDONLY);
->> +       if (psi_fd < 0)
->> +               ksft_exit_skip("PSI unavailable (CONFIG_PSI=n or psi=0)\n");
->> +       close(psi_fd);
->> +
->> +       for (i = 0; i < ARRAY_SIZE(proc_tests); i++) {
->> +               switch (test_proc_trigger(proc_tests[i].resource,
->> +                                         proc_tests[i].full_only)) {
->> +               case KSFT_PASS:
->> +                       ksft_test_result_pass("%s\n", proc_tests[i].name);
->> +                       break;
->> +               case KSFT_SKIP:
->> +                       ksft_test_result_skip("%s\n", proc_tests[i].name);
->> +                       break;
->> +               default:
->> +                       ksft_test_result_fail("%s\n", proc_tests[i].name);
->> +                       break;
->> +               }
->> +       }
->> +
->> +       for (i = 0; i < ARRAY_SIZE(cg_tests); i++) {
->> +               switch (cg_tests[i].fn(root)) {
->> +               case KSFT_PASS:
->> +                       ksft_test_result_pass("%s\n", cg_tests[i].name);
->> +                       break;
->> +               case KSFT_SKIP:
->> +                       ksft_test_result_skip("%s\n", cg_tests[i].name);
->> +                       break;
->> +               default:
->> +                       ksft_test_result_fail("%s\n", cg_tests[i].name);
->> +                       break;
->> +               }
->> +       }
-> 
-> Please convert this to use
-> https://docs.kernel.org/dev-tools/kselftest.html#test-harness as I
-> suggested before. This code will look much simpler. Even if some other
-> tests are not using it, there is no reason for new tests not to take
-> advantage of the existing harness. You will find planty of examples
-> which use them.
-> 
-Converted, thanks for the pointer. Each case is a TEST_F(psi, ...) now;
-the cgroup v2 and PSI availability checks live in FIXTURE_SETUP() and
-SKIP there, and the hog killing and cgroup destruction live in
-FIXTURE_TEARDOWN(). It does make the code simpler, as you predicted.
-The hogs also set PR_SET_PDEATHSIG on themselves now, so an interrupted
-run doesn't leave orphans pinning every CPU.
-
-With that the file shrinks from 296 to 206 lines. I tested it on a few
-setups (PSI on and off, with and without /proc/pressure/irq): 6/6 pass
-where everything is available, clean skips otherwise.
-
-Thanks a lot for the review and for your patience with all the iterations.
-
-Thanks,
-Tao>> +
->> +       ksft_finished();
->> +}
->> --
->> 2.43.0
->>
-
+Which CMA usecases are covered by this work? It would be also great to
+spend more time describing usecases.
+-- 
+Michal Hocko
+SUSE Labs
