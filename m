@@ -1,279 +1,220 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-227.mta0.migadu.com [91.218.175.227])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 063F349364C;
-	Sun, 23 Aug 2026 13:32:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD3223911A2
+	for <cgroups@vger.kernel.org>; Sun, 23 Aug 2026 14:52:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787491972; cv=none; b=p0Dipesw4HXySHYT1lYTd9d/9mOSGnvdNYGWd3kNOMle5E3m5wPCxyrpB0SA2QScn/FmU6vB0zws/r+jHk9CHfmfI4jty07fhxMaXS13dfRiSr4OSr9cyNsUigoAtleq0QEBG6QqKoxYJpu5BPoGBWfcKf28janDPwh+5UNlxVs=
+	t=1787496756; cv=none; b=NWsr2MN7Pmnt62rZTHVbF3gkt9teBl8f6sj7oRzAaantvRTYvtr/YqVnPwzNGJtRxw3CrwKqZcQfz9uqjmNNc3/vJLHnIaUl9hxgMM0ppn2vgJ9G7ymYjDHSgXusGY5p16sxu5vTjLCeeb7P6tM6DyegnAw8MVl2zoJnMgWwXxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787491972; c=relaxed/simple;
-	bh=9wsmerHxEK7Jdp01jX7Ti/ajzMQcAfnwHV0vWIRMCn4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lFAk+Zhug5aNcs6llh0jZwUInIToPWS6ZjFfkHJECnEIz+mh81gX8ud6fLLCNBWisAcAxhnWJ2QvPHHJhfFb2dMd2xIVTzwltJOAPAepxFI625JHSnCA0Z+bcV51GXqnM0yzJUGm5FUJURx+13JQZKyHNFPH9m30VLY+SkWIixY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKuh8fCa; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787496756; c=relaxed/simple;
+	bh=9oZ/GVF5ZnkfYq+PeS7hkUQ12oaf6Pk7QpDnKjKc234=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tD6iaihJ4LUUkWeiCuH3CDHCkGr6GJH784YiOzEPULo4UFr0RhVxYDCKFEfC/tCKM600D5et5gc2SCmR8umUY0goSoA9cO+pxwxbo8TXiB8FCDn8iF8b5kocKaoRv2tAD9RzStVR3/WBswXbavwIje0lbyGcF3EhfBkANQHSfHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PmsjAZCj; arc=none smtp.client-ip=91.218.175.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKuh8fCa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76171F000E9;
-	Sun, 23 Aug 2026 13:32:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787491970;
-	bh=8KYwjYDmJgv3DnzDOpRmS3OQgAUfeEON5RSUmmX7LeU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BKuh8fCaInrcFBcT9JPPeKYinLYc2/Ia8kito9c/k0yLMh5AhnPIFZ8GENBhUoLAR
-	 nVavT+qzK13I5dM4nIDPuwNy7K/X5Q47M9zNUaap/0IMn4B/NAqh6y87WoDfihWTt4
-	 G4+jZPoNfLVWWvHeKZYmPFyY9mSz1v+4dswZns26zYXfIssVpHrLauPKJh3zDA3j3a
-	 a7zZ6NlpV/raMgv0PGK6tkXI8qCx5Mf4Rukx/POzB8lcSM1xIyhimElgsM+1iwPA/7
-	 P6+idTUXgWpua3+INzz/HMMc6QJzmpdO0g0gUFonMEPJytHLedsGkCDMwvT46VMrn5
-	 O9zVPjthG2MdA==
-From: Yu Kuai <yukuai@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	Tejun Heo <tj@kernel.org>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Christoph Hellwig <hch@lst.de>,
-	Tao Cui <cui.tao@linux.dev>,
-	Jan Kara <jack@suse.cz>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Coly Li <colyli@fygo.io>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Alasdair Kergon <agk@redhat.com>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
-	Dan Williams <djbw@kernel.org>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Ira Weiny <iweiny@kernel.org>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Youngjun Park <youngjun.park@lge.com>,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org,
-	nvdimm@lists.linux.dev,
-	virtualization@lists.linux.dev,
-	gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [PATCH 3/3] blk-cgroup: move async bio punt state to blkcg
-Date: Sun, 23 Aug 2026 21:30:45 +0800
-Message-ID: <20260823133045.970199-4-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260823133045.970199-1-yukuai@kernel.org>
-References: <20260823133045.970199-1-yukuai@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PmsjAZCj"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=9oZ/GVF5ZnkfYq+PeS7hkUQ12oaf6Pk7QpDnKjKc234=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787496751; v=1; x=1788101551;
+ b=PmsjAZCjeEhYTAYSW2SvlvqBwCZGLzX2/Kh+CuZoJALZDw1xA9jAe6gvXCii2v05AS5+m2FJ
+ fvQgWxfkyUDbzzZWzQ/xp3xuaucDs9yXGGSVVfY9TivLXquCPTycWYi+u1HHMp3BbsXYU6J3e9g
+ f6R3oE1rhrpBhDIle51TRLHc=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from three-body (240e:398:90:76f0:87b1:670e:21af:efaf)
+	by smtp.migadu.com with ESMTPS id 2aef8cd3afc152ee;
+	Sun, 23 Aug 2026 14:52:21 +0000
+X-Mizu-Trace-ID: 2aef8cd3afc152ee
+X-Migadu-Flow: FLOW_OUT
+Date: Mon, 24 Aug 2026 22:51:51 +0800
+From: Chen Yu <chen.yu@linux.dev>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Szabina Korbai <szkorbai@linux.ibm.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>, mingo@kernel.org,
+	longman@redhat.com, chenridong@huaweicloud.com,
+	juri.lelli@redhat.com, vincent.guittot@linaro.org,
+	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
+	mgorman@suse.de, vschneid@redhat.com, tj@kernel.org,
+	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jstultz@google.com,
+	qyousef@layalina.io, euan@linux.ibm.com, huschle@linux.ibm.com,
+	yu.c.chen@intel.com, tim.c.chen@intel.com, philip.li@intel.com
+Subject: Re: [PATCH v3 0/7] sched: Flatten the pick
+Message-ID: <aoxah90s0bQ4tcUW@three-body>
+References: <20260605105513.354837583@infradead.org>
+ <fecf5eb215b4b86bec11ca47eb6b5b17f5e0fea5.camel@linux.ibm.com>
+ <d690a668-7bb2-4cd1-a229-295e556d4f28@amd.com>
+ <ef9f077a6faafc747b3e144400dd3f5ad10e8e0a.camel@linux.ibm.com>
+ <20260818091649.GC1247881@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260818091649.GC1247881@noisy.programming.kicks-ass.net>
 
-From: Yu Kuai <yukuai@fygo.io>
+On Tue, Aug 18, 2026 at 11:16:49AM +0200, Peter Zijlstra wrote:
+> > > 
+> > > Are you using tip:sched/core at commit 68e3748781 ("sched/fair: Fix
+> > > flat
+> > > hierarchy") for the flat_cg numbers or did you checkout at
+> > > 85570f10a4c6
+> > > ("sched/eevdf: Move to a single runqueue")?
+> > > 
+> > > There are a couple fixes for vruntime update and Vincent's
+> > > optimizations
+> > > for preemption bits which might make a difference to the overall
+> > > results.
+> > 
+> > 
+> > Hi Prateek,
+> > 
+> > thank you, that's a good call. I did checkout at "Move to a single
+> > runqueue". Let me try it with the fix included, see how the results are
+> > affected.
+> 
+> I've not yet managed to digest your various benchmark results, but also
+> double check that patch 6/7 from this series is not to 'blame' for the
+> some of the changes.
+> 
+> The 0day robot fingered that patch for at least one issue.
+> 
+> In that case the benchmark threads ended up 'heavier' than before, which
+> resulted in less preemptions. Probably ksoftirqd getting ran less and
+> causing a regression in network throughput for that thing.
+> 
 
-blkcg_punt_bio_submit() currently queues punted bios on blkg->async_bios,
-so it has to call bio_blkg() to find or create a queue-local blkg.  Bios
-now carry and pin the blkcg css, so punted bio lifetime no longer needs to
-be anchored by a blkg.
+The 0day' regression was triggered by running netperf/netserver using loopback,
+so ksoftirqd was not really running very frequently IMO.
 
-Keeping the punt state in blkg can instantiate a blkg even when no blkcg
-policy is enabled, just to bounce submission from a shared kthread.  Move
-async_bio_lock, async_bios and async_bio_work to struct blkcg, and queue
-punted bios on bio_blkcg() for non-root cgroups.  Root or unassociated bios
-are submitted directly.
+> I did suggest trying to change the slice of ksoftirqd down, such that it
+> might be ran more readily, but I'm not sure that ever got tried.
 
-This preserves the priority-inversion avoidance while preventing
-blkcg_punt_bio_submit() from creating blkgs that are not needed by any
-policy.
+The 0day regression was triggered by running netperf/netserver over loopback,
+so ksoftirqd was not running very frequently IIUC.
 
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- block/blk-cgroup.c | 44 +++++++++++++++++++++-----------------------
- block/blk-cgroup.h | 14 ++++++--------
- 2 files changed, 27 insertions(+), 31 deletions(-)
+I borrowed a similar machine(no-SMT, every 4 Cores share L2, 192 Cores) as 0day used.
+I asked AI to generate a simple test script based on 0day's reproducer
+(attached at the end of this email), and successfully reproduced the regression.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index b23f1e2d568d..1bd91223367c 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -180,14 +180,10 @@ static void blkg_free(struct blkcg_gq *blkg)
+TL;DR,
+The decision made by wake_affine_weight() seems to be affected by the increased
+weight of the wakee under concur mode. As a result, wake_affine_weight() became less
+likely to select this_cpu. This reduced preference for this_cpu leads to a higher
+L2 miss rate on this platform, and consequently lower throughput.
+
+Test summary:
+
+| Config | Throughput (Mbps) | **L2 miss%** | **LLC miss%** |
+| smp + WA_WEIGHT | **470249** | **19.37%** | 60.08% |
+| smp + NO_WA_WEIGHT | 305360 | 32.67% | 60.46% |
+| concur + WA_WEIGHT | 338770 | 31.45% | 62.85% |
+| concur + NO_WA_WEIGHT | 259358 | 36.24% | 61.95% |
+
+We can see if WA_WEIGHT is disabled in smp mode, the performance drops to concur. One
+possible reason is that task_h_load(p) returns a very small value in smp mode(just the
+issue that concur wants to fix), whereas it returns a "normal" value in concur mode.
+
+In smp mode, the extremly small value returned by task_h_load(p) can be effectively ignored
+in the comparison in wake_affine_weight(). As a result, the condition for returning this_cpu
+becomes:
+
+cpu_load(cpu_rq(this_cpu)) * 100 < cpu_load(cpu_rq(prev_cpu) * 108
+
+As a result, this_cpu has a higher chance of being selected in smp mode. In concur mode,
+task_h_load(p) is on par with cpu_load(), so it cannot be simply ignored and provides a fairer
+basis for choosing between this_cpu and prev_cpu. Since netperf/netserver is a sync wakeup, it
+prefers to be co-located on the same CPU/L2 domain for better L2 cache locality.
+
+I'm not sure if this is the expected behavior before I further digging into the details,
+a hack patch could restore part of the performance, because it increases the ratio to
+return this_cpu:
+
+thanks,
+Chenyu
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 6d881e530f89..8bff8b6698a9 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -8385,6 +8385,7 @@ wake_affine_weight(struct sched_domain *sd, struct task_struct *p,
+        unsigned long task_load;
  
- static void __blkg_release(struct rcu_head *rcu)
- {
- 	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
+        this_eff_load = cpu_load(cpu_rq(this_cpu));
++       task_load = task_h_load(p);
  
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	WARN_ON(!bio_list_empty(&blkg->async_bios));
--#endif
+        if (sync) {
+                unsigned long current_load = task_h_load(current);
+@@ -8392,11 +8393,13 @@ wake_affine_weight(struct sched_domain *sd, struct task_struct *p,
+                if (current_load > this_eff_load)
+                        return this_cpu;
+ 
++               /* replace current load with wakee load does no harm */
++               if (sched_feat(WA_SYNC_WEIGHT) && current_load >= task_load)
++                       return this_cpu;
++
+                this_eff_load -= current_load;
+        }
+ 
+-       task_load = task_h_load(p);
 -
- 	blkg_free(blkg);
- }
- 
- /*
-  * A group is RCU protected, but having an rcu lock does not mean that one
-@@ -226,23 +222,22 @@ static void blkg_release(struct percpu_ref *ref)
- }
- 
- #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
- static struct workqueue_struct *blkcg_punt_bio_wq;
- 
--static void blkg_async_bio_workfn(struct work_struct *work)
-+static void blkcg_async_bio_workfn(struct work_struct *work)
- {
--	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
--					     async_bio_work);
-+	struct blkcg *blkcg = container_of(work, struct blkcg, async_bio_work);
- 	struct bio_list bios = BIO_EMPTY_LIST;
- 	struct bio *bio;
- 	struct blk_plug plug;
- 	bool need_plug = false;
- 
--	/* as long as there are pending bios, @blkg can't go away */
--	spin_lock(&blkg->async_bio_lock);
--	bio_list_merge_init(&bios, &blkg->async_bios);
--	spin_unlock(&blkg->async_bio_lock);
-+	/* as long as there are pending bios, @blkcg can't go away */
-+	spin_lock(&blkcg->async_bio_lock);
-+	bio_list_merge_init(&bios, &blkcg->async_bios);
-+	spin_unlock(&blkcg->async_bio_lock);
- 
- 	/* start plug only when bio_list contains at least 2 bios */
- 	if (bios.head && bios.head->bi_next) {
- 		need_plug = true;
- 		blk_start_plug(&plug);
-@@ -259,19 +254,19 @@ static void blkg_async_bio_workfn(struct work_struct *work)
-  * cgroup.  Use this helper instead of submit_bio to punt the actual issuing to
-  * a dedicated per-blkcg work item to avoid such priority inversions.
-  */
- void blkcg_punt_bio_submit(struct bio *bio)
- {
--	struct blkcg_gq *blkg = bio_blkg(bio);
-+	struct blkcg *blkcg = bio_blkcg(bio);
- 
--	if (blkg && blkg->parent) {
--		spin_lock(&blkg->async_bio_lock);
--		bio_list_add(&blkg->async_bios, bio);
--		spin_unlock(&blkg->async_bio_lock);
--		queue_work(blkcg_punt_bio_wq, &blkg->async_bio_work);
-+	if (blkcg && cgroup_parent(blkcg->css.cgroup)) {
-+		spin_lock(&blkcg->async_bio_lock);
-+		bio_list_add(&blkcg->async_bios, bio);
-+		spin_unlock(&blkcg->async_bio_lock);
-+		queue_work(blkcg_punt_bio_wq, &blkcg->async_bio_work);
- 	} else {
--		/* Never bounce if there is no non-root blkg to queue on. */
-+		/* Never bounce if there is no non-root blkcg to queue on. */
- 		submit_bio(bio);
- 	}
- }
- EXPORT_SYMBOL_GPL(blkcg_punt_bio_submit);
- 
-@@ -350,15 +345,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	blkg->q = disk->queue;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
- 	blkg->blkcg_id = blkcg->css.id;
- 	blkg->iostat.blkg = blkg;
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spin_lock_init(&blkg->async_bio_lock);
--	bio_list_init(&blkg->async_bios);
--	INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
--#endif
- 
- 	u64_stats_init(&blkg->iostat.sync);
- 	for_each_possible_cpu(cpu) {
- 		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
- 		per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
-@@ -1388,10 +1378,13 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
- 		if (blkcg->cpd[i])
- 			blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
- 
- 	mutex_unlock(&blkcg_pol_mutex);
- 
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	WARN_ON(!bio_list_empty(&blkcg->async_bios));
-+#endif
- 	free_percpu(blkcg->lhead);
- 	kfree(blkcg);
- }
- 
- static struct cgroup_subsys_state *
-@@ -1436,10 +1429,15 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 	}
- 
- 	spin_lock_init(&blkcg->lock);
- 	refcount_set(&blkcg->online_pin, 1);
- 	INIT_HLIST_HEAD(&blkcg->blkg_list);
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spin_lock_init(&blkcg->async_bio_lock);
-+	bio_list_init(&blkcg->async_bios);
-+	INIT_WORK(&blkcg->async_bio_work, blkcg_async_bio_workfn);
-+#endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	INIT_LIST_HEAD(&blkcg->cgwb_list);
- #endif
- 	list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
- 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 8d0df8ed5813..1925420154c1 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -75,18 +75,11 @@ struct blkcg_gq {
- 
- 	struct blkg_iostat_set __percpu	*iostat_cpu;
- 	struct blkg_iostat_set		iostat;
- 
- 	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spinlock_t			async_bio_lock;
--	struct bio_list			async_bios;
--#endif
--	union {
--		struct work_struct	async_bio_work;
--		struct work_struct	free_work;
--	};
-+	struct work_struct		free_work;
- 
- 	atomic_t			use_delay;
- 	atomic64_t			delay_nsec;
- 	atomic64_t			delay_start;
- 	u64				last_delay;
-@@ -111,10 +104,15 @@ struct blkcg {
- 	/*
- 	 * List of updated percpu blkg_iostat_set's since the last flush.
- 	 */
- 	struct llist_head __percpu	*lhead;
- 
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spinlock_t			async_bio_lock; /* protects async_bios */
-+	struct bio_list			async_bios;
-+	struct work_struct		async_bio_work;
-+#endif
- #ifdef CONFIG_BLK_CGROUP_FC_APPID
- 	char                            fc_app_id[FC_APPID_LEN];
- #endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct list_head		cgwb_list;
--- 
-2.51.0
+        this_eff_load += task_load;
+        if (sched_feat(WA_BIAS))
+                this_eff_load *= 100;
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index 8f0dee8fc475..99fabe53fb22 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -129,6 +129,7 @@ SCHED_FEAT(ATTACH_AGE_LOAD, true)
+ SCHED_FEAT(WA_IDLE, true)
+ SCHED_FEAT(WA_WEIGHT, true)
+ SCHED_FEAT(WA_BIAS, true)
++SCHED_FEAT(WA_SYNC_WEIGHT, true)
 
+
+test command:
+
+NR=$(( $(nproc) * 2 ))
+run() {
+local mode=$1 waw=$2 tag=$3
+echo $mode | sudo -n tee /sys/kernel/debug/sched/cgroup_mode >/dev/null
+echo $waw  | sudo -n tee /sys/kernel/debug/sched/features    >/dev/null
+sudo -n pkill -x netserver; sleep 1
+netserver -4 >/dev/null 2>&1; sleep 1
+rm -f /tmp/m4.$tag
+for i in $(seq $NR); do
+netperf -4 -H 127.0.0.1 -t TCP_MAERTS -l 70 -P 0 >> /tmp/m4.$tag 
+2>/dev/null &
+done
+sleep 15
+sudo -n ./tools/perf/perf stat -a \
+-e 
+l2_request.hit,l2_request.miss,longest_lat_cache.reference,longest_lat_cache.miss 
+\
+-x, -o /tmp/p4.$tag -- sleep 20
+wait
+} >/dev/null 2>&1
+run smp    WA_WEIGHT    smp_waw
+run smp    NO_WA_WEIGHT smp_nowaw
+run concur WA_WEIGHT    con_waw
+run concur NO_WA_WEIGHT con_nowaw
+echo WA_WEIGHT | sudo -n tee /sys/kernel/debug/sched/features >/dev/null
+
+
+printf "%-12s %10s %8s %10s %10s\n" CONFIG Mbps streams L2miss% LLCmiss%
+for t in smp_waw smp_nowaw con_waw con_nowaw; do
+   read TP NS < <(awk '{s+=$NF;n++} END{print s, n}' /tmp/m4.$t)
+   awk -F, -v t=$t -v tp=$TP -v ns=$NS '
+     $3=="l2_request.hit"{h=$1} $3=="l2_request.miss"{m=$1}
+     $3=="longest_lat_cache.reference"{r=$1} 
+$3=="longest_lat_cache.miss"{lm=$1}
+     END{printf "%-12s %10.0f %8d %9.2f%% %9.2f%%\n", t, tp, ns, 
+100*m/(h+m), 100*lm/r}' /tmp/p4.$t
+done
