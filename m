@@ -1,129 +1,177 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43ABE3672BF
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 14:37:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 437A441A921;
+	Mon, 24 Aug 2026 15:26:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787582233; cv=none; b=pH/uTnxY7jEJoMNlfNL9ojNwE0XfFqB4NvtMqaRZNBOY7MYNdrbU+s11wrx5c3v7fBoY9RTYUDHtxcyprM9N8+iMMY2XJ+nhewRjVt95u0DHtk4VcqnQlK5O5QJAvHlvtehH+Fus0noycsM/FDsvEmqkPsBahOB91srSo6foHtM=
+	t=1787585192; cv=none; b=uwC7VATxiALjhffPjPHVQAdukWjcpJNZKfL+PvcxcMfvg4LZlLa2eDiTPXbipTfgEdox4Rgvgd423UY59ql+ZgdVLDYLhGf05gBYbfHmBUGL5CJyvmTAURN8xeRqMoS5XQO/auZh5qjjTIBWZC2laAQ7pxssnQHXq2nBf91DUeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787582233; c=relaxed/simple;
-	bh=E95yqgu+uc/18j/95ZEM/xLlM0SYg+YIYsKPiW9JzhU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XMXKpw6k8+ca+uzn3sQqWVN8GuYN3Otj6HGRJwjSCCAsnRA7NEMCe7zROIN/0nzS99mNNtkcZYBn20vopbK32wi8vW2l7WCVCPHqaOGECIUcklUpph3vitArjXdg5pvyNxKFRY3ULw8Kc8ZpXSZL7HTF5BwNkRwDq9EIaeVugnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=J4C9ctMD; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1787585192; c=relaxed/simple;
+	bh=bN2F8gmSHKc1/jt75s0wLe0MmFp59ane/uTTthFFmOQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=on70bx4XPS8TsFfs3UsxjC7ua4gYlOHdiv18zX3c8C/xbF70pIVlbU1CkC5OJm2FbjvqRiI9MWPPi6Na/lpiTjYbkmAr7czTZ9WmYoi2b+oYJPNPfQ0VpQCByqErLg8WFRD8QBLHLH2SZasi2xlfwFt8ZpRuQ1J7ey8lyDpqD8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZNHeNCf9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J4C9ctMD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787582229;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CLfKTflZCIezVxGilF5qGmiTx8Ok8bqVruJftZGAGYs=;
-	b=J4C9ctMDmkd2FdrMUoIwzd/pMD/gHi7EjMPAoSUWcvfcH7IGcyM7u8xx6uycz+6KEZJZSy
-	Zlu0EJAaXGVxFmfMiyXXgcgRQpHpRKCyUtijGmZkQ5vOQ4tEPrz1RxXz49juCY26NRHQGw
-	CO4EZ8Q9rtVvoimg711qcIqgJj7YJKE=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-634-LJsUzn1bPr6kjEKCGZUQ6g-1; Mon,
- 24 Aug 2026 10:37:07 -0400
-X-MC-Unique: LJsUzn1bPr6kjEKCGZUQ6g-1
-X-Mimecast-MFC-AGG-ID: LJsUzn1bPr6kjEKCGZUQ6g_1787582225
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4FB021955DD0;
-	Mon, 24 Aug 2026 14:37:04 +0000 (UTC)
-Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D0C2F1955D6D;
-	Mon, 24 Aug 2026 14:37:01 +0000 (UTC)
-Message-ID: <0a9afea3-bd0c-42af-8c92-6f2d54348d1e@redhat.com>
-Date: Mon, 24 Aug 2026 10:37:00 -0400
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZNHeNCf9"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D36A4C19425;
+	Mon, 24 Aug 2026 15:26:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1787585191;
+	bh=bN2F8gmSHKc1/jt75s0wLe0MmFp59ane/uTTthFFmOQ=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=ZNHeNCf9t7zLgIVI7HBfTfunv7f59iFTKQczIwTWr0zUM5Uij6nDVv8g8FZbHI52I
+	 X56PQNRAEgFeTT1t5csi3wRpmkxhvxRT0rziugCWbeZX2bvpy8zury5iAQF11cK37O
+	 sCWbnVVdXvhxrCtESr9CT99nSjxyrkf/PR3kKg4T0A6ZlTb0J6BqK9PKF16evvBGp6
+	 p6Hrfr94J0Vo+z8PlnQ29wC7T7fKGlc9Jad0/PUJSNBzkAobmkfsAPfmNW0Bu9NTd4
+	 iYPBOcYZmj7O9fxu0k/X1BkAujPKgGC/NOXJtsMfTNET5xUNwxowOIAtdA/ldIgnnT
+	 3meD7YAwdZrYA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CBBC5DF9C;
+	Mon, 24 Aug 2026 15:26:31 +0000 (UTC)
+From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
+Date: Mon, 24 Aug 2026 23:26:28 +0800
+Subject: [PATCH v2 1/6] mm/memcontrol: make lru_zone_size atomic and
+ simplify sanity check
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/17] cgroup/cpuset: Release CPUs when a type change is
- rejected
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, cgroups@vger.kernel.org
-Cc: ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
- mkoutny@suse.com, shuah@kernel.org, linux-kselftest@vger.kernel.org,
- linux-kernel@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20260820124202.517160-1-guopeng.zhang@linux.dev>
- <20260820124202.517160-9-guopeng.zhang@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260820124202.517160-9-guopeng.zhang@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Message-Id: <20260824-mglru-flags-cleanup-v2-1-0104132114ae@tencent.com>
+References: <20260824-mglru-flags-cleanup-v2-0-0104132114ae@tencent.com>
+In-Reply-To: <20260824-mglru-flags-cleanup-v2-0-0104132114ae@tencent.com>
+To: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+ Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+ Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ Ridong Chen <ridong.chen@linux.dev>, David Hildenbrand <david@kernel.org>, 
+ Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+ Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, 
+ Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, 
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Kairui Song <ryncsn@gmail.com>, Kairui Song <kasong@tencent.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787585189; l=3616;
+ i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
+ bh=RexeF1U3Yfl0k0lRFmBeywxr/pHJWWKLBeFtqNt3agc=;
+ b=BZLmo0P2XGHFX1zI7sUUmKSe4H3Wpg70rneiSn6rerCZeGSMyCua0Uo+7VKEzGhYmGwVtnAdv
+ 7TwR1hIlpuTAf9aQp09WtZ/jGtYwqgpmaPHmB5ZMWy4z5yZucbnyrIx
+X-Developer-Key: i=kasong@tencent.com; a=ed25519;
+ pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
+X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
+ with auth_id=562
+X-Original-From: Kairui Song <kasong@tencent.com>
+Reply-To: kasong@tencent.com
 
-On 8/20/26 8:41 AM, Guopeng Zhang wrote:
-> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
->
-> When a housekeeping check rejects a root-to-isolated or isolated-to-root
-> change, update_prstate() marks the partition invalid but leaves its
-> effective_xcpus allocated. Those CPUs remain missing from the partition
-> which owns the invalidated subtree.
->
-> Disable a rejected remote partition with remote_partition_disable().
-> For a local partition, return effective_xcpus to its parent before
-> recording the invalid state. Use the complete mask because descendants
-> are invalidated along with the parent and their CPUs return at the same
-> time.
->
-> Fixes: 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full don't leave any housekeeping")
-> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> ---
->   kernel/cgroup/cpuset.c | 15 +++++++++++++--
->   1 file changed, 13 insertions(+), 2 deletions(-)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 853942c1afeb..a616012927be 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -3020,10 +3020,21 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->   		compute_partition_owned_cpumask(cs, tmpmask.new_cpus);
->   		if (((new_prs == PRS_ISOLATED) &&
->   		     !isolated_cpus_can_update(tmpmask.new_cpus, NULL)) ||
-> -		    prstate_housekeeping_conflict(new_prs, tmpmask.new_cpus))
-> +		    prstate_housekeeping_conflict(new_prs, tmpmask.new_cpus)) {
->   			err = PERR_HKEEPING;
-> -		else
-> +			if (is_remote_partition(cs)) {
-> +				WRITE_ONCE(cs->prs_err, err);
-This WRITE_ONCE() is not necessary as it will be done later in the 
-function.
-> +				remote_partition_disable(cs, &tmpmask);
-> +			} else {
-> +				spin_lock_irq(&callback_lock);
-> +				partition_xcpus_del(old_prs, parent, cs->effective_xcpus);
-> +				spin_unlock_irq(&callback_lock);
-> +				cpuset_update_tasks_cpumask(parent, tmpmask.new_cpus);
-> +				update_sibling_cpumasks(parent, cs, &tmpmask);
-> +			}
+From: Kairui Song <kasong@tencent.com>
 
-This code to disable the partition is duplicating what is being done in 
-the last else clause of the outer if, but in a somewhat different way. 
-That is not good programming practice. You can either jump to the 
-partition disabling code below or separate out the partition disabling 
-code controlled by a separate control flag and set the flag to do it.
+commit ca707239e8a7 ("mm: update_lru_size warn and reset bad lru_size")
+introduced a sanity check to catch memcg counter underflow, which was
+more of a workaround for another bug: lru_zone_size is unsigned, so
+underflow wraps it around and returns an enormously large number, then
+the memcg shrinker loops almost forever as the calculated number of
+folios to shrink is huge. That commit also checked if a zero value
+matches the empty LRU list, so we have to hold the LRU lock, and
+handle the positive and negative deltas separately.
 
-Cheers,
-Longman
+But later commit b4536f0c829c ("mm, memcg: fix the active list aging
+for lowmem requests when memcg is enabled") already removed the LRU
+emptiness check, so handling the deltas separately is no longer
+needed. And if we just turn it into an atomic long, underflow isn't a
+big issue either, and can be checked at the reader side, which is
+called much less frequently than the updater.
 
-> +		} else {
->   			isolcpus_updated = true;
-> +		}
->   	} else {
->   		/*
->   		 * Switching back to member is always allowed even if it
+So let's turn the counter into an atomic long and check at the reader
+side instead, which has a smaller overhead. The underflow correction
+is removed: a massive leak of the LRU size counter would indicate
+that something else has gone very wrong, and one should fix that
+leaking site instead. Besides, the updater-side sanity check is
+unlikely to catch the leaking site anyway: if a folio was removed
+without updating the counter while other folios remain on the LRU,
+the WARN only triggers much later, from a likely innocent callsite.
+
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Signed-off-by: Kairui Song <kasong@tencent.com>
+---
+ include/linux/memcontrol.h |  9 +++++++--
+ mm/memcontrol.c            | 18 +-----------------
+ 2 files changed, 8 insertions(+), 19 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 215e2e87f42b..7b89d0cb5f6c 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -113,7 +113,7 @@ struct mem_cgroup_per_node {
+ 	/* Fields which get updated often at the end. */
+ 	struct lruvec		lruvec;
+ 	CACHELINE_PADDING(_pad2_);
+-	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
++	atomic_long_t		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
+ 	struct mem_cgroup_reclaim_iter	iter;
+ 
+ 	/*
+@@ -902,10 +902,15 @@ static inline
+ unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
+ 		enum lru_list lru, int zone_idx)
+ {
++	long val;
+ 	struct mem_cgroup_per_node *mz;
+ 
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	return READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
++	val = atomic_long_read(&mz->lru_zone_size[zone_idx][lru]);
++	if (WARN_ON_ONCE(val < 0))
++		return 0;
++
++	return val;
+ }
+ 
+ void __mem_cgroup_handle_over_high(gfp_t gfp_mask);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 11b85f4b6828..a7572ded56c9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1529,28 +1529,12 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+ 				int zid, long nr_pages)
+ {
+ 	struct mem_cgroup_per_node *mz;
+-	unsigned long *lru_size;
+-	long size;
+ 
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	lru_size = &mz->lru_zone_size[zid][lru];
+-
+-	if (nr_pages < 0)
+-		*lru_size += nr_pages;
+-
+-	size = *lru_size;
+-	if (WARN_ONCE(size < 0,
+-		"%s(%p, %d, %ld): lru_size %ld\n",
+-		__func__, lruvec, lru, nr_pages, size)) {
+-		VM_BUG_ON(1);
+-		*lru_size = 0;
+-	}
+-
+-	if (nr_pages > 0)
+-		*lru_size += nr_pages;
++	atomic_long_add(nr_pages, &mz->lru_zone_size[zid][lru]);
+ }
+ 
+ /**
+
+-- 
+2.55.0
+
 
