@@ -1,159 +1,170 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67793932C4
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 22:03:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787609030; cv=none; b=sL15v0QCRIvUcTsxpPZO/HLmXS4r8MgresLZpn599Wz9ndCnaRWZs1luTGeuegwDEAMO4RAAD9B2kHPGhgaanJAch1FaJ9YmLeN8drV6yYOOSapCuRks0hDFXL+dCk6ogAa8dO6SJXPXgj4WSuGjlbVvwR5Gcrk4zv3ShHl5Th8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787609030; c=relaxed/simple;
-	bh=XUlYpvur5uBDwUWOp+VgOQbpBxzGWFt/Fy1ep+LAqUA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bYRGjSYCIcebtlhZ7jnrkcS/uG5MAn8LB8HuT3es48Z/tVCNiArNQBC+azKQpDuvVVvHyancadWBNqQRdw4GpU3Rt3Y4J+z7J29F3/cdQytLMYLbhgPrjGKj4JJ7q6b4uQg7g5CkKzjSOEXTDRtQQwj/fnc/HE4cD63hVyLcOkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BKR4C7OE; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=SKniA9nC; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A368F393DF1
+	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 23:43:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787614985; cv=pass; b=hyzLbJiM+hvtIXF2+JDJTk2rvnwDARY9fmjD5x5V4XDrKatrxAwkV8bcpGvN3jfIqWePf1b+gZ4NgD+v+NXpCRHOU+szW+Qj/lMC0Id236gW1TJWJyUmCxRNnmjGiA1Qr9NbHqfe8HfjXOArQ6ukxaFkFCAKV1TF9K7PLMkhCFc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787614985; c=relaxed/simple;
+	bh=sHnXZHT8WiiUeAdh+tKiJaengtnfesqTEZdJsUGA+8I=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=sLySR+CVMTAIARoFTTAdO/X3iF8l6k2GR7npBZVs9Ug1Gv4Bu+akxklvHVxBAkyprCbc0bnEAJF2lVkrdCSTpgK77e8PuQBIRLcMA9RV+GB++a6lsI/D+D42/6D2eeCy64hrnjtco+Buk/WHpZqEiqbUZgimFw3HPcsyZUuSXyc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h2uelV63; arc=pass smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BKR4C7OE";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="SKniA9nC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1787609027;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P6umSLzif7YwA3wBurX01NBnFBatASw3o1QKXhBN6wY=;
-	b=BKR4C7OEijjFLAlAdxwxXZL2K0QL3eGZx4BNJ2nL9ZDt+rvc6GUYGxSaymThHGxb3yr7AD
-	0f+r9sg6C8MPAsIedBj32QY8OZFW0vA5EalJ6kMA41dAEPQ67sEFcBz6s5OiBX6liuUKmt
-	RlokmlhRXSlQLwPl5QV/qNTIcpLfSKM=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-610-lgUNDu92PsWXU3WAWte3wg-1; Mon, 24 Aug 2026 18:03:46 -0400
-X-MC-Unique: lgUNDu92PsWXU3WAWte3wg-1
-X-Mimecast-MFC-AGG-ID: lgUNDu92PsWXU3WAWte3wg_1787609026
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-51c0408254aso2568921cf.0
-        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 15:03:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h2uelV63"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-499b6c02b02so19237255e9.1
+        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 16:43:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787614982; cv=none;
+        d=google.com; s=arc-20260327;
+        b=fgSarhrOmT8epYH3VJAoNgaYrDnjK3srsA12Y6nPQsgYLR0vw4sSKgV/hJ/nGVG7Vx
+         tWfrc916e3S1uvVOosl1qq8NFTsxik/tvgE38PW05SsMCKenkxlWPA9btAZzuWITqEGJ
+         FM2bgLuYyrO6zT1a874NHr7nRR2FmOmFIsvdiDU8LPb5DyyI7A0HF6dpqf2yu0lv2cgc
+         TaWr9wJjLZX8t3EY1VYllWAkBZldoc5RmZPKqW5E46DS6WXa/Tzfbrx83i4kKhAh1do9
+         AdgVr2CB/5oxsJZreTQzG6Ah5uLb7dVGGoYjokPaC0V9jy4oQcUL1RDHB3jzr7Zkaox0
+         X1SQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=sHnXZHT8WiiUeAdh+tKiJaengtnfesqTEZdJsUGA+8I=;
+        fh=m0gEy2WvU8WjTojkCrAHwb0O4mk5IZvQ8/rJHKfQRsg=;
+        b=EBqz4zATyKau/kmHICPwnl9MUuko/08BEu0QSJW+GWTH41m9+qNQYCPA0UuiSGunZM
+         BHPxbKPYWgNmHtWdSHCyhrdhBEfOZL/rNbAoSOGq/9HirG3ZAXLthYm5zYSkD0mhIGZd
+         KrmGzwyQx8TtcfhkA5E02yoXRQ9u8lntt/Ma5flnOUJnx7FIyPb4u5XuGZOTSkgXcZi9
+         +bjmCBS4Bw1evGAF5vjuCsxXf7Jjl9m+FgnNtGy/R7j4BsgspTvJVGoa+2xMCB5DadvI
+         kX1IUpfmV466wa1+faD5/efFZD9NPO6/d+fxhAQwsoGSgyujoGtHQzBfk2MlaE9hzH/z
+         rZvg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1787609025; x=1788213825; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1787614982; x=1788219782; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=P6umSLzif7YwA3wBurX01NBnFBatASw3o1QKXhBN6wY=;
-        b=SKniA9nCCYTBx3P3sxWLmiIYGmJM6YH3JvyOpTC4CWVp0fgPq4ei2nIzHBHvR2Bz63
-         +yTp0ONLi9X/CfnOCXVkUN1jovnK3vyeFdl9iwmNOlE8mgy7Tsgid386Z3/9J1Z35qIU
-         riLX9HfWPqYdjTQBGtewflFrZ6jWEAZmjiBcELvpTpYMWgPoZfQqJ4lhR/G1V9szp80Y
-         88eepWCaWE3axvzMSbP9B0FymOuan0/7a8awEp7K3tPIWB9OcDEVTwn9o5ocenz3rcjW
-         xTm+y52t7HKy2988uQii+YAVnbO6A+auNxlmCqlCKBowCUEeWlCsWQI7NRXv+KK/51oW
-         6ChA==
+        bh=sHnXZHT8WiiUeAdh+tKiJaengtnfesqTEZdJsUGA+8I=;
+        b=h2uelV63RA1KI/d610zMVtXkoVzjoNExOXZEOOETin1s6ccJnSsLuNwP63Qz5Mey44
+         frM2+JDVCqfWZPAEeK+BRffhVIFOTEbVHVeWySFX2wDYZ+cQMevQv4rsBSUNTn7UaqRe
+         zrueLROytLujeezVwR5d+mA25uxdHvCeTdIHZup1P9e7fLz7RZf2ySve3cyzLwDX9mvr
+         r8I2zPOBAF+drq1WnFcbNsNyhNgYXum5MWjcnjXp9hxNIyiCEySL+xKd1mlW6RW9xwP+
+         ij+K3BRd9zUslegs/+tCSIAIkDiaaxEwmFB72AXI6jJdxh5cjqdUZJEiRZwc3QQVGuqW
+         ZIyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787609025; x=1788213825;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1787614982; x=1788219782;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=P6umSLzif7YwA3wBurX01NBnFBatASw3o1QKXhBN6wY=;
-        b=GtC1i1CI5aQm/z97FGYTqeruD8Du0F3q/03hAIntSk0ccqDWaM1zL4yB7HDymSRVof
-         1IeUvYwsZI97iKo4L4+AXuGsoS1V+R94gFF4Y2zl6BR+gwwAIgYtR7VE3sPAsD0QEcO2
-         dcEGYn94pAEJNSeSgISg9Nwo/b5VXsPzym14a+fHzRkhxlLhPQzxyDjh+WOeyBnq8Nin
-         N1cS/81wjaMi7J5Y8jHEjybSj5yUdu4dyBkR36iH98gDqWFuVQ9F1UTlZOiEdciVOwA2
-         pvrDd+M4UmsVSj1EjH3bhCNoLSFYvh1BaBQqLwpkwUhA7FQKogwrFO+smdSzF4Ywujxu
-         zHRw==
-X-Forwarded-Encrypted: i=1; AHgh+RoMlqVxPV2JLJrF/2wPxqPEIhuVjEQoOGtbyBnGYMPF7kUe7O69V1hTzTjDa5hn/YJdiqPxnGig@vger.kernel.org
-X-Gm-Message-State: AFuF++kAiB0EiOZRtGg17P1nf1Lp/xK9AeqXmmkiLV+2uGIHmDkodED5
-	HzZojm2OjwdTY0liDJoSMCwHULG6YVucNIy3HijAJOKHLMUhwWh3lDnowAEXmG4AqXgG9FQ8o12
-	V8u088zurkwBrLV0qAHFK/2p/Sqj+i29nMkdTOKle94r3c9gRPy+xSH9vBdw=
-X-Gm-Gg: AR+sD11km9IsEmwMgOCvfVpA/y0WZbYsu99jtjd08XeCAh9iCM7YZyHGlXMuv8Ey/g7
-	NkUVj4Q2QZu9OAy+dqOpdUkiQ23Wws/cShKcotNqgtV5KSCOgfYUmVtB815ocQrJJMm+svv7+Yx
-	PrH4lthhMl4Vixk3cpJB14u/SQ7dVD/FAujiRBYRMQPwKovGct8S6H2LZU1qUjNLRfzTXMDmIdl
-	1xU6HKQjHh9MwBlyRc2SLlg8OIlCVqvuihxJPRgG01v5r9xeW7EXt6OyhbSCvONqBRRAsR8rf9z
-	BtaGC/CXig6T+RAekRMAnAIb0CLuxoBuQgqoSILc1TKuqtUYxpevzuPHxwE0uSlXd8uevFbyt+K
-	qtmd8zGd9nTWDKqIi8+JtGiJAvjr1+NTGi5PTsgpiocdB
-X-Received: by 2002:ac8:59d1:0:b0:52e:125b:9444 with SMTP id d75a77b69052e-52e2ed0710dmr27175031cf.17.1787609025480;
-        Mon, 24 Aug 2026 15:03:45 -0700 (PDT)
-X-Received: by 2002:ac8:59d1:0:b0:52e:125b:9444 with SMTP id d75a77b69052e-52e2ed0710dmr27173851cf.17.1787609024921;
-        Mon, 24 Aug 2026 15:03:44 -0700 (PDT)
-Received: from localhost (pool-100-17-17-231.bstnma.fios.verizon.net. [100.17.17.231])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90c93a81392sm71344616d6.42.2026.08.24.15.03.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 15:03:43 -0700 (PDT)
-Date: Mon, 24 Aug 2026 18:03:43 -0400
-From: Eric Chanudet <echanude@redhat.com>
-To: Maxime Ripard <mripard@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Michal Hocko <mhocko@suse.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Shuah Khan <shuah@kernel.org>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, Albert Esteve <aesteve@redhat.com>
-Subject: Re: [PATCH 03/11] cgroup: add memory_cma_accounting mount option
-Message-ID: <aoy5n82tN7PynPVf@echanude-thinkpadx1carbongen13.rmtusma.csb>
-References: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
- <20260821-cma-memcg-regions-v1-3-d21b165b8440@redhat.com>
- <20260824-poised-meaty-shellfish-9a09d2@houat>
+        bh=sHnXZHT8WiiUeAdh+tKiJaengtnfesqTEZdJsUGA+8I=;
+        b=ntjDBWqSPmVOO3xmUkiw2H9T1hFA29xCQN4FIzr//fHN0UfrpaMz/wTAZRy2A56nWc
+         My+mQjy4FsjDOfM16Bo6DdTqXAbmnyXhvJiaffFYpwe4ZfMlqDwpQhkxYnHjIq780z8m
+         NoYMEGWUYNu+EN+nEl6B54MLDsbtuNYideDlld9v066pPbkeAg8+cffVwrUrZmXXRvou
+         dvVXUXPeKH2FnjBReKhLbN0iH/SnSJsCyBBj/vOJQGf0xYFs3n0SMTkeEcf6PQzR/utC
+         YML6yVVQz1RNjdTxUiEHapHE/Bc58vnRVC0EM5BFGJagiQsZZRgQRO8h9KqQK7ZHms6y
+         0MpQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqLPmG98RnhzSomlQImT0RXCpp8Zxx+tN4J9UxkC0QeluXlLqIwT3sReyFEczry2AW1skHcghmy@vger.kernel.org
+X-Gm-Message-State: AFuF++mQFcSa7txn3V7Kc0Fz/Z7Bko402NphN1BtpHetvapzw3H2sQKI
+	IMoDnB+YrhqVfI6cM0RY5bLGs2qU1y9CoZ5XFoijzcH4qtiLbc0wROvM8oxtzr9hpKkWLkiVFBQ
+	4bfcRVP2Zq3zpmsiIgFbdLf8bEg7+JTc=
+X-Gm-Gg: AR+sD11mkgCd1fiDViH+7hGMhxhIKT/tstS6chZ7A8rQMV99BlfJfMMj4s23PZGx8m7
+	0DGcVvfHL41Vj8rijEI0w2DrvfMIGx9IucqBMlvo/9jkexw/mQm5lm//awdvPs/BczGHX3Vyp/r
+	iwIL/D8KTMCCfhS2ATTESfl3MRFWsL6XacfeQDKrx6O5X2MXX13MMtybKsIuq7HeKsYFLAo7o6D
+	zzkkEZEP25iypQUSfiClG3102kp1Wmfe2AQM+VsC4pa1bVNU4DiIs1z7LnTfEtimGifZVEBR5F/
+	8498fevYKkW7ndQkThBYtzvuuhO3SZs03zo+lhkTtGSdTDs6k40gsZs0mtwgBpOGzHElbf437j1
+	WqvPGrn0vi7xBo89CPD0Brq4mnXc=
+X-Received: by 2002:a05:600c:5294:b0:499:7f38:d77 with SMTP id
+ 5b1f17b1804b1-499b830f690mr402396315e9.6.1787614981730; Mon, 24 Aug 2026
+ 16:43:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260824-poised-meaty-shellfish-9a09d2@houat>
+References: <CAJnrk1bk66ZhRAS7mojSnD5RBfFS+0ChAPymE3ObRWr0C_udWg@mail.gmail.com>
+ <CAO9r8zPpe6fWOSXtRUjFB8WNMroeBqvLT+2QtAU4E27AtLUXMQ@mail.gmail.com>
+ <CAJnrk1YifN22mA5PFRVrh3m_ygxax6x4_8nraG2hPqCzyzBj7A@mail.gmail.com>
+ <anpsLy_pCanocgS1@google.com> <CAJnrk1Yoj7fqbzurmHkbA-vegpQu3cf-_dfvKor_VxuNhPR-AA@mail.gmail.com>
+ <CAO9r8zPLipVW6bvyDK1ypSawbo=LHKvmLqWH0xA6WMR9GYNJpg@mail.gmail.com>
+ <CAJnrk1ai-TqcudPoK-qFRYAJnUjBmg1kVa6Vxg3eDm5w5ivqSA@mail.gmail.com>
+ <CAO9r8zNJ=Fpc0pZExrttVTDCM3yzSmLPCAU=+RS0k5Pm+hY96w@mail.gmail.com> <CADrL8HV7_f68qfd6hG=xCTqzupPqr77ynbwdz8jm0hzjdgDVeg@mail.gmail.com>
+In-Reply-To: <CADrL8HV7_f68qfd6hG=xCTqzupPqr77ynbwdz8jm0hzjdgDVeg@mail.gmail.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Mon, 24 Aug 2026 16:42:49 -0700
+X-Gm-Features: AcwNN1Wa1AOcfS35Y1v_bgY_n2l1WDv-MkAP-PHL7EYAY7Mw9O0j_aJCxbHrZ54
+Message-ID: <CAJnrk1ZU1UO35n46acq9My77G8=h3JUCLXchiamBCFbiDZXJzg@mail.gmail.com>
+Subject: Re: memcg stats flushing (WAS "Re: [PATCH] fuse: disable default bdi strictlimiting")
+To: James Houghton <jthoughton@google.com>
+Cc: Yosry Ahmed <yosry@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>, 
+	Jan Kara <jack@suse.cz>, Miklos Szeredi <miklos@szeredi.hu>, 
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>, kernel-team@meta.com, 
+	fuse-devel <fuse-devel@lists.linux.dev>, Jingbo Xu <jefflexu@linux.alibaba.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	linux-mm <linux-mm@kvack.org>, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Jesper Dangaard Brouer <hawk@kernel.org>, Yunzhao Li <yunzhao@cloudflare.com>, Song Hu <husong@kylinos.cn>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Aug 24, 2026 at 09:02:30AM +0200, Maxime Ripard wrote:
-> On Fri, Aug 21, 2026 at 02:56:55PM -0400, Eric Chanudet wrote:
-> > Add a cgroup v2 mount option that will be used later in this series to
-> > enable CMA memory accounting under memcg.
-> > 
-> > The option is made opt-in as it will charge allocations to the cgroup's
-> > overall memory usage, which changes existing expectations.
-> > 
-> > Signed-off-by: Eric Chanudet <echanude@redhat.com>
-> > ---
-> >  Documentation/admin-guide/cgroup-v2.rst | 20 ++++++++++++++++++++
-> >  include/linux/cgroup-defs.h             |  5 +++++
-> >  kernel/cgroup/cgroup.c                  | 15 ++++++++++++++-
-> >  3 files changed, 39 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> > index aed195a71cbf..3dfc13f31a0c 100644
-> > --- a/Documentation/admin-guide/cgroup-v2.rst
-> > +++ b/Documentation/admin-guide/cgroup-v2.rst
-> > @@ -246,6 +246,26 @@ cgroup v2 currently supports the following mount options.
-> >            will not be tracked by the memory controller (even if cgroup
-> >            v2 is remounted later on).
-> >  
-> > +  memory_cma_accounting
-> > +        Count CMA memory usage towards the cgroup's overall memory usage for
-> > +        the memory controller, and expose per-CMA-area usage counters. This
-> > +        behavior is opt-in, so as to not cause regression on existing setups.
-> > +
-> > +        A few caveats to keep in mind:
-> > +
-> > +        * CMA areas are reserved at boot time, memory is only charged to a
-> > +          cgroup when a CMA allocation is performed on its behalf.
-> > +        * CMA pages allocated while this option is not enabled will not be
-> > +          tracked by the memory controller, even if cgroup v2 is remounted
-> > +          later on with this option. Charges happen at allocation.
-> 
-> And what would happen if it's the other way around, ie mounted with this
-> option enabled, then remounted with the option disabled?
+On Fri, Aug 21, 2026 at 6:39=E2=80=AFPM James Houghton <jthoughton@google.c=
+om> wrote:
+>
+> On Fri, Aug 21, 2026 at 12:41=E2=80=AFPM Yosry Ahmed <yosry@kernel.org> w=
+rote:
+> >
+> > On Thu, Aug 20, 2026 at 4:39=E2=80=AFPM Joanne Koong <joannelkoong@gmai=
+l.com> wrote:
+> > > Would you be able to share the test you're using? I've been trying to
+> > > repro it locally without much luck.
+> >
+> > The exact test uses some internal testing libraries, we're looking
+> > into whether we can translate it to a standalone C repro.
+> >
+> > From a high-level, the test:
+> > - Creates a VM with 260 MB (256 MB for testing + 4 MB margin) in a
+> > cgroup, backed by shmem THPs. The VM is not a fully fledged VM, just a
+> > KVM VM running bare metal code (so 4 MB is enough margin).
+> > - Enables zswap in the cgroup.
+> > - Tells the VM to write to 256 MB of its memory.
+> > - Checks the cgroup shmem usage and that no swap occurred (no limit).
+> > - Sets the cgroup limit to half the VM memory.
+> > - Checks the cgroup shmem usage and swap again, usage should be ~half
+> > and so is swap.
+> > - Tells the VM to read the 256 MB of memory again. This should cause a
+> > lot of thrashing and reclaim, but no OOM kills as all guest memory is
+> > reclaimable.
+> >
+> > With the ratelimited flushing, the test started flaking 5-10% of the
+> > time due to OOM kills.
+>
+> Hi Joanne, Yosry,
+>
+> I've attached a reproducer for you (as a patch that should apply to
+> Linus's tree).
+>
+> In tools/testing/selftests/kvm, `make` should build it. Instructions
+> for running it (like setting up swap/etc.) are in the comment at the
+> top of the file.
+>
+> As part of the patch, I've also included a sysctl to dynamically tune
+> whether or not the memcg stats flush is rate-limited. You should find
+> that when it is rate-limited, OOMs occur, and when it is not, OOMs do
+> not occur.
+>
+> This reproducer behaves slightly differently than our internal
+> version. This version, when run with `-b 512M` anyway, seems to OOM
+> simply by setting memory.max, whereas our internal version would OOM
+> upon re-accessing the memory. Not really a meaningful difference, but
+> just wanted to point it out.
+>
+> Please let me know if you have any trouble running this test or if the
+> test is wrong in some way.
+>
 
-I meant for it to have no more charge issued until remounted with the
-option enabled. Pages that have been charged are uncharged when
-released, even if memory_cma_accounting is disabled after the charge is
-issued. In this version, it is broken[1].
+Thank you so much, James! This is very helpful - I will run some
+experiments with your repro this week.
 
-I extended the documentation line with the fix for a potential v2.
-
-[1]https://lore.kernel.org/sashiko-reviews/aoi_OHVZjsY9a9VV@echanude-thinkpadx1carbongen13.rmtusma.csb/
-
--- 
-Eric Chanudet
-
+Thanks,
+Joanne
