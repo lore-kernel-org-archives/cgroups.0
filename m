@@ -1,64 +1,68 @@
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B21713777E
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 03:35:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96C4D376BD0
+	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 03:35:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787542544; cv=none; b=Z6jjqvjEECyJjqB3giDqyBNGG6Fg15FBUUKzFRiEQzKS9uVCTYAHYif/nNzRf5Nhx+5hEo6xssH89UKvEA70SZM5damFdDNPvA2a8d44w6BW5AXLjB11JUby7us004wBT+h7694jmCGPR4V/CdTg9/+4KGrXbkPpFWthrRzJVhs=
+	t=1787542546; cv=none; b=Vta2ip+7MW9xQvXc0Xs94o7eLD9nm8UAz62CWuQYDK9YTOJsLUq5NPcb/1ZLcDozzlCLIUa6iKLXPK2rBGDcWX5kkJolMV+s+voUisbPZKV0N4wgRMU5lmUmmrv6ZHT8la+GdVlbskFZb8/6kO4wr3Bbpar5588BdM48t6NGIhk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787542544; c=relaxed/simple;
-	bh=kbgCodxyQTaxxkxIo0FUrwNH41ZTUr4K/1wkJGxMPuo=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=aMTZdLj7hKPo9925J1VJKNIok6Ry1NTtLAVIrzzEgai/jsGP8gonThNIM7R1t8c+RI4Wau02EwqwgzvzfhiQ35hYssVQYX/3tq6NRjvYyXC5GY9fQ3tblS63xfvWTDGgCF+smYBBcLZ9BZv0u9iBxuIC30W1Gq1sbojREaaFQkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=CQ69D3AW; arc=none smtp.client-ip=209.85.214.199
+	s=arc-20240116; t=1787542546; c=relaxed/simple;
+	bh=RX9tbEJGh8uuIbWQO+YgeJhWqknJ4mX0lzATa1cSsnw=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=JmIt6I9vztY4sD1l5VniLpYREVsxpiV0VJdrSC5hCJe1ORP0JJ0bIv7gHqydf9oyCQfWoTvZtg9PkZC4FtdMKQzTuUUfVgW637mB1g1EknAiehaIzuwSVlR03BNQAnX29VGY1cRit8w3zW/moYWE/6OqA7bJXtZKMtR0bvTUNnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=VNB/g7sy; arc=none smtp.client-ip=209.85.214.200
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CQ69D3AW"
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2d6c166bafcso4511085ad.2
-        for <cgroups@vger.kernel.org>; Sun, 23 Aug 2026 20:35:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VNB/g7sy"
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2ce7dff6253so39089255ad.1
+        for <cgroups@vger.kernel.org>; Sun, 23 Aug 2026 20:35:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787542542; x=1788147342; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=xxIn6wRkBnBvygNlVhjjksdALrlKyZQyyugm0lI7tMA=;
-        b=CQ69D3AWW6HqoCoWr3QXKYEYidW/JhwFcL7aijHB6MaYJBvM4ydWchC5XvVTtvLJtk
-         ydbgSD7iiuuJH0/8Jx6RPdFv5E2PPc0/yYRyIO2vYDLIkcfKjj/eQJIiYoBMV+wE/0tc
-         6qrkqLOOE4TkTa4pk4+pPtN1Z+FpUkMiCjrNugQeVUA6d/Ka3/EJlAE9pUZGG0JlrM0n
-         y6QedXrP/dsLG13EqnrBHTud82jhfECtQL4ImklBsU+HwKD968Pl2Oaf1EAPqm7pnkNX
-         8iM34ixZ7f9o5y2UXjRDCAUMB4UPxKSt8+LsbVNwuCgJY9ZJw1/gIQbePQKn4uBjy0nD
-         95EA==
+        d=google.com; s=20251104; t=1787542545; x=1788147345; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uLeWQI8viIKf2ncJdeLCdpToNayUvXof6lXIwZBpCjQ=;
+        b=VNB/g7syu5iKfwGAIFnAWhzrE/lyAEE3JUdz4SeHPDtFS2nJlSOCa1GN+RoKZ8TlK8
+         gLS7fNA1ME6YVq5vjSEP+e9V4AF3PP2/oQE0q8IF617bzq2JwdRbnfx/bnOpHPCNcEYq
+         iF2tdmpVKF5t3Vve/EYh2VdlEjMGSfSD5xdMVJVerFzW19qA+V+WEe9D6X6EVDi2yRJM
+         049TiffLfRq6IbLHG6cfNipB1IJqS4gWHm3nqXvvSaqe29LNoVxFDXf/V2QEky/BAXc9
+         EsDCnTTpg0+TvzJiQSpaeiOio0IxhY+PpAsdRUnBUoOUSY5mgITaVgg4M/Yjk+O/fYtU
+         NVdQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787542542; x=1788147342;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=xxIn6wRkBnBvygNlVhjjksdALrlKyZQyyugm0lI7tMA=;
-        b=NPnewnp+cGyIZT9N4MHfxTd2L3mzIdgcZnxoV/PY6JbvT91dlPUQgG9prxn/Nz2UId
-         SOfUopdX4LzkGzKdgPOUpiszlEho/YtrOinxi58pLrvJKA0Z2Ex0Xg0ti4aJw+QR2ik0
-         mUs02t61ZGBMiko8GfVJ8e9Lw0JzM2H62EqyQeaDUNu/Q1fPle/OiOZ4rD3G7mvWUCPR
-         LHZS4vuzG1bqSsi5VhhWAON2JezMqxWhrRO7T+LiLX7OUnuNFmc/l1aB73eQTqhv2nZ6
-         rRX/CTJKn+0z9D/R5yYzUuMmViT4T0sYtwuDLNJlW6jPzo03G9jbwBK04h+EOXbQQepL
-         xgYw==
-X-Forwarded-Encrypted: i=1; AHgh+Rqq2Zy4L6iP+dqhWHqXQaTECf2znHa8xjuHaISpaQh7VoWXCdpvlBPvQXDyyObG/6NtviR0zQvf@vger.kernel.org
-X-Gm-Message-State: AFuF++l5aYiRrPeHpsGH4CgDmTd6nKhVvJNZsd2bnrqRqsiugy9crRYD
-	Yq10wX4jdrEWYIVaL7tX4Sr25sz78pdxj4obduQfbUEsU/HUlbQkueljN5uj3y/MfZPnK9rPPai
-	wGGreVHY1ig==
-X-Received: from pldc11.prod.google.com ([2002:a17:902:d98b:b0:2ca:c3ac:bb34])
- (user=wfelipe job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:f686:b0:2d0:cc92:f7af
- with SMTP id d9443c01a7336-2d670c96265mr233860275ad.9.1787542542407; Sun, 23
- Aug 2026 20:35:42 -0700 (PDT)
-Date: Mon, 24 Aug 2026 03:33:56 +0000
+        d=1e100.net; s=20251104; t=1787542545; x=1788147345;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=uLeWQI8viIKf2ncJdeLCdpToNayUvXof6lXIwZBpCjQ=;
+        b=T4/a0G7ZWxlIqqODW1YTFOAyVvgFxjFtNil8kyXGaKcwC8lfzsUhRB6xMyMssSoCkA
+         JuclOf4ijJX79l1y+JxwKiDj4JzXnCcq8Pjn8Y/C7pF7IixaPJ2MjbjC2Q1tOshszGku
+         u0rlPA0U41RDbRlK2AJ4B7xuy7jjWIhsruKz6inRt2wtfo9bvy3skl/boQxVn6ywiAlA
+         p84uBEESrjx6fBvt9WgXoOai+qBim4vruBIRW4xiIjV606hgIbPwZLSKgxF3J69xDvT6
+         kMAn9yMZUkAetrfqCtyCTbejJYzIjSoRgWhCcELcdKsSa/+qud3eGlsQNaYaS9H9J2pC
+         NVLA==
+X-Forwarded-Encrypted: i=1; AHgh+Ron8g67OAYEv9NGE+tBFan7N84pN5YdRiyHsA4VjP31Xkd9YH8m5B8zOFVLYYS68rC8XEO0S/jE@vger.kernel.org
+X-Gm-Message-State: AFuF++md1t0gd82VCXAtuF8XhBT0pfcx4CIoMaehZ4Z+A6WChNzgvnda
+	GhjxsIEUGUuLfq31gwgByX6Vlm32+XtNu7Z3j3pQwLuRPybRC68cw+XBktdmFgfbO7A+sBHDqzA
+	JfGL2I608iQ==
+X-Received: from plgk2.prod.google.com ([2002:a17:902:ce02:b0:2d5:6077:5a69])
+ (user=wfelipe job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:3b85:b0:2cc:ac15:ff4c
+ with SMTP id d9443c01a7336-2d61a0da51fmr357601025ad.8.1787542544728; Sun, 23
+ Aug 2026 20:35:44 -0700 (PDT)
+Date: Mon, 24 Aug 2026 03:33:57 +0000
+In-Reply-To: <20260824033533.2147900-1-wfelipe@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+References: <20260824033533.2147900-1-wfelipe@google.com>
 X-Mailer: git-send-email 2.55.0.766.g2966f0265a-goog
-Message-ID: <20260824033533.2147900-1-wfelipe@google.com>
-Subject: [PATCH v2 0/2] selftests/cgroup: fixes for test_zswap on single core VM
+Message-ID: <20260824033533.2147900-2-wfelipe@google.com>
+Subject: [PATCH v2 1/2] selftests/cgroup: test_zswap: wait for cgroup to
+ unpopulate in test_zswap_writeback
 From: Wilson Felipe Pereira <wfelipe@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
@@ -68,41 +72,44 @@ Cc: linux-mm@kvack.org, cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	Wilson Felipe Pereira <wfelipe@google.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-This series fixes two test failures in test_zswap observed when running on
-a single-core VM (-smp 1) with 4GB of RAM.
+When running test_zswap on a single-core VM (-smp 1) with 4GB of RAM,
+test_zswap_writeback intermittently fails on the initial run after boot.
 
-Patch 1 addresses a race condition in test_zswap_writeback() where
-waitpid() returns before the exiting child process is switched away by the
-kernel, causing an immediate write of "+memory" to cgroup.subtree_control
-to fail with -EBUSY. We fix this by waiting for cgroup.events to report
-"populated 0".
+In test_zswap_writeback(), after waitpid() reaps the child process created
+by test_zswap_writeback_one(), writing "+memory" to cgroup.subtree_control
+can fail with -EBUSY. Under cgroup v2, enabling domain subtree controllers
+is forbidden while any tasks remain in cgroup.procs.
 
-Patch 2 fixes an implicit unsigned conversion bug in test_no_kmem_bypass()
-where small negative timing differences between debugfs stored_pages and
-cgroup zswapped bytes caused the comparison to falsely fail due to
-unsigned promotion.
+When a child process exits, exit_notify() wakes the parent process,
+allowing waitpid() to return immediately. However, the cgroup populated
+task count (nr_populated_csets) is only decremented when the exiting
+task is switched away via finish_task_switch() -> cgroup_task_dead(). On
+single-core systems, the parent runs before the dead child has been
+switched out, causing "+memory" to fail with -EBUSY if written immediately
+after waitpid() returns.
 
-v1 -> v2:
-- Patch 1: Replace EBUSY retry loop with cg_read_strcmp_wait() waiting for
-  cgroup.events "populated 0" (Michal Koutn=C3=BD).
-- Patch 1: Clarify task lifecycle in commit description (Yosry Ahmed).
-- Patch 2: Remove abs() and declare delta/zswapped as signed longs with a
-  signed threshold comparison (Michal Koutn=C3=BD).
-- Patch 2: Add Fixes tag (Michal Koutn=C3=BD).
+Fix this by waiting for cgroup.events to report "populated 0\n" via
+cg_read_strcmp_wait() before enabling subtree control.
 
-v1: https://lore.kernel.org/all/20260804042053.56940-1-wfelipe@google.com/
+Signed-off-by: Wilson Felipe Pereira <wfelipe@google.com>
+---
+ tools/testing/selftests/cgroup/test_zswap.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Wilson Felipe Pereira (2):
-  selftests/cgroup: test_zswap: wait for cgroup to unpopulate in
-    test_zswap_writeback
-  selftests/cgroup: test_zswap: fix implicit unsigned promotion bug in
-    test_no_kmem_bypass
-
- tools/testing/selftests/cgroup/test_zswap.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
---=20
+diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
+index 49b36ee79160..a7ff525c1267 100644
+--- a/tools/testing/selftests/cgroup/test_zswap.c
++++ b/tools/testing/selftests/cgroup/test_zswap.c
+@@ -407,6 +407,8 @@ static int test_zswap_writeback(const char *root, bool wb)
+ 	 * Thus, the parent's setting shall be what's in effect. */
+ 	if (cg_write(test_group, "memory.zswap.max", "max"))
+ 		goto out;
++	if (cg_read_strcmp_wait(test_group, "cgroup.events", "populated 0\n"))
++		goto out;
+ 	if (cg_write(test_group, "cgroup.subtree_control", "+memory"))
+ 		goto out;
+ 
+-- 
 2.55.0.766.g2966f0265a-goog
 
