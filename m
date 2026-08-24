@@ -1,132 +1,135 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23EBB40B0F2
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 12:30:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 631CE41167C
+	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 12:37:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787574612; cv=none; b=ABA5+XLAMjwPa+vvF3ugOGJa4mN6BoU2uASrZFhXgLVxXfLjVhKlcMfI7rnP3Xz9gIbdyyQTORfmYXTYFsghj4Q51uijXdb8vvncbKdyUVvEvry9Oa/BuAwidlqBa/J+bq7WzFJ9oDVa7b9U7j6hxyWkLxw3FLsHclY1HgqfEiA=
+	t=1787575025; cv=none; b=JU5x+srCH3v2Zb49hZtBErtJufTkRIBT36g1azL+OpO1R/anSOvnB/5ynInZ5PJfDoBA2pBg1/U1+Y5FsOEhWs/8a7RZWv8DkA0kw+c562uoq8VJADiBj0NNa92zKEUh7K9cgnRpuAzmF8kzVpleDbaTJyNTuBm2eIySB+1b8F8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787574612; c=relaxed/simple;
-	bh=9avveLcrKkhK1W9rSYKP8umKyTKseZySIkXYM3VP2/g=;
+	s=arc-20240116; t=1787575025; c=relaxed/simple;
+	bh=vMMjMInCck9yF8tkMjBlrSp6ScF2a084G6L/dqZn6ao=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b8p+8VppjdVZBT52pHriPY6ZM+CH/3JxIOkUm9/rJklNRKB/e9NF7mYMOa4KuyTzWCi2S6DSG3SP3TG5I1j5uNNPW7JHsM32Rp4I5nz4ExbS9AilJieHnqILrT6GgifzaPSRubWeiwWPtBRtWf8fbCYOZ1y8EomTnexkMRZ6qIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FMAtwmUh; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=XDNJkJHUmtGdtK7PKd6gq9797hhIdVLs59R02idcxFzZA3xUN5SOXfESrUyGlIBeP6k5zB5zgT1+NjZAbHNdx652PMELXpC0IlJf1s5HBjcoEgc1sz+KGi0zsEHuQepenfNNa/zdBs+i8UdHoN5gE5iV3ZaIHVGRUxJ9B+X4Cs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=arczoRj/; arc=none smtp.client-ip=209.85.208.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FMAtwmUh"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-4799b3f7c83so2341713f8f.2
-        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 05:30:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="arczoRj/"
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6a0c8283146so5832115a12.0
+        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 05:37:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787574606; x=1788179406; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1787575020; x=1788179820; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=PUk7KPHfvUyw9pUIUwd/E+D8sEbupQa09omQcDsDz3o=;
-        b=FMAtwmUhSEDMxJShEkhx1hFBibflKnjtqMFzgZaAbZqR1q0+OFu6xS9qASpydQpQjb
-         C8wiDorVQjObJqHHTF2ltkONPAOdXsqZ5sy01LX6CqZrVJ//sLxVh+zSs+FvWU1k0Pz3
-         DLdczUVj+WMsePjttdwEcYSwfDWaJg3MScklyj3ZIDbNUGXz9bF1kip6OJV7WGK5rJ11
-         Cqd8PZbS+toJzjYWP6xpHIAHWnHdp55c+X6pIhNUaVpgjz6ExqmYiUJ9DsuAfPmRWLZS
-         wCKtJorBzjz+biqDv7cwIKxem8jO72jyvR/l3WGsCzZCEHs41jhUwOe6fWkjsab2sywn
-         GZ5Q==
+        bh=86o2mla0Wt4YoV7NQUB6bfRSm8bpfsWlSQQ8/iZvyTQ=;
+        b=arczoRj/jMWSEsCGnxDc8QgLgbHeY49YBrwFMJjF//o9YhC9w6uwlsNHXTo+oprOSx
+         TuAVykOdEMNqTbKOFXt0lNVkPMQZ8cKj9++jUN0FRUzbbyh8OPzqvaZ1azFKg6eCxi3x
+         r6i3nrGkrO5R3F2h31uS8i3Nw/WhoyXIsrck5ejsfng/uH4rOqDXtc6hohOEVtMsHrfn
+         H/BIk/gn+alS+Yn/L+LA4igVEkNBtFwvCni/bQiQBEe7NJcPn7ws3I74k2sRVLcxCxXE
+         QxeTx2RbH5V0n8vRo6jjldYRoyz1oqcR4iRXdQD0swOinXot8cqAUZlJRtAcnX2JL8jF
+         r2oQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787574606; x=1788179406;
+        d=1e100.net; s=20251104; t=1787575020; x=1788179820;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=PUk7KPHfvUyw9pUIUwd/E+D8sEbupQa09omQcDsDz3o=;
-        b=GqFC9+BUu3tWuDZzVzHI2fJD7f+VhLzPRp7meIyeoWtbdK3TvIqWK9NRKNOBfpsHTC
-         tmyFnqXKO0vXPobcgnVtblLoWzQ2rIg0r0YFr1gmE0rjOWMys8gD20US4D0zvE8oufhc
-         VfCF3XIQFQ+k7u6LXfdcxHylYctBa2XBSuw8v130L67xR9UckyMrmrzC4XDoyNOy2JM5
-         ha1SkCubz/AQHrdaPrZq8SvDduWpJ2tjV/7wCv97X1nUJP65Fp/gkE+K2oU0wkMVnNb/
-         N3E00FVzB6oWdxEdKAFZWu/67emjDs0UCGOqS/v9xVD4KZJHBlyocFkuGHY0VspQ7jn8
-         IiEQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrdVOZ24LJD4bdeSczQskRO4y4yz2/X/aIhaUSj0yLiVgWn1wVDtZwaxwXPSxsP14MpvsVCltbh@vger.kernel.org
-X-Gm-Message-State: AFuF++k9Ne+spUR7EHTiJpB5p/dAtGIqRd6VEViqf42W0T6VqHVLosUN
-	LpfLmJ5qULHe7b4Ft7zw2vjITBu0kztIfR7InTgZ/t9hiQ0SWtTeltfg
-X-Gm-Gg: AR+sD13/anVuF49AWJc9Et2xW/w+fkeFOWYwzorRD9jYyZ6ZC0Ck/dKkKRSc4B5sSdI
-	KO1pAQ7Dz2O0J4n/FJZAQu4/oSG2cIO0spden7D6dV/UMq4KpLyb6r1KyEdsu5FnCAxgR3xHgys
-	XNIS/GxAxBiZPRtYMwg3kWjCFlKarsvlk5lnP6qW0F3ACfJdnotJijg4fK+ihpFykv6f1Nqi7iu
-	OIlkYsGjPqU9x8xemC2/ByY7h+Bb+3bNC0D/qAtLTTltJSuPkVfJ+0PiA4STgI2359gNoqTCgld
-	7xqWYkYudLt1i9JUx3okTABtGQyce5b/7S+AQEUg2FdDsMnnRLYXdtIwWiLTVkKjEp6yyj2kxXa
-	LO7A31+sIUq/tzlx+ZVJwOSCQLb7yq9YW/qnmY1FlK1XY0/z2L++oYAcKCPw4qLHh/JHi0lHImF
-	gfBQkaCzrh+Hsn/eXaNzWkpJi4HoufLxHAErZ7FvAbGRO+ynEvqS6bzDqB5lLbeZ2vsb+lgiun4
-	Cqc5cpphnoWAj4BKH1aNTlz
-X-Received: by 2002:a05:6000:2383:b0:475:3a97:8e2c with SMTP id ffacd0b85a97d-482c81c0377mr18786975f8f.16.1787574582551;
-        Mon, 24 Aug 2026 05:29:42 -0700 (PDT)
-Received: from KASONG-MC4 ([101.32.222.185])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482c9c086fbsm7997186f8f.26.2026.08.24.05.29.32
+        bh=86o2mla0Wt4YoV7NQUB6bfRSm8bpfsWlSQQ8/iZvyTQ=;
+        b=pZNTVGDG9xEs7DOxX5Gbz17O6bL7OYJp5bd5o6uxvjRXpfZzyGsFWqxN07tFY99Kcb
+         pVLBCEVoYl1jLZEXj3botrG1K9uQepn4bTZdidvIYzk4cAp5ebd/H2Ipw8k5vdwyo7DJ
+         vKFxx/TsxmcjCKc/zVbFZ60nxr7rlf18pajRMei97d3XbuT1x9P+iOmbwY73l9bk9aVV
+         L+COy7r/P+vAXs8JuFtQEbKQH9htAsmQX4/unCDFkZISx+UqMwNXGD5lZjK9kX32YGip
+         XjYPj0v8eB39vkcWXZb4uB7D7/2PtdZ7YlR4gY4CSgES7HF7sLzH2b4RGJLHIR22tyn8
+         j3+Q==
+X-Forwarded-Encrypted: i=1; AHgh+RqH1FyUxgIn9p+8FMCrEX/Hp9dtLp8CLDP6Tu79PX1nGg995PvOo5uaGOty9g4odqoEZxSwYN+7@vger.kernel.org
+X-Gm-Message-State: AFuF++m/8ycKggRq0kAiml87KpZ3WpD63YQXs2IqH1Yvmg0G1Y5rFaIY
+	iDd0ZHIsnENmkHoKKUjsPMxl18P/pmpI6AZZr3OpaAso5Oayha13103anLOymzxu4is=
+X-Gm-Gg: AR+sD127qLsVhEoYMaqqZkK53sG2m5TRX+w/P+nA25YTEbX7CO+PTRVsqyeXnuYRsyQ
+	RvXaji95KBGkoywx/Y1jZwc3iUmzjGuK2Xush/WjJbJI28R7efAG8y9LOxK0IG1BAE4JbnORIXH
+	4fed/cdfYKRKZFUl5PvVdW1icS1d62T9FLlZb/beXk7hf3QiKTRC10cnl6j42+E6cthVg9SmGxY
+	ViDoy90dl8LgRPvIuwZ/nNOf/DViCbjN/Dc+zUgWxXtIXZ9dA6iy69efeUyqgid8ab/OxdUVIDR
+	3pi+sJGdKnljz7XB/To7DuOXVNbiYlhIJgGNZXE+nZwvAeKUytAw5Ogw9/MIYvHiUIqZ6iXo0TX
+	AMDzou/8+dNZukZpReYlwtJ122ResA7cl52MTA7gS3TohYOnpdI1l4pq3GvjRRHCNmHKQccDZ3g
+	oTpw+4hG8Mci6hxhb2ZPdJEDtqXpCgh68Ir64eswLGYo/zZ9ViTawBTggpbOLF4GE=
+X-Received: by 2002:a05:6402:52d5:b0:6a0:a644:355e with SMTP id 4fb4d7f45d1cf-6a42f1848fdmr30356559a12.2.1787575020160;
+        Mon, 24 Aug 2026 05:37:00 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a5ba19e053sm2079673a12.12.2026.08.24.05.36.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 05:29:41 -0700 (PDT)
-Date: Mon, 24 Aug 2026 20:29:29 +0800
-From: Kairui Song <ryncsn@gmail.com>
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: kasong@tencent.com, linux-mm@kvack.org, 
-	Andrew Morton <akpm@linux-foundation.org>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Chris Li <chrisl@kernel.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] mm/migrate: copy the referenced state via
- folio_migrate_refs()
-Message-ID: <aowmf2OcDnayYaU2@KASONG-MC4>
-References: <20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com>
- <20260818-mglru-flags-cleanup-v1-3-8dbbdac0d28c@tencent.com>
- <51b025a4-7da8-4b50-9ba3-1c25eaee7b04@kernel.org>
+        Mon, 24 Aug 2026 05:36:59 -0700 (PDT)
+Date: Mon, 24 Aug 2026 14:36:57 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Wilson Felipe Pereira <wfelipe@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Tejun Heo <tj@kernel.org>, Shuah Khan <shuah@kernel.org>, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] selftests/cgroup: test_zswap: wait for cgroup to
+ unpopulate in test_zswap_writeback
+Message-ID: <aow4qP5gj9CfiOr5@localhost.localdomain>
+References: <20260824033533.2147900-1-wfelipe@google.com>
+ <20260824033533.2147900-2-wfelipe@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="lsaln24baban35xn"
 Content-Disposition: inline
-In-Reply-To: <51b025a4-7da8-4b50-9ba3-1c25eaee7b04@kernel.org>
+In-Reply-To: <20260824033533.2147900-2-wfelipe@google.com>
 
-On Thu, Aug 20, 2026 at 08:20:34PM +0800, David Hildenbrand (Arm) wrote:
-> On 8/18/26 07:38, Kairui Song via B4 Relay wrote:
-> > From: Kairui Song <kasong@tencent.com>
-> > 
-> > folio_migrate_flags() copies PG_referenced separately, while
-> > folio_migrate_refs() copies the rest of the reference state. Make
-> > folio_migrate_refs() copy the complete state, i.e., PG_referenced plus
-> > the MGLRU refs counter, in both LRU implementations, and drop the
-> > open-coded copy so the reference state is transferred in one place.
-> > 
-> > Signed-off-by: Kairui Song <kasong@tencent.com>
-> > ---
-> >  include/linux/mm_inline.h | 16 +++++++++++++---
-> >  mm/migrate.c              |  4 ++--
-> >  2 files changed, 15 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> > index 93bf3fa221f8..df62daaa2ee7 100644
-> > --- a/include/linux/mm_inline.h
-> > +++ b/include/linux/mm_inline.h
-> > @@ -366,11 +366,19 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
-> >  	return true;
-> >  }
-> >  
-> > +/**
-> > + * folio_migrate_refs - copy the reference state to a new folio
-> > + * @new: the destination folio
-> > + * @old: the source folio
-> > + *
-> 
-> Man, that function has a confusing name (refs vs. ref_count). :)
-> 
-> "ref_state" would be clearer (just what the description says).
-> 
-> Or better, "folio_migrate_lru_refs", because that's literally the name of the
-> function you use: folio_set_lru_refs.
-> 
-> Can we have a cleanup patch to name that consistently?
 
-Sure, I think I can just rename it here as the code gets consolidated
-and kdoc being added
+--lsaln24baban35xn
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2 1/2] selftests/cgroup: test_zswap: wait for cgroup to
+ unpopulate in test_zswap_writeback
+MIME-Version: 1.0
+
+On Mon, Aug 24, 2026 at 03:33:57AM +0000, Wilson Felipe Pereira <wfelipe@go=
+ogle.com> wrote:
+> When running test_zswap on a single-core VM (-smp 1) with 4GB of RAM,
+> test_zswap_writeback intermittently fails on the initial run after boot.
+>=20
+> In test_zswap_writeback(), after waitpid() reaps the child process created
+> by test_zswap_writeback_one(), writing "+memory" to cgroup.subtree_control
+> can fail with -EBUSY. Under cgroup v2, enabling domain subtree controllers
+> is forbidden while any tasks remain in cgroup.procs.
+>=20
+> When a child process exits, exit_notify() wakes the parent process,
+> allowing waitpid() to return immediately. However, the cgroup populated
+> task count (nr_populated_csets) is only decremented when the exiting
+> task is switched away via finish_task_switch() -> cgroup_task_dead(). On
+> single-core systems, the parent runs before the dead child has been
+> switched out, causing "+memory" to fail with -EBUSY if written immediately
+> after waitpid() returns.
+>=20
+> Fix this by waiting for cgroup.events to report "populated 0\n" via
+> cg_read_strcmp_wait() before enabling subtree control.
+>=20
+> Signed-off-by: Wilson Felipe Pereira <wfelipe@google.com>
+> ---
+>  tools/testing/selftests/cgroup/test_zswap.c | 2 ++
+>  1 file changed, 2 insertions(+)
+
+Acked-by: Michal Koutn=FD <mkoutny@suse.com>
+
+--lsaln24baban35xn
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaow65hsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ai0QAD9GkXMc6bI0AhzKJwbSaqE
+aI4XwcIv1S0SkdLiNbkxuPMA/3XaRn1ZHXQ5i2Jrq1+ppT0VNUvfWl9IlFN0Wc/x
+KzEA
+=DvGz
+-----END PGP SIGNATURE-----
+
+--lsaln24baban35xn--
