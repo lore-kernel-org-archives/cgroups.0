@@ -1,223 +1,200 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D373F6C32
-	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 16:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13D9546C826
+	for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 16:31:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.53
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787587740; cv=pass; b=ZRGcnLLo3hOtCX8zgfnDbHAdlv7AzKud6BSVnlKD4r6kZ1rpdqYl7I4OafmjUTzd4iPR8AOrDvS8diikpp22j59wTnThzmyib9pJR5/JWZ6RwOoSJT8AQSsMkVqo2lfmLVBV40kvXHlnTj5cA8oqnTT+/nkXal53TnX8HkIbjAs=
+	t=1787589081; cv=pass; b=TRCPopnmQ3rKx9+AKH2ndcg5RxQt2d4Ej/NPPxonIIVAmDwp7oXkz2aQ0pDf9LCivdWNUmfG0i7A15N1wpOm5cpGZosDIRnOEUVgEugNkhJu0p7pYk0JNZ7GUP90QLnCF5SgVeQ54pufR5s0TyBiBN/YN49pDwzxX3kVVXUqtQA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787587740; c=relaxed/simple;
-	bh=SLByKNE+iyqFj/f2/XSBS1vO5wCST7NUp64XyeqzhTI=;
+	s=arc-20240116; t=1787589081; c=relaxed/simple;
+	bh=m0KvC1xwLQQwlzKKy20Dkrhkm17zfHVvHAlyYqFx5ag=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=i1RbW5SRaVFBGjWl5yXVeZ7hjRwgf97aMJ9xBIXPt8GB1+k08qnpUrrB9yvmd+zABfjQxEQ4nQ0uwEsXB2jd4KwgVuDQkygoYO9AHoc7zAZj4AnIugnm1N3fZhAB04Avp0Rl56TMNQqSYEQ5QgWo6BkbIDtkynut7b7VC/wHkr4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S8piObZU; arc=pass smtp.client-ip=209.85.208.46
+	 To:Cc:Content-Type; b=Qyy932F6/MxCn9q0dkcPlimZK9rg4zpHqW2vGETYCNZoz5xSU0pDAlAWcT8ff79mpygCrUnhVPaf6TsJlpRzDOjs8Y7c8W6fGuugJKexvP4vPUyW618hZ+TUDqkw9H0PMUd0zj+dtHnK20bteN2RNscnF6kCBC1UHrTDTy1LjOw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sntkPcM0; arc=pass smtp.client-ip=209.85.218.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S8piObZU"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6a378f90555so5821337a12.3
-        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 09:08:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787587737; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sntkPcM0"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c1677c91969so449714566b.1
+        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 09:31:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787589078; cv=none;
         d=google.com; s=arc-20260327;
-        b=CT+nhhZA5DnfNRjM+Q+DbEFUB9b+EiEzHBNYjfNDOmUq6eDjOmRUTjYBzs2hntjfUC
-         T9AD9ov3k5pehevDng7YsjtW+NwjR0vYP1/1LTHb7JBxrB3hjaT7RrcBgdUT1Od3ISS6
-         wgPTRA5G/mo4DoMiEJURsUbZt04Vgh0NrOGmJlDR/6qJyLeq/4FPocMtvUD0AVcFHFad
-         gvD/cGlFzG8OYuiIhFa9ReOiGOV5s5Xnc3E0m9yESi3JgqDLE4ZmTs9vrdJ283RZci7a
-         inGjpEsL4T8l0wTVC68+Yj2geviId7ZmWEGYTM3R5DvwJ4xbiHu/obam8vhCfFNG08sU
-         5m9w==
+        b=eDn0YlYQTqSWSn0t7/T8RNF+yaT29zaY7qxdsR5L9F+53xruRhU7iuZfTeWjP7A4i4
+         c9a8anQLcQMDxMTGHMC/9NcBGXj4C6xr08IpB4b+G5gxuUdvaSXJqhkYUj7gg+1KmDm6
+         dlqILDYm7KRiTJuypFzxExSL6d83HGTqAV7Bp/uk8tvvRGFMux2Pgon494Cxa8It/GOS
+         WUQ9/o19SwDC6yJToKUYsu/niqETYaNW4RDCCbHb/8wyjvjwPdv0KIUFVystcJocHO2q
+         QuWNNEU6h8uvVs4/KlP5JwiYBkl3Ck3I3MiLlTnUH0+7dH939WgWjNkb4YqsaUAeJ/4v
+         f+hg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=0W5q9JFccKIuoTxyIlvb1CNjf7arEqYMbmUndz72Edg=;
-        fh=DH72csQHg+cOjhz6KiPji9hMQNXJPzEgfDNc1Rcji0o=;
-        b=bqLQrwxefmIDqGaaKQRo6raD+Fp80l6Qs0NVT+moor2ZTU1SF6YpjuqgDAlQD8fu/M
-         zPtWTYgX9NU3IhozqCyAz9o/uawlMxnBLziYKIU2jCePqbPsZpyxosYjqzfF+Ql5AOVc
-         rPo5m2h9xP70cY8xYVT1U3P2ygQH9jANJFtSwg/A+YqPtVie75caFuETyMQRJDgkjqAP
-         M1bad6QtqEmbiZQbFL4E7IQFodl7KzyCWfn28rqs4rWH24MLhVAwDJfCdYeiAXTUYMM4
-         NV34ScMTF+3p/fxvtVtEeQsEyOP/BwQGAKhzZdEp4emnSqAm8HzP+QluN7o0G4Z7UQWW
-         hoow==;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=jKDnyhtd0eENDwLDsf23GJYh56L3iJu19fRA635QnCc=;
+        fh=/mCTmXAW/NS1dEQo2oz02RZFhQinj/iwrIZUebctlm8=;
+        b=TJVM239kbS8wJ/GvkKDQDzJYHrjGQUniqj1zck5V51ZoPT5iMwzix//6QQaOumfPV/
+         tpndgUB/K4RV+M5ch1MkOe3pamdYOy+Mc9eW4/W+/UOzNvwvvGLg6mj22yPDNJ/wGiv/
+         XCNHcy0dL7chg6aX7dLDkX5+rXSlR1BQX0f2RVR4suA3YZxdCSVNBE/MCrG++PPOsGDh
+         3yYz5/gBclGVU3BspzT7547P7s6rVsUlkap5R6RNOQFq4R+o6VRptJCeTP0EOtOEeTF+
+         hdrysS5kFBUyqiwHg+1mjVPa3xY+nkkiEvrRUOgA63Ei2LV708BtfGOJLYGkjvb8uTSV
+         wKIQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787587737; x=1788192537; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=0W5q9JFccKIuoTxyIlvb1CNjf7arEqYMbmUndz72Edg=;
-        b=S8piObZUqPCWeWNzZM63rQVa8NJAv+3R3bPgEo9ebVCLzNn38RtiEmXFD99OzeUs6q
-         urMix47R46kNQ+Lx4zHolSthBLcoF8wboqc/X47UTB1TP0XV2L+WkwSgiKb30eOof7ts
-         T9qBZC5O/DnvInyBbluRKNnQe4CiqGqt1cw+OzVcDIHBfnP4j9ONK9QkuNk0mIzN9h4q
-         UuPuTYTda4GfbtigD69jh3FIaMneNnB2qR5nR9hizUgwo16EEN02q15w2XMacEVp/YTp
-         Ftv++80mnI7tVfVjRWxX1rEeaFy2dI9YMIBqxpsCIXUZoD+RPWZOS7MwNHnpa0kvOyrZ
-         d3Pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787587737; x=1788192537;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1787589078; x=1788193878; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=0W5q9JFccKIuoTxyIlvb1CNjf7arEqYMbmUndz72Edg=;
-        b=SSkUKWH/Bo8Rq42JrlJlKUbk8EBn2AGJWLtEVoGsYxvXXRJKTb/bBB7i+QjrqdPawm
-         NRKcwb2FbIKz1uieD9N8RSi5vYl/rNNFP/KDV1ubA8SgGJi4CCXDiRrqJui6RxN9ZAX6
-         kUJLTcVczSxu69AHlM/BZO63Erp7cxtez+oo3vdAJfM8nDFHfmBWkvZw1BNS+LSBFcJr
-         2cZjT5FHpnz7XktpmgDw/MP1YzR/GvbYIL5tpFEM2BvF1M5gMK+BF0kDoD05V7l2+W8P
-         hKlvmcSfcPyytxkRzxEpONy6Erb2pSobDmXSOc2roaEuC6lak4rlEJ3t8WsuvPVpMsfR
-         YzZA==
-X-Forwarded-Encrypted: i=1; AHgh+RobGaDcggS+QeJO/hDScde/RTFqj5RuakgEh47Pqkou+lanHF4dRHfolXveYTCWZ/Hr6VFowFJj@vger.kernel.org
-X-Gm-Message-State: AFuF++k0NppPISY+O1ixipNpkWhWGrgW0M6LBYkB7O9xmmXkbkXDy0tU
-	/M42cZoKYRH5tMt9B65fiWOujDJtk/NScBw9FSCjBxOl+EmccV//ewEValUNBQKYKnLYUTqvuP6
-	OA65tcgXvsJMZKw7IIK6678DkpJby/xE=
-X-Gm-Gg: AR+sD10Ra6gX/S8OahWYlyr9JsteFhod8MU+Qmq9Ldg9/SM/5MQp+I9/pK2jE+dSUJh
-	zcMtcoCKiU9V05MhYS/2HTdMH5uFu2v0PI01SWWmbk0Zl4nkNmHs9kDFioGjQAVI3NYLEQCCp4I
-	ifvl6UHaTZgnTpwLIZQ6kLmYSr0dGKk6a2lDVHHowqaPS+3lieICVk44KDhPpvBTa1MMiBFFBxn
-	3o+i66n4uBsOdoDkwzwRiAqbf4LO9JK+9yh/XoxFl5Tg5jR6XuxyDvGOMKQUOwCdVQNT65OPcTV
-	4ntJRSGvRnzRprEVzglnnlPQm/Bov08esnW41m0ha7Ydqw==
-X-Received: by 2002:a05:6402:e93:b0:6a0:584f:454c with SMTP id
- 4fb4d7f45d1cf-6a42f28ebaemr31545775a12.16.1787587736646; Mon, 24 Aug 2026
- 09:08:56 -0700 (PDT)
+        bh=jKDnyhtd0eENDwLDsf23GJYh56L3iJu19fRA635QnCc=;
+        b=sntkPcM0gvGZJhU16O8r1Zo05JmCCm5cUnW6hYr9kzxQc6did4hvjjY68HDaVusjDS
+         dWXFPp7ya1R1isMKDagvlDusleHdU69RVjxF9SJ22Jr8shMiFr68458mOo7Z+xuRiT40
+         /fpIF6lTGC/AvRKTtEzJYLWyU2XKvEqbCFoUQTiRAHHclMu/qSIlqwjsYH+pCYpc7c3c
+         n75W5fRyd+SwT2vUZvLIvm26EH8ahJWPSN6EPHFyX1ebImweK5N14AtPIvnIGB4BGpog
+         D5dCQWdJ+Zqhil4vsA9fxC5Z5blouVXpNyrPHALFwM6BWSaVqxXImXdS/UyizWpagWbF
+         ZnVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787589078; x=1788193878;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=jKDnyhtd0eENDwLDsf23GJYh56L3iJu19fRA635QnCc=;
+        b=jGVy8AkRVizs/esXwmQJGgPZTw0dPWyn0zi1N/SGCtJIsbyx4crCXvTkLSNI8bRGgb
+         DTSTEeP3kaSRT5uwR4RBXOaUJZ95qJr5IkzsBWjR2RklykkNMFEXqt5M2uoWGeC4CTSD
+         7yS8dm7OImhtt9GWXHqvJoRCKijrSET56INumm5Mu/5CxfGDT1PsKYPJ6QiqSwbq7vFl
+         tCJObdf2gxocKApjMXK84hsUAzDuhkK+qXk1ySkQe9JV6B7F1WyDrBA1OT/xnIlfBinx
+         aajccWSdcGghkJdozZXhPqftD+mZoHNC4G2Q/S4ysUNr2p1BZr/7dfFKl4HX20HG2gEg
+         oZAw==
+X-Forwarded-Encrypted: i=1; AHgh+Rr/JAHeNwAjjHotD1LVhC7g860pvoQGA1J2w9Mkj3Bpel125PULMSnXBdVhq3PEVNejrU2eaUNI@vger.kernel.org
+X-Gm-Message-State: AFuF++nnA5K5ay4PdC9JGlx4SVle3qgeAFQM2wgs+rLdZBxhRCgyl6Kp
+	ekSkZzB4QuwfSyQ8pDRPr4KQ9VU4RYBdC4qL0V4UTDhQW6zs9ynPSWCCjqhbODhgdnaKqPM0mLa
+	Uwh2EE5oJKcTtRIwLXjubi6kOEb59YE0=
+X-Gm-Gg: AR+sD12oRlIQkMyXeriCtqd+Q8JtK0RmJBKaZ0XKH4AfBSfwp2TGCIWONOhMaj6z+yO
+	fcqrM/mTSDrQa/J14jVoalPvHAJJu9o0uczvjB9qTjnEgSZ4rclegPdUaW2qJN6DVSlpQ4DlZaY
+	l9lqx6XMgMrrtX3DgA8aQGY1pMD91XX/8C62xGPEnp4sDA27oGYoNALvG1KZlqxWZqfZiyqbJ2G
+	v/jRGaR7Pbba1clAPlwqpJxYLAV6Oy8iQVVLxwn9YsuKJmarCyp/ah09t/TBUIkWpy14L1/Ni9J
+	q17BtQdUCTkZ46tP0BzXvQ5XtowtxMXEatma1cw1pRSe0zyPO56xoc/zR47NTQQZ6ZJtQhXXPKu
+	Zgh8ISPZi0f0c
+X-Received: by 2002:a17:906:209c:b0:c24:cc3c:db11 with SMTP id
+ a640c23a62f3a-c24cc3cdcf3mr595871666b.21.1787589078066; Mon, 24 Aug 2026
+ 09:31:18 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260806184254.3790858-3-nphamcs@gmail.com> <20260820041940.443214-1-kunwu.chan@linux.dev>
- <CAKEwX=Mj7QVArjKVvKOKnuQoTmN1Wu=vXe4jkLshnzKoYF4XkA@mail.gmail.com>
-In-Reply-To: <CAKEwX=Mj7QVArjKVvKOKnuQoTmN1Wu=vXe4jkLshnzKoYF4XkA@mail.gmail.com>
-From: KunWu Chan <kunwu.chan@gmail.com>
-Date: Tue, 25 Aug 2026 00:08:44 +0800
-X-Gm-Features: AcwNN1UwGPQAC4xmpw6qspF5xlvAI6xHm0KWte_rbifou6WEZwEBSX5eypRKXJ4
-Message-ID: <CAN_Opa_o6y7LnRNF0Ow66E99QKkvdo1iV3fbgk5YCqtcoFa66Q@mail.gmail.com>
-Subject: Re: [PATCH v3 02/11] mm, swap: support zswap and zeroswap as vswap backends
-To: Nhat Pham <nphamcs@gmail.com>
-Cc: Kunwu Chan <kunwu.chan@linux.dev>, akpm@linux-foundation.org, chrisl@kernel.org, 
-	kasong@tencent.com, hannes@cmpxchg.org, mhocko@kernel.org, 
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev, yosry@kernel.org, 
-	david@kernel.org, muchun.song@linux.dev, shikemeng@huaweicloud.com, 
-	baoquan.he@linux.dev, baohua@kernel.org, youngjun.park@lge.com, 
-	chengming.zhou@linux.dev, ljs@kernel.org, liam@infradead.org, 
-	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, qi.zheng@linux.dev, 
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, 
-	riel@surriel.com, gourry@gourry.net, haowenchao22@gmail.com, corbet@lwn.net, 
-	kernel-team@meta.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, cgroups@vger.kernel.org
+References: <20260824-mglru-flags-cleanup-v2-0-0104132114ae@tencent.com> <20260824-mglru-flags-cleanup-v2-2-0104132114ae@tencent.com>
+In-Reply-To: <20260824-mglru-flags-cleanup-v2-2-0104132114ae@tencent.com>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Tue, 25 Aug 2026 00:30:41 +0800
+X-Gm-Features: AcwNN1VH8-bOniuA8E6yY3_HjFay55kxzw2lY4Eo1sZSYSutQu4Ycnu52ZLcbp8
+Message-ID: <CAMgjq7BYze16AVf7O4qBzYiNBOuTo_ayza3AjWFEQ=LG4pwuxg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/6] mm/mglru: introduce helpers for manipulating gen
+ and refs flags
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Chris Li <chrisl@kernel.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	Ridong Chen <ridong.chen@linux.dev>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, Aug 22, 2026 at 1:09=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrote=
-:
+Got this from sashiko (I consider it false negative since that is
+extremely unlikely to be an issue):
+
+--- Patch [2]: [PATCH v2 2/6] mm/mglru: introduce helpers for
+manipulating gen and refs flags ---
+commit f0369e7dfac3789b1433352b10e442443527f4cc
+Author: Kairui Song <kasong@tencent.com>
+
+mm/mglru: introduce helpers for manipulating gen and refs flags
+
+This commit introduces helpers for adjusting a folio's refs and generation
+info. It replaces bit operations on folio->flags.f, splitting some combined
+operations under the assumption that the resulting transient states are
+harmless.
+
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index c1404a59523d6..080132997d876 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+
+[ ... ]
+
+> @@ -843,19 +843,22 @@ static bool lru_gen_set_refs(struct folio *folio, const vma_flags_t *vma_flags)
+>   if (!folio_test_referenced(folio) && !folio_test_workingset(folio)) {
+>   /* Activate file-backed executable folios after first usage. */
+>   if (is_exec_file_folio(folio, vma_flags)) {
+> - set_mask_bits(&folio->flags.f, LRU_REFS_FLAGS, BIT(PG_workingset));
+> + folio_set_lru_refs(folio, 0);
+> + folio_set_workingset(folio);
+
+The commit message mentions that splitting these atomic operations only
+creates harmless transient states, but could this specific split break
+lockless MGLRU protection?
+
+Because lru_gen_set_refs() can be called locklessly (e.g., from
+lru_gen_look_around() holding only the page table lock), this creates a
+transient window where the folio has both its LRU references cleared
+(refs = 0) and the PG_workingset flag not yet set.
+
+Concurrently, evict_folios() runs under the LRU lock and evaluates folios
+for eviction using sort_folio():
+
+mm/vmscan.c:sort_folio() {
+    int refs = folio_lru_refs(folio);
+    bool workingset = folio_test_workingset(folio);
+    int tier = lru_tier_from_refs(refs, workingset);
+    ...
+    if (tier > tier_idx || refs + workingset == BIT(LRU_REFS_WIDTH) + 1) {
+    ...
+}
+
+If sort_folio() reads the folio's flags during this transient window,
+it will see refs = 0 and workingset = false, causing tier to evaluate to 0.
+
+Will this cause the MGLRU protection check (tier > tier_idx) to fail and
+incorrectly isolate actively used executable file folios for eviction?
+
+>   return true;
+>   }
 >
-> On Wed, Aug 19, 2026 at 9:21=E2=80=AFPM Kunwu Chan <kunwu.chan@gmail.com>=
- wrote:
-> >
-> > On Thu,  6 Aug 2026 11:42:45 -0700 Nhat Pham <nphamcs@gmail.com> wrote:
-> >
-> > Hi Nhat,
-> > [...]
-> > syzbot reported a NULL dereference in the v3 series:
-> >
-> >   __vtable_get()
-> >     vswap_to_phys()
-> >       swap_entry_backend_has_flag()
-> >
-> > Seems like the underlying issue is introduced by this patch's
-> > `virtual_table` lifetime management.
-> >
-> > This patch adds:
-> >
-> > > @@ -70,6 +70,7 @@ struct swap_cluster_info_dynamic {
-> > >       struct swap_cluster_info ci;
-> > >       unsigned int index;             /* for cluster_index() */
-> > >       struct rcu_head rcu;
-> > > +     atomic_long_t *virtual_table;   /* Backing pointers for vswap s=
-lots */
-> > >  };
-> >
-> > [...]
-> >
-> > while the read side does:
-> >
-> > > +static inline unsigned long __vtable_get(struct swap_cluster_info_dy=
-namic *ci_dyn,
-> > > +                                      unsigned int off)
-> > > +{
-> > > +     VM_WARN_ON_ONCE(off >=3D SWAPFILE_CLUSTER);
-> > > +     return atomic_long_read(&ci_dyn->virtual_table[off]);
-> > > +}
-> > > +
-> >
-> > `atomic_long_read()` only makes the access atomic; it does not protect
-> > the lifetime of the allocation being accessed.
-> >
-> > [...]
-> >
-> > > +static inline void vswap_cluster_free_vtable(struct swap_cluster_inf=
-o *ci)
-> > > +{
-> > > +     struct swap_cluster_info_dynamic *ci_dyn;
-> > > +
-> >
-> > and frees it synchronously:
-> >
-> > > +     ci_dyn =3D container_of(ci, struct swap_cluster_info_dynamic, c=
-i);
-> > > +     kfree(ci_dyn->virtual_table);
-> > > +     ci_dyn->virtual_table =3D NULL;
-> > > +}
-> > > +
-> >
-> > The existing `ci->table` already has an RCU-aware lifetime: readers use
-> > the corresponding RCU access rules, and the storage is not freed until
-> > after the appropriate grace period. `virtual_table` introduced here doe=
-s
-> > not have an equivalent lifetime rule.
-> >
-> > The syzbot crash shows that the current teardown/read-side synchronizat=
-ion
-> > is insufficient: `__vtable_get()` can observe a torn-down
-> > `virtual_table` and dereference NULL.
-> >
-> > I don't think a NULL check in `__vtable_get()` alone would be the right
-> > fix. The NULL dereference is a symptom of the missing lifetime guarante=
-e.
-> > `virtual_table` needs to remain valid for as long as a reader can reach
-> > and access the corresponding dynamic cluster.
+> - set_mask_bits(&folio->flags.f, LRU_REFS_MASK, BIT(PG_referenced));
+> + folio_set_lru_refs(folio, 1);
+>   return false;
+>   }
 >
-> Thanks for taking a look, Kunwu.
->
-> Null-check by itself is not sufficient, correct. But I think a full
-> dance of: rcu read section + spin_lock + checking for
-> CLUSTER_FLAG_DEAD should suffice. As long as cluster is valid inside
-> this rcu read section, we can get the lock. Once we have the lock, no
-> one can free the cluster under us. and as long as the
-> "CLUSTER_FLAG_DEAD" flag checks out under the lock, we can exit the
-> rcu_read_section(), and proceed with reading the vtable. I already
-> fixed this in (to-be-sent) v4.
->
+>   /* Promote on second access */
+> - if (folio_lru_refs(folio) > 1)
+> - set_mask_bits(&folio->flags.f, LRU_REFS_FLAGS, BIT(PG_workingset));
+> - else
+> + if (folio_lru_refs(folio) > 1) {
+> + folio_set_lru_refs(folio, 0);
+> + folio_set_workingset(folio);
 
-Hi Nhat,
-Thanks for the clarification. That makes sense.
+Does this have the same transient state race with sort_folio() as the split
+above, potentially causing actively used folios to be wrongly evicted on
+their second access?
 
-I agree that the NULL check alone would only mask the underlying lifetime
-issue. I see the lifetime dependency now: virtual_table is protected by the
-lifetime of the containing cluster, rather than by an independent RCU lifet=
-ime.
+> + } else {
+>   folio_mark_accessed(folio);
+> + }
+>   return true;
+>  }
 
-> Note that this is actually only required where we don't have any
-> reference pin. One example is the one syzbot detected phys swap device
-> backend flag check, because at do_swap_time() we don't actually have
-> any reference pins. The PTE is not locked, so swap entry can gets
-> released underneath us. But if we have a pin - for e.g if we own the
-> swap cache folio, then we don't really need this dance.
+===
 
-I also understand the distinction between the unpinned path, such as
-the syzbot-reported physical-swap backend flag check, and paths where
-we already have a reference pin, such as owning the swap cache folio.
+In theory, yes. In practise, it's very unlikely to occur, and even if
+it did, we are totally fine.
 
-I'll take a closer look at the v4 implementation once it is posted,
-particularly the lock/CLUSTER_FLAG_DEAD ordering and the teardown
-path.
-
-Thanks,
-KunWu
+And I have often observed that folios stuck in highest tier due to
+PG_workingset is actually causing worse reclaim. But if we are very
+paranoid here we can do folio_set_workingset and then
+folio_set_lru_refs. (This may cause a in theory, still very very
+unlikely, aggressive protection. And in fact I think we are definitely
+fine either way). I might update this if there is a v3.
