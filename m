@@ -1,93 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC71351C13;
-	Tue, 25 Aug 2026 14:59:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C62E455175
+	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 14:59:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787669955; cv=none; b=ncWEXzbcdgt8QP36JSMamGsYnwpviJ5/zWVEs4zaoSnPpEHByYJ1aiQWB8vP1TnVu0hscEyx0F5741gxzwrn/O/ULOPlgCqXsh4wKzlZ5P5x2PkKVkkWrerjsqMnIhOqTnYFmpV1S+U9UplT/w+uLbyTuATBpcX3sUQ/Hb9lN3o=
+	t=1787670005; cv=none; b=kMpG4tcRUV5iPgCsnVEPzP5MCytrAvt+MQDKewkDSulRll2zoAESPF427+h4k548fDZIGeSmeka6XNnb9XccQgfdyxcHQJPBtd4NyHQH3wHTNen7COtD9ZiQXUst+RlfKsbZXoj4stgyp75cky4BMNG2H/kzKB6SqxV8PQM6sA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787669955; c=relaxed/simple;
-	bh=kfGPEncLi1JjdqMbHvY9oy5fgibv7ARwTmJ1vWHEAoI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=CRUB9yBcfohW2D8xDSpohzvdqgf+S30hqubkcLVPgXObW77hgRyzMMZRtXXU6r27eXhOZRIlZIL6U3Em3r2O2Vx8/P8wYUFf8dhTXg617xIgscAF0aaxdWS12sLVQ6IBi7hnMoxu/7D5iPSdHvT5ZhdLR+HuoQBmRgMW9M41z+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kJF4ssCT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787670005; c=relaxed/simple;
+	bh=Dpw4rtPNIhmMqn7wNJpVZncgvMPX1xG1jtECbsm5Vj8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AUYoW45Nd+wNNzOENieys82azqDrRQbBG0HjEl73Jd5fzbJI5FxD/0MUdPXH3gF+5FsP94sG+Fk6G5uydwWNmyvipO4iVLjxqPOL2ZVQO7ZlA4nOUmZB7rM9qCiZnJYxoeuvencx9mNqYgHh3lfjRrDcS6HT+OGDDugNL1vW5Ns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=TaE266Wd; arc=none smtp.client-ip=209.85.208.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kJF4ssCT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 759181F000E9;
-	Tue, 25 Aug 2026 14:59:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787669948;
-	bh=CS16TY7QXHbRdzvC7fXYJVGDsq3ymYJ2NMTpQ4DNreQ=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=kJF4ssCTQSYgJMv5xEdodK+nM1bhIGCXpCHUCFLQoOj6EDCOdQj2SQZ50L9lsDYua
-	 1ung9XDkhv94e6tn/CPKv/Xm4EgS5A2uqK7xyZvlsNgIk8K8vRx3uMnbIS5DgQUs/t
-	 2WmfczScGuy3RDIXguE+0smLtPmzccR8V5GRzX73NGlFek1vThzA3GGvTyrLBBeIWr
-	 NohGEIOckjSaTZMUPYd6e+wHPowfpESiEtNszwOgD2qUUsEtesJwYuMhgZd+9xx2FO
-	 W8bikb/7fo9bj+M5xHkAi4fiZ7BZbB1lVwdhRXpzPHHagJtWoyrjfD0cRahSREW9kj
-	 5617+wo/NZFpg==
-From: Christian Brauner <brauner@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Tejun Heo <tj@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Meta kernel team <kernel-team@meta.com>, driver-core@lists.linux.dev, 
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Christian Brauner <brauner@kernel.org>
-In-Reply-To: <20260821050507.2161607-1-shakeel.butt@linux.dev>
-References: <20260821050507.2161607-1-shakeel.butt@linux.dev>
-Subject: Re: [PATCH 0/4] kernfs: remove kernfs_rwsem from dentry
- revalidation
-Message-Id: <20260825-grabmal-erwachen-aufatmen-b62c5d6c220e@brauner>
-Date: Tue, 25 Aug 2026 16:58:58 +0200
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="TaE266Wd"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6a10d02ff43so9459646a12.0
+        for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 07:59:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1787669994; x=1788274794; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=06QgDRd3KsQRNkIC849obH3kyg/ANunDmHU+Cwu/Xpo=;
+        b=TaE266Wdpq6iQsaokirOQEe4P7Up3BdlXLynmT2tdAbixOEuLgylVj3/ONXvl240Gd
+         XOLYm886a43G/NjFMJ33EcK8dDdAF8cWS2NjjOSAOCi/rn3fBe6u1Xf46fSqOz0o12vP
+         0NCt4aZ2NjrKTVBvUJcnqgg2YsyNY3FQf6ac7Ri5KEa4HPcYlg9grx4a/Bh2eRo/ySMh
+         EfRT/nmlHsNWGm2LzStmUJKh/TnnICIE1HpJkousfGkVO80IXxLWxA2pGFPVoaN4b/E0
+         OON4P1FJEenXJhGzsZd3QJewKyf27NhyFqrq2x7/1/1Q9a2TThPF5/J+SdFoRzCBHCuh
+         SgLA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787669994; x=1788274794;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=06QgDRd3KsQRNkIC849obH3kyg/ANunDmHU+Cwu/Xpo=;
+        b=QeLlHri4894Cw8Eo7ONjBHR04g5n9npi1ARLfaEdxTJxzGLDCEwFpHBVEJLn1madHE
+         d11FIF14yybvIutl4r7cKXZRUsiyjdfJkZcs9VvWp4RC4cFPySozmrQF9XjTyoeFy7Gf
+         /1HF2vJO0bwGe8EBof4o1jk2t7KL5mbkyx7NiCZw0AWrphXBnpRCYtyHqxv3XUkNgzll
+         ArfHexeZY2t0kZ7MkEAfxZ4wuL3+7dmt4PTiZjz/8GRmsmvSVytq9w+bGiFRJaDB9qJ2
+         zFOYDgSFGorfyO7JMoVOejDUQVKFsymelbBLS3nM49FUISQO6EdeWG/zenn9MRhV23dN
+         Qqgg==
+X-Forwarded-Encrypted: i=1; AHgh+RpWtDKHA5ikZ0Cd5x54f6TcaPjWbAnovI3+3nJeIEc/S96+7b+DmpVsDk0vZtklVHduegFd6p5E@vger.kernel.org
+X-Gm-Message-State: AFuF++kGRZLNW7pPwnsSef9YZseVAbzjceynHnlDMnl/917cyYOJnJNT
+	qv3HWxXT/Kmk9KTGWeaY8zSgtcFgo7QNgLWS04EyMt25eJEtRFX6a4OQXW3PM0JQ20I=
+X-Gm-Gg: AR+sD11TQz+7zQ3jojuijNfCwdqzgxnHY8avSucVvdJdfcKv7Emt4Haz/GBlnKmRbDG
+	w0Q8R5SHXEWTyEADOrKOa5HknkuicpvrFcJLQTqgnE4KqidG8EgCvv9Dzw21se8xse5O5Hkgk3V
+	1jHuqrM1sThfZWhDWmd+VsrYwzE7N5xmMteHLLZfk3lDYB1bwcaVXdAIjMmLLSutgZAO7A1lsPe
+	2+7/wk859OGoS/BLwt2vPOyf+Wiv/hnp3LJYAawI5rzsm8jXfihS8yGcAdtRH4Ei89fKi+02ZD3
+	nan2xZkZPWj1UpJZ2hrfVONJ0Ulhfub5pnt3gs2cjtdQ6ZRLTIAQKM/Y5QwKHbm6nZEB9RxWR4u
+	fq1+qS+fnzQBSl1fx/MAYliYmXa51hYRi/Akv5ml2kWiwo08hUbaImfOxP6uQklfi0/CWDLnvdf
+	d9Yoz+L+VKIKzjZ8SkjVazYoODpx8pe3/bPFRxUmWWjPYJo4dU45DN51Q1gqxiFL0Liho8Ig4=
+X-Received: by 2002:a17:907:b048:20b0:c20:1c9c:b36f with SMTP id a640c23a62f3a-c246a4b154amr2894042866b.8.1787669994328;
+        Tue, 25 Aug 2026 07:59:54 -0700 (PDT)
+Received: from localhost (109-81-80-32.rct.o2.cz. [109.81.80.32])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249606a905sm2134790566b.13.2026.08.25.07.59.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Aug 2026 07:59:53 -0700 (PDT)
+Date: Tue, 25 Aug 2026 16:59:52 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Eric Chanudet <echanude@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Shuah Khan <shuah@kernel.org>,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, Maxime Ripard <mripard@redhat.com>,
+	Albert Esteve <aesteve@redhat.com>
+Subject: Re: [PATCH 00/11] mm/cma: charge cma allocation to memcg using per
+ area counters
+Message-ID: <ao2t6HP-Zt5KDg30@tiehlicka>
+References: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
+ <aowHqqaqK7TeexQH@tiehlicka>
+ <ao2gA_m3BCBu2esy@echanude-thinkpadx1carbongen13.rmtusma.csb>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.17-dev-362b8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1613; i=brauner@kernel.org;
- h=from:subject:message-id; bh=kfGPEncLi1JjdqMbHvY9oy5fgibv7ARwTmJ1vWHEAoI=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWT1rt21etv3n4csDQQ9fj7iffizI3nnRWU7nan3Mlv/f
- Qp/Esog2VHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCR7myGf9qy/UsvqM1NP1m/
- 5WONVnhXylL+2TxxYv5NRs3MC6Z2LGJkWB6dZiVzI+L2i5iX2hJNbC47pq3qkE77f/JH3uPnbWt
- fcAMA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ao2gA_m3BCBu2esy@echanude-thinkpadx1carbongen13.rmtusma.csb>
 
-On Thu, 20 Aug 2026 22:05:03 -0700, Shakeel Butt wrote:
-> kernfs: remove kernfs_rwsem from dentry revalidation
+On Tue 25-08-26 10:47:53, Eric Chanudet wrote:
+> On Mon, Aug 24, 2026 at 10:58:18AM +0200, Michal Hocko wrote:
+> > On Fri 21-08-26 14:56:52, Eric Chanudet wrote:
+> > > CMA allocations are currently unaccounted for by cgroup memory
+> > > controllers. As system resources, they should fall under memcg, but CMA
+> > > areas partition the available space for different purposes and memcg
+> > > doesn't have a good representation for that.
+> > 
+> > Which CMA usecases are covered by this work? It would be also great to
+> > spend more time describing usecases.
 > 
-> At Meta, we are seeing important system daemons that poll cgroupfs and
-> sysfs geth stuck in kernfs_dop_revalidate() for minutes. The two that
-> hurt most are the ones we can least afford to lose: oomd, which decides
-> what to kill when a machine runs out of memory, and below[1], which
-> records the telemetry used to understand what happened afterwards.
+> We would like to offer some usage guaranties to userspace processes
+> ending up doing allocations in CMA.
 > 
-> [...]
+> For example, a shared CMA area is described in device-tree for an ARM64
+> platforms. Userspace components could then, for example, allocate from
+> it through the dmabuf heap, or a device or framework-specific ioctl for
+> that matter, to use the buffer with sensors. The dtb may have other CMA
+> areas described additionally that may or may not be used by that
+> component. In this context, we would like the ability to limit one of
+> the userspace component to over-allocate and choke the other(s).
 
-Applied to the vfs-7.4.kernfs branch of the vfs/vfs.git tree.
-Patches in the vfs-7.4.kernfs branch should appear in linux-next soon.
+How exactly is this supposed to work? How is the CMA access controled
+and opted in for accounting. What happens when memcg limits are hit. And
+many more details, please.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+> memcg
+> looked like a good fit to achieve this, albeit handling the areas, so a
+> cgroup has a quota in a given CMA resource.
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Please expand more on why do you think this fits into the memcg model.
+AFAIU we are talking about a unreclaimable memory and reservations of
+CMA areas.
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+> This trails from an earlier post where we tried doing this using
+> dmem[1], but I was unable to reconcile the requirement for memcg
+> accounting[2] since from dmem I didn't have memory objects to charge nor
+> the guaranty there was one. Given CMA is always system memory, it looked
+> like a better fit to try something without dmem.
+> 
+> Best,
+> 
+> [1] https://lore.kernel.org/all/20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com/
+> [2] https://lore.kernel.org/all/ahB7pCu_G4vuswc0@linux.dev/
+> 
+> > -- 
+> > Michal Hocko
+> > SUSE Labs
+> > 
+> 
+> -- 
+> Eric Chanudet
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.4.kernfs
-
-[1/4] kernfs: Use VFS lookup context in d_revalidate()
-      https://git.kernel.org/vfs/vfs/c/b3c97f5cb084
-[2/4] kernfs: Prepare directory revisions for lockless reads
-      https://git.kernel.org/vfs/vfs/c/272e0997df44
-[3/4] kernfs: Avoid namespace dereference in d_revalidate()
-      https://git.kernel.org/vfs/vfs/c/e1c629a8dbc7
-[4/4] kernfs: Remove kernfs_rwsem from dentry revalidation
-      https://git.kernel.org/vfs/vfs/c/8c6ad578e2f0
-
+-- 
+Michal Hocko
+SUSE Labs
