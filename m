@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C95548CD67;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3634048CD7F;
 	Tue, 25 Aug 2026 17:53:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787680419; cv=none; b=cBpDfp/t/nvUdT32lp+OLpCXHV4gJVIihXIC33jEt6WU1xmg2HejgjLk1xSPNudPyEerHQbJ9iqKuPZf6evkUxn0ceF+qwBU+DY9Cd54lggUS+KjreSnPEiyD/YY8Ys8blQ54Dlv5Jp70vxfQxHyRcMUMuF4G3aM7JMDrwQZOVE=
+	t=1787680419; cv=none; b=ua7DAvLMQvfn3/q1E+qzZKpWdV/u0e5xqcTgZ7xO85xxEVmbTDD0tYM3INpNdrGx3g7nVRhmjiqBcqQpy0Y8Uo2F00fBfdwClBxUa/esFbfMxUEMOV908CSX+mWczjluuwNDLe6BKGXsgD9ri4VU0wQgkd+zP1FojES3xYbTDIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787680419; c=relaxed/simple;
-	bh=x91NYTB0icDkDpw7RJAyeqsTrQzHrISb8JAZjmZwxVY=;
+	bh=44fcJB1GAGM863zI2kF8HQbZ3J3Y4TWDrV3HTL0mUO0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=mdBOwM6XV1QQO13pduW57gXvdkWBKL5V6cPYLfP+g4QrFVVq3XUc80wns5F9kLwvjtdpZUckqKD6meI9AE6os/LmuxZqiT4K4B7Cf+Ix7xBmPMwA18YwzrwMhWpdlxd0LEL8Hk8DhSAIvDjHJvL8Rb2UxGLF7JClrOOKNKyHCV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OMF+TPUE; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=CVta7ChGeoq1k1GnlynR1pkGQy+rZ7bJzwKmwFex1GE4612DYDU0T60vLZ06yQ0u8AL5+PQBMpYg8gnOW3FOpDE0Mppv6AfCIwtAZqF4Cst5Be+H09N+0fpeEs5lEfcUeNOvNVTRwkXpIlOnGyO4pQs2WsGG75knCX2nVKwgcEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aOprSh0L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OMF+TPUE"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BFEF3C2BCFB;
-	Tue, 25 Aug 2026 17:53:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aOprSh0L"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 022F0C4AF09;
+	Tue, 25 Aug 2026 17:53:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1787680418;
-	bh=x91NYTB0icDkDpw7RJAyeqsTrQzHrISb8JAZjmZwxVY=;
+	s=k20201202; t=1787680419;
+	bh=44fcJB1GAGM863zI2kF8HQbZ3J3Y4TWDrV3HTL0mUO0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=OMF+TPUEy3YiTGEzrKiu05kMX6kystsQysRf6q3UaVmZRYgh7Qkqego2ZWZJOWxOU
-	 grhMK6amGvLKfkFWhP8VpxVoNucPh22LpmwPLXYk6rVD8cK9XKU/ab0DX65HnMQLxn
-	 vN0JzlHGEElPCqTFZ2+3A/O1EAACIQc06lB9k7CQQUVgalLoaRqlQJPd2TQgzo/siL
-	 xpDqB5zFJTfY6+HuH9+GNEVZSGI4+2WWQ5mWogO6tVyh5dXARKKswbkgM0spqIhtIN
-	 10S5W6ypKZE0IA2xWXbEJp0uIHPNAN5PhofkLtbXE8R15ACSdfPMqG/5Hs1VL477yX
-	 10+iTQIgm3QSA==
+	b=aOprSh0LRluLPNXP+tv/SGGfD2lF4VlnVl7aKQTiZxk4fAfXTKUOyjNw0u2Z/PAgI
+	 FnnTkyUre74XKp5KQSeNYONL7IvESdvM2w6/PZBCERDUm5ji0jkKXL5immG9Xi7rqE
+	 LucZ0/YJEBBjTm63lKnm2384rYkAWcXTf39fPWX9UJnmUdm0Zw9Q7F+9qn8/eg/mCb
+	 RnDhMU2tS/oNijInZFGZHTKxUvbO5QKqBBdZXHXycKtH4Up3goOp6BO8YVRYvciRMz
+	 H+PmpcWbQ6qhujq2nOPv2ngqpYSjuMTFy+Tkpdth2DPwrlHe7urw0xrbZ8wWJmpXbU
+	 JHfHkccviaENQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5904C61DBD;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C70C61DBE;
 	Tue, 25 Aug 2026 17:53:38 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Wed, 26 Aug 2026 01:53:36 +0800
-Subject: [PATCH v3 3/6] mm/migrate: copy all referenced state via
- folio_migrate_lru_refs
+Date: Wed, 26 Aug 2026 01:53:39 +0800
+Subject: [PATCH v3 6/6] mm/mglru: fix potential generation folio number
+ leak
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260826-mglru-flags-cleanup-v3-3-d9f1c75549c8@tencent.com>
+Message-Id: <20260826-mglru-flags-cleanup-v3-6-d9f1c75549c8@tencent.com>
 References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com>
 In-Reply-To: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com>
 To: linux-mm@kvack.org
@@ -60,11 +60,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Kairui Song <ryncsn@gmail.com>, Kairui Song <kasong@tencent.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787680416; l=3430;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787680416; l=5305;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=F5+WyoMRKAo52xC+EbaLJqEaBkiRHvtsGp9Dpo2ZkjU=;
- b=noV7iQlZnx63oX5tZYMbh1wEEbGwnyLEUkL5DLG+Qp5A6Hol3WaFfxZIcmRM5pnZoqUrvp6gz
- S7iSbTn6kAAC5uisfYwCOVtzRHU05byJ+EpbRh3INC3AFQN7NaegO1G
+ bh=100BN63Qk6wpTXHzIP+LZWC/nFv6HG+IQJ3POMrMtTo=;
+ b=pkXtD/trrADDPFghgG1C14MnZoGcjG3viYChFQ701qoMLKWuWnnanZr9Csqw6aw4cj7J+yzBR
+ M+bha0hrPzfC6wJ1v3kHvCIUwez9fs0a0JiR6nEWDneIZdqIAwmyOPK
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -74,94 +74,129 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-folio_migrate_flags() copies PG_referenced separately from the MGLRU
-refs counter, which folio_migrate_refs() transfers. Yet under MGLRU,
-PG_referenced and the refs counter bits together describe the
-referenced status of a folio.
+Each generation of MGLRU accounts anon and file folio numbers
+separately, and the page table walker updates each generation's
+counters in batch once the walk is done. The walker promotes a
+folio's generation with a cmpxchg on folio->flags, and
+update_batch_size() then reads the live flags again to pick the
+anon/file column to charge. The walk holds neither the lruvec lock nor
+the folio lock, so the type can flip between the cmpxchg and that
+read: the lazyfree path clears PG_swapbacked, and reclaim sets it back
+on a dirty lazyfree folio. The batched delta pair is then recorded in
+the wrong type column. Nothing reconciles it afterwards, permanently
+skewing lrugen->nr_pages and the reclaim budgets derived from it.
 
-Consolidate the two: rename folio_migrate_refs() to
-folio_migrate_lru_refs() and let it copy the complete referenced
-status, i.e., the MGLRU refs count including PG_referenced, or just
-PG_referenced for the active/inactive LRU. Drop the open-coded
-PG_referenced copy so the referenced status is transferred in one
-place. No behavior change is intended: under the active/inactive LRU
-the extra bits are unused, so operating on them is a noop.
+Fix it by capturing the type from the flags snapshot the cmpxchg
+linearized against: folio_update_gen() returns the type of the state
+it transitioned from, and update_batch_size() accounts with that.
 
-Transfer the reference state first, before the destination folio is
-marked uptodate, so a concurrent lockless reader cannot have its
-reference update overwritten by the copy.
+A folio's type only changes while it is off the LRU list, inside a
+del/add pair under the lruvec lock, with the gen bits cleared in
+between. The generation and PG_swapbacked sit in the same
+folio->flags word, so the cmpxchg snapshot captures them together.
+Let G be the generation that snapshot captured (old_gen) and G' the
+one it wrote (new_gen); the CAS can land in only three places:
 
-Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+  - before the del: the folio is anon at G; the batch records anon
+    G -> G', and the del later removes the folio from the anon
+    counters;
+  - between del and add: gen == -1, so folio_update_gen() returns -1
+    without touching the flags and no batch is recorded; the del/add
+    pair accounts for the move alone;
+  - after the add: the folio is file at the fresh generation the add
+    charged; the batch records file, that gen -> G', matching that
+    charge.
+
+Unlike the drift of lazy promotions, which sort_folio() repairs under
+the lruvec lock, the phantom deltas from before this fix land in a
+column the folio never occupies again, so nothing ever repairs them.
+
+Fixes: 018ee47f1489 ("mm: multi-gen LRU: exploit locality in rmap")
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- include/linux/mm_inline.h | 20 +++++++++++++++-----
- mm/migrate.c              |  6 +++---
- 2 files changed, 18 insertions(+), 8 deletions(-)
+ include/linux/mm_inline.h |  7 ++++++-
+ mm/vmscan.c               | 13 +++++++------
+ 2 files changed, 13 insertions(+), 7 deletions(-)
 
 diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index edfaf2661812..7f91a89b5ba3 100644
+index 7f91a89b5ba3..8cf82989ec26 100644
 --- a/include/linux/mm_inline.h
 +++ b/include/linux/mm_inline.h
-@@ -365,11 +365,19 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
- 	return true;
- }
+@@ -10,6 +10,11 @@
+ #include <linux/userfaultfd_k.h>
+ #include <linux/leafops.h>
  
--static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
-+/**
-+ * folio_migrate_lru_refs - copy the reference state to a new folio
-+ * @new: the destination folio
-+ * @old: the source folio
-+ *
-+ * Transfer the reference state to @new during migration: the MGLRU
-+ * refs count, including PG_referenced, or just PG_referenced for the
-+ * active/inactive LRU.
-+ */
-+static inline void folio_migrate_lru_refs(struct folio *new, const struct folio *old)
- {
--	unsigned long refs = READ_ONCE(old->flags.f) & LRU_REFS_MASK;
--
--	set_mask_bits(&new->flags.f, LRU_REFS_MASK, refs);
-+	BUILD_BUG_ON(LRU_REFS_MASK & BIT(PG_referenced));
-+	folio_set_lru_refs(new, folio_lru_refs(old));
- }
- #else /* !CONFIG_LRU_GEN */
- 
-@@ -398,8 +406,10 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
- 	return false;
- }
- 
--static inline void folio_migrate_refs(struct folio *new, const struct folio *old)
-+static inline void folio_migrate_lru_refs(struct folio *new, const struct folio *old)
- {
-+	if (folio_test_referenced(old))
-+		folio_set_referenced(new);
- }
- #endif /* CONFIG_LRU_GEN */
- 
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 15b45832bcfa..a369d0c95c38 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -776,8 +776,9 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
- {
- 	int cpupid;
- 
--	if (folio_test_referenced(folio))
--		folio_set_referenced(newfolio);
-+	/* Copy the reference state, including PG_referenced */
-+	folio_migrate_lru_refs(newfolio, folio);
++static inline int folio_flags_is_file_lru(const unsigned long *flags)
++{
++	return !test_bit(PG_swapbacked, flags);
++}
 +
- 	if (folio_test_uptodate(folio))
- 		folio_mark_uptodate(newfolio);
- 	if (folio_test_clear_active(folio)) {
-@@ -807,7 +808,6 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
- 	if (folio_test_idle(folio))
- 		folio_set_idle(newfolio);
+ /**
+  * folio_is_file_lru - Should the folio be on a file LRU or anon LRU?
+  * @folio: The folio to test.
+@@ -27,7 +32,7 @@
+  */
+ static inline int folio_is_file_lru(const struct folio *folio)
+ {
+-	return !folio_test_swapbacked(folio);
++	return folio_flags_is_file_lru(const_folio_flags(folio, 0));
+ }
  
--	folio_migrate_refs(newfolio, folio);
- 	/*
- 	 * Copy NUMA information to the new page, to prevent over-eager
- 	 * future migrations of this same page.
+ static __always_inline void __update_lru_size(struct lruvec *lruvec,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index cdc2e44875da..6fda948aecf2 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3269,7 +3269,8 @@ static bool positive_ctrl_err(struct ctrl_pos *sp, struct ctrl_pos *pv)
+  ******************************************************************************/
+ 
+ /* promote pages accessed through page tables */
+-static int folio_update_gen(struct folio *folio, int new_gen, const vma_flags_t *vma_flags)
++static int folio_update_gen(struct folio *folio, int new_gen, int *is_file,
++			    const vma_flags_t *vma_flags)
+ {
+ 	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
+ 	int old_gen;
+@@ -3298,6 +3299,7 @@ static int folio_update_gen(struct folio *folio, int new_gen, const vma_flags_t
+ 		new_flags |= BIT(PG_workingset);
+ 	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+ 
++	*is_file = folio_flags_is_file_lru(&old_flags);
+ 	return old_gen;
+ }
+ 
+@@ -3328,9 +3330,8 @@ static int folio_inc_gen(struct lruvec *lruvec, struct folio *folio)
+ }
+ 
+ static void update_batch_size(struct lru_gen_mm_walk *walk, struct folio *folio,
+-			      int old_gen, int new_gen)
++			      int old_gen, int new_gen, int type)
+ {
+-	int type = folio_is_file_lru(folio);
+ 	int zone = folio_zonenum(folio);
+ 	int delta = folio_nr_pages(folio);
+ 
+@@ -3519,7 +3520,7 @@ static bool suitable_to_scan(int total, int young)
+ static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
+ 		struct lruvec *lruvec, struct folio *folio, bool dirty)
+ {
+-	int new_gen, old_gen;
++	int new_gen, old_gen, file;
+ 
+ 	if (!folio)
+ 		return;
+@@ -3532,9 +3533,9 @@ static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struc
+ 		folio_mark_dirty(folio);
+ 
+ 	if (walk) {
+-		old_gen = folio_update_gen(folio, new_gen, &vma->flags);
++		old_gen = folio_update_gen(folio, new_gen, &file, &vma->flags);
+ 		if (old_gen >= 0 && old_gen != new_gen)
+-			update_batch_size(walk, folio, old_gen, new_gen);
++			update_batch_size(walk, folio, old_gen, new_gen, file);
+ 	} else if (lru_gen_set_refs(folio, &vma->flags)) {
+ 		old_gen = folio_lru_gen(folio);
+ 		if (old_gen >= 0 && old_gen != new_gen)
 
 -- 
 2.55.0
