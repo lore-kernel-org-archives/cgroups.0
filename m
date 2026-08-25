@@ -1,129 +1,117 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D96612EEE75
-	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 03:38:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6651A378824
+	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 07:40:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787629116; cv=none; b=txVdOSEw6qQSQ9sux9Z0oeUl/7UdVg1SJWMSjG2tiW3IHOVCnbs127MANPlbyNwjvanX30V2AhLOLQUC8FQwrCxMJT2Kt3EoD4pT/5yYBHVRNS7WWSpN8Op2Dmj82EaWRmuXay+mHa++aA9nrPsi4YX3RwcOGUq5kcxEBji8j88=
+	t=1787643623; cv=none; b=B4oW85BTdFAkwIYg1u6d5GRaF/buKDs7XN/qu7KXmA2zto98Q18mNjQLYizBqEJQWVVDLlGp5BrB/94BIg/Qkg0ZSmz4VXdVTCU8iDfU0F5wjXv9Yt+aVIivqkIfWPA30bVZLWVqm8sk0ulGuARnzjm5vN3wuDUy/y33RSHsoIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787629116; c=relaxed/simple;
-	bh=E+rumZ5IHlJxJjkjEZT710lc/D+oefpHKErRjwEJSMM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tlnm0f8jc/HPfhptRL43s1vrvwijJwqMhl48d7X/PCU/k/tNqicm93XRZcVAlpjfc3zhubd8oU2lLf1PPsuHGjjE4ntQJaLhoh1JcBUcRwuZuUnSgMzUFUsKX8JiETVimH/w+9PmhT6Dzwu2aCxzo/aS5o3gBLjiBONr6wZr3Y8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca; spf=pass smtp.mailfrom=metarealtyinc.ca; dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b=BKWbZjdJ; arc=none smtp.client-ip=209.85.222.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=metarealtyinc.ca
+	s=arc-20240116; t=1787643623; c=relaxed/simple;
+	bh=tZJHSLhita37GZE4qEiliq716XxjbQZxZLfaHUeBxsw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=je5riKG1212+aOPaP/hi5nMPhii9IaPkhzAQbKZwncGo+jSBgo4J/mZvDdeheA30kfGauZffmU0NIwL2btqjZL6E3gUC3XXi8Q3NCWJU2bGnI/JLzJJTFRu+JveWVAkM4AWBlJfji5jKCZXtbNwUawqGm4ahenLsZDhy3bfvzqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EUYlOulW; arc=none smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b="BKWbZjdJ"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-934956bee57so435721585a.2
-        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 20:38:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EUYlOulW"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-6a1a546a6bbso7713675a12.1
+        for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 00:40:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=metarealtyinc-ca.20251104.gappssmtp.com; s=20251104; t=1787629114; x=1788233914; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+        d=suse.com; s=google; t=1787643620; x=1788248420; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=fP+EZyv3hwxvWRQB0kgMS5FUixvZvwf9qKXyYVHzYng=;
-        b=BKWbZjdJX2hJxNABWtaTGQ/4Uq1zkue8NfVk2AA98rnJW5psevG4jZlZbij/0hKzgL
-         QTBn+UYT6JSHBpf1uypD/eHoTb03iB37X/2yXGKiovHNXLKOKpqiXse6vqvun7by79aT
-         3uc9mftkLtq9BpKMoekbhoiO9KY5lWZM8dGmEwosIPGB9nHl1kqH8iEwH7Y5Oq/OdiZD
-         5149tLV6/O26mjfVvCjwiXEtI2cPYli+i+0rpysoT24d45/2ALyyeGrvndibwp1TNvyP
-         bdrS+o8N8Yum4RcuYq7nR2d6OONWHUxYWTD+UiyaOqZ6Wiks2U8Lf6d0ZpvTZnbY70pb
-         5TAg==
+        bh=HvIHRFnGldbLfSeUQWu0/lotI0W1auWfZBfJjbwacgc=;
+        b=EUYlOulWc6m7/itZjtlAZdJVn+dL8xlUxJTLw7r3HYQtKBe/qoCwuVfzCUfAJJyYE+
+         QoTK0OVCeHeepfYwKBYhoskukutgnL6jEf5+VvYjHWwIlt/7yx01uowAws5OH0iOmg2Z
+         FHZdUBD5LqCZ9uYnZEdTRz57vIURCexBIk+mGyZfJlKwl2OnlJ+xbWZX8K5ST/Q73Gk1
+         p57rt4BKJ663n/nykOGUC1QDRI+eouMZF0JljR6ZrATFfJ/UaE//8TMayDqtyx4/wJCf
+         Z3L5o21Ap+4XkltYyBKmVDS6AlqfGSEXSUpPwYJJDyYHnY6qzp7sVvlQjs0tE992lzqf
+         XbWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787629114; x=1788233914;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+        d=1e100.net; s=20251104; t=1787643620; x=1788248420;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=fP+EZyv3hwxvWRQB0kgMS5FUixvZvwf9qKXyYVHzYng=;
-        b=cTJNkoD+762e3VDWOtmik6Bxr5qIMjylBQRNc0LAXD0tHFoWgsgBMfyVcuqu1XdCU8
-         l8t41aypFioTNsctTaJ7M1khC4OcGFaItLmV43HhAbkmOYCM3hpGzWYw3UTdkm0IdYH6
-         SYeJSY58VVzCMKlGgg6kYwwnS0xkSLVJf9zB/rUHi9OJRnoo4oi+nyXoYGy4KJ4MimY3
-         b6HtPdk4olaiGorpGMNylfu4O9iqoU2FSf/1IwkqZ1GUT1VohPtM5VtP+yMCs+mqWK/c
-         y/3JdFEMokpthQec6ta76PA8FoOTYoKewI0YEwK/HtKHKfZoeIWDH7sUfdfCYeH6sgi5
-         uUXA==
-X-Forwarded-Encrypted: i=1; AHgh+Ro6/mgy3qWdOzU8jj3VrGDSHGtP7aG/h5doeeSK/KFJ3GjCTG3pkOKyv2u7wTx3uK8NR2B36FhR@vger.kernel.org
-X-Gm-Message-State: AFuF++k2tcrlI3Bj1mw7MgS/ynodMru0L7X3bPNvkpyU8BwiSEabnFWK
-	e0k/nYRVirQoSPGqBPXAf9UJe3i8xgt05XcucQTqIqsVKHnpuqRTT4q+o+SDsmrFUeg=
-X-Gm-Gg: AR+sD12OqT4EBA3Bt/XkMQq/2PQhnoqyuG3zj82p8mZTi7HPeXEMImOCE4q0egds9Pg
-	2wG/sqrwdP7mFGp0U+VDcLjlZ3JXVEt0/9bCkSX6+1kEWDX2qKK/bbiFRisc7dCzW7e03YIa0tL
-	kDkxmMj3fmfoVscnYddypDRJc4zUZX3UR9iAX/DD5x5RNklzwihZvF1tcrQEaCnO1pA3o2+njie
-	IJ0wDCVrsjo49HOt+9DWrSpek/W1Oh1swd8Y+InE5FHBcHWJ1QSivD15WiThiX9ubdSion+sEdw
-	qZCxDmcdxm2NXSysb+wBX1G4Namr77n1ML1T66fLzHnhJ4X50BaiINc3nBm6pop9CYsp6yLOlTh
-	gRYh4sJP63U3JZ+tbP+aQ7+n74EoKIzyaP8iy9kYlt90WasZq3kSVZX6JUTbyK7oFifi/tp5J+m
-	P9lAEUdij+UU+wU+f2rxXlXn0StZqdIYaF1XO9wmN4FVfruStJMTQLmatQCp+o8HmmX09l0dzut
-	d1Q3u2SN4NYfZJt5f3PqprBQRYEPAxLYUyy0Nl33IazHsPZpHFw8oJRfOu0juOYJKMjScQ90mJw
-	XugYp2y9rrmOoF5rkKmNIrWQtMIVyRhJ29BMRFQjEnU=
-X-Received: by 2002:a05:620a:3bd2:b0:92b:8a7c:f71e with SMTP id af79cd13be357-937468bb96emr1905480085a.15.1787629113779;
-        Mon, 24 Aug 2026 20:38:33 -0700 (PDT)
-Received: from jake-laptop ([2607:fea8:e5:500::fa4c])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93749eb4240sm640377085a.47.2026.08.24.20.38.32
+        bh=HvIHRFnGldbLfSeUQWu0/lotI0W1auWfZBfJjbwacgc=;
+        b=g1SO8EIned+pYRdnRloIf1M0CG+nRypcjjkEBqtG24E6jokDGSV+iMwcimbgNs9HQN
+         sgbQzMJ4W2fszhJIsBH2OrqiU4ao1aTZtG1nuO8SC3Ey4hoDBBkdaEOuR88Bz629U9nz
+         hybNp0ft5TMHYxe5Nj+C7d+9/aCe4m2sGa7AnnJdkWrOzRTXabw5VzMccS7exyswScOD
+         yEydtrCJWtRTxEO+a9UPVZdhO1mdfuzeEVdOw8Lmx2GemPPZfAZof1YiMGWKccvUEvmw
+         fGShOSaeOWetyOhKZBZzdwHNZN0PUW9rbAugA3NaZHy5MsfSVCVgaKFrrgKAaZqua0li
+         j5Jg==
+X-Forwarded-Encrypted: i=1; AHgh+Rryt2XXy84Dy54J9lUrZzwxVlRha+QSgimAbairMqQuMHXErD8dz40TnPqi9PgAO2qecbOFAxV2@vger.kernel.org
+X-Gm-Message-State: AFuF++nv4DXn33FszhGIVUupwIb3KXE7+N4Q5xV8rvYRKIGvjQmJ68Gv
+	wt6tsF3iTkk45woWd/hr9IRIBUsEj0WfI9u8NZdHsPXvviWfhalDGm5F+UqwiKR9qDQ=
+X-Gm-Gg: AR+sD13BoNJ9JA6pi4nh1ovA8LisaVG7hYJjGNs7X9HI7SjDrpVZOAVFZsaoSLL4NuI
+	IKaq5STr7MR2zrMCCNiID8x+T7XeFncs11pgqFQA1YP0ur+9hb/E0ubvrFP9TbJEIgpfHY6MWxr
+	Qvb9nkYz906Gtl74zn6VkZjlHTWOuK8y43jvVHXqxn+s4V2Qto0WoFMnpiXKUo5Zr1s6MTYbZ/z
+	Zq1OtY09Tb5DrJcVUMtbK3tYvuymHchb3+b3nR5U/uJ0Du8G3969dcvnh7kDbO01nRSJPwDiK4M
+	fwmuB0cVVua0U+9j7KEZhMLMUUkskL+Rpj0//K02YpIlMQ6psoHtCuxq7syw8rWv4IWW+6o7lpF
+	nK09+PKmDh3/Ch4d9Rq8xebJsFq6gsT2qPyRKGDIRjKcIEakmMqnh76zGUvlAisaGtYdDW8szyN
+	cCgiN5A1BMg87Un5+y0h9I2AwwbZ5o6t7jvljO+9UkUMk+iYgY0RduFXaE705DIOc5FwOWLdmXx
+	g==
+X-Received: by 2002:a17:906:9f8e:b0:c24:b11a:46fc with SMTP id a640c23a62f3a-c24e5be5ae6mr443422266b.22.1787643619483;
+        Tue, 25 Aug 2026 00:40:19 -0700 (PDT)
+Received: from localhost (109-81-81-112.rct.o2.cz. [109.81.81.112])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c24966f6b48sm1685768466b.33.2026.08.25.00.40.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 20:38:33 -0700 (PDT)
-From: Jake Steinman <j@metarealtyinc.ca>
-To: Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>
-Cc: Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Waiman Long <longman@redhat.com>,
-	Tejun Heo <tj@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org
-Subject: Re: [BUG] sched/fair: divide error in __calc_prop_weight() from the enqueue path (flat-hierarchy series)
-Date: Mon, 24 Aug 2026 23:38:31 -0400
-Message-ID: <20260825033831.3006196-1-j@metarealtyinc.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260818231333.1441757-1-j@metarealtyinc.ca>
-References: <20260818231333.1441757-1-j@metarealtyinc.ca>
+        Tue, 25 Aug 2026 00:40:18 -0700 (PDT)
+Date: Tue, 25 Aug 2026 09:40:17 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Eric Chanudet <echanude@redhat.com>
+Cc: Mike Rapoport <rppt@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Shuah Khan <shuah@kernel.org>,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, Maxime Ripard <mripard@redhat.com>,
+	Albert Esteve <aesteve@redhat.com>
+Subject: Re: [PATCH 00/11] mm/cma: charge cma allocation to memcg using per
+ area counters
+Message-ID: <ao1G4V-MhsjL5Bms@tiehlicka>
+References: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
+ <aoqbCyX-32doBJwd@kernel.org>
+ <aoy88hVQcA6Gkfuk@echanude-thinkpadx1carbongen13.rmtusma.csb>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aoy88hVQcA6Gkfuk@echanude-thinkpadx1carbongen13.rmtusma.csb>
 
-Another report of this, same divide but reached from the idle path rather
-than fork. https://github.com/CachyOS/linux-cachyos/issues/985
+On Mon 24-08-26 17:58:49, Eric Chanudet wrote:
+> On Sun, Aug 23, 2026 at 10:02:35AM +0300, Mike Rapoport wrote:
+[...]
+> > CI found issues:
+> >  
+> > https://github.com/linux-mm/linux-mm/actions/runs/32519133924
+> 
+> Indeed my apologies, I messed up CMA=n it needed a forward declaration
+> and gating for mm/cma.h content included in mm/memcontrol.c.
+> 
+> I queued this up for a v2, with the other issues reported by Sashiko.
 
-  Oops: divide error: 0000 [#1] SMP NOPTI
-  CPU: 7 UID: 0 PID: 0 Comm: swapper/7 Tainted: G         C          7.2.0-1-cachyos #1
-  RIP: 0010:enqueue_task_fair+0x87c/0x2150
-  Call Trace:
-   <TASK>
-   sched_ttwu_pending+0x204/0x590
-   flush_smp_call_function_queue+0x169/0x250
-   ? cpuidle_enter_state+0xc2/0x230
-   cpu_startup_entry+0x2f6/0x3d0
-   start_secondary+0x9a/0xa0
-   common_startup_64+0x13e/0x150
-   </TASK>
-  Kernel panic - not syncing: Attempted to kill the idle task!
+Let's focus on the highlevel design and usecase disussion first before
+you start chasing specific implementation details.
 
-An idle CPU takes a wakeup IPI and faults enqueuing the woken task. In
-swapper there is nothing to kill, so it panics immediately instead of
-oopsing first.
-
-Symbolised against linux-cachyos-dbg it lands where mine did:
-
-  __calc_prop_weight   fair.c:4728:10
-    inlined at enqueue_hierarchy  fair.c:7891:12
-    inlined at enqueue_task_fair  fair.c:7949:11
-
-Still nothing on what empties the cpuset. Their machine looks like mine —
-concur mode, no empty effective masks, no partitions.
-
-They have offered to run the tg_cpus() floor or a debug build with
-WARN_ON_ONCE(!cfs_rq->load.weight). They reproduce more readily than I do,
-so that is probably the machine to instrument.
-
-Thanks,
-Jake
+-- 
+Michal Hocko
+SUSE Labs
