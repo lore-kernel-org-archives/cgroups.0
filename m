@@ -1,150 +1,203 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 636CD30E85D
-	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 18:21:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787682063; cv=pass; b=RDdcxzsAwDwnHGIOTHr1bunybKAV1tQ3nNsMOUNToYdpjR9XNXTRBsLCLEN9UlQ8EsrUzFEjDrDKW2ny10YGs6ieS/Se3WR+XPTG9up7MMr0z7tTv1+bsw88OB4CvRq6F6YH2GpnXNnrn7P/ycCTFrXVUuaGPch88F5BxfF8Up0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787682063; c=relaxed/simple;
-	bh=hqhrXVg8CxH/GguegGLV3hzS3LCLILXiCZ3vQaTJdNI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=a3jT94I270pJl32PlbQyp5/ZzF+CyOeS49XOVfsI7CYYrGpC/aYLYQwfxHQQv17H6wblLT/zOonhamir3IxkJPI9MUDDu+TgGfpVmlAFt/FtRLdNYOqE07/6UmkSoNZJwqePUMF928o5tAeDb0iLfHB2YruWIQg0Jpo01zq5Ilg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WPEPHZ36; arc=pass smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A77C35E1A2
+	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 18:33:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787682835; cv=none; b=C2+bi7BCtod4MYD/6Ae+WmF1X2vBn5O7yKJ8DXYnWhajgokM1/18D8RWcSxEVV38XMAWM9rmxKMn8LfDPgyTaKSGxOyYSvXDFIcClC8kUTUh0IWPMVJXe0h7jTTlQg1XjbElTw3xzCNV1Lz3cJlwfIeq4b0CCwSixXm8OCtFtmM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787682835; c=relaxed/simple;
+	bh=oz1vsSfhnzHKzMyvIU1457fQ+VKFGoaSC1MKlUjtQH4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lSeND3PCXn2UIvzvN1QJ9QKeq6OEWivnN3jRviJQwyCUt5pt1BtSb+0u0bY0o5UTh8rTRma17gIEbJMIy5t8yutEGvhIpawDkIv4zsOEavZL/l8pVjUJa37BbUbfuKR80zlm3oGna5dPeqqkiuCAwmtVfz9TvRyNmr65cDgisKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=W/8SbrF7; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=jzRQFdKS; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WPEPHZ36"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-c1671ec8692so731255266b.0
-        for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 11:21:01 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787682060; cv=none;
-        d=google.com; s=arc-20260327;
-        b=bwo57BaaAiLvhJ/ZQoTLWKVTDUxMTxHKA+eQdfgqPXtKaL+UdDJ+nE51wYgOD0nyeK
-         tJOp0NLTzVgRL8uNIzWYmt6kold7gafh1Aa0b7eQ1XYag/oII9/LMQlbbpn53aUyyN5Z
-         Crc2x+gpic3GnjoPsHICDQ3ARRIr1S5P7acteAK1e51t05Lkx+hfyo7bcN+PkH0l68wS
-         4x8NOoaIdYkBzA8RUlOgFcC6EvXeSq5rW6NVYOP5kx9dLtVzs2A3I7G4Q1ShuPaKR2cL
-         TyvDaO2mVsEqh/BjL8akjv/C+an2E5fB2pWAuZv0wyJihsKLVefL2SVzW3l3/pbGBXYw
-         5zOQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=ODQhhb/CDE443Rj/4ZuYP20/0K8ohc51c/+lKvAoakc=;
-        fh=NvVk3+SEhWRGaACbXLb3nsjYMJYLK/trluGYxLvWwwQ=;
-        b=OsdJd400LVi2SN9mW5GjojXRDc3ul2a1buIlaJIOZFMU6TFCOKweBnWVGc9G+rf+8P
-         9/HPyhB3dpRniCymsstOyCQnOI2asyOWEP0Qsvu2bJ7A42/griIjH1c+DErx37BRivmz
-         oNjFtAgldjgiWoptGEjUrayoGbE9IisXoHaQm+cgavXQn1Z4iGRJng5uwTUsZ8R5jqHR
-         j69g+xt+yFgRH6CX0jJEJZONajYsnoNE3HFXbHMFyod13dBIkMsMAK59/q5WbsEmSzPy
-         pyLgK6cfgnF7cuMyK2lsyLH2tuutJhrVhqjqxppMc807ZB2r+yRUq77+Jer8r++vJpsX
-         J7Qg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W/8SbrF7";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="jzRQFdKS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1787682833;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ezRFPRBsxOpDYy/LiqFi78+AQBRMUReYJkZLlaNR3K4=;
+	b=W/8SbrF75mz/Zn8oWiVac3ovOvThYS7LcQubf1KhZG0A30B9KAJFWsL88sXa8nm27Dnh4J
+	wtFz4ORgbPryd7MPozFPaY1ggjlUgt5Z7fGWDI7pGPf80DSeT1qXHO4n03ByTWdR2SpR5x
+	Z6aGrhXJxyl8+rqRR2eqJk12Ye49lyE=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-217-vnqEqZs2NCKTOk4FCsfaUA-1; Tue, 25 Aug 2026 14:33:51 -0400
+X-MC-Unique: vnqEqZs2NCKTOk4FCsfaUA-1
+X-Mimecast-MFC-AGG-ID: vnqEqZs2NCKTOk4FCsfaUA_1787682831
+Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-907c59bd73bso2243276d6.3
+        for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 11:33:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787682060; x=1788286860; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ODQhhb/CDE443Rj/4ZuYP20/0K8ohc51c/+lKvAoakc=;
-        b=WPEPHZ365CUd7p3tXNNZSL1V/++6DE7Teh6IjSwzyi6ckQph+naN3EeH89ogEh3mF+
-         rXTcmhvsG8xdJNZAfqIaJBAp2NHVCcuifLeEdOxW7ZfwjF05/DFhr9FpuqVloReukF/b
-         JBKl6aaFScScom3X8uUpPJmeNZQYODp94t0LmLIosy4eD0dQonJzYTbD35pqG7cWNORv
-         RgNOwuQ2QCUsD4ATDc7jQepcM3NRhmGMV10paObjNn59k8As7FXIAQfCCj4oavwIXPv9
-         nxoNTXqG2+x+y+glXt5lN6HyOzS34MEN6+IBY18uJUpj2ChnBUPt9Y8+hUCVFHNYGFtm
-         OHRw==
+        d=redhat.com; s=google; t=1787682831; x=1788287631; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ezRFPRBsxOpDYy/LiqFi78+AQBRMUReYJkZLlaNR3K4=;
+        b=jzRQFdKSWJtzGdyzwv0exG9iaPgnI2K8a/EAGci9as+f6G19LBrW5M7APdAFNEeXcV
+         rlEJjhQZRH9s/5Pk/pfggSnebigCMW952giqJy7uj80ouy7dxDf3WuFjj7RuHzDjR5Xy
+         Svncfo4f6Z77AeBkNsWFkZIQyDMruBFb3Ogw4/XS9nyEjXVgRWdj8/vArFsXn/OtYATU
+         nAPsqsT22BOiiy9MQdrrwOySX+SCxSkoJWyVBiHplTZL3ayRwBlfj06m3rFhgv2TDC0a
+         hcnanWYaH3vrZjyEejpPuIfKJmGjocLmSZke7Qpy2TeQX9YisjxeAi69VFld64dG5FVF
+         I5IA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787682060; x=1788286860;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=ODQhhb/CDE443Rj/4ZuYP20/0K8ohc51c/+lKvAoakc=;
-        b=rsEiDA5r0HhgxwKQsIBfRK4avV/OE1oUdII0Pd1vD/O5g6ECNKD508viL0kXMWhY7Y
-         7Hhl8I4sTiT2q+gu5uFHfkV+u6vCpSz/b5X6uFZoe/tFZxiPAg1SMvkayPIXoWQrnXyf
-         4plakJfo9Y+cljbCxi0EEbrYluSPaqve97iqcjJ9Asue/aOf4Akxfp5BBt+S8zP+gqLt
-         xna3yjdYePPSyjEhc8NzmfigUlQrRVnmDmbRS1SVFWxvP54HzIygXlS83YahPpKpPm9v
-         yBL6+jnWsgcpicCK0WZC1xSTaM7H77tgCq4dTdj1jh9H1AW75a8hWJ//Z2kl1l1auD3n
-         LJ1w==
-X-Forwarded-Encrypted: i=1; AHgh+Rq2GdAhQDZkwAoH8cH4gtZmsehDZUd2+c5tP6dCct0cGHE7+cDC389RdgvcUzPQrKffyLs4mP65@vger.kernel.org
-X-Gm-Message-State: AFuF++lwa4GE+2n6s8vsgrjqWmyjJ1P9p9uh+qzj7JAh0HHT2csl7H5H
-	TnMSVr/01pyFD48dMNyPmo1DFPoQrXC4AT7VBBxyAx+RaBVmIeZB/i6XE1N+PtkUxDL0e7YYM5U
-	dO7OFbANIxVRhL3TlZ527m2KXmZBinZA=
-X-Gm-Gg: AR+sD10jcRPLGVeH58fm60lfjZi1j6Lc4eHkF/yyAiIdJOn5IJ3y+JaYxO23KJLRun5
-	+PLII8UCS+xEU/tvLzE+Bhp4zeKBYbFd8g1GAVcE9MaPFmlQWpdKt1BKww2Hcsz2pCQh25CQvVS
-	L6tOXt7zd3zYm9hHtiZZPjuSLQwPa7zf0irMMG4NuUAfRK13RZDa+kCB47LeHnLT7mJllm3/XJE
-	yau85reSvhCyh2lfm+J+g4AzngUAN6aXqYvyPhx9INCBjk5ndyeRq6rnwyKEeFQLtAvtMKJ8wdK
-	1U2MCpXhsSeMIyJ2/35G9cpB8aNnziPzYvMTZwChlfA6FVVRV9/KNRcpv5g5coCQBzlKyo4CaDm
-	gDMWVcpj1Kf8H
-X-Received: by 2002:a17:906:6315:b0:c1c:4e36:eec6 with SMTP id
- a640c23a62f3a-c250c608d86mr52189466b.18.1787682059979; Tue, 25 Aug 2026
- 11:20:59 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1787682831; x=1788287631;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ezRFPRBsxOpDYy/LiqFi78+AQBRMUReYJkZLlaNR3K4=;
+        b=BrUD95t5vLyPP1W5laCiVI+tkOzehktqRGSGd6De0fe/1rYcOr0xStmrSw1Xe5qvR6
+         w+3vA/mAt80N3tpREDqQXrbgaStyyhyLhQMx6za7C0+QQNzrdZuKcxWYY03hSUBeaEXn
+         ydkggd3+unultPwpaeisTAII1BdEPf43R8J8udQQ5A9QlFTNqewX5RTQRkXCwKd2WJ/I
+         yz4JxUUB6MCBZI3cznKJsrScefcNnLEJmd8ePEsGQb7FIaRvL53aX8dFoYP5cQpGG0/U
+         CQad9OZIPTsQQhExM4Vsfvcf46jS69RfVlm+tbEIyhtI9S5/9qEiYY6uluvKuAUn901e
+         oeGw==
+X-Forwarded-Encrypted: i=1; AHgh+Ro9YZlpIv2H17r84DbMRu0iKofyEzmd6eIOon3Hkb9A0Tt0FgeWacd0EisaZ1u5+4DMzP+sm6R7@vger.kernel.org
+X-Gm-Message-State: AFuF++kP4uGcUXUsBThDKetYphqXi5vzO+ElhhleGAx3YfFnwgtMecfJ
+	zmpGr8bmSY6Bvil669oaFOFZktBhH6IMTN32KDKUHLKSN5D02CaqeqN4n17wpijV/+gAj8VMlty
+	3Vhz89UWpTK/JsV7STxXHUqdySr8x2lqkmLlfggx3Iw604ivnZfZ9pZ5tAhI=
+X-Gm-Gg: AR+sD12cOz5HMZyeduWXE76yUvvNDr0HyTlLidljC/ScTqOytnejmDyGNaE6sqgbNhC
+	QMoalv8jn954ls4fNAwoJkZp1zbeULtLEV+rDNGgpN1jT4ACuSdyi3PiD5tbTGGQAwiKOfV00Mm
+	ZJ1BjSxkh4nm8nno2r0lFud90e7fR8eLVQJCQhTDQblXCLN3O860xAd1YX6063axZKsBca8JEdK
+	8SBQiNrmwEx9kk4+PM7Afz8sXw7SYyPoxR+WtF1XV08iHdWftZi+jbvMwJlSBO1JNvigxKdhiks
+	i+Kvaup1vD5Fm1hK6u/fIRvs7KqP7bez/CHWRTDHLZBDn1QyMUI9T3Rn8tRJUNBOuNnoqaBMdTs
+	yXRhXfLnktetY6UDtesBGzRpZ3AGfbeNMCY3fzdiVnUN8
+X-Received: by 2002:a05:6214:469d:b0:90a:4361:9c4f with SMTP id 6a1803df08f44-90cc790aa6cmr10048476d6.1.1787682831095;
+        Tue, 25 Aug 2026 11:33:51 -0700 (PDT)
+X-Received: by 2002:a05:6214:469d:b0:90a:4361:9c4f with SMTP id 6a1803df08f44-90cc790aa6cmr10046546d6.1.1787682830292;
+        Tue, 25 Aug 2026 11:33:50 -0700 (PDT)
+Received: from localhost (pool-100-17-17-231.bstnma.fios.verizon.net. [100.17.17.231])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90cc65093d5sm4901706d6.26.2026.08.25.11.33.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Aug 2026 11:33:49 -0700 (PDT)
+Date: Tue, 25 Aug 2026 14:33:48 -0400
+From: Eric Chanudet <echanude@redhat.com>
+To: Michal Hocko <mhocko@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Shuah Khan <shuah@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	Maxime Ripard <mripard@redhat.com>, Albert Esteve <aesteve@redhat.com>
+Subject: Re: [PATCH 00/11] mm/cma: charge cma allocation to memcg using per
+ area counters
+Message-ID: <ao3UKM5SbxBmxuR0@echanude-thinkpadx1carbongen13.rmtusma.csb>
+References: <20260821-cma-memcg-regions-v1-0-d21b165b8440@redhat.com>
+ <aowHqqaqK7TeexQH@tiehlicka>
+ <ao2gA_m3BCBu2esy@echanude-thinkpadx1carbongen13.rmtusma.csb>
+ <ao2t6HP-Zt5KDg30@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com> <20260826-mglru-flags-cleanup-v3-2-d9f1c75549c8@tencent.com>
-In-Reply-To: <20260826-mglru-flags-cleanup-v3-2-d9f1c75549c8@tencent.com>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Wed, 26 Aug 2026 02:20:22 +0800
-X-Gm-Features: AcwNN1U_5z30Xb0y454YfAJGi9xba_Kr9vW4b5gdWTy2Z2qEjtPAhDL3tECEXfo
-Message-ID: <CAMgjq7BheDgQZa0=KiRnxVwky9by5LA=iaexfPfT0WftgfL=qQ@mail.gmail.com>
-Subject: Re: [PATCH v3 2/6] mm/mglru: introduce helpers for manipulating gen
- and refs flags
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Chris Li <chrisl@kernel.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Ridong Chen <ridong.chen@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ao2t6HP-Zt5KDg30@tiehlicka>
 
-Sashiko reports (TLDR: false positive, please ignore)
+On Tue, Aug 25, 2026 at 04:59:52PM +0200, Michal Hocko wrote:
+> On Tue 25-08-26 10:47:53, Eric Chanudet wrote:
+> > On Mon, Aug 24, 2026 at 10:58:18AM +0200, Michal Hocko wrote:
+> > > On Fri 21-08-26 14:56:52, Eric Chanudet wrote:
+> > > > CMA allocations are currently unaccounted for by cgroup memory
+> > > > controllers. As system resources, they should fall under memcg, but CMA
+> > > > areas partition the available space for different purposes and memcg
+> > > > doesn't have a good representation for that.
+> > > 
+> > > Which CMA usecases are covered by this work? It would be also great to
+> > > spend more time describing usecases.
+> > 
+> > We would like to offer some usage guaranties to userspace processes
+> > ending up doing allocations in CMA.
+> > 
+> > For example, a shared CMA area is described in device-tree for an ARM64
+> > platforms. Userspace components could then, for example, allocate from
+> > it through the dmabuf heap, or a device or framework-specific ioctl for
+> > that matter, to use the buffer with sensors. The dtb may have other CMA
+> > areas described additionally that may or may not be used by that
+> > component. In this context, we would like the ability to limit one of
+> > the userspace component to over-allocate and choke the other(s).
+> 
+> How exactly is this supposed to work? How is the CMA access controled
+> and opted in for accounting. What happens when memcg limits are hit. And
+> many more details, please.
+> 
 
-commit 381ba2d1b94989f14f9427e1427b761444230107
-Author: Kairui Song <kasong@tencent.com>
+The administrator opts in by mounting cgroupfs with
+memory_cma_accounting. At which point the cma allocator will charge CMA
+allocations against memcg and manages a per area counter depending on
+what area the allocation was made into.
 
-mm/mglru: introduce helpers for manipulating gen and refs flags
+Assuming memory_cma_accounting is set, if a non-root cgroup makes a CMA
+allocation over either memcg's max limit or the per-area limit set by
+the admin, the allocation fails with ENOMEM.
 
-This commit introduces helpers for adjusting a folio's refs and generation
-info, replacing direct bit operations on folio->flags.f. No functional
-changes are intended, splitting some combined atomic operations into two.
+If memory_cma_accounting is dynamically unset, no the CMA allocator no
+longer issues charges. Whatever was already charged can be uncharged
+when it gets released.
 
-> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> index 621c8653d8f7e..edfaf26618120 100644
-> --- a/include/linux/mm_inline.h
-> +++ b/include/linux/mm_inline.h
+It looked consistent to use memcg since movable pages from regular
+allocations may end up in available CMA regions until a CMA allocation
+needs the space and has them moved. So in an extreme case, hogging the
+CMA space of a large enough area could trigger system memory pressure.
 
-[ ... ]
+> > memcg
+> > looked like a good fit to achieve this, albeit handling the areas, so a
+> > cgroup has a quota in a given CMA resource.
+> 
+> Please expand more on why do you think this fits into the memcg model.
+> AFAIU we are talking about a unreclaimable memory and reservations of
+> CMA areas.
 
-> @@ -270,7 +331,7 @@ static inline bool lru_gen_add_folio(struct lruvec *lruvec, struct folio *folio,
->   gen = lru_gen_from_seq(seq);
->   flags = (gen + 1UL) << LRU_GEN_PGOFF;
->   /* see the comment on MIN_NR_GENS about PG_active */
-> - set_mask_bits(&folio->flags.f, LRU_GEN_MASK | BIT(PG_active), flags);
-> + set_mask_bits(folio_flags(folio, 0), LRU_GEN_MASK | BIT(PG_active), flags);
+Since memcg already accounts for some unreclaimable memory (kmem,
+hugetlb), or induces failure if no reclamation is possible, I did not
+see CMA allocations being unreclaimable to be a blocker to track what is
+otherwise system memory.
 
-This is a pre-existing issue, but since this line is being modified, does
-it miss clearing the tier bits (LRU_REFS_FLAGS) when updating the MGLRU
-generation?
+I viewed pages allocated in CMA as guarantying special properties while
+being otherwise similar to pages already accounted in memcg to the point
+that charging them against memcg made more sense than having an entirely
+different pool. I can see how that could be the other way around though,
+especially with the per area counters, like how hugetlb have their own
+controller.
 
-When a folio moves to a new generation, its tier bits should be cleared so
-tracking starts fresh. Failing to clear them can leave stale access counts
-that inflate the folio's tier, which might distort eviction logic and cause
-thrashing under memory pressure.
+> > This trails from an earlier post where we tried doing this using
+> > dmem[1], but I was unable to reconcile the requirement for memcg
+> > accounting[2] since from dmem I didn't have memory objects to charge nor
+> > the guaranty there was one. Given CMA is always system memory, it looked
+> > like a better fit to try something without dmem.
+> > 
+> > Best,
+> > 
+> > [1] https://lore.kernel.org/all/20260519-cgroup-dmem-memcg-double-charge-v2-0-db4d1407062b@redhat.com/
+> > [2] https://lore.kernel.org/all/ahB7pCu_G4vuswc0@linux.dev/
+> > 
+> > > -- 
+> > > Michal Hocko
+> > > SUSE Labs
+> > > 
+> > 
+> > -- 
+> > Eric Chanudet
+> 
+> -- 
+> Michal Hocko
+> SUSE Labs
+> 
 
-Since this path is executed by memory pressure or page faults triggering
-MGLRU page additions, should LRU_REFS_FLAGS be included in the cleared
-mask here?
+-- 
+Eric Chanudet
 
-===
-
-Not really, MGLRU somehow currently keep PG_workingset once set, also
-PG_referenced is a bit special. In fact, the usage isn't very clearly
-defined, which I think we can sanitize with MGLRU-FG later, but not
-now.
