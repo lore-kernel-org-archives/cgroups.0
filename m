@@ -1,214 +1,267 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mta1.migadu.com (out-153.mta1.migadu.com [95.215.58.153])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA31405F7
-	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 00:24:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787617445; cv=pass; b=JEbJc5RhlpQecVNoDicetao3djase/ymBjrna8OcMQmjgVH/aKJc0XwKr3+iU3T/9W5pRh2c+xEWnMvPqFu6BiPBX507iaimUZIyYG2Nnn1DpGBLxmc6nShu7+IXfNhO247ESmggsszIWa3PJSaovesAdmx6MRFn10xMz7xXvHM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787617445; c=relaxed/simple;
-	bh=sD4t/4meW865SSv9NS2Z9q2uhT3+EtFOR3Gtp+V9Umo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PoFjx6dbZ//5MiAEH62vi5VUSvfTVGt007FNnySgdsgZVLL1Shvs9IwLkDEF5LNQAS8tTFDndtBweW+WRgCL9Mrw+3+oag/JevY8sXxxy31+Z/bUaHelzidDvZxKUH4Vc2H7ztDsaqDnh2xBY6zWTE1kwh3HA+qC20hBXidynvU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JPfxkiJW; arc=pass smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49A92D5C83
+	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 01:35:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.153
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787621725; cv=none; b=lAdFpr8G9gDGVHhD7KVnqMacEXGbj0lWo9sfKpzkYtK9cqn6vkaivLabLSIFcZt/I9LuEi4Zp0+CO0YYcu+0MmjaltMh2AI9N1asCvAw8ry4xgD8uLw4hTW+spjE6veuh5fWpfIFSD2F4rWVqQIdOKNHlly3b/lCobwFTcJD36U=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787621725; c=relaxed/simple;
+	bh=p5lPbK2jlF4D2oJ2mfcXZ3A9mwzMgb9oUbrKUKKpWp0=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=RAlHLX1J7aWkqc5ivb2XCppm8xCw8aPq6nt0vWG3CJtvKZ8YfYXJcjf9vYrjscpq0B4vI+mmJjuzM9sUeZlm9Pe0kTI/rqhw6LrcBPJO/QeXc5HVWPjcfCyard3R2xb7mjbYnsgbvB1F5lCIq8UnepKOsoMWD+ul5Xocavxw8t8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UKATGl9B; arc=none smtp.client-ip=95.215.58.153
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JPfxkiJW"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-499ac87c92bso32342515e9.1
-        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 17:24:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787617441; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Dcs3YoPdVPj9yojbVGNuzmO7HlpCCUZ3NdRWAbhn+quUE21K8UXCsr2bYalVDLEZ+w
-         4vni/jpsmHrL/YdFFOHl3B4R1k+fGk/gtvJZTh4v8hAndc+a58cXOtgXi3mVzH8pskit
-         4r+Sf7mlffs3AlGyV1pO7KKxtfliKmbtRRaLQO9y+Zse74Zs/kXG7aWLs1Oc/v5M18J5
-         v8OJxbCugrs9wG/A/PCcClwZl2n5lF2LNr18ihc8u+jrNEPhcevBgVtgiaNlETCwETKQ
-         uqj0nBqArbTT/BMAnV12cjZsh5domMM/1BwWjNUzlzmsaH97QcDN94FcFWZOFrdeJ8eI
-         GqFQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=SM23yOgiB3MFJPRmlHg0vJfTbh4NbcSvH9yKFOdYwW0=;
-        fh=zIprZzMdW0VsE8QSV80MQ4Ym4eZmv6+mRdP3YUmuejE=;
-        b=VGY5BlBz5/9Vrtnc1SumHKM67gyWlLPMmZDDyw4/ZBuHRcWvpLXW45mN8augIrn7Xi
-         5/DKF+aK79Cch8Cm6oyVeEy8+JGgiy+A8ixl5AfP00LPqerz+uhB+9HtLFnwIwIDo4U/
-         +luS2HSa3ZAK4VhOUQRrRspLt+tyMjDSBwicNzdbC+xbBZZ/mv5WQw6+NkJ70GreX7wt
-         go10tbrSHTV2ylbvBl+EY0Kaic8O94G/Lsn+30Dad3mlhqOvILunAirOvCvOTdoJD45c
-         5529tNO464Sw1OHZEvSCYbLC+1wScXBrEdfcB8YXvy56+wBmNyB2UZASqcMTQL7fxCkq
-         t5Sw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787617441; x=1788222241; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=SM23yOgiB3MFJPRmlHg0vJfTbh4NbcSvH9yKFOdYwW0=;
-        b=JPfxkiJWSvf3+eBnm7GOWg4rkfNLnrP0M7Y9ODKTYV/eZ5hP+UFqkOJlhDuxutPpxL
-         3UHEpo3PiWfog6Wg9IFA9FXH7lpnkGqn9n3lZ6/My2bKgCU0OZRk2/+lg8WBSQsrrSnC
-         rHekgNCIVsCvb1TxDODI3Yt30A4zCjij9yK1rC1C8JfitG19d5CeEQ5ODX+aX2hanW5q
-         FMIf+aS7XZafYSCV55QkRSBXTJP/kaIDVpZUFQA1+70QZnnu3mSpiAUICTwj4U99qrZL
-         MvkMVUx8AbuLZslCIjvvb5epHfA4AQvc3xTDuMD9srq072iAPGeIYsgv7xLEiH6QC7q/
-         Jpgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787617441; x=1788222241;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=SM23yOgiB3MFJPRmlHg0vJfTbh4NbcSvH9yKFOdYwW0=;
-        b=SEyfEnEczxfpcWugIkSw8Pwi9IF69IBDqYHKJGgRB/HRjBepxhF+EGpgN/Us8KW08d
-         i5Uf80VZLM4ryGjd6zG/EG4gp3y2qtyc5uYiO1zReMbAuOIj35uFzn3PRnT+5oFsOBsH
-         GIMoe78qqaRI9L/p9tUt6TAeKb/0l5AwOCBoPDIsiJUpCiT5vVasBQ12ofuH5CVkyOWh
-         6CbT9PPtccRVc1qyrAgL964Gzs4MXEFHaybQB1lSa9PMLCmwh394qQJAP5X53MH1sfr+
-         C7YR0urW8PDbw6bgb7Zxb9V82StKOsArrOYm41NPk3+xjQqOJaEfqjfywn7icR3Q49TR
-         Y9mg==
-X-Forwarded-Encrypted: i=1; AHgh+RogkNUeP/yz8PZvt0At38yyYaK3mE6397M45LZ9n9YFfxI9jau6ERNxMn+AEr0rptOyTcrWrQxG@vger.kernel.org
-X-Gm-Message-State: AFuF++mB1T26kuGlR03oJKv6ZOYfRFXGXNb3bFw3nZnHmlDh3aXzQNCw
-	wQ7OfhMRpI6O7CvbafovXpSQGs4Rd4WvmQJUEpc5SEH+K1ULVLDftUnlaXwikwEVOtnVp7YVD1M
-	XKK3B60M0T6XRLFkOFQeniOEP6P+aDJk=
-X-Gm-Gg: AR+sD13cwjFpeqqvWHT1irUmirBMtYXKZgTb1eTb/GG+nTR8ttXxDdJFR4QFnwdcHol
-	GocSVHgAiqhO2tsZmaxi4QBvti5rsyR7w3ufYKuj6iB4Tiga17eFc4HmTRxTOyjit+Ct4SVhSZ1
-	cNVPSvOOXJi8Azvej0dAipmcP/IeZdOAQjxxJDLS38Pc9sJ3MEth8BIy1xPpCiBRofCIlrXjAEV
-	XhKiGG+VHe+RM1/tw8/5FrGdXy4dEr2zINMBoUaQ0NbjZ6gg//JVBdikd9vgG2EHcY7fsaUT23k
-	jSMdqojGSPTDn5kUMu1GWX0J6tMGOjSE/oy9bhJNYa0z3gfwpZoQT0cEYtLC6GkVnpvowVMeMdp
-	ByJI7s/+S3Bs+seqzSQ+SlkxHPwiNZcYcTMq3rQ==
-X-Received: by 2002:a05:600c:800f:b0:499:a5fc:207e with SMTP id
- 5b1f17b1804b1-499d64e89a1mr29445385e9.8.1787617441435; Mon, 24 Aug 2026
- 17:24:01 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UKATGl9B"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=p5lPbK2jlF4D2oJ2mfcXZ3A9mwzMgb9oUbrKUKKpWp0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787621719; v=1; x=1788226519;
+ b=UKATGl9BSUOD98DW5vwdHiWFWkFffkE9hulXm26fnCPMk0MASZYU9o5f967ciWT5402rJBiU
+ bpdonXDu3QYMfcP0hMkA0nZKhbbwpVjr/lt9bzGf21Se6q11SzXOpOQKTw2iIwoQUC10UZi0DmO
+ F6unTmr8ewL7abLjFwv9csGk=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: from [192.168.110.173] (223.70.160.239)
+	by smtp.migadu.com with ESMTPS id 84308079bb73c8cc;
+	Tue, 25 Aug 2026 01:35:10 +0000
+X-Mizu-Trace-ID: 84308079bb73c8cc
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <ca5c6c43-b6e6-48f3-9e3b-6d5f8b1538c8@linux.dev>
+Date: Tue, 25 Aug 2026 09:35:00 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJnrk1bFq7J7K0=X67voeZVkAb0dmiLkqomuQ+VcXBLyP5hMVg@mail.gmail.com>
- <20260824213127.2783019-1-joshua.hahnjy@gmail.com>
-In-Reply-To: <20260824213127.2783019-1-joshua.hahnjy@gmail.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Mon, 24 Aug 2026 17:23:49 -0700
-X-Gm-Features: AcwNN1VvhoQUdKysuMaaEXxvbCegYlGP-f6bdSnaoNT-mW2XzDOEHtfE4jJBGi4
-Message-ID: <CAJnrk1Y-ZaT_3QGZBc_RRKM-rJdEsaaQp20e39Omwh5nv_Lqag@mail.gmail.com>
-Subject: Re: [PATCH] mm: memcg: use ratelimited stats flush in obj_cgroup_may_zswap()
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: Yosry Ahmed <yosry@kernel.org>, Song Hu <husong@kylinos.cn>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, akpm@linux-foundation.org, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, 
-	nphamcs@gmail.com, chengming.zhou@linux.dev, yunzhao@cloudflare.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, Yu Kuai <yukuai@fygo.io>,
+ Christoph Hellwig <hch@lst.de>, Nilay Shroff <nilay@linux.ibm.com>,
+ Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+ linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v3 4/6] blk-cgroup: allocate blkgs in blkg_create
+To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
+References: <20260823152926.1043863-1-yukuai@kernel.org>
+ <20260823152926.1043863-5-yukuai@kernel.org>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260823152926.1043863-5-yukuai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Aug 24, 2026 at 2:31=E2=80=AFPM Joshua Hahn <joshua.hahnjy@gmail.co=
-m> wrote:
->
-> On Thu, 20 Aug 2026 15:18:39 -0700 Joanne Koong <joannelkoong@gmail.com> =
-wrote:
->
-> > On Tue, Aug 18, 2026 at 11:35=E2=80=AFAM Yosry Ahmed <yosry@kernel.org>=
- wrote:
-> > >
-> > > On Mon, Aug 17, 2026 at 6:53=E2=80=AFPM Song Hu <husong@kylinos.cn> w=
-rote:
-> > > >
-> > > >
-> > > >
-> > > > =E5=9C=A8 2026/8/18 00:04, Shakeel Butt =E5=86=99=E9=81=93:
-> > > > > On Mon, Aug 17, 2026 at 09:18:43PM +0800, Song Hu wrote:
-> > > > >> obj_cgroup_may_zswap() runs on every folio swapped out through
-> > > > >> zswap.  For each ancestor with a non-max zswap.max, it flushes t=
-he
-> > > > >> cgroup rstat hierarchy synchronously with force=3Dtrue, which sk=
-ips
-> > > > >> the ratelimit inside __mem_cgroup_flush_stats().  In a swap stor=
-m
-> > > > >> with zswap.max configured, a container takes the global rstat lo=
-ck
-> > > > >> on every swapped-out folio.
-> > > > >
-> > > > > Any reason you are limiting zswap through zswap.max?
-> > > > >
-> > > >
-> > > > Mostly fairness on a shared pool: zswap.max_pool_percent is global
-> > > > only, so on a multi-tenant host one cgroup's cold anonymous memory
-> > > > can soak the pool and crowd out the others.  zswap.max is the only
-> > > > per-cgroup control over that share; memory.max bounds the total
-> > > > footprint, not the share of the pool.
-> > > >
-> > > > >>
-> > > > >> zswap_shrinker_count() had the same pattern and switched to
-> > > > >> mem_cgroup_flush_stats_ratelimited() in commit ea80da363a1f
-> > > > >> ("mm/zswap: use ratelimited stats flush in zswap_shrinker_count(=
-)"),
-> > > > >> where the same flush on the shrinker side showed up at 2.88% of
-> > > > >> kernel cycles under osq_lock on a 96-core machine.
-> > > > >>
-> > > > >> Measured on a KVM guest with a swap storm under a cgroup with
-> > > > >> zswap.max set: obj_cgroup_may_zswap() was entered 198,977 times
-> > > > >> before the patch and 198,968 times after, while
-> > > > >> __mem_cgroup_flush_stats() was entered 281,017 times before and
-> > > > >> 80,445 times after.  The removed 200,572 flushes match the store
-> > > > >> attempt count almost exactly; the remainder comes from other sta=
-ts
-> > > > >> readers in the swap path.
-> > > > >
-> > > > > This is a known issue. Using ratelimited interface also comes wit=
-h a drawback
-> > > > > that the kernel may react on stale information and the consequenc=
-es might be
-> > > > > unneeded oom-kills.
-> > > > >
-> > > > > There was orthogonal discussion on moving zswap limit enforcement=
- away from
-> > > > > rstat. Yosry, any updates on that?
-> > >
-> > > I am not actively looking into that, but Joanne was looking into
-> > > AFAICT. I will respond to the thread there and CC Song as well.
-> > >
-> >
-> > For this zswap stat, I ran some benchmarks comparing 4 approaches
-> > (switchable behind a runtime knob [1]):
-> > a) rstat + forced flush       (baseline aka what the tree does today)
-> > b) rstat + ratelimited         (Song's proposal)
-> > c) hierarchical per-CPU   (Yosry's idea from [2])
-> > d) page counters              (following what all the other memcg limit=
-s do)
->
-> Hi Joanne,
+Hi Kuai,
 
-Hi Joshua!
+在 2026/8/23 23:29, Yu Kuai 写道:
+> From: Yu Kuai <yukuai@fygo.io>
+> 
+> Move blkg allocation into blkg_create() and have it take a gfp_t mask, so
+> that the caller controls whether creation may sleep. blkg_create() now
+> always allocates the blkg itself instead of sometimes receiving a
+> preallocated one, which lets the lookup and config paths drop their open-
+> coded preallocation and retry loops.
+> 
+> blkg_lookup_create() and the root-blkg setup use GFP_NOIO (or GFP_KERNEL
+> for the root) so they do not recurse into IO reclaim; the nowait policy
+> path added later will use GFP_ATOMIC.
+> 
+> Signed-off-by: Yu Kuai <yukuai@fygo.io>
+> ---
+>  block/blk-cgroup.c | 48 +++++++++++++---------------------------------
+>  1 file changed, 13 insertions(+), 35 deletions(-)
+> 
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index 0f34a80a726d..33fba781017b 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -383,37 +383,29 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
+>  out_free_blkg:
+>  	kfree(blkg);
+>  	return NULL;
+>  }
+>  
+> -/*
+> - * If @new_blkg is %NULL, this function tries to allocate a new one as
+> - * necessary using %GFP_NOWAIT.  @new_blkg is always consumed on return.
+> - */
+>  static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+> -				    struct blkcg_gq *new_blkg)
+> +				    gfp_t gfp_mask)
+>  {
+> -	struct blkcg_gq *blkg;
+> +	struct blkcg_gq *blkg = NULL;
+>  	int i, ret;
+>  
+>  	lockdep_assert_held(&disk->queue->blkcg_mutex);
+>  
+>  	/* request_queue is dying, do not create/recreate a blkg */
+>  	if (blk_queue_dying(disk->queue)) {
+>  		ret = -ENODEV;
+>  		goto err_free_blkg;
+>  	}
+>  
 
->
-> I hope you are doing well! Thank you for running all these experiments.
-> I'm not biased in any direction but I was curious what you did for the
-> page counter implementation. The reason I am asking is because I am
+Reading patch 4/6, one thing looked off to me. Before the series,
+blkg_create() allocated with GFP_NOWAIT under queue_lock, or took a
+caller-preallocated object. After patches 3+4, it allocates with the
+passed gfp_mask while holding blkcg_mutex:
 
-Thanks for bringing my attention to your page counter stock series.
-The implementation of page counters I used for my benchmarking [1] was
-unstocked, where it incurs an atomic cost per charge / uncharge
-instead of doing any sort of batching/caching.
+> -	/* allocate */
+> -	if (!new_blkg) {
+> -		new_blkg = blkg_alloc(blkcg, disk, GFP_NOWAIT);
+> -		if (unlikely(!new_blkg)) {
+> -			ret = -ENOMEM;
+> -			goto err_free_blkg;
+> -		}
+> +	blkg = blkg_alloc(blkcg, disk, gfp_mask);
+> +	if (unlikely(!blkg)) {
+> +		ret = -ENOMEM;
+> +		goto err_free_blkg;
+>  	}
+> -	blkg = new_blkg;
+>  
 
-> working on making page counters more scalable / performant by pushing
-> the memcg stock down to the page counter level [3]. I wonder if the
-> caching that stock provides can give (d) an upper hand over (c).
->
+(patch 4 also makes blkg_lookup_create() pass GFP_NOIO for the
+config path, where blkg_conf_prep() used to drop queue_lock before
+allocating.)
 
-I think caching the stock would definitely help the update cost of (d)
-as you point out, but unfortunately for this zswap case, the nr_cpus *
-# descendants * 64 max over-reporting the caching would introduce to
-the zswap stat could lead to overly conservative rejections of stores
-that should have been allowed and/or OOM killings for cgroups where
-zswap writeback is disabled. Thanks for bringing this idea up though -
-I had a similar idea to this with batching the per-cpu counter [2],
-until Johannes graciously directed me to commit 2d146aa3aa842 (mm:
-memcontrol: switch to rstat), which had switched from per-cpu batching
-to rstat precisely because the nr_cpus * # descendants * # batch pages
-error bound was getting problematic.
+blk_throtl_init() reaches blkcg_activate_policy() with the queue
+frozen, so we can end up allocating (and entering reclaim) while
+holding q_usage_counter -> blkcg_mutex. Reclaim can then add the
+q_usage_counter edge from the disk probe side.
+
+I booted the series in a VM with PROVE_LOCKDEP to check, and lockdep
+does report a circular dependency on the first io.max write, every
+boot:
+
+    bash/2330 is trying to acquire lock:
+    ffff88810e518548 (&q->blkcg_mutex){+.+.}-{4:4}, at: blkcg_activate_policy+0x1ee/0xa00
+    but task is already holding lock:
+    ffff88810e518060 (&q->q_usage_counter(io)){++++}-{0:0}, at: blk_mq_freeze_queue_nomemsave+0xd/0x20
+
+    Chain exists of:
+    &q->blkcg_mutex --> fs_reclaim --> &q->q_usage_counter
+
+GFP_NOIO keeps direct writeback out of reclaim, so an actual hang
+looks hard to hit -- but the splat fires on a very common operation.
+
+Could the two-phase allocation already used for pd_prealloc in
+blkcg_activate_policy() also apply to blkg_create()? I.e. try
+GFP_NOWAIT under blkcg_mutex, and if that fails drop the mutex,
+preallocate with GFP_KERNEL and retry. I think that drops the
+blkcg_mutex -> fs_reclaim edge, but I may be missing something.
 
 Thanks,
-Joanne
+Tao
 
-[1] https://github.com/joannekoong/linux/commit/9092e0057f038ffca43ae3f35fa=
-f58c33b1d7c9b
-[2] https://lore.kernel.org/linux-fsdevel/anpsLy_pCanocgS1@google.com/T/#m5=
-ed6ff8e64eeb909ff3c92bde5105406b1ddaf10
+>  	/* link parent */
+>  	if (blkcg_parent(blkcg)) {
+>  		rcu_read_lock();
+>  		blkg->parent = blkg_lookup(blkcg_parent(blkcg), disk->queue);
+> @@ -461,12 +453,12 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+>  	/* @blkg failed fully initialized, use the usual release path */
+>  	percpu_ref_kill(&blkg->refcnt);
+>  	return ERR_PTR(ret);
+>  
+>  err_free_blkg:
+> -	if (new_blkg)
+> -		blkg_free(new_blkg);
+> +	if (blkg)
+> +		blkg_free(blkg);
+>  	return ERR_PTR(ret);
+>  }
+>  
+>  /*
+>   * The root blkg holds a live reference while the disk is active, so walking
+> @@ -531,11 +523,11 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+>  			pos = parent;
+>  			parent = blkcg_parent(parent);
+>  		}
+>  		rcu_read_unlock();
+>  
+> -		blkg = blkg_create(pos, disk, NULL);
+> +		blkg = blkg_create(pos, disk, GFP_NOIO);
+>  		if (IS_ERR(blkg)) {
+>  			blkg = ret_blkg;
+>  			break;
+>  		}
+>  		if (pos == blkcg)
+> @@ -865,39 +857,29 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+>  	 * non-root blkgs have access to their parents.
+>  	 */
+>  	while (true) {
+>  		struct blkcg *pos = blkcg;
+>  		struct blkcg *parent;
+> -		struct blkcg_gq *new_blkg;
+>  
+>  		parent = blkcg_parent(blkcg);
+>  		rcu_read_lock();
+>  		while (parent && !blkg_lookup(parent, q)) {
+>  			pos = parent;
+>  			parent = blkcg_parent(parent);
+>  		}
+>  		rcu_read_unlock();
+>  
+> -		new_blkg = blkg_alloc(pos, disk, GFP_NOIO);
+> -		if (unlikely(!new_blkg)) {
+> -			ret = -ENOMEM;
+> -			goto fail_unlock;
+> -		}
+> -
+>  		if (!blkcg_policy_enabled(q, pol)) {
+> -			blkg_free(new_blkg);
+>  			ret = -EOPNOTSUPP;
+>  			goto fail_unlock;
+>  		}
+>  
+>  		rcu_read_lock();
+>  		blkg = blkg_lookup(pos, q);
+>  		rcu_read_unlock();
+> -		if (blkg) {
+> -			blkg_free(new_blkg);
+> -		} else {
+> -			blkg = blkg_create(pos, disk, new_blkg);
+> +		if (!blkg) {
+> +			blkg = blkg_create(pos, disk, GFP_NOIO);
+>  			if (IS_ERR(blkg)) {
+>  				ret = PTR_ERR(blkg);
+>  				goto fail_unlock;
+>  			}
+>  		}
+> @@ -1466,27 +1448,23 @@ void blkg_exit_queue(struct request_queue *q)
+>  }
+>  
+>  int blkcg_init_disk(struct gendisk *disk)
+>  {
+>  	struct request_queue *q = disk->queue;
+> -	struct blkcg_gq *new_blkg, *blkg;
+> +	struct blkcg_gq *blkg;
+>  
+>  	/*
+>  	 * If the queue is shared across disk rebind (e.g., SCSI), the
+>  	 * previous disk's blkcg state is cleaned up asynchronously via
+>  	 * disk_release() -> blkcg_exit_disk(). Wait for all old blkgs to be
+>  	 * removed from the queue list before setting up new blkcg state.
+>  	 */
+>  	wait_var_event(&q->blkg_list, list_empty_careful(&q->blkg_list));
+>  
+> -	new_blkg = blkg_alloc(&blkcg_root, disk, GFP_KERNEL);
+> -	if (!new_blkg)
+> -		return -ENOMEM;
+> -
+>  	/* Make sure the root blkg exists. */
+>  	mutex_lock(&q->blkcg_mutex);
+> -	blkg = blkg_create(&blkcg_root, disk, new_blkg);
+> +	blkg = blkg_create(&blkcg_root, disk, GFP_KERNEL);
+>  	if (IS_ERR(blkg))
+>  		goto err_unlock;
+>  	q->root_blkg = blkg;
+>  	mutex_unlock(&q->blkcg_mutex);
+>  
+
