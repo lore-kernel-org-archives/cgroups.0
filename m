@@ -1,297 +1,129 @@
-Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
+Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B4E02931F8
-	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 02:34:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D96612EEE75
+	for <cgroups@vger.kernel.org>; Tue, 25 Aug 2026 03:38:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787625248; cv=none; b=Ai4ZEerbWedCOUNa8N0kGsr5p4TbCvs1pHvlltRMsMR28wKWuRV6IuyEWPcSJOCX18SHzSb0owi3wyuWaUIcrJMWInaAzPOPCvTpcEqBYuA3/sfIn5GMZIxEC0XzZdvQpid3Kz4kN3ZSxkIn0KL6anc/1LGddCQNGpJDdHQFAaU=
+	t=1787629116; cv=none; b=txVdOSEw6qQSQ9sux9Z0oeUl/7UdVg1SJWMSjG2tiW3IHOVCnbs127MANPlbyNwjvanX30V2AhLOLQUC8FQwrCxMJT2Kt3EoD4pT/5yYBHVRNS7WWSpN8Op2Dmj82EaWRmuXay+mHa++aA9nrPsi4YX3RwcOGUq5kcxEBji8j88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787625248; c=relaxed/simple;
-	bh=Cw5BitVxKiZ/XuqFC9PfZMXgD2EiVbmLVlUZl4A/kNE=;
-	h=From:Subject:Date:Message-Id:In-Reply-To:To:References:
-	 Content-Type:Cc:Mime-Version; b=u6pMz+49pM73x4Qf8yX1Vw9lHKTjp1gx0LgXCXu3B9LVZZ/UsBRQ5JN1FcCWlsf+iqKF4qGqTdEJJFkUNQc1jSBdjBenzuWG8nlVGdtSDsWtThZzXgm2ruUpr8/yrPltKKASWQhECA9kcCyNS1oe7Pub2RWPwxHDAnQtMtxQMhw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=N1damRuD; arc=none smtp.client-ip=209.127.231.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1787629116; c=relaxed/simple;
+	bh=E+rumZ5IHlJxJjkjEZT710lc/D+oefpHKErRjwEJSMM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tlnm0f8jc/HPfhptRL43s1vrvwijJwqMhl48d7X/PCU/k/tNqicm93XRZcVAlpjfc3zhubd8oU2lLf1PPsuHGjjE4ntQJaLhoh1JcBUcRwuZuUnSgMzUFUsKX8JiETVimH/w+9PmhT6Dzwu2aCxzo/aS5o3gBLjiBONr6wZr3Y8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca; spf=pass smtp.mailfrom=metarealtyinc.ca; dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b=BKWbZjdJ; arc=none smtp.client-ip=209.85.222.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=metarealtyinc.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=metarealtyinc.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="N1damRuD"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1787625231;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=lDI5s84hBd6G6H4Z44CVTBiUldbRbWGcWgxU60+VRcc=;
- b=N1damRuDdXq/S1qvgsPvIgiOMRae2tOkZnrPnX1YDwqs4BpardpXORILjIwLcfT8gYvwpj
- y61YbIXqFqSjzjrn0p6+CIe6SIBHKc9qAw6XSARZEfZtjieI80bZQTVw9B+QETeoNZA+pu
- TWAjzZ46WhnyanSUxlDLh1p/WnyjNm3fgccPfl/M/4xsLb/VBYb1pWqQR0LMYoC1hGE8nK
- KadtWGzDFvZXC6xb/23tUyEcACNIzwGM96ySDeyVio6TOd1xo8LUoK8Oh78L/wbHfzWxv3
- 04zQ7pe5Zo3U0Nd2rvrcDJvdztzZvF7cvxjniVoqNblCd8b3RFfMfgLhHpxn6g==
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [RFC PATCH v3 4/6] blk-cgroup: allocate blkgs in blkg_create
-Date: Tue, 25 Aug 2026 10:33:45 +0800
-Message-Id: <6a9cc2ee-c46f-4cd4-9d32-a96bcbfed213@fygo.io>
-User-Agent: Mozilla Thunderbird
-In-Reply-To: <ca5c6c43-b6e6-48f3-9e3b-6d5f8b1538c8@linux.dev>
-Received: from [192.168.1.104] ([39.182.0.185]) by smtp.larksuite.com with ESMTPS; Tue, 25 Aug 2026 02:33:49 +0000
-To: "Tao Cui" <cui.tao@linux.dev>, "Yu Kuai" <yukuai@kernel.org>, 
-	"Jens Axboe" <axboe@kernel.dk>, "Tejun Heo" <tj@kernel.org>, 
-	"Josef Bacik" <josef@toxicpanda.com>, 
-	"Sebastian Andrzej Siewior" <bigeasy@linutronix.de>, 
-	"Clark Williams" <clrkwllms@kernel.org>, 
-	"Steven Rostedt" <rostedt@goodmis.org>, "yu kuai" <yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-References: <20260823152926.1043863-1-yukuai@kernel.org> <20260823152926.1043863-5-yukuai@kernel.org> <ca5c6c43-b6e6-48f3-9e3b-6d5f8b1538c8@linux.dev>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Cc: "Christoph Hellwig" <hch@lst.de>, "Nilay Shroff" <nilay@linux.ibm.com>, 
-	"Hannes Reinecke" <hare@suse.de>, <linux-block@vger.kernel.org>, 
-	<cgroups@vger.kernel.org>, <linux-rt-devel@lists.linux.dev>, 
-	<linux-kernel@vger.kernel.org>
-X-Lms-Return-Path: <lba+26a8cff0e+3bf86d+vger.kernel.org+yukuai@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
+	dkim=pass (2048-bit key) header.d=metarealtyinc-ca.20251104.gappssmtp.com header.i=@metarealtyinc-ca.20251104.gappssmtp.com header.b="BKWbZjdJ"
+Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-934956bee57so435721585a.2
+        for <cgroups@vger.kernel.org>; Mon, 24 Aug 2026 20:38:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=metarealtyinc-ca.20251104.gappssmtp.com; s=20251104; t=1787629114; x=1788233914; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=fP+EZyv3hwxvWRQB0kgMS5FUixvZvwf9qKXyYVHzYng=;
+        b=BKWbZjdJX2hJxNABWtaTGQ/4Uq1zkue8NfVk2AA98rnJW5psevG4jZlZbij/0hKzgL
+         QTBn+UYT6JSHBpf1uypD/eHoTb03iB37X/2yXGKiovHNXLKOKpqiXse6vqvun7by79aT
+         3uc9mftkLtq9BpKMoekbhoiO9KY5lWZM8dGmEwosIPGB9nHl1kqH8iEwH7Y5Oq/OdiZD
+         5149tLV6/O26mjfVvCjwiXEtI2cPYli+i+0rpysoT24d45/2ALyyeGrvndibwp1TNvyP
+         bdrS+o8N8Yum4RcuYq7nR2d6OONWHUxYWTD+UiyaOqZ6Wiks2U8Lf6d0ZpvTZnbY70pb
+         5TAg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787629114; x=1788233914;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=fP+EZyv3hwxvWRQB0kgMS5FUixvZvwf9qKXyYVHzYng=;
+        b=cTJNkoD+762e3VDWOtmik6Bxr5qIMjylBQRNc0LAXD0tHFoWgsgBMfyVcuqu1XdCU8
+         l8t41aypFioTNsctTaJ7M1khC4OcGFaItLmV43HhAbkmOYCM3hpGzWYw3UTdkm0IdYH6
+         SYeJSY58VVzCMKlGgg6kYwwnS0xkSLVJf9zB/rUHi9OJRnoo4oi+nyXoYGy4KJ4MimY3
+         b6HtPdk4olaiGorpGMNylfu4O9iqoU2FSf/1IwkqZ1GUT1VohPtM5VtP+yMCs+mqWK/c
+         y/3JdFEMokpthQec6ta76PA8FoOTYoKewI0YEwK/HtKHKfZoeIWDH7sUfdfCYeH6sgi5
+         uUXA==
+X-Forwarded-Encrypted: i=1; AHgh+Ro6/mgy3qWdOzU8jj3VrGDSHGtP7aG/h5doeeSK/KFJ3GjCTG3pkOKyv2u7wTx3uK8NR2B36FhR@vger.kernel.org
+X-Gm-Message-State: AFuF++k2tcrlI3Bj1mw7MgS/ynodMru0L7X3bPNvkpyU8BwiSEabnFWK
+	e0k/nYRVirQoSPGqBPXAf9UJe3i8xgt05XcucQTqIqsVKHnpuqRTT4q+o+SDsmrFUeg=
+X-Gm-Gg: AR+sD12OqT4EBA3Bt/XkMQq/2PQhnoqyuG3zj82p8mZTi7HPeXEMImOCE4q0egds9Pg
+	2wG/sqrwdP7mFGp0U+VDcLjlZ3JXVEt0/9bCkSX6+1kEWDX2qKK/bbiFRisc7dCzW7e03YIa0tL
+	kDkxmMj3fmfoVscnYddypDRJc4zUZX3UR9iAX/DD5x5RNklzwihZvF1tcrQEaCnO1pA3o2+njie
+	IJ0wDCVrsjo49HOt+9DWrSpek/W1Oh1swd8Y+InE5FHBcHWJ1QSivD15WiThiX9ubdSion+sEdw
+	qZCxDmcdxm2NXSysb+wBX1G4Namr77n1ML1T66fLzHnhJ4X50BaiINc3nBm6pop9CYsp6yLOlTh
+	gRYh4sJP63U3JZ+tbP+aQ7+n74EoKIzyaP8iy9kYlt90WasZq3kSVZX6JUTbyK7oFifi/tp5J+m
+	P9lAEUdij+UU+wU+f2rxXlXn0StZqdIYaF1XO9wmN4FVfruStJMTQLmatQCp+o8HmmX09l0dzut
+	d1Q3u2SN4NYfZJt5f3PqprBQRYEPAxLYUyy0Nl33IazHsPZpHFw8oJRfOu0juOYJKMjScQ90mJw
+	XugYp2y9rrmOoF5rkKmNIrWQtMIVyRhJ29BMRFQjEnU=
+X-Received: by 2002:a05:620a:3bd2:b0:92b:8a7c:f71e with SMTP id af79cd13be357-937468bb96emr1905480085a.15.1787629113779;
+        Mon, 24 Aug 2026 20:38:33 -0700 (PDT)
+Received: from jake-laptop ([2607:fea8:e5:500::fa4c])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93749eb4240sm640377085a.47.2026.08.24.20.38.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Aug 2026 20:38:33 -0700 (PDT)
+From: Jake Steinman <j@metarealtyinc.ca>
+To: Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>
+Cc: Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>,
+	Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: Re: [BUG] sched/fair: divide error in __calc_prop_weight() from the enqueue path (flat-hierarchy series)
+Date: Mon, 24 Aug 2026 23:38:31 -0400
+Message-ID: <20260825033831.3006196-1-j@metarealtyinc.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260818231333.1441757-1-j@metarealtyinc.ca>
+References: <20260818231333.1441757-1-j@metarealtyinc.ca>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi,
+Another report of this, same divide but reached from the idle path rather
+than fork. https://github.com/CachyOS/linux-cachyos/issues/985
 
-=E5=9C=A8 2026/8/25 9:35, Tao Cui =E5=86=99=E9=81=93:
-> Hi Kuai,
->
-> =E5=9C=A8 2026/8/23 23:29, Yu Kuai =E5=86=99=E9=81=93:
->> From: Yu Kuai <yukuai@fygo.io>
->>
->> Move blkg allocation into blkg_create() and have it take a gfp_t mask, s=
-o
->> that the caller controls whether creation may sleep. blkg_create() now
->> always allocates the blkg itself instead of sometimes receiving a
->> preallocated one, which lets the lookup and config paths drop their open=
--
->> coded preallocation and retry loops.
->>
->> blkg_lookup_create() and the root-blkg setup use GFP_NOIO (or GFP_KERNEL
->> for the root) so they do not recurse into IO reclaim; the nowait policy
->> path added later will use GFP_ATOMIC.
->>
->> Signed-off-by: Yu Kuai <yukuai@fygo.io>
->> ---
->>   block/blk-cgroup.c | 48 +++++++++++++---------------------------------
->>   1 file changed, 13 insertions(+), 35 deletions(-)
->>
->> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
->> index 0f34a80a726d..33fba781017b 100644
->> --- a/block/blk-cgroup.c
->> +++ b/block/blk-cgroup.c
->> @@ -383,37 +383,29 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *b=
-lkcg, struct gendisk *disk,
->>   out_free_blkg:
->>   	kfree(blkg);
->>   	return NULL;
->>   }
->>  =20
->> -/*
->> - * If @new_blkg is %NULL, this function tries to allocate a new one as
->> - * necessary using %GFP_NOWAIT.  @new_blkg is always consumed on return=
-.
->> - */
->>   static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendis=
-k *disk,
->> -				    struct blkcg_gq *new_blkg)
->> +				    gfp_t gfp_mask)
->>   {
->> -	struct blkcg_gq *blkg;
->> +	struct blkcg_gq *blkg =3D NULL;
->>   	int i, ret;
->>  =20
->>   	lockdep_assert_held(&disk->queue->blkcg_mutex);
->>  =20
->>   	/* request_queue is dying, do not create/recreate a blkg */
->>   	if (blk_queue_dying(disk->queue)) {
->>   		ret =3D -ENODEV;
->>   		goto err_free_blkg;
->>   	}
->>  =20
-> Reading patch 4/6, one thing looked off to me. Before the series,
-> blkg_create() allocated with GFP_NOWAIT under queue_lock, or took a
-> caller-preallocated object. After patches 3+4, it allocates with the
-> passed gfp_mask while holding blkcg_mutex:
->
->> -	/* allocate */
->> -	if (!new_blkg) {
->> -		new_blkg =3D blkg_alloc(blkcg, disk, GFP_NOWAIT);
->> -		if (unlikely(!new_blkg)) {
->> -			ret =3D -ENOMEM;
->> -			goto err_free_blkg;
->> -		}
->> +	blkg =3D blkg_alloc(blkcg, disk, gfp_mask);
->> +	if (unlikely(!blkg)) {
->> +		ret =3D -ENOMEM;
->> +		goto err_free_blkg;
->>   	}
->> -	blkg =3D new_blkg;
->>  =20
-> (patch 4 also makes blkg_lookup_create() pass GFP_NOIO for the
-> config path, where blkg_conf_prep() used to drop queue_lock before
-> allocating.)
->
-> blk_throtl_init() reaches blkcg_activate_policy() with the queue
-> frozen, so we can end up allocating (and entering reclaim) while
-> holding q_usage_counter -> blkcg_mutex. Reclaim can then add the
-> q_usage_counter edge from the disk probe side.
->
-> I booted the series in a VM with PROVE_LOCKDEP to check, and lockdep
-> does report a circular dependency on the first io.max write, every
-> boot:
->
->      bash/2330 is trying to acquire lock:
->      ffff88810e518548 (&q->blkcg_mutex){+.+.}-{4:4}, at: blkcg_activate_p=
-olicy+0x1ee/0xa00
->      but task is already holding lock:
->      ffff88810e518060 (&q->q_usage_counter(io)){++++}-{0:0}, at: blk_mq_f=
-reeze_queue_nomemsave+0xd/0x20
->
->      Chain exists of:
->      &q->blkcg_mutex --> fs_reclaim --> &q->q_usage_counter
->
-> GFP_NOIO keeps direct writeback out of reclaim, so an actual hang
-> looks hard to hit -- but the splat fires on a very common operation.
+  Oops: divide error: 0000 [#1] SMP NOPTI
+  CPU: 7 UID: 0 PID: 0 Comm: swapper/7 Tainted: G         C          7.2.0-1-cachyos #1
+  RIP: 0010:enqueue_task_fair+0x87c/0x2150
+  Call Trace:
+   <TASK>
+   sched_ttwu_pending+0x204/0x590
+   flush_smp_call_function_queue+0x169/0x250
+   ? cpuidle_enter_state+0xc2/0x230
+   cpu_startup_entry+0x2f6/0x3d0
+   start_secondary+0x9a/0xa0
+   common_startup_64+0x13e/0x150
+   </TASK>
+  Kernel panic - not syncing: Attempted to kill the idle task!
 
-This is a known problem, and there is also a known problem to call pd_alloc=
-_fn() while
-queue is frozen, because percpu allocation there can trigger lockdep deadlo=
-ck as well.
+An idle CPU takes a wakeup IPI and faults enqueuing the woken task. In
+swapper there is nothing to kill, so it panics immediately instead of
+oopsing first.
 
->
-> Could the two-phase allocation already used for pd_prealloc in
-> blkcg_activate_policy() also apply to blkg_create()? I.e. try
-> GFP_NOWAIT under blkcg_mutex, and if that fails drop the mutex,
-> preallocate with GFP_KERNEL and retry. I think that drops the
-> blkcg_mutex -> fs_reclaim edge, but I may be missing something.
+Symbolised against linux-cachyos-dbg it lands where mine did:
 
-I'm afraid not, this is not the plan to fix the deadlock, the plan for the =
-order is:
+  __calc_prop_weight   fair.c:4728:10
+    inlined at enqueue_hierarchy  fair.c:7891:12
+    inlined at enqueue_task_fair  fair.c:7949:11
 
-1) hold blkcg_mutex first;
-2) allocate memory, including blkg and pd_alloc_fn;
-3) queue freeze;
-4) pd_init_fn and make blkg online;
+Still nothing on what empties the cpuset. Their machine looks like mine —
+concur mode, no empty effective masks, no partitions.
 
->
-> Thanks,
-> Tao
->
->>   	/* link parent */
->>   	if (blkcg_parent(blkcg)) {
->>   		rcu_read_lock();
->>   		blkg->parent =3D blkg_lookup(blkcg_parent(blkcg), disk->queue);
->> @@ -461,12 +453,12 @@ static struct blkcg_gq *blkg_create(struct blkcg *=
-blkcg, struct gendisk *disk,
->>   	/* @blkg failed fully initialized, use the usual release path */
->>   	percpu_ref_kill(&blkg->refcnt);
->>   	return ERR_PTR(ret);
->>  =20
->>   err_free_blkg:
->> -	if (new_blkg)
->> -		blkg_free(new_blkg);
->> +	if (blkg)
->> +		blkg_free(blkg);
->>   	return ERR_PTR(ret);
->>   }
->>  =20
->>   /*
->>    * The root blkg holds a live reference while the disk is active, so w=
-alking
->> @@ -531,11 +523,11 @@ static struct blkcg_gq *blkg_lookup_create(struct =
-blkcg *blkcg,
->>   			pos =3D parent;
->>   			parent =3D blkcg_parent(parent);
->>   		}
->>   		rcu_read_unlock();
->>  =20
->> -		blkg =3D blkg_create(pos, disk, NULL);
->> +		blkg =3D blkg_create(pos, disk, GFP_NOIO);
->>   		if (IS_ERR(blkg)) {
->>   			blkg =3D ret_blkg;
->>   			break;
->>   		}
->>   		if (pos =3D=3D blkcg)
->> @@ -865,39 +857,29 @@ int blkg_conf_prep(struct blkcg *blkcg, const stru=
-ct blkcg_policy *pol,
->>   	 * non-root blkgs have access to their parents.
->>   	 */
->>   	while (true) {
->>   		struct blkcg *pos =3D blkcg;
->>   		struct blkcg *parent;
->> -		struct blkcg_gq *new_blkg;
->>  =20
->>   		parent =3D blkcg_parent(blkcg);
->>   		rcu_read_lock();
->>   		while (parent && !blkg_lookup(parent, q)) {
->>   			pos =3D parent;
->>   			parent =3D blkcg_parent(parent);
->>   		}
->>   		rcu_read_unlock();
->>  =20
->> -		new_blkg =3D blkg_alloc(pos, disk, GFP_NOIO);
->> -		if (unlikely(!new_blkg)) {
->> -			ret =3D -ENOMEM;
->> -			goto fail_unlock;
->> -		}
->> -
->>   		if (!blkcg_policy_enabled(q, pol)) {
->> -			blkg_free(new_blkg);
->>   			ret =3D -EOPNOTSUPP;
->>   			goto fail_unlock;
->>   		}
->>  =20
->>   		rcu_read_lock();
->>   		blkg =3D blkg_lookup(pos, q);
->>   		rcu_read_unlock();
->> -		if (blkg) {
->> -			blkg_free(new_blkg);
->> -		} else {
->> -			blkg =3D blkg_create(pos, disk, new_blkg);
->> +		if (!blkg) {
->> +			blkg =3D blkg_create(pos, disk, GFP_NOIO);
->>   			if (IS_ERR(blkg)) {
->>   				ret =3D PTR_ERR(blkg);
->>   				goto fail_unlock;
->>   			}
->>   		}
->> @@ -1466,27 +1448,23 @@ void blkg_exit_queue(struct request_queue *q)
->>   }
->>  =20
->>   int blkcg_init_disk(struct gendisk *disk)
->>   {
->>   	struct request_queue *q =3D disk->queue;
->> -	struct blkcg_gq *new_blkg, *blkg;
->> +	struct blkcg_gq *blkg;
->>  =20
->>   	/*
->>   	 * If the queue is shared across disk rebind (e.g., SCSI), the
->>   	 * previous disk's blkcg state is cleaned up asynchronously via
->>   	 * disk_release() -> blkcg_exit_disk(). Wait for all old blkgs to be
->>   	 * removed from the queue list before setting up new blkcg state.
->>   	 */
->>   	wait_var_event(&q->blkg_list, list_empty_careful(&q->blkg_list));
->>  =20
->> -	new_blkg =3D blkg_alloc(&blkcg_root, disk, GFP_KERNEL);
->> -	if (!new_blkg)
->> -		return -ENOMEM;
->> -
->>   	/* Make sure the root blkg exists. */
->>   	mutex_lock(&q->blkcg_mutex);
->> -	blkg =3D blkg_create(&blkcg_root, disk, new_blkg);
->> +	blkg =3D blkg_create(&blkcg_root, disk, GFP_KERNEL);
->>   	if (IS_ERR(blkg))
->>   		goto err_unlock;
->>   	q->root_blkg =3D blkg;
->>   	mutex_unlock(&q->blkcg_mutex);
->>  =20
+They have offered to run the tg_cpus() floor or a debug build with
+WARN_ON_ONCE(!cfs_rq->load.weight). They reproduce more readily than I do,
+so that is probably the machine to instrument.
 
---=20
 Thanks,
-Kuai
+Jake
