@@ -1,115 +1,131 @@
-Received: from mta1.migadu.com (out-2.mta1.migadu.com [95.215.58.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE7218472
-	for <cgroups@vger.kernel.org>; Wed, 26 Aug 2026 02:18:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1C0918C008;
+	Wed, 26 Aug 2026 03:00:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787710705; cv=none; b=ScFZa8aHu+PqVu6RtRGcS3hNAuONUfMtpq22YN1JFDWpg5J2hBzkSdaSnwT3PGraQ/D8lJcplhj3Mf2Zn/kfgMc0vMWAQxm4J0idAMqMO0+zP+OGI1sSOf4q/YmBRAUsdbEk252hboucy5K58nhMPRO709r0KoCPDHiT4siA5rI=
+	t=1787713256; cv=none; b=N7WDNBgg/BI68WMcnjexrwGtcEtxph+Z/qLg8HRdWf6S4sJR23nvpaK1UC3yJQ1sdCTjMbCmcwYfTdxXHPS6oDY8FMfA1D7uFmXbI1uwLc0wmofnPF8iZdDFNra5hNieyLzqAEBjffnCT5BQuMR9cT8xQt/IujCunWzWcA191Wo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787710705; c=relaxed/simple;
-	bh=t/05Fp8KvIdQ3wJax8e4wYX6B2lpmgVrEQ6lnlSI1GY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=URsjnUsGaQ3BiUmBsQvIcOr7msu7c6mUKBwAuAholNI0sLl93u9D4KOhi34SGjTBXlNn5FCghN3c+d9kMlIwNjeVTMexIyWQfGOmUty4phP8v+F97VbWS0Kh7p5UPgTRgRpGH0wHGa4qi7l7mFxIGPsrs8YwMdrH/nQc18xHY6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fe38BSaU; arc=none smtp.client-ip=95.215.58.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fe38BSaU"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=t/05Fp8KvIdQ3wJax8e4wYX6B2lpmgVrEQ6lnlSI1GY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787710700; v=1; x=1788315500;
- b=fe38BSaUQDBavAjpQIFCgpdHyzLYDhM0INhYqF3yOODfNB9x/Cjk7eOEyjzpl7068Xr9Gx0e
- 6P1vm6mdzF6qvze919ms5gMoPIsl10JWwGJmatxfiIGHTUKCW15OkyXwa66+QRORLEM0AqFcm7b
- r6bvXtPBePFcCDiKhkvlTYI8=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: from ctao-book.. (223.70.160.239)
-	by smtp.migadu.com with ESMTPS id 376f8c39feeeb18b;
-	Wed, 26 Aug 2026 02:18:10 +0000
-X-Mizu-Trace-ID: 376f8c39feeeb18b
-X-Migadu-Flow: FLOW_OUT
-From: Tao Cui <cui.tao@linux.dev>
-To: tj@kernel.org,
-	akpm@linux-foundation.org,
-	shakeel.butt@linux.dev,
-	mhocko@suse.com
-Cc: mhocko@kernel.org,
-	mkoutny@suse.com,
-	hannes@cmpxchg.org,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	linux-mm@kvack.org,
+	s=arc-20240116; t=1787713256; c=relaxed/simple;
+	bh=VA+AH5pJWPWmbh4QS86foyjWLvhMz5Hw8tan3ko3UQQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=la8l/lqYjSqZuNatbmxJVbN5ltNYCkbn5JOcjSo8ScIDS1ukyo2+gV1Q955v2pOWtfLlrI+hXinpJe4CFL8YVnC+j+B5B9Hi9b7QOZDCfOAeuOtTNpQ4VZCWVgL01OY8uIVHMDQ9+fKkgQtFvTotw2pdNN4z9U9f6kXJlBtCMQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 544bff2ca0fa11f19a56ed5b684f684d-20260826
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_TXT
+	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN, HR_FROM_NAME
+	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
+	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_PRE_RE, HR_SJ_WS, HR_TO_COUNT
+	HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED
+	SA_UNTRUSTED, SA_LOWREP, SA_EXISTED, SN_UNTRUSTED, SN_LOWREP
+	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:8010ee7e-c882-410b-aab3-c3e0db6b12f4,IP:10,
+	URL:0,TC:0,Content:11,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:21
+X-CID-INFO: VERSION:1.3.19,REQID:8010ee7e-c882-410b-aab3-c3e0db6b12f4,IP:10,UR
+	L:0,TC:0,Content:11,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:21
+X-CID-META: VersionHash:7db8b62,CLOUDID:b600d1a7afe962d6c665d03961dabf92,BulkI
+	D:260820194334S50I7KW6,BulkQuantity:3,SF:17|19|64|66|78|80|81|82|83|102|12
+	7|136|841|850|865|898,TC:nil,Content:3|15|50,EDM:-3|-100,IP:-2,URL:0,File:
+	nil,RT:nil,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:
+	0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 544bff2ca0fa11f19a56ed5b684f684d-20260826
+X-User: liuzhe1@kylinos.cn
+Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
+	(envelope-from <liuzhe1@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 768919277; Wed, 26 Aug 2026 11:00:44 +0800
+From: Zhe Liu <liuzhe1@kylinos.cn>
+To: mkoutny@suse.com
+Cc: bsegall@google.com,
 	cgroups@vger.kernel.org,
+	corbet@lwn.net,
+	dietmar.eggemann@arm.com,
+	hannes@cmpxchg.org,
+	juri.lelli@redhat.com,
+	kprateek.nayak@amd.com,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	cui.tao@linux.dev,
-	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH v2] docs: cgroup: document empty-write behavior of memory limit knobs
-Date: Wed, 26 Aug 2026 10:17:53 +0800
-Message-ID: <20260826021753.197871-1-cui.tao@linux.dev>
-X-Mailer: git-send-email 2.43.0
+	linux-kselftest@vger.kernel.org,
+	liuzhe1@kylinos.cn,
+	mgorman@suse.de,
+	mingo@redhat.com,
+	peterz@infradead.org,
+	rostedt@goodmis.org,
+	skhan@linuxfoundation.org,
+	tj@kernel.org,
+	vincent.guittot@linaro.org,
+	vschneid@redhat.com
+Subject: Re: [PATCH 1/2] sched/fair: Reset incompatible burst on quota change
+Date: Wed, 26 Aug 2026 11:00:06 +0800
+Message-Id: <20260826030006.171041-1-liuzhe1@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <aobnZEh1hfIBhswD@localhost.localdomain>
+References: <aobnZEh1hfIBhswD@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Tao Cui <cuitao@kylinos.cn>
+On Thu, Aug 20, 2026 at 01:43:21PM +0200, Michal Koutný wrote:
 
-A maintenance script on a cluster wrote an unset variable into
-memory.max of a workload cgroup; the variable expanded to an empty
-string, the write succeeded, and the workload in the cgroup was
-OOM-killed.  Nothing pointed back at the write, so it took quite
-some time to trace the OOM kills to that script.
+> Why not clamp the burst_us to quota_us? That's quite natural to me.
+>
+> Like Sashiko said, the user configured values should not get lost, the
+> resulting burst value (0 or quota or whatever makes sense) might be
+> applied effectively (to allow configuration order independence) but not
+> overwrite what was configured.
 
-The memory controller documentation does not say what an empty
-write does; the cpuset controller documents its empty-value
-semantics.  The actual behavior is that the empty string is
-accepted as 0.  Reproduced on a k8s cluster (v1.29, cgroup v2,
-two-container pod, 384M limit):
+Thanks for the suggestion. I agree that applying the clamp at enforcement
+time is a better fit here.
 
-  # LIMIT=
-  # echo "$LIMIT" > $CG/memory.max
-  # echo $?
-  0
+There is also a second ordering case to consider: when both quota and burst
+are being increased, writing burst first currently fails with EINVAL because
+the burst value is checked against the old quota.
 
-  m6demo   0/2     OOMKilled   0
+For v2, I plan to remove the validation which couples burst_us to the
+current quota_us. The quota upper-bound check will remain unchanged, while
+burst_us will be checked independently against max_bw_runtime_us:
 
-  Memory cgroup out of memory: Killed process 339529 (sleep) ... anon-rss:32kB
+@@ tg_set_bandwidth()
+ 	if (quota_us != RUNTIME_INF &&/path/to/YOUR_REPLY
+ 	    quota_us > max_bw_runtime_us)
+ 		return -EINVAL;
 
-State it where the interface files are introduced, alongside the
-existing notes on units and page rounding.
+-	if (quota_us != RUNTIME_INF && (burst_us > quota_us ||
+-					burst_us + quota_us > max_bw_runtime_us))
++	if (burst_us > max_bw_runtime_us)
+ 		return -EINVAL;
 
-Link: https://lore.kernel.org/all/aoVUlFdZYLFn_gvJ@tiehlicka/
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+The configured burst value will be retained, and the value used by CFS will
+be capped when the runtime is refilled:
 
----
+@@ __refill_cfs_bandwidth_runtime()
+-	cfs_b->runtime = min(cfs_b->runtime,
+-			     cfs_b->quota + cfs_b->burst);
++	cfs_b->runtime = min(cfs_b->runtime,
++			     cfs_b->quota +
++			     min(cfs_b->burst, cfs_b->quota));
 
-Changes since v1: document the empty-write behavior instead of
-rejecting it, the outcome of the review discussion at the Link:
-below.
+This preserves the value configured through cpu.max.burst and
+cpu.cfs_burst_us while applying the clamp to the value used for enforcement.
+It also allows the quota and burst settings to be written in either order.
 
----
- Documentation/admin-guide/cgroup-v2.rst | 4 ++++
- 1 file changed, 4 insertions(+)
+I have tested both write-order sequences on linux-next next-20260824. A v2
+with the corresponding selftest update will follow.
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 86a2a0099178..8d2603751c51 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1321,6 +1321,10 @@ All memory amounts are in bytes.  If a value which is not aligned to
- PAGE_SIZE is written, the value may be rounded up to the closest
- PAGE_SIZE multiple when read back.
- 
-+For the limit files described below, an empty or all-whitespace
-+write is accepted and sets the limit to 0.  To disable a limit,
-+write "max"; to set it to zero explicitly, write "0".
-+
-   memory.current
- 	A read-only single value file which exists on non-root
- 	cgroups.
--- 
-2.43.0
-
+Thanks again for pointing this out.
