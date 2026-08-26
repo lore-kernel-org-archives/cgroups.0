@@ -1,215 +1,67 @@
-Received: from mta0.migadu.com (out-45.mta0.migadu.com [91.218.175.45])
+Received: from mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2127141F360
-	for <cgroups@vger.kernel.org>; Wed, 26 Aug 2026 13:31:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06053BE162
+	for <cgroups@vger.kernel.org>; Wed, 26 Aug 2026 18:35:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787751085; cv=none; b=RD/jXYhZxebj7jL0sUfbb8+ZStyfLH3tTCHUDX4YERzkdnMKat7Spc0Spd34kit7sDgSr/B3AWmIaqoVEVZvfJvuCU6GyBS8EbcHppKYArkYk7PmmvhHL0/JJ1yhkZOlLzj5eIDDtJI8doOxk1VfskfNnzvSGtEI/TISywm1IYE=
+	t=1787769360; cv=none; b=gQqMgQgOXCRITNHQvnOWLIi5Bhi+m+C8IO7UWz/wxkac4A4ymp80HUgJO7h7iZh5CyTRpAecawaDYqDXuGZ5UKzfKQ14JegLHnrkYzipZeuwdUhxHTITEGsHrx9n3feZhW3IMYHbrjJ2EZI4MAxJu3XO+30qti73fwzYN+KLN7w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787751085; c=relaxed/simple;
-	bh=lR4mZ8qczUfYMvA6XHhKi70YkLbB/IMG+ilRAttzYlY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cloXfY/KF7EpUZTZh3Ml03pBweHPds64nOcC10xDlyaous94V8/7oVbvXFEkUtA2Y7asf2ubgHubVX7sl1UuFTVZFEHc5nDeLf7w5CcGypW+ASzYp4+ATrKQavQk3kaMoNMlAOGravqWq3U5v8ibxOoVlzmRZH0SBca9JEsVqjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RMJ/OfnN; arc=none smtp.client-ip=91.218.175.45
+	s=arc-20240116; t=1787769360; c=relaxed/simple;
+	bh=ZyrhrAm7j38NGOmipO+o+kjkSYfh0FE7Hm9WXO5o6LA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U4ulXfMJboCM//GSZSkGqsdeGW1X3qBig2deoz7Knm+WkYgiB+8DcV8N918b2DlXstU82oRj01oc3PeTvxnbJaUcRcgzH5tS4Xs2aL2b/I1XK0xW2mfmPRC14+OZiKkqbRc7dfnI6YyUdxDbFpHOYBVT+BnT4yCM/3f+mwz/TlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=hhDrfRDY; arc=none smtp.client-ip=91.218.175.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RMJ/OfnN"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="hhDrfRDY"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=lR4mZ8qczUfYMvA6XHhKi70YkLbB/IMG+ilRAttzYlY=;
+DKIM-Signature: a=rsa-sha256; bh=ZyrhrAm7j38NGOmipO+o+kjkSYfh0FE7Hm9WXO5o6LA=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787751079; v=1; x=1788355879;
- b=RMJ/OfnNf5glc2HTrO7xk+ubkDnht6HwAdoF4dB6PY+8/c0BHTw9+Egm7iNN5NZDPrl9oLX3
- LniZOv2r4dx62AFPUbxxUZQSTwNuv1gwS5sO/Xeisx0xJMvH4t+FWCKLz6qE354ISosRF1YQTUr
- cca2naq+lIqVQwqT2BYVOPFI=
+ t=1787769346; v=1; x=1788374146;
+ b=hhDrfRDYhKkfpSwP9PNCv6Uakdp4iyxNRK9IYGEw6fc0T9fBe+6KkcbdIto8F+rvWFfzIL2a
+ LzucZZv8LnyK9Ou0J+wMdvcIkyok/GhLLfVtAgBN6AhAg53uFvt6UiJsUkgSqWFSwHMACzX9dPr
+ txGaB6Xr/bs9Cb9Y0gytDlJI=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: from mi-ThinkCentre-M760t.mioffice.cn (14.29.108.92)
-	by smtp.migadu.com with ESMTPS id 57b289fe451a8707;
-	Wed, 26 Aug 2026 13:31:19 +0000
-X-Mizu-Trace-ID: 57b289fe451a8707
+Received: from localhost (2a03:2880:10ff:b::)
+	by smtp.migadu.com with ESMTPS id eb79b8ec4e60aea3;
+	Wed, 26 Aug 2026 18:35:45 +0000
+X-Mizu-Trace-ID: eb79b8ec4e60aea3
 X-Migadu-Flow: FLOW_OUT
-From: Ridong Chen <ridong.chen@linux.dev>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Muchun Song <muchun.song@linux.dev>,
-	David Hildenbrand <david@kernel.org>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	Wei Xu <weixugc@google.com>,
-	Yu Zhao <yuzhao@google.com>,
-	cgroups@vger.kernel.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	linux-kernel@vger.kernel.org,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>,
-	stable@vger.kernel.org
-Subject: [RFC PATCH] mm/mglru: fix ineffective memory protection for non-kswapd reclaim
-Date: Wed, 26 Aug 2026 21:30:54 +0800
-Message-Id: <20260826133054.88529-1-ridong.chen@linux.dev>
-X-Mailer: git-send-email 2.34.1
+Date: Wed, 26 Aug 2026 11:35:44 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Hongfu Li <hongfu.li@linux.dev>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	muchun.song@linux.dev, akpm@linux-foundation.org, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, Hongfu Li <lihongfu@kylinos.cn>
+Subject: Re: [PATCH] mm/memcontrol: remove unused memcg parameter in
+ calculate_high_delay()
+Message-ID: <ao8x787ZgJvUvhbr@linux.dev>
+References: <20260825120153.1405-1-hongfu.li@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260825120153.1405-1-hongfu.li@linux.dev>
 
-From: Ridong Chen <chenridong@xiaomi.com>
+On Tue, Aug 25, 2026 at 08:01:53PM +0800, Hongfu Li wrote:
+> From: Hongfu Li <lihongfu@kylinos.cn>
+> 
+> The memcg argument of calculate_high_delay() is never referenced in
+> its function body. The delay calculation only depends on nr_pages
+> and max_overage, and both callers have already obtained max_overage
+> from the same memcg.
+> 
+> Drop this unused parameter and update the two call sites inside
+> __mem_cgroup_handle_over_high().
+> 
+> Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
 
-memory.min/low is silently bypassed for MGLRU during global proactive
-reclaim (writing to the root memory.reclaim) and global direct reclaim.
-It can be reproduced as follows:
-
-  # echo 7 > /sys/kernel/mm/lru_gen/enabled
-  # cd /sys/fs/cgroup
-  # mkdir -p a/b
-  # echo 100M > a/memory.min
-  # echo +memory > a/cgroup.subtree_control
-  # echo 100M > a/b/memory.min
-  # echo $$ > a/b/cgroup.procs
-  # dd if=/dev/zero of=/tmp/testfile bs=1M count=200
-  # cat a/b/memory.current
-  222650368
-  # echo 500M > memory.reclaim
-  -bash: echo: write error: Resource temporarily unavailable
-  # cat a/b/memory.current
-  6070272
-
-memory.min is 100M, yet reclaim drops a/b down to 6M, breaking the
-protection.  The traditional LRU path is not affected because
-shrink_node() calls mem_cgroup_calculate_protection() for each memcg it
-visits during a top-down tree walk.
-
-Commit 30d77b7eef01 ("mm/mglru: fix ineffective protection calculation")
-moved the protection computation into lru_gen_age_node(), which only
-runs for kswapd.  Non-kswapd global reclaim reaches shrink_one() through
-lru_gen_shrink_node() -> shrink_many() without any protection
-computation, so emin/elow remain stale or zero.
-
-Introduce mem_cgroup_protection_path() which computes emin/elow along
-the root-to-target path only by iterating through the cgroup ancestors
-array top-down.  This avoids the full tree traversal that would be
-needed with mem_cgroup_calculate_protection(), limiting the cost to
-O(depth) per memcg - typically 3-5 levels.
-
-Call it from shrink_one() for the non-kswapd path so that each memcg
-about to be shrunk has correct protection values.
-
-Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
----
- include/linux/memcontrol.h |  7 +++++++
- mm/memcontrol.c            | 42 ++++++++++++++++++++++++++++++++++++++
- mm/vmscan.c                |  8 +++++++-
- 3 files changed, 56 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7d1c0ce189a8..26be8277d64b 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -605,6 +605,8 @@ static inline void mem_cgroup_protection(struct mem_cgroup *root,
- 
- void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- 				     struct mem_cgroup *memcg);
-+void mem_cgroup_protection_path(struct mem_cgroup *root,
-+				struct mem_cgroup *memcg);
- 
- static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
- 					  struct mem_cgroup *memcg)
-@@ -1133,6 +1135,11 @@ static inline void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- {
- }
- 
-+static inline void mem_cgroup_protection_path(struct mem_cgroup *root,
-+					      struct mem_cgroup *memcg)
-+{
-+}
-+
- static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
- 					  struct mem_cgroup *memcg)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1271d390b617..c739db33b917 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5198,6 +5198,48 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- 	page_counter_calculate_protection(&root->memory, &memcg->memory, recursive_protection);
- }
- 
-+/**
-+ * mem_cgroup_protection_path - compute protection along root->memcg path
-+ * @root: the top ancestor of the sub-tree being checked (NULL for root_mem_cgroup)
-+ * @memcg: the target memory cgroup
-+ *
-+ * Walk the ancestor path from @root down to @memcg and compute the effective
-+ * protection at each level.  This is safe for isolated queries because it
-+ * ensures parents are computed before children.
-+ */
-+void mem_cgroup_protection_path(struct mem_cgroup *root,
-+				struct mem_cgroup *memcg)
-+{
-+	bool recursive_protection =
-+		cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_RECURSIVE_PROT;
-+	struct cgroup *cg;
-+	int root_level, i;
-+
-+	if (mem_cgroup_disabled())
-+		return;
-+
-+	if (!root)
-+		root = root_mem_cgroup;
-+
-+	if (memcg == root)
-+		return;
-+
-+	root_level = root->css.cgroup->level;
-+	cg = memcg->css.cgroup;
-+
-+	rcu_read_lock();
-+	for (i = root_level + 1; i <= cg->level; i++) {
-+		struct mem_cgroup *cur;
-+
-+		cur = mem_cgroup_from_css(cgroup_css(cg->ancestors[i],
-+						    &memory_cgrp_subsys));
-+		if (cur)
-+			page_counter_calculate_protection(&root->memory,
-+					&cur->memory, recursive_protection);
-+	}
-+	rcu_read_unlock();
-+}
-+
- static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
- 			gfp_t gfp)
- {
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 6dff207ad8c6..e572d2742c8c 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -5102,7 +5102,13 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
- 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
- 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
- 
--	/* lru_gen_age_node() called mem_cgroup_calculate_protection() */
-+	/*
-+	 * For kswapd, lru_gen_age_node() has already called
-+	 * mem_cgroup_calculate_protection()
-+	 */
-+	if (!current_is_kswapd())
-+		mem_cgroup_protection_path(NULL, memcg);
-+
- 	if (mem_cgroup_below_min(NULL, memcg))
- 		return MEMCG_LRU_YOUNG;
- 
--- 
-2.34.1
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 
