@@ -1,44 +1,77 @@
-Received: from mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F2C1FB1
-	for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 16:58:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 299BC47CA61
+	for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 17:15:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787849886; cv=none; b=rMTyllFJT/8OHG1j8e52lCyHTBoYWYAC3Z8fm2WNzU2lPX1lVSTOp8PVM7TcUH+ekoCxUVQJQGtSFbQl3SBQB0zLnJd3G6uWONb64sFVmtwlxDUc4g5Eq5D/mniva0S+hXzX5Njjw4cvLOm1/4OwjRhkitRg+WURXQ+VNQdPjcs=
+	t=1787850907; cv=none; b=TTm7K7ibQ7Oc2+8hMcTuUFXI8bwAvxH/Tao1sNDaFQUeeJ9HLr4RxMb88t5V2Tf7no81dRVHGm09zf+fLjYRL7Frtut0SPheubZ1Yz2ruQwljXvzsGOp+gGtSt5lUbQOSd+u5UD7aKdJV0/kBUwkGYrPrHKXSTyza/O06XWQja4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787849886; c=relaxed/simple;
-	bh=/QFykKqY4DddYYy1JGcan4kcCBGwtGcv3+RRD0IyIGI=;
+	s=arc-20240116; t=1787850907; c=relaxed/simple;
+	bh=b+DbO/XBRVMRrkEPpL+a8uMHxOKqXYztv7EREra78xc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cDwcIzo44qz2kPiOlTLOUzBMhj1Bq1UTD07DKkM+rm18/nG/cj/FYvA0ot/EXxoMoqrWeBQa3eGv/8gK6ZSItL9svq2n9JohqvG0hIQFOIdqAoG1GkHgVZVt8mfQDJu/BcM1Y/+uRqbvj9TNKqY7rbchoEbfb7tFHcvP+1pg3hI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Ivqhg7pH; arc=none smtp.client-ip=91.218.175.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=d4oPR0Jyf/+PqpXMKYGElhcmzeNRoxJsPEfq0A9jdTQ0ytW7WG1wY/VPSv99+NevxLIYfzqFA9YZ+yaRP2+kqw3F4Ba/KidRdtynvzdut1zNI7u8w6yn6vd4wmUxXQRkgRSGZpwoD3iFWLSTlttaDceaJQFLehHHOj2b6AWpGcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=hGEE+8bz; arc=none smtp.client-ip=209.85.128.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Ivqhg7pH"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=/QFykKqY4DddYYy1JGcan4kcCBGwtGcv3+RRD0IyIGI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787849879; v=1; x=1788454679;
- b=Ivqhg7pHLNsyndpaARYlFqDnmbpn1BaiBSqdHDcYc9yhz/pIdu9VmkV5j55SLDNmXNtPJZaE
- 0Cl/Y9gc7tdKLsmud+OSnZkVge2QVvg3J0MR5gK6zz1fqKDFmtUFJimwlAa2EPUAXtYxmz3vToK
- vR7Mlb767U8AJY2CwUqm/o74=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 1ee3e873e45b78e8;
-	Thu, 27 Aug 2026 16:57:59 +0000
-X-Mizu-Trace-ID: 1ee3e873e45b78e8
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 27 Aug 2026 09:57:53 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="hGEE+8bz"
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-836cb2fa1bcso950547b3.1
+        for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 10:15:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1787850904; x=1788455704; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=uQnMu3iWvpGPN+g3IV0k0ZH3wDq8ERD9nTW8XM39tKI=;
+        b=hGEE+8bzf/Y+yzK9IPDD9jQPIyk0rtF3ze2FRvddTqNFXwrO1szjujUG7oul9sbmJj
+         MPkPCS7ksHtop/Exs8DmSM6cYabeH3IJrCwd1dXHSvTUXpI/JL5Ijo8aRobeFJvn432U
+         WedPz+ScNjjc4OYjdBzQJ7Lf5Ej3LvPEfTYqI1iOyPIZfi+SJThW45/S9EPsjTSaBU58
+         /cGedcx2u8tP544KzHN0EK72Kt5ABAzQPuGDDhGsId+lnzHU0EK+StseoE8k0aialhK2
+         j1+eBP3bHhn9jRByIx2Z2pmCHPtXKqD7227QzgHLd1hm4mE0zHzDZ5DNFDmHkBa3m3lT
+         /XZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787850904; x=1788455704;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uQnMu3iWvpGPN+g3IV0k0ZH3wDq8ERD9nTW8XM39tKI=;
+        b=fW8UUvDez7zUVS3kfNNIcnsIyvnV02Sr2KtLATWdlrPUnyBWlsvyHubRn1nf/Hb/at
+         0d5v/c3yGgwqcfw77dDf9Pumt6Ro/WRj9EgXMjEaO3rEMEE4Oa5wmI2DuPpE8yEaouPl
+         EgoXGKiCDBICOfta4m+RbXkBBJUXlj1Z4uj2oW89MtHwXHArGMFLvjsLzqmQ2hrXNSaq
+         OBp8fRydVjxwKLMTB7u2E3N9ahUwhZKgZf0CnePazyDyMoNJ/XgtBF2kmk+RGybfTom1
+         myM9Vb1X8X6txEsoTeHX9TOIJ+K/sBzptwP3GYbM+PzDkIsBpD02DdRr3htEjRuGuS+x
+         6ASg==
+X-Forwarded-Encrypted: i=1; AHgh+RpeQ5gi40MJ334lGdmlxCpVgpifxAikUssmwAAGLFUjzkNB4y3/PQjmHumu+CyWKjeyv9DsnWex@vger.kernel.org
+X-Gm-Message-State: AFuF++myoIwh5dVyI0iID/IS5wWBnCyZUizvAqMxkgupAwoqakD8l5PP
+	rmWhYygRGMydNsBvqvAyR5xSBwLTwSlNpNlxn+x4ufnSbl1qeSf+GKZXDovE83qzYoc=
+X-Gm-Gg: AR+sD12fFPuCbtAhFZfYdRZ6sHC6+bWs54Pcg2Iwpb7m9nBo2RjT86JY6Jw3h464wlA
+	pVeckxPOROKdYsxkGZ18AX+DeHdlaLvV0rwuOZxZw3E6K7m1jCdueQex85mACZjbqirlMLYhbzT
+	0VqmyAmO1+5g8ZA6dk8AVvmUyG7QiiKZBb95vOjqDCPJl+SOncODeESoxYvN/ztlnYzLap+kG9Q
+	S4HrpbQMwq2jWcIl3HR9u5kdO0DhYZEmzXLlgtA6SG6cavLCfJB48yQXZyh8sQXVQwJf2LWRRUF
+	oDqGCLoX8vdwgXsVABbgNQUwtuAlplRcopxGObVynhzyrBuDoF2T1nkCe8PkA6+1GsLRLCmV/qt
+	iCc3Je9W1iDh3ikrohAccgAS0qGCNSBwH8Ho5d2Zphgncm9J4BiKqNLjj3sBKRnIM3tdGhbBHJJ
+	Gcwq7GnUW1ODMpgwv+QA0mp2QZwK4Gee9XS3N/bVD/jMcxsfQbg7m0OMfJCO6+DA==
+X-Received: by 2002:a05:690c:c017:b0:845:a433:c337 with SMTP id 00721157ae682-85d632603a2mr3858517b3.0.1787850903708;
+        Thu, 27 Aug 2026 10:15:03 -0700 (PDT)
+Received: from localhost ([2605:8600:200:1a83:fe59:7385:2855:8588])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-85b5c7f08d6sm13933737b3.11.2026.08.27.10.15.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2026 10:15:03 -0700 (PDT)
+Date: Thu, 27 Aug 2026 13:14:59 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
 To: Rik van Riel <riel@surriel.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, kernel-team@meta.com
+Cc: Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
 Subject: Re: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work during
  offline
-Message-ID: <apBsMXzLXltN9MTd@linux.dev>
+Message-ID: <20260827171459.GE3004@cmpxchg.org>
 References: <20260827124211.3b94b103@fangorn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -76,7 +109,9 @@ On Thu, Aug 27, 2026 at 12:42:11PM -0400, Rik van Riel wrote:
 >                                       refill_stock(victim)
 >                                         css_get(victim)
 >                                         WRITE_ONCE(cached[i]=victim)
-> 
+
+I'm really confused. CPU1 acquires a ref for the cached[i] pointer ^
+
 >   percpu_ref kill confirmed, css_killed_ref_fn() called
 > 
 >   css_killed_work_fn() [offline_wq]
@@ -89,13 +124,15 @@ On Thu, Aug 27, 2026 at 12:42:11PM -0400, Rik van Riel wrote:
 >       mem_cgroup_private_id_put()
 >     css_put() -> refcnt may hit 0
 
-Why would refcnt hit 0? CPU1 stock has a reference.
+So how can it hit 0 here?
 
-> 
 >   [RCU GP]
 >   css_free_rwork_fn()
 >     mem_cgroup_free(victim)
 >     // victim struct freed
+
+This won't run until we hit zero...
+
 > 
 >                                         // worker delayed by scheduler/
 >                                         // WQ concurrency
@@ -104,78 +141,5 @@ Why would refcnt hit 0? CPU1 stock has a reference.
 >                                           // UAF: old == freed victim
 >                                           memcg_uncharge(old)
 >                                           css_put(&old->css)
-> 
-> Fix by having the offline path wait for the workqueue to be
-> done with the memcg, before freeing the memcg.
-> 
-> Found through a code audit with kres.
-> 
-> Fixes: 591edfb10a94 ("mm: drain memcg stocks on css offlining")
-> Cc: stable@vger.kernel.org
-> Assisted-by: Hermes:muse-spark-1.2 kres
-> Signed-off-by: Rik van Riel <riel@surriel.com>
-> ---
->  mm/memcontrol.c | 29 +++++++++++++++++++++++++----
->  1 file changed, 25 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6dc4888a90f3..c95a1f6ec799 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2273,12 +2273,18 @@ static void schedule_drain_work(int cpu, struct work_struct *work)
->   * Drains all per-CPU charge caches for given root_memcg resp. subtree
->   * of the hierarchy under it.
->   */
-> -void drain_all_stock(struct mem_cgroup *root_memcg)
-> +static void __drain_all_stock(struct mem_cgroup *root_memcg, bool sync)
->  {
->  	int cpu, curcpu;
->  
-> -	/* If someone's already draining, avoid adding running more workers. */
-> -	if (!mutex_trylock(&percpu_charge_mutex))
-> +	/*
-> +	 *  If someone's already draining, avoid starting more workers.
-> +	 *  Synchronous callers need to guarantee all the last things
-> +	 *  are flushed, e.g. before a memcg is removed.
-> +	 */
-> +	if (sync)
-> +		mutex_lock(&percpu_charge_mutex);
-> +	else if (!mutex_trylock(&percpu_charge_mutex))
->  		return;
->  	/*
->  	 * Notify other cpus that system-wide "drain" is running
-> @@ -2316,6 +2322,21 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
->  	mutex_unlock(&percpu_charge_mutex);
->  }
->  
-> +void drain_all_stock(struct mem_cgroup *root_memcg)
-> +{
-> +	__drain_all_stock(root_memcg, false);
-> +}
-> +
-> +void drain_all_stock_sync(struct mem_cgroup *root_memcg)
-> +{
-> +	/*
-> +	 * Make sure the workqueue is done with this memcg
-> +	 * before freeing it.
-> +	 */
-> +	__drain_all_stock(root_memcg, true);
-> +	flush_workqueue(memcg_wq);
-> +}
-> +
->  static int memcg_hotplug_cpu_dead(unsigned int cpu)
->  {
->  	/* no need for the local lock */
-> @@ -4305,7 +4326,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
->  	wb_memcg_offline(memcg);
->  	lru_gen_offline_memcg(memcg);
->  
-> -	drain_all_stock(memcg);
-> +	drain_all_stock_sync(memcg);
->  
->  	mem_cgroup_private_id_put(memcg, 1);
->  }
-> -- 
-> 2.55.0
-> 
-> 
+
+...which is here.
