@@ -1,135 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1327F440A1F;
-	Thu, 27 Aug 2026 10:55:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62B5E21A453
+	for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 12:04:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787828124; cv=none; b=X0A2+1sYLqocEPI/ygInEhgLsk/GF8YMfX7gjD/Ga0KmXbTX0f1LvXUOyO+WKgu3Mgs6Dnkp3LBgWuG8so/f1fMl2WWW/9OMgrMlaxElykBHG4ogme1KKqvEqa6xo8BQBnaNahgTOPdfpBD8jvBJq3dl1mIxAWru7/cN5rgp2VE=
+	t=1787832258; cv=none; b=POXXfEjoAw9IsIluFSQaeDxKRZYdV7QyW7Zjo5gstw34ozyXyogkdiebi/wtp8OLdDz54DLKppiB5Riy6bAODISU9wFTq9V0kDy/dhhk8d60On2w0seiRvKrdLCyaFufPWrpl7/brV6lqj+pVxEQ8WyTzMmIcYcRmI4bEIHJjTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787828124; c=relaxed/simple;
-	bh=qVDoP69S5jcubxdwkgxYl/6m53lua0jM1BoH/rNwE2g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dcTS1gWfF2fRFK+V2vZIZelmKtOhgH5cyVBofERDEQUBYNoXUsli2ynvSiKStm1lGpWuoy25z7XAo+iMPUMuSxZaX5kvikEAFKJqWDb9cNXYPN1mvhZVzPW/hJheEAmUvA3yw86Sz/1/dC+uRb70xZlPxOON+CkksvnQUrjbsBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WmI6KeFW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787832258; c=relaxed/simple;
+	bh=sisPV8gzEpPlKpghtjt/eOx5vsk5qM8t0MCPsEmqUhA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Za8FB6GbRfiC771m767JULMt7VWMS0k5Y12ouY0U2SkbhdphjusdSNZIqZvoxwW5V8w7BvHaB1HIUdUZxDlobl9JlXbwgsBmsFUR0wz/mbyco8mIEwxH2mYuWIjcQBLMTgd+fI/L3vkZL0FfU1SWuA4fGRdMkO5pnJ9YiR45MMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Ptc/ttcQ; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WmI6KeFW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 092E51F00A3A;
-	Thu, 27 Aug 2026 10:55:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787828121;
-	bh=lOIjdq4+U/tO0XOht7hcXH5DuMTGbl0cEZdAzU3LGMU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=WmI6KeFWRxalh2Qorm88ibg25D6VNeXU0rh2PyMvcYJugkGlQw3ypPTW+eM5X/X+a
-	 lKpvk4dJ/VQ4mNUOtwd6rab2qzqWg35yVHrZUjgYzPcAGlqHNnx7GbDlNkohro+tjK
-	 tAy73M/Ht07J/zQDivOswr7iUtQqX0SLJsbdkBtu8sRcBax1Y8y7i6mysu7ZAjzQ7O
-	 td4rdEWYPjvtgs/KBqLTdLy80b87OnYKH7iLsibHXZ9EqIQljx2BjvbYjJsjXPMGFo
-	 ELVYp3nicxjDCmV75c/XhNiCkiw4oLgAKpZpPn9eNHJhWKnfNFL7E9NE83svKucEM5
-	 z7rE+fxWMDJpQ==
-Message-ID: <ce7d74db-989c-4618-afd0-016943f0a58f@kernel.org>
-Date: Thu, 27 Aug 2026 12:55:13 +0200
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Ptc/ttcQ"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-499b2981a7bso7185605e9.3
+        for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 05:04:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1787832256; x=1788437056; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=GP97XYSOxAd4mwkEh8pXHynZ3Zgb6dcRm0VHZ16u2ys=;
+        b=Ptc/ttcQykigA1DF/F2r5O7S/7kxd/H7gnsic9BADBJlWlM586l+y2xqLMgdmDrX5K
+         PBiqR8ZwsqEw+bO6z8YcpN6FUapN7EwSaCm2XM9IQAobM5HzN/cuwwTQMgS0Hk8+snhI
+         ebUt7Ir1LW9S53JZKPADNbanBCOI+gGWiAMsiRbB9b+CCFZLtQYzSteFGKDk1iCjLc94
+         8vPKBd+WhxfgYoRInnOMnAnn+kUIoQzxbjxxwoRQ4Ef0rcK5xA+ltPNIxLtX8f+5EP35
+         v9Kprc5fIIVlYhLAL78L1/vSBFQgTHXlhi65jIcKhK/ZVJVvy/WqZlvEtdtAcCKEa/d4
+         DMKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787832256; x=1788437056;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=GP97XYSOxAd4mwkEh8pXHynZ3Zgb6dcRm0VHZ16u2ys=;
+        b=gDOihMWtf1WUwGTjeaieUszN39F+HnP4c3pzU63wAFM/4HCCzAIQhTjPxzqDJN/CHI
+         lE9RSnwn+BsZwkh5VRC0ERE+2xUj3OrIyC3jKiQEfLjHVkk+XdZOeb63TXFWpvHWE9z0
+         m/DmNwx6ZMaWq4tCJMyvXnwCggnuvqSgP9vTWf/pl6uuKmSyFZzfabQ06YJASfLN279A
+         AgUsouPtOsUv8Zwqb1BhN66SRWXpQHtIdMNX/nKKeft19bvEW+8DOp+DoO9oCkCMFsDA
+         V43/8+8pZhKj1MuP0autpPdTK7S9u0ImkClYsPPA34TDBrMkyL6oRiS7XeoJQlVykuvn
+         L3Aw==
+X-Forwarded-Encrypted: i=1; AHgh+Rrn+Yy+WLXRZzH2pvxPJUQU/0ROzoumt6YAMZZ2wsv5pPQ4UR8b6L0rgU8SnORFuWMZnUcI16M+@vger.kernel.org
+X-Gm-Message-State: AFuF++nrOA8egFJh80HhAyoxRRE70niNA9bCKyePW3R1cFZKOUidJ3/z
+	TEhghzBk9kfYoAGNRH6yhjQYcdAZrE+VoOZL0UWXJjxYdlyhJEAhS1OH9+uRzQAxaOY=
+X-Gm-Gg: AR+sD13mwSH4mXdzRachN6F//IppJkbU/jXh0YYWWJ2+kA+lyd5kVozHDd/YUMCITlw
+	PiDaBYORx3WgYD1jTiQCYFcT1HVzZOPuw65cMFC6iujXDs5+nWcboINXbLqGajq7n48E54JbEaz
+	8OJgRKS2N4y94v1dIfP47M0PMQhNn81w7GOS/B/GesgiXtiIQJsXDOWpPThsj8BaH+Yo5LlQ+ej
+	GEGbqAs3EKW+4ghbGsiOAeHA4B+3SEr+qkvH8vh4bN6MYiTBb8PRzf+7CHJoy/H7eASyQr1rXJM
+	/3vvALFp0IPr2E2i/kfrH0HyE0X0EIsSF+VdTn9nNKAtOVdnrujJFnut75PIZl+8Ygat59oB96k
+	p69ItI6QwANExcSXx9b0XGY5IpzfYOEZMOLyfh0uqpqJlC2XB7oIMz8gjMG06W0x67DRqYrZsYV
+	igZtvm8i7JkHdwAubTZchNYuCSD2nTzhIgBCEqo9EvKc/jtd/7ffA5OrwwmVlHfI97+P4N1yJkv
+	ZnkjRVbpUWA
+X-Received: by 2002:a05:600c:3513:b0:496:bbce:fc with SMTP id 5b1f17b1804b1-499dc82c0d7mr166799585e9.12.1787832255539;
+        Thu, 27 Aug 2026 05:04:15 -0700 (PDT)
+Received: from localhost (109-81-32-216.rct.o2.cz. [109.81.32.216])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482e28dc134sm8549762f8f.20.2026.08.27.05.04.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2026 05:04:15 -0700 (PDT)
+Date: Thu, 27 Aug 2026 14:04:13 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Hao Li <hao.li@linux.dev>
+Cc: hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, akpm@linux-foundation.org,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mm: memcontrol: treat disabled memcg as kmem accounting
+ disabled
+Message-ID: <apAnveXHmeQlKJnU@tiehlicka>
+References: <20260827091813.22327-1-hao.li@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/6] mm/migrate: copy all referenced state via
- folio_migrate_lru_refs
-To: kasong@tencent.com, linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Barry Song
- <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>,
- Baolin Wang <baolin.wang@linux.alibaba.com>,
- Ridong Chen <ridong.chen@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
- Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>,
- Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>
-References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com>
- <20260826-mglru-flags-cleanup-v3-3-d9f1c75549c8@tencent.com>
-From: "David Hildenbrand (Arm)" <david@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=david@kernel.org; keydata=
- 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
- qIws/H2t
-In-Reply-To: <20260826-mglru-flags-cleanup-v3-3-d9f1c75549c8@tencent.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260827091813.22327-1-hao.li@linux.dev>
 
-On 8/25/26 19:53, Kairui Song via B4 Relay wrote:
-> From: Kairui Song <kasong@tencent.com>
+On Thu 27-08-26 17:17:50, Hao Li wrote:
+> mem_cgroup_kmem_disabled() currently only checks whether the
+> "cgroup.memory=nokmem" option is specified. However, kmem accounting is
+> also unavailable when memcg itself is disabled.
 > 
-> folio_migrate_flags() copies PG_referenced separately from the MGLRU
-> refs counter, which folio_migrate_refs() transfers. Yet under MGLRU,
-> PG_referenced and the refs counter bits together describe the
-> referenced status of a folio.
-> 
-> Consolidate the two: rename folio_migrate_refs() to
-> folio_migrate_lru_refs() and let it copy the complete referenced
-> status, i.e., the MGLRU refs count including PG_referenced, or just
-> PG_referenced for the active/inactive LRU. Drop the open-coded
-> PG_referenced copy so the referenced status is transferred in one
-> place. No behavior change is intended: under the active/inactive LRU
-> the extra bits are unused, so operating on them is a noop.
-> 
-> Transfer the reference state first, before the destination folio is
-> marked uptodate, so a concurrent lockless reader cannot have its
-> reference update overwritten by the copy.
-> 
-> Reviewed-by: Baoquan He <baoquan.he@linux.dev>
-> Signed-off-by: Kairui Song <kasong@tencent.com>
+> Check both conditions to ensure the function accurately reflects the
+> kmem accounting state.
+
+It would be really great if you could describe how we could end up with
+the inconsistent memcg enabled but kmem enabled and what kind of effect
+does this have.
+
+AFAICS the inconsistency is possible and it would lead some wastage but
+no functional problems but the changelog should be more descriptive.
+
+> Signed-off-by: Hao Li <hao.li@linux.dev>
 > ---
-
-Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+>  mm/memcontrol.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 1ebceade4021..b28f6165c354 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -132,7 +132,7 @@ static DEFINE_SPINLOCK(objcg_lock);
+>  
+>  bool mem_cgroup_kmem_disabled(void)
+>  {
+> -	return cgroup_memory_nokmem;
+> +	return cgroup_memory_nokmem || mem_cgroup_disabled();
+>  }
+>  
+>  static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages);
+> -- 
+> 2.54.0
 
 -- 
-Cheers,
-
-David
+Michal Hocko
+SUSE Labs
