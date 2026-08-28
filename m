@@ -1,227 +1,326 @@
-Received: from mta0.migadu.com (out-112.mta0.migadu.com [91.218.175.112])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5469B418342
-	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 11:10:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C42443DA7C2
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 13:17:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787915405; cv=none; b=R/pji+cMBaiA4HSdbz1ha5KXTZI5Rf3vjEU+eAWUlhYojQ+A+ARIGyOXjRAFqYHlJozdRE6Bica+G2NHAqLC7G+ZKeyLp3gV8zY4PxJQrBe5SfmVtd+sejSUp7B+PrMpfwjN/xA/wmn/naZ8TOs/NbVNy/vFFzuggh6l9o13JJo=
+	t=1787923046; cv=none; b=mtQMDpk1jmZ5lrqFvwp5ylcOGnR+kLE7qiqEGxgyWBmf6OiuKtnmJ05eoRY9ftp4if3OeEkIPd4I1mETsdU4YwOtI7+cGeO9WHuZSD8NaTtpm56NGjGd3wfC5vUX75aX52Nfcs+dJzJTBC2XTO0qbzFDu7X5dij325A2HKNIBts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787915405; c=relaxed/simple;
-	bh=eE7AKtJ5rHDjCHFP0sbjzrcKFX6z6p2ntCRRXg0JHB8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kLFl2/6HxcCsDqzdzFkFINLCLtVAEdJinjxVs7O9Pkh+NPaUvqHtAlo0B7kMECBWU0y4lOdcONERn34WlQEYCNkZYHuZuxE+S0+pLQF1nQh2SpWJ2Qa+o11EXhUrcjeQnLIIWTjn/ul6uN53qGjJpUArx4iPYRDpZ4Qp4aPtVAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=s3AqYBR7; arc=none smtp.client-ip=91.218.175.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787923046; c=relaxed/simple;
+	bh=mvGL/Z6C0Re6DrFrYesxk/Q4uufXmrCFIKM47XXYy2M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=EWeMap7Zn8OVBZohRp3DwLrZfGdOg96Jlm+Te4f+6VIInnReNx7F/5ASH+dk6ww3cZfkSfrLJiknDG+XRrEwPuj9nHMIzBNlCkriIQ18rCqGCcRa5DJjDO8GO4ThPg5QSa2n5LGOht2WBeQN2u2CZUBclmrhajaDoFbdn77Ubqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UyvuhnKP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="s3AqYBR7"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=eE7AKtJ5rHDjCHFP0sbjzrcKFX6z6p2ntCRRXg0JHB8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787915399; v=1; x=1788520199;
- b=s3AqYBR7xq9lQCJZeMNj5AAuqsD0kfS4MXgdsvZddFFOpu51QVN5ntOKtjk9abTPFIikO1Q1
- 1wABoFLL6nAwe13oy0Dis2s3dVLZA9RL65FsMa+Dg7M8/WBIk7iao6ZVo6prAeBvwQB8AhgTbOy
- 1gG5UEZmbR/djDug+B6vMruM=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 103cb01acecf7077;
-	Fri, 28 Aug 2026 11:09:59 +0000
-X-Mizu-Trace-ID: 103cb01acecf7077
-X-Migadu-Flow: FLOW_OUT
-From: Ridong Chen <ridong.chen@linux.dev>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Muchun Song <muchun.song@linux.dev>,
-	Kairui Song <kasong@tencent.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	Wei Xu <weixugc@google.com>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Chris Down <chris@chrisdown.name>,
-	Tejun Heo <tj@kernel.org>,
-	Yu Zhao <yuzhao@google.com>,
-	cgroups@vger.kernel.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	linux-kernel@vger.kernel.org,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2 2/2] mm/mglru: fix ineffective memory protection for non-kswapd reclaim
-Date: Fri, 28 Aug 2026 19:09:19 +0800
-Message-Id: <20260828110919.1324028-3-ridong.chen@linux.dev>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260828110919.1324028-1-ridong.chen@linux.dev>
-References: <20260828110919.1324028-1-ridong.chen@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UyvuhnKP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25D791F00A3A
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 13:17:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787923042;
+	bh=LXWsySxCAhI2eKubAnh1Qok8EJGkZG2y63EPSSYhj5I=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=UyvuhnKPSnuQrqsbE0ARAQuwBiMkIN3fyqBNebM7kEVUZIU+wqErq/AqQZfMk8SzO
+	 m4MqzXjL80cjVyZgIrb2uo3znrd3Mg6bYTMnTr2vzEvoA+6cJeBS6qL6ZJ03i8u7zc
+	 g6H5KCKAlmiqdPt8gsGB/01eFfOHrbctWP6cB+0YZzV7uYwD9lMBTJMm/nI2ui2B1X
+	 F+sUj8UzR+Hv+Th48BEHmpe+NccUbhoinPDmu3EMYkqmGHKkTZfDPPfzUf9nWYsZOm
+	 PrummRw8x6PeVhNHqxEvZsOUS8R0NDAVMziEKWNneSuSjpNV0dM0sTRGYhMMtLAugh
+	 kEl9ZyrXNW3iQ==
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6a0a4a28cbdso1380058a12.3
+        for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 06:17:22 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+Rpi4VtT/TIftbYi2qJYNrkN2PiTyYfKDz44tRbzeB3xcD5lgZC6AOiZNAfZ4WAEoj8KD7C5jcTK@vger.kernel.org
+X-Gm-Message-State: AFuF++mFzQTfl0tb8CPG1a0zHE9Kh4rzcgq9tumh9hUZDhmLk8jatDEh
+	nRPqK21V5OIKfLWOiRp+b+5ff7dVWvKa3GoXzWSX43aSjCVF8Q/3OKrWmEaL9fAlroWtiLj5Rlv
+	TszUZQZFvihhRH/3U7QOA9yYr35BYb3w=
+X-Received: by 2002:a17:907:9813:b0:c24:e1e9:69c with SMTP id
+ a640c23a62f3a-c255667b63dmr416435066b.0.1787923040778; Fri, 28 Aug 2026
+ 06:17:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAJnrk1bk66ZhRAS7mojSnD5RBfFS+0ChAPymE3ObRWr0C_udWg@mail.gmail.com>
+ <CAO9r8zPpe6fWOSXtRUjFB8WNMroeBqvLT+2QtAU4E27AtLUXMQ@mail.gmail.com>
+ <CAJnrk1YifN22mA5PFRVrh3m_ygxax6x4_8nraG2hPqCzyzBj7A@mail.gmail.com>
+ <anpsLy_pCanocgS1@google.com> <CAJnrk1b5asARJ_g176DsoNCvf+iFqzPbOtVveeuPxTPZDmnuKw@mail.gmail.com>
+ <CAO9r8zOeh1fFsY5CG1C8CDCJH25eiioY-otRv6Krn1=S21PeaA@mail.gmail.com> <CAJnrk1YO5E6ETxn9RmM-LWRQSRxwF9iEakAPz6veMPjaKMAEOQ@mail.gmail.com>
+In-Reply-To: <CAJnrk1YO5E6ETxn9RmM-LWRQSRxwF9iEakAPz6veMPjaKMAEOQ@mail.gmail.com>
+From: Yosry Ahmed <yosry@kernel.org>
+Date: Fri, 28 Aug 2026 06:17:09 -0700
+X-Gmail-Original-Message-ID: <CAO9r8zPErbULcVTzk8GGS8w=6d-Qn10rLSkSOEzrO++Vhx7+Dw@mail.gmail.com>
+X-Gm-Features: AcwNN1VqPOz4jQ794_KmrH9eGNa1-pCCTewSGBGtIJmecacOEyoNdreux6MHngs
+Message-ID: <CAO9r8zPErbULcVTzk8GGS8w=6d-Qn10rLSkSOEzrO++Vhx7+Dw@mail.gmail.com>
+Subject: Re: memcg stats flushing (WAS "Re: [PATCH] fuse: disable default bdi strictlimiting")
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Miklos Szeredi <miklos@szeredi.hu>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, kernel-team@meta.com, 
+	fuse-devel <fuse-devel@lists.linux.dev>, Jingbo Xu <jefflexu@linux.alibaba.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	linux-mm <linux-mm@kvack.org>, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Jesper Dangaard Brouer <hawk@kernel.org>, Yunzhao Li <yunzhao@cloudflare.com>
+Content-Type: text/plain; charset="UTF-8"
 
-From: Ridong Chen <chenridong@xiaomi.com>
+> > > These are the results I'm seeing from the benchmarks. I'm comparing
+> > > non-ratelimited rstat vs (a) vs (b). I'm comparing non-ratelimited
+> > > rstat instead of ratelimited rstat, because ratelimited rstat relies
+> > > on the 2s flusher and doesn't incur any additional flushing when
+> > > called.
+> > >
+> > > ~On the update side~
+> > > ns per update (measured by having a kthread pinned to each CPU and all
+> > > threads updating the same cgroup for a 200ms window, run on 80 CPUs,
+> > > computed as total CPU time / # updates)
+> > > depth      rstat      (a)         (b)
+> > >     1        22.34       32.49      60.10
+> > >     8        22.46       47.12      140.72
+> > >     16      22.49       70.96      206.39
+> > >     32      22.51       139.16    305.40
+> >
+> > There goes my dream if an rstat-free world :')
+> >
+> > I am very surprised though that you care about hierarchies this deep.
+> > I don't think we have anything close to even 8 at Google, and in all
+> > my previous testing I usually test up to 4 or 5 levels. I suspect at
+>
+> At Meta, we often see depths 8 to 16.
 
-memory.min/low is silently bypassed for MGLRU during global proactive
-reclaim (writing to the root memory.reclaim) and global direct reclaim.
-It can be reproduced as follows:
+Interesting :)
 
-  # echo 7 > /sys/kernel/mm/lru_gen/enabled
-  # cd /sys/fs/cgroup
-  # mkdir -p a/b
-  # echo 100M > a/memory.min
-  # echo +memory > a/cgroup.subtree_control
-  # echo 100M > a/b/memory.min
-  # echo $$ > a/b/cgroup.procs
-  # dd if=/dev/zero of=/tmp/testfile bs=1M count=200
-  # cat a/b/memory.current
-  222650368
-  # echo 500M > memory.reclaim
-  -bash: echo: write error: Resource temporarily unavailable
-  # cat a/b/memory.current
-  6070272
+> > that level the difference might be acceptable. But aren't other
+> > operations also really expensive at that depth? I imagine the charging
+> > path is really slow if it has to do atomic updates for 32 parents. Is
+>
+> I agree. This aligns with what I saw when running the page counter
+> approach for zwap on depth 32. For the writeback path though, the
+> dirtying / writeback folio lifecycle is just stat updates. There's a
+> charge, but that happens only once, when the folio enters the page
+> cache.
 
-memory.min is 100M, yet reclaim drops a/b down to 6M, breaking the
-protection. The traditional LRU path is not affected because
-shrink_node() calls mem_cgroup_calculate_protection() for each memcg it
-visits during a top-down tree walk.
+FWIW, when I added the per-memcg thresholding for flush (i.e.
+stats_updates), there were some regressions in some microbenchmarks on
+the update side due to the parent iteration in deep hierarchies.
+However, we decided the regressions were acceptable because they were
+of low significance compared to the extra of charging/uncharging in
+those deep hierarchies. As you said, charges are not 1:1 to stat
+updates, but it was considered a general indicator of acceptable
+performance for the workload at that depth. That is all obviously very
+hand wavy :)
 
-Commit 30d77b7eef01 ("mm/mglru: fix ineffective protection calculation")
-moved the protection computation into lru_gen_age_node(), which only
-runs for kswapd. Non-kswapd global reclaim reaches shrink_one() through
-lru_gen_shrink_node() -> shrink_many() without any protection
-computation, so emin/elow remain stale or zero.
+> > the update path really a problem given everything else?
+> >
+> > Given the constant cost of rstat updates, it also seems like
+> > memcg_vmstats_needs_flush() is mostly evaluating to true and skipping
+> > the parent walk. I wonder how much this remains true in practice, I
+> > think Shakeel mentioned that it does help in production.
+>
+> I think for the writeback path, this is probably often encountered in
+> practice, since the threshold is 64 * nr_cpus and any sustained write
+> would cross that quickly. It would matter most with order-0 folios
+> since there's 4 updates incurred per folio independent of folio size.
 
-Introduce mem_cgroup_protection_path() which computes emin/elow along
-the root-to-target path only by iterating through the cgroup ancestors
-array top-down. This avoids the full tree traversal that would be
-needed with mem_cgroup_calculate_protection(), limiting the cost to
-O(depth) per memcg - typically 3-5 levels.
+Makes sense.
 
-Call it from shrink_one() for the non-kswapd path so that each memcg
-about to be shrunk has correct protection values.
+> > > (a) and (b) perform worse on higher memcg depths, whereas rstat is
+> > > unaffected by depth level, which makes sense given that (a) and (b)
+> > > can't break early if the flushable threshold has already been
+> > > exceeded.
+> > >
+> > > ~On the flush side~
+> > > ns per flush call (measured at leaf of memcg chain, ie best scenario
+> > > for rstat, # CPUs on the system is 80)
+> > >   rstat                      10165.60 ns   (min 9924)
+> > >     (a)                       734.10 ns
+> > >     (b)                        4.79 ns
+> > >
+> > > (a) is around 14x cheaper than an rstat flush, which I think is
+> > > because the rstat flush goes through every stat, even ones that are
+> > > not directly relevant.
+> >
+> > I think that's only part of the story. rstat iterates all children
+> > cgroups as well. I think reading multiple contiguous stats may
+> > actually be really cheap since they are likely in the same cacheline.
+>
+> In that benchmark, the flush cost was measured at the leaf of the
+> memcg chain, so I don't think there were any children to iterate here.
+> Maybe some of it is attributed to the rstat locking? I'm not too sure.
+>
+> >
+> > >
+> > > Using some napkin math, I think the breakeven point for (a) is around:
+> > >                       updates per read
+> > > depth 1             ~900
+> > > depth 8             ~380
+> > > depth 32           ~80
+> > >
+> > > eg for depth 1:  (10165.60 - 734.10) / (32.49 -  22.34)
+> > >
+> > > This is assuming one read per flush, which is what (a) and (b) would
+> > > necessarily have to pay, whereas rstat only needs to flush when the #
+> > > of stats updates exceeds the MEMCG_CHARGE_BATCH * nr_cpus threshold,
+> > > so the updates per read numbers above are in reality lower.
+> > >
+> > > Running a fio write job and using tracepoints to count # of stat
+> > > updates, # of reads of those stats, and how many of those reads flush,
+> > > I'm seeing:
+> > >                      updates/s              reads/s
+> > > flushes/s         updates per read
+> > > bs=1M            643                           119                 45
+> > >                        5
+> > > bs=4k            156,415                     123                 58
+> > >                      1267
+> > >
+> > > For larger folio sizes, (a) is cheaper for writeback (since there are
+> > > 4 update events *per folio* in the dirtying/writeback lifecycle) but
+> > > for smaller folio sizes (eg order 0 folios), (a) is worse, as a lot
+> > > more updates are incurred, and the performance is worse the deeper the
+> > > memcg is nested.
+> >
+> > Hmm interesting analysis, but I actually think a more interesting one
+> > is the effect of the update latency in respective update paths. For
+> > example, in the zswap_store() case you analyzed earlier, it ends up
+> > being in the noise. I would check what the hottest update paths are
+> > (probably networking?) and check what the update paths are, to check
+> > if they are really sensitive to the increased update cost. It could be
+> > the case that at least stats that are used by in-kernel flushers do
+> > not really care about the extra update cost.
+>
+> Extrapolating a bit from the synthetic benchmarks, at depth 8, I think
+> the extra overhead incurred on an update comes out to roughly around
+> 25ns, and at depth 16, around 48ns. I haven't looked at the networking
+> path, but the lru path (__update_lru_size()) looks concerning, as it
+> would have that extra overhead while holding the lru lock, which "is
+> already a heavy contention point on memory-heavy workloads" [1]. As I
+> understand it, reclaim, compaction, and the page cache path all
+> serialize on that lock.
 
-Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
-Cc: stable@vger.kernel.org
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
----
- include/linux/memcontrol.h | 11 ++++++++++
- mm/memcontrol.c            | 45 ++++++++++++++++++++++++++++++++++++++
- mm/vmscan.c                |  8 ++++++-
- 3 files changed, 63 insertions(+), 1 deletion(-)
+Yeah it could be a problem, but I think we won't know for sure until
+we run a reclaim-heavy workload (e.g. build the kernel in a constraint
+cgroup) and check for actual regressions. I am often surprised by what
+actually shows up (or doesn't) in higher-level workloads.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7d1c0ce189a8..8066b798a759 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -605,6 +605,10 @@ static inline void mem_cgroup_protection(struct mem_cgroup *root,
- 
- void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- 				     struct mem_cgroup *memcg);
-+#ifdef CONFIG_LRU_GEN
-+void mem_cgroup_protection_path(struct mem_cgroup *root,
-+				struct mem_cgroup *memcg);
-+#endif
- 
- static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
- 					  struct mem_cgroup *memcg)
-@@ -1133,6 +1137,13 @@ static inline void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- {
- }
- 
-+#ifdef CONFIG_LRU_GEN
-+static inline void mem_cgroup_protection_path(struct mem_cgroup *root,
-+					      struct mem_cgroup *memcg)
-+{
-+}
-+#endif
-+
- static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
- 					  struct mem_cgroup *memcg)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1271d390b617..095050d4296a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5198,6 +5198,51 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- 	page_counter_calculate_protection(&root->memory, &memcg->memory, recursive_protection);
- }
- 
-+#ifdef CONFIG_LRU_GEN
-+/**
-+ * mem_cgroup_protection_path - compute protection along root->memcg path
-+ * @root: the top ancestor of the sub-tree being checked (NULL for root_mem_cgroup)
-+ * @memcg: the target memory cgroup
-+ *
-+ * Walk the ancestor path from @root down to @memcg and compute the effective
-+ * protection at each level.  This is safe for isolated queries because it
-+ * ensures parents are computed before children.
-+ */
-+void mem_cgroup_protection_path(struct mem_cgroup *root,
-+				struct mem_cgroup *memcg)
-+{
-+	bool recursive_protection =
-+		cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_RECURSIVE_PROT;
-+	struct cgroup *cg;
-+	int root_level, i;
-+
-+	if (mem_cgroup_disabled())
-+		return;
-+
-+	if (!root)
-+		root = root_mem_cgroup;
-+
-+	if (memcg == root)
-+		return;
-+
-+	root_level = root->css.cgroup->level;
-+	cg = memcg->css.cgroup;
-+
-+	rcu_read_lock();
-+	for (i = root_level + 1; i <= cg->level; i++) {
-+		struct mem_cgroup *cur;
-+
-+		cur = mem_cgroup_from_css(cgroup_css(cg->ancestors[i],
-+						     &memory_cgrp_subsys));
-+		if (cur)
-+			page_counter_calculate_protection(&root->memory,
-+							  &cur->memory,
-+							  recursive_protection);
-+	}
-+	rcu_read_unlock();
-+}
-+#endif /* CONFIG_LRU_GEN */
-+
- static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
- 			gfp_t gfp)
- {
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index f11491ee9ed5..e0ba68ede745 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -5102,7 +5102,13 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
- 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
- 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
- 
--	/* lru_gen_age_node() called mem_cgroup_calculate_protection() */
-+	/*
-+	 * For kswapd, lru_gen_age_node() has already called
-+	 * mem_cgroup_calculate_protection()
-+	 */
-+	if (!current_is_kswapd())
-+		mem_cgroup_protection_path(NULL, memcg);
-+
- 	if (mem_cgroup_below_min(NULL, memcg))
- 		return MEMCG_LRU_YOUNG;
- 
--- 
-2.34.1
+>
+> If we were to move all the callers off rstat, I think this also would
+> unfortunately make the walk more expensive. As I understand it, each
+> stat would be a per-cpu counter which would be added to the
+> memcg_vmstats_percpu struct, and that would have to spill onto
+> multiple cachelines. Or maybe I'm missing something here and there
+> would be a better way to do it.
 
+Yeah. I count 54 stats, with 8 bytes per counter that's ~7 cachelines
+(on x86_64). I can see that being really expensive, but I can also see
+it disappear into the noise if the stats updated together live in
+close cachelines and the CPU prefetches surrounding cachelines.
+
+> > > I also ran some experiments with Jan's suggestion of scaling the flush
+> > > threshold to the memcg's limit rather than to the number of cpus. It
+> > > helps the overshoot we saw and slightly outperforms doing a plain
+> > > non-ratelimited flush (100% of dirty limit vs 101% on a 1G memcg, 103%
+> > > vs 107% on a 256M memcg) but led to ~2.4x more flushes.
+> > >
+> > > The initial reason we switched to the ratelimited version of the flush
+> > > was because flushing was expensive, but I'm not sure if flushing is as
+> > > expensive as it used to be. Testing the non-ratelimited version, the
+> > > flushes account for about 0.9% of the system CPU the write path
+> > > already spends, and I didn't see any throughput difference between the
+> > > two (249-252 MB/s either way), on a 32G memcg. With the
+> > > non-ratelimited version, it's also not a flush per read - it's still
+> > > "ratelimited" by number of updates that have elapsed since the last
+> > > flush (only flushing if stats_updates >= MEMCG_CHARGE_BATCH * nr_cpus)
+> > > which means concurrent writers writing back at the same time will
+> > > "share" flushes rather than triggering their own.
+> >
+> > Yup, this is exactly what I mean. This is a good analysis for the cost
+> > of the flush: how much it matters end-to-end. Even though the full
+> > flush is 14x more expensive according to your numbers, it seems like
+> > it ultimately doesn't affect performance much. I would do the same for
+> > the update paths, see if the extra cost really matters. WDYT?
+>
+> imo ideally it would be great to minimize any overhead we can where if
+> we don't need the precision for a certain stat, then it would be
+> preferable to not incur any extra overhead for it on updates if the
+> overhead saved on reads doesn't justify it. In the grand scheme of
+> things though, I think in most cases, the extra overhead/latency isn't
+> really discernible except at high depths and except for the lock
+> contention issue mentioned above.
+
+Right. I am just trying to avoid the complexity of having two update
+schemes if we can help it. If we can move everything to a new "better"
+scheme, that would be great. But it might be the case that we have to
+have a different scheme just for stats where the current update/read
+tradeoff doesn't make sense.
+
+> I don't really have an issue with rstat for cases like writeback where
+> we're not doing a lot of reads compared to updates,
+
+I don't remember why ratelimiting was added, but I suspect for cases
+with large trees, high number of CPUs, and/or high cgroup lock
+contention -- the cost of a normal flush could get really high. Back
+in the day when we used to always flush the entire tree (before
+per-memcg thresholding), we ran into hard lockups for flushes taking
+>10s with irqs off (we had atomic flushing back then).
+
+>  but I think we do
+> need to get rid of the rstat rate-limiting, as it seems so arbitrary
+> to rely on two seconds for stats being updated. Bounding it by time
+> and not stats_updates feels wrong. Even in the cases where precision
+> doesn't matter, it seems better to give those callers a higher stats
+> updates threshold depending on how much error they can tolerate, than
+> to rely on a blanket 2 seconds.
+
+100% agreed. I never liked the ratelimited flush tbh. I think we
+practically end up just not flushing in most cases (but I never really
+checked), so it's just a way to feel good about skipping a flush :P
+
+> > > In light of the above, imo it seems to make the most sense to just do
+> > > the plain non-ratelimited flush for mem_cgroup_wb_stats() and make the
+> > > flushing magnitude bound again, wh ich also aligns with what the
+> > > global non-memcg domain does. The question is whether the extra flush
+> > > cost is acceptable, but the numbers above make me think it is.
+> >
+> > If we can eat the cost of the flush here that's great, but I think we
+> > can't say the same for the vmscan and zswap paths (at least)? :/
+>
+> I haven't tried out the vmscan repro or run any benchmarks on that
+> path, but the logic in vmscan seems weird to me, as it will always
+> conclude that there were no refaults whenever reclaim scans faster
+> than the refaults counter advances (which I think would be most of the
+> time under memory pressure). I'm thinking maybe we could do something
+> similar to what Usama did in [1] where we fold the refault delta into
+> a per-lruvec accumulator and let it decay. I'm planning to look more
+> into this and will follow up then.
+
+Looking forward to it.
+
+> For the zswap path, it's still a bit unclear to me whether exactness
+> is necessary or whether the 64 * nr_cpus error tolerance is
+> acceptable. If that error tolerance is acceptable, I think it makes
+> sense to use the non-ratelimited version of rstat with no forced
+> flushing, given that reads are supposed to be rare since rarely
+> anybody (from what I understand) in practice sets zswap.max. Quick
+> benchmarks at depth=4 with zswap.max set at every level, 20 workers on
+> 80 cpus:  rstat forced = ~7,600 stores/s, rstat unforced = ~300k
+> stores/s, and hierarchical per-cpu counters = ~440k stores/s. The
+> hierarchical per-cpu counters outperforms rstat unforced on the stores
+> given that it removes the flush, but we already see massive
+> improvements from using rstat unforced over rstat forced.
+
+I would like to avoid the ratelimited flush for the limit checking for
+the same reasons discussed above. I think we were all under the
+assumption that the limit is rarely set in practice (other than 0 or
+max), until we saw [*].
+
+[*]https://lore.kernel.org/linux-mm/20260817131843.45121-1-husong@kylinos.cn/.
+
+>
+> Thanks,
+> Joanne
+>
+> [1] https://lore.kernel.org/linux-mm/20260727162550.2032-4-usama.arif@linux.dev/
+>
+> >
+> > >
+> > > Thanks,
+> > > Joanne
