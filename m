@@ -1,134 +1,135 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+Received: from mta1.migadu.com (out-74.mta1.migadu.com [95.215.58.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B933B3E0250
-	for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 23:31:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A362AE7A
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 00:13:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787873484; cv=none; b=KMfp9uIbUgl1e3FD2huXYhZ5tmZw/VV5+sMOzGvZv77FiEyNfzcAgdNnHAS/WZ3GOFFb9EzOKrUGnJ93OxILF+5N+ONHFt23qDt7g5YX16zAlk/tBRtEqvvnsSWrwEqcfwPxOXCFbh6oeBiuinVfrsxx8abw4E0/Alv1BlaIa+U=
+	t=1787876042; cv=none; b=bZVtrtukC7OFXeVfPzM25lzVgqgzUaIqFXtL9vduMVJ9psWZ++CtM+7ew48rCeaiVIVqjWyVQ2STloQ1GwKhumngtJpOJue3CSFGMU/r2KU6irCBVYfmifcnA4Zus2HxBgfxNK2xG2X5PNdy1GjuXuY1agQc0ndLWkfqDy4nNeg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787873484; c=relaxed/simple;
-	bh=/Etwo9DLyA1piEjryJIX/y39Y2LuaF2Cl5MFeAEYG5E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AUYHFL8PfB8j0qi1y44eX06w/QETkcl2lyYwKb/3BBk9i55TauwFu9mVQW3xwIRkjUTP+t8JEsvVmJxr3zhdzZ0NO7p8OEcdjQrNFVd0RWGu0eyUFro6KtrjRqgbfMAenCGz6xT7x8QReaB/ETjG5sZiIfhrULmGK/0jQtq3xcw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dama.to; spf=none smtp.mailfrom=dama.to; dkim=pass (2048-bit key) header.d=dama-to.20251104.gappssmtp.com header.i=@dama-to.20251104.gappssmtp.com header.b=INdbKFdq; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dama.to
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=dama.to
+	s=arc-20240116; t=1787876042; c=relaxed/simple;
+	bh=fsmsExbs5nEKnsojLuf0l39j1UTtxo6K5C9nm891QB8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XFtcPyqZ5fHM5VbBR1Uk1Ko75xxD8mjUWfLNSzjdKy5OSiyTkUkaeGB7VpN1lBCGqhLrO+CrzoIeoTArJVbIXdKeoan/rmChjyy9YRY32eXWC+gG77QPmXafqeyLD7zHuNaTjH9+jddk5SIhGPaWz6jUi04wlePhJ42AV9ukl0o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=HcJr3mDH; arc=none smtp.client-ip=95.215.58.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dama-to.20251104.gappssmtp.com header.i=@dama-to.20251104.gappssmtp.com header.b="INdbKFdq"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3965d3d9ab8so227754a91.3
-        for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 16:31:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dama-to.20251104.gappssmtp.com; s=20251104; t=1787873482; x=1788478282; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=dyiy2y/avbYOe0BnQSrLgYOVHtwCGX72+qfVpLstJvk=;
-        b=INdbKFdqr+oOKdIS6fNi1KjYeQqVP7cMehmHLqCakBHQCuVKkVloj2KQZX+2BIBR4j
-         7kx7j83xIdi5cJsqnzr0XtbKYuBqmf408X3Y2EtY2kDHueyXTQtEKwB3USshpEn5cQ6j
-         ZKzYw1PXgAO+eq+bNA4DiecxtFzsaUpDox3y9M2kDqOta08fYRDnNYrHFTK+Qq33zqfk
-         nL1JjiXnDvLpc4ObbkYQ+ze1EVBS8YI4DK0Yce5R7v7HIgvbm9HHjqja43njYFTk5Ao6
-         3UPFGS5I9z3BQjaZ8QOLOd+GeRtxV2+Ffi0kyySfLCN1+ojKAIh/CkIsCJeAWhFofz5a
-         UytA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787873482; x=1788478282;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=dyiy2y/avbYOe0BnQSrLgYOVHtwCGX72+qfVpLstJvk=;
-        b=Ft38eOWi1ioSguWvpRWmRbSMk+PoxBpvLgkzlZNYXpUFbmm3y4hFJvdjCsek7sC1E5
-         Ac/RHeROtOmVDZ/JzHQi+wsLbA5P/zDMpdfvkte6hQ++FO3SLkzA5QN9Jqs21LD6uoPI
-         G8E1y/I4p4968atYQGHeA+7rsIDy97P7xhlZZKHX7YPipIerfpVMTOz+Rt1zFuXhQs/w
-         JagmgTntvVRnRfLgLjo+8i/AFDzT9SKVDSuuzqSqARIeqX+lhG8vyn2abG2iVN/6OPkt
-         1YLhgjqtHK/kufhQG4utBBZzVAGkMRgyAmuaVeyxYejqUu89PEPi4CNHW5LMG0HgTdlG
-         uowQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrqR5MsBP68dmiy6QPqfZ08wBiXROvm/n6QT8JvyT+zcghYHbNz6RgCbYUWyD2R6OWiFvQmaI33@vger.kernel.org
-X-Gm-Message-State: AFuF++nobve9atvSPJLJji4oqZ0hahj92lcOH9eh1KBMSngCTkx9WFOh
-	1K7J+1ZcQtjNARIUe+rScP/3DtgAs5qPP1xTCxP9pcpqt9kbQdF+5v2swvavQ/FCCUIO/xWuGhM
-	4rDdI7i4=
-X-Gm-Gg: AR+sD10gjt/4qJVy95iXy9oq2E7649pvpJE74zJDlekkeknpXkVqE6/UOvroNNJ/k7T
-	4gtlUogAokoaHHR1qzOVmSVcrURObz1wSBB9Tx5uRSFzGbIqC74vgELCFLaaCujdXCEHlkqH/AQ
-	jhFNTuLRmt0419UJwU1EaDW6ApweQ6KRx3pNsvQzHfgkkUpbS1mxtemm+HLkrf0d2Y+vDQmu0UM
-	u7PVBZ15yOeN92N7936O5OVsYA4/mCzxuvcy+bExuS72wXEt9+tkSivMz4LrVKW40eDuui2mSPH
-	I69fwUtFtjm75EAe6pNeeCYphbT+FeBaIHQOpfaw83otltmCYKoJHaGIdO9Fgc0cgu6IaNAhmof
-	nQEG4RN6OXQKtr4UYpDhkW+oj1gOi+CBt9MCgRAiwSgI381+V9QbfjDdRFt1NJgc4JjHIyBOrOU
-	3W4VZD59GrMSMSsKsPc1Iez1Y8SstCvVKBrcz6FT+N1Q==
-X-Received: by 2002:a17:90b:1c0a:b0:396:54ba:8932 with SMTP id 98e67ed59e1d1-396d104e722mr3685624a91.16.1787873481701;
-        Thu, 27 Aug 2026 16:31:21 -0700 (PDT)
-Received: from localhost ([2a03:2880:2ff:4a::])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-396b1ab4e12sm4501710a91.16.2026.08.27.16.31.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Aug 2026 16:31:21 -0700 (PDT)
-From: Joe Damato <joe@dama.to>
-To: linux-kernel@vger.kernel.org,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Joe Damato <joe@dama.to>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	bpf@vger.kernel.org
-Subject: [PATCH] mm: memcontrol: raise MEMCG_MAX for charges that fail without reclaiming
-Date: Thu, 27 Aug 2026 16:31:18 -0700
-Message-ID: <20260827233119.411152-1-joe@dama.to>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="HcJr3mDH"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=fsmsExbs5nEKnsojLuf0l39j1UTtxo6K5C9nm891QB8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787876036; v=1; x=1788480836;
+ b=HcJr3mDHQNMfTpxf9qN2PWYt5rVNj8obn2InI3h2sePCM6es2pHJZIo26KaepRyKEbi2brwN
+ LWr8VMFNDAOe3ztNYc3y9ohNc+PK9qhcPm9ckx3uYbvt+8uesqhtc4fymxNNiUMsSPvJh5sLJJY
+ t9fQVIAt6JLUeM3xAgm/UN/g=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id a46212a26a1c49f4;
+	Fri, 28 Aug 2026 00:13:46 +0000
+X-Mizu-Trace-ID: a46212a26a1c49f4
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 27 Aug 2026 17:13:44 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Joe Damato <joe@dama.to>
+Cc: linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
+Subject: Re: [PATCH] mm: memcontrol: raise MEMCG_MAX for charges that fail
+ without reclaiming
+Message-ID: <apDPJzlJ4gS9YUDX@linux.dev>
+References: <20260827233119.411152-1-joe@dama.to>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260827233119.411152-1-joe@dama.to>
 
-Charges that exceed memory.max and return through the nomem label can
-raise no event and simply return -ENOMEM.
+On Thu, Aug 27, 2026 at 04:31:18PM -0700, Joe Damato wrote:
+> Charges that exceed memory.max and return through the nomem label can
+> raise no event and simply return -ENOMEM.
+> 
+> A non-blocking charge can hit the limit, get rejected, but is not
+> visible in memory.events.
+> 
+> This was noticed in a production setting where bpf_mem_alloc() attempted
+> to refill its per-cpu freelists, which triggered a non-blocking charge
+> while at the limit.
+> 
+> Move the event so that it is raised as soon as the charge is known not
+> to fit.
+> 
+> Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Signed-off-by: Joe Damato <joe@dama.to>
+> ---
+>  mm/memcontrol.c | 15 +++++----------
+>  1 file changed, 5 insertions(+), 10 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 1271d390b617..3904fe9a7b2e 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2683,6 +2683,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		goto retry;
+>  	}
+>  
+> +	if (!raised_max_event) {
+> +		__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+> +		raised_max_event = true;
+> +	}
+> +
+>  	/*
+>  	 * Prevent unbounded recursion when reclaim operations need to
+>  	 * allocate memory. This might exceed the limits temporarily,
+> @@ -2711,9 +2716,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	    mm_flags_test(MMF_OOM_SKIP, current->signal->oom_mm))
+>  		goto nomem;
+>  
+> -	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+> -	raised_max_event = true;
 
-A non-blocking charge can hit the limit, get rejected, but is not
-visible in memory.events.
+I just noticed that this will change the current behavior where we keep
+increasing MAX counter while charge request loops through reclaim and retry.
+Though we have not documented that behavior, so not sure if it is worth
+preserving. It does help identify cases where a request keep looping in the
+charge/reclaim/retry path.
 
-This was noticed in a production setting where bpf_mem_alloc() attempted
-to refill its per-cpu freelists, which triggered a non-blocking charge
-while at the limit.
+Let's see what others say. Keeping the behavior should not be that hard if we
+decide to keep it. Something like below (untested):
 
-Move the event so that it is raised as soon as the charge is known not
-to fit.
-
-Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
-Signed-off-by: Joe Damato <joe@dama.to>
----
- mm/memcontrol.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1271d390b617..3904fe9a7b2e 100644
+index 1271d390b617..6bfa4ad30b24 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2683,6 +2683,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 		goto retry;
- 	}
+@@ -2656,10 +2656,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	bool raised_max_event = false;
+ 	unsigned long pflags;
+ 	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
++	int ret = 0;
  
-+	if (!raised_max_event) {
-+		__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
-+		raised_max_event = true;
+ retry:
+ 	if (consume_stock(memcg, nr_pages))
+-		return 0;
++		return ret;
+ 
+ 	if (!allow_spinning)
+ 		/* Avoid the refill and flush of the older stock */
+@@ -2770,16 +2771,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * put the burden of reclaim on regular allocation requests
+ 	 * and let these go through as privileged allocations.
+ 	 */
+-	if (!(gfp_mask & (__GFP_NOFAIL | __GFP_HIGH)))
+-		return -ENOMEM;
++	if (!(gfp_mask & (__GFP_NOFAIL | __GFP_HIGH))) {
++		ret = -ENOMEM;
++		goto out;
 +	}
-+
- 	/*
- 	 * Prevent unbounded recursion when reclaim operations need to
- 	 * allocate memory. This might exceed the limits temporarily,
-@@ -2711,9 +2716,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	    mm_flags_test(MMF_OOM_SKIP, current->signal->oom_mm))
- 		goto nomem;
- 
--	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
--	raised_max_event = true;
--
- 	psi_memstall_enter(&pflags);
- 	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
- 						    gfp_mask, reclaim_options, NULL);
-@@ -2773,13 +2775,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	if (!(gfp_mask & (__GFP_NOFAIL | __GFP_HIGH)))
- 		return -ENOMEM;
  force:
 -	/*
 -	 * If the allocation has to be enforced, don't forget to raise
@@ -140,8 +141,30 @@ index 1271d390b617..3904fe9a7b2e 100644
  	/*
  	 * The allocation either can't fail or will lead to more memory
  	 * being freed very soon.  Allow memory usage go over the limit
-
-base-commit: 3d83758432b5e6ed9507500a57efb0f3af41ee7d
--- 
-2.53.0-Meta
+@@ -2789,7 +2785,15 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (do_memsw_account())
+ 		page_counter_charge(&memcg->memsw, nr_pages);
+ 
+-	return 0;
++out:
++	/*
++	 * Don't forget to raise a MEMCG_MAX event for forced or rejected requests.
++	 */
++	if (!raised_max_event)
++		__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
++
++	return ret;
+ 
+ done_restock:
+ 	if (batch > nr_pages)
+@@ -2848,7 +2852,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	    !(current->flags & PF_MEMALLOC) &&
+ 	    gfpflags_allow_blocking(gfp_mask))
+ 		__mem_cgroup_handle_over_high(gfp_mask);
+-	return 0;
++	return ret;
+ }
+ 
+ static inline int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 
 
