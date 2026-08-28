@@ -1,94 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72F5D18A6DB;
-	Fri, 28 Aug 2026 03:07:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8223A38B7A7;
+	Fri, 28 Aug 2026 03:22:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787886439; cv=none; b=GwM5Gj39/R9zbTa+03TPlwsOFL6IXIj0mHEgP8cBLycI0kv6EM7Y4TB8uBiCByx4RUU3zfIEeQ1wbe0bJIe+708P5gs60t8YnIWf2j/omgM+0/FGZYyCGG5Bgfqp/W1Tio2qgTtVclWVmG8355bjqsc8KYSjX81ndfEJytJPJxw=
+	t=1787887380; cv=none; b=hU33m8pMyKxaY4FPWhwU0VUfud8Bv0D7zdMy045ylqcx1WGweByY6h7O9knpzGUwDN4rFi4g5Pr01ATXYEiIuCGMOPO7RVxyHDBi7glMQNup4IH1RS4QjOBQinz22fGMoY6ZThHiVtR7Jab8nlAK3cJQwg2hnHliFAC0dIpz+pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787886439; c=relaxed/simple;
-	bh=Vk13ylbq2XTaCbis4+HpHrTF1zhROa0YXnhjXOcmLkg=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=nAK19Bi6l64xKFIqEdaMwhk3mpkVH08Fs79WKP1L/ew/sfPyMos9HsJdcUA+QsDLIVEdNA+Bkn6tEBZdYFOrQBqsfyZGdiZ5YvjlTssZM1T0GW4rCsRnwcoVUUuqZqNSrVGpDTrzv/9exADu6jx34sbzzJ+euwD5ulHgxnXCytI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=ogwjESZ5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787887380; c=relaxed/simple;
+	bh=e9hRHQ6aFzR5cn+38V4JJ8FVmkjRNBrpiy92HLnfLew=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fWCohV3Obt1NXsYiMS+nQDvPwFkJoTdA/f6dYmyEhUY4bj7ZWPrqBZAkk/Wrlt6u+IPX/ed52La4klQGzMMRl0sX4CD/nMDczCQYpuD/5RD+CHw6enfOjjQw/xdkrmL95N/0ZFlC5u9S5+USzXH9n5k/Qaq3/iAevIP9mzwjqaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MWBkayRI; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="ogwjESZ5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8ADF1F000E9;
-	Fri, 28 Aug 2026 03:07:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1787886438;
-	bh=Gt76UcTPmzHLWuOwKDbCamUsSovytLsnrvRwSJBIAoo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=ogwjESZ5/FbCSjjrCLy5uiofj6a3BXR3/ZKpajdm5ZCo9aB8+asfXzXiazHR/vJcs
-	 ggzMBp1ivVxgK7aGvpICf/s7db/rIy8wvidccRF4T05SSed7qjdRnmJlI+KxOyFki7
-	 2kC+NR2EW8bFE+6fZhpAnLQZXcj8BYnklmn+9FVA=
-Date: Thu, 27 Aug 2026 20:07:16 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Nhat Pham <nphamcs@gmail.com>
-Cc: chrisl@kernel.org, kasong@tencent.com, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- yosry@kernel.org, david@kernel.org, muchun.song@linux.dev,
- shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org,
- youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org,
- liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com,
- qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com,
- weixugc@google.com, riel@surriel.com, gourry@gourry.net,
- haowenchao22@gmail.com, corbet@lwn.net, hughd@google.com,
- baolin.wang@linux.alibaba.com, tj@kernel.org, mkoutny@suse.com,
- skhan@linuxfoundation.org, kunwu.chan@linux.dev, kernel-team@meta.com,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH v4 00/11] Virtual Swap Space (Swap Table Edition)
-Message-Id: <20260827200716.97881447f243c4afd275144e@linux-foundation.org>
-In-Reply-To: <20260825153238.2695446-1-nphamcs@gmail.com>
-References: <20260825153238.2695446-1-nphamcs@gmail.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MWBkayRI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787887378; x=1819423378;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=e9hRHQ6aFzR5cn+38V4JJ8FVmkjRNBrpiy92HLnfLew=;
+  b=MWBkayRI/kq8R1YMVh31aTu38dqaZxh+8x3He4Y+eHclL3Hrst9jBQbV
+   MHS+zD/S4hE7BzL+SRbE3cSW28Ax+5RIUvEqlipszEl9FuJOkWW7ToCMT
+   W2nbwBbF0Zpv2D5rZwVUCif0AmoO7K3qfIZmkZbp6fh1wf/PeubzsQL7p
+   yG6ST5bsd3m4slADxqdkG6j1mPiAWcg5yp9Z+cpbOWOrgsRcRPGF1q7Az
+   +j+HPWlNIRWz4joDpdSB5FBMWEfPwYhJtyJtQ0i0KPRqx4oaW9AWgmzb6
+   U+pG4H/94TCVvjrI/FzT5jNwiD8MaW63HiujffydA1ugJlpZwd8dZ3RxA
+   A==;
+X-CSE-ConnectionGUID: EldlS51/QmOkBskFqlALzg==
+X-CSE-MsgGUID: M/f4JxZnShiVtUYaDI6d5w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11888"; a="88518140"
+X-IronPort-AV: E=Sophos;i="6.25,247,1779174000"; 
+   d="scan'208";a="88518140"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2026 20:22:57 -0700
+X-CSE-ConnectionGUID: bIY3IgiKTmi14/iipIiR9A==
+X-CSE-MsgGUID: Q1F7nL41TcmvXhXm5pucxg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,247,1779174000"; 
+   d="scan'208";a="266231271"
+Received: from lkp-server01.sh.intel.com (HELO 3532383e6126) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 27 Aug 2026 20:22:55 -0700
+Received: from kbuild by 3532383e6126 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wznB6-00000000AIb-2U06;
+	Fri, 28 Aug 2026 03:22:52 +0000
+Date: Fri, 28 Aug 2026 11:22:03 +0800
+From: kernel test robot <lkp@intel.com>
+To: Rik van Riel <riel@surriel.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: oe-kbuild-all@lists.linux.dev, Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work during
+ offline
+Message-ID: <202608281149.3OqBLtQa-lkp@intel.com>
+References: <20260827124211.3b94b103@fangorn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260827124211.3b94b103@fangorn>
 
-On Tue, 25 Aug 2026 08:32:26 -0700 Nhat Pham <nphamcs@gmail.com> wrote:
+Hi Rik,
 
-> Currently, when an anon page is swapped out, a slot in a backing swap
-> device is allocated and stored in the page table entries that refer to
-> the original page. This slot is also used as the "key" to find the
-> swapped out content, as well as the index to swap data structures, such
-> as the swap cache, or the swap cgroup mapping. Tying a swap entry to its
-> backing slot in this way is performant and efficient when swap is purely
-> just disk space, and swapoff is rare.
-> 
-> However, the advent of many swap optimizations has exposed major
-> drawbacks of this design. The first problem is that we occupy a physical
-> slot in the swap space, even for pages that are NEVER expected to hit
-> the disk: pages compressed and stored in the zswap pool, zero-filled
-> pages, or pages rejected by both of these optimizations when zswap
-> writeback is disabled. This is arguably the central shortcoming of
-> zswap:
+kernel test robot noticed the following build warnings:
 
-Thanks.
+[auto build test WARNING on akpm-mm/mm-everything]
 
-I asked Gemini for a tl;dr and was told
+url:    https://github.com/intel-lab-lkp/linux/commits/Rik-van-Riel/mm-memcg-fix-UAF-in-drain_all_stock-async-work-during-offline/20260827-124211
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20260827124211.3b94b103%40fangorn
+patch subject: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work during offline
+config: xtensa-randconfig-r073-20260828 (https://download.01.org/0day-ci/archive/20260828/202608281149.3OqBLtQa-lkp@intel.com/config)
+compiler: xtensa-linux-gcc (GCC) 16.1.0
+smatch: v0.5.0-9187-g5189e3fb
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260828/202608281149.3OqBLtQa-lkp@intel.com/reproduce)
 
-: Introduce Virtual Swap Space (vswap) to decouple swap entry management
-: from physical disk slots by using dynamically allocated virtual
-: clusters that back swap entries on demand via zswap, zero-filled pages,
-: or physical disk.  Eliminate wasted storage space, remove the need for
-: static swapfile provisioning, and enable in-memory swap features on
-: diskless systems without degrading performance.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202608281149.3OqBLtQa-lkp@intel.com/
 
-I'll take no action at this time - let's see what the other swap
-developers make of this.
+All warnings (new ones prefixed by >>):
 
-Sashiko was talkative, as usual:
-	https://sashiko.dev/#/patchset/20260825153238.2695446-1-nphamcs@gmail.com
+>> mm/memcontrol.c:2380:6: warning: no previous prototype for 'drain_all_stock_sync' [-Wmissing-prototypes]
+    2380 | void drain_all_stock_sync(struct mem_cgroup *root_memcg)
+         |      ^~~~~~~~~~~~~~~~~~~~
 
-There are a few pre-existing things in among this, They look legit to
-me, from a quick read.  SWAP_USAGE_OFFLIST_BIT should use
-BITS_PER_TYPE(atomic_long_t)?
 
+vim +/drain_all_stock_sync +2380 mm/memcontrol.c
+
+  2379	
+> 2380	void drain_all_stock_sync(struct mem_cgroup *root_memcg)
+  2381	{
+  2382		/*
+  2383		 * Make sure the workqueue is done with this memcg
+  2384		 * before freeing it.
+  2385		 */
+  2386		__drain_all_stock(root_memcg, true);
+  2387		flush_workqueue(memcg_wq);
+  2388	}
+  2389	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
