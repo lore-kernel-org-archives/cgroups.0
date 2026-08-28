@@ -1,95 +1,94 @@
-Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0DC63CB;
-	Fri, 28 Aug 2026 02:33:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72F5D18A6DB;
+	Fri, 28 Aug 2026 03:07:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787884439; cv=none; b=iac/4UrYxyu2PEgkiIA1PponH5QGrJpN/fnsFoaUIEvTyBxD9q61wf3sERrNv3yW9jpPoIegvCw/h/arrFbnxdAIoLP42T/G4vOP80Ddv1K3qaxNxyrKAEPnf9jLmXW8wpzR8vDOzinzwEK0gZV/j4ootZQH9i1l7I7ycpP9ZUM=
+	t=1787886439; cv=none; b=GwM5Gj39/R9zbTa+03TPlwsOFL6IXIj0mHEgP8cBLycI0kv6EM7Y4TB8uBiCByx4RUU3zfIEeQ1wbe0bJIe+708P5gs60t8YnIWf2j/omgM+0/FGZYyCGG5Bgfqp/W1Tio2qgTtVclWVmG8355bjqsc8KYSjX81ndfEJytJPJxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787884439; c=relaxed/simple;
-	bh=9wMZiDMq/rz4mdl1/IN58xfKmIEDgogb4Bj2q2MwzcQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IMJnth149uu1/ECWdYT56OUWjFSmPqMbgv3VQxX/tZ8hFKXG+UZZ1yqrq1DrMou5y4U3qsTIuTzKhtPMZ6WaAlL/Tro9/8G/YFDcneFQfEN4pQ/0yTdiRp5QmzQHQcA3cEE7rWTyq6KprQSbLOYLP6UrZFshnF5ID+f5TsXILFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=Ddrw2MLk; arc=none smtp.client-ip=96.67.55.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
+	s=arc-20240116; t=1787886439; c=relaxed/simple;
+	bh=Vk13ylbq2XTaCbis4+HpHrTF1zhROa0YXnhjXOcmLkg=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=nAK19Bi6l64xKFIqEdaMwhk3mpkVH08Fs79WKP1L/ew/sfPyMos9HsJdcUA+QsDLIVEdNA+Bkn6tEBZdYFOrQBqsfyZGdiZ5YvjlTssZM1T0GW4rCsRnwcoVUUuqZqNSrVGpDTrzv/9exADu6jx34sbzzJ+euwD5ulHgxnXCytI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=ogwjESZ5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="Ddrw2MLk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
-	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
-	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID; bh=9wMZiDMq/rz4mdl1/IN58xfKmIEDgogb4Bj2q2MwzcQ=; b=Ddrw2M
-	Lk3YEBmmpXUcWQSW5Nc9gjbQV7ES9xzuPcUYu6b/UtYEC5Y6iuragnZgtRNY56RFy9I9Q61f6Mwev
-	G7ginCZ2fDYuGiK4JnCbyvSax0NXYDaSIxMtvuGjPfTtz2m64iiNU82eS8IuDFr6RqC/yGotc+j3S
-	/WkjHHnbnazFkWMRNtIA3on4eNt8C693Axu31t0IXcPVE0UJv1Z8lpNRmOhftmLD5Rrm3BN74GTVb
-	LzxgGARBpWAuKtD6R5hunO9KGa5LohV2AB1W+i/iAkmyE6d4+BuklBc4SZ3Vr3zbcXkRVXTLK5zs2
-	A0/iNxSFPSPr4hpbAWSklLkK25Ig==;
-Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
-	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <riel@surriel.com>)
-	id 1wzmPa-00000008mz0-13sP;
-	Fri, 28 Aug 2026 02:33:46 +0000
-Message-ID: <a614ab59e1b454d21011fbbc04347b6b6c49a95f.camel@surriel.com>
-Subject: Re: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work
- during offline
-From: Rik van Riel <riel@surriel.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
- Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Muchun Song	 <muchun.song@linux.dev>,
- cgroups@vger.kernel.org, linux-mm@kvack.org, 	linux-kernel@vger.kernel.org,
- kernel-team@meta.com
-Date: Thu, 27 Aug 2026 22:33:45 -0400
-In-Reply-To: <20260827153527.e0e968a22717f558a22fb893@linux-foundation.org>
-References: <20260827124211.3b94b103@fangorn>
-	 <20260827153527.e0e968a22717f558a22fb893@linux-foundation.org>
-Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
- keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
- eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
- Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
- lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
- dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
- mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
- gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
- r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
- WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
- 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
- Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
- +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
- g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
- KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
- fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
- 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
- G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
- okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
- TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
- cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
- omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
- QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
- c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="ogwjESZ5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8ADF1F000E9;
+	Fri, 28 Aug 2026 03:07:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1787886438;
+	bh=Gt76UcTPmzHLWuOwKDbCamUsSovytLsnrvRwSJBIAoo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=ogwjESZ5/FbCSjjrCLy5uiofj6a3BXR3/ZKpajdm5ZCo9aB8+asfXzXiazHR/vJcs
+	 ggzMBp1ivVxgK7aGvpICf/s7db/rIy8wvidccRF4T05SSed7qjdRnmJlI+KxOyFki7
+	 2kC+NR2EW8bFE+6fZhpAnLQZXcj8BYnklmn+9FVA=
+Date: Thu, 27 Aug 2026 20:07:16 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Nhat Pham <nphamcs@gmail.com>
+Cc: chrisl@kernel.org, kasong@tencent.com, hannes@cmpxchg.org,
+ mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+ yosry@kernel.org, david@kernel.org, muchun.song@linux.dev,
+ shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org,
+ youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org,
+ liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com,
+ qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com,
+ weixugc@google.com, riel@surriel.com, gourry@gourry.net,
+ haowenchao22@gmail.com, corbet@lwn.net, hughd@google.com,
+ baolin.wang@linux.alibaba.com, tj@kernel.org, mkoutny@suse.com,
+ skhan@linuxfoundation.org, kunwu.chan@linux.dev, kernel-team@meta.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, cgroups@vger.kernel.org
+Subject: Re: [PATCH v4 00/11] Virtual Swap Space (Swap Table Edition)
+Message-Id: <20260827200716.97881447f243c4afd275144e@linux-foundation.org>
+In-Reply-To: <20260825153238.2695446-1-nphamcs@gmail.com>
+References: <20260825153238.2695446-1-nphamcs@gmail.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Thu, 2026-08-27 at 15:35 -0700, Andrew Morton wrote:
->=20
-> Sashiko might have found another thing in there:
-> =09
-> =09
-> https://sashiko.dev/#/patchset/20260827124211.3b94b103@fangorn
+On Tue, 25 Aug 2026 08:32:26 -0700 Nhat Pham <nphamcs@gmail.com> wrote:
 
-Coming up with a fix for that now, and some
-adjustments to the kernel-style rules about
-refactoring code to make it easier to read.
+> Currently, when an anon page is swapped out, a slot in a backing swap
+> device is allocated and stored in the page table entries that refer to
+> the original page. This slot is also used as the "key" to find the
+> swapped out content, as well as the index to swap data structures, such
+> as the swap cache, or the swap cgroup mapping. Tying a swap entry to its
+> backing slot in this way is performant and efficient when swap is purely
+> just disk space, and swapoff is rare.
+> 
+> However, the advent of many swap optimizations has exposed major
+> drawbacks of this design. The first problem is that we occupy a physical
+> slot in the swap space, even for pages that are NEVER expected to hit
+> the disk: pages compressed and stored in the zswap pool, zero-filled
+> pages, or pages rejected by both of these optimizations when zswap
+> writeback is disabled. This is arguably the central shortcoming of
+> zswap:
 
---=20
-All Rights Reversed.
+Thanks.
+
+I asked Gemini for a tl;dr and was told
+
+: Introduce Virtual Swap Space (vswap) to decouple swap entry management
+: from physical disk slots by using dynamically allocated virtual
+: clusters that back swap entries on demand via zswap, zero-filled pages,
+: or physical disk.  Eliminate wasted storage space, remove the need for
+: static swapfile provisioning, and enable in-memory swap features on
+: diskless systems without degrading performance.
+
+I'll take no action at this time - let's see what the other swap
+developers make of this.
+
+Sashiko was talkative, as usual:
+	https://sashiko.dev/#/patchset/20260825153238.2695446-1-nphamcs@gmail.com
+
+There are a few pre-existing things in among this, They look legit to
+me, from a quick read.  SWAP_USAGE_OFFLIST_BIT should use
+BITS_PER_TYPE(atomic_long_t)?
+
