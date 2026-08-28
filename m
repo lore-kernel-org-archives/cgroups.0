@@ -1,68 +1,45 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-154.mta0.migadu.com [91.218.175.154])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E8EC30DED5;
-	Fri, 28 Aug 2026 00:42:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3020830675F
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 00:48:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787877772; cv=none; b=ovXMkQv75DS1vdW/8nW0jICEa3pIyKg2iB4zLWjovZTUYH89DnG7eTUMJgFcgNim/NgIZCHI8xLajFfw8R+C7S8Yvn2sORRC2TEQWUriFCaq+WgYqVjn4cuZo+8bQws6+TfTQAQt0Vzsod15PlzlvWCw1O3xF0xpZ693HAUmllI=
+	t=1787878094; cv=none; b=YQ2aT+yIBrcLF2XU3eOnmjdOoQ3Q9dopcmzO8xMBSqWiB4V4i2023n0iRBUH7KfpHqNZoozU6rJ9BO7n5wuW0r8UjgyJVaiIIQ7ksEj/JjZZsOcoTtTCPZ9ZKm06yNJ1KfImt7VQ/4p2PQpCL9XI64UbjrTuWPjXEWTEPy06+ts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787877772; c=relaxed/simple;
-	bh=rXFUXxlKqBaXuqzdOpAFlhPtekA9ua3NlNpqEnttbNU=;
+	s=arc-20240116; t=1787878094; c=relaxed/simple;
+	bh=Kv7SegtkprBpdAtnxRcZRecFg6c76sWZc/YX/HSXqi4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qstcg8WklqKWr+5pB+UxIum4thFKznY6hxfhJcGJZ5EmBI8arlRUcAXmoTpqs7CPRGfaJBK01nRiXJyfjkqPV7NoIkzcv1yT5Z03qJpdZ4mZ0FEEkLv/3gkq/b5FI7mn7y+2n84sdahhD1DG3VtuCAdpoxCrclRT7jXXwei/hRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eSoXWTb5; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=CYxP1IvLfFOQc74yxOEHZBmr+JfFoHejjjbetNqDktOidZzZf2XygOmkPH3xHc9kxj2y+ERr/w6+s4/Oyj7ug1hi3pRrbSfXqHDH0ZGaMSrhwkf+/x2vXIbBuRXGXJFiS4+Uvueb2Lo2Mbs0y2JDtWlHyJqz3rTWs73Z/Alup/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NpBuPJnC; arc=none smtp.client-ip=91.218.175.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eSoXWTb5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787877770; x=1819413770;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=rXFUXxlKqBaXuqzdOpAFlhPtekA9ua3NlNpqEnttbNU=;
-  b=eSoXWTb55RHWJohS9YWqNhHsHQCkRgHpQVp5sbuZztjqY+t6g7lgTFUI
-   L7TPHujEH1nfy/9xGAZoBpjLLw0RXWjFRPxu+foGVXu6SD9dpikzV1Hi1
-   ZIq1J2p/mXjvwhm9uS2mJJo36FhARtL0g5TU9ISbt0YSD7OEnEUn5BmEF
-   b583SoUzwJbOwVTpybkpiPQ/zhOE+K7HTXB/E+Y+xI9BbOLOdNnflVZKC
-   gbdE8dF3zWAccGxZX2aZRVKCdIgH+wm3ii5OYaWcJAc9i6GktktH7X0Ni
-   lAp6+FPwkHhG6qVEiPYqGqVCxDXAqqCJr0JLJcxDThpe6A3RnRNj1I/1I
-   g==;
-X-CSE-ConnectionGUID: QWLVAIhQSkSXlEI30xEQEw==
-X-CSE-MsgGUID: ma225OYvRtWU+SsyDGLSuQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11888"; a="92245951"
-X-IronPort-AV: E=Sophos;i="6.25,247,1779174000"; 
-   d="scan'208";a="92245951"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2026 17:42:50 -0700
-X-CSE-ConnectionGUID: XDqL6UANT36uEF3p2NzRAQ==
-X-CSE-MsgGUID: xNdi13Q/QkOl/mSsam120g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,247,1779174000"; 
-   d="scan'208";a="271831002"
-Received: from lkp-server01.sh.intel.com (HELO 3532383e6126) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 27 Aug 2026 17:42:47 -0700
-Received: from kbuild by 3532383e6126 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wzkg8-00000000ACb-1p3b;
-	Fri, 28 Aug 2026 00:42:44 +0000
-Date: Fri, 28 Aug 2026 08:42:25 +0800
-From: kernel test robot <lkp@intel.com>
-To: Rik van Riel <riel@surriel.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work during
- offline
-Message-ID: <202608280832.9NUcmGpu-lkp@intel.com>
-References: <20260827124211.3b94b103@fangorn>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NpBuPJnC"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Kv7SegtkprBpdAtnxRcZRecFg6c76sWZc/YX/HSXqi4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787878089; v=1; x=1788482889;
+ b=NpBuPJnCKiroB8N/qNlsW9K8B4fEy1GEaSAhNJFXUQtJ4qDWZH9q7NoyChCwc2lhDZHB3ssP
+ 0NDcvSxPOtucqEE14JWtuO65iisYR0ggFPCqjtyPie1ZqDmn5EfW/Ng4iPi8f7+vzfU/YdVYpKJ
+ 3SyCAzgqCG8cbm9wEU4h5RTc=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 4f6263115d5ea613;
+	Fri, 28 Aug 2026 00:47:59 +0000
+X-Mizu-Trace-ID: 4f6263115d5ea613
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 28 Aug 2026 08:47:54 +0800
+From: Hao Li <hao.li@linux.dev>
+To: Michal Hocko <mhocko@suse.com>
+Cc: hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	muchun.song@linux.dev, akpm@linux-foundation.org, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mm: memcontrol: treat disabled memcg as kmem accounting
+ disabled
+Message-ID: <apDZV9nKW69ZbIj1@fedora>
+References: <20260827091813.22327-1-hao.li@linux.dev>
+ <apAnveXHmeQlKJnU@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -71,53 +48,60 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260827124211.3b94b103@fangorn>
+In-Reply-To: <apAnveXHmeQlKJnU@tiehlicka>
 
-Hi Rik,
+On Thu, Aug 27, 2026 at 02:04:13PM +0200, Michal Hocko wrote:
+> On Thu 27-08-26 17:17:50, Hao Li wrote:
+> > mem_cgroup_kmem_disabled() currently only checks whether the
+> > "cgroup.memory=nokmem" option is specified. However, kmem accounting is
+> > also unavailable when memcg itself is disabled.
+> > 
+> > Check both conditions to ensure the function accurately reflects the
+> > kmem accounting state.
+> 
+> It would be really great if you could describe how we could end up with
+> the inconsistent memcg enabled but kmem enabled and what kind of effect
+> does this have.
 
-kernel test robot noticed the following build warnings:
+Yes, thanks for point out this.
 
-[auto build test WARNING on akpm-mm/mm-everything]
+> 
+> AFAICS the inconsistency is possible and it would lead some wastage but
+> no functional problems but the changelog should be more descriptive.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Rik-van-Riel/mm-memcg-fix-UAF-in-drain_all_stock-async-work-during-offline/20260827-124211
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20260827124211.3b94b103%40fangorn
-patch subject: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work during offline
-config: x86_64-randconfig-074-20260828 (https://download.01.org/0day-ci/archive/20260828/202608280832.9NUcmGpu-lkp@intel.com/config)
-compiler: clang version 22.1.3 (https://github.com/llvm/llvm-project e9846648fd6183ee6d8cbdb4502213fcf902a211)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260828/202608280832.9NUcmGpu-lkp@intel.com/reproduce)
+Exactly! The most direct benefit is that when memcg is disabled,
+new_kmalloc_cache() will not need to create a separate `KMALLOC_CGROUP` slub
+cache, but can simply alias it to `KMALLOC_NORMAL`. This avoids wastage.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608280832.9NUcmGpu-lkp@intel.com/
+If this sounds reasonable, I would be happy to explain it in more detail
+in v2.
 
-All warnings (new ones prefixed by >>):
+> 
+> > Signed-off-by: Hao Li <hao.li@linux.dev>
+> > ---
+> >  mm/memcontrol.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 1ebceade4021..b28f6165c354 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -132,7 +132,7 @@ static DEFINE_SPINLOCK(objcg_lock);
+> >  
+> >  bool mem_cgroup_kmem_disabled(void)
+> >  {
+> > -	return cgroup_memory_nokmem;
+> > +	return cgroup_memory_nokmem || mem_cgroup_disabled();
+> >  }
+> >  
+> >  static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages);
+> > -- 
+> > 2.54.0
+> 
+> -- 
+> Michal Hocko
+> SUSE Labs
 
->> mm/memcontrol.c:2380:6: warning: no previous prototype for function 'drain_all_stock_sync' [-Wmissing-prototypes]
-    2380 | void drain_all_stock_sync(struct mem_cgroup *root_memcg)
-         |      ^
-   mm/memcontrol.c:2380:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-    2380 | void drain_all_stock_sync(struct mem_cgroup *root_memcg)
-         | ^
-         | static 
-   1 warning generated.
-
-
-vim +/drain_all_stock_sync +2380 mm/memcontrol.c
-
-  2379	
-> 2380	void drain_all_stock_sync(struct mem_cgroup *root_memcg)
-  2381	{
-  2382		/*
-  2383		 * Make sure the workqueue is done with this memcg
-  2384		 * before freeing it.
-  2385		 */
-  2386		__drain_all_stock(root_memcg, true);
-  2387		flush_workqueue(memcg_wq);
-  2388	}
-  2389	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+-- 
+Thanks,
+Hao
