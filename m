@@ -1,126 +1,126 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4D03C3450
-	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 05:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787895018; cv=none; b=mpN4E/vAlp+O0C6bRb3vAh0mtEfpnCMNR4yNIw3QzW443kJM20se3I54by2FJpF07xW9Fl2s89HXfXDYI24A4XL4UbprvXnXYkZlo6m3MgGLO/3oUq2XV4MICrxj/gbHXdSBmxOK0z2gAc2tvUTiMI9Y4NZvUHcdyNhaqMUOlck=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787895018; c=relaxed/simple;
-	bh=mtqi38h9DnqwhETyTcFF31oaSRnkxp4QlcAD58krSpM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oWFx7pOQSjI8VdNM8Kjodfp1G6j1HMjQc6P4V3i2YDjH0Hgni80E5LrIGYTNed6dE0betxl4sKekIDxyft6YFvEAi/WDca51urqPrzZhSM4cgEOhcfupfe/30dTVTzeUrP1qsVd1/9+wvfQ5uZrwA7qESmaawc9qc+o8eD+RkMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FLvvsOj3; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 651162ECD35
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 05:43:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787895784; cv=pass; b=a57L+D6Cob0Pc3oRtPwoaYBdlsFpLIQFZbp+y0V8uUQ0zg2xcIpJFkYG4unjNlMYKmq00jl9/zLM+BvwEkz2+TxG1pAmX/lWkh3jsMRFP2Ihn/b2G3O6iKl5yrb37kpzwwOFlFfP2Q5w/gvPP9ntX4TWPC/su9JYaO+ovl79UcE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787895784; c=relaxed/simple;
+	bh=wBxP4YbhlKCZA5smzchOnIzBLXWhALGSS58Lbit0obQ=;
+	h=From:MIME-Version:Date:Message-ID:Subject:To:Cc:Content-Type; b=s4btl6b62Yb3v+XsPPagAtExZcfiB1wdeouDuqasPdZWWdM4lKF3CCvFkq4yOlzT1oqHn3kUmmi23QosKbXfrmrqw3qJK08c4iv6I7nYNZV/Ji8VHALjRHlBHMPfcB2TypueOIaC2NpHo/MgDwEBWTfnis6mn8r1w/9h0OlqzlM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu; spf=pass smtp.mailfrom=berkeley.edu; dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b=DbGunFKk; arc=pass smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=berkeley.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FLvvsOj3"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2d712281f8bso7334905ad.1
-        for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 22:30:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b="DbGunFKk"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-39682983a0fso628676a91.3
+        for <cgroups@vger.kernel.org>; Thu, 27 Aug 2026 22:43:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787895783; cv=none;
+        d=google.com; s=arc-20260327;
+        b=YidGJnInP1GBw8cgFcwguqXjtkz57EnIiMp6sR8xuOXWSNpMtrKorK6ScGXTZImLAb
+         HL0EDEb3xPF8UTPxhPlWb+oJtvClPTC8n0/jxlYVpFHapQhvL3ijaPPX7ta396/w2dI6
+         vrvHwPFEtL+0c70GYwqdEciuWkcRxxuerPHLBCcjadPyDda23Kb1/HwPK6OKbWA5HvGo
+         gH5cbsKIApwZY3cOUHkDqhd9545clqL800ezfeyFCo+t9rkqP+sk4W69TgfA7x0qF90J
+         aa9Uvzmfw7oI+7OT95fgMSYudDX/CKTT6sS30rc/ISbGgs0GYtnmseNf4dntDNEWTq3A
+         dwwQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:mime-version:from:dkim-signature;
+        bh=ymcSwDmaIrMigTTRllqGG5n7lpgRFCcfMNtdeB++vus=;
+        fh=JzzAQT7lbP7g7Op/NwxggUxfxXvEpFnFxSUQuYuSomc=;
+        b=WZ6pqdArBL00oLe9rNNe+j4KiJSgjaoPbRumCCa6kmzCnS59OqqtghG6y2p5edcYPa
+         8MHDQoPYtkHpmGAowMYIrmi5VdVFsMMxIPeyZBMDundQ51tp1MMtjdME6Rwfn/b+Vn1e
+         u73McIH+R/Mi8i5hePH5/IENKpiRtnslsakjiHCR902bGHAxUf/hLq5GrmKjM71s4Bwm
+         Qj2SidEOY05g1eK0HlKM1qZPngscHfbF3Fo+1muyY8l7itvueiwxzG1k84wedmUjhTbj
+         BJ/hMlmQ2IW8GW5rHAPAtMO0HZ95esA4nsJ3nL6PUSbVWfJbkPJcwo/siliiWrscyMXp
+         onNg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787895016; x=1788499816; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=zjyf211XtRs0nkL10Qp9VSObiEIsDLFDi9ZSA9jafOA=;
-        b=FLvvsOj38MgqFBUciJ/vDSZ4XIo/6//8Nty+qFkdOR1C4WA9k+ty2xp8q5WuhY2J76
-         P+s4lEWpXdAVRHearhDx3XmKkxA1cJxcPGjrGNwgAPv9gaeWiDwRvtz0SKtHRmKXfuvT
-         YHgwOXBRSwSpVpCOfn5jT4vHA9qNZxpVLwyrybQaPbIXwyT+naM2rBZMLgWPL4vnKngp
-         kU6f5dVA+Ra8oOrxzXW0QkvJCcdXm5tsyRx2/CtV8f6qwMfeBr/Fhv26VG7IC6LfdMkA
-         JfasdCd6e1FdoLXNDI4bLFZRNbfjULbM+08tecsil8BfEq1EGUEY0saTG5KjRRPnwUqA
-         RICw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787895016; x=1788499816;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+        d=berkeley.edu; s=google; t=1787895783; x=1788500583; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:mime-version:from:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=zjyf211XtRs0nkL10Qp9VSObiEIsDLFDi9ZSA9jafOA=;
-        b=iw1Jzkz4MuBG81MKy+tp73jpi2LNG75NkTn8jOUkTwHfDX5x+kg19BGj6waW9PcQmD
-         i+bfNEyb/GvPwVy8TX2QKxTu2tVr6WwmtbBs+u3rjqHXNggXoA0e3GkGxIkyNrLNvuAG
-         RA51FQlNt6i+jqKGg04tqS2IOdJUOT8KYX7lbFLRiDs6weot8xv1/+V8c9Bu6blghk+C
-         WjvjxZv6uBn5ZS+dByg19yjZBfTrAqnLHUpfu83N2RW2MItPl1UVZmUWIs4zHJd5jJeh
-         CdP8ACn7AKsBy9o6Dp4VXJP1mXd+X3VDlekLW3hVA9kf5oBmsmFqSGf35Pbtr9iGOUjH
-         qrmA==
-X-Forwarded-Encrypted: i=1; AHgh+RqIQJqqhD+yS/pdz81VGiTpKA1QWcozs+TnIZ9IWu2fhZ+ttF2bHqIZ+CRnFMjc40+yBSpZPfMe@vger.kernel.org
-X-Gm-Message-State: AFuF++ngYHZYtBIJvj9uY+Zwcpnn7CNGGJPoeEtrrbBD7y1ZPCEN8eTW
-	1ATZ1iMamrDyC25mRbDLlnwBWK/M8fEQZMir69wVWJcf52T58IkWWtaB
-X-Gm-Gg: AR+sD10OhXAG0s+dJCOjV7CGCHbia7mjQ/unULEZHzpfgStY5tyEFbvVz9inHMNNhh7
-	eR2JUinMWfmtNTSTlseP00AiEjm9Rmhhwrg85kPMA1RkZdOVpmCqioqXbk0QYFqgYQi1eKTcfMX
-	lTTpDYwsDAtlLXYckcBcRKyEtTIkWZR6bZtYrvNqHDJAiKY56XGJlPh5dgdZOFZSL9qT30vehxq
-	pN+Mgj3G5vRHMt5mEKMS5u8XNd+9v5ThjJqr8Q5h5AV9ysroDuT9naHRa5NpXmu11kzV12IzNrB
-	LxcMF9CLF+oUHKlqEsHhnzwhCmSph3xGAbTxnFkDlxGcEQtseJKqhd+5IkEAy5REga5EzolLmTi
-	dmRbncyp7oOGAEfRHE8+HRribZ1S2lc9eWXS8WlkTMIfnO7fWLUuw4qFlK8jJDb87YS+3YyoQTE
-	NUVyiXeMULSVfNzg7ywtUppqoxNE8CAZSd6OAAFkkrfq33rR8l1AIDm5kKxHiYbVQITTWZI4tzC
-	qlfp3PNnjg915SGCqzEyNzaywDH
-X-Received: by 2002:a17:902:d591:b0:2c9:deec:f564 with SMTP id d9443c01a7336-2d74df52c1cmr1686825ad.13.1787895015897;
-        Thu, 27 Aug 2026 22:30:15 -0700 (PDT)
-Received: from localhost.localdomain (vmi2317720.contaboserver.net. [84.247.152.65])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d75988cb5dsm2170415ad.64.2026.08.27.22.30.05
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 27 Aug 2026 22:30:15 -0700 (PDT)
-From: Lian Wang <lianux.mm@gmail.com>
-To: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Cc: linux-mm@kvack.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	Wei Xu <weixugc@google.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Chris Li <chrisl@kernel.org>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Yu Zhao <yuzhao@google.com>,
-	Zi Yan <ziy@nvidia.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kairui Song <ryncsn@gmail.com>,
-	Kairui Song <kasong@tencent.com>
-Subject: Re: [PATCH v3 5/6] mm/mglru: use explicit tier range in read_ctrl_pos()
-Date: Fri, 28 Aug 2026 13:29:28 +0800
-Message-ID: <20260828052949.52874-1-lianux.mm@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260826-mglru-flags-cleanup-v3-5-d9f1c75549c8@tencent.com>
-References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com> <20260826-mglru-flags-cleanup-v3-5-d9f1c75549c8@tencent.com>
+        bh=ymcSwDmaIrMigTTRllqGG5n7lpgRFCcfMNtdeB++vus=;
+        b=DbGunFKkbLMAP17Y7TdVSRMr8mnu9MPZKVSt922mkdNBXR/RRGCUS7VkD34L8HuVMk
+         MNA0LcDOVo0krgDQBk5ecXyDr/AgE/MVTf3O13vHMWyiD8DTLAcbZS+Nnw7OnGlOm2wL
+         w9rcHUq2X4SV2UxlwZNx1SieR1zbUdBiEvXUA08rsC9NCKbH+t4qUYy/sf2xoTQ+SWN2
+         E2rQOOtk4zVJswtbhBE1owblP9iNh3Z0KumjFrLCLO+BzArw2nLz+1T0kWrRpyC41Fv6
+         iqmyLEVPK8XiT1wibG0qHSVcFDH3dFYOOMtbeXk9L7Fo81J4mTitFSKVNN59VJm6waNQ
+         /qAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787895783; x=1788500583;
+        h=content-type:cc:to:subject:message-id:date:mime-version:from
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=ymcSwDmaIrMigTTRllqGG5n7lpgRFCcfMNtdeB++vus=;
+        b=IbI65aB4oSdTR2ws+3D8+S5UmyGexiTp3bYB5uYNcqJ7/H5ehfJKlQPRkzJRNGYV6g
+         dX7pwHCCmGpqfxXj3KJzcnu//ZuPcc8Zz+6wJAcBZZRbirFDwsqkjiVVwlG93sNvsRz6
+         K4jM7Le+W/XUvwaJvHsvlHIVSGFmmx8OwKVMlQssBGyLxIhLkf/ZSzNYGBvIhG3jMxLL
+         qt/QrKExi7jTvYEuBzgx2eLoZ2bqcmnePRJBw+nXmDShCZljlQ5/SR0Y6ZFsAMUNmgCZ
+         jQYRPa6E4YOOG1lU5F6YvAimHapUcUiloY/cq964sIAi/EyUX08dhOu2shlcL/cDOaiB
+         hxNw==
+X-Forwarded-Encrypted: i=1; AHgh+Rpd3YPFHhI0elPzzy1XY/Zoff30XfX8BDI7G2YlqP68njQIKXvkAfVxlMgXAHc5RYk6dIjrevf9@vger.kernel.org
+X-Gm-Message-State: AFuF++lzzA0jDqyKjgJOglVyUVPPqYHbQRIKcyRLrMvMBCea6S7Glaaf
+	Fzlpt3zxQR8Hw1y/XAjZoZhK2wJsEK0voaXpgzTsQZTH4g7i7CeKvpYxqZUmghskGu2d/IdYXW6
+	s5hpeMYdoSxMIgEgMSJfl0oKmA3i/2JcntKR3DKs3pVfUQqEVZWYUQg==
+X-Gm-Gg: AR+sD121I77RyHzbOv+MWMJ4WC5iqJlQGDkomfEqAL2+/KAU+9FxjNtH/PRfoVO9RJw
+	mi0RIp9KK6z2/AobLWgSyZh6nQRG34pOPno3aQSmkv44P+S0W2YURzexpMVeQm3PsDiZVLWgfcf
+	EmorUO0QlxRcTgqh0UDV4PylzSDTZxfQmw7Rw6Z38wR2e5kAb7Wm1MsYv8MZ5omc0G3QT/76+vQ
+	avV2EY79L6G6diHJFL+ex2+8LMXrjVOCGOSdgPS5KDwiQwi9EDGfX4yFJrFLN7S4oaYiNG7534Y
+	FxHsWdAi2ItCXbgMliFAxpBl93oYtBzZGgbSOQ0TVMeiB2Egk4eryH7JYnuBex7tOmO1HhEAoM3
+	7ggvk/o7I5Z+nU27Ynks4JEYrarxCwl+1
+X-Received: by 2002:a17:90b:530c:b0:381:1c96:829b with SMTP id
+ 98e67ed59e1d1-396d0d4c43amr9634249a91.3.1787895781568; Thu, 27 Aug 2026
+ 22:43:01 -0700 (PDT)
+Received: from 474444807712 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 27 Aug 2026 22:43:01 -0700
+Received: from 474444807712 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 27 Aug 2026 22:43:01 -0700
+From: Farhad Alemi <farhad.alemi@berkeley.edu>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Date: Thu, 27 Aug 2026 22:43:01 -0700
+X-Gm-Features: AcwNN1Wp7GsXp8ne0pKDNCHjGi3GIZAVKBDWrEj4p0lfI9KYWd84e7KzkWViHJo
+Message-ID: <CA+0ovChh3VjsKN1g+ZGjwwY2fGTpP7uD+aCCByLj5Qbymw=bfQ@mail.gmail.com>
+Subject: [BUG] general protection fault in cpuset_cpus_allowed
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: falemi@asu.edu, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Kairui,
+Hello,
 
-> Replace it with explicit (tier_min, tier_max) parameters using a
-> closed [tier_min, tier_max] interval
+As part of the kernel research at ASU's SEFCOM
+lab, we hit the crash below. Crash reports can be found here:
 
-While touching read_ctrl_pos(), would it make sense to add:
+  https://github.com/farhad-alemi/public_bug_reports/tree/main/166-general-protection-fault-in-cpuset-cpus-allowed/
 
-	lockdep_assert_held(&lruvec->lru_lock);
+  Oops: general protection fault, probably for non-canonical address
+0xdffffc000000001d: 0000 [#1] SMP KASAN NOPTI
+  KASAN: null-ptr-deref in range [0x00000000000000e8-0x00000000000000ef]
+  RIP: 0010:bitmap_intersects include/linux/bitmap.h:440 [inline]
+  RIP: 0010:cpumask_intersects include/linux/cpumask.h:822 [inline]
+  RIP: 0010:guarantee_active_cpus kernel/cgroup/cpuset.c:481 [inline]
+  RIP: 0010:__cpuset_cpus_allowed_locked kernel/cgroup/cpuset.c:4022 [inline]
+  RIP: 0010:cpuset_cpus_allowed+0x14a/0x2f0 kernel/cgroup/cpuset.c:4071
+  Call Trace:
+   cpuset_cpus_allowed+0x14a/0x2f0 kernel/cgroup/cpuset.c:4071
+   __sched_setaffinity+0x98/0x3c0 kernel/sched/syscalls.c:1149
+   sched_setaffinity+0x341/0x4a0 kernel/sched/syscalls.c:1237
+   __x64_sys_sched_setaffinity+0x106/0x170 kernel/sched/syscalls.c:1262
 
-All current callers run under the lruvec lock. read_ctrl_pos() derives the
-history slot from min_seq and combines avg_refaulted/avg_total and protected
-with the atomic counters, while reset_ctrl_pos() rotates and clears that
-state under the same lock and already has this assertion.
+A second capture reaches the identical fault -- same address, same KASAN range,
+same RIP -- through cpuset_fork <- cgroup_post_fork <- copy_process <-
+kernel_clone <- clone3, with the crashing task being systemd at PID 1.
 
-Adding the assertion here would document the snapshot contract and catch a
-future lockless caller before it can observe fields from different history
-epochs.
+Our reproducer.c is available upon request.
 
-If I missed an existing lockless caller, or if this is intentionally a
-best-effort snapshot, please ignore this suggestion.
+Happy to test a patch if that would help.
 
-Thanks,
-Lian
+Regards,
