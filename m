@@ -1,58 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-31.mta0.migadu.com [91.218.175.31])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F354F3BD638;
-	Fri, 28 Aug 2026 18:53:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6149E284693
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 18:56:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.31
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787943219; cv=none; b=Z4pbBNS19nCk+SnogNOL1JeRn0sqHQ7zfq9Hp0VEzj11sh08ef9+H7A9QCI3x+APj/pxNzWzLJU6jnWlp38A/22bwGVGJ3OxDLjxc1MJ9scn9gV1M4lb6mTuZcMkgvxi/gslQoFLEkWr3mUwcp0ke1cfmLuLyVKDQcHqg46184o=
+	t=1787943391; cv=none; b=SJtFpB9lUd3x6bNPUskmsP52kmI69kD3ha5bYklsAejz5o/OqykeEbDqjCDfL0WaFX8BK8pDwS6mET6F7zIlFCiIDrHa1y8sYFLgI223dvYriktpvwywURRLSWCwqL3GRQshBPkyGv9JP59zEkJuIvHJu0BP51oK4YzDIAHAG+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787943219; c=relaxed/simple;
-	bh=NvZ6zF6kTuMB9njp0C1XvnHSNiEPGgZyGxCgECFMZWs=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=qkdOqNTVne5Nh4vCdotQha4lOaZDl4+d/6tmA9m1/UqJIoLLhfuLa1vWRIX8tlBE/aQZOLEF2SLQxzOM/lYpWF81Riwk3+5mZjxvtPcNOiOq/y3hXWhVkw8lfP5UvA2I+2kIOOpSWceEUqyeFoE751I1u7sygnRTE9xX0MmB9HA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Z0hlIj1m; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787943391; c=relaxed/simple;
+	bh=COHTECr9DeZAX32asUSS//tsR/rFjizcv3IDQHcOnVU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wnsbmu11LDb+M5VPkertz6OhWGJvGjUIZ5RD3BYRhYq42q/oxnjlS2+3lK2LP1rmtpqhQow7Z4LuL46VKaLLgE8Ff81mnEDyD5iVZuLohokaKkwPRjxHeILYs6cj6p6b5ZLxvn4yOvd420sAAfmV+Iwsn7Srfu9tqKzxiqijGCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=D27vTXo3; arc=none smtp.client-ip=91.218.175.31
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Z0hlIj1m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABA4F1F000E9;
-	Fri, 28 Aug 2026 18:53:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1787943217;
-	bh=B9mdNfhFcUO2gJ0ktoY/zaGQbPahFjeEg5bz/X1VOZA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=Z0hlIj1mp6THUJEgNkV5IGHjWaaFGD20ZZqph4GrZV16OoVYRFjB42P09sbRzr6tC
-	 mGilmF6zeByyib7ZNL7MlsbQ7Ib2e7S8pM6l2c6XPq+rprEpRwNg72OqVKKEE5qSS9
-	 g536fmH75N3r0a608t+GaPafLgU3nv8hP28sIFbE=
-Date: Fri, 28 Aug 2026 11:53:36 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Wilson Felipe Pereira <wfelipe@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>,
- Nhat Pham <nphamcs@gmail.com>, Chengming Zhou <chengming.zhou@linux.dev>,
- Tejun Heo <tj@kernel.org>, =?ISO-8859-1?Q?"Michal_Koutn=FD"?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, linux-mm@kvack.org,
- cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 0/2] selftests/cgroup: fixes for test_zswap on single
- core VM
-Message-Id: <20260828115336.6ef439268af56dce797d2aba@linux-foundation.org>
-In-Reply-To: <20260828033741.2184560-1-wfelipe@google.com>
-References: <20260828033741.2184560-1-wfelipe@google.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="D27vTXo3"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=COHTECr9DeZAX32asUSS//tsR/rFjizcv3IDQHcOnVU=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787943387; v=1; x=1788548187;
+ b=D27vTXo3I0zVioIGEzXP/NUMSyfjk1F4R4aR0+9ZYgDw0uMHkZStrpg7uYiW5cRvwUe+S76I
+ hyoH9wic34ZB3zA93DHOo2Vce6FS5/8uE/cmrdNzTzPMGtESVYVkD4dNMGCvde6t+RVHYm+/Vv8
+ S2A5dhriYmOBzgzrngMH4Jew=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id b3b004b6420231b8;
+	Fri, 28 Aug 2026 18:56:26 +0000
+X-Mizu-Trace-ID: b3b004b6420231b8
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 28 Aug 2026 11:56:25 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Rik van Riel <riel@surriel.com>
+Cc: linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@meta.com
+Subject: Re: [PATCH v2] mm/memcontrol: fix stuck FLUSHING_CACHED_CHARGE bit
+ on isolated cpus
+Message-ID: <apHZti_C5udMRh2i@linux.dev>
+References: <20260828135036.7d44361f@fangorn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260828135036.7d44361f@fangorn>
 
-On Fri, 28 Aug 2026 03:37:30 +0000 Wilson Felipe Pereira <wfelipe@google.com> wrote:
+On Fri, Aug 28, 2026 at 01:50:36PM -0400, Rik van Riel wrote:
+> When drain_all_stock() sets FLUSHING_CACHED_CHARGE before checking
+> isolation, schedule_drain_work() can drop the work in a separate RCU
+> critical section, and housekeeping_update()'s synchronize_rcu() can race
+> that second check, leaving the flag set.
+> 
+> drain_local_stock() only clears the bit for work that ran, so the flag
+> remains set and the stock is never drained again.
+> 
+> Have schedule_drain_work() return whether the work was queued, and clear
+> FLUSHING_CACHED_CHARGE in drain_all_stock() when the remote CPU is
+> isolated, so future drains can retry.
+> 
+> Fixes: 6a792697a53a ("memcg: do not drain charge pcp caches on remote isolated cpus")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Michal Hocko <mhocko@suse.com>
+> Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Signed-off-by: Rik van Riel <riel@surriel.com>
 
-> This series fixes two test failures in test_zswap observed when running on
-> a single-core VM (-smp 1) with 4GB of RAM.
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 
-Thanks, let me queue this for test and additional review.
-
-There might be an issue on 32-bit:
-	https://sashiko.dev/#/patchset/20260828033741.2184560-1-wfelipe@google.com
