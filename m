@@ -1,102 +1,102 @@
-Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-75.mta1.migadu.com [95.215.58.75])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80FE737E5E7;
-	Fri, 28 Aug 2026 16:13:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2298B38DC52
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 16:54:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.75
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787933638; cv=none; b=kzrMkdrWrue95RC4rM6UKZkUuwP3KXXGdxbOf8OpcbIgmLjkstGe57zQWWvQ0Mzy/en8d3f9e2DzzgNXysxikMhN257flSgWUYx9eofZnH62ck4l3uO30/ayNnkzpDAmzZvEe+jEoY7VSfjlbtOrhTAaARMKRu+tisnkBQPA9V4=
+	t=1787936051; cv=none; b=YY1VPPVc/tPbX44VzMOdJz7vbPkOVhIUEpZrjpkQWrZqC/on09lYacjtw2LqtLMhfPW7CZkwwW6MODFe8ZiAqLj9g16447Qt3yTjVhYOC/2jGoLZZX5heoCy6fkNFHobqKzTdIJpwfmcGiy2PX3jD+THK0PDs+Q9+NV8Hkr1w8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787933638; c=relaxed/simple;
-	bh=IFcfwBysJINcxMfSNDFyM7b2wk60J46XwABn1gllY0o=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Lm2I9RC+2igAaL+XHGQCLM0K2iA/U0JXkyIL6WzQk6OSjuZUJhfTNjAByY19uxTcqwgeMe+H6o3E0X5Ckv4R8p3Xsxe+mnV7wuKRbyz3cjnFDT57PyBwNLP/mQn5s6WBNJysEsS9Lk9mdS4NVqsGbd5KKe7WqXlsqeOp+uNMUA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=D7QqSmOb; arc=none smtp.client-ip=96.67.55.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
+	s=arc-20240116; t=1787936051; c=relaxed/simple;
+	bh=psJGwL1+j+jKt7s0yptB6/W3PUUi95PtS5n+HITAWyc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X20MUrzWXli5LPa4TL7NTSL+61jjwGhY41cynAFA4dOf+TQYRubRmogFbWeZajelVNFX6/xc+isaSNYK22iUNDPjjlvswoSOf/HIRH+Xjmq+BaaICaISuo5sidOj6QGtO0GfH15F3wOfYls/VQa1B8A7ZBUsYHoe54Tq8DT3iq4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KMWLw46O; arc=none smtp.client-ip=95.215.58.75
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="D7QqSmOb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
-	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
-	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID; bh=2TOHanlDmqs1MCHJU5mQ5YIvRXJl2lupzJtXXmLOVuc=; b=D7QqSm
-	Ob0+hY6lYjhI0Mzw0AH2csJnCE+N3S4MXGbqzhQ59iETcGH/paxg1sekw1Ygx1ZKzTXEhTRgQGH74
-	2+Hjj+2rJ31B4kZ6geCR5VjVJ1ECb5Y4zN2O61xgAyM1pECogqFvNTczfLyeY5zUhLzYI5xjGZDl+
-	rDEyeUw+8BQx91da9opjZX/b5GK0YyyTWRKNs6kmDjvgN0yc5KhvnFDayjmbz9rpytl+SpzPzmOFP
-	KcZMn+JX2emjqoo9RBmWuAxjyi71NAC5WTDZ0daFU2aTGlu+Gifv053Xdb3qgbTPgih7rDEqpnvGi
-	Nog8LJW6h20W4JwnPPoFtvH0VH1Q==;
-Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
-	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <riel@surriel.com>)
-	id 1wzzDA-0000000927k-3eII;
-	Fri, 28 Aug 2026 16:13:48 +0000
-Message-ID: <35008c3b1d00766116bc9b6768d42238099117b8.camel@surriel.com>
-Subject: Re: [PATCH] mm/memcontrol: avoid stuck FLUSHING_CACHED_CHARGE bit
- on isolated cpus
-From: Rik van Riel <riel@surriel.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>, Michal Hocko <mhocko@suse.com>
-Cc: linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, 
- Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song
- <muchun.song@linux.dev>, Andrew Morton	 <akpm@linux-foundation.org>,
- cgroups@vger.kernel.org, linux-mm@kvack.org, 	kernel-team@meta.com,
- stable@vger.kernel.org
-Date: Fri, 28 Aug 2026 12:13:48 -0400
-In-Reply-To: <apGro0MJ-brPJfoa@linux.dev>
-References: <cover.1787890328.git.riel@surriel.com>
-	 <a611f2bc40d30f9c14a6f41b173185975c46a203.1787890328.git.riel@surriel.com>
-	 <apGaZdxAPH68kkCc@tiehlicka> <apGro0MJ-brPJfoa@linux.dev>
-Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
- keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
- eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
- Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
- lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
- dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
- mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
- gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
- r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
- WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
- 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
- Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
- +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
- g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
- KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
- fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
- 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
- G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
- okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
- TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
- cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
- omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
- QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
- c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KMWLw46O"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=psJGwL1+j+jKt7s0yptB6/W3PUUi95PtS5n+HITAWyc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787936041; v=1; x=1788540841;
+ b=KMWLw46OnClM4RT7i00HJSzN7lZFpKGoDxoP9mv7bV9IjQJrEBa+KRhkvUfg/PuVFI/A9M3Y
+ 2jxgN9LOTBrlm1buMQwNnwQBDC4s5i5FCLuEn5sjIpL0+C8mC06z+0dJ169vZhVwY7Wz2IQS01I
+ BLV1xK7o9NKK2RKgJRs2TPmQ=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 4322b439f1cc1ba4;
+	Fri, 28 Aug 2026 16:53:51 +0000
+X-Mizu-Trace-ID: 4322b439f1cc1ba4
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 28 Aug 2026 09:53:50 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Farhad Alemi <farhad.alemi@berkeley.edu>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, falemi@asu.edu, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [BUG] refill_stock -- VM_WARN_ON_ONCE(mem_cgroup_is_root()) from
+ a write to the cgroup-v2 root's memory.reclaim
+Message-ID: <apG8lKU0xDitsvV7@linux.dev>
+References: <CA+0ovCgWzUMK+nNbbtH7eV65Ca=fDN4Ozu7iASgryjvv8Tk8zQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+0ovCgWzUMK+nNbbtH7eV65Ca=fDN4Ozu7iASgryjvv8Tk8zQ@mail.gmail.com>
 
-On Fri, 2026-08-28 at 08:41 -0700, Shakeel Butt wrote:
->=20
-> Let's go with this patch. We can simplify above by inversing the
-> check:
->=20
-> 	if (cpu_is_isolated(cpu))
-> 		return false;
->=20
-At that point, we could also clear the bit here, and
-have the function return void again, so there's no
-duplication of that check and clear in drain_all_stock()
-> =09
-> 	queue_work_on(cpu, memcg_wq, &memcg_st->work);
-> 	return true;
+On Thu, Aug 27, 2026 at 10:28:57PM -0700, Farhad Alemi wrote:
+> Hello,
+> 
+> As part of the kernel research at ASU's SEFCOM
+> lab, we hit the crash below. Crash reports can be found here:
+> 
+>   https://github.com/farhad-alemi/public_bug_reports/tree/main/145-memcg-vm_warn-refill_stock-root-cgroup/
+> 
+>   mem_cgroup_is_root(memcg)
+>   WARNING: mm/memcontrol.c:2198 at refill_stock+0x644/0x940, CPU#1: repro/9490
+>   Call Trace:
+>    refill_stock+0x644/0x940
+>    try_charge_memcg+0x12d6/0x1570
+>    __obj_cgroup_charge+0x35/0xf0
+>    obj_cgroup_charge+0x1de/0x210
+>    obj_cgroup_charge_zswap+0x83/0x270
+>    zswap_store+0x1620/0x2000
+>    swap_writeout+0x94c/0x14c0
+>    shrink_folio_list+0x3388/0x52b0
+>    evict_folios+0x374d/0x48c0
+>    try_to_shrink_lruvec+0xe72/0x1350
+>    shrink_node+0x3320/0x3b90
+>    do_try_to_free_pages+0x6a2/0x1990
+>    try_to_free_mem_cgroup_pages+0x30d/0x830
+>    user_proactive_reclaim+0x504/0x840
+>    memory_reclaim+0x1f/0x30
+>    cgroup_file_write+0x331/0x8f0
+>    kernfs_fop_write_iter+0x3af/0x540
+> 
+> Our reproducer.c is available upon request.
+> 
+> Happy to test a patch if that would help.
 
-Let me send that.
+Thanks for the report. Please test the following patch. I will send formal patch
+after your testing.
 
---=20
-All Rights Reversed.
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 4a18ee4509ab..1709ac96bbde 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3157,7 +3157,7 @@ static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
+ 
+ 	memcg = get_mem_cgroup_from_objcg(objcg);
+ 
+-	ret = try_charge_memcg(memcg, gfp, nr_pages);
++	ret = try_charge(memcg, gfp, nr_pages);
+ 	if (ret)
+ 		goto out;
+ 
+
