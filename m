@@ -1,181 +1,117 @@
-Received: from mta0.migadu.com (out-163.mta0.migadu.com [91.218.175.163])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C587337C927
-	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 09:57:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.163
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9337D3E0090;
+	Fri, 28 Aug 2026 10:25:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787911049; cv=none; b=N5Sll9xLFMBsXyZj0dtM2yk0Zy1ja69D7ASsGd3NWjpH7GaOzExMbD/M075IrG58RJqFG7GpfEESD7VlIYefROxbgDxbPdS8IMmmbDr6fqTDQVTu80j18e00YcTromHvJ49zpheswucRglYKOZEVDdTu3nD+LO61ZOf4IDPR0r8=
+	t=1787912756; cv=none; b=qp0hPH/q327wqVLOtfKMcmtaxIZUpRDsADrCqimULVjhUAapwsB72zmqWtdckTjZaFFyG0Kf+wd0WyPrNuKPZFtouhxhJl4jpqQ8yU485OvYxRdPe/L5GrpUI0ze1FHOu7JGTwW7uVzNah5E8jZcmWJbZzu0pQQyP51qMjs6Li4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787911049; c=relaxed/simple;
-	bh=8gctiQayN9AteUHWBqHT2qKA3oPtMk+DGZXUaD6Q10Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gS8hI7SeIlbRAZTXsuPVNbo5KvoaWpFK+IxSLRoDnhr9PeGTeqfQO7S4G/BKA24WdfXgwFc0FRVNJDNgUqO5eWUAKvG0rufsMVoI4sRafWQ85lAJ2vB164RoVGi5/6ieUm9MD5C0z0zP/ykaGRpP0LcPk68Wzkx4UW0FPMAlUS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=toQXFrvC; arc=none smtp.client-ip=91.218.175.163
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787912756; c=relaxed/simple;
+	bh=y2hbqMERCbiubt7BDkFMXl1dBTo5MssDHay4qoq9wxA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ozCm98zg02vUPisZdZlWGwMNPMtPYGY8hPUTwxgN9yJC91zSOL0KnrLn5zF4jRA332I8DhFbl+YXNIJElXmv0tZvg5Mdx+RvXXxWX9p+kAw91mwq/ejL4weTFBMoLoeN0/v9z7QBU26S6Ddb07Bhg17UBTCU1Z36sQ0130jbyEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OfwhvkOr; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="toQXFrvC"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=8gctiQayN9AteUHWBqHT2qKA3oPtMk+DGZXUaD6Q10Y=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787911043; v=1; x=1788515843;
- b=toQXFrvCxBaMDBbXjaFh4NEnQkU+MS3cVayA61G77Tb1zlVwqbKdGTFG2C13AMgjZM9/f1jH
- fdW7eSjHHdaUrqvZT+Lwhk3NBj0we9N6TnahdvReiX+2HyWPyc4RkW0U72RdftZdVEQBIHfHpug
- iTDUr4AwgAWak6iiuoQDnp1c=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 990eda6ec407a941;
-	Fri, 28 Aug 2026 09:57:23 +0000
-X-Mizu-Trace-ID: 990eda6ec407a941
-X-Migadu-Flow: FLOW_OUT
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-To: cgroups@vger.kernel.org,
-	longman@redhat.com,
-	ridong.chen@linux.dev
-Cc: tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	shuah@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH v2 6/6] selftests/cgroup: Add CPU release tests for type-change validation failures
-Date: Fri, 28 Aug 2026 17:56:43 +0800
-Message-ID: <20260828095643.13395-7-guopeng.zhang@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260828095643.13395-1-guopeng.zhang@linux.dev>
-References: <20260828095643.13395-1-guopeng.zhang@linux.dev>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OfwhvkOr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787912754; x=1819448754;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=y2hbqMERCbiubt7BDkFMXl1dBTo5MssDHay4qoq9wxA=;
+  b=OfwhvkOr2b6oN/wkqJr2bItw5OFPB4ZA2LHG8T7BrhRI4axAumrRRael
+   xK4zQOXtDNeuP16L45eUbonQgRi/P1qaS0IdUgwvBBnIX+1t/VJVm3bJC
+   je2ewzc2Xwm9JbzzvmcUVfnk39A+G5aCInhxfdk1vn7lkk9W0ovrEb6Y0
+   iEnGUsFcBvyPnPfMteOzaX8dmvWMEQ5jybYzJzasz9BeL+UjM3C9Wb6D1
+   FPMYQU3ehGzpDC32xb3FdaUg+LFTeHl9gkczQwg3QBGjUkOpcUKuHiewU
+   uHB7JIY3A9HYhcR9Bf/SR2uynTwvKB4JATG25SYrJurDOiDc+OAeq7zCf
+   Q==;
+X-CSE-ConnectionGUID: TfqW/FaASqqYVdzPw83XRA==
+X-CSE-MsgGUID: MlqczSQBTO2WoLoB87Th4w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11888"; a="99580841"
+X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
+   d="scan'208";a="99580841"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2026 03:25:54 -0700
+X-CSE-ConnectionGUID: 6SUyTDvTToGtt1YkFVWwbw==
+X-CSE-MsgGUID: xaSfKNblR3SZYeLPnQSyQg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
+   d="scan'208";a="273380978"
+Received: from lkp-server01.sh.intel.com (HELO 3532383e6126) ([10.239.97.150])
+  by fmviesa005.fm.intel.com with ESMTP; 28 Aug 2026 03:25:51 -0700
+Received: from kbuild by 3532383e6126 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wztmO-00000000Ar3-0FNM;
+	Fri, 28 Aug 2026 10:25:48 +0000
+Date: Fri, 28 Aug 2026 18:25:01 +0800
+From: kernel test robot <lkp@intel.com>
+To: Rik van Riel <riel@surriel.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: oe-kbuild-all@lists.linux.dev, Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work during
+ offline
+Message-ID: <202608281724.4MTLH1h2-lkp@intel.com>
+References: <20260827124211.3b94b103@fangorn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260827124211.3b94b103@fangorn>
 
-From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+Hi Rik,
 
-Exercise housekeeping validation failures for local and remote partition
-type changes. Check that the requested partition type becomes invalid,
-its CPUs are returned to the top cpuset and their boot-time isolation
-state is preserved.
+kernel test robot noticed the following build warnings:
 
-Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
----
- .../selftests/cgroup/test_cpuset_prs.sh       | 93 +++++++++++++++++++
- 1 file changed, 93 insertions(+)
+[auto build test WARNING on akpm-mm/mm-everything]
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index 72fe5ce48eff..9b236826166c 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -1419,6 +1419,97 @@ test_housekeeping_cpu_return()
- 	echo "$TEST_NAME test PASSED."
- }
- 
-+#
-+# A local type change that fails the boot housekeeping constraint must release
-+# the partition CPUs and preserve their boot-isolated state.
-+#
-+test_partition_type_failure()
-+{
-+	TEST_NAME="Local partition type-change validation failure"
-+	get_boot_isolated_cpu "$TEST_NAME" || return 0
-+	echo "Running $TEST_NAME test ..."
-+
-+	cd $CGROUP2/test
-+	echo member > cpuset.cpus.partition
-+	echo $BOOT_CPU > cpuset.cpus
-+	[[ $(cat cpuset.cpus.effective) = "$BOOT_CPU" ]] || {
-+		echo "$TEST_NAME test SKIPPED: CPU $BOOT_CPU is unavailable"
-+		echo "" > cpuset.cpus
-+		cd $CGROUP2
-+		return 0
-+	}
-+	test_partition isolated
-+	echo root > cpuset.cpus.partition
-+	grep -q '^root invalid (partition config conflicts with housekeeping setup)$' \
-+		cpuset.cpus.partition || {
-+		echo "Partition type failure did not produce the expected state"
-+		exit 1
-+	}
-+	[[ $(cat $CGROUP2/cpuset.cpus.effective) = "$CPULIST" ]] || {
-+		echo "Partition type failure did not release CPU $BOOT_CPU"
-+		exit 1
-+	}
-+	check_isolcpus "." || {
-+		echo "Partition type failure lost boot-isolated CPU $BOOT_CPU"
-+		exit 1
-+	}
-+	echo member > cpuset.cpus.partition
-+	echo "" > cpuset.cpus
-+	cd $CGROUP2
-+	echo "$TEST_NAME test PASSED."
-+}
-+
-+#
-+# Exercise the same type-change validation failure for a remote partition.
-+#
-+test_remote_partition_type_failure()
-+{
-+	TEST_NAME="Remote partition type-change validation failure"
-+	get_boot_isolated_cpu "$TEST_NAME" || return 0
-+	echo "Running $TEST_NAME test ..."
-+
-+	cd $CGROUP2/test
-+	echo member > cpuset.cpus.partition
-+	echo +cpuset > cgroup.subtree_control
-+	echo $BOOT_CPU > cpuset.cpus
-+	echo $BOOT_CPU > cpuset.cpus.exclusive
-+	[[ $(cat cpuset.cpus.effective) = "$BOOT_CPU" ]] || {
-+		echo "$TEST_NAME test SKIPPED: CPU $BOOT_CPU is unavailable"
-+		echo "" > cpuset.cpus.exclusive
-+		echo "" > cpuset.cpus
-+		cd $CGROUP2
-+		return 0
-+	}
-+	mkdir A1
-+	cd A1
-+	echo $BOOT_CPU > cpuset.cpus
-+	echo $BOOT_CPU > cpuset.cpus.exclusive
-+	test_partition isolated
-+	echo root > cpuset.cpus.partition
-+	grep -q '^root invalid (partition config conflicts with housekeeping setup)$' \
-+		cpuset.cpus.partition || {
-+		echo "Remote type failure did not produce the expected state"
-+		exit 1
-+	}
-+	[[ $(cat $CGROUP2/cpuset.cpus.effective) = "$CPULIST" ]] || {
-+		echo "Remote type failure did not release CPU $BOOT_CPU"
-+		exit 1
-+	}
-+	check_isolcpus "." || {
-+		echo "Remote type failure lost boot-isolated CPU $BOOT_CPU"
-+		exit 1
-+	}
-+	echo member > cpuset.cpus.partition
-+	echo "" > cpuset.cpus.exclusive
-+	echo "" > cpuset.cpus
-+	cd ..
-+	rmdir A1
-+	echo "" > cpuset.cpus.exclusive
-+	echo "" > cpuset.cpus
-+	cd $CGROUP2
-+	echo "$TEST_NAME test PASSED."
-+}
-+
- #
- # Wait for inotify event for the given file and read it
- # $1: cgroup file to wait for
-@@ -1493,5 +1584,7 @@ test_isolated
- test_boot_isolated
- test_child_owned_cpus
- test_housekeeping_cpu_return
-+test_partition_type_failure
-+test_remote_partition_type_failure
- test_inotify
- echo "All tests PASSED."
--- 
-2.43.0
+url:    https://github.com/intel-lab-lkp/linux/commits/Rik-van-Riel/mm-memcg-fix-UAF-in-drain_all_stock-async-work-during-offline/20260827-124211
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20260827124211.3b94b103%40fangorn
+patch subject: [PATCH] mm/memcg: fix UAF in drain_all_stock() async work during offline
+config: nios2-randconfig-r121-20260828 (https://download.01.org/0day-ci/archive/20260828/202608281724.4MTLH1h2-lkp@intel.com/config)
+compiler: nios2-linux-gcc (GCC) 8.5.0
+sparse: v0.6.5-rc1
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260828/202608281724.4MTLH1h2-lkp@intel.com/reproduce)
 
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202608281724.4MTLH1h2-lkp@intel.com/
+
+sparse warnings: (new ones prefixed by >>)
+>> mm/memcontrol.c:2380:6: sparse: sparse: symbol 'drain_all_stock_sync' was not declared. Should it be static?
+   mm/memcontrol.c:4678:52: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   mm/memcontrol.c:4678:52: sparse:    struct task_struct [noderef] __rcu *
+   mm/memcontrol.c:4678:52: sparse:    struct task_struct *
+
+vim +/drain_all_stock_sync +2380 mm/memcontrol.c
+
+  2379	
+> 2380	void drain_all_stock_sync(struct mem_cgroup *root_memcg)
+  2381	{
+  2382		/*
+  2383		 * Make sure the workqueue is done with this memcg
+  2384		 * before freeing it.
+  2385		 */
+  2386		__drain_all_stock(root_memcg, true);
+  2387		flush_workqueue(memcg_wq);
+  2388	}
+  2389	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
