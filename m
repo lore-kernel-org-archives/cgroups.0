@@ -1,78 +1,79 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86F642B9B7
-	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 13:58:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB93435AC12
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 14:25:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787925493; cv=none; b=cxPH4o/sxWAipCkWP3dli//p3FUhvLUV2yOSGIhUFLwHJ3HELaCTLnbTDIDbKy6FfHp8hYgJ3H95T8IcevcHEiFbXB8DeP4idkQphrj+NrmgyTJ3w7r/fMnIahVLFv2HXCvPXUf7nY231a7XUfK0lV7gl7zzbiU+FabC9mj6eK0=
+	t=1787927147; cv=none; b=UpqBsTjjFbWKj6EoPVXVhXqOSWwp6/WOE+vl7lYOHamY+/LR7CyEJ82bxwXqm4RqhLSjx0Nw/JE0KZKFk/rRX3Gu3Xscp80ixu1LmlrdYnG+0ruEnyMxiLPH40FbqkdIewLVNuUHEl7ZVOFWvYeARjjuGeNNRcLwJp1L4IkFyx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787925493; c=relaxed/simple;
-	bh=8aH0EhpSWQcfKV42OG35TjAJGz1D/rOh3qyHuyjLHr4=;
+	s=arc-20240116; t=1787927147; c=relaxed/simple;
+	bh=gF7RjPEJRFWajt/OLcEI/3tzHIgjMyeLim53Upe2oFY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=atZRKX8+3hBTd176WuvjIDSxw3/nDFNI3C4iltIZm9GDZJdCeDpfsZWrYFLzyeIjNJzZx2wJa+qBvSD5aM8TprZgHk0gvMr/txsPS/WfS7GbOIt/ZUYVDg8FA/4OnsVnPLt6tw/Nd1U9q7lW5pa03hY4NOaOctPK7BySouCcIMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=QqTW+Hse; arc=none smtp.client-ip=209.85.128.44
+	 Content-Type:Content-Disposition:In-Reply-To; b=FHyhGwlFpC1dSvUK+4ewVPZ5DgdVqirHnz9q3kBlJRYiCOuyJrVGxqhYd4RNSHKZE9zcNtwgNW5SdCqb01JkpyYqSx2soZmLvqaEAmPZ1+GFNRQK7P0yyEpaa6pg3nw5hgjhNdmvxDc5XtVYjO642amPICe5jNnPWEzH54UM3ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eXnuON0z; arc=none smtp.client-ip=209.85.221.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="QqTW+Hse"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-496bb7cdf51so11971825e9.2
-        for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 06:58:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eXnuON0z"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-482dd6ee390so899087f8f.3
+        for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 07:25:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1787925490; x=1788530290; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1787927144; x=1788531944; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=KpbfDG68Jz7v4yiugpNXGnV426H5322VZcT0zhKeUVQ=;
-        b=QqTW+HseM0hcfNuSKgLxfnlvNbmMg8fKqytGxMSf9fI7/bPln0piQqK2lfQHsmtNga
-         75gKN3lqBBU0Q2QDVRCsk19P0xICuwEIXGFuYvKnNFOGPVLKLdLn246kq1o3Xtnu/aFu
-         4iMyC/qAhKHrgzaBvx5dP1s22VqyfyoyLCJxrdpNrKps0JbjgO8dFdd9VcIc1w8rsc4l
-         ZDpHd2/gVIVM4CgvFRigfFudi8j6m05h+gQ49S7gyedFxi0tk6tuazw7f1V3d2wJDJ55
-         xargBsWhNgoMZlxLr1cE4c4wEvZ3UFrqtHBR/1jOncIS8xno3bgW6s/c5GkqhcI+rftr
-         RsXQ==
+        bh=BoxMq16+fYtVCLi36Xsb9nn9RavJ5HgJioRujA1lSB0=;
+        b=eXnuON0z7SL4oznMBGst9qSBcOo3fOl/LXUzgaBWnOHkjqXCUiOSiSCofWmNzhHuFt
+         C9xsrjVFAkWVcRXUi26Je2nO0TvJRYOAaewoLpq1ve3q6g2jZk8jh2rGROy/4aQSRHYW
+         6ORnDst3cZZHfeFdJYvQqM8KJRef48cFX+G9wSS4GUWORN26q6PcvCDEPdVPjduqDrSO
+         9vGlee0KGMyx+Rz+pfZl09rQERxM146WBE1qkQ4AbtGa1c7YMbrzTbyjtusCuT+t6sx/
+         wXzZ4Jzs2EDS2Xsncu2VaGp0cy3O4sJ5uuq+Wj2Y9vtpma1BhqyAA09utlk4JNEbTIql
+         uxSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787925490; x=1788530290;
+        d=1e100.net; s=20251104; t=1787927144; x=1788531944;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=KpbfDG68Jz7v4yiugpNXGnV426H5322VZcT0zhKeUVQ=;
-        b=CNYikogp+hxcidfOuOoH/ajH4feSyNnwqdEabEDOvOMGZ0Aiw7LzEa7XwbFxQg/KUL
-         qas+y7fpUE70JR1vBnuuYXCNSfOWtSa75Ps3Z/CvdErWwOIX3XlQYa3EUYcuMZ2MI+7C
-         grtpL3pGr8GW9S86ocgwOIauVL7rD6vs2A4pOExYFQMf87i6XQb5vPKY83ZN22NLMJaF
-         9feNqzPuLjijHk9WC9ZL7jcj9hgD2QK+YgvlxhRqMeE/hvMyb3HGijTTzGRYKkJo/uRy
-         f81Y9R9NtS9uRw/6HtII/JZEoI9rWSBttY7F+feezRKLWfddtPRp1u3dy9T7hcsP5MOs
-         8+9Q==
-X-Forwarded-Encrypted: i=1; AHgh+RqpOakVgPTX633SKRZGseeHBYQTORoBy9PNIOrV0IifcAhp/Z62wHB2F4Z63LhJDTzTabn1de8E@vger.kernel.org
-X-Gm-Message-State: AFuF++n8JvxVSQdPCAGt1PwYg2ZXTMOfSZGxstNDVz1hwS1f54+HQfZU
-	etko75T5+c4J0Fadqj1FwPBSjxQChZxPjYtdvoYLs1xQdVkL9ZTvSn0GihWyDUpB58A=
-X-Gm-Gg: AR+sD13VGLclTY3tWNMwgfaXhncxCqXx/2iyoSTdAAnt1Y60MN/Ldj1XDlp9yxpiEe3
-	k9v9gftCoMBGtS6joLq1AjkBo6vg5FUs2u4atU4x4TTQ9xGfdidAPJdM2SNwemT+7uJlEj1/sLI
-	i0R0Ks67R7h4quTddRYh48S6aVLRZRSPWikhJSrq4cnItLbLKSF6tL7AD26HDY2OH51r1d4l2jh
-	OQMfNnxeXAygvBjGM79TOZjEMduCJQBePl9nZN2dR2YREgB/0bn0u9+zFcCnUiuRoe+fTv5F/DF
-	tj6ef8Cd9Z4RhoPqLEVt3wNcIrAWOxcPj/QvpM4KftS/KvtIPhGgKFrVrnS1+2RSjRRwzz43pYL
-	ZhFp5qt2hrPw7DEltu8G60uJ53eRBmKPylCjbu8Dvf8i8qITvNFp/Zk/jBAEMSuGrmDtNOqXUHF
-	dBrnMEzF9Rdpv73LsfFxI2W96Fi35xrdr1rOz/04gOe3YVZl82g+iebVz8bYvsvKppGMi3K0mNB
-	w==
-X-Received: by 2002:a05:6000:4b1e:b0:482:ea08:8c8a with SMTP id ffacd0b85a97d-482f79c8f48mr11841026f8f.20.1787925489731;
-        Fri, 28 Aug 2026 06:58:09 -0700 (PDT)
+        bh=BoxMq16+fYtVCLi36Xsb9nn9RavJ5HgJioRujA1lSB0=;
+        b=hqvHt0VHwzcmVZPfZytOhLYu1ep6WYn63BBWhHn2HiqrZdQ5powoEHn3mvr0n+BotH
+         tfQ28klS4/VBr4sGInQsuYMJyF3dLUlmZvht8wYrEswYrE0ya+nn+WSO7UO9jgbhAxcu
+         jYdd1IbxqeTXt/zMVcVlhRGqso9VTaHErURvkcGCaxxhlkzh/RRjX/Ms0gCCv8fY/UuF
+         AVzGpd6WJTnTuLN4wgdC4Yk7glAzGW5Pc6jlZb91p9V9FWTTKACYrXn7oFcaBGJdDoNC
+         /tUMczCiY88JLy2bev800D4bc5wRwfETELY07enZMn7eZoklOC+WUv7ZnOx+OxnDO0Ji
+         toPg==
+X-Forwarded-Encrypted: i=1; AHgh+RrmyBuN2qYR8ZrpJ5mgS47cb3yaIBvvk0gzlG9daul0+T5dRz3V6hAbW0PNOXKXUlj2H1qxxyu+@vger.kernel.org
+X-Gm-Message-State: AFuF++mGpxwcOBP1lTo9WVjU4c7oseSdCSTemPnNXQQk8bKg8U4FydGw
+	1G+EmEP5b50eBIu7J0TSkiah7oNvuWi4yYEjMnbs+kP8o0cQQeNUER/kSTQzl0ccVN4=
+X-Gm-Gg: AR+sD12WJRTy3njNgDWfLHx5y8IdZafzSZDWs85Wvw3HvzY3E3yu6zLV8eK96aeIlJ9
+	fw0fRP0NFORBhR8BQsVrSvdvDX4kFM45ImDHFCXiUINV2x5LcvQKs9dDxjprD1eZ6CEZ9oBg3nJ
+	zgZlRJeWVHHYUw0AojKgoyMddLHhKBv9A8sDavrlk3DBc2ItfG0h9IP4qMFtXxxLBLLVlSmsixZ
+	ocJc6ZmquN20zEXBnA4y7IdI7hA1yNXazvqSi9HPsghvhTNMbwHdqfPRLVHcGFMEseQ8QCt/Z/v
+	aUugB7sN88VBC09joX6sOQcu0ZOYloHILq7oQ1uaA2kXeBdHJameGQuY8ewilkhAJDB2upXZJts
+	kYmm0gRp+qcxuin7TLg3GWN3N8DarS7NYzICKZq3aZmEcTLQywuWmErZ6Hjb0Vzg3w5IrKjddic
+	MB5SnlarjiFU+O+h7o8bhe5W2jSOar92Ibp0lC83mrJToSshhk+x097oOeDs+FA4IU9YGTAg1b7
+	A==
+X-Received: by 2002:a05:600c:b85:b0:49c:c96a:d36b with SMTP id 5b1f17b1804b1-49cc96ad411mr23596595e9.12.1787927143838;
+        Fri, 28 Aug 2026 07:25:43 -0700 (PDT)
 Received: from localhost (109-81-85-229.rct.o2.cz. [109.81.85.229])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482fba3cf65sm8616460f8f.0.2026.08.28.06.58.09
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49c5a903eebsm17011155e9.4.2026.08.28.07.25.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2026 06:58:09 -0700 (PDT)
-Date: Fri, 28 Aug 2026 15:58:07 +0200
+        Fri, 28 Aug 2026 07:25:43 -0700 (PDT)
+Date: Fri, 28 Aug 2026 16:25:41 +0200
 From: Michal Hocko <mhocko@suse.com>
-To: Hao Li <hao.li@linux.dev>
-Cc: hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, akpm@linux-foundation.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mm: memcontrol: treat disabled memcg as kmem accounting
- disabled
-Message-ID: <apGT74PpkVvkUkY4@tiehlicka>
-References: <20260827091813.22327-1-hao.li@linux.dev>
- <apAnveXHmeQlKJnU@tiehlicka>
- <apDZV9nKW69ZbIj1@fedora>
+To: Rik van Riel <riel@surriel.com>
+Cc: linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, kernel-team@meta.com, stable@vger.kernel.org
+Subject: Re: [PATCH] mm/memcontrol: avoid stuck FLUSHING_CACHED_CHARGE bit on
+ isolated cpus
+Message-ID: <apGaZdxAPH68kkCc@tiehlicka>
+References: <cover.1787890328.git.riel@surriel.com>
+ <a611f2bc40d30f9c14a6f41b173185975c46a203.1787890328.git.riel@surriel.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -81,70 +82,79 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <apDZV9nKW69ZbIj1@fedora>
+In-Reply-To: <a611f2bc40d30f9c14a6f41b173185975c46a203.1787890328.git.riel@surriel.com>
 
-On Fri 28-08-26 08:47:54, Hao Li wrote:
-> On Thu, Aug 27, 2026 at 02:04:13PM +0200, Michal Hocko wrote:
-> > On Thu 27-08-26 17:17:50, Hao Li wrote:
-> > > mem_cgroup_kmem_disabled() currently only checks whether the
-> > > "cgroup.memory=nokmem" option is specified. However, kmem accounting is
-> > > also unavailable when memcg itself is disabled.
-> > > 
-> > > Check both conditions to ensure the function accurately reflects the
-> > > kmem accounting state.
-> > 
-> > It would be really great if you could describe how we could end up with
-> > the inconsistent memcg enabled but kmem enabled and what kind of effect
-> > does this have.
+On Fri 28-08-26 09:46:21, Rik van Riel wrote:
+> drain_all_stock() can leave FLUSHING_CACHED_CHARGE set after the
+> work is dropped.  It sets the bit before checking isolation and
+> schedule_drain_work() checks isolation and queues in a separate RCU
+> critical section, so housekeeping_update()'s synchronize_rcu() can
+> race the second check.
 > 
-> Yes, thanks for point out this.
+> drain_local_stock() only clears the bit for work that ran, so the bit
+> remains set and the stock is never drained again.
 > 
-> > 
-> > AFAICS the inconsistency is possible and it would lead some wastage but
-> > no functional problems but the changelog should be more descriptive.
-> 
-> Exactly! The most direct benefit is that when memcg is disabled,
-> new_kmalloc_cache() will not need to create a separate `KMALLOC_CGROUP` slub
-> cache, but can simply alias it to `KMALLOC_NORMAL`. This avoids wastage.
+> Reorganize the drain_all_stock() loop, reducing nesting, splitting
+> out local vs remote cpu handling, and skipping everything on isolated
+> cpus, which solves the stuck FLUSHING_CACHED_CHARGE flag.
 
-This is definitely important detail to mention in the chagelog. Same as
-the effect on the __list_lru_init and other callers. TBH I am no longer
-100% sure this is correct. You need to explain more why this is just
-wastage rathe than a subtle side effect that is desirable.
+Is there any reason why we cannot simply clear the flag if the work is
+not scheduled?
+---
 
-> If this sounds reasonable, I would be happy to explain it in more detail
-> in v2.
-> 
-> > 
-> > > Signed-off-by: Hao Li <hao.li@linux.dev>
-> > > ---
-> > >  mm/memcontrol.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > index 1ebceade4021..b28f6165c354 100644
-> > > --- a/mm/memcontrol.c
-> > > +++ b/mm/memcontrol.c
-> > > @@ -132,7 +132,7 @@ static DEFINE_SPINLOCK(objcg_lock);
-> > >  
-> > >  bool mem_cgroup_kmem_disabled(void)
-> > >  {
-> > > -	return cgroup_memory_nokmem;
-> > > +	return cgroup_memory_nokmem || mem_cgroup_disabled();
-> > >  }
-> > >  
-> > >  static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages);
-> > > -- 
-> > > 2.54.0
-> > 
-> > -- 
-> > Michal Hocko
-> > SUSE Labs
-> 
-> -- 
-> Thanks,
-> Hao
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 69b37f63a307..907ac63e5067 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2261,8 +2261,10 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
+ 	return flush;
+ }
+ 
+-static void schedule_drain_work(int cpu, struct work_struct *work)
++static bool schedule_drain_work(int cpu, struct work_struct *work)
+ {
++	int ret = false;
++
+ 	/*
+ 	 * Protect housekeeping cpumask read and work enqueue together
+ 	 * in the same RCU critical section so that later cpuset isolated
+@@ -2270,8 +2272,12 @@ static void schedule_drain_work(int cpu, struct work_struct *work)
+ 	 * pending work on newly isolated CPUs.
+ 	 */
+ 	guard(rcu)();
+-	if (!cpu_is_isolated(cpu))
+-		queue_work_on(cpu, memcg_wq, work);
++	if (!cpu_is_isolated(cpu)) {
++		queue_work_on(cpu, memcg_wq, &memcg_st->work);
++		ret = true;
++	}
++
++	return ret;
+ }
+ 
+ /*
+@@ -2303,8 +2309,8 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
+ 				      &memcg_st->flags)) {
+ 			if (cpu == curcpu)
+ 				drain_local_memcg_stock(&memcg_st->work);
+-			else
+-				schedule_drain_work(cpu, &memcg_st->work);
++			else if (!schedule_drain_work(cpu, &memcg_st->work))
++				clear_bit(FLUSHING_CACHED_CHARGE, &memcg_st->flags)
+ 		}
+ 
+ 		if (!test_bit(FLUSHING_CACHED_CHARGE, &obj_st->flags) &&
+@@ -2313,8 +2319,8 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
+ 				      &obj_st->flags)) {
+ 			if (cpu == curcpu)
+ 				drain_local_obj_stock(&obj_st->work);
+-			else
+-				schedule_drain_work(cpu, &obj_st->work);
++			else if (!schedule_drain_work(cpu, &obj_st->work))
++				clear_bit(FLUSHING_CACHED_CHARGE, &obj_st->flags);
+ 		}
+ 	}
+ 	migrate_enable();
 -- 
 Michal Hocko
 SUSE Labs
