@@ -1,32 +1,33 @@
-Received: from mta1.migadu.com (out-213.mta1.migadu.com [95.215.58.213])
+Received: from mta0.migadu.com (out-193.mta0.migadu.com [91.218.175.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D8693911C9
-	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 09:24:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.213
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0294638C433
+	for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 09:25:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787909101; cv=none; b=na2FB05hvEsCv0ZByX3JzBIvhJHY8PwE2899RbbwWNdZjr9nelZf2e2MUE9azvp6DZECowq0QEaa/+LX0DdjOHqI21hRxgxTOEA12zyc6M2cNZSA8Dk+pl7dOIFTrbZ/PxtLALKiko2mIV55NCD2eEhBiLC1TCqRqOgLCsmvIqk=
+	t=1787909112; cv=none; b=aKFT8i8iUl/6jsI4yB+mCULQ2+MbOk8p0KPll9ZQMjUvrvZOX/rvNeBBSL9oZdHmUeb1sQCzi+lsR8Yhu5nsYTBG8W0xR4cNuxokIUU9LbAlV/OlE9d76WFzzJnqSy6F3HUi/flCoDzl7+jjC/w/xUR5waUZL260Ak6JSDVCepo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787909101; c=relaxed/simple;
-	bh=CDI22/xCoc9ddBdZXUhSYZ3MzxPYo2degC19Pq6FtgM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Pgx7CP1FZ35BziommkRFF59n6AJOgegQngeaKp5Yf3jCFOI9bYX6kM376C1TPJgkAHCi7nrGM9Ilnmxs/SPmwTt+VOHB0tje9oXMbMB6kRjkv5YXk7Gc2jIlrRqj1BbnXJMlk8PRIckudGnF9RU7iJz7ir7MrvO7Hr6HfuDjR8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pbkERHQJ; arc=none smtp.client-ip=95.215.58.213
+	s=arc-20240116; t=1787909112; c=relaxed/simple;
+	bh=dBqn/fwXS6Yqu7+OeooRTuVzLOlPePdPqVBD4zdNuTA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=txxXBUHqdhmqGA8kd6xFb/ol9U54L348rBlYr4l2RSs8KeSl3Hm5N4TvwAxK0VujWaoasA5rR5Vs+6WlbkxPGQ3Im0ohWJB4nR1snfC0kGQXEqnunafNAaeoFaySc1fzjtR+odAl+DXOmEJD3ngG2f25bY1DDJ0TTQ/yHJRnPKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=S9ChDKaL; arc=none smtp.client-ip=91.218.175.193
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pbkERHQJ"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="S9ChDKaL"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=CDI22/xCoc9ddBdZXUhSYZ3MzxPYo2degC19Pq6FtgM=;
+DKIM-Signature: a=rsa-sha256; bh=dBqn/fwXS6Yqu7+OeooRTuVzLOlPePdPqVBD4zdNuTA=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787909095; v=1; x=1788513895;
- b=pbkERHQJkaHElumOogHNEjWknXO+i1b5M+StdIo+zG6BnFCi7wMPV/RECNgeGCjdvJ4snv2h
- Ej0YNfsYEXscKQDCMuw7X9hMaLmy8aASChOhogmFclGZIJvs4rIk81ODwASU+uKXoHoS93ojBzg
- oHmQhIAvt0BQJv3SS/hGnSUE=
+ t=1787909107; v=1; x=1788513907;
+ b=S9ChDKaLDw1RrTJFJfcqJNeTpafUMPONVvbaQW8JqDshbUn0LnQJnL6RgjNKr8Q28oSO42RH
+ oIOmhPqXy1J60mbKDF+3BJIHk3ZR/AigbVTa+TlmkrewN5JVFuvc41K+K6B8C4FsVfdpUIlwNN/
+ noG+AmmaXTB9yQ7GDxneWt6s=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 220f4142187c77b2;
-	Fri, 28 Aug 2026 09:24:55 +0000
-X-Mizu-Trace-ID: 220f4142187c77b2
+Received: by smtp.migadu.com with ESMTPS id 770e0ca2d72166ed;
+	Fri, 28 Aug 2026 09:25:07 +0000
+X-Mizu-Trace-ID: 770e0ca2d72166ed
 X-Migadu-Flow: FLOW_OUT
 From: Ridong Chen <ridong.chen@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
@@ -50,11 +51,14 @@ Cc: Muchun Song <muchun.song@linux.dev>,
 	linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
 	linux-kernel@vger.kernel.org,
 	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH 0/2] mm/mglru: fix ineffective memory protection for non-kswapd reclaim
-Date: Fri, 28 Aug 2026 17:24:30 +0800
-Message-Id: <20260828092432.1257917-1-ridong.chen@linux.dev>
+	Ridong Chen <chenridong@xiaomi.com>,
+	stable@vger.kernel.org
+Subject: [PATCH 1/2] mm/page_counter: avoid integer overflow in effective_protection()
+Date: Fri, 28 Aug 2026 17:24:31 +0800
+Message-Id: <20260828092432.1257917-2-ridong.chen@linux.dev>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260828092432.1257917-1-ridong.chen@linux.dev>
+References: <20260828092432.1257917-1-ridong.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -65,23 +69,74 @@ Content-Transfer-Encoding: 8bit
 
 From: Ridong Chen <chenridong@xiaomi.com>
 
-This series fixes memory.min/low being silently bypassed for MGLRU
-during non-kswapd global reclaim (global direct reclaim and root-level
-memory.reclaim).
+effective_protection() distributes a parent's protection among its
+children with two proportional calculations:
 
-Patch 2 is the actual fix. Patch 1 is a prerequisite: an integer overflow
-in effective_protection(), spotted by the sashiko review tool, which
-patch 2's new caller would also be exposed to.
+	protected * parent_effective / siblings_protected
 
-Ridong Chen (2):
-  mm/page_counter: avoid integer overflow in effective_protection()
-  mm/mglru: fix ineffective memory protection for non-kswapd reclaim
+and, for recursive protection:
 
- include/linux/memcontrol.h | 11 +++++++++++
- mm/memcontrol.c            | 45 +++++++++++++++++++++++++++++++++++++++++++++
- mm/page_counter.c          | 10 ++++++----
- mm/vmscan.c                |  8 +++++++-
- 4 files changed, 69 insertions(+), 5 deletions(-)
+	(parent_effective - siblings_protected) * (usage - protected)
+		/ (parent_usage - siblings_protected)
 
---
-2.43.0
+All operands are page counts in unsigned long, and the multiplication is
+done at unsigned long width before the division. On systems with >= 16TB
+RAM the product can exceed 2^64 and wrap, yielding a bogus effective
+protection value and silently breaking memory.min/low enforcement. This
+was reported by the sashiko review tool [1].
+
+Use mul_u64_u64_div_u64() for both expressions, which performs the
+multiply in a 128-bit intermediate before dividing. The divisors are
+non-zero on the paths that reach them: siblings_protected >
+parent_effective in the first case and parent_usage > siblings_protected
+in the second.
+
+[1] https://sashiko.dev/#/patchset/20260826133054.88529-1-ridong.chen@linux.dev?part=1
+
+Fixes: bc50bcc6e00b ("mm: memcontrol: clean up and document effective low/min calculations")
+Fixes: 8a931f801340 ("mm: memcontrol: recursive memory.low protection")
+Cc: stable@vger.kernel.org
+Assisted-by: Claude:claude-opus-4-8
+Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+---
+ mm/page_counter.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/mm/page_counter.c b/mm/page_counter.c
+index 661e0f2a5127..311153b0e002 100644
+--- a/mm/page_counter.c
++++ b/mm/page_counter.c
+@@ -8,6 +8,7 @@
+ #include <linux/page_counter.h>
+ #include <linux/atomic.h>
+ #include <linux/kernel.h>
++#include <linux/math64.h>
+ #include <linux/string.h>
+ #include <linux/sched.h>
+ #include <linux/bug.h>
+@@ -356,7 +357,8 @@ static unsigned long effective_protection(unsigned long usage,
+ 	 * otherwise get a smaller chunk than what they claimed.
+ 	 */
+ 	if (siblings_protected > parent_effective)
+-		return protected * parent_effective / siblings_protected;
++		return mul_u64_u64_div_u64(protected, parent_effective,
++					   siblings_protected);
+ 
+ 	/*
+ 	 * Ok, utilized protection of all children is within what the
+@@ -399,9 +401,9 @@ static unsigned long effective_protection(unsigned long usage,
+ 	    usage > protected) {
+ 		unsigned long unclaimed;
+ 
+-		unclaimed = parent_effective - siblings_protected;
+-		unclaimed *= usage - protected;
+-		unclaimed /= parent_usage - siblings_protected;
++		unclaimed = mul_u64_u64_div_u64(parent_effective - siblings_protected,
++						usage - protected,
++						parent_usage - siblings_protected);
+ 
+ 		ep += unclaimed;
+ 	}
+-- 
+2.34.1
+
