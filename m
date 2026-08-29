@@ -1,56 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB9532620DE
-	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 10:05:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787997901; cv=none; b=Ufs2/sfGhr6KX7Lyj60tu+qWCWzg1VeftLvGrTZZOlxDCAQNCNkvdC9NvG/sOy01S5M3Ts7vGyzgDDAIyDNq1fHxn6ZtcHMDcbM13ogNezmdP/Re3xfHU2w+4vSHeQLHBVTG5GMtL7V9T3fJO7NOJJITWsGmbnNcdK587gO2Fhg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787997901; c=relaxed/simple;
-	bh=Bm1bDKma1fCaZlo6UL6h2FrDywYhUARIBqg2ikagqJI=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 032011C5D72
+	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 14:32:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788013953; cv=pass; b=UlySmL/SKEHstPScdzFhPyx30awqd/9BJQb4ZPIGtGd/grx1AamJNp06h9L2wuVZHfBQ9UNuVA0TLt+YxbtrHjOa5sukAuZV/yadJd4P1jaaWzVTbCPSborOXAzmD52lSlobyaEdRU2yJ8Iy5I4dShc28P0zuUhgb8Cof/ytPyM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788013953; c=relaxed/simple;
+	bh=bw9e0RkPAnFNpT6iU3Y4+l6yC1de+Muma8XPrpWZVgM=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=TtkFG1XnBD3RL9CgJf3gZ9jZCLP45z9dKTH4zmOKOiFh0a1kgoRSDf39nvtDAAdnWptzIfmtDfZqk3cyzrON6ZWwR3sa07vov1it8MMkK4omwjeEfdTtk0U/3R2Ime4cnb73PRzdJBhgjqNIfcig3TPxLP6BkXc4XYW34mWfH5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z+PqkQXG; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=Q6BAcZiNfHvvm26ikup6Sgl67ayPdg2GfonVSaYhJLVwuyAwy7Co8gBJEz14RWqfVZjEluOJCrims+0LT+tmuEXECR7gSy+D0+HMAiH+4KiXjNdqZf1CeP9rcg3D2EkzX2R0ZVYRqmqBILJXLvQ/uhzFhfx40iAzw5m+nNEbchk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aJvacSe8; arc=pass smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z+PqkQXG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 595431F0155F
-	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 10:05:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787997900;
-	bh=Bm1bDKma1fCaZlo6UL6h2FrDywYhUARIBqg2ikagqJI=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=Z+PqkQXGYbY9/A0mRMQa8SBREguvmiQFpgCS7ncHAY/AUCJM9o2SfDjA6hsgDq8Ez
-	 +3Mm0EWs9yOftNpFTALFo1/T+66ksL0gVV4A1tpo6YlluRt4TItKIvveb2VOCnHa5N
-	 qyZ9/zp+VynmUSel3VpOHTfB2nLDy+USLgjJ+/6uKQH/b1fYBUM9k5lrwfgdejEja3
-	 Joxpavp74DPSqhjh8YnFLypvUiZai7OoyEhtJgwIzBUHExOlvyYAEdSq6CiIpPS8OC
-	 lD6aF28g15EroYcIZFcC1mU3OeeQYx5PmP4jCJ/hKDR0BsKQml+m4q+iBuPkCku4FP
-	 2yb0Jf4mwuH3w==
-Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-90cbff85fa9so12726176d6.2
-        for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 03:05:00 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBzCs6ZBeg9B+2Bz4cdb8G+69lls5qmpGopx3SDQRY5ZxzLOtIe8Mhm3AijmeUeOGQQpawmp2Uh7@vger.kernel.org
-X-Gm-Message-State: AFuF++lvRrKz0k6NKjaw3heDIToBgZ8/3461L7NZSfoUdTZD9SZTF19h
-	NEDzY+9Yd07e/Kppmhv8kSIMwzubNhfi2PomSDI++VbKnsL6xcwyIN5Uak+odygxpkmoCcC+jBz
-	0uE3pba/ODASQw1eWBNgxsF7kGwe0tFQ=
-X-Received: by 2002:a05:6214:4497:b0:90a:7fbd:ea89 with SMTP id
- 6a1803df08f44-90ce0e572dfmr180465806d6.1.1787997899307; Sat, 29 Aug 2026
- 03:04:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aJvacSe8"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c2531f453eeso321951466b.3
+        for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 07:32:31 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788013950; cv=none;
+        d=google.com; s=arc-20260327;
+        b=UuAlf/bgtcvEn21f6rvIIkMnA9sUJt0TqG1QOoH8BO1MHM0DD6bfTMXkd9b28EEHfD
+         LjXgR77yrXHK1BPl04EH3c0gKWcPPkdOjVBQDj6p2zS6hzxr422Ckvz7BG2GPzza9EPw
+         iOaW+wUkiauXLOJQTMHaLUu/GqyEqwyXoaW6CJX8FPmMChYuKIKdGEPhUzXKdhZns1pr
+         kNr36/4W5/BiVIyLG7iKvbmQh3HNlTkx4RIkUnXheUCpuYx8i3/CZTgvJHMEnqPr4Nau
+         ykFVLV7JVOIjf9tBFm1J75UajpH3RlKZtlThJwmn5FOeA7Ay/pJmwpjiT76JejnlMrLT
+         qD3g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=4hygF3KOg5K3j/SEn1AwfTDb0LJzxqqJ+rrQ/Ud785c=;
+        fh=Dx5+RPaRB4bIkdAXrkmNBYCLtVRQ2Oli7I7RQ8/s5R0=;
+        b=BNDdRSp7lQESMZzgiqvajYIHlPhcvsaE+WPRiQ6ys1q6oLW2bn2noimKe16t6INIew
+         j8ssej5kvOQL5yAMm/slcJkt5YnMgWk5fZ5uyDPacgrPTpiWLhc+6pmFwJxG8Uldk/gd
+         wCKy3ejoJQt9ZUjf3Vzt+nrB9E9UFb4hr9YBwD7plky/zK5fQZEpDL/vJNjkA6ymvhK7
+         D6/K3l6joEq553pgL0scdyNezHU96bmr4dbxwxApmcA7gV3pIoB2K/OLj75ayr1W7iUc
+         JDi0WgTY3/xb5c7sXiFyOh5Oon3M5sZ4aPker3zDVtlVvgYxm5czPNnHi2J6GkdL2Tod
+         NJxw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788013950; x=1788618750; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=4hygF3KOg5K3j/SEn1AwfTDb0LJzxqqJ+rrQ/Ud785c=;
+        b=aJvacSe8d8dMUG1tFKjW5ZeX6dU0OgdMfSIomUR5iMktRI+3Z40dN69p6OpS/rgrKQ
+         BavwMUGMAqXtTNxvLjVGGCGqEfD/rCVlF+uo8zX9bYUE02AbvsuEqdZtP1afwj95ShID
+         s31tX53rP5OPrkGsw8Xp+WZb2hULx6CbHrwRnmXP/ou+4hn3QiD82qN1S307ZNADQv1q
+         qxZu0mkxG0qLBRa2oqQwrPe3zDbpCU4nO7ZIcUNgevTbU+HxvrUymqsb0ppCxxkQ3b9d
+         eSOxfi+xGpcMrY/iAGPnA8pVXq+rOE0szRuH88fuP3psG2oKzH9v4GhSjvZSsOy8VmSb
+         ow3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788013950; x=1788618750;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=4hygF3KOg5K3j/SEn1AwfTDb0LJzxqqJ+rrQ/Ud785c=;
+        b=eO07ZKD+58J/5nPXQt29Oo2uK9+lKySXp2HONbssNSqeYym5Y5+VtAPhLXWC7k1VfD
+         D+BlXwl54UsrB5i3bcgHcafosqz8NV7Sz6ROMCUWrKyiSxPOTkMw4l3hrjp4ereCnMys
+         t7mR+WRj/CqH85e54pXSY00I4ioWeJnhJmktMz+FgvYMdvoHBsi+riFHb99PJ0TKX6xy
+         skgKg92ZIk50C8FyrSIXnrODyj928tvTIYSu6ELnUTEFK6gJvVNDuKfkTLFjirzf9Cym
+         7ZU9NWNvVEhLF9uNFQk7/8Zv17hHIvTQpcScSRCSGEws6aQdqQ+aZLeWArEdd2mafhZK
+         Wcjg==
+X-Forwarded-Encrypted: i=1; AHgh+RqTceAQmqCy9fbWs6rGSR5inM8oLUFsUiUAAPJ/rGmWMUWkwzDo2XnURE1dQbPFUyKXfgi9FKO6@vger.kernel.org
+X-Gm-Message-State: AFuF++nR2w3fjy8JrUaZmtSS9nmsGqomy/02NbSu/O+debH7yKsHVmKY
+	mdimALL0EuK7+vnExKg9PVrzMo0JUrIcmPbnSvR9QjR6vyvJbZhdYaXY9NIrfYlmz50m2ZS+0dw
+	soEmQgly+Ud4L9bYgDhT2hPeeDB4dJuc=
+X-Gm-Gg: AR+sD12OnoLfKB2406+fC8uKsSa4YK6DqMaSN1+dcF/H5G9CsZQ2W8xlRwTJEz6VWuP
+	5PZjnAWrNdX8g/KlYRhF/+y5LpLvf9eLl3Fn04P3hpwyCyHwNRQUXNzEO4/07kLqK/kjTuI8ajF
+	cAIXl8W7rbK4jDcC7bgBHE1cSwsoEk5PhckpbQB8KXlFiReTvxoc0q/KL30XDDvsghAnSFS6NsG
+	AWONzicZSUSzycBfShdSNe58aB2bXSuuULjwBNMzMcMAgjxQBHmVEHIuQkLwTR8PVwcOS8pmI4r
+	GbaPLSjHIpI3jkMSEqOU0CX+st0NKHwW9O1IwC27EyQ6KMYDDKPy0JZ6mdrLmwXpX+6/WKKN8yT
+	fTg==
+X-Received: by 2002:a17:906:99d0:b0:c25:6210:84e5 with SMTP id
+ a640c23a62f3a-c256210a3f9mr776428566b.14.1788013949866; Sat, 29 Aug 2026
+ 07:32:29 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com> <20260826-mglru-flags-cleanup-v3-4-d9f1c75549c8@tencent.com>
-In-Reply-To: <20260826-mglru-flags-cleanup-v3-4-d9f1c75549c8@tencent.com>
-From: Barry Song <baohua@kernel.org>
-Date: Sat, 29 Aug 2026 18:04:48 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4wU7B_Lnz_fbKOUsb+2fs1D3GrMcPq7FBLN4n4M7LLwBg@mail.gmail.com>
-X-Gm-Features: AcwNN1X-K486iK9cL85ffaV_ppz2Dedfrrpz1iVvNLwjwGEYt4Lbvyldsp-xaSY
-Message-ID: <CAGsJ_4wU7B_Lnz_fbKOUsb+2fs1D3GrMcPq7FBLN4n4M7LLwBg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/6] mm/mglru: move max_seq read into walk_update_folio
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com>
+ <20260826-mglru-flags-cleanup-v3-5-d9f1c75549c8@tencent.com> <20260828052949.52874-1-lianux.mm@gmail.com>
+In-Reply-To: <20260828052949.52874-1-lianux.mm@gmail.com>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Sat, 29 Aug 2026 22:31:53 +0800
+X-Gm-Features: AcwNN1U1XN5oJYNoIA4DZfdB5v_IkrXwFftUeLIhH3MOVieiywGaW9p9wEVYMfA
+Message-ID: <CAMgjq7DONqF_TZaxtez0fVzxyNdiAzMBikM2nKdQojRqX_n-rw@mail.gmail.com>
+Subject: Re: [PATCH v3 5/6] mm/mglru: use explicit tier range in read_ctrl_pos()
+To: Lian Wang <lianux.mm@gmail.com>
+Cc: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>, linux-mm@kvack.org, 
+	Andrew Morton <akpm@linux-foundation.org>, Barry Song <baohua@kernel.org>, 
 	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
 	Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
 	Shakeel Butt <shakeel.butt@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
@@ -60,29 +103,24 @@ Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
 	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
 	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, 
 	Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Aug 26, 2026 at 1:53=E2=80=AFAM Kairui Song via B4 Relay
-<devnull+kasong.tencent.com@kernel.org> wrote:
+On Fri, Aug 28, 2026 at 1:30=E2=80=AFPM Lian Wang <lianux.mm@gmail.com> wro=
+te:
 >
-> From: Kairui Song <kasong@tencent.com>
+> Hi Kairui,
 >
-> walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
-> each read lrugen->max_seq to compute the target generation used by
-> walk_update_folio(), then pass it as a parameter. Move the read into
-> walk_update_folio() itself so the callers no longer need to compute
-> or pass the value.
+> > Replace it with explicit (tier_min, tier_max) parameters using a
+> > closed [tier_min, tier_max] interval
 >
-> The max_seq read now happens once per folio update rather than once
-> per walk range, so folios always get promoted to the current youngest
-> generation.
+> While touching read_ctrl_pos(), would it make sense to add:
 >
-> Reviewed-by: Baoquan He <baoquan.he@linux.dev>
-> Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-> Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
+>         lockdep_assert_held(&lruvec->lru_lock);
 
-Reviewed-by: Barry Song <baohua@kernel.org>
+Hi Lian
+
+Thanks for the suggestion. I don't think that's necessary, though.
+Nothing will go wrong if the lock is not held, reporting warning is
+kind of over react :)
