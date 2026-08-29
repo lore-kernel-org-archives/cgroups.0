@@ -1,82 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-151.mta1.migadu.com [95.215.58.151])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E627D305699;
-	Fri, 28 Aug 2026 23:19:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FD103F106E
+	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 00:33:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787959183; cv=none; b=HnUzGygS8p3mRJPnwcv5JPJUYkQ/9qbmy/nqMwD+146DpuHeRAwS3WGc64Zt+kP3BEtPmivPi7jNFLr8FTEY+cxdaSzB4mIx0/xTDduPdttm50TZooNNR8An2+zCUh9SxRIQwZXjpgbTptnrsiW/u1mrgeCBvguWMWEnFywkR1s=
+	t=1787963582; cv=none; b=qRBAJrS/JUknaBk1itQPXkJ/+KanzyMqOPM07XjVWeNF/TQtnc1t6JhDy9Ljo4GR8D5VHIPtar+bUfrWLUFXlZuCPLQGW5NHKdDXLf7j1/7q9xVzqmXBt47VmPKGaRe8qMYvnj2ZKMztRF7WRB4ZpNe7eTGJSWzVzR0bPXVYong=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787959183; c=relaxed/simple;
-	bh=zTrPZ5twPN1sLhY3sbL8sKUc5MsAXTW86f5F2d3lJ6I=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=TF4DPOWvPNiowhRTY+RbtfUgYLQhcK8urK+qSSt6rD3iROPyVu6Ej0TKr0cXcKxLrLGmGgdqo2QxKAGOrQ37XH1vpnMw+c9vrj339IGTMYt9SLT9Ze29BzoGyHEHJ6ofCoi5Ys5aAGDxAqlkg1xodVnsiq73ApxbewPeVRmrX1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=OyaMlNeG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787963582; c=relaxed/simple;
+	bh=XHL0G3FrD3EaKeVkxOn/16guskz9c3p8tk2uofgjOyw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c49FQ8sC/l/bxDSBNVKvtg5pMjChDBJ3LEiEYzLCph5vG8Ni3PnpyQnqt8OLQjkA1ih09UCXCCPVfSR0bLYX6NEO+FH1GL9gYxACXga7bzOhSr4gU6hMH05yhUrduLBjeLhaphbx1Vrrsx8RvMn8VNLOj7NevaJZ7mpQV0/TqWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=csYZR4Uv; arc=none smtp.client-ip=95.215.58.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="OyaMlNeG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBBB51F000E9;
-	Fri, 28 Aug 2026 23:19:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1787959182;
-	bh=wGTIcEOa8Bl/ys+CrMwubJJ+e1El5YPJ5H0B806NNM0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=OyaMlNeGv29cOVIgzSDrI3H6wGxTi2yI9Obbhxt+DwrreAxbryAnDVJORfl8SFd3V
-	 /kAvbZsPefzV20UYas1yLsr3mJHRbaImT/12+z7SvKQSH7GdrkVb9G0PyZUJRENAD9
-	 XlkjMAd/hkCHTzcXNNDeZc4WDw1ZedHHBXDsana8=
-Date: Fri, 28 Aug 2026 16:19:41 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: kasong@tencent.com
-Cc: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>,
- linux-mm@kvack.org, Barry Song <baohua@kernel.org>, Axel Rasmussen
- <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu
- <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, Michal
- Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>, Baolin
- Wang <baolin.wang@linux.alibaba.com>, Ridong Chen <ridong.chen@linux.dev>,
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka
- <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>,
- Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>
-Subject: Re: [PATCH v3 0/6] mm/mglru: clean up folio counters and flag usage
-Message-Id: <20260828161941.def8f7a319f6b435aad62d69@linux-foundation.org>
-In-Reply-To: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com>
-References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="csYZR4Uv"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=XHL0G3FrD3EaKeVkxOn/16guskz9c3p8tk2uofgjOyw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787963578; v=1; x=1788568378;
+ b=csYZR4Uv0jCerVCL8b4JHJCF3OVcG7teAwwbDC09u4KlLq/iTE7WPvx6NE63Hkh26k0E/Rgl
+ 5WBZfHSXAScTScly+1bbI2iOc6bY1dPlyOXQYbC454CU/N+JjhIdwYvK93WEobqfZxK9du3ncCe
+ tIjEQR3yVlZ9QLIXpmbxKmok=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 6fb6e2f96245975a;
+	Sat, 29 Aug 2026 00:32:48 +0000
+X-Mizu-Trace-ID: 6fb6e2f96245975a
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 28 Aug 2026 17:32:42 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Etienne Perot <eperot@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Christian Brauner <brauner@kernel.org>, 
+	Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 1/2] cgroup: fix spurious SIGKILL of CLONE_INTO_CGROUP
+ children
+Message-ID: <apInuCtg9UnoB9w0@linux.dev>
+References: <20260828215252.4126811-1-eperot@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260828215252.4126811-1-eperot@google.com>
 
-On Wed, 26 Aug 2026 01:53:33 +0800 Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org> wrote:
-
-> This is a cleanup series separated out from the MGLRU-FG series [1]. As
-> that series is getting too long in following updates, seperate out the
-> clean up part for easier review and merge.
+On Fri, Aug 28, 2026 at 09:52:51PM +0000, Etienne Perot wrote:
+> Since commit b69bb476dee9 ("cgroup: fix race between fork and
+> cgroup.kill"), the fork path snapshots the kill_seq of the child's
+> future cgroup into kargs->kill_seq, and cgroup_post_fork() SIGKILLs
+> the child if that cgroup's kill_seq has changed in the meantime, to
+> catch forks racing with a cgroup.kill sweep.
 > 
-> No feature change is intended, except one bugfix. It mostly replaces
-> the open-coded bit operations scattered throughout the MGLRU code with
-> new helpers, with proper kdocs, sanity debug checks, and hardens a few
-> MGLRU functions.
+> For CLONE_INTO_CGROUP, however, the snapshot in cgroup_css_set_fork()
+> is taken before the target cgroup has been resolved: kargs->cgrp is
+> always NULL at this point (it is only set at the end of the function).
+> So the "if (kargs->cgrp)" branch is dead code and the snapshot always
+> records the kill_seq of the parent's cgroup. cgroup_post_fork() then
+> compares it with the kill_seq of the target cgroup, so the child gets
+> SIGKILLed whenever the two cgroups have been killed a different number
+> of times.
 > 
-> A subtle generation counter leak is also found during the refactoring
-> and the fix is included.
+> As a result, once cgroup.kill has been written to a cgroup, every
+> child subsequently cloned into it with clone3(CLONE_INTO_CGROUP) is
+> killed on the spot, for as long as the cgroup exists: kill_seq is not
+> exposed to userspace and never resets.
 > 
-> Also collected review feedbacks on the cleanup part from the posted
-> series.
+> Re-snapshot kill_seq from the target cgroup once it has been resolved,
+> and drop the dead branch at the early snapshot site.
+> 
+> This does not reopen the race fixed by b69bb476dee9. For
+> CLONE_INTO_CGROUP, everything from the snapshot to the check in
+> cgroup_post_fork() runs with cgroup_mutex held, and kill_seq is
+> only ever incremented under cgroup_mutex.
 
-Thanks, I queued this for testing and further review.
+Thanks for catching this. Overall looks good. Can you please fix the comment
+where kill_seq is defined in the header. Currently it says kill_seq is
+serialized by css_set_lock. After your change, it should for normal fork it is
+serialized by css_set_lock but for clone3(CLONE_INTO_CGROUP), it is serialized
+by cgroup_mutex.
 
+Orthogonally, we have plans to remove cgroup_mutex dependency from cgroup.kill,
+so we will need to reevaluate this at that time.
 
-I included a few notes-to-self:
-
-- Unaddressed review comments:
-	https://lore.kernel.org/fbb40ab7-6942-4983-9621-ab8d5d50474f@linux.alibaba.com
-	https://lore.kernel.org/20260828052949.52874-1-lianux.mm@gmail.com
-
-- [6/6] is pending review
+> 
+> Fixes: b69bb476dee9 ("cgroup: fix race between fork and cgroup.kill")
+> Cc: stable@vger.kernel.org
+> Cc: Shakeel Butt <shakeel.butt@linux.dev>
+> Assisted-by: LLM
+> Signed-off-by: Etienne Perot <eperot@google.com>
+> ---
+>  kernel/cgroup/cgroup.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index c3a12fee7528..2d532bf2c0c7 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -6873,10 +6873,7 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
+>  	spin_lock_irq(&css_set_lock);
+>  	cset = task_css_set(current);
+>  	get_css_set(cset);
+> -	if (kargs->cgrp)
+> -		kargs->kill_seq = kargs->cgrp->kill_seq;
+> -	else
+> -		kargs->kill_seq = cset->dfl_cgrp->kill_seq;
+> +	kargs->kill_seq = cset->dfl_cgrp->kill_seq;
+>  	spin_unlock_irq(&css_set_lock);
+>  
+>  	if (!(kargs->flags & CLONE_INTO_CGROUP)) {
+> @@ -6940,6 +6937,7 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
+>  
+>  	put_css_set(cset);
+>  	kargs->cgrp = dst_cgrp;
+> +	kargs->kill_seq = dst_cgrp->kill_seq;
+>  	return ret;
+>  
+>  err:
+> -- 
+> 2.55.0.897.gb25b4bd76c-goog
+> 
