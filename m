@@ -1,127 +1,225 @@
-Received: from mta1.migadu.com (out-151.mta1.migadu.com [95.215.58.151])
+Received: from mail-oi2-f0.google.com (mail-oi2-f0.google.com [74.125.231.192])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FD103F106E
-	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 00:33:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF1551514F8
+	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 00:33:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.192
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787963582; cv=none; b=qRBAJrS/JUknaBk1itQPXkJ/+KanzyMqOPM07XjVWeNF/TQtnc1t6JhDy9Ljo4GR8D5VHIPtar+bUfrWLUFXlZuCPLQGW5NHKdDXLf7j1/7q9xVzqmXBt47VmPKGaRe8qMYvnj2ZKMztRF7WRB4ZpNe7eTGJSWzVzR0bPXVYong=
+	t=1787963616; cv=none; b=VMTiFLG25xm+KdY39Gbyk6EP0ddaegu/DYhEW7GKT3HfaiY9Ci6rNYAVaehPSV6X4HI/CbKQFyUljLxMcYmUS7wnBB7W8VWh3/Tt43ImF8FERJ8pEnkxwZuJ2lCXik7iyOX6hdKcDAchZpG3GhdbY08AiQFY2ufshm/Ql+VTq4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787963582; c=relaxed/simple;
-	bh=XHL0G3FrD3EaKeVkxOn/16guskz9c3p8tk2uofgjOyw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c49FQ8sC/l/bxDSBNVKvtg5pMjChDBJ3LEiEYzLCph5vG8Ni3PnpyQnqt8OLQjkA1ih09UCXCCPVfSR0bLYX6NEO+FH1GL9gYxACXga7bzOhSr4gU6hMH05yhUrduLBjeLhaphbx1Vrrsx8RvMn8VNLOj7NevaJZ7mpQV0/TqWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=csYZR4Uv; arc=none smtp.client-ip=95.215.58.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="csYZR4Uv"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=XHL0G3FrD3EaKeVkxOn/16guskz9c3p8tk2uofgjOyw=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787963578; v=1; x=1788568378;
- b=csYZR4Uv0jCerVCL8b4JHJCF3OVcG7teAwwbDC09u4KlLq/iTE7WPvx6NE63Hkh26k0E/Rgl
- 5WBZfHSXAScTScly+1bbI2iOc6bY1dPlyOXQYbC454CU/N+JjhIdwYvK93WEobqfZxK9du3ncCe
- tIjEQR3yVlZ9QLIXpmbxKmok=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6fb6e2f96245975a;
-	Sat, 29 Aug 2026 00:32:48 +0000
-X-Mizu-Trace-ID: 6fb6e2f96245975a
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 28 Aug 2026 17:32:42 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Etienne Perot <eperot@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Christian Brauner <brauner@kernel.org>, 
-	Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] cgroup: fix spurious SIGKILL of CLONE_INTO_CGROUP
- children
-Message-ID: <apInuCtg9UnoB9w0@linux.dev>
-References: <20260828215252.4126811-1-eperot@google.com>
+	s=arc-20240116; t=1787963616; c=relaxed/simple;
+	bh=nkPhFdgmWtXtAyV4iyyrZcCvowT2KbVn3gNKW2Yrtfc=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=Rben+zXG/3euAhVvKFOC1d/I8TaJDrKzGR3wRw07F4T8cJ3Mbo6JYNnzDG+0vxELN1yJiot7UVmV9RF8PmwGngSYAO3/nGM8AD2snT53vFIKDIaRHG1TWbZbMcF0+roR9lvmgGCM3UYT77uwSM+JzGxRDNz0eJscgg8Rv0NuKSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.192
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi2-f0.google.com with SMTP id 5614622812f47-4a49b13b745so543612b6e.0
+        for <cgroups@vger.kernel.org>; Fri, 28 Aug 2026 17:33:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787963613; x=1788568413;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=IlIMu5bgBCnFIxaX2eV5zuV1R2iOSwt6vufRHu6k+8k=;
+        b=dt5JxmhuxSIW/ksyDkpevROxlf5Daoklrj6Cs1j2nhUAODCOrH0FhkBCco7www+ymR
+         2f6fHcnTlTs1XAoMSx78/FvUl/0arsmKk/fTAETrICGAN1EvROgOTjtZp2fPkq5yTPZH
+         80AuPrN+2urh0nlkdum//vimOpXa9VS/H9gF/IGZi3m2dEMtMrb5hWoU88qakmqUgVOM
+         AleHtvs6BGeqlYxpxkpFVK2jSm5DWghn4cbZOuAa+vhxW4iTuutfazM9+iZSs3axruj0
+         hfe4T5hswBRWeZBi3zaBQ7RU8GOjhQRUJ2Yh/oohBk8OrK92ZCSax5D+UyFlqneddu6/
+         1E3g==
+X-Forwarded-Encrypted: i=1; AHgh+RptTxeLNhNy1koXhaAivUtkAwBKKPloyXxxK8qlvNne31wk5NLvd/zzTC1Fu9d7nezW9tO2WQeh@vger.kernel.org
+X-Gm-Message-State: AFuF++kLoci48N17UDFCxGsGiamZphnm9DIJ3KSBpoUDG+ynlQyJPdBR
+	PgNFMscBBNnja8x3pgPAciiEA+OT29wFQkqbtWWFn3KnmcoEgdRh/KdpXMwSg3twqvVveQQsUtx
+	FELi3neuuqqmTbyv2jc3/551wzLCh7UOsa5yIC6hxkTG38vuBL7tHT8Eee/k=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260828215252.4126811-1-eperot@google.com>
+X-Received: by 2002:a05:6808:1306:b0:4b3:80b8:8741 with SMTP id
+ 5614622812f47-4b39804f929mr11891424b6e.5.1787963613752; Fri, 28 Aug 2026
+ 17:33:33 -0700 (PDT)
+Date: Fri, 28 Aug 2026 17:33:33 -0700
+In-Reply-To: <6a807bfd.f7a79266.2f965f.0008.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a9228dd.1d9ded08.62e62.00f7.GAE@google.com>
+Subject: Re: [syzbot] [block?] [cgroups?] possible deadlock in blkg_conf_prep
+From: syzbot <syzbot+144a1c0e22e53a08ef5a@syzkaller.appspotmail.com>
+To: axboe@kernel.dk, cgroups@vger.kernel.org, josef@toxicpanda.com, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com, tj@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Aug 28, 2026 at 09:52:51PM +0000, Etienne Perot wrote:
-> Since commit b69bb476dee9 ("cgroup: fix race between fork and
-> cgroup.kill"), the fork path snapshots the kill_seq of the child's
-> future cgroup into kargs->kill_seq, and cgroup_post_fork() SIGKILLs
-> the child if that cgroup's kill_seq has changed in the meantime, to
-> catch forks racing with a cgroup.kill sweep.
-> 
-> For CLONE_INTO_CGROUP, however, the snapshot in cgroup_css_set_fork()
-> is taken before the target cgroup has been resolved: kargs->cgrp is
-> always NULL at this point (it is only set at the end of the function).
-> So the "if (kargs->cgrp)" branch is dead code and the snapshot always
-> records the kill_seq of the parent's cgroup. cgroup_post_fork() then
-> compares it with the kill_seq of the target cgroup, so the child gets
-> SIGKILLed whenever the two cgroups have been killed a different number
-> of times.
-> 
-> As a result, once cgroup.kill has been written to a cgroup, every
-> child subsequently cloned into it with clone3(CLONE_INTO_CGROUP) is
-> killed on the spot, for as long as the cgroup exists: kill_seq is not
-> exposed to userspace and never resets.
-> 
-> Re-snapshot kill_seq from the target cgroup once it has been resolved,
-> and drop the dead branch at the early snapshot site.
-> 
-> This does not reopen the race fixed by b69bb476dee9. For
-> CLONE_INTO_CGROUP, everything from the snapshot to the check in
-> cgroup_post_fork() runs with cgroup_mutex held, and kill_seq is
-> only ever incremented under cgroup_mutex.
+syzbot has found a reproducer for the following issue on:
 
-Thanks for catching this. Overall looks good. Can you please fix the comment
-where kill_seq is defined in the header. Currently it says kill_seq is
-serialized by css_set_lock. After your change, it should for normal fork it is
-serialized by css_set_lock but for clone3(CLONE_INTO_CGROUP), it is serialized
-by cgroup_mutex.
+HEAD commit:    818bebeb63dd drm/xe: Don't hand out the flat CCS storage a..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=104ced79580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=ccca94d2c01b9e78
+dashboard link: https://syzkaller.appspot.com/bug?extid=144a1c0e22e53a08ef5a
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16f08379580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=124ced79580000
 
-Orthogonally, we have plans to remove cgroup_mutex dependency from cgroup.kill,
-so we will need to reevaluate this at that time.
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-818bebeb.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/6e4100526b12/vmlinux-818bebeb.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/723c4783ee96/bzImage-818bebeb.xz
 
-> 
-> Fixes: b69bb476dee9 ("cgroup: fix race between fork and cgroup.kill")
-> Cc: stable@vger.kernel.org
-> Cc: Shakeel Butt <shakeel.butt@linux.dev>
-> Assisted-by: LLM
-> Signed-off-by: Etienne Perot <eperot@google.com>
-> ---
->  kernel/cgroup/cgroup.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index c3a12fee7528..2d532bf2c0c7 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -6873,10 +6873,7 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
->  	spin_lock_irq(&css_set_lock);
->  	cset = task_css_set(current);
->  	get_css_set(cset);
-> -	if (kargs->cgrp)
-> -		kargs->kill_seq = kargs->cgrp->kill_seq;
-> -	else
-> -		kargs->kill_seq = cset->dfl_cgrp->kill_seq;
-> +	kargs->kill_seq = cset->dfl_cgrp->kill_seq;
->  	spin_unlock_irq(&css_set_lock);
->  
->  	if (!(kargs->flags & CLONE_INTO_CGROUP)) {
-> @@ -6940,6 +6937,7 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
->  
->  	put_css_set(cset);
->  	kargs->cgrp = dst_cgrp;
-> +	kargs->kill_seq = dst_cgrp->kill_seq;
->  	return ret;
->  
->  err:
-> -- 
-> 2.55.0.897.gb25b4bd76c-goog
-> 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+144a1c0e22e53a08ef5a@syzkaller.appspotmail.com
+
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Not tainted
+------------------------------------------------------
+syz.1.18/6027 is trying to acquire lock:
+ffffffff8efc6c00
+ (
+fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:314 [inline]
+fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:4539 [inline]
+fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:4899 [inline]
+fs_reclaim){+.+.}-{0:0}, at: kmem_cache_alloc_noprof+0x63/0x6a0 mm/slub.c:4933
+
+but task is already holding lock:
+ffff888028683bc0 (&q->blkcg_mutex){+.+.}-{4:4}, at: blkg_conf_prep+0xbc/0xf10 block/blk-cgroup.c:849
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (&q->blkcg_mutex){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5886 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5843
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bc0 kernel/locking/mutex.c:821
+       blkcg_activate_policy+0x34f/0xbf0 block/blk-cgroup.c:1608
+       blk_throtl_init+0x39a/0x5b0 block/blk-throttle.c:1339
+       tg_set_conf.isra.0+0x252/0x500 block/blk-throttle.c:1368
+       cgroup_file_write+0x1e6/0x8a0 kernel/cgroup/cgroup.c:4412
+       kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+       new_sync_write fs/read_write.c:595 [inline]
+       vfs_write+0x6af/0x1050 fs/read_write.c:687
+       ksys_write+0x12a/0x250 fs/read_write.c:739
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #1 (&q->q_usage_counter(io)#17){++++}-{0:0}:
+       lock_acquire kernel/locking/lockdep.c:5886 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5843
+       blk_alloc_queue+0x610/0x790 block/blk-core.c:504
+       blk_mq_alloc_queue+0x174/0x290 block/blk-mq.c:4420
+       __blk_mq_alloc_disk+0x29/0x120 block/blk-mq.c:4467
+       loop_add+0x498/0xb60 drivers/block/loop.c:2071
+       loop_init+0x1d3/0x200 drivers/block/loop.c:2310
+       do_one_initcall+0x11c/0x6f0 init/main.c:1353
+       do_initcall_level init/main.c:1415 [inline]
+       do_initcalls init/main.c:1431 [inline]
+       do_basic_setup init/main.c:1451 [inline]
+       kernel_init_freeable+0x6ea/0x7b0 init/main.c:1666
+       kernel_init+0x21/0x1e0 init/main.c:1556
+       ret_from_fork+0x730/0xd60 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+-> #0 (fs_reclaim){+.+.}-{0:0}:
+       check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3181
+       check_prevs_add kernel/locking/lockdep.c:3300 [inline]
+       validate_chain kernel/locking/lockdep.c:3924 [inline]
+       __lock_acquire+0x1492/0x1ec0 kernel/locking/lockdep.c:5253
+       lock_acquire kernel/locking/lockdep.c:5886 [inline]
+       lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5843
+       __fs_reclaim_acquire mm/page_alloc.c:4375 [inline]
+       fs_reclaim_acquire+0xc4/0x100 mm/page_alloc.c:4389
+       might_alloc include/linux/sched/mm.h:314 [inline]
+       slab_pre_alloc_hook mm/slub.c:4539 [inline]
+       slab_alloc_node mm/slub.c:4899 [inline]
+       kmem_cache_alloc_noprof+0x63/0x6a0 mm/slub.c:4933
+       __radix_tree_preload+0x333/0x820 lib/radix-tree.c:338
+       blkg_conf_prep+0x489/0xf10 block/blk-cgroup.c:885
+       tg_set_conf.isra.0+0x1ed/0x500 block/blk-throttle.c:1373
+       cgroup_file_write+0x1e6/0x8a0 kernel/cgroup/cgroup.c:4412
+       kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+       new_sync_write fs/read_write.c:595 [inline]
+       vfs_write+0x6af/0x1050 fs/read_write.c:687
+       ksys_write+0x12a/0x250 fs/read_write.c:739
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+other info that might help us debug this:
+
+Chain exists of:
+  fs_reclaim --> &q->q_usage_counter(io)#17 --> &q->blkcg_mutex
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&q->blkcg_mutex);
+                               lock(&q->q_usage_counter(io)#17);
+                               lock(&q->blkcg_mutex);
+  lock(fs_reclaim);
+
+ *** DEADLOCK ***
+
+locks held by syz.1.18/6027: 6, last CPU#3:
+ #0: ffff888035cc8b70 (&f->f_pos_lock){+.+.}-{4:4}, at: fdget_pos+0x2aa/0x380 fs/file.c:1259
+ #1: ffff8880372a4460 (sb_writers#11){.+.+}-{0:0}, at: ksys_write+0x12a/0x250 fs/read_write.c:739
+ #2: ffff888037174c80 (&of->mutex){+.+.}-{4:4}, at: kernfs_fop_write_iter+0x2c2/0x5f0 fs/kernfs/file.c:336
+ #3: ffff8880534200f8 (kn->active#66){.+.+}-{0:0}, at: kernfs_get_active_of fs/kernfs/file.c:73 [inline]
+ #3: ffff8880534200f8 (kn->active#66){.+.+}-{0:0}, at: kernfs_fop_write_iter+0x332/0x5f0 fs/kernfs/file.c:337
+ #4: ffff888028683a40 (&q->rq_qos_mutex){+.+.}-{4:4}, at: blkg_conf_open_bdev+0x253/0x410 block/blk-cgroup.c:806
+ #5: ffff888028683bc0 (&q->blkcg_mutex){+.+.}-{4:4}, at: blkg_conf_prep+0xbc/0xf10 block/blk-cgroup.c:849
+
+stack backtrace:
+CPU: 3 UID: 0 PID: 6027 Comm: syz.1.18 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ print_circular_bug.cold+0x178/0x1be kernel/locking/lockdep.c:2059
+ check_noncircular+0x146/0x160 kernel/locking/lockdep.c:2191
+ check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3181
+ check_prevs_add kernel/locking/lockdep.c:3300 [inline]
+ validate_chain kernel/locking/lockdep.c:3924 [inline]
+ __lock_acquire+0x1492/0x1ec0 kernel/locking/lockdep.c:5253
+ lock_acquire kernel/locking/lockdep.c:5886 [inline]
+ lock_acquire+0x1b9/0x370 kernel/locking/lockdep.c:5843
+ __fs_reclaim_acquire mm/page_alloc.c:4375 [inline]
+ fs_reclaim_acquire+0xc4/0x100 mm/page_alloc.c:4389
+ might_alloc include/linux/sched/mm.h:314 [inline]
+ slab_pre_alloc_hook mm/slub.c:4539 [inline]
+ slab_alloc_node mm/slub.c:4899 [inline]
+ kmem_cache_alloc_noprof+0x63/0x6a0 mm/slub.c:4933
+ __radix_tree_preload+0x333/0x820 lib/radix-tree.c:338
+ blkg_conf_prep+0x489/0xf10 block/blk-cgroup.c:885
+ tg_set_conf.isra.0+0x1ed/0x500 block/blk-throttle.c:1373
+ cgroup_file_write+0x1e6/0x8a0 kernel/cgroup/cgroup.c:4412
+ kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+ new_sync_write fs/read_write.c:595 [inline]
+ vfs_write+0x6af/0x1050 fs/read_write.c:687
+ ksys_write+0x12a/0x250 fs/read_write.c:739
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f7b6519e159
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f7b66080028 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f7b65425fa0 RCX: 00007f7b6519e159
+RDX: 000000000000006a RSI: 00002000000000c0 RDI: 0000000000000005
+RBP: 00007f7b65235024 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f7b65426038 R14: 00007f7b65425fa0 R15: 00007ffc8680c158
+ </TASK>
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
