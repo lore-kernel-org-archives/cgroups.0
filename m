@@ -1,54 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7541F341650
-	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 09:56:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB9532620DE
+	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 10:05:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787997406; cv=none; b=TqTaLOa2Or/aQPRkAPpiclv9tymlLq450erHWlkS8oDcKRjja3aLTAN5PMqQX8kUbLZEVJp5Ld1jDtgyT3YX5vqJow0UN6Nl2mfThtzspyWIFZdn58NWJNsEy2hDDxJhQu17XUc3aJB9c0q/aGNb5AwXUk7EBWpehp5AfIiRwfg=
+	t=1787997901; cv=none; b=Ufs2/sfGhr6KX7Lyj60tu+qWCWzg1VeftLvGrTZZOlxDCAQNCNkvdC9NvG/sOy01S5M3Ts7vGyzgDDAIyDNq1fHxn6ZtcHMDcbM13ogNezmdP/Re3xfHU2w+4vSHeQLHBVTG5GMtL7V9T3fJO7NOJJITWsGmbnNcdK587gO2Fhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787997406; c=relaxed/simple;
-	bh=UrFVACfUigNKuEeAS2rOrHF/W3WbbIlyxgRKUtLSz3E=;
+	s=arc-20240116; t=1787997901; c=relaxed/simple;
+	bh=Bm1bDKma1fCaZlo6UL6h2FrDywYhUARIBqg2ikagqJI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=m+ADpfgySnOD9hPWMi/Qn6JPh27ZFTVx/SxlWWubDGfgdKc/S6IIyc2WL7WANrxlA5fmogxLKvwr/sgDpK4U4O0ot0/jvgV27AxDy0W2HzJJtwsomnsKg/hj5JwOMaiIn6nL6vBukSwrloMGEh8oR17/9TWp1hhfbey/y3VVg78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5+BAN31; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=TtkFG1XnBD3RL9CgJf3gZ9jZCLP45z9dKTH4zmOKOiFh0a1kgoRSDf39nvtDAAdnWptzIfmtDfZqk3cyzrON6ZWwR3sa07vov1it8MMkK4omwjeEfdTtk0U/3R2Ime4cnb73PRzdJBhgjqNIfcig3TPxLP6BkXc4XYW34mWfH5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z+PqkQXG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5+BAN31"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C9C31F000E9
-	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 09:56:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z+PqkQXG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 595431F0155F
+	for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 10:05:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787997404;
-	bh=UrFVACfUigNKuEeAS2rOrHF/W3WbbIlyxgRKUtLSz3E=;
+	s=k20260515; t=1787997900;
+	bh=Bm1bDKma1fCaZlo6UL6h2FrDywYhUARIBqg2ikagqJI=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=P5+BAN313h0CYeJo4TIOg6k1doINAoWJENv7bG0Iwvo1zxMOQ05wiV5Tlbbmbkivz
-	 Fr+7RZKRDy1cZSaDDJF/ghikBBUh6aP7HgY6cMc2fmam85lNhaHg7tPJPoz2lUlr5g
-	 JttkLUyZDJ4DV6ghVpEjgVOYlMRP11K18a22LhgAZAZDEiMs8Q/EIEXg7zOPfgo11u
-	 bSjUNzqkRZphDgk0frTJTYODh/EnC8h5aTI3bumwoJj+Z53fq8LvdMM2Vhm2YrP6Wh
-	 S7ApTqpxIQT4ox6317a3q5IKqz53YLJ8k0pObjgXlEARelFGvhU0J2X5qAmqNDZ3iO
-	 nqwfj+LdoyNRw==
-Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-92edb12cdf2so120782685a.3
-        for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 02:56:44 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RqKLQ3WP5JmIBdnQWjFMVTw52xLQF+2GyKfeb+yxH/q1upOFp3O3fq78HH0Vz0BlpCvSyNWBLvk@vger.kernel.org
-X-Gm-Message-State: AFuF++nhry+Bwp6MSA8Sl6069NUZvgoG40GN8k9OhFAzEQ1eWEmBsh50
-	bBLeceQU0/DavI0QDEXl/mW9i9+XDxDiVtrt99o9pR/pjelt6E6cIbwGyhLxeeU5Zt/djJ0XtD9
-	pF/U+UInhWgb8M8viF6U4j/F2IwI0xzY=
-X-Received: by 2002:a05:620a:a410:20b0:932:dbf6:6f9 with SMTP id
- af79cd13be357-9391377b55bmr1149584285a.9.1787997403348; Sat, 29 Aug 2026
- 02:56:43 -0700 (PDT)
+	b=Z+PqkQXGYbY9/A0mRMQa8SBREguvmiQFpgCS7ncHAY/AUCJM9o2SfDjA6hsgDq8Ez
+	 +3Mm0EWs9yOftNpFTALFo1/T+66ksL0gVV4A1tpo6YlluRt4TItKIvveb2VOCnHa5N
+	 qyZ9/zp+VynmUSel3VpOHTfB2nLDy+USLgjJ+/6uKQH/b1fYBUM9k5lrwfgdejEja3
+	 Joxpavp74DPSqhjh8YnFLypvUiZai7OoyEhtJgwIzBUHExOlvyYAEdSq6CiIpPS8OC
+	 lD6aF28g15EroYcIZFcC1mU3OeeQYx5PmP4jCJ/hKDR0BsKQml+m4q+iBuPkCku4FP
+	 2yb0Jf4mwuH3w==
+Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-90cbff85fa9so12726176d6.2
+        for <cgroups@vger.kernel.org>; Sat, 29 Aug 2026 03:05:00 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBzCs6ZBeg9B+2Bz4cdb8G+69lls5qmpGopx3SDQRY5ZxzLOtIe8Mhm3AijmeUeOGQQpawmp2Uh7@vger.kernel.org
+X-Gm-Message-State: AFuF++lvRrKz0k6NKjaw3heDIToBgZ8/3461L7NZSfoUdTZD9SZTF19h
+	NEDzY+9Yd07e/Kppmhv8kSIMwzubNhfi2PomSDI++VbKnsL6xcwyIN5Uak+odygxpkmoCcC+jBz
+	0uE3pba/ODASQw1eWBNgxsF7kGwe0tFQ=
+X-Received: by 2002:a05:6214:4497:b0:90a:7fbd:ea89 with SMTP id
+ 6a1803df08f44-90ce0e572dfmr180465806d6.1.1787997899307; Sat, 29 Aug 2026
+ 03:04:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com> <20260826-mglru-flags-cleanup-v3-3-d9f1c75549c8@tencent.com>
-In-Reply-To: <20260826-mglru-flags-cleanup-v3-3-d9f1c75549c8@tencent.com>
+References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com> <20260826-mglru-flags-cleanup-v3-4-d9f1c75549c8@tencent.com>
+In-Reply-To: <20260826-mglru-flags-cleanup-v3-4-d9f1c75549c8@tencent.com>
 From: Barry Song <baohua@kernel.org>
-Date: Sat, 29 Aug 2026 17:56:32 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4wKiM+99c5JzW4kp=J+2qPNGemnAg4x1PeiudamwLOf9w@mail.gmail.com>
-X-Gm-Features: AcwNN1V7KSbbFyvp8SG4r87uwEoqsTqZAxA7dZIuQ66MlFFh0qP85fwkFdw6IWM
-Message-ID: <CAGsJ_4wKiM+99c5JzW4kp=J+2qPNGemnAg4x1PeiudamwLOf9w@mail.gmail.com>
-Subject: Re: [PATCH v3 3/6] mm/migrate: copy all referenced state via folio_migrate_lru_refs
+Date: Sat, 29 Aug 2026 18:04:48 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4wU7B_Lnz_fbKOUsb+2fs1D3GrMcPq7FBLN4n4M7LLwBg@mail.gmail.com>
+X-Gm-Features: AcwNN1X-K486iK9cL85ffaV_ppz2Dedfrrpz1iVvNLwjwGEYt4Lbvyldsp-xaSY
+Message-ID: <CAGsJ_4wU7B_Lnz_fbKOUsb+2fs1D3GrMcPq7FBLN4n4M7LLwBg@mail.gmail.com>
+Subject: Re: [PATCH v3 4/6] mm/mglru: move max_seq read into walk_update_folio
 To: kasong@tencent.com
 Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
 	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
@@ -69,28 +69,20 @@ On Wed, Aug 26, 2026 at 1:53=E2=80=AFAM Kairui Song via B4 Relay
 >
 > From: Kairui Song <kasong@tencent.com>
 >
-> folio_migrate_flags() copies PG_referenced separately from the MGLRU
-> refs counter, which folio_migrate_refs() transfers. Yet under MGLRU,
-> PG_referenced and the refs counter bits together describe the
-> referenced status of a folio.
+> walk_pte_range(), walk_pmd_range_locked(), and lru_gen_look_around()
+> each read lrugen->max_seq to compute the target generation used by
+> walk_update_folio(), then pass it as a parameter. Move the read into
+> walk_update_folio() itself so the callers no longer need to compute
+> or pass the value.
 >
-> Consolidate the two: rename folio_migrate_refs() to
-> folio_migrate_lru_refs() and let it copy the complete referenced
-> status, i.e., the MGLRU refs count including PG_referenced, or just
-> PG_referenced for the active/inactive LRU. Drop the open-coded
-> PG_referenced copy so the referenced status is transferred in one
-> place. No behavior change is intended: under the active/inactive LRU
-> the extra bits are unused, so operating on them is a noop.
->
-> Transfer the reference state first, before the destination folio is
-> marked uptodate, so a concurrent lockless reader cannot have its
-> reference update overwritten by the copy.
+> The max_seq read now happens once per folio update rather than once
+> per walk range, so folios always get promoted to the current youngest
+> generation.
 >
 > Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+> Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+> Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 > ---
-
-Yep. We now have some unified code for both MGLRU and
-active/inactive LRU in `folio_migrate_flags()`.
 
 Reviewed-by: Barry Song <baohua@kernel.org>
