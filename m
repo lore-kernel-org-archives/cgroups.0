@@ -1,55 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 170312EF653
-	for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 07:54:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02CAB28505E
+	for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 07:59:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788076445; cv=none; b=IT0L6VADqFBJdDidMJyspSxqPa8rehx3LNLWba4TQyTr3QXfs2tNqrSLShUG9ms6rfh8icvZBBwBAAcZnBZYHaWCt5IanQAC92gIx4HQAcStcmRLQCJ+kR0YgVDwChSeeLC5aXzlKLST8cGO/JN29bOajVdu/yvkgSeRHSfejw8=
+	t=1788076759; cv=none; b=QewWGwIPObpsgI+FysqyX8DhaccmbOns89zMICo/Vu0dFPPyZReAya/r2pXJlk+qCCaEyBhSxAFEkaDiK/N64iXBXBK5pSyOsZRjZUoo88gf+XnejPN/AgFT9dM2dGLYxS7OBuvpbXU77XRRZGA6ltxyn9u6Qf/L4eFIrTrKjE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788076445; c=relaxed/simple;
-	bh=Hn03e+/WULF81D3yHyPxkS+4ZIZvHapTPnkx+jlSYf4=;
+	s=arc-20240116; t=1788076759; c=relaxed/simple;
+	bh=dktkFusJORwS0wg5TREbRvxTJv6WJ4glZJP83ZLSGXM=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VYmnIq4QmzRBUCfS218chOFw+DLCS6MHzKooqriuysj0iK7+XT9p+9/lVQlnIixYjsMmHxESCfHg3SsemgSSs6nTs2yvankdnxmvCTtcI5VLpei8NSd0NAyB5gAxHDHWkyADrVmiH2mBXENhC5BW2HVhEEeBFR+0c+9UFR9JI/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ocy4ylfF; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=JTw5RM3jUcvKpjXFjC5UFdLrTrIxJ30CdCqRy4wZRIg93TfSLsmjGO6ltcaPJ5uF7L9mdSWevA2JSzuDR1s6/5xe8vtIT6qX2RxeJ3g8gWbjZIPa3ecBEyArranUwSaphTL2jkPAGeSvZDixBXO/00xi+P1iZZ5ESGgRF737yog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lIw0faM7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ocy4ylfF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E6D51F00ADF
-	for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 07:54:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lIw0faM7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A135C1F00ACF
+	for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 07:59:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788076443;
-	bh=UeEQ5jVzcI0HkkaBYNG8dZHlQd9/ubRiXJT++zIWi7M=;
+	s=k20260515; t=1788076757;
+	bh=NrLDNBRCYN+jXa4vhl3946i3kCe1JZe5SP3/HQaL10U=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=ocy4ylfFrWKNIBjucLRgP/bcUttjvfQaZdfmC/pHFTioFbRGlQ/BlBKtxGZvpA56x
-	 y5ImLCwoTbty6dkS6KMS89q6JBdaD+/NQTN5LkWHvvPGlmvCnDIw8/djn59ZygBqOv
-	 qpf6b1LPrGedr/UXbe+Q7ljzC/EK74Z0OZfMDyxNLvShInFyiXq22EwFZBrL7ZaP90
-	 A1o3rLatmXqkczN8qBvTranP1LLvheI1b78mbPVMICwC8PwQZ6zS3T3aK3OzuKZ781
-	 BMoERzwL+5IbTPFjHwrOp6xKzLVWu4mbxGH77VAham2ilthQ3rh/KxqQjwbVAoXHAA
-	 +v6+rbaqH2HMg==
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-9390a2c8909so160711285a.0
-        for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 00:54:03 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Ro+WIuiyM0JrRQQzYMejAF7oJgrptO5m/qwwskPhoihhF5OJn2A5KJoXd1tnpH7t3ZoVaPf01wA@vger.kernel.org
-X-Gm-Message-State: AFuF++nfI5yemD6/7/+1fPRPAaNQbHwZjSoQXk3bzkPCugyhF91QFueF
-	yvks76l57VkMFrfm+qfieOz4WxPHFQzNJgnCn3Al/B614H0V7llGHEV/9/TSFZdAhwR0541c1ly
-	yQ9VCDMRdVLT2t3sEi/YTERllVCSQY2Q=
-X-Received: by 2002:a05:620a:6c0d:b0:938:fd60:4f9 with SMTP id
- af79cd13be357-939138ffdc0mr2008314785a.27.1788076442846; Sun, 30 Aug 2026
- 00:54:02 -0700 (PDT)
+	b=lIw0faM7AwczaPglu+Ccvr2HXhVNbDDmxWNjJXQ5CjV4eGSR/yPsCnHUn0p9Mg/qc
+	 YVgNxuBLmyqhygOdOIphzwelaalJTN36rqN6TCmLGicMk+9y0yevruc6IfODRc0cyR
+	 U3zzrMNXe1Putuqul5Ssc94V879+Q2V5g6+af2a9Xy7hIsEBGjQV/6HFr+1Ee11m6l
+	 mZiy0JqnURPf2rmZh48RhFX6cuj4XWA0NH7RCsHlEqvtdvyhY8XhvhiWGvcsoacEYf
+	 TlpjYailZ0wm6CauWCtPmJMEf5PftYSFlRFfT0BANi3bs4iPpk1DdjKjveXZe40lcF
+	 5iRg/W3GhgNMA==
+Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-92e55b62640so129776685a.0
+        for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 00:59:17 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RrnoqjY5Yz06l9BFfGIJY2xc+UyXbWX9+mjtH4ES/a8d8eJkjkLwXRr4UkI6uv6V6pX0aS8Y3Ch@vger.kernel.org
+X-Gm-Message-State: AFuF++kxBitgLbkPILYwQ0C3H8TNxN2YOPMMK47FDmw2hfhQWGuwB6b1
+	xjMGDPQsoXGaaZBsih0dQOk2tn0mAhWqEHcr6ht4xae8Pj+U7YYhYk9ogzYeN6VwLTNJEhr4OYO
+	gzQsTykHXFSdwObbnZbBMS/Apk9J/Z2E=
+X-Received: by 2002:a05:620a:29cd:b0:915:a953:4b9c with SMTP id
+ af79cd13be357-93913749780mr1843635385a.3.1788076756998; Sun, 30 Aug 2026
+ 00:59:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260828110919.1324028-1-ridong.chen@linux.dev> <20260828110919.1324028-3-ridong.chen@linux.dev>
-In-Reply-To: <20260828110919.1324028-3-ridong.chen@linux.dev>
+References: <20260828110919.1324028-1-ridong.chen@linux.dev> <20260828110919.1324028-2-ridong.chen@linux.dev>
+In-Reply-To: <20260828110919.1324028-2-ridong.chen@linux.dev>
 From: Barry Song <baohua@kernel.org>
-Date: Sun, 30 Aug 2026 15:53:51 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4ws6edtcToqJQ0azJPTymAYj41nzdGJvBqEM+gROiJtRQ@mail.gmail.com>
-X-Gm-Features: AcwNN1XAAY1zLhOoDIQLd7-dIIw1xCvdhjIWr8q4jSclCc3cBnbDulr35kYiJ1A
-Message-ID: <CAGsJ_4ws6edtcToqJQ0azJPTymAYj41nzdGJvBqEM+gROiJtRQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] mm/mglru: fix ineffective memory protection for
- non-kswapd reclaim
+Date: Sun, 30 Aug 2026 15:59:05 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4wp+O3AX2YQMsU5iHNZX2tYJ1TuSH30eyp=_XeEb2gSrQ@mail.gmail.com>
+X-Gm-Features: AcwNN1VSR0ETjAivAghBgogeIeAmAQL0JT7gsTA1npC62VHF_x-d0gDpe0cIFYc
+Message-ID: <CAGsJ_4wp+O3AX2YQMsU5iHNZX2tYJ1TuSH30eyp=_XeEb2gSrQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] mm/page_counter: avoid integer overflow in effective_protection()
 To: Ridong Chen <ridong.chen@linux.dev>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
 	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
@@ -64,145 +63,39 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Aug 28, 2026 at 7:10=E2=80=AFPM Ridong Chen <ridong.chen@linux.dev>=
+On Fri, Aug 28, 2026 at 7:09=E2=80=AFPM Ridong Chen <ridong.chen@linux.dev>=
  wrote:
 >
 > From: Ridong Chen <chenridong@xiaomi.com>
 >
-> memory.min/low is silently bypassed for MGLRU during global proactive
-> reclaim (writing to the root memory.reclaim) and global direct reclaim.
-
-I guess nobody is silently bypassing anything. It's just that the
-effective min is stale data. If kswapd has run at least once, should
-the protection have been updated already?
-I guess we need to update the changelog a bit?
-
-> It can be reproduced as follows:
+> effective_protection() scales a parent's protection by a ratio of page
+> counts, e.g. for recursive protection:
 >
->   # echo 7 > /sys/kernel/mm/lru_gen/enabled
->   # cd /sys/fs/cgroup
->   # mkdir -p a/b
->   # echo 100M > a/memory.min
->   # echo +memory > a/cgroup.subtree_control
->   # echo 100M > a/b/memory.min
->   # echo $$ > a/b/cgroup.procs
->   # dd if=3D/dev/zero of=3D/tmp/testfile bs=3D1M count=3D200
->   # cat a/b/memory.current
->   222650368
->   # echo 500M > memory.reclaim
->   -bash: echo: write error: Resource temporarily unavailable
->   # cat a/b/memory.current
->   6070272
+>         (parent_effective - siblings_protected) * (usage - protected)
+>                 / (parent_usage - siblings_protected)
 >
-> memory.min is 100M, yet reclaim drops a/b down to 6M, breaking the
-> protection. The traditional LRU path is not affected because
-> shrink_node() calls mem_cgroup_calculate_protection() for each memcg it
-> visits during a top-down tree walk.
+> The multiply is done at unsigned long width before dividing. On systems
+> with >=3D 16TB RAM the product can exceed 2^64 and wrap, giving a bogus
+> protection value and silently breaking memory.min/low enforcement.
 >
-> Commit 30d77b7eef01 ("mm/mglru: fix ineffective protection calculation")
-> moved the protection computation into lru_gen_age_node(), which only
-> runs for kswapd. Non-kswapd global reclaim reaches shrink_one() through
-> lru_gen_shrink_node() -> shrink_many() without any protection
-> computation, so emin/elow remain stale or zero.
+> Use mul_u64_u64_div_u64() to multiply in a 128-bit intermediate. Because
+> usage and parent_usage are not read atomically (a child is charged
+> before its parent), usage - protected can briefly exceed the divisor,
+> making the quotient overflow 64 bits and trap (#DE on x86). Cap it so
+> the ratio stays <=3D 1.
 >
-> Introduce mem_cgroup_protection_path() which computes emin/elow along
-> the root-to-target path only by iterating through the cgroup ancestors
-> array top-down. This avoids the full tree traversal that would be
-> needed with mem_cgroup_calculate_protection(), limiting the cost to
-> O(depth) per memcg - typically 3-5 levels.
+> Reported by the sashiko review tool [1].
 >
-> Call it from shrink_one() for the non-kswapd path so that each memcg
-> about to be shrunk has correct protection values.
+> [1] https://sashiko.dev/#/patchset/20260826133054.88529-1-ridong.chen@lin=
+ux.dev?part=3D1
 >
-> Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
+> Fixes: bc50bcc6e00b ("mm: memcontrol: clean up and document effective low=
+/min calculations")
+> Fixes: 8a931f801340 ("mm: memcontrol: recursive memory.low protection")
 > Cc: stable@vger.kernel.org
 > Assisted-by: Claude:claude-opus-4-8
 > Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 > ---
->  include/linux/memcontrol.h | 11 ++++++++++
->  mm/memcontrol.c            | 45 ++++++++++++++++++++++++++++++++++++++
->  mm/vmscan.c                |  8 ++++++-
->  3 files changed, 63 insertions(+), 1 deletion(-)
->
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 7d1c0ce189a8..8066b798a759 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -605,6 +605,10 @@ static inline void mem_cgroup_protection(struct mem_=
-cgroup *root,
->
->  void mem_cgroup_calculate_protection(struct mem_cgroup *root,
->                                      struct mem_cgroup *memcg);
-> +#ifdef CONFIG_LRU_GEN
-> +void mem_cgroup_protection_path(struct mem_cgroup *root,
-> +                               struct mem_cgroup *memcg);
-> +#endif
->
->  static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
->                                           struct mem_cgroup *memcg)
-> @@ -1133,6 +1137,13 @@ static inline void mem_cgroup_calculate_protection=
-(struct mem_cgroup *root,
->  {
->  }
->
-> +#ifdef CONFIG_LRU_GEN
-> +static inline void mem_cgroup_protection_path(struct mem_cgroup *root,
-> +                                             struct mem_cgroup *memcg)
-> +{
-> +}
-> +#endif
-> +
 
-I wonder if we could follow the zswap pattern?
-
-#if defined(CONFIG_MEMCG) && defined(CONFIG_ZSWAP)
-bool obj_cgroup_may_zswap(struct obj_cgroup *objcg);
-void obj_cgroup_charge_zswap(struct obj_cgroup *objcg, size_t size);
-void obj_cgroup_uncharge_zswap(struct obj_cgroup *objcg, size_t size);
-bool mem_cgroup_zswap_writeback_enabled(struct mem_cgroup *memcg);
-#else
-static inline bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
-{
-        return true;
-}
-...
-#endif
-
->  static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
->                                           struct mem_cgroup *memcg)
->  {
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 1271d390b617..095050d4296a 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5198,6 +5198,51 @@ void mem_cgroup_calculate_protection(struct mem_cg=
-roup *root,
->         page_counter_calculate_protection(&root->memory, &memcg->memory, =
-recursive_protection);
->  }
->
-> +#ifdef CONFIG_LRU_GEN
-> +/**
-> + * mem_cgroup_protection_path - compute protection along root->memcg pat=
-h
-> + * @root: the top ancestor of the sub-tree being checked (NULL for root_=
-mem_cgroup)
-> + * @memcg: the target memory cgroup
-> + *
-> + * Walk the ancestor path from @root down to @memcg and compute the effe=
-ctive
-> + * protection at each level.  This is safe for isolated queries because =
-it
-> + * ensures parents are computed before children.
-> + */
-> +void mem_cgroup_protection_path(struct mem_cgroup *root,
-> +                               struct mem_cgroup *memcg)
-
-Can we rename it to `mem_cgroup_calculate_protection_path()`?
-
-BTW, I see that the only caller is in vmscan and it passes NULL as
-`root`. Do we need to keep the `root` argument if the new helper is
-only used for global reclaim?
-
-Best Regards
-Barry
+LGTM,
+Reviewed-by: Barry Song <baohua@kernel.org>
