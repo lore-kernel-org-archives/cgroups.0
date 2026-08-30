@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-177.mta1.migadu.com [95.215.58.177])
+Received: from mta0.migadu.com (out-201.mta0.migadu.com [91.218.175.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FF59C8CE
-	for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 00:21:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1037212F89
+	for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 00:21:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788049286; cv=none; b=EqgUca6fXeOhbC9Kcms3UhqgQUfAO7fc5ngZdY4SswREIdV3nqD3hs5sUCqmYukhAxtNi6sCtv5h1IZKyvZZmvRECgjkQQlCNO/ljpacqhRVSBdeNYdYpdkYCbcycPj/3ZKkT58sOb1j989Fj7tvS1s10/xYU1x/tQnJVSdoO5s=
+	t=1788049293; cv=none; b=kmnJwly12kTpu9XKH6VxHtHboG8Ygld7Nl+frgHu4/jCoGtogfkNDLiczASTRENAf1pTnV+UFmsU+ciGJ7NIcVRbNqUokH+3Oj3HNvI9wpcoIN8YTvIA6diBCKESDkffLjEBsAeiA0sO6/mxQEFu5+OnIPknABlRkBEf4FdkUJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788049286; c=relaxed/simple;
-	bh=QVlkSSSS5i8xu5m23D1SnKfFAtjaOMB8/90a5M4Lomc=;
+	s=arc-20240116; t=1788049293; c=relaxed/simple;
+	bh=HW0I75C/5UBwwd+jukPw0ARJed7HblTEcNCAI5VbTdI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ulp+I/tByzYsdHmofyQEXaBVTBhqD0Da+qKLiK9IoJ7Y7705zafe24VnJ/J7+GiIj6zAb7mup5spzkzTYYsVZAYOqjMM2es2zbJ808xk1wq+0obllYUns9XAmfPnW3Cpsh38e/tc+IGn7VGmI0hJAw9Hg1wJqsV2V6acI0YNa/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LY7mmaoF; arc=none smtp.client-ip=95.215.58.177
+	 MIME-Version; b=YWZZGtj1fxs5XKlzAQRTCVjGlu0xkVvAn21DOeNVDRG3NoHUw8LncQbdJic8Fvmt3E6iz9ktruag4zzMWFo5ueHhqgOpFwefL9sN0LhjQP+xIwx3u91eYjVDOYfm+RDmrX188JNMdYSm0X1FoXmFIuqoEr3M7Osh3YZB7y88M9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cv5J/t3a; arc=none smtp.client-ip=91.218.175.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LY7mmaoF"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cv5J/t3a"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=QVlkSSSS5i8xu5m23D1SnKfFAtjaOMB8/90a5M4Lomc=;
+DKIM-Signature: a=rsa-sha256; bh=HW0I75C/5UBwwd+jukPw0ARJed7HblTEcNCAI5VbTdI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788049283; v=1; x=1788654083;
- b=LY7mmaoFxuUqir6SolTLvQ+wvq8vrtMjPYce7Zee0eOgPQXpj8wiy9VyV9C+3Kccn45pZhjw
- jiI3OEXMBfy1SNNWMhOkzo4y/6KiAgp+ifvwDKY9sQ/8kD1clnTnfS5rGW9K9odjlbrrCduLDZ8
- Fx0eqTyxod/bxqrkadPTOJNU=
+ t=1788049289; v=1; x=1788654089;
+ b=cv5J/t3aEBhM4DKLAaOZG4aDJjyvdVlwaVEnSmjLfQx0ZFmRa45LBUDqVbjlbP0DwkvrP81S
+ FeQSBC6pO23xN4OYtcPP1Xggo7ZHjbu6LvSoMZubHavDI2ci1/0xGhb/KEdjtYW8Nu61ERUtFDr
+ Bu+zv/3Yn6pU/bvtFpJ6H90w=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 5c14cddd30220827;
-	Sun, 30 Aug 2026 00:21:22 +0000
-X-Mizu-Trace-ID: 5c14cddd30220827
+Received: by smtp.migadu.com with ESMTPS id 485d79aea16e38b9;
+	Sun, 30 Aug 2026 00:21:29 +0000
+X-Mizu-Trace-ID: 485d79aea16e38b9
 X-Migadu-Flow: FLOW_OUT
 From: Ridong Chen <ridong.chen@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
@@ -45,9 +45,9 @@ Cc: Muchun Song <muchun.song@linux.dev>,
 	Tao Cui <cuitao@kylinos.cn>,
 	Ridong Chen <ridong.chen@linux.dev>,
 	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH v4 RESEND 1/2] memcg: acquire peaks_lock when reading memory.peak
-Date: Sun, 30 Aug 2026 08:20:43 +0800
-Message-Id: <20260830002044.1938621-2-ridong.chen@linux.dev>
+Subject: [PATCH v4 RESEND 2/2] mm, memcg: fix memory.peak reset clobbering other fds' watermark
+Date: Sun, 30 Aug 2026 08:20:44 +0800
+Message-Id: <20260830002044.1938621-3-ridong.chen@linux.dev>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260830002044.1938621-1-ridong.chen@linux.dev>
 References: <20260830002044.1938621-1-ridong.chen@linux.dev>
@@ -61,62 +61,62 @@ Content-Transfer-Encoding: 8bit
 
 From: Ridong Chen <chenridong@xiaomi.com>
 
-Sashiko reported that a reader can transiently observe a lower peak
-within a race window [1]. peak_show() returns
-max(local_watermark, ofp->value), but peak_write() updates those two
-under peaks_lock while the reader takes no lock. The interleaving is:
+Writing to memory.peak resets the peak for that fd only. Each fd is a
+watcher and reads back max(its own value, the shared local_watermark).
 
-  writer (reset on fd A)                 reader (fd B)
-  ----------------------                 -------------
-  usage = page_counter_read(pc)
-  WRITE_ONCE(local_watermark, usage)
-  // watermark lowered to usage
-                                         lw  = READ_ONCE(local_watermark)
-                                         // sees the lowered usage
-                                         val = READ_ONCE(ofp->value)
-                                         // B's value not updated yet
-                                         return max(lw, val)
-                                         // both low -> low peak
-  WRITE_ONCE(peer_ctx->value, usage)
-  // B updated, but too late
+peak_write() resets by lowering local_watermark to the current usage.
+To keep the other watchers' peaks it then walks the watcher list, but it
+stores the current usage into them instead of the old watermark. So once
+usage has dropped from a peak, a reset on one fd wrongly drags every
+other fd's peak down too, even fds that never reset.
 
-Fix it by acquiring peaks_lock when reading the peak, so the reader sees
-a consistent snapshot of local_watermark and the per-fd values. The same
-race applies to memory.swap.peak, which shares peaks_lock and the
-peak_write() path, so take the lock there as well.
+Reproduced on 7.2.0-rc5-next under QEMU, two fds A and B on one cgroup:
+B sees the peak (410624 KB), usage drops, then A resets -- and B's peak
+collapses to 1060 KB although B never reset. With this patch B keeps
+reading 410624 KB.
 
-[1] https://sashiko.dev/#/patchset/20260730115314.1069089-1-ridong.chen@linux.dev?part=1
+Fix: save the old watermark before lowering it and use that to floor the
+other watchers, so a reset only affects the fd that issued it.
 
 Fixes: c6f53ed8f213 ("mm, memcg: cg2 memory{.swap,}.peak write handlers")
+Closes: https://sashiko.dev/#/patchset/20260807090000.1532495-1-ridong.chen@linux.dev
 Assisted-by: Claude:claude-opus-4-8
+Acked-by: Tao Cui <cuitao@kylinos.cn>
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-Reviewed-by: Muchun Song <muchun.song@linux.dev>
 Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
- mm/memcontrol.c | 2 ++
- 1 file changed, 2 insertions(+)
+ mm/memcontrol.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 095050d4296a..b84f448fe984 100644
+index b84f448fe984..4c02d7de460c 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -4719,6 +4719,7 @@ static int memory_peak_show(struct seq_file *sf, void *v)
+@@ -4749,7 +4749,7 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
+ 			  loff_t off, struct page_counter *pc,
+ 			  struct list_head *watchers)
  {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(sf));
+-	unsigned long usage;
++	unsigned long usage, old_watermark;
+ 	struct cgroup_of_peak *peer_ctx;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+ 	struct cgroup_of_peak *ofp = of_peak(of);
+@@ -4757,11 +4757,12 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
+ 	spin_lock(&memcg->peaks_lock);
  
-+	guard(spinlock)(&memcg->peaks_lock);
- 	return peak_show(sf, v, &memcg->memory);
- }
+ 	usage = page_counter_read(pc);
++	old_watermark = READ_ONCE(pc->local_watermark);
+ 	WRITE_ONCE(pc->local_watermark, usage);
  
-@@ -5909,6 +5910,7 @@ static int swap_peak_show(struct seq_file *sf, void *v)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(sf));
+ 	list_for_each_entry(peer_ctx, watchers, list)
+-		if (usage > peer_ctx->value)
+-			WRITE_ONCE(peer_ctx->value, usage);
++		if (peer_ctx != ofp && old_watermark > peer_ctx->value)
++			WRITE_ONCE(peer_ctx->value, old_watermark);
  
-+	guard(spinlock)(&memcg->peaks_lock);
- 	return peak_show(sf, v, &memcg->swap);
- }
- 
+ 	/* initial write, register watcher */
+ 	if (ofp->value == OFP_PEAK_UNSET)
 -- 
 2.34.1
 
