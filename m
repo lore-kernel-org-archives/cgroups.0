@@ -1,181 +1,149 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE8125F988
-	for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 18:34:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3F02244694;
+	Sun, 30 Aug 2026 18:43:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788114893; cv=none; b=gRrTAS6J49aWLbgeBsN/7U7VoE75+rUK7HNRGwVt5o2ft/QEwU8BUIZCyiNpf48ztkFcyVBCkUYqIMPr3ippQFEKmAAkbzwR3yPEilgFdbfQx+P8ZTfJBaROrjLUm+eOw+sXRbjzcb8FuW+7r0qyWiwPHM476sT1mKxb1q9mkTA=
+	t=1788115418; cv=none; b=q8HqpsmDbbLyzBS+RkUFnyis2gP0rFVvtbXX5r79sTwH71v2JhS348Wp+rfbwvhlSVtbfqVW6/HL1lkBvhWp4nInr+ca6vxZlO5gm1efCdbwS7Dst7/ha8G5ZOaq3LyLs2dQQUhozVOG27s6c3l5LdApip1xz6QCuJWI9Y89fKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788114893; c=relaxed/simple;
-	bh=5/5s81NWJ47FiUJFRDO+SzIEGSJvrgMrmIrqhox4ohU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ttEmWdGHtNR8PJjueGHV6Ue/sVre2ATaksGGEG/STmWL9NERLNDZFuvg7AOcIh8R0xF2kMM8ni7uCvnsWVhrYkrHWP005ULslJwZz2h6GZvHpNOthyBOkWSxmhtQr+pfNfBTDUYPb/DHQcpBm+H5v5xAVUdpociSeiP8Gw1oKIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UyhoGSKB; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788115418; c=relaxed/simple;
+	bh=r8MlvVN1Hrr7nFXT/twKw1mcbQBSoK+7gb7Pqz1TrzU=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=KSfMmUR/AMW3+dpimCo/NnQ7gPGU6hfbgltkmxonvKMlBSbpcE0ZNnHB79mVcjXWcPeGzwgJ4iXL/u/OFaMuMBkqhsPtNwADB3lgtl3EzpmrJdx0PQyH1m2TBm9nLEhduZkppUB8Zuv2D2d+Sq/2SeDK5oTZyV/Abwdn0TWlJl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TgJLfl0w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UyhoGSKB"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-382ef647e20so2681725a91.1
-        for <cgroups@vger.kernel.org>; Sun, 30 Aug 2026 11:34:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788114891; x=1788719691; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=G0B4wZ3fn9SdpG81JGH8ihBKW0Pv8b+m2YhlqJODgpk=;
-        b=UyhoGSKBptxU9+2IP6vXABW7+bdfmRONs2ktvbLzUglaXAxQp4mXhOVa9pcOKmvYys
-         uKO5FG5EVo3xWgYo/EMLk6jXbm6jSxjCxIAw2TrXAf67dk8esomf7r002KJCMeMmStrg
-         YhsgCGSnvuVyBeV0Ob24SbEEnTfIej9TvNFS+OkrpzTOtkc74Aj+1tnNSoIu8hCv4e1C
-         VdDNSJ/CG0cL/TNshjK6uz+1KzFwrUbWCfSAVZYURuqO3QeKsNH0NA/tQzcziuxQMeGn
-         cCR/r8HtRO9UN4Yt+ci+0sV7Ict99FiK2MMI6kV9kho8ZFwkUSzLonyMHTIN5tau+UNl
-         8xWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788114891; x=1788719691;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=G0B4wZ3fn9SdpG81JGH8ihBKW0Pv8b+m2YhlqJODgpk=;
-        b=UWUx+UZlnJTKlZUX2fs6XNoypqWgCGWHkTvW8U+WR+NmUeTiTmPK0CPVacSEBqeREh
-         LwTCsxhKNc+379NMBmWZXPflgqMzNJzjUGpYaAYSBs/uaPFMEvqSfGCweNr35r5GyNEz
-         lPJDmb3an2DC1YLX3rN5MLf55yAfG5Pa35xegdAaAIPphI6z57cf6Sa7NB9ZSUQFoqQr
-         NpVyEcoYqBx6Wiv8P4LihM0L+OkskZdgWzfG9MXxAWo1g8RXm/q73D0rQo7GlczjsuqW
-         XSYeDxgNbv5lzXjr4eoK4k9zvOqifZauRHPOaS251lD+TDIjMlQlGwk/mrEsS9gHJEzl
-         6JLw==
-X-Forwarded-Encrypted: i=1; AKwUvBw6EvkI0eIWFwCTwZkrFRGX1iK/x5Fout9YvxummAlYOtloxfTIQWz2z4VQ+r7/VW7KuTPYA2fc@vger.kernel.org
-X-Gm-Message-State: AFuF++lSOxdkDkgrgEe40QVa6vXIRLawGAoSnhs5ACu6/bVy0ucJ5cYk
-	ftDyc2b60gnZTqrAQSCwMVYjEWeJccSIXRsif/dkHBrSLWBRxoIXPdSJ
-X-Gm-Gg: AYBFou1GV0mvC0kyYHk888p4jowff3886VyYj8To2UBq+lG4f1W0oqXuX3ZbyKkSMXc
-	x9PTeeQl/IMKdcJeh8wmgDy3x8WoVQm/ucv6aLuNXQPTerXPJ5jV92P0LUO0mvfbcyxVvf+vg9X
-	Wm3sQcUfy78l4UwesQlLsb2oZWWcivSd3aJRxRXL4mWrrO/ferlHXriWYgXxotaZ9Cv7JDidPGl
-	95ayau9uvEx9zIzC7W2e+g4Ac4mfOv/babuY3WAxzZ2RCCw+inR09NZ1YzNlxrQ3K/y6NCqGwVi
-	7HAIbS4hWUpGuticoLfK7FqhzHkq+72K9Re0obMzVFj0ZlvtSzadgbrNcXV0JTGrXZ25hQJ5mZn
-	e5jlp44Ts+phiFXXS7bT/Slb6mkZqM+J1KVCIlzNeYjh8/8N3SLBEDHUu3CWirqGZ/5Q+8CvMXT
-	q47SmEvIgcYBejaK4WTIYxosBPHooUPu1kfWIOqcupjAk3ishWhGpOo7Y/z7Lkf6QQZTeKTn4SA
-	eFS4q1stiuD865Y4YWg4GFkuA==
-X-Received: by 2002:a17:90a:4ca6:b0:398:bd66:35f5 with SMTP id 98e67ed59e1d1-398bd66372fmr8496745a91.25.1788114890953;
-        Sun, 30 Aug 2026 11:34:50 -0700 (PDT)
-Received: from KASONG-MC4 ([101.32.222.185])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-398a2d45bd0sm3248973a91.0.2026.08.30.11.34.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 30 Aug 2026 11:34:50 -0700 (PDT)
-Date: Mon, 31 Aug 2026 02:34:41 +0800
-From: Kairui Song <ryncsn@gmail.com>
-To: Barry Song <baohua@kernel.org>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Chris Li <chrisl@kernel.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Ridong Chen <ridong.chen@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 2/6] mm/mglru: introduce helpers for manipulating gen
- and refs flags
-Message-ID: <apR2LxjPMbripExL@KASONG-MC4>
-References: <20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com>
- <20260826-mglru-flags-cleanup-v3-2-d9f1c75549c8@tencent.com>
- <CAGsJ_4yasRXO52K-13dx9ZXPw95wEyn2bpnf0NiQ2z56dxf-vQ@mail.gmail.com>
- <CAMgjq7B7TFfBZLPorZEmg5y9u6TzFbYVQXZNC8+iztGtifmdKQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TgJLfl0w"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A51C3C2BCC7;
+	Sun, 30 Aug 2026 18:43:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1788115417;
+	bh=r8MlvVN1Hrr7nFXT/twKw1mcbQBSoK+7gb7Pqz1TrzU=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=TgJLfl0wz14V18Wx5yNmcZ5PnrAtKMHEiuZabADBTR84kMn568rjpEjb0CWTm9w1S
+	 SLO3wq4XrDirTVtd+VwgTvfMbcHmOr6376z2QqNHdnbP4YtXOn2kiOQkommp5OJMNv
+	 exKhqS0LmhzA4BN+6D4W6U2YOKJ/dqIz4yhd1U7YqNlovHNWMjWJV+glUOT13m5/K3
+	 RQtl1gGHX4JUUhe9H6HlaRQ1orAXeq9zOxAQ73w6MIFQqdR2WZKluetLU0H/633LR6
+	 d0Jh9Rm9WjdKhKzpvvb6GV6rLW2HGIoV/kj2nf2sF2grWYNHKLbHa9aD/JtGoCbyBc
+	 jj741jNX0OjVg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CBA6C61DD9;
+	Sun, 30 Aug 2026 18:43:37 +0000 (UTC)
+From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
+Subject: [PATCH v4 0/6] mm/mglru: clean up folio counters and flag usage
+Date: Mon, 31 Aug 2026 02:43:30 +0800
+Message-Id: <20260831-mglru-flags-cleanup-v4-0-2d15dde0d7ee@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMgjq7B7TFfBZLPorZEmg5y9u6TzFbYVQXZNC8+iztGtifmdKQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/33PQQ6CMBAF0KuYrq1pS8HqynsYF2U6hRospgWiM
+ dzdghuMxOVP/ryfeZGIwWEkx82LBBxcdK1PQW43BGrtK6TOpEwEEwVTXNFb1YSe2kZXkUKD2vd
+ 3CiAPYLUpcmlJurwHtO4xq+fLJ8e+vCJ0EzU1ahe7Njzn2YFPvf8LA6eMKlOWRgMzQsGpQw/ou
+ x20NzJtDGKhCLmuiKQwziTPBOdS46+SLZViXcmSYg6Wwz7P0+PqWxnH8Q3x40MQVgEAAA==
+X-Change-ID: 20260818-mglru-flags-cleanup-cc49cfad654f
+To: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+ Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+ Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Ridong Chen <ridong.chen@linux.dev>, Lian Wang <lianux.mm@gmail.com>, 
+ Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, 
+ Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>, 
+ Kairui Song <kasong@tencent.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788115415; l=3114;
+ i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
+ bh=r8MlvVN1Hrr7nFXT/twKw1mcbQBSoK+7gb7Pqz1TrzU=;
+ b=qvvnolvYWKShhvmr1tUm9SVdTo6PBNA1ZlhFYB/9rJqU/D1nqXkHACF4VUiZsG7q24kwA1i/q
+ AoyKSNXNaiDDBhZ61n6ZzFVKQ+U6TYuP5GRyLpe7fIoC7KeswtgHzkw
+X-Developer-Key: i=kasong@tencent.com; a=ed25519;
+ pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
+X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
+ with auth_id=562
+X-Original-From: Kairui Song <kasong@tencent.com>
+Reply-To: kasong@tencent.com
 
-On Sat, Aug 29, 2026 at 03:47:42PM +0800, Kairui Song wrote:
-> On Sat, Aug 29, 2026 at 12:22 PM Barry Song <baohua@kernel.org> wrote:
-> >
-> > On Wed, Aug 26, 2026 at 1:53 AM Kairui Song via B4 Relay
-> > <devnull+kasong.tencent.com@kernel.org> wrote:
-> > >
-> > > From: Kairui Song <kasong@tencent.com>
-> > >
-> > > Instead of doing bit ops on folio->flags.f, introduce helpers for
-> > > adjusting a folio's refs and generation info, making the code easier
-> > > to debug and understand.
-> > >
-> > > No functional change is intended: some combined atomic operations are
-> > > split into two, which only creates harmless transient states. There is
-> > > no measurable performance impact, and some paths even look slightly
-> > > better in the generated assembly.
-> >
-> > Hi Kairui,
-> >
-> > I like your idea. Overall, it looks good to me. With some cleanup,
-> > we might have the following:
-> >
-> > >
-> > > Signed-off-by: Kairui Song <kasong@tencent.com>
-> > > ---
-> > >  include/linux/mm_inline.h | 76 ++++++++++++++++++++++++++++++++++++++++++-----
-> > >  include/linux/mmzone.h    |  1 +
-> > >  mm/folio.c                | 19 +++++++-----
-> > >  mm/vmscan.c               | 61 ++++++++++++++++++++-----------------
-> > >  4 files changed, 114 insertions(+), 43 deletions(-)
-> > >
-> > > diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> > > index 621c8653d8f7..edfaf2661812 100644
-> > > --- a/include/linux/mm_inline.h
-> > > +++ b/include/linux/mm_inline.h
-> > > @@ -142,10 +142,42 @@ static inline int lru_tier_from_refs(int refs, bool workingset)
-> > >         return workingset ? MAX_NR_TIERS - 1 : order_base_2(refs);
-> > >  }
-> > >
-> > > -static inline int folio_lru_refs(const struct folio *folio)
-> > > +/**
-> > > + * lru_gen_from_flags - Return the LRU generation number from folio flags.
-> > > + * @flags: folio flags
-> > > + *
-> > > + * Returns: A number between 0 and (MAX_NR_GENS - 1), inclusive. Returns
-> > > + * -1 if the flags indicate the folio is off the list (e.g., isolated).
-> > > + */
-> > > +static inline int lru_gen_from_flags(unsigned long flags)
-> > > +{
-> > > +       int gen = ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF);
-> > > +
-> > > +       BUILD_BUG_ON(LRU_GEN_MASK & LRU_REFS_MASK);
-> > > +       gen -= 1;
-> > > +       VM_WARN_ON_ONCE(gen != -1 && gen >= MAX_NR_GENS);
-> >
-> > Since `gen` is an `int`, it seems a bit odd to have
-> > `gen != -1 && gen >= MAX_NR_GENS` combined here.
-> >
-> > Do you actually mean the following instead?
-> >
-> > VM_WARN_ON_ONCE(gen < -1 || gen >= MAX_NR_GENS);
-> 
-> Thanks for the review!
-> 
-> Yeah, thats's a better sanity check, will udpate it.
+This is a cleanup series separated out from the MGLRU-FG series [1]. As
+that series is getting too long in following updates, seperate out the
+clean up part for easier review and merge.
 
-Hi Barry
+No feature change is intended, except one bugfix. It mostly replaces
+the open-coded bit operations scattered throughout the MGLRU code with
+new helpers, with proper kdocs, sanity debug checks, and hardens a few
+MGLRU functions.
 
-After second though, I now remember why I did this in the first place.
-And there is already many following checks in upstream:
+A subtle generation counter leak is also found during the refactoring
+and the fix is included.
 
-VM_WARN_ON_ONCE(new_gen != -1 && new_gen >= MAX_NR_GENS);
-VM_WARN_ON_ONCE(old_gen != -1 && new_gen >= MAX_NR_GENS);
+Also collected review feedbacks on the cleanup part from the posted
+series.
 
-And gen is signed everything since it has a -1 special value.
+Link: https://lore.kernel.org/linux-mm/20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com/ [1]
+Signed-off-by: Kairui Song <kasong@tencent.com>
+---
+Changes in v4:
+- Rename lru_gen_set_flags/lru_gen_from_flags to
+  lru_set_gen_flags/lru_get_gen_flags, similiar with lru refs helpers,
+  as suggested by [ Barry Song ].
+- Added some comments to cover concerned raised by [ Barry Song ] and [
+  Baolin Wang ].
+- A little code shuffling and better sanity check for concerns raised by 
+  [ Ridong Chen ].
+- Collect tags.
+- Link to v3: https://patch.msgid.link/20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com
 
-The reason is MAX_NR_GENS is unsigned, so a signed -1 will
-look larger and trigger false warning on it.
+Changes in v3:
+- Set PG_workingset before setting LRU refs bit to avoid any potential
+  under report of folio tier.
+- Migrate folio's referenced status before PG_update so lockless readers
+  won't set stale referenced status.
+- Link to v2: https://patch.msgid.link/20260824-mglru-flags-cleanup-v2-0-0104132114ae@tencent.com
 
-Or we will have to have something like:
-VM_WARN_ON_ONCE(gen < -1 || gen >= (int)MAX_NR_GENS)
+Changes in v2:
+- Dropped the redundant LRU_GEN_MAX macro.
+- Renamed folio_migrate_refs() to folio_migrate_lru_refs() and reworded
+  its commit message to describe the referenced state being transferred.
+- Rewrote patch 6's commit message with a detailed analysis of the
+  anon/file accounting race.
+- Dropped patch 7, it doesn't really fix anything, and might be in
+  conflict with other updating series.
+- Collected Reviewed-by tags.
+- Link to v1: https://patch.msgid.link/20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com
 
-I prefer to keep it with the existing style, with proper
-comment, further sanity check cleanup later. Right now the
-usage of MAX_NR_GENS is limited so I think we are fine.
+---
+Kairui Song (6):
+      mm/memcontrol: make lru_zone_size atomic and simplify sanity check
+      mm/mglru: introduce helpers for manipulating gen and refs flags
+      mm/migrate: copy all referenced state via folio_migrate_lru_refs
+      mm/mglru: move max_seq read into walk_update_folio
+      mm/mglru: use explicit tier range in read_ctrl_pos()
+      mm/mglru: fix potential generation folio number leak
 
-In fact I'm think we can get rid of the -1 by combining with
-PG_lru, or use a formal special flag. Which can be done later.
+ include/linux/memcontrol.h |   9 +++-
+ include/linux/mm_inline.h  | 111 ++++++++++++++++++++++++++++++++++++------
+ include/linux/mmzone.h     |   3 ++
+ mm/folio.c                 |  19 ++++----
+ mm/memcontrol.c            |  18 +------
+ mm/migrate.c               |   6 +--
+ mm/vmscan.c                | 117 +++++++++++++++++++++++----------------------
+ 7 files changed, 183 insertions(+), 100 deletions(-)
+---
+base-commit: aeddb4d52acfcc5ce5e988acd48f2906fe966ca3
+change-id: 20260818-mglru-flags-cleanup-cc49cfad654f
+
+Best regards,
+--  
+Kairui Song <kasong@tencent.com>
+
+
