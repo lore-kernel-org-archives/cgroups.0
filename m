@@ -1,205 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-16.mta0.migadu.com [91.218.175.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64F252FD1AA;
-	Sun, 30 Aug 2026 18:43:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 464711C6FF5
+	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 01:50:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788115418; cv=none; b=VLDa/ZAdvRYlcaNCHQoXGeMVdzeKlnNcjoIPYtIE+xCxjiwQbzB5pckB/2vIJD3g1X6gLAXx3LCJ+xz044K5BXDWwhU+5eyrAx8/wlF39SWH7g0RUgxvHHZGmF9PPQZsbwghk0XAinC9l76qURaqY6Iw44t6gynzZ5s5w1wUGvk=
+	t=1788141025; cv=none; b=CQvniAdLwB8ttS+6Awy9fMNuzpE6Cj/762nhOPw6QmmjhlMptOI5G/HRsTHb6xjCOk3h3CmOjv12jKjtb1LvJ9wJgZt2FSV4U75li4VUK9C+3rCHADxA/rdT4R36ODWTIemSpfx3WBYZ8RMGg1+Y5rF1JTPhBZX3knMbE5Vfcb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788115418; c=relaxed/simple;
-	bh=spyvUXst4fUCAIZ0m+QJ4vENQfhFkGWKQfmvYUD3ZzQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=eGJlrRNcAm7Otr7Bii+KwBlBnFXPsaVE45OoE0X7cL8hBQsIipBGCNFH6euvmIWD+m9GuNuaXntVAlWB85McdHtvFlfZ1dcvZYisHQyiJsTmvWJxLyZ6mTNwh27Fbb0yENIqOxDS9PBh6L3kKNkq0VW6FEeULqarXUNSqhN6dEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mhhKTrs3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1788141025; c=relaxed/simple;
+	bh=FcvyL1cxg9jiIFc6PqfH9upLLBuIdCn+XO9mMwBInv8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CDvFNuBDlQZBFhALDlEGqD5drrjeSVFHr0K5784806Ksn3XFgFVqASpfRPs9Go98a05IN/ehOmF1IGSTzaQKonFOKmPqhvCGAPwrtbgo6KqyBrm9rwOAFCybgKF3RIBZ+jLT27WqLPCwTYkZd/rEYas7HS9rOzyR2K73QVj5OFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KqZBdlvN; arc=none smtp.client-ip=91.218.175.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mhhKTrs3"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 276FEC2BD01;
-	Sun, 30 Aug 2026 18:43:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1788115418;
-	bh=spyvUXst4fUCAIZ0m+QJ4vENQfhFkGWKQfmvYUD3ZzQ=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=mhhKTrs3i+PPC9sd4Kcn6L8dCzynom7LL6TgEvgJqpMoYE9yHSLfpXPiV3e6ph8HH
-	 qRz50dDocsS2n0L4zMtbmBLeamqr4RcSZCoGwg0bYkjLETcyaYjZ31kXX7L6dnUM5w
-	 gXOe7Sx5PnoCWu5+DtUF+3TNtKR2eu2x6t5kyPgKUqTWVposz3NKWWCuTbcmRxxY09
-	 jrEJS86hmCFhZai4uMaLiz58F0bsy0c9CI70bCM+xKN77vCkCZIKFR+bKGNEiXu8f2
-	 IAr788FjVTtHHC394YAJXaUjb6s9lzb9LNYA/WLR6sxUYNNy0YqTNItbQVHKAtaPSJ
-	 2ByEtKCNOMlQg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13E70C61DB9;
-	Sun, 30 Aug 2026 18:43:38 +0000 (UTC)
-From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Mon, 31 Aug 2026 02:43:36 +0800
-Subject: [PATCH v4 6/6] mm/mglru: fix potential generation folio number
- leak
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KqZBdlvN"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=FcvyL1cxg9jiIFc6PqfH9upLLBuIdCn+XO9mMwBInv8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788141019; v=1; x=1788745819;
+ b=KqZBdlvNp/zy0Gf0IR6kC9Crh1CQ5gXXRd5Sa3fARvOc+/zaVyquMZhAVV5JF1Rub72LrFSD
+ Js/QrUTPuzLUiPrVtfVJvG1cWyRNZs0hXvaha04Tu39CTHa2nXYonu2sWxsF61KFI/jiKJOkqaN
+ djY4nOUSl4tUex9F7CvLzgMg=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 858a2bb64318c06d;
+	Mon, 31 Aug 2026 01:50:09 +0000
+X-Mizu-Trace-ID: 858a2bb64318c06d
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <ba138f23-6972-44c8-8ce5-80de1f50891c@linux.dev>
+Date: Mon, 31 Aug 2026 09:50:02 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] cgroup/cpuset: Handle cpu hotplug race in
+ guarantee_active_cpus()
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Farhad Alemi <farhad.alemi@berkeley.edu>
+References: <20260828180322.730419-1-longman@redhat.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20260828180322.730419-1-longman@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260831-mglru-flags-cleanup-v4-6-2d15dde0d7ee@tencent.com>
-References: <20260831-mglru-flags-cleanup-v4-0-2d15dde0d7ee@tencent.com>
-In-Reply-To: <20260831-mglru-flags-cleanup-v4-0-2d15dde0d7ee@tencent.com>
-To: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
- Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
- Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
- Roman Gushchin <roman.gushchin@linux.dev>, 
- Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>, 
- Baolin Wang <baolin.wang@linux.alibaba.com>, 
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
- Ridong Chen <ridong.chen@linux.dev>, Lian Wang <lianux.mm@gmail.com>, 
- Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, 
- Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>, 
- Kairui Song <kasong@tencent.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788115415; l=5305;
- i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=Z2J6CC3Ye9renPiwGZhbUdZHuoUS/IyRTK+jViwM/8c=;
- b=z+rZLYptLZpoPbh9exaTA303vLangU8/qr4wFS5iTEHnCVR9t9TxpRlGMDO/sY2UI6BoAE/88
- Kr/Z1J5HZyTB/ek9655augLaRbqwYrilnoLKRiOj9xE7eilBE5I/EmA
-X-Developer-Key: i=kasong@tencent.com; a=ed25519;
- pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
-X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
- with auth_id=562
-X-Original-From: Kairui Song <kasong@tencent.com>
-Reply-To: kasong@tencent.com
 
-From: Kairui Song <kasong@tencent.com>
 
-Each generation of MGLRU accounts anon and file folio numbers
-separately, and the page table walker updates each generation's
-counters in batch once the walk is done. The walker promotes a
-folio's generation with a cmpxchg on folio->flags, and
-update_batch_size() then reads the live flags again to pick the
-anon/file column to charge. The walk holds neither the lruvec lock nor
-the folio lock, so the type can flip between the cmpxchg and that
-read: the lazyfree path clears PG_swapbacked, and reclaim sets it back
-on a dirty lazyfree folio. The batched delta pair is then recorded in
-the wrong type column. Nothing reconciles it afterwards, permanently
-skewing lrugen->nr_pages and the reclaim budgets derived from it.
 
-Fix it by capturing the type from the flags snapshot the cmpxchg
-linearized against: folio_update_gen() returns the type of the state
-it transitioned from, and update_batch_size() accounts with that.
+On 8/29/2026 2:03 AM, Waiman Long wrote:
+> With commit 2125c0034c5d ("cgroup/cpuset: Make cpuset hotplug
+> processing synchronous"), the cpuset hotplug operation becomes
+> synchronous. That commit also removes the code that handles the race
+> between cpuset_hotplug_work and cpu hotplug notifier with the assumption
+> that race is now gone. Later commit 7a0aabd9ce69 ("cgroup/cpuset:
+> Always use cpu_active_mask") updates the cpuset code to always use
+> cpu_active_mask instead of cpu_ohline_mask in various places including
+> guarantee_online_cpus() which is also renamed to guarantee_active_cpus()
+> in that commit.
+> 
+> In the case of CPU offline operation, cpuset_active_mask is updated
+> first in sched_cpu_deactivate() to remove the offline CPU before
+> cpuset_handle_hotplug() is called to update the effective_cpus of the
+> affected cpusets. The cpu_online_mask is updated after that near the end
+> of the offline operation to remove the offline CPU. As a result, the race
+> comes back and the top cpuset may not have any active CPU leading to NULL
+> pointer dereference during the race window when guarantee_active_cpus()
+> is called after cpu_active_mask is updated to remove the CPU to be torn
+> down but before cpuset_handle_hotplug() is able to properly update the
+> effective_cpus of the top cpuset.
+> 
 
-A folio's type only changes while it is off the LRU list, inside a
-del/add pair under the lruvec lock, with the gen bits cleared in
-between. The generation and PG_swapbacked sit in the same
-folio->flags word, so the cmpxchg snapshot captures them together.
-Let G be the generation that snapshot captured (old_gen) and G' the
-one it wrote (new_gen); the CAS can land in only three places:
+Hi Longman,
 
-  - before the del: the folio is anon at G; the batch records anon
-    G -> G', and the del later removes the folio from the anon
-    counters;
-  - between del and add: gen == -1, so folio_update_gen() returns -1
-    without touching the flags and no batch is recorded; the del/add
-    pair accounts for the move alone;
-  - after the add: the folio is file at the fresh generation the add
-    charged; the batch records file, that gen -> G', matching that
-    charge.
+Thank you for the patch. I believe it should resolve the issue.
+Could Farhad please verify whether it works as expected?
 
-Unlike the drift of lazy promotions, which sort_folio() repairs under
-the lruvec lock, the phantom deltas from before this fix land in a
-column the folio never occupies again, so nothing ever repairs them.
+> Fix this by adding back the NULL cs check to avoid this problem. However,
+> the output of guarantee_active_cpus() will be unreliable during that
+> race window.
+> 
 
-Fixes: 018ee47f1489 ("mm: multi-gen LRU: exploit locality in rmap")
-Signed-off-by: Kairui Song <kasong@tencent.com>
----
- include/linux/mm_inline.h |  7 ++++++-
- mm/vmscan.c               | 13 +++++++------
- 2 files changed, 13 insertions(+), 7 deletions(-)
+If guarantee_active_cpus() can return unreliable results during that race 
+window, should it instead return an error when it cannot guarantee that the 
+active CPUs are usable? Otherwise, callers might use an incorrect 'pmask', which 
+could lead to other issues downstream.
 
-diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index 047295ae6e8a..7e487c23aff7 100644
---- a/include/linux/mm_inline.h
-+++ b/include/linux/mm_inline.h
-@@ -10,6 +10,11 @@
- #include <linux/userfaultfd_k.h>
- #include <linux/leafops.h>
- 
-+static inline int folio_flags_is_file_lru(const unsigned long *flags)
-+{
-+	return !test_bit(PG_swapbacked, flags);
-+}
-+
- /**
-  * folio_is_file_lru - Should the folio be on a file LRU or anon LRU?
-  * @folio: The folio to test.
-@@ -27,7 +32,7 @@
-  */
- static inline int folio_is_file_lru(const struct folio *folio)
- {
--	return !folio_test_swapbacked(folio);
-+	return folio_flags_is_file_lru(const_folio_flags(folio, 0));
- }
- 
- static __always_inline void __update_lru_size(struct lruvec *lruvec,
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 724b6e034e69..87e667c410ed 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3269,7 +3269,8 @@ static bool positive_ctrl_err(struct ctrl_pos *sp, struct ctrl_pos *pv)
-  ******************************************************************************/
- 
- /* promote pages accessed through page tables */
--static int folio_update_gen(struct folio *folio, int new_gen, const vma_flags_t *vma_flags)
-+static int folio_update_gen(struct folio *folio, int new_gen, int *is_file,
-+			    const vma_flags_t *vma_flags)
- {
- 	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
- 	int old_gen;
-@@ -3298,6 +3299,7 @@ static int folio_update_gen(struct folio *folio, int new_gen, const vma_flags_t
- 		new_flags |= BIT(PG_workingset);
- 	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
- 
-+	*is_file = folio_flags_is_file_lru(&old_flags);
- 	return old_gen;
- }
- 
-@@ -3328,9 +3330,8 @@ static int folio_inc_gen(struct lruvec *lruvec, struct folio *folio)
- }
- 
- static void update_batch_size(struct lru_gen_mm_walk *walk, struct folio *folio,
--			      int old_gen, int new_gen)
-+			      int old_gen, int new_gen, int type)
- {
--	int type = folio_is_file_lru(folio);
- 	int zone = folio_zonenum(folio);
- 	int delta = folio_nr_pages(folio);
- 
-@@ -3519,7 +3520,7 @@ static bool suitable_to_scan(int total, int young)
- static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struct *vma,
- 		struct lruvec *lruvec, struct folio *folio, bool dirty)
- {
--	int new_gen, old_gen;
-+	int new_gen, old_gen, file;
- 
- 	if (!folio)
- 		return;
-@@ -3532,9 +3533,9 @@ static void walk_update_folio(struct lru_gen_mm_walk *walk, struct vm_area_struc
- 		folio_mark_dirty(folio);
- 
- 	if (walk) {
--		old_gen = folio_update_gen(folio, new_gen, &vma->flags);
-+		old_gen = folio_update_gen(folio, new_gen, &file, &vma->flags);
- 		if (old_gen >= 0 && old_gen != new_gen)
--			update_batch_size(walk, folio, old_gen, new_gen);
-+			update_batch_size(walk, folio, old_gen, new_gen, file);
- 	} else if (lru_gen_set_refs(folio, &vma->flags)) {
- 		old_gen = folio_lru_gen(folio);
- 		if (old_gen >= 0 && old_gen != new_gen)
+> Fixes: 7a0aabd9ce69 ("cgroup/cpuset: Always use cpu_active_mask")
+> Reported-by: Farhad Alemi <farhad.alemi@berkeley.edu>
+> Link: https://lore.kernel.org/lkml/CA+0ovChh3VjsKN1g+ZGjwwY2fGTpP7uD+aCCByLj5Qbymw=bfQ@mail.gmail.com
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>   kernel/cgroup/cpuset.c | 20 ++++++++++++++++++--
+>   1 file changed, 18 insertions(+), 2 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 0bad5bbec6bf..309478ab21ad 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -513,10 +513,26 @@ static void guarantee_active_cpus(struct task_struct *tsk,
+>   	rcu_read_lock();
+>   	cs = task_cs(tsk);
+>   
+> -	while (!cpumask_intersects(cs->effective_cpus, pmask))
+> +	while (!cpumask_intersects(cs->effective_cpus, pmask)) {
+>   		cs = parent_cs(cs);
+> -
+> +		if (unlikely(!cs)) {
+> +			/*
+> +			 * The top cpuset doesn't have any active cpu as a
+> +			 * consequence of a race between its caller and the cpu
+> +			 * hotplug operation where cpu_active_mask is updated
+> +			 * asynchronously before cpuset_handle_hotplug() is
+> +			 * being called to adjust the effective_cpus of the
+> +			 * affected cpusets. But we know the top cpuset's
+> +			 * effective_cpus is on its way to be identical to
+> +			 * cpu_active_mask minus the exclusive CPUs dedicated
+> +			 * to other valid cpuset partitions. Just pass back
+> +			 * the filtered cpu_active_mask in this case.
+> +			 */
+> +			goto out_unlock;
+> +		}
+> +	}
+>   	cpumask_and(pmask, pmask, cs->effective_cpus);
+> +out_unlock:
+>   	rcu_read_unlock();
+>   }
+>   
 
 -- 
-2.55.0
-
+Best regards
+Ridong
 
