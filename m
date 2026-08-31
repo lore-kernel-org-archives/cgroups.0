@@ -1,119 +1,175 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7564538DC71;
-	Mon, 31 Aug 2026 05:57:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D57139FCB4
+	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 07:29:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788155842; cv=none; b=fqfGcheXVBGvgaobRGGBEjCCYrBiJPxXlGV0w7tX1jbrwI2IVL/6WWGKlWxI27xF8ArBEG4NYlcut/WRnoOu6EfvUvhZxp1coCxtuBHBWiLo8iGAbsZyYFj6wywKaZrWIsRGcUybt7EbiJhNZWneqk/VgNm8GKQ32FbBqygzUkE=
+	t=1788161357; cv=none; b=F9xUWIGILlI7P/FnszI06FmPE/+AXcZupDhCl9ZmBycz117HhkuW+QXqpH0mJdK6LsNfebcavcPn00Jw8GD/B62yWLDDx4E+1WZYMdIThF4E6jlYSDhBpLtLwW8ceFlXFac6uFqYIyBsC7QVuPWusWfqrGaVw4dbiW8L4bMWPMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788155842; c=relaxed/simple;
-	bh=cKK22JY6o1/GYcTB1hR0UNrqPfLsqQak1zI8LrKAR0U=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=n1QCMo0/etnKGPNpxiItcEAU16AaPY9UCzYoLJH6Dlffx/dfN9A7xoWy8itc2MZmMGazYWynR7oqe/2vUMNJV2m0urkyLilqvQhwdSx3oypbm6oHZz2AyMlSIZIelmlu68ik7lu5hkJrU4LNzNkOcDipkaHFj7j7lHKTGeyazJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HCXihJmR; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788161357; c=relaxed/simple;
+	bh=jKunFJbRTXAVT8eYRevg418PMfhaJ+T7AZJAXrgxsuE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rt1BnJJfq3oreLi0DXb5OK/5AekbBYXRgXoTSMYvBD0NA4cRNeqQmcZiPhqbmzBkfKNwk+ru2iESltj41PlbFPKxWE0UQwlVpVH0gcotlllnUJcfnEHs+Hwy+eI01tuR+DNdfSCSPslvIOUokpcJk6vEsUsqOlTrTKBib7KaY80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=H+m0godM; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HCXihJmR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788155841; x=1819691841;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=cKK22JY6o1/GYcTB1hR0UNrqPfLsqQak1zI8LrKAR0U=;
-  b=HCXihJmRAiP1G++VffMiBLgyA1Fp9yjkQsOyaOWUjU3UmHIeDPnw6nOB
-   RbUBU1sj+yaIY5x95nuWgGZ+gFsw7taPT2awtcvb0VKvAUAZcHVwsCxgK
-   Cj3AhI+Dhnx9BOph1EujU126+r5SdkGbQ8DVPrxPF4wjWS6R/cczFz1ZB
-   5lg2FmqYT6X6uoI+Izk+UyZkcorgBmpr/iSURJMZOq+RAM9hS/2qtAtSY
-   mqneqZppoE4r5bQXFZS/DnUrIDKpgSRGmFY9cUtbQPjKmQ9y+qI5ZCRUN
-   2z7evwRW7qJFtfrFSfQGG0qKIxmlwAXFXTOl3JnFLSoeBtCvKBn+ebDVo
-   w==;
-X-CSE-ConnectionGUID: PaIF3/EMTZKgw07/2RuzDw==
-X-CSE-MsgGUID: nAyX0XeAR2i6ZbCdLzyjDA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11891"; a="87685507"
-X-IronPort-AV: E=Sophos;i="6.25,252,1779174000"; 
-   d="scan'208";a="87685507"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2026 22:57:20 -0700
-X-CSE-ConnectionGUID: LfU/4KPFS1y5kPly/KzuDg==
-X-CSE-MsgGUID: G8hsJwG+QAG/YwLNFozcZw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,252,1779174000"; 
-   d="scan'208";a="266127689"
-Received: from tester.sh.intel.com ([10.112.106.126])
-  by fmviesa008.fm.intel.com with ESMTP; 30 Aug 2026 22:57:17 -0700
-From: Tao Yu <tao1.yu@intel.com>
-To: tj@kernel.org,
-	josef@toxicpanda.com,
-	axboe@kernel.dk
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tao Yu <tao1.yu@intel.com>,
-	syzbot+144a1c0e22e53a08ef5a@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH] blk-cgroup: use GFP_NOIO for radix tree preload in blkg_conf_prep
-Date: Mon, 31 Aug 2026 13:57:16 +0800
-Message-Id: <20260831055716.773354-1-tao1.yu@intel.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="H+m0godM"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-49b0d8bc2aaso30682215e9.0
+        for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 00:29:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1788161353; x=1788766153; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=lObPyH6kdWwL+DlBFF/s5fn9Kq4aH8qpCjM9SPcedhs=;
+        b=H+m0godMWIxYAt3S1k75WjJZGl8IGb8sX2SHr/VUhc/qsGMciGRBUb8V2tx0gAxT5o
+         dlOijgBoem9SLAdb/8OWsKUN6QnvKn4dtnmoDzK9WmgKESXK11WjAV0E9MCyU4OWtKDf
+         Df23jTtLKL0ccw7J7tKuLhZQwSt/igQG1pe3gCiO1MUxKk4mbAG5B7zfylYdt76Y89WN
+         fmo0r8UJzVhfZp11zi8lWuu83TbeA2sFN4HDozNsqrZesT5K0Nfxw2hzFTAbSafHF4va
+         j82f9uPGAYrGk1sj2sbZn+U4ot5TIsxgTuBqE2y39bMnttgnT+hvKq3slGyiO/7wYvSd
+         oR2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788161353; x=1788766153;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=lObPyH6kdWwL+DlBFF/s5fn9Kq4aH8qpCjM9SPcedhs=;
+        b=CQ8F7Nudhr3AROUawkSAfAZhztKNIKW8bkSYS/DnFovbYl5MnyPjM0gtT1rlzW/lLm
+         PFr60ihOObULSJDSNCml3j3lVg2G/of6C/OfkuVIJfb/bAUv0ydihGMoM73DOx8MBycj
+         IWtJcE4ec/sPlVAPNj/Tlja+DNHLUt2vSCzE1EmUAD0AAGMYis7R6WEdjIVcQN54MNqa
+         Xu2TLvMTPYyIYfNdjNR/1PntOQMPJ0c8I3KrlsiVD5WjqeRBN0g28TO5dpRGz4oGH8zN
+         918f5H5Nt5Vj0/sL1sPXnIGrwHzmnr/xG+y1OwNv9++VvAZD0jOd0F7mRAXsEdY0nRLV
+         xSow==
+X-Forwarded-Encrypted: i=1; AHgh+Ro7xLksQ6dC17/I72OCZh0CONuZ0szGoib/E+J7JsnSFmhE6kYbT1q9fZWE6Qu2KKyM7emSL8tk@vger.kernel.org
+X-Gm-Message-State: AFuF++mLN6vj8VIpaWAuXgVQim1IDxVL5nR8ZKfWkaj4ApOycSnBWQi1
+	cO0t7b7IbGsWBUJ7Aepy1XrWKbM65yqcc0iJJvcko+WumV85C27dDjhxR4yW3RMDnSw=
+X-Gm-Gg: AR+sD11CnJ28Hro0W01+3KRExwW7/bWMvl0RVtCiEP11j2V7nPbFx0220GIqCkai4hX
+	ayFh3KIaoThuTNSe2wKFr4ACO5MzcsqrRiMtrrVU655KTixNjjHwqcmSy/Zh6epaIBQ+JKhxTsV
+	StA5HLSgQxLjC8/EsdpPUIXG6vHEgNra5JK/rPnIhRPEQT0YezZz/RdauRlCpBAvXZPa2klG90b
+	Chzt+mTDuwlsZZAV0XckP0akTeUvlzqmCCvLcjHslogrxnmodnQjX3IWPADcFUKsTLeUZWiZbeX
+	FMObic5HwCj3TV/8H7YJiaWgw/CqXeLqb9Mp5yPNLRF1uhHFic8dL8T0qNs2XF+pqT+idi065CF
+	KgARVnLB55sLrZw+eHBbQHOcFMkwxaOL/+ND2hlV4hiALgjH/h9Ddm9mfUDNQ73uS21Q0ZX9zkn
+	qNkOWJ55iGWGENZ1VslxdaedCYESmb7zErGHsQdCoSccbAvAjCS5nddSK8EZct7eFRsfv9lTHGy
+	Q==
+X-Received: by 2002:a05:600c:b85:b0:49c:c96a:d36b with SMTP id 5b1f17b1804b1-49cc96ad411mr275821535e9.12.1788161353524;
+        Mon, 31 Aug 2026 00:29:13 -0700 (PDT)
+Received: from localhost (109-81-17-247.rct.o2.cz. [109.81.17.247])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49b94dd2517sm269889955e9.7.2026.08.31.00.29.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Aug 2026 00:29:13 -0700 (PDT)
+Date: Mon, 31 Aug 2026 09:29:11 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Rik van Riel <riel@surriel.com>
+Cc: linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, kernel-team@meta.com
+Subject: Re: [PATCH v2] mm/memcontrol: fix stuck FLUSHING_CACHED_CHARGE bit
+ on isolated cpus
+Message-ID: <apUtRwonTCUF07u5@tiehlicka>
+References: <20260828135036.7d44361f@fangorn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260828135036.7d44361f@fangorn>
 
-blkg_conf_prep() allocates a new blkg with GFP_NOIO after dropping
-queue_lock, but still preloads the radix tree node with GFP_KERNEL while
-q->blkcg_mutex is held.
+On Fri 28-08-26 13:50:36, Rik van Riel wrote:
+> When drain_all_stock() sets FLUSHING_CACHED_CHARGE before checking
+> isolation, schedule_drain_work() can drop the work in a separate RCU
+> critical section, and housekeeping_update()'s synchronize_rcu() can race
+> that second check, leaving the flag set.
+> 
+> drain_local_stock() only clears the bit for work that ran, so the flag
+> remains set and the stock is never drained again.
+> 
+> Have schedule_drain_work() return whether the work was queued, and clear
+> FLUSHING_CACHED_CHARGE in drain_all_stock() when the remote CPU is
+> isolated, so future drains can retry.
+> 
+> Fixes: 6a792697a53a ("memcg: do not drain charge pcp caches on remote isolated cpus")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Michal Hocko <mhocko@suse.com>
+> Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Signed-off-by: Rik van Riel <riel@surriel.com>
 
-GFP_KERNEL may enter direct reclaim and acquire fs_reclaim, which adds
-the dependency
+Acked-by: Michal Hocko <mhocko@suse.com>
 
-  q->blkcg_mutex -> fs_reclaim
+Thanks
 
-This completes a circular locking dependency with the existing path
+> ---
+> v2: use the approach suggested by Michal and Shakeel
+> 
+> Link: https://lore.kernel.org/all/cover.1787890328.git.riel@surriel.com/
+> 
+>  mm/memcontrol.c | 19 ++++++++++++-------
+>  1 file changed, 12 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 1271d390b617..309398e943ca 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2306,7 +2306,7 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
+>  	return flush;
+>  }
+>  
+> -static void schedule_drain_work(int cpu, struct work_struct *work)
+> +static bool schedule_drain_work(int cpu, struct work_struct *work)
+>  {
+>  	/*
+>  	 * Protect housekeeping cpumask read and work enqueue together
+> @@ -2315,8 +2315,11 @@ static void schedule_drain_work(int cpu, struct work_struct *work)
+>  	 * pending work on newly isolated CPUs.
+>  	 */
+>  	guard(rcu)();
+> -	if (!cpu_is_isolated(cpu))
+> -		queue_work_on(cpu, memcg_wq, work);
+> +	if (cpu_is_isolated(cpu))
+> +		return false;
+> +
+> +	queue_work_on(cpu, memcg_wq, work);
+> +	return true;
+>  }
+>  
+>  /*
+> @@ -2348,8 +2351,9 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
+>  				      &memcg_st->flags)) {
+>  			if (cpu == curcpu)
+>  				drain_local_memcg_stock(&memcg_st->work);
+> -			else
+> -				schedule_drain_work(cpu, &memcg_st->work);
+> +			else if (!schedule_drain_work(cpu, &memcg_st->work))
+> +				clear_bit(FLUSHING_CACHED_CHARGE,
+> +					  &memcg_st->flags);
+>  		}
+>  
+>  		if (!test_bit(FLUSHING_CACHED_CHARGE, &obj_st->flags) &&
+> @@ -2358,8 +2362,9 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
+>  				      &obj_st->flags)) {
+>  			if (cpu == curcpu)
+>  				drain_local_obj_stock(&obj_st->work);
+> -			else
+> -				schedule_drain_work(cpu, &obj_st->work);
+> +			else if (!schedule_drain_work(cpu, &obj_st->work))
+> +				clear_bit(FLUSHING_CACHED_CHARGE,
+> +					  &obj_st->flags);
+>  		}
+>  	}
+>  	migrate_enable();
+> -- 
+> 2.55.0
+> 
+> 
 
-  fs_reclaim -> q->q_usage_counter -> q->blkcg_mutex
-
-and triggers a lockdep warning when configuring blkcg policies.
-
-Use GFP_NOIO for radix_tree_preload() so that the preload context matches
-the rest of this allocation path and does not recurse into reclaim while
-q->blkcg_mutex is held.
-
-Reported-by: syzbot+144a1c0e22e53a08ef5a@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=144a1c0e22e53a08ef5a
-Fixes: f255c19b3ab46 ("blk-cgroup: Pre-allocate tree node on blkg_conf_prep")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tao Yu <tao1.yu@intel.com>
----
- block/blk-cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 2b5c29434e426..27e00180e4cc1 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -873,7 +873,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 			parent = blkcg_parent(parent);
- 		}
- 
--		/* Drop locks to do new blkg allocation with GFP_KERNEL. */
-+		/* Drop queue_lock to do new blkg allocation with GFP_NOIO. */
- 		spin_unlock_irq(&q->queue_lock);
- 
- 		new_blkg = blkg_alloc(pos, disk, GFP_NOIO);
-@@ -882,7 +882,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 			goto fail_exit;
- 		}
- 
--		if (radix_tree_preload(GFP_KERNEL)) {
-+		if (radix_tree_preload(GFP_NOIO)) {
- 			blkg_free(new_blkg);
- 			ret = -ENOMEM;
- 			goto fail_exit;
 -- 
-2.34.1
-
+Michal Hocko
+SUSE Labs
