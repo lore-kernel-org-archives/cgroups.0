@@ -1,32 +1,33 @@
-Received: from mta1.migadu.com (out-211.mta1.migadu.com [95.215.58.211])
+Received: from mta1.migadu.com (out-218.mta1.migadu.com [95.215.58.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3921C3D25AD
-	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 09:46:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74AD83D649A
+	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 09:46:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788169597; cv=none; b=G9iWwy/1JNbdBm49OugLllix/g/iZtEfHMBcgz8OhLZ4cfayeEZn4hBMvygV/jBVlzI9aJ8LJdd+W4cXGHxGjPhFAZXwcHDERIbrv2UrDr6X8FrnqBD+YWN9jkhO2djJBKOOeuipDSZDJ7ZjACOl+BQeRG1Pd1dZUjUzyAa/ayM=
+	t=1788169603; cv=none; b=E/IKV1TfNXtwZ4W3bwsP5xMc9SCphbTSYzaLbFvLU2cT9nqpnpMS3tgrmU+4/pj9VKVrkVYB4+CX90vHAI89VMlenK/H8uX+JXCQiD9exF/zSriqq3jUKZb3UOg+N952Bgq8W0kRhmD6CDubWSpQksSEcaw8YBE0dTP8EVfzsvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788169597; c=relaxed/simple;
-	bh=AF4DD4VVRvODeKZk9FQinottqHGc5UMNhNCLJuS+ivE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nDRA669dPfYagMQOKJys2412pmPKEab6gCaMhJdl17WqpaSegFZsevPnCNGeWYOPs0S1PxWL+NGUzzZWAgvfaxt9mKBQHv65WzT9Z5Olo8bRAqh9Ukq6X3ID8kBxCqAlj9wzdNRfaiW2vWSZcALiT90d7RA05n71N6VFleekAs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LVprdE3U; arc=none smtp.client-ip=95.215.58.211
+	s=arc-20240116; t=1788169603; c=relaxed/simple;
+	bh=gLq6dTRueazhtZMb/V4BL5tx3YydnlrYd+x5AgErLV0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=AMwEtZsVRtkcF9gfHI2LkSnOViw0mvHNNu6bvJ2wRwXneE7tA9tcCwLcy7gmwVfcbAzy8oKDYwbW2GDDO9/BpuYYlbufT0Tzu8QQjUJqH+i1yxOm5NcO+Vdeh1nWDz3P0gQ8XV8FQ6nRtl8JCETMo09hYO+G+phaz+V9BEOA6FI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NW4vXXiz; arc=none smtp.client-ip=95.215.58.218
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LVprdE3U"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NW4vXXiz"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=AF4DD4VVRvODeKZk9FQinottqHGc5UMNhNCLJuS+ivE=;
+DKIM-Signature: a=rsa-sha256; bh=gLq6dTRueazhtZMb/V4BL5tx3YydnlrYd+x5AgErLV0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788169592; v=1; x=1788774392;
- b=LVprdE3Ub8HO29yourlyTGlfgZbpOFAnHCkNfh7v77RZgWe+bRfXJGw8ujZhmy9rzG5HAduv
- 4w1CWWR5yqy55Sqny5U3xmGEUxhKeY+NusZ3F73Tr7P3FHamp3KNBxfEEFr8lRa0OqMs+2BQOom
- 3EhfzPJjhDd7GRJM71l4B7so=
+ t=1788169599; v=1; x=1788774399;
+ b=NW4vXXizt6meWPAXDM+eYSu6b9F/w+WIaLtKLgX5XWAk0osIeecEezgLzw/39BdRZZZFZTNx
+ bQHuWAFtFc2OCiE21LyYQwgvDA1lYW6dzWsA9RsdyLCqK3XK6YjG1GPgfmVr0Eee4vvNNdzBydQ
+ QvAZ5/RU8nvxso7X8LPOgBtQ=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 22025baba8b5f51b;
-	Mon, 31 Aug 2026 09:46:32 +0000
-X-Mizu-Trace-ID: 22025baba8b5f51b
+Received: by smtp.migadu.com with ESMTPS id 151bee8d5fdfa34c;
+	Mon, 31 Aug 2026 09:46:39 +0000
+X-Mizu-Trace-ID: 151bee8d5fdfa34c
 X-Migadu-Flow: FLOW_OUT
 From: "Hui Zhu" <hui.zhu@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
@@ -46,11 +47,14 @@ To: Johannes Weiner <hannes@cmpxchg.org>,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org
-Cc: Hui Zhu <zhuhui@kylinos.cn>
-Subject: [PATCH v2 0/3] mm: workingset: fix the shadow node budget under MGLRU
-Date: Mon, 31 Aug 2026 17:46:08 +0800
-Message-ID: <cover.1788169145.git.zhuhui@kylinos.cn>
+Cc: Hui Zhu <zhuhui@kylinos.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v2 1/3] mm: workingset: use lruvec_page_state_local() to count lru pages
+Date: Mon, 31 Aug 2026 17:46:09 +0800
+Message-ID: <e16dc5e411c1c5d95c4c4db6ffc789756362b867.1788169145.git.zhuhui@kylinos.cn>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <cover.1788169145.git.zhuhui@kylinos.cn>
+References: <cover.1788169145.git.zhuhui@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -62,73 +66,44 @@ Content-Transfer-Encoding: 8bit
 From: Hui Zhu <zhuhui@kylinos.cn>
 
 Commit 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the
-number of lru pages") broke the workingset shadow node budget under
-MGLRU: lruvec_lru_size() reads mz->lru_zone_size, which MGLRU never
-maintains, so count_shadow_nodes() sees the evictable LRU lists as
-empty and the shadow shrinker reclaims eviction tokens almost as fast
-as they are created, losing thrashing protection.
+number of lru pages") switched count_shadow_nodes() to lruvec_lru_size().
+With CONFIG_MEMCG enabled, lruvec_lru_size() reads mz->lru_zone_size,
+which only the classic LRU paths maintain.  MGLRU accounts its pages
+through __update_lru_size(), which skips that array, so with MGLRU on the
+four evictable LRU lists are always seen as empty.  The shadow node budget
+(pages >> 3) then collapses to slab plus unevictable pages, and the
+workingset shadow shrinker reclaims eviction tokens almost as fast as they
+are created, losing thrashing protection.
 
-Patch 1 switches count_shadow_nodes() back to lruvec_page_state_local(),
-which both classic LRU and MGLRU maintain.
+lruvec_page_state_local() reads lruvec_stats->state_local instead, which
+both classic LRU and MGLRU maintain.  Switch back to it.  The reparenting
+race this re-exposes on cgroup v2 is closed by the follow-up patch that
+redirects dying-memcg stat updates for all hierarchies.
 
-Patch 2 addresses the reparenting race that motivated 7404bd37cfbe:
-patch 1 makes cgroup v2 read state_local as well, so extend the
-dying-memcg stat redirection (previously cgroup v1 only) to all
-hierarchies.
+Fixes: 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the number of lru pages")
+Cc: stable@vger.kernel.org
+Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
+---
+ mm/workingset.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Patch 3 recovers the performance.  Patch 2 added an unconditional
-rcu_read_lock() to the stat update fast path; patch 3 moves the dying
-check out of the RCU read-side critical section so the lock is only
-taken on the rare dying path.
-
-Performance testing
-===================
-
-The test script and the raw results are available at [1].
-
-Environment: 10-vCPU QEMU guest, 8 GiB RAM, cgroup v2; 7 runs per
-configuration, medians reported.  Workloads:
-
-  w1-anon-churn: single-threaded anon fault/charge loop in a memcg
-                 (MADV_DONTNEED + re-fault, no reclaim).  Every touch
-                 is a real fault with charge and memcg stat updates,
-                 so it stresses exactly the fast path patch 2 changes.
-  w2-file-churn: file read loop under memory.high pressure
-                 (reclaim-bound, noisier).
-  w3-reparent:   reparent accounting sanity check.
-
-w1-anon-churn (pages/s):
-
-                 classic LRU          MGLRU
-base             4393028              4377122
-patches 1-2      4385996   (-0.2%)    4352887   (-0.6%)
-patches 1-3      4381832   (-0.3%)    4377053   (+0.0%)
-
-w2-file-churn (MB/s):
-
-                 classic LRU          MGLRU
-base             8277                 8226
-patches 1-2      8226      (-0.6%)    8123      (-1.3%)
-patches 1-3      8157      (-1.4%)    8294      (+0.8%)
-
-w3-reparent passed on all kernels.
-
-Patch 2 alone shows a small overhead, most visible under MGLRU (-0.6%
-on w1); patch 3 brings w1 back to the base level in both LRU
-configurations.  The remaining differences are within run-to-run
-noise.
-
-[1] https://gist.github.com/teawater/32f373ec41d185d840455eb167321a5a
-
-Hui Zhu (3):
-  mm: workingset: use lruvec_page_state_local() to count lru pages
-  mm: memcg: redirect stats updates of dying memcgs for all hierarchies
-  mm: memcg: skip the RCU lock when the memcg is not dying
-
- mm/memcontrol.c | 30 ++++++++++++------------------
- mm/workingset.c |  5 ++---
- 2 files changed, 14 insertions(+), 21 deletions(-)
-
+diff --git a/mm/workingset.c b/mm/workingset.c
+index f351798e723a..85a4e14e95d5 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -693,10 +693,9 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ 
+ 		mem_cgroup_flush_stats_ratelimited(sc->memcg);
+ 		lruvec = mem_cgroup_lruvec(sc->memcg, NODE_DATA(sc->nid));
+-
+ 		for (pages = 0, i = 0; i < NR_LRU_LISTS; i++)
+-			pages += lruvec_lru_size(lruvec, i, MAX_NR_ZONES - 1);
+-
++			pages += lruvec_page_state_local(lruvec,
++							 NR_LRU_BASE + i);
+ 		pages += lruvec_page_state_local(
+ 			lruvec, NR_SLAB_RECLAIMABLE_B) >> PAGE_SHIFT;
+ 		pages += lruvec_page_state_local(
 -- 
 2.53.0
 
