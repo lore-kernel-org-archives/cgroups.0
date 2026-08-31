@@ -1,99 +1,99 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949803D45EF
-	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 11:24:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92872403AEA
+	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 12:33:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788175447; cv=pass; b=UONu8EoQmvjKL+Aa43dbsqAEzlO0CbkNOcUk6RW50OfdbJRIgUrYXQiUFiUita2vVyDCM0DDEdURdR2CcKOeW6gscsgqM8tiiB8e/amEq4ranqZXwlgvBFtMg/HfreMVVNCYYor0rK9np8UJBcACQ9wsCDoXjK/0HkmncavAlTk=
+	t=1788179599; cv=pass; b=a4hS+NEr8fyDxBPahE6o2f/j3SI5POCkXbgok+ijuHFV/jpKHWZjDUnwHJcAPWjvxjbKEIxqyC+r4+eE6z1A+gfXDDr48lkPiDCHjxGThB3EbIAS3b2+bQJKm25HsE+UVKmcvv+Em7VzRyrU852kVq0wUjZoi1uEEsMcMK/M/qw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788175447; c=relaxed/simple;
-	bh=C9vgZ5OpqoqCmfcKT8JCoWSmu766g0cDfXH9A/VZNa4=;
+	s=arc-20240116; t=1788179599; c=relaxed/simple;
+	bh=gaRkedV713MsnXzEO4CGtOGQLpcQnFwA/KGBiZD2p+A=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=TB9G7HhpPe06YfvsXO7H4kqmOzPhUa31n7fstf8I8G8sqE3ia+k4CUCow/qVwQndXiVdj4MWyO3otBe2H2JP5o8vndpOnk4AWF8JJ4fbeGaqd9UV6wsc0LvxSG8H6wwvbsvRyy8hDWZlZKjtpoVtJcr3QCPPOBb0yMiST2gTiu0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E93YYZVT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=eJyhUWgt; arc=pass smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=q0HdL2Vg4kJBy03ThrCl9qBJK6rINjjirX5GkK73GvFsoCGtI957Mc6u4VjLis2rC6h+j+eXcLxYQnkAzwws5ejyxTBk9ms+ROF4TiNUGz0HQVxtNrSofFf0GMZ4/6/cV30M+n0K1aTZLRTPtejZ5PXo34bDTyJff6OFc2cEDX4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YaZSO/bu; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=M5b0yJkc; arc=pass smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E93YYZVT";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="eJyhUWgt"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YaZSO/bu";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="M5b0yJkc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788175444;
+	s=mimecast20190719; t=1788179596;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
-	b=E93YYZVTZd8tdwkJfh8MLIEY0MqShSQopLUl3dA5cLJTAOZO6dwOz/9OR7EVlnV1r+BWMd
-	4cVPmVQuvRqrdN8/jNIDgE1oaka+oSlSALDzob89rq9WXoiCaX0KgU2Rliye2Sin3Wt2TS
-	twW4hP3LNx3wEN1RogpLrA9jYbQLn1o=
+	bh=vykGLcQWkbD8ivoSk8Q9cZUvO6Y0xtJU1XX9cOdfeIs=;
+	b=YaZSO/bu4CFE8YRWSDDXVapV/akVqXwhTJd5pasQ1fpBoHA20dbYe2vqqs+oLYYcVKtua/
+	lysKPLINoxt5FJy5SUc+zgl08EuFVFH9024aZDxqZMFyI8kY1A9p+OmUGwOaS+vI+bsYqa
+	n2rhcNFz4RH+vm/JMVxqZxsxYk9FhxE=
 Received: from mail-yw1-f200.google.com (mail-yw1-f200.google.com
  [209.85.128.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-653-UWZSr0nbPmiYhYHOPEIeJA-1; Mon, 31 Aug 2026 07:24:03 -0400
-X-MC-Unique: UWZSr0nbPmiYhYHOPEIeJA-1
-X-Mimecast-MFC-AGG-ID: UWZSr0nbPmiYhYHOPEIeJA_1788175442
-Received: by mail-yw1-f200.google.com with SMTP id 00721157ae682-836c9f68dcbso49719807b3.0
-        for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 04:24:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788175442; cv=none;
+ us-mta-573-AMv_M9Y7MFid0Gf5XShyyw-1; Mon, 31 Aug 2026 08:33:15 -0400
+X-MC-Unique: AMv_M9Y7MFid0Gf5XShyyw-1
+X-Mimecast-MFC-AGG-ID: AMv_M9Y7MFid0Gf5XShyyw_1788179594
+Received: by mail-yw1-f200.google.com with SMTP id 00721157ae682-858b746a9a8so76397857b3.2
+        for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 05:33:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788179594; cv=none;
         d=google.com; s=arc-20260327;
-        b=Nl05Egflkv8ZwXLj2eGOpNdvrgG7aMKl+QjISWEB9qRsAMqufG6XmgZSIlONoC8Ufv
-         oA/iy/Wnv5yn3KsR7mbeT/0Dp8Na6fxNsDwbmgWsUZ283/LZ+Tns9U+9iJfkoaGbhe1l
-         81AIoxYf/64GkgXtK3Q6bmiGdxOd7Jm/EI1MBQX3gJl5wBmWhfKFsQmRDLlWOH2XwoY7
-         4Uq+8WT5Zabo7amxyfsDJ0h9JDA3SWpHrgN3rrHVgazUpNYetkoJYqvqEBPRHHd934Aj
-         7XHnFTiZr0/mXQfxecZA21Gs8s9acef/6dOQSCrQ1fdSyxBy4qNL1nbg1kwilkNxwwI2
-         PRaA==
+        b=AIWqCpTc0O1kxBdogDsS3Xy8UImG4d6DnehfdlMwhgBRrFP8uVui9yu10ss9UrFP02
+         klwoWzsXJ3MrcHppzY7D4cG0VQfQNM5ruYn1e19PdDfbYhaMLACSFIQeAcAIED4HZnTl
+         e74avN2ARPFFlL0p9PUMe1IGJs70OTuEtjGjhdSsxO/aDekECQ2nvOaFcIMlcg/N5uFH
+         mPMMdQq0Fjq3Fvb6kaos98+x6TUVlGoQO2E1kvdSK1Er/dG/UhiUDfmtdkpO1Yno/0gX
+         Rk5cQkbp1I+BT5AkIvs8PCsr0ll3BTztHBbE3raXK3ISPoNVYrQFB2IxqtJaXwnYAol/
+         NB5Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
-        fh=o2pIUtQu6YPL1KlxQm4RXcJ8EjoivOG6z3ipA+2Gv5Q=;
-        b=DkHYVCDH12gtkHRKEI9G3QQ5cForO+qi14LDn/YDW1mS3UMVl7UtpjT9nJYYWMLo+O
-         S8Uzrxk4PnS0kScwbgGZz+Tx8qJZdPs0fDp5rZeq9EH79l7OYAkv84bDaPsLuQdLABkQ
-         NF7yzYrKgXwnxycwm0AZhQHhVrmJqwwTriTLjdqd4b2+jUUNXh8iHUvrts+9juwqeNnb
-         URkbhP/BRT3fDjPVl3YRFFh6W4RKMfarUnx0RqOUbhVW8c8KjoorSe3iMyXkR71d4yLT
-         7G3U43ZnPI0A7yVPq9BdvXW+gLWSyXoRkfjBsT2DuMsDDrDjP0xXcyObAdvWabTnPMJ0
-         xaqQ==;
+        bh=vykGLcQWkbD8ivoSk8Q9cZUvO6Y0xtJU1XX9cOdfeIs=;
+        fh=NbYjJyxieloYL4V4BPk0l65aXADmyA4KnJFxxZW9yAE=;
+        b=Wj+4o4IZKKEtTGSdUw/+ysjTBMDPasDEKaodDp73YnUyqI6m601Jty7Q9ZRA79ugaN
+         CoG2mtTUogKuiyjRpsKbQ+OXsMsASix+6vYT/J48u1erbVwPyJt78WzxeeYiz93EswAH
+         iwHrAhI3ZPTrgY8tWxO7j3GyIwV7+eR0ofIxVSLW28bPNNxzBGU90HPgFEAZ1qeBlOo3
+         4vvGT5G0G060TZWMGo1HOKvGtGHQhxEubrmuK0RVmnaQ7gL91FnSsmLL40KkITDxLNCQ
+         ExDD/HqKlWPPMQkEet8cBt9SMQbM6Bc96TelCz3UoTf5dHhpNqXZQUOdvGguoXWYJf8t
+         WBYA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1788175442; x=1788780242; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1788179594; x=1788784394; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
-        b=eJyhUWgtKANGVUW4zMaluleGLmwM3cyd50f70DCIj5dfPFjbYnnuDyoMEhdRVd5XvP
-         EU3k/0lEwdIh40wxAi1MbeNH6LErrWtsxJ0Ee+Yn8cN2pDkzWqcdj7YyOhbJmOCIl/Mj
-         X7pEAR5tuoA1ocxqFUGd8zmw+CO1XcHAVkuLb/1UNimubyyIANP7wBCO0RTq85Nq0KYP
-         aAO1xBSGVLVKz65tYGIP2+PFkM6sxqFgNNjuc7LBDT9IkRIj/SlNlr6oVY/B2rbJ1nDN
-         6bkz4liuOBf546AARaIYMRPlHUSxTQxC0zHpnQmnR94F/WEzOzwSocAflXfvHgETG8Qa
-         KUgQ==
+        bh=vykGLcQWkbD8ivoSk8Q9cZUvO6Y0xtJU1XX9cOdfeIs=;
+        b=M5b0yJkch9jbyAmN49IAK3k5cXukhmc2QAKQnn1Pti5wNEpRpH9BDAJ/dSjrN0h1Yu
+         CgCTUwV1Wx8kxTYLyhnshVAZ/7WuFA/eCYeKVDcUNDAZPoTpQliAvhmGn9mTorovf6RF
+         rubviHBLB8iK6s+M580thkSldGBovfOL2YEqoifAL4ALNdiMLADc61ZZlHWN/Jv7XOkq
+         J1L8/a/pxkAU/EWDfhIUSgKBxXNU6TT8R5inqo2Dl1XmW37DtkpAYtvnxa7tGoHqeB2Z
+         yyKtlabTonVLYu10YZFetKVl6RNKvtaUSrEmSeO+gtaW0TccvbT1F8RObGuAIaMFz87Z
+         SNgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788175442; x=1788780242;
+        d=1e100.net; s=20251104; t=1788179594; x=1788784394;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
-        b=J2a42JECwZSL/VIUhAgSGJejMpDYQ3YNI13uRKTo8pkJvPaaDdcw7zVOC9Wmh8GUKj
-         74lj8ntDWy2PGlqpeye+ZpHXTZgDHgDOLWV16OpWMIcfrgNCMhoxoH1ZoDTO5oSLn3jo
-         o1alf3ERj9U6qKK9ofRtqxwG7FI7AcIhSJn1Wn+HdWEQC0+czCb6hbpXiDCEcpdQmckz
-         lP+Ek6Hta2svi1Vivbt1fPSVNXERVWVA8C0Qc8sPqQXUn5qMwSMuQV+fWugX/Cug+kSc
-         oZPEWEHdxF4mtOlrjeExJsP9reR8POlmT1O9GwzcG4Tz7CtA9aZZnLn/H+49JwE6+xil
-         1JKA==
-X-Forwarded-Encrypted: i=1; AKwUvBx3DXqWts6MbGFnbNeFtCfXeWS5n/UnL0rM/2sweNgL1giHosOy7fZokx3IZ/I49s5G1IX2VjWB@vger.kernel.org
-X-Gm-Message-State: AFuF++m0ggWO89UHZ7vUqu1Bw5xhesUUi1ckZ9hL9igbxawUsA0kqDJ/
-	0m3cmTRt1z8c7oMXDG/xFVag8Vrk5qaT4yQeMU/PgHADRAczzKIHGhfdllwrMG9n921GZm0CyIA
-	uGIAamOYnNzhn/khjjShaOmt5I1xi9ObgynvhLa2c3rdm7Ru22LHMlc9R1DQGB/t9iNqzv884iF
-	LprGTNkxzCGAAKEj1mWeRu4fDVN4A7D4cWdQ==
-X-Gm-Gg: AYBFou0BIB8BH21mrmsgbU0SCOox7kSBAj4cdWRGaO0egLgT7dLjMR2xx4PKcpE2G9O
-	XC6Wa+StwjFP4dz8Cyht2EHOCMQd0fJ8ZflCKQ5wH6bfc9vHlirsJLRCj1eibkRL5OykCAdDmGe
-	WBIkNJ6mWj7moyJ1lzCEQ6op0z0vvWzMLXyLoJezJ2lskFTlRhzpcsVwU=
-X-Received: by 2002:a05:690c:e3e6:b0:81e:6a10:f90f with SMTP id 00721157ae682-85d6a2e13f3mr94107787b3.17.1788175442388;
-        Mon, 31 Aug 2026 04:24:02 -0700 (PDT)
-X-Received: by 2002:a05:690c:e3e6:b0:81e:6a10:f90f with SMTP id
- 00721157ae682-85d6a2e13f3mr94107637b3.17.1788175441869; Mon, 31 Aug 2026
- 04:24:01 -0700 (PDT)
+        bh=vykGLcQWkbD8ivoSk8Q9cZUvO6Y0xtJU1XX9cOdfeIs=;
+        b=D4oeHbJjK/P51hiHXp5xiEgMDLVtBz6t2iKJGmpWXBW4s3TWb5llpgluvXpk1sn7x2
+         +/SLGkVQy4r16zBX4festhLMqXk82yj88E1sNFwDSsCjG65H2Y0/EQ+AoXLZdtXk0vZQ
+         Y0oxrkLJF3V1CCbXGI4SN2nH32kw2Z5CWTbRUpA/MOs/fJh2YQl85NxXSqbMBW8tVllY
+         s/uYa69MVUnUZqgXSEkxZB8n5N0cmWXXCaDNX+1BTwfISNtCVkZkCbAu2ycq3GDCQvYN
+         5oaFDljWw4yWTSw/d+iFv1N+g7vGBU0625mPNyLZR3SA9apP45O3x6+0fB+gNkZjDDrG
+         MkXw==
+X-Forwarded-Encrypted: i=1; AKwUvBzy+c5sdMjOBxHyFlaNxQ7NDmCxFLWsnhpTGj+KNlSEjxMC1q0aDxdSyzNOelMB+f+cuGAU33SG@vger.kernel.org
+X-Gm-Message-State: AFuF++mUXFWOpMw4RMCTjk6iUHauXXnu2rIsj6yVqTQA5lNAosbs9aJd
+	9mge7kQY2sFDJ4NcJ/K77q+rJoSepRKZzFOO5S+q9DKDv6j8tccMj+dvLxChtMKRr6Rc3zC6wNL
+	LHa+YXb/xr5PxocpXF53ozVUXeWDvuORlzE9/FgrBzdA0WslgHbpIwhLBS9h9+ijfS2dMyZtDps
+	9efD7UUPzY9KGY63ifcW+8ctTPkJHCDS/gVg==
+X-Gm-Gg: AYBFou2iWMvooikTgeHHszqHP/A46Lwp3ufFHmJVnBmjJ60d9fIh5VKn+bhMXd+hNuR
+	ZuBaCtT0jlm8ZCzahUMhJiih7BJry973gvA2NTzWD48VLVreV/N8iYq5vR9nENe1AA4x4TeAFsb
+	cHTfCXqEoGhroPacH8yZsJhSgOjvWxH2sxJQ2YfHplqgWo0+eOjSCrkMQ=
+X-Received: by 2002:a05:690c:12:b0:81f:2403:9e70 with SMTP id 00721157ae682-86874be3a5cmr2835107b3.19.1788179594054;
+        Mon, 31 Aug 2026 05:33:14 -0700 (PDT)
+X-Received: by 2002:a05:690c:12:b0:81f:2403:9e70 with SMTP id
+ 00721157ae682-86874be3a5cmr2834877b3.19.1788179593435; Mon, 31 Aug 2026
+ 05:33:13 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -101,13 +101,13 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260706-kunit_cgroups-v5-0-6c42c8753468@redhat.com>
- <20260706-kunit_cgroups-v5-1-6c42c8753468@redhat.com> <aoyFYWYmocJkTeXk@localhost.localdomain>
-In-Reply-To: <aoyFYWYmocJkTeXk@localhost.localdomain>
+ <20260706-kunit_cgroups-v5-2-6c42c8753468@redhat.com> <aox7nCE6ety6s8iL@localhost.localdomain>
+In-Reply-To: <aox7nCE6ety6s8iL@localhost.localdomain>
 From: Albert Esteve <aesteve@redhat.com>
-Date: Mon, 31 Aug 2026 13:23:50 +0200
-X-Gm-Features: AcwNN1U0KtJvFymBd5EOdAW56G473bYb8daTnzAjeFTLioL1I8ELNQhwXHMDOSE
-Message-ID: <CADSE00+8E_6q1PRhQdnH+HfqCHca5Oy4b4wgM67QPq-X6Z6FwQ@mail.gmail.com>
-Subject: Re: [PATCH v5 1/4] cgroup: Add dmem_selftest module
+Date: Mon, 31 Aug 2026 14:33:01 +0200
+X-Gm-Features: AcwNN1VESQqh0r-wdgek3mj8e31_XWzdy83B8uFKeigSXr8USOY8ZjvFSjh8Sv0
+Message-ID: <CADSE00KZNUVT41-nZ4O_v8DAihrOmysE2N_LOMH4QJf-+Ha4qg@mail.gmail.com>
+Subject: Re: [PATCH v5 2/4] selftests: cgroup: Add dmem selftest coverage
 To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
 Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, 
 	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
@@ -118,107 +118,528 @@ Content-Transfer-Encoding: quoted-printable
 On Mon, Aug 24, 2026 at 8:28=E2=80=AFPM Michal Koutn=C3=BD <mkoutny@suse.co=
 m> wrote:
 >
-> On Mon, Jul 06, 2026 at 02:06:40PM +0200, Albert Esteve <aesteve@redhat.c=
+> On Mon, Jul 06, 2026 at 02:06:41PM +0200, Albert Esteve <aesteve@redhat.c=
 om> wrote:
-> > Currently, dmem charging is driver-driven through direct
-> > calls to dmem_cgroup_try_charge(), so cgroup selftests
-> > do not have a generic way to trigger charge and uncharge
-> > paths from userspace.
-> >
-> > This limits any selftest coverage to configuration/readout
-> > checks unless a specific driver exposing charge hooks is
-> > present in the test environment.
+> > +static long long dmem_read_limit_for_region(const char *cgroup, const =
+char *ctrl,
+> > +                                         const char *region_name)
 >
-> What about that
-> drivers/gpu/drm/ttm/tests/ttm_resource_test.c
-> ?
+> This should be replaceable with lib/cgroup_util.c:cg_read_key_long()
 
-But that test does not set up a dmem region (man->cg =3D=3D NULL), so
-ttm_resource_try_charge is a no-op. Even if we add a region there, it
-would not exercise nested dmem.{max,min,low} from userspace as
-intended here. But I can reword the message to avoid sounding like
-there is no in-kernel coverage whatsoever.
+True. I'll take care of it.
 
 >
-> >
-> > Add kernel/cgroup/dmem_selftest.c as a helper module
-> > (CONFIG_DMEM_SELFTEST) that registers a synthetic dmem region
-> > (dmem_selftest) and exposes debugfs control files:
-> > /sys/kernel/debug/dmem_selftest/charge
-> > /sys/kernel/debug/dmem_selftest/uncharge
->
-> Nit: I'd think about alloc and free (to denote meaning not how it's
-> implemented).
-
-Works for me. I'll change the naming for the next version.
-
->
-> >
-> > Writing a size to charge triggers dmem_cgroup_try_charge() for
-> > the calling task's cgroup (the module calls kstrtou64()).
-> > Writing to uncharge releases the outstanding charge via
-> > dmem_cgroup_uncharge(). Only a single outstanding charge
-> > is supported.
-> >
-> > This provides a deterministic, driver-independent mechanism
-> > for exercising dmem accounting paths in selftests.
-> >
-> > Signed-off-by: Albert Esteve <aesteve@redhat.com>
-> > ---
-> >  init/Kconfig                  |  12 +++
-> >  kernel/cgroup/Makefile        |   1 +
-> >  kernel/cgroup/dmem_selftest.c | 198 ++++++++++++++++++++++++++++++++++=
-++++++++
-> >  3 files changed, 211 insertions(+)
-> >
-> > diff --git a/init/Kconfig b/init/Kconfig
-> > index 5230d4879b1c8..6fab65d6b44ea 100644
-> > --- a/init/Kconfig
-> > +++ b/init/Kconfig
-> > @@ -1267,6 +1267,18 @@ config CGROUP_DMEM
-> >         As an example, it allows you to restrict VRAM usage for applica=
-tions
-> >         in the DRM subsystem.
-> >
-> > +config DMEM_SELFTEST
-> > +     tristate "dmem cgroup selftest helper module"
-> > +     depends on CGROUP_DMEM && DEBUG_FS
-> > +     default n
-> > +     help
-> > +       Builds a small loadable module that registers a dmem region nam=
-ed
-> > +       "dmem_selftest" and exposes debugfs files under
-> > +       /sys/kernel/debug/dmem_selftest/ so kselftests can trigger
-> > +       dmem charge/uncharge operations from userspace.
+> > +{
+> > +     char buf[4096];
+> > +     char *line, *saveptr =3D NULL;
+> > +     char fname[256];
+> > +     char fval[64];
 > > +
-> > +       Say N unless you run dmem selftests or develop the dmem control=
-ler.
+> > +     if (cg_read(cgroup, ctrl, buf, sizeof(buf)) < 0)
+> > +             return -2;
+> > +
+> > +     for (line =3D strtok_r(buf, "\n", &saveptr); line;
+> > +          line =3D strtok_r(NULL, "\n", &saveptr)) {
+> > +             if (!line[0])
+> > +                     continue;
+> > +             if (sscanf(line, "%255s %63s", fname, fval) !=3D 2)
+> > +                     continue;
+> > +             if (strcmp(fname, region_name))
+> > +                     continue;
+> > +             if (!strcmp(fval, "max"))
+> > +                     return -1;
+> > +             return strtoll(fval, NULL, 0);
+> > +     }
+> > +     return -2;
+> > +}
+> > +
+> > +static long long dmem_read_limit(const char *cgroup, const char *ctrl)
+> > +{
+> > +     return dmem_read_limit_for_region(cgroup, ctrl, DM_SELFTEST_REGIO=
+N);
+> > +}
+> > +
+> > +static int dmem_write_limit(const char *cgroup, const char *ctrl,
+> > +                         const char *val)
+> > +{
+> > +     char wr[512];
+> > +
+> > +     snprintf(wr, sizeof(wr), "%s %s", DM_SELFTEST_REGION, val);
+> > +     return cg_write(cgroup, ctrl, wr);
+> > +}
+> > +
+> > +static int dmem_selftest_charge_bytes(unsigned long long bytes)
+> > +{
+> > +     char wr[32];
+> > +
+> > +     snprintf(wr, sizeof(wr), "%llu", bytes);
+> > +     return write_text(DM_SELFTEST_CHARGE, wr, strlen(wr));
+> > +}
+> > +
+> > +static int dmem_selftest_uncharge(void)
+> > +{
+> > +     return write_text(DM_SELFTEST_UNCHARGE, "\n", 1);
+> > +}
+> > +
+> > +/*
+> > + * First, this test creates the following hierarchy:
+> > + * A
+> > + * A/B     dmem.max=3D1M
+> > + * A/B/C   dmem.max=3D75K
+> > + * A/B/D   dmem.max=3D25K
+> > + * A/B/E   dmem.max=3D8K
+> > + * A/B/F   dmem.max=3D0
+> > + *
+> > + * Then for each leaf cgroup it tries to charge above dmem.max
+> > + * and expects the charge request to fail and dmem.current to
+> > + * remain unchanged.
+> > + *
+> > + * For leaves with non-zero dmem.max, it additionally charges a
+> > + * smaller amount and verifies accounting grows within one PAGE_SIZE
+> > + * rounding bound, then uncharges and verifies dmem.current returns
+> > + * to the previous value.
+> > + *
+> > + */
+> > +static int test_dmem_max(const char *root)
+> > +{
+> > +     static const char * const leaf_max[] =3D { "75K", "25K", "8K", "0=
+" };
+> > +     static const unsigned long long fail_sz[] =3D {
+> > +             (75ULL * 1024ULL) + 1ULL,
+> > +             (25ULL * 1024ULL) + 1ULL,
+> > +             (8ULL * 1024ULL) + 1ULL,
+> > +             1ULL
+> > +     };
+> > +     static const unsigned long long pass_sz[] =3D {
+> > +             4096ULL, 4096ULL, 4096ULL, 0ULL
+> > +     };
 >
-> Could this be made w/out introduciton of a new Kconfig option? (E.g.
-> what tools/testing/selftests/livepatch/test_modules/Makefile does)
+> Possibly those could be signed (to save the casts down below).
 >
-> (Maybe reword to insmod if you choose building the test module as OOT.)
+> > +     char *parent[2] =3D {NULL};
+> > +     char *children[4] =3D {NULL};
+> > +     unsigned long long cap;
+> > +     long long page_size;
+> > +     long long cur_before, cur_after;
+>
+> Just `long` should be fine (with gcc).
+>
+> > +     int ret =3D KSFT_FAIL;
+> > +     int charged =3D 0;
+> > +     int in_child =3D 0;
+> > +     long long v;
+> > +     int i;
+> > +
+> > +     if (access(DM_SELFTEST_CHARGE, W_OK) !=3D 0)
+> > +             return KSFT_SKIP;
+> > +
+> > +     if (find_selftest_region(root, &cap) !=3D 1)
+> > +             return KSFT_SKIP;
+> > +
+> > +     page_size =3D sysconf(_SC_PAGESIZE);
+> > +     if (page_size <=3D 0)
+> > +             goto cleanup;
+> > +
+> > +     parent[0] =3D cg_name(root, "dmem_prot_0");
+> > +     if (!parent[0])
+> > +             goto cleanup;
+> > +
+> > +     parent[1] =3D cg_name(parent[0], "dmem_prot_1");
+> > +     if (!parent[1])
+> > +             goto cleanup;
+> > +
+> > +     if (cg_create(parent[0]))
+> > +             goto cleanup;
+> > +
+> > +     if (cg_write(parent[0], "cgroup.subtree_control", "+dmem"))
+> > +             goto cleanup;
+> > +
+> > +     if (cg_create(parent[1]))
+> > +             goto cleanup;
+> > +
+> > +     if (cg_write(parent[1], "cgroup.subtree_control", "+dmem"))
+> > +             goto cleanup;
+> > +
+> > +     for (i =3D 0; i < 4; i++) {
+>
+>         for (i =3D 0; i < ARRAY_SIZE(children); i++) {
+>
+> > +             children[i] =3D cg_name_indexed(parent[1], "dmem_child", =
+i);
+> > +             if (!children[i])
+> > +                     goto cleanup;
+> > +             if (cg_create(children[i]))
+> > +                     goto cleanup;
+> > +     }
+> > +
+> > +     if (dmem_write_limit(parent[1], "dmem.max", "1M"))
+> > +             goto cleanup;
+> > +     for (i =3D 0; i < 4; i++)
+>
+>         for (i =3D 0; i < ARRAY_SIZE(children); i++) {
+>
+> > +             if (dmem_write_limit(children[i], "dmem.max", leaf_max[i]=
+))
+> > +                     goto cleanup;
+> > +
+> > +     v =3D dmem_read_limit(parent[1], "dmem.max");
+> > +     if (v !=3D 1024LL * 1024LL)
+>
+> This...
+>
+> > +             goto cleanup;
+> > +     v =3D dmem_read_limit(children[0], "dmem.max");
+> > +     if (v !=3D 75LL * 1024LL)
+>
+> ...and these literals would be nicer with MB() macro and possibly added
+> similar KB() macro.
+>
+> > +             goto cleanup;
+> > +     v =3D dmem_read_limit(children[1], "dmem.max");
+> > +     if (v !=3D 25LL * 1024LL)
+> > +             goto cleanup;
+> > +     v =3D dmem_read_limit(children[2], "dmem.max");
+> > +     if (v !=3D 8LL * 1024LL)
+> > +             goto cleanup;
+> > +     v =3D dmem_read_limit(children[3], "dmem.max");
+> > +     if (v !=3D 0)
+> > +             goto cleanup;
+> > +
+> > +     for (i =3D 0; i < 4; i++) {
+>
+>         for (i =3D 0; i < ARRAY_SIZE(children); i++) {
+>
+> (to avoid unnamed non-trivial constant)
+>
+> > +             if (cg_enter_current(children[i]))
+> > +                     goto cleanup;
+> > +             in_child =3D 1;
+> > +
+> > +             cur_before =3D dmem_read_limit(children[i], "dmem.current=
+");
+> > +             if (cur_before < 0)
+> > +                     goto cleanup;
+> > +
+> > +             if (dmem_selftest_charge_bytes(fail_sz[i]) >=3D 0) {
+> > +                     charged =3D 1;
+> > +                     goto cleanup;
+> > +             }
+> > +
+> > +             cur_after =3D dmem_read_limit(children[i], "dmem.current"=
+);
+> > +             if (cur_after !=3D cur_before)
+> > +                     goto cleanup;
+> > +
+> > +             if (pass_sz[i] > 0) {
+> > +                     if (dmem_selftest_charge_bytes(pass_sz[i]) < 0)
+> > +                             goto cleanup;
+> > +                     charged =3D 1;
+> > +
+> > +                     cur_after =3D dmem_read_limit(children[i], "dmem.=
+current");
+> > +                     if (cur_after < cur_before + (long long)pass_sz[i=
+])
+> > +                             goto cleanup;
+> > +                     if (cur_after > cur_before + (long long)pass_sz[i=
+] + page_size)
+> > +                             goto cleanup;
+> > +
+> > +                     if (dmem_selftest_uncharge() < 0)
+> > +                             goto cleanup;
+> > +                     charged =3D 0;
+> > +
+> > +                     cur_after =3D dmem_read_limit(children[i], "dmem.=
+current");
+> > +                     if (cur_after !=3D cur_before)
+> > +                             goto cleanup;
+> > +             }
+> > +
+> > +             if (cg_enter_current(root))
+> > +                     goto cleanup;
+> > +             in_child =3D 0;
+> > +     }
+> > +
+> > +     ret =3D KSFT_PASS;
+> > +
+> > +cleanup:
+> > +     if (charged)
+> > +             dmem_selftest_uncharge();
+> > +     if (in_child)
+> > +             cg_enter_current(root);
+> > +     for (i =3D 3; i >=3D 0; i--) {
+>
+> ditto with ARRAY_SIZE
+>
+> > +             if (!children[i])
+> > +                     continue;
+> > +             cg_destroy(children[i]);
+> > +             free(children[i]);
+> > +     }
+> > +     for (i =3D 1; i >=3D 0; i--) {
+>
+> ditto with ARRAY_SIZE
 
-Ah, nice example. I'll drop the CONFIG_DMEM_SELFTEST and have the
-helper module as OOT.
+I'll address all the points raised (here and all the above).
 
 >
-> > +static int __init dmem_selftest_register(void)
+> > +             if (!parent[i])
+> > +                     continue;
+> > +             cg_destroy(parent[i]);
+> > +             free(parent[i]);
+> > +     }
+> > +     return ret;
+> > +}
+> > +
+> > +/*
+> > + * This test sets dmem.min and dmem.low on a child cgroup, then charge
+> > + * from that context and verify dmem.current tracks the charged bytes
+> > + * (within one page rounding).
 >
-> Just an idea to reduce the amount debugfs of boilerplage -- the testing
-> args could be handled by module_param_cb().
+> I don't know, this doesn't test much of the .min nor .low protection,
+> and the .current tracking is already tested by the above. I'd drop it
+> for now.
 
-Ok, I'll switch to module parameters and drop the debugfs boilerplate
-and DEBUG_FS dependency.
+Makes sense. I'll do that for the next version.
+
+>
+> > + */
+> > +static int test_dmem_charge_with_attr(const char *root, bool min)
+> > +{
+> > +     unsigned long long cap;
+> > +     const unsigned long long charge_sz =3D 12345ULL;
+> > +     const char *attribute =3D min ? "dmem.min" : "dmem.low";
+> > +     int ret =3D KSFT_FAIL;
+> > +     char *cg =3D NULL;
+> > +     long long cur;
+> > +     long long page_size;
+> > +     int charged =3D 0;
+> > +     int in_child =3D 0;
+> > +
+> > +     if (access(DM_SELFTEST_CHARGE, W_OK) !=3D 0)
+> > +             return KSFT_SKIP;
+> > +
+> > +     if (find_selftest_region(root, &cap) !=3D 1)
+> > +             return KSFT_SKIP;
+> > +
+> > +     page_size =3D sysconf(_SC_PAGESIZE);
+> > +     if (page_size <=3D 0)
+> > +             goto cleanup;
+> > +
+> > +     cg =3D cg_name(root, "test_dmem_attr");
+> > +     if (!cg)
+> > +             goto cleanup;
+> > +
+> > +     if (cg_create(cg))
+> > +             goto cleanup;
+> > +
+> > +     if (cg_enter_current(cg))
+> > +             goto cleanup;
+> > +     in_child =3D 1;
+> > +
+> > +     if (dmem_write_limit(cg, attribute, "16K"))
+> > +             goto cleanup;
+> > +
+> > +     if (dmem_selftest_charge_bytes(charge_sz) < 0)
+> > +             goto cleanup;
+> > +     charged =3D 1;
+> > +
+> > +     cur =3D dmem_read_limit(cg, "dmem.current");
+> > +     if (cur < (long long)charge_sz)
+> > +             goto cleanup;
+> > +     if (cur > (long long)charge_sz + page_size)
+> > +             goto cleanup;
+> > +
+> > +     if (dmem_selftest_uncharge() < 0)
+> > +             goto cleanup;
+> > +     charged =3D 0;
+> > +
+> > +     cur =3D dmem_read_limit(cg, "dmem.current");
+> > +     if (cur !=3D 0)
+> > +             goto cleanup;
+> > +
+> > +     ret =3D KSFT_PASS;
+> > +
+> > +cleanup:
+> > +     if (charged)
+> > +             dmem_selftest_uncharge();
+> > +     if (in_child)
+> > +             cg_enter_current(root);
+> > +     cg_destroy(cg);
+> > +     free(cg);
+> > +     return ret;
+> > +}
+> > +
+> > +static int test_dmem_min(const char *root)
+> > +{
+> > +     return test_dmem_charge_with_attr(root, true);
+> > +}
+> > +
+> > +static int test_dmem_low(const char *root)
+> > +{
+> > +     return test_dmem_charge_with_attr(root, false);
+> > +}
+> > +
+> > +/*
+> > + * This test charges non-page-aligned byte sizes and verify dmem.curre=
+nt
+> > + * stays consistent: it must account at least the requested bytes and
+> > + * never exceed one kernel page of rounding overhead. Then uncharge mu=
+st
+> > + * return usage to 0.
+>
+> The lower bound makes sense. Could you explain more about the upper
+> bound and granularity? That applies only for the test module or is that
+> intended constraint for any dmem-charging driver?
+
+Uhm, the upper bound was modeled on test_memcontrol.c. Those tests
+cannot match memory.current exactly, so use lower bound plus
+values_close().
+
+But for dmem, it isn't necessary; it accounts for the requested size
+with no page rounding or extra charge. I'll fix that and check for
+equality.
+
+Thanks for raising this.
+
+>
+> > + */
+> > +static int test_dmem_charge_byte_granularity(const char *root)
+> > +{
+> > +     static const unsigned long long sizes[] =3D { 1ULL, 4095ULL, 4097=
+ULL, 12345ULL };
+> > +     char *cg =3D NULL;
+> > +     unsigned long long cap;
+> > +     long long cur;
+> > +     long long page_size;
+> > +     int ret =3D KSFT_FAIL;
+> > +     int charged =3D 0;
+> > +     int in_child =3D 0;
+> > +     size_t i;
+> > +
+> > +     if (access(DM_SELFTEST_CHARGE, W_OK) !=3D 0)
+> > +             return KSFT_SKIP;
+> > +
+> > +     if (find_selftest_region(root, &cap) !=3D 1)
+> > +             return KSFT_SKIP;
+> > +
+> > +     page_size =3D sysconf(_SC_PAGESIZE);
+> > +     if (page_size <=3D 0)
+> > +             goto cleanup;
+> > +
+> > +     cg =3D cg_name(root, "dmem_dbg_byte_gran");
+> > +     if (!cg)
+> > +             goto cleanup;
+> > +
+> > +     if (cg_create(cg))
+> > +             goto cleanup;
+> > +
+> > +     if (dmem_write_limit(cg, "dmem.max", "8M"))
+> > +             goto cleanup;
+> > +
+> > +     if (cg_enter_current(cg))
+> > +             goto cleanup;
+> > +     in_child =3D 1;
+> > +
+> > +     for (i =3D 0; i < ARRAY_SIZE(sizes); i++) {
+> > +             if (dmem_selftest_charge_bytes(sizes[i]) < 0)
+> > +                     goto cleanup;
+> > +             charged =3D 1;
+> > +
+> > +             cur =3D dmem_read_limit(cg, "dmem.current");
+> > +             if (cur < (long long)sizes[i])
+> > +                     goto cleanup;
+> > +             if (cur > (long long)sizes[i] + page_size)
+> > +                     goto cleanup;
+> > +
+> > +             if (dmem_selftest_uncharge() < 0)
+> > +                     goto cleanup;
+> > +             charged =3D 0;
+> > +
+> > +             cur =3D dmem_read_limit(cg, "dmem.current");
+> > +             if (cur !=3D 0)
+> > +                     goto cleanup;
+> > +     }
+> > +
+> > +     ret =3D KSFT_PASS;
+> > +
+> > +cleanup:
+> > +     if (charged)
+> > +             dmem_selftest_uncharge();
+> > +     if (in_child)
+> > +             cg_enter_current(root);
+> > +     if (cg) {
+> > +             cg_destroy(cg);
+> > +             free(cg);
+> > +     }
+> > +     return ret;
+> > +}
+> > +
+> > +#define T(x) { x, #x }
+> > +struct dmem_test {
+> > +     int (*fn)(const char *root);
+> > +     const char *name;
+> > +} tests[] =3D {
+> > +     T(test_dmem_max),
+> > +     T(test_dmem_min),
+> > +     T(test_dmem_low),
+> > +     T(test_dmem_charge_byte_granularity),
+> > +};
+> > +#undef T
+> > +
+> > +int main(int argc, char **argv)
+> > +{
+> > +     char root[PATH_MAX];
+> > +     int i;
+> > +
+> > +     ksft_print_header();
+> > +     ksft_set_plan(ARRAY_SIZE(tests));
+> > +
+> > +     if (cg_find_unified_root(root, sizeof(root), NULL))
+> > +             ksft_exit_skip("cgroup v2 isn't mounted\n");
+> > +
+> > +     if (cg_read_strstr(root, "cgroup.controllers", "dmem"))
+> > +             ksft_exit_skip("dmem controller isn't available (CONFIG_C=
+GROUP_DMEM?)\n");
+> > +
+> > +     if (cg_read_strstr(root, "cgroup.subtree_control", "dmem"))
+> > +             if (cg_write(root, "cgroup.subtree_control", "+dmem"))
+> > +                     ksft_exit_skip("Failed to enable dmem controller\=
+n");
+> > +
+> > +     for (i =3D 0; i < ARRAY_SIZE(tests); i++) {
+> > +             switch (tests[i].fn(root)) {
+> > +             case KSFT_PASS:
+> > +                     ksft_test_result_pass("%s\n", tests[i].name);
+> > +                     break;
+> > +             case KSFT_SKIP:
+> > +                     ksft_test_result_skip(
+> > +                             "%s (need CONFIG_DMEM_SELFTEST, modprobe =
+dmem_selftest)\n",
+> > +                             tests[i].name);
+>
+> I'm worried that the KSFT_SKIP from a subtest might be too broad for the
+> modprobe prompt.
+> Perhaps you can check it by stat'ing DM_SELFTEST_CHARGE before any
+> subtests start?
+
+Agreed. I'll stat the helper in main().
 
 BR,
-Albert
+Albert.
 
 >
-> > +static int __init dmem_selftest_init(void)
-> ...
-> > +     add_taint(TAINT_TEST, LOCKDEP_STILL_OK);
 >
-> Great!
->
+> > +                     break;
+> > +             default:
+> > +                     ksft_test_result_fail("%s\n", tests[i].name);
+> > +                     break;
+> > +             }
+> > +     }
+> > +
+> > +     ksft_finished();
+> > +}
+> >
+> > --
+> > 2.54.0
+> >
 
