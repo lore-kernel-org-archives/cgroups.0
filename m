@@ -1,225 +1,176 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68F1D3A3826;
-	Mon, 31 Aug 2026 08:42:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788165757; cv=none; b=Q0blaX8s7YPBuyYNxrJKq9aIF/dUiFbZ6BdgEa9WjYZqC9AO9rV451AqNJtQ991QuA4m4f5wSA03jfJjmmrWWM2TtsI1tR2QAUQutwAfRUw7gMlfVZ/oZNWmj2nnwx7TkrrugPElHIddXNga3cIbfSHofor7qd4RxXIrN4WIKxs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788165757; c=relaxed/simple;
-	bh=AnnLzZQASW3ffm7HTAuT/jmzPEia7UpYkcE3pF7Rkko=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=inkogKL0nLhIZgKu4Ja5cMCeId5CP/gdl1h7Cah7AlDPXGfZ3LN1kxaQEeuYBnvhJWb0ny+JWywjn1YBGAaY8k3X9GYbvSWZq6oUkKQlXJhNPeou1i2z5d5c915xsV2QDn8HMMhSdpEP1FMs98TTc2Rxf2ra4zUk5D0OCXqXje0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AP2Fjn92; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609F12E7F39
+	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 08:45:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788165941; cv=pass; b=aZ9HWkBH+X8IuEjt695trS/RUejuM5+yIQlyYggSAdpUB5GzqG94PC8aNeEodcU8gJ//6hpmETCQJj8/1QNgOvxl/3JBMwzGdqhY4WLmp+YSENXOSXMAQXVaGGrLgv802+vi7Z0ngXcKCOjf+q9u5rARNnToJm16S/vJt52U4WI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788165941; c=relaxed/simple;
+	bh=VjLyCE3ULm1W9z56D4wq6X0rbN/EyoCSd9TZqyvP8TE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=PnS0/BhLCzRd5bWmRspWH/JeVTCO/LKyhts1tLbRDk0ULYXyw3ks8TiW9QTcgEtFBoSx2XyY4RIbrDOI1MQ05TA8FWkdJZDK/1ToB5kwJhVN7/SpDKHAevSfx80rSCU6Z6gTbIPva74z28Amd228MIjmX0O7VOD9ESlZ0sAEg4c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Qz7fQzIR; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=F2Pt5yZB; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AP2Fjn92"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788165755; x=1819701755;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=AnnLzZQASW3ffm7HTAuT/jmzPEia7UpYkcE3pF7Rkko=;
-  b=AP2Fjn9204qJQTWumq4kgtdS4J4hWjhd6kBBKEHZHV+kyc/IoxVgBPZu
-   KxfFxlSlFRGMdp2VOh1NRTtG+Ay9JpU9QrbZlLrvFcSAQ2mBoJxn096mZ
-   RW8HXl6XKzRj/U74+K2onId2yrAJLURZOtNKpy5Z56t5/s+do9vyMiVkS
-   GwVZfLAgsCuwU3jhmb9bsMshGFppq3VG2w8bBH5avTqZmKIg1j2BkjLuz
-   Ta9JxQjvH7vF52RxFxzR+hef8nvqSV5WtVKCbX2qBty0N4tWcDv5FR3Cv
-   FKEJJVm//k6McKzfF90TZVz6tMXHBn2NaJLhxl8hPds9eDhuREf9QdUUz
-   A==;
-X-CSE-ConnectionGUID: 3hgIHp6CT3OixxAA48OpTg==
-X-CSE-MsgGUID: ts7UQ/aeS/CxK3zuZ1ujpA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11891"; a="88420960"
-X-IronPort-AV: E=Sophos;i="6.25,252,1779174000"; 
-   d="scan'208";a="88420960"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 01:41:43 -0700
-X-CSE-ConnectionGUID: G0af2RCzRaqI7TbIqJ/Gmg==
-X-CSE-MsgGUID: +StTUGGuSV+FSzs8rhOhVg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,252,1779174000"; 
-   d="scan'208";a="269326210"
-Received: from junjie-desk-dev.bj.intel.com (HELO junjie-desk-dev.tail2c02c1.ts.net) ([10.238.152.71])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 01:41:37 -0700
-From: Junjie Cao <junjie.cao@intel.com>
-To: syzbot+2642f347f7309b4880dc@syzkaller.appspotmail.com
-Cc: akpm@linux-foundation.org,
-	cgroups@vger.kernel.org,
-	hannes@cmpxchg.org,
-	jackmanb@google.com,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	mhocko@kernel.org,
-	mhocko@suse.com,
-	muchun.song@linux.dev,
-	netdev@vger.kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	surenb@google.com,
-	syzkaller-bugs@googlegroups.com,
-	vbabka@suse.cz,
-	ziy@nvidia.com,
-	hdanton@sina.com,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	horms@kernel.org,
-	jhs@mojatatu.com,
-	jiri@resnulli.us,
-	vinicius.gomes@intel.com
-Subject: Re: [syzbot] [mm?] INFO: rcu detected stall in exit_to_user_mode_loop
-Date: Mon, 31 Aug 2026 16:41:31 +0800
-Message-ID: <20260831084131.410457-1-junjie.cao@intel.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <6887ebf4.a00a0220.b12ec.00ae.GAE@google.com>
-References: <6887ebf4.a00a0220.b12ec.00ae.GAE@google.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qz7fQzIR";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="F2Pt5yZB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788165939;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vg1jasgozEJAkrVTwgSp5gxj0PTi1l2mqJv39TXaqQc=;
+	b=Qz7fQzIRnc7W9sjW8/AAFlbLIwov4ogHVSW03Jx7BVhonqLDbWkKeP62hQCtJBjWB0pitB
+	XI8+CfGUAzM0zGoXaljFRRSJWZQCxrLFF/0cPI96rKlQ3gudGZPqa5LGBCLxAEG/KvHPtF
+	2JdyuEgcVmUWSqPA+QD5oB4ib05kvzQ=
+Received: from mail-yw1-f197.google.com (mail-yw1-f197.google.com
+ [209.85.128.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-85-zhqT5Hw0MXihco_d5lI83A-1; Mon, 31 Aug 2026 04:45:34 -0400
+X-MC-Unique: zhqT5Hw0MXihco_d5lI83A-1
+X-Mimecast-MFC-AGG-ID: zhqT5Hw0MXihco_d5lI83A_1788165934
+Received: by mail-yw1-f197.google.com with SMTP id 00721157ae682-836c8fc09cfso50243667b3.1
+        for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 01:45:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788165934; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XqA20MWHYPmGqWGoYEF0eyKs0J1faDWX523fj71nA/ZoqK1iE0c/qkVJ/3frJQhPKz
+         3M/vET6XV/zIjnbUvErceEYEsBdJhKK43nCjamUChGF9zD6H16J+CPebm4MzxYNMj3pU
+         3QKwtqufXrbHN//2y4URG4dHyiovnyztmlj8efUiNvfjEMZeZx4+W1THsbUAgw3A8+NT
+         XSEu4e9A/wK/AG2iNPtm529oWPYsflBnEeFNZzJn+VKeZtOdMCPYciFlB/0tbbTRrq+K
+         hlaBuUuucXJv+YE4WVBZ0mc17oSDrMW6hPkEPLJKAwkC1+XUkqKYp2esyzvpSNdw0PJo
+         sKmA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=vg1jasgozEJAkrVTwgSp5gxj0PTi1l2mqJv39TXaqQc=;
+        fh=exT5RKZJ/Cxd1Wi23g68bEAZKp1RYsKPkXwxkXI0zPo=;
+        b=XmmTmDEuMm1lJTVJugptNQQ4tlKV/Dblq2CyhApNK+EGmdlEI6WlXpTLpfytPG2gia
+         c1lIu6xy+t7P8sXO3uIl2vxO1N5uv2FqIcJPzLtlIHPSf68gqQXL3Rn2Y8w8Ada3O0On
+         iN9PGq3Z15Pu69xNZJfZ3Q5XIzfaKeHYYjEXiWp19TFzAloNEiso2L6U0lpACb2ihx3s
+         qfaeNu7xJsPjI/Swg1VfM0gAOHcX5RblOCosgAtYNmWBJkSFLg5lyrRKrGMzHyfRz2k/
+         TbreSSNOi4+gPwpf6sLETOHcUmLT79CaZyp85FEr+lsYybtHgnNoLcqeSix3XqIeJFn4
+         WeBQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1788165934; x=1788770734; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=vg1jasgozEJAkrVTwgSp5gxj0PTi1l2mqJv39TXaqQc=;
+        b=F2Pt5yZBQ/IoUPjVPeuFlkIff/F1KhVvJo19zlPvTTV+FA4WNvcszJi4u3APb6alwf
+         duqsRsIOwzgwwcLa3BcUfUQ7fjt3NbcH9yCnxW1WYyAPcCkrAaFH9H6K6OXaLnj6mwX7
+         NyZYpYS8s1Na08gnpB33WeEFMYsO1JKlTYTbsh2FDZkXcgB/05xDzFkYe4bXPlzkcLQR
+         OvJ8QE2xQGiByW4mrIraucsnu3GG08TDC+IYNtDrFm9BgvYvOrPc/d/HVi2TeA9zW+j9
+         Batf3c3GDV86uL2IB4a45alOx9fcpUcE9h2J4IRiuzSCiBzIg6Eh2s6WKbCmuz8+smgA
+         Yahg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788165934; x=1788770734;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vg1jasgozEJAkrVTwgSp5gxj0PTi1l2mqJv39TXaqQc=;
+        b=JLyr2rWg419F+r+nw+uBwIoFiLxfaYICT2uJ+X3VXZfIQpDkzXwJaHPJKHKtguHc+A
+         qBR9AJBgeTKMfgzoRtAscqKxBk4mOUgy1WQYcE9Ycl6CHYGZGuMk7dsCkC8ZHB3haRLq
+         xeLo/aHGWKgVKKSQwqfrXPRdtWcGI9NpNKrExjAO1K/tgQxw42aWpf5OmZ7zmI+twty0
+         mSr59ti9abTe0T8zEjZ1/7pQfvs6dGEb3CEh69YfSGqRnTOzaRC7UnEx5Gm10xTdUg6Y
+         5//Cj0UK11RrpZJdSbEkhEtwKKnPNRC+M4DlHTRMl0vCRuMb3HzUGl+gw6VL/0iqqsHs
+         7QLg==
+X-Forwarded-Encrypted: i=1; AKwUvBz5xtocwZIzfINHXiAZ050aGTHj2srzcFIezjHn/Y85K2zFEtjBNlLELFWE0kXnnW7XAySSYcgn@vger.kernel.org
+X-Gm-Message-State: AFuF++llT+cfb/9faraGIV6vaBv4vMstrUSY+XIgZaDmWU/UOjxVdoBK
+	p2LgowflYD7enzKM/LdEmYpfNGvhLqUx7AEcMvwV5vNVPBm5pZjaYH6Uue7Bo9gMq3AxFEZ17+L
+	fAYJoyrwfNhy2PKdBz3LLUZTD+/AAcpx9LqVrm8ZSAfiC3p3oE3LO3Btp50qQnOvtMGtnOy/z+O
+	aQVc5ltW+LnGmfcmtqkdABrbI68sxXwDFf+A==
+X-Gm-Gg: AYBFou2nT4A88hR/7vYk2DlXakE89VtKM7PB9//LTu+Cq33yYAb0i3n4reTc/0DD1ic
+	KqbqYQIaNmK0Yu7blI1KdWVwsRKQZ+nowkrnPyiFvtxBZFfyi9y//j10A041MjNLUEgOjjO9A2F
+	1jIqaqQAHMI+IxTWLLQzxT9blrNU9Dzfxk7UFJGVvyRz8EQpsvqVx4QSc=
+X-Received: by 2002:a05:690c:e3c1:b0:845:cc1a:af6e with SMTP id 00721157ae682-85d6c4f9797mr89839047b3.30.1788165934293;
+        Mon, 31 Aug 2026 01:45:34 -0700 (PDT)
+X-Received: by 2002:a05:690c:e3c1:b0:845:cc1a:af6e with SMTP id
+ 00721157ae682-85d6c4f9797mr89838877b3.30.1788165933810; Mon, 31 Aug 2026
+ 01:45:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260706-kunit_cgroups-v5-0-6c42c8753468@redhat.com> <aoyLV5ovAaY15G-h@localhost.localdomain>
+In-Reply-To: <aoyLV5ovAaY15G-h@localhost.localdomain>
+From: Albert Esteve <aesteve@redhat.com>
+Date: Mon, 31 Aug 2026 10:45:21 +0200
+X-Gm-Features: AcwNN1URWgK4fv0lv7-8mBvsb3EpLpT39bC_2lvLWDVD0tpVvUbMExgZhTXTnyc
+Message-ID: <CADSE00+5PWATGzHokJMEoY9fuYRYrf=H9NA1zfXXoaZA2NvPzA@mail.gmail.com>
+Subject: Re: [PATCH v5 0/4] cgroup: dmem: add selftest helper, coverage, and
+ VM runner
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, Eric Chanudet <echanude@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-#syz test: git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net.git a8455260b2e9c024d1872ac1c094793d55a7e537
+On Mon, Aug 24, 2026 at 8:27=E2=80=AFPM Michal Koutn=C3=BD <mkoutny@suse.co=
+m> wrote:
+>
+> Hello Albert.
+>
+> On Mon, Jul 06, 2026 at 02:06:39PM +0200, Albert Esteve <aesteve@redhat.c=
+om> wrote:
+> > Hi all,
+> >
+> > This small series adds practical test coverage for the dmem
+> > cgroup controller.
+> >
+> > The motivation came from following the recent dmem API discussion in
+> > thread [1]. That discussion considered changing the dmem API and
+> > adding a new knob. Currently there are no dedicated tests covering
+> > dmem behaviour, which makes such changes riskier.
+> >
+> > Adding selftests has an additional challenge: dmem charging paths
+> > are driver-driven today, so regression testing is harder unless a
+> > suitable driver is present in the test environment.
+> >
+> > This series addresses that by adding:
+> > - a kernel-side selftest helper module to trigger charge/uncharge
+> >   from userspace in a controlled way,
+> > - cgroup selftests covering dmem accounting and protection semantics
+> >   (including dmem.max enforcement and byte-granularity checks),
+> > - a virtme-based VM runner for repeatable execution of the dmem tests.
+> >
+> > The goal is to make dmem behavior easier to validate when evolving the =
+API
+> > and implementation, while keeping tests deterministic and driver-indepe=
+ndent.
+>
+> Thanks for the dmem selftesting. I'll respond to first two patches
+> individually. I find the wrapper scripts in the last two a bit of an
+> overkill for the selftest (as it adds dependency on particular VM
+> environment, I'd keep the simplicity of selftests such that wherever
+> they are executed (w/out wrappers), there they run (be it a physical
+> machine or a VM). At most, I'd consider a simple wrapper that'd load
+> ensure the test module is loaded.
 
-diff --git a/net/sched/sch_taprio.c b/net/sched/sch_taprio.c
-index 39ac5b97aa3a..901dfd2484e1 100644
---- a/net/sched/sch_taprio.c
-+++ b/net/sched/sch_taprio.c
-@@ -83,6 +83,10 @@ struct sched_gate_list {
- 	s64 cycle_time;
- 	s64 cycle_time_extension;
- 	s64 base_time;
-+	/* min(cycle_time, sum of intervals): the software schedule restarts
-+	 * the list after the last entry even when cycle_time is not up yet.
-+	 */
-+	s64 period;
- };
- 
- struct taprio_sched {
-@@ -871,12 +875,13 @@ static struct sk_buff *taprio_dequeue(struct Qdisc *sch)
- }
- 
- static bool should_restart_cycle(const struct sched_gate_list *oper,
--				 const struct sched_entry *entry)
-+				 const struct sched_entry *entry,
-+				 ktime_t end_time)
- {
- 	if (list_is_last(&entry->list, &oper->entries))
- 		return true;
- 
--	if (ktime_compare(entry->end_time, oper->cycle_end_time) == 0)
-+	if (ktime_compare(end_time, oper->cycle_end_time) == 0)
- 		return true;
- 
- 	return false;
-@@ -925,8 +930,9 @@ static enum hrtimer_restart advance_sched(struct hrtimer *timer)
- 	int num_tc = netdev_get_num_tc(dev);
- 	struct sched_entry *entry, *next;
- 	struct Qdisc *sch = q->root;
--	ktime_t end_time;
--	int tc;
-+	ktime_t end_time, next_start, now;
-+	int budget, tc;
-+	s64 behind;
- 
- 	spin_lock(&q->current_entry_lock);
- 	entry = rcu_dereference_protected(q->current_entry,
-@@ -952,23 +958,49 @@ static enum hrtimer_restart advance_sched(struct hrtimer *timer)
- 		goto first_run;
- 	}
- 
--	if (should_restart_cycle(oper, entry)) {
--		next = list_first_entry(&oper->entries, struct sched_entry,
--					list);
--		oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time,
--						    oper->cycle_time);
--	} else {
--		next = list_next_entry(entry, list);
-+	now = hrtimer_cb_get_time(timer);
-+	end_time = entry->end_time;
-+	behind = ktime_sub(now, end_time);
-+
-+	/* Behind, e.g. delayed timer or stepped clock: skip whole periods
-+	 * arithmetically and walk at most one more to the entry covering
-+	 * now, instead of replaying the backlog one expiry at a time. The
-+	 * cap bounds the walk; a leftover is picked up by the next expiry.
-+	 */
-+	if (unlikely(behind >= oper->period)) {
-+		s64 jump = div64_s64(behind, oper->period) * oper->period;
-+
-+		end_time = ktime_add_ns(end_time, jump);
-+		oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time, jump);
- 	}
- 
--	end_time = ktime_add_ns(entry->end_time, next->interval);
--	end_time = min_t(ktime_t, end_time, oper->cycle_end_time);
-+	budget = 2 * oper->num_entries;
-+	do {
-+		if (should_restart_cycle(oper, entry, end_time)) {
-+			next = list_first_entry(&oper->entries,
-+						struct sched_entry, list);
-+			oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time,
-+							    oper->period);
-+		} else {
-+			next = list_next_entry(entry, list);
-+		}
-+
-+		next_start = end_time;
-+		end_time = ktime_add_ns(next_start, next->interval);
-+		end_time = min_t(ktime_t, end_time, oper->cycle_end_time);
-+		entry = next;
-+	} while (unlikely(ktime_compare(end_time, now) <= 0) && budget--);
- 
-+	/* next can be the entry already published as q->current_entry (a
-+	 * single-entry schedule, or a catch-up of whole periods), so the
-+	 * close times and budgets below are rewritten in place while
-+	 * taprio_dequeue_from_txq() may be reading them.
-+	 */
- 	for (tc = 0; tc < num_tc; tc++) {
- 		if (next->gate_duration[tc] == oper->cycle_time)
- 			next->gate_close_time[tc] = KTIME_MAX;
- 		else
--			next->gate_close_time[tc] = ktime_add_ns(entry->end_time,
-+			next->gate_close_time[tc] = ktime_add_ns(next_start,
- 								 next->gate_duration[tc]);
- 	}
- 
-@@ -1130,6 +1162,8 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
- 				 struct sched_gate_list *new,
- 				 struct netlink_ext_ack *extack)
- {
-+	struct sched_entry *entry;
-+	ktime_t cycle = 0;
- 	int err = 0;
- 
- 	if (tb[TCA_TAPRIO_ATTR_SCHED_SINGLE_ENTRY]) {
-@@ -1152,13 +1186,10 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
- 	if (err < 0)
- 		return err;
- 
--	if (!new->cycle_time) {
--		struct sched_entry *entry;
--		ktime_t cycle = 0;
--
--		list_for_each_entry(entry, &new->entries, list)
--			cycle = ktime_add_ns(cycle, entry->interval);
-+	list_for_each_entry(entry, &new->entries, list)
-+		cycle = ktime_add_ns(cycle, entry->interval);
- 
-+	if (!new->cycle_time) {
- 		if (cycle < 0 || cycle > INT_MAX) {
- 			NL_SET_ERR_MSG(extack, "'cycle_time' is too big");
- 			return -EINVAL;
-@@ -1172,6 +1203,7 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
- 		return -EINVAL;
- 	}
- 
-+	new->period = min(new->cycle_time, cycle);
- 	taprio_calculate_gate_durations(q, new);
- 
- 	return 0;
+Thanks for the review!
+
+The last two patches were meant to follow the existing virtme-ng
+vmtest.sh pattern used by other selftests, mainly as a convenient
+developer loop. Anyway, I can see how it might be overkill, especially
+in this initial version. I'll drop them for now and keep the first two
+patches.
+
+If a tiny wrapper that only ensures dmem_selftest is loaded turns out
+to be useful, that can be added later.
+
+BR,
+Albert.
+
+>
+> Thanks,
+> Michal
+
