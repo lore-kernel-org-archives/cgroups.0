@@ -1,431 +1,224 @@
-Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FFC33C661A
-	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 11:12:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.198
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788174727; cv=none; b=kaldIKNHBIZWzCvnCN8fJe3OOl2BRnsgov7atCrs+bL7ixCAZMASnfcmjC9KL5dZHYQUPlW6FryIsWU8JYa04JMYcOjtnZU+VVH3pqSXm5ekN+K+E3AERtlP9picCByiUaLciIkK8q9YRubKOwceIQLbj793TXNRwEEoYG5mF2s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788174727; c=relaxed/simple;
-	bh=jx6m7TDAy3n2H1KmnOT50dstkrbrIEfHThU3enjgJ+s=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=AQXtY9101SOej1eHUbeJUV0Mfy/SlI84f5fIsupj67Q2bv0G60E2u3TQKWRnjVDJr+mJatRrzN74wG9i/rB9OqDExJVvla9nne1SgkfS7BTdVV5VN/mJWLBo2VHh7YiLwTf6LQ9SY8muUg5pRE0JmPPVHEinHvxpvdPKnmsXD8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-4b28db6c77aso5087852b6e.3
-        for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 04:12:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788174724; x=1788779524;
-        h=content-transfer-encoding:content-type:to:from:subject:message-id
-         :in-reply-to:date:mime-version:x-gm-message-state:from:to:cc:subject
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949803D45EF
+	for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 11:24:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788175447; cv=pass; b=UONu8EoQmvjKL+Aa43dbsqAEzlO0CbkNOcUk6RW50OfdbJRIgUrYXQiUFiUita2vVyDCM0DDEdURdR2CcKOeW6gscsgqM8tiiB8e/amEq4ranqZXwlgvBFtMg/HfreMVVNCYYor0rK9np8UJBcACQ9wsCDoXjK/0HkmncavAlTk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788175447; c=relaxed/simple;
+	bh=C9vgZ5OpqoqCmfcKT8JCoWSmu766g0cDfXH9A/VZNa4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TB9G7HhpPe06YfvsXO7H4kqmOzPhUa31n7fstf8I8G8sqE3ia+k4CUCow/qVwQndXiVdj4MWyO3otBe2H2JP5o8vndpOnk4AWF8JJ4fbeGaqd9UV6wsc0LvxSG8H6wwvbsvRyy8hDWZlZKjtpoVtJcr3QCPPOBb0yMiST2gTiu0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E93YYZVT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=eJyhUWgt; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E93YYZVT";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="eJyhUWgt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788175444;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
+	b=E93YYZVTZd8tdwkJfh8MLIEY0MqShSQopLUl3dA5cLJTAOZO6dwOz/9OR7EVlnV1r+BWMd
+	4cVPmVQuvRqrdN8/jNIDgE1oaka+oSlSALDzob89rq9WXoiCaX0KgU2Rliye2Sin3Wt2TS
+	twW4hP3LNx3wEN1RogpLrA9jYbQLn1o=
+Received: from mail-yw1-f200.google.com (mail-yw1-f200.google.com
+ [209.85.128.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-653-UWZSr0nbPmiYhYHOPEIeJA-1; Mon, 31 Aug 2026 07:24:03 -0400
+X-MC-Unique: UWZSr0nbPmiYhYHOPEIeJA-1
+X-Mimecast-MFC-AGG-ID: UWZSr0nbPmiYhYHOPEIeJA_1788175442
+Received: by mail-yw1-f200.google.com with SMTP id 00721157ae682-836c9f68dcbso49719807b3.0
+        for <cgroups@vger.kernel.org>; Mon, 31 Aug 2026 04:24:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788175442; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Nl05Egflkv8ZwXLj2eGOpNdvrgG7aMKl+QjISWEB9qRsAMqufG6XmgZSIlONoC8Ufv
+         oA/iy/Wnv5yn3KsR7mbeT/0Dp8Na6fxNsDwbmgWsUZ283/LZ+Tns9U+9iJfkoaGbhe1l
+         81AIoxYf/64GkgXtK3Q6bmiGdxOd7Jm/EI1MBQX3gJl5wBmWhfKFsQmRDLlWOH2XwoY7
+         4Uq+8WT5Zabo7amxyfsDJ0h9JDA3SWpHrgN3rrHVgazUpNYetkoJYqvqEBPRHHd934Aj
+         7XHnFTiZr0/mXQfxecZA21Gs8s9acef/6dOQSCrQ1fdSyxBy4qNL1nbg1kwilkNxwwI2
+         PRaA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
+        fh=o2pIUtQu6YPL1KlxQm4RXcJ8EjoivOG6z3ipA+2Gv5Q=;
+        b=DkHYVCDH12gtkHRKEI9G3QQ5cForO+qi14LDn/YDW1mS3UMVl7UtpjT9nJYYWMLo+O
+         S8Uzrxk4PnS0kScwbgGZz+Tx8qJZdPs0fDp5rZeq9EH79l7OYAkv84bDaPsLuQdLABkQ
+         NF7yzYrKgXwnxycwm0AZhQHhVrmJqwwTriTLjdqd4b2+jUUNXh8iHUvrts+9juwqeNnb
+         URkbhP/BRT3fDjPVl3YRFFh6W4RKMfarUnx0RqOUbhVW8c8KjoorSe3iMyXkR71d4yLT
+         7G3U43ZnPI0A7yVPq9BdvXW+gLWSyXoRkfjBsT2DuMsDDrDjP0xXcyObAdvWabTnPMJ0
+         xaqQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1788175442; x=1788780242; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=6AHpiCqC3lUjekaa7pzFDioIiCAl1doBUmmbvzVJYRo=;
-        b=C7HWw2NKJwPCOXptOFkI3lhux1i+4QvzzcyBymw0+ft/3+3Rqr1fbd214shvJkH1gm
-         +7N5qTTyImSIBoniiHApMq0vdldivd4K0UaeqSm7F/WmfuWoVemzLBU1TM/mQ5/xsWhu
-         ScKjLAVgz00dHiQyFV2H+OsCEm8UeG+5aszxdUC5SqH5axtTMfAb4WGOlCHevDnpE/Wc
-         lxvI308Bo4sNITaS+oBdV8r49ManEc5QfzR0QZJPqnYWGBqTDZdE2d83bKYo8f3ge+uW
-         Y5Kcyaw5wgzeJ3xXiEamjlI02i3IuReCAgpBHGD67lwo/D0cjVymWoHR2txg/kYcF/+d
-         tIlA==
-X-Forwarded-Encrypted: i=1; AHgh+Rqhue45dpzu3s7kF1rCYE9u4O/qyJ2CzmVywjRageIeeBa6VH8iZ+vriQojV5wfvPGkI4Z83h8b@vger.kernel.org
-X-Gm-Message-State: AFuF++n2ReSbQUZaVjS1ZAWXfeLQevlP6Ga746eiP395qz2meFpJyoai
-	hUTYGrlLwawtuDKC/LUJtdgBeB1oJUejnBkOEhTqSKLHS5bX6b2G/ayEavwJ6P99LEbroLK3Wip
-	r3kdvKhA0+7UNoRbcSUs4ViTHiNGa/541RkHdUkaT1MDk0w4VBpGikWD/8QI=
+        bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
+        b=eJyhUWgtKANGVUW4zMaluleGLmwM3cyd50f70DCIj5dfPFjbYnnuDyoMEhdRVd5XvP
+         EU3k/0lEwdIh40wxAi1MbeNH6LErrWtsxJ0Ee+Yn8cN2pDkzWqcdj7YyOhbJmOCIl/Mj
+         X7pEAR5tuoA1ocxqFUGd8zmw+CO1XcHAVkuLb/1UNimubyyIANP7wBCO0RTq85Nq0KYP
+         aAO1xBSGVLVKz65tYGIP2+PFkM6sxqFgNNjuc7LBDT9IkRIj/SlNlr6oVY/B2rbJ1nDN
+         6bkz4liuOBf546AARaIYMRPlHUSxTQxC0zHpnQmnR94F/WEzOzwSocAflXfvHgETG8Qa
+         KUgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788175442; x=1788780242;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=GynAiyqKaF7zNIjy+JX3ryfv5HnQb4XBD3qIOpzfei0=;
+        b=J2a42JECwZSL/VIUhAgSGJejMpDYQ3YNI13uRKTo8pkJvPaaDdcw7zVOC9Wmh8GUKj
+         74lj8ntDWy2PGlqpeye+ZpHXTZgDHgDOLWV16OpWMIcfrgNCMhoxoH1ZoDTO5oSLn3jo
+         o1alf3ERj9U6qKK9ofRtqxwG7FI7AcIhSJn1Wn+HdWEQC0+czCb6hbpXiDCEcpdQmckz
+         lP+Ek6Hta2svi1Vivbt1fPSVNXERVWVA8C0Qc8sPqQXUn5qMwSMuQV+fWugX/Cug+kSc
+         oZPEWEHdxF4mtOlrjeExJsP9reR8POlmT1O9GwzcG4Tz7CtA9aZZnLn/H+49JwE6+xil
+         1JKA==
+X-Forwarded-Encrypted: i=1; AKwUvBx3DXqWts6MbGFnbNeFtCfXeWS5n/UnL0rM/2sweNgL1giHosOy7fZokx3IZ/I49s5G1IX2VjWB@vger.kernel.org
+X-Gm-Message-State: AFuF++m0ggWO89UHZ7vUqu1Bw5xhesUUi1ckZ9hL9igbxawUsA0kqDJ/
+	0m3cmTRt1z8c7oMXDG/xFVag8Vrk5qaT4yQeMU/PgHADRAczzKIHGhfdllwrMG9n921GZm0CyIA
+	uGIAamOYnNzhn/khjjShaOmt5I1xi9ObgynvhLa2c3rdm7Ru22LHMlc9R1DQGB/t9iNqzv884iF
+	LprGTNkxzCGAAKEj1mWeRu4fDVN4A7D4cWdQ==
+X-Gm-Gg: AYBFou0BIB8BH21mrmsgbU0SCOox7kSBAj4cdWRGaO0egLgT7dLjMR2xx4PKcpE2G9O
+	XC6Wa+StwjFP4dz8Cyht2EHOCMQd0fJ8ZflCKQ5wH6bfc9vHlirsJLRCj1eibkRL5OykCAdDmGe
+	WBIkNJ6mWj7moyJ1lzCEQ6op0z0vvWzMLXyLoJezJ2lskFTlRhzpcsVwU=
+X-Received: by 2002:a05:690c:e3e6:b0:81e:6a10:f90f with SMTP id 00721157ae682-85d6a2e13f3mr94107787b3.17.1788175442388;
+        Mon, 31 Aug 2026 04:24:02 -0700 (PDT)
+X-Received: by 2002:a05:690c:e3e6:b0:81e:6a10:f90f with SMTP id
+ 00721157ae682-85d6a2e13f3mr94107637b3.17.1788175441869; Mon, 31 Aug 2026
+ 04:24:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:4f47:b0:4b2:21e2:82c6 with SMTP id
- 5614622812f47-4b3982a9a00mr26600352b6e.10.1788174724066; Mon, 31 Aug 2026
- 04:12:04 -0700 (PDT)
-Date: Mon, 31 Aug 2026 04:12:04 -0700
-In-Reply-To: <20260831084131.410457-1-junjie.cao@intel.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a956184.4d659fcc.734b4.004d.GAE@google.com>
-Subject: Re: [syzbot] [mm?] INFO: rcu detected stall in exit_to_user_mode_loop
-From: syzbot <syzbot+2642f347f7309b4880dc@syzkaller.appspotmail.com>
-To: akpm@linux-foundation.org, cgroups@vger.kernel.org, davem@davemloft.net, 
-	edumazet@google.com, hannes@cmpxchg.org, hdanton@sina.com, horms@kernel.org, 
-	jackmanb@google.com, jhs@mojatatu.com, jiri@resnulli.us, junjie.cao@intel.com, 
-	kuba@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	mhocko@kernel.org, mhocko@suse.com, muchun.song@linux.dev, 
-	netdev@vger.kernel.org, pabeni@redhat.com, roman.gushchin@linux.dev, 
-	shakeel.butt@linux.dev, surenb@google.com, syzkaller-bugs@googlegroups.com, 
-	vbabka@suse.cz, vinicius.gomes@intel.com, ziy@nvidia.com
+References: <20260706-kunit_cgroups-v5-0-6c42c8753468@redhat.com>
+ <20260706-kunit_cgroups-v5-1-6c42c8753468@redhat.com> <aoyFYWYmocJkTeXk@localhost.localdomain>
+In-Reply-To: <aoyFYWYmocJkTeXk@localhost.localdomain>
+From: Albert Esteve <aesteve@redhat.com>
+Date: Mon, 31 Aug 2026 13:23:50 +0200
+X-Gm-Features: AcwNN1U0KtJvFymBd5EOdAW56G473bYb8daTnzAjeFTLioL1I8ELNQhwXHMDOSE
+Message-ID: <CADSE00+8E_6q1PRhQdnH+HfqCHca5Oy4b4wgM67QPq-X6Z6FwQ@mail.gmail.com>
+Subject: Re: [PATCH v5 1/4] cgroup: Add dmem_selftest module
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On Mon, Aug 24, 2026 at 8:28=E2=80=AFPM Michal Koutn=C3=BD <mkoutny@suse.co=
+m> wrote:
+>
+> On Mon, Jul 06, 2026 at 02:06:40PM +0200, Albert Esteve <aesteve@redhat.c=
+om> wrote:
+> > Currently, dmem charging is driver-driven through direct
+> > calls to dmem_cgroup_try_charge(), so cgroup selftests
+> > do not have a generic way to trigger charge and uncharge
+> > paths from userspace.
+> >
+> > This limits any selftest coverage to configuration/readout
+> > checks unless a specific driver exposing charge hooks is
+> > present in the test environment.
+>
+> What about that
+> drivers/gpu/drm/ttm/tests/ttm_resource_test.c
+> ?
 
-syzbot tried to test the proposed patch but the build/boot failed:
+But that test does not set up a dmem region (man->cg =3D=3D NULL), so
+ttm_resource_try_charge is a no-op. Even if we add a region there, it
+would not exercise nested dmem.{max,min,low} from userspace as
+intended here. But I can reword the message to avoid sounding like
+there is no in-kernel coverage whatsoever.
 
- 2.992004][    T1] Mandatory Access Control activated.
-[    2.993509][    T1] pnp: PnP ACPI init
-[    3.023863][    T1] pnp: PnP ACPI: found 6 devices
-[    3.105394][    T1] clocksource: acpi_pm: mask: 0xffffff max_cycles: 0xf=
-fffff, max_idle_ns: 2085701024 ns
-[    3.113910][    T1] NET: Registered PF_INET protocol family
-[    3.116610][    T1] IP idents hash table entries: 131072 (order: 8, 1048=
-576 bytes, vmalloc)
-[    3.128889][    T1] tcp_listen_portaddr_hash hash table entries: 4096 (o=
-rder: 7, 294912 bytes, vmalloc)
-[    3.130899][    T1] Table-perturb hash table entries: 65536 (order: 6, 2=
-62144 bytes, vmalloc)
-[    3.133075][    T1] TCP established hash table entries: 65536 (order: 7,=
- 524288 bytes, vmalloc)
-[    3.144444][    T1] TCP bind hash table entries: 65536 (order: 12, 94371=
-84 bytes, vmalloc hugepage)
-[    3.151706][    T1] TCP: Hash tables configured (established 65536 bind =
-65536)
-[    3.155107][    T1] MPTCP token hash table entries: 8192 (order: 8, 7208=
-96 bytes, vmalloc)
-[    3.158207][    T1] UDP hash table entries: 4096 (order: 8, 1048576 byte=
-s, vmalloc)
-[    3.161213][    T1] NET: Registered PF_UNIX/PF_LOCAL protocol family
-[    3.166692][    T1] RPC: Registered named UNIX socket transport module.
-[    3.167740][    T1] RPC: Registered udp transport module.
-[    3.168610][    T1] RPC: Registered tcp transport module.
-[    3.169492][    T1] RPC: Registered tcp-with-tls transport module.
-[    3.170446][    T1] RPC: Registered tcp NFSv4.1 backchannel transport mo=
-dule.
-[    3.187812][    T1] NET: Registered PF_XDP protocol family
-[    3.189221][    T1] pci_bus 0000:00: resource 4 [io  0x0000-0x0cf7 windo=
-w]
-[    3.190367][    T1] pci_bus 0000:00: resource 5 [io  0x0d00-0xffff windo=
-w]
-[    3.191848][    T1] pci_bus 0000:00: resource 6 [mem 0x000a0000-0x000bff=
-ff window]
-[    3.193134][    T1] pci_bus 0000:00: resource 7 [mem 0xc0000000-0xfebfef=
-ff window]
-[    3.195979][    T1] pci 0000:00:00.0: Limiting direct PCI/PCI transfers
-[    3.197272][    T1] PCI: CLS 0 bytes, default 64
-[    3.198358][    T1] PCI-DMA: Using software bounce buffering for IO (SWI=
-OTLB)
-[    3.199469][    T1] software IO TLB: mapped [mem 0x00000000b4400000-0x00=
-000000b8400000] (64MB)
-[    3.201954][    T1] ACPI: bus type thunderbolt registered
-[    3.211140][    T1] RAPL PMU: API unit is 2^-32 Joules, 0 fixed counters=
-, 10737418240 ms ovfl timer
-[    3.216011][   T61] kworker/u8:1 (61) used greatest stack depth: 27880 b=
-ytes left
-[    3.236610][    T1] kvm_amd: CPU 0 isn't AMD or Hygon
-[    3.236649][    T1] clocksource: tsc: mask: 0xffffffffffffffff max_cycle=
-s: 0x285d5483c8d, max_idle_ns: 440795228937 ns
-[    3.239738][    T1] clocksource: Switched to clocksource tsc
-[    3.247879][   T67] kworker/u8:3 (67) used greatest stack depth: 27160 b=
-ytes left
-[    3.274579][    T1] Initialise system trusted keyrings
-[    3.278300][    T1] workingset: timestamp_bits=3D40 (anon: 35) max_order=
-=3D21 bucket_order=3D0 (anon: 0)
-[    3.286066][    T1] DLM installed
-[    3.291910][    T1] squashfs: version 4.0 (2009/01/31) Phillip Lougher
-[    3.299536][    T1] NFS: Registering the id_resolver key type
-[    3.299710][    T1] Key type id_resolver registered
-[    3.299721][    T1] Key type id_legacy registered
-[    3.299981][    T1] nfs4filelayout_init: NFSv4 File Layout Driver Regist=
-ering...
-[    3.300091][    T1] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Drive=
-r Registering...
-[    3.304030][    T1] smbdirect: subsystem loading...
-[    3.312200][    T1] smbdirect: subsystem loaded
-[    3.342789][    T1] Key type cifs.spnego registered
-[    3.343043][    T1] Key type cifs.idmap registered
-[    3.346819][    T1] ntfs3: Enabled Linux POSIX ACLs support
-[    3.346847][    T1] ntfs3: Read-only LZX/Xpress compression included
-[    3.347118][    T1] jffs2: version 2.2. (NAND) (SUMMARY)  =C2=A9 2001-20=
-06 Red Hat, Inc.
-[    3.349230][    T1] romfs: ROMFS MTD (C) 2007 Red Hat, Inc.
-[    3.349425][    T1] QNX4 filesystem 0.2.3 registered.
-[    3.349531][    T1] qnx6: QNX6 filesystem 1.0.0 registered.
-[    3.350763][    T1] fuse: init (API version 7.46)
-[    3.354681][    T1] orangefs_debugfs_init: called with debug mask: :none=
-: :0:
-[    3.355943][    T1] orangefs_init: module version upstream loaded
-[    3.356821][    T1] JFS: nTxBlock =3D 8192, nTxLock =3D 65536
-[    3.369044][    T1] SGI XFS with ACLs, security attributes, realtime, sc=
-rub, repair, quota, no debug enabled
-[    3.378590][    T1] 9p: Installing v9fs 9p2000 file system support
-[    3.380623][    T1] NILFS version 2 loaded
-[    3.381303][    T1] befs: version: 0.9.3
-[    3.382815][    T1] ocfs2: Registered cluster interface o2cb
-[    3.384592][    T1] ocfs2: Registered cluster interface user
-[    3.386061][    T1] OCFS2 User DLM kernel interface loaded
-[    3.408890][    T1] gfs2: GFS2 installed
-[    3.423843][    T1] ceph: loaded (mds proto 32)
-[    3.437963][    T1] NET: Registered PF_ALG protocol family
-[    3.439495][    T1] async_tx: api initialized (async)
-[    3.440455][    T1] Key type asymmetric registered
-[    3.441477][    T1] Asymmetric key parser 'x509' registered
-[    3.442418][    T1] Asymmetric key parser 'pkcs8' registered
-[    3.443295][    T1] Key type pkcs7_test registered
-[    3.444626][    T1] Block layer SCSI generic (bsg) driver version 0.4 lo=
-aded (major 239)
-[    3.448227][    T1] io scheduler mq-deadline registered
-[    3.449247][    T1] io scheduler kyber registered
-[    3.450679][    T1] io scheduler bfq registered
-[    3.452609][    T1] raid6: skipped pq benchmark and selected avx512x4
-[    3.470190][    T1] input: Power Button as /devices/platform/LNXPWRBN:00=
-/input/input0
-[    3.473842][    T1] ACPI: button: Power Button [PWRF]
-[    3.477749][    T1] input: Sleep Button as /devices/platform/LNXSLPBN:00=
-/input/input1
-[    3.480757][    T1] ACPI: button: Sleep Button [SLPF]
-[    3.501883][    T1] ioatdma: Intel(R) QuickData Technology Driver 5.00
-[    3.538986][    T1] ACPI: \_SB_.LNKC: Enabled at IRQ 11
-[    3.540120][    T1] virtio-pci 0000:00:03.0: virtio_pci: leaving for leg=
-acy driver
-[    3.573242][    T1] ACPI: \_SB_.LNKD: Enabled at IRQ 10
-[    3.574257][    T1] virtio-pci 0000:00:04.0: virtio_pci: leaving for leg=
-acy driver
-[    3.611123][    T1] ACPI: \_SB_.LNKB: Enabled at IRQ 10
-[    3.612311][    T1] virtio-pci 0000:00:06.0: virtio_pci: leaving for leg=
-acy driver
-[    4.026288][  T629] kworker/u8:6 (629) used greatest stack depth: 26904 =
-bytes left
-[    4.103079][    T1] N_HDLC line discipline registered with maxframe=3D40=
-96
-[    4.105350][    T1] Serial: 8250/16550 driver, 4 ports, IRQ sharing enab=
-led
-[    4.114516][    T1] 00:02: ttyS0 I/O:0x3f8 (irq =3D 4, base_baud =3D 115=
-200) is a 16550A
-[    4.129686][    T1] 00:03: ttyS1 I/O:0x2f8 (irq =3D 3, base_baud =3D 115=
-200) is a 16550A
-[    4.144792][    T1] 00:04: ttyS2 I/O:0x3e8 (irq =3D 6, base_baud =3D 115=
-200) is a 16550A
-[    4.169157][    T1] 00:05: ttyS3 I/O:0x2e8 (irq =3D 7, base_baud =3D 115=
-200) is a 16550A
-[    4.206372][    T1] Non-volatile memory driver v1.3
-[    4.228763][    T1] usbcore: registered new interface driver xillyusb
-[    4.234701][    T1] ACPI: bus type drm_connector registered
-[    4.245698][    T1] [drm] Initialized vgem 1.0.0 for vgem on minor 0
-[    4.252028][    T1] ------------[ cut here ]------------
-[    4.252067][    T1] [PLANE:35:plane-0] pixel format with alpha exposed b=
-ut blend mode not setup
-[    4.252085][    T1] WARNING: drivers/gpu/drm/drm_mode_config.c:872 at dr=
-m_mode_config_validate+0xfb4/0x1be0, CPU#0: swapper/0/1
-[    4.256488][    T1] Modules linked in:
-[    4.257080][    T1] CPU: 0 UID: 0 PID: 1 Comm: swapper/0 Not tainted syz=
-kaller #0 PREEMPT(full)=20
-[    4.258850][    T1] Hardware name: Google Google Compute Engine/Google C=
-ompute Engine, BIOS Google 08/05/2026
-[    4.260606][    T1] RIP: 0010:drm_mode_config_validate+0xfbb/0x1be0
-[    4.261603][    T1] Code: 00 49 8b 57 18 48 89 f8 48 c1 e8 03 0f b6 04 2=
-8 84 c0 74 08 3c 03 0f 8e 00 0b 00 00 48 8d 3d 5c 1f 7e 0b 41 8b b7 c8 00 0=
-0 00 <67> 48 0f b9 3a e9 fa fd ff ff 48 8b 5c 24 20 e8 d1 aa 39 fc 48 8d
-[    4.264757][    T1] RSP: 0000:ffffc90000067c18 EFLAGS: 00010246
-[    4.265631][    T1] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 000=
-0000000000000
-[    4.266846][    T1] RDX: ffff88802708ff80 RSI: 0000000000000023 RDI: fff=
-fffff91504ba0
-[    4.268445][    T1] RBP: dffffc0000000000 R08: 0000000000000001 R09: 000=
-0000000000000
-[    4.269744][    T1] R10: 0000000000000001 R11: 0000000000000000 R12: fff=
-fed1004ea1e23
-[    4.270879][    T1] R13: ffffed1004ea1e24 R14: 0000000000000001 R15: fff=
-f88802750f028
-[    4.272125][    T1] FS:  0000000000000000(0000) GS:ffff888123b65000(0000=
-) knlGS:0000000000000000
-[    4.273520][    T1] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    4.274598][    T1] CR2: ffff88823ffff000 CR3: 000000000eb96000 CR4: 000=
-00000003526f0
-[    4.275805][    T1] Call Trace:
-[    4.276304][    T1]  <TASK>
-[    4.276744][    T1]  drm_dev_register+0x56e/0x7b0
-[    4.277432][    T1]  vkms_create+0x491/0x5b0
-[    4.278450][    T1]  ? __pfx_vkms_init+0x10/0x10
-[    4.279187][    T1]  vkms_init+0x98/0xe0
-[    4.279870][    T1]  do_one_initcall+0x11c/0x6f0
-[    4.280657][    T1]  ? __pfx_do_one_initcall+0x10/0x10
-[    4.281473][    T1]  ? kernel_init_freeable+0x4ca/0x7b0
-[    4.282372][    T1]  kernel_init_freeable+0x6ea/0x7b0
-[    4.283205][    T1]  ? __pfx_kernel_init+0x10/0x10
-[    4.283952][    T1]  kernel_init+0x21/0x1e0
-[    4.284623][    T1]  ? __pfx_kernel_init+0x10/0x10
-[    4.285469][    T1]  ret_from_fork+0x730/0xd60
-[    4.286179][    T1]  ? __pfx_ret_from_fork+0x10/0x10
-[    4.286964][    T1]  ? __switch_to+0x800/0x10f0
-[    4.288061][    T1]  ? __pfx_kernel_init+0x10/0x10
-[    4.288883][    T1]  ret_from_fork_asm+0x1a/0x30
-[    4.289745][    T1]  </TASK>
-[    4.290229][    T1] Kernel panic - not syncing: kernel: panic_on_warn se=
-t ...
-[    4.291328][    T1] CPU: 0 UID: 0 PID: 1 Comm: swapper/0 Not tainted syz=
-kaller #0 PREEMPT(full)=20
-[    4.292619][    T1] Hardware name: Google Google Compute Engine/Google C=
-ompute Engine, BIOS Google 08/05/2026
-[    4.294006][    T1] Call Trace:
-[    4.294490][    T1]  <TASK>
-[    4.294982][    T1]  dump_stack_lvl+0x100/0x190
-[    4.295673][    T1]  vpanic+0x553/0x970
-[    4.296729][    T1]  ? __pfx_vpanic+0x10/0x10
-[    4.297560][    T1]  panic+0xd1/0xe0
-[    4.297698][    T1]  ? __pfx_panic+0x10/0x10
-[    4.297698][    T1]  check_panic_on_warn.cold+0x19/0x34
-[    4.297698][    T1]  ? drm_mode_config_validate+0xfb4/0x1be0
-[    4.297698][    T1]  __warn.cold+0x191/0x318
-[    4.297698][    T1]  __report_bug+0x30f/0x440
-[    4.297698][    T1]  ? drm_mode_config_validate+0xfb4/0x1be0
-[    4.297698][    T1]  ? __pfx___report_bug+0x10/0x10
-[    4.297698][    T1]  ? reacquire_held_locks+0xdd/0x1f0
-[    4.297698][    T1]  report_bug_entry+0xe2/0x290
-[    4.297698][    T1]  ? drm_mode_config_validate+0xfbb/0x1be0
-[    4.297698][    T1]  handle_bug+0x1cd/0x2a0
-[    4.297698][    T1]  exc_invalid_op+0x17/0x50
-[    4.297698][    T1]  asm_exc_invalid_op+0x1a/0x20
-[    4.297698][    T1] RIP: 0010:drm_mode_config_validate+0xfbb/0x1be0
-[    4.297698][    T1] Code: 00 49 8b 57 18 48 89 f8 48 c1 e8 03 0f b6 04 2=
-8 84 c0 74 08 3c 03 0f 8e 00 0b 00 00 48 8d 3d 5c 1f 7e 0b 41 8b b7 c8 00 0=
-0 00 <67> 48 0f b9 3a e9 fa fd ff ff 48 8b 5c 24 20 e8 d1 aa 39 fc 48 8d
-[    4.297698][    T1] RSP: 0000:ffffc90000067c18 EFLAGS: 00010246
-[    4.297698][    T1] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 000=
-0000000000000
-[    4.297698][    T1] RDX: ffff88802708ff80 RSI: 0000000000000023 RDI: fff=
-fffff91504ba0
-[    4.297698][    T1] RBP: dffffc0000000000 R08: 0000000000000001 R09: 000=
-0000000000000
-[    4.297698][    T1] R10: 0000000000000001 R11: 0000000000000000 R12: fff=
-fed1004ea1e23
-[    4.297698][    T1] R13: ffffed1004ea1e24 R14: 0000000000000001 R15: fff=
-f88802750f028
-[    4.297698][    T1]  ? drm_mode_config_validate+0xf76/0x1be0
-[    4.297698][    T1]  drm_dev_register+0x56e/0x7b0
-[    4.297698][    T1]  vkms_create+0x491/0x5b0
-[    4.297698][    T1]  ? __pfx_vkms_init+0x10/0x10
-[    4.297698][    T1]  vkms_init+0x98/0xe0
-[    4.297698][    T1]  do_one_initcall+0x11c/0x6f0
-[    4.297698][    T1]  ? __pfx_do_one_initcall+0x10/0x10
-[    4.297698][    T1]  ? kernel_init_freeable+0x4ca/0x7b0
-[    4.297698][    T1]  kernel_init_freeable+0x6ea/0x7b0
-[    4.297698][    T1]  ? __pfx_kernel_init+0x10/0x10
-[    4.297698][    T1]  kernel_init+0x21/0x1e0
-[    4.297698][    T1]  ? __pfx_kernel_init+0x10/0x10
-[    4.297698][    T1]  ret_from_fork+0x730/0xd60
-[    4.297698][    T1]  ? __pfx_ret_from_fork+0x10/0x10
-[    4.297698][    T1]  ? __switch_to+0x800/0x10f0
-[    4.297698][    T1]  ? __pfx_kernel_init+0x10/0x10
-[    4.297698][    T1]  ret_from_fork_asm+0x1a/0x30
-[    4.297698][    T1]  </TASK>
-[    4.297698][    T1] Kernel Offset: disabled
-[    4.297698][    T1] Rebooting in 86400 seconds..
+>
+> >
+> > Add kernel/cgroup/dmem_selftest.c as a helper module
+> > (CONFIG_DMEM_SELFTEST) that registers a synthetic dmem region
+> > (dmem_selftest) and exposes debugfs control files:
+> > /sys/kernel/debug/dmem_selftest/charge
+> > /sys/kernel/debug/dmem_selftest/uncharge
+>
+> Nit: I'd think about alloc and free (to denote meaning not how it's
+> implemented).
 
+Works for me. I'll change the naming for the next version.
 
-syzkaller build log:
-go env (err=3D<nil>)
-AR=3D'ar'
-CC=3D'gcc'
-CGO_CFLAGS=3D'-O2 -g'
-CGO_CPPFLAGS=3D''
-CGO_CXXFLAGS=3D'-O2 -g'
-CGO_ENABLED=3D'1'
-CGO_FFLAGS=3D'-O2 -g'
-CGO_LDFLAGS=3D'-O2 -g'
-CXX=3D'g++'
-GCCGO=3D'gccgo'
-GO111MODULE=3D'auto'
-GOAMD64=3D'v1'
-GOARCH=3D'amd64'
-GOAUTH=3D'netrc'
-GOBIN=3D''
-GOCACHE=3D'/syzkaller/.cache/go-build'
-GOCACHEPROG=3D''
-GODEBUG=3D''
-GOENV=3D'/syzkaller/.config/go/env'
-GOEXE=3D''
-GOEXPERIMENT=3D''
-GOFIPS140=3D'off'
-GOFLAGS=3D''
-GOGCCFLAGS=3D'-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=3D0=
- -ffile-prefix-map=3D/tmp/go-build1798266567=3D/tmp/go-build -gno-record-gc=
-c-switches'
-GOHOSTARCH=3D'amd64'
-GOHOSTOS=3D'linux'
-GOINSECURE=3D''
-GOMOD=3D'/syzkaller/jobs-2/linux/gopath/src/github.com/google/syzkaller/go.=
-mod'
-GOMODCACHE=3D'/syzkaller/jobs-2/linux/gopath/pkg/mod'
-GONOPROXY=3D''
-GONOSUMDB=3D''
-GOOS=3D'linux'
-GOPATH=3D'/syzkaller/jobs-2/linux/gopath'
-GOPRIVATE=3D''
-GOPROXY=3D'https://proxy.golang.org,direct'
-GOROOT=3D'/usr/local/go'
-GOSUMDB=3D'sum.golang.org'
-GOTELEMETRY=3D'local'
-GOTELEMETRYDIR=3D'/syzkaller/.config/go/telemetry'
-GOTMPDIR=3D''
-GOTOOLCHAIN=3D'auto'
-GOTOOLDIR=3D'/usr/local/go/pkg/tool/linux_amd64'
-GOVCS=3D''
-GOVERSION=3D'go1.26.0'
-GOWORK=3D''
-PKG_CONFIG=3D'pkg-config'
+>
+> >
+> > Writing a size to charge triggers dmem_cgroup_try_charge() for
+> > the calling task's cgroup (the module calls kstrtou64()).
+> > Writing to uncharge releases the outstanding charge via
+> > dmem_cgroup_uncharge(). Only a single outstanding charge
+> > is supported.
+> >
+> > This provides a deterministic, driver-independent mechanism
+> > for exercising dmem accounting paths in selftests.
+> >
+> > Signed-off-by: Albert Esteve <aesteve@redhat.com>
+> > ---
+> >  init/Kconfig                  |  12 +++
+> >  kernel/cgroup/Makefile        |   1 +
+> >  kernel/cgroup/dmem_selftest.c | 198 ++++++++++++++++++++++++++++++++++=
+++++++++
+> >  3 files changed, 211 insertions(+)
+> >
+> > diff --git a/init/Kconfig b/init/Kconfig
+> > index 5230d4879b1c8..6fab65d6b44ea 100644
+> > --- a/init/Kconfig
+> > +++ b/init/Kconfig
+> > @@ -1267,6 +1267,18 @@ config CGROUP_DMEM
+> >         As an example, it allows you to restrict VRAM usage for applica=
+tions
+> >         in the DRM subsystem.
+> >
+> > +config DMEM_SELFTEST
+> > +     tristate "dmem cgroup selftest helper module"
+> > +     depends on CGROUP_DMEM && DEBUG_FS
+> > +     default n
+> > +     help
+> > +       Builds a small loadable module that registers a dmem region nam=
+ed
+> > +       "dmem_selftest" and exposes debugfs files under
+> > +       /sys/kernel/debug/dmem_selftest/ so kselftests can trigger
+> > +       dmem charge/uncharge operations from userspace.
+> > +
+> > +       Say N unless you run dmem selftests or develop the dmem control=
+ler.
+>
+> Could this be made w/out introduciton of a new Kconfig option? (E.g.
+> what tools/testing/selftests/livepatch/test_modules/Makefile does)
+>
+> (Maybe reword to insmod if you choose building the test module as OOT.)
 
-git status (err=3D<nil>)
-HEAD detached at 4cb2b096987
-nothing to commit, working tree clean
+Ah, nice example. I'll drop the CONFIG_DMEM_SELFTEST and have the
+helper module as OOT.
 
+>
+> > +static int __init dmem_selftest_register(void)
+>
+> Just an idea to reduce the amount debugfs of boilerplage -- the testing
+> args could be handled by module_param_cb().
 
-tput: No value for $TERM and no -T specified
-tput: No value for $TERM and no -T specified
-Makefile:31: run command via tools/syz-env for best compatibility, see:
-Makefile:32: https://github.com/google/syzkaller/blob/master/docs/contribut=
-ing.md#using-syz-env
-go list -f '{{.Stale}}' -ldflags=3D"-s -w -X github.com/google/syzkaller/pr=
-og.GitRevision=3D4cb2b096987c8122dc6b37eb51200b1ca7991e0f -X github.com/goo=
-gle/syzkaller/prog.gitRevisionDate=3D20260727-130118"  ./sys/syz-sysgen | g=
-rep -q false || go install -ldflags=3D"-s -w -X github.com/google/syzkaller=
-/prog.GitRevision=3D4cb2b096987c8122dc6b37eb51200b1ca7991e0f -X github.com/=
-google/syzkaller/prog.gitRevisionDate=3D20260727-130118"  ./sys/syz-sysgen
-make .descriptions
-tput: No value for $TERM and no -T specified
-tput: No value for $TERM and no -T specified
-Makefile:31: run command via tools/syz-env for best compatibility, see:
-Makefile:32: https://github.com/google/syzkaller/blob/master/docs/contribut=
-ing.md#using-syz-env
-bin/syz-sysgen
-touch .descriptions
-GOOS=3Dlinux GOARCH=3Damd64 go build -ldflags=3D"-s -w -X github.com/google=
-/syzkaller/prog.GitRevision=3D4cb2b096987c8122dc6b37eb51200b1ca7991e0f -X g=
-ithub.com/google/syzkaller/prog.gitRevisionDate=3D20260727-130118"  -o ./bi=
-n/linux_amd64/syz-execprog github.com/google/syzkaller/tools/syz-execprog
-mkdir -p ./bin/linux_amd64
-g++ -o ./bin/linux_amd64/syz-executor executor/executor.cc \
-	-m64 -O2 -pthread -Wall -Werror -Wparentheses -Wunused-const-variable -Wfr=
-ame-larger-than=3D16384 -Wno-stringop-overflow -Wno-array-bounds -Wno-forma=
-t-overflow -Wno-unused-but-set-variable -Wno-unused-command-line-argument -=
-static-pie -std=3Dc++17 -I. -Iexecutor/_include   -DGOOS_linux=3D1 -DGOARCH=
-_amd64=3D1 \
-	-DHOSTGOOS_linux=3D1 -DGIT_REVISION=3D\"4cb2b096987c8122dc6b37eb51200b1ca7=
-991e0f\"
-/usr/bin/ld: /tmp/ccZHlTeq.o: in function `Connection::Connect(char const*,=
- char const*)':
-executor.cc:(.text._ZN10Connection7ConnectEPKcS1_[_ZN10Connection7ConnectEP=
-KcS1_]+0x386): warning: Using 'gethostbyname' in statically linked applicat=
-ions requires at runtime the shared libraries from the glibc version used f=
-or linking
-./tools/check-syzos.sh 2>/dev/null
+Ok, I'll switch to module parameters and drop the debugfs boilerplate
+and DEBUG_FS dependency.
 
+BR,
+Albert
 
-Error text is too large and was truncated, full error text is at:
-https://syzkaller.appspot.com/x/error.txt?x=3D14ce4349580000
-
-
-Tested on:
-
-commit:         a8455260 ipvlan: unregister upper devices outside pnod..
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net.gi=
-t
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3D9cc692b98d9b4fd=
-b
-dashboard link: https://syzkaller.appspot.com/bug?extid=3D2642f347f7309b488=
-0dc
-compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Deb=
-ian) 2.44
-patch:          https://syzkaller.appspot.com/x/patch.diff?x=3D11aef3795800=
-00
+>
+> > +static int __init dmem_selftest_init(void)
+> ...
+> > +     add_taint(TAINT_TEST, LOCKDEP_STILL_OK);
+>
+> Great!
+>
 
