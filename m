@@ -1,36 +1,32 @@
-Received: from mta0.migadu.com (out-107.mta0.migadu.com [91.218.175.107])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7611E28CF4A
-	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 01:53:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.107
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC8A3A785C;
+	Tue,  1 Sep 2026 02:06:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788227623; cv=none; b=EQVuWtpXdYZxyWjs0zZyei3hIWqQIO9wi0QuSHbcLye17EuFauwM0CsnW1k1hE5pCom1J51ycf/Cth9y6QzkSgTaRvcDrf02PRZJZuQnQuiKA34kioSGkS+rXcDwhHOz6AKF2NvWXC2b/9fjlW2+8aR/cSRbekrJVyf5Bg5Fyvs=
+	t=1788228377; cv=none; b=t7Uw+Zwd153oOJDp3VvIXkYm2DT+MS5DVk5Ig1kFwejP0d+3KWRvEDLi6HZwd7b4FMl4k0/VkT7qcK4fKXeHp5d8VctY4RnVkNznsMOlcrfkPo4P9GPDFzc0HEBhwrY1zmjTe8x57dJKOdmGCuoJEfONPo73EsdDOayoNlh5dy8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788227623; c=relaxed/simple;
-	bh=Ay1gryBYGG6aqSGyYWuP+er0TtdYtW7WR2F5GMe8wBA=;
+	s=arc-20240116; t=1788228377; c=relaxed/simple;
+	bh=y//G2hfrQusFIRZMpStTygTDFgIXFnHvdvwsiKyfwsQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=km2C85gzb9GVqr9gODy2UCznqbFMuDQQefabyywg/rMZ8QaduvScvo/S+75PV8CYiJQ7YvXejOqhV29nsm+XRVGzTk5+CScN+z6oSpdYWzaqUfBaNHMv2fjgkng+thR5QXipM8qlKHIogAIWm0Bku/T1rPdDNXaWyb4537llgp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XHfG0enZ; arc=none smtp.client-ip=91.218.175.107
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 In-Reply-To:Content-Type; b=lv9Uo+Vggq1rX/j2ihcWS6JPdgPhqVCTxujalC/uPCm0pfqKpszzTk1ApQTT4NAkyIqsqWQOquEdjiniOTMPr2JetuIpS0ik2mvsrbmwIEOmXifP/zpl7zJgBskGe1pPnYuo3brZQ0zD23s4N1HHMElkpqayyz/vPEK2w2yFMFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=pixYcPIp; arc=none smtp.client-ip=115.124.30.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XHfG0enZ"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Ay1gryBYGG6aqSGyYWuP+er0TtdYtW7WR2F5GMe8wBA=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788227592; v=1; x=1788832392;
- b=XHfG0enZBs2Cx6R8OlvKrHLnEppxUENyCnRTKPAJ0UfKQiss1FcQmiUwANannm6kETm1jqBS
- KA5SbFmRwH/ShKdHLn1OhJfoymbft51weOW9DIxGWTI145fO7uUgHA7vH5Z/V7iuAmw02bKq+mz
- QDq7Xxk9u6hInk54W0v3Fd9E=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 24139c14f82578d9;
-	Tue, 01 Sep 2026 01:53:12 +0000
-X-Mizu-Trace-ID: 24139c14f82578d9
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <6322b8b3-fcf2-4052-979d-439f458d31bb@linux.dev>
-Date: Tue, 1 Sep 2026 09:53:07 +0800
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="pixYcPIp"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1788228360; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=ky50rSgY5tzco+q1f2XF8OoC/+HTORaE9naTNqUCG6g=;
+	b=pixYcPIpGLwwBAEq+DOnsRyJRjlASLs0wn6aqBNv/PdoPQ2RIW6htjKBFt0CXr+gsJtPJnSRggP6vsGlgQeLFC20s9y96AQyEnbi4AcLqSIpPk9/mHZCEvTYPjgieCLPlM28+bv6qYQ3iwnFl4qe48dOCaWBdLypFOdJwmkoiII=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R171e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=baolin.wang@linux.alibaba.com;NM=1;PH=DS;RN=26;SR=0;TI=SMTPD_---0XA0imgg_1788228356;
+Received: from 30.74.144.116(mailfrom:baolin.wang@linux.alibaba.com fp:SMTPD_---0XA0imgg_1788228356 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 01 Sep 2026 10:05:58 +0800
+Message-ID: <07013ca0-a7bf-40ac-837d-e60e6b6b82d2@linux.alibaba.com>
+Date: Tue, 1 Sep 2026 10:05:56 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,106 +34,46 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in
- cgroup1_pidlist_destroy_all
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Junnan Zhang <zhangjn_dev@163.com>
-Cc: tj@kernel.org, hannes@cmpxchg.org, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, Junnan Zhang <zhangjn11@chinatelecom.cn>,
- Shouxin Sun <sunshx@chinatelecom.cn>
-References: <20260814084016.123741-1-zhangjn_dev@163.com>
- <20260814102052.147408-1-zhangjn_dev@163.com>
- <apU1sXYP_QhsQFcB@localhost.localdomain>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <apU1sXYP_QhsQFcB@localhost.localdomain>
+Subject: Re: [PATCH v4 2/6] mm/mglru: introduce helpers for manipulating gen
+ and refs flags
+To: kasong@tencent.com, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Barry Song
+ <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
+ Ridong Chen <ridong.chen@linux.dev>, Lian Wang <lianux.mm@gmail.com>,
+ Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>,
+ Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>
+References: <20260831-mglru-flags-cleanup-v4-0-2d15dde0d7ee@tencent.com>
+ <20260831-mglru-flags-cleanup-v4-2-2d15dde0d7ee@tencent.com>
+From: Baolin Wang <baolin.wang@linux.alibaba.com>
+In-Reply-To: <20260831-mglru-flags-cleanup-v4-2-2d15dde0d7ee@tencent.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 
 
-On 8/31/2026 4:16 PM, Michal Koutný wrote:
-> Hi Junnan.
+On 8/31/26 2:43 AM, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
 > 
-> (Sorry for late response, I sketched some notes and then didn't get down
-> to sent them. Now they're below.)
+> Instead of doing bit ops on folio->flags.f, introduce helpers for
+> adjusting a folio's refs and generation info, making the code easier
+> to debug and understand.
 > 
-> On Fri, Aug 14, 2026 at 06:20:52PM +0800, Junnan Zhang <zhangjn_dev@163.com> wrote:
->> From: Junnan Zhang <zhangjn11@chinatelecom.cn>
->>
->> cgroup1_pidlist_destroy_all() flushes the global
->> cgroup_pidlist_destroy_wq while destroying a cgroup. Because all cgroup
->> v1 pidlist destruction work items are queued on the same shared workqueue,
->> a single slow or stuck work item (e.g. waiting for pidlist_mutex held by a
->> user-space reader) blocks every concurrent cgroup destruction path.
->>
->> This can lead to kworker tasks stuck in flush_workqueue() for over
->> hung_task_timeout seconds, as observed on busy systems running Docker or
->> Kubernetes workloads.
+> No functional change is intended: some combined atomic operations are
+> split into two, which only creates harmless transient states. There is
+> no measurable performance impact, and some paths even look slightly
+> better in the generated assembly.
 > 
-> Since the cgroup_pidlist_destroy_wq is already a dedicated workqueue (no
-> other conteders), the pursuit of pidlist_mutex holder is a feasible
-> theory. However, that would also mean:
-> a) a single reader taking more than hung_task_timeout_secs (that'd be
->     a softlockup earlier),
-> b) starvation of cgroup1_pidlist_destroy_all() by many (queued)
->     cgroup_pidlist_start() callers which goes against the second-long
->     caching of pidlists,
-> c) there is large number of nr_cgroups * nr_pidnses which makes the
->     caching ineffective
-> 
->>
->>    INFO: task kworker/0:1:1438499 blocked for more than 120 seconds.
->>    "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->>    kworker/0:1 D 0 1438499 2 0x80000080
->>    Workqueue: cgroup_destroy css_free_rwork_fn
->>    ? __schedule+0x296/0x900
->>    schedule+0x28/0x80
->>    schedule_timeout+0x1ee/0x3a0
->>    ? kvm_sched_clock_read+0xd/0x20
->>    wait_for_completion+0x12c/0x190
->>    ? wake_up_q+0x70/0x70
->>    flush_workqueue+0x132/0x430
->>    ? cgroup1_pidlist_destroy_all+0x7c/0xa0
->>    cgroup1_pidlist_destroy_all+0x7c/0xa0
->>    css_free_rwork_fn+0xb5/0x390
->>    process_one_work+0x195/0x3e0
->>    worker_thread+0x30/0x390
->>    ? process_one_work+0x3e0/0x3e0
->>    kthread+0x113/0x130
->>    ? kthread_create_worker_on_cpu+0x70/0x70
->>    ret_from_fork+0x1f/0x40
->>
+> Acked-by: Qi Zheng <qi.zheng@linux.dev>
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
 
-I'm not sure we've found the real root cause yet, and the current analysis 
-doesn't convince me.
-
-Shouldn't we first figure out why flush_workqueue() waited 120s? Was it because 
-there were too many pids, or because someone held pidlist_mutex for too long?
-
->> Fix it by moving the cgroup's pidlists to a local orphan list under
->> pidlist_mutex, clearing their ->owner pointer, and then cancelling each
->> pidlist's delayed work outside the lock. The destroy work function now
->> checks ->owner and skips freeing orphaned pidlists, so
->> cgroup1_pidlist_destroy_all() can free them safely without flushing the
->> whole shared workqueue.
-> 
-> What's the point of the workqueue after this change? (Mainly the
-> expiration + having process context for the handler.)
-> 
-> The flushing isn't necessary if there's a way how to ensure pidlists
-> head won't be used after cgrp removal, which the fix should achieve.
-> 
-> 
-> So I'd say, the narrow-focused cancellation may work, no need to wait
-> for other cgroups. OTOH, I'm surprised this v1-issue popped up only now
-> and whether such a long contention can happen over pidlist_mutex as your
-> commit message implies. What nr_cgroups, nr_pidnses could cause this in
-> your theory?
-> 
-> Thanks,
-> Michal
-
--- 
-Best regards
-Ridong
-
+LGTM.
+Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
