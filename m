@@ -1,206 +1,114 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7AB737DEA4
-	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 20:55:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.172
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788296161; cv=pass; b=KpsN916swmUSzvprNBvB6xoR9C5rURhk7YrJo223gQoIyM1iRCg07dZamIZVwppnkun4RqFV7kq79ihpLjPZOwH9gWgmy8RlSNY7sxGZm629pkeRZV/e1yc5otm+iW1RF+ztAjMVRsQJcnGqWbdSVyg98vYZ3fHldQT71EHp64s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788296161; c=relaxed/simple;
-	bh=ds0R7RSWqyOotBdAMyqdu/tBAQwZG7fw93dEWKgQL/U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=js5YfbTnzJDc2TQl+wXiOA/SAv2HYK6nXxRGnwKxEa3HGR0RcUnDieQx6tq5AGIGaqx0wS0jxy1AKD0nY+Y/m3e08Ynn26f7g79DcS2sJ6a876+CV66wm1mtMYwxlBOPHfobb070YzwlvkLQ/kK3ejv1KqOGz4iOWoBFwEzgH+8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu; spf=pass smtp.mailfrom=berkeley.edu; dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b=FcBGHHlR; arc=pass smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=berkeley.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4050D37FF6A
+	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 20:59:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788296395; cv=none; b=VpiNCJcBM90031j9q5gEbSskmte/KFaZbxIGM1ihYUN0BavGMDvyEM6KIE90kTc1Wq57/rWbIToTLwOmofufwUT/YcumecrIgnGCFqi+utwlO+PLL0IUOT6wlyl6do04GBJm/3OzkoN+wj7N87chK/ytuKb2af5XsJM15P8OxfE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788296395; c=relaxed/simple;
+	bh=7Bwol/isO3PKYL7GwxQ+DnKxspzRoJb43zIQMxZuCDY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LlB3YZVcLdX86wiDWHay0xSV8d1Ca34gP18w4jVEhKKoss1mEXEZlnXtpmauHym6i/AbJFMLQYYeNNWc30uK65xFMpgUq35lwa0xh093N1BhN7Q3Fv1itMHfAGbCxf1/6AmShoLllOwrrwvdOsvWXiEx3luHTE6g1C4qmXbi2is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=YJfB2dm+; arc=none smtp.client-ip=209.85.128.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b="FcBGHHlR"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2d7200b2e15so2783015ad.3
-        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 13:55:50 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788296150; cv=none;
-        d=google.com; s=arc-20260327;
-        b=iZ9LLXJhWerV5c/c2Sk8JCxt9Je+5ZSy93ElcdC9YUWmEJKEEaDFlnyybap7/JW0BW
-         RdlWnyOFXrEqSKzdJQRwNXxnZl77Fio/5oEGcjh2+PHl5hm3rwvq/eh9nK0h2UUYRNFb
-         Dv0FAU2Gx81LrgrATXYazgl5XfxnWcekY6FJaig94e1zV9TSJUlRfaY8tnanViXFfGyL
-         8AfutjsrqNSRT8PEIHbHzTPGjAti5hclFX9bP/zRORmLF9j01VzJI5XRXHPxv2+pQMbi
-         v7eXgxkVZz9a+0uuYKd0nidCZYEXRXVaRyBc/wvsHAhF4ENEvMufbWjIdmHo0yts9rf3
-         Jggw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=ds0R7RSWqyOotBdAMyqdu/tBAQwZG7fw93dEWKgQL/U=;
-        fh=7mQJ2xZwnHNpXxkUg3MlriWaxFGbEN2K5s3tDEuN6mU=;
-        b=NKOnVjYVXK5sF3ls2O6Cqd6oYmkQETZdylH3fgpiL9R2LXUI1fp+CN+ELJI7ry4ahr
-         y4JAul6D5Al1k3FX6C1sbLvaqei9FRhlSxl6l0spA6u7fupXoNHR+2dVDilOO1GhJfFw
-         rg/SPi8DFEtTe/lTns1ncfUztl9MDGLYDKfTsN7V9W+izFgp5Rt3h2GvELgKZqWEg3Ii
-         8RaT8bDwb4cpT5UwQ9F/LTDvv8+80Ug29sllTW2KLTcLfuj/yTYcLPALFoOaD+ucWOsr
-         fxv0OYmXbkcqnExBFzWnfMfP00o2MBEHbirRwRTccZWzq2XcnUVMu4TRnREeTf6CcUkX
-         WK1Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="YJfB2dm+"
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-85aa9c1308dso4831727b3.3
+        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 13:59:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=berkeley.edu; s=google; t=1788296150; x=1788900950; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ds0R7RSWqyOotBdAMyqdu/tBAQwZG7fw93dEWKgQL/U=;
-        b=FcBGHHlRa4KyK6GLEYePiV1yMfHY9X4tCxvXfbyyon/t4mMQ77vFLr3Efx2H4xoojX
-         K5SAoChJLrfCBfofVkHLb5sE2bERbvgJYYddVya8hqWqdSuWaFGOyg9tIdxTI0qaFZpC
-         47nCqGNHUg3csj6vtTSPbDwJ2zSKc/zSacqGjov8DXjDMpHZ7MeFO9JbSTPn6Uk6uSMI
-         TSgnAXMVXQ09ZvX4z8RMrg8nwu6l4GY1UxI2q7tp5pYzwhhfAeaGXKTHKmuXLmC4GrLu
-         0gqGrkEsSyv1x1om4rvM3kVHMnONK+hCLFGcmgksArwZQLerVSqrAloo3ZVLobxU89/L
-         sC/Q==
+        d=cmpxchg.org; s=google; t=1788296391; x=1788901191; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=scAaW2u08X/6xoYYfzAu3cY9q95BQA8pLakjGEvGhLQ=;
+        b=YJfB2dm+oM8zkvx9mZ/MCddLaSAoLBN9yf8SQYeCD5dVyIi8jWR5rQbpndEo0A5f4g
+         N6FHZIL0MdU5dunJVOO8yTEV/34kI0F0BcI/Ij2BoOE/bBndwc4wgOetpoDhOXt/FInO
+         ZQLISVUf4WSItvhdBUm697OS6mZVbVlw9BxEfse1pm/pmEhmAsZHMvGTTNbAWVZi5aaa
+         SgDlTcKZXIatCkekAcJMZh0AUDL+iz8ab+SmcMILC+xTNl8g/nodf4Zw9f0/AbMU26q8
+         5N3rbmsVxw37+0ZClT7huVzl3d6WRopmNQMjVi/9pqjjKVhil0ikA3YHjO+aNNcIkvlv
+         Yy6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788296150; x=1788900950;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=ds0R7RSWqyOotBdAMyqdu/tBAQwZG7fw93dEWKgQL/U=;
-        b=cUdKHDyaZnPTHSNiUFdIqPGFQkJdiJVQnc8vIibSYliB6SWbOhumA+8Jr1IXVJwmVz
-         OHdwh24L1XeD2Q6WHGFtrBSKNz4uOxLJKTtGy//tfd1OR162kGL6Hg5Djt9dn4OE1lGE
-         jPip0JAKrvvd2mwamAriFaHa5itRFjYFqn4qt1t+n6TCe1iL04zPfJA7sFxy/WURHMM6
-         g+PlQXP4/o1Dt/oa90GsF5RXBiuH3fNC1kzXcfoT0E+QWqjARGo47PyEUot1gHuUQQ/7
-         IP7QjAEmPmNCYmtoTbXIUxn0zxP9u5G102J03IlyHhR5UpwBCXplC7oVtmb21U5pipYQ
-         Mm3w==
-X-Forwarded-Encrypted: i=1; AKwUvBwdZdfyB0uxdg/40BbbGVV/+vajQyQfd3E1gAUZwLS7AquVYgMDdPtme634QVKGwqacclE+DQlG@vger.kernel.org
-X-Gm-Message-State: AFuF++nYBD9I3H3E4IG2ijOPfxETA5CWt4zo6YznrqWqoXKGFiGlq6qC
-	Sr7eLwkM/pcQNsr8XEfJWurY6/8Wh8YyO+F8BBIdJYDVVwxSUhUtZdpv9jL+YBxF5GSdzqM3Ncz
-	LtVEVostA4nKD7CzKGmpDfHCKyUoRkzfITQJHUPrW
-X-Gm-Gg: AYBFou3Y4+RMN33SX6HNAjxVeRuRnizRpVLA5RlopAjdazsRjzTBhTd2jqAKYxIJ3l7
-	F4SiLBtm+r2lMh5vgaDG8y73Lfb2U+FVj/9bqxT25MjO72HzxDlqMhd/vWDMcsm+2xfAWNenRDn
-	TMCh2al6FuynoCgxmjfqN/A3pBGthwvQULMx3FnUyuE+8zh2727CwDcSgvMXjz95CKNcwLLW9+7
-	l8RM7tXzOYuozSodqR4zou+a+MRmmHl5qAr6YUd6yFWvu3xpgNq54VNSVJx2pBvqL6iN0qUK6yO
-	GlNiman9hyynW/aorV7xbbrwcglysAX33qlYqak/8cu0hO+P7dTBmgFx1KV7FRgTUE555aCcrZg
-	h8wqWgAXh+l9WMMaNsZWg5zskZ3gFLA==
-X-Received: by 2002:a17:90b:3b41:b0:381:6c5:3f63 with SMTP id
- 98e67ed59e1d1-39907cd4e1dmr14923888a91.6.1788296149094; Tue, 01 Sep 2026
- 13:55:49 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1788296391; x=1788901191;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=scAaW2u08X/6xoYYfzAu3cY9q95BQA8pLakjGEvGhLQ=;
+        b=kYs6PXGi84o2QyrfAftR0W3qusSyldqa/pDVoyUmJWLQmCZMeHRPwTE+tQQWJvVoRH
+         vmtYDGboKpvhekA9KSkGGrc1QiTJ/hwjBxlKFre4onWHAZrYMGS15GqzXcmJbq+w7Kyv
+         SiuoBWe53Hi03JX8PWYEXv+6BP+gee/CaeBjxSXo01ZBfSndJ01+/rzKUB05GcjysAp9
+         /f0ZR8wYCMogKETzn1DGBbCB6JKbFM9TW83y/JKt9xFHn4LyGSka/M2t6EXCqp/jNfPy
+         3zuMEDEcLEretL1OSvVwwa3QpKw8l9WC6371Q2zeBFw/gGb+CJuBYQ5C+QqxXgyUjZV8
+         zG6Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxDAiwgymcwWOqtFUj0CMEDVLHYS5D/PtgmiE7JSAUmEXSv2jEjmT0NBVFBhaGk1Bq3+f85i8to@vger.kernel.org
+X-Gm-Message-State: AFuF++mh12/DXSAdcoHdtJTmqliWxfVRvvzMgPNizsUZF7cUgNvOs41x
+	Qjq+/Vbj3B4dt0gyND1KKUioykFm0BqFiZ4k3obASGw+rcZQEJMRTEXKunoxUHzEWCA=
+X-Gm-Gg: AYBFou04YOJ501Hj7GWNpa7OHEQs+rcKAaKNvtI85xF+jhjwKufHEIGwxuiX/OzBvCU
+	+V7To9nx/C6rRdv1CXGKAvaKFbYTcTIcYcunybmrVl8LocL1VcWkrjQxkZV56KDaaeznZP1/oR4
+	gJfoPz9yKH1lNrIMnWBfi5wjISMzins9Ny5a5rVyM/wJhZUM3tOrSHeIS1YAUhVpFRiDDEI77m1
+	a1S0DesXRiNO7v0bAKsiXUkYmpUYVBiktnYv5Ivq2mX+xSncrLGHUzHbufasHjSdOgUzQwiFgXZ
+	5G4zGqRSr6OtVlGskT6z1nB3WNxQ2nxNVgD6voFy3FTPkV5WaBxL73HYzyRshknkg5ma/a8e+/f
+	W3m0viSLERjSvzfqM96i37ZCOAvUb/zMTfojDWFE6s59wgoLyalfYm63S7t1b37UViQhgKQ+LKV
+	j6PEqd0CuiSgkcVPHRVitpJ3b2T5aXB9uRw5aOgw2tDyOR13cz+SmghqfxYvnb
+X-Received: by 2002:a05:690e:1347:b0:66f:8a2b:3db1 with SMTP id 956f58d0204a3-66f8a2b40ebmr2730463d50.46.1788296390661;
+        Tue, 01 Sep 2026 13:59:50 -0700 (PDT)
+Received: from localhost ([2605:8600:200:1a83:fe59:7385:2855:8588])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-66f986afd80sm444525d50.20.2026.09.01.13.59.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Sep 2026 13:59:49 -0700 (PDT)
+Date: Tue, 1 Sep 2026 16:59:46 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Michal Hocko <mhocko@suse.com>
+Cc: David Stevens <stevensd@google.com>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] memcg: Don't call schedule_work when no spinning is
+ allowed
+Message-ID: <20260901205946.GL3004@cmpxchg.org>
+References: <20260831234339.280376-1-stevensd@google.com>
+ <apYXCL_GJs9Ovu0v@linux.dev>
+ <CAOiLmNEV8b3TW_Q7+h5mYrZ1Nw73XcPFPUsapeYObLYajq_PJw@mail.gmail.com>
+ <20260901142552.GG3004@cmpxchg.org>
+ <apbyZgB_Zu-DK8pN@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260828180322.730419-1-longman@redhat.com> <ba138f23-6972-44c8-8ce5-80de1f50891c@linux.dev>
- <85411b3f-bcbd-4a7e-99a5-49a465ca2df8@redhat.com>
-In-Reply-To: <85411b3f-bcbd-4a7e-99a5-49a465ca2df8@redhat.com>
-From: Farhad Alemi <farhad.alemi@berkeley.edu>
-Date: Tue, 1 Sep 2026 13:55:36 -0700
-X-Gm-Features: AcwNN1VD3djn7rU681MM0gPsbT7bDdd9EX-NdctA3Cep3e36lV4eXPZoh5Q-0g0
-Message-ID: <CA+0ovCg3BcogTUuqZwboEaZW41dkcsAV3nWjENOHc5ZFGaEarA@mail.gmail.com>
-Subject: Re: [PATCH] cgroup/cpuset: Handle cpu hotplug race in guarantee_active_cpus()
-To: Waiman Long <longman@redhat.com>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary="000000000000b98a53065a72242b"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <apbyZgB_Zu-DK8pN@tiehlicka>
 
---000000000000b98a53065a72242b
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Tue, Sep 01, 2026 at 05:42:30PM +0200, Michal Hocko wrote:
+> On Tue 01-09-26 10:25:52, Johannes Weiner wrote:
+> > On Mon, Aug 31, 2026 at 06:04:57PM -0700, David Stevens wrote:
+> [...]
+> > > There would be no guarantee that memcg reclaim would ever be
+> > > triggered, which also would also stop MEMCG_HIGH events from being
+> > > generated. Overall that seems a more serious than just dropping
+> > > userspace notifications like is done for MEMCG_MAX.
+> > 
+> > I'm leaning that way too. It's an indefinite error, and it's a freely
+> > programmable surface.
+> 
+> I am really curious about the indefinite error side of things. It has
+> been my understanding that these NMI safe charges are a) rare and b)
+> there is userspace running so eventually any discrepancies would
+> resolve so the excess is temporary.
 
-Apologies for the delay in response. Upon our run, the patched kernel
-388b607d107c07aaade04c7f22f344cab6bdccd3 no longer panics when facing
-the attached reproducer.
+So I think the question is what limits the error in both space and
+time. When you say it's rare and userspace fixes it, it basically
+means the answer is: luck of the common case.
 
-Thanks!
+But that doesn't help the worst case that can be triggered.
 
-On Mon, Aug 31, 2026 at 5:09=E2=80=AFPM Waiman Long <longman@redhat.com> wr=
-ote:
->
-> On 8/30/26 9:50 PM, Ridong Chen wrote:
-> >
-> >
-> > On 8/29/2026 2:03 AM, Waiman Long wrote:
-> >> With commit 2125c0034c5d ("cgroup/cpuset: Make cpuset hotplug
-> >> processing synchronous"), the cpuset hotplug operation becomes
-> >> synchronous. That commit also removes the code that handles the race
-> >> between cpuset_hotplug_work and cpu hotplug notifier with the assumpti=
-on
-> >> that race is now gone. Later commit 7a0aabd9ce69 ("cgroup/cpuset:
-> >> Always use cpu_active_mask") updates the cpuset code to always use
-> >> cpu_active_mask instead of cpu_ohline_mask in various places including
-> >> guarantee_online_cpus() which is also renamed to guarantee_active_cpus=
-()
-> >> in that commit.
-> >>
-> >> In the case of CPU offline operation, cpuset_active_mask is updated
-> >> first in sched_cpu_deactivate() to remove the offline CPU before
-> >> cpuset_handle_hotplug() is called to update the effective_cpus of the
-> >> affected cpusets. The cpu_online_mask is updated after that near the e=
-nd
-> >> of the offline operation to remove the offline CPU. As a result, the
-> >> race
-> >> comes back and the top cpuset may not have any active CPU leading to
-> >> NULL
-> >> pointer dereference during the race window when guarantee_active_cpus(=
-)
-> >> is called after cpu_active_mask is updated to remove the CPU to be tor=
-n
-> >> down but before cpuset_handle_hotplug() is able to properly update the
-> >> effective_cpus of the top cpuset.
-> >>
-> >
-> > Hi Longman,
-> >
-> > Thank you for the patch. I believe it should resolve the issue.
-> > Could Farhad please verify whether it works as expected?
-> >
-> >> Fix this by adding back the NULL cs check to avoid this problem.
-> >> However,
-> >> the output of guarantee_active_cpus() will be unreliable during that
-> >> race window.
-> >>
-> >
-> > If guarantee_active_cpus() can return unreliable results during that
-> > race window, should it instead return an error when it cannot
-> > guarantee that the active CPUs are usable? Otherwise, callers might
-> > use an incorrect 'pmask', which could lead to other issues downstream.
->
-> I am thinking about that too. However, the change will be more extensive
-> and it is that easy to figure out if we are the in the race window. So
-> more thought will be needed before we can make that change. In the mean
-> time, we have to fix the NULL pointer dereference and it has behaved
-> like that before.
->
-> Cheers,
-> Longman
->
-
---000000000000b98a53065a72242b
-Content-Type: application/octet-stream; name="reproducer.c"
-Content-Disposition: attachment; filename="reproducer.c"
-Content-Transfer-Encoding: base64
-Content-ID: <f_mtj4rdg80>
-X-Attachment-Id: f_mtj4rdg80
-
-LyoKICogUmVwcm9kdWNlciBmb3IgMTY2LWdlbmVyYWwtcHJvdGVjdGlvbi1mYXVsdC1pbi1jcHVz
-ZXQtY3B1cy1hbGxvd2VkLgogKgogKiBCdWlsZDogZ2NjIC1wdGhyZWFkIC1zdGF0aWMgLU8wIC13
-IC1vIHJlcHJvIHJlcHJvZHVjZXIuYwogKiBSdW46ICAgYXMgcm9vdCBpbiBhIGRpc3Bvc2FibGUg
-Vk0uCiAqLwojZGVmaW5lIF9HTlVfU09VUkNFCiNpbmNsdWRlIDxmY250bC5oPgojaW5jbHVkZSA8
-cHRocmVhZC5oPgojaW5jbHVkZSA8c2NoZWQuaD4KI2luY2x1ZGUgPHN0ZGlvLmg+CiNpbmNsdWRl
-IDxzdHJpbmcuaD4KI2luY2x1ZGUgPHN5cy9zdGF0Lmg+CiNpbmNsdWRlIDx1bmlzdGQuaD4KCiNk
-ZWZpbmUgQ0cgIi9zeXMvZnMvY2dyb3VwIgoKc3RhdGljIHBpZF90IHZpY3RpbTsKCnN0YXRpYyB2
-b2lkIHdyKGNvbnN0IGNoYXIgKnBhdGgsIGNvbnN0IGNoYXIgKnZhbCkKewoJaW50IGZkID0gb3Bl
-bihwYXRoLCBPX1dST05MWSk7CgoJaWYgKGZkIDwgMCkKCQlyZXR1cm47Cgl3cml0ZShmZCwgdmFs
-LCBzdHJsZW4odmFsKSk7CgljbG9zZShmZCk7Cn0KCnN0YXRpYyB2b2lkIGNnX3dyKGNvbnN0IGNo
-YXIgKmdycCwgY29uc3QgY2hhciAqZmlsZSwgY29uc3QgY2hhciAqdmFsKQp7CgljaGFyIHBhdGhb
-MTI4XTsKCglzbnByaW50ZihwYXRoLCBzaXplb2YocGF0aCksIENHICIvJXMvJXMiLCBncnAsIGZp
-bGUpOwoJd3IocGF0aCwgdmFsKTsKfQoKc3RhdGljIHZvaWQgKmNwdTFfZmxhcCh2b2lkICp1bnVz
-ZWQpCnsKCWZvciAoOzspIHsKCQl3cigiL3N5cy9kZXZpY2VzL3N5c3RlbS9jcHUvY3B1MS9vbmxp
-bmUiLCAiMCIpOwoJCXdyKCIvc3lzL2RldmljZXMvc3lzdGVtL2NwdS9jcHUxL29ubGluZSIsICIx
-Iik7CgkJY2dfd3IoImhvbGRlciIsICJjcHVzZXQuY3B1cy5wYXJ0aXRpb24iLCAicm9vdCIpOwoJ
-fQoJcmV0dXJuIE5VTEw7Cn0KCmludCBtYWluKHZvaWQpCnsKCWNoYXIgcGlkWzMyXTsKCWNwdV9z
-ZXRfdCBjcHUwX29ubHk7CglwdGhyZWFkX3QgZmxhcHBlcjsKCgl3cihDRyAiL2Nncm91cC5zdWJ0
-cmVlX2NvbnRyb2wiLCAiK2NwdXNldCIpOwoJbWtkaXIoQ0cgIi9ob2xkZXIiLCAwNzU1KTsKCgl2
-aWN0aW0gPSBmb3JrKCk7CglpZiAoIXZpY3RpbSkgewoJCXBhdXNlKCk7CgkJX2V4aXQoMCk7Cgl9
-CgoJY2dfd3IoImhvbGRlciIsICJjcHVzZXQuY3B1cyIsICIwIik7CgljZ193cigiaG9sZGVyIiwg
-ImNwdXNldC5jcHVzLmV4Y2x1c2l2ZSIsICIwIik7CgljZ193cigiaG9sZGVyIiwgImNwdXNldC5j
-cHVzLnBhcnRpdGlvbiIsICJyb290Iik7CgoJc25wcmludGYocGlkLCBzaXplb2YocGlkKSwgIiVk
-IiwgZ2V0cGlkKCkpOwoJY2dfd3IoImhvbGRlciIsICJjZ3JvdXAucHJvY3MiLCBwaWQpOwoKCXB0
-aHJlYWRfY3JlYXRlKCZmbGFwcGVyLCBOVUxMLCBjcHUxX2ZsYXAsIE5VTEwpOwoKCUNQVV9aRVJP
-KCZjcHUwX29ubHkpOwoJQ1BVX1NFVCgwLCAmY3B1MF9vbmx5KTsKCWZvciAoOzspCgkJc2NoZWRf
-c2V0YWZmaW5pdHkodmljdGltLCBzaXplb2YoY3B1MF9vbmx5KSwgJmNwdTBfb25seSk7CglyZXR1
-cm4gMDsKfQo=
---000000000000b98a53065a72242b--
+Like I said, if we need to have code to handle that !allow_spinning
+case anyway, I'd rather just have a few lines of working code than a
+(lengthy) comment explaining the luck of the common case.
