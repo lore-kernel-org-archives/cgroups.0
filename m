@@ -1,51 +1,78 @@
-Received: from outbound.ms.icloud.com (ms-2002e-snip4-11.eps.apple.com [57.103.74.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA7D147125F
-	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 16:16:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.74.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 371B9481FC2
+	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 16:47:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788279370; cv=none; b=L6y/o6t0g1dafp2YMgBkXzr2IH4goFtaxu+fCy3oKJVxrkwLCJ+IEH4eKl6DLx2snTgbNc2VeFMuPyv4tr7aCKI5z4vZH9+DTtyjA06bBk42JPagItddnUXsAMTH9O+BqEMMZNM2fvtrqrW5K3YVVtX6ZLFYYQ9xzFvznCp2tu8=
+	t=1788281271; cv=none; b=Cdd1RJID4g8U66iNQquKT85J4kLvNIH9CoQw8UWk9BOBCVn2YPRQqdnXDZoFC6jEFI4P3tOx8vgdKRv8eSg4dZZCIsqb6jR9FVx6KjevjqSbKrdjb0qIJED36xTbRW8vBIfmZGn90t7pefqOLUMMJgbkpRMYtZXtBPJ1BlTL5bY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788279370; c=relaxed/simple;
-	bh=ADeAwl/QAQsfvBfXlydlcUIFk1c+X9XIJs46t7uZFvI=;
+	s=arc-20240116; t=1788281271; c=relaxed/simple;
+	bh=3R8Bg53JyAhCy2qvymO/9qJ99ABaUImHkGF3d2fo+cQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tL+OHpIxVs7D6Jr8wkxjKse5eg36nD/WIRc5hSzp9eXLpQht+HRuv0OvN92IKkr2tC0LKBFemqRXj6btH55oXDRdkPm/nuL6EC3PbEVh6SkHoKQtS14y36RhrfACDhjqimozIIWznzBx6RIjP2ZWksyxFNLsalHkj9EaQox3/2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=RfeGA9Tu; arc=none smtp.client-ip=57.103.74.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=MQ0dNkJ/Ig4RLCRPALjOrSlmqYaHs/uKH7wHkZ0WftUtE5CePrgGpnYITTjj/a5M8xYcafivQ9dTzWOpOZL8ljiFY2eU6I6YaR2tinKuGIGjeawE41CERkirYC80VRK+huRwZHXaZGkVo5T90x2CMO0KylDVyL1rwJk7eLFh3Ws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=LaMI0RE2; arc=none smtp.client-ip=209.85.128.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="RfeGA9Tu"
-Received: from outbound.ms.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-west-3a-100-percent-6 (Postfix) with ESMTPS id 7DE5B1800498;
-	Tue, 01 Sep 2026 16:16:03 +0000 (UTC)
-X-ICL-RepId: 01a05dc1-9780-74fc-a8a0-dd5f50e2776f
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQtPHV4PRQNECFYCVAVLVxQEGlUKQgRyGVoUXBhTRVEfVFhVCQoCURxWDVdDVARfUEsbDlwOS1oVVRcOAkIfUB9MFldDWhgcGVoUXBhTRVEfVFhDGUVWaUELTx1dGVscQmRYVwkKAlEcVg1XQ1QEX1BUEVdQCwpCEg83dCxwU2IlQSJZXG8rcDl3P3UseSx1JXZVfi4HVRIEQAhWUF4IXh9MHA==
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1788279368; x=1790871368; bh=92qr28gxcvqaJAUGFwtri5MG2JfmT72Ftu72VmuCjoI=; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:x-icloud-hme; b=RfeGA9TuauXRozQTLe9xY/kU20nyeZq81kUUcXlM7EejF7S2n/yO5GMEql4LBO1qqdWUpVFsWrZjskpxVip0+E7DWmg6+yIveonu8+5bgFn5RoUQ13JvVJiMTAH/Y4s0yUy188WwWqp9MdKjGdglsbV5fOBRCa3TbGM8iUTU9R2/XeeNmjLwv1M70JuAmAY6GXC3zWLV4i9mOED6F6KhyO7B5/HP3uE3Nl9slgON3WqgGzgU2ghdhAcRL56lsz0HB7Y84si7uKicJbuhC+uXYuknzjvVrXW+A/qIgKpO7nipqgrzx8vNx1ac2xisbQP/N3Jf7KPCMyOobZx+nw4BBw==
-mail-alias-created-date: 1772519804199
-Received: from BINGFANGGUO-MC0 (unknown [17.156.208.39])
-	by p00-icloudmta-asmtp-us-west-3a-100-percent-6 (Postfix) with ESMTPSA id D4496180048E;
-	Tue, 01 Sep 2026 16:15:57 +0000 (UTC)
-Date: Wed, 2 Sep 2026 00:15:52 +0800
-From: Bingfang Guo <bfguo@icloud.com>
-To: bingfangguo@tencent.com
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="LaMI0RE2"
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-81f3b227a4aso2865657b3.1
+        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 09:47:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1788281267; x=1788886067; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ZG1Y/lCpTOfNL04ELiR/+tH7Q8YET/r11fYlIJBd10U=;
+        b=LaMI0RE2h3tDo0ppj7PzcMUt/pdKX78jQE3u0MHPUaomO/eFvixVpKNnhJysu4VgLY
+         OCSgWTwnbbYBLeedBzxgt5fhOYlzG26pScf0JMaWs6/+oge9ZT27jZaI+ekdj3yBY3fD
+         +sp+OOOQr5pfGyoUSCNtk06qLwQKkDpMABBhmFk1QiNz8WafA2dWl+DW/nxLFUbiBgg9
+         LxXUrgCJILJf8k42CHynLWbJVPN/Vbn988Jvd78YwHCBN+vwIBOsHMFbd038KhLwf9HH
+         00AjAaHjcPM/jtq3a2lr4ugVVYfT1F0ivmQnAsEn8AK2gMBe4BVL3EbPqpaUBRkStjLJ
+         L6xg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788281267; x=1788886067;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ZG1Y/lCpTOfNL04ELiR/+tH7Q8YET/r11fYlIJBd10U=;
+        b=J83v5XBZQUqZ+OPG7kYVJsik1rKJiwgcgx926KbKVgegXE06ay3RH06xbjGArJbK+b
+         LWVnGpvYbAGlOvi2rF+DFCj/4Id+cm2oqdncvh2s5sI6+6ykbTu0fseYTBX5uxELVXIQ
+         Ikabu9oMSHlr4P3z8NBo45FZp6ChWgu2bsYfqzGdaRM9fkQH9NmYc+frcn+Qq+RyMq2H
+         t4AMDliEl67HIqSs2xsduAlWKEsOxtO1KmXHw/V/jZwD6/ei8H+fgKjd1cMfO3B1oK6o
+         qgymyNmJUk5tsHpankU/9uIqfk1G/PEhxIyWx39fhOYMgGNLiXogFLaDYQSJ3q1VC9n0
+         cr2Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxBuC1He0SpMVFMmXEjxBAaoaaAey95tYJv/4/cpkx9LCQFNoNFT+OL3qjKMcyW+THMUnhRPMPw@vger.kernel.org
+X-Gm-Message-State: AFuF++lhBlgC9pYziz6MiiFKbWO1GL7F+oO8jlGdGnrZhz53K9+plesM
+	gKEKdjO/3TNvNmR8V3Wf0343LjbXh3h3KnYymk6NPB8n626Wf206sgun8Y1FiMEdiP0=
+X-Gm-Gg: AYBFou123tOH0L3AK5ty+NOm0nBKBDfyCv4QuQtHdljzm/65+e18a0QxK4qhzl1gmKe
+	Cww7PYKla6/qr53Ptldc1s2Cb6nMHbQ0dLeevpo2VvUYrwbg6e+aZAvBruNjeOGkCP/MUc6M8IP
+	SooArmucyGDtgyhlTvUfhMfCg4QaV21UZ/vmW0ps8PZjdvpeHYQ1dV17kYQdZ7otvAO9TZEJ2lV
+	u3RJBtZBTZrcwXn5tm3EnWzxI7F5+mX1eghwo2XIsHFbDs2CcAUFZfWbnJK6MxagthGv242+v8c
+	Rit+R8oFrBrU0BldG48He2FMQM5RS3im504S+ZwV5sV+G0C7k1tndve9eJjPNTGb4MgtV1ZqdRO
+	6d8RTM8wdrkPlithY2rk5RJ6IiF3AcIYoLT2ZMOxDMEL1wy0feuIRi0kFDatIRGiz+lj2uCC0G/
+	Ih6je8S+WusI0joSZxqtpFCqWGhQgvukW8wfiVH/F4MolrBStC4y3L3me1a+hM
+X-Received: by 2002:a05:690c:f14:b0:81e:9826:942c with SMTP id 00721157ae682-85d625bd769mr138767767b3.0.1788281266714;
+        Tue, 01 Sep 2026 09:47:46 -0700 (PDT)
+Received: from localhost ([2605:8600:200:1a83:fe59:7385:2855:8588])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-85e65f146f8sm78197607b3.29.2026.09.01.09.47.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Sep 2026 09:47:45 -0700 (PDT)
+Date: Tue, 1 Sep 2026 12:47:41 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
+	Qi Zheng <qi.zheng@linux.dev>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>,
-	Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC v2 2/6] mm/memcg: get memcgid reference only after
- swap charging success
-Message-ID: <apb6OGAG8PUxZj1X@BINGFANGGUO-MC0>
-References: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
- <20260901-bingfangguo-memcgid-rework-v2-2-8edd7f7a7251@tencent.com>
+	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	Farhad Alemi <farhad.alemi@berkeley.edu>, stable@vger.kernel.org
+Subject: Re: [PATCH] memcg: avoid charging the root memcg from
+ obj_cgroup_charge_pages()
+Message-ID: <20260901164741.GJ3004@cmpxchg.org>
+References: <20260829023251.474083-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -54,108 +81,60 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260901-bingfangguo-memcgid-rework-v2-2-8edd7f7a7251@tencent.com>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAxMDE0NCBTYWx0ZWRfX++g7zNO1O3Nb
- Tegk+uvcq5Wc/U4O4nvpW+alzAoZkzEFWcTpwXXC7Eif66wj9YsRp5FljjQyqVKGW9jjqTj89SB
- QMK5uCFDxdBBW1C9VdSyrqani1+gUT3fk1qrhb/bg7ynSH9ukSR7Ij3MDpTHhG3eKiwkk+rJK3E
- OaGTW4grE7Og2WtHt56PLl9dmqLnKbVgKk+NkqSMcz8Kw1JKZdtPLb1V1SE1r4qn3ZaHuYmoRI9
- uVBuled2e+8aLnc3nUXP5d985b4ENi+C3/2SiBAUkxv+wne50/J50weI7GP3l61STe/r3iew6DF
- O5MOaK52ZWkXZAmbgV6okUDYqY/zWKtQ3iGBU6yrTJnfvbstmv2YlPIl8vMihM=
-X-Proofpoint-ORIG-GUID: RMguB3f-L3dL71g5JI9oNuBIeZ2Q4tjc
-X-Proofpoint-GUID: RMguB3f-L3dL71g5JI9oNuBIeZ2Q4tjc
-X-Authority-Info-Out: v=2.4 cv=SvydKfO0 c=1 sm=1 tr=0 ts=6a96fa44
- cx=c_apl:c_pps:t_out a=kRaGL2Q7qLiahLf3O6OaIA==:117
- a=kRaGL2Q7qLiahLf3O6OaIA==:17 a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10
- a=x7bEGLp0ZPQA:10 a=vu5NlEYW-o8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=GvQkQWPkAAAA:8 a=kWxB-xFdqsxXOBgkBTwA:9 a=CjuIK1q_8ugA:10
-X-JNJ: AAAAAAABr7/9GQ5TggZcjHunDR2Vd2DrQpW4NpfLI0rFWEd+2c2sZMk7Iac0b4cS1Sc70LvYYpTHzTTfFpqEtcgi0UP22nBx5HWtpYaTj1xJan4OR5B87OzsGVQ9o31U11FEBzTXrDCZEKS2xrC9NSuEOfyfJHHiDcUpfNmYrwcVm0L2BUWniyJ/z28WPpEN0hmiLXVXJClUepHynvTZ0/OF5uj/fMbHgQdtuGqw0aaN1J1ZNeCMTiN3eZzIqdDxjlfaPxO86cTPk6f4qzHcjsq+mpU0AZ36hVoL/iTyePu0qWgcMcjPJWMJ5/YPLxiHxJEj1IO130W5cvCsFppg1v5QqR4SVPUpZoq3Of8+Dv0nvyIce+SbFbSdGcLcD5B2SY/14DAfYkXk+BVXKQCf83Jyx3KdEXqi9NDAMhVmdin4fyTslczsWkTnlLztY+Xk6HAkIGvfK8dNVzsCRVVzEPyGZl321P3/V+w+dc9YBnTCCNjai7orQfggu3JrbxBJ18Mg7Wa1Via/jrEglS0cn9M6kxaybilRczWVV3NnP9oulF4Ga9l09/mJNgoKrB+lDP5FCp+Mi3TOIFAn8VpCu14mw3rL6YRALiMV+i9q+8KUkpQ/jD5YYoSQYEKeH2yOroChoAcD5iHemK7UbuVN2a7T7M5BzeFTbmH3la+DXdeqmFmTNIDQpPOdeMWaJPOvcXbwfDuyaTaAdv6igdqRY4y7XK770u/90NPlEVDWw2DZjhFPmPxN4M1OuzE4tVORG9gnn2c+UGBXvGPK9GKVZ+JE7gW1LCqohEafVjnCVrse5kUBoQpf7Wb7aWenhkb7jhKlqmTt7LuIM07/ROb9zoN0s+sNCFFX2GfFLJk6Y5gsJNFDWrBL14PMVrYAEwi87wENCJ8UtHcgvepkYo297dbIKKE1tl9WTpabvVAJs5hOfCXx3yu1iZmngLsJb2QH4FOyNzexKBcjzVh6gF39gKHQBiWXTXc
- U04aZhQ9hhFhs1ypRSoS8+Mjp3TEB39i6PTYNn5dYDpMrIgO4ZeAiTAJHMF234B9/sNoic5K9T0XOELG7SycnCjDGsvZnKIY6Cq+CLBbDE+RP5GShVQoYrWxAM96S6sOFwmX4gmMgNL+FMiBePYCMbDHh6CYk8VxMdDr02eC+dw+vFVciu8DTufMUxa66Z7JP9fciVVjFduVc6KGYac8RS54TRKrZry+YwjUtbZywv6VbX81H2r+Z2hJWnUCq1XfEETtnOs1LH8SkJK0O+ea+HT+KxazGUg5NQnyITuPUlfBGPujwQuw/bHgo+VfdkhEAjP7Z/D24kq+0rEG3vZcx62VkNPrZSQ+lGxJz9QDAgUfayvGLrmuqTI8YWEUY9lYpoVJp9+y7g6mVTkeuQ3js2hzzz4O7KKN7ydsR/Dzpz7/3QyrmNzDVV6QUcwNE5eKPllX4tAkVKmv/W48jmA==
+In-Reply-To: <20260829023251.474083-1-shakeel.butt@linux.dev>
 
-Forwarding reviews from Sashiko:
-> > From: Bingfang Guo <bingfangguo@tencent.com>
-> > 
-> > __mem_cgroup_try_charge_swap() pinned the memcg private id before the
-> > swap counter was charged and had to undo the pin on the failure path.
-> > Hold RCU lock for an extended period (which should be fine,
-> > __memcg1_swapout() does this as well) so concurrent memcg release can
-> > be avoided, and take the id reference to its online parent only after
-> > charging has succeeded.
-> > 
-> > The failure path is now a plain return, and the id is only pinned for
-> > entries that actually end up charged to swap.
-> > 
-> > Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
-> > ---
-> >  mm/memcontrol.c | 15 +++++++++------
-> >  1 file changed, 9 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 31cec9dde55f0..ecb4fb07d7735 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -5755,6 +5755,7 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
-> >  	struct page_counter *counter;
-> >  	struct mem_cgroup *memcg;
-> >  	struct obj_cgroup *objcg;
-> > +	unsigned short memcgid;
-> >  
-> >  	if (do_memsw_account())
-> >  		return 0;
-> > @@ -5772,22 +5773,24 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
-> >  		return 0;
-> >  	}
-> >  
-> > -	memcg = mem_cgroup_private_id_get_online(memcg, nr_pages);
-> > -	/* memcg is pined by memcg ID. */
-> > -	rcu_read_unlock();
-> > +	while (memcg_is_dying(memcg))
-> > +		memcg = parent_mem_cgroup(memcg);
-> >  
-> >  	if (!mem_cgroup_is_root(memcg) &&
-> >  	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
-> >  		memcg_memory_event(memcg, MEMCG_SWAP_MAX);
-> >  		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
-> > -		mem_cgroup_private_id_put(memcg, nr_pages);
-> > +		rcu_read_unlock();
-> >  		return -ENOMEM;
-> >  	}
-> >  	mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
-> >  
-> > +	memcg = mem_cgroup_private_id_get_online(memcg, nr_pages);
-> > +	memcgid = mem_cgroup_private_id(memcg);
-> > +	rcu_read_unlock();
+On Fri, Aug 28, 2026 at 07:32:51PM -0700, Shakeel Butt wrote:
+> obj_cgroup_charge_pages() resolves the objcg to its memcg and calls
+> try_charge_memcg(), which does not short circuit the root memcg.  That
+> memcg can be the root memcg: obj_cgroup_is_root() reflects the memcg the
+> objcg was created for and is never updated, while memcg_reparent_objcgs()
+> does redirect objcg->memcg to the parent on rmdir.  An objcg of a dying
+> child of root therefore passes every obj_cgroup_is_root() filter but
+> resolves to the root memcg.
 > 
-> Does this introduce a Time-of-Check to Time-of-Use (TOCTOU) race?
-> If a concurrent cgroup rmdir (triggering css_offline) occurs exactly between
-> page_counter_try_charge() and mem_cgroup_private_id_get_online(), could it
-> drop the child's ID refcount to zero?
-> The subsequent ID lookup would climb to the parent, recording the parent's ID
-> in the swap cache while the child's counter was already charged. This could
-> leave the child's swap page_counter and MEMCG_SWAP stat permanently charged
-> when destroyed.
-> Additionally, could the parent cgroup's MEMCG_SWAP stat receive a spurious
-> uncharge upon swap-in, causing it to permanently under-report swap usage and
-> corrupting the memory.stat output?
+> Folios keep the objcg they were charged with, so this is easy to reach
+> through zswap: allocate anon memory in a cgroup, move the task out,
+> remove the cgroup, then write to the root cgroup's memory.reclaim.  The
+> reclaimed folios are charged through the reparented objcg and end up in
+> refill_stock() with the root memcg:
 > 
+>   WARNING: mm/memcontrol.c:2198 at refill_stock+0x644/0x940
+>    refill_stock+0x644/0x940
+>    try_charge_memcg+0x12d6/0x1570
+>    __obj_cgroup_charge+0x35/0xf0
+>    obj_cgroup_charge+0x1de/0x210
+>    obj_cgroup_charge_zswap+0x83/0x270
+>    zswap_store+0x1620/0x2000
+>    swap_writeout+0x94c/0x14c0
+>    shrink_folio_list+0x3388/0x52b0
+>    [...]
+>    try_to_free_mem_cgroup_pages+0x30d/0x830
+>    user_proactive_reclaim+0x504/0x840
+>    memory_reclaim+0x1f/0x30
+> 
+> Beyond the warning, the charge is asymmetric: obj_cgroup_uncharge_pages()
+> skips refill_stock() for the root memcg, so the root's page counter grows
+> and is never uncharged.  It is not user visible, since memory.current is
+> not exposed on the root, but it is a leak.
+> 
+> Use try_charge(), which returns early for the root memcg, restoring the
+> symmetry with obj_cgroup_uncharge_pages().
+> 
+> The above sequence was scripted into a standalone reproducer (zswap on,
+> swap on a virtio disk, 512MB of anon memory faulted in inside a child of
+> the root cgroup, the task then migrated to the root cgroup, the child
+> removed, followed by "echo 600M swappiness=max > memory.reclaim" on the
+> root) and run in a CONFIG_DEBUG_VM=y VM.  It reproduces the splat on the
+> first zswap store of a reparented folio, with the same call chain as the
+> report.  With this patch applied the splat is gone while the zswap store
+> count over the run is unchanged, so the same path is still exercised.
+> cgroup selftests test_zswap, test_kmem and test_memcontrol show no new
+> failures.
+> 
+> Fixes: 20d6c1725228 ("memcg: avoid refill_stock for root memcg")
+> Reported-by: Farhad Alemi <farhad.alemi@berkeley.edu>
+> Closes: https://lore.kernel.org/all/CA+0ovCgWzUMK+nNbbtH7eV65Ca=fDN4Ozu7iASgryjvv8Tk8zQ@mail.gmail.com/
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 
-Just as I replied in patch 4, offlining shouldn't happen with rcu read lock
-held, so actually this won't happen and we should always get the memcg itself...
-And even if we are getting the ancestor it should be fine, uncharging can be
-done for its online ancestor and stat will be consistent.
-
-Maybe we can release the rcu lock earlier or remove the retry logic when we get
-the memcgid reference?
-
-> > +
-> >  	ci = swap_cluster_get_and_lock(folio);
-> > -	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages,
-> > -			  mem_cgroup_private_id(memcg));
-> > +	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages, memcgid);
-> >  	swap_cluster_unlock(ci);
-> >  
-> >  	return 0;
-> > 
-> > -- 
-> > 2.43.7
-> > 
-> > 
+Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
