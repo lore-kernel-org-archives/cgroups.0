@@ -1,59 +1,81 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 005AE3921CE;
-	Tue,  1 Sep 2026 01:23:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B95233721;
+	Tue,  1 Sep 2026 01:43:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788225827; cv=none; b=s4Ro612nELyFpl5bPBqkutilXKPVMCOCW0Efe+1ZaYelZ1XpB3wn3/KMFmOsc5Vc2YfxoCPFMkVzq2aSu3yzkHLLLe7q6OdBDb8MtIlWm43DNyuYrNKKQxmHtUZ/UZVzn/lJr4uouruzjno5ZnHtoXH9eQhrLt7rO6tg+HK/Jdg=
+	t=1788227003; cv=none; b=PgIURGZcAOQgZF/68J2IM/SpauK9/xCq0OKXhiQEUj1iWGWhH0O4L3LJd116e+KQeWngQR/S6WIo1fSLeYg9plw5Z1u0NFv6TRalYWgjwEMBgxylfzpcDcWyzGu/yJ7uhxsya4+Dsqjkf9vSZMou4Ofd+YIkcsDtky8++b3IMYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788225827; c=relaxed/simple;
-	bh=jvL8s4sRjuHKostLJ5wltrklxxOsv6ymzdGE1Jx0d8U=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=APVfVJirQ+KiVU2c67/ta1yPpdlOOJJp16Wip3IWER/6Qnx9j2yTKLWeunpvNrewvCOHd+P8wSs1yayNVz3dycBR050X+owirhJ+ax/Wf2k4Gd31XbdWAVQ7LBzrOVDEvM2dCdzbbmA+NPdCFW3v5BRv8Z3RgkXk/wIEgoUlCVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gUKKIDLB; arc=none smtp.client-ip=192.198.163.16
+	s=arc-20240116; t=1788227003; c=relaxed/simple;
+	bh=RtYKfymBNp9KvWTyDmEZgzY+yJgX+7+dkVBS2iKKpbg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=nCzebmH+MqKAkix45OChST4tAg7mG2BpEqpUV/W25FgH7JlabPxpmZO3f60ErwbmNfAYFSwzZnr3khi+JVlEQITOwuiXWoJlji5V6uyRuHMPNdTFwCpJHy6yzBc6LO0p7JhNqBS+oisNrXjbIY6gr9YRUI8kgyFyBuONdJxL7T4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OxuXNRoZ; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gUKKIDLB"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OxuXNRoZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788225826; x=1819761826;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=jvL8s4sRjuHKostLJ5wltrklxxOsv6ymzdGE1Jx0d8U=;
-  b=gUKKIDLBzEPH/pcBThdenheULofysbuS0V0STj2+KTCyxFrQ6AKVlyN2
-   K6Kl4yU3ZhC5FuM2G45Rjht0viXA62xzqSUSXL6f+rDQ4vQJu6jkXiVOd
-   fNAIGfrXdCPujSe4I44MmArJM1jTMu/CmlKB8yttkFEvO2fghZMHr07q0
-   wv8hwLi6wPEKTfr/MQR7A084d/tUTLl9G64gidN3PxdAIgGxfVsxGJ3BN
-   mivM28NSBLL4vjJ65hOhJY6j06TUMfLul94NeW1o9F/3SYdacYItdehJz
-   UB4MQnatAvVnszeH9YNjd7G5YSkO2lQ7IZgRg/i1aYIgrmIjuEHBA96us
-   g==;
-X-CSE-ConnectionGUID: hK3RV5lGSNqX9oBTGCSCZA==
-X-CSE-MsgGUID: IQFxeENPSFq35+H9qQCXqA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11892"; a="76190678"
+  t=1788227000; x=1819763000;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=RtYKfymBNp9KvWTyDmEZgzY+yJgX+7+dkVBS2iKKpbg=;
+  b=OxuXNRoZbeMhHzlxYC81ZkjH9pDwzsc8K4NekhGfKXAgP24SJrAxjKA8
+   1Gm9o1qt/0TKLTOv0i+FtG0TNX5LR0xNQufjqb0BZcNOJ50Gouz3Z2Hc1
+   cMQl5gbQzelJKzo8vwnjRcuzj3WtdXUqDp7ZbGJI71WJaSqyOHvZSyWEc
+   hFAdZ+Md+n8qclUSIXHfLtreCUxHs6uCF71NnuPo1L4AuMaA+19x6lCtT
+   TVnrrUVfyTZsqnLQNFns4rAn3Lll4CHG+WUmvD8Cy/CHQf/MUxNiHQRS7
+   2nHec3RxN4YE6Jwk0fQ1ssbjtYn4mn0hBNgMs2kO0XsC6w0P4sMolcYAj
+   A==;
+X-CSE-ConnectionGUID: VB0LFxPFQxSTGdrDgCBxbA==
+X-CSE-MsgGUID: HR5wpLpATyav5a8px76fHg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11892"; a="106164298"
 X-IronPort-AV: E=Sophos;i="6.25,255,1779174000"; 
-   d="scan'208";a="76190678"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 18:23:45 -0700
-X-CSE-ConnectionGUID: aplSqfJuQoeJ0IH9cB/tXg==
-X-CSE-MsgGUID: IypmSCzZQv+5Yb2qGacs4A==
+   d="scan'208";a="106164298"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 18:43:19 -0700
+X-CSE-ConnectionGUID: qBb9qxWMQLydzmJilke+1g==
+X-CSE-MsgGUID: JA2nDKJhT02Nus7N07a2Tg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,255,1779174000"; 
-   d="scan'208";a="272730977"
-Received: from tester.sh.intel.com ([10.112.106.126])
-  by orviesa004.jf.intel.com with ESMTP; 31 Aug 2026 18:23:43 -0700
-From: Tao Yu <tao1.yu@intel.com>
-To: tj@kernel.org,
+   d="scan'208";a="273136121"
+Received: from junjie-desk-dev.bj.intel.com ([10.238.152.71])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 18:43:11 -0700
+From: Junjie Cao <junjie.cao@intel.com>
+To: syzbot+2642f347f7309b4880dc@syzkaller.appspotmail.com
+Cc: akpm@linux-foundation.org,
+	cgroups@vger.kernel.org,
 	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
+	jackmanb@google.com,
 	linux-kernel@vger.kernel.org,
-	Tao Yu <tao1.yu@intel.com>,
-	syzbot+bb2e19a1190a556c01b1@syzkaller.appspotmail.com
-Subject: [PATCH] cgroup: reject controller re-enable while css teardown is pending
-Date: Tue,  1 Sep 2026 09:23:42 +0800
-Message-Id: <20260901012342.855056-1-tao1.yu@intel.com>
-X-Mailer: git-send-email 2.34.1
+	linux-mm@kvack.org,
+	mhocko@kernel.org,
+	mhocko@suse.com,
+	muchun.song@linux.dev,
+	netdev@vger.kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	surenb@google.com,
+	syzkaller-bugs@googlegroups.com,
+	vbabka@suse.cz,
+	ziy@nvidia.com,
+	hdanton@sina.com,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	horms@kernel.org,
+	jhs@mojatatu.com,
+	jiri@resnulli.us,
+	vinicius.gomes@intel.com
+Subject: Re: [syzbot] [mm?] INFO: rcu detected stall in exit_to_user_mode_loop
+Date: Tue,  1 Sep 2026 09:43:03 +0800
+Message-ID: <20260901014303.417027-1-junjie.cao@intel.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <6887ebf4.a00a0220.b12ec.00ae.GAE@google.com>
+References: <6887ebf4.a00a0220.b12ec.00ae.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -62,118 +84,142 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Writing cgroup.subtree_control currently calls cgroup_kn_lock_live() with
-drain_offline=true and can therefore block in cgroup_lock_and_drain_offline()
-before taking cgroup_mutex.
+#syz test: git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git abdf623ddb75b24659018d3952d8f61937306ae5
 
-After 1dffd95575eb ("cgroup: Defer kill_css_finish() in
-cgroup_apply_control_disable()"), disabling a controller can leave CSS_DYING
-csses behind until the subtree is fully drained. If userspace re-enables a
-controller before that teardown completes, the write path may wait
-indefinitely from kernfs context. syzbot reported this as hung tasks stuck in
-cgroup_subtree_control_write().
-
-The write side does not need to synchronously drain all pending teardowns. It
-only needs to avoid reusing controller state whose css teardown is still in
-flight. Blocking the user-visible write path in TASK_UNINTERRUPTIBLE is the
-wrong tradeoff here.
-
-Stop draining offline csses from subtree_control and cgroup.type writes.
-Instead, reject the operation with -EBUSY if it would reuse a subsystem which
-still has dying csses in the target subtree. Limit the subtree_control check
-to controllers being newly enabled, and use the current subtree controller
-mask for cgroup.type because threaded conversion re-applies that state.
-
-This preserves the asynchronous teardown model, avoids hung writers in D
-state, and keeps the rejection scoped to the controllers that are actually
-racing with teardown.
-
-Fixes: 1dffd95575eb ("cgroup: Defer kill_css_finish() in cgroup_apply_control_disable()")
-Reported-by: syzbot+bb2e19a1190a556c01b1@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=bb2e19a1190a556c01b1
-Signed-off-by: Tao Yu <tao1.yu@intel.com>
----
- kernel/cgroup/cgroup.c | 40 +++++++++++++++++++++++++++++++++++++---
- 1 file changed, 37 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index c3a12fee7528f..129a9b0752416 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3356,6 +3356,20 @@ void cgroup_lock_and_drain_offline(struct cgroup *cgrp)
- 	}
+diff --git a/net/sched/sch_taprio.c b/net/sched/sch_taprio.c
+index 39ac5b97aa3a..901dfd2484e1 100644
+--- a/net/sched/sch_taprio.c
++++ b/net/sched/sch_taprio.c
+@@ -83,6 +83,10 @@ struct sched_gate_list {
+ 	s64 cycle_time;
+ 	s64 cycle_time_extension;
+ 	s64 base_time;
++	/* min(cycle_time, sum of intervals): the software schedule restarts
++	 * the list after the last entry even when cycle_time is not up yet.
++	 */
++	s64 period;
+ };
+ 
+ struct taprio_sched {
+@@ -871,12 +875,13 @@ static struct sk_buff *taprio_dequeue(struct Qdisc *sch)
  }
  
-+static bool cgroup_has_dying_csses(struct cgroup *cgrp, u32 ss_mask)
-+{
-+	int ssid;
+ static bool should_restart_cycle(const struct sched_gate_list *oper,
+-				 const struct sched_entry *entry)
++				 const struct sched_entry *entry,
++				 ktime_t end_time)
+ {
+ 	if (list_is_last(&entry->list, &oper->entries))
+ 		return true;
+ 
+-	if (ktime_compare(entry->end_time, oper->cycle_end_time) == 0)
++	if (ktime_compare(end_time, oper->cycle_end_time) == 0)
+ 		return true;
+ 
+ 	return false;
+@@ -925,8 +930,9 @@ static enum hrtimer_restart advance_sched(struct hrtimer *timer)
+ 	int num_tc = netdev_get_num_tc(dev);
+ 	struct sched_entry *entry, *next;
+ 	struct Qdisc *sch = q->root;
+-	ktime_t end_time;
+-	int tc;
++	ktime_t end_time, next_start, now;
++	int budget, tc;
++	s64 behind;
+ 
+ 	spin_lock(&q->current_entry_lock);
+ 	entry = rcu_dereference_protected(q->current_entry,
+@@ -952,23 +958,49 @@ static enum hrtimer_restart advance_sched(struct hrtimer *timer)
+ 		goto first_run;
+ 	}
+ 
+-	if (should_restart_cycle(oper, entry)) {
+-		next = list_first_entry(&oper->entries, struct sched_entry,
+-					list);
+-		oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time,
+-						    oper->cycle_time);
+-	} else {
+-		next = list_next_entry(entry, list);
++	now = hrtimer_cb_get_time(timer);
++	end_time = entry->end_time;
++	behind = ktime_sub(now, end_time);
 +
-+	lockdep_assert_held(&cgroup_mutex);
++	/* Behind, e.g. delayed timer or stepped clock: skip whole periods
++	 * arithmetically and walk at most one more to the entry covering
++	 * now, instead of replaying the backlog one expiry at a time. The
++	 * cap bounds the walk; a leftover is picked up by the next expiry.
++	 */
++	if (unlikely(behind >= oper->period)) {
++		s64 jump = div64_s64(behind, oper->period) * oper->period;
 +
-+	for (ssid = 0; ssid < CGROUP_SUBSYS_COUNT; ssid++) {
-+		if ((ss_mask & (1 << ssid)) && cgrp->nr_dying_subsys[ssid])
-+			return true;
-+	}
++		end_time = ktime_add_ns(end_time, jump);
++		oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time, jump);
+ 	}
+ 
+-	end_time = ktime_add_ns(entry->end_time, next->interval);
+-	end_time = min_t(ktime_t, end_time, oper->cycle_end_time);
++	budget = 2 * oper->num_entries;
++	do {
++		if (should_restart_cycle(oper, entry, end_time)) {
++			next = list_first_entry(&oper->entries,
++						struct sched_entry, list);
++			oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time,
++							    oper->period);
++		} else {
++			next = list_next_entry(entry, list);
++		}
 +
-+	return false;
-+}
-+
- /**
-  * cgroup_save_control - save control masks and dom_cgrp of a subtree
-  * @cgrp: root of the target subtree
-@@ -3649,7 +3663,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
++		next_start = end_time;
++		end_time = ktime_add_ns(next_start, next->interval);
++		end_time = min_t(ktime_t, end_time, oper->cycle_end_time);
++		entry = next;
++	} while (unlikely(ktime_compare(end_time, now) <= 0) && budget--);
+ 
++	/* next can be the entry already published as q->current_entry (a
++	 * single-entry schedule, or a catch-up of whole periods), so the
++	 * close times and budgets below are rewritten in place while
++	 * taprio_dequeue_from_txq() may be reading them.
++	 */
+ 	for (tc = 0; tc < num_tc; tc++) {
+ 		if (next->gate_duration[tc] == oper->cycle_time)
+ 			next->gate_close_time[tc] = KTIME_MAX;
+ 		else
+-			next->gate_close_time[tc] = ktime_add_ns(entry->end_time,
++			next->gate_close_time[tc] = ktime_add_ns(next_start,
+ 								 next->gate_duration[tc]);
+ 	}
+ 
+@@ -1130,6 +1162,8 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
+ 				 struct sched_gate_list *new,
+ 				 struct netlink_ext_ack *extack)
+ {
++	struct sched_entry *entry;
++	ktime_t cycle = 0;
+ 	int err = 0;
+ 
+ 	if (tb[TCA_TAPRIO_ATTR_SCHED_SINGLE_ENTRY]) {
+@@ -1152,13 +1186,10 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
+ 	if (err < 0)
+ 		return err;
+ 
+-	if (!new->cycle_time) {
+-		struct sched_entry *entry;
+-		ktime_t cycle = 0;
+-
+-		list_for_each_entry(entry, &new->entries, list)
+-			cycle = ktime_add_ns(cycle, entry->interval);
++	list_for_each_entry(entry, &new->entries, list)
++		cycle = ktime_add_ns(cycle, entry->interval);
+ 
++	if (!new->cycle_time) {
+ 		if (cycle < 0 || cycle > INT_MAX) {
+ 			NL_SET_ERR_MSG(extack, "'cycle_time' is too big");
  			return -EINVAL;
+@@ -1172,6 +1203,7 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
+ 		return -EINVAL;
  	}
  
--	cgrp = cgroup_kn_lock_live(of->kn, true);
-+	cgrp = cgroup_kn_lock_live(of->kn, false);
- 	if (!cgrp)
- 		return -ENODEV;
++	new->period = min(new->cycle_time, cycle);
+ 	taprio_calculate_gate_durations(q, new);
  
-@@ -3689,6 +3703,17 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	if (ret)
- 		goto out_unlock;
- 
-+	/*
-+	 * Disabled controllers are offlined asynchronously. Don't sleep here
-+	 * waiting for them to drain while holding the kernfs write context.
-+	 * Report the in-flight teardown and let userspace retry once the dying
-+	 * csses have gone away.
-+	 */
-+	if (enable && cgroup_has_dying_csses(cgrp, enable)) {
-+		ret = -EBUSY;
-+		goto out_unlock;
-+	}
-+
- 	/* save and update control masks and prepare csses */
- 	cgroup_save_control(cgrp);
- 
-@@ -3788,14 +3813,23 @@ static ssize_t cgroup_type_write(struct kernfs_open_file *of, char *buf,
- 	if (strcmp(strstrip(buf), "threaded"))
- 		return -EINVAL;
- 
--	/* drain dying csses before we re-apply (threaded) subtree control */
--	cgrp = cgroup_kn_lock_live(of->kn, true);
-+	/*
-+	 * Threaded conversion re-applies subtree control, so reject it while a
-+	 * prior controller disable is still offlining csses in the subtree.
-+	 */
-+	cgrp = cgroup_kn_lock_live(of->kn, false);
- 	if (!cgrp)
- 		return -ENOENT;
- 
-+	if (cgroup_has_dying_csses(cgrp, cgrp->subtree_ss_mask)) {
-+		ret = -EBUSY;
-+		goto out_unlock;
-+	}
-+
- 	/* threaded can only be enabled */
- 	ret = cgroup_enable_threaded(cgrp);
- 
-+out_unlock:
- 	cgroup_kn_unlock(of->kn);
- 	return ret ?: nbytes;
- }
--- 
-2.34.1
-
+ 	return 0;
