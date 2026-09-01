@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ABD0473C88;
-	Tue,  1 Sep 2026 08:58:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AA5846EF94;
+	Tue,  1 Sep 2026 08:58:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788253097; cv=none; b=ISm/gAamQeQTOCSxgwLvRXQgIs76sLAzOSNGJsqVe9WkuhmfVefiOA/LBcSq/lD/o0UrRjW0lfm3LyvXyfkoMBsEdm7AMJJcrA01wGeQmmT+nwCnNGHyU7osCASXSv8D345obivIrLP2Jg4M0W+yDsFXRExhimky45AmljtDxtw=
+	t=1788253097; cv=none; b=H3e3p1CYeqJL5Eo2rvFfz/gVUbqw5sXy0un8xjAOW77/6NWySLhystgxJhKILS7RdNRLan0psHm7LfgHYV4j01iy7+tfKGO0jSNsRn8Hou0GtCpInqCeid6nvjd54/OC9cIp35FlovODIPc1GNDL3P00wRnYxok+TlMhPdDv8V0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788253097; c=relaxed/simple;
-	bh=KlUxJ5Oj10Jo6f53V6E/JY8gDtVIZbewdVdCgVfLshY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=WQjxY6FQEuN5YPCB5u3287IONQpb7T24oARyb27AN7/ltG/fJqGlAS1uLlWHIik6CXv4em5cvg7h25+PT4jP9I57/QYjY7xsPGgEaZCbD9wH2npQ0RLAgKvByxGuq48jbd5PjN1vrH/K9/NK6Nkqud8oD0mIbEJHhM0zK4Q81eo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q+wPWbMJ; arc=none smtp.client-ip=10.30.226.201
+	bh=2rsNpbbKndbyocdYHBqGvoSTRhCZGAVV39aajeiQvbw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=dq6d+ag+MwoUEKctd1kZYBe/IQRsb7gXzMeWHuJ8fJRiyXmWG9fzjFAemRBJVfc6XIa1Iire0p+4sQbf+Z3uHYuYSvW38gJrARjYE4HL3Cyj0ZY5Plq3OgEtVPTsypQJSG0JYfA9cLQ+dARUTHL3X/TDxdtiQFomjm9TmsaMzyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kRCDP9kR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q+wPWbMJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CA886C2BCFA;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kRCDP9kR"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B6801C2BCF4;
 	Tue,  1 Sep 2026 08:58:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1788253096;
-	bh=KlUxJ5Oj10Jo6f53V6E/JY8gDtVIZbewdVdCgVfLshY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=Q+wPWbMJCk+meNviZObyUyWu0S1q5aygcJ0vIBA5TP5zHaOm4TplJAiH4BpPFySeO
-	 jXDscHzc0zAOG/HMcwRWXD9XpaWU93ZFF0tfmWiw0bJ01q7Uceqo3IIq7xd/WZuxB9
-	 2swdeXcjeKwomMGwC/lknTFwPgKJfI7c7T+t4n/aNYeh79wtPAmtVgF0ldq5pYhaXl
-	 zghGJbbDc7WYzAwYaqBJsvT/po3TeYmWpCJJ6/qmBVrboEDpdyYxkxcnC9pRBO6LIb
-	 VMVqTb+uDMcXtZ4aPdts5DLvfNV9kFrqi2EdAlj0GaZe/2w3bF9Vh9tn8+amJ8MHri
-	 2tz4YIm78FBEA==
+	bh=2rsNpbbKndbyocdYHBqGvoSTRhCZGAVV39aajeiQvbw=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=kRCDP9kRglnPQjyJSzcjD4Abzpt2HdWFARfsP7NYOJvQKKtr5fswRRJjnxHfiF6wy
+	 gsPJRleHQdLRUIE7ZNGRH03IN/HReQQ5pG89j46UBJC260PPX5gIGZyEH2ylX0S06U
+	 Y9//vQqqc+Cl5ROtPFzvW12eXNSJgqy/EHZXh2jEbEJ5uDZ72VZnZ25r7jyNOQqGNX
+	 d4A/+MSH+2BuqjL09iBrFAZGDITjX5blBvXJnwCAMJCKlxGv9Qgpmon0tqZup1Usn/
+	 EuKpyXd1KNiGvMLYUFviX+aJYITSMdDZ+4dnFHzFZsXjwutIv65hGTPepWREHP0xVH
+	 TBYTpPCGqMUrw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B06C61DD3;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A33A5C61DD6;
 	Tue,  1 Sep 2026 08:58:16 +0000 (UTC)
 From: Bingfang Guo via B4 Relay <devnull+bingfangguo.tencent.com@kernel.org>
-Date: Tue, 01 Sep 2026 16:58:00 +0800
-Subject: [PATCH RFC v2 1/6] mm/memcg: add a helper to kill the memcgid on
- offlining
+Subject: [PATCH RFC v2 0/6] mm/memcg: move memcgid refcount to objcg to
+ unpin dying memcgs
+Date: Tue, 01 Sep 2026 16:57:59 +0800
+Message-Id: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,9 +41,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260901-bingfangguo-memcgid-rework-v2-1-8edd7f7a7251@tencent.com>
-References: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
-In-Reply-To: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
+X-B4-Tracking: v=1; b=H4sIAJeTlmoC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyjHQUlJIzE
+ vPSU3UzU4B8JSMDIzMDCyNz3aTMvPQ0oER6ab5ubmpucnpmim5Ranl+UbaupbFFqpFpanJiUqK
+ REtCAgqLUtMwKsOHRSkFuzkqxtbUA5Vvo4HEAAAA=
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
  Roman Gushchin <roman.gushchin@linux.dev>, 
  Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
@@ -56,11 +56,11 @@ To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, 
  linux-kernel@vger.kernel.org, Bingfang Guo <bingfangguo@tencent.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788253095; l=1251;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788253095; l=3096;
  i=bingfangguo@tencent.com; s=20260812; h=from:subject:message-id;
- bh=3jIkwaCFjFq8QjiGq9DEwjO0Gl2r32Hxoi06xqqEo54=;
- b=fFy5sTfWuAG/5jEHRJE44WgGDDn7U5jjh+8LxOBk/3EumTxFbZ9fB/Db50YLW6h5pywsH36vd
- pgSY2DJLajRDGHE5DuQDgcZ12R0BvZh2CcatUZ1nsRPAiD576IfDQcW
+ bh=2rsNpbbKndbyocdYHBqGvoSTRhCZGAVV39aajeiQvbw=;
+ b=niyCOO6I31iqWLWbba9BN/RcyJmA4XUdfG73eXvhi2yvhf4G3il5zEqKw7xURsTT+nbknaOgH
+ SEQtesn+OCHCSrV8AwoIdhtMQMgrZm5lhO4im7A0OvH0B6Hj8Ev/k12
 X-Developer-Key: i=bingfangguo@tencent.com; a=ed25519;
  pk=q7u9S7d5e7VijWrYF9O+vv9/XvqWduVGtwGtuCObAHE=
 X-Endpoint-Received: by B4 Relay for bingfangguo@tencent.com/20260812 with
@@ -68,46 +68,70 @@ X-Endpoint-Received: by B4 Relay for bingfangguo@tencent.com/20260812 with
 X-Original-From: Bingfang Guo <bingfangguo@tencent.com>
 Reply-To: bingfangguo@tencent.com
 
-From: Bingfang Guo <bingfangguo@tencent.com>
+Although the dying memcg problem caused by LRU pages is fixed, I can
+still see the issue on some workloads that use shmem after those pages
+are swapped out.  This series binds the memcgid refcount to objcgs so
+dying memcgs can be freed normally in this case.
 
-The online state holds one reference on the memcg private id; it is
-released when the memcg goes offline. Put that release behind a small
-helper, mem_cgroup_private_id_kill(), so css_offline() reads clearly
-and the id refcount helpers stay symmetric: get_online() / kill() /
-put().
+The memcg private ID identifies memcgs for objects that can outlive the
+cgroup itself: swap entries and workingset shadows.  Today the ID's
+refcount is embedded in the css, and every outstanding ID reference
+(mostly swap entries) pins the css, keeping the entire memcg alive,
+which brings a problem: A swapped-out page holds a memcgid reference
+that pins the css, so the memcg cannot be freed until the page is
+swapped back in and charged back to its online parent.
+
+The work done by Muchun Song and Qi Zheng already charges folios to the
+objcg, which is reparented to its parent when the memcg offlines.  This
+series applies similar idea to the memcg private ID: the ID's refcount
+moves from the css into the objcg, and the memcgid xarray holds a
+reference to an objcg instead of pinning the css.  When the memcg
+offlines, the objcg is reparented and any remaining memcgid references
+resolve to the ancestor, so swapped-out pages no longer pin the dying
+memcg and get the online parent naturally on swapin.
+
+Patches 1-4 are self-contained preparatory cleanups:
+  - add a helper to drop the online-state reference on offlining
+  - take the memcgid reference only after swap charging succeeds
+  - make mem_cgroup_private_id_put() take the ID instead of the memcg
+  - return the memcg from mem_cgroup_private_id_put() for uncharging
+
+Patch 5 actually moves the refcount to objcgs, and patch 6 makes the
+remaining callers (list_lru, workingset) to filter out memcgs that have
+already been reparented.
+
+Changes in v2:
+- Rework the logic to try to keep changes small.
+- Change order of the commits to make it cleaner.
+- Fix problems reported by sashiko.
+- Reparent to mm-unstable.
+
+RFC v1 contains some scripts and codes for reproducing the problem and
+testing the fix:
+
+https://lore.kernel.org/linux-mm/20260813-memcgid-objcg-v1-0-83d21c685b77@tencent.com/T/#m0e8ce07568e16239ba113c803f27caf308b299e7
 
 Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
 ---
- mm/memcontrol.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+Bingfang Guo (6):
+      mm/memcg: add a helper to kill the memcgid on offlining
+      mm/memcg: get memcgid reference only after swap charging success
+      mm/memcg: pass the id itself instead of memcg for putting ID
+      mm/memcg: return the memcg when putting memcgid
+      mm/memcg: move memcg private ID refcount to objcg
+      mm/memcg: filter out reparented memcgs got from memcgid
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 256b68ffca70e..31cec9dde55f0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4048,6 +4048,11 @@ static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned
- 	}
- }
- 
-+static void mem_cgroup_private_id_kill(struct mem_cgroup *memcg)
-+{
-+	mem_cgroup_private_id_put(memcg, 1);
-+}
-+
- struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg, unsigned int n)
- {
- 	while (!refcount_add_not_zero(n, &memcg->id.ref)) {
-@@ -4385,7 +4390,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- 
- 	drain_all_stock(memcg);
- 
--	mem_cgroup_private_id_put(memcg, 1);
-+	mem_cgroup_private_id_kill(memcg);
- }
- 
- static void mem_cgroup_css_released(struct cgroup_subsys_state *css)
+ include/linux/memcontrol.h |  15 +++---
+ mm/list_lru.c              |   2 +-
+ mm/memcontrol.c            | 117 +++++++++++++++++++++++++++++++++++----------
+ mm/workingset.c            |   2 +-
+ 4 files changed, 100 insertions(+), 36 deletions(-)
+---
+base-commit: 88297631d4d42f6004cb39c0ba3da7d2d10a616f
+change-id: 20260827-bingfangguo-memcgid-rework-938e25ecaba2
 
+Best regards,
 -- 
-2.43.7
+Bingfang Guo <bingfangguo@tencent.com>
 
 
