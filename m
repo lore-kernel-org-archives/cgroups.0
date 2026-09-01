@@ -1,131 +1,202 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 263E049362E
-	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 18:08:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27EDD495500
+	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 18:12:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.46
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788286121; cv=pass; b=qpnuDVhvAaCq4E7QysvBPgefE8ye1er2WtvLV5g3nvEgWXbgyPsibzpwo0iJbskHuD/Qnsl5rV8Xx9/5hYXc+ARMFqkR0xTujNX/VrQovn/Qe9hlqtVeZlSSODKjERh/3mv0SjhMQbuz+MHteZ1gMwTcD7Eps/G2BqXEP3AuGtE=
+	t=1788286325; cv=pass; b=VsnjcbI1uSdVaNfWFvZRKr642W8/ldtttZ+RCRtWEBPFW9xNXu/ZO2yANPigJv2mgGDA2F8gXJ23aUfe/vVFXum95po6s6nSM8WuoCv4bEtB8FheEAtnI3DllkFubDhOp1Rm/mwhccS8pq14nOtX4yzDUH23wu42H86bH04+Osg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788286121; c=relaxed/simple;
-	bh=X8FXyGo/raPRkoKPVRflMF35yNw57qYqgXG+3mdOgbE=;
+	s=arc-20240116; t=1788286325; c=relaxed/simple;
+	bh=OYDHwPtRS/urJTrcJcJyVU92g7dRNXopeu0W3B+ow1I=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=LtdU6D2U+OX1TN7TCUcKhuJ59jCwXGwxcr5xyRH21RsIoOn/lCVl2l+p+sJSWd8jTZXGcgqNKRfKdRG/UUv1O7ZTWCIprKf3OBJN46ZgC8orGFZSMrbU3uzrmnpiMeDWbrBnQWZ/PribZeEKOF9CorC5+HRNg9o7bGpbL0tVQHs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=r3Y+jpYF; arc=pass smtp.client-ip=209.85.128.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 To:Cc:Content-Type; b=W8J00y+pPRJzklgZHZhn0cNwsWIrfFfPbohWzqnduhlnFcoE1nQBzgUXElddyZkojno5f8YFcfSqOS/jDWt9TXe2lD66H2/1vrfOnB2vfqMqIBgRzsn1mLZltB2jQjSvk5VkA0tYlc+VedAKMlr45QPd8F/gVoE6CujRBVRk+UQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=q6NALGms; arc=pass smtp.client-ip=209.85.218.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="r3Y+jpYF"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-498012a61f6so5575e9.0
-        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 11:08:39 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788286118; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q6NALGms"
+Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-c15e2dab83eso11312266b.1
+        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 11:12:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788286322; cv=none;
         d=google.com; s=arc-20260327;
-        b=OQ8B6YuuTFva2aXZ5fSB/MowOYWONOd5jpm15yRQ2aJiDNHcJnywA7CfwGTcJhY3vg
-         MXHMWZUTCsvK5gUfVQvNPnVaOnUYNsasHA/m7dSlU/D+Fbi2nX+xQT76QmHvp2ZttYbk
-         UF37JdVgQ/EQ1fIv2JglHdzs3ZzJHcarFl37uT3cLisMlclghgxfrn9OATpB4HclOybH
-         VroWS6X5SOJ6FYvePCf+01Qwo3o+Vtv4hJHatKuHT3bBHncvUpVLugMSAFKMsjAxbNXs
-         f7+yPBQwa5eazfDlUbS+u7ymV8a+2/r7Yv0mEpFxHS0Og8uaSbk6TTbuZ5M509EFTWPZ
-         4Cbg==
+        b=QT4OYCt0zNf1oIoP5zKNvn7zUBAraNn6V/6RsEVdoGKVbjMEUdpnYQbl51DOXwusRz
+         evwwJqCG0i84Wxhx9PqmmWh0SxZM91SDBVH+fE1S+0ZENtJN52sD+l2SL/sG5KAQ90s9
+         6faaMdWyglYeK82tje5ggikfoy/1Lyb/Jqm58I3/L58bvQKg0pZe/EzcHZrabmRWKLT4
+         MRhRVS2GsHdolIg6Zox9WLs3xgM+x6fK4JGUjX929+ULGjCyuPtNMdCudjRqtWLp/bGF
+         1KZYeKaDZaPh1TD8Aj72BdlZ28A9FD5i3zYoazZ6hSS7z3jZfu1N7jerbACpuA3lMZhN
+         hvTg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=X8FXyGo/raPRkoKPVRflMF35yNw57qYqgXG+3mdOgbE=;
-        fh=wgmxzCq7fS+dK+123mClAslbfdiG8C79iQClNQkyW1E=;
-        b=BbWyGEG+4ivKAd68zs+B1Vzr1QbW+42xcltK5Wg3QVoLlld48HPPhAKeg5MM2VObh7
-         dT00nYDpFU0X5TUNM+jR4qBI5urcosvShPZ5UxgFJETus66ARGmm8QgPxhlowo9oVPch
-         gllSpCcE9a0NqRMe/agB91COLQfTuYLDG5vOaT9oogIILXWaxuhmduZDBDI3/WLJ6v+j
-         8FTofcUp8JeDqUVF9PMFqfwXAcrvLXsSMx29IXRiPtRRc7jQVfkrHE0MUIygisk5H/CS
-         rm19QmEdDGvz40UtVtjhj9RsSVcTi4S6ZtEMkq1pepJRj6HcirKBY0dCCfdEl41b/ixs
-         XowQ==;
+        bh=OYDHwPtRS/urJTrcJcJyVU92g7dRNXopeu0W3B+ow1I=;
+        fh=FOethAWVBNLCEA3CTUXiAqoC2ktl77pc+PHLBjDpNDw=;
+        b=Dbia3eXCOkYcvm+xvZ6Z86M74sNeggtyGF++5YhckOuf2JcrFGsmrdvlD+45SZwCe4
+         wKA834wViRUZ3wsklv/I7N/oVfvUk5BEPj1PpSiAbHc/PdItcxomluV7VdQz8bA8ozmO
+         hg5tVvHSrMF+YMQEhmrqQ382dbCNTEtyxtZkeiy3Iqxv8zu28kImjNmeVenS3mx68+Bz
+         s91scrdzwiDPQGLAeRqGh4yxV3qWaHCKV9N7b2CNoCwSFrOvlKs26doywCjDCkuyYePM
+         WeySUgdhCq0Ul945OPm/h1zd2/N7qtCN4UgHi6NZmCVho5cGB4TBSQ82KxOm1w2gM49S
+         D4Uw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788286118; x=1788890918; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788286322; x=1788891122; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=X8FXyGo/raPRkoKPVRflMF35yNw57qYqgXG+3mdOgbE=;
-        b=r3Y+jpYFBP9QgP3o8VlGeqoGnuVeIsV5aqh3U8uAcTvLNx3+PWGAoN36b6IiAuo/Za
-         yXOs843Mt7n4vwklcQy3LfM/ZZnsva1J9KksYHOtoTg6GXuhQ1BmTGrIzfpvU+GP00mn
-         WeJa0Nm7C8g8eotHjMpSrOzIbjQaAb8pRJzYGZCJBQcIHG/UPX6gLMkJlXBYgpMAHo8e
-         YlR1SdsR/f5V+iCIFL706u0LPTpK+I7FbP1k3daKrm/3WMmAGStwPg+xBwvbx5cykX/F
-         ekxPqXl7ng8467YwDpfWUd6+8hx7dUtkI7DNyzRFkkqm70CfaUsCsD+VYBeomSG2rrmR
-         /Kuw==
+        bh=OYDHwPtRS/urJTrcJcJyVU92g7dRNXopeu0W3B+ow1I=;
+        b=q6NALGms6T+Hl3xT51OPayJ9cR0C353JJdFnmPqjBvIOXdis+14TwmXDCRyboFeGtD
+         El+GAxOZ9DDN6wjUvoYerSCJRjkxF3Qaj7XEnhAhJ/wrFSPqMsKnN1TaY2S3ZCNxeXu/
+         gBtl/wvPGxuKMw5htJ5ZasTdsEOSuXfCD6Lap0DFTghUyT6eQtKiGTPMU4IliwcMRPsM
+         u37f/ch4KmJhi9o7GsTRrrvQTquai5mA8v0PmNhmUQgYRH75YlZYg+j5dgwbcEGBQBMF
+         hc6wlF1RQPdMeRfeZUwkZdYv9UoJTU4eklhY0CifG8Syu3N7M1FwYLtymiMXoFuokr4L
+         ZzPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788286118; x=1788890918;
+        d=1e100.net; s=20251104; t=1788286322; x=1788891122;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=X8FXyGo/raPRkoKPVRflMF35yNw57qYqgXG+3mdOgbE=;
-        b=rjSRg3y5ZnmiYWcELUla+N6IHcQBaqbgfvgayf3XP89sDQs9JvqetwCgTV5DzW8GLf
-         VmWBoaGssuUbQzbHB2IGrIkhjJcm3V3xDhwh949ZZTRabK/JUMi5oN5Popek8EsvJAqU
-         9J/Nf2WNU+VcYSxSb4DuePAXT/SAStC1VPejKcq0T+LnYIPlaIWWOQAA73v2iO67GqAJ
-         PbpakAAppYPLzu0ET4/AzGUYfNzgJYLTCpZsWl/CHrpIcsWU9KAAvw+v/dxyWuplOagU
-         2w36Yy0oCbiySjZt11rysllVWg6iv+Z5EftwnprANVIsEP3JPbtucKTost3EgzOUiN4c
-         AKKA==
-X-Forwarded-Encrypted: i=1; AHgh+RrkmfteThspDLHtaBFwjruehAB6SLSpoW2/tupky0e/5n/F470vULPoww2P2fECXnEliUdwolps@vger.kernel.org
-X-Gm-Message-State: AFuF++nQ6mNPU3ofSPXBI9hRXpfEKobtIYobh6o8CuDV++3dKq9f+lno
-	zvNjKvlbpfswROhZRvPsZvaJ344TB2IgmU00+LjGAXwbImtfBlWD3ULEPKakTLp4afdf6tDhuWa
-	nUC1yC4HMOlUaIGp5qwkshKxrvdU6RkoQlm5yX+CC
-X-Gm-Gg: AR+sD10RgX3zThOPHSijmn9WUf8StezpxBZRCQIH/kSkvK/xbCNsieP5cZBI0q3fCXQ
-	ugkfckl0kis2Ix2/RN7+H+GQzxhM5iWruv0MMO8n1b2pvC6z/tNF57K6QSBxUioPIHhQZqONt5k
-	9R08S5pt1GwFwHOn7Wf4DvM7hAgkLMG2WXUUgJb68zWYJL492H53IWmSIqpRx3urmMzcDnE4Nkx
-	mn70v5fisSxly+kdDK4kuDFVReCKAPPKjjGl5rSCUC+oJVM1w0vuj+AgHZrGKsoj4xPZLpJpSsX
-	rbShxpXTmuNhxwAVrCclg/AdwwOaqUElGadY1TCy4VrgMVpifSRltUFVRuMCKaRi/IUFX1n6hcA
-	798mWcGfGHlLOTggRtkPwQOc9Fm86G0n0cxldW/q3UpQ=
-X-Received: by 2002:a05:600c:c8:b0:49c:e41a:4c70 with SMTP id
- 5b1f17b1804b1-49ce47aad23mr50035e9.6.1788286117650; Tue, 01 Sep 2026 11:08:37
- -0700 (PDT)
+        bh=OYDHwPtRS/urJTrcJcJyVU92g7dRNXopeu0W3B+ow1I=;
+        b=dKz2DKQqb2DL6dQUxpXBPioCUle1D024YU7BJe0lgCQkb/nVwxL2F2elisCGwEW6Rx
+         9laG3KbcPRo4C82rXh0WCYJUxDHOBK9zaaa0oE/KfJoKihpURBChocz/w3LF37Z1Tg7p
+         OYc4KXhzq+W3lqsQQ3qNUTcNQakWrpOSI9vpKJfdcHiq5eKO23xfSYfxDzWAyBDOGhA7
+         mc4G9VtWMB5+Omz35IZMJ3vrRlqmzY5n+51A7lGPxizfyX/r0IdPXv0qmaVYznlDiZzf
+         wJiud1Dfo/LNuoUZWfq5AXT8kLzeKMWmi2BQkxFcweMPKSUkkm/cIFyIUdY2c4/xgY6L
+         8p8Q==
+X-Forwarded-Encrypted: i=1; AHgh+RoQDDisAD3AAVyf5XfM1JRr4Vey0MLEkM2i02wDjpqVn19TADiHdvk5wnSzmR6tfZTbOtq3RC5p@vger.kernel.org
+X-Gm-Message-State: AFuF++kHOVHpCt+m9owN4B9xE+vDACAszTPuxQXjk+1IQHTlJdf+Qw0N
+	RBALS9230D7CQ+SsTO7squbsyCke3zP/UNWAaZNQ5LR9K8xtT6bFumiRTXpLxf8X0lAaZGhQ7yq
+	dblONWbp9pckb1noHvOMCLCpqrWKyZHQ=
+X-Gm-Gg: AR+sD10LcizPZllQm+OhVdMsP+KZRmc9quJG0hIml1pBCiOk3j30ZCXGwWKrzQD5TsC
+	oiAgx9YvIZy+/aZ9AIsJghZWYGRXxJtP3kRzt1fsER+t/WqQVF3ysSPBRwyAp9yPy3j/wvAhsw4
+	0Zu/QpyHic8aNmBZH2aHsSGVIFfNqbMHEu7ILrNZ71FI+zXmUAO4wV0tYhrkAU5Ho/W6jWVn4YM
+	XRrpsZrULV3iABEQQ/T6vceNEwvc/8jECdW1l0S61MXoNsX4SEFNL/x2kWwwZpmqfp4KVZigpuM
+	ONDPm4AeNHSc5Cz0jkcB8Sqh2AOLynaJLKucR/CaWlifxtl1MI45HhfaBr6m++guEG2/VjLtjZG
+	3
+X-Received: by 2002:a17:907:c714:b0:c24:d6f0:2071 with SMTP id
+ a640c23a62f3a-c255742f97emr2437697666b.12.1788286321995; Tue, 01 Sep 2026
+ 11:12:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260831234339.280376-1-stevensd@google.com> <apYXCL_GJs9Ovu0v@linux.dev>
- <CAOiLmNEV8b3TW_Q7+h5mYrZ1Nw73XcPFPUsapeYObLYajq_PJw@mail.gmail.com> <apaKRS7TYhlGRRW3@tiehlicka>
-In-Reply-To: <apaKRS7TYhlGRRW3@tiehlicka>
-From: David Stevens <stevensd@google.com>
-Date: Tue, 1 Sep 2026 11:08:25 -0700
-X-Gm-Features: AcwNN1UXbwoF_SLVJgTUIv4PDetr6v3cnkw3nV8p3K9PhP-UrCNprRfCd1ZzSOk
-Message-ID: <CAOiLmNF6Qfc1M83fYFH030J7UKR=t8zKoW2pGbzeFakBnH9Ycg@mail.gmail.com>
-Subject: Re: [PATCH] memcg: Don't call schedule_work when no spinning is allowed
-To: Michal Hocko <mhocko@suse.com>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+References: <20260831-mglru-flags-cleanup-v4-0-2d15dde0d7ee@tencent.com>
+ <20260831-mglru-flags-cleanup-v4-1-2d15dde0d7ee@tencent.com>
+ <apZVe8UHZ1CNo4r1@linux.dev> <CAMgjq7D6V4eTZJ1Q1Xf2J6yTCq=JjvzT-W-HHX6EnMfzm3BK1g@mail.gmail.com>
+ <apcJgcFLHKZfI40m@linux.dev>
+In-Reply-To: <apcJgcFLHKZfI40m@linux.dev>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Wed, 2 Sep 2026 02:11:24 +0800
+X-Gm-Features: AcwNN1XLuero4S-u0uv2ETgMcz4JXom2ZmkXeiEroEYDvMkv4dB11HBSW6z7Bos
+Message-ID: <CAMgjq7C=k_nzwiM_MTcjVjWMTGf=s8oRaUBY00dCvLbP4EiHnQ@mail.gmail.com>
+Subject: Re: [PATCH v4 1/6] mm/memcontrol: make lru_zone_size atomic and
+ simplify sanity check
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Ridong Chen <ridong.chen@linux.dev>, Lian Wang <lianux.mm@gmail.com>, Yu Zhao <yuzhao@google.com>, 
+	Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 1, 2026 at 1:18=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrote=
-:
+On Wed, Sep 2, 2026 at 1:37=E2=80=AFAM Shakeel Butt <shakeel.butt@linux.dev=
+> wrote:
 >
-> On Mon 31-08-26 18:04:57, David Stevens wrote:
-> > On Mon, Aug 31, 2026 at 5:10=E2=80=AFPM Shakeel Butt <shakeel.butt@linu=
+> On Tue, Sep 01, 2026 at 01:20:33PM +0800, Kairui Song wrote:
+> > On Tue, Sep 1, 2026 at 12:38=E2=80=AFPM Shakeel Butt <shakeel.butt@linu=
 x.dev> wrote:
 > > >
-> > > On Mon, Aug 31, 2026 at 04:43:39PM -0700, David Stevens wrote:
-> > > > Memcg charging can be done from any context, but calling schedule_w=
-ork()
-> > > > isn't safe from an NMI. If memory.high is breached from a context w=
-here
-> > > > spinning isn't allowed, use irq_work to schedule the reclaim work.
+> > > On Mon, Aug 31, 2026 at 02:43:31AM +0800, Kairui Song via B4 Relay wr=
+ote:
+> > > > From: Kairui Song <kasong@tencent.com>
 > > > >
-> > > > Fixes: 3ac4638a734a ("memcg: make memcg_rstat_updated nmi safe")
-> > > > Signed-off-by: David Stevens <stevensd@google.com>
+> > > > commit ca707239e8a7 ("mm: update_lru_size warn and reset bad lru_si=
+ze")
+> > > > introduced a sanity check to catch memcg counter underflow, which w=
+as
+> > > > more of a workaround for another bug: lru_zone_size is unsigned, so
+> > > > underflow wraps it around and returns an enormously large number, t=
+hen
+> > > > the memcg shrinker loops almost forever as the calculated number of
+> > > > folios to shrink is huge. That commit also checked if a zero value
+> > > > matches the empty LRU list, so we have to hold the LRU lock, and
+> > > > handle the positive and negative deltas separately.
+> > > >
+> > > > But later commit b4536f0c829c ("mm, memcg: fix the active list agin=
+g
+> > > > for lowmem requests when memcg is enabled") already removed the LRU
+> > > > emptiness check, so handling the deltas separately is no longer
+> > > > needed. And if we just turn it into an atomic long, underflow isn't=
+ a
+> > > > big issue either,
 > > >
-> > > Did you hit this issue or just code inspection? I assume this is the
-> > > done_restock code path.
+> > > Why atomic long and not just long?
 > >
-> > I just found this via code inspection. I spent a little bit trying to
-> > trigger it for real, but the only way I managed was by writing a hacky
-> > driver absuing alloc_pages_nolock().
+> > Long is fine too; I was just trying to be defensive. The original
+> > check was a defensive design for leaks or races, and atomic long is
+> > more immune to race conditions. See below for the other conditions.
 >
-> Then this is not really a fix but rather a new feature.
+> Unless we really need it, let's stay with "long" for now. As you mentione=
+d below
+> this is busy/hot path, no need to add overhead of atomic here.
 
-I spent a bit longer looking, and this can be hit via bpf_arena_alloc_pages=
-().
+OK, no problem.
 
--David
+> >
+> > So checking it in the reader side is much lighter and cleaner code-wise=
+.
+>
+> So, one motivation is cleaner code?
+
+Right that's one of the motivition.
+
+>
+> >
+> > Checking in the reader side also tolerates deferred accounting false
+> > positives: if a folio is added to / removed from LRU but have the
+> > accounting happens later, that's fine, but might cause a temporary
+> > underflow (there shouldn't be such usage right now, but cleanly the
+> > oldest commit I mentioned is trying to catch something). It should
+> > just proceed without performing extra operations on the counter or
+> > raising a warning on the updater side.
+> >
+> > The underflow won't affect anything besides the two readers mentioned
+> > above (reclaimer and reparenting).
+> >
+> > Besides, I don't think warning on the writer side will help catch the
+> > real leak either, it just adds overhead to a busy path. The folio
+> > triggering the underflow is very unlikely to be the one leaking the
+> > count. And if that leak is actually caused by a race, the atomic long
+> > change should cure it.
+>
+> I think you are going and looking too much into the history of this warni=
+ng. I
+> think you just need to explain that the current warning in the update sid=
+e
+> already can't always catch the actual leak and is costly. Moving to read =
+side
+> make the code cleaner and warnings will be at the location where the cons=
+umers
+> we care about are going to consume it. Also add couple of sentences on be=
+havior
+> difference it will have i.e. warning on flipping into negative vs we will
+> continue to operate even in negative but only warn on negative consumptio=
+n.
+>
+> Another question: why is this patch part of this series? Just some orthog=
+onal
+> cleanups or are they related?
+>
+
+These were all part of the MGLRU-FG prerequisite, so I sent them
+together. I can split it out.
