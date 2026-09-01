@@ -1,140 +1,163 @@
-Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+Received: from mta0.migadu.com (out-163.mta0.migadu.com [91.218.175.163])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 371B9481FC2
-	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 16:47:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 567DE483BF4
+	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 17:37:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.163
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788281271; cv=none; b=Cdd1RJID4g8U66iNQquKT85J4kLvNIH9CoQw8UWk9BOBCVn2YPRQqdnXDZoFC6jEFI4P3tOx8vgdKRv8eSg4dZZCIsqb6jR9FVx6KjevjqSbKrdjb0qIJED36xTbRW8vBIfmZGn90t7pefqOLUMMJgbkpRMYtZXtBPJ1BlTL5bY=
+	t=1788284241; cv=none; b=XGJrDH5+DzT7p9ybeFclhMIqpfu5Qn19swSOL8SOQsNhoF9gTiqSWpWQ8+/ae9Vzyok2hgu9XC5DKmno7pPEZTfyWjL0CkYRJBm9z+CZ1UpRpc7Km3DldMnYZILn5YekwspjSi6oUak7tuF8ZtvzL+vDJJEJLVP7oIxqxZjO8pg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788281271; c=relaxed/simple;
-	bh=3R8Bg53JyAhCy2qvymO/9qJ99ABaUImHkGF3d2fo+cQ=;
+	s=arc-20240116; t=1788284241; c=relaxed/simple;
+	bh=6zo0vD0WrMxDTrLkYi5SZlZp0oHj/c0Lu7P8MC3D64I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MQ0dNkJ/Ig4RLCRPALjOrSlmqYaHs/uKH7wHkZ0WftUtE5CePrgGpnYITTjj/a5M8xYcafivQ9dTzWOpOZL8ljiFY2eU6I6YaR2tinKuGIGjeawE41CERkirYC80VRK+huRwZHXaZGkVo5T90x2CMO0KylDVyL1rwJk7eLFh3Ws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=LaMI0RE2; arc=none smtp.client-ip=209.85.128.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=ky03D4cIGHqcpy5exDqOg6xCC32/x5oMqGxz5SlCqipUtzNUTv/MSYfzVTd9ian2Q7el/oUZgqm6PZ6j+kWwRKVGQurUHgi/qdfLkDPcgPD7J5QdFRxempjEyvQ4RUav8u84RxVobOD02hpKBFRh/Nv0bL49mUNH0+G3UcF7qfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Y7GCVbGI; arc=none smtp.client-ip=91.218.175.163
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="LaMI0RE2"
-Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-81f3b227a4aso2865657b3.1
-        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 09:47:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1788281267; x=1788886067; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ZG1Y/lCpTOfNL04ELiR/+tH7Q8YET/r11fYlIJBd10U=;
-        b=LaMI0RE2h3tDo0ppj7PzcMUt/pdKX78jQE3u0MHPUaomO/eFvixVpKNnhJysu4VgLY
-         OCSgWTwnbbYBLeedBzxgt5fhOYlzG26pScf0JMaWs6/+oge9ZT27jZaI+ekdj3yBY3fD
-         +sp+OOOQr5pfGyoUSCNtk06qLwQKkDpMABBhmFk1QiNz8WafA2dWl+DW/nxLFUbiBgg9
-         LxXUrgCJILJf8k42CHynLWbJVPN/Vbn988Jvd78YwHCBN+vwIBOsHMFbd038KhLwf9HH
-         00AjAaHjcPM/jtq3a2lr4ugVVYfT1F0ivmQnAsEn8AK2gMBe4BVL3EbPqpaUBRkStjLJ
-         L6xg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788281267; x=1788886067;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ZG1Y/lCpTOfNL04ELiR/+tH7Q8YET/r11fYlIJBd10U=;
-        b=J83v5XBZQUqZ+OPG7kYVJsik1rKJiwgcgx926KbKVgegXE06ay3RH06xbjGArJbK+b
-         LWVnGpvYbAGlOvi2rF+DFCj/4Id+cm2oqdncvh2s5sI6+6ykbTu0fseYTBX5uxELVXIQ
-         Ikabu9oMSHlr4P3z8NBo45FZp6ChWgu2bsYfqzGdaRM9fkQH9NmYc+frcn+Qq+RyMq2H
-         t4AMDliEl67HIqSs2xsduAlWKEsOxtO1KmXHw/V/jZwD6/ei8H+fgKjd1cMfO3B1oK6o
-         qgymyNmJUk5tsHpankU/9uIqfk1G/PEhxIyWx39fhOYMgGNLiXogFLaDYQSJ3q1VC9n0
-         cr2Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxBuC1He0SpMVFMmXEjxBAaoaaAey95tYJv/4/cpkx9LCQFNoNFT+OL3qjKMcyW+THMUnhRPMPw@vger.kernel.org
-X-Gm-Message-State: AFuF++lhBlgC9pYziz6MiiFKbWO1GL7F+oO8jlGdGnrZhz53K9+plesM
-	gKEKdjO/3TNvNmR8V3Wf0343LjbXh3h3KnYymk6NPB8n626Wf206sgun8Y1FiMEdiP0=
-X-Gm-Gg: AYBFou123tOH0L3AK5ty+NOm0nBKBDfyCv4QuQtHdljzm/65+e18a0QxK4qhzl1gmKe
-	Cww7PYKla6/qr53Ptldc1s2Cb6nMHbQ0dLeevpo2VvUYrwbg6e+aZAvBruNjeOGkCP/MUc6M8IP
-	SooArmucyGDtgyhlTvUfhMfCg4QaV21UZ/vmW0ps8PZjdvpeHYQ1dV17kYQdZ7otvAO9TZEJ2lV
-	u3RJBtZBTZrcwXn5tm3EnWzxI7F5+mX1eghwo2XIsHFbDs2CcAUFZfWbnJK6MxagthGv242+v8c
-	Rit+R8oFrBrU0BldG48He2FMQM5RS3im504S+ZwV5sV+G0C7k1tndve9eJjPNTGb4MgtV1ZqdRO
-	6d8RTM8wdrkPlithY2rk5RJ6IiF3AcIYoLT2ZMOxDMEL1wy0feuIRi0kFDatIRGiz+lj2uCC0G/
-	Ih6je8S+WusI0joSZxqtpFCqWGhQgvukW8wfiVH/F4MolrBStC4y3L3me1a+hM
-X-Received: by 2002:a05:690c:f14:b0:81e:9826:942c with SMTP id 00721157ae682-85d625bd769mr138767767b3.0.1788281266714;
-        Tue, 01 Sep 2026 09:47:46 -0700 (PDT)
-Received: from localhost ([2605:8600:200:1a83:fe59:7385:2855:8588])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-85e65f146f8sm78197607b3.29.2026.09.01.09.47.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Sep 2026 09:47:45 -0700 (PDT)
-Date: Tue, 1 Sep 2026 12:47:41 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	Farhad Alemi <farhad.alemi@berkeley.edu>, stable@vger.kernel.org
-Subject: Re: [PATCH] memcg: avoid charging the root memcg from
- obj_cgroup_charge_pages()
-Message-ID: <20260901164741.GJ3004@cmpxchg.org>
-References: <20260829023251.474083-1-shakeel.butt@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Y7GCVbGI"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=6zo0vD0WrMxDTrLkYi5SZlZp0oHj/c0Lu7P8MC3D64I=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788284236; v=1; x=1788889036;
+ b=Y7GCVbGIEXLYVUd79jHtVQQqb+uBUWPuth9NYQmo6v5EAfHQ7tZSk2S6fa+0ez6f00vUj0nd
+ aBFMZZR2tPO4xr3NjVhOh7PxBHZHxGuzip0tn0zpHpPGmn09eLJrd1mrL3q061ELjFruiaqFdoI
+ CTFnd7yCBk67B0NrKgluxrng=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id c386ce8340dde776;
+	Tue, 01 Sep 2026 17:37:16 +0000
+X-Mizu-Trace-ID: c386ce8340dde776
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 1 Sep 2026 10:37:14 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Kairui Song <ryncsn@gmail.com>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Chris Li <chrisl@kernel.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Ridong Chen <ridong.chen@linux.dev>, Lian Wang <lianux.mm@gmail.com>, Yu Zhao <yuzhao@google.com>, 
+	Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 1/6] mm/memcontrol: make lru_zone_size atomic and
+ simplify sanity check
+Message-ID: <apcJgcFLHKZfI40m@linux.dev>
+References: <20260831-mglru-flags-cleanup-v4-0-2d15dde0d7ee@tencent.com>
+ <20260831-mglru-flags-cleanup-v4-1-2d15dde0d7ee@tencent.com>
+ <apZVe8UHZ1CNo4r1@linux.dev>
+ <CAMgjq7D6V4eTZJ1Q1Xf2J6yTCq=JjvzT-W-HHX6EnMfzm3BK1g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260829023251.474083-1-shakeel.butt@linux.dev>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMgjq7D6V4eTZJ1Q1Xf2J6yTCq=JjvzT-W-HHX6EnMfzm3BK1g@mail.gmail.com>
 
-On Fri, Aug 28, 2026 at 07:32:51PM -0700, Shakeel Butt wrote:
-> obj_cgroup_charge_pages() resolves the objcg to its memcg and calls
-> try_charge_memcg(), which does not short circuit the root memcg.  That
-> memcg can be the root memcg: obj_cgroup_is_root() reflects the memcg the
-> objcg was created for and is never updated, while memcg_reparent_objcgs()
-> does redirect objcg->memcg to the parent on rmdir.  An objcg of a dying
-> child of root therefore passes every obj_cgroup_is_root() filter but
-> resolves to the root memcg.
+On Tue, Sep 01, 2026 at 01:20:33PM +0800, Kairui Song wrote:
+> On Tue, Sep 1, 2026 at 12:38 PM Shakeel Butt <shakeel.butt@linux.dev> wrote:
+> >
+> > On Mon, Aug 31, 2026 at 02:43:31AM +0800, Kairui Song via B4 Relay wrote:
+> > > From: Kairui Song <kasong@tencent.com>
+> > >
+> > > commit ca707239e8a7 ("mm: update_lru_size warn and reset bad lru_size")
+> > > introduced a sanity check to catch memcg counter underflow, which was
+> > > more of a workaround for another bug: lru_zone_size is unsigned, so
+> > > underflow wraps it around and returns an enormously large number, then
+> > > the memcg shrinker loops almost forever as the calculated number of
+> > > folios to shrink is huge. That commit also checked if a zero value
+> > > matches the empty LRU list, so we have to hold the LRU lock, and
+> > > handle the positive and negative deltas separately.
+> > >
+> > > But later commit b4536f0c829c ("mm, memcg: fix the active list aging
+> > > for lowmem requests when memcg is enabled") already removed the LRU
+> > > emptiness check, so handling the deltas separately is no longer
+> > > needed. And if we just turn it into an atomic long, underflow isn't a
+> > > big issue either,
+> >
+> > Why atomic long and not just long?
 > 
-> Folios keep the objcg they were charged with, so this is easy to reach
-> through zswap: allocate anon memory in a cgroup, move the task out,
-> remove the cgroup, then write to the root cgroup's memory.reclaim.  The
-> reclaimed folios are charged through the reparented objcg and end up in
-> refill_stock() with the root memcg:
-> 
->   WARNING: mm/memcontrol.c:2198 at refill_stock+0x644/0x940
->    refill_stock+0x644/0x940
->    try_charge_memcg+0x12d6/0x1570
->    __obj_cgroup_charge+0x35/0xf0
->    obj_cgroup_charge+0x1de/0x210
->    obj_cgroup_charge_zswap+0x83/0x270
->    zswap_store+0x1620/0x2000
->    swap_writeout+0x94c/0x14c0
->    shrink_folio_list+0x3388/0x52b0
->    [...]
->    try_to_free_mem_cgroup_pages+0x30d/0x830
->    user_proactive_reclaim+0x504/0x840
->    memory_reclaim+0x1f/0x30
-> 
-> Beyond the warning, the charge is asymmetric: obj_cgroup_uncharge_pages()
-> skips refill_stock() for the root memcg, so the root's page counter grows
-> and is never uncharged.  It is not user visible, since memory.current is
-> not exposed on the root, but it is a leak.
-> 
-> Use try_charge(), which returns early for the root memcg, restoring the
-> symmetry with obj_cgroup_uncharge_pages().
-> 
-> The above sequence was scripted into a standalone reproducer (zswap on,
-> swap on a virtio disk, 512MB of anon memory faulted in inside a child of
-> the root cgroup, the task then migrated to the root cgroup, the child
-> removed, followed by "echo 600M swappiness=max > memory.reclaim" on the
-> root) and run in a CONFIG_DEBUG_VM=y VM.  It reproduces the splat on the
-> first zswap store of a reparented folio, with the same call chain as the
-> report.  With this patch applied the splat is gone while the zswap store
-> count over the run is unchanged, so the same path is still exercised.
-> cgroup selftests test_zswap, test_kmem and test_memcontrol show no new
-> failures.
-> 
-> Fixes: 20d6c1725228 ("memcg: avoid refill_stock for root memcg")
-> Reported-by: Farhad Alemi <farhad.alemi@berkeley.edu>
-> Closes: https://lore.kernel.org/all/CA+0ovCgWzUMK+nNbbtH7eV65Ca=fDN4Ozu7iASgryjvv8Tk8zQ@mail.gmail.com/
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Long is fine too; I was just trying to be defensive. The original
+> check was a defensive design for leaks or races, and atomic long is
+> more immune to race conditions. See below for the other conditions.
 
-Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+Unless we really need it, let's stay with "long" for now. As you mentioned below
+this is busy/hot path, no need to add overhead of atomic here.
+
+> 
+> > > So let's turn the counter into an atomic long and check at the reader
+> > > side instead, which has a smaller overhead. The underflow correction
+> > > is removed: a massive leak of the LRU size counter would indicate
+> > > that something else has gone very wrong, and one should fix that
+> > > leaking site instead. Besides, the updater-side sanity check is
+> > > unlikely to catch the leaking site anyway: if a folio was removed
+> > > without updating the counter while other folios remain on the LRU,
+> > > the WARN only triggers much later, from a likely innocent callsite.
+> >
+> > Do you have any data to support your claim that updater-side sanity check is not
+> > that useful? Also can you explain the motivation to move the check from the
+> > update side to reader side?
+> 
+> I think I described that in the commit message. Commit ca707239e8a7
+> introduced the original emptiness check. The goal was to fix an
+> over-busy reclaim scenario: upon underflow, an unsigned long returns
+> an extremely large value. The reclaimer calculates the page number to
+> scan based on that value, and thus enters a busy loop trying to
+> reclaim much more than the actual usage. It's really a defensive
+> design or workaround.
+> 
+> And later commit b4536f0c829c just removed that emptiness check,
+> leaving only the underflow check. So at this point we are just
+> defending against underflow. Currently, I don't believe there are any
+> known leaks or underflow issues in mainline, still purely a defensive
+> design.
+> 
+> Reading these counters (mem_cgroup_get_zone_lru_size()) is much rare
+> than updating them: the only readers are reclaimer - per loop, each
+> loop will scan a large chunk of folios. Or during reparenting - per
+> child.
+> 
+> Writers, however, operate on every LRU folio.
+> 
+> So checking it in the reader side is much lighter and cleaner code-wise.
+
+So, one motivation is cleaner code?
+
+> 
+> Checking in the reader side also tolerates deferred accounting false
+> positives: if a folio is added to / removed from LRU but have the
+> accounting happens later, that's fine, but might cause a temporary
+> underflow (there shouldn't be such usage right now, but cleanly the
+> oldest commit I mentioned is trying to catch something). It should
+> just proceed without performing extra operations on the counter or
+> raising a warning on the updater side.
+> 
+> The underflow won't affect anything besides the two readers mentioned
+> above (reclaimer and reparenting).
+> 
+> Besides, I don't think warning on the writer side will help catch the
+> real leak either, it just adds overhead to a busy path. The folio
+> triggering the underflow is very unlikely to be the one leaking the
+> count. And if that leak is actually caused by a race, the atomic long
+> change should cure it.
+
+I think you are going and looking too much into the history of this warning. I
+think you just need to explain that the current warning in the update side
+already can't always catch the actual leak and is costly. Moving to read side
+make the code cleaner and warnings will be at the location where the consumers
+we care about are going to consume it. Also add couple of sentences on behavior
+difference it will have i.e. warning on flipping into negative vs we will
+continue to operate even in negative but only warn on negative consumption.
+
+Another question: why is this patch part of this series? Just some orthogonal
+cleanups or are they related?
+
+
+
