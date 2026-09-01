@@ -1,77 +1,82 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533A03D093C
-	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 13:10:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C7847F775
+	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 13:13:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788268240; cv=none; b=shwbqsvQQNu2oXTy0OLZ6rCdqRG+tjbt20JzLmHJqOKvaVtVDzAQF3WHBW/RrJlzukL133A6n86lLnwHMpf+6uk2SRtyUw1KzcQu2pWmDDJY7FXy/JRNldPS2p6Sn1rvoM4FoCPDLUUa3SuyLWOdFldLU5e08G0X5ZrVVNhwdLE=
+	t=1788268425; cv=none; b=pRVlFZOmTWNm+qQw5n8xVbOEs09UIijsN4tAkjC2dW9OTc4MbA6NtSHlsCDw1grlhp1bGksWZjjTphqliDelbFMIaNd6Q/X0nrjt8tJhTzeU3Ko8rT/feU4p20CRcUjU8JmXtHbvj9Y8LPdAHSq22C3JLRsRbDbwqRWHdtZWwAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788268240; c=relaxed/simple;
-	bh=2MjXv1e8wiIM/gEWm4yDQzgBCSwTd88L75rr88+13fs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=O0TGXtBkzlmRPqKnF4uZqCgn/mVoU9CPfUV0zI5wB1HZ8ETD6vLI4zcuIznMzyUzcUBgamCTx675q2Y5thEMrLYtdnvbIi84J5F/eyA5ifftPg5EzpAeS9KsJQA3RINKsbFJx4LmBWIOdcWhER8vKIK6e/3ArjMK5MsXfkTfdks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=JppEdgrB; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1788268425; c=relaxed/simple;
+	bh=qz0SaQk3SQ761T7x85SQqX6nS4lr/tPFoNL/yc11oWM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=eqorraxPFaB6VFg7R5lAMmKDT/8XTdc3/CxR8a90eAJgK2ucM80N0cZl0Dneu6OxYFYTqAbWz8B0IqDj4DIh0qLARKYhkU428rpLHkmIl8axw8h2Qkb+AzNKoBXtLw+ha9TpWDx9sgcOv0J1ZHqb4jlZGx+Q58eSzQLCtx5fLt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ANU2PVlR; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="JppEdgrB"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-396750cfee6so3789072a91.2
-        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 06:10:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ANU2PVlR"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-499b2981a7bso54894555e9.3
+        for <cgroups@vger.kernel.org>; Tue, 01 Sep 2026 06:13:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1788268237; x=1788873037; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788268422; x=1788873222; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=CS6TAB/bDfKrIMRJ1Cd4TjasF33S/34CI8IaymPnMnA=;
-        b=JppEdgrBzXCLZrvAy7buXrHiJt0AR2mIuWVg/X9Go0i9gO9v2hN1r7hg5T5feZ6Fy3
-         NmYuv5tv7V2zx5FI/fDtEjOFjO3mNiUgASaP1iQBjGtzrBElquaUUZoIjPbXUijivgrD
-         n4BedBEC4bVH7q6eRaVykSLWF5v52YtnTha/YBTi5RhQKMF0GXMdtDXQklKyVI/Jhr8H
-         JYPzzXvZ8CbHeEhSRnlaXAvKGGyixLJZqp5Ln/UVK5sD6wWRm3Od15S4kXl33rB9aVBh
-         bk0yqrPhcsMrr1xospnyDz5ug+W4sRTfAywSWE2zSljpEGVHgbTCiE6Hxl0PtPVWJgyZ
-         OuPw==
+        bh=kXeoOvwBP+ldx/8gVLXWVNkzbohuXGpUFdUxHm5IJN4=;
+        b=ANU2PVlR0xjDk10WJqeNzE4PntPV11Y7KQ0HLMFGfWM/M1zB/LaUktVc6FaEZ+UzpG
+         knocl7ARmHJpXgtXBIipi5CzN7J/UDkspYvlOIMIHyHb+NStk1VqNNkK7NGjum1ey3BU
+         JzpOuhTnUHrwtw+6doZCLKGlvZd/FY/63aWKo2XdoVKf4lOaIQl5Fk252dhg87vaP5f4
+         PUSGRIme95qlQkrQNQfSSTy9ma8RiEsR58BZf5ZkyZFAgb6P48QJTuTiWm1UaEfaou1r
+         f/Avv1DF2uSgRKvPxAV7fELdiw2nj6xrfrISO13N3xmN8uLe5ZPr1GSgpeasirqdaLPB
+         6xiQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788268237; x=1788873037;
+        d=1e100.net; s=20251104; t=1788268422; x=1788873222;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=CS6TAB/bDfKrIMRJ1Cd4TjasF33S/34CI8IaymPnMnA=;
-        b=jsM5BnFDnsDTAJAybPwIQQa+B/FXD/TvnLfrhC9NbGtA90YrkWyo0NhBj8ifQt9xFn
-         cDDxoyzHqrkuQu0K/O2SgkecHma1qU6XqbSOoHgpTglp6wio4UNarDWkZFrHWpqexk/m
-         n9BNUlniY48v0s23kMh5Ul2YyVETw1K7HsxL5Quc+t/dmjntEFdIfRUYtWHsoFO+aLIE
-         62utcENxNoQ7rmUBZQ7iA03I/i7axXxPbbO1GExTyph2HGhJONjDDqzKQWiHy00kbazU
-         nPynpSflMYYoZKLhYjn6IbfCiUicWsc4iX0Fb8B+1iXuoTjMBmXlFF8umavtAIV6j3Mp
-         cTYw==
-X-Forwarded-Encrypted: i=1; AKwUvBwriMf8T6yMj9z9RkN4szbhXIYlbu68ABGchW38s1gKXiGI5y0LWBevtgoGQWfodAzl7N0/0t1N@vger.kernel.org
-X-Gm-Message-State: AFuF++lNpcRO1B9dLVX8e2jWBVjEAQDxsCLp5QJYsNv/RTAhsRXSJfFK
-	mUoUAmyp37qVBarDNWmovffe+jg8ZaNa2u+CH3F2QS0EvkE06GDF9UEaZiPoT4vlrUw=
-X-Gm-Gg: AYBFou3UamcWQj+kdjxVO3u5y/LIjjw+sLvxWARmSeIrKEhs2hdcxpbX2UKAoHiO6BV
-	sGX1dNV/fkSEt5GWUYEK25rGMkmh+/z3ew/4S4MQKBeROU08chbmVRqqxFlSrLBPQJ7MYE1fxdS
-	xKY8JBTzPtjkc118btuGzxdrKDAidffH1Mi7NLdfQPJmftpH0ZQrIBvFqVfBgMpGuS/Ew2I1VB2
-	wGzJi7XLFW8/ZX7Fd+i9kQjRtLRkrn/b7CknAK173nhLrC8amG/+2X8pyTL0IrK6+cjcyrqgOkh
-	uWAMTZ3ylsnBkT95/K7WyX08HvalH983eGfWEsc97BaadkTER/o9j+jYvEkO3TFGL26gDO8YFox
-	ytga/j9yXBuQQzriV3H/sOFzLmiN4d/7fkwWONkaNmy2kFE5ibaFyL/Ye5fpj9o3NX28/NJHGwF
-	BzMnKjC3gKMkaPDDACnxyVgK8UtgjzDawcavGBy1+XXXKun8n5HMvcQqRH5ReA2y6Msw==
-X-Received: by 2002:a17:90b:3c83:b0:398:9bd5:490b with SMTP id 98e67ed59e1d1-3989bd54c84mr38553882a91.18.1788268231587;
-        Tue, 01 Sep 2026 06:10:31 -0700 (PDT)
-Received: from localhost ([106.38.226.103])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3990bcf7ca7sm6520279a91.4.2026.09.01.06.10.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Sep 2026 06:10:31 -0700 (PDT)
-From: Julian Sun <sunjunchao@bytedance.com>
-To: linux-mm@kvack.org,
-	cgroups@vger.kernel.org
-Cc: hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org,
-	axboe@kernel.dk,
-	tj@kernel.org,
-	jack@suse.cz
-Subject: [PATCH] writeback, memcg: skip foreign dirty tracking for bdev inodes
-Date: Tue,  1 Sep 2026 21:10:28 +0800
-Message-Id: <20260901131028.1120284-1-sunjunchao@bytedance.com>
-X-Mailer: git-send-email 2.39.5
+        bh=kXeoOvwBP+ldx/8gVLXWVNkzbohuXGpUFdUxHm5IJN4=;
+        b=huk+FDhRbnkLZ9QH24xUca7pzwiMdyT/1b4ZLAEqpsoyFWJxg1Of8NAfznqBG0Uhsz
+         B9N6zY+wgXFtvCIeoCjMaDSFzbCGedWrKxBfcbieNgH7yjFfOTbwcncuFzg3Bs7J8dD3
+         uv/26t2fhoooE2ErVV2qj2FRcXFr+XFqhmNYTjU/tKMW55fUHHekfrOe986DB6QDoYw4
+         Sz7Itlg9B90oLVtLnRgHKl+M8HGJNnqc+l6Aagq0Bn8PVFLo8qUSYK5Vp1rPq5FEnIqM
+         fUAL1VGOQUAd+lR1d4Q7yzZK/vg0ZqTqy0LdEWK5D8agLIGne30wdSafop7PP52RwWYl
+         zm4Q==
+X-Forwarded-Encrypted: i=1; AHgh+RptaS8rLafZ0mqrk11LzxsHNTA6+Ak3kjjZ7wX4T4Z58XtqjZek0rDWJNwqSsgEZFyQfpOQ72QO@vger.kernel.org
+X-Gm-Message-State: AFuF++lbIAUk/0J60hAaunWI4HiL3q6Ms0D80ojkgKGcqzAV8ZjDvwrd
+	XqRGMgV8YMfh6ZKPHpBdrd+17/AfsgcIQYJuODjpaaSyGuMsiRmgcAug
+X-Gm-Gg: AR+sD10sfoQcWEog4Y2k03BaYfKxAnWtZ9uLFE/TBbJsw3twRxp12gtWZogvRjDd2nE
+	e+GCJnYtSyUohC3tezlc3yA4aneNQFVBISPdipyIoDiGhNTUz18Bgzb45Mr4jWLGtOPRRyq9MNm
+	4OcoH8MfB874fT1gAzW8Yf0WIrekzoWcHGaz5j/zW1h+sl+6/tCOL92heEAXp+bxpiCupeEcDer
+	fIs5vjN2QZ5acPHu4/WREkTuyMBqBaeaCs0UnmTX4J1t9pjYrXwKTveyJqEHVYr88l0B3t5kDOx
+	2reeg+ANzwVk/KYNSx36NhxkGw+3ZSViOoZekV+t/heOVBj7QKBgFFzKOvoaobg3eln1u2M+ASH
+	kj0FkFYCDw+JQH2iewiXSq0lBLOdJ5rY+kj1LrMcoVDBgxd4jNp8kpIvfPHbh/I3MiPsI4qLoyq
+	4OeIHAGSE60WwCliaWrBDYXvNJnH6VPiOSCgSfnKAanYIZ40h/2JIxCnpfFKUpULZivjvr869iK
+	slLQLI7NbLewEyhsURU2gyeaz2tL1hyPsyw4gP6fzvAp8lx4z+RY/u+ddgxejP0YHI78xEaD4JX
+	fBIO8qfHOzuf4BkjwBlyWsKgmbsU80hhGGh4UjSXlPARlmSHCs/or5T1sDDKzkrd9fvOlgsikYu
+	ZyMquBA==
+X-Received: by 2002:a05:600c:3f19:b0:498:943:ccc0 with SMTP id 5b1f17b1804b1-49cdc43d444mr166787295e9.6.1788268421259;
+        Tue, 01 Sep 2026 06:13:41 -0700 (PDT)
+Received: from MacBook-Pro-von-Karl.localdomain (dynamic-2a02-3100-a16a-7801-fd8c-4b37-36b4-e53a.310.pool.telefonica.de. [2a02:3100:a16a:7801:fd8c:4b37:36b4:e53a])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48442d6eafesm4504719f8f.24.2026.09.01.06.13.39
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 01 Sep 2026 06:13:40 -0700 (PDT)
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: stable@vger.kernel.org
+Cc: Waiman Long <longman@redhat.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>,
+	Chen Ridong <chenridong@huaweicloud.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Sasha Levin <sashal@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Karl Mehltretter <kmehltretter@gmail.com>
+Subject: [PATCH 6.1.y] cgroup/cpuset: Fix misplaced DL migration reset
+Date: Tue,  1 Sep 2026 15:13:35 +0200
+Message-Id: <20260901131335.15553-1-kmehltretter@gmail.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -80,58 +85,58 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Foreign dirty flushing handles cases where a dirtied folio's memcg and
-the memcg owning its inode wb differ.
+Mainline commit 4a39eda5fdd8 ("cgroup/cpuset: Reset DL migration state
+on can_attach() failure") puts the common error cleanup in
+cpuset_can_attach().  The 6.1.y backport instead placed that hunk at
+cpuset_can_fork()'s similarly named out_unlock label, while removing
+cpuset_can_attach()'s two existing targeted resets.
 
-wbc_detach_inode() notes that "concurrent write sharing of an inode is
-expected to be very rare". This expectation does not hold for bdev inodes.
-A bdev inode and mapping are shared by buffered users of the block device,
-while the inode has a single wb owner. On ext4, buffer-cache folios used
-by metadata and journal I/O can therefore be charged to different memcgs
-while sharing the same mapping. Normal bdev activity can thus produce
-frequent folio/wb ownership mismatches.
+If cpuset_can_attach() fails after accounting a SCHED_DEADLINE task,
+cgroup_migrate_execute() does not call cpuset_cancel_attach() for the
+failing subsystem.  The temporary migration fields remain set, and a
+later successful migration can consume the stale state and corrupt
+deadline-task and pending-bandwidth accounting.
 
-This was reproduced on cgroup v2 with the memory and I/O controllers
-enabled, using ext4 on a loop device. jbd2 repeatedly generated
-track_foreign_dirty events for bdev folios charged to unrelated memcgs.
-When one of those memcgs entered dirty throttling, the resulting record led
-to a flush_foreign event and queued writeback with reason=foreign_flush for
-the bdev inode's root wb.
+Move the reset to cpuset_can_attach()'s common error exit.  It is not
+needed in cpuset_can_fork(), which never accumulates migration DL state.
 
-Skip foreign dirty tracking when the folio mapping's host inode is on the
-blockdev pseudo superblock. This prevents bdev-originated records from
-triggering later foreign flushes.
-
-The tradeoff is that dirty throttling in the folio's memcg no longer uses
-bdev dirtiness to queue writeback on the bdev inode's owner wb. Those
-folios remain subject to normal writeback. This is preferable because a
-single bdev wb owner does not identify which cgroup is responsible for a
-mapping shared by buffered bdev users. Flushing it can write back data
-unrelated to the throttled memcg. Dirty accounting, normal writeback, and
-foreign dirty tracking for non-bdev inodes remain unchanged.
-
-Fixes: 97b27821b485 ("writeback, memcg: Implement foreign dirty flushing")
-Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
+Fixes: f8a8358832f3 ("cgroup/cpuset: Reset DL migration state on can_attach() failure")
+Assisted-by: LLM
+Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
 ---
- mm/memcontrol.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Applies to Linux 6.1.186 and 6.1.187-rc1.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1271d390b617..5d7320f76c06 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3898,6 +3898,11 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
- 	u64 oldest_at = now;
- 	int oldest = -1;
- 	int i;
-+	struct address_space *mapping = folio_mapping(folio);
-+	struct inode *bdev_inode = mapping ? mapping->host : NULL;
-+
-+	if (bdev_inode && sb_is_blkdev_sb(bdev_inode->i_sb))
-+		return;
+A controlled QEMU A/B on 6.1.186 forced an attach error after accounting a
+real SCHED_DEADLINE task.  The affected kernel returned with
+nr_migrate_dl_tasks=1 and sum_migrate_dl_bw=104857; both fields were zero
+with this patch.
+
+The equivalent 6.6.y correction is submitted separately.
+
+ kernel/cgroup/cpuset.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 681b52f6aae5b..7123bb020a242 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2600,6 +2600,8 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 	 */
+ 	cs->attach_in_progress++;
+ out_unlock:
++	if (ret)
++		reset_migrate_dl_data(cs);
+ 	mutex_unlock(&cpuset_mutex);
+ 	return ret;
+ }
+@@ -3405,8 +3407,6 @@ static int cpuset_can_fork(struct task_struct *task, struct css_set *cset)
+ 	cs->attach_in_progress++;
  
- 	trace_track_foreign_dirty(folio, wb);
- 
+ out_unlock:
+-	if (ret)
+-		reset_migrate_dl_data(cs);
+ 	mutex_unlock(&cpuset_mutex);
+ 	return ret;
+ }
 -- 
-2.39.5
-
+2.53.0
