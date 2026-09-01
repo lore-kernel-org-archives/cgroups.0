@@ -1,81 +1,69 @@
-Received: from mta1.migadu.com (out-64.mta1.migadu.com [95.215.58.64])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2877023BD1D
-	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 00:10:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC02926738C;
+	Tue,  1 Sep 2026 00:46:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788221444; cv=none; b=mkY5AwNhvs+gkBA9lxzQG69306TxNaqb6edcuGosOKMpPCgOFdFh5M7REnoN84ZVHBYijBZHs83US5qTDpd/q6v+Fn4ijYrjrGZ7hqpzoex1J4ZwpumxIwBmW7oPDHmfXttmc11FlHFlIx6IB6ZwHv+YE5VOajpYVKk8hwrv6PQ=
+	t=1788223568; cv=none; b=fy0cOgk7Sv2VTBmOCCop1Pv+5A4WKv/bvwXfy7UCokgwX8zPGrlxFfArxee6BmPJ6OiHJtOdPjQVkZqJPrVQaFiIT8jW1KKQZZY7Z95Lr6orw9PJ1qEJHJ3T45JkvUSORFD4o0mP8U9A+X96fE43DFqxzUaNq/4t2sCwiEtSnYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788221444; c=relaxed/simple;
-	bh=VQbX7qhToOCvYZznvKl5y3u5IYIy1k7DJaMvEMrWF3o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q0apbHt56XyPg+jDrYIsnPCuHTAgUx3Gnutb8HfVLdDlHBRyqYKPnHGWpvarxCX9ogNN3weNnbsfb8VdDIbxpA+OpxUqtw34prL5pU8U4SZTRWHUgI7cbN432V4mdqv0aH7ieU8iVIQDA5/BjItrAaHUgi2pY0+CbOtgPteRewg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=SKJJ3Wb1; arc=none smtp.client-ip=95.215.58.64
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788223568; c=relaxed/simple;
+	bh=d+fwOcwzgoPY3iYiDpoERorpIcEI2FlvPaYKLnA04ik=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=kv000PrDjEXgtiJiBYOP/zZAnFdwgOQLOggPCCvuZYrEzfzPR7vJJIXR4scl+XEdfEB79XEtvegXCtX571kmtbp+hfj3Fff/+MBARxEzcQrdYrj+bbyAIfo62/4xbIHM0H54ZAs61prQYnFTYmAqxVxpUfw+e74ls4DsQv7FEQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Hq5cMU1S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="SKJJ3Wb1"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=VQbX7qhToOCvYZznvKl5y3u5IYIy1k7DJaMvEMrWF3o=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788221439; v=1; x=1788826239;
- b=SKJJ3Wb1HujSZQSBqPuzVTR/xJGO1tdDt880sMmlpXUZEantBEzeHhnlcfOtSxPZwbKHcCFN
- uZ2j4wQjhFYmtuxLnMhjv2WCJvMDFh6S2XD6L1HLzmhGmZAyk3qhO+wlAZyMHWgqPD15xuKmXVM
- UuV2JXP0GvzSLw3esOCf5mtI=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 69816a8805fc6742;
-	Tue, 01 Sep 2026 00:10:29 +0000
-X-Mizu-Trace-ID: 69816a8805fc6742
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 31 Aug 2026 17:10:24 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: David Stevens <stevensd@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] memcg: Don't call schedule_work when no spinning is
- allowed
-Message-ID: <apYXCL_GJs9Ovu0v@linux.dev>
-References: <20260831234339.280376-1-stevensd@google.com>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Hq5cMU1S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 973F31F000E9;
+	Tue,  1 Sep 2026 00:46:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1788223566;
+	bh=wfI4nJW4NZXTURLLniIaQtBfHGjWmn+gqY78i2JXq1g=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=Hq5cMU1S8uQbYuvCrodD6jKmSm+wxowLUmyrGzsBsHCmq4D3xzPMTIi4Q/BnBxm80
+	 JtL7GP8is89pIBLJGtMFrDDaxmAKdnDP8dQo/uLQhHxF+1yhsoB/wUgdYfuthBFmjk
+	 tppIR+WsAf7ommFZeRL6lw0jdWpBKDxTpsuvCxks=
+Date: Mon, 31 Aug 2026 17:46:05 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Ziyang Men <ziyang.meme@gmail.com>
+Cc: Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>, Johannes
+ Weiner <hannes@cmpxchg.org>, Michal =?ISO-8859-1?Q?Koutn=FD?=
+ <mkoutny@suse.com>, Jiri Kosina <jikos@kernel.org>, Benjamin Tissoires
+ <bentiss@kernel.org>, David Vernet <void@manifault.com>, Eduard Zingerman
+ <eddyz87@gmail.com>, Viktor Malik <vmalik@redhat.com>, Andrea Righi
+ <arighi@nvidia.com>, Changwoo Min <changwoo@igalia.com>, Michal Hocko
+ <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel
+ Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, JP
+ Kobryn <inwardvessel@gmail.com>, Mykola Lysenko <mykolal@meta.com>, Nathan
+ Chancellor <nathan@kernel.org>, kernel-team@meta.com,
+ linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org,
+ linux-input@vger.kernel.org, sched-ext@lists.linux.dev, linux-mm@kvack.org,
+ bpf@vger.kernel.org, llvm@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/4] selftests: shared lib.bpf.mk for building BPF
+ progs and skeletons
+Message-Id: <20260831174605.4f76fe0a643fac90fce740b5@linux-foundation.org>
+In-Reply-To: <apX9zb+3awc99Pfh@devvm16600.scu0.facebook.com>
+References: <20260814075054.507089-1-ziyang.meme@gmail.com>
+	<apX9zb+3awc99Pfh@devvm16600.scu0.facebook.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260831234339.280376-1-stevensd@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, Aug 31, 2026 at 04:43:39PM -0700, David Stevens wrote:
-> Memcg charging can be done from any context, but calling schedule_work()
-> isn't safe from an NMI. If memory.high is breached from a context where
-> spinning isn't allowed, use irq_work to schedule the reclaim work.
-> 
-> Fixes: 3ac4638a734a ("memcg: make memcg_rstat_updated nmi safe")
-> Signed-off-by: David Stevens <stevensd@google.com>
+On Mon, 31 Aug 2026 15:18:53 -0700 Ziyang Men <ziyang.meme@gmail.com> wrote:
 
-Did you hit this issue or just code inspection? I assume this is the
-done_restock code path.
+> Just want to follow-up on this patch series. Please let me know the possible
+> issues and I will fix them.
 
-> ---
->  include/linux/memcontrol.h |  1 +
->  mm/memcontrol.c            | 12 +++++++++++-
->  2 files changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 8170bb8066a2..036d973ceca6 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -219,6 +219,7 @@ struct mem_cgroup {
->  	spinlock_t	 peaks_lock;
->  
->  	/* Range enforcement for interrupt charges */
-> +	struct irq_work high_irq_work;
+It was sent two weeks ago, during the merge window and bpfbot said lots
+of things and Sashiko said more:
 
-Instead of adding more complexity, let's just return if we can not spin on
-done_restock path.
+	https://sashiko.dev/#/patchset/20260814075054.507089-1-ziyang.meme@gmail.com
 
+Under these circumstances I expect most reviewers would choose to await
+the next iteration!
