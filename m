@@ -1,225 +1,143 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-107.mta0.migadu.com [91.218.175.107])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B95233721;
-	Tue,  1 Sep 2026 01:43:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7611E28CF4A
+	for <cgroups@vger.kernel.org>; Tue,  1 Sep 2026 01:53:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788227003; cv=none; b=PgIURGZcAOQgZF/68J2IM/SpauK9/xCq0OKXhiQEUj1iWGWhH0O4L3LJd116e+KQeWngQR/S6WIo1fSLeYg9plw5Z1u0NFv6TRalYWgjwEMBgxylfzpcDcWyzGu/yJ7uhxsya4+Dsqjkf9vSZMou4Ofd+YIkcsDtky8++b3IMYc=
+	t=1788227623; cv=none; b=EQVuWtpXdYZxyWjs0zZyei3hIWqQIO9wi0QuSHbcLye17EuFauwM0CsnW1k1hE5pCom1J51ycf/Cth9y6QzkSgTaRvcDrf02PRZJZuQnQuiKA34kioSGkS+rXcDwhHOz6AKF2NvWXC2b/9fjlW2+8aR/cSRbekrJVyf5Bg5Fyvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788227003; c=relaxed/simple;
-	bh=RtYKfymBNp9KvWTyDmEZgzY+yJgX+7+dkVBS2iKKpbg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nCzebmH+MqKAkix45OChST4tAg7mG2BpEqpUV/W25FgH7JlabPxpmZO3f60ErwbmNfAYFSwzZnr3khi+JVlEQITOwuiXWoJlji5V6uyRuHMPNdTFwCpJHy6yzBc6LO0p7JhNqBS+oisNrXjbIY6gr9YRUI8kgyFyBuONdJxL7T4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OxuXNRoZ; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788227623; c=relaxed/simple;
+	bh=Ay1gryBYGG6aqSGyYWuP+er0TtdYtW7WR2F5GMe8wBA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=km2C85gzb9GVqr9gODy2UCznqbFMuDQQefabyywg/rMZ8QaduvScvo/S+75PV8CYiJQ7YvXejOqhV29nsm+XRVGzTk5+CScN+z6oSpdYWzaqUfBaNHMv2fjgkng+thR5QXipM8qlKHIogAIWm0Bku/T1rPdDNXaWyb4537llgp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XHfG0enZ; arc=none smtp.client-ip=91.218.175.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OxuXNRoZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788227000; x=1819763000;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=RtYKfymBNp9KvWTyDmEZgzY+yJgX+7+dkVBS2iKKpbg=;
-  b=OxuXNRoZbeMhHzlxYC81ZkjH9pDwzsc8K4NekhGfKXAgP24SJrAxjKA8
-   1Gm9o1qt/0TKLTOv0i+FtG0TNX5LR0xNQufjqb0BZcNOJ50Gouz3Z2Hc1
-   cMQl5gbQzelJKzo8vwnjRcuzj3WtdXUqDp7ZbGJI71WJaSqyOHvZSyWEc
-   hFAdZ+Md+n8qclUSIXHfLtreCUxHs6uCF71NnuPo1L4AuMaA+19x6lCtT
-   TVnrrUVfyTZsqnLQNFns4rAn3Lll4CHG+WUmvD8Cy/CHQf/MUxNiHQRS7
-   2nHec3RxN4YE6Jwk0fQ1ssbjtYn4mn0hBNgMs2kO0XsC6w0P4sMolcYAj
-   A==;
-X-CSE-ConnectionGUID: VB0LFxPFQxSTGdrDgCBxbA==
-X-CSE-MsgGUID: HR5wpLpATyav5a8px76fHg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11892"; a="106164298"
-X-IronPort-AV: E=Sophos;i="6.25,255,1779174000"; 
-   d="scan'208";a="106164298"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 18:43:19 -0700
-X-CSE-ConnectionGUID: qBb9qxWMQLydzmJilke+1g==
-X-CSE-MsgGUID: JA2nDKJhT02Nus7N07a2Tg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,255,1779174000"; 
-   d="scan'208";a="273136121"
-Received: from junjie-desk-dev.bj.intel.com ([10.238.152.71])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 18:43:11 -0700
-From: Junjie Cao <junjie.cao@intel.com>
-To: syzbot+2642f347f7309b4880dc@syzkaller.appspotmail.com
-Cc: akpm@linux-foundation.org,
-	cgroups@vger.kernel.org,
-	hannes@cmpxchg.org,
-	jackmanb@google.com,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	mhocko@kernel.org,
-	mhocko@suse.com,
-	muchun.song@linux.dev,
-	netdev@vger.kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	surenb@google.com,
-	syzkaller-bugs@googlegroups.com,
-	vbabka@suse.cz,
-	ziy@nvidia.com,
-	hdanton@sina.com,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	horms@kernel.org,
-	jhs@mojatatu.com,
-	jiri@resnulli.us,
-	vinicius.gomes@intel.com
-Subject: Re: [syzbot] [mm?] INFO: rcu detected stall in exit_to_user_mode_loop
-Date: Tue,  1 Sep 2026 09:43:03 +0800
-Message-ID: <20260901014303.417027-1-junjie.cao@intel.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <6887ebf4.a00a0220.b12ec.00ae.GAE@google.com>
-References: <6887ebf4.a00a0220.b12ec.00ae.GAE@google.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XHfG0enZ"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Ay1gryBYGG6aqSGyYWuP+er0TtdYtW7WR2F5GMe8wBA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788227592; v=1; x=1788832392;
+ b=XHfG0enZBs2Cx6R8OlvKrHLnEppxUENyCnRTKPAJ0UfKQiss1FcQmiUwANannm6kETm1jqBS
+ KA5SbFmRwH/ShKdHLn1OhJfoymbft51weOW9DIxGWTI145fO7uUgHA7vH5Z/V7iuAmw02bKq+mz
+ QDq7Xxk9u6hInk54W0v3Fd9E=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 24139c14f82578d9;
+	Tue, 01 Sep 2026 01:53:12 +0000
+X-Mizu-Trace-ID: 24139c14f82578d9
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <6322b8b3-fcf2-4052-979d-439f458d31bb@linux.dev>
+Date: Tue, 1 Sep 2026 09:53:07 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in
+ cgroup1_pidlist_destroy_all
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Junnan Zhang <zhangjn_dev@163.com>
+Cc: tj@kernel.org, hannes@cmpxchg.org, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Junnan Zhang <zhangjn11@chinatelecom.cn>,
+ Shouxin Sun <sunshx@chinatelecom.cn>
+References: <20260814084016.123741-1-zhangjn_dev@163.com>
+ <20260814102052.147408-1-zhangjn_dev@163.com>
+ <apU1sXYP_QhsQFcB@localhost.localdomain>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <apU1sXYP_QhsQFcB@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-#syz test: git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git abdf623ddb75b24659018d3952d8f61937306ae5
 
-diff --git a/net/sched/sch_taprio.c b/net/sched/sch_taprio.c
-index 39ac5b97aa3a..901dfd2484e1 100644
---- a/net/sched/sch_taprio.c
-+++ b/net/sched/sch_taprio.c
-@@ -83,6 +83,10 @@ struct sched_gate_list {
- 	s64 cycle_time;
- 	s64 cycle_time_extension;
- 	s64 base_time;
-+	/* min(cycle_time, sum of intervals): the software schedule restarts
-+	 * the list after the last entry even when cycle_time is not up yet.
-+	 */
-+	s64 period;
- };
- 
- struct taprio_sched {
-@@ -871,12 +875,13 @@ static struct sk_buff *taprio_dequeue(struct Qdisc *sch)
- }
- 
- static bool should_restart_cycle(const struct sched_gate_list *oper,
--				 const struct sched_entry *entry)
-+				 const struct sched_entry *entry,
-+				 ktime_t end_time)
- {
- 	if (list_is_last(&entry->list, &oper->entries))
- 		return true;
- 
--	if (ktime_compare(entry->end_time, oper->cycle_end_time) == 0)
-+	if (ktime_compare(end_time, oper->cycle_end_time) == 0)
- 		return true;
- 
- 	return false;
-@@ -925,8 +930,9 @@ static enum hrtimer_restart advance_sched(struct hrtimer *timer)
- 	int num_tc = netdev_get_num_tc(dev);
- 	struct sched_entry *entry, *next;
- 	struct Qdisc *sch = q->root;
--	ktime_t end_time;
--	int tc;
-+	ktime_t end_time, next_start, now;
-+	int budget, tc;
-+	s64 behind;
- 
- 	spin_lock(&q->current_entry_lock);
- 	entry = rcu_dereference_protected(q->current_entry,
-@@ -952,23 +958,49 @@ static enum hrtimer_restart advance_sched(struct hrtimer *timer)
- 		goto first_run;
- 	}
- 
--	if (should_restart_cycle(oper, entry)) {
--		next = list_first_entry(&oper->entries, struct sched_entry,
--					list);
--		oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time,
--						    oper->cycle_time);
--	} else {
--		next = list_next_entry(entry, list);
-+	now = hrtimer_cb_get_time(timer);
-+	end_time = entry->end_time;
-+	behind = ktime_sub(now, end_time);
-+
-+	/* Behind, e.g. delayed timer or stepped clock: skip whole periods
-+	 * arithmetically and walk at most one more to the entry covering
-+	 * now, instead of replaying the backlog one expiry at a time. The
-+	 * cap bounds the walk; a leftover is picked up by the next expiry.
-+	 */
-+	if (unlikely(behind >= oper->period)) {
-+		s64 jump = div64_s64(behind, oper->period) * oper->period;
-+
-+		end_time = ktime_add_ns(end_time, jump);
-+		oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time, jump);
- 	}
- 
--	end_time = ktime_add_ns(entry->end_time, next->interval);
--	end_time = min_t(ktime_t, end_time, oper->cycle_end_time);
-+	budget = 2 * oper->num_entries;
-+	do {
-+		if (should_restart_cycle(oper, entry, end_time)) {
-+			next = list_first_entry(&oper->entries,
-+						struct sched_entry, list);
-+			oper->cycle_end_time = ktime_add_ns(oper->cycle_end_time,
-+							    oper->period);
-+		} else {
-+			next = list_next_entry(entry, list);
-+		}
-+
-+		next_start = end_time;
-+		end_time = ktime_add_ns(next_start, next->interval);
-+		end_time = min_t(ktime_t, end_time, oper->cycle_end_time);
-+		entry = next;
-+	} while (unlikely(ktime_compare(end_time, now) <= 0) && budget--);
- 
-+	/* next can be the entry already published as q->current_entry (a
-+	 * single-entry schedule, or a catch-up of whole periods), so the
-+	 * close times and budgets below are rewritten in place while
-+	 * taprio_dequeue_from_txq() may be reading them.
-+	 */
- 	for (tc = 0; tc < num_tc; tc++) {
- 		if (next->gate_duration[tc] == oper->cycle_time)
- 			next->gate_close_time[tc] = KTIME_MAX;
- 		else
--			next->gate_close_time[tc] = ktime_add_ns(entry->end_time,
-+			next->gate_close_time[tc] = ktime_add_ns(next_start,
- 								 next->gate_duration[tc]);
- 	}
- 
-@@ -1130,6 +1162,8 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
- 				 struct sched_gate_list *new,
- 				 struct netlink_ext_ack *extack)
- {
-+	struct sched_entry *entry;
-+	ktime_t cycle = 0;
- 	int err = 0;
- 
- 	if (tb[TCA_TAPRIO_ATTR_SCHED_SINGLE_ENTRY]) {
-@@ -1152,13 +1186,10 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
- 	if (err < 0)
- 		return err;
- 
--	if (!new->cycle_time) {
--		struct sched_entry *entry;
--		ktime_t cycle = 0;
--
--		list_for_each_entry(entry, &new->entries, list)
--			cycle = ktime_add_ns(cycle, entry->interval);
-+	list_for_each_entry(entry, &new->entries, list)
-+		cycle = ktime_add_ns(cycle, entry->interval);
- 
-+	if (!new->cycle_time) {
- 		if (cycle < 0 || cycle > INT_MAX) {
- 			NL_SET_ERR_MSG(extack, "'cycle_time' is too big");
- 			return -EINVAL;
-@@ -1172,6 +1203,7 @@ static int parse_taprio_schedule(struct taprio_sched *q, struct nlattr **tb,
- 		return -EINVAL;
- 	}
- 
-+	new->period = min(new->cycle_time, cycle);
- 	taprio_calculate_gate_durations(q, new);
- 
- 	return 0;
+
+On 8/31/2026 4:16 PM, Michal Koutný wrote:
+> Hi Junnan.
+> 
+> (Sorry for late response, I sketched some notes and then didn't get down
+> to sent them. Now they're below.)
+> 
+> On Fri, Aug 14, 2026 at 06:20:52PM +0800, Junnan Zhang <zhangjn_dev@163.com> wrote:
+>> From: Junnan Zhang <zhangjn11@chinatelecom.cn>
+>>
+>> cgroup1_pidlist_destroy_all() flushes the global
+>> cgroup_pidlist_destroy_wq while destroying a cgroup. Because all cgroup
+>> v1 pidlist destruction work items are queued on the same shared workqueue,
+>> a single slow or stuck work item (e.g. waiting for pidlist_mutex held by a
+>> user-space reader) blocks every concurrent cgroup destruction path.
+>>
+>> This can lead to kworker tasks stuck in flush_workqueue() for over
+>> hung_task_timeout seconds, as observed on busy systems running Docker or
+>> Kubernetes workloads.
+> 
+> Since the cgroup_pidlist_destroy_wq is already a dedicated workqueue (no
+> other conteders), the pursuit of pidlist_mutex holder is a feasible
+> theory. However, that would also mean:
+> a) a single reader taking more than hung_task_timeout_secs (that'd be
+>     a softlockup earlier),
+> b) starvation of cgroup1_pidlist_destroy_all() by many (queued)
+>     cgroup_pidlist_start() callers which goes against the second-long
+>     caching of pidlists,
+> c) there is large number of nr_cgroups * nr_pidnses which makes the
+>     caching ineffective
+> 
+>>
+>>    INFO: task kworker/0:1:1438499 blocked for more than 120 seconds.
+>>    "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>    kworker/0:1 D 0 1438499 2 0x80000080
+>>    Workqueue: cgroup_destroy css_free_rwork_fn
+>>    ? __schedule+0x296/0x900
+>>    schedule+0x28/0x80
+>>    schedule_timeout+0x1ee/0x3a0
+>>    ? kvm_sched_clock_read+0xd/0x20
+>>    wait_for_completion+0x12c/0x190
+>>    ? wake_up_q+0x70/0x70
+>>    flush_workqueue+0x132/0x430
+>>    ? cgroup1_pidlist_destroy_all+0x7c/0xa0
+>>    cgroup1_pidlist_destroy_all+0x7c/0xa0
+>>    css_free_rwork_fn+0xb5/0x390
+>>    process_one_work+0x195/0x3e0
+>>    worker_thread+0x30/0x390
+>>    ? process_one_work+0x3e0/0x3e0
+>>    kthread+0x113/0x130
+>>    ? kthread_create_worker_on_cpu+0x70/0x70
+>>    ret_from_fork+0x1f/0x40
+>>
+
+I'm not sure we've found the real root cause yet, and the current analysis 
+doesn't convince me.
+
+Shouldn't we first figure out why flush_workqueue() waited 120s? Was it because 
+there were too many pids, or because someone held pidlist_mutex for too long?
+
+>> Fix it by moving the cgroup's pidlists to a local orphan list under
+>> pidlist_mutex, clearing their ->owner pointer, and then cancelling each
+>> pidlist's delayed work outside the lock. The destroy work function now
+>> checks ->owner and skips freeing orphaned pidlists, so
+>> cgroup1_pidlist_destroy_all() can free them safely without flushing the
+>> whole shared workqueue.
+> 
+> What's the point of the workqueue after this change? (Mainly the
+> expiration + having process context for the handler.)
+> 
+> The flushing isn't necessary if there's a way how to ensure pidlists
+> head won't be used after cgrp removal, which the fix should achieve.
+> 
+> 
+> So I'd say, the narrow-focused cancellation may work, no need to wait
+> for other cgroups. OTOH, I'm surprised this v1-issue popped up only now
+> and whether such a long contention can happen over pidlist_mutex as your
+> commit message implies. What nr_cgroups, nr_pidnses could cause this in
+> your theory?
+> 
+> Thanks,
+> Michal
+
+-- 
+Best regards
+Ridong
+
