@@ -1,71 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADFED440A13;
-	Tue,  1 Sep 2026 03:39:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDDAE441037;
+	Tue,  1 Sep 2026 03:39:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788233983; cv=none; b=QNaXGHAQsU2MHyfE7PGxbPWEh337Uhn9ua2yWHH3wFUdOoUovI5legr7+EBSJ0B/LWhD5Lh84DyXQTtbJKE60L+RcJfKLYD5NCykl7fEEyEIqUCoyV/ciKZDBvf45vAlPNlEIicIpmnLCDLsV5WoaJEzY6qFs+RcqOR0bvhWFLw=
+	t=1788234002; cv=none; b=aE0Z070NtK62ObV7z661sM67Jzfd3MqEvC1r6pQbqTnBYWEhzJGwTilx5A23V3O0GrWh8hrTgL4FmfOM58PtsxxEy0PVfAM4xNy/y/IFhjnj+rmEKYw+Cpu4hUleH/YSM8a1ZzxQxszIfnJ/5pvQiMm2R0QW20hKFmTjhI0c3QY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788233983; c=relaxed/simple;
-	bh=9C29zMQh6XvAxTYsbh+zSOZLACrNP1gRRlQwmbrm4xc=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=ESQpRR3LosRxgKiE43nxRldtztRds5eRxHBNfSiglA967gXKjCX8EYVKJxs1aH52YPg9+FAfXkfSew7SnDHlWtWv5z6pIV6FQgL5C4PqYbajcmI6mizkWI/wpwRnbMhtFxv9QYHKG47+uhKj17uy8VFS8LETIWXw0C35MRYvrHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=s8TuZ3sM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788234002; c=relaxed/simple;
+	bh=FBOtULf8CFZAYjOEQAV7Wvs/y0/TtvPhPtil2Ikh2io=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=KIC1F8Zv1nHR9dG6gbFD8B/+GSO5V+PDKUQhSTCB9N+YqCAozN2MfNthLTKtXrSnCHnJtUlVlgy2sCKhlwMVyW0Vr0Cq2C7fnredX6wYwsa4xWj8yMyxx/E7Zr7s9MpssOe6ujee92eqZMiaeMIOw3QD2H0NzAOxTEOue0dfoII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=P7wgZ+wL; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="s8TuZ3sM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AF6A1F000E9;
-	Tue,  1 Sep 2026 03:39:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1788233982;
-	bh=a/VdIQLDigMrM7krqqQaGYUq1ryWMzorWYseQH/iXOM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=s8TuZ3sMsrRpghZI9kxLPKwAUVdjRcqEKdGL2Di6vTOV1OvhiapGGrrfBi7LF42Jr
-	 VEDNeu9y9aekgIegPW2vy9W1t+RxkKnLWDLTZlWctGjQ66pDWJgSaddgva8snMpyON
-	 PWM3/ZNw8hXIBbY+WXSYx4ovLvoq2GZgPWEEI/i4=
-Date: Mon, 31 Aug 2026 20:39:41 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Xueyuan Chen <xueyuan.chen21@gmail.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, zhaonanzhe@xiaomi.com, baohua@kernel.org,
- hannes@cmpxchg.org, ryncsn@gmail.com, youngjun.park@lge.com,
- baolin.wang@linux.alibaba.com, hughd@google.com, chrisl@kernel.org,
- shikemeng@huaweicloud.com, nphamcs@gmail.com, baoquan.he@linux.dev,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, david@kernel.org, ljs@kernel.org
-Subject: Re: [PATCH v7 0/4] mm: avoid large folio splits when swap is
- unavailable
-Message-Id: <20260831203941.0ba48ca2d794d6903d232e5f@linux-foundation.org>
-In-Reply-To: <20260830042920.2280454-1-xueyuan.chen21@gmail.com>
-References: <20260830042920.2280454-1-xueyuan.chen21@gmail.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="P7wgZ+wL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Po
+	P8bWYIQUl0297J3WZJS5T0aRa8xkK9bNJ6Q0/k/TA=; b=P7wgZ+wLBFZOZ1anOn
+	pmOeqfAOaoBBoRqE1WRO1/s+ao9hveHht6AU1EhxH15/j9AHBIUur9dJnLyrBTNG
+	WpI3qFI6EgF/zE5AlY2jTqMg3bL7S5AhBCRLP6rLT0LezpoZx6uAiXKcaWfZB03V
+	Au97Htf3C0m3unmrVdciwGUBY=
+Received: from sky.localdomain (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgCnpR3sSJZq6TvgPA--.45208S2;
+	Tue, 01 Sep 2026 11:39:24 +0800 (CST)
+From: Junnan Zhang <zhangjn_dev@163.com>
+To: mkoutny@suse.com
+Cc: cgroups@vger.kernel.org,
+	hannes@cmpxchg.org,
+	linux-kernel@vger.kernel.org,
+	sunshx@chinatelecom.cn,
+	tj@kernel.org,
+	zhangjn11@chinatelecom.cn,
+	zhangjn_dev@163.com
+Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in cgroup1_pidlist_destroy_all
+Date: Tue,  1 Sep 2026 11:39:23 +0800
+Message-ID: <20260901033923.40420-1-zhangjn_dev@163.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <FIXME-fill-in-Michals-message-id>
+References: <apU1sXYP_QhsQFcB@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:QCgvCgCnpR3sSJZq6TvgPA--.45208S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxWr45Jry5KFWrtF15Jr47urg_yoWrWry7pa
+	yYyw4Fywn5Wry09ayIy3yIgF1rAa1rGayDJr1rGrW0yw15WrnYgryI9ayUWa4UAFZ5Jr1q
+	vrZ8WFs8ur4qqFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0JUeVbkUUUUU=
+X-CM-SenderInfo: x2kd0wxmqbvvry6rljoofrz/xtbCxQyNI2qWSOy36wAA3j
 
-On Sun, 30 Aug 2026 12:29:16 +0800 Xueyuan Chen <xueyuan.chen21@gmail.com> wrote:
+Hi Michal,
 
-> This is v7 of Barry's original RFC patch, "mm: Avoiding split large
-> folios if swap has no space":
-> 
-> https://lore.kernel.org/r/20260618221720.71768-1-baohua@kernel.org
-> 
-> Barry's RFC showed the no-swap case with MADV_PAGEOUT on 16KB mTHP: the
-> large-folio split counter increased by 1024 even though no swapout
-> progress was possible. Skipping the split in that case kept the counter
-> at 0.
-> 
-> This series makes folio_alloc_swap() classify failures according to
-> whether splitting a large folio might allow swapout to make progress.
-> Callers can then avoid destroying the large folio when neither global
-> swap availability nor the folio's memcg swap hierarchy has capacity for
-> even a smaller folio.
+Thanks for the review.
 
-Thanks.  Sashiko had a question which didn't occur against v6:
+> a) a single reader taking more than hung_task_timeout_secs (that'd be
+>    a softlockup earlier),
+> b) starvation of cgroup1_pidlist_destroy_all() by many (queued)
+>    cgroup_pidlist_start() callers which goes against the second-long
+>    caching of pidlists,
+> c) there is large number of nr_cgroups * nr_pidnses which makes the
+>    caching ineffective
 
-	https://sashiko.dev/#/patchset/20260830-folio_swap_entry-v1-0-7786b52acbc8@columbia.edu
+An honest caveat first: this was reported by a customer on a production
+Kubernetes node. A guest memory dump was taken at the time, but it
+couldn't be analyzed with crash, so I can't give you the exact
+nr_cgroups/nr_pidnses.
+
+That said, I believe c) alone is sufficient, and neither a) nor b) is
+needed to explain the 120s stall, because the flush latency is
+backlog x per-work latency rather than the latency of any single work:
+
+- backlog: flush_workqueue() waits for all works already queued on the
+  shared wq, which drains serially (WQ_PERCPU, max_active=1). Container
+  churn constantly runs cgroup destruction, and each destroyed cgroup
+  queues one work per cached (type, ns) pidlist, so the queue ahead of
+  the flusher grows with churn rate x nr_cgroups.
+
+- per-work latency: each destroy work must acquire the owner's
+  pidlist_mutex, contending with readers (kubelet/cadvisor/runtime
+  scraping cgroup.procs). pidlist_array_load() runs entirely under
+  that mutex (css_set walk, kvmalloc, sort), so on a node with frequent
+  scraping each work can sit tens of ms behind a reader.
+
+A few thousand queued works each delayed by tens of ms already exceed
+hung_task_timeout_secs -- no single reader needs to hold the mutex for
+that long (so a) doesn't apply), and each individual work does get the
+mutex eventually, so it's not sustained starvation either (so b)
+doesn't apply).
+
+More on b): the second-long caching only helps readers that re-read
+within that 1s window (e.g. a single `cat` doing several seq_file
+iterations). Periodic scrapers like kubelet/cadvisor, with typical
+intervals of 10-30s, never hit the cache at all: every scrape round
+rebuilds the pidlist under the mutex and queues an expiry work 1s
+later. So heavy reader traffic and the existence of the cache are not
+in conflict -- the cache is simply ineffective for this access
+pattern. It also means the wq steadily carries ~nr_cgroups expiry
+works per scrape round, on top of the works queued by churn, which is
+what the flusher ends up waiting behind.
+
+On nr_pidnses specifically: containers typically share the pod/host
+pid namespace, so in the common case the multiplier is really
+nr_cgroups x scraping frequency rather than nr_pidnses. I can't confirm
+the customer's pidns usage for the same reason as above.
+
+> OTOH, I'm surprised this v1-issue popped up only now
+
+cgroup v1 is legacy but still the default on widely deployed enterprise
+distros, and per-node cgroup density plus metrics scraping frequency
+have grown a lot in recent years, so the backlog needed to trip this
+only became common recently. Triggering it also requires all three
+conditions at once -- many cgroups, frequent full-sweep scraping, and
+sustained create/destroy churn -- which is presumably why it isn't
+seen more often: missing any one of them, the queue never builds up.
+That's my best explanation -- admittedly not provable without an
+analyzable dump.
+
+> What's the point of the workqueue after this change? (Mainly the
+> expiration + having process context for the handler.)
+
+It still serves the normal path: the deferred expiry that makes the
+pidlist cache work, and process context for freeing. The patch only
+removes the flush from the cgroup-removal path where, as you noted,
+the orphan list guarantees the pidlists head won't be used after cgrp
+removal.
+
+If the lack of exact field numbers is a blocker, I can put together a
+synthetic reproducer (N cgroups with concurrent cgroup.procs readers
+plus destroy churn) and report measured flush_workqueue() latency with
+and without the patch. Would that address your concern?
+
+Thanks,
+Junnan
+
