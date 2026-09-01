@@ -1,45 +1,45 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDDAE441037;
-	Tue,  1 Sep 2026 03:39:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB9FA306B3D;
+	Tue,  1 Sep 2026 03:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788234002; cv=none; b=aE0Z070NtK62ObV7z661sM67Jzfd3MqEvC1r6pQbqTnBYWEhzJGwTilx5A23V3O0GrWh8hrTgL4FmfOM58PtsxxEy0PVfAM4xNy/y/IFhjnj+rmEKYw+Cpu4hUleH/YSM8a1ZzxQxszIfnJ/5pvQiMm2R0QW20hKFmTjhI0c3QY=
+	t=1788234537; cv=none; b=DbUes/5lKWNiumuOBtNVwXmJr9wzhN+UTVDl4ly7CmIxISMdBQ0TRjln02nNz8sU0/0MK2p9LM93VY+TH2u7JQerAQHe2iwhbEkSjCVGQjldOKP3810M/uQIj+BrULUjAidYIzO0j7O9ZI6kcvBSdGbb/VQHTuhuXUyxDV0Rb0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788234002; c=relaxed/simple;
-	bh=FBOtULf8CFZAYjOEQAV7Wvs/y0/TtvPhPtil2Ikh2io=;
+	s=arc-20240116; t=1788234537; c=relaxed/simple;
+	bh=M1fwBcWahtrW6WxtBkmdiPaKgXrstS0ffPFc+YZQzJw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KIC1F8Zv1nHR9dG6gbFD8B/+GSO5V+PDKUQhSTCB9N+YqCAozN2MfNthLTKtXrSnCHnJtUlVlgy2sCKhlwMVyW0Vr0Cq2C7fnredX6wYwsa4xWj8yMyxx/E7Zr7s9MpssOe6ujee92eqZMiaeMIOw3QD2H0NzAOxTEOue0dfoII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=P7wgZ+wL; arc=none smtp.client-ip=220.197.31.3
+	 MIME-Version; b=DTgDIJwHiqENw2BeAlU5+q2tPC8wzwj6g1+F5rfvUPGemJHnx/ExdDTsVfN2JLhvWoqovy98S32dAIYwf03jV0ejt6WYEax0DvckF2JX4WyaeG0ujcCIeZL/iYPHQiwSi9yjtKKxxppMONs/9ZgQijLXNVBqNl+cZhZ2egZHvzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VBr8Ic00; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="P7wgZ+wL"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VBr8Ic00"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Po
-	P8bWYIQUl0297J3WZJS5T0aRa8xkK9bNJ6Q0/k/TA=; b=P7wgZ+wLBFZOZ1anOn
-	pmOeqfAOaoBBoRqE1WRO1/s+ao9hveHht6AU1EhxH15/j9AHBIUur9dJnLyrBTNG
-	WpI3qFI6EgF/zE5AlY2jTqMg3bL7S5AhBCRLP6rLT0LezpoZx6uAiXKcaWfZB03V
-	Au97Htf3C0m3unmrVdciwGUBY=
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=M1
+	fwBcWahtrW6WxtBkmdiPaKgXrstS0ffPFc+YZQzJw=; b=VBr8Ic00bAyyQ7Ywz8
+	YTGoAqeYn9oy8l9t7gi8XzbezBKxeqpoywKmhEG+rWDzY2yDUWMHXm8YjvWlzDFE
+	TKw0rCy6ZyY/DcDHujgIErrpO4PJ0Mg5AtbnMs8FM6LTnvo7Ncrn5Ou4/0ho1TL3
+	5XenEyeF7DIWL452ipSj1lwGQ=
 Received: from sky.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgCnpR3sSJZq6TvgPA--.45208S2;
-	Tue, 01 Sep 2026 11:39:24 +0800 (CST)
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wBHZOn6SpZqngcxSg--.17773S2;
+	Tue, 01 Sep 2026 11:48:10 +0800 (CST)
 From: Junnan Zhang <zhangjn_dev@163.com>
-To: mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	hannes@cmpxchg.org,
+To: zhangjn_dev@163.com,
+	Ridong Chen <ridong.chen@linux.dev>
+Cc: Michal Koutny <mkoutny@suse.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	sunshx@chinatelecom.cn,
-	tj@kernel.org,
-	zhangjn11@chinatelecom.cn,
-	zhangjn_dev@163.com
+	Shouxin Sun <sunshx@chinatelecom.cn>
 Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in cgroup1_pidlist_destroy_all
-Date: Tue,  1 Sep 2026 11:39:23 +0800
-Message-ID: <20260901033923.40420-1-zhangjn_dev@163.com>
+Date: Tue,  1 Sep 2026 11:48:09 +0800
+Message-ID: <20260901034809.41778-1-zhangjn_dev@163.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <FIXME-fill-in-Michals-message-id>
-References: <apU1sXYP_QhsQFcB@localhost.localdomain>
+In-Reply-To: <6322b8b3-fcf2-4052-979d-439f458d31bb@linux.dev>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -47,93 +47,34 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgCnpR3sSJZq6TvgPA--.45208S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWr45Jry5KFWrtF15Jr47urg_yoWrWry7pa
-	yYyw4Fywn5Wry09ayIy3yIgF1rAa1rGayDJr1rGrW0yw15WrnYgryI9ayUWa4UAFZ5Jr1q
-	vrZ8WFs8ur4qqFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0JUeVbkUUUUU=
-X-CM-SenderInfo: x2kd0wxmqbvvry6rljoofrz/xtbCxQyNI2qWSOy36wAA3j
+X-CM-TRANSID:_____wBHZOn6SpZqngcxSg--.17773S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrurWfKF1fXFy3GrW8Cw48Zwb_yoWDuFX_Cr
+	ZFk34Dt3y8Gr4Igr4UKFn5ArZrGw4xAryUt3yrJa92gryrGFsxJF4q9r93X3yxWay8JrZx
+	Wr1Sqay3uw1DGjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7VUUqNt7UUUUU==
+X-CM-SenderInfo: x2kd0wxmqbvvry6rljoofrz/xtbC7hoRpmqWSvq3bAAA3U
 
-Hi Michal,
+Hi Ridong,
 
-Thanks for the review.
+> Shouldn't we first figure out why flush_workqueue() waited 120s? Was
+> it because there were too many pids, or because someone held
+> pidlist_mutex for too long?
 
-> a) a single reader taking more than hung_task_timeout_secs (that'd be
->    a softlockup earlier),
-> b) starvation of cgroup1_pidlist_destroy_all() by many (queued)
->    cgroup_pidlist_start() callers which goes against the second-long
->    caching of pidlists,
-> c) there is large number of nr_cgroups * nr_pidnses which makes the
->    caching ineffective
+That's the same question Michal raised; please see my reply to him in
+this thread for the full analysis. The short version: it's neither a
+single long mutex holder nor oversized pidlists per se -- the wait is
+backlog x per-work latency. flush_workqueue() waits for every work
+already queued on the shared wq, which drains serially
+(WQ_PERCPU, max_active=1). Container churn keeps queueing destroy
+works, and each work must take the owner's pidlist_mutex behind
+readers whose pidlist_array_load() runs entirely under that mutex.
+A few thousand queued works each delayed by tens of ms is enough to
+exceed 120s.
 
-An honest caveat first: this was reported by a customer on a production
-Kubernetes node. A guest memory dump was taken at the time, but it
-couldn't be analyzed with crash, so I can't give you the exact
-nr_cgroups/nr_pidnses.
-
-That said, I believe c) alone is sufficient, and neither a) nor b) is
-needed to explain the 120s stall, because the flush latency is
-backlog x per-work latency rather than the latency of any single work:
-
-- backlog: flush_workqueue() waits for all works already queued on the
-  shared wq, which drains serially (WQ_PERCPU, max_active=1). Container
-  churn constantly runs cgroup destruction, and each destroyed cgroup
-  queues one work per cached (type, ns) pidlist, so the queue ahead of
-  the flusher grows with churn rate x nr_cgroups.
-
-- per-work latency: each destroy work must acquire the owner's
-  pidlist_mutex, contending with readers (kubelet/cadvisor/runtime
-  scraping cgroup.procs). pidlist_array_load() runs entirely under
-  that mutex (css_set walk, kvmalloc, sort), so on a node with frequent
-  scraping each work can sit tens of ms behind a reader.
-
-A few thousand queued works each delayed by tens of ms already exceed
-hung_task_timeout_secs -- no single reader needs to hold the mutex for
-that long (so a) doesn't apply), and each individual work does get the
-mutex eventually, so it's not sustained starvation either (so b)
-doesn't apply).
-
-More on b): the second-long caching only helps readers that re-read
-within that 1s window (e.g. a single `cat` doing several seq_file
-iterations). Periodic scrapers like kubelet/cadvisor, with typical
-intervals of 10-30s, never hit the cache at all: every scrape round
-rebuilds the pidlist under the mutex and queues an expiry work 1s
-later. So heavy reader traffic and the existence of the cache are not
-in conflict -- the cache is simply ineffective for this access
-pattern. It also means the wq steadily carries ~nr_cgroups expiry
-works per scrape round, on top of the works queued by churn, which is
-what the flusher ends up waiting behind.
-
-On nr_pidnses specifically: containers typically share the pod/host
-pid namespace, so in the common case the multiplier is really
-nr_cgroups x scraping frequency rather than nr_pidnses. I can't confirm
-the customer's pidns usage for the same reason as above.
-
-> OTOH, I'm surprised this v1-issue popped up only now
-
-cgroup v1 is legacy but still the default on widely deployed enterprise
-distros, and per-node cgroup density plus metrics scraping frequency
-have grown a lot in recent years, so the backlog needed to trip this
-only became common recently. Triggering it also requires all three
-conditions at once -- many cgroups, frequent full-sweep scraping, and
-sustained create/destroy churn -- which is presumably why it isn't
-seen more often: missing any one of them, the queue never builds up.
-That's my best explanation -- admittedly not provable without an
-analyzable dump.
-
-> What's the point of the workqueue after this change? (Mainly the
-> expiration + having process context for the handler.)
-
-It still serves the normal path: the deferred expiry that makes the
-pidlist cache work, and process context for freeing. The patch only
-removes the flush from the cgroup-removal path where, as you noted,
-the orphan list guarantees the pidlists head won't be used after cgrp
-removal.
-
-If the lack of exact field numbers is a blocker, I can put together a
-synthetic reproducer (N cgroups with concurrent cgroup.procs readers
-plus destroy churn) and report measured flush_workqueue() latency with
-and without the patch. Would that address your concern?
+Unfortunately the guest memory dump captured at the incident couldn't
+be analyzed with crash, so exact queue depths aren't available; I've
+offered to build a synthetic reproducer with measured latency data if
+that's needed to move this forward.
 
 Thanks,
 Junnan
