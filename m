@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-168.mta1.migadu.com [95.215.58.168])
+Received: from mta0.migadu.com (out-144.mta0.migadu.com [91.218.175.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B051C4446FA
-	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 10:27:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.168
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD60A4483A2
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 10:27:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788344823; cv=none; b=to8MdFd4gOM6ydU/y9uNpKWbXLlypZ/8JzC2kqQqCVGewLkiJlRhFXKJzQUBzIuvv5wHvPgCgbsLrq1kN6/v3+zvVMJE8Vjg3skmpi8rj/j3x7jWeHqBYFwMjBICLejeZQCcWK8RmPHZgc+zt5Vf710TNswLxYBR4Wa94Mn8N0M=
+	t=1788344835; cv=none; b=IAzKUl2IENBPjSKkYoqqYF7YRUGdeuB8CaOtJYgPGhqE3ALZawCAKkFbm4y5CW75rQAqhJmVwn7x4rcLmBIYrtdjkAZB9EVlPd3vKIZvc1Jarm4Ebe00NxqpFCIFc5aPs1j/kAFiPvYUg6HuO+YyMrRLg+ltzLTRluobw0iq8nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788344823; c=relaxed/simple;
-	bh=zGfpNOf8GXS1tMO1sxnV8iyUOnNhZeoiOgLvLa85HC0=;
+	s=arc-20240116; t=1788344835; c=relaxed/simple;
+	bh=+0zvnt4F50BkbJRzuovmFvfMHcY1XlEE3MUtbFEME9I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=b7hRFliqi8j4qdOTNvhKe5CeicUW1rTqKDxBUhemlvbtzh6DjAivnPMumaOEvKx2FmJjwJvRiVqLe2sFYs3HDp+IVO3xMhfkfBSH1XpUTzBpQkR9zEK7LXLp5awaEX7VPfNlP1ie5DAdyCdvxd5dRZyVafq+4dzQ1p4/aJY7LGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RSbAmmlB; arc=none smtp.client-ip=95.215.58.168
+	 MIME-Version; b=YLKRlaHhljJR7tlDX0bfylhnyjefHlo8yhbxYR9WyXaZ7AHRlBr3sZnR5GaQzLu5z7E8Ufwt967lGqpOFs1Sd4QcoBboFcSako2RgA+FmHmKgAX4RxdwTEvAqY6/a1b1/Lyu2+Y2wbyqwm7wttuNuR9Bfn3u8esrXMdUDao1Csg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Ecb8Gaws; arc=none smtp.client-ip=91.218.175.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RSbAmmlB"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Ecb8Gaws"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=zGfpNOf8GXS1tMO1sxnV8iyUOnNhZeoiOgLvLa85HC0=;
+DKIM-Signature: a=rsa-sha256; bh=+0zvnt4F50BkbJRzuovmFvfMHcY1XlEE3MUtbFEME9I=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788344818; v=1; x=1788949618;
- b=RSbAmmlBJqheij3VFWqKKkoU/X0hiJYl9BX9D1/hCaNSl59Z8Re1/swq/aERbOcT9zozqMvP
- 9JwEklbdmr3L12IqrWXz38dh0DTzEvs7xya7dvqETvTvRbT7zty/2pejzsupWVVFZ2bYfh1ECoR
- O9/u+I9nzjvccM2IoQMCuASA=
+ t=1788344827; v=1; x=1788949627;
+ b=Ecb8GawsHAdDxiR2kluHMiWRyiOq9wGoMQ1E/BPPZFa3OMXOltgN+t1dIF/RVfuq0OrYFzS4
+ YKoIaqoXc4ctRojGLvt5fgaZbSbbm1PaxjUnBLPgKsX+gc9SRzrwvOXSg+x1BwQZQs9WtePabl9
+ xQQh0P/kOUNe1daOAGzCc0Gc=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id d11d726b60207fc6;
-	Wed, 02 Sep 2026 10:26:58 +0000
-X-Mizu-Trace-ID: d11d726b60207fc6
+Received: by smtp.migadu.com with ESMTPS id 8e989ec727cfae15;
+	Wed, 02 Sep 2026 10:27:07 +0000
+X-Mizu-Trace-ID: 8e989ec727cfae15
 X-Migadu-Flow: FLOW_OUT
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: cgroups@vger.kernel.org,
@@ -40,9 +40,9 @@ Cc: tj@kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH v3 5/7] selftests/cgroup: Add tests for housekeeping CPU return to isolated parents
-Date: Wed,  2 Sep 2026 18:26:13 +0800
-Message-ID: <20260902102615.79189-6-guopeng.zhang@linux.dev>
+Subject: [PATCH v3 6/7] cgroup/cpuset: Release CPUs when type-change validation fails
+Date: Wed,  2 Sep 2026 18:26:14 +0800
+Message-ID: <20260902102615.79189-7-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260902102615.79189-1-guopeng.zhang@linux.dev>
 References: <20260902102615.79189-1-guopeng.zhang@linux.dev>
@@ -56,201 +56,70 @@ Content-Transfer-Encoding: 8bit
 
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-Return the last housekeeping CPU from a root child to an isolated parent.
-Check that the parent becomes invalid and releases its CPUs instead of
-adding the returned CPU to the isolated mask.
+When housekeeping validation fails during a root/isolated type change,
+update_prstate() marks the requested state invalid without running the
+partition-disable path. The failed partition's effective_xcpus may be
+cleared, but its CPUs remain unavailable to the partition which owns the
+invalidated subtree.
 
-Repeat the test with two isolated ancestors and check that the outermost
-isolated partition is invalidated.
+This can be reproduced on a cgroup v2 system booted with
+isolcpus=domain,15:
 
-Add the nested test cgroup to the global cleanup list so a failed
-assertion does not leave the test hierarchy behind.
+    cd /sys/fs/cgroup
+    echo +cpuset > cgroup.subtree_control
+    mkdir type-fail-repro
+    echo 15 > type-fail-repro/cpuset.cpus
+    echo isolated > type-fail-repro/cpuset.cpus.partition
+    echo root > type-fail-repro/cpuset.cpus.partition
+    cat type-fail-repro/cpuset.cpus.partition
+    cat cpuset.cpus.effective
 
+The requested root state is recorded as invalid, but CPU 15 remains
+unavailable to the top cpuset.
+
+Run the common partition-disable path when housekeeping validation fails.
+Disable remote partitions with remote_partition_disable() and return local
+partition CPUs to their parent. If that would consume the last housekeeping
+CPU, invalidate the outermost isolated ancestor instead.
+
+Fixes: 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full don't leave any housekeeping")
+Fixes: b1034a690129 ("cgroup/cpuset: Ensure domain isolated CPUs stay in root or isolated partition")
 Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
- .../selftests/cgroup/test_cpuset_prs.sh       | 149 +++++++++++++++++-
- 1 file changed, 148 insertions(+), 1 deletion(-)
+ kernel/cgroup/cpuset.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index a3df6b094e0f..99cba4e5277d 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -122,7 +122,8 @@ cleanup()
- {
- 	online_cpus
- 	cd $CGROUP2
--	rmdir A1/A2/A3 A1/A2 A1 B1 test/A1 test/B1 test > /dev/null 2>&1
-+	rmdir A1/A2/A3 A1/A2 A1 B1 \
-+	      test/A1/A2 test/A1 test/B1 test > /dev/null 2>&1
- 	rmdir rtest/p1/c11 rtest/p1/c12 rtest/p2/c21 \
- 	      rtest/p2/c22 rtest/p1 rtest/p2 rtest > /dev/null 2>&1
- 	[[ -n "$SCHED_DEBUG" ]] &&
-@@ -1222,6 +1223,30 @@ test_boot_isolated()
- 	echo "$TEST_NAME test PASSED."
- }
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 19efa62bb694..30d9ea5f3859 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3042,6 +3042,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	struct cpuset *invalidated = NULL;
+ 	struct cpumask *isolcpus_update_cpus = cs->effective_xcpus;
+ 	struct tmpmasks tmpmask;
++	bool disable_partition = false;
+ 	bool isolcpus_updated = false;
  
-+# Return success if CPU $2 is present in cpulist $1.
-+cpulist_contains()
-+{
-+	local CPULIST_ARG=$1
-+	local CPU_ARG=$2
-+	local ITEM FIRST LAST
-+	local OLD_IFS=$IFS
-+
-+	IFS=,
-+	for ITEM in $CPULIST_ARG
-+	do
-+		FIRST=${ITEM%-*}
-+		LAST=${ITEM#*-}
-+		[[ $ITEM != *-* ]] && LAST=$FIRST
-+		if [[ $CPU_ARG -ge $FIRST && $CPU_ARG -le $LAST ]]
-+		then
-+			IFS=$OLD_IFS
-+			return 0
-+		fi
-+	done
-+	IFS=$OLD_IFS
-+	return 1
-+}
-+
- #
- # A parent's type and CPU-mask changes must check only CPUs owned directly by
- # the parent, not a boot-isolated CPU owned by a valid child partition.
-@@ -1390,6 +1415,127 @@ test_trial_child_invalidation()
- 	echo "$TEST_NAME test PASSED."
- }
- 
-+#
-+# Returning the last housekeeping CPU to an isolated parent must invalidate
-+# the isolated partition instead of adding that CPU to the isolated mask.
-+#
-+test_housekeeping_cpu_return()
-+{
-+	TEST_NAME="Housekeeping CPU return"
-+	NOHZ_FILE=/sys/devices/system/cpu/nohz_full
-+	[[ -r $NOHZ_FILE ]] || {
-+		echo "$TEST_NAME test SKIPPED: no nohz_full state"
-+		return 0
-+	}
-+	NOHZ_CPUS=$(cat $NOHZ_FILE)
-+	[[ -n "$NOHZ_CPUS" && "$NOHZ_CPUS" != "(null)" ]] || {
-+		echo "$TEST_NAME test SKIPPED: no nohz_full CPUs"
-+		return 0
+ 	if (old_prs == new_prs)
+@@ -3107,6 +3108,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 		     !isolated_cpus_can_update(tmpmask.new_cpus, NULL)) ||
+ 		    prstate_housekeeping_conflict(new_prs, tmpmask.new_cpus)) {
+ 			err = PERR_HKEEPING;
++			disable_partition = true;
+ 		} else {
+ 			/*
+ 			 * Only directly owned CPUs change isolation state for a
+@@ -3122,6 +3124,10 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 		 * parent would consume the last housekeeping CPU, invalidate
+ 		 * the outermost isolated ancestor and return its CPUs instead.
+ 		 */
++		disable_partition = true;
 +	}
 +
-+	HK_CPU=
-+	HK_COUNT=0
-+	TYPE_CPUS=()
-+	for ((CPU=0; CPU < NR_CPUS; CPU++))
-+	do
-+		CPU_ONLINE=/sys/devices/system/cpu/cpu${CPU}/online
-+		[[ ! -e $CPU_ONLINE || $(cat $CPU_ONLINE) -eq 1 ]] || continue
-+		cpulist_contains "$BOOT_CPUS" $CPU && continue
-+		if cpulist_contains "$NOHZ_CPUS" $CPU
-+		then
-+			[[ ${#TYPE_CPUS[@]} -lt 3 ]] && TYPE_CPUS+=("$CPU")
-+		else
-+			HK_CPU=$CPU
-+			((HK_COUNT++))
-+		fi
-+	done
-+
-+	[[ $HK_COUNT -eq 1 && ${#TYPE_CPUS[@]} -ge 2 ]] || {
-+		echo "$TEST_NAME test SKIPPED: requires one full housekeeping CPU"
-+		return 0
-+	}
-+	echo "Running $TEST_NAME test ..."
-+
-+	cd $CGROUP2/test
-+	echo member > cpuset.cpus.partition
-+	echo +cpuset > cgroup.subtree_control
-+	echo $HK_CPU,${TYPE_CPUS[0]},${TYPE_CPUS[1]} > cpuset.cpus
-+	test_partition root
-+	mkdir A1
-+	cd A1
-+	echo $HK_CPU > cpuset.cpus
-+	test_partition root
-+	cd ..
-+	test_partition isolated
-+	cd A1
-+	test_partition member
-+	cd ..
-+	grep -q '^isolated invalid (partition config conflicts with housekeeping setup)$' \
-+		cpuset.cpus.partition || {
-+		echo "Isolated parent remained valid after housekeeping CPU return"
-+		exit 1
-+	}
-+	[[ $(cat $CGROUP2/cpuset.cpus.effective) = "$CPULIST" ]] || {
-+		echo "Housekeeping CPU return did not release the partition CPUs"
-+		exit 1
-+	}
-+	check_isolcpus "." || {
-+		echo "Housekeeping CPU was added to the isolated mask"
-+		exit 1
-+	}
-+	rmdir A1
-+	echo member > cpuset.cpus.partition
-+	echo "" > cpuset.cpus
-+
-+	if [[ ${#TYPE_CPUS[@]} -lt 3 ]]
-+	then
-+		echo "Nested $TEST_NAME test SKIPPED: requires three nohz_full CPUs"
-+		cd $CGROUP2
-+		echo "$TEST_NAME test PASSED."
-+		return 0
-+	fi
-+
-+	# Repeat the check with two isolated ancestors.
-+	echo $HK_CPU,${TYPE_CPUS[0]},${TYPE_CPUS[1]},${TYPE_CPUS[2]} > cpuset.cpus
-+	test_partition root
-+	mkdir A1
-+	cd A1
-+	echo $HK_CPU,${TYPE_CPUS[1]},${TYPE_CPUS[2]} > cpuset.cpus
-+	test_partition root
-+	echo +cpuset > cgroup.subtree_control
-+	mkdir A2
-+	cd A2
-+	echo $HK_CPU > cpuset.cpus
-+	test_partition root
-+	cd ..
-+	test_partition isolated
-+	cd ..
-+	test_partition isolated
-+	cd A1/A2
-+	test_partition member
-+	cd ../..
-+	grep -q '^isolated invalid (partition config conflicts with housekeeping setup)$' \
-+		cpuset.cpus.partition || {
-+		echo "Outermost isolated partition remained valid after housekeeping CPU return"
-+		exit 1
-+	}
-+	[[ $(cat $CGROUP2/cpuset.cpus.effective) = "$CPULIST" ]] || {
-+		echo "Nested housekeeping CPU return did not release the partition CPUs"
-+		exit 1
-+	}
-+	check_isolcpus "." || {
-+		echo "Nested housekeeping CPU return added the CPU to the isolated mask"
-+		exit 1
-+	}
-+	rmdir A1/A2
-+	echo member > A1/cpuset.cpus.partition
-+	rmdir A1
-+	echo member > cpuset.cpus.partition
-+	echo "" > cpuset.cpus
-+	cd $CGROUP2
-+	echo "$TEST_NAME test PASSED."
-+}
-+
- #
- # Wait for inotify event for the given file and read it
- # $1: cgroup file to wait for
-@@ -1464,5 +1610,6 @@ test_isolated
- test_boot_isolated
- test_child_owned_cpus
- test_trial_child_invalidation
-+test_housekeeping_cpu_return
- test_inotify
- echo "All tests PASSED."
++	if (disable_partition) {
+ 		if (old_prs == PRS_ROOT &&
+ 		    parent->partition_root_state == PRS_ISOLATED &&
+ 		    !isolated_cpus_can_update(cs->effective_xcpus, NULL))
 -- 
 2.43.0
 
