@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-102.mta0.migadu.com [91.218.175.102])
+Received: from mta1.migadu.com (out-26.mta1.migadu.com [95.215.58.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4AB4AD7DB
-	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 17:43:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.102
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5C64AD7DC
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 17:43:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.26
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788371018; cv=none; b=s26EsCjLKK8YwLVCRSlyUcxgr5TzxS5F8Ji5d09PegCa0ZSszKS7/4DVZKNsdc42aqNYrQ5jWjbEEH0PbkWHWnLjbCgPwNicSHhlYVV6lvCDPLoqgJLEGGczVwmzIq93aZHx9YJzD89rGzRWYsLUTalokPec4t5r7DeWvRFZxXY=
+	t=1788371020; cv=none; b=QNoAGGPAk2VLblo19VVOlqs4DJorHnwhnuC1Ks8DeJ2a3+oJjd1AlqhJ+9JG4lpYyxITMzxO9HVyXTzE1ZWNkp6e0FGkSwTCfht83LyhX569y92r3bLWa/2mTpksjvRquAvEqZ8BwAl5eUo1oIMy58riRItqYnS2UdsmsETult8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788371018; c=relaxed/simple;
-	bh=yb0bO+jMr8HKLSvckBXSyVmp7KoF8OjxYY9x1SSRZYA=;
+	s=arc-20240116; t=1788371020; c=relaxed/simple;
+	bh=4dRS80kpsGVD4l2ygd1KyYake2c32jhgx7HQ68nHlXg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=poSPA1a0lYYsGNxxNZjxBRUBM8FWH867P+2lLDIT1HW34S1pMA6JIb9bmkxaGDvday0kropg2GPiG5Nr+SYg2gSGIFabbgN4XUXUdD0EuPznLlBTHniclKpc6FXB0zBMcj3D6AHggg9f0zZmYJupHX7KhUcsoRcYaw97kEagjQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qPkpbEWq; arc=none smtp.client-ip=91.218.175.102
+	 MIME-Version; b=lgc0TgS4ECbDc9oAroeldDknshyHbPcLHh/fuzW5Grp24NNQnYKaRCOSGRdCmEK7Q9zJ0tKx9jbiWEgcc2SHN5bGmbXJZ1fo5vPc2XVl5YQYlYImdOM/Vjsf+gRZBH3eJf7W7TWl6Zu6lbJqevLFELOSXOozm1z+6dLbobGyqGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UN6z/n1c; arc=none smtp.client-ip=95.215.58.26
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qPkpbEWq"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UN6z/n1c"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=yb0bO+jMr8HKLSvckBXSyVmp7KoF8OjxYY9x1SSRZYA=;
+DKIM-Signature: a=rsa-sha256; bh=4dRS80kpsGVD4l2ygd1KyYake2c32jhgx7HQ68nHlXg=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788371014; v=1; x=1788975814;
- b=qPkpbEWqSPfFlplLW/5zTmAGsK+Jgvw2LuSv7x9rDbxggeSRB3s6CVgDIsfoeI7oeCwMd7W5
- kiruYEpW/cDGYTJ6M09RoGkjeK8tmrMZ2d+bAvXNYSqgayxFYsggEzS1P8+XSgYY0YrHpwGBqGG
- 4GH68oM3b307PecVmXl2tV5o=
+ t=1788371016; v=1; x=1788975816;
+ b=UN6z/n1cHLAg5WD6cn13vdsgGfCAFlp51wmF5wGTPtc2h4fSOQouzU3xsZzUh80+Wh5YzKez
+ WrUvYCHCz/aNBPZAQozQyk3k29v+OOdcnwrv31LNdjHPs5QmUS4Kjpb8ojDolKZp38PBJNa5xFm
+ /kaj7sQg4DOINw0JE7s/1QoI=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ea98a50b791055b0;
-	Wed, 02 Sep 2026 17:43:34 +0000
-X-Mizu-Trace-ID: ea98a50b791055b0
+Received: by smtp.migadu.com with ESMTPS id 6cb6e875af4750b6;
+	Wed, 02 Sep 2026 17:43:36 +0000
+X-Mizu-Trace-ID: 6cb6e875af4750b6
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
@@ -46,9 +46,9 @@ Cc: Michal Hocko <mhocko@suse.com>,
 	linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 6/8] memcg: remove the per-node soft limit tree fields
-Date: Wed,  2 Sep 2026 10:43:09 -0700
-Message-ID: <20260902174311.1772372-7-shakeel.butt@linux.dev>
+Subject: [PATCH v2 7/8] memcg: remove mem_cgroup->soft_limit
+Date: Wed,  2 Sep 2026 10:43:10 -0700
+Message-ID: <20260902174311.1772372-8-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260902174311.1772372-1-shakeel.butt@linux.dev>
 References: <20260902174311.1772372-1-shakeel.butt@linux.dev>
@@ -60,43 +60,75 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-tree_node, usage_in_excess and on_tree only existed for the soft limit
-rbtree. They also doubled as the buffer between the read-mostly head of
-struct mem_cgroup_per_node and its update-often tail, so replace them
-with the explicit padding that CONFIG_MEMCG_V1=n already used.
+Nothing reads it anymore, so the field and the helper that reset it on
+css alloc and css reset can go.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 Acked-by: Michal Hocko <mhocko@suse.com>
 Acked-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- include/linux/memcontrol.h | 13 -------------
- 1 file changed, 13 deletions(-)
+ include/linux/memcontrol.h | 2 --
+ mm/memcontrol-v1.h         | 6 ------
+ mm/memcontrol.c            | 2 --
+ 3 files changed, 10 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 11c1fa88d6fd..1eababed16f5 100644
+index 1eababed16f5..c79992643556 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -95,20 +95,7 @@ struct mem_cgroup_per_node {
- 	struct lruvec_stats			*lruvec_stats;
- 	struct shrinker_info __rcu	*shrinker_info;
+@@ -280,8 +280,6 @@ struct mem_cgroup {
  
--#ifdef CONFIG_MEMCG_V1
--	/*
--	 * Memcg-v1 only stuff in middle as buffer between read mostly fields
--	 * and update often fields to avoid false sharing. If v1 stuff is
--	 * not present, an explicit padding is needed.
--	 */
+ 	struct memcg1_events_percpu __percpu *events_percpu;
+ 
+-	unsigned long soft_limit;
 -
--	struct rb_node		tree_node;	/* RB tree node */
--	unsigned long		usage_in_excess;/* Set to the value by which */
--						/* the soft limit is exceeded*/
--	bool			on_tree;
--#else
- 	CACHELINE_PADDING(_pad1_);
--#endif
+ 	/* protected by memcg_oom_lock */
+ 	bool oom_lock;
+ 	int under_oom;
+diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+index fd611e66859a..f48d0e22e615 100644
+--- a/mm/memcontrol-v1.h
++++ b/mm/memcontrol-v1.h
+@@ -42,11 +42,6 @@ void memcg1_free_events(struct mem_cgroup *memcg);
  
- 	/* Fields which get updated often at the end. */
- 	struct lruvec		lruvec;
+ void memcg1_memcg_init(struct mem_cgroup *memcg);
+ 
+-static inline void memcg1_soft_limit_reset(struct mem_cgroup *memcg)
+-{
+-	WRITE_ONCE(memcg->soft_limit, PAGE_COUNTER_MAX);
+-}
+-
+ struct cgroup_taskset;
+ void memcg1_css_offline(struct mem_cgroup *memcg);
+ 
+@@ -97,7 +92,6 @@ static inline bool memcg1_alloc_events(struct mem_cgroup *memcg) { return true;
+ static inline void memcg1_free_events(struct mem_cgroup *memcg) {}
+ 
+ static inline void memcg1_memcg_init(struct mem_cgroup *memcg) {}
+-static inline void memcg1_soft_limit_reset(struct mem_cgroup *memcg) {}
+ static inline void memcg1_css_offline(struct mem_cgroup *memcg) {}
+ 
+ static inline bool memcg1_oom_prepare(struct mem_cgroup *memcg, bool *locked)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 29def0376819..bce3962dba57 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4257,7 +4257,6 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		return ERR_CAST(memcg);
+ 
+ 	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+-	memcg1_soft_limit_reset(memcg);
+ #ifdef CONFIG_ZSWAP
+ 	memcg->zswap_max = PAGE_COUNTER_MAX;
+ 	WRITE_ONCE(memcg->zswap_writeback, true);
+@@ -4464,7 +4463,6 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
+ 	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+-	memcg1_soft_limit_reset(memcg);
+ 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
+ 	memcg_wb_domain_size_changed(memcg);
+ }
 -- 
 2.53.0-Meta
 
