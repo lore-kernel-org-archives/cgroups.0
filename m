@@ -1,22 +1,22 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A0A4A015B;
-	Wed,  2 Sep 2026 13:49:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EF7E49F10D;
+	Wed,  2 Sep 2026 13:49:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788356980; cv=none; b=ZjDWina4jL2GG9Ok5ErX2V69PrWG3XEmffOrPR6RkQQdfgGTOwaCl4/2CvIGyHUkeFZOmVXDPSZYfBGZj0j7WyirOHiQ3G5Yp3CLlDNte6xtKeqhmNZ3nfeAOPUhlEOqRUhI7v5Md7QfBLLubpra6y9Kc/hrjFVsYsPyfUwWVEk=
+	t=1788356996; cv=none; b=SzjJT37mMyOeFLO4OiTt68zvkBnN1Ok97+rR00uypA14NPsY2rEVsMzDhw8/Iy2scrEcUc7u2yrwYMPX+5LGZf+0tDrckxkOQqhpFb4WfUU+RdBeJxktwd/Yg7ZloJjvqAzrC9AHeiHOUixML4mvRr4dOVseT1sAczNhZ1PXWYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788356980; c=relaxed/simple;
+	s=arc-20240116; t=1788356996; c=relaxed/simple;
 	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TpV2f4nOhH8aOVREHX8juzRCv7+GtwXp7DY31jzmZSZ9JGpyegBuavWx8qZeAkpjitmTK7UuATSdwP4n0H+0Md8oHdFvFilcWDnfPH2GcAUIuiVjwgEQ8Whv1aH26ujbPghMyes4zm4drCVeUo+WhNIw4NIn5gMPucEN/hwepfI=
+	 Content-Type:Content-Disposition:In-Reply-To; b=V8PcdLCcOW5UyTUSM/YK3cXIfDbUL0ivLXVpSz45YKebN8iD2MH1DakOT6QiAHD5JtKl6Qp2BlZuRjDp75BmgR03fSsLA0DD9MRM7lLM+uEQCoUgth0VgHcF/KIXzXnRZclsCeZsYtavblI9gkqEpu+ElrLnxSo1UMOOhVfhI6A=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 83AAF68BEB; Wed,  2 Sep 2026 15:49:30 +0200 (CEST)
-Date: Wed, 2 Sep 2026 15:49:30 +0200
+	id 2A61668BEB; Wed,  2 Sep 2026 15:49:51 +0200 (CEST)
+Date: Wed, 2 Sep 2026 15:49:50 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Yu Kuai <yukuai@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
@@ -53,9 +53,9 @@ Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
 	nvdimm@lists.linux.dev, virtualization@lists.linux.dev,
 	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: Re: [PATCH 2/3] blk-cgroup: store blkcg in bio instead of blkg
-Message-ID: <20260902134930.GA22560@lst.de>
-References: <20260823133045.970199-1-yukuai@kernel.org> <20260823133045.970199-3-yukuai@kernel.org>
+Subject: Re: [PATCH 3/3] blk-cgroup: move async bio punt state to blkcg
+Message-ID: <20260902134950.GB22560@lst.de>
+References: <20260823133045.970199-1-yukuai@kernel.org> <20260823133045.970199-4-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -64,7 +64,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260823133045.970199-3-yukuai@kernel.org>
+In-Reply-To: <20260823133045.970199-4-yukuai@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
 Looks good:
