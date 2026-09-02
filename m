@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 030D3440A2D;
-	Wed,  2 Sep 2026 23:03:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E379A453A55;
+	Wed,  2 Sep 2026 23:03:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788390196; cv=none; b=OKfaC9u/4Ig5OTEIzL/Gs8Mk9zto7OAz0NHNkSzdRhfjE7/2c2EKY9vZX2INAYOEp+wkm9XnBkx+9qcRmO+as+HL71pliEUolbf2U2eBZiEKJyCdHlxxygI8+AmQ3vkpAyX0MBZ5MkXwspqpDPPMS5+OkuH4WJHunsAKMrMSrAE=
+	t=1788390197; cv=none; b=Ro50uuWHb3Zp/apGYS001xm8N0A657Cg58j+FrD62m/pbYW9kM+BnoYwOhm7hx5dWLkAMNrUz1esP3op5AFE1atKsW62c8H3fTf0koBEFvAkPCi93QxMoctg474sKRlM1PMdqQ4dlr5XwHThS/5ckPFw4somCW1Lw4cCI4M6V/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788390196; c=relaxed/simple;
-	bh=fndp4qv/QeXRr/XfnaC89r8d9bcdhYgfAKmLjgG7/+U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EryGdMYa5qwKHsiXiVQBbg4V/W7kSfcWt8VWJSUAgpZSkxYEuLcWRbp5JXj37/EQt0k28JlAz9nZqjQILcWpYK3MLK7+PaYB99Tjk1DUUsIPvnEuhsSVdcfTfKq+6ytRbjQwjtyElDTk+olFTpt8OcmVIvptfVyAM/YXZXC07ps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lMyY+NqE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788390197; c=relaxed/simple;
+	bh=ALQBHKdgV9XkgPvCN52f3Het2eAgYEWkpQ5yeWDDvek=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VNlgHzShOJiqaq6oeolKc9EQeJQ/LNkJQ37ztBErUNZ7XH09WcbjIEGO+er6i2AQZZE6+Ci9JKLo7UpUDmHVLdMWXeF3vjpRE0TAcGo2JMb2uIDjMkGXCjPGyJzCZ9p3782WrJTV0dbfrN8j4PaNKN9lu0sTkV5/Rd0GvMw9SqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b3dpZ21W; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lMyY+NqE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A52B1F000E9;
-	Wed,  2 Sep 2026 23:03:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b3dpZ21W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 435871F00A3A;
+	Wed,  2 Sep 2026 23:03:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788390194;
-	bh=3aWPiCKKoMG8UqUXpL5MtBg9mZadrWPfR0OxNr9nT7k=;
-	h=From:To:Cc:Subject:Date;
-	b=lMyY+NqEWPsfJYa84MO3Ldtr0TUudUL0usWfKAQsZ8hrA1AJPF3EWt+J3gdUHfMKK
-	 9XiwrLmpGkpy/LYnLfp7zooTD9+h/3KPHdPo5Ivv98RA4yZfL+iv4GJkZs6ZJ9M0cJ
-	 XC3L8ShSCWfaMHX/OhBO5uep5bxjs4vpZYfmWufGmUtkvyM/Ldyu+1jiMH0yXIXDcw
-	 qJC/HoyaleskhB4Oh7Ek1bUj9/mTmQmqHBwvdPSif4fRZXQ/XE91HSLN6izR7rHpCV
-	 JvsnV73JNAf2WdVNWeFqs7vxyLXzWiTqAoKM3dIVk4IE9CbQleyS5JJ55sf5uqXhse
-	 Or8Lw/OxMKKAw==
+	s=k20260515; t=1788390195;
+	bh=Gfakxnm96pGklzhCfGWbwyW7CUOm85Y3B7BmNPYSD5U=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=b3dpZ21WfmMzi0OvBkXeyA8ncIqBdMGFdEd1I9eTRdFGE2/Rcug2WexFfMp7wNrZQ
+	 WUX9Eu1Pak2wwSX7QuXUEzBBDJPUcEVDNXSwfRPGcGNnvMvt9m6lKsskbQ+fX6UmPy
+	 qLANNRFMscCXvSXZEX+pKeegyieeWSOuDgIz67a1hYZ5LWAGMUNkU8d7mEOViwZ7SA
+	 2S3CBlCF0yytTTAyjpC8VYrTeLc823JlS8c5nFnP9Y+kWmT9t2VQg0ycKniVw7Qjey
+	 vWksZxwkhfqkvpllf475i0rA2A0vZklejKbRrZK8jc6NjPF9aajNH8ylQ1mkhQwr2c
+	 DJW+ia4AsEH/g==
 From: Tejun Heo <tj@kernel.org>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Koutny <mkoutny@suse.com>
@@ -33,10 +34,12 @@ Cc: cgroups@vger.kernel.org,
 	syzbot+bb2e19a1190a556c01b1@syzkaller.appspotmail.com,
 	Tao Yu <tao1.yu@intel.com>,
 	Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET cgroup/for-7.4] cgroup: Make the offline drain interruptible
-Date: Wed,  2 Sep 2026 13:03:10 -1000
-Message-ID: <20260902230313.530839-1-tj@kernel.org>
+Subject: [PATCH 1/3] cgroup: Return -ENODEV consistently for a dead cgroup
+Date: Wed,  2 Sep 2026 13:03:11 -1000
+Message-ID: <20260902230313.530839-2-tj@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260902230313.530839-1-tj@kernel.org>
+References: <20260902230313.530839-1-tj@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,58 +48,76 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hello,
+cgroup_kn_lock_live() returns NULL when the cgroup behind a kernfs node has
+already been removed. Most callers turn that into -ENODEV, but the
+cgroup.type, cgroup.max.descendants, cgroup.max.depth, cgroup.pressure,
+cgroup.freeze and cgroup.kill writers return -ENOENT. The divergence is
+accidental. Return -ENODEV from all of them, matching cgroup.procs and
+cgroup.subtree_control.
 
-syzbot has been reporting "task hung in cgroup_subtree_control_write".
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup/cgroup.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-The underlying problem is an indefinite wait in a place where indefinite
-waits should not happen. A task past exit_signals() can block in its exit
-path for as long as, say, a FUSE daemon takes to answer a flush.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index c3a12fee7528..37bc8a67a40f 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3791,7 +3791,7 @@ static ssize_t cgroup_type_write(struct kernfs_open_file *of, char *buf,
+ 	/* drain dying csses before we re-apply (threaded) subtree control */
+ 	cgrp = cgroup_kn_lock_live(of->kn, true);
+ 	if (!cgrp)
+-		return -ENOENT;
++		return -ENODEV;
+ 
+ 	/* threaded can only be enabled */
+ 	ret = cgroup_enable_threaded(cgrp);
+@@ -3834,7 +3834,7 @@ static ssize_t cgroup_max_descendants_write(struct kernfs_open_file *of,
+ 
+ 	cgrp = cgroup_kn_lock_live(of->kn, false);
+ 	if (!cgrp)
+-		return -ENOENT;
++		return -ENODEV;
+ 
+ 	WRITE_ONCE(cgrp->max_descendants, descendants);
+ 
+@@ -3877,7 +3877,7 @@ static ssize_t cgroup_max_depth_write(struct kernfs_open_file *of,
+ 
+ 	cgrp = cgroup_kn_lock_live(of->kn, false);
+ 	if (!cgrp)
+-		return -ENOENT;
++		return -ENODEV;
+ 
+ 	WRITE_ONCE(cgrp->max_depth, depth);
+ 
+@@ -4193,7 +4193,7 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of,
+ 
+ 	cgrp = cgroup_kn_lock_live(of->kn, false);
+ 	if (!cgrp)
+-		return -ENOENT;
++		return -ENODEV;
+ 
+ 	psi = cgroup_psi(cgrp);
+ 	if (psi->enabled != enable) {
+@@ -4269,7 +4269,7 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
+ 
+ 	cgrp = cgroup_kn_lock_live(of->kn, false);
+ 	if (!cgrp)
+-		return -ENOENT;
++		return -ENODEV;
+ 
+ 	cgroup_freeze(cgrp, freeze);
+ 
+@@ -4331,7 +4331,7 @@ static ssize_t cgroup_kill_write(struct kernfs_open_file *of, char *buf,
+ 
+ 	cgrp = cgroup_kn_lock_live(of->kn, false);
+ 	if (!cgrp)
+-		return -ENOENT;
++		return -ENODEV;
+ 
+ 	/*
+ 	 * Killing is a process directed operation, i.e. the whole thread-group
+-- 
+2.55.0
 
-That wait is interruptible in name only. Once a thread group is exiting,
-prepare_signal() drops every signal sent to it, so nothing can wake the
-task. It still shows as TASK_INTERRUPTIBLE, and the hung task detector only
-looks at TASK_UNINTERRUPTIBLE, so the stuck task never appears in any
-report.
-
-Since 1dffd95575eb ("cgroup: Defer kill_css_finish() in
-cgroup_apply_control_disable()"), a disabled css offlines only after every
-such task pinning it has exited, and the re-enable path waits for that
-offline in TASK_UNINTERRUPTIBLE. The writer inherits the unkillable wait,
-sits in D state, and is the only thing the hung task report shows.
-
-This patchset makes the drain interruptible so that the writer can be
-killed. The wait in the exit path remains a separate problem.
-
-Tao Yu posted a patch that rejects the re-enable with -EBUSY while csses are
-dying:
-
- https://lore.kernel.org/all/20260901012342.855056-1-tao1.yu@intel.com/
-
-That fails re-enables that would have succeeded and keys off a counter that
-also covers removed cgroups and offlined-but-pinned csses, so this takes the
-interruptible wait instead.
-
- 0001-cgroup-Return-ENODEV-consistently-for-a-dead-cgroup.patch
- 0002-cgroup-Return-ERR_PTR-from-cgroup_kn_lock_live.patch
- 0003-cgroup-Make-the-offline-drain-interruptible.patch
-
-0001 unifies the errno the interface file writers return for a removed
-cgroup. 0002 makes cgroup_kn_lock_live() return ERR_PTR so that it can
-report the interrupted drain. 0003 is the actual change.
-
-This is against v7.3-rc1 (cee9395acd80) and also available in the following
-git branch:
-
- https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git cgroup-drain-interruptible
-
-diffstat follows.
-
- kernel/cgroup/cgroup-internal.h |  2 +-
- kernel/cgroup/cgroup-v1.c       | 16 ++++---
- kernel/cgroup/cgroup.c          | 98 ++++++++++++++++++++++++-----------------
- kernel/cgroup/debug.c           | 10 ++---
- 4 files changed, 74 insertions(+), 52 deletions(-)
-
---
-tejun
