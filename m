@@ -1,122 +1,386 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from mta1.migadu.com (out-232.mta1.migadu.com [95.215.58.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70C054AA585
-	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 17:21:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAFE30DD1B
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 17:43:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788369703; cv=none; b=ZKQrldBahOPtaIbagbUvfPUXpGz0Cd69pROvozKva9oOEQ2IepMXxV1Kn+hA+OihDjYGNG4j7c8V7jTvewHMomFx+0I916mcNf69dANhNa9Se6Uq9NWrHmj7J6fsZ7WZve+neUfLmehAzV/uL49f5UrugBaqNSzY4gNiXczo+sc=
+	t=1788371010; cv=none; b=PRgX34Ucob0y/vSXAbUBaFMnt+d3AOMGaysGQ/XSBlrdcLRbqHf7+Z7qBuP+Aw/gIZMdsyd6W8ulLtODHSHb82ShqIy21E8neS2irZ9EAkaKug/YY0alfVIPAvv2x3gjPxph9oPN3r8oviIewnEB8ik0WuCnLdfJbRbARAQ5/RE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788369703; c=relaxed/simple;
-	bh=m+JVflRfogZkAqD6QsXF3pZmp6uJr0RtWwe9UeEcILs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aLzxZ6gVvzruN8UgpO9GetngCwj/9Nx2C/CADak9JGwZ+9SPhubWUf1CTD3HYHlvKF9wkwnSd+Qmhxh+E/dDjEX/HRg8wItNc80oBC6D2eMAYD4sEy0fgFDEQjvIc69pIkA7kw6pLXkdgZPGEF9JrrWS3APmP3ylHHHyNuB73hA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=SXjFc8my; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1788371010; c=relaxed/simple;
+	bh=loghd6j+nCeF3xm8tMD6bmZm3wHgeUImKiF7irSIGq0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pAGcXpKlh1flOkQ4Ow4MOMTrHmh9siroTIhadOdpp08mrYIPU28Hbs17FIkGb++xnFxl/SQV0St0vIyIk+ScetOTWZY3EstbNLM2LoJRhjSJ6L6+Pedkdp1FqR+9SWrVHMKlWd9VYyfnizsWJdUFJVa6O22rhqTGzS9ZYmk8mdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=WULaBfaB; arc=none smtp.client-ip=95.215.58.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="SXjFc8my"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-49b392ccaacso19952005e9.2
-        for <cgroups@vger.kernel.org>; Wed, 02 Sep 2026 10:21:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1788369700; x=1788974500; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=mbr8vDhDQK57otnRsW80mi/+agFd8G6T3W4N93pfIMo=;
-        b=SXjFc8myRRa5xojHOKjeEhB6i/sBvtxJUJeidgzE3zQKvBcpPwhhj/M4U5r/ZFSO0r
-         EfXwzCFKIPOCgfdXI2NFqY7pJIKRcugPakyfkFs5OwNFXVrQVqrGm+hDwMWBSsAuwXQf
-         tC9TnMBgZlR5GaamYt71w3a+LpxeY9oR2CqFPJzyLwLg0Jl4MNKtbznLSKvu1qb+iBMX
-         l9NmW1reQ4iDF5EsBLmQJS4Eu1lrfv0pucjjkNnWO3OZTdYIozFfFa53uQJQ0K6/8YVo
-         YHM1D/v6OwpaPdYOb5zuyC8zD0wNPmBA5FM8OLkOW3HEAZyCYDEBlepEBuEUPzHXyfsR
-         2/4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788369700; x=1788974500;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=mbr8vDhDQK57otnRsW80mi/+agFd8G6T3W4N93pfIMo=;
-        b=KjAtOKRDjYegaDD3qiJB0bOv0RQGjJb65kRcs4mjWwceDl7aN9ZijEXOV10+65HYN6
-         nhWM0B5jDmlpE7We00ny5vmRCZ4N80GYrs9IB6nzT/0kt84P+iGMGUTlHGzV6hTCXs28
-         LcMppz8Fk15qMcvFtSRmRD/WhyE1zQ8rDT/71dstEFg1zZd0Wx1ArQ8JqByFtkHKkcUa
-         OtwQVVmoSFy1fbL7HHe8S5RLJf0EPJzuT+YOv0oBQma0pmyZULSw5TTsbJ/6iTdzR3Pz
-         hwbmQwQy2xgWXbDTu+nhSkt82vgMkfq/Li9csVG9jpcTEknR0A+GCekzifk/fnNLcMZq
-         CHmw==
-X-Forwarded-Encrypted: i=1; AHgh+RpZhkyG5UlXOTvn9de88dmslQWPunCtNtMOFSG1Rjo0CMhDTQf/gU/U8RM/UtTS9o7WYxQuzah7@vger.kernel.org
-X-Gm-Message-State: AFuF++mTEg2UjrsihsKfnDa+Avjudl9k6x8GWPwULev/WPuRVtVgx7M5
-	ZGUkRkhcsEUXrbechG7bPAnK9D4OzwuAdYOYxyJB2gsvtoxPA9dRmsYcgs6lpoKmXK0=
-X-Gm-Gg: AR+sD13fiygFB4EbHFUN2ocQNnP5ZUGzw0QYCisvUG7MfINlwV2gh+XXP3TZIh04jHA
-	i4GObKKtqnScwlRTm+EBQfEMO+BBXOUQ1KXz+3qbpuvSnkrR29dmDVfuxKrY2z5YwgL2rkWugRo
-	lna8Rb5xy5HUQBwWzf6Zv9eJpU8mEMndkFrUbRxsr91EwIMswtvBI0HVQUnn9hJTl33WFPBUdc9
-	M6u5Bpvsuo7ODbDxt7Yw8qKkL1ktRe72wEjsKHj4TJNB/FYjI2RedOhGdQF3qcoD/ufqSK1Mdq+
-	KPBFzCFaSfDHBHS6k0uysKNNn2TJaaQCDk86px/hoHZxA/J9qFrdr4sVXIz999E6Sq5OCnxEx6h
-	fIn0SGvpxVQCJcskduSEQGJii4YdMF19cEnFQdkTV3lIoWJP/TBgE0/liSmvXS8eXTOuVYq98PU
-	AhxtBvGEr3OOU5nrueJaRtRYWNgVKYggotTbczsZ0lSvf5WQPREeC/TXmZ3ftxzbw=
-X-Received: by 2002:a05:600c:4592:b0:496:c1f3:e8f8 with SMTP id 5b1f17b1804b1-49ce5828104mr100735675e9.7.1788369699585;
-        Wed, 02 Sep 2026 10:21:39 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce554d52esm46037545e9.3.2026.09.02.10.21.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Sep 2026 10:21:39 -0700 (PDT)
-Date: Wed, 2 Sep 2026 19:21:37 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Wilson Felipe Pereira <wfelipe@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Tejun Heo <tj@kernel.org>, Shuah Khan <shuah@kernel.org>, 
-	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="WULaBfaB"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=loghd6j+nCeF3xm8tMD6bmZm3wHgeUImKiF7irSIGq0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788371005; v=1; x=1788975805;
+ b=WULaBfaBRpC/Q9OWFciuO2ivdzYd9SS7epDxphCXgFt5WF0zY/iFqyLgS4OAwIhUWhMizPaC
+ x8kZxJNagAemyS6lsfUk9NFHk2jMI0mWdnvcXXst3KB7XcnYH87HtjsnKq3Tt07xSjDUV0i+o9o
+ 1vPB/d9Spt0+ittxlAWCzX6c=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 5861c8020117319e;
+	Wed, 02 Sep 2026 17:43:25 +0000
+X-Mizu-Trace-ID: 5861c8020117319e
+X-Migadu-Flow: FLOW_OUT
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	tjmercier@google.com,
+	Meta kernel team <kernel-team@meta.com>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 2/2] selftests/cgroup: test_zswap: fix implicit
- unsigned promotion bug in test_no_kmem_bypass
-Message-ID: <apha6cxiTEi9_FS7@localhost.localdomain>
-References: <20260901052250.154532-1-wfelipe@google.com>
- <20260901052250.154532-3-wfelipe@google.com>
- <apaO1OHVQWJCuJDE@localhost.localdomain>
- <p9738q5kh9uc.fsf@wfelipe-west1.c.googlers.com>
+Subject: [PATCH v2 1/8] memcg: remove v1 soft limit reclaim
+Date: Wed,  2 Sep 2026 10:43:04 -0700
+Message-ID: <20260902174311.1772372-2-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260902174311.1772372-1-shakeel.butt@linux.dev>
+References: <20260902174311.1772372-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="brfghnffrv7lgskx"
-Content-Disposition: inline
-In-Reply-To: <p9738q5kh9uc.fsf@wfelipe-west1.c.googlers.com>
+Content-Transfer-Encoding: 8bit
 
+Nothing can put a cgroup on the soft limit rbtree anymore, so the tree
+is always empty and both callers of memcg1_soft_limit_reclaim() are
+guaranteed no-ops. Remove the reclaim pass from direct reclaim and from
+kswapd, along with its implementation.
 
---brfghnffrv7lgskx
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v5 2/2] selftests/cgroup: test_zswap: fix implicit
- unsigned promotion bug in test_no_kmem_bypass
-MIME-Version: 1.0
+In shrink_zones() this leaves the global reclaim branch with a
+last_pgdat check that is now redundant with the identical check right
+below it, so drop it and move the explaining comment down to the check
+that remains. That check could only ever fire once last_pgdat was set,
+which implies first_pgdat had already been assigned, so skipping it does
+not change which node consider_reclaim_throttle() gets.
 
-On Tue, Sep 01, 2026 at 10:42:51PM +0000, Wilson Felipe Pereira <wfelipe@go=
-ogle.com> wrote:
-> I like this option a), any thoughts on the sequence here?
->=20
-> I thought the following steps:
-> 1) Add cg_read_key_s64() here and make use of it;
-> 2) In another patch (probably 3/3), replace all uses of cg_read_key_long
->    by cg_read_key_s64. There are 41 uses currently.
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+Acked-by: Michal Hocko <mhocko@suse.com>
+Acked-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+---
+ include/linux/memcontrol.h |  12 ---
+ mm/memcontrol-v1.c         | 175 -------------------------------------
+ mm/vmscan.c                |  39 ++-------
+ 3 files changed, 6 insertions(+), 220 deletions(-)
 
-Sounds good to me.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index da625d2edb3b..11c1fa88d6fd 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1924,10 +1924,6 @@ static inline bool mem_cgroup_zswap_writeback_enabled(struct mem_cgroup *memcg)
+ /* Cgroup v1-related declarations */
+ 
+ #ifdef CONFIG_MEMCG_V1
+-unsigned long memcg1_soft_limit_reclaim(pg_data_t *pgdat, int order,
+-					gfp_t gfp_mask,
+-					unsigned long *total_scanned);
+-
+ bool mem_cgroup_oom_synchronize(bool wait);
+ 
+ static inline bool task_in_memcg_oom(struct task_struct *p)
+@@ -1948,14 +1944,6 @@ static inline void mem_cgroup_exit_user_fault(void)
+ }
+ 
+ #else /* CONFIG_MEMCG_V1 */
+-static inline
+-unsigned long memcg1_soft_limit_reclaim(pg_data_t *pgdat, int order,
+-					gfp_t gfp_mask,
+-					unsigned long *total_scanned)
+-{
+-	return 0;
+-}
+-
+ static inline bool task_in_memcg_oom(struct task_struct *p)
+ {
+ 	return false;
+diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+index 05ef55cae4dc..b38b8d0f7f51 100644
+--- a/mm/memcontrol-v1.c
++++ b/mm/memcontrol-v1.c
+@@ -34,13 +34,6 @@ struct mem_cgroup_tree {
+ 
+ static struct mem_cgroup_tree soft_limit_tree __read_mostly;
+ 
+-/*
+- * Maximum loops in mem_cgroup_soft_reclaim(), used for soft
+- * limit reclaim to prevent infinite loops, if they ever occur.
+- */
+-#define	MEM_CGROUP_MAX_RECLAIM_LOOPS		100
+-#define	MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS	2
+-
+ /* for OOM */
+ struct mem_cgroup_eventfd_list {
+ 	struct list_head list;
+@@ -233,174 +226,6 @@ void memcg1_remove_from_trees(struct mem_cgroup *memcg)
+ 	}
+ }
+ 
+-static struct mem_cgroup_per_node *
+-__mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+-{
+-	struct mem_cgroup_per_node *mz;
+-
+-retry:
+-	mz = NULL;
+-	if (!mctz->rb_rightmost)
+-		goto done;		/* Nothing to reclaim from */
+-
+-	mz = rb_entry(mctz->rb_rightmost,
+-		      struct mem_cgroup_per_node, tree_node);
+-	/*
+-	 * Remove the node now but someone else can add it back,
+-	 * we will to add it back at the end of reclaim to its correct
+-	 * position in the tree.
+-	 */
+-	__mem_cgroup_remove_exceeded(mz, mctz);
+-	if (!soft_limit_excess(mz->memcg) ||
+-	    !css_tryget(&mz->memcg->css))
+-		goto retry;
+-done:
+-	return mz;
+-}
+-
+-static struct mem_cgroup_per_node *
+-mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+-{
+-	struct mem_cgroup_per_node *mz;
+-
+-	spin_lock_irq(&mctz->lock);
+-	mz = __mem_cgroup_largest_soft_limit_node(mctz);
+-	spin_unlock_irq(&mctz->lock);
+-	return mz;
+-}
+-
+-static int mem_cgroup_soft_reclaim(struct mem_cgroup *root_memcg,
+-				   pg_data_t *pgdat,
+-				   gfp_t gfp_mask,
+-				   unsigned long *total_scanned)
+-{
+-	struct mem_cgroup *victim = NULL;
+-	int total = 0;
+-	int loop = 0;
+-	unsigned long excess;
+-	unsigned long nr_scanned;
+-	struct mem_cgroup_reclaim_cookie reclaim = {
+-		.pgdat = pgdat,
+-	};
+-
+-	excess = soft_limit_excess(root_memcg);
+-
+-	while (1) {
+-		victim = mem_cgroup_iter(root_memcg, victim, &reclaim);
+-		if (!victim) {
+-			loop++;
+-			if (loop >= 2) {
+-				/*
+-				 * If we have not been able to reclaim
+-				 * anything, it might because there are
+-				 * no reclaimable pages under this hierarchy
+-				 */
+-				if (!total)
+-					break;
+-				/*
+-				 * We want to do more targeted reclaim.
+-				 * excess >> 2 is not to excessive so as to
+-				 * reclaim too much, nor too less that we keep
+-				 * coming back to reclaim from this cgroup
+-				 */
+-				if (total >= (excess >> 2) ||
+-					(loop > MEM_CGROUP_MAX_RECLAIM_LOOPS))
+-					break;
+-			}
+-			continue;
+-		}
+-		total += mem_cgroup_shrink_node(victim, gfp_mask, false,
+-					pgdat, &nr_scanned);
+-		*total_scanned += nr_scanned;
+-		if (!soft_limit_excess(root_memcg))
+-			break;
+-	}
+-	mem_cgroup_iter_break(root_memcg, victim);
+-	return total;
+-}
+-
+-unsigned long memcg1_soft_limit_reclaim(pg_data_t *pgdat, int order,
+-					    gfp_t gfp_mask,
+-					    unsigned long *total_scanned)
+-{
+-	unsigned long nr_reclaimed = 0;
+-	struct mem_cgroup_per_node *mz, *next_mz = NULL;
+-	unsigned long reclaimed;
+-	int loop = 0;
+-	struct mem_cgroup_tree_per_node *mctz;
+-	unsigned long excess;
+-
+-	if (lru_gen_enabled())
+-		return 0;
+-
+-	if (order > 0)
+-		return 0;
+-
+-	mctz = soft_limit_tree.rb_tree_per_node[pgdat->node_id];
+-
+-	/*
+-	 * Do not even bother to check the largest node if the root
+-	 * is empty. Do it lockless to prevent lock bouncing. Races
+-	 * are acceptable as soft limit is best effort anyway.
+-	 */
+-	if (!mctz || RB_EMPTY_ROOT(&mctz->rb_root))
+-		return 0;
+-
+-	/*
+-	 * This loop can run a while, specially if mem_cgroup's continuously
+-	 * keep exceeding their soft limit and putting the system under
+-	 * pressure
+-	 */
+-	do {
+-		if (next_mz)
+-			mz = next_mz;
+-		else
+-			mz = mem_cgroup_largest_soft_limit_node(mctz);
+-		if (!mz)
+-			break;
+-
+-		reclaimed = mem_cgroup_soft_reclaim(mz->memcg, pgdat,
+-						    gfp_mask, total_scanned);
+-		nr_reclaimed += reclaimed;
+-		spin_lock_irq(&mctz->lock);
+-
+-		/*
+-		 * If we failed to reclaim anything from this memory cgroup
+-		 * it is time to move on to the next cgroup
+-		 */
+-		next_mz = NULL;
+-		if (!reclaimed)
+-			next_mz = __mem_cgroup_largest_soft_limit_node(mctz);
+-
+-		excess = soft_limit_excess(mz->memcg);
+-		/*
+-		 * One school of thought says that we should not add
+-		 * back the node to the tree if reclaim returns 0.
+-		 * But our reclaim could return 0, simply because due
+-		 * to priority we are exposing a smaller subset of
+-		 * memory to reclaim from. Consider this as a longer
+-		 * term TODO.
+-		 */
+-		/* If excess == 0, no tree ops */
+-		__mem_cgroup_insert_exceeded(mz, mctz, excess);
+-		spin_unlock_irq(&mctz->lock);
+-		css_put(&mz->memcg->css);
+-		loop++;
+-		/*
+-		 * Could not reclaim anything and there are no more
+-		 * mem cgroups to try or we seem to be looping without
+-		 * reclaiming anything.
+-		 */
+-		if (!nr_reclaimed &&
+-			(next_mz == NULL ||
+-			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
+-			break;
+-	} while (!nr_reclaimed);
+-	if (next_mz)
+-		css_put(&next_mz->memcg->css);
+-	return nr_reclaimed;
+-}
+-
+ static u64 mem_cgroup_move_charge_read(struct cgroup_subsys_state *css,
+ 				struct cftype *cft)
+ {
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index fdd13299a04a..0e04eaf64af3 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -6439,8 +6439,6 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+ {
+ 	struct zoneref *z;
+ 	struct zone *zone;
+-	unsigned long nr_soft_reclaimed;
+-	unsigned long nr_soft_scanned;
+ 	gfp_t orig_mask;
+ 	pg_data_t *last_pgdat = NULL;
+ 	pg_data_t *first_pgdat = NULL;
+@@ -6482,35 +6480,17 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+ 				sc->compaction_ready = true;
+ 				continue;
+ 			}
+-
+-			/*
+-			 * Shrink each node in the zonelist once. If the
+-			 * zonelist is ordered by zone (not the default) then a
+-			 * node may be shrunk multiple times but in that case
+-			 * the user prefers lower zones being preserved.
+-			 */
+-			if (zone->zone_pgdat == last_pgdat)
+-				continue;
+-
+-			/*
+-			 * This steals pages from memory cgroups over softlimit
+-			 * and returns the number of reclaimed pages and
+-			 * scanned pages. This works for global memory pressure
+-			 * and balancing, not for a memcg's limit.
+-			 */
+-			nr_soft_scanned = 0;
+-			nr_soft_reclaimed = memcg1_soft_limit_reclaim(zone->zone_pgdat,
+-								      sc->order, sc->gfp_mask,
+-								      &nr_soft_scanned);
+-			sc->nr_reclaimed += nr_soft_reclaimed;
+-			sc->nr_scanned += nr_soft_scanned;
+-			/* need some check for avoid more shrink_zone() */
+ 		}
+ 
+ 		if (!first_pgdat)
+ 			first_pgdat = zone->zone_pgdat;
+ 
+-		/* See comment about same check for global reclaim above */
++		/*
++		 * Shrink each node in the zonelist once. If the zonelist is
++		 * ordered by zone (not the default) then a node may be shrunk
++		 * multiple times but in that case the user prefers lower zones
++		 * being preserved.
++		 */
+ 		if (zone->zone_pgdat == last_pgdat)
+ 			continue;
+ 		last_pgdat = zone->zone_pgdat;
+@@ -7171,8 +7151,6 @@ clear_reclaim_active(pg_data_t *pgdat, int highest_zoneidx)
+ static int balance_pgdat(pg_data_t *pgdat, int order, int highest_zoneidx)
+ {
+ 	int i;
+-	unsigned long nr_soft_reclaimed;
+-	unsigned long nr_soft_scanned;
+ 	unsigned long pflags;
+ 	unsigned long nr_boost_reclaim;
+ 	unsigned long zone_boosts[MAX_NR_ZONES] = { 0, };
+@@ -7278,12 +7256,7 @@ static int balance_pgdat(pg_data_t *pgdat, int order, int highest_zoneidx)
+ 		 */
+ 		kswapd_age_node(pgdat, &sc);
+ 
+-		/* Call soft limit reclaim before calling shrink_node. */
+ 		sc.nr_scanned = 0;
+-		nr_soft_scanned = 0;
+-		nr_soft_reclaimed = memcg1_soft_limit_reclaim(pgdat, sc.order,
+-							      sc.gfp_mask, &nr_soft_scanned);
+-		sc.nr_reclaimed += nr_soft_reclaimed;
+ 
+ 		/*
+ 		 * There should be no need to raise the scanning priority if
+-- 
+2.53.0-Meta
 
-Michal
-
---brfghnffrv7lgskx
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaphbHRsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AgYRgEAp30olA9rJ2qhGFysO4s+
-aIyThbEl72AZDl4Xoxzmfa0BAPTcX/yNIMQiLrmSpdmTPSJc835GqqqammL+Cq4q
-NggI
-=9Inn
------END PGP SIGNATURE-----
-
---brfghnffrv7lgskx--
