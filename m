@@ -1,184 +1,122 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FCE44A99AD
-	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 16:17:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70C054AA585
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 17:21:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788365826; cv=none; b=MqoH40DBeHoruBUx+kZMJTYAXzjqxt7rqDlwnP+267LH6Rchha3PcuOzT5ZO87BKfO55jRzgDsb2nhI77W9ODLlkawJXtfaLrW8T28SOFXyklQVAyDwWOag9m4Z+Ini7x7Q1LNZFHqOIyNv7XZL9wckh01Zkx5nZ6Sg30Mm5cLc=
+	t=1788369703; cv=none; b=ZKQrldBahOPtaIbagbUvfPUXpGz0Cd69pROvozKva9oOEQ2IepMXxV1Kn+hA+OihDjYGNG4j7c8V7jTvewHMomFx+0I916mcNf69dANhNa9Se6Uq9NWrHmj7J6fsZ7WZve+neUfLmehAzV/uL49f5UrugBaqNSzY4gNiXczo+sc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788365826; c=relaxed/simple;
-	bh=MvzGmB5M3KwwWdgcRhErFJ3CEHCYccyXT8hULlFhA/Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MM4E1V8jQY7MPpcB1ChL3QRVQI5TlGpB7PojrxBTZJeH79hRIDgXjwriwGsxDLcy8PMyATzKeXj/MG/Kh2B0Ri1ekofaVCiEqGA8+m+XIfJDm3J7UoiTiHDFhYNVRveJ9QMPzXqOjJRVkee0SwGfXT7byI6YJOS4cfcfwQbL3gY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=ZCZY9/ou; arc=none smtp.client-ip=209.85.128.41
+	s=arc-20240116; t=1788369703; c=relaxed/simple;
+	bh=m+JVflRfogZkAqD6QsXF3pZmp6uJr0RtWwe9UeEcILs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aLzxZ6gVvzruN8UgpO9GetngCwj/9Nx2C/CADak9JGwZ+9SPhubWUf1CTD3HYHlvKF9wkwnSd+Qmhxh+E/dDjEX/HRg8wItNc80oBC6D2eMAYD4sEy0fgFDEQjvIc69pIkA7kw6pLXkdgZPGEF9JrrWS3APmP3ylHHHyNuB73hA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=SXjFc8my; arc=none smtp.client-ip=209.85.128.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ZCZY9/ou"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-495437bb891so231925e9.1
-        for <cgroups@vger.kernel.org>; Wed, 02 Sep 2026 09:17:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="SXjFc8my"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-49b392ccaacso19952005e9.2
+        for <cgroups@vger.kernel.org>; Wed, 02 Sep 2026 10:21:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1788365818; x=1788970618; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=sNc40VDRvQIJSYaBEgVXINcg1PcRLw4VS1qTwcd8gXA=;
-        b=ZCZY9/ou/3ZQ1uOggqaSdpB93HmQRbJRTe4gZ0gnpnKV5rY6XCz4kbZmWSCakOTnaK
-         FjleICOVI4pe7Ob46yTbtz4lOX2P+Z8QAziRyB6a+zJc3dtr8e6bF2v8QT4jw8PvocOj
-         pPoHBxIZ9mVIni2XWjxxgPudYgdLI1ZfrjzWvml9hqrxRk97uAsHOHlWjrV9bnQc7H16
-         VE4qHTdz55y2H9D4scZZ1bAWPkh9tPn+uGM/RYZ9GH4m+IuiPUZuKGeUwrF96lmke7Qd
-         PsJww4CRfPVn3UlUv/UaQGGXOvnFt0ggAEJ+bbfE2jmOySo17flwyfG3o++IETwhKWWc
-         qM1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788365818; x=1788970618;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+        d=suse.com; s=google; t=1788369700; x=1788974500; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=sNc40VDRvQIJSYaBEgVXINcg1PcRLw4VS1qTwcd8gXA=;
-        b=nQwVXdfQsY6B93hrm0+nLZX+vCf6ATVR75sgWMN3BCQfBbuOoGnDu8clOa64K3zWmr
-         d6G2BASsysp7ZY+2XlkPCxlOjS6hDN9VIJbCt4uJJqjCXPTNzOlZ+dDMnMVL/53yHemL
-         wBUPT0++QH00CUfD7EzDCJmDA21A+gZwRhIRzhFmdVL8RvjCI7I4t2GkRPvoD++NTLGA
-         bE8AiapGLyN8+YUANxoYUnKzLUSilcvFdSDdppcI1713v5+ZgGqlVIAUuDgZ/luzV++g
-         x0x5glUpN2Ibp0ppIwPNUPxHBm7U5dcD/5j9sHPMTdL1vY3FQ4Ri8RGAG/Q9Mgh+rm+I
-         xCQQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrMSqY0iwMcf7BxC6ySl/VvINvZwYZF+1I2PeyG/5C0eQYmeNQuizNaBm4bEtw8JNZ7kSK+YS0u@vger.kernel.org
-X-Gm-Message-State: AFuF++lwx3xNIPWN3ZoRKn6Ocayxqo5mEc6InRjJdLuTJ+7ICMm3sjTk
-	pdhlC/fVL5SGrESBIqJFjQYfvZqqDdL60j2yk+aNzlswHb0ZmtXaTloUyPAPIwd+npg=
-X-Gm-Gg: AR+sD13GmajvpEGIGI4F6DyMvxEyT84dSiA3wBJL6AqFY+GsoqbnaB7Qy2dEVN/vQAk
-	0oPKIpyOWrrjePk/1DdDj41Ws3x0DS/NHG3t+LV1I85Gfg+QfY/cJRHYzXrH2JGGYrXPMkE6VSw
-	VM0zhSyAAsnBrfCCotBpl5Os4Azg0d8wPMqbbJLXhjXa7pK+nPrCPQGcL7p90iPmgfnyXjHWeHg
-	nUxsHDf39w7Khi6qTG30WxAdh5qCnlKwWUszJ0LfqFi3XMAdQ+5DPaYOdzuAPEnQlcvWxEjbYJ5
-	VHGJUj/x54FXUXRuXBtEBGnfUwZ6yTf78KfMTuEVl5AQlArNDTriILJjJYFyBeUW4pSLeAFln6B
-	GRh9fNOxOCw8PrXf7ef9Se6y482bxMoo1I5h6wi0eBEASgRgpl6x09yrS0ubI2zVRzL+W6iJkJK
-	nHjb6J2rbPv0xTSZtd/KDM/cwNGD7l1drViK50zZcBbFHt35g0DHw=
-X-Received: by 2002:a05:600c:4745:b0:49c:ced9:ab7f with SMTP id 5b1f17b1804b1-49cee5f0dc7mr5346065e9.8.1788365817872;
-        Wed, 02 Sep 2026 09:16:57 -0700 (PDT)
-Received: from localhost.cz ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cee5d1fa6sm2948395e9.1.2026.09.02.09.16.57
+        bh=mbr8vDhDQK57otnRsW80mi/+agFd8G6T3W4N93pfIMo=;
+        b=SXjFc8myRRa5xojHOKjeEhB6i/sBvtxJUJeidgzE3zQKvBcpPwhhj/M4U5r/ZFSO0r
+         EfXwzCFKIPOCgfdXI2NFqY7pJIKRcugPakyfkFs5OwNFXVrQVqrGm+hDwMWBSsAuwXQf
+         tC9TnMBgZlR5GaamYt71w3a+LpxeY9oR2CqFPJzyLwLg0Jl4MNKtbznLSKvu1qb+iBMX
+         l9NmW1reQ4iDF5EsBLmQJS4Eu1lrfv0pucjjkNnWO3OZTdYIozFfFa53uQJQ0K6/8YVo
+         YHM1D/v6OwpaPdYOb5zuyC8zD0wNPmBA5FM8OLkOW3HEAZyCYDEBlepEBuEUPzHXyfsR
+         2/4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788369700; x=1788974500;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mbr8vDhDQK57otnRsW80mi/+agFd8G6T3W4N93pfIMo=;
+        b=KjAtOKRDjYegaDD3qiJB0bOv0RQGjJb65kRcs4mjWwceDl7aN9ZijEXOV10+65HYN6
+         nhWM0B5jDmlpE7We00ny5vmRCZ4N80GYrs9IB6nzT/0kt84P+iGMGUTlHGzV6hTCXs28
+         LcMppz8Fk15qMcvFtSRmRD/WhyE1zQ8rDT/71dstEFg1zZd0Wx1ArQ8JqByFtkHKkcUa
+         OtwQVVmoSFy1fbL7HHe8S5RLJf0EPJzuT+YOv0oBQma0pmyZULSw5TTsbJ/6iTdzR3Pz
+         hwbmQwQy2xgWXbDTu+nhSkt82vgMkfq/Li9csVG9jpcTEknR0A+GCekzifk/fnNLcMZq
+         CHmw==
+X-Forwarded-Encrypted: i=1; AHgh+RpZhkyG5UlXOTvn9de88dmslQWPunCtNtMOFSG1Rjo0CMhDTQf/gU/U8RM/UtTS9o7WYxQuzah7@vger.kernel.org
+X-Gm-Message-State: AFuF++mTEg2UjrsihsKfnDa+Avjudl9k6x8GWPwULev/WPuRVtVgx7M5
+	ZGUkRkhcsEUXrbechG7bPAnK9D4OzwuAdYOYxyJB2gsvtoxPA9dRmsYcgs6lpoKmXK0=
+X-Gm-Gg: AR+sD13fiygFB4EbHFUN2ocQNnP5ZUGzw0QYCisvUG7MfINlwV2gh+XXP3TZIh04jHA
+	i4GObKKtqnScwlRTm+EBQfEMO+BBXOUQ1KXz+3qbpuvSnkrR29dmDVfuxKrY2z5YwgL2rkWugRo
+	lna8Rb5xy5HUQBwWzf6Zv9eJpU8mEMndkFrUbRxsr91EwIMswtvBI0HVQUnn9hJTl33WFPBUdc9
+	M6u5Bpvsuo7ODbDxt7Yw8qKkL1ktRe72wEjsKHj4TJNB/FYjI2RedOhGdQF3qcoD/ufqSK1Mdq+
+	KPBFzCFaSfDHBHS6k0uysKNNn2TJaaQCDk86px/hoHZxA/J9qFrdr4sVXIz999E6Sq5OCnxEx6h
+	fIn0SGvpxVQCJcskduSEQGJii4YdMF19cEnFQdkTV3lIoWJP/TBgE0/liSmvXS8eXTOuVYq98PU
+	AhxtBvGEr3OOU5nrueJaRtRYWNgVKYggotTbczsZ0lSvf5WQPREeC/TXmZ3ftxzbw=
+X-Received: by 2002:a05:600c:4592:b0:496:c1f3:e8f8 with SMTP id 5b1f17b1804b1-49ce5828104mr100735675e9.7.1788369699585;
+        Wed, 02 Sep 2026 10:21:39 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce554d52esm46037545e9.3.2026.09.02.10.21.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Sep 2026 09:16:57 -0700 (PDT)
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-To: Tejun Heo <tj@kernel.org>,
-	cgroups@vger.kernel.org,
+        Wed, 02 Sep 2026 10:21:39 -0700 (PDT)
+Date: Wed, 2 Sep 2026 19:21:37 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Wilson Felipe Pereira <wfelipe@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Tejun Heo <tj@kernel.org>, Shuah Khan <shuah@kernel.org>, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Cc: Dan Schatzberg <dschatzberg@meta.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	stable@vger.kernel.org,
-	Noah Elias Feldt <N.Feldt@mittwald.de>,
-	Salvatore Bonaccorso <carnil@debian.org>,
-	Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH] cgroup: Avoid iteration of dying tasks with zero refcount
-Date: Wed,  2 Sep 2026 18:16:52 +0200
-Message-ID: <20260902161653.1051794-1-mkoutny@suse.com>
-X-Mailer: git-send-email 2.55.0
+Subject: Re: [PATCH v5 2/2] selftests/cgroup: test_zswap: fix implicit
+ unsigned promotion bug in test_no_kmem_bypass
+Message-ID: <apha6cxiTEi9_FS7@localhost.localdomain>
+References: <20260901052250.154532-1-wfelipe@google.com>
+ <20260901052250.154532-3-wfelipe@google.com>
+ <apaO1OHVQWJCuJDE@localhost.localdomain>
+ <p9738q5kh9uc.fsf@wfelipe-west1.c.googlers.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="brfghnffrv7lgskx"
+Content-Disposition: inline
+In-Reply-To: <p9738q5kh9uc.fsf@wfelipe-west1.c.googlers.com>
 
-The commit 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from
-cgroup_task_release() to cgroup_task_free()") extended the lifetime of
-tasks on the dying_tasks list.
-The iterators have provision to go through dying_tasks because of
-dying threadgroup leaders or explicit CSS_TASK_ITER_WITH_DEAD, however,
-it was expected that such tasks can obtain a new reference (that is
-possible before cgroup_task_release()/put_task_struct_rcu_user()).
-The tasks after cgroup_task_release() and before cgroup_task_free()
-are subject to race when they may or may not have usage count > 0.
-The iterator should not attempt to resurrect tasks whose usage count
-dropped to zero. (When that happens, __put_task_struct_rcu_cb() is
-already imminent and the returned task_struct would could be used
-after free.)
 
-As a band-aid, filter tasks returned from css_task_iter_next() only to
-those that have positive usage count (whose reference's lifetime can be
-extended).
+--brfghnffrv7lgskx
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v5 2/2] selftests/cgroup: test_zswap: fix implicit
+ unsigned promotion bug in test_no_kmem_bypass
+MIME-Version: 1.0
 
-Rough illustration of the possible race
+On Tue, Sep 01, 2026 at 10:42:51PM +0000, Wilson Felipe Pereira <wfelipe@go=
+ogle.com> wrote:
+> I like this option a), any thoughts on the sequence here?
+>=20
+> I thought the following steps:
+> 1) Add cg_read_key_s64() here and make use of it;
+> 2) In another patch (probably 3/3), replace all uses of cg_read_key_long
+>    by cg_read_key_s64. There are 41 uses currently.
 
-  R (reader of cgroup.procs)         T (thread)                       L (group leader)
-  ---------------------------------  -------------------------------- --------------------------------
-                                                                      L exits, signal->live > 0
-                                                                      cgroup_task_dead(L)
-                                                                        css_set_skip_task_iters() // skips only cset->tasks
-                                                                        list_add_tail(&L->cg_list, &cset->dying_tasks)
-  css_task_iter_next()
-    take css_set_lock
-    css_task_iter_advance()
-      leader && signal->live != 0
-      => it->task_pos = &L->cg_list
-                                     T exits
-                                     --signal->live == 0
-                                     release_task(T)
-                                       cgroup_task_release(T)
-                                       release_task(L) // zap_leader
-                                         cgroup_task_release(L)
-                                         put_task_struct_rcu_user(L)
-                                         ...RCU...
-                                         put_task_struct(L)
-                                           L->usage = 0
-                                           /* L still on dying_tasks */
-                                           ...RCU...
-                                           __put_task_struct(L)
-    it->task_pos = &L->cg_list
-    get_task_struct(L)
-      => addition on 0
-    drop css_set_lock
-                                           cgroup_task_free(L)
-                                             css_set_skip_task_iters() // dying skip comes too late
-                                           free_task(L)
-  cgroup_procs_show()
-    task_pid_vnr(L)
+Sounds good to me.
 
-cgroup_task_release() is not synced via css_set_lock hence the race
-possibility. (I'm not 100% convinced about this LLM-assisted
-interleaving, multiple css_task_iter_next() calls may be involved with
-css_set_lock released.)
-
-Fixes: 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from cgroup_task_release() to cgroup_task_free()")
-Cc: stable@vger.kernel.org # v6.19+
-Link: https://lists.debian.org/debian-kernel/2026/08/msg00220.html
-Reported-by: Noah Elias Feldt <N.Feldt@mittwald.de>
-Reported-by: Salvatore Bonaccorso <carnil@debian.org>
-Signed-off-by: Michal Koutný <mkoutny@suse.com>
----
- kernel/cgroup/cgroup.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-Salvatore,
-I was able to trigger the issue with your reproducer on 7.1.8
-(occassionally, not always). With the patch on top of v7.3-rc1, I cannot
-reproduce it (different base though). If you can confirm that in your
-env, it'd be good.
-
-Thanks,
 Michal
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index c3a12fee7528f..112d68fe28778 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5303,10 +5303,13 @@ struct task_struct *css_task_iter_next(struct css_task_iter *it)
- 	if (it->flags & CSS_TASK_ITER_SKIPPED)
- 		css_task_iter_advance(it);
- 
--	if (it->task_pos) {
-+	while (it->task_pos && !it->cur_task) {
- 		it->cur_task = list_entry(it->task_pos, struct task_struct,
- 					  cg_list);
--		get_task_struct(it->cur_task);
-+		/* a task on dying_tasks with zero refcount is only valid for
-+		 * RCU readers, not even interesting for
-+		 * CSS_TASK_ITER_WITH_DEAD, find another one */
-+		it->cur_task = tryget_task_struct(it->cur_task);
- 		css_task_iter_advance(it);
- 	}
- 
--- 
-2.55.0
+--brfghnffrv7lgskx
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaphbHRsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AgYRgEAp30olA9rJ2qhGFysO4s+
+aIyThbEl72AZDl4Xoxzmfa0BAPTcX/yNIMQiLrmSpdmTPSJc835GqqqammL+Cq4q
+NggI
+=9Inn
+-----END PGP SIGNATURE-----
+
+--brfghnffrv7lgskx--
