@@ -1,32 +1,33 @@
-Received: from mta1.migadu.com (out-143.mta1.migadu.com [95.215.58.143])
+Received: from mta0.migadu.com (out-115.mta0.migadu.com [91.218.175.115])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91CC3A1A54
-	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 10:26:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.143
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ED8443FD18
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 10:26:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.115
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788344790; cv=none; b=PpjAEgsliIarPC+4VGB9Gdfs51DRqgxzWSwjh/pD4U1UIOHUS9Q1IYXQ+L892nWY3igljZ3ruzIds842R2NAsem2Wy0A8XWkyCjXgA7y/9YOkI66CWQB46IaEmiDl2d0A72n+X9KIbsX/hrkpdl0wgvvxSUmTUflkrmWoJB1x0U=
+	t=1788344795; cv=none; b=mUdZKENOb91BdjNF6xW/LdlRJ8daVkktUSo2y4p5qfZJBE2mCaehxOrh5f4GJa92YZoksEvSKKwrZlwfQWVv7F6xlLf4o+oND2zPhAT4gke7Gp2qELgFxdBB3Z1DfAC3TAK+WCm/dPY4TCC7sMcNdaVvI7oSMGi+2QOXqZ2TtLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788344790; c=relaxed/simple;
-	bh=ozjvIvUOcuwBj9pLnU9tq8iGZAyk8kJZnCt29NmdDpg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XS3wtBUJHLmUcEHv8w/dYxqlQMC7O0NxJ1t4FqVAxTA1kwZBQSa/jpveo8sVKdy/aTlKz/JbvvLFpPtZRMvtu6yq3X2/KK8MCXCKkMJA5GbfGxDTiRqfi7WKEfVRZQvnoIrpAClOqCunkVPXqmZf3qlmIqgRLt0dviZgrXGnMyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=EaOCwsMT; arc=none smtp.client-ip=95.215.58.143
+	s=arc-20240116; t=1788344795; c=relaxed/simple;
+	bh=kQ4SUfFL7l6CK6D4M0vZTJ4yXI8I7EmpzCUw04y0Mtw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=WZ892CHUJGwo4pqFezx2O9I01x7M9L9o3IuQ+gji7FGo5TLkCEV+kfg9DfVZ3mJR+zu02rLHIYnNshaNaCj1z9anYN8BySPn2VUbGOrTFFae8zwVC56MgPv56FhQWBvl+GYZzwHziMZDJhqRsWTv2w0+wWR6oj2oAG5AqO002So=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Z4jLufZg; arc=none smtp.client-ip=91.218.175.115
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="EaOCwsMT"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Z4jLufZg"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=ozjvIvUOcuwBj9pLnU9tq8iGZAyk8kJZnCt29NmdDpg=;
+DKIM-Signature: a=rsa-sha256; bh=kQ4SUfFL7l6CK6D4M0vZTJ4yXI8I7EmpzCUw04y0Mtw=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788344785; v=1; x=1788949585;
- b=EaOCwsMT991e8wsWyRrOSmmXXlZQshYBPGho3CaFxmFvLOBeIIGhq2RGkFZfL6QL3TkgM2wp
- zJHEKGprGx/4jVhSEe1l3suBWl9LPC/JZAUMgD6UcyXcL1oXq8v56f3VshCHeHugky1MIQ26PML
- JiWNME7f5+EqYoL/GcGv2pNI=
+ t=1788344791; v=1; x=1788949591;
+ b=Z4jLufZgUef4DIgbPPU1Cyw4/bpI5GGQ4RxQup3T3iPBT/hODAZJ5bWcRfB9J8VMbz9XpKDh
+ zIjuasbPK8qlbmx5JK5IS46/8qBK4/gz9+U55zlXGOSMJpfU93aENvSChlBu2KMEt0zjjLR9cIi
+ 42LJzqKerGkBF9f9/rWnt11c=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 52c2f6c04a87ca4d;
-	Wed, 02 Sep 2026 10:26:25 +0000
-X-Mizu-Trace-ID: 52c2f6c04a87ca4d
+Received: by smtp.migadu.com with ESMTPS id b319449c4d0dc839;
+	Wed, 02 Sep 2026 10:26:31 +0000
+X-Mizu-Trace-ID: b319449c4d0dc839
 X-Migadu-Flow: FLOW_OUT
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: cgroups@vger.kernel.org,
@@ -38,11 +39,13 @@ Cc: tj@kernel.org,
 	shuah@kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
-	Guopeng Zhang <guopeng.zhang@linux.dev>
-Subject: [PATCH v3 0/7] cgroup/cpuset: Fix partition type transitions
-Date: Wed,  2 Sep 2026 18:26:08 +0800
-Message-ID: <20260902102615.79189-1-guopeng.zhang@linux.dev>
+	Guopeng Zhang <zhangguopeng@kylinos.cn>
+Subject: [PATCH v3 1/7] cgroup/cpuset: Factor out child partition validation
+Date: Wed,  2 Sep 2026 18:26:09 +0800
+Message-ID: <20260902102615.79189-2-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260902102615.79189-1-guopeng.zhang@linux.dev>
+References: <20260902102615.79189-1-guopeng.zhang@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,89 +54,84 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Several partition type-change and validation paths use effective_xcpus,
-which also includes CPUs assigned to valid child partitions. As a result,
-changing a parent between root and isolated can alter a child's isolation
-accounting or fail housekeeping validation because of CPUs the parent does
-not own.
+From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-A proposed parent CPU mask needs different treatment for children which
-would become invalid under that mask. Their CPUs return to the parent and
-must participate in housekeeping validation. Otherwise a parent can pass
-validation with a boot-isolated CPU hidden behind a child which is about
-to become invalid.
+compute_partition_effective_cpumask() checks whether each valid child
+partition remains covered by the parent exclusive CPU mask and whether it
+would consume all remaining CPUs of a populated parent.
 
-There are two related failure paths. Returning the last housekeeping CPU
-from a root child to an isolated parent must invalidate the appropriate
-isolated ancestor. Also, a root/isolated type change which fails
-housekeeping validation must release the partition's CPUs instead of
-leaving them unavailable to the owner of the invalidated subtree.
+Factor these two checks into child_partition_error() so the same rules can
+be reused when evaluating a proposed parent configuration. This is a
+preparatory refactoring with no intended functional change.
 
-Factor out the child partition validity checks and reuse them when
-computing the CPUs owned directly by a partition under a proposed
-configuration. Use the directly owned CPUs for root/isolated type-change
-accounting and housekeeping validation, handle the last-housekeeping-CPU
-return case, and run the normal partition-disable path after a failed
-type-change validation. Add focused selftests for each case.
+Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+---
+ kernel/cgroup/cpuset.c | 38 +++++++++++++++++++++++++++++---------
+ 1 file changed, 29 insertions(+), 9 deletions(-)
 
-This is based on cgroup/for-7.3-fixes (3f4b7d1a49c5 "selftests/cgroup:
-test clone3() into a previously killed cgroup").
-
-Testing:
-
-- Ran tools/testing/selftests/cgroup/test_cpuset_prs.sh with
-  isolcpus=domain,15; all applicable tests passed.
-- Ran the housekeeping CPU-return tests with
-  nohz_full=1-14 isolcpus=domain,15; both cases passed.
-
-Changes in v3:
-
-- factor the child partition validity rules into a preparatory patch and
-  reuse them for trial ownership calculation;
-- during trial validation, subtract only children which remain valid under
-  the proposed parent CPU mask, covering both PERR_INVCPUS and PERR_NOCPUS;
-- keep cs->effective_xcpus as the default isolation-accounting mask and
-  use the directly owned mask only for a successful root/isolated type
-  change;
-- use an isolated child for the boot-isolated trial-validation tests, as a
-  root child containing that CPU fails immediately with PERR_HKEEPING;
-- make the isolated-ancestor walk safe when it reaches the top cpuset and
-  clarify the member-transition handling;
-- clean up nested housekeeping-return test cgroups on failure.
-
-Link: https://lore.kernel.org/all/20260828095643.13395-1-guopeng.zhang@linux.dev/
-
-Changes in v2:
-
-- split the type-transition fixes from the original series;
-- merge the child-owned accounting and validation changes;
-- validate trial CPU masks against CPUs owned directly by the partition;
-- handle a root child returning the last housekeeping CPU, including
-  nested isolated ancestors;
-- use the common partition-disable path after type-change validation
-  failure;
-- initialize boot-isolated CPU data during selftest setup;
-- split the accounting, child-owned validation and housekeeping-return
-  tests.
-
-Link: https://lore.kernel.org/all/20260820124202.517160-1-guopeng.zhang@linux.dev/
-
-Guopeng Zhang (7):
-  cgroup/cpuset: Factor out child partition validation
-  cgroup/cpuset: Account for child CPU ownership in partition changes
-  selftests/cgroup: Add tests for type-change isolation accounting
-  selftests/cgroup: Test child CPU ownership in partition changes
-  selftests/cgroup: Add tests for housekeeping CPU return to isolated
-    parents
-  cgroup/cpuset: Release CPUs when type-change validation fails
-  selftests/cgroup: Add CPU release tests for type-change validation
-    failures
-
- kernel/cgroup/cpuset.c                        | 182 +++++++-
- .../selftests/cgroup/test_cpuset_prs.sh       | 430 +++++++++++++++++-
- 2 files changed, 588 insertions(+), 24 deletions(-)
-
-
-base-commit: 3f4b7d1a49c5c826f3be9b684313eea5b83ac232
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 8f24171b6055..6994dc75d940 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2085,6 +2085,26 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+ 	return 0;
+ }
+ 
++/*
++ * Return the error that will invalidate a child partition under a proposed
++ * parent partition configuration.
++ */
++static enum prs_errcode
++child_partition_error(struct cpuset *child,
++		      const struct cpumask *partition_cpus,
++		      const struct cpumask *remaining_cpus,
++		      bool parent_populated)
++{
++	if (!cpumask_subset(child->effective_xcpus, partition_cpus))
++		return PERR_INVCPUS;
++
++	if (parent_populated &&
++	    cpumask_subset(remaining_cpus, child->effective_xcpus))
++		return PERR_NOCPUS;
++
++	return PERR_NONE;
++}
++
+ /**
+  * compute_partition_effective_cpumask - compute effective_cpus for partition
+  * @cs: partition root cpuset
+@@ -2121,6 +2141,8 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+ 
+ 	rcu_read_lock();
+ 	cpuset_for_each_child(child, css, cs) {
++		enum prs_errcode child_err;
++
+ 		if (!is_partition_valid(child))
+ 			continue;
+ 
+@@ -2129,15 +2151,13 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+ 		 * partition root.
+ 		 */
+ 		WARN_ON_ONCE(is_remote_partition(child));
+-		WRITE_ONCE(child->prs_err, 0);
+-		if (!cpumask_subset(child->effective_xcpus,
+-				    cs->effective_xcpus))
+-			WRITE_ONCE(child->prs_err, PERR_INVCPUS);
+-		else if (populated &&
+-			 cpumask_subset(new_ecpus, child->effective_xcpus))
+-			WRITE_ONCE(child->prs_err, PERR_NOCPUS);
+-
+-		if (child->prs_err) {
++		WRITE_ONCE(child->prs_err, PERR_NONE);
++		child_err = child_partition_error(child, cs->effective_xcpus,
++						  new_ecpus, populated);
++		if (child_err)
++			WRITE_ONCE(child->prs_err, child_err);
++
++		if (child_err) {
+ 			int old_prs = child->partition_root_state;
+ 
+ 			/*
 -- 
 2.43.0
+
