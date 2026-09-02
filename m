@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B08344570DC;
-	Wed,  2 Sep 2026 23:03:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C99F145DF7A;
+	Wed,  2 Sep 2026 23:03:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788390198; cv=none; b=iM8jma1Vb/dHul4MhWR7DBxqsQJ3blVBwomgdInT0lbiaNULjTua5X2iOqd8Bg0t9vXldEJZjsjKEtE41lA/Q8riqaxmDaq4v6q5wYj/It4lG5BE7DkPX8ug51tvDC8lpzgTh9cxwRFom+SrxaeaGEs8fjZfNkboCu3m6/J+8ps=
+	t=1788390199; cv=none; b=c+IRRSnwtkTaFtNWrlczvPI1z3RjuQnGTbHp4HGhkslbHcZbXBepFJqpsMWsd72nuwDX9Gnzj4GmNNtDEr6zmfAquqcs7a7GLHP3Lh7F0I0CQ0heBIRW0S/dpKjrSnzeV6pc4r4jAo9aoNQF/Xnp1Mx68YjCn2NJfz1Iwg2EhCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788390198; c=relaxed/simple;
-	bh=fp7MWsVj8esTMjTwfffIb5ZhPY6VFWRQfRjWfSyCMLs=;
+	s=arc-20240116; t=1788390199; c=relaxed/simple;
+	bh=CwGHvM079Im0TuHoV0Drg/Mimle10zFtbdHmu3f2NE4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=e7gmqu28Qo2HBCobs/cDpGXiuC6YIQfTHxTxTadwX6ab3QcwaCFwECxOL0eBhROsNmrr3KR9Y4XAcV5ET9DhiV9VJv+B6HESZJ0asnwUFgpb3tHkEqKNK5EKf5S9WGlAF0ypc3lAv1FWyFqJ73FHS5Q0So5ByelrHg/1vOL0N4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBY93s55; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=ZdlK57f6HVh9K6uulhes8N281rPJKsEh3cyCbiDKj6E+79wIoLR8VZ4lrwSsh7+7Y2oZGTwdO317SRPIx1WxMVixedAKlgvnb7tsLMZZoWHNw5QtOjKyK7LziAG2b2g7/6y2g1rt6SWs3UHTbAYgsyt4KZiB4x0U9qlrhcnF/1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OH3bI0QJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBY93s55"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B7C61F00A3E;
-	Wed,  2 Sep 2026 23:03:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OH3bI0QJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 311BD1F000E9;
+	Wed,  2 Sep 2026 23:03:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788390196;
-	bh=MiN0XteFwj5t9AgJUtHGHzHFCcJNmj2TDOBzZh23NKc=;
+	s=k20260515; t=1788390197;
+	bh=zbYJZzsZQFzJ7Y2l+2uragr4mBEIJa3oynFCBMsaSQs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OBY93s55zLn9/bkoh/9O265QY3iBiSv5NeEmdtofZl2nEbdML027rX7j+Ql5Dzc+y
-	 CCwoVMdrYTM3FsJdMToox5KqsTaklPXfVLbSFwMgXdSWGuFJyPrIOTZKoWXKxd8jSw
-	 aoqcsDMkYz+ssXG8euoJLAYFjyUAqWSTk4tiSPcCyPv7D7PG+K/zqpUZJ3VW8dc59A
-	 FHiw/mKHSbMLQi+MjJ2GynCX3ZLwZtV3K/lK4lVqcBkzd7e6Gk6X+Yei7YRzGnrrcV
-	 UuiV41UA8+qIH/jM+2ZBRuFUyaUSHZYyjzKZZDLLv2R0e4vwCSCYSsefUxJFpuJgmh
-	 LYTK5sORQUe4Q==
+	b=OH3bI0QJpqRpklxqGsU70lc/qOEHhMDIFax1A92b9OpdOf5kcCGW4S+G8s7k6sVG9
+	 sAI8GVDaDlcmQjtqFSLpR/vpfpBgYCFjM1BcxgjtXxj0zv5gkAX183U3NVulqE8u+C
+	 VNBiq3hihsjhGgGga+yUJsIv0WtdnL42JVp2SRoUn4DtNe2UNxkouL8MdqtcO7k3VM
+	 fPbAY9W0g+ytlE7AJbE6+m11iBghlHx05UabJ57mmYf/xCcWf8TiwXLgsLyqIWodv/
+	 I9MbB+oK+amv7G44hQ9TbLQUSjvHedJmPZC6151txIb0rcdMJzEyXdQexSRblxvC+G
+	 v5bHaR7lnyJGQ==
 From: Tejun Heo <tj@kernel.org>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Koutny <mkoutny@suse.com>
@@ -34,9 +34,9 @@ Cc: cgroups@vger.kernel.org,
 	syzbot+bb2e19a1190a556c01b1@syzkaller.appspotmail.com,
 	Tao Yu <tao1.yu@intel.com>,
 	Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/3] cgroup: Return ERR_PTR from cgroup_kn_lock_live()
-Date: Wed,  2 Sep 2026 13:03:12 -1000
-Message-ID: <20260902230313.530839-3-tj@kernel.org>
+Subject: [PATCH 3/3] cgroup: Make the offline drain interruptible
+Date: Wed,  2 Sep 2026 13:03:13 -1000
+Message-ID: <20260902230313.530839-4-tj@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260902230313.530839-1-tj@kernel.org>
 References: <20260902230313.530839-1-tj@kernel.org>
@@ -48,231 +48,186 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-cgroup_kn_lock_live() returns NULL when the cgroup is dead and the callers
-translate that into an errno themselves. Return ERR_PTR(-ENODEV) instead and
-have the callers pass the errno through, so that failures other than a dead
-cgroup can be reported through the same return value. No functional change.
+cgroup_subtree_control_write() and cgroup_type_write() drain dying csses
+from the subtree before re-applying control, so that a controller being
+re-enabled gets a fresh css instead of adopting one that is still dying. The
+drain waits for offline_css() in TASK_UNINTERRUPTIBLE.
 
+Since 1dffd95575eb ("cgroup: Defer kill_css_finish() in
+cgroup_apply_control_disable()"), a disabled css offlines only after every
+task that still pins it has finished exiting. The root cause of the hang is
+an indefinite wait in a place where indefinite waits should not happen: a
+task past exit_signals() can block in its exit path for as long as, say, a
+FUSE daemon takes to answer a flush, and nothing can interrupt it because
+prepare_signal() drops every signal for an exiting group. The drain then
+escalated that into an uninterruptible wait for the writer, which sits in D
+state for as long as the exiting task does. That is the hang syzbot reports
+as "task hung in cgroup_subtree_control_write".
+
+Make the drain interruptible. Nothing has been modified when it runs, so the
+write restarts or fails with EINTR without side effects. cgroup1 mount and
+remount drain the same way and become interruptible too.
+cgroup_destroy_root() drains from a workqueue where no signal is ever
+pending and keeps waiting as before.
+
+This only stops the escalation. The write still waits for the exiting tasks,
+and the indefinite wait in the exit path remains a separate problem.
+
+Fixes: 1dffd95575eb ("cgroup: Defer kill_css_finish() in cgroup_apply_control_disable()")
+Reported-by: syzbot+bb2e19a1190a556c01b1@syzkaller.appspotmail.com
+Link: https://lore.kernel.org/all/6a23a4b4.e4db5ad2.3b7dfb.0000.GAE@google.com/
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup/cgroup-v1.c |  8 +++----
- kernel/cgroup/cgroup.c    | 50 +++++++++++++++++++--------------------
- kernel/cgroup/debug.c     | 10 ++++----
- 3 files changed, 34 insertions(+), 34 deletions(-)
+ kernel/cgroup/cgroup-internal.h |  2 +-
+ kernel/cgroup/cgroup-v1.c       |  8 ++++--
+ kernel/cgroup/cgroup.c          | 48 ++++++++++++++++++++++-----------
+ 3 files changed, 40 insertions(+), 18 deletions(-)
 
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index 58797123b752..f2684f9f8e0a 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -254,7 +254,7 @@ void cgroup_procs_write_finish(struct task_struct *task,
+ 			       enum cgroup_attach_lock_mode lock_mode)
+ 	__releases(&cgroup_threadgroup_rwsem);
+ 
+-void cgroup_lock_and_drain_offline(struct cgroup *cgrp);
++int cgroup_lock_and_drain_offline(struct cgroup *cgrp);
+ 
+ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode);
+ int cgroup_rmdir(struct kernfs_node *kn);
 diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index a4337c9b5287..7e008867f3ac 100644
+index 7e008867f3ac..167bf6555a49 100644
 --- a/kernel/cgroup/cgroup-v1.c
 +++ b/kernel/cgroup/cgroup-v1.c
-@@ -506,8 +506,8 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
- 	enum cgroup_attach_lock_mode lock_mode;
+@@ -1097,7 +1097,9 @@ int cgroup1_reconfigure(struct fs_context *fc)
+ 	int ret = 0;
+ 	u32 added_mask, removed_mask;
  
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
+-	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
++	ret = cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
++	if (unlikely(ret))
++		return ret;
  
- 	task = cgroup_procs_write_start(buf, threadgroup, &lock_mode);
- 	ret = PTR_ERR_OR_ZERO(task);
-@@ -569,8 +569,8 @@ static ssize_t cgroup_release_agent_write(struct kernfs_open_file *of,
+ 	/* See what subsystems are wanted */
+ 	ret = check_cgroupfs_options(fc);
+@@ -1262,7 +1264,9 @@ int cgroup1_get_tree(struct fs_context *fc)
+ 	if (!ns_capable(ctx->ns->user_ns, CAP_SYS_ADMIN))
  		return -EPERM;
  
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 	spin_lock(&release_agent_path_lock);
- 	strscpy(cgrp->root->release_agent_path, strstrip(buf),
- 		sizeof(cgrp->root->release_agent_path));
+-	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
++	ret = cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
++	if (unlikely(ret))
++		return ret;
+ 
+ 	ret = cgroup1_root_to_use(fc);
+ 	if (!ret && !percpu_ref_tryget_live(&ctx->root->cgrp.self.refcnt))
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 37bc8a67a40f..61a201bed71a 100644
+index 61a201bed71a..7f25678f8b7b 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -1685,8 +1685,8 @@ void cgroup_kn_unlock(struct kernfs_node *kn)
-  * This helper is to be used by a cgroup kernfs method currently servicing
-  * @kn.  It breaks the active protection, performs cgroup locking and
+@@ -1379,7 +1379,10 @@ static void cgroup_destroy_root(struct cgroup_root *root)
+ 
+ 	trace_cgroup_destroy_root(root);
+ 
+-	cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
++	/* runs off a workqueue, no signal can interrupt the drain */
++	ret = cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
++	if (WARN_ON_ONCE(ret))
++		cgroup_lock();
+ 
+ 	BUG_ON(atomic_read(&root->nr_cgrps));
+ 	BUG_ON(!list_empty(&cgrp->self.children));
+@@ -1687,7 +1690,8 @@ void cgroup_kn_unlock(struct kernfs_node *kn)
   * verifies that the associated cgroup is alive.  Returns the cgroup if
-- * alive; otherwise, %NULL.  A successful return should be undone by a
-- * matching cgroup_kn_unlock() invocation.  If @drain_offline is %true, the
-+ * alive; otherwise, an ERR_PTR value.  A successful return should be undone by
-+ * a matching cgroup_kn_unlock() invocation.  If @drain_offline is %true, the
-  * cgroup is drained of offlining csses before return.
+  * alive; otherwise, an ERR_PTR value.  A successful return should be undone by
+  * a matching cgroup_kn_unlock() invocation.  If @drain_offline is %true, the
+- * cgroup is drained of offlining csses before return.
++ * cgroup is drained of offlining csses before return, and an interrupted drain
++ * fails with -ERESTARTSYS.
   *
   * Any cgroup kernfs method implementation which requires locking the
-@@ -1710,7 +1710,7 @@ struct cgroup *cgroup_kn_lock_live(struct kernfs_node *kn, bool drain_offline)
- 	 * break the active_ref protection.
- 	 */
- 	if (!cgroup_tryget(cgrp))
--		return NULL;
-+		return ERR_PTR(-ENODEV);
+  * associated cgroup should use this helper.  It avoids nesting cgroup
+@@ -1697,6 +1701,7 @@ void cgroup_kn_unlock(struct kernfs_node *kn)
+ struct cgroup *cgroup_kn_lock_live(struct kernfs_node *kn, bool drain_offline)
+ {
+ 	struct cgroup *cgrp;
++	int ret;
+ 
+ 	if (kernfs_type(kn) == KERNFS_DIR)
+ 		cgrp = kn->priv;
+@@ -1713,10 +1718,16 @@ struct cgroup *cgroup_kn_lock_live(struct kernfs_node *kn, bool drain_offline)
+ 		return ERR_PTR(-ENODEV);
  	kernfs_break_active_protection(kn);
  
- 	if (drain_offline)
-@@ -1722,7 +1722,7 @@ struct cgroup *cgroup_kn_lock_live(struct kernfs_node *kn, bool drain_offline)
- 		return cgrp;
+-	if (drain_offline)
+-		cgroup_lock_and_drain_offline(cgrp);
+-	else
++	if (drain_offline) {
++		ret = cgroup_lock_and_drain_offline(cgrp);
++		if (unlikely(ret)) {
++			kernfs_unbreak_active_protection(kn);
++			cgroup_put(cgrp);
++			return ERR_PTR(ret);
++		}
++	} else {
+ 		cgroup_lock();
++	}
  
- 	cgroup_kn_unlock(kn);
--	return NULL;
-+	return ERR_PTR(-ENODEV);
+ 	if (!cgroup_is_dead(cgrp))
+ 		return cgrp;
+@@ -3320,16 +3331,20 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+  * @cgrp: root of the target subtree
+  *
+  * Because css offlining is asynchronous, userland may try to re-enable a
+- * controller while the previous css is still around.  This function grabs
+- * cgroup_mutex and drains the previous css instances of @cgrp's subtree.
++ * controller while the previous css is still around. This function grabs
++ * cgroup_mutex and waits until no css in @cgrp's subtree is dying. A dying css
++ * offlines only after every task that still pins it has finished exiting, which
++ * can take arbitrarily long, so the wait is interruptible.
++ *
++ * Returns 0 with cgroup_mutex held once the subtree is drained, or -ERESTARTSYS
++ * without it if interrupted by a signal.
+  */
+-void cgroup_lock_and_drain_offline(struct cgroup *cgrp)
+-	__acquires(&cgroup_mutex)
++int cgroup_lock_and_drain_offline(struct cgroup *cgrp)
+ {
+ 	struct cgroup *dsct;
+ 	struct cgroup_subsys_state *d_css;
+ 	struct cgroup_subsys *ss;
+-	int ssid;
++	int ssid, ret;
+ 
+ restart:
+ 	cgroup_lock();
+@@ -3343,17 +3358,20 @@ void cgroup_lock_and_drain_offline(struct cgroup *cgrp)
+ 				continue;
+ 
+ 			cgroup_get_live(dsct);
+-			prepare_to_wait(&dsct->offline_waitq, &wait,
+-					TASK_UNINTERRUPTIBLE);
+-
++			ret = prepare_to_wait_event(&dsct->offline_waitq, &wait,
++						    TASK_INTERRUPTIBLE);
+ 			cgroup_unlock();
+-			schedule();
++			if (!ret)
++				schedule();
+ 			finish_wait(&dsct->offline_waitq, &wait);
+-
+ 			cgroup_put(dsct);
++			if (unlikely(ret))
++				return ret;
+ 			goto restart;
+ 		}
+ 	}
++
++	return 0;
  }
  
- static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
-@@ -3650,8 +3650,8 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	}
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, true);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	for_each_subsys(ss, ssid) {
- 		if (enable & (1 << ssid)) {
-@@ -3790,8 +3790,8 @@ static ssize_t cgroup_type_write(struct kernfs_open_file *of, char *buf,
- 
- 	/* drain dying csses before we re-apply (threaded) subtree control */
- 	cgrp = cgroup_kn_lock_live(of->kn, true);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	/* threaded can only be enabled */
- 	ret = cgroup_enable_threaded(cgrp);
-@@ -3833,8 +3833,8 @@ static ssize_t cgroup_max_descendants_write(struct kernfs_open_file *of,
- 		return -ERANGE;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	WRITE_ONCE(cgrp->max_descendants, descendants);
- 
-@@ -3876,8 +3876,8 @@ static ssize_t cgroup_max_depth_write(struct kernfs_open_file *of,
- 		return -ERANGE;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	WRITE_ONCE(cgrp->max_depth, depth);
- 
-@@ -4075,8 +4075,8 @@ static ssize_t pressure_write(struct kernfs_open_file *of, char *buf,
- 	ssize_t ret = 0;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	ctx = of->priv;
- 	if (!ctx) {
-@@ -4192,8 +4192,8 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of,
- 		return -ERANGE;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	psi = cgroup_psi(cgrp);
- 	if (psi->enabled != enable) {
-@@ -4268,8 +4268,8 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
- 		return -ERANGE;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	cgroup_freeze(cgrp, freeze);
- 
-@@ -4330,8 +4330,8 @@ static ssize_t cgroup_kill_write(struct kernfs_open_file *of, char *buf,
- 		return -ERANGE;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	/*
- 	 * Killing is a process directed operation, i.e. the whole thread-group
-@@ -5485,8 +5485,8 @@ static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
- 	enum cgroup_attach_lock_mode lock_mode;
- 
- 	dst_cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!dst_cgrp)
--		return -ENODEV;
-+	if (IS_ERR(dst_cgrp))
-+		return PTR_ERR(dst_cgrp);
- 
- 	task = cgroup_procs_write_start(buf, threadgroup, &lock_mode);
- 	ret = PTR_ERR_OR_ZERO(task);
-@@ -6120,8 +6120,8 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
- 		return -EINVAL;
- 
- 	parent = cgroup_kn_lock_live(parent_kn, false);
--	if (!parent)
--		return -ENODEV;
-+	if (IS_ERR(parent))
-+		return PTR_ERR(parent);
- 
- 	if (!cgroup_check_hierarchy_limits(parent)) {
- 		ret = -EAGAIN;
-@@ -6397,7 +6397,7 @@ int cgroup_rmdir(struct kernfs_node *kn)
- 	int ret = 0;
- 
- 	cgrp = cgroup_kn_lock_live(kn, false);
--	if (!cgrp)
-+	if (IS_ERR(cgrp))
- 		return 0;
- 
- 	ret = cgroup_destroy_locked(cgrp);
-diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-index 883347b87842..96004cd65d09 100644
---- a/kernel/cgroup/debug.c
-+++ b/kernel/cgroup/debug.c
-@@ -45,7 +45,7 @@ static int current_css_set_read(struct seq_file *seq, void *v)
- 	struct cgroup_subsys_state *css;
- 	int i, refcnt;
- 
--	if (!cgroup_kn_lock_live(of->kn, false))
-+	if (IS_ERR(cgroup_kn_lock_live(of->kn, false)))
- 		return -ENODEV;
- 
- 	spin_lock_irq(&css_set_lock);
-@@ -206,8 +206,8 @@ static int cgroup_subsys_states_read(struct seq_file *seq, void *v)
- 	int i;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	for_each_subsys(ss, i) {
- 		css = rcu_dereference_check(cgrp->subsys[ss->id], true);
-@@ -254,8 +254,8 @@ static int cgroup_masks_read(struct seq_file *seq, void *v)
- 	struct cgroup *cgrp;
- 
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
--	if (!cgrp)
--		return -ENODEV;
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
- 
- 	cgroup_masks_read_one(seq, "subtree_control", cgrp->subtree_control);
- 	cgroup_masks_read_one(seq, "subtree_ss_mask", cgrp->subtree_ss_mask);
+ /**
 -- 
 2.55.0
 
