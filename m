@@ -1,60 +1,48 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-143.mta1.migadu.com [95.215.58.143])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E7453EFD22;
-	Wed,  2 Sep 2026 10:19:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91CC3A1A54
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 10:26:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.143
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788344360; cv=none; b=TfcdZOowoWidT/KK4MAY/1MgdWD4C530gIvvQDGrZmmb72xvptm0GIlo9TChQDRoYP8nL6wUIzx8/QO4T0EH0HC2qMDc7O+Eet7RAF0NSXwZJzsCKJ6fiAhxIMB0uEZVfQiFK6cEpm0hGJhDM+rFHMpRQU0wwjBCro/KzaPtTXY=
+	t=1788344790; cv=none; b=PpjAEgsliIarPC+4VGB9Gdfs51DRqgxzWSwjh/pD4U1UIOHUS9Q1IYXQ+L892nWY3igljZ3ruzIds842R2NAsem2Wy0A8XWkyCjXgA7y/9YOkI66CWQB46IaEmiDl2d0A72n+X9KIbsX/hrkpdl0wgvvxSUmTUflkrmWoJB1x0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788344360; c=relaxed/simple;
-	bh=0uXLbFCjKkSc5bdGWkdSocxRnPS4EEyfA57szxibfjw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fJAhchA7mqQB93U+np7pQt/xZYsHWra7iCFc79g8tyWIvhPSEfKjGpHeluS/kLPnj5W3zT138nDqJLus0gQ6cE1dszA20zxz6wMVJYJrwPyVRWDX+esTia0AyesMbceKtMbcA/DhNg+mjtjTodVe1SRlCe2fD3i5D0NZvsxt124=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: b9ed5c00a6b711f19a56ed5b684f684d-20260902
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NAME
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:9ebfbd50-ea65-42a1-a090-8e18eb9596ca,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:35
-X-CID-INFO: VERSION:1.3.19,REQID:9ebfbd50-ea65-42a1-a090-8e18eb9596ca,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:35
-X-CID-META: VersionHash:7db8b62,CLOUDID:c79026a429cb39097d0fb0fc4418a6ac,BulkI
-	D:260902181910FXD04WUY,BulkQuantity:0,SF:10|38|66|78|102|127|865|898,TC:ni
-	l,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:ni
-	l,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: b9ed5c00a6b711f19a56ed5b684f684d-20260902
-X-User: sunshaojie@kylinos.cn
-Received: from sunshaojie-pc [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1710416012; Wed, 02 Sep 2026 18:19:05 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
+	s=arc-20240116; t=1788344790; c=relaxed/simple;
+	bh=ozjvIvUOcuwBj9pLnU9tq8iGZAyk8kJZnCt29NmdDpg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XS3wtBUJHLmUcEHv8w/dYxqlQMC7O0NxJ1t4FqVAxTA1kwZBQSa/jpveo8sVKdy/aTlKz/JbvvLFpPtZRMvtu6yq3X2/KK8MCXCKkMJA5GbfGxDTiRqfi7WKEfVRZQvnoIrpAClOqCunkVPXqmZf3qlmIqgRLt0dviZgrXGnMyc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=EaOCwsMT; arc=none smtp.client-ip=95.215.58.143
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="EaOCwsMT"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ozjvIvUOcuwBj9pLnU9tq8iGZAyk8kJZnCt29NmdDpg=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788344785; v=1; x=1788949585;
+ b=EaOCwsMT991e8wsWyRrOSmmXXlZQshYBPGho3CaFxmFvLOBeIIGhq2RGkFZfL6QL3TkgM2wp
+ zJHEKGprGx/4jVhSEe1l3suBWl9LPC/JZAUMgD6UcyXcL1oXq8v56f3VshCHeHugky1MIQ26PML
+ JiWNME7f5+EqYoL/GcGv2pNI=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 52c2f6c04a87ca4d;
+	Wed, 02 Sep 2026 10:26:25 +0000
+X-Mizu-Trace-ID: 52c2f6c04a87ca4d
+X-Migadu-Flow: FLOW_OUT
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+To: cgroups@vger.kernel.org,
+	longman@redhat.com,
+	ridong.chen@linux.dev
+Cc: tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shuah@kernel.org,
 	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH] cgroup: namespace: replace BUG_ON() in copy_cgroup_ns() with WARN_ON_ONCE()
-Date: Wed,  2 Sep 2026 18:18:56 +0800
-Message-ID: <20260902101856.225493-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.50.1
+	linux-kselftest@vger.kernel.org,
+	Guopeng Zhang <guopeng.zhang@linux.dev>
+Subject: [PATCH v3 0/7] cgroup/cpuset: Fix partition type transitions
+Date: Wed,  2 Sep 2026 18:26:08 +0800
+Message-ID: <20260902102615.79189-1-guopeng.zhang@linux.dev>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -63,34 +51,89 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-copy_cgroup_ns() uses BUG_ON() to guard against a NULL old_ns. The
-condition cannot currently be triggered by any caller, and the sole
-caller, create_new_namespaces(), already checks the return value with
-IS_ERR() and unwinds correctly.
+Several partition type-change and validation paths use effective_xcpus,
+which also includes CPUs assigned to valid child partitions. As a result,
+changing a parent between root and isolated can alter a child's isolation
+accounting or fail housekeeping validation because of CPUs the parent does
+not own.
 
-Replace the BUG_ON() with WARN_ON_ONCE() and return -EINVAL instead,
-consistent with the policy of not killing the whole machine for a
-recoverable programming error.
+A proposed parent CPU mask needs different treatment for children which
+would become invalid under that mask. Their CPUs return to the parent and
+must participate in housekeeping validation. Otherwise a parent can pass
+validation with a boot-isolated CPU hidden behind a child which is about
+to become invalid.
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
- kernel/cgroup/namespace.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+There are two related failure paths. Returning the last housekeeping CPU
+from a root child to an isolated parent must invalidate the appropriate
+isolated ancestor. Also, a root/isolated type change which fails
+housekeeping validation must release the partition's CPUs instead of
+leaving them unavailable to the owner of the invalidated subtree.
 
-diff --git a/kernel/cgroup/namespace.c b/kernel/cgroup/namespace.c
-index ea4ee13936be..13930955c254 100644
---- a/kernel/cgroup/namespace.c
-+++ b/kernel/cgroup/namespace.c
-@@ -53,7 +53,8 @@ struct cgroup_namespace *copy_cgroup_ns(u64 flags,
- 	struct ucounts *ucounts;
- 	struct css_set *cset;
- 
--	BUG_ON(!old_ns);
-+	if (WARN_ON_ONCE(!old_ns))
-+		return ERR_PTR(-EINVAL);
- 
- 	if (!(flags & CLONE_NEWCGROUP)) {
- 		get_cgroup_ns(old_ns);
+Factor out the child partition validity checks and reuse them when
+computing the CPUs owned directly by a partition under a proposed
+configuration. Use the directly owned CPUs for root/isolated type-change
+accounting and housekeeping validation, handle the last-housekeeping-CPU
+return case, and run the normal partition-disable path after a failed
+type-change validation. Add focused selftests for each case.
+
+This is based on cgroup/for-7.3-fixes (3f4b7d1a49c5 "selftests/cgroup:
+test clone3() into a previously killed cgroup").
+
+Testing:
+
+- Ran tools/testing/selftests/cgroup/test_cpuset_prs.sh with
+  isolcpus=domain,15; all applicable tests passed.
+- Ran the housekeeping CPU-return tests with
+  nohz_full=1-14 isolcpus=domain,15; both cases passed.
+
+Changes in v3:
+
+- factor the child partition validity rules into a preparatory patch and
+  reuse them for trial ownership calculation;
+- during trial validation, subtract only children which remain valid under
+  the proposed parent CPU mask, covering both PERR_INVCPUS and PERR_NOCPUS;
+- keep cs->effective_xcpus as the default isolation-accounting mask and
+  use the directly owned mask only for a successful root/isolated type
+  change;
+- use an isolated child for the boot-isolated trial-validation tests, as a
+  root child containing that CPU fails immediately with PERR_HKEEPING;
+- make the isolated-ancestor walk safe when it reaches the top cpuset and
+  clarify the member-transition handling;
+- clean up nested housekeeping-return test cgroups on failure.
+
+Link: https://lore.kernel.org/all/20260828095643.13395-1-guopeng.zhang@linux.dev/
+
+Changes in v2:
+
+- split the type-transition fixes from the original series;
+- merge the child-owned accounting and validation changes;
+- validate trial CPU masks against CPUs owned directly by the partition;
+- handle a root child returning the last housekeeping CPU, including
+  nested isolated ancestors;
+- use the common partition-disable path after type-change validation
+  failure;
+- initialize boot-isolated CPU data during selftest setup;
+- split the accounting, child-owned validation and housekeeping-return
+  tests.
+
+Link: https://lore.kernel.org/all/20260820124202.517160-1-guopeng.zhang@linux.dev/
+
+Guopeng Zhang (7):
+  cgroup/cpuset: Factor out child partition validation
+  cgroup/cpuset: Account for child CPU ownership in partition changes
+  selftests/cgroup: Add tests for type-change isolation accounting
+  selftests/cgroup: Test child CPU ownership in partition changes
+  selftests/cgroup: Add tests for housekeeping CPU return to isolated
+    parents
+  cgroup/cpuset: Release CPUs when type-change validation fails
+  selftests/cgroup: Add CPU release tests for type-change validation
+    failures
+
+ kernel/cgroup/cpuset.c                        | 182 +++++++-
+ .../selftests/cgroup/test_cpuset_prs.sh       | 430 +++++++++++++++++-
+ 2 files changed, 588 insertions(+), 24 deletions(-)
+
+
+base-commit: 3f4b7d1a49c5c826f3be9b684313eea5b83ac232
 -- 
-2.50.1
-
+2.43.0
