@@ -1,233 +1,436 @@
-Received: from cu-ua11p00im-quki07170902.ua.silu.net (cu-ua11p00im-quki07170902.ua.silu.net [123.126.78.68])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-19.mta0.migadu.com [91.218.175.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 273AF339390;
-	Wed,  2 Sep 2026 03:54:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=123.126.78.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48BB42E7F17
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 04:03:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788321254; cv=none; b=YJH9hR5kW7a2cqO2/2WDx06k5XNS5Iq8mDDv059w9TFatCzjXQ2venYbISytv4k1OwZPFfJxaZf6+PRWNmg6AMa23MwGNEp2Q5gnQbIUdJaFdpuJlm7fauJo71OSUEtj9fbfY/mZq7fnqC7qggMb0/Z2Ul88cl9Knu+J5FAvUG4=
+	t=1788321819; cv=none; b=sA1YoYmzONp5D8WmiY887X+EPiOJVtXCbyV2xqyfW5/AZhUIye4wSn29a64Wy5iMf2GuLvPjRiMBcUKLA+DMooDmHsocUmdAtOQ3xZbSIPGy2sgZK8jIuaUxd7iJh1sbr1o5bIccQibEUF+WaHyc3zzHBBgNS/MLDNb1nwIngq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788321254; c=relaxed/simple;
-	bh=6o96VhsPEnVEZ2gIAswjOdSxx+PGSleuvRr/bfcpeg8=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=aVmkFgHrUeN5IgJDm7Qs1kIMBLn5vmOk2XNzNyJzKSjlc/T01rKIIbnPosB4RJo5iI8oVMrKp8+mTyOQ2Xw17CxzbDrV49OKYtuRAYaKMbToirbY04QYq8SLDgdy9zCHaE0tXLVvghAji+OubsFlF5pBJcc4QOMSNQqdXF/8HUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=sovUyfkV; arc=none smtp.client-ip=123.126.78.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1788321819; c=relaxed/simple;
+	bh=DbwDhGtJhMf7Tdu2Cf8Zni0EuKXGVu1Bm9paQorwYdo=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=grit/kc6MIj76csJyzwDu7w1IZHYJvRMJFGQod7BnRZwLPEvtNYsKSYgjh7E6j8O1IakEf/bEQdaA8qZjO80I3EsvcESAml9pkRAQTC+5XLjLpe6MggbGwDVw0fclxRel3SU8Z9HieQQH8URURz5kQJxDEuibWotv504Fiz48TQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PFk2TRwS; arc=none smtp.client-ip=91.218.175.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="sovUyfkV"
-Received: from smtpclient.apple (ua11p00im-asmtpcmvip.ua.silu.net [112.19.242.76])
-	by ua11p00im-quki07170902.ua.silu.net (Postfix) with ESMTPSA id 637F7CC00B8;
-	Wed,  2 Sep 2026 03:54:05 +0000 (UTC)
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1788321250; x=1790913250; bh=gt9G2GKgH5tHFxWKVawtkc5MhF/w6yd2haL+O80x1ZM=; h=Content-Type:Mime-Version:Subject:From:Date:Message-Id:To:x-icloud-hme; b=sovUyfkVQ2D2qdC3E7IiMd3EJNIMXo0mBwjYkwUSxdEv9sNjpHiJHuVNRqlb0HhLHma/S5QnF+I8VH8Hp5d3Q7wWE3tovnxHGb+xRpq1wRScIQU1Ncq65nyr6tdyIZgu16KBEuApINgF+upYvHSEPSYw6hzBvv0FC0YtplEmXCbVjqLi6RBPNAfmScsZKZK5tHrcpmGhUt3QYQYAjPFmU7gkjAe863qDBxevTpwVfAAIbCgX8MMEME7ogGqU3hTm/9xQZjdPbHdpR5J0vU01Upa+iwRViV5W3q38Mqddx+hwpXQbnCfPQI5CDOB9PXPHR8eup9lX33xAuDv5bLavVg==
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PFk2TRwS"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=DbwDhGtJhMf7Tdu2Cf8Zni0EuKXGVu1Bm9paQorwYdo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788321814; v=1; x=1788926614;
+ b=PFk2TRwSY3OiDL0ZY4CFEDzBF/oO9fBDaScDc165udbkwB+zsIcnDC12FJmNYrHeRaKiLIpn
+ 1TpLFFy/Hc4eYzHaYwylSE4/jefS5Pape2Z587A1vhsPJ+FMbkspwsoBUki+BE69SHihhwPqI1H
+ Wr1apGfE/+fRTClMThZoflb8=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id f7c2754d8f2478b7;
+	Wed, 02 Sep 2026 04:03:24 +0000
+X-Mizu-Trace-ID: f7c2754d8f2478b7
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <8c2c9a3d-802d-4496-8ed0-dd470c1a1fcb@linux.dev>
+Date: Wed, 2 Sep 2026 12:03:18 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.300.41.1.7\))
-Subject: Re: [PATCH RFC v2 6/6] mm/memcg: filter out reparented memcgs got
- from memcgid
-From: Bingfang Guo <bfguo@icloud.com>
-In-Reply-To: <20260901-bingfangguo-memcgid-rework-v2-6-8edd7f7a7251@tencent.com>
-Date: Wed, 2 Sep 2026 11:53:53 +0800
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Dave Chinner <david@fromorbit.com>,
- Qi Zheng <qi.zheng@linux.dev>,
- Kairui Song <kasong@tencent.com>,
- Barry Song <baohua@kernel.org>,
- Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>,
- Wei Xu <weixugc@google.com>,
- David Hildenbrand <david@kernel.org>,
- Lorenzo Stoakes <ljs@kernel.org>,
- cgroups@vger.kernel.org,
- linux-mm@kvack.org,
- linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <6134564F-5800-4F1C-AB02-3487D3EFA8B3@icloud.com>
-References: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
- <20260901-bingfangguo-memcgid-rework-v2-6-8edd7f7a7251@tencent.com>
-To: bingfangguo@tencent.com
-X-Mailer: Apple Mail (2.3864.300.41.1.7)
-X-Proofpoint-GUID: R8Jnm2sXbLLOvCYd3F9jlxXiU9mU3hyO
-X-Proofpoint-ORIG-GUID: R8Jnm2sXbLLOvCYd3F9jlxXiU9mU3hyO
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDAyNSBTYWx0ZWRfXzaqJ9OUR5xah
- rgCed482E6xWFm/AiHM8FsTJcElEwQpynwl2NVpHbjWrtvxwdtO/3PVNdSxKL9XLBaCfJRmeU4j
- NtAZoAYNopGU0Mjuo7RyFGmF5tPztsBEcT/OrDhKIH8RkdG2a87fC3MqcK/eEDWAnKwEe+XWtLS
- mrtMfsrQjwvEfr9pY/4gJt7mA1NJ1Zb8bYDOulDnXwmVBOpTsTXxOhcpe0lE27xKDJAdGzYTgDS
- JAUh3uqW4H/+CuCN4q0YpyWiRVMbmM8kdbZKsvzLN1ib2hDYPVIUPFvD3NEUNMQCakBeG0Bpuo3
- fo556HkHtOsf1MHuhuCRSSLSnEd9Y39SdSEMTtAHw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-01_06,2026-09-01_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0
- mlxscore=0 adultscore=0 bulkscore=0 spamscore=0 suspectscore=0
- lowpriorityscore=0 clxscore=-2147483648 mlxlogscore=999 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
- definitions=main-2609020025
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, Michal Koutny <mkoutny@suse.com>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Ziyang Men <ziyang.meme@gmail.com>, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH v4] selftests/cgroup: add PSI pressure trigger and
+ validation tests
+To: Suren Baghdasaryan <surenb@google.com>
+References: <20260824085913.546741-1-cui.tao@linux.dev>
+ <CAJuCfpHgYW4WHf3AH1Oj9TAthvCN_aqNW1uxMN2O109wd6Lckw@mail.gmail.com>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <CAJuCfpHgYW4WHf3AH1Oj9TAthvCN_aqNW1uxMN2O109wd6Lckw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+Hi, Suren,
 
-Forwarding reviews from Sashiko:
->> From: Bingfang Guo <bingfangguo@tencent.com>
->>=20
->> mem_cgroup_from_private_id() looks up the objcg that owns the id and
->> returns the objcg's current memcg.  After reparenting, that memcg can
->> differ from the one the id originally belonged to.
->>=20
->> Callers such as the list lru and workingset refault code expect to =
-get
->> back exactly the memcg referred to by the memcgid, so check that the
->> returned memcg still owns the id and return NULL otherwise. In this
->> case, make list_lru just skip and workingset tests use the root (as =
-the
->> comments said in workingset.c:460).
->>=20
->> Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
+在 2026/8/26 01:33, Suren Baghdasaryan 写道:
+> On Mon, Aug 24, 2026 at 1:59 AM Tao Cui <cui.tao@linux.dev> wrote:
+>>
+>> From: Tao Cui <cuitao@kylinos.cn>
+>>
+>> The cgroup selftests have no PSI coverage. Add test_psi.c: per-resource
+>> trigger smoke tests (one trigger per fd, IRQ full-only), a
+>> cgroup.pressure hide/show toggle test, and a CPU-pressure trigger test
+>> using over-subscription. Skips when PSI is disabled or a resource is
+>> absent.
+>>
+>> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+>>
 >> ---
->> mm/list_lru.c   | 2 +-
->> mm/memcontrol.c | 9 ++++++++-
->> mm/workingset.c | 2 +-
->> 3 files changed, 10 insertions(+), 3 deletions(-)
->>=20
->> diff --git a/mm/list_lru.c b/mm/list_lru.c
->> index 36662d02ff963..bc956267f6835 100644
->> --- a/mm/list_lru.c
->> +++ b/mm/list_lru.c
->> @@ -428,7 +428,7 @@ unsigned long list_lru_walk_node(struct list_lru =
-*lru, int nid,
->> 		xa_for_each(&lru->xa, index, mlru) {
->> 			rcu_read_lock();
->> 			memcg =3D mem_cgroup_from_private_id(index);
->> -			if (!mem_cgroup_tryget(memcg)) {
->> +			if (!memcg || !mem_cgroup_tryget(memcg)) {
->> 				rcu_read_unlock();
->> 				continue;
->> 			}
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 38d2b00657a7a..84dcab3acb8a2 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -4112,17 +4112,24 @@ struct mem_cgroup =
-*mem_cgroup_private_id_get_online(struct mem_cgroup *memcg, un
->>  * @id: the memcg id to look up
->>  *
->>  * Caller must hold rcu_read_lock().
->> + *
->> + * @return: the memcg, or NULL if the memcg is already reparented.
->>  */
->> struct mem_cgroup *mem_cgroup_from_private_id(unsigned short id)
->> {
->> 	struct obj_cgroup *objcg;
->> +	struct mem_cgroup *memcg;
->> 	WARN_ON_ONCE(!rcu_read_lock_held());
->>=20
->> 	objcg =3D xa_load(&mem_cgroup_private_ids, id);
->> 	if (!objcg)
->> 		return NULL;
->>=20
->> -	return obj_cgroup_memcg(objcg);
->> +	memcg =3D obj_cgroup_memcg(objcg);
->> +	if (mem_cgroup_private_id(memcg) !=3D id)
->> +		return NULL;
+>> Changes since v3 (Suren Baghdasaryan review):
+>> - Convert to the kselftest harness: each case is a TEST_F(psi, ...)
+>>   with the cgroup root/PSI availability checks in FIXTURE_SETUP() and
+>>   the teardown (kill hogs, destroy cgroup) in FIXTURE_TEARDOWN(),
+>>   which also removes the "ret"/"created" bookkeeping.
+>> - A trigger that does not fire within the poll timeout is now a FAIL
+>>   instead of a SKIP: ncpus+1 hogs with a 1usec threshold must stall,
+>>   so a timeout indicates a real problem.
+>> - Treat a poll() timeout and a poll() error uniformly via ASSERT.
+>> - Check sysconf(_SC_NPROCESSORS_ONLN) only for -1 and report
+>>   strerror(errno); declare variables one per line; for(;;) {}.
+>> - Make hog_cpu() die with the runner via PR_SET_PDEATHSIG so an
+>>   interrupted run does not leave orphaned hogs pinning every CPU.
+>>
+>> Changes since v2 (Suren Baghdasaryan, Michal Koutny review):
+>> - Restructure the trigger test into per-resource cases (io, memory, cpu,
+>>   irq) so a failure points at the specific resource; irq is skipped when
+>>   /proc/pressure/irq is absent.
+>> - Spawn the CPU hogs with cg_run_nowait() instead of open-coding fork(),
+>>   and arm the trigger with a 2s window so unprivileged users can set it.
+>> - Address the remaining review comments on cleanup and robustness:
+>>   guard teardown with a "created" flag, use cg_read_strcmp() instead of
+>>   atoi(), report strerror() on errors, and fix the unused-parameter and
+>>   sign-compare nits.
+>>
+>> Changes since v1 (Michal Koutny, sashiko review):
+>> - Keep trigger tests smoke-level; switch the firing test from memory to
+>>   CPU pressure; drop churn_memory().
+>> - Keep the runner out of the cgroup; add PSI/IRQ skip-guards and a
+>>   .gitignore entry.
+>>
+>> v1: https://lore.kernel.org/all/20260724025826.504586-1-cui.tao@linux.dev/
+>> v2: https://lore.kernel.org/all/20260728083742.2359320-1-cui.tao@linux.dev/
+>> v3: https://lore.kernel.org/all/20260813133723.1663605-1-cui.tao@linux.dev/
+>> ---
+>>  tools/testing/selftests/cgroup/.gitignore |   1 +
+>>  tools/testing/selftests/cgroup/Makefile   |   2 +
+>>  tools/testing/selftests/cgroup/config     |   1 +
+>>  tools/testing/selftests/cgroup/test_psi.c | 206 ++++++++++++++++++++++
+>>  4 files changed, 210 insertions(+)
+>>  create mode 100644 tools/testing/selftests/cgroup/test_psi.c
+>>
+>> diff --git a/tools/testing/selftests/cgroup/.gitignore b/tools/testing/selftests/cgroup/.gitignore
+>> index 952e4448bf07..ce2b907c57ea 100644
+>> --- a/tools/testing/selftests/cgroup/.gitignore
+>> +++ b/tools/testing/selftests/cgroup/.gitignore
+>> @@ -8,5 +8,6 @@ test_kill
+>>  test_kmem
+>>  test_memcontrol
+>>  test_pids
+>> +test_psi
+>>  test_zswap
+>>  wait_inotify
+>> diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
+>> index e01584c2189a..a8c69e37332a 100644
+>> --- a/tools/testing/selftests/cgroup/Makefile
+>> +++ b/tools/testing/selftests/cgroup/Makefile
+>> @@ -16,6 +16,7 @@ TEST_GEN_PROGS += test_kill
+>>  TEST_GEN_PROGS += test_kmem
+>>  TEST_GEN_PROGS += test_memcontrol
+>>  TEST_GEN_PROGS += test_pids
+>> +TEST_GEN_PROGS += test_psi
+>>  TEST_GEN_PROGS += test_zswap
+>>
+>>  LOCAL_HDRS += $(selfdir)/clone3/clone3_selftests.h $(selfdir)/pidfd/pidfd.h
+>> @@ -32,4 +33,5 @@ $(OUTPUT)/test_kill: $(LIBCGROUP_O)
+>>  $(OUTPUT)/test_kmem: $(LIBCGROUP_O)
+>>  $(OUTPUT)/test_memcontrol: $(LIBCGROUP_O)
+>>  $(OUTPUT)/test_pids: $(LIBCGROUP_O)
+>> +$(OUTPUT)/test_psi: $(LIBCGROUP_O)
+>>  $(OUTPUT)/test_zswap: $(LIBCGROUP_O)
+>> diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
+>> index 39f979690dd3..8a3ef479e83d 100644
+>> --- a/tools/testing/selftests/cgroup/config
+>> +++ b/tools/testing/selftests/cgroup/config
+>> @@ -4,3 +4,4 @@ CONFIG_CGROUP_FREEZER=y
+>>  CONFIG_CGROUP_SCHED=y
+>>  CONFIG_MEMCG=y
+>>  CONFIG_PAGE_COUNTER=y
+>> +CONFIG_PSI=y
+>> diff --git a/tools/testing/selftests/cgroup/test_psi.c b/tools/testing/selftests/cgroup/test_psi.c
+>> new file mode 100644
+>> index 000000000000..d5fab10f4fd4
+>> --- /dev/null
+>> +++ b/tools/testing/selftests/cgroup/test_psi.c
+>> @@ -0,0 +1,206 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +#define _GNU_SOURCE
+>> +#include <errno.h>
+>> +#include <fcntl.h>
+>> +#include <poll.h>
+>> +#include <stdbool.h>
+>> +#include <stdio.h>
+>> +#include <stdlib.h>
+>> +#include <string.h>
+>> +#include <unistd.h>
+>> +#include <sys/prctl.h>
+>> +#include <linux/limits.h>
 >> +
->> +	return memcg;
->> }
->=20
-> Does returning NULL here for reparented memcgs break swapin accounting
-> in callers like mem_cgroup_swapin_charge_folio()?
-> If an offlined memcg is reparented, its original ID no longer matches =
-the
-> inheritor's ID. When mem_cgroup_swapin_charge_folio() calls this =
-function:
-> 	memcg =3D mem_cgroup_from_private_id(id);
-> 	if (!memcg || !css_tryget_online(&memcg->css))
-> 		memcg =3D get_mem_cgroup_from_mm(mm);
-> Would receiving NULL force it to wrongfully charge the faulting task =
-instead
-> of the parent memcg that inherited the swap charge, creating a =
-permanent
-> accounting mismatch?
->=20
+>> +#include "../kselftest_harness.h"
+>> +#include "cgroup_util.h"
+>> +
+>> +#define PSI_POLL_TIMEOUT_MS    5000
+>> +
+>> +/* PSI triggers are written with a trailing NUL the kernel parser expects. */
+>> +static ssize_t write_trigger(int fd, const char *trigger)
+>> +{
+>> +       return write(fd, trigger, strlen(trigger) + 1);
+>> +}
+>> +
+>> +static int pressure_open(const char *resource)
+>> +{
+>> +       char path[PATH_MAX];
+>> +       int fd;
+>> +
+>> +       snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
+>> +       fd = open(path, O_RDWR);
+>> +       if (fd < 0)
+>> +               fprintf(stderr, "open %s: %s\n", path, strerror(errno));
+> 
+> Use ksft_perror() instead please.
 
-The original behavior uses css_tryget_online(), which filters out =
-offlined
-memcgs as well so I suppose no behavioral change here.
+Done, thanks.
 
-And swap (or memsw) counter of the memcg from which the page was swapped =
-out
-should be uncharged in __mem_cgroup_uncharge_swap() when the swap entry =
-is
-removed.
+> 
+>> +       return fd;
+>> +}
+>> +
+>> +FIXTURE(psi)
+>> +{
+>> +       char root[PATH_MAX];
+>> +       char *cg;
+>> +};
+>> +
+>> +FIXTURE_SETUP(psi)
+>> +{
+>> +       int psi_fd;
+>> +
+>> +       self->cg = NULL;
+>> +
+>> +       if (cg_find_unified_root(self->root, sizeof(self->root), NULL))
+>> +               SKIP(return, "cgroup v2 isn't mounted");
+>> +
+>> +       /* PSI must be enabled (CONFIG_PSI=y, not disabled on the cmdline). */
+>> +       psi_fd = open("/proc/pressure/memory", O_RDONLY);
+>> +       if (psi_fd < 0)
+>> +               SKIP(return, "PSI unavailable (CONFIG_PSI=n or psi=0)");
+>> +       close(psi_fd);
+> 
+> Why can't cgroup setup be done here? IOW, why not do
+> 
+> self->cg = cg_name(self->root, "psi_trigger_test");
+> cg_create(self->cg))
+> 
+> here only once? Usually FIXTURE_SETUP and FIXTURE_TEARDOWN are
+> symmetric: you teardown what you setup.
+> 
 
-I will put this in the commit message to explain it later.
+You're right, that's the cleaner split, I've moved it there. The cgroup
+is now created once in FIXTURE_SETUP() (the proc trigger tests simply
+don't use it) and the teardown became unconditional, so the NULL guard
+is gone as well.
 
->>=20
->> struct mem_cgroup *mem_cgroup_get_from_id(u64 id)
->> diff --git a/mm/workingset.c b/mm/workingset.c
->> index 7ac2b88c80ae5..4e9b7b163c01e 100644
->> --- a/mm/workingset.c
->> +++ b/mm/workingset.c
->> @@ -470,7 +470,7 @@ bool workingset_test_recent(void *shadow, bool =
-file, bool *workingset,
->> 	 * configurations instead.
->> 	 */
->> 	eviction_memcg =3D mem_cgroup_from_private_id(memcgid);
->> -	if (!mem_cgroup_tryget(eviction_memcg))
->> +	if (eviction_memcg && !mem_cgroup_tryget(eviction_memcg))
->> 		eviction_memcg =3D NULL;
->> 	rcu_read_unlock();
->=20
-> The commit message states that workingset tests use the root (as the
-> comments said in workingset.c:460) when NULL is returned. However, is
-> this what actually happens?
-> Looking immediately below this diff in workingset_test_recent(), it =
-seems
-> receiving NULL triggers an early return:
-> 	if (!mem_cgroup_disabled() && !eviction_memcg)
-> 		return false;
-> Does this abort the refault calculation entirely, treating the =
-reparented
-> shadow entry as cold and causing page cache thrashing?
+> 
+>> +}
+>> +
+>> +FIXTURE_TEARDOWN(psi)
+>> +{
+>> +       if (self->cg) {
+>> +               cg_killall(self->cg);
+>> +               cg_destroy(self->cg);
+>> +               free(self->cg);
+>> +       }
+>> +}
+>> +
+>> +/*
+>> + * /proc/pressure/<resource> accepts exactly one trigger per file
+>> + * descriptor. For io, memory and cpu verify that a "some" trigger arms
+>> + * and that a second trigger on the same fd is rejected with EBUSY.
+>> + */
+>> +TEST_F(psi, proc_trigger_io)
+>> +{
+>> +       int fd;
+>> +
+>> +       fd = pressure_open("io");
+>> +       ASSERT_GE(fd, 0);
+>> +       ASSERT_GT(write_trigger(fd, "some 150000 2000000"), 0);
+>> +       ASSERT_EQ(-1, write_trigger(fd, "full 150000 2000000"));
+>> +       ASSERT_EQ(EBUSY, errno);
+>> +       close(fd);
+>> +}
+>> +
+>> +TEST_F(psi, proc_trigger_memory)
+>> +{
+>> +       int fd;
+>> +
+>> +       fd = pressure_open("memory");
+>> +       ASSERT_GE(fd, 0);
+>> +       ASSERT_GT(write_trigger(fd, "some 150000 2000000"), 0);
+>> +       ASSERT_EQ(-1, write_trigger(fd, "full 150000 2000000"));
+>> +       ASSERT_EQ(EBUSY, errno);
+>> +       close(fd);
+>> +}
+>> +
+>> +TEST_F(psi, proc_trigger_cpu)
+>> +{
+>> +       int fd;
+>> +
+>> +       fd = pressure_open("cpu");
+>> +       ASSERT_GE(fd, 0);
+>> +       ASSERT_GT(write_trigger(fd, "some 150000 2000000"), 0);
+>> +       ASSERT_EQ(-1, write_trigger(fd, "full 150000 2000000"));
+>> +       ASSERT_EQ(EBUSY, errno);
+>> +       close(fd);
+>> +}
+> 
+> proc_trigger_io, proc_trigger_memory and proc_trigger_cpu do almost
+> the same thing. You can refactor them:
+> 
 
-I didn't make it clear in the commit message here.  For MGLRU the root =
-is used.
-But for classical LRU, it's just skipped because refault reading of =
-other memcgs
-should be meaningless in this case.
+Done, following your sketch. One small addition: I gave the helper an
+explicit _metadata argument so the ASSERTs attribute to the calling
+test, the way the seccomp selftests do it. Happy to drop it if you
+prefer the simpler signature.
 
-I will update the commit message to match the behavior...
+While at it I also removed the now-unneeded NULL init of self->cg and
+a stale stdbool.h include left over from the restructuring (noted in
+the changelog).
 
-> Additionally, can this cause an issue in MGLRU lru_gen_test_recent()?
-> If mem_cgroup_from_private_id() returns NULL there:
-> 	memcg =3D mem_cgroup_from_private_id(memcg_id);
-> 	*lruvec =3D mem_cgroup_lruvec(memcg, pgdat);
-> Would this silently fall back to the root memcg LRU vector instead of =
-the
-> correct parent memcg, incorrectly evaluating the child eviction token
-> against the root completely unrelated max_seq?
->=20
+Still 6/6 on my test machines, with and without /proc/pressure/irq.
+Thanks again for the review.
 
-Yes, but the activation is speculative as documented so it should be =
-okay? Are
-there better ways to handle this?
+---
+Tao
 
-But I do think it may be good to keep the two methods behaves =
-consistently, to
-either skip the check or get a random result for both two cases.
-
->>=20
->>=20
->> --=20
->> 2.43.7
->>=20
->>=20
-
+> static void test_psi_write(const char *filename)
+> {
+>        int fd;
+> 
+>        fd = pressure_open(filename);
+>        ASSERT_GE(fd, 0);
+>        ASSERT_GT(write_trigger(fd, "some 150000 2000000"), 0);
+>        ASSERT_EQ(-1, write_trigger(fd, "full 150000 2000000"));
+>        ASSERT_EQ(EBUSY, errno);
+>        close(fd);
+> }
+> 
+> TEST_F(psi, proc_trigger_io)
+> {
+>        test_psi_write("io");
+> }
+> 
+> TEST_F(psi, proc_trigger_memory)
+> {
+>        test_psi_write("memory");
+> }
+> 
+> TEST_F(psi, proc_trigger_cpu)
+> {
+>        test_psi_write("cpu");
+> }
+> 
+>> +
+>> +/*
+>> + * irq only tracks "full", so a "some" trigger must be rejected while a
+>> + * "full" trigger arms. irq is optional -- it only exists with IRQ-time
+>> + * accounting -- so a missing /proc/pressure/irq is SKIP, not FAIL.
+>> + */
+>> +TEST_F(psi, proc_trigger_irq)
+>> +{
+>> +       int fd;
+>> +
+>> +       fd = pressure_open("irq");
+>> +       if (fd < 0)
+>> +               SKIP(return, "/proc/pressure/irq unavailable");
+>> +
+>> +       ASSERT_EQ(-1, write_trigger(fd, "some 150000 2000000"));
+>> +       ASSERT_GT(write_trigger(fd, "full 150000 2000000"), 0);
+>> +       close(fd);
+>> +}
+>> +
+>> +/*
+>> + * cgroup.pressure gates visibility of the per-resource *.pressure files
+>> + * inside a cgroup: writing 0 hides them, writing 1 shows them again.
+>> + * Drive one hide/show cycle and check that memory.pressure appears and
+>> + * disappears along with it.
+>> + */
+>> +TEST_F(psi, cgroup_pressure_toggle)
+>> +{
+>> +       char buf[BUF_SIZE];
+>> +
+>> +       self->cg = cg_name(self->root, "psi_toggle_test");
+>> +       ASSERT_NE(NULL, self->cg);
+>> +       ASSERT_EQ(0, cg_create(self->cg));
+>> +
+>> +       ASSERT_EQ(0, cg_write(self->cg, "cgroup.pressure", "0"));
+>> +       ASSERT_EQ(0, cg_read_strcmp(self->cg, "cgroup.pressure", "0\n"));
+>> +       ASSERT_LT(cg_read(self->cg, "memory.pressure", buf, sizeof(buf)), 0);
+>> +
+>> +       ASSERT_EQ(0, cg_write(self->cg, "cgroup.pressure", "1"));
+>> +       ASSERT_EQ(0, cg_read_strcmp(self->cg, "cgroup.pressure", "1\n"));
+>> +       ASSERT_GE(cg_read(self->cg, "memory.pressure", buf, sizeof(buf)), 0);
+>> +}
+>> +
+>> +/*
+>> + * A child that burns CPU forever; stopped by cg_killall() on teardown.
+>> + * It also dies with the runner, so an interrupted run (e.g. Ctrl-C
+>> + * during poll()) does not leave orphaned hogs pinning every CPU.
+>> + */
+>> +static int hog_cpu(const char *cgroup, void *arg)
+>> +{
+>> +       prctl(PR_SET_PDEATHSIG, SIGKILL);
+>> +       for (;;) {}
+>> +       return 0;
+>> +}
+>> +
+>> +/*
+>> + * Arm a "some" trigger on a cgroup's cpu.pressure, oversubscribe the
+>> + * cgroup with more spinning hogs than there are CPUs, and check that the
+>> + * trigger fires once the cgroup stalls on CPU.
+>> + */
+>> +TEST_F(psi, cgroup_trigger_fire)
+>> +{
+>> +       char *cpupress;
+>> +       struct pollfd pfd = { .events = POLLPRI };
+>> +       long ncpus;
+>> +       int fd;
+>> +       int i;
+>> +
+>> +       self->cg = cg_name(self->root, "psi_trigger_test");
+>> +       ASSERT_NE(NULL, self->cg);
+>> +       ASSERT_EQ(0, cg_create(self->cg));
+>> +
+>> +       cpupress = cg_control(self->cg, "cpu.pressure");
+>> +       ASSERT_NE(NULL, cpupress);
+>> +       fd = open(cpupress, O_RDWR);
+>> +       free(cpupress);
+>> +       ASSERT_GE(fd, 0);
+>> +       pfd.fd = fd;
+>> +
+>> +       /*
+>> +        * 1usec threshold over a 2s window: any CPU stall fires it. The 2s
+>> +        * window is the smallest unprivileged users are allowed to arm.
+>> +        */
+>> +       ASSERT_GT(write_trigger(fd, "some 1 2000000"), 0);
+>> +
+>> +       ncpus = sysconf(_SC_NPROCESSORS_ONLN);
+>> +       if (ncpus == -1)
+>> +               TH_LOG("sysconf(_SC_NPROCESSORS_ONLN): %s", strerror(errno));
+>> +       ASSERT_NE(-1, ncpus);
+>> +
+>> +       /* ncpus+1 hogs guarantee CPU contention inside the cgroup. */
+>> +       for (i = 0; i < ncpus + 1; i++)
+>> +               ASSERT_GE(cg_run_nowait(self->cg, hog_cpu, NULL), 0);
+>> +
+>> +       ASSERT_EQ(1, poll(&pfd, 1, PSI_POLL_TIMEOUT_MS));
+>> +       ASSERT_NE(0, pfd.revents & POLLPRI);
+>> +       close(fd);
+>> +}
+>> +
+>> +TEST_HARNESS_MAIN
+>> --
+>> 2.43.0
+>>
 
