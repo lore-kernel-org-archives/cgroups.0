@@ -1,239 +1,227 @@
-Received: from mta1.migadu.com (out-36.mta1.migadu.com [95.215.58.36])
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F3604AE8BE
-	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 17:43:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.36
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407C84A64E6
+	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 18:47:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788371026; cv=none; b=C5YJUCGJ228A3BQoBA4M1sm7tv3dTKCnbjEazQhIFoBLm0CuYstm1dTLy2OyByDp7Y5GzA+9rCQu2ShsEAbMCgkXaXPecA8PkeCqZ79V+q+c2Or6vrzCl86Q58uZatcXlIo6UAtaSuYJATkGCnksOYAyGgB/lZ5MDrz637ibeLs=
+	t=1788374856; cv=none; b=eD2y0dOsjw/329ir919F2XXOcm4QJMcpjsBQBU0YpObkp3D/ikJSZWPZ5V9NTnAqrrKu/LPdlArko6SbHgiauikoq08El/QRHDEK3HE1mCyocCf5iz7dhoYEOd52aDkSgboFmLp7MvSsE7SHE/S+hN5bMr8zEwnHLKgmAZBIdVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788371026; c=relaxed/simple;
-	bh=lrjCYHOcwMy32zOEwRExw4Ntk5Rn48/VDKas/aRCiDk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GglkCdUCFcdilEu7tI2Rq+pItrYVTWRj7FZodTqCxZlncYXWUjcmNPWfNaLzelW/P1RV2bIyrYBxv0CxIaNlpDLkTG05uRg4gamwXEe8xUeBLmodyEVqmtn5X/TZGGD/VOYaimZKjZiIEfye7nbTZv06QXBHNE5EIS9bPgU8Dfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lrvJDXC0; arc=none smtp.client-ip=95.215.58.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788374856; c=relaxed/simple;
+	bh=EKFYkxW33JQakAeWcdMhEomjNk4xgLKTRBDk38OiwiQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Xi+wKomp0eLXQacXQtqai31tBsiIMpbJKo8BDnGHynLSgCue4h6CZiMVcurfx86m4ndfr5Lu8pwhpVq87R5lvqbBk7bBPucG0F0eGR+GY6xcPkVmG1PYW4SqBGHeiKSjKTN3SIjdx3S9/nrkM6G1EeneS/3qaUSjYNKI0CKvxFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=AFCKenhk; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lrvJDXC0"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=lrjCYHOcwMy32zOEwRExw4Ntk5Rn48/VDKas/aRCiDk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788371020; v=1; x=1788975820;
- b=lrvJDXC0nJs+aCSd7NRfT7aybqATfJqcfbjFjtRVnBCiTk9x9tKcMEDhxQlPq+FWuSBudbPy
- mNq1HX9+LHsqUGKGT3M1H/MxyendhoaPECHd4tTfAFYmrMdfyjummbGEGAK83XJGhoHvtEL/dOU
- umj0yL1zwEFDBpTa1L/UwFsg=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9d2b252c45d99bda;
-	Wed, 02 Sep 2026 17:43:40 +0000
-X-Mizu-Trace-ID: 9d2b252c45d99bda
-X-Migadu-Flow: FLOW_OUT
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	tjmercier@google.com,
-	Meta kernel team <kernel-team@meta.com>,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 8/8] memcg: simplify v1 event ratelimiting
-Date: Wed,  2 Sep 2026 10:43:11 -0700
-Message-ID: <20260902174311.1772372-9-shakeel.butt@linux.dev>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260902174311.1772372-1-shakeel.butt@linux.dev>
-References: <20260902174311.1772372-1-shakeel.butt@linux.dev>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="AFCKenhk"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-49ccfbe062eso11545095e9.3
+        for <cgroups@vger.kernel.org>; Wed, 02 Sep 2026 11:47:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1788374852; x=1788979652; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=IdCJ7DhUlcSYo5R128c9LaTPAZTDWZg8qrvo1ipn3/A=;
+        b=AFCKenhkUuhZMDVClNVR+mQwMovkD+fOyQIeToFLjgXHkw/v7jaixe2GYZImeCFR1t
+         eDK4cy8eSbh+sDwcN8anJfAzgbHqW6HrL+g6c2nnpbM33ZzdI39Rj29CbnSdNT9Hfre6
+         aQeeWG7044G8sdWLTABpZ7gVZIlkQxj9Ml+b5tQKU+/523OUVhX/4eqqiEOZMDeznApp
+         N6PrPVitkLZqhh7i9XHdEQ3eAKOcD7gB1Nn373NEctcyY3zHBeanuawi0C8S1yiz2l0c
+         tH/MGNqbM7YVqmXF8lOQVNrQOP7TKqDwWk4p6sGzel4Rnt//CsZoa2ZS9KPK2Vts/31I
+         v0Ew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788374852; x=1788979652;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IdCJ7DhUlcSYo5R128c9LaTPAZTDWZg8qrvo1ipn3/A=;
+        b=Gi3X6t9TBxx0t1kWm1+YhANuGJfvI1wtBNBYDd/jNslxrAv3dyIj4k0fdcSg/BEdBg
+         6QJZCin4H1FoNn8DiJQ/Tzh62eF1+ZTDM0UblgV3QglaI97WNJ9gvLl5Wb7ab4NRLuFb
+         d2VEbiClpnJTfS/1TEddr2kGCNCY7kZ0ksQkCS0yxQzfi7ZAjmgkaE4GspGAm3B5/Orl
+         vCiNP+JOhfS+tizGD8bM73OHNrlS5VEhy7jqVgfyr+4KU4rbWWTCTbN2tRWyv83LFAAE
+         QyAfu/Ps6OMA+TgkDVlMvgrlxkp9bzQX19yTshGuvcmSQ4nJAXoim0u4NFEhqV304YbV
+         JhPg==
+X-Forwarded-Encrypted: i=1; AKwUvBwX8sGUfBsw+BM6BEboCEFzih2T3FbuMiFC4UUxL5s3HfD4c4OeVBLVlVZkqVzxUjbvJXupIoL0@vger.kernel.org
+X-Gm-Message-State: AFuF++ls8npvCN3AOocONbPRe2bnYBhTIb4gtuPB7rf58GUgQ3LFpWv5
+	3hJANX7PCLSmzlh33xsKEg80kx/eXDHes7uwlDpLmCIGQfyzYFjqbYrVEXewhp5eii8=
+X-Gm-Gg: AYBFou2xWbggcc2Vp8P7l9+Vwr7dV8S2k6ALLGFe7HDkoC0BUeduukw/54CivQw77US
+	lkScyqENLCOEkG23oeub/skQ5HjYeslHfGnvC2g4RBsDqS02KDLFP/4Ug+BW52ee2YREUD9IJH+
+	EB6C657n9NXqzGM0Jupa9NABfIhgYygilm68xdRg5okFTmOhvWHHlzYlRXfRp/sG9lrb5fv8w0W
+	FtpW1PJJBS4z5OsYIF5jXZfRVN4OImVMpiFuXQbu+hdNXAFzdrBAc648lWRs/QnCrPubTCV0UAF
+	itnG7uQDQg1YUuDg8a8e9FsoAqs/7QZR6tahV60HQRTbU9p6ki1g97oymf52DOPLRkBaWYSGI/o
+	yhowilJHbvDjolTY/1AFvtAlkm2yxoLJJ78LdK6NQwdXSRMBot5flFD8vHbfhSpWUkNckSycdxZ
+	f4Rg2RzOQKETUv231+PLSjWgsBRCh3jV7feFp3StM2jf8Y/15u9Yq+UYb0uAjpjObCmFq8GeVPZ
+	Q==
+X-Received: by 2002:a05:600c:3b25:b0:49c:cfae:34d2 with SMTP id 5b1f17b1804b1-49ce55fb5f7mr127189595e9.4.1788374852065;
+        Wed, 02 Sep 2026 11:47:32 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cee5d2019sm11290985e9.2.2026.09.02.11.47.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Sep 2026 11:47:31 -0700 (PDT)
+Date: Wed, 2 Sep 2026 20:47:29 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, Ziyang Men <ziyang.meme@gmail.com>, 
+	Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [PATCH v5] selftests/cgroup: add PSI pressure trigger and
+ validation tests
+Message-ID: <aphkAGKpg3dgFc6c@localhost.localdomain>
+References: <20260902040725.877155-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="k7dsd4vdmhwtmf2v"
+Content-Disposition: inline
+In-Reply-To: <20260902040725.877155-1-cui.tao@linux.dev>
 
-Thresholds are the only periodic v1 event left, so the target enum, the
-per-cpu target array and the switch in memcg1_event_ratelimit() all
-collapse to a single counter.
 
-memcg1_check_events() no longer needs a node id either, which lets
-memcg1_uncharge_batch() drop its nid argument and struct
-uncharge_gather drop the field feeding it.
+--k7dsd4vdmhwtmf2v
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Subject: Re: [PATCH v5] selftests/cgroup: add PSI pressure trigger and
+ validation tests
+MIME-Version: 1.0
 
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-Acked-by: Michal Hocko <mhocko@suse.com>
-Acked-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
----
- mm/memcontrol-v1.c | 43 +++++++++++--------------------------------
- mm/memcontrol-v1.h |  4 ++--
- mm/memcontrol.c    |  4 +---
- 3 files changed, 14 insertions(+), 37 deletions(-)
+Hello Tao.
 
-diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
-index 475f998b7643..bf2c7d53b01b 100644
---- a/mm/memcontrol-v1.c
-+++ b/mm/memcontrol-v1.c
-@@ -200,15 +200,9 @@ static void mem_cgroup_threshold(struct mem_cgroup *memcg)
-  * to trigger some periodic events. This is straightforward and better
-  * than using jiffies etc. to handle periodic memcg event.
-  */
--enum mem_cgroup_events_target {
--	MEM_CGROUP_TARGET_THRESH,
--	MEM_CGROUP_TARGET_SOFTLIMIT,
--	MEM_CGROUP_NTARGETS,
--};
--
- struct memcg1_events_percpu {
- 	unsigned long nr_page_events;
--	unsigned long targets[MEM_CGROUP_NTARGETS];
-+	unsigned long threshold_target;
- };
- 
- static void memcg1_charge_statistics(struct mem_cgroup *memcg, int nr_pages)
-@@ -225,43 +219,28 @@ static void memcg1_charge_statistics(struct mem_cgroup *memcg, int nr_pages)
- }
- 
- #define THRESHOLDS_EVENTS_TARGET 128
--#define SOFTLIMIT_EVENTS_TARGET 1024
- 
--static bool memcg1_event_ratelimit(struct mem_cgroup *memcg,
--				enum mem_cgroup_events_target target)
-+static bool memcg1_event_ratelimit(struct mem_cgroup *memcg)
- {
- 	unsigned long val, next;
- 
- 	val = __this_cpu_read(memcg->events_percpu->nr_page_events);
--	next = __this_cpu_read(memcg->events_percpu->targets[target]);
-+	next = __this_cpu_read(memcg->events_percpu->threshold_target);
- 	/* from time_after() in jiffies.h */
- 	if ((long)(next - val) < 0) {
--		switch (target) {
--		case MEM_CGROUP_TARGET_THRESH:
--			next = val + THRESHOLDS_EVENTS_TARGET;
--			break;
--		case MEM_CGROUP_TARGET_SOFTLIMIT:
--			next = val + SOFTLIMIT_EVENTS_TARGET;
--			break;
--		default:
--			break;
--		}
--		__this_cpu_write(memcg->events_percpu->targets[target], next);
-+		__this_cpu_write(memcg->events_percpu->threshold_target,
-+				 val + THRESHOLDS_EVENTS_TARGET);
- 		return true;
- 	}
- 	return false;
- }
- 
--/*
-- * Check events in order.
-- *
-- */
--static void memcg1_check_events(struct mem_cgroup *memcg, int nid)
-+static void memcg1_check_events(struct mem_cgroup *memcg)
- {
- 	if (IS_ENABLED(CONFIG_PREEMPT_RT))
- 		return;
- 
--	if (unlikely(memcg1_event_ratelimit(memcg, MEM_CGROUP_TARGET_THRESH)))
-+	if (unlikely(memcg1_event_ratelimit(memcg)))
- 		mem_cgroup_threshold(memcg);
- }
- 
-@@ -271,7 +250,7 @@ void memcg1_commit_charge(struct folio *folio, struct mem_cgroup *memcg)
- 
- 	local_irq_save(flags);
- 	memcg1_charge_statistics(memcg, folio_nr_pages(folio));
--	memcg1_check_events(memcg, folio_nid(folio));
-+	memcg1_check_events(memcg);
- 	local_irq_restore(flags);
- }
- 
-@@ -344,7 +323,7 @@ void __memcg1_swapout(struct folio *folio, struct swap_cluster_info *ci)
- 	VM_WARN_ON_IRQS_ENABLED();
- 	memcg1_charge_statistics(memcg, -folio_nr_pages(folio));
- 	preempt_enable_nested();
--	memcg1_check_events(memcg, folio_nid(folio));
-+	memcg1_check_events(memcg);
- 
- 	rcu_read_unlock();
- 	obj_cgroup_put(objcg);
-@@ -398,14 +377,14 @@ void memcg1_swapin(struct folio *folio)
- #endif
- 
- void memcg1_uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
--			   unsigned long nr_memory, int nid)
-+			   unsigned long nr_memory)
- {
- 	unsigned long flags;
- 
- 	local_irq_save(flags);
- 	count_memcg_events(memcg, PGPGOUT, pgpgout);
- 	__this_cpu_add(memcg->events_percpu->nr_page_events, nr_memory);
--	memcg1_check_events(memcg, nid);
-+	memcg1_check_events(memcg);
- 	local_irq_restore(flags);
- }
- 
-diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
-index f48d0e22e615..b9a21f0fd2c3 100644
---- a/mm/memcontrol-v1.h
-+++ b/mm/memcontrol-v1.h
-@@ -59,7 +59,7 @@ void memcg1_oom_recover(struct mem_cgroup *memcg);
- 
- void memcg1_commit_charge(struct folio *folio, struct mem_cgroup *memcg);
- void memcg1_uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
--			   unsigned long nr_memory, int nid);
-+			   unsigned long nr_memory);
- 
- void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s);
- void reparent_memcg1_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent);
-@@ -107,7 +107,7 @@ static inline void memcg1_commit_charge(struct folio *folio,
- 
- static inline void memcg1_uncharge_batch(struct mem_cgroup *memcg,
- 					 unsigned long pgpgout,
--					 unsigned long nr_memory, int nid) {}
-+					 unsigned long nr_memory) {}
- 
- static inline void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s) {}
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bce3962dba57..30636b9d9673 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5328,7 +5328,6 @@ struct uncharge_gather {
- 	unsigned long nr_memory;
- 	unsigned long pgpgout;
- 	unsigned long nr_kmem;
--	int nid;
- };
- 
- static inline void uncharge_gather_clear(struct uncharge_gather *ug)
-@@ -5351,7 +5350,7 @@ static void uncharge_batch(const struct uncharge_gather *ug)
- 		memcg1_oom_recover(memcg);
- 	}
- 
--	memcg1_uncharge_batch(memcg, ug->pgpgout, ug->nr_memory, ug->nid);
-+	memcg1_uncharge_batch(memcg, ug->pgpgout, ug->nr_memory);
- 	rcu_read_unlock();
- 
- 	/* drop reference from uncharge_folio */
-@@ -5380,7 +5379,6 @@ static void uncharge_folio(struct folio *folio, struct uncharge_gather *ug)
- 			uncharge_gather_clear(ug);
- 		}
- 		ug->objcg = objcg;
--		ug->nid = folio_nid(folio);
- 
- 		/* pairs with obj_cgroup_put in uncharge_batch */
- 		obj_cgroup_get(objcg);
--- 
-2.53.0-Meta
+On Wed, Sep 02, 2026 at 12:07:25PM +0800, Tao Cui <cui.tao@linux.dev> wrote:
+> +/* PSI triggers are written with a trailing NUL the kernel parser expects. */
+> +static ssize_t write_trigger(int fd, const char *trigger)
+> +{
+> +	return write(fd, trigger, strlen(trigger) + 1);
+> +}
 
+Hyrum's law. It all works for me: NUL, \n or just write(2) the exact
+length of the string.
+For conventionality, I'd prefer the simple literals and plain strlen() +
+0. (I reckon cg_write() cannot be used because of FD access.)
+
+> +
+> +static int pressure_open(const char *resource)
+> +{
+> +	char path[PATH_MAX];
+> +	int fd;
+> +
+> +	snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
+> +	fd = open(path, O_RDWR);
+> +	if (fd < 0)
+> +		ksft_perror(path);
+
+This outputs:
+| # /proc/pressure/irq: No such file or directory (2)
+| #      SKIP      /proc/pressure/irq unavailable
+
+I.e. similar message is printed twice.
+Since strace is a companion of cgroup selftests, I'd keep this helper
+silent.
+
+> +	return fd;
+> +}
+> +
+> +FIXTURE(psi)
+> +{
+> +	char root[PATH_MAX];
+> +	char *cg;
+> +};
+> +
+> +FIXTURE_SETUP(psi)
+> +{
+> +	int psi_fd;
+> +
+> +	if (cg_find_unified_root(self->root, sizeof(self->root), NULL))
+> +		SKIP(return, "cgroup v2 isn't mounted");
+> +
+> +	/* PSI must be enabled (CONFIG_PSI=y, not disabled on the cmdline). */
+> +	psi_fd = open("/proc/pressure/memory", O_RDONLY);
+> +	if (psi_fd < 0)
+> +		SKIP(return, "PSI unavailable (CONFIG_PSI=n or psi=0)");
+> +	close(psi_fd);
+> +
+> +	self->cg = cg_name(self->root, "psi_trigger_test");
+> +	if (!self->cg)
+> +		SKIP(return, "failed to allocate cgroup name");
+> +	if (cg_create(self->cg))
+> +		SKIP(return, "failed to create cgroup: %s", strerror(errno));
+
+Why are these two SKIPs (not failures)?
+
+> +TEST_F(psi, cgroup_trigger_fire)
+> +{
+> +	char *cpupress;
+> +	struct pollfd pfd = { .events = POLLPRI };
+> +	long ncpus;
+> +	int fd;
+> +	int i;
+> +
+> +	cpupress = cg_control(self->cg, "cpu.pressure");
+> +	ASSERT_NE(NULL, cpupress);
+> +	fd = open(cpupress, O_RDWR);
+> +	free(cpupress);
+> +	ASSERT_GE(fd, 0);
+> +	pfd.fd = fd;
+> +
+> +	/*
+> +	 * 1usec threshold over a 2s window: any CPU stall fires it. The 2s
+> +	 * window is the smallest unprivileged users are allowed to arm.
+> +	 */
+> +	ASSERT_GT(write_trigger(fd, "some 1 2000000"), 0);
+
+The selftest rarely can be run as unprivileged user (even test cgroup
+creation needs privileges), so this comment is irrelevant. (But it's
+fine to test with that value.)
+
+On the more abstract level -- I was playing with this and thinking about
+a value that'd test both sides, i.e. false triggers as well as false
+non-triggers. I'd find that to be the half of the window and the number
+of tasks should be then (3*ncpus + 1) / 2.
+Or perhaps test two thresholds, one tiny like you did and one maximum
+(whole window) with same amount tasks but expect trigger, no trigger
+respectively.
+
+
+> +
+> +	ncpus = sysconf(_SC_NPROCESSORS_ONLN);
+> +	if (ncpus == -1)
+> +		TH_LOG("sysconf(_SC_NPROCESSORS_ONLN): %s", strerror(errno));
+> +	ASSERT_NE(-1, ncpus);
+
+Same as messages from pressure_open() above. Simply assert.
+
+> +
+> +	/* ncpus+1 hogs guarantee CPU contention inside the cgroup. */
+> +	for (i = 0; i < ncpus + 1; i++)
+> +		ASSERT_GE(cg_run_nowait(self->cg, hog_cpu, NULL), 0);
+> +
+> +	ASSERT_EQ(1, poll(&pfd, 1, PSI_POLL_TIMEOUT_MS));
+> +	ASSERT_NE(0, pfd.revents & POLLPRI);
+> +	close(fd);
+> +}
+> +
+> +TEST_HARNESS_MAIN
+
+All in all, this looks so much better than the initial version, well
+done. Just a few polishing touches.
+
+Michal
+
+--k7dsd4vdmhwtmf2v
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaphvPRsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AiKJwD+PqtkHd3blRPy13sFyLqF
+8DxwZSomQ1H3UCKVICDOT/8A/A56P4uCIa6DGF+2hWa4rtwuRod+M+rCD4tqo/Cf
+mVQH
+=xP5B
+-----END PGP SIGNATURE-----
+
+--k7dsd4vdmhwtmf2v--
