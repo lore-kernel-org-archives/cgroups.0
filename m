@@ -1,130 +1,108 @@
-Received: from mta0.migadu.com (out-119.mta0.migadu.com [91.218.175.119])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forwardcorp1d.mail.yandex.net (forwardcorp1d.mail.yandex.net [178.154.239.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7BD40681A
-	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 11:49:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45CB232937A;
+	Thu,  3 Sep 2026 12:04:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788436150; cv=none; b=a4GSG2QEtMxaBPhDb9jZLvMWZ/hvxgw09KS5+T6YfFSXG3GC99I2I2EacyMIQTLbsC1IopwiSt79+vL3uk6PIGZefv7lC0niwCOASmqyIR1R5MgDY5p7lZQAAzjK24NAbk0Q+pk4mzNXfWh5R3meJCMok6BfctwW8gKG+CdDZMI=
+	t=1788437050; cv=none; b=uSGtZ8ZTDn2x8NMBFgTkugrBRpAZywLVpIjiYI/wjTe6ZFCrB10Fm7LwnrV8PArEMwaQRMY4Y23qgiRe8b9CDtzQBczPRwcQKCZFldL9yLosIO9aJFQbikNGg0REoHLsiU9HtqnFCb80y1Eb/nXQogWICZH9twU/e+TC9PrsHlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788436150; c=relaxed/simple;
-	bh=77ef0smQwTHv7ciVNhDJeRJa0P6JZyLYvgjHop8xgXY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SU+bcHpElxyeXZOrjRapyg06cokRnC3YYWzPVAZn7YVgeTeBUXQRo6cQtECUkFcJJTXXkpBU91f9VoBJvXZFYa6/npza5zQudtniRSgVH2HrvogD3d5p3LMOtnzZdVbnmDx8/O3RKg2mxAMwUcCc/BWtLe/0bHTbM7bREqX1uVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TjUa2R95; arc=none smtp.client-ip=91.218.175.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788437050; c=relaxed/simple;
+	bh=M6A05OEKRI8aV92fPYmcQc5HME2uGARcHn1GvM9pIvI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=JcpNHEh8UtCz+B1EzkyioHndYXUI7Qt0ovFYHT9VdfzTDkbuSFYVC/xvK8mwqLSKm6efmfoq/2mI6J7RLHuQcblkzx/heZahQjCGxdBdkUXs2KqEfLUKJjVPKr36qHkW4ODMnWAdQXpAnJ6C0FtXwZdn4klGKn0sN0j2+LLqmNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru; spf=pass smtp.mailfrom=yandex-team.ru; dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b=pkDzc2ze; arc=none smtp.client-ip=178.154.239.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex-team.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TjUa2R95"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=77ef0smQwTHv7ciVNhDJeRJa0P6JZyLYvgjHop8xgXY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788436137; v=1; x=1789040937;
- b=TjUa2R955q9nVy4b4LUdivA4FzzWYtSTFBTH8RO0Mfy/UC+61uc3/1t5BQ4pHuYo7+/vHx+C
- 5+3B+LeXwitx0WunELzPRB6a+B+d45myP1W2BstqE+Dg+u5YJeNRq8pWMoiOSHL89NAexPLpMI+
- n7xlWW1JMbnyMOVyxaggoTF4=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 10f1446bfee7baed;
-	Thu, 03 Sep 2026 11:48:47 +0000
-X-Mizu-Trace-ID: 10f1446bfee7baed
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <f067f8c9-00f0-484a-adf3-da58fe972bfe@linux.dev>
-Date: Thu, 3 Sep 2026 19:48:36 +0800
+	dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b="pkDzc2ze"
+Received: from mail-nwsmtp-smtp-corp-main-56.klg.yp-c.yandex.net (mail-nwsmtp-smtp-corp-main-56.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:65a0:0:640:e1de:0])
+	by forwardcorp1d.mail.yandex.net (postfix) with ESMTPS id A961A80769;
+	Thu, 03 Sep 2026 15:03:57 +0300 (MSK)
+Received: from [127.0.1.1] (unknown [2a02:6bf:8009:1403:13e2:aa39:7988:f1b2])
+	by mail-nwsmtp-smtp-corp-main-56.klg.yp-c.yandex.net (smtpcorp) with ESMTPSA id u3kPrH5XViE0-YIPre64s;
+	Thu, 03 Sep 2026 15:03:57 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru;
+	s=default; t=1788437037;
+	bh=Df7xCZqqZ1aQpHN0K+/HVHczZNeqgBe2XscfGWdDMak=;
+	h=Cc:Message-Id:To:From:Date:Subject;
+	b=pkDzc2zeIK9qWmv9suqN7qXgDw0NIoUb51rgR3X0sx52gV+ny/lAag6jWuMyjegT4
+	 CqnGCvkzHybQmhfguQdlv8Mvu4bEylJDmzoP1C087jdGciJ8qGcFi9Fo+zMaCeA9jY
+	 DJhRhXfOzgMiVwOx7Jw2Le8LdAklBMX9Kj5Xeqvo=
+Authentication-Results: mail-nwsmtp-smtp-corp-main-56.klg.yp-c.yandex.net; dkim=pass header.i=@yandex-team.ru
+From: Mikhail Rudenko <xyzzy@yandex-team.ru>
+Date: Thu, 03 Sep 2026 14:54:17 +0300
+Subject: [PATCH] blk-throttle: reject IOPS limits above UINT_MAX for legacy
+ interface
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] mm/mglru: fix ineffective memory protection for
- non-kswapd reclaim
-To: Barry Song <baohua@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Muchun Song <muchun.song@linux.dev>, Kairui Song <kasong@tencent.com>,
- Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
- Chris Down <chris@chrisdown.name>, Tejun Heo <tj@kernel.org>,
- Yu Zhao <yuzhao@google.com>,
- "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
- <cgroups@vger.kernel.org>,
- "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
- <linux-mm@kvack.org>, linux-kernel@vger.kernel.org,
- Ridong Chen <chenridong@xiaomi.com>, stable@vger.kernel.org
-References: <20260903031952.1120321-1-ridong.chen@linux.dev>
- <20260903031952.1120321-3-ridong.chen@linux.dev>
- <CAGsJ_4wKaboESQfUJPi8y4BNJuxpEWG2Prjb44NvFKDV_aeVhw@mail.gmail.com>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <CAGsJ_4wKaboESQfUJPi8y4BNJuxpEWG2Prjb44NvFKDV_aeVhw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260903-throttl-truncation-fix-v1-1-c6a864c8bc17@yandex-team.ru>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWM0QqDMAxFf0XyvECtMuh+RfbQdlEzRpU0joH47
+ 8vc47ncc3aoJEwVbs0OQm+uvBSD9tJAnmOZCPlhDN75qwuuQ51lUX2hylZyVLvjyB/s+pRdCiH
+ 63oPJq5DNZ3i4/7lu6UlZfzU4ji9lJG9negAAAA==
+X-Change-ID: 20260903-throttl-truncation-fix-34bc0b99a242
+To: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, 
+ Jens Axboe <axboe@kernel.dk>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+ Mikhail Rudenko <xyzzy@yandex-team.ru>
+X-Mailer: b4 0.15.2
 
+tg_set_conf(), used for blkio.throttle.{read,write}_iops_device legacy
+blkio cgroup sysfs knobs, parses limits as u64 but stores them in
+unsigned int, silently truncating values above UINT_MAX. In addition
+to being an obvios correctness issue, this may result in division by
+zero in tg_within_iops_limit(), if the value is truncated to zero.
 
+Reject such values with -EINVAL and explicitly use UINT_MAX as
+a sentinel value for IOPS limits.
 
-On 9/3/2026 2:30 PM, Barry Song wrote:
-> On Thu, Sep 3, 2026 at 11:20 AM Ridong Chen <ridong.chen@linux.dev> wrote:
->>
->> From: Ridong Chen <chenridong@xiaomi.com>
->>
->> For MGLRU, memory.min/low is not honored during global proactive reclaim
->> (writing to the root memory.reclaim) and global direct reclaim, because
->> these paths shrink memcgs using stale or effective protection (emin/elow).
-> 
-> Are you sure it should be “stale or effective”?
-> My gut feeling is that we don't need the “or” here.
-> 
+Fixes: 3a8b31d396b2 ("blkcg: restructure blkio_group configruation setting")
+Cc: stable@vger.kernel.org
+Signed-off-by: Mikhail Rudenko <xyzzy@yandex-team.ru>
+---
+This was found by a local Sashiko instance when reviewing an unrelated
+patch. Idk if Assisted-by: is required in this case. This patch was
+written manually, though.
 
-My bad. It was a typo. Will remove "or".
+Exact commit for Fixes: was a bit difficult to track, since the code
+went through multiple refactorings. I believe that it's 3a8b31d396b2,
+where (temp > THROTL_IOPS_MAX) check was dropped. Anyway, all the
+maintained LTS releases are affected.
+---
+ block/blk-throttle.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-> [...]
->>
->> Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
->> Cc: stable@vger.kernel.org
->> Assisted-by: Claude:claude-opus-4-8
->> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
->> ---
-> 
-> With a few nits:
-> 
-> Reviewed-by: Barry Song <baohua@kernel.org>
-> 
-> [...]
->> diff --git a/mm/vmscan.c b/mm/vmscan.c
->> index b4c9b8f3dfe9..500cc2051d13 100644
->> --- a/mm/vmscan.c
->> +++ b/mm/vmscan.c
->> @@ -5111,7 +5111,13 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
->>          struct mem_cgroup *memcg = lruvec_memcg(lruvec);
->>          struct pglist_data *pgdat = lruvec_pgdat(lruvec);
->>
->> -       /* lru_gen_age_node() called mem_cgroup_calculate_protection() */
->> +       /*
->> +        * For kswapd, lru_gen_age_node() has already called
->> +        * mem_cgroup_calculate_protection()
->> +        */
-> 
-> Could be clearer:
-> 
-> /*
->   * For kswapd, mem_cgroup_calculate_protection() has already
->   * been called during the top-down cgroup traversal.
->   */
-> 
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index ffc3b70065d4..d2d46aeb24e1 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1377,8 +1377,12 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+ 	ret = -EINVAL;
+ 	if (sscanf(ctx.body, "%llu", &v) != 1)
+ 		goto unprep;
++
++	if (!is_u64 && v > UINT_MAX)
++		goto unprep;
++
+ 	if (!v)
+-		v = U64_MAX;
++		v = is_u64 ? U64_MAX : UINT_MAX;
+ 
+ 	tg = blkg_to_tg(ctx.blkg);
+ 	tg_update_carryover(tg);
 
-Thank you, will update.
+---
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+change-id: 20260903-throttl-truncation-fix-34bc0b99a242
 
->> +       if (!current_is_kswapd())
->> +               mem_cgroup_calculate_protection_path(NULL, memcg);
-> 
-> Best Regards
-> Barry
-
--- 
-Best regards
-Ridong
+Best regards,
+--  
+Mikhail Rudenko <xyzzy@yandex-team.ru>
 
