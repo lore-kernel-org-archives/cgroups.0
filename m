@@ -1,104 +1,173 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2858C50C288
-	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 19:34:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB908455626
+	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 20:07:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788464083; cv=none; b=F0wFrF6uLvtcwryMkeq7g4yXZXPNn74/opcHSEXcZs9X++bt5mPtkLz+JNmm9m8qk/3yg1JxvkIdDHDN8NYkuBQXNdpD8HUntEJFhTesJ9nxJru4LvHrT7TGXIe0Y++21thkVhfpuqSK+ef25LMBM5eGGMoI5MdbpEPAG/0fDXE=
+	t=1788466079; cv=none; b=QvSyATcgFv2h0ntv5/L3hYp9OhzXrOn9RUdGRExi/1D7oTRMo1zgi5DXtGNISjga1uuiMDZ06cQ2uq1PH7osbPevsk4X3ht2PkecJKeYu1USesYXDkdQvCjjP4537ulCn+q8Zpsb4IDQ+mCk8mhFTu663g/NW9jH/hWmEcXABdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788464083; c=relaxed/simple;
-	bh=isQHEi07ge6EFI0JDD+py6jjJBr/TTVzhs0gdmyR6AI=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=i7NGjrt5mZznBfGx/uWMsMADkEG34QGErpaw/MCOJ/b1gfvcsuH4pLb1LmwJ3d4TdAbbmZMUel8gNutHQ/rRn1T9maKkj7+iFcfnCrHl9x343MzjkUmkuUk/OBstP+SPB1yDb/FDa17W2Kx/jupAoR6Sx/LoDmYIly7f94cZqgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Gbka91Sk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788466079; c=relaxed/simple;
+	bh=KKQRjTnbbi03SF4QrsbxyQRZEuOt84yDjPrhPIt1HPQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oh7eaJy8tCXlUUwLCldajOXBfDpQbIfvsG8uMlLzfar21G6aSoDwiXQrNpG6Sc3gm5hcH7ynuKSueOUiQDFVNfvpeagIEZV05vs2/DXpL4tj+dKPzFUPPK2vKMvoAavcXg6IpxmAdblQEL/nKJW/VzDZ4A8PgcSaZSFklfyO8uA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ls+YW+pf; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Gbka91Sk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7616D1F00A3D;
-	Thu,  3 Sep 2026 19:34:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ls+YW+pf"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-482dbe4d247so170378f8f.2
+        for <cgroups@vger.kernel.org>; Thu, 03 Sep 2026 13:07:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1788464067;
-	bh=cEe0Xe4BGpisjWutg3Hd6ntpHOx/Gjz8x6DaZwu6w6I=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=Gbka91Sk8dHFzSVk+rS7sdjg/NU835GPWh8k5QJ1FOTqyrifht+DmIEQz7ZV98V+R
-	 ZMyk+C44h1OmLiDxoEVLz7TBeY6QV6/heypUssRvfn7Fpqp+Lp/LwaYRpcc+60tjOP
-	 jVq4CP/4n/HFTbW+75H5vG6rE8TqPeXSRjR6/e58=
-Date: Thu, 3 Sep 2026 12:34:27 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Julian Sun <sunjunchao@bytedance.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, axboe@kernel.dk, tj@kernel.org, jack@suse.cz
-Subject: Re: [PATCH v2] writeback, memcg: skip foreign dirty tracking for
- bdev inodes
-Message-Id: <20260903123427.eb0beab18ff68d4632aece6c@linux-foundation.org>
-In-Reply-To: <20260903083303.2769873-1-sunjunchao@bytedance.com>
-References: <20260903083303.2769873-1-sunjunchao@bytedance.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        d=gmail.com; s=20251104; t=1788466064; x=1789070864; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:sender:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=e7urBqs1yQ/qOhZ2GYLJeqmnou9jkoySIxXngdzIimQ=;
+        b=ls+YW+pfZ7GyxdxELlYWV95YEIKJN5IsFaDyIWkbtjYroz62MWSP4hqE3CQYoBM0nQ
+         B5uzSCrZvAffTcfDw1Ie8NXseYvD0hB/k4Gh60o1aUFjKc0483+fSVWqimENRKQ6RyPq
+         t55YwzBFCd0IdylZP7lJzR1ZjgpiQY3tSsUQZ2mWXFebRYKFFz/N6/HDAaipGM2O+ysu
+         jn4vHjINlcCK/ks8IGvqNAIJjMeWxV1RXaSv3YVhjm+BxLnoB5mt3wvL32HdR3p181+A
+         xA8zCgWyAH051FpD/JybJIprfmNjBuu6CVv4Z5s6HMN/lnKNGu98Km90rV4Zn4U5W0YV
+         0vgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788466064; x=1789070864;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=e7urBqs1yQ/qOhZ2GYLJeqmnou9jkoySIxXngdzIimQ=;
+        b=nhfnY9MM8jDkg8u6RjXf2GQLlLBMNNL2T+5Jf9JRMatJRQNmdam8MaDN3Uq7lUIn5u
+         YkK6Y8zaSJ0W/YYOJHgejTF4x+R9zhH7NzBjsEyr3tX/E08Dv0nA+sidwbWgM0ZTTUXs
+         SNliuvC0cpf50T5Hy9slDWI+62hshRkTNPFk9TYoJ2zNJyRY+XFMagwbvK7ZZx4kKT4S
+         SGt3mI6C7xZwgqkPVoG1U9UG/vkdhDm+friodeBXfR7dx6PXxY+cydMrlaRpr3glZ3sN
+         xq+QjV4YoMsWzDSb4R4zcdhnraobyctmQu8DCyhF9SmLyYLgerIvf3SvTCcsv/Tv6niV
+         4sIA==
+X-Forwarded-Encrypted: i=1; AKwUvByKfqGs7ccK6Fa1DYVVFQEoiaQygdS/Ru3fnjf+Nf94wtKaQ7oLYai4pcgijxkcsAuFyD+Zx1zX@vger.kernel.org
+X-Gm-Message-State: AFuF++kkufyBGtdlQLi7azwNIIM/H43O00EyEgYa0BZ+kUNy3iBSv3Ed
+	vdZnsBzMDQK0kSbVr2/SExrvQHeHzHLzMX7ijUwZyFTunXn5y+6WPEM1
+X-Gm-Gg: AYBFou0J99P3lb0VLoq3VO8ThlczvqoWkTppxeomNiETzggN/x5A+6Iriozfg9Impux
+	toiA8weHmoIdiPGibxErLF0oXGnkk4ehtozmvi8gEJIpNDiCPzzwH2JzqldUpnLTHy5FNYr6Fgb
+	wTkE3mAFz6/HyWULtgeQdKUIIjpmxjGIRvhBVcfei4TBnq4oba21FBxymJ4kQnFlVG5loBHAqNq
+	bhvOLgQWR0sYOPYdr4GVknfKzSLxpDPd6yhUf1qCQhgyiP6Jq3s9zHDqmpTLGEsMKTtYFzIJ4Tq
+	W2pqywFpYGLM2ww+nYxtYdjg1rK6AITahsnS+2q1d25vZJJk99/oa1HEFcYB6FvU695VILuW8Vr
+	7ibRFhmkTuG6CtLNnKBSxPfmmLDapUb6J8YXBszRZBW54/3+nBVbltN1TVrstXAC2u3dncz+h8z
+	6h1GF/hGNLHylsnnPE5maEuLvDiI9zwSeTjbFKysdtVhHr5SXGCR8sTpNAaG+s5BHjzSGN/vVtQ
+	qYtWe5dKuy10NWZqK3jgW4=
+X-Received: by 2002:a05:600c:3b01:b0:49b:4d64:bbc4 with SMTP id 5b1f17b1804b1-49cf81f1592mr4839615e9.8.1788466064353;
+        Thu, 03 Sep 2026 13:07:44 -0700 (PDT)
+Received: from eldamar.lan (c-82-192-247-196.customer.ggaweb.ch. [82.192.247.196])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ce58d1c9esm68315165e9.0.2026.09.03.13.07.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 13:07:43 -0700 (PDT)
+Sender: Salvatore Bonaccorso <salvatore.bonaccorso@gmail.com>
+Received: by eldamar.lan (Postfix, from userid 1000)
+	id A8CE3BE2DE0; Thu, 03 Sep 2026 22:07:41 +0200 (CEST)
+Date: Thu, 3 Sep 2026 22:07:41 +0200
+From: Salvatore Bonaccorso <carnil@debian.org>
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Dan Schatzberg <dschatzberg@meta.com>,
+	Peter Zijlstra <peterz@infradead.org>, stable@vger.kernel.org,
+	Noah Elias Feldt <N.Feldt@mittwald.de>,
+	Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] cgroup: Avoid iteration of dying tasks with zero refcount
+Message-ID: <apnTjQvt_FbQfm_r@eldamar.lan>
+References: <20260902161653.1051794-1-mkoutny@suse.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260902161653.1051794-1-mkoutny@suse.com>
 
-On Thu,  3 Sep 2026 16:33:03 +0800 Julian Sun <sunjunchao@bytedance.com> wrote:
+Hi Michal,
 
-> Foreign dirty flushing handles cases where a dirtied folio's memcg and
-> the memcg owning its inode wb differ.
+On Wed, Sep 02, 2026 at 06:16:52PM +0200, Michal Koutný wrote:
+> The commit 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from
+> cgroup_task_release() to cgroup_task_free()") extended the lifetime of
+> tasks on the dying_tasks list.
+> The iterators have provision to go through dying_tasks because of
+> dying threadgroup leaders or explicit CSS_TASK_ITER_WITH_DEAD, however,
+> it was expected that such tasks can obtain a new reference (that is
+> possible before cgroup_task_release()/put_task_struct_rcu_user()).
+> The tasks after cgroup_task_release() and before cgroup_task_free()
+> are subject to race when they may or may not have usage count > 0.
+> The iterator should not attempt to resurrect tasks whose usage count
+> dropped to zero. (When that happens, __put_task_struct_rcu_cb() is
+> already imminent and the returned task_struct would could be used
+> after free.)
 > 
-> wbc_detach_inode() notes that "concurrent write sharing of an inode is
-> expected to be very rare". This expectation does not hold for bdev inodes.
-> A bdev inode and mapping are shared by buffered users of the block device,
-> while the inode has a single wb owner. On ext4, buffer-cache folios used
-> by metadata and journal I/O can therefore be charged to different memcgs
-> while sharing the same mapping. Normal bdev activity can thus produce
-> frequent folio/wb ownership mismatches.
+> As a band-aid, filter tasks returned from css_task_iter_next() only to
+> those that have positive usage count (whose reference's lifetime can be
+> extended).
 > 
-> This was reproduced on cgroup v2 with the memory and I/O controllers
-> enabled, using ext4 on a loop device. jbd2 repeatedly generated
-> track_foreign_dirty events for bdev folios charged to unrelated memcgs.
-> When one of those memcgs entered dirty throttling, the resulting record led
-> to a flush_foreign event and queued writeback with reason=foreign_flush for
-> the bdev inode's root wb.
+> Rough illustration of the possible race
 > 
-> Skip foreign dirty tracking when the folio mapping's host inode is on the
-> blockdev pseudo superblock. This prevents bdev-originated records from
-> triggering later foreign flushes.
+>   R (reader of cgroup.procs)         T (thread)                       L (group leader)
+>   ---------------------------------  -------------------------------- --------------------------------
+>                                                                       L exits, signal->live > 0
+>                                                                       cgroup_task_dead(L)
+>                                                                         css_set_skip_task_iters() // skips only cset->tasks
+>                                                                         list_add_tail(&L->cg_list, &cset->dying_tasks)
+>   css_task_iter_next()
+>     take css_set_lock
+>     css_task_iter_advance()
+>       leader && signal->live != 0
+>       => it->task_pos = &L->cg_list
+>                                      T exits
+>                                      --signal->live == 0
+>                                      release_task(T)
+>                                        cgroup_task_release(T)
+>                                        release_task(L) // zap_leader
+>                                          cgroup_task_release(L)
+>                                          put_task_struct_rcu_user(L)
+>                                          ...RCU...
+>                                          put_task_struct(L)
+>                                            L->usage = 0
+>                                            /* L still on dying_tasks */
+>                                            ...RCU...
+>                                            __put_task_struct(L)
+>     it->task_pos = &L->cg_list
+>     get_task_struct(L)
+>       => addition on 0
+>     drop css_set_lock
+>                                            cgroup_task_free(L)
+>                                              css_set_skip_task_iters() // dying skip comes too late
+>                                            free_task(L)
+>   cgroup_procs_show()
+>     task_pid_vnr(L)
 > 
-> The tradeoff is that dirty throttling in the folio's memcg no longer uses
-> bdev dirtiness to queue writeback on the bdev inode's owner wb. Those
-> folios remain subject to normal writeback. This is preferable because a
-> single bdev wb owner does not identify which cgroup is responsible for a
-> mapping shared by buffered bdev users. Flushing it can write back data
-> unrelated to the throttled memcg. Dirty accounting, normal writeback, and
-> foreign dirty tracking for non-bdev inodes remain unchanged.
+> cgroup_task_release() is not synced via css_set_lock hence the race
+> possibility. (I'm not 100% convinced about this LLM-assisted
+> interleaving, multiple css_task_iter_next() calls may be involved with
+> css_set_lock released.)
+> 
+> Fixes: 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from cgroup_task_release() to cgroup_task_free()")
+> Cc: stable@vger.kernel.org # v6.19+
+> Link: https://lists.debian.org/debian-kernel/2026/08/msg00220.html
+> Reported-by: Noah Elias Feldt <N.Feldt@mittwald.de>
+> Reported-by: Salvatore Bonaccorso <carnil@debian.org>
+> Signed-off-by: Michal Koutný <mkoutny@suse.com>
+> ---
+>  kernel/cgroup/cgroup.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> Salvatore,
+> I was able to trigger the issue with your reproducer on 7.1.8
+> (occassionally, not always). With the patch on top of v7.3-rc1, I cannot
+> reproduce it (different base though). If you can confirm that in your
+> env, it'd be good.
 
-When fixing something, please always describe the userspace-visible
-runtime effects.
+I tested it with the additional poc which Noah did sent to us (not
+public) and with your patch it survives. 
 
-I'm thinking probably "unnecessary I/O"?  If so, has this been
-quantified/measured?  If not, can the effects be guessed about?
+Tested-by: Salvatore Bonaccorso <carnil@debian.org>
 
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3898,6 +3898,15 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
->  	u64 oldest_at = now;
->  	int oldest = -1;
->  	int i;
-> +	struct address_space *mapping = folio_mapping(folio);
-> +	struct inode *bdev_inode = mapping ? mapping->host : NULL;
-> +
-> +	/*
-> +	 * Bdev inodes are usually shared by many memcgs so foreign
-> +	 * tracking leads to frequent flushes which is counterproductive.
-> +	 */
-> +	if (bdev_inode && sb_is_blkdev_sb(bdev_inode->i_sb))
-> +		return;
->  
->  	trace_track_foreign_dirty(folio, wb);
->  
-> -- 
-> 2.39.5
+Regards,
+Salvatore
