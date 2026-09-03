@@ -1,79 +1,142 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E8528D831;
-	Thu,  3 Sep 2026 08:03:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE1F2440647
+	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 08:33:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788422595; cv=none; b=kCBjoRXrQUFWtD6jMG1nYWhptbci7zoQok454rgh+XhDHcgPDqVpFBghTlYYgDmqBoIFZ/idhdu5sz7umWEgvuBjmYfUvN8dmiJ+1bXChLRIoU0n/NpbfhEPOhvWoe95HUaHudKhSGhku4a3exV5PK47pdKGOpMxTDgl2TL0mQI=
+	t=1788424389; cv=none; b=KwgUwnLo6Z8J2X3JlTAfqIMdiKNN9X27+eTcziNjuUUrMVEk+vRoMgBqA0Cc0di7h9IJQfcxRu3d/rKxXhKdAAH+skr1iLoqH7FNLXddmst183VRImSBlbCMqk5AGFTSBBTOWKhJSxhMpbtlT9PuqL/6cdX0JalZ6peYYfPpHdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788422595; c=relaxed/simple;
-	bh=jf3HiJp7KGXNkhMGzd9DLXSB/B6BVW/0TP1rBAu4Qt4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YJ2KucQeuaz+/Aok29V33dOdiJ2uEp5BLDE7fT/7S7t0vcU43uTeTcmwXUixwVptteTuiBRwBBUlVqoA+vL6aVqB2rttWrd4RYiIUoIWuo/1nnrPjV4dOFjvSTwq3qUHYkz8UgjmgxMT4tkWzDyxSrzs4HdEcpGZwYKYfXQxu0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: e412836ea76d11f19a56ed5b684f684d-20260903
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CHARSET
-	HR_CHARSET_NUM, HR_CTE_8B, HR_CTT_TXT, HR_DATE_H, HR_DATE_WKD
-	HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN
-	HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_PRE_RE
-	HR_SJ_WS, HR_TO_CHARSET, HR_TO_CHARSET_NUM, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
-	AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:31a68eb5-cefe-46be-aa58-537d3a78dd8f,IP:20,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:20
-X-CID-INFO: VERSION:1.3.19,REQID:31a68eb5-cefe-46be-aa58-537d3a78dd8f,IP:20,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:20
-X-CID-META: VersionHash:7db8b62,CLOUDID:9ee2620b21c6a5122e6d77181d0f45db,BulkI
-	D:260903160307BGU20KHC,BulkQuantity:0,SF:10|38|66|78|81|82|83|102|127|865|
-	898,TC:nil,Content:0|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:
-	nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,AR
-	C:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: e412836ea76d11f19a56ed5b684f684d-20260903
-X-User: sunshaojie@kylinos.cn
-Received: from sunshaojie-pc [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1395721317; Thu, 03 Sep 2026 16:03:04 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: Tejun Heo <tj@kernel.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: Re: [PATCH v2 0/3] drop BUG_ON() NULL checks in namespace copy helpers
-Date: Thu,  3 Sep 2026 16:02:34 +0800
-Message-ID: <20260903080235.149723-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260903064828.126643-1-sunshaojie@kylinos.cn>
-References: <20260903064828.126643-1-sunshaojie@kylinos.cn>
+	s=arc-20240116; t=1788424389; c=relaxed/simple;
+	bh=7w/b7B7kFuxlXwOkqCyvvlyEYDg8ezW5ErFjW6OK1Cc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pGdVKyk9APSVk70OTBKnmz/zYf5rsIe/+pQLmicvrqZd0eJnyUqxCHnlUePw9lM6TvZ7c0ZJKlQQ7ktw2u+umrvmbaoByljIA1WlspG4I0EIf0rBVTZJBB0iO9qJ/+wiE6merBGQnhyyBeiuo4WcVqGrOydAcJ9pA9NZHCw2G/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=iR4tu4Zp; arc=none smtp.client-ip=209.85.215.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="iR4tu4Zp"
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc147d86bebso830716a12.0
+        for <cgroups@vger.kernel.org>; Thu, 03 Sep 2026 01:33:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1788424387; x=1789029187; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=BaXToYLkp4W1X8Rn05QhvduOjOn9yVBdgHfyyN+fIII=;
+        b=iR4tu4ZpJNGmh2xb5OngXUqAXxfr9RCWrRzSHPjSgycIz+EJqy4ZjM0O+0UFfEhTF/
+         Jz6lSS9pF4MH9V76GbUYg9UT8FYPryKc5XdI34BiK7bderI4JsABltx15DmAQG2f5V7I
+         qaAmAm0clqBQdt3DV6paOjTtOmv5tZJ6uvbDrIPTGKlrpnUcE/uXdW6R3+c82ZUbKBNA
+         IDAWZOjZDpb8HL5usLsFvIajzMP88KC1O0K4dTnBMy+pCNEWlF+sx5YxDWk3hvvnCDuR
+         SSusnp4xuF1SA5fdX8cuUzjfNc2DJQuKCSSGbg8b4Req2UcRfQyD2ofm3f2TXI3X7KYg
+         S/cg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788424387; x=1789029187;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=BaXToYLkp4W1X8Rn05QhvduOjOn9yVBdgHfyyN+fIII=;
+        b=VX2b2tZLSIZp8bw3EMXTGDUiDMHuaGm7tf26ngGs1VXCMK8EUSEiFYPQabvF+9nd0u
+         eNenh/EyDOkUB/jHEAIIM6GAuiQUHhd8fTznWu05oLS2S79jBoRlClhQoJBrhyCwYGNL
+         4WbgbzznhbpLhJPo9tGFe/nPmKNay0ci8+MrhOcfoKwG4dyg+P9e/7tLNCSD+7Q9EI5i
+         vkWb9dPapkQaK0wySn0qrO8ivEC9TVeDAGjWrM9C06GgroKjo33sJ1rk7filXsTr+esj
+         X8UlKwaBxL2lATalVXhZZQdH4cjnieupwuhqPIYZtSQi67T1uheLUe+W1dnl3YUXioFb
+         Cn6w==
+X-Forwarded-Encrypted: i=1; AKwUvByrTU9A5jybY2lrmjaaxj1pNVyerUSL6iqkezKtC8V2EQGDlwRn5f8hjFSv6t3k2+GRBgh9aozZ@vger.kernel.org
+X-Gm-Message-State: AFuF++k1fZacmTLWTYh1ko96+lWSz1VKP+mH7IBz8BYQ0snBk4+9zZWk
+	Warun0sEjeNq0XbxC1PCzT5Yx1/zWzD39HiUVrPmnobydDqQuEL/HcgqPT4D0iafnI6VUlLkI5/
+	MUPFb0t4=
+X-Gm-Gg: AYBFou0VFkSYFJQVAFSNt2x5ZDV+AtOuIq0Rk58T9AC27k6wISSFEL73Uv42++9tdZe
+	dKfNCVCVy3MoAYU0shly76X9E0ttlkHOC08hxBGqfVbSXH0EVW5Mi1pCinmWVc9hm1bwm1t2rz/
+	xfxVyBf2WUA4AoOD7HanEKXhXXbmXf5f36wUgknN9ARteOduXuA9qIVkPly8POeQ40alE1dqIoO
+	0GFyN8mG6EGwnA1F14+eC/LRYLO4yn2dtaGBLK3PU5iB2g4jrN61IUNN3wzLX5v8QNJ5rTVAxmk
+	iHA4B17o9huVqzbMjeliZD1YB9ZW34jJGX3eqPZJB6YgfnsEFTiJtzHnVcF07fiFwy5VMjeuPQD
+	4Hwx2cDMY0w/e48SY1YdmMN/TQXvokb2XtBdCZRzfvADqW2KsI0t2gU/+RNL2x8Mtwq/ErwY/Xx
+	UglguWMhEbaFVLw55LVqBfiQnWBDvf+D+n5ouR1wEXFI30uHyvdFlBReoOTm+fdA==
+X-Received: by 2002:a17:90a:d60e:b0:384:927f:3db9 with SMTP id 98e67ed59e1d1-39b131c0c34mr1941697a91.1.1788424386961;
+        Thu, 03 Sep 2026 01:33:06 -0700 (PDT)
+Received: from localhost ([106.38.226.3])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39b08ce4221sm4590357a91.14.2026.09.03.01.33.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 01:33:06 -0700 (PDT)
+From: Julian Sun <sunjunchao@bytedance.com>
+To: linux-mm@kvack.org,
+	cgroups@vger.kernel.org
+Cc: hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	akpm@linux-foundation.org,
+	axboe@kernel.dk,
+	tj@kernel.org,
+	jack@suse.cz
+Subject: [PATCH v2] writeback, memcg: skip foreign dirty tracking for bdev inodes
+Date: Thu,  3 Sep 2026 16:33:03 +0800
+Message-Id: <20260903083303.2769873-1-sunjunchao@bytedance.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Apologies, the cover letter of this series says
+Foreign dirty flushing handles cases where a dirtied folio's memcg and
+the memcg owning its inode wb differ.
 
-    "... following the discussion with Tejun."
+wbc_detach_inode() notes that "concurrent write sharing of an inode is
+expected to be very rare". This expectation does not hold for bdev inodes.
+A bdev inode and mapping are shared by buffered users of the block device,
+while the inode has a single wb owner. On ext4, buffer-cache folios used
+by metadata and journal I/O can therefore be charged to different memcgs
+while sharing the same mapping. Normal bdev activity can thus produce
+frequent folio/wb ownership mismatches.
 
-It should read "... following the discussion with Michal Koutný".
-The patches themselves are unaffected.
+This was reproduced on cgroup v2 with the memory and I/O controllers
+enabled, using ext4 on a loop device. jbd2 repeatedly generated
+track_foreign_dirty events for bdev folios charged to unrelated memcgs.
+When one of those memcgs entered dirty throttling, the resulting record led
+to a flush_foreign event and queued writeback with reason=foreign_flush for
+the bdev inode's root wb.
 
-Thanks,
-Shaojie
+Skip foreign dirty tracking when the folio mapping's host inode is on the
+blockdev pseudo superblock. This prevents bdev-originated records from
+triggering later foreign flushes.
+
+The tradeoff is that dirty throttling in the folio's memcg no longer uses
+bdev dirtiness to queue writeback on the bdev inode's owner wb. Those
+folios remain subject to normal writeback. This is preferable because a
+single bdev wb owner does not identify which cgroup is responsible for a
+mapping shared by buffered bdev users. Flushing it can write back data
+unrelated to the throttled memcg. Dirty accounting, normal writeback, and
+foreign dirty tracking for non-bdev inodes remain unchanged.
+
+Fixes: 97b27821b485 ("writeback, memcg: Implement foreign dirty flushing")
+Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
+---
+ mm/memcontrol.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1271d390b617..6e8f7ff7d44a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3898,6 +3898,15 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
+ 	u64 oldest_at = now;
+ 	int oldest = -1;
+ 	int i;
++	struct address_space *mapping = folio_mapping(folio);
++	struct inode *bdev_inode = mapping ? mapping->host : NULL;
++
++	/*
++	 * Bdev inodes are usually shared by many memcgs so foreign
++	 * tracking leads to frequent flushes which is counterproductive.
++	 */
++	if (bdev_inode && sb_is_blkdev_sb(bdev_inode->i_sb))
++		return;
+ 
+ 	trace_track_foreign_dirty(folio, wb);
+ 
+-- 
+2.39.5
+
