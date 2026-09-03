@@ -1,75 +1,161 @@
-Received: from mta0.migadu.com (out-164.mta0.migadu.com [91.218.175.164])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E98A3B995B
-	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 17:57:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.164
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D95838B123
+	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 18:33:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788458233; cv=none; b=hExK56gZXNau2rftUDGQ9QaOQWnSUeKOYyP2WOE3ngbTt9FHtgsDYm94Er2Lg44mQ/hXmWirxLZ46zd4MWCUUE4sUWElhfz63I6JdLFOTOcC5JUp4onq7Wuxyg/HFmmNCq3fmIyfnccVVuriHcLeeK6Eth0qhcCLQeaGXDhol8g=
+	t=1788460442; cv=none; b=j+1h+1CxDM8HKwrOoVKnEKnEr6GHGJS5ETsjChZ9dqnxZ/O4sDnoRz5PeblRuK9tprkwA3qceJNcjJ9BPBIDab4Pa86hLZi5HkHVQbU9LKdmVZX29pyZBXpdbPKkHzOtIaw5LpKFbaXFwFCWie48CwuOU/Qou3WEkDP4B7WPcfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788458233; c=relaxed/simple;
-	bh=FUgc+fVrFtLC9X8AHnzWDs712XgUX1Jr5Y/gjnGpuAs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fbvcvtFZQJF1wwI2zXh7gFzh24vEO/ogIJmyjIPB2YJceO8Cjzpbqo2RZd+KSkHb0tQYIHoNItMSPaWnoM3Dd2uSssuvGB/ZKhyRAJ9AOp+xEPFyE/lKG28qYqu+/bxXOxKNNIU6qPQlMJKSsb2EdnJEJxg4nMm0SHvfLptW4P4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=bTMUZ30c; arc=none smtp.client-ip=91.218.175.164
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788460442; c=relaxed/simple;
+	bh=rYEDqSVs5KWsByB/gKaLKuCfCYtF38rGdj2qCxtEO8g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HPX6ZXIUdnCYfjIfxnZDCQwHf6vALyn3cxpcRv23fXzeAv2mX3YdbT6rmga5SjwUgA/ByHWTKmDZt6TKX/WTZP5Oq6egiZiInVIoeJv+hZJ+iCcDd6bvXrm8pfpSnmm9q3D/B9JvoziESICZnRluRwyfpHff4PvVXYOzxhufFP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RJEZTtRa; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="bTMUZ30c"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=FUgc+fVrFtLC9X8AHnzWDs712XgUX1Jr5Y/gjnGpuAs=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788458230; v=1; x=1789063030;
- b=bTMUZ30cKVsb7lFaJXg1dUncaE2NhoDm9kxEGWbjyHWxjKmDvQD+wVlMCwLmX0H557IvgNkd
- v3umFX7EQLH9H4EGDWWg207vlnBWlp61/UyN8uOnPBJdUf/kdBZvXfT240NkGRBIcxg2AUqDpz6
- TeCRs2xMo0F5jYjNkF7MNIik=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id da9ba4cda93ba682;
-	Thu, 03 Sep 2026 17:57:09 +0000
-X-Mizu-Trace-ID: da9ba4cda93ba682
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 3 Sep 2026 10:57:08 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Hui Zhu <hui.zhu@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
-	Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	Hui Zhu <zhuhui@kylinos.cn>
-Subject: Re: [PATCH v2 3/3] mm: memcg: skip the RCU lock when the memcg is
- not dying
-Message-ID: <apm0372x4vOtJvSs@linux.dev>
-References: <cover.1788169145.git.zhuhui@kylinos.cn>
- <3fc10f32131097bb57efaec72d049d635b227cf1.1788169145.git.zhuhui@kylinos.cn>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RJEZTtRa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788460431;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hAb38BLLkIQ7vd+VdRyAqRpps7HgXE5a0fJqzLwWo8Y=;
+	b=RJEZTtRa+4kOcc7GNgA5Fv4xA/ZoYE2Pyk+R2U+rt+ymXNZmC0Q57th+9uzINGIXQRu7l4
+	vp7wpaUczXUxRhCZfQqwonw56IJ06UvAvqZ61d9vpwRNPMKV+j+njLlrpSTj3+ySoHDlQw
+	lxqVbJFY8u1XNjvfKE+ptEQ7s8PMS9c=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-512-qUrUPf8xNrO1dNKaejVlUw-1; Thu,
+ 03 Sep 2026 14:33:47 -0400
+X-MC-Unique: qUrUPf8xNrO1dNKaejVlUw-1
+X-Mimecast-MFC-AGG-ID: qUrUPf8xNrO1dNKaejVlUw_1788460425
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F0CFF185CE9B;
+	Thu,  3 Sep 2026 18:33:44 +0000 (UTC)
+Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DBF4E1803A51;
+	Thu,  3 Sep 2026 18:33:42 +0000 (UTC)
+Message-ID: <5842edcd-9283-4a87-afc9-50e51962368e@redhat.com>
+Date: Thu, 3 Sep 2026 14:33:41 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3fc10f32131097bb57efaec72d049d635b227cf1.1788169145.git.zhuhui@kylinos.cn>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/7] cgroup/cpuset: Factor out child partition
+ validation
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, cgroups@vger.kernel.org,
+ ridong.chen@linux.dev
+Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260902102615.79189-1-guopeng.zhang@linux.dev>
+ <20260902102615.79189-2-guopeng.zhang@linux.dev>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260902102615.79189-2-guopeng.zhang@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Mon, Aug 31, 2026 at 05:46:11PM +0800, Hui Zhu wrote:
-> From: Hui Zhu <zhuhui@kylinos.cn>
-> 
-> get_non_dying_memcg_start() takes rcu_read_lock() on every stat update, but
-> the lock only protects the upward walk to a non-dying ancestor, which
-> happens solely while a memcg is being offlined.  The dying check itself
-> reads the CSS_DYING flag of a memcg the caller already holds a reference
-> to, so it is safe without the lock.
-> 
-> Check memcg_is_dying() first and return immediately when the memcg is
-> alive, taking the RCU lock only on the rare dying path.  On an anon
-> fault/charge churn workload in a memcg this recovers the ~0.6% overhead
-> added by the previous patch (4368077 vs 4343159 pages/s before, back to
-> ~4377000 pages/s after).
-> 
-> Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
+On 9/2/26 6:26 AM, Guopeng Zhang wrote:
+> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>
+> compute_partition_effective_cpumask() checks whether each valid child
+> partition remains covered by the parent exclusive CPU mask and whether it
+> would consume all remaining CPUs of a populated parent.
+>
+> Factor these two checks into child_partition_error() so the same rules can
+> be reused when evaluating a proposed parent configuration. This is a
+> preparatory refactoring with no intended functional change.
+>
+> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> ---
+>   kernel/cgroup/cpuset.c | 38 +++++++++++++++++++++++++++++---------
+>   1 file changed, 29 insertions(+), 9 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 8f24171b6055..6994dc75d940 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2085,6 +2085,26 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>   	return 0;
+>   }
+>   
+> +/*
+> + * Return the error that will invalidate a child partition under a proposed
+> + * parent partition configuration.
+> + */
+> +static enum prs_errcode
+> +child_partition_error(struct cpuset *child,
+> +		      const struct cpumask *partition_cpus,
+> +		      const struct cpumask *remaining_cpus,
+> +		      bool parent_populated)
+I think you should add some functional comments on what "partition_cpus" 
+and "remaining_cpus" are supposed to be so that caller knows what to 
+pass into this helper.
+> +{
+> +	if (!cpumask_subset(child->effective_xcpus, partition_cpus))
+> +		return PERR_INVCPUS;
+> +
+> +	if (parent_populated &&
+> +	    cpumask_subset(remaining_cpus, child->effective_xcpus))
+> +		return PERR_NOCPUS;
+> +
+> +	return PERR_NONE;
+> +}
+> +
+>   /**
+>    * compute_partition_effective_cpumask - compute effective_cpus for partition
+>    * @cs: partition root cpuset
+> @@ -2121,6 +2141,8 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>   
+>   	rcu_read_lock();
+>   	cpuset_for_each_child(child, css, cs) {
+> +		enum prs_errcode child_err;
+> +
+>   		if (!is_partition_valid(child))
+>   			continue;
+>   
+> @@ -2129,15 +2151,13 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>   		 * partition root.
+>   		 */
+>   		WARN_ON_ONCE(is_remote_partition(child));
+> -		WRITE_ONCE(child->prs_err, 0);
+> -		if (!cpumask_subset(child->effective_xcpus,
+> -				    cs->effective_xcpus))
+> -			WRITE_ONCE(child->prs_err, PERR_INVCPUS);
+> -		else if (populated &&
+> -			 cpumask_subset(new_ecpus, child->effective_xcpus))
+> -			WRITE_ONCE(child->prs_err, PERR_NOCPUS);
+> -
+> -		if (child->prs_err) {
+> +		WRITE_ONCE(child->prs_err, PERR_NONE);
+> +		child_err = child_partition_error(child, cs->effective_xcpus,
+> +						  new_ecpus, populated);
+> +		if (child_err)
+> +			WRITE_ONCE(child->prs_err, child_err);
+> +
 
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+You can ignore the inital PERR_NONE write and always write the child_err 
+value into child->prs_err.
+
+Not big issue, just some nits.
+
+Cheers,
+Longman
+
+> +		if (child_err) {
+>   			int old_prs = child->partition_root_state;
+>   
+>   			/*
+
