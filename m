@@ -1,82 +1,85 @@
-Received: from mail.mainlining.org (mail.mainlining.org [5.75.144.95])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F24C4499BA;
-	Thu,  3 Sep 2026 08:40:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.75.144.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB773EF0C8
+	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 09:28:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788424843; cv=none; b=LMsLStgrzRgEb9mUIdBMb5BDQjpshlThFZuzus07npEXAiC9U8eQKTSlXv27spviBkiQIyJzSCnC7R3/41G2GizhNkA/H1PJaWdkSrxxdxVROYVRfhocvZGQdrAQmmI18T4czhcCS0iLgvrGMMi1eypFvJdP2HrOJkXZCQvifMg=
+	t=1788427739; cv=none; b=MatJOBXohQZxqNuSdyGgGEJ3/zZ8W4R6EiqLMCZRa+po2pMFDvD1dW/oV7QxboWl1XI/HVga94ZIX8l49hK+Os6bH9jgp4ICzdMdTu++PESdQF1TvwmPO+SXwV16CvpCdYOYeHVUe++murURDOwa9I/3WHEMpsvd7SV5+pOhWbM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788424843; c=relaxed/simple;
-	bh=kMTOFN8JZhM/m7RvvMqXj/VTFZ5tb5Ajow1J3nUWZgw=;
-	h=Date:From:To:CC:Subject:In-Reply-To:Message-ID:MIME-Version:
-	 Content-Type; b=FCTXLVd9haenJkP8QSF/O1zdT9/cArwZDj9sd+7L1ya8+IWKlU4Nuh6wV/Y45l/YLRrR3ZxTVUvPuSuwxPaA6j+BebSKKMYf1CWAxTgSavKPmOPd9NiFM8Bf/T2n4D5gTJ4c9ksRnvJkdfCag0p/y6sRNF+z5FwyV3I0Z/ZCILM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mainlining.org; spf=pass smtp.mailfrom=mainlining.org; dkim=pass (2048-bit key) header.d=mainlining.org header.i=@mainlining.org header.b=mDQatlzl; dkim=permerror (0-bit key) header.d=mainlining.org header.i=@mainlining.org header.b=LuGOw9ME; arc=none smtp.client-ip=5.75.144.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mainlining.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mainlining.org
+	s=arc-20240116; t=1788427739; c=relaxed/simple;
+	bh=U5pi9NpNkggEpIXhIWqLp0A74V6qUf5yXoAM5xhOX0Q=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=Oh5gPI0ZJVI8AZTYdnoPiE3KhfXXnoEWsgM3QQQBiIFp7MOvGvodFxL3WTVFd1TjSlzHLNlHV48GfAHbTOHMY5G/fvohCwDtJDMvCo2amdsvWttrzYHUUFVbS6Q7bOC0SIKKeXBqgnlIu3i5xSDFYssGapCinuJ8MQaoTuOxdfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fE/xtliZ; arc=none smtp.client-ip=91.218.175.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mainlining.org header.i=@mainlining.org header.b="mDQatlzl";
-	dkim=permerror (0-bit key) header.d=mainlining.org header.i=@mainlining.org header.b="LuGOw9ME"
-DKIM-Signature: v=1; a=rsa-sha256; s=202507r; d=mainlining.org; c=relaxed/relaxed;
-	h=Message-ID:Subject:To:From:Date; t=1788424814; bh=Lwc1uEi59DT6h5HnJoqKhbK
-	oJBDpxb8emwwF7CCjWek=; b=mDQatlzlflnWCFQUd3FUD2C9gogGntQYQwwbGhdz8biTGbYcFS
-	mrTHaqc7KE6gQE54fzal5z0HIp8cVC9/b/SePFR3OAw9F20N9ajvV38jGzLLx18CHwmkeLV9mHL
-	RBsqy00tj+MV1jdUciTMri4j2DvCY+aN5yQlwjov7OaqMjkiPLMAt9ED+JNLiHLrSrxUHbqW/CE
-	jIsMPqlbRzoB4qbB4WhSJzZQPyiw+XN2rXozmkhXRb7kEK6Z05PzjN2T70GY7nnGshsF4qf5ZyB
-	zcqrk6h1AP4z3uHflwjnHQnQQWP1cS8DM2E86pbztcgdwepk4uujOwHZhYBNVRDDMUA==;
-DKIM-Signature: v=1; a=ed25519-sha256; s=202507e; d=mainlining.org; c=relaxed/relaxed;
-	h=Message-ID:Subject:To:From:Date; t=1788424814; bh=Lwc1uEi59DT6h5HnJoqKhbK
-	oJBDpxb8emwwF7CCjWek=; b=LuGOw9ME6e3WFLcYm44DJ9YnX8TGY9tiaCd7EOKe/dgjMf9y7d
-	wLv42xm6EaEuW+q9zoqUCccEUsRbfdL4qJDQ==;
-Date: Thu, 03 Sep 2026 09:40:12 +0100
-From: Bradley Morgan <brads@mainlining.org>
-To: sunshaojie@kylinos.cn
-CC: brauner@kernel.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, jack@suse.cz,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- mkoutny@suse.com, ptikhomirov@virtuozzo.com, tj@kernel.org,
- viro@zeniv.linux.org.uk
-Subject: Re: [PATCH v2 2/3] uts: drop BUG_ON() in copy_utsname()
-In-Reply-To: <20260903064828.126643-3-sunshaojie@kylinos.cn>
-Message-ID: <3C0E7463-BFCA-4E4A-A6AF-AD9F6E57010A@mainlining.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fE/xtliZ"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=U5pi9NpNkggEpIXhIWqLp0A74V6qUf5yXoAM5xhOX0Q=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788427735; v=1; x=1789032535;
+ b=fE/xtliZyUR7sSEanHE6W6zVSFJ7M268Lo+drXADDWbmQN4mZr8Dpbe2bm3RrxyXKeJGtDwD
+ oF4xtqmfEQ025u9ATgpzOYfb2yn6hm/a+LNJVz/BHkUH+8A7NpPjIu61YSgYC5yNUxYNAuNY2vp
+ 2fNGEfKqC5fTbA9EUUx4GNmo=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 6635a15b9f1bc633;
+	Thu, 03 Sep 2026 09:28:55 +0000
+X-Mizu-Trace-ID: 6635a15b9f1bc633
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <7fb0d5df-6d16-477a-a140-377158b0fa05@linux.dev>
+Date: Thu, 3 Sep 2026 17:28:48 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, Jan Kara <jack@suse.cz>,
+ Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, cgroups@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] cgroup: namespace: drop BUG_ON() in
+ copy_cgroup_ns()
+To: Shaojie Sun <sunshaojie@kylinos.cn>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Christian Brauner <brauner@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>
+References: <aphwXq5bEQwKhqx2@localhost.localdomain>
+ <20260903064828.126643-1-sunshaojie@kylinos.cn>
+ <20260903064828.126643-2-sunshaojie@kylinos.cn>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20260903064828.126643-2-sunshaojie@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 3 September 2026 07:48:27 BST, Shaojie Sun <sunshaojie@kylinos.cn>
-wrote:
->The sole caller, create_new_namespaces(), always passes a valid uts
->namespace pointer from the task's nsproxy. The other copy_*_ns()
->helpers, e.g. copy_time_ns() and copy_pid_ns(), don't perform such a
->check either. Drop the BUG_ON() for consistency with them.
->
-
-Reviewed-by: Bradley Morgan <brads@mainlining.org>
 
 
->Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
->---
-> kernel/utsname.c | 1 -
-> 1 file changed, 1 deletion(-)
->
->diff --git a/kernel/utsname.c b/kernel/utsname.c
->index ebbfc578a9d3..1ebf87e24607 100644
->--- a/kernel/utsname.c
->+++ b/kernel/utsname.c
->@@ -81,7 +81,6 @@ struct uts_namespace *copy_utsname(u64 flags,
-> {
-> 	struct uts_namespace *new_ns;
+在 2026/9/3 14:48, Shaojie Sun 写道:
+> The sole caller, create_new_namespaces(), always passes a valid cgroup
+> namespace pointer from the task's nsproxy. The other copy_*_ns()
+> helpers, e.g. copy_time_ns() and copy_pid_ns(), don't perform such a
+> check either. Drop the BUG_ON() for consistency with them.
 > 
->-	BUG_ON(!old_ns);
-> 	get_uts_ns(old_ns);
+> Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
+> ---
+>  kernel/cgroup/namespace.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> 	if (!(flags & CLONE_NEWUTS))
->
+> diff --git a/kernel/cgroup/namespace.c b/kernel/cgroup/namespace.c
+> index ea4ee13936be..76660332ec64 100644
+> --- a/kernel/cgroup/namespace.c
+> +++ b/kernel/cgroup/namespace.c
+> @@ -53,8 +53,6 @@ struct cgroup_namespace *copy_cgroup_ns(u64 flags,
+>  	struct ucounts *ucounts;
+>  	struct css_set *cset;
+>  
+> -	BUG_ON(!old_ns);
+> -
+>  	if (!(flags & CLONE_NEWCGROUP)) {
+>  		get_cgroup_ns(old_ns);
+>  		return old_ns;
 
---- Thanks!
-https://lore.kernel.org/all/EE579805-42F2-4C58-B752-F28779EEB717@grrlz.net/
+Reviewed-by: Tao Cui <cuitao@kylinos.cn>
