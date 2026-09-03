@@ -1,141 +1,104 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B28E3E866B
-	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 19:12:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2858C50C288
+	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 19:34:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788462730; cv=none; b=Ik+MjClRD9g7/i2ZJVZEC2XCfAioISYowHpKb+pE2l8oT2jzPGl4TsbEZEPQN+YIlUHqh86XK1YdOpp/4npAayyMf4xVdX2wkEZmKFeQe1DOIxHU2fn1pvyCm7nn98Ms1EsHNZhlcz129OtZrIQvCf0hHl9WP2sNSnzp+Th51BI=
+	t=1788464083; cv=none; b=F0wFrF6uLvtcwryMkeq7g4yXZXPNn74/opcHSEXcZs9X++bt5mPtkLz+JNmm9m8qk/3yg1JxvkIdDHDN8NYkuBQXNdpD8HUntEJFhTesJ9nxJru4LvHrT7TGXIe0Y++21thkVhfpuqSK+ef25LMBM5eGGMoI5MdbpEPAG/0fDXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788462730; c=relaxed/simple;
-	bh=1i8tMJfp/R8QxhaIUIM0toTZBDt7bMgl455MIL0WIoI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=H18NjAoVOlMph3GnkYBv74UZqQyoNUp4ZA2OSVknsLhZ3vGk4YajjTV8ykt8HZf8cz1bazn9iTTXHsh1YJdoM+EHqZV7knnpXKLhBhieBUT7H8Itsy3rc9tim4E/yZuBRFtjwKYRw5hYGD9XcLQdmuaJ0GjDY9xIlZ/g291Z2Og=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CSGZbc1H; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1788464083; c=relaxed/simple;
+	bh=isQHEi07ge6EFI0JDD+py6jjJBr/TTVzhs0gdmyR6AI=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=i7NGjrt5mZznBfGx/uWMsMADkEG34QGErpaw/MCOJ/b1gfvcsuH4pLb1LmwJ3d4TdAbbmZMUel8gNutHQ/rRn1T9maKkj7+iFcfnCrHl9x343MzjkUmkuUk/OBstP+SPB1yDb/FDa17W2Kx/jupAoR6Sx/LoDmYIly7f94cZqgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Gbka91Sk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CSGZbc1H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788462718;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9NSPYcZxyhavCYoY5cBlCY/RocvvrkZ0xuo+47WWZcw=;
-	b=CSGZbc1Hs3yxkQKFmy2BewDE0jFcpY9IAr4qfgSLxmTUTJK1atBLXRFwxwHK8YoCc4sCKW
-	ZH8BHUZr71lDfJ8aqcPqEd3HFpiwo6uNdyYGQPyBS0+M7C4KlL+5mOaQBdqpVTfd3tgjpk
-	WiNWQ52Loxm/hg/I+HHtajipMBuHBaI=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-159-enJAFK_rPne1IS8NMIzeYQ-1; Thu,
- 03 Sep 2026 15:11:54 -0400
-X-MC-Unique: enJAFK_rPne1IS8NMIzeYQ-1
-X-Mimecast-MFC-AGG-ID: enJAFK_rPne1IS8NMIzeYQ_1788462713
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8309318C0FE8;
-	Thu,  3 Sep 2026 19:11:52 +0000 (UTC)
-Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8B0671955F7C;
-	Thu,  3 Sep 2026 19:11:50 +0000 (UTC)
-Message-ID: <9ff85fed-190c-4a8d-8d47-2a37990c1cbb@redhat.com>
-Date: Thu, 3 Sep 2026 15:11:49 -0400
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Gbka91Sk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7616D1F00A3D;
+	Thu,  3 Sep 2026 19:34:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1788464067;
+	bh=cEe0Xe4BGpisjWutg3Hd6ntpHOx/Gjz8x6DaZwu6w6I=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=Gbka91Sk8dHFzSVk+rS7sdjg/NU835GPWh8k5QJ1FOTqyrifht+DmIEQz7ZV98V+R
+	 ZMyk+C44h1OmLiDxoEVLz7TBeY6QV6/heypUssRvfn7Fpqp+Lp/LwaYRpcc+60tjOP
+	 jVq4CP/4n/HFTbW+75H5vG6rE8TqPeXSRjR6/e58=
+Date: Thu, 3 Sep 2026 12:34:27 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Julian Sun <sunjunchao@bytedance.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org,
+ mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+ muchun.song@linux.dev, axboe@kernel.dk, tj@kernel.org, jack@suse.cz
+Subject: Re: [PATCH v2] writeback, memcg: skip foreign dirty tracking for
+ bdev inodes
+Message-Id: <20260903123427.eb0beab18ff68d4632aece6c@linux-foundation.org>
+In-Reply-To: <20260903083303.2769873-1-sunjunchao@bytedance.com>
+References: <20260903083303.2769873-1-sunjunchao@bytedance.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/7] cgroup/cpuset: Factor out child partition
- validation
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, cgroups@vger.kernel.org,
- ridong.chen@linux.dev
-Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20260902102615.79189-1-guopeng.zhang@linux.dev>
- <20260902102615.79189-2-guopeng.zhang@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260902102615.79189-2-guopeng.zhang@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 9/2/26 6:26 AM, Guopeng Zhang wrote:
-> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
->
-> compute_partition_effective_cpumask() checks whether each valid child
-> partition remains covered by the parent exclusive CPU mask and whether it
-> would consume all remaining CPUs of a populated parent.
->
-> Factor these two checks into child_partition_error() so the same rules can
-> be reused when evaluating a proposed parent configuration. This is a
-> preparatory refactoring with no intended functional change.
->
-> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> ---
->   kernel/cgroup/cpuset.c | 38 +++++++++++++++++++++++++++++---------
->   1 file changed, 29 insertions(+), 9 deletions(-)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 8f24171b6055..6994dc75d940 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -2085,6 +2085,26 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->   	return 0;
->   }
->   
-> +/*
-> + * Return the error that will invalidate a child partition under a proposed
-> + * parent partition configuration.
-> + */
-> +static enum prs_errcode
-> +child_partition_error(struct cpuset *child,
-> +		      const struct cpumask *partition_cpus,
-> +		      const struct cpumask *remaining_cpus,
-> +		      bool parent_populated)
-> +{
-> +	if (!cpumask_subset(child->effective_xcpus, partition_cpus))
-> +		return PERR_INVCPUS;
-> +
-> +	if (parent_populated &&
-> +	    cpumask_subset(remaining_cpus, child->effective_xcpus))
-> +		return PERR_NOCPUS;
-> +
-> +	return PERR_NONE;
-> +}
-> +
->   /**
->    * compute_partition_effective_cpumask - compute effective_cpus for partition
->    * @cs: partition root cpuset
-> @@ -2121,6 +2141,8 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
->   
->   	rcu_read_lock();
->   	cpuset_for_each_child(child, css, cs) {
-> +		enum prs_errcode child_err;
-> +
->   		if (!is_partition_valid(child))
->   			continue;
->   
-> @@ -2129,15 +2151,13 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
->   		 * partition root.
->   		 */
->   		WARN_ON_ONCE(is_remote_partition(child));
-> -		WRITE_ONCE(child->prs_err, 0);
-> -		if (!cpumask_subset(child->effective_xcpus,
-> -				    cs->effective_xcpus))
+On Thu,  3 Sep 2026 16:33:03 +0800 Julian Sun <sunjunchao@bytedance.com> wrote:
 
-Looking at the patch again, I now see that the current code is 
-incorrect. It should be "if (!cpumask_subset(child->effective_xcpus, 
-new_ecpus))" So you only need to pass the "parent_excpus" (for instance) 
-to the new helper instead of passing two.
+> Foreign dirty flushing handles cases where a dirtied folio's memcg and
+> the memcg owning its inode wb differ.
+> 
+> wbc_detach_inode() notes that "concurrent write sharing of an inode is
+> expected to be very rare". This expectation does not hold for bdev inodes.
+> A bdev inode and mapping are shared by buffered users of the block device,
+> while the inode has a single wb owner. On ext4, buffer-cache folios used
+> by metadata and journal I/O can therefore be charged to different memcgs
+> while sharing the same mapping. Normal bdev activity can thus produce
+> frequent folio/wb ownership mismatches.
+> 
+> This was reproduced on cgroup v2 with the memory and I/O controllers
+> enabled, using ext4 on a loop device. jbd2 repeatedly generated
+> track_foreign_dirty events for bdev folios charged to unrelated memcgs.
+> When one of those memcgs entered dirty throttling, the resulting record led
+> to a flush_foreign event and queued writeback with reason=foreign_flush for
+> the bdev inode's root wb.
+> 
+> Skip foreign dirty tracking when the folio mapping's host inode is on the
+> blockdev pseudo superblock. This prevents bdev-originated records from
+> triggering later foreign flushes.
+> 
+> The tradeoff is that dirty throttling in the folio's memcg no longer uses
+> bdev dirtiness to queue writeback on the bdev inode's owner wb. Those
+> folios remain subject to normal writeback. This is preferable because a
+> single bdev wb owner does not identify which cgroup is responsible for a
+> mapping shared by buffered bdev users. Flushing it can write back data
+> unrelated to the throttled memcg. Dirty accounting, normal writeback, and
+> foreign dirty tracking for non-bdev inodes remain unchanged.
 
-Cheers,
-Longman
+When fixing something, please always describe the userspace-visible
+runtime effects.
 
+I'm thinking probably "unnecessary I/O"?  If so, has this been
+quantified/measured?  If not, can the effects be guessed about?
+
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3898,6 +3898,15 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
+>  	u64 oldest_at = now;
+>  	int oldest = -1;
+>  	int i;
+> +	struct address_space *mapping = folio_mapping(folio);
+> +	struct inode *bdev_inode = mapping ? mapping->host : NULL;
+> +
+> +	/*
+> +	 * Bdev inodes are usually shared by many memcgs so foreign
+> +	 * tracking leads to frequent flushes which is counterproductive.
+> +	 */
+> +	if (bdev_inode && sb_is_blkdev_sb(bdev_inode->i_sb))
+> +		return;
+>  
+>  	trace_track_foreign_dirty(folio, wb);
+>  
+> -- 
+> 2.39.5
