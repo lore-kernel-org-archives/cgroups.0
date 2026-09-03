@@ -1,49 +1,82 @@
-Received: from mta1.migadu.com (out-201.mta1.migadu.com [95.215.58.201])
+Received: from mail-pj2-f4.google.com (mail-pj2-f4.google.com [74.125.227.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40430447811
-	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 07:35:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B07D03793B6
+	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 07:51:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788420951; cv=none; b=e61Izsw7rfQrhbOVYPFV6U+/IJthNXjRxOlCKOWh47t7gb4XPrU7GqD+O8oqsXzXWIV6YQk5l1fG9HkCV+UKB7ONm5hvDdVkQtFUeB6u/841+YzOpgCO9TkmD27skPJy+9MREyAuB5RsHXfqyVV+22UyqKeFDpCrQUobld45z1A=
+	t=1788421874; cv=none; b=s1NWC/Ssp0OTS+OHNDYezWQVjY+OZW7EINWpvZwTQtztIWK/2Uj4DS3EVXtIQ+Z4gz7CCUA6+SQ1qJmB+MXCtKwmszALm8GS2gZJKSSQHNYAwuF8NbN5CXGydRSZ9BBGwrF8XYA3osNqHS83YYbqc6my9ICQSkB+/HRkwrU2bYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788420951; c=relaxed/simple;
-	bh=u3Ile/OYKX4kP8lluygtrG5IPVka1AQyFIVtj+OD9x8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JIVID+EeP2ol6iGaiXxrLocYb/1c0eaAIUuZjjKA1J6yNxRYqoXxDB4dKsNCIO8DDXaCyRuCgBJwbLmAIgekuk7leOBg33YSNooLSDcmW0AKkoNhuVp0YNKyz+j+5dq6MSgaAJfGRwACPIV7hssXSv8Y6OeOz6kj2K7Thw0/2AU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ovesXsCq; arc=none smtp.client-ip=95.215.58.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788421874; c=relaxed/simple;
+	bh=Twa+Yfd7YrJh4UKgw+MdhWaC2+lUEvSCwdgdLUXkKTg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Qkyw4wi42T7KwiqMO9fr3onFXOLU02o/teKh7aJ8Wyo1vU/8wISokpAqUgtEtzEMILJRFrB+n6PTz6rE672icUVZdjGJ5Hmzy0mbQeBEga4qcsfUmZB+xRs9dAmA4V+h5Hbt9tvFK23n1gKKdgNlJSDQ6LQV/MuoJss5X5ptAyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aWN6hwBu; arc=none smtp.client-ip=74.125.227.132
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ovesXsCq"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=u3Ile/OYKX4kP8lluygtrG5IPVka1AQyFIVtj+OD9x8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788420947; v=1; x=1789025747;
- b=ovesXsCqkLcdfQMmUvpejbKdqCAd0Zf9jCBF51XbiDpQeM1GUBfMojj7EC4wUjKP8GjQ15hv
- VZbQ9YgHlpKPQ5gskoZFar8h3iR/w4nMVlIoMoLC6ioTU9dmuFRNAC+mMyQfWOwRZrkvTVhXHxM
- T4jR+O1WMHVxQged8Yzr9khk=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 14c2f6911cc44582;
-	Thu, 03 Sep 2026 07:35:37 +0000
-X-Mizu-Trace-ID: 14c2f6911cc44582
-X-Migadu-Flow: FLOW_OUT
-From: Tao Cui <cui.tao@linux.dev>
-To: Michal Koutny <mkoutny@suse.com>,
-	Suren Baghdasaryan <surenb@google.com>
-Cc: Tejun Heo <tj@kernel.org>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aWN6hwBu"
+Received: by mail-pj2-f4.google.com with SMTP id 98e67ed59e1d1-3896ccc93b5so622045a91.1
+        for <cgroups@vger.kernel.org>; Thu, 03 Sep 2026 00:51:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788421872; x=1789026672; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ICN4jGrb/nR91jjnghtKbxqLBDgDgvVDNKC+0blsog0=;
+        b=aWN6hwBuA/5k/BIJ5/3BA+whAr/t4JYufhYK1xiwejKacW2mLbRKgIGyLuYDlExdau
+         ytbiqdxnohdzj1z495GqiTjhib0t0h3dQUQILeLtalizL2cECCep/KvpBM1oKptb5uAM
+         l32Om1VKlo9+6uLTcwGlUZjtAMIgD/kL1/AyF2z6GtcL3t9NOVFh17cMZ3ZwIsVqIsWn
+         k4Dqft+aNl0R795qBqclNe11OUh6ZsCC66RuL9gRQbnCnJEZVT0FPJJnIiOOoRe9QyM2
+         jbxdbVi64KZy6sidOP89XMXN/Kh8IWuLc4oVh0J4zb+mHFIKVSGqCS0XK7MDqKGmP7ky
+         suzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788421872; x=1789026672;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ICN4jGrb/nR91jjnghtKbxqLBDgDgvVDNKC+0blsog0=;
+        b=rM10zpdHd83QUQpJEvb8lF6eDlmwMY1HvyNA9J/TLjGpg5q2H0bDMggYf5QuRnzZ6n
+         PXikPDrOOqbRTkKbYofxwKxIqqECHeZzXErrvZlsl61txvUpasCykN/FushFrt9yPbNS
+         o7IcGkMOc5nUObsHOPbrqZco0DIKwdnfoKbvFWsiA9aHRxqVtXHQa/KqfUnFALVYQ2J/
+         iRivyqOlOc1RjjLYJ8N/rLINtsZ07rJHMVlK8lfVKTZX5X98ZHUlAxGKpOFOIQdmf1xL
+         1gJAKMo2SXxvgbnaBKyKHi5aTfsJ7qCMeafEnXIWU0UGPrv1dqAq9mNOwZ7YS8QxcajH
+         mf1g==
+X-Forwarded-Encrypted: i=1; AKwUvBzY2nmllL3fZKGLzR0Ju1OflKLmdc8Xf+ikgPlqtMmueWP9KsoqprPHc2lhEZ0FCt4xt3iIq74N@vger.kernel.org
+X-Gm-Message-State: AFuF++l2L7BAxVa4TDrpdFyIEIYanmljHJ6LNOwD2frf3xvx1rM/uLMm
+	Oa24KOYiJdJUXMfdKc7m/g+/4zrS95q2Y80rYAlqOMenfs6fPuE6qtcG
+X-Gm-Gg: AYBFou0EJRXPvj+2nYtUo+H0iEjhJ6xhZwOKmiZgxYX5j2X/AsdHiXiWcbkVb+Zxucd
+	FTG9lrgk5zKJvYMtNRqoRM7/vmYD0TXaRKK6XG9LFBvNNkdeLKNw5vw+tM4JtJRMPK/4iqhGxzl
+	TeSD0BiW73GRI45BgMXfyfLYS3yXMjOoE3Hj/Tq/J3DX0njKRcxz00/wN+K6kX89DnMku8wL+SZ
+	3V6ECeGzq1Vna+/oNZzRvAPrtewTEPvDDvcmOnY+vGF2OyeasYe8y2wwQUh1Erfh2HTyfIKHUri
+	hEhnyvbvJ4eFKkcH4ZegtGbqyQM/2QyV03Y2B/t6BXHQc+RrXuj9VNe4f2k8dha0QdrN5LW4/W9
+	7d6D/tTy6Sv6ko2fpq0rwK9av7+dgUne4yKD07mZoNjvCstzHLNkzk4C8U3XLK+EOrYGYbUIAtx
+	Y9rPwmn/paoiKtUJxlsqGRtGyTiBZ5KmKo8p6jsKFArMqc6rlUeyfAPMetr5pipDs+3+XpkBkOe
+	gvaHVZsHNyJTO1bg8Pwqbo=
+X-Received: by 2002:a17:90b:280a:b0:38e:250b:122f with SMTP id 98e67ed59e1d1-39aee085053mr15681059a91.16.1788421871755;
+        Thu, 03 Sep 2026 00:51:11 -0700 (PDT)
+Received: from HXDQXTDYHN.bytedance.net ([63.216.146.178])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39b083e6e3asm4021341a91.2.2026.09.03.00.51.05
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Thu, 03 Sep 2026 00:51:10 -0700 (PDT)
+From: Jinmeng Zhou <jinmengzhou22@gmail.com>
+X-Google-Original-From: Jinmeng Zhou <zhoujinmeng@bytedance.com>
+To: Muchun Song <muchun.song@linux.dev>,
+	Oscar Salvador <osalvador@suse.de>,
+	David Hildenbrand <david@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	Shuah Khan <shuah@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Nhat Pham <nphamcs@gmail.com>
+Cc: linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
-	Ziyang Men <ziyang.meme@gmail.com>,
-	Tao Cui <cuitao@kylinos.cn>,
-	cui.tao@linux.dev
-Subject: [PATCH v6] selftests/cgroup: add PSI pressure trigger and validation tests
-Date: Thu,  3 Sep 2026 15:35:23 +0800
-Message-ID: <20260903073523.1055584-1-cui.tao@linux.dev>
-X-Mailer: git-send-email 2.43.0
+	cgroups@vger.kernel.org,
+	Jinmeng Zhou <zhoujinmeng@bytedance.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] mm/hugetlb: charge folios to the target mm's memcg
+Date: Thu,  3 Sep 2026 15:50:48 +0800
+Message-Id: <20260903075048.3316-1-zhoujinmeng@bytedance.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,360 +85,143 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Tao Cui <cuitao@kylinos.cn>
+HugeTLB folios are currently charged to the memcg of the allocating
+task.  This gives the wrong result when a userfaultfd handler populates a
+HugeTLB VMA that belongs to another process.  The UFFDIO_COPY ioctl
+operates on the userfaultfd context's mm, but get_mem_cgroup_from_current()
+charges the folio to the handler's memcg instead.
 
-The cgroup selftests have no PSI coverage. Add test_psi.c: per-resource
-trigger smoke tests (one trigger per fd, IRQ full-only), a
-cgroup.pressure hide/show toggle test, and two CPU-pressure trigger
-tests using over-subscription: one expects the trigger to fire at a
-tiny threshold, the other expects it not to fire at a whole-window
-threshold. Skips when PSI is disabled or a resource is absent.
+This can be reproduced by placing the faulting process and its userfaultfd
+handler in different memory cgroups.  Have the target process register a
+HugeTLB mapping with userfaultfd, trigger a missing fault, and let the
+handler resolve it with UFFDIO_COPY.  The hugepage usage is then reported
+in the handler's memory.current instead of the target's.
 
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+The generic userfaultfd population path avoids this problem by charging
+folios to dst_vma->vm_mm.
 
+Pass the target mm through hugetlb_alloc_folio() and charge the folio by
+using get_mem_cgroup_from_mm().  This preserves the existing charge timing
+and error handling while making HugeTLB userfaultfd population consistent
+with the generic path.
+
+Fixes: 8cba9576df60 ("hugetlb: memcg: account hugetlb-backed memory in memory controller")
+Cc: stable@vger.kernel.org
+Signed-off-by: Jinmeng Zhou <zhoujinmeng@bytedance.com>
 ---
-Changes since v5 (Michal Koutny review):
-- Terminate trigger writes with a newline instead of a NUL. The parser
-  (psi_write()) overwrites the last byte of the write with a NUL, so a
-  plain strlen()-sized write silently truncates the last digit for
-  privileged users (e.g. a 2000000us window becomes 200000us) and
-  fails with EINVAL for unprivileged ones. The newline keeps the
-  payload intact and drops the reliance on the undocumented NUL
-  convention.
-- Keep pressure_open() silent: the SKIP message already reports why a
-  resource is unavailable and strace accompanies these tests anyway.
-  This replaces the ksft_perror() added on review of v4, which
-  duplicated the SKIP reason.
-- Treat a test cgroup creation failure in FIXTURE_SETUP() as a failure
-  instead of a SKIP.
-- Drop the unprivileged-minimum remark from the fire test comment and
-  the duplicate sysconf() error report.
-- Add cgroup_trigger_no_fire, the false-trigger side of the firing
-  test: with the threshold equal to the whole window, ncpus+1 hogs must
-  not fire it. Under this oversubscription the measured cpu.pressure
-  "some" stays in the 2-17% range on 2- and 16-CPU machines, so the
-  margin is comfortable.
+ include/linux/hugetlb.h    | 3 ++-
+ include/linux/memcontrol.h | 8 +++++---
+ mm/hugetlb.c               | 9 ++++++---
+ mm/memcontrol.c            | 6 ++++--
+ 4 files changed, 17 insertions(+), 9 deletions(-)
 
-Changes since v4 (Suren Baghdasaryan review):
-- Report pressure_open() errors with ksft_perror() instead of a raw
-  fprintf.
-- Create the test cgroup in FIXTURE_SETUP() so that setup and teardown
-  are symmetric, and drop the per-test creation and the NULL guard in
-  the teardown.
-- Factor the identical bodies of proc_trigger_io/memory/cpu into
-  test_psi_write(); the helper takes _metadata so that its ASSERTs
-  attribute to the calling test, following the seccomp selftests
-  precedent.
-- Drop the now-unneeded NULL init of self->cg and the stale stdbool.h
-  include left over from the restructuring.
-
-Changes since v3 (Suren Baghdasaryan review):
-- Convert to the kselftest harness: each case is a TEST_F(psi, ...)
-  with the cgroup root/PSI availability checks in FIXTURE_SETUP() and
-  the teardown (kill hogs, destroy cgroup) in FIXTURE_TEARDOWN(),
-  which also removes the "ret"/"created" bookkeeping.
-- A trigger that does not fire within the poll timeout is now a FAIL
-  instead of a SKIP: ncpus+1 hogs with a 1usec threshold must stall,
-  so a timeout indicates a real problem.
-- Treat a poll() timeout and a poll() error uniformly via ASSERT.
-- Check sysconf(_SC_NPROCESSORS_ONLN) only for -1 and report
-  strerror(errno); declare variables one per line; for(;;) {}.
-- Make hog_cpu() die with the runner via PR_SET_PDEATHSIG so an
-  interrupted run does not leave orphaned hogs pinning every CPU.
-
-Changes since v2 (Suren Baghdasaryan, Michal Koutny review):
-- Restructure the trigger test into per-resource cases (io, memory, cpu,
-  irq) so a failure points at the specific resource; irq is skipped when
-  /proc/pressure/irq is absent.
-- Spawn the CPU hogs with cg_run_nowait() instead of open-coding fork(),
-  and arm the trigger with a 2s window so unprivileged users can set it.
-- Address the remaining review comments on cleanup and robustness:
-  guard teardown with a "created" flag, use cg_read_strcmp() instead of
-  atoi(), report strerror() on errors, and fix the unused-parameter and
-  sign-compare nits.
-
-Changes since v1 (Michal Koutny, sashiko review):
-- Keep trigger tests smoke-level; switch the firing test from memory to
-  CPU pressure; drop churn_memory().
-- Keep the runner out of the cgroup; add PSI/IRQ skip-guards and a
-  .gitignore entry.
-
-v1: https://lore.kernel.org/all/20260724025826.504586-1-cui.tao@linux.dev/
-v2: https://lore.kernel.org/all/20260728083742.2359320-1-cui.tao@linux.dev/
-v3: https://lore.kernel.org/all/20260813133723.1663605-1-cui.tao@linux.dev/
-v4: https://lore.kernel.org/all/20260824085913.546741-1-cui.tao@linux.dev/
-v5: https://lore.kernel.org/all/20260902040725.877155-1-cui.tao@linux.dev/
----
- tools/testing/selftests/cgroup/.gitignore |   1 +
- tools/testing/selftests/cgroup/Makefile   |   2 +
- tools/testing/selftests/cgroup/config     |   1 +
- tools/testing/selftests/cgroup/test_psi.c | 219 ++++++++++++++++++++++
- 4 files changed, 223 insertions(+)
- create mode 100644 tools/testing/selftests/cgroup/test_psi.c
-
-diff --git a/tools/testing/selftests/cgroup/.gitignore b/tools/testing/selftests/cgroup/.gitignore
-index 952e4448bf070..ce2b907c57ea3 100644
---- a/tools/testing/selftests/cgroup/.gitignore
-+++ b/tools/testing/selftests/cgroup/.gitignore
-@@ -8,5 +8,6 @@ test_kill
- test_kmem
- test_memcontrol
- test_pids
-+test_psi
- test_zswap
- wait_inotify
-diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
-index e01584c2189ac..a8c69e37332a4 100644
---- a/tools/testing/selftests/cgroup/Makefile
-+++ b/tools/testing/selftests/cgroup/Makefile
-@@ -16,6 +16,7 @@ TEST_GEN_PROGS += test_kill
- TEST_GEN_PROGS += test_kmem
- TEST_GEN_PROGS += test_memcontrol
- TEST_GEN_PROGS += test_pids
-+TEST_GEN_PROGS += test_psi
- TEST_GEN_PROGS += test_zswap
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index 16c4c4caa126..45ada75dc04e 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -699,7 +699,8 @@ enum hugetlb_alloc_flag {
+ #define HUGETLB_ALLOC_USE_GLOBAL_RESERVATIONS BIT(HUGETLB_ALLOC_USE_GLOBAL_RESERVATIONS_BIT)
  
- LOCAL_HDRS += $(selfdir)/clone3/clone3_selftests.h $(selfdir)/pidfd/pidfd.h
-@@ -32,4 +33,5 @@ $(OUTPUT)/test_kill: $(LIBCGROUP_O)
- $(OUTPUT)/test_kmem: $(LIBCGROUP_O)
- $(OUTPUT)/test_memcontrol: $(LIBCGROUP_O)
- $(OUTPUT)/test_pids: $(LIBCGROUP_O)
-+$(OUTPUT)/test_psi: $(LIBCGROUP_O)
- $(OUTPUT)/test_zswap: $(LIBCGROUP_O)
-diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
-index 39f979690dd3b..8a3ef479e83d3 100644
---- a/tools/testing/selftests/cgroup/config
-+++ b/tools/testing/selftests/cgroup/config
-@@ -4,3 +4,4 @@ CONFIG_CGROUP_FREEZER=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_MEMCG=y
- CONFIG_PAGE_COUNTER=y
-+CONFIG_PSI=y
-diff --git a/tools/testing/selftests/cgroup/test_psi.c b/tools/testing/selftests/cgroup/test_psi.c
-new file mode 100644
-index 0000000000000..95dcb8a9f1843
---- /dev/null
-+++ b/tools/testing/selftests/cgroup/test_psi.c
-@@ -0,0 +1,219 @@
-+// SPDX-License-Identifier: GPL-2.0
-+#define _GNU_SOURCE
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <poll.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <unistd.h>
-+#include <sys/prctl.h>
-+#include <linux/limits.h>
-+
-+#include "../kselftest_harness.h"
-+#include "cgroup_util.h"
-+
-+#define PSI_POLL_TIMEOUT_MS	5000
-+
-+/*
-+ * The kernel parser overwrites the last byte of a trigger write with a
-+ * NUL, so terminate with a newline to keep the payload intact.
-+ */
-+static ssize_t write_trigger(int fd, const char *trigger)
-+{
-+	char buf[64];
-+
-+	snprintf(buf, sizeof(buf), "%s\n", trigger);
-+
-+	return write(fd, buf, strlen(buf));
-+}
-+
-+static int pressure_open(const char *resource)
-+{
-+	char path[PATH_MAX];
-+
-+	snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
-+	return open(path, O_RDWR);
-+}
-+
-+FIXTURE(psi)
-+{
-+	char root[PATH_MAX];
-+	char *cg;
-+};
-+
-+FIXTURE_SETUP(psi)
-+{
-+	int psi_fd;
-+
-+	if (cg_find_unified_root(self->root, sizeof(self->root), NULL))
-+		SKIP(return, "cgroup v2 isn't mounted");
-+
-+	/* PSI must be enabled (CONFIG_PSI=y, not disabled on the cmdline). */
-+	psi_fd = open("/proc/pressure/memory", O_RDONLY);
-+	if (psi_fd < 0)
-+		SKIP(return, "PSI unavailable (CONFIG_PSI=n or psi=0)");
-+	close(psi_fd);
-+
-+	self->cg = cg_name(self->root, "psi_trigger_test");
-+	ASSERT_NE(NULL, self->cg);
-+	ASSERT_EQ(0, cg_create(self->cg));
-+}
-+
-+FIXTURE_TEARDOWN(psi)
-+{
-+	cg_killall(self->cg);
-+	cg_destroy(self->cg);
-+	free(self->cg);
-+}
-+
-+/*
-+ * /proc/pressure/<resource> accepts exactly one trigger per file
-+ * descriptor. Verify that a "some" trigger arms and that a second
-+ * trigger on the same fd is rejected with EBUSY.
-+ */
-+static void test_psi_write(struct __test_metadata *_metadata,
-+			   const char *filename)
-+{
-+	int fd;
-+
-+	fd = pressure_open(filename);
-+	ASSERT_GE(fd, 0);
-+	ASSERT_GT(write_trigger(fd, "some 150000 2000000"), 0);
-+	ASSERT_EQ(-1, write_trigger(fd, "full 150000 2000000"));
-+	ASSERT_EQ(EBUSY, errno);
-+	close(fd);
-+}
-+
-+TEST_F(psi, proc_trigger_io)
-+{
-+	test_psi_write(_metadata, "io");
-+}
-+
-+TEST_F(psi, proc_trigger_memory)
-+{
-+	test_psi_write(_metadata, "memory");
-+}
-+
-+TEST_F(psi, proc_trigger_cpu)
-+{
-+	test_psi_write(_metadata, "cpu");
-+}
-+
-+/*
-+ * irq only tracks "full", so a "some" trigger must be rejected while a
-+ * "full" trigger arms. irq is optional -- it only exists with IRQ-time
-+ * accounting -- so a missing /proc/pressure/irq is SKIP, not FAIL.
-+ */
-+TEST_F(psi, proc_trigger_irq)
-+{
-+	int fd;
-+
-+	fd = pressure_open("irq");
-+	if (fd < 0)
-+		SKIP(return, "/proc/pressure/irq unavailable");
-+
-+	ASSERT_EQ(-1, write_trigger(fd, "some 150000 2000000"));
-+	ASSERT_GT(write_trigger(fd, "full 150000 2000000"), 0);
-+	close(fd);
-+}
-+
-+/*
-+ * cgroup.pressure gates visibility of the per-resource *.pressure files
-+ * inside a cgroup: writing 0 hides them, writing 1 shows them again.
-+ * Drive one hide/show cycle and check that memory.pressure appears and
-+ * disappears along with it.
-+ */
-+TEST_F(psi, cgroup_pressure_toggle)
-+{
-+	char buf[BUF_SIZE];
-+
-+	ASSERT_EQ(0, cg_write(self->cg, "cgroup.pressure", "0"));
-+	ASSERT_EQ(0, cg_read_strcmp(self->cg, "cgroup.pressure", "0\n"));
-+	ASSERT_LT(cg_read(self->cg, "memory.pressure", buf, sizeof(buf)), 0);
-+
-+	ASSERT_EQ(0, cg_write(self->cg, "cgroup.pressure", "1"));
-+	ASSERT_EQ(0, cg_read_strcmp(self->cg, "cgroup.pressure", "1\n"));
-+	ASSERT_GE(cg_read(self->cg, "memory.pressure", buf, sizeof(buf)), 0);
-+}
-+
-+/*
-+ * A child that burns CPU forever; stopped by cg_killall() on teardown.
-+ * It also dies with the runner, so an interrupted run (e.g. Ctrl-C
-+ * during poll()) does not leave orphaned hogs pinning every CPU.
-+ */
-+static int hog_cpu(const char *cgroup, void *arg)
-+{
-+	prctl(PR_SET_PDEATHSIG, SIGKILL);
-+	for (;;) {}
+ struct folio *hugetlb_alloc_folio(struct hstate *h,
+-		struct mempolicy_interpreted *mpoli, u8 alloc_flags);
++		struct mempolicy_interpreted *mpoli, struct mm_struct *mm,
++		u8 alloc_flags);
+ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
+ 				unsigned long addr, bool cow_from_owner);
+ struct folio *alloc_hugetlb_folio_nodemask(struct hstate *h, int preferred_nid,
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7d1c0ce189a8..362af58e50a4 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -662,7 +662,8 @@ static inline int mem_cgroup_charge(struct folio *folio, struct mm_struct *mm,
+ 	return __mem_cgroup_charge(folio, mm, gfp);
+ }
+ 
+-int mem_cgroup_charge_hugetlb(struct folio* folio, gfp_t gfp);
++int mem_cgroup_charge_hugetlb(struct folio *folio, struct mm_struct *mm,
++			      gfp_t gfp);
+ 
+ int mem_cgroup_swapin_charge_folio(struct folio *folio, unsigned short id,
+ 				   struct mm_struct *mm, gfp_t gfp);
+@@ -1156,9 +1157,10 @@ static inline int mem_cgroup_charge(struct folio *folio,
+ 	return 0;
+ }
+ 
+-static inline int mem_cgroup_charge_hugetlb(struct folio* folio, gfp_t gfp)
++static inline int mem_cgroup_charge_hugetlb(struct folio *folio,
++					    struct mm_struct *mm, gfp_t gfp)
+ {
+-        return 0;
 +	return 0;
-+}
-+
-+/*
-+ * Arm a "some" trigger on a cgroup's cpu.pressure, oversubscribe the
-+ * cgroup with more spinning hogs than there are CPUs, and check that the
-+ * trigger fires once the cgroup stalls on CPU.
-+ */
-+TEST_F(psi, cgroup_trigger_fire)
-+{
-+	char *cpupress;
-+	struct pollfd pfd = { .events = POLLPRI };
-+	long ncpus;
-+	int fd;
-+	int i;
-+
-+	cpupress = cg_control(self->cg, "cpu.pressure");
-+	ASSERT_NE(NULL, cpupress);
-+	fd = open(cpupress, O_RDWR);
-+	free(cpupress);
-+	ASSERT_GE(fd, 0);
-+	pfd.fd = fd;
-+
-+	/* 1usec threshold over a 2s window: any CPU stall fires it. */
-+	ASSERT_GT(write_trigger(fd, "some 1 2000000"), 0);
-+
-+	ncpus = sysconf(_SC_NPROCESSORS_ONLN);
-+	ASSERT_NE(-1, ncpus);
-+
-+	/* ncpus+1 hogs guarantee CPU contention inside the cgroup. */
-+	for (i = 0; i < ncpus + 1; i++)
-+		ASSERT_GE(cg_run_nowait(self->cg, hog_cpu, NULL), 0);
-+
-+	ASSERT_EQ(1, poll(&pfd, 1, PSI_POLL_TIMEOUT_MS));
-+	ASSERT_NE(0, pfd.revents & POLLPRI);
-+	close(fd);
-+}
-+
-+/*
-+ * The flip side of cgroup_trigger_fire: with the threshold equal to the
-+ * whole window, even ncpus+1 hogs must not accumulate enough stall to
-+ * fire the trigger.
-+ */
-+TEST_F(psi, cgroup_trigger_no_fire)
-+{
-+	char *cpupress;
-+	struct pollfd pfd = { .events = POLLPRI };
-+	long ncpus;
-+	int fd;
-+	int i;
-+
-+	cpupress = cg_control(self->cg, "cpu.pressure");
-+	ASSERT_NE(NULL, cpupress);
-+	fd = open(cpupress, O_RDWR);
-+	free(cpupress);
-+	ASSERT_GE(fd, 0);
-+	pfd.fd = fd;
-+
-+	ASSERT_GT(write_trigger(fd, "some 2000000 2000000"), 0);
-+
-+	ncpus = sysconf(_SC_NPROCESSORS_ONLN);
-+	ASSERT_NE(-1, ncpus);
-+
-+	for (i = 0; i < ncpus + 1; i++)
-+		ASSERT_GE(cg_run_nowait(self->cg, hog_cpu, NULL), 0);
-+
-+	ASSERT_EQ(0, poll(&pfd, 1, PSI_POLL_TIMEOUT_MS));
-+	close(fd);
-+}
-+
-+TEST_HARNESS_MAIN
+ }
+ 
+ static inline int mem_cgroup_swapin_charge_folio(struct folio *folio,
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 785772845795..5ab5a5141574 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -2816,6 +2816,7 @@ void wait_for_freed_hugetlb_folios(void)
+  * hugetlb_alloc_folio - Allocate a hugetlb folio.
+  * @h: Hugetlb state control block.
+  * @mpoli: Interpreted memory policy to use for allocation.
++ * @mm: Memory descriptor of the allocation target.
+  * @alloc_flags: Flags controlling the allocation behavior.
+  *
+  * Allocates a hugetlb folio and handles cgroup charging and global hstate
+@@ -2826,7 +2827,8 @@ void wait_for_freed_hugetlb_folios(void)
+  *         -ENOMEM if mem cgroup charging fails.
+  */
+ struct folio *hugetlb_alloc_folio(struct hstate *h,
+-		struct mempolicy_interpreted *mpoli, u8 alloc_flags)
++		struct mempolicy_interpreted *mpoli, struct mm_struct *mm,
++		u8 alloc_flags)
+ {
+ 	bool charge_hugetlb_cgroup_rsvd = alloc_flags &
+ 					  HUGETLB_ALLOC_CHARG_CGROUP_RSVD;
+@@ -2881,7 +2883,8 @@ struct folio *hugetlb_alloc_folio(struct hstate *h,
+ 
+ 	spin_unlock_irq(&hugetlb_lock);
+ 
+-	ret = mem_cgroup_charge_hugetlb(folio, gfp | __GFP_RETRY_MAYFAIL);
++	ret = mem_cgroup_charge_hugetlb(folio, mm,
++					gfp | __GFP_RETRY_MAYFAIL);
+ 	/*
+ 	 * Unconditionally increment NR_HUGETLB here because if
+ 	 * mem_cgroup_charge_hugetlb failed, freeing the page will
+@@ -3020,7 +3023,7 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
+ 		.nodemask = nodemask,
+ 	};
+ 
+-	folio = hugetlb_alloc_folio(h, &mpoli, alloc_flags);
++	folio = hugetlb_alloc_folio(h, &mpoli, vma->vm_mm, alloc_flags);
+ 
+ 	mpol_cond_put(mpol);
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1271d390b617..0b795bf1e6cf 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5233,6 +5233,7 @@ int __mem_cgroup_charge(struct folio *folio, struct mm_struct *mm, gfp_t gfp)
+ /**
+  * mem_cgroup_charge_hugetlb - charge the memcg for a hugetlb folio
+  * @folio: folio being charged
++ * @mm: mm context of the allocation target
+  * @gfp: reclaim mode
+  *
+  * This function is called when allocating a huge page folio, after the page has
+@@ -5242,9 +5243,10 @@ int __mem_cgroup_charge(struct folio *folio, struct mm_struct *mm, gfp_t gfp)
+  * Returns ENOMEM if the memcg is already full.
+  * Returns 0 if either the charge was successful, or if we skip the charging.
+  */
+-int mem_cgroup_charge_hugetlb(struct folio *folio, gfp_t gfp)
++int mem_cgroup_charge_hugetlb(struct folio *folio, struct mm_struct *mm,
++			      gfp_t gfp)
+ {
+-	struct mem_cgroup *memcg = get_mem_cgroup_from_current();
++	struct mem_cgroup *memcg = get_mem_cgroup_from_mm(mm);
+ 	int ret = 0;
+ 
+ 	/*
 -- 
-2.43.0
+2.39.5
 
