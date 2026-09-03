@@ -1,71 +1,85 @@
-Received: from mta1.migadu.com (out-7.mta1.migadu.com [95.215.58.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD86447819
-	for <cgroups@vger.kernel.org>; Wed,  2 Sep 2026 23:10:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E5125F98A;
+	Thu,  3 Sep 2026 01:04:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788390630; cv=none; b=bwBod0omurX7LfHsyMBFWo8pdwGfKUXOXc/8duwKPKdLmFJF1dnQEO1xnX9aXbKr09SLAOjx72EaZZQ2S4A2lviyW7jlO8Jhaa+UN9Rs1062L/NnHKSS6cjp416eu7N7vbL3yb9bmHuaKK2K8G1pgas6arCO2IS44CNNSp1nBJE=
+	t=1788397451; cv=none; b=MDDd+BMvmvOQ33jLW58ycTYSqkbQFOIVsfEfWY3IP+6l/sesbdsO7NA1tedhtfUiFYWJIZk6XT0dmFeQ9kv9fpn+86Am3QwLmuTibRxsI4F8VFdIeIqv02bhV6dgL6Tptk3j9TAXWEnnoYiKUj3duzxGPF1U/Ifiw7r3AO1dYbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788390630; c=relaxed/simple;
-	bh=gh0fIpKiPd0DP6/RuTzi5CpiJJOPRkFRWWSg57qcjP0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g/SIyQz1NOo4R6ujQKyDzIvgXEzEofwxppfqtjWxz5llxB/WKT6EaZ0ZZ9kyeLT6L52NvfLNZdLtzHVJDC+K9MsuUojRyvjHduUkZfmeW+f/l4I95p+aoCp3TeaoXm8AisK+3vIecq8oqa1O3UiptA6/B08hO19gv9vWW9alDmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=en/5X6vr; arc=none smtp.client-ip=95.215.58.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788397451; c=relaxed/simple;
+	bh=bfrVCWHN1Dv/MDHrzG5R4VEyW2inHXOCByzv7h8fNE4=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=Ab+btkfILBvz4JM+UGo/3HSJCM24hw6eZVG7T+O+cN445UssqahbM880QIXtBAMz9xtXVHWsCBAoAqCNb9a8j0b6oQ+29GBq7pOHdC5jvyxMky9ZWPt2/qGXYqYoYQR9g7Wd3KiD9DGENyRWxGAgjTXjnbUO4YJ2GJAZCXNSwyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Lv6frWmI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="en/5X6vr"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=gh0fIpKiPd0DP6/RuTzi5CpiJJOPRkFRWWSg57qcjP0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788390625; v=1; x=1788995425;
- b=en/5X6vr6xE7rn64i1d5+CS20wAKSL+h+BXjct84mTDa8zt8teFHfihddw50BjJX6/CLniTM
- 5sN0eGL2Jtx+Ot+o1YqHc4R+fxcAkRjIGg5zyMZIhWJQefgn7VcBLkhwhJXYj+zHHi0UA/v9xv6
- Vat4WVGuLukfhCDmSNSkUfG0=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 1b76ea144a7bccf6;
-	Wed, 02 Sep 2026 23:10:02 +0000
-X-Mizu-Trace-ID: 1b76ea144a7bccf6
-X-Migadu-Flow: FLOW_OUT
-Date: Wed, 2 Sep 2026 16:10:01 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Ziyang Men <ziyang.meme@gmail.com>
-Cc: kernel-team@meta.com, Jens Axboe <axboe@kernel.dk>, 
-	Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Shuah Khan <shuah@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Vincent Guittot <vincent.guittot@linaro.org>, 
-	Ben Segall <bsegall@google.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, 
-	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
-	Yonghong Song <yonghong.song@linux.dev>, Jiri Olsa <jolsa@kernel.org>, 
-	Emil Tsalapatis <emil@etsalapatis.com>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	JP Kobryn <inwardvessel@gmail.com>, Mykola Lysenko <mykolal@meta.com>, linux-block@vger.kernel.org, 
-	bpf@vger.kernel.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] cgroup: expose cpu.stat and io.stat to BPF
-Message-ID: <apisezhyZe_3vp0x@linux.dev>
-References: <20260820211758.3393984-1-ziyang.meme@gmail.com>
- <apX9KtGrmfA7u0zV@devvm16600.scu0.facebook.com>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Lv6frWmI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61D661F000E9;
+	Thu,  3 Sep 2026 01:04:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1788397449;
+	bh=kNT7Z2FMxt/nfOQZlUflR3zMw2XOgkeNZiCD6ouunac=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=Lv6frWmIMBhsZT2PbPJmz9srQDtxWdSn9v59muHBsrLCyGSrOM4BF+Dwp/XHqJ9Hr
+	 ZIhqg1lFK5NXXOOVJHWCGB3GvpzX42wDAjbROLuEi8b3RvB1druPR2CWA+ZgLTPwzl
+	 XHf38yM4beeoq2eVsBsaiwhmWV0YcnfpmxdTt6Q4=
+Date: Wed, 2 Sep 2026 18:04:08 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Joshua Hahn <joshua.hahnjy@gmail.com>
+Cc: Nhat Pham <nphamcs@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>,
+ Yosry Ahmed <yosry@kernel.org>, Krush Chavan <krushchavan@outlook.com>,
+ "Chengming Zhou" <chengming.zhou@linux.dev>, "Tejun Heo" <tj@kernel.org>,
+ Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, "Shuah Khan"
+ <shuah@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org,
+ kernel-team@meta.com
+Subject: Re: [PATCH v2] selftests/cgroup: account for zswap shrinker
+ writeback
+Message-Id: <20260902180408.05b925ce05359cd4d7f96894@linux-foundation.org>
+In-Reply-To: <20260902194521.3652178-1-joshua.hahnjy@gmail.com>
+References: <20260902194521.3652178-1-joshua.hahnjy@gmail.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <apX9KtGrmfA7u0zV@devvm16600.scu0.facebook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, Aug 31, 2026 at 03:16:10PM -0700, Ziyang Men wrote:
-> Hi Reviewers,
+On Wed,  2 Sep 2026 12:45:20 -0700 Joshua Hahn <joshua.hahnjy@gmail.com> wrote:
+
+> The test_no_invasive_cgroup_shrink selftest checks that when a cgroup
+> has zswapped out more memory than memory.zswap.max, it does not
+> trigger writeback for other cgroups. To do this, it compares the
+> writeback count in a control cgroup and makes sure that it is 0,
+> and then checks the writeback count in an aggressor cgroup who does
+> expect to see writeback.
 > 
-> Just want to follow-up on this patch series. Please let me know the possible
-> issues and I will fix them.
+> However, when the zswap shrinker is enabled, the victim cgroup can see
+> legitimate writebacks not triggered by the aggressor. In some Meta CI
+> tests, we have seen this failure mode happen.
 > 
+> Instead of checking that the victim cgroup has 0 writeback, compare the
+> writeback values before and after the aggressor runs and check that
+> the victim cgroup did not perform any additional writeback. Note that
+> this can still lead to probabilistic failures if writebacks take longer
+> than 5 seconds, but this should fix the systematic failure case.
+> 
+> Fixes: b5ba474f3f51 ("zswap: shrink zswap pool based on memory pressure")
 
-AI bots have raised real concerns. Please address those and then resubmit.
+Thanks.
 
+I do support backporting selftests fixes.  We want selftests to work
+well in the kernel with which they are shipped.  But, as ever, we
+should include a clear explanation of the userspace-visible runtime
+effects of the bug.
+
+Seems the short answer is "false-positive test failures" but we can
+perhaps do a little better than that.  Quoting the failure messages
+would be a good way - very recognizable.
+
+> Reported-by: Krush Chavan <krushchavan@outlook.com>
+
+Relatedly, is there a Link:/Closes:?
