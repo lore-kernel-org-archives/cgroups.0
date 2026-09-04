@@ -1,57 +1,56 @@
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2C2638CFED
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 22:51:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA653932E5
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 22:51:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788562271; cv=none; b=iqCHD5+t+k1dwVfRCs1AaqNv9C3AfZnpOvglioik8DN1M+xD80s+BPARCFJmvg+BwQv6uRbPKi2QvWcg6PBMXfzTCzF1m5eQFvThmz3y1UaP/RZSEAA2eU1sogbqWiUDP/ToTnl/Q9Tiv/rCwkFh34bo/w4NthpBGvXu+HgJf6Y=
+	t=1788562272; cv=none; b=KKKCNBhdRdTYCGZoXGGPZMkx077a3jnicmVVuXLoz3oUepqXOU4lQ1bOQzYsq1UB3tLU3YTXQooBoUlDi6BHFNkBC6YREGknROUd4XxekkTfxsKmid4GSXGiICBieGstngHmm2g2WGSIHnCM+xBnjDmx44RMhsFa+iEMWHsQEGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788562271; c=relaxed/simple;
-	bh=BH0sJiRzFlk64hqG4rCWsKMMTvzMukqzBxeOy8VRpSU=;
+	s=arc-20240116; t=1788562272; c=relaxed/simple;
+	bh=7Rr4cZf23G1AhSmC6yHNaypWuZm8NnD+lG4o7s9xYsQ=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=ltud7l7dgV11sUitgewh0Xmaxzm12glD3ojnb0VfJoHnEkJlKme4V8oVuEggnEHFXOrPmYW1OhTiWzdIz0ooO+P7OgiFohfJwe/b7dYwREA9jUWUoa3KMoJtNiZJjX7v04qQt73fFppjkM5xHisrf4aTFQ0B0EMYP//fM0x2PIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=AwWmW932; arc=none smtp.client-ip=209.85.216.70
+	 To:Cc:Content-Type; b=Kwo7d/5ooFOWUPJWdIPlAjqjmArxIz0+qL8z8V59oKP2RR2MkvAKk/zNDv5JVLKi+Obl+BPCkLtpBRXU4h2EzxWT3Ys9RFVEgf4DKuGy64lt49MRWXDjc4pBSNebFn02dw2lNvhumIRmpuGR1eHHmGbBZAN0/XsPXG6bg8Lpmco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pMPWpmHv; arc=none smtp.client-ip=209.85.216.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--wfelipe.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="AwWmW932"
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38e8fee6af3so1948309a91.1
-        for <cgroups@vger.kernel.org>; Fri, 04 Sep 2026 15:51:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pMPWpmHv"
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-38f5ac7416eso1794439a91.3
+        for <cgroups@vger.kernel.org>; Fri, 04 Sep 2026 15:51:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788562269; x=1789167069; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=etVT3JR9OsRtloAyimt/t5S2ubPCA2IZVBKjgKO3AfA=;
-        b=AwWmW932FkhjNUV6DIYweOvyEHcmC+At/HTdWgGsKzsaMLu41wtvvOQkahEZfEwFl1
-         vHtrO4tB+YiweA/OBUXJE8DY5OUO4qTFZJhts0/onDK1jIAeoWNoQ7ztTz5nCvCIxLAF
-         3dcn1FDWawsnRbGsDQEP1kH6n+hSAGVOw0Qce4aYhEJyJwzyWURAcxIe2EKGOOvkO5Px
-         G3+a6VcvzPClmn0x5MuDwhgqtjb9TkVwWS4g4CmrR6cpvOKa7QRRkjKbaDrGS/6S7uiM
-         gg02gYVjfYLqT7hi5nhnhrnNx1pFiRgHr0HzsCrLpYplizdHlij+FP6mb5lxMg9YNxLf
-         vHNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788562269; x=1789167069;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1788562270; x=1789167070; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=etVT3JR9OsRtloAyimt/t5S2ubPCA2IZVBKjgKO3AfA=;
-        b=M+oBuDoLOU4r/KeUsxiAbYIBXeq9+i3x/LV/VZ63LHPJwugQELoQdncG99fcExhgVY
-         Kkl+GH8MLin7G6PxA5yoLg2xUdY4x+HOMzOI0cwGC1PHhhr1qPRkS3P2yLC7rKdKRVkE
-         wdDajdC+I8Pk1gKn4qATV1E/k3Au2JsHJS05bU/uPTMK58AtIDuyxj3YPpugt8Bzmw30
-         sYA772gtQNSnHD888XW3oaDEHDZonoJv8rEjyOzH2teSdKSDnT39lq20f15cPS3AkjZl
-         bdL3MQP2p93LKAsmEtFiJMXhjTkXYu6QNYT3nDEIGiAwjuJLd98PewZx1AOI+eATDIVL
-         hW6Q==
-X-Forwarded-Encrypted: i=1; AKwUvBwkB638Lllm+Sv8//XYfgN/T5MnOzUlsATHyrW3QV+jMSBoGmpyYfctUPwZJxovh34EKHtp+8rW@vger.kernel.org
-X-Gm-Message-State: AFuF++kFGNuIIhcHjvH8JNGynpgx4HXDetdRvP5LMY3fE26FuGLUh2xz
-	3ALZHKg1YZ9zrcJGVTqjdGYTkNqp17DoMF0CMnPaiCiLvKac8ZGAWMSf1aiSKR3Ug8fP6NSpGCw
-	vM6HO02VUxQ==
-X-Received: from pgu38.prod.google.com ([2002:a63:1466:0:b0:c9a:53ea:434a])
- (user=wfelipe job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:4388:b0:3da:1e2f:3be9
- with SMTP id adf61e73a8af0-3da3a0b0070mr14239936637.22.1788562268577; Fri, 04
- Sep 2026 15:51:08 -0700 (PDT)
-Date: Fri,  4 Sep 2026 22:45:13 +0000
+        bh=VNAQcGgCzsGn8fB04Y1RcaGfsgoCFdcws+Wtu5yA69s=;
+        b=pMPWpmHvPvN5zEtwTLfiDUwwtHC9VZdApTNgYP7e3Ok+eo1Xts9Fvyb+b8istJf6St
+         4Vn5dsgfbIag6TjgVEKTt5ds6e7AB1uARD0bDhOn30lv7W92DLAiWMEd+ixT/wf95ywD
+         i6VaHyXO5Ru0Mh+Hc0nk64A3sCiglprJBxBEZHv18R0mTGNteQIFVAlfDC/e2NFPDdGl
+         +6oei6f+NNsnLAZ6BjU5BOW6scwTLSTTRuAQofF7T5aQGRtWFos//U/Na2v0LK2I3lR8
+         MccdtCStSJXqxtu02pILHGq95bkGtgoRimyoXtpWDw9R7MT0DpvYrPAOYRQ4LBTYWZaU
+         j0rQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788562270; x=1789167070;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VNAQcGgCzsGn8fB04Y1RcaGfsgoCFdcws+Wtu5yA69s=;
+        b=d4oR6SThokn6FQfHTEy0D5uhEDYoB+ONTISSV+gUY3QvHmitFSWXT/hz+y5n1OY/hd
+         D9h6SuLvZpz8YkaOttdrHJCOa2fgmEgsp44GGYnGzeGTIYJiwZA/gtrFsSimV8dX1pT8
+         0FPmDN1JZqe4K56c6CQzE/JyL3nJTZcSjqXOPiNTeD3zM1Rw6PWrwnyVNQ4XgSDodEwD
+         DLuaTwH08o8SMT0+jWCLEGNnre+XGBgyDRYOI+kUnvd9kMiX+i4mxgsDKDjgf4CKa6l5
+         4Nz/hZnRZ9G3fO6J9EzhH06InTVg2CqfrsgrB7mzHxKemSHgrXx0/TekCmjPqod3+zJW
+         ausA==
+X-Forwarded-Encrypted: i=1; AKwUvBw88AL85Z2XLaUulhB/FyyxIrjsyWOo4tvR5CA318xR8nn/Shnp7gZkJ8ab3mb0AJvsQmJNrKc0@vger.kernel.org
+X-Gm-Message-State: AFuF++kZVjAsSYmd+BjMyk43VGM0H85k19bFZuUort+lg3TOPUERX/xK
+	NLqfa4DeEF8eNyWKXGRe2CsUGn0GidU2X3J+TBPYvPqnG/nsfCTULKIkOrSkDfxf3M7Fpb5IyuP
+	4PJoIy6l6lA==
+X-Received: from pjbsj10.prod.google.com ([2002:a17:90b:2d8a:b0:398:ff5d:7e24])
+ (user=wfelipe job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:5243:b0:38e:c232:9d3f
+ with SMTP id 98e67ed59e1d1-39b2614df1emr14776303a91.5.1788562270186; Fri, 04
+ Sep 2026 15:51:10 -0700 (PDT)
+Date: Fri,  4 Sep 2026 22:45:15 +0000
 In-Reply-To: <20260904225103.2955759-1-wfelipe@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -61,9 +60,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260904225103.2955759-1-wfelipe@google.com>
 X-Mailer: git-send-email 2.55.0.979.g7e5102b832-goog
-Message-ID: <20260904225103.2955759-2-wfelipe@google.com>
-Subject: [PATCH v6 1/3] selftests/cgroup: test_zswap: wait for cgroup to
- unpopulate in test_zswap_writeback
+Message-ID: <20260904225103.2955759-4-wfelipe@google.com>
+Subject: [PATCH v6 3/3] selftests/cgroup: test_zswap: fix implicit unsigned
+ promotion bug in test_no_kmem_bypass
 From: Wilson Felipe Pereira <wfelipe@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
@@ -73,48 +72,49 @@ Cc: linux-mm@kvack.org, cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	Wilson Felipe Pereira <wfelipe@google.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-When running test_zswap on a single-core VM (-smp 1) with 4GB of RAM,
-test_zswap_writeback intermittently fails on the initial run after boot.
+In test_no_kmem_bypass(), delta (stored_pages * page_size - zswapped) is
+checked against stored_pages * page_size / 4 to verify that the pages
+pushed to zswap belong to the test memory cgroup.
 
-In test_zswap_writeback(), after waitpid() reaps the child process created
-by test_zswap_writeback_one(), writing "+memory" to cgroup.subtree_control
-can fail with -EBUSY. Under cgroup v2, enabling domain subtree controllers
-is forbidden while any tasks remain in cgroup.procs.
+Due to slight stat update timing differences, delta can evaluate to a small
+negative number (e.g. -5MB out of 1GB). Because delta was declared as a
+signed int and stored_pages is an unsigned size_t, C's usual arithmetic
+conversions implicitly promote a negative delta to a large unsigned 64-bit
+integer, causing `delta < stored_pages * page_size / 4` to falsely evaluate
+to 0 and fail the test.
 
-When a child process exits, exit_notify() wakes the parent process,
-allowing waitpid() to return immediately. However, the cgroup populated
-task count (nr_populated_csets) is only decremented when the exiting
-task is switched away via finish_task_switch() -> cgroup_task_dead(). On
-single-core systems, the parent runs before the dead child has been
-switched out, causing "+memory" to fail with -EBUSY if written immediately
-after waitpid() returns.
+Fix this by declaring delta and max_delta as signed 64-bit values (s64),
+explicitly casting stored_pages, and comparing against a signed threshold,
+ensuring negative deltas correctly evaluate to true.
 
-Fix this by waiting for cgroup.events to report "populated 0\n" via
-cg_read_strcmp_wait() before enabling subtree control.
-
+Fixes: a549f9f31561 ("selftests: cgroup: add test_zswap with no kmem bypass test")
 Signed-off-by: Wilson Felipe Pereira <wfelipe@google.com>
-Acked-by: Michal Koutn=C3=BD <mkoutny@suse.com>
 ---
- tools/testing/selftests/cgroup/test_zswap.c | 2 ++
- 1 file changed, 2 insertions(+)
+ tools/testing/selftests/cgroup/test_zswap.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/se=
-lftests/cgroup/test_zswap.c
-index 609c48f38524..8f2c9aa4776c 100644
+diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
+index f4ee440b3c66..6e7ee11bc97a 100644
 --- a/tools/testing/selftests/cgroup/test_zswap.c
 +++ b/tools/testing/selftests/cgroup/test_zswap.c
-@@ -408,6 +408,8 @@ static int test_zswap_writeback(const char *root, bool =
-wb)
- 	 * Thus, the parent's setting shall be what's in effect. */
- 	if (cg_write(test_group, "memory.zswap.max", "max"))
- 		goto out;
-+	if (cg_read_strcmp_wait(test_group, "cgroup.events", "populated 0\n"))
-+		goto out;
- 	if (cg_write(test_group, "cgroup.subtree_control", "+memory"))
- 		goto out;
-=20
---=20
+@@ -632,11 +632,12 @@ static int test_no_kmem_bypass(const char *root)
+ 			break;
+ 		/* If memory was pushed to zswap, verify it belongs to memcg */
+ 		if (stored_pages > stored_pages_threshold) {
+-			s64 zswapped = cg_read_key_s64(test_group, "memory.stat", "zswapped ");
+-			int delta = stored_pages * page_size - zswapped;
+-			int result_ok = delta < stored_pages * page_size / 4;
++			s64 zswapped = cg_read_key_s64(
++				test_group, "memory.stat", "zswapped ");
++			s64 delta = (s64)stored_pages * page_size - zswapped;
++			s64 max_delta = (s64)stored_pages * page_size / 4;
+ 
+-			ret = result_ok ? KSFT_PASS : KSFT_FAIL;
++			ret = (delta < max_delta) ? KSFT_PASS : KSFT_FAIL;
+ 			break;
+ 		}
+ 	}
+-- 
 2.55.0.979.g7e5102b832-goog
 
