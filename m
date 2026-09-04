@@ -1,267 +1,213 @@
-Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95553955FE
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 21:42:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788558151; cv=none; b=eDAoMKKc9Lrl1LbAO1Dj31qQ6d0x2WD+nGIhrpeNFvBpDYOZqCCDxQX091olClQ1+7h9qIGfiSI8VK1pdnzj7P8a/nkYpy8yAaMsLAyeJ/DfoabVq3yy2SF1PENbUYSUaCN2Eti3rpEEcpbekhKwXpymvoSbd/CUa3Fk/RyVl3E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788558151; c=relaxed/simple;
-	bh=IfTURNHlwjtaRepVD5dByQ+90DxxWiZBB2cnPzFTSSc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P3Aj41zz8ICMzciyL3usFyBoyRsEbuGcb2KpjDT4X85tQZZs0s6x9paq7f/lOECfVKmUjwOpPnxb6EZutiWCEMP1MW8KgfjWRNdUl3IAvZH91G8c4V6juzvNf0NlDiyMpxVOnB3uMpAO6NluVW9t00iKubSI/1ddq2znnUND5Qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=nvpYHaWp; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=WV01+LBO; arc=none smtp.client-ip=148.163.135.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F842446BEA
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 22:16:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.140
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788560171; cv=pass; b=cT4sAq0cn/HVRivGluyuTpKT5zDJe+eRaaTCdXxKb1K/52408XSmWWBP3IUpYcdTP/lfDuvB5ZzsFy4h8RhnFy9t9Kmn9N/SYYZTH/pi6XPMYMdi2sVug5N46Q0DRkuQ7ovjBmtNvui3oOl9XTdTlc4GIaN0G0WDk4SfjqizB78=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788560171; c=relaxed/simple;
+	bh=dz2fj88YTNw0Ti+IhRHiMFJ+cu0G95tHI9e8c83/Hzo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=A+1cFLTdEeKvc3RyZklD4a39VEmPQ9leso4RQfSoWh+sLhwYpjnbAe+sg1V4tiHJIWCwZRz1b+5AH9HqY5fOgVijTa2Trghy+oDfO2yBP5J7luKG2v414QxVRSA7o68bqpW+kduwUfbEOZ/ccG4wm6+lJwUvQ2dlZ3WITP5Ejp0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NKwV3ncZ; arc=pass smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="nvpYHaWp";
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="WV01+LBO"
-Received: from pps.filterd (m0167071.ppops.net [127.0.0.1])
-	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 684KZ1NS4168451
-	for <cgroups@vger.kernel.org>; Fri, 4 Sep 2026 17:42:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps01; bh=9sBs
-	rXDWsA6mIM6eTb+x+9JskBQgNRQ7PhCpi14v3SQ=; b=nvpYHaWpJagUrv72UkPu
-	pSyLtzsV1MZZi57QENoYRlenxKN2V2EsKHyhZ9o5kJZaa2q3s3LGsw6nDLsiobU5
-	wEQFRPDAoD0D541yZ8U1Y+BjiW9KFG6uT79JPlnRHXhEi5zNEzNRiMP+EuEnqdfs
-	OrHHhY/585JZoZ7zWL8I6RT5o1wOEPg5htyWEDiU4Qd9pEcl0Zp2xARNJ8J5/9WM
-	w7S9cP3TRSGxIJSjWIwNi7TV88gioy34fkCUxBgxdbyML0goMreNY2ygjzWl83AT
-	iXDilJMAvs8KbeChfGBTJaCPT1NK6iCXdUUkQ4xSk8w0kW6pSQl/iCr7gZDkNlkF
-	GA==
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com [209.85.219.72])
-	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4gg0acb8re-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <cgroups@vger.kernel.org>; Fri, 04 Sep 2026 17:42:28 -0400 (EDT)
-Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-90cea0b5522so27414076d6.1
-        for <cgroups@vger.kernel.org>; Fri, 04 Sep 2026 14:42:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NKwV3ncZ"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b5e50eb70so3055e9.1
+        for <cgroups@vger.kernel.org>; Fri, 04 Sep 2026 15:16:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788560166; cv=none;
+        d=google.com; s=arc-20260327;
+        b=W71sBpxwyRcDY1NNeU4X/0IRmyPAaAKHBE53gjqLc9h+bTJgw/rqGZOUulQzyJTq24
+         XhxACxxxSyJZbMCxeakGNuU+Nxp90n89SL0A7Ap3l3LPGvKhhGOFoeBJYZDbrn5JIZS1
+         U0heqo2XikVXTPQD5IbxiEKvWO2F9XDP3r/YqzEhK44P+ipTFGRm0jJYLumAZh2CAEge
+         9OxvWJUo180zLjrgZkGgkrr8RjOdTtoED/P9oDoiZ97yfA+cUOTifrd04+tiyjBys1Gx
+         UHeN8SecQ7u7sAV/E40LY9uEUobKYlWUNz3m4uaOLd89ucVeL0yYGkSGccFE+pWNJ/O+
+         NE1A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=0l8VM1lkkUjt52ORVhFYEbx3JRFVUpwcUSSFpCihGCk=;
+        fh=UqFIAKO7hDaRXfD7ex5BEfUjbppDmGxdNyZG72GGZl0=;
+        b=iqc75y+RJcSZ9uY+5MBeFLuYCdklDcyw3mfa+VNyB2KoS57yWkTlx8sdVrj+ZhrW6k
+         k5Swf7gzSWIiDff319LcInOAb9e/DP8xSfUp9HgjlGBKoU0K1FBd4RH/rHboE8V5P0zN
+         /qPO8uXI+nj/qkxtffFeBlp++HDYebyhhW3JrbRj3CrZDvVCH90oIcz5nFrCiQArtSVq
+         eBC/tlQHguSZPlDR4dnmZctg8HUY+xAeIYJk8gCBUmqszWRwZogVbNWPDRpBB82toBLU
+         Z5ehT6KRtNBduR9H7CKDM66pu7G4dnd+9cj3aua0RxGKwtdOppa4Um/aPEDkc7FQFoFh
+         Zvjg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=columbia.edu; s=lionmail; t=1788558148; x=1789162948; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9sBsrXDWsA6mIM6eTb+x+9JskBQgNRQ7PhCpi14v3SQ=;
-        b=WV01+LBOnOkMCPt09DlKn3sEFtbEFUrO2mjNUipos8CQ7R4bmaY1qoEgSpJy8erngB
-         K+QazoaoiX1dllF1iUnHpxEWmnWHMqAGFZXAAnWgviDuMngYBBdjB+D3j0qDya1S5Mcx
-         CmrUVKU2r7LDm+rylGfSlMOOiw6FkieF0X8nLNr08nqZzD+3ALTqoST1WFmnLsDEiP23
-         U9qowCI530qEIIJ+k4+ZXSdVG7Qv1Y5qI+fmqXenoVVfReNcnMNxbXNlfQKzsQgtroWE
-         KiY90lbtw6Vy2934NCHfcUo1xEEwd6Gq1roSJBWE9UUgdM/U//SoonSPsxT1meGQMhtC
-         /BmQ==
+        d=google.com; s=20251104; t=1788560166; x=1789164966; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0l8VM1lkkUjt52ORVhFYEbx3JRFVUpwcUSSFpCihGCk=;
+        b=NKwV3ncZA2lylVdyey7jD7wRUGkdvzs7/XYI2XZD0HgmOwZtp5fcsqw4e5ovBEOGAz
+         bm7Ui01c/Yxj8yQhaf5KH5yD/uoaLUljRUuZcGmZJL9KXMUNmJT4x4SUXJ3zNXflXqoh
+         i88/QuZJAJz8uGKWXc+PtWZt5egoLWDdrU+vqSM9Sb3coQmjOTVvikd7qslAVYnwBtFW
+         U3WrypdHxswdeum18xARveXZQLSi4CvhgBw7RY2P7uH3k7W5I7I6cNeWItj62zEh+Ny/
+         uf3KFfnzY3A1TzY3vikPi41R+HGXuJaB+SDrToOro1jeQcLvMB0RXwxvX5xPxDP/qLs0
+         GQlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788558148; x=1789162948;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9sBsrXDWsA6mIM6eTb+x+9JskBQgNRQ7PhCpi14v3SQ=;
-        b=mIzUv9bi5MlTAm3CqmKwu7KEr+L+oF35ra2WF9xalnf3mNH2qsEwj9sDcINJsf1GZJ
-         BNeHa4pLEF6dupOhH4BYtOko08OrUeEfvlKtLdikeQbOTOp+ocKAGrdncHBcd0iwSOYc
-         XrwvqMUMNV/c1Du4+2nAyNv9Z3El0n/p26zmHB0CBMJdmEk/2H5ZvTdWjQmHmuBlld0W
-         mIjiOMK5FQ3+eeyu+O1FSg0dawzWuxY5J35NZqK0WUkwL1n8JosOCgRfptEn2qyLZ97a
-         k6siAMftU1BnztESByjt48CH4VWyEKvXT5QihWO/ojhSdYnr/KyFHPrvRWFb6zqowqrC
-         Rn9w==
-X-Gm-Message-State: AFuF++n99KTCjLKgzUNOJwaCFFbewexLnHRgUZrSx1+B63xtulhrZEXN
-	gcuUsHmcyXvU9knrWXhA2VZ+6SToL//jpCTQKzbvIzgOlcrlRegB6IPSVGWVfFRi8SdmheVVs2p
-	aikdIwSsIBnyVE0r0h6SkFxxxnWiNTQbXN9tYgJg5j1/FZ61Wj+ReMvE=
-X-Gm-Gg: AYBFou29atpBfF/VdT2fV06FhbjZg3vrhEooIWYqxH/3rsneizWo1kVgdXcGf+dGEVO
-	adnbcUQhJ6o35rzLfGnZtm2rvHv89O+tR+UaULJ6UM31GjzppFlYh9L/XeshQI2G0/GgxQI5Ki9
-	CPQQuhfaUwUvGNc9XXrXfjOFwS5L4vOv+nGhsqEH6/sBQ6mf1utXchhcOmJgvSTBpEVrwVrkNPZ
-	q16+mlGC3mzGdIpT4UlJN3+Hq+PJjZ9T+V4S5L0saGE9LY0A5ys82kO3x59ei9PUjOm92T5MDlC
-	dnvxUjKdDK1HoXUSskSynb1MtQ9gvCnXz9s8/BGQKPX+lNNibZ4e13qJXbRZvNX6ZBTdw5Uz2eN
-	SvmW7eLJq8mQxg1CRm20RixhftX8dv51tDynFeDAJIy2pfZ9WlSHs
-X-Received: by 2002:a05:6214:f25:b0:910:44f2:5ce3 with SMTP id 6a1803df08f44-91044f25d21mr48209936d6.8.1788558147685;
-        Fri, 04 Sep 2026 14:42:27 -0700 (PDT)
-X-Received: by 2002:a05:6214:f25:b0:910:44f2:5ce3 with SMTP id 6a1803df08f44-91044f25d21mr48209456d6.8.1788558147144;
-        Fri, 04 Sep 2026 14:42:27 -0700 (PDT)
-Received: from [10.207.49.22] (nat-128-59-177-158.net.columbia.edu. [128.59.177.158])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91043b54cd6sm18880636d6.34.2026.09.04.14.42.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 04 Sep 2026 14:42:26 -0700 (PDT)
-Message-ID: <7f70b59e-b1b5-452a-8a2b-d51392737a53@columbia.edu>
-Date: Fri, 4 Sep 2026 17:42:25 -0400
+        d=1e100.net; s=20251104; t=1788560166; x=1789164966;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0l8VM1lkkUjt52ORVhFYEbx3JRFVUpwcUSSFpCihGCk=;
+        b=QpDwDzF3BT36UwWE/1lQB9ODurjU6sMfJpDtQ0e9V8oUJ3AGdixU69pef5NltnE0Eg
+         bKZzQIgG61t9HLZ2ocTi/4OkHLPMjZMD7z40Vg8jOcINy1/vVV+GPDuBxIZ2mQ8DgB4J
+         RjxEhSlfebbIiV1fWIwAGJrOYna5L0s/RAWJb/nB0DQEQmXJoEoA7by3pfTog2TM/8UR
+         J3oESBImCVeP8JGHay8Nxzgi/IjlzWP9+jGPICX7wBotHYBSIZBdL9hEBwecCheD03tF
+         82EAtZDjsL4bRmKIp/HM8d8K2MDtTBRIGw/aCtOAb86qpSb4i5E2qAyqnU0QwqasiHYB
+         fhVA==
+X-Forwarded-Encrypted: i=1; AKwUvByQ7CP/H7JZfZcu3B5asC3DEtsqb3cmdPBwjqbShdm1y1CPLEkPY4FbymHJ7BKy7UXKq+D8pHeB@vger.kernel.org
+X-Gm-Message-State: AFuF++mnehFZBrjfyAl6Mp9VenASBjWNjeoW48BsUqlKM7oppKk3Xkti
+	6yqqLQls5K+t/AXycooaRAnhjPDAHCo34Lb6/7Lbe/0Uxpdxjt6Psu3UIUhevlTPWkSj1lnXX+O
+	QuW9f7ojQQno8qiQdvBfTPerHd/I1DvabrVosOMwf
+X-Gm-Gg: AYBFou0c90qun5mJF4g4QvU00yW6McbFnxw5Mo7OcU+C6mskuZwba8v3DqB4kyhNQSG
+	p287q6lyYYxJ3lkOTPK7ALhzMbXcSXZQK2LL6tmNEEs1gdKxbY9l/s9zwLssqhO3q0RMwlMkLJ8
+	PoVEOvSGe8kvjNkHVAYhD55yzmVf06B+M6iQh1eye94kcHoLPQ87ePLqppeie5KgCu6zRFkHWgl
+	/7wlCHugc8Mqv9SVDDcrJuqbjwloLU7EPRVsvfXzyV3Z1u6q/kVKa+RPqb3k4jRaeEcwhHwcSBN
+	929+xnM+qkQwynmJ4JW4VDMB4xO1crH2vZHBmgA0LUmZlkRXAwt9z7OGzoOdCfSxMM7uXGuXqGo
+	=
+X-Received: by 2002:a05:600c:470a:b0:499:c4db:2ea9 with SMTP id
+ 5b1f17b1804b1-49d01dd5312mr209675e9.9.1788560165981; Fri, 04 Sep 2026
+ 15:16:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/11] mm: memcontrol: constify the memcg and lruvec stat
- readers
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Shakeel Butt <shakeel.butt@linux.dev>,
-        Muchun Song <muchun.song@linux.dev>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
-        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
-        Youngjun Park <youngjun.park@lge.com>,
-        David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
-        "Liam R. Howlett" <liam@infradead.org>,
-        Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>,
-        Suren Baghdasaryan <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>,
-        Axel Rasmussen <axelrasmussen@google.com>,
-        Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
-References: <20260902-folio_memcg-const-v1-0-e2c1da22246d@columbia.edu>
- <20260902-folio_memcg-const-v1-8-e2c1da22246d@columbia.edu>
-Content-Language: en-US
-From: Tal Zussman <tz2294@columbia.edu>
-In-Reply-To: <20260902-folio_memcg-const-v1-8-e2c1da22246d@columbia.edu>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: o41VUMBP0NyXCwOASBLltSHGT0jItu4k
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA0MDIwMSBTYWx0ZWRfX3TUnn8kXJeqc
- NEPiW5997DHJprzQm401lAG96B82dknQ8Bl54JdM+rD6NRmKRnrqoU8YB7wYA2kUgsHBEnhm3qi
- b+/YQ88+8ufkrL/7SowBtywWHYnxMJeVUhWGBvCEPaWpWDx8UipY
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA0MDIwMSBTYWx0ZWRfX3wrfEqU4EAbg
- BBBa6FgtXFgeMo7j+TYqDvPOCUFnID3rxubHjfAzaT7ghsmqkmbjFz5BZhZ5jtcYpzCvwvdmR6k
- lvOsuaT71je1bgcPga0KdsJeTXApKiIRPY2wcBtvWIXwpVl2L4ie+jgOGChAz0zJEZ4kWJc6T2t
- j5iTQ/FmlYlwTI3jKeOpcRs3Uh0EyjWYvn1sbdTYF/B1YspFjcKVXkC445FKOpK6GznwiCi1Rwk
- BydPaL92Q0J9udZqk7+QVBw520cCN8bvaHeDeExwuzwEkKoyRkVPE9EwqSmNZSmb+jjzvbxr7Nx
- DBpRNWrH8Qw+LXCsM/aWud4nQCoryb8gZasMlGvyHD/wNJAKgrEg4twQBKR+xpEstXhCYLPW0u9
- tA27DEFGhhYgjZrVS992FVV+EoycHTgGsbBV7NIbP8qK7qVZQpI4VyTqsA70h3ptVxISlNFq1pu
- 9nlyWmtWTcAWp4cXE+w==
-X-Proofpoint-ORIG-GUID: o41VUMBP0NyXCwOASBLltSHGT0jItu4k
-X-Authority-Analysis: v=2.4 cv=a4EAM0SF c=1 sm=1 tr=0 ts=6a9b3b44 cx=c_pps
- a=7E5Bxpl4vBhpaufnMqZlrw==:117 a=tLges04aSNaZGVAfhBIy2A==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=x7bEGLp0ZPQA:10 a=A0y_DWxS2BwA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=79PYxaXUQd1wl-QFWJnA:22
- a=H57HtBtNAyM616LuGCcA:9 a=QEXdDO2ut3YA:10 a=pJ04lnu7RYOZP9TFuWaZ:22
-X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11896
- signatures=596817
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=10 adultscore=0 spamscore=0 phishscore=0 priorityscore=1501
- bulkscore=10 lowpriorityscore=10 malwarescore=0 clxscore=1015 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609040201
+References: <20260904173145.2028377-1-stevensd@google.com> <apsTohKZNnZuWIxC@linux.dev>
+In-Reply-To: <apsTohKZNnZuWIxC@linux.dev>
+From: David Stevens <stevensd@google.com>
+Date: Fri, 4 Sep 2026 15:15:54 -0700
+X-Gm-Features: AcwNN1VpnwWrsGTRyjmKHtNydJf_FSs12X_Euci9xsJuEck82AevDlkEA_BZZfE
+Message-ID: <CAOiLmNGdPk+7v6Aqm9ctQV9J3YKti50gVTP00P=-3cZ8-x5cUA@mail.gmail.com>
+Subject: Re: [PATCH v2] memcg: Don't call schedule_work when no spinning is allowed
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, Lorenzo Stoakes <ljs@kernel.org>, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	Michal Hocko <mhocko@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Responses to Sashiko below.
+On Fri, Sep 4, 2026 at 12:03=E2=80=AFPM Shakeel Butt <shakeel.butt@linux.de=
+v> wrote:
+>
+> On Fri, Sep 04, 2026 at 10:31:45AM -0700, David Stevens wrote:
+> > Memcg charging can be done from any context, but calling schedule_work(=
+)
+> > isn't safe from an NMI. If memory.high is breached from a context where
+> > spinning isn't allowed, use irq_work to schedule the reclaim work.
+> >
+> > Fixes: 3ac4638a734a ("memcg: make memcg_rstat_updated nmi safe")
+> > Acked-by: Michal Hocko <mhocko@suse.com>
+> > Signed-off-by: David Stevens <stevensd@google.com>
+> > ---
+> > v2:
+> >   - Added missing includes reported by Lorenzo and kernel test robot
+> >   - Added Acked-by
+> >
+> >  include/linux/memcontrol.h |  2 ++
+> >  mm/memcontrol.c            | 13 ++++++++++++-
+> >  2 files changed, 14 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> > index 8170bb8066a2..4a5ef0aba475 100644
+> > --- a/include/linux/memcontrol.h
+> > +++ b/include/linux/memcontrol.h
+> > @@ -23,6 +23,7 @@
+> >  #include <linux/writeback.h>
+> >  #include <linux/page-flags.h>
+> >  #include <linux/shrinker.h>
+> > +#include <linux/irq_work_types.h>
+> >
+> >  struct mem_cgroup;
+> >  struct obj_cgroup;
+> > @@ -219,6 +220,7 @@ struct mem_cgroup {
+> >       spinlock_t       peaks_lock;
+> >
+> >       /* Range enforcement for interrupt charges */
+> > +     struct irq_work high_irq_work;
+> >       struct work_struct high_work;
+> >
+> >  #ifdef CONFIG_ZSWAP
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 6dc4888a90f3..0e8b302ca9ad 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -62,6 +62,7 @@
+> >  #include <linux/seq_buf.h>
+> >  #include <linux/sched/isolation.h>
+> >  #include <linux/kmemleak.h>
+> > +#include <linux/irq_work.h>
+> >  #include "internal.h"
+> >  #include "swap_table.h"
+> >  #include <net/sock.h>
+> > @@ -2360,6 +2361,11 @@ static void high_work_func(struct work_struct *w=
+ork)
+> >       reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
+> >  }
+> >
+> > +static void high_irq_work_func(struct irq_work *work)
+> > +{
+> > +     schedule_work(&container_of(work, struct mem_cgroup, high_irq_wor=
+k)->high_work);
+> > +}
+> > +
+> >  /*
+> >   * Clamp the maximum sleep time per allocation batch to 2 seconds. Thi=
+s is
+> >   * enough to still cause a significant slowdown in most cases, while s=
+till
+> > @@ -2752,7 +2758,10 @@ static int try_charge_memcg(struct mem_cgroup *m=
+emcg, gfp_t gfp_mask,
+> >               /* Don't bother a random interrupted task */
+> >               if (!in_task()) {
+> >                       if (mem_high) {
+> > -                             schedule_work(&memcg->high_work);
+> > +                             if (allow_spinning)
+> > +                                     schedule_work(&memcg->high_work);
+> > +                             else
+> > +                                     irq_work_queue(&memcg->high_irq_w=
+ork);
+> >                               break;
+> >                       }
+> >                       continue;
+> > @@ -4129,6 +4138,7 @@ static struct mem_cgroup *mem_cgroup_alloc(struct=
+ mem_cgroup *parent)
+> >               goto fail;
+> >
+> >       INIT_WORK(&memcg->high_work, high_work_func);
+> > +     init_irq_work(&memcg->high_irq_work, high_irq_work_func);
+> >       vmpressure_init(&memcg->vmpressure);
+> >       INIT_LIST_HEAD(&memcg->memory_peaks);
+> >       INIT_LIST_HEAD(&memcg->swap_peaks);
+> > @@ -4337,6 +4347,7 @@ static void mem_cgroup_css_free(struct cgroup_sub=
+sys_state *css)
+> >               static_branch_dec(&memcg_bpf_enabled_key);
+> >
+> >       vmpressure_cleanup(&memcg->vmpressure);
+> > +     irq_work_sync(&memcg->high_irq_work);
+>
+> On RT kernels, this will put rcu grace period here while we are holding t=
+he
+> cgroup_mutex. Easy fix would be to use IRQ_WORK_INIT_HARD instead of
+> init_irq_work() in mem_cgroup_alloc.
+>
+> Something like:
+>         memcg->high_irq_work =3D IRQ_WORK_INIT_HARD(high_irq_work_func);
+>
 
-On 9/2/26 10:27 PM, Tal Zussman wrote:
-> memcg_page_state(), memcg_events(), and the lruvec_page_state() family
-> only read counters. Constify them.
-> 
-> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
-> ---
->  include/linux/memcontrol.h | 23 ++++++++++++-----------
->  mm/memcontrol.c            | 12 ++++++------
->  2 files changed, 18 insertions(+), 17 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index bd82628d0d72e..10a197886f316 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-[ ... ]
-> @@ -1392,19 +1393,19 @@ static inline bool memcg_vm_event_item_valid(enum vm_event_item idx)
->  	return false;
->  }
->  
-> -static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
-> +static inline unsigned long lruvec_page_state(const struct lruvec *lruvec,
->  					      enum node_stat_item idx)
->  {
->  	return node_page_state(lruvec_pgdat(lruvec), idx);
->  }
+This executes as part of css_free_rwork_fn(), so it isn't under cgroup_mute=
+x.
 
-[Severity: Low]
-Does passing the newly constified lruvec pointer to lruvec_pgdat() discard
-the const qualifier?
-
-Looking at lruvec_pgdat() in include/linux/mmzone.h, it does this:
-
-	return container_of(lruvec, struct pglist_data, __lruvec);
-
-This returns a mutable container from a const pointer, circumventing the
-internal const-correctness the patch intends to provide. Should
-container_of_const() be used here instead?
-
-Answer:
-
-lruvec_pgdat() purposefully returns a non-const pgdat, as some callers
-still need one at the moment (node_page_state()).
-
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 35f924c9f2a31..3d3eadddc1307 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -489,7 +489,7 @@ struct lruvec_stats {
->  	long state_pending[NR_MEMCG_NODE_STAT_ITEMS];
->  };
->  
-> -unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
-> +unsigned long lruvec_page_state(const struct lruvec *lruvec, enum node_stat_item idx)
->  {
->  	struct mem_cgroup_per_node *pn;
->  	long x;
-
-[Severity: Low]
-Does the use of container_of() later in this function silently cast away the
-const qualifier added to the lruvec parameter?
-
-In lruvec_page_state():
-
-	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-
-This macro expansion discards the const qualifier, undermining the compiler's
-ability to enforce const-correctness. Could container_of_const() be used here
-instead, with pn declared as a const struct mem_cgroup_per_node *?
-
-Answer:
-
-Yes, this can use container_of_const(). Will change.
-
-[ ... ]
-> @@ -530,7 +530,7 @@ unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
->   * monotonically-incremented event counters are stored in
->   * enum node_stat_item.
->   */
-> -unsigned long lruvec_page_state_monotonic(struct lruvec *lruvec,
-> +unsigned long lruvec_page_state_monotonic(const struct lruvec *lruvec,
->  					  enum node_stat_item idx)
->  {
->  	struct mem_cgroup_per_node *pn;
-
-[Severity: Low]
-Does this function also silently lose the const qualifier through
-container_of(), similar to lruvec_page_state()?
-
-In lruvec_page_state_monotonic():
-
-	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-
-Would it be better to use container_of_const() and a const pointer for pn
-to preserve the safety guarantees of this patch?
-
-Answer:
-
-Yes, this can use container_of_const(). Will change.
-
-> @@ -547,7 +547,7 @@ unsigned long lruvec_page_state_monotonic(struct lruvec *lruvec,
->  	return (unsigned long)READ_ONCE(pn->lruvec_stats->state[i]);
->  }
->  
-> -unsigned long lruvec_page_state_local(struct lruvec *lruvec,
-> +unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
->  				      enum node_stat_item idx)
->  {
->  	struct mem_cgroup_per_node *pn;
-
-[Severity: Low]
-Like the other functions above, does container_of() discard the const
-qualifier here?
-
-In lruvec_page_state_local():
-
-	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-
-Could this be updated to use container_of_const() as well to maintain strict
-const-correctness?
-
-Answer:
-
-Yes, this can use container_of_const(). Will change.
+-David
