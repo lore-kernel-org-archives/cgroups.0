@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-165.mta0.migadu.com [91.218.175.165])
+Received: from mta1.migadu.com (out-2.mta1.migadu.com [95.215.58.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 620FB446BE2
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 09:46:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.165
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD7EC446BE8
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 09:46:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788515185; cv=none; b=gOWs6Q2hNMJUQ1qgq1MKDR6uda7nt+nppLDTLyplHOvLPmPdAFmtjBxEXhvtpA3T1o7eed2wcO1LdFT/Vw9WRJ3iTCcO8y26C/2sjM0hW0qmcK4nY5gxl4Wyb2cmLzjYpXZ1TGuoCoeSMcDL86fybNSmmoVwhdoD76TIcT05YkY=
+	t=1788515191; cv=none; b=bgHHRbQrRdGr3E47pY+KNWqp4BHN0XC0s3QFl4s1Ogba9KHewwhZNa0aRgp/oYY/4CeziMYLfRVOBMgx3gY2Jne1Iq1WoMm1TKQXeHRdPkElorCkBEGbKDZz9S7MY3VQLnP1ol6c3rjumn/Y44JTOOOVM13WFF2D3Xee1wTwPfU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788515185; c=relaxed/simple;
-	bh=l6I893eMOABjOB0M92Iaqwew/NDGht/r0iDtXoMxBjA=;
+	s=arc-20240116; t=1788515191; c=relaxed/simple;
+	bh=oWXn58rPBwvnPsDKjYWUwvvP2+3EylLcllR8rhtC+xQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=L3TPCsMuMQ6NSNnnylRBU1OAxPTpLve/5oHcXTD48TFjGKF9Z/UCFIyYS39GGQ8K/whfuxsslEUuQbGAh0nBOE0CkHkDMGCykCuvopnSxBljqgyt8+uNRUr9IcwbeE/I0J3tEzdfBR1KCawS8WTH/XkUxj/hdTiA/No4XSmQDMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=F8CdhhJG; arc=none smtp.client-ip=91.218.175.165
+	 MIME-Version; b=n/EAhBLIekSCDnfx/C6SGhy0rwKRrYilPEjreKt4DmVVqOnCcyv7eDx4jia4GR6SSXjwAuTQD4wQqxIp8g10jmY/u08hkJceiuSI8Z7YdWQa1dzIFXdP5OzEV1goTj6Hy43OkRbfbvxAT3ZJDRT5WN4pfCmdEoo0BU1zvFGjjgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=dDcqYoSi; arc=none smtp.client-ip=95.215.58.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="F8CdhhJG"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="dDcqYoSi"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=l6I893eMOABjOB0M92Iaqwew/NDGht/r0iDtXoMxBjA=;
+DKIM-Signature: a=rsa-sha256; bh=oWXn58rPBwvnPsDKjYWUwvvP2+3EylLcllR8rhtC+xQ=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788515180; v=1; x=1789119980;
- b=F8CdhhJGU+uXXlZUT/P0KokyYv9tS8ia0VRNcfI06OJvwdLPq+Z6cjqqJX0gJkQuFUXhEHnI
- cTZwdY0Lp5TA7roERAgKKIbOnqzUcbTuXCY6yMOzmoSNILyhyL/8pDgq3jbDFInh7uN/V2ovLbN
- ThTDbSL5aFfQWKnXVvR9PlfU=
+ t=1788515187; v=1; x=1789119987;
+ b=dDcqYoSi1RteUgPJPCBFyZOuwP5ogGsrAXXNvEAhbKiquyCWaRfgRxD5O1pP4dE0FG2xcNFX
+ jUe8on/tbg+iHuRz+Nl3YS/AtLF8+/s4lgk/k9KhxnvEmM9/az56bC65da64WthuN2CIUCItehY
+ ZWr5GEw/NZtOy5PF1Kd+h2mo=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 66135b2da841d307;
-	Fri, 04 Sep 2026 09:46:19 +0000
-X-Mizu-Trace-ID: 66135b2da841d307
+Received: by smtp.migadu.com with ESMTPS id 9ecf6e52d081f39c;
+	Fri, 04 Sep 2026 09:46:27 +0000
+X-Mizu-Trace-ID: 9ecf6e52d081f39c
 X-Migadu-Flow: FLOW_OUT
 From: "Hui Zhu" <hui.zhu@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
@@ -49,9 +49,9 @@ To: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org
 Cc: Hui Zhu <zhuhui@kylinos.cn>,
 	stable@vger.kernel.org
-Subject: [PATCH v3 1/3] mm: memcg: redirect stats updates of dying memcgs for all hierarchies
-Date: Fri,  4 Sep 2026 17:45:54 +0800
-Message-ID: <8a3fe5e6a076cdd9ac997125cb6c6a0948e1a6b6.1788514750.git.zhuhui@kylinos.cn>
+Subject: [PATCH v3 2/3] mm: workingset: use lruvec_page_state_local() to count lru pages
+Date: Fri,  4 Sep 2026 17:45:55 +0800
+Message-ID: <2ec3a7f73e85ee5f5739c9dc2e58e9a0e2091925.1788514750.git.zhuhui@kylinos.cn>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <cover.1788514750.git.zhuhui@kylinos.cn>
 References: <cover.1788514750.git.zhuhui@kylinos.cn>
@@ -65,86 +65,46 @@ Content-Transfer-Encoding: 8bit
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-get_non_dying_memcg_start() redirects the stat updates of a dying memcg to
-its closest non-dying ancestor, but only on cgroup v1; on cgroup v2 the
-stats keep being accounted to the dying memcg itself.
+Commit 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the
+number of lru pages") switched count_shadow_nodes() to lruvec_lru_size().
+With CONFIG_MEMCG enabled, lruvec_lru_size() reads mz->lru_zone_size,
+which only the classic LRU paths maintain.  MGLRU accounts its pages
+through __update_lru_size(), which skips that array, so with MGLRU on the
+four evictable LRU lists are always seen as empty.  The shadow node budget
+(pages >> 3) then collapses to slab plus unevictable pages, and the
+workingset shadow shrinker reclaims eviction tokens almost as fast as they
+are created, losing thrashing protection.
 
-A later patch in this series restores lruvec_page_state_local() in
-count_shadow_nodes() to fix the broken workingset shadow node budget
-under MGLRU.  count_shadow_nodes() is the only reader of those
-non-hierarchical state_locals on cgroup v2: when a memcg is offlined,
-its pages are reparented to the ancestor but their stat updates keep
-being accounted to the dying memcg, so count_shadow_nodes() computes a
-wrong shadow node budget and workingset thrashing protection is lost.
-This is user visible as premature reclaim of hot page cache and
-degraded performance under memory pressure.  Apply the redirection to
-all hierarchies to fix this.
-
-Offlining is rare, so the added cost on the stat update fast path is
-limited to an rcu_read_lock() and a css_is_dying() check; the upward
-walk happens only while a memcg is dying.
+lruvec_page_state_local() reads lruvec_stats->state_local instead, which
+both classic LRU and MGLRU maintain.  Switch back to it.  The reparenting
+race this re-exposes on cgroup v2 is closed by the follow-up patch that
+redirects dying-memcg stat updates for all hierarchies.
 
 Fixes: 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the number of lru pages")
 Cc: stable@vger.kernel.org
 Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
 Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- mm/memcontrol.c | 30 +++++-------------------------
- 1 file changed, 5 insertions(+), 25 deletions(-)
+ mm/workingset.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8319ad8c5c23..b3d1ac3fe0aa 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -805,20 +805,14 @@ static long memcg_state_val_in_pages(int idx, long val)
- 	return val < 0 ? -res : res;
- }
+diff --git a/mm/workingset.c b/mm/workingset.c
+index f351798e723a..85a4e14e95d5 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -693,10 +693,9 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
  
--#ifdef CONFIG_MEMCG_V1
- /*
-- * Used in mod_memcg_state() and mod_memcg_lruvec_state() to avoid race with
-- * reparenting of non-hierarchical state_locals.
-+ * Used in mod_memcg_state() and mod_memcg_lruvec_state() to avoid race
-+ * with reparenting of non-hierarchical state_locals.  Offlining a
-+ * memcg is rare, so do the redirection for all cgroup hierarchies.
-  */
--static inline struct mem_cgroup *get_non_dying_memcg_start(struct mem_cgroup *memcg,
--							   bool *rcu_locked)
-+static inline struct mem_cgroup *
-+get_non_dying_memcg_start(struct mem_cgroup *memcg, bool *rcu_locked)
- {
--	/* Rebinding can cause this value to be changed at runtime */
--	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
--		*rcu_locked = false;
--		return memcg;
--	}
+ 		mem_cgroup_flush_stats_ratelimited(sc->memcg);
+ 		lruvec = mem_cgroup_lruvec(sc->memcg, NODE_DATA(sc->nid));
 -
- 	rcu_read_lock();
- 	*rcu_locked = true;
- 
-@@ -830,22 +824,8 @@ static inline struct mem_cgroup *get_non_dying_memcg_start(struct mem_cgroup *me
- 
- static inline void get_non_dying_memcg_end(bool rcu_locked)
- {
--	if (!rcu_locked)
--		return;
+ 		for (pages = 0, i = 0; i < NR_LRU_LISTS; i++)
+-			pages += lruvec_lru_size(lruvec, i, MAX_NR_ZONES - 1);
 -
- 	rcu_read_unlock();
- }
--#else
--static inline struct mem_cgroup *get_non_dying_memcg_start(struct mem_cgroup *memcg,
--							   bool *rcu_locked)
--{
--	return memcg;
--}
--
--static inline void get_non_dying_memcg_end(bool rcu_locked)
--{
--}
--#endif
- 
- static void __mod_memcg_state(struct mem_cgroup *memcg,
- 			      enum memcg_stat_item idx, long val)
++			pages += lruvec_page_state_local(lruvec,
++							 NR_LRU_BASE + i);
+ 		pages += lruvec_page_state_local(
+ 			lruvec, NR_SLAB_RECLAIMABLE_B) >> PAGE_SHIFT;
+ 		pages += lruvec_page_state_local(
 -- 
 2.53.0
 
