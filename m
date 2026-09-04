@@ -1,46 +1,49 @@
-Received: from mta1.migadu.com (out-201.mta1.migadu.com [95.215.58.201])
+Received: from mta0.migadu.com (out-34.mta0.migadu.com [91.218.175.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 769342AD37
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 06:54:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D79673955CD
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 07:14:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788504881; cv=none; b=jr+ItFQwFmweuhBD4Mpiiwc7xoHjewNKw50Vbeep0GuQovVmc8FJgCRIDW3fnrwDImUmvFHk/+w9nMnTnt0KitOEGB3rFkILMTSxE5KPJO760MdZvOk3UYMt/hljaNmx6PMerFlWt7X8HyrogDHioZiouHv5RnWMcQ60xYlEiXU=
+	t=1788506101; cv=none; b=PID66qktqyyum7tl2Y+phIBDasmdGjDhjm2JuBbz1kp4smYUf6ktcE4alaItpswvSfLxvRr8LAUBLpxeL8ldETQ+ioJb1rU/4C5eiUNXBuMBt2tsKGRAebt/nmXJ2NCbiyWc+sRXyrvdOix8cdgoY7KTM/YK5/9kzHoQby46Qek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788504881; c=relaxed/simple;
-	bh=l6+ZOUuNv8+XJsv/alaSTFr9NoikR4ZpDcuHcewyguI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mNjskxWG6j/3P+E2w5Z9vMtGLsRK5uFKfFO0XBnR7ZwxnOeLgTpLQO07Uk0V+M9pfSntnjsEhvRKR3+i0GRMjjoUQbbZqHOz8sSdqzRhVa93D7MZfO4paoF4EYd6p/G8aNED97vcrVpDO5uBT+7Hju4QhaoJPQ/BsXEhOsBKJ4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=nIlwg9uc; arc=none smtp.client-ip=95.215.58.201
+	s=arc-20240116; t=1788506101; c=relaxed/simple;
+	bh=g6KBlsEfdQ6twWTWJN7KP2LWVnATn4EXLmzlK1fULfQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Tioix6Jvr+M64gBOIJAGaT+OO2QjbLGZXbz//RqynV3LNgoH3x0q69zkSrwM9HkbZunOKsdUFmDZWTyFcL+jEEQVbyeNQbqQYUr1p3n2ajeHZV/sgUzCcAboiFR5F6OE6kUE81CwPU9agP939c/eHKateBeFdK7bOCHkUdi0LXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RR54Ka5X; arc=none smtp.client-ip=91.218.175.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="nIlwg9uc"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RR54Ka5X"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=l6+ZOUuNv8+XJsv/alaSTFr9NoikR4ZpDcuHcewyguI=;
+DKIM-Signature: a=rsa-sha256; bh=g6KBlsEfdQ6twWTWJN7KP2LWVnATn4EXLmzlK1fULfQ=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788504876; v=1; x=1789109676;
- b=nIlwg9ucTchwNEzVP2A+VKjH9t+/WjzH1R5+izmXYoFiXbv5ugzOh6wT8Wvwsvt37k6hBWYH
- AUmiHu6vWc+vguuQicA2mctb2Po4yqNpvhRT8G3H3qSQbWYIY0EiYzJEdvuDGfCPw5kbC19dWiM
- rHomT4kxJF7T339+y//4j62w=
+ t=1788506095; v=1; x=1789110895;
+ b=RR54Ka5XhTmOpwHooWPVbtVGhqVsavUthb5caiU5T4ZrMrOE/NSmSbKAxSiANLqVRFuIGUf8
+ 2FjaSajt/CAnpSZOrl8QtnbSHzJgEz1he+8it+quilrRp/lesTSqDy6Ky1ZjPih7qOTHg7/m1d6
+ V2aMtV3iQghjL9cD1BUg2cvU=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 74da6a6d0a4fe423;
-	Fri, 04 Sep 2026 06:54:36 +0000
-X-Mizu-Trace-ID: 74da6a6d0a4fe423
+Received: by smtp.migadu.com with ESMTPS id 90fa9b6c7ea8f2ef;
+	Fri, 04 Sep 2026 07:14:55 +0000
+X-Mizu-Trace-ID: 90fa9b6c7ea8f2ef
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
-To: Jens Axboe <axboe@kernel.dk>,
-	Tang Yizhou <tangyeechou@gmail.com>
+To: axboe@kernel.dk,
+	Tang Yizhou <tangyeechou@gmail.com>,
+	Bart Van Assche <bvanassche@acm.org>
 Cc: tj@kernel.org,
 	josef@toxicpanda.com,
-	linux-block@vger.kernel.org,
+	boris@bur.io,
 	cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	cuitao@kylinos.cn,
-	cui.tao@linux.dev
-Subject: [PATCH v3] block/blk-iolatency: fix always-zero cur_stat mean on non-SSD
-Date: Fri,  4 Sep 2026 14:54:26 +0800
-Message-ID: <20260904065426.1281914-1-cui.tao@linux.dev>
+	cui.tao@linux.dev,
+	Tang Yizhou <yizhou.tang@shopee.com>
+Subject: [PATCH v2] blk-cgroup: avoid 32-bit overflow in root io.stat byte accounting
+Date: Fri,  4 Sep 2026 15:14:43 +0800
+Message-ID: <20260904071443.1283147-1-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -52,90 +55,53 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-iolatency_check_latencies() accumulates the per-window latency stat
-into iolat->cur_stat via latency_stat_sum(), which for non-SSD devices
-calls blk_rq_stat_sum().  But blk_rq_stat_sum() is contracted on a raw
-per-cpu src: it folds src->batch into the new mean.  By the time the
-per-window stat reaches cur_stat it is already aggregated, with batch
-left at 0.  Each window therefore contributes zero latency to
-cur_stat->mean, which on non-SSD devices stays at 0; the
-latency_sum_ok(&cur_stat) check that gates scaling up is always true,
-so the scale-up hysteresis never engages.  SSD devices use the
-percentile path and are unaffected.
+blkcg_fill_root_iostats() converts per-CPU sector counts to bytes with
 
-Add latency_stat_merge(), which merges two already-aggregated stats by
-their reconstructed totals (mean * nr_samples) instead of src->batch,
-and use it only for the cur_stat accumulation; the earlier per-cpu sum
-keeps latency_stat_sum(), whose src is still raw.
+    tmp.bytes[BLKG_IOSTAT_READ] += cpu_dkstats->sectors[STAT_READ] << 9;
 
-Fixes: d70675121546 ("block: introduce blk-iolatency io controller")
+but disk_stats.sectors is `unsigned long`, and the shift is carried out in
+that type before the result is promoted to the u64 accumulator.  On 32-bit
+kernels (unsigned long is 32 bits) this wraps, so once a per-CPU counter
+reaches 2**23 sectors (~4 GiB) the computed byte count is wrong, corrupting
+the root cgroup's io.stat.
+
+Every other sector->byte conversion in the tree casts to a wide type first
+((loff_t)sectors << SECTOR_SHIFT in bdev.c, (u64)max_sectors << SECTOR_SHIFT
+in blk-settings.c); do the same here.
+
+Fixes: ef45fe470e1e5 ("blk-cgroup: show global disk stats in root cgroup io.stat")
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Tang Yizhou <yizhou.tang@shopee.com>
 
 ---
-Changes in v3:
-- Rebase onto current linux-next head (no code change).
-- Verified with a two-kernel QEMU run (virtio-blk forced rotational,
-  cgroup v2 io.latency target set below the achievable latency so the
-  scale path runs every window): on the unpatched kernel cur_stat->mean
-  stayed 0 across all windows while the per-window mean was 120-250us;
-  with this patch cur_stat->mean tracked the per-window mean.
-
 Changes in v2:
-- Move the fix from blk-stat.c (blk_rq_stat_sum) into blk-iolatency.c,
-  per Tang Yizhou's review: blk_rq_stat_sum() is contracted on a raw
-  per-cpu src, so the aggregated-stat merge belongs in the iolatency
-  caller, not the shared helper.
-
-v1: https://lore.kernel.org/all/20260720133813.45150-1-cui.tao@linux.dev/
-v2: https://lore.kernel.org/all/20260721030312.85655-1-cui.tao@linux.dev/
+- Rebase onto current linux-next head (no code change).
+- Add the Reviewed-by tags collected on v1 (Bart Van Assche, Tang Yizhou).
+- Link to v1: https://lore.kernel.org/r/20260714063118.1153083-1-cui.tao@linux.dev
 ---
- block/blk-iolatency.c | 27 ++++++++++++++++++++++++++-
- 1 file changed, 26 insertions(+), 1 deletion(-)
+ block/blk-cgroup.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 2caa79a008ad..853608a4f187 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -216,6 +216,31 @@ static inline void latency_stat_sum(struct iolatency_grp *iolat,
- 		blk_rq_stat_sum(&sum->rqs, &stat->rqs);
- }
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 2b5c29434e42..471cfd2347c9 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1118,11 +1118,11 @@ static void blkcg_fill_root_iostats(void)
+ 				cpu_dkstats->ios[STAT_DISCARD];
+ 			// convert sectors to bytes
+ 			tmp.bytes[BLKG_IOSTAT_READ] +=
+-				cpu_dkstats->sectors[STAT_READ] << 9;
++				(u64)cpu_dkstats->sectors[STAT_READ] << SECTOR_SHIFT;
+ 			tmp.bytes[BLKG_IOSTAT_WRITE] +=
+-				cpu_dkstats->sectors[STAT_WRITE] << 9;
++				(u64)cpu_dkstats->sectors[STAT_WRITE] << SECTOR_SHIFT;
+ 			tmp.bytes[BLKG_IOSTAT_DISCARD] +=
+-				cpu_dkstats->sectors[STAT_DISCARD] << 9;
++				(u64)cpu_dkstats->sectors[STAT_DISCARD] << SECTOR_SHIFT;
+ 		}
  
-+/*
-+ * Merge an already-aggregated @stat into @sum by reconstructed totals
-+ * (mean * nr_samples); blk_rq_stat_sum() reads src->batch, which is 0
-+ * here. The overflow check also rejects the 0 samples case.
-+ */
-+static inline void latency_stat_merge(struct iolatency_grp *iolat,
-+				      struct latency_stat *sum,
-+				      struct latency_stat *stat)
-+{
-+	if (iolat->ssd) {
-+		sum->ps.total += stat->ps.total;
-+		sum->ps.missed += stat->ps.missed;
-+	} else {
-+		if (sum->rqs.nr_samples + stat->rqs.nr_samples <=
-+		    sum->rqs.nr_samples)
-+			return;
-+		sum->rqs.mean = div_u64(sum->rqs.mean * sum->rqs.nr_samples +
-+					stat->rqs.mean * stat->rqs.nr_samples,
-+					sum->rqs.nr_samples + stat->rqs.nr_samples);
-+		sum->rqs.min = min(sum->rqs.min, stat->rqs.min);
-+		sum->rqs.max = max(sum->rqs.max, stat->rqs.max);
-+		sum->rqs.nr_samples += stat->rqs.nr_samples;
-+	}
-+}
-+
- static inline void latency_stat_record_time(struct iolatency_grp *iolat,
- 					    u64 req_time)
- {
-@@ -547,7 +572,7 @@ static void iolatency_check_latencies(struct iolatency_grp *iolat, u64 now)
- 	/* Somebody beat us to the punch, just bail. */
- 	spin_lock_irqsave(&lat_info->lock, flags);
- 
--	latency_stat_sum(iolat, &iolat->cur_stat, &stat);
-+	latency_stat_merge(iolat, &iolat->cur_stat, &stat);
- 	lat_info->nr_samples -= iolat->nr_samples;
- 	lat_info->nr_samples += latency_stat_samples(iolat, &iolat->cur_stat);
- 	iolat->nr_samples = latency_stat_samples(iolat, &iolat->cur_stat);
+ 		flags = u64_stats_update_begin_irqsave(&blkg->iostat.sync);
 -- 
 2.43.0
+
