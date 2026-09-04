@@ -1,195 +1,200 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CED293CF1F2
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 08:37:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD0BA3ACF02
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 09:00:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788511069; cv=none; b=RikSNixVJoi8fVW041zzw5E3wgrof1jJ4Rc01/xowL00XEHOHHOXLkHIxfuCf3I41FU8/ZmLRFse2wM2Fcd0hxd+yLoWNIV7YnEGa3tTnAqFfnkmHQXOGC2+N9FftjqQ1EtZxpcMRTET6Vmrfv1mznmUXdtnMSUNHhtetEMcXAs=
+	t=1788512423; cv=none; b=FsA6Z7iEnWktaaH90D9k3xEyNNWqwPRydsPp9omywjvzfMTYU8Co7HTaN41X9D+CRH6zChcqV2XdZgnxyAj7f3vxUXDznEDVWVHEkvom/9kYk7lVjkOrfs3c3++toN77tIeSYioJHhJA5qmqiLMyCs6WMbyPwyQgN209W7K8/x0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788511069; c=relaxed/simple;
-	bh=JNVo3mCPeHl6ES3fr1l9fzdDZhXVPKNXb/7te67rFJA=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PrevOrPQY2yQrsXgnmZKCYl1AOXiF04Es6P0euf5k9nmZ9V65LlIWaBxTPA3WPkI2Zh2l/wNN3B3w5/vypBxLpQWeLxziXvDALMn/cAQp8mwC4aGSbw5P6yOsHiXK0icOXAUljxNjcxZnvOKFk4DsF+dynEKtHx9eg3WMrLZVpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=It9jDnEV; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788512423; c=relaxed/simple;
+	bh=DynVF4jXj/DQ6NdYeydnbpxGDYW5B+c9r61GoWsdEjI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mRl9dVm/6irtNeVYbJ4COaamjEXqTHXlWcrkOFt7x5tO8AjFBJAJ43rX/7Q6/hVeQ3WwvQAF9+jESkUTD4f3fnFMSRchwB5CDZqfnIaJ3ATaG/cqC7dQuN4mZByhvWGfo5AtJYqzKUG516OupvEFs1w4R4aJlygL1R2b4YV0fAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=2n+IpX51; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=oKLGQ7sf; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=X745eKzP; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=FT5soJ5p; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="It9jDnEV"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4995b0343c1so9913345e9.3
-        for <cgroups@vger.kernel.org>; Fri, 04 Sep 2026 01:37:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788511066; x=1789115866; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=3s1LbH3i67Aex+XO8TqzHfYjkZ2LQ+Zdti2dOun8vp0=;
-        b=It9jDnEVCbZVR9s5JO3WJcHTmGDv4Qvre+NAB3GUZs1d8/27QCs3gM890sAJAfRu0X
-         QXW71DDQXO+Bm5q5BjpqOjxDgpRwnGLANq5vYPrpr5vu06y7qevH/bd+7zME9iSg2SyQ
-         O9XxjOIXzdz9zr0wVl1a4UG3RPYhyIurxSFVdnb/VYMOOPXHI2vbrFupWEyr4BOoTrWk
-         9yTZ5jvfCIzY002hPglb8hNKqvIW9iB+TZez5fD8kTaPwEF/k+pftgp6MvufxC546o12
-         RaXRMaiJSljwTsHyFmgEWatoGmCnDkVh+cjv7zxYkAG/xQL2srka43NFz0RhyAGDTxmv
-         ycYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788511066; x=1789115866;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3s1LbH3i67Aex+XO8TqzHfYjkZ2LQ+Zdti2dOun8vp0=;
-        b=YFQboAzqySOgVdGYzITHCyHU932C9pxy4xkAtPbAUcAg/seUSntJfNmlix7MvCFWwP
-         NOi8dnki3W1/hLDuqJznh1Os1SgD2UV3Tdlg6jBiA/5/UyN5KY0toqcsAcCpausrEvL5
-         s2pJ7OM/OPxXFwbO6jvBQ1raabb1kcq+bucfi3itBKTbbgougtHuSqtgwg8yUt+/jD4Q
-         0fGsE9woroCYug8P1wmseNazD+qnlg4PgwXEKDnHCVtKWZk3wQBi/p+pUD2phkJL27Of
-         hMVKjg9i5P0vqy38RWMXOz2KbZyi56GKM/gF4rrnDac8/YFFmZ4AZJcqV3RzC2yQSgo0
-         eo3g==
-X-Forwarded-Encrypted: i=1; AKwUvBwrrc0iLxE2+UVV3d4aQ/5f4EHIjPqNW0Hgxsj7PMVWKGsXRshzIc4qe1/m+i6o/DqBcNt/r4r5@vger.kernel.org
-X-Gm-Message-State: AFuF++lBNvv+crY0f7IuXwy96r3Hd5NVojVmZWezgZ0I9SPJEsFh9LF3
-	b1LIYUOnfjCKBaPxYM6v+nMcCIsI5xZwlBDsOPANqyd9BiIpgzsMxSHo
-X-Gm-Gg: AYBFou3EkGLsWz4vq/ic85FCJGdB9nwn/V6xgwx0SRR4s7S8tIfjcqh6iYOyc9873/W
-	x6UIujMP5Zh819yi7+sdNkA1BgX7ce4/TG2gOm4BqFtrKg9c3xe/wTDTwKh//UNvKVC/OIqHhcm
-	p4p+u6782xrcIMQ9WwKQ95WnDl/fE855fg6cbEPgflczBaw64LwcdIkvV7C+2JSCHvsBGxPm2mn
-	diNzHVhuKS6SPiDX9mLn3oG3IJpjpG/KfXatdz/DDPHk0K3OiT2rHQCqQv0jcQvEVL0YpcMka1e
-	me8IPQjMTTBnCD9uUaayb3ZGYZZi/IuBFZiSsBkDDhzBRpKVFcfPuveRS4bd+c6635+rEiNKCpc
-	1SySjBCEos8Gw4dsbagJ3b5tn+tNlwIl4Cpph5nIswPrMs2WGfLh+gq4fWPxeqf0aNJLNVH7EPA
-	ceg8+swah2Tjq1Kvgln/YSAs+L7LtwsgX2xamKcGMx7ZaToNt9sOZxf6G/Kei8VZnjdJhuQlVXm
-	fsQSAVm20JXRQi+Wps8U3WkNA==
-X-Received: by 2002:a05:600c:5303:b0:49c:fa21:1c85 with SMTP id 5b1f17b1804b1-49cfa211d81mr22763385e9.26.1788511065589;
-        Fri, 04 Sep 2026 01:37:45 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cee5d4938sm137112065e9.2.2026.09.04.01.37.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 01:37:45 -0700 (PDT)
-Date: Fri, 4 Sep 2026 09:37:43 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Ridong Chen <ridong.chen@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Muchun
- Song <muchun.song@linux.dev>, Kairui Song <kasong@tencent.com>, Qi Zheng
- <qi.zheng@linux.dev>, Barry Song <baohua@kernel.org>, Axel Rasmussen
- <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu
- <weixugc@google.com>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes
- <ljs@kernel.org>, Chris Down <chris@chrisdown.name>, Tejun Heo
- <tj@kernel.org>, Yu Zhao <yuzhao@google.com>, cgroups@vger.kernel.org (open
- list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
- linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER
- (MEMCG)), linux-kernel@vger.kernel.org, Ridong Chen
- <chenridong@xiaomi.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] mm/page_counter: avoid integer overflow in
- effective_protection()
-Message-ID: <20260904093743.23cde26b@pumpkin>
-In-Reply-To: <20260903031952.1120321-2-ridong.chen@linux.dev>
-References: <20260903031952.1120321-1-ridong.chen@linux.dev>
-	<20260903031952.1120321-2-ridong.chen@linux.dev>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="2n+IpX51";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="oKLGQ7sf";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="X745eKzP";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="FT5soJ5p"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 71B5122B0C;
+	Fri,  4 Sep 2026 09:00:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1788512415; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lLfEq2d9SGszS5pQF4tLiNBc07Qp6BDCc4+wys6emDs=;
+	b=2n+IpX51oNNOJVS+8qwEdtvECRq/AlSxFxH3HPpvkm3/Jbs/DGzbHpVuN828h9P6GPP7GE
+	PH+pTFrYaan+XmNqEfGHVg7yT/NPqdzhIETV5k8zi1qnbj1JBiMYUj2WlT3pRgiuE6Or3b
+	XjPD2CbmZJx2UuqN+or/T7cmaH3yIQE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1788512415;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lLfEq2d9SGszS5pQF4tLiNBc07Qp6BDCc4+wys6emDs=;
+	b=oKLGQ7sfZ1iSt3f8Jg2UBQtw+OkGbj+ZayZPdfnP9EIpmCuAcDjJHSvdzWwvTfvd8ts39I
+	EzHRl6TnuV2MG0DA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=X745eKzP;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=FT5soJ5p
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1788512411; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lLfEq2d9SGszS5pQF4tLiNBc07Qp6BDCc4+wys6emDs=;
+	b=X745eKzP8BUGBUEj5dHInWHKaxpaFHhUT/sdYJtrjAYuDYBhlwzpow/j+ZxflKHx3KsoAe
+	V0Z3L1ys3TMeqwMfN8h/A9l9Q+x4peXrOznZX6L0BrnlScO6GXPcfChIyOGk7A1UX0Guil
+	vuPsGQtQNkf4ijtZjGu4uJSgosFohXU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1788512411;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lLfEq2d9SGszS5pQF4tLiNBc07Qp6BDCc4+wys6emDs=;
+	b=FT5soJ5pKEagZVToBO4ECQ3dY1VxfC+VphmQKcFDkyQmfS2tT3O7MUkn6VSuLaKNw80sMt
+	MFPaXZ3ZpVwEINCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4C5CA13726;
+	Fri,  4 Sep 2026 09:00:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id aVGXEpuImmqjbAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 04 Sep 2026 09:00:11 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id C6E41A13CE; Fri, 04 Sep 2026 11:00:06 +0200 (CEST)
+Date: Fri, 4 Sep 2026 11:00:06 +0200
+From: Jan Kara <jack@suse.cz>
+To: Julian Sun <sunjunchao@bytedance.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	shakeel.butt@linux.dev, muchun.song@linux.dev, axboe@kernel.dk, tj@kernel.org, 
+	jack@suse.cz
+Subject: Re: [External] Re: [PATCH v2] writeback, memcg: skip foreign dirty
+ tracking for bdev inodes
+Message-ID: <j644hkswljrskiivxcimh2ms2zoilfptfhl7bdy6uu3tvqv6yd@m46nuyunp5ni>
+References: <20260903083303.2769873-1-sunjunchao@bytedance.com>
+ <20260903123427.eb0beab18ff68d4632aece6c@linux-foundation.org>
+ <5f34e3e1-749e-44d1-b3e7-50e11f7240e3@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5f34e3e1-749e-44d1-b3e7-50e11f7240e3@bytedance.com>
+X-Spam-Score: -4.01
+X-Rspamd-Queue-Id: 71B5122B0C
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:dkim,suse.com:email,bytedance.com:email];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Spam-Flag: NO
 
-On Thu,  3 Sep 2026 11:19:51 +0800
-Ridong Chen <ridong.chen@linux.dev> wrote:
+On Fri 04-09-26 11:39:23, Julian Sun wrote:
+> On 9/4/26 3:34 AM, Andrew Morton wrote:
+> > On Thu,  3 Sep 2026 16:33:03 +0800 Julian Sun <sunjunchao@bytedance.com> wrote:
+> > 
+> > > Foreign dirty flushing handles cases where a dirtied folio's memcg and
+> > > the memcg owning its inode wb differ.
+> > > 
+> > > wbc_detach_inode() notes that "concurrent write sharing of an inode is
+> > > expected to be very rare". This expectation does not hold for bdev inodes.
+> > > A bdev inode and mapping are shared by buffered users of the block device,
+> > > while the inode has a single wb owner. On ext4, buffer-cache folios used
+> > > by metadata and journal I/O can therefore be charged to different memcgs
+> > > while sharing the same mapping. Normal bdev activity can thus produce
+> > > frequent folio/wb ownership mismatches.
+> > > 
+> > > This was reproduced on cgroup v2 with the memory and I/O controllers
+> > > enabled, using ext4 on a loop device. jbd2 repeatedly generated
+> > > track_foreign_dirty events for bdev folios charged to unrelated memcgs.
+> > > When one of those memcgs entered dirty throttling, the resulting record led
+> > > to a flush_foreign event and queued writeback with reason=foreign_flush for
+> > > the bdev inode's root wb.
+> > > 
+> > > Skip foreign dirty tracking when the folio mapping's host inode is on the
+> > > blockdev pseudo superblock. This prevents bdev-originated records from
+> > > triggering later foreign flushes.
+> > > 
+> > > The tradeoff is that dirty throttling in the folio's memcg no longer uses
+> > > bdev dirtiness to queue writeback on the bdev inode's owner wb. Those
+> > > folios remain subject to normal writeback. This is preferable because a
+> > > single bdev wb owner does not identify which cgroup is responsible for a
+> > > mapping shared by buffered bdev users. Flushing it can write back data
+> > > unrelated to the throttled memcg. Dirty accounting, normal writeback, and
+> > > foreign dirty tracking for non-bdev inodes remain unchanged.
+> > 
+> > When fixing something, please always describe the userspace-visible
+> > runtime effects.
+> 
+> Sorry, I overlooked this aspect.
+> > 
+> > I'm thinking probably "unnecessary I/O"?  If so, has this been
+> > quantified/measured?  If not, can the effects be guessed about?
+> 
+> We suspect that a large amount of prematurely triggered foreign writeback
+> consumes device writeback bandwidth, thereby degrading the performance of
+> the entire writeback path.
+> 
+> On one production machine, the total nr_pages of the foreign-flush works was
+> 630,681,285, or about 2.4 TiB, while the machine had only 400 GiB of memory.
+> Although nr_pages does not represent the number of dirty pages that will
+> ultimately be written back, the actual number of pages written back may
+> still be very large because the corresponding wb was continuously
+> accumulating dirty pages.
 
-> From: Ridong Chen <chenridong@xiaomi.com>
-> 
-> effective_protection() scales a parent's protection by a ratio of page
-> counts, e.g. for recursive protection:
-> 
-> 	(parent_effective - siblings_protected) * (usage - protected)
-> 		/ (parent_usage - siblings_protected)
-> 
-> The multiply is done at unsigned long width before dividing. On systems
-> with >= 16TB RAM the product can exceed 2^64 and wrap, giving a bogus
-> protection value and silently breaking memory.min/low enforcement.
-> 
-> Use mul_u64_u64_div_u64() to multiply in a 128-bit intermediate. Because
-> usage and parent_usage are not read atomically (a child is charged
-> before its parent), usage - protected can briefly exceed the divisor,
-> making the quotient overflow 64 bits and trap (#DE on x86). Cap it so
-> the ratio stays <= 1.
-> 
-> Reported by the sashiko review tool [1].
-> 
-> [1] https://sashiko.dev/#/patchset/20260826133054.88529-1-ridong.chen@linux.dev?part=1
-> 
-> Fixes: bc50bcc6e00b ("mm: memcontrol: clean up and document effective low/min calculations")
-> Fixes: 8a931f801340 ("mm: memcontrol: recursive memory.low protection")
-> Cc: stable@vger.kernel.org
-> Assisted-by: Claude:claude-opus-4-8
-> Reviewed-by: Barry Song <baohua@kernel.org>
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-> ---
->  mm/page_counter.c | 19 +++++++++++++------
->  1 file changed, 13 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mm/page_counter.c b/mm/page_counter.c
-> index 661e0f2a5127..e8bd512069c5 100644
-> --- a/mm/page_counter.c
-> +++ b/mm/page_counter.c
-> @@ -8,6 +8,7 @@
->  #include <linux/page_counter.h>
->  #include <linux/atomic.h>
->  #include <linux/kernel.h>
-> +#include <linux/math64.h>
->  #include <linux/string.h>
->  #include <linux/sched.h>
->  #include <linux/bug.h>
-> @@ -356,7 +357,8 @@ static unsigned long effective_protection(unsigned long usage,
->  	 * otherwise get a smaller chunk than what they claimed.
->  	 */
->  	if (siblings_protected > parent_effective)
-> -		return protected * parent_effective / siblings_protected;
-> +		return mul_u64_u64_div_u64(protected, parent_effective,
-> +					   siblings_protected);
+As Tejun also wrote, it would be good to really quantify these effects -
+best by demonstrating how this change improved writeback behavior (and we
+are not so much interested in the number of submitted writeback works but
+more in the observed load on the storage or completion of some workload).
+The problem with your solution is that it has its downsided as well
+(possible stalls in dirty throttling) so it should be very clear what are
+we gaining to outweight this risk.
 
-On 32bit it is only necessary to use a 64bit intermediary.
-mul_u64_u64_div_u64() will drop back to the (probably faster) 64 by 64
-divide (and then maybe to a 64 by 32 one).
-But there is a lot of extra code before that happens.
+In principle I agree that a lot of submitted writeback works can degrade
+writeback behavior - a lot of workloads has some set of folios that is
+practically permanently dirty and if you are pushing writeback too much, we
+will be just writing these folios over and over again without useful work
+really done. Also if there's comparably small amount of folios dirty, the
+IO resulting from writeback is generally less efficient. But how severe
+these effects can get in case you describe is not clear...
 
->  
->  	/*
->  	 * Ok, utilized protection of all children is within what the
-> @@ -397,13 +399,18 @@ static unsigned long effective_protection(unsigned long usage,
->  	if (parent_effective > siblings_protected &&
->  	    parent_usage > siblings_protected &&
->  	    usage > protected) {
-> -		unsigned long unclaimed;
-> +		unsigned long unclaimed = parent_effective - siblings_protected;
-> +		unsigned long unprotected = usage - protected;
-> +		unsigned long parent_unprotected = parent_usage - siblings_protected;
->  
-> -		unclaimed = parent_effective - siblings_protected;
-> -		unclaimed *= usage - protected;
-> -		unclaimed /= parent_usage - siblings_protected;
-> +		/*
-> +		 * The usages aren't read atomically, so a child can transiently
-> +		 * appear to use more than its parent, making the ratio exceed 1
-> +		 * and the quotient overflow 64 bits (#DE on x86).  Cap it.
-> +		 */
-> +		unprotected = min(unprotected, parent_unprotected);
->  
-> -		ep += unclaimed;
-> +		ep += mul_u64_u64_div_u64(unclaimed, unprotected, parent_unprotected);
-
-If the ratio is forced to 1 there is no point doing the scaling.
-So maybe:
-		if (likely(parent_unprotected > unprotected))
-			unclaimed = mul_u64_u64_div_u64(unclaimed, unprotected,
-							parent_unprotected);
-		ep += unclaimed;
-OTOH if the min() generates a cmov rather than a conditional branch
-then you don't get a statically mispredicted branch in the normal case
-(which is very likely with the empty 'else' branch).
-
-David
-
->  	}
->  
->  	return ep;
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
