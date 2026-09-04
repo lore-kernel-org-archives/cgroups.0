@@ -1,130 +1,111 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21ECA36A372
-	for <cgroups@vger.kernel.org>; Thu,  3 Sep 2026 22:33:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAEA02192F9;
+	Fri,  4 Sep 2026 01:05:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788474798; cv=none; b=F0ZTT0w9wIWSsQNcq3cH7i6lY9e3LzBZk0cBxNuGJDmK0LCoiBSLJNESVzGlTF8rJPdEwFsSSGisybPAluWLg0FyQUIX69sU89lB7K1YPc9o0aoaSiljT6mjQwmluFbciFnOVbo4JzQj3VpPtX9L01UFEx4oyWn86fuO8cVmFtk=
+	t=1788483953; cv=none; b=Zyyq2nx+N4VeK8LcOEla2uEGaoFFsk87e8eUDCa9k7ol/LrI1rdL0QRk0UlBWyrMgTHJ425uzVab0b3H03cUwjfmAQV6kug3BFb4AYSdM69im8Wl/I9FtrUDNYUCyQqajXRcUPjMlzVXbOw98HesBoZx3l9Zod3nKMK4BcFUIS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788474798; c=relaxed/simple;
-	bh=4c3nfHzx6sq9eUFKnQag6UKfPOIkWmaO1ykpU7H4aTg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EkeXXh9iIjPfI3HUEl+GUr9a327R3FqxtHZc2liSj212zKZeOS52m78lam3SyBiz9XQQH5wHIEoxBbxeXSSj8Xlo/PKHy16TB6nc/nKjC5/YSGom8FEC4q2FTvDss3//h8FLUwtLSLBV1FI0CiXBFxCy4X6qqrwamogrAtMm5Ak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FsHvcRhC; arc=none smtp.client-ip=209.85.215.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788483953; c=relaxed/simple;
+	bh=pXJxK3+dwpX0ZuLCucXJEaT/CLa6AThnH/lmQa4I3lI=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:CC:References:
+	 In-Reply-To:Content-Type; b=K6sqXm79kIHXQrJpNr6wZhjLfmDp3COgDSGbEn5dz3ORV2RkqwoXNS02YpBebtlW79rwRQI4JM1B/b542lQ8/bltMYhzhy+gaSzv6xpGybQYLSpI+7QnnOYbfMiSf4WXw3eDZqKgIFHpWndfg4OkpOJhx5hXPgSeMnuoHDZ5pgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=c1r7eiZl; arc=none smtp.client-ip=113.46.200.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FsHvcRhC"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-ca7c1176317so416008a12.1
-        for <cgroups@vger.kernel.org>; Thu, 03 Sep 2026 15:33:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788474796; x=1789079596; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=fsb6fC2BuVNqBfvyOr4NyKSsD45FGtfpTAVkgi/kym4=;
-        b=FsHvcRhCU6TMl+UeBx+bnI8iEyrnBLJwSmw9MOiZMDL29XawM5rsCzPt5uvYnfeCRd
-         VxMzbh+f/Q2YjF3tjclhwcCrez5bxpwNi+ODuX9ExQ9kfWQAjhj0CKHLgW76roI2rDKl
-         +Bnot7RxzAuGXtuPcLje3DjlYwFhqyU21vWhmqRI3S/U/IXncIUAKQ0oO0cUeBL+qiYq
-         WEOHWLinVimGVZhqVOZb8E/SC1kbn7fXkpq3USuc+lG57dj32GGkVg24WpiAfAeBI069
-         PnGalnKHaQyjpmO3Y/tlrVGVWV3mWWZI36WWV2wZnjlunR2MeRT0LiWqu1ky/vfizaYL
-         ek7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788474796; x=1789079596;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=fsb6fC2BuVNqBfvyOr4NyKSsD45FGtfpTAVkgi/kym4=;
-        b=FkTawQioYlDyE7C1S+sYckn/WPiG9kTrshf/SxtOb8/qfYn0F4JgneE27SUGgfV2I3
-         ABeY+SNpZVT8GF7natRDQwiHWjsJcwgaKW0RLYyqHOCxoIF3PF2Bz0o2T3Igi/Pd2COh
-         DOZBu47DcAw7l2wD5xFaG/zfs/ZFyXO7ahx8WfuP8zSFJ4WdC7UzSxJUMexy8HZaYiKY
-         P7yzVaKe/fNVV3zKw5JMpoYpiHnvW7M9Y0Zjj2uu6Z8VsdQJ3XOntsgJucRave4EVLa9
-         /N6QLlujOXp3rrGuWF7dRc97UcR8b7pDAuAnG2P9UMkKm7luIVn0C1Tvx4lTylgO0tS1
-         Yhkg==
-X-Forwarded-Encrypted: i=1; AKwUvBwrYEEtKg4qN8eCcJwsPfcyIvuysmATrdoLwMfDDptEmrIS1KItMXjKoQEbZzci063RByVmSnaz@vger.kernel.org
-X-Gm-Message-State: AFuF++nuDoqLF2ceERotS20iTg4PbbtV1zaQU+o/KXhhBS5wlLsK2kxO
-	eb0IGNQw5YZ+Hf7PLV3JUS2gVy3//ziu6n7yYjuQHAEw9GIvN1pD6Gsr
-X-Gm-Gg: AYBFou3IsMjEbflleqKbba9qyJoSBhBM3Aph0b+ijN+NltTdyRlJI39OFh5mmGFREkH
-	ZTjZpqzKlFQiqBvb9itkr+cNJjj9H0NFOA4Zjm985zhwcSPH/gStklgnEnj1f4Mqk5r3zlFYjyd
-	VqSMMgekljwkIJfezeL3f8qUjAJ4JOIEtJaZBvoGdUC54Mv+JSomlVMwLlEroT4s7HmwPhzIKor
-	J4weS8k/ZrBxIgpU7UpwpyRaGNgzNR/kAaQ5xyU++SX8S7G+CxX/IpNE6nVCGC+2J7r0Qnu/g04
-	61X/J8rO8hZ6ri9i22W7eEfH8FZUJylwplopP2DQIy73K1fVV4mjzUUhH++chcEYC2Ht8RZuJT/
-	UIGvTukV9DwOxpMjVnzQ63d52EdAwj5rSgaLMRlfy5UTA848sI69bahoOl0vO6MTCWOHQvHjOrP
-	YnZ9LOkTJsRgYs6CzIGThW/b5aB/wHLnZrY5VT2p8twd9iginQcgzP9512z4A62b+R7OpfTWjaq
-	24aN3d6
-X-Received: by 2002:a17:90b:268f:b0:398:c3a3:dbd0 with SMTP id 98e67ed59e1d1-39b2612eb96mr2849147a91.8.1788474796180;
-        Thu, 03 Sep 2026 15:33:16 -0700 (PDT)
-Received: from devvm16600.scu0.facebook.com ([2a03:2880:9ff:73::])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339a534d25sm1797152eec.5.2026.09.03.15.33.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Sep 2026 15:33:15 -0700 (PDT)
-Date: Thu, 3 Sep 2026 15:33:12 -0700
-From: Ziyang Men <ziyang.meme@gmail.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: kernel-team@meta.com, Jens Axboe <axboe@kernel.dk>,
-	Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Shuah Khan <shuah@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Ben Segall <bsegall@google.com>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
-	Yonghong Song <yonghong.song@linux.dev>,
-	Jiri Olsa <jolsa@kernel.org>,
-	Emil Tsalapatis <emil@etsalapatis.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	JP Kobryn <inwardvessel@gmail.com>,
-	Mykola Lysenko <mykolal@meta.com>, linux-block@vger.kernel.org,
-	bpf@vger.kernel.org, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] cgroup: expose cpu.stat and io.stat to BPF
-Message-ID: <apn1qN+ic4A7elHD@devvm16600.scu0.facebook.com>
-References: <20260820211758.3393984-1-ziyang.meme@gmail.com>
- <apX9KtGrmfA7u0zV@devvm16600.scu0.facebook.com>
- <apisezhyZe_3vp0x@linux.dev>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="c1r7eiZl"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=R44xkW68vjRLhEKdA9HxJ22eV9oyvArt4A8C0/wQSo8=;
+	b=c1r7eiZldp5+In5FW8BEUxdtlU5u/WVo+hSCJWw91lCBymS2tcgwWI/JzJA041tHKqqz4v/Nl
+	hXo7ErQV6AgoBMx7gU1AaEoW5lxF3r8HvNXZJwWBGTpxd9MgOyQkHUYa6XLn1XNdCt00vy8B1Ug
+	A1o7hU9teks1R0J1f8bUgiU=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4hbdKQ3qwkz1prLc;
+	Fri,  4 Sep 2026 08:54:50 +0800 (CST)
+Received: from kwepemo500018.china.huawei.com (unknown [7.202.195.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3A59E40579;
+	Fri,  4 Sep 2026 09:05:43 +0800 (CST)
+Received: from [10.174.176.101] (10.174.176.101) by
+ kwepemo500018.china.huawei.com (7.202.195.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Fri, 4 Sep 2026 09:05:39 +0800
+Message-ID: <0334fe7d-d949-45f7-8914-3012cb11b740@huawei.com>
+Date: Fri, 4 Sep 2026 09:05:39 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <apisezhyZe_3vp0x@linux.dev>
+User-Agent: Mozilla Thunderbird
+From: Qiqi Li <liqiqi23@huawei.com>
+Subject: Re: [PATCH v5 25/36] mm/memory_hotplug: support N_MEMORY_PRIVATE node
+ hotplug
+To: Gregory Price <gourry@gourry.net>
+CC: <linux-mm@kvack.org>, <Zhigang.Luo@amd.com>, <arun.george@samsung.com>,
+	<balbirs@nvidia.com>, <brendan.jackman@linux.dev>, <yuzenghui@huawei.com>,
+	<apopple@nvidia.com>, <alucerop@amd.com>, <matthew.brost@intel.com>,
+	<akpm@linux-foundation.org>, <david@kernel.org>, <ljs@kernel.org>,
+	<liam@infradead.org>, <vbabka@kernel.org>, <rppt@kernel.org>,
+	<surenb@google.com>, <mhocko@suse.com>, <corbet@lwn.net>,
+	<skhan@linuxfoundation.org>, <gregkh@linuxfoundation.org>,
+	<rafael@kernel.org>, <dakr@kernel.org>, <djbw@kernel.org>,
+	<vishal.l.verma@intel.com>, <dave.jiang@intel.com>,
+	<alison.schofield@intel.com>, <osandov@osandov.com>, <jannh@google.com>,
+	<pfalcato@suse.de>, <jackmanb@google.com>, <hannes@cmpxchg.org>,
+	<ziy@nvidia.com>, <pbonzini@redhat.com>, <osalvador@suse.de>,
+	<joshua.hahnjy@gmail.com>, <rakie.kim@sk.com>, <byungchul@sk.com>,
+	<ying.huang@linux.alibaba.com>, <kasong@tencent.com>, <qi.zheng@linux.dev>,
+	<shakeel.butt@linux.dev>, <baohua@kernel.org>, <axelrasmussen@google.com>,
+	<yuanchu@google.com>, <weixugc@google.com>, <yury.norov@gmail.com>,
+	<linux@rasmusvillemoes.dk>, <longman@redhat.com>, <ridong.chen@linux.dev>,
+	<tj@kernel.org>, <mkoutny@suse.com>, <sj@kernel.org>, <jgg@ziepe.ca>,
+	<jhubbard@nvidia.com>, <peterx@redhat.com>, <baolin.wang@linux.alibaba.com>,
+	<npache@redhat.com>, <ryan.roberts@arm.com>, <dev.jain@arm.com>,
+	<lance.yang@linux.dev>, <usama.arif@linux.dev>, <xu.xin16@zte.com.cn>,
+	<chengming.zhou@linux.dev>, <roman.gushchin@linux.dev>,
+	<muchun.song@linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <driver-core@lists.linux.dev>,
+	<nvdimm@lists.linux.dev>, <linux-cxl@vger.kernel.org>,
+	<linux-debuggers@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<kvm@vger.kernel.org>, <cgroups@vger.kernel.org>, <damon@lists.linux.dev>,
+	<linux-kselftest@vger.kernel.org>, <kernel-team@meta.com>
+References: <20260720193431.3841992-1-gourry@gourry.net>
+ <20260720193431.3841992-26-gourry@gourry.net>
+ <6840c720-8cb7-46bb-a652-040c130a4427@huawei.com>
+ <aoJaaYp30LnKLj1w@gourry-fedora-PF4VCD3F>
+In-Reply-To: <aoJaaYp30LnKLj1w@gourry-fedora-PF4VCD3F>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemo500018.china.huawei.com (7.202.195.199)
 
-On Wed, Sep 02, 2026 at 04:10:01PM -0700, Shakeel Butt wrote:
->On Mon, Aug 31, 2026 at 03:16:10PM -0700, Ziyang Men wrote:
->> Hi Reviewers,
->>
->> Just want to follow-up on this patch series. Please let me know the possible
->> issues and I will fix them.
->>
->
->AI bots have raised real concerns. Please address those and then resubmit.
->
+On 8/17/2026 8:49 AM, Gregory Price wrote:
+> It would need to be reserved, and you could use numa emulation but
+> that's clunky.  I have an RFC for exactly this issue - though i haven't
+> pushed it further yet.
+> 
+> https://lore.kernel.org/all/20260610014517.253609-1-gourry@gourry.net/
 
-Hi Shakeel, 
+Hi Gregory,
 
-I have reviewed the AI bots suggestions, and it seems the main issue is to
-decide whether we want some kfuncs to be NMI safe, e.g., 
+Sorry for the late reply.
 
-	- The `bpf_cgroup_base_stat()`, which calls the `cputime_adjust()` and in turn
-	  acquires `raw_spin_lock_irqsave()`.
-	- The `bpf_cgroup_css()` and `bpf_css_release()` to get/put the css.
+I took a look at the exclusive-node RFC. The approach looks useful for
+device-backed private memory without a firmware-described NUMA node.
+Thanks for the pointer.
 
-The simply solution is to mark them SLEEPABLE.
+We are currently looking into the private-node and CRAM design as a
+whole. I noticed that CRAM was not included with the v5 series, and saw
+that others were also interested in a v5 version.
 
-Hi Eduard, what's your idea about this? Do we want to mark them SLEEPABLE or there
-are better ways stand in the mid?
+If you already have a CRAM branch or patches based on v5, even if they
+are still work in progress, would you mind sharing them? It would be
+very helpful for us to continue testing the overall design.
 
 Thanks,
-Ziyang 
+Qiqi
