@@ -1,122 +1,145 @@
-Received: from mta1.migadu.com (out-138.mta1.migadu.com [95.215.58.138])
+Received: from mta0.migadu.com (out-156.mta0.migadu.com [91.218.175.156])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EFB643F8A5
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 09:22:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16504443E47
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 09:46:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.156
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788513744; cv=none; b=nburGxRwQLnz/BBLdIt68gD3wZtzMcJHs6hK8qzJK3CaKIaSdjr5HXMjGpj3npID5nEa3PgFT6rNmB0Vn5odPWAvGHq28JMG2/76rvV8rrckOIeV9aEuuzOznu3JpnrBkBpV0O5ZEQb3hUm2gbHBI0R87bNukkm3RjElxTdklk0=
+	t=1788515177; cv=none; b=Vgh5VEsGO8ccS/dsHbbNEEvLIcxurjst0FOXmzQCaUbjMN2kQVX1DRO7CT1Iew1CDo5DRbHhj6dLJ6VMaYR1F/HWiwa119MkJAvcj4VNZU6cb0AhJW9xqAkaZwPN02uhawIRk+oIh4DcqGtMDNGIA5RqoWSYt4ql3yLLxJGEOuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788513744; c=relaxed/simple;
-	bh=XNzKjHkngtqCqjAb20SyRUTjszAkf7AltK/o8l/wh4c=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ZoWjEPtfDnsE8qqxFyHaWqH1gVTcqRzkUTfg6SQVLcLmVE8wzZNfdx61D+g4WIKMOjgbmdSwxpuMgaxvXGi1eZqznw/ft5ulpoQjbT3n8oa8v7iyjJEY4/rDAtc9l4a9FXK/ZZyK1dyQdVbI1yCRzoyGjF+cqNuAJiSeiBljoao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jliOTdxF; arc=none smtp.client-ip=95.215.58.138
+	s=arc-20240116; t=1788515177; c=relaxed/simple;
+	bh=l/Ow3opJmMzhmqvzKXqorsr7GYrL7d+S+qdRXbzW95c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qrq5JqQGrau6xjecGAI474r8NWb4wcqN6T9MY96q+GMPBXAzOvLYhIbq7BwvV+gXRHOv1rQxmcWQ8uGiw01n10xcQDTw5I6a4cbE0alwmjS5cDYsHwT5iG65OyCMZl6/68WdHtjjo0atAtvxDLd0DIMn6/AAsdrA8h9sOUqDnrg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=a58wWKwg; arc=none smtp.client-ip=91.218.175.156
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jliOTdxF"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="a58wWKwg"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=XNzKjHkngtqCqjAb20SyRUTjszAkf7AltK/o8l/wh4c=;
+DKIM-Signature: a=rsa-sha256; bh=l/Ow3opJmMzhmqvzKXqorsr7GYrL7d+S+qdRXbzW95c=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788513720; v=1; x=1789118520;
- b=jliOTdxFdYOZ523Ol/7jwNqyhcK0HU6euwaS4w3sdOU+PTG1z1P4JzL+WfoNJeh5KCXt5Exw
- v0RkuFBpw6+D2R5ZOkXs91Gw0QEYBZWkO5kagk9sjHjUYxlToHVSfSF62tDlFjUflyXpkqMWtce
- kVvdtQ88SbF5hOhDmWaRcEaE=
+ t=1788515172; v=1; x=1789119972;
+ b=a58wWKwg8mGKUOXAGK3r67R8fcGl4gcyLW2rQhTxK7/SpiR9YtaInuDp8V6rpE+m/wKz+b19
+ eaOWj3nsFVHJ+GyeB39dt18FJcyJJwCKDO66vuiK2xw3uAYuZPS9GOncohcIeeI0VgM699HJdsZ
+ J+PwbVqiKrLRWL7sN0QjgFqo=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4d2c5bf555aa2c40;
-	Fri, 04 Sep 2026 09:21:50 +0000
-X-Mizu-Trace-ID: 4d2c5bf555aa2c40
+Received: by smtp.migadu.com with ESMTPS id 5d1dfc6f5b4389c6;
+	Fri, 04 Sep 2026 09:46:12 +0000
+X-Mizu-Trace-ID: 5d1dfc6f5b4389c6
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <ce007c25-8d49-4df4-9508-3af911f90eb7@linux.dev>
-Date: Fri, 4 Sep 2026 17:21:42 +0800
+From: "Hui Zhu" <hui.zhu@linux.dev>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>,
+	Wei Xu <weixugc@google.com>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org
+Cc: Hui Zhu <zhuhui@kylinos.cn>
+Subject: [PATCH v3 0/3] mm: workingset: fix the shadow node budget under MGLRU
+Date: Fri,  4 Sep 2026 17:45:53 +0800
+Message-ID: <cover.1788514750.git.zhuhui@kylinos.cn>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, bsegall@google.com, cgroups@vger.kernel.org,
- corbet@lwn.net, dietmar.eggemann@arm.com, hannes@cmpxchg.org,
- juri.lelli@redhat.com, kprateek.nayak@amd.com, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- mgorman@suse.de, mingo@redhat.com, peterz@infradead.org,
- rostedt@goodmis.org, skhan@linuxfoundation.org, tj@kernel.org,
- vincent.guittot@linaro.org, vschneid@redhat.com, stable@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] sched/fair: Remove the write-order dependency
- between cpu.max and cpu.max.burst
-To: Zhe Liu <liuzhe1@kylinos.cn>, mkoutny@suse.com
-References: <aobnZEh1hfIBhswD@localhost.localdomain>
- <20260904062013.504236-1-liuzhe1@kylinos.cn>
- <20260904062013.504236-2-liuzhe1@kylinos.cn>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20260904062013.504236-2-liuzhe1@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi, Zhe,
+From: Hui Zhu <zhuhui@kylinos.cn>
 
-在 2026/9/4 14:20, Zhe Liu 写道:
-> Keep the configured burst independent of the current quota and cap it
-> when CFS refills runtime. This allows quota and burst updates in either
-> order.
-> 
+Commit 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the
+number of lru pages") broke the workingset shadow node budget under
+MGLRU: lruvec_lru_size() reads mz->lru_zone_size, which MGLRU never
+maintains, so count_shadow_nodes() sees the evictable LRU lists as
+empty and the shadow shrinker reclaims eviction tokens almost as fast
+as they are created, losing thrashing protection.
 
-Ran the selftests on next-20260903 in a VM: all 10 test_cpu cases pass
-with the series applied, and test_cpucg_max_burst fails on the unpatched
-kernel, so the test does catch the old behavior.
+Patch 1 extends the dying-mcg stat redirection (previously cgroup v1
+only) to all hierarchies, addressing the reparenting race that motivated
+7404bd37cfbe.
 
-One problem (spotted by sashiko, an automated overflow checker; I
-re-did the arithmetic): dropping the burst_us + quota_us <=
-max_bw_runtime_us check is not safe. With quota and burst both near
-MAX_BW, the period-scaling path in sched_cfs_period_timer() can double
-both up to 512x, and the new clamp quota + min(burst, quota) in
-__refill_cfs_bandwidth_runtime() then wraps u64 to 0, leaving the group
-with zero runtime on every refill.
+Patch 2 then switches count_shadow_nodes() back to
+lruvec_page_state_local(), which both classic LRU and MGLRU maintain.
 
-I believe you can just drop the burst_us > quota_us comparison and keep
-the sum check. Both write-order cases still pass that way: burst=80ms
-with quota=50ms gives 130ms, well under the limit.
+Patch 3 recovers the performance.  Patch 1 added an unconditional
+rcu_read_lock() to the stat update fast path; patch 3 checks
+memcg_is_dying() first and takes the RCU lock only on the rare dying
+path.
 
-Tested-by: Tao Cui <cuitao@kylinos.cn>
+Changes since v2:
+ - Reorder the series: the dying-memcg redirection now comes first and
+   the switch back to lruvec_page_state_local() follows it, as
+   requested.
+ - Patch 1: add the Fixes and Cc stable tags and describe the
+   user-visible impact of the bug, as requested.
+ - Collect Shakeel's Acked-by.
 
-> Fixes: f4183717b370 ("sched/fair: Introduce the burstable CFS controller")
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Zhe Liu <liuzhe1@kylinos.cn>
-> ---
->  kernel/sched/core.c | 3 +--
->  kernel/sched/fair.c | 3 ++-
->  2 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-> index f78275192036..5269b8cfcf7f 100644
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -10159,8 +10159,7 @@ static int tg_set_bandwidth(struct task_group *tg,
->  	if (quota_us != RUNTIME_INF && quota_us > max_bw_runtime_us)
->  		return -EINVAL;
->  
-> -	if (quota_us != RUNTIME_INF && (burst_us > quota_us ||
-> -					burst_us + quota_us > max_bw_runtime_us))
-> +	if (burst_us > max_bw_runtime_us)
->  		return -EINVAL;
->  
->  #ifdef CONFIG_CFS_BANDWIDTH
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 6d881e530f89..488de18d477e 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -6627,7 +6627,8 @@ void __refill_cfs_bandwidth_runtime(struct cfs_bandwidth *cfs_b)
->  		cfs_b->nr_burst++;
->  	}
->  
-> -	cfs_b->runtime = min(cfs_b->runtime, cfs_b->quota + cfs_b->burst);
-> +	cfs_b->runtime = min(cfs_b->runtime,
-> +			     cfs_b->quota + min(cfs_b->burst, cfs_b->quota));
->  	cfs_b->runtime_snap = cfs_b->runtime;
->  }
->  
+Performance testing
+===================
+
+The test script and the raw results are available at [1].
+
+Environment: 10-vCPU QEMU guest, 8 GiB RAM, cgroup v2; 7 runs per
+configuration, medians reported.  Workloads:
+
+  w1-anon-churn: single-threaded anon fault/charge loop in a memcg
+                 (MADV_DONTNEED + re-fault, no reclaim).  Every touch
+                 is a real fault with charge and memcg stat updates,
+                 so it stresses exactly the fast path patch 1 changes.
+  w2-file-churn: file read loop under memory.high pressure
+                 (reclaim-bound, noisier).
+  w3-reparent:   reparent accounting sanity check.
+
+w1-anon-churn (pages/s):
+
+                 classic LRU          MGLRU
+base             4393028              4377122
+patches 1-2      4385996   (-0.2%)    4352887   (-0.6%)
+patches 1-3      4381832   (-0.3%)    4377053   (+0.0%)
+
+w2-file-churn (MB/s):
+
+                 classic LRU          MGLRU
+base             8277                 8226
+patches 1-2      8226      (-0.6%)    8123      (-1.3%)
+patches 1-3      8157      (-1.4%)    8294      (+0.8%)
+
+w3-reparent passed on all kernels.
+
+The small overhead visible with patches 1-2 comes from the redirection
+added by patch 1; patch 3 brings w1 back to the base level in both LRU
+configurations.  The remaining differences are within run-to-run noise.
+
+[1] https://gist.github.com/teawater/32f373ec41d185d840455eb167321a5a
+
+Changelog:
+v3:
+According to the comments of Shakeel, reorder the series per review,
+add Fixes/Cc stable and the user-visible impact to patch 1.
+
+Hui Zhu (3):
+  mm: memcg: redirect stats updates of dying memcgs for all hierarchies
+  mm: workingset: use lruvec_page_state_local() to count lru pages
+  mm: memcg: skip the RCU lock when the memcg is not dying
+
+ mm/memcontrol.c | 30 ++++++++++++------------------
+ mm/workingset.c |  5 ++---
+ 2 files changed, 14 insertions(+), 21 deletions(-)
+
+-- 
+2.53.0
 
