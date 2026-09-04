@@ -1,153 +1,113 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B024343F2;
-	Fri,  4 Sep 2026 06:20:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C38C33F4DD2
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 06:36:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788502861; cv=none; b=VcP5AH33yCVY+ddPbKR+qXzB+b3y8Tg5DQVrTJ9cJvq9S/IgplrnOafCJG8ao8jDzgNwvgjFiDY2++BbltVr1VPusQK34yXZuXDd1JBY4+ocr02b0fDdX9Sr+psZ9StC22sGlgV0qRpB/jUBTIoyGJgysmvHKRzWuB/bsqpWjXk=
+	t=1788503766; cv=none; b=WM/9A79zOlT0repHA5/46xmra+z0hVPtHcCIuQ7AoYSGcyJGvMrtSp3yMqwEfUWRN/LNT1GNMhLx5PYJeOW09uyeSi1c0f9uQKTdXxQejrqcpO046FqGqcR3/D/P+OM83yAE+WqoF/nwdRFU3GQXgurgXrSBVbu0tbCfp6FGuqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788502861; c=relaxed/simple;
-	bh=vjjwnZKTmpSoCzEX6B+atdLSf/jTDKGaw79jufSgLB0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=sX6D+YsQsq+QCcpAchHgKs1ZhmByLGrxybkaN6NPjMvsC/x9ZvnDSfVz8Z5pW/5JgIj/T8KAKQfTx3r5zvrV+3HZhPbtNYtOLZUcrk7QvdzllNdyOSTWnwZbTQmdP9x18K22lRrF8p97DOFdKO+66LQEi/G8CW25W86uWeCycAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: c5b99d4ca82811f19a56ed5b684f684d-20260904
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_EXISTED
-	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_GOOD
-	CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD
-	ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:a5f8d2f1-70ff-46d2-936c-5892c1d407d8,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.19,REQID:a5f8d2f1-70ff-46d2-936c-5892c1d407d8,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:7db8b62,CLOUDID:0766db24e3ba21c8fadd283d7e52bd08,BulkI
-	D:260904140205JEG5SQEN,BulkQuantity:1,SF:17|19|66|78|81|82|102|127|136|850
-	|865|898,TC:nil,Content:0|15|50|99,EDM:-3|-100,IP:-2,URL:0,File:nil,RT:nil
-	,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BR
-	R:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: c5b99d4ca82811f19a56ed5b684f684d-20260904
-X-User: liuzhe1@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <liuzhe1@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1096141703; Fri, 04 Sep 2026 14:20:49 +0800
-From: Zhe Liu <liuzhe1@kylinos.cn>
-To: mkoutny@suse.com
-Cc: bsegall@google.com,
-	cgroups@vger.kernel.org,
-	corbet@lwn.net,
-	dietmar.eggemann@arm.com,
-	hannes@cmpxchg.org,
-	juri.lelli@redhat.com,
-	kprateek.nayak@amd.com,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	liuzhe1@kylinos.cn,
-	mgorman@suse.de,
-	mingo@redhat.com,
-	peterz@infradead.org,
-	rostedt@goodmis.org,
-	skhan@linuxfoundation.org,
-	tj@kernel.org,
-	vincent.guittot@linaro.org,
-	vschneid@redhat.com
-Subject: [PATCH v2 3/3] Documentation: describe CPU quota and burst ordering
-Date: Fri,  4 Sep 2026 14:20:13 +0800
-Message-Id: <20260904062013.504236-4-liuzhe1@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260904062013.504236-1-liuzhe1@kylinos.cn>
-References: <aobnZEh1hfIBhswD@localhost.localdomain>
- <20260904062013.504236-1-liuzhe1@kylinos.cn>
+	s=arc-20240116; t=1788503766; c=relaxed/simple;
+	bh=LbLGq6/4UgYFH9Nnd4m+t/CQzejhxnNDV3wqOJuxgSM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WsHrvuJdLZdq0UoM6vGerc9f+JwkhGCpqc1muxQr2FTpZS69V1c6Rv9s6fjCR1NlNdiZDWRmUgAi6PIDrzS3Z4LuLwNTCEK6GcppbuTv6UsZzT/F9ZjSBX2POCesyOKVfig/mYLvz9q5s5SF6e2S1rU9u4p0z9Pohe6q74BA7WM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ccJvPGio; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ccJvPGio"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33DC91F00A3D;
+	Fri,  4 Sep 2026 06:36:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788503765;
+	bh=757sSow4bZxacgFES5O5/6SYu86a200KKf1Pkw+peq0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ccJvPGio6PTHW6jwkb7/NDj3fTlu3lr9EJCBIJjpKQYklYtlAbrbH/O9gf79D5Uxr
+	 xBFRC2IXGv7MZMdykmWd0QUR8VoUYTdYz5LnSmhs8AfdZ2L/peo0LQasEbgmjJsL9g
+	 vkEZOCMnBWyGxHKB5xmpfTDyCJeop+Nq4JuRMx44E+eZ1dgr3A3HByTGOWHUocewmy
+	 REvebJ08P9SuUym90fBg4dfvn+IxEFocNw0ee5YHM3gap2AhvoE4KJDNQfGJFXekPP
+	 jb8zsn7dBzviwnUfFpEZpBLIf4JfhvF6j/hXlP576HaZ+PynB/iRuCLjrkpjQLXy3B
+	 iiU7L7tE2xa8Q==
+Date: Thu, 3 Sep 2026 20:36:04 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Julian Sun <sunjunchao@bytedance.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org,
+	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, akpm@linux-foundation.org, axboe@kernel.dk,
+	jack@suse.cz
+Subject: Re: [External] Re: [PATCH v2] writeback, memcg: skip foreign dirty
+ tracking for bdev inodes
+Message-ID: <appm1E4rzQQB_srX@slm.duckdns.org>
+References: <20260903083303.2769873-1-sunjunchao@bytedance.com>
+ <apnYouiUINQR-98e@slm.duckdns.org>
+ <3a7ca3ba-d2e6-40a1-95b2-4d0ee93d4242@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3a7ca3ba-d2e6-40a1-95b2-4d0ee93d4242@bytedance.com>
 
-Document the independent quota and burst configuration and the runtime
-burst clamp.
+Hello,
 
-Signed-off-by: Zhe Liu <liuzhe1@kylinos.cn>
----
- Documentation/admin-guide/cgroup-v2.rst |  5 ++++-
- Documentation/scheduler/sched-bwc.rst   | 21 ++++++++++++---------
- 2 files changed, 16 insertions(+), 10 deletions(-)
+On Fri, Sep 04, 2026 at 12:34:27PM +0800, Julian Sun wrote:
+...
+> > Was this reproduced from an actual workload with adverse effects? If so, can
+> > you please explain the workload and effects with concrete details?
+> 
+> Yes, this can be reproduced on many production machines. On one production
+> machine, we observed 102 wb works with WB_REASON_FOREIGN_FLUSH as their
+> reason, 101 of which belonged to the same wb. This wb was the owner of the
+> bdev inode, and dirty pages were continuously being generated for it.
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 7c2a8ed80071..57253c2c1819 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1229,7 +1229,10 @@ will be referred to. All time durations are in microseconds.
- 	A read-write single value file which exists on non-root
- 	cgroups.  The default is "0".
- 
--	The burst in the range [0, $MAX].
-+	The burst in the range [0, $MAX]. The configured value is retained when
-+	the quota changes and may be larger than the current quota. During CFS
-+	runtime refill, the effective burst is limited to the current quota.
-+	The quota and burst files can therefore be written in either order.
- 
- 	This file affects only processes under the fair-class scheduler.
- 
-diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
-index e881a945c188..08a54ee84da2 100644
---- a/Documentation/scheduler/sched-bwc.rst
-+++ b/Documentation/scheduler/sched-bwc.rst
-@@ -90,20 +90,22 @@ bandwidth restriction in place, such a group is described as an unconstrained
- bandwidth group. This represents the traditional work-conserving behavior for
- CFS.
- 
--Writing any (valid) positive value(s) no smaller than cpu.cfs_burst_us will
--enact the specified bandwidth limit. The minimum quota allowed for the quota or
--period is 1ms. There is also an upper bound on the period length of 1s.
--Additional restrictions exist when bandwidth limits are used in a hierarchical
--fashion, these are explained in more detail below.
-+Writing any valid quota value will enact the specified bandwidth limit. The
-+minimum quota allowed for the quota or period is 1ms. There is also an upper
-+bound on the period length of 1s. Additional restrictions exist when bandwidth
-+limits are used in a hierarchical fashion, these are explained in more detail
-+below.
- 
- Writing any negative value to cpu.cfs_quota_us will remove the bandwidth limit
- and return the group to an unconstrained state once more.
- 
- A value of 0 for cpu.cfs_burst_us indicates that the group can not accumulate
- any unused bandwidth. It makes the traditional bandwidth control behavior for
--CFS unchanged. Writing any (valid) positive value(s) no larger than
--cpu.cfs_quota_us into cpu.cfs_burst_us will enact the cap on unused bandwidth
--accumulation.
-+CFS unchanged. A valid positive value written to cpu.cfs_burst_us is retained
-+when the quota changes. If it is larger than the current quota, CFS limits the
-+effective burst during runtime refill to the current quota.
-+
-+The quota and burst files can be updated in either order.
- 
- Any updates to a group's bandwidth specification will result in it becoming
- unthrottled if it is in a constrained state.
-@@ -243,4 +245,5 @@ Examples
- 	# echo 50000 > cpu.cfs_period_us /* period = 50ms */
- 	# echo 10000 > cpu.cfs_burst_us /* burst = 10ms */
- 
--   Larger buffer setting (no larger than quota) allows greater burst capacity.
-+   A larger buffer setting allows greater burst capacity. If the configured
-+   burst is larger than the quota, the effective burst is limited to the quota.
+This is the mechanism triggering.
+
+> The logic here is that, Once a memcg has recorded the owner wb of a bdev
+> inode as foreign, any task in that memcg that reaches the throttling path in
+> balance_dirty_pages() may queue one WB_REASON_FOREIGN_FLUSH work item for
+> each recently recorded foreign wb, up to four in total, without checking
+> whether those target wbs caused the current dirty throttling.
+> 
+> On this machine, the total nr_pages of the foreign-flush works was
+> 630,681,285, or about 2.4 TiB, while the machine had only 400 GiB of memory.
+> Although nr_pages does not represent the number of dirty pages that will
+> ultimately be written back, the actual number of pages written back may
+> still be very large because the corresponding wb was continuously
+> accumulating dirty pages.
+
+Is this necessarily an adverse effect tho? These are all metadata flushes,
+right? When they're gonna get written might change but do the extra flushes
+change how much is going to be written? If so, how? If not, are the extra
+flushes adding noticeable overhead in terms of cpu or io?
+
+> > > Skip foreign dirty tracking when the folio mapping's host inode is on the
+> > > blockdev pseudo superblock. This prevents bdev-originated records from
+> > > triggering later foreign flushes.
+> > 
+> > If you do this, tho, that means now cgroups that accumulated a lot of
+> > metadata writes on ext4 and crunched for memory don't have a way to relieve
+> > the pressure outside of periodic or other lucky flushes. ie. I have a hard
+> > time judging whether this is net plus or not without learning more about how
+> > this patch came to be.
+> 
+> How about this approach? Before queuing a WB_REASON_FOREIGN_FLUSH work item,
+> check the target wb and avoid queuing another one if it already has an
+> unfinished WB_REASON_FOREIGN_FLUSH work item.
+> 
+> This approach can eliminate a large number of duplicate foreign flushes, but
+> one issue remains: a memcg may dirty only a small number of pages in a bdev
+> inode, and when that memcg enters dirty throttling, the throttling may be
+> completely unrelated to the wb that owns the bdev inode, yet a foreign flush
+> is still queued to that wb. This problem becomes more pronounced when the wb
+> has a large number of dirty pages. Perhaps we should track the number of
+> foreign pages in the memcg and avoid issuing a foreign flush when the number
+> is below a certain percentage?
+
+Yeah, maybe, but I'm kinda having a hard time evaluating anything as the
+mental picture I have of the problem is too incomplete. Please fill us in.
+
+Thanks.
+
 -- 
-2.25.1
+tejun
