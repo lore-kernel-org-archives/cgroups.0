@@ -1,59 +1,75 @@
-Received: from mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E34A447813
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 09:46:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA933D6CB0
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 10:43:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788515199; cv=none; b=DK0ATor6yFCKLc2NRNkHE+R8TUHx5M00Xoo2fe9tbHDpf/CZBbJoabDNn6IOcRD+u9EyRbfZnWhfLH9Q15+dpSKLteDeADzHKStFVSt6+bmdqDPDhBZIxj6NnwkjEJhWEnXJZyuHmySltugssZeKBiGckVxG558j5UBgSbGlAYc=
+	t=1788518583; cv=none; b=Izjk7XOPVqUj5W6RmHoo5Ku2jwtV8/SgdxTEFPM4v0L4qg6KcQQ09sQc0oTlC2kuG/h75cmbu/csfJ/LwyIGfTyyYOClDpXRxmc+yyyzvv0uOAsAbiAj97/CL2Zwp/bl3Z/rVHmULkDUHF2X1LF8UleXodQA7OOfcJudt96PcJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788515199; c=relaxed/simple;
-	bh=/egS0JLq3DdP+ELRV2+UfNnFQyripc/bTgQpMQb2RyA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iDrTvdQDaUGevJVXbFFsTc+GtVscoPU6CqaFtRB+ivBCUDYJwMXhexDRCgGy4AtyUdjWEeQCvZMRVnWLtub0llE98P+e8j46tTbos7BepfcdQH7vjIdPud5FpjfuVKTjusS7hGdwQPm5JWyDf7+CngfUdlRaM/Y6WajFksR/IkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qW3oOuJB; arc=none smtp.client-ip=91.218.175.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788518583; c=relaxed/simple;
+	bh=8w3ux5dxQF/VaWUODYk/SATXtztTxPbRqIt+6Pe5jMg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UJTMwupTM0eCljdT4ay0ZJQyUi/ku3buPxzezvSVydXSE9jF09qWjG2AJP/558kI3WMLHxaQqHP6VMIzTEvH9lIc/SENmZX4JTg5rujAAZlzR/9kbwEwAPwaoN5lIXUS867g/E3eUtuZjX8d7qdfACSCchuHv1WAHzlwO9nyti0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=es8aQSD7; arc=none smtp.client-ip=209.85.216.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qW3oOuJB"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=/egS0JLq3DdP+ELRV2+UfNnFQyripc/bTgQpMQb2RyA=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788515195; v=1; x=1789119995;
- b=qW3oOuJBe29Tupcqm9ATJ9aRgS3psFQXuPso1euycC7858JUW3MBvmxVRvaPD+zzUfcrM3rb
- 00VakCJQPwc+h8kR+79Z/WbkPVEFCi1Epwmau5Nz+ojPkq6GlC//NVhlb3sFC2nLYH79tCgIsA2
- H6mQkg8uB6wDBdNuWqEMvqSk=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8f911b791d4dc657;
-	Fri, 04 Sep 2026 09:46:34 +0000
-X-Mizu-Trace-ID: 8f911b791d4dc657
-X-Migadu-Flow: FLOW_OUT
-From: "Hui Zhu" <hui.zhu@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="es8aQSD7"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-38dfe7eb825so709801a91.0
+        for <cgroups@vger.kernel.org>; Fri, 04 Sep 2026 03:43:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788518580; x=1789123380; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4a4L7BNv+LxG4ZtAuwYin4s42kbMGqQiy86Ml9znP8k=;
+        b=es8aQSD73GRS22fS7DLOIzOMF3yUToukkn+NTVn5v9cnJYoYlDlKST4njnzhhWwhYz
+         jyh5MxHqQtaMK2lqnIGEnihPQP30b1eWqLnd5J+U9r4l6j5bO5mLMDWu9hTbf3ZUU1eh
+         kP2nHT77YYtxzt+OvGp8e5DiyFxtBBeAiHe+cCxNsd9ZG5UxySThDkRXQ9Oh1HWl5Dar
+         4q/QCLs0o2BuAn21qTfyQ8FpQE2ZiUS3rWN+N56ocbVmXNYlipm0hOWo+mdWi1xqXoHr
+         QFhOVbHMfJWpg2Q9oj15wCicqy4c8Hd1wY/tcH3aK9nHWfm1509LwftVxVIYmYARPj2T
+         yM2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788518580; x=1789123380;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4a4L7BNv+LxG4ZtAuwYin4s42kbMGqQiy86Ml9znP8k=;
+        b=hHl2FMtP9JMVCbCrE9ZQ3yS67G10ATSlpFTV5wM7LSacZuW2kjbPxKTLEPaSXz+Xn7
+         1ULpEIug1ejSZuXQUBVZExxzArnBwrNYKABOKF8QZgm/ifp7Ed7nNdidB0KUxllDknaT
+         IEZqK5DEwe7cYOr4YRiG7bDFkVVnUY6csdTVfBQ4O2GzQqDOGnJuYZisIJ/1Em8cA79C
+         sT+BnKl/LrmUbbjFiMD5KS0UOi1cADLaYQIwk933rknCHddgg4QSY4/j50tdR2zvp9MA
+         TyBaFQso5l7Y42doWoIa8D3qRWy284pCJNVqpfNpCqriU1MB2BA8yRZR0xF4JX02gbU7
+         UbZA==
+X-Forwarded-Encrypted: i=1; AKwUvBy08xZaRTabcfPkYRGipBspykM9xH4/MhBgN2sU31M+Omgoz56NxeCMijWAjGTzbmWcBGLox28R@vger.kernel.org
+X-Gm-Message-State: AFuF++l8YOu99qx/afsxxzLHKXHiweIIUNLNM25Iw9+2ToT7TiOLCAoj
+	SwRQpzeUKMC/uZh+cVM8AuuZCJXSAEHkiMFPO1JOnJvIDTocZka4Igic
+X-Gm-Gg: AYBFou0lwXe6sTAp+ERgtLYYl4Eatqi4uuHYHNnkxkc8uiLb/OVeXX7NVE4UILlM3Wl
+	MmOpc5kiNr4AqtT0VAm8z+JEBHfXnj9TnSDSWG7NDNL2opOZkkmPpQwKR3NrXufmNr+VWLFbF8L
+	Rto9HP6ZnTYtRB4KgHoIEt8PEKQHKLUf+46de90EDVd18O35avpof1wXeoE6HGbC2LvthhCC9Ab
+	PK8AY5Y3ygibLTcHiokrNLURyR08QXlKqCHk5ucz8RWlKU7xhYqMKtvPWMzZzkas5FU+VMrTSN9
+	fsCgV3AMnO2jwT4uEjPuK4Uu/XekT4DscGHgufy6xRvTgsM3Mbgf2nqNW+zNYbnZkKkNmWhOS5p
+	T1pRUBdNnwH4vje1rRF5o5xdukVlUf7oKjOmvYXQbUQegV8JBdjReRHyAnVnRl/18Ol3MXbF46O
+	4swakAbIAhAX4wvHn2JrGB89+1P7rSPm8aDKZrktW5aCeSX+5jby632+eTtXTkhKHhzhC1AXjmA
+	4nS0nbeM5MB3Z4Ejvgne85TbWo=
+X-Received: by 2002:a17:90b:4cce:b0:38f:240d:b857 with SMTP id 98e67ed59e1d1-39b260dd4e9mr8682700a91.2.1788518580475;
+        Fri, 04 Sep 2026 03:43:00 -0700 (PDT)
+Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339b314cfcsm5981759eec.19.2026.09.04.03.42.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 03:43:00 -0700 (PDT)
+From: Hemanth Selam <hemanth.selam@gmail.com>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	Wei Xu <weixugc@google.com>,
+	Muchun Song <muchun.song@linux.dev>
+Cc: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Cc: Hui Zhu <zhuhui@kylinos.cn>
-Subject: [PATCH v3 3/3] mm: memcg: skip the RCU lock when the memcg is not dying
-Date: Fri,  4 Sep 2026 17:45:56 +0800
-Message-ID: <0db657472c5278b2e2b87fbca7590b47ca520303.1788514750.git.zhuhui@kylinos.cn>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <cover.1788514750.git.zhuhui@kylinos.cn>
-References: <cover.1788514750.git.zhuhui@kylinos.cn>
+	linux-mm@kvack.org
+Subject: [PATCH] memcg: fix typo "memroy" in comment
+Date: Fri,  4 Sep 2026 16:12:53 +0530
+Message-ID: <20260904104254.16103-1-hemanth.selam@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -62,58 +78,29 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Hui Zhu <zhuhui@kylinos.cn>
+Correct "memroy" to "memory", reported by scripts/checkpatch.pl using the
+misspelling list in scripts/spelling.txt.  Only touches comments, no code
+changes.
 
-get_non_dying_memcg_start() takes rcu_read_lock() on every stat update, but
-the lock only protects the upward walk to a non-dying ancestor, which
-happens solely while a memcg is being offlined.  The dying check itself
-reads the CSS_DYING flag of a memcg the caller already holds a reference
-to, so it is safe without the lock.
-
-Check memcg_is_dying() first and return immediately when the memcg is
-alive, taking the RCU lock only on the rare dying path.  On an anon
-fault/charge churn workload in a memcg this recovers the ~0.6% overhead
-added by the previous patch (4368077 vs 4343159 pages/s before, back to
-~4377000 pages/s after).
-
-Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+Assisted-by: Cursor:claude-opus-5
+Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
 ---
- mm/memcontrol.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ include/linux/memcontrol.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b3d1ac3fe0aa..f454d02746e9 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -813,6 +813,17 @@ static long memcg_state_val_in_pages(int idx, long val)
- static inline struct mem_cgroup *
- get_non_dying_memcg_start(struct mem_cgroup *memcg, bool *rcu_locked)
- {
-+	/*
-+	 * Fast path: the caller holds a reference to @memcg, so reading
-+	 * its CSS_DYING flag without the RCU lock is safe.  The RCU lock
-+	 * is only needed to walk up to a non-dying ancestor, which
-+	 * happens only while a memcg is actually being offlined.
-+	 */
-+	if (!memcg_is_dying(memcg)) {
-+		*rcu_locked = false;
-+		return memcg;
-+	}
-+
- 	rcu_read_lock();
- 	*rcu_locked = true;
- 
-@@ -824,6 +835,9 @@ get_non_dying_memcg_start(struct mem_cgroup *memcg, bool *rcu_locked)
- 
- static inline void get_non_dying_memcg_end(bool rcu_locked)
- {
-+	if (!rcu_locked)
-+		return;
-+
- 	rcu_read_unlock();
- }
- 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7d1c0ce189a8..488dafe54d77 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -258,7 +258,7 @@ struct mem_cgroup {
+ 	atomic_t		kmem_stat;
+ #endif
+ 	/*
+-	 * Hint of reclaim pressure for socket memroy management. Note
++	 * Hint of reclaim pressure for socket memory management. Note
+ 	 * that this indicator should NOT be used in legacy cgroup mode
+ 	 * where socket memory is accounted/charged separately.
+ 	 */
 -- 
-2.53.0
+2.48.1
 
