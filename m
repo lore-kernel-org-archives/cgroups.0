@@ -1,20 +1,20 @@
 Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286D732470E;
-	Fri,  4 Sep 2026 06:20:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B024343F2;
+	Fri,  4 Sep 2026 06:20:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788502858; cv=none; b=U9h5gBLLhfzlp23kiZ7HGrK8l0qwzaHC7JY0NZr/pb+ALQ8FcZ46jkGxPlwcirNjH4//iuWz7K2te6W3CzhIfs+8uJ0VRYnWIzmGnPZxGrY9eCxM0WCDeqoqtiLcNQVJ2Ns1mzlogqU4C7qkxpni7dHw19q0TTSu0j9v+xDKHUY=
+	t=1788502861; cv=none; b=VcP5AH33yCVY+ddPbKR+qXzB+b3y8Tg5DQVrTJ9cJvq9S/IgplrnOafCJG8ao8jDzgNwvgjFiDY2++BbltVr1VPusQK34yXZuXDd1JBY4+ocr02b0fDdX9Sr+psZ9StC22sGlgV0qRpB/jUBTIoyGJgysmvHKRzWuB/bsqpWjXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788502858; c=relaxed/simple;
-	bh=8cokZ4JMx1IsIhMEWSnDbPmYtzKquw85d/Q7EuKjjnU=;
+	s=arc-20240116; t=1788502861; c=relaxed/simple;
+	bh=vjjwnZKTmpSoCzEX6B+atdLSf/jTDKGaw79jufSgLB0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ByNr+vunxYEr17tL4iyzLi0Zj7deVSHtY3KXZYzG4BjarKQgHGd4D9K7L0MG1f11CMxsloLXFuwJuzQujPX2fgKcdQxD6MHpCPlnHTRQxdvbrR/cVVkKbv2UmmeG1LEtI6w4gWVVmHKy924YR7mJXqVimHdWB2JCNm0H0lOxz0U=
+	 MIME-Version; b=sX6D+YsQsq+QCcpAchHgKs1ZhmByLGrxybkaN6NPjMvsC/x9ZvnDSfVz8Z5pW/5JgIj/T8KAKQfTx3r5zvrV+3HZhPbtNYtOLZUcrk7QvdzllNdyOSTWnwZbTQmdP9x18K22lRrF8p97DOFdKO+66LQEi/G8CW25W86uWeCycAE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: c3bbb098a82811f19a56ed5b684f684d-20260904
+X-UUID: c5b99d4ca82811f19a56ed5b684f684d-20260904
 X-CTIC-Tags:
 	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
 	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN, HR_FROM_NAME
@@ -25,27 +25,27 @@ X-CTIC-Tags:
 	CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD
 	ABX_MISS_RDNS
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:c792123f-bbc2-46f5-8ba9-af878e796901,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:35
-X-CID-INFO: VERSION:1.3.19,REQID:c792123f-bbc2-46f5-8ba9-af878e796901,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:35
-X-CID-META: VersionHash:7db8b62,CLOUDID:78b1adb4db2f047bc9bbc583b8220a2c,BulkI
-	D:260904140202TY0MLTEZ,BulkQuantity:1,SF:17|19|66|78|81|82|102|127|136|850
-	|865|898,TC:nil,Content:0|15|50|99,EDM:5|-100,IP:-2,URL:0,File:nil,RT:nil,
-	Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR
-	:0,BRE:0,ARC:0
+X-CID-O-INFO: VERSION:1.3.19,REQID:a5f8d2f1-70ff-46d2-936c-5892c1d407d8,IP:10,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:10
+X-CID-INFO: VERSION:1.3.19,REQID:a5f8d2f1-70ff-46d2-936c-5892c1d407d8,IP:10,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:10
+X-CID-META: VersionHash:7db8b62,CLOUDID:0766db24e3ba21c8fadd283d7e52bd08,BulkI
+	D:260904140205JEG5SQEN,BulkQuantity:1,SF:17|19|66|78|81|82|102|127|136|850
+	|865|898,TC:nil,Content:0|15|50|99,EDM:-3|-100,IP:-2,URL:0,File:nil,RT:nil
+	,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BR
+	R:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: c3bbb098a82811f19a56ed5b684f684d-20260904
+X-UUID: c5b99d4ca82811f19a56ed5b684f684d-20260904
 X-User: liuzhe1@kylinos.cn
 Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
 	(envelope-from <liuzhe1@kylinos.cn>)
 	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1430395546; Fri, 04 Sep 2026 14:20:46 +0800
+	with ESMTP id 1096141703; Fri, 04 Sep 2026 14:20:49 +0800
 From: Zhe Liu <liuzhe1@kylinos.cn>
 To: mkoutny@suse.com
 Cc: bsegall@google.com,
@@ -67,9 +67,9 @@ Cc: bsegall@google.com,
 	tj@kernel.org,
 	vincent.guittot@linaro.org,
 	vschneid@redhat.com
-Subject: [PATCH v2 2/3] selftests: cgroup: Test CPU quota and burst write order
-Date: Fri,  4 Sep 2026 14:20:12 +0800
-Message-Id: <20260904062013.504236-3-liuzhe1@kylinos.cn>
+Subject: [PATCH v2 3/3] Documentation: describe CPU quota and burst ordering
+Date: Fri,  4 Sep 2026 14:20:13 +0800
+Message-Id: <20260904062013.504236-4-liuzhe1@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260904062013.504236-1-liuzhe1@kylinos.cn>
 References: <aobnZEh1hfIBhswD@localhost.localdomain>
@@ -82,71 +82,72 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Test that quota and burst can be written in either order without losing
-the configured burst value.
+Document the independent quota and burst configuration and the runtime
+burst clamp.
 
 Signed-off-by: Zhe Liu <liuzhe1@kylinos.cn>
 ---
- tools/testing/selftests/cgroup/test_cpu.c | 40 +++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ Documentation/admin-guide/cgroup-v2.rst |  5 ++++-
+ Documentation/scheduler/sched-bwc.rst   | 21 ++++++++++++---------
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
-index f9f7017d9299..b13c2535afcd 100644
---- a/tools/testing/selftests/cgroup/test_cpu.c
-+++ b/tools/testing/selftests/cgroup/test_cpu.c
-@@ -733,6 +733,45 @@ static int test_cpucg_max(const char *root)
- 	return ret;
- }
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 7c2a8ed80071..57253c2c1819 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1229,7 +1229,10 @@ will be referred to. All time durations are in microseconds.
+ 	A read-write single value file which exists on non-root
+ 	cgroups.  The default is "0".
  
-+static int test_cpucg_max_burst(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	char *cpucg;
+-	The burst in the range [0, $MAX].
++	The burst in the range [0, $MAX]. The configured value is retained when
++	the quota changes and may be larger than the current quota. During CFS
++	runtime refill, the effective burst is limited to the current quota.
++	The quota and burst files can therefore be written in either order.
+ 
+ 	This file affects only processes under the fair-class scheduler.
+ 
+diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
+index e881a945c188..08a54ee84da2 100644
+--- a/Documentation/scheduler/sched-bwc.rst
++++ b/Documentation/scheduler/sched-bwc.rst
+@@ -90,20 +90,22 @@ bandwidth restriction in place, such a group is described as an unconstrained
+ bandwidth group. This represents the traditional work-conserving behavior for
+ CFS.
+ 
+-Writing any (valid) positive value(s) no smaller than cpu.cfs_burst_us will
+-enact the specified bandwidth limit. The minimum quota allowed for the quota or
+-period is 1ms. There is also an upper bound on the period length of 1s.
+-Additional restrictions exist when bandwidth limits are used in a hierarchical
+-fashion, these are explained in more detail below.
++Writing any valid quota value will enact the specified bandwidth limit. The
++minimum quota allowed for the quota or period is 1ms. There is also an upper
++bound on the period length of 1s. Additional restrictions exist when bandwidth
++limits are used in a hierarchical fashion, these are explained in more detail
++below.
+ 
+ Writing any negative value to cpu.cfs_quota_us will remove the bandwidth limit
+ and return the group to an unconstrained state once more.
+ 
+ A value of 0 for cpu.cfs_burst_us indicates that the group can not accumulate
+ any unused bandwidth. It makes the traditional bandwidth control behavior for
+-CFS unchanged. Writing any (valid) positive value(s) no larger than
+-cpu.cfs_quota_us into cpu.cfs_burst_us will enact the cap on unused bandwidth
+-accumulation.
++CFS unchanged. A valid positive value written to cpu.cfs_burst_us is retained
++when the quota changes. If it is larger than the current quota, CFS limits the
++effective burst during runtime refill to the current quota.
 +
-+	cpucg = cg_name(root, "cpucg_max_burst");
-+	if (!cpucg)
-+		return KSFT_FAIL;
-+
-+	if (cg_create(cpucg))
-+		goto cleanup;
-+
-+	if (cg_write(cpucg, "cpu.max", "max 100000") ||
-+	    cg_write(cpucg, "cpu.max.burst", "100000000") ||
-+	    cg_write(cpucg, "cpu.max", "50000 100000") ||
-+	    cg_read_strcmp(cpucg, "cpu.max.burst", "100000000\n"))
-+		goto cleanup;
-+
-+	if (cg_write(cpucg, "cpu.max.burst", "80000") ||
-+	    cg_write(cpucg, "cpu.max", "100000 100000") ||
-+	    cg_read_strcmp(cpucg, "cpu.max.burst", "80000\n"))
-+		goto cleanup;
-+
-+	if (cg_write(cpucg, "cpu.max.burst", "0") ||
-+	    cg_write(cpucg, "cpu.max", "50000 100000") ||
-+	    cg_write(cpucg, "cpu.max", "100000 100000") ||
-+	    cg_write(cpucg, "cpu.max.burst", "80000") ||
-+	    cg_read_strcmp(cpucg, "cpu.max.burst", "80000\n"))
-+		goto cleanup;
-+
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	cg_destroy(cpucg);
-+	free(cpucg);
-+
-+	return ret;
-+}
-+
- /*
-  * This test verifies that a process inside of a nested cgroup whose parent
-  * group has a cpu.max value set, is properly throttled.
-@@ -822,6 +861,7 @@ struct cpucg_test {
- 	T(test_cpucg_nested_weight_overprovisioned),
- 	T(test_cpucg_nested_weight_underprovisioned),
- 	T(test_cpucg_max),
-+	T(test_cpucg_max_burst),
- 	T(test_cpucg_max_nested),
- };
- #undef T
++The quota and burst files can be updated in either order.
+ 
+ Any updates to a group's bandwidth specification will result in it becoming
+ unthrottled if it is in a constrained state.
+@@ -243,4 +245,5 @@ Examples
+ 	# echo 50000 > cpu.cfs_period_us /* period = 50ms */
+ 	# echo 10000 > cpu.cfs_burst_us /* burst = 10ms */
+ 
+-   Larger buffer setting (no larger than quota) allows greater burst capacity.
++   A larger buffer setting allows greater burst capacity. If the configured
++   burst is larger than the quota, the effective burst is limited to the quota.
 -- 
 2.25.1
