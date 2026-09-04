@@ -1,143 +1,152 @@
-Received: from va-2-56.ptr.blmpb.com (va-2-56.ptr.blmpb.com [209.127.231.56])
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D6A53B05A4
-	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 03:13:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B6F63B1EFC
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 03:18:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788491584; cv=none; b=K+EBCG7slYFlkJc0GJphiryRVkF7YnGBPsw2oye7aMYfdcQsY9p045wwwZc8z7u0Q496+A9m0QPo4DNAtD9ju+kfn0DojYPHycAAwxZdTZ/94G3vysIT825SrChh5sFwt4nQ5BecMKL5x7lKq1Dp6qG7yAxtNyvS4Fe7uN3XTNI=
+	t=1788491892; cv=none; b=n0lXLecLqrXOr9tczIwinohMUJS1Gcp3rjhUrvqXsQVXLGztUACm5/4DIKn417ttQtSKnlnwe0+c6X6fNH4E2VX1Cbo3YGQJ0Or5drhyScdNmCHJVPWRZ2eN6FFJvrQ5ec9yVm1IDtdEIFxgA83O3EU059gD0zrrT5zCRCKUWoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788491584; c=relaxed/simple;
-	bh=7ZYURzTjNpp5Jb3huda0uhTCqkZeMQ88SC6undWpr6s=;
-	h=References:Date:Message-Id:In-Reply-To:Cc:From:Subject:To:
-	 Mime-Version:Content-Type; b=PEobLGzFwYkV4ZZsrWMQMfeBECRsKFBKpg2Gcxf5TICByToOJEq0i2fJAMXtioXFy4r58vOdz2Kha+YqriUPgkoZ2qNNNgwMUko/BnhXv8lew7LiEsICclpUexIQlT1ekcZZA5P7ugwKOjKJLJ51p0MRFRM9Uik7empH7F7ReeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=SKbpGInE; arc=none smtp.client-ip=209.127.231.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1788491892; c=relaxed/simple;
+	bh=AIU6NGTW/RpZfTt6y2cuypcAmkoFDaCDqNNZTCJi0Bc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YEI91jVrKexFAAYig2x7nBSmg4MciqDL64TUWzjojp1EvVBG1RMUgAzCja7PHY9t8w19HLudv1erKozRSChiDKOrvvxHixiT6vDtUU/w8DzhFhAFbACiGdd2Vb1wHgGyB6bt5CpnavKYchCN4vR2v2T132tEdWTeQH88M9T+FPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=XXnf1qrk; arc=none smtp.client-ip=209.85.160.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="SKbpGInE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1788491571;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=0eB8FmLlkMeY0eoTlosmEVMIfxb8DfMhD7pOp16Dnzs=;
- b=SKbpGInEy5OHEPdbZ65Xl6TrNqBnUBt0g+LdHz7D41PwG0zGkO9DvFFe3xJwUCWvRvsUL3
- lYV9zHNhNKYFycf+9cxS7jbb4GnrCNPHVFrLUw8zjdPTwpcKKASb5G6qw29oGnuZL5myaf
- P15dLgYERK52rEQayyXVnfbBaSCbn4XuzLpQXcZ9thxQb+exa2c8kILxMcYny85WgUPqn5
- 5/xy0mlcnvxEC9F723h8KaRXDArZoEHWFmyf8+lD43mEYQP6YKZoESrWLIZgiSvjgacpdR
- YsYYWvzpNesCh/nBIwwIj6DERCVLGoangKaJ5mW2VTWYOLxRNHh0vSMwz5YiJw==
-References: <20260904030607.1193800-1-cui.tao@linux.dev>
-Reply-To: yukuai@fygo.io
-User-Agent: Mozilla Thunderbird
-X-Original-From: yu kuai <yukuai@fygo.io>
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 4 Sep 2026 11:12:45 +0800
-Message-Id: <63b0770e-844a-4249-a64e-85b1e1978fab@fygo.io>
-In-Reply-To: <20260904030607.1193800-1-cui.tao@linux.dev>
-X-Lms-Return-Path: <lba+26a9a3732+d20b5f+vger.kernel.org+yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.178]) by smtp.larksuite.com with ESMTPS; Fri, 04 Sep 2026 03:12:50 +0000
-Cc: <tj@kernel.org>, <linux-block@vger.kernel.org>, <josef@toxicpanda.com>, 
-	<cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<david.laight.linux@gmail.com>, <haris.iqbal@linux.dev>, 
-	<cuitao@kylinos.cn>, "Yu Kuai" <yukuai@huawei.com>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v5] blk-throttle: fix divide-by-zero on legacy iops limit of 0
-To: "Tao Cui" <cui.tao@linux.dev>, <axboe@kernel.dk>, 
-	"yu kuai" <yukuai@fygo.io>
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="XXnf1qrk"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-52e2d1bdbc0so4672081cf.0
+        for <cgroups@vger.kernel.org>; Thu, 03 Sep 2026 20:18:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1788491887; x=1789096687; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=I82bST350eZ9tF0sXAbqbqSO4hf+URoRFBA/uGedV7I=;
+        b=XXnf1qrkElo3aCzA7QExaOWSdNxP/unmoxpQ7Nl14LSqP+OXLeyp+7TwEx+/0vPFXS
+         mbXWBII3WXz82rpc/mRXs5oQAafMXv/lR9i6NSNTO7vI6fbUQ9Lm/H+/70dUKyPYID/D
+         rINud0bXIB6JWQRfob5+wo6/7GzlrBSpoLZZyO4V6Mq1y4oT1jQb28+99bKN5jmlVfq7
+         XLGDbXv6L3DciY+gWrXNu3RIZDTtpgb+GehzhnXRXGRkpYwMGg9GSc7zeFG53wLU+gCx
+         flGxyi214iKlFdnetOf0+RVR7gjNDakGPu1348MlAGrbuEUQ+hjaFC/oLLirlUZ3Lv2L
+         lQ3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788491887; x=1789096687;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=I82bST350eZ9tF0sXAbqbqSO4hf+URoRFBA/uGedV7I=;
+        b=RE9SO5Bqc7ipV/tUN9nHpMT3ongONAeE/LzlnLkaspWGkr+e7lFn9YR+w1D6ggjsa5
+         SlphmZAvNYyUjZ1pgqH8VVmPbrWt6gyuUjJCsfAMB66GL3Z2Nnrr+TQkv9a6P4g6QHde
+         TBy4QMsyhfpED8/qkYxc7bkGptmSSCGLQTA8QSf9sfFjtwYNN87wgBrf0Co0sRfy4wAz
+         ZPWuHCeylY/gy7uI0VvyjYGeP8xcAym/vamaZOjc+Hf8xd4nkyHhIaAqubWHt5HfYuei
+         M58polxFwHpb4FNz+rrEYMNZvJpvcDiDvTSztOyE/wlwcLOz9DpO/qyV3Pf7DxniOkLL
+         Qp5A==
+X-Forwarded-Encrypted: i=1; AKwUvBxZcG7y+B0n/X8u6dTuM4nKy2PNYBFX7ntNglJW71e1G6E+AC1bb+fJGLYOwWYbmfEM67MOj7xJ@vger.kernel.org
+X-Gm-Message-State: AFuF++mU5y5VyJ5W6xczVc+fKPU1ZnnQySLHOpdR1UPp+aXVlg+9G+S7
+	jXepiDhJ3uz1fZWkFalnR6ic/VmIRbVWy9IRBor2urvD+rlmHAnjUIpYAvzQD7W3SDM=
+X-Gm-Gg: AYBFou1eFr4o8si2mTXL3B1B9IGTLlH0JyAq9nJ2ZAmMCJbWu3YetSagMwaqAlS506/
+	jZfEojZ9hDz5Z6Qd+HDfEQk0KR73YtG9nK0L9LoUcGtbBiLXd8xIRUDLgCtnZunuL9iQ3la+OBA
+	BRTYl3tr5hZ3u0vKjtwU/DU61IWKit8iIsyRazqs5ZuN/lyieaTtC0bmm0lZYWyDjjWlD/yFzzh
+	upFID92nfDy6EjSe3VvrlhI22UNc4WLZmMNHA4xkdm8Ph/F86Ibewh1ttgb3XV6D7+YRGTFZMw8
+	2ZQtiQ8LAVrmN5jUVE9esw368x2Uh9ui5ATpUSW1zzEvVaHp+0bo/lT+gMFzWWSBh9z1ur8sCRJ
+	9w9YQI6GU56SEAHMGyayevaU6p1lTPr/naLpVmsRJxbwocFBOu6dcEyej/pSgvMPXkWwWAjZ0wY
+	kyEMbmDTE1xoIb29xUuigbG0p+mta+f6HYq7n+06Ts2F0wzlgDrviswDQ+1OsgH8v9dJkwhQQQW
+	FnrDDHQ41duq0x9KIaN4l0DH8u7PqcWKk5kP+L7jf6D029+jw/iyP8=
+X-Received: by 2002:a05:622a:1c18:b0:52d:4f43:d5b0 with SMTP id d75a77b69052e-530548bc5e0mr43078621cf.22.1788491887027;
+        Thu, 03 Sep 2026 20:18:07 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5305402a7b7sm11260161cf.3.2026.09.03.20.18.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 20:18:06 -0700 (PDT)
+Date: Thu, 3 Sep 2026 23:18:03 -0400
+From: Gregory Price <gourry@gourry.net>
+To: Qiqi Li <liqiqi23@huawei.com>
+Cc: linux-mm@kvack.org, Zhigang.Luo@amd.com, arun.george@samsung.com, 
+	balbirs@nvidia.com, brendan.jackman@linux.dev, yuzenghui@huawei.com, 
+	apopple@nvidia.com, alucerop@amd.com, matthew.brost@intel.com, 
+	akpm@linux-foundation.org, david@kernel.org, ljs@kernel.org, liam@infradead.org, 
+	vbabka@kernel.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com, 
+	corbet@lwn.net, skhan@linuxfoundation.org, gregkh@linuxfoundation.org, 
+	rafael@kernel.org, dakr@kernel.org, djbw@kernel.org, vishal.l.verma@intel.com, 
+	dave.jiang@intel.com, alison.schofield@intel.com, osandov@osandov.com, 
+	jannh@google.com, pfalcato@suse.de, jackmanb@google.com, hannes@cmpxchg.org, 
+	ziy@nvidia.com, pbonzini@redhat.com, osalvador@suse.de, joshua.hahnjy@gmail.com, 
+	rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com, 
+	kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev, baohua@kernel.org, 
+	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, yury.norov@gmail.com, 
+	linux@rasmusvillemoes.dk, longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org, 
+	mkoutny@suse.com, sj@kernel.org, jgg@ziepe.ca, jhubbard@nvidia.com, 
+	peterx@redhat.com, baolin.wang@linux.alibaba.com, npache@redhat.com, 
+	ryan.roberts@arm.com, dev.jain@arm.com, lance.yang@linux.dev, usama.arif@linux.dev, 
+	xu.xin16@zte.com.cn, chengming.zhou@linux.dev, roman.gushchin@linux.dev, 
+	muchun.song@linux.dev, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	driver-core@lists.linux.dev, nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org, 
+	linux-debuggers@vger.kernel.org, linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, 
+	cgroups@vger.kernel.org, damon@lists.linux.dev, linux-kselftest@vger.kernel.org, 
+	kernel-team@meta.com
+Subject: Re: [PATCH v5 25/36] mm/memory_hotplug: support N_MEMORY_PRIVATE
+ node hotplug
+Message-ID: <apo3bZab6qtCosQM@gourry-fedora-PF4VCD3F>
+References: <20260720193431.3841992-1-gourry@gourry.net>
+ <20260720193431.3841992-26-gourry@gourry.net>
+ <6840c720-8cb7-46bb-a652-040c130a4427@huawei.com>
+ <aoJaaYp30LnKLj1w@gourry-fedora-PF4VCD3F>
+ <0334fe7d-d949-45f7-8914-3012cb11b740@huawei.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0334fe7d-d949-45f7-8914-3012cb11b740@huawei.com>
 
-Hi,
+On Fri, Sep 04, 2026 at 09:05:39AM +0800, Qiqi Li wrote:
+> On 8/17/2026 8:49 AM, Gregory Price wrote:
+> > It would need to be reserved, and you could use numa emulation but
+> > that's clunky.  I have an RFC for exactly this issue - though i haven't
+> > pushed it further yet.
+> > 
+> > https://lore.kernel.org/all/20260610014517.253609-1-gourry@gourry.net/
+> 
+> Hi Gregory,
+> 
+> Sorry for the late reply.
+> 
+> I took a look at the exclusive-node RFC. The approach looks useful for
+> device-backed private memory without a firmware-described NUMA node.
+> Thanks for the pointer.
+> 
+> We are currently looking into the private-node and CRAM design as a
+> whole. I noticed that CRAM was not included with the v5 series, and saw
+> that others were also interested in a v5 version.
+> 
+> If you already have a CRAM branch or patches based on v5, even if they
+> are still work in progress, would you mind sharing them? It would be
+> very helpful for us to continue testing the overall design.
+>
 
-=E5=9C=A8 2026/9/4 11:06, Tao Cui =E5=86=99=E9=81=93:
-> From: Tao Cui <cuitao@kylinos.cn>
->
-> Writing a multiple of 2^32 (e.g. 4294967296) to a legacy cgroup v1
-> throttle iops file (blkio.throttle.{read,write}_iops_device) silently
-> truncates to 0: tg_set_conf() stores the sscanf-parsed u64 value into
-> an unsigned int field with no clamping. The cgroup v2 path,
-> tg_set_limit(), already clamps the same kind of value with
-> min_t(u64, val, UINT_MAX), but the legacy path never did. Note that
-> the "!v -> U64_MAX" mapping only catches an explicit zero and does not
-> catch a value that truncates to zero.
->
-> With iops stored as 0, tg_update_has_rules() sets has_rules_iops[] and
-> the next IO reaches tg_within_iops_limit(), which computes
->
->      jiffy_wait =3D max(jiffy_wait, HZ / iops_limit + 1);
->
-> triggering a divide-by-zero oops.
->
-> Fix it in tg_set_conf() by clamping the value to UINT_MAX, consistent
-> with tg_set_limit(). This closes the truncation root cause: with 0 no
-> longer reachable as a stored limit, the HZ / iops_limit divide is never
-> hit.
->
-> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
-> Reviewed-by: Yu Kuai <yukuai@huawei.com>
-This tag is wrong, please use yukuai@fygo.io.
->
-> ---
-> Changes in v5:
-> - Rebase onto current linux-next head (no code change, context shifted on=
-ly).
-> - Add the Reviewed-by tag collected on v4.
-> - Link to v4: https://lore.kernel.org/r/20260722102459.253189-1-cui.tao@l=
-inux.dev
->
-> Changes in v4:
-> - Drop the defensive "iops_limit =3D=3D 0" check in tg_dispatch_iops_time=
-():
->    with the tg_set_conf() clamp in place, 0 can never be stored as a limi=
-t,
->    so the runtime check only guards an unreachable state. (Yu Kuai)
-> - Drop the Fixes: tag: the unclamped write -- and the iops=3D0 behavior i=
-t
->    can produce (calculate_io_allowed() returns 0, so no IO is issued) --
->    long predates the commit that added the HZ / iops_limit divide, so
->    attributing it there was incorrect. (Yu Kuai)
->
-> Changes in v3:
-> - Drop the (u64) cast on UINT_MAX: the kernel's type-checked min() accept=
-s
->    two unsigned types of different width (both >=3D 4 bytes), so
->    min(v, UINT_MAX) compiles clean. (David Laight)
->
-> Changes in v2:
-> - Use a "void *field" local for the config write so the assignment reads
->    *(u64 *)field / *(unsigned int *)field instead of the
->    (type *)((void *)tg + of_cft(of)->private) casts.
-> - Use min(v, UINT_MAX) instead of min_t(u64, v, UINT_MAX).
-> ---
->   block/blk-throttle.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index ffc3b70065d4..97ad7959d006 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -1383,10 +1383,12 @@ static ssize_t tg_set_conf(struct kernfs_open_fil=
-e *of,
->   	tg =3D blkg_to_tg(ctx.blkg);
->   	tg_update_carryover(tg);
->  =20
-> +	void *field =3D (void *)tg + of_cft(of)->private;
-> +
->   	if (is_u64)
-> -		*(u64 *)((void *)tg + of_cft(of)->private) =3D v;
-> +		*(u64 *)field =3D v;
->   	else
-> -		*(unsigned int *)((void *)tg + of_cft(of)->private) =3D v;
-> +		*(unsigned int *)field =3D min(v, UINT_MAX);
->  =20
->   	tg_conf_updated(tg, false);
->   	ret =3D 0;
+I dropped it off because it was starting to become unwieldly, but i am
+continuing to maintain a branch on my github:
 
---=20
-Thanks,
-Kuai
+https://github.com/gourryinverse/linux/commits/scratch/gourry/cramtest/cram_72/
+
+I have not posted a new version in some time and it has been reworked
+significantly in the past few months - but I plan to talk about this
+particular branch and the tests I've run with it at the device memory
+LPC micro-conference.
+
+I validated this branch against most in-tree (relevant) filesystems for
+the page-cache extension, but I imagine the anon-only version subset is
+the more immediately interesting for upstream development.
+
+I may include the anon-only version in v6, but I've been a bit busy
+shoring up the base private memory node core and implementing kernel
+selftests and LTP tests to ensure there's no userland api regressions.
+
+I hope to get something out later this month.
+
+~Gregory
