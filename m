@@ -1,188 +1,135 @@
-Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-113.ptr.blmpb.com (va-2-113.ptr.blmpb.com [209.127.231.113])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D8AB347532;
-	Fri,  4 Sep 2026 06:50:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E1E41DE15
+	for <cgroups@vger.kernel.org>; Fri,  4 Sep 2026 06:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788504640; cv=none; b=SVOlXvxA6CnfvAL6J7fOxOC/XFxfhGMnadZv36USjuAvmMxWfOS8zQomBbxF3lXiVa/wRlpSABQWbNHPHd8xJPxJik77OuQiB91FO8j1Nk4rocI6zLTi8La1pIvcnvPHZBnQUVQXIHW2xg/o7imea5S3YMI3YKFcVVbftih6RaU=
+	t=1788504762; cv=none; b=hjlFKRUTDTf7MjqAGtRU6EYzoivsB+7/Hlqejn3OGwSGFLjNf8bdHKPI0LFFCCXgl6V26QGQVblQL3B0c3Zf9IQsqom46KPBI/kF8mXFXYgqEReV2KRolZ2fTA6xSRE8WBnX/ztizfEJsLQ2DrUPnSbi2q0NfmOX9WB5cXUl+EU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788504640; c=relaxed/simple;
-	bh=rpSq558nN3YpcilriIjg2YtG0E96Qh3YMGKHIhdduFc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TkhPcI5eA8HdbTZStMxnXG6rIvCwHbIyb2NCP7LUHIGN5IPiw6k6oox3xS5OJ9TQLFi86H0jh62fomFk61GxPSdfcxLAlN6R17MSXe2GaoMUAKhpIk1Ac1kRF1jryZMYWD74yfgBQtLZrAC0l3e3kJYlVCCIFHnxfM27tQVHltE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=uI/PZWGt; arc=none smtp.client-ip=115.124.30.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1788504762; c=relaxed/simple;
+	bh=T6Y/sOiGPvMRfPfHNQRfySVWMf63zFzZFk3cNSODLcs=;
+	h=Subject:Date:Content-Type:Mime-Version:Message-Id:To:From:Cc; b=nh+OfFxI256cZWz+AIHLauNSVc/gDOuIX6pEpkm1Fg1uzCMRO+FiEwvrvnm07qSneS1usMeKpnIWP7yKecA8U6LHt84fDOlDtERtROTHcuQJmL+MVf3WxulG2JAaQiVK9PCTJSvNEwdPWgjWsheMD/UDlVlo+XohDYPfJUVwqAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=O6rjfpBa; arc=none smtp.client-ip=209.127.231.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="uI/PZWGt"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1788504634; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=dUwnrTnO9K1+Dq0dCp0gfyukZzjfQW8mCiD3/Ac3fAA=;
-	b=uI/PZWGtcrQZpe7a7DKpHtDDDiwIT4J0f2Vd84UDnvJjncPbC9Dfuik2aIZ6Pk5Ij+Seg4qvpdnjrwPEo/bG+bO/o+3XMFFl7FBo0LygZQZgyfka4U6zyjF/vM6L9YDDjCH0WS4waDPoI92OSiT1Xx9WkEwcoxYBJre98GwQiDM=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=baolin.wang@linux.alibaba.com;NM=1;PH=DS;RN=28;SR=0;TI=SMTPD_---0XAHuDz3_1788504630;
-Received: from 30.74.144.116(mailfrom:baolin.wang@linux.alibaba.com fp:SMTPD_---0XAHuDz3_1788504630 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 04 Sep 2026 14:50:32 +0800
-Message-ID: <de28b6a7-7f51-4344-8139-1ec412604062@linux.alibaba.com>
-Date: Fri, 4 Sep 2026 14:50:30 +0800
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="O6rjfpBa"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1788504748; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=28SnKEvKoJ3nWwHB2ftkFSyFO3g/G4nEKnDXDivfznM=;
+ b=O6rjfpBak0JRuHQ3Q0TsStrZ5DrTED/F43Kw59lqymysp4p3BN9D37Hock/VNXTr6dzr72
+ QcYCHW5/nKmaZTU2dNkVlYgv4dfDWdCNO1/jJ8N4ZJBn2Zyd1dw+KqNW2Q+LBkZ83nsjvj
+ DgD/Op2O9pQMgQE+8k6BtSCU7qvsS4YtAU12lSzodKvysglQbp1wXvK3odRJI+q3rfHe4T
+ bIFkmjqGZHhinSbbZHDakUuW4mrIyZpYtftbgg1fgIiTAxtFInMcuannl4HyXnsizMPR9C
+ qgStbSE82nrAPeD4yCFjSK4Z0I0wCgIKR5dnI+e4Ri0YWlTqX8Ev+y0uIilkrw==
+Subject: [RFC 0/2] mm: add explicit goals to memcg memory.reclaim
+Date: Fri,  4 Sep 2026 14:51:57 +0800
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] mm: memcg: settle memory.high debt after THP faults
- with non-blocking gfp
-To: Qinyun Tan <qinyuntan@linux.alibaba.com>,
- Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.com>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
- Zi Yan <ziy@nvidia.com>, Xunlei Pang <xlpang@linux.alibaba.com>,
- "Liam R . Howlett" <liam@infradead.org>, Nico Pache <nico.pache@linux.dev>,
- Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
- Barry Song <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>,
- Usama Arif <usama.arif@linux.dev>, Vlastimil Babka <vbabka@kernel.org>,
- Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Chris Down <chris@chrisdown.name>, Chuanhua Han <hanchuanhua@oppo.com>,
- Kairui Song <kasong@tencent.com>, linux-mm@kvack.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260904035407.4098627-1-qinyuntan@linux.alibaba.com>
- <20260904035407.4098627-2-qinyuntan@linux.alibaba.com>
-From: Baolin Wang <baolin.wang@linux.alibaba.com>
-In-Reply-To: <20260904035407.4098627-2-qinyuntan@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.45.2
+Message-Id: <20260904065159.34409-1-lizhe.67@bytedance.com>
+X-Lms-Return-Path: <lba+26a9a6aaa+c4c0ab+vger.kernel.org+lizhe.67@bytedance.com>
 Content-Transfer-Encoding: 7bit
+To: <akpm@linux-foundation.org>, <david@kernel.org>, <ljs@kernel.org>, 
+	<liam@infradead.org>, <rppt@kernel.org>, <surenb@google.com>, 
+	<mhocko@suse.com>, <tj@kernel.org>, <hannes@cmpxchg.org>, 
+	<shakeel.butt@linux.dev>, <muchun.song@linux.dev>, <qi.zheng@linux.dev>
+From: "Li Zhe" <lizhe.67@bytedance.com>
+Cc: <cgroups@vger.kernel.org>, <linux-doc@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>, 
+	<lizhe.67@bytedance.com>
+X-Original-From: Li Zhe <lizhe.67@bytedance.com>
 
+memory.reclaim is used by userspace controllers as a proactive memcg
+reclaim interface. On systems without memory tiering, a completed request
+is normally interpreted as eviction-oriented progress: pages were freed
+and the cgroup's charged footprint can drop.
 
+Memory tiering makes that interpretation ambiguous. The reclaim scanner
+may satisfy the requested amount by demoting cold folios from a faster
+tier to a slower tier. That is useful aging behavior, but it means a
+request can complete even though the cgroup's charged footprint is
+unchanged. Userspace controllers that rely on memory.reclaim for actual
+cgroup footprint reduction therefore lose the ability to request the same
+kind of outcome they get on non-tiered systems.
 
-On 9/4/26 11:54 AM, Qinyun Tan wrote:
-> Anonymous THP faults happening in a kernel loop that does not return
-> to userspace -- the populate loop of a single mlock() call, or any
-> GUP-driven population -- can drive a memcg's usage from memory.high
-> all the way up to memory.max with zero reclaim and zero penalty
-> sleep.
-> 
-> This defeats the containment memory.high is supposed to provide:
-> above high, the documented promise is that "the processes of the
-> cgroup are throttled and put under heavy reclaim pressure", and
-> userspace OOM handlers (oomd, Kubernetes) rely on the high..max
-> buffer as their reaction window.  Only after hitting memory.max does
-> the non-blocking charge fail, THP fall back to 4K, and
-> folio_prealloc()'s GFP_KERNEL charge finally restore throttling --
-> by which point the entire buffer has been consumed.
-> 
-> memory.high is enforced at two points after a charge succeeds:
-> 
->    1. from resume_user_mode_work() on return to userspace, requested
->       via set_notify_resume();
->    2. synchronously in try_charge_memcg() for large overcharges, added
->       by commit c9afe31ec443 ("memcg: synchronously enforce memory.high
->       for large overcharges"), gated on gfpflags_allow_blocking().
-> 
-> A populate loop does not return to userspace between faults, so gate
-> 1 never runs.  Gate 2 is defeated by the charge gfp: since
-> commit 3b3636924dfe ("mm, memcg: sync allocation and memcg charge
-> gfp flags for THP"), the THP fault path passes the allocation gfp
-> from vma_thp_gfp_mask() to mem_cgroup_charge().  With defrag=defer
-> that gfp is GFP_TRANSHUGE_LIGHT | __GFP_KSWAPD_RECLAIM; with the
-> default defrag=madvise and no MADV_HUGEPAGE it is plain
-> GFP_TRANSHUGE_LIGHT.  Neither allows blocking.  This is the right
-> policy for the physical allocation -- a THP is not worth direct
-> compaction, fall back to 4K instead -- but try_charge_memcg() also
-> interprets it as "this context cannot sleep" and skips the
-> synchronous enforcement, even
-> though fault context sleeps just fine (it holds the mmap or per-VMA
-> read lock).
-> 
-> Fix this in the fault paths, which know their context can sleep:
-> after a successful THP/mTHP charge, settle any accrued over-high
-> debt via mem_cgroup_handle_over_high(GFP_KERNEL).  This reuses the
-> existing throttling machinery (reclaim + calculate_high_delay()
-> penalty sleep) and is a no-op read of
-> current->memcg_nr_pages_over_high when there is no debt.
+At the same time, some controllers want the opposite operation: use the
+reclaim scanner as a best-effort placement mechanism to move cold folios
+from DRAM to CXL or other lower tiers, without evicting them from memory.
+This can be used to maintain top-tier headroom or a desired
+DRAM/CXL occupancy ratio according to workload policy.
 
-This doesn't convince me. If the user sets defrag=defer, it means large 
-folio allocations should not block, so using gfpflags_allow_blocking() 
-to decide whether to call mem_cgroup_handle_over_high() is reasonable.
+This series keeps the existing behavior as the default, and adds explicit
+opt-in goals for userspace controllers that want a more specific outcome
+from memcg memory.reclaim:
 
-If you call mem_cgroup_handle_over_high() directly in the allocation 
-functions, it would definitely increase allocation latency. This is not 
-what we expect when setting defrag=defer.
+  echo "1G goal=evict" > memory.reclaim
 
-On the other hand, I wonder if briefly exceeding memory.high is really a 
-problem in the real products. If this is only to fix the 
-test_memcg_high_sync selftest below, which is full of magic numbers, I 
-don't think it makes much sense.
+    Run the normal reclaim scanner and keep demotion enabled as part of
+    tier aging, but do not count successful demotion toward completing the
+    requested amount. This lets callers ask memory.reclaim to continue
+    until eviction progress, rather than demotion-only progress, satisfies
+    the request. If the cgroup has no usable demotion target, goal=evict
+    falls back to the default goal=progress behavior.
 
-> Deliberately not changed:
-> 
->   - The charge gfp itself is kept coupled to the allocation gfp, so the
->     fail-fast behaviour at memory.max (charge fails -> fall back to 4K
->     instead of reclaiming or OOMing for a THP) that the coupling was
->     introduced for is fully preserved.
-> 
->   - try_charge_memcg() is not touched: gfpflags_allow_blocking() is the
->     only signal it has, and it must stay conservative for callers that
->     genuinely cannot sleep.
-> 
-> The pre-existing selftest test_memcg_high_sync, added alongside the
-> synchronous enforcement by commit 6323ec54b450 ("selftests: memcg:
-> test high limit for single entry allocation"), readily reproduces
-> this: it mlocks 200M against memory.high=30M and memory.max=140M
-> with swap disabled, and expects high events with no max events.  On
-> systems with transparent_hugepage/enabled=always it fails without
-> this patch -- the population bursts through to memory.max -- and
-> passes with it.
-> 
-> Fixes: c9afe31ec443 ("memcg: synchronously enforce memory.high for large overcharges")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Qinyun Tan <qinyuntan@linux.alibaba.com>
-> ---
-> 
-> Note for stable backports: mem_cgroup_handle_over_high() only gained
-> its gfp_mask argument in v6.6, from commit 9ea9cb00a82b ("mm:
-> memcontrol: fix GFP_NOFS recursion in memory.high enforcement"); on
-> older kernels the call sites take no argument.
-> 
->   mm/huge_memory.c | 8 ++++++++
->   mm/memory.c      | 2 ++
->   2 files changed, 10 insertions(+)
-> 
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index ced400f72d43..543ba4a74dc3 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -1329,6 +1329,14 @@ static struct folio *vma_alloc_anon_folio_pmd(struct vm_area_struct *vma,
->   		return NULL;
->   	}
->   
-> +	/*
-> +	 * The charge gfp encodes THP allocation policy and may not allow
-> +	 * blocking, which makes try_charge skip its synchronous memory.high
-> +	 * throttling. Fault context can sleep, so settle any over-high debt
-> +	 * here instead of letting usage grow unthrottled up to memory.max.
-> +	 */
-> +	mem_cgroup_handle_over_high(GFP_KERNEL);
-> +
->   	if (folio_memcg_alloc_deferred(folio)) {
->   		folio_put(folio);
->   		count_vm_event(THP_FAULT_FALLBACK);
-> diff --git a/mm/memory.c b/mm/memory.c
-> index 8b0c2c735d3d..24cbf2a26905 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -5362,6 +5362,8 @@ static struct folio *alloc_anon_folio(struct vm_fault *vmf)
->   			folio_put(folio);
->   			goto next;
->   		}
-> +		/* Same reasoning as in vma_alloc_anon_folio_pmd(). */
-> +		mem_cgroup_handle_over_high(GFP_KERNEL);
->   		if (order > 1 && folio_memcg_alloc_deferred(folio)) {
->   			folio_put(folio);
->   			goto fallback;
+  echo "1G goal=demote" > memory.reclaim
 
+    Use the existing reclaim scanner for best-effort memory tier demotion
+    without LRU folio eviction. This is intended for placement control,
+    such as maintaining top-tier headroom or a desired DRAM/CXL occupancy
+    ratio. Demoted folios remain charged to the cgroup, so this goal does
+    not imply memory.current reduction. If the cgroup has no usable
+    demotion target, the request fails early with -EAGAIN.
+
+The default remains goal=progress, which is the current memory.reclaim
+behavior. In that mode, the kernel's existing reclaim progress accounting
+is unchanged and successful demotion can satisfy the requested amount.
+
+Patch 1 preserves the tiered LRU aging model. It changes the completion
+accounting for an eviction-oriented request, while still allowing demotion
+to happen as an intermediate step. After enough demotion has been done in
+a batch, reclaim avoids repeatedly scanning the top tiers in the cgroup's
+allowed demotion hierarchy just to produce more demotion-only progress,
+while still allowing lower tiers to age or reclaim normally.
+
+Patch 2 constrains a request in the other direction: it allows best-effort
+demotion as the requested action, while keeping folios that are not queued
+for demotion instead of evicting them from the LRU. It also skips slab
+shrinking, because slab reclaim cannot contribute demotion progress and
+would otherwise be retried aggressively for an underfilled demotion
+request.
+
+This also keeps the ABI scoped to the existing memory.reclaim interface
+instead of adding a new cgroup file. The goal key describes what kind of
+progress the caller wants from the request; it does not select a source or
+target tier, does not provide strict placement guarantees, and remains
+subject to cgroup protection, swappiness balancing, reclaim eligibility,
+and demotion target availability.
+
+This series is memcg-only. The per-node reclaim interface shares the
+parser but has different semantics: node reclaim can legitimately treat
+demotion as the desired way to relieve pressure on a node. For that
+reason, the new goals are rejected from the per-node path rather than
+being given a different meaning there.
+
+Li Zhe (2):
+  mm: add goal=evict to memory.reclaim
+  mm: add goal=demote to memory.reclaim
+
+ Documentation/admin-guide/cgroup-v2.rst |  26 ++++
+ include/linux/memory-tiers.h            |  13 ++
+ mm/internal.h                           |   2 +
+ mm/memory-tiers.c                       |  35 +++++-
+ mm/vmscan.c                             | 154 ++++++++++++++++++++++--
+ 5 files changed, 219 insertions(+), 11 deletions(-)
+
+-- 
+2.20.1
