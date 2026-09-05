@@ -1,95 +1,70 @@
-Received: from mta0.migadu.com (out-129.mta0.migadu.com [91.218.175.129])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forwardcorp1d.mail.yandex.net (forwardcorp1d.mail.yandex.net [178.154.239.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF58F1DB95E
-	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 12:18:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.129
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E743335838A;
+	Sat,  5 Sep 2026 13:11:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788610722; cv=none; b=ZoOc8PVKvczMvxeqUYH2gQGlkkXfbtiJYoPwsukrMucST71VmiSMX251HI29DgqTqltACZeswwbPVQiLrFjsFJeRaC0+W9WiDq1jxbOgU5o6QBc/lqSLTiFLalM4FJA2Y9HgONohx3nuNHgsVVR/QzJBujonmhK4RdCxTvsmC/4=
+	t=1788613892; cv=none; b=bwe8CRPOROUKr0ZOcbIj+7blxa47XkEZ1DHFIuM5/GWTMlzmd0Oy3FGXxoV2h2xXTRREJjvc+TivPDGDzYbBRPKuN/juaBTclkWMFC/wHtjXF4nIqHLzSqwY4GtirqtOOnd+bRThmwjYQL7BJKnwc0wHk9df2wbenMGN9A2dmRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788610722; c=relaxed/simple;
-	bh=ySkuT1pGEsfWYtaDY+C44/DFGOfxtIvjurzCYJAaaQE=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=m1xJzvsBLNUi6ioZhHLIjRUUMwCt8qlQaMffH8GGYoBmSP7FIxxSYrYao+ri3FNCk3q7GPkwmQzlMXjVHHO8Ou91Pjr7YxuFGqzdFAIHt9vbABz2Wtg4nak+uM1w/0JloV23+VFIGJ6y/8kRmg4TPxJxJ598f2XC0/v6FCgZdJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mQkaeJ+R; arc=none smtp.client-ip=91.218.175.129
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788613892; c=relaxed/simple;
+	bh=HvW7qdH8/2X3TXbyAoHR4OeyZ8dbsH74G+yO9hseOxo=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=Lg8ypEbQfeRhiPFPXYVJiOmEEBhw+9r8zI9+9HXoGI3G4988gPU1h9gxmqFJnb54vH61ToLxBpPbc3wZ8gjUi0jouYWwgoDokoFw1EjzCkVt7lF2+zpcuSvf5+kPYL7xdcfXn4+yJQRY1W7Kj0l9CTZK3rMCTYAYdovEEHsqWeg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru; spf=pass smtp.mailfrom=yandex-team.ru; dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b=RgJxU+wL; arc=none smtp.client-ip=178.154.239.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex-team.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mQkaeJ+R"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=ySkuT1pGEsfWYtaDY+C44/DFGOfxtIvjurzCYJAaaQE=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788610716; v=1; x=1789215516;
- b=mQkaeJ+Ru1jBnLEKNvofl9iKMEqOqeWxneOId2uofPFFUrfOziGHTNyciHTMHWWBg8A5sUfK
- 0Rn0I/MZJY82eJK3JfUJPFCbecRlT3WegZdFndHolumtLnfUkxX3kCUGuwvt+EZBHVFfWt/9eb3
- bUrzcsFHHYqy/YeJRNC/wV3c=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id b1c979f2108c0cd3;
-	Sat, 05 Sep 2026 12:18:26 +0000
-X-Mizu-Trace-ID: b1c979f2108c0cd3
-X-Migadu-Flow: FLOW_OUT
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b="RgJxU+wL"
+Received: from mail-nwsmtp-smtp-corp-main-68.klg.yp-c.yandex.net (mail-nwsmtp-smtp-corp-main-68.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:86a0:0:640:75de:0])
+	by forwardcorp1d.mail.yandex.net (postfix) with ESMTPS id 5DEC6805E4;
+	Sat, 05 Sep 2026 16:11:19 +0300 (MSK)
+Received: from i115078296 (unknown [2a02:6bf:8080:89c::1:1b])
+	by mail-nwsmtp-smtp-corp-main-68.klg.yp-c.yandex.net (smtpcorp) with ESMTPSA id HBKB1P1jHCg0-wDVHjtHG;
+	Sat, 05 Sep 2026 16:11:18 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru;
+	s=default; t=1788613878;
+	bh=HvW7qdH8/2X3TXbyAoHR4OeyZ8dbsH74G+yO9hseOxo=;
+	h=Message-ID:Date:Subject:In-reply-to:Cc:References:To:From;
+	b=RgJxU+wLrLNRyLtyyqz1/UFI7ai6tFmNvTkeKJ1K1aTcxrCLoJLnpRENii6pe1LS2
+	 2vwRf5FDrSfHjHk5LZKN+8wa3J7n5LuEa25u5T7lDlvKPFgVNGq7ETIDCGX5uZ1sOd
+	 MaJY9gZrz4V23G2VuCccsEfS7CfCHzELdH//Ykjc=
+Authentication-Results: mail-nwsmtp-smtp-corp-main-68.klg.yp-c.yandex.net; dkim=pass header.i=@yandex-team.ru
+References: <20260903-throttl-truncation-fix-v1-1-c6a864c8bc17@yandex-team.ru>
+User-agent: mu4e 1.10.9; emacs 31.1
+From: Mikhail Rudenko <xyzzy@yandex-team.ru>
+To: Mikhail Rudenko <xyzzy@yandex-team.ru>
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens
+ Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+Subject: Re: [PATCH] blk-throttle: reject IOPS limits above UINT_MAX for
+ legacy interface
+Date: Sat, 05 Sep 2026 16:09:26 +0300
+In-reply-to: <20260903-throttl-truncation-fix-v1-1-c6a864c8bc17@yandex-team.ru>
+Message-ID: <86v78jrgga.fsf@yandex-team.ru>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.1\))
-Subject: Re: [PATCH RFC v2 6/6] mm/memcg: filter out reparented memcgs got
- from memcgid
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20260901-bingfangguo-memcgid-rework-v2-6-8edd7f7a7251@tencent.com>
-Date: Sat, 5 Sep 2026 20:18:03 +0800
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Dave Chinner <david@fromorbit.com>,
- Qi Zheng <qi.zheng@linux.dev>,
- Kairui Song <kasong@tencent.com>,
- Barry Song <baohua@kernel.org>,
- Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>,
- Wei Xu <weixugc@google.com>,
- David Hildenbrand <david@kernel.org>,
- Lorenzo Stoakes <ljs@kernel.org>,
- Bingfang Guo <bfguo@icloud.com>,
- cgroups@vger.kernel.org,
- linux-mm@kvack.org,
- linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <3F681C23-8462-4BA3-B3C6-B7A45A9341DE@linux.dev>
-References: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
- <20260901-bingfangguo-memcgid-rework-v2-6-8edd7f7a7251@tencent.com>
-To: bingfangguo@tencent.com
-X-Mailer: Apple Mail (2.3864.700.51.1.1)
+MIME-Version: 1.0
+Content-Type: text/plain
 
 
+On 2026-09-03 at 14:54 +03, Mikhail Rudenko <xyzzy@yandex-team.ru> wrote:
 
-> On Sep 1, 2026, at 16:58, Bingfang Guo via B4 Relay =
-<devnull+bingfangguo.tencent.com@kernel.org> wrote:
->=20
-> From: Bingfang Guo <bingfangguo@tencent.com>
->=20
-> mem_cgroup_from_private_id() looks up the objcg that owns the id and
-> returns the objcg's current memcg.  After reparenting, that memcg can
-> differ from the one the id originally belonged to.
->=20
-> Callers such as the list lru and workingset refault code expect to get
-> back exactly the memcg referred to by the memcgid, so check that the
-> returned memcg still owns the id and return NULL otherwise. In this
-> case, make list_lru just skip and workingset tests use the root (as =
-the
-> comments said in workingset.c:460).
->=20
-> Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
+> tg_set_conf(), used for blkio.throttle.{read,write}_iops_device legacy
+> blkio cgroup sysfs knobs, parses limits as u64 but stores them in
+> unsigned int, silently truncating values above UINT_MAX. In addition
+> to being an obvios correctness issue, this may result in division by
+> zero in tg_within_iops_limit(), if the value is truncated to zero.
 
-We should move this patch earlier to avoid introducing the problem first
-and then fixing it later.
+Nevermind, there is a patch under review [1] which solves this.
 
-Muchun,
-Thanks.
+[1] https://lore.kernel.org/r/20260722102459.253189-1-cui.tao@linux.dev
 
+--
+Best regards,
+Mikhail Rudenko
