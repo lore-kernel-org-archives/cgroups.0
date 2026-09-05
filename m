@@ -1,137 +1,160 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3EB2351C02
-	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 15:03:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797A2368D45;
+	Sat,  5 Sep 2026 16:51:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788620638; cv=none; b=tnDC2SLcG/nW0bQR/QQ6ngndxMiummyozThBD7GAcCnVW01P1JTrBZVZbOgOVfGiCfWyLMwUDV4RtBcIHqejHo2UkNvY+cOWo1zxCpvAFz9qx1RZKaAS1xYDms8dm7SU6Zkzgq1O4tiRubkfvy7WkbsQ8STQf6i1iBHRrNTruYs=
+	t=1788627074; cv=none; b=uZSG8xteaLaJf5q0SAtDD4FHycWJfNiguWcUMstSNFEmdhm7SFZJvMiiTOleWo7aS1RckLvL3RCBNNzJ8hYYpL4EQfLqJl70CneI8zEpyAs9AkdtXjQVaHGeDVYw2E23/AnUj8o5dIqMrblvEKjVXdmU9wlpzWqOT4hhC3bM8BA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788620638; c=relaxed/simple;
-	bh=bXt5GNrgWDFrfTkFgZN/1GXRpccRQywiyIOKcbVq9gk=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=ddoeg+VWBCze4bdFDa6YuarDUab7oSjE8xYsagAstdCRIokxIaGfL4ysroG4O6p20gvtkBvSqfn+PspXg8rml6y9/IyiKagMiHPDwmY7sZf23r2fVVhFSL3trJIuQyjWfW+JaoOUDWwg2aKIR49uVwpRiQq/jSOWCi88ZfOcFew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=F0Ynvyqp; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1788627074; c=relaxed/simple;
+	bh=dskzQeDGxBtirZ5ohMl5zEVdQosEdst7khpwTL27U/U=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=lRKkw/3Y6ynHiytVr1zCuusx7VQVFbU1xHmc6UgIarJOeJGfjaOjVHn3swj6l8sh0/SqjBEHILjBIDG6un0C3PErKhCA4W4TE8b0JtXCwS6IOIk6yhUnB4uXCFWlcQ2dm9HJwvnm3ajiqn576z8EQ1tyxZySgL3LJhwZsQnzV/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HX1nRK8D; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="F0Ynvyqp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1788620636; x=1820156636;
-  h=date:from:to:cc:subject:message-id;
-  bh=bXt5GNrgWDFrfTkFgZN/1GXRpccRQywiyIOKcbVq9gk=;
-  b=F0YnvyqpsRyEiqR3pub/ML1AXvTKrSSHshx3c8Uo2HyJELkJqTUylQG5
-   kOsjD5FsV9D7+0FHA+54e4VcvBensBrq+h2eNCWZ8ARdkpw24R/wMVVqH
-   4JxC6XJCDM8+5qLDIKtG8bvl8tO1Myjn2t9XVJXq9aW4DQmZl37lQHPqD
-   xWffCvI0sslJH9HTUy2yyBIJGSZgNmlAmwIUrDH3FFZW6mZrbk6HCtTxa
-   ywguBJnCKugStL7TjchT+q23QosJCqYCnHlWPwQUQwAtW2vJdT6dN6rlq
-   V82wHJBIvua1Ib55E/ZNlwn77R3zqclfUEYy0Y0QG/kcYn1JSQtny2u4z
-   w==;
-X-CSE-ConnectionGUID: 38lS3VzRSJS4PkLKb+qysA==
-X-CSE-MsgGUID: IPxnCKqkSfCaWg6I0jy7Iw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11897"; a="106463556"
-X-IronPort-AV: E=Sophos;i="6.25,264,1779174000"; 
-   d="scan'208";a="106463556"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2026 08:03:55 -0700
-X-CSE-ConnectionGUID: eldpXh0YR1+EUTGUiX+vXw==
-X-CSE-MsgGUID: yl2R/yh2TbyNty2JVowj+A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,264,1779174000"; 
-   d="scan'208";a="274118422"
-Received: from lkp-server01.sh.intel.com (HELO 73f3364bc37e) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 05 Sep 2026 08:03:54 -0700
-Received: from kbuild by 73f3364bc37e with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1x2rvr-000000000dD-34Gn;
-	Sat, 05 Sep 2026 15:03:51 +0000
-Date: Sat, 05 Sep 2026 23:03:08 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:cgroup-drain-interruptible] BUILD SUCCESS
- 18b1d3778d376a8aeae753e1dafcce5ee77d5da2
-Message-ID: <202609052305.o1UNsHu8-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HX1nRK8D"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 21C4EC2BCF4;
+	Sat,  5 Sep 2026 16:51:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1788627074;
+	bh=dskzQeDGxBtirZ5ohMl5zEVdQosEdst7khpwTL27U/U=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=HX1nRK8DRRdhEB8JADjUNXQ9wgUM2sxu0B7FBNFJrho3d+Os79D+Fnw64sRVm/+ms
+	 /hx+GP2r4U2uyMCFemTy1BgAgRZaDFW+Xu/irXLuRe4LN6824RQH2Wu9BB+4YyPXtl
+	 p6l2Rl/pJHG4y8jAZZF4WnFPOYpmYmbqbCFi9cKIOp6XVncjFC+qcAc76Kin3oDK4M
+	 37uLuVIpGk2BflXSS/o0vCNPyYMT+4Ie5ZOXLjPEdaZR24jNCqcZSqKflgahS9jNLy
+	 aeegFQEkg4ER29m0FFny+CQ5wp2b+MF1N5unCC74G2AklYGl4hyDaC4jP4vGIdjvQW
+	 WlWunQuVL5/Zw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C35AC624D3;
+	Sat,  5 Sep 2026 16:51:14 +0000 (UTC)
+From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
+Subject: [PATCH v6 0/6] mm/mglru: clean up folio counters and flag usage
+Date: Sun, 06 Sep 2026 00:51:05 +0800
+Message-Id: <20260906-mglru-flags-cleanup-v6-0-9aacbd77d4ca@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/33PTU7EMAwF4KuMsiYoTpP+sOIeiEVqO52gTjpq2
+ go06t1JhwVFU7F8kv09+yYSj4GTeDndxMhLSGGIOZRPJ4FnFzuWgXIWWulS1VDLS9ePs/S965L
+ Enl2crxLRNOgdldZ4kTevI/vweVff3n9ymtsPxmmjtolzSNMwft1rF9jm/m9YQCpZU9uSQ0W6x
+ teJI3KcnnG4iK1j0TtFm2NFZ0WBMlBoAOP4USn2SnmsFFmhxgNW1ubH60fF7JQCjhWTFU1giVh
+ RxQe32F+lUfpYsVlpqK1KoKpq2P9V1nX9BtZJkdHiAQAA
+X-Change-ID: 20260818-mglru-flags-cleanup-cc49cfad654f
+To: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+ Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+ Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Muchun Song <muchun.song@linux.dev>, Chris Li <chrisl@kernel.org>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Ridong Chen <ridong.chen@linux.dev>, Lian Wang <lianux.mm@gmail.com>, 
+ Yu Zhao <yuzhao@google.com>, Zi Yan <ziy@nvidia.com>, 
+ Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Kairui Song <ryncsn@gmail.com>, 
+ Kairui Song <kasong@tencent.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788627071; l=3580;
+ i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
+ bh=dskzQeDGxBtirZ5ohMl5zEVdQosEdst7khpwTL27U/U=;
+ b=c12Fl395Bz9yonkrDDvw0bsBMU4J4OnfMbYdVzc+uUwH1FEGqU5ysTHxGqgnSRDcgtknxkfzX
+ YAvjHxzMlViCZNwTdVvDMg/KXp8x21JoepotrEeSoxF5dZeuTCH5m0k
+X-Developer-Key: i=kasong@tencent.com; a=ed25519;
+ pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
+X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
+ with auth_id=562
+X-Original-From: Kairui Song <kasong@tencent.com>
+Reply-To: kasong@tencent.com
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git cgroup-drain-interruptible
-branch HEAD: 18b1d3778d376a8aeae753e1dafcce5ee77d5da2  cgroup: Make the offline drain interruptible
+This is a cleanup series separated out from the MGLRU-FG series [1]. As
+that series is getting too long in following updates, seperate out the
+clean up part for easier review and merge.
 
-elapsed time: 3555m
+No feature change is intended, except one bugfix. It mostly replaces
+the open-coded bit operations scattered throughout the MGLRU code with
+new helpers, with proper kdocs, sanity debug checks, and hardens a few
+MGLRU functions.
 
-configs tested: 60
-configs skipped: 0
+A subtle generation counter leak is also found during the refactoring
+and the fix is included.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Also collected review feedbacks on the cleanup part from the posted
+series.
 
-tested configs:
-alpha         allnoconfig    gcc-16.1.0
-alpha        allyesconfig    gcc-16.1.0
-arc          allmodconfig    gcc-16.1.0
-arc           allnoconfig    gcc-16.1.0
-arc          allyesconfig    clang-24
-arm           allnoconfig    clang-17
-arm           allnoconfig    gcc-16.1.0
-arm          allyesconfig    gcc-16.1.0
-arm64        allmodconfig    clang-24
-arm64         allnoconfig    gcc-16.1.0
-csky         allmodconfig    gcc-16.1.0
-csky          allnoconfig    gcc-16.1.0
-hexagon      allmodconfig    gcc-16.1.0
-hexagon       allnoconfig    clang-24
-hexagon       allnoconfig    gcc-16.1.0
-i386         allmodconfig    clang-22
-i386          allnoconfig    gcc-14
-i386          allnoconfig    gcc-16.1.0
-i386         allyesconfig    clang-22
-loongarch    allmodconfig    clang-24
-loongarch     allnoconfig    clang-20
-loongarch     allnoconfig    gcc-16.1.0
-m68k         allmodconfig    gcc-16.1.0
-m68k          allnoconfig    gcc-16.1.0
-m68k         allyesconfig    gcc-16.1.0
-microblaze    allnoconfig    gcc-16.1.0
-microblaze   allyesconfig    gcc-16.1.0
-mips         allmodconfig    gcc-16.1.0
-mips          allnoconfig    gcc-16.1.0
-mips         allyesconfig    gcc-16.1.0
-nios2        allmodconfig    clang-20
-nios2        allmodconfig    gcc-11.5.0
-nios2         allnoconfig    clang-24
-openrisc     allmodconfig    clang-20
-openrisc      allnoconfig    clang-24
-parisc       allmodconfig    gcc-16.1.0
-parisc        allnoconfig    clang-24
-parisc       allyesconfig    gcc-16.1.0
-powerpc      allmodconfig    gcc-16.1.0
-powerpc       allnoconfig    clang-24
-riscv        allmodconfig    clang-24
-riscv         allnoconfig    clang-24
-riscv        allyesconfig    clang-24
-s390         allmodconfig    clang-24
-s390          allnoconfig    clang-24
-s390         allyesconfig    gcc-16.1.0
-sh           allmodconfig    gcc-16.1.0
-sh            allnoconfig    clang-24
-sh           allyesconfig    gcc-16.1.0
-sparc         allnoconfig    clang-24
-sparc64      allmodconfig    clang-20
-um           allmodconfig    clang-17
-um            allnoconfig    clang-24
-um           allyesconfig    gcc-16.1.0
-x86_64       allmodconfig    clang-22
-x86_64        allnoconfig    clang-24
-x86_64       allyesconfig    clang-22
-x86_64      rhel-9.4-rust    clang-22
-xtensa        allnoconfig    clang-24
-xtensa       allyesconfig    clang-20
+Link: https://lore.kernel.org/linux-mm/20260804-mglru-fg-v1-0-4d8dad39dad6@tencent.com/ [1]
+Signed-off-by: Kairui Song <kasong@tencent.com>
+---
+Changes in v6:
+- Rebase on top of mm-unstable, also mergable on mm-new.
+- Collect tags.
+- Link to v5: https://patch.msgid.link/20260902-mglru-flags-cleanup-v5-0-9db761d779ef@tencent.com
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Changes in v5:
+- Change atomic long to plain long in patch 1, and adjust commit message.
+- Rename is_file to type, and avoid touching folio_is_file_lru in patch 7/7.
+- Link to v4: https://patch.msgid.link/20260831-mglru-flags-cleanup-v4-0-2d15dde0d7ee@tencent.com
+
+Changes in v4:
+- Rename lru_gen_set_flags/lru_gen_from_flags to
+  lru_set_gen_flags/lru_get_gen_flags, similiar with lru refs helpers,
+  as suggested by [ Barry Song ].
+- Added some comments to cover concerned raised by [ Barry Song ] and [
+  Baolin Wang ].
+- A little code shuffling and better sanity check for concerns raised by 
+  [ Ridong Chen ].
+- Collect tags.
+- Link to v3: https://patch.msgid.link/20260826-mglru-flags-cleanup-v3-0-d9f1c75549c8@tencent.com
+
+Changes in v3:
+- Set PG_workingset before setting LRU refs bit to avoid any potential
+  under report of folio tier.
+- Migrate folio's referenced status before PG_update so lockless readers
+  won't set stale referenced status.
+- Link to v2: https://patch.msgid.link/20260824-mglru-flags-cleanup-v2-0-0104132114ae@tencent.com
+
+Changes in v2:
+- Dropped the redundant LRU_GEN_MAX macro.
+- Renamed folio_migrate_refs() to folio_migrate_lru_refs() and reworded
+  its commit message to describe the referenced state being transferred.
+- Rewrote patch 6's commit message with a detailed analysis of the
+  anon/file accounting race.
+- Dropped patch 7, it doesn't really fix anything, and might be in
+  conflict with other updating series.
+- Collected Reviewed-by tags.
+- Link to v1: https://patch.msgid.link/20260818-mglru-flags-cleanup-v1-0-8dbbdac0d28c@tencent.com
+
+---
+Kairui Song (6):
+      mm/memcontrol: move the lru_zone_size sanity check to the reader side
+      mm/mglru: introduce helpers for manipulating gen and refs flags
+      mm/migrate: copy all referenced state via folio_migrate_lru_refs
+      mm/mglru: move max_seq read into walk_update_folio
+      mm/mglru: use explicit tier range in read_ctrl_pos()
+      mm/mglru: fix potential generation folio number leak
+
+ include/linux/memcontrol.h |   9 +++-
+ include/linux/mm_inline.h  | 115 +++++++++++++++++++++++++++++++++++++++-----
+ include/linux/mmzone.h     |   3 ++
+ mm/folio.c                 |  19 ++++----
+ mm/memcontrol.c            |  18 +------
+ mm/migrate.c               |   6 +--
+ mm/vmscan.c                | 116 ++++++++++++++++++++++++---------------------
+ 7 files changed, 188 insertions(+), 98 deletions(-)
+---
+base-commit: b5529903123d9535bcf74386c1f4e185e8632dd9
+change-id: 20260818-mglru-flags-cleanup-cc49cfad654f
+
+Best regards,
+--  
+Kairui Song <kasong@tencent.com>
+
+
