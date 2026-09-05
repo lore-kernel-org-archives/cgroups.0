@@ -1,143 +1,159 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from outbound.st.icloud.com (st-2005l-snip4-4.eps.apple.com [57.103.79.77])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7CBF2D949F
-	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 17:32:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788629523; cv=pass; b=ngwSJ4Zze5/JfNn1uD5ZbisdmMBJ2ErKCl1y7yZaZzf5cOqAWXFjJ6MgCQS5V9nZHu6DbYoa2SL0v0bz+6ZbX6NpWCIIN96RNMPzab5N8Bru+wjO8FkMuK93RlK/Eg0IyZ5EkNoomkKqDuV158LIrGvGSfBo/BFvLP/Q3sOYrns=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788629523; c=relaxed/simple;
-	bh=6SqWxQUNqkycziFg1GQ7wJboenSDKgNq2op/2w7iabM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=o55cOocOp1XLT6KZx5worTPbZRz8Oij4j34rR1IO6LI/T7eoJ8ekDEWh3wyCAiXU3hwYmViDWPRE0/1IlrkFg1sgjqTHbv2jg23FhmDeUzNc8fmXb44TF2qk1fR6w4ZcO1GrSsCR9AvVeOWoox1ApCw3c5Ve9rnqx6jJLKXr5e4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=drax72qJ; arc=pass smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 931C422FDE6
+	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 19:35:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.79.77
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788636952; cv=none; b=RvsxlCCc1wJBFum/nSc6iMdLN5CaUzfqkfPwyFetYe1+BhCv+oT1n4wyumpgPRGGgdzmP6uu2LE5DlZr9RbogGWNKm0HwLXnLnHYowJNtfqOSzVTttGbnrwKA/Hp54hLji8zg8KHDDYdhPQlJKpEmzgItPdtCBvimqTzfftfNHk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788636952; c=relaxed/simple;
+	bh=1YO3SgBQak4tGK61FOqQcBJJY6vKG97qYfPdKsjiw1I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lyqyzYdxtDrSIZ50my0VpGt7YV5GnVPAcRex5cBiovqSsCVcuZQJeeBREB0KvqN3xprjQIZUjL2r/NJCJVOu1Hva75exNIlwlmY1HP2Har6xDkFmO6lf5HHXsKVD6VeZJxLtRvu/kmr7F5edExDrGPxIc96kSMAkW8KkDVZ9jV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=xYlP7d/H; arc=none smtp.client-ip=57.103.79.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="drax72qJ"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c20e70a0962so262763266b.2
-        for <cgroups@vger.kernel.org>; Sat, 05 Sep 2026 10:32:01 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788629520; cv=none;
-        d=google.com; s=arc-20260327;
-        b=pCh2FdVPvJuILNCtkBFt88SW3jKGSxurItLRCEvg6xqmF2jqUOgv1OjlBddTyuL4yF
-         xDksbnVaq9cQKLrFjVudSC2hMDWCoHy6MBHFARZPdr31JymQnuIO0Pwm6XOr3RMwLRJO
-         ISX9/dBDtktuwM7v287zP1wM2Vo8y+9qP4POZKCAbyTUcEXGhP4lIbJZKHeVamoyZJ4+
-         uhXDrgAH3elAGs9tJuH3LYwWqbtTh/fbcTgy+kOH6yTGd908JdmOBL0LJWjhY5/ULRuV
-         5XTxbKADWEoOEqheLkA5CWp00j3yk2jpZp6bnIne6tRoseqYB5XyzUNqgR2S+36xTrH0
-         fBqA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=JOW8XuwLJiAY2FOtXpU6W0erUZewcmKtXhsLrPUNiVE=;
-        fh=eoy/vDAMfzakqEVbsUNtqNUu7PaHAfI1MQmvxuhFqMU=;
-        b=iBE0br1lKSmXSv2OYZdPx9ZkNl2eKVPi7BPeBbhktSWqKWOsdJQcUcAPGvmgKigbq/
-         qnYPM0gA5cNcs7dyHhIxsUtyYUySf0a79bzywvzD0TYJ3z3mundHld+bJwO6wdOqCh+y
-         L0SIMOgTIofS4keLiITaejVtm/RrGOB6Nl4T6q+IP0JrpCn3juxdo1GIyUAFfaQlby+W
-         J7hASqBdDpoBD2H/NyKHkbUssNx5OzQpU1TO84Dbr/geaUPaN+fSEaI5NLjPae9uWsmN
-         t8fK27WBepeC/r0YAc3kSd/EznDeoQey5+bIdDIKdf3rnEO6bCjuAdT9UqaKXHAH6rQY
-         uRKw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788629520; x=1789234320; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JOW8XuwLJiAY2FOtXpU6W0erUZewcmKtXhsLrPUNiVE=;
-        b=drax72qJDld6goBKj+BAhYBiU++KNynPrfyhQH0fjgI+VHEaGX9fwmzK8cyG3xTsLJ
-         lWVUmEVg5I5N1tq7rWFmBAHP9tLHXO4n+pQCIV87/ASCr8xrEQDqvvRTVYkPBgnGuM2B
-         Rccdu/5lIIdipKPBH038dGgpqI44AVo4aTQ7gIOMoo9mNJyQJM4RC55f6oNlUYKr2Zkv
-         Yu9Kpzapct8mdb6IcWk/wNoPjMu8pAy1awe4Zuc41O52kI6zlItDlwIPZRdzazbB4dvT
-         I38cbuHVHHpCu4hWbIciTT2TUUyznFB1dXHJuuppt3vJg2LOjrf1EaxQ0FFHP3vnnG6y
-         hy6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788629520; x=1789234320;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=JOW8XuwLJiAY2FOtXpU6W0erUZewcmKtXhsLrPUNiVE=;
-        b=HaGUaylwGl/8f/oKSEXLmyiH+fsiJK7v4ie1cwHdE788mSwaUja5oEIAKQCGomm4rh
-         W5sFyUJD8VI737Mf8QYJtPNPN8gQggl2iGP5S9pDS34/UaPUqNElQGJPW/vlZ2MDBiJF
-         F83CJdXPx0AIMvcotHIyoKoBvMU5JsKbzzFQkoeQhM1lriUzGgAARNXiLCfi9y2kxUmX
-         K4sl6vXGpmyYXjkr59yUx9o8DynITT1FW8yLQ3MFGLXW3L5wDq0BHdDbFfoIZ+D0VDw8
-         aaLgPrGb5bDMkNAyKmz/WXHoZZFZGFcIek9mYTy5ssl0rrfoRM5OFAvwYB6ZDYP9NvRS
-         kgIw==
-X-Forwarded-Encrypted: i=1; AKwUvBx+doFh41xpyVBZRy1D0dIkPxukB2h52x3Gihb2MWZxns0uZBWlpnTiALDkrVlOYgqA6ehTBc0F@vger.kernel.org
-X-Gm-Message-State: AFuF++kAM0MctpWP2tsmzIEtuLt3ntoe/E//lY1GaEXwrKCrqkDGa0o6
-	QPAqMnDxF2XzkvyfiadQBCXzc2h3C6fKkcIhVxrB2LD8NTV1miA3zZ9zBfvwcGvy7yS/AK2ZyWp
-	1NWxCxLD9fdxmc3ZbGmrFCKkJmB0u92Q=
-X-Gm-Gg: AYBFou0Ns5bBa2PEecyRHXvrFoh3+kbwaIjmyKwTnLqwLE1swcTyErDPYBezPukBfFX
-	zM8UykkrF93L5d28QAyFnjJyrUb+tBj+O4Q8L+VAn0JsQ0Wr10QwjKaiTINdmAeM7Mm1M19CaaK
-	OKJBNayvvNH6k07T75tfzQ+ZIdYSlaH6AadIRcUqffMV2p5NJDiUIcpcuQO+FNtz8zgV4B1YlfK
-	m2wl9/POFS58pbfEtZR49QD8fw0WLkyZUriuZXuOHIoegIsdqQ+hfmoNNzECv3xLvdf0edfaug2
-	rGs2VwDlsvdWMFuoLrSR57mklHlQxfJ9qS2bZi2TWQWvAT6zOyIt71XpKVNy90WiSFGCvUfPaxk
-	Vy50=
-X-Received: by 2002:a17:907:c16:b0:c25:2d27:5652 with SMTP id
- a640c23a62f3a-c260c9d1affmr910733066b.11.1788629519742; Sat, 05 Sep 2026
- 10:31:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="xYlP7d/H"
+Received: from outbound.st.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-east-1a-20-percent-1 (Postfix) with ESMTPS id 541171800362;
+	Sat, 05 Sep 2026 19:35:46 +0000 (UTC)
+X-ICL-RepId: 01a07311-df40-7bc0-814d-5f116123f2c8
+X-ICL-Out-Info: HUtFAUMEWwJACUgATUQeDx5WFlZNRAJCTQtPHV4PRQBAC1YGVBcOVk1bHlQYWCtbE1UXRgkZCF0dGR5XUF4IXh9MHB0OWAYSAlpFAlQXA1ccVkVcGEMJXQVXHB0eQ0VbE1UXRgkZCF0dGQhHHwowA0IOVgNDB0UALRkcV1BeCF4fTBwdDlgGEh1QHA5RVhtKBnsRUiBVPVwSDxtFPHcpez5+PnIjcCxnPxQ1cF0JS0YJSR0OBFQHXQVd
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1788636950; x=1791228950; bh=5cezDtxlrHR9EE90cG0MGu9l/gtilxYv/wFRi03p5CY=; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:x-icloud-hme; b=xYlP7d/HGHwwS9l4ltBvg+bwAR3UE2k8aaC0n9FRoe2EstONodWFCWhXdzjiXWr5YNGCWihIWyoJNqT4YOMc0V3swB9F3pv+yj58lCdug35TxJU66fv4STV7uVEcjrixwRmFqs9ru2yoZNXafdrcvAJ/OPZwu2BCdfb/y0j/JvVLgqkPNOo1uN2IWylRk6T07drRrZkCoYqPmDnpHGzSTgBn2NG03v8ijztiRonHxgx2J+pYzXOtip8G5rkSZ01Q4BVt2k9/nJdJPH1tlnODon2WwV4mZ4MQ+6JFenbZw3tglu09syklMz0AXySqenX1lx55ybNdAQjRoSB5u4ZZyQ==
+mail-alias-created-date: 1772519804199
+Received: from BINGFANGGUO-MC0 (unknown [17.156.216.30])
+	by p00-icloudmta-asmtp-us-east-1a-20-percent-1 (Postfix) with ESMTPSA id E677A180009D;
+	Sat, 05 Sep 2026 19:35:39 +0000 (UTC)
+Date: Sun, 6 Sep 2026 03:35:34 +0800
+From: Bingfang Guo <bfguo@icloud.com>
+To: Muchun Song <muchun.song@linux.dev>
+Cc: bingfangguo@tencent.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>,
+	Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>
+Subject: Re: [PATCH RFC v2 2/6] mm/memcg: get memcgid reference only after
+ swap charging success
+Message-ID: <apxvBiaMbVnb6cvQ@BINGFANGGUO-MC0>
+References: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
+ <20260901-bingfangguo-memcgid-rework-v2-2-8edd7f7a7251@tencent.com>
+ <a2fb9ea3-78dc-4bee-a64e-0928983961ad@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260906-mglru-flags-cleanup-v6-0-9aacbd77d4ca@tencent.com> <20260906-mglru-flags-cleanup-v6-2-9aacbd77d4ca@tencent.com>
-In-Reply-To: <20260906-mglru-flags-cleanup-v6-2-9aacbd77d4ca@tencent.com>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Sun, 6 Sep 2026 01:31:22 +0800
-X-Gm-Features: AcwNN1W6XiAA7KV5jUk181yU-Mg2q-AQY3I1lcI5rPzfroqnvUHhwkCK3HoP1Y0
-Message-ID: <CAMgjq7DTmBQU4D95J2ur2CUYPohx1ychRV=vKvLjR78tNFJwOg@mail.gmail.com>
-Subject: Re: [PATCH v6 2/6] mm/mglru: introduce helpers for manipulating gen
- and refs flags
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Chris Li <chrisl@kernel.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Ridong Chen <ridong.chen@linux.dev>, Lian Wang <lianux.mm@gmail.com>, Yu Zhao <yuzhao@google.com>, 
-	Zi Yan <ziy@nvidia.com>, Qi Zheng <qi.zheng@linux.dev>, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a2fb9ea3-78dc-4bee-a64e-0928983961ad@linux.dev>
+X-Proofpoint-GUID: f1AQX1aTWqZN4lSzMnJQFR8nPOtEeKPA
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA1MDIxOCBTYWx0ZWRfX7iWWTN2q2aep
+ YsFgd7msiqRVkD/rJQXi1/QlA+kVGXDWCKtn4WB9tUowU0vkGImtXVZ4hhsoHlCHnd/IeNQ6Dku
+ MK+/ttyGh/Yz4c2V2oy06avcjMT6X5x1JnmH0YBw8H2cHoqI7WRSPpMJPj5b70ChIv4s50CGyoQ
+ M4uK/OsaiXpI/5gqVECxKvrWAx1zEQuBIPJhVEo2HlaANoslSCHmuSelXpZxUkuZRaqApt27XXm
+ SSnMHpLrDdPrLoNWvhXdfyVwA3KSpxgh2avBzAqTKz5u3YYI6pDP/g1EHel+vFvpk8pU0CwHTZi
+ Z8j5tULbt0FreMybyaTkgEhknTxXIgdnt21gD0eYd1/9L15hnxH9lMXi9Lgdtc=
+X-Authority-Info-Out: v=2.4 cv=F/5at6hN c=1 sm=1 tr=0 ts=6a9c6f14
+ cx=c_apl:c_pps:t_out a=oyWFxbOnq+dmhQrAPgaJYA==:117
+ a=oyWFxbOnq+dmhQrAPgaJYA==:17 a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10
+ a=x7bEGLp0ZPQA:10 a=vu5NlEYW-o8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=GvQkQWPkAAAA:8 a=kWxB-xFdqsxXOBgkBTwA:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-ORIG-GUID: f1AQX1aTWqZN4lSzMnJQFR8nPOtEeKPA
+X-JNJ: AAAAAAABQtsNwvohzyHt18T/0XBw4zXFE4+rSf1ZKh25MuxUte1NkrQswCQK75JHel8fA7OxzS92/1Hos834UchYn/lKqif2Zda/FvdlEf2XjL+bRuZsi3HuLgn2RkCfOJiOSByR8BM9/fy/332snyhjR4TsbZKBtWg7bb1oIkNpTKQzV8SeMeo+Qn3yI0m61IGRbpb+jNQNXLeVuNGwfjkHvP8sqZpHpAOrFkgsCtQwiuQZ5ZfEzkJEqkuQVG4Kx/cXOpJM/6M+5yxW7/TGDf2Z8rR3SoqFjIcT7zoq7sAMv6wTG1gcDd7W9mmFCe4olo6YgsjlfULevVzja6q3eek+f2G14qDi0Q8m46NjVAfLpsE11mh4ATE8m+zUClBwsmRwugerTW19PeG9uPRAuhpQZR8ySGZqCUUEpFc1lAkOAFlVg9eQKjsLY/gbT1VN9XInEjtWV23yvVhn+yYLROVcQ0CdTzkzMv/Fu5EkvmGXf99jt8KE1RQvsJKb5uzE11Tl7Dh7u8KR+ZaKHmxbbia6ajjKsBES5KedYxM1Tn3cRYruV5AFKSr3KuCS7V4SlKEeUrl7A0uEMzvUhv1kwIIrIVo2vr6tUaE2FRiwaWUX25bY6UISum/f3h+NcnQR0cN0zvB0yRgY3FlM6nWkW4b/U+EJBDEOnhN6dKx+fHOVEq6COLvQqXC873kXjyuMLLDpBrKTBjCVC2cB6TMyyIqH6q7k3JEthiP0LgqGQmiyx5sqOd5cr96OKQju+nydnCuamVFir597b7+cePYPSUKogHK69US98/eWOH1YxqqpPn9svSEy2sk6kI57wzfaIR9AmhLuNK5tyLbxGWDZKigtShbfmafSe0L4LGWdswZvX2zh7OGrmNWzKoSyyMSOCBz202q6bET2/LGDIc42K4IbAK1GqeR0qpH8GxkB2iYmhB4JgM9yxRtSjD5fH+dPpblA+8t9UQ7CBk4HycWePodsMRxyRk8
+ 3Srh7gsBITtCb7xOUnRuawvoZwth+eUn9Kr6qyMQtzBJBYuPzaszmj3fKnM1kL47y05+/LqvSlIHM81Z9bPDajhoY5k+EO95NWk5iqKiXiJ6YCKukQm74qK98SRhNfkzR9N6+ADYJUymAboZvbbfUdwCvH7BOZ7bFBuHNMkh92ZrvjdkCj2tRJQknZmKKf21ETJd0m2CcHT960/G+RQr+aKLEPsKlNXns39TnUDVw354HLbH/DlVfrJFJPz9oAnyA1cqhJnMPFt0vljB4c2+N2qfvaKNgZ70d4qf48iMTDQAGoA633zMff+loSJAzXifQhEdBjMHHQ4nWt2s/hWuyjcc6btA9gHiWZIWz4d5SUlMU1mMKCj2GY+i5gfXW3lbufp76dNHQ8V084CR0H42em4wCaK2wCteBf7Tayiwh+a1X+NEE5FfT+yFw0HgqUDCHKMcznaUm7EJ262p8336/H3xhRk/4qi+RCCLamK2gEqwzzw==
 
-Sashiko reports (please ignore, false positive):
+On Sat, Sep 05, 2026 at 03:12:19PM +0800, Muchun Song wrote:
+> 
+> 
 
-commit b3b2fc9d5285717c3d36754aee77477780b76245
-Author: Kairui Song <kasong@tencent.com>
+Hi, Muchun!  Thanks for your insightful reviews!
 
-mm/mglru: introduce helpers for manipulating gen and refs flags
+> On 2026/9/1 16:58, Bingfang Guo via B4 Relay wrote:
+> > From: Bingfang Guo <bingfangguo@tencent.com>
+> > 
+> > __mem_cgroup_try_charge_swap() pinned the memcg private id before the
+> > swap counter was charged and had to undo the pin on the failure path.
+> > Hold RCU lock for an extended period (which should be fine,
+> > __memcg1_swapout() does this as well) so concurrent memcg release can
+> > be avoided, and take the id reference to its online parent only after
+> > charging has succeeded.
+> > 
+> > The failure path is now a plain return, and the id is only pinned for
+> > entries that actually end up charged to swap.
+> > 
+> > Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
+> > ---
+> >   mm/memcontrol.c | 15 +++++++++------
+> >   1 file changed, 9 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 31cec9dde55f0..ecb4fb07d7735 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -5755,6 +5755,7 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
+> >   	struct page_counter *counter;
+> >   	struct mem_cgroup *memcg;
+> >   	struct obj_cgroup *objcg;
+> > +	unsigned short memcgid;
+> >   	if (do_memsw_account())
+> >   		return 0;
+> > @@ -5772,22 +5773,24 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
+> >   		return 0;
+> >   	}
+> > -	memcg = mem_cgroup_private_id_get_online(memcg, nr_pages);
+> > -	/* memcg is pined by memcg ID. */
+> > -	rcu_read_unlock();
+> > +	while (memcg_is_dying(memcg))
+> > +		memcg = parent_mem_cgroup(memcg);
+> 
+> Since we've already chosen to expand the scope of RCU holding, it
+> seems we don't need to check whether the memcg is in a dying state
+> here. The upcoming stats updates aren't really tied to whether the
+> memcg is dying anyway, right? Why don't we just simplify the code?
+> 
+> Muchun,
+> Thanks.
 
-This commit introduces helpers for adjusting a folio's refs and generation
-info instead of performing bit operations directly on folio flags. It
-splits some combined atomic operations into two without intended functional
-changes.
+Yeah, indeed. Whether the memcg is dying doesn't make much
+difference, and dying memcgs should be rare so walking up till
+some online parent should be useless in most cases. And it does
+seem a bit strange to do that here...
 
-> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> --- a/include/linux/mm_inline.h
-> +++ b/include/linux/mm_inline.h
-[ ... ]
-> @@ -270,7 +339,7 @@ static inline bool lru_gen_add_folio(struct lruvec *lruvec, struct folio *folio,
->   gen = lru_gen_from_seq(seq);
->   flags = (gen + 1UL) << LRU_GEN_PGOFF;
->   /* see the comment on MIN_NR_GENS about PG_active */
-> - set_mask_bits(&folio->flags.f, LRU_GEN_MASK | BIT(PG_active), flags);
-> + set_mask_bits(folio_flags(folio, 0), LRU_GEN_MASK | BIT(PG_active), flags);
+So I agree that removing the check would be better as well! I
+will make the change in the next version.
 
-This isn't a bug introduced by this patch, but does lru_gen_add_folio()
-fail to clear LRU_REFS_FLAGS when updating the LRU generation mask here?
+Regards,
+Bingfang
 
-When an isolated folio is added back to the LRU using lru_gen_add_folio(),
-its generation is updated but the stale LRU_REFS_FLAGS are retained.
-Stale tier bits can inflate access counts and severely distort eviction
-decisions, defeating the purpose of the multi-gen LRU tier tracking.
+> >   	if (!mem_cgroup_is_root(memcg) &&
+> >   	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
+> >   		memcg_memory_event(memcg, MEMCG_SWAP_MAX);
+> >   		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
+> > -		mem_cgroup_private_id_put(memcg, nr_pages);
+> > +		rcu_read_unlock();
+> >   		return -ENOMEM;
+> >   	}
+> >   	mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
+> > +	memcg = mem_cgroup_private_id_get_online(memcg, nr_pages);
+> > +	memcgid = mem_cgroup_private_id(memcg);
+> > +	rcu_read_unlock();
+> > +
+> >   	ci = swap_cluster_get_and_lock(folio);
+> > -	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages,
+> > -			  mem_cgroup_private_id(memcg));
+> > +	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages, memcgid);
+> >   	swap_cluster_unlock(ci);
+> >   	return 0;
+> > 
+> 
 
-===
-
-As it said, it's not a bug introduced by this patch, and I don't think
-it is an existing bug either, lru_gen_add_folio isn't suppose to clear
-the refs flags, or we might under counted refs or workingset.
