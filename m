@@ -1,36 +1,36 @@
-Received: from mta0.migadu.com (out-155.mta0.migadu.com [91.218.175.155])
+Received: from mta0.migadu.com (out-6.mta0.migadu.com [91.218.175.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ACC341379A
-	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 07:12:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37158370D56
+	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 07:29:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788592353; cv=none; b=a17ntWYZB9CzBxek+4bwgE9Pa3vQBNYVTIMhoU6uLHQx/8fDTdD6h6FzHqHr2TLCxjGduVhsw9BX+aTzYBPGo8bhjxXxMhJBaHb8LCxEz1G10hFhCSnv53l44DZ95Dbax5IrZj5yVNc3IlR2qKeWGQSuRCQocfbS+EmNCRuqmv4=
+	t=1788593354; cv=none; b=UlwuvwKkwe1M6MRILguuYiKT0yceqdT5e7M9PD9jmfaoQg5kqTMHj5fHnOtlR7BPd98wWaJx4YwI9GBDHnpUgQciOA2o7tstC1oQmh+5QS8G+YpewXuNxrErQInPIqFln0qcf0cBai9lygEpH1YUY1anqgp0Ma4fFSJzk7ohEZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788592353; c=relaxed/simple;
-	bh=NDEQnPZ0MaLk8wFMT+/bNULPhdcxRN/4BxqEM/TV/So=;
+	s=arc-20240116; t=1788593354; c=relaxed/simple;
+	bh=FO7uk+ZczJKUWeZKSugD0fmMxualw4LCIKgewWBGV1E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MLKlCSqDF0qPouiDGpRrbJmdFMRsq1oOS23vi5GYf7RoK6TZ7rHFu5KHaUfr9iee1tsPwclDyJtg46MhlRclv4snlriAn/Bk77eO1DJmTIoFXaqGCEyOHXPxS0VTUyeun2Juqp4IylXbwxNHZRuDziRlTv6/hotiI3ymA2A+IbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tAZU/ufA; arc=none smtp.client-ip=91.218.175.155
+	 In-Reply-To:Content-Type; b=X9INIMA+sz6Whi5nNETuv3+c0+qM2BdpLymPVBeVKP/FR6YrE/tPyKwP86osM2v4maw3w9u9t87QzwbEmLrhDP9YnFp8TqbWTWq4K/4XXA6Ld/MTAuFXDcKpYVHBt5ojuZ3qtkUiFq15BqsZxmQKlB2oxNFAHirUbTjTJZJWQIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Sn8e1vKp; arc=none smtp.client-ip=91.218.175.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tAZU/ufA"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Sn8e1vKp"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=NDEQnPZ0MaLk8wFMT+/bNULPhdcxRN/4BxqEM/TV/So=;
+DKIM-Signature: a=rsa-sha256; bh=FO7uk+ZczJKUWeZKSugD0fmMxualw4LCIKgewWBGV1E=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788592346; v=1; x=1789197146;
- b=tAZU/ufAEEpRfnTicQ+t3GppjgsIbdu+OOXQ0z3fFbtBGLW3h7xZVrVKaFe2KgnAE04Nrroc
- yeip7kA9uI0EwVV003A0bY0zQwAeFbmRLRKBlOOhHbMXIL4kEFU442D1acLfFZBrZFWoQSaUVc5
- ti5iv/7J6BT89RhwR7f1riic=
+ t=1788593350; v=1; x=1789198150;
+ b=Sn8e1vKpmMPzdYYzJRR4lZuz2OnF8SaOrtUCfRegQ6mwhNhdspWOSbjzHto9eMcCEipcYypD
+ bZA+B8dRa3NfRSh/30yhj95DT0R3f9UsbzmvtmFT//sQPmCEHFQlD/LQAvgsBO2mYu/SeNnEG6L
+ FzA8qlxdk48nthKbhlHy2qCA=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 78ea68531be7ce2e;
-	Sat, 05 Sep 2026 07:12:26 +0000
-X-Mizu-Trace-ID: 78ea68531be7ce2e
+Received: by smtp.migadu.com with ESMTPS id d6a05955758b5d40;
+	Sat, 05 Sep 2026 07:29:00 +0000
+X-Mizu-Trace-ID: d6a05955758b5d40
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <a2fb9ea3-78dc-4bee-a64e-0928983961ad@linux.dev>
-Date: Sat, 5 Sep 2026 15:12:19 +0800
+Message-ID: <c3bec318-ef9d-4d96-8a98-a68717c17201@linux.dev>
+Date: Sat, 5 Sep 2026 15:28:50 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,8 +38,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v2 2/6] mm/memcg: get memcgid reference only after
- swap charging success
+Subject: Re: [PATCH RFC v2 4/6] mm/memcg: return the memcg when putting
+ memcgid
 To: bingfangguo@tencent.com
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
@@ -52,10 +52,10 @@ Cc: cgroups@vger.kernel.org, linux-mm@kvack.org,
  Wei Xu <weixugc@google.com>, David Hildenbrand <david@kernel.org>,
  Lorenzo Stoakes <ljs@kernel.org>, Bingfang Guo <bfguo@icloud.com>
 References: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
- <20260901-bingfangguo-memcgid-rework-v2-2-8edd7f7a7251@tencent.com>
+ <20260901-bingfangguo-memcgid-rework-v2-4-8edd7f7a7251@tencent.com>
 Content-Language: en-US
 From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20260901-bingfangguo-memcgid-rework-v2-2-8edd7f7a7251@tencent.com>
+In-Reply-To: <20260901-bingfangguo-memcgid-rework-v2-4-8edd7f7a7251@tencent.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
@@ -64,71 +64,86 @@ Content-Transfer-Encoding: 7bit
 On 2026/9/1 16:58, Bingfang Guo via B4 Relay wrote:
 > From: Bingfang Guo <bingfangguo@tencent.com>
 >
-> __mem_cgroup_try_charge_swap() pinned the memcg private id before the
-> swap counter was charged and had to undo the pin on the failure path.
-> Hold RCU lock for an extended period (which should be fine,
-> __memcg1_swapout() does this as well) so concurrent memcg release can
-> be avoided, and take the id reference to its online parent only after
-> charging has succeeded.
+> __mem_cgroup_uncharge_swap() needs both the memcg and the id refcount
+> drop.  Right now it looks the memcg up by id, uncharges it, then looks
+> it up again inside mem_cgroup_private_id_put() to drop the reference.
 >
-> The failure path is now a plain return, and the id is only pinned for
-> entries that actually end up charged to swap.
+> Make mem_cgroup_private_id_put() resolve the id once, drop the
+> reference, and return the nearest online memcg with a reference held for
+> the caller.  __mem_cgroup_uncharge_swap() then uses that memcg directly
+> and drops the reference after uncharging, avoiding the second xarray
+> lookup.
 >
 > Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
 > ---
->   mm/memcontrol.c | 15 +++++++++------
->   1 file changed, 9 insertions(+), 6 deletions(-)
+>   mm/memcontrol.c | 20 +++++++++++++++++---
+>   1 file changed, 17 insertions(+), 3 deletions(-)
 >
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 31cec9dde55f0..ecb4fb07d7735 100644
+> index 048c9bb0fad79..f0503a1e5492d 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -5755,6 +5755,7 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
->   	struct page_counter *counter;
+> @@ -4048,14 +4048,28 @@ static void __mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned int n
+>   	}
+>   }
+>   
+> -static void mem_cgroup_private_id_put(unsigned short id, unsigned int n)
+> +/**
+> + * mem_cgroup_private_id_put - put memcgid and get the nearest online memcg
+> + * @id: the memcg private id got from mem_cgroup_id_get_online
+> + * @n: count of references to put
+> + */
+> +static struct mem_cgroup *mem_cgroup_private_id_put(unsigned short id, unsigned int n)
+
+Having an API that put reference-counted resources return a struct pointer
+is a very strange design. Please don't do that.
+
+>   {
 >   	struct mem_cgroup *memcg;
->   	struct obj_cgroup *objcg;
-> +	unsigned short memcgid;
 >   
->   	if (do_memsw_account())
->   		return 0;
-> @@ -5772,22 +5773,24 @@ int __mem_cgroup_try_charge_swap(struct folio *folio)
->   		return 0;
->   	}
->   
-> -	memcg = mem_cgroup_private_id_get_online(memcg, nr_pages);
-> -	/* memcg is pined by memcg ID. */
-> -	rcu_read_unlock();
-> +	while (memcg_is_dying(memcg))
-> +		memcg = parent_mem_cgroup(memcg);
-
-Since we've already chosen to expand the scope of RCU holding, it
-seems we don't need to check whether the memcg is in a dying state
-here. The upcoming stats updates aren't really tied to whether the
-memcg is dying anyway, right? Why don't we just simplify the code?
-
-Muchun,
-Thanks.
->   
->   	if (!mem_cgroup_is_root(memcg) &&
->   	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
->   		memcg_memory_event(memcg, MEMCG_SWAP_MAX);
->   		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
-> -		mem_cgroup_private_id_put(memcg, nr_pages);
-> +		rcu_read_unlock();
->   		return -ENOMEM;
->   	}
->   	mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
->   
-> +	memcg = mem_cgroup_private_id_get_online(memcg, nr_pages);
-> +	memcgid = mem_cgroup_private_id(memcg);
-> +	rcu_read_unlock();
+>   	rcu_read_lock();
+>   	memcg = mem_cgroup_from_private_id(id);
+> +	if (!memcg)
+> +		goto out;
 > +
->   	ci = swap_cluster_get_and_lock(folio);
-> -	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages,
-> -			  mem_cgroup_private_id(memcg));
-> +	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_pages, memcgid);
->   	swap_cluster_unlock(ci);
+>   	__mem_cgroup_private_id_put(memcg, n);
+> +
+> +	while (memcg_is_dying(memcg) || !mem_cgroup_tryget(memcg))
+> +		memcg = parent_mem_cgroup(memcg);
+> +
+> +out:
+>   	rcu_read_unlock();
+> +	return memcg;
+>   }
 >   
->   	return 0;
+>   static void mem_cgroup_private_id_kill(struct mem_cgroup *memcg)
+> @@ -5816,7 +5830,7 @@ void __mem_cgroup_uncharge_swap(unsigned short id, unsigned int nr_pages)
+>   	struct mem_cgroup *memcg;
+>   
+>   	rcu_read_lock();
+> -	memcg = mem_cgroup_from_private_id(id);
+
+I think we can introduce a new helper like obj_cgroup_from_private_id(),
+We can use the ID to get the corresponding obj_cgroup, and then get the
+mem_cgroup.
+
+Muhcun,
+Thanks.
+> +	memcg = mem_cgroup_private_id_put(id, nr_pages);
+>   	if (memcg) {
+>   		if (!mem_cgroup_is_root(memcg)) {
+>   			if (do_memsw_account())
+> @@ -5825,10 +5839,10 @@ void __mem_cgroup_uncharge_swap(unsigned short id, unsigned int nr_pages)
+>   				page_counter_uncharge(&memcg->swap, nr_pages);
+>   		}
+>   		mod_memcg_state(memcg, MEMCG_SWAP, -nr_pages);
+> -		mem_cgroup_private_id_put(id, nr_pages);
+>   	}
+>   	rcu_read_unlock();
+>   
+> +	mem_cgroup_put(memcg);
+>   }
+>   
+>   long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
 >
 
