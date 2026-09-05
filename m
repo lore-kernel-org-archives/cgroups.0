@@ -1,33 +1,32 @@
-Received: from mta1.migadu.com (out-119.mta1.migadu.com [95.215.58.119])
+Received: from mta1.migadu.com (out-125.mta1.migadu.com [95.215.58.125])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAD2B26158B
-	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 03:05:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C60923ED5E
+	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 03:05:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.125
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788577541; cv=none; b=pfYCVYmmG2CFX00K4ffgWtLZrTYGreCO9fucyAZg+OBKPz4apSQb1kOLEQXaqKqwHPDxe2CfYMGwywLreFZ/Du7bSRkTAkriUgopJ/+cuy89n4cUldxUkhHzSASDWcXrIsVSrX5Op2nhScUV7z2/G2R00+Da0L9TroCdkpkmR7o=
+	t=1788577547; cv=none; b=XM+RisuxU25RJargBsx3EOUziLTs3LUi3oiSaWlqis58rvoTFhitgjypa2/sJf3t08eYSwvbez52MIOECam++w4ycGAD8YUhot50dGfjtFwB8pJV9CV0EwkHZaZ2gPaQm6VcSYn6Rq9vB/i+W3GuGSadJO0CBdNV8OC1Q0BCGhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788577541; c=relaxed/simple;
-	bh=1J3PUA095spFjhU5SX/VP0Vy7DB3E7cHPPmCEK6BDk8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=q2k9Z0j/yIjpGswpNSokVenVW0ZS6HZga609YlbJ/lGJnE7aJ58Uta6qWVLNICLVdMSxK/hfG0QZ+ucZDMk5ac9GLis3VTh9If0fk+DReXhETMt/vDY/cXT2aPcD3QNil+H1f90jyYM65r9dHMO56hyNWA9RN1Myqa9GzckIiP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=M+GhIc21; arc=none smtp.client-ip=95.215.58.119
+	s=arc-20240116; t=1788577547; c=relaxed/simple;
+	bh=wLT7iFs3MczdphYR4AkXje9YdWj0uWa+VrRt5sOOktY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=guNiP3xDPkkXX6bve2UgFr3MeI97+45duE5ZU0Dto3p6wEd273sqjhEKTUidT+7T+dEKMyzQkHeTJmmJEHE4C/EVW4f6hrFHMOVrIBkHf36VokbwYczAkUm0hocVmb4n6J3v7h7bGluxrsHIZJeVOATLlyX3B3za/qaKcUfD4d8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jjyS1sLK; arc=none smtp.client-ip=95.215.58.125
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="M+GhIc21"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jjyS1sLK"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=1J3PUA095spFjhU5SX/VP0Vy7DB3E7cHPPmCEK6BDk8=;
+DKIM-Signature: a=rsa-sha256; bh=wLT7iFs3MczdphYR4AkXje9YdWj0uWa+VrRt5sOOktY=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788577536; v=1; x=1789182336;
- b=M+GhIc215tZSbUe72sTTT6oxkN2KRhTDUPngcGvnFRG7FrHdA3alBMY+lGRpA0BTiDKedvBQ
- uZ1h3wULe9ab2O1Db4v6y2z9aQ2WfuHHjGmnbAakjk0AFoqTcfq/pUqe0kaSRixLTFCqLf1UNAz
- xMq2sA2WNOa2/U1BjJm98lk8=
+ t=1788577543; v=1; x=1789182343;
+ b=jjyS1sLKPLphMwjUl3G1ZF2HBLcmNhPySNR4zxAcS88QvzF054XCtu14AWqqegKIG3s1pQvb
+ b8QIDdHj9I8FHubHIlAzhTHgyPykidsgXl+mePQcPg81fhfob1uUDiQ62fF7DwOMfS3VFnWkKAh
+ GjjNHCxS45UZAIsX4M90Q8T0=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6cd579c380cbde10;
-	Sat, 05 Sep 2026 03:05:36 +0000
-X-Mizu-Trace-ID: 6cd579c380cbde10
+Received: by smtp.migadu.com with ESMTPS id 50c0c96e9f01a2e5;
+	Sat, 05 Sep 2026 03:05:33 +0000
+X-Mizu-Trace-ID: 50c0c96e9f01a2e5
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
@@ -40,12 +39,10 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/6] memcg: split mem_cgroup_private_id into two fields
-Date: Fri,  4 Sep 2026 20:05:18 -0700
-Message-ID: <20260905030522.1887837-3-shakeel.butt@linux.dev>
+Subject: [PATCH 0/6] memcg: group struct fields by access pattern
+Date: Fri,  4 Sep 2026 20:05:16 -0700
+Message-ID: <20260905030522.1887837-1-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260905030522.1887837-1-shakeel.butt@linux.dev>
-References: <20260905030522.1887837-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -54,127 +51,68 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The two members of struct mem_cgroup_private_id have different access
-patterns. The id is read on every eviction and refault through
-mem_cgroup_private_id(), and is only written when the memcg is created
-and destroyed. The ref is written on every swap charge and uncharge.
+Every so often we get a memcg performance regression caused by nothing
+more than a field moving. Someone adds a field, removes one, or puts a
+few behind a config option. The layout shifts, fields with different
+access patterns land on the same cache line, and a bot reports a
+regression.
 
-Split them into private_id and private_id_ref so a later patch can put
-them into different cache line groups. A struct member cannot be split
-across two groups.
+Two examples. commit 98c9daf5ae6b ("mm: memcg: guard memcg1-specific
+members of struct mem_cgroup_per_node") moved lruvec next to
+lru_zone_size[] and needed commit f59adcf59332 ("mm: memcg: add
+cacheline padding after lruvec in mem_cgroup_per_node") to fix it.
+commit c1afbd5de131 ("mm/memcontrol: avoid false sharing between
+vmstats and events") had to add ____cacheline_aligned_in_smp for the
+same reason.
 
-No functional change.
+Each fix was correct but nothing stops the next field addition
+from undoing it.
 
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
----
- include/linux/memcontrol.h | 10 +++-------
- mm/memcontrol.c            | 18 +++++++++---------
- 2 files changed, 12 insertions(+), 16 deletions(-)
+This series makes the layout a contract the compiler checks, the same
+way struct net_device does it. Fields are sorted into named cache line
+groups by access pattern, and memcg_struct_check() verifies at build
+time that every field sits in its group. A field added in the wrong
+place now breaks the build instead of quietly costing a few percent.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index ac575fcc5f1e..46fc99786ebd 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -66,11 +66,6 @@ struct mem_cgroup_reclaim_cookie {
- 
- #define MEM_CGROUP_ID_SHIFT	16
- 
--struct mem_cgroup_private_id {
--	int id;
--	refcount_t ref;
--};
--
- struct memcg_vmstats_percpu;
- struct memcg1_events_percpu;
- struct memcg_vmstats;
-@@ -189,7 +184,8 @@ struct mem_cgroup {
- 	struct cgroup_subsys_state css;
- 
- 	/* Private memcg ID. Used to ID objects that outlive the cgroup */
--	struct mem_cgroup_private_id id;
-+	int private_id;
-+	refcount_t private_id_ref;
- 
- 	/* Accounted resources */
- 	struct page_counter memory;		/* Both v1 & v2 */
-@@ -811,7 +807,7 @@ static inline unsigned short mem_cgroup_private_id(struct mem_cgroup *memcg)
- 	if (mem_cgroup_disabled())
- 		return 0;
- 
--	return memcg->id.id;
-+	return memcg->private_id;
- }
- struct mem_cgroup *mem_cgroup_from_private_id(unsigned short id);
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9a65d7148c22..c42297ae3b0e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3797,7 +3797,7 @@ static void memcg_online_kmem(struct mem_cgroup *memcg)
- 
- 	static_branch_enable(&memcg_kmem_online_key);
- 
--	memcg->kmemcg_id = memcg->id.id;
-+	memcg->kmemcg_id = memcg->private_id;
- }
- 
- static void memcg_offline_kmem(struct mem_cgroup *memcg)
-@@ -4056,15 +4056,15 @@ static DEFINE_XARRAY_ALLOC1(mem_cgroup_private_ids);
- 
- static void mem_cgroup_private_id_remove(struct mem_cgroup *memcg)
- {
--	if (memcg->id.id > 0) {
--		xa_erase(&mem_cgroup_private_ids, memcg->id.id);
--		memcg->id.id = 0;
-+	if (memcg->private_id > 0) {
-+		xa_erase(&mem_cgroup_private_ids, memcg->private_id);
-+		memcg->private_id = 0;
- 	}
- }
- 
- static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned int n)
- {
--	if (refcount_sub_and_test(n, &memcg->id.ref)) {
-+	if (refcount_sub_and_test(n, &memcg->private_id_ref)) {
- 		mem_cgroup_private_id_remove(memcg);
- 
- 		/* Memcg ID pins CSS */
-@@ -4074,7 +4074,7 @@ static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned
- 
- struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg, unsigned int n)
- {
--	while (!refcount_add_not_zero(n, &memcg->id.ref)) {
-+	while (!refcount_add_not_zero(n, &memcg->private_id_ref)) {
- 		/*
- 		 * The root cgroup cannot be destroyed, so it's refcount must
- 		 * always be >= 1.
-@@ -4198,7 +4198,7 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
- 	if (!memcg)
- 		return ERR_PTR(-ENOMEM);
- 
--	error = xa_alloc(&mem_cgroup_private_ids, &memcg->id.id, NULL,
-+	error = xa_alloc(&mem_cgroup_private_ids, &memcg->private_id, NULL,
- 			 XA_LIMIT(1, MEM_CGROUP_ID_MAX), GFP_KERNEL);
- 	if (error)
- 		goto fail;
-@@ -4345,7 +4345,7 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	lru_gen_online_memcg(memcg);
- 
- 	/* Online state pins memcg ID, memcg ID pins CSS */
--	refcount_set(&memcg->id.ref, 1);
-+	refcount_set(&memcg->private_id_ref, 1);
- 	css_get(css);
- 
- 	/*
-@@ -4358,7 +4358,7 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	 * publish it here at the end of onlining. This matches the
- 	 * regular ID destruction during offlining.
- 	 */
--	xa_store(&mem_cgroup_private_ids, memcg->id.id, memcg, GFP_KERNEL);
-+	xa_store(&mem_cgroup_private_ids, memcg->private_id, memcg, GFP_KERNEL);
- 
- 	return 0;
- free_objcg:
+struct mem_cgroup gets three groups:
+
+  memcg_write_hot     written on the charge, reclaim and socket paths
+  memcg_cold          only the cgroup control paths touch these
+  memcg_read_mostly   set when the memcg is created, then only read
+
+Testing
+=======
+
+The cgroup selftests give identical results with and without the series.
+
+For performance, two identical 30 core Xeon machines each ran both
+kernels, with the boot order swapped between them so that machine and
+order effects cancel. The useful tests run two workloads at once in one
+cgroup, because false sharing only shows up when one side reads a field
+that the other side writes.
+
+  slab allocs + page faults, slab side           +1.2%
+  page faults + memory.stat readers, fault side  +1.3%
+  page faults + memory.stat readers, reader side +0.8%
+  everything else                                no change
+
+No test regressed. The gains are small but the point of the series is
+the build time contract.
+
+Shakeel Butt (6):
+  memcg: move per-node objcg to the read-mostly fields
+  memcg: split mem_cgroup_private_id into two fields
+  memcg: group the write-hot fields of struct mem_cgroup
+  memcg: group the cold fields of struct mem_cgroup
+  memcg: group the read-mostly fields of struct mem_cgroup
+  memcg: group the fields of struct mem_cgroup_per_node
+
+ include/linux/memcontrol.h | 169 ++++++++++++++++++++++---------------
+ mm/memcontrol.c            | 122 ++++++++++++++++++++++++--
+ 2 files changed, 213 insertions(+), 78 deletions(-)
+
+
+base-commit: 817d340204c513316223ba084615f5906ac49ddb
 -- 
 2.53.0-Meta
 
