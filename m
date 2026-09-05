@@ -1,32 +1,33 @@
-Received: from mta1.migadu.com (out-125.mta1.migadu.com [95.215.58.125])
+Received: from mta1.migadu.com (out-122.mta1.migadu.com [95.215.58.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C60923ED5E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4995B1E7660
 	for <cgroups@vger.kernel.org>; Sat,  5 Sep 2026 03:05:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.125
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788577547; cv=none; b=XM+RisuxU25RJargBsx3EOUziLTs3LUi3oiSaWlqis58rvoTFhitgjypa2/sJf3t08eYSwvbez52MIOECam++w4ycGAD8YUhot50dGfjtFwB8pJV9CV0EwkHZaZ2gPaQm6VcSYn6Rq9vB/i+W3GuGSadJO0CBdNV8OC1Q0BCGhs=
+	t=1788577547; cv=none; b=VxQVpj78bQfI8nDJe+AZnCh7uAI2NGlJpArRgIg/61CLRm23tsSEVNBI/NAZM5lEph3lcnk+GvYI/XN39rXs8cTO0sYVY/hDW1KCA6Ny2brNMBI854HhLwfJ0yoLM1TK99h1fNOnTLxps6GgDoc60mb+lruNX41423qWSlmDWHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788577547; c=relaxed/simple;
-	bh=wLT7iFs3MczdphYR4AkXje9YdWj0uWa+VrRt5sOOktY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=guNiP3xDPkkXX6bve2UgFr3MeI97+45duE5ZU0Dto3p6wEd273sqjhEKTUidT+7T+dEKMyzQkHeTJmmJEHE4C/EVW4f6hrFHMOVrIBkHf36VokbwYczAkUm0hocVmb4n6J3v7h7bGluxrsHIZJeVOATLlyX3B3za/qaKcUfD4d8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jjyS1sLK; arc=none smtp.client-ip=95.215.58.125
+	bh=OCqMxy89FiBT48toG1bb2lBNxftt+Uy3sG/HpFdPjKI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=dVH9S86hMrTxaDV57V5/S+QGz2EFjIrW5gwCyvMLnlAfQfVWsaggyIu9kxCEM9nmulgHJeRxswtZEYUTMVuc0ldmKPLHIgUGsEF3refOIRhRlbFqX7KUcevSNH5tsQtKvUM525unf8D+ywFyNhH9duoBTiNpQ7zaSBnjaPkL4LY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=U3DiYY19; arc=none smtp.client-ip=95.215.58.122
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jjyS1sLK"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="U3DiYY19"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=wLT7iFs3MczdphYR4AkXje9YdWj0uWa+VrRt5sOOktY=;
+DKIM-Signature: a=rsa-sha256; bh=OCqMxy89FiBT48toG1bb2lBNxftt+Uy3sG/HpFdPjKI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788577543; v=1; x=1789182343;
- b=jjyS1sLKPLphMwjUl3G1ZF2HBLcmNhPySNR4zxAcS88QvzF054XCtu14AWqqegKIG3s1pQvb
- b8QIDdHj9I8FHubHIlAzhTHgyPykidsgXl+mePQcPg81fhfob1uUDiQ62fF7DwOMfS3VFnWkKAh
- GjjNHCxS45UZAIsX4M90Q8T0=
+ t=1788577542; v=1; x=1789182342;
+ b=U3DiYY19bAXB6/KVr3LU7yjm1cTAB71T4DUya3mKji9CBTaU+wHDZhh6fCiTJgFrcRgpz3iQ
+ QPbSw2vzRdCYsD/EYU+MGXip0NNPj/cK5/A2h1//WpUqJjzGo4MjTI5SnXsWC/Q93PNoAgj1u4Y
+ LnZchLA+sOn5hVB+Wh794aZ0=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 50c0c96e9f01a2e5;
-	Sat, 05 Sep 2026 03:05:33 +0000
-X-Mizu-Trace-ID: 50c0c96e9f01a2e5
+Received: by smtp.migadu.com with ESMTPS id 77fe83e8f7634880;
+	Sat, 05 Sep 2026 03:05:41 +0000
+X-Mizu-Trace-ID: 77fe83e8f7634880
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
@@ -39,10 +40,12 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/6] memcg: group struct fields by access pattern
-Date: Fri,  4 Sep 2026 20:05:16 -0700
-Message-ID: <20260905030522.1887837-1-shakeel.butt@linux.dev>
+Subject: [PATCH 3/6] memcg: group the write-hot fields of struct mem_cgroup
+Date: Fri,  4 Sep 2026 20:05:19 -0700
+Message-ID: <20260905030522.1887837-4-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260905030522.1887837-1-shakeel.butt@linux.dev>
+References: <20260905030522.1887837-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,68 +54,180 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Every so often we get a memcg performance regression caused by nothing
-more than a field moving. Someone adds a field, removes one, or puts a
-few behind a config option. The layout shifts, fields with different
-access patterns land on the same cache line, and a bot reports a
-regression.
+These fields are written on the charge, reclaim and socket paths:
 
-Two examples. commit 98c9daf5ae6b ("mm: memcg: guard memcg1-specific
-members of struct mem_cgroup_per_node") moved lruvec next to
-lru_zone_size[] and needed commit f59adcf59332 ("mm: memcg: add
-cacheline padding after lruvec in mem_cgroup_per_node") to fix it.
-commit c1afbd5de131 ("mm/memcontrol: avoid false sharing between
-vmstats and events") had to add ____cacheline_aligned_in_smp for the
-same reason.
+  socket_pressure       written by reclaim, read on every socket charge
+  memory_events         bumped for this memcg and every ancestor, so a
+                        busy child dirties the whole chain
+  memory_events_local
+  vmpressure            written on every reclaim iteration
+  private_id_ref        written on every swap charge and uncharge
+  kmem_stat
+  high_irq_work, high_work
 
-Each fix was correct but nothing stops the next field addition
-from undoing it.
+They are spread over the struct today and share cache lines with
+read-mostly fields. Put them in one cache line group.
 
-This series makes the layout a contract the compiler checks, the same
-way struct net_device does it. Fields are sorted into named cache line
-groups by access pattern, and memcg_struct_check() verifies at build
-time that every field sits in its group. A field added in the wrong
-place now breaks the build instead of quietly costing a few percent.
+socket_pressure is kept next to memory_events because
+mem_cgroup_sk_under_memory_pressure() reads one and bumps the other.
 
-struct mem_cgroup gets three groups:
+Add memcg_struct_check() so the build fails if a field lands outside
+its group.
 
-  memcg_write_hot     written on the charge, reclaim and socket paths
-  memcg_cold          only the cgroup control paths touch these
-  memcg_read_mostly   set when the memcg is created, then only read
+No functional change.
 
-Testing
-=======
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+---
+ include/linux/memcontrol.h | 59 ++++++++++++++++++++++----------------
+ mm/memcontrol.c            | 32 +++++++++++++++++++++
+ 2 files changed, 66 insertions(+), 25 deletions(-)
 
-The cgroup selftests give identical results with and without the series.
-
-For performance, two identical 30 core Xeon machines each ran both
-kernels, with the boot order swapped between them so that machine and
-order effects cancel. The useful tests run two workloads at once in one
-cgroup, because false sharing only shows up when one side reads a field
-that the other side writes.
-
-  slab allocs + page faults, slab side           +1.2%
-  page faults + memory.stat readers, fault side  +1.3%
-  page faults + memory.stat readers, reader side +0.8%
-  everything else                                no change
-
-No test regressed. The gains are small but the point of the series is
-the build time contract.
-
-Shakeel Butt (6):
-  memcg: move per-node objcg to the read-mostly fields
-  memcg: split mem_cgroup_private_id into two fields
-  memcg: group the write-hot fields of struct mem_cgroup
-  memcg: group the cold fields of struct mem_cgroup
-  memcg: group the read-mostly fields of struct mem_cgroup
-  memcg: group the fields of struct mem_cgroup_per_node
-
- include/linux/memcontrol.h | 169 ++++++++++++++++++++++---------------
- mm/memcontrol.c            | 122 ++++++++++++++++++++++++--
- 2 files changed, 213 insertions(+), 78 deletions(-)
-
-
-base-commit: 817d340204c513316223ba084615f5906ac49ddb
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 46fc99786ebd..32b77ec5ba98 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -185,7 +185,6 @@ struct mem_cgroup {
+ 
+ 	/* Private memcg ID. Used to ID objects that outlive the cgroup */
+ 	int private_id;
+-	refcount_t private_id_ref;
+ 
+ 	/* Accounted resources */
+ 	struct page_counter memory;		/* Both v1 & v2 */
+@@ -195,15 +194,45 @@ struct mem_cgroup {
+ 		struct page_counter memsw;	/* v1 only */
+ 	};
+ 
+-	/* registered local peak watchers */
+-	struct list_head memory_peaks;
+-	struct list_head swap_peaks;
+-	spinlock_t	 peaks_lock;
++	/* Written on the charge, reclaim and socket paths. */
++	__cacheline_group_begin_aligned(memcg_write_hot);
++	/*
++	 * Hint of reclaim pressure for socket memory management. Note
++	 * that this indicator should NOT be used in legacy cgroup mode
++	 * where socket memory is accounted/charged separately.
++	 */
++	u64			socket_pressure;
++#if BITS_PER_LONG < 64
++	seqlock_t		socket_pressure_seqlock;
++#endif
++	/*
++	 * memory.events is bumped for this memcg and all its ancestors, so a
++	 * busy child dirties every ancestor.
++	 */
++	atomic_long_t		memory_events[MEMCG_NR_MEMORY_EVENTS];
++	atomic_long_t		memory_events_local[MEMCG_NR_MEMORY_EVENTS];
++
++	/* vmpressure notifications. Written on every reclaim iteration. */
++	struct vmpressure vmpressure;
++
++	/* Written on every swap charge and uncharge. */
++	refcount_t private_id_ref;
+ 
++#ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
++	/* MEMCG_KMEM for nmi context */
++	atomic_t		kmem_stat;
++#endif
+ 	/* Range enforcement for interrupt charges */
+ 	struct irq_work high_irq_work;
+ 	struct work_struct high_work;
+ 
++	__cacheline_group_end_aligned(memcg_write_hot);
++
++	/* registered local peak watchers */
++	struct list_head memory_peaks;
++	struct list_head swap_peaks;
++	spinlock_t	 peaks_lock;
++
+ #ifdef CONFIG_ZSWAP
+ 	unsigned long zswap_max;
+ 
+@@ -214,9 +243,6 @@ struct mem_cgroup {
+ 	bool zswap_writeback;
+ #endif
+ 
+-	/* vmpressure notifications */
+-	struct vmpressure vmpressure;
+-
+ 	/*
+ 	 * Should the OOM killer kill all belonging tasks, had it kill one?
+ 	 */
+@@ -232,23 +258,6 @@ struct mem_cgroup {
+ 	/* memory.stat */
+ 	struct memcg_vmstats	*vmstats;
+ 
+-	/* memory.events */
+-	atomic_long_t		memory_events[MEMCG_NR_MEMORY_EVENTS];
+-	atomic_long_t		memory_events_local[MEMCG_NR_MEMORY_EVENTS];
+-
+-#ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
+-	/* MEMCG_KMEM for nmi context */
+-	atomic_t		kmem_stat;
+-#endif
+-	/*
+-	 * Hint of reclaim pressure for socket memroy management. Note
+-	 * that this indicator should NOT be used in legacy cgroup mode
+-	 * where socket memory is accounted/charged separately.
+-	 */
+-	u64			socket_pressure;
+-#if BITS_PER_LONG < 64
+-	seqlock_t		socket_pressure_seqlock;
+-#endif
+ 	int kmemcg_id;
+ 
+ #ifdef CONFIG_CGROUP_WRITEBACK
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c42297ae3b0e..2e209dedeb4f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5726,6 +5726,36 @@ __setup("cgroup.memory=", cgroup_memory);
+  * basically everything that doesn't depend on a specific mem_cgroup structure
+  * should be initialized from here.
+  */
++/*
++ * Fields are grouped by access pattern. Putting a field in the wrong group
++ * breaks the build here.
++ */
++static void __init memcg_struct_check(void)
++{
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      socket_pressure);
++#if BITS_PER_LONG < 64
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      socket_pressure_seqlock);
++#endif
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      memory_events);
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      memory_events_local);
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      vmpressure);
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      private_id_ref);
++#ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      kmem_stat);
++#endif
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      high_irq_work);
++	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_write_hot,
++				      high_work);
++}
++
+ int __init mem_cgroup_init(void)
+ {
+ 	unsigned int memcg_size;
+@@ -5739,6 +5769,8 @@ int __init mem_cgroup_init(void)
+ 	 */
+ 	BUILD_BUG_ON(MEMCG_CHARGE_BATCH > S32_MAX / PAGE_SIZE);
+ 
++	memcg_struct_check();
++
+ 	cpuhp_setup_state_nocalls(CPUHP_MM_MEMCQ_DEAD, "mm/memctrl:dead", NULL,
+ 				  memcg_hotplug_cpu_dead);
+ 
 -- 
 2.53.0-Meta
 
