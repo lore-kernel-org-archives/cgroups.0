@@ -1,185 +1,85 @@
-Received: from mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53D13093CB
-	for <cgroups@vger.kernel.org>; Sun,  6 Sep 2026 01:11:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01BF731D757;
+	Sun,  6 Sep 2026 01:42:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788657107; cv=none; b=sjWQoCtnbvO5BxTwtbEFYC6BeF3/qpI6F4v8qYDSxHZKLTFubzSvJ70Q4mZslUqmDB+FpUPUhB1ZIPVE9+2DcKVtCfIEON2A0Hp7A0Wa50s881d6VsqYGOz032TDPaLq7v0fYYcPl119bDzQAX5WLNDKFTY/dFGzu8CBLrMakjc=
+	t=1788658952; cv=none; b=Hihjj/e/u5CSqVfdZeWAtfi1QGN48QxeNBZXVUIv+ij7Kpw2OVbCLRx1xGqep+mxt61m89VdHlKKQn4jx1Go5Iuqzj7qdkM1p7eWZg4poGpjnDKO/5RPzMEDAom5C/O+fx/LN6bo3Gt8XeLLX7W6yBvVQYiLBRoHFg13ZiK73j0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788657107; c=relaxed/simple;
-	bh=zW7QNqiwYguh6Fh5GCujAnJ8mRwsK4X04rOZ+SnCXzU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OSjpvzvDU6vicqKgFd36kfSX22NdwYVfiLfe+OsR5Zn+bydCwW4oKCmctHasNktOvXzXLLgNVXvYITu2/nQ8nnmLKOt9ziViAFOP/UbopHDZe/NxtN12RXKlGlD78Vt//ThOPsleJarLSu6v2PE/s5MbkkJu4WqT56AEMKlTMfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TIs/2n7U; arc=none smtp.client-ip=91.218.175.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788658952; c=relaxed/simple;
+	bh=ApLE/2PxWloz+Z9G2cOjEzC/92REoLzHOvW9vdU51Is=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=TpipKIQJX37ntBsM6x9qxQzM6Lj3gnxixz+ZU88oAaFs3R4mw+s36UmpWGOkP7uFtWqKytRxU5Eax4K4Tym40UFHwqVLSXAJGigaFfM4pNfTtd4dVQkjA5wK97qxGI3J9Awi/j802FdM1h2z/VJaeLxeUev6JpbBvqEt+G9xC3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=d9otqxcd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TIs/2n7U"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=zW7QNqiwYguh6Fh5GCujAnJ8mRwsK4X04rOZ+SnCXzU=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788657102; v=1; x=1789261902;
- b=TIs/2n7UPrFFtv67oCWx/Km/lwRhljfKn3fPIRoN9oGPoYy/DjooFk1oMYppJxjBtW8V8SX2
- zfGxbVPfTtAQetOA+9sohO8ihXzBWoB5SLzHfyXRRpIiJ5ls64s9pv8CFxS3uDctIkPOqpH183S
- iwoKZWvHi/K/BhI5S23Q/+D8=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id d50bff216045863e;
-	Sun, 06 Sep 2026 01:11:32 +0000
-X-Mizu-Trace-ID: d50bff216045863e
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <f65d4985-5e21-4e29-b5f4-dcff0fa479ab@linux.dev>
-Date: Sun, 6 Sep 2026 09:11:24 +0800
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="d9otqxcd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F288F1F00A3A;
+	Sun,  6 Sep 2026 01:42:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1788658950;
+	bh=/AYMvAp78dVD5vLMe+eK825AGZ5A0V/aakGb0r5iBD8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=d9otqxcd7zj7hxwsR7h9z2fXV+XdoihBpmslDHd0s4xCWUN1nwpYbP6klTajWyeY8
+	 8w+ufiaU8aIE8EqK3x4dEuUmX7zmiB/PaoxQh+7SI8o2wyvRAzjJaGcC+dLNbn7q+1
+	 6FrDVJ5D6Lc3kW9cUm6S3KRt2N1DjTCTMaIoKtGM=
+Date: Sat, 5 Sep 2026 18:42:29 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Hui Zhu" <hui.zhu@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+ <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, David
+ Hildenbrand <david@kernel.org>, Qi Zheng <qi.zheng@linux.dev>, Lorenzo
+ Stoakes <ljs@kernel.org>, Kairui Song <kasong@tencent.com>, Barry Song
+ <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie
+ <yuanchu@google.com>, Wei Xu <weixugc@google.com>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, Hui Zhu
+ <zhuhui@kylinos.cn>, stable@vger.kernel.org
+Subject: Re: [PATCH v3 2/3] mm: workingset: use lruvec_page_state_local() to
+ count lru pages
+Message-Id: <20260905184229.8f7f30cf10638e7dc8224467@linux-foundation.org>
+In-Reply-To: <2ec3a7f73e85ee5f5739c9dc2e58e9a0e2091925.1788514750.git.zhuhui@kylinos.cn>
+References: <cover.1788514750.git.zhuhui@kylinos.cn>
+	<2ec3a7f73e85ee5f5739c9dc2e58e9a0e2091925.1788514750.git.zhuhui@kylinos.cn>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] mm/page_counter: avoid integer overflow in
- effective_protection()
-To: David Laight <david.laight.linux@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Muchun Song <muchun.song@linux.dev>, Kairui Song <kasong@tencent.com>,
- Qi Zheng <qi.zheng@linux.dev>, Barry Song <baohua@kernel.org>,
- Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
- Wei Xu <weixugc@google.com>, David Hildenbrand <david@kernel.org>,
- Lorenzo Stoakes <ljs@kernel.org>, Chris Down <chris@chrisdown.name>,
- Tejun Heo <tj@kernel.org>, Yu Zhao <yuzhao@google.com>,
- "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
- <cgroups@vger.kernel.org>,
- "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
- <linux-mm@kvack.org>, linux-kernel@vger.kernel.org,
- Ridong Chen <chenridong@xiaomi.com>, stable@vger.kernel.org
-References: <20260903031952.1120321-1-ridong.chen@linux.dev>
- <20260903031952.1120321-2-ridong.chen@linux.dev>
- <20260904093743.23cde26b@pumpkin>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <20260904093743.23cde26b@pumpkin>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
+On Fri,  4 Sep 2026 17:45:55 +0800 "Hui Zhu" <hui.zhu@linux.dev> wrote:
 
-
-On 9/4/2026 4:37 PM, David Laight wrote:
-> On Thu,  3 Sep 2026 11:19:51 +0800
-> Ridong Chen <ridong.chen@linux.dev> wrote:
+> From: Hui Zhu <zhuhui@kylinos.cn>
 > 
->> From: Ridong Chen <chenridong@xiaomi.com>
->>
->> effective_protection() scales a parent's protection by a ratio of page
->> counts, e.g. for recursive protection:
->>
->> 	(parent_effective - siblings_protected) * (usage - protected)
->> 		/ (parent_usage - siblings_protected)
->>
->> The multiply is done at unsigned long width before dividing. On systems
->> with >= 16TB RAM the product can exceed 2^64 and wrap, giving a bogus
->> protection value and silently breaking memory.min/low enforcement.
->>
->> Use mul_u64_u64_div_u64() to multiply in a 128-bit intermediate. Because
->> usage and parent_usage are not read atomically (a child is charged
->> before its parent), usage - protected can briefly exceed the divisor,
->> making the quotient overflow 64 bits and trap (#DE on x86). Cap it so
->> the ratio stays <= 1.
->>
->> Reported by the sashiko review tool [1].
->>
->> [1] https://sashiko.dev/#/patchset/20260826133054.88529-1-ridong.chen@linux.dev?part=1
->>
->> Fixes: bc50bcc6e00b ("mm: memcontrol: clean up and document effective low/min calculations")
->> Fixes: 8a931f801340 ("mm: memcontrol: recursive memory.low protection")
->> Cc: stable@vger.kernel.org
->> Assisted-by: Claude:claude-opus-4-8
->> Reviewed-by: Barry Song <baohua@kernel.org>
->> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
->> ---
->>   mm/page_counter.c | 19 +++++++++++++------
->>   1 file changed, 13 insertions(+), 6 deletions(-)
->>
->> diff --git a/mm/page_counter.c b/mm/page_counter.c
->> index 661e0f2a5127..e8bd512069c5 100644
->> --- a/mm/page_counter.c
->> +++ b/mm/page_counter.c
->> @@ -8,6 +8,7 @@
->>   #include <linux/page_counter.h>
->>   #include <linux/atomic.h>
->>   #include <linux/kernel.h>
->> +#include <linux/math64.h>
->>   #include <linux/string.h>
->>   #include <linux/sched.h>
->>   #include <linux/bug.h>
->> @@ -356,7 +357,8 @@ static unsigned long effective_protection(unsigned long usage,
->>   	 * otherwise get a smaller chunk than what they claimed.
->>   	 */
->>   	if (siblings_protected > parent_effective)
->> -		return protected * parent_effective / siblings_protected;
->> +		return mul_u64_u64_div_u64(protected, parent_effective,
->> +					   siblings_protected);
+> Commit 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the
+> number of lru pages") switched count_shadow_nodes() to lruvec_lru_size().
+> With CONFIG_MEMCG enabled, lruvec_lru_size() reads mz->lru_zone_size,
+> which only the classic LRU paths maintain.  MGLRU accounts its pages
+> through __update_lru_size(), which skips that array, so with MGLRU on the
+> four evictable LRU lists are always seen as empty.  The shadow node budget
+> (pages >> 3) then collapses to slab plus unevictable pages, and the
+> workingset shadow shrinker reclaims eviction tokens almost as fast as they
+> are created, losing thrashing protection.
 > 
-> On 32bit it is only necessary to use a 64bit intermediary.
-> mul_u64_u64_div_u64() will drop back to the (probably faster) 64 by 64
-> divide (and then maybe to a 64 by 32 one).
-> But there is a lot of extra code before that happens.
-> 
+> lruvec_page_state_local() reads lruvec_stats->state_local instead, which
+> both classic LRU and MGLRU maintain.  Switch back to it.  The reparenting
+> race this re-exposes on cgroup v2 is closed by the follow-up patch that
+> redirects dying-memcg stat updates for all hierarchies.
 
-Hi David,
+The follow-up patch is "mm: memcg: skip the RCU lock when the memcg is
+not dying"?  But that's an optimization so I'm confused.
 
-Thank you for your review.
+If we're re-exposing a race, the fix for that race should have the same
+Fixes: and cc:stable as the commit which did the reexposure?
 
-Do you want me to split this for 32-bit, or is keeping the single
-mul_u64_u64_div_u64() call for readability fine with you?
+It isn't clear why any of these patches is cc:stable.  The overall
+effect is a tiny performance improvement?  Very clear descriptions of
+end-user effects are always helpful.
 
->>   
->>   	/*
->>   	 * Ok, utilized protection of all children is within what the
->> @@ -397,13 +399,18 @@ static unsigned long effective_protection(unsigned long usage,
->>   	if (parent_effective > siblings_protected &&
->>   	    parent_usage > siblings_protected &&
->>   	    usage > protected) {
->> -		unsigned long unclaimed;
->> +		unsigned long unclaimed = parent_effective - siblings_protected;
->> +		unsigned long unprotected = usage - protected;
->> +		unsigned long parent_unprotected = parent_usage - siblings_protected;
->>   
->> -		unclaimed = parent_effective - siblings_protected;
->> -		unclaimed *= usage - protected;
->> -		unclaimed /= parent_usage - siblings_protected;
->> +		/*
->> +		 * The usages aren't read atomically, so a child can transiently
->> +		 * appear to use more than its parent, making the ratio exceed 1
->> +		 * and the quotient overflow 64 bits (#DE on x86).  Cap it.
->> +		 */
->> +		unprotected = min(unprotected, parent_unprotected);
->>   
->> -		ep += unclaimed;
->> +		ep += mul_u64_u64_div_u64(unclaimed, unprotected, parent_unprotected);
-> 
-> If the ratio is forced to 1 there is no point doing the scaling.
-> So maybe:
-> 		if (likely(parent_unprotected > unprotected))
-> 			unclaimed = mul_u64_u64_div_u64(unclaimed, unprotected,
-> 							parent_unprotected);
-> 		ep += unclaimed;
-> OTOH if the min() generates a cmov rather than a conditional branch
-> then you don't get a statically mispredicted branch in the normal case
-> (which is very likely with the empty 'else' branch).
-> 
-
-I'd rather keep it as-is and avoid the extra branch. Does that work for you?
-
-> 
->>   	}
->>   
->>   	return ep;
-> 
-
--- 
-Best regards
-Ridong
+So at this time I'll schedule the whole series for 7.4-rc1.  If there's
+some reason why some/all of these should be backported then please lmk.
 
