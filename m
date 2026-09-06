@@ -1,85 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-80.mta0.migadu.com [91.218.175.80])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01BF731D757;
-	Sun,  6 Sep 2026 01:42:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 890F586329
+	for <cgroups@vger.kernel.org>; Sun,  6 Sep 2026 05:05:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788658952; cv=none; b=Hihjj/e/u5CSqVfdZeWAtfi1QGN48QxeNBZXVUIv+ij7Kpw2OVbCLRx1xGqep+mxt61m89VdHlKKQn4jx1Go5Iuqzj7qdkM1p7eWZg4poGpjnDKO/5RPzMEDAom5C/O+fx/LN6bo3Gt8XeLLX7W6yBvVQYiLBRoHFg13ZiK73j0=
+	t=1788671143; cv=none; b=CSSA68LctnMY20+FEk6c5aIf/lvO3habj/pt14gbjjD0vo31GwovC+c56ANQnv6OALkwpAULcF+1USqgQH+eO5TK01qJysf5tO0xjUuiB2VNpCEbR6Aunb+Q8NpR9eGgPrBteeVD+y1pmsLnvDxtoFoGKdXV/ovyQcr7+5Cncbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788658952; c=relaxed/simple;
-	bh=ApLE/2PxWloz+Z9G2cOjEzC/92REoLzHOvW9vdU51Is=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=TpipKIQJX37ntBsM6x9qxQzM6Lj3gnxixz+ZU88oAaFs3R4mw+s36UmpWGOkP7uFtWqKytRxU5Eax4K4Tym40UFHwqVLSXAJGigaFfM4pNfTtd4dVQkjA5wK97qxGI3J9Awi/j802FdM1h2z/VJaeLxeUev6JpbBvqEt+G9xC3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=d9otqxcd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788671143; c=relaxed/simple;
+	bh=90c8t894CaHOARptfQVdz1/jF1xpxhRk1kEXilNjskc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=skAS5DoCx1GpDuCwzPZ+t2Hxw+jYhR0cHaAXEN/R/Mso3BHxRbigaVqV+jaosMtGO0pS3og3mhqqyxFkZLAtnB9RfJJ004g4Wssxw6bG4T9wFleCeU7N2jFyBWwp8Pux/OLEQn+29Q+U8x+rMQ6abmpsGhUF43Wr9oL21GeapRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YLdvTY+B; arc=none smtp.client-ip=91.218.175.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="d9otqxcd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F288F1F00A3A;
-	Sun,  6 Sep 2026 01:42:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1788658950;
-	bh=/AYMvAp78dVD5vLMe+eK825AGZ5A0V/aakGb0r5iBD8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=d9otqxcd7zj7hxwsR7h9z2fXV+XdoihBpmslDHd0s4xCWUN1nwpYbP6klTajWyeY8
-	 8w+ufiaU8aIE8EqK3x4dEuUmX7zmiB/PaoxQh+7SI8o2wyvRAzjJaGcC+dLNbn7q+1
-	 6FrDVJ5D6Lc3kW9cUm6S3KRt2N1DjTCTMaIoKtGM=
-Date: Sat, 5 Sep 2026 18:42:29 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Hui Zhu" <hui.zhu@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, David
- Hildenbrand <david@kernel.org>, Qi Zheng <qi.zheng@linux.dev>, Lorenzo
- Stoakes <ljs@kernel.org>, Kairui Song <kasong@tencent.com>, Barry Song
- <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie
- <yuanchu@google.com>, Wei Xu <weixugc@google.com>, cgroups@vger.kernel.org,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, Hui Zhu
- <zhuhui@kylinos.cn>, stable@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] mm: workingset: use lruvec_page_state_local() to
- count lru pages
-Message-Id: <20260905184229.8f7f30cf10638e7dc8224467@linux-foundation.org>
-In-Reply-To: <2ec3a7f73e85ee5f5739c9dc2e58e9a0e2091925.1788514750.git.zhuhui@kylinos.cn>
-References: <cover.1788514750.git.zhuhui@kylinos.cn>
-	<2ec3a7f73e85ee5f5739c9dc2e58e9a0e2091925.1788514750.git.zhuhui@kylinos.cn>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YLdvTY+B"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=90c8t894CaHOARptfQVdz1/jF1xpxhRk1kEXilNjskc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788671137; v=1; x=1789275937;
+ b=YLdvTY+BdhyNetq/FhXe4EJRfKs9DSQjDHNoaWd8l9uLh9kMqYxUOh+IO1tnDOxXrJjw3EGC
+ lZabqH3rKazj6pm80QQRLvsFcYlYbxPQGySi9bvJEJakjd8zPRAtLhmno2C0r73+txoiF5K7J+E
+ iOK0VDADYSR4rly3oQfumg3c=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 1352ad230425d981;
+	Sun, 06 Sep 2026 05:05:36 +0000
+X-Mizu-Trace-ID: 1352ad230425d981
+X-Migadu-Flow: FLOW_OUT
+Date: Sat, 5 Sep 2026 22:05:32 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, muchun.song@linux.dev, yosry@kernel.org, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH v3] mm/memcontrol: skip non-hierarchical memcg-wide stats
+ when v1 is unavailable
+Message-ID: <20260906050459.GA80665@shakeel.butt@linux.dev>
+References: <20260903215616.1456239-1-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260903215616.1456239-1-joannelkoong@gmail.com>
 
-On Fri,  4 Sep 2026 17:45:55 +0800 "Hui Zhu" <hui.zhu@linux.dev> wrote:
-
-> From: Hui Zhu <zhuhui@kylinos.cn>
+On Thu, Sep 03, 2026 at 02:56:16PM -0700, Joanne Koong wrote:
+> memcg_vmstats keeps a non-hierarchical copy of every memcg-wide stat item
+> and event alongside the hierarchical one. The only readers however are
+> the legacy memory.stat and memory.numa_stat, and reparenting on offline.
+> All of them live under CONFIG_MEMCG_V1, and their accessors
+> (memcg_page_state_local() and memcg_events_local()) are already compiled
+> out with it. This means on a CONFIG_MEMCG_V1=n kernel, memcg_vmstats's
+> non-hierarchical arrays are written to on every rstat flush, despite
+> their values never being read / accessed.
 > 
-> Commit 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the
-> number of lru pages") switched count_shadow_nodes() to lruvec_lru_size().
-> With CONFIG_MEMCG enabled, lruvec_lru_size() reads mz->lru_zone_size,
-> which only the classic LRU paths maintain.  MGLRU accounts its pages
-> through __update_lru_size(), which skips that array, so with MGLRU on the
-> four evictable LRU lists are always seen as empty.  The shadow node budget
-> (pages >> 3) then collapses to slab plus unevictable pages, and the
-> workingset shadow shrinker reclaims eviction tokens almost as fast as they
-> are created, losing thrashing protection.
+> The same holds when the kernel does support v1 but the controller has
+> been blocked from v1 hierarchies with the boot param
+> cgroup_no_v1={memory,all}. A v1 mount is refused in that case, so the
+> legacy memory.stat can never exist and the arrays are just as unread /
+> unaccessed.
 > 
-> lruvec_page_state_local() reads lruvec_stats->state_local instead, which
-> both classic LRU and MGLRU maintain.  Switch back to it.  The reparenting
-> race this re-exposes on cgroup v2 is closed by the follow-up patch that
-> redirects dying-memcg stat updates for all hierarchies.
+> Compile out the non-hierarchical memcg-wide arrays if CONFIG_MEMCG_V1 is
+> not set. If it is set but cgroup_no_v1= has blocked the controller, skip
+> updates on the arrays.
+> 
+> This makes flushes cheaper. mem_cgroup_stat_aggregate() can now skip the
+> read-modify-write of ac->local[i]. Nothing else accesses state_local or
+> events_local, so those cachelines were getting pulled in solely for the
+> writes and they are separate from the ones the loop is already walking.
+> 
+> On an 80-cpu x86_64 machine with 500 cgroups each running a workload that
+> dirties anon, file, dirty/writeback, slab, kmem, mlock, and reclaim
+> counters, timing mem_cgroup_css_rstat_flush() in-kernel in TSC ticks per
+> flush showed roughly
+> 
+>                          before   after    delta
+> memcg-wide aggregation   1231     1180     -4.1%
+> overall flush function   2452     2397     -2.2%
+> 
+> These numbers are from taking the median of 70 samples, one per 20s
+> window on each kernel. The 95% intervals observed on the two deltas are
+> [-5.41%, -1.76%] and [-4.53%, -0.14%]. The values above include the
+> timing overhead itself, so only the delta is meaningful here.
+> 
+> Counting the items that actually changed, a median of 1.5 of the 77
+> memcg-wide items (57 state + 20 events) had a non-zero per-cpu delta at
+> each flush, which means the benchmarks above are with one or two fewer
+> cachelines pulled in per flush. The count is low because the benchmark
+> reads memory.stat in a loop to keep the flush rate up. For cases where
+> flushes are triggered only by the 2s periodic worker, more changes will
+> have accumulated between flushes, so more cachelines are skipped and the
+> per-flush saving should be larger.
+> 
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 
-The follow-up patch is "mm: memcg: skip the RCU lock when the memcg is
-not dying"?  But that's an optimization so I'm confused.
-
-If we're re-exposing a race, the fix for that race should have the same
-Fixes: and cc:stable as the commit which did the reexposure?
-
-It isn't clear why any of these patches is cc:stable.  The overall
-effect is a tiny performance improvement?  Very clear descriptions of
-end-user effects are always helpful.
-
-So at this time I'll schedule the whole series for 7.4-rc1.  If there's
-some reason why some/all of these should be backported then please lmk.
-
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
