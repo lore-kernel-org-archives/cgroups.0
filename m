@@ -1,217 +1,201 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-40.mta1.migadu.com [95.215.58.40])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CF7F36165E;
-	Mon,  7 Sep 2026 06:03:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83C343E49FE
+	for <cgroups@vger.kernel.org>; Mon,  7 Sep 2026 07:10:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788761033; cv=none; b=rEtxc99y+4lww8m66Af5FWUxK+EiY0kSyZYkr7uWwZDy2Sl2xJBA1iB9veEz/Y12ZWmVL+60PVRi+oPRwY98iL64jraQkXLv99uv/Lzu3HHAcLcnP+FowWVCrAxFXvMeh6wvbelDyie8QUTMJ7mO7sLCxT0VSi6s3z7uEpNfQ5A=
+	t=1788765061; cv=none; b=TuZ9xTOtB1BSTjzNWTTlUgg+nSBkC0/h/NpeLoXmXOFsriWV4amiUwfgaYYFb5+UplgZrA/2BmJknYGbck2PfGYOYIeMViyhNfKoyZ28NX56lkkVSsRUy9zsEqgCxX/XbG2VXdNjsK4hFXick9bkRtfKzPo4Z9+XkWmED1KQypo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788761033; c=relaxed/simple;
-	bh=rPRFh+npbncxIb5/WeLVPv9dtkEn3Fd7H/t9nDTS8Mw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JVJ57N8rNwKpHARr2D0/JovQw6gak2wy7lCFu5rdefYr5VEhzSeC2mLSN8ms2AwyT/+mbfExVbgGPh66lny3tbvk3z6xPcKPHn9bLpgAc0mcIR4ZroqTcJQDnKk8vTJPvWjugbaTXsLGT798wOGd7lGwa+pYnCjTO1o+ENnB3O4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=k6q7up2c; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1788765061; c=relaxed/simple;
+	bh=JRRbxs4nGui4cuCx7AujhYPrgAf4uhXjt73M6I+9Ogw=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=oOAmlKRY0zhMtTloZooUJYyrM+zE23rGJKuPe/zy5ikU+hg83V2s6UXpInWYh0CE2CNak87JkkIelzBbQLNSb2Z7Ta/PhzWMgPFz4XUeHkbiagYY9ayw2ujKidtW1BHvXEjjIbaGAeg2s5faw0+og5zbq5cCcHQx8FlTI7MvLnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Hhgnm4SF; arc=none smtp.client-ip=95.215.58.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="k6q7up2c"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68741iLQ821207;
-	Mon, 7 Sep 2026 06:02:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=ksb5J1
-	kFmRG7IMX5VJXWmuOrTscqVKlwxv+1yj74CUg=; b=k6q7up2cShkCwnKg3qcM+J
-	3OKFVGYl5ffUd5g4riCP2Lq9CxtBm4aCnITrClbP6nXXQXVz/sWejThstwiSnmwZ
-	poAYZdJsAZ3Wd97mtVzgA7TRScDZIc5UfrX0GroHiY7DdZtT/WFxT12yDhHN18Zs
-	216pm3b7xsRslesr8WcyrzJmMCoFl8upWjSFtiDOP2OK1LOQWzIKaZgCeq8bvevH
-	MFy4zH422iwJw0j1aebibAxZ2MZT0qkMOZ0XOGmXs1c+Rp68zxfAb+W95e6SU/7D
-	pPxp+VfMb1kKp1P2qDD3hBcl4aNs839+0UXPrjiNgHkqHHnkymLQdChmIytgrhHg
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ggbheprn1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 07 Sep 2026 06:02:36 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 6875uP9b030858;
-	Mon, 7 Sep 2026 06:02:36 GMT
-Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ggxwgv5ay-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 07 Sep 2026 06:02:36 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68762ZOB43254018
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 7 Sep 2026 06:02:35 GMT
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8375E5805D;
-	Mon,  7 Sep 2026 06:02:35 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A18D458053;
-	Mon,  7 Sep 2026 06:02:19 +0000 (GMT)
-Received: from [9.123.7.57] (unknown [9.123.7.57])
-	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Mon,  7 Sep 2026 06:02:19 +0000 (GMT)
-Message-ID: <a123f309-6ec7-470f-b5b0-f08cca6d2627@linux.ibm.com>
-Date: Mon, 7 Sep 2026 11:32:18 +0530
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Hhgnm4SF"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=JRRbxs4nGui4cuCx7AujhYPrgAf4uhXjt73M6I+9Ogw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788765057; v=1; x=1789369857;
+ b=Hhgnm4SF3mmBLXXwrqe1ktY1xlHdGoWv2w2BCE2HumKS1+pUL4nAKQrsYQnapFDQQc78N2Uk
+ rgBZ3HjruPMaxvlKWw8Hxod3H2vp1IM/cshr4OgpWiybzzy5RFkq1j45pvmbwh35oPMKTRih4Lz
+ bQiREaJCKv5VQSlsI3pOWTdg=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id 9cad51a24e8e6336;
+	Mon, 07 Sep 2026 07:10:57 +0000
+X-Mizu-Trace-ID: 9cad51a24e8e6336
+X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/3] blk-cgroup: store blkcg in bio instead of blkg
-To: yukuai@fygo.io, Yu Kuai <yukuai@kernel.org>, Jens Axboe
- <axboe@kernel.dk>,
-        Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>, Tao Cui <cui.tao@linux.dev>,
-        Jan Kara <jack@suse.cz>, Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>, Coly Li <colyli@fygo.io>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Alasdair Kergon
- <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
-        Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-        Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
-        Dan Williams <djbw@kernel.org>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Ira Weiny
- <iweiny@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
-        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
-        Youngjun Park <youngjun.park@lge.com>, cgroups@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-        nvdimm@lists.linux.dev, virtualization@lists.linux.dev,
-        gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-References: <20260823133045.970199-1-yukuai@kernel.org>
- <20260823133045.970199-3-yukuai@kernel.org>
- <49d724b8-57c6-48fc-8099-69cd1b072351@linux.ibm.com>
- <befbc177-f7f5-4c44-b02e-20a99fc64c0c@fygo.io>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <befbc177-f7f5-4c44-b02e-20a99fc64c0c@fygo.io>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: im8OC1-EmKXczbx-h1qS5bOwxgKAaWN6
-X-Authority-Analysis: v=2.4 cv=RIaD2Yi+ c=1 sm=1 tr=0 ts=6a9e537d cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
- a=3B2c1Lu2D3hCyOpHH_4A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA3MDA2MyBTYWx0ZWRfX41bv8i9Ji5b5
- khAXgMgA4wj06LIds34mWjHokFZI5htPa3CcCYMzkMltQ3HbC8kwOJZUNARuqYjQ3TPdyG/HODX
- vLmFSG4SdgheEUgTIxq9rj8tvz9D58I=
-X-Proofpoint-ORIG-GUID: n5OGK1j4LYtHzHpx4KZ2qyT0H7DzsKco
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA3MDA2MyBTYWx0ZWRfX9PiRfBZRsKiO
- CX+4bhydjMEyqMW0Fa1P0zb0/Vxvvu/ZGl5CDMSuLOs4q5kXF+sZXNNrsiWxNvPLt0ZTPCvf3W2
- FEYMlSilDZFBf/kwoTaf//bU8y9gtYJCCdWiXQ6p1bQzQzFsYfVQUiW2EzalUnnNiv84ndOnn/T
- 8sIQWvaEanwTKBCDHqXfyMrixhlF2BR+HrNKLL1mZtiUePnF9Q0oxzWRf6p+VmRwInrlXDOFnkG
- icAa0fFzxWnAr5o7Kp+y441RcyP59HAkDdqe0ASiFnLmKSzzBo4GBekCkFm7orKjID5F7VHBMHs
- PYHJHFkgCC9CVBXXx86BkHmuSi3otCFap/OIt6bBQ4pYSs+wIuRJh5PMGVzAQZIkUIlXtMNl7xE
- g1lLq/MfjeBSh1A/urFKfg+cWYG/vs3riyno/UMGvCo2gk5S8kVNYKHIH6GtDFcpMH4I5pmYDgE
- +V28/ums8ewFhwRZIeg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-07_01,2026-09-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 suspectscore=0 malwarescore=0 priorityscore=1501 bulkscore=0
- adultscore=0 phishscore=0 clxscore=1015 impostorscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609070063
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.1\))
+Subject: Re: [PATCH RFC v2 4/6] mm/memcg: return the memcg when putting
+ memcgid
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <apxvRTMdmit7dYk5@BINGFANGGUO-MC0>
+Date: Mon, 7 Sep 2026 15:10:38 +0800
+Cc: bingfangguo@tencent.com,
+ cgroups@vger.kernel.org,
+ linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Dave Chinner <david@fromorbit.com>,
+ Qi Zheng <qi.zheng@linux.dev>,
+ Kairui Song <kasong@tencent.com>,
+ Barry Song <baohua@kernel.org>,
+ Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>,
+ Wei Xu <weixugc@google.com>,
+ David Hildenbrand <david@kernel.org>,
+ Lorenzo Stoakes <ljs@kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <7B499C0E-2A46-4EC7-A850-8CC2DA2B5D20@linux.dev>
+References: <20260901-bingfangguo-memcgid-rework-v2-0-8edd7f7a7251@tencent.com>
+ <20260901-bingfangguo-memcgid-rework-v2-4-8edd7f7a7251@tencent.com>
+ <c3bec318-ef9d-4d96-8a98-a68717c17201@linux.dev>
+ <apxvRTMdmit7dYk5@BINGFANGGUO-MC0>
+To: Bingfang Guo <bfguo@icloud.com>
+X-Mailer: Apple Mail (2.3864.700.51.1.1)
 
-On 9/6/26 5:09 PM, yu kuai wrote:
-> Hi,
-> 
-> 在 2026/9/6 18:56, Nilay Shroff 写道:
->> On 8/23/26 7:00 PM, Yu Kuai wrote:
->>> @@ -257,20 +262,21 @@ static inline bool
->>> bio_issue_as_root_blkg(struct bio *bio)
->>>     * @blkcg: blkcg of interest
->>>     * @q: request_queue of interest
->>>     *
->>>     * Lookup a blkg for the @blkcg - @q pair, whether it is online or
->>> dying.
->>>     *
->>> - * Must be called in a RCU critical section.
->>> + * Must be called with either RCU read lock or queue_lock held.
->>>     *
->>>     * This does not acquire a reference.  The caller must already hold
->>> one, or
->>>     * have the blkg pinned by I/O.
->>>     */
->>>    static inline struct blkcg_gq *blkg_lookup_any(struct blkcg *blkcg,
->>>                               struct request_queue *q)
->>>    {
->>> -    RCU_LOCKDEP_WARN(!rcu_read_lock_held(),
->>> -             "blkg_lookup_any() requires an RCU read lock");
->>> +    RCU_LOCKDEP_WARN(!rcu_read_lock_held() &&
->>> +             !lockdep_is_held(&q->queue_lock),
->>> +             "blkg_lookup_any() requires an RCU read lock or
->>> queue_lock");
->>>          return rhashtable_lookup(&q->blkg_hash, &blkcg->css.id,
->>>                     blkg_hash_params);
->>>    }
->>
->> The changes look good to me. However, rhashtable_lookup() is annotated
->> with __must_hold_shared(RCU). Since we now officially support Clang
->> context annotations in the block layer, compiling with the latest
->> Clang/LLVM generates a number of context warnings, for example:
->>
->> block/blk-cgroup.h:277:9: warning: calling function 'rhashtable_lookup'
->> requires holding __ctx_lock_RCU 'RCU' [-Wthread-safety-analysis]
->>    277 |         return rhashtable_lookup(&q->blkg_hash, &blkcg->css.id,
->>        |                ^
->>
->> The same warning is reported from several other block layer source
->> files that include blk-cgroup.h.
->>
->> This indicates that rhashtable_lookup() requires the RCU read lock
->> from Clang's context-analysis perspective. Looking at the call paths of
->> blkg_lookup_any(), it appears that not all callers hold
->> rcu_read_lock() when invoking it.
-> 
-> I was not aware of the above clang warning, this should not be a real problem
-> because queue_lock should have the same protection as rcu, and I was trying
-> not to make this patch too complex.
-> 
-I agree that this is not a runtime correctness issue when the lookup is already
-protected by q->queue_lock.
 
-> I add the rcu_read_lock() in the following patch to covert queue_lock to blkcg_mutex:
-> 
-> [RFC PATCH v3 3/6] blk-cgroup: protect blkgs with blkcg_mutex - Yu Kuai <https://lore.kernel.org/all/20260823152926.1043863-4-yukuai@kernel.org/>
-> 
-> Since this is related to compile warning, I'll move the rcu protection to this
-> patch.
-> 
-Since rhashtable_lookup() is annotated with __must_hold_shared(RCU), Clang's
-context analysis still reports warnings for these call paths. While this
-doesn't cause a build failure (and only generates warning) when CONFIG_WERROR
-is not enabled, it could do so for configurations that enable CONFIG_WERROR=y.
 
-So IMO, moving the rcu_read_lock() protection into this patch makes sense.
-This would avoid introducing the Clang warnings/errors in this patch, and then
-you may accordingly adjust your subsequent series where the q->queue_lock protection
-is removed and the blkg lookup paths are protected by RCU.
+> On Sep 6, 2026, at 03:36, Bingfang Guo <bfguo@icloud.com> wrote:
+>=20
+> On Sat, Sep 05, 2026 at 03:28:50PM +0800, Muchun Song wrote:
+>>=20
+>=20
+> Hi, Muchun!
+>=20
+>>=20
+>> On 2026/9/1 16:58, Bingfang Guo via B4 Relay wrote:
+>>> From: Bingfang Guo <bingfangguo@tencent.com>
+>>>=20
+>>> __mem_cgroup_uncharge_swap() needs both the memcg and the id =
+refcount
+>>> drop.  Right now it looks the memcg up by id, uncharges it, then =
+looks
+>>> it up again inside mem_cgroup_private_id_put() to drop the =
+reference.
+>>>=20
+>>> Make mem_cgroup_private_id_put() resolve the id once, drop the
+>>> reference, and return the nearest online memcg with a reference held =
+for
+>>> the caller.  __mem_cgroup_uncharge_swap() then uses that memcg =
+directly
+>>> and drops the reference after uncharging, avoiding the second xarray
+>>> lookup.
+>>>=20
+>>> Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
+>>> ---
+>>>  mm/memcontrol.c | 20 +++++++++++++++++---
+>>>  1 file changed, 17 insertions(+), 3 deletions(-)
+>>>=20
+>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>> index 048c9bb0fad79..f0503a1e5492d 100644
+>>> --- a/mm/memcontrol.c
+>>> +++ b/mm/memcontrol.c
+>>> @@ -4048,14 +4048,28 @@ static void =
+__mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned int n
+>>>   }
+>>>  }
+>>> -static void mem_cgroup_private_id_put(unsigned short id, unsigned =
+int n)
+>>> +/**
+>>> + * mem_cgroup_private_id_put - put memcgid and get the nearest =
+online memcg
+>>> + * @id: the memcg private id got from mem_cgroup_id_get_online
+>>> + * @n: count of references to put
+>>> + */
+>>> +static struct mem_cgroup *mem_cgroup_private_id_put(unsigned short =
+id, unsigned int n)
+>>=20
+>> Having an API that put reference-counted resources return a struct =
+pointer
+>> is a very strange design. Please don't do that.
+>=20
+> That's true.
+>=20
+>>=20
+>>>  {
+>>>   struct mem_cgroup *memcg;
+>>>   rcu_read_lock();
+>>>   memcg =3D mem_cgroup_from_private_id(id);
+>>> + if (!memcg)
+>>> + goto out;
+>>> +
+>>>   __mem_cgroup_private_id_put(memcg, n);
+>>> +
+>>> + while (memcg_is_dying(memcg) || !mem_cgroup_tryget(memcg))
+>>> + memcg =3D parent_mem_cgroup(memcg);
+>>> +
+>>> +out:
+>>>   rcu_read_unlock();
+>>> + return memcg;
+>>>  }
+>>>  static void mem_cgroup_private_id_kill(struct mem_cgroup *memcg)
+>>> @@ -5816,7 +5830,7 @@ void __mem_cgroup_uncharge_swap(unsigned short =
+id, unsigned int nr_pages)
+>>>   struct mem_cgroup *memcg;
+>>>   rcu_read_lock();
+>>> - memcg =3D mem_cgroup_from_private_id(id);
+>>=20
+>> I think we can introduce a new helper like =
+obj_cgroup_from_private_id(),
+>> We can use the ID to get the corresponding obj_cgroup, and then get =
+the
+>> mem_cgroup.
+>=20
+> I actually did this in some local versions but gave up in the end
+> because the ID should be referring to some memcg and I was not
+> sure if getting some objcg from a memcgid looks normal.
 
-I also noticed that some paths already take q->queue_lock followed by rcu_read_lock(),
-so adding the RCU protection here should be consistent with those existing paths.
+But the current series is already changing the binding
+relationship between IDs and pointers. You've already
+established a binding between the ID and the objcg, rather
+than with the memcg. Therefore, I think this is a very
+natural transition.
 
-Thanks,
---Nilay
+Muchun,
+Thanks.
+
+>=20
+> So if that is acceptable, I think it's a great idea to do like
+> that! And the put can look less weird then.
+>=20
+> Thanks for your idea!
+>=20
+> Regards,
+> Bingfang
+>=20
+>>=20
+>> Muhcun,
+>> Thanks.
+>>> + memcg =3D mem_cgroup_private_id_put(id, nr_pages);
+>>>   if (memcg) {
+>>>   if (!mem_cgroup_is_root(memcg)) {
+>>>   if (do_memsw_account())
+>>> @@ -5825,10 +5839,10 @@ void __mem_cgroup_uncharge_swap(unsigned =
+short id, unsigned int nr_pages)
+>>>   page_counter_uncharge(&memcg->swap, nr_pages);
+>>>   }
+>>>   mod_memcg_state(memcg, MEMCG_SWAP, -nr_pages);
+>>> - mem_cgroup_private_id_put(id, nr_pages);
+>>>   }
+>>>   rcu_read_unlock();
+>>> + mem_cgroup_put(memcg);
+>>>  }
+>>>  long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+
+
