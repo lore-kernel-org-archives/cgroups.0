@@ -1,154 +1,223 @@
-Received: from mta0.migadu.com (out-84.mta0.migadu.com [91.218.175.84])
+Received: from mta1.migadu.com (out-41.mta1.migadu.com [95.215.58.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10E0B286A4
-	for <cgroups@vger.kernel.org>; Mon,  7 Sep 2026 01:44:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64AA1D416C
+	for <cgroups@vger.kernel.org>; Mon,  7 Sep 2026 02:08:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788745495; cv=none; b=QOttdqqnW4vhKaYtz093Tz/q0n+2XBicCuptkG0PT0szPvWdaYfNzzUrtxJlgpchxWuuLidHd+uw6JvctzHoudjvAqAgYjLWKugf8XBekgPeyxPIU/2tK/roUNYVgX9srK9XpcBdczvHgCxSA+Zp04Gs2e3+FnyC3mKlOzse8wg=
+	t=1788746921; cv=none; b=dpd6reIfrQ+HwG+N6HjvpGxT+aZkWEPJ9q78AkquSy++Sjjv8MN8vLgsktxWv12WqTBemoAJSKtQaVor+BW3xKHqZC7aJvrLs/uQJIBOus2GrJnkdmkoeK+DBH+JJZlQbpPpX0SgtCO4wlVXv4HLAsUWmtdO0L3f8HC0/S4tp2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788745495; c=relaxed/simple;
-	bh=XMR5YJjRPObLoKxi0OzfqaRkyg3NKVdX/m6x9mGp2oc=;
+	s=arc-20240116; t=1788746921; c=relaxed/simple;
+	bh=LzaE8JGTRIG+1dFbwA1G5yAmK7QHt16tXyvwzCJNb+Y=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ExdgvYe6r++Pb7VazzyBYqO9baNvxaaaICADAY3VNkHbGPyF762GC4DXeHoSdxst0ZstyamM25vkcDHYa8vOdgXy7yAEGzAAYemhhXXh7bfWo4W5YpfN2YPsreeE0L5MYigNt9EfnDX/XemDhNv3WdNYHoncT8afCrTGkSsPnrk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ZCwUwJdn; arc=none smtp.client-ip=91.218.175.84
+	 In-Reply-To:Content-Type; b=kVi+7sp+aeXiuWupbAjo1HgiZ1g6uZ7xAsCSDnufqQKjPG8G3QZ3OnyVACeiNw9KUX83BgyRHt0GRE7IvsnTCqHzzzUIvtR6JsKUwL0Y0opr3555Ve/iX7WjjVPJtVbz8gpQ1ihLOeDuXlRzCG+745IjhDOE0DNhJwQBlLkeJIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Q9kMccRM; arc=none smtp.client-ip=95.215.58.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ZCwUwJdn"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Q9kMccRM"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=XMR5YJjRPObLoKxi0OzfqaRkyg3NKVdX/m6x9mGp2oc=;
+DKIM-Signature: a=rsa-sha256; bh=LzaE8JGTRIG+1dFbwA1G5yAmK7QHt16tXyvwzCJNb+Y=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788745490; v=1; x=1789350290;
- b=ZCwUwJdnQWZStcaR1trmencBxswFTSJP9SSHtDQ85LnJZyNu/A4+4jTNLdmgUIHqbaDDb+JB
- LQudeadFJtMDgfTF6V0UwmXbodmzrtZ94bHIiO7J/kDN+fKED7jno1P5IJE9rmIMHXiHQdMxRy3
- k3qmsR2+SEnDwKHBqxMKh+Q8=
+ t=1788746915; v=1; x=1789351715;
+ b=Q9kMccRMT3uafmyFewup31luuM6O10A1KE/oDyetb1ndPJ2hYkFQK42/jV12GtglNUpZt6r3
+ CNs8k4vdBFB+KZwvHULoCNNoWg3KfdZ/DOa2l+Ojqz03fHeX3vvCOPS/0nNY/TVoSUwX0f5OXQK
+ CMcOhvrDBDycS8Gm5UEnG2bs=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8afd76475cebebba;
-	Mon, 07 Sep 2026 01:44:40 +0000
-X-Mizu-Trace-ID: 8afd76475cebebba
+Received: by smtp.migadu.com with ESMTPS id 385f2f7eacdaa4a4;
+	Mon, 07 Sep 2026 02:08:28 +0000
+X-Mizu-Trace-ID: 385f2f7eacdaa4a4
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <33a37382-28d0-420c-9254-431e1b7e6d6b@linux.dev>
-Date: Mon, 7 Sep 2026 09:44:35 +0800
+Message-ID: <e081c02a-a663-484b-8ce6-1d7624a4188e@linux.dev>
+Date: Mon, 7 Sep 2026 10:08:18 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (macOS/Intel)
-Subject: Re: [PATCH v3 2/3] mm: workingset: use lruvec_page_state_local() to
- count lru pages
-To: Andrew Morton <akpm@linux-foundation.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] mm/page_counter: avoid integer overflow in
+ effective_protection()
+To: David Laight <david.laight.linux@gmail.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
  Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- David Hildenbrand <david@kernel.org>, Qi Zheng <qi.zheng@linux.dev>,
- Lorenzo Stoakes <ljs@kernel.org>, Kairui Song <kasong@tencent.com>,
- Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- Hui Zhu <zhuhui@kylinos.cn>, stable@vger.kernel.org
-References: <cover.1788514750.git.zhuhui@kylinos.cn>
- <2ec3a7f73e85ee5f5739c9dc2e58e9a0e2091925.1788514750.git.zhuhui@kylinos.cn>
- <20260905184229.8f7f30cf10638e7dc8224467@linux-foundation.org>
-Content-Language: en-US
-From: Hui Zhu <hui.zhu@linux.dev>
-In-Reply-To: <20260905184229.8f7f30cf10638e7dc8224467@linux-foundation.org>
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Muchun Song <muchun.song@linux.dev>, Kairui Song <kasong@tencent.com>,
+ Qi Zheng <qi.zheng@linux.dev>, Barry Song <baohua@kernel.org>,
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
+ Wei Xu <weixugc@google.com>, David Hildenbrand <david@kernel.org>,
+ Lorenzo Stoakes <ljs@kernel.org>, Chris Down <chris@chrisdown.name>,
+ Tejun Heo <tj@kernel.org>, Yu Zhao <yuzhao@google.com>,
+ "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>,
+ "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <linux-mm@kvack.org>, linux-kernel@vger.kernel.org,
+ Ridong Chen <chenridong@xiaomi.com>, stable@vger.kernel.org
+References: <20260903031952.1120321-1-ridong.chen@linux.dev>
+ <20260903031952.1120321-2-ridong.chen@linux.dev>
+ <20260904093743.23cde26b@pumpkin>
+ <f65d4985-5e21-4e29-b5f4-dcff0fa479ab@linux.dev>
+ <20260906111618.644362b3@pumpkin>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20260906111618.644362b3@pumpkin>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 
 
-> On Fri,  4 Sep 2026 17:45:55 +0800 "Hui Zhu" <hui.zhu@linux.dev> wrote:
->
->> From: Hui Zhu <zhuhui@kylinos.cn>
+On 9/6/2026 6:16 PM, David Laight wrote:
+> On Sun, 6 Sep 2026 09:11:24 +0800
+> Ridong Chen<ridong.chen@linux.dev> wrote:
+> 
+>> On 9/4/2026 4:37 PM, David Laight wrote:
+>>> On Thu,  3 Sep 2026 11:19:51 +0800
+>>> Ridong Chen<ridong.chen@linux.dev> wrote:
+>>>    
+>>>> From: Ridong Chen<chenridong@xiaomi.com>
+>>>>
+>>>> effective_protection() scales a parent's protection by a ratio of page
+>>>> counts, e.g. for recursive protection:
+>>>>
+>>>> 	(parent_effective - siblings_protected) * (usage - protected)
+>>>> 		/ (parent_usage - siblings_protected)
+>>>>
+>>>> The multiply is done at unsigned long width before dividing. On systems
+>>>> with >= 16TB RAM the product can exceed 2^64 and wrap, giving a bogus
+>>>> protection value and silently breaking memory.min/low enforcement.
+>>>>
+>>>> Use mul_u64_u64_div_u64() to multiply in a 128-bit intermediate. Because
+>>>> usage and parent_usage are not read atomically (a child is charged
+>>>> before its parent), usage - protected can briefly exceed the divisor,
+>>>> making the quotient overflow 64 bits and trap (#DE on x86). Cap it so
+>>>> the ratio stays <= 1.
+>>>>
+>>>> Reported by the sashiko review tool [1].
+>>>>
+>>>> [1]https://sashiko.dev/#/patchset/20260826133054.88529-1-ridong.chen@linux.dev? 
+>>>> part=1
+>>>>
+>>>> Fixes: bc50bcc6e00b ("mm: memcontrol: clean up and document effective low/min calculations")
+>>>> Fixes: 8a931f801340 ("mm: memcontrol: recursive memory.low protection")
+>>>> Cc:stable@vger.kernel.org
+>>>> Assisted-by: Claude:claude-opus-4-8
+>>>> Reviewed-by: Barry Song<baohua@kernel.org>
+>>>> Signed-off-by: Ridong Chen<chenridong@xiaomi.com>
+>>>> ---
+>>>>    mm/page_counter.c | 19 +++++++++++++------
+>>>>    1 file changed, 13 insertions(+), 6 deletions(-)
+>>>>
+>>>> diff --git a/mm/page_counter.c b/mm/page_counter.c
+>>>> index 661e0f2a5127..e8bd512069c5 100644
+>>>> --- a/mm/page_counter.c
+>>>> +++ b/mm/page_counter.c
+>>>> @@ -8,6 +8,7 @@
+>>>>    #include <linux/page_counter.h>
+>>>>    #include <linux/atomic.h>
+>>>>    #include <linux/kernel.h>
+>>>> +#include <linux/math64.h>
+>>>>    #include <linux/string.h>
+>>>>    #include <linux/sched.h>
+>>>>    #include <linux/bug.h>
+>>>> @@ -356,7 +357,8 @@ static unsigned long effective_protection(unsigned long usage,
+>>>>    	 * otherwise get a smaller chunk than what they claimed.
+>>>>    	 */
+>>>>    	if (siblings_protected > parent_effective)
+>>>> -		return protected * parent_effective / siblings_protected;
+>>>> +		return mul_u64_u64_div_u64(protected, parent_effective,
+>>>> +					   siblings_protected);
+>>> On 32bit it is only necessary to use a 64bit intermediary.
+>>> mul_u64_u64_div_u64() will drop back to the (probably faster) 64 by 64
+>>> divide (and then maybe to a 64 by 32 one).
+>>> But there is a lot of extra code before that happens.
+>>>    
+>> Hi David,
 >>
->> Commit 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the
->> number of lru pages") switched count_shadow_nodes() to lruvec_lru_size().
->> With CONFIG_MEMCG enabled, lruvec_lru_size() reads mz->lru_zone_size,
->> which only the classic LRU paths maintain.  MGLRU accounts its pages
->> through __update_lru_size(), which skips that array, so with MGLRU on the
->> four evictable LRU lists are always seen as empty.  The shadow node budget
->> (pages >> 3) then collapses to slab plus unevictable pages, and the
->> workingset shadow shrinker reclaims eviction tokens almost as fast as they
->> are created, losing thrashing protection.
+>> Thank you for your review.
 >>
->> lruvec_page_state_local() reads lruvec_stats->state_local instead, which
->> both classic LRU and MGLRU maintain.  Switch back to it.  The reparenting
->> race this re-exposes on cgroup v2 is closed by the follow-up patch that
->> redirects dying-memcg stat updates for all hierarchies.
-> The follow-up patch is "mm: memcg: skip the RCU lock when the memcg is
-> not dying"?  But that's an optimization so I'm confused.
+>> Do you want me to split this for 32-bit, or is keeping the single
+>> mul_u64_u64_div_u64() call for readability fine with you?
+> Maybe I'll look at wrapping mul_u64_add_u64_div_u64() with something that
+> checks statically_true(((a) | (b) | (c) | (d)) < 1ull << 32).
+> 
+> Probably neater than the conditional here.
+> 
 
-Sorry for the confusion - the commit message still says "follow-up
-patch" because that was the position in v2.  In v3 the series was
-reordered as requested, so the patch that closes the race, "mm: memcg:
-redirect stats updates of dying memcgs for all hierarchies", is now
-patch 1 and comes before this one.  Patch 3 is indeed only an
-optimization.  v4 will reword this sentence to:
+Agreed. Other callers face the same 32-bit concern, so a wrapper that does the 
+statically_true(...) check once would be cleaner than open-coding a conditional 
+in each site.
 
-The reparenting race this re-exposes on cgroup v2 is closed by the
-preceding patch that redirects dying-memcg stat updates for all
-hierarchies.
+>>>>    
+>>>>    	/*
+>>>>    	 * Ok, utilized protection of all children is within what the
+>>>> @@ -397,13 +399,18 @@ static unsigned long effective_protection(unsigned long usage,
+>>>>    	if (parent_effective > siblings_protected &&
+>>>>    	    parent_usage > siblings_protected &&
+>>>>    	    usage > protected) {
+>>>> -		unsigned long unclaimed;
+>>>> +		unsigned long unclaimed = parent_effective - siblings_protected;
+>>>> +		unsigned long unprotected = usage - protected;
+>>>> +		unsigned long parent_unprotected = parent_usage - siblings_protected;
+>>>>    
+>>>> -		unclaimed = parent_effective - siblings_protected;
+>>>> -		unclaimed *= usage - protected;
+>>>> -		unclaimed /= parent_usage - siblings_protected;
+>>>> +		/*
+>>>> +		 * The usages aren't read atomically, so a child can transiently
+>>>> +		 * appear to use more than its parent, making the ratio exceed 1
+>>>> +		 * and the quotient overflow 64 bits (#DE on x86).  Cap it.
+>>>> +		 */
+>>>> +		unprotected = min(unprotected, parent_unprotected);
+>>>>    
+>>>> -		ep += unclaimed;
+>>>> +		ep += mul_u64_u64_div_u64(unclaimed, unprotected, parent_unprotected);
+>>> If the ratio is forced to 1 there is no point doing the scaling.
+>>> So maybe:
+>>> 		if (likely(parent_unprotected > unprotected))
+>>> 			unclaimed = mul_u64_u64_div_u64(unclaimed, unprotected,
+>>> 							parent_unprotected);
+>>> 		ep += unclaimed;
+>>> OTOH if the min() generates a cmov rather than a conditional branch
+>>> then you don't get a statically mispredicted branch in the normal case
+>>> (which is very likely with the empty 'else' branch).
+>>>    
+>> I'd rather keep it as-is and avoid the extra branch. Does that work for you?
+> I nearly came to that conclusion while writing the comment!
+> Actually the same might go for the other three tests - generating a 0 or 1
+> from a conditional move ought to be better than the possibly mispredicted
+> very unlikely branch.
+> (I am right in thinking that they should never fail?)
+> 
 
-> If we're re-exposing a race, the fix for that race should have the same
-> Fixes: and cc:stable as the commit which did the reexposure?
+No — these three checks fail all the time in normal operation, so I'd
+keep the branch:
 
-Yes, and it does.  Patch 1 carries exactly the same tags as this
-patch:
-Fixes: 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the 
-number of lru pages")
-Cc: stable@vger.kernel.org
-Patch 3 has no tags because it only recovers the fast-path overhead
-that patch 1 adds; it fixes no bug by itself.
+if (parent_effective > siblings_protected &&
+	parent_usage > siblings_protected &&
+	usage > protected) {
 
-> It isn't clear why any of these patches is cc:stable.  The overall
-> effect is a tiny performance improvement?  Very clear descriptions of
-> end-user effects are always helpful.
-The performance table in the cover letter measures the overhead that
-the patches themselves add to the stat update fast path, not the
-impact of the bug - sorry if that was misleading.
+Checks 1 and 3 just ask "is there anything left to distribute?". Often
+there isn't, so they fail routinely.
 
-The end-user effect of the bug is the loss of thrashing protection.
-Since 7404bd37cfbe, with MGLRU enabled count_shadow_nodes() sees the
-four evictable LRU lists as always empty, so the workingset shadow
-node budget collapses to slab plus unevictable pages: for a memcg
-holding 1 GiB of page cache and 64 MiB of slab the budget drops from
-~35k nodes to ~2k.  The shadow shrinker then reclaims eviction tokens
-almost as fast as they are created, so a refault finds a live page
-instead of a shadow entry and lru_gen_refault() cannot restore the
-workingset state of the refaulting page.  Hot file pages that should
-be protected are evicted again and re-read from disk.  In other words,
-workloads that refault page cache under memory pressure thrash, with
-visibly increased IO and latency.  This hits every memcg reclaim and,
-since the root memcg is iterated as well, global reclaim too.
-> So at this time I'll schedule the whole series for 7.4-rc1.  If there's
-> some reason why some/all of these should be backported then please lmk.
->
-I would suggest backporting all three patches together to the trees
-that contain 7404bd37cfbe: it went into v7.1, so 7.1.y and 7.2.y
-carry the regression.  Taking patch 3 along with patches 1 and 2
-avoids leaving the ~0.6% fast-path overhead of patch 1 in the stable
-trees.
+Check 2 is a divide-by-zero guard. parent_usage - siblings_protected is
+the divisor. A conditional-move can't replace it: the division would run
+anyway and only get multiplied by zero afterwards, so we'd still divide
+by zero when the two are equal. The branch is what stops us reaching the
+division.
 
-So v4 will reword the reference in this patch's commit message ("the
-preceding patch" instead of "the follow-up patch").  No code changes.
+> I also suspect the #UD is the least of the problems.
+> You don't want the scaling to produce a bigger number at all.
+> 
 
-One question: should patch 3 ("mm: memcg: skip the RCU lock when the
-memcg is not dying") also carry the same
+Agreed, and the min() already ensures that. It caps the value so the
+result can never be larger than unclaimed. Avoiding the trap is just a
+bonus of that same cap.
 
-   Fixes: 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get 
-the number of lru pages")
-   Cc: stable@vger.kernel.org
+So I'll keep the patch as-is. Thanks for the review!
 
-tags?  That would make the stable trees pick up the whole series
-together, but since patch 3 only recovers the overhead of patch 1 and
-fixes no bug by itself, a Fixes: tag on it may look odd.  Please let
-me know your preference.
-
-Best,
-Hui
-
+-- 
+Best regards
+Ridong
 
