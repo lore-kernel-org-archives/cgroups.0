@@ -1,36 +1,36 @@
-Received: from mta0.migadu.com (out-57.mta0.migadu.com [91.218.175.57])
+Received: from mta1.migadu.com (out-244.mta1.migadu.com [95.215.58.244])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7039B427F8F
-	for <cgroups@vger.kernel.org>; Mon,  7 Sep 2026 09:48:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.57
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62F0844E659
+	for <cgroups@vger.kernel.org>; Mon,  7 Sep 2026 09:48:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.244
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788774502; cv=none; b=uskA8X0LBS6EXCrXfTJHkafqKQmiSfieo3lfg9x3SYi52aBglK5nV2rBmT44fq0LNnKFQgVlB7Jg411EI+6HKwzLnG7TZdE+23W8Vf+r7T3fA6JzEuPpIVGgh5TV6ie2nhXokWcABPqjXjjcpIjrsh096K82EGK+6AIvTC2VDlA=
+	t=1788774519; cv=none; b=ITq6rt5n5BUSQzPKa65eFzAuTiriDbwUf3hlD2T88dXSGVjf/tscesQY4bPDr49hWIf/q8ey+eASWnoTyksUtXdnJPtlhKjYecOfp5YiJ8lcrbOJqiL8WFNMq966geT04luT0U37+UTThvkWlujkgJaPsCKNeAc+Kl9VtkpGQ7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788774502; c=relaxed/simple;
-	bh=SfCvDOt1m+OeT9sy0/9OG1/B26Xs/Ch2DcCWnVWF7Ns=;
+	s=arc-20240116; t=1788774519; c=relaxed/simple;
+	bh=OwGbvgYEbOe76OK9GCEyBQybyVZ+vhGr7ZHbuXJ9nkI=;
 	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=CZUItYCs1J8tdN/4mYq09NNTwRpRwyXrvAhEqcnFkyy327YDKSlTwoXaofmch4HoAyDNXQR98Z7CiTatv13jrpE+6xxgmy21US9FzwmiXMBVIhGDycn8MPy2B+7pDN1zsiNWCn/se5VlfYe7ywWyoYA54jr6HeiSBhumid0C4sE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pWShir7Z; arc=none smtp.client-ip=91.218.175.57
+	 In-Reply-To:Content-Type; b=F7WdkRbvoLVttdfjb7L7R46Y+CVwuM7SB28b1OZNNCPeclfKbU3eRke2Nm7LG0ID+Aob41GwKGUKIkkCGK7ZebamZOJ1Onb+fUK1uQZre3eRgJ2ra9Z+I5qQjPGuCMoT6r0zpQqKZu3bKJqIjR3TlBohELzz4sJLMwr3262k4wQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GC5JUerM; arc=none smtp.client-ip=95.215.58.244
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pWShir7Z"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GC5JUerM"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=SfCvDOt1m+OeT9sy0/9OG1/B26Xs/Ch2DcCWnVWF7Ns=;
+DKIM-Signature: a=rsa-sha256; bh=OwGbvgYEbOe76OK9GCEyBQybyVZ+vhGr7ZHbuXJ9nkI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788774498; v=1; x=1789379298;
- b=pWShir7ZItwJhoxRkTllROB/u34q2Lwafl3yV2WQe7rb0l3F7TXzDYMI4LZToypQYJUyQ1Oc
- zAzroZrx6wS+YQZzw8vVPLrzvPg59J38VBSmtErhj7WIwQsgkt50rZwkaKgv0VLBkwYFMN5g3NT
- NbiVmmOy6s+UUkPs+LuEaZ88=
+ t=1788774515; v=1; x=1789379315;
+ b=GC5JUerMzz+jJyr/Z+K0JNdPwWvMBwzjdlO6PZ1itBe1h46hJJcxf083B9PehE3X0MzBY7E2
+ xTrtKWRCNnabnmRxmE3xiJYJADTq+CmALjYxRHltT34knMdvJwW068WIwARYcR7tHD4AC/riKhC
+ 3UDkY7zcX8W2swutmKvY6tFM=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 56f2a83ee2b9f73d;
-	Mon, 07 Sep 2026 09:48:18 +0000
-X-Mizu-Trace-ID: 56f2a83ee2b9f73d
+Received: by smtp.migadu.com with ESMTPS id 8a4cd58bb8253468;
+	Mon, 07 Sep 2026 09:48:35 +0000
+X-Mizu-Trace-ID: 8a4cd58bb8253468
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <ff4122db-2ea4-4121-8d6a-022d492d2b4d@linux.dev>
-Date: Mon, 7 Sep 2026 17:48:09 +0800
+Message-ID: <8c4ae94b-503f-4ef5-9e60-724378b5fd23@linux.dev>
+Date: Mon, 7 Sep 2026 17:48:30 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -48,15 +48,15 @@ Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
  Guopeng Zhang <zhangguopeng@kylinos.cn>
 References: <20260902102615.79189-1-guopeng.zhang@linux.dev>
  <20260902102615.79189-2-guopeng.zhang@linux.dev>
- <5842edcd-9283-4a87-afc9-50e51962368e@redhat.com>
+ <9ff85fed-190c-4a8d-8d47-2a37990c1cbb@redhat.com>
 Content-Language: en-US
-In-Reply-To: <5842edcd-9283-4a87-afc9-50e51962368e@redhat.com>
+In-Reply-To: <9ff85fed-190c-4a8d-8d47-2a37990c1cbb@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 
 
-在 2026/9/4 02:33, Waiman Long 写道:
+在 2026/9/4 03:11, Waiman Long 写道:
 > On 9/2/26 6:26 AM, Guopeng Zhang wrote:
 >> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 >>
@@ -89,10 +89,6 @@ Content-Transfer-Encoding: 8bit
 >> +              const struct cpumask *partition_cpus,
 >> +              const struct cpumask *remaining_cpus,
 >> +              bool parent_populated)
-> I think you should add some functional comments on what "partition_cpus" and "remaining_cpus" are supposed to be so that caller knows what to pass into this helper.
-
-Thanks for the suggestion. I will add comments in the next version.
-
 >> +{
 >> +    if (!cpumask_subset(child->effective_xcpus, partition_cpus))
 >> +        return PERR_INVCPUS;
@@ -121,26 +117,26 @@ Thanks for the suggestion. I will add comments in the next version.
 >> -        WRITE_ONCE(child->prs_err, 0);
 >> -        if (!cpumask_subset(child->effective_xcpus,
 >> -                    cs->effective_xcpus))
->> -            WRITE_ONCE(child->prs_err, PERR_INVCPUS);
->> -        else if (populated &&
->> -             cpumask_subset(new_ecpus, child->effective_xcpus))
->> -            WRITE_ONCE(child->prs_err, PERR_NOCPUS);
->> -
->> -        if (child->prs_err) {
->> +        WRITE_ONCE(child->prs_err, PERR_NONE);
->> +        child_err = child_partition_error(child, cs->effective_xcpus,
->> +                          new_ecpus, populated);
->> +        if (child_err)
->> +            WRITE_ONCE(child->prs_err, child_err);
->> +
 > 
-> You can ignore the inital PERR_NONE write and always write the child_err value into child->prs_err.
-> 
-> Not big issue, just some nits.
+> Looking at the patch again, I now see that the current code is incorrect. It should be "if (!cpumask_subset(child->effective_xcpus, new_ecpus))" So you only need to pass the "parent_excpus" (for instance) to the new helper instead of passing two.
 > 
 
-Makes sense. I will update it.
+Longman, thanks for your review.
+
+Yes, you are right that using `cs->effective_xcpus` here is incorrect.
+
+In v1, I had a change for this issue, and based on your comment [1], I moved it to another fix. I also followed Ridong's suggestion to split the original 17-patch series into smaller series. I split it into three parts locally, and the current series is the second part, so this fix is not included here.
+
+I plan to address this in the third series, together with the CPU ownership and isolation accounting issues following child partition invalidation.
+
+In that series, the two masks have different meanings: the newly computed unfiltered exclusive mask, including offline CPUs, is used for the child containment check, while the active CPU mask remaining after child ownership is accounted for is used for the `PERR_NOCPUS` check. So I would prefer to keep the two-mask interface here and clarify their meanings with comments.
+
+Does this approach make sense to you?
+
+[1] https://lore.kernel.org/all/3bf50da2-f13a-4cef-bfb8-cd592f862164@redhat.com/
 
 Thanks,
 Guopeng
+
+
 
