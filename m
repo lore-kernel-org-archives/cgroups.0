@@ -1,145 +1,146 @@
-Received: from mta0.migadu.com (out-118.mta0.migadu.com [91.218.175.118])
+Received: from mta0.migadu.com (out-57.mta0.migadu.com [91.218.175.57])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E2F24457D5
-	for <cgroups@vger.kernel.org>; Mon,  7 Sep 2026 08:40:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.118
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7039B427F8F
+	for <cgroups@vger.kernel.org>; Mon,  7 Sep 2026 09:48:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.57
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788770414; cv=none; b=j2vG3qzbSmOcLtw9DZB+BYWhkgjJSH5t7WVOLK2cLmrKX48qM/Wbq5Oi1Ji+6yaNc9HfhSLIexOFJS1mniio3l1E0UIfQE6a7H6aYF0YCLS6Wly3HuPwnoxgFaaeTn9OcDSmQlo+zptQuTxKL22a5zObkWMIFjUhApyOjhu9XT4=
+	t=1788774502; cv=none; b=uskA8X0LBS6EXCrXfTJHkafqKQmiSfieo3lfg9x3SYi52aBglK5nV2rBmT44fq0LNnKFQgVlB7Jg411EI+6HKwzLnG7TZdE+23W8Vf+r7T3fA6JzEuPpIVGgh5TV6ie2nhXokWcABPqjXjjcpIjrsh096K82EGK+6AIvTC2VDlA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788770414; c=relaxed/simple;
-	bh=GGO8eqN6d+o+o/h/2jMfZ75tLsSl7Qm1XxnpQIF2MLA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=u2yO77t8Y8Gvr81IFbdbsDzA1fNopJ/ZkHq4D2NQSyN51gMkRTe3IZtBETBLTZjhcpGk1q14Qv2RC8dH5joJzAeWAMA4DjNvgOictbIT6OYeaJ4dgfQ7bWM9jHmBnjTODVX8kpOe6UIIkctb7BELLRXiHZMpiklBMGxTh1kPXiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mimAj+tN; arc=none smtp.client-ip=91.218.175.118
+	s=arc-20240116; t=1788774502; c=relaxed/simple;
+	bh=SfCvDOt1m+OeT9sy0/9OG1/B26Xs/Ch2DcCWnVWF7Ns=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=CZUItYCs1J8tdN/4mYq09NNTwRpRwyXrvAhEqcnFkyy327YDKSlTwoXaofmch4HoAyDNXQR98Z7CiTatv13jrpE+6xxgmy21US9FzwmiXMBVIhGDycn8MPy2B+7pDN1zsiNWCn/se5VlfYe7ywWyoYA54jr6HeiSBhumid0C4sE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pWShir7Z; arc=none smtp.client-ip=91.218.175.57
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mimAj+tN"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pWShir7Z"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=GGO8eqN6d+o+o/h/2jMfZ75tLsSl7Qm1XxnpQIF2MLA=;
+DKIM-Signature: a=rsa-sha256; bh=SfCvDOt1m+OeT9sy0/9OG1/B26Xs/Ch2DcCWnVWF7Ns=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788770409; v=1; x=1789375209;
- b=mimAj+tNTstS2NFREbTdf492Qym2vL0fMboNBRUtTW4JnNus1vHg07l/KY9ZSBsPuNdnYjwS
- 5aij5txNcIc1eshgmoO4YYSvlu00Fl4r/nxsSX7V4vOVAPfKV5wczM4OZEFH+ooSNYTHPJac2LB
- 0luQVYqVunPm76ui+FWJJhNQ=
+ t=1788774498; v=1; x=1789379298;
+ b=pWShir7ZItwJhoxRkTllROB/u34q2Lwafl3yV2WQe7rb0l3F7TXzDYMI4LZToypQYJUyQ1Oc
+ zAzroZrx6wS+YQZzw8vVPLrzvPg59J38VBSmtErhj7WIwQsgkt50rZwkaKgv0VLBkwYFMN5g3NT
+ NbiVmmOy6s+UUkPs+LuEaZ88=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8cb33a948e3a62c7;
-	Mon, 07 Sep 2026 08:40:05 +0000
-X-Mizu-Trace-ID: 8cb33a948e3a62c7
+Received: by smtp.migadu.com with ESMTPS id 56f2a83ee2b9f73d;
+	Mon, 07 Sep 2026 09:48:18 +0000
+X-Mizu-Trace-ID: 56f2a83ee2b9f73d
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <f1021240-ccb6-43dc-8e02-b94f0c4f5fb6@linux.dev>
-Date: Mon, 7 Sep 2026 16:39:54 +0800
+Message-ID: <ff4122db-2ea4-4121-8d6a-022d492d2b4d@linux.dev>
+Date: Mon, 7 Sep 2026 17:48:09 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (macOS/Intel)
-Subject: Re: [PATCH v3 1/3] mm: memcg: redirect stats updates of dying memcgs
- for all hierarchies
-To: sashiko-reviews@lists.linux.dev
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- David Hildenbrand <david@kernel.org>, Qi Zheng <qi.zheng@linux.dev>,
- Lorenzo Stoakes <ljs@kernel.org>, Kairui Song <kasong@tencent.com>,
- Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
-References: <cover.1788514750.git.zhuhui@kylinos.cn>
- <8a3fe5e6a076cdd9ac997125cb6c6a0948e1a6b6.1788514750.git.zhuhui@kylinos.cn>
- <20260904102113.DB9011F00A3D@smtp.kernel.org>
+User-Agent: Mozilla Thunderbird
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+Subject: Re: [PATCH v3 1/7] cgroup/cpuset: Factor out child partition
+ validation
+To: Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org,
+ ridong.chen@linux.dev
+Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260902102615.79189-1-guopeng.zhang@linux.dev>
+ <20260902102615.79189-2-guopeng.zhang@linux.dev>
+ <5842edcd-9283-4a87-afc9-50e51962368e@redhat.com>
 Content-Language: en-US
-From: Hui Zhu <hui.zhu@linux.dev>
-In-Reply-To: <20260904102113.DB9011F00A3D@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <5842edcd-9283-4a87-afc9-50e51962368e@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Redirecting dying memcg stat updates to the parent on cgroup v2 without reparenting the base stats causes permanent negative stat leaks and underflows.
-> --
->
-> commit 106b19246ac20191c0af6a41927414095cb5d019
-> Author: Hui Zhu <zhuhui@kylinos.cn>
->
-> mm: memcg: redirect stats updates of dying memcgs for all hierarchies
->
-> This patch removes the cgroup v1 restriction on redirecting dying memcg stat
-> updates to the closest non-dying ancestor. It unconditionally applies this
-> redirection across all hierarchies in an effort to fix workingset shadow node
-> budget calculations under MGLRU.
->
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 9a65d7148c227..64eb59bba61cf 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
-> [ ... ]
->
->> -static inline struct mem_cgroup *get_non_dying_memcg_start(struct mem_cgroup *memcg,
->> -							   bool *rcu_locked)
->> +static inline struct mem_cgroup *
->> +get_non_dying_memcg_start(struct mem_cgroup *memcg, bool *rcu_locked)
->>   {
->> -	/* Rebinding can cause this value to be changed at runtime */
->> -	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
->> -		*rcu_locked = false;
->> -		return memcg;
->> -	}
+在 2026/9/4 02:33, Waiman Long 写道:
+> On 9/2/26 6:26 AM, Guopeng Zhang wrote:
+>> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>>
+>> compute_partition_effective_cpumask() checks whether each valid child
+>> partition remains covered by the parent exclusive CPU mask and whether it
+>> would consume all remaining CPUs of a populated parent.
+>>
+>> Factor these two checks into child_partition_error() so the same rules can
+>> be reused when evaluating a proposed parent configuration. This is a
+>> preparatory refactoring with no intended functional change.
+>>
+>> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>> ---
+>>   kernel/cgroup/cpuset.c | 38 +++++++++++++++++++++++++++++---------
+>>   1 file changed, 29 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 8f24171b6055..6994dc75d940 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -2085,6 +2085,26 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>       return 0;
+>>   }
+>>   +/*
+>> + * Return the error that will invalidate a child partition under a proposed
+>> + * parent partition configuration.
+>> + */
+>> +static enum prs_errcode
+>> +child_partition_error(struct cpuset *child,
+>> +              const struct cpumask *partition_cpus,
+>> +              const struct cpumask *remaining_cpus,
+>> +              bool parent_populated)
+> I think you should add some functional comments on what "partition_cpus" and "remaining_cpus" are supposed to be so that caller knows what to pass into this helper.
+
+Thanks for the suggestion. I will add comments in the next version.
+
+>> +{
+>> +    if (!cpumask_subset(child->effective_xcpus, partition_cpus))
+>> +        return PERR_INVCPUS;
+>> +
+>> +    if (parent_populated &&
+>> +        cpumask_subset(remaining_cpus, child->effective_xcpus))
+>> +        return PERR_NOCPUS;
+>> +
+>> +    return PERR_NONE;
+>> +}
+>> +
+>>   /**
+>>    * compute_partition_effective_cpumask - compute effective_cpus for partition
+>>    * @cs: partition root cpuset
+>> @@ -2121,6 +2141,8 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>>         rcu_read_lock();
+>>       cpuset_for_each_child(child, css, cs) {
+>> +        enum prs_errcode child_err;
+>> +
+>>           if (!is_partition_valid(child))
+>>               continue;
+>>   @@ -2129,15 +2151,13 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>>            * partition root.
+>>            */
+>>           WARN_ON_ONCE(is_remote_partition(child));
+>> -        WRITE_ONCE(child->prs_err, 0);
+>> -        if (!cpumask_subset(child->effective_xcpus,
+>> -                    cs->effective_xcpus))
+>> -            WRITE_ONCE(child->prs_err, PERR_INVCPUS);
+>> -        else if (populated &&
+>> -             cpumask_subset(new_ecpus, child->effective_xcpus))
+>> -            WRITE_ONCE(child->prs_err, PERR_NOCPUS);
 >> -
->>   	rcu_read_lock();
->>   	*rcu_locked = true;
->>   
->> @@ -870,22 +864,8 @@ static inline struct mem_cgroup *get_non_dying_memcg_start(struct mem_cgroup *me
-> [Severity: High]
-> Does this redirection cause permanent stat underflows in the ancestor under
-> cgroup v2?
->
-> In cgroup v2, base local stats are explicitly not reparented during offlining.
-> Looking at reparent_state_local():
->
->      if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
->          return;
->
-> Because of this early return, the dying memcg retains its positive base counts.
->
-> However, with this patch, when resources previously charged to the dying memcg
-> are freed later on, the negative delta applied in mod_memcg_state() is
-> redirected up to the parent.
->
-> Since the non-dying ancestor never received the positive base counts but now
-> receives the negative uncharge updates, its local stats (like NR_FILE_PAGES,
-> MEMCG_SOCK, and LRU counts) will permanently underflow.
->
-> Because lruvec_page_state_local() clamps negative values to zero, wouldn't
-> this severe underflow mask the ancestor's own legitimate positive stats,
-> ultimately breaking the workingset shadow node budget calculation and causing
-> the exact premature reclaim and thrashing this patch aims to resolve?
->
-The observation is correct: on cgroup v2 reparent_state_local() returns
-early, so the dying memcg keeps its positive base counts while the
-negative uncharge deltas land on the ancestor, and the ancestor's
-state_local can permanently underflow and get clamped to zero.
+>> -        if (child->prs_err) {
+>> +        WRITE_ONCE(child->prs_err, PERR_NONE);
+>> +        child_err = child_partition_error(child, cs->effective_xcpus,
+>> +                          new_ecpus, populated);
+>> +        if (child_err)
+>> +            WRITE_ONCE(child->prs_err, child_err);
+>> +
+> 
+> You can ignore the inital PERR_NONE write and always write the child_err value into child->prs_err.
+> 
+> Not big issue, just some nits.
+> 
 
-One clarification on attribution, though: this underflow is not
-introduced by the redirection.  Once memcg_reparent_objcgs() rewrites
-objcg->memcg to the parent, folio_memcg() of the reparented folios
-already returns the parent, so the freeing path applies the negative
-deltas to the parent's lruvec directly, with or without this patch.
-The redirection only matters during the short window between
-css_offline() and the objcg reparenting.  So the missing base reparent
-is a pre-existing gap that this series re-exposes rather than creates.
+Makes sense. I will update it.
 
-That said, I agree it needs to be handled.  I'm preparing a follow-up
-patch that also reparents the non-hierarchical lruvec state_locals
-(the ones count_shadow_nodes() reads) on cgroup v2, mirroring what v1
-already does.  Will fold it into the next version.
-
-Best,
-Hui
+Thanks,
+Guopeng
 
