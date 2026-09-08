@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31DC483BD8;
-	Tue,  8 Sep 2026 21:03:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80FB5486BBA;
+	Tue,  8 Sep 2026 21:03:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788901417; cv=none; b=mrBxMhizKTQ9MXmes4qqQMiEUh/2JpCmLv7bp7PZqQdr3OqLsQe/WfRgzNGx76jVZB3eLQJWR9bcZWEW0TAMb/+Lur4dTZmFX/2oNtizCR+Ufr0ckr5s4fSBm/Weg0psPC8Tcx6eMgX/D9+C7AspbspaNM1xVOnjHg/sfm5pQI4=
+	t=1788901418; cv=none; b=flWOC2OgxZNQ0OUyfsi8NmovXYel0ONEE8bdFoPfHD14BHCMFyP4LtRGjnJgpVmFLiMfRcA6llGeGkJQ/IzeQBaEpPHyBoIbFdpZcWcUyajrXmSAlWQuKnX92GF2zt1iCxZ/Zt6IVb7PpFUlKatPUaOzZvCe7JqXeNJraqXhXo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788901417; c=relaxed/simple;
-	bh=0TXV1+uuvA2AEY0E6bElvINIJZOSpwwyZ2/iBsisImk=;
+	s=arc-20240116; t=1788901418; c=relaxed/simple;
+	bh=Uv9BUuKdOHwKtitU1A2LN8pShA9XzVMAomxGgSpfV/I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=KStMK1+w7kFS9anlfXPCKmcUUUCVYzCcoCb2aVBNaMThpNqGFkUjCOQPuT7yP+cl2DCfMFuleRZa40W8yv/8Q9PO9MFytv7T0CV1FG8wrlwIoU3TcdDtItTlMrlQbRLrKrwaFq5IdgGneNVNs/DL1h/j/BwKBZPtNNaPhKCNR8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ijp8bKDD; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=nEdjqcPfGxPXXgiP2EVCgJh7KbD8vA4QYeJ6fXYogbfWiPwa1NKTwPpGt9pzyr+b3FUnzLtdy2Gt2SoRUWaEdQY2vvx1O0H/p207j8zU29rh7hhsGcdj2g9xJZ96Ur4rOKAdg9tN8C+DV/DjgTlLv6C4l92twXIGIHAO8PnEF+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mWhAWEOS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ijp8bKDD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E1001F00A3A;
-	Tue,  8 Sep 2026 21:03:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mWhAWEOS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 182C81F00A3D;
+	Tue,  8 Sep 2026 21:03:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788901416;
-	bh=xYZU48Q5YI0a4FaRSaEZUnwzmCxEfV20qAzngQf7dAs=;
+	s=k20260515; t=1788901417;
+	bh=SSKA7iWZ9ilk1jqKiGIP1AqhqMfphe75pbl/x/QioAY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Ijp8bKDDIn9DCCso7OvjicAeL7j5vwEuCfFsvIgOnJNJmRVOO6gL8rlrPXtkxGO54
-	 TlvVRBJax0sRRzrPHZvV1mKeJUPMCXIo6+YU9wpmxnDz9ND8ewGw2Sa4jcGKqmGXI2
-	 4YEkg5DrvA6lLyJnYagyGvk4k81OJeByEOhtJtYdHTi2m/X2CezdD8g0Arik1PVOqU
-	 i5pJy+c/vt2F7B1FCnMkWdrwD42mKdGE9yOqBrSzG7/q9QaLaNf8XAIeV5MIHZ6tv+
-	 PpzXQ7CNcDXEH5I3Vd4uaxfIY1OErj8GNtVjlaYbAsJO4dHMtIvouf9al2QNgSDUGH
-	 bLAZSuaPO0DVw==
+	b=mWhAWEOSLVE5oNWRrQ/WDH6T8XAYLXTERHwzJx7RtLb3fLl6My748/VMKnHosKRq4
+	 nJqSl+wPINFsnbMYNnsBhZ3U/xhmXH46npo+4jJCOAs+HGPeIQOV6RHv9wroEDmY3b
+	 VGeLUoSsIXZUlR5awefLJp2lwe8inFWQan+H++4WUN3V575H/WOvd8M3kbknuldk3g
+	 lprdvtQAyDtPAfXzm3RvhZhju45CouEBOy9h0hls/+9LdOze6qdPBnxB+5ryNMO+j5
+	 VFdWMHKdL0jjthF2OAnMvJU+t5IQ8GCb/7EfqA6Fub/eksXEj/6wknWKR3nDo1Vg/6
+	 DnFreSsAuRSbA==
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cui.tao@linux.dev>
 Cc: tj@kernel.org, josef@toxicopanda.com, axboe@kernel.dk,
@@ -33,12 +33,13 @@ Cc: tj@kernel.org, josef@toxicopanda.com, axboe@kernel.dk,
  linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org,
  ast@kernel.org, daniel@iogearbox.net, linux-kselftest@vger.kernel.org,
  Tao Cui <cuitao@kylinos.cn>
-Subject: Re: [RFC PATCH 3/8] blk-iocost: implement BPF struct_ops registration
+Subject: Re: [RFC PATCH 4/8] blk-iocost: dispatch cost calculation to
+ registered BPF model
 Date: Tue, 08 Sep 2026 10:31:11 -1000
-Message-ID: <178889947167.2.9168058946538747939@kernel.org>
-In-Reply-To: <20260908100143.47598-4-cui.tao@linux.dev>
+Message-ID: <178889947167.2.14929031776522673392@kernel.org>
+In-Reply-To: <20260908100143.47598-5-cui.tao@linux.dev>
 References: <20260908100143.47598-1-cui.tao@linux.dev>
- <20260908100143.47598-4-cui.tao@linux.dev>
+ <20260908100143.47598-5-cui.tao@linux.dev>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -50,17 +51,17 @@ MIME-Version: 1.0
 
 Hello, Tao.
 
-On Tue, 08 Sep 2026 18:01:38 +0800, Tao Cui wrote:
+On Tue, 08 Sep 2026 18:01:39 +0800, Tao Cui wrote:
 
-> +static struct bpf_struct_ops bpf_iocost_model_ops = {
-> +	.verifier_ops = &bpf_iocost_verifier_ops,
-> +	.init = bpf_iocost_model_init,
-> +	.init_member = bpf_iocost_init_member,
+> +		if (iocost_bpf_calc_cost(bio_op(bio),
+> +					 bio->bi_iter.bi_size,
+> +					 bio->bi_iter.bi_sector,
+> +					 iocg->cursor,
+> +					 iocg_to_blkg(iocg)->blkcg->css.id,
+> +					 is_merge ? IOCOST_COST_F_MERGE : 0,
 
-Please add a .check_member callback rejecting sleepable programs. The
-generic verifier permits sleepable struct_ops programs, so a model can
-currently call bpf_copy_from_user() while iocost_bpf_calc_cost() holds
-rcu_read_lock().
+bio_op() drops REQ_PREFLUSH and REQ_FUA, and the flags argument only carries
+merge status. Please preserve the operation flags.
 
 Thanks.
 
