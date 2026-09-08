@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-48.mta1.migadu.com [95.215.58.48])
+Received: from mta1.migadu.com (out-51.mta1.migadu.com [95.215.58.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 425E931E838
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 02:22:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC4133344A
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 02:22:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788834124; cv=none; b=mt/f7r3D8u64pqgOZTj6+cDsaleZVEjcUvcuk4GSd45h4N5HaXd2hbe+wAcB20AVDjxolRS5eRw0T+0P7jPEJLAHrku3YthXE5aKj5k9dCZOoam6m7QQa8Cewh0//ZXfhCAm+QBRkgl0pXpaZy+7Pt2zBpxpWd4WZUoGN8zGBQE=
+	t=1788834128; cv=none; b=l68QEEJQqC11kyEeCAVzeFcp/c8WnLM/cb8S8eK9apBazH+Dd4dvYm6+v5L+iNT/32L9rZdI67or6DurHb8+Zw/IvXDgmP1ujs5CT7Fd2LVjDkxyaTGVS+fQ9zrZMlp/Ke/ersXuqTi+X6qtptnesXPWUt08BQEYBtz8igsKvpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788834124; c=relaxed/simple;
-	bh=pWO4RZatUqrPA6r4dQjv9yyaw0w7zdsYNSyi6AjSt+Q=;
+	s=arc-20240116; t=1788834128; c=relaxed/simple;
+	bh=RlLZG9DF6LMhq752V92mo173s8ccnTQNr43ipFQvvoo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hZqTY+1V4iXLRLuZYjhuLx8TKh+SY6cgpvR5tc7h52fpyP95F7t7vNTEJbd+7n6IA9dLEIbm94slcW/DBxipnUL3oFEABt1/SFjAmBvHva27lSS8nD9AX11F8JgXU+8q7kMhn43C8B3LyXp3urKnupML/WlkZXpRzvQ2TJyaDA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TVskdhzf; arc=none smtp.client-ip=95.215.58.48
+	 MIME-Version; b=rIApLnLUlitBIyk7TglBDfEOT6oLCNnXEqxTjNb2p+eJiA313Edf7TvlNfQGJFVcqIMc3CmONmRcqtjwY20aOfo9IKLT+V4YjEY1GDAIrAle8m7IQ2WKpcqOJBFX5G7XDlfghI+MYAnl9G+cAuGY+rHSgN8rp25goF+elhelAJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MoRFccNJ; arc=none smtp.client-ip=95.215.58.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TVskdhzf"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MoRFccNJ"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=pWO4RZatUqrPA6r4dQjv9yyaw0w7zdsYNSyi6AjSt+Q=;
+DKIM-Signature: a=rsa-sha256; bh=RlLZG9DF6LMhq752V92mo173s8ccnTQNr43ipFQvvoo=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788834119; v=1; x=1789438919;
- b=TVskdhzfKQrLKD4J0X68ckG0Ci8e8tkt1ywDoKHXxUsd0ikdoYapKy6fAh1pcEcVgrCOSiU7
- TdP9NT7yHinDx5YpseE8jtK24IYjjuH9xmXykWeZvbjnnzYZ94NaH9fMnCPj41104dn9dFZKAEl
- jeddX1z8Nx9kzMaQPIg+iMao=
+ t=1788834124; v=1; x=1789438924;
+ b=MoRFccNJtw9FXGRQz2iJn/dFpgWkGqRUnSvMH86oAAG/7sX6gKiw0mPCYH2wTuyiH8NEQSpJ
+ wp8kJri79LhY1tJJHWJ46XXIaGZ/XO/moyHnUmsddYMKW5pjMr4AxeN8R45FxKZo2G7oYa1KwcO
+ HvgFtH9oDQuArD060ng5N36w=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 25ba49c4d1d890a5;
-	Tue, 08 Sep 2026 02:21:59 +0000
-X-Mizu-Trace-ID: 25ba49c4d1d890a5
+Received: by smtp.migadu.com with ESMTPS id 6471dc207b4861e7;
+	Tue, 08 Sep 2026 02:22:04 +0000
+X-Mizu-Trace-ID: 6471dc207b4861e7
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: tj@kernel.org,
@@ -38,9 +38,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	cui.tao@linux.dev,
 	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH 1/4] blk-iocost: charge flushes as pageless random writes
-Date: Tue,  8 Sep 2026 10:21:32 +0800
-Message-ID: <20260908022135.1429281-2-cui.tao@linux.dev>
+Subject: [PATCH 2/4] blk-iocost: charge zone appends as page-counted sequential writes
+Date: Tue,  8 Sep 2026 10:21:33 +0800
+Message-ID: <20260908022135.1429281-3-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260908022135.1429281-1-cui.tao@linux.dev>
 References: <20260908022135.1429281-1-cui.tao@linux.dev>
@@ -54,59 +54,63 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-Standalone flushes issued by blkdev_issue_flush() are represented as
-dataless REQ_OP_WRITE | REQ_PREFLUSH bios, which
-calc_vtime_cost_builtin() prices at zero.  The flush component of
-flush-heavy workloads such as database commits, journal flushes, and
-metadata sync is thus neither charged nor throttled: a cgroup at 1% weight
-can issue ~510k flushes per 12s, monopolizing the device while iocost
-reports zero usage.
+Zone append is a primary write operation for zoned devices; zoned
+btrfs and f2fs use it for data writes.  It is priced at zero, so the
+zone append portion of zoned workloads runs outside the controller:
+a 1%-weight cgroup issued 16000 appends at zero cost on a zoned
+null_blk.
 
-Price them as pageless random writes (LCOEF_WRANDIO), which provides
-an approximation of the device time consumed by a flush.  For
-profiles where WRANDIO clamps to zero (ssd_dfl / ssd_fast), use a
-one-page floor (LCOEF_WPAGE).  After this patch, the same 1%-weight
-cgroup is limited to 24 flushes per 12s; on ext4, write+fsync
-workloads are correctly accounted through the journal layer (~2.2us
-per flush on the ssd_fast profile).
+A zone append advances the zone write pointer and is therefore
+sequential from the device's perspective; the actual sector is only
+returned after completion, so the cursor-based seq/rand
+classification doesn't apply.  Price it as a page-counted sequential
+write.  After this patch, 16000 appends from the same cgroup are
+charged 533264 usec (33us per append).
+
+Also skip the cursor update for ZA bios: bi_sector is the zone
+start, not the actual write position (which is only returned after
+completion).  Setting the cursor from ZA would misclassify subsequent
+READ/WRITE bios.
 
 Fixes: 7caa47151ab2 ("blkcg: implement blk-iocost")
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- block/blk-iocost.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ block/blk-iocost.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 2745bffcd5ee..abc512532ed9 100644
+index abc512532ed9..d7860ec1ad49 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -2533,8 +2533,8 @@ static void calc_vtime_cost_builtin(struct bio *bio, struct ioc_gq *iocg,
- 	u64 seek_pages = 0;
- 	u64 cost = 0;
- 
--	/* Can't calculate cost for empty bio */
--	if (!bio->bi_iter.bi_size)
-+	/* Dataless WRITE|REQ_PREFLUSH (standalone flush) is priced below */
-+	if (!bio->bi_iter.bi_size && !(bio->bi_opf & REQ_PREFLUSH))
- 		goto out;
- 
- 	switch (bio_op(bio)) {
-@@ -2544,6 +2544,15 @@ static void calc_vtime_cost_builtin(struct bio *bio, struct ioc_gq *iocg,
- 		coef_page	= ioc->params.lcoefs[LCOEF_RPAGE];
- 		break;
- 	case REQ_OP_WRITE:
-+		if (!bio->bi_iter.bi_size) {
-+			/*
-+			 * dataless WRITE|REQ_PREFLUSH: standalone flush;
-+			 * at least one page so fast profiles still charge
-+			 */
-+			cost = max(ioc->params.lcoefs[LCOEF_WRANDIO],
-+				   ioc->params.lcoefs[LCOEF_WPAGE]);
-+			goto out;
-+		}
- 		coef_seqio	= ioc->params.lcoefs[LCOEF_WSEQIO];
+@@ -2557,6 +2557,17 @@ static void calc_vtime_cost_builtin(struct bio *bio, struct ioc_gq *iocg,
  		coef_randio	= ioc->params.lcoefs[LCOEF_WRANDIO];
  		coef_page	= ioc->params.lcoefs[LCOEF_WPAGE];
+ 		break;
++	case REQ_OP_ZONE_APPEND:
++		/*
++		 * A zone append advances the zone write pointer and is
++		 * therefore sequential from the device's perspective, so
++		 * the cursor-based classification below doesn't apply.
++		 * Compute the full cost here.
++		 */
++		if (!is_merge)
++			cost += ioc->params.lcoefs[LCOEF_WSEQIO];
++		cost += pages * ioc->params.lcoefs[LCOEF_WPAGE];
++		goto out;
+ 	default:
+ 		goto out;
+ 	}
+@@ -2717,7 +2728,9 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	if (!iocg_activate(iocg, &now))
+ 		return;
+ 
+-	iocg->cursor = bio_end_sector(bio);
++	/* ZA bi_sector is zone start, not the write position */
++	if (bio_op(bio) != REQ_OP_ZONE_APPEND)
++		iocg->cursor = bio_end_sector(bio);
+ 	vtime = atomic64_read(&iocg->vtime);
+ 	cost = adjust_inuse_and_calc_cost(iocg, vtime, abs_cost, &now);
+ 
 -- 
 2.43.0
 
