@@ -1,229 +1,246 @@
-Received: from mail-oa1-f53.google.com (mail-oa1-f53.google.com [209.85.160.53])
+Received: from mta0.migadu.com (out-163.mta0.migadu.com [91.218.175.163])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EB852D0C8F
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 01:23:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C51B29E0E5
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 01:27:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.163
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788830614; cv=none; b=of/mvJn00OWUfpDdzfyH1GcLoQAKl5+KS2ZGGTRVwMDBGpKePL3j9zrYkDItyG2xDZN6DtXnXEXaReywK2+h707kBqKfjOzmd4IuifVXBmVI1L4PCkl5zurYgN6MO8v/O0KA3cyF4BeQB0jWJhHINXw1BvSLWbmdzc0NZIv/H0o=
+	t=1788830851; cv=none; b=UKw7fkkYAXtrHtfLtZhyCVZPTrppPvpww1XzmlhsBeHD5mYOlEpbmE5/uElmtPAHfAASA/+p/6i4VOPzWjwQH0ui99hISt4EXmJ5Z/lBJoUaXszhmhy1cAS73lDL8yT+e3yyn74sDNdAV1kF6QZwxZqAPWupsvQ+GbGTwlxNFZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788830614; c=relaxed/simple;
-	bh=PrE+qhGw1xvjxxjuNJw7GeDdZI4DSou+8/0RAf55MFM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=s+KOix3OOgt/HYp7jRcYLMykgK+KTLL7eiLWY1Ps1hQ5RsOUO8U2qL6s4bMhOp5rnqYnilXvrEnsOlri2ml3bZY7MSjIMpZD8nfoTWdMt2MZs3Fclz9QA34JedW1HkXQA+Fc94vEB0PaMAuoNEpnPC2AUzqwHzBFUtDfiuV4Ckk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PDeavnG5; arc=none smtp.client-ip=209.85.160.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788830851; c=relaxed/simple;
+	bh=dsDRaDunIKCn+MJPiPdeLUKuKsqc8In8Ij1klgunuKA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WC+PcbUVitSdpEBMaXk5Z81RjYBAYWjwEOIkgRigOgU1fisbUaq/p7ymJqGtYPzG940Xwc4lRsj7/UeBQ9oraErKOoNnj0gWQN/95EyvXWrq4VqAnQuB421Uj5vQn7FpF2lAHgs75WDgJz6ebPqtIZD1wRqsv4TiGwdqosgWL40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=C+uvDn8x; arc=none smtp.client-ip=91.218.175.163
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PDeavnG5"
-Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-46af2e2654cso1908656fac.2
-        for <cgroups@vger.kernel.org>; Mon, 07 Sep 2026 18:23:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788830607; x=1789435407; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=os1bxGgQvoOLa9ryjCYK+ThrfW/L4s5kmkzao71FISs=;
-        b=PDeavnG5z/CSBNAC0pSbz0Nrzkkyfl1pDbIDwelpORKR0FCrB/ueQ5hCaCwfvehlvP
-         sSbvCSQTMzv9w8tTGrfkpx0WUOl1OjCAWh6424mKZ0l7kTnlXlXHWbT4Ey2JpbVD7MjA
-         sc20lFPs+7oZf8qvIBN7RaWHrxq0MUZIbvN8LfsARg7DiVcfdhR8VSFWHgjQO9PIfKw5
-         9gVxx72FOtbsnBGU090wishA7skNtg0yUewosOTjhb04pLVJgVdF8wQH7HMF7w6/3/Zz
-         jj/e8A/QUIN1D50DheM2m4txb4OO8mqf7lnkAn1VcE/ISQgOgLnymARXl18AmDUrcAFA
-         Px3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788830607; x=1789435407;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=os1bxGgQvoOLa9ryjCYK+ThrfW/L4s5kmkzao71FISs=;
-        b=ME+tIzSomyiqmB8H2z2JgA62PYOpCztbwe+TNls6YErhNGFGKwRqnB2Omrdkliy0VA
-         Pv+cOm1R0I4wMK37mz9PtoD4IOrB8p2cjQDOrqpCEFeieGMO02clpooiCKHgus+mSTBm
-         tmy6Wt+ksIu2RtyaOPQJS9FDrG6ovxzDsu7GA7RqsIVxQzpsrcdeiLLP3KgdV3nOm8NH
-         OpI41Q+BoWt44g9lQQagoO/8cHyjgoJ7gXKv5K49ksiAvDg8B4rcCcwf3EyW18dWvqO9
-         0jyecuvb5kqfZTOot59vSdu3eTLwnlqIRCN2dkRlC26iPmzuDtRDzYWdsoeSX38P05C5
-         fFyQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxcqLBkmj4Hp5YGfw2BUczgkVE9yad6tc4kZGzAZJAlUb893jjmGl8Nq4d6xeM7Fr86gHZJETst@vger.kernel.org
-X-Gm-Message-State: AFuF++kTjMC0+b4l7Ch1j92OLazbQoS88kcU0qIusxOTfJc2hd35OEMF
-	Opr00NB27or2q264XTkVAsbi9d2XqdCQiUTySsh70wQQurZEq2lXuwHX
-X-Gm-Gg: AYBFou1x0D7kEjPusrph2T07M0ICQzZD4tq1X77wrOimj6ZHTT++CO1hiUylSx+1YB0
-	9CwVCd7FQbUV1UDkx5ozWBTmXZnfro+sh88886QOVPQeOUyYRnbMP4OzH8b/oW7JKT+D2egGuJz
-	xS5szzY33MqyzObELM6C8KZ+tW7r/PnsAGHfpJmFhLyeaCpxy1f8YyH0nMsFvi7d/6ueHk5c2cR
-	IgzRstyDk+z1TFn5w0R5JmDDZfnjKp8jWgC0dR3FrrcFDsaI4QwGmrl50qF4LsjgYUdhKsCkl8D
-	UzWMncuSNvKkPM6uBuKFzepmbx7f5nu1MKD1ajOk+VXvXwQ7Sc7loSXbPqB8veynMWWOWh8GxaA
-	SdRrygrV+IlPPQkUsO9qrN0teo4IucQ3F4ZWfodt5HPDwu7SnYAG+MT2dSuMD1JoIA0m8v0qnSz
-	BQBgJ+Wrrmeaz+3sKWOt0i5aVNg/GH91OJIVPplWX1Wv7TQMH1EzyrDRdXVsh3Y9PKxuBD2k1RN
-	McBYUN1u1Pv/RQ9+rk=
-X-Received: by 2002:a05:6871:c301:b0:457:494b:1548 with SMTP id 586e51a60fabf-475516ed3a3mr34561336fac.5.1788830607148;
-        Mon, 07 Sep 2026 18:23:27 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:54::])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-475543f5ac5sm12322726fac.8.2026.09.07.18.23.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2026 18:23:26 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org,
-	david@kernel.org,
-	ljs@kernel.org,
-	liam@infradead.org,
-	vbabka@kernel.org,
-	rppt@kernel.org,
-	surenb@google.com,
-	dev@lankhorst.se,
-	mripard@kernel.org,
-	nat@pixelcluster.dev,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	osalvador@suse.de,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH v5 4/7] mm/page_counter: use stock in page_counter_try_charge
-Date: Mon,  7 Sep 2026 18:23:24 -0700
-Message-ID: <20260908012325.1770706-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <ap86vDv143VHvrzh@linux.dev>
-References: 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="C+uvDn8x"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=dsDRaDunIKCn+MJPiPdeLUKuKsqc8In8Ij1klgunuKA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788830846; v=1; x=1789435646;
+ b=C+uvDn8xCDw+XGQR7EDzpxMWYlvnBHcH+jj4UhK5jXHNzLoBhnFCfVvGAiUyc0Q9ETq4vJIP
+ 9mxIyUFqsOf6S7iuHWSO4sVYceBY8dJjua/jZuh1SbJcRO5C/zQdhu5i9Tr4lWE6iZY2a3wFEW/
+ Kw+hNJxDZV3+EBx9/oIgKmMQ=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id ef7a5941853f9600;
+	Tue, 08 Sep 2026 01:27:26 +0000
+X-Mizu-Trace-ID: ef7a5941853f9600
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <a89dab46-c6e8-4643-bf83-83fd76a38ab7@linux.dev>
+Date: Tue, 8 Sep 2026 09:27:17 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/7] cgroup/cpuset: Factor out child partition
+ validation
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long
+ <longman@redhat.com>, cgroups@vger.kernel.org
+Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260902102615.79189-1-guopeng.zhang@linux.dev>
+ <20260902102615.79189-2-guopeng.zhang@linux.dev>
+ <5842edcd-9283-4a87-afc9-50e51962368e@redhat.com>
+ <5e0d1386-b094-4d4e-8569-e6b584f955c5@linux.dev>
+ <7d1f1c95-5dad-4124-858c-7c8e3119f437@linux.dev>
+ <0b2b6b9d-98de-4f45-8e65-a202fe9ce0d1@linux.dev>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <0b2b6b9d-98de-4f45-8e65-a202fe9ce0d1@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On Mon, 7 Sep 2026 16:21:33 -0700 Shakeel Butt <shakeel.butt@linux.dev> wrote:
 
-> On Mon, Aug 31, 2026 at 09:37:48AM -0700, Joshua Hahn wrote:
-> > Transparently make page_counter_try_charge attempt to service the charge
-> > from its stock. We preserve the same semantics as the existing stock
-> > management in try_charge_memcg:
-> > 
-> > 1. Limit-check against the stock. If there is enough, then skip the
-> >    hierarchy walk and charge to the stock.
-> > 2. Greedily attempt to fulfill the charge request and refill the stock
-> >    simultaneously to the hierarchy.
-> > 3. If this fails, retry the stock and charge without trying to refill
-> >    the stock, i.e. with the number of pages requested.
-> > 4. If the greedy attempt succeeds, return excess pages to the stock.
-> > 
-> > page_counter_refill_stock() falls back to a hierarchical uncharge when
-> > there is no stock, in NMI contexts, on lock contention, or for a refill
-> > larger than the batch.
-> > 
-> > The greedy charge is also skipped in NMI where both stock helpers bail
-> > out since the batch charge would be undone again.
-> > 
-> > No functional change intended, since no page_counter enables stock yet
-> > and counter->batch is left at 0.
-> > 
-> > Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> > Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
-> > ---
-> >  include/linux/page_counter.h |   2 +
-> >  mm/page_counter.c            | 135 +++++++++++++++++++++++++++++++----
-> >  2 files changed, 125 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
-> > index c1fe331f34e7e..428ca8e7b2da5 100644
-> > --- a/include/linux/page_counter.h
-> > +++ b/include/linux/page_counter.h
-> > @@ -82,6 +82,8 @@ static inline unsigned long page_counter_read(struct page_counter *counter)
-> >  
-> >  void page_counter_cancel(struct page_counter *counter, unsigned long nr_pages);
-> >  void page_counter_charge(struct page_counter *counter, unsigned long nr_pages);
-> > +unsigned long page_counter_refill_stock(struct page_counter *counter,
-> > +					unsigned long overage);
-> >  bool page_counter_try_charge(struct page_counter *counter,
-> >  			     unsigned long nr_pages, struct page_counter **fail,
-> >  			     unsigned long *nr_charged);
-> > diff --git a/mm/page_counter.c b/mm/page_counter.c
-> > index 3f61eba695518..a76949abf04e7 100644
-> > --- a/mm/page_counter.c
-> > +++ b/mm/page_counter.c
-> > @@ -113,25 +113,126 @@ void page_counter_charge(struct page_counter *counter, unsigned long nr_pages)
-> >  	}
-> >  }
-> >  
-> > +static bool page_counter_consume_stock(struct page_counter *counter,
-> > +				       unsigned long nr_pages)
-> > +{
-> > +	struct page_counter_stock __percpu *stock = READ_ONCE(counter->stock);
-> > +	struct page_counter_stock *pcp_stock;
-> > +	unsigned long flags;
-> > +	bool charged = false;
-> > +
-> > +	if (!stock || nr_pages > counter->batch)
-> > +		return false;
-> > +
-> > +	/* raw_spin_trylock isn't enough to protect against nested NMI in UP */
+
+On 9/7/2026 6:16 PM, Guopeng Zhang wrote:
 > 
-> I don't understand what this comment is trying to say. The nested NMI is
-> confusing.
-
-Hi Shakeel, thanks for your review on the series!
-
-Yes, I'm sorry about that. There were a few layers of protection that
-I wanted to make against nested NMI, ordering, publishing for stock, 
-etc. I think I didn't make it clear what was happening, so I'll
-address that in the next version.
-
-> > +	if (in_nmi())
-> > +		return false;
 > 
-> You are completely disabling stocks for memcg charges in nmi context. Why? I
-> assume that is what the comment above trying to explain but it is failing.
+> 在 2026/9/4 09:55, Ridong Chen 写道:
+>>
+>>
+>> On 9/4/2026 9:25 AM, Ridong Chen wrote:
+>>>
+>>>
+>>> On 9/4/2026 2:33 AM, Waiman Long wrote:
+>>>> On 9/2/26 6:26 AM, Guopeng Zhang wrote:
+>>>>> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>>>>>
+>>>>> compute_partition_effective_cpumask() checks whether each valid child
+>>>>> partition remains covered by the parent exclusive CPU mask and whether it
+>>>>> would consume all remaining CPUs of a populated parent.
+>>>>>
+>>>>> Factor these two checks into child_partition_error() so the same rules can
+>>>>> be reused when evaluating a proposed parent configuration. This is a
+>>>>> preparatory refactoring with no intended functional change.
+>>>>>
+>>>>> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>>>>> ---
+>>>>>    kernel/cgroup/cpuset.c | 38 +++++++++++++++++++++++++++++---------
+>>>>>    1 file changed, 29 insertions(+), 9 deletions(-)
+>>>>>
+>>>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>>>> index 8f24171b6055..6994dc75d940 100644
+>>>>> --- a/kernel/cgroup/cpuset.c
+>>>>> +++ b/kernel/cgroup/cpuset.c
+>>>>> @@ -2085,6 +2085,26 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>>>>        return 0;
+>>>>>    }
+>>>>> +/*
+>>>>> + * Return the error that will invalidate a child partition under a proposed
+>>>>> + * parent partition configuration.
+>>>>> + */
+>>>>> +static enum prs_errcode
+>>>>> +child_partition_error(struct cpuset *child,
+>>>>> +              const struct cpumask *partition_cpus,
+>>>>> +              const struct cpumask *remaining_cpus,
+>>>>> +              bool parent_populated)
+>>>> I think you should add some functional comments on what "partition_cpus" and "remaining_cpus" are supposed to be so that caller knows what to pass into this helper.
+>>>
+>>> Would it help to rename them to excpus and local_excpus?
+>>> local already implies "excluding children" (just like cgroup.stat.local), so I think that makes the intent clearer.
+>>>
+>>
+>> Regarding the naming: child_partition_error is a bit odd — it sounds like it's validating a hierarchical child partition, but it's actually validating the partition itself (the child argument). The parent is only needed as context for the validation logic, not because we're checking a subordinate partition.
+>>
+>> I'd suggest renaming it to something like:
+>>
+>> ```
+>> static enum prs_errcode cs_partition_error(struct cpuset *cs, ...)
+>>
+>> ```
+>>
+>> That would better reflect what the function actually does.
+>>
 > 
-> IIUC you want to use spin_lock instead of local_trylock because you want to
-> support draining from remote cpus and spin_lock on UP are simply disable irq and
-> does not protect from NMI. Maybe you need spin_trylock similar to local_trylock.
-> Not saying you to implement that but please explain stuff clearly.
-
-Yes, that's exactly what it is. I think there was a lot of thinking
-on my end on things to look out for that in the end it just kind of
-became a jumbled mess, I'll definitely do a re-spin of what's happening
-in the next version.
-
-> > +
-> > +	/* It's OK to migrate here, since stock is fungible within a counter. */
-> > +	pcp_stock = raw_cpu_ptr(stock);
+> Thanks, Ridong. I see what you mean about the name.
 > 
-> migrate between cpus? Why? What are you gaining by allowing that?
-
-All I was trying to say here is that we don't need to drain an exact
-CPU, all we need to do is to try and get any CPU. So if we migrate
-and get a different CPU's ptr than we initially started with, it's no
-big deal (that's what I tried to explain with saying that stock is
-fungible). But I agree it's a little lacking in explanation here,
-I'll rework it in the next version.
-
-> > +	if (!raw_spin_trylock_irqsave(&pcp_stock->lock, flags))
+> My intention with "child" was to describe the role of the partition in these checks. Both callers use the helper while walking a parent's child partitions, and the result depends on the parent's complete exclusive mask, whether the parent is populated, and the active CPUs remaining at that point in the walk. The helper also checks only the two conditions that can invalidate a child during this process, rather than performing general validation of an arbitrary cpuset partition.
 > 
-> Why do you need to disable irqs?
+> For that reason, `cs_partition_error()` might suggest a broader scope than the helper actually has. Would it make sense to keep `child_partition_error()` and clarify the comment, for example:
 > 
-> Anyways, you are changing the fast path of the charge drastically. Previously
-> there was no atomic ops and not irq toggling but this patch is adding atomic op
-> and irq toggle (not sure about why irq toggle is needed) on the fast path.
+
+As you can see, we are continuing to add partition checks, so I'd still suggest 
+avoiding child_partition_error(), it would become confusing when we later 
+refactor the partition validation logic. All of these functions are ultimately 
+used to validate a partition, and the validation may depend on either the parent 
+or a trialcs, or something else.
+
+So I'd propose keeping it as:
+
+static enum prs_errcode cs_partition_error(struct cpuset *cs, struct cpuset 
+*parent);
+
+This is more general and better accommodates future extensions.
+
+
+> /*
+>   * Return the error that would invalidate @child under its parent
+>   * partition's CPU configuration.
+>   */
 > 
-> I understand that remote draining is the only reason you need to use spin locks
-> here otherwise you will need to allocate work_struct in page_counter_stock. You
-> are making these design decisions very silently and implicitly.
+> I am also open to another name that preserves this parent-child context.
+> 
 
-I agree, sorry for that : -(
 
-> How about we decouple the decision of remote drain / spin lock from moving stock
-> inside page counter? First move the stock to page counter without any spin lock
-> or remote drain and later in the series you convert to spin lock plus remote
-> draining with performance numbers.
 
-That sounds like a good plan to me. I'll do exactly that and send a
-new version.
+> 
+>> On a related note, the current partition validation logic is scattered across the code. I think we should consider consolidating it into a common set of helpers, perhaps like:
+>>
+>>
+>> ```
+>> static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *trialcs, struct cpuset *parent)
+>> {
+>> ...
+>> }
+>>
+>> static enum prs_errcode validate_local_partition(struct cpuset *cs, struct cpuset *trialcs, struct cpuset *parent)
+>> {
+>>      // local partion specific check
+>>      // call validate_partition
+>>      
+>> }
+>>
+>> static enum prs_errcode validate_remote_partition(struct cpuset *cs, struct cpuset *trialcs, struct cpuset *parent)
+>> {
+>>      // remote partion specific check
+>>      // call validate_partition
+>> }
+>>
+>> ```
+>>
+> 
+> That sounds like a good idea.
+> 
+> Since these validation paths have different inputs and side effects, consolidating them may require a broader review and restructuring.
+> 
+> I will look into this separately after the current series is completed.
+> 
+> Thanks,
+> Guopeng
+>>
+>>>>> +{
+>>>>> +    if (!cpumask_subset(child->effective_xcpus, partition_cpus))
+>>>>> +        return PERR_INVCPUS;
+>>>>> +
+>>>>> +    if (parent_populated &&
+>>>>> +        cpumask_subset(remaining_cpus, child->effective_xcpus))
+>>>>> +        return PERR_NOCPUS;
+>>>>> +
+>>>>> +    return PERR_NONE;
+>>>>> +}
+>>>>> +
+>>>>>    /**
+>>>>>     * compute_partition_effective_cpumask - compute effective_cpus for partition
+>>>>>     * @cs: partition root cpuset
+>>>>> @@ -2121,6 +2141,8 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>>>>>        rcu_read_lock();
+>>>>>        cpuset_for_each_child(child, css, cs) {
+>>>>> +        enum prs_errcode child_err;
+>>>>> +
+>>>>>            if (!is_partition_valid(child))
+>>>>>                continue;
+>>>>> @@ -2129,15 +2151,13 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>>>>>             * partition root.
+>>>>>             */
+>>>>>            WARN_ON_ONCE(is_remote_partition(child));
+>>>>> -        WRITE_ONCE(child->prs_err, 0);
+>>>>> -        if (!cpumask_subset(child->effective_xcpus,
+>>>>> -                    cs->effective_xcpus))
+>>>>> -            WRITE_ONCE(child->prs_err, PERR_INVCPUS);
+>>>>> -        else if (populated &&
+>>>>> -             cpumask_subset(new_ecpus, child->effective_xcpus))
+>>>>> -            WRITE_ONCE(child->prs_err, PERR_NOCPUS);
+>>>>> -
+>>>>> -        if (child->prs_err) {
+>>>>> +        WRITE_ONCE(child->prs_err, PERR_NONE);
+>>>>> +        child_err = child_partition_error(child, cs->effective_xcpus,
+>>>>> +                          new_ecpus, populated);
+>>>>> +        if (child_err)
+>>>>> +            WRITE_ONCE(child->prs_err, child_err);
+>>>>> +
+>>>>
+>>>> You can ignore the inital PERR_NONE write and always write the child_err value into child->prs_err.
+>>>>
+>>>> Not big issue, just some nits.
+>>>>
+>>>> Cheers,
+>>>> Longman
+>>>>
+>>>>> +        if (child_err) {
+>>>>>                int old_prs = child->partition_root_state;
+>>>>>                /*
+>>>>
+>>>
+>>
+> 
 
-Thank you for your time Shakeel, I hope you have a great rest of your
-day! : -)
-Joshua
+-- 
+Best regards
+Ridong
+
