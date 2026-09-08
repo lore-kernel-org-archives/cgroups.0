@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-64.mta0.migadu.com [91.218.175.64])
+Received: from mta0.migadu.com (out-69.mta0.migadu.com [91.218.175.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93CB72E7BD3
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 03:41:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F296331EA3
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 03:41:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788838929; cv=none; b=OwDEeTSYAa59fKJxw3+4tmUp2eEPw4TqNE9fiLnRnImz0zXiijokia0Yen8cT37ss9NoqjOO3G5w0/7co6YDCv0F9lzEoIBi4GBFkOzcCuiaAtaKHrbWermOiEvTzY4TXiFoskzZemxHc5KwM0vLHZyDwa7Jtlkcemyn2NHixAI=
+	t=1788838927; cv=none; b=qo6WUjVyYg8+CJQ8bwrVGQDwZm5tWTGtVsiKKIiNwgMy+U/tvdNgya+VB6SSckS3kBOdCb82qQcbZWovJYSvJxYpPKlIUvyux90ZDCv0e7rXEUYIGXMc3Lq+QihS8paJDezPa9O/DpNemjIDv3FIv4Kcf+yGtul+VXToNJ93pSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788838929; c=relaxed/simple;
-	bh=fjfBBGmsJJ56y0JVyIG84X0Pp//85lfIIw3IuGHXEuw=;
+	s=arc-20240116; t=1788838927; c=relaxed/simple;
+	bh=MlIZcCXSxTICdrlqvuuIMch3l/hSvENFUEtEORDa6Hc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cqvAukqE39riIzeWWUq7Dr9E6E4kZOr/xRbb18q45mFQOnCQaERSEVNzIg+bLe4qSiXvN+jRCUdiYYFbsd35S7a57X+W4F8smL0QrnLVcfBqEG8dJbs0j+WJSpvZMYqQc5dsZAiSbt0vq6owI2wJpPkvf9ClLG/1p7wk2XNnom4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TV/1aYmT; arc=none smtp.client-ip=91.218.175.64
+	 MIME-Version; b=vC2RXGvbyODerq+yTYvTRbFjEUTnZimw09kLBH45SIQy/dBSJYFl6wXsebf1xNuQfLmjAs2xUXGwygF0Hr6UtCLYw/Yka4lUy6OKn+ak2F++7cC9krvlOTqTJwv3DKAc39QHG5E+MLwdA9rfBFxtNFOUnGMkKQ+7uaeMNMcangg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MwBqBnL3; arc=none smtp.client-ip=91.218.175.69
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TV/1aYmT"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MwBqBnL3"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=fjfBBGmsJJ56y0JVyIG84X0Pp//85lfIIw3IuGHXEuw=;
+DKIM-Signature: a=rsa-sha256; bh=MlIZcCXSxTICdrlqvuuIMch3l/hSvENFUEtEORDa6Hc=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788838905; v=1; x=1789443705;
- b=TV/1aYmTB6zEuD+B0PHKtv1u1K1lnMpW6hxK9r8KoQP47BTsSpXlj2wqw9OdbBdeosF/HZdE
- 2Cu8FFePzLLpExSt6G6D82Epdu6UzLk6PfbIemxvKwvJ3A/RlCcmJamleL8jPjJsAIlZrEFg+BT
- Ww8fDQfzKzNL4msglA59OX3Y=
+ t=1788838914; v=1; x=1789443714;
+ b=MwBqBnL3ytwpnPgdbMGRuZcfvxrd0kp14PW/enIyEnE0bK5M8xEx/+P3mVSugRjiNfOy38s8
+ /6DxJyQem8tlDIrbJWpX2dW94lry9A6VDFf1TfHysQ6TuB8JU6dsaxxU8CgXdGu7tF7JanEscpY
+ oT/1B+2y38nwtcmYaBU8Q/hs=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 20f6f116f302dedc;
-	Tue, 08 Sep 2026 03:41:45 +0000
-X-Mizu-Trace-ID: 20f6f116f302dedc
+Received: by mta12.migadu.com with ESMTPS id 0e9898f317fc1207;
+	Tue, 08 Sep 2026 03:41:53 +0000
+X-Mizu-Trace-ID: 0e9898f317fc1207
 X-Migadu-Flow: FLOW_OUT
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
@@ -49,9 +49,9 @@ To: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org
 Cc: Hui Zhu <zhuhui@kylinos.cn>,
 	stable@vger.kernel.org
-Subject: [PATCH v4 3/4] mm: memcg: skip the RCU lock when the memcg is not dying
-Date: Tue,  8 Sep 2026 11:41:13 +0800
-Message-ID: <9ffdbdfc96312e3e13cb8f056bfe26649492d949.1788837625.git.zhuhui@kylinos.cn>
+Subject: [PATCH v4 4/4] mm: memcg: reparent non-hierarchical lruvec stats on cgroup v2
+Date: Tue,  8 Sep 2026 11:41:14 +0800
+Message-ID: <4a7a64eed2b145ad535fedaea3624f8310c29d5b.1788837625.git.zhuhui@kylinos.cn>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1788837625.git.zhuhui@kylinos.cn>
 References: <cover.1788837625.git.zhuhui@kylinos.cn>
@@ -65,58 +65,139 @@ Content-Transfer-Encoding: 8bit
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-get_non_dying_memcg_start() takes rcu_read_lock() on every stat update, but
-the lock only protects the upward walk to a non-dying ancestor, which
-happens solely while a memcg is being offlined.  The dying check itself
-reads the CSS_DYING flag of a memcg the caller already holds a reference
-to, so it is safe without the lock.
+On cgroup v2, reparent_state_local() returns early and never moves the
+dying memcg's non-hierarchical state_local base counts to its parent.
+Meanwhile memcg_reparent_objcgs() rewrites objcg->memcg to the parent,
+so when the reparented folios are freed later, the negative deltas land
+on the parent's lruvec.  The parent therefore receives the uncharges
+without ever having received the matching charges, and its state_local
+(NR_LRU_BASE + lru, MEMCG_SOCK, NR_SLAB_RECLAIMABLE_B,
+NR_SLAB_UNRECLAIMABLE_B) permanently underflows.  Since
+lruvec_page_state_local() clamps negative values to zero, the underflow
+masks the parent's own legitimate pages.
 
-Check memcg_is_dying() first and return immediately when the memcg is
-alive, taking the RCU lock only on the rare dying path.  On an anon
-fault/charge churn workload in a memcg this recovers the ~0.6% overhead
-added by the previous patch (4368077 vs 4343159 pages/s before, back to
-~4377000 pages/s after).
+count_shadow_nodes() is the only reader of these non-hierarchical
+state_locals on cgroup v2, so the underflow directly distorts the
+workingset shadow node budget.
 
-Fixes: 7404bd37cfbe ("mm: workingset: use lruvec_lru_size() to get the number of lru pages")
+Fix this by reparenting the lruvec state_locals on cgroup v2 as well,
+mirroring what cgroup v1 already does.  Only the lruvec stats consumed
+by count_shadow_nodes() are moved; the memcg-level stats are left alone
+because on v2 they are exposed through the rstat hierarchical tree and
+are not read from state_local.
+
+Fixes: 8285917d6f38 ("mm: memcontrol: prepare for reparenting non-hierarchical stats")
 Cc: stable@vger.kernel.org
 Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- mm/memcontrol.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ mm/memcontrol-v1.h |  5 +++--
+ mm/memcontrol.c    | 42 ++++++++++++++++++++++++++++--------------
+ 2 files changed, 31 insertions(+), 16 deletions(-)
 
+diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+index 1e394269c613d..0578b7076764d 100644
+--- a/mm/memcontrol-v1.h
++++ b/mm/memcontrol-v1.h
+@@ -25,6 +25,9 @@ int memory_stat_show(struct seq_file *m, void *v);
+ struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg,
+ 						    unsigned int n);
+ 
++void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
++				       struct mem_cgroup *parent, int idx);
++
+ /* Cgroup v1-specific declarations */
+ #ifdef CONFIG_MEMCG_V1
+ 
+@@ -73,8 +76,6 @@ void reparent_memcg1_lruvec_state_local(struct mem_cgroup *memcg, struct mem_cgr
+ 
+ void reparent_memcg_state_local(struct mem_cgroup *memcg,
+ 				struct mem_cgroup *parent, int idx);
+-void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
+-				       struct mem_cgroup *parent, int idx);
+ 
+ void memcg1_account_kmem(struct mem_cgroup *memcg, int nr_pages);
+ static inline bool memcg1_tcpmem_active(struct mem_cgroup *memcg)
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ace9fe2b46084..9995f3d2aae1b 100644
+index 9995f3d2aae1b..f13030f75fa54 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -853,6 +853,17 @@ static long memcg_state_val_in_pages(int idx, long val)
- static inline struct mem_cgroup *
- get_non_dying_memcg_start(struct mem_cgroup *memcg, bool *rcu_locked)
- {
-+	/*
-+	 * Fast path: the caller holds a reference to @memcg, so reading
-+	 * its CSS_DYING flag without the RCU lock is safe.  The RCU lock
-+	 * is only needed to walk up to a non-dying ancestor, which
-+	 * happens only while a memcg is actually being offlined.
-+	 */
-+	if (!memcg_is_dying(memcg)) {
-+		*rcu_locked = false;
-+		return memcg;
-+	}
-+
- 	rcu_read_lock();
- 	*rcu_locked = true;
- 
-@@ -864,6 +875,9 @@ get_non_dying_memcg_start(struct mem_cgroup *memcg, bool *rcu_locked)
- 
- static inline void get_non_dying_memcg_end(bool rcu_locked)
- {
-+	if (!rcu_locked)
-+		return;
-+
- 	rcu_read_unlock();
+@@ -232,14 +232,29 @@ static inline struct obj_cgroup *__memcg_reparent_objcgs(struct mem_cgroup *memc
+ 	return objcg;
  }
  
+-#ifdef CONFIG_MEMCG_V1
+ static void __mem_cgroup_flush_stats(struct mem_cgroup *memcg, bool force);
+ 
+-static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
++/*
++ * Reparent the non-hierarchical lruvec stats that count_shadow_nodes() reads
++ * to approximate the shadow node budget.  They are not exposed to userspace
++ * on cgroup v2, but they must follow the reparented folios; otherwise the
++ * ancestor would only receive the negative deltas when the folios are freed
++ * without ever having received the positive base, and its local stats would
++ * permanently underflow.
++ */
++static void reparent_v2_lruvec_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
+ {
+-	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+-		return;
++	int i;
++
++	for (i = 0; i < NR_LRU_LISTS; i++)
++		reparent_memcg_lruvec_state_local(memcg, parent, NR_LRU_BASE + i);
++
++	reparent_memcg_lruvec_state_local(memcg, parent, NR_SLAB_RECLAIMABLE_B);
++	reparent_memcg_lruvec_state_local(memcg, parent, NR_SLAB_UNRECLAIMABLE_B);
++}
+ 
++static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
++{
+ 	/*
+ 	 * Reparent stats exposed non-hierarchically. Flush @memcg's stats first
+ 	 * to read its stats accurately , and conservatively flush @parent's
+@@ -248,17 +263,18 @@ static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgr
+ 	 */
+ 	__mem_cgroup_flush_stats(memcg, true);
+ 
+-	/* The following counts are all non-hierarchical and need to be reparented. */
+-	reparent_memcg1_state_local(memcg, parent);
+-	reparent_memcg1_lruvec_state_local(memcg, parent);
++	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
++		reparent_v2_lruvec_state_local(memcg, parent);
++	} else {
++#ifdef CONFIG_MEMCG_V1
++		/* The following counts are all non-hierarchical and need to be reparented. */
++		reparent_memcg1_state_local(memcg, parent);
++		reparent_memcg1_lruvec_state_local(memcg, parent);
++#endif
++	}
+ 
+ 	__mem_cgroup_flush_stats(parent, true);
+ }
+-#else
+-static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
+-{
+-}
+-#endif
+ 
+ static inline void reparent_locks(struct mem_cgroup *memcg, struct mem_cgroup *parent, int nid)
+ {
+@@ -570,7 +586,6 @@ unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+ 	return x;
+ }
+ 
+-#ifdef CONFIG_MEMCG_V1
+ static void __mod_memcg_lruvec_state(struct mem_cgroup_per_node *pn,
+ 				     enum node_stat_item idx, long val);
+ 
+@@ -592,7 +607,6 @@ void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
+ 		__mod_memcg_lruvec_state(parent_pn, idx, value);
+ 	}
+ }
+-#endif
+ 
+ /* Subset of vm_event_item to report for memcg event stats */
+ static const unsigned int memcg_vm_event_stat[] = {
 -- 
 2.43.0
 
