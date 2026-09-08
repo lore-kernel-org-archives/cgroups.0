@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-251.mta1.migadu.com [95.215.58.251])
+Received: from mta1.migadu.com (out-11.mta1.migadu.com [95.215.58.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ABEA4EE842
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 10:02:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.251
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68A74D2EDA
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 10:02:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788861748; cv=none; b=mbogJqwvhCLdyKe1a+mkno32J5ff0zPzCkoP3782BRsaZW816WlOMRl4j1myH11N8VKxLYAGgOIMARN61VxEXuScSTJCuUS3PyIaFKjMNQZI1+6MTgEtvQZvFovjzsCwvs8DSKUWXlZ/jrSRpvC1BLjPnibaKQJH8ZHjs29yzwc=
+	t=1788861759; cv=none; b=V74BZbV+F2Y6lPMKpwRIRHAwoMS+TnYCeEcBvhlyp56XKV/Z2+RWchjIZTFXbHTAAbfjvRYV97jTWCzgbTtM3eJOd057UgFBhKAP2sQbS32VFPyeg6JNZivapmclVPjbHmYFGCimkFgF+Q/V5MJWMyDed52dgPhBCf7uROzL4P4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788861748; c=relaxed/simple;
-	bh=3EOpRkGpyjybDuKlEe8Dm2WpL894O+e4syc8+3J+rKs=;
+	s=arc-20240116; t=1788861759; c=relaxed/simple;
+	bh=wWqqyXxBeroIFBeIbRhs73ts8SnHGnu+jeiXZcy34Mk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZFiWSksyxkJdbaVkSrV4YbUuQhbsJYjs0JtloOoYTDZUPmmDdjRRC0iCut/qWbg2lkWZlW5u0ecAtfdmmG+fbtmrssGkPcqhhU1PnV5akUxj7qWlc72jeClnCKk0LRwUqdyUT9L4Dwovva7GJlpudAfmsPuQ/mQTNK1mCCcK1OY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YY864aDQ; arc=none smtp.client-ip=95.215.58.251
+	 MIME-Version; b=uvL+zcgqNjSzlpcdFq0uoqIogf5b3muPozy8CEB76/x9pJE4hxLlW44AGYPnkqO3l9vQSoqglwL9HECwQX205qVq7EoNvTFeS+n1rYCyH3PaBNyOPkkSRxAFvTZugABlBQ6HAwCNl872eozl6V0KXTqEGW1E+L5r9s8Y3CUZKvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=BBPg2zbv; arc=none smtp.client-ip=95.215.58.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YY864aDQ"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="BBPg2zbv"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=3EOpRkGpyjybDuKlEe8Dm2WpL894O+e4syc8+3J+rKs=;
+DKIM-Signature: a=rsa-sha256; bh=wWqqyXxBeroIFBeIbRhs73ts8SnHGnu+jeiXZcy34Mk=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788861743; v=1; x=1789466543;
- b=YY864aDQ8ApF0zFToG0dYNGdF4qoOSE+bCJa81VN2QE4H4LehI1OWr48s2PAHSKlJmKz0NnU
- P8mWLZMCaZIVvTG1iDB6zZuT2o0VQXTRlstCw+hRo/C0+OE4Vnn7e1r9YgnYfsiRxXPeacE7PDF
- aXWwiahadRC0HFXxHQeVLeCc=
+ t=1788861755; v=1; x=1789466555;
+ b=BBPg2zbvP4e7oWrVOPTSaJmbIJ57mrXJ7/08yRBMg1dCllozSjG5wr7EaDQSRebu/V0N2O4t
+ R74RMiTVf9NIjJHjwQx8jDtYl5aUf9nalTsVq3MzlTnSXjfYQzm2RwO9Mu19/BZOcwzF1HmpHYT
+ lDw8GtuCiWoaOEYiQaFl3DtM=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id e678ba84bb062b64;
-	Tue, 08 Sep 2026 10:02:23 +0000
-X-Mizu-Trace-ID: e678ba84bb062b64
+Received: by smtp.migadu.com with ESMTPS id e2c0af394d354957;
+	Tue, 08 Sep 2026 10:02:35 +0000
+X-Mizu-Trace-ID: e2c0af394d354957
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: tj@kernel.org,
@@ -43,9 +43,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	cui.tao@linux.dev,
 	Tao Cui <cuitao@kylinos.cn>
-Subject: [RFC PATCH 2/8] blk-iocost: define iocost_model_ops cost model interface
-Date: Tue,  8 Sep 2026 18:01:37 +0800
-Message-ID: <20260908100143.47598-3-cui.tao@linux.dev>
+Subject: [RFC PATCH 3/8] blk-iocost: implement BPF struct_ops registration
+Date: Tue,  8 Sep 2026 18:01:38 +0800
+Message-ID: <20260908100143.47598-4-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260908100143.47598-1-cui.tao@linux.dev>
 References: <20260908100143.47598-1-cui.tao@linux.dev>
@@ -59,114 +59,195 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-Define the interface for pluggable cost models: a struct_ops with a
-single calc_cost(op, nbytes, sector, cursor, iocg_id, flags) callback
-taking scalar arguments only.  The return value is vtime (2^37 per
-second of device time), clamped to 1s per IO by the kernel.  A return
-value of 0 delegates the IO back to the builtin formula, so a model
-which only handles some IO types cannot make the rest free.
+Register the iocost_model_ops struct_ops type: at most one model
+system-wide (EBUSY otherwise), called under RCU from the submit/merge
+path.  Registration and unregistration are serialized with a mutex
+because the caller only holds the per-map lock.  Includes the
+verifier ops, CFI stubs and late_initcall registration.  A model
+returning 0 makes the caller fall back to the builtin formula, which
+keeps a partial model from making the IO types it does not handle
+free.
 
-iocg_id is the id of the issuing cgroup, so a model can keep
-per-cgroup state, e.g. for multi-stream sequentiality detection.
-The id is only valid while the cgroup exists and is recycled after
-removal, so models must treat it as a transient key; struct_ops
-callback signatures are frozen once merged, so the identifier is
-part of the initial interface.
+The verifier allows the base helper set, so models can use maps for
+per-cgroup state keyed by iocg_id.  The model runs in the submit path
+under RCU and must not sleep.
 
-The model is called from the IO submission path under RCU and must
-not sleep.  Only the bio-level charging path consults the model; the
-request-level sizing path keeps using the builtin formula.
-
-This is a definition-only patch; the registration infrastructure and
-dispatch hook follow in subsequent patches.
+No code calls the registered model yet; the dispatch hook follows.
 
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- block/Kconfig              |  9 ++++++
- include/linux/blk-iocost.h | 56 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 65 insertions(+)
- create mode 100644 include/linux/blk-iocost.h
+ block/Makefile         |   1 +
+ block/blk-iocost-bpf.c | 152 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 153 insertions(+)
+ create mode 100644 block/blk-iocost-bpf.c
 
-diff --git a/block/Kconfig b/block/Kconfig
-index 70e4a66d941ff..bf43be21e00bb 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -231,4 +231,13 @@ config BLK_ERROR_INJECTION
- 
- source "block/Kconfig.iosched"
- 
-+config BLK_CGROUP_IOCOST_BPF
-+	bool "Enable BPF pluggable cost model support for the cost IO controller"
-+	depends on BLK_CGROUP_IOCOST && BPF_SYSCALL && BPF_JIT
-+	help
-+	 Enabling this option registers the "iocost_model_ops" BPF
-+	 struct_ops type, which allows a BPF program to replace the
-+	 builtin linear cost model on devices configured with
-+	 "ctrl=bpf" through io.cost.model.
-+
- endif # BLOCK
-diff --git a/include/linux/blk-iocost.h b/include/linux/blk-iocost.h
+diff --git a/block/Makefile b/block/Makefile
+index e7bd320e3d697..ee5cebeea006f 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -39,3 +39,4 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
+ 					   blk-crypto-sysfs.o
+ obj-$(CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK)	+= blk-crypto-fallback.o
+ obj-$(CONFIG_BLOCK_HOLDER_DEPRECATED)	+= holder.o
++obj-$(CONFIG_BLK_CGROUP_IOCOST_BPF)	+= blk-iocost-bpf.o
+diff --git a/block/blk-iocost-bpf.c b/block/blk-iocost-bpf.c
 new file mode 100644
-index 0000000000000..7111b5c03dc36
+index 0000000000000..0c34f56ded71d
 --- /dev/null
-+++ b/include/linux/blk-iocost.h
-@@ -0,0 +1,56 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _LINUX_BLK_IOCOST_H
-+#define _LINUX_BLK_IOCOST_H
-+
-+#include <linux/types.h>
-+
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++++ b/block/blk-iocost-bpf.c
+@@ -0,0 +1,152 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (c) 2026 Tao Cui */
 +
 +/*
-+ * Pluggable cost model interface for blk-iocost.
++ * blk-iocost: BPF struct_ops plumbing for pluggable cost models.
 + *
-+ * A BPF struct_ops implementation registered against "iocost_model_ops"
-+ * replaces the builtin linear cost model on devices configured with
-+ * "ctrl=bpf" through io.cost.model.  The model is a pure function of the
-+ * arguments below and returns the cost of the IO in device time units,
-+ * where 1 second of device time equals 2^37 (VTIME_PER_SEC).  The
-+ * returned value is clamped by the kernel.  A cost of 0 delegates the
-+ * IO back to the builtin formula, so a model which does not handle a
-+ * given IO type cannot make it free.
-+ *
-+ * The iocg_id argument identifies the issuing cgroup (css id) so the
-+ * model can keep per-cgroup state, e.g. for multi-stream sequentiality
-+ * detection.  The id is only valid while the cgroup exists: css ids are
-+ * recycled once the cgroup is removed, so models must treat it as a
-+ * transient key and reset state when they observe it reused.  Whether
-+ * the interface needs a release(iocg_id) callback for state cleanup is
-+ * an open question.
-+ *
-+ * The model is called from the IO submission path under RCU and must
-+ * not sleep.  Only the bio-level charging path consults the model;
-+ * the request-level sizing path (calc_size_vtime_cost()) keeps using
-+ * the builtin formula.
++ * Registers the "iocost_model_ops" struct_ops type.  At most one model
++ * can be registered at a time; devices opt in per-queue with
++ * "echo $DEV ctrl=bpf > io.cost.model".  Devices without a registered
++ * model keep using the builtin linear model.
 + */
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/bpf.h>
++#include <linux/bpf_verifier.h>
++#include <linux/btf.h>
++#include <linux/blk-iocost.h>
 +
-+/* flags for calc_cost() */
-+#define IOCOST_COST_F_MERGE	(1ULL << 0)	/* called from merge path */
++/* 1s of device time; upper bound on a single IO's chargeable cost */
++#define IOCOST_BPF_MAX_COST	(1ULL << 37)
 +
-+struct iocost_model_ops {
-+	/*
-+	 * @op:		REQ_OP_* value (uapi blk_opf.h)
-+	 * @nbytes:	IO size in bytes
-+	 * @sector:	starting sector
-+	 * @cursor:	iocg cursor sector, 0 if none (sequentiality hint)
-+	 * @iocg_id:	css id of the issuing cgroup
-+	 * @flags:	IOCOST_COST_F_*
-+	 */
-+	u64 (*calc_cost)(u64 op, u64 nbytes, u64 sector, u64 cursor,
-+			 u64 iocg_id, u64 flags);
-+};
++static struct bpf_struct_ops bpf_iocost_model_ops;
++
++static DEFINE_MUTEX(iocost_bpf_reg_lock);
++static struct iocost_model_ops __rcu *iocost_bpf_model;
++static DEFINE_STATIC_KEY_FALSE(iocost_bpf_key);
++
++bool iocost_bpf_model_registered(void)
++{
++	return static_branch_unlikely(&iocost_bpf_key);
++}
 +
 +bool iocost_bpf_calc_cost(u64 op, u64 nbytes, u64 sector, u64 cursor,
-+			  u64 iocg_id, u64 flags, u64 *costp);
-+bool iocost_bpf_model_registered(void);
++			  u64 iocg_id, u64 flags, u64 *costp)
++{
++	const struct iocost_model_ops *ops;
++	u64 cost;
 +
-+#endif	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
-+#endif	/* _LINUX_BLK_IOCOST_H */
++	if (!static_branch_unlikely(&iocost_bpf_key))
++		return false;
++
++	rcu_read_lock();
++	ops = rcu_dereference(iocost_bpf_model);
++	if (!ops) {
++		rcu_read_unlock();
++		return false;
++	}
++	cost = ops->calc_cost(op, nbytes, sector, cursor, iocg_id, flags);
++	rcu_read_unlock();
++
++	if (!cost)
++		return false;
++
++	*costp = min(cost, IOCOST_BPF_MAX_COST);
++	return true;
++}
++
++static int bpf_iocost_model_init(struct btf *btf)
++{
++	s32 type_id;
++
++	type_id = btf_find_by_name_kind(btf, "iocost_model_ops", BTF_KIND_STRUCT);
++	if (type_id < 0)
++		return -EINVAL;
++	return 0;
++}
++
++static int bpf_iocost_init_member(const struct btf_type *t,
++				  const struct btf_member *member,
++				  void *kdata, const void *udata)
++{
++	return 0;
++}
++
++static bool bpf_iocost_is_valid_access(int off, int size,
++				       enum bpf_access_type type,
++				       const struct bpf_prog *prog,
++				       struct bpf_insn_access_aux *info)
++{
++	return bpf_tracing_btf_ctx_access(off, size, type, prog, info);
++}
++
++static const struct bpf_func_proto *
++bpf_iocost_get_func_proto(enum bpf_func_id func_id,
++			  const struct bpf_prog *prog)
++{
++	return bpf_base_func_proto(func_id, prog);
++}
++
++static const struct bpf_verifier_ops bpf_iocost_verifier_ops = {
++	.get_func_proto = bpf_iocost_get_func_proto,
++	.is_valid_access = bpf_iocost_is_valid_access,
++};
++
++static int bpf_iocost_reg(void *kdata, struct bpf_link *link)
++{
++	struct iocost_model_ops *new_ops = kdata;
++
++	if (!new_ops->calc_cost)
++		return -EINVAL;
++
++	int ret = 0;
++
++	/* the caller only holds the per-map lock, so serialize here */
++	mutex_lock(&iocost_bpf_reg_lock);
++	if (rcu_access_pointer(iocost_bpf_model))
++		ret = -EBUSY;
++	else {
++		static_branch_inc(&iocost_bpf_key);
++		rcu_assign_pointer(iocost_bpf_model, new_ops);
++	}
++	mutex_unlock(&iocost_bpf_reg_lock);
++	return ret;
++}
++
++static void bpf_iocost_unreg(void *kdata, struct bpf_link *link)
++{
++	mutex_lock(&iocost_bpf_reg_lock);
++	if (rcu_access_pointer(iocost_bpf_model) == kdata) {
++		rcu_assign_pointer(iocost_bpf_model, NULL);
++		static_branch_dec(&iocost_bpf_key);
++	}
++	mutex_unlock(&iocost_bpf_reg_lock);
++}
++
++static u64 bpf_iocost_calc_cost_stub(u64 op, u64 nbytes, u64 sector,
++				     u64 cursor, u64 iocg_id, u64 flags)
++{
++	return 0;
++}
++
++static struct iocost_model_ops __bpf_ops_iocost_model_ops = {
++	.calc_cost = bpf_iocost_calc_cost_stub,
++};
++
++static struct bpf_struct_ops bpf_iocost_model_ops = {
++	.verifier_ops = &bpf_iocost_verifier_ops,
++	.init = bpf_iocost_model_init,
++	.init_member = bpf_iocost_init_member,
++	.reg = bpf_iocost_reg,
++	.unreg = bpf_iocost_unreg,
++	.name = "iocost_model_ops",
++	.cfi_stubs = &__bpf_ops_iocost_model_ops,
++	.owner = THIS_MODULE,
++};
++
++static int __init bpf_iocost_init(void)
++{
++	return register_bpf_struct_ops(&bpf_iocost_model_ops, iocost_model_ops);
++}
++late_initcall(bpf_iocost_init);
 -- 
 2.43.0
 
