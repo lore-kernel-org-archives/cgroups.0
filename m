@@ -1,85 +1,87 @@
 Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF0558B6AF
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 15:57:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB6758E2A9
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 15:57:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788883069; cv=none; b=KkFEEBJqiqCQayUoqBDKvjJV64+4K0frn6PKY1o28qdHGaeOvmfJG10Awq7wOlgS9ggQRQTkIyp+u7AnCEn2X5ffiDeVSIMnB4BHZi41Z2boi0CMP4VDjDhCgSUvgjGtcr+zfAUxB+gRkJkBCcBFybXJPSuxvDVbf7zuFPNDYas=
+	t=1788883070; cv=none; b=jnSIt8hvQ0L9nZBjxSebfF6HdpqK+GSFvs31+Rcq+HOk2X+dkX98g0jPLwL6YepNymeiwQPFhG8MO0rZhIV9IUpDWoaeNWRHZJvLTKW1f0Hhxqw9K04nsGIzqhFMN574ApgFQWB/gFkjcf/kH/hpJe/T0L1FuQwkYGluRIGqXfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788883069; c=relaxed/simple;
-	bh=hj+Nv0WF1d95Gjv7TrdlCtnL4rlx46A03j7UOfRM5nU=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=FAfTBqdMQrLbjZoT7lFq8iNkjHb1A6kcKn7zy2QYyAd4Y8Bf3wKuHLFLDhvaqsyVtW/43CgDoNZkIlsulSY6abCTCluEeKtfcn2artDxmhCRZvCRyVMK2LN5HJLccFooAys6yDijB1N5n5zFFH2rCs3mmktrrqa6GoCAINBlHR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=nbNFtHL9; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=HwcXoEba; arc=none smtp.client-ip=148.163.135.74
+	s=arc-20240116; t=1788883070; c=relaxed/simple;
+	bh=ugnKiN2qF100fvbO6aZoM7EJjqjdGQ9b7nhN8W8O0/M=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=NMVYuRCgExnIlLQkGbL9mgDHcJv9Jeq+0RxrJZNJM76IXKakY2M1OIUxsW+PBY122w/n/dLcrH2bx0kWpCyoJFuKlmblTyk2+Uotj/9hdzVLtk9KkZE42Ir1hDMEu+CDHIOMtMB2/6uj1N84vJRyBBikRccEQfL9qKFG/vxbw20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=H0X9Gg7d; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=ffU5sY3U; arc=none smtp.client-ip=148.163.135.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="nbNFtHL9";
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="HwcXoEba"
-Received: from pps.filterd (m0167072.ppops.net [127.0.0.1])
-	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 688Fbd5W1154483
-	for <cgroups@vger.kernel.org>; Tue, 8 Sep 2026 11:57:46 -0400
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="H0X9Gg7d";
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="ffU5sY3U"
+Received: from pps.filterd (m0167068.ppops.net [127.0.0.1])
+	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 688Fb0Yh1774963
+	for <cgroups@vger.kernel.org>; Tue, 8 Sep 2026 11:57:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pps01; bh=NifX4Rb1WDw0wxtWlVThAQsW+j
-	ygu9Vf8Cny+Iwc1Mw=; b=nbNFtHL9MXnWtK26BxA1gyl68MUKnXXXxoueCQqUDN
-	PlAAxqnECyGfrI5luVVHgkn5aO+soguWzHRqqKc5XoFDmbdhwuvLilMM99IFcYTj
-	+JMRcn73qCpmaZ/fWTKKkSatKo8L/US1KBq7wxr/gMhukyyBM3tqhRZRDJqV+PTz
-	BNPwJMOiHkFnv0ilHeV2vGi+c+rMDYMQ+GRq2EIfM5V8QkTFK6agkdniSQrtaMGv
-	5nwebsxdCctFhRbY1bic7XQ+mrRjg0RVx1tPhg9fdt7WBnf0r7ukd4MtVXQdEI89
-	jlgmXgdAt1/o0W4fgk24CIkvLrkWTwRHE5bwZ+V0zgYw==
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
-	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4gj50j5h17-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pps01; bh=a1Sa
+	gTgITL5NsRvzAQglokC1slbC5Sjoi1TsTJ0PiCE=; b=H0X9Gg7d+NgnDVZ1sJdJ
+	YhoeRED5c1/QYDjOyFwx02Xm1hNGpoVNdlNqlTjhc2Riq5/6DGf3nd+oa33l2dx+
+	T5NyLuUFBqGGZK1tf8QaXXJKbLUCJvJ7EqbR7bY8qM1gIh2kKzVE9VIFQjknEyvk
+	XpYIPxzwCwKBwlPdvpcif8QlPp87S1qU8NayRxTfoNpuaabuTedHjRVJjB5R7LAz
+	2DGU7rvnFpWI4kP/rkcb76KAS2mmrkgW4AXG45tmMwVNmGjansQn645jk8mZz6Sr
+	v9BgFn5F8Bqjf+94ChbTA4y5DiibtB20WcN42/ZXqicVM9Zbkcxl/P5Q4sp33lHU
+	dw==
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
+	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4gjmwhgd13-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 11:57:46 -0400 (EDT)
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-52fb6c7b680so62327791cf.1
-        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 08:57:46 -0700 (PDT)
+	for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 11:57:47 -0400 (EDT)
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-51c1d137a68so63036301cf.3
+        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 08:57:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=columbia.edu; s=lionmail; t=1788883065; x=1789487865; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=NifX4Rb1WDw0wxtWlVThAQsW+jygu9Vf8Cny+Iwc1Mw=;
-        b=HwcXoEbaTAwmRH2QxWJltWnPsYtWr4hQDxDV3oliZTmaezj4cLpGGb2fAdKp/EAxIz
-         OKgRDw1WL42dB8A+3BCWeSAYsJ+6IqBmMAvEZFh7IDN+KmAg//lOWcJX0+v6dZWn15OR
-         Zbs4/gu/5bWblvlSt2xZ2xOA3KpFqxalq5z0LhYRrLMQFPXyVpUHkpp3cBe5/e09M/TF
-         TBIariIH0BuKoOWYukmVvYRe8vaj7evSq8Zkd9wm6s3bc2Q6DyRHlXRAUBqtQQKhSszm
-         kX813aWVserf/IBkXUoCdFiJlU/Ib+cKyI7VyPk3KrVw69NCUVaumlCiV6I0em7stSNc
-         mpxA==
+        d=columbia.edu; s=lionmail; t=1788883066; x=1789487866; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=a1SagTgITL5NsRvzAQglokC1slbC5Sjoi1TsTJ0PiCE=;
+        b=ffU5sY3U2XK/M45oZLaJH4vnMBhMglsjZ4rtbfHdzLt77UfxCnwc5jzWZm+nHifFf+
+         RDhwITDz9GTIdPTy+lagvP9NuxNyrpBepHIQGnETrpQQxiUglSID7ybxn959DDuA1ca+
+         Sflcr/9yY3bwUPWRJnk2u9mLKrM3h/Tx/WDqfErD/dsK86o6JjqTAZXeELcx4jfdoPi9
+         Ou2wKPfyhRJ5TxrMmMxP9DHeVaz7/D2WGtf1W2UcyGX7h6jb3OKJyois6jlAEM8TIW9E
+         b6jm7dHh0iICZMp0zU73PzPCqrem+wzN8wyMk3tG7LcKjVOZA87pzs+l1A4b7ujeRR8a
+         GbYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788883065; x=1789487865;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=NifX4Rb1WDw0wxtWlVThAQsW+jygu9Vf8Cny+Iwc1Mw=;
-        b=gdmg27bMJDeLmnVH/Cc6mqiIyiHBqtA5pMT8FPbSSIhzKZLrMV0+9fUfP4Gr3lP0nf
-         d7mCz8euKr1seYI/33mQMOGDM7BDoaDPlEvtIcPqEJ//yNOaXQFdTd8TQlvfz6ZvIsGP
-         6NtsaGE5ExgIK23yS+iEYAE5g4djH9CCYOGpQ1ojxTzgofP5OkhN2RO8UGW1HewYfeBB
-         kpCa/YCOpQxpZ6uAL6kLgar8K97t/AZJxIAvnO7iwgJOlrcZrXgpCZNH8/Lum2FtNmsD
-         QqvFyfj4rXVgdQN9Q7tIclJYIYo10J+jsKN8wnA5SRPwCsVFDhYnAlTYU/dx3rO6wjQg
-         ApSQ==
-X-Gm-Message-State: AFuF++l/O17icVgc4sKd+2LT7hIbzw/xPVxpRcIYbkfEtnCkGHHKL4iO
-	//RJ5Yx62kaj3TWeLiM4O6+faeFvfAxNoMvGhem+3wrhlZAQH0qHUvb9ZILO7PsZ+DMnG1ZCqkA
-	i4DstvGFiH+JK04zuoC2kjNJMDenL9Eyu2dDMack6Psf37RjliTaiWaM=
-X-Gm-Gg: AYBFou08kv+JjgDc4vo9PWFntTL3flQcdR0TAOl7VkF3ZUkgXAobWGD1Td2dtKsfm+a
-	velBQx35HUpzrIEnJF2o5dRI8hKtVEHKPAg+nJYSPuZ5BhvrwQhJGFGgufA08j3OQC4SjZLPaaU
-	WMgcGUjsIdqPvtXrKGxPbzMHd+3+xCTb3nXJEU1RJxz9hC2M7ZPeS9pTKm0VmUfRFehMJTZRnlv
-	hXpwsmq7JLx8imPsr/jX940TvR9HU1wTyDfg0ae3q1+d53cm8IeZ+XoPidQZtDakNxMLPv1/B/j
-	qpqxFDqgloy05a15IP6z3cl95GmNqtt7b4t2n93Qt66MGbjbiNFWJ2U78Hwq0BZnCrYyElM/Gln
-	eDPLf9PBBUqNmEPd8M44N9mqXkN8hJkGcIzjf3RIvqqqJzfBh
-X-Received: by 2002:a05:622a:134d:b0:52f:f072:a1d1 with SMTP id d75a77b69052e-53054819272mr349899271cf.11.1788883065115;
+        d=1e100.net; s=20251104; t=1788883066; x=1789487866;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=a1SagTgITL5NsRvzAQglokC1slbC5Sjoi1TsTJ0PiCE=;
+        b=WS6A4EZ0mEL1O1DU/uQ5E2EYDyjrCM7G/bBS4Xx5oa3ew+uZ4Q830+vwIAxGOhcRzX
+         oy9i29xRVrLdTiK0NLeFyV89iIh6T/iJ8Zk8irPnv+YBuO7InN4eIBg0xc4l1NfzNTMT
+         zSyKC0NYDYfa6aZ3EJ2sah14iSROXHOHmoLdChFNY549df7FaoqvXd9BWb8uWbxCvu/O
+         0aTb2pXCBAAa/3DCwIXL6ChaKmSgNUaY0ioyZNAeCLXR82iH5z8bgBsu9n5+c2N91N8b
+         t6Ex7zFHXGkA8bd0+KWuFDG6KqbBNd3FElwxfjQy0b0/Y746Uy/fO9Rgt5vpstWwHmo6
+         OW9g==
+X-Gm-Message-State: AFuF++nD+XCMg4pDnvyErSi329filQH3yWiKpWc7vnc5OE8reB0c1NyT
+	24oDgiLNXsXrPx8KEAJ2YqbTKneMqWI4Ati0MGkMxcf/zkxa0AjfARe85zV0JXhCYYbflkGpbC6
+	T2ooeXoTEwkbuufQJPDX6QzTi4WsR1mB5k85D85SZEtvqVYr+2Ni2nsY=
+X-Gm-Gg: AYBFou3hE3/n3WtXsHHt0DW2HcqIXbcxEeHKOfPW4L9drzs91k2oWMSfJvwGhyde/Ah
+	uicEA9MgRCeAm3ag2FHEE2PGej0mw+4vwpBHM3ZdAyNbtaWVh4FSxELekNrXxtAGtYlJVVHYBTX
+	fCuErLB60A+9RK2F5GPoqdsW9pE+68xWUrGsO3EqVQojpDQGLoYqYwLqMnEQZ43+aBipzW4sHYG
+	IAzgZ7emfSg/55V51GZn1DNh0wyGtAIUqhQtGp8xp5Kuq1LsAf2Lu0K0JGVxCkiws6e08rROB5I
+	po3NN+nW/umVfwSrHNZmn1X9zrYMh87uJalL9rAHqdnv6oY3ZpaqjwLN262UJEkeBhxztPOGYZq
+	EgIDYkC5NZbPK0PEgVcpE76Tw8xU4MrXyuWnD6iRb/+jMNiPX
+X-Received: by 2002:ac8:5987:0:b0:530:178a:9de8 with SMTP id d75a77b69052e-530547d74e5mr351510541cf.22.1788883066252;
+        Tue, 08 Sep 2026 08:57:46 -0700 (PDT)
+X-Received: by 2002:ac8:5987:0:b0:530:178a:9de8 with SMTP id d75a77b69052e-530547d74e5mr351509611cf.22.1788883065571;
         Tue, 08 Sep 2026 08:57:45 -0700 (PDT)
-X-Received: by 2002:a05:622a:134d:b0:52f:f072:a1d1 with SMTP id d75a77b69052e-53054819272mr349898481cf.11.1788883064429;
-        Tue, 08 Sep 2026 08:57:44 -0700 (PDT)
 Received: from [127.0.1.1] (nat-128-59-177-174.net.columbia.edu. [128.59.177.174])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53093295584sm27830461cf.13.2026.09.08.08.57.43
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53093295584sm27830461cf.13.2026.09.08.08.57.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 08:57:43 -0700 (PDT)
+        Tue, 08 Sep 2026 08:57:45 -0700 (PDT)
 From: Tal Zussman <tz2294@columbia.edu>
-Subject: [PATCH v2 00/11] mm: memcontrol: constify the read side of the
- memcg API
-Date: Tue, 08 Sep 2026 11:57:36 -0400
-Message-Id: <20260908-folio_memcg-const-v2-0-811e9f443409@columbia.edu>
+Date: Tue, 08 Sep 2026 11:57:37 -0400
+Subject: [PATCH v2 01/11] mm: memcontrol: take a const folio in
+ folio_memcg() and friends
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -88,11 +90,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHAwoGoC/22Nyw6CMBBFf4XM2poyqYCu/A9DTGkHGAOtaYFoC
- P8uj63Lk5x77gyRAlOEWzJDoIkje7cCnhIwrXYNCbYrA0rMZCFzUfuO/bOn3jTCeBcHoXSWk5J
- WFZcK1t07UM2fvfkoD45j9SIzbKHNaDkOPnz30yndvKN/lfinP6VCCkKTWo2IKrN347uxr1ify
- Y5QLsvyAyiWWWDHAAAA
-X-Change-ID: 20260807-folio_memcg-const-4a67e40d485b
+Message-Id: <20260908-folio_memcg-const-v2-1-811e9f443409@columbia.edu>
+References: <20260908-folio_memcg-const-v2-0-811e9f443409@columbia.edu>
+In-Reply-To: <20260908-folio_memcg-const-v2-0-811e9f443409@columbia.edu>
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
         Roman Gushchin <roman.gushchin@linux.dev>,
         Shakeel Butt <shakeel.butt@linux.dev>,
@@ -112,89 +112,268 @@ To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
         Tal Zussman <tz2294@columbia.edu>
 X-Mailer: b4 0.17-dev-db0b7
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788883062; l=2237;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788883062; l=8676;
  i=tz2294@columbia.edu; s=20250528; h=from:subject:message-id;
- bh=hj+Nv0WF1d95Gjv7TrdlCtnL4rlx46A03j7UOfRM5nU=;
- b=Eq+dpJKvk9whXLlAXSzv+mq7m+3iea9TQG0LeUDcbezPns09wXcAvBEa2NVPavbZ7BAUmO63Z
- PSK81m8Ob4hBtmnLts5McXIWX4J153hefwW3tg14Hbs4ZiWO0dXw4fN
+ bh=ugnKiN2qF100fvbO6aZoM7EJjqjdGQ9b7nhN8W8O0/M=;
+ b=+g0EzX/rIcUaVH8Zv4IsAN/c7ulNBIIEwyCkRhsx2EFbcdwzmWsb2G9SwUbw6+YoxNYAfRbC7
+ SvAM1LqY4mNAxiYEXzzRzNdjo8rO7TReAFS/jmUKrvbnENy32ljtI+w
 X-Developer-Key: i=tz2294@columbia.edu; a=ed25519;
  pk=BIj5KdACscEOyAC0oIkeZqLB3L94fzBnDccEooxeM5Y=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA4MDE3MiBTYWx0ZWRfXwGNTAxGKkE1h
- ayxDeYY5LyMbvH0+6NIpUEJQ/a+FLWBXus79FQOXeoTUUTzm2RDFkxRpzzw5BJhidAOI8ghldHl
- wWkwVYqlgBwI3YwHb5zOOWO5dKkkJg7oLAx2S26cWvEEm3KRFWe4h8P1IQEckvbISIOe2ks1ntI
- RzBwmee0HPqvB7E75zcOb1gfgHTf0IaZvpovXgu9/KNmx9rvKhLIw0NK6fhKoGZI/7vTjmhRM9o
- wGeYcC6InyCSF+YK/jWFO0n7cRngEgeUbhW0Az7r1hFJQfDZUYHE3e7x0flasW2zbB9ZfI9R/o5
- fzrE8VOKeA0CHXWovON1hCh4/1kgBQkJj7bxygIdO1OQlbuwk0epGAYuEp/geMKNvWI85I0srms
- Hu5TKql7FrZKL2w3B31v75OBHg9fyMZfSNBko5XKr0KSF04+OMaLlXNV3gGKra1i8Q++cOeDItC
- GjJzPfKI/ImPjE4/Kog==
-X-Proofpoint-ORIG-GUID: Xy7WrqebNUhwhJWRXZsP3cWufIrRGfcg
-X-Proofpoint-GUID: Xy7WrqebNUhwhJWRXZsP3cWufIrRGfcg
-X-Authority-Analysis: v=2.4 cv=O7gJeh9W c=1 sm=1 tr=0 ts=6aa0307a cx=c_pps
- a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=HBUb3goEnnz3w2smY6d+Hw==:17
+X-Authority-Analysis: v=2.4 cv=Zubd7d7G c=1 sm=1 tr=0 ts=6aa0307b cx=c_pps
+ a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=HBUb3goEnnz3w2smY6d+Hw==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=x7bEGLp0ZPQA:10 a=A0y_DWxS2BwA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=SsB-OO3BMngHh3ZO9fOt:22
- a=VwQbUJbxAAAA:8 a=JfrnYn6hAAAA:8 a=bC-a23v3AAAA:8 a=b6ln72opZJ-VCPk_GP8A:9
- a=QEXdDO2ut3YA:10 a=dawVfQjAaf238kedN5IG:22 a=1CNFftbPRP8L7MoqJWF3:22
- a=FO4_E8m0qiDe52t0p3_H:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA4MDE3MiBTYWx0ZWRfX7M0XNMh1lJDZ
- j/hfPOvSAn+cTIX9YtWZ3DD7Cc4jrMfNcgq5fNlRzQPPiTStVNxm5oKleKz7lBnzzpB2far6ajo
- 2IokeLIzDlhTG/x6w6ATUMhTUNQr82oq9Sr+YH7ebnlt/oWzTLOO
+ a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=usPcmh10W0ubT8QP8_c3:22
+ a=mS-MXv6ntEAvCgPac54A:9 a=QEXdDO2ut3YA:10 a=a_PwQJl-kcHnX1M80qC6:22
+X-Proofpoint-ORIG-GUID: WHIjb85obWUnM7tEWyZShUoXWzF0ZxMG
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA4MDE3MiBTYWx0ZWRfX+pT+i0qehRGH
+ 8tvw/7jLkiUnY7Wd6PZny4yTpJPsDMHOEMxNS41oz4tfyQxEsmhezCxyK598QjDTF0686qZ87WB
+ cBbvFDFUO3WOy8bcSNzFvDyPQjoQNXWaBpxEtSgojg3SCgWRo6RFCFpxDWfpfM9Z4BbCk2oxl/1
+ s2gP5Q6m+/9jJOasCoJMI+3s/DknrlY6s21uELV9sZlDBIqtbbIUYt1EX+WXz1scv8t8Ynbam10
+ 4aDr3zYpJ/6xROorfeJbEgG13QndYkSUu7rVV47S9Nm5xlJl7qBwMbuPHulsJYlUVV7kWRcoxZE
+ wGVbp1JWKAF2JB9JC/kjxhYBAnip6Wb6ncRP0o7QNGVK9IfEVqEi8/phpYmJKiT9kgY6hypxbcN
+ TuuBQbHJauP84ikwDVcodVlGwM0D87whNktlC0cfncFfdTW9F1Sz2qLu8L2c6ciYow1uqTG4x9K
+ AvCqawXeN/cPsCHU0mw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA4MDE3MiBTYWx0ZWRfX58wgIFkeVE3E
+ 1AzBQ4gdEZqipeRT6gU7+Yn+4xkC6/v3cLeR/u6jO9GaQmpPi26kiR5w3YUeLIYMWhVaMdELoQX
+ VslbIpnHeIXyOuTfirQTcCkKSe5y8TnARbgskVdXNk0YfE8HRPdb
+X-Proofpoint-GUID: WHIjb85obWUnM7tEWyZShUoXWzF0ZxMG
 X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11900
  signatures=596817
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 suspectscore=0 clxscore=1015 malwarescore=0 bulkscore=10
- adultscore=0 priorityscore=1501 spamscore=0 impostorscore=10
- lowpriorityscore=10 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2609080172
+ lowpriorityscore=10 clxscore=1015 impostorscore=10 suspectscore=0 spamscore=0
+ malwarescore=0 adultscore=0 priorityscore=1501 bulkscore=10 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609080172
 
-The memcg accessors, lruvec helpers, and stat readers only read from
-the memcg, folio, or lruvec they are given, but take non-const
-pointers. Constify them, along with a couple other helper functions in
-mm/page_counter.c along the way.
+The folio_memcg() family only reads from the folio, and everything it
+calls already takes a const folio. Constify it, along with the page
+wrappers built on top of it.
 
-This started as a follow-up to [1] that quickly grew in proportions :)
-
-[1]: https://lore.kernel.org/linux-mm/anYqSDnC2BbJXv1h@casper.infradead.org/
-
+Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 ---
-Changes in v2:
-- Patch 3: Constify the folio argument of folio_lruvec_relock_irq() and
-  folio_lruvec_relock_irqsave() as well, per Sashiko
-- Patch 3: Note that mem_cgroup_lruvec() updates lruvec->pgdat in the
-  per-node structure, not the memcg, per Sashiko
-- Patches 3 and 8: Use container_of_const() in lruvec_memcg() and the
-  lruvec_page_state() family, per Sashiko
-- Link to v1: https://patch.msgid.link/20260902-folio_memcg-const-v1-0-e2c1da22246d@columbia.edu
+ include/linux/memcontrol.h | 46 +++++++++++++++++++++++-----------------------
+ mm/memcontrol.c            |  6 +++---
+ 2 files changed, 26 insertions(+), 26 deletions(-)
 
----
-Tal Zussman (11):
-      mm: memcontrol: take a const folio in folio_memcg() and friends
-      mm: memcontrol: constify obj_cgroup_memcg() and friends
-      mm: memcontrol: constify the lruvec helpers
-      mm/page_io: take a const folio in bio_associate_blkg_from_folio()
-      mm: memcontrol: constify the mem_cgroup accessors
-      mm: page_counter: constify page_counter_read() and page_counter_margin()
-      mm: memcontrol: constify the reclaim protection helpers
-      mm: memcontrol: constify the memcg and lruvec stat readers
-      mm: memcontrol: constify the swap accounting helpers
-      mm: memcontrol: constify mem_cgroup_swappiness() and mem_cgroup_get_max()
-      mm: memcontrol: constify the zswap and socket pressure helpers
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 4f720791a31c..8a614a36c05d 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -410,7 +410,7 @@ static inline struct mem_cgroup *obj_cgroup_memcg(struct obj_cgroup *objcg)
+  * or NULL. This function assumes that the folio is known to have a
+  * proper object cgroup pointer.
+  */
+-static inline struct obj_cgroup *folio_objcg(struct folio *folio)
++static inline struct obj_cgroup *folio_objcg(const struct folio *folio)
+ {
+ 	unsigned long memcg_data = folio->memcg_data;
+ 
+@@ -448,7 +448,7 @@ static inline struct obj_cgroup *folio_objcg(struct folio *folio)
+  * Note: The caller should hold an rcu read lock or cgroup_mutex to protect
+  * memcg associated with a folio from being released.
+  */
+-static inline struct mem_cgroup *folio_memcg(struct folio *folio)
++static inline struct mem_cgroup *folio_memcg(const struct folio *folio)
+ {
+ 	struct obj_cgroup *objcg = folio_objcg(folio);
+ 
+@@ -461,7 +461,7 @@ static inline struct mem_cgroup *folio_memcg(struct folio *folio)
+  *
+  * Returns true if folio is charged to a memory cgroup, otherwise returns false.
+  */
+-static inline bool folio_memcg_charged(struct folio *folio)
++static inline bool folio_memcg_charged(const struct folio *folio)
+ {
+ 	return folio->memcg_data != 0;
+ }
+@@ -481,7 +481,7 @@ static inline bool folio_memcg_charged(struct folio *folio)
+  * A caller should hold an rcu read lock to protect memcg associated with a
+  * page from being released.
+  */
+-static inline struct mem_cgroup *folio_memcg_check(struct folio *folio)
++static inline struct mem_cgroup *folio_memcg_check(const struct folio *folio)
+ {
+ 	/*
+ 	 * Because folio->memcg_data might be changed asynchronously
+@@ -498,11 +498,11 @@ static inline struct mem_cgroup *folio_memcg_check(struct folio *folio)
+ 	return obj_cgroup_memcg(objcg);
+ }
+ 
+-static inline struct mem_cgroup *page_memcg_check(struct page *page)
++static inline struct mem_cgroup *page_memcg_check(const struct page *page)
+ {
+ 	if (PageTail(page))
+ 		return NULL;
+-	return folio_memcg_check((struct folio *)page);
++	return folio_memcg_check((const struct folio *)page);
+ }
+ 
+ static inline struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
+@@ -527,14 +527,14 @@ static inline struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *ob
+  * that the folio has an associated memory cgroup. It's not safe to call
+  * this function against some types of folios, e.g. slab folios.
+  */
+-static inline bool folio_memcg_kmem(struct folio *folio)
++static inline bool folio_memcg_kmem(const struct folio *folio)
+ {
+ 	VM_BUG_ON_PGFLAGS(PageTail(&folio->page), &folio->page);
+ 	VM_BUG_ON_FOLIO(folio->memcg_data & MEMCG_DATA_OBJEXTS, folio);
+ 	return folio->memcg_data & MEMCG_DATA_KMEM;
+ }
+ 
+-static inline bool PageMemcgKmem(struct page *page)
++static inline bool PageMemcgKmem(const struct page *page)
+ {
+ 	return folio_memcg_kmem(page_folio(page));
+ }
+@@ -777,7 +777,7 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm);
+ 
+ struct mem_cgroup *get_mem_cgroup_from_current(void);
+ 
+-struct mem_cgroup *get_mem_cgroup_from_folio(struct folio *folio);
++struct mem_cgroup *get_mem_cgroup_from_folio(const struct folio *folio);
+ 
+ struct lruvec *folio_lruvec_lock(struct folio *folio);
+ struct lruvec *folio_lruvec_lock_irq(struct folio *folio);
+@@ -905,8 +905,8 @@ static inline bool mm_match_cgroup(struct mm_struct *mm,
+ 	return match;
+ }
+ 
+-struct cgroup_subsys_state *get_mem_cgroup_css_from_folio(struct folio *folio);
+-ino_t page_cgroup_ino(struct page *page);
++struct cgroup_subsys_state *get_mem_cgroup_css_from_folio(const struct folio *folio);
++ino_t page_cgroup_ino(const struct page *page);
+ 
+ static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
+ {
+@@ -956,7 +956,7 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg);
+ void mod_memcg_state(struct mem_cgroup *memcg,
+ 		     enum memcg_stat_item idx, int val);
+ 
+-static inline void mod_memcg_page_state(struct page *page,
++static inline void mod_memcg_page_state(const struct page *page,
+ 					enum memcg_stat_item idx, int val)
+ {
+ 	struct mem_cgroup *memcg;
+@@ -990,7 +990,7 @@ void mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val);
+ void count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+ 			unsigned long count);
+ 
+-static inline void count_memcg_folio_events(struct folio *folio,
++static inline void count_memcg_folio_events(const struct folio *folio,
+ 		enum vm_event_item idx, unsigned long nr)
+ {
+ 	struct mem_cgroup *memcg;
+@@ -1084,22 +1084,22 @@ static inline struct mem_cgroup *obj_cgroup_memcg(struct obj_cgroup *objcg)
+ 
+ #define root_mem_cgroup		(NULL)
+ 
+-static inline struct mem_cgroup *folio_memcg(struct folio *folio)
++static inline struct mem_cgroup *folio_memcg(const struct folio *folio)
+ {
+ 	return NULL;
+ }
+ 
+-static inline bool folio_memcg_charged(struct folio *folio)
++static inline bool folio_memcg_charged(const struct folio *folio)
+ {
+ 	return false;
+ }
+ 
+-static inline struct mem_cgroup *folio_memcg_check(struct folio *folio)
++static inline struct mem_cgroup *folio_memcg_check(const struct folio *folio)
+ {
+ 	return NULL;
+ }
+ 
+-static inline struct mem_cgroup *page_memcg_check(struct page *page)
++static inline struct mem_cgroup *page_memcg_check(const struct page *page)
+ {
+ 	return NULL;
+ }
+@@ -1109,12 +1109,12 @@ static inline struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *ob
+ 	return NULL;
+ }
+ 
+-static inline bool folio_memcg_kmem(struct folio *folio)
++static inline bool folio_memcg_kmem(const struct folio *folio)
+ {
+ 	return false;
+ }
+ 
+-static inline bool PageMemcgKmem(struct page *page)
++static inline bool PageMemcgKmem(const struct page *page)
+ {
+ 	return false;
+ }
+@@ -1248,7 +1248,7 @@ static inline struct mem_cgroup *get_mem_cgroup_from_current(void)
+ 	return NULL;
+ }
+ 
+-static inline struct mem_cgroup *get_mem_cgroup_from_folio(struct folio *folio)
++static inline struct mem_cgroup *get_mem_cgroup_from_folio(const struct folio *folio)
+ {
+ 	return NULL;
+ }
+@@ -1406,7 +1406,7 @@ static inline void mod_memcg_state(struct mem_cgroup *memcg,
+ {
+ }
+ 
+-static inline void mod_memcg_page_state(struct page *page,
++static inline void mod_memcg_page_state(const struct page *page,
+ 					enum memcg_stat_item idx, int val)
+ {
+ }
+@@ -1471,7 +1471,7 @@ static inline void count_memcg_events(struct mem_cgroup *memcg,
+ {
+ }
+ 
+-static inline void count_memcg_folio_events(struct folio *folio,
++static inline void count_memcg_folio_events(const struct folio *folio,
+ 		enum vm_event_item idx, unsigned long nr)
+ {
+ }
+@@ -1901,7 +1901,7 @@ static inline void count_objcg_events(struct obj_cgroup *objcg,
+ {
+ }
+ 
+-static inline ino_t page_cgroup_ino(struct page *page)
++static inline ino_t page_cgroup_ino(const struct page *page)
+ {
+ 	return 0;
+ }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 307203301a2a..1ad7de092611 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -332,7 +332,7 @@ EXPORT_SYMBOL(memcg_bpf_enabled_key);
+  * If memcg is bound to a traditional hierarchy, the css of root_mem_cgroup
+  * is returned.
+  */
+-struct cgroup_subsys_state *get_mem_cgroup_css_from_folio(struct folio *folio)
++struct cgroup_subsys_state *get_mem_cgroup_css_from_folio(const struct folio *folio)
+ {
+ 	struct mem_cgroup *memcg;
+ 
+@@ -357,7 +357,7 @@ struct cgroup_subsys_state *get_mem_cgroup_css_from_folio(struct folio *folio)
+  * after page_cgroup_ino() returns, so it only should be used by callers that
+  * do not care (such as procfs interfaces).
+  */
+-ino_t page_cgroup_ino(struct page *page)
++ino_t page_cgroup_ino(const struct page *page)
+ {
+ 	struct mem_cgroup *memcg;
+ 	unsigned long ino = 0;
+@@ -1242,7 +1242,7 @@ struct mem_cgroup *get_mem_cgroup_from_current(void)
+  *
+  * See folio_memcg() for folio->objcg/memcg binding rules.
+  */
+-struct mem_cgroup *get_mem_cgroup_from_folio(struct folio *folio)
++struct mem_cgroup *get_mem_cgroup_from_folio(const struct folio *folio)
+ {
+ 	struct mem_cgroup *memcg;
+ 
 
- include/linux/memcontrol.h   | 204 ++++++++++++++++++++++---------------------
- include/linux/mmzone.h       |   2 +-
- include/linux/page_counter.h |   4 +-
- include/linux/swap.h         |  12 +--
- mm/memcontrol.c              |  49 ++++++-----
- mm/page_counter.c            |   2 +-
- mm/page_io.c                 |  14 +--
- mm/swap.h                    |   2 +-
- 8 files changed, 148 insertions(+), 141 deletions(-)
----
-base-commit: 9d3243fc689fef444f87e0a703b4c99653137e1b
-change-id: 20260807-folio_memcg-const-4a67e40d485b
-
-Best regards,
---  
-Tal Zussman <tz2294@columbia.edu>
+-- 
+2.39.5
 
