@@ -1,60 +1,54 @@
-Received: from mta0.migadu.com (out-69.mta0.migadu.com [91.218.175.69])
+Received: from mta0.migadu.com (out-129.mta0.migadu.com [91.218.175.129])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F296331EA3
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 03:41:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B94064CC27C
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 10:02:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.129
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788838927; cv=none; b=qo6WUjVyYg8+CJQ8bwrVGQDwZm5tWTGtVsiKKIiNwgMy+U/tvdNgya+VB6SSckS3kBOdCb82qQcbZWovJYSvJxYpPKlIUvyux90ZDCv0e7rXEUYIGXMc3Lq+QihS8paJDezPa9O/DpNemjIDv3FIv4Kcf+yGtul+VXToNJ93pSs=
+	t=1788861738; cv=none; b=SderWhKJeNbYxYV2DkmXeDavxA/imSVdL43/jMeu7zZ4pM5ruTBt52BzAedOPZGa69dmQ73YSjpJ8Tevgf9OSpnvOYWq1qdu94b/5pxsmEsqJQmghFbdyTe3BjsDHhrlqmCDE5WN+k9dWKbnNuWYuOTZf9lgHUI0/IMqWQUwPSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788838927; c=relaxed/simple;
-	bh=MlIZcCXSxTICdrlqvuuIMch3l/hSvENFUEtEORDa6Hc=;
+	s=arc-20240116; t=1788861738; c=relaxed/simple;
+	bh=6Er5qYt+ZL2rO4NlQ1VevHRE6P5HGnDAn+0Yr/dg/0g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=vC2RXGvbyODerq+yTYvTRbFjEUTnZimw09kLBH45SIQy/dBSJYFl6wXsebf1xNuQfLmjAs2xUXGwygF0Hr6UtCLYw/Yka4lUy6OKn+ak2F++7cC9krvlOTqTJwv3DKAc39QHG5E+MLwdA9rfBFxtNFOUnGMkKQ+7uaeMNMcangg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MwBqBnL3; arc=none smtp.client-ip=91.218.175.69
+	 MIME-Version; b=cvX2ZB6JHsRCAcMZJpMnc2Yp/K28h6WquUn3qccaXRGDI0HZTG/TUeVJIaI3/KOpu7RgFnJFpv3lvyHlxgzd/6PPx/w2qS9IE0SZY2k1VlS0pKYC5+VE8TuZYTpWd1ilzpl9it/luL6OvloObUfIPz/Y9ZSR9BHwgMl7EBSWbcg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=JWvNfjWg; arc=none smtp.client-ip=91.218.175.129
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MwBqBnL3"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="JWvNfjWg"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=MlIZcCXSxTICdrlqvuuIMch3l/hSvENFUEtEORDa6Hc=;
+DKIM-Signature: a=rsa-sha256; bh=6Er5qYt+ZL2rO4NlQ1VevHRE6P5HGnDAn+0Yr/dg/0g=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788838914; v=1; x=1789443714;
- b=MwBqBnL3ytwpnPgdbMGRuZcfvxrd0kp14PW/enIyEnE0bK5M8xEx/+P3mVSugRjiNfOy38s8
- /6DxJyQem8tlDIrbJWpX2dW94lry9A6VDFf1TfHysQ6TuB8JU6dsaxxU8CgXdGu7tF7JanEscpY
- oT/1B+2y38nwtcmYaBU8Q/hs=
+ t=1788861733; v=1; x=1789466533;
+ b=JWvNfjWgf7ukrdt4gC6LENfTtGxf6hReZebMLhAlTcqQa2PvtyEQBUDY8MWYY3173C2Fp8OP
+ t+8h7beDta2ewHRVOAXWvVkfB0dA6u2HpmCuaUfMi853g5EVYC4RpLJ02quSXHekNm8cZ7ZAEwD
+ i5XvSTaJDLFWdpL8RJiblY58=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 0e9898f317fc1207;
-	Tue, 08 Sep 2026 03:41:53 +0000
-X-Mizu-Trace-ID: 0e9898f317fc1207
+Received: by smtp.migadu.com with ESMTPS id f280b3f1737e38a0;
+	Tue, 08 Sep 2026 10:02:13 +0000
+X-Mizu-Trace-ID: f280b3f1737e38a0
 X-Migadu-Flow: FLOW_OUT
-From: Hui Zhu <hui.zhu@linux.dev>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	Wei Xu <weixugc@google.com>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Cc: Hui Zhu <zhuhui@kylinos.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH v4 4/4] mm: memcg: reparent non-hierarchical lruvec stats on cgroup v2
-Date: Tue,  8 Sep 2026 11:41:14 +0800
-Message-ID: <4a7a64eed2b145ad535fedaea3624f8310c29d5b.1788837625.git.zhuhui@kylinos.cn>
+From: Tao Cui <cui.tao@linux.dev>
+To: tj@kernel.org,
+	josef@toxicopanda.com,
+	axboe@kernel.dk
+Cc: cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bpf@vger.kernel.org,
+	andrii@kernel.org,
+	ast@kernel.org,
+	daniel@iogearbox.net,
+	linux-kselftest@vger.kernel.org,
+	cui.tao@linux.dev,
+	Tao Cui <cuitao@kylinos.cn>
+Subject: [RFC PATCH 1/8] blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
+Date: Tue,  8 Sep 2026 18:01:36 +0800
+Message-ID: <20260908100143.47598-2-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1788837625.git.zhuhui@kylinos.cn>
-References: <cover.1788837625.git.zhuhui@kylinos.cn>
+In-Reply-To: <20260908100143.47598-1-cui.tao@linux.dev>
+References: <20260908100143.47598-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -63,141 +57,114 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Hui Zhu <zhuhui@kylinos.cn>
+From: Tao Cui <cuitao@kylinos.cn>
 
-On cgroup v2, reparent_state_local() returns early and never moves the
-dying memcg's non-hierarchical state_local base counts to its parent.
-Meanwhile memcg_reparent_objcgs() rewrites objcg->memcg to the parent,
-so when the reparented folios are freed later, the negative deltas land
-on the parent's lruvec.  The parent therefore receives the uncharges
-without ever having received the matching charges, and its state_local
-(NR_LRU_BASE + lru, MEMCG_SOCK, NR_SLAB_RECLAIMABLE_B,
-NR_SLAB_UNRECLAIMABLE_B) permanently underflows.  Since
-lruvec_page_state_local() clamps negative values to zero, the underflow
-masks the parent's own legitimate pages.
+The existing iocost tracepoints are state-change driven: vrate_adj
+fires only when the adjustment logic runs, inuse_* only on surplus
+state transitions, activate/idle only on cgroup state changes.  In a
+steady state none of them fire.  The only other way to observe the
+controller (period length, vrate, busy level, active cgroup count,
+device utilization) is iocost_monitor.py, which reads kernel memory
+through drgn and is not usable in most production environments.
 
-count_shadow_nodes() is the only reader of these non-hierarchical
-state_locals on cgroup v2, so the underflow directly distorts the
-workingset shadow node budget.
+Add iocost_ioc_tick, emitted once per period from the tail of
+ioc_timer_fn() with the overall controller state: period_us, vrate,
+busy_level, active iocg count, usage percentage and running state.
+It fires every period the controller runs, including steady states,
+plus one final tick before the controller goes idle, which makes
+dormancy (e.g. a device saturated entirely by uncharged IO) directly
+visible.
 
-Fix this by reparenting the lruvec state_locals on cgroup v2 as well,
-mirroring what cgroup v1 already does.  Only the lruvec stats consumed
-by count_shadow_nodes() are moved; the memcg-level stats are left alone
-because on v2 they are exposed through the rstat hierarchical tree and
-are not read from state_local.
+At the default period this is a couple of events per second per
+device; the cost is zero while the static key is off.
 
-Fixes: 8285917d6f38 ("mm: memcontrol: prepare for reparenting non-hierarchical stats")
-Cc: stable@vger.kernel.org
-Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- mm/memcontrol-v1.h |  5 +++--
- mm/memcontrol.c    | 42 ++++++++++++++++++++++++++++--------------
- 2 files changed, 31 insertions(+), 16 deletions(-)
+ block/blk-iocost.c            |  5 +++++
+ include/trace/events/iocost.h | 40 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 45 insertions(+)
 
-diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
-index 1e394269c613d..0578b7076764d 100644
---- a/mm/memcontrol-v1.h
-+++ b/mm/memcontrol-v1.h
-@@ -25,6 +25,9 @@ int memory_stat_show(struct seq_file *m, void *v);
- struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg,
- 						    unsigned int n);
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 2745bffcd5eef..c24daa9d72ee9 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -2238,6 +2238,7 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 	struct ioc_now now;
+ 	LIST_HEAD(surpluses);
+ 	int nr_debtors, nr_shortages = 0, nr_lagging = 0;
++	int nr_active = 0;
+ 	u64 usage_us_sum = 0;
+ 	u32 ppm_rthr;
+ 	u32 ppm_wthr;
+@@ -2274,6 +2275,8 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 		u64 vdone, vtime, usage_us;
+ 		u32 hw_active, hw_inuse;
  
-+void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
-+				       struct mem_cgroup *parent, int idx);
++		nr_active++;
 +
- /* Cgroup v1-specific declarations */
- #ifdef CONFIG_MEMCG_V1
- 
-@@ -73,8 +76,6 @@ void reparent_memcg1_lruvec_state_local(struct mem_cgroup *memcg, struct mem_cgr
- 
- void reparent_memcg_state_local(struct mem_cgroup *memcg,
- 				struct mem_cgroup *parent, int idx);
--void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
--				       struct mem_cgroup *parent, int idx);
- 
- void memcg1_account_kmem(struct mem_cgroup *memcg, int nr_pages);
- static inline bool memcg1_tcpmem_active(struct mem_cgroup *memcg)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9995f3d2aae1b..f13030f75fa54 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -232,14 +232,29 @@ static inline struct obj_cgroup *__memcg_reparent_objcgs(struct mem_cgroup *memc
- 	return objcg;
- }
- 
--#ifdef CONFIG_MEMCG_V1
- static void __mem_cgroup_flush_stats(struct mem_cgroup *memcg, bool force);
- 
--static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
-+/*
-+ * Reparent the non-hierarchical lruvec stats that count_shadow_nodes() reads
-+ * to approximate the shadow node budget.  They are not exposed to userspace
-+ * on cgroup v2, but they must follow the reparented folios; otherwise the
-+ * ancestor would only receive the negative deltas when the folios are freed
-+ * without ever having received the positive base, and its local stats would
-+ * permanently underflow.
-+ */
-+static void reparent_v2_lruvec_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
- {
--	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
--		return;
-+	int i;
-+
-+	for (i = 0; i < NR_LRU_LISTS; i++)
-+		reparent_memcg_lruvec_state_local(memcg, parent, NR_LRU_BASE + i);
-+
-+	reparent_memcg_lruvec_state_local(memcg, parent, NR_SLAB_RECLAIMABLE_B);
-+	reparent_memcg_lruvec_state_local(memcg, parent, NR_SLAB_UNRECLAIMABLE_B);
-+}
- 
-+static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
-+{
- 	/*
- 	 * Reparent stats exposed non-hierarchically. Flush @memcg's stats first
- 	 * to read its stats accurately , and conservatively flush @parent's
-@@ -248,17 +263,18 @@ static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgr
- 	 */
- 	__mem_cgroup_flush_stats(memcg, true);
- 
--	/* The following counts are all non-hierarchical and need to be reparented. */
--	reparent_memcg1_state_local(memcg, parent);
--	reparent_memcg1_lruvec_state_local(memcg, parent);
-+	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
-+		reparent_v2_lruvec_state_local(memcg, parent);
-+	} else {
-+#ifdef CONFIG_MEMCG_V1
-+		/* The following counts are all non-hierarchical and need to be reparented. */
-+		reparent_memcg1_state_local(memcg, parent);
-+		reparent_memcg1_lruvec_state_local(memcg, parent);
-+#endif
-+	}
- 
- 	__mem_cgroup_flush_stats(parent, true);
- }
--#else
--static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
--{
--}
--#endif
- 
- static inline void reparent_locks(struct mem_cgroup *memcg, struct mem_cgroup *parent, int nid)
- {
-@@ -570,7 +586,6 @@ unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return x;
- }
- 
--#ifdef CONFIG_MEMCG_V1
- static void __mod_memcg_lruvec_state(struct mem_cgroup_per_node *pn,
- 				     enum node_stat_item idx, long val);
- 
-@@ -592,7 +607,6 @@ void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
- 		__mod_memcg_lruvec_state(parent_pn, idx, value);
+ 		/*
+ 		 * Collect unused and wind vtime closer to vnow to prevent
+ 		 * iocgs from accumulating a large amount of budget.
+@@ -2460,6 +2463,8 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 		ioc_refresh_vrate(ioc, &now);
  	}
- }
--#endif
  
- /* Subset of vm_event_item to report for memcg event stats */
- static const unsigned int memcg_vm_event_stat[] = {
++	trace_iocost_ioc_tick(ioc, nr_active, usage_us_sum);
++
+ 	spin_unlock_irq(&ioc->lock);
+ }
+ 
+diff --git a/include/trace/events/iocost.h b/include/trace/events/iocost.h
+index e772b1bc60d60..2b9ff348a4f51 100644
+--- a/include/trace/events/iocost.h
++++ b/include/trace/events/iocost.h
+@@ -178,6 +178,46 @@ TRACE_EVENT(iocost_ioc_vrate_adj,
+ 	)
+ );
+ 
++/*
++ * Periodic per-device summary, emitted once per period from the tail of
++ * ioc_timer_fn().  Unlike the state-change events above, this fires every
++ * period the controller is running, including steady states, and carries
++ * the overall controller state so basic monitoring doesn't require drgn.
++ */
++TRACE_EVENT(iocost_ioc_tick,
++
++	TP_PROTO(struct ioc *ioc, int nr_active, u64 usage_us_sum),
++
++	TP_ARGS(ioc, nr_active, usage_us_sum),
++
++	TP_STRUCT__entry (
++		__string(devname, ioc_name(ioc))
++		__field(u32, period_us)
++		__field(u64, vrate)
++		__field(int, busy_level)
++		__field(int, nr_active)
++		__field(u32, usage_pct)
++		__field(int, running)
++	),
++
++	TP_fast_assign(
++		__assign_str(devname);
++		__entry->period_us = ioc->period_us;
++		__entry->vrate = ioc->vtime_base_rate;
++		__entry->busy_level = ioc->busy_level;
++		__entry->nr_active = nr_active;
++		__entry->usage_pct = ioc->period_us ?
++			div_u64(usage_us_sum * 100, ioc->period_us) : 0;
++		__entry->running = ioc->running;
++	),
++
++	TP_printk("[%s] period=%uus vrate=%llu busy=%d active=%d usage=%u%% running=%d",
++		__get_str(devname), __entry->period_us, __entry->vrate,
++		__entry->busy_level, __entry->nr_active, __entry->usage_pct,
++		__entry->running
++	)
++);
++
+ TRACE_EVENT(iocost_iocg_forgive_debt,
+ 
+ 	TP_PROTO(struct ioc_gq *iocg, const char *path, struct ioc_now *now,
 -- 
 2.43.0
 
