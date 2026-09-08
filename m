@@ -1,73 +1,74 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B90D55930D
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 14:13:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B671576EDD
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 15:55:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788876809; cv=none; b=ZBSOO6On2A49ymRqCIv3bTgE8PgOHf6CB3AwKIXv4gM1lywv3hHYbggbdQTBC76XrTuOUnpySjzoMxZ0NhTfANR4iB/paKQbaKmpDCaMV3DkhsFd31fiTGohH8ui1iSWW8Nh3UgLyPb8t1rb7dmUodL3wOFwDMt+tjDUrj6TWRk=
+	t=1788882949; cv=none; b=GFsN3VXEvLL/0UE81ORqVQK/rmlNC/lb0XbNqeYHz0pe1lEVE585SOJpkLrgseToCkAX2tWmBghAmRL5X3EQHBF9jvYHZvUZiW5oVA25xV5Q7D6jPve7jVclifX6eGze984Sf/yEBQUEQlcjXeKbkgIwngsFo7fl20QwXeO4Ab4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788876809; c=relaxed/simple;
-	bh=pC6jcGOtItS2e12mvg6Rf1hkiJ5TikWx8vGxQaaWnjY=;
+	s=arc-20240116; t=1788882949; c=relaxed/simple;
+	bh=AzcQcDujYJDMScylfG3Dek1ZhVg7b50dImiSr//5IuQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gsQBF51bLFJGMLN/txsPSTYseDT6aLJ7YZGMlu+xhS+D6b+MucOLM9XVSVixpszSmbpKmrp03nAGMRa+a3eDg1ABgRZYfE4Hlh7epXm83+Q5OydK/HhrohkVcIcRnbfmTv/LrYRZl/DdzScHHzX0ml6IHJhg064eeIMSnUgu4IU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=BOs0MWjZ; arc=none smtp.client-ip=209.85.221.48
+	 Content-Type:Content-Disposition:In-Reply-To; b=ah42xkb11cbrefE4fGPo4RwWwERMIosGlxBpMWpJGwu72M6VRBsdnsCON5jaXT+2n6D2+TAN/RCApgnyBPI/KNkqFO+svRSKsgcMCeIcS5mkn1jX0CpH+hTsF2BMR8QR1VmcLnGu640r0f+dq2rdlRidyfh3y6hdliQoFnhWR2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=B954uWuP; arc=none smtp.client-ip=209.85.128.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="BOs0MWjZ"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-482dd6ee390so5347596f8f.3
-        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 07:13:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="B954uWuP"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-49557167508so57093195e9.1
+        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 08:55:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1788876793; x=1789481593; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1788882945; x=1789487745; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=3L5oRWmTUO6yAxQOWYcTnXegO65U7Igw+Adee2Oy+KQ=;
-        b=BOs0MWjZyCSQnaxc8tKqRuXPfuGP+iYYdD/CqQya0kp/tF2dl7CbRxON1DB4/YZzE8
-         6JUKvrvchaz6Z05USmNp710FiKTZUOUSGnMq7OypAr08dkKhDksSF9dwav+sp887xtBF
-         5WlFoDLXU/tniYPwY1dvJ8b/b4E3MwIkGkuXK4tLuy8rSlUBlg1wnH/NqluFb724qgDE
-         l9XiwmO1hFfA9bg7ulNKqbbF02DzNatEJzxAyOtPQcpG2mejMvf/gkL/vJzn0oYmfQOj
-         VQZHcLxH8HPD1S5wkne9p4c3iHtvB3+IHpPNiH98CtPXpAuI1yKRtWPtBy/tY73TrmvX
-         +SMA==
+        bh=uvYRoMu996lSKiESe/rhQE6W2Irf+NpUm8XBKk69vVY=;
+        b=B954uWuPOYqiBOr5+PssQ3Ol4IU8jd7B2kSfmYHRslfdVmlCgSWcagS4GDpRE5GK6G
+         tcPBVk3yKLgyKKnP3YrA35fSjgZUrhWYnD4w+W98n2isGFsQp3j9mip72e7e6rqkOmNo
+         Z1iTVDZN39LZpBJ2v5LnNLHbysq3AAkVMjxT+2LiAgON7My+1OD8fa8gXGJ8QbSPqCe5
+         6MQsTHI2xUGwfmmeuS8d1MTX7hJsJLVn2YpT1XgA09dJJsKPyp9jBHcp9yKI5PLqBB04
+         RpqnnMEusVo8Ywlvuqyd8OSc8RDl7jjx19KTpjlPc4yCl/JloWZR5pxGFzmJ8PQd2ViO
+         vePw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788876793; x=1789481593;
+        d=1e100.net; s=20251104; t=1788882945; x=1789487745;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=3L5oRWmTUO6yAxQOWYcTnXegO65U7Igw+Adee2Oy+KQ=;
-        b=rAIoQtdby/Uqqyv3rp3fy4yf2w142Zc3QibI0ctKehen7vIMgEcFG3fjUw2Ic1rY8r
-         P1MHdBJj+eLBvc2EJbMw0RinNVGGG5NF2gLy2ffv5PegxPOLupmSiuoq8sA7PflLdzJh
-         ClIvquD4hL+dnB5ui19eiF7YiMcDCwHpnvcBDZQKDSc5p/cit1gGBF30rzOUEmEwcfuD
-         lqqWbhqUXNlk3e5ktFsQdJW3PsTmxBKtKbCAPdY2n44bt8cXS2/0jmi0St/DSvBwj7vk
-         m4VrCDtjweVt4l59lH9LglhnlJqdqsXkjbnzJ7reQn+AjJ7YnBPHUetdWbqCtOZjq55b
-         XOdg==
-X-Gm-Message-State: AFuF++n87AMMP3A5fPfHV4v8BX1fcRvLBxFJwEl8A7eBP3wzyDUgHWCr
-	U1Y/1kBdeaiI/JiIKCmaFNVZvnu4n691Gquba2qZqJj7B1PQoqCS+5yZc8iFZBzgQXE=
-X-Gm-Gg: AYBFou0bmXHBcAQmxtaLXBlJ3bU+J6HdhjkxtFEmrqIRlprKALSz8nRko7Xqo5onvNj
-	leckxJO/fMFjOnQo+J+tAM+5FSzgxU/c9tK0qmEzdXs/JskUuMJ+0Ww9gyUELercfNYr4uTU+Q1
-	ijp8gI7T21ckqJgzlx3f19+OJGX4LpBg7DncPxPBQ+8qBvr5LhPmE5fhHauwl7uxYBD2oATm6Yb
-	7ZwPwJbB6dWdWtNZUeWAbScwVjhdipa9DGuu0v8bTzlupJ4lBUZme3fgF+XaDN87g0tNEvCyqWG
-	UNLhr/VbRxpqTgCxpA24fauo4GOekEHPoCCBrJmChnUn5uPILrs5msR/sBunLVBhrtW9NysYu9J
-	VDFa8pF6HRVBYC7O6YAIJpTgXyUa5spBczfGfMOp2QPTNJM2pA5NjeGM93/O3cpPMabFA7wThrr
-	G8YZO3UR5ErDPOY65gqw5FlLqme0C8HrXVQhSgiu0xKByaCqQE0a63c+QBiyP/jc0=
-X-Received: by 2002:a05:6000:98a:b0:484:3311:af37 with SMTP id ffacd0b85a97d-48587298f26mr32655977f8f.26.1788876793275;
-        Tue, 08 Sep 2026 07:13:13 -0700 (PDT)
+        bh=uvYRoMu996lSKiESe/rhQE6W2Irf+NpUm8XBKk69vVY=;
+        b=AUtx/Tj2YNxO06lb8RiyADaWoW/0GxtqC7WuwziWyyiB8HbsgvXhND9NTDcaP4StEZ
+         Qisrwu+Idn1uU5etGCBTNfXf/ZHLdKnRkGssD22dwartraOijVpVthCLQR5WpDxKbymM
+         dNgidQC2MFhQSUcozX8DNaQuOImoWLckTvJxUyeCGG2DhOVyEgHD9zyHdJ4Air4Y4T+V
+         6uzLrCkdf9caIVmLlIBdGsJIPcPfgdbK+ZkpNCkhliMlpLGXqvmOcRdX4lV5DM829fcy
+         JFSEuv6b2d0YT4+WzkfSCNjmgyJ7fYFBilMyK+3diMeaOAlbPRNppCfvFi/xlktG7e9d
+         GxHw==
+X-Forwarded-Encrypted: i=1; AKwUvByu97zFWnQeM67ddA8HyEstbufoihL6Tec/j1Aw8tCuSewe9s367I+k6Fc6HaXQJZlQdnAECjNb@vger.kernel.org
+X-Gm-Message-State: AFuF++lj1PAmAF0C2GmdCwLwE/rQ8wO3LFqSQ+tx71HVbsCsHBYtaerf
+	LRh3qL1mrxOw1+SFgfvdDzpizIWzYBL23Uk++krOYoYa2aBsT9rf38mVFeDC9c/gOKI=
+X-Gm-Gg: AYBFou3WzwbhLqcDMYvFd174ztCoNIxxAwIG+TY0NDvXwv/VVdjWZ2+aZqpfZU2twC6
+	/aiSPL5VGX31TO4mRSu2nU7Yc6zqC8/2iYREYwCs6NikX6/jPKRy2V4ttpszjn+3uHzFc9hjitc
+	EdATzR0pWh/xCfkw6Czqo5PEZLzAz+0z7DcRQbKS6EQT81zDDRDLdrHHgihiGq2mc9o+QJASSp3
+	LRCWor52vIQ5CDYkCi5rko8ikUZg85Swi0tfVE3TDKHakwxYMuv9wuYCXCZj5I4gJptujCA7b9p
+	pQ6SdI1J0UkKg+E+MdEEBfI9TVNFSWpuhWKTV03RmibWYKuEoXgbQlhzqYMkJzSDxVYydF2aMPF
+	dupFTge1v6ZviOObKge9/jXkeo8jFEDqc5WpDkO2ADDY+LisdEiLTJcx43Kx890oLo48RHRgOHj
+	hIXOIqnQE0sPXz0MgbwY9fiT+otGg7V5xS0Uq9ePo1i0U3fpHYDPVvk8Y0NGYCTws9
+X-Received: by 2002:a05:600c:3b01:b0:49b:4d64:bbc4 with SMTP id 5b1f17b1804b1-49cf81f1592mr513548485e9.8.1788882945317;
+        Tue, 08 Sep 2026 08:55:45 -0700 (PDT)
 Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4858ac2b4cdsm35144071f8f.16.2026.09.08.07.13.12
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cee5f912esm501130535e9.4.2026.09.08.08.55.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 07:13:12 -0700 (PDT)
-Date: Tue, 8 Sep 2026 16:13:11 +0200
+        Tue, 08 Sep 2026 08:55:44 -0700 (PDT)
+Date: Tue, 8 Sep 2026 17:55:43 +0200
 From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Junnan Zhang <zhangjn_dev@163.com>
-Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, 
-	linux-kernel@vger.kernel.org, sunshx@chinatelecom.cn, tj@kernel.org, zhangjn11@chinatelecom.cn
-Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in
- cgroup1_pidlist_destroy_all
-Message-ID: <ap_3u9i1n8mQrObY@localhost.localdomain>
-References: <apU1sXYP_QhsQFcB@localhost.localdomain>
- <20260901033923.40420-1-zhangjn_dev@163.com>
+To: Noah Feldt <noah@feldt.systems>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, N.Feldt@mittwald.de, carnil@debian.org, dschatzberg@meta.com, 
+	hannes@cmpxchg.org, peterz@infradead.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2] cgroup: Avoid iteration of dying tasks with zero
+ refcount
+Message-ID: <aqAtv3WVn51LN3E8@localhost.localdomain>
+References: <20260907192723.72167-1-noah@feldt.systems>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -75,133 +76,140 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="i6d4qd4oqwkj5vkb"
+	protocol="application/pgp-signature"; boundary="zwoag2cpocblfvef"
 Content-Disposition: inline
-In-Reply-To: <20260901033923.40420-1-zhangjn_dev@163.com>
+In-Reply-To: <20260907192723.72167-1-noah@feldt.systems>
 
 
---i6d4qd4oqwkj5vkb
+--zwoag2cpocblfvef
 Content-Type: text/plain; protected-headers=v1; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in
- cgroup1_pidlist_destroy_all
+Subject: Re: [PATCH v2] cgroup: Avoid iteration of dying tasks with zero
+ refcount
 MIME-Version: 1.0
 
-Hi Junnan.
+On Mon, Sep 07, 2026 at 07:27:32PM +0000, Noah Feldt <noah@feldt.systems> w=
+rote:
+> Hi Michal,
+>=20
+> thanks for the v2. I tested it on the same production node and with the
+> same reproducer (the 2nd PoC) that triggered the original crash.
+>=20
+> Result: it no longer panics, the use-after-free of the reaped leader is
+> gone. But the node now hard-locks up instead. dmesg is attached as
+> prod.log (module lists trimmed); the relevant part is:
+>=20
+>   watchdog: CPU24: Watchdog detected hard LOCKUP on cpu 24
+>   RIP: 0010:native_queued_spin_lock_slowpath+0x2aa/0x2f0
+>   Call Trace:
+>    _raw_spin_lock_irqsave+0x3d/0x50
+>    cgroup_task_dead+0x29/0x140
+>    finish_task_switch.isra.0+0x238/0x2c0
+>    __schedule+0x4ec/0xfe0
+>=20
+> i.e. one CPU spins forever holding css_set_lock with IRQs disabled, and
+> the other CPUs pile up on that spinlock until the NMI watchdog fires on
+> several of them.
 
-On Tue, Sep 01, 2026 at 11:39:23AM +0800, Junnan Zhang <zhangjn_dev@163.com=
-> wrote:
-> Thanks for the review.
->=20
-> > a) a single reader taking more than hung_task_timeout_secs (that'd be
-> >    a softlockup earlier),
-> > b) starvation of cgroup1_pidlist_destroy_all() by many (queued)
-> >    cgroup_pidlist_start() callers which goes against the second-long
-> >    caching of pidlists,
-> > c) there is large number of nr_cgroups * nr_pidnses which makes the
-> >    caching ineffective
->=20
-> An honest caveat first: this was reported by a customer on a production
-> Kubernetes node. A guest memory dump was taken at the time, but it
-> couldn't be analyzed with crash, so I can't give you the exact
-> nr_cgroups/nr_pidnses.
->=20
-> That said, I believe c) alone is sufficient, and neither a) nor b) is
-> needed to explain the 120s stall, because the flush latency is
-> backlog x per-work latency rather than the latency of any single work:
->=20
-> - backlog: flush_workqueue() waits for all works already queued on the
->   shared wq, which drains serially (WQ_PERCPU, max_active=3D1). Container
->   churn constantly runs cgroup destruction, and each destroyed cgroup
->   queues one work per cached (type, ns) pidlist, so the queue ahead of
->   the flusher grows with churn rate x nr_cgroups.
-
-flush_workqueue() should only block for items present at its invocation
-(not later added). I assume large amount of rmdir's in short succession
-may build up the queue as a one-off event.
+I bothed the loop...
 
 >=20
-> - per-work latency: each destroy work must acquire the owner's
->   pidlist_mutex, contending with readers (kubelet/cadvisor/runtime
->   scraping cgroup.procs). pidlist_array_load() runs entirely under
->   that mutex (css_set walk, kvmalloc, sort), so on a node with frequent
->   scraping each work can sit tens of ms behind a reader.
-
-OK, lets (over)estimate 100ms per pidlist_mutex passthrough, that gives
-lower bound of some 1200 cgroups removed together. (That's a lot but
-borderline still practically possible.)
-
-> A few thousand queued works each delayed by tens of ms already exceed
-> hung_task_timeout_secs -- no single reader needs to hold the mutex for
-> that long (so a) doesn't apply), and each individual work does get the
-> mutex eventually, so it's not sustained starvation either (so b)
-> doesn't apply).
+> > First, I replaced the if() with a while() loop because when one such
+> > dying leader could remain on dying_tasks, there can be more of them
+> > (matter of effort) and single css_task_iter_advance() won't be
+>  enough
+> > (we need to skip all such tasks before get_task_struct()).
 >=20
-> More on b): the second-long caching only helps readers that re-read
-> within that 1s window (e.g. a single `cat` doing several seq_file
-> iterations). Periodic scrapers like kubelet/cadvisor, with typical
-> intervals of 10-30s, never hit the cache at all: every scrape round
-> rebuilds the pidlist under the mutex and queues an expiry work 1s
-> later.
-
-So one reader produces ~0.1 items/s, with the latency number above
-around 10 items/s should be dispatched. Or ~100 (parallel) scrapers
-should be manageable.
-
-> So heavy reader traffic and the existence of the cache are not
-> in conflict -- the cache is simply ineffective for this access
-> pattern. It also means the wq steadily carries ~nr_cgroups expiry
-> works per scrape round, on top of the works queued by churn, which is
-> what the flusher ends up waiting behind.
-
-I understand that an abprubt removal of thousands of cgroups may stress
-the pidlist_destroy workqueue.
-
-> On nr_pidnses specifically: containers typically share the pod/host
-> pid namespace, so in the common case the multiplier is really
-> nr_cgroups x scraping frequency rather than nr_pidnses. I can't confirm
-> the customer's pidns usage for the same reason as above.
+> The while() is what locks up:
 >=20
-> > OTOH, I'm surprised this v1-issue popped up only now
+> > +	while (it->task_pos && it->cur_tasks_head =3D=3D &it->cur_cset->dying=
+_tasks) {
+> > +		task =3D list_entry(it->task_pos, struct task_struct, cg_list);
+> > +		if (!atomic_read(&task->signal->live))
+> > +			css_task_iter_advance(it);
+> > +	}
+
+=2E..and after I hit Send, I realized it might be unnecessary thanks to
+implicit loop via `goto repeat;` in css_task_iter_advance(). But then
+there's CSS_TASK_ITER_WITH_DEAD which needs additional care
+(fortunately, this flag is not used by those userspace users, so the
+if-variant would be sufficient to fix the race in non-sched_ext
+scenarios).
+
+
 >=20
-> cgroup v1 is legacy but still the default on widely deployed enterprise
-> distros, and per-node cgroup density plus metrics scraping frequency
-> have grown a lot in recent years, so the backlog needed to trip this
-> only became common recently.
+> A LLM helped me debug this
+>=20
+> When the leader is still live, atomic_read(&task->signal->live) !=3D 0, so
+> the if() body is skipped, css_task_iter_advance() is never called,
+> it->task_pos never moves and the loop condition stays true forever. A
+> live dying-list leader thus spins the loop under css_set_lock -> the hard
+> lockup above.
+>=20
+> The loop has to stop on the first live leader (that is exactly the task we
+> want to hand out) and only advance past the dead ones. Turning the skip
+> into a break makes it terminate. The variant I tested:
+>=20
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -5209,6 +5209,7 @@
+>   */
+>  struct task_struct *css_ta
+> sk_iter_next(struct css_task_iter *it)
+>  {
+> +	struct task_struct *task;
+>  	unsigned long irqflags;
+>=20
+>  	if (it->cur_task) {
+> @@ -5222,6 +5223,22 @@
+>  	if (it->flags & CSS_TASK_ITER_SKIPPED)
+>  		css_task_iter_advance(it);
+>=20
+> +	/*
+> +	 * @it->task_pos was picked on an earlier call. A dying leader stays on
+> +	 * dying_tasks until cgroup_task_free(), past its last usage ref drop,
+> +	 * so it may have been reaped since and get_task_struct() on it would
+> +	 * resurrect a task about to be freed. That last ref is dropped by an
+> +	 * RCU callback queued from release_task(), after signal->live hit zero,
+> +	 * so a leader still showing live threads in this irq-disabled section
+> +	 * can't lose its ref before the section ends.
+> +	 */
+> +	while (it->task_pos && it->cur_tasks_head =3D=3D &it->cur_cset->dying_t=
+asks) {
+> +		task =3D list_entry(it->task_pos, struct task_struct, cg_list);
+> +		if (atomic_read(&task->signal->live))
+> +			break;
+> +		css_task_iter_advance(it);
+> +	}
+> +
+>  	if (it->task_pos) {
+>  		it->c
+> ur_task =3D list_entry(it->task_pos, struct task_struct,
+>  					  cg_list);
+>=20
+> Same reproducer after this change: no panic and no lockup, the node stays
+> up under the load that reproduced it before.
+>=20
+> Tested-by: Noah Elias Feldt <N.Feldt@mittwald.de> # while-variant with th=
+e break
 
-I remain somewhat reserved whether only the mere density would cause
-thise (as there are other bottlenecks that may start blocking with these
-numbers).
-
-
-> It still serves the normal path: the deferred expiry that makes the
-> pidlist cache work, and process context for freeing. The patch only
-> removes the flush from the cgroup-removal path where, as you noted,
-> the orphan list guarantees the pidlists head won't be used after cgrp
-> removal.
-
-Your patch looks correct to me, although, I'd rather not nurture the
-venerable code at all. And I've never liked pidlists, so I'd like to
-take the opportunity to retire them a bit:
-
-https://github.com/Werkov/linux/commit/8c3d45be95841ede16ceac29d48be59e59ec=
-5a82
-
-Opinions?
+Thanks, factoring the live count into the loop is what I should've done
+with the loop.
+Though, the fix loses a bit of elegance. Hm, thinking...
 
 Michal
 
---i6d4qd4oqwkj5vkb
+--zwoag2cpocblfvef
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaqAX8xsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AiCNAEAuH4tNak/UWWRTrr33e1Y
-/LNO4CkrwG5PfwH7cMDM8bEA/R5qVFuVBf/N8JAqUJg5KzBs1LoIvZVOFsWODqGT
-bpQC
-=VMSf
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaqAv+xsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AjGBwD/f2Y2iVrTgbxg/qzozsM7
+7pNj1MPifZ0yK1TvAtBYi5EA/iyXE0yNdFfYjuHLfjeGWW7DuKLIMxrJ0VDLy1xT
+3hIC
+=cwT4
 -----END PGP SIGNATURE-----
 
---i6d4qd4oqwkj5vkb--
+--zwoag2cpocblfvef--
