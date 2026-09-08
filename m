@@ -1,215 +1,200 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B671576EDD
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 15:55:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF0558B6AF
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 15:57:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788882949; cv=none; b=GFsN3VXEvLL/0UE81ORqVQK/rmlNC/lb0XbNqeYHz0pe1lEVE585SOJpkLrgseToCkAX2tWmBghAmRL5X3EQHBF9jvYHZvUZiW5oVA25xV5Q7D6jPve7jVclifX6eGze984Sf/yEBQUEQlcjXeKbkgIwngsFo7fl20QwXeO4Ab4=
+	t=1788883069; cv=none; b=KkFEEBJqiqCQayUoqBDKvjJV64+4K0frn6PKY1o28qdHGaeOvmfJG10Awq7wOlgS9ggQRQTkIyp+u7AnCEn2X5ffiDeVSIMnB4BHZi41Z2boi0CMP4VDjDhCgSUvgjGtcr+zfAUxB+gRkJkBCcBFybXJPSuxvDVbf7zuFPNDYas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788882949; c=relaxed/simple;
-	bh=AzcQcDujYJDMScylfG3Dek1ZhVg7b50dImiSr//5IuQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ah42xkb11cbrefE4fGPo4RwWwERMIosGlxBpMWpJGwu72M6VRBsdnsCON5jaXT+2n6D2+TAN/RCApgnyBPI/KNkqFO+svRSKsgcMCeIcS5mkn1jX0CpH+hTsF2BMR8QR1VmcLnGu640r0f+dq2rdlRidyfh3y6hdliQoFnhWR2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=B954uWuP; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1788883069; c=relaxed/simple;
+	bh=hj+Nv0WF1d95Gjv7TrdlCtnL4rlx46A03j7UOfRM5nU=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=FAfTBqdMQrLbjZoT7lFq8iNkjHb1A6kcKn7zy2QYyAd4Y8Bf3wKuHLFLDhvaqsyVtW/43CgDoNZkIlsulSY6abCTCluEeKtfcn2artDxmhCRZvCRyVMK2LN5HJLccFooAys6yDijB1N5n5zFFH2rCs3mmktrrqa6GoCAINBlHR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=nbNFtHL9; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=HwcXoEba; arc=none smtp.client-ip=148.163.135.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="B954uWuP"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-49557167508so57093195e9.1
-        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 08:55:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="nbNFtHL9";
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="HwcXoEba"
+Received: from pps.filterd (m0167072.ppops.net [127.0.0.1])
+	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 688Fbd5W1154483
+	for <cgroups@vger.kernel.org>; Tue, 8 Sep 2026 11:57:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pps01; bh=NifX4Rb1WDw0wxtWlVThAQsW+j
+	ygu9Vf8Cny+Iwc1Mw=; b=nbNFtHL9MXnWtK26BxA1gyl68MUKnXXXxoueCQqUDN
+	PlAAxqnECyGfrI5luVVHgkn5aO+soguWzHRqqKc5XoFDmbdhwuvLilMM99IFcYTj
+	+JMRcn73qCpmaZ/fWTKKkSatKo8L/US1KBq7wxr/gMhukyyBM3tqhRZRDJqV+PTz
+	BNPwJMOiHkFnv0ilHeV2vGi+c+rMDYMQ+GRq2EIfM5V8QkTFK6agkdniSQrtaMGv
+	5nwebsxdCctFhRbY1bic7XQ+mrRjg0RVx1tPhg9fdt7WBnf0r7ukd4MtVXQdEI89
+	jlgmXgdAt1/o0W4fgk24CIkvLrkWTwRHE5bwZ+V0zgYw==
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
+	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4gj50j5h17-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 11:57:46 -0400 (EDT)
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-52fb6c7b680so62327791cf.1
+        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 08:57:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1788882945; x=1789487745; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=uvYRoMu996lSKiESe/rhQE6W2Irf+NpUm8XBKk69vVY=;
-        b=B954uWuPOYqiBOr5+PssQ3Ol4IU8jd7B2kSfmYHRslfdVmlCgSWcagS4GDpRE5GK6G
-         tcPBVk3yKLgyKKnP3YrA35fSjgZUrhWYnD4w+W98n2isGFsQp3j9mip72e7e6rqkOmNo
-         Z1iTVDZN39LZpBJ2v5LnNLHbysq3AAkVMjxT+2LiAgON7My+1OD8fa8gXGJ8QbSPqCe5
-         6MQsTHI2xUGwfmmeuS8d1MTX7hJsJLVn2YpT1XgA09dJJsKPyp9jBHcp9yKI5PLqBB04
-         RpqnnMEusVo8Ywlvuqyd8OSc8RDl7jjx19KTpjlPc4yCl/JloWZR5pxGFzmJ8PQd2ViO
-         vePw==
+        d=columbia.edu; s=lionmail; t=1788883065; x=1789487865; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=NifX4Rb1WDw0wxtWlVThAQsW+jygu9Vf8Cny+Iwc1Mw=;
+        b=HwcXoEbaTAwmRH2QxWJltWnPsYtWr4hQDxDV3oliZTmaezj4cLpGGb2fAdKp/EAxIz
+         OKgRDw1WL42dB8A+3BCWeSAYsJ+6IqBmMAvEZFh7IDN+KmAg//lOWcJX0+v6dZWn15OR
+         Zbs4/gu/5bWblvlSt2xZ2xOA3KpFqxalq5z0LhYRrLMQFPXyVpUHkpp3cBe5/e09M/TF
+         TBIariIH0BuKoOWYukmVvYRe8vaj7evSq8Zkd9wm6s3bc2Q6DyRHlXRAUBqtQQKhSszm
+         kX813aWVserf/IBkXUoCdFiJlU/Ib+cKyI7VyPk3KrVw69NCUVaumlCiV6I0em7stSNc
+         mpxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788882945; x=1789487745;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=uvYRoMu996lSKiESe/rhQE6W2Irf+NpUm8XBKk69vVY=;
-        b=AUtx/Tj2YNxO06lb8RiyADaWoW/0GxtqC7WuwziWyyiB8HbsgvXhND9NTDcaP4StEZ
-         Qisrwu+Idn1uU5etGCBTNfXf/ZHLdKnRkGssD22dwartraOijVpVthCLQR5WpDxKbymM
-         dNgidQC2MFhQSUcozX8DNaQuOImoWLckTvJxUyeCGG2DhOVyEgHD9zyHdJ4Air4Y4T+V
-         6uzLrCkdf9caIVmLlIBdGsJIPcPfgdbK+ZkpNCkhliMlpLGXqvmOcRdX4lV5DM829fcy
-         JFSEuv6b2d0YT4+WzkfSCNjmgyJ7fYFBilMyK+3diMeaOAlbPRNppCfvFi/xlktG7e9d
-         GxHw==
-X-Forwarded-Encrypted: i=1; AKwUvByu97zFWnQeM67ddA8HyEstbufoihL6Tec/j1Aw8tCuSewe9s367I+k6Fc6HaXQJZlQdnAECjNb@vger.kernel.org
-X-Gm-Message-State: AFuF++lj1PAmAF0C2GmdCwLwE/rQ8wO3LFqSQ+tx71HVbsCsHBYtaerf
-	LRh3qL1mrxOw1+SFgfvdDzpizIWzYBL23Uk++krOYoYa2aBsT9rf38mVFeDC9c/gOKI=
-X-Gm-Gg: AYBFou3WzwbhLqcDMYvFd174ztCoNIxxAwIG+TY0NDvXwv/VVdjWZ2+aZqpfZU2twC6
-	/aiSPL5VGX31TO4mRSu2nU7Yc6zqC8/2iYREYwCs6NikX6/jPKRy2V4ttpszjn+3uHzFc9hjitc
-	EdATzR0pWh/xCfkw6Czqo5PEZLzAz+0z7DcRQbKS6EQT81zDDRDLdrHHgihiGq2mc9o+QJASSp3
-	LRCWor52vIQ5CDYkCi5rko8ikUZg85Swi0tfVE3TDKHakwxYMuv9wuYCXCZj5I4gJptujCA7b9p
-	pQ6SdI1J0UkKg+E+MdEEBfI9TVNFSWpuhWKTV03RmibWYKuEoXgbQlhzqYMkJzSDxVYydF2aMPF
-	dupFTge1v6ZviOObKge9/jXkeo8jFEDqc5WpDkO2ADDY+LisdEiLTJcx43Kx890oLo48RHRgOHj
-	hIXOIqnQE0sPXz0MgbwY9fiT+otGg7V5xS0Uq9ePo1i0U3fpHYDPVvk8Y0NGYCTws9
-X-Received: by 2002:a05:600c:3b01:b0:49b:4d64:bbc4 with SMTP id 5b1f17b1804b1-49cf81f1592mr513548485e9.8.1788882945317;
-        Tue, 08 Sep 2026 08:55:45 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cee5f912esm501130535e9.4.2026.09.08.08.55.44
+        d=1e100.net; s=20251104; t=1788883065; x=1789487865;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=NifX4Rb1WDw0wxtWlVThAQsW+jygu9Vf8Cny+Iwc1Mw=;
+        b=gdmg27bMJDeLmnVH/Cc6mqiIyiHBqtA5pMT8FPbSSIhzKZLrMV0+9fUfP4Gr3lP0nf
+         d7mCz8euKr1seYI/33mQMOGDM7BDoaDPlEvtIcPqEJ//yNOaXQFdTd8TQlvfz6ZvIsGP
+         6NtsaGE5ExgIK23yS+iEYAE5g4djH9CCYOGpQ1ojxTzgofP5OkhN2RO8UGW1HewYfeBB
+         kpCa/YCOpQxpZ6uAL6kLgar8K97t/AZJxIAvnO7iwgJOlrcZrXgpCZNH8/Lum2FtNmsD
+         QqvFyfj4rXVgdQN9Q7tIclJYIYo10J+jsKN8wnA5SRPwCsVFDhYnAlTYU/dx3rO6wjQg
+         ApSQ==
+X-Gm-Message-State: AFuF++l/O17icVgc4sKd+2LT7hIbzw/xPVxpRcIYbkfEtnCkGHHKL4iO
+	//RJ5Yx62kaj3TWeLiM4O6+faeFvfAxNoMvGhem+3wrhlZAQH0qHUvb9ZILO7PsZ+DMnG1ZCqkA
+	i4DstvGFiH+JK04zuoC2kjNJMDenL9Eyu2dDMack6Psf37RjliTaiWaM=
+X-Gm-Gg: AYBFou08kv+JjgDc4vo9PWFntTL3flQcdR0TAOl7VkF3ZUkgXAobWGD1Td2dtKsfm+a
+	velBQx35HUpzrIEnJF2o5dRI8hKtVEHKPAg+nJYSPuZ5BhvrwQhJGFGgufA08j3OQC4SjZLPaaU
+	WMgcGUjsIdqPvtXrKGxPbzMHd+3+xCTb3nXJEU1RJxz9hC2M7ZPeS9pTKm0VmUfRFehMJTZRnlv
+	hXpwsmq7JLx8imPsr/jX940TvR9HU1wTyDfg0ae3q1+d53cm8IeZ+XoPidQZtDakNxMLPv1/B/j
+	qpqxFDqgloy05a15IP6z3cl95GmNqtt7b4t2n93Qt66MGbjbiNFWJ2U78Hwq0BZnCrYyElM/Gln
+	eDPLf9PBBUqNmEPd8M44N9mqXkN8hJkGcIzjf3RIvqqqJzfBh
+X-Received: by 2002:a05:622a:134d:b0:52f:f072:a1d1 with SMTP id d75a77b69052e-53054819272mr349899271cf.11.1788883065115;
+        Tue, 08 Sep 2026 08:57:45 -0700 (PDT)
+X-Received: by 2002:a05:622a:134d:b0:52f:f072:a1d1 with SMTP id d75a77b69052e-53054819272mr349898481cf.11.1788883064429;
+        Tue, 08 Sep 2026 08:57:44 -0700 (PDT)
+Received: from [127.0.1.1] (nat-128-59-177-174.net.columbia.edu. [128.59.177.174])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53093295584sm27830461cf.13.2026.09.08.08.57.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 08:55:44 -0700 (PDT)
-Date: Tue, 8 Sep 2026 17:55:43 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Noah Feldt <noah@feldt.systems>
-Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, N.Feldt@mittwald.de, carnil@debian.org, dschatzberg@meta.com, 
-	hannes@cmpxchg.org, peterz@infradead.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] cgroup: Avoid iteration of dying tasks with zero
- refcount
-Message-ID: <aqAtv3WVn51LN3E8@localhost.localdomain>
-References: <20260907192723.72167-1-noah@feldt.systems>
+        Tue, 08 Sep 2026 08:57:43 -0700 (PDT)
+From: Tal Zussman <tz2294@columbia.edu>
+Subject: [PATCH v2 00/11] mm: memcontrol: constify the read side of the
+ memcg API
+Date: Tue, 08 Sep 2026 11:57:36 -0400
+Message-Id: <20260908-folio_memcg-const-v2-0-811e9f443409@columbia.edu>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="zwoag2cpocblfvef"
-Content-Disposition: inline
-In-Reply-To: <20260907192723.72167-1-noah@feldt.systems>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAHAwoGoC/22Nyw6CMBBFf4XM2poyqYCu/A9DTGkHGAOtaYFoC
+ P8uj63Lk5x77gyRAlOEWzJDoIkje7cCnhIwrXYNCbYrA0rMZCFzUfuO/bOn3jTCeBcHoXSWk5J
+ WFZcK1t07UM2fvfkoD45j9SIzbKHNaDkOPnz30yndvKN/lfinP6VCCkKTWo2IKrN347uxr1ify
+ Y5QLsvyAyiWWWDHAAAA
+X-Change-ID: 20260807-folio_memcg-const-4a67e40d485b
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Shakeel Butt <shakeel.butt@linux.dev>,
+        Muchun Song <muchun.song@linux.dev>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
+        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
+        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
+        Youngjun Park <youngjun.park@lge.com>,
+        David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+        "Liam R. Howlett" <liam@infradead.org>,
+        Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>,
+        Suren Baghdasaryan <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>,
+        Axel Rasmussen <axelrasmussen@google.com>,
+        Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        Tal Zussman <tz2294@columbia.edu>
+X-Mailer: b4 0.17-dev-db0b7
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788883062; l=2237;
+ i=tz2294@columbia.edu; s=20250528; h=from:subject:message-id;
+ bh=hj+Nv0WF1d95Gjv7TrdlCtnL4rlx46A03j7UOfRM5nU=;
+ b=Eq+dpJKvk9whXLlAXSzv+mq7m+3iea9TQG0LeUDcbezPns09wXcAvBEa2NVPavbZ7BAUmO63Z
+ PSK81m8Ob4hBtmnLts5McXIWX4J153hefwW3tg14Hbs4ZiWO0dXw4fN
+X-Developer-Key: i=tz2294@columbia.edu; a=ed25519;
+ pk=BIj5KdACscEOyAC0oIkeZqLB3L94fzBnDccEooxeM5Y=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA4MDE3MiBTYWx0ZWRfXwGNTAxGKkE1h
+ ayxDeYY5LyMbvH0+6NIpUEJQ/a+FLWBXus79FQOXeoTUUTzm2RDFkxRpzzw5BJhidAOI8ghldHl
+ wWkwVYqlgBwI3YwHb5zOOWO5dKkkJg7oLAx2S26cWvEEm3KRFWe4h8P1IQEckvbISIOe2ks1ntI
+ RzBwmee0HPqvB7E75zcOb1gfgHTf0IaZvpovXgu9/KNmx9rvKhLIw0NK6fhKoGZI/7vTjmhRM9o
+ wGeYcC6InyCSF+YK/jWFO0n7cRngEgeUbhW0Az7r1hFJQfDZUYHE3e7x0flasW2zbB9ZfI9R/o5
+ fzrE8VOKeA0CHXWovON1hCh4/1kgBQkJj7bxygIdO1OQlbuwk0epGAYuEp/geMKNvWI85I0srms
+ Hu5TKql7FrZKL2w3B31v75OBHg9fyMZfSNBko5XKr0KSF04+OMaLlXNV3gGKra1i8Q++cOeDItC
+ GjJzPfKI/ImPjE4/Kog==
+X-Proofpoint-ORIG-GUID: Xy7WrqebNUhwhJWRXZsP3cWufIrRGfcg
+X-Proofpoint-GUID: Xy7WrqebNUhwhJWRXZsP3cWufIrRGfcg
+X-Authority-Analysis: v=2.4 cv=O7gJeh9W c=1 sm=1 tr=0 ts=6aa0307a cx=c_pps
+ a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=HBUb3goEnnz3w2smY6d+Hw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=x7bEGLp0ZPQA:10 a=A0y_DWxS2BwA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=SsB-OO3BMngHh3ZO9fOt:22
+ a=VwQbUJbxAAAA:8 a=JfrnYn6hAAAA:8 a=bC-a23v3AAAA:8 a=b6ln72opZJ-VCPk_GP8A:9
+ a=QEXdDO2ut3YA:10 a=dawVfQjAaf238kedN5IG:22 a=1CNFftbPRP8L7MoqJWF3:22
+ a=FO4_E8m0qiDe52t0p3_H:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA4MDE3MiBTYWx0ZWRfX7M0XNMh1lJDZ
+ j/hfPOvSAn+cTIX9YtWZ3DD7Cc4jrMfNcgq5fNlRzQPPiTStVNxm5oKleKz7lBnzzpB2far6ajo
+ 2IokeLIzDlhTG/x6w6ATUMhTUNQr82oq9Sr+YH7ebnlt/oWzTLOO
+X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11900
+ signatures=596817
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 suspectscore=0 clxscore=1015 malwarescore=0 bulkscore=10
+ adultscore=0 priorityscore=1501 spamscore=0 impostorscore=10
+ lowpriorityscore=10 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2609080172
 
+The memcg accessors, lruvec helpers, and stat readers only read from
+the memcg, folio, or lruvec they are given, but take non-const
+pointers. Constify them, along with a couple other helper functions in
+mm/page_counter.c along the way.
 
---zwoag2cpocblfvef
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v2] cgroup: Avoid iteration of dying tasks with zero
- refcount
-MIME-Version: 1.0
+This started as a follow-up to [1] that quickly grew in proportions :)
 
-On Mon, Sep 07, 2026 at 07:27:32PM +0000, Noah Feldt <noah@feldt.systems> w=
-rote:
-> Hi Michal,
->=20
-> thanks for the v2. I tested it on the same production node and with the
-> same reproducer (the 2nd PoC) that triggered the original crash.
->=20
-> Result: it no longer panics, the use-after-free of the reaped leader is
-> gone. But the node now hard-locks up instead. dmesg is attached as
-> prod.log (module lists trimmed); the relevant part is:
->=20
->   watchdog: CPU24: Watchdog detected hard LOCKUP on cpu 24
->   RIP: 0010:native_queued_spin_lock_slowpath+0x2aa/0x2f0
->   Call Trace:
->    _raw_spin_lock_irqsave+0x3d/0x50
->    cgroup_task_dead+0x29/0x140
->    finish_task_switch.isra.0+0x238/0x2c0
->    __schedule+0x4ec/0xfe0
->=20
-> i.e. one CPU spins forever holding css_set_lock with IRQs disabled, and
-> the other CPUs pile up on that spinlock until the NMI watchdog fires on
-> several of them.
+[1]: https://lore.kernel.org/linux-mm/anYqSDnC2BbJXv1h@casper.infradead.org/
 
-I bothed the loop...
+---
+Changes in v2:
+- Patch 3: Constify the folio argument of folio_lruvec_relock_irq() and
+  folio_lruvec_relock_irqsave() as well, per Sashiko
+- Patch 3: Note that mem_cgroup_lruvec() updates lruvec->pgdat in the
+  per-node structure, not the memcg, per Sashiko
+- Patches 3 and 8: Use container_of_const() in lruvec_memcg() and the
+  lruvec_page_state() family, per Sashiko
+- Link to v1: https://patch.msgid.link/20260902-folio_memcg-const-v1-0-e2c1da22246d@columbia.edu
 
->=20
-> > First, I replaced the if() with a while() loop because when one such
-> > dying leader could remain on dying_tasks, there can be more of them
-> > (matter of effort) and single css_task_iter_advance() won't be
->  enough
-> > (we need to skip all such tasks before get_task_struct()).
->=20
-> The while() is what locks up:
->=20
-> > +	while (it->task_pos && it->cur_tasks_head =3D=3D &it->cur_cset->dying=
-_tasks) {
-> > +		task =3D list_entry(it->task_pos, struct task_struct, cg_list);
-> > +		if (!atomic_read(&task->signal->live))
-> > +			css_task_iter_advance(it);
-> > +	}
+---
+Tal Zussman (11):
+      mm: memcontrol: take a const folio in folio_memcg() and friends
+      mm: memcontrol: constify obj_cgroup_memcg() and friends
+      mm: memcontrol: constify the lruvec helpers
+      mm/page_io: take a const folio in bio_associate_blkg_from_folio()
+      mm: memcontrol: constify the mem_cgroup accessors
+      mm: page_counter: constify page_counter_read() and page_counter_margin()
+      mm: memcontrol: constify the reclaim protection helpers
+      mm: memcontrol: constify the memcg and lruvec stat readers
+      mm: memcontrol: constify the swap accounting helpers
+      mm: memcontrol: constify mem_cgroup_swappiness() and mem_cgroup_get_max()
+      mm: memcontrol: constify the zswap and socket pressure helpers
 
-=2E..and after I hit Send, I realized it might be unnecessary thanks to
-implicit loop via `goto repeat;` in css_task_iter_advance(). But then
-there's CSS_TASK_ITER_WITH_DEAD which needs additional care
-(fortunately, this flag is not used by those userspace users, so the
-if-variant would be sufficient to fix the race in non-sched_ext
-scenarios).
+ include/linux/memcontrol.h   | 204 ++++++++++++++++++++++---------------------
+ include/linux/mmzone.h       |   2 +-
+ include/linux/page_counter.h |   4 +-
+ include/linux/swap.h         |  12 +--
+ mm/memcontrol.c              |  49 ++++++-----
+ mm/page_counter.c            |   2 +-
+ mm/page_io.c                 |  14 +--
+ mm/swap.h                    |   2 +-
+ 8 files changed, 148 insertions(+), 141 deletions(-)
+---
+base-commit: 9d3243fc689fef444f87e0a703b4c99653137e1b
+change-id: 20260807-folio_memcg-const-4a67e40d485b
 
+Best regards,
+--  
+Tal Zussman <tz2294@columbia.edu>
 
->=20
-> A LLM helped me debug this
->=20
-> When the leader is still live, atomic_read(&task->signal->live) !=3D 0, so
-> the if() body is skipped, css_task_iter_advance() is never called,
-> it->task_pos never moves and the loop condition stays true forever. A
-> live dying-list leader thus spins the loop under css_set_lock -> the hard
-> lockup above.
->=20
-> The loop has to stop on the first live leader (that is exactly the task we
-> want to hand out) and only advance past the dead ones. Turning the skip
-> into a break makes it terminate. The variant I tested:
->=20
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -5209,6 +5209,7 @@
->   */
->  struct task_struct *css_ta
-> sk_iter_next(struct css_task_iter *it)
->  {
-> +	struct task_struct *task;
->  	unsigned long irqflags;
->=20
->  	if (it->cur_task) {
-> @@ -5222,6 +5223,22 @@
->  	if (it->flags & CSS_TASK_ITER_SKIPPED)
->  		css_task_iter_advance(it);
->=20
-> +	/*
-> +	 * @it->task_pos was picked on an earlier call. A dying leader stays on
-> +	 * dying_tasks until cgroup_task_free(), past its last usage ref drop,
-> +	 * so it may have been reaped since and get_task_struct() on it would
-> +	 * resurrect a task about to be freed. That last ref is dropped by an
-> +	 * RCU callback queued from release_task(), after signal->live hit zero,
-> +	 * so a leader still showing live threads in this irq-disabled section
-> +	 * can't lose its ref before the section ends.
-> +	 */
-> +	while (it->task_pos && it->cur_tasks_head =3D=3D &it->cur_cset->dying_t=
-asks) {
-> +		task =3D list_entry(it->task_pos, struct task_struct, cg_list);
-> +		if (atomic_read(&task->signal->live))
-> +			break;
-> +		css_task_iter_advance(it);
-> +	}
-> +
->  	if (it->task_pos) {
->  		it->c
-> ur_task =3D list_entry(it->task_pos, struct task_struct,
->  					  cg_list);
->=20
-> Same reproducer after this change: no panic and no lockup, the node stays
-> up under the load that reproduced it before.
->=20
-> Tested-by: Noah Elias Feldt <N.Feldt@mittwald.de> # while-variant with th=
-e break
-
-Thanks, factoring the live count into the loop is what I should've done
-with the loop.
-Though, the fix loses a bit of elegance. Hm, thinking...
-
-Michal
-
---zwoag2cpocblfvef
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaqAv+xsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AjGBwD/f2Y2iVrTgbxg/qzozsM7
-7pNj1MPifZ0yK1TvAtBYi5EA/iyXE0yNdFfYjuHLfjeGWW7DuKLIMxrJ0VDLy1xT
-3hIC
-=cwT4
------END PGP SIGNATURE-----
-
---zwoag2cpocblfvef--
