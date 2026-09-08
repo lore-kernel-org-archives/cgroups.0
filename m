@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-51.mta1.migadu.com [95.215.58.51])
+Received: from mta0.migadu.com (out-227.mta0.migadu.com [91.218.175.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC4133344A
-	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 02:22:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23B09331EBA
+	for <cgroups@vger.kernel.org>; Tue,  8 Sep 2026 02:22:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788834128; cv=none; b=l68QEEJQqC11kyEeCAVzeFcp/c8WnLM/cb8S8eK9apBazH+Dd4dvYm6+v5L+iNT/32L9rZdI67or6DurHb8+Zw/IvXDgmP1ujs5CT7Fd2LVjDkxyaTGVS+fQ9zrZMlp/Ke/ersXuqTi+X6qtptnesXPWUt08BQEYBtz8igsKvpE=
+	t=1788834135; cv=none; b=oZhaj+FdmYyHg2z3f4qLHKjjp5CNrmT/BKb8FOtMYuuA2sM/cpmpbTOZgMTdtzeR5TAua1+NylIc8n3QyJ235lsB9fFe3f760n0gNO3TeNVeOgocTU4sjyNb/LPcHEcZIVPThugVvlCLrsBWAiyeJvsePfDZa8JpUZjBBV2vJQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788834128; c=relaxed/simple;
-	bh=RlLZG9DF6LMhq752V92mo173s8ccnTQNr43ipFQvvoo=;
+	s=arc-20240116; t=1788834135; c=relaxed/simple;
+	bh=XrfCJ2yq4Pel9YDmeRVtPrl/rhKP6Bf09p5x0cJBln4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rIApLnLUlitBIyk7TglBDfEOT6oLCNnXEqxTjNb2p+eJiA313Edf7TvlNfQGJFVcqIMc3CmONmRcqtjwY20aOfo9IKLT+V4YjEY1GDAIrAle8m7IQ2WKpcqOJBFX5G7XDlfghI+MYAnl9G+cAuGY+rHSgN8rp25goF+elhelAJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MoRFccNJ; arc=none smtp.client-ip=95.215.58.51
+	 MIME-Version; b=s3x2hHMzSQgGWNNhQvyvgplPX47bO46SwuA6OveG4x+aDgt/cqes1fi/LLfEgPlrliRHtJm4yJpYdh9etO6eIDtLcyY74Be/tXkCWhx2g7XguyAWobh73qhV913I2FPOhF9MFb2KkYQ8iWQubmcJLadLakoHovufv3tYiTSzfNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rvFoY7Xj; arc=none smtp.client-ip=91.218.175.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MoRFccNJ"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rvFoY7Xj"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=RlLZG9DF6LMhq752V92mo173s8ccnTQNr43ipFQvvoo=;
+DKIM-Signature: a=rsa-sha256; bh=XrfCJ2yq4Pel9YDmeRVtPrl/rhKP6Bf09p5x0cJBln4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788834124; v=1; x=1789438924;
- b=MoRFccNJtw9FXGRQz2iJn/dFpgWkGqRUnSvMH86oAAG/7sX6gKiw0mPCYH2wTuyiH8NEQSpJ
- wp8kJri79LhY1tJJHWJ46XXIaGZ/XO/moyHnUmsddYMKW5pjMr4AxeN8R45FxKZo2G7oYa1KwcO
- HvgFtH9oDQuArD060ng5N36w=
+ t=1788834131; v=1; x=1789438931;
+ b=rvFoY7XjjTX4cgUSRMNFB0hMFaDhvCOc8rgdEQdzBfxUyMwJc9AAm8Cot25J1iyfmU+m+sB5
+ G6QFYdrQUPZNZ899dO9MdHJssFo0G7+E5kE+z8apyfMQcQwnmFyDBG+BtW9GLC2A2IxNOETc5LK
+ /9T1vqWOWmeyd/Z5XFz94PoA=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6471dc207b4861e7;
-	Tue, 08 Sep 2026 02:22:04 +0000
-X-Mizu-Trace-ID: 6471dc207b4861e7
+Received: by smtp.migadu.com with ESMTPS id 6af8ed773968ad58;
+	Tue, 08 Sep 2026 02:22:11 +0000
+X-Mizu-Trace-ID: 6af8ed773968ad58
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: tj@kernel.org,
@@ -38,9 +38,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	cui.tao@linux.dev,
 	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH 2/4] blk-iocost: charge zone appends as page-counted sequential writes
-Date: Tue,  8 Sep 2026 10:21:33 +0800
-Message-ID: <20260908022135.1429281-3-cui.tao@linux.dev>
+Subject: [PATCH 3/4] blk-iocost: account zone append completions in latency stats
+Date: Tue,  8 Sep 2026 10:21:34 +0800
+Message-ID: <20260908022135.1429281-4-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260908022135.1429281-1-cui.tao@linux.dev>
 References: <20260908022135.1429281-1-cui.tao@linux.dev>
@@ -54,63 +54,46 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-Zone append is a primary write operation for zoned devices; zoned
-btrfs and f2fs use it for data writes.  It is priced at zero, so the
-zone append portion of zoned workloads runs outside the controller:
-a 1%-weight cgroup issued 16000 appends at zero cost on a zoned
-null_blk.
+ioc_rqos_done() only accounts READ and WRITE completions, so zone
+append completions are excluded from the latency window: the vrate
+feedback loop cannot see ZA-induced latency, leaving it unable to
+respond to device saturation caused by zone appends.  Similarly,
+calc_size_vtime_cost_builtin() does not classify zone append as a
+write operation.
 
-A zone append advances the zone write pointer and is therefore
-sequential from the device's perspective; the actual sector is only
-returned after completion, so the cursor-based seq/rand
-classification doesn't apply.  Price it as a page-counted sequential
-write.  After this patch, 16000 appends from the same cgroup are
-charged 533264 usec (33us per append).
+Charging (the cost model) and feedback (the latency window) are
+separate mechanisms, so this is not covered by the previous patch
+that prices zone appends.
 
-Also skip the cursor update for ZA bios: bi_sector is the zone
-start, not the actual write position (which is only returned after
-completion).  Setting the cursor from ZA would misclassify subsequent
-READ/WRITE bios.
+Treat zone append as WRITE for both latency accounting and cost
+classification.
 
 Fixes: 7caa47151ab2 ("blkcg: implement blk-iocost")
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- block/blk-iocost.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ block/blk-iocost.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index abc512532ed9..d7860ec1ad49 100644
+index d7860ec1ad49..1bf622e39ce4 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -2557,6 +2557,17 @@ static void calc_vtime_cost_builtin(struct bio *bio, struct ioc_gq *iocg,
- 		coef_randio	= ioc->params.lcoefs[LCOEF_WRANDIO];
- 		coef_page	= ioc->params.lcoefs[LCOEF_WPAGE];
+@@ -2606,6 +2606,7 @@ static void calc_size_vtime_cost_builtin(struct request *rq, struct ioc *ioc,
+ 	case REQ_OP_READ:
+ 		*costp = pages * ioc->params.lcoefs[LCOEF_RPAGE];
  		break;
 +	case REQ_OP_ZONE_APPEND:
-+		/*
-+		 * A zone append advances the zone write pointer and is
-+		 * therefore sequential from the device's perspective, so
-+		 * the cursor-based classification below doesn't apply.
-+		 * Compute the full cost here.
-+		 */
-+		if (!is_merge)
-+			cost += ioc->params.lcoefs[LCOEF_WSEQIO];
-+		cost += pages * ioc->params.lcoefs[LCOEF_WPAGE];
-+		goto out;
- 	default:
- 		goto out;
- 	}
-@@ -2717,7 +2728,9 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
- 	if (!iocg_activate(iocg, &now))
- 		return;
- 
--	iocg->cursor = bio_end_sector(bio);
-+	/* ZA bi_sector is zone start, not the write position */
-+	if (bio_op(bio) != REQ_OP_ZONE_APPEND)
-+		iocg->cursor = bio_end_sector(bio);
- 	vtime = atomic64_read(&iocg->vtime);
- 	cost = adjust_inuse_and_calc_cost(iocg, vtime, abs_cost, &now);
- 
+ 	case REQ_OP_WRITE:
+ 		*costp = pages * ioc->params.lcoefs[LCOEF_WPAGE];
+ 		break;
+@@ -2876,6 +2877,7 @@ static void ioc_rqos_done(struct rq_qos *rqos, struct request *rq)
+ 		pidx = QOS_RLAT;
+ 		rw = READ;
+ 		break;
++	case REQ_OP_ZONE_APPEND:
+ 	case REQ_OP_WRITE:
+ 		pidx = QOS_WLAT;
+ 		rw = WRITE;
 -- 
 2.43.0
 
