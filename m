@@ -1,315 +1,292 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8663B6C14;
-	Wed,  9 Sep 2026 09:44:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5269953ECF0
+	for <cgroups@vger.kernel.org>; Wed,  9 Sep 2026 11:13:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788947063; cv=none; b=luj7mye8ifgKCmwQPx48PosKQfe7WO6t8Ec9jU15V9LU+Uahh0N7CyhTlB2r0MojyZqiHAY9WhEs342vEQPHuZQXK3zf/uIRNheGVvyqT2KRcoqzs3x+goba/8Ha/5A1i6upRKavkN4o8sHubzXehTuo+By+1lk0zsOsUCXg+5U=
+	t=1788952405; cv=none; b=OZ/24VqRgA01MNahXCUiUdnAC5YBP0nck+lCLz3shOZHHNZ3UZOQTZC3kDAT1Ldfb7j4VTBKlEpxoy07S2ogsxulu1yx8HWHLKhXleAbqQv86YvpBvu1k4jF/ACiez9Lu72/Nk+svajYtj1oSbbK+UwSmp0IJuRo4oxhlHnxl5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788947063; c=relaxed/simple;
-	bh=DzE6a8ucUIKezdLyiT87i1fHKPmzHSKWoTm6ztJGBrE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=dkIxKChxLRveRJ4EYOxpkOCnolJBVNjQ96Kv8sdPao5vhxR6rKK7+zcod3VnIJyeS334pyySaz3fYgzmqhu3r+0BAmHiHk07Yix9LPJeyoo/iHd2VF1YgD7CjVgjudjWutWcXPzdx+Bf2R1HKhottOG1WKkT8SbGVZwrr8WWYaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hj8TJM05; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1788952405; c=relaxed/simple;
+	bh=SdDK9Jtea+gLoPmR5qgH21O2FL6w+8OF3kIkUfHK2pI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WemExtDOGWRAmo1u02fZBv8HtlM6H5v9wmollyBX4J53aB0GLP/XjMWlWCq+oa5AYa9812nk4bVyVRyjtWEXjvMGidA2nJ4MDT4gwHMbns0wtUv/pX84vkyTnTNKJOX5G+PbSMF6xJPEHHyuPe8VX0THlMfDM5FGmcJHx7Wl14Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=UKSgAtEo; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=1H1aqm4Q; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=zdgaJvOx; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=o9N+FL63; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hj8TJM05"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 967D2C2BCFC;
-	Wed,  9 Sep 2026 09:44:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1788947062;
-	bh=DzE6a8ucUIKezdLyiT87i1fHKPmzHSKWoTm6ztJGBrE=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=Hj8TJM05RMbUz9l8edeAbgRMFTc2BxpJxnU49GGVlssA5yqJhzTXQWVFa75FQQdPO
-	 J4YNpewm/4ro6Y07XRGNqQL9cyOySQMVgEjUxIke3w8Oo3Fb4DdRSEuUgrbsnrzlNb
-	 1PHUoFfpWtXrr4dtkw8qbvWyPKKVq2GmCyMVn9YQouAr1HiKc8i9a7oSWwU1y7WLvJ
-	 htEEwBsrMUDiJiPqabaUxG/VxfLFjo8rmBkvgao1rD7D105RjhTVaetCJDL26KiXap
-	 xXAGno8zLj2EJFQvj9BbhsxFkOa/Wyda2kvb6t8qeqAekqRjR0ruPXiwwYxelzU18l
-	 zSNvHb8QC44ww==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74424C79FAD;
-	Wed,  9 Sep 2026 09:44:22 +0000 (UTC)
-From: linuszeng via B4 Relay <devnull+linuszeng.tencent.com@kernel.org>
-Date: Wed, 09 Sep 2026 17:44:19 +0800
-Subject: [PATCH v2 1/3] mm: page_counter: add page_counter_protection
- struct and init API
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="UKSgAtEo";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="1H1aqm4Q";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="zdgaJvOx";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="o9N+FL63"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 3EF9A1FD7A;
+	Wed,  9 Sep 2026 11:13:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1788952392; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DeXsftOuNT3CbkQE1Mjo+rsYtRaEoFIut8eLiwn0gnw=;
+	b=UKSgAtEoRd2Htkho2rLOzbDL+FbD4x0S4r74urdR0HNW50USjOzygSrun99W0WmLDI5kHL
+	OsnrChYdhaHcHXZOKnoMmse7/8aHogubRISX/wSK7GRDIq5VWTOyzBQ+BT8Y8K/LmPDe8q
+	1JWZA8Vko+c9IRG0vAPDs4ti0A+Zvow=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1788952392;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DeXsftOuNT3CbkQE1Mjo+rsYtRaEoFIut8eLiwn0gnw=;
+	b=1H1aqm4Q4G8LuElJMu9tnqwjnzjXS4MHvXB/8VzFK5E74xZTkXE5sKFduEZslxYXhpjW2L
+	EWXteG/oaSPaNyBw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=zdgaJvOx;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=o9N+FL63
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1788952388; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DeXsftOuNT3CbkQE1Mjo+rsYtRaEoFIut8eLiwn0gnw=;
+	b=zdgaJvOx0hG6nEDGLkB8Dbs4wkI30S8KHJa4pbGB/d7eOZyAhw2mXwvweHalw09A5QrHDd
+	fWH9uG4fZhP3qPB+sHLuRoUY66hX9ioLyg2llyvaovZ0DrcDqJ+TsH1t/8otVEDobkTY1w
+	3y7OYa/oOc7cqROP8g9Df70IMCB6A70=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1788952388;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DeXsftOuNT3CbkQE1Mjo+rsYtRaEoFIut8eLiwn0gnw=;
+	b=o9N+FL63CTDAvYFZ2FzI+7iVC/WpzlcL8KM3YHWg+5HryxpudPVjFBViNMpEfH2j/fgjN1
+	qj8B1l3ucX2MLtAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E88EE1352C;
+	Wed,  9 Sep 2026 11:12:43 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id iWY+AjA/oWqtXAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 09 Sep 2026 11:12:15 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 04EF5A1341; Wed, 09 Sep 2026 13:03:27 +0200 (CEST)
+Date: Wed, 9 Sep 2026 13:03:27 +0200
+From: Jan Kara <jack@suse.cz>
+To: Julian Sun <sunjunchao@bytedance.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	muchun.song@linux.dev, akpm@linux-foundation.org, axboe@kernel.dk, tj@kernel.org, 
+	jack@suse.cz
+Subject: Re: [PATCH v3] writeback, memcg: skip foreign dirty tracking for
+ bdev inodes
+Message-ID: <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
+References: <20260909034343.340703-1-sunjunchao@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260909-descriptive-name-v2-1-d7dd7c099049@tencent.com>
-References: <20260909-descriptive-name-v2-0-d7dd7c099049@tencent.com>
-In-Reply-To: <20260909-descriptive-name-v2-0-d7dd7c099049@tencent.com>
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
- Roman Gushchin <roman.gushchin@linux.dev>, 
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
- Andrew Morton <akpm@linux-foundation.org>, 
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
- Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
- Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
- Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
- Oscar Salvador <osalvador@suse.de>, 
- Jingxiang Zeng <jingxiangzeng.cas@gmail.com>
-Cc: Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org, 
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
- dri-devel@lists.freedesktop.org, linuszeng <linuszeng@tencent.com>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788947061; l=8820;
- i=linuszeng@tencent.com; s=20260909; h=from:subject:message-id;
- bh=qRo7579G0THOdatUrKxYMO5fc5xqKHZM+hDjreNI4ZA=;
- b=sm9aZHKSL3UgtbwsCx3EepH0eABzrIRsPuV/OQa6YtjA4YYenyUMrOOwjC/BuCeTXIw+F2a4w
- E94ynhOvlhRA+SfoBNns+mQRxSsyDGgong2OQVembX7Fcbr5Hz7AA6T
-X-Developer-Key: i=linuszeng@tencent.com; a=ed25519;
- pk=6K54xRzYIRWqatrAPy86M4E0MsI92BVJBhXwz5NdC74=
-X-Endpoint-Received: by B4 Relay for linuszeng@tencent.com/20260909 with
- auth_id=1017
-X-Original-From: linuszeng <linuszeng@tencent.com>
-Reply-To: linuszeng@tencent.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260909034343.340703-1-sunjunchao@bytedance.com>
+X-Spam-Score: -4.01
+X-Rspamd-Queue-Id: 3EF9A1FD7A
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	RCVD_COUNT_THREE(0.00)[3];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Spam-Flag: NO
 
-From: linuszeng <linuszeng@tencent.com>
+On Wed 09-09-26 11:43:43, Julian Sun wrote:
+> The expectation in wbc_detach_inode() that "concurrent write sharing of an
+> inode is expected to be very rare" does not hold for bdev inodes. On ext4,
+> metadata from many memcgs shares the same bdev inode, so dirty throttling
+> in those memcgs can repeatedly trigger foreign flushes of the owner wb.
+> These flushes can also write ordinary file data, reducing overwrite
+> coalescing under continuous buffered overwrites. The resulting extra I/O
+> leaves less device bandwidth for other workloads.
 
-This commit extracts the hierarchical protection state (memory.min and
-memory.low) from struct page_counter into a new page_counter_protection
-structure.  It introduces page_counter_init_protection() to attach this
-context, saving space for counters that don't support protection.
+Hum. Are you aware of [1]? The guy is from the same company so I was
+assuming you two are working together on the problem :). 
 
-The dmem pool allocator now points its counter at the embedded
-protection context, and the pool fix-up path in get_cg_pool_locked()
-links the new prot->parent the same way it links cnt.parent, so pools
-created bottom-up do not lose hierarchical protection.
+[1] https://lore.kernel.org/all/cover.1788836830.git.yinxin.x@bytedance.com
 
-No functional change.
----
- include/linux/memcontrol.h   |  7 ++++++
- include/linux/page_counter.h | 59 +++++++++++++++++++++++++++++++++++++++-----
- kernel/cgroup/dmem.c         |  9 ++++---
- mm/hugetlb_cgroup.c          |  4 +--
- mm/memcontrol.c              | 21 ++++++++++------
- mm/page_counter.c            |  2 +-
- 6 files changed, 82 insertions(+), 20 deletions(-)
+> Skip foreign dirty tracking for bdev inodes. Ordinary writeback and
+> foreign dirty tracking for non-bdev inodes are unchanged.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 058ebd73ff16..ed863f4ed233 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -195,6 +195,13 @@ struct mem_cgroup {
- 	/* Accounted resources */
- 	struct page_counter memory;		/* Both v1 & v2 */
- 
-+	/*
-+	 * Hierarchical memory.min/memory.low protection tracking for the
-+	 * memory page counter. swap/memsw, kmem and tcpmem counters do not
-+	 * support protection and have no such context.
-+	 */
-+	struct page_counter_protection memory_prot;
-+
- 	union {
- 		struct page_counter swap;	/* v2 only */
- 		struct page_counter memsw;	/* v1 only */
-diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
-index 07b7cb12249c..b81f16702764 100644
---- a/include/linux/page_counter.h
-+++ b/include/linux/page_counter.h
-@@ -7,6 +7,32 @@
- #include <linux/limits.h>
- #include <asm/page.h>
- 
-+/*
-+ * Hierarchical protection (memory.min / memory.low) tracking.
-+ *
-+ * Only the memory page counter (and dmem pools) participate in protection.
-+ * swap/memsw, kmem and tcpmem page counters never do, so the protection
-+ * fields are kept out of struct page_counter in this separate structure to
-+ * save space in the common case. struct page_counter links to it via ->prot,
-+ * which is NULL for counters without protection support.
-+ */
-+struct page_counter_protection {
-+	struct page_counter_protection *parent;
-+
-+	/* effective memory.min and memory.min usage tracking */
-+	unsigned long emin;
-+	atomic_long_t min_usage;
-+	atomic_long_t children_min_usage;
-+
-+	/* effective memory.low and memory.low usage tracking */
-+	unsigned long elow;
-+	atomic_long_t low_usage;
-+	atomic_long_t children_low_usage;
-+
-+	unsigned long min;
-+	unsigned long low;
-+};
-+
- struct page_counter {
- 	/*
- 	 * Make sure 'usage' does not share cacheline with any other field in
-@@ -41,6 +67,12 @@ struct page_counter {
- 	unsigned long high;
- 	unsigned long max;
- 	struct page_counter *parent;
-+
-+	/*
-+	 * Hierarchical protection context, NULL for counters that do not
-+	 * support memory.min/memory.low (swap, memsw, kmem, tcpmem, ...).
-+	 */
-+	struct page_counter_protection *prot;
- } ____cacheline_internodealigned_in_smp;
- 
- #if BITS_PER_LONG == 32
-@@ -49,18 +81,33 @@ struct page_counter {
- #define PAGE_COUNTER_MAX (LONG_MAX / PAGE_SIZE)
- #endif
- 
--/*
-- * Protection is supported only for the first counter (with id 0).
-- */
- static inline void page_counter_init(struct page_counter *counter,
--				     struct page_counter *parent,
--				     bool protection_support)
-+				     struct page_counter *parent)
- {
- 	counter->usage = (atomic_long_t)ATOMIC_LONG_INIT(0);
- 	counter->max = PAGE_COUNTER_MAX;
- 	counter->parent = parent;
--	counter->protection_support = protection_support;
- 	counter->track_failcnt = false;
-+	counter->prot = NULL;
-+}
-+
-+/*
-+ * Enable hierarchical protection (memory.min/memory.low) on @counter.
-+ * @prot and @parent are the protection contexts of @counter and its
-+ * parent page counter respectively. Only the memory page counter (and
-+ * dmem pools) call this.
-+ *
-+ * The remaining members of @prot (emin, elow and the usage counters) are
-+ * expected to be zero already, so @prot must come from zeroed memory.
-+ */
-+static inline void page_counter_init_protection(struct page_counter *counter,
-+						struct page_counter_protection *prot,
-+						struct page_counter_protection *parent)
-+{
-+	counter->prot = prot;
-+	prot->parent = parent;
-+	prot->min = 0;
-+	prot->low = 0;
- }
- 
- static inline unsigned long page_counter_read(struct page_counter *counter)
-diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
-index 4683f3d68022..a4bac0d5ac3b 100644
---- a/kernel/cgroup/dmem.c
-+++ b/kernel/cgroup/dmem.c
-@@ -88,6 +88,7 @@ struct dmem_cgroup_pool_state {
- 	struct rcu_head rcu;
- 
- 	struct page_counter cnt;
-+	struct page_counter_protection prot;
- 	struct dmem_cgroup_pool_state *parent;
- 
- 	refcount_t ref;
-@@ -426,8 +427,9 @@ alloc_pool_single(struct dmemcg_state *dmemcs, struct dmem_cgroup_region *region
- 	if (parent)
- 		ppool = find_cg_pool_locked(parent, region);
- 
--	page_counter_init(&pool->cnt,
--			  ppool ? &ppool->cnt : NULL, true);
-+	page_counter_init(&pool->cnt, ppool ? &ppool->cnt : NULL);
-+	page_counter_init_protection(&pool->cnt, &pool->prot,
-+				     ppool ? &ppool->prot : NULL);
- 	reset_all_resource_limits(pool);
- 	refcount_set(&pool->ref, 1);
- 	kref_get(&region->ref);
-@@ -480,8 +482,9 @@ get_cg_pool_locked(struct dmemcg_state *dmemcs, struct dmem_cgroup_region *regio
- 		/* ppool was created if it didn't exist by above loop. */
- 		ppool = find_cg_pool_locked(pp, region);
- 
--		/* Fix up parent links, mark as inited. */
-+		/* Fix up parent links (counter and protection), mark as inited. */
- 		pool->cnt.parent = &ppool->cnt;
-+		pool->prot.parent = &ppool->prot;
- 		if (ppool && !pool->parent) {
- 			pool->parent = ppool;
- 			dmemcg_pool_get(ppool);
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index ecb6e0b7819a..7fdae504cfc6 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -108,8 +108,8 @@ static void hugetlb_cgroup_init(struct hugetlb_cgroup *h_cgroup,
- 		fault = hugetlb_cgroup_counter_from_cgroup(h_cgroup, idx);
- 		rsvd = hugetlb_cgroup_counter_from_cgroup_rsvd(h_cgroup, idx);
- 
--		page_counter_init(fault, fault_parent, false);
--		page_counter_init(rsvd, rsvd_parent, false);
-+		page_counter_init(fault, fault_parent);
-+		page_counter_init(rsvd, rsvd_parent);
- 
- 		if (!cgroup_subsys_on_dfl(hugetlb_cgrp_subsys)) {
- 			fault->track_failcnt = true;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 86ff580c7018..ffa1ced3baae 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4267,25 +4267,30 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- #endif
- 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
- 	if (parent) {
--		page_counter_init(&memcg->memory, &parent->memory, memcg_on_dfl);
--		page_counter_init(&memcg->swap, &parent->swap, false);
-+		page_counter_init(&memcg->memory, &parent->memory);
-+		if (memcg_on_dfl)
-+			page_counter_init_protection(&memcg->memory, &memcg->memory_prot,
-+						     &parent->memory_prot);
-+		page_counter_init(&memcg->swap, &parent->swap);
- #ifdef CONFIG_MEMCG_V1
- 		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
- 		memcg->memory.track_failcnt = !memcg_on_dfl;
- 		memcg->memsw.track_failcnt = !memcg_on_dfl;
- 		WRITE_ONCE(memcg->oom_kill_disable, READ_ONCE(parent->oom_kill_disable));
--		page_counter_init(&memcg->kmem, &parent->kmem, false);
--		page_counter_init(&memcg->tcpmem, &parent->tcpmem, false);
-+		page_counter_init(&memcg->kmem, &parent->kmem);
-+		page_counter_init(&memcg->tcpmem, &parent->tcpmem);
- 		memcg->tcpmem.track_failcnt = !memcg_on_dfl;
- #endif
- 	} else {
- 		init_memcg_stats();
- 		init_memcg_events();
--		page_counter_init(&memcg->memory, NULL, true);
--		page_counter_init(&memcg->swap, NULL, false);
-+		page_counter_init(&memcg->memory, NULL);
-+		page_counter_init_protection(&memcg->memory, &memcg->memory_prot,
-+					     NULL);
-+		page_counter_init(&memcg->swap, NULL);
- #ifdef CONFIG_MEMCG_V1
--		page_counter_init(&memcg->kmem, NULL, false);
--		page_counter_init(&memcg->tcpmem, NULL, false);
-+		page_counter_init(&memcg->kmem, NULL);
-+		page_counter_init(&memcg->tcpmem, NULL);
- #endif
- 		root_mem_cgroup = memcg;
- 		return &memcg->css;
-diff --git a/mm/page_counter.c b/mm/page_counter.c
-index 450543f4b318..38cb99f5f50e 100644
---- a/mm/page_counter.c
-+++ b/mm/page_counter.c
-@@ -15,7 +15,7 @@
- 
- static bool track_protection(struct page_counter *c)
- {
--	return c->protection_support;
-+	return c->prot != NULL;
- }
- 
- static void propagate_protected_usage(struct page_counter *c,
+Frankly, I'm not yet convinced this is worth the risk of regressions. The
+gains are nice but both the winning and the loosing loads are synthetic and
+none of them is like "this is definitely what most people are going to
+hit".
 
+I think what [1] is proposing is more in the direction where we might go
+(although the second patch in its current form isn't acceptable to me
+either). But what I miss from both your approaches is the verification that
+the change actually helps your *production* workloads. Unless it is an
+obvious fix (like was the case of patch 1 in the series [1]) I'm very
+reluctant to approve any additional heuristics unless it is proven they
+actually help production loads. These heuristics are never going to be
+perfect so you can always come up with a synthetic load breaking it in one
+way or another. The art is in tuning them so they work for the practical
+cases :)
+
+								Honza
+
+> 
+> In a synthetic ext4 test with cgroup v2 (QEMU/KVM, 4 vCPUs, 8 GiB RAM),
+> device writes are capped at 200 MiB/s. fio repeatedly overwrites a 256 MiB
+> file in the root wb while four memory- and I/O-limited memcgs generate
+> metadata and trigger foreign flushes through dirty throttling. A concurrent
+> fio performs 16 GiB of sequential direct writes on the same filesystem.
+> Across five pairs with 9 GiB of buffered overwrites per run, mean results
+> are:
+> 
+>                                       Baseline    Skip bdev
+>   Overwritten-file device writes       5.60 GiB     1.70 GiB (-69.6%)
+>   Foreground completion time           104.2 s      89.1 s   (-14.4%)
+>   Foreground bandwidth                 157.3 MiB/s 183.8 MiB/s
+>   Foreground p99 completion latency     1434 ms      480 ms
+> 
+> The tradeoff is that memcgs with dirty bdev folios lose this way of
+> requesting writeback to relieve dirty pressure. In a separate uncapped ext4
+> test, a memcg with memory.high=256 MiB creates 60,000 files paced at 4,000
+> files/s, each with a distinct 128-byte xattr, and makes occasional buffered
+> data writes. The xattrs use external 4 KiB blocks. Across two pairs,
+> completion is 31-33% slower including final sync, while device writes
+> remain about 524 MiB.
+> 
+> With 64-byte xattrs stored within the inode, the same paced workload
+> showed no substantial completion-time regression, including at
+> memory.high=16 or 32 MiB where the baseline triggered dirty throttling
+> and foreign flushes.
+> 
+> I believe this external-xattr-heavy workload under memory pressure is
+> relatively uncommon in practice, and expect the benefits to outweigh the
+> regression. I therefore consider this an acceptable workaround.
+> 
+> Core fio commands for the overwrite test:
+> 
+>     fio --name=hotspot --filename="$dir/hot.data" --rw=write \
+>         --bs=64K --ioengine=psync --direct=0 --thread=1 \
+>         --size=256M --io_size=9216M --rate=64M \
+>         --refill_buffers=1 --invalidate=0 --eta=never \
+>         --output-format=json --output="$out/target.json" &
+>     hot_pid=$!
+> 
+>     sleep 8
+>     fio --name=foreground --filename="$dir/foreground.data" \
+>         --rw=write --bs=1M --ioengine=libaio --iodepth=32 \
+>         --direct=1 --thread=1 --invalidate=0 --size=4096M \
+>         --io_size=16384M --eta=never --output-format=json \
+>         --output="$out/foreground.json"
+>     wait "$hot_pid"
+> 
+> In the log below, base is the original kernel and skip includes this
+> patch. hot_GiB is device writes for the repeatedly overwritten file,
+> including final sync; the other performance columns describe foreground
+> fio.
+> 
+> Full five-pair log:
+> nohup: ignoring input
+> [2026-09-05 17:52:10] RESULTS=/tmp/cgwb-20260905-175145; WARNING: reformats /dev/nvme5n1; 5 pair(s), limit=200 MiB/s
+> [2026-09-05 17:52:10] round-001-base: booting
+> [2026-09-05 17:52:20] round-001-base: running workload
+> [2026-09-05 17:55:36] round-001-skip: booting
+> [2026-09-05 17:55:45] round-001-skip: running workload
+> [2026-09-05 17:58:57] ROUND 1: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
+> [2026-09-05 17:58:57]          base    104.574   156.67    156.67    203.82   1434.45     5.862    0
+> [2026-09-05 17:58:57]          skip     89.125   183.83    183.83    173.62    480.25     1.656    0
+> [2026-09-05 17:58:57] skip vs base: bandwidth +17.33%, time -14.77%, hotspot IO -71.75%
+> [2026-09-05 17:58:57] round-002-skip: booting
+> [2026-09-05 17:59:06] round-002-skip: running workload
+> [2026-09-05 18:02:18] round-002-base: booting
+> [2026-09-05 18:02:27] round-002-base: running workload
+> [2026-09-05 18:05:42] ROUND 2: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
+> [2026-09-05 18:05:42]          base    103.533   158.25    158.25    201.75   1434.45     5.493    0
+> [2026-09-05 18:05:42]          skip     89.124   183.83    183.83    173.65    480.25     1.730    0
+> [2026-09-05 18:05:42] skip vs base: bandwidth +16.17%, time -13.92%, hotspot IO -68.50%
+> [2026-09-05 18:05:42] round-003-base: booting
+> [2026-09-05 18:05:52] round-003-base: running workload
+> [2026-09-05 18:09:06] round-003-skip: booting
+> [2026-09-05 18:09:15] round-003-skip: running workload
+> [2026-09-05 18:12:28] ROUND 3: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
+> [2026-09-05 18:12:28]          base    104.648   156.56    156.56    203.96   1434.45     5.334    1
+> [2026-09-05 18:12:28]          skip     89.243   183.59    183.59    173.92    480.25     1.824    0
+> [2026-09-05 18:12:28] skip vs base: bandwidth +17.26%, time -14.72%, hotspot IO -65.80%
+> [2026-09-05 18:12:28] WARN: runtime diagnostics present; inspect each data/dmesg before using this pair.
+> [2026-09-05 18:12:28] round-004-skip: booting
+> [2026-09-05 18:12:37] round-004-skip: running workload
+> [2026-09-05 18:15:50] round-004-base: booting
+> [2026-09-05 18:16:00] round-004-base: running workload
+> [2026-09-05 18:19:15] ROUND 4: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
+> [2026-09-05 18:19:15]          base    103.565   158.20    158.20    201.84   1434.45     5.497    0
+> [2026-09-05 18:19:15]          skip     89.124   183.83    183.83    173.57    480.25     1.648    0
+> [2026-09-05 18:19:15] skip vs base: bandwidth +16.20%, time -13.94%, hotspot IO -70.01%
+> [2026-09-05 18:19:15] round-005-base: booting
+> [2026-09-05 18:19:24] round-005-base: running workload
+> [2026-09-05 18:22:41] round-005-skip: booting
+> [2026-09-05 18:22:50] round-005-skip: running workload
+> [2026-09-05 18:26:03] ROUND 5: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
+> [2026-09-05 18:26:03]          base    104.567   156.68    156.68    203.78   1434.45     5.830    1
+> [2026-09-05 18:26:03]          skip     89.035   184.02    184.02    173.47    480.25     1.648    0
+> [2026-09-05 18:26:03] skip vs base: bandwidth +17.44%, time -14.85%, hotspot IO -71.72%
+> [2026-09-05 18:26:03] WARN: runtime diagnostics present; inspect each data/dmesg before using this pair.
+> [2026-09-05 18:26:03] DONE: 5 pair(s); all test VMs stopped
+> 
+> Fixes: 97b27821b485 ("writeback, memcg: Implement foreign dirty flushing")
+> Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
+> ---
+>  mm/memcontrol.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 1271d390b617..6e8f7ff7d44a 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3898,6 +3898,15 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
+>  	u64 oldest_at = now;
+>  	int oldest = -1;
+>  	int i;
+> +	struct address_space *mapping = folio_mapping(folio);
+> +	struct inode *bdev_inode = mapping ? mapping->host : NULL;
+> +
+> +	/*
+> +	 * Bdev inodes are usually shared by many memcgs so foreign
+> +	 * tracking leads to frequent flushes which is counterproductive.
+> +	 */
+> +	if (bdev_inode && sb_is_blkdev_sb(bdev_inode->i_sb))
+> +		return;
+>  
+>  	trace_track_foreign_dirty(folio, wb);
+>  
+> -- 
+> 2.39.5
+> 
 -- 
-2.43.7
-
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
