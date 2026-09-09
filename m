@@ -1,252 +1,140 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD82F582B9E
-	for <cgroups@vger.kernel.org>; Wed,  9 Sep 2026 16:32:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B09B57F72E
+	for <cgroups@vger.kernel.org>; Wed,  9 Sep 2026 16:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.170
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788971530; cv=pass; b=dD/W1bIV/trj//aXi/Qcdz5tSZaRpTD5RAL4Znqe2rdGviv82DKo6mOdssCdJZKa6Nazplz1S5hRjNdQnKEVZDrP47dUU+7jAiHrRqocrGXobhyrJ75BYYUm/tyJKvjyHV3XjIj/vbu3OpDGzeO3Xw//HI6j8QPF9MgED5PEfjg=
+	t=1788972124; cv=pass; b=VrD+/6nTkqqyEV6OHuuuysVh/D+OzRZ6iTI1YF3qDfk7zltc3VX653SWjJKr+DWTk5t3HVJ8AD/vvg6BIdEA7eqBzo1IBW94oE3wlNNyz1NMcEMBNIeDwjc9cmE7Gf/hfYMOo7kK/P/AghX9o+2PtcVOLJSFN6UADBZN/5D7Yb4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788971530; c=relaxed/simple;
-	bh=r44vAOmSHOyOvNc7T/11Q08h5EqMSZopzIEzum1UHI4=;
+	s=arc-20240116; t=1788972124; c=relaxed/simple;
+	bh=/PVQoRJaxnOVHklysY+eFPRn0PjfeKzNOqRGrKxgA1Q=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PIVEO+WQIkLYY/1+l/9v458MAjpSJPkeq9Ezq3tLVBbavbWpfjnJwH+qiy3v7J0EhlFSt5s67/YngVVekr8rIMuTv2T4VPlGy4ahLUllIH+K904TwjlKl/oH136Ul7wsJP6kkYSoVKnyMoTAreKvADesRO9enLf8AOnW7nIDhCY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu; spf=pass smtp.mailfrom=berkeley.edu; dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b=tqGXfepl; arc=pass smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=berkeley.edu
+	 To:Cc:Content-Type; b=TxS+lSpZym3RoUt3AgEWx0QH4q6ctoi3xszW69RbLLbFyo7PZ3LPj6ExTI/ibH0xT2rYDYLFVhdN8Vzeqk5bLd2qzeP8/AO6fuA3HycijtMziXKlsG+DLB/fZwH0f1OwB0rBskX5q70rECZepCvipjUyDkc6tjYRgr0KyRnUdqU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KMdV5HJZ; arc=pass smtp.client-ip=209.85.208.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b="tqGXfepl"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2d58efc7356so78233165ad.1
-        for <cgroups@vger.kernel.org>; Wed, 09 Sep 2026 09:32:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788971528; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KMdV5HJZ"
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-3a4835ab78cso25713901fa.2
+        for <cgroups@vger.kernel.org>; Wed, 09 Sep 2026 09:42:02 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788972120; cv=none;
         d=google.com; s=arc-20260327;
-        b=rPXYRbCSL4sTd/Vjh3qSnQopdZjTkhYrRQdvgPLFQehJioQLSbaA8x2sYYsZ3zq85L
-         2eswIg/2ecQ1PFaJ9BYNyI6ufHrBQsmiplYILJE3/hloA7jx8SaaGV/u4jVxPvnrl4ov
-         jhcoefjLwQnOl/6/eGR7BpGBAKoHhJSTv3DWNW/VNmnkub2i21tuDCF5JU4JatL+V+3w
-         uk5TM4EZI9sUB3WT9bKNZQ1QXMgZUJGWfSwr4jt6UampHZZE2QVfHANKbNEK+r8BwApN
-         VR/KRBp1GDoZwKUGPOG052XC9dqoBJXyKukknueGsB0HP+VMJCqW2SBLuhcQvSjqopRT
-         6ccQ==
+        b=iqE9DKXJB0tSV9sf2dlMvH5S4NSzG8cv3Kbk531LvuZCIcGSPX8qDTufMOKMJA3BZI
+         1LLaXwPLARLI9dAjddYpxmukzJ2xmA/VYJ8X2D34feUfnK5JWbmmpYbzJrpsrTKW0CBB
+         tOSLGIX2uyB10iCi7+Ixhfmj+t/OFrXMvUQNC89k073nRuWcDJaG2H/puKKUjHbnixEz
+         LMRRcHl3+1OGzFkTt6xpQ/MB5OPLKCP+9/e3GA0DvzggUK4hqm5hO3k20eOkHZ1rSEE6
+         oOKGIe48X757lf1n4/hcpZswWsFVjbD4qmzYDG335m0D4D/ln7aXdzpKHKQc+WbeCnuW
+         Krcg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=LbwUECXSGtpoNpkapF0wkYICgxlHh/DhMmXXNw+XPjo=;
-        fh=0Imnl2zAXp3DyRvGfs6fPNqSp0sJV2PFFGZceyDNipg=;
-        b=sjzerOUDPVxImwLr8ALXcNMWWUbMH/grfgoYAuMak72t4paMUcqzYDtCsy3eGn5G7m
-         OGVi9AW/JrdZSiWiav7m5PIKspnzi9lcbFU98YaGYxk//B1afZjlstmkq0ErOLFQbeCU
-         uukwgNcig8gHOoSS6Ny0O0NQwp/bmHocZ00rIu2VQDbatzvM1wVoaLnSKgDcyHVCXv49
-         nbRIgnacb5nTgmSmlD9Ma7AGkutJmUmgAjpjQD7axxzXMjoMr4l7LeFwHsFJW4Wn13qA
-         a6cdQO3ZU5DmCide03wA6Py2dKA2S2NhiML/0kvqawrh/jq2Y+2GMSUrOjsAT/EJHUJY
-         Yv3g==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=/PVQoRJaxnOVHklysY+eFPRn0PjfeKzNOqRGrKxgA1Q=;
+        fh=sXBjrbpgso0AOi6jxGQBIuPiA8oN0pkGCUXnXY21ZBI=;
+        b=XE2JNyGA9vjsEUk5EYU+5nZKdGfio+6dazKCXuaYrb7JWuZF9F9669JmFdVBZ+7u8b
+         4qeCwD+wUuqX2u1/Lj1wVAuyYhbrax7gMmnLzsfgSNo6d2Kx03xKENaWI4h4lFN4nRqE
+         2XQRkwZfe21IJEq56sdDDYJak07PcmIW6wh/S+eIIN5cOSn7knNTKA2Vdnaz+/pkXiB1
+         X+Ow7xSLDOsQEJvQxfW8rp1oNdaapE5xjlqdD2xFHw3NhIGSWP8VA3y9o4LCG+XYfI4E
+         ngOnXwLVu89tSN2GVzg8i6ThHXOV5BdfRG2wxyPIBBE7QvuEcQzypsaT/u9UU1h7ymH0
+         VKdA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=berkeley.edu; s=google; t=1788971528; x=1789576328; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=LbwUECXSGtpoNpkapF0wkYICgxlHh/DhMmXXNw+XPjo=;
-        b=tqGXfeplKXANc1BlHoP9KIRN2gR2Mru1D8TVLe/oWChEyvb3L1aRML9+30MiZmoz+C
-         qCqF/+j2dYltqVIqhHGO6qHsNAu5IpuepMkvpwuSDeCRlcxvSjU7Yxk6dmHRXHax6C3j
-         GJHYPrv2wD1VpE3iBF374ZbNr3ZP1Ok0PbyWCvG8Ocog4Mp7dWHQeYCQa7wSsm2uqT3s
-         +cPJjan8RSuNUE5gPZ0jVS6n83eaztnBVEd3wCDxDomPZHRSuzRuqUVifzuSN3Z0CI4J
-         CR+G2kDljoRNF0tp03RqJytokln1Fd/dOVrmSO6iHoQcjhcYtc9MW9n1GgsyoHpns1yz
-         iSDA==
+        d=gmail.com; s=20251104; t=1788972120; x=1789576920; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=/PVQoRJaxnOVHklysY+eFPRn0PjfeKzNOqRGrKxgA1Q=;
+        b=KMdV5HJZLLIGtdTClDxjzcAuheXnvNce1P1lhEryWKx2i8eALdZs63zfXF+uUbfM2C
+         XToTkhlCI+ek3ljZF0Cew7UDx038xg1rJ3x+oJshyqwgORB8iiCvpAOjAv4LgcFBxBJa
+         g0qiswT5jPVitQmJvPqLoRjKT359Nz4buKHHuksAgwUQnVp9GwHZ1DS5xI8+WcmpNGgK
+         7Nu91E2WjY9yxcUSlcC/sFq2usp1DBmdr8iaGTJzbgoOJ06J8ibkvpSJlIZgL3VeJvqG
+         ozrJJwvMMjy9d7XW0YzsoAW/Q2ZEFuXct7MHPiPDKLgizH/BUTkNWGrbndLP+Kum1SJc
+         +JLA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788971528; x=1789576328;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=LbwUECXSGtpoNpkapF0wkYICgxlHh/DhMmXXNw+XPjo=;
-        b=GllEpvMOgMfmxJtEBVtkTZ0H/dLzHpDC4jyp1Ksi/yYXtqeSXUHqRQHPVMph67nAGB
-         x0cHX5rc5PcvbyaMKl3k3Qg7K9TQ6cx8t3kfxCPzK0LEQaksfmwe/SquTFU+++uuBqn8
-         YFx1G3rOXvKyE+8txlwnqm3ghIfgzVEWhjXa210hIRvXmBBSZwBdwN3GtNq2GmJCqNza
-         mmcqyBi/y7hyTf6h7jHkRbxtlPuLH7NjEW07OcH3cjy8JW6lDzh0YTnRwre9k6NcQnCE
-         Vcgw+lLKi6cU8OBWsxwsjY6XpncjyocrG+780IJfb05GoDnZ2qv6rKpfwwmWa9BzmkkA
-         Vdpg==
-X-Forwarded-Encrypted: i=1; AKwUvBxpVAn3Zqg96CxMqN2C0CE0NwPExzAxHyCP4wylQfh8M47wqHECvPWOqmWJvRn8CQFpb4redirb@vger.kernel.org
-X-Gm-Message-State: AFuF++kCopn5d2rsxyciPY46/Eg6FkQq9/H1FJmM7tzat8CW2Z5VW8NK
-	2wTMcwmvA/ijXb5VH8oXAdWFTBZEsrSScb/XeMYN1ZdPiNB4KNa8cNDu1g7+euy3EIoaGqUI0Io
-	gWtF+N149f65+y1PMk6kpIAYRaYL05USp0BaMT+gQ
-X-Gm-Gg: AYBFou3o5El/zKOinjb/ZilJTn6XOFdKTj/FYpNWa2gfb4Dc+2oXXjxcvbtCoanvhCJ
-	HWAD9eq5r/p6bBSm+7rgeds+GL9hNwvlGJrgkaZnlm2QFT0oVWEmLQLPkGALzv1B339j3m/o/na
-	JGvfjtWTI2Bl21YOkKA2vNaKpmeCR+shpdNhW5FNbs4TnVp+YUaBHmewI+N3UdulKWUDeBgMwQf
-	Dy77X+wcyUB1Zs6mMwKJaBhx7dIehEJB1lkly8Y4GUgUOlDJxptnsDiSlnbzZqGLEtjlxR4QOag
-	cXYd+ybvh4xyxYk3PvAjmRWP2SXuVq2dQA+xV1Q0MEDkN0W0D7cc/Uy9rvaanLDNMzR6nm2HdAI
-	5TKet6/kbhOQfCjTUxFJKDzvCeagZ6YPPbbDM6PDL7Q==
-X-Received: by 2002:a17:903:26d0:b0:2db:5c0a:f18c with SMTP id
- d9443c01a7336-2db5c0b15fdmr270389895ad.6.1788971526736; Wed, 09 Sep 2026
- 09:32:06 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1788972120; x=1789576920;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=/PVQoRJaxnOVHklysY+eFPRn0PjfeKzNOqRGrKxgA1Q=;
+        b=UIFWCMhxlz4k0MCrguiEJa6sQ49HyIpNOqAEQa1YKv2PBBKNh6RrUUSAKFtxksdKqH
+         6e0P9CIPk1rhG+ck6LMQBZJ8gVZVicUsch4KuJcmlvVXT39gL4th6Y+VS8ZnurT2JgUw
+         fi0JRT3U8bYTMll9jB3GjJAQZYtSa0z+JX+YVOmpFoqs1/G3aczEriHAlQPGc5DKEmpP
+         SRiMB2zxpn03ZgdU9sBZIkmTJ03MRNsPiegDuqWOZOLrKwhGxi/cK8kUtpwwMa48Pkkf
+         nGQVcGfJVzJsENxSiiyGYI6vBBEPvK+LTgmvAG8RTLP2aiWaAr37KwdlLGFiSOk0Madn
+         WtJg==
+X-Forwarded-Encrypted: i=1; AKwUvBwqRZhGcu5gZg3RjjNby2fbpBWNCImdeGhddkkZvbZjVDoA+7C2C2WRneV+l3arjZVfMBFU8VqU@vger.kernel.org
+X-Gm-Message-State: AFuF++k4q5DlHxZdhQXjvUZVyDL9+jtQ9prLRpY2w6BF9gfOKtuzqk2h
+	GxyBf47t3STqzEz/6nXgM9wG2y1l2S4IEa8iIRXaUE5z7uScBMo+Mw0WoPuloWYraOs3M3O5+/s
+	nlhlW2yNRpB8/vC9BInB1KfrfjNMHZAQ=
+X-Gm-Gg: AYBFou3LzUWaT5uglRYKYG445+iRbNNLkrBV5cDhBRKbSLF42C7wbAx0BJgdmL2emUb
+	EizYEAgS+4k9jBWbEW4WJNOsvrfP9ZXyqYSMeHY42aMKmAC2Q63g0Tk4eS0Ex4020ntfiJJVB3z
+	n0f21Tkpl5+HHCwqGiu2v1KkCB91is27ALLRyip7O8X/cDQqwleX8yTgPYRgP3GK90JxnNhVvyy
+	boMVAjxAukk+rN7UZ1NPZTr2foka1aCsa8wbomoIf7vhgXVfXjDm1OeTti9W+2DXcjI15TLLC/s
+	9I25Cc9gAXNryBDvgrmpooJ5JKkcNC6q+IoqszbiTdz8tRsC+OVzhVgRkgJZhJfh5NY2Q4Ed+Ab
+	9orXvdrPPYHA=
+X-Received: by 2002:a05:651c:221f:b0:3a3:2585:3bc5 with SMTP id
+ 38308e7fff4ca-3a371a898d4mr40270231fa.3.1788972119897; Wed, 09 Sep 2026
+ 09:41:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260829023251.474083-1-shakeel.butt@linux.dev> <20260901164741.GJ3004@cmpxchg.org>
-In-Reply-To: <20260901164741.GJ3004@cmpxchg.org>
-From: Farhad Alemi <farhad.alemi@berkeley.edu>
-Date: Wed, 9 Sep 2026 09:31:55 -0700
-X-Gm-Features: AcwNN1Xftn-5NEwC_biLDSz968e7PXUVQrICe5nQwJT8vOgIGskFQo4c9Lq4Bc8
-Message-ID: <CA+0ovCgpQCaSH+_z+akR4ydhQBd+GSXNoP9mnngszj0Kt5pbow@mail.gmail.com>
-Subject: Re: [PATCH] memcg: avoid charging the root memcg from obj_cgroup_charge_pages()
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, Meta kernel team <kernel-team@meta.com>
-Content-Type: multipart/mixed; boundary="0000000000005e66a2065b0f6426"
-
---0000000000005e66a2065b0f6426
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com> <aqBT_35E-eSoN_zj@cmpxchg.org>
+In-Reply-To: <aqBT_35E-eSoN_zj@cmpxchg.org>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Wed, 9 Sep 2026 09:41:46 -0700
+X-Gm-Features: AcwNN1VWXPWfi4oFELOf49OQVDIrkZtLFgj_RbpHarRwRGht_40BlAv3JxkMu4E
+Message-ID: <CAKEwX=N4aaq_oD2agTUNrUNXhaYGeQ9vxu+dywFvEFgWFi4uQg@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Kairui Song <ryncsn@gmail.com>, Chris Li <chrisl@kernel.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
+	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-The patched kernel (this patch on 28924df2a08f) no longer panics on
-the attached reproducer.
-
-
-On Tue, Sep 1, 2026 at 9:47=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org>=
- wrote:
+On Tue, Sep 8, 2026 at 11:30=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org=
+> wrote:
 >
-> On Fri, Aug 28, 2026 at 07:32:51PM -0700, Shakeel Butt wrote:
-> > obj_cgroup_charge_pages() resolves the objcg to its memcg and calls
-> > try_charge_memcg(), which does not short circuit the root memcg.  That
-> > memcg can be the root memcg: obj_cgroup_is_root() reflects the memcg th=
-e
-> > objcg was created for and is never updated, while memcg_reparent_objcgs=
-()
-> > does redirect objcg->memcg to the parent on rmdir.  An objcg of a dying
-> > child of root therefore passes every obj_cgroup_is_root() filter but
-> > resolves to the root memcg.
-> >
-> > Folios keep the objcg they were charged with, so this is easy to reach
-> > through zswap: allocate anon memory in a cgroup, move the task out,
-> > remove the cgroup, then write to the root cgroup's memory.reclaim.  The
-> > reclaimed folios are charged through the reparented objcg and end up in
-> > refill_stock() with the root memcg:
-> >
-> >   WARNING: mm/memcontrol.c:2198 at refill_stock+0x644/0x940
-> >    refill_stock+0x644/0x940
-> >    try_charge_memcg+0x12d6/0x1570
-> >    __obj_cgroup_charge+0x35/0xf0
-> >    obj_cgroup_charge+0x1de/0x210
-> >    obj_cgroup_charge_zswap+0x83/0x270
-> >    zswap_store+0x1620/0x2000
-> >    swap_writeout+0x94c/0x14c0
-> >    shrink_folio_list+0x3388/0x52b0
-> >    [...]
-> >    try_to_free_mem_cgroup_pages+0x30d/0x830
-> >    user_proactive_reclaim+0x504/0x840
-> >    memory_reclaim+0x1f/0x30
-> >
-> > Beyond the warning, the charge is asymmetric: obj_cgroup_uncharge_pages=
-()
-> > skips refill_stock() for the root memcg, so the root's page counter gro=
-ws
-> > and is never uncharged.  It is not user visible, since memory.current i=
-s
-> > not exposed on the root, but it is a leak.
-> >
-> > Use try_charge(), which returns early for the root memcg, restoring the
-> > symmetry with obj_cgroup_uncharge_pages().
-> >
-> > The above sequence was scripted into a standalone reproducer (zswap on,
-> > swap on a virtio disk, 512MB of anon memory faulted in inside a child o=
-f
-> > the root cgroup, the task then migrated to the root cgroup, the child
-> > removed, followed by "echo 600M swappiness=3Dmax > memory.reclaim" on t=
-he
-> > root) and run in a CONFIG_DEBUG_VM=3Dy VM.  It reproduces the splat on =
-the
-> > first zswap store of a reparented folio, with the same call chain as th=
-e
-> > report.  With this patch applied the splat is gone while the zswap stor=
-e
-> > count over the run is unchanged, so the same path is still exercised.
-> > cgroup selftests test_zswap, test_kmem and test_memcontrol show no new
-> > failures.
-> >
-> > Fixes: 20d6c1725228 ("memcg: avoid refill_stock for root memcg")
-> > Reported-by: Farhad Alemi <farhad.alemi@berkeley.edu>
-> > Closes: https://lore.kernel.org/all/CA+0ovCgWzUMK+nNbbtH7eV65Ca=3DfDN4O=
-zu7iASgryjvv8Tk8zQ@mail.gmail.com/
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> On Mon, Sep 07, 2026 at 01:51:31PM +0800, Kairui Song wrote:
+> > Where I've ended up is that unbounded growth is a real concern. On a
+> > host with no memcg limit (root cgroup, and most desktop and embedded
+> > setups), an unlimited pool means usage can keep growing, with no
+> > admin visible ceiling at all. I'm not attached to xswap's percent of RA=
+M
+> > knob specifically, but I do think some kind of bound makes sense.
 >
-> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+> Swap space is just process virtual address space, no?
+>
+> Swap entries already have one or more page table entries pointing to
+> them, which in turn are managed by trees of vm_area_structs. That
+> means rlimits apply, overcommit protection applies, and OOM killer
+> attribution works as well (oom_badness()).
 
---0000000000005e66a2065b0f6426
-Content-Type: text/x-c-code; charset="US-ASCII"; name="reproducer.c"
-Content-Disposition: attachment; filename="reproducer.c"
-Content-Transfer-Encoding: base64
-Content-ID: <f_mtubfcki0>
-X-Attachment-Id: f_mtubfcki0
+I tested this theory. I spinned up a process, and let it spam 0-filled
+memory + swap these pages out continually.
 
-LyoKICogUmVwcm9kdWNlciBmb3IgMTQ1LW1lbWNnLXZtX3dhcm4tcmVmaWxsX3N0b2NrLXJvb3Qt
-Y2dyb3VwCiAqLwojZGVmaW5lIF9HTlVfU09VUkNFCiNpbmNsdWRlIDxlcnJuby5oPgojaW5jbHVk
-ZSA8ZmNudGwuaD4KI2luY2x1ZGUgPHNpZ25hbC5oPgojaW5jbHVkZSA8c3RkaW8uaD4KI2luY2x1
-ZGUgPHN0ZGxpYi5oPgojaW5jbHVkZSA8c3RyaW5nLmg+CiNpbmNsdWRlIDxzeXMvbW1hbi5oPgoj
-aW5jbHVkZSA8c3lzL3N0YXQuaD4KI2luY2x1ZGUgPHN5cy9zeXNjYWxsLmg+CiNpbmNsdWRlIDxz
-eXMvd2FpdC5oPgojaW5jbHVkZSA8dW5pc3RkLmg+CgojZGVmaW5lIENHUk9VUF9ST09UICIvc3lz
-L2ZzL2Nncm91cCIKI2RlZmluZSBWSUNUSU1fQ0dST1VQIENHUk9VUF9ST09UICIvdmljdGltIgoj
-ZGVmaW5lIFNXQVBGSUxFICAiL3N3YXBmaWxlLjE0NSIKI2RlZmluZSBTV0FQX1NJWkUgKDUxMlVM
-TCA8PCAyMCkKI2RlZmluZSBBTk9OX1NJWkUgKDQwMFVMTCA8PCAyMCkKCnN0YXRpYyBpbnQgd3Jp
-dGVfZmlsZShjb25zdCBjaGFyICpwYXRoLCBjb25zdCBjaGFyICp2YWx1ZSkKewoJaW50IGZkID0g
-b3BlbihwYXRoLCBPX1dST05MWSk7CglpbnQgcmM7CgoJaWYgKGZkIDwgMCkgewoJCXByaW50Zigi
-b3BlbiAlczogJXNcbiIsIHBhdGgsIHN0cmVycm9yKGVycm5vKSk7CgkJcmV0dXJuIC0xOwoJfQoJ
-cmMgPSB3cml0ZShmZCwgdmFsdWUsIHN0cmxlbih2YWx1ZSkpOwoJaWYgKHJjIDwgMCkKCQlwcmlu
-dGYoIndyaXRlICVzIDwtICVzOiAlc1xuIiwgcGF0aCwgdmFsdWUsIHN0cmVycm9yKGVycm5vKSk7
-CgljbG9zZShmZCk7CglyZXR1cm4gcmMgPCAwID8gLTEgOiAwOwp9CgovKiBzd2Fwb24oKSByZWZ1
-c2VzIGEgc3BhcnNlIGZpbGUsIHNvIHRoZSBhcmVhIGlzIHdyaXR0ZW4gb3V0IGluIGZ1bGwgKi8K
-c3RhdGljIGludCBzZXR1cF9zd2FwZmlsZSh2b2lkKQp7Cgl1bnNpZ25lZCBsb25nIHBhZ2Vfc2l6
-ZSA9IDQwOTY7Cgl1bnNpZ25lZCBjaGFyICpoZWFkZXIgPSBjYWxsb2MoMSwgcGFnZV9zaXplKTsK
-CXVuc2lnbmVkIGNoYXIgKnplcm9zID0gY2FsbG9jKDEsIDEgPDwgMjApOwoJdW5zaWduZWQgbG9u
-ZyBsb25nIG9mZjsKCWludCBmZCA9IG9wZW4oU1dBUEZJTEUsIE9fUkRXUiB8IE9fQ1JFQVQgfCBP
-X1RSVU5DLCAwNjAwKTsKCglpZiAoZmQgPCAwKQoJCXJldHVybiAtMTsKCWZvciAob2ZmID0gMDsg
-b2ZmIDwgU1dBUF9TSVpFOyBvZmYgKz0gKDEgPDwgMjApKQoJCWlmICh3cml0ZShmZCwgemVyb3Ms
-IDEgPDwgMjApICE9ICgxIDw8IDIwKSkKCQkJcmV0dXJuIC0xOwoKCS8qIHN0cnVjdCBzd2FwX2hl
-YWRlcjogMTAyNCBib290Yml0cywgdGhlbiB2ZXJzaW9uL2xhc3RfcGFnZS9ucl9iYWRwYWdlcywK
-CSAqIGFuZCB0aGUgIlNXQVBTUEFDRTIiIG1hZ2ljIGluIHRoZSBsYXN0IDEwIGJ5dGVzIG9mIHRo
-ZSBmaXJzdCBwYWdlICovCgkqKHVuc2lnbmVkIGludCAqKShoZWFkZXIgKyAxMDI0KSA9IDE7Cgkq
-KHVuc2lnbmVkIGludCAqKShoZWFkZXIgKyAxMDI4KSA9IChTV0FQX1NJWkUgLyBwYWdlX3NpemUp
-IC0gMTsKCW1lbWNweShoZWFkZXIgKyBwYWdlX3NpemUgLSAxMCwgIlNXQVBTUEFDRTIiLCAxMCk7
-CglpZiAocHdyaXRlKGZkLCBoZWFkZXIsIHBhZ2Vfc2l6ZSwgMCkgIT0gKHNzaXplX3QpcGFnZV9z
-aXplKQoJCXJldHVybiAtMTsKCWZzeW5jKGZkKTsKCWNsb3NlKGZkKTsKCXJldHVybiBzeXNjYWxs
-KFNZU19zd2Fwb24sIFNXQVBGSUxFLCAwKTsKfQoKaW50IG1haW4odm9pZCkKewoJY2hhciBwaWRf
-c3RyWzMyXTsKCWludCBjaGFyZ2VkX3BpcGVbMl0sIHBsYWNlZF9waXBlWzJdOwoJcGlkX3QgY2hp
-bGQ7CgljaGFyIHN5bmNfYnl0ZTsKCglzZXR2YnVmKHN0ZG91dCwgTlVMTCwgX0lPTkJGLCAwKTsK
-CgkvKiB6c3dhcCBtdXN0IGJlIG9uLCBvciBub3RoaW5nIGlzIGNoYXJnZWQgdG8gdGhlIG9iamNn
-IGF0IGFsbCAqLwoJd3JpdGVfZmlsZSgiL3N5cy9tb2R1bGUvenN3YXAvcGFyYW1ldGVycy9lbmFi
-bGVkIiwgIlkiKTsKCWlmIChzZXR1cF9zd2FwZmlsZSgpIDwgMCkgewoJCXByaW50Zigic3dhcG9u
-OiAlc1xuIiwgc3RyZXJyb3IoZXJybm8pKTsKCQlyZXR1cm4gMTsKCX0KCXdyaXRlX2ZpbGUoQ0dS
-T1VQX1JPT1QgIi9jZ3JvdXAuc3VidHJlZV9jb250cm9sIiwgIittZW1vcnkiKTsKCWlmIChta2Rp
-cihWSUNUSU1fQ0dST1VQLCAwNzU1KSA8IDAgJiYgZXJybm8gIT0gRUVYSVNUKSB7CgkJcHJpbnRm
-KCJta2RpciAlczogJXNcbiIsIFZJQ1RJTV9DR1JPVVAsIHN0cmVycm9yKGVycm5vKSk7CgkJcmV0
-dXJuIDE7Cgl9CgoJcGlwZShjaGFyZ2VkX3BpcGUpOwoJcGlwZShwbGFjZWRfcGlwZSk7CgoJY2hp
-bGQgPSBmb3JrKCk7CglpZiAoY2hpbGQgPT0gMCkgewoJCWNoYXIgKmFub247CgkJdW5zaWduZWQg
-bG9uZyBsb25nIGk7CgoJCWNsb3NlKGNoYXJnZWRfcGlwZVswXSk7CgkJY2xvc2UocGxhY2VkX3Bp
-cGVbMV0pOwoJCXJlYWQocGxhY2VkX3BpcGVbMF0sICZzeW5jX2J5dGUsIDEpOwoKCQlhbm9uID0g
-bW1hcChOVUxMLCBBTk9OX1NJWkUsIFBST1RfUkVBRCB8IFBST1RfV1JJVEUsCgkJCSAgICBNQVBf
-UFJJVkFURSB8IE1BUF9BTk9OWU1PVVMsIC0xLCAwKTsKCQlpZiAoYW5vbiA9PSBNQVBfRkFJTEVE
-KQoJCQlfZXhpdCgxKTsKCQkvKiBjb21wcmVzc2libGU6IHpzd2FwIG9ubHkgY2hhcmdlcyB3aGF0
-IGl0IGFjdHVhbGx5IHN0b3JlcyAqLwoJCWZvciAoaSA9IDA7IGkgPCBBTk9OX1NJWkU7IGkgKz0g
-NDA5NikgewoJCQltZW1zZXQoYW5vbiArIGksIDB4NDEgKyAoaSAlIDcpLCA0MDk2KTsKCQkJKih1
-bnNpZ25lZCBsb25nICopKGFub24gKyBpKSA9IGk7CgkJfQoJCXdyaXRlKGNoYXJnZWRfcGlwZVsx
-XSwgIngiLCAxKTsKCQlwYXVzZSgpOwkJLyoga2VlcCB0aGUgZm9saW9zIGNoYXJnZWQgKi8KCQlf
-ZXhpdCgwKTsKCX0KCWNsb3NlKGNoYXJnZWRfcGlwZVsxXSk7CgljbG9zZShwbGFjZWRfcGlwZVsw
-XSk7CgoJc25wcmludGYocGlkX3N0ciwgc2l6ZW9mKHBpZF9zdHIpLCAiJWQiLCBjaGlsZCk7Cgl3
-cml0ZV9maWxlKFZJQ1RJTV9DR1JPVVAgIi9jZ3JvdXAucHJvY3MiLCBwaWRfc3RyKTsKCXdyaXRl
-KHBsYWNlZF9waXBlWzFdLCAieCIsIDEpOwoJcmVhZChjaGFyZ2VkX3BpcGVbMF0sICZzeW5jX2J5
-dGUsIDEpOwoKCS8qIGNncm91cCB2MiBkb2VzIG5vdCByZWNoYXJnZSBvbiBtaWdyYXRpb24sIHNv
-IHRoZSBmb2xpb3Mga2VlcAoJICogcG9pbnRpbmcgYXQgdmljdGltJ3Mgb2JqY2cgYWZ0ZXIgdGhl
-IG93bmVyIGxlYXZlcyAqLwoJd3JpdGVfZmlsZShDR1JPVVBfUk9PVCAiL2Nncm91cC5wcm9jcyIs
-IHBpZF9zdHIpOwoKCS8qIHJtZGlyIHJlcGFyZW50cyB0aGF0IG9iamNnIHRvIHRoZSBST09UIG1l
-bWNnIHdoaWxlIGxlYXZpbmcKCSAqIG9iamNnLT5pc19yb290IGZhbHNlLCB3aGljaCBpcyB3aGF0
-IGRlZmVhdHMgdGhlCgkgKiBvYmpfY2dyb3VwX2lzX3Jvb3QoKSBndWFyZCBpbiBvYmpfY2dyb3Vw
-X2NoYXJnZV96c3dhcCgpICovCglpZiAocm1kaXIoVklDVElNX0NHUk9VUCkgPCAwKQoJCXByaW50
-Zigicm1kaXIgJXM6ICVzXG4iLCBWSUNUSU1fQ0dST1VQLCBzdHJlcnJvcihlcnJubykpOwoKCS8q
-IHJlY2xhaW0gb24gdGhlIFJPT1Q6IHRoZSB6c3dhcCBjaGFyZ2UgbGFuZHMgb24gcm9vdF9tZW1f
-Y2dyb3VwIGFuZAoJICogcmVmaWxsX3N0b2NrKCkgdHJpcHMgVk1fV0FSTl9PTl9PTkNFKG1lbV9j
-Z3JvdXBfaXNfcm9vdChtZW1jZykpICovCgl3cml0ZV9maWxlKENHUk9VUF9ST09UICIvbWVtb3J5
-LnJlY2xhaW0iLCAiMUciKTsKCglraWxsKGNoaWxkLCBTSUdLSUxMKTsKCXdhaXRwaWQoY2hpbGQs
-IE5VTEwsIDApOwoJcmV0dXJuIDA7Cn0K
---0000000000005e66a2065b0f6426--
+As you predicted, oom-killer picked it up eventually. The host was
+(and is) intact otherwise :)
