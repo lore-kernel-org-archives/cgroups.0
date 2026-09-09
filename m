@@ -1,331 +1,252 @@
-Received: from mail-yx2-f12.google.com (mail-yx2-f12.google.com [74.125.224.140])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC35F55D88D
-	for <cgroups@vger.kernel.org>; Wed,  9 Sep 2026 13:18:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD82F582B9E
+	for <cgroups@vger.kernel.org>; Wed,  9 Sep 2026 16:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.182
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788959910; cv=pass; b=kUkdzFHxxSn/rVI/GjYKnIV/3EVM09XQmaUMT3CF/eDwWZay+aLCTlKcVenudXyRjWdhuPBQeV3xAuOOCbAO84QDx0HTXwiA+kXWamypgMesiizW7/FavSPJisRLUpqn54+poF3gW+EvdJa4MtoYZobXJdHzGXBsutsSOYGW068=
+	t=1788971530; cv=pass; b=dD/W1bIV/trj//aXi/Qcdz5tSZaRpTD5RAL4Znqe2rdGviv82DKo6mOdssCdJZKa6Nazplz1S5hRjNdQnKEVZDrP47dUU+7jAiHrRqocrGXobhyrJ75BYYUm/tyJKvjyHV3XjIj/vbu3OpDGzeO3Xw//HI6j8QPF9MgED5PEfjg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788959910; c=relaxed/simple;
-	bh=1lzX+47PLtI0a5fdd4NmDGDTIzRAcDxyP0vT2uPczU0=;
+	s=arc-20240116; t=1788971530; c=relaxed/simple;
+	bh=r44vAOmSHOyOvNc7T/11Q08h5EqMSZopzIEzum1UHI4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=a/wjQviW6uBwwiR+1zMfRArBC/YcNJu6ia7pAp7854HGWBKeAAC9ykQ5AVBvqiCbXvxY1dFRRPEITfkxyP0jONIc3It5GyMuzS7I1ybUhN8/nTDNpjxmGRZe3Qy2d95Y1C4r86ZfqslUZYCDkCco2RpbWgvv7iFgxJ8pZYOSUKE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=gfaEaMN+; arc=pass smtp.client-ip=74.125.224.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	 To:Cc:Content-Type; b=PIVEO+WQIkLYY/1+l/9v458MAjpSJPkeq9Ezq3tLVBbavbWpfjnJwH+qiy3v7J0EhlFSt5s67/YngVVekr8rIMuTv2T4VPlGy4ahLUllIH+K904TwjlKl/oH136Ul7wsJP6kkYSoVKnyMoTAreKvADesRO9enLf8AOnW7nIDhCY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu; spf=pass smtp.mailfrom=berkeley.edu; dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b=tqGXfepl; arc=pass smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=berkeley.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=berkeley.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="gfaEaMN+"
-Received: by mail-yx2-f12.google.com with SMTP id 00721157ae682-86382f10801so13092087b3.1
-        for <cgroups@vger.kernel.org>; Wed, 09 Sep 2026 06:18:26 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788959904; cv=none;
+	dkim=pass (2048-bit key) header.d=berkeley.edu header.i=@berkeley.edu header.b="tqGXfepl"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2d58efc7356so78233165ad.1
+        for <cgroups@vger.kernel.org>; Wed, 09 Sep 2026 09:32:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788971528; cv=none;
         d=google.com; s=arc-20260327;
-        b=WLIHyrYG1ZHpYFA5kZZ4kwI+/67qwjUoM78ZtB5mq/29p2C4rE1//Co/Kl1/b70PiS
-         auQ0oGbuYufHPXKaxF+F3dCJC6iH6fIDjfjFSGCFreVK5j0UUwYascYOrOjAF2hgUL3A
-         2UYuEJTy9okZIe9WiLMQsWpubHhlKPhWTBrTMISFdfDg7NXYJGTvwEy/oMF2klEpvjzn
-         EI1qwNM8hO+LvusGdwmsnuPtjf3oogC8tje2asxry4sqiQDJyl5B29EmLpIKdsPFBLa0
-         h0tZ0KLN0Sp6Dd8JpWJCws3vWq1NnsDRSGqAs6ULz7/moCTnM90wNefn0l9giZKahCiC
-         ucdA==
+        b=rPXYRbCSL4sTd/Vjh3qSnQopdZjTkhYrRQdvgPLFQehJioQLSbaA8x2sYYsZ3zq85L
+         2eswIg/2ecQ1PFaJ9BYNyI6ufHrBQsmiplYILJE3/hloA7jx8SaaGV/u4jVxPvnrl4ov
+         jhcoefjLwQnOl/6/eGR7BpGBAKoHhJSTv3DWNW/VNmnkub2i21tuDCF5JU4JatL+V+3w
+         uk5TM4EZI9sUB3WT9bKNZQ1QXMgZUJGWfSwr4jt6UampHZZE2QVfHANKbNEK+r8BwApN
+         VR/KRBp1GDoZwKUGPOG052XC9dqoBJXyKukknueGsB0HP+VMJCqW2SBLuhcQvSjqopRT
+         6ccQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=dB9s3FYZowUuXLZgEMY+0LbMoABpg3BhWeFIHXgpTgA=;
-        fh=MS3rmbdsUabvIc5F+rR46igA+7yAVagQUzA+sZR016c=;
-        b=DyPxAyWgk3I2bocCBcOClVe7uWz6D52J/jWl6h81Q0IsiKVqJpVmz7Heil7vnTDinN
-         QrGrQobaSWRpMRR+hqd0qNihzE+cyuUIULRje3etKzUx1vWxSWcYx1subvCUMe+CYf+f
-         h2FLhOjsGZOqxEI7QqTgL2cZmCWKd+JPeAst83qyBTNGQ4usRmRzjHThcrQgl43DVnzl
-         JrqF95SKUa5FSbTNWjVN9OyCBtMc24EZbn1WK4Wsi3cEguZJwM0/qEJCrz94THtG9X55
-         cVnIPAv6Hp4eOpIlEpiPFyPiNqVtaI8nCDE1PKFwp6AhoPzzO4T1XaTVB72xu7oGECod
-         nUIw==;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=LbwUECXSGtpoNpkapF0wkYICgxlHh/DhMmXXNw+XPjo=;
+        fh=0Imnl2zAXp3DyRvGfs6fPNqSp0sJV2PFFGZceyDNipg=;
+        b=sjzerOUDPVxImwLr8ALXcNMWWUbMH/grfgoYAuMak72t4paMUcqzYDtCsy3eGn5G7m
+         OGVi9AW/JrdZSiWiav7m5PIKspnzi9lcbFU98YaGYxk//B1afZjlstmkq0ErOLFQbeCU
+         uukwgNcig8gHOoSS6Ny0O0NQwp/bmHocZ00rIu2VQDbatzvM1wVoaLnSKgDcyHVCXv49
+         nbRIgnacb5nTgmSmlD9Ma7AGkutJmUmgAjpjQD7axxzXMjoMr4l7LeFwHsFJW4Wn13qA
+         a6cdQO3ZU5DmCide03wA6Py2dKA2S2NhiML/0kvqawrh/jq2Y+2GMSUrOjsAT/EJHUJY
+         Yv3g==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1788959904; x=1789564704; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=dB9s3FYZowUuXLZgEMY+0LbMoABpg3BhWeFIHXgpTgA=;
-        b=gfaEaMN+8RS97mz4K5PV4m78k1Kn/SPCe93jqRLjbG9UNFUXFRcdRktMjZznX95gbI
-         rV4/ELOU8IAg9mbBvknMZpIiQ9GC9Kh/1WOQnwcz0Vv2Y1HH62gSB6Sx3Lra26nquF47
-         0YZDV3IZlXF9gZZGRUVH9CH4BUXpncAdPPYoWXZ/KVRlCsUC07uwHGNNYfpJBZbw7Wel
-         /ZsIB/u73/4GK104G+bn5kjZlm1dwJfHNsdvlcx58OQ9O0ddDh96PsZcuSWA1a0wTywu
-         ibEHXLXU3HKz3sgxuvxd0O8q4SNKvXigYPku3li5IHmSOHSvZfie2y5da7tlpAT9n53p
-         PhMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788959904; x=1789564704;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=berkeley.edu; s=google; t=1788971528; x=1789576328; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=dB9s3FYZowUuXLZgEMY+0LbMoABpg3BhWeFIHXgpTgA=;
-        b=CzVSG13sNPz9jAZ1VRcuCWP0ZXHwCBDMRLiD6Khe7VX+AATcm6+Iq5cIuvIOMoMv95
-         R49iNLebvwCaGcoi8Udcpo68RiSFpp5vbMd1qdwAc25cIT/mTAE0c1InUzEcbGtUxxnR
-         /JOqtMugndThY0Wm7T9E4OlzoKw43xPYielcD+NewwBMg0YlGxzoOVAq+w5hB1oWU+g3
-         QgW6C/xbrQOwLnNmY8JWqyIb5LZJP7UPC1TVxYomd2pirRzexM/pDeEvAOLz/O+qxwNG
-         iHpgOw8gOwUTvorZuB74hkq4HayJzcqHBBOmG6KNYUNTROPwItUlfZcZkEcN0/5z44/0
-         CpoQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwip+ss8p+j0tvTaPWtgl1cKBq5J5KzHXr8nztkM+sN0OVx1JUUqEVuDrrAk+d7+9nyK/CML1lq@vger.kernel.org
-X-Gm-Message-State: AFuF++npyMvu3or/GDefY4bJSpFmJIDv+sXWl5VQ/BOFxK7FNSG2LTcA
-	YrKBZjTfdYW63TWsC8DJ7SrBFW+yWQYAJAMny3/5q7aRM/Y5PXBjyF1ToGv1Z5D1fxQZQD58ivD
-	E6B5wRttyNnbH+CLnwmnzACHTIAfHoyPTKVr9wM39IQ==
-X-Gm-Gg: AYBFou1aQZdce+fAbfSkl4pvc5mKB91Q02HFDswT1A4HWSVVANno4khTzGHATgM7Iac
-	rbMFWJcnp0YTLmxeUuLw0GlaRojXWhh1DSdujKCwSMyz1xG7MseJ1MvVqcbEVX2IBpOo2+4DAGw
-	ztwyk8RBWVLA+ui8MWXRglo8M+TUrsoLEtWoqLNN2gWPOVV6aQRI/wmCf8+aHcvYfD9LZfReI80
-	tUSsUrtUZOr0EFXFelPitq+aud97JQib+65PS8UykDBPLshgbuQVg5I9JsVOji26w/ATht1R7T/
-	boe+UDqmCh1g81dxZRFDWWzGM0Kjx4Im8d+k7zCVLFCGvIuME2EGNevSd+YG2vk0R8s6
-X-Received: by 2002:a05:690c:a687:b0:873:5c6b:a329 with SMTP id
- 00721157ae682-87c0f4ed202mr29037297b3.35.1788959903404; Wed, 09 Sep 2026
- 06:18:23 -0700 (PDT)
+        bh=LbwUECXSGtpoNpkapF0wkYICgxlHh/DhMmXXNw+XPjo=;
+        b=tqGXfeplKXANc1BlHoP9KIRN2gR2Mru1D8TVLe/oWChEyvb3L1aRML9+30MiZmoz+C
+         qCqF/+j2dYltqVIqhHGO6qHsNAu5IpuepMkvpwuSDeCRlcxvSjU7Yxk6dmHRXHax6C3j
+         GJHYPrv2wD1VpE3iBF374ZbNr3ZP1Ok0PbyWCvG8Ocog4Mp7dWHQeYCQa7wSsm2uqT3s
+         +cPJjan8RSuNUE5gPZ0jVS6n83eaztnBVEd3wCDxDomPZHRSuzRuqUVifzuSN3Z0CI4J
+         CR+G2kDljoRNF0tp03RqJytokln1Fd/dOVrmSO6iHoQcjhcYtc9MW9n1GgsyoHpns1yz
+         iSDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788971528; x=1789576328;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=LbwUECXSGtpoNpkapF0wkYICgxlHh/DhMmXXNw+XPjo=;
+        b=GllEpvMOgMfmxJtEBVtkTZ0H/dLzHpDC4jyp1Ksi/yYXtqeSXUHqRQHPVMph67nAGB
+         x0cHX5rc5PcvbyaMKl3k3Qg7K9TQ6cx8t3kfxCPzK0LEQaksfmwe/SquTFU+++uuBqn8
+         YFx1G3rOXvKyE+8txlwnqm3ghIfgzVEWhjXa210hIRvXmBBSZwBdwN3GtNq2GmJCqNza
+         mmcqyBi/y7hyTf6h7jHkRbxtlPuLH7NjEW07OcH3cjy8JW6lDzh0YTnRwre9k6NcQnCE
+         Vcgw+lLKi6cU8OBWsxwsjY6XpncjyocrG+780IJfb05GoDnZ2qv6rKpfwwmWa9BzmkkA
+         Vdpg==
+X-Forwarded-Encrypted: i=1; AKwUvBxpVAn3Zqg96CxMqN2C0CE0NwPExzAxHyCP4wylQfh8M47wqHECvPWOqmWJvRn8CQFpb4redirb@vger.kernel.org
+X-Gm-Message-State: AFuF++kCopn5d2rsxyciPY46/Eg6FkQq9/H1FJmM7tzat8CW2Z5VW8NK
+	2wTMcwmvA/ijXb5VH8oXAdWFTBZEsrSScb/XeMYN1ZdPiNB4KNa8cNDu1g7+euy3EIoaGqUI0Io
+	gWtF+N149f65+y1PMk6kpIAYRaYL05USp0BaMT+gQ
+X-Gm-Gg: AYBFou3o5El/zKOinjb/ZilJTn6XOFdKTj/FYpNWa2gfb4Dc+2oXXjxcvbtCoanvhCJ
+	HWAD9eq5r/p6bBSm+7rgeds+GL9hNwvlGJrgkaZnlm2QFT0oVWEmLQLPkGALzv1B339j3m/o/na
+	JGvfjtWTI2Bl21YOkKA2vNaKpmeCR+shpdNhW5FNbs4TnVp+YUaBHmewI+N3UdulKWUDeBgMwQf
+	Dy77X+wcyUB1Zs6mMwKJaBhx7dIehEJB1lkly8Y4GUgUOlDJxptnsDiSlnbzZqGLEtjlxR4QOag
+	cXYd+ybvh4xyxYk3PvAjmRWP2SXuVq2dQA+xV1Q0MEDkN0W0D7cc/Uy9rvaanLDNMzR6nm2HdAI
+	5TKet6/kbhOQfCjTUxFJKDzvCeagZ6YPPbbDM6PDL7Q==
+X-Received: by 2002:a17:903:26d0:b0:2db:5c0a:f18c with SMTP id
+ d9443c01a7336-2db5c0b15fdmr270389895ad.6.1788971526736; Wed, 09 Sep 2026
+ 09:32:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260909034343.340703-1-sunjunchao@bytedance.com> <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
-In-Reply-To: <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
-From: Julian Sun <sunjunchao@bytedance.com>
-Date: Wed, 9 Sep 2026 21:18:11 +0800
-X-Gm-Features: AcwNN1URoKkZXd_A9WMykFjRGrValQDMpxYfrhpq6USFcen05i6L89OzgmnMZJM
-Message-ID: <CAHSKhtcvaWgGHY_NWW242vYHHiSet0v-qsj4MsXGiwZJFrdUnQ@mail.gmail.com>
-Subject: Re: [External] Re: [PATCH v3] writeback, memcg: skip foreign dirty
- tracking for bdev inodes
-To: Jan Kara <jack@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	muchun.song@linux.dev, akpm@linux-foundation.org, axboe@kernel.dk, 
-	tj@kernel.org
+References: <20260829023251.474083-1-shakeel.butt@linux.dev> <20260901164741.GJ3004@cmpxchg.org>
+In-Reply-To: <20260901164741.GJ3004@cmpxchg.org>
+From: Farhad Alemi <farhad.alemi@berkeley.edu>
+Date: Wed, 9 Sep 2026 09:31:55 -0700
+X-Gm-Features: AcwNN1Xftn-5NEwC_biLDSz968e7PXUVQrICe5nQwJT8vOgIGskFQo4c9Lq4Bc8
+Message-ID: <CA+0ovCgpQCaSH+_z+akR4ydhQBd+GSXNoP9mnngszj0Kt5pbow@mail.gmail.com>
+Subject: Re: [PATCH] memcg: avoid charging the root memcg from obj_cgroup_charge_pages()
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, Meta kernel team <kernel-team@meta.com>
+Content-Type: multipart/mixed; boundary="0000000000005e66a2065b0f6426"
+
+--0000000000005e66a2065b0f6426
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Sep 9, 2026 at 7:13=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
->
-> On Wed 09-09-26 11:43:43, Julian Sun wrote:
-> > The expectation in wbc_detach_inode() that "concurrent write sharing of=
- an
-> > inode is expected to be very rare" does not hold for bdev inodes. On ex=
-t4,
-> > metadata from many memcgs shares the same bdev inode, so dirty throttli=
-ng
-> > in those memcgs can repeatedly trigger foreign flushes of the owner wb.
-> > These flushes can also write ordinary file data, reducing overwrite
-> > coalescing under continuous buffered overwrites. The resulting extra I/=
-O
-> > leaves less device bandwidth for other workloads.
->
-> Hum. Are you aware of [1]? The guy is from the same company so I was
-> assuming you two are working together on the problem :).
+The patched kernel (this patch on 28924df2a08f) no longer panics on
+the attached reproducer.
 
-Yes, Xin and I are on the same team, and we are looking at different
-ways to mitigate this issue.
 
-We will continue trying to gather more evidence from production to
-better understand its actual impact. The number of calls to
-`balance_dirty_pages()` and the time spent in it might be useful
-metrics for this purpose.
-
-Jan, if we can show that this patch provides a measurable improvement
-in production, would you consider accepting it? Or do you think we
-should still look for a better approach? If you think there is a
-better way to address this, we'd be very interested in your
-suggestion.
-
+On Tue, Sep 1, 2026 at 9:47=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org>=
+ wrote:
 >
-> [1] https://lore.kernel.org/all/cover.1788836830.git.yinxin.x@bytedance.c=
-om
->
-> > Skip foreign dirty tracking for bdev inodes. Ordinary writeback and
-> > foreign dirty tracking for non-bdev inodes are unchanged.
->
-> Frankly, I'm not yet convinced this is worth the risk of regressions. The
-> gains are nice but both the winning and the loosing loads are synthetic a=
-nd
-> none of them is like "this is definitely what most people are going to
-> hit".
->
-> I think what [1] is proposing is more in the direction where we might go
-> (although the second patch in its current form isn't acceptable to me
-> either). But what I miss from both your approaches is the verification th=
-at
-> the change actually helps your *production* workloads. Unless it is an
-> obvious fix (like was the case of patch 1 in the series [1]) I'm very
-> reluctant to approve any additional heuristics unless it is proven they
-> actually help production loads. These heuristics are never going to be
-> perfect so you can always come up with a synthetic load breaking it in on=
+> On Fri, Aug 28, 2026 at 07:32:51PM -0700, Shakeel Butt wrote:
+> > obj_cgroup_charge_pages() resolves the objcg to its memcg and calls
+> > try_charge_memcg(), which does not short circuit the root memcg.  That
+> > memcg can be the root memcg: obj_cgroup_is_root() reflects the memcg th=
 e
-> way or another. The art is in tuning them so they work for the practical
-> cases :)
->
->                                                                 Honza
->
+> > objcg was created for and is never updated, while memcg_reparent_objcgs=
+()
+> > does redirect objcg->memcg to the parent on rmdir.  An objcg of a dying
+> > child of root therefore passes every obj_cgroup_is_root() filter but
+> > resolves to the root memcg.
 > >
-> > In a synthetic ext4 test with cgroup v2 (QEMU/KVM, 4 vCPUs, 8 GiB RAM),
-> > device writes are capped at 200 MiB/s. fio repeatedly overwrites a 256 =
-MiB
-> > file in the root wb while four memory- and I/O-limited memcgs generate
-> > metadata and trigger foreign flushes through dirty throttling. A concur=
-rent
-> > fio performs 16 GiB of sequential direct writes on the same filesystem.
-> > Across five pairs with 9 GiB of buffered overwrites per run, mean resul=
-ts
-> > are:
+> > Folios keep the objcg they were charged with, so this is easy to reach
+> > through zswap: allocate anon memory in a cgroup, move the task out,
+> > remove the cgroup, then write to the root cgroup's memory.reclaim.  The
+> > reclaimed folios are charged through the reparented objcg and end up in
+> > refill_stock() with the root memcg:
 > >
-> >                                       Baseline    Skip bdev
-> >   Overwritten-file device writes       5.60 GiB     1.70 GiB (-69.6%)
-> >   Foreground completion time           104.2 s      89.1 s   (-14.4%)
-> >   Foreground bandwidth                 157.3 MiB/s 183.8 MiB/s
-> >   Foreground p99 completion latency     1434 ms      480 ms
+> >   WARNING: mm/memcontrol.c:2198 at refill_stock+0x644/0x940
+> >    refill_stock+0x644/0x940
+> >    try_charge_memcg+0x12d6/0x1570
+> >    __obj_cgroup_charge+0x35/0xf0
+> >    obj_cgroup_charge+0x1de/0x210
+> >    obj_cgroup_charge_zswap+0x83/0x270
+> >    zswap_store+0x1620/0x2000
+> >    swap_writeout+0x94c/0x14c0
+> >    shrink_folio_list+0x3388/0x52b0
+> >    [...]
+> >    try_to_free_mem_cgroup_pages+0x30d/0x830
+> >    user_proactive_reclaim+0x504/0x840
+> >    memory_reclaim+0x1f/0x30
 > >
-> > The tradeoff is that memcgs with dirty bdev folios lose this way of
-> > requesting writeback to relieve dirty pressure. In a separate uncapped =
-ext4
-> > test, a memcg with memory.high=3D256 MiB creates 60,000 files paced at =
-4,000
-> > files/s, each with a distinct 128-byte xattr, and makes occasional buff=
-ered
-> > data writes. The xattrs use external 4 KiB blocks. Across two pairs,
-> > completion is 31-33% slower including final sync, while device writes
-> > remain about 524 MiB.
+> > Beyond the warning, the charge is asymmetric: obj_cgroup_uncharge_pages=
+()
+> > skips refill_stock() for the root memcg, so the root's page counter gro=
+ws
+> > and is never uncharged.  It is not user visible, since memory.current i=
+s
+> > not exposed on the root, but it is a leak.
 > >
-> > With 64-byte xattrs stored within the inode, the same paced workload
-> > showed no substantial completion-time regression, including at
-> > memory.high=3D16 or 32 MiB where the baseline triggered dirty throttlin=
-g
-> > and foreign flushes.
+> > Use try_charge(), which returns early for the root memcg, restoring the
+> > symmetry with obj_cgroup_uncharge_pages().
 > >
-> > I believe this external-xattr-heavy workload under memory pressure is
-> > relatively uncommon in practice, and expect the benefits to outweigh th=
+> > The above sequence was scripted into a standalone reproducer (zswap on,
+> > swap on a virtio disk, 512MB of anon memory faulted in inside a child o=
+f
+> > the root cgroup, the task then migrated to the root cgroup, the child
+> > removed, followed by "echo 600M swappiness=3Dmax > memory.reclaim" on t=
+he
+> > root) and run in a CONFIG_DEBUG_VM=3Dy VM.  It reproduces the splat on =
+the
+> > first zswap store of a reparented folio, with the same call chain as th=
 e
-> > regression. I therefore consider this an acceptable workaround.
+> > report.  With this patch applied the splat is gone while the zswap stor=
+e
+> > count over the run is unchanged, so the same path is still exercised.
+> > cgroup selftests test_zswap, test_kmem and test_memcontrol show no new
+> > failures.
 > >
-> > Core fio commands for the overwrite test:
-> >
-> >     fio --name=3Dhotspot --filename=3D"$dir/hot.data" --rw=3Dwrite \
-> >         --bs=3D64K --ioengine=3Dpsync --direct=3D0 --thread=3D1 \
-> >         --size=3D256M --io_size=3D9216M --rate=3D64M \
-> >         --refill_buffers=3D1 --invalidate=3D0 --eta=3Dnever \
-> >         --output-format=3Djson --output=3D"$out/target.json" &
-> >     hot_pid=3D$!
-> >
-> >     sleep 8
-> >     fio --name=3Dforeground --filename=3D"$dir/foreground.data" \
-> >         --rw=3Dwrite --bs=3D1M --ioengine=3Dlibaio --iodepth=3D32 \
-> >         --direct=3D1 --thread=3D1 --invalidate=3D0 --size=3D4096M \
-> >         --io_size=3D16384M --eta=3Dnever --output-format=3Djson \
-> >         --output=3D"$out/foreground.json"
-> >     wait "$hot_pid"
-> >
-> > In the log below, base is the original kernel and skip includes this
-> > patch. hot_GiB is device writes for the repeatedly overwritten file,
-> > including final sync; the other performance columns describe foreground
-> > fio.
-> >
-> > Full five-pair log:
-> > nohup: ignoring input
-> > [2026-09-05 17:52:10] RESULTS=3D/tmp/cgwb-20260905-175145; WARNING: ref=
-ormats /dev/nvme5n1; 5 pair(s), limit=3D200 MiB/s
-> > [2026-09-05 17:52:10] round-001-base: booting
-> > [2026-09-05 17:52:20] round-001-base: running workload
-> > [2026-09-05 17:55:36] round-001-skip: booting
-> > [2026-09-05 17:55:45] round-001-skip: running workload
-> > [2026-09-05 17:58:57] ROUND 1: kind     seconds    MiB/s      IOPS   me=
-an_ms    p99_ms   hot_GiB WARN
-> > [2026-09-05 17:58:57]          base    104.574   156.67    156.67    20=
-3.82   1434.45     5.862    0
-> > [2026-09-05 17:58:57]          skip     89.125   183.83    183.83    17=
-3.62    480.25     1.656    0
-> > [2026-09-05 17:58:57] skip vs base: bandwidth +17.33%, time -14.77%, ho=
-tspot IO -71.75%
-> > [2026-09-05 17:58:57] round-002-skip: booting
-> > [2026-09-05 17:59:06] round-002-skip: running workload
-> > [2026-09-05 18:02:18] round-002-base: booting
-> > [2026-09-05 18:02:27] round-002-base: running workload
-> > [2026-09-05 18:05:42] ROUND 2: kind     seconds    MiB/s      IOPS   me=
-an_ms    p99_ms   hot_GiB WARN
-> > [2026-09-05 18:05:42]          base    103.533   158.25    158.25    20=
-1.75   1434.45     5.493    0
-> > [2026-09-05 18:05:42]          skip     89.124   183.83    183.83    17=
-3.65    480.25     1.730    0
-> > [2026-09-05 18:05:42] skip vs base: bandwidth +16.17%, time -13.92%, ho=
-tspot IO -68.50%
-> > [2026-09-05 18:05:42] round-003-base: booting
-> > [2026-09-05 18:05:52] round-003-base: running workload
-> > [2026-09-05 18:09:06] round-003-skip: booting
-> > [2026-09-05 18:09:15] round-003-skip: running workload
-> > [2026-09-05 18:12:28] ROUND 3: kind     seconds    MiB/s      IOPS   me=
-an_ms    p99_ms   hot_GiB WARN
-> > [2026-09-05 18:12:28]          base    104.648   156.56    156.56    20=
-3.96   1434.45     5.334    1
-> > [2026-09-05 18:12:28]          skip     89.243   183.59    183.59    17=
-3.92    480.25     1.824    0
-> > [2026-09-05 18:12:28] skip vs base: bandwidth +17.26%, time -14.72%, ho=
-tspot IO -65.80%
-> > [2026-09-05 18:12:28] WARN: runtime diagnostics present; inspect each d=
-ata/dmesg before using this pair.
-> > [2026-09-05 18:12:28] round-004-skip: booting
-> > [2026-09-05 18:12:37] round-004-skip: running workload
-> > [2026-09-05 18:15:50] round-004-base: booting
-> > [2026-09-05 18:16:00] round-004-base: running workload
-> > [2026-09-05 18:19:15] ROUND 4: kind     seconds    MiB/s      IOPS   me=
-an_ms    p99_ms   hot_GiB WARN
-> > [2026-09-05 18:19:15]          base    103.565   158.20    158.20    20=
-1.84   1434.45     5.497    0
-> > [2026-09-05 18:19:15]          skip     89.124   183.83    183.83    17=
-3.57    480.25     1.648    0
-> > [2026-09-05 18:19:15] skip vs base: bandwidth +16.20%, time -13.94%, ho=
-tspot IO -70.01%
-> > [2026-09-05 18:19:15] round-005-base: booting
-> > [2026-09-05 18:19:24] round-005-base: running workload
-> > [2026-09-05 18:22:41] round-005-skip: booting
-> > [2026-09-05 18:22:50] round-005-skip: running workload
-> > [2026-09-05 18:26:03] ROUND 5: kind     seconds    MiB/s      IOPS   me=
-an_ms    p99_ms   hot_GiB WARN
-> > [2026-09-05 18:26:03]          base    104.567   156.68    156.68    20=
-3.78   1434.45     5.830    1
-> > [2026-09-05 18:26:03]          skip     89.035   184.02    184.02    17=
-3.47    480.25     1.648    0
-> > [2026-09-05 18:26:03] skip vs base: bandwidth +17.44%, time -14.85%, ho=
-tspot IO -71.72%
-> > [2026-09-05 18:26:03] WARN: runtime diagnostics present; inspect each d=
-ata/dmesg before using this pair.
-> > [2026-09-05 18:26:03] DONE: 5 pair(s); all test VMs stopped
-> >
-> > Fixes: 97b27821b485 ("writeback, memcg: Implement foreign dirty flushin=
-g")
-> > Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
-> > ---
-> >  mm/memcontrol.c | 9 +++++++++
-> >  1 file changed, 9 insertions(+)
-> >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 1271d390b617..6e8f7ff7d44a 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -3898,6 +3898,15 @@ void mem_cgroup_track_foreign_dirty_slowpath(str=
-uct folio *folio,
-> >       u64 oldest_at =3D now;
-> >       int oldest =3D -1;
-> >       int i;
-> > +     struct address_space *mapping =3D folio_mapping(folio);
-> > +     struct inode *bdev_inode =3D mapping ? mapping->host : NULL;
-> > +
-> > +     /*
-> > +      * Bdev inodes are usually shared by many memcgs so foreign
-> > +      * tracking leads to frequent flushes which is counterproductive.
-> > +      */
-> > +     if (bdev_inode && sb_is_blkdev_sb(bdev_inode->i_sb))
-> > +             return;
-> >
-> >       trace_track_foreign_dirty(folio, wb);
-> >
-> > --
-> > 2.39.5
-> >
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> > Fixes: 20d6c1725228 ("memcg: avoid refill_stock for root memcg")
+> > Reported-by: Farhad Alemi <farhad.alemi@berkeley.edu>
+> > Closes: https://lore.kernel.org/all/CA+0ovCgWzUMK+nNbbtH7eV65Ca=3DfDN4O=
+zu7iASgryjvv8Tk8zQ@mail.gmail.com/
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+>
+> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
 
+--0000000000005e66a2065b0f6426
+Content-Type: text/x-c-code; charset="US-ASCII"; name="reproducer.c"
+Content-Disposition: attachment; filename="reproducer.c"
+Content-Transfer-Encoding: base64
+Content-ID: <f_mtubfcki0>
+X-Attachment-Id: f_mtubfcki0
 
-Thanks,
---=20
-Julian Sun <sunjunchao@bytedance.com>
+LyoKICogUmVwcm9kdWNlciBmb3IgMTQ1LW1lbWNnLXZtX3dhcm4tcmVmaWxsX3N0b2NrLXJvb3Qt
+Y2dyb3VwCiAqLwojZGVmaW5lIF9HTlVfU09VUkNFCiNpbmNsdWRlIDxlcnJuby5oPgojaW5jbHVk
+ZSA8ZmNudGwuaD4KI2luY2x1ZGUgPHNpZ25hbC5oPgojaW5jbHVkZSA8c3RkaW8uaD4KI2luY2x1
+ZGUgPHN0ZGxpYi5oPgojaW5jbHVkZSA8c3RyaW5nLmg+CiNpbmNsdWRlIDxzeXMvbW1hbi5oPgoj
+aW5jbHVkZSA8c3lzL3N0YXQuaD4KI2luY2x1ZGUgPHN5cy9zeXNjYWxsLmg+CiNpbmNsdWRlIDxz
+eXMvd2FpdC5oPgojaW5jbHVkZSA8dW5pc3RkLmg+CgojZGVmaW5lIENHUk9VUF9ST09UICIvc3lz
+L2ZzL2Nncm91cCIKI2RlZmluZSBWSUNUSU1fQ0dST1VQIENHUk9VUF9ST09UICIvdmljdGltIgoj
+ZGVmaW5lIFNXQVBGSUxFICAiL3N3YXBmaWxlLjE0NSIKI2RlZmluZSBTV0FQX1NJWkUgKDUxMlVM
+TCA8PCAyMCkKI2RlZmluZSBBTk9OX1NJWkUgKDQwMFVMTCA8PCAyMCkKCnN0YXRpYyBpbnQgd3Jp
+dGVfZmlsZShjb25zdCBjaGFyICpwYXRoLCBjb25zdCBjaGFyICp2YWx1ZSkKewoJaW50IGZkID0g
+b3BlbihwYXRoLCBPX1dST05MWSk7CglpbnQgcmM7CgoJaWYgKGZkIDwgMCkgewoJCXByaW50Zigi
+b3BlbiAlczogJXNcbiIsIHBhdGgsIHN0cmVycm9yKGVycm5vKSk7CgkJcmV0dXJuIC0xOwoJfQoJ
+cmMgPSB3cml0ZShmZCwgdmFsdWUsIHN0cmxlbih2YWx1ZSkpOwoJaWYgKHJjIDwgMCkKCQlwcmlu
+dGYoIndyaXRlICVzIDwtICVzOiAlc1xuIiwgcGF0aCwgdmFsdWUsIHN0cmVycm9yKGVycm5vKSk7
+CgljbG9zZShmZCk7CglyZXR1cm4gcmMgPCAwID8gLTEgOiAwOwp9CgovKiBzd2Fwb24oKSByZWZ1
+c2VzIGEgc3BhcnNlIGZpbGUsIHNvIHRoZSBhcmVhIGlzIHdyaXR0ZW4gb3V0IGluIGZ1bGwgKi8K
+c3RhdGljIGludCBzZXR1cF9zd2FwZmlsZSh2b2lkKQp7Cgl1bnNpZ25lZCBsb25nIHBhZ2Vfc2l6
+ZSA9IDQwOTY7Cgl1bnNpZ25lZCBjaGFyICpoZWFkZXIgPSBjYWxsb2MoMSwgcGFnZV9zaXplKTsK
+CXVuc2lnbmVkIGNoYXIgKnplcm9zID0gY2FsbG9jKDEsIDEgPDwgMjApOwoJdW5zaWduZWQgbG9u
+ZyBsb25nIG9mZjsKCWludCBmZCA9IG9wZW4oU1dBUEZJTEUsIE9fUkRXUiB8IE9fQ1JFQVQgfCBP
+X1RSVU5DLCAwNjAwKTsKCglpZiAoZmQgPCAwKQoJCXJldHVybiAtMTsKCWZvciAob2ZmID0gMDsg
+b2ZmIDwgU1dBUF9TSVpFOyBvZmYgKz0gKDEgPDwgMjApKQoJCWlmICh3cml0ZShmZCwgemVyb3Ms
+IDEgPDwgMjApICE9ICgxIDw8IDIwKSkKCQkJcmV0dXJuIC0xOwoKCS8qIHN0cnVjdCBzd2FwX2hl
+YWRlcjogMTAyNCBib290Yml0cywgdGhlbiB2ZXJzaW9uL2xhc3RfcGFnZS9ucl9iYWRwYWdlcywK
+CSAqIGFuZCB0aGUgIlNXQVBTUEFDRTIiIG1hZ2ljIGluIHRoZSBsYXN0IDEwIGJ5dGVzIG9mIHRo
+ZSBmaXJzdCBwYWdlICovCgkqKHVuc2lnbmVkIGludCAqKShoZWFkZXIgKyAxMDI0KSA9IDE7Cgkq
+KHVuc2lnbmVkIGludCAqKShoZWFkZXIgKyAxMDI4KSA9IChTV0FQX1NJWkUgLyBwYWdlX3NpemUp
+IC0gMTsKCW1lbWNweShoZWFkZXIgKyBwYWdlX3NpemUgLSAxMCwgIlNXQVBTUEFDRTIiLCAxMCk7
+CglpZiAocHdyaXRlKGZkLCBoZWFkZXIsIHBhZ2Vfc2l6ZSwgMCkgIT0gKHNzaXplX3QpcGFnZV9z
+aXplKQoJCXJldHVybiAtMTsKCWZzeW5jKGZkKTsKCWNsb3NlKGZkKTsKCXJldHVybiBzeXNjYWxs
+KFNZU19zd2Fwb24sIFNXQVBGSUxFLCAwKTsKfQoKaW50IG1haW4odm9pZCkKewoJY2hhciBwaWRf
+c3RyWzMyXTsKCWludCBjaGFyZ2VkX3BpcGVbMl0sIHBsYWNlZF9waXBlWzJdOwoJcGlkX3QgY2hp
+bGQ7CgljaGFyIHN5bmNfYnl0ZTsKCglzZXR2YnVmKHN0ZG91dCwgTlVMTCwgX0lPTkJGLCAwKTsK
+CgkvKiB6c3dhcCBtdXN0IGJlIG9uLCBvciBub3RoaW5nIGlzIGNoYXJnZWQgdG8gdGhlIG9iamNn
+IGF0IGFsbCAqLwoJd3JpdGVfZmlsZSgiL3N5cy9tb2R1bGUvenN3YXAvcGFyYW1ldGVycy9lbmFi
+bGVkIiwgIlkiKTsKCWlmIChzZXR1cF9zd2FwZmlsZSgpIDwgMCkgewoJCXByaW50Zigic3dhcG9u
+OiAlc1xuIiwgc3RyZXJyb3IoZXJybm8pKTsKCQlyZXR1cm4gMTsKCX0KCXdyaXRlX2ZpbGUoQ0dS
+T1VQX1JPT1QgIi9jZ3JvdXAuc3VidHJlZV9jb250cm9sIiwgIittZW1vcnkiKTsKCWlmIChta2Rp
+cihWSUNUSU1fQ0dST1VQLCAwNzU1KSA8IDAgJiYgZXJybm8gIT0gRUVYSVNUKSB7CgkJcHJpbnRm
+KCJta2RpciAlczogJXNcbiIsIFZJQ1RJTV9DR1JPVVAsIHN0cmVycm9yKGVycm5vKSk7CgkJcmV0
+dXJuIDE7Cgl9CgoJcGlwZShjaGFyZ2VkX3BpcGUpOwoJcGlwZShwbGFjZWRfcGlwZSk7CgoJY2hp
+bGQgPSBmb3JrKCk7CglpZiAoY2hpbGQgPT0gMCkgewoJCWNoYXIgKmFub247CgkJdW5zaWduZWQg
+bG9uZyBsb25nIGk7CgoJCWNsb3NlKGNoYXJnZWRfcGlwZVswXSk7CgkJY2xvc2UocGxhY2VkX3Bp
+cGVbMV0pOwoJCXJlYWQocGxhY2VkX3BpcGVbMF0sICZzeW5jX2J5dGUsIDEpOwoKCQlhbm9uID0g
+bW1hcChOVUxMLCBBTk9OX1NJWkUsIFBST1RfUkVBRCB8IFBST1RfV1JJVEUsCgkJCSAgICBNQVBf
+UFJJVkFURSB8IE1BUF9BTk9OWU1PVVMsIC0xLCAwKTsKCQlpZiAoYW5vbiA9PSBNQVBfRkFJTEVE
+KQoJCQlfZXhpdCgxKTsKCQkvKiBjb21wcmVzc2libGU6IHpzd2FwIG9ubHkgY2hhcmdlcyB3aGF0
+IGl0IGFjdHVhbGx5IHN0b3JlcyAqLwoJCWZvciAoaSA9IDA7IGkgPCBBTk9OX1NJWkU7IGkgKz0g
+NDA5NikgewoJCQltZW1zZXQoYW5vbiArIGksIDB4NDEgKyAoaSAlIDcpLCA0MDk2KTsKCQkJKih1
+bnNpZ25lZCBsb25nICopKGFub24gKyBpKSA9IGk7CgkJfQoJCXdyaXRlKGNoYXJnZWRfcGlwZVsx
+XSwgIngiLCAxKTsKCQlwYXVzZSgpOwkJLyoga2VlcCB0aGUgZm9saW9zIGNoYXJnZWQgKi8KCQlf
+ZXhpdCgwKTsKCX0KCWNsb3NlKGNoYXJnZWRfcGlwZVsxXSk7CgljbG9zZShwbGFjZWRfcGlwZVsw
+XSk7CgoJc25wcmludGYocGlkX3N0ciwgc2l6ZW9mKHBpZF9zdHIpLCAiJWQiLCBjaGlsZCk7Cgl3
+cml0ZV9maWxlKFZJQ1RJTV9DR1JPVVAgIi9jZ3JvdXAucHJvY3MiLCBwaWRfc3RyKTsKCXdyaXRl
+KHBsYWNlZF9waXBlWzFdLCAieCIsIDEpOwoJcmVhZChjaGFyZ2VkX3BpcGVbMF0sICZzeW5jX2J5
+dGUsIDEpOwoKCS8qIGNncm91cCB2MiBkb2VzIG5vdCByZWNoYXJnZSBvbiBtaWdyYXRpb24sIHNv
+IHRoZSBmb2xpb3Mga2VlcAoJICogcG9pbnRpbmcgYXQgdmljdGltJ3Mgb2JqY2cgYWZ0ZXIgdGhl
+IG93bmVyIGxlYXZlcyAqLwoJd3JpdGVfZmlsZShDR1JPVVBfUk9PVCAiL2Nncm91cC5wcm9jcyIs
+IHBpZF9zdHIpOwoKCS8qIHJtZGlyIHJlcGFyZW50cyB0aGF0IG9iamNnIHRvIHRoZSBST09UIG1l
+bWNnIHdoaWxlIGxlYXZpbmcKCSAqIG9iamNnLT5pc19yb290IGZhbHNlLCB3aGljaCBpcyB3aGF0
+IGRlZmVhdHMgdGhlCgkgKiBvYmpfY2dyb3VwX2lzX3Jvb3QoKSBndWFyZCBpbiBvYmpfY2dyb3Vw
+X2NoYXJnZV96c3dhcCgpICovCglpZiAocm1kaXIoVklDVElNX0NHUk9VUCkgPCAwKQoJCXByaW50
+Zigicm1kaXIgJXM6ICVzXG4iLCBWSUNUSU1fQ0dST1VQLCBzdHJlcnJvcihlcnJubykpOwoKCS8q
+IHJlY2xhaW0gb24gdGhlIFJPT1Q6IHRoZSB6c3dhcCBjaGFyZ2UgbGFuZHMgb24gcm9vdF9tZW1f
+Y2dyb3VwIGFuZAoJICogcmVmaWxsX3N0b2NrKCkgdHJpcHMgVk1fV0FSTl9PTl9PTkNFKG1lbV9j
+Z3JvdXBfaXNfcm9vdChtZW1jZykpICovCgl3cml0ZV9maWxlKENHUk9VUF9ST09UICIvbWVtb3J5
+LnJlY2xhaW0iLCAiMUciKTsKCglraWxsKGNoaWxkLCBTSUdLSUxMKTsKCXdhaXRwaWQoY2hpbGQs
+IE5VTEwsIDApOwoJcmV0dXJuIDA7Cn0K
+--0000000000005e66a2065b0f6426--
