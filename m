@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7853AD522;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED6D53AA4E9;
 	Wed,  9 Sep 2026 09:44:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788947063; cv=none; b=Eg+7a3Pd2h1ZL8cBgeuPDi9EHI4FdfVzBM4izRxp8ulPz9E07nrmXZrqpcDV2iOvoIVFsZZ/nbw/gNhDDGgPFY6tF0EYhYkP9m6tJsSEkMerhV7Qybzz3GBAJSTdRSmrp6KhlNSAlCKxv8Vjv4uzLrF+FlFPhh/+S+Dp03/wvO8=
+	t=1788947063; cv=none; b=epJf2QW1l5xm4XyLGPvLMHQWSluxatfynIdA0Na24dO70aJMdlsGMJoAKKKdBvwELu+ZprFs8FNyCe846pWXh3+cpB0EkOL3GzdbWkAt4ZOp1lL64pvgPXHwuTiDvaBpwJ1Coh8zHH0FZvjmkxSFagiBzqUN65sbWneVMsuhA/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788947063; c=relaxed/simple;
-	bh=Ad5PxfNFH0KjUpTuLE+nETx4q7cGEdziN7xPAPqWwOw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=c3qUccrUb/E8lPj+WLkf7nyLudwbTZGDzAuv1WRyXk0VbAmMw0gO3LDCcUKrJCrDM2awyoidnLkqqyofZv7t7RQFg8wBMp84Uj0uGDu/7vv6N9LFF6OIM8rdPmb8f2IDcGFn1WlcojgLGBt6bpX5UMeCFmBSxMksAxhUR3gHhIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IXM1iDLR; arc=none smtp.client-ip=10.30.226.201
+	bh=p/FFus9bKe5tMEJQcywlfhVh8H2JBkhG45wwhRpVejU=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VYpWabZCzKJRrJSBU8jGkHkJhwgkZ39jLwwnS66/iu+s6wGqcH3wDPN1lCGIqNZYir/rZP5bunGZ1POWdAdEPa6YPZ7up/pYf/08yy/06SgGtrZaEDWuIoy6aelsyAcGnD4zctyEDFSjQh0dxywqic8+VV+eG/9a+SAXmdwW7yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aGCVbomS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IXM1iDLR"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B63EBC2BD04;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aGCVbomS"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 84301C2BCF4;
 	Wed,  9 Sep 2026 09:44:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1788947062;
-	bh=Ad5PxfNFH0KjUpTuLE+nETx4q7cGEdziN7xPAPqWwOw=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=IXM1iDLR+2q7Qj4UZE1d1OdKRnk1SWc6Th/SW9s7EtMl9ukUkzwFJuXlchIh0ZG7V
-	 kXMbB4b1c6/O/PP2klrteeuRTIuJqi2PoU0vgOhuvXMAyCemST3VLF0BvP5z9c6fVZ
-	 y+4TMX5lsYxOPQiaNVERUL+X5SPpA0gat5nSgRwKCHry0y9mZ8ujjEc6eHMpkVHgfs
-	 zACqQPA6A4gpxAlCKvKDS9dB/TaADmeL+QK6k9Y6aZYyHi7S1FqPaO9yGFT/phq03M
-	 LW3lmhU0IHCcxGH6bpffE+uzcLe0vH9Ypl9fvpONY/EC+o6Ol3W1/sKLT9X0l1669x
-	 pvSSIYNs+XIjA==
+	bh=p/FFus9bKe5tMEJQcywlfhVh8H2JBkhG45wwhRpVejU=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=aGCVbomS++Z2D+pnl6D6I/WvraSgdcxXB1PWnieNuY/YFqXVDyDvx4gwD8NdKxola
+	 gKTEE8wsE5zssmRlKcXpsHX7LI5eMEdSl27dwgmRx4FLy+falJR15j4VpoCOJzQdK+
+	 nX2QkvLvz5aInYezpjesG2lqKKRw+C8f94FDj//QntD8/grEncLgLKvxBb8LgZ5eyg
+	 0O5jLZYx2yNWn5XQb/SQaTjaefeiNOinx/XKBmUpe5MCFMb9YXQTu0BUz8Pw27o38Z
+	 YJfB2EYHFS5rGI2WFHBGRmGDzGAcKiVnKPmF3J7wBBNBqGDYpNzNZclxeia/ptaKi0
+	 RGm2ekaof4N5A==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AF87C79FB9;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E507C79FB6;
 	Wed,  9 Sep 2026 09:44:22 +0000 (UTC)
 From: linuszeng via B4 Relay <devnull+linuszeng.tencent.com@kernel.org>
-Date: Wed, 09 Sep 2026 17:44:21 +0800
-Subject: [PATCH v2 3/3] mm: page_counter: drop protection fields from
- struct page_counter
+Subject: [PATCH v2 0/3] mm: page_counter: move hierarchical protection out
+ of struct page_counter
+Date: Wed, 09 Sep 2026 17:44:18 +0800
+Message-Id: <20260909-descriptive-name-v2-0-d7dd7c099049@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,9 +41,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260909-descriptive-name-v2-3-d7dd7c099049@tencent.com>
-References: <20260909-descriptive-name-v2-0-d7dd7c099049@tencent.com>
-In-Reply-To: <20260909-descriptive-name-v2-0-d7dd7c099049@tencent.com>
+X-B4-Tracking: v=1; b=H4sIAHIqoWoC/32NQQ7CIBBFr9LM2jFAkwquvEfTBcLUzqK0AUI0D
+ XcXewCX7yX//QMSRaYE9+6ASIUTb6GBunTgFhtehOwbgxJqEEYY9JRc5D1zIQx2JaReK9vP5qa
+ 9hzbbI838PpPj1HjhlLf4OR+K/Nk/sSJRoNRKm0G6p5D2kSk4CvnqthWmWusX0JWKTLIAAAA=
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
  Roman Gushchin <roman.gushchin@linux.dev>, 
  Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
@@ -60,11 +60,11 @@ Cc: Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org,
  linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
  dri-devel@lists.freedesktop.org, linuszeng <linuszeng@tencent.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788947061; l=1664;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788947061; l=4455;
  i=linuszeng@tencent.com; s=20260909; h=from:subject:message-id;
- bh=Ty2hOT3RbwUGz3En7B5H9g1JCCLU1A+cfCkKn52iXOE=;
- b=DabIe6gyrzCaIlUMZ+sK5yF+k8V1AXEAlJEyfeNhNSOm4taa8h7olgRc3rZRs1NDNlh3wZvec
- 6uuVi36nj8mDzWloXIy3VsJaBD8D3LXRVtrsGSlLIRQ9LQUXjqdvkPm
+ bh=p/FFus9bKe5tMEJQcywlfhVh8H2JBkhG45wwhRpVejU=;
+ b=hJTwX6JHH/uUOp9uHufT3TwNsMm+bWbW8cQjl9xqdJC3KPtmdS0V4dRJcPJJbMw26XXmcfYw6
+ f4kAsSPB1svC72rIgJlJBLAxwUHAIMyEP1iKgbuGtVIe8pJCi+QT/mm
 X-Developer-Key: i=linuszeng@tencent.com; a=ed25519;
  pk=6K54xRzYIRWqatrAPy86M4E0MsI92BVJBhXwz5NdC74=
 X-Endpoint-Received: by B4 Relay for linuszeng@tencent.com/20260909 with
@@ -72,59 +72,97 @@ X-Endpoint-Received: by B4 Relay for linuszeng@tencent.com/20260909 with
 X-Original-From: linuszeng <linuszeng@tencent.com>
 Reply-To: linuszeng@tencent.com
 
-From: linuszeng <linuszeng@tencent.com>
+Hierarchical memory protection (memory.min / memory.low) is built on
+struct page_counter today: every counter carries the full protection
+state - emin/elow, the protected-usage trackers (min_usage,
+children_min_usage, low_usage, children_low_usage), the configured
+min/low values and a protection_support flag - although only the memory
+page counter (and dmem pools) ever participates in protection.
+swap/memsw, kmem, tcpmem and hugetlb counters ship this state around
+unused.
 
-The protection state now lives in struct page_counter_protection, so
-remove the emin/min_usage/children_min_usage, elow/low_usage/
-children_low_usage, min, low and protection_support fields from struct
-page_counter.
+This series moves that state into a dedicated struct
+page_counter_protection, instantiated only for the counters that
+actually support protection, which shrinks struct page_counter by one
+cache line.
 
-Also drop the now-orphaned _pad2_ padding and its comment: with the
-protection fields gone it no longer separates the read-mostly fields
-from anything, and the structure's cacheline alignment already pads the
-tail out.
+Patch 1 adds struct page_counter_protection and links it to struct
+page_counter through a ->prot pointer (NULL when protection is not
+supported).  page_counter_init() loses its protection_support argument,
+and the new page_counter_init_protection() attaches the context.
+Protection stays enabled only on the cgroup v2 hierarchy, matching the
+previous page_counter_init(..., memcg_on_dfl) behaviour, and the root
+memcg keeps it unconditionally.
 
-swap/memsw, kmem, tcpmem and hugetlb counters no longer carry this
-unused state: on 64-bit the structure shrinks from three cache lines to
-two, saving one cache line.
+Patch 2 migrates the read/write side of protection onto the new
+structure: propagate_protected_usage(), page_counter_set_min()/low()
+and page_counter_calculate_protection() now operate on the protection
+context, and the memcg and dmem accessors (mem_cgroup_protection,
+mem_cgroup_below_min/low, the dmem below_min/low helpers and the dmem
+eviction check) read emin/elow/children_*_usage from it.
+
+Patch 3 deletes the now-unused fields from struct page_counter.  On
+64-bit the structure drops from three cache lines to two, one cache
+line saved per counter.  For reference, pahole shows the layout before
+and after (x86_64, 64-byte cache lines):
+
+    before:                                after:
+     0  usage                               0  usage
+     8  failcnt                             8  failcnt
+    64  emin                               64  watermark
+    72  min_usage                          72  local_watermark
+    80  children_min_usage                 80  track_failcnt
+    88  elow                               88  high
+    96  low_usage                          96  max
+   104  children_low_usage                104  parent
+   112  watermark                         112  prot
+   120  local_watermark
+   128  protection_support                 size 128, 2 cachelines,
+   129  track_failcnt                         11 members
+   136  min
+   144  low                                (the protection fields moved
+   152  high                               into struct
+   160  max                                page_counter_protection,
+   168  parent                              72 bytes, allocated only
+                                           where protection is used)
+   size 192, 3 cachelines, 19 members
+
+The four embedded page counters of struct mem_cgroup all shrink by 64
+bytes, which translates to 128 bytes saved per cgroup once the one
+embedded page_counter_protection is accounted for (2176 -> 2048 bytes
+with CONFIG_MEMCG_V1=y, verified with pahole).
+
+No functional change is intended: protection semantics and the cgroup
+v1/v2 behaviour are preserved.
+
+Signed-off-by: linuszeng <linuszeng@tencent.com>
 ---
- include/linux/page_counter.h | 16 ----------------
- 1 file changed, 16 deletions(-)
+Changes in v2:
+- dmem: fix up prot.parent in get_cg_pool_locked() too, so bottom-up
+  created pools keep hierarchical protection.
+- Drop the orphaned _pad2_ padding and its stale comment from struct
+  page_counter.
+- Link to v1: https://lore.kernel.org/r/20260909-descriptive-name-v1-0-1828961cb01a@tencent.com
 
-diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
-index b81f16702764..0007960ba5a4 100644
---- a/include/linux/page_counter.h
-+++ b/include/linux/page_counter.h
-@@ -43,27 +43,11 @@ struct page_counter {
- 
- 	CACHELINE_PADDING(_pad1_);
- 
--	/* effective memory.min and memory.min usage tracking */
--	unsigned long emin;
--	atomic_long_t min_usage;
--	atomic_long_t children_min_usage;
--
--	/* effective memory.low and memory.low usage tracking */
--	unsigned long elow;
--	atomic_long_t low_usage;
--	atomic_long_t children_low_usage;
--
- 	unsigned long watermark;
- 	/* Latest cg2 reset watermark */
- 	unsigned long local_watermark;
- 
--	/* Keep all the read most fields in a separete cacheline. */
--	CACHELINE_PADDING(_pad2_);
--
--	bool protection_support;
- 	bool track_failcnt;
--	unsigned long min;
--	unsigned long low;
- 	unsigned long high;
- 	unsigned long max;
- 	struct page_counter *parent;
+---
+linuszeng (3):
+      mm: page_counter: add page_counter_protection struct and init API
+      mm: page_counter: track protection state in page_counter_protection
+      mm: page_counter: drop protection fields from struct page_counter
 
+ include/linux/memcontrol.h   | 15 ++++++---
+ include/linux/page_counter.h | 73 +++++++++++++++++++++++++++++++-------------
+ kernel/cgroup/dmem.c         | 21 +++++++------
+ mm/hugetlb_cgroup.c          |  4 +--
+ mm/memcontrol.c              | 29 ++++++++++--------
+ mm/page_counter.c            | 61 +++++++++++++++++++++++-------------
+ 6 files changed, 133 insertions(+), 70 deletions(-)
+---
+base-commit: d118502628f8b673be9023db8bdf878f64a7ed45
+change-id: 20260909-descriptive-name-e382a3f978dd
+
+Best regards,
 -- 
-2.43.7
+linuszeng <linuszeng@tencent.com>
 
 
