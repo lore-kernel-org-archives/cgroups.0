@@ -1,83 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3713B1ED0;
-	Wed,  9 Sep 2026 18:43:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0D3039B497;
+	Wed,  9 Sep 2026 18:59:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788979429; cv=none; b=jC0Yrou5kAVR30M5VVMyi6+JDKu+ARqED6PBdD+T35Xw1lgm+bl7fjnupjsZiSQjiwmR/tVvzS/bAwopB8wI84V9Cd9pkKxS9ROCydjULYkU3zNfPHpwfY9o80ui4Fcbey9InemTGjzbuAlohP4VepKLFV6UK1W2piZnLG8IqBo=
+	t=1788980400; cv=none; b=H/j4RXMhK1rGSHteGrA+Lh2ur6Hl8dRPyXLyyVXj+f0uN824sBxJ9bzabvNPjQWrPvPptg9tthB/CGoqOXhBuXIW34TiVc9ViAL73oAZQlptIMhbTrNApqAOLXLt3d9cunWDw0Ki95xS0qrvnXCNb5mkffyz+450XfIvnLq7brA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788979429; c=relaxed/simple;
-	bh=/ABAap94S+dePFPdwnvUg8PR0sbDbzMv42XkVKTqVR0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GSh9QV1EG5RkPvRMtStRc+Av3UHqzuDvfyniq4TV9JvDR2LzZ8wNy75RyP+WNnzeaOvSHQdCCBhRkALqqUwVoRH1xnglautSlprMS5clAP4xO801hm2PgkdkbZIA8H+nKdrSjeX8TIdu/TrDTeqQSWEup38xpqe0kD5vjsq/XXA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AIdiZAtB; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788980400; c=relaxed/simple;
+	bh=XJKJ7anL7hXoTXFizwsDHiJ3oit7/vRl3YUppSqzpB8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YwTHijIzp/g6pUEXZlMOyiSFHt8/EtKa63xigxi5oz/t719dnMOs9IRbMlUTdS1fB7KSn+VdNoOmwPZ7YzRty9gA944xBOv+sNsB/nmNO0uVrXyIb9b1V+WbRQXJGFiGSLUO3XY6xNvm9PWoAOCnWiiIsT/WL5rSVjY9kK4GrnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M1Q+eEm/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AIdiZAtB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE7D51F000FF;
-	Wed,  9 Sep 2026 18:43:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M1Q+eEm/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A59211F000FF;
+	Wed,  9 Sep 2026 18:59:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788979428;
-	bh=cBO086qLSBOOKWmDT9TG7Y9H6Td1it1Mgr5V18SRHdc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=AIdiZAtBo2In6rb9LsXbLf3z6fGM/GGY+ucwjosNGwZEyFo7paekLwcwLMZvxRanG
-	 PTthba8l7QoWRmJ1XhNegyKr4+BuBnWg3F8PA+E/mDPZ6zL0BEcHTRzLfeaSxDx+nc
-	 dSh7Gq6eW7Q0Ph0fZXh16LXjwA+6tnXdYRhFEoq+sFonkP/erJa6/5Oy1sxkAIouI9
-	 VzBzZQqqPv4iJ0c8UCphKKHG6grWAZwYgxQUiTiGlnC/ETnDe65nd7g2G4iDTzsDRU
-	 RYHmTn4WXHivWkfSq/TTjwkVkFBaE4qTizAxuykJK/GpnqyB3floJER0UjRjl4UpDa
-	 nyf/VTRgA6HJQ==
+	s=k20260515; t=1788980398;
+	bh=FUYw9ieBaMi9B5CXc3nNfGkqutWFJDcR4LezWBU8ycc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=M1Q+eEm/pjRG9p35tZ2tq7sBCyQ7YjpNO0MNx3uV5+xK8ugC2Vjj1A7/gdJtdv5iT
+	 gCyuHYYLuttZv8t0oUi5lzZi8SDVrn6BBjnLycPCL20X/3kCdNS4rW5zRTBkExKKfI
+	 yeClu/L6NNoswf+Im2oOinEWfvFuOtXnqrAgaNC6NH3XPKG71KaKTCa6/S6S4iPTEK
+	 Q9+h77zkGBXiA1BYxFGPpCBcz9GJNyLD1WAWqYmSp1Z0THX+cJr40XifoGRFqOKTFr
+	 Li3VyrooVn/0XoBd31V1CqSzGkknLmVIqO36kzgOkjWj72QdJ40VItqyewg4rw1ijf
+	 QASdi5vXKxwwQ==
+Date: Wed, 9 Sep 2026 08:59:57 -1000
 From: Tejun Heo <tj@kernel.org>
-To: Ziyang Men <ziyang.meme@gmail.com>
-Cc: Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>,
- Michal =?utf-8?q?Koutn=C3=BD?= <mkoutny@suse.com>,
- Jiri Kosina <jikos@kernel.org>, Benjamin Tissoires <bentiss@kernel.org>,
- David Vernet <void@manifault.com>, Eduard Zingerman <eddyz87@gmail.com>,
- Viktor Malik <vmalik@redhat.com>, Andrea Righi <arighi@nvidia.com>,
- Changwoo Min <changwoo@igalia.com>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- JP Kobryn <inwardvessel@gmail.com>,
- Mykola Lysenko <mykolal@meta.com>, Nathan Chancellor <nathan@kernel.org>,
- kernel-team@meta.com, linux-kselftest@vger.kernel.org,
- cgroups@vger.kernel.org, linux-input@vger.kernel.org,
- sched-ext@lists.linux.dev, linux-mm@kvack.org, bpf@vger.kernel.org,
- llvm@lists.linux.dev, linux-kernel@vger.kernel.org,
- Emil Tsalapatis <emil@etsalapatis.com>
-Subject: Re: [PATCH v4 1/4] selftests: add shared lib.bpf.mk to build BPF
- progs and skeletons
-Date: Wed, 09 Sep 2026 08:26:33 -1000
-Message-ID: <178897839380.2.8401342105193256410@kernel.org>
-In-Reply-To: <20260908235552.2610256-2-ziyang.meme@gmail.com>
-References: <20260908235552.2610256-1-ziyang.meme@gmail.com>
- <20260908235552.2610256-2-ziyang.meme@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+To: Junnan Zhang <zhangjn_dev@163.com>
+Cc: Michal Koutny <mkoutny@suse.com>, Johannes Weiner <hannes@cmpxchg.org>,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Shouxin Sun <sunshx@chinatelecom.cn>
+Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in
+ cgroup1_pidlist_destroy_all
+Message-ID: <aqGsrY9Vj57CsVeb@slm.duckdns.org>
+References: <aqA6x_8E3Xiewoso@slm.duckdns.org>
+ <20260909084619.91579-1-zhangjn_dev@163.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260909084619.91579-1-zhangjn_dev@163.com>
 
-Hello, Ziyang.
+Hello,
 
-This is an AI review. The finding below was reproduced with a local BPF
-build using the posted lib.bpf.mk.
+On Wed, Sep 09, 2026 at 04:46:19PM +0800, Junnan Zhang wrote:
+> Would you consider taking it as a minimal fix? Or, if the consensus
+> is to leave v1 completely untouched, what would be the recommended
+> course for production systems that keep hitting this?
 
-On Tue, Sep 08, 2026 at 04:55:49PM -0700, Ziyang Men wrote:
-> +$(lib_bpf_vmlinux_h): | $(lib_bpf_vmlinux_stamp) ;
+The problem is that the root cause isn't sufficiently established. It's just
+difficult to believe cleaning up these lists would take longer than 120s in
+itself. Maybe there were other contributing factors - e.g. another
+saturating per-cpu work item that was preventing the execution of the
+pidlist work item, high memory pressure stalling worker creation, or just
+severe CPU contention from bw control or whatnot.
 
-Please make the stamp a normal prerequisite, keeping the empty recipe:
+Without the root cause convincingly established, this can't be a "minimal
+fix". This can be a proactive behavior improvement, but that's not something
+we want to do for cgroup1 code base at this point. Not because we hate
+people on cgroup1 but because they're the legacy users on legacy code base.
+Nobody is actively working on it and no leading edge testing and adoption
+covers it. Any change carries risk of breakage and a change like this can
+lead to really subtle problems that can take a long time to diagnose
+especially with slow-moving long-tail userbase.
 
-    $(lib_bpf_vmlinux_h): $(lib_bpf_vmlinux_stamp) ;
-
-Changing a macro in a supplied VMLINUX_H updated vmlinux.h, but the same
-build left the BPF object and skeleton unchanged. Disassembly still showed
-the old constant. With the normal prerequisite, both rebuilt in one
-invocation. Touching the input without changing its contents did not rebuild
-either.
+So, yes, I'll take minimal fixes that address real problems (subject to risk
+vs. benefit balance of course), but you haven't established that yet.
 
 Thanks.
 
