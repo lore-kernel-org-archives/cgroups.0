@@ -1,113 +1,160 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC83A18DB35;
-	Wed,  9 Sep 2026 06:10:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54E0F3D1CAC;
+	Wed,  9 Sep 2026 08:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788934214; cv=none; b=Bg7Cjly/T1EKWGd8syD6/MY0DGHvcJeSogQPO1eZ2GaKa2bswGMJupDx3d029Vcrh5LlZ0n32IaCPLa01wL0SYC1Mw7D+Vhhhe7JDKojEBVZEWnLwtjMS7gjyILO8EOmQkz4MjRYfXvopTMsQ0OT+/RwbLea/ScB3U0JFx5uV6M=
+	t=1788941334; cv=none; b=tBX4I+GkZcLnxT+o8y0SbhycSm6MPyljGyHnC9UI+ZYhl5I80aK5F1xittFm4W75Ruq1C+/CBNHcRiTPeiUuu4WEDkVulXqHtM/v1bH/os1t0sAjMYzG8iXFQDaD1Phse3yuIQI5LGSe4o0iEVv5n87RDJlHAfLX3RTIv7QCw/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788934214; c=relaxed/simple;
-	bh=iLvK5koVMLb2qPO/VCWjVuq/8qm2q0mgWBFwM3kwN2s=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DkGZuZO5tknZ1aJ9LmcjlHOEP9d3LC9XjAhIIyV5S2FLlrR+Exbe5Mw1bWjoC5lLjX1B7beMDpjbAoelel570ZE5jQbSPLX8fVCusI9YBWJjjXxdis9qpdcLlWeyY1bXooPrBTiCQdrkOKzQv4IxOTaDBbWdotC2hmmCTYy/mY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=qWyMGqcf; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1788941334; c=relaxed/simple;
+	bh=0N4tCqvoyEM1SL2Vocr2i9WoAjYrlgAoSQ2+oga4Vkk=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=WPSUO8LWGcHE7F3LcygaqNZ9jFtEe6JOTXovSfRW3NdjYyQ1I7GzvAEMMXznqo4NW/IzDer/LWZT9N4VL/eLUZkCGltMcchDLmSbfV7ljPmbjl3tPjhnJ/4c8Set8YDktaSJYkNuMV1woq/IicJSstveG9gFJQPj08m0eGKVScU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ScInSnsM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="qWyMGqcf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=CQ
-	f10nkRRln1bJkiOeszGQ9fnPOoBo5zbMRzixDC9+E=; b=qWyMGqcfa1rgV8E7oh
-	Z69rlWXSQaREsNy8FkIoTClFEKJj226i/HeSzt/qqxt0NWGnHxXdLKKt0wHvtAO9
-	skn3T1ASgbwLsEnPcCq+nJOmfpdFPFOYn7fPaDnL6SB5tqb0JuqKBheOtPoV1zpi
-	pxL7QVr5yzJsTki5stJSA1hQI=
-Received: from localhost (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wBnI_Tq96BqwDFYBg--.22927S2;
-	Wed, 09 Sep 2026 14:08:43 +0800 (CST)
-From: Hui Su <sh_def@163.com>
-To: John Stultz <jstultz@google.com>,
-	Tejun Heo <tj@kernel.org>
-Cc: Hui Su <sh_def@163.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Koutny <mkoutny@suse.com>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] sched: Account cgroup CPU time to the execution context
-Date: Wed,  9 Sep 2026 15:08:43 +0900
-Message-ID: <20260909060843.2524877-1-sh_def@163.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <CANDhNCq5iPq87=iKSJv-XzYzTYJ8Hp+bPJ6SoVfWB3pRa=HypQ@mail.gmail.com>
-References: <20260904034707.268416-1-sh_def@163.com> <appnKwylGK3QUIJ3@slm.duckdns.org> <CANDhNCq5iPq87=iKSJv-XzYzTYJ8Hp+bPJ6SoVfWB3pRa=HypQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ScInSnsM"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E7E10C2BCF4;
+	Wed,  9 Sep 2026 08:08:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1788941334;
+	bh=0N4tCqvoyEM1SL2Vocr2i9WoAjYrlgAoSQ2+oga4Vkk=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=ScInSnsM2M7JBpwIMPq/Id4rgoksbi3q3+WQmS3bqquSv1GVtXJgYFOmqJ/BhL86T
+	 JC7kDXzzKkJYSJxw2hvAoCDQO/iOvVYRM3X55/JOrv9OVWSGribrNdY62+rgsDdEOa
+	 F3bJa1z5S7XjPIBsPzFOA7B7v85Q4g6X1/t45whBk8ZKWQ//V9/au9XNASLOx8JstS
+	 TqkDIi1rBoaCYWcj8Xf7IsD1PRyxKAClkbAgLmqJId5/xFAszed3p8jYRL8q+4bpym
+	 iiPOc6cbT90ZTfJ8f8bwW9hanrSTWd+UacYGg2Fnmdc96yWY4v5NHfpEH8P8pwJcC0
+	 gi9+CbjTdoG8g==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4A95C79FAD;
+	Wed,  9 Sep 2026 08:08:53 +0000 (UTC)
+From: linuszeng via B4 Relay <devnull+linuszeng.tencent.com@kernel.org>
+Subject: [PATCH 0/3] mm: page_counter: move hierarchical protection out of
+ struct page_counter
+Date: Wed, 09 Sep 2026 16:08:50 +0800
+Message-Id: <20260909-descriptive-name-v1-0-1828961cb01a@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBnI_Tq96BqwDFYBg--.22927S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Ary7tr4DGw1xZFyxWFyfJFb_yoW8ur18pa
-	nYyw1DtFn5JF4fKF4xCw4jqa4ftw4Syrs8tFWDJ347Ar13GFyrGr1IkrWUCF9rJrs3ZF1q
-	vw1F9FyI9anFvwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRo89ZUUUUU=
-X-CM-SenderInfo: xvkbvvri6rljoofrz/xtbC6gz7W2qg9+xSYAAA3l
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIABIUoWoC/x3MQQqAIBRF0a3IHyeYQWVbiQair/qDTDQkiPaeN
+ DyDex/KSIxMk3gooXDmM1S0jSC327BBsq8mrXSvjDLSI7vE8eICGewBiW7UtlvNMHpPNYsJK9/
+ /cl7e9wOwMuUWYgAAAA==
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+ Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
+ Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Oscar Salvador <osalvador@suse.de>, 
+ Jingxiang Zeng <jingxiangzeng.cas@gmail.com>
+Cc: Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org, 
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linuszeng <linuszeng@tencent.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788941332; l=4127;
+ i=linuszeng@tencent.com; s=20260909; h=from:subject:message-id;
+ bh=0N4tCqvoyEM1SL2Vocr2i9WoAjYrlgAoSQ2+oga4Vkk=;
+ b=Pt6vMJJnazt3S702QoElX0h3DiSOPfuKq644OwsYOWwrBGuuzqbgGc1I5x8AomssdowVUMDs4
+ 53xvtqoHIipD+Mkj2ZSK1V4uwV1wqmkXLlj0IzhO7K0eYBvimjsL7eZ
+X-Developer-Key: i=linuszeng@tencent.com; a=ed25519;
+ pk=6K54xRzYIRWqatrAPy86M4E0MsI92BVJBhXwz5NdC74=
+X-Endpoint-Received: by B4 Relay for linuszeng@tencent.com/20260909 with
+ auth_id=1017
+X-Original-From: linuszeng <linuszeng@tencent.com>
+Reply-To: linuszeng@tencent.com
 
-On Tue, Sep 8, 2026 at 10:17 PM John Stultz <jstultz@google.com> wrote:
->
-> I believe I'm ok with this if you are. Commit aa4f74dfd42b ("sched:
-> Fix runtime accounting w/ split exec & sched contexts") was trying to
-> allow the owner's cputime to make sense in top, but we still want the
-> donor to be "donating" their time, so I thought the compromise of
-> charging the donor's cgroup would make more sense. I'm imagining
-> something like the cpu bandwidth controllers, where it seemed like the
-> donor's cgroup is who we'd want to charge, and eventually throttle,
-> even though it is donating time to the lock owner to run (since even
-> if the lock owner's cgroup was throttled, proxying will let the donor
-> "bust" through the limit and run the lock owner using the donor's
-> bandwidth - up until the donor's bandwidth was exceeded).
->
-> But if it is causing trouble for the accounting, and you think it
-> makes more sense the other way, I'll trust your judgement.
-> Tentatively:
->    Acked-by: John Stultz <jstultz@google.com>
->
-> Eventually I think we'll want to track per-task "donated" and "gifted"
-> time so folks can more finely distinguish the accounting.
->
-> thanks
-> -john
+Hierarchical memory protection (memory.min / memory.low) is built on
+struct page_counter today: every counter carries the full protection
+state - emin/elow, the protected-usage trackers (min_usage,
+children_min_usage, low_usage, children_low_usage), the configured
+min/low values and a protection_support flag - although only the memory
+page counter (and dmem pools) ever participates in protection.
+swap/memsw, kmem, tcpmem and hugetlb counters ship this state around
+unused.
 
-Thanks John and Tejun.
+This series moves that state into a dedicated struct
+page_counter_protection, instantiated only for the counters that
+actually support protection, which shrinks struct page_counter by one
+cache line.
 
-One distinction that may help here is that this patch only changes the
-cgroup CPU usage accounting performed by cgroup_account_cputime(). It
-does not change CFS bandwidth accounting.
+Patch 1 adds struct page_counter_protection and links it to struct
+page_counter through a ->prot pointer (NULL when protection is not
+supported).  page_counter_init() loses its protection_support argument,
+and the new page_counter_init_protection() attaches the context.
+Protection stays enabled only on the cgroup v2 hierarchy, matching the
+previous page_counter_init(..., memcg_on_dfl) behaviour, and the root
+memcg keeps it unconditionally.
 
-Under proxy execution, update_curr() still accounts CFS bandwidth
-through account_cfs_rq_runtime() on the cfs_rq associated with the
-scheduling context. Thus, the donor's scheduling bandwidth continues
-to be consumed as before; this patch does not change the bandwidth or
-throttling behavior John described.
+Patch 2 migrates the read/write side of protection onto the new
+structure: propagate_protected_usage(), page_counter_set_min()/low()
+and page_counter_calculate_protection() now operate on the protection
+context, and the memcg and dmem accessors (mem_cgroup_protection,
+mem_cgroup_below_min/low, the dmem below_min/low helpers and the dmem
+eviction check) read emin/elow/children_*_usage from it.
 
-The change here only makes the observable cgroup CPU usage accounting
-follow the task that actually executed, in line with the per-task,
-thread-group, and cgroup user/system accounting.
+Patch 3 deletes the now-unused fields from struct page_counter.  On
+64-bit the structure drops from three cache lines to two, one cache
+line saved per counter.  For reference, pahole shows the layout before
+and after (x86_64, 64-byte cache lines):
 
-The donated/gifted accounting you mention sounds useful for exposing
-both sides explicitly, but I agree that would be separate follow-up
-work.
+    before:                                after:
+     0  usage                               0  usage
+     8  failcnt                             8  failcnt
+    64  emin                               64  watermark
+    72  min_usage                          72  local_watermark
+    80  children_min_usage                 80  track_failcnt
+    88  elow                               88  high
+    96  low_usage                          96  max
+   104  children_low_usage                104  parent
+   112  watermark                         112  prot
+   120  local_watermark
+   128  protection_support                 size 128, 2 cachelines,
+   129  track_failcnt                         11 members
+   136  min
+   144  low                                (the protection fields moved
+   152  high                               into struct
+   160  max                                page_counter_protection,
+   168  parent                              72 bytes, allocated only
+                                           where protection is used)
+   size 192, 3 cachelines, 19 members
 
-Thanks,
-Hui
+The four embedded page counters of struct mem_cgroup all shrink by 64
+bytes, which translates to 128 bytes saved per cgroup once the one
+embedded page_counter_protection is accounted for (2176 -> 2048 bytes
+with CONFIG_MEMCG_V1=y, verified with pahole).
+
+No functional change is intended: protection semantics and the cgroup
+v1/v2 behaviour are preserved.
+
+Signed-off-by: linuszeng <linuszeng@tencent.com>
+---
+linuszeng (3):
+      mm: page_counter: add page_counter_protection struct and init API
+      mm: page_counter: track protection state in page_counter_protection
+      mm: page_counter: drop protection fields from struct page_counter
+
+ include/linux/memcontrol.h   | 15 ++++++---
+ include/linux/page_counter.h | 76 ++++++++++++++++++++++++++++++++------------
+ kernel/cgroup/dmem.c         | 18 ++++++-----
+ mm/hugetlb_cgroup.c          |  4 +--
+ mm/memcontrol.c              | 29 ++++++++++-------
+ mm/page_counter.c            | 61 ++++++++++++++++++++++-------------
+ 6 files changed, 134 insertions(+), 69 deletions(-)
+---
+base-commit: d118502628f8b673be9023db8bdf878f64a7ed45
+change-id: 20260909-descriptive-name-e382a3f978dd
+
+Best regards,
+-- 
+linuszeng <linuszeng@tencent.com>
+
 
