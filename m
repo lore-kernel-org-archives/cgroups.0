@@ -1,224 +1,159 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783131AC45D
-	for <cgroups@vger.kernel.org>; Wed,  9 Sep 2026 03:43:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788925429; cv=none; b=fXftjue207Y1GQArQc3E0yccOLeB9bSGKrZfNL9PE+mV+4uEUwWrbylMwfsaTzYu9v8lhPRwLi6fX0hAbkNeLo/H3XOra48Gzbi51V+pWkBp4DWctwK/j0ieLbwlf45E6SZ9NK1wISB3n4fsWmnhLXetuN3TJO2Ntrgm3jp1mTc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788925429; c=relaxed/simple;
-	bh=hcjcyrx4NnLd+4sco5obi2YPfyZnF6oovxqA6Uvpvxo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OunR3rwBDhwGY8LXwNBtcdwFj5Vk14Nau4I/qzu7+fv273qRCfav2Dpa640ilcJgJigOGiVBo7xVUVedsB/F6kUYgaWXBMYadmJxntnTPzU2m32L5Y2qYyU664xSuyrXzDpyNx+IZTLcWsUfPUFy+w2M++Q+EOayJDEW0Uxg53E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=Qvc70PKi; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37B452D3733
+	for <cgroups@vger.kernel.org>; Wed,  9 Sep 2026 05:17:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788931081; cv=pass; b=mgJjb3vIN8fXckaRvOm0SFtykL0sUteA6+JS7xuYyyVkmJT3rHk9KYtgycEzC3dzQNyloi27aIKxff/FpQ3PrWp5qT2y4+4dKsly9wua8N1OW5+9fc3j3bHPUnFLgz7XGdwbTS/eb/mwZwFJjbGHKqn0pJulof6IKsZmzDx2JZ4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788931081; c=relaxed/simple;
+	bh=lTUeH7uBg1apEPj4h8nGLSJDSLS3Xk4Z953/h7Ad4fE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HZ6pKgXVVVCCnAZYSGRhtBMryX/jJ0I9mcG7Dp/5uEXZWaitCBHMZUdkt6XA5NbNb9CMyi8GAlG/Lw5j8MEu1Z3MUFN21hxCHImCMsFBmwEkWb81DppmRTtBVLGLLppsgRa7IMyS67gKykFsinG2OXlmLLRDk7SifouF8p+lLUs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=lO+67OJ3; arc=pass smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="Qvc70PKi"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-84e0688b7e8so4149973b3a.1
-        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 20:43:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="lO+67OJ3"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4998b5a63e2so63765575e9.1
+        for <cgroups@vger.kernel.org>; Tue, 08 Sep 2026 22:17:59 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788931078; cv=none;
+        d=google.com; s=arc-20260327;
+        b=PafLw6PfjnvYD+MRmxgZpi71seQwbuy0QXBrM+g+W0sLQc/b8jjGQIVaWSfzramvQq
+         GT1tVmGdUXTpeVJz2qljq1k1Fn88WJ1ALD2zRL2r2hC7VIORNeyojQxicXZaexjLD8Yy
+         RFifGK/mPVg5gJNU84vjy/fAmLcDoU9ClWefWJ0cNOE2Kk9d4WN7vPZlBJFzwiQcDD50
+         cGxg/ZFcVtrp9pKziCgACvd64HTxYtIC0ThU4HP2EzkBVv4/ZYCuLFkpAElv7D8AQ/ee
+         WWls+NSUYagN4C81+lNZBWK4c3lNhKAHcL70xaxa30aqtxYOjdkel+zy+GQu2oLFjePb
+         tdLg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=tpwg2VYWUV11d9na6aGEr4WCfSoveOTRZKFpwBK71as=;
+        fh=JwI6ltbppv95JEZ3K9M7wOVGZqQtTc4x3/pk5KxZzqc=;
+        b=KKQst5RFQEtvlzpX8CKxk7UPrk3ZyRPz2F1SHaSMPOGOxyAdIeWqYRn/IhrcfytF+H
+         VnKPdqRQQFk5FG3u+rxruF2YWL6W78VavGAahivTEMJnDK08xiP+tXUf/W1rDgoFo5tv
+         nByqlD74J1HNYflvH1vRrNpiu3S9wjvbMzVE3WrKPJxC9YC2Xi+1XD8daSse3nfN8NDB
+         2wlqnj67QGO7mgw39H0G9Y5OnHWFKdMbBbDh4NOkQYCtRb5voLwvMAoQ0SvYlbVZ0cdf
+         Jr1Mjf4XNMI1c6IHnLoSVyytDZ8AUF+mSF5oywzALN1n955rUPdhR9B/Fy8n4T1Watm1
+         51nA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1788925427; x=1789530227; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=AUs1qeMV4Avebc488kXwADqOO+7MG6W6kUjE+T02g2E=;
-        b=Qvc70PKiZeg+5rsATD9z9RSYDTyLNlqhYdOzwJBY82qgi+gt90lJz0a0gEK51KuCAu
-         fqF+YaKGMwgQgKGTFLHLcdwBcFwi/s3wXu/jGtH3kFNqeRBgMP4xJgLLMdqx9TrmsX+G
-         Te7rgwcLiQw82LGZEn1GjZ+6NA4Mn0Ca88mSItMuciPX1fD6HFPwquEQ6zu/qC4LLsIv
-         DYg0tHk1RmHrOgFmryxRr5A9WzYup6oONhuIzSigKr5vV0OwTXSNq/ozVoq78kfTxqhn
-         6IfT+tYddhxW/uGgN+/7vusQ9iT6R6BLEBbSwnoPTxTDbiyP2jnNO48md7k662tVKuUP
-         XY6Q==
+        d=google.com; s=20251104; t=1788931078; x=1789535878; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=tpwg2VYWUV11d9na6aGEr4WCfSoveOTRZKFpwBK71as=;
+        b=lO+67OJ3IGhqll8vXeLvTOahZth0zjaiU3enZNvJ6P4MLNb4rTgDLlPsgs/xCvIr9e
+         Euq/kbR6klL9Anfms2ejYXqd7EmMdXSAtvvk1znTAEyMR5WP2tKzJ96dADwwORfIMRMb
+         oSYSqGMDQQaq5OOW96FoHXvXi3TXdvq39aaoNry/CdJsmeLHea0QlgymNH5CpQSIuj3P
+         gaDl2lwRupsJ1L4/JcRAr4CDlEWtDWYaia+8LZw6sgl/rdnDoeGNLnbget4FP6tJP+J+
+         7nmEqOEvXKtW6isp8j7nF1zcYlEqxIP2iHMXRPasjsX3odleCS6BKTOKkh9NGdmpcnBw
+         z6NQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788925427; x=1789530227;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=AUs1qeMV4Avebc488kXwADqOO+7MG6W6kUjE+T02g2E=;
-        b=ZItThU/52ZdCUCuqceVeJsJgxcuHKOlRt/IZDZ4zgXcFUBjB7UMKVOn6aqnvGFEDOL
-         AclqkzjuCXW2XstX1GoarsW5wz/EhJkVD/QchODKhEISssr72lIqVxSR9EC3eEjrX8/T
-         YovZp6bE6yo92GZjT1knaOhMlyuMufrqPjZIeWjlNYzZZ3+9FhqzKiPdz7C2vDq2vAVs
-         CcYpqRjg9OuNmTevor+vrXXZKsR2F+gVUk8DuVEt7V5Yvwhqwa1CO7mLW1lt7/cIZLWx
-         +2FA6ma4kdoZxZzoce4+dyMb2bddM+PafpuDT8TO8cctSWSLrHrEuDRwsIQ16FIjKuFF
-         399A==
-X-Forwarded-Encrypted: i=1; AKwUvBzsvByrnmU+WRS2BnryxJz6+QgJpkyH3t8Z8+x3LuPQPPAMz91jDiYf2lGu0mUqrzK3vKilwtwx@vger.kernel.org
-X-Gm-Message-State: AFuF++lqLknMqqmFYp7K/9QAEWUep1Bpa1IqI5hjOM0Tr2try+lMgnrz
-	omXJ2ZZIYB4cpu5wo2Dq5bxLQriw9yKn8N5CscOOs/Bap1+Tm00W0JoKXspx5pecot72R9AHbQd
-	R6Otf5gU=
-X-Gm-Gg: AYBFou1Idm3KK+ELgABQK8m9vwVvuBkaohbK0wwvpk5HQGJmUYTb4xcluXiTXAGLiAI
-	utgeAr94sfE/KkirLfs/0W1lctwOqgFC8E5v7fF0UkDolXpNlPx8CnmnM4NHik2ZIRNp1g+aVFV
-	0Q46cU2ptTXYTdt7RQAPsvHdDb9D9kFhyVZKmINs/UCfeJ7PLJqSdC5uiwyW/YOJkYUpZnD+Kxp
-	D3XVqWd15KOxDPoueQD37wp91JkajfaER+NSqmfFWFChzZjjayUv+BY4xwsvKZ1COIUgKeY1xdA
-	YpvSz5Z5EhBSibCFnNQg1jq4/7OtNPHKhOOJwyAVEETkCcVkdgOvkoQsIOhC3LxpdW54Zv4Nzb6
-	CiRkY4AMmiwv+r0PJrCcELLJUaBoiszQuLzKoyBQobwzUlxn4AYvN25wBXx5NqWmIlaOzOeAbLH
-	gmdURhQ6/BtWbp2WW7g5MQsQ7OZ1KsgPbBAxtSEbuisfsEah/tybJP8hJL7Zs/bc7Z9xWZbcxad
-	A==
-X-Received: by 2002:a05:6a00:440f:b0:84e:b7ed:7d50 with SMTP id d2e1a72fcca58-861684928fcmr45806421b3a.16.1788925426536;
-        Tue, 08 Sep 2026 20:43:46 -0700 (PDT)
-Received: from localhost ([106.38.226.27])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-86153f417f2sm6071019b3a.58.2026.09.08.20.43.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 20:43:46 -0700 (PDT)
-From: Julian Sun <sunjunchao@bytedance.com>
-To: linux-mm@kvack.org,
-	cgroups@vger.kernel.org
-Cc: hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org,
-	axboe@kernel.dk,
-	tj@kernel.org,
-	jack@suse.cz
-Subject: [PATCH v3] writeback, memcg: skip foreign dirty tracking for bdev inodes
-Date: Wed,  9 Sep 2026 11:43:43 +0800
-Message-Id: <20260909034343.340703-1-sunjunchao@bytedance.com>
-X-Mailer: git-send-email 2.39.5
+        d=1e100.net; s=20251104; t=1788931078; x=1789535878;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=tpwg2VYWUV11d9na6aGEr4WCfSoveOTRZKFpwBK71as=;
+        b=deYh97H5hHY3o+hRHU+R6wkJHqWw9O1XGnrQSY4ndsNcYSdMm82yTRxzeQFXajDEg8
+         mzHwXCzfFns5ylIAy5vA/GdnccUun4PvKL/JNSdhJRu6QmX8uDMSRm9H04oAfbRdJMcY
+         l3PvfEFGqkDIwlEq39MJnKg4MqMwafKF3ItzlQhDPuTvX3n04VaSckLx3K7vBNFt/UM5
+         BJbN1+Pf2z3EeK8ld8BsEGJ3nFTHhYzkXLRoNFDjiN7zoJg7NbJok+A+7eyW2Om1XS1c
+         wt4pHXGAPekGTw1mHBjeZTfaEo02wqkPiFV31MYDsg/a712fs1N59cMsnfT/8p5GMatu
+         wpTg==
+X-Forwarded-Encrypted: i=1; AKwUvBy05xJPycX/64z/gAOgYtuEDhH/KSadBGV5Ayz4lHswDmJnDqukHBzLU4b1aQhDNqfBc+N5tQpu@vger.kernel.org
+X-Gm-Message-State: AFuF++ltwxoUkXIyD2IRGtgDImzLG2vMRSNDvYWm9soGFM6yIALGKwHS
+	5grTFiEor+mXu/2TTuBigo5YUK19qcQ7IJfwxSFANxdl1HSp4Nu55JQXxVu9ttvRo/ZUfFpIek8
+	W6yMSwlFsFYyrMIbmpSl2dCByRLwUflm0exfAyVY=
+X-Gm-Gg: AYBFou1Qr56MyxuS2++L8JisFM+TwyTjbzFObCO4Rm9/6fZ2LhY9PXl0SbGRJDwrhhq
+	oupWSTqtVBOWHCQQ+eUh50mbtwq3wmTfXA+NvnyddQlt8aiWaidTUdMeAwc3Cx1XMRNtQHmB7eo
+	5fifo4ny4CB4J9/aptlh98NFHhnlZWHkhmkmBXbIm6GymQZ1dC8IzhwXJ+wSdSoLjLe9/vFckiW
+	7HQJoHLbHZlDLvuBtHZDpyz4Wyptau5yVbPK/9ee26qrAvtzWP+7j/WMmd2AR6PjEg/Mm1Snmw0
+	EzHfrQe5Zra+q8NAgAsHJOYegZ6VWpu39hAVmAKbSBejzkIjPqtXyFcPRNKZmJivoHpsDvMeJA8
+	Xj25cypAT91sZjKSTBXXl0FsEnnJyR0PMIEiretNDDKY3Ow09g3O0EE+LnuJCF0eBVW4YRbL+EX
+	KiduQ/DOk=
+X-Received: by 2002:a05:600c:3f19:b0:49c:fc6c:be13 with SMTP id
+ 5b1f17b1804b1-49cfc6cc0f4mr295286715e9.25.1788931077754; Tue, 08 Sep 2026
+ 22:17:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260904034707.268416-1-sh_def@163.com> <appnKwylGK3QUIJ3@slm.duckdns.org>
+In-Reply-To: <appnKwylGK3QUIJ3@slm.duckdns.org>
+From: John Stultz <jstultz@google.com>
+Date: Tue, 8 Sep 2026 22:17:45 -0700
+X-Gm-Features: AcwNN1XZTxQTZZ7aSCZe1KjWtvEMHTatn6Zj5p6jHaQ6JF4P0FCajzYWel3JKFI
+Message-ID: <CANDhNCq5iPq87=iKSJv-XzYzTYJ8Hp+bPJ6SoVfWB3pRa=HypQ@mail.gmail.com>
+Subject: Re: [PATCH v2] sched: Account cgroup CPU time to the execution context
+To: Tejun Heo <tj@kernel.org>
+Cc: Hui Su <sh_def@163.com>, Ingo Molnar <mingo@redhat.com>, 
+	Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, 
+	Vincent Guittot <vincent.guittot@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Koutny <mkoutny@suse.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, 
+	Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, 
+	Valentin Schneider <vschneid@redhat.com>, K Prateek Nayak <kprateek.nayak@amd.com>, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The expectation in wbc_detach_inode() that "concurrent write sharing of an
-inode is expected to be very rare" does not hold for bdev inodes. On ext4,
-metadata from many memcgs shares the same bdev inode, so dirty throttling
-in those memcgs can repeatedly trigger foreign flushes of the owner wb.
-These flushes can also write ordinary file data, reducing overwrite
-coalescing under continuous buffered overwrites. The resulting extra I/O
-leaves less device bandwidth for other workloads.
+On Thu, Sep 3, 2026 at 11:37=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
+>
+> On Fri, Sep 04, 2026 at 11:47:07AM +0800, Hui Su wrote:
+> > Proxy execution separates the scheduling context from the execution
+> > context. Commit aa4f74dfd42b ("sched: Fix runtime accounting w/ split
+> > exec & sched contexts") made per-task and thread-group runtime
+> > accounting follow the task that actually executes, while cgroup CPU
+> > usage is charged to the donor.
+> >
+> > When the donor and execution task belong to different cgroups, this
+> > makes a task's execution time count against a different cgroup from the
+> > one the task belongs to.
+> >
+> > Cgroup CPU usage should follow the execution context, matching the
+> > per-task, thread-group, and cgroup user/system accounting. Keep
+> > scheduling state associated with the donor, but charge cgroup CPU
+> > usage to rq->curr.
+> >
+> > A reproducer with the donor and execution task in separate cgroups
+> > showed the execution task accumulating runtime while cgroup CPU usage
+> > was charged to the donor's cgroup. With this change, the execution
+> > task's cgroup accumulates the CPU usage instead. The same behavior was
+> > verified with an RT donor and with legacy cpuacct accounting.
+> >
+> > Fixes: aa4f74dfd42b ("sched: Fix runtime accounting w/ split exec & sch=
+ed contexts")
+> > Suggested-by: Tejun Heo <tj@kernel.org>
+> > Signed-off-by: Hui Su <sh_def@163.com>
+>
+> Provided John is okay with going this way:
+>
+> Acked-by: Tejun Heo <tj@kernel.org>
 
-Skip foreign dirty tracking for bdev inodes. Ordinary writeback and
-foreign dirty tracking for non-bdev inodes are unchanged.
+I believe I'm ok with this if you are. Commit aa4f74dfd42b ("sched:
+Fix runtime accounting w/ split exec & sched contexts") was trying to
+allow the owner's cputime to make sense in top, but we still want the
+donor to be "donating" their time, so I thought the compromise of
+charging the donor's cgroup would make more sense.   I'm imagining
+something like the cpu bandwidth controllers, where it seemed like the
+donor's cgroup is who we'd want to charge, and eventually throttle,
+even though it is donating time to the lock owner to run (since even
+if the lock owner's cgroup was throttled, proxying will let the donor
+"bust" through the limit and run the lock owner using the donor's
+bandwidth - up until the donor's bandwidth was exceeded).
 
-In a synthetic ext4 test with cgroup v2 (QEMU/KVM, 4 vCPUs, 8 GiB RAM),
-device writes are capped at 200 MiB/s. fio repeatedly overwrites a 256 MiB
-file in the root wb while four memory- and I/O-limited memcgs generate
-metadata and trigger foreign flushes through dirty throttling. A concurrent
-fio performs 16 GiB of sequential direct writes on the same filesystem.
-Across five pairs with 9 GiB of buffered overwrites per run, mean results
-are:
+But if it is causing trouble for the accounting, and you think it
+makes more sense the other way, I'll trust your judgement.
+Tentatively:
+   Acked-by: John Stultz <jstultz@google.com>
 
-                                      Baseline    Skip bdev
-  Overwritten-file device writes       5.60 GiB     1.70 GiB (-69.6%)
-  Foreground completion time           104.2 s      89.1 s   (-14.4%)
-  Foreground bandwidth                 157.3 MiB/s 183.8 MiB/s
-  Foreground p99 completion latency     1434 ms      480 ms
+Eventually I think we'll want to track per-task "donated" and "gifted"
+time so folks can more finely distinguish the accounting.
 
-The tradeoff is that memcgs with dirty bdev folios lose this way of
-requesting writeback to relieve dirty pressure. In a separate uncapped ext4
-test, a memcg with memory.high=256 MiB creates 60,000 files paced at 4,000
-files/s, each with a distinct 128-byte xattr, and makes occasional buffered
-data writes. The xattrs use external 4 KiB blocks. Across two pairs,
-completion is 31-33% slower including final sync, while device writes
-remain about 524 MiB.
-
-With 64-byte xattrs stored within the inode, the same paced workload
-showed no substantial completion-time regression, including at
-memory.high=16 or 32 MiB where the baseline triggered dirty throttling
-and foreign flushes.
-
-I believe this external-xattr-heavy workload under memory pressure is
-relatively uncommon in practice, and expect the benefits to outweigh the
-regression. I therefore consider this an acceptable workaround.
-
-Core fio commands for the overwrite test:
-
-    fio --name=hotspot --filename="$dir/hot.data" --rw=write \
-        --bs=64K --ioengine=psync --direct=0 --thread=1 \
-        --size=256M --io_size=9216M --rate=64M \
-        --refill_buffers=1 --invalidate=0 --eta=never \
-        --output-format=json --output="$out/target.json" &
-    hot_pid=$!
-
-    sleep 8
-    fio --name=foreground --filename="$dir/foreground.data" \
-        --rw=write --bs=1M --ioengine=libaio --iodepth=32 \
-        --direct=1 --thread=1 --invalidate=0 --size=4096M \
-        --io_size=16384M --eta=never --output-format=json \
-        --output="$out/foreground.json"
-    wait "$hot_pid"
-
-In the log below, base is the original kernel and skip includes this
-patch. hot_GiB is device writes for the repeatedly overwritten file,
-including final sync; the other performance columns describe foreground
-fio.
-
-Full five-pair log:
-nohup: ignoring input
-[2026-09-05 17:52:10] RESULTS=/tmp/cgwb-20260905-175145; WARNING: reformats /dev/nvme5n1; 5 pair(s), limit=200 MiB/s
-[2026-09-05 17:52:10] round-001-base: booting
-[2026-09-05 17:52:20] round-001-base: running workload
-[2026-09-05 17:55:36] round-001-skip: booting
-[2026-09-05 17:55:45] round-001-skip: running workload
-[2026-09-05 17:58:57] ROUND 1: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
-[2026-09-05 17:58:57]          base    104.574   156.67    156.67    203.82   1434.45     5.862    0
-[2026-09-05 17:58:57]          skip     89.125   183.83    183.83    173.62    480.25     1.656    0
-[2026-09-05 17:58:57] skip vs base: bandwidth +17.33%, time -14.77%, hotspot IO -71.75%
-[2026-09-05 17:58:57] round-002-skip: booting
-[2026-09-05 17:59:06] round-002-skip: running workload
-[2026-09-05 18:02:18] round-002-base: booting
-[2026-09-05 18:02:27] round-002-base: running workload
-[2026-09-05 18:05:42] ROUND 2: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
-[2026-09-05 18:05:42]          base    103.533   158.25    158.25    201.75   1434.45     5.493    0
-[2026-09-05 18:05:42]          skip     89.124   183.83    183.83    173.65    480.25     1.730    0
-[2026-09-05 18:05:42] skip vs base: bandwidth +16.17%, time -13.92%, hotspot IO -68.50%
-[2026-09-05 18:05:42] round-003-base: booting
-[2026-09-05 18:05:52] round-003-base: running workload
-[2026-09-05 18:09:06] round-003-skip: booting
-[2026-09-05 18:09:15] round-003-skip: running workload
-[2026-09-05 18:12:28] ROUND 3: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
-[2026-09-05 18:12:28]          base    104.648   156.56    156.56    203.96   1434.45     5.334    1
-[2026-09-05 18:12:28]          skip     89.243   183.59    183.59    173.92    480.25     1.824    0
-[2026-09-05 18:12:28] skip vs base: bandwidth +17.26%, time -14.72%, hotspot IO -65.80%
-[2026-09-05 18:12:28] WARN: runtime diagnostics present; inspect each data/dmesg before using this pair.
-[2026-09-05 18:12:28] round-004-skip: booting
-[2026-09-05 18:12:37] round-004-skip: running workload
-[2026-09-05 18:15:50] round-004-base: booting
-[2026-09-05 18:16:00] round-004-base: running workload
-[2026-09-05 18:19:15] ROUND 4: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
-[2026-09-05 18:19:15]          base    103.565   158.20    158.20    201.84   1434.45     5.497    0
-[2026-09-05 18:19:15]          skip     89.124   183.83    183.83    173.57    480.25     1.648    0
-[2026-09-05 18:19:15] skip vs base: bandwidth +16.20%, time -13.94%, hotspot IO -70.01%
-[2026-09-05 18:19:15] round-005-base: booting
-[2026-09-05 18:19:24] round-005-base: running workload
-[2026-09-05 18:22:41] round-005-skip: booting
-[2026-09-05 18:22:50] round-005-skip: running workload
-[2026-09-05 18:26:03] ROUND 5: kind     seconds    MiB/s      IOPS   mean_ms    p99_ms   hot_GiB WARN
-[2026-09-05 18:26:03]          base    104.567   156.68    156.68    203.78   1434.45     5.830    1
-[2026-09-05 18:26:03]          skip     89.035   184.02    184.02    173.47    480.25     1.648    0
-[2026-09-05 18:26:03] skip vs base: bandwidth +17.44%, time -14.85%, hotspot IO -71.72%
-[2026-09-05 18:26:03] WARN: runtime diagnostics present; inspect each data/dmesg before using this pair.
-[2026-09-05 18:26:03] DONE: 5 pair(s); all test VMs stopped
-
-Fixes: 97b27821b485 ("writeback, memcg: Implement foreign dirty flushing")
-Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
----
- mm/memcontrol.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1271d390b617..6e8f7ff7d44a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3898,6 +3898,15 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
- 	u64 oldest_at = now;
- 	int oldest = -1;
- 	int i;
-+	struct address_space *mapping = folio_mapping(folio);
-+	struct inode *bdev_inode = mapping ? mapping->host : NULL;
-+
-+	/*
-+	 * Bdev inodes are usually shared by many memcgs so foreign
-+	 * tracking leads to frequent flushes which is counterproductive.
-+	 */
-+	if (bdev_inode && sb_is_blkdev_sb(bdev_inode->i_sb))
-+		return;
- 
- 	trace_track_foreign_dirty(folio, wb);
- 
--- 
-2.39.5
-
+thanks
+-john
