@@ -1,145 +1,171 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-52.mta1.migadu.com [95.215.58.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF52E3AFD08;
-	Thu, 10 Sep 2026 08:58:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFD423AF65B
+	for <cgroups@vger.kernel.org>; Thu, 10 Sep 2026 09:46:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789030707; cv=none; b=oi7ysXHcpwvT3GbqH+Idw7sIAnpwZoyqGn906wXJyPlz7mnU75RRjqmFRxPPjPfvo+eConxa2WesDWXR0kDmBg2EBtuDkX0JReGIHYPMv6gBVRAPMCrlrCxJlpngKGDNMFJgOJlWE6rh3EKnRT9Yhn2ZfZ2xZJ9t/zqaXzrrwNA=
+	t=1789033587; cv=none; b=RumEXEOh7BQeaG20JAV9sfeYqh7fDjkyuzbWxdYnUdFWxLnkWKAnTGGDJa/AO7tFb7OWqFohlQq+329nUd8JsgC9hZ/3GCqJmYXymOgWECKlLGYY+Pta2htLhyBokpNRCvbeP1Bfo2dsahgzJvXxyPVG8ha4eYRn7or0ZoCZ2Fc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789030707; c=relaxed/simple;
-	bh=he5KiB6VLqYXxJgUJv16m3SCnnY9BNTeNN1ibGIWJqM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XqerZ7GShUykS21BTRJUw3NFS3kyB4EONMCjwDtCMMyM4/3Mc+GdZ4z1mpQc8fDj6CEAm/w/xhqEORCJKLZARWHRKwOAtnjsAFl4lL7ONplk52/iWek2YZUBMP73xGpEh460s4w4n/jN0x554KhG1Yecwyy9qwXket6zjxfjRyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MpUzMoWR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789033587; c=relaxed/simple;
+	bh=1s0sTBKgmDXAyT/yWUt1Cx4H07lp4AXlO812CGcK5cg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g1EWyZ0x7lMRrKxvV228lT5hrQwAsYPv6LPC+AIKbcAzpjKgy/bMNbjqLfnJWeBAG/bu/Si0oQqS3SSqPOOFnqvntIQkFXR3F2pt1P6zyuFKOgH9WCZC3jN4uVr0CB+lyHav4UrNStD4/cVG7ytoH6/DRcln8sQM+MV/SIOlHY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=blMD8T1A; arc=none smtp.client-ip=95.215.58.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MpUzMoWR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77F9A1F000FF;
-	Thu, 10 Sep 2026 08:58:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789030705;
-	bh=MG/9KXk2jvCpvz70MN0ACXgz/x6FHQZmZN1K2kd/4gQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=MpUzMoWRzc3w1dvHb0CKLDIJvfk81hBvJ+Ry3Z+tKkJ33lHiA4C3lJqJduoDoCZg9
-	 goTs7zPI+AZIcnyDN+JDE8LQnV+mGfKRV4T7DqsNyTS9GLLTKG3YL8q4VaukX5vyNr
-	 2Bdt5xG4J/Yp4QB3ushFrsyBjyEuFRxjMrzXErhETCfeTUi0Wst2Jtmc5CirLr/bar
-	 FVhUeA0camPh5dX7vV9lPfJ79mNvls4s+q0bUM8P+Q7GyqdIpCADxOmPdHsPoBgMKd
-	 0PPSkqz+JiLYrDRjsj0HyjbPQQE1nOrSub/adIftRor4yJB57BG447JjC0MsMN/ncm
-	 LvpeJNdugcQEA==
-Message-ID: <e2d2b01e-e6eb-4009-a07e-e615d576c0c3@kernel.org>
-Date: Thu, 10 Sep 2026 10:58:05 +0200
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="blMD8T1A"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=1s0sTBKgmDXAyT/yWUt1Cx4H07lp4AXlO812CGcK5cg=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789033580; v=1; x=1789638380;
+ b=blMD8T1AfzsQdjle660JGRIK4zfXJSdA+KEA3EIQHXyiL/KZL8vf4Lmq3SG8qrgicr8VCgBv
+ 326qLFJCQJ6RP92ZwSDIzaKzwOuxvE4jux6ijJsDbpX5c+i/OlH5gncrTQqLjL/qU1m4OuPywsy
+ o+WppX6FhQl3/RCD59UOHPNE=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 23d0f6ffbb5a8dda;
+	Thu, 10 Sep 2026 09:46:20 +0000
+X-Mizu-Trace-ID: 23d0f6ffbb5a8dda
+X-Migadu-Flow: FLOW_OUT
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+To: Waiman Long <longman@redhat.com>,
+	Ridong Chen <ridong.chen@linux.dev>
+Cc: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Guopeng Zhang <guopeng.zhang@linux.dev>
+Subject: [PATCH v4 0/7] cgroup/cpuset: Fix partition transitions and invalidation
+Date: Thu, 10 Sep 2026 17:45:39 +0800
+Message-ID: <20260910094546.5852-1-guopeng.zhang@linux.dev>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 14/36] mm/damon: skip private node memory in DAMON
- migration and pageout
-To: Gregory Price <gourry@gourry.net>, SJ Park <sj@kernel.org>
-Cc: arun.george@samsung.com, balbirs@nvidia.com, brendan.jackman@linux.dev,
- yuzenghui@huawei.com, apopple@nvidia.com, alucerop@amd.com,
- matthew.brost@intel.com, akpm@linux-foundation.org, ljs@kernel.org,
- liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com,
- mhocko@suse.com, corbet@lwn.net, skhan@linuxfoundation.org,
- gregkh@linuxfoundation.org, rafael@kernel.org, dakr@kernel.org,
- djbw@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com,
- alison.schofield@intel.com, osandov@osandov.com, jannh@google.com,
- pfalcato@suse.de, jackmanb@google.com, hannes@cmpxchg.org, ziy@nvidia.com,
- pbonzini@redhat.com, osalvador@suse.de, joshua.hahnjy@gmail.com,
- rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com,
- kasong@tencent.com, qi.zheng@linux.dev, shakeel.butt@linux.dev,
- baohua@kernel.org, axelrasmussen@google.com, yuanchu@google.com,
- weixugc@google.com, yury.norov@gmail.com, linux@rasmusvillemoes.dk,
- longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org, mkoutny@suse.com,
- jgg@ziepe.ca, jhubbard@nvidia.com, peterx@redhat.com,
- baolin.wang@linux.alibaba.com, npache@redhat.com, ryan.roberts@arm.com,
- dev.jain@arm.com, lance.yang@linux.dev, usama.arif@linux.dev,
- xu.xin16@zte.com.cn, chengming.zhou@linux.dev, roman.gushchin@linux.dev,
- muchun.song@linux.dev, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, driver-core@lists.linux.dev,
- nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
- linux-debuggers@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- kvm@vger.kernel.org, cgroups@vger.kernel.org, damon@lists.linux.dev,
- linux-kselftest@vger.kernel.org, kernel-team@meta.com
-References: <amCzmkdOr6AFv_kQ@gourry-fedora-PF4VCD3F>
- <20260723001943.95854-1-sj@kernel.org>
- <amGHuputMNCFZ9CV@gourry-fedora-PF4VCD3F>
-From: "David Hildenbrand (Arm)" <david@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=david@kernel.org; keydata=
- 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
- qIws/H2t
-In-Reply-To: <amGHuputMNCFZ9CV@gourry-fedora-PF4VCD3F>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 7/23/26 05:25, Gregory Price wrote:
-> On Wed, Jul 22, 2026 at 05:19:42PM -0700, SJ Park wrote:
->> On Wed, 22 Jul 2026 08:16:56 -0400 Gregory Price <gourry@gourry.net> wrote:
->>
->>>
->>> See the damon changes in:
->>>
->>> https://lore.kernel.org/linux-mm/al-pkvmgIxGu3LzM@gourry-fedora-PF4VCD3F/T/#mfb99303c85dd9d4c3f58832dc28fc55583a7217a
->>
->> Summarizing what you want to say, quoting something from the patch, or at least
->> calling it "26th patch of this series" would have made reviewing much easier.
->> Cc-ing damon@ for only patches that toucing DAMON source files and the cover
->> letter of the series could also be helpful.  Please consider doing some of
->> these for future replies.
->>
-> 
-> I have been very much discouraged from this kind of trimming because it
-> removes the context of the series from the individual patches - making it
-> even more confusing.
+Several partition type-change and validation paths use effective_xcpus,
+which also includes CPUs assigned to valid child partitions. As a result,
+changing a parent between root and isolated can alter a child's isolation
+accounting or fail housekeeping validation because of CPUs the parent does
+not own.
 
-Yes, 99% of upstream maintainers will scream at you if you CC them only on
-individual patches :)
+A proposed parent CPU mask needs different treatment for children which
+would become invalid under that mask. CPUs they can no longer retain must
+be accounted for under their new owner, including in the parent's
+housekeeping validation. Otherwise a parent can pass validation with a
+boot-isolated CPU hidden behind a child which is about to become invalid.
+
+There are related problems in the paths which apply CPU mask changes and
+propagate partition invalidation. Child validation can use an old parent
+exclusive mask, CPUs released by an invalid child can retain their former
+isolation state, and a later hierarchy walk can incorrectly make an
+out-of-mask child valid again. Configured masks are also published too late
+for partition update paths which inspect or revisit the cpuset.
+
+Factor the child invalidation checks into cs_partition_error() and keep the
+complete parent exclusive mask and the remaining active mask explicit at
+its call sites. Use directly owned CPUs for root/isolated type changes and
+housekeeping validation, invalidate the appropriate isolated ancestor when
+the last housekeeping CPU is returned, and release partition CPUs after a
+failed type-change validation.
+
+Use newly computed masks when invalidating children, update isolation
+accounting according to the partition receiving each CPU, prevent
+out-of-mask children from being revalidated, and publish configured masks
+before partition updates can inspect or revisit the cpuset.
+
+This v4 contains only the seven cpuset implementation patches. Patches 1-3
+correspond to the three implementation patches in v3; patches 4-7 add the
+related fixes for child invalidation, propagated isolation accounting and
+publication of configured CPU masks. The selftests from v3 and the
+additional regression tests are kept locally for validation. I plan to
+submit them as a separate series after these fixes are accepted.
+
+Testing:
+
+The previously reported local results, using the selftests retained
+outside this series, are:
+
+- Partition type-change tests with isolcpus=domain,15: all applicable
+  tests passed.
+- Housekeeping CPU-return tests with
+  nohz_full=1-14 isolcpus=domain,15: both cases passed.
+
+Changes in v4:
+
+- temporarily drop all selftest patches, including those posted in v3,
+  as the current test design needs rework and some cases are redundant;
+  retain them locally for validation and submit them as a separate series
+  after the fixes are accepted;
+- rename child_partition_error() to cs_partition_error(), document its
+  inputs and keep the complete and remaining CPU masks explicit;
+- add the related child-invalidation, propagated isolation-accounting and
+  configured-mask publication fixes as patches 4-7;
+- keep child containment, invalid-partition recovery and direct isolation
+  accounting in the same patch around
+  compute_partition_effective_cpumask();
+- use the newly computed, unfiltered exclusive mask to validate children
+  and account offline CPUs released by an invalid child;
+- prevent a later hierarchy walk from revalidating an out-of-mask child;
+- update isolation accounting when invalidation propagates through a
+  member or invalid parent;
+- publish cpus_allowed and exclusive_cpus before partition update paths
+  inspect or revisit the cpuset.
+
+Link: https://lore.kernel.org/all/20260902102615.79189-1-guopeng.zhang@linux.dev/
+
+Changes in v3:
+
+- factor the child partition validity rules into a preparatory patch and
+  reuse them for trial ownership calculation;
+- during trial validation, subtract only children which remain valid under
+  the proposed parent CPU mask, covering both PERR_INVCPUS and PERR_NOCPUS;
+- keep cs->effective_xcpus as the default isolation-accounting mask and
+  use the directly owned mask only for a successful root/isolated type
+  change;
+- use an isolated child for the boot-isolated trial-validation tests, as a
+  root child containing that CPU fails immediately with PERR_HKEEPING;
+- make the isolated-ancestor walk safe when it reaches the top cpuset and
+  clarify the member-transition handling;
+- force hierarchy propagation after invalidating an isolated ancestor and
+  verify task CPU masks and descendant partition states;
+- move the test process back to the root cgroup and clean up nested
+  housekeeping-return test cgroups on failure.
+
+Link: https://lore.kernel.org/all/20260828095643.13395-1-guopeng.zhang@linux.dev/
+
+Changes in v2:
+
+- split the type-transition fixes from the original series;
+- merge the child-owned accounting and validation changes;
+- validate trial CPU masks against CPUs owned directly by the partition;
+- handle a root child returning the last housekeeping CPU, including
+  nested isolated ancestors;
+- use the common partition-disable path after type-change validation
+  failure;
+- initialize boot-isolated CPU data during selftest setup;
+- split the accounting, child-owned validation and housekeeping-return
+  tests.
+
+Link: https://lore.kernel.org/all/20260820124202.517160-1-guopeng.zhang@linux.dev/
+
+Guopeng Zhang (7):
+  cgroup/cpuset: Factor out child partition validation
+  cgroup/cpuset: Account for child CPU ownership in partition changes
+  cgroup/cpuset: Release CPUs when type-change validation fails
+  cgroup/cpuset: Fix child invalidation after parent CPU changes
+  cgroup/cpuset: Fix isolation accounting on propagated invalidation
+  cgroup/cpuset: Publish cpus_allowed before partition updates
+  cgroup/cpuset: Publish exclusive_cpus before partition updates
+
+ kernel/cgroup/cpuset.c | 277 ++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 247 insertions(+), 30 deletions(-)
 
 -- 
-Cheers,
-
-David
+2.43.0
