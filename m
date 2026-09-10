@@ -1,80 +1,68 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BC673A2572;
-	Thu, 10 Sep 2026 05:41:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912EF3BB135;
+	Thu, 10 Sep 2026 06:17:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789018895; cv=none; b=AUXZxg1YVMSRxyk/5RIF+kfGLJFRJFHMQrt+XaNdZVCwds3kjJC4DeXFTWqO/UIoZ+KmvcKS7mnyTLRyoKEBWTsvK3vbFX1TVXYdEJY+K96iUO1hxwnyWT5V57MVMkJdYAxkCrrjuCX1o4OKdNqTn9I2pjFUihsHTQjqXnhk1xA=
+	t=1789021034; cv=none; b=STxpswzehNT8FBQQ3gc3tjOpaeyEafUngJZUtECikGSuhQ08LF62JE1fUzlMsytK6Mr53YBSLNGD9khu82UdhjwBHRcEx+CcdHBDr4Z6qlpBBkYmR8nZV0oDhua6IOTB7diGwHr5Z4JsgkBjpcvmBrNZsok5k8mu6v0RCmEmHT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789018895; c=relaxed/simple;
-	bh=QTe1maqDB5loOzncoTs+Y0dn6EHlYTRJncmuVOdTIu0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hHJ+Op/hSe6Psz9wF3qOnxQoGn2TVLYMcRjElSh9ZwCKbGYaIRkjvmdJJuRCX+8pCkMQByNItsBh585IWikzmeUxcHyd3B+OcrcQMpzYugwg4ZKRP48Qc3xi0WK66StPgV3g4B6Iyvl7sbOD2yCsL35e5UyPJypfEOFEdSzPoPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RmexEMbB; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1789021034; c=relaxed/simple;
+	bh=W5n1szKTlD2UUANHlXzPnHSKm2VVYA14OjCDAdDsGfo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BNXtGZKEua2DoiOyh6aX9r0ueg3mt9A+/zBxMQfFnyCh/WCaKhyHe6xd2HBTC59snT8HMSm5ZMfvKGOE5A67zKuptrnDKl4Qb+CWaoNywIG3q08YL4fMzwwaLwYBkvxQGeTWpPbGx0JdUMu4Wvl7qH3g9KHduHbd+UkZscJQu+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MyEFahQy; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RmexEMbB"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Pmlf15rJxZgO7eQQkJpIuKwAVLruLNQvd8UgNwztSEo=; b=RmexEMbBNFMTs50rFaEKMYszrh
-	wWpR52U0Rl2PnvFs48ssHfTr4Ve8ziX8uzWnzndnndAvrSY3Szm15wogstHD+zoviXR230d7XLo1x
-	6rYETcn0EI7gkl2lR/KhT2GEsZbO261EaLEfCgl6gwizb6M+LIMPH7quj05A2AP/G86Y3fwcj5GP8
-	iNbGA7D3zw5hxGFOl+wwX2gcTQeAiaoMW8N8YGfCf6dPwNDh0Cb+kmZ0FYroDqxVmGGvNfgHC4Z6H
-	v7aSPx4DPpMJOk7dW+EXj9pDA+c1JOtXjZyGQN0msRG0QqWpTProH16y8swABORTZNVkYqKoSLaJp
-	WffHRnhg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x4XXO-0000000DT3s-1mkS;
-	Thu, 10 Sep 2026 05:41:30 +0000
-Date: Wed, 9 Sep 2026 22:41:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: tj@kernel.org, josef@toxicopanda.com, axboe@kernel.dk,
-	cgroups@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
-Subject: Re: [PATCH 1/4] blk-iocost: charge flushes as pageless random writes
-Message-ID: <aqJDCtbWqXlPu0X9@infradead.org>
-References: <20260908022135.1429281-1-cui.tao@linux.dev>
- <20260908022135.1429281-2-cui.tao@linux.dev>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MyEFahQy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=W5
+	n1szKTlD2UUANHlXzPnHSKm2VVYA14OjCDAdDsGfo=; b=MyEFahQymaFAFSk6Zp
+	ZXIFTwPjpqXBMJUriw7hN4naGzL4bh97QwEQaREyyJsRJqg5VJ6QnoznPJkg4ABU
+	Mj/JpwWyNq/IjLWzZixhyV3lUWzxZXpfnmWUhCt7FV6wGsElqPjilCLaw5Q71Tj9
+	n1AGYQ9wJRmtM/lDAzxEEgtd4=
+Received: from sky.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3_5krS6JqpT+PBw--.37361S2;
+	Thu, 10 Sep 2026 14:16:12 +0800 (CST)
+From: Junnan Zhang <zhangjn_dev@163.com>
+To: tj@kernel.org
+Cc: cgroups@vger.kernel.org,
+	hannes@cmpxchg.org,
+	linux-kernel@vger.kernel.org,
+	mkoutny@suse.com,
+	ridong.chen@linux.dev,
+	sunshx@chinatelecom.cn,
+	zhangjn_dev@163.com
+Subject: Re: [PATCH v3] cgroup: avoid flushing global workqueue in cgroup1_pidlist_destroy_all
+Date: Thu, 10 Sep 2026 14:16:10 +0800
+Message-ID: <20260910061610.91209-1-zhangjn_dev@163.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <aqGsrY9Vj57CsVeb@slm.duckdns.org>
+References: <aqGsrY9Vj57CsVeb@slm.duckdns.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260908022135.1429281-2-cui.tao@linux.dev>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3_5krS6JqpT+PBw--.37361S2
+X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjTRRc_aDUUUU
+X-CM-SenderInfo: x2kd0wxmqbvvry6rljoofrz/xtbC7QwhtmqiSywFxQAA3Z
 
-On Tue, Sep 08, 2026 at 10:21:32AM +0800, Tao Cui wrote:
-> From: Tao Cui <cuitao@kylinos.cn>
-> 
-> Standalone flushes issued by blkdev_issue_flush() are represented as
-> dataless REQ_OP_WRITE | REQ_PREFLUSH bios, which
-> calc_vtime_cost_builtin() prices at zero.  The flush component of
-> flush-heavy workloads such as database commits, journal flushes, and
-> metadata sync is thus neither charged nor throttled: a cgroup at 1% weight
-> can issue ~510k flushes per 12s, monopolizing the device while iocost
-> reports zero usage.
-> 
-> Price them as pageless random writes (LCOEF_WRANDIO), which provides
-> an approximation of the device time consumed by a flush.  For
-> profiles where WRANDIO clamps to zero (ssd_dfl / ssd_fast), use a
-> one-page floor (LCOEF_WPAGE).  After this patch, the same 1%-weight
-> cgroup is limited to 24 flushes per 12s; on ext4, write+fsync
-> workloads are correctly accounted through the journal layer (~2.2us
-> per flush on the ssd_fast profile).
+Hi Tejun,
 
-Flushes are actually a really interesting case.  For devics with
-a non-volatile write cache they are no-ops, but submit_bio should
-ensure we never see them here.  But devices with a volatile write
-cache they are significantly more expensive than any kind of write.
-If we touch this we should probably figure out a way to model that.
-Note that this includes standalone flushes and PREFLUSH ones,
-so this patch might be a good start, but still is missing a very
-important part.
+Thanks for the clarification -- agreed that the 120s stall needs to
+be convincingly attributed before this can count as a minimal fix.
+
+I'll put together a reproducer that drives only cgroup churn plus
+cgroup.procs readers on an otherwise idle machine, with measured
+cgroup1_pidlist_destroy_all() latencies (and a lowered
+hung_task_timeout_secs to catch actual splats), and report back with
+the numbers. It'll take me a few days to set up.
+
+Thanks,
+Junnan
 
