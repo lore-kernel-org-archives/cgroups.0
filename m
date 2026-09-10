@@ -1,332 +1,362 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363D4399036
-	for <cgroups@vger.kernel.org>; Thu, 10 Sep 2026 23:33:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC853A784F;
+	Thu, 10 Sep 2026 23:49:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789083221; cv=none; b=UDdYDPiP/0LgkUZZ9CpoWVh6B8D1Nr1JVNrkS+kzPbcZysMDoMXkxHr0IpFqPsZATcEzVO8NmJF/rF7QOsAXzvPssQ///PIHxn0XTM1RUC02k/lOuumrf275y223ohGANxs+066i5rvRCi2owNxHBuVTNqv0gIg/vCi9xVGQxYY=
+	t=1789084173; cv=none; b=lzl8OmoBgEQkaxJqcm8rLWVxtREtlxNpYHB/TRlpwEAhwhqaeuEhPPUTH99zSrsnUw/RbSYiC4ZUcY+Qgvbewlp4pbqOCK06eKzC0s+0arxKhj5Qdjt2I/5WIDqRPArAGvJaaEzDIzl0PEfQXT57i1KPX6Gi1uip6nhqy8OmtTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789083221; c=relaxed/simple;
-	bh=txHUBulABd3m0OF7Y53+6fpuw2qvy7g4Ft1wH9BXuaY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IBRrgdYhPZPsN1ssr3KedWrEVK6OD7ViKV8yn2gn2Z+GEY/PbklkIkgXdVTO/O0UIxL9PbCbNjOr8t7GntuwMLod5eo1WJK2XnPnO8NGbxdZq/f+upcMSeKidujRTl55zcT7+S50q3joGtyKZIRm6vz64JCRRDwpJPzCdtDLVM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=m9y05765; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789084173; c=relaxed/simple;
+	bh=GniLviUPIjDaEa1gqtaII0N0z5XcLo4ZXvSD4msaZmY=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=re7J7Zv9sKpdCHmG59aWhniIjO/qW4sAnE5/e2HBczNVMUxNxmPnyJWnM9JA7IKEacIigkNiSpDtBHBplFmlwIJfwPMs1ZHkMC6KSwc/XUSPVT49NgLhxbITOZfBcnEXjcnrqrRv7mbCY80jRkxqVs/dw/R+LP7rL2NM5p36aMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=eli6qMGS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m9y05765"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-398e9698a70so355168a91.0
-        for <cgroups@vger.kernel.org>; Thu, 10 Sep 2026 16:33:37 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="eli6qMGS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A45831F000FF;
+	Thu, 10 Sep 2026 23:49:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789083217; x=1789688017; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=uKqFigUfUBeSnFW0KPe67v5MSiJ+XREL1Pj3ehWoLGc=;
-        b=m9y05765utThwX4HhPADOAJfHz4ywAtiyOPnRUN6daoFP0LeHfOTF+3H3Kccvs9Y/l
-         WIH+fz+gAtvXIRsMVB4stYodWf9xRvAjtsDS/dY9QWXOPKXImrWUntSilxN2lFBdxO9Z
-         cpE9pM4hBWNLtdcyP2TDMmGrgnDM3V5Qke/HMEqraT1xVcrMTyxkzuo0f3HpxDcqbIjI
-         uIj6DKO3D64kKDOML9MJceBIX2+/eZeof6s3i4q7h4bTg+k/Wyd4Qq2MZ5HAIG5IAgQT
-         0Q1MCsyMNi/nR24zn8uT7wTzOsilhUBa6J4QtiDMEpD9LluK05Kwxao93mbS0jfe0hfO
-         BLRQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789083217; x=1789688017;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=uKqFigUfUBeSnFW0KPe67v5MSiJ+XREL1Pj3ehWoLGc=;
-        b=qqb6tuU6Qn9wRASxyiwveW3CkJe3ZFl7Sih4cYXG5UFU69rxUCG3fhwrFdwI4GtLiD
-         qN7V1s3KI900WM2Mm6khyREqoR0JIDMXoUaZ1SjmsKy5fdMvlZqbdaoNAU8M9AxQzPEC
-         MAvswQoY5dd5XO2TH6pkmw8QKh5fAspaDGiSIrwyQZwwjmcyxz8XizlZ2++lQP1KpY94
-         gOKAYzOtjQY97xtWhoQRbJHf9p5IxAfpEOaH/6PPclNy9QV/Mw7kXYBmhIiH+OoqpAw4
-         MHY+w24Q/IZY7uROQxYHBCwP58F0N55I3hHXX83gdtaCupXeksSJUDAlQdBMuJ5R7J1o
-         DBbQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzfCKmEa9PMxC27b55bNdb0ujZmmi5wgkIPJeZZUwVKoccyXV1cz4LA0l9PMd6dypE3aPUs1L9C@vger.kernel.org
-X-Gm-Message-State: AFuF++nNrvPdhshw7jKZbiuDE3J6UIB67j+PKNh/v5qve8vurVk3tm9V
-	iwGQLYFwMZXQe+PQwM1rRL4HiXSIBTeBckECdcGakcspw9mgHGViPbRC
-X-Gm-Gg: AYBFou0H2OCmvTWWyafbZeRSZV1reg87ft2+c/hUKbMUmRtg+vUv0f+wp1ejHaIvooJ
-	2gJhQGQHkABS5CVX3cCo5bOs6OgkQUsQaX15Rr0+abOX2KXENl37hmcv2FTMK6oBIi2tzTY1oQX
-	Kn5WDSN+1NhkgLCgFHfCxMag1km6MJdN/xAVMbwsQ4VgPFVU5lqhSeSsekbDY5eb0syQXWERx+g
-	yiD6tLMfCCyzctou8gGiBHXEErWooOSci3i3AacBJoH8msBL2lHkqJIMeaxKClHv4XlZA9IbAsy
-	N+kvKRPJHAT0ThJBqJkGJRg4z0RRCQuP255IBaLiVUn2CA7GsXIDscEKv861wJ3CYpQ4by5qw3P
-	MKT+s2nNsTLnpBQPxIvxJe3K+17xZuuLzPIzePpuNRL5mAUh9aoO3IKGcWcq0Cu2ST21T41JAHm
-	iEr9MD4rmL//D4edF3vcQQ+Vytad/uOZ4JgmDwP8BcEm/0Bi7jhlvwWKWbdZTeDKSnYRwYDcF1Y
-	arl
-X-Received: by 2002:a17:90b:4cce:b0:38e:7168:281 with SMTP id 98e67ed59e1d1-39d9bec4d91mr1889561a91.10.1789083217212;
-        Thu, 10 Sep 2026 16:33:37 -0700 (PDT)
-Received: from localhost ([2a03:2880:9ff:43::])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14365b97994sm2817540c88.12.2026.09.10.16.33.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2026 16:33:36 -0700 (PDT)
-From: Ziyang Men <ziyang.meme@gmail.com>
-To: Shuah Khan <shuah@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Jiri Kosina <jikos@kernel.org>,
-	Benjamin Tissoires <bentiss@kernel.org>,
-	David Vernet <void@manifault.com>,
-	Eduard Zingerman <eddyz87@gmail.com>
-Cc: Viktor Malik <vmalik@redhat.com>,
-	Andrea Righi <arighi@nvidia.com>,
-	Changwoo Min <changwoo@igalia.com>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	JP Kobryn <inwardvessel@gmail.com>,
-	Mykola Lysenko <mykolal@meta.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Ziyang Men <ziyang.meme@gmail.com>,
-	kernel-team@meta.com,
-	linux-kselftest@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-input@vger.kernel.org,
-	sched-ext@lists.linux.dev,
-	linux-mm@kvack.org,
-	bpf@vger.kernel.org,
-	llvm@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v5 4/4] selftests/sched_ext: build BPF schedulers via the shared lib.bpf.mk
-Date: Thu, 10 Sep 2026 16:33:03 -0700
-Message-ID: <20260910233303.1063501-5-ziyang.meme@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260910233303.1063501-1-ziyang.meme@gmail.com>
-References: <20260910233303.1063501-1-ziyang.meme@gmail.com>
+	d=linux-foundation.org; s=korg; t=1789084171;
+	bh=VF1IzpkvEZpz8vf0zB2nL50NHFRi+ukaTt7C4SFlbI4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=eli6qMGSmz4lm+Ip/4jVK6MLz8m76VA2SZpkZJMK63aPYDQl/jurHC0HPodPWxyfk
+	 IVLRqvcTgRZA75S/PEmbchQw+wlSOJM0+r6Uz7rodzsywLcV1tw4cpzLPz2LV1wk9+
+	 g2DsZN4aOSrRDHGa3XPs8/H7rY8FhdTjUIrevcRE=
+Date: Thu, 10 Sep 2026 16:49:30 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: syzbot <syzbot+093e05755c2d99caab91@syzkaller.appspotmail.com>
+Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org,
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+ linux-usb@vger.kernel.org, mhocko@kernel.org, muchun.song@linux.dev,
+ roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+ syzkaller-bugs@googlegroups.com, Jiri Kosina <jikos@kernel.org>, Benjamin
+ Tissoires <bentiss@kernel.org>, bentiss@kernel.org>,
+ linux-input@vger.kernel.org
+Subject: Re: [syzbot] [mm?] [cgroups?] inconsistent lock state in
+ fs_reclaim_acquire (4)
+Message-Id: <20260910164930.4be969ed38cb0d5b4b45cd27@linux-foundation.org>
+In-Reply-To: <6aa1e191.f81106d8.2ab401.0004.GAE@google.com>
+References: <6aa1e191.f81106d8.2ab401.0004.GAE@google.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-sched_ext carries its own ~130 lines of libbpf + bpftool + vmlinux.h +
-BPF-object + skeleton build machinery.  Replace it with an include of the
-shared tools/testing/selftests/lib.bpf.mk, making sched_ext the third
-in-tree consumer of that fragment, after selftests/cgroup and
-selftests/hid.
+On Wed, 09 Sep 2026 15:45:37 -0700 syzbot <syzbot+093e05755c2d99caab91@syzkaller.appspotmail.com> wrote:
 
-All generated skeletons and subskeletons keep the same public API, and
-the runner is built and linked the same way.
+> Hello,
+> 
+> syzbot found the following issue on:
+> 
+> HEAD commit:    34c9c5517033 Merge 7.3-rc2 into usb-next
+> git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git usb-testing
+> console output: https://syzkaller.appspot.com/x/log.txt?x=1408d749580000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=c451f9f64434b622
+> dashboard link: https://syzkaller.appspot.com/bug?extid=093e05755c2d99caab91
+> compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=102c2ef9580000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=156d7af9580000
+> 
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/8a384e63cde6/disk-34c9c551.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/e5a73decdc30/vmlinux-34c9c551.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/13abc163bbdc/bzImage-34c9c551.xz
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+093e05755c2d99caab91@syzkaller.appspotmail.com
+> 
+> ================================
+> WARNING: inconsistent lock state
 
-Suggested-by: Eduard Zingerman <eddyz87@gmail.com>
-Suggested-by: Mykola Lysenko <mykolal@meta.com>
-Assisted-by: Claude:claude-opus-5
-Signed-off-by: Ziyang Men <ziyang.meme@gmail.com>
----
- tools/testing/selftests/sched_ext/Makefile | 149 ++++-----------------
- 1 file changed, 26 insertions(+), 123 deletions(-)
+Thanks.  tl;dr: drivers/hid/hid-multitouch.c
 
-diff --git a/tools/testing/selftests/sched_ext/Makefile b/tools/testing/selftests/sched_ext/Makefile
-index 5d2dffca0e91..856fe7dea685 100644
---- a/tools/testing/selftests/sched_ext/Makefile
-+++ b/tools/testing/selftests/sched_ext/Makefile
-@@ -14,48 +14,29 @@ CURDIR := $(abspath .)
- REPOROOT := $(abspath ../../../..)
- TOOLSDIR := $(REPOROOT)/tools
- LIBDIR := $(TOOLSDIR)/lib
--BPFDIR := $(LIBDIR)/bpf
- TOOLSINCDIR := $(TOOLSDIR)/include
--BPFTOOLDIR := $(TOOLSDIR)/bpf/bpftool
--APIDIR := $(TOOLSINCDIR)/uapi
- GENDIR := $(REPOROOT)/include/generated
- GENHDR := $(GENDIR)/autoconf.h
--SCXTOOLSDIR := $(TOOLSDIR)/sched_ext
- SCXTOOLSINCDIR := $(TOOLSDIR)/sched_ext/include
- 
--OUTPUT_DIR := $(OUTPUT)/build
--OBJ_DIR := $(OUTPUT_DIR)/obj
--INCLUDE_DIR := $(OUTPUT_DIR)/include
--BPFOBJ_DIR := $(OBJ_DIR)/libbpf
--SCXOBJ_DIR := $(OBJ_DIR)/sched_ext
--BPFOBJ := $(BPFOBJ_DIR)/libbpf.a
--LIBBPF_OUTPUT := $(OBJ_DIR)/libbpf/libbpf.a
--
--DEFAULT_BPFTOOL := $(OUTPUT_DIR)/host/sbin/bpftool
--HOST_OBJ_DIR := $(OBJ_DIR)/host/bpftool
--HOST_LIBBPF_OUTPUT := $(OBJ_DIR)/host/libbpf/
--HOST_LIBBPF_DESTDIR := $(OUTPUT_DIR)/host/
--HOST_DESTDIR := $(OUTPUT_DIR)/host/
--
--VMLINUX_BTF_PATHS ?= $(if $(O),$(O)/vmlinux)					\
--		     $(if $(KBUILD_OUTPUT),$(KBUILD_OUTPUT)/vmlinux)		\
--		     ../../../../vmlinux					\
--		     /sys/kernel/btf/vmlinux					\
--		     /boot/vmlinux-$(shell uname -r)
--VMLINUX_BTF ?= $(abspath $(firstword $(wildcard $(VMLINUX_BTF_PATHS))))
--ifeq ($(VMLINUX_BTF),)
--$(error Cannot find a vmlinux for VMLINUX_BTF at any of "$(VMLINUX_BTF_PATHS)")
--endif
-+# Build scheduler skeletons and subskeletons with the shared BPF rules.
-+BPF_SRCS        := $(wildcard *.bpf.c)
-+BPF_SKEL_EXT    := .bpf.skel.h
-+BPF_GEN_SUBSKEL := 1
-+# Preserve the existing build/ layout.
-+BPF_OBJ_DIR  := $(OUTPUT)/build/obj/sched_ext
-+BPF_SKEL_DIR := $(OUTPUT)/build/include
-+SCXOBJ_DIR   := $(BPF_OBJ_DIR)
- 
--BPFTOOL ?= $(DEFAULT_BPFTOOL)
-+include ../lib.bpf.mk
- 
- ifneq ($(wildcard $(GENHDR)),)
-   GENFLAGS := -DHAVE_GENHDR
- endif
- 
- CFLAGS += -g -O2 -rdynamic -pthread -Wall -Werror $(GENFLAGS)			\
--	  -I$(INCLUDE_DIR) -I$(GENDIR) -I$(LIBDIR)				\
--	  -I$(TOOLSINCDIR) -I$(APIDIR) -I$(CURDIR)/include -I$(SCXTOOLSINCDIR)
-+	  -I$(GENDIR) -I$(LIBDIR) -I$(TOOLSINCDIR) -I$(APIDIR)			\
-+	  -I$(CURDIR)/include -I$(SCXTOOLSINCDIR)
- 
- # Silence some warnings when compiled with clang
- ifneq ($(LLVM),)
-@@ -64,102 +45,26 @@ endif
- 
- LDFLAGS = -lelf -lz -lpthread -lzstd
- 
--IS_LITTLE_ENDIAN = $(shell $(CC) -dM -E - </dev/null |				\
--			grep 'define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__')
--
--# Get Clang's default includes on this system, as opposed to those seen by
--# '-target bpf'. This fixes "missing" files on some architectures/distros,
--# such as asm/byteorder.h, asm/socket.h, asm/sockios.h, sys/cdefs.h etc.
--#
--# Use '-idirafter': Don't interfere with include mechanics except where the
--# build would have failed anyways.
--define get_sys_includes
--$(shell $(1) $(2) -v -E - </dev/null 2>&1 \
--	| sed -n '/<...> search starts here:/,/End of search list./{ s| \(/.*\)|-idirafter \1|p }') \
--$(shell $(1) $(2) -dM -E - </dev/null | grep '__riscv_xlen ' | awk '{printf("-D__riscv_xlen=%d -D__BITS_PER_LONG=%d", $$3, $$3)}')
--endef
--
--ifneq ($(CROSS_COMPILE),)
--CLANG_TARGET_ARCH = --target=$(notdir $(CROSS_COMPILE:%-=%))
--endif
--
--CLANG_SYS_INCLUDES = $(call get_sys_includes,$(CLANG),$(CLANG_TARGET_ARCH))
--
--BPF_CFLAGS = -g -D__TARGET_ARCH_$(SRCARCH)					\
--	     $(if $(IS_LITTLE_ENDIAN),-mlittle-endian,-mbig-endian)		\
-+# Preserve the scheduler-specific flags; the shared recipe adds target flags.
-+BPF_CFLAGS = -g -D__TARGET_ARCH_$(SRCARCH) $(MENDIAN)				\
- 	     -I$(CURDIR)/include -I$(CURDIR)/include/bpf-compat			\
- 	     -I$(INCLUDE_DIR) -I$(APIDIR) -I$(SCXTOOLSINCDIR)			\
- 	     -I$(REPOROOT)/include						\
--	     $(CLANG_SYS_INCLUDES) 						\
-+	     $(CLANG_SYS_INCLUDES)						\
- 	     -Wall -Wno-compare-distinct-pointer-types				\
- 	     -Wno-incompatible-function-pointer-types				\
- 	     -Wno-microsoft-anon-tag						\
- 	     -fms-extensions							\
--	     -O2 -mcpu=v3
--
--# sort removes libbpf duplicates when not cross-building
--MAKE_DIRS := $(sort $(OBJ_DIR)/libbpf $(OBJ_DIR)/libbpf				\
--	       $(OBJ_DIR)/bpftool $(OBJ_DIR)/resolve_btfids			\
--	       $(HOST_OBJ_DIR) $(INCLUDE_DIR) $(SCXOBJ_DIR))
--
--$(MAKE_DIRS):
--	$(call msg,MKDIR,,$@)
--	$(Q)mkdir -p $@
--
--$(BPFOBJ): $(wildcard $(BPFDIR)/*.[ch] $(BPFDIR)/Makefile)			\
--	   $(APIDIR)/linux/bpf.h						\
--	   | $(OBJ_DIR)/libbpf
--	$(Q)$(MAKE) $(submake_extras) -C $(BPFDIR) OUTPUT=$(OBJ_DIR)/libbpf/	\
--		    ARCH=$(ARCH) CC="$(CC)" CROSS_COMPILE=$(CROSS_COMPILE)	\
--		    EXTRA_CFLAGS='-g -O0 -fPIC'					\
--		    DESTDIR=$(OUTPUT_DIR) prefix= all install_headers
--
--$(DEFAULT_BPFTOOL): $(wildcard $(BPFTOOLDIR)/*.[ch] $(BPFTOOLDIR)/Makefile)	\
--		    $(LIBBPF_OUTPUT) | $(HOST_OBJ_DIR)
--	$(Q)$(MAKE) $(submake_extras)  -C $(BPFTOOLDIR)				\
--		    ARCH= CROSS_COMPILE= CC=$(HOSTCC) LD=$(HOSTLD)		\
--		    EXTRA_CFLAGS='-g -O0'					\
--		    OUTPUT=$(HOST_OBJ_DIR)/					\
--		    LIBBPF_OUTPUT=$(HOST_LIBBPF_OUTPUT)				\
--		    LIBBPF_DESTDIR=$(HOST_LIBBPF_DESTDIR)			\
--		    prefix= DESTDIR=$(HOST_DESTDIR) install-bin
--
--$(INCLUDE_DIR)/vmlinux.h: $(VMLINUX_BTF) $(BPFTOOL) | $(INCLUDE_DIR)
--ifeq ($(VMLINUX_H),)
--	$(call msg,GEN,,$@)
--	$(Q)$(BPFTOOL) btf dump file $(VMLINUX_BTF) format c > $@
--else
--	$(call msg,CP,,$@)
--	$(Q)cp "$(VMLINUX_H)" $@
--endif
--
--$(SCXOBJ_DIR)/%.bpf.o: %.bpf.c $(INCLUDE_DIR)/vmlinux.h	| $(BPFOBJ) $(SCXOBJ_DIR)
--	$(call msg,CLNG-BPF,,$(notdir $@))
--	$(Q)$(CLANG) $(BPF_CFLAGS) -target bpf -c $< -o $@
-+	     $(BPF_EXTRA_CFLAGS)
- 
--$(INCLUDE_DIR)/%.bpf.skel.h: $(SCXOBJ_DIR)/%.bpf.o $(INCLUDE_DIR)/vmlinux.h $(BPFTOOL) | $(INCLUDE_DIR)
--	$(eval sched=$(notdir $@))
--	$(call msg,GEN-SKEL,,$(sched))
--	$(Q)$(BPFTOOL) gen object $(<:.o=.linked1.o) $<
--	$(Q)$(BPFTOOL) gen object $(<:.o=.linked2.o) $(<:.o=.linked1.o)
--	$(Q)$(BPFTOOL) gen object $(<:.o=.linked3.o) $(<:.o=.linked2.o)
--	$(Q)diff $(<:.o=.linked2.o) $(<:.o=.linked3.o)
--	$(Q)$(BPFTOOL) gen skeleton $(<:.o=.linked3.o) name $(subst .bpf.skel.h,,$(sched)) > $@
--	$(Q)$(BPFTOOL) gen subskeleton $(<:.o=.linked3.o) name $(subst .bpf.skel.h,,$(sched)) > $(@:.skel.h=.subskel.h)
-+EXTRA_CLEAN += $(OUTPUT)/build
- 
- ################
- # C schedulers #
- ################
- 
--override define CLEAN
--	rm -rf $(OUTPUT_DIR)
--	rm -f $(TEST_GEN_PROGS)
--endef
--
--# Every testcase takes all of the BPF progs are dependencies by default. This
--# allows testcases to load any BPF scheduler, which is useful for testcases
--# that don't need their own prog to run their test.
--all_test_bpfprogs := $(foreach prog,$(wildcard *.bpf.c),$(INCLUDE_DIR)/$(patsubst %.c,%.skel.h,$(prog)))
-+# Build every scheduler before each test.
-+all_test_bpfprogs := $(BPF_SKELS)
- 
- auto-test-targets :=			\
- 	create_dsq			\
-@@ -195,24 +100,22 @@ auto-test-targets :=			\
- testcase-targets := $(addsuffix .o,$(addprefix $(SCXOBJ_DIR)/,$(auto-test-targets)))
- 
- $(SCXOBJ_DIR)/runner.o: runner.c | $(SCXOBJ_DIR) $(BPFOBJ)
--	$(CC) $(CFLAGS) -c $< -o $@
-+	$(call msg,CC,,$@)
-+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
- 
- # Create all of the test targets object files, whose testcase objects will be
- # registered into the runner in ELF constructors.
--#
--# Note that we must do double expansion here in order to support conditionally
--# compiling BPF object files only if one is present, as the wildcard Make
--# function doesn't support using implicit rules otherwise.
- $(testcase-targets): $(SCXOBJ_DIR)/%.o: %.c $(SCXOBJ_DIR)/runner.o $(all_test_bpfprogs) | $(SCXOBJ_DIR)
--	$(eval test=$(patsubst %.o,%.c,$(notdir $@)))
--	$(CC) $(CFLAGS) -c $< -o $@
-+	$(call msg,CC,,$@)
-+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
- 
- $(SCXOBJ_DIR)/util.o: util.c | $(SCXOBJ_DIR)
--	$(CC) $(CFLAGS) -c $< -o $@
-+	$(call msg,CC,,$@)
-+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
- 
- $(OUTPUT)/runner: $(SCXOBJ_DIR)/runner.o $(SCXOBJ_DIR)/util.o $(BPFOBJ) $(testcase-targets)
--	@echo "$(testcase-targets)"
--	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-+	$(call msg,BINARY,,$@)
-+	$(Q)$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
- 
- .DEFAULT_GOAL := all
- 
--- 
-2.53.0-Meta
 
+My friendly local LLM tells me
+
+  So I would not initially blame mm/cgroups despite syzbot's [mm?]
+  [cgroups?] classification.  fs_reclaim is just where lockdep detects
+  the violation.  The suspicious code is
+  drivers/hid/hid-multitouch.c:mt_allocate_report_data(): it
+  dynamically allocates report bookkeeping from mt_event(), and
+  mt_event() can evidently execute in atomic/softirq context.
+
+  The interesting question for the actual fix is why this structure
+  wasn't allocated earlier.  mt_find_report_data() presumably normally
+  finds preexisting report data, but this reproducer gets an HID report
+  for which none exists and falls into mt_allocate_report_data() at
+  runtime.  The likely proper fix is therefore to arrange for this data
+  to be allocated during device/report initialization in sleepable
+  context, rather than merely changing this allocation to GFP_ATOMIC. 
+  The latter could suppress the reclaim problem but devm_* itself and
+  the lifetime/list manipulation deserve checking before assuming
+  that's sufficient.
+
+which is sufficient for me to cc relevant folks and run away.
+
+> syzkaller #0 Not tainted
+> --------------------------------
+> inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
+> syz.3.17/3981 [HC0[0]:SC1[1]:HE0:SE0] takes:
+> ffffffff89ab7bc0 (fs_reclaim){+.?.}-{0:0}, at: might_alloc include/linux/sched/mm.h:316 [inline]
+> ffffffff89ab7bc0 (fs_reclaim){+.?.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:4636 [inline]
+> ffffffff89ab7bc0 (fs_reclaim){+.?.}-{0:0}, at: slab_alloc_node mm/slub.c:4974 [inline]
+> ffffffff89ab7bc0 (fs_reclaim){+.?.}-{0:0}, at: __do_kmalloc_node mm/slub.c:5413 [inline]
+> ffffffff89ab7bc0 (fs_reclaim){+.?.}-{0:0}, at: __kmalloc_node_track_caller_noprof+0xcc/0x820 mm/slub.c:5545
+> {SOFTIRQ-ON-W} state was registered at:
+>   lock_acquire kernel/locking/lockdep.c:5942 [inline]
+>   lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+>   __fs_reclaim_acquire mm/page_alloc.c:4375 [inline]
+>   fs_reclaim_acquire+0xc4/0x100 mm/page_alloc.c:4389
+>   might_alloc include/linux/sched/mm.h:316 [inline]
+>   xa_alloc include/linux/xarray.h:876 [inline]
+>   mem_cgroup_alloc mm/memcontrol.c:4160 [inline]
+>   mem_cgroup_css_alloc+0x7e/0x1ce0 mm/memcontrol.c:4225
+>   cgroup_init_subsys+0x223/0x700 kernel/cgroup/cgroup.c:6431
+>   cgroup_init+0x569/0xe50 kernel/cgroup/cgroup.c:6558
+>   start_kernel+0x470/0x490 init/main.c:1176
+>   x86_64_start_reservations+0x24/0x30 arch/x86/kernel/head64.c:310
+>   x86_64_start_kernel+0x12b/0x130 arch/x86/kernel/head64.c:291
+>   common_startup_64+0x13e/0x158
+> irq event stamp: 317
+> hardirqs last  enabled at (316): [<ffffffff878ad162>] __raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:210 [inline]
+> hardirqs last  enabled at (316): [<ffffffff878ad162>] _raw_spin_unlock_irqrestore+0x52/0x80 kernel/locking/spinlock.c:221
+> hardirqs last disabled at (317): [<ffffffff878acd32>] __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:153 [inline]
+> hardirqs last disabled at (317): [<ffffffff878acd32>] _raw_spin_lock_irqsave+0x52/0x60 kernel/locking/spinlock.c:181
+> softirqs last  enabled at (302): [<ffffffff8177a2a8>] __do_softirq kernel/softirq.c:679 [inline]
+> softirqs last  enabled at (302): [<ffffffff8177a2a8>] invoke_softirq kernel/softirq.c:519 [inline]
+> softirqs last  enabled at (302): [<ffffffff8177a2a8>] __irq_exit_rcu+0x168/0x210 kernel/softirq.c:758
+> softirqs last disabled at (313): [<ffffffff8177a2a8>] __do_softirq kernel/softirq.c:679 [inline]
+> softirqs last disabled at (313): [<ffffffff8177a2a8>] invoke_softirq kernel/softirq.c:519 [inline]
+> softirqs last disabled at (313): [<ffffffff8177a2a8>] __irq_exit_rcu+0x168/0x210 kernel/softirq.c:758
+> 
+> other info that might help us debug this:
+>  Possible unsafe locking scenario:
+> 
+>        CPU0
+>        ----
+>   lock(fs_reclaim);
+>   <Interrupt>
+>     lock(fs_reclaim);
+> 
+>  *** DEADLOCK ***
+> 
+> locks held by syz.3.17/3981: 1, on CPU#0:
+>  #0: ffff888122130870 (&hiddev->existancelock){+.+.}-{4:4}, at: hiddev_ioctl+0x165/0x15b0 drivers/hid/usbhid/hiddev.c:610
+> 
+> stack backtrace:
+> CPU: 0 UID: 0 PID: 3981 Comm: syz.3.17 Not tainted syzkaller #0 PREEMPT(lazy) 
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/24/2026
+> Call Trace:
+>  <IRQ>
+>  __dump_stack lib/dump_stack.c:94 [inline]
+>  dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+>  print_usage_bug.part.0+0x258/0x340 kernel/locking/lockdep.c:4086
+>  print_usage_bug kernel/locking/lockdep.c:4054 [inline]
+>  valid_state kernel/locking/lockdep.c:4100 [inline]
+>  mark_lock_irq kernel/locking/lockdep.c:4311 [inline]
+>  mark_lock+0x956/0x1020 kernel/locking/lockdep.c:4797
+>  mark_usage kernel/locking/lockdep.c:4686 [inline]
+>  __lock_acquire+0x7f1/0x1f40 kernel/locking/lockdep.c:5242
+>  lock_acquire kernel/locking/lockdep.c:5942 [inline]
+>  lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+>  __fs_reclaim_acquire mm/page_alloc.c:4375 [inline]
+>  fs_reclaim_acquire+0xc4/0x100 mm/page_alloc.c:4389
+>  might_alloc include/linux/sched/mm.h:316 [inline]
+>  slab_pre_alloc_hook mm/slub.c:4636 [inline]
+>  slab_alloc_node mm/slub.c:4974 [inline]
+>  __do_kmalloc_node mm/slub.c:5413 [inline]
+>  __kmalloc_node_track_caller_noprof+0xcc/0x820 mm/slub.c:5545
+>  alloc_dr drivers/base/devres.c:141 [inline]
+>  devm_kmalloc+0xa5/0x2b0 drivers/base/devres.c:951
+>  devm_kzalloc include/linux/device/devres.h:50 [inline]
+>  mt_allocate_report_data+0x59/0xcc0 drivers/hid/hid-multitouch.c:695
+>  mt_find_report_data drivers/hid/hid-multitouch.c:745 [inline]
+>  mt_event+0x1bf/0x270 drivers/hid/hid-multitouch.c:1570
+>  hid_process_event+0x37d/0x5a0 drivers/hid/hid-core.c:1572
+>  hid_process_report drivers/hid/hid-core.c:1730 [inline]
+>  hid_report_raw_event+0xb14/0x14c0 drivers/hid/hid-core.c:2109
+>  __hid_input_report.constprop.0+0x349/0x470 drivers/hid/hid-core.c:2180
+>  hid_ctrl+0x4a4/0x560 drivers/hid/usbhid/hid-core.c:486
+>  __usb_hcd_giveback_urb+0x38e/0x610 drivers/usb/core/hcd.c:1657
+>  usb_hcd_giveback_urb+0x3ca/0x4a0 drivers/usb/core/hcd.c:1741
+>  dummy_timer+0xdb2/0x3700 drivers/usb/gadget/udc/dummy_hcd.c:2019
+>  __run_hrtimer kernel/time/hrtimer.c:2067 [inline]
+>  __hrtimer_run_queues+0x462/0x9c0 kernel/time/hrtimer.c:2124
+>  hrtimer_run_softirq+0x1ca/0x360 kernel/time/hrtimer.c:2141
+>  handle_softirqs+0x1d9/0x9b0 kernel/softirq.c:645
+>  __do_softirq kernel/softirq.c:679 [inline]
+>  invoke_softirq kernel/softirq.c:519 [inline]
+>  __irq_exit_rcu+0x168/0x210 kernel/softirq.c:758
+>  irq_exit_rcu+0x9/0x30 kernel/softirq.c:775
+>  instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1062 [inline]
+>  sysvec_apic_timer_interrupt+0x8f/0xb0 arch/x86/kernel/apic/apic.c:1062
+>  </IRQ>
+>  <TASK>
+>  asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:674
+> RIP: 0010:__raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:211 [inline]
+> RIP: 0010:_raw_spin_unlock_irqrestore+0x31/0x80 kernel/locking/spinlock.c:221
+> Code: f5 53 48 8b 74 24 10 48 89 fb 48 83 c7 18 e8 56 f7 05 fa 48 89 df e8 de 4d 06 fa f7 c5 00 02 00 00 75 23 9c 58 f6 c4 02 75 37 <bf> 01 00 00 00 e8 65 a3 f8 f9 65 48 83 3d d4 ee 98 05 00 74 16 5b
+> RSP: 0018:ffffc90001bff9f0 EFLAGS: 00000246
+> RAX: 0000000000000002 RBX: ffff8881f5625fc0 RCX: 0000000000000040
+> RDX: 0000000000000001 RSI: ffffffff89329b79 RDI: ffffffff87d2b780
+> RBP: 0000000000000287 R08: 0000000000000001 R09: 0000000000000000
+> R10: 0000000000000001 R11: 0000000000000000 R12: ffff8881f5625fc0
+> R13: 0000000000000000 R14: 00000000ffffffff R15: ffff8881f5626008
+>  __mod_timer+0x409/0xca0 kernel/time/timer.c:1139
+>  add_timer+0x62/0x90 kernel/time/timer.c:1249
+>  schedule_timeout+0x122/0x280 kernel/time/sleep_timeout.c:98
+>  usbhid_wait_io+0x24e/0x420 drivers/hid/usbhid/hid-core.c:648
+>  usbhid_init_reports+0x1a7/0x390 drivers/hid/usbhid/hid-core.c:787
+>  hiddev_ioctl+0xddb/0x15b0 drivers/hid/usbhid/hiddev.c:794
+>  vfs_ioctl fs/ioctl.c:51 [inline]
+>  __do_sys_ioctl fs/ioctl.c:597 [inline]
+>  __se_sys_ioctl fs/ioctl.c:583 [inline]
+>  __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+>  do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+>  do_syscall_64+0x119/0x710 arch/x86/entry/syscall_64.c:84
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> RIP: 0033:0x7f01bd5ee159
+> Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007f01bd42e028 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+> RAX: ffffffffffffffda RBX: 00007f01bd876090 RCX: 00007f01bd5ee159
+> RDX: 0000000000000000 RSI: 00000000c018480b RDI: 0000000000000004
+> RBP: 00007f01bd68503b R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+> R13: 00007f01bd876128 R14: 00007f01bd876090 R15: 00007ffe3b7b3048
+>  </TASK>
+> ------------[ cut here ]------------
+> do not call blocking ops when !TASK_RUNNING; state=2 set at [<ffffffff818d66ad>] prepare_to_wait_event+0x8d/0x720 kernel/sched/wait.c:318
+> WARNING: kernel/sched/core.c:9179 at __might_sleep+0x94/0xc0 kernel/sched/core.c:9179, CPU#0: syz.3.17/3981
+> Modules linked in:
+> CPU: 0 UID: 0 PID: 3981 Comm: syz.3.17 Not tainted syzkaller #0 PREEMPT(lazy) 
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/24/2026
+> RIP: 0010:__might_sleep+0x97/0xc0 kernel/sched/core.c:9179
+> Code: 8b 94 24 c0 17 00 00 48 85 d2 75 14 48 83 c4 08 89 ee 48 89 df 31 d2 5b 5d 41 5c e9 33 fc ff ff 48 8d 3d 5c d9 92 09 48 89 d1 <67> 48 0f b9 3a eb db e8 fd 20 9c 00 eb 9f 89 74 24 04 e8 22 21 9c
+> RSP: 0018:ffffc90000007828 EFLAGS: 00010082
+> RAX: dffffc0000000000 RBX: ffffffff8931ad45 RCX: ffffffff818d66ad
+> RDX: ffffffff818d66ad RSI: 0000000000000002 RDI: ffffffff8b16a1e0
+> RBP: 0000000000000142 R08: 0000000000000001 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000001 R12: ffff888107ed3c80
+> R13: 0000000000000dc0 R14: 00000000ffffffff R15: 00000000ffffffff
+> FS:  00007f01bd42e6c0(0000) GS:ffff8882683e4000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007f01bd42dff8 CR3: 00000001214ba000 CR4: 00000000003506f0
+> Call Trace:
+>  <IRQ>
+>  might_alloc include/linux/sched/mm.h:322 [inline]
+>  slab_pre_alloc_hook mm/slub.c:4636 [inline]
+>  slab_alloc_node mm/slub.c:4974 [inline]
+>  __do_kmalloc_node mm/slub.c:5413 [inline]
+>  __kmalloc_node_track_caller_noprof+0x473/0x820 mm/slub.c:5545
+>  alloc_dr drivers/base/devres.c:141 [inline]
+>  devm_kmalloc+0xa5/0x2b0 drivers/base/devres.c:951
+>  devm_kzalloc include/linux/device/devres.h:50 [inline]
+>  mt_allocate_report_data+0x59/0xcc0 drivers/hid/hid-multitouch.c:695
+>  mt_find_report_data drivers/hid/hid-multitouch.c:745 [inline]
+>  mt_event+0x1bf/0x270 drivers/hid/hid-multitouch.c:1570
+>  hid_process_event+0x37d/0x5a0 drivers/hid/hid-core.c:1572
+>  hid_process_report drivers/hid/hid-core.c:1730 [inline]
+>  hid_report_raw_event+0xb14/0x14c0 drivers/hid/hid-core.c:2109
+>  __hid_input_report.constprop.0+0x349/0x470 drivers/hid/hid-core.c:2180
+>  hid_ctrl+0x4a4/0x560 drivers/hid/usbhid/hid-core.c:486
+>  __usb_hcd_giveback_urb+0x38e/0x610 drivers/usb/core/hcd.c:1657
+>  usb_hcd_giveback_urb+0x3ca/0x4a0 drivers/usb/core/hcd.c:1741
+>  dummy_timer+0xdb2/0x3700 drivers/usb/gadget/udc/dummy_hcd.c:2019
+>  __run_hrtimer kernel/time/hrtimer.c:2067 [inline]
+>  __hrtimer_run_queues+0x462/0x9c0 kernel/time/hrtimer.c:2124
+>  hrtimer_run_softirq+0x1ca/0x360 kernel/time/hrtimer.c:2141
+>  handle_softirqs+0x1d9/0x9b0 kernel/softirq.c:645
+>  __do_softirq kernel/softirq.c:679 [inline]
+>  invoke_softirq kernel/softirq.c:519 [inline]
+>  __irq_exit_rcu+0x168/0x210 kernel/softirq.c:758
+>  irq_exit_rcu+0x9/0x30 kernel/softirq.c:775
+>  instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1062 [inline]
+>  sysvec_apic_timer_interrupt+0x8f/0xb0 arch/x86/kernel/apic/apic.c:1062
+>  </IRQ>
+>  <TASK>
+>  asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:674
+> RIP: 0010:__raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:211 [inline]
+> RIP: 0010:_raw_spin_unlock_irqrestore+0x31/0x80 kernel/locking/spinlock.c:221
+> Code: f5 53 48 8b 74 24 10 48 89 fb 48 83 c7 18 e8 56 f7 05 fa 48 89 df e8 de 4d 06 fa f7 c5 00 02 00 00 75 23 9c 58 f6 c4 02 75 37 <bf> 01 00 00 00 e8 65 a3 f8 f9 65 48 83 3d d4 ee 98 05 00 74 16 5b
+> RSP: 0018:ffffc90001bff9f0 EFLAGS: 00000246
+> RAX: 0000000000000002 RBX: ffff8881f5625fc0 RCX: 0000000000000040
+> RDX: 0000000000000001 RSI: ffffffff89329b79 RDI: ffffffff87d2b780
+> RBP: 0000000000000287 R08: 0000000000000001 R09: 0000000000000000
+> R10: 0000000000000001 R11: 0000000000000000 R12: ffff8881f5625fc0
+> R13: 0000000000000000 R14: 00000000ffffffff R15: ffff8881f5626008
+>  __mod_timer+0x409/0xca0 kernel/time/timer.c:1139
+>  add_timer+0x62/0x90 kernel/time/timer.c:1249
+>  schedule_timeout+0x122/0x280 kernel/time/sleep_timeout.c:98
+>  usbhid_wait_io+0x24e/0x420 drivers/hid/usbhid/hid-core.c:648
+>  usbhid_init_reports+0x1a7/0x390 drivers/hid/usbhid/hid-core.c:787
+>  hiddev_ioctl+0xddb/0x15b0 drivers/hid/usbhid/hiddev.c:794
+>  vfs_ioctl fs/ioctl.c:51 [inline]
+>  __do_sys_ioctl fs/ioctl.c:597 [inline]
+>  __se_sys_ioctl fs/ioctl.c:583 [inline]
+>  __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+>  do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+>  do_syscall_64+0x119/0x710 arch/x86/entry/syscall_64.c:84
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> RIP: 0033:0x7f01bd5ee159
+> Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007f01bd42e028 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+> RAX: ffffffffffffffda RBX: 00007f01bd876090 RCX: 00007f01bd5ee159
+> RDX: 0000000000000000 RSI: 00000000c018480b RDI: 0000000000000004
+> RBP: 00007f01bd68503b R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+> R13: 00007f01bd876128 R14: 00007f01bd876090 R15: 00007ffe3b7b3048
+>  </TASK>
+> ----------------
+> Code disassembly (best guess):
+>    0:	f5                   	cmc
+>    1:	53                   	push   %rbx
+>    2:	48 8b 74 24 10       	mov    0x10(%rsp),%rsi
+>    7:	48 89 fb             	mov    %rdi,%rbx
+>    a:	48 83 c7 18          	add    $0x18,%rdi
+>    e:	e8 56 f7 05 fa       	call   0xfa05f769
+>   13:	48 89 df             	mov    %rbx,%rdi
+>   16:	e8 de 4d 06 fa       	call   0xfa064df9
+>   1b:	f7 c5 00 02 00 00    	test   $0x200,%ebp
+>   21:	75 23                	jne    0x46
+>   23:	9c                   	pushf
+>   24:	58                   	pop    %rax
+>   25:	f6 c4 02             	test   $0x2,%ah
+>   28:	75 37                	jne    0x61
+> * 2a:	bf 01 00 00 00       	mov    $0x1,%edi <-- trapping instruction
+>   2f:	e8 65 a3 f8 f9       	call   0xf9f8a399
+>   34:	65 48 83 3d d4 ee 98 	cmpq   $0x0,%gs:0x598eed4(%rip)        # 0x598ef11
+>   3b:	05 00
+>   3d:	74 16                	je     0x55
+>   3f:	5b                   	pop    %rbx
+> 
+> 
+> ---
+> This report is generated by a bot. It may contain errors.
+> See https://goo.gl/tpsmEJ for more information about syzbot.
+> syzbot engineers can be reached at syzkaller@googlegroups.com.
+> 
+> syzbot will keep track of this issue. See:
+> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+> 
+> If the report is already addressed, let syzbot know by replying with:
+> #syz fix: exact-commit-title
+> 
+> If you want syzbot to run the reproducer, reply with:
+> #syz test: git://repo/address.git branch-or-commit-hash
+> If you attach or paste a git patch, syzbot will apply it before testing.
+> 
+> If you want to overwrite report's subsystems, reply with:
+> #syz set subsystems: new-subsystem
+> (See the list of subsystem names on the web dashboard)
+> 
+> If the report is a duplicate of another one, reply with:
+> #syz dup: exact-subject-of-another-report
+> 
+> If you want to undo deduplication, reply with:
+> #syz undup
