@@ -1,122 +1,174 @@
-Received: from mta1.migadu.com (out-123.mta1.migadu.com [95.215.58.123])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 937623C3F56
-	for <cgroups@vger.kernel.org>; Thu, 10 Sep 2026 09:47:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.123
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E96145DF6C;
+	Thu, 10 Sep 2026 10:57:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789033645; cv=none; b=gLhW/zE9O09ciEsFXZw7s4GzcBtQTWhPIp3LWLMGvHv7coqtDKQ8GUf3oD4jUTW0vUxMob1pugw+stgMQNflyV617A6DJrQfMIKyu2vXTiuuGtLVK8LMlC3szyJUVfKII9rGRxe0gQqJZP4NlxFSfXtCiNeGz0dDdSMiKjsIMog=
+	t=1789037831; cv=none; b=crxvrFZkmY91w97duxRlCxPIFHhjoDiHAR+0U3xlXu4x2ixlcPD9P9SEwBttfHqm2MWUU47DuXRn9kGZtFWXGFUp9fMDMomo7EKsL4G/e8nYbn7QejtaAJ1D0unGXAonLAeaJecox3NHb+0UASnbUDD1RTOLzstBWGsH/ssAkIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789033645; c=relaxed/simple;
-	bh=HolPMd8/7+8zon78gTwvmMPvfZlvri2GRivOncH46xI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YberMz8aYMJIxqZxf2sazKFLEoHmqn2qhfqEZX8GQqpNG9CbAMmGFaYjZwk7xif7vSTyCFiDSJVyfjfLik/HGY6wjAoPYzQCbVVpdBTejlu7Tqap9BjQ/bbegCfoejMWom1LMVU35uORiCs1Q1NmKQCkiflTN5H0fOc1ein1x2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iPEhwuL0; arc=none smtp.client-ip=95.215.58.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789037831; c=relaxed/simple;
+	bh=kvAMh//qzFyr59ZzKLHP+/ecQZnfn+YJ/B1zHlv6DBE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Q6lmvhIGDfV9GWXX0B1q9p0gvndHoNyBy8roP/jn4WpJgAsztK4bjTWu0cVrMu2i+S2r6apbJLL/JA1ls37nJeJkVk2MOQ/WD2OWhI2w4yimqZKOx9J9fcvg7MnrFHUwDbPaiYULV6Q+Wt0j6LwnTA5iFCllkgEwLGqhmkZqv10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eK8zViyI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iPEhwuL0"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=HolPMd8/7+8zon78gTwvmMPvfZlvri2GRivOncH46xI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789033638; v=1; x=1789638438;
- b=iPEhwuL0bcM/pn0RHtXKiIZtCCEqE4DrFIabYllKx/zCPdxZNxQ2XlEkZC/JEBzg3jS4Nivh
- JRp9Gx9JLPyX51aI1IpuMcygDi3SX8ljsvpJeLUOn0bVwuHPtAcl89uYz7QcuTC4MXV8CKvpZoV
- 49liJKoozG8Q2YNYJ7hF1uiI=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id d8f0ac91ae137753;
-	Thu, 10 Sep 2026 09:47:18 +0000
-X-Mizu-Trace-ID: d8f0ac91ae137753
-X-Migadu-Flow: FLOW_OUT
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-To: Waiman Long <longman@redhat.com>,
-	Ridong Chen <ridong.chen@linux.dev>
-Cc: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH v4 7/7] cgroup/cpuset: Publish exclusive_cpus before partition updates
-Date: Thu, 10 Sep 2026 17:45:46 +0800
-Message-ID: <20260910094546.5852-8-guopeng.zhang@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260910094546.5852-1-guopeng.zhang@linux.dev>
-References: <20260910094546.5852-1-guopeng.zhang@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eK8zViyI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FBD11F00893;
+	Thu, 10 Sep 2026 10:56:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789037829;
+	bh=GxlyEAD3OjzkL84LXM7QY5JNpJtiOF5Zyguxd2EmB9s=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=eK8zViyIm/bW0+IG/megvvXAxtIOAaGbbA0fXts46bTz2Ah3auqf2tX9g6vhwKlQG
+	 oK7093vyOD0v6JMIWihPbQAbYKJX4WDIBaErdJiA7WGxfdwj4YLTMKLWylzHSskruX
+	 IPNal/2lHXurLSF3Z+IWE0cQk3o2xs4Bi5jUSG7ufNcw8EmGp4dCFLaWv28ZF965vu
+	 JNP7Q5hdqlha0dYFpTJv5w6D5RvvMoaWQduNtQP7puWp0H1By3u/FOFSKzeYxeEL2h
+	 48EdKDIn+oz9XUmzGq7/S/AQlqJOqbyqxqY9ezMkf3BCL6yzH+frRR/qE1dwI6gMe5
+	 njJFo5DYT61nA==
+Message-ID: <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org>
+Date: Thu, 10 Sep 2026 12:56:57 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: Path forward for Virtualized Swap?
+To: Nhat Pham <nphamcs@gmail.com>
+Cc: Kairui Song <kasong@tencent.com>, Chris Li <chrisl@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>,
+ Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>,
+ Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
+ YoungJun Park <youngjun.park@lge.com>,
+ Chengming Zhou <chengming.zhou@linux.dev>,
+ "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>,
+ "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport
+ <rppt@kernel.org>, =?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?=
+ <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>,
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
+ Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>,
+ Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>,
+ Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>,
+ Meta kernel team <kernel-team@meta.com>,
+ Linux Memory Management List <linux-mm@kvack.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-doc@vger.kernel.org,
+ "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
+ Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
+ <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
+From: "David Hildenbrand (Arm)" <david@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=david@kernel.org; keydata=
+ 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
+ qIws/H2t
+In-Reply-To: <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+On 9/8/26 18:45, Nhat Pham wrote:
+> On Mon, Sep 7, 2026 at 4:30 AM David Hildenbrand (Arm) <david@kernel.org> wrote:
+>>
+>> On 9/4/26 23:14, Nhat Pham wrote:
+>>
+>> Hi,
+>>
+>>> To Kairui, Johannes, Yosry, Chris, David, Andrew, and other (z)swap folks -
+>>> I need some help here.
+>>
+>> I'll mostly ignore swap-related stuff because (a) -EBUSY and (b) we have quite
+>> some swap experts around :)
+>>
+>> Reading below, I do wonder if the swap subsystem needs some more coordination
+>> and collaboration?
+>>
+>> For example, maybe having bi-weekly/monthly meetings to get everybody aligned
+>> and uptodate could be something reasonable?
+>>
+>> This approach has proven fairly helpful in areas where (1) multiple companies
+>> are involved (2) many concurrent development is happening, and (3) people have
+>> different priorities and requirements.
+>>
+>> Is there already something like that to organize development? Should we get
+>> started with that?
+> 
+> Hi David!
 
-update_exclusive_cpumask() calls partition_cpus_change() before publishing
-the new exclusive_cpus mask. When an invalid partition is recovered,
-update_parent_effective_cpumask() therefore gets the old mask from
-user_xcpus(). If that mask contains only offline CPUs and the partition is
-populated, the valid replacement is rejected with PERR_NOCPUS.
+Hi!
 
-This can be reproduced on a cgroup v2 system with CPUs 1-4 online:
+> 
+> Thank you for your suggestions :) More collaboration and communication
+> is definitely needed here. Conference is a good place for this, but
+> it's not something we can do very frequently, and many folks could not
+> attend (visa issues, etc.).
 
-    cd /sys/fs/cgroup
-    echo +cpuset > cgroup.subtree_control
-    mkdir exclusive-repro
-    echo 1-4 > exclusive-repro/cpuset.cpus
-    echo isolated > exclusive-repro/cpuset.cpus.partition
-    echo +cpuset > exclusive-repro/cgroup.subtree_control
-    mkdir exclusive-repro/child
-    echo 4 > exclusive-repro/child/cpuset.cpus.exclusive
-    echo isolated > exclusive-repro/child/cpuset.cpus.partition
-    sleep 1000 & task=$!
-    echo $task > exclusive-repro/child/cgroup.procs
-    echo 0 > /sys/devices/system/cpu/cpu4/online
-    echo 3 > exclusive-repro/child/cpuset.cpus.exclusive
-    cat exclusive-repro/child/cpuset.cpus.partition
-    echo 1 > /sys/devices/system/cpu/cpu4/online
-    kill $task
+Right, and conferences usually don't have the capacity to squeeze too many
+swap-related topics in, so it would have to be side discussions or BOFs.
 
-Without this fix, the child remains invalid after CPU 3 is written because
-the recovery path still validates the old CPU 4 mask.
+> 
+> A bi-weekly/monthly series of meetings sound very appealing. Swap
+> contributors are very spread out (China, NorAm, Europe, etc.), so
+> coordination will be tricky, but let us figure out something.
 
-Publish exclusive_cpus after all fallible preparation and before
-partition_cpus_change(), as update_cpumask() already does for cpus_allowed.
-Keep effective_xcpus unchanged until the partition update has computed the
-old-to-new difference.
+Yes, that's an issue. I'd suggest swap maintainers take care of that if they
+agree. I could try as well, but it's rather tricky right now on my end ...
 
-Fixes: c49b5e89c45f ("cpuset: use partition_cpus_change for setting exclusive cpus")
-Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
----
- kernel/cgroup/cpuset.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+As an alternative, we could also use on/two/ ... slots in the bi-weekly MM
+alignment session to talk about swap. (I'd be happy to learn more about all this
+as well)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 80a709bfa4b7..94c56ec8d4f8 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2690,10 +2690,18 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		return -ENOMEM;
- 
- 	trialcs->prs_err = PERR_NONE;
--	partition_cpus_change(cs, trialcs, &tmp);
- 
-+	/*
-+	 * partition_cpus_change() may inspect user_xcpus(cs). Publish the
-+	 * configured mask that was used to compute trialcs->effective_xcpus.
-+	 */
- 	spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->exclusive_cpus, trialcs->exclusive_cpus);
-+	spin_unlock_irq(&callback_lock);
-+
-+	partition_cpus_change(cs, trialcs, &tmp);
-+
-+	spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->effective_xcpus, trialcs->effective_xcpus);
- 	if ((old_prs > 0) && !is_partition_valid(cs))
- 		reset_partition_data(cs);
 -- 
-2.43.0
+Cheers,
 
+David
