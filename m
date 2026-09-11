@@ -1,128 +1,222 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10EBB3749F2
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 15:17:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 699A0494805
+	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 15:39:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789139846; cv=none; b=lGSUlNhpIdIheTGQLHgkyCzUc8X8HVSoP4GnxXPXekxVoG4D+RWnBHjn7X9+Xl9euZV8eBal+afzzWdWH5NAR4N8Wpjq/DwwfTXGjJ2HHVe8LE043tBqAXfT6TaGdJKn8P7kZvj+dFasUL2HMVLjhyq4yvhK+4ssFnEvBFYj+08=
+	t=1789141207; cv=none; b=p940uu8GxQQA4XcooPRCqIxwVv4vLfv5YVWCPuEm43X/DMjiXQivcpo19Znah5z3DPDnsYWoojtE8pWgS+g4wqMpXjGGez3l2Hq75SG0tZHEjLXfUKe2LiC/SN6vfZn9S0vB4qiT8PE7RCgygEKZj1whRD6rMIo0QVhbk65twGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789139846; c=relaxed/simple;
-	bh=2JzqsoiLxocAa5D2L3SPzdIZsS+OW1mUD+PJx4LQgiw=;
+	s=arc-20240116; t=1789141207; c=relaxed/simple;
+	bh=1He2/t8OT3FakPV+P9CEM1nIM8aG+N1AP18rk4PIg6s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wh3wL783fMX9aVxLx1fJe3IFnHkMx13ZzZvgoJvmsUCO5vthmFmW0wy/uqpYIokEN4BAr7jW0l0xWsoGonbGOOshOmK2WEaaNWlrpqaKeQPNcUE6pCQujPLFNYsVxUotGmRewj3+Ayj1LK9G6NAu3pF1xGkaTFjy0AmN+iiOpdk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=I6RtdCym; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=EG25ReVSfKQ/ws0YnNKqThjAnFqoDwCTUpqUQQAp0Q5pUX3yWaNgZgDIvy3IUuR/uYCrGbg4iBibDXrXuMo7oiiVOyeRW7GcdiFBLjf2LXwlY5TLTSVIKL+HJoLr64D3TpYc+oz2ACBFlkmuEgd/UYM93T3ye/CNbNJCvUBj56c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yRG5ex+E; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ibyTuXKy; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=RkpCoSdf; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=/uV3tk5l; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="I6RtdCym"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6a173ad7cf4so1595621a12.3
-        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 08:17:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1789139843; x=1789744643; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=2JzqsoiLxocAa5D2L3SPzdIZsS+OW1mUD+PJx4LQgiw=;
-        b=I6RtdCymQit8YVXUfVke0ZwgoF+2b4Tc/vK0eZ2VUZDUJChIYtI6CnGF4+IqV5FMy3
-         LOyeMJAaPO2kxMgLgb1ATDws207sX2VFKoAFTuMzLtypckeKCdP8poCGi+BBj04Lfq+D
-         kG9uHWBdcrp47SkdypV1RxuPCBKHyoJhlalbk3yJG1h39CeiZQW7rqBlpHHhXbIcxNDJ
-         1CDfNWCv8YLccrEGqj9XLOO7+0cvtgfU4Jl2JwaD/kkPq/DrsUYm+ycsaBjzpikCU2xH
-         OaOTgz7S78hceZxdyxmBLUuED4unG6DduCxil069rY9oJ3424QX13qkDmAkBTb1egp9j
-         UO9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789139843; x=1789744643;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=2JzqsoiLxocAa5D2L3SPzdIZsS+OW1mUD+PJx4LQgiw=;
-        b=IUzddS5qP8q9APNaCkOZOejAK9eadhrfz7Vvx7eusGbb95gLhEdP7+FWE4JwN6Rl74
-         jJ8JbP+WYjNAmxxAgDB+HXIx93EoEqb6teXaFYqLtmfM7b0GntgkR0BfW8rfb0KFXWzy
-         QWzZeMKsj0wvWy3dCkH12Cyo6e6EYnX2LdYuwaFEVg9wTxotSukFLF67LhGbl5nVaYh4
-         B2esAyzOZIQW9bFjOOAjymTLdZINjqCkQ9/GB8ogDSegzNIGPRklUXddg6n2kkaTuXNQ
-         61ayveDQJe+FLpIwYBvXyNNDNbBPxBleMl15AV8viC+oPq4hRzSOtaSXPyfCGgEsHl2I
-         NBlA==
-X-Forwarded-Encrypted: i=1; AKwUvBzmbwBRIuepPCDQE4Jory4RM1USM9xRvjYjAYAncp8NKY1N8nTK6GTku5fj4OjS7XaK7VzhOKXG@vger.kernel.org
-X-Gm-Message-State: AFuF++kXraVw+To8rh1WttXI1LjCNRm/WFc2qFvnN3sgIvAT8P8DdY4I
-	o3WjtAe07MKKnqTMlI7v62/l+1HehxqAQjEM+xN/K2X1tckbC/sWsN10zq9BcCpVKLM=
-X-Gm-Gg: AYBFou3GCjjCKyOqbOx5xbwJ4y7B7xpRoLQFO2Ja9xhx95MI1RdbcHxB/at6ViA3tDo
-	K2D1U5AFarfgSRViz+77FYN7Thu3i2u2s2ePupgHe5A+uw3j34G4FrkzS6G6cCeFKiXo7dwHHFr
-	aez+BL0VAYYTGdMaUYC6WtxNhf2NmAM6KpoKtsXzFY5ToOV8o1HacQ7OrEjoK1cnT702qh/4Ywa
-	kqP5qZBry3ScS7JcGvLlFQ1qV1aMcXy8i/sdXmUIUcH962+p6usQid5z8KxQJQvOTAKb72t2cud
-	J8m6Mfe0V5XPltOHeHk3vQA24zyrmh0OI0F9coEOa8ubnb6zuTdhkEsg0aFAq3Wr9JIyqGrMiOz
-	EOQVj7FxHubsvAhrPUjSDnFWx4FKdN8/SiiZQjRZHxnyyB8f0d3mbpeXmjMf1EJpjMTXigtsHy+
-	hPfnBUmP3oDNYvqVleFWMf9cWX03jCGS0tkTPHs23+Z/8O6hJH/orecE4Gcv1wwwbIPAJzXZmxk
-	g==
-X-Received: by 2002:a17:906:6a03:b0:c29:45ce:85ad with SMTP id a640c23a62f3a-c29667f24c6mr225571866b.1.1789139843199;
-        Fri, 11 Sep 2026 08:17:23 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2966026e2esm93138666b.19.2026.09.11.08.17.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Sep 2026 08:17:22 -0700 (PDT)
-Date: Fri, 11 Sep 2026 17:17:20 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: linuszeng@tencent.com
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
-	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, Oscar Salvador <osalvador@suse.de>, 
-	Jingxiang Zeng <jingxiangzeng.cas@gmail.com>, Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v2 0/3] mm: page_counter: move hierarchical protection
- out of struct page_counter
-Message-ID: <aqQZus_Cc3mRiuXn@localhost.localdomain>
-References: <20260909-descriptive-name-v2-0-d7dd7c099049@tencent.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yRG5ex+E";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ibyTuXKy";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="RkpCoSdf";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="/uV3tk5l"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id B72D421998;
+	Fri, 11 Sep 2026 15:39:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1789141191; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ISisgtuP+E44Yh84wawy3XFCNcwKdHPChIXb+WWrbb8=;
+	b=yRG5ex+EgB7JBx7GgoY0xMIivNvnNeF+/ahkrQ6RI9VUTThFlHzeUDfRkQD79gt6PAZZRo
+	QB9V1ct50L9FC6VBPHoyNtADtG3BzCnvgr/9kKHl/D6/CBK2EI6+uIc607aqyPkMK/oi43
+	glGziJW/osokEeiCZUnyi0qDUuAxPbA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1789141191;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ISisgtuP+E44Yh84wawy3XFCNcwKdHPChIXb+WWrbb8=;
+	b=ibyTuXKyLcMMID8pqMigaGopxJtiBJpdeCCWE2u61T/OgIVLnkEZbVXEK/xnidGY8NiTND
+	8W55H2ZR3gYX40DA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1789141187; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ISisgtuP+E44Yh84wawy3XFCNcwKdHPChIXb+WWrbb8=;
+	b=RkpCoSdfSHWj1fcGtwrDhT62/fsH7xBwSZ2zrwPbNGs6VmbGZdwjTzYiJjy1F8iWLGBvkD
+	HpKgVD9dSpdoEI/pxQHyekwgrbZpWyVejI0I2fyfmaw5BHlfbNhSdIW2QUoPpjnAjn90qZ
+	ze/kVeQhZNqGHOU663uUKvS9yhMyTgQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1789141187;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ISisgtuP+E44Yh84wawy3XFCNcwKdHPChIXb+WWrbb8=;
+	b=/uV3tk5lQuLMBGbwQPAkn0EVQUwb3BC4zkQwrUMFqeDPefyjym38hC1nKr16gCgXqmQx+B
+	FQZIBaAwPIhJgqBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 58E82136ED;
+	Fri, 11 Sep 2026 15:39:47 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 1CI+FcMgpGp/QgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 11 Sep 2026 15:39:47 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id DB29DA079E; Fri, 11 Sep 2026 17:39:31 +0200 (CEST)
+Date: Fri, 11 Sep 2026 17:39:31 +0200
+From: Jan Kara <jack@suse.cz>
+To: Julian Sun <sunjunchao@bytedance.com>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	shakeel.butt@linux.dev, muchun.song@linux.dev, akpm@linux-foundation.org, 
+	axboe@kernel.dk, tj@kernel.org
+Subject: Re: [PATCH v3] writeback, memcg: skip foreign dirty tracking for
+ bdev inodes
+Message-ID: <l2awpukcp7lorvujvwdoqnlwlkkjl6e2kef6tnjvdw7qve2fni@vh4lspozoytt>
+References: <20260909034343.340703-1-sunjunchao@bytedance.com>
+ <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
+ <CAHSKhtcvaWgGHY_NWW242vYHHiSet0v-qsj4MsXGiwZJFrdUnQ@mail.gmail.com>
+ <ekylbhyzseq25nxq2yivmmdt5xl5glum5proueyd5mrqfux2y6@fpvflg4crr2i>
+ <db6d62f4-34f0-4237-ab58-c21b0968bee7@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="ozrropszbqjorccy"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260909-descriptive-name-v2-0-d7dd7c099049@tencent.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <db6d62f4-34f0-4237-ab58-c21b0968bee7@bytedance.com>
+X-Spam-Score: -3.80
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,suse.cz:email]
+X-Spam-Flag: NO
 
+On Fri 11-09-26 19:39:42, Julian Sun wrote:
+> On 9/11/26 7:20 PM, Jan Kara wrote:
+> > On Wed 09-09-26 21:18:11, Julian Sun wrote:
+> > > On Wed, Sep 9, 2026 at 7:13 PM Jan Kara <jack@suse.cz> wrote:
+> > > > 
+> > > > On Wed 09-09-26 11:43:43, Julian Sun wrote:
+> > > > > The expectation in wbc_detach_inode() that "concurrent write sharing of an
+> > > > > inode is expected to be very rare" does not hold for bdev inodes. On ext4,
+> > > > > metadata from many memcgs shares the same bdev inode, so dirty throttling
+> > > > > in those memcgs can repeatedly trigger foreign flushes of the owner wb.
+> > > > > These flushes can also write ordinary file data, reducing overwrite
+> > > > > coalescing under continuous buffered overwrites. The resulting extra I/O
+> > > > > leaves less device bandwidth for other workloads.
+> > > > 
+> > > > Hum. Are you aware of [1]? The guy is from the same company so I was
+> > > > assuming you two are working together on the problem :).
+> > > 
+> > > Yes, Xin and I are on the same team, and we are looking at different
+> > > ways to mitigate this issue.
+> > 
+> > OK :).
+> > 
+> > > We will continue trying to gather more evidence from production to
+> > > better understand its actual impact. The number of calls to
+> > > `balance_dirty_pages()` and the time spent in it might be useful
+> > > metrics for this purpose.
+> > > 
+> > > Jan, if we can show that this patch provides a measurable improvement
+> > > in production, would you consider accepting it? Or do you think we
+> > > should still look for a better approach? If you think there is a
+> > > better way to address this, we'd be very interested in your
+> > > suggestion.
+> > 
+> > I definitely acknowledge that there's a problem with foreign flushing due
+> > to bdev inodes that needs to be fixed because as Tejun wrote, bdev inodes
+> > break the fundamental assumptions of foreign flushes. But so far I haven't
+> > seen a solution which I'd definitely support.
+> > 
+> > Having data from production to understand what exactly is the practical
+> > problem will hopefully help us understand how the solution should look
+> > like. Is it just that we trigger too many flushes and that slows down
+> > things? Or is even one foreign flush of the whole wb due to bdev inode
+> > making performance bad? Is it that we have many foreign pages and foreign
+> > flushes fail to properly write them?  These are questions we need to answer
+> > to decide how the solution should look like. And the solution could be
+> > anything from just limiting number of foreign flushes for a wb to 1
+> > (because there really isn't big point in more of them being queued) to more
+> > involved foreign page tracking for bdev inodes so that flushes can be more
+> > targetted.
+> 
+> Hi Jan,
+> 
+> Thanks for your feedback.
+> 
+> All the foreign flushes we've observed were triggered by bdev inodes.
+> What we've observed is that the bdev inode has only around 10 MB of
+> dirty pages, but it triggers writeback of around 40 GB of dirty pages
+> across the entire wb. The actual foreign pages account for less than
+> 10 MB, yet flushing them triggers writeback of the whole wb, and this
+> happens repeatedly.
+> 
+> This appears to cause significant write amplification.
+> 
+> Limiting foreign flushes to one may not be sufficient in this case,
+> since even a single flush can trigger a large amount of unnecessary
+> writeback. I'm currently working on tracking foreign inodes so that
+> foreign flushes can target those inodes specifically.
 
---ozrropszbqjorccy
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Subject: Re: [PATCH v2 0/3] mm: page_counter: move hierarchical protection
- out of struct page_counter
-MIME-Version: 1.0
+OK, good, these are already some tangible data to use :). So in that case
+I'd maybe just:
 
-Hi.
+1) Avoid adding 'wb' as foreign just because it owns bdev inode where we
+are dirtying a page.
+2) Track that we have some foreign pages in this particular bdev inode.
+3) In balance dirty pages queue flushes of bdev inodes where we have
+foreign pages (besides queueing standard foreign flushes).
 
-On Wed, Sep 09, 2026 at 05:44:18PM +0800, linuszeng via B4 Relay <devnull+linuszeng.tencent.com@kernel.org> wrote:
-> No functional change is intended: protection semantics and the cgroup
-> v1/v2 behaviour are preserved.
+I didn't put too much thought into how to integrate this in an elegant way
+with the current writeback infrastructure but something like this shouldn't
+be that hard and it should help you with the foreign flush issues you
+observe.
 
-It is not clear from the description what is the intention then :-)
+> The impact on production workloads is not easy to measure directly,
+> which is another challenge we're facing. We've had reports of slow
+> dirty page writeback from production workloads. Although we haven't
+> established the full causal chain yet, we suspect foreign flushes may
+> be contributing to the problem.
 
-Do you have any measurements that the reduced cache footprint
-changes performance for setups without protection?
-And what is the positive impact on protected scenarios where the
-counters are in (possibly) different cacheline and one indirection
-further?
+Just being able to measure that "with these patches we don't need to flush
+40GB of unrelated data in foreign flushes in our production workloads" is
+enough to convince me they bring some tangible benefit for your workload
+:).
 
-Thanks,
-Michal
-
---ozrropszbqjorccy
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaqQbfBsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AjHdwEA9eabDSoks6Xn+ni3bc0I
-AP32Ul+BBWTmz5HMyoTjovoA/2JJSh5lKBEsuu0fwEMrZGzX9XiTI5mG6CHzszPG
-ztkH
-=VS/g
------END PGP SIGNATURE-----
-
---ozrropszbqjorccy--
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
