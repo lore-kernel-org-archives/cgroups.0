@@ -1,118 +1,107 @@
-Received: from mail-ej2-f12.google.com (mail-ej2-f12.google.com [74.125.228.140])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90A1D599A2F
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 21:12:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.140
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789161130; cv=pass; b=JQn+i6tHJguCORs+lJ6rqj/3uPYzWWC3WkgzOrDIlSwGOsl33Y8hV6n17X3VDIWr55JrdKwp8PwdHXeHG+TmbrH3y1eX710/8ZXVHoI7IY7HxeharLMOswdmh5JCkhFgWWi/ZugPM9708q+UaMFLMgf2baON/hzNWb5WEUCt24M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789161130; c=relaxed/simple;
-	bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AQZk/OAtfz3ALspfSS9+xmuPLbf5CO7gvo9JnU8qgzu7s8jIh8ci29iqisvpUC7polHZdChJqi6h63a810b0e7IzY3XA9iAkFU9Ta0/i5E6yCv/3uOMVk+pok1j9hD6/uoGEZa6f2ynA3yL1erlgwQ8oiZLen5qv1DJrD3gyHG4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=tab4gvan; arc=pass smtp.client-ip=74.125.228.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7425F4BEE41
+	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 22:09:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789164597; cv=none; b=NK82rwciF8+JXQVOgZLJ1Ac8Vlz3A7zD8MFaxaC6ybcZurWL7AslyqgoFOhU4IS5s5qGjQm0+ie71+MxG5GK8z61ndx0nnlxsvvWkFfKD3M31MVBTsi8+uhSUrhD6Vkv502Z7xydXJLeAWnQsHMobV12WU2sE69eKG2emqfJkIg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789164597; c=relaxed/simple;
+	bh=t+Do4nGFECT6+LKHRKvJVejkOKMJELdYcZO6ItT3PsI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lC1SQzwKNGGWYHnJyt1C0Uwg4Pzz9hsCihkdt+BlPqKELmNXJv+3vZSXUYhTu70e1P3/FhHnyXBeZYGMybXP8bmPCMIUbVRKaXolGVO+6oqvft6SlKvsBzRBtAuQWYJDowxPcX0UMEAJHo9VmKw6WZUBx0CEyl+ibApEAVEGgSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UXVKXqDY; arc=none smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tab4gvan"
-Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c254f9f0b1fso53397766b.2
-        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 14:12:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789161127; cv=none;
-        d=google.com; s=arc-20260327;
-        b=E7YVNYJc8mbUePus8f0FeKuXOeorS7DIRvnjUk8AFLug7q7KJi4nKh8wZo6F8EFw5H
-         3ws7BK2T3jv0e9WEUwHCLR6FXy7Xk430jr+Yz1w8v5tvBVY+NF3+wFtnGV/IDdO614fV
-         3eQxc7GgpwKtv8hX2UO3ZzQGQHbxUeNWsaQxM1Uw6/hP8rIEJaWkQizd4EZcPGwZfVvU
-         nbOX60R1ln06gdUhdQOAknwnJiZ9fvRVZvGbKqSZDG1ZZTfo3h5VIQIm7s+MwAZET+aa
-         5qEPbu1CTTVzJ3agZ8NT83nQUtdTqG20MvHP/4usEzvoqkgSwm5eJBU/xQvh+U6MtY+M
-         Mjog==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
-        fh=9gEs10ztJp7Hb1ABYLHXQeaf8kiwsxffaFchV8GP5ls=;
-        b=IVtk9WqWZcvfAUT/5doVjS12RSSC/uduQj3BGqIhjgKduBShAq0bVKnIAK80hIlGXW
-         E6jpwZM7Rm71C6vnasSlT6SEOMn8DczIL8OWikb7IlovGKOGabLZ0lEeyxfVcq1ok8Aa
-         fgugwJWgdHNjhYmC/Pbu02r4pGswWAZa7W6RQoIL8SJ2gx6NbDp1FEj3+AegO+H0Lmt5
-         OIoADwNDur+3m1seVe9SW8PZpJGuN+cJDWTdrzJ4T7fUzf8Y0hVYenXhPnwDhRcgEQFd
-         QfaK3E1fDpznRzH9vsOuSjYcuZPZWw+zePip1OB72ka3tQgIEOSxTMsCARbXAUcT6dSv
-         iHPg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UXVKXqDY"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912d822dso450145e9.2
+        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 15:09:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789161127; x=1789765927; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
-        b=tab4gvan26Lk8iSkXFMZKYdWvxPwyLkHVcOPb864H7VAY3JJKwGbGxUhXS5wgYjgdn
-         Se+CBLEXQ3R7ILWbGpuYvaca4inykx6aU+PE2U72zGgpF0ruFmNy90/0Sof7SiF3Y4E2
-         oZP6bp1cwU0uwdiPMZHZZ+9XTyRKeSWZF9VptYUT0GLSzxPn3P28H2q5sjoHoOHSNlXa
-         eAFfMe6zs7z5kynF1KQ4iDf6YzrJn36+W+8QdlaXmYu2bd6iEnSq26pL0wLOHR+xU/AQ
-         YMgt5pHZ5odDyjhHBjKvrLQJPPIeLLumFl5XXeXziiu2lfRE5llT7VzGwhb5DCBIL3OY
-         Z44A==
+        d=gmail.com; s=20251104; t=1789164594; x=1789769394; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Dk8RJ/gWGUzJZL37Z13wVy/RHkm1H9VT60iwGnpNGc4=;
+        b=UXVKXqDYkUXMqC1VF7c5oSmOINGOJjIRwB+zt63W1TugeVgGhA+4fA0uWFfdCxMnml
+         JY8aOD6UENqwML/LorPb3nBylNitbNjBtkbAOWs3l9pNaLZZ1YeN3Vjkc/EovEZEI+4O
+         bpRZFnENG8YuAf7qOlL/zoyFyyIK2Nemdl3BD6iS6HOBUewYeUSkiuaVxKeKt5rjloDk
+         okfVGjgHoYrKlWgOoE5s2SczIkCuuahrw1Isgb/zKXwtuSGVEhA8YHDV3A0+QGeM8Eq/
+         cuvoxPx6Rgj+7drav+4YNH6hUcoJ3itgi2nFP6n9IECVTDsrlhntZODs2ibr7+isStYY
+         v9pg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789161127; x=1789765927;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
-        b=OIx39WvjjRbCARC2Cbmc7f4QqnAV+dmowTbyny5tbaXFL7dPWRwJUPhzmtdu85WjXZ
-         FAhOkvtoCUHQ5ZkdSczrsdG0dJljCz2lxftZfb4XbIXCTGeiWCxWMGX217oNX9jsTEUM
-         cySwBYPlD3Rp+eQgTOJmfy9S6e84JY7541Sg7E4OY7zBQETBJtTCF5RYvZeQ1/ak12I4
-         qLPdvISjYjW5b1rhj5qwkEwTl8N1PZ/DlaSKz0Hz//Q6pE+8TG3kJWiNsJ8VpgIa148H
-         xL+uNGR7Hu/JV+UebW5+0dEsC1JxzZI6JEy8zw2HSHR8DzDKzwfWer2HiXq9lWU/xiM+
-         X0+Q==
-X-Forwarded-Encrypted: i=1; AKwUvBzANbdrg3SbjPXmLeRg3AoT8V3UE3K+mT4fztYV/rdok8kBPTQmLRw2HiIrhwPdQXmqcio/cg8A@vger.kernel.org
-X-Gm-Message-State: AFuF++mE5PJlmxknpPKa7+0QHvfZC70e/0OiPNl75IvRjXwU+YQex/FV
-	i674Z2Oj6IBOc3BXHHhz2yFJlRpqN1dxhXaSEod/3LrGUuOFsS93q46U8obpUwnHIcxT0+nBfMb
-	KvMFMn3DONsxwXPZrR7Mo4AGdKSFYQ5P/9QolJObk
-X-Gm-Gg: AYBFou3Pp8O9ifPrWO/wzhHzXWXYbvhIrTA9y9iaBHnBbfBGWTzmHkasGMz6vATNgZ3
-	6cM+5QJEnCMHHbv+rVKmPmleo9vOdjUgmBCYMw5nryBTYoBKJ95qvwWxkCJbOYB63Pso1nqzAfT
-	usKI1BqX/MB8vf8pBuPXDF3sAqysJyPPyFhbbswfN5QdrhLhq5/Sjyt8zmEzYtmTI6AFZj8xhll
-	W8W80IsOS+eMjUl5eZbn6NnHh7Iw5z/6WIRC099EXPoNVQ2gHEQ9hA3egAmXYXwwJCleDFaUrWY
-	ml+oxMj5vvE8i0Oi0xYlWFvjQhywxFcLV9xhY8EJBJ7ep/Pelpc4Cn1XO+Li4R8J1vRLZ9hnSt7
-	YumdiYa8n0wHCZyk2y2M7
-X-Received: by 2002:a17:907:9619:b0:c25:8e53:45ca with SMTP id
- a640c23a62f3a-c29667578e3mr499344966b.21.1789161126322; Fri, 11 Sep 2026
- 14:12:06 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1789164594; x=1789769394;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Dk8RJ/gWGUzJZL37Z13wVy/RHkm1H9VT60iwGnpNGc4=;
+        b=c66l6XlgFkZ0EWfEf9FnW+cDR4UPAN7VxVSAINUzjlMNJ+Vqot93QggtRnyQTIMsTX
+         mxSj76CnZUNk6dZ1ceJI1qgLqPh9OQMlZpS1YTeKFJ9aL1SkRK3S6kOaudxAf9mX2iRb
+         2nQgDGgeImULenD22kp64ugrAho4lemufSw8mbUBe4qfaNMFMd5yk/6bqcWDZPejd3QW
+         6XrO22Cu/HhIEFwsKMN0JnpaKJNQxhy0DdY84VrBQdnxrgNZi/NE56y9fg2ib/r8vqaB
+         CADhw3nQ9ylaHAIRFE3YgBU4cNhBA2oII3q1pKQxYTBjrI4bcyA4gw9YQxaSSnuABadx
+         IIQg==
+X-Forwarded-Encrypted: i=1; AKwUvBxsp/yTUZFrFxQv+QJ3AZrnAKHAYvg+GSkTq8SioWVwsfpbyol43GngDC+hFRu9XX7EGKxfByfr@vger.kernel.org
+X-Gm-Message-State: AFuF++kqTjAKr5OVHgdHOdS8RshMIy2BgcEKLWlYMOUjZtY/6M3JvOSr
+	pwcHXRUonu3pc332J+tq21Wmw1XYg5VwWHTyJrBCOsZHDvqB3Jlvs9L1
+X-Gm-Gg: AYBFou18Ul6/x/tm4Yo5AS/0fT5G/rn/atw6yFzlMrmuc0UwrZaFnHTt+DDYYPC/rGr
+	TL9QMaiEckQbUCb4br4iZK+DilLfi+IEOoZyVJ97AE+06PcdfcmMdLBTo+xzen/E9T92F0EHnAO
+	vooHk7cRe1RQivY+AyII1Zj0MUpZ0acZFGLwKGh4ycp14u8dOk2mkAvK+0VwtZlbDPPjSF3lhMy
+	6bT/v6B9YtDTN3tjDLBJcNGdBm0j3HyYFPRKSD3krJKC0+K+R97lfN79rEFJ2hqjc4HR9DHQ9kk
+	Aoh+uznGyEV4lgKcuxAo0/q+WoTUEw6nBy0D3H0Fxd6u5Ojp+d+KSg4wXxvUKaJ/AcZte+JJkaA
+	RqB5/qif9ZPGLWF2w5XjcrhbfFUE54SPyueGpU6Y9H9w+y1Nxym9BoAcHZPaqRVGomyG57g2OEs
+	s4VHoxrJl+z/FivmtbkN/muwq7bZ+j9jYEiDxYJ/au951/+INjbKL049kqFIgNevn2sL8BuM0Be
+	k8/1X8egh2zwF305TQAZgquvYA43fxYL1BP3eWujfbeZYsiVUuCHiV2WYAwb/KjSoBUFwX1QWxI
+	MBw2aOlniLko7LCB0b/+xNHEwaXpSqdfMcubSzP1OwLxjmk=
+X-Received: by 2002:a05:600c:3f16:b0:49d:25b0:cc60 with SMTP id 5b1f17b1804b1-49e6cc13c99mr904955e9.29.1789164593578;
+        Fri, 11 Sep 2026 15:09:53 -0700 (PDT)
+Received: from localhost.localdomain (dynamic-095-114-033-154.95.114.pool.telefonica.de. [95.114.33.154])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e69f02c92sm33383385e9.2.2026.09.11.15.09.52
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 11 Sep 2026 15:09:53 -0700 (PDT)
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: Maarten Lankhorst <dev@lankhorst.se>,
+	Maxime Ripard <mripard@kernel.org>,
+	Natalie Vock <nat@pixelcluster.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Karl Mehltretter <kmehltretter@gmail.com>,
+	cgroups@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] cgroup/dmem: Fix eviction helper reference in dmem_cgroup_try_charge()
+Date: Sat, 12 Sep 2026 00:08:33 +0200
+Message-Id: <20260911220833.6958-1-kmehltretter@gmail.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260821050507.2161607-1-shakeel.butt@linux.dev>
- <20260821050507.2161607-5-shakeel.butt@linux.dev> <CAB=BE-QMyzKT-o=gbhdp3g8JSqQgRiTFzxTX9vEBmCttABrmdw@mail.gmail.com>
- <aqRWuffGKczUhegT@linux.dev>
-In-Reply-To: <aqRWuffGKczUhegT@linux.dev>
-From: Sandeep Dhavale <dhavale@google.com>
-Date: Fri, 11 Sep 2026 14:11:53 -0700
-X-Gm-Features: AcwNN1Wh4xneWSvMXksn88XWYdkFKLDPGlOSXkSUkMRqjCCaU4JFTl4RQoJGSwA
-Message-ID: <CAB=BE-SjW76gWr0kZcPnEjXOwt90vCV0TJeFuYEGV1Kt4Y1HWw@mail.gmail.com>
-Subject: Re: [PATCH 4/4] kernfs: Remove kernfs_rwsem from dentry revalidation
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, 
-	Christian Brauner <christian@brauner.io>, Meta kernel team <kernel-team@meta.com>, driver-core@lists.linux.dev, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-> Hi Sandeep, thanks for the report. Do you have a reproducer? If yes, can you
-> reproduce with this series?
->
-Hi Shakeel,
-No luck with the reproducer yet, and reports have been sporadic.
+The kernel-doc comment of dmem_cgroup_try_charge() refers to
+dmem_cgroup_evict_valuable, which does not exist. The name is
+dmem_cgroup_state_evict_valuable. Say dmem_cgroup_state_evict_valuable.
 
-> I think first we need a real reproducer before considering anything. I would not
-> add a check unless we have proof that it is really needed.
+Fixes: b168ed458dde ("kernel/cgroup: Add "dmem" memory accounting cgroup")
+Assisted-by: LLM
+Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+---
+ kernel/cgroup/dmem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ok, I understand. Do you have any opinion on the suspected call chain
-which makes dentry->d_inode = NULL; ?
-Partner report said it happens under memory pressure, and userspace
-component was reading the CMA stats through
-sysfs [1]. So I naturally looked at the shrinker and suspected that
-call chain, which made sense for my 6.12 kernel call stack.
-
-Thanks,
-Sandeep.
-[1] https://cs.android.com/android/platform/superproject/+/android-latest-release:system/memory/libmeminfo/sysmeminfo.cpp;l=545?q=sysme&ss=android%2Fplatform%2Fsuperproject
+diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
+index 4683f3d6802268ddad40bd5d9e10305fc4dfddc5..13dbd083f6dedf83002ee7e7912e1f983e3594f0 100644
+--- a/kernel/cgroup/dmem.c
++++ b/kernel/cgroup/dmem.c
+@@ -706,7 +706,7 @@ EXPORT_SYMBOL_GPL(dmem_cgroup_uncharge);
+  *
+  * When this function fails with -EAGAIN and @ret_limit_pool is non-null, it
+  * will be set to the pool for which the limit is hit. This can be used for
+- * eviction as argument to dmem_cgroup_evict_valuable(). This reference must be freed
++ * eviction as argument to dmem_cgroup_state_evict_valuable(). This reference must be freed
+  * with @dmem_cgroup_pool_state_put().
+  *
+  * Return: 0 on success, -EAGAIN on hitting a limit, or a negative errno on failure.
