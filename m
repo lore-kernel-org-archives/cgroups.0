@@ -1,135 +1,175 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1384042E8C8
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 10:19:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3416D3CF976
+	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 11:20:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789121958; cv=none; b=uK/dxkf0RYMBiAMIPYK9MiW2NHwDi1o/9+EhLln9u53c+hofnmglfrNVzRlmv2sBEAx4dtRggC1l/Qq0IiHkLqQcSFoScf8aO2EbxUjWLjQat/XaV5TvFJe+OB9sx3/C9GEzZjNG0sUHmcMyUyxHJaWlczCGkmtDGyA3l5XurDg=
+	t=1789125623; cv=none; b=rY6m9bIKOd3cKch1FKyJ21CrHIb5fANbhTQsq4dqUft2Wi9xyFpntpYlLpkpCziQFCReE1qf+o49aH8bVTMwXlxIs5UXTTyT1MpA5teZTBeCtedNP8d2xDZdJCSlQf6YlI3QESngSrb91DBmq8x+Fd+mA6cipJRDvEArleg1HO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789121958; c=relaxed/simple;
-	bh=BxrZFbzDf2SyAOpYi68fzTgGFq/6jGpMGUzY0dphSbY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nicx5l+KqsA9xi/Wvrwqd+5eq+AsWXDJ2DRUv9EWAliDIymXV/0CdW9ssnceZoO2Y4rsmexJ+PhDheOu6mtAxSZV0ic/m2VoZ5bcfJC3ArF+1hbpEMYGIVSZN/Ss7ZuqKZKgEw1sTu9Hw7u0YPji+JF4c1zPQfTdChekCnJR3b4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=D0oJRd3A; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=PB7VQeQ5; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1789125623; c=relaxed/simple;
+	bh=mounJEJpqAqAJiHMUyFE2b3MjHjfrGGGPtzek9Mnj5w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LfOgewW9Auw4MHyYPm7GvpV1F3mv4/nZjQ/v/OcYylLN/pNaW1VZJeCy+U/eMZDbBqgMwRlTMggKy27CKLpmOwts1V7ckW5Fed11HRDQei9xi9Ff+F03X1D7RUuna/vqYG0YNTcCnMQqcz2x8xESsh3/ehyHm9qL0oOK3vVLNuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=a4nwf5Aa; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=71OVCowj; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=pKY2NinR; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=aFf3cNsi; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="D0oJRd3A";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="PB7VQeQ5"
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1789121945;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=OXOpLTSTo4iNnhNTVXX1FQP73d0OnFLISfa5cBxa4SY=;
-	b=D0oJRd3AO1cfI0OyIgv1qG7Dego9mPmmGXIBXRqsB/aUejM2xmeBbcM4h0rZW9aF/BELYd
-	tTy8q8IGobdgofL8GWJQTzhHktcajrxG/CTg//vXx/BA8WemidxYnjKDlukIxIFbtg6yJa
-	upQEQu1b67sxbNHNyEoL0NNrDrHMldDPdrzCALHtTm5eNDdlzb9QcGWPjghdB0jTxWejy7
-	M/du+nhOUr4J8EfkDMYhPEwLHfbIWRMwMyDAnG0w+0G5Q9SlYtIn7eMZzQji8Qpz/xZUkm
-	V3hWgVw3/sna8SqQmV82Wqe58o1jvtFTPKKIbeoNq8d7nmfInUMPZB2cQdgqrw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1789121945;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=OXOpLTSTo4iNnhNTVXX1FQP73d0OnFLISfa5cBxa4SY=;
-	b=PB7VQeQ5KrvTKRqtd03OJf7ciWPhtXEs3pwogTC1F1Zmf4+5ZzPuNGqS83hX8FhTr3tic8
-	NGL9j+FzMwyndXAw==
-To: cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH] cgroup: Move cgrp_dead_ task+iwork into its own struct
-Date: Fri, 11 Sep 2026 12:19:00 +0200
-Message-ID: <20260911101900.984420-1-bigeasy@linutronix.de>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="a4nwf5Aa";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="71OVCowj";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="pKY2NinR";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="aFf3cNsi"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id CD16D21AB4;
+	Fri, 11 Sep 2026 11:20:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1789125616; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF050pABNTWd4QPvjkP8yXRmzSxGQTtL7sVvE8V5RnU=;
+	b=a4nwf5AaXnoivV006w6a9h7Fur3fmXGif41Sc+QaSolO3OYu8rWO6MP4W4zs+X5QeW5jLE
+	1o2z6G1py8XUq/5xw96ZKarB3cna2DEUJuzw59r+/qQslV0RXK9UGgSDU2Y178yOp/ULGv
+	bWxnii0/DTEdGguPPU/VHB+xVYAZv80=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1789125616;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF050pABNTWd4QPvjkP8yXRmzSxGQTtL7sVvE8V5RnU=;
+	b=71OVCowjfvzjEv7JxVBYWE6n9QqdAePvuVH1lt8I6NDVePP2xdJPEzevN3P1D5mnKKbhVD
+	HXmpBdGkZu5ydSBg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1789125611; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF050pABNTWd4QPvjkP8yXRmzSxGQTtL7sVvE8V5RnU=;
+	b=pKY2NinR2PoinIesd9mBmfQ4kzKhAD8tC8hNsjq6VXge+uYHLVyRuRDvJneApYUy3jZiSQ
+	S4T8Q0REpOmhFMOPPZ1WYKGfeB1pSC0l8vUY95jHdg44R54MFEvJnQ5d70KAUaHWGXEeiO
+	huZ05WumTahepvc1aaoT13Ehes30sds=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1789125611;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cF050pABNTWd4QPvjkP8yXRmzSxGQTtL7sVvE8V5RnU=;
+	b=aFf3cNsiYVucLkMBqwe9QnC3/fUHRXbUySgfDH301JmskDCpKw3+OfpwgHURmw9XpJlQ4y
+	ALffrM7qLihmJCCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A1BB1132D3;
+	Fri, 11 Sep 2026 11:20:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id cIl3J+vjo2qpNwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 11 Sep 2026 11:20:11 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 2F5FEA1342; Fri, 11 Sep 2026 13:20:07 +0200 (CEST)
+Date: Fri, 11 Sep 2026 13:20:07 +0200
+From: Jan Kara <jack@suse.cz>
+To: Julian Sun <sunjunchao@bytedance.com>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	shakeel.butt@linux.dev, muchun.song@linux.dev, akpm@linux-foundation.org, 
+	axboe@kernel.dk, tj@kernel.org
+Subject: Re: [External] Re: [PATCH v3] writeback, memcg: skip foreign dirty
+ tracking for bdev inodes
+Message-ID: <ekylbhyzseq25nxq2yivmmdt5xl5glum5proueyd5mrqfux2y6@fpvflg4crr2i>
+References: <20260909034343.340703-1-sunjunchao@bytedance.com>
+ <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
+ <CAHSKhtcvaWgGHY_NWW242vYHHiSet0v-qsj4MsXGiwZJFrdUnQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHSKhtcvaWgGHY_NWW242vYHHiSet0v-qsj4MsXGiwZJFrdUnQ@mail.gmail.com>
+X-Spam-Score: -3.80
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Spam-Flag: NO
 
-cgrp_dead_tasks and cgrp_dead_tasks_iwork are independent per-CPU
-variables and are independently accessed via a this_cpu_ptr().
+On Wed 09-09-26 21:18:11, Julian Sun wrote:
+> On Wed, Sep 9, 2026 at 7:13 PM Jan Kara <jack@suse.cz> wrote:
+> >
+> > On Wed 09-09-26 11:43:43, Julian Sun wrote:
+> > > The expectation in wbc_detach_inode() that "concurrent write sharing of an
+> > > inode is expected to be very rare" does not hold for bdev inodes. On ext4,
+> > > metadata from many memcgs shares the same bdev inode, so dirty throttling
+> > > in those memcgs can repeatedly trigger foreign flushes of the owner wb.
+> > > These flushes can also write ordinary file data, reducing overwrite
+> > > coalescing under continuous buffered overwrites. The resulting extra I/O
+> > > leaves less device bandwidth for other workloads.
+> >
+> > Hum. Are you aware of [1]? The guy is from the same company so I was
+> > assuming you two are working together on the problem :).
+> 
+> Yes, Xin and I are on the same team, and we are looking at different
+> ways to mitigate this issue.
 
-Having a custom struct with those two members makes it possible to have
-only one per-CPU accessor and access the second member via an offset.
-This makes the code a bit more compact and is micro-optimization.
+OK :).
 
-Besides that, it allows cgrp_dead_tasks_iwork_fn() to access the list
-pointer via the passed iwork pointer. This not only eliminates the
-this_cpu_ptr() but also makes it possible to be invoked on a different
-CPU. This does not happen as of today but might if I can flush the
-irq_work items from another CPU during CPU-hotplug events.
+> We will continue trying to gather more evidence from production to
+> better understand its actual impact. The number of calls to
+> `balance_dirty_pages()` and the time spent in it might be useful
+> metrics for this purpose.
+> 
+> Jan, if we can show that this patch provides a measurable improvement
+> in production, would you consider accepting it? Or do you think we
+> should still look for a better approach? If you think there is a
+> better way to address this, we'd be very interested in your
+> suggestion.
 
-Create struct cgroup_dead with the per-CPU variables as members. Access
-the struct with a per-CPU accessor and use the cointer_of() in the
-irq_work callback.
+I definitely acknowledge that there's a problem with foreign flushing due
+to bdev inodes that needs to be fixed because as Tejun wrote, bdev inodes
+break the fundamental assumptions of foreign flushes. But so far I haven't
+seen a solution which I'd definitely support.
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- kernel/cgroup/cgroup.c | 23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+Having data from production to understand what exactly is the practical
+problem will hopefully help us understand how the solution should look
+like. Is it just that we trigger too many flushes and that slows down
+things? Or is even one foreign flush of the whole wb due to bdev inode
+making performance bad? Is it that we have many foreign pages and foreign
+flushes fail to properly write them?  These are questions we need to answer
+to decide how the solution should look like. And the solution could be
+anything from just limiting number of foreign flushes for a wb to 1
+(because there really isn't big point in more of them being queued) to more
+involved foreign page tracking for bdev inodes so that flushes can be more
+targetted.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 2d532bf2c0c7a..5277274f48b54 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -7194,15 +7194,19 @@ static void do_cgroup_task_dead(struct task_struct =
-*tsk)
-  * the cgroup and task_struct can be pinned indefinitely. Bounce through l=
-azy
-  * irq_work to allow batching while ensuring timely completion.
-  */
--static DEFINE_PER_CPU(struct llist_head, cgrp_dead_tasks);
--static DEFINE_PER_CPU(struct irq_work, cgrp_dead_tasks_iwork);
-+struct cgroup_dead {
-+	struct irq_work		iwork;
-+	struct llist_head	tasks;
-+};
-+static DEFINE_PER_CPU(struct cgroup_dead, cgroup_dead);
-=20
- static void cgrp_dead_tasks_iwork_fn(struct irq_work *iwork)
- {
-+	struct cgroup_dead *cgrp_dead =3D container_of(iwork, struct cgroup_dead,=
- iwork);
- 	struct llist_node *lnode;
- 	struct task_struct *task, *next;
-=20
--	lnode =3D llist_del_all(this_cpu_ptr(&cgrp_dead_tasks));
-+	lnode =3D llist_del_all(&cgrp_dead->tasks);
- 	llist_for_each_entry_safe(task, next, lnode, cg_dead_lnode) {
- 		do_cgroup_task_dead(task);
- 		put_task_struct(task);
-@@ -7214,17 +7218,20 @@ static void __init cgroup_rt_init(void)
- 	int cpu;
-=20
- 	for_each_possible_cpu(cpu) {
--		init_llist_head(per_cpu_ptr(&cgrp_dead_tasks, cpu));
--		per_cpu(cgrp_dead_tasks_iwork, cpu) =3D
--			IRQ_WORK_INIT_LAZY(cgrp_dead_tasks_iwork_fn);
-+		struct cgroup_dead *cgrp_dead =3D per_cpu_ptr(&cgroup_dead, cpu);
-+
-+		init_llist_head(&cgrp_dead->tasks);
-+		cgrp_dead->iwork =3D IRQ_WORK_INIT_LAZY(cgrp_dead_tasks_iwork_fn);
- 	}
- }
-=20
- void cgroup_task_dead(struct task_struct *task)
- {
-+	struct cgroup_dead *cgrp_dead =3D this_cpu_ptr(&cgroup_dead);
-+
- 	get_task_struct(task);
--	llist_add(&task->cg_dead_lnode, this_cpu_ptr(&cgrp_dead_tasks));
--	irq_work_queue(this_cpu_ptr(&cgrp_dead_tasks_iwork));
-+	llist_add(&task->cg_dead_lnode, &cgrp_dead->tasks);
-+	irq_work_queue(&cgrp_dead->iwork);
- }
- #else	/* CONFIG_PREEMPT_RT */
- static void __init cgroup_rt_init(void) {}
---=20
-2.55.0
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
