@@ -1,199 +1,198 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDB0A337699
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 17:02:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0DA7397699
+	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 18:14:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789146166; cv=pass; b=ip4NDOkLdT87ohMuVTjCciaGENi3PnZqQdP+D1fz3MPvsiAXzWK0jMItH0Z49BXM3JFT9e9uXISWD+eN/WUu/Y7wV6CsC0QfhECygxGzeI6Sckjljvh7S9xrfOnTKSKJZLspklImiOJvSaxqjIU1tuZH9iLH9Xff3MtX4RDa9kk=
+	t=1789150495; cv=pass; b=HlRoCVbFPuera9R/9nLpuDvFlEX6gZni1RglJRfXIzJYqseRUEegxB50gLyuNRhOF7aRHNCkXq9W+Ou0qLjM/fG/oyaqKnLwo0SVW4kUvFHqzhmPD8ZbXy43/IAXll/6EvuBcCqlQJfaE7BL3hfbh0xFP8YsGHvnyYP8J92Fmck=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789146166; c=relaxed/simple;
-	bh=lEBjerB2ZaHUd2HRyZIeMAAHDOVNiGkEpACiPSF32K0=;
+	s=arc-20240116; t=1789150495; c=relaxed/simple;
+	bh=GBuxWMSsg4wZZ3OpOH0+odAqCmKuZujhQPqIzTdn0Yk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rfR8tWvHj+TPpbIOZMK51I68nIrmV9nvbP9xNhk+9U76o4hRcp555+NOzksF/Ns8fNHVpb/IygingV1TCm2Wf1jOs3PMF92mFf4+MdTrT22gO5A07Z1Zkee/4C2Lbam6Nz1AKjSN1vMcl0Q6BJa7kc47S766AVEVLsRgw9AigRs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PSSKsIBU; arc=pass smtp.client-ip=209.85.218.52
+	 To:Cc:Content-Type; b=L0rPq7iwar/TGaS0w0d0+aHlwmOoWwzPjfvib/Pg6UmygZ0SeJhau/TKIO1Np0Z96iN8zoC2NR9nDPzvZtJF72cdsLG4102yqfR8APDtomjWG/9eddmJ+dbtJpq1c1XsKmYdI87QhLTarPCNdv4a/KmKEV6Iojbl50/tzdk4ioo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VX0N/ICf; arc=pass smtp.client-ip=209.85.208.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PSSKsIBU"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c169ae1cb26so302288566b.1
-        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 10:02:44 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789146163; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VX0N/ICf"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-6a9a4dc8afeso1982488a12.3
+        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 11:14:53 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789150492; cv=none;
         d=google.com; s=arc-20260327;
-        b=ei322EZy9Lh7lpJ1hXIiGWuRWv8eRh7MSJPmyMgxzjIx+ieW4lM7UbqiV1mrlwrWV/
-         zDhJCfQAUab/t9nep6Je5N3jZDJzfvfJgHTt9FHWZkSUgTVaFhemxukw8+WF09rpmCka
-         eg56Is4Yv0wThvHXDT3Y7t8XRWhn572zm7Np2KTD92r6rn+yGzATbnSLlxpdakUSMp7Q
-         tfbiTE7iLCU4e2rkC4BwPvQr4Dj3i16q4AejebDqBLUXGdX6qaaLIq2PYHHejg1K2gr9
-         4cwAgOP0FLUoTnpmyjXsFDoHbnpoiT01F8J1UpBOxFztNLfx2i7dQPaJE5LiRREihKdT
-         II1g==
+        b=oCO9mXrhipANrK+KuJNZVuDLCBmENv0tK36WcnfBBKCNSMjgMAwD0HGEc/EbEzU+iK
+         dkmTpBkuRXyHTGG11EI8x6G0c6U9jjV5hbrz/YObbFN53/YxYwurL7vXk2JGac9joIHM
+         Yf2YN9ERwdifTxQekq8zGQEDzHtRv4AvjlleywWOEjvbKgLPA++GJQ4qNdmMqhYZEAlu
+         Hycfx9IE4jo1JYcuUEypP5iRbCq/kZX4tpq8ssmGPsN1G8/+BP2uDi5w/mwPkXLfPmaU
+         WojJln7yhbHC7Aiih2LFlqNUdt18Hix+ZsRWrtiWF4vGILjb7Wxj8tgfA0Fz9burllGD
+         +SuQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=OECv2yjkS4C1/vp1OMprOqRH2B2H12xO1mA6lcxkPXk=;
-        fh=drUBtAHGXCkLD2kstUKeuqv7uZ7njp6DibDZw1BN4y4=;
-        b=cNC/GDcHmCD9UQJZpLaP3nlfVvUL4rZfY+6E1S4ztIwlzYwoJRu53nCnL3veSf0pRN
-         ZHXiG3qww7iGUZpBhynTpQc/Nx9BcuCiQuZWwuTQvOZBWVn9jMO6Ak/wkVE/dzBxft4d
-         TDrGLwHeZtNTAb7OfHv4EJij1fyzz4mRUh3IIIkH8Q5ECtUXufkiGswM4FMVGvOOx/QZ
-         EWzo3IoEja/jV/JOYsaJuHOcMKm+Kj+lj27zVVWeXMVNjRazDt9g4gAG7SJXWsRxqgsz
-         rr3YhcIWJXZm2ekHT5A40JKtFfOzyo6DunPNl0XU4OUy1J9KM+DkFeA9BJh4eLZcfTVY
-         fzXQ==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=sgMffH9c4Ut5GzZRUzz1jul/MtsWXNFvANxlyz2Cqvc=;
+        fh=NXSQVtDrccYfmRPef/ZCZ3ZR5PUD20qRF7MRgiAd4z0=;
+        b=nOJKmPADlDBF6nx8Z5adcQz9pqHHT/Y0Scu5dtsC8/JNUomxj1E/T5mldjz78Fmu+E
+         axjrjUdvn8DWaMVmxpAcdrR6q0j3KOAUgcptkHNLnU9pUR0P7MpKExFegYq2jYt8Coa7
+         uTZhBn9eXbVL2GW8Ay1+CGF18iMLY7U+KoK7YpMDV0OfZ7XFsd64GFm+eudcDSotZGpm
+         YayR81z2aQmAKOzT+PkzdfdcapnohLiph46RSI6NqexRrqYDnlsMGlpj+P9JPjQzx86U
+         1Y+4/vl+FA96NQor9SPy0hkHc2aYuW819fQAXiQ+ugDonajfuTkZtEU4VWuGiXrvmS72
+         BX+Q==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789146163; x=1789750963; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OECv2yjkS4C1/vp1OMprOqRH2B2H12xO1mA6lcxkPXk=;
-        b=PSSKsIBUcy9qWXPPdPjS2shTYOrHYxI+7JjwPD1iAbq/y7A4hf/IbpooPhQCxq4Xxr
-         KItZ/y9NkYpFBGFT9RDYDHbX1t/sxF2VM83Pgg9H6B2j2I2/zvhB6hNoPcz2VUiZBVeX
-         ruaMrYiw6aO4RYc3fu9s6fMXBvsQme/5euDfysceXZUmwWyk2Simg/p2pJn/2gXP8yup
-         LiJRxpvGc3ThoQ/vIeglePYQEtrIiVfmF+xNJY4rBgW+AgaQPO/uVt8u9bwgh/iNZqTD
-         tbEKiUqbqXMHnfAjQO+KONv56GNa4Mw3gxyrdwZs9NMLh19tYZRMn+FM/XX/6P6SG7Kr
-         OlqA==
+        d=gmail.com; s=20251104; t=1789150492; x=1789755292; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=sgMffH9c4Ut5GzZRUzz1jul/MtsWXNFvANxlyz2Cqvc=;
+        b=VX0N/ICfu6nRhxaCAHv2F/9u4G0ce6Yvyyj9kYf6yKwcgmh4mGHhVrKRzUUGrUe82e
+         dBSCR9VM4bbbucXmQuVRNwen9qIBQbUC5lhp/BJhA6uozTYw3JJ6C3hY61Bc8V2N0oMH
+         OsenC7xrPsCNjt4k17SfnYGAnwLGIXuWASqa3KcopYNNdixArZx47YK8Wn6LzSXzvDJX
+         x1NsCnbmPvYJES2RR+9eDOEqUPc0DMcZd2UUzDR+6XBPvO+0zHxNEKNqw1xrCN+LHBha
+         tcZ3NcfQQ/VmrXX0AlN2GTuAzmN1CX+k2fKbafpWss5W//1XDE4S+Nyi3zOpUrriKaLu
+         wWKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789146163; x=1789750963;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=OECv2yjkS4C1/vp1OMprOqRH2B2H12xO1mA6lcxkPXk=;
-        b=Adgx4wcQ0jnHIZL5P53ZtEEJGdDbZTQdSZAWvmCkmpe2G1ABfAcs5zg9ovdamQCP8/
-         16yZQL6XMfi82UdhfSFgnJ5u9xAPBAEA/iFUmCCLeDhOOcbhr5104jJDZeegpKNnfX+G
-         VDbFG5ZaBUsDXIjARa6wNNZJzgGZa62UGt7NC/r0Lisy86nzKA2Uszkp14S9hsWN5OIl
-         QoYPjHIseArntviLyVrWzPjx2IR8RQEsU5UjkbhhoGkvgPeAWBxVrU3Tp4rahFZr9exU
-         i1+NDtbvO8ceuvCXc8QOyc+Of7yZGwMDBi0hrbn7bfN7ar7c6gK8fP6ch9uLKZbjJPp+
-         EDpA==
-X-Forwarded-Encrypted: i=1; AKwUvBwUQCz/omZTLR6J8qtxbaaGH94dKuVGMxrJy4h0l2T2b5BVIuVOajETWH9rLbxdjcDUXZVJCQLp@vger.kernel.org
-X-Gm-Message-State: AFuF++n3PTT6syJBsRkWgIkuPKUKk5gkLUgLe0luKSHFpX/Vju3vClm8
-	+/AZs6TtcP7nnTWy6Ubs93VkuC+AL3lOUSEyosHQ5RaN9FOGHfFqgcFQfzBWfFoju2RDIpWGtpq
-	x5AufVQo/VSGTxn1eNrtp/8YSXsFbGpE=
-X-Gm-Gg: AYBFou33bYDGOGwdEvA5Uw2D3g/HhqlmkndyHItR2zxEQWvs1ZHP65DVqX436G6LnFs
-	a0gOGRyXKiJLqxGNNM8CI4ft0Osb6j7Tr5Esg6wA1ypo5H7jKSlj4MqemnDB7/8iSiwoGMLi6V3
-	mOaAMPdWSTOYHJcJxcbTDtmnvxMOBOs9atyCq+6lDf4OBlBlSzth7VaEmHduvZaExGnYd0oJSu9
-	vZjFlpwUwjEWCUBkLb3jKEyjwEvxtCyfYhbgngva51PLK52oTZLQcKwb5UaWnBaWWDxlcEHvV8G
-	2Qy/5GgcansHiO5N1wquoF3pxrnUqwD884NL9oEBtTuT3aQt7ZvFzatTNpUFKqpUoYlTr6MxHTo
-	Zh3BeElH+I8Zv
-X-Received: by 2002:a17:907:6ea3:b0:c26:1cfd:4244 with SMTP id
- a640c23a62f3a-c2945df0046mr549681566b.11.1789146162827; Fri, 11 Sep 2026
- 10:02:42 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1789150492; x=1789755292;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=sgMffH9c4Ut5GzZRUzz1jul/MtsWXNFvANxlyz2Cqvc=;
+        b=C/lxpOTvmQStA99vRC3YjfIwXbF1CPbDZndTnZYmi98NioQ1+esbFD+yQf9YIvw9yJ
+         1elbKEOrEF6SxJ5EZLrNWvWIUXvm6HHMrYDwFdg7NPwcoGJFKyLq5ub2j2daL4U4ONUm
+         6/esVU5bIS42LozAZS0z/CkysAOxPGWRABMu/FzM9IkueZS6WMfxfxlDWwGE2kB6EccX
+         iAFsiDV5miO0fuxt+GtZKBSDJjy+F9nJXydBGlXVHvkw1AzK49PwueJw4WG4+DwBAEBE
+         A0n5j3xU/jJMLLUyaA40nweHOEWbu0s61t1LmCmjKyRR/N6yZFuz6GdJ+iwBGqgENIl5
+         x77A==
+X-Forwarded-Encrypted: i=1; AKwUvBy62jF4/xLGFAGGOYcYM49NA+YMFpJ9b4tePIxAln85z/LqQ5WjCBccgRrEf8A71yPLJMvvPrM0@vger.kernel.org
+X-Gm-Message-State: AFuF++m4fKKCfYx61NAQ69wRqiKkI9GO8wA+roRs07XMwUtPPRjZWJVi
+	lq0Lq5p4c47ks4XumqNKveCtZNKp7CUgeEK05MiWU/y+7lmZhk5tpQQlwvELeeAMi1sH1iahYmN
+	5biYbYGF71ntN4uYlzlF5kKPr1tbmBYM=
+X-Gm-Gg: AYBFou0SG7He8GVoRHZqjIrBZElOEGu5qy37ev6xmGS3C7brGCbz+KcNPYb8KLTvqah
+	nI4eCesd6vx3Hy9StKRFWokTWRy0RS+iFYWPsDQmLJoj/ZBrqDuYSDTgvwy9yz7zXa34sXTbZYo
+	rEUVXbtAg4vW6zmmrrOb5d75pFeTMt9tBs3CkAOVe76d72RSG/cYC5s6D8sxIk0n5EENl8o5Yl1
+	bWHuQGao+JxsqekhUu3GknqCPyr7sMiKH4ykOG3ds4ET3gqFTQNYG/vG+EsSJEcGHyoSh2vbX60
+	UqhWvrf1G6ROzrjQmtf2FyEfupLvUSt7ZtRq05NDNu/6tIKCM0O+3OIbWHP25cM7i6tkUAmJd2d
+	NvWK1PNIcg6jX
+X-Received: by 2002:a17:907:1c10:b0:c29:286e:2e3e with SMTP id
+ a640c23a62f3a-c29666d5f9dmr241723566b.38.1789150491872; Fri, 11 Sep 2026
+ 11:14:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com> <20260911-mglru-fg-v2-2-f26e5cb26da7@tencent.com>
-In-Reply-To: <20260911-mglru-fg-v2-2-f26e5cb26da7@tencent.com>
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com>
+ <CAKEwX=O8i+OsP6BJXNZNk07hveN9HDT+PoyMTAU6gOc-xp0Ppg@mail.gmail.com>
+ <CAMgjq7BQeQQOZMDPFJ+8LS2N4t3x53r6Nm+9o0_pi92oVUgjgQ@mail.gmail.com> <CAKEwX=MS-7C96i4tzBijHN=-xuZgny_wQEa_0YjfHzhoNysdYQ@mail.gmail.com>
+In-Reply-To: <CAKEwX=MS-7C96i4tzBijHN=-xuZgny_wQEa_0YjfHzhoNysdYQ@mail.gmail.com>
 From: Kairui Song <ryncsn@gmail.com>
-Date: Sat, 12 Sep 2026 01:02:06 +0800
-X-Gm-Features: AcwNN1WZxmLzBpJpg1QE0SBA47yQSwx0Rtahq0z7WbiXeya29doeRNeqKHQTWO4
-Message-ID: <CAMgjq7AAxBGFN05ZQQsqhWhKi8XNyxCfCbH8-G1sZfqDKEYvCQ@mail.gmail.com>
-Subject: Re: [PATCH RFC v2 02/15] mm/mglru: make generation page counters atomic
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
-	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+Date: Sat, 12 Sep 2026 02:14:13 +0800
+X-Gm-Features: AcwNN1X_Mr5nGygMYASuHxKAbKSbuoEdUvrKDUVcI7Vk1_FQ39e_c44cG1FLDGc
+Message-ID: <CAMgjq7B7Mc7vpQN0gBknsSrfZWXdif5L7nU29YskG9mzS-_jsA@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Nhat Pham <nphamcs@gmail.com>, YoungJun Park <youngjun.park@lge.com>
+Cc: Chris Li <chrisl@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
-	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
-	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
-	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
-	SeongJae Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
-	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
-	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
-	zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Barry Song <baohua@kernel.org>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
+	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Sashiko reviewed this, I think it's just false positives, see "===" below.
-
-commit 5d43c1cf23cfcb5744723aabee21da2f8bffb50a
-Author: Kairui Song <kasong@tencent.com>
-
-mm/mglru: make generation page counters atomic
-
-This commit converts the MGLRU generation page counters to atomic_long_t.
-This enables lockless updates to the counters without holding the LRU lock
-while ensuring final consistency.
-
-> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> index 597f013c8e046..f52f02e8e5be1 100644
-> --- a/include/linux/mm_inline.h
-> +++ b/include/linux/mm_inline.h
-[ ... ]
-
-This is a pre-existing issue, but looking at lru_gen_add_folio() in
-include/linux/mm_inline.h, it updates the folio's MGLRU generation but
-fails to clear its tier bits:
-
-include/linux/mm_inline.h:lru_gen_add_folio() {
-    ...
-    set_mask_bits(folio_flags(folio, 0), LRU_GEN_MASK | BIT(PG_active), flags);
-    ...
-}
-
-Does this leave stale tier bits intact? The MM Reclaim documentation states
-that all paths modifying LRU_GEN_MASK must also clear LRU_REFS_FLAGS,
-otherwise stale tier bits inflate access counts and distort MGLRU eviction
-decisions. Could we add a fix for this to the series?
-
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index aaceed4759eeb..32890e628240f 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-[ ... ]
-> @@ -4720,7 +4717,7 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+On Sat, Sep 12, 2026 at 12:57=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrot=
+e:
 >
->   for (i = 0; i < get_nr_gens(child_lruvec, type); i++) {
->   int gen = lru_gen_from_seq(child_lrugen->max_seq - i);
-> - long nr_pages = child_lrugen->nr_pages[gen][type][zone];
-> + long nr_pages = atomic_long_read(&child_lrugen->nr_pages[gen][type][zone]);
->   int child_lru_active = lru_gen_is_active(child_lruvec, gen) ? LRU_ACTIVE : 0;
->   int parent_lru_active = lru_gen_is_active(parent_lruvec, gen) ? LRU_ACTIVE : 0;
+> On Fri, Sep 11, 2026 at 9:10=E2=80=AFAM Kairui Song <ryncsn@gmail.com> wr=
+ote:
+> >
+> > A boot time bool will cause real trouble for us, at least. We have
+> > many VMs with fixed boot images and fixed cmdlines. However, the VM
+> > itself is used by different customers, some are ZRAM only users, and
+> > quite a lot don't want any kind of compression (e.g. their data is
+> > dense compression is just waste of CPU) and prefer plain swap. So I do
+> > hope we can have a runtime tunable instead of modifying the cmdline
+> > and rebooting or rebuilding the base image for different cases, and we
+> > have already seen that a runtime toggle isn't hard at all.
 >
-> @@ -4728,9 +4725,8 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
->   list_splice_tail_init(&child_lrugen->folios[gen][type][zone],
->        &parent_lrugen->folios[gen][type][zone]);
+> Ah yeah I see. But before moving back to runtime parameter, do you
+> think we can come up with a heuristics for this that have does not
+> require userspace input? In v4, I'm doing this at folio_alloc_swap()
+> time:
 >
-> - WRITE_ONCE(child_lrugen->nr_pages[gen][type][zone], 0);
-> - WRITE_ONCE(parent_lrugen->nr_pages[gen][type][zone],
-> -   parent_lrugen->nr_pages[gen][type][zone] + nr_pages);
-> + atomic_long_set(&child_lrugen->nr_pages[gen][type][zone], 0);
-> + atomic_long_add(nr_pages, &parent_lrugen->nr_pages[gen][type][zone]);
+> a. If the cgroup enables zswap, then always go vswap.
+>
+> b. If zswap is not available for the cgroup, then bypass vswap, and go
+> straight for physical swap entries. My intuition is that we are not
+> buying anything for these zram users, as we need a physical swap slot
+> anyway. Thanks to your design, both can co-exist in the system now -
+> that's something I actually did not envision possible in the original
+> version of vswap. Pretty cool eh :)
 
-Is there a TOCTOU race in __lru_gen_reparent_memcg() overwriting concurrent
-lockless updates to nr_pages?
+Thanks for the test and idea! Yeah, I always hoped we could do this
+because there are some very promising use cases for raw and plain
+swap, not just ZRAM.
 
-This patch explicitly converts nr_pages to atomic_long_t to allow lockless
-updates without the LRU lock. However, the code reads the counter at the top
-of the loop:
+> Would something like this fix it for you? ZRAM users will not get
+> vswap indirection overhead at all, because it would bypass vswap :)
+> Down the line we can revisit this decision - for e.g, if there is a
+> use case for vswap-on-top-of-swapfile. There might be other interface
+> that makes more sense.
 
-    long nr_pages = atomic_long_read(&child_lrugen->nr_pages[gen][type][zone]);
+Hmm, this interface looks confusing though. you mean tangles vswap
+with zswap through the cgroup's zswap limit? I originally expected
+this to be a problem solved by tiering, skipping certain tiers seems
+much more intuitive. Maybe Youngjun have some idea here?
 
-and then later clears it using atomic_long_set() as shown above. If a
-concurrent lockless update happens between the read and the zeroing, wouldn't
-the update be permanently lost?
+> > > > doesn't conflict with what vswap is trying to do. Some other of the=
+se
+> > > > differences involve design decisions rather than just surface knobs=
+,
+> > > > and those are the parts we're stuck with once they ship.
+> > > >
+> > > > So a few current interface difference of vswap and xswap I've notic=
+ed are:
+> > > >
+> > > >  - default size: somehow also tangled with VM_SPARSE, which
+> > > > needs an initial virtual value. It's super cheap if not zero cost
+> > > > (the only cost is occupying some vmalloc area, which is fine
+> > > > I guess?). But we still have to pick a number, could be large
+> > > > enough to satisfy everyone?
+> > >
+> > > 8PB? ;)
+> >
+> > Right I saw that at V1 :).
+> >
+> > I'm not sure if this is the reason that is in conflict with VM_SPARSE
+> > in your mind? Techically, at least for 64 bit, we can just apply the
+> > same limit to VM_SPARSE, for 64 bit machines we have a lot of virtual
+> > space to consume and that should be fine (VM_SPARSE is just the
+> > cluster map, which is much smaller compared to swap space).
+> >
+> > And another thing is do we really need that much in any case? Will
+> > things like, e.g. 64 times the physical memory (max pfn) be enough? I
+> > know Baoquan suggest just use the physical memory size. So that could
+> > be tunable, it's really easy to tune, just a number.
+>
+> Potentially, but we have many users at Meta. There's a huge diversity
+> of machine types, workingset size, access patterns (both frequency and
+> file:anon split), compressibility, etc.
 
-Could this cause permanent divergence between actual LRU list sizes and
-recorded nr_pages, corrupting eviction statistics and causing over/under
-reclaim logic errors? Should this safely clear the counter against concurrent
-writers by using atomic_long_xchg() instead?
-
-===
-
-The first lru_gen_add_folio part is false positive, we want to retain
-the refs info, not clean it, at least in this series. For existing
-cases, maybe it's actually not a good idea to always clear the refs
-info as well. But anyway it's not a bug introduced here.
-
-The second reparent issue, __lru_gen_reparent_memcg only occurs for
-dead lruvec, and all users only do this for alive ones. Maybe I can
-add some VM_WARN_ON_ONCE and a Context: kdoc here in next version,
-it's not a bug but good to be cleaner indeed.
+You can just set the number as 8PB? :)
