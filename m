@@ -1,166 +1,171 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617D73B8D5C
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 11:39:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 603E74457A6;
+	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789126789; cv=none; b=A2qmlRv9i6QknTVTm9CG5emTZ8g6wFUG2KKN10Zs8ianpejW4QDmN/UHPE6SgRNIUHLksT4eftK6hFZpR6VoUDRyBu9IBbVV3G8MWjf2Han9Oa5Aurd0oOEXmS1OCN3KqvMO+5UNcfqSb22orKFAVbrXa21I/+E7XQZf3SCfbbI=
+	t=1789127110; cv=none; b=CZt1Lb4Y1/zn6IltEW0L3HaiBrED49w81IuxLpnsynm9JTRSidwaTYRXPwCK4qc9hcas6sZDPapYbGFmtOT656oWix1C7NRWsET0SRasaeajiTYD+/VngV+Be6n8Bzm0XWEYaIiheAYVM93YeqSnTZM4LMXRDFrlJ8eW9cPtG8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789126789; c=relaxed/simple;
-	bh=Ok4+hD9azR+g5ojmlRz1kk1LD9HCDxdTr7YJJElV97I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rh4fsNZuH8f21+A3jUKTFEHHYazz/7IwMtKViKa1PNXtpmhzSJgdfK8uKQ7PhwqWHiVLQgaiqTd+jRXbrzGz6ju0VD/MQtk4a3IIRJRDjSklJYpVVWx6tv+YLU4/hPvpkBNWLF3RyN8rhfdS1y9qVvF7IRu7oCcZNfiAPPlQs1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=NuoDIdSd; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1789127110; c=relaxed/simple;
+	bh=d1Y4YPT7qxMmXCP5i5LFdt1hdX4SS+8Ci1LOHflJYAI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=AYufDUodw4BZMhM6Zvn9UAbCL7GuovjWpLpEQAZdXIz3/qGWP+yJdf7eA4Mxa3F3wVPzEyLNr1ej1grDiJJbtEFuFjBwoa7O0vvtykwQ4uYeK2KLOkFMR3nxuepiYSidPYuVtteZj+M5Icw3zk9Nf004iMcEHc+Sysdej8XIqL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G0P9kzTW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="NuoDIdSd"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-86265451beeso507755b3a.0
-        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 04:39:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1789126786; x=1789731586; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=oS5pCTFp0KI+iC50w7FkRnX3WOjbdZEE16QE70yFVGs=;
-        b=NuoDIdSd41PIH4pKRL1Wfv3nssSMBFbWqkw9l/yIc7hfUlDZm1w5SehzQZLbUjyBji
-         T/qFOgAIiBP9qr0aY52WKmamH/xXhhkH3CTfHkHQvVPXBN1irAnuCdWXVWL6c3EdF+/9
-         RWM0sEicq6d2sk8q6JW+UuMSgxCp4uZtJMU+tx+aAwFwOxkaWQ3QKvi5H9MvgdPWb1A4
-         cjGwZ9mZi/67PLcxoEdDhFn0hbt7/ba6NwkhNU2G1XWweCQHBjvFhbOl198SjOhuW6IZ
-         VDOGrhE4Dm/oObRybLL1cJWHa7ukBmj3cFEHygMdSeRLLkhGnWFjSxOc9TROKIrUn1gH
-         keDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789126786; x=1789731586;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=oS5pCTFp0KI+iC50w7FkRnX3WOjbdZEE16QE70yFVGs=;
-        b=TmBOC/f8Cj/yzbtsL+XlDoT3nf7seecAToPO71zBiVWiqryfSYcO2I0e1svBtbIBu5
-         9KQ7OBUANi5rMYpitlzG/YqYUe5ueTymcrwuhx/+ZpDYz/OXqQH8SPRKnsN6GogZl65Q
-         Jhf7cwX0O68PFe7PkuSQnnMcwEh/jqvDSHJni7Wdq32JAeCb/oshkJLP5PJye0+Tqg6d
-         wvEFLizP65KT1LFvIqY3XNn9jZvsYOPLByWPnJ46ox7aVisca0lZ0FGXKN5KQ5tqLHLO
-         uCwYRq18Bz033pdyN0/TYARQwQKU2roJQUaWZ4CKwHS0bFoi3r//I1SlBbCsXhJ5H2W9
-         rkUw==
-X-Forwarded-Encrypted: i=1; AKwUvBwbwEMhlx58BkRoIoAW8c/Cgr8CtTyX7ytw29BKgs4doiYpWzhkjynDDZzHUJu+anq2WPfQZAYu@vger.kernel.org
-X-Gm-Message-State: AFuF++mYyGWzjAYNYSK6BWwwgoe+d7mHv9beF6m7yruhG/5rV+noPU3m
-	SS1U80/ovDrZMhBQF9nKSMrXFi2q6NQWQp0npBrdVVF5Z9DZLBCo21acrg32jsB6y67W5b8FSdG
-	zeLAfO3U=
-X-Gm-Gg: AYBFou3UlDjG8s1ucWGnwQoPy5xO/N0P3M6auIt/wAlcHcZoXM03PuuZiczs41F2ydE
-	Nr1uN40dy6Af1ko0aD+WQdEL3YwLXOB9k7oUCbFgKw0d7MgApJqXJ3qe24xfJsfWxgxCJpEVKKY
-	tK8tZ6W4q9eJneyqGRPkxkMA4vULNXd6Z7J3eU5mdkfZPFvgOMYkVf8gi+TewoDoBGLwRMDcYa4
-	CMC+hwYB9+JGCPdeW00aaFQEjH72wyWBWDGA1MVFUPcffjqdMP9Pl+aWC5LTp9etR33606zILjq
-	iF03U+m30YQnFX2wNxo7jNgXjoZv0/bxuKSjZ++ZD/fy9diOIymUYi3OXAkAKG9G1DngpPieYOz
-	FDxbvH7mfDrSExW/qaMEd9HZ1z3FGo90QYH+F4i8pZndhrNwIac1EBh74eNRhBTKETIXzyJJTR0
-	WuyTgjL4CGBoRfin+hz1frbNWPyYiLhNVc8ARieMIKrBBwKZA9Ms2hQ+2v6URGBCA7ZIBmlH4A3
-	96cnzkXYSL2Y3eeQqFMz57AyLol+34x7k9lu0tYLzQn
-X-Received: by 2002:a05:6a00:4fcd:b0:864:cbc5:b8dc with SMTP id d2e1a72fcca58-86b2ecef9e2mr5888381b3a.10.1789126786110;
-        Fri, 11 Sep 2026 04:39:46 -0700 (PDT)
-Received: from [100.81.12.150] ([61.213.176.58])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-86b286c4e5esm1038881b3a.19.2026.09.11.04.39.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 11 Sep 2026 04:39:45 -0700 (PDT)
-Message-ID: <db6d62f4-34f0-4237-ab58-c21b0968bee7@bytedance.com>
-Date: Fri, 11 Sep 2026 19:39:42 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G0P9kzTW"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E0601C2BCB8;
+	Fri, 11 Sep 2026 11:45:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1789127110;
+	bh=d1Y4YPT7qxMmXCP5i5LFdt1hdX4SS+8Ci1LOHflJYAI=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=G0P9kzTW8AM22s5oPa6hHDE4CbC4DixXhokc34IXMFfm0YnPgpOLiZzzRUdVDRTsO
+	 fGw7PHX+f84FPehfyWDh8kxLXgdfjAUNqbp8j+Z5+RhvUV47lJhwX9jvaRiFMndTcX
+	 3NskMRyprW5kWSFZsmbktiVOwb/4z82iPS4P6opnujydVcMotsbp8wWl8oRMJbb5FL
+	 1ZqpF4aQMTd58Wn55sn2ePGaZQI09jkiZb3J7SxGUFmsNPeuBnefPJi+tuHuodBcQm
+	 voeI7v+6raUiGD3pEP6v9n8vYiiGXSl7AIUtZRXQ8y5qa+25q4UPEiWv16gv+O6gkg
+	 8VhUquLkrfDVg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF05C88E4C;
+	Fri, 11 Sep 2026 11:45:09 +0000 (UTC)
+From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
+Date: Fri, 11 Sep 2026 19:45:04 +0800
+Subject: [PATCH RFC v2 01/15] mm/memcontrol: allow update of LRU statistic
+ without holding LRU lock
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] writeback, memcg: skip foreign dirty tracking for bdev
- inodes
-To: Jan Kara <jack@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, akpm@linux-foundation.org, axboe@kernel.dk,
- tj@kernel.org
-References: <20260909034343.340703-1-sunjunchao@bytedance.com>
- <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
- <CAHSKhtcvaWgGHY_NWW242vYHHiSet0v-qsj4MsXGiwZJFrdUnQ@mail.gmail.com>
- <ekylbhyzseq25nxq2yivmmdt5xl5glum5proueyd5mrqfux2y6@fpvflg4crr2i>
-From: Julian Sun <sunjunchao@bytedance.com>
-In-Reply-To: <ekylbhyzseq25nxq2yivmmdt5xl5glum5proueyd5mrqfux2y6@fpvflg4crr2i>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260911-mglru-fg-v2-1-f26e5cb26da7@tencent.com>
+References: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
+In-Reply-To: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
+To: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+ Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
+ Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
+ Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
+ Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
+ Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>, 
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+ Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
+ Suren Baghdasaryan <surenb@google.com>, 
+ Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+ Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
+ Gregory Price <gourry@gourry.net>, 
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, 
+ Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
+ SeongJae Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, 
+ Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>, 
+ Zicheng Wang <wangzicheng@honor.com>, Chen Ridong <chenridong@xiaomi.com>, 
+ Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>, 
+ zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, linux-kernel@vger.kernel.org, 
+ cgroups@vger.kernel.org, Kairui Song <kasong@tencent.com>, 
+ Nico Pache <nico.pache@linux.dev>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789127106; l=3250;
+ i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
+ bh=HPL0IDynbJIttYnOEHBWr8ihbXmo9qxsFuOTnhhs8gc=;
+ b=x5yYdtClJFJY2q6tOQeScr8nDkYHljCqLLx/jRAoZo8wYLWf9ATedGlxlqAl/8g9c6uiEift9
+ Glqm3tshTP6DlN9hrGw2ZhQUaA33tSd0Tilfsg+1vzqcFc9T9djfnO9
+X-Developer-Key: i=kasong@tencent.com; a=ed25519;
+ pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
+X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
+ with auth_id=562
+X-Original-From: Kairui Song <kasong@tencent.com>
+Reply-To: kasong@tencent.com
 
-On 9/11/26 7:20 PM, Jan Kara wrote:
-> On Wed 09-09-26 21:18:11, Julian Sun wrote:
->> On Wed, Sep 9, 2026 at 7:13 PM Jan Kara <jack@suse.cz> wrote:
->>>
->>> On Wed 09-09-26 11:43:43, Julian Sun wrote:
->>>> The expectation in wbc_detach_inode() that "concurrent write sharing of an
->>>> inode is expected to be very rare" does not hold for bdev inodes. On ext4,
->>>> metadata from many memcgs shares the same bdev inode, so dirty throttling
->>>> in those memcgs can repeatedly trigger foreign flushes of the owner wb.
->>>> These flushes can also write ordinary file data, reducing overwrite
->>>> coalescing under continuous buffered overwrites. The resulting extra I/O
->>>> leaves less device bandwidth for other workloads.
->>>
->>> Hum. Are you aware of [1]? The guy is from the same company so I was
->>> assuming you two are working together on the problem :).
->>
->> Yes, Xin and I are on the same team, and we are looking at different
->> ways to mitigate this issue.
-> 
-> OK :).
-> 
->> We will continue trying to gather more evidence from production to
->> better understand its actual impact. The number of calls to
->> `balance_dirty_pages()` and the time spent in it might be useful
->> metrics for this purpose.
->>
->> Jan, if we can show that this patch provides a measurable improvement
->> in production, would you consider accepting it? Or do you think we
->> should still look for a better approach? If you think there is a
->> better way to address this, we'd be very interested in your
->> suggestion.
-> 
-> I definitely acknowledge that there's a problem with foreign flushing due
-> to bdev inodes that needs to be fixed because as Tejun wrote, bdev inodes
-> break the fundamental assumptions of foreign flushes. But so far I haven't
-> seen a solution which I'd definitely support.
-> 
-> Having data from production to understand what exactly is the practical
-> problem will hopefully help us understand how the solution should look
-> like. Is it just that we trigger too many flushes and that slows down
-> things? Or is even one foreign flush of the whole wb due to bdev inode
-> making performance bad? Is it that we have many foreign pages and foreign
-> flushes fail to properly write them?  These are questions we need to answer
-> to decide how the solution should look like. And the solution could be
-> anything from just limiting number of foreign flushes for a wb to 1
-> (because there really isn't big point in more of them being queued) to more
-> involved foreign page tracking for bdev inodes so that flushes can be more
-> targetted.
+From: Kairui Song <kasong@tencent.com>
 
-Hi Jan,
+To enable moving file pages in folio_mark_accessed directly and lazily
+for MGLRU, allow updating the LRU statistic atomically without holding a
+lock. It may cause temporary counter underflow, which should be fine as
+we still follow final consistency of the counter, and it only serves as
+a factor for calculating the reclaim budget in vmscan. A little
+inaccuracy has no visible effect.
 
-Thanks for your feedback.
+Signed-off-by: Kairui Song <kasong@tencent.com>
+---
+ include/linux/memcontrol.h | 6 +++---
+ include/linux/mm_inline.h  | 3 +--
+ mm/memcontrol.c            | 6 +++---
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
-All the foreign flushes we've observed were triggered by bdev inodes.
-What we've observed is that the bdev inode has only around 10 MB of
-dirty pages, but it triggers writeback of around 40 GB of dirty pages
-across the entire wb. The actual foreign pages account for less than
-10 MB, yet flushing them triggers writeback of the whole wb, and this
-happens repeatedly.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 46bf724cae7a..2daf2be5d1e5 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -106,7 +106,7 @@ struct mem_cgroup_per_node {
+ 
+ 	/* Written on every LRU update and on every reclaim iteration. */
+ 	__cacheline_group_begin_aligned(memcg_pn_write_hot);
+-	long			lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
++	atomic_long_t		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
+ 	struct mem_cgroup_reclaim_iter	iter;
+ #ifdef CONFIG_MEMCG_NMI_SAFETY_REQUIRES_ATOMIC
+ 	/* slab stats for nmi context */
+@@ -926,8 +926,8 @@ unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
+ 	struct mem_cgroup_per_node *mz;
+ 
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	val = READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
+-	if (WARN_ON_ONCE(val < 0))
++	val = atomic_long_read(&mz->lru_zone_size[zone_idx][lru]);
++	if (val < 0)
+ 		return 0;
+ 
+ 	return val;
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index ab69b9930893..597f013c8e04 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -47,11 +47,10 @@ static __always_inline void __update_lru_size(struct lruvec *lruvec,
+ {
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+ 
+-	lockdep_assert_held(&lruvec->lru_lock);
+ 	WARN_ON_ONCE(nr_pages != (int)nr_pages);
+ 
+ 	mod_lruvec_state(lruvec, NR_LRU_BASE + lru, nr_pages);
+-	__mod_zone_page_state(&pgdat->node_zones[zid],
++	mod_zone_page_state(&pgdat->node_zones[zid],
+ 				NR_ZONE_LRU_BASE + lru, nr_pages);
+ }
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1460cba53588..3cc14d1932f0 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1544,8 +1544,8 @@ struct lruvec *folio_lruvec_lock_irqsave(struct folio *folio,
+  * @zid: zone id of the accounted pages
+  * @nr_pages: positive when adding or negative when removing
+  *
+- * This function must be called under lru_lock, just before a page is added
+- * to or just after a page is removed from an lru list.
++ * This function must be called when a page is added to or removed from
++ * an lru list. Caller need to protect the lruvec from being freed.
+  */
+ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+ 				int zid, long nr_pages)
+@@ -1556,7 +1556,7 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+ 		return;
+ 
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	mz->lru_zone_size[zid][lru] += nr_pages;
++	atomic_long_add(nr_pages, &mz->lru_zone_size[zid][lru]);
+ }
+ 
+ /**
 
-This appears to cause significant write amplification.
-
-Limiting foreign flushes to one may not be sufficient in this case,
-since even a single flush can trigger a large amount of unnecessary
-writeback. I'm currently working on tracking foreign inodes so that
-foreign flushes can target those inodes specifically.
-
-The impact on production workloads is not easy to measure directly,
-which is another challenge we're facing. We've had reports of slow
-dirty page writeback from production workloads. Although we haven't
-established the full causal chain yet, we suspect foreign flushes may
-be contributing to the problem.
-> 
-> 								Honza
-
-Thanks,
 -- 
-Julian Sun <sunjunchao@bytedance.com>
+2.55.0
+
+
