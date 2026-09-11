@@ -1,156 +1,127 @@
-Received: from mta0.migadu.com (out-19.mta0.migadu.com [91.218.175.19])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68F0739B960
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 13:06:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37A3347ECFC
+	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 13:38:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789132005; cv=none; b=ubfcmBhVWivzMuCUFFhfnCqVrp837i1gbQInFuvHt/VI4OVNhcOwNuXLpjpiUkHxOfmcK2wxq5RO1t5mSVpPizVbHiUwewdcmdyIVv4PE3kBdmY2hFLH+2h4auvd1g6j/C7SzfaPhrepyhtquBZciwKAWcowyW5N8EJBk0QlfEw=
+	t=1789133886; cv=none; b=vGmB4ISKgK1PY5owQpY+x+/k6JSURo8nV6OMCZxf5oo7WPLRoBI4Tz/uIpedWrP4vubgq8UOZFbI2KRUcOyhcCjFPOQQbDKqZMGl7Q6V2h3iS8A1RAikLaZX6vbH+A9VA2qLPWhn9JNcX5ERm9Byr9T+qTkY3SJ+Uj5vN+1Rer0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789132005; c=relaxed/simple;
-	bh=bMQKUDCnWYRVzV2bP3s9Nv8XrLCTHDAUkzNZebbjfT8=;
+	s=arc-20240116; t=1789133886; c=relaxed/simple;
+	bh=G5oGKlY5PoXFYrQbr90UtLh0FPDjEic/9QCE85WaxEQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b4LQ2lNwfEoxC43mxL/AHVRyylPG99c0gFDi0W9le9ETurrXkQp/WbKv7HEKiRumy9VHDJ3ZpnRf7ieaZuTjJSFhfE5Kp0eV8zz14orH995Lg/lVkJxT6hy89TVdAvA3PNTxMVqIaO1CcVRYMv49NtIOhcFzR5fx6LyroKrKMHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MRadHebc; arc=none smtp.client-ip=91.218.175.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=AXpRNEsx8lk29TR0E3ueCblscqM31hBh5V7rrSbbqj6xtHfQE2npkhPNOAgFQTHwsDepjWxmrPaPDiSRwvdyG5gt+SDYDvwPtJppK+cmcLfIieV4LQkJBNpREN7sVE9KXg6bICyymWIw1eeF68l9goT8BMDEMipzMXPpMsdK9UY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Rt8QOKAS; arc=none smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MRadHebc"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=bMQKUDCnWYRVzV2bP3s9Nv8XrLCTHDAUkzNZebbjfT8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789132000; v=1; x=1789736800;
- b=MRadHebcmh3cs6A29n2tnkWSPAMX36pHRZE+eKWGFqLn5+S85uSpf3Sm7W2pWd1pgyiYWjYj
- 6IbWu+dq+NllnP70BtrDF9iP/jMZbbirNc6PZihvaD8wBJzoFPH29mxbrF+nTkvkNC5ITbjBp2k
- UTKFEN+iNzg8vVehykncC0gU=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 9a318d970a08cc45;
-	Fri, 11 Sep 2026 13:06:40 +0000
-X-Mizu-Trace-ID: 9a318d970a08cc45
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 11 Sep 2026 21:06:29 +0800
-From: Baoquan He <baoquan.he@linux.dev>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>,
-	Chris Li <chrisl@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Yosry Ahmed <yosry@kernel.org>,
-	David Hildenbrand <david@kernel.org>,
-	Muchun Song <muchun.song@linux.dev>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Barry Song <baohua@kernel.org>,
-	YoungJun Park <youngjun.park@lge.com>,
-	Chengming Zhou <chengming.zhou@linux.dev>,
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-	Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>,
-	Wenchao Hao <haowenchao22@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Tejun Heo <tj@kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Kunwu Chan <kunwu.chan@linux.dev>,
-	Meta kernel team <kernel-team@meta.com>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-doc@vger.kernel.org,
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kairui Song <ryncsn@gmail.com>,
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-Message-ID: <aqP81aqNbwAbs2P0@fedora>
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <aqJXx2vtbKaRLt3x@fedora>
- <aqLZ5TVDAqEbIeMN@linux.dev>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Rt8QOKAS"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49cd38e0f79so5557955e9.3
+        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 06:38:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1789133883; x=1789738683; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=osp+4Cm30+6Iu5OpGQes5EkKoH1z/cunw3a7Qh7uS1E=;
+        b=Rt8QOKASasJGNmmR9ka5Uo0n52yNMcx9eminTOAlN2Y2IsC4LbUyqxUpYNHYnvzypN
+         P7EXQliT49Kw5BRVv3FizFn8HKTgXIhPyzLldEaHbRw+uFMp0TZe7md73931yYn/ixOS
+         ttOpPageH+Y57cJmRDoTWoUjqjPEOvVqgLAhXycJZaY/ZoKfPS9Z9lyRB1k38CR8eROB
+         hfXeK9XuvRPXkfFo2Nfwm/mNjlhO08nojmBdRoIl6IzV2iw1F0wqZuML/SBcTArMrFgS
+         ahVJ3f0efAWiYMITMsrHVtAdjU5R4EjN1TGojSjl4/u496GzUTiR8FKPzNwOBGibFbR/
+         aDPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789133883; x=1789738683;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=osp+4Cm30+6Iu5OpGQes5EkKoH1z/cunw3a7Qh7uS1E=;
+        b=XaOYsZ49ydrQIjnFyRZicx01DiL9cdAr+o907ulihVPm+Qq5EaDN5Ftxe36sHoz4HG
+         pkD/lzjptDDAlKWPCGVvWuvzcsFdTVw3nh3JjxCFLjs+Ne1DPr7WNSHLxeqwY8bvF4Tn
+         mXNJqgdP68b1qMTlatKBZiag7QwBtsRm+eYSq947WsUnld45ObPzuIX2Col0UtTj55aN
+         4akbobZXUQa2sovRre+1LidHgsTu/uYU40QQ12RsMQzyti6SGPpkp6RpLHcKrbqip53f
+         rDXFAjJgnDyKWoZYSbwKAjtyP/pNTqDPxMnNMdv+6rLN1wEVCaQkUx+PkmRHs79rVPoy
+         Y2uA==
+X-Gm-Message-State: AFuF++kSTVG++ZJoJ+Oss8EyRPFwOhr/MGL9g5stjOerqLVNo93knK0R
+	ITlzR4pAP0LtBwMW4F4A2zDZ6lXGHIt3quF3XBYJbGtPt9VCBJydb0Zd/vsHfOhBFPM=
+X-Gm-Gg: AYBFou38SkcKCnLvvbCOxj+txiljoeuV9VrAgAuLsbefkD6DHhqzXH9zddfpWrOHbam
+	xzDgqHVNgtQHPBomrWpkCSSn8rGPiUgGESbPh9k1Sn/MIetOuWuyv48aD8r84s3mUIdzwv32cwg
+	SHQU5bwJd6fNITV1/IRVCUU2Om7M+4F5p+/pecOPEqZeov2d8cDSu3wE4Fu8N/vGG9AbQqMphYh
+	UyM0NlYUOvZGG5h29VIbq9RcNv40N2cPVcC64tgMTV0Xf1XV1uwWsgbnEjE9f1/19x9Ha9BdwtE
+	chifL+jb6RnNC7KKXe0hKJAhQ7fldg6OkSCY1CNsl8ioSRngPlRoAyFc7rvbJ659KZqzhBpC3OI
+	WfTAv6J/YlztsWBHo9src5pSUVIoPIU20NUvQF0ybpUB7DtjujdffJmrnSGMUnYQFfPQrEBI7Ul
+	YCGxOrDvtCmzFdTSTTqacRnkxOYpV5FsXhInf7zdbYpzB+XqbZ44ykMYUdyHtZxP+I7cjdhVjYZ
+	g==
+X-Received: by 2002:a05:600c:3494:b0:49c:e3c3:5efd with SMTP id 5b1f17b1804b1-49e619aab42mr116115395e9.9.1789133883115;
+        Fri, 11 Sep 2026 06:38:03 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d26d49d57sm148647335e9.14.2026.09.11.06.38.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Sep 2026 06:38:02 -0700 (PDT)
+Date: Fri, 11 Sep 2026 15:38:01 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] cgroup: Move cgrp_dead_ task+iwork into its own struct
+Message-ID: <aqQEDRSoZDnsCTC1@localhost.localdomain>
+References: <20260911101900.984420-1-bigeasy@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="xwykti33if7bkyii"
 Content-Disposition: inline
-In-Reply-To: <aqLZ5TVDAqEbIeMN@linux.dev>
+In-Reply-To: <20260911101900.984420-1-bigeasy@linutronix.de>
 
-On 09/10/26 at 09:39am, Shakeel Butt wrote:
-> On Thu, Sep 10, 2026 at 03:09:59PM +0800, Baoquan He wrote:
-> > Hi Nhat,
-> > 
-> > On 09/04/26 at 02:14pm, Nhat Pham wrote:
-> > .....snip...
-> 
-> [...]
-> 
-> > With VM_SPARSE, xswap's cluster access is exactly the plain-array line the
-> > rest of swap already uses:
-> > 
-> >     return &si->cluster_info[offset / SWAPFILE_CLUSTER];
-> > 
-> > no branch, no RCU discipline, no tear-down state machine, and no NULL
-> > return. So VM_SPARSE doesn't add complexity to close a gap; it lets the
-> > cluster layer stay as simple as it already is, which is precisely the
-> > part later work (writeback, rmap lookup, memcg charging, THP) has to sit
-> > on.
-> > 
-> > I'm not going to claim xswap wins on throughput. I measured it:
-> > on a 64G/64-thread swapout, xswap, vswap and plain swap+zswap are all
-> > within ~2-3% of each other, effectively identical. 
-> 
-> So the claim is VM_SPARSE is simpler than xarray based approach. I feel like
-> we are discussing implementation details before deciding the design and
-> architecture. So, instead of VM_SPARSE vs xarray, let's discuss and decide the
-> need for dynamic growth. Why we want dynamic growth upfront or can it be added
-> later? Once we decide that then it will be very easy to pick an implementation
-> that would take us there.
 
-Hi Shakeel,
+--xwykti33if7bkyii
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] cgroup: Move cgrp_dead_ task+iwork into its own struct
+MIME-Version: 1.0
 
-Thank you for joining the discussion and for taking the time to comment.
+On Fri, Sep 11, 2026 at 12:19:00PM +0200, Sebastian Andrzej Siewior <bigeas=
+y@linutronix.de> wrote:
+> cgrp_dead_tasks and cgrp_dead_tasks_iwork are independent per-CPU
+> variables and are independently accessed via a this_cpu_ptr().
+>=20
+> Having a custom struct with those two members makes it possible to have
+> only one per-CPU accessor and access the second member via an offset.
+> This makes the code a bit more compact and is micro-optimization.
+>=20
+> Besides that, it allows cgrp_dead_tasks_iwork_fn() to access the list
+> pointer via the passed iwork pointer. This not only eliminates the
+> this_cpu_ptr() but also makes it possible to be invoked on a different
+> CPU. This does not happen as of today but might if I can flush the
+> irq_work items from another CPU during CPU-hotplug events.
+>=20
+> Create struct cgroup_dead with the per-CPU variables as members. Access
+> the struct with a per-CPU accessor and use the cointer_of() in the
+> irq_work callback.
+>=20
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> ---
+>  kernel/cgroup/cgroup.c | 23 +++++++++++++++--------
+>  1 file changed, 15 insertions(+), 8 deletions(-)
 
-Agreed on requirement first - but this one was already decided, and not by me. In
-the July ghost swapfile thread Nhat rejected exactly the shape of "grow only, can
-be added later":
+Acked-by: Michal Koutn=FD <mkoutny@suse.com>
 
-    "Except for my virtual swap design, which does support dynamic growth AND
-     shrinking of capacity on demand ;) If it cannot grow (and furthermore, if it
-     requires userspace operation to trigger swapfile growth), why do we need this
-     at all? Might as well create a new swapfile with swapon?"
+--xwykti33if7bkyii
+Content-Type: application/pgp-signature; name="signature.asc"
 
-To me what it converged on was "dynamic growth and shrink, no writeback yet".
-So automatic growth *and* shrink is the requirement, and the simpler alternative
-was already on the table.
+-----BEGIN PGP SIGNATURE-----
 
-And I keep mentioning it in the cover-letter of each version of my posting. I
-only did the foundtation via lazy vmalloc. And Nhat will do the core
-part including writabck, rmap lookup, memcg accounting, zero page fill,
-etc.
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaqQENRsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ah07wD/QHk6ijDMHWWVtRs0T6tN
+4hMYgT4/oE3txfzgpwDOKYYBAJ8K8a3t0441GRf8yVMBArRz0dlxn8LuPgZoAc43
+PCYB
+=nk72
+-----END PGP SIGNATURE-----
 
-What is still genuinely open, and I would like us to settle, is how large the
-device's address space should be, because the metadata scales with it:
-
-    address space = machine memory (128G)  ->  65536 clusters  ->  ~4MB table
-    address space = worst case, like (8PB)->  ~4M clusters    ->  ~256MB table
-
-Once that is fixed, choosing the lazy representation is a normal implementation
-question - and it is the same question Johannes is asking from the other side.
-
-As you can see, xswap make swap_cluster_info[] kept as is. Accessing it
-is simple and easy, and the xswap code is not intrusive into normal swap
-code, and won't add complexity to normal swap. Even though Nhat doesn't
-admit it, saying if writeback is done on top of xswap, the code is messy
-too. In fact, it's not. I have done a draft writeback part, I will post
-for checking, there won't be a lot of struct swap_cluster_info_dynamic , 
-swap_is_vswap() flying around.
-
-Thanks
-Baoquan
+--xwykti33if7bkyii--
