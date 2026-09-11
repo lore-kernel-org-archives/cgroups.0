@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B854C45D919;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D67F7443C3C;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789127110; cv=none; b=Z/mvntU7c+AoGFYkLVqFVuO8EULDZEZOtL9aH9bL0KXK2zpIjrtme/xDpkoTXaP4VSETwtebu6T/2S6LFeO4JmwQm2fKXfZRvQ5GDvmE3QKTRicDP7qvagw348+snlI/UOF37LNs4O2lyTiA5xoa6q4rnfXPQP4PKzgG2Vfku5E=
+	t=1789127110; cv=none; b=LzGUBMaDmnt81+ijzr5v0ft9T9tLJRvOjITEMWA3dJy96iVwdYdPMgmDA5yq3TcWiIIoWY9PR3qVaRgv4tpcNW4za0a1w/XFpJhsZAjZ5Db6dJIV6U7qkfCKU2qHQwwhT9wBOlk0UYcaVCQEupnvw7By0/D0xA6CSK35xVQbUwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789127110; c=relaxed/simple;
-	bh=tiOocqisQJyVtmOF/Ljy6WtfbcgSVLkxHwITetyJBZ0=;
+	bh=/lY5gEpGTaNwvlEKSxlKmxu6E0txXFkrisGXKy9UIIM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ohgrHJ7NPo1yHUJvAyFldHBoIjTF4+9q79+sax/VpYguRmpQFoedy4RTDTOPG2n+rTdC0M/kQrQwCo0lrI8IRm74z/NBQ7/HXlW2rKT7ww9pZXVpFb7aSQYE895U0I6NEAYdyyFYLB2ZSO5GISITtjFdXWZ41eqlWA0FBo2x5UQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DtXDy/kR; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=MPtSdft2fOe98gA97/M/cPq7xVjPjeaz5x/3fxlD3Z3j26rpaD5zFT5kXrZ8SL4AiBNeeQgNht5NMQ7Sb4kpEG8x/cKeOazBVJ0/Z3zP0kevhu3C04Mck6KRv8//75Iqiy58jkv0hrUUlgfrehoUXSH4C9yXGAvpUAsU5QE1twE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ux0m74oD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DtXDy/kR"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8B2E4C2BCB8;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ux0m74oD"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B257AC2BD05;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1789127110;
-	bh=tiOocqisQJyVtmOF/Ljy6WtfbcgSVLkxHwITetyJBZ0=;
+	bh=/lY5gEpGTaNwvlEKSxlKmxu6E0txXFkrisGXKy9UIIM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=DtXDy/kR8BbNlqyiZWybP5tlaOds8dkA9RX+Q5leY8Q14fv3hSREETWxPreNruaPg
-	 Tg/5mkqr0ZG2v8ZmkwWQsmoc1xTNuPkKOXxooh7PY8O2OKqH1WzIiOa6l8M/bgTxpb
-	 a1rDOTw2INo2zkGUXOC0BSqtwq2NgCvlzwCaE6wr6gB3z95jOO/qpd4bLbGENclVkM
-	 EnZfLF74CN1Lwbj7lEHiJP956YUuANJdFlCOoWEcU9RKVG6KzPRHPH1+CptKKp+3cj
-	 2RhbGiXEFzSAuVlc+pVxiZQYRGru7JExIeT+DZ60os/o/gqXRcUJB5mNtv27bepv7K
-	 qWN4ybYT5yd1A==
+	b=ux0m74oDp+yGQG+hNIorZkv96QsCvcJXKQe8+VUc0VhEPrY3atv1d7NPwrhM73IwI
+	 2KujFAkYzr9/JD6HMpytNwmQ4wuyxBWEqRVDcZoFLOMnIQy2Exm+q5jSBXKa5JJ4to
+	 AJeapC6LjRTo0muHaX1O8npqN/cu5CcYrb1BZNbZirIZBkN9H3U5s0bNBzuerbtZ25
+	 /cTRUVrEOUTA56VaC+nTKM7Wfj0MrRYNrxAembYcnfgyywVlzHUqM+R4sHblouFqzF
+	 8lP9nMWSDbxF0Iw2vFVmJiNUiRrPcIphBitAH9iIKNc8cWam6cydrvzFILuYV6FaHk
+	 vux0Dn/Cnsk8g==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77C2FC88E50;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CBF9C88E56;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Fri, 11 Sep 2026 19:45:12 +0800
-Subject: [PATCH RFC v2 09/15] mm/madvise: adapt for LRU refs based
- operations in MGLRU
+Date: Fri, 11 Sep 2026 19:45:14 +0800
+Subject: [PATCH RFC v2 11/15] mm/huge_memory: mark file folio as accessed
+ more accurately on split
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260911-mglru-fg-v2-9-f26e5cb26da7@tencent.com>
+Message-Id: <20260911-mglru-fg-v2-11-f26e5cb26da7@tencent.com>
 References: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
 In-Reply-To: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
 To: linux-mm@kvack.org
@@ -71,11 +71,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  cgroups@vger.kernel.org, Kairui Song <kasong@tencent.com>, 
  Nico Pache <nico.pache@linux.dev>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789127106; l=3579;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789127106; l=1826;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=pmj3P/HChz1ZRyXZspIgJRWwIbXzfxFrfJsIOvXtfWs=;
- b=OqQF+CHj07t5BGpiOKt6owYBMczI7DdeygcSZALiFcAbH7fMx79vuC0X8jtXv74o3Fg4K2wwv
- Hxmig2GiAyIBMdICKTsfcw6NAhJCqCpBrTMNaTy0Dg7bbRGZy/kUj4Z
+ bh=zoau8tZvqlE+jd7BkKrQZbu0T6b9R97TMFLg8Qf1U1I=;
+ b=Q9MKka4b+M1P9Y/HTzprHKNwsHFN5f3Rg6ebAfiHu7JNKa5bNTSpVuoVn19vKxQfNXnH0hG6T
+ PgqMtiabM7mDyD0RBXIhSPsvQRj1NX6FvphJEYpX3bQSPKZtnEOfAzj
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -85,103 +85,48 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-For the active/inactive LRU, madvise clears PG_referenced so that one more
-access is not enough to reactivate a folio, and keeps PG_workingset on a
-folio demoted out of the active list so its refault is still accounted as
-a workingset refault (PSI).
+The behavior of updating the folio's access info isn't consistent for
+huge mapping splitting or ordinary unmapping. The page table's young
+flag has to be translated into folio's access info.
 
-MGLRU keeps that history in the folio's refs count instead, which now
-lives in PG_referenced, PG_workingset and LRU_REFS_MASK, so writing to
-those bits directly corrupts the count. The two hints want different
-things:
+Right now it only check and set folio's referenced flag, which isn't
+enough since folio flags update on access have its rules. Ordinary
+unmapping (zapping) calls folio_mark_accessed(), and it also checks
+if the VMA has recency to avoid false updates.
 
-- MADV_COLD resets the count in folio_deactivate(), which also moves the
-  folio to the oldest generation.
-- MADV_PAGEOUT isolates the folio and hands it to reclaim_pages(), which
-  ignores the count, so keep it and let the eviction shadow record the
-  folio's real hotness.
-
-PG_young is idle-page-tracking state, not a reclaim input, so it is still
-cleared for both LRUs.
+So first just use the right helper here to be more consistent.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/madvise.c | 48 ++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 34 insertions(+), 14 deletions(-)
+ mm/huge_memory.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mm/madvise.c b/mm/madvise.c
-index f75a9d139980..cdd1bebf2485 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -361,6 +361,38 @@ static inline int madvise_folio_pte_batch(unsigned long addr, unsigned long end,
- 				     FPB_MERGE_YOUNG_DIRTY);
- }
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 30b7c63b0e35..28a9aa4c8b20 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3109,8 +3109,8 @@ static void __split_huge_pud_locked(struct vm_area_struct *vma, pud_t *pud,
  
-+/*
-+ * Drop the recency information madvise() is expected to drop before
-+ * deactivating or reclaiming a folio.
-+ */
-+static void madvise_cold_or_pageout_prep_folio(struct folio *folio)
-+{
-+	/*
-+	 * VM couldn't reclaim the folio unless we clear PG_young.
-+	 * As a side effect, it makes confuse idle-page tracking
-+	 * because they will miss recent referenced history.
-+	 */
-+	folio_test_clear_young(folio);
-+
-+	/*
-+	 * MGLRU keeps this history in the refs count. MADV_COLD resets
-+	 * it in folio_deactivate(), MADV_PAGEOUT hands the folio to
-+	 * reclaim_pages(), which ignores the count, so keep it, and let
-+	 * the eviction shadow record the folio's real hotness.
-+	 */
-+	if (lru_gen_enabled())
-+		return;
-+
-+	/*
-+	 * For the active/inactive LRU, a folio demoted out of the active
-+	 * list should have PG_workingset so its refault is still accounted
-+	 * as a workingset refault.
-+	 */
-+	folio_clear_referenced(folio);
-+	if (folio_test_active(folio))
-+		folio_set_workingset(folio);
-+}
-+
- static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
- 				unsigned long addr, unsigned long end,
- 				struct mm_walk *walk)
-@@ -438,10 +470,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
- 			tlb_remove_pmd_tlb_entry(tlb, pmd, addr);
- 		}
- 
--		folio_clear_referenced(folio);
--		folio_test_clear_young(folio);
--		if (folio_test_active(folio))
--			folio_set_workingset(folio);
-+		madvise_cold_or_pageout_prep_folio(folio);
- 		if (pageout) {
- 			if (folio_isolate_lru(folio)) {
- 				if (folio_test_unevictable(folio))
-@@ -547,16 +576,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
- 			tlb_remove_tlb_entries(tlb, pte, nr, addr);
- 		}
- 
--		/*
--		 * We are deactivating a folio for accelerating reclaiming.
--		 * VM couldn't reclaim the folio unless we clear PG_young.
--		 * As a side effect, it makes confuse idle-page tracking
--		 * because they will miss recent referenced history.
--		 */
--		folio_clear_referenced(folio);
--		folio_test_clear_young(folio);
--		if (folio_test_active(folio))
--			folio_set_workingset(folio);
-+		madvise_cold_or_pageout_prep_folio(folio);
- 		if (pageout) {
- 			if (folio_isolate_lru(folio)) {
- 				if (folio_test_unevictable(folio))
+ 	if (!folio_test_dirty(folio) && pud_dirty(old_pud))
+ 		folio_mark_dirty(folio);
+-	if (!folio_test_referenced(folio) && pud_young(old_pud))
+-		folio_set_referenced(folio);
++	if (pud_young(old_pud) && vma_has_recency(vma))
++		folio_mark_accessed(folio);
+ 	folio_remove_rmap_pud(folio, page, vma);
+ 	add_mm_counter(vma->vm_mm, mm_counter_file(folio),
+ 		-HPAGE_PUD_NR);
+@@ -3232,8 +3232,8 @@ static void __split_huge_pmd_locked(struct vm_area_struct *vma, pmd_t *pmd,
+ 			folio = page_folio(page);
+ 			if (!folio_test_dirty(folio) && pmd_dirty(old_pmd))
+ 				folio_mark_dirty(folio);
+-			if (!folio_test_referenced(folio) && pmd_young(old_pmd))
+-				folio_set_referenced(folio);
++			if (pmd_young(old_pmd) && vma_has_recency(vma))
++				folio_mark_accessed(folio);
+ 			folio_remove_rmap_pmd(folio, page, vma);
+ 			add_mm_counter(mm, mm_counter_file(folio), -HPAGE_PMD_NR);
+ 			folio_put(folio);
 
 -- 
 2.55.0
