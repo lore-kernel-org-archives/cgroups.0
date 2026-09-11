@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A19C7457E4F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 971B54562A0;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789127110; cv=none; b=pxJGSNKtuuDizqqHc98pDK4/i2LSnVX014AIfcWGbDAloZsNhVneaEot7Qf0eLNWd0MqF3rEtUHqSnnKlTvay+R9IULa2dpcvWmNlHcQSg8Xh/MMBKnCOWenHyT3oQujGA8b0I17GdMNfHaErX3++0IfPanWdjbTcuhalVXRhUg=
+	t=1789127110; cv=none; b=fPM5vQ4cs622aBaSqV0O+BAOl2ReISz1dmjwfpLrW/mg0BvcHJpB9ZTGstYaKZ9AeDxUJEoR5JPSGo0VL7SQtkNaHbqDg15LxeCtka29EO41BYl7CbCw+JsMRxn7mECiY4lAAnxtQIeMihyBZR0Zdaz6UGAwN5zMPBr8v82U7xY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789127110; c=relaxed/simple;
-	bh=qAq/J/sYfG6ZkVcfim0Zo7HRre2y54mXkinDXrdmMHQ=;
+	bh=ZJOo7deY76UhsFn6arvsRMMDlkiEzUg2v00o2VvyZ2k=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Z+SP3SrlegKMLXcpi+D4cvpwWHC78Fo3TDDW4s41XukqWaGo4pRKyMagX6J8P70biyDibUWxSPo8ka+ZwplyHvVZvJ4b/ceJFhXH9jAKJiWP5M5pEtL0/OfNFG9h+NtMAaPNZvDaa6xiVgou0WUFBRSBdc6KvSVFJz6ZX3Q/TTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R7U5owHJ; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=h3vW4SRxJgaROIBx/2uTNuYM2KEFxFnA4ygmALkv9a9Tflb0ELjuoghXe5zCnciBU1KSQafvk8rlp/BXCRIf0mS6OSW4h7jxH0sT526Iler0enMC41levy69ijWetRM2SYEEdYAvjSvvRgSxZZxydEiCTk58Ur89Q/kJytWGrD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DDx/Gj/C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R7U5owHJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 68DC9C2BCFF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DDx/Gj/C"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4F542C4AF0C;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1789127110;
-	bh=qAq/J/sYfG6ZkVcfim0Zo7HRre2y54mXkinDXrdmMHQ=;
+	bh=ZJOo7deY76UhsFn6arvsRMMDlkiEzUg2v00o2VvyZ2k=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=R7U5owHJv1EiXrYkvh4qkTXdITwnp8F2b1jM5gFpgcdKz8MBEfZDNZbBpgbc2hR2D
-	 5Ib3SDxm4haP4Eviv5Qvk1M82u85pqqZzZi/2kU+2iMu8phiV8tRO/TpsCU3xrO1Cq
-	 nq8KHNIbwxysf6D4VdGwpdcNttILC8jL4PRroJG67oOGW1/hdnts47VktmDrCaJnYr
-	 4JKE7/banh8q+I6V4pqqKwrECqz1IwLzdAap3cBDw3yP0Ob4ND/w5dfpHReGUbw9dT
-	 AiBe70kTraZoFkcuoFZn2hJvGDmvuKSEN9BkAdubUOqnN0zOLxTwU9nMRI773JT0v3
-	 kmsphNzFkTD6w==
+	b=DDx/Gj/Cl5F5eMuMF+4TILwUuA19BUHAMXv83ffsd51xzgaR/toJkVeFZX5xw3swT
+	 iOAI8wCmuRmpI3WWJBPRRD687me2QMhvLGXfGOj0f/0E35Y6j6WO1NyRuG97msI/1u
+	 kx4zXeltv4i9W8JBOylSmqvkdigOUWlueTyvMp7fOnOys/+Qvs2hprIapL1/ibAr/1
+	 s5TBX5kACMdwbGTZ4V/F2odNbG73203hLVtVdmz4cXbAt9Dvw3N0kC9bR3iE3gbD5r
+	 xwNMaLBnfcyPHH/82aSrMbjCeIzF+K+tWiYRqUhw0P3FtgSPHV6UoKqVQLOrfs229V
+	 tq2ICqO0+h2aQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF7AC88E4D;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C785C88E4C;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Fri, 11 Sep 2026 19:45:10 +0800
-Subject: [PATCH RFC v2 07/15] mm/mglru, gup: mark folios referenced via a
- fast helper
+Date: Fri, 11 Sep 2026 19:45:09 +0800
+Subject: [PATCH RFC v2 06/15] mm/mglru: move add/del LRU size accounting
+ out of lru_gen_update_size()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260911-mglru-fg-v2-7-f26e5cb26da7@tencent.com>
+Message-Id: <20260911-mglru-fg-v2-6-f26e5cb26da7@tencent.com>
 References: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
 In-Reply-To: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
 To: linux-mm@kvack.org
@@ -71,11 +71,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  cgroups@vger.kernel.org, Kairui Song <kasong@tencent.com>, 
  Nico Pache <nico.pache@linux.dev>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789127106; l=2592;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789127106; l=3145;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=76hiJ+IqCKnuaQ/7hlfV8Pomepbu2+G2JAyXF+7DflM=;
- b=S+M7djq6ItbHCmZylWQyxNxFu67PRNPY5Uj1bR3LDiXAhZwDr8c+jDwGogPiatHHiJwEqUONs
- u1VPGkYohVeBa/rPImHUErKPffukw6+HzwzE2VJvJS39L8JCoSuGWvL
+ bh=B7AzDMJ6t8nkJcGeyGE0me87jhZAEGVPGztsFzfkMfg=;
+ b=xxTtaDGa4ISWsL/T1TW0p167TaoyFSfS6uG+HC3qcQDGtO3GQyR2AANtkxwyXOQZhNsnAO/VD
+ HpDXsIZHIwvCmmDvoezx5yEL4rqWXvrwg5P2rFInv6Wl+B6YI7hh3g0
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -85,86 +85,89 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-Introduce folio_inc_lru_refs_fast(): raise refs from 0 to
-LRU_REFS_REFERENCED via cmpxchg, or just set PG_referenced for the
-classical LRU as before. No counter update, promotion, and guarteens
-no other complex operations in following commits.
+Pure code shuffle, no behavior change.  lru_gen_update_size() now only
+updates the per-generation counters plus the promotion move; the
+addition and deletion active/inactive accounting move to
+lru_gen_add_folio() and lru_gen_del_folio(), which know the generation
+and can apply the active-window test directly.
 
-Convert the gup fast-path sites. No behavior change for classical LRU.
+The unevictable case is untouched: unevictable folios never enter
+lru_gen_add_folio() and keep being accounted by lruvec_add_folio() as
+before.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- include/linux/mm_inline.h | 25 +++++++++++++++++++++++++
- mm/gup.c                  |  6 +++---
- 2 files changed, 28 insertions(+), 3 deletions(-)
+ include/linux/mm_inline.h | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
 diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index 8700563dade8..23ddd5d78571 100644
+index 5a62b83b4168..8700563dade8 100644
 --- a/include/linux/mm_inline.h
 +++ b/include/linux/mm_inline.h
-@@ -439,6 +439,31 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
- }
- #endif /* CONFIG_LRU_GEN */
+@@ -298,21 +298,9 @@ static inline void lru_gen_update_size(struct lruvec *lruvec, struct folio *foli
+ 	if (new_gen >= 0)
+ 		atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][zone]);
  
-+/**
-+ * folio_inc_lru_refs_fast - Bump folio refs count without promotion.
-+ * @folio: the folio
-+ *
-+ * Raise refs from 0 to LRU_REFS_REFERENCED and leave hotter folios
-+ * untouched. For the classical LRU, a plain PG_referenced set.
-+ */
-+static __always_inline void folio_inc_lru_refs_fast(struct folio *folio)
-+{
-+	unsigned long new_flags, old_flags;
+-	/* addition */
+-	if (old_gen < 0) {
+-		if (lru_gen_is_active(lruvec, new_gen))
+-			lru += LRU_ACTIVE;
+-		__update_lru_size(lruvec, lru, zone, delta);
++	/* return now if not a promotion */
++	if (old_gen < 0 || new_gen < 0)
+ 		return;
+-	}
+-
+-	/* deletion */
+-	if (new_gen < 0) {
+-		if (lru_gen_is_active(lruvec, old_gen))
+-			lru += LRU_ACTIVE;
+-		__update_lru_size(lruvec, lru, zone, -delta);
+-		return;
+-	}
+ 
+ 	/* promotion */
+ 	if (!lru_gen_is_active(lruvec, old_gen) && lru_gen_is_active(lruvec, new_gen)) {
+@@ -366,6 +354,8 @@ static inline bool lru_gen_add_folio(struct lruvec *lruvec, struct folio *folio,
+ 	int gen = folio_lru_gen(folio);
+ 	int type = folio_is_file_lru(folio);
+ 	int zone = folio_zonenum(folio);
++	int delta = folio_nr_pages(folio);
++	enum lru_list lru = type * LRU_INACTIVE_FILE;
+ 	struct lru_gen_folio *lrugen = &lruvec->lrugen;
+ 
+ 	BUILD_BUG_ON(BIT(LRU_GEN_WIDTH - 1) != MAX_NR_GENS);
+@@ -381,6 +371,10 @@ static inline bool lru_gen_add_folio(struct lruvec *lruvec, struct folio *folio,
+ 	set_mask_bits(folio_flags(folio, 0), LRU_GEN_MASK | BIT(PG_active), flags);
+ 
+ 	lru_gen_update_size(lruvec, folio, -1, gen);
++	if (lru_gen_is_active(lruvec, gen))
++		lru += LRU_ACTIVE;
++	__update_lru_size(lruvec, lru, zone, delta);
 +
-+	if (!lru_gen_enabled()) {
-+		folio_set_referenced(folio);
-+		return;
-+	}
-+
-+	old_flags = READ_ONCE(*folio_flags(folio, 0));
-+	do {
-+		if (lru_get_refs_flags(old_flags))
-+			break;
-+		new_flags = old_flags;
-+		lru_set_refs_flags(&new_flags, LRU_REFS_REFERENCED);
-+	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
-+}
-+
- static __always_inline
- void lruvec_add_folio(struct lruvec *lruvec, struct folio *folio)
+ 	/* for folio_rotate_reclaimable() */
+ 	if (reclaiming)
+ 		list_add_tail(&folio->lru, &lrugen->folios[gen][type][zone]);
+@@ -394,6 +388,9 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
  {
-diff --git a/mm/gup.c b/mm/gup.c
-index e49f020f721d..cbf609dc8866 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -2899,7 +2899,7 @@ static unsigned long gup_fast_pte_range(pmd_t pmd, pmd_t *pmdp,
- 			gup_put_folio(folio, 1, flags);
- 			goto pte_unmap;
- 		}
--		folio_set_referenced(folio);
-+		folio_inc_lru_refs_fast(folio);
- 		pages[nr_pages] = page;
- 		nr_pages++;
- 	} while (ptep++, addr += PAGE_SIZE, addr != end);
-@@ -2968,7 +2968,7 @@ static unsigned long gup_fast_pmd_leaf(pmd_t orig, pmd_t *pmdp,
+ 	unsigned long flags;
+ 	int gen = folio_lru_gen(folio);
++	int zone = folio_zonenum(folio);
++	int delta = folio_nr_pages(folio);
++	enum lru_list lru = folio_is_file_lru(folio) * LRU_INACTIVE_FILE;
  
- 	for (i = 0; i < nr_pages; i++)
- 		*(pages++) = page++;
--	folio_set_referenced(folio);
-+	folio_inc_lru_refs_fast(folio);
- 	return nr_pages;
- }
+ 	if (gen < 0)
+ 		return false;
+@@ -407,6 +404,9 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ 	gen = ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF) - 1;
  
-@@ -3010,7 +3010,7 @@ static unsigned long gup_fast_pud_leaf(pud_t orig, pud_t *pudp,
+ 	lru_gen_update_size(lruvec, folio, gen, -1);
++	if (lru_gen_is_active(lruvec, gen))
++		lru += LRU_ACTIVE;
++	__update_lru_size(lruvec, lru, zone, -delta);
+ 	list_del(&folio->lru);
  
- 	for (i = 0; i < nr_pages; i++)
- 		*(pages++) = page++;
--	folio_set_referenced(folio);
-+	folio_inc_lru_refs_fast(folio);
- 	return nr_pages;
- }
- 
+ 	return true;
 
 -- 
 2.55.0
