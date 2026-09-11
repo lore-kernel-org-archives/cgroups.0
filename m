@@ -1,99 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D922A43FD18;
-	Fri, 11 Sep 2026 07:44:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B63F544BCAE;
+	Fri, 11 Sep 2026 07:44:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789112694; cv=none; b=PtoUwxkj3V/yik3gZshSNVDn1RGQHjes9D/sl8q51T6oByzKijhoxmBVM6ji59Ny3ZhWwsO4oIIGXehu9O0H1Ypj8zHUH5ZwDxHsipJtlAQlXYHPXuVrOdtKw6E0WoVlIdgRas8aQYYHvGiRtx46Yuvip1C9MC9RIj07uVoLmiA=
+	t=1789112697; cv=none; b=fxp8sSI+oT2dUnxcEEXnTTJ3OUfBNbLtxfEgrs6Q1s1cSNDUA6ea/GdtSy2okBoTFs5bvCZriSS6ns8DdhnMy0HOunbTaTBKR4rj4go4858RJM1jsGvkKd5jlsrFF9mlGj9h6IVjjV8OyoP/7qgPkBB7tJFPqoNjaQ9gpnnrMmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789112694; c=relaxed/simple;
-	bh=CozpsqKYWbQnFcDTKflFHOpM+sIi6p3fXyPJ3ObzalM=;
+	s=arc-20240116; t=1789112697; c=relaxed/simple;
+	bh=F5gWWSNqHxis+mEexCTYx+bQntoGdKudDjdbvc/jjEc=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=qYyKObEXHxx5ls0CR7IvIEZZUwc0LK004bJaExOdR8UICDWXHtdnQP1BpTVGoJqNQYlJoKohyYjtMPYREzuDiu/ixGuyMC599FLaSEXHu7306KJ9BJAMU2qEP8sAioKD95ERGNpxpyVC+1T0qwnb0It7zKpO6thq29/etP0ODpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nSh8nXxf; arc=none smtp.client-ip=100.103.45.18
+	 Subject:From:To:Cc:Date; b=o5UjyWRMp4W2mBwjCapVRECE0d8phAXSjuqor/rowUGpK/zJ3h/YCOm+iPfF40+is6v00+rSsOvAptYkZ1TdIjnF+mGt7cvcTuyOiOhsLQJdsP54vq66P9A7TAPP70YOM7Ht3B8ENOC4UJXf5RHzpJjDl3y3ntzhn9qOqtQB8eY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IndTzz0q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nSh8nXxf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05E101F000FF;
-	Fri, 11 Sep 2026 07:44:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IndTzz0q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB6CA1F00893;
+	Fri, 11 Sep 2026 07:44:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789112692;
-	bh=JVNsmiGxY1SdhPHsIl79rzqOKs/aP852ofsVaoPTftY=;
+	s=k20260515; t=1789112695;
+	bh=OBzZVFee4S2rVGtg6M6II1AeDxf+F8a1EcPtLaDHgSA=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=nSh8nXxfkEr1kUl7cfnHIIf1jZLF1ZnKYJMXAxMWbeex/1I+vA4DWR+URZEpMvHbi
-	 Xnd9r+6mji6dWqQ9LCBHTlIGDBmfENwyZi5PoKHpFNaZUjNorCTFH/TTHY/G3I1dA4
-	 S7uGU0ykKRHQQVaF4JDhVsKt2auPoAB+6NT3b+aIPD9mvfkjstADVlQH8nTUnqC0r2
-	 EwAuj7ZGUOIv8VXmM6rLhTrgeRIR/46HXvJwII9OQYXc9vwQOiXOJmpXzAlsrcDx6V
-	 vqfoDjPnSK3T0vArVyKY6JMKGujqewoGn/BM3DPlCS9vZ6WnXsmenQnuYyeu9uaoQT
-	 gm0AJS8Tv+A5w==
-Content-Type: multipart/mixed; boundary="===============1065213570066958851=="
+	b=IndTzz0qx5n84yuYFaj0DWuFbXlMNMPU4pRMRYbKWgxyf4TAx2zBq8olTVJsw4s2u
+	 T8ETqh0czo2f8KDTWd/deX51MYFDkVdIFO3jrx3+oJdStA6flfctbs8Kow9r290h9/
+	 ysBcd4DtTy6jucTnsC9uG3bAlZdzphZM22IDAA+tfNUpb1185+ZTvA0wuTYdkFIDlQ
+	 GY+8MTjJh6Sf1yjKHRdxLJRSR4tsXlWw8dXmKWnC+c0hbF7rNeEftF3Q0uYOwSChKD
+	 6R3SIFMUrqRBR5DKwf4bY4JCkrXjt16eiRWlwNww199xaYLBMnyK0TdnOyRIMGd5MC
+	 z5YYoLKAUXWUw==
+Content-Type: multipart/mixed; boundary="===============1662541605359616403=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <81d809ef7a590d33ae978b98bb3d830b3cff2ce34a091ab3f4a5f0b977bfdfeb@mail.kernel.org>
-In-Reply-To: <20260910233303.1063501-4-ziyang.meme@gmail.com>
-References: <20260910233303.1063501-4-ziyang.meme@gmail.com>
-Subject: Re: [PATCH v5 3/4] selftests/hid: build the BPF program via the shared lib.bpf.mk
+Message-Id: <c51a056670cea30c7fb85ed0ef80a6be9b7e538196a5ae53cbad3b374db70c2c@mail.kernel.org>
+In-Reply-To: <20260910233303.1063501-5-ziyang.meme@gmail.com>
+References: <20260910233303.1063501-5-ziyang.meme@gmail.com>
+Subject: Re: [PATCH v5 4/4] selftests/sched_ext: build BPF schedulers via the shared lib.bpf.mk
 From: bot+bpf-ci@kernel.org
 To: ziyang.meme@gmail.com,shuah@kernel.org,tj@kernel.org,hannes@cmpxchg.org,mkoutny@suse.com,jikos@kernel.org,bentiss@kernel.org,void@manifault.com,eddyz87@gmail.com
 Cc: vmalik@redhat.com,arighi@nvidia.com,changwoo@igalia.com,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,akpm@linux-foundation.org,inwardvessel@gmail.com,mykolal@meta.com,nathan@kernel.org,ziyang.meme@gmail.com,kernel-team@meta.com,linux-kselftest@vger.kernel.org,cgroups@vger.kernel.org,linux-input@vger.kernel.org,sched-ext@lists.linux.dev,linux-mm@kvack.org,bpf@vger.kernel.org,llvm@lists.linux.dev,linux-kernel@vger.kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Fri, 11 Sep 2026 07:44:50 +0000 (UTC)
+Date: Fri, 11 Sep 2026 07:44:53 +0000 (UTC)
 
---===============1065213570066958851==
+--===============1662541605359616403==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> diff --git a/tools/testing/selftests/hid/Makefile b/tools/testing/selftests/hid/Makefile
-> index 2f423de83147..1190a747036d 100644
-> --- a/tools/testing/selftests/hid/Makefile
-> +++ b/tools/testing/selftests/hid/Makefile
-> @@ -47,7 +47,6 @@ msg =
->  else
->  msg = @printf '  %-8s%s %s%s\n' "$(1)" "$(if $(2), [$(2)])" "$(notdir $(3))" "$(if $(4), $(4))";
->  MAKEFLAGS += --no-print-directory
-> -submake_extras := feature_display=0
->  endif
-
-This isn't a bug, but with submake_extras gone, does anything still need
-this local msg/MAKEFLAGS block?  lib.mk defines both identically a few
-lines below, so it looks like it could be dropped along with the rest of
-the copied machinery.
-
-> @@ -58,172 +57,25 @@ override define CLEAN
->  	$(Q)$(RM) -r $(EXTRA_CLEAN)
->  endef
->
-> -include ../lib.mk
-> -
-> -TOOLSDIR := $(top_srcdir)/tools
-> -LIBDIR := $(TOOLSDIR)/lib
+> diff --git a/tools/testing/selftests/sched_ext/Makefile b/tools/testing/selftests/sched_ext/Makefile
+> index 3cfe90e0f34f..dd3f5594af24 100644
+> --- a/tools/testing/selftests/sched_ext/Makefile
+> +++ b/tools/testing/selftests/sched_ext/Makefile
+> @@ -14,48 +14,29 @@ CURDIR := $(abspath .)
+>  REPOROOT := $(abspath ../../../..)
+>  TOOLSDIR := $(REPOROOT)/tools
+>  LIBDIR := $(TOOLSDIR)/lib
 > -BPFDIR := $(LIBDIR)/bpf
-> -TOOLSINCDIR := $(TOOLSDIR)/include
+>  TOOLSINCDIR := $(TOOLSDIR)/include
 > -BPFTOOLDIR := $(TOOLSDIR)/bpf/bpftool
-> -SCRATCH_DIR := $(OUTPUT)/tools
-> -BUILD_DIR := $(SCRATCH_DIR)/build
-> -INCLUDE_DIR := $(SCRATCH_DIR)/include
-> -BPFOBJ := $(BUILD_DIR)/libbpf/libbpf.a
+> -APIDIR := $(TOOLSINCDIR)/uapi
+>  GENDIR := $(REPOROOT)/include/generated
+>  GENHDR := $(GENDIR)/autoconf.h
+> -SCXTOOLSDIR := $(TOOLSDIR)/sched_ext
+>  SCXTOOLSINCDIR := $(TOOLSDIR)/sched_ext/include
+>
+> -OUTPUT_DIR := $(OUTPUT)/build
+> -OBJ_DIR := $(OUTPUT_DIR)/obj
+> -INCLUDE_DIR := $(OUTPUT_DIR)/include
+> -BPFOBJ_DIR := $(OBJ_DIR)/libbpf
+> -SCXOBJ_DIR := $(OBJ_DIR)/sched_ext
+> -BPFOBJ := $(BPFOBJ_DIR)/libbpf.a
+> -LIBBPF_OUTPUT := $(OBJ_DIR)/libbpf/libbpf.a
+> -
+> -DEFAULT_BPFTOOL := $(OUTPUT_DIR)/host/sbin/bpftool
+> -HOST_OBJ_DIR := $(OBJ_DIR)/host/bpftool
+> -HOST_LIBBPF_OUTPUT := $(OBJ_DIR)/host/libbpf/
+> -HOST_LIBBPF_DESTDIR := $(OUTPUT_DIR)/host/
+> -HOST_DESTDIR := $(OUTPUT_DIR)/host/
+> -
+> -VMLINUX_BTF_PATHS ?= $(if $(O),$(O)/vmlinux)					\
+> -		     $(if $(KBUILD_OUTPUT),$(KBUILD_OUTPUT)/vmlinux)		\
+> -		     ../../../../vmlinux					\
+> -		     /sys/kernel/btf/vmlinux					\
+> -		     /boot/vmlinux-$(shell uname -r)
+> -VMLINUX_BTF ?= $(abspath $(firstword $(wildcard $(VMLINUX_BTF_PATHS))))
+> -ifeq ($(VMLINUX_BTF),)
+> -$(error Cannot find a vmlinux for VMLINUX_BTF at any of "$(VMLINUX_BTF_PATHS)")
+> -endif
+> +# Build scheduler skeletons and subskeletons with the shared BPF rules.
+> +BPF_SRCS        := $(wildcard *.bpf.c)
+> +BPF_SKEL_EXT    := .bpf.skel.h
+> +BPF_GEN_SUBSKEL := 1
+
+This isn't a bug, but is anything consuming the generated
+*.bpf.subskel.h headers? Grepping the directory for "subskel" matches
+only the Makefile itself - no .c or .h file under
+tools/testing/selftests/sched_ext/ includes a subskeleton header. The
+pre-patch rule generated them too, so this preserves existing behavior,
+but the conversion makes the subskeleton an explicit one-line opt-in.
+Would dropping BPF_GEN_SUBSKEL be a reasonable follow-up to save a
+bpftool run per scheduler?
+
+> +# Preserve the existing build/ layout.
+> +BPF_OBJ_DIR  := $(OUTPUT)/build/obj/sched_ext
+> +BPF_SKEL_DIR := $(OUTPUT)/build/include
+> +SCXOBJ_DIR   := $(BPF_OBJ_DIR)
+>
+> -BPFTOOL ?= $(DEFAULT_BPFTOOL)
+> +include ../lib.bpf.mk
 
 [ ... ]
 
-> +# Build the legacy progs/*.c layout with the shared BPF rules.
-> +BPF_SRCS       := $(wildcard progs/*.c)
-> +BPF_PROG_EXT   := .c
-> +# BPFDIR is defined when this recursive variable is expanded.
-> +BPF_EXTRA_HDRS  = $(wildcard progs/*.h) $(wildcard $(BPFDIR)/hid_bpf_*.h) \
-> +		  $(wildcard $(BPFDIR)/*.bpf.h)
-> +
+> @@ -64,102 +45,26 @@ endif
+>
+>  LDFLAGS = -lelf -lz -lpthread -lzstd
 
-This isn't a bug, but do the two $(BPFDIR) wildcards still match anything
-here?  tools/lib/bpf has no hid_bpf_*.h, and lib.bpf.mk's
-lib_bpf_header_sources already covers *.bpf.h - if so, this could become
-a simple BPF_EXTRA_HDRS := $(wildcard progs/*.h) and lose the
-recursive-expansion comment.
+[ ... ]
+
+> +EXTRA_CLEAN += $(OUTPUT)/build
+>
+>  ################
+>  # C schedulers #
+>  ################
+>
+> -override define CLEAN
+> -	rm -rf $(OUTPUT_DIR)
+> -	rm -f $(TEST_GEN_PROGS)
+> -endef
+> -
+> -# Every testcase takes all of the BPF progs are dependencies by default. This
+> -# allows testcases to load any BPF scheduler, which is useful for testcases
+> -# that don't need their own prog to run their test.
+> -all_test_bpfprogs := $(foreach prog,$(wildcard *.bpf.c),$(INCLUDE_DIR)/$(patsubst %.c,%.skel.h,$(prog)))
+> +# Build every scheduler before each test.
+> +all_test_bpfprogs := $(BPF_SKELS)
+
+This isn't a bug, but since the variable assignment is otherwise a
+straight substitution (the foreach expression becomes $(BPF_SKELS)),
+would it be worth keeping the original comment wording? The previous
+text explained the rationale - "Every testcase takes all of the BPF
+progs as dependencies by default. This allows testcases to load any BPF
+scheduler, which is useful for testcases that don't need their own prog
+to run their test." - while the replacement restates what the following
+line does and drops the reason a testcase depends on schedulers it does
+not own.
 
 
 ---
@@ -101,4 +151,4 @@ AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
 See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/34573210499
---===============1065213570066958851==--
+--===============1662541605359616403==--
