@@ -1,108 +1,118 @@
-Received: from mta0.migadu.com (out-154.mta0.migadu.com [91.218.175.154])
+Received: from mail-ej2-f12.google.com (mail-ej2-f12.google.com [74.125.228.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 206BB4B53FB
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 19:36:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.154
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789155388; cv=none; b=QJ7D6nyehCDQtwoQ4HMFXhlCPBgrrjUvqYKnNwdhsN7x4OyqAPsth1t58JltjfTLJxCQ7smR9R/A3RTllMB+09GMkd1vEaqbWm5W4zJ1NgZxJP26S4U8lsB5BAP4Cnfp6EiKFiMBQ7VIZnggI5AU6HM/YepgMgOpgIo+q1zhJ64=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789155388; c=relaxed/simple;
-	bh=5axUg2fGvQSR87hlCNMrBXF6myPM/7xQ+ipU/f5bq9M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tvfXz5ZOZW93JBkOVnoID+bOE8o5LXbDyKNvgEG4Pq+GfYT2zMXJ6eWRPIIyv2YVsCihJcaVpJ5qkB2MBAgbLr4Ju+cPXoQuKG95rtiPMV8+O5a24z33rRZgnKSUuuqoElPTzU3e/5/rnLNEr86RFxPYLDEvjwz3p/2006ZoTNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=I/QUrGAl; arc=none smtp.client-ip=91.218.175.154
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90A1D599A2F
+	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 21:12:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.140
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789161130; cv=pass; b=JQn+i6tHJguCORs+lJ6rqj/3uPYzWWC3WkgzOrDIlSwGOsl33Y8hV6n17X3VDIWr55JrdKwp8PwdHXeHG+TmbrH3y1eX710/8ZXVHoI7IY7HxeharLMOswdmh5JCkhFgWWi/ZugPM9708q+UaMFLMgf2baON/hzNWb5WEUCt24M=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789161130; c=relaxed/simple;
+	bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=AQZk/OAtfz3ALspfSS9+xmuPLbf5CO7gvo9JnU8qgzu7s8jIh8ci29iqisvpUC7polHZdChJqi6h63a810b0e7IzY3XA9iAkFU9Ta0/i5E6yCv/3uOMVk+pok1j9hD6/uoGEZa6f2ynA3yL1erlgwQ8oiZLen5qv1DJrD3gyHG4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=tab4gvan; arc=pass smtp.client-ip=74.125.228.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="I/QUrGAl"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5axUg2fGvQSR87hlCNMrBXF6myPM/7xQ+ipU/f5bq9M=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789155374; v=1; x=1789760174;
- b=I/QUrGAlUsfm1o9sIX9LcW4TYrrzzwwBJdUBskLmhCtzevu5HOF7uQP6GeE+VGc7+TqLN7Kp
- Tv8xQHLwB2Jwm2ByZuP9NL4Hm6E6B4EUtg/c5b4n7D+6fljv1Ktv2YXDJwchl54c8y8yYSUxxSP
- KJk4FGdymXlIzuOEUTgyahaA=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 199cd7cb081f703c;
-	Fri, 11 Sep 2026 19:36:14 +0000
-X-Mizu-Trace-ID: 199cd7cb081f703c
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 11 Sep 2026 12:36:12 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Runli <mingyu.he@shopee.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, Muchun Song <muchun.song@linux.dev>, 
-	Andrew Morton <akpm@linux-foundation.org>, Yosry Ahmed <yosry@kernel.org>, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, littleswimmingwhale@gmail.com
-Subject: Re: [PATCH] memcg: keep propagating stats updates to ancestors
-Message-ID: <aqRXqcynCx88D2QK@linux.dev>
-References: <20260911032905.63683-1-mingyu.he@shopee.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tab4gvan"
+Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c254f9f0b1fso53397766b.2
+        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 14:12:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789161127; cv=none;
+        d=google.com; s=arc-20260327;
+        b=E7YVNYJc8mbUePus8f0FeKuXOeorS7DIRvnjUk8AFLug7q7KJi4nKh8wZo6F8EFw5H
+         3ws7BK2T3jv0e9WEUwHCLR6FXy7Xk430jr+Yz1w8v5tvBVY+NF3+wFtnGV/IDdO614fV
+         3eQxc7GgpwKtv8hX2UO3ZzQGQHbxUeNWsaQxM1Uw6/hP8rIEJaWkQizd4EZcPGwZfVvU
+         nbOX60R1ln06gdUhdQOAknwnJiZ9fvRVZvGbKqSZDG1ZZTfo3h5VIQIm7s+MwAZET+aa
+         5qEPbu1CTTVzJ3agZ8NT83nQUtdTqG20MvHP/4usEzvoqkgSwm5eJBU/xQvh+U6MtY+M
+         Mjog==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
+        fh=9gEs10ztJp7Hb1ABYLHXQeaf8kiwsxffaFchV8GP5ls=;
+        b=IVtk9WqWZcvfAUT/5doVjS12RSSC/uduQj3BGqIhjgKduBShAq0bVKnIAK80hIlGXW
+         E6jpwZM7Rm71C6vnasSlT6SEOMn8DczIL8OWikb7IlovGKOGabLZ0lEeyxfVcq1ok8Aa
+         fgugwJWgdHNjhYmC/Pbu02r4pGswWAZa7W6RQoIL8SJ2gx6NbDp1FEj3+AegO+H0Lmt5
+         OIoADwNDur+3m1seVe9SW8PZpJGuN+cJDWTdrzJ4T7fUzf8Y0hVYenXhPnwDhRcgEQFd
+         QfaK3E1fDpznRzH9vsOuSjYcuZPZWw+zePip1OB72ka3tQgIEOSxTMsCARbXAUcT6dSv
+         iHPg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789161127; x=1789765927; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
+        b=tab4gvan26Lk8iSkXFMZKYdWvxPwyLkHVcOPb864H7VAY3JJKwGbGxUhXS5wgYjgdn
+         Se+CBLEXQ3R7ILWbGpuYvaca4inykx6aU+PE2U72zGgpF0ruFmNy90/0Sof7SiF3Y4E2
+         oZP6bp1cwU0uwdiPMZHZZ+9XTyRKeSWZF9VptYUT0GLSzxPn3P28H2q5sjoHoOHSNlXa
+         eAFfMe6zs7z5kynF1KQ4iDf6YzrJn36+W+8QdlaXmYu2bd6iEnSq26pL0wLOHR+xU/AQ
+         YMgt5pHZ5odDyjhHBjKvrLQJPPIeLLumFl5XXeXziiu2lfRE5llT7VzGwhb5DCBIL3OY
+         Z44A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789161127; x=1789765927;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=euBz/ciJkJSclpUCQrD/ca+QSNLN9fjMpZ7nLoA7Ujo=;
+        b=OIx39WvjjRbCARC2Cbmc7f4QqnAV+dmowTbyny5tbaXFL7dPWRwJUPhzmtdu85WjXZ
+         FAhOkvtoCUHQ5ZkdSczrsdG0dJljCz2lxftZfb4XbIXCTGeiWCxWMGX217oNX9jsTEUM
+         cySwBYPlD3Rp+eQgTOJmfy9S6e84JY7541Sg7E4OY7zBQETBJtTCF5RYvZeQ1/ak12I4
+         qLPdvISjYjW5b1rhj5qwkEwTl8N1PZ/DlaSKz0Hz//Q6pE+8TG3kJWiNsJ8VpgIa148H
+         xL+uNGR7Hu/JV+UebW5+0dEsC1JxzZI6JEy8zw2HSHR8DzDKzwfWer2HiXq9lWU/xiM+
+         X0+Q==
+X-Forwarded-Encrypted: i=1; AKwUvBzANbdrg3SbjPXmLeRg3AoT8V3UE3K+mT4fztYV/rdok8kBPTQmLRw2HiIrhwPdQXmqcio/cg8A@vger.kernel.org
+X-Gm-Message-State: AFuF++mE5PJlmxknpPKa7+0QHvfZC70e/0OiPNl75IvRjXwU+YQex/FV
+	i674Z2Oj6IBOc3BXHHhz2yFJlRpqN1dxhXaSEod/3LrGUuOFsS93q46U8obpUwnHIcxT0+nBfMb
+	KvMFMn3DONsxwXPZrR7Mo4AGdKSFYQ5P/9QolJObk
+X-Gm-Gg: AYBFou3Pp8O9ifPrWO/wzhHzXWXYbvhIrTA9y9iaBHnBbfBGWTzmHkasGMz6vATNgZ3
+	6cM+5QJEnCMHHbv+rVKmPmleo9vOdjUgmBCYMw5nryBTYoBKJ95qvwWxkCJbOYB63Pso1nqzAfT
+	usKI1BqX/MB8vf8pBuPXDF3sAqysJyPPyFhbbswfN5QdrhLhq5/Sjyt8zmEzYtmTI6AFZj8xhll
+	W8W80IsOS+eMjUl5eZbn6NnHh7Iw5z/6WIRC099EXPoNVQ2gHEQ9hA3egAmXYXwwJCleDFaUrWY
+	ml+oxMj5vvE8i0Oi0xYlWFvjQhywxFcLV9xhY8EJBJ7ep/Pelpc4Cn1XO+Li4R8J1vRLZ9hnSt7
+	YumdiYa8n0wHCZyk2y2M7
+X-Received: by 2002:a17:907:9619:b0:c25:8e53:45ca with SMTP id
+ a640c23a62f3a-c29667578e3mr499344966b.21.1789161126322; Fri, 11 Sep 2026
+ 14:12:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260911032905.63683-1-mingyu.he@shopee.com>
+References: <20260821050507.2161607-1-shakeel.butt@linux.dev>
+ <20260821050507.2161607-5-shakeel.butt@linux.dev> <CAB=BE-QMyzKT-o=gbhdp3g8JSqQgRiTFzxTX9vEBmCttABrmdw@mail.gmail.com>
+ <aqRWuffGKczUhegT@linux.dev>
+In-Reply-To: <aqRWuffGKczUhegT@linux.dev>
+From: Sandeep Dhavale <dhavale@google.com>
+Date: Fri, 11 Sep 2026 14:11:53 -0700
+X-Gm-Features: AcwNN1Wh4xneWSvMXksn88XWYdkFKLDPGlOSXkSUkMRqjCCaU4JFTl4RQoJGSwA
+Message-ID: <CAB=BE-SjW76gWr0kZcPnEjXOwt90vCV0TJeFuYEGV1Kt4Y1HWw@mail.gmail.com>
+Subject: Re: [PATCH 4/4] kernfs: Remove kernfs_rwsem from dentry revalidation
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, 
+	Christian Brauner <christian@brauner.io>, Meta kernel team <kernel-team@meta.com>, driver-core@lists.linux.dev, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Sep 11, 2026 at 11:29:05AM +0800, Runli wrote:
-> memcg_rstat_updated() stops walking the ancestors when a memcg exceeds
-> the flush threshold. A concurrent flush can leave an ancestor below the
-> threshold, so the early exit prevents it from receiving further updates.
-> 
-> Consider root and leaf on a 4-CPU system, with a threshold of 256.
-> CPU 0 is flushing another CPU's stats after CPU 1's stats have already
-> been flushed. The counts below are shared stats_updates counters:
-> 
->   CPU 0 (root flush)                CPU 1 (leaf updates)
->   ------------------               --------------------
->   clear leaf->stats_updates
->                                    add 64 to leaf and root
->   clear root->stats_updates
->   finish flush
->                                    leaf = 64, root = 0
->                                    4 more batches of 64:
->                                      leaf = 320, root = 256
->                                    next update:
->                                      leaf > threshold
->                                      break; root is not updated
-> 
-> Root remains at the threshold, which is insufficient to trigger a flush,
-> while further leaf updates keep taking the early exit. The periodic
-> forced flush restores progress, but until then the root's aggregated
-> statistics can fall far behind. For example, page cache grows at rate of
-> 1 GiB/s, a two-second wait can leave the reported usage about 2 GiB below
-> the actual usage.
-> 
-> Skip only the flushable node and continue walking its ancestors, so each
-> ancestor can accumulate updates until it exceeds the flush threshold.
-> 
-> Fixes: 60cada258dfe ("memcg: optimize memcg_rstat_updated")
-> Signed-off-by: Runli <mingyu.he@shopee.com>
-> ---
-> Testing:
-> Based on commit 893e11787f78, with and without this patch,
->   using 32 concurrent instances of:
->   netperf -H 127.0.0.1 -p 12875 -t TCP_STREAM -l 60 \
->           -T <client_cpu>,<server_cpu> -P 0 -v 0 -f m -- -m 1024
-> 
-> Both netperf and netserver ran in the same leaf memcg, directly below
-> root (root -> leaf), with memory bound to NUMA node 0.
-> Each kernel was tested for five 60-second runs after a 10-second warmup.
-> 
-> Median aggregate throughput decreased from 107.26 to 105.23 Gbit/s
-> (1.9%) with this change.
-> 
-> I think fixing the correctness issue is worth the roughly 2% throughput
-> cost.
+> Hi Sandeep, thanks for the report. Do you have a reproducer? If yes, can you
+> reproduce with this series?
+>
+Hi Shakeel,
+No luck with the reproducer yet, and reports have been sporadic.
 
-Do you have any real world or production data to show that this is an issue? I
-would not change anything unless there is real data. Also we have periodic flush
-which will fix this (I have not looked deeper into this to see if this is a real
-issue). In addition we have bpf interface for the stats for users who really
-care about accuracy and efficiency.
+> I think first we need a real reproducer before considering anything. I would not
+> add a check unless we have proof that it is really needed.
 
+Ok, I understand. Do you have any opinion on the suspected call chain
+which makes dentry->d_inode = NULL; ?
+Partner report said it happens under memory pressure, and userspace
+component was reading the CMA stats through
+sysfs [1]. So I naturally looked at the shrinker and suspected that
+call chain, which made sense for my 6.12 kernel call stack.
+
+Thanks,
+Sandeep.
+[1] https://cs.android.com/android/platform/superproject/+/android-latest-release:system/memory/libmeminfo/sysmeminfo.cpp;l=545?q=sysme&ss=android%2Fplatform%2Fsuperproject
