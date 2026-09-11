@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C125245D935;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A19C7457E4F;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789127110; cv=none; b=dO2pz44TWtvn1YaWu7ynTlXzxPx60R+GRWsURlHfeEYSZT2bwUjF2G2KHWtye1WkLCr2kH5FCGAaC3nUYNp0X5sYJPssWiHik/3s51rF4joSbLE2pC+DJ/QbtlWm1Zg9lyS3wEyy4r3XIns5ftPmupvIGcxLCWZuJV8I26+QhA4=
+	t=1789127110; cv=none; b=pxJGSNKtuuDizqqHc98pDK4/i2LSnVX014AIfcWGbDAloZsNhVneaEot7Qf0eLNWd0MqF3rEtUHqSnnKlTvay+R9IULa2dpcvWmNlHcQSg8Xh/MMBKnCOWenHyT3oQujGA8b0I17GdMNfHaErX3++0IfPanWdjbTcuhalVXRhUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789127110; c=relaxed/simple;
-	bh=DfCUe025uIKtclHTHshGr+EQA5lUG9lK0Ak1YmmZ3yI=;
+	bh=qAq/J/sYfG6ZkVcfim0Zo7HRre2y54mXkinDXrdmMHQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=CoFHHBWQbzzPxTYOrQJTygC/i1YWNWax8ByctUgnDWTgGoeV0bvppa/oCTd3GCku7rhRcl8IxDisXi9ND8CEK5hJ1BZGsvZgsl5/NiT1ZkhbmZW9PcYkogwZ45QiPFInKbYa4qomFxByfg9qnt2Mb0px33yG8C2rJRtVRoMjHPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vOeFyNE/; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=Z+SP3SrlegKMLXcpi+D4cvpwWHC78Fo3TDDW4s41XukqWaGo4pRKyMagX6J8P70biyDibUWxSPo8ka+ZwplyHvVZvJ4b/ceJFhXH9jAKJiWP5M5pEtL0/OfNFG9h+NtMAaPNZvDaa6xiVgou0WUFBRSBdc6KvSVFJz6ZX3Q/TTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R7U5owHJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vOeFyNE/"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 9DFC5C2BCF5;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R7U5owHJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 68DC9C2BCFF;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1789127110;
-	bh=DfCUe025uIKtclHTHshGr+EQA5lUG9lK0Ak1YmmZ3yI=;
+	bh=qAq/J/sYfG6ZkVcfim0Zo7HRre2y54mXkinDXrdmMHQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=vOeFyNE/3umDOaMHwnBTe60c1eORoeQLfYq3cHxJ23YmqK8+9U0Muzn1hBttfepC8
-	 GEH76gKvFKT8E5c400ONJ0hz6ts4cN5/4sId9CPz8aB3fyLesZEupyTuto1qkmr4a+
-	 QhO3QgiJcgDmMarn04/hGOyq4FA0eru2AesyXQkk3juIfjC6KUypHc3HS387xSyta0
-	 C964ATFvyLCcJ9zyAYK4WPOzrc7EqZNKubhZskLgXh3bI69+4/GzdIr8Vp4DJS8l/3
-	 n27kh3pW2rOstGNo+V7b1icVPAUhjA6Fvxx6xPj5B/0ZXzVwOV2xIs+MjJ5bYrMibx
-	 WcR3AGXjOdzsA==
+	b=R7U5owHJv1EiXrYkvh4qkTXdITwnp8F2b1jM5gFpgcdKz8MBEfZDNZbBpgbc2hR2D
+	 5Ib3SDxm4haP4Eviv5Qvk1M82u85pqqZzZi/2kU+2iMu8phiV8tRO/TpsCU3xrO1Cq
+	 nq8KHNIbwxysf6D4VdGwpdcNttILC8jL4PRroJG67oOGW1/hdnts47VktmDrCaJnYr
+	 4JKE7/banh8q+I6V4pqqKwrECqz1IwLzdAap3cBDw3yP0Ob4ND/w5dfpHReGUbw9dT
+	 AiBe70kTraZoFkcuoFZn2hJvGDmvuKSEN9BkAdubUOqnN0zOLxTwU9nMRI773JT0v3
+	 kmsphNzFkTD6w==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A10FC88E58;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF7AC88E4D;
 	Fri, 11 Sep 2026 11:45:10 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Fri, 11 Sep 2026 19:45:13 +0800
-Subject: [PATCH RFC v2 10/15] mm/damon: convert to LRU refs based
- operations
+Date: Fri, 11 Sep 2026 19:45:10 +0800
+Subject: [PATCH RFC v2 07/15] mm/mglru, gup: mark folios referenced via a
+ fast helper
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260911-mglru-fg-v2-10-f26e5cb26da7@tencent.com>
+Message-Id: <20260911-mglru-fg-v2-7-f26e5cb26da7@tencent.com>
 References: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
 In-Reply-To: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
 To: linux-mm@kvack.org
@@ -71,11 +71,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  cgroups@vger.kernel.org, Kairui Song <kasong@tencent.com>, 
  Nico Pache <nico.pache@linux.dev>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789127106; l=1029;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789127106; l=2592;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=bcXldTPRhQXaWP3mxZJ2ezjk1cc+Ox0W+LQc8aNOz8c=;
- b=do1F4divk/7w2Elskq/IjnlxGlD0GvPCpGcO1NxNx128hC5/j7AU69z6BO05EBV0r14XpdFLF
- hEo32isNyfKBA1akJ+lhRl/ob9TCe+kfwahhgsT2XTfHRCJu2kj/T8I
+ bh=76hiJ+IqCKnuaQ/7hlfV8Pomepbu2+G2JAyXF+7DflM=;
+ b=S+M7djq6ItbHCmZylWQyxNxFu67PRNPY5Uj1bR3LDiXAhZwDr8c+jDwGogPiatHHiJwEqUONs
+ u1VPGkYohVeBa/rPImHUErKPffukw6+HzwzE2VJvJS39L8JCoSuGWvL
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -85,37 +85,86 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-damon_pa_pageout() cleared PG_referenced directly, which under MGLRU
-may corrupts the folio's refs count in later commits. That flag is now
-bit 0 of the count (LRU_REFS_FLAGS).
+Introduce folio_inc_lru_refs_fast(): raise refs from 0 to
+LRU_REFS_REFERENCED via cmpxchg, or just set PG_referenced for the
+classical LRU as before. No counter update, promotion, and guarteens
+no other complex operations in following commits.
 
-Reset the count instead under MGLRU.
+Convert the gup fast-path sites. No behavior change for classical LRU.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/damon/paddr.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ include/linux/mm_inline.h | 25 +++++++++++++++++++++++++
+ mm/gup.c                  |  6 +++---
+ 2 files changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/mm/damon/paddr.c b/mm/damon/paddr.c
-index 79195026b903..38d3ff7019e3 100644
---- a/mm/damon/paddr.c
-+++ b/mm/damon/paddr.c
-@@ -280,7 +280,14 @@ static unsigned long damon_pa_pageout(struct damon_region *r,
- 		else
- 			*sz_filter_passed += folio_size(folio) / addr_unit;
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 8700563dade8..23ddd5d78571 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -439,6 +439,31 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ }
+ #endif /* CONFIG_LRU_GEN */
  
--		folio_clear_referenced(folio);
-+		/*
-+		 * DAMON only gets here for regions it measured as cold,
-+		 * so the hotness can be, and better be dropped.
-+		 */
-+		if (lru_gen_enabled())
-+			folio_set_lru_refs(folio, 0);
-+		else
-+			folio_clear_referenced(folio);
- 		folio_test_clear_young(folio);
- 		if (!folio_isolate_lru(folio))
- 			goto put_folio;
++/**
++ * folio_inc_lru_refs_fast - Bump folio refs count without promotion.
++ * @folio: the folio
++ *
++ * Raise refs from 0 to LRU_REFS_REFERENCED and leave hotter folios
++ * untouched. For the classical LRU, a plain PG_referenced set.
++ */
++static __always_inline void folio_inc_lru_refs_fast(struct folio *folio)
++{
++	unsigned long new_flags, old_flags;
++
++	if (!lru_gen_enabled()) {
++		folio_set_referenced(folio);
++		return;
++	}
++
++	old_flags = READ_ONCE(*folio_flags(folio, 0));
++	do {
++		if (lru_get_refs_flags(old_flags))
++			break;
++		new_flags = old_flags;
++		lru_set_refs_flags(&new_flags, LRU_REFS_REFERENCED);
++	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
++}
++
+ static __always_inline
+ void lruvec_add_folio(struct lruvec *lruvec, struct folio *folio)
+ {
+diff --git a/mm/gup.c b/mm/gup.c
+index e49f020f721d..cbf609dc8866 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -2899,7 +2899,7 @@ static unsigned long gup_fast_pte_range(pmd_t pmd, pmd_t *pmdp,
+ 			gup_put_folio(folio, 1, flags);
+ 			goto pte_unmap;
+ 		}
+-		folio_set_referenced(folio);
++		folio_inc_lru_refs_fast(folio);
+ 		pages[nr_pages] = page;
+ 		nr_pages++;
+ 	} while (ptep++, addr += PAGE_SIZE, addr != end);
+@@ -2968,7 +2968,7 @@ static unsigned long gup_fast_pmd_leaf(pmd_t orig, pmd_t *pmdp,
+ 
+ 	for (i = 0; i < nr_pages; i++)
+ 		*(pages++) = page++;
+-	folio_set_referenced(folio);
++	folio_inc_lru_refs_fast(folio);
+ 	return nr_pages;
+ }
+ 
+@@ -3010,7 +3010,7 @@ static unsigned long gup_fast_pud_leaf(pud_t orig, pud_t *pudp,
+ 
+ 	for (i = 0; i < nr_pages; i++)
+ 		*(pages++) = page++;
+-	folio_set_referenced(folio);
++	folio_inc_lru_refs_fast(folio);
+ 	return nr_pages;
+ }
+ 
 
 -- 
 2.55.0
