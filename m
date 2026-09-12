@@ -1,82 +1,82 @@
-Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E15633ADB9
-	for <cgroups@vger.kernel.org>; Sat, 12 Sep 2026 08:48:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19AF8400DF6
+	for <cgroups@vger.kernel.org>; Sat, 12 Sep 2026 09:01:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.44
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789202922; cv=pass; b=Vfnh3emJm5oEQ//OI8rYFKJifVExDknDd8kkxR779yJhZvCoNuhtQc4iDTG/n0f5kLBs5Ysfvnec9K0tUHPccQI35Zkiuzf8+4TSOpHsN0eEbzIMQeZqY0ZstB4xxdDghGJD3co0vNcvQH7Bc8xBrbTja+/RWGojaCe5fiBVUhA=
+	t=1789203682; cv=pass; b=I4L5qzwXkqEBYu2fsMmjrObStr5WnQeeIjkrSmRVAGitiQWP21ScJLitc4v6yHlgUfb7/rK1Lirx6Sf39EwZM8xILnX2cNRWABPNVL52NKcAq1NFG4U4x3fq7zXBfwFEuv2f3LkNEQHSclqmj8A54wXGLT0ulgqpSFhByaVtXAA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789202922; c=relaxed/simple;
-	bh=PEtxQYkjYgQRxaF03D30N0xMCnigd147rHHH7QHltEQ=;
+	s=arc-20240116; t=1789203682; c=relaxed/simple;
+	bh=IPNosc/r0xfulC5WG68kmh6M6W043Uql4TTAQdGiAs8=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Q44MgxBZG37MZUTRmZQfZg/fwbUJX/KJUK+Q9mAXenKSkFQEpQAMhJ21eAarjmS4teLgPeF3RyNkvK9/deZsGAlNHsO1evtIzmZkiU9NbOcDEVGcmXOngOB1nFxscZF4a7DIXzRxobtJ/4gh772dkmY9Mc0xvjJgsTeWT/bwhoA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EhX9cfsT; arc=pass smtp.client-ip=209.85.208.51
+	 To:Cc:Content-Type; b=pZo8nO8lSDjKrsn83i6PprKo5QTbKvZHXE+swZOn6pUdq7/jKiQ+tftrpiaNRG0cxq0DDVZBzyJu4Y0KmW+NIKSGmSy8+D1eXnEls5d/fvR9onNqS3J6xXyD5FHsxJsnPEv5NuFqZjpj5vDTVrrp96mbilLwsSo7cPOokJmpHTM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cphMH7I2; arc=pass smtp.client-ip=209.85.218.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EhX9cfsT"
-Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-6a20319d030so2535790a12.2
-        for <cgroups@vger.kernel.org>; Sat, 12 Sep 2026 01:48:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789202916; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cphMH7I2"
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-c25b661d37dso267956866b.0
+        for <cgroups@vger.kernel.org>; Sat, 12 Sep 2026 02:01:20 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789203679; cv=none;
         d=google.com; s=arc-20260327;
-        b=MCBcZRIND7XL6co6K84Tlfjeyh6qb7LxrbBeVljNpxxBcgV07o+6GURJEJIqy3OXDA
-         7yqCr5mPuHfeN9OTjAHSCAZQM1AohkvRMITMKDGBOIXcV4ajQEdq7cvIqd+u3aDouHT1
-         RYZvTXPd5ZFb7IeqL6VQxo+E1mbtfAvJQNw2HL0si29gbqKgXoDV1Qa+EjoBrRxekeyY
-         l6ZjpdpZyfSetHW/nc7MQG8BoHqU7DtuDQJcAirnbFq+eLjO9PUW8j7w/yEOrjBsO7E6
-         oBSxdeWDAC0p2613HUsNb73IxBY/NHbrAcKUiVgou/xPA3qjPsUF85ogfI6XBJyQz+kp
-         F/5Q==
+        b=SeiqsVa0TvRRlXalcs8ZADbuslKod6/7uCSEP2qWIyhKNQv3sq8LIbpT88zL4aOn4e
+         HA8aVaQN9sblodpzy7t21L8N/j7SCUPUDI1AHO4prJ4LTUscAXXF/ltAzSgvNtz5xccH
+         g6w14/fYbKlmKsoz09lMJUeB0XS2UPO34qoRWtErGXz1z4iey3m6XsASPRT/ku7BeayE
+         LFEO0fgzSofTUw/Je+E79znVaRc/85j6ayUL9XArk2s6IhnXaiqaVvlMJpWqMVhORvru
+         YjiabLQCfW6zO3BprdRT1pVlcXre+aZQXm/mU0Wg6pfG3L3KqDoKgxSEvIgH+P6skkmV
+         gBsw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=I4VBvSxEGrUfJJhcCbVvt54AZ/dw8YbEqxSSPOGIQHY=;
-        fh=QyHo2MK5eR+9ddgN83J0ksqLzP7bnTLtd4ncyrJuPTU=;
-        b=oprxMNBg5zqfsq7/C1D3d1fptWlpFzMFuilqnkWPa43kWoh/zVj32OezgMyBdKJ3Vg
-         epLd1AEv5ueFLJHydOnkj45NrEplf6thY4jow+BEybwKRpvshmjQx9vTO7455I2a/bXL
-         nEno8Vqy0Ujsi7ovXQ8gbhimYD6xTqhPFP/0cg52sWrNikJRvWlRLGeV3xHgmesro+85
-         w7x2hwmoYHOIGYK31XTpKHCDDOuq8YNM29DcFO+ZaWyVVqubSX9cP0jDD2m7+qZTxjWm
-         MioPnzvZJ02raY7nbYlXBPuzbcI0a89CXpzMOKXPexV+1e+8pR5Q9sV4F3w0JKWrdU/O
-         ZVRw==;
+        bh=Emo/VHVaZMhmQcduzPD7yxfTUOKr9C1DEbaLmLBuIaI=;
+        fh=hcUck0OYOldyhN32MXRO74w26Sd6jOsI+PZKVEG54N8=;
+        b=eQhl32pU8i184m2ooz/QG96WLj3JijuiqW1+aTnvCs53wb16ZnVzLI/curL6WGboCu
+         LFusuY1a7yXkxPEo/Jcom2ccQWVGO3ej+FuPheU/8bnERqI0U0L0mCCzG9B6p5FJV3Nk
+         vXhzxWuUtIpcVop4lkl08XjyKeMiNiZ0B9juToGhcGBgxPY0mn1rtBdcawnc9MVVYVoP
+         /fC/1BbJEtC01FzWX11x+zwqhTlckYau+hpSNkwCyQ3hXLHYxo9AmrBktEmo1bwDEEcM
+         h4XpSPfS7WHVYIzPinUQIDhNpWIb7rDyjRF1GFXRbk8oBIeSMmWA1NZfoR91lW1NO8BO
+         /9KA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789202916; x=1789807716; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789203679; x=1789808479; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=I4VBvSxEGrUfJJhcCbVvt54AZ/dw8YbEqxSSPOGIQHY=;
-        b=EhX9cfsTA8wuzqlx4v0gI7INYdvOI07HVCKskWVxtYxlHU3ehzVsoxO1P1oohG3jYi
-         nhYfe2s/cBhfDjlnSZV2gp56s9x3/hoj3XQ5wY2lk5ixBD8B1YDl0Q9UCRnb3Cw6VLes
-         x7lY9ZCYQ/LZ1OHTtHj0WXhsqx+ip4fZRzU68j8MwYJ/R3nxiRx94JN6H0e1HaNpaCMc
-         0cAb0UxJRiGOPdvbiUZ3iecH08hEB1wnwjZYuFn7r5uCpHfOkBa8dl/NyUpw8BvCob9+
-         GBE95j0TpbLAMoXNeeuZi8bkIL45PNSe66OlTXqDAbwvMMVYzQARcSvHuB4ARFwcVeen
-         /YgQ==
+        bh=Emo/VHVaZMhmQcduzPD7yxfTUOKr9C1DEbaLmLBuIaI=;
+        b=cphMH7I2NbjgYz9Y7q4cvOIjKX5pGTY8W2/iskq9B7nGNj0k7301wz5doOVV6+aTVr
+         LIo6OcxJqd/it3YEzllDVrdV+6MRbfFIJhKgiwjAwQM40YgAkJs5YRfSotp+m4AZEEO4
+         tRNBQw51bNBDE+YMltcv1NIYcxldHzDQXK6MaWlhu52lLDd0lMYK0x2MN1wTUqFXB6Nj
+         RtAlSwE9KgvQvze3Y/My6eAYs90PvCCc9HxZXLn8JZy3P2QX/aoYs9fT6t+xEZxhgpap
+         +BDLXm9FF6AygIxv1GYhBoEg2KPJ0kYc4upched6ca/pIqohLomPB/aC1RgYAnVLX3IP
+         LsoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789202916; x=1789807716;
+        d=1e100.net; s=20251104; t=1789203679; x=1789808479;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=I4VBvSxEGrUfJJhcCbVvt54AZ/dw8YbEqxSSPOGIQHY=;
-        b=kgO8gEulzKG1BhIWSehXfshoQ/Zfd9gpYlPYSxxF/ZsLnV682dxtkDPSAgffH/OrHP
-         f/qc4/hIB+DKxZ9J4rZnaf7RrKhev0yRupnGDJ1Q6Wcgg6SY2eSuFzHoab3QPPhs6l60
-         TqYMVpNIiOt9PIJxDFBxgFVUGBtGJcgLloEDC7wjpqtwmUngJ6vPatgmFTL7EuBDDi4G
-         20pT+P/fk0hhHy/3Z4/JJblieRw6ji+M4JBmYxWXf4SOMhjdez2dE1zi6iPTOZBymJo4
-         k7lmyOWC36qhQGgCUBnVjLhkHZw/PZGU9f9WeOWl/op+F8cqth6bhHmywfIm9S5L6f1p
-         5t0g==
-X-Forwarded-Encrypted: i=1; AKwUvBwKjHC/RO2ajQT0rPGNgHzXcC3C+xm9Q/nw89/MUjJ2DmPCeyywDa01yAYiTH+TXDETwiAQdXCp@vger.kernel.org
-X-Gm-Message-State: AFuF++nM/PVQls48o4jaRq5roipj7f2iybFHrwAcxMlsZVDXHHhg7cxA
-	PIBelPhIqCMvzxFOHxrQ/iFwdnjrnP0dj/FRQmOnjGTwklEW6XXdIMzOFWxZKknIiJHKo8A7hV+
-	AFp6FT9AQnzlLEqdm7yW9KAfHIYKRErI=
-X-Gm-Gg: AYBFou1B/1inwW5Y5htQSHkMwgYcCtew2uiOWhDJfH0wW6bc2U2Pd8V+us5N1fWOXuK
-	dVwg5OgVJTBEjWeGcONlMXeiuLud+Buwm+2zvJcTD3z4rN1fP3PQPWwgP1CLhzurujxXkJ01tJv
-	sxwLG2Jh9yOzVVvdcRh6S8AqxhgknlZNgP+Lam2TjZAFi1FYZMnTfyuxrYCsCC/jm4TitFqXrk7
-	4IT788+i9ZZtKropR9cmZRqFnrOnFHYJxeb3PggzhrN2UvGjaKbj35iwb0rnVyZa0UFSp27M6GN
-	qPVQs+r0c0MBTwuw6j//BrmJAl0HoAH6NtlRJVbm5PiHP07wbnnCyyAOCVwbDD9P4Y5NeD4GZbs
-	TaRhOsAFlNX41pQ==
-X-Received: by 2002:a05:6402:354a:b0:6a9:93c0:113e with SMTP id
- 4fb4d7f45d1cf-6a9b5603d6cmr3580548a12.9.1789202916079; Sat, 12 Sep 2026
- 01:48:36 -0700 (PDT)
+        bh=Emo/VHVaZMhmQcduzPD7yxfTUOKr9C1DEbaLmLBuIaI=;
+        b=UJpH69GhCzr9V7rLjbhNKLsdqVpMI1CIhYHwoFB9L6DXOPE+VySLU9a5kg+yVeaVZ4
+         78TvWWHL85mjPW+w5IDXpAYlJyyAwPzDZ0YEnRIffcjjZQU4uhpRHui7Vt1wF2s8HN0k
+         OwmJ97eZnfmhF9Izff87egGOW14ofhhhcoAjMXaV0pxM6Qy9qbw5eup243DvW8XKxAAk
+         RS8GVEZPtp9BDWsZJJ0cfmDktAPNUJFkdsAIDXfKGAT4a2vN6gwNXnT8x2f5GWBnV/74
+         rqHt+VSMdF9heutoVbG99yRo0sPwZarOpMz8IHVMGHhY5X8AxhthAGpFmt3fwe/V454d
+         nbsA==
+X-Forwarded-Encrypted: i=1; AKwUvBzrVwYUxXliw1tDR3HPX2WLZ9hiPn9MAdRTYdxrs8bwDEinNHbVSjNoi+LLagmrlHkZKhp5qX7m@vger.kernel.org
+X-Gm-Message-State: AFuF++n8xg+HS1JPhnmj4DCXpOWHICtiGfC1O8GL2b+O5nQ5lLwylUn4
+	OaHi9LILffyTUrjjV8t11JC5bu6Fm8/9JErOdm5stK7q7FZrHPzpmZNz3+AtiatFk9Y3PC2R9sd
+	XobnA1x7lo/Gvs+HwUpmo6c6laFPHlqA=
+X-Gm-Gg: AYBFou3wWrqjYManqlPy2VNyoa6OfUjgB+1VjOjWIBGdD7a5fCAEBv6gRJpO4aL+z8/
+	ZfhFJvqI7xg5gHer5hprRYBb/ueQTdxu/FZ3kPLbOO1ixbz8BznnwAcdN/qWCItiF7EG/7KDyM+
+	+zgm3yxqgy0AfAd43Rtt9yXuTsgzFvcsdNAzvZnILL4dURhMSYeFO0uCrEanuzuLyL1NKlnOv4S
+	zgrUZn0H/c14YHxDxDXVOrZ4gg9CCo5MxsyACPIWB4LWFgJMK3w77CKLaE/8dFQSLkNGuYdwILH
+	/vLYPt8Zb7A8QMCKZoel9yIHGIgPQmzxwHHjEeKfwfZfcLjJObe7lv9Da9WOixFq8lDsL8TLrZ+
+	zZiB/2Jc7P/U+
+X-Received: by 2002:a17:907:3f88:b0:c25:9102:ed with SMTP id
+ a640c23a62f3a-c29665ff973mr349742666b.5.1789203678979; Sat, 12 Sep 2026
+ 02:01:18 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -85,25 +85,22 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
  <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com>
- <CAKEwX=O8i+OsP6BJXNZNk07hveN9HDT+PoyMTAU6gOc-xp0Ppg@mail.gmail.com>
- <CAMgjq7BQeQQOZMDPFJ+8LS2N4t3x53r6Nm+9o0_pi92oVUgjgQ@mail.gmail.com>
- <CAKEwX=MS-7C96i4tzBijHN=-xuZgny_wQEa_0YjfHzhoNysdYQ@mail.gmail.com>
- <CAMgjq7B7Mc7vpQN0gBknsSrfZWXdif5L7nU29YskG9mzS-_jsA@mail.gmail.com> <CAKEwX=PxZ68_4240DC8HjcqPRE0bQWGmouoqapqqTQ2b0xqpvg@mail.gmail.com>
-In-Reply-To: <CAKEwX=PxZ68_4240DC8HjcqPRE0bQWGmouoqapqqTQ2b0xqpvg@mail.gmail.com>
+ <aqBT_35E-eSoN_zj@cmpxchg.org> <CAKEwX=N4aaq_oD2agTUNrUNXhaYGeQ9vxu+dywFvEFgWFi4uQg@mail.gmail.com>
+In-Reply-To: <CAKEwX=N4aaq_oD2agTUNrUNXhaYGeQ9vxu+dywFvEFgWFi4uQg@mail.gmail.com>
 From: Kairui Song <ryncsn@gmail.com>
-Date: Sat, 12 Sep 2026 16:47:59 +0800
-X-Gm-Features: AcwNN1Vvr5dRguutvcgehjz-XZkuALg4SjwQULHioJZ7yEPwdeM7nc8UPMPMn9E
-Message-ID: <CAMgjq7D40KGRjwpFMH4x4fhJ18OQyZwPtovhc8Hm3Y7+__d4Lw@mail.gmail.com>
+Date: Sat, 12 Sep 2026 17:00:42 +0800
+X-Gm-Features: AcwNN1VTyrOeQmFG_efe2_ca4qa89c2Nr9YsCc4NghZiW0bnHUOivuHs2n-bDVs
+Message-ID: <CAMgjq7AfNBUpMamcv29JFzpX=7ApNYVLtPjWT4Sm8cXjSLYL9g@mail.gmail.com>
 Subject: Re: Path forward for Virtualized Swap?
 To: Nhat Pham <nphamcs@gmail.com>
-Cc: YoungJun Park <youngjun.park@lge.com>, Chris Li <chrisl@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
 	Kemeng Shi <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Barry Song <baohua@kernel.org>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
 	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
 	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
 	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
@@ -119,113 +116,58 @@ Cc: YoungJun Park <youngjun.park@lge.com>, Chris Li <chrisl@kernel.org>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Sep 12, 2026 at 3:04=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrote=
-:
+On Thu, Sep 10, 2026 at 12:42=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrot=
+e:
 >
-> On Fri, Sep 11, 2026 at 11:14=E2=80=AFAM Kairui Song <ryncsn@gmail.com> w=
-rote:
+> On Tue, Sep 8, 2026 at 11:30=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.o=
+rg> wrote:
 > >
-> > > Would something like this fix it for you? ZRAM users will not get
-> > > vswap indirection overhead at all, because it would bypass vswap :)
-> > > Down the line we can revisit this decision - for e.g, if there is a
-> > > use case for vswap-on-top-of-swapfile. There might be other interface
-> > > that makes more sense.
+> > On Mon, Sep 07, 2026 at 01:51:31PM +0800, Kairui Song wrote:
+> > > Where I've ended up is that unbounded growth is a real concern. On a
+> > > host with no memcg limit (root cgroup, and most desktop and embedded
+> > > setups), an unlimited pool means usage can keep growing, with no
+> > > admin visible ceiling at all. I'm not attached to xswap's percent of =
+RAM
+> > > knob specifically, but I do think some kind of bound makes sense.
 > >
-> > Hmm, this interface looks confusing though. you mean tangles vswap
-> > with zswap through the cgroup's zswap limit? I originally expected
-> > this to be a problem solved by tiering, skipping certain tiers seems
-> > much more intuitive. Maybe Youngjun have some idea here?
+> > Swap space is just process virtual address space, no?
+> >
+> > Swap entries already have one or more page table entries pointing to
+> > them, which in turn are managed by trees of vm_area_structs. That
+> > means rlimits apply, overcommit protection applies, and OOM killer
+> > attribution works as well (oom_badness()).
 >
-> It wouldn't be confusing if this is something users don't have to
-> think about at all :) My point is that we don't have a use case where
-> we need userspace input on vswap-enablement on a per-cgroup basis yet,
-
-Ha, you really can't assume that for everyone :), we even have
-workloads working at different compression levels, and the tiering
-series shows different cgroups working on different devices, there has
-been pathes enabling per-cgroup swap device a decade ago.
-
-> > > Potentially, but we have many users at Meta. There's a huge diversity
-> > > of machine types, workingset size, access patterns (both frequency an=
-d
-> > > file:anon split), compressibility, etc.
-> >
-> > You can just set the number as 8PB? :)
+> I tested this theory. I spinned up a process, and let it spam 0-filled
+> memory + swap these pages out continually.
 >
-> Sure, but with the vmalloc-array approach, there is more metadata
-> overhead even if we have not allocated the backing page of the
-> clusters yet. This will be annoying on the smaller size machines
-> (O(dozen of GB)) to also pay the overhead of 8PB-swap space metadata
-> reservation.
+> As you predicted, oom-killer picked it up eventually. The host was
+> (and is) intact otherwise :)
 
-Not al all? With VM_SPARSE, you literally have zero overhead, unless
-you really use these slots.
+Good to know the kill path works. But I think the accounting side cuts the
+other way? Won't that conversely underestimate the host's ability to
+handle memory alloc? Not to mention a lot of application are
+swap  space aware, some built in logics like e.g. with vm_enough_memory:
 
-And even if you really use these slots, the overhead in both CPU and
-memory is lower than Xarray, if I did the math right. I just ran a
-quick test with Baoquan's Xswap, forcing it to start with 8PB on boot;
-it was smooth as batter on a 1GB box and still worked fine after heavy
-anon memory pressure.
+On a 1G machine with vswap enabled:
+[    0.241906] vswap: created virtual swap device (2199023255040 pages)
 
-See below (8PB xswap device with almost no metadata overhead, the only
-overhead comes from zswap so I reduced the tree number but that can be
-easily merged into clusters as we discussed before):
+a 2G sparse anonymous allocation fails:
+[   46.044002] __vm_enough_memory: pid: 1129, comm: search_agent,
+bytes: 2147483648 not enough memory for the allocation.
 
-### Before XSWAP
-# free -m
-               total        used        free      shared  buff/cache   avai=
-lable
-Mem:            1464         405         756           1         544       =
- 1058
-Swap:              0           0           0
+The default "Heuristic overcommit handling" policy is meant to handle
+seriously wild allocation (as documented, and it's named as
+OVERCOMMIT_GUESS).
+totalram_pages() + total_swap_pages
 
-### Create a XSWAP device, I hardcoded the max size in code to 8PB,
-### and use fewer ZSWAP trees:
-# echo 0 > /sys/kernel/mm/xswap/create
-[  140.289280] xswap: adding extendable swap type 0 (prio -1, init 733
-clusters =3D 375295 pages, max 2199023255552 pages)
-# free -m
-               total        used        free      shared  buff/cache   avai=
-lable
-Mem:            1464         407         755           1         545       =
- 1057
-Swap:           1465           0        1465
+Is the limit, the heuristic exists only to make "a seriously wild
+allocation fail" (as documented). But on a vswap-only machine,
+reasonable allocations fail. Common swap devices, zram, or xswap don't
+have this problem. One could argue that the size there is just an
+optimistic guess, the compression ratio is not controllable. But that
+heuristic is a guess by design, and a plausible number serves it fine.
+"Unlimited" seems break that.
 
-### Lift the ceiling to 8PB:
-# echo 4294967296 > /sys/kernel/debug/xswap/type0_cluster_limit
-# free -m
-               total        used        free      shared  buff/cache   avai=
-lable
-Mem:            1464         403         756           1         547       =
- 1060
-Swap:     8589934591           0  8589934591
-
-### Run memhog:
-# time memhog 12G
-...
-________________________________________________________
-Executed in    4.36 secs    fish           external
-   usr time    0.46 secs    0.00 millis    0.46 secs
-   sys time    3.77 secs    3.80 millis    3.76 secs
-
-### After memhog:
-# free -m
-               total        used        free      shared  buff/cache   avai=
-lable
-Mem:            1464         336        1136           0         222       =
- 1127
-Swap:     8589934591          31  8589934560
-
-The only different from vswap now is that you just hides everything :)
-(writeback is not hard to add)
-
-> https://lore.kernel.org/all/CAKEwX=3DNYoMH8pTKeCvA=3DXHFmmNVMeDz3mxbhp5q6=
--PxSTJ5wOg@mail.gmail.com/
-
-Right I saw that, but 64 bit of private id will make shadows really
-awkward, not for SWAP but for file folios and file mappings, swap
-table is actully fine since memcg_table is standaone, and we can
-workaround the hieratical refault distance issue in other ways (e.g.
-record the reclaim level instead of memcgid direct). I think 24 bit is
-good for now? As I've never see anyone ran into issues
-with even 16 bits in production.
+One can switch to strict overcommit limit, but that is limited by a
+user specified ratio or number; again, we need a concrete number. A
+fuzzy "unlimited" seems odd.
