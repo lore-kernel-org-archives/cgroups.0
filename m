@@ -1,107 +1,73 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+Received: from mta0.migadu.com (out-157.mta0.migadu.com [91.218.175.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7425F4BEE41
-	for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 22:09:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35FEB387345
+	for <cgroups@vger.kernel.org>; Sat, 12 Sep 2026 03:09:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789164597; cv=none; b=NK82rwciF8+JXQVOgZLJ1Ac8Vlz3A7zD8MFaxaC6ybcZurWL7AslyqgoFOhU4IS5s5qGjQm0+ie71+MxG5GK8z61ndx0nnlxsvvWkFfKD3M31MVBTsi8+uhSUrhD6Vkv502Z7xydXJLeAWnQsHMobV12WU2sE69eKG2emqfJkIg=
+	t=1789182583; cv=none; b=IJY5pDzivap5dTpokt8K1BkBRMPworrWw60zbwuowxMJS625weGl0G5WzsDn82JQoE77xTbmzIn/YxOg4E92LcY4RoWAywdq2sSVKFxCLalIQvf/jFVOpof/AsyXpD9RxxxwacA+uwoFeme9HfIGYAq1BbEyLkghe+JZsOqXG70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789164597; c=relaxed/simple;
-	bh=t+Do4nGFECT6+LKHRKvJVejkOKMJELdYcZO6ItT3PsI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lC1SQzwKNGGWYHnJyt1C0Uwg4Pzz9hsCihkdt+BlPqKELmNXJv+3vZSXUYhTu70e1P3/FhHnyXBeZYGMybXP8bmPCMIUbVRKaXolGVO+6oqvft6SlKvsBzRBtAuQWYJDowxPcX0UMEAJHo9VmKw6WZUBx0CEyl+ibApEAVEGgSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UXVKXqDY; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789182583; c=relaxed/simple;
+	bh=Iu8FewysYP/Ep//xGcr71N/KuWpAf/0JZgUTITgcNRo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=W4uqhpXu8qk8DoXJEzHZ22gCy6arkKb2cPO4xzQyp/9iGgr0UTxvcc5uaDot/TifG5HcwUgCKckIrNVke4bi0YVPlq4yA6tgjmjLB1Y6fCqP6jzL3CWegerVh62XDJjmUfXfYmRHz3JrHuyFD7CkQspiVcnxcD84zXe9FjgLd9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=HKAkhPLS; arc=none smtp.client-ip=91.218.175.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UXVKXqDY"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b912d822dso450145e9.2
-        for <cgroups@vger.kernel.org>; Fri, 11 Sep 2026 15:09:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789164594; x=1789769394; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Dk8RJ/gWGUzJZL37Z13wVy/RHkm1H9VT60iwGnpNGc4=;
-        b=UXVKXqDYkUXMqC1VF7c5oSmOINGOJjIRwB+zt63W1TugeVgGhA+4fA0uWFfdCxMnml
-         JY8aOD6UENqwML/LorPb3nBylNitbNjBtkbAOWs3l9pNaLZZ1YeN3Vjkc/EovEZEI+4O
-         bpRZFnENG8YuAf7qOlL/zoyFyyIK2Nemdl3BD6iS6HOBUewYeUSkiuaVxKeKt5rjloDk
-         okfVGjgHoYrKlWgOoE5s2SczIkCuuahrw1Isgb/zKXwtuSGVEhA8YHDV3A0+QGeM8Eq/
-         cuvoxPx6Rgj+7drav+4YNH6hUcoJ3itgi2nFP6n9IECVTDsrlhntZODs2ibr7+isStYY
-         v9pg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789164594; x=1789769394;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Dk8RJ/gWGUzJZL37Z13wVy/RHkm1H9VT60iwGnpNGc4=;
-        b=c66l6XlgFkZ0EWfEf9FnW+cDR4UPAN7VxVSAINUzjlMNJ+Vqot93QggtRnyQTIMsTX
-         mxSj76CnZUNk6dZ1ceJI1qgLqPh9OQMlZpS1YTeKFJ9aL1SkRK3S6kOaudxAf9mX2iRb
-         2nQgDGgeImULenD22kp64ugrAho4lemufSw8mbUBe4qfaNMFMd5yk/6bqcWDZPejd3QW
-         6XrO22Cu/HhIEFwsKMN0JnpaKJNQxhy0DdY84VrBQdnxrgNZi/NE56y9fg2ib/r8vqaB
-         CADhw3nQ9ylaHAIRFE3YgBU4cNhBA2oII3q1pKQxYTBjrI4bcyA4gw9YQxaSSnuABadx
-         IIQg==
-X-Forwarded-Encrypted: i=1; AKwUvBxsp/yTUZFrFxQv+QJ3AZrnAKHAYvg+GSkTq8SioWVwsfpbyol43GngDC+hFRu9XX7EGKxfByfr@vger.kernel.org
-X-Gm-Message-State: AFuF++kqTjAKr5OVHgdHOdS8RshMIy2BgcEKLWlYMOUjZtY/6M3JvOSr
-	pwcHXRUonu3pc332J+tq21Wmw1XYg5VwWHTyJrBCOsZHDvqB3Jlvs9L1
-X-Gm-Gg: AYBFou18Ul6/x/tm4Yo5AS/0fT5G/rn/atw6yFzlMrmuc0UwrZaFnHTt+DDYYPC/rGr
-	TL9QMaiEckQbUCb4br4iZK+DilLfi+IEOoZyVJ97AE+06PcdfcmMdLBTo+xzen/E9T92F0EHnAO
-	vooHk7cRe1RQivY+AyII1Zj0MUpZ0acZFGLwKGh4ycp14u8dOk2mkAvK+0VwtZlbDPPjSF3lhMy
-	6bT/v6B9YtDTN3tjDLBJcNGdBm0j3HyYFPRKSD3krJKC0+K+R97lfN79rEFJ2hqjc4HR9DHQ9kk
-	Aoh+uznGyEV4lgKcuxAo0/q+WoTUEw6nBy0D3H0Fxd6u5Ojp+d+KSg4wXxvUKaJ/AcZte+JJkaA
-	RqB5/qif9ZPGLWF2w5XjcrhbfFUE54SPyueGpU6Y9H9w+y1Nxym9BoAcHZPaqRVGomyG57g2OEs
-	s4VHoxrJl+z/FivmtbkN/muwq7bZ+j9jYEiDxYJ/au951/+INjbKL049kqFIgNevn2sL8BuM0Be
-	k8/1X8egh2zwF305TQAZgquvYA43fxYL1BP3eWujfbeZYsiVUuCHiV2WYAwb/KjSoBUFwX1QWxI
-	MBw2aOlniLko7LCB0b/+xNHEwaXpSqdfMcubSzP1OwLxjmk=
-X-Received: by 2002:a05:600c:3f16:b0:49d:25b0:cc60 with SMTP id 5b1f17b1804b1-49e6cc13c99mr904955e9.29.1789164593578;
-        Fri, 11 Sep 2026 15:09:53 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-095-114-033-154.95.114.pool.telefonica.de. [95.114.33.154])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e69f02c92sm33383385e9.2.2026.09.11.15.09.52
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 11 Sep 2026 15:09:53 -0700 (PDT)
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Maarten Lankhorst <dev@lankhorst.se>,
-	Maxime Ripard <mripard@kernel.org>,
-	Natalie Vock <nat@pixelcluster.dev>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Karl Mehltretter <kmehltretter@gmail.com>,
-	cgroups@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="HKAkhPLS"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Iu8FewysYP/Ep//xGcr71N/KuWpAf/0JZgUTITgcNRo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789182578; v=1; x=1789787378;
+ b=HKAkhPLShVk3N0r/3FWzzsFzOrhVyMRzoZO7EdMoAZ01GbxWFrh5oJYzn0VI8bm7f4CGhy5D
+ 6mMkx+e79pEFJEQ033DW8p8qA8kqnHymKyVV8NDlRK0pgnuUo+NKBwKLFsiEMB5zrVjPAPJxYRC
+ 7SwCqa9cIFS+gj1vUyICCQ0k=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 90df69297e1a59c2;
+	Sat, 12 Sep 2026 03:09:28 +0000
+X-Mizu-Trace-ID: 90df69297e1a59c2
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 11 Sep 2026 20:09:27 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Sandeep Dhavale <dhavale@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Tejun Heo <tj@kernel.org>, Christian Brauner <christian@brauner.io>, 
+	Meta kernel team <kernel-team@meta.com>, driver-core@lists.linux.dev, cgroups@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] cgroup/dmem: Fix eviction helper reference in dmem_cgroup_try_charge()
-Date: Sat, 12 Sep 2026 00:08:33 +0200
-Message-Id: <20260911220833.6958-1-kmehltretter@gmail.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+Subject: Re: [PATCH 4/4] kernfs: Remove kernfs_rwsem from dentry revalidation
+Message-ID: <aqTB1AVmFVs08T19@linux.dev>
+References: <20260821050507.2161607-1-shakeel.butt@linux.dev>
+ <20260821050507.2161607-5-shakeel.butt@linux.dev>
+ <CAB=BE-QMyzKT-o=gbhdp3g8JSqQgRiTFzxTX9vEBmCttABrmdw@mail.gmail.com>
+ <aqRWuffGKczUhegT@linux.dev>
+ <CAB=BE-SjW76gWr0kZcPnEjXOwt90vCV0TJeFuYEGV1Kt4Y1HWw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAB=BE-SjW76gWr0kZcPnEjXOwt90vCV0TJeFuYEGV1Kt4Y1HWw@mail.gmail.com>
 
-The kernel-doc comment of dmem_cgroup_try_charge() refers to
-dmem_cgroup_evict_valuable, which does not exist. The name is
-dmem_cgroup_state_evict_valuable. Say dmem_cgroup_state_evict_valuable.
+On Fri, Sep 11, 2026 at 02:11:53PM -0700, Sandeep Dhavale wrote:
+> > Hi Sandeep, thanks for the report. Do you have a reproducer? If yes, can you
+> > reproduce with this series?
+> >
+> Hi Shakeel,
+> No luck with the reproducer yet, and reports have been sporadic.
+> 
+> > I think first we need a real reproducer before considering anything. I would not
+> > add a check unless we have proof that it is really needed.
+> 
+> Ok, I understand. Do you have any opinion on the suspected call chain
+> which makes dentry->d_inode = NULL; ?
 
-Fixes: b168ed458dde ("kernel/cgroup: Add "dmem" memory accounting cgroup")
-Assisted-by: LLM
-Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
----
- kernel/cgroup/dmem.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I don't see how reclaim can set dentry->d_inode = NULL for a dentry with
+elevated dentry->d_lockref.count because kernfs_dop_revalidate gets the dentry
+whose dentry->d_lockref.count is elevated. Reclaim specifically skips such
+dentries.
 
-diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
-index 4683f3d6802268ddad40bd5d9e10305fc4dfddc5..13dbd083f6dedf83002ee7e7912e1f983e3594f0 100644
---- a/kernel/cgroup/dmem.c
-+++ b/kernel/cgroup/dmem.c
-@@ -706,7 +706,7 @@ EXPORT_SYMBOL_GPL(dmem_cgroup_uncharge);
-  *
-  * When this function fails with -EAGAIN and @ret_limit_pool is non-null, it
-  * will be set to the pool for which the limit is hit. This can be used for
-- * eviction as argument to dmem_cgroup_evict_valuable(). This reference must be freed
-+ * eviction as argument to dmem_cgroup_state_evict_valuable(). This reference must be freed
-  * with @dmem_cgroup_pool_state_put().
-  *
-  * Return: 0 on success, -EAGAIN on hitting a limit, or a negative errno on failure.
