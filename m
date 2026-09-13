@@ -1,325 +1,157 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf2-f12.google.com (mail-lf2-f12.google.com [74.125.229.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B442323643F;
-	Sun, 13 Sep 2026 13:31:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789306272; cv=none; b=HrScdIgwF4foVC8YvuXVHFJKi/xHPmG2xaSxnIAODlcRP5N7Mf3VZANYiiJQ0xytf1mqB9CIw9C3+lwAB3ZQcT19jJiRkjdcrNp15fv4/p3jJ+aN97fbmo/YDj95I57SWD1D0CwkU1hOFIr7hy22QKbK4MFE+A5s+bwC3ORYcp0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789306272; c=relaxed/simple;
-	bh=J9hiblMOx3XvVdaM9J2BbPYlG8NGFT52bvA4fXddIg4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Yld4bCohB47ly/cU08aUT29Tx1teds9M8rYAjU6HvuqmqrVJ4fgllTMZsqz5v0xFPkley0JmPd9LE9uQ7WRQcCvVUXv6nX9njLaoVAQiqFy+T/5gtGyED6PTY2r3GpODqkPjyAZWi+m5rruJSWjd8Hmz9I/onOl7lLdj/v9fqTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=kkCdYWnG; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D1F53EC81D
+	for <cgroups@vger.kernel.org>; Sun, 13 Sep 2026 14:43:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.229.204
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789310601; cv=pass; b=l8E4tmw1q0WXgsrFpmGEeonYnhKgAMX+l+Moq04GvKUtGQRkt+d2QMTw4M3KjDC6/e6qHvhiekXSOop+/st2KF/q+vHfOn04QzZLscWotxecVqUg+xTRcY9NV0b+aJsqlModcelzu8ZhhSSOvhkXdbTskFAXxX9JTWrEipTClUI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789310601; c=relaxed/simple;
+	bh=s50I1f+RlATnyS7ncxttVC4STee39n4jtfw1TIV5Yo8=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=ps19FSCw82rm3VcUjJLv1dS4mAFoxvdv+VE0gNNKdsagCvHYqSf/noYAFfjPntEXFaWQXZAFJ0Yra9uI9snibFZGVYf4yZgc24l4VxVeQzmw8Wg6EBtOq3vy0wLVb+I9VXkWTRTXUEwhrSI+O69qmRQmjhI/LDi7G74zcwb42e8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ifO2WhRh; arc=pass smtp.client-ip=74.125.229.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="kkCdYWnG"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68DAVQkF1255664;
-	Sun, 13 Sep 2026 13:29:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=+V/HIm
-	HSDz8kfFeEdbya+rI2+T3XQl9CUl1CtP6MnQY=; b=kkCdYWnGsL4dS89b7MgWSi
-	8GJVjDvIQ9h+M7k9j8tNkW942RE2zvWfRXzQr0qjMV4dHnmHq99pw1YTz+UTXy9/
-	/S2UyPagSL+3Nq+IIu97ne4NbyZ+AqdmWBXCba6AGvFf2ejDRurwYcHXw8QeTIyj
-	EyRPmRrcXkc6VeiZi55r7/FCsKGoutX6JFwfOme2x/bVj5SFDoAQSDC1qKdcXczB
-	FvcLTPegwmnY5jKb1mHlYiiwwO05cS1/iUHz1TjmycNOCk0ATqbKujf4ylqluy5c
-	liEEExomDNrLDNESynCU303UKrXLt/cSpMWD8aQW8BOy49f/6vTzDaCITCiAvP2Q
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gmxdpvp3k-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Sun, 13 Sep 2026 13:29:42 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68DAZ4oB544502;
-	Sun, 13 Sep 2026 13:29:41 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gnh2psqu1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 13 Sep 2026 13:29:41 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68DDTf2U23134818
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 13 Sep 2026 13:29:41 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 445F958055;
-	Sun, 13 Sep 2026 13:29:41 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2A64B58043;
-	Sun, 13 Sep 2026 13:29:27 +0000 (GMT)
-Received: from [9.61.162.129] (unknown [9.61.162.129])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Sun, 13 Sep 2026 13:29:26 +0000 (GMT)
-Message-ID: <f27ee89f-5a52-4cfc-a14a-e5019ae61d89@linux.ibm.com>
-Date: Sun, 13 Sep 2026 18:59:25 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ifO2WhRh"
+Received: by mail-lf2-f12.google.com with SMTP id 2adb3069b0e04-5b5e4f1651cso842981e87.0
+        for <cgroups@vger.kernel.org>; Sun, 13 Sep 2026 07:43:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789310597; cv=none;
+        d=google.com; s=arc-20260327;
+        b=f+tKAlV5chTxILQNp1dhi34kjbvUDu2CkI+CZ8g64vh5YNbJiOJgIO/WFwplsUv4CM
+         VI4QbYzMPEo8b6B6SkyMD87aNhKKIN5W6nfjan/XuGGx1pqGWOwyUQ+ut4QM0LD7E7QR
+         dfT7DN8ZvoDIpAOjg2y8KJdG1x9myLJRPq7DjaP8RZyixd4PxggGG/zOdfxI+T3rRARM
+         yzbXYaWdG3+KwH3kXR23K5lVl9dJjsQif2XpJ8b9Cwy6UB1ir32S6kHy8fuvwJtsArgl
+         ycsgNE24UdBUrR1jAL0XQ4hZaXtk+F/4VQXa/62YBx3NIa9cvlFZQGmODhOKkEWzFW4b
+         Hv4Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=gDlSeCeZClgynUnsugyjmVlBCsPDuPwIPykfDcGyfzM=;
+        fh=Z2virYgVcpE/0B/+UrLq8YfXXBl72G6pZWSJPdOpnAE=;
+        b=A/L1VWwndtvqy9s2fYLwNkNJYuE+otZSnkzaTKK/WZmKthOo8JkcG5I3JhgICz14Yr
+         i2n+zqJV8IgLqCcOTNbGyZzCZT0q6k8QR3K69HsDcAWujK5cpidA7mIvHd3cKtPN2Ewj
+         5DShPreV7KiYObleHUIP5wyeLo4mhz7ZDHJ1GkQWCLFxCBZf1xfe8nISP7+FfeRK3xCD
+         CMcEyzXpUCdNi7/ZChJguMI372esxl9ubeZ1STGyx4tsMjY53bpgK8oUgD1A3UKRY+6U
+         jztUBeDzc4HHMp7/L1v5+O+U28lBs9fgIB4fcyIO5T4lVFDjJlQiSif44ikJUsSrHxJt
+         CPCQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789310597; x=1789915397; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=gDlSeCeZClgynUnsugyjmVlBCsPDuPwIPykfDcGyfzM=;
+        b=ifO2WhRhrXtDIb73mPmQdy4A6RBD1E89fcx/jvL0anBmS9lzobQGuGU3yN7qqxVhlz
+         4BfYnvUCMnwvUzhnBxY2K5l0eyPu+nt/1/AKJ2vBSP3V7QykXJCSt+SDZ5Mhnp20CkgY
+         MkEZAJVXlvyL2n6k8/aHehRmw36bT2IZDUeYGIyeb9Rc/8k8JMPtX5VNqsuOr3DqNW1U
+         4DZvdtzxgtO8WLDgj9aGPQcWduY7nd1Nw3087KVNT9hdaszy7xouOeX0qNaNthpW7Kly
+         mHQ27wZt3FeTifvO3vFqF2hy0w2pLbNZi202kY3+ZQbyRbSTn5fdnzO+I2px2/TqvPf/
+         ZCYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789310597; x=1789915397;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=gDlSeCeZClgynUnsugyjmVlBCsPDuPwIPykfDcGyfzM=;
+        b=WD0Th3t1IU1KApynNdfT48QW915c0tmsxCpPO60PXrtKtHm7grJk6+x3f6sZhZt9dd
+         c6MENsX+EDdNS2uTFnAjojcCIDoNsYezSKn9zVBgTLWXyTNF/Duqf48yY6LMTLObm04A
+         V5FlKiWNIOyc54b/dg8uQGYL4H2vw3mzQqQtCdiI1Mo2rLDaejXajCv3ItyAR6m6KJqW
+         n7ShKG2yUQbfYktkqHQq4ZEpe6qZNkf+p3SrqmMlIFaQ+km0O4OolELkLMQHgLWyK3+S
+         tuhNogPV52rCEG6b8bUOxLb+UFB/JXU1MRuQVxIqFHqoi5+Gxk7Wd1GG5we7cGQvHCQF
+         4RoQ==
+X-Forwarded-Encrypted: i=1; AKwUvByWLVIFjk4QJfFIVBmCixrM9lej5vVWlvYT9UMELVoSVy1BbtCau3nxww01B5eDLyYF541z3Y1y@vger.kernel.org
+X-Gm-Message-State: AFuF++n7Ghhcv7A4SAc5cHV5lfOuiDPIjLSMcDR8rnfCRQ3okkvFMK6G
+	xN2TFihtKLUDO022p687ymxj7b2Za6zJH56httkOu9xbUeGCFOT0Bvh9jnwUeHibeGDUv1bPeW0
+	5a7fqExzMHSEEvvDDAs8dpWvN3k5fv44=
+X-Gm-Gg: AYBFou0hNLdxAjXYVgknvBFg5ujSPlPxuOc6hasweL4W2O+7baV4iVLmJbKWB91JbZ5
+	Xd4jRHqLrGgrM7kI6q5JbQjJBnTRCXWEtgRKkM+V0VujYU78MP4x7B8eFLicVUgqLOG7unJU26G
+	Mk3aS9NhebjKCDglCcWhsI2YLIZmBFN8SoyKtWkBgggjdyNli5mUfsFI9C7zQUGNbdidD8pR1jE
+	hXPJcrdss3YQf8uqj3Sgacks7Mjnhz8qjvEeMzGnyAlvG79g+B4FqiLjy5Cce9QYuF8GvgBXyoZ
+	fJSlwyE95IwXaH+W7jJAhyZjw7Ev+tFavVlXjUCc0xGNGMH+9RvOntixeMWYcIpXIvKJP9GH7VE
+	fbsTOFZjxURzLeuo=
+X-Received: by 2002:a05:6512:108c:b0:5b7:6682:17b8 with SMTP id
+ 2adb3069b0e04-5b8a8ef6a7fmr1282624e87.37.1789310596997; Sun, 13 Sep 2026
+ 07:43:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] blk-cgroup: move async bio punt state to blkcg
-To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Josef Bacik <josef@toxicpanda.com>, Tejun Heo <tj@kernel.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Randy Dunlap
- <rdunlap@infradead.org>, Coly Li <colyli@fygo.io>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Alasdair Kergon
- <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
-        Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
-        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
-        Youngjun Park <youngjun.park@lge.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Bill Wendling
- <morbo@google.com>,
-        Justin Stitt <justinstitt@google.com>
-Cc: Yu Kuai <yukuai@fygo.io>, Christoph Hellwig <hch@lst.de>,
-        Tao Cui <cuitao@kylinos.cn>, linux-block@vger.kernel.org,
-        cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-        gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, llvm@lists.linux.dev
-References: <cover.1789237876.git.yukuai@fygo.io>
- <326e4904402440323532168095f2eb0c6f697836.1789237877.git.yukuai@fygo.io>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <326e4904402440323532168095f2eb0c6f697836.1789237877.git.yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTEzMDE4NiBTYWx0ZWRfXwV/0FqNA71UW
- 0pSFlqnYwSqWUYI6LgVLyKbNtIbqAXpKwLtlpplrS30cUDQsW2lRrlESKbbUK1oSAm5xS8Ylm55
- VNl+w9i9HLWFGn8vh9aZHnh6SAqmPz13WVaI6pKqA55iJdy5LNt9R1Wi94ijn02bhHTHKAe0eRP
- mp1vNvMZ7l2UiHUt58ZXQBMVs6hQdaaQ3nChJkoptBrQFIPGEirAwojONs4lZ6aHCKdNxRtzvJA
- VEaSWJbv7lVRD5sIfTWnm9jjRqkJZ32e7oiPfEo9MnPFWhdGetfmkOqDaQekF77ovy5LJRxmJm4
- GHgK/ALXAeVLOEPIBjf+qhG5iy+5XWRhZiTObq8UQ+HqyRjSELagks36ThrVEyBiln9x1oyRA3K
- 6RWEEkijXp9Vg20WYSpU+aj5P1ynIjIW9tHl7ChXZlM42/wLY0H0BiuqAYnMqScT+rA1lzv4TAc
- lKGFPo2jxo7pOUNxhDA==
-X-Proofpoint-GUID: jqEO1yjE93QiEpR2tJ-y2Cj8IdEumaS9
-X-Authority-Analysis: v=2.4 cv=DobDa2/+ c=1 sm=1 tr=0 ts=6aa6a547 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=DV5896PDfqYWo4ufmHUA:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: vL8PPh6d47DxNDz6NH1gi_sDy5Mchg5w
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTEzMDE4NiBTYWx0ZWRfX+u9bu0oOeNVm
- 0mm11mtP4XmiNfvfkDWefm6R0Hke5V/MZntTFgts27Fvw05oL4zedqtiD/PrbwZHmnddXxuaxEY
- eyOP6ZBuPFe31aD3IKoBDNy2zMXtA+0=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-13_04,2026-09-11_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 malwarescore=0 priorityscore=1501 suspectscore=0 impostorscore=0
- spamscore=0 clxscore=1015 adultscore=0 bulkscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609130186
+From: Chengfeng Lin <lin2530632123@gmail.com>
+Date: Sun, 13 Sep 2026 22:43:04 +0800
+X-Gm-Features: AcwNN1X5pmsda_UiZ5ntCUgJCNHKWL9vQ4K7aO1nbiEQVANFLK5Pbt5CxzkS2Uk
+Message-ID: <CANGjgdn=H50AaA-+O_GA-hkE9UwLANmkjx1zRsKUzxF5za8VfQ@mail.gmail.com>
+Subject: [REGRESSION] kernfs: empty cgroup rmdir latency after
+ delete-notification changes
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, 
+	driver-core@lists.linux.dev, cgroups@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	regressions@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/13/26 12:24 PM, Yu Kuai wrote:
-> From: Yu Kuai <yukuai@fygo.io>
-> 
-> blkcg_punt_bio_submit() currently queues punted bios on blkg->async_bios,
-> so it has to call bio_blkg() to find or create a queue-local blkg.  Bios
-> now carry and pin the blkcg css, so punted bio lifetime no longer needs to
-> be anchored by a blkg.
-> 
-> Keeping the punt state in blkg can instantiate a blkg even when no blkcg
-> policy is enabled, just to bounce submission from a shared kthread.  Move
-> async_bio_lock, async_bios and async_bio_work to struct blkcg, and queue
-> punted bios on bio_blkcg() for non-root cgroups.  Root or unassociated bios
-> are submitted directly.
-> 
-> This preserves the priority-inversion avoidance while preventing
-> blkcg_punt_bio_submit() from creating blkgs that are not needed by any
-> policy.
-> 
-> Signed-off-by: Yu Kuai <yukuai@fygo.io>
-> ---
->   block/blk-cgroup.c | 52 ++++++++++++++++++++++++++--------------------
->   block/blk-cgroup.h | 14 ++++++-------
->   2 files changed, 35 insertions(+), 31 deletions(-)
-> 
-> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index 59ccfefe16a8..aa3cee107ebe 100644
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -180,14 +180,10 @@ static void blkg_free(struct blkcg_gq *blkg)
->   
->   static void __blkg_release(struct rcu_head *rcu)
->   {
->   	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
->   
-> -#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-> -	WARN_ON(!bio_list_empty(&blkg->async_bios));
-> -#endif
-> -
->   	blkg_free(blkg);
->   }
->   
->   /*
->    * A group is RCU protected, but having an rcu lock does not mean that one
-> @@ -226,23 +222,23 @@ static void blkg_release(struct percpu_ref *ref)
->   }
->   
->   #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
->   static struct workqueue_struct *blkcg_punt_bio_wq;
->   
-> -static void blkg_async_bio_workfn(struct work_struct *work)
-> +static void blkcg_async_bio_workfn(struct work_struct *work)
->   {
-> -	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
-> -					     async_bio_work);
-> +	struct blkcg *blkcg = container_of(work, struct blkcg, async_bio_work);
->   	struct bio_list bios = BIO_EMPTY_LIST;
->   	struct bio *bio;
->   	struct blk_plug plug;
->   	bool need_plug = false;
->   
-> -	/* as long as there are pending bios, @blkg can't go away */
-> -	spin_lock(&blkg->async_bio_lock);
-> -	bio_list_merge_init(&bios, &blkg->async_bios);
-> -	spin_unlock(&blkg->async_bio_lock);
-> +	/* as long as there are pending bios, @blkcg can't go away */
-> +	{
-> +		guard(spinlock)(&blkcg->async_bio_lock);
-> +		bio_list_merge_init(&bios, &blkcg->async_bios);
-> +	}
->
-Instead of using guard(spinlock)(...) here, I think we could use the
-simpler spin_lock()/spin_unlock() helpers. IMO, they are easier
-to read and reason about for these short critical sections.
+Hi T.J.,
 
->   	/* start plug only when bio_list contains at least 2 bios */
->   	if (bios.head && bios.head->bi_next) {
->   		need_plug = true;
->   		blk_start_plug(&plug);
-> @@ -259,19 +255,20 @@ static void blkg_async_bio_workfn(struct work_struct *work)
->    * cgroup.  Use this helper instead of submit_bio to punt the actual issuing to
->    * a dedicated per-blkcg work item to avoid such priority inversions.
->    */
->   void blkcg_punt_bio_submit(struct bio *bio)
->   {
-> -	struct blkcg_gq *blkg = bio_blkg(bio);
-> +	struct blkcg *blkcg = bio_blkcg(bio);
->   
-> -	if (blkg && blkg->parent) {
-> -		spin_lock(&blkg->async_bio_lock);
-> -		bio_list_add(&blkg->async_bios, bio);
-> -		spin_unlock(&blkg->async_bio_lock);
-> -		queue_work(blkcg_punt_bio_wq, &blkg->async_bio_work);
-> +	if (blkcg && cgroup_parent(blkcg->css.cgroup)) {
-> +		{
-> +			guard(spinlock)(&blkcg->async_bio_lock);
-> +			bio_list_add(&blkcg->async_bios, bio);
-> +		}
-> +		queue_work(blkcg_punt_bio_wq, &blkcg->async_bio_work);
+I found an increase in empty cgroup removal latency across 507d8ce13f5b
+("kernfs: Don't set_nlink for directories being removed") and eea5d2bb34ba
+("kernfs: Send IN_DELETE_SELF and IN_IGNORED"). With sched_ext disabled,
+rmdir() went from about 6.5 us to 9.6 us, an increase of 46-47%.
+The result held in two independent runs.
 
-Again same here, replace guard() with spin_lock() and spin_unlock()
-helpers.
+The workload creates an empty cgroup v2 leaf under a private parent with
+the CPU controller enabled, checks it with stat(), and removes it. It
+places no tasks in the leaf and does not register any inotify watches.
+I time mkdir() and rmdir() separately; stat() is outside both timed regions.
 
->   	} else {
-> -		/* Never bounce if there is no non-root blkg to queue on. */
-> +		/* Never bounce if there is no non-root blkcg to queue on. */
->   		submit_bio(bio);
->   	}
->   }
->   EXPORT_SYMBOL_GPL(blkcg_punt_bio_submit);
->   
-> @@ -350,15 +347,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
->   	blkg->q = disk->queue;
->   	INIT_LIST_HEAD(&blkg->q_node);
->   	blkg->blkcg = blkcg;
->   	blkg->blkcg_id = blkcg->css.id;
->   	blkg->iostat.blkg = blkg;
-> -#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-> -	spin_lock_init(&blkg->async_bio_lock);
-> -	bio_list_init(&blkg->async_bios);
-> -	INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
-> -#endif
->   
->   	u64_stats_init(&blkg->iostat.sync);
->   	for_each_possible_cpu(cpu) {
->   		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
->   		per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
-> @@ -1399,10 +1391,16 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
->   		if (blkcg->cpd[i])
->   			blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
->   
->   	mutex_unlock(&blkcg_pol_mutex);
->   
-> +#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-> +	{
-> +		guard(spinlock)(&blkcg->async_bio_lock);
-> +		WARN_ON(!bio_list_empty(&blkcg->async_bios));
-> +	}
-> +#endif
+These are consecutive source states, not different release kernels:
 
-This is a slightly different case. At this point blkcg_css_free() is
-freeing the blkcg object after its final reference has gone away, so
-there should be no concurrent context accessing blkcg->async_bios.
-Therefore, I don't think we need to acquire async_bio_lock here just
-to perform the WARN_ON() check.
-The clang context annotation cannot infer this object-lifetime property
-and will therefore report an unprotected access. I think we should
-explicitly mark this access as context-unsafe.
+  base:   f917dc56060a, before both changes
+  guard:  507d8ce13f5b, the nlink race protection
+  notify: eea5d2bb34ba, plus the deletion notifications
 
-But wait, even better, we could introduce a bio_list_empty_careful() helper,
-similar to list_empty_careful(), for this purpose:
+For the second run with sched_ext disabled, the medians of the nine
+sample means per boot were:
 
-static inline bool bio_list_empty_careful(const struct bio_list *bl)
-	__context_unsafe(/* intentional lockless access to @bl->head */)
-{
-	return bl->head == NULL;
-}
+                         boot A       boot B
+  base                    6.504        6.528 us/rmdir
+  guard                   6.956        6.922 us/rmdir
+  notify                  9.553        9.558 us/rmdir
 
-Then this could simply become:
+The first change added 6.05-6.95%; the second added a further 37.33-38.08%.
+Each run used fresh boots in base-A/guard-A/notify-A/notify-B/guard-B/base-B
+order. Each point had nine samples of 128 removals, after 16 warmups.
+I used an i7-12700KF, CPU0, full preemption, the performance governor and
+Turbo disabled. These three kernels used the same toolchain and configuration,
+apart from LOCALVERSION. I used the same control binary throughout.
+Removal sample CV stayed below 3%, and endpoint drift stayed below 2%.
+The result also held after dropping the first sample.
+A similar slowdown was also observed with sched_ext enabled, both with
+and without cgroup callbacks.
 
-WARN_ON(!bio_list_empty_careful(&blkcg->async_bios));
+Separate, untimed traces showed 26 kernfs nodes removed per leaf. The
+guard change doubled the attribute write-lock entries from 26 to 52.
+The notify change added 26 inode lookups. A return-value probe found one
+directory inode and 25 NULL results. These counts do not show how much
+time each step costs, or that a lookup returning NULL can safely be skipped.
 
->   	free_percpu(blkcg->lhead);
->   	kfree(blkcg);
->   }
->   
->   static struct cgroup_subsys_state *
-> @@ -1447,10 +1445,18 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
->   	}
->   
->   	spin_lock_init(&blkcg->lock);
->   	refcount_set(&blkcg->online_pin, 1);
->   	INIT_HLIST_HEAD(&blkcg->blkg_list);
-> +#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-> +	spin_lock_init(&blkcg->async_bio_lock);
-> +	{
-> +		guard(spinlock)(&blkcg->async_bio_lock);
-> +		bio_list_init(&blkcg->async_bios);
-> +	}
-> +	INIT_WORK(&blkcg->async_bio_work, blkcg_async_bio_workfn);
-> +#endif
+I understand that the notifications and race protection are needed.
+A local root-reuse prototype saved about 4-5%, but did not recover most
+of the increase; it is not a complete fix.
 
-This is interesting. As you know, while an object is being allocated
-and before it is published, it can't be accessed concurrently. So
-guarding blkcg->async_bios with blkcg->async_bio_lock is not necessary
-here. Moreover, since blkcg is zero-initialized, we could simply remove
-both the guard(...) and the bio_list_init() call above.
+A separate v7.2-A / 2f0c1cf72f46 (7.3-rc2) / v7.2-B check gave
+9.919 / 9.719 / 9.953 us/rmdir with the same control binary. Mainline was
+2.02-2.36% faster, with sample CV below 0.75% and old-end drift of 0.35%.
+Both versions still removed 26 nodes and made 26 inode lookups per leaf.
+The later name-hash change was on the measured path, but this comparison
+does not isolate its effect or repeat the exact-commit test above.
+
+Results, configuration identities and the tested workload:
+https://github.com/lcf0399/linux-regression-evidence/tree/b1eef2a0fb18babbf8e0d5832b63a655bfd28926/kernfs-empty-cgroup-removal
+
+Do you see a safe way to reduce this per-node removal work while keeping
+the notification and race fixes?
 
 Thanks,
---Nilay
-
+Chengfeng
