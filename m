@@ -1,164 +1,199 @@
-Received: from mta0.migadu.com (out-73.mta0.migadu.com [91.218.175.73])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A399647ECC2
-	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 15:00:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.73
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789398047; cv=none; b=PEpeiG6pPRuSsSp6d6tSHXktved4DA83IvJJVCk8EVq8X5Wux9Z5vtK3Ml0w11ANpJq3vCd6G9s3cznIc/xuJbwiUhCJlnQvJeJ6rtq6Om973376nE60BT3bAmHrBldN2zfAWhgdCxqTswacFIhqxNRSiXyuxuIfkOeUQ9De1CQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789398047; c=relaxed/simple;
-	bh=hwtaTLMA1sYqRp29cSIfiy68ZXQatt6fyt/Ot6ycecQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VxPLSbTzssrabyJa7wja/FwlUU0Zx9jLqTONIEaVr3m0QD9jtPLcXVqnWGuaOrcYiIFWGwSk72mdRVoH3HDu5xa7XZpWmrHeteQRSzlqr3WPIIeQxdOvJ2T9nqXP2ty1Ut4O5v/VRgnrUQ5it+v5JtBQXtEFthYWFo+P5JhpIw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lMeKd2OP; arc=none smtp.client-ip=91.218.175.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2004647012D
+	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 16:10:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.140
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789402254; cv=pass; b=pvhY7r3Zygj6sPZuqxoHeLyEb6t3v7hoApGnjNqEEiv1isI7XHcrg35bBStYdDmYc/MEM8rEZlH/YRAlsgDyLyCD6d3wIyUZ19d++x95PdKYuMMcPM5H6XdT604SiumszrcrPfkiNUJUoIJAej6S1XrPlob9cRyfkBZIuQWi5bc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789402254; c=relaxed/simple;
+	bh=ynN4ATH+92kqx24zHVCCIK4upKdL2BGsB5dzD19o/CU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=EjFiQ41IG4RXYKgUAms/4CJxYseq4kxlBZOXu8nAy6PYbzctorn+jw6z4QTFOnUq1+iUXvlxPKUtQr/VFZnJgwDVXBAbAdNsEuMbnnTzeDeWvZrem54bDaYclODwJ7qAdTsR2QxoKF9vFZ/vad5f9Rc2NWAK6+dzTS9wGjffVwA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rOXtvHwv; arc=pass smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lMeKd2OP"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=hwtaTLMA1sYqRp29cSIfiy68ZXQatt6fyt/Ot6ycecQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789398042; v=1; x=1790002842;
- b=lMeKd2OPeWI5xdKjNJhCkAzknfMSH3RcFG8v98Xjq6Jbnhz7ZldVTq96SOQRXtR08hV7RCoH
- cPRdDhiiI27IBrsHJWsgKDzE9eTSoIy4NkKO9nxRG8GALCPQjSg3Fj9QUJow8DlmfbXfncTvmeq
- 7Rqo7LO/JVX98DBt9SGf8Adc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 24f60d578e23c651;
-	Mon, 14 Sep 2026 15:00:27 +0000
-X-Mizu-Trace-ID: 24f60d578e23c651
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 14 Sep 2026 23:00:24 +0800
-From: Baoquan He <baoquan.he@linux.dev>
-To: Kairui Song <ryncsn@gmail.com>,
-	"David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Nhat Pham <nphamcs@gmail.com>, Chris Li <chrisl@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Yosry Ahmed <yosry@kernel.org>, Muchun Song <muchun.song@linux.dev>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Barry Song <baohua@kernel.org>,
-	YoungJun Park <youngjun.park@lge.com>,
-	Chengming Zhou <chengming.zhou@linux.dev>,
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-	Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>,
-	Wenchao Hao <haowenchao22@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Tejun Heo <tj@kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Kunwu Chan <kunwu.chan@linux.dev>,
-	Meta kernel team <kernel-team@meta.com>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-doc@vger.kernel.org,
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-Message-ID: <aqgMCIOFi0dKx_6L@fedora>
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
- <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
- <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org>
- <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
- <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rOXtvHwv"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e6598dd44so8336635e9.1
+        for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 09:10:51 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789402250; cv=none;
+        d=google.com; s=arc-20260327;
+        b=iwrzUZFGEzPE6+1f06HSTvcSmLytY+JW96GNAA5MkpUBcoDch+gJaU3Apf7iqgPLJ9
+         b/y+HyVFnHTsvQXIWPJMVPxd1UimDCqa32ejvCCmLFh864ThFrR1pp3INh5WEW62+jTa
+         a0DnFfy9hIMl1rrLVZlsOgJauTVoq591/gEHqxRE0k/e+6OUsU+lP7S4FrMkUQreqzuk
+         TVZ/iRxpeYGu3NWJ4NoOZBcblFybJu1IrwrlVIHNX7TnC22qEhliZjctLvUOads2XVby
+         xulX8ppUB/fS9GvnGSloMeBLjY95N5ZnULaHPPiRJylpD1HT7ZTGXtmcQLsA537Iy7Ik
+         LEaQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=JVDJIFTFgLvCCjRsRRk9CSdls4G/cg4o7is/ZxTdK6I=;
+        fh=adqOmFDlJd8Q81EcPZGKbAZNocXO+tmh5eZ/l1XzxQA=;
+        b=beSrVkFblEHDvgWU8vK59pVWrC4GiihivxF/KZE5vI/yTNHdwMc/krS9OX+DJ8DYnB
+         XZ3w76eBs7xkJQ5gXqH5k8A8VUi5GI6nJ7pfD56MD7CBWD+Hfw4RrcujPInBWGyUT+OX
+         nprKeg7sxNQpRsLtX1yL6tRjc4KHp8uFqubsrQ05ZlPLc/ttPSDyztmtIlxhFJRFrCoI
+         I4C2t6QgTCSVu3Wiz6OG/hOJ3p5vy4XJlulZdFlW+eJ7M8optbe6+oFw2JcvvHxgk/5/
+         Al6zPQpezq/CrzkLYJ8K9nPFwVujNzGACmYF/n+nDtT/BURVFq11hEV04rdN9TtTmRQj
+         6/pg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789402250; x=1790007050; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=JVDJIFTFgLvCCjRsRRk9CSdls4G/cg4o7is/ZxTdK6I=;
+        b=rOXtvHwv40Jr+RFB237IqvvDrxZHHbFimOteqcQo+b2v89LwUpQvaDnYTFsVrnkLCo
+         H/4lXn3jXep5qC1ZrVZH948Gsp7QtJAmlYGD3Wpw0LWZTJtCIdzVBJxcLJeJUH4EYs7i
+         CDEb80RK9Gicgk6gfftIY5d8DU4HfUD85MwFbwCgn6dv6PSXScjGF8h1eeaqk5KD5dBK
+         ZjTJhYToaTNXfFlA8JYaaT4zJamNwN7eX1v2qkApywwSJ6IWQU3YU3VVj9MlaIuoYur5
+         JosWP0GxPxTSq8F1iTRHKGCEv//0Svr1+xYmRxrcxS5eR08gT3l20Rp9IcPASomD97nY
+         N0vw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789402250; x=1790007050;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=JVDJIFTFgLvCCjRsRRk9CSdls4G/cg4o7is/ZxTdK6I=;
+        b=njjzBwvKWygn7vm1skKwLWg4Kiwq+HLnSCPX6MrVT/jsgaA4yHM6CirAnz4paOPXq7
+         5PWC+iL3tn3FZWQwG1zsxN87ZQZ2aiB934iQ8AGqpInjhIpcMVS/9ZCZoG7PtjryQQ8q
+         1k/BwuTPUlsdaO0EzkmE5GSmLrnWnEHECKfB3W6YGLtMgOGnW71tH1JFvtxM0UvSfQiR
+         g6sQtHskBeMf5Q8KjO0MUDRrEIpmza9wiBcqqpYfPevogtSaGHfrQpMapj7ZlC1sr1b/
+         SDRpmPxBrXB2NMqCCoNMSCguuPPi/Qp7lIeQbxzT+e4Pw95eNKCDl+IMeh8DdcSGhEy9
+         Gf3w==
+X-Forwarded-Encrypted: i=1; AKwUvBxcp0MQUdHBcXvSIXCviSA8Fh8ceOE7FvnReoU2nIrbUsNm1IQ9zlX7wegoqVaUBjlqa0g5kHE5@vger.kernel.org
+X-Gm-Message-State: AFuF++l2PY6PCESVh1JH/PTj7ECXXXIErv/PD/7ACPKfzVl9mn1lZC7n
+	SZDP4mIw1OeZ7d8Rd1gMacIBVVMuHN9cz4rZD1/Qr87BMwq7vP6IX8hzGbqBQJY8r+cw4hIB89E
+	kBVbNK5TfibAbqr6BCmZhkXfkBiCiY64=
+X-Gm-Gg: AYBFou3w+QxhlQal+Nw6OqcKZ8gcgmX8jtlbCDzVTl0bRzXWc5eiKVlFX03vCGNOKUD
+	MdrYnov+aesRjbuZ/8fJXJ+Kpwx9V1BNicXiqzzZVGAPf7NMfJTVlXifrIG2AR+wvC5nNhGPo7q
+	Tc+V9gBgB+2BFYHcRsp+VUftx/IOsiW3ApTgiJxNTNrH/fxoiFRnDsw/Y4SM/ppXnRfzFPgmlHG
+	WrCvzHC9bXG9JUjZD4IBavzZwohQcgKdjcm6fgXuEoo02qbr/q4TU3B9A04ASbBvKYr7ROYJNts
+	HK77XyGbpVcn2d9Xr9p3+Jk4rlHkgbUZtYsCNmBwdNdjN4oI8h9VYC2rIZo1aNuQg/Haq/rOaCy
+	NvWL9jx9I1zFlK3zERxFBlA==
+X-Received: by 2002:a05:600c:37cd:b0:49c:fa20:cc08 with SMTP id
+ 5b1f17b1804b1-49e7a67cdcfmr47809235e9.31.1789402250147; Mon, 14 Sep 2026
+ 09:10:50 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com>
+ <aqBT_35E-eSoN_zj@cmpxchg.org> <CAKEwX=N4aaq_oD2agTUNrUNXhaYGeQ9vxu+dywFvEFgWFi4uQg@mail.gmail.com>
+ <CAMgjq7AfNBUpMamcv29JFzpX=7ApNYVLtPjWT4Sm8cXjSLYL9g@mail.gmail.com>
+In-Reply-To: <CAMgjq7AfNBUpMamcv29JFzpX=7ApNYVLtPjWT4Sm8cXjSLYL9g@mail.gmail.com>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Mon, 14 Sep 2026 09:10:38 -0700
+X-Gm-Features: AcwNN1UhGBQM2G8axnieeGvN4-f-Y8NhL0mjIZlCfhdtBbLfiYUWAueMcYwHRoQ
+Message-ID: <CAKEwX=NZo8DNg70uhhd6CM0BfHH1RAkfuSQwVeTg+77a5-r5DA@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Kairui Song <ryncsn@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
+	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 09/12/26 at 12:20am, Kairui Song wrote:
-> On Fri, Sep 11, 2026 at 12:23 AM Nhat Pham <nphamcs@gmail.com> wrote:
+On Sat, Sep 12, 2026 at 2:01=E2=80=AFAM Kairui Song <ryncsn@gmail.com> wrot=
+e:
+>
+> On Thu, Sep 10, 2026 at 12:42=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wr=
+ote:
 > >
-> > On Thu, Sep 10, 2026 at 3:57 AM David Hildenbrand (Arm)
-> > <david@kernel.org> wrote:
+> > On Tue, Sep 8, 2026 at 11:30=E2=80=AFAM Johannes Weiner <hannes@cmpxchg=
+.org> wrote:
 > > >
-> > > On 9/8/26 18:45, Nhat Pham wrote:
-> > > > On Mon, Sep 7, 2026 at 4:30 AM David Hildenbrand (Arm) <david@kernel.org> wrote:
-> > > >>
-> > > >> On 9/4/26 23:14, Nhat Pham wrote:
-> > > >>
-> > > >> Hi,
-> > > >>
-> > > >>> To Kairui, Johannes, Yosry, Chris, David, Andrew, and other (z)swap folks -
-> > > >>> I need some help here.
-> > > >>
-> > > >> I'll mostly ignore swap-related stuff because (a) -EBUSY and (b) we have quite
-> > > >> some swap experts around :)
-> > > >>
-> > > >> Reading below, I do wonder if the swap subsystem needs some more coordination
-> > > >> and collaboration?
-> > > >>
-> > > >> For example, maybe having bi-weekly/monthly meetings to get everybody aligned
-> > > >> and uptodate could be something reasonable?
-> > > >>
-> > > >> This approach has proven fairly helpful in areas where (1) multiple companies
-> > > >> are involved (2) many concurrent development is happening, and (3) people have
-> > > >> different priorities and requirements.
-> > > >>
-> > > >> Is there already something like that to organize development? Should we get
-> > > >> started with that?
-> > > >
-> > > > Hi David!
+> > > On Mon, Sep 07, 2026 at 01:51:31PM +0800, Kairui Song wrote:
+> > > > Where I've ended up is that unbounded growth is a real concern. On =
+a
+> > > > host with no memcg limit (root cgroup, and most desktop and embedde=
+d
+> > > > setups), an unlimited pool means usage can keep growing, with no
+> > > > admin visible ceiling at all. I'm not attached to xswap's percent o=
+f RAM
+> > > > knob specifically, but I do think some kind of bound makes sense.
 > > >
-> > > Hi!
+> > > Swap space is just process virtual address space, no?
 > > >
-> > > >
-> > > > Thank you for your suggestions :) More collaboration and communication
-> > > > is definitely needed here. Conference is a good place for this, but
-> > > > it's not something we can do very frequently, and many folks could not
-> > > > attend (visa issues, etc.).
-> > >
-> > > Right, and conferences usually don't have the capacity to squeeze too many
-> > > swap-related topics in, so it would have to be side discussions or BOFs.
-> > >
-> > > >
-> > > > A bi-weekly/monthly series of meetings sound very appealing. Swap
-> > > > contributors are very spread out (China, NorAm, Europe, etc.), so
-> > > > coordination will be tricky, but let us figure out something.
-> > >
-> > > Yes, that's an issue. I'd suggest swap maintainers take care of that if they
-> > > agree. I could try as well, but it's rather tricky right now on my end ...
-> > >
-> > > As an alternative, we could also use on/two/ ... slots in the bi-weekly MM
-> > > alignment session to talk about swap. (I'd be happy to learn more about all this
-> > > as well)
+> > > Swap entries already have one or more page table entries pointing to
+> > > them, which in turn are managed by trees of vm_area_structs. That
+> > > means rlimits apply, overcommit protection applies, and OOM killer
+> > > attribution works as well (oom_badness()).
 > >
-> > That's awesome! Thanks for the offer David - I think MM alignment is at 9AM
-> > PDT Wednesday, usually right? That works for me of course, but Baoquan
-> > and Kairui (and other swap folks) - would this time be convenient for
-> > you?
+> > I tested this theory. I spinned up a process, and let it spam 0-filled
+> > memory + swap these pages out continually.
 > >
-> 
-> Thanks for setting this up!
-> 
-> Is 9AM PDT fixed, or can it be adjusted? 9AM PDT is midnight for the
-> UTC+8 folks.
-> 
-> The time is still fine for me, though, I tend to stay up quite late
-> anyway ;) so that time works fine on my end if the slot is fixed.
-> 
-> Is there a calendar invite or something, please send me one, I'm happy
-> to do a swap sync discussion there.
+> > As you predicted, oom-killer picked it up eventually. The host was
+> > (and is) intact otherwise :)
+>
+> Good to know the kill path works. But I think the accounting side cuts th=
+e
+> other way? Won't that conversely underestimate the host's ability to
+> handle memory alloc? Not to mention a lot of application are
+> swap  space aware, some built in logics like e.g. with vm_enough_memory:
+>
+> On a 1G machine with vswap enabled:
+> [    0.241906] vswap: created virtual swap device (2199023255040 pages)
+>
+> a 2G sparse anonymous allocation fails:
+> [   46.044002] __vm_enough_memory: pid: 1129, comm: search_agent,
+> bytes: 2147483648 not enough memory for the allocation.
+>
+> The default "Heuristic overcommit handling" policy is meant to handle
+> seriously wild allocation (as documented, and it's named as
+> OVERCOMMIT_GUESS).
+> totalram_pages() + total_swap_pages
+>
+> Is the limit, the heuristic exists only to make "a seriously wild
+> allocation fail" (as documented). But on a vswap-only machine,
+> reasonable allocations fail. Common swap devices, zram, or xswap don't
+> have this problem. One could argue that the size there is just an
+> optimistic guess, the compression ratio is not controllable. But that
+> heuristic is a guess by design, and a plausible number serves it fine.
+> "Unlimited" seems break that.
 
-Thanks for opening this up for discussion. While the time slot is a
-little late for me, I am not very sure if I can attend, will see.
+Oh yeah that needs fixing - thanks for digging that one out!
 
+I'm not sure the answer is keeping "totalram_pages() +
+total_swap_pages" though. That makes some amount of sense when the
+backend is disk swap - 1 swap slot =3D=3D 1 page in memory, so it
+represents a concrete amount. With compression swap backend in the
+picture it's very murky.
+
+I think what Johannes proposed makes a lot of sense. Maybe also
+keeping physical swap pages in:
+
+pages =3D totalram_pages() + total_swap_pages
+if (vswap_is_enabled() && zswap_is_enabled())
+   pages +=3D 2 * totalram_pages();
+
+i.e just RAM x 3 + physical swap pages. I think this is a
+"good-enough" gate. If users truly believe their memory is more
+compressible than that (and for some reason they really need big
+allocations like this), yes I think they should with the overcommit
+mode :)
+
+I'll include this heuristics in v5.
