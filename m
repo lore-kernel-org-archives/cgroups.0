@@ -1,189 +1,164 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from mta0.migadu.com (out-73.mta0.migadu.com [91.218.175.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A32DF446075
-	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 12:19:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A399647ECC2
+	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 15:00:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789388361; cv=none; b=S79F9pw6uhCjXE7MNwW2KgKPP+aXl2IMrJiH2Xi7aCMN4rVHOChsWCNZH8/h2XpwbGtGK/qISSsfX7Xvq9FE6xOVbAADPaYKN1zeAkd+46i5vzNBhzQiahEHWtOIEmRVmhTSSL8wKHfaNn1EvD8HXlzsCGm+TeuBimBR/kEiz0o=
+	t=1789398047; cv=none; b=PEpeiG6pPRuSsSp6d6tSHXktved4DA83IvJJVCk8EVq8X5Wux9Z5vtK3Ml0w11ANpJq3vCd6G9s3cznIc/xuJbwiUhCJlnQvJeJ6rtq6Om973376nE60BT3bAmHrBldN2zfAWhgdCxqTswacFIhqxNRSiXyuxuIfkOeUQ9De1CQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789388361; c=relaxed/simple;
-	bh=w0NPZ2B16PTKXd/UrN0ohc5GgWHynSlyLqxyyFQZ+pU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cGs7cOuQQx0rBDDy2UkIKFgv3arfC8gw/RnOd0g6MkT7LflYObGnrGczYZWTFhWTcYBW5nTCIFGfsGthf7MZTmWNbrz+ciWKcTLs0QRNMJHjaDqvs23PGWQ31M6j9CG6YlB1sluVte+Q4M0mYOllISyzmbcV4AhGfzW2alqGdgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=R96rEyoM; arc=none smtp.client-ip=209.85.128.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1789398047; c=relaxed/simple;
+	bh=hwtaTLMA1sYqRp29cSIfiy68ZXQatt6fyt/Ot6ycecQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VxPLSbTzssrabyJa7wja/FwlUU0Zx9jLqTONIEaVr3m0QD9jtPLcXVqnWGuaOrcYiIFWGwSk72mdRVoH3HDu5xa7XZpWmrHeteQRSzlqr3WPIIeQxdOvJ2T9nqXP2ty1Ut4O5v/VRgnrUQ5it+v5JtBQXtEFthYWFo+P5JhpIw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lMeKd2OP; arc=none smtp.client-ip=91.218.175.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="R96rEyoM"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4980fe6b3beso17220145e9.0
-        for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 05:19:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1789388358; x=1789993158; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Mtb9frUiqPz4ISU8sxRxKOZ4uH5pILeNk9x+K4a1PXU=;
-        b=R96rEyoMomxICdRlZcz8tjGUzYF8Gnpctwj8T5BimfgvzxmDV3VB4uNfgLWuo2nzTu
-         NqZyVV1E0CeDoVgzLN/ykHIDaJ+TdEEBusD6PheoMW/J8GWALrcQtwjVpNX8k0DIDSW7
-         jl+XawgQkZpbXIpiVa25Yftr/ZH+Se5N4AUXdKcKyb3xdSi0iyf3et8lL6gzpEIYPU3d
-         xlxs7NWFhsqWl/gpK1dcLfNYbBnpMQVVK34g9qq6Qfqi+HbkZTkN9+tcE8E/6BE0GGf5
-         Alz3MdE8RBWfRyo5dGFWg+1Zscp2vlDSZL3tZ/Yd2zsEiok3CB25I/QPaBWJSI9YAD7Y
-         2c8Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789388358; x=1789993158;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Mtb9frUiqPz4ISU8sxRxKOZ4uH5pILeNk9x+K4a1PXU=;
-        b=lUx1zftTNp4x14FyB3lk2O8OTCuxQz3Yr1ZIx5tIInyCtcsNJkAmUE6bgYTzHNhDRY
-         X8Peh6xdFObB+AzrrrCg2gFf4I/XeR0RyMLJBVmu9G9kn1lb7vKddQBwbySEdtMsTjhN
-         D+PeCEyP/eXFIuZ1iSQNbRwkMORxN+uKeRUFMLHMHSdrqj2Fsu0zNjI8MZvQmTh70AY3
-         bF38LCCAOb6BI9+V8VifQJ6I6Nt/GpHMAym0kdtvDphXhTVeniQCxyh+6vi6m5By7sLm
-         HmMoMmrCro0Z94jiJOvOw6gENo5tDsUTSjzt0SNeSGNOAiKFqYkFf6GnIbKeRm1v0vrV
-         Mk5Q==
-X-Forwarded-Encrypted: i=1; AKwUvByTTUPoZ4gFoBO5wY6dlgEa5KnAuI9bo8AL9weMpjSn4n2x0Xh9RVTQUkuZTuVbBMvB0ylu53LO@vger.kernel.org
-X-Gm-Message-State: AFuF++mIc8uvjxgADmwi492C7NwXj2bw7HXGK/BBu1uPQU/ZJVoiflxj
-	8DScGoX5/86Zo5/JXrl6rHVLLiYBXnGCretW0DuDnLXXg9GNhiAuMU2457NzI1Oo+ME=
-X-Gm-Gg: AYBFou0vwr9GVBPgNOwya2TdUJiKIYJjc1AOKy0La18NfYoF6RwNGxWsu2FaepMGyp0
-	7yaaMd2XdzCBfT3eDeutMCnHeDrBu54tsYEstsJCNHYzgCy060hqKw/oRqmD8ruyIGkwpNXbGl6
-	UI5Xxlji5+VIAjwSxj3xKKQYxpPBZb86FK4dT4Tk3PIpSavHWtNsYkt1xoM6RdCAj+wttNR/OmH
-	ZrjSbvgJq2UQIGLhmEbJCotwEpkQSQHtA4ggLeGcCyDkv1FkeacPgrWxj62RE3reu6oIgYuI81k
-	DyZ4lboz7VHpz5zHZ51Lcv8JM+WRXFHYLhhOAYiTFWKtGSUyFUYk//6fjrqcCaBgt7BEuhF5Vm7
-	MV1GQ3Eu6oKSTIGdM4OcIwRa93OTT6BA61RT0o30SPaRdxMqtBzmv79q3X9Bs9fphiXO7fr00FF
-	OREGkdA/XDsFTG8HmqKGzBJY1LiK/RbdILyMvWJdEiQfYK3d/+2Ab+c7uyjGyX6w==
-X-Received: by 2002:a7b:cb87:0:b0:49e:718f:4f2e with SMTP id 5b1f17b1804b1-49e76021236mr49712805e9.3.1789388357764;
-        Mon, 14 Sep 2026 05:19:17 -0700 (PDT)
-Received: from localhost.cz ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-486eb2ecf2esm26768289f8f.2.2026.09.14.05.19.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 05:19:17 -0700 (PDT)
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-To: Tejun Heo <tj@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Dan Schatzberg <dschatzberg@meta.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	stable@vger.kernel.org,
-	Noah Elias Feldt <N.Feldt@mittwald.de>,
-	Salvatore Bonaccorso <carnil@debian.org>,
-	Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH v3] cgroup: Avoid iteration of dying tasks with zero refcount
-Date: Mon, 14 Sep 2026 14:19:10 +0200
-Message-ID: <20260914121911.98132-1-mkoutny@suse.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lMeKd2OP"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=hwtaTLMA1sYqRp29cSIfiy68ZXQatt6fyt/Ot6ycecQ=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789398042; v=1; x=1790002842;
+ b=lMeKd2OPeWI5xdKjNJhCkAzknfMSH3RcFG8v98Xjq6Jbnhz7ZldVTq96SOQRXtR08hV7RCoH
+ cPRdDhiiI27IBrsHJWsgKDzE9eTSoIy4NkKO9nxRG8GALCPQjSg3Fj9QUJow8DlmfbXfncTvmeq
+ 7Rqo7LO/JVX98DBt9SGf8Adc=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id 24f60d578e23c651;
+	Mon, 14 Sep 2026 15:00:27 +0000
+X-Mizu-Trace-ID: 24f60d578e23c651
+X-Migadu-Flow: FLOW_OUT
+Date: Mon, 14 Sep 2026 23:00:24 +0800
+From: Baoquan He <baoquan.he@linux.dev>
+To: Kairui Song <ryncsn@gmail.com>,
+	"David Hildenbrand (Arm)" <david@kernel.org>
+Cc: Nhat Pham <nphamcs@gmail.com>, Chris Li <chrisl@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Yosry Ahmed <yosry@kernel.org>, Muchun Song <muchun.song@linux.dev>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Barry Song <baohua@kernel.org>,
+	YoungJun Park <youngjun.park@lge.com>,
+	Chengming Zhou <chengming.zhou@linux.dev>,
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>,
+	Wenchao Hao <haowenchao22@gmail.com>,
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Tejun Heo <tj@kernel.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Kunwu Chan <kunwu.chan@linux.dev>,
+	Meta kernel team <kernel-team@meta.com>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-doc@vger.kernel.org,
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+Message-ID: <aqgMCIOFi0dKx_6L@fedora>
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
+ <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
+ <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org>
+ <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
+ <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
 
-The commit 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from
-cgroup_task_release() to cgroup_task_free()") extended the lifetime of
-tasks on the dying_tasks list.
-The iterators have provision to go through dying_tasks because of
-dying threadgroup leaders or explicit CSS_TASK_ITER_WITH_DEAD, however,
-it was expected that such tasks can obtain a new reference (that is
-possible before cgroup_task_release()/put_task_struct_rcu_user()).
-The tasks after cgroup_task_release() and before cgroup_task_free()
-are subject to race when they may or may not have ->usage count > 0.
+On 09/12/26 at 12:20am, Kairui Song wrote:
+> On Fri, Sep 11, 2026 at 12:23 AM Nhat Pham <nphamcs@gmail.com> wrote:
+> >
+> > On Thu, Sep 10, 2026 at 3:57 AM David Hildenbrand (Arm)
+> > <david@kernel.org> wrote:
+> > >
+> > > On 9/8/26 18:45, Nhat Pham wrote:
+> > > > On Mon, Sep 7, 2026 at 4:30 AM David Hildenbrand (Arm) <david@kernel.org> wrote:
+> > > >>
+> > > >> On 9/4/26 23:14, Nhat Pham wrote:
+> > > >>
+> > > >> Hi,
+> > > >>
+> > > >>> To Kairui, Johannes, Yosry, Chris, David, Andrew, and other (z)swap folks -
+> > > >>> I need some help here.
+> > > >>
+> > > >> I'll mostly ignore swap-related stuff because (a) -EBUSY and (b) we have quite
+> > > >> some swap experts around :)
+> > > >>
+> > > >> Reading below, I do wonder if the swap subsystem needs some more coordination
+> > > >> and collaboration?
+> > > >>
+> > > >> For example, maybe having bi-weekly/monthly meetings to get everybody aligned
+> > > >> and uptodate could be something reasonable?
+> > > >>
+> > > >> This approach has proven fairly helpful in areas where (1) multiple companies
+> > > >> are involved (2) many concurrent development is happening, and (3) people have
+> > > >> different priorities and requirements.
+> > > >>
+> > > >> Is there already something like that to organize development? Should we get
+> > > >> started with that?
+> > > >
+> > > > Hi David!
+> > >
+> > > Hi!
+> > >
+> > > >
+> > > > Thank you for your suggestions :) More collaboration and communication
+> > > > is definitely needed here. Conference is a good place for this, but
+> > > > it's not something we can do very frequently, and many folks could not
+> > > > attend (visa issues, etc.).
+> > >
+> > > Right, and conferences usually don't have the capacity to squeeze too many
+> > > swap-related topics in, so it would have to be side discussions or BOFs.
+> > >
+> > > >
+> > > > A bi-weekly/monthly series of meetings sound very appealing. Swap
+> > > > contributors are very spread out (China, NorAm, Europe, etc.), so
+> > > > coordination will be tricky, but let us figure out something.
+> > >
+> > > Yes, that's an issue. I'd suggest swap maintainers take care of that if they
+> > > agree. I could try as well, but it's rather tricky right now on my end ...
+> > >
+> > > As an alternative, we could also use on/two/ ... slots in the bi-weekly MM
+> > > alignment session to talk about swap. (I'd be happy to learn more about all this
+> > > as well)
+> >
+> > That's awesome! Thanks for the offer David - I think MM alignment is at 9AM
+> > PDT Wednesday, usually right? That works for me of course, but Baoquan
+> > and Kairui (and other swap folks) - would this time be convenient for
+> > you?
+> >
+> 
+> Thanks for setting this up!
+> 
+> Is 9AM PDT fixed, or can it be adjusted? 9AM PDT is midnight for the
+> UTC+8 folks.
+> 
+> The time is still fine for me, though, I tend to stay up quite late
+> anyway ;) so that time works fine on my end if the slot is fixed.
+> 
+> Is there a calendar invite or something, please send me one, I'm happy
+> to do a swap sync discussion there.
 
-The race window is between css_task_iter_next() invocations
-when css_set_lock is released and we may arrive at a new ->task_pos.
-The iterator should not attempt to resurrect tasks whose ->usage count
-dropped to zero. (When that happens, __put_task_struct_rcu_cb() is
-already imminent and the returned task_struct would could be used
-after free.)
-
-As for the fix, we cannot simply check the signal->live count of a task
-on the dying list because that won't distinguish regular zombies waiting
-to be reaped from RCU remnant tasks that are going to be free'd.
-Therefore add an extra check to rule out ->usage==0 tasks from any
-iteration.
-
-The repeat: loop in css_task_iter_advance() doesn't consider ->usage
-count, so add a new loop to css_task_iter_next() to skip de-used tasks
-on the dying_list.
-
-Rough illustration of the possible race
-
-  R (reader of cgroup.procs)         T (thread)                       L (group leader)
-  ---------------------------------  -------------------------------- --------------------------------
-                                                                      L exits, signal->live > 0
-                                                                      cgroup_task_dead(L)
-                                                                        css_set_skip_task_iters() // skips only cset->tasks
-                                                                        list_add_tail(&L->cg_list, &cset->dying_tasks)
-  css_task_iter_next()
-    take css_set_lock
-    css_task_iter_advance()
-      leader && signal->live != 0
-      => it->task_pos = &L->cg_list
-    release css_set_lock
-                                     T exits
-                                     --signal->live == 0
-				     cgroup_task_dead(T) // css_set_lock
-                                     release_task(T)
-                                       cgroup_task_release(T)
-                                       release_task(L) // zap_leader
-                                         cgroup_task_release(L)
-                                         put_task_struct_rcu_user(L)
-                                         ...RCU...
-                                         put_task_struct(L)
-                                           L->usage = 0
-                                           /* L still on dying_tasks */
-                                           ...RCU...
-                                           __put_task_struct(L)
-  css_task_iter_next() // another iteration
-    take css_set_lock
-    it->task_pos = &L->cg_list
-    get_task_struct(L)
-      => addition on 0
-    drop css_set_lock
-                                           cgroup_task_free(L)
-                                             css_set_skip_task_iters() // dying skip comes too late
-                                           free_task(L)
-  cgroup_procs_show()
-    task_pid_vnr(L)
-
-Fixes: 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from cgroup_task_release() to cgroup_task_free()")
-Cc: stable@vger.kernel.org # v6.19+
-Link: https://lists.debian.org/debian-kernel/2026/08/msg00220.html
-Reported-by: Noah Elias Feldt <N.Feldt@mittwald.de>
-Reported-by: Salvatore Bonaccorso <carnil@debian.org>
-Tested-by: Salvatore Bonaccorso <carnil@debian.org>
-Signed-off-by: Michal Koutný <mkoutny@suse.com>
----
- kernel/cgroup/cgroup.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-Changes from v2 (https://lore.kernel.org/r/20260907170345.45316-1-mkoutny@suse.com)
-- return to tryget_task_struct() variant not to break CSS_TASK_ITER_WITH_DEAD
-- append Tested-by: from v1
-- reword commit message
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index c3a12fee7528f..112d68fe28778 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5303,10 +5303,13 @@ struct task_struct *css_task_iter_next(struct css_task_iter *it)
- 	if (it->flags & CSS_TASK_ITER_SKIPPED)
- 		css_task_iter_advance(it);
- 
--	if (it->task_pos) {
-+	while (it->task_pos && !it->cur_task) {
- 		it->cur_task = list_entry(it->task_pos, struct task_struct,
- 					  cg_list);
--		get_task_struct(it->cur_task);
-+		/* a task on dying_tasks with zero refcount is only valid for
-+		 * RCU readers, not even interesting for
-+		 * CSS_TASK_ITER_WITH_DEAD, find another one */
-+		it->cur_task = tryget_task_struct(it->cur_task);
- 		css_task_iter_advance(it);
- 	}
- 
--- 
-2.55.0
+Thanks for opening this up for discussion. While the time slot is a
+little late for me, I am not very sure if I can attend, will see.
 
