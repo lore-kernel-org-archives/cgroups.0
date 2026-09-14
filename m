@@ -1,284 +1,297 @@
-Received: from mail-lr2-f12.google.com (mail-lr2-f12.google.com [74.125.230.76])
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4032E49BD95
-	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 18:08:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.230.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D732E3C10A2
+	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 19:01:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789409316; cv=pass; b=ZsN5d8inksAtl4vUNkJpPLSP8qHBOTjkHaiaXNsQ6SkS1hVyOQ4fHaZPf/F7rzVv0Z641VQl7x6+WqPDTFuVAnCkjHq4Jko6PG3pVA9/FR8VcmG9tIy6QcYGsHACdr6SFyDPXpRlaI8Lk9tQXH3xFqLCpgYP87aMwLfbjD8A4dU=
+	t=1789412500; cv=pass; b=oXEzdWfcZ5iKm3clkQ3kHaLJmKkZv6Mdsui6ROBQ1Ks+Tq56Iz6cz11w605dVig80QoiIKY6p4Dtc9Nvlz7IO+HqNBbAsD3539eKxfDxktXDZy3SoqtRWHMC3hKnTWghWlZQ4mnkCmzMlh7nJxjSkQInBnFxPfUKAtZpGSb3UBE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789409316; c=relaxed/simple;
-	bh=nrL7HxkxpCYK37KcSgRy3IUkJkgNJYps77Sf88qk4eo=;
+	s=arc-20240116; t=1789412500; c=relaxed/simple;
+	bh=tEqRa+DsXLUgwM55dRsOm8XIccM+IQ7pzEYsSC9u7A4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IAwKlV5Lj7ShEqdW+rl1NW3Yp5j0a6xlcwOllzc97uYEakS48BhlKKYdajvfHeuPEged6VxC5WnMtl1xWMujSjqVV9WwGQASAKuL72NBC6N4Nt1Kg0An+9iFuN1oh2eS34RDgt5aYqPWfcdYfkh8qe/dwp51lCPnS+Jm9JlcK+U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nthWdiIT; arc=pass smtp.client-ip=74.125.230.76
+	 To:Cc:Content-Type; b=RsA3zi4Lpslnr0VAxSrBPLzy2PU+pL2P7qLSufbzXSkIwZe6QhV+2A75RJNzfdlZMuvpt2jRXbKcrfxw42zFhl24+lRO94Wh6/Ul7xnFoPivrrpKoDDquWJ42OM4itr+ulk87nRxgjovxGghChwPPbd14VRdk1Wu6p+g1dMjG8k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gmdgZh2W; arc=pass smtp.client-ip=74.125.225.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nthWdiIT"
-Received: by mail-lr2-f12.google.com with SMTP id 38308e7fff4ca-3a2ff176d5eso21585651fa.0
-        for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 11:08:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789409300; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gmdgZh2W"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-48449f62b93so751420f8f.0
+        for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 12:01:23 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789412482; cv=none;
         d=google.com; s=arc-20260327;
-        b=TQHg2XDzpPbH3cXOvc4MyG3lx7ZOWHo7Rtzv0aGMkfEzvs5AN2t6Gy36iiPTN56w9v
-         9HpmL3IzQro68VI+Vv+gtcvFr0h1qXYPWg4kHjE20HtNNs2w99W0j2o/xsG7rgGPCcmh
-         gLiRTfkGAIMeg7h50iH/gRYF1tewu9okeHMR0/Hen5xFfe5bHMQbu99LtMYWzicPzoxb
-         hLAUXMUdTB7/dsxjVdBqrtrfR1A7c5sZssEMX6oWSv+HMATHJMMQrfKIOL7bdE9uNU+R
-         4aXFl40U5PFQOs+c49NoSPwKVVeVcdr59u1+8pmX6PpsDhTvIUfpfP+tZR1J4ciBNQZr
-         otAg==
+        b=Rkf/IDgmJLFXFc/V+xv7FbyWq8ZlhJK0DGjcw+uvSK9m+yZL3S1W2DJULi7My3GxHZ
+         XV17YOxuuMgF9NOxmSXv+vOg1blXO6FAQovcfyE7Vc+zo0RaZ9+ea8crj+Eogv4aY2nS
+         bAB47wDlHdFap9JBZ20dxshEifimw1v8fXUjsQSnPVJNiR/9rNs1Kdy3mSvV6xikrZwO
+         UnlkVcSW8IYveyEaHrkx9NkvM/ZUqUcCPb2C78ziHJmroroBU+xBrtn+WrGhbv/38a2w
+         IgZzJYLNrSyXWy2KVpdwjsWQIJJA8Y8Np6fRNhBt6yMutReN8xZWzPfXg5MiuybBCvt2
+         Ndcw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=YqfeFaksCtRDL645H6Ma8BX+7yBDF05G4zL3//smvsI=;
-        fh=KVTGyWub4Almxv8k1Ep/xi6UjIv49BvV3BHiV/jWnGs=;
-        b=QXklL8j9BpKZn7AcpOjB/AKnxtmfLEMI4mKROcQhy/TbkKOnarQVO6lkA0XWAa5zm0
-         whO94awelyoNmMWxZecZwEwqGICGdsSzxR+t01BTrBxHJ++6FkQje1mO8X4bCh6rljna
-         Sdxz02l2mXvdzjHuo0qCcs9G+TOGMnsFbPyIBgU4yRuX3d9yotdXT6Mi20l4vFHR032Z
-         p0kUotb8MCtt/+rrNlFzjutTxOOZMZS6yt3oe+EtV7e4OOhsxUkkz1jHBgTDbz25bewT
-         etKniA9SexFBdCg3cbyAov97d/shHo9aRFhX3oLvGo6cHLcnmfdImPVnhPPAXtLhtkfZ
-         5Jcw==;
+        bh=kcWr29ciRXo/Ssy/W3GMAIMRBylURTjvxgSXaybDMn0=;
+        fh=7x2OSxASdh6en1ofOZtchf3tzKXwquxhFxlhIOXIb6s=;
+        b=YRDUD9DwqGb/iFK7uH6Tc5It3yOejbUlm23dWClj7mspjTJEDB4umHLlCEDu3ANo5y
+         RGh6jkMjBSh0vzBTHnM4ULQmG99PPBRYdkHq1qNqquFhqmmAjgKNIYs9qr+q8x4nwNx6
+         JfGeCZL0Otxx8PTbLgydEd4Scx0BR9rxA0RFO6Hr0756wTa+sNEZmMCDk5AMNzbpDluJ
+         wteiSX/icxzNj48S/otexgsycdu86mRx2q+6zcgqVHGQCZCLOvFySu1/Q+OWN4B4xP9l
+         oxY2qYsVWVMlyG6vUOf7M0r7ztNrwkHzCz8wCBP7cWvN1IF+PoSfXuZ0bx733khzC5zI
+         vyuA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789409300; x=1790014100; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789412482; x=1790017282; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=YqfeFaksCtRDL645H6Ma8BX+7yBDF05G4zL3//smvsI=;
-        b=nthWdiIT1dqdQPptON5i6UB8AYh32ISOiDmwdttRHgnKK3TyZN7elsFCPNU4D8D+k1
-         qTuRx2iNbqlTLm2GrkuCYePCIpamewXWUv8bTr5o2y0f5Xc7ZIOeGauYVGYdnJLUmSB4
-         Bt9ipvvAZCGC3v8w79Wj4R9qUZSa6AqrBFoAe00K/7j6XFR5Ya4zpGfiknj8zGWc/afo
-         q8IGBmYPAPtfQ8NxCe4u3VF/sqgdnZvV0bN8welvGOf22JqWji3perwKCIQ2bRaIqlQ+
-         Kp2muJ1t8BxJnFSZQaIk48NoDFee/ypD189gKhA+/YIiSdVWpx+Mvg9Btli2s3DBti8t
-         0ddQ==
+        bh=kcWr29ciRXo/Ssy/W3GMAIMRBylURTjvxgSXaybDMn0=;
+        b=gmdgZh2WwB7TU1kRO8iSENZpNQ6sIpswBklNM34kRAArJ9aZysmuP0detAheSU4DFD
+         FW+7M57oDZ05DSIJAB2fm1eybxSekBbYkYuIYo92xhvMDiMdPvfRe1TDl9MfpugCMQdY
+         iv4PNu8l0Xpf6ifsFwSehWpISnM0urCT4M+6X0EXK5VT6Wy8GUDMaz4Nx/ccY1/lZC87
+         H5+O1XCucYwTpOXduuwh/nK5l2cWs7auiGQISwLyGWfc18+31lB6KLshdLN8Le1t5XNq
+         2OyrB3M5XfuXdHtZOqgOr+POBgtmqB8s59oiX16hTsjOoeooZR+0an2dMHkwtzuohhr5
+         ZgbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789409300; x=1790014100;
+        d=1e100.net; s=20260707; t=1789412482; x=1790017282;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=YqfeFaksCtRDL645H6Ma8BX+7yBDF05G4zL3//smvsI=;
-        b=I/2dFXopT+bLIudSbwR64kMnYlGUurOKeF/eH0oIHkmDe9GZ198zr1FpZSCjZ9o0mC
-         gJaY6DmoZvmWZTDNnCsmu8Pje9SwCX9XpO34iWH3JqWICrSjpJwdrBM5d4OFvqOB2iAK
-         NffTqu7VQ0hbmk/KIu6PPHpAKs1ToWn8RYPUCNfEVR0w5mWeDE8zivYh+w82RtaHE24U
-         to6nYRDzwTaTnwSQLE9DZF8AA/zbO49iBsUYzIYUtDsRpAuHLMEiXfmMVsRV/UWHy08P
-         3WQhcQWR02eyim/lzoVzYbMoukg/mSUVpG7Gqv1/cTdytCdkdb6jh+mD3h/BO0TWh6ks
-         guuA==
-X-Forwarded-Encrypted: i=1; AKwUvByuWjGadld5dzJjyD520nmJ4aI7Ka52LibvuTw2LkqCVlTcgIng6v8YCfl5tPrPIkQUFeSmXh/a@vger.kernel.org
-X-Gm-Message-State: AFuF++lq1iQNGBO/dhEHH6Jp+Pi3iXTcyBDsQsqpc9gyaAbHqGV9ZiRN
-	Df2IQUlri2OC+Fw/I7+ODddyDNwPg/Oor5WuZXQ2MbCLEQDXmXKUj8HK5HXJhfCLiFne6r5d09E
-	meX3PImiy4JAjMhPLS0E8Hajm6XpeMOYoLZlt
-X-Gm-Gg: AYBFou2ZUcKOjkq4Kd85UXql1xRBHjOHn+zkiWXfWw4QPrvCn1XOEwindnbJrIOnoar
-	654cFslEZUAEMkVQrrXFGH902G0/91mm4rVrnzhhtldXd8n9nRSVo1vOKYRNAOMBOtW7zUJwLar
-	xvCRcZKCrFKyviD2DD6stHonzQbq9itfpM0aIcixQEBw/gWWEbBzO3wWMbSFHi9fHpVDnvHznGx
-	ZJyYF73MHhQcru0VHdOrNSClUwo8/waZ7eaW3ObrXIPMonZMteXEXGJ2Q5apz4ZdrX8hsXN9pjE
-	kWG2wUiNmftoLuy82cDgSGEpTKg49nw8GmEhohJzrYzbbibylxe5SUz6oUhbLkzk/rD8qCd0EZV
-	KEIN7hT3VqPM5SQ==
-X-Received: by 2002:a2e:8a86:0:b0:3a1:4f33:f60e with SMTP id
- 38308e7fff4ca-3a5c8904fa7mr13824431fa.8.1789409299251; Mon, 14 Sep 2026
- 11:08:19 -0700 (PDT)
+        bh=kcWr29ciRXo/Ssy/W3GMAIMRBylURTjvxgSXaybDMn0=;
+        b=Euuq+g1VZww5rEON4yUpflcFfALdrqUtzbMipT3amqf4u403s1RzKoZzL4UBRqWMjY
+         /yqidx8pc9aaCFnleUUtJjjS/2YFmjjs1JVO3PriSJRw8cmTs2p9K/48wrjdCdUZjSHq
+         wqdnEYElQZlE+aWY7tJZftwH0P47YhXTHGVxJuiDSy/TrrDcHqBHUcJ+RCNKmTIkeins
+         hA5ZoUURoW0A/9TVvc4QyXW6SGa+GB/88cbhUiCT2ZVe/XyMhAXPfrv9VrfW6cJNQ4aT
+         5ZicU1nAMcN9UPWeIcw7FN3ufKYOVDmFHz4rRIBQySiBUZylEsDPK+26blftvP1jqGDr
+         UzuA==
+X-Forwarded-Encrypted: i=1; AKwUvBw0dPoOlAy9ACRb1KZyJXhHDFskw86vv6SqsBhRAakreahL9VBrTD57NjzplyNI3VwLVqJ0n5sN@vger.kernel.org
+X-Gm-Message-State: AFuF++kZxg1v1zdLlNpRQOrCrWcZN5XWwGsAyyYE0Vt5E5qSY2KH3tEg
+	t5UD+D8aaHqPVgKWjD783eMB8RBMPf2KhINAPV8ydV/AYTkXf92z3c3go/6PAiHShZTBNWmMm7k
+	VOjvWnQ5aUhTpbGSGWMjh9yy7lccyXbY=
+X-Gm-Gg: AYBFou2lkjB+wsXMmNvZn82efsXgIqS01qq/2EV7IfjocB8w04F9HMBGQ4/iiv4c0pN
+	TsXt0dA2lLcpzKJw2XAlLsO6Pp75goCa+d6ildjyGKVYMEHy/H9HIYU8ApGwiHvoFvf4GhioD1B
+	00wQM+9L6RXIicWCQp0u2vGCUP3eavORXOLZtoE/eKDqyJ6Q9I6LldoGPyeEw+M6bCCkSd0/XEO
+	oe1WtpZ+gAv2HCsMXfvEGpLi3tklG8OgPVrBsROIkwxdugIyrxCabAiYHbaAUGH8D1+dnRrYhdC
+	95XlJZwNwXxS2vaENGVmJmISEu+PfKNL+W3xF3kZSQ9eanWG7Isl300nH59QWwJOOCiFoZztkwq
+	hctikpZCrBnRDDXgT0cg0O4t9C+2cHNC1YXgVTcSHTxXAcQcv
+X-Received: by 2002:a05:6000:4803:b0:485:7d6d:e0e0 with SMTP id
+ ffacd0b85a97d-48705a39405mr1037299f8f.3.1789412481801; Mon, 14 Sep 2026
+ 12:01:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CANGjgdn=H50AaA-+O_GA-hkE9UwLANmkjx1zRsKUzxF5za8VfQ@mail.gmail.com>
- <aqa7KgIJYGgf7INk@slm.duckdns.org> <CANGjgd=f9n7zEZS=xi71y_dY6Uk75_qgP9qVDkYBusNz9sp2sg@mail.gmail.com>
- <CABdmKX2Oer9wrxWdR8s48Czro8H51HY+S_mfnUj-RvhjCM1RgA@mail.gmail.com>
-In-Reply-To: <CABdmKX2Oer9wrxWdR8s48Czro8H51HY+S_mfnUj-RvhjCM1RgA@mail.gmail.com>
-From: Chengfeng Lin <lin2530632123@gmail.com>
-Date: Tue, 15 Sep 2026 02:08:06 +0800
-X-Gm-Features: AcwNN1VjX10xVedHjffuUUEznl-luy-airmCt-rJgo7haX1ZQMrAAmn74RSRo6w
-Message-ID: <CANGjgdmKg1_QyzhCSh03T4RStw5_znnhqmFFS8TVwQbm-sZZbA@mail.gmail.com>
-Subject: Re: [REGRESSION] kernfs: empty cgroup rmdir latency after
- delete-notification changes
-To: "T.J. Mercier" <tjmercier@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jan Kara <jack@suse.cz>, 
-	driver-core@lists.linux.dev, cgroups@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	regressions@lists.linux.dev
+References: <CAJnrk1bk66ZhRAS7mojSnD5RBfFS+0ChAPymE3ObRWr0C_udWg@mail.gmail.com>
+ <CAO9r8zPpe6fWOSXtRUjFB8WNMroeBqvLT+2QtAU4E27AtLUXMQ@mail.gmail.com>
+ <CAJnrk1YifN22mA5PFRVrh3m_ygxax6x4_8nraG2hPqCzyzBj7A@mail.gmail.com>
+ <anpsLy_pCanocgS1@google.com> <CAJnrk1Yoj7fqbzurmHkbA-vegpQu3cf-_dfvKor_VxuNhPR-AA@mail.gmail.com>
+ <CAO9r8zPLipVW6bvyDK1ypSawbo=LHKvmLqWH0xA6WMR9GYNJpg@mail.gmail.com>
+ <CAJnrk1ai-TqcudPoK-qFRYAJnUjBmg1kVa6Vxg3eDm5w5ivqSA@mail.gmail.com>
+ <CAO9r8zNJ=Fpc0pZExrttVTDCM3yzSmLPCAU=+RS0k5Pm+hY96w@mail.gmail.com> <CADrL8HV7_f68qfd6hG=xCTqzupPqr77ynbwdz8jm0hzjdgDVeg@mail.gmail.com>
+In-Reply-To: <CADrL8HV7_f68qfd6hG=xCTqzupPqr77ynbwdz8jm0hzjdgDVeg@mail.gmail.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Mon, 14 Sep 2026 12:01:09 -0700
+X-Gm-Features: AcwNN1VFoc_2eKOenFa2PrLINBfqq7xz_q3LPSvn75t1DU2-aSfT1Pyeo05pSnY
+Message-ID: <CAJnrk1aHdBm4CofvKfx7B3H-uF2xRXZUQs47J_4xeRmRZ4hcZg@mail.gmail.com>
+Subject: Re: memcg stats flushing (WAS "Re: [PATCH] fuse: disable default bdi strictlimiting")
+To: James Houghton <jthoughton@google.com>
+Cc: Yosry Ahmed <yosry@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>, 
+	Jan Kara <jack@suse.cz>, Miklos Szeredi <miklos@szeredi.hu>, 
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>, kernel-team@meta.com, 
+	fuse-devel <fuse-devel@lists.linux.dev>, Jingbo Xu <jefflexu@linux.alibaba.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	linux-mm <linux-mm@kvack.org>, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Jesper Dangaard Brouer <hawk@kernel.org>, Yunzhao Li <yunzhao@cloudflare.com>, Song Hu <husong@kylinos.cn>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi T.J.,
+On Fri, Aug 21, 2026 at 6:39=E2=80=AFPM James Houghton <jthoughton@google.c=
+om> wrote:
+>
+> On Fri, Aug 21, 2026 at 12:41=E2=80=AFPM Yosry Ahmed <yosry@kernel.org> w=
+rote:
+> >
+> > On Thu, Aug 20, 2026 at 4:39=E2=80=AFPM Joanne Koong <joannelkoong@gmai=
+l.com> wrote:
+> > > Would you be able to share the test you're using? I've been trying to
+> > > repro it locally without much luck.
+> >
+> > The exact test uses some internal testing libraries, we're looking
+> > into whether we can translate it to a standalone C repro.
+> >
+> > From a high-level, the test:
+> > - Creates a VM with 260 MB (256 MB for testing + 4 MB margin) in a
+> > cgroup, backed by shmem THPs. The VM is not a fully fledged VM, just a
+> > KVM VM running bare metal code (so 4 MB is enough margin).
+> > - Enables zswap in the cgroup.
+> > - Tells the VM to write to 256 MB of its memory.
+> > - Checks the cgroup shmem usage and that no swap occurred (no limit).
+> > - Sets the cgroup limit to half the VM memory.
+> > - Checks the cgroup shmem usage and swap again, usage should be ~half
+> > and so is swap.
+> > - Tells the VM to read the 256 MB of memory again. This should cause a
+> > lot of thrashing and reclaim, but no OOM kills as all guest memory is
+> > reclaimable.
+> >
+> > With the ratelimited flushing, the test started flaking 5-10% of the
+> > time due to OOM kills.
+>
+> Hi Joanne, Yosry,
+>
+> I've attached a reproducer for you (as a patch that should apply to
+> Linus's tree).
+>
+> In tools/testing/selftests/kvm, `make` should build it. Instructions
+> for running it (like setting up swap/etc.) are in the comment at the
+> top of the file.
+>
+> As part of the patch, I've also included a sysctl to dynamically tune
+> whether or not the memcg stats flush is rate-limited. You should find
+> that when it is rate-limited, OOMs occur, and when it is not, OOMs do
+> not occur.
+>
+> This reproducer behaves slightly differently than our internal
+> version. This version, when run with `-b 512M` anyway, seems to OOM
+> simply by setting memory.max, whereas our internal version would OOM
+> upon re-accessing the memory. Not really a meaningful difference, but
+> just wanted to point it out.
 
-Thanks for the patch. Your changes reduced rmdir() latency by
-21.87-22.86% in the same empty-cgroup benchmark, with sched_ext disabled.
+Thanks again for the repro, James.
 
-I tested these two states on 2f0c1cf72f46 (7.3-rc2):
+I added some instrumentation to prepare_scan_control() and have been
+seeing that the OOM gets triggered in this pathway:
+a) the memcg is created with memory.max set to unlimited. 512 M gets
+faulted in. The new anon folios get put on the inactive list. Nothing
+reclaims them yet
+b) userspace then sets memory.max to half of memory.current (~271M
+from ~542 M currently used). This causes memory_max_write() to trigger
+reclaim logic
+c) the folios have already moved to the active list (my
+instrumentation shows 122684 active vs. 179 inactive) when reclaim
+does the scanning, which means the only way for pages to be reclaimed
+is for pages to get deactivated from the active list back to the
+inactive list.
+d) prepare_scan_control() (which decides if the pages get deactivated)
+reads the LRU sizes from rstat. This memcg hasn't been flushed yet
+(the 2s flusher hasn't yet triggered since when the memcg was
+created), so the NR_INACTIVE_ANON and NR_ACTIVE_ANON stats are all
+still zero. The real values are all still sitting in per-cpu buffers
+that haven't yet been flushed. My instrumentation shows:
+        inactive_anon       rstat: 0    actual: 179
+        active_anon          rstat: 0    actual: 122684  (~479 MB)
+e) the deactivation logic in prepare_scan_control() is:
 
-  A: baseline + Shakeel's file-handle decoding read-lock fix [1]
-  B: A + your INODE_INITED changes, without modifying your code
+                refaults =3D lruvec_page_state(target_lruvec,
+                                WORKINGSET_ACTIVATE_ANON);
+                if (refaults !=3D target_lruvec->refaults[WORKINGSET_ANON] =
+||
+                        inactive_is_low(target_lruvec, LRU_INACTIVE_ANON))
+                        sc->may_deactivate |=3D DEACTIVATE_ANON;
+                else
+                        sc->may_deactivate &=3D ~DEACTIVATE_ANON;
 
-I used the original binary on the bare-metal i7-12700KF, pinned to CPU0,
-with full preemption, the performance governor and Turbo disabled.
-Both kernels used GCC 15.2 and the same config except LOCALVERSION.
+The if check fails:
+     refaults !=3D prev refaults: 0 !=3D 0      (false)
+     inactive_is_low(): both LRU inactive and active values are 0: 0 *
+inactive_ratio < 0     ( false)
 
-The clean timing sequence used four fresh boots: A1 -> B1 -> B2 -> A2.
+DEACTIVATE_ANON gets cleared
 
-                     A1       B1       B2       A2
-  rmdir (us)        9.727    7.600    7.548    9.784
+f) pages don't get moved from the active list to the inactive list, so
+reclaim ends up freeing nothing. memory_max_write() goes through all
+MAX_RECLAIM_RETRIES and OOMs, even though there's 479 MB reclaimable
+(but it's all on the active list).
 
-Each value is the median of nine sample means. Each sample contains
-128 measured removals after 16 warmups. All four B/A comparisons showed
-the improvement above. Removal CVs were below 2.03%. The drift between
-boots was +0.59% for A and -0.68% for B. The improvement held after
-dropping the first sample from each boot.
+I saw that the skipped_deactivate retry did fire (on 858 of 4264
+scans), but not enough to get the memory.current back under the halved
+memory.max, so memory_max_write() still exhausted MAX_RECLAIM_RETRIES
+and OOMed.
 
-Separate, untimed traces showed the same 26 kernfs nodes per removal,
-but ilookup() calls fell from 26 to 1. Deletion lock counts were unchanged.
-Basic checks of file/directory deletion notifications and link counts
-with FDs held open passed on both kernels.
 
-I also timed the full mkdir() -> stat() -> rmdir() sequence using a
-separate binary on the same kernels. The latest continuous follow-up used
-four fresh boots, with nine samples per boot. Each sample had 16 warmups
-and 32 measured sequences, with no pauses between them. The full sequence
-fell from 30.07-30.65 us to 27.97-28.34 us, a 5.77-8.76% reduction.
-The maximum CV was 1.76%, and boot drift stayed below 2% in both states.
-In the earlier continuous follow-up with 128 operations per sample, the
-full sequence was 5.15-6.52% shorter, but CVs of 4.52-6.46% were too high
-to establish a stable overall improvement percentage.
+imo I think the best fix would be
+a) for non-root memcgs, revert back to the non-ratelimited version
+(mem_cgroup_flush_stats())
+b) for root-memcgs (which if flushed will flush every cgroup on the
+machine), don't use rstat at all and use the existing node counters
+instead (which is what the non-memcg case already uses).
+mod_lruvec_state() always updates the node vmstat and the memcg lruvec
+stat in the same call. For the root lruvec, the node counter reflects
+the same value and doesn't need any flushing. It has an error bound of
+125 pages/cpu at most, but this is tighter than what we currently have
+with the ratelimited version.
 
-Untimed tracing placed the added write lock in first stat(), during inode
-initialization. The patch skips lookups for nodes whose inodes were never
-initialized; it does not move those lookups into stat(). The individual
-mkdir() and stat() timings remained too variable to quantify their changes.
+commit 90a6f2a8f442 ("memcg: use ratelimited stats flush in the
+reclaim") was what switched vmscan to using ratelimited flushing. The
+reason for this was to fix the stalls from concurrent reclaimers
+contending on the rstat lock. For the Cloudflare case, kswapd threads
+were contending on the rstat lock on 8 numa-node machines. That's the
+global path (eg sc->target_mem_cgroup is NULL,
+mem_cgroup_flush_stats() turns it into root, so this flush essentially
+ends up flushing every cgroup on the machine), which gets addressed by
+adding the fix in b), which takes kswapd and global direct reclaim off
+rstat entirely. For the non-root memcg case, the flushing is bounded
+by the MEMCG_CHARGE_BATCH * num_online_cpus() threshold (a non-root
+memcg's stats_updates only accumulates its own subtree's updates, so
+it takes a lot longer for it to be exceeded than the root's does).
 
-I also checked whether the benefit persisted with less frequent operations.
-For this diagnostic, I added 50 and 200 ms pauses between sequences,
-outside the timers. I kept 16 warmups and 32 measured sequences per sample.
-rmdir() still saved 2.10-2.58 us, but its baseline rose from about 10 us
-to 18 us, reducing the percentage gain. The full sequence was 0.66-2.85%
-shorter, with a maximum CV of 1.53%.
+I ran some benchmarks to get a rough idea of what a) costs. I set up a
+workload that allocates 512M of anon memory in a memcg with memory.max
+set to half of that to trigger reclaim continuously. I varied the
+number of threads touching the memory, so that N of them hit
+memory.max and enter direct reclaim on the same memcg at once. I used
+bpftrace to measure the time spent inside css_rstat_flush() and
+shrink_node() and used those two numbers to get a percentage for how
+much of reclaim is spent in flushing. These are the numbers I saw:
 
-I included [1] because the file-handle path on this base lacks
-kernfs_rwsem protection. Source review suggests a possible wait cycle
-when that path recreates an evicted inode. Initialization waits for
-kernfs_iattr_rwsem, while removal holds it and waits for I_NEW to clear.
-I have not reproduced this possible deadlock in the kernel.
-Does the base for your diff already include [1] or equivalent locking?
+# threads      flush as % of shrink_node()
+1                ratelimited: 1.10%       non-ratelimited: 2.22%
+16              ratelimited: 0.36%       non-ratelimited: 2.87%
+64              ratelimited: 0.16%       non-ratelimited: 2.52%
 
-[1] [PATCH v2 3/4] kernfs: don't lose IN_DELETE_SELF
-    when decoding a file handle
-https://lists.openwall.net/linux-kernel/2026/09/05/828
+Between the ratelimited and the non-ratelimited runs, walltime and
+pgsteal were pretty much indistinguishable (42.7s vs 43.6s at 16
+threads and 41.7 s vs 42.4s at 64, with the ranges overlapping, and
+pgsteal within 0.2%).
 
-Results and reproducers:
-https://github.com/lcf0399/linux-regression-evidence/tree/f101b1b9c0d3dfce0=
-7f81b11ca2da2c252150e4c/kernfs-empty-cgroup-removal/bare-metal/inode-inited
+I also measured the lock contention. At 16 and 64 threads, 15-20% of
+__css_rstat_lock() acquisitions hit a contended trylock with the
+non-ratelimited version. At 16 threads, the mean flush time rises
+about 8% and at 64 it roughly triples from the single-thread case
+(26us at 1 thread, 42 us at 16, 87us at 64)  but I didn't see any
+effect of this on wall time or pgsteal between the non-ratelimited and
+the ratelimited version, and the percentage of reclaim time spent
+flushing stayed at 2-3%. I think that's because css_rstat_flush()
+takes and drops the lock once per cpu rather than holding it across
+the walk.
+
+I also ran it with 32 actively churning sub-cgroups under the reclaim
+target, since css_rstat_flush() walks the descendants that have
+pending updates. I saw that per-flush cost rises slightly (~24 us to
+27 us) but the share of reclaim time spent flushing went down rather
+than up (4.1% to 3.2%), because reclaim gets more expensive faster
+than flushing does. I don't have a ratelimited baseline at 32 children
+though, because with the ratelimited version, all the runs I tried
+OOMed. I think this is an alternative repro to the OOM issue but
+doesn't need/have KVM dependencies, so if this would be useful to
+clean up and send as a standalone C repro, please let me know.
+
+(Also btw (this is a bit tangential to this OOM issue, but somewhat
+semi-related), I don't think the WORKINGSET_ACTIVATE_{ANON,FILE} stats
+checking really does anything in practice. On my benchmark runs, the
+"refaults !=3D prev_refaults" check evaluates to false in pretty much
+every scan. Even with flushing working properly, it didn't trigger on
+1673718 of 1674912 samples, even though the cgroup was thrashing the
+whole time (a separate run of the same workload counted 6371860 anon
+refaults vs 6523 activations). I think it's because reclaim is
+scanning faster than the refaults counter advances, so it'll almost
+always see no change. I'm not sure how much this matters in practice,
+but I think effectively in that check above in prepare_scan_control(),
+deactivation relies entirely on the inactive_is_low() check.)
+
+What do you all think about adding a) and b) as the fix for this issue?
 
 Thanks,
-Chengfeng
-
-T.J. Mercier <tjmercier@google.com> =E4=BA=8E2026=E5=B9=B49=E6=9C=8814=E6=
-=97=A5=E5=91=A8=E4=B8=80 00:17=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Sun, Sep 13, 2026 at 8:47=E2=80=AFAM Chengfeng Lin <lin2530632123@gmai=
-l.com> wrote:
-> >
-> > Hi Tejun,
-> >
-> > Thanks. I found this during research into kernel performance regression=
-s,
-> > using a microbenchmark of cgroup creation and removal. This was not
-> > prompted by a production issue.
-> >
-> > I reported it to document the added removal cost and ask whether some
-> > of it could be reduced while preserving the fixes. I agree that the
-> > roughly 3 us increase per removal does not, by itself, demonstrate a
-> > significant impact on real workloads.
-> >
-> > Thanks,
-> > Chengfeng
-> >
-> > Tejun Heo <tj@kernel.org> =E4=BA=8E2026=E5=B9=B49=E6=9C=8813=E6=97=A5=
-=E5=91=A8=E6=97=A5 23:03=E5=86=99=E9=81=93=EF=BC=9A
-> > >
-> > > Hello,
-> > >
-> > > On Sun, Sep 13, 2026 at 10:43:04PM +0800, Chengfeng Lin wrote:
-> > > > I found an increase in empty cgroup removal latency across 507d8ce1=
-3f5b
-> > > > ("kernfs: Don't set_nlink for directories being removed") and eea5d=
-2bb34ba
-> > > > ("kernfs: Send IN_DELETE_SELF and IN_IGNORED"). With sched_ext disa=
-bled,
-> > > > rmdir() went from about 6.5 us to 9.6 us, an increase of 46-47%.
-> > > > The result held in two independent runs.
-> > >
-> > > I don't want to make cgroup removal unnecessarily expensive but at th=
-e same
-> > > time it's not an operation that I consider to be a hot path, so as lo=
-ng as
-> > > the operaiton can finish in a reasonable amount of time and single di=
-git us
-> > > definitely is, performance of rmdir usually isn't something which is =
-high in
-> > > priority. Can you please detail why this matters for you?
-> > >
-> > > Thanks.
-> > >
-> > > --
-> > > tejun
->
-> Hi Chengfeng and Tejun,
->
-> We use this kernfs IN_DELETE_SELF feature on Android where multiple
-> cgroups are created and removed frequently on a per-application basis,
-> but we hadn't noticed a significant delay due to the inotify
-> functionality during cgroup removal. It's probably masked by much
-> larger delays (milliseconds) we regularly see due to unreleated issues
-> with cgroup locks like priority inversion with cgroup_mutex, and
-> contention for cgroup_threadgroup_rwsem.
->
-> As far as what we can do, I think avoiding inode lookups for kernfs
-> nodes that never had an inode created should improve the situation. It
-> doesn't eliminate the locking overhead, which I don't think can easily
-> be eliminated. The code below doesn't deal with inode eviction either,
-> but at least files which are never accessed won't introduce the inode
-> lookup overhead.
->
-> diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-> index 4f9ade82b08a..3ec9f79b1aa2 100644
-> --- a/fs/kernfs/dir.c
-> +++ b/fs/kernfs/dir.c
-> @@ -1523,6 +1523,9 @@ static void kernfs_clear_inode_nlink(struct
-> kernfs_node *kn)
->         struct kernfs_root *root =3D kernfs_root(kn);
->         struct kernfs_super_info *info;
->
-> +       if (!(kn->flags & KERNFS_INODE_INITED))
-> +               return;
-> +
->         lockdep_assert_held_read(&root->kernfs_supers_rwsem);
->
->         list_for_each_entry(info, &root->supers, node) {
-> diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
-> index 38b28aa7cd02..f8b4a8b8ade4 100644
-> --- a/fs/kernfs/inode.c
-> +++ b/fs/kernfs/inode.c
-> @@ -208,6 +208,10 @@ static void kernfs_init_inode(struct kernfs_node
-> *kn, struct inode *inode)
->         set_default_inode_attr(inode, kn->mode);
->         kernfs_refresh_inode(kn, inode);
->
-> +       down_write(&kernfs_root(kn)->kernfs_iattr_rwsem);
-> +       kn->flags |=3D KERNFS_INODE_INITED;
-> +       up_write(&kernfs_root(kn)->kernfs_iattr_rwsem);
-> +
->         /* initialize inode according to type */
->         switch (kernfs_type(kn)) {
->         case KERNFS_DIR:
-> diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-> index e21b2f7f4159..87f074ce19d3 100644
-> --- a/include/linux/kernfs.h
-> +++ b/include/linux/kernfs.h
-> @@ -113,6 +113,7 @@ enum kernfs_node_flag {
->         KERNFS_EMPTY_DIR        =3D 0x1000,
->         KERNFS_HAS_RELEASE      =3D 0x2000,
->         KERNFS_REMOVING         =3D 0x4000,
-> +       KERNFS_INODE_INITED     =3D 0x8000,
->  };
->
-> -T.J.
+Joanne
