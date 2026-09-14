@@ -1,191 +1,267 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mta0.migadu.com (out-31.mta0.migadu.com [91.218.175.31])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1E23101A7
-	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 02:18:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0390265620
+	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 07:34:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.31
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789352318; cv=none; b=K+Aig7+kQs96xJAML7KNywGimJN0NlyCLx1WP5BpYTlOpEpUElVv7i5AuHYjJNBRysbv1LPXS3lJSMbiZXwUJVkLQNjKUkuFrQmmkpDBJOVNfWZ0UHgfDgpShQl0sfdcnN0jo3Ohkoyqbbfx9QRFRv+gdVrPHpzSJLOqv/WYFSk=
+	t=1789371251; cv=none; b=ZoqF1WjAs9S7V53yvlRiRJoC0jG1bHiL5wAYTIdHDheACVhb6iVm4mLfPC0XwKXuuVxsMMN0ox+M4Ocrb+Jv5H00ZUe2+60E2ijBpZNgzPkOTtsddzU4PBY/TXpsjlbXHxLBU4MxX/cAg630ri9tG628664Gf85ldsbieFz/SnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789352318; c=relaxed/simple;
-	bh=pZGDrroNHqjdFZupRzGuVRROHlFvliLkvG4+Plg0fdM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lbdszdZ9e3OfWWJefN6Z5ng4UrQvdeMeyCv3TPncvCg7EOht/DWVNyMVKd+K7bbH9DUoz7U1ZMGHoKIEvmo+EZggl9aRMOugpN52lALdZtgJt+VwkkRFDLjV2XzaKN/NgaTXKVmTFe4s7pyWVkNQTPuGxRYXs7us287yWSjEbWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=Q392KOCo; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1789371251; c=relaxed/simple;
+	bh=T9yqexVIbUceZI9GQ7YgOL3+cqQQ9ZaJeJTzzuJBpjY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Y/U+yRPQXkVd/xRhm9+exf3co5BkacanfaO8Gj+m0TubZyszUeVyV4yJP343+DJTn3cBI268RRXFIGgt06IsuT191zfywBiKtoKysjhHyF71/AFDweciOa3OnQ0/DL01Nm28BzXLPB/HiqcifW1Lax7yuyvSozfGFOu/rKvNNnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=b6pCvLLd; arc=none smtp.client-ip=91.218.175.31
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="Q392KOCo"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-853f8c34ba4so3756854b3a.0
-        for <cgroups@vger.kernel.org>; Sun, 13 Sep 2026 19:18:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1789352314; x=1789957114; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=DxBEauNnCmvuxYQWGMnLgbbVInndKO4lO+HSKGFpeVU=;
-        b=Q392KOCoJRUrGLcdxPCt1OpEPiHzU1w3EdPxu+KLQEK4Oce9o2/EGndlVgR6I3n3ZC
-         iebcnhyNE/JplxLfu3PlTgs8SAQHKD3aY+2mlBBPNNPmRIgixkyvDn5s38qk2NoWtKJu
-         fDMkD1e2vWlQTPS70+m4/aAlHjPqM7wS7cOJXhAL+iLDd6iT1v3AACyU9Sh0Nh7VxLSp
-         7UuDqpjps2vcQNOWCeVn2r7tUzNJGwDiwOTATYqWqb/stipcL3aNF+jK1/uQAAHqBcn4
-         yYrG28A7M43VV+pGR8ZLazVwaDsehbSpzGL+c2lifUJIYiJVCcC9jse/Rsy6LCB5p7Xv
-         fDqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789352314; x=1789957114;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=DxBEauNnCmvuxYQWGMnLgbbVInndKO4lO+HSKGFpeVU=;
-        b=VauqHycfVzsldjSOCxygLsgYSWPhJ7js9vwLg+RIOXwQdSBaVczU27w6WmYCpGqO9H
-         qF+C8KsE99Do9YLlaah20d6mx/+tFjD83lMR3gd1n6JwykTYAFPFW2KYtAjxzD0mP3ut
-         1aoMdV/+d3lL5STGP0J7jif9JeJnovje26UMu2VaAx4V6PkcpMk4IN8LeCeanK4KOYVu
-         lhgCSnzfdKt26uLqxtWiFqvFGouexHlkFpChUSeiH+D8ImAvqRJSM5jNxQnT4rp/BD3U
-         Fp2iFfPwZGordRE/WA9Ef591LaW9gi50Oi84sKIGz3v869kiWVuMRgsze8xHhqHGuCdS
-         LNfw==
-X-Forwarded-Encrypted: i=1; AKwUvBwQ3Yzd5IFB4yZ1k6AK9LcXGz+yp6/95Uh4XwaYeQSum+ujCtI+M//YdLH8B4SuDfwZDnhqxUKZ@vger.kernel.org
-X-Gm-Message-State: AFuF++nwTnRfbjVcQboHmuIBUQGcDHXuw9lf/RKQwxd5BtSsx7DiPO3d
-	Rv9pqnQ8BuzVYjlULkLWrlAUubbqie55SXPzp0oGy/G6oOb7HOS4g8Piiiao1+5tsbg=
-X-Gm-Gg: AYBFou2xVfXoT+dlGj0d5odzOISWM6GzRc9ZoXodNutzpjck8xT6LJ0l38vywmbA7am
-	h6oAbZ/ewTXAXQYQ0qZPjQmye6M5drZlYkMEVi1pl1JxZpM8KXDMPyy9ISBhDl55sKQH7ZrZOWG
-	DMrNUFHFvcEVTyZmco7DTbQVK0Kyhn7TA8wcXGA8gQwtFK+7C+lntadl22CkFNZrXn+DSOKWB4b
-	AvERjF/sW4BSOgDT/rBzRZJ6VFxM/Q55UWx8yfqV0l1TqFlmUqm8YIQQjQ9CCWGNIDfXuVUMpIT
-	iPwex4+P9AWiFZu0HPvwiS3gEV4BTcN7xlPYJW4gSf6psTZHZPtmfiaNKbeUFnyQumNBRmpCFPL
-	wYd7/5Qy9TRDLza+7/Cdb3Quuo1LJqtYlxXuv7Jd+0S1G7X3XMOy9791c6mPb3vUWLi1mLoJCSD
-	YGbL5UDG2+XiCykkGpEcKuka9K+dUKHS1Q+UUM5gxkP90aOEjI+/PcliWrNOJjJ+S0QphJ1Tq+B
-	fCWe1w4zgSWVMK99+POPUx3MIH3t7yZ9MnP3zvMvZ8=
-X-Received: by 2002:a05:6a00:950b:b0:851:d12e:389b with SMTP id d2e1a72fcca58-86f854fa179mr1418104b3a.14.1789352313961;
-        Sun, 13 Sep 2026 19:18:33 -0700 (PDT)
-Received: from [100.81.12.150] ([61.213.176.57])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-86b291c06e0sm3752158b3a.28.2026.09.13.19.18.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 13 Sep 2026 19:18:33 -0700 (PDT)
-Message-ID: <e55a7422-1871-4a03-80bd-09cedf9630dd@bytedance.com>
-Date: Mon, 14 Sep 2026 10:18:29 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="b6pCvLLd"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=T9yqexVIbUceZI9GQ7YgOL3+cqQQ9ZaJeJTzzuJBpjY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789371246; v=1; x=1789976046;
+ b=b6pCvLLdw//ZztLIUFZYl/nNZFtefyttTJgOyQ/tY0LG1xLrz2Ean29fvXELz9cq70Wj62rX
+ goxiJPaFkT8LEW6c/HYdrhCmmeWlQ6P7f+9rJ8RaZP3ahStCynGXk0PeexfvjQR31BRMcLP8TD9
+ ImvOh8B+ekkSEW2LQkpeyUhY=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id c11aff05638d77e2;
+	Mon, 14 Sep 2026 07:34:06 +0000
+X-Mizu-Trace-ID: c11aff05638d77e2
+X-Migadu-Flow: FLOW_OUT
+From: Tao Cui <cui.tao@linux.dev>
+To: tj@kernel.org,
+	josef@toxicopanda.com,
+	axboe@kernel.dk
+Cc: cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bpf@vger.kernel.org,
+	andrii@kernel.org,
+	ast@kernel.org,
+	daniel@iogearbox.net,
+	linux-kselftest@vger.kernel.org,
+	cui.tao@linux.dev,
+	cuitao@kylinos.cn
+Subject: [RFC PATCH v3 0/5] blk-iocost: BPF struct_ops cost model
+Date: Mon, 14 Sep 2026 15:33:51 +0800
+Message-ID: <20260914073356.791518-1-cui.tao@linux.dev>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] writeback, memcg: skip foreign dirty tracking for bdev
- inodes
-To: Jan Kara <jack@suse.cz>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, akpm@linux-foundation.org, axboe@kernel.dk,
- tj@kernel.org
-References: <20260909034343.340703-1-sunjunchao@bytedance.com>
- <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
- <CAHSKhtcvaWgGHY_NWW242vYHHiSet0v-qsj4MsXGiwZJFrdUnQ@mail.gmail.com>
- <ekylbhyzseq25nxq2yivmmdt5xl5glum5proueyd5mrqfux2y6@fpvflg4crr2i>
- <db6d62f4-34f0-4237-ab58-c21b0968bee7@bytedance.com>
- <l2awpukcp7lorvujvwdoqnlwlkkjl6e2kef6tnjvdw7qve2fni@vh4lspozoytt>
-From: Julian Sun <sunjunchao@bytedance.com>
-In-Reply-To: <l2awpukcp7lorvujvwdoqnlwlkkjl6e2kef6tnjvdw7qve2fni@vh4lspozoytt>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 9/11/26 11:39 PM, Jan Kara wrote:
-> On Fri 11-09-26 19:39:42, Julian Sun wrote:
->> On 9/11/26 7:20 PM, Jan Kara wrote:
->>> On Wed 09-09-26 21:18:11, Julian Sun wrote:
->>>> On Wed, Sep 9, 2026 at 7:13 PM Jan Kara <jack@suse.cz> wrote:
->>>>>
->>>>> On Wed 09-09-26 11:43:43, Julian Sun wrote:
->>>>>> The expectation in wbc_detach_inode() that "concurrent write sharing of an
->>>>>> inode is expected to be very rare" does not hold for bdev inodes. On ext4,
->>>>>> metadata from many memcgs shares the same bdev inode, so dirty throttling
->>>>>> in those memcgs can repeatedly trigger foreign flushes of the owner wb.
->>>>>> These flushes can also write ordinary file data, reducing overwrite
->>>>>> coalescing under continuous buffered overwrites. The resulting extra I/O
->>>>>> leaves less device bandwidth for other workloads.
->>>>>
->>>>> Hum. Are you aware of [1]? The guy is from the same company so I was
->>>>> assuming you two are working together on the problem :).
->>>>
->>>> Yes, Xin and I are on the same team, and we are looking at different
->>>> ways to mitigate this issue.
->>>
->>> OK :).
->>>
->>>> We will continue trying to gather more evidence from production to
->>>> better understand its actual impact. The number of calls to
->>>> `balance_dirty_pages()` and the time spent in it might be useful
->>>> metrics for this purpose.
->>>>
->>>> Jan, if we can show that this patch provides a measurable improvement
->>>> in production, would you consider accepting it? Or do you think we
->>>> should still look for a better approach? If you think there is a
->>>> better way to address this, we'd be very interested in your
->>>> suggestion.
->>>
->>> I definitely acknowledge that there's a problem with foreign flushing due
->>> to bdev inodes that needs to be fixed because as Tejun wrote, bdev inodes
->>> break the fundamental assumptions of foreign flushes. But so far I haven't
->>> seen a solution which I'd definitely support.
->>>
->>> Having data from production to understand what exactly is the practical
->>> problem will hopefully help us understand how the solution should look
->>> like. Is it just that we trigger too many flushes and that slows down
->>> things? Or is even one foreign flush of the whole wb due to bdev inode
->>> making performance bad? Is it that we have many foreign pages and foreign
->>> flushes fail to properly write them?  These are questions we need to answer
->>> to decide how the solution should look like. And the solution could be
->>> anything from just limiting number of foreign flushes for a wb to 1
->>> (because there really isn't big point in more of them being queued) to more
->>> involved foreign page tracking for bdev inodes so that flushes can be more
->>> targetted.
->>
->> Hi Jan,
->>
->> Thanks for your feedback.
->>
->> All the foreign flushes we've observed were triggered by bdev inodes.
->> What we've observed is that the bdev inode has only around 10 MB of
->> dirty pages, but it triggers writeback of around 40 GB of dirty pages
->> across the entire wb. The actual foreign pages account for less than
->> 10 MB, yet flushing them triggers writeback of the whole wb, and this
->> happens repeatedly.
->>
->> This appears to cause significant write amplification.
->>
->> Limiting foreign flushes to one may not be sufficient in this case,
->> since even a single flush can trigger a large amount of unnecessary
->> writeback. I'm currently working on tracking foreign inodes so that
->> foreign flushes can target those inodes specifically.
-> 
-> OK, good, these are already some tangible data to use :). So in that case
-> I'd maybe just:
-> 
-> 1) Avoid adding 'wb' as foreign just because it owns bdev inode where we
-> are dirtying a page.
-> 2) Track that we have some foreign pages in this particular bdev inode.
-> 3) In balance dirty pages queue flushes of bdev inodes where we have
-> foreign pages (besides queueing standard foreign flushes).
-> 
-> I didn't put too much thought into how to integrate this in an elegant way
-> with the current writeback infrastructure but something like this shouldn't
-> be that hard and it should help you with the foreign flush issues you
-> observe.
-> 
->> The impact on production workloads is not easy to measure directly,
->> which is another challenge we're facing. We've had reports of slow
->> dirty page writeback from production workloads. Although we haven't
->> established the full causal chain yet, we suspect foreign flushes may
->> be contributing to the problem.
+From: Tao Cui <cuitao@kylinos.cn>
 
-Jan, thanks for the suggestion. This approach makes more sense.
-I'll implement it and send a patch after testing.
-> 
-> Just being able to measure that "with these patches we don't need to flush
-> 40GB of unrelated data in foreign flushes in our production workloads" is
-> enough to convince me they bring some tangible benefit for your workload
-> :).
-> 
-> 								Honza
+This is v3 of the RFC.  The changes since v2 are listed in the
+changelog at the bottom.
 
-Thanks,
+Why a pluggable model at all
+----------------------------
+
+When iocost landed in 2019, its commit message already promised that
+"a later patch will also allow using bpf progs for cost models", and
+the code has carried the split for it ever since: calc_vtime_cost()
+is a dispatcher whose only implementation is calc_vtime_cost_builtin().
+Seven years later the builtin linear model is still the only one.
+This series fills that slot, following the TCP congestion control
+model registration pattern: builtin algorithms remain the default
+while new ones can be prototyped in BPF.
+
+The measured problems
+---------------------
+
+The builtin model prices each IO with a binary sequential/random base
+picked by a single per-cgroup cursor and a 16MB seek threshold, plus
+a per-page cost.  On a virtio-blk device with the HDD autop profile,
+a 4k IO costs ~24us when judged sequential and ~2.7ms when judged
+random, a 112x spread, so a wrong judgement becomes a wrong price.
+Three classes of mispricing, all measured:
+
+ 1. Heuristic rigidity.  Two legitimate sequential readers in one
+    cgroup (a database with multiple tablespaces, a threaded backup)
+    ping-pong the single cursor and are all priced random: a
+    measured 89x overcharge collapses throughput under the same
+    weight.  Random IO within a hot window smaller than the 16MB
+    threshold is priced sequential: measured 107x undercharge, an
+    accounting escape for hotspot workloads.  No setting of the six
+    builtin parameters seems able to fix this: telling the streams
+    apart requires per-IO state tracking, which looks like logic
+    rather than coefficients.
+
+ 2. Device nonlinearity.  SLC-cache phases, SMR band placement and
+    shared controllers (multiple NVMe namespaces multiplexing one
+    device) make the real cost of an identical IO vary by an order
+    of magnitude over time or across namespaces.  A static
+    6-parameter linear model has no way to express that.
+
+ 3. Unpriced operations.  Flush and zone append fall through to a
+    cost of zero and bypass throttling entirely, and the same pattern
+    extends to device quirks the builtin model was never taught.
+
+Mispricing feeds directly into the control loop: vtime budgets,
+surplus donation and the vrate feedback all consume the model's
+output, so a wrong model can skew the whole controller.
+
+How
+---
+
+A bound BPF model fully owns pricing for every IO on the device:
+it is called from the bio charging path and prices every operation
+including flushes.  The completion-time request sizing for the
+latency met/missed accounting still uses the builtin coefficients
+(the request's bio, and with it the issuing cgroup, is gone by then);
+extending the model there is an open question of this interface.  The builtin
+cursor is not exposed; a model is expected to track its own stream
+state.  Note that model state keyed by the blkcg alone is shared
+across every device the model is bound to, unlike the builtin cursor
+which is per (cgroup, device).
+
+    u64 calc_cost(u64 opf, u64 nbytes, sector_t sector,
+		  struct blkcg *blkcg, u64 model_flags)
+
+opf is the full bio->bi_opf (the operation must be extracted with a
+mask, and the REQ_* flag bits, including PREFLUSH/FUA, are part of
+it); model_flags carries iocost-specific metadata which is not part
+of the bio operation flags, such as whether the cost calculation
+is for a merged request; the return value is vtime, clamped to 1
+second of device time per IO.  blkcg is passed so the model can key
+per-cgroup state; state stored in BPF_MAP_TYPE_CGRP_STORAGE
+follows the cgroup lifetime, and optional blkcg_online()/
+blkcg_offline() callbacks mirror the css lifecycle for models
+which want eager setup or teardown.
+
+The registration and binding model follows the TCP congestion
+control model registration pattern: registering a struct_ops makes
+the model available by its name, while io.cost.model binds one
+registered model to a device with "model=<name>" and restores the
+builtin model with "model=linear".  Unregistering a model removes
+it from the registry so it can no longer be selected by name;
+devices already using the model keep using it until they are
+switched back to the builtin model, at which point the reference
+is released.  A model which does not implement calc_cost is
+rejected at load.  Sleepable models are rejected at verification,
+since calc_cost() runs under RCU read lock.  Patch overview:
+
+ 1/5: the BPF struct_ops cost model support: Kconfig, ops
+      definition, name registry, registration, io.cost.model
+      binding, unified dispatch and verifier checks
+ 2/5: selftest with the 2x example model (the full builtin linear
+      HDD formula at double cost) plus a runner and the selftest
+      kernel config entries
+ 3/5: add an iocost_ioc_tick tracepoint emitting the per-period
+      controller state, so model quality can be evaluated without
+      drgn (existing events are state-change driven and silent in
+      steady state)
+ 4/5: a second example model which replaces the single-cursor
+      sequentiality heuristic with per-cgroup multi-stream detection
+      keyed by the cgroup, the first consumer of the state interface
+ 5/5: document the model=<name> binding in cgroup-v2.rst
+
+Does it work
+------------
+
+Mechanism, verified functionally (QEMU, virtio-blk with the HDD
+profile, sequential-read workload from a 1%-weight cgroup, builtin
+vs the 2x example model):
+
+ - per-IO charge: 2882us -> 5722us, a factor of 1.985x; the
+   completed IO count halves and total cost.usage is conserved,
+   i.e. the model output drives both charging and budgeting
+ - edge cases: binding an unknown model name fails with ENOENT
+   and nothing is applied; unregistering a bound model leaves the
+   device correctly priced (2x) until it is switched back; the
+   readback shows the bound model name; the selftest runner
+   checks the write error and errno of every step, including the
+   restoration
+
+Workload-shape verification added in this revision (same setup,
+4k IOs at weight 1000, builtin vs the 2x example model):
+
+ - flush-heavy workload (read/write/fsync alternating): priced
+   1.99x the builtin, i.e. flushes no longer reset the cursor
+   and misjudge the following IO as random
+ - non-page-multiple IO (6 KiB): priced ~2x, matching the
+   builtin's truncating page count
+ - first IO from a high LBA (past 16 MiB): priced 2.01x, i.e.
+   a fresh cgroup's zero cursor no longer misjudges the first IO
+   as random
+
+Payoff, demonstrated with the multi-stream example model (4/5) on
+the same setup, 4k IOs at weight 1000, builtin vs the model:
+
+ - two sequential readers in one cgroup: priced 1961us/op by builtin
+   (both judged random by the single cursor) and 23us/op by the
+   model (each stream keeps its own slot); the completed IO count
+   rises by two orders of magnitude
+ - random IO inside an 8M window: priced 24us/op by builtin
+   (undercharge, an accounting escape) and 2607us/op by the model
+ - single-stream sequential and whole-disk random pricing are
+   unchanged, so the model fixes both directions of mispricing
+   without introducing a new one
+
+Non-interference, measured on enterprise NVMe: no measurable
+overhead when the BPF model is not attached.
+
+---
+Changes in v3:
+- blkcg online/offline notifications follow the model binding, not
+  the name registry; an unregistered but still-bound model keeps
+  receiving them until its last reference is dropped
+- the io.cost.model write resolves the model name before applying
+  anything and swaps the model pointer under ioc->lock, so a bad
+  name rejects the whole write and concurrent writers cannot
+  interleave a half-applied configuration
+- iocost_ioc_tick reports the period's own state, including its
+  measured duration and the period number that just ended
+- a model which does not implement calc_cost is rejected at load
+  (the CFI stub previously satisfied the check and priced every
+  IO at 0)
+- CFI stubs are provided for blkcg_online/blkcg_offline, without
+  which the verifier rejected any model trying to implement the
+  optional lifecycle callbacks
+- the example models match the builtin cursor semantics: a zero
+  cursor means no previous IO, the cursor is only advanced for bios
+  the builtin prices (a dataless flush no longer resets it), the
+  cursor advance truncates to whole sectors like bio_end_sector(),
+  and the page count truncates like the builtin; stream updates
+  are lockless like the builtin cursor, noted in the example
+- the selftest builds at every commit (the streams test moved to
+  the patch adding the multi-stream model), includes <ctype.h>,
+  checks enable=1, skips instead of failing on devices without
+  iocost, distinguishes the open() errno from the write() errno,
+  and reports the restoration error
+
+Tao Cui (5):
+  blk-iocost: add BPF struct_ops cost model support
+  selftests/bpf: add iocost cost model test
+  blk-iocost: add iocost_ioc_tick tracepoint for per-period device
+    summary
+  selftests/bpf: add multi-stream sequentiality example model
+  docs: cgroup-v2: document io.cost model=<name> binding
+
+ Documentation/admin-guide/cgroup-v2.rst       |  12 +
+ block/Kconfig                                 |   9 +
+ block/Makefile                                |   1 +
+ block/blk-cgroup.c                            |   3 +
+ block/blk-iocost-bpf.c                        | 307 ++++++++++++++++++
+ block/blk-iocost.c                            | 229 +++++++++++--
+ include/linux/blk-iocost.h                    |  83 +++++
+ include/trace/events/iocost.h                 |  46 +++
+ tools/testing/selftests/bpf/config            |   2 +
+ .../selftests/bpf/prog_tests/iocost_model.c   | 200 ++++++++++++
+ .../selftests/bpf/progs/iocost_model.c        | 134 ++++++++
+ tools/testing/selftests/bpf/progs/iocost_ms.c | 156 +++++++++
+ 12 files changed, 1158 insertions(+), 24 deletions(-)
+ create mode 100644 block/blk-iocost-bpf.c
+ create mode 100644 include/linux/blk-iocost.h
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/iocost_model.c
+ create mode 100644 tools/testing/selftests/bpf/progs/iocost_model.c
+ create mode 100644 tools/testing/selftests/bpf/progs/iocost_ms.c
+
 -- 
-Julian Sun <sunjunchao@bytedance.com>
+2.43.0
+
