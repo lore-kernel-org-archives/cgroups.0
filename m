@@ -1,297 +1,127 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D732E3C10A2
-	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 19:01:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789412500; cv=pass; b=oXEzdWfcZ5iKm3clkQ3kHaLJmKkZv6Mdsui6ROBQ1Ks+Tq56Iz6cz11w605dVig80QoiIKY6p4Dtc9Nvlz7IO+HqNBbAsD3539eKxfDxktXDZy3SoqtRWHMC3hKnTWghWlZQ4mnkCmzMlh7nJxjSkQInBnFxPfUKAtZpGSb3UBE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789412500; c=relaxed/simple;
-	bh=tEqRa+DsXLUgwM55dRsOm8XIccM+IQ7pzEYsSC9u7A4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RsA3zi4Lpslnr0VAxSrBPLzy2PU+pL2P7qLSufbzXSkIwZe6QhV+2A75RJNzfdlZMuvpt2jRXbKcrfxw42zFhl24+lRO94Wh6/Ul7xnFoPivrrpKoDDquWJ42OM4itr+ulk87nRxgjovxGghChwPPbd14VRdk1Wu6p+g1dMjG8k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gmdgZh2W; arc=pass smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796903A1690;
+	Mon, 14 Sep 2026 20:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789418211; cv=none; b=oBSEFxnFn6MzxpX9GJ8mcDdEsV1XRLKkEaIR/OMjAhVfV6vy4l7jkiBjlw+NSAWBUKFOmhZ6lx2mFoDyFm3HZB9TBW4CsB9Ed/jMcWi/xdfuSRrhppTE7oqbif82PiS2z+Ib1crLSCnfBNx+PPAFSbc0HmoHtNKhv6VIuVVolZk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789418211; c=relaxed/simple;
+	bh=/sNxzbddZxqlcZceQW1zIwaoQBVW4vEyJ/85AKT6/0U=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=QruXegeqaqMxoY8d3owTxVj4F+Zo/hp0/kGpx1JXmXu4RTE9hKRlb+wRemhzZI7PZFuiHFLk87uBYeClGIYxQ3qudU5Lwsr6c2lkiboT49B8xOE1Rwt+orFoACxZM2RDdKPxd848wji3yWfCsno+eR7H/r+1JIsxs0SW8TmqLAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EFUlY8Zx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gmdgZh2W"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-48449f62b93so751420f8f.0
-        for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 12:01:23 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789412482; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Rkf/IDgmJLFXFc/V+xv7FbyWq8ZlhJK0DGjcw+uvSK9m+yZL3S1W2DJULi7My3GxHZ
-         XV17YOxuuMgF9NOxmSXv+vOg1blXO6FAQovcfyE7Vc+zo0RaZ9+ea8crj+Eogv4aY2nS
-         bAB47wDlHdFap9JBZ20dxshEifimw1v8fXUjsQSnPVJNiR/9rNs1Kdy3mSvV6xikrZwO
-         UnlkVcSW8IYveyEaHrkx9NkvM/ZUqUcCPb2C78ziHJmroroBU+xBrtn+WrGhbv/38a2w
-         IgZzJYLNrSyXWy2KVpdwjsWQIJJA8Y8Np6fRNhBt6yMutReN8xZWzPfXg5MiuybBCvt2
-         Ndcw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=kcWr29ciRXo/Ssy/W3GMAIMRBylURTjvxgSXaybDMn0=;
-        fh=7x2OSxASdh6en1ofOZtchf3tzKXwquxhFxlhIOXIb6s=;
-        b=YRDUD9DwqGb/iFK7uH6Tc5It3yOejbUlm23dWClj7mspjTJEDB4umHLlCEDu3ANo5y
-         RGh6jkMjBSh0vzBTHnM4ULQmG99PPBRYdkHq1qNqquFhqmmAjgKNIYs9qr+q8x4nwNx6
-         JfGeCZL0Otxx8PTbLgydEd4Scx0BR9rxA0RFO6Hr0756wTa+sNEZmMCDk5AMNzbpDluJ
-         wteiSX/icxzNj48S/otexgsycdu86mRx2q+6zcgqVHGQCZCLOvFySu1/Q+OWN4B4xP9l
-         oxY2qYsVWVMlyG6vUOf7M0r7ztNrwkHzCz8wCBP7cWvN1IF+PoSfXuZ0bx733khzC5zI
-         vyuA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789412482; x=1790017282; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=kcWr29ciRXo/Ssy/W3GMAIMRBylURTjvxgSXaybDMn0=;
-        b=gmdgZh2WwB7TU1kRO8iSENZpNQ6sIpswBklNM34kRAArJ9aZysmuP0detAheSU4DFD
-         FW+7M57oDZ05DSIJAB2fm1eybxSekBbYkYuIYo92xhvMDiMdPvfRe1TDl9MfpugCMQdY
-         iv4PNu8l0Xpf6ifsFwSehWpISnM0urCT4M+6X0EXK5VT6Wy8GUDMaz4Nx/ccY1/lZC87
-         H5+O1XCucYwTpOXduuwh/nK5l2cWs7auiGQISwLyGWfc18+31lB6KLshdLN8Le1t5XNq
-         2OyrB3M5XfuXdHtZOqgOr+POBgtmqB8s59oiX16hTsjOoeooZR+0an2dMHkwtzuohhr5
-         ZgbA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789412482; x=1790017282;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kcWr29ciRXo/Ssy/W3GMAIMRBylURTjvxgSXaybDMn0=;
-        b=Euuq+g1VZww5rEON4yUpflcFfALdrqUtzbMipT3amqf4u403s1RzKoZzL4UBRqWMjY
-         /yqidx8pc9aaCFnleUUtJjjS/2YFmjjs1JVO3PriSJRw8cmTs2p9K/48wrjdCdUZjSHq
-         wqdnEYElQZlE+aWY7tJZftwH0P47YhXTHGVxJuiDSy/TrrDcHqBHUcJ+RCNKmTIkeins
-         hA5ZoUURoW0A/9TVvc4QyXW6SGa+GB/88cbhUiCT2ZVe/XyMhAXPfrv9VrfW6cJNQ4aT
-         5ZicU1nAMcN9UPWeIcw7FN3ufKYOVDmFHz4rRIBQySiBUZylEsDPK+26blftvP1jqGDr
-         UzuA==
-X-Forwarded-Encrypted: i=1; AKwUvBw0dPoOlAy9ACRb1KZyJXhHDFskw86vv6SqsBhRAakreahL9VBrTD57NjzplyNI3VwLVqJ0n5sN@vger.kernel.org
-X-Gm-Message-State: AFuF++kZxg1v1zdLlNpRQOrCrWcZN5XWwGsAyyYE0Vt5E5qSY2KH3tEg
-	t5UD+D8aaHqPVgKWjD783eMB8RBMPf2KhINAPV8ydV/AYTkXf92z3c3go/6PAiHShZTBNWmMm7k
-	VOjvWnQ5aUhTpbGSGWMjh9yy7lccyXbY=
-X-Gm-Gg: AYBFou2lkjB+wsXMmNvZn82efsXgIqS01qq/2EV7IfjocB8w04F9HMBGQ4/iiv4c0pN
-	TsXt0dA2lLcpzKJw2XAlLsO6Pp75goCa+d6ildjyGKVYMEHy/H9HIYU8ApGwiHvoFvf4GhioD1B
-	00wQM+9L6RXIicWCQp0u2vGCUP3eavORXOLZtoE/eKDqyJ6Q9I6LldoGPyeEw+M6bCCkSd0/XEO
-	oe1WtpZ+gAv2HCsMXfvEGpLi3tklG8OgPVrBsROIkwxdugIyrxCabAiYHbaAUGH8D1+dnRrYhdC
-	95XlJZwNwXxS2vaENGVmJmISEu+PfKNL+W3xF3kZSQ9eanWG7Isl300nH59QWwJOOCiFoZztkwq
-	hctikpZCrBnRDDXgT0cg0O4t9C+2cHNC1YXgVTcSHTxXAcQcv
-X-Received: by 2002:a05:6000:4803:b0:485:7d6d:e0e0 with SMTP id
- ffacd0b85a97d-48705a39405mr1037299f8f.3.1789412481801; Mon, 14 Sep 2026
- 12:01:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EFUlY8Zx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65B521F000FF;
+	Mon, 14 Sep 2026 20:36:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789418210;
+	bh=bcOX7r1Cj9VeZWKm8zDkuf0BISjIkiCvFWWoInxB8sU=;
+	h=From:Date:Subject:To:Cc;
+	b=EFUlY8Zxcn4IMHCDhXLwi3lLqS8BIc4GDHJBEys/ooFDVHK5zIcC03PPr+MAyT+r+
+	 udFBWZMIvzD3eqXcutwtyBDBRvrZB+8Bqf9XyNfqHr1+2o1mATnzDnWIuf1/GiT/H4
+	 rnargqIQ7Cnr9tdTSfBmfshE/xxfklIxUx2ODBp47Pb/oma7CNe6byrx6a3F7XqR6F
+	 BT9KW0AChvQ21t7etBW5/bd3balwiTVChKV6+qY8Yl9fln6W1PysJ6YrNTSO1LnqP1
+	 gRxJOPZhf/qNM+DTKPrA9KGz0Y74qHaabIOoTPArxd4+wFTmfXhXE3kCulfgods8ie
+	 C3WavO0elK6zg==
+From: "Harry Yoo (Meta)" <harry@kernel.org>
+Date: Mon, 14 Sep 2026 21:36:39 +0100
+Subject: [PATCH] selftests/cgroup: ignore memory.reclaim -EAGAIN for zswap
+ writeback test
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJnrk1bk66ZhRAS7mojSnD5RBfFS+0ChAPymE3ObRWr0C_udWg@mail.gmail.com>
- <CAO9r8zPpe6fWOSXtRUjFB8WNMroeBqvLT+2QtAU4E27AtLUXMQ@mail.gmail.com>
- <CAJnrk1YifN22mA5PFRVrh3m_ygxax6x4_8nraG2hPqCzyzBj7A@mail.gmail.com>
- <anpsLy_pCanocgS1@google.com> <CAJnrk1Yoj7fqbzurmHkbA-vegpQu3cf-_dfvKor_VxuNhPR-AA@mail.gmail.com>
- <CAO9r8zPLipVW6bvyDK1ypSawbo=LHKvmLqWH0xA6WMR9GYNJpg@mail.gmail.com>
- <CAJnrk1ai-TqcudPoK-qFRYAJnUjBmg1kVa6Vxg3eDm5w5ivqSA@mail.gmail.com>
- <CAO9r8zNJ=Fpc0pZExrttVTDCM3yzSmLPCAU=+RS0k5Pm+hY96w@mail.gmail.com> <CADrL8HV7_f68qfd6hG=xCTqzupPqr77ynbwdz8jm0hzjdgDVeg@mail.gmail.com>
-In-Reply-To: <CADrL8HV7_f68qfd6hG=xCTqzupPqr77ynbwdz8jm0hzjdgDVeg@mail.gmail.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Mon, 14 Sep 2026 12:01:09 -0700
-X-Gm-Features: AcwNN1VFoc_2eKOenFa2PrLINBfqq7xz_q3LPSvn75t1DU2-aSfT1Pyeo05pSnY
-Message-ID: <CAJnrk1aHdBm4CofvKfx7B3H-uF2xRXZUQs47J_4xeRmRZ4hcZg@mail.gmail.com>
-Subject: Re: memcg stats flushing (WAS "Re: [PATCH] fuse: disable default bdi strictlimiting")
-To: James Houghton <jthoughton@google.com>
-Cc: Yosry Ahmed <yosry@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Jan Kara <jack@suse.cz>, Miklos Szeredi <miklos@szeredi.hu>, 
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>, kernel-team@meta.com, 
-	fuse-devel <fuse-devel@lists.linux.dev>, Jingbo Xu <jefflexu@linux.alibaba.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	linux-mm <linux-mm@kvack.org>, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Jesper Dangaard Brouer <hawk@kernel.org>, Yunzhao Li <yunzhao@cloudflare.com>, Song Hu <husong@kylinos.cn>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260914-test-zswap-wb-ignore-eagain-v1-1-6fb715c22cd8@kernel.org>
+X-B4-Tracking: v=1; b=H4sIANZaqGoC/yXMwQ6CMAwA0F8hPdtkQyEZv2I8lFFHOQyyDjES/
+ p2px3d5OygnYYWu2iHxS1TmWGAvFfiRYmCUoRhqU7fG2Rtm1owf3WjBrUcJcU6MTIEkorGu8de
+ WiJyBMiyJn/L+7ffH37r2E/v8LeE4TpUhhdJ/AAAA
+X-Change-ID: 20260914-test-zswap-wb-ignore-eagain-0195c36aaa90
+To: Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, 
+ Nhat Pham <nphamcs@gmail.com>, Usama Arif <usamaarif642@gmail.com>, 
+ Chengming Zhou <chengming.zhou@linux.dev>, Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Shuah Khan <shuah@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+ Joshua Hahn <joshua.hahnjy@gmail.com>, Kiryl Shutsemau <kas@kernel.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, 
+ linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ "Harry Yoo (Meta)" <harry@kernel.org>
+X-Mailer: b4 0.15.2
 
-On Fri, Aug 21, 2026 at 6:39=E2=80=AFPM James Houghton <jthoughton@google.c=
-om> wrote:
->
-> On Fri, Aug 21, 2026 at 12:41=E2=80=AFPM Yosry Ahmed <yosry@kernel.org> w=
-rote:
-> >
-> > On Thu, Aug 20, 2026 at 4:39=E2=80=AFPM Joanne Koong <joannelkoong@gmai=
-l.com> wrote:
-> > > Would you be able to share the test you're using? I've been trying to
-> > > repro it locally without much luck.
-> >
-> > The exact test uses some internal testing libraries, we're looking
-> > into whether we can translate it to a standalone C repro.
-> >
-> > From a high-level, the test:
-> > - Creates a VM with 260 MB (256 MB for testing + 4 MB margin) in a
-> > cgroup, backed by shmem THPs. The VM is not a fully fledged VM, just a
-> > KVM VM running bare metal code (so 4 MB is enough margin).
-> > - Enables zswap in the cgroup.
-> > - Tells the VM to write to 256 MB of its memory.
-> > - Checks the cgroup shmem usage and that no swap occurred (no limit).
-> > - Sets the cgroup limit to half the VM memory.
-> > - Checks the cgroup shmem usage and swap again, usage should be ~half
-> > and so is swap.
-> > - Tells the VM to read the 256 MB of memory again. This should cause a
-> > lot of thrashing and reclaim, but no OOM kills as all guest memory is
-> > reclaimable.
-> >
-> > With the ratelimited flushing, the test started flaking 5-10% of the
-> > time due to OOM kills.
->
-> Hi Joanne, Yosry,
->
-> I've attached a reproducer for you (as a patch that should apply to
-> Linus's tree).
->
-> In tools/testing/selftests/kvm, `make` should build it. Instructions
-> for running it (like setting up swap/etc.) are in the comment at the
-> top of the file.
->
-> As part of the patch, I've also included a sysctl to dynamically tune
-> whether or not the memcg stats flush is rate-limited. You should find
-> that when it is rate-limited, OOMs occur, and when it is not, OOMs do
-> not occur.
->
-> This reproducer behaves slightly differently than our internal
-> version. This version, when run with `-b 512M` anyway, seems to OOM
-> simply by setting memory.max, whereas our internal version would OOM
-> upon re-accessing the memory. Not really a meaningful difference, but
-> just wanted to point it out.
+The zswap_writeback_enabled test fails when a write to memory.reclaim
+returns -EAGAIN, which means less than the requested amount was
+reclaimed. attempt_writeback() propagates the -EAGAIN to the caller,
+and the test case is marked as failed even when zswap writeback did
+happen.
 
-Thanks again for the repro, James.
+This heavily depends on the performance of the backing swap device.
+Reclaim does not wait for writeback (on cgroup v2), does not count pages
+that are under writeback as reclaimed, and memory.reclaim gives up after
+MAX_RECLAIM_RETRIES passes without making progress. On a slow device
+where reclaim does not make any progress before writeback completes,
+a write to memory.reclaim fails.
 
-I added some instrumentation to prepare_scan_control() and have been
-seeing that the OOM gets triggered in this pathway:
-a) the memcg is created with memory.max set to unlimited. 512 M gets
-faulted in. The new anon folios get put on the inactive list. Nothing
-reclaims them yet
-b) userspace then sets memory.max to half of memory.current (~271M
-from ~542 M currently used). This causes memory_max_write() to trigger
-reclaim logic
-c) the folios have already moved to the active list (my
-instrumentation shows 122684 active vs. 179 inactive) when reclaim
-does the scanning, which means the only way for pages to be reclaimed
-is for pages to get deactivated from the active list back to the
-inactive list.
-d) prepare_scan_control() (which decides if the pages get deactivated)
-reads the LRU sizes from rstat. This memcg hasn't been flushed yet
-(the 2s flusher hasn't yet triggered since when the memcg was
-created), so the NR_INACTIVE_ANON and NR_ACTIVE_ANON stats are all
-still zero. The real values are all still sitting in per-cpu buffers
-that haven't yet been flushed. My instrumentation shows:
-        inactive_anon       rstat: 0    actual: 179
-        active_anon          rstat: 0    actual: 122684  (~479 MB)
-e) the deactivation logic in prepare_scan_control() is:
+On a VM with zswap enabled, where IO delay was injected via dm-delay,
+the success rate of the zswap writeback test drops dramatically once
+the delay reaches 11 ms: 7% failures at 10 ms and 79% failures at 11 ms,
+n = 100.
 
-                refaults =3D lruvec_page_state(target_lruvec,
-                                WORKINGSET_ACTIVATE_ANON);
-                if (refaults !=3D target_lruvec->refaults[WORKINGSET_ANON] =
-||
-                        inactive_is_low(target_lruvec, LRU_INACTIVE_ANON))
-                        sc->may_deactivate |=3D DEACTIVATE_ANON;
-                else
-                        sc->may_deactivate &=3D ~DEACTIVATE_ANON;
+When zswap writeback is enabled, ignore -EAGAIN from memory.reclaim and
+determine pass/fail based on the zswpwb counter because that is what
+zswap_writeback_enabled actually wants to test.
 
-The if check fails:
-     refaults !=3D prev refaults: 0 !=3D 0      (false)
-     inactive_is_low(): both LRU inactive and active values are 0: 0 *
-inactive_ratio < 0     ( false)
+With this change, the test reliably passes even on a slow swap device
+(tested up to 1000 ms delay). This makes the test resilient against
+the performance of the swap device.
 
-DEACTIVATE_ANON gets cleared
+Assisted-by: LLM
+Fixes: 158863e5d7cc ("selftests: cgroup: add tests to verify the zswap writeback path")
+Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
+---
+- Huge thanks to Joshua Hahn who kindly helped the investigation and
+  the discussion of the problem.
 
-f) pages don't get moved from the active list to the inactive list, so
-reclaim ends up freeing nothing. memory_max_write() goes through all
-MAX_RECLAIM_RETRIES and OOMs, even though there's 479 MB reclaimable
-(but it's all on the active list).
+- LLM was used to perform experiments with injected IO delay and
+  to investigate why memory.reclaim fails (and verified by Harry Yoo).
+  Everything else was handcrafted by Harry Yoo.
+---
+ tools/testing/selftests/cgroup/test_zswap.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-I saw that the skipped_deactivate retry did fire (on 858 of 4264
-scans), but not enough to get the memory.current back under the halved
-memory.max, so memory_max_write() still exhausted MAX_RECLAIM_RETRIES
-and OOMed.
+diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
+index 1ac779072775..d50acc1b83ac 100644
+--- a/tools/testing/selftests/cgroup/test_zswap.c
++++ b/tools/testing/selftests/cgroup/test_zswap.c
+@@ -346,7 +346,16 @@ static int attempt_writeback(const char *cgroup, void *arg)
+ 	 * it can't writeback to swap.
+ 	 */
+ 	ret = cg_write_numeric(cgroup, "memory.reclaim", memsize);
+-	if (!wb_enabled)
++
++	/*
++	 * When writeback is enabled, memory.reclaim may still fail to reclaim
++	 * the requested amount of memory due to a slow swap device.
++	 * Ignore -EAGAIN here. The caller determines pass/fail based on the
++	 * zswap writeback counter.
++	 */
++	if (wb_enabled && ret == -EAGAIN)
++		ret = 0;
++	else if (!wb_enabled)
+ 		ret = (ret == -EAGAIN) ? 0 : -1;
+ 
+ out:
 
+---
+base-commit: baa8de2f3448d1466a888a805c18d01c998fe052
+change-id: 20260914-test-zswap-wb-ignore-eagain-0195c36aaa90
 
-imo I think the best fix would be
-a) for non-root memcgs, revert back to the non-ratelimited version
-(mem_cgroup_flush_stats())
-b) for root-memcgs (which if flushed will flush every cgroup on the
-machine), don't use rstat at all and use the existing node counters
-instead (which is what the non-memcg case already uses).
-mod_lruvec_state() always updates the node vmstat and the memcg lruvec
-stat in the same call. For the root lruvec, the node counter reflects
-the same value and doesn't need any flushing. It has an error bound of
-125 pages/cpu at most, but this is tighter than what we currently have
-with the ratelimited version.
+Best regards,
+--  
+Cheers,
+Harry / Hyeonggon
 
-commit 90a6f2a8f442 ("memcg: use ratelimited stats flush in the
-reclaim") was what switched vmscan to using ratelimited flushing. The
-reason for this was to fix the stalls from concurrent reclaimers
-contending on the rstat lock. For the Cloudflare case, kswapd threads
-were contending on the rstat lock on 8 numa-node machines. That's the
-global path (eg sc->target_mem_cgroup is NULL,
-mem_cgroup_flush_stats() turns it into root, so this flush essentially
-ends up flushing every cgroup on the machine), which gets addressed by
-adding the fix in b), which takes kswapd and global direct reclaim off
-rstat entirely. For the non-root memcg case, the flushing is bounded
-by the MEMCG_CHARGE_BATCH * num_online_cpus() threshold (a non-root
-memcg's stats_updates only accumulates its own subtree's updates, so
-it takes a lot longer for it to be exceeded than the root's does).
-
-I ran some benchmarks to get a rough idea of what a) costs. I set up a
-workload that allocates 512M of anon memory in a memcg with memory.max
-set to half of that to trigger reclaim continuously. I varied the
-number of threads touching the memory, so that N of them hit
-memory.max and enter direct reclaim on the same memcg at once. I used
-bpftrace to measure the time spent inside css_rstat_flush() and
-shrink_node() and used those two numbers to get a percentage for how
-much of reclaim is spent in flushing. These are the numbers I saw:
-
-# threads      flush as % of shrink_node()
-1                ratelimited: 1.10%       non-ratelimited: 2.22%
-16              ratelimited: 0.36%       non-ratelimited: 2.87%
-64              ratelimited: 0.16%       non-ratelimited: 2.52%
-
-Between the ratelimited and the non-ratelimited runs, walltime and
-pgsteal were pretty much indistinguishable (42.7s vs 43.6s at 16
-threads and 41.7 s vs 42.4s at 64, with the ranges overlapping, and
-pgsteal within 0.2%).
-
-I also measured the lock contention. At 16 and 64 threads, 15-20% of
-__css_rstat_lock() acquisitions hit a contended trylock with the
-non-ratelimited version. At 16 threads, the mean flush time rises
-about 8% and at 64 it roughly triples from the single-thread case
-(26us at 1 thread, 42 us at 16, 87us at 64)  but I didn't see any
-effect of this on wall time or pgsteal between the non-ratelimited and
-the ratelimited version, and the percentage of reclaim time spent
-flushing stayed at 2-3%. I think that's because css_rstat_flush()
-takes and drops the lock once per cpu rather than holding it across
-the walk.
-
-I also ran it with 32 actively churning sub-cgroups under the reclaim
-target, since css_rstat_flush() walks the descendants that have
-pending updates. I saw that per-flush cost rises slightly (~24 us to
-27 us) but the share of reclaim time spent flushing went down rather
-than up (4.1% to 3.2%), because reclaim gets more expensive faster
-than flushing does. I don't have a ratelimited baseline at 32 children
-though, because with the ratelimited version, all the runs I tried
-OOMed. I think this is an alternative repro to the OOM issue but
-doesn't need/have KVM dependencies, so if this would be useful to
-clean up and send as a standalone C repro, please let me know.
-
-(Also btw (this is a bit tangential to this OOM issue, but somewhat
-semi-related), I don't think the WORKINGSET_ACTIVATE_{ANON,FILE} stats
-checking really does anything in practice. On my benchmark runs, the
-"refaults !=3D prev_refaults" check evaluates to false in pretty much
-every scan. Even with flushing working properly, it didn't trigger on
-1673718 of 1674912 samples, even though the cgroup was thrashing the
-whole time (a separate run of the same workload counted 6371860 anon
-refaults vs 6523 activations). I think it's because reclaim is
-scanning faster than the refaults counter advances, so it'll almost
-always see no change. I'm not sure how much this matters in practice,
-but I think effectively in that check above in prepare_scan_control(),
-deactivation relies entirely on the inactive_is_low() check.)
-
-What do you all think about adding a) and b) as the fix for this issue?
-
-Thanks,
-Joanne
