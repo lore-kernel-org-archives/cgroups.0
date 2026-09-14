@@ -1,209 +1,191 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67B5C36167B
-	for <cgroups@vger.kernel.org>; Sun, 13 Sep 2026 16:17:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.140
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789316279; cv=pass; b=NhukvLJ9DRKoG7gUQuOo5EYMnXJTDhojmTP9oqUgPGHoOBtxJ5n300KJLl7Bm1ZiYMm3ZOLp/h/ESG4Rx6KtHxLVWxl6xQBUah7wHL9tX7S7gdneoQJi4fXvYcjPrdnshqJmeKSZ5PdILBriTc3svoz4W37GfdNiYo3XhvqCjRI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789316279; c=relaxed/simple;
-	bh=qrjaa3A/zSN3z/kTwF5pNuuhb8WEmUsn7IuE9lN2/WE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DnK2rV6vZxvis5jsjb2oJCh0kVs4fwmc/M3Wwk/0//xmUr5m/+hJu0uILZjmVEQeo4DXuCIDbBBXiQ6DHYkQfhqUvi+CnnGT2yvYFFmCq4/dUuqjhF2ZUOUIOPvooT5o5CKLMokjB4pUbauSLlddH8Fdp2q4CW7WHMzGRtF6lEw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=tCVPXk/H; arc=pass smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1E23101A7
+	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 02:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789352318; cv=none; b=K+Aig7+kQs96xJAML7KNywGimJN0NlyCLx1WP5BpYTlOpEpUElVv7i5AuHYjJNBRysbv1LPXS3lJSMbiZXwUJVkLQNjKUkuFrQmmkpDBJOVNfWZ0UHgfDgpShQl0sfdcnN0jo3Ohkoyqbbfx9QRFRv+gdVrPHpzSJLOqv/WYFSk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789352318; c=relaxed/simple;
+	bh=pZGDrroNHqjdFZupRzGuVRROHlFvliLkvG4+Plg0fdM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lbdszdZ9e3OfWWJefN6Z5ng4UrQvdeMeyCv3TPncvCg7EOht/DWVNyMVKd+K7bbH9DUoz7U1ZMGHoKIEvmo+EZggl9aRMOugpN52lALdZtgJt+VwkkRFDLjV2XzaKN/NgaTXKVmTFe4s7pyWVkNQTPuGxRYXs7us287yWSjEbWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=Q392KOCo; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tCVPXk/H"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ccf3bc34cso38045e9.0
-        for <cgroups@vger.kernel.org>; Sun, 13 Sep 2026 09:17:55 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789316273; cv=none;
-        d=google.com; s=arc-20260327;
-        b=baT0XE60ofawz/oJr49GTsuc7HlFs8Rsx9dkAtKQ/Ek80VI6xM+DbtPFm5F+rjoP4D
-         YcHUufKQvQC9aIJCSKqeP0CilCnJ35p2ouD0S+KQSVqWajLrfv0OyXRSyLy3yKCBysvP
-         eFl7G5GtKuoCJHE+s9qA5RNJLmqxNnffcz5IQTJHnWP/vEi9uqWUu9nXwznIzH4mcPyV
-         M9VTM44A0M50OYffXTquLYOqWCyFX9I2/nAtKgqJfSUKM1+uWCtOWufb+rFHa1gJXhtH
-         ZczX+jAgIJ/gO9iVQ8VhjtXSqFCqVWjkGBmQBcYLQFNBAs4OFIbzcbWyCndlXVRuxz7U
-         XpHQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=yt+Ej+RFTyAlxOsRS7i/kggIDyE3eMtCY51oxHgQhKU=;
-        fh=sGuri1KfubYvZuJE6Q1AqY6n1pa9fa1iSbmaezyShdo=;
-        b=lLOA4Pka7XwBYXOxcFSD3MvzJ3yqzA+enZN2IQfbFOaRZ2gXZNQFYruEuU8qPkt+LU
-         n3m/9d1TDDMtj/nPGxkgqFG7KbNk9GH0OI4oKw9I0zsc3D0WEvwAJUzzc6SZlWwrooTy
-         zuG7jYUYJrm3oazXLHB6oD5PA1qIjgAKpspnYeCe6TOcX1CEOBi4kixxR/YqaPSeMbw4
-         TItX8o0sk75pD2IwOEBKWth+TsZJXkmy6uNrW+B6hnU4U3zp/t0e79XHOHBZ/F/C+GIz
-         HHXBgjZFDJsFJqzW+plRO9RKEpjwpo1TqFUmeZU8ZLftALGIB54Nry0v4U7To/QEfsRz
-         WX/g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="Q392KOCo"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-853f8c34ba4so3756854b3a.0
+        for <cgroups@vger.kernel.org>; Sun, 13 Sep 2026 19:18:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789316273; x=1789921073; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=yt+Ej+RFTyAlxOsRS7i/kggIDyE3eMtCY51oxHgQhKU=;
-        b=tCVPXk/HjBz56vj4DLIPxsFAPBf4WEFz28uWG+bmseZ02lUx3aVTcesxKxChma+YO+
-         W6q33Oj2Qo/+e/+PynKd1/AEm3W3som0kepoB5iZ7vwCxYLGUZy5nB2qJk+wIQ61ybZf
-         pTCIDVMNiusuJ9LNmK/mFcAMbw+yOao6lcyiBFmJXoHVbf7T9/8n5hAlnzu0kR3gdXxa
-         impsYqQtMstf9P611tjjgRK+UYCXkRacITTOIrsIbFwTe/foUDbSpZhbS5XrnBZ17S/k
-         ntpi0xLEFoPNbRccDTVJANeOb/EO5RGaHODnXkKPBCwA67WhN7YFjjMRUxfZ5Zth8oft
-         wEDA==
+        d=bytedance.com; s=google; t=1789352314; x=1789957114; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=DxBEauNnCmvuxYQWGMnLgbbVInndKO4lO+HSKGFpeVU=;
+        b=Q392KOCoJRUrGLcdxPCt1OpEPiHzU1w3EdPxu+KLQEK4Oce9o2/EGndlVgR6I3n3ZC
+         iebcnhyNE/JplxLfu3PlTgs8SAQHKD3aY+2mlBBPNNPmRIgixkyvDn5s38qk2NoWtKJu
+         fDMkD1e2vWlQTPS70+m4/aAlHjPqM7wS7cOJXhAL+iLDd6iT1v3AACyU9Sh0Nh7VxLSp
+         7UuDqpjps2vcQNOWCeVn2r7tUzNJGwDiwOTATYqWqb/stipcL3aNF+jK1/uQAAHqBcn4
+         yYrG28A7M43VV+pGR8ZLazVwaDsehbSpzGL+c2lifUJIYiJVCcC9jse/Rsy6LCB5p7Xv
+         fDqg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789316273; x=1789921073;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1789352314; x=1789957114;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=yt+Ej+RFTyAlxOsRS7i/kggIDyE3eMtCY51oxHgQhKU=;
-        b=UpUN7cb1Aemo+9BdLRB+8dWhmLFQeUmXoywft+0xV9Q3Uol8B8W/uTxLquvyY9yVS4
-         immSqeGkAsrrXV0ZfIfyhQB9J/esAGc+XBuTFmH6/n9x9YhHuxZnDjPev/6RNvdpRdaC
-         XtNAizAjvu1W9oLk/mrgkI2+N4ycTvA/h7LfniY7Eh3cP+bZ90C/Mpikq+FtWNN0ND0z
-         V94IqLQIzajyhsTvjml4pg2UkVvxdEjXTuW3Id5HPOZ2EPJzwBeuGB3nc4TVChG/u932
-         yOYez2Q8btk5hfk3oR1XhI23KT/vcTDqhtskrz7IxmE7zGSMl6Km4A4gN/vgUfIbDIiA
-         2Ieg==
-X-Forwarded-Encrypted: i=1; AKwUvBxmeDAH98TeascVVAUbm3sKTxbsZ9SUKq3N7PyHa5EZ4kwdH3P68uN9bgpxVeLsyjpEDyeqziJ6@vger.kernel.org
-X-Gm-Message-State: AFuF++mMFUrY3V1YXtqqAgnpn8pk94JtVLKLQMBULkN8u39S00Qt3uXD
-	hYVghiV3evVkmaS/gaWpGUO54XSwy2pWN9qRLb8gBsZjcu0Hn13l/nPATzqXstbSVkUeg8JpW3c
-	KnsAO4b6lAf4gxIPfD15YhiG5Hm64ZvcnR0FbJxMe
-X-Gm-Gg: AYBFou1M6a8o38vptt126GE1cR0C/Ou9dqjSH23OM6u9QYMbyFI65ChdzKmipA70P89
-	jhZP2ah3AontjgW+sqRLzwkBuktNK/bh3YKZ/Jh65F62hapX9sJZa+awPW3qVab6hqMODNN645L
-	JL21f9WkFoT7IJYPzDLfQmmUAPxDeRishkoRR1yLsSp201pwvXKAVGbqlCwc1pDse7mSqbD3tqE
-	N7/YNMNn863RAPBialF46LLM0gI6YZ+FZT+XTp3Yzh/R7W6nKsGK1nKZDlK0V801zuk4mr2/2I0
-	Flmlbu5iwvtZT71qLVWeB0NB+xJY+WDN9qn2+NL5b9ADsE28DzXA5y88XHufzXewcuvUpRhxvYb
-	Jnx4qDgwcwA==
-X-Received: by 2002:a05:600c:3593:b0:49a:d4d9:e417 with SMTP id
- 5b1f17b1804b1-49e754445b3mr671735e9.6.1789316272535; Sun, 13 Sep 2026
- 09:17:52 -0700 (PDT)
+        bh=DxBEauNnCmvuxYQWGMnLgbbVInndKO4lO+HSKGFpeVU=;
+        b=VauqHycfVzsldjSOCxygLsgYSWPhJ7js9vwLg+RIOXwQdSBaVczU27w6WmYCpGqO9H
+         qF+C8KsE99Do9YLlaah20d6mx/+tFjD83lMR3gd1n6JwykTYAFPFW2KYtAjxzD0mP3ut
+         1aoMdV/+d3lL5STGP0J7jif9JeJnovje26UMu2VaAx4V6PkcpMk4IN8LeCeanK4KOYVu
+         lhgCSnzfdKt26uLqxtWiFqvFGouexHlkFpChUSeiH+D8ImAvqRJSM5jNxQnT4rp/BD3U
+         Fp2iFfPwZGordRE/WA9Ef591LaW9gi50Oi84sKIGz3v869kiWVuMRgsze8xHhqHGuCdS
+         LNfw==
+X-Forwarded-Encrypted: i=1; AKwUvBwQ3Yzd5IFB4yZ1k6AK9LcXGz+yp6/95Uh4XwaYeQSum+ujCtI+M//YdLH8B4SuDfwZDnhqxUKZ@vger.kernel.org
+X-Gm-Message-State: AFuF++nwTnRfbjVcQboHmuIBUQGcDHXuw9lf/RKQwxd5BtSsx7DiPO3d
+	Rv9pqnQ8BuzVYjlULkLWrlAUubbqie55SXPzp0oGy/G6oOb7HOS4g8Piiiao1+5tsbg=
+X-Gm-Gg: AYBFou2xVfXoT+dlGj0d5odzOISWM6GzRc9ZoXodNutzpjck8xT6LJ0l38vywmbA7am
+	h6oAbZ/ewTXAXQYQ0qZPjQmye6M5drZlYkMEVi1pl1JxZpM8KXDMPyy9ISBhDl55sKQH7ZrZOWG
+	DMrNUFHFvcEVTyZmco7DTbQVK0Kyhn7TA8wcXGA8gQwtFK+7C+lntadl22CkFNZrXn+DSOKWB4b
+	AvERjF/sW4BSOgDT/rBzRZJ6VFxM/Q55UWx8yfqV0l1TqFlmUqm8YIQQjQ9CCWGNIDfXuVUMpIT
+	iPwex4+P9AWiFZu0HPvwiS3gEV4BTcN7xlPYJW4gSf6psTZHZPtmfiaNKbeUFnyQumNBRmpCFPL
+	wYd7/5Qy9TRDLza+7/Cdb3Quuo1LJqtYlxXuv7Jd+0S1G7X3XMOy9791c6mPb3vUWLi1mLoJCSD
+	YGbL5UDG2+XiCykkGpEcKuka9K+dUKHS1Q+UUM5gxkP90aOEjI+/PcliWrNOJjJ+S0QphJ1Tq+B
+	fCWe1w4zgSWVMK99+POPUx3MIH3t7yZ9MnP3zvMvZ8=
+X-Received: by 2002:a05:6a00:950b:b0:851:d12e:389b with SMTP id d2e1a72fcca58-86f854fa179mr1418104b3a.14.1789352313961;
+        Sun, 13 Sep 2026 19:18:33 -0700 (PDT)
+Received: from [100.81.12.150] ([61.213.176.57])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-86b291c06e0sm3752158b3a.28.2026.09.13.19.18.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 13 Sep 2026 19:18:33 -0700 (PDT)
+Message-ID: <e55a7422-1871-4a03-80bd-09cedf9630dd@bytedance.com>
+Date: Mon, 14 Sep 2026 10:18:29 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CANGjgdn=H50AaA-+O_GA-hkE9UwLANmkjx1zRsKUzxF5za8VfQ@mail.gmail.com>
- <aqa7KgIJYGgf7INk@slm.duckdns.org> <CANGjgd=f9n7zEZS=xi71y_dY6Uk75_qgP9qVDkYBusNz9sp2sg@mail.gmail.com>
-In-Reply-To: <CANGjgd=f9n7zEZS=xi71y_dY6Uk75_qgP9qVDkYBusNz9sp2sg@mail.gmail.com>
-From: "T.J. Mercier" <tjmercier@google.com>
-Date: Sun, 13 Sep 2026 09:17:40 -0700
-X-Gm-Features: AcwNN1UGrvqbq3HFY7pcrIOl_jX8tfzTKZIUJ5QTX30rH2G51YS_Yo5JvuNEb8Q
-Message-ID: <CABdmKX2Oer9wrxWdR8s48Czro8H51HY+S_mfnUj-RvhjCM1RgA@mail.gmail.com>
-Subject: Re: [REGRESSION] kernfs: empty cgroup rmdir latency after
- delete-notification changes
-To: Chengfeng Lin <lin2530632123@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jan Kara <jack@suse.cz>, 
-	driver-core@lists.linux.dev, cgroups@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	regressions@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] writeback, memcg: skip foreign dirty tracking for bdev
+ inodes
+To: Jan Kara <jack@suse.cz>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org,
+ mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+ muchun.song@linux.dev, akpm@linux-foundation.org, axboe@kernel.dk,
+ tj@kernel.org
+References: <20260909034343.340703-1-sunjunchao@bytedance.com>
+ <iqvi6yo62ydxzshad2mhi55rxhyskfsoo62ji2curbldrg5cc4@z3wju4r6c3ab>
+ <CAHSKhtcvaWgGHY_NWW242vYHHiSet0v-qsj4MsXGiwZJFrdUnQ@mail.gmail.com>
+ <ekylbhyzseq25nxq2yivmmdt5xl5glum5proueyd5mrqfux2y6@fpvflg4crr2i>
+ <db6d62f4-34f0-4237-ab58-c21b0968bee7@bytedance.com>
+ <l2awpukcp7lorvujvwdoqnlwlkkjl6e2kef6tnjvdw7qve2fni@vh4lspozoytt>
+From: Julian Sun <sunjunchao@bytedance.com>
+In-Reply-To: <l2awpukcp7lorvujvwdoqnlwlkkjl6e2kef6tnjvdw7qve2fni@vh4lspozoytt>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Sun, Sep 13, 2026 at 8:47=E2=80=AFAM Chengfeng Lin <lin2530632123@gmail.=
-com> wrote:
->
-> Hi Tejun,
->
-> Thanks. I found this during research into kernel performance regressions,
-> using a microbenchmark of cgroup creation and removal. This was not
-> prompted by a production issue.
->
-> I reported it to document the added removal cost and ask whether some
-> of it could be reduced while preserving the fixes. I agree that the
-> roughly 3 us increase per removal does not, by itself, demonstrate a
-> significant impact on real workloads.
->
-> Thanks,
-> Chengfeng
->
-> Tejun Heo <tj@kernel.org> =E4=BA=8E2026=E5=B9=B49=E6=9C=8813=E6=97=A5=E5=
-=91=A8=E6=97=A5 23:03=E5=86=99=E9=81=93=EF=BC=9A
-> >
-> > Hello,
-> >
-> > On Sun, Sep 13, 2026 at 10:43:04PM +0800, Chengfeng Lin wrote:
-> > > I found an increase in empty cgroup removal latency across 507d8ce13f=
-5b
-> > > ("kernfs: Don't set_nlink for directories being removed") and eea5d2b=
-b34ba
-> > > ("kernfs: Send IN_DELETE_SELF and IN_IGNORED"). With sched_ext disabl=
-ed,
-> > > rmdir() went from about 6.5 us to 9.6 us, an increase of 46-47%.
-> > > The result held in two independent runs.
-> >
-> > I don't want to make cgroup removal unnecessarily expensive but at the =
-same
-> > time it's not an operation that I consider to be a hot path, so as long=
- as
-> > the operaiton can finish in a reasonable amount of time and single digi=
-t us
-> > definitely is, performance of rmdir usually isn't something which is hi=
-gh in
-> > priority. Can you please detail why this matters for you?
-> >
-> > Thanks.
-> >
-> > --
-> > tejun
+On 9/11/26 11:39 PM, Jan Kara wrote:
+> On Fri 11-09-26 19:39:42, Julian Sun wrote:
+>> On 9/11/26 7:20 PM, Jan Kara wrote:
+>>> On Wed 09-09-26 21:18:11, Julian Sun wrote:
+>>>> On Wed, Sep 9, 2026 at 7:13 PM Jan Kara <jack@suse.cz> wrote:
+>>>>>
+>>>>> On Wed 09-09-26 11:43:43, Julian Sun wrote:
+>>>>>> The expectation in wbc_detach_inode() that "concurrent write sharing of an
+>>>>>> inode is expected to be very rare" does not hold for bdev inodes. On ext4,
+>>>>>> metadata from many memcgs shares the same bdev inode, so dirty throttling
+>>>>>> in those memcgs can repeatedly trigger foreign flushes of the owner wb.
+>>>>>> These flushes can also write ordinary file data, reducing overwrite
+>>>>>> coalescing under continuous buffered overwrites. The resulting extra I/O
+>>>>>> leaves less device bandwidth for other workloads.
+>>>>>
+>>>>> Hum. Are you aware of [1]? The guy is from the same company so I was
+>>>>> assuming you two are working together on the problem :).
+>>>>
+>>>> Yes, Xin and I are on the same team, and we are looking at different
+>>>> ways to mitigate this issue.
+>>>
+>>> OK :).
+>>>
+>>>> We will continue trying to gather more evidence from production to
+>>>> better understand its actual impact. The number of calls to
+>>>> `balance_dirty_pages()` and the time spent in it might be useful
+>>>> metrics for this purpose.
+>>>>
+>>>> Jan, if we can show that this patch provides a measurable improvement
+>>>> in production, would you consider accepting it? Or do you think we
+>>>> should still look for a better approach? If you think there is a
+>>>> better way to address this, we'd be very interested in your
+>>>> suggestion.
+>>>
+>>> I definitely acknowledge that there's a problem with foreign flushing due
+>>> to bdev inodes that needs to be fixed because as Tejun wrote, bdev inodes
+>>> break the fundamental assumptions of foreign flushes. But so far I haven't
+>>> seen a solution which I'd definitely support.
+>>>
+>>> Having data from production to understand what exactly is the practical
+>>> problem will hopefully help us understand how the solution should look
+>>> like. Is it just that we trigger too many flushes and that slows down
+>>> things? Or is even one foreign flush of the whole wb due to bdev inode
+>>> making performance bad? Is it that we have many foreign pages and foreign
+>>> flushes fail to properly write them?  These are questions we need to answer
+>>> to decide how the solution should look like. And the solution could be
+>>> anything from just limiting number of foreign flushes for a wb to 1
+>>> (because there really isn't big point in more of them being queued) to more
+>>> involved foreign page tracking for bdev inodes so that flushes can be more
+>>> targetted.
+>>
+>> Hi Jan,
+>>
+>> Thanks for your feedback.
+>>
+>> All the foreign flushes we've observed were triggered by bdev inodes.
+>> What we've observed is that the bdev inode has only around 10 MB of
+>> dirty pages, but it triggers writeback of around 40 GB of dirty pages
+>> across the entire wb. The actual foreign pages account for less than
+>> 10 MB, yet flushing them triggers writeback of the whole wb, and this
+>> happens repeatedly.
+>>
+>> This appears to cause significant write amplification.
+>>
+>> Limiting foreign flushes to one may not be sufficient in this case,
+>> since even a single flush can trigger a large amount of unnecessary
+>> writeback. I'm currently working on tracking foreign inodes so that
+>> foreign flushes can target those inodes specifically.
+> 
+> OK, good, these are already some tangible data to use :). So in that case
+> I'd maybe just:
+> 
+> 1) Avoid adding 'wb' as foreign just because it owns bdev inode where we
+> are dirtying a page.
+> 2) Track that we have some foreign pages in this particular bdev inode.
+> 3) In balance dirty pages queue flushes of bdev inodes where we have
+> foreign pages (besides queueing standard foreign flushes).
+> 
+> I didn't put too much thought into how to integrate this in an elegant way
+> with the current writeback infrastructure but something like this shouldn't
+> be that hard and it should help you with the foreign flush issues you
+> observe.
+> 
+>> The impact on production workloads is not easy to measure directly,
+>> which is another challenge we're facing. We've had reports of slow
+>> dirty page writeback from production workloads. Although we haven't
+>> established the full causal chain yet, we suspect foreign flushes may
+>> be contributing to the problem.
 
-Hi Chengfeng and Tejun,
+Jan, thanks for the suggestion. This approach makes more sense.
+I'll implement it and send a patch after testing.
+> 
+> Just being able to measure that "with these patches we don't need to flush
+> 40GB of unrelated data in foreign flushes in our production workloads" is
+> enough to convince me they bring some tangible benefit for your workload
+> :).
+> 
+> 								Honza
 
-We use this kernfs IN_DELETE_SELF feature on Android where multiple
-cgroups are created and removed frequently on a per-application basis,
-but we hadn't noticed a significant delay due to the inotify
-functionality during cgroup removal. It's probably masked by much
-larger delays (milliseconds) we regularly see due to unreleated issues
-with cgroup locks like priority inversion with cgroup_mutex, and
-contention for cgroup_threadgroup_rwsem.
-
-As far as what we can do, I think avoiding inode lookups for kernfs
-nodes that never had an inode created should improve the situation. It
-doesn't eliminate the locking overhead, which I don't think can easily
-be eliminated. The code below doesn't deal with inode eviction either,
-but at least files which are never accessed won't introduce the inode
-lookup overhead.
-
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 4f9ade82b08a..3ec9f79b1aa2 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -1523,6 +1523,9 @@ static void kernfs_clear_inode_nlink(struct
-kernfs_node *kn)
-        struct kernfs_root *root =3D kernfs_root(kn);
-        struct kernfs_super_info *info;
-
-+       if (!(kn->flags & KERNFS_INODE_INITED))
-+               return;
-+
-        lockdep_assert_held_read(&root->kernfs_supers_rwsem);
-
-        list_for_each_entry(info, &root->supers, node) {
-diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
-index 38b28aa7cd02..f8b4a8b8ade4 100644
---- a/fs/kernfs/inode.c
-+++ b/fs/kernfs/inode.c
-@@ -208,6 +208,10 @@ static void kernfs_init_inode(struct kernfs_node
-*kn, struct inode *inode)
-        set_default_inode_attr(inode, kn->mode);
-        kernfs_refresh_inode(kn, inode);
-
-+       down_write(&kernfs_root(kn)->kernfs_iattr_rwsem);
-+       kn->flags |=3D KERNFS_INODE_INITED;
-+       up_write(&kernfs_root(kn)->kernfs_iattr_rwsem);
-+
-        /* initialize inode according to type */
-        switch (kernfs_type(kn)) {
-        case KERNFS_DIR:
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index e21b2f7f4159..87f074ce19d3 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -113,6 +113,7 @@ enum kernfs_node_flag {
-        KERNFS_EMPTY_DIR        =3D 0x1000,
-        KERNFS_HAS_RELEASE      =3D 0x2000,
-        KERNFS_REMOVING         =3D 0x4000,
-+       KERNFS_INODE_INITED     =3D 0x8000,
- };
-
--T.J.
+Thanks,
+-- 
+Julian Sun <sunjunchao@bytedance.com>
