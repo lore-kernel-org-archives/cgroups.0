@@ -1,330 +1,284 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+Received: from mail-lr2-f12.google.com (mail-lr2-f12.google.com [74.125.230.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B109F48D893
-	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 16:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4032E49BD95
+	for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 18:08:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.230.76
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789404594; cv=pass; b=k3tsG9WRFaGG1xWFlxPVS/zIsb6/Vak4ebOg+YVOzoAEXdtEkOzc3XUQnx4nDX8jKC0CLJMOO7NxqpAE1rRQGFm5wakxAN3k44L5XdDMJF/2dn8cNuir/mm3eaHxK0Nbt8XVi/9ktXLUVIU8i7EYV6r5yJUCkBwVaS7/NIZCM40=
+	t=1789409316; cv=pass; b=ZsN5d8inksAtl4vUNkJpPLSP8qHBOTjkHaiaXNsQ6SkS1hVyOQ4fHaZPf/F7rzVv0Z641VQl7x6+WqPDTFuVAnCkjHq4Jko6PG3pVA9/FR8VcmG9tIy6QcYGsHACdr6SFyDPXpRlaI8Lk9tQXH3xFqLCpgYP87aMwLfbjD8A4dU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789404594; c=relaxed/simple;
-	bh=7jqLPXF1igJUd80a+c0Yy1y5YA/B5JPdvkj9X3w++FA=;
+	s=arc-20240116; t=1789409316; c=relaxed/simple;
+	bh=nrL7HxkxpCYK37KcSgRy3IUkJkgNJYps77Sf88qk4eo=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=j9AWx8C6NzJX1MfysdcKoT5+quMoOD1vY5o+3V6eCqgAjqW895Is1G66mn9GabfxA8mxt5qKflOZKmvkFhyrmZjHBkNAhyxM9cCVvGjs+AW9BKYGDvqMe/FxJnYgPQLfbCDy9/cgPvjfcqyKydfXYPnuTtRs22wSWycEL8sTdMQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JrQILUID; arc=pass smtp.client-ip=74.125.225.76
+	 To:Cc:Content-Type; b=IAwKlV5Lj7ShEqdW+rl1NW3Yp5j0a6xlcwOllzc97uYEakS48BhlKKYdajvfHeuPEged6VxC5WnMtl1xWMujSjqVV9WwGQASAKuL72NBC6N4Nt1Kg0An+9iFuN1oh2eS34RDgt5aYqPWfcdYfkh8qe/dwp51lCPnS+Jm9JlcK+U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nthWdiIT; arc=pass smtp.client-ip=74.125.230.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JrQILUID"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6350f91so1224735f8f.1
-        for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 09:49:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789404591; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nthWdiIT"
+Received: by mail-lr2-f12.google.com with SMTP id 38308e7fff4ca-3a2ff176d5eso21585651fa.0
+        for <cgroups@vger.kernel.org>; Mon, 14 Sep 2026 11:08:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789409300; cv=none;
         d=google.com; s=arc-20260327;
-        b=qkipPZV6+dMsdX5/W8zZBaIPtmYQpCtZT9URJtQEQoNa1L1whztNbee3I93WRJqhEj
-         guWEeLIfw7EFsWK39ODQM0Xst19q0D3BthtWm0wMoD9UaZHyBpReBSdXSS0+n27EmysD
-         +HTOBrsxz6qIOdyWL5BAAamumXuQTvYgZybg5+bMUBdXdTzWCG/yTsKzFQjhxld0DeNp
-         EWRiNvpXd6t7vE66tOn/VrymPOuY2pLb9XDE+qIeJc0YVjXtwv/eiPWodIYaSIYpDhi0
-         P3X857vz7zYyUaOGj+cc6ITozRAfgVcdR/rQMqYanGidWTWoynZqlchqfRvcpdMwJAJt
-         NVQA==
+        b=TQHg2XDzpPbH3cXOvc4MyG3lx7ZOWHo7Rtzv0aGMkfEzvs5AN2t6Gy36iiPTN56w9v
+         9HpmL3IzQro68VI+Vv+gtcvFr0h1qXYPWg4kHjE20HtNNs2w99W0j2o/xsG7rgGPCcmh
+         gLiRTfkGAIMeg7h50iH/gRYF1tewu9okeHMR0/Hen5xFfe5bHMQbu99LtMYWzicPzoxb
+         hLAUXMUdTB7/dsxjVdBqrtrfR1A7c5sZssEMX6oWSv+HMATHJMMQrfKIOL7bdE9uNU+R
+         4aXFl40U5PFQOs+c49NoSPwKVVeVcdr59u1+8pmX6PpsDhTvIUfpfP+tZR1J4ciBNQZr
+         otAg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=G183+Yxm6/Twsin5qYVqwM95g4Sy/Qck0fET7NLxE+k=;
-        fh=P9SwNmi0+sGEQxl+JLf8Cpu/SxNxhSqBOiuU1ePw0gg=;
-        b=gu9y767gbRULyqY4j2bKkjoRlgkJBrvfT9+O0kItgRwQRBNKa3s8/o62BEROwr3lmM
-         Q5nPFVeodfVQLKNocV5CIRYLQTmK9c/CqZAqE7dHjfH6a8WmmFaDlK40aG9sc/Oq52gF
-         kYCTm+rwKVGwsotxfkDb2RPG15qOF/dQ/RXuYjyrnjNvgFWDMjw+d1sSjp7Q4UHoEEeF
-         0CxeV0thCmdD3IEYsuWJ4azBaEcy5VlrAsFW78evtu1FsUHRFa20oDjCra4cupSY5hAA
-         a4P/9EeNNQm4jcMk23+vZo0W7sqXh4wIaaKN0KnYpja7Ux5YNmPS0/5Csnsvaoy9KMRX
-         oqdA==;
+        bh=YqfeFaksCtRDL645H6Ma8BX+7yBDF05G4zL3//smvsI=;
+        fh=KVTGyWub4Almxv8k1Ep/xi6UjIv49BvV3BHiV/jWnGs=;
+        b=QXklL8j9BpKZn7AcpOjB/AKnxtmfLEMI4mKROcQhy/TbkKOnarQVO6lkA0XWAa5zm0
+         whO94awelyoNmMWxZecZwEwqGICGdsSzxR+t01BTrBxHJ++6FkQje1mO8X4bCh6rljna
+         Sdxz02l2mXvdzjHuo0qCcs9G+TOGMnsFbPyIBgU4yRuX3d9yotdXT6Mi20l4vFHR032Z
+         p0kUotb8MCtt/+rrNlFzjutTxOOZMZS6yt3oe+EtV7e4OOhsxUkkz1jHBgTDbz25bewT
+         etKniA9SexFBdCg3cbyAov97d/shHo9aRFhX3oLvGo6cHLcnmfdImPVnhPPAXtLhtkfZ
+         5Jcw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789404591; x=1790009391; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789409300; x=1790014100; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=G183+Yxm6/Twsin5qYVqwM95g4Sy/Qck0fET7NLxE+k=;
-        b=JrQILUID1bKBhb+/x3xIgPavKzr+v2xHSfsbF9dZU9Ee480JcjOvWdw60nLeUeeusQ
-         AWsoT8npn0DBvLpBDqky1T2wBqSSBFGunkpjoNWQOEz9ZXkHouxEcHx6v/qTC0HNqIMS
-         om1ADZuRMc052tqrcywgFTjZlen5YhGzeXz8WYDSDdgMmquoWWLnX0PbJlpyp7sPZ4N6
-         Tz+j4NxQc9nXE1hV7wudS68m595/97lKGe88pRVRJssFxTb0DxCr53vpf19ohR5cJDTw
-         cSA9pURmDtXQ6EJLY2LDocQ1fbW0k1UPZO5NsTJ64MOexBX4WrnLNi6SD/1FqXRPIQnT
-         srnA==
+        bh=YqfeFaksCtRDL645H6Ma8BX+7yBDF05G4zL3//smvsI=;
+        b=nthWdiIT1dqdQPptON5i6UB8AYh32ISOiDmwdttRHgnKK3TyZN7elsFCPNU4D8D+k1
+         qTuRx2iNbqlTLm2GrkuCYePCIpamewXWUv8bTr5o2y0f5Xc7ZIOeGauYVGYdnJLUmSB4
+         Bt9ipvvAZCGC3v8w79Wj4R9qUZSa6AqrBFoAe00K/7j6XFR5Ya4zpGfiknj8zGWc/afo
+         q8IGBmYPAPtfQ8NxCe4u3VF/sqgdnZvV0bN8welvGOf22JqWji3perwKCIQ2bRaIqlQ+
+         Kp2muJ1t8BxJnFSZQaIk48NoDFee/ypD189gKhA+/YIiSdVWpx+Mvg9Btli2s3DBti8t
+         0ddQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789404591; x=1790009391;
+        d=1e100.net; s=20251104; t=1789409300; x=1790014100;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=G183+Yxm6/Twsin5qYVqwM95g4Sy/Qck0fET7NLxE+k=;
-        b=VQH6xKYATOOmEvlTDeyNl5yK5g9EfGN/6uiGXA+X9gXjT/4XKQiWSYSFlzZMemzhJn
-         Nde8H7elbI4gWtOA4FMDXEwssm9UOE4U1l20iv0yj1ywmrC9nasDLruGrzth4K/akETO
-         OlyNTbv8OZtfgUi7Lk/wTTVxBywCpGILjTEvoGg5oBOGNVYyNcejxIgUDpddgW/hZMQK
-         CLYhj4n2E91vXczzzs2TfCxcFdfOQAxo9nOzgPbPh1P8ypKtwNnQU859C5RWayJ+u77C
-         it3owOJx+qIe2BjqUGChuX9r1sfOmQG0kPCHaS9zisoeO8G1PXJU2Gm+wjF1V7sF7F9X
-         rFtA==
-X-Forwarded-Encrypted: i=1; AKwUvByj4lGkAtkgY/Mu43FhjDfhhRMD/TcnKnSwUYMzSzJVaLi1lPn3LSJQhb/14kkR0bf1nStheFOI@vger.kernel.org
-X-Gm-Message-State: AFuF++lm+Q6Qcy3BDFSbxKZuqYlC6ve300qgNqd+kAKR6XC4UX+BuLki
-	7ABd6qEAgE2nTPrFBvMUdF4Eh2a2VH7dxp3sCZMQfhua4ob6rfbiFEtJHqH96JzV6gJLdHoUEwM
-	DtIbkQkjpzuwATfljxdfWOevX29a+r+w=
-X-Gm-Gg: AYBFou23/ya64v0YNQwJ2TzSwqXqy0kHmfYAPJm+VHbi+8gW436oQEt7BBCD5vwcDp0
-	IXO8ZnYsdyMGQ/lpyR58yn6zzbD/mowRV3H+y3ApQtDSEfczU/LtPjSRermEGfQNY4TerZiPIMB
-	Rm91DCXubQJctJ4uTf5wfm9T8hpIQUXkHlIQ6rnYZXohknHA1wcOzwE1WPw1aAO25WHO60Z1sOR
-	8QAIanBKF23nsDSBzMhd8u5m7iN4W/cAjz89xumA6UH49ej/W18mgTsFRrBwDtF8ixMEuUsRp3r
-	DUjz3nU8+4EbWWQxkdE0uqCAsdpFNsLZ51lGMN0iXxqyBB4soYSPCQv4+mXRN9yAI6kTeylJQkQ
-	B0WIIrfvYBJJs
-X-Received: by 2002:a05:6000:27c8:b0:487:4ba:97f0 with SMTP id
- ffacd0b85a97d-48704ba998fmr1121463f8f.23.1789404590535; Mon, 14 Sep 2026
- 09:49:50 -0700 (PDT)
+        bh=YqfeFaksCtRDL645H6Ma8BX+7yBDF05G4zL3//smvsI=;
+        b=I/2dFXopT+bLIudSbwR64kMnYlGUurOKeF/eH0oIHkmDe9GZ198zr1FpZSCjZ9o0mC
+         gJaY6DmoZvmWZTDNnCsmu8Pje9SwCX9XpO34iWH3JqWICrSjpJwdrBM5d4OFvqOB2iAK
+         NffTqu7VQ0hbmk/KIu6PPHpAKs1ToWn8RYPUCNfEVR0w5mWeDE8zivYh+w82RtaHE24U
+         to6nYRDzwTaTnwSQLE9DZF8AA/zbO49iBsUYzIYUtDsRpAuHLMEiXfmMVsRV/UWHy08P
+         3WQhcQWR02eyim/lzoVzYbMoukg/mSUVpG7Gqv1/cTdytCdkdb6jh+mD3h/BO0TWh6ks
+         guuA==
+X-Forwarded-Encrypted: i=1; AKwUvByuWjGadld5dzJjyD520nmJ4aI7Ka52LibvuTw2LkqCVlTcgIng6v8YCfl5tPrPIkQUFeSmXh/a@vger.kernel.org
+X-Gm-Message-State: AFuF++lq1iQNGBO/dhEHH6Jp+Pi3iXTcyBDsQsqpc9gyaAbHqGV9ZiRN
+	Df2IQUlri2OC+Fw/I7+ODddyDNwPg/Oor5WuZXQ2MbCLEQDXmXKUj8HK5HXJhfCLiFne6r5d09E
+	meX3PImiy4JAjMhPLS0E8Hajm6XpeMOYoLZlt
+X-Gm-Gg: AYBFou2ZUcKOjkq4Kd85UXql1xRBHjOHn+zkiWXfWw4QPrvCn1XOEwindnbJrIOnoar
+	654cFslEZUAEMkVQrrXFGH902G0/91mm4rVrnzhhtldXd8n9nRSVo1vOKYRNAOMBOtW7zUJwLar
+	xvCRcZKCrFKyviD2DD6stHonzQbq9itfpM0aIcixQEBw/gWWEbBzO3wWMbSFHi9fHpVDnvHznGx
+	ZJyYF73MHhQcru0VHdOrNSClUwo8/waZ7eaW3ObrXIPMonZMteXEXGJ2Q5apz4ZdrX8hsXN9pjE
+	kWG2wUiNmftoLuy82cDgSGEpTKg49nw8GmEhohJzrYzbbibylxe5SUz6oUhbLkzk/rD8qCd0EZV
+	KEIN7hT3VqPM5SQ==
+X-Received: by 2002:a2e:8a86:0:b0:3a1:4f33:f60e with SMTP id
+ 38308e7fff4ca-3a5c8904fa7mr13824431fa.8.1789409299251; Mon, 14 Sep 2026
+ 11:08:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com>
- <CAKEwX=O8i+OsP6BJXNZNk07hveN9HDT+PoyMTAU6gOc-xp0Ppg@mail.gmail.com>
- <CAMgjq7BQeQQOZMDPFJ+8LS2N4t3x53r6Nm+9o0_pi92oVUgjgQ@mail.gmail.com>
- <CAKEwX=MS-7C96i4tzBijHN=-xuZgny_wQEa_0YjfHzhoNysdYQ@mail.gmail.com>
- <CAMgjq7B7Mc7vpQN0gBknsSrfZWXdif5L7nU29YskG9mzS-_jsA@mail.gmail.com>
- <CAKEwX=PxZ68_4240DC8HjcqPRE0bQWGmouoqapqqTQ2b0xqpvg@mail.gmail.com> <CAMgjq7D40KGRjwpFMH4x4fhJ18OQyZwPtovhc8Hm3Y7+__d4Lw@mail.gmail.com>
-In-Reply-To: <CAMgjq7D40KGRjwpFMH4x4fhJ18OQyZwPtovhc8Hm3Y7+__d4Lw@mail.gmail.com>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Mon, 14 Sep 2026 09:49:38 -0700
-X-Gm-Features: AcwNN1WO51K14Fm2T1tur-3vx3APS3D8nhOV3AEZCzJzOrHll5YjpThxvhcytDE
-Message-ID: <CAKEwX=NvHj-Py22-QuR10gynfRk0g5y8g6Cs2+L-hbuAyfmXFw@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Kairui Song <ryncsn@gmail.com>
-Cc: YoungJun Park <youngjun.park@lge.com>, Chris Li <chrisl@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Barry Song <baohua@kernel.org>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
+References: <CANGjgdn=H50AaA-+O_GA-hkE9UwLANmkjx1zRsKUzxF5za8VfQ@mail.gmail.com>
+ <aqa7KgIJYGgf7INk@slm.duckdns.org> <CANGjgd=f9n7zEZS=xi71y_dY6Uk75_qgP9qVDkYBusNz9sp2sg@mail.gmail.com>
+ <CABdmKX2Oer9wrxWdR8s48Czro8H51HY+S_mfnUj-RvhjCM1RgA@mail.gmail.com>
+In-Reply-To: <CABdmKX2Oer9wrxWdR8s48Czro8H51HY+S_mfnUj-RvhjCM1RgA@mail.gmail.com>
+From: Chengfeng Lin <lin2530632123@gmail.com>
+Date: Tue, 15 Sep 2026 02:08:06 +0800
+X-Gm-Features: AcwNN1VjX10xVedHjffuUUEznl-luy-airmCt-rJgo7haX1ZQMrAAmn74RSRo6w
+Message-ID: <CANGjgdmKg1_QyzhCSh03T4RStw5_znnhqmFFS8TVwQbm-sZZbA@mail.gmail.com>
+Subject: Re: [REGRESSION] kernfs: empty cgroup rmdir latency after
+ delete-notification changes
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jan Kara <jack@suse.cz>, 
+	driver-core@lists.linux.dev, cgroups@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	regressions@lists.linux.dev
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Sep 12, 2026 at 1:48=E2=80=AFAM Kairui Song <ryncsn@gmail.com> wrot=
-e:
+Hi T.J.,
+
+Thanks for the patch. Your changes reduced rmdir() latency by
+21.87-22.86% in the same empty-cgroup benchmark, with sched_ext disabled.
+
+I tested these two states on 2f0c1cf72f46 (7.3-rc2):
+
+  A: baseline + Shakeel's file-handle decoding read-lock fix [1]
+  B: A + your INODE_INITED changes, without modifying your code
+
+I used the original binary on the bare-metal i7-12700KF, pinned to CPU0,
+with full preemption, the performance governor and Turbo disabled.
+Both kernels used GCC 15.2 and the same config except LOCALVERSION.
+
+The clean timing sequence used four fresh boots: A1 -> B1 -> B2 -> A2.
+
+                     A1       B1       B2       A2
+  rmdir (us)        9.727    7.600    7.548    9.784
+
+Each value is the median of nine sample means. Each sample contains
+128 measured removals after 16 warmups. All four B/A comparisons showed
+the improvement above. Removal CVs were below 2.03%. The drift between
+boots was +0.59% for A and -0.68% for B. The improvement held after
+dropping the first sample from each boot.
+
+Separate, untimed traces showed the same 26 kernfs nodes per removal,
+but ilookup() calls fell from 26 to 1. Deletion lock counts were unchanged.
+Basic checks of file/directory deletion notifications and link counts
+with FDs held open passed on both kernels.
+
+I also timed the full mkdir() -> stat() -> rmdir() sequence using a
+separate binary on the same kernels. The latest continuous follow-up used
+four fresh boots, with nine samples per boot. Each sample had 16 warmups
+and 32 measured sequences, with no pauses between them. The full sequence
+fell from 30.07-30.65 us to 27.97-28.34 us, a 5.77-8.76% reduction.
+The maximum CV was 1.76%, and boot drift stayed below 2% in both states.
+In the earlier continuous follow-up with 128 operations per sample, the
+full sequence was 5.15-6.52% shorter, but CVs of 4.52-6.46% were too high
+to establish a stable overall improvement percentage.
+
+Untimed tracing placed the added write lock in first stat(), during inode
+initialization. The patch skips lookups for nodes whose inodes were never
+initialized; it does not move those lookups into stat(). The individual
+mkdir() and stat() timings remained too variable to quantify their changes.
+
+I also checked whether the benefit persisted with less frequent operations.
+For this diagnostic, I added 50 and 200 ms pauses between sequences,
+outside the timers. I kept 16 warmups and 32 measured sequences per sample.
+rmdir() still saved 2.10-2.58 us, but its baseline rose from about 10 us
+to 18 us, reducing the percentage gain. The full sequence was 0.66-2.85%
+shorter, with a maximum CV of 1.53%.
+
+I included [1] because the file-handle path on this base lacks
+kernfs_rwsem protection. Source review suggests a possible wait cycle
+when that path recreates an evicted inode. Initialization waits for
+kernfs_iattr_rwsem, while removal holds it and waits for I_NEW to clear.
+I have not reproduced this possible deadlock in the kernel.
+Does the base for your diff already include [1] or equivalent locking?
+
+[1] [PATCH v2 3/4] kernfs: don't lose IN_DELETE_SELF
+    when decoding a file handle
+https://lists.openwall.net/linux-kernel/2026/09/05/828
+
+Results and reproducers:
+https://github.com/lcf0399/linux-regression-evidence/tree/f101b1b9c0d3dfce0=
+7f81b11ca2da2c252150e4c/kernfs-empty-cgroup-removal/bare-metal/inode-inited
+
+Thanks,
+Chengfeng
+
+T.J. Mercier <tjmercier@google.com> =E4=BA=8E2026=E5=B9=B49=E6=9C=8814=E6=
+=97=A5=E5=91=A8=E4=B8=80 00:17=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On Sat, Sep 12, 2026 at 3:04=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wro=
-te:
+> On Sun, Sep 13, 2026 at 8:47=E2=80=AFAM Chengfeng Lin <lin2530632123@gmai=
+l.com> wrote:
 > >
-> > On Fri, Sep 11, 2026 at 11:14=E2=80=AFAM Kairui Song <ryncsn@gmail.com>=
- wrote:
-> > >
-> > > > Would something like this fix it for you? ZRAM users will not get
-> > > > vswap indirection overhead at all, because it would bypass vswap :)
-> > > > Down the line we can revisit this decision - for e.g, if there is a
-> > > > use case for vswap-on-top-of-swapfile. There might be other interfa=
-ce
-> > > > that makes more sense.
-> > >
-> > > Hmm, this interface looks confusing though. you mean tangles vswap
-> > > with zswap through the cgroup's zswap limit? I originally expected
-> > > this to be a problem solved by tiering, skipping certain tiers seems
-> > > much more intuitive. Maybe Youngjun have some idea here?
+> > Hi Tejun,
 > >
-> > It wouldn't be confusing if this is something users don't have to
-> > think about at all :) My point is that we don't have a use case where
-> > we need userspace input on vswap-enablement on a per-cgroup basis yet,
->
-> Ha, you really can't assume that for everyone :), we even have
-> workloads working at different compression levels, and the tiering
-> series shows different cgroups working on different devices, there has
-> been pathes enabling per-cgroup swap device a decade ago.
-
-I still don't think you're getting my points.
-
-Compression levels have nothing to do with vswap selection. It has to
-do with *zswap* (i.e compressed swapping) selection (or the algorithm
-being selected). Vswap is just the transparent mechanism underneath.
-
-Once you HAVE selected zswap, then the question of "do you want vswap
-or not" is easier to answer:
-
-1. Overhead: rather minimal with vswap (at least based on the testing
-I have done so far).
-
-2. Usability: vswap buys you the decoupling of swap space from
-physical swapfile.
-
-I struggle to see why you would not enable vswap if you enable zswap.
-And more accurately, a scenario where you want vswap in some cgroups
-with zswap, but not others.
-
-Taking a step back from all of this - we're arguing about the
-participation of vswap/xswap in an interface that has not even been
-merged yet. None of us can say for sure how it will look, or if it
-will be merged in the first place. I think that making sure vswap can
-participate in that interface is already more than reasonable. Once
-that interface is in, AND the usecase that necessitates per-cgroup
-vswap selection presents itself, then we can expose vswap later.
-
->
-> > > > Potentially, but we have many users at Meta. There's a huge diversi=
-ty
-> > > > of machine types, workingset size, access patterns (both frequency =
-and
-> > > > file:anon split), compressibility, etc.
-> > >
-> > > You can just set the number as 8PB? :)
+> > Thanks. I found this during research into kernel performance regression=
+s,
+> > using a microbenchmark of cgroup creation and removal. This was not
+> > prompted by a production issue.
 > >
-> > Sure, but with the vmalloc-array approach, there is more metadata
-> > overhead even if we have not allocated the backing page of the
-> > clusters yet. This will be annoying on the smaller size machines
-> > (O(dozen of GB)) to also pay the overhead of 8PB-swap space metadata
-> > reservation.
+> > I reported it to document the added removal cost and ask whether some
+> > of it could be reduced while preserving the fixes. I agree that the
+> > roughly 3 us increase per removal does not, by itself, demonstrate a
+> > significant impact on real workloads.
+> >
+> > Thanks,
+> > Chengfeng
+> >
+> > Tejun Heo <tj@kernel.org> =E4=BA=8E2026=E5=B9=B49=E6=9C=8813=E6=97=A5=
+=E5=91=A8=E6=97=A5 23:03=E5=86=99=E9=81=93=EF=BC=9A
+> > >
+> > > Hello,
+> > >
+> > > On Sun, Sep 13, 2026 at 10:43:04PM +0800, Chengfeng Lin wrote:
+> > > > I found an increase in empty cgroup removal latency across 507d8ce1=
+3f5b
+> > > > ("kernfs: Don't set_nlink for directories being removed") and eea5d=
+2bb34ba
+> > > > ("kernfs: Send IN_DELETE_SELF and IN_IGNORED"). With sched_ext disa=
+bled,
+> > > > rmdir() went from about 6.5 us to 9.6 us, an increase of 46-47%.
+> > > > The result held in two independent runs.
+> > >
+> > > I don't want to make cgroup removal unnecessarily expensive but at th=
+e same
+> > > time it's not an operation that I consider to be a hot path, so as lo=
+ng as
+> > > the operaiton can finish in a reasonable amount of time and single di=
+git us
+> > > definitely is, performance of rmdir usually isn't something which is =
+high in
+> > > priority. Can you please detail why this matters for you?
+> > >
+> > > Thanks.
+> > >
+> > > --
+> > > tejun
 >
-> Not al all? With VM_SPARSE, you literally have zero overhead, unless
-> you really use these slots.
+> Hi Chengfeng and Tejun,
 >
-> And even if you really use these slots, the overhead in both CPU and
-> memory is lower than Xarray, if I did the math right. I just ran a
-> quick test with Baoquan's Xswap, forcing it to start with 8PB on boot;
-> it was smooth as batter on a 1GB box and still worked fine after heavy
-> anon memory pressure.
+> We use this kernfs IN_DELETE_SELF feature on Android where multiple
+> cgroups are created and removed frequently on a per-application basis,
+> but we hadn't noticed a significant delay due to the inotify
+> functionality during cgroup removal. It's probably masked by much
+> larger delays (milliseconds) we regularly see due to unreleated issues
+> with cgroup locks like priority inversion with cgroup_mutex, and
+> contention for cgroup_threadgroup_rwsem.
 >
-> See below (8PB xswap device with almost no metadata overhead, the only
-> overhead comes from zswap so I reduced the tree number but that can be
-> easily merged into clusters as we discussed before):
+> As far as what we can do, I think avoiding inode lookups for kernfs
+> nodes that never had an inode created should improve the situation. It
+> doesn't eliminate the locking overhead, which I don't think can easily
+> be eliminated. The code below doesn't deal with inode eviction either,
+> but at least files which are never accessed won't introduce the inode
+> lookup overhead.
 >
-> ### Before XSWAP
-> # free -m
->                total        used        free      shared  buff/cache   av=
-ailable
-> Mem:            1464         405         756           1         544     =
-   1058
-> Swap:              0           0           0
+> diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+> index 4f9ade82b08a..3ec9f79b1aa2 100644
+> --- a/fs/kernfs/dir.c
+> +++ b/fs/kernfs/dir.c
+> @@ -1523,6 +1523,9 @@ static void kernfs_clear_inode_nlink(struct
+> kernfs_node *kn)
+>         struct kernfs_root *root =3D kernfs_root(kn);
+>         struct kernfs_super_info *info;
 >
-> ### Create a XSWAP device, I hardcoded the max size in code to 8PB,
-> ### and use fewer ZSWAP trees:
-> # echo 0 > /sys/kernel/mm/xswap/create
-> [  140.289280] xswap: adding extendable swap type 0 (prio -1, init 733
-> clusters =3D 375295 pages, max 2199023255552 pages)
-> # free -m
->                total        used        free      shared  buff/cache   av=
-ailable
-> Mem:            1464         407         755           1         545     =
-   1057
-> Swap:           1465           0        1465
+> +       if (!(kn->flags & KERNFS_INODE_INITED))
+> +               return;
+> +
+>         lockdep_assert_held_read(&root->kernfs_supers_rwsem);
 >
-> ### Lift the ceiling to 8PB:
-> # echo 4294967296 > /sys/kernel/debug/xswap/type0_cluster_limit
-> # free -m
->                total        used        free      shared  buff/cache   av=
-ailable
-> Mem:            1464         403         756           1         547     =
-   1060
-> Swap:     8589934591           0  8589934591
+>         list_for_each_entry(info, &root->supers, node) {
+> diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
+> index 38b28aa7cd02..f8b4a8b8ade4 100644
+> --- a/fs/kernfs/inode.c
+> +++ b/fs/kernfs/inode.c
+> @@ -208,6 +208,10 @@ static void kernfs_init_inode(struct kernfs_node
+> *kn, struct inode *inode)
+>         set_default_inode_attr(inode, kn->mode);
+>         kernfs_refresh_inode(kn, inode);
 >
-> ### Run memhog:
-> # time memhog 12G
-> ...
-> ________________________________________________________
-> Executed in    4.36 secs    fish           external
->    usr time    0.46 secs    0.00 millis    0.46 secs
->    sys time    3.77 secs    3.80 millis    3.76 secs
+> +       down_write(&kernfs_root(kn)->kernfs_iattr_rwsem);
+> +       kn->flags |=3D KERNFS_INODE_INITED;
+> +       up_write(&kernfs_root(kn)->kernfs_iattr_rwsem);
+> +
+>         /* initialize inode according to type */
+>         switch (kernfs_type(kn)) {
+>         case KERNFS_DIR:
+> diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+> index e21b2f7f4159..87f074ce19d3 100644
+> --- a/include/linux/kernfs.h
+> +++ b/include/linux/kernfs.h
+> @@ -113,6 +113,7 @@ enum kernfs_node_flag {
+>         KERNFS_EMPTY_DIR        =3D 0x1000,
+>         KERNFS_HAS_RELEASE      =3D 0x2000,
+>         KERNFS_REMOVING         =3D 0x4000,
+> +       KERNFS_INODE_INITED     =3D 0x8000,
+>  };
 >
-> ### After memhog:
-> # free -m
->                total        used        free      shared  buff/cache   av=
-ailable
-> Mem:            1464         336        1136           0         222     =
-   1127
-> Swap:     8589934591          31  8589934560
->
-> The only different from vswap now is that you just hides everything :)
-> (writeback is not hard to add)
-
-Ah I see hmmm. I probably messed up my napkin math.
-
-Regardless, I think we have strayed far from my original ask. It's a
-good idea, but with significantly less exposure to correctness and
-performance testing. Baoquan himself said it:
-
-"Throughput is within ~2-3% of plain swap+zswap on a 64G/64-thread
-swapout, so it is dominated by zswap compression, not the cluster table."
-
-I've even tried to show that that if we are to want it, replacing the
-xarray with vmalloc is simple, conceptually.
-
-Why are we throwing away all of the testing, validation, design work?
-
-Let's recap the arguments so far:
-
-1. We began with: it's more performant/less overhead. Which
-intuitively makes sense, but the numbers have not played out yet. And
-as I have said, we still keep the old code in tact. Optimizations can
-be done on top after the main use cases have been landed - it in fact
-gives us a testing grounds for optimizations.
-
-2. Now we have moved on to "it's simpler". My apologies, but I have to
-push back on this, because the comparison so far is so unfair it's
-farcical.
-
-With xswap, we're rolling a custom-written extensible array. It
-requires a 1000+LoC patch series to implement.
-
-With vswap, we're using a data structure that work out-of-the-box
-(xarray), with well-understood API and concurrency model. Yes, it
-involves more null checks and interactions with RCU, but with vmalloc
-we're adding a workqueue to support only tail-shrink, and have to
-invoke vmalloc API, which includes nasty surprises such as sleepable
-allocations, which can cause deadlocks in lock section.
-
-If we're comparing LoC, the first 2 patches of vswap, which enables
-writeback-less swap virtualization, is "+440 / -37" and "+456 / -29",
-respectively (including places where I have to set things up for
-writeback, detailed documentation of the encodings, etc.).
-
-I don't think vmalloc is significantly simpler. It *looks* simpler,
-because the interface looks like plain array access, but unlike the
-xarray we're in charge of maintaining the entire data structure
-itself, not just using it, so we have to take into account the data
-structure's implementation in the complexity equations.
-
-3. Userspace API - there's more to argue here, but I will note that
-vswap can be runtime-enabled and sized too. I just don't think there's
-a good use case for it yet (but we're discussing this in other
-threads).
-
->
-> > https://lore.kernel.org/all/CAKEwX=3DNYoMH8pTKeCvA=3DXHFmmNVMeDz3mxbhp5=
-q6-PxSTJ5wOg@mail.gmail.com/
->
-> Right I saw that, but 64 bit of private id will make shadows really
-> awkward, not for SWAP but for file folios and file mappings, swap
-> table is actully fine since memcg_table is standaone, and we can
-> workaround the hieratical refault distance issue in other ways (e.g.
-> record the reclaim level instead of memcgid direct). I think 24 bit is
-> good for now? As I've never see anyone ran into issues
-> with even 16 bits in production.
-
-I think you misunderstood me. I'm not proposing raising the private id
-- I'm proposing we raise the size of the refcnt field. That's the
-thing that gets saturated.
-
-Technically I think you can reproduce it with baseline - if my napkin
-math is correct, if a cgroup has more than 8TB worth of swap entries
-(4k size), then the refcnt will be saturated. You can already create
-an 8TB swapfile today, IIUC (even without vswap).
-
-Anyway that can be fixed as the independently from swap
-virtualization. One thing at a time.
+> -T.J.
