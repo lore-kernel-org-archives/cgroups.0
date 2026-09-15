@@ -1,310 +1,186 @@
-Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-169.mta0.migadu.com [91.218.175.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BCA036829D;
-	Tue, 15 Sep 2026 04:25:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B93443CE41
+	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 05:48:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789446357; cv=none; b=YpX16wH4+xvCKbSC974eXpjZ0YymTw1UmlcGfi9NFR5LdBX7+35vv6UfD9nBWGlrSEk3ZeVHflMpp/hDnFsxenFKLQ/SEg7XQpFU089lpscXjvFbmCVqG+QoMBomgba1m70jJh9VAlLuNDGkHYbghbw72USnLvsCtwBf1DkIffA=
+	t=1789451296; cv=none; b=j69k1dPbPnY7JtQ53xKZN25El5ei6ozbN7W52dSADbO3s22A0ifplwUWW32SQqZxAFog0FZl6bS3ivkPllMjuq0x/VYToj2XlCUiAKN+pG4zvZjf7yRGuJjeLb6yTgw3v7593lUtSbwx0+kwjGGH/a7/4EMoQZugHjSD9Cl/ka0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789446357; c=relaxed/simple;
-	bh=/Trq8QHy2PF98oukvQr1TF/haOYHolHC835pmqluVm8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OgVmomdAk2DNVyjcFewZVicWxzDEh4RLF/kz2q85k+6Wr0tdqbugxGuVCbS0+Lsyb9+9984y8k3dB6rI07rEAxCcsfPAsSjJ+KZIe+VP2RdqG6cZD/TIkrJM83DR/PdMxNYdnqbI6b9tEzeUTBB2Qux+g4jBlQ83Wy6nboraDik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=AKVVrd5G; arc=none smtp.client-ip=115.124.30.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1789451296; c=relaxed/simple;
+	bh=1SMCEB2g0ru+dqQbzOuDzgyYF3rYputEIdw/bgUlvZg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gtro9NGr9CGHDCAiE1wE/cZt1mb5bdoeDlCE54zcp9jIDC8I0/FNKtQf8AXtvLpufrrXmKbGQ1V0fbPajgn3KhsSBUtqkx17OPqMl+QumMzMty6IE0JFlu0VQah6QiQtBc28x/yj4Bt+tyusB+/4k//8f66yY1B5WfYoOJxTKlU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=P0N2JM8j; arc=none smtp.client-ip=91.218.175.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="AKVVrd5G"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1789446352; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=qRccphNs3O5ad7NrqVtsKfZvxe0bhOXzZTVZa7T6UFc=;
-	b=AKVVrd5GbgfcX9mKgqP58gY/a+OrD9E6HHoBSW+VRxp04iq9dxl0YZy9542j7RCfqJua+JJ2eip9+7/6QTlFkJzENKS5ReDyxbOS9YygKVszjwwpKnCohCBQGGa1Vxl0MmSCvwYHa+JwaGmEWaAsrxWQtHFL7PhhMBIsrr2Y2Xk=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=27;SR=0;TI=SMTPD_---0XB027CR_1789446349;
-Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XB027CR_1789446349 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 15 Sep 2026 12:25:50 +0800
-From: Qinyun Tan <qinyuntan@linux.alibaba.com>
-To: akpm@linux-foundation.org
-Cc: hannes@cmpxchg.org,
-	mhocko@suse.com,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	david@kernel.org,
-	ljs@kernel.org,
-	ziy@nvidia.com,
-	baolin.wang@linux.alibaba.com,
-	xlpang@linux.alibaba.com,
-	liam@infradead.org,
-	nico.pache@linux.dev,
-	ryan.roberts@arm.com,
-	dev.jain@arm.com,
-	baohua@kernel.org,
-	lance.yang@linux.dev,
-	usama.arif@linux.dev,
-	vbabka@kernel.org,
-	rppt@kernel.org,
-	surenb@google.com,
-	chris@chrisdown.name,
-	kasong@tencent.com,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Qinyun Tan <qinyuntan@linux.alibaba.com>
-Subject: [PATCH v2 1/1] mm: memcg: don't hand out large folios above memory.high
-Date: Tue, 15 Sep 2026 12:25:46 +0800
-Message-ID: <20260915042546.279410-2-qinyuntan@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.7
-In-Reply-To: <20260915042546.279410-1-qinyuntan@linux.alibaba.com>
-References: <20260915042546.279410-1-qinyuntan@linux.alibaba.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="P0N2JM8j"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=1SMCEB2g0ru+dqQbzOuDzgyYF3rYputEIdw/bgUlvZg=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789451292; v=1; x=1790056092;
+ b=P0N2JM8jBAMAw6rEN9c03+yVfqQ0gHCf9zJCW4aiHnxNmCBMZkivhfBHad5/qSSnJgaYU5EO
+ Pf6qio/eXiBcPLnZUuBtSf91txLIS28C+SKkOePm5xfspolIkq0vY8RXmF6fVxVBAOVTD7Qhz82
+ iLnRyJjETaAs+CYesPH4trHs=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id 789024df115dfd94;
+	Tue, 15 Sep 2026 05:48:11 +0000
+X-Mizu-Trace-ID: 789024df115dfd94
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 15 Sep 2026 13:48:05 +0800
+From: Baoquan He <baoquan.he@linux.dev>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>,
+	Chris Li <chrisl@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Yosry Ahmed <yosry@kernel.org>,
+	David Hildenbrand <david@kernel.org>,
+	Muchun Song <muchun.song@linux.dev>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Barry Song <baohua@kernel.org>,
+	YoungJun Park <youngjun.park@lge.com>,
+	Chengming Zhou <chengming.zhou@linux.dev>,
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>,
+	Wenchao Hao <haowenchao22@gmail.com>,
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Tejun Heo <tj@kernel.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Kunwu Chan <kunwu.chan@linux.dev>,
+	Meta kernel team <kernel-team@meta.com>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-doc@vger.kernel.org,
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kairui Song <ryncsn@gmail.com>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+Message-ID: <aqjcFb6MFNiA6n4V@fedora>
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <aqJXx2vtbKaRLt3x@fedora>
+ <aqLZ5TVDAqEbIeMN@linux.dev>
+ <aqP81aqNbwAbs2P0@fedora>
+ <aqQrPLPXHXiuKup0@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aqQrPLPXHXiuKup0@linux.dev>
 
-memory.high is enforced on return to userspace, and synchronously in
-try_charge_memcg() for large overcharges, but only when the charge gfp
-allows blocking.  A populate loop - mlock(), MADV_POPULATE_*, any
-GUP-driven population - never returns to userspace, and large folios are
-charged with the THP allocation gfp, which does not allow blocking under
-the default defrag=madvise without MADV_HUGEPAGE, nor under defrag=defer.
-So neither runs: usage grows from memory.high straight up to memory.max
-with no reclaim and no penalty sleep.
+On 09/11/26 at 09:45am, Shakeel Butt wrote:
+> On Fri, Sep 11, 2026 at 09:06:29PM +0800, Baoquan He wrote:
+> > On 09/10/26 at 09:39am, Shakeel Butt wrote:
+> > > On Thu, Sep 10, 2026 at 03:09:59PM +0800, Baoquan He wrote:
+> > > > Hi Nhat,
+> > > > 
+> > > > On 09/04/26 at 02:14pm, Nhat Pham wrote:
+> > > > .....snip...
+> > > 
+> > > [...]
+> > > 
+> > > > With VM_SPARSE, xswap's cluster access is exactly the plain-array line the
+> > > > rest of swap already uses:
+> > > > 
+> > > >     return &si->cluster_info[offset / SWAPFILE_CLUSTER];
+> > > > 
+> > > > no branch, no RCU discipline, no tear-down state machine, and no NULL
+> > > > return. So VM_SPARSE doesn't add complexity to close a gap; it lets the
+> > > > cluster layer stay as simple as it already is, which is precisely the
+> > > > part later work (writeback, rmap lookup, memcg charging, THP) has to sit
+> > > > on.
+> > > > 
+> > > > I'm not going to claim xswap wins on throughput. I measured it:
+> > > > on a 64G/64-thread swapout, xswap, vswap and plain swap+zswap are all
+> > > > within ~2-3% of each other, effectively identical. 
+> > > 
+> > > So the claim is VM_SPARSE is simpler than xarray based approach. I feel like
+> > > we are discussing implementation details before deciding the design and
+> > > architecture. So, instead of VM_SPARSE vs xarray, let's discuss and decide the
+> > > need for dynamic growth. Why we want dynamic growth upfront or can it be added
+> > > later? Once we decide that then it will be very easy to pick an implementation
+> > > that would take us there.
+> > 
+> > Hi Shakeel,
+> > 
+> > Thank you for joining the discussion and for taking the time to comment.
+> 
+> Hi Baoquan,
+> 
+> I am mainly trying to facilitate the discussion but your use of LLM is causing
+> more confusion. LLM use is fine but please at least re-read before sending that
+> the sentences flow and makes sense.
 
-mlock(200M) in a cgroup with memory.high=30M and memory.max=140M.  Of the
-110M between high and max, the burst consumed:
+Sorry, my bad. I used LLM to find Nhat's words. But I did check it by
+myself. I wrote most of them by myself. While at it ath the moment, my
+logic could be unclear.
 
-  4K pages                       3M in 5s, then still throttled
-  THP, defrag=always             6M in 5s, then still throttled
-  THP, defrag=madvise          110M in 13ms, then OOM killed at 16ms
-  THP, defrag=madvise, patched   3M in 5s, then still throttled
+As said, how swap_cluster_info[] is built is the foundation. Whatever
+you do, you have to make swap_cluster_info[] ready, then you can do
+writeback, rmap lookup, thp support, etc, on top of it.
+swap_cluster_info[] is the basement, then you continue building 2nd
+floor, 3rd floor, till a high building is done with things added. Nobody
+wants to claim he just need the high building, while no basement.
 
-The defrag=madvise run raised no memory.high event at all - the throttling
-machinery never ran once - and nothing in userspace, oomd or a Kubernetes
-eviction manager, reacts inside 16ms.  The gfp it was charged with is not a
-statement about sleeping either: it describes allocation policy, a THP is
-not worth direct compaction, while the order-0 fallback of the very same
-fault charges with GFP_KERNEL and sleeps just fine.  memory.high should not
-stop working because of the order of the folios a workload happens to fault
-in.
+Now, the foundation has been built with the lazy vmalloc, it can grow on
+demand. It keeps swap_cluster_info accessing as swap_cluster_info[],
+a basic array semantics. And since we our target is to support a very
+large swap device with an extendable logical space, grow on demand and
+shrink becomes important. Now it is there.
 
-Fix this where the order is chosen: above memory.high, refuse a large folio
-whose charge cannot be throttled - in the anon THP fault paths and for
-large folio swapin - and let the fault fall back to order-0.  That charge
-blocks, so try_charge_memcg() reclaims and throttles it as before, and the
-refusal happens before the allocation, so the fault path only gets shorter.
-mlock() above is the worst case since the pages are unevictable; where
-reclaim can keep up, usage simply stays at memory.high.
+That's my understanding, not sure if there's anything I can't get so
+that writeback need be made first.
 
-A charge that may block is already throttled, so the check is gated on
-gfpflags_allow_blocking(): defrag=always and MADV_HUGEPAGE VMAs are
-unaffected.  Other VMAs get large folios again once usage is back below
-memory.high, which is the intent - above it the cgroup is meant to be under
-reclaim pressure.
-
-Suggested-by: Zi Yan <ziy@nvidia.com>
-Signed-off-by: Qinyun Tan <qinyuntan@linux.alibaba.com>
----
- include/linux/memcontrol.h | 33 ++++++++++++++++++++++
- mm/huge_memory.c           | 12 ++++++++
- mm/memcontrol.c            | 56 ++++++++++++++++++++++++++++++++++++++
- mm/memory.c                |  7 +++++
- mm/swap_state.c            | 16 ++++++++++-
- 5 files changed, 123 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 46bf724cae7a..defef0d3d710 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -941,6 +941,33 @@ static inline void mem_cgroup_handle_over_high(gfp_t gfp_mask)
- 		__mem_cgroup_handle_over_high(gfp_mask);
- }
- 
-+bool __mem_cgroup_large_folio_over_high(struct mm_struct *mm, gfp_t gfp);
-+
-+/**
-+ * mem_cgroup_large_folio_over_high - would a large folio escape memory.high?
-+ * @mm: mm the folio would be charged against, may be NULL
-+ * @gfp: gfp mask the folio would be allocated and charged with
-+ *
-+ * See __mem_cgroup_large_folio_over_high().
-+ *
-+ * The task's over-high debt is more than a fast path here, it also scopes
-+ * the check to the case that is broken.  The debt is settled and cleared on
-+ * every return to userspace, so a task faulting large folios from a
-+ * userspace loop always finds it zero and keeps getting them - memory.high
-+ * is enforced for it on the way out.  Only a loop that stays in the kernel,
-+ * where nothing throttles at all, accrues debt and reaches the counters.
-+ *
-+ * Return: %true if the caller should fall back to a smaller order.
-+ */
-+static inline bool mem_cgroup_large_folio_over_high(struct mm_struct *mm,
-+						    gfp_t gfp)
-+{
-+	if (likely(!current->memcg_nr_pages_over_high))
-+		return false;
-+
-+	return __mem_cgroup_large_folio_over_high(mm, gfp);
-+}
-+
- unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg);
- 
- void mem_cgroup_print_oom_context(struct mem_cgroup *memcg,
-@@ -1390,6 +1417,12 @@ static inline void mem_cgroup_handle_over_high(gfp_t gfp_mask)
- {
- }
- 
-+static inline bool mem_cgroup_large_folio_over_high(struct mm_struct *mm,
-+						    gfp_t gfp)
-+{
-+	return false;
-+}
-+
- static inline struct mem_cgroup *mem_cgroup_get_oom_group(
- 	struct task_struct *victim, struct mem_cgroup *oom_domain)
- {
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 30b7c63b0e35..9247c36da64a 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -1355,6 +1355,18 @@ static struct folio *vma_alloc_anon_folio_pmd(struct vm_area_struct *vma,
- 	const int order = HPAGE_PMD_ORDER;
- 	struct folio *folio;
- 
-+	/*
-+	 * A THP charged with a gfp that cannot block escapes the memory.high
-+	 * throttling in try_charge_memcg().  Don't hand out one while the
-+	 * cgroup is already above memory.high: the order-0 fallback is charged
-+	 * with a blocking gfp and throttles as documented.
-+	 */
-+	if (mem_cgroup_large_folio_over_high(vma->vm_mm, gfp)) {
-+		count_vm_event(THP_FAULT_FALLBACK);
-+		count_mthp_stat(order, MTHP_STAT_ANON_FAULT_FALLBACK);
-+		return NULL;
-+	}
-+
- 	folio = vma_alloc_folio(gfp, order, vma, addr & HPAGE_PMD_MASK);
- 
- 	if (unlikely(!folio)) {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1460cba53588..dd7a62c3dacb 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2587,6 +2587,62 @@ static unsigned long calculate_high_delay(unsigned int nr_pages,
- 	return penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
- }
- 
-+/**
-+ * __mem_cgroup_large_folio_over_high - would a large folio escape memory.high?
-+ * @mm: mm the folio would be charged against, may be NULL
-+ * @gfp: gfp mask the folio would be allocated and charged with
-+ *
-+ * memory.high is enforced on return to userspace, or synchronously in
-+ * try_charge_memcg() - but the synchronous path is gated on the charge gfp
-+ * allowing blocking.  Large folios are charged with the THP allocation gfp,
-+ * which does not allow blocking unless the allocation policy asks for direct
-+ * compaction, so those charges escape throttling entirely: a fault loop that
-+ * does not return to userspace inbetween - the populate loop of mlock() or
-+ * MADV_POPULATE_*, any GUP-driven population - can grow usage from
-+ * memory.high all the way up to memory.max with no reclaim and no delay.
-+ *
-+ * Above memory.high the cgroup is supposed to be under reclaim pressure, so
-+ * refuse the large folio instead.  Callers fall back to order-0, which is
-+ * charged with a blocking gfp and throttled as documented.
-+ *
-+ * This is a lockless snapshot of the counters; a stale result only costs one
-+ * large folio either way.
-+ *
-+ * Callers should use mem_cgroup_large_folio_over_high(), which keeps the
-+ * counter lookup off the fault path unless the task has actually charged
-+ * above memory.high before.
-+ *
-+ * Return: %true if the caller should fall back to a smaller order.
-+ */
-+bool __mem_cgroup_large_folio_over_high(struct mm_struct *mm, gfp_t gfp)
-+{
-+	struct mem_cgroup *memcg, *iter;
-+	bool over_high = false;
-+
-+	/*
-+	 * A charge that can block is throttled by try_charge_memcg() itself,
-+	 * there is no reason to give up the large folio for it.
-+	 */
-+	if (gfpflags_allow_blocking(gfp))
-+		return false;
-+
-+	memcg = get_mem_cgroup_from_mm(mm);
-+	if (!memcg)
-+		return false;
-+
-+	for (iter = memcg; iter; iter = parent_mem_cgroup(iter)) {
-+		if (page_counter_read(&iter->memory) >
-+		    READ_ONCE(iter->memory.high)) {
-+			over_high = true;
-+			break;
-+		}
-+	}
-+
-+	mem_cgroup_put(memcg);
-+
-+	return over_high;
-+}
-+
- /*
-  * Reclaims memory over the high limit. Called directly from
-  * try_charge() (context permitting), as well as from the userland
-diff --git a/mm/memory.c b/mm/memory.c
-index 926276d41920..b28fccc86216 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -5321,6 +5321,13 @@ static struct folio *alloc_anon_folio(struct vm_fault *vmf)
- 
- 	/* Try allocating the highest of the remaining orders. */
- 	gfp = vma_thp_gfp_mask(vma);
-+
-+	/* Same reasoning as in vma_alloc_anon_folio_pmd(). */
-+	if (mem_cgroup_large_folio_over_high(vma->vm_mm, gfp)) {
-+		count_mthp_stat(order, MTHP_STAT_ANON_FAULT_FALLBACK);
-+		goto fallback;
-+	}
-+
- 	while (orders) {
- 		addr = ALIGN_DOWN(vmf->address, PAGE_SIZE << order);
- 		folio = vma_alloc_folio(gfp, order, vma, addr);
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 625c185a1ca4..a235c9aecaf1 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -440,9 +440,23 @@ static struct folio *__swap_cache_alloc(struct swap_cluster_info *ci,
- 	 * Limit THP gfp. The limitation is a no-op for typical
- 	 * GFP_HIGHUSER_MOVABLE but matters for shmem.
- 	 */
--	if (order)
-+	if (order) {
- 		gfp = thp_shmem_limit_gfp_mask(vma_thp_gfp_mask(vma), gfp);
- 
-+		/*
-+		 * This gfp may not allow blocking, in which case the charge
-+		 * below escapes the memory.high throttling in
-+		 * try_charge_memcg().  Above memory.high, have the caller
-+		 * retry with a smaller order, down to order-0, which is
-+		 * charged with the caller's blocking gfp and throttled as
-+		 * documented.  Only fault context is throttled here; the
-+		 * readahead and zswap writeback callers have no @vmf and are
-+		 * not the ones to hold back.
-+		 */
-+		if (vmf && mem_cgroup_large_folio_over_high(vma->vm_mm, gfp))
-+			return ERR_PTR(-ENOMEM);
-+	}
-+
- 	if (mpol || !vmf) {
- 		folio = folio_alloc_mpol(gfp, order, mpol, ilx, numa_node_id());
- 	} else {
--- 
-2.43.7
-
+[I type each of above by hand.]
+> 
+> > 
+> > Agreed on requirement first - but this one was already decided, and not by me. In
+> > the July ghost swapfile thread Nhat rejected exactly the shape of "grow only, can
+> > be added later":
+> > 
+> >     "Except for my virtual swap design, which does support dynamic growth AND
+> >      shrinking of capacity on demand ;) If it cannot grow (and furthermore, if it
+> >      requires userspace operation to trigger swapfile growth), why do we need this
+> >      at all? Might as well create a new swapfile with swapon?"
+> > 
+> > To me what it converged on was "dynamic growth and shrink, no writeback yet".
+> 
+> I am not getting how out of context above paragraph shows the conclusion about
+> dynamic growth/shrink and *no writeback*.
+> 
+> > So automatic growth *and* shrink is the requirement, and the simpler alternative
+> > was already on the table.
+> > 
+> > And I keep mentioning it in the cover-letter of each version of my posting. I
+> > only did the foundtation via lazy vmalloc. And Nhat will do the core
+> > part including writabck, rmap lookup, memcg accounting, zero page fill,
+> > etc.
+> 
+> I don't see any evidense of this decision. Actually this whole email thread
+> shows that there is no such decision.
+> 
+> > 
+> > What is still genuinely open, and I would like us to settle, is how large the
+> > device's address space should be, because the metadata scales with it:
+> 
+> With dynamic growth/shrink, is this really a blocker?
+> 
+> Anyways, I will let Nhat and others discuss the technical details (unless I am
+> asked for it). My main reason to join the conversation is to converge the
+> discussion to a decision and resolution.
