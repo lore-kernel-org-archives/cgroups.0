@@ -1,87 +1,87 @@
 Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC4DA4D90D7
-	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 23:20:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5C4E37187F
+	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 23:20:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789514444; cv=none; b=phNiBMDIYKHsoZbIpgYYK5XG3qe33GaK2X5velYr5QUYRH8+v7wuER+8bQ+CogZg0FVXyNCoBAuTtdEJsUawLaHCbDPcPsB4Q3SYmEXLOWgrbTFD9ttowgVbtbxvrta9OXVCQGnUNA9WMVSp82oZc5vxDZT9DSVfpYRMcFWRk7U=
+	t=1789514446; cv=none; b=ONV3LiptzEwo0DEygeSwazWv9iptrDtkc/5714NTxI0HUu+yoKAE15qsnJmlmWPEk3PLT1GLsmpKM7oqjUqMDTgLAJYC+NR96bw5bQtjKFykysKbW7L7jp1aTQ2kvEEzg+CKkLTlayHTzfeatRG2RgKyQqM4DuYKoR7z/6sYzno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789514444; c=relaxed/simple;
-	bh=wZ7UnBf3QaZVjgfHJlCjkDQs5ZCx1m2hy7FBVH9jNJ8=;
+	s=arc-20240116; t=1789514446; c=relaxed/simple;
+	bh=9okpZMTMnyXLmB2Ry6c0Ho0fpCdh1VUMQUGi454i+qg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Sn6hRFGTqe/1D3rKG/cexjKZUFOMSkXYNBwcA1uTNPei4DSFCSx9ceY2O6HhK5u5DlU189GM2u3qrXHE3a6Th5bnHbAZqP1hswvOKsoK1NOwfDM9W79lrbL+eZsxEd4tfR3rVP1JpSstTPRpV100wCVw2gG43zc/b4IWtFhpd2w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=S9rK6HyP; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=aqU2zy1H; arc=none smtp.client-ip=148.163.135.74
+	 In-Reply-To:To:Cc; b=HgZR8Hi2iC7cmKdBLmO33xfxdafhGF1uKMrluLvmdlv+bBtwFyXRWPHGfFwaXxtJUrvatrmxts5OnXCokvhg3IZW1TnvHX1wJIbu7Vw3gJh8B1PWyspTE6I9VPgy/dkZ7EEtgbC3AILkdBsyp5IImouFo25e4oCaNyMNWu2GGj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=KyNFFuFb; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=z7s1AkiX; arc=none smtp.client-ip=148.163.135.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="S9rK6HyP";
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="aqU2zy1H"
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="KyNFFuFb";
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="z7s1AkiX"
 Received: from pps.filterd (m0167070.ppops.net [127.0.0.1])
-	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68FMbVKF2571546
-	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 19:20:41 -0400
+	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68FMbTRR2571529
+	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 19:20:42 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps01; bh=I8Bx
-	BffBm5AN+TbnCPlm79JDerV+EaqITRnbuFkY/pc=; b=S9rK6HyP/h7A4yGqszKk
-	zM3hQPXjLzadtt72/LiNjWiSpMSiAC9FPRsS/wcxtzKR1JCC3IQiaFjfi2DLIfdb
-	X0TK93p8VJJWSlgRtA7aDm/QdN9UM3D5OIkpcveq9x2st3xVmMVPdgIQyDqchoRz
-	Jp+3ZemsV8+s/4IlKN6BxFbyiCAOsPMsgjYgNAxbXmO4qLp1Ii9/X6T0QGKdWP/8
-	QvllnTi7BbiHAo1gO637scqE4IJstR9xZG4IBjdVwXtW5Uz0LKnJdkIrg4yD6bng
-	X/MKcgToO3WxcCaN4zAElmfY2WP6OiR2I3D3ZTzDW+7q4JK1/+i47CTRlI/8KK+G
-	VQ==
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
-	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4gqbwd9t1c-1
+	:message-id:mime-version:references:subject:to; s=pps01; bh=HMhj
+	gHsliwPh5UROcPmv09nrjwRg6d7C9/cMqZ3ArSQ=; b=KyNFFuFb9uuMNkmZ/nGZ
+	MJxQuTaGbvpjICGU6Ngu4s/VAVoknIB+GaN/H/ipDGxEBq+pRj2Ja/zCsTaNyMh8
+	rTOgf2pf2FBnV+O4Vrj6n4TRBTaeqpKC0yCpqjinkj1J635s46VL0nCAwmfyDXDv
+	21nj21VnC7bjU8uQ98XSkcPNx2DUQuBA5Oz9EHiMP/h5PZhblHSVwq/PAdjJl8dg
+	4RrUoFbY+u9DNOSI2/UXiXR7I4qivI4I50mklJ/B/osSLT3I7+Nl5XBsTeXOfZB8
+	HMyB0aorOW1vIrddY9qQ4mkdBe9dVSnWmpY9MgN2oJRiiPS1SaTwDP5jxKEO/MxW
+	pg==
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com [209.85.222.200])
+	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4gqbwd9t1r-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 19:20:40 -0400 (EDT)
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-93a1b824e84so599673485a.2
-        for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 16:20:40 -0700 (PDT)
+	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 19:20:42 -0400 (EDT)
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-93918756165so967785885a.0
+        for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 16:20:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=columbia.edu; s=lionmail; t=1789514440; x=1790119240; darn=vger.kernel.org;
+        d=columbia.edu; s=lionmail; t=1789514441; x=1790119241; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=I8BxBffBm5AN+TbnCPlm79JDerV+EaqITRnbuFkY/pc=;
-        b=aqU2zy1H56r3I2nuZ+Ghy4+W29kXceb/4Uovo4GSy0omI1DoE9xHDkFCD55mCUh12i
-         F+HzEpOW7YArdhaZAzXg2b0fVH/9szEeLct3iRaka1SRceZvqu8HU3sx5UkuDvnWmw89
-         V3qZWcIp7xLAFBchPu6JogvwyhULy75oQ9Wo3VO8bShDow7B5TSAYtZipPNkFfIhzO8o
-         Z8wBhp3WMX8VpsaJ0dfxKuwbZz71hWjNMXsGLH1DLoiKLk0F9gjV5dscGM8RznHXfzj1
-         Fdiw5/CfMTtTe/tT7RafFGn4BI57mOw2CjNs8R/6oOFVPLEF14Rxy3jjXvjrCZyqLq6d
-         DDIw==
+        bh=HMhjgHsliwPh5UROcPmv09nrjwRg6d7C9/cMqZ3ArSQ=;
+        b=z7s1AkiXtAylW3LflXZWUQawdrHChcWUiCKy40Dxj1tMHNz8IUv4Nto05pyLnd1bqm
+         pl46LqabwE8+VLMIsaISQg/ik4YwZh4pNcE6nBKq3L7JLw83nW7rVtJOHNb19SHz0qT/
+         hFAHjqLqmiRAlizrYiiIeBwbR7fOH3Y6bW1Ub8B3xWSQi+354AfOmTPJlJuEMbgKh5DA
+         uXvQdFtEA6Q3V/du1AFUM/V6hyBgQ0nS1cR5YWq3pn9QxdsbDxKI/+syKf3t76CJZW6s
+         5FK75Ti4YSEzTe19mmX9f2ugm/rXYqmBmvRErblOmTx5k/9GgMeYZSS+jrdli1Y4eOBI
+         px1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789514440; x=1790119240;
+        d=1e100.net; s=20260707; t=1789514441; x=1790119241;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=I8BxBffBm5AN+TbnCPlm79JDerV+EaqITRnbuFkY/pc=;
-        b=u+Gkgcpurm/yMywQ95ipdbTBNia41qgrRGHbvDT5lDZ4wV0EBqX8U6Jc0prkf7p77v
-         3CyPWQJVikiPJa+BDJAskAlbeYQnI4F0ezh6f1QxJ2E8GyBYxHLu1SanTfiuZ60q1jqN
-         niTf38fvTZGUM/G1UyVjvScvgTDYZqRN+px+eqxutL5v8qoHoRj8XWtNTQ/MGKtF4TCy
-         Jm7Bnra6WUKFSKzIh6KrH6obVoc8GvhZZ6JNjd+tBc+wJkqizhpmZ3KewmVluSo5t8kz
-         wvLmXU/erLIcfs574Df5+l114fUZFn1XIytNb42HJPxnn9BVH3DO7Ct98cCJU+TgQUEL
-         DQ4g==
-X-Gm-Message-State: AFuF++mCfFGYB60QlSX1pd3u08gtjPNghHr0EZN/MOMCGMCGAbsDeA1n
-	h3SXVqwiWH1Xvbf/jCCTdutSBUXQVTQ8RtC0FHo9Ei3CwpA2RvKM7EGA1/YQwQPGaz4GAhVEyu4
-	/kE6nDgVaB+NvpD2IKCtDVM/SX3wgcF07Tix3dCw6gf8px/BfRtMfpcBRuF3Td2Y=
-X-Gm-Gg: AYBFou1rV9NN1/8EkjSbxTKMemWVY6Sp6EQzaUJPW9J3QDzoHy/fC9iVtSGlr7JJKKs
-	2tmjAFXDza39/Usr309UZQUlslzbf1RwbtSt18Qhlt48mmWGV0/4yHb0u+56n0x6/7IRCdj8ChQ
-	vWtuBXK/K+weekiwy+tN1WzJ4vPIrKoTYe9VE0Tp2ykfiyCNeQxM1M0umK7/VtUYUPar89Ji23n
-	1YTsDRjdA0jpgT8WFzKuQCLOn/vSwmAMxj1gU4ROrFr5312j5H/oaWatFzXsgiA9ZyD2H5cHkOM
-	wkSBDMOhyCsbSNxayLflveOIxClcz7eaaKcZHgmXgz49p29DHU2PmMNJwqpwqmbtGM+eXgJatgs
-	9jUzOgFcuIVZ/ZanDdJONpClZFTKm2zrknoQOPakBZ6UE5LTZ
-X-Received: by 2002:a05:620a:3910:b0:939:e93d:a66a with SMTP id af79cd13be357-93bb78f7f4dmr61547585a.32.1789514439965;
-        Tue, 15 Sep 2026 16:20:39 -0700 (PDT)
-X-Received: by 2002:a05:620a:3910:b0:939:e93d:a66a with SMTP id af79cd13be357-93bb78f7f4dmr61541285a.32.1789514439451;
-        Tue, 15 Sep 2026 16:20:39 -0700 (PDT)
+        bh=HMhjgHsliwPh5UROcPmv09nrjwRg6d7C9/cMqZ3ArSQ=;
+        b=lvGr8AdY/RUJ8hGtE6/2l88u7ERnHlwwFYWRux28/ayN63/KMZjx2p0b44UCIgf3Dx
+         3JkUMJ2oEgPGQuXdy5QvH0wSLwKgVfOoBhEXb56Js0Ar5yCPjs1WGFi2H8W2onXMhej6
+         f7xpP10LgqXEHfgZ8KECaDlNzJNTcHNlpdp7CmKKlH6gaSzC5EtN4JOZw3WYH1cpH+gS
+         sZo/7XAjMBi4r8OqTESN+Xqqq9AS1aX3qkGrAlSDTTBnNnC7HDmVqbqfXuqs0RHR79Zw
+         PYedtV2w5ITwl2pZuWUKsypkThDlP5MHBDuQ+l9vL7JN00iffuK8wNgJQ4aVA8VC1zQt
+         IUXg==
+X-Gm-Message-State: AFuF++mFwapsrE2UHeN+1hkGfy+SlOaiEsM1la0d2jWMeooNKJ2IC4AP
+	Y9NHkxIoRaS3hplFeJNFs3TguuhfVbOqjo/DDssbegRGXj3wC9K8C6HHWu0pN5Qa7UhFlYhOfS9
+	WpveX0DTjfXjIIL1bhpPC4sybDsneQdm/qjWpcNG3a7sC8NG6xcxy1ClkhwxXUVA=
+X-Gm-Gg: AYBFou3Ngi4AtyDsmPC39BJt8SI455UzKBbk9UrDPSfMWtQ0GgHLwMkTX7Ng+83Go+d
+	Jl0+QO22R0wuSASZNgL6oenN9AzXSZ7P2rH5su9em2BRXMQN6FIkx50PpHXhWR97Ek0Eyxe4R+T
+	zRcLnk4TRpjD4dyupPjgYhMUCB8bPVX3OQmKSQuZtPU35ZK9edWX1g283CSBNuxJ2OHUaoaoIX/
+	Dgkh06fR7GoF9oF1PZXEfjkXhTICDkFvvhnNBYxc9s/q0yLWXQFgRVT2ZxgvMUj1Gon4vg41zEB
+	RlYGI9WC3SOo0vdak8ZnqKeWCIV4hje73w1tpHV3j8iC6e9UCK4r8n9FK3Wh+XdWO0gZZngn973
+	sXRyfObWTNTwJ6D/TtjljbXgcSLXikKYBmbON3s4XmtJm9qfR
+X-Received: by 2002:a05:620a:2715:b0:93a:2239:4ac1 with SMTP id af79cd13be357-93bb787fabamr64991185a.32.1789514441307;
+        Tue, 15 Sep 2026 16:20:41 -0700 (PDT)
+X-Received: by 2002:a05:620a:2715:b0:93a:2239:4ac1 with SMTP id af79cd13be357-93bb787fabamr64985185a.32.1789514440925;
+        Tue, 15 Sep 2026 16:20:40 -0700 (PDT)
 Received: from [127.0.1.1] (nat-128-59-179-204.net.columbia.edu. [128.59.179.204])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93b781dfde3sm77151085a.12.2026.09.15.16.20.37
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93b781dfde3sm77151085a.12.2026.09.15.16.20.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2026 16:20:38 -0700 (PDT)
+        Tue, 15 Sep 2026 16:20:40 -0700 (PDT)
 From: Tal Zussman <tz2294@columbia.edu>
-Date: Tue, 15 Sep 2026 19:20:13 -0400
-Subject: [PATCH v3 09/11] mm: memcontrol: constify the swap accounting
- helpers
+Date: Tue, 15 Sep 2026 19:20:14 -0400
+Subject: [PATCH v3 10/11] mm: memcontrol: constify mem_cgroup_swappiness()
+ and mem_cgroup_get_max()
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -90,7 +90,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260915-folio_memcg-const-v3-9-c239a6010b58@columbia.edu>
+Message-Id: <20260915-folio_memcg-const-v3-10-c239a6010b58@columbia.edu>
 References: <20260915-folio_memcg-const-v3-0-c239a6010b58@columbia.edu>
 In-Reply-To: <20260915-folio_memcg-const-v3-0-c239a6010b58@columbia.edu>
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
@@ -114,31 +114,31 @@ To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
         Tal Zussman <tz2294@columbia.edu>
 X-Mailer: b4 0.17-dev-db0b7
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789514423; l=2888;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789514423; l=2036;
  i=tz2294@columbia.edu; s=20250528; h=from:subject:message-id;
- bh=wZ7UnBf3QaZVjgfHJlCjkDQs5ZCx1m2hy7FBVH9jNJ8=;
- b=uQOuh4Y4lcarwBt0PjaPQLOIRjitIWOjUpkIOJTKiZT9gi8Z6zqXMWbVyhurz9h9MOSuF8ZZ/
- lJj8Mrj/5nOBz5sF8o9hxVOYzRvSrTFDO4XuzZtHYt0sUaQOOzg4iHb
+ bh=9okpZMTMnyXLmB2Ry6c0Ho0fpCdh1VUMQUGi454i+qg=;
+ b=fi/2DRaM94/2tgQrx1Km8UqYFSnS643KGtWcuw4p72BsEv73LKIWc+7o20uPW2rGtmzVXgwVD
+ NdaMZWxQM9QDr1iBOLN5X4QSyCwbT7wdxmvFu2Zj1i7et6qcP0Mi0MV
 X-Developer-Key: i=tz2294@columbia.edu; a=ed25519;
  pk=BIj5KdACscEOyAC0oIkeZqLB3L94fzBnDccEooxeM5Y=
-X-Authority-Analysis: v=2.4 cv=JeEpPkKV c=1 sm=1 tr=0 ts=6aa9d2c8 cx=c_pps
- a=qKBjSQ1v91RyAK45QCPf5w==:117 a=hXAsoc/zAxyCEdIRhrpmVw==:17
+X-Authority-Analysis: v=2.4 cv=JeEpPkKV c=1 sm=1 tr=0 ts=6aa9d2ca cx=c_pps
+ a=hnmNkyzTK/kJ09Xio7VxxA==:117 a=hXAsoc/zAxyCEdIRhrpmVw==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=x7bEGLp0ZPQA:10 a=A0y_DWxS2BwA:10
  a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=svvvyxlR1OQQkelhaPoB:22
- a=vlTQYXqq4tgfiFTJlkUA:9 a=QEXdDO2ut3YA:10 a=NFOGd7dJGGMPyQGDc5-O:22
-X-Proofpoint-ORIG-GUID: 4qsrCsJJF_fwkOmMkOG31-wroGcBE2wh
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE1MDM0MSBTYWx0ZWRfXzQs9AyhoiASt
- jVgg81fCbIOxxegoaIqycXlU/e/t71BmHnPex3MMSYRv2s5SRHsa4irgvpyhAe2gS1t6u8QuA5W
- kYPJy3U57cqBB86MyXNhC5m4S1TBLO+x42M/RaXcKHJuGlPx9IfmH5p0l5oY4t2X9Pw/l0xUbxN
- FeTCMcQpGofpeNOO3siB/GcIYDHbF3rh11TuL+kOtg/tG0KhbjSm5SAnHlqGgfPpH04eI/U+muj
- FE68kxFd1WpRMK1GQ56sMX1gFnZZQyy+BGMCMQCUF4H3oRPEIqsPPgwp0tqmacCJ7dulrk+J0Go
- 5CWiAfpg6v/aTDuWWLSe2jejzK3KiaMyKJlDlttJNhSySXTaEIbAyOBTypib/EbLnDlTmxNMDxX
- iz+LtagOmoZb79V+/RzEoEeqU7hs97N3z3L6D5VEoVrO5EYefNWy7HBGqx0jIJPUJv1/RuUuq+j
- 40mQbHeikEqP1EUFECQ==
-X-Proofpoint-GUID: 4qsrCsJJF_fwkOmMkOG31-wroGcBE2wh
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE1MDM0MSBTYWx0ZWRfX8a4HOxTLikaL
- vv6KelfR2T7Hj4r3PUj5sVdGf+IcSaMpaC52qDYLYELY6j03nnTTBW2zBx8hBITmI8lSo9zNd01
- Wo7uiE/rXPjVbJGhqoIDhNPHzQF8xYlQYZ5Mxm6/VAZLv7d9m+vW
+ a=LvCEVWXYBYKFGHUOtEoA:9 a=QEXdDO2ut3YA:10 a=PEH46H7Ffwr30OY-TuGO:22
+X-Proofpoint-ORIG-GUID: iKBSM-wFAfbDtJ4rAfzeiYMTmYhf5V5c
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE1MDM0MSBTYWx0ZWRfX0nZFSUF0AzZS
+ 1nttLRKXlFrIz5DVfUj/S8ZDmjmPL0DVY0JqsUn7glry+P6E7f4chyU6vfp93hx+cI9Q04Qo7Yu
+ DwYeq2JAokAZfkHSyAkhb7+jF3U7rROP/E1KevCSFkhB4JIOTPVrNvSxcXa+bfUKDU/CR0o1ssN
+ CzfRU8hXl9f+NPlLsGsE6Ulxf+1xFkg//zP+b8JUfwJlGrqGAIrLk4WQYlTYKfix+NIxD71J+Kk
+ hniCdOIZwP09Rsc3rDkOQMgx3YoxSjuF+JISvAg3MiP6cX8t6t7I8iCjNmqwNHbIUrPnWZ7JvLL
+ +4Kg7JGncPlA2xnl06Nr5gFYEUTmln2c5a4R35t/uZU3bz37LJS03pS+jBr9DTdhRNYGezPuc18
+ RvEr4C1ucrIY87EvmrG2uR1JMGDcUB8+W422wy9WdtVHfbHeDmx6Wf3OAY6tMspA56vX84EU5GJ
+ SuGtEnMPklpWs04hczg==
+X-Proofpoint-GUID: iKBSM-wFAfbDtJ4rAfzeiYMTmYhf5V5c
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE1MDM0MSBTYWx0ZWRfX7KEZcE7J0CV+
+ P9tZyrbqTXXvlB3713k+IGcMsL6w4Niw1tDUCtAy0qlYkd3RlHfq9cwkpuhKgXZcxilfw6wJlHp
+ Xc6QiQnBDDjAOp5SuCGaH9YSbf3596xcZn4eVnMFabDjz1BdoqQD
 X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11906
  signatures=596817
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
@@ -148,87 +148,63 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
  definitions=main-2609150341
 
-mem_cgroup_get_nr_swap_pages(), mem_cgroup_get_folio_swap_margin(), and
-mem_cgroup_swap_full() only read swap counters and limits. Constify
-them.
-
-Remove externs from function declarations while at it.
+Both only read swappiness and the memory limits. Constify them.
 
 Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 ---
- include/linux/swap.h | 12 ++++++------
- mm/memcontrol.c      |  6 +++---
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ include/linux/memcontrol.h | 4 ++--
+ mm/memcontrol.c            | 2 +-
+ mm/swap.h                  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 43155e122b5c..18f833a448fb 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -529,9 +529,9 @@ static inline void mem_cgroup_uncharge_swap(unsigned short id, unsigned int nr_p
- 	__mem_cgroup_uncharge_swap(id, nr_pages);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 9beb065c0879..f11899085473 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -941,7 +941,7 @@ static inline void mem_cgroup_handle_over_high(gfp_t gfp_mask)
+ 		__mem_cgroup_handle_over_high(gfp_mask);
  }
  
--long mem_cgroup_get_folio_swap_margin(struct folio *folio);
--extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
--extern bool mem_cgroup_swap_full(struct folio *folio);
-+long mem_cgroup_get_folio_swap_margin(const struct folio *folio);
-+long mem_cgroup_get_nr_swap_pages(const struct mem_cgroup *memcg);
-+bool mem_cgroup_swap_full(const struct folio *folio);
- #else
- static inline int mem_cgroup_try_charge_swap(struct folio *folio)
- {
-@@ -543,17 +543,17 @@ static inline void mem_cgroup_uncharge_swap(unsigned short id,
- {
+-unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg);
++unsigned long mem_cgroup_get_max(const struct mem_cgroup *memcg);
+ 
+ void mem_cgroup_print_oom_context(const struct mem_cgroup *memcg,
+ 				struct task_struct *p);
+@@ -1372,7 +1372,7 @@ unsigned long mem_cgroup_get_zone_lru_size(const struct lruvec *lruvec,
+ 	return 0;
  }
  
--static inline long mem_cgroup_get_folio_swap_margin(struct folio *folio)
-+static inline long mem_cgroup_get_folio_swap_margin(const struct folio *folio)
+-static inline unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg)
++static inline unsigned long mem_cgroup_get_max(const struct mem_cgroup *memcg)
  {
- 	return PAGE_COUNTER_MAX;
- }
- 
--static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
-+static inline long mem_cgroup_get_nr_swap_pages(const struct mem_cgroup *memcg)
- {
- 	return get_nr_swap_pages();
- }
- 
--static inline bool mem_cgroup_swap_full(struct folio *folio)
-+static inline bool mem_cgroup_swap_full(const struct folio *folio)
- {
- 	return vm_swap_full();
+ 	return 0;
  }
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b13f5ed74a5a..ebf325af7acc 100644
+index ebf325af7acc..6e3731b97690 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -6003,7 +6003,7 @@ void __mem_cgroup_uncharge_swap(unsigned short id, unsigned int nr_pages)
- 	rcu_read_unlock();
- }
- 
--long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
-+long mem_cgroup_get_nr_swap_pages(const struct mem_cgroup *memcg)
- {
- 	long nr_swap_pages = get_nr_swap_pages();
- 
-@@ -6019,7 +6019,7 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
-  *
-  * Return: Remaining chargeable pages in the folio's memcg hierarchy.
+@@ -1884,7 +1884,7 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
+ /*
+  * Return the memory (and swap, if configured) limit for a memcg.
   */
--long mem_cgroup_get_folio_swap_margin(struct folio *folio)
-+long mem_cgroup_get_folio_swap_margin(const struct folio *folio)
+-unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg)
++unsigned long mem_cgroup_get_max(const struct mem_cgroup *memcg)
  {
- 	struct mem_cgroup *memcg;
- 	long margin;
-@@ -6036,7 +6036,7 @@ long mem_cgroup_get_folio_swap_margin(struct folio *folio)
- 	return margin;
- }
+ 	unsigned long max = READ_ONCE(memcg->memory.max);
  
--bool mem_cgroup_swap_full(struct folio *folio)
-+bool mem_cgroup_swap_full(const struct folio *folio)
+diff --git a/mm/swap.h b/mm/swap.h
+index b3b54c28929a..1957960dc60d 100644
+--- a/mm/swap.h
++++ b/mm/swap.h
+@@ -82,7 +82,7 @@ enum swap_cluster_flags {
+ 
+ extern int vm_swappiness;
+ 
+-static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
++static inline int mem_cgroup_swappiness(const struct mem_cgroup *memcg)
  {
- 	struct mem_cgroup *memcg;
- 	bool ret = false;
+ #ifdef CONFIG_MEMCG_V1
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
 
 -- 
 2.39.5
