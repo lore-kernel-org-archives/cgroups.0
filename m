@@ -1,112 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-47.ptr.blmpb.com (va-2-47.ptr.blmpb.com [209.127.231.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9F2B356771;
-	Tue, 15 Sep 2026 14:19:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A4974B0CAA
+	for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 15:43:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789481999; cv=none; b=aekfohT6A5uvtTortzVAbPLG9V46+YtdzlphbFJie/ruuKl1QH0p8bOsrCcv+R1FIZXUfjXJUBs5aazus5Zf4vWbHxl9RgdtF/HAsCVacJndjM59rAIyAOBZh1SAKQxZ0X5Ixq9ukBQRrNxdT/d/8Nxb46fSE7eLSsE6yHTs5KU=
+	t=1789487040; cv=none; b=J0/7Q/JJD5GSQWaOHcgu5tZW5a4VU8kFKJRISX9Bv64pKbdxWegypAi4nr5CJe0bkkwwxYDd6ckXeikVa63koexf3kQz9PgN32SWhxijUeV7JHI8W7uhGkA8YtXUUujEXaOk+ibxhna31YoadAOd+t3rprsSMx0AEd21XutLHp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789481999; c=relaxed/simple;
-	bh=+6tvygM2RIk9WU1p/bgGC8tb1HBXX8t7UzpSPaVrj9E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cUVNw84CG/8hzZNI72YzqreTPt35/EDiQ8ut9mo1QBRvIDru+k19oJ7EQpYcRNdZxfU099YDk84Q/n2ZFYM7pGFDxnfTA15w/fJOafqlR+YPgWfCSrxxjcQIOOHhRE9XnQz/C1TB2KW6OBdTt6IaaAVDN/X7kEc8c9NmZBksrCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XH97yrql; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789487040; c=relaxed/simple;
+	bh=X0OA0zd3t2u7iXfF0yPqLYpX2BIJuMIZZ+1R/TrabeE=;
+	h=Date:In-Reply-To:Mime-Version:References:Content-Type:Cc:From:
+	 Subject:Message-Id:To; b=TPdmlcehNPariG5A5br9HiHhnDHpLoEnYGKi1DEucwRxbiqIVDZ4U+LUioF9LSJL7ehS+LtxiaJuDCppph7o8uhAB2pC1U13oCKwwQhQQSyH0N0/KhIXF4HXSaxYJe3gAkOUYatz5vUNdtekBpMDVROxOwDDCFXvr/NrUAQzWts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Yxfwj8cU; arc=none smtp.client-ip=209.127.231.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XH97yrql"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7CC01F000FF;
-	Tue, 15 Sep 2026 14:19:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789481998;
-	bh=QcgTXTTUvI8ONqxc9jbvCeetYEK34ysR8JYdT7Si4YA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=XH97yrqlqW9680GKgc4K9WvLNVabunnNtw6rQYsqPH91xIeL7Z7d4PxLbPvUbyv0E
-	 ksl92UZaozw0dst3Pt3Poq7XeAd3UcbsuPfVuomLzJS16NQydbeLwM/ahGUgrAICTj
-	 +YaWlu0kKSq+05dJlFctlKjThXhPvglEOOAUW9U0eY/MJqIapFOVitZeZXyPcJQfXE
-	 sRG9oh6ZKMajnuDxEpI4HWMWQ3VoOYeLrkbCzIJY/lx8OB5FzebLTb4KPY3Pl72Tyv
-	 36ef6arjoqZ4RaPZGU7bLlGGms3Ni73RabSv4TAXq/dlJo1CxvK3U1kjniQiTS1zLv
-	 L7jSoV84wcUbg==
-Date: Tue, 15 Sep 2026 15:19:56 +0100
-From: Harry Yoo <harry@kernel.org>
-To: SJ Park <sj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, 
-	Nhat Pham <nphamcs@gmail.com>, Usama Arif <usamaarif642@gmail.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, 
-	Kiryl Shutsemau <kas@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] selftests/cgroup: ignore memory.reclaim -EAGAIN for
- zswap writeback test
-Message-ID: <aqlTZR90H-7OuSfD@thinkstation>
-References: <aqkavo7OfQdMOpLf@thinkstation>
- <20260915141049.70696-1-sj@kernel.org>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Yxfwj8cU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789487022;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=d0n1MM6xxPsL/QERF+JcaetyUJsQd2U/h4AXxBLwz/w=;
+ b=Yxfwj8cUnFaenowRxaFu7ujBz88KmMiwrPqOyEtY6KZc4/KQz4cV/ZtjypgMIhf0dG2Uad
+ 6g6MGTRY3tKrIxSxXvqAu5qt3BMoccdgG3hBtOlsZsePr6nKRM5o7U1EdtYm6DEbWtVQBI
+ WM92Ay6NSYf0X2LK2355OATd/dEsYA0u/CMQBtXoHf4B21rN+d/C7OtAPByvu/uEEG++16
+ pp4Rn4USo8LFuLM6R4KRW0n1ICP901jwzGYtcrg68abH3D+RbEZOATqpUFQANlaz7XtIEB
+ w0JSFBa6avJtYocfqxxBYQXyT6MyxrO7G73aMh85L3A+71SaK3HzCkh+IVHoSA==
+Date: Tue, 15 Sep 2026 23:43:32 +0800
+In-Reply-To: <20260915064950.GA13417@lst.de>
+User-Agent: Mozilla Thunderbird
+X-Lms-Return-Path: <lba+26aa967ad+4153f6+vger.kernel.org+yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260915141049.70696-1-sj@kernel.org>
+Mime-Version: 1.0
+X-Original-From: yu kuai <yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+References: <cover.1789237876.git.yukuai@fygo.io> <ef547fdb7a6c8e39a25a1b9473c444f24a0f03be.1789237876.git.yukuai@fygo.io> <20260915064950.GA13417@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Cc: "Jens Axboe" <axboe@kernel.dk>, "Josef Bacik" <josef@toxicpanda.com>, 
+	"Tejun Heo" <tj@kernel.org>, "Johannes Weiner" <hannes@cmpxchg.org>, 
+	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	"Jonathan Corbet" <corbet@lwn.net>, 
+	"Shuah Khan" <skhan@linuxfoundation.org>, 
+	"Randy Dunlap" <rdunlap@infradead.org>, "Coly Li" <colyli@fygo.io>, 
+	"Kent Overstreet" <kent.overstreet@linux.dev>, 
+	"Alasdair Kergon" <agk@redhat.com>, "Mike Snitzer" <snitzer@kernel.org>, 
+	"Mikulas Patocka" <mpatocka@redhat.com>, 
+	"Benjamin Marzinski" <bmarzins@redhat.com>, "Song Liu" <song@kernel.org>, 
+	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"Andreas Gruenbacher" <agruenba@redhat.com>, 
+	"Matthew Wilcox" <willy@infradead.org>, "Jan Kara" <jack@suse.cz>, 
+	"Andrew Morton" <akpm@linux-foundation.org>, 
+	"Chris Li" <chrisl@kernel.org>, "Kairui Song" <kasong@tencent.com>, 
+	"Kemeng Shi" <shikemeng@huaweicloud.com>, 
+	"Nhat Pham" <nphamcs@gmail.com>, "Baoquan He" <baoquan.he@linux.dev>, 
+	"Barry Song" <baohua@kernel.org>, 
+	"Youngjun Park" <youngjun.park@lge.com>, 
+	"Nathan Chancellor" <nathan@kernel.org>, 
+	"Nick Desaulniers" <ndesaulniers@google.com>, 
+	"Bill Wendling" <morbo@google.com>, 
+	"Justin Stitt" <justinstitt@google.com>, 
+	"Nilay Shroff" <nilay@linux.ibm.com>, "Tao Cui" <cuitao@kylinos.cn>, 
+	<linux-block@vger.kernel.org>, <cgroups@vger.kernel.org>, 
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-bcache@vger.kernel.org>, <dm-devel@lists.linux.dev>, 
+	<linux-raid@vger.kernel.org>, <gfs2@lists.linux.dev>, 
+	<linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>, 
+	<llvm@lists.linux.dev>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v2 2/3] blk-cgroup: store blkcg in bio instead of blkg
+Message-Id: <06e3c977-461c-4469-80ec-b9f54aa51eea@fygo.io>
+To: "Christoph Hellwig" <hch@lst.de>, "Yu Kuai" <yukuai@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Tue, 15 Sep 2026 15:43:40 +0000
 
-On Tue, Sep 15, 2026 at 07:10:48AM -0700, SJ Park wrote:
-> On Tue, 15 Sep 2026 11:21:53 +0100 Harry Yoo <harry@kernel.org> wrote:
-> 
-> > On Mon, Sep 14, 2026 at 05:18:17PM -0700, SJ Park wrote:
-> > > On Mon, 14 Sep 2026 21:36:39 +0100 "Harry Yoo (Meta)" <harry@kernel.org> wrote:
-> > > > --- a/tools/testing/selftests/cgroup/test_zswap.c
-> > > > +++ b/tools/testing/selftests/cgroup/test_zswap.c
-> > > > @@ -346,7 +346,16 @@ static int attempt_writeback(const char *cgroup, void *arg)
-> > > >  	 * it can't writeback to swap.
-> > > >  	 */
-> > > >  	ret = cg_write_numeric(cgroup, "memory.reclaim", memsize);
-> > > > -	if (!wb_enabled)
-> > > > +
-> > > > +	/*
-> > > > +	 * When writeback is enabled, memory.reclaim may still fail to reclaim
-> > > > +	 * the requested amount of memory due to a slow swap device.
-> > > > +	 * Ignore -EAGAIN here. The caller determines pass/fail based on the
-> > > > +	 * zswap writeback counter.
-> > > > +	 */
-> > > > +	if (wb_enabled && ret == -EAGAIN)
-> > > > +		ret = 0;
-> > > > +	else if (!wb_enabled)
-> > > >  		ret = (ret == -EAGAIN) ? 0 : -1;
-> > > 
-> > > My humble eyes were unable to easily understand the change.  Is the change
-> > > effectively same to below, and if so, would this be easier to read?
-> > > 
-> > > '''
-> > > @@ -344,10 +344,11 @@ static int attempt_writeback(const char *cgroup, void *arg)
-> > >          * writeback as zswap.max is 1/4 of what was needed when reclaim ran the first time.
-> > >          * If writeback is disabled, memory reclaim will fail as zswap is limited and
-> > >          * it can't writeback to swap.
-> > > +        * Even if writeback is enabled, it could return -EAGAIN due to a slow
-> > > +        * swap device.
-> > >          */
-> > >         ret = cg_write_numeric(cgroup, "memory.reclaim", memsize);
-> > > -       if (!wb_enabled)
-> > > -               ret = (ret == -EAGAIN) ? 0 : -1;
-> > > +       ret = (ret == -EAGAIN) ? 0 : -1;
-> > 
-> > Hmm, no. This will mark the test as failed when a write to
-> > memory.reclaim returns zero even when wb_enabled is true.
-> > 
-> > It's not the same because when wb_enabled == true we consider
-> > ret == 0 or ret == -EAGAIN as success, while with wb_enabled == false
-> > we consider ret == -EAGAIN as success.
-> 
-> Ah, got it.  You are right.  Sorry for making noise and thank you for kindly
-> correcting me.
+Hi,
 
-No worries ;-)
- 
-> Reviewed-by: SJ Park <sj@kernel.org>
+=E5=9C=A8 2026/9/15 14:49, Christoph Hellwig =E5=86=99=E9=81=93:
+> On Sun, Sep 13, 2026 at 02:54:39PM +0800, Yu Kuai wrote:
+>> @@ -6243,10 +6245,17 @@ static void bfq_insert_request(struct blk_mq_hw_=
+ctx *hctx, struct request *rq,
+>>   	bool idle_timer_disabled =3D false;
+>>   	blk_opf_t cmd_flags;
+>>   	LIST_HEAD(free);
+>>  =20
+>>   #ifdef CONFIG_BFQ_GROUP_IOSCHED
+>> +	/*
+>> +	 * Pin the blkg used to look up bfqg.  If this is the first IO for
+>> +	 * the blkcg on this queue, create the bfqg before holding bfqd->lock.
+>> +	 */
+>> +	if (rq->bio && !bio_flagged(rq->bio, BIO_BLKG_REF))
+>> +		bio_blkg(rq->bio);
+> Can rq->bio be NULL here?  flush or empty passthrough request should
+> never enter the scheuler.
+Yes, rq->bio should never be NULL.
+>
+>>   	if (!cgroup_subsys_on_dfl(io_cgrp_subsys) && rq->bio)
+>>   		bfqg_stats_update_legacy_io(q, rq);
+> But I guess given that the code below checks it, we should at least
+> be consistent, so I guess it is better to keep it for now.
+>
+>>  =20
+>>   static inline void dm_bio_record(struct dm_bio_details *bd, struct bio=
+ *bio)
+>>   {
+>>   	bd->bi_bdev =3D bio->bi_bdev;
+>> -	bd->bi_flags =3D bio->bi_flags;
+>> +	/* Restoring an ownership bit cannot recreate the associated reference=
+. */
+>> +	bd->bi_flags =3D bio->bi_flags & ~(1U << BIO_BLKG_REF);
+> I have a bit of a hard time parsing this, the line also is overly
+> long.
 
-Thanks a lot for reviewing, SJ!
+This is an issue found by AI, if the new flag is recorded to bi_flags, and =
+the flag can be
+restored to new bio by dm_bio_restore() without actually acquire a blkg ref=
+erence. And I
+checked this is the only place to read/write bi_flags directly in driver.
 
--- 
-Cheers,
-Harry / Hyeonggon
+--=20
+Thanks,
+Kuai
