@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-78.mta0.migadu.com [91.218.175.78])
+Received: from mta0.migadu.com (out-111.mta0.migadu.com [91.218.175.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A47EC18E025
-	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 02:32:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A045345EAC
+	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 02:33:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789525927; cv=none; b=HZQg4O1hiX1XUxZUGUxv9cXpy+DDVPHcez4EXcIuf8fiNsJ+YEqqt5ci+qU2rS4lHGogwmBaiMvP5tm2BRV/MRs8bIFq9CKpxpBQyqp+hHM5nPEqmtLLjqeBKXgoIzsT8Bo7chxrxCKLaazoynukeIvkjOsRE7lELk+MOuZUgoE=
+	t=1789525984; cv=none; b=PpmutU045wfA4l+GG9NYUNt3L/XNWcZEbYeyi7scEkWdyDnH1pAPLvYvYhvAxdfDIKnYxen/EP++35mPhL5KtTbF3z06bhefrOx3s3FgYgadJ/SpV8wnFe9xueY8jvgBH4EunHThhtnTG9sHbutDCOfU2hCJrDL8aConwHQSOHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789525927; c=relaxed/simple;
-	bh=6W4t1O6zL3vim3e+wdusHCDSqONbr3dliD7/v/Y/1c8=;
+	s=arc-20240116; t=1789525984; c=relaxed/simple;
+	bh=EL2OlE49I5JY81apAvNWZqvNiNlpta9PbuUy1mYyKIM=;
 	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=c2m3ovJV/NJARgpJSB3bhr5csHXHH8FptkFPFBTkcVvIakevAcUvI1aZBefz3gA4qaIdQTWah5oBtNcL5C0adsjIsFrtEbeCBRS1tOId9Q7uHOoCIEJ7CBu/iWc0dFCv+HqZ+VQjHN2XtdtbdmCB6hcHD/IiADf4BwKMhcM1W/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=BKevCqde; arc=none smtp.client-ip=91.218.175.78
+	 Message-Id:References:To; b=pB3HhcezQ1qifinAe4iN3Ip7wmATiVixAzI5IFgHBBWDNseg28VYZ3n/J6yUp1t32JnmhY1h+ZqMTOm08XxLmXi2qdoUl56UUl7v7cz1LJEigEAqNgUE4ywsJyfovW46F1ijNJqVrCuZwrNPSHds+vD3ZiaadnoejrDYmKPAQV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Vl+EYyYQ; arc=none smtp.client-ip=91.218.175.111
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="BKevCqde"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Vl+EYyYQ"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=6W4t1O6zL3vim3e+wdusHCDSqONbr3dliD7/v/Y/1c8=;
+DKIM-Signature: a=rsa-sha256; bh=EL2OlE49I5JY81apAvNWZqvNiNlpta9PbuUy1mYyKIM=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789525920; v=1; x=1790130720;
- b=BKevCqder0SVJxHtfV67s+LrqRff5qOlXLFQxjcR0GvnND/mp+2QrBCp/yoJmKLHpvxeF68v
- n8w0vlQcdKIQV0gfdh7EEbHAKw4vuXgJ4v+BsUCyBEWZIFEiiN6CBqCQPYquwx6QcStvTrjdZML
- f9PAof3JOs4ZHUiq9STAhNG4=
+ t=1789525978; v=1; x=1790130778;
+ b=Vl+EYyYQbU6OEG/du4v/iP54LiQa1SuyPS2vamEpynw/r/G5sG1zzqaKuGm7YLKtgOrrUGzx
+ YQt7erpMiIVhF2GWnBb0Z2LnOH6Zj96OwDmbjR/HqjiN8k3JrXxQFoGoPLgvgudTma0K93nqTQK
+ QToe55+12PflF64iVD66MCak=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id ad698002a27eb520;
-	Wed, 16 Sep 2026 02:32:00 +0000
-X-Mizu-Trace-ID: ad698002a27eb520
+Received: by mta11.migadu.com with ESMTPS id 227d476b07422197;
+	Wed, 16 Sep 2026 02:32:58 +0000
+X-Mizu-Trace-ID: 227d476b07422197
 X-Migadu-Flow: FLOW_OUT
 Content-Type: text/plain;
 	charset=us-ascii
@@ -37,11 +37,11 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.1\))
-Subject: Re: [PATCH v3 04/11] mm/page_io: take a const folio in
- bio_associate_blkg_from_folio()
+Subject: Re: [PATCH v3 05/11] mm: memcontrol: constify the mem_cgroup
+ accessors
 From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20260915-folio_memcg-const-v3-4-c239a6010b58@columbia.edu>
-Date: Wed, 16 Sep 2026 10:31:35 +0800
+In-Reply-To: <20260915-folio_memcg-const-v3-5-c239a6010b58@columbia.edu>
+Date: Wed, 16 Sep 2026 10:32:36 +0800
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
  Michal Hocko <mhocko@kernel.org>,
  Roman Gushchin <roman.gushchin@linux.dev>,
@@ -70,9 +70,9 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
  linux-mm@kvack.org,
  linux-kernel@vger.kernel.org
 Content-Transfer-Encoding: 7bit
-Message-Id: <CC7B7144-E53C-4A6E-8B47-61D4A440173F@linux.dev>
+Message-Id: <B130AC93-87CD-4FD9-88FC-B57798DE33BE@linux.dev>
 References: <20260915-folio_memcg-const-v3-0-c239a6010b58@columbia.edu>
- <20260915-folio_memcg-const-v3-4-c239a6010b58@columbia.edu>
+ <20260915-folio_memcg-const-v3-5-c239a6010b58@columbia.edu>
 To: Tal Zussman <tz2294@columbia.edu>
 X-Mailer: Apple Mail (2.3864.700.51.1.1)
 
@@ -80,12 +80,17 @@ X-Mailer: Apple Mail (2.3864.700.51.1.1)
 
 > On Sep 16, 2026, at 07:20, Tal Zussman <tz2294@columbia.edu> wrote:
 > 
-> bio_associate_blkg_from_folio() and its helpers only read from the
-> folio. Constify their folio arguments.
+> mem_cgroup_id(), parent_mem_cgroup(), mem_cgroup_is_root(),
+> mem_cgroup_is_descendant(), memcg_kmem_id(), and the other memcg
+> accessors only read from the memcg. Constify them, along with
+> mem_cgroup_shrink_is_root()'s shrink_control.
+> 
+> mem_cgroup_print_oom_context()'s task stays non-const, as
+> task_cgroup() takes a non-const task.
 > 
 > Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 
-Reviewed-by: Muchun Song <muchun.song@linux.dev>
+Acked-by: Muchun Song <muchun.song@linux.dev>
 
-Thanks
+Thanks.
 
