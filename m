@@ -1,239 +1,883 @@
-Received: from mail-wr2-f34.google.com (mail-wr2-f34.google.com [74.125.225.98])
+Received: from mta0.migadu.com (out-131.mta0.migadu.com [91.218.175.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BC843A3830
-	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 06:59:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.98
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789541996; cv=pass; b=g34gzUirMZ0ioHdUovs3S9ge8h97tuqPZy4LhDZiyfTPRg64iItmwNj6EpfIsdJnY68l+g23gZbyT0MIvVeFjyFhGxnxJ7/Wsr2A/lraT/8HYk9Nz/ridiAGdkyZmbQ2oIQDNdZ34oX9M4v+TagePaTEUs3LA+r/S6VQ6NLN79M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789541996; c=relaxed/simple;
-	bh=NsFK5lBLdksgQCKOANm3YAnPr1p7FDQOhLcuqTO5IpM=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=k8ln16ob7utY9PYgdAs16rGz+3/DMGIQ4vxJ+9C9NyTonF+m5pjkPjBzm4Shp3BaYFdCIE5kCydTgBC+gqu+STP4a0mvERksqqOrVc9O+9orutjU7NVvMnHoRipzQuHvPiPlZl6A3MHMUuDWWYa9gmXrbRwFjnw7X+m+Utk0qRE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=everpuredata.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=everpuredata.com header.i=@everpuredata.com header.b=aEd8hPGR; arc=pass smtp.client-ip=74.125.225.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=everpuredata.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FBC844065D
+	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 07:18:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789543103; cv=none; b=utZkkaVmomsak2c/vPGz5yxv9mbL+FU/IVRm6LA5tq/egSa+NNHXJGoZY09cj+Bc+RhkeMChjKUnFYM3xqgTqP1Q/bDYVs8/qREantMMjE81dqQv7IzscVqixScD8cXIfG383QwqnseKqic0Ge0CCebuVmw4gt50NCCIzldN1tM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789543103; c=relaxed/simple;
+	bh=jYVhDy72RjY3IvjvQCFsqXzbrxJr4NCRCcUEMs+qYMg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=AENWSEvwzoT01VoYHgYz4ladyA2hMs8pEbJDmiCVeKFpWycF1MWdesL1+1hgcHfEd4bmcMHLBf/JB5twbZYnykyYkJiRwEuHjKClYHFVcv3l2DTZH48/uZ9rCPykfPGqRt0CO2i1TxoBWz0kBs68DcigkH4XTyDkqlNLoZSyWn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=JlYFAEEo; arc=none smtp.client-ip=91.218.175.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=everpuredata.com header.i=@everpuredata.com header.b="aEd8hPGR"
-Received: by mail-wr2-f34.google.com with SMTP id ffacd0b85a97d-482f633cd78so185916f8f.1
-        for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 23:59:55 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789541993; cv=none;
-        d=google.com; s=arc-20260327;
-        b=MIdcKdAAD7ywNCNTWh3H5Go/Z3e8NKJLjWbsRrfPeHQx5UylfVXFmHiHQ/ziq2ZVFD
-         R6x5fi2EHJtDxR3CplkV1ELu09D+LocMl5jYXzqxz/fmNIYuqAiWRIcCVYw/LW7xAInT
-         LddrSLNpR8Id4tvzOIel79KaynXqVtLj0Wv4z0jJXjVFe1a47OJd8VUIFs6cACNX8VIp
-         vg37lJe9ysCloDSo7PLPGcMCZR54tPNiywzswq2JMlYLPYhGblrV+Xjjja9e6z8/hltJ
-         o6y45x916rQVyun1NKzkOz6t/dhjY8x+xOoTs/VS8b1yQ31iAEw/2m0DS2UHHAGfEckd
-         gnvg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:dkim-signature;
-        bh=OxRv6yCuRqsbWvAT6YBIWbqNgEcNj7stzbBHK5z0Hkk=;
-        fh=bGKTSn4It4PPs31bfZ6OTq3WgTKSkO5YiE6V7iJEh4k=;
-        b=cGQbeMGPffa6qo9loQxNCXHKFiioecG1fUDHI8v5YxGkspx4WvsWBeHD6VVW1dH0Rl
-         W80tpoW/fj0MqoNBNaJnhbU9x9s3bSysEuicza+BNxdgBIAfqceTFw6h9MwMhwzNUdvY
-         +E72CqpYUUORuap6nVjJBsrTAxpe4S3l1HEDxWT9kp9Vgi/8cw/gea8cM149GUAwrWFc
-         1+9uXDtMwn+m4r9xDGUoVdYqWbWOAbXOyE5k9yHSKF6WYWi0yVlvm2BvALuRt5T4+3Ol
-         53aQ6kDfxuKSlACg1SQ9urxEv9zKAhFYoJ8JLArCPoepfCosOs1wzJFlmuVYjiTin4v1
-         0W7w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=everpuredata.com; s=google; t=1789541993; x=1790146793; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OxRv6yCuRqsbWvAT6YBIWbqNgEcNj7stzbBHK5z0Hkk=;
-        b=aEd8hPGRsxfwb/UoqnOHSIsx7PExyKgdefiKh/GOG2kI7m6h6Aaqm+iW9BADjArYU/
-         XwcLGmzZobL/+CpuRHD52j6ITbfILxdZEv+Vpo/k9Vs4uMy6MvP2DRNaRAsDpb3gAD9a
-         JSyRvuVWeNN5/C2hxRgPgeB3xtAZsQvAUx51lHmss2rnpZmVHld4gel04EWTVaM6GtvQ
-         WF/c/Y6XraKaYk9OO/FPwBEMH7/lwMhlm9WmxvwwGWJRmFieS1GQDsIJgtD9IoSZHjrN
-         nAWks2CdETF03gXG55b9ErI564LvbQfuSuq3BAPzar12t0cJxTs0snPZPdwXKOr3E89U
-         hAhg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789541993; x=1790146793;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=OxRv6yCuRqsbWvAT6YBIWbqNgEcNj7stzbBHK5z0Hkk=;
-        b=nhWhYxMDglufwXrXROICgMi2xyzFOk4ShLtr3lTR1t7BChD5Bs9ajyg5zvFBJ5uICs
-         O5sVUBgukaTlla6Y3lVndHt6Y9FT3btFgS76a12TWTF094uYkEDPiZPrdXjc2N2QFacz
-         PdONy3IUe2/TvZtRGghg9jI+uYq70EVICKszEo+Yzlk7U3m7cQqkae7pkSFCKBWcQdKa
-         YXfOXG/zMJe/1Kk755IkuBL7NfSn03RQQgrF4WCe9KVsqm573GVTnQqiJSqF1OyXshol
-         X7dfwwLfZja1NcYJuoje3hD0quiBWH+8oWXrK+aQGGKnKmmJXBPwo/5NfD3GkoQd38Fq
-         JfCQ==
-X-Gm-Message-State: AFuF++n1eov6QsWYvjXJ/nJRKGPuZvF3/1xm4dBMsPSOgsdfBNhR/Gmm
-	aajpMLj1MYyJ7uANRrlai66fI0wzDN6CCOlDC5mXQiUDNmecEmH5m6FVwauTArNdjezxl8y7sIu
-	1Sj5hLyRtHNWr89GVENb0moF1PiYD5pHqhQG8fEGB5HZxT9s/AZGJV3mYfQ==
-X-Gm-Gg: AYBFou0V9WLe/eqx1l7NpyxsBj2464X7zqafMFjx/BebWybdl+HZvYeC4lDLRaataA5
-	Y+FS6llKF0P8k4zz5JGl6IYJZAIAaNqDsO6G7kNM+mMS513P9NhN8TCeClJz75IQCzlvZHQwCO9
-	RNQzvhwY21++PjQ2XFTApefLhy0l9Pq99flNRGps0q0Ec1OkaEsJswq+E0Q/RNcmvTntNkgKSwo
-	CaLEKgYUjVx+3E7S8pBrwzADv+T6bxrlAEsmCuAJv2qenuytLERZBcitqvYsK8B2JnERLnmujF9
-	DD4Mi23wLzEMPuLKoSk5DhnETckjNLCEhPku9An/U6fguuyRZZ5b6hEP
-X-Received: by 2002:a05:6000:41e6:b0:487:981:4e0d with SMTP id
- ffacd0b85a97d-4870cef12ffmr1598765f8f.19.1789541993327; Tue, 15 Sep 2026
- 23:59:53 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="JlYFAEEo"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=jYVhDy72RjY3IvjvQCFsqXzbrxJr4NCRCcUEMs+qYMg=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789543082; v=1; x=1790147882;
+ b=JlYFAEEo43nDx8ZoeA1Jp5/DKTnyvQNg/trCrr3fAXZycSx/dITWxX6gemwlTgm6exJ7Jx2B
+ O4wN7p9UZPTeh6nxZLy3ouuNYxgfAAv+dCcZyDDTeMo6C3ftzOePjViDOUxmTDaN9t/tU2ldsn/
+ RGAWbUcguXI/no79QVBjoymQ=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 89008bcf60211ae7;
+	Wed, 16 Sep 2026 07:18:02 +0000
+X-Mizu-Trace-ID: 89008bcf60211ae7
+X-Migadu-Flow: FLOW_OUT
+From: Tao Cui <cui.tao@linux.dev>
+To: tj@kernel.org,
+	josef@toxicopanda.com,
+	axboe@kernel.dk,
+	ameryhung@gmail.com
+Cc: cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bpf@vger.kernel.org,
+	andrii@kernel.org,
+	ast@kernel.org,
+	daniel@iogearbox.net,
+	linux-kselftest@vger.kernel.org,
+	cui.tao@linux.dev,
+	cuitao@kylinos.cn
+Subject: [PATCH] blk-iocost: add BPF struct_ops cost model support
+Date: Wed, 16 Sep 2026 15:17:36 +0800
+Message-ID: <20260916071740.1068341-2-cui.tao@linux.dev>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260916071740.1068341-1-cui.tao@linux.dev>
+References: <20260916071740.1068341-1-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: "Sirisha Mylavarapu (she/her)" <smylavarapu@everpuredata.com>
-Date: Wed, 16 Sep 2026 12:29:41 +0530
-X-Gm-Features: AcwNN1UbbJK3z4QtoObtS3Rrx-3WNhrwiaUkg_WlUPpZaDMMuDQXcRWCi8Y5iUI
-Message-ID: <CABc6Dy5mvvCSECx2z+-L1q6FpQGO_hQfoLaS6vtpWVud6+8zbA@mail.gmail.com>
-Subject: cgroup v2 io.max throttling works for NFSd reads but not writes
-To: linux-nfs@vger.kernel.org
-Cc: cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi,
+From: Tao Cui <cuitao@kylinos.cn>
 
-I have been experimenting with cgroup v2 io.max throttling for NFSd on
-kernel 7.0.0-14-generic (Ubuntu 26.04) and I wanted to share results
-and ask for recommendations.
+Add the iocost_model_ops struct_ops: a bound BPF model fully replaces
+the builtin linear model on a device.  calc_cost() receives the full
+bio->bi_opf (including REQ_PREFLUSH and REQ_FUA), the IO size, the
+start sector (sector_t), the issuing blkcg and the iocost-specific call
+metadata (the merge-path indicator), and is called from the bio
+charging path, so a model owns pricing for every IO on the device.
+The completion-time request sizing used for the latency met/missed
+accounting still uses the builtin linear coefficients: blk-mq has
+already cleared the request's bio by the time the controller sees the
+completion, so there is no issuing cgroup to pass to the model at that
+point; extending the model to the sizing path is left open
+by this interface.  The builtin cursor is not exposed: a model
+is expected to track its own stream state.
 
-Goal: Throttle NFS server I/O bandwidth using cgroup v2 io.max by
-placing nfsd kernel threads in a dedicated cgroup, to limit block
-device I/O performed by the NFS server.
+The registration and binding model follows the TCP congestion
+model registration pattern: registering a struct_ops makes the model
+available by its name (char name[IOCOST_MODEL_NAME_LEN], validated at
+init_member), while
+io.cost.model binds one registered model to a device with
+"model=<name>" and unbinds with "model=linear" or "ctrl=auto/user".
+Unregistering a model removes it from the registry so it can no longer
+be selected by name; devices already using the model continue to do so
+until switched back to the builtin model.  The struct_ops core holds a
+map reference while the model is registered, so .reg/.unreg take no
+extra reference; each device binding takes one with
+bpf_struct_ops_get() and releases it when the device switches back to
+the builtin model, which keeps the kdata of an unregistered but
+still-bound model alive.
 
-Setup:
+calc_cost() runs under RCU read lock; sleepable programs are rejected
+in .check_member.  blkcg_online()/blkcg_offline() callbacks mirroring
+the blkcg css lifecycle let models manage per-cgroup state; a model
+receives these notifications exactly while at least one device has it
+bound, not while it is merely registered.
 
--NFSd direct I/O mode enabled via debugfs (io_cache_read=3D2, io_cache_writ=
-e=3D2).
--All 16 [nfsd] kernel threads moved to a dedicated cgroup
-(system.slice/nfsd.slice)
--io.max throttle set to 50 MB/s on underlying block device (sdb,64GB
-disk, major:minor 8:16).
--NFS export mounted locally via loopback for testing.
--fio used for benchmarks
+- a model which does not implement calc_cost is rejected at load:
+  kvalue is zeroed at map allocation and function members are only
+  written when the BPF side provides a prog, so the missing member
+  stays NULL and the dispatch would call it on every bio
+- the builtin model keeps the reserved name "linear" (model=linear
+  unbinds), so a BPF model registering under that name is rejected
+- io.cost.model writes preserve the bound model: bpf_model is seeded
+  from the currently bound model so a coefficient-only write keeps it
+  bound; ctrl=auto/user and model=linear are the explicit ways back
+  to the builtin model
+- ctrl=bpf is accepted on write (it is what the read path prints),
+  so a saved configuration can be restored as-is
 
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+---
+ block/Kconfig              |   9 ++
+ block/Makefile             |   1 +
+ block/blk-cgroup.c         |   4 +
+ block/blk-iocost-bpf.c     | 310 +++++++++++++++++++++++++++++++++++++
+ block/blk-iocost.c         | 195 ++++++++++++++++++++---
+ include/linux/blk-iocost.h |  84 ++++++++++
+ 6 files changed, 585 insertions(+), 18 deletions(-)
+ create mode 100644 block/blk-iocost-bpf.c
+ create mode 100644 include/linux/blk-iocost.h
 
-Results:
-Read throttling works as expected, consistently capped at 50 MB/s.
-Write throttling doesn't work regardless of io_cache_write mode(tried
-DIRECT=3D2 and DONTCACHE=3D1).
+diff --git a/block/Kconfig b/block/Kconfig
+index 70e4a66d941ff..91e808f86d28d 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -231,4 +231,13 @@ config BLK_ERROR_INJECTION
+ 
+ source "block/Kconfig.iosched"
+ 
++config BLK_CGROUP_IOCOST_BPF
++	bool "Enable BPF pluggable cost model support for the cost IO controller"
++	depends on BLK_CGROUP_IOCOST && BPF_SYSCALL && BPF_JIT && DEBUG_INFO_BTF
++	help
++	 Enabling this option registers the "iocost_model_ops" BPF
++	 struct_ops type, which allows a BPF program to fully replace
++	 the builtin linear cost model on a device it is bound to
++	 through io.cost.model.
++
+ endif # BLOCK
+diff --git a/block/Makefile b/block/Makefile
+index e7bd320e3d697..ee5cebeea006f 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -39,3 +39,4 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
+ 					   blk-crypto-sysfs.o
+ obj-$(CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK)	+= blk-crypto-fallback.o
+ obj-$(CONFIG_BLOCK_HOLDER_DEPRECATED)	+= holder.o
++obj-$(CONFIG_BLK_CGROUP_IOCOST_BPF)	+= blk-iocost-bpf.o
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index b56db1cc6778f..b08ceb94a281b 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -32,6 +32,7 @@
+ #include <linux/part_stat.h>
+ #include "blk.h"
+ #include "blk-cgroup.h"
++#include <linux/blk-iocost.h>
+ #include "blk-ioprio.h"
+ #include "blk-throttle.h"
+ 
+@@ -1341,6 +1342,7 @@ void blkcg_unpin_online(struct cgroup_subsys_state *blkcg_css)
+  */
+ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+ {
++	iocost_notify_blkcg_offline(css_to_blkcg(css));
+ 	/* this prevents anyone from attaching or migrating to this blkcg */
+ 	wb_blkcg_offline(css);
+ 
+@@ -1447,6 +1449,8 @@ static int blkcg_css_online(struct cgroup_subsys_state *css)
+ {
+ 	struct blkcg *parent = blkcg_parent(css_to_blkcg(css));
+ 
++	iocost_notify_blkcg_online(css_to_blkcg(css));
++
+ 	/*
+ 	 * blkcg_pin_online() is used to delay blkcg offline so that blkgs
+ 	 * don't go offline while cgwbs are still active on them.  Pin the
+diff --git a/block/blk-iocost-bpf.c b/block/blk-iocost-bpf.c
+new file mode 100644
+index 0000000000000..7f1f9a2e51cb2
+--- /dev/null
++++ b/block/blk-iocost-bpf.c
+@@ -0,0 +1,310 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * blk-iocost: BPF struct_ops plumbing for pluggable cost models.
++ *
++ * Registers the "iocost_model_ops" struct_ops type and maintains the
++ * name registry of registered models.  A registered model is bound to
++ * a device through io.cost.model; see include/linux/blk-iocost.h.
++ */
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/mutex.h>
++#include <linux/slab.h>
++#include <linux/bpf.h>
++#include <linux/bpf_verifier.h>
++#include <linux/btf.h>
++#include <linux/blk-iocost.h>
++
++static DEFINE_MUTEX(iocost_bpf_reg_lock);
++static LIST_HEAD(iocost_bpf_models);
++static LIST_HEAD(iocost_bpf_lifecycle);
++
++/*
++ * One node per registered model.  refcount: 1 while registered
++ * (dropped in .unreg) plus one per bound device (dropped in
++ * iocost_bpf_model_put(), which pairs its bpf_struct_ops_get(), so the
++ * kdata of an unregistered model stays alive while any device is still
++ * bound to it).  The node sits on the lifecycle notify list exactly
++ * while at least one device has the model bound.
++ */
++struct iocost_bpf_model {
++	struct list_head	list;		/* name registry */
++	struct list_head	lifecycle;	/* lifecycle notify list */
++	const struct iocost_model_ops *ops;
++	refcount_t		refs;
++};
++
++/*
++ * Look up a registered model by name and acquire a binding reference
++ * on it.  The registry lock is held across lookup and
++ * bpf_struct_ops_get() so the model cannot be unregistered in between.
++ * Returns the ops or an ERR_PTR.
++ */
++const struct iocost_model_ops *iocost_bpf_model_get(const char *name)
++{
++	struct iocost_bpf_model *m;
++	const struct iocost_model_ops *ops = ERR_PTR(-ENOENT);
++
++	mutex_lock(&iocost_bpf_reg_lock);
++	list_for_each_entry(m, &iocost_bpf_models, list) {
++		if (!strcmp(m->ops->name, name)) {
++			if (bpf_struct_ops_get(m->ops)) {
++				refcount_inc(&m->refs);
++				/* first bind: join the notify list */
++				if (refcount_read(&m->refs) == 2)
++					list_add(&m->lifecycle,
++						 &iocost_bpf_lifecycle);
++				ops = m->ops;
++			}
++			break;
++		}
++	}
++	mutex_unlock(&iocost_bpf_reg_lock);
++	return ops;
++}
++
++static struct iocost_bpf_model *
++iocost_bpf_model_lookup(const struct iocost_model_ops *ops)
++{
++	struct iocost_bpf_model *m;
++
++	list_for_each_entry(m, &iocost_bpf_models, list) {
++		if (m->ops == ops)
++			return m;
++	}
++	return NULL;
++}
++
++/*
++ * Lifecycle notifications walk the lifecycle list, which keeps a node
++ * for as long as any device has the model bound, so an unregistered
++ * but still-bound model keeps receiving blkcg online/offline.
++ */
++void iocost_notify_blkcg_online(struct blkcg *blkcg)
++{
++	struct iocost_bpf_model *m;
++
++	guard(mutex)(&iocost_bpf_reg_lock);
++	list_for_each_entry(m, &iocost_bpf_lifecycle, lifecycle) {
++		if (m->ops->blkcg_online)
++			m->ops->blkcg_online(blkcg);
++	}
++}
++
++void iocost_notify_blkcg_offline(struct blkcg *blkcg)
++{
++	struct iocost_bpf_model *m;
++
++	guard(mutex)(&iocost_bpf_reg_lock);
++	list_for_each_entry(m, &iocost_bpf_lifecycle, lifecycle) {
++		if (m->ops->blkcg_offline)
++			m->ops->blkcg_offline(blkcg);
++	}
++}
++
++static int bpf_iocost_model_init(struct btf *btf)
++{
++	s32 type_id;
++
++	type_id = btf_find_by_name_kind(btf, "iocost_model_ops", BTF_KIND_STRUCT);
++	if (type_id < 0)
++		return -EINVAL;
++	return 0;
++}
++
++static bool bpf_iocost_is_valid_access(int off, int size,
++				       enum bpf_access_type type,
++				       const struct bpf_prog *prog,
++				       struct bpf_insn_access_aux *info)
++{
++	return bpf_tracing_btf_ctx_access(off, size, type, prog, info);
++}
++
++/*
++ * No iocost-specific helpers; bpf_base_func_proto already covers the
++ * cgroup storage helpers under CONFIG_CGROUPS.
++ */
++static const struct bpf_func_proto *
++bpf_iocost_get_func_proto(enum bpf_func_id func_id,
++			  const struct bpf_prog *prog)
++{
++	return bpf_base_func_proto(func_id, prog);
++}
++
++static int bpf_iocost_check_member(const struct btf_type *t,
++				   const struct btf_member *member,
++				   const struct bpf_prog *prog)
++{
++	/* calc_cost() is called with RCU read lock held */
++	if (prog->sleepable)
++		return -EINVAL;
++	return 0;
++}
++
++static int bpf_iocost_init_member(const struct btf_type *t,
++				  const struct btf_member *member,
++				  void *kdata, const void *udata)
++{
++	struct iocost_model_ops *ops = kdata;
++	const struct iocost_model_ops *uops = udata;
++	u32 moff = __btf_member_bit_offset(t, member) / 8;
++
++	switch (moff) {
++	case offsetof(struct iocost_model_ops, name):
++		if (bpf_obj_name_cpy(ops->name, uops->name,
++				     sizeof(ops->name)) <= 0)
++			return -EINVAL;
++		return 1;
++	}
++
++	return 0;
++}
++
++/*
++ * kvalue is zeroed at map allocation and function members are only
++ * written when the BPF side provides a prog, so a model which did
++ * not implement calc_cost leaves it NULL.  The dispatch would call
++ * it on every bio, so reject it here.
++ */
++static int bpf_iocost_validate(void *kdata)
++{
++	struct iocost_model_ops *ops = kdata;
++
++	if (!ops->calc_cost)
++		return -EINVAL;
++	/* "linear" is the builtin model; model=linear unbinds */
++	if (!strcmp(ops->name, "linear"))
++		return -EINVAL;
++	return 0;
++}
++
++/*
++ * The struct_ops core holds a reference on the map while the model is
++ * registered, so kdata stays valid until .unreg returns; no extra
++ * reference is needed here.
++ */
++static int bpf_iocost_reg(void *kdata, struct bpf_link *link)
++{
++	struct iocost_model_ops *ops = kdata;
++	struct iocost_bpf_model *m;
++	int ret = 0;
++
++	m = kzalloc_obj(struct iocost_bpf_model, GFP_KERNEL);
++	if (!m)
++		return -ENOMEM;
++	refcount_set(&m->refs, 1);
++	INIT_LIST_HEAD(&m->lifecycle);
++
++	mutex_lock(&iocost_bpf_reg_lock);
++	{
++		struct iocost_bpf_model *other;
++
++		list_for_each_entry(other, &iocost_bpf_models, list) {
++			if (!strcmp(other->ops->name, ops->name)) {
++				ret = -EEXIST;
++				break;
++			}
++		}
++	}
++	if (!ret) {
++		m->ops = ops;
++		list_add(&m->list, &iocost_bpf_models);
++	}
++	mutex_unlock(&iocost_bpf_reg_lock);
++
++	if (ret)
++		kfree(m);
++	return ret;
++}
++
++/*
++ * Unregistering drops the registration reference.  If a device is
++ * still bound, the binding references keep the node (and the kdata,
++ * through their bpf_struct_ops_get()) alive and it keeps receiving
++ * blkcg online/offline notifications; otherwise the node is freed.
++ */
++static void bpf_iocost_unreg(void *kdata, struct bpf_link *link)
++{
++	struct iocost_model_ops *ops = kdata;
++	struct iocost_bpf_model *m;
++
++	mutex_lock(&iocost_bpf_reg_lock);
++	m = iocost_bpf_model_lookup(ops);
++	if (m) {
++		/* keep the linkage queryable so model_put() can tell a
++		 * still-registered node (one ref held by the registry)
++		 * from one kept alive only by device bindings
++		 */
++		list_del_init(&m->list);
++		if (refcount_dec_and_test(&m->refs))
++			kfree(m);
++	}
++	mutex_unlock(&iocost_bpf_reg_lock);
++}
++
++void iocost_bpf_model_put(const struct iocost_model_ops *ops)
++{
++	struct iocost_bpf_model *m;
++
++	mutex_lock(&iocost_bpf_reg_lock);
++	list_for_each_entry(m, &iocost_bpf_lifecycle, lifecycle) {
++		if (m->ops == ops)
++			break;
++	}
++	if (&m->lifecycle != &iocost_bpf_lifecycle) {
++		bool freed = refcount_dec_and_test(&m->refs);
++
++		/* leave the notify list with the last binding: the
++		 * remaining ref is either the registry's (node still on
++		 * iocost_bpf_models) or zero and the node is freed
++		 */
++		if (freed || !list_empty(&m->list))
++			list_del(&m->lifecycle);
++		mutex_unlock(&iocost_bpf_reg_lock);
++		bpf_struct_ops_put(ops);
++		if (freed)
++			kfree(m);
++		return;
++	}
++	mutex_unlock(&iocost_bpf_reg_lock);
++}
++
++static const struct bpf_verifier_ops bpf_iocost_verifier_ops = {
++	.get_func_proto = bpf_iocost_get_func_proto,
++	.is_valid_access = bpf_iocost_is_valid_access,
++};
++
++static u64 bpf_iocost_calc_cost_stub(u64 opf, u64 nbytes, u64 sector,
++				     struct blkcg *blkcg, u64 flags)
++{
++	return 0;
++}
++
++static void bpf_iocost_blkcg_online_stub(struct blkcg *blkcg) { }
++static void bpf_iocost_blkcg_offline_stub(struct blkcg *blkcg) { }
++
++static struct iocost_model_ops __bpf_ops_iocost_model_ops = {
++	.calc_cost = bpf_iocost_calc_cost_stub,
++	.blkcg_online = bpf_iocost_blkcg_online_stub,
++	.blkcg_offline = bpf_iocost_blkcg_offline_stub,
++};
++
++static struct bpf_struct_ops bpf_iocost_model_ops = {
++	.verifier_ops = &bpf_iocost_verifier_ops,
++	.init = bpf_iocost_model_init,
++	.check_member = bpf_iocost_check_member,
++	.init_member = bpf_iocost_init_member,
++	.validate = bpf_iocost_validate,
++	.reg = bpf_iocost_reg,
++	.unreg = bpf_iocost_unreg,
++	.name = "iocost_model_ops",
++	.cfi_stubs = &__bpf_ops_iocost_model_ops,
++	.owner = THIS_MODULE,
++};
++
++static int __init bpf_iocost_init(void)
++{
++	return register_bpf_struct_ops(&bpf_iocost_model_ops, iocost_model_ops);
++}
++late_initcall(bpf_iocost_init);
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 2745bffcd5eef..22b2ece52fa58 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -177,6 +177,7 @@
+ #include <linux/timer.h>
+ #include <linux/time64.h>
+ #include <linux/parser.h>
++#include <linux/blk-iocost.h>
+ #include <linux/sched/signal.h>
+ #include <asm/local.h>
+ #include <asm/local64.h>
+@@ -445,6 +446,11 @@ struct ioc {
+ 	int				autop_idx;
+ 	bool				user_qos_params:1;
+ 	bool				user_cost_model:1;
++
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	/* bound BPF cost model, NULL = builtin linear model */
++	const struct iocost_model_ops	__rcu *model;
++#endif
+ };
+ 
+ struct iocg_pcpu_stat {
+@@ -2571,10 +2577,28 @@ static void calc_vtime_cost_builtin(struct bio *bio, struct ioc_gq *iocg,
+ 
+ static u64 calc_vtime_cost(struct bio *bio, struct ioc_gq *iocg, bool is_merge)
+ {
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	const struct iocost_model_ops *model;
+ 	u64 cost;
+ 
+-	calc_vtime_cost_builtin(bio, iocg, is_merge, &cost);
+-	return cost;
++	rcu_read_lock();
++	model = rcu_dereference(iocg->ioc->model);
++	if (model) {
++		cost = model->calc_cost(bio->bi_opf, bio->bi_iter.bi_size,
++					bio->bi_iter.bi_sector,
++					iocg_to_blkg(iocg)->blkcg,
++					is_merge ? IOCOST_COST_F_MERGE : 0);
++		rcu_read_unlock();
++		return min(cost, VTIME_PER_SEC);
++	}
++	rcu_read_unlock();
++#endif
++	{
++		u64 cost;
++
++		calc_vtime_cost_builtin(bio, iocg, is_merge, &cost);
++		return cost;
++	}
+ }
+ 
+ static void calc_size_vtime_cost_builtin(struct request *rq, struct ioc *ioc,
+@@ -2596,10 +2620,28 @@ static void calc_size_vtime_cost_builtin(struct request *rq, struct ioc *ioc,
+ 
+ static u64 calc_size_vtime_cost(struct request *rq, struct ioc *ioc)
+ {
+-	u64 cost;
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	const struct iocost_model_ops *model;
+ 
+-	calc_size_vtime_cost_builtin(rq, ioc, &cost);
+-	return cost;
++	rcu_read_lock();
++	model = rcu_dereference(ioc->model);
++	if (model && rq->bio && rq->bio->bi_blkg) {
++		u64 cost;
++
++		cost = model->calc_cost(rq->cmd_flags, blk_rq_bytes(rq),
++					blk_rq_pos(rq),
++					rq->bio->bi_blkg->blkcg, 0);
++		rcu_read_unlock();
++		return min(cost, VTIME_PER_SEC);
++	}
++	rcu_read_unlock();
++#endif
++	{
++		u64 cost;
++
++		calc_size_vtime_cost_builtin(rq, ioc, &cost);
++		return cost;
++	}
+ }
+ 
+ enum over_budget_action {
+@@ -2900,6 +2942,19 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
+ 
+ 	timer_shutdown_sync(&ioc->timer);
+ 	free_percpu(ioc->pcpu_stat);
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	{
++		const struct iocost_model_ops *model;
++
++		spin_lock_irq(&ioc->lock);
++		model = rcu_dereference_protected(ioc->model,
++					lockdep_is_held(&ioc->lock));
++		rcu_assign_pointer(ioc->model, NULL);
++		spin_unlock_irq(&ioc->lock);
++		if (model)
++			iocost_bpf_model_put(model);
++	}
++#endif
+ 	kfree(ioc);
+ }
+ 
+@@ -3438,12 +3493,30 @@ static u64 ioc_cost_model_prfill(struct seq_file *sf,
+ 		return 0;
+ 
+ 	spin_lock_irq(&ioc->lock);
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	{
++		const struct iocost_model_ops *model =
++			rcu_dereference_protected(ioc->model,
++					lockdep_is_held(&ioc->lock));
++
++		seq_printf(sf, "%s ctrl=%s model=%s "
++			   "rbps=%llu rseqiops=%llu rrandiops=%llu "
++			   "wbps=%llu wseqiops=%llu wrandiops=%llu\n",
++			   dname, model ? "bpf" :
++				   ioc->user_cost_model ? "user" : "auto",
++			   model ? model->name : "linear",
++			   u[I_LCOEF_RBPS], u[I_LCOEF_RSEQIOPS],
++			   u[I_LCOEF_RRANDIOPS], u[I_LCOEF_WBPS],
++			   u[I_LCOEF_WSEQIOPS], u[I_LCOEF_WRANDIOPS]);
++	}
++#else
+ 	seq_printf(sf, "%s ctrl=%s model=linear "
+ 		   "rbps=%llu rseqiops=%llu rrandiops=%llu "
+ 		   "wbps=%llu wseqiops=%llu wrandiops=%llu\n",
+ 		   dname, ioc->user_cost_model ? "user" : "auto",
+ 		   u[I_LCOEF_RBPS], u[I_LCOEF_RSEQIOPS], u[I_LCOEF_RRANDIOPS],
+ 		   u[I_LCOEF_WBPS], u[I_LCOEF_WSEQIOPS], u[I_LCOEF_WRANDIOPS]);
++#endif
+ 	spin_unlock_irq(&ioc->lock);
+ 	return 0;
+ }
+@@ -3457,6 +3530,48 @@ static int ioc_cost_model_show(struct seq_file *sf, void *v)
+ 	return 0;
+ }
+ 
++/*
++ * Resolve the model name and take a reference on the new model before
++ * anything is applied, so a bad name rejects the whole write.  The
++ * registry lookup takes the registration mutex and must stay outside
++ * ioc->lock.  The returned model is per-write state passed back into
++ * ioc_bpf_model_commit(), which performs the pointer swap under
++ * ioc->lock so concurrent writers cannot interleave a half-applied
++ * configuration, and the caller drops the old model's reference
++ * afterwards.
++ */
++static const struct iocost_model_ops *
++ioc_bpf_model_prepare(const char *name)
++{
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	if (!name[0])
++		return NULL;
++	return iocost_bpf_model_get(name);
++#else
++	return name[0] ? ERR_PTR(-ENOENT) : NULL;
++#endif
++}
++
++/*
++ * Swap in the model returned by ioc_bpf_model_prepare().  Called with
++ * ioc->lock held; dropping the old model's reference may sleep, so
++ * the caller does it after releasing the lock.
++ */
++static const struct iocost_model_ops *
++ioc_bpf_model_commit(struct ioc *ioc, const struct iocost_model_ops *new)
++{
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	const struct iocost_model_ops *old;
++
++	old = rcu_dereference_protected(ioc->model,
++					lockdep_is_held(&ioc->lock));
++	rcu_assign_pointer(ioc->model, new);
++	return old;
++#else
++	return NULL;
++#endif
++}
++
+ static const match_table_t cost_ctrl_tokens = {
+ 	{ COST_CTRL,		"ctrl=%s"	},
+ 	{ COST_MODEL,		"model=%s"	},
+@@ -3482,6 +3597,7 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+ 	struct ioc *ioc;
+ 	u64 u[NR_I_LCOEFS];
+ 	bool user;
++	char bpf_model[IOCOST_MODEL_NAME_LEN];
+ 	char *body, *p;
+ 	int ret;
+ 
+@@ -3512,6 +3628,24 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+ 	spin_lock_irq(&ioc->lock);
+ 	memcpy(u, ioc->params.i_lcoefs, sizeof(u));
+ 	user = ioc->user_cost_model;
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++	{
++		const struct iocost_model_ops *model =
++			rcu_dereference_protected(ioc->model,
++					lockdep_is_held(&ioc->lock));
++
++		/* seed from the bound model so a coefficient-only write
++		 * keeps it bound; ctrl=auto/user and model=linear are
++		 * the explicit ways back to the builtin model
++		 */
++		if (model)
++			strscpy(bpf_model, model->name, sizeof(bpf_model));
++		else
++			bpf_model[0] = '\0';
++	}
++#else
++	bpf_model[0] = '\0';
++#endif
+ 
+ 	ret = -EINVAL;
+ 
+@@ -3527,17 +3661,27 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+ 		switch (match_token(p, cost_ctrl_tokens, args)) {
+ 		case COST_CTRL:
+ 			match_strlcpy(buf, &args[0], sizeof(buf));
+-			if (!strcmp(buf, "auto"))
++			if (!strcmp(buf, "auto")) {
+ 				user = false;
+-			else if (!strcmp(buf, "user"))
++			} else if (!strcmp(buf, "user")) {
+ 				user = true;
+-			else
++			} else if (!strcmp(buf, "bpf")) {
++				/* readback value; keep the bound model */
++				continue;
++			} else {
+ 				goto unlock;
++			}
++			/* ctrl=auto/user: explicit return to builtin */
++			bpf_model[0] = '\0';
+ 			continue;
+ 		case COST_MODEL:
+ 			match_strlcpy(buf, &args[0], sizeof(buf));
+-			if (strcmp(buf, "linear"))
+-				goto unlock;
++			if (!strcmp(buf, "linear")) {
++				/* back to the builtin linear model */
++				bpf_model[0] = '\0';
++				continue;
++			}
++			match_strlcpy(bpf_model, &args[0], sizeof(bpf_model));
+ 			continue;
+ 		}
+ 
+@@ -3550,19 +3694,34 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+ 		user = true;
+ 	}
+ 
+-	if (user) {
+-		memcpy(ioc->params.i_lcoefs, u, sizeof(u));
+-		ioc->user_cost_model = true;
+-	} else {
+-		ioc->user_cost_model = false;
+-	}
+-	ioc_refresh_params(ioc, true);
+-
+ 	ret = 0;
+ 
+ unlock:
+ 	spin_unlock_irq(&ioc->lock);
+ 
++	/* resolve the name outside ioc->lock; see ioc_bpf_model_prepare() */
++	if (!ret) {
++		const struct iocost_model_ops *new, *old;
++
++		new = ioc_bpf_model_prepare(bpf_model);
++		if (IS_ERR(new)) {
++			ret = PTR_ERR(new);
++		} else {
++			spin_lock_irq(&ioc->lock);
++			if (user) {
++				memcpy(ioc->params.i_lcoefs, u, sizeof(u));
++				ioc->user_cost_model = true;
++			} else {
++				ioc->user_cost_model = false;
++			}
++			ioc_refresh_params(ioc, true);
++			old = ioc_bpf_model_commit(ioc, new);
++			spin_unlock_irq(&ioc->lock);
++			if (IS_ENABLED(CONFIG_BLK_CGROUP_IOCOST_BPF) && old)
++				iocost_bpf_model_put(old);
++		}
++	}
++
+ 	blk_mq_unquiesce_queue(q);
+ 	blk_mq_unfreeze_queue(q, memflags);
+ 
+diff --git a/include/linux/blk-iocost.h b/include/linux/blk-iocost.h
+new file mode 100644
+index 0000000000000..68bff8beb7beb
+--- /dev/null
++++ b/include/linux/blk-iocost.h
+@@ -0,0 +1,84 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_BLK_IOCOST_H
++#define _LINUX_BLK_IOCOST_H
++
++#include <linux/types.h>
++#include <linux/blk_types.h>
++
++#define IOCOST_MODEL_NAME_LEN	16
++
++#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
++
++struct blkcg;
++
++/*
++ * Pluggable cost model interface for blk-iocost.
++ *
++ * A BPF struct_ops implementation registered against "iocost_model_ops"
++ * fully replaces the builtin linear model on the devices it is bound to
++ * through io.cost.model.  The model owns pricing for every IO on a bound
++ * device: it prices all operations, including flushes, and it is called
++ * from the bio charging path.  The completion-time request sizing for
++ * the latency met/missed accounting still uses the builtin coefficients
++ * (the request's bio, and with it the issuing cgroup, is gone by then);
++ * extending the model there is left open by this interface.
++ *
++ * calc_cost() is called from the IO submission path with RCU read lock
++ * held and must not sleep.  It returns the cost of the IO in vtime
++ * units, where 1 second of device time equals VTIME_PER_SEC (2^37,
++ * available to BPF programs through vmlinux.h).  The returned value is
++ * clamped to 1 second of device time per IO.
++ *
++ * The model is passed the blkcg of the issuing cgroup so it can keep
++ * per-cgroup state.  State keyed by the blkcg alone is shared across
++ * every device the model is bound to, unlike the builtin cursor which
++ * is per (cgroup, device).  blkcg_online()/blkcg_offline() are optional
++ * callbacks mirroring the blkcg css lifecycle: they are delivered
++ * only while at least one device has the model bound, and state
++ * created on online (or lazily on first use) must be released on
++ * offline.
++ *
++ * The registration and binding model follows the TCP congestion
++ * control framework: registering a struct_ops makes the model available
++ * by its name, while io.cost.model binds one registered model to a
++ * device.  Unregistering removes the name from the registry; devices
++ * already bound keep using it until switched back to the builtin
++ * model.
++ */
++
++/*
++ * iocost-specific call metadata for calc_cost()'s model_flags
++ * argument; everything else, including REQ_PREFLUSH/REQ_FUA, is
++ * already present in the opf argument.  An enum so the value is
++ * exported through BTF and BPF models can use it from vmlinux.h.
++ */
++enum {
++	IOCOST_COST_F_MERGE	= 1 << 0,	/* called from merge path */
++};
++
++struct iocost_model_ops {
++	u64 (*calc_cost)(u64 opf, u64 nbytes, sector_t sector,
++			 struct blkcg *blkcg, u64 model_flags);
++	void (*blkcg_online)(struct blkcg *blkcg);
++	void (*blkcg_offline)(struct blkcg *blkcg);
++
++	/* model name, used to select the model through io.cost.model */
++	char name[IOCOST_MODEL_NAME_LEN];
++};
++
++const struct iocost_model_ops *iocost_bpf_model_get(const char *name);
++void iocost_bpf_model_put(const struct iocost_model_ops *ops);
++void iocost_notify_blkcg_online(struct blkcg *blkcg);
++void iocost_notify_blkcg_offline(struct blkcg *blkcg);
++
++#else	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
++
++struct blkcg;
++struct iocost_model_ops;
++
++static inline void iocost_bpf_model_put(const struct iocost_model_ops *ops) { }
++static inline void iocost_notify_blkcg_online(struct blkcg *blkcg) { }
++static inline void iocost_notify_blkcg_offline(struct blkcg *blkcg) { }
++
++#endif	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
++#endif	/* _LINUX_BLK_IOCOST_H */
+-- 
+2.43.0
 
-Root cause (as I understand it): The NFS client buffers writes in the
-local page cache and returns immediately to the application. The
-actual disk write happens asynchronously, so the application never
-waits for data to reach disk =E2=80=94 meaning the throttle does not provid=
-e
-backpressure to the writer even when the nfsd cgroup's io.max is
-active.
-
-Questions:
-1. Is NFSd write throttling via cgroup v2 io.max a known limitation?
-Is there active upstream work to address this?
-2. Are there any known workarounds or recommended approaches to
-achieve NFS write I/O throttling at the server side?
-
-Any pointers to upstream patches or LKML threads would be appreciated.
-
-Experiment:
-1. Load nfsd module
-
-root@smylavarapu-16-0:~# modprobe nfsd
-root@smylavarapu-16-0:~# ls /sys/kernel/debug/nfsd
-disable-splice-read  io_cache_read  io_cache_write
-
-2. Enable Direct I/O mode
-
-root@smylavarapu-16-0:~# echo 2 > /sys/kernel/debug/nfsd/io_cache_read
-root@smylavarapu-16-0:~# echo 2 > /sys/kernel/debug/nfsd/io_cache_write
-root@smylavarapu-16-0:~# cat /sys/kernel/debug/nfsd/io_cache_read
-2
-
-3. Start NFS server and verify nfsd kernel threads
-
-root@smylavarapu-16-0:~# systemctl start nfs-server
-root@smylavarapu-16-0:~# ps aux | grep '\[nfsd\]'
-root  662609  0.0  0.0  0  0 ?  I  10:48  0:00 [nfsd]
-root  662610  0.0  0.0  0  0 ?  I  10:48  0:00 [nfsd]
-... (16 threads total, PIDs 662609=E2=80=93662624)
-root@smylavarapu-16-0:~# cat /proc/$(pgrep -x nfsd | head -1)/cgroup
-0::/
-
-4. Format and mount real block device (sdb)
-
-root@smylavarapu-16-0:~# mkfs.ext4 /dev/sdb
-mke2fs 1.47.2 (1-Jan-2025)
-Discarding device blocks: done
-Creating filesystem with 16777216 4k blocks and 4194304 inodes
-...done
-root@smylavarapu-16-0:~# mount /dev/sdb /nfs-test-export
-root@smylavarapu-16-0:~# ls -la /dev/sdb
-brw-rw---- 1 root disk 8, 16 Sep 15 14:02 /dev/sdb
-major:minor =3D 8:16
-
-5. Export over NFS and mount locally
-
-root@smylavarapu-16-0:~# echo "/nfs-test-export
-*(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
-root@smylavarapu-16-0:~# exportfs -ra
-root@smylavarapu-16-0:~# exportfs -v
-/nfs-test-export
-<world>(sync,wdelay,hide,no_subtree_check,sec=3Dsys,rw,secure,no_root_squas=
-h,no_all_squash)
-root@smylavarapu-16-0:~# mkdir -p /mnt/nfs-client
-root@smylavarapu-16-0:~# mount -t nfs 127.0.0.1:/nfs-test-export /mnt/nfs-c=
-lient
-root@smylavarapu-16-0:~# df -h /mnt/nfs-client
-Filesystem                  Size  Used Avail Use% Mounted on
-127.0.0.1:/nfs-test-export   63G  2.0M   60G   1% /mnt/nfs-client
-
-6. Move nfsd threads to dedicated cgroup
-
-root@smylavarapu-16-0:~# mkdir -p /sys/fs/cgroup/system.slice/nfsd.slice
-root@smylavarapu-16-0:~# cat /sys/fs/cgroup/system.slice/cgroup.subtree_con=
-trol
-cpuset cpu io memory hugetlb pids rdma misc dmem
-root@smylavarapu-16-0:~# echo "+io" >
-/sys/fs/cgroup/system.slice/cgroup.subtree_control
-root@smylavarapu-16-0:~# for pid in $(pgrep -x nfsd); do
-    echo $pid > /sys/fs/cgroup/system.slice/nfsd.slice/cgroup.procs
-done
-root@smylavarapu-16-0:~# cat /proc/$(pgrep -x nfsd | head -1)/cgroup
-0::/system.slice/nfsd.slice
-
-7. Apply 50 MB/s throttle
-
-root@smylavarapu-16-0:~# echo "8:16 wbps=3D52428800 rbps=3D52428800" >
-/sys/fs/cgroup/system.slice/nfsd.slice/io.max
-root@smylavarapu-16-0:~# cat /sys/fs/cgroup/system.slice/nfsd.slice/io.max
-8:16 rbps=3D52428800 wbps=3D52428800 riops=3Dmax wiops=3Dmax
-
-8. Write test =E2=80=94 io_cache_write=3D2
-
-root@smylavarapu-16-0:~# fio --name=3Dnfs-write --rw=3Dwrite --bs=3D1M --si=
-ze=3D4G \
-    --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D30
---time_based
-WRITE: bw=3D1761MiB/s (1847MB/s), io=3D52.0GiB, run=3D30236msec
-=E2=86=92 NOT throttled (1761 MB/s)
-
-9. Write test after drop_caches =E2=80=94 io_cache_write=3D2
-
-root@smylavarapu-16-0:~# echo 3 > /proc/sys/vm/drop_caches
-root@smylavarapu-16-0:~# fio --name=3Dnfs-write --rw=3Dwrite --bs=3D1M --si=
-ze=3D4G \
-    --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D30
---time_based
-WRITE: bw=3D2315MiB/s (2427MB/s), io=3D68.1GiB, run=3D30127msec
-=E2=86=92 NOT throttled (2315 MB/s)
-
-10. Read test =E2=80=94 io_cache_read=3D2
-
-root@smylavarapu-16-0:~# echo 3 > /proc/sys/vm/drop_caches
-root@smylavarapu-16-0:~# fio --name=3Dnfs-read --rw=3Dread --bs=3D1M --size=
-=3D4G \
-    --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D30
---time_based
-
-READ: bw=3D50.0MiB/s (52.4MB/s), IOPS=3D49, io=3D1501MiB, run=3D30032msec
-=E2=86=92 THROTTLED (capped at 50 MB/s)
-
-Thank you,
-Sirisha.
