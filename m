@@ -1,16 +1,16 @@
 Received: from lgeamrelo07.lge.com (lgeamrelo07.lge.com [156.147.51.103])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C31744D9567
-	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 18:34:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3675529403
+	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 18:34:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789583712; cv=none; b=fUPw8uBMbWsYWzWDhLrFvEYJrM/jE6We3ZZG4VQIZMK7QV3QqPTRrn1kdHf6s3FY5EVyE9Y7kIh21XsSNJH9PIe9I/HD3QUq6MnBx0BTRUQEe0RxqRfTeDK3TDIBnnHbcfe6IIzJg8zuzrV7USId4231/MpjQ5fhwYOq6YelNCk=
+	t=1789583712; cv=none; b=rww0mDFKgM4K/eixYktqARFrXvLn/sGscqyj9FLF/QBehTT5R+Myt9pHLZCNHBbV7MV0bxUoJAtDFqr/k5F49OeOimaKAuNnb7HufPOw2NMYTlnGtKT2RCuE0q4Hy9pXJlDqKiBibv1Jp3Hn7n2x66iESV9xNo9LQtBe/edAn/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789583712; c=relaxed/simple;
-	bh=X61Dnjaw35FZr4d8vkWRgJwXha9DyIs+cJOK34/L4bo=;
+	bh=9vQQUggjZS/CTjvK13LaKTfDvlY33IA8A65kzKIFyFA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KowpRiCSIeNKnjRdbEIKDLk1emndzOKDPXVcK0qZ+Mc0jYXZO/8ABLVpaeqVwX7bpG4IvT2gse8546mXsfwmMP2YSIguiDVXE4Y4Rf7BLMQssOdsuNmw6MFgJYevFcIjGNu33R6CItNKNvhh/8IV17eSeCAz9N0zvxVJxjerWh0=
+	 MIME-Version; b=px/I4YoRMrOrC4Wzk5B3+4wABxMKr/d9/zv0rBKTvW8oQcS/8e6v7oHYs3aDhYo1m19IiXuNxXgueIUdqRdAn737mdPwPc1S/CFE5mp+VvMZTvMBD1YhyOffSx6xGqmsZPb5hBOmYlovV7VjWCLiNaJ1bP7BRP8OKf2LT2AdOTA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.103
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
@@ -39,9 +39,9 @@ Cc: chrisl@kernel.org,
 	taejoon.song@lge.com,
 	her0gyugyu@gmail.com,
 	lianux.mm@gmail.com
-Subject: [RFC PATCH v11 3/4] mm: swap: add a debugfs interface for memcg tier selection
-Date: Thu, 17 Sep 2026 03:34:36 +0900
-Message-Id: <20260916183437.2946306-4-youngjun.park@lge.com>
+Subject: [RFC PATCH v11 1/4] mm: swap: introduce swap tier infrastructure
+Date: Thu, 17 Sep 2026 03:34:34 +0900
+Message-Id: <20260916183437.2946306-2-youngjun.park@lge.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260916183437.2946306-1-youngjun.park@lge.com>
 References: <20260916183437.2946306-1-youngjun.park@lge.com>
@@ -53,575 +53,406 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Swap tiers do nothing until something chooses between them. Let a memory
-cgroup do that.
+Introduce the "swap tier" as an abstraction over swap devices, so that
+swap allocation is organized on a tier basis rather than on a flat list
+of devices.
 
-Each cgroup carries a mask of the tiers it may swap to. Write a cgroup
-path and a hex mask to /sys/kernel/debug/swap/memcg_tiers to set it. Bit
-i is the tier at index i. /sys/kernel/debug/swap/tiers lists each tier's
-index and priority.
+Swap priority already points this way. Devices with different priorities
+are used in priority order, and devices with the same priority are used
+round-robin. A priority therefore already behaves like a tier, a group
+of devices that share one service speed. This patch gives that group an
+explicit structure, without adding any user interface.
 
-  # echo "/batch 0x2" > /sys/kernel/debug/swap/memcg_tiers
+A swap tier is the set of swap devices that share a priority. A tier is
+created when the first device with its priority is swapped on, and
+removed when the last one is swapped off. The active tiers are kept
+sorted by priority for allocation.
 
-This lives in debugfs on purpose. A cgroup file is a permanent ABI, and
-what a swap tier should look like is not settled yet. It is built only
-with CONFIG_MEMCG and CONFIG_DEBUG_FS.
+Making the tier own its devices gives a same-priority group the data
+structures it needs and lays the groundwork for tier-based allocation,
+onto which per-cgroup swap device selection can later be fit.
 
-The masks are kept in a list keyed by cgroup ID rather than in struct
-mem_cgroup, so memcg itself is not changed. A mask applies to the memory
-charged to its cgroup and is not inherited by child cgroups. The entry of
-a removed cgroup is dropped on the next write.
+No tier feature and no user-visible change are introduced here. This
+only prepares the ground for them.
 
-Each swap device is stamped with its tier's bit at swapon. A device's
-tier never changes, so the stamp is written once and read locklessly by
-the allocator.
-
-When the last device of a tier is swapped off, the tier frees its index
-for reuse. It waits until swapoff can no longer fail, so a device whose
-swapoff fails goes back to the same index. The freed bit is set back in
-every cgroup mask, so a cgroup that had disabled that tier must disable
-it again once a new tier reuses the index.
-
-Assisted-by: Claude:claude-opus-5
+Suggested-by: Chris Li <chrisl@kernel.org>
 Signed-off-by: Youngjun Park <youngjun.park@lge.com>
 ---
- Documentation/mm/index.rst     |   1 +
- Documentation/mm/swap-tier.rst |  55 ++++++
- MAINTAINERS                    |   1 +
- include/linux/swap.h           |   1 +
- mm/swap_tier.c                 | 294 ++++++++++++++++++++++++++++++++-
- mm/swap_tier.h                 |  31 ++++
- mm/swapfile.c                  |   5 +
- 7 files changed, 387 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/mm/swap-tier.rst
+ MAINTAINERS          |   2 +
+ include/linux/swap.h |   2 +-
+ mm/Makefile          |   2 +-
+ mm/swap.h            |   1 +
+ mm/swap_tier.c       | 114 +++++++++++++++++++++++++++++++++++++++++++
+ mm/swap_tier.h       |  37 ++++++++++++++
+ mm/swapfile.c        |  66 +++++++++++++------------
+ 7 files changed, 192 insertions(+), 32 deletions(-)
+ create mode 100644 mm/swap_tier.c
+ create mode 100644 mm/swap_tier.h
 
-diff --git a/Documentation/mm/index.rst b/Documentation/mm/index.rst
-index 13a79f5d092c..6afc45cd4b3d 100644
---- a/Documentation/mm/index.rst
-+++ b/Documentation/mm/index.rst
-@@ -34,6 +34,7 @@ see the :doc:`admin guide <../admin-guide/mm/index>`.
-    page_reclaim
-    swap
-    swap-table
-+   swap-tier
-    page_cache
-    shmfs
-    oom
-diff --git a/Documentation/mm/swap-tier.rst b/Documentation/mm/swap-tier.rst
-new file mode 100644
-index 000000000000..4007c23f83a6
---- /dev/null
-+++ b/Documentation/mm/swap-tier.rst
-@@ -0,0 +1,55 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+:Author: Chris Li <chrisl@kernel.org>,
-+         Youngjun Park <youngjun.park@lge.com>
-+
-+==========
-+Swap Tier
-+==========
-+
-+Swap tier is a group of swap devices that share a priority. It acts as a
-+facilitation layer, allowing users to manage swap devices based on their
-+speeds.
-+
-+Users are encouraged to assign swap device priorities according to device
-+speed to fully utilize this feature.
-+
-+Tier Index
-+----------
-+
-+A tier is created when the first swap device with its priority is swapped on,
-+and removed when the last one is swapped off. Each tier is given an index when
-+it is created and keeps it until it is removed, so a tier's index does not
-+change when another priority is swapped on or off.
-+
-+Per-cgroup Tier Selection
-+-------------------------
-+
-+A memory cgroup can be limited to some tiers through debugfs. This is for
-+evaluation, not a stable ABI.
-+
-+``/sys/kernel/debug/swap/tiers`` lists the index and priority of each tier.
-+``/sys/kernel/debug/swap/memcg_tiers`` takes a cgroup path and a mask in hex,
-+where bit ``i`` allows the tier at index ``i``::
-+
-+    # cat /sys/kernel/debug/swap/tiers
-+    Idx   Prio
-+    0     100
-+    1     50
-+    # echo "/batch 0x2" > /sys/kernel/debug/swap/memcg_tiers
-+
-+There is no separate delete operation. Writing a mask that allows every tier
-+clears the restriction, so the cgroup drops out of the file::
-+
-+    # echo "/batch 0xffffffff" > /sys/kernel/debug/swap/memcg_tiers
-+
-+A cgroup's mask is also dropped when the cgroup is removed.
-+
-+A mask applies to the memory charged to its own cgroup and is not inherited by
-+child cgroups. A tier keeps its index for its lifetime, so the same mask keeps
-+selecting the same tier across a swapon or swapoff.
-+
-+When a tier's last device is swapped off, its index is freed and can be reused
-+by a later tier. The freed index is re-allowed in every cgroup mask, so a
-+cgroup that had disabled it must disable it again once a new tier reuses the
-+index.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 37f353015cae..af17b804f31b 100644
+index e4412c3d8d45..37f353015cae 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -17402,6 +17402,7 @@ L:	linux-mm@kvack.org
- S:	Maintained
- F:	Documentation/ABI/testing/sysfs-kernel-mm-swap
- F:	Documentation/mm/swap-table.rst
-+F:	Documentation/mm/swap-tier.rst
- F:	include/linux/swap.h
- F:	include/linux/swap_ops.h
- F:	include/linux/swapfile.h
+@@ -17410,6 +17410,8 @@ F:	mm/page_io.c
+ F:	mm/swap.h
+ F:	mm/swap_table.h
+ F:	mm/swap_state.c
++F:	mm/swap_tier.c
++F:	mm/swap_tier.h
+ F:	mm/swapfile.c
+ 
+ MEMORY MANAGEMENT - THP (TRANSPARENT HUGE PAGE)
 diff --git a/include/linux/swap.h b/include/linux/swap.h
-index df69c2dd434a..30d3c37ca530 100644
+index 43155e122b5c..22ccb4b5801e 100644
 --- a/include/linux/swap.h
 +++ b/include/linux/swap.h
-@@ -237,6 +237,7 @@ struct swap_info_struct {
+@@ -237,7 +237,7 @@ struct swap_info_struct {
  	struct percpu_ref users;	/* indicate and keep swap device valid. */
  	unsigned long	flags;		/* SWP_USED etc: see above */
  	signed short	prio;		/* swap priority of this type */
-+	unsigned int	tier_mask;	/* swap tier mask */
- 	struct plist_node list;		/* entry in its swap tier */
+-	struct plist_node list;		/* entry in swap_active_head */
++	struct plist_node list;		/* entry in its swap tier */
  	signed char	type;		/* strange name for an index */
  	unsigned int	max;		/* size of this swap device */
-diff --git a/mm/swap_tier.c b/mm/swap_tier.c
-index 286f319fb125..de183c2678e0 100644
---- a/mm/swap_tier.c
-+++ b/mm/swap_tier.c
-@@ -1,5 +1,10 @@
- // SPDX-License-Identifier: GPL-2.0
- #include <linux/swap.h>
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_DEBUG_FS)
-+#include <linux/debugfs.h>
-+#include <linux/memcontrol.h>
-+#include <linux/seq_file.h>
-+#endif
+ 	struct swap_cluster_info *cluster_info; /* array, one entry per cluster */
+diff --git a/mm/Makefile b/mm/Makefile
+index 2a3ec53d62ee..d89a7abadc46 100644
+--- a/mm/Makefile
++++ b/mm/Makefile
+@@ -76,7 +76,7 @@ ifdef CONFIG_MMU
+ 	obj-$(CONFIG_ADVISE_SYSCALLS)	+= madvise.o
+ endif
  
- #include "swap.h"
- #include "swap_tier.h"
-@@ -17,6 +22,10 @@ static LIST_HEAD(swap_tier_inactive_list);
- 	for (idx = 0, tier = &swap_tiers[0]; idx < MAX_SWAPTIER; \
- 		idx++, tier = &swap_tiers[idx])
+-obj-$(CONFIG_SWAP)	+= page_io.o swap_state.o swapfile.o
++obj-$(CONFIG_SWAP)	+= page_io.o swap_state.o swapfile.o swap_tier.o
+ obj-$(CONFIG_ZSWAP)	+= zswap.o
+ obj-$(CONFIG_HAS_DMA)	+= dmapool.o
+ obj-$(CONFIG_HUGETLBFS)	+= hugetlb.o hugetlb_sysfs.o hugetlb_sysctl.o
+diff --git a/mm/swap.h b/mm/swap.h
+index b3b54c28929a..4de6b9b0f261 100644
+--- a/mm/swap.h
++++ b/mm/swap.h
+@@ -36,6 +36,7 @@ struct swap_io_ctx;
+ #define swap_entry_order(order)	0
+ #endif
  
-+/* A tier's index is its slot in the array, stable for its lifetime. */
-+#define TIER_IDX(tier)	((tier) - swap_tiers)
-+#define TIER_MASK(tier)	(1U << TIER_IDX(tier))
-+
++extern spinlock_t swap_lock;
+ extern struct swap_info_struct *swap_info[];
+ 
  /*
-  * Naming Convention:
-  *   swap_tiers_*() - Public/exported functions
-@@ -56,6 +65,12 @@ static void swap_tier_inactivate(struct swap_tier *tier)
- 	list_move_tail(&tier->list, &swap_tier_inactive_list);
- }
- 
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_DEBUG_FS)
-+static void swap_tiers_debugfs_init(void);
-+#else
-+static inline void swap_tiers_debugfs_init(void) {}
-+#endif
+diff --git a/mm/swap_tier.c b/mm/swap_tier.c
+new file mode 100644
+index 000000000000..8ed1427cee09
+--- /dev/null
++++ b/mm/swap_tier.c
+@@ -0,0 +1,114 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <linux/swap.h>
 +
- void swap_tiers_init(void)
- {
- 	struct swap_tier *tier;
-@@ -69,6 +84,8 @@ void swap_tiers_init(void)
- 		INIT_LIST_HEAD(&tier->list);
- 		swap_tier_inactivate(tier);
- 	}
++#include "swap.h"
++#include "swap_tier.h"
 +
-+	swap_tiers_debugfs_init();
- }
- 
- static struct swap_tier *swap_tier_prepare(short prio)
-@@ -103,6 +120,17 @@ void swap_tiers_assign_dev(struct swap_info_struct *swp)
- 	spin_unlock(&swap_avail_lock);
- 
- 	plist_add(&swp->list, &tier->active_head);
++#define MAX_SWAPTIER	MAX_SWAPFILES
 +
-+	/* Put back by a failed swapoff, so already stamped and counted. */
-+	if (swp->tier_mask)
-+		return;
++static struct swap_tier swap_tiers[MAX_SWAPTIER];
 +
-+	/*
-+	 * A device's tier never changes, so stamp it once here. Paired with
-+	 * the READ_ONCE() in the allocator, which reads this without swap_lock.
-+	 */
-+	tier->nr_devs++;
-+	WRITE_ONCE(swp->tier_mask, TIER_MASK(tier));
- }
- 
- void swap_tiers_remove_dev(struct swap_info_struct *swp)
-@@ -113,11 +141,31 @@ void swap_tiers_remove_dev(struct swap_info_struct *swp)
- 
- 	tier = swap_tier_lookup(swp->prio);
- 	plist_del(&swp->list, &tier->active_head);
--	if (plist_head_empty(&tier->active_head)) {
-+}
++/* active swap priority list, sorted in descending order */
++LIST_HEAD(swap_tier_active_list);
++/* unused swap_tier object */
++static LIST_HEAD(swap_tier_inactive_list);
++
++#define for_each_tier(tier, idx) \
++	for (idx = 0, tier = &swap_tiers[0]; idx < MAX_SWAPTIER; \
++		idx++, tier = &swap_tiers[idx])
 +
 +/*
-+ * A failed swapoff puts the device back into its tier, so the tier is given
-+ * up only here, once swapoff can no longer fail. Returns the tier's mask if
-+ * @swp was its last device, 0 otherwise.
++ * Naming Convention:
++ *   swap_tiers_*() - Public/exported functions
++ *   swap_tier_*()  - Private/internal functions
 + */
-+unsigned int swap_tiers_release_dev(struct swap_info_struct *swp)
++
++static struct swap_tier *swap_tier_lookup(short prio)
 +{
 +	struct swap_tier *tier;
-+	unsigned int freed = 0;
 +
-+	lockdep_assert_held(&swap_lock);
-+
-+	tier = swap_tier_lookup(swp->prio);
-+	if (!--tier->nr_devs) {
- 		spin_lock(&swap_avail_lock);
- 		swap_tier_inactivate(tier);
- 		spin_unlock(&swap_avail_lock);
-+		freed = TIER_MASK(tier);
- 	}
-+
-+	WRITE_ONCE(swp->tier_mask, 0);
-+
-+	return freed;
- }
- 
- /* The avail list of the tier @swp belongs to. */
-@@ -127,3 +175,247 @@ struct plist_head *swap_tiers_avail_head(struct swap_info_struct *swp)
- 
- 	return &swap_tier_lookup(swp->prio)->avail_head;
- }
-+
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_DEBUG_FS)
-+static DEFINE_MUTEX(swap_tier_lock);
-+
-+/*
-+ * struct swap_tier_cgroup - tier mask of a cgroup.
-+ *
-+ * @id: cgroup ID of the cgroup.
-+ * @mask: tiers the cgroup may swap to.
-+ * @list: linkage into swap_tier_cgroup_list.
-+ * @rcu: frees the entry after a grace period.
-+ */
-+struct swap_tier_cgroup {
-+	u64 id;
-+	unsigned int mask;
-+	struct list_head list;
-+	struct rcu_head rcu;
-+};
-+
-+/*
-+ * Cgroups written to memcg_tiers. Changed under swap_tier_lock, walked by
-+ * the allocator under RCU. A cgroup not on the list may use every tier.
-+ */
-+static LIST_HEAD(swap_tier_cgroup_list);
-+
-+static struct swap_tier_cgroup *swap_tier_cgroup_lookup(u64 id)
-+{
-+	struct swap_tier_cgroup *stc;
-+
-+	list_for_each_entry_rcu(stc, &swap_tier_cgroup_list, list,
-+				lockdep_is_held(&swap_tier_lock)) {
-+		if (stc->id == id)
-+			return stc;
++	for_each_active_tier(tier) {
++		if (tier->prio == prio)
++			return tier;
 +	}
 +
 +	return NULL;
 +}
 +
-+/* Drop the entries that allow every tier or whose cgroup is removed. */
-+static void swap_tier_cgroup_prune(void)
++/* Insert new tier into the active list sorted by priority. */
++static void swap_tier_activate(struct swap_tier *new)
 +{
-+	struct swap_tier_cgroup *stc, *tmp;
-+	struct cgroup *cgrp;
++	struct list_head *pos = &swap_tier_active_list;
++	struct swap_tier *tier;
 +
-+	lockdep_assert_held(&swap_tier_lock);
-+
-+	list_for_each_entry_safe(stc, tmp, &swap_tier_cgroup_list, list) {
-+		if (stc->mask != TIER_ALL_MASK) {
-+			cgrp = __cgroup_get_from_id(stc->id);
-+			if (!IS_ERR(cgrp)) {
-+				cgroup_put(cgrp);
-+				continue;
-+			}
-+		}
-+
-+		list_del_rcu(&stc->list);
-+		kfree_rcu(stc, rcu);
-+	}
-+}
-+
-+/* One line per cgroup that dropped a tier, in the syntax a write takes. */
-+static int swap_tiers_memcg_show(struct seq_file *m, void *v)
-+{
-+	struct swap_tier_cgroup *stc;
-+	struct cgroup *cgrp;
-+	char *path;
-+
-+	path = kmalloc(PATH_MAX, GFP_KERNEL);
-+	if (!path)
-+		return -ENOMEM;
-+
-+	mutex_lock(&swap_tier_lock);
-+	list_for_each_entry(stc, &swap_tier_cgroup_list, list) {
-+		if (stc->mask == TIER_ALL_MASK)
-+			continue;
-+
-+		/* A removed cgroup's entry stays until the next write. */
-+		cgrp = __cgroup_get_from_id(stc->id);
-+		if (IS_ERR(cgrp))
-+			continue;
-+
-+		cgroup_path(cgrp, path, PATH_MAX);
-+		cgroup_put(cgrp);
-+		seq_printf(m, "%s 0x%x\n", path, stc->mask);
-+	}
-+	mutex_unlock(&swap_tier_lock);
-+
-+	kfree(path);
-+	return 0;
-+}
-+
-+/*
-+ * Keep only the tiers set in @mask.  @cgpath must name a cgroup that has
-+ * the memory controller enabled.
-+ */
-+static int swap_tiers_memcg_set(const char *cgpath, unsigned int mask)
-+{
-+	struct swap_tier_cgroup *stc;
-+	struct cgroup *cgrp;
-+	bool enabled;
-+	int ret = 0;
-+	u64 id;
-+
-+	cgrp = cgroup_get_from_path(cgpath);
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
-+
-+	/*
-+	 * Not cgroup_get_e_css(), which falls back to an ancestor when the
-+	 * memory controller is not enabled here.
-+	 */
-+	rcu_read_lock();
-+	enabled = cgroup_css(cgrp, &memory_cgrp_subsys);
-+	rcu_read_unlock();
-+	id = cgroup_id(cgrp);
-+	cgroup_put(cgrp);
-+
-+	if (!enabled)
-+		return -ENOENT;
-+
-+	mutex_lock(&swap_tier_lock);
-+
-+	stc = swap_tier_cgroup_lookup(id);
-+	if (stc) {
-+		WRITE_ONCE(stc->mask, mask);
-+	} else if (mask != TIER_ALL_MASK) {
-+		stc = kmalloc_obj(*stc, GFP_KERNEL);
-+		if (stc) {
-+			stc->id = id;
-+			stc->mask = mask;
-+			list_add_rcu(&stc->list, &swap_tier_cgroup_list);
-+		} else {
-+			ret = -ENOMEM;
++	for_each_active_tier(tier) {
++		if (tier->prio <= new->prio) {
++			pos = &tier->list;
++			break;
 +		}
 +	}
-+	swap_tier_cgroup_prune();
 +
-+	mutex_unlock(&swap_tier_lock);
-+	return ret;
++	list_add_tail(&new->list, pos);
 +}
 +
-+/* The tiers that the cgroup @folio is charged to may swap to. */
-+unsigned int folio_tier_mask(struct folio *folio)
++static void swap_tier_inactivate(struct swap_tier *tier)
 +{
-+	struct swap_tier_cgroup *stc;
-+	struct mem_cgroup *memcg;
-+	unsigned int mask = TIER_ALL_MASK;
++	list_move_tail(&tier->list, &swap_tier_inactive_list);
++}
 +
-+	rcu_read_lock();
-+	memcg = folio_memcg(folio);
-+	if (memcg) {
-+		stc = swap_tier_cgroup_lookup(cgroup_id(memcg->css.cgroup));
-+		if (stc)
-+			mask = READ_ONCE(stc->mask);
++void swap_tiers_init(void)
++{
++	struct swap_tier *tier;
++	int idx;
++
++	BUILD_BUG_ON(BITS_PER_TYPE(int) < MAX_SWAPTIER);
++
++	for_each_tier(tier, idx) {
++		plist_head_init(&tier->active_head);
++		INIT_LIST_HEAD(&tier->list);
++		swap_tier_inactivate(tier);
 +	}
-+	rcu_read_unlock();
-+
-+	return mask;
 +}
 +
-+/*
-+ * When a tier is removed, its index (bit position in the mask) becomes
-+ * free for reassignment to a future tier. If a cgroup had previously
-+ * disabled this tier (cleared the bit in its memcg_tiers entry), its mask
-+ * would keep that bit clear, meaning the new tier at the same index would
-+ * be silently unavailable, an invisible cgroup constraint left behind by a
-+ * tier that no longer exists.
-+ *
-+ * To prevent this, OR the removed tier's mask bit into every cgroup's
-+ * mask. This resets the bit so the new tier is accessible by default.
-+ * Users who want to restrict it must explicitly disable it after the tier
-+ * is re-created.
-+ */
-+void swap_tiers_memcg_propagate(unsigned int mask)
-+{
-+	struct swap_tier_cgroup *stc;
-+
-+	mutex_lock(&swap_tier_lock);
-+	list_for_each_entry(stc, &swap_tier_cgroup_list, list)
-+		WRITE_ONCE(stc->mask, stc->mask | mask);
-+	mutex_unlock(&swap_tier_lock);
-+}
-+
-+static int swap_tiers_memcg_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, swap_tiers_memcg_show, NULL);
-+}
-+
-+static ssize_t swap_tiers_memcg_write(struct file *file,
-+				      const char __user *ubuf,
-+				      size_t count, loff_t *ppos)
-+{
-+	char *pos, *tmp, *cgpath;
-+	unsigned int mask;
-+	int ret;
-+
-+	tmp = memdup_user_nul(ubuf, count);
-+	if (IS_ERR(tmp))
-+		return PTR_ERR(tmp);
-+
-+	pos = strstrip(tmp);
-+	cgpath = strsep(&pos, " \t\n");
-+	if (!cgpath || !*cgpath || !pos ||
-+	    kstrtouint(skip_spaces(pos), 16, &mask))
-+		ret = -EINVAL;
-+	else
-+		ret = swap_tiers_memcg_set(cgpath, mask);
-+
-+	kfree(tmp);
-+	return ret ? ret : count;
-+}
-+
-+static const struct file_operations swap_tiers_memcg_fops = {
-+	.open		= swap_tiers_memcg_open,
-+	.read		= seq_read,
-+	.write		= swap_tiers_memcg_write,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+};
-+
-+static int swap_tiers_show(struct seq_file *m, void *v)
++static struct swap_tier *swap_tier_prepare(short prio)
 +{
 +	struct swap_tier *tier;
 +
-+	seq_printf(m, "%-5s %s\n", "Idx", "Prio");
++	lockdep_assert_held(&swap_lock);
 +
-+	spin_lock(&swap_lock);
-+	for_each_active_tier(tier)
-+		seq_printf(m, "%-5td %d\n", TIER_IDX(tier), tier->prio);
-+	spin_unlock(&swap_lock);
++	/* A tier holds at least one device, so one is always unused. */
++	tier = list_first_entry(&swap_tier_inactive_list,
++		struct swap_tier, list);
 +
-+	return 0;
++	list_del_init(&tier->list);
++	tier->prio = prio;
++
++	return tier;
 +}
-+DEFINE_SHOW_ATTRIBUTE(swap_tiers);
 +
-+static void swap_tiers_debugfs_init(void)
++void swap_tiers_assign_dev(struct swap_info_struct *swp)
 +{
-+	struct dentry *dir = debugfs_create_dir("swap", NULL);
++	struct swap_tier *tier;
 +
-+	debugfs_create_file("tiers", 0400, dir, NULL, &swap_tiers_fops);
-+	debugfs_create_file("memcg_tiers", 0600, dir, NULL,
-+			    &swap_tiers_memcg_fops);
++	lockdep_assert_held(&swap_lock);
++
++	tier = swap_tier_lookup(swp->prio);
++	if (!tier) {
++		tier = swap_tier_prepare(swp->prio);
++		swap_tier_activate(tier);
++	}
++
++	plist_add(&swp->list, &tier->active_head);
 +}
-+#endif
++
++void swap_tiers_remove_dev(struct swap_info_struct *swp)
++{
++	struct swap_tier *tier;
++
++	lockdep_assert_held(&swap_lock);
++
++	tier = swap_tier_lookup(swp->prio);
++	plist_del(&swp->list, &tier->active_head);
++	if (plist_head_empty(&tier->active_head))
++		swap_tier_inactivate(tier);
++}
 diff --git a/mm/swap_tier.h b/mm/swap_tier.h
-index c4347c28d8f1..9967cfbcc439 100644
---- a/mm/swap_tier.h
+new file mode 100644
+index 000000000000..3dce716d23f6
+--- /dev/null
 +++ b/mm/swap_tier.h
-@@ -9,16 +9,20 @@
- /* Forward declarations */
- struct swap_info_struct;
- 
-+#define TIER_ALL_MASK		(~0U)
+@@ -0,0 +1,37 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _SWAP_TIER_H
++#define _SWAP_TIER_H
 +
- /*
-  * struct swap_tier - structure representing a swap tier.
-  *
-  * @prio: priority of the swap devices in the tier.
-+ * @nr_devs: swap devices in the tier, including ones being swapped off.
-  * @active_head: swap devices in the tier.
-  * @avail_head: available swap devices in the tier.
-  * @list: linkage into swap_tier_active_list or swap_tier_inactive_list.
-  */
- struct swap_tier {
- 	short prio;
-+	int nr_devs;
- 	struct plist_head active_head;
- 	struct plist_head avail_head;
- 	struct list_head list;
-@@ -35,6 +39,33 @@ void swap_tiers_init(void);
- /* Tier assignment */
- void swap_tiers_assign_dev(struct swap_info_struct *swp);
- void swap_tiers_remove_dev(struct swap_info_struct *swp);
-+unsigned int swap_tiers_release_dev(struct swap_info_struct *swp);
- struct plist_head *swap_tiers_avail_head(struct swap_info_struct *swp);
- 
-+/**
-+ * swap_tiers_mask_test - test whether two tier masks overlap
-+ * @tier_mask: mask to test, e.g. a swap device's tier bit
-+ * @mask: mask to test against, e.g. a cgroup's mask
++#include <linux/list.h>
++#include <linux/plist.h>
++#include <linux/types.h>
++
++/* Forward declarations */
++struct swap_info_struct;
++
++/*
++ * struct swap_tier - structure representing a swap tier.
 + *
-+ * Return: true if @tier_mask and @mask share at least one tier bit.
++ * @prio: priority of the swap devices in the tier.
++ * @active_head: swap devices in the tier.
++ * @list: linkage into swap_tier_active_list or swap_tier_inactive_list.
 + */
-+static inline bool swap_tiers_mask_test(unsigned int tier_mask,
-+					unsigned int mask)
-+{
-+	return tier_mask & mask;
-+}
++struct swap_tier {
++	short prio;
++	struct plist_head active_head;
++	struct list_head list;
++};
 +
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_DEBUG_FS)
-+/* Memcg related functions */
-+void swap_tiers_memcg_propagate(unsigned int mask);
-+unsigned int folio_tier_mask(struct folio *folio);
-+#else
-+static inline void swap_tiers_memcg_propagate(unsigned int mask) {}
++extern struct list_head swap_tier_active_list;
 +
-+static inline unsigned int folio_tier_mask(struct folio *folio)
-+{
-+	return TIER_ALL_MASK;
-+}
-+#endif
++#define for_each_active_tier(tier) \
++	list_for_each_entry(tier, &swap_tier_active_list, list)
 +
- #endif /* _SWAP_TIER_H */
++/* Initialization and application */
++void swap_tiers_init(void);
++
++/* Tier assignment */
++void swap_tiers_assign_dev(struct swap_info_struct *swp);
++void swap_tiers_remove_dev(struct swap_info_struct *swp);
++
++#endif /* _SWAP_TIER_H */
 diff --git a/mm/swapfile.c b/mm/swapfile.c
-index e9d142c0655b..bb953dd33ca0 100644
+index c0eddccfaca2..8201ae779833 100644
 --- a/mm/swapfile.c
 +++ b/mm/swapfile.c
-@@ -3191,6 +3191,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
+@@ -48,6 +48,7 @@
+ #include "swap_table.h"
+ #include "internal.h"
+ #include "swap.h"
++#include "swap_tier.h"
+ 
+ static void swap_range_alloc(struct swap_info_struct *si,
+ 			     unsigned int nr_entries);
+@@ -61,9 +62,9 @@ static void move_cluster(struct swap_info_struct *si,
+  * lazily allocated & freed swap device info struts, and SWP_USED indicates
+  * which device is used, ~SWP_USED devices and can be reused.
+  *
+- * Also protects swap_active_head total_swap_pages, and the SWP_WRITEOK flag.
++ * Also protects the swap tiers, total_swap_pages, and the SWP_WRITEOK flag.
+  */
+-static DEFINE_SPINLOCK(swap_lock);
++DEFINE_SPINLOCK(swap_lock);
+ static unsigned int nr_swapfiles;
+ atomic_long_t nr_swap_pages;
+ /*
+@@ -83,17 +84,11 @@ bool swap_migration_ad_supported;
+ static const char Bad_file[] = "Bad swap file entry ";
+ static const char Bad_offset[] = "Bad swap offset entry ";
+ 
+-/*
+- * all active swap_info_structs
+- * protected with swap_lock, and ordered by priority.
+- */
+-static PLIST_HEAD(swap_active_head);
+-
+ /*
+  * all available (active, not full) swap_info_structs
+  * protected with swap_avail_lock, ordered by priority.
+- * This is used by folio_alloc_swap() instead of swap_active_head
+- * because swap_active_head includes all swap_info_structs,
++ * This is used by folio_alloc_swap() instead of the active lists of
++ * the swap tiers because those include all swap_info_structs,
+  * but folio_alloc_swap() doesn't need to look at full ones.
+  * This uses its own lock instead of swap_lock because when a
+  * swap_info_struct changes between not-full/full, it needs to
+@@ -1444,22 +1439,27 @@ static bool swap_sync_discard(void)
+ {
+ 	bool ret = false;
+ 	struct swap_info_struct *si, *next;
++	struct swap_tier *tier;
++	short prio;
+ 
+ 	spin_lock(&swap_lock);
+ start_over:
+-	plist_for_each_entry_safe(si, next, &swap_active_head, list) {
+-		spin_unlock(&swap_lock);
+-		if (get_swap_device_info(si)) {
+-			if (si->flags & SWP_PAGE_DISCARD)
+-				ret = swap_do_scheduled_discard(si);
+-			put_swap_device(si);
+-		}
+-		if (ret)
+-			return true;
++	for_each_active_tier(tier) {
++		prio = tier->prio;
++		plist_for_each_entry_safe(si, next, &tier->active_head, list) {
++			spin_unlock(&swap_lock);
++			if (get_swap_device_info(si)) {
++				if (si->flags & SWP_PAGE_DISCARD)
++					ret = swap_do_scheduled_discard(si);
++				put_swap_device(si);
++			}
++			if (ret)
++				return true;
+ 
+-		spin_lock(&swap_lock);
+-		if (plist_node_empty(&next->list))
+-			goto start_over;
++			spin_lock(&swap_lock);
++			if (plist_node_empty(&next->list) || tier->prio != prio)
++				goto start_over;
++		}
+ 	}
+ 	spin_unlock(&swap_lock);
+ 
+@@ -3088,7 +3088,7 @@ static void _enable_swap_info(struct swap_info_struct *si)
+ 
+ 	assert_spin_locked(&swap_lock);
+ 
+-	plist_add(&si->list, &swap_active_head);
++	swap_tiers_assign_dev(si);
+ 
+ 	/* Add back to available list */
+ 	add_to_avail_list(si, true);
+@@ -3182,6 +3182,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
+ {
+ 	struct swap_info_struct *p = NULL;
+ 	struct swap_cluster_info *cluster_info;
++	struct swap_tier *tier;
+ 	struct file *swap_file, *victim;
  	struct address_space *mapping;
  	struct inode *inode;
- 	unsigned int maxpages;
-+	unsigned int freed_tier;
- 	int err, found = 0;
+@@ -3200,13 +3201,17 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
  
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -3290,7 +3291,11 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
- 	p->max = 0;
- 	p->cluster_info = NULL;
+ 	mapping = victim->f_mapping;
+ 	spin_lock(&swap_lock);
+-	plist_for_each_entry(p, &swap_active_head, list) {
+-		if (p->flags & SWP_WRITEOK) {
+-			if (p->swap_file->f_mapping == mapping) {
+-				found = 1;
+-				break;
++	for_each_active_tier(tier) {
++		plist_for_each_entry(p, &tier->active_head, list) {
++			if (p->flags & SWP_WRITEOK) {
++				if (p->swap_file->f_mapping == mapping) {
++					found = 1;
++					break;
++				}
+ 			}
+ 		}
++		if (found)
++			break;
+ 	}
+ 	if (!found) {
+ 		err = -EINVAL;
+@@ -3230,7 +3235,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
+ 	}
+ 	spin_lock(&p->lock);
+ 	del_from_avail_list(p, true);
+-	plist_del(&p->list, &swap_active_head);
++	swap_tiers_remove_dev(p);
+ 	atomic_long_sub(p->pages, &nr_swap_pages);
+ 	total_swap_pages -= p->pages;
  	spin_unlock(&p->lock);
-+	freed_tier = swap_tiers_release_dev(p);
- 	spin_unlock(&swap_lock);
-+	/* Under swapon_mutex, so a swapon cannot reuse the index before this. */
-+	if (freed_tier)
-+		swap_tiers_memcg_propagate(freed_tier);
- 	arch_swap_invalidate_area(p->type);
- 	zswap_swapoff(p->type);
- 	mutex_unlock(&swapon_mutex);
+@@ -4002,7 +4007,7 @@ int swap_dup_entry_direct(swp_entry_t entry)
+ #if defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
+ static bool __has_usable_swap(void)
+ {
+-	return !plist_head_empty(&swap_active_head);
++	return !list_empty(&swap_tier_active_list);
+ }
+ 
+ void __folio_throttle_swaprate(struct folio *folio, gfp_t gfp)
+@@ -4055,6 +4060,7 @@ static int __init swapfile_init(void)
+ 		swap_migration_ad_supported = true;
+ #endif	/* CONFIG_MIGRATION */
+ 
++	swap_tiers_init();
+ 	return 0;
+ }
+ subsys_initcall(swapfile_init);
 -- 
 2.48.1
 
