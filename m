@@ -1,88 +1,121 @@
-Received: from mta0.migadu.com (out-39.mta0.migadu.com [91.218.175.39])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4288E4E56CB
-	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 12:58:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E24C4FECE0;
+	Wed, 16 Sep 2026 13:34:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789563494; cv=none; b=ult1OSPSgoaZKzNZ7wYi1hW3pEbsTq1MziRDYFZIespcGOpX2uZjuedUzjkANSKneuVSpyxct5H9GdY1YB/aPOi8MbXqVfi1eN4isOjjpXjusNygesJDneStHyIoA5WdcHAV8Smu3y1cP4KsaMTkODLBi+qPDqVtxm6fCBTtmmc=
+	t=1789565669; cv=none; b=qvOnBhwiFIhMpYgnPvXWsNBVaGepr8lR+de66lGovqWaca4Ngdqo/goye4DVDNKgxLBBb9JXw96XLQBky/ecbw+cVGPpmWjxBg7BZ/huLkXlALlsPSVFmX/+85vWoObpQ6Lijep4p4JE4V5y6m6OOaSnoMVM/z02hduqPyqJ9E8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789563494; c=relaxed/simple;
-	bh=bdXVZ1Kbw6bqlFSxE/MaNfB3RIbM8xtQX+eZUVejI94=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FhmeagA02FaSdHSCTOiDtEN1mqyLbhdHyX89mJhdO9Cf+yJnnPTOx0GvwHB86Pb0Ubj+smDWaEy6vI4LG/LZO/l5WP1b0ysH6YGDLcjBhb0Hiej3iq/WeUXJHNS7syx42AYtFrWw1OklHEfpE/ObYuwsfD1G7VJVf4tUTL2+twg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pq2dSTG7; arc=none smtp.client-ip=91.218.175.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789565669; c=relaxed/simple;
+	bh=fLoaW2b0XzoIjRglXsq3OJ3Glg24SoQ3XvJvf0iXsZk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aVpZL9sk8wqWe6LJKvIhpx1J+VhXC7uH6Ir8JuMr8fe0wplanJXerW8iXZl77/kJNnArQgsM3+rkce2tT+RDdlNtL4cUj+ohUCPy+zKnMq41t/MEjxetoxvmE8C44NYiAhu9jpxVNvwMPw5C7zwBUWAd0gZN/YeJ614BYXYwvx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZCYZZfUe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pq2dSTG7"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=bdXVZ1Kbw6bqlFSxE/MaNfB3RIbM8xtQX+eZUVejI94=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789563490; v=1; x=1790168290;
- b=pq2dSTG7Q95TTIaQMizi0n5RB6McC4WDKKzoXmE6vWjaxc4iTbdPjsYAgbCeHS8ppbsrWyw0
- tJQD6nm9hEqxjd0k9itvXFOfG4DJY6pCv488cr2OfNVNLxap8Qa2jm0fb9BMhtZTjwrhp3hJOpr
- +lbceArzVhgaKTqo2denBr9w=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9a5d3f7511db98d0;
-	Wed, 16 Sep 2026 12:58:10 +0000
-X-Mizu-Trace-ID: 9a5d3f7511db98d0
-X-Migadu-Flow: FLOW_OUT
-From: Tao Cui <cui.tao@linux.dev>
-To: hannes@cmpxchg.org,
-	mhocko@kernel.org
-Cc: roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cui.tao@linux.dev,
-	Tao Cui <cuitao@kylinos.cn>
-Subject: [PATCH 3/3] docs: cgroup-v1: note the v1 memory controller implementation boundary
-Date: Wed, 16 Sep 2026 20:57:37 +0800
-Message-ID: <20260916125737.1095414-4-cui.tao@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260916125737.1095414-1-cui.tao@linux.dev>
-References: <20260916125737.1095414-1-cui.tao@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZCYZZfUe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E6A61F000FF;
+	Wed, 16 Sep 2026 13:34:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789565663;
+	bh=2Z0tDRbfIu14gBiwBTHTnXsfRNC4/vvPKIDDl1Wr1Wg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ZCYZZfUe2VXwIRg14QoroYNTZXywKr3OsnaMGA0X6vHMZkznCnqFoTZ7cASnmjWSx
+	 e+fqG574aLUN7JUyYqpTQcX4mxopFrxfwvp/lSs0HEx6Cl8HhU6nVuCpee7pYtW0zy
+	 WrITWsGDQIO2/fiYGSDqdPVzl2VKbP8HFYpChZfuVx71SH7zcS/nRl9IN65Dm1/bvs
+	 sGV4hYi1OybacI5MHgLfD74wysS1nA81WUQR6cyV9MzUa0Ykeca2a3BNRLnIUjIird
+	 qxy6NMoMyF95YrJHvhXzfsA3w/yhOS5VY0BwwuEVZv7gt0xHYJwQXrrLsWW03ABtVS
+	 4bsRK7es+cY4Q==
+Date: Wed, 16 Sep 2026 14:34:11 +0100
+From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+To: Tal Zussman <tz2294@columbia.edu>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Barry Song <baohua@kernel.org>, Youngjun Park <youngjun.park@lge.com>, 
+	David Hildenbrand <david@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/11] mm: memcontrol: constify the read side of the
+ memcg API
+Message-ID: <aqqaaDqTDahlZ7bR@gremlin>
+References: <20260908-folio_memcg-const-v2-0-811e9f443409@columbia.edu>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260908-folio_memcg-const-v2-0-811e9f443409@columbia.edu>
 
-From: Tao Cui <cuitao@kylinos.cn>
+On Tue, Sep 08, 2026 at 11:57:36AM -0400, Tal Zussman wrote:
+> The memcg accessors, lruvec helpers, and stat readers only read from
+> the memcg, folio, or lruvec they are given, but take non-const
+> pointers. Constify them, along with a couple other helper functions in
+> mm/page_counter.c along the way.
+>
+> This started as a follow-up to [1] that quickly grew in proportions :)
+>
+> [1]: https://lore.kernel.org/linux-mm/anYqSDnC2BbJXv1h@casper.infradead.org/
 
-Document that the legacy memory controller is now isolated behind
-CONFIG_MEMCG_V1, with its state in struct mem_cgroup_v1, and that new
-functionality belongs to the v2 memory controller.
+:)
 
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
----
- Documentation/admin-guide/cgroup-v1/memory.rst | 7 +++++++
- 1 file changed, 7 insertions(+)
+I looked through it, all looks sensible, and it compiles locally and
+const-ifies things so it's all good AFAIC! So:
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 7d2a44af52c9..2eff1dc6e13b 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -8,6 +8,13 @@ Memory Resource Controller
-       here but make sure to check the current code if you need a deeper
-       understanding.
- 
-+.. note::
-+      The legacy (v1) memory controller implementation is isolated behind
-+      ``CONFIG_MEMCG_V1``: its interface lives in ``mm/memcontrol-v1.c`` and
-+      its per-cgroup state in ``struct mem_cgroup_v1`` (see
-+      ``include/linux/memcontrol.h``).  New functionality belongs to the
-+      cgroup v2 memory controller.
-+
- .. note::
-       The Memory Resource Controller has generically been referred to as the
-       memory controller in this document. Do not confuse memory controller
--- 
-2.43.0
+Acked-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
+For the whole series :)
+
+>
+> ---
+> Changes in v2:
+> - Patch 3: Constify the folio argument of folio_lruvec_relock_irq() and
+>   folio_lruvec_relock_irqsave() as well, per Sashiko
+> - Patch 3: Note that mem_cgroup_lruvec() updates lruvec->pgdat in the
+>   per-node structure, not the memcg, per Sashiko
+> - Patches 3 and 8: Use container_of_const() in lruvec_memcg() and the
+>   lruvec_page_state() family, per Sashiko
+> - Link to v1: https://patch.msgid.link/20260902-folio_memcg-const-v1-0-e2c1da22246d@columbia.edu
+>
+> ---
+> Tal Zussman (11):
+>       mm: memcontrol: take a const folio in folio_memcg() and friends
+>       mm: memcontrol: constify obj_cgroup_memcg() and friends
+>       mm: memcontrol: constify the lruvec helpers
+>       mm/page_io: take a const folio in bio_associate_blkg_from_folio()
+>       mm: memcontrol: constify the mem_cgroup accessors
+>       mm: page_counter: constify page_counter_read() and page_counter_margin()
+>       mm: memcontrol: constify the reclaim protection helpers
+>       mm: memcontrol: constify the memcg and lruvec stat readers
+>       mm: memcontrol: constify the swap accounting helpers
+>       mm: memcontrol: constify mem_cgroup_swappiness() and mem_cgroup_get_max()
+>       mm: memcontrol: constify the zswap and socket pressure helpers
+>
+>  include/linux/memcontrol.h   | 204 ++++++++++++++++++++++---------------------
+>  include/linux/mmzone.h       |   2 +-
+>  include/linux/page_counter.h |   4 +-
+>  include/linux/swap.h         |  12 +--
+>  mm/memcontrol.c              |  49 ++++++-----
+>  mm/page_counter.c            |   2 +-
+>  mm/page_io.c                 |  14 +--
+>  mm/swap.h                    |   2 +-
+>  8 files changed, 148 insertions(+), 141 deletions(-)
+> ---
+> base-commit: 9d3243fc689fef444f87e0a703b4c99653137e1b
+> change-id: 20260807-folio_memcg-const-4a67e40d485b
+>
+> Best regards,
+> --
+> Tal Zussman <tz2294@columbia.edu>
+>
+
+--
+Cheers, Lorenzo
