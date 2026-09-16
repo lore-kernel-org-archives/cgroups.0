@@ -1,300 +1,239 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr2-f34.google.com (mail-wr2-f34.google.com [74.125.225.98])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C037D374E40;
-	Wed, 16 Sep 2026 05:48:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789537708; cv=none; b=RW4dvMrjvsSXNm1b338Ajd8PiXPKhsE+5z7Aeeri1xUoyWvYkAtOJMGqsZuDSOodI6mqSBtiKnJRYznY9P6WdqNWTDEJAs/f1/1Ffo8bG/CNY6xzwvMBhC7DkrnjzrMdqc28BCrGlvrd8mpIJz1QWAZndn9sGGoNn4wgt4cqZD0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789537708; c=relaxed/simple;
-	bh=njcNesu0T2wlf680w7LVVN2Ev1fYXdOMmrZOnhfUu7g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KHGbbmZBB54/QxFxTuuasgwZ/um4X+vvKaACq3gXcp3imbiF3r7je2NhjHoXrY+7R/vLZxXuSVROZxLRRCW7Tzl3yoD71xzd4cNk3N3ETBaukxhbdbiEzxgUKY48Po5v8wdQP40Xs+7GJt8EvpwOhd/95OeHSyi2CnlI0JqGtYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=lx12HJfL; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BC843A3830
+	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 06:59:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.98
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789541996; cv=pass; b=g34gzUirMZ0ioHdUovs3S9ge8h97tuqPZy4LhDZiyfTPRg64iItmwNj6EpfIsdJnY68l+g23gZbyT0MIvVeFjyFhGxnxJ7/Wsr2A/lraT/8HYk9Nz/ridiAGdkyZmbQ2oIQDNdZ34oX9M4v+TagePaTEUs3LA+r/S6VQ6NLN79M=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789541996; c=relaxed/simple;
+	bh=NsFK5lBLdksgQCKOANm3YAnPr1p7FDQOhLcuqTO5IpM=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=k8ln16ob7utY9PYgdAs16rGz+3/DMGIQ4vxJ+9C9NyTonF+m5pjkPjBzm4Shp3BaYFdCIE5kCydTgBC+gqu+STP4a0mvERksqqOrVc9O+9orutjU7NVvMnHoRipzQuHvPiPlZl6A3MHMUuDWWYa9gmXrbRwFjnw7X+m+Utk0qRE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=everpuredata.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=everpuredata.com header.i=@everpuredata.com header.b=aEd8hPGR; arc=pass smtp.client-ip=74.125.225.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=everpuredata.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="lx12HJfL"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68FLVo181805238;
-	Wed, 16 Sep 2026 05:46:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=LIabAc
-	JQ4SujGOG0uLelxBeziOrGyHi5lo2W+7zfeTE=; b=lx12HJfLZS91YM5KIhWYZ9
-	hDsxiLfBZdoX31K0/DytlhbwZEBHDky5J3S6a2bv1wyEH1AYLkSaG4lQuvSTEdUu
-	V7cXD8RKC8CpmxwYqHX6puNGwT5EPDlf1E+Oj7GhouPgT5MmqIbwyQwIUdPo53Wx
-	QKtzzjoYmJEEzPx04t87vjSqNrKvYIuDl8UHvrf0OK3f+KrZ+gm6EU2w/qAKWrXZ
-	rL33NwZbqi7VhQTP6DJgP8v6KHrWeZ0aJ31AI7AEhoBv0SuiQ+ffDehVa6hg2xZn
-	HhT2Zi6A3zsa1AtXdXD2Oxx+07DqgTuLSy7utHIhzAqbUetGjLdot7Lt4PkhQ9yw
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gmv5htw82-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 16 Sep 2026 05:46:45 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68G2qVLt464070;
-	Wed, 16 Sep 2026 05:46:44 GMT
-Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gq03vcvf5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 16 Sep 2026 05:46:44 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68G5khN328312216
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 16 Sep 2026 05:46:43 GMT
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 96B2558059;
-	Wed, 16 Sep 2026 05:46:43 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 72C9258053;
-	Wed, 16 Sep 2026 05:46:29 +0000 (GMT)
-Received: from [9.61.52.228] (unknown [9.61.52.228])
-	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 16 Sep 2026 05:46:29 +0000 (GMT)
-Message-ID: <d0dbf12d-b358-4164-b865-0e44c7163b7d@linux.ibm.com>
-Date: Wed, 16 Sep 2026 11:16:27 +0530
+	dkim=pass (2048-bit key) header.d=everpuredata.com header.i=@everpuredata.com header.b="aEd8hPGR"
+Received: by mail-wr2-f34.google.com with SMTP id ffacd0b85a97d-482f633cd78so185916f8f.1
+        for <cgroups@vger.kernel.org>; Tue, 15 Sep 2026 23:59:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789541993; cv=none;
+        d=google.com; s=arc-20260327;
+        b=MIdcKdAAD7ywNCNTWh3H5Go/Z3e8NKJLjWbsRrfPeHQx5UylfVXFmHiHQ/ziq2ZVFD
+         R6x5fi2EHJtDxR3CplkV1ELu09D+LocMl5jYXzqxz/fmNIYuqAiWRIcCVYw/LW7xAInT
+         LddrSLNpR8Id4tvzOIel79KaynXqVtLj0Wv4z0jJXjVFe1a47OJd8VUIFs6cACNX8VIp
+         vg37lJe9ysCloDSo7PLPGcMCZR54tPNiywzswq2JMlYLPYhGblrV+Xjjja9e6z8/hltJ
+         o6y45x916rQVyun1NKzkOz6t/dhjY8x+xOoTs/VS8b1yQ31iAEw/2m0DS2UHHAGfEckd
+         gnvg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :mime-version:dkim-signature;
+        bh=OxRv6yCuRqsbWvAT6YBIWbqNgEcNj7stzbBHK5z0Hkk=;
+        fh=bGKTSn4It4PPs31bfZ6OTq3WgTKSkO5YiE6V7iJEh4k=;
+        b=cGQbeMGPffa6qo9loQxNCXHKFiioecG1fUDHI8v5YxGkspx4WvsWBeHD6VVW1dH0Rl
+         W80tpoW/fj0MqoNBNaJnhbU9x9s3bSysEuicza+BNxdgBIAfqceTFw6h9MwMhwzNUdvY
+         +E72CqpYUUORuap6nVjJBsrTAxpe4S3l1HEDxWT9kp9Vgi/8cw/gea8cM149GUAwrWFc
+         1+9uXDtMwn+m4r9xDGUoVdYqWbWOAbXOyE5k9yHSKF6WYWi0yVlvm2BvALuRt5T4+3Ol
+         53aQ6kDfxuKSlACg1SQ9urxEv9zKAhFYoJ8JLArCPoepfCosOs1wzJFlmuVYjiTin4v1
+         0W7w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=everpuredata.com; s=google; t=1789541993; x=1790146793; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=OxRv6yCuRqsbWvAT6YBIWbqNgEcNj7stzbBHK5z0Hkk=;
+        b=aEd8hPGRsxfwb/UoqnOHSIsx7PExyKgdefiKh/GOG2kI7m6h6Aaqm+iW9BADjArYU/
+         XwcLGmzZobL/+CpuRHD52j6ITbfILxdZEv+Vpo/k9Vs4uMy6MvP2DRNaRAsDpb3gAD9a
+         JSyRvuVWeNN5/C2hxRgPgeB3xtAZsQvAUx51lHmss2rnpZmVHld4gel04EWTVaM6GtvQ
+         WF/c/Y6XraKaYk9OO/FPwBEMH7/lwMhlm9WmxvwwGWJRmFieS1GQDsIJgtD9IoSZHjrN
+         nAWks2CdETF03gXG55b9ErI564LvbQfuSuq3BAPzar12t0cJxTs0snPZPdwXKOr3E89U
+         hAhg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789541993; x=1790146793;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=OxRv6yCuRqsbWvAT6YBIWbqNgEcNj7stzbBHK5z0Hkk=;
+        b=nhWhYxMDglufwXrXROICgMi2xyzFOk4ShLtr3lTR1t7BChD5Bs9ajyg5zvFBJ5uICs
+         O5sVUBgukaTlla6Y3lVndHt6Y9FT3btFgS76a12TWTF094uYkEDPiZPrdXjc2N2QFacz
+         PdONy3IUe2/TvZtRGghg9jI+uYq70EVICKszEo+Yzlk7U3m7cQqkae7pkSFCKBWcQdKa
+         YXfOXG/zMJe/1Kk755IkuBL7NfSn03RQQgrF4WCe9KVsqm573GVTnQqiJSqF1OyXshol
+         X7dfwwLfZja1NcYJuoje3hD0quiBWH+8oWXrK+aQGGKnKmmJXBPwo/5NfD3GkoQd38Fq
+         JfCQ==
+X-Gm-Message-State: AFuF++n1eov6QsWYvjXJ/nJRKGPuZvF3/1xm4dBMsPSOgsdfBNhR/Gmm
+	aajpMLj1MYyJ7uANRrlai66fI0wzDN6CCOlDC5mXQiUDNmecEmH5m6FVwauTArNdjezxl8y7sIu
+	1Sj5hLyRtHNWr89GVENb0moF1PiYD5pHqhQG8fEGB5HZxT9s/AZGJV3mYfQ==
+X-Gm-Gg: AYBFou0V9WLe/eqx1l7NpyxsBj2464X7zqafMFjx/BebWybdl+HZvYeC4lDLRaataA5
+	Y+FS6llKF0P8k4zz5JGl6IYJZAIAaNqDsO6G7kNM+mMS513P9NhN8TCeClJz75IQCzlvZHQwCO9
+	RNQzvhwY21++PjQ2XFTApefLhy0l9Pq99flNRGps0q0Ec1OkaEsJswq+E0Q/RNcmvTntNkgKSwo
+	CaLEKgYUjVx+3E7S8pBrwzADv+T6bxrlAEsmCuAJv2qenuytLERZBcitqvYsK8B2JnERLnmujF9
+	DD4Mi23wLzEMPuLKoSk5DhnETckjNLCEhPku9An/U6fguuyRZZ5b6hEP
+X-Received: by 2002:a05:6000:41e6:b0:487:981:4e0d with SMTP id
+ ffacd0b85a97d-4870cef12ffmr1598765f8f.19.1789541993327; Tue, 15 Sep 2026
+ 23:59:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] blk-cgroup: move async bio punt state to blkcg
-To: yukuai@fygo.io, Yu Kuai <yukuai@kernel.org>, Jens Axboe
- <axboe@kernel.dk>,
-        Josef Bacik <josef@toxicpanda.com>, Tejun Heo <tj@kernel.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Randy Dunlap <rdunlap@infradead.org>, Coly Li <colyli@fygo.io>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Alasdair Kergon
- <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
-        Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
-        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
-        Youngjun Park <youngjun.park@lge.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Bill Wendling
- <morbo@google.com>,
-        Justin Stitt <justinstitt@google.com>
-Cc: Christoph Hellwig <hch@lst.de>, Tao Cui <cuitao@kylinos.cn>,
-        linux-block@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
-        linux-raid@vger.kernel.org, gfs2@lists.linux.dev,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        llvm@lists.linux.dev
-References: <cover.1789237876.git.yukuai@fygo.io>
- <326e4904402440323532168095f2eb0c6f697836.1789237877.git.yukuai@fygo.io>
- <f27ee89f-5a52-4cfc-a14a-e5019ae61d89@linux.ibm.com>
- <52df0198-9949-4801-ac0f-c86935d1aceb@fygo.io>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <52df0198-9949-4801-ac0f-c86935d1aceb@fygo.io>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDA2OSBTYWx0ZWRfX1gy6KzyZTO/l
- rL51RO0W701nRkcEHte/j9aRVxrfkRfJ+Jtis/WO9hc0tXlk424evaovVJRGnJvNjQ8gKGI8ddp
- A8scu8xfT/rVabl6n18riuCnKxgx1mjW8Pz2ohY0V3KxlY0zRQriM7EqDUvASE6rleZb9BxerXk
- MBWdtRatkDryBNFQmS2OfTrlu+shK/KU+pEOtyA0pT8bLU2KDiwDQEW/j+Dv4spAcF8nPVmPGHl
- AQzKnyUhbKqIy8tKmVx8QomvhHB68zeGZFudR9r5BoOtp05hHacxNcVgJWQC97OqrLe+XY28ZuI
- sG6otgW8E9sxOuxfYt4yCthjMiTmvN60SWfrZWqZWIuDquyvMpdUtxNKl3FoLWF78V6PSY/IXWB
- l5ZNRQDl9/BaeIKV0WM9zLbULJDQpiqbNdWBnzo8msr++EdqT32Rs46nmVeEUO7HQL2/tDdPsBu
- Ss8GhgqqHuM1Ilj9/Qg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDA2OSBTYWx0ZWRfXw5nEcY0jQeuZ
- tax0LoWnDAcmk4cbc2FCdT8zX9xVz7SxmWGxfp7CNjY7iP8psVX/aHLR9njmVbGNHuMSUuDjhxs
- jV4mV1YYN5V3CY+DGkFm4LkU9uZLAbk=
-X-Authority-Analysis: v=2.4 cv=Zsx4uN7G c=1 sm=1 tr=0 ts=6aaa2d46 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=EVVczme9KZ5WO4Hfbr4A:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: 37_berB40VslJIQLTEVE8C2V_Rtd3Cmf
-X-Proofpoint-GUID: dUuyNwdiGQH56_Z-inY37SOtflE__LN5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-15_05,2026-09-15_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 impostorscore=0 clxscore=1015 priorityscore=1501
- lowpriorityscore=0 bulkscore=0 adultscore=0 phishscore=0 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
- definitions=main-2609160069
+From: "Sirisha Mylavarapu (she/her)" <smylavarapu@everpuredata.com>
+Date: Wed, 16 Sep 2026 12:29:41 +0530
+X-Gm-Features: AcwNN1UbbJK3z4QtoObtS3Rrx-3WNhrwiaUkg_WlUPpZaDMMuDQXcRWCi8Y5iUI
+Message-ID: <CABc6Dy5mvvCSECx2z+-L1q6FpQGO_hQfoLaS6vtpWVud6+8zbA@mail.gmail.com>
+Subject: cgroup v2 io.max throttling works for NFSd reads but not writes
+To: linux-nfs@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 9/15/26 9:24 PM, yu kuai wrote:
-> Hi,
-> 
-> 在 2026/9/13 21:29, Nilay Shroff 写道:
->> On 9/13/26 12:24 PM, Yu Kuai wrote:
->>> From: Yu Kuai <yukuai@fygo.io>
->>>
->>> blkcg_punt_bio_submit() currently queues punted bios on
->>> blkg->async_bios,
->>> so it has to call bio_blkg() to find or create a queue-local blkg.  Bios
->>> now carry and pin the blkcg css, so punted bio lifetime no longer
->>> needs to
->>> be anchored by a blkg.
->>>
->>> Keeping the punt state in blkg can instantiate a blkg even when no blkcg
->>> policy is enabled, just to bounce submission from a shared kthread.
->>> Move
->>> async_bio_lock, async_bios and async_bio_work to struct blkcg, and queue
->>> punted bios on bio_blkcg() for non-root cgroups.  Root or
->>> unassociated bios
->>> are submitted directly.
->>>
->>> This preserves the priority-inversion avoidance while preventing
->>> blkcg_punt_bio_submit() from creating blkgs that are not needed by any
->>> policy.
->>>
->>> Signed-off-by: Yu Kuai <yukuai@fygo.io>
->>> ---
->>>    block/blk-cgroup.c | 52 ++++++++++++++++++++++++++--------------------
->>>    block/blk-cgroup.h | 14 ++++++-------
->>>    2 files changed, 35 insertions(+), 31 deletions(-)
->>>
->>> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
->>> index 59ccfefe16a8..aa3cee107ebe 100644
->>> --- a/block/blk-cgroup.c
->>> +++ b/block/blk-cgroup.c
->>> @@ -180,14 +180,10 @@ static void blkg_free(struct blkcg_gq *blkg)
->>>      static void __blkg_release(struct rcu_head *rcu)
->>>    {
->>>        struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq,
->>> rcu_head);
->>>    -#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
->>> -    WARN_ON(!bio_list_empty(&blkg->async_bios));
->>> -#endif
->>> -
->>>        blkg_free(blkg);
->>>    }
->>>      /*
->>>     * A group is RCU protected, but having an rcu lock does not mean
->>> that one
->>> @@ -226,23 +222,23 @@ static void blkg_release(struct percpu_ref *ref)
->>>    }
->>>      #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
->>>    static struct workqueue_struct *blkcg_punt_bio_wq;
->>>    -static void blkg_async_bio_workfn(struct work_struct *work)
->>> +static void blkcg_async_bio_workfn(struct work_struct *work)
->>>    {
->>> -    struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
->>> -                         async_bio_work);
->>> +    struct blkcg *blkcg = container_of(work, struct blkcg,
->>> async_bio_work);
->>>        struct bio_list bios = BIO_EMPTY_LIST;
->>>        struct bio *bio;
->>>        struct blk_plug plug;
->>>        bool need_plug = false;
->>>    -    /* as long as there are pending bios, @blkg can't go away */
->>> -    spin_lock(&blkg->async_bio_lock);
->>> -    bio_list_merge_init(&bios, &blkg->async_bios);
->>> -    spin_unlock(&blkg->async_bio_lock);
->>> +    /* as long as there are pending bios, @blkcg can't go away */
->>> +    {
->>> +        guard(spinlock)(&blkcg->async_bio_lock);
->>> +        bio_list_merge_init(&bios, &blkcg->async_bios);
->>> +    }
->>>
->> Instead of using guard(spinlock)(...) here, I think we could use the
->> simpler spin_lock()/spin_unlock() helpers. IMO, they are easier
->> to read and reason about for these short critical sections.
-> Ok.
->>
->>>        /* start plug only when bio_list contains at least 2 bios */
->>>        if (bios.head && bios.head->bi_next) {
->>>            need_plug = true;
->>>            blk_start_plug(&plug);
->>> @@ -259,19 +255,20 @@ static void blkg_async_bio_workfn(struct
->>> work_struct *work)
->>>     * cgroup.  Use this helper instead of submit_bio to punt the
->>> actual issuing to
->>>     * a dedicated per-blkcg work item to avoid such priority inversions.
->>>     */
->>>    void blkcg_punt_bio_submit(struct bio *bio)
->>>    {
->>> -    struct blkcg_gq *blkg = bio_blkg(bio);
->>> +    struct blkcg *blkcg = bio_blkcg(bio);
->>>    -    if (blkg && blkg->parent) {
->>> -        spin_lock(&blkg->async_bio_lock);
->>> -        bio_list_add(&blkg->async_bios, bio);
->>> -        spin_unlock(&blkg->async_bio_lock);
->>> -        queue_work(blkcg_punt_bio_wq, &blkg->async_bio_work);
->>> +    if (blkcg && cgroup_parent(blkcg->css.cgroup)) {
->>> +        {
->>> +            guard(spinlock)(&blkcg->async_bio_lock);
->>> +            bio_list_add(&blkcg->async_bios, bio);
->>> +        }
->>> +        queue_work(blkcg_punt_bio_wq, &blkcg->async_bio_work);
->>
->> Again same here, replace guard() with spin_lock() and spin_unlock()
->> helpers.
->>
->>>        } else {
->>> -        /* Never bounce if there is no non-root blkg to queue on. */
->>> +        /* Never bounce if there is no non-root blkcg to queue on. */
->>>            submit_bio(bio);
->>>        }
->>>    }
->>>    EXPORT_SYMBOL_GPL(blkcg_punt_bio_submit);
->>>    @@ -350,15 +347,10 @@ static struct blkcg_gq *blkg_alloc(struct
->>> blkcg *blkcg, struct gendisk *disk,
->>>        blkg->q = disk->queue;
->>>        INIT_LIST_HEAD(&blkg->q_node);
->>>        blkg->blkcg = blkcg;
->>>        blkg->blkcg_id = blkcg->css.id;
->>>        blkg->iostat.blkg = blkg;
->>> -#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
->>> -    spin_lock_init(&blkg->async_bio_lock);
->>> -    bio_list_init(&blkg->async_bios);
->>> -    INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
->>> -#endif
->>>          u64_stats_init(&blkg->iostat.sync);
->>>        for_each_possible_cpu(cpu) {
->>>            u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
->>>            per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
->>> @@ -1399,10 +1391,16 @@ static void blkcg_css_free(struct
->>> cgroup_subsys_state *css)
->>>            if (blkcg->cpd[i])
->>>                blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
->>>          mutex_unlock(&blkcg_pol_mutex);
->>>    +#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
->>> +    {
->>> +        guard(spinlock)(&blkcg->async_bio_lock);
->>> +        WARN_ON(!bio_list_empty(&blkcg->async_bios));
->>> +    }
->>> +#endif
->>
->> This is a slightly different case. At this point blkcg_css_free() is
->> freeing the blkcg object after its final reference has gone away, so
->> there should be no concurrent context accessing blkcg->async_bios.
->> Therefore, I don't think we need to acquire async_bio_lock here just
->> to perform the WARN_ON() check.
-> 
-> Perhaps is it better just to remove the check? blkcg will be pinned
-> by any bio inside the list, so I believe this is safe.
-> 
-Ideally yes we would not enter into blkcg_css_free() until all
-references to blkcg are dropped. So the WARN_ON() appears to be
-used just as a paranoia check. I'm okay either to drop it or
-if you want to keep it then I suggest replacing bio_list_empty()
-with bio_list_empty_careful(), so that the check explicitly allows
-lockless inspection during teardown.
+Hi,
 
-Thanks,
---Nilay
+I have been experimenting with cgroup v2 io.max throttling for NFSd on
+kernel 7.0.0-14-generic (Ubuntu 26.04) and I wanted to share results
+and ask for recommendations.
 
+Goal: Throttle NFS server I/O bandwidth using cgroup v2 io.max by
+placing nfsd kernel threads in a dedicated cgroup, to limit block
+device I/O performed by the NFS server.
+
+Setup:
+
+-NFSd direct I/O mode enabled via debugfs (io_cache_read=3D2, io_cache_writ=
+e=3D2).
+-All 16 [nfsd] kernel threads moved to a dedicated cgroup
+(system.slice/nfsd.slice)
+-io.max throttle set to 50 MB/s on underlying block device (sdb,64GB
+disk, major:minor 8:16).
+-NFS export mounted locally via loopback for testing.
+-fio used for benchmarks
+
+
+Results:
+Read throttling works as expected, consistently capped at 50 MB/s.
+Write throttling doesn't work regardless of io_cache_write mode(tried
+DIRECT=3D2 and DONTCACHE=3D1).
+
+Root cause (as I understand it): The NFS client buffers writes in the
+local page cache and returns immediately to the application. The
+actual disk write happens asynchronously, so the application never
+waits for data to reach disk =E2=80=94 meaning the throttle does not provid=
+e
+backpressure to the writer even when the nfsd cgroup's io.max is
+active.
+
+Questions:
+1. Is NFSd write throttling via cgroup v2 io.max a known limitation?
+Is there active upstream work to address this?
+2. Are there any known workarounds or recommended approaches to
+achieve NFS write I/O throttling at the server side?
+
+Any pointers to upstream patches or LKML threads would be appreciated.
+
+Experiment:
+1. Load nfsd module
+
+root@smylavarapu-16-0:~# modprobe nfsd
+root@smylavarapu-16-0:~# ls /sys/kernel/debug/nfsd
+disable-splice-read  io_cache_read  io_cache_write
+
+2. Enable Direct I/O mode
+
+root@smylavarapu-16-0:~# echo 2 > /sys/kernel/debug/nfsd/io_cache_read
+root@smylavarapu-16-0:~# echo 2 > /sys/kernel/debug/nfsd/io_cache_write
+root@smylavarapu-16-0:~# cat /sys/kernel/debug/nfsd/io_cache_read
+2
+
+3. Start NFS server and verify nfsd kernel threads
+
+root@smylavarapu-16-0:~# systemctl start nfs-server
+root@smylavarapu-16-0:~# ps aux | grep '\[nfsd\]'
+root  662609  0.0  0.0  0  0 ?  I  10:48  0:00 [nfsd]
+root  662610  0.0  0.0  0  0 ?  I  10:48  0:00 [nfsd]
+... (16 threads total, PIDs 662609=E2=80=93662624)
+root@smylavarapu-16-0:~# cat /proc/$(pgrep -x nfsd | head -1)/cgroup
+0::/
+
+4. Format and mount real block device (sdb)
+
+root@smylavarapu-16-0:~# mkfs.ext4 /dev/sdb
+mke2fs 1.47.2 (1-Jan-2025)
+Discarding device blocks: done
+Creating filesystem with 16777216 4k blocks and 4194304 inodes
+...done
+root@smylavarapu-16-0:~# mount /dev/sdb /nfs-test-export
+root@smylavarapu-16-0:~# ls -la /dev/sdb
+brw-rw---- 1 root disk 8, 16 Sep 15 14:02 /dev/sdb
+major:minor =3D 8:16
+
+5. Export over NFS and mount locally
+
+root@smylavarapu-16-0:~# echo "/nfs-test-export
+*(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+root@smylavarapu-16-0:~# exportfs -ra
+root@smylavarapu-16-0:~# exportfs -v
+/nfs-test-export
+<world>(sync,wdelay,hide,no_subtree_check,sec=3Dsys,rw,secure,no_root_squas=
+h,no_all_squash)
+root@smylavarapu-16-0:~# mkdir -p /mnt/nfs-client
+root@smylavarapu-16-0:~# mount -t nfs 127.0.0.1:/nfs-test-export /mnt/nfs-c=
+lient
+root@smylavarapu-16-0:~# df -h /mnt/nfs-client
+Filesystem                  Size  Used Avail Use% Mounted on
+127.0.0.1:/nfs-test-export   63G  2.0M   60G   1% /mnt/nfs-client
+
+6. Move nfsd threads to dedicated cgroup
+
+root@smylavarapu-16-0:~# mkdir -p /sys/fs/cgroup/system.slice/nfsd.slice
+root@smylavarapu-16-0:~# cat /sys/fs/cgroup/system.slice/cgroup.subtree_con=
+trol
+cpuset cpu io memory hugetlb pids rdma misc dmem
+root@smylavarapu-16-0:~# echo "+io" >
+/sys/fs/cgroup/system.slice/cgroup.subtree_control
+root@smylavarapu-16-0:~# for pid in $(pgrep -x nfsd); do
+    echo $pid > /sys/fs/cgroup/system.slice/nfsd.slice/cgroup.procs
+done
+root@smylavarapu-16-0:~# cat /proc/$(pgrep -x nfsd | head -1)/cgroup
+0::/system.slice/nfsd.slice
+
+7. Apply 50 MB/s throttle
+
+root@smylavarapu-16-0:~# echo "8:16 wbps=3D52428800 rbps=3D52428800" >
+/sys/fs/cgroup/system.slice/nfsd.slice/io.max
+root@smylavarapu-16-0:~# cat /sys/fs/cgroup/system.slice/nfsd.slice/io.max
+8:16 rbps=3D52428800 wbps=3D52428800 riops=3Dmax wiops=3Dmax
+
+8. Write test =E2=80=94 io_cache_write=3D2
+
+root@smylavarapu-16-0:~# fio --name=3Dnfs-write --rw=3Dwrite --bs=3D1M --si=
+ze=3D4G \
+    --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D30
+--time_based
+WRITE: bw=3D1761MiB/s (1847MB/s), io=3D52.0GiB, run=3D30236msec
+=E2=86=92 NOT throttled (1761 MB/s)
+
+9. Write test after drop_caches =E2=80=94 io_cache_write=3D2
+
+root@smylavarapu-16-0:~# echo 3 > /proc/sys/vm/drop_caches
+root@smylavarapu-16-0:~# fio --name=3Dnfs-write --rw=3Dwrite --bs=3D1M --si=
+ze=3D4G \
+    --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D30
+--time_based
+WRITE: bw=3D2315MiB/s (2427MB/s), io=3D68.1GiB, run=3D30127msec
+=E2=86=92 NOT throttled (2315 MB/s)
+
+10. Read test =E2=80=94 io_cache_read=3D2
+
+root@smylavarapu-16-0:~# echo 3 > /proc/sys/vm/drop_caches
+root@smylavarapu-16-0:~# fio --name=3Dnfs-read --rw=3Dread --bs=3D1M --size=
+=3D4G \
+    --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D30
+--time_based
+
+READ: bw=3D50.0MiB/s (52.4MB/s), IOPS=3D49, io=3D1501MiB, run=3D30032msec
+=E2=86=92 THROTTLED (capped at 50 MB/s)
+
+Thank you,
+Sirisha.
