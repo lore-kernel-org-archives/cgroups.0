@@ -1,55 +1,86 @@
-Received: from mta0.migadu.com (out-43.mta0.migadu.com [91.218.175.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpbgeu2.qq.com (smtpbgeu2.qq.com [18.194.254.142])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A1F445AFB
-	for <cgroups@vger.kernel.org>; Wed, 16 Sep 2026 07:23:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEA9B446067;
+	Wed, 16 Sep 2026 07:43:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.194.254.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789543444; cv=none; b=u7obaovk/jZqKDN/dnxo9vGREND9znX0QtKoFgMFV5gqS8BZgLepLKCESF7Q+6bCF1LydndXT5c9jbbWvJ0Z9ZHW/yQFdgsQCHZIXjgSfyxsWSLrCh3WI/6rMColVBjateLwpvCsXlKjsa4GceccVpYaYIjN9MAokfOeUESNQHo=
+	t=1789544603; cv=none; b=DJxvWHj7UOOr1dP4c9uERQyhhGFS7gLPyNjbsccvvBEX8RDQ+i1Db3D4UwBpo7gMI4s2dIwNyg1dA3D1Qg2kkSx78wGeT+N3q9HzlX/9x3vfavb3G59FcuPdrGmzvOuFik9gzS7vFQXh6iudp7mt66jZR2mBzPvPxlKFKavvyTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789543444; c=relaxed/simple;
-	bh=uoC/DTNjLo+8BpUG1DxkXdxXYHJdmsRQjIs9AQ/rPTs=;
+	s=arc-20240116; t=1789544603; c=relaxed/simple;
+	bh=kcw6iirLp+8iv456bhv39U23DSOM9ROt6NVJrN79rr4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VfYq9vr1N+FCsjADinPsV7brnADdMu3fDdCqwMjTKi2whP9iLt+XVEd2ivpR2ArgNU0mI+8v3fsmwBZKFesVr8bjBIleAb3WD6vTOKPL4FAxyAhdY4cxxS8ik6J06P5ahqAt5EQjy5F+i1jRUqhU3hhEkECRywu1H/X0faydV3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Tx5hhvQ5; arc=none smtp.client-ip=91.218.175.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 MIME-Version; b=mDAuWguvR8jCV/5QYBr7oIokRBpdbcMLDINplV9t5d6HUrUAcN31QwKH4DBODIMnWv0QHnk2NcsOs7pdUfUfJPtarsUMfyvr+7bgMcTtwoDxJ1VJbGb54en0JdJvNjSaNqohEUH+KiF+lzupEqo71/9j7Dr0GNY5gqmJydnwSxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=UF4+HUeQ; arc=none smtp.client-ip=18.194.254.142
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Tx5hhvQ5"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=uoC/DTNjLo+8BpUG1DxkXdxXYHJdmsRQjIs9AQ/rPTs=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789543410; v=1; x=1790148210;
- b=Tx5hhvQ5nSHaU4Ik7ApMy12CgCy+datVEpMzDGk4Q9uAuMCL8iJ7587hlxDAT96uuVS1JZYj
- 1rP/Xn1XMeTNDovjdzxaeTU+lHjToHWJmzc4whO3N+BHNNKWLW1N1jzWYbosb7G0n2/xUTCRcoX
- 7Pf6Bb2/HRzunImmGOAN6+Mc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 572a0c6a9d624fe7;
-	Wed, 16 Sep 2026 07:23:30 +0000
-X-Mizu-Trace-ID: 572a0c6a9d624fe7
-X-Migadu-Flow: FLOW_OUT
-From: Tao Cui <cui.tao@linux.dev>
-To: tj@kernel.org,
-	josef@toxicopanda.com,
-	axboe@kernel.dk,
-	ameryhung@gmail.com
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="UF4+HUeQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1789544578;
+	bh=GC2uHY6TzEQ871y2a6vw3j4HAppRLJhpctXLjf5YSoc=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=UF4+HUeQ6S7X9M0YyVPsN34Ze5JkO1RQ1kXa+M0TG6lXdIAb+WgtUpfwgVUib+KNF
+	 wTyLYIvKmFfoefpjsKPGNXZy6sdkjM7NpLLYiXNFfWpo34tpO8V7Fn1yIALmMds54l
+	 X1cqfbKKufSwhmEAYPagVY5FofJBnE7PobnahYvE=
+X-QQ-mid: esmtpsz20t1789544575tdce502f5
+X-QQ-Originating-IP: MFlZU4grfHATUCmYhWGj7hiotv7USuKZFxkNblM3mXs=
+Received: from zzz-PC ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 16 Sep 2026 15:42:42 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 9278055536101676971
+From: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
+To: Kairui Song <kasong@tencent.com>,
+	linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Muchun Song <muchun.song@linux.dev>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Ying Huang <ying.huang@linux.alibaba.com>,
+	Chris Li <chrisl@kernel.org>,
+	Baoquan He <baoquan.he@linux.dev>,
+	Nico Pache <nico.pache@linux.dev>,
+	Usama Arif <usama.arif@linux.dev>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>,
+	Wei Xu <weixugc@google.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Youngjun Park <youngjun.park@lge.com>,
+	Zi Yan <ziy@nvidia.com>,
+	Gregory Price <gourry@gourry.net>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Ryan Roberts <ryan.roberts@arm.com>,
+	Dev Jain <dev.jain@arm.com>,
+	Lance Yang <lance.yang@linux.dev>,
+	Hugh Dickins <hughd@google.com>,
+	SeongJae Park <sj@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Yu Zhao <yuzhao@google.com>,
+	Vernon Yang <vernon2gm@gmail.com>,
+	Zicheng Wang <wangzicheng@honor.com>,
+	Chen Ridong <chenridong@xiaomi.com>,
+	Tal Zussman <tz2294@columbia.edu>,
+	Kairui Song <ryncsn@gmail.com>,
 	linux-kernel@vger.kernel.org,
-	bpf@vger.kernel.org,
-	andrii@kernel.org,
-	ast@kernel.org,
-	daniel@iogearbox.net,
-	linux-kselftest@vger.kernel.org,
-	cui.tao@linux.dev,
-	cuitao@kylinos.cn
-Subject: [RFC PATCH v4 2/5] selftests/bpf: add iocost cost model test
-Date: Wed, 16 Sep 2026 15:22:59 +0800
-Message-ID: <20260916072302.1068871-3-cui.tao@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260916072302.1068871-1-cui.tao@linux.dev>
-References: <20260916072302.1068871-1-cui.tao@linux.dev>
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH RFC v2 00/15] mm/mglru: frequency guided promotion (MGLRU-FG) and flag cleanup
+Date: Wed, 16 Sep 2026 15:42:41 +0800
+Message-ID: <EF8E0336FFC4841B+20260916074241.3373002-1-zhaozhengzhuo@uniontech.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
+References: <20260911-mglru-fg-v2-0-f26e5cb26da7@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -57,366 +88,194 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-2
+X-QQ-XMAILINFO: NAeO0+xU6W769OBubAh1qVtaxG3Zsynl5V5opSTVuZngx038riODAy4c
+	jNAK2gwCQUCfzrNgNUTlh8m2x9LaYXc1ucKyH1Qf0eshl5VJ5BGuurx2xudHuJVEt7OlZwf
+	Irnov5FoDZEn224OUQL1vkouLQAM9dVpZgKBXAHORBBsuCZJ/JXfOB6cnALyCMdoY8Xl7rQ
+	SIDVN/yws+wBtbWaOz1QWr+4k9KPtnU2AAmwyTsyb8k5ItGm8L2Qb9tIc0p/l5HrJ6Pdrwh
+	JldiHVPK+kOGUyBSXUoXdIxotIKs74fNgMLqcj7atvjDd3cqTFIK93XPG0+jll6f0lz1FCv
+	82OwCZcf8OHXkT+czht60Dhbb2z/40NC8kn95g5JZIeXhbjrNDsxGw68isXh8B3Z12lOnen
+	JuTkWQAi9MXObUIR/g7gdmJAcZ1+V7ApKWHbFA9GP2sK4EYSlMPqOEEWPfM4kCfQNBOVdyB
+	oxRBeJ6EJGM/+RsY1XOw1W6MIsVQNIEqi/c8+GHa/xea0HeSCH27fiSyp92nmSkd6oqp412
+	WDzgCEkpP5Iaj/NGn5k3LI1mi/0tzJsR3N/ZOCaB2I9UsP3SJ7Dpb5luYLNXZe1KRZRDzaR
+	fJ15MwT73c8vgE35ZCNfl/9PJDopezNcBg+vcKSuiXuAoWWtnRJAVlmnVyq6slX+mobiFOL
+	6GC7pZcoXDysIu8y94MGBdfjZ35Z5IZCuUg4ZdlqM1pMQYV1IARX8CDr8ZmLInOY8Bct99g
+	kUBM3ash4VJLKprtNchSy34G8TrIfu9oajEOkUeOLHowZltYou2xcT6kkViWXZwXal0YQ19
+	Qtb18ohIRXaNLiZYaTZkza0e1Djz+gE7EsAVdHWyNq5Cxoi4PjAnQzgpmai4oyaTOcpvlAG
+	CguEOwtveVqy74D8sgJ0PasRhGoc33R99NisVNiIb17xz56wA3wXPAVESq9LyYgHhPllEIJ
+	5OEVWyPxh/pQUmLnGZoIUgzCQAc33TL++N/IApraEXH2YHB70qLoW9AexaNSdEXp+rHWpys
+	jPnKq1S9R+yKvwJXvJYv8lCbAH6LKaRN1dAXjs8IIPIYQ/qvwTbZn9fbM7w5Vxiky0YRGyt
+	8aCTaEAkBmE
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-RECHKSPAM: 0
 
-From: Tao Cui <cuitao@kylinos.cn>
+Hi Kairui,
 
-Add an example cost model implementing the full builtin linear HDD
-formula at double cost, including flush pricing, and a runner which
-registers it as a struct_ops and binds it to a device through
-io.cost.model with "model=iocost_2x", verifying the readback and
-restoring "model=linear" afterwards, checking the write error and
-errno of every step including the restoration.  Binding an unknown
-model name is verified to fail with ENOENT.  Under the same workload
-the doubled model charges exactly twice the builtin model (verified
-2882us -> 5722us per IO, completed IO count halved).
+Following up on my earlier v1 test report [1], I tested the complete v2
+series on a small WSL2 box. Applied on the stated base-commit
+9958290885035431e2494159f555e332c3c14906 (mm-new): all 15 patches
+applied with git am, zero conflicts, and the resulting diffstat matches
+the cover letter exactly (20 files, +812/-499).
 
-Per-cgroup stream state uses a CGRP_STORAGE map keyed by the cgroup
-of the blkcg argument, so the model inherits the cgroup lifetime and
-never leaks or reuses stale state.  opf carries the full
-bio->bi_opf including REQ_* flag bits, so the operation must be
-extracted with a mask, not compared for equality.
+Environment
+===========
+WSL2 VM on a 32G Windows host, 12 CPUs, deepin 23 userspace, swap on an
+NVMe-backed virtual disk. VM memory was 15G/4G swap for the kernel
+build, fio and sqlite-grep runs, and 20G/8G for the DB and browser
+workloads. The distro WSL kernel ships without CONFIG_LRU_GEN, so both
+kernels were built from the distro config plus CONFIG_LRU_GEN=y +
+CONFIG_LRU_GEN_ENABLED=y; the two kernel configs differ only in
+LOCALVERSION. MGLRU was toggled at runtime via
+/sys/kernel/mm/lru_gen/enabled for the CLRU/MGLRU split, as in your own
+harness. Workloads were scaled proportionally to this smaller box as
+noted below.
 
-All writes go through write(2) rather than stdio, since the kernel's
-rejection happens in the write() syscall, not in the userspace buffer
-copy.  CONFIG_BLK_CGROUP_IOCOST and CONFIG_BLK_CGROUP_IOCOST_BPF are
-added to the selftest kernel config: without them vmlinux.h does not
-contain iocost_model_ops and the skeletons fail to build; the runtime
-skip cannot avoid a build dependency.
+In summary: no After-vs-Before regression anywhere in my matrix, clear
+wins on fio miss rate, Chromium&Node and sqlite hot-path stability,
+both MGLRU modes consistently ahead of CLRU, and classical LRU
+untouched (MGLRU-off runs agree across the two kernels within <1% on
+every metric). Both kernels survived ~8h of heavy memory pressure with
+zero panics/BUGs/warnings. One caveat: your +13.4% MongoDB gain did not
+reproduce at my scaled 12-thread setup (+0.7%), but no regression
+either. Android was not tested (no real device here).
 
-The runner is skipped unless $IOCOST_TEST_DEV gives a major:minor of
-a device with iocost enabled.
+Build kernel test
+=================
+make -j12 in a 3G memcg, disk swap, kernel and build output on the same
+disk (your -j48/NVMe setup scaled to 12 CPUs), single run per point.
+Your 16-point swappiness sweep scaled down to {60, 100}; note that with
+swappiness=0 the build gets OOM-killed inside the 3G memcg and never
+completes on this box, so that point could not be measured:
 
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
----
- tools/testing/selftests/bpf/config            |   2 +
- .../selftests/bpf/prog_tests/iocost_model.c   | 165 ++++++++++++++++++
- .../selftests/bpf/progs/iocost_model.c        | 135 ++++++++++++++
- 3 files changed, 302 insertions(+)
- create mode 100644 tools/testing/selftests/bpf/prog_tests/iocost_model.c
- create mode 100644 tools/testing/selftests/bpf/progs/iocost_model.c
+swappiness 60:
+        real     refault_file  refault_anon  pswpout
+CLRU    1114.6s     4,645,990       825,316  3,401,489
+Before  1101.1s     3,772,987       628,921  2,871,346
+After   1091.9s     3,710,332       663,956  2,900,774
 
-diff --git a/tools/testing/selftests/bpf/config b/tools/testing/selftests/bpf/config
-index 2f79688dcf7ce..67a630cb56148 100644
---- a/tools/testing/selftests/bpf/config
-+++ b/tools/testing/selftests/bpf/config
-@@ -138,3 +138,5 @@ CONFIG_SMC_HS_CTRL_BPF=y
- CONFIG_DIBS=y
- CONFIG_DIBS_LO=y
- CONFIG_PM_WAKELOCKS=y
-+CONFIG_BLK_CGROUP_IOCOST=y
-+CONFIG_BLK_CGROUP_IOCOST_BPF=y
-diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
-new file mode 100644
-index 0000000000000..94c633b975277
---- /dev/null
-+++ b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
-@@ -0,0 +1,165 @@
-+// SPDX-License-Identifier: GPL-2.0
-+#include <test_progs.h>
-+#include <ctype.h>
-+#include <fcntl.h>
-+#include <unistd.h>
-+#include "iocost_model.skel.h"
-+
-+/*
-+ * Write a line to io.cost.model with write(2) and return the errno of
-+ * the failed write, or 0 on success.  stdio is not used here on
-+ * purpose: the kernel's rejection happens in the write() syscall,
-+ * not in the userspace buffer copy, and every write, including
-+ * the error paths of the callers below, is checked.
-+ */
-+static int write_cost_model(const char *buf)
-+{
-+	int fd, err = 0;
-+	ssize_t n;
-+
-+	fd = open("/sys/fs/cgroup/io.cost.model", O_WRONLY);
-+	if (fd < 0)
-+		return -errno;	/* negative: the file is not there */
-+	n = write(fd, buf, strlen(buf));
-+	if (n < 0)
-+		err = errno;
-+	close(fd);
-+	return err;
-+}
-+
-+/*
-+ * Read back the io.cost.model line of dev and copy the model= value
-+ * into @model.  Returns 0 on success.
-+ */
-+static int readback_model(const char *dev, char *model, size_t model_sz)
-+{
-+	char line[256], word[256], *m, *end;
-+	FILE *fp;
-+	int found = 0;
-+
-+	fp = fopen("/sys/fs/cgroup/io.cost.model", "r");
-+	if (!fp)
-+		return -1;
-+	while (fgets(line, sizeof(line), fp)) {
-+		if (sscanf(line, "%255s", word) == 1 && !strcmp(word, dev)) {
-+			found = 1;
-+			break;
-+		}
-+	}
-+	fclose(fp);
-+	if (!found)
-+		return -1;
-+
-+	m = strstr(line, "model=");
-+	if (!m)
-+		return -1;
-+	m += strlen("model=");
-+	end = m;
-+	while (*end && !isspace(*end))
-+		end++;
-+	snprintf(model, model_sz, "%.*s", (int)(end - m), m);
-+	return 0;
-+}
-+
-+/*
-+ * Bind the named model to a device with "model=<name>", verify the
-+ * readback and restore the builtin model.  Returns 0 on success.
-+ */
-+static int bind_model(const char *dev, const char *name)
-+{
-+	char buf[300], got[64];
-+	int err;
-+
-+	snprintf(buf, sizeof(buf), "%s model=%s\n", dev, name);
-+	err = write_cost_model(buf);
-+	if (err)
-+		return err > 0 ? -err : -EIO;
-+	err = readback_model(dev, got, sizeof(got));
-+	if (!err && !strcmp(got, name)) {
-+		/*
-+		 * restore the builtin linear model on every path so
-+		 * the device is not left bound to a model the caller
-+		 * may unregister right after; the write is checked too
-+		 */
-+		snprintf(buf, sizeof(buf), "%s model=linear\n", dev);
-+		err = write_cost_model(buf);
-+		return err > 0 ? -err : (err ? -EIO : 0);
-+	}
-+
-+	/* bind failed or does not read back: still restore, but report
-+	 * the original failure rather than the restore result
-+	 */
-+	snprintf(buf, sizeof(buf), "%s model=linear\n", dev);
-+	write_cost_model(buf);
-+	return err ? -EIO : -EINVAL;
-+}
-+
-+/*
-+ * True when the device line exists in io.cost.qos and iocost is
-+ * enabled on it.
-+ */
-+static int dev_has_iocost(const char *dev)
-+{
-+	char line[256], word[256];
-+	FILE *fp;
-+	int found = 0;
-+
-+	fp = fopen("/sys/fs/cgroup/io.cost.qos", "r");
-+	if (!fp)
-+		return 0;
-+	while (fgets(line, sizeof(line), fp)) {
-+		if (sscanf(line, "%255s", word) == 1 && !strcmp(word, dev)) {
-+			found = strstr(line, "enable=1") != NULL;
-+			break;
-+		}
-+	}
-+	fclose(fp);
-+	return found;
-+}
-+
-+/*
-+ * Bind the 2x example model and verify the io.cost.model readback.
-+ * IO accounting itself is not checked here; it needs a device doing
-+ * real IO under iocost and is covered by the kernel-side validation
-+ * described in the cover letter.
-+ *
-+ * Requires root, cgroup v2 and a device with iocost support.  The
-+ * device must be given as major:minor in $IOCOST_TEST_DEV, otherwise
-+ * the test is skipped.
-+ */
-+void serial_test_iocost_model(void)
-+{
-+	struct iocost_model *skel;
-+	char buf[300], *dev;
-+	int err;
-+
-+	dev = getenv("IOCOST_TEST_DEV");
-+	if (!dev || geteuid() != 0) {
-+		test__skip();
-+		return;
-+	}
-+	if (!dev_has_iocost(dev)) {
-+		printf("skip: %s has no iocost enabled\n", dev);
-+		test__skip();
-+		return;
-+	}
-+
-+	/*
-+	 * negative: binding an unknown model name must be rejected,
-+	 * so a typo cannot silently disable cost model updates
-+	 */
-+	snprintf(buf, sizeof(buf), "%s model=no_such_model\n", dev);
-+	err = write_cost_model(buf);
-+	ASSERT_EQ(err > 0 ? err : 0, ENOENT, "unknown_model_rejected");
-+
-+	skel = iocost_model__open_and_load();
-+	if (!ASSERT_OK_PTR(skel, "skel_open_load"))
-+		return;
-+
-+	/* attaching the struct_ops registers the model by name */
-+	err = iocost_model__attach(skel);
-+	if (ASSERT_OK(err, "attach"))
-+		ASSERT_OK(bind_model(dev, "iocost_2x"), "bind_and_readback");
-+
-+	iocost_model__destroy(skel);
-+}
-diff --git a/tools/testing/selftests/bpf/progs/iocost_model.c b/tools/testing/selftests/bpf/progs/iocost_model.c
-new file mode 100644
-index 0000000000000..efef61410464d
---- /dev/null
-+++ b/tools/testing/selftests/bpf/progs/iocost_model.c
-@@ -0,0 +1,135 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Example iocost cost model: the builtin linear HDD formula with all
-+ * costs doubled.
-+ *
-+ * The constants mirror what calc_lcoefs() derives from the AUTOP_HDD
-+ * defaults (rbps=174019176 rseqiops=41708 rrandiops=370, w-side
-+ * analog) in vtime units where 1s == 2^37.  On a rotational device
-+ * still on ctrl=auto, a device bound to this model through
-+ * io.cost.model charges exactly twice the builtin model under the
-+ * same workload, so the doubled cost is a direct check that
-+ * accounting goes through the BPF path.  On a non-rotational device,
-+ * or one with user-pinned coefficients, the ratio to the builtin
-+ * model is arbitrary.
-+ *
-+ * The cursor handling mirrors the builtin: a zero cursor means "no
-+ * previous IO", and the cursor is only advanced for READ and WRITE
-+ * bios the builtin prices, so flushes and discards leave it alone.
-+ *
-+ * The model implements the full linear formula itself, including
-+ * flushes: there is no fallback to the builtin model, a dataless
-+ * WRITE|REQ_PREFLUSH is priced as a one-page write.
-+ */
-+
-+#include "vmlinux.h"
-+#include <bpf/bpf_helpers.h>
-+#include <bpf/bpf_tracing.h>
-+
-+/*
-+ * VTIME_PER_SEC, IOC_PAGE_SIZE/SHIFT, IOC_SECT_TO_PAGE_SHIFT and
-+ * IOCOST_COST_F_MERGE come from vmlinux.h (BTF enum constants)
-+ */
-+#define LCOEF_RANDIO_PAGES	4096	/* 16MB seek threshold */
-+#define IOCOST_REQ_OP_MASK	0xff		/* REQ_OP_MASK, not in BTF */
-+
-+/*
-+ * DIV64_U64_ROUND_UP / DIV_ROUND_UP_ULL equivalents, folded at
-+ * compile time
-+ */
-+#define RU(x, y)		((x) / (y) + (((x) % (y)) ? 1 : 0))
-+
-+#define RBPS	174019176ULL
-+#define RSEQIOPS	41708ULL
-+#define RRANDIOPS	370ULL
-+#define WBPS	178075866ULL
-+#define WSEQIOPS	42705ULL
-+#define WRANDIOPS	378ULL
-+
-+#define RPAGE	(RU(VTIME_PER_SEC, RU(RBPS, IOC_PAGE_SIZE)))
-+#define RSEQIO	(RU(VTIME_PER_SEC, RSEQIOPS) - RPAGE)
-+#define RRANDIO	(RU(VTIME_PER_SEC, RRANDIOPS) - RPAGE)
-+#define WPAGE	(RU(VTIME_PER_SEC, RU(WBPS, IOC_PAGE_SIZE)))
-+#define WSEQIO	(RU(VTIME_PER_SEC, WSEQIOPS) - WPAGE)
-+#define WRANDIO	(RU(VTIME_PER_SEC, WRANDIOPS) - WPAGE)
-+
-+/*
-+ * per-cgroup cursor storage: keyed by the cgroup, freed with it, so
-+ * the model never leaks or reuses stale per-cgroup state
-+ */
-+struct {
-+	__uint(type, BPF_MAP_TYPE_CGRP_STORAGE);
-+	__uint(map_flags, BPF_F_NO_PREALLOC);
-+	__type(key, int);
-+	__type(value, __u64);
-+} cursor_store SEC(".maps");
-+
-+SEC("struct_ops")
-+u64 BPF_PROG(iocost_2x_calc_cost, u64 opf, u64 nbytes, u64 sector,
-+	     struct blkcg *blkcg, u64 model_flags)
-+{
-+	u64 pages, seek_pages = 0, base, coef_page, randio, cost;
-+
-+	/* builtin truncates: max(sectors >> IOC_SECT_TO_PAGE_SHIFT, 1) */
-+	pages = nbytes >> IOC_PAGE_SHIFT;
-+	if (!pages)
-+		pages = 1;
-+
-+	if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ) {
-+		base = RSEQIO; coef_page = RPAGE; randio = RRANDIO;
-+	} else if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE) {
-+		base = WSEQIO; coef_page = WPAGE; randio = WRANDIO;
-+	} else {
-+		/*
-+		 * a fully owning model must price every op; unknown
-+		 * ops are priced as a single page write
-+		 */
-+		base = 0; coef_page = WPAGE; randio = 0;
-+	}
-+
-+	/*
-+	 * mirror the builtin cursor semantics: seek distance is only
-+	 * computed against a non-zero cursor, and the cursor is only
-+	 * advanced for bios the builtin prices (READ/WRITE with a
-+	 * non-zero size), so flushes and discards leave it alone
-+	 */
-+	{
-+		__u64 *cursor, cur;
-+		int priced = (opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ ||
-+			     (opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE;
-+
-+		cursor = bpf_cgrp_storage_get(&cursor_store,
-+					      blkcg->css.cgroup, NULL,
-+					      BPF_LOCAL_STORAGE_GET_F_CREATE);
-+		if (!cursor) {
-+			if (model_flags & IOCOST_COST_F_MERGE)
-+				base = 0;
-+			return 2 * (base + pages * coef_page);
-+		}
-+		cur = *cursor;
-+		if (cur && priced) {
-+			seek_pages = sector > cur ? sector - cur
-+						   : cur - sector;
-+			seek_pages >>= IOC_SECT_TO_PAGE_SHIFT;
-+			if (seek_pages > LCOEF_RANDIO_PAGES)
-+				base = randio;
-+		}
-+		if (priced && nbytes &&
-+		    !(model_flags & IOCOST_COST_F_MERGE))
-+			*cursor = sector + RU(nbytes, 512);
-+	}
-+
-+	if (model_flags & IOCOST_COST_F_MERGE)
-+		base = 0;
-+
-+	cost = 2 * (base + pages * coef_page);
-+	return cost;
-+}
-+
-+SEC(".struct_ops")
-+struct iocost_model_ops iocost_2x = {
-+	.calc_cost = (void *)iocost_2x_calc_cost,
-+	.name = "iocost_2x",
-+};
-+
-+char LICENSE[] SEC("license") = "GPL";
--- 
-2.43.0
+swappiness 100:
+        real     refault_file  refault_anon  pswpout
+CLRU    1124.6s     4,475,974       741,947  3,470,739
+Before  1086.6s     3,764,594       757,247  3,002,297
+After   1078.8s     3,715,202       651,335  3,108,020
 
+MGLRU clearly beats CLRU (real -1.2~-4.1%, refault_file -16~-20%,
+pswpout -10~-16%); After is at par or slightly better than Before
+(-0.7~-0.8% real), matching the small deltas in your cover letter.
+Repeatability checks: a rerun of Before/sw60 landed within 0.7%
+(1093.0s), and CLRU agrees across the two kernels within 0.9% (sw60:
+1114.6s vs 1104.9s), so the series does not disturb classical LRU.
+
+MongoDB YCSB workloadb [2]
+==========================
+recordcount 20M, operationcount 6M (as yours), 16G memcg (as yours),
+default WiredTiger cache, 12 threads (scaled from 48), disk swap. One
+discarded warm-up run, then 5 measured runs, ops/s:
+
+CLRU:         21242 20607 19591 19595 19360  (median 19,595)
+MGLRU Before: 20943 20429 20085 20937 20842  (median 20,842)
+MGLRU After:  20993 20404 20922 21031 21332  (median 20,993)
+
+After >= Before (+0.7%) >> CLRU (+7.1%). Your +13.4% did not show up at
+this shallower thread count, but there is no regression either.
+Interesting side note: CLRU degraded monotonically across the 5
+back-to-back runs (-9%) while both MGLRU configs stayed flat.
+
+My own caveat: my first attempt capped WiredTiger's cache at 8G, which
+pushed the workload into a swap-thrash regime where Before actually
+won; with the default cache size that inversion disappears, so it was
+my test artifact, not a patch issue.
+
+Chromium & Node.js test [3]
+===========================
+Yu Zhao's original per-pair workload, scaled: 4 server+client pairs
+(each server capped at 4G as in the original), 30 min per config
+(yours: 1h), disk swap (yours: zram). Total requests:
+
+CLRU:         72572
+MGLRU Before: 76638
+MGLRU After:  84303 (+10.0% vs Before, +16.2% vs CLRU)
+
+After also had the best tail: 1 request >= 16s vs 8 for Before (CLRU
+had none, but at the lowest throughput).
+
+FIO cached with zipf
+====================
+Same recipe as yours, scaled down: 16 jobs x 1.5G files (24G total) in
+an 8G cgroup, 4k sync buffered randread, ramp 45s + run 600s, two of
+your zipf points, single run per config:
+
+Avg IOPS (higher is better):
++--------+-----------+-----------+-----------+
+| zipf   | CLRU      | Before    | After     |
++--------+-----------+-----------+-----------+
+|  0.9   |   450,323 |   449,141 |   473,428 |
+|  1.2   | 2,515,146 | 2,389,242 | 2,615,904 |
++--------+-----------+-----------+-----------+
+
+Miss rate (refault/read, lower is better):
++--------+--------+--------+--------+
+| zipf   | CLRU   | Before | After  |
++--------+--------+--------+--------+
+|  0.9   | 0.1735 | 0.1758 | 0.1641 |
+|  1.2   | 0.0211 | 0.0234 | 0.0195 |
++--------+--------+--------+--------+
+
+Reproduces your observations: After lowers the miss rate -6.7% (z0.9)
+and -16.7% (z1.2) vs Before (-5.4% / -7.6% vs CLRU) while IOPS also
+rise (+5.4% / +9.5%); Before being slightly worse than CLRU on miss
+rate also reproduced. Caveat: single run per config here.
+
+LevelDB Scan/Get [4]
+====================
+The cache_ext paper's own artifact (its My-YCSB + LevelDB fork),
+mixed_get_scan (95% get + 5% scan, scan_length 10000, zipf 0.99), 4
+threads, 240s warm-up + 240s measured, 3 iterations per config with a
+fresh DB copy per iteration. Scaled: 128M-entry ~28G DB (paper: 512M /
+110G) in a 2.5G memcg, keeping the paper's ~11:1 DB:memcg ratio, swap
+off as in the paper. ops/s per iteration:
+
+CLRU:         13718 / 14179 / 13262  (median 13,718)
+MGLRU Before: 18625 / 14433 / 14309  (median 14,433)
+MGLRU After:  13152 / 14328 / 14420  (median 14,328)
+
+After is at parity with Before (-0.7%, noise) and +4.5% vs CLRU -- same
+direction as your +7.7%, and consistent with your own table where After
+essentially matches mainline MGLRU on this test.
+
+SQLite and grep [5]
+===================
+Your harness as-is (300M memcg, as in run.sh), 5 runs per config after
+drop_caches. Hot lookup (1000 hot-index lookups):
+
+CLRU:         122 ms median, bimodal 10.7~183 ms
+MGLRU Before: 12.4 ms median, noisy 9.8~179 ms
+MGLRU After:  10.5 ms median, stable 10.1~11.5 ms
+
+Same ordering as your 10.58 < 14.51 << 567 story (CLRU degrades to a
+bimodal distribution here rather than the collapsed mode). On the cold
+scans, both MGLRU modes beat CLRU by ~17%.
+
+One observation: in the harness's multi-tier test (large cold scans
+coexisting with hot lookups), baseline MGLRU had an incidental win on
+the hot part (~2.35s vs CLRU 3.15s) and After returns to ~3.1s --
+consistent with your LevelDB discussion of dropping the refs==1
+second-oldest-gen bump. Not a problem, just something I noticed.
+
+Others
+======
+Not tested: Android (needs a real device; this box has no nested KVM).
+
+Full raw logs available on request.
+
+Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
+
+Thanks,
+zhaozhengzhuo
+
+[1] https://lore.kernel.org/linux-mm/92DCEFFD13221261+20260828102344.1537874-1-zhaozhengzhuo@uniontech.com/
+[2] https://github.com/brianfrankcooper/YCSB/blob/master/workloads/workloadb
+[3] https://lore.kernel.org/all/20221220214923.1229538-1-yuzhao@google.com/
+[4] https://dl.acm.org/doi/10.1145/3731569.3764820 (artifact: https://github.com/cache-ext/cache_ext)
+[5] https://github.com/ryncsn/emm-test-project/tree/master/sqlite-grep
