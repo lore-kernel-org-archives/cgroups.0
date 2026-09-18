@@ -1,136 +1,106 @@
-Received: from mail-pj2-f42.google.com (mail-pj2-f42.google.com [74.125.227.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EA8A519E16
-	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 16:56:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6126D519E16
+	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 16:56:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789750584; cv=none; b=KUeHx9NqPV82opAc/zxbsaJTF+Lz8zaISgXoNI2Bk7d8NDRNKO3DPSr9l1H12xpVXP9A0yqMa4rqbjfZNPUSyCGtEydPxV/Hgfy2gF8YQ9TYJbhDaTVQr2UOlBPyVfgI/eiYTsc+LDHsvDBCBr/PcfEoj+DlqIGKEStbgyTGtSI=
+	t=1789750617; cv=none; b=T/7l3tLcEmHJOLQiV4xy9TSkLlKBqImUEtRou+BhpZryANb8s9OnxAzXgHjoHqmSTkWeTrwlsnkePqxrCks08FUIx3w2/xyosj0bSFv7b4Njo3Cmf4sVNeea8g6x7TFziM2BOtX75oZO/FNPZTyVcJqz0F5b0z0WAkCez8WAtQo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789750584; c=relaxed/simple;
-	bh=H+ukdmwXP+tMkaQEpJ23doFZ9tvP/S4l/tdO9wntvVQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CKwcST69lqPsdwmxld8spYCBe3TIF8TabHGgVcpuAx43JLblxIta25QU+AUorC+ljK+aKWprdnIXmyui5LpBbLS2QNGZSrHDJ1k0KaaYugLNlahi91SFxd7tCaLMO3JwSrgtRy/CRIi9ZAioya0Ms2fxtmI9wqy4SUq1ZSxwPdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=don+vCZz; arc=none smtp.client-ip=74.125.227.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789750617; c=relaxed/simple;
+	bh=TSyTJvkqaPMNE9NUr5ytx8YmL6TBT8EihcFtZo4cjmM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QtaCLF24qSBZ+GDLJPsu2xN9lH/PuBQNe1MdfqHXfPash77VELPYVSIbi14LqtjylDw3xbJCo9/8srbdPwb27A56cLqia+Oh8KOAg65KL/oZglTOqw3HIBcXh7hMuR7tXPhCDYQHCtLHiSDVzAUU78/gT7odJb+HY5Y5JitLRz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=lQgwG7nH; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=xKVlXRjw; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="don+vCZz"
-Received: by mail-pj2-f42.google.com with SMTP id d9443c01a7336-2ddb44ad1c1so10264645ad.3
-        for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 09:56:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789750581; x=1790355381; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=TZ4B6fQ0OaE27qFChHjfflbajHqzh3JOUdhhP8Vrl9E=;
-        b=don+vCZzE4jWR0Cuyc8swx8r/1ZzCoKa2h3pQqwyut2J8K/74Lyj7Y5mHNqNwF8O3/
-         E2yJjdTyKEMfbWukcSXwsMAYuk3zhHQI90EHwCcS7Xmp8pr2WQr9uuMjb4S1UwmXJDK/
-         HY/ceq1fhT5FTqzEhP1B9YlqqGMNOmrRRrbsDUMkNA9yt5Ofw7Z1sXKhJLKa91mejKn6
-         DxoAgp8bgdq4XLEqzPCR/DYXV4q0OJnM/VFdarKiY6dWs5tbZowRiiwkMNHWr9wpZD32
-         3LcUbVEUwqU6nEIr2AUBKs5KO7BOIQapGv34UlZbTTgllgtdgOs8ZJdKD9GIYRsKDRbj
-         JLKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789750581; x=1790355381;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TZ4B6fQ0OaE27qFChHjfflbajHqzh3JOUdhhP8Vrl9E=;
-        b=iBggr+IwkgMHEUyxTCZa/nqKh7zEjgYYOq4jF7XUerpVLwrTKS0wbh/WlvKfBOLBTj
-         /dT+g/QDgS0fCGx0j2J60L2M7xVNCdz++9jVeGL1onnXRaQlLV8pA4VY9Vor93NTXgZq
-         Uw2IUf5z4XXHjVqoEYjI4+MNc7Ma6Ae95D2HOpQtzLLZuYfgjLIbGTrMoNgfF2SM8NHi
-         ivVj9KXT/nFunV8qSv4rwkccQFtz1kRZP33YZkfiaeCnMc0RBpcnhPUV0SmNaxpWqVon
-         ScKNlVdotRIisCPuvxZc70i56YXOVcd0e+16/YkVuZ7TkPEFcEa+3Fb2GHA4+OsZWhhc
-         2gPw==
-X-Gm-Message-State: AFuF++nHAT732eSW+N/nBfWEvkZfr1XcNslrmPy/KPlDeY7owtpSJ+ba
-	CG5UKdzJXyfnOTwqQzyrP78LBxfY8t7wBA8ZEh2NIykq24w6Gw8A+jx/
-X-Gm-Gg: AYBFou1C1vMoEqmL1Yvxw77k3y3EnJKcSGSm0seFLNEchM/CTvgomuKiXOMYC4FmZge
-	3jmcF8TjPZeXlGnqbe+WlcW6SsHO07pMx9bmLkFMx+HTaIcQCVB+SGdc/sNyPGmwVTjA0Vjtqmd
-	0PLF0kft8N99r7l9dTUbfAiptcfFkk8P1GONE5LetPXuhESAgpG3n+0Mue384xKQ4cTE9b8BzKV
-	dX+h+xc5T1lnUFG8c1845vhYwQuxB77D5jJgwdDN1jNOL+PXyb/KbwKt5F4h2nZ2h7y4AT9NpaN
-	cuiIImYJoSWYAkinbE1UUt+SljSnjyZU1hdBdDE37jT4MVF1JSCVwTC9LyxD7tNr5F8hLBjyT/Z
-	8Ee0Yqrlt613HxxOzlVB9gaNlZ6DtpC1hmKBAeEWe/i19lW3hrAgSCje4Tx3ZsigjwRYaS0t5Kh
-	iYOxf2wRDw8vTPftj3HaBdb56pKI1goV/D5KdtkOTlOStH1Fl0U5D7zQdKEAdmRWzcT0u/SiQmE
-	Q4=
-X-Received: by 2002:a17:902:d2cc:b0:2dd:ad73:c982 with SMTP id d9443c01a7336-2ddb1ba0faamr58779045ad.26.1789750580884;
-        Fri, 18 Sep 2026 09:56:20 -0700 (PDT)
-Received: from ubuntu.. ([110.9.142.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ddb75bfe10sm11409685ad.64.2026.09.18.09.56.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Sep 2026 09:56:20 -0700 (PDT)
-From: Sang-Heon Jeon <ekffu200098@gmail.com>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	Muchun Song <muchun.song@linux.dev>
-Subject: [PATCH 2/2] memcg: remove unused mod_memcg_page_state()
-Date: Sat, 19 Sep 2026 01:55:58 +0900
-Message-ID: <20260918165601.1014666-3-ekffu200098@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260918165601.1014666-1-ekffu200098@gmail.com>
-References: <20260918165601.1014666-1-ekffu200098@gmail.com>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="lQgwG7nH";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="xKVlXRjw"
+Date: Fri, 18 Sep 2026 18:56:51 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1789750613;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=emdDJKcEKTGGLQ7h14SrN3QAr0euBcRN0XPBQmBSILE=;
+	b=lQgwG7nHAtdfoal/qo2RXooU4cd8/pzoZTMqk1eVnqUDArCnPyqab8r1lm5tw4I5c4JEr/
+	KyKaor2UI6rcTYg+bTqmEYr+QuxIL8r0nnQncJ58LMBi4AGqbxudicjEro2B8QKW1wePL0
+	2vTRO+M1KFi4EhfCn9j16Y2WKoAYP4iS78dq1a1lEIzeihUGJMDCD9ppDFdBNQ9PrTrhOS
+	U5QjpP7sgbT/gk6k0wQmtyn/hGlk8Z+BvMrCEoU3tQB49AWqHldlKH0NAULnwLWCsrTL76
+	hHfawkk+6HQcxnOHFYqYvEsb1dyQP8khExIP4DcvQRypbOVLTIZrqemgSHaO/w==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1789750613;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=emdDJKcEKTGGLQ7h14SrN3QAr0euBcRN0XPBQmBSILE=;
+	b=xKVlXRjwL3gT2XT1PhgNJK5O1FRS9n4HRS4EjK5nxEfXkzHS4s2cFJc557MNxN/5+hNzhJ
+	FYkrc9RifU3YX6Dg==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] cgroup: Use %p for pointer formatting
+Message-ID: <20260918165651.-T6A2FGq@linutronix.de>
+References: <20260918104852.1p2fz_-_@linutronix.de>
+ <aq0z3hEYggA_TuUD@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <aq0z3hEYggA_TuUD@localhost.localdomain>
 
-Since commit c466412c73c3 ("mm: memcontrol: switch to native NR_VMALLOC
-vmstat counter"), mod_memcg_page_state() has no callers.
+On 2026-09-18 14:59:00 [+0200], Michal Koutn=C3=BD wrote:
+> On Fri, Sep 18, 2026 at 12:48:52PM +0200, Sebastian Andrzej Siewior <bige=
+asy@linutronix.de> wrote:
+> > Since commit ad67b74d2469d ("printk: hash addresses printed with
+> > %p") pointers are hashed by default and the behaviour can be controller
+> > by `hash_pointers' boot argument.
+> > The policy on %p is to not introduce new ones.
+>                 %pK  should be here?
 
-So remove it.
+No, %p was intended. By making it %p it is "introducing" it. The "not
+introducing new ones" is based on
+  https://docs.kernel.org/process/deprecated.html#p-format-specifier
 
-No functional change.
+> I assume it based on:
+>=20
+> | This is because %pK checks are done at read() time rather than open()
+> | ...
+> | The correct long-term solution is to do the permission checks at
+> | open() time.
+>=20
+> of Documentation/admin-guide/sysctl/kernel.rst-time
 
-Signed-off-by: Sang-Heon Jeon <ekffu200098@gmail.com>
----
- include/linux/memcontrol.h | 20 --------------------
- 1 file changed, 20 deletions(-)
+These checks never came. I need to update that file as well=E2=80=A6
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index b57a74617b0b..c0557e1e3d21 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -949,21 +949,6 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg);
- void mod_memcg_state(struct mem_cgroup *memcg,
- 		     enum memcg_stat_item idx, int val);
- 
--static inline void mod_memcg_page_state(const struct page *page,
--					enum memcg_stat_item idx, int val)
--{
--	struct mem_cgroup *memcg;
--
--	if (mem_cgroup_disabled())
--		return;
--
--	rcu_read_lock();
--	memcg = folio_memcg(page_folio(page));
--	if (memcg)
--		mod_memcg_state(memcg, idx, val);
--	rcu_read_unlock();
--}
--
- unsigned long memcg_events(const struct mem_cgroup *memcg, int event);
- unsigned long memcg_page_state(const struct mem_cgroup *memcg, int idx);
- unsigned long memcg_page_state_output(const struct mem_cgroup *memcg, int item);
-@@ -1396,11 +1381,6 @@ static inline void mod_memcg_state(struct mem_cgroup *memcg,
- {
- }
- 
--static inline void mod_memcg_page_state(const struct page *page,
--					enum memcg_stat_item idx, int val)
--{
--}
--
- static inline unsigned long memcg_page_state(const struct mem_cgroup *memcg, int idx)
- {
- 	return 0;
--- 
-2.43.0
+> <snip>
+> > Removing %pK makes it possible to remove its handling from the library.
+>=20
+> This is also a good sell.
+> But I see there are a few of them still here and there.
 
+I am working on it ;) I just sent all code patches and networking
+has it applied in -next. So it is moving.
+
+> >=20
+> > Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> > ---
+> >  kernel/cgroup/debug.c | 8 ++++----
+> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> >
+>=20
+> Nevertheless,
+> Acked-by: Michal Koutn=C3=BD <mkoutny@suse.com>
+
+Thank you.
+
+Sebastian
