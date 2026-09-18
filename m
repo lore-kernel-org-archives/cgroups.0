@@ -1,58 +1,134 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-71.mta0.migadu.com [91.218.175.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71E154F3EBA;
-	Fri, 18 Sep 2026 13:23:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 816EF4FECE7
+	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 13:34:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789737789; cv=none; b=CxF4/XE4f3Ge8XJCFZukIjQT1XjxIZ2DVV0DcAlDCRQx9HMM3igoBW+7r/K9cDJWdWSs0nL/cCc4UBbgPme8hGy7IO+nbMiqrJVxyBgZbeI1Qjpi7XUHVAT0su72dB2U7KWbxSn9H+vST+sTiqG9uTrNR10StfcJre0JOwOpGdo=
+	t=1789738445; cv=none; b=ep/XP/KnvI7A2vre6ZIOft4kMsegSgYgy9IFgz50K/eu8vc/64UTnySHPe5GAZ+bJ3CZSL+9+zXfJ6sj58IWr9O0pb/O3tZgDoQIByYBk9Rgmc+nzAdJXi5jcbkXj0Cwx7QwzCnktw2fCbKX1mOrQRgw5jL2f6jDEb4RFgrLmRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789737789; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FAsvRPLKc9UivTR2xMQW91u9pxRa8h3h0V81JI6uwDdgu+5N45RylQ6NN1jF7seoxCuM1E8Lntm75lnw4y42jgPQxCKEEhVMD7XRX0g/gKWMPh4WpvD/jG2GJZ66LGAHpgI3dsC9nig9JcjoCHIq4aeF9bRSljKUF+RKY7hcMJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YRdLxeDB; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1789738445; c=relaxed/simple;
+	bh=QNJzCBnu54BpVshGaNyg8PaNs/5K+yMc5H4BxDJHLDw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LS27p0LGBeLkneKKOIKRt5qP2s2CrNSViI9oAXWKXjiiPGXr3D2qE1xIad52WC6Ox+okhKj9Kce0zhbCQa91nlufMnn83cav8nkcJpKugVw+yYWh7rpcOEYUugq4XGYK5C8KLCZEFemXz01FCSCM3zyIuFCDqaib1yhyrgZx0vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=g19sDtP3; arc=none smtp.client-ip=91.218.175.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YRdLxeDB"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=YRdLxeDBkvpoZx0Xh3Q6p+9koV
-	i0mE/T53rYXYAd2gLS1rmkV05YixdngIIYTc/fZcC2Tio0E59vlGIAI9kTv6l96dj+wRd3HtCOM1D
-	Itu3Md4tmNNG9reEaxLaGDo6/KqVm/Qi9d06josGjJD5IMOHDjl+PqB+J6wWtQ3cZF7uUnh1gGjBw
-	Cf5gm9m4BgFCeppB/SiYFzOvxzovQ6tnXhq8P1MdwSZznG04FaVMMzxRUpn3o1qGauHAQTrz0mZPB
-	RQYMTmHVetf9LP8si2zRhkcaOltfoanCS4B5foT8fWyM4Yqw5aeNNBavG13ZuAqih2DjSRFO53CQv
-	e4oRbRHw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x7YYU-0000000EV4j-2WcO;
-	Fri, 18 Sep 2026 13:23:06 +0000
-Date: Fri, 18 Sep 2026 06:23:06 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: tj@kernel.org, josef@toxicopanda.com, axboe@kernel.dk,
-	hch@infradead.org, cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	cuitao@kylinos.cn
-Subject: Re: [PATCH v2 4/4] blk-iocost: fix stale comment in
- ioc_rqos_throttle()
-Message-ID: <aq07OoI2Ay6NMcoW@infradead.org>
-References: <20260916085304.1080271-1-cui.tao@linux.dev>
- <20260916085304.1080271-5-cui.tao@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="g19sDtP3"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=QNJzCBnu54BpVshGaNyg8PaNs/5K+yMc5H4BxDJHLDw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789738441; v=1; x=1790343241;
+ b=g19sDtP36qsyybRvLhgKP5lompGQMUviQF//dUpFUYPUcgHgu2czYnatB7Vq47P42at24jLL
+ Ih5DJfJE1jRSofPFv5rHh0acd07O9aRUT4gX0ce1QLNr+9fJLymqUEhRfmavU6OijniQ1cEHRlD
+ vSejqqKkwsukG6YTjGmFKQjk=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 70f1350159e85615;
+	Fri, 18 Sep 2026 13:33:51 +0000
+X-Mizu-Trace-ID: 70f1350159e85615
+X-Migadu-Flow: FLOW_OUT
+From: Usama Arif <usama.arif@linux.dev>
+To: axboe@kernel.dk,
+	cgroups@vger.kernel.org,
+	josef@toxicpanda.com,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	tj@kernel.org
+Cc: hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shakeel.butt@linux.dev,
+	riel@surriel.com,
+	Usama Arif <usama.arif@linux.dev>
+Subject: [PATCH] tick/nohz: Avoid unused timekeeping_max_deferment() calls
+Date: Fri, 18 Sep 2026 06:33:45 -0700
+Message-ID: <20260918133345.2823363-1-usama.arif@linux.dev>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260916085304.1080271-5-cui.tao@linux.dev>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-Looks good:
+tick_nohz_next_event() limits a CPU's sleep interval to the maximum
+deferment supported by the current clocksource when that CPU owns the
+do_timer() duty. If the duty is unassigned, the limit also applies when
+the CPU's TS_FLAG_DO_TIMER_LAST flag is set.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+After the early timer checks, the function currently reads the maximum
+deferment unconditionally. It then replaces the result with KTIME_MAX
+unless one of the two conditions above applies.
+
+timekeeping_max_deferment() performs a seqcount-protected read of the
+shared timekeeper and follows its clocksource pointer. Check the do_timer
+state first and avoid this work when the result would be discarded. This
+leaves the resulting expiry unchanged and reduces accesses to timekeeper
+data that is modified regularly.
+
+On x86-64 this removes 18-20 dynamically executed instructions, including
+the call, from the common non-owner path when the seqcount does not retry.
+
+Signed-off-by: Usama Arif <usama.arif@linux.dev>
+---
+v1 -> v2:
+- Remove the unnecessary comment and delta variable (Frederic Weisbecker).
+---
+ kernel/time/tick-sched.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+index c8f2c4a503b08..a7893a079a83f 100644
+--- a/kernel/time/tick-sched.c
++++ b/kernel/time/tick-sched.c
+@@ -816,7 +816,7 @@ u64 get_jiffies_update(unsigned long *basej)
+  */
+ static ktime_t tick_nohz_next_event(struct tick_sched *ts, int cpu)
+ {
+-	u64 basemono, next_tick, delta, expires;
++	u64 basemono, next_tick, expires;
+ 	unsigned long basejiff;
+ 	int tick_cpu;
+ 
+@@ -856,8 +856,7 @@ static ktime_t tick_nohz_next_event(struct tick_sched *ts, int cpu)
+ 	 * If the tick is due in the next period, keep it ticking or
+ 	 * force prod the timer.
+ 	 */
+-	delta = next_tick - basemono;
+-	if (delta <= (u64)TICK_NSEC) {
++	if (next_tick - basemono <= (u64)TICK_NSEC) {
+ 		/*
+ 		 * We've not stopped the tick yet, and there's a timer in the
+ 		 * next period, so no point in stopping it either, bail.
+@@ -873,17 +872,19 @@ static ktime_t tick_nohz_next_event(struct tick_sched *ts, int cpu)
+ 	 * the sleep time to the timekeeping 'max_deferment' value.
+ 	 * Otherwise we can sleep as long as we want.
+ 	 */
+-	delta = timekeeping_max_deferment();
+ 	tick_cpu = READ_ONCE(tick_do_timer_cpu);
+ 	if (tick_cpu != cpu &&
+-	    (tick_cpu != TICK_DO_TIMER_NONE || !tick_sched_flag_test(ts, TS_FLAG_DO_TIMER_LAST)))
+-		delta = KTIME_MAX;
+-
+-	/* Calculate the next expiry time */
+-	if (delta < (KTIME_MAX - basemono))
+-		expires = basemono + delta;
+-	else
++	    (tick_cpu != TICK_DO_TIMER_NONE || !tick_sched_flag_test(ts, TS_FLAG_DO_TIMER_LAST))) {
+ 		expires = KTIME_MAX;
++	} else {
++		expires = timekeeping_max_deferment();
++
++		/* Calculate the next expiry time */
++		if (expires < (KTIME_MAX - basemono))
++			expires += basemono;
++		else
++			expires = KTIME_MAX;
++	}
+ 
+ 	ts->timer_expires = min_t(u64, expires, next_tick);
+ 
+-- 
+2.53.0-Meta
 
