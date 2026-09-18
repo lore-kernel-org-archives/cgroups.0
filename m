@@ -1,34 +1,37 @@
-Received: from outbound.ms.icloud.com (ms-2001f-snip4-10.eps.apple.com [57.103.73.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-6.mta0.migadu.com [91.218.175.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 097243D7A18
-	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 19:14:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.73.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164E044AB6B
+	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 20:24:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789758859; cv=none; b=niqhIDeFlsinw4P5h4/JvX7FxJK5UD5C5FfUdRYCdjbmnDDmVGiCv0s+yS5IIitR0Eqs6mqf8iNrA8OWvQuHWasDkKQfaJtkiTTNs9tS4axohFSVp5CQn2RsIqxWEutQc5/+LjnC2Fg01AElz9A+sNjz4dBn4Jy911i+3IYRO18=
+	t=1789763048; cv=none; b=C+abbOteJkftryrgEts6lAVnQp11S27c4UE365rTUft4CYX7ymbWO9ubWg9vDyHR1M9U8d/M5zS2K5GVmt2/2cRObuCj7he52VJosULylZdsk6bSJvPrqRvqQLNadvaW7F1JndPB+3eHPFakyzJ1gkomecEjzU7XAcHCze8BNZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789758859; c=relaxed/simple;
-	bh=iMm9vMK9Xe+ef0KAk20+7SWzlYZ+nDsyks61rfIqBVA=;
+	s=arc-20240116; t=1789763048; c=relaxed/simple;
+	bh=eT66H6iANzWDoxgeBfogAllHhpEDQptXi80Z7mxNldQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DemVr/gC1mPO6/9ybskDWA1pDIJ+mgB8/W9CtTB/EjM/u0rv+W6dxzYvVpzXqB+iXdBxZ0D52Uh3Am+9vf1O5/jffL9ibf7s+ALRaPQBGnxfR1DEPA4wPHqEAOSjo+S/5nRFvVfHv1THGMMpARcCaEupFPdoctr2KJPg3AH/gZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=Js38DULw; arc=none smtp.client-ip=57.103.73.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=dx6xQQXw5LZTGFIjhNAAskCfI7IFBgnpqVLstA8nmTz+zVeIOQU8KYy/0C83Kry8DpnZqIni3EfAQNZaKTB8tMPHfMai7r9m7LkDmTI05Q8z57exNcpX0nwx66o68t5i20cX1NSFV7sUEF6Ux1XzL0YLtVYDK5j1sJKCn7nmjso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LKxEZyKC; arc=none smtp.client-ip=91.218.175.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="Js38DULw"
-Received: from outbound.ms.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-west-3a-100-percent-2 (Postfix) with ESMTPS id C4116180014C;
-	Fri, 18 Sep 2026 19:14:10 +0000 (UTC)
-X-ICL-RepId: 01a0b5f0-c68c-78d1-94b1-522a552173d3
-X-ICL-Out-Info: HUtFAUMEWwJACUgATUQeDx5WFlZNRAJCTQhOAEMGWQdeCEwCQwZYClBcHA4PUQxHH3kRUAFYHlZeWhdeTVEPDxlaFFwYU0VRH1RYQQ4KWgtQUR1fAgoERwRbF0YDU0VfAxcRUAFYHlZeWhdeTUcfQE1iSQFaGVscQBdKbk1TDw8ZWhRcGFNFUR9UWF4EU1YOEUhKeQlALUc7ai18XwMIbTB7MX0qcSp8N34tfEB6KAJOGQxKHVJWWxNVF0YJ
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1789758854; x=1792350854; bh=zWqcj/x6eWYWbBAL8kl/ymZLuNhjh0BA6RJ6N290BcI=; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:x-icloud-hme; b=Js38DULwrukcCRSoJMjJBXBKxGgeLw2rwtAxJYs0TLF9Na00R3xPywULitqV1dAH6hG73N0k72FAgaJYgFGsncbGSuI+RvhOpYRwQkXiAVgMMOpHOdQlVOztqBTerafBroDU8kvXsEmNphsptgJ+pzkNyabexOnwe+ZD6e7L4YLz5fgqY/IdYhHXb9/WRAvXdij3RUOxy2/y+rxW4YZI7eKLrKr9d1DWPx6Jov63+R8hxYJlKjDaYrtiWuq8lEcBXxoDywAtPAQmDVWE7TD2R2E67wRd+Vv7bdt6o/X1RDOo0Sh59RxkNOeAeFyJZdoEPdOwH9KEu0ELDRD4CB98yA==
-mail-alias-created-date: 1772519804199
-Received: from BINGFANGGUO-MC0 (unknown [17.156.208.39])
-	by p00-icloudmta-asmtp-us-west-3a-100-percent-2 (Postfix) with ESMTPSA id A4764180017D;
-	Fri, 18 Sep 2026 19:14:04 +0000 (UTC)
-Date: Sat, 19 Sep 2026 03:14:00 +0800
-From: Bingfang Guo <bfguo@icloud.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LKxEZyKC"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=eT66H6iANzWDoxgeBfogAllHhpEDQptXi80Z7mxNldQ=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789763044; v=1; x=1790367844;
+ b=LKxEZyKCj+P+NQJ3YggNKSwHcQ4kkGKVl0EHrOOnZow5edCGHpAfIXqAVI0s3Y7zD4OC+qbj
+ 7zEk7CEe0Rh6cFauNgTgXtdJuf5Lt08oib7ms4cTox6MrFv2X96OwcCuWUF9bab/WPgzcH+fvgY
+ +Ts9YSSRsRoiTja/6Zg3GKps=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 5e90c63acb495c08;
+	Fri, 18 Sep 2026 20:24:03 +0000
+X-Mizu-Trace-ID: 5e90c63acb495c08
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 18 Sep 2026 13:24:01 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Bingfang Guo <bfguo@icloud.com>
 Cc: bingfangguo@tencent.com, Johannes Weiner <hannes@cmpxchg.org>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
 	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
@@ -37,11 +40,12 @@ Cc: bingfangguo@tencent.com, Johannes Weiner <hannes@cmpxchg.org>,
 	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
 	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, cgroups@vger.kernel.org, 
 	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] memcg: move memcg private ID refcount to objcg
-Message-ID: <aq2JdwFuKSUO24c_@BINGFANGGUO-MC0>
+Subject: Re: [PATCH 3/4] memcg: manipulate memcg private ID references by ID
+Message-ID: <aq2dkhBuFktQYvTB@linux.dev>
 References: <20260918-bingfangguo-memcgid-rework-v1-0-5bbf3220d88f@tencent.com>
- <20260918-bingfangguo-memcgid-rework-v1-4-5bbf3220d88f@tencent.com>
- <aq2AUmRISe3Nmfft@linux.dev>
+ <20260918-bingfangguo-memcgid-rework-v1-3-5bbf3220d88f@tencent.com>
+ <aq1_Qhid7-62pHcW@linux.dev>
+ <aq2BfYdMr_8JeY_Q@BINGFANGGUO-MC0>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,75 +54,120 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aq2AUmRISe3Nmfft@linux.dev>
-X-Proofpoint-GUID: lM56lfooGkGx8VqIDgjmfZIh95NUhIJw
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE4MDI3NyBTYWx0ZWRfXw7vRgnkvLACs
- zCN9QZxssgzuh/otDe5TsLrV1j+RR+aXz5C/AlQGc+eBg5RVjrPSMWEOK8+Ktae5tgqd4ywDH37
- W1YHLn5DonaEl1PJUiwPi0qyCXkvDnZBYCS7vPCPlKvGbix4+EL4Jy9tmR/AkkEpRwu71GJj1uJ
- GySFC9LJT1u4Bd2pSs1l2WE/B7et7oFkkyQBwB9v3kS0GyGtneOtuXFFQPZZFzoF1g0bwnMAaf9
- vu1v03YJQgLBtqgV1yfI0DjFTFwYIkMfv3lDparQW2tyimjwCquGrccSIgdRocjpmjLCUKAQ7vf
- cc6ZTS3g8VVJ+HZwtNNYKNSPCZhYsX4kQXnGggh/c1bjHrS58b5VvyUcW2hUaY=
-X-Proofpoint-ORIG-GUID: lM56lfooGkGx8VqIDgjmfZIh95NUhIJw
-X-Authority-Info-Out: v=2.4 cv=fPA0HJae c=1 sm=1 tr=0 ts=6aad8d85
- cx=c_apl:c_pps:t_out a=kRaGL2Q7qLiahLf3O6OaIA==:117
- a=kRaGL2Q7qLiahLf3O6OaIA==:17 a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10
- a=x7bEGLp0ZPQA:10 a=vu5NlEYW-o8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=GvQkQWPkAAAA:8 a=N-mGDGxclJDxHLb_ER0A:9 a=CjuIK1q_8ugA:10
-X-JNJ: AAAAAAAB9jBc8wj8EuzGQJhAEc7+fSE+eTWbzq4/kImKkp555YMA7pXJyMEHsIEiaBAwrrL+zdncb89SvcQeTok9aX6ho0IGdn+BHJZ1jnZht8gj8eoiOGEkjJbIelVreiusVq8TGn9y4rZfSTg5bzCJ/zbUxDY/ssVTTCdhqho3xGGq0tb0ff1cOyDyPcWk3WdbFGa99CdjxY0XYmSGBn6oMh7C+BxOgXGIah0DhmTy8DYkt2ZKOAfTKG9Ua9VnXs2aH1gcT0qtD9NKMl7Ow8yBfxQWOdz4G4ofFlxJ5v04EkV82npleTwRn0pws8OYxNqDFUNoENuCjnwRTClH5nPHmRwlaCwSX3OGKY6in60vYO/A5bY1ds7z2Y8Zl55Gr6coQ+qaDw/00G6DMvp/Y4/r/GdplsjtHf6Wu93dVBs5ig758oOwgdq4UMnQDuVcvxRvQYfcu5DsEJK9WOxQtqn97pORomY38HCambcTn6xPcr54CnodGRrtCVWfKPZJjS2dJMLUPbqo2JHcB1feHWE34JftOkDsJ7dpZy00tXanoSyjrHl61wUw5OucAJzA65n6xv2/LnMObSP02FmEFXViXx+Owxe2J4B0zugC1Uw8RRcnaunfjIs0udGXt+DjtlUN45Oq3xr3LnO7GjsKxLpctoRnlzI1xf3vqpee2G1MCa+mJApmEhDLscvv1GopeqiTwN5UyIeeAxNDhYVcfXoFaasn/tgtUZrhLhv/bVVUTzmu5e5QG/q1hwGNXtAPPoxY/1NnUKuRJ3sCPgwSyF2Kq0aBpSz+TfXbCBqKBzoagZTxYlI++3iIu4H8MZshwBlydK+aw2/ixHJgJj6aY1neadshe+JaLBzjmELoLC7V8ie8HXo7ZizDNrymDRSgaog4qcgkz+aRnssRTEd4/gsxeHoyrJjTI3Ot6k6WBYXpI7Ieef01WnCiSDxFnvl6RbIwSVA8RT0U5WvQYlKStsewlv2TAXE
- zOCZHjy9lcQkkQdAzKTFad0qOh39Wr8GtgaAtvcOFupjc7jAI2LzMrd0pMLyIMJCK+3sLoI7hkCuTReukfp9OZl0AMPtjEs9LQvg4kDhc9m3PBI8HLJQASYVv9KCTr3OYbG9ispm4a2t9mXvhLWk3v6FhlwOx/scAXsFu3+AGgKrdprn8VEldZmmbFkCbCJHN1wddOO62TUV7gjKjKtnEhNxEzRnIzw39eP5pAIIKG2ytEl64aNp65RJnSy4fCtLoHes8E/e5gObzX+TxdBU2Z5ynVpyQ7xyCBauoDZpwf+lmO+aSetFqx8emV/YqkZWq10gacwOX386B8M4eyVeZ3r5srv+aVpz8z/+ZzTdcQ2fMsGqI704PjO9fB1IGPtcxGuKYgLeWHTaLX5bSsKrCClS9EOEAwCmX46lHUSZcElhVgEJFioQDPGWd1K3n207FZ/mci6eeYrzWsfD9YA==
+In-Reply-To: <aq2BfYdMr_8JeY_Q@BINGFANGGUO-MC0>
 
-On Fri, Sep 18, 2026 at 11:19:08AM +0800, Shakeel Butt wrote:
-> On Fri, Sep 18, 2026 at 05:18:43PM +0800, Bingfang Guo via B4 Relay wrote:
-> > From: Bingfang Guo <bingfangguo@tencent.com>
+On Sat, Sep 19, 2026 at 02:46:52AM +0800, Bingfang Guo wrote:
+> On Fri, Sep 18, 2026 at 11:14:03AM +0800, Shakeel Butt wrote:
+> > On Fri, Sep 18, 2026 at 05:18:42PM +0800, Bingfang Guo via B4 Relay wrote:
+> > > From: Bingfang Guo <bingfangguo@tencent.com>
+> > > 
+> > > This is a preparatory work for moving memcgid from memcg to objcg.
+> > > 
+> > > Swap entries retain a private ID rather than a memcg pointer. Once
+> > > private ID references are moved to objcgs, the ID can also outlive the
+> > > memcg to which it was originally assigned.  So it's better to make the
+> > > get and put functions accept the ID itself instead of the memcg.
+> > > 
+> > > Rename mem_cgroup_private_id_get_online() to
+> > > mem_cgroup_private_id_get(), and make it return the ID only.  If the
+> > > memcg is already dying, the dying memcg will still be used for charging
+> > > and stats accounting in v2 swap charging path. But they are hierarchical
+> > > and will be reparented after offlining so it doesn't matter.
+> > > 
+> > > Make mem_cgroup_private_id_put() take the ID and resolve the reference
+> > > holder internally. Convert swap uncharge and charge rollback to release
+> > > the reference using that ID.  This introduces an extra xarray lookup for
+> > > now, which will be removed in the final patch.
+> > > 
+> > > Separate the online-state reference release into
+> > > mem_cgroup_private_id_kill(). The offline path already has the memcg
+> > > pointer and can call the underlying put helper directly.
+> > > 
+> > > Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
+> > > ---
+> > >  mm/memcontrol-v1.c |  7 +++----
+> > >  mm/memcontrol-v1.h |  3 +--
+> > >  mm/memcontrol.c    | 32 +++++++++++++++++++++++---------
+> > >  3 files changed, 27 insertions(+), 15 deletions(-)
+> > > 
+> > > diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+> > > index ed015fdd95123..b7f2868885071 100644
+> > > --- a/mm/memcontrol-v1.c
+> > > +++ b/mm/memcontrol-v1.c
+> > > @@ -268,7 +268,7 @@ void memcg1_commit_charge(struct folio *folio, struct mem_cgroup *memcg)
+> > >   */
+> > >  void __memcg1_swapout(struct folio *folio, struct swap_cluster_info *ci)
+> > >  {
+> > > -	struct mem_cgroup *memcg, *swap_memcg;
+> > > +	struct mem_cgroup *memcg;
+> > >  	struct obj_cgroup *objcg;
+> > >  	unsigned int nr_entries;
+> > >  	unsigned short private_id;
+> > > @@ -298,9 +298,8 @@ void __memcg1_swapout(struct folio *folio, struct swap_cluster_info *ci)
+> > >  	 * if the ID refers to the root memcg.
+> > >  	 */
+> > >  	nr_entries = folio_nr_pages(folio);
+> > > -	swap_memcg = mem_cgroup_private_id_get_online(memcg, nr_entries);
+> > > -	private_id = mem_cgroup_private_id(swap_memcg);
+> > > -	mod_memcg_state(swap_memcg, MEMCG_SWAP, nr_entries);
+> > > +	private_id = mem_cgroup_private_id_get(memcg, nr_entries);
+> > > +	mod_memcg_state(memcg, MEMCG_SWAP, nr_entries);
+> > >  
+> > >  	__swap_cgroup_set(ci, swp_cluster_offset(folio->swap), nr_entries, private_id);
+> > >  
+> > > diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+> > > index 23be2512702dc..281425273ea97 100644
+> > > --- a/mm/memcontrol-v1.h
+> > > +++ b/mm/memcontrol-v1.h
+> > > @@ -27,8 +27,7 @@ static inline bool mem_cgroup_private_id_is_root(unsigned short id)
+> > >  	return id == mem_cgroup_private_id(root_mem_cgroup);
+> > >  }
+> > >  
+> > > -struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg,
+> > > -						    unsigned int n);
+> > > +unsigned short mem_cgroup_private_id_get(struct mem_cgroup *memcg, unsigned int n);
+> > >  
+> > >  void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
+> > >  				       struct mem_cgroup *parent, int idx);
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index bfe53e4392f09..ed44b3e7ac938 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -4082,7 +4082,7 @@ static void mem_cgroup_private_id_remove(struct mem_cgroup *memcg)
+> > >  	}
+> > >  }
+> > >  
+> > > -static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned int n)
+> > > +static void __mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned int n)
+> > >  {
+> > >  	if (refcount_sub_and_test(n, &memcg->private_id_ref)) {
+> > >  		mem_cgroup_private_id_remove(memcg);
+> > > @@ -4092,7 +4092,22 @@ static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned
+> > >  	}
+> > >  }
+> > >  
+> > > -struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg, unsigned int n)
+> > > +static inline void mem_cgroup_private_id_put(unsigned short id, unsigned int n)
+> > > +{
+> > > +	struct mem_cgroup *memcg;
+> > > +
+> > > +	rcu_read_lock();
 > > 
-> > diff --git a/mm/workingset.c b/mm/workingset.c
-> > index 8412f4840ae35..7e4fbc5a786d6 100644
-> > --- a/mm/workingset.c
-> > +++ b/mm/workingset.c
-> > @@ -281,6 +281,9 @@ static bool lru_gen_test_recent(void *shadow, struct lruvec **lruvec,
-> >  	unpack_shadow(shadow, &memcg_id, &pgdat, token, workingset);
-> >  
-> >  	memcg = mem_cgroup_from_private_id(memcg_id);
-> > +	if (!memcg)
-> > +		return false;
+> > Use lockdep_assert_in_rcu_read_lock() here instead of taking rcu as both callers
+> > already taking rcu read lock.
+> > 
 > 
-> You can not return here without initializing *lruvec as it might be used in the
-> caller. Also mem_cgroup_lruvec() can handle null memcg and will substitute with
-> root_mem_cgroup.
+> Thanks for pointing out this.
 > 
+> Agreed.  Both two callers are already holding the rcu lock so
+> taking the lock here is unnecessary. So I will drop the
+> rcu_read_lock() and use that in the next version!
+> 
+> My concern is that: mem_cgroup_private_id_put() looks like a
+> universal put function, requiring rcu held (which is true today)
+> is not that obvious to the users.  So I think adding a short kdoc
+> comment to make it clear later might be a good idea.
 
-Oops. Thanks! Nice catch!
-
-I made a mistake here and it managed to work so I didn't notice
-it...
-
-In the previous patch I left here unchanged and used the root.
-But then it struck me that maybe it is more consistent to make
-the classical LRU and MGLRU behave similarly by skipping the
-recency check for both of them.
-
-I'd like to hear about your suggestions:  Whether to simply
-remove the if statement and use the root only for MGLRU? Or to
-use the root and keep the test speculative for both the two?
-
-Thanks
-Bingfang
-
-> > +
-> >  	*lruvec = mem_cgroup_lruvec(memcg, pgdat);
-> >  
-> >  	max_seq = READ_ONCE((*lruvec)->lrugen.max_seq);
-> > @@ -470,7 +473,7 @@ bool workingset_test_recent(void *shadow, bool file, bool *workingset,
-> >  	 * configurations instead.
-> >  	 */
-> >  	eviction_memcg = mem_cgroup_from_private_id(memcgid);
-> > -	if (!mem_cgroup_tryget(eviction_memcg))
-> > +	if (eviction_memcg && !mem_cgroup_tryget(eviction_memcg))
-> >  		eviction_memcg = NULL;
-> >  	rcu_read_unlock();
-> >  
-> > 
-> > -- 
-> > 2.43.7
-> > 
-> > 
+This function is internal to memcg code, so whoever is going to call it better
+know to call it with rcu held because of lockdep assert. No need to have a
+comment.
