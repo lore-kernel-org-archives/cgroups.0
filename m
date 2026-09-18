@@ -1,148 +1,341 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37D953BA236
-	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 07:58:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EBDB3DDDBE;
+	Fri, 18 Sep 2026 08:54:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789718306; cv=none; b=aoX/lHPuzgL6sATXwtgHS0mLi4agwcEE0oYJalsCoMZlRogQ2F+p/TCoUzRwFfKBqlpZwpQIpCQDJzxKqu5+/jFL8cFzt5GVEB6PCt/5HGij0nQrXow4xAs0XEeNIrDsw04IkQNQDeKpR8rf0ui7/LXD96jsQFObMgtt38Zrb4A=
+	t=1789721654; cv=none; b=KsANtZuF3d4K5T8DGxgIxyimQ0qaooezVjO0HCkIfk4FgXzbZUGySN+t2rh55txiJLHnrjI52wI2TGQwuDqp5277//5ToaiUS7GdV+JPQX0ND/D2u4Sq2h63MZ2Pubj2f6uEZOKYLMD/vOzIq5gtaa0At4ZQA7x8vQp/uLFRubU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789718306; c=relaxed/simple;
-	bh=/z2wgDgimcZIfi6KUkr3H28lBp+LYcX+PMuNB+uct+k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n0/bfpUeMvD7rARsg/A6/sYGe+sKopOojfWbUbWR3VpU4CjEe4OHNW90iqLzI4LgKUHSF+uuq8N1ZeOv0lK4JKH0LNPFKbRXxxbuw2HsWYGw5hPv/MaxMtF5NIZMPjls1hDW6n0+ScZVDsvmoyOFwJmgyADcvYymXrrMTF4DGIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=UuHrxIyg; arc=none smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1789721654; c=relaxed/simple;
+	bh=aU+zGcsd/b4y8gfxOYwXDtxYISGgw2Gxjyv9f8ql9dc=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=dNc3WGDXqUno8j7JbOzJvYmpBS169a29AlXXlcjEUj5WOxqR1obM2r+k06bsy+G8pYia2FloLSTc3XXjYXOnr9eHNsBOQ8ppDwYS/kvJeivcd5whU2BU1AQGjLqLEYTS4KQj9BZj6g+AhVbzsYoR9UH+OSEjz8+A3w1gfm0lr9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o1QL4I5I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="UuHrxIyg"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-48439feca17so316029f8f.1
-        for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 00:58:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1789718300; x=1790323100; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=dV9H14tWbd96/qCJ/vqD0rQ8aDrl9j+AsefZpIAGXFA=;
-        b=UuHrxIyg6as0maU3zb4v6jr/oDZfB76LnL3OcjULMKJ6KhJfBcvXHV3C/ksvhZdz0E
-         MmWJrt5ZU8H4avTbBvdkRhzPHgHAttnn8CqbnxxzhCCmN2EMr6n9idBKwNyPvdd3J45M
-         uX6oQJ3nX81gQ9xSNeEUMKdlzjSMg9HIIY7HSYH3Xi/bmdVJD67+aCjagDsrWYn5BnBr
-         TJ+KUDfxVJOYKgWUNAjPCnqyy+JigD9JniR9boW5z+WwLSizYgxLSCNCnAalOizxvp/9
-         yYWa1zg6G9car3hB6FAqvsTqffjNxH04hHK/UDasNzzeoqF8i9FQoY0fb1MRC/jLEs3f
-         qMBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789718300; x=1790323100;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=dV9H14tWbd96/qCJ/vqD0rQ8aDrl9j+AsefZpIAGXFA=;
-        b=smhrkEhHbEQi9MyvlKvTbaxcifCOBbGMcuMinwy1SuoGRNIIGDD/q1IhxGBjtfLkq0
-         nBD7u+dWA2T1KX8zVoqCNnHkt1ons/Q8BrRCLyKKRkCs4WXoqgsdQDx7yZd9m44nug4A
-         SsizpLqdfviWXPF+qDlmnhRvORb+uKghInomCtRflqVWfGrkoFB9XASXUcew2Sd56hHb
-         EB/Rcu4sVGsJZ6KH3DnuPylSu/HDZje83uPNuM71p6TsPA+XH9/pStpyR7wStz+wofWB
-         +tVO2bvtqbvNUqeQKcEdDrBsLWUZjwsBTbr2hVrWPxy+lCknItw1Vs0ahtTCyJejQIGm
-         nXKQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzhx/Im2AfLhmPy7JucR/QG3ZjMV1l7f4pelnhD+AtI+vTI+RQyqJmoxTZnvTBqigLmWh3Ukrd+@vger.kernel.org
-X-Gm-Message-State: AFuF++n31LGL5hA0UqHF1/tr4/tPBpCmnXL7pWPA48mtZfJ6r+rofvvs
-	tuegKppM79qQ4AwcO/vyi3PjwFWPQpp4sUKm8qAaGWl9F9Sta23EoDJ/xtZxD7dCWZs=
-X-Gm-Gg: AYBFou23CErqDGm3EBRgY9bX1/g0W0q9dU7zm4Vl7iMP+iQFlB5dxdL5LYs3Lm26noc
-	DwXJ1g7Q26GCWK8bZQ0bG9eD2w086Zq2KPYGq9p6pYW0az5Kj3m+LZH2jE2q3pDuir3wcwO2c4o
-	hoyhdASoS+tDKVua47MIC8I1fg8pT9J3O3LLUJYXEk7MKZVqvUQe2qRRQnWr+rQdDhsI/m4CYfe
-	CiSViVR6gp9gqmSUWoQ3XZCpGiTzTNB/AIWLb0HKfNvgzY1PLwguAWNPrbJ/quK6Fos+WLREA3Y
-	EN8zm9W4n2XmCNG5wITs0ZiiInvXWevTBOrNFf7HMan1KLWEBo1vVJRRp5qRNm9zMHtXTsaA+aB
-	lhtWrhpOBAB9+3mN2TClbU34DCzv7AXEUv6afFNa3jQ7nkM1ez2g5pvReI8J+4NwzFATJf4FIJt
-	87KijDL3cBe+cxVtiB/E8oI/5rEVBAbsf3UlbD/zGbRPqRwENtG4oRdZRRNMlociVHsDtwIxpAp
-	ZcCy+zH2uZ4
-X-Received: by 2002:a05:600c:8518:b0:49d:28c4:b304 with SMTP id 5b1f17b1804b1-49fc5741563mr18804255e9.29.1789718300499;
-        Fri, 18 Sep 2026 00:58:20 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fbd204d89sm160372235e9.3.2026.09.18.00.58.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Sep 2026 00:58:19 -0700 (PDT)
-Date: Fri, 18 Sep 2026 09:58:17 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R . Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
-	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, Oscar Salvador <osalvador@suse.de>, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	kernel-team@meta.com
-Subject: Re: [PATCH v6 0/5] mm/page_counter: move stock from mem_cgroup to
- page_counter
-Message-ID: <aqzulM8S63363Tr1@localhost.localdomain>
-References: <20260916210552.891730-1-joshua.hahnjy@gmail.com>
- <20260917175701.2343946-1-joshua.hahnjy@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o1QL4I5I"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 90018C2BCF6;
+	Fri, 18 Sep 2026 08:54:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1789721653;
+	bh=aU+zGcsd/b4y8gfxOYwXDtxYISGgw2Gxjyv9f8ql9dc=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=o1QL4I5IGfsnNrIicKfPQX/iil/P9M1bH8Pdv4kbigwcX8gWkvg5JF5J+Hg7VlAXN
+	 xYdZ19IHpBeWktRwevW3h/MLgguWInfVuHF68NJtoPqjgDFWHaF/e10ZjCFvmKQC1S
+	 2IEQtcnh5oG+WFvpJ5GQM62W8xCaVJl3GFEn3EQCqdt1NX9JaUK44yz8X+LNXcqmlU
+	 IkwtiV8svxqY5+DtTJylBxmPFG8mNDT24MB1MNJMVFdvhkJN3hiLwnhz5+6qgUPkBl
+	 4I+kloUIKk/7j2TnT/UesqILUmuR+wExzb7Ln9YZpcuWOmQFEijnG1Fllv6YdyCUP5
+	 2AlLcwNYjrE0A==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71A3BC982D7;
+	Fri, 18 Sep 2026 08:54:13 +0000 (UTC)
+From: Jingxiang Zeng via B4 Relay <devnull+linuszeng.tencent.com@kernel.org>
+Date: Fri, 18 Sep 2026 16:53:42 +0800
+Subject: [PATCH 2/6] mm: page_counter: track protection state in
+ page_counter_protection
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="6tot43pwavmchhic"
-Content-Disposition: inline
-In-Reply-To: <20260917175701.2343946-1-joshua.hahnjy@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260918-descriptive-name-v1-2-dfcfdd91b456@tencent.com>
+References: <20260918-descriptive-name-v1-0-dfcfdd91b456@tencent.com>
+In-Reply-To: <20260918-descriptive-name-v1-0-dfcfdd91b456@tencent.com>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+ Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
+ Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Oscar Salvador <osalvador@suse.de>, Jonathan Corbet <corbet@lwn.net>, 
+ Shuah Khan <skhan@linuxfoundation.org>, 
+ Randy Dunlap <rdunlap@infradead.org>
+Cc: Jingxiang Zeng <jingxiangzeng.cas@gmail.com>, cgroups@vger.kernel.org, 
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linux-doc@vger.kernel.org, 
+ Jingxiang Zeng <linuszeng@tencent.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789721651; l=9424;
+ i=linuszeng@tencent.com; s=20260909; h=from:subject:message-id;
+ bh=CfFjeGPSW+N+Iw1P+GRZXWwVce/M2M1WMHPh1nAZy3E=;
+ b=jHpPy7d+GDh+HUqiPXX7FRb0ibwbrNw7nMVEoGk2aTWH+mJ3cLPntP/bIns5bUIeOcTpATZxL
+ 1OdQfYToxPuBu+9swnmlTRddbMrjgSG3r5RhShXyjuZltZZBazTGJim
+X-Developer-Key: i=linuszeng@tencent.com; a=ed25519;
+ pk=6K54xRzYIRWqatrAPy86M4E0MsI92BVJBhXwz5NdC74=
+X-Endpoint-Received: by B4 Relay for linuszeng@tencent.com/20260909 with
+ auth_id=1017
+X-Original-From: Jingxiang Zeng <linuszeng@tencent.com>
+Reply-To: linuszeng@tencent.com
+
+From: Jingxiang Zeng <linuszeng@tencent.com>
+
+Move the read/write side of hierarchical protection from struct
+page_counter to struct page_counter_protection: propagate_protected_usage()
+updates the protection context of the parent, page_counter_set_min()/low()
+and page_counter_calculate_protection() operate on it, and memcg and dmem
+accessors (including dmem_cgroup_below_min()/below_low()) read
+min/low/emin/elow and children_*_usage from it.
+
+struct page_counter keeps its now-unused protection fields for now; they
+are removed in a follow-up commit.
+
+No functional change.
+
+Signed-off-by: Jingxiang Zeng <linuszeng@tencent.com>
+---
+ include/linux/memcontrol.h |  8 +++----
+ kernel/cgroup/dmem.c       | 12 +++++-----
+ mm/memcontrol.c            |  8 +++----
+ mm/page_counter.c          | 59 +++++++++++++++++++++++++++++-----------------
+ 4 files changed, 52 insertions(+), 35 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 5936f497aea6..ff69a390a809 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -625,8 +625,8 @@ static inline void mem_cgroup_protection(struct mem_cgroup *root,
+ 	if (root == memcg)
+ 		return;
+ 
+-	*min = READ_ONCE(memcg->memory.emin);
+-	*low = READ_ONCE(memcg->memory.elow);
++	*min = READ_ONCE(memcg->memory_prot.emin);
++	*low = READ_ONCE(memcg->memory_prot.elow);
+ }
+ 
+ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
+@@ -650,7 +650,7 @@ static inline bool mem_cgroup_below_low(struct mem_cgroup *target,
+ 	if (mem_cgroup_unprotected(target, memcg))
+ 		return false;
+ 
+-	return READ_ONCE(memcg->memory.elow) >=
++	return READ_ONCE(memcg->memory_prot.elow) >=
+ 		page_counter_read(&memcg->memory);
+ }
+ 
+@@ -660,7 +660,7 @@ static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
+ 	if (mem_cgroup_unprotected(target, memcg))
+ 		return false;
+ 
+-	return READ_ONCE(memcg->memory.emin) >=
++	return READ_ONCE(memcg->memory_prot.emin) >=
+ 		page_counter_read(&memcg->memory);
+ }
+ 
+diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
+index a4bac0d5ac3b..4027d3d309c8 100644
+--- a/kernel/cgroup/dmem.c
++++ b/kernel/cgroup/dmem.c
+@@ -212,12 +212,12 @@ set_resource_max(struct dmem_cgroup_pool_state *pool, u64 val, bool nonblock)
+ 
+ static u64 get_resource_low(struct dmem_cgroup_pool_state *pool)
+ {
+-	return pool ? READ_ONCE(pool->cnt.low) : 0;
++	return pool ? READ_ONCE(pool->cnt.prot->low) : 0;
+ }
+ 
+ static u64 get_resource_min(struct dmem_cgroup_pool_state *pool)
+ {
+-	return pool ? READ_ONCE(pool->cnt.min) : 0;
++	return pool ? READ_ONCE(pool->cnt.prot->min) : 0;
+ }
+ 
+ static u64 get_resource_max(struct dmem_cgroup_pool_state *pool)
+@@ -388,13 +388,13 @@ bool dmem_cgroup_state_evict_valuable(struct dmem_cgroup_pool_state *limit_pool,
+ 	dmem_cgroup_calculate_protection(limit_pool, test_pool);
+ 
+ 	used = page_counter_read(ctest);
+-	min = READ_ONCE(ctest->emin);
++	min = READ_ONCE(ctest->prot->emin);
+ 
+ 	if (used <= min)
+ 		return false;
+ 
+ 	if (!ignore_low) {
+-		low = READ_ONCE(ctest->elow);
++		low = READ_ONCE(ctest->prot->elow);
+ 		if (used > low)
+ 			return true;
+ 
+@@ -787,7 +787,7 @@ bool dmem_cgroup_below_min(struct dmem_cgroup_pool_state *root,
+ 	 * here.
+ 	 */
+ 	dmem_cgroup_calculate_protection(root, test);
+-	return page_counter_read(&test->cnt) <= READ_ONCE(test->cnt.emin);
++	return page_counter_read(&test->cnt) <= READ_ONCE(test->cnt.prot->emin);
+ }
+ EXPORT_SYMBOL_GPL(dmem_cgroup_below_min);
+ 
+@@ -818,7 +818,7 @@ bool dmem_cgroup_below_low(struct dmem_cgroup_pool_state *root,
+ 	 * here.
+ 	 */
+ 	dmem_cgroup_calculate_protection(root, test);
+-	return page_counter_read(&test->cnt) <= READ_ONCE(test->cnt.elow);
++	return page_counter_read(&test->cnt) <= READ_ONCE(test->cnt.prot->elow);
+ }
+ EXPORT_SYMBOL_GPL(dmem_cgroup_below_low);
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 94c538ea3cb5..aaf23e849408 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4860,7 +4860,7 @@ static ssize_t memory_peak_write(struct kernfs_open_file *of, char *buf,
+ static int memory_min_show(struct seq_file *m, void *v)
+ {
+ 	return seq_puts_memcg_tunable(m,
+-		READ_ONCE(mem_cgroup_from_seq(m)->memory.min));
++		READ_ONCE(mem_cgroup_from_seq(m)->memory_prot.min));
+ }
+ 
+ static ssize_t memory_min_write(struct kernfs_open_file *of,
+@@ -4883,7 +4883,7 @@ static ssize_t memory_min_write(struct kernfs_open_file *of,
+ static int memory_low_show(struct seq_file *m, void *v)
+ {
+ 	return seq_puts_memcg_tunable(m,
+-		READ_ONCE(mem_cgroup_from_seq(m)->memory.low));
++		READ_ONCE(mem_cgroup_from_seq(m)->memory_prot.low));
+ }
+ 
+ static ssize_t memory_low_write(struct kernfs_open_file *of,
+@@ -6457,6 +6457,6 @@ void mem_cgroup_show_protected_memory(struct mem_cgroup *memcg)
+ 		memcg = root_mem_cgroup;
+ 
+ 	pr_warn("Memory cgroup min protection %lukB -- low protection %lukB",
+-		K(atomic_long_read(&memcg->memory.children_min_usage)),
+-		K(atomic_long_read(&memcg->memory.children_low_usage)));
++		K(atomic_long_read(&memcg->memory_prot.children_min_usage)),
++		K(atomic_long_read(&memcg->memory_prot.children_low_usage)));
+ }
+diff --git a/mm/page_counter.c b/mm/page_counter.c
+index aa1f9a9a314f..d33f40ca2c78 100644
+--- a/mm/page_counter.c
++++ b/mm/page_counter.c
+@@ -22,28 +22,29 @@ static bool track_protection(struct page_counter *c)
+ static void propagate_protected_usage(struct page_counter *c,
+ 				      unsigned long usage)
+ {
++	struct page_counter_protection *prot = c->prot;
+ 	unsigned long protected, old_protected;
+ 	long delta;
+ 
+-	if (!c->parent)
++	if (!prot || !prot->parent)
+ 		return;
+ 
+-	protected = min(usage, READ_ONCE(c->min));
+-	old_protected = atomic_long_read(&c->min_usage);
++	protected = min(usage, READ_ONCE(prot->min));
++	old_protected = atomic_long_read(&prot->min_usage);
+ 	if (protected != old_protected) {
+-		old_protected = atomic_long_xchg(&c->min_usage, protected);
++		old_protected = atomic_long_xchg(&prot->min_usage, protected);
+ 		delta = protected - old_protected;
+ 		if (delta)
+-			atomic_long_add(delta, &c->parent->children_min_usage);
++			atomic_long_add(delta, &prot->parent->children_min_usage);
+ 	}
+ 
+-	protected = min(usage, READ_ONCE(c->low));
+-	old_protected = atomic_long_read(&c->low_usage);
++	protected = min(usage, READ_ONCE(prot->low));
++	old_protected = atomic_long_read(&prot->low_usage);
+ 	if (protected != old_protected) {
+-		old_protected = atomic_long_xchg(&c->low_usage, protected);
++		old_protected = atomic_long_xchg(&prot->low_usage, protected);
+ 		delta = protected - old_protected;
+ 		if (delta)
+-			atomic_long_add(delta, &c->parent->children_low_usage);
++			atomic_long_add(delta, &prot->parent->children_low_usage);
+ 	}
+ }
+ 
+@@ -258,7 +259,10 @@ void page_counter_set_min(struct page_counter *counter, unsigned long nr_pages)
+ {
+ 	struct page_counter *c;
+ 
+-	WRITE_ONCE(counter->min, nr_pages);
++	if (!counter->prot)
++		return;
++
++	WRITE_ONCE(counter->prot->min, nr_pages);
+ 
+ 	for (c = counter; c; c = c->parent)
+ 		propagate_protected_usage(c, atomic_long_read(&c->usage));
+@@ -275,7 +279,10 @@ void page_counter_set_low(struct page_counter *counter, unsigned long nr_pages)
+ {
+ 	struct page_counter *c;
+ 
+-	WRITE_ONCE(counter->low, nr_pages);
++	if (!counter->prot)
++		return;
++
++	WRITE_ONCE(counter->prot->low, nr_pages);
+ 
+ 	for (c = counter; c; c = c->parent)
+ 		propagate_protected_usage(c, atomic_long_read(&c->usage));
+@@ -454,9 +461,18 @@ void page_counter_calculate_protection(struct page_counter *root,
+ 				       struct page_counter *counter,
+ 				       bool recursive_protection)
+ {
++	struct page_counter_protection *prot = counter->prot;
++	struct page_counter_protection *parent_prot;
+ 	unsigned long usage, parent_usage;
+ 	struct page_counter *parent = counter->parent;
+ 
++	/*
++	 * Only counters with protection support (memory, dmem pools) are
++	 * ever passed here, but guard anyway.
++	 */
++	if (!prot)
++		return;
++
+ 	/*
+ 	 * Effective values of the reclaim targets are ignored so they
+ 	 * can be stale. Have a look at mem_cgroup_protection for more
+@@ -472,23 +488,24 @@ void page_counter_calculate_protection(struct page_counter *root,
+ 		return;
+ 
+ 	if (parent == root) {
+-		counter->emin = READ_ONCE(counter->min);
+-		counter->elow = READ_ONCE(counter->low);
++		prot->emin = READ_ONCE(prot->min);
++		prot->elow = READ_ONCE(prot->low);
+ 		return;
+ 	}
+ 
++	parent_prot = parent->prot;
+ 	parent_usage = page_counter_read(parent);
+ 
+-	WRITE_ONCE(counter->emin, effective_protection(usage, parent_usage,
+-			READ_ONCE(counter->min),
+-			READ_ONCE(parent->emin),
+-			atomic_long_read(&parent->children_min_usage),
++	WRITE_ONCE(prot->emin, effective_protection(usage, parent_usage,
++			READ_ONCE(prot->min),
++			READ_ONCE(parent_prot->emin),
++			atomic_long_read(&parent_prot->children_min_usage),
+ 			recursive_protection));
+ 
+-	WRITE_ONCE(counter->elow, effective_protection(usage, parent_usage,
+-			READ_ONCE(counter->low),
+-			READ_ONCE(parent->elow),
+-			atomic_long_read(&parent->children_low_usage),
++	WRITE_ONCE(prot->elow, effective_protection(usage, parent_usage,
++			READ_ONCE(prot->low),
++			READ_ONCE(parent_prot->elow),
++			atomic_long_read(&parent_prot->children_low_usage),
+ 			recursive_protection));
+ }
+ #endif /* CONFIG_MEMCG || CONFIG_CGROUP_DMEM */
+
+-- 
+2.43.7
 
 
---6tot43pwavmchhic
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v6 0/5] mm/page_counter: move stock from mem_cgroup to
- page_counter
-MIME-Version: 1.0
-
-Hi.
-
-On Thu, Sep 17, 2026 at 10:57:00AM -0700, Joshua Hahn <joshua.hahnjy@gmail.=
-com> wrote:
->=20
-> This is true, but this is already the behavior for vanilla memcg.
-> In this series I'm hoping to preserve all existing semantics without
-> changing behaviors, so I can fix this problem in a separate issue.
->=20
-> Specifically, in vanilla try_charge_memcg:
->=20
-> done_restock:
-> 	if (batch > nr_pages)
-> 		refill_stock(memcg, batch - nr_pages);
->=20
-> ...
-> 			current->memcg_nr_pages_over_high +=3D batch;
->=20
-> So I've just preserved the exact semantics that we used to have before.
-
-Kudos to you for the conservative approach.
-
->=20
-> The problem isn't that big anyways though, it's a transient inflation
-> in memcg_over_high and will be wiped on the next high handling run,
-> and there is no effect on accounting or permanent inflations.
-
-It reminds me [1] where stockage imprecision could even trigger OOM but
-it was reportedly only visible in LTP.
-
-HTH,
-Michal
-
-[1] https://lore.kernel.org/all/20250530151858.672391-1-mkoutny@suse.com/
-
---6tot43pwavmchhic
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaqzvFhsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AiyGQEAxBEcNkVlUsFJunbUaXyj
-fCr+UQ4r8t6S3GNeKJPgiYYA/3Gky8F7pWf3EmNRaSTu35DLuveVmYfJTnxV3o4s
-qHYK
-=tu6R
------END PGP SIGNATURE-----
-
---6tot43pwavmchhic--
