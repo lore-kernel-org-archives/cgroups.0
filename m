@@ -1,85 +1,107 @@
-Received: from mta0.migadu.com (out-128.mta0.migadu.com [91.218.175.128])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9054F96B1
-	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 13:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.128
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DFD52BDC0F;
+	Fri, 18 Sep 2026 13:53:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789738585; cv=none; b=c+WJ5nefDxuYXua2qUK/BgeqZRv30NxEwhm1du901CDTkbIGfzL4n3WkbNNPoNkZJPGMHnPPd83qMNmAB2dTjfC504i1azJy2ZOwyiDj4rKfPc+s2DYDpj4orKLbz71GxhnRhPnBJ3E15ghVEjyXslqLtKk8hJTobw55OD76Www=
+	t=1789739585; cv=none; b=HA9tUEjFxuptZGz7CMwAH7mITCdmynaBL3QitSWa+PN76okfMlRX7LPdikprXgOd7VPYYqdFdnOHJl7u97Zg3amvtFRI4vViHfItQfuqdGwKzgwnIJ4Z9LPyLTxKPKuN0IDscbNlgTo1SqlGdbbXU5ZADhDc5rYz0aVhHiuFRpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789738585; c=relaxed/simple;
-	bh=pvD3aJ8le/Im6vSiNfoFqTwGeUg+ivaLxFZnLjWT+cU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YTpDYkk/NxKBlK+Kj1xBEKQAojJTCDIDpSxdYgpFc92K6Bfm21IKnaqhRj6kJztMAvmssSxpR3/ag5BHYMPxHBCf/Fi4naODtRTHgim8miJ5DFs83MPmuY8kIeXJ7lbgf/rGl2XEhnC82XLTVzkWgxiETmp9jnbCQpHN5O2UthE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kapzy+CL; arc=none smtp.client-ip=91.218.175.128
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789739585; c=relaxed/simple;
+	bh=j47wWgNed3Dy1tgOTLlnlr02ddYZmYZX5QouJSK+fjw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hwZhKA/Y4MHLfI2UU+4EhiZbVpyb93LmyJ2gcWxJulKeOowSjWdppodwLFfRY8rPNq0Jww6Fnwt+5jSGzhIj++WS1CCRR7iS6mzhKL+1/ZSV7jQ6k09DmjK2yC0Fe4VHFmKHDpHBXFKqci8254daWDwlhkRBhX4pOr+aKM+5Gco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f97FyMau; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kapzy+CL"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=pvD3aJ8le/Im6vSiNfoFqTwGeUg+ivaLxFZnLjWT+cU=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789738581; v=1; x=1790343381;
- b=kapzy+CL8MxYpnUjnMi2eYTtP7h+6QUMWN/lJJHjsIb60SYxnQhEt6/Ufn81HRAlzfdVzPiN
- MWnn8Bi7JZ4/M9mEP2cbnX3cK0kAoqTh5I3tLrRnuD321s8U3AWcX3HGDuwBms9+UzR61gRJVj8
- fJlAKbgALNOnYrRKyJzC9faI=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 5c05e03064eca122;
-	Fri, 18 Sep 2026 13:36:10 +0000
-X-Mizu-Trace-ID: 5c05e03064eca122
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <5db7d87e-8d1b-40e0-a69c-4dcebc173456@linux.dev>
-Date: Fri, 18 Sep 2026 14:36:05 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f97FyMau"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46EA31F000FF;
+	Fri, 18 Sep 2026 13:52:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789739584;
+	bh=0ofE/qDb5J9ar98eMmtKZuvLhg7PBCT+/uutvWytlvs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=f97FyMauyGj9dmrCQu8/VUgHVsqfD98mB3R6ooyXX6zZFElQVoVveAYDPw5FmZncy
+	 n47bYrTrUw8mQJaj6Lv4gRI4x5JRZWzhYPrIfypqL6H7ef9Azgsx/9agLBWk8/b/RG
+	 N5GeNQxoniykBE0BKv+ZA39TBtklWqviLDdCcANZ0jvuDreb+PPMTJXL/QWCXA1s6z
+	 +B9pVjrRDFEpRQKtvptO5McpD71THnklpX3j9HGxGzV2o0Ti4LtwG5N7xkhNPW1vCa
+	 0Rt+JrMFZQTTC6nF8y86RphpvVsc8Q2IDTwYStn1XDYQCb20PBBRNDTAZLVanIXE0G
+	 bLTbRvWWJHx6w==
+Date: Fri, 18 Sep 2026 14:52:54 +0100
+From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+To: Qinyun Tan <qinyuntan@linux.alibaba.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@suse.com, 
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev, david@kernel.org, 
+	ziy@nvidia.com, baolin.wang@linux.alibaba.com, xlpang@linux.alibaba.com, 
+	liam@infradead.org, nico.pache@linux.dev, ryan.roberts@arm.com, dev.jain@arm.com, 
+	baohua@kernel.org, lance.yang@linux.dev, usama.arif@linux.dev, vbabka@kernel.org, 
+	rppt@kernel.org, surenb@google.com, chris@chrisdown.name, kasong@tencent.com, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/1] mm: memcg: don't hand out large folios above
+ memory.high
+Message-ID: <aq1CIf0BPWFZLLmH@gremlin>
+References: <20260915042546.279410-1-qinyuntan@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] tick/nohz: Avoid unused timekeeping_max_deferment() calls
-To: axboe@kernel.dk, cgroups@vger.kernel.org, josef@toxicpanda.com,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org
-Cc: hannes@cmpxchg.org, mkoutny@suse.com, shakeel.butt@linux.dev,
- riel@surriel.com
-References: <20260918133345.2823363-1-usama.arif@linux.dev>
-Content-Language: en-US
-From: Usama Arif <usama.arif@linux.dev>
-In-Reply-To: <20260918133345.2823363-1-usama.arif@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260915042546.279410-1-qinyuntan@linux.alibaba.com>
 
 
+This is the friendly patch-bot of Lorenzo Stoakes.
 
-On 18/09/2026 14:33, Usama Arif wrote:
-> tick_nohz_next_event() limits a CPU's sleep interval to the maximum
-> deferment supported by the current clocksource when that CPU owns the
-> do_timer() duty. If the duty is unassigned, the limit also applies when
-> the CPU's TS_FLAG_DO_TIMER_LAST flag is set.
-> 
-> After the early timer checks, the function currently reads the maximum
-> deferment unconditionally. It then replaces the result with KTIME_MAX
-> unless one of the two conditions above applies.
-> 
-> timekeeping_max_deferment() performs a seqcount-protected read of the
-> shared timekeeper and follows its clocksource pointer. Check the do_timer
-> state first and avoid this work when the result would be discarded. This
-> leaves the resulting expiry unchanged and reduces accesses to timekeeper
-> data that is modified regularly.
-> 
-> On x86-64 this removes 18-20 dynamically executed instructions, including
-> the call, from the common non-owner path when the seqcount does not retry.
-> 
-> Signed-off-by: Usama Arif <usama.arif@linux.dev>
-> ---
-> v1 -> v2:
-> - Remove the unnecessary comment and delta variable (Frederic Weisbecker).
-> ---
->  kernel/time/tick-sched.c | 23 ++++++++++++-----------
->  1 file changed, 12 insertions(+), 11 deletions(-)
-> 
-Sorry about the noise, please ignore, copied the wrong list of people to send to.
-The correct list is [1]
+You have sent him a patch/series that has triggered this response.
 
-[1] https://lore.kernel.org/all/20260918133408.2834751-1-usama.arif@linux.dev/
+He used to manually respond to these common problems, but in order to save
+his sanity (he kept writing the same thing over and over, yet to different
+people), I was created.
+
+Hopefully you will not take offence and will fix the problem in your patch
+and resubmit it so that it can be accepted into the Linux kernel tree.
+
+When sending emails to mm:
+
+1. Patch series with 1 patch sent with cover letter
+
+Please send single patches without a cover letter.
+
+The easiest way of accomplishing this (+ our preference) is to use
+b4 [0], otherwise format patches like this:
+
+$ git format-patch HEAD~1
+
+[0]: https://b4.docs.kernel.org/en/latest/contributor/send.html
+
+2. Missing cc's
+
+You are missing cc's. Fixing this is easy with b4 [0] (the recommended way
+of sending patches to mm):
+
+$ b4 prep --auto-to-cc
+
+Alternatively, you can use scripts/get_maintainer.pl:
+
+$ scripts/get_maintainer.pl --nogit-fallback <files-or-patches>
+
+[0]: https://b4.docs.kernel.org/en/latest/contributor/send.html
+
+Specifically, the following appear to be missing:
+
+  chrisl@kernel.org
+
+If you wish to discuss this problem further, or you have questions about
+how to resolve this issue, please feel free to respond to this email and
+Lorenzo will reply once he has dug out from the pending patches received
+from other developers.
+
+thanks,
+
+Lorenzo's patch email bot
+
+[ Idea shamelessly stolen from greg-kh ]
+
+--
+Cheers, Lorenzo
