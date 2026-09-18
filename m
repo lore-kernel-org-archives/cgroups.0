@@ -1,129 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CBF928315D
-	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 12:52:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CFE23E51F7
+	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 12:59:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789735970; cv=none; b=eQMoajsUN540RrUBpRn5SrCCDbTh0v1dV5jpX7fDiAim5dQdyhdHHlSjizHQ9NO8/kvnVX2ZV3Sth1xAkZk0sQcp1AMBwgwUCCeXiht7Y/VNgcP5ezZVIF8NIruxmXvu8Jw55Ps1m1bS+TUdBo5u7SKjUjt+lT+JmuPhEVGQa98=
+	t=1789736346; cv=none; b=Dn4hC9N2I8bjjHVF6KPLVFScvwtVUrOk3s+3btFvjWpdUq+kTuGQcAt9V45OV2iUfM+XFRloZchCXPhthV4lVVtkKW4/qp/ryKX5jPIHvi3PzFhWzVUDUM2H/f4jrLZeh0odG8Q1P4iNg4niR5iY7ZQ9dk2MskLXlsh2KwN6zCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789735970; c=relaxed/simple;
-	bh=URL5OVHpVZmJeSxZOa6qP69E2VQXQ72G81+v0ms+TiQ=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=ZCIS73MuR8xEfogyxk4HEXR1M+CJ0oGr6rOq2V01AxwpYOKys4Zz0iyKplfvZNNzmY5OqjtD3F0jhJO7KOX+8CwyGcwmKxACqpKCPoWxEJxUO4QVj68tOV65Pqrd21H3PxlbnbOhLVPdO8j6o2Rp9yjUf4cdkRToUSCcvRYo1Vk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JGkleZ/X; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789736346; c=relaxed/simple;
+	bh=GeGe1G7IqSHc7gRJJW5jBwTcx8OPDQooEPSShzO98Sw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QOgfkIUKOZ3o1frdd56WrLaFkMilUHxg7D6PZS+Yqvj8gwQbnqTJU4BuUrgr808skQglMnF2XtODU4kge2EVvYGfxzOcMemdlCiTX0bwDIgzykVy1IIdc7u/UR9kmuMBgM0TckuhhZhkkiMrGTCCwyO3JCH2TeniDeXLc8LwAsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Ye47TcDw; arc=none smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JGkleZ/X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59D2C1F000FF;
-	Fri, 18 Sep 2026 12:52:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789735965;
-	bh=URL5OVHpVZmJeSxZOa6qP69E2VQXQ72G81+v0ms+TiQ=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=JGkleZ/XAhcExzcKZYi+/mjkmIUpIz7ElmkzDgJx4CsNxWHyEjCmMZYPHzZR42/L1
-	 b5RYJH4UGPjJnpZXK6W8pzvPo+v/PK/7jtfJaXnTKxjUgdQHkYCx7DoHkpnGC6uK3D
-	 ae17+c+gbueBcmUUX4ruz4UZWFkzqCOVee5dXOJnlW1MNrDD4yj44h0MbMk85mSxmw
-	 R1z1rbeZMkJgCLX+Ui0oQ5/a4ipfKl70ybCtC5qD7UUKu108ykC3Tw/Tk2TRVOL2X6
-	 okk6yUCZHNSs6U0LkKvTq8tu/2e+RntE+waOoGGxT9BnoJPceENrakgp0v3rZN1d62
-	 L60yoquFc5TXQ==
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 75E0EF40066;
-	Fri, 18 Sep 2026 08:52:44 -0400 (EDT)
-Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Fri, 18 Sep 2026 08:52:44 -0400
-X-ME-Sender: <xms:HDStaren-s3mEd_C4H-zlsIV7JEzMAWsNt0EWptDbCnevV-pUJ_weA>
-    <xme:HDStasCmqhBZxfbT5fMCOzd8ZQICQjPEnR5TVCHaGzkkxB37RwDMoZXuc4aiznTKy
-    ouBiT5nxmiywQY_RVt4rDKO1EfYJJOMFM6YTS0VqpzqJT8b6IUrgfFN>
-X-ME-Proxy-Cause: dmFkZTE33gkw3iy7iQIBCYo/4ICHCmC2a6ZnNhVNSgX+77E2Uj/vrbLC26dFdd/ArqndTg
-    18tA+eunGD5VmfGGlJsxv59olllHR07FZNc3vw2mLaXz+nQ67UeJeidhrUUyNBO55TmjC5
-    KriJMJE8kUsxN4SAWbdC/G1fukpWQ8unoeojVJgtd1S9dYwELM/e7JyM4K1eHTgNcdBs9V
-    52JO6rS5Yx6+dT7jjEIhLlMfkhqEerhk+CQ1qd4RJrfcqoEVGY8tuNbwhTnZu0WwSfoAch
-    76OZjH5gAiEI1IS8DfLQXk2GnMjcA5T8FpYzh8Q867ci9Rw4Obhj2fgQi4/J1uX2o+kuK+
-    A8KHlAKLsFhm0xZGCcF1swPp1pOw7kY3dIHj+QSCte1x5VZLKLiV4NOVYzRCDzbnu7sccH
-    VmMnbRvo5Hzn9qsDAk/sCiPGlsElurIXIbUB4cL0/HgpUJK7/aKF8IBM7RUrtAZtvT3NCl
-    YXZNIz/A9SONwdQtYIkZG2SxX5tLLhsdtJKLYw3m3SjsJiaQz14eCWwm0iIjmuXlbD+z8a
-    Xxa1KfnQyh/QtZWrbljpOxWJktNwhY6dOHq+TUIt0hyOS9Hvu4QhUCaWQLkBIsoJkt+pSU
-    zHgLE5qoPdGVZOivcNXsWXXCxLII0x07Prj9bSOCULKTsgClyNXANxctlMew
-X-ME-Proxy: <xmx:HDStanB6YYkI6hbuTGcK5Qe6mH2txNhmFslQE2VTFJQhu9MIKnPorQ>
-    <xmx:HDStatpCUxyKrL-xL6K03kxspFiMWzxFQ6P_NgEFJpl6TUOWGh0hNg>
-    <xmx:HDStaqhcTvhbVdkzBWQUPipFPLZqKeyLQpouoQwPflVsRkEShMZ9nQ>
-    <xmx:HDStaiAkq56nvhGkte7O1T85C4nBLKBiJa2kUQUsXhguLHpVOT-dDQ>
-    <xmx:HDStanEvvcxnymQyPheDXK_z1uKVUMW8PEufV3S8Ix3iuciPRXbLXGvD>
-Feedback-ID: ifa6e4810:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 5770A780070; Fri, 18 Sep 2026 08:52:44 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Ye47TcDw"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ccfd61ecaso6811265e9.3
+        for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 05:59:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1789736342; x=1790341142; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=lQXJHC3pkovuXf5ldAtUgyIK3nhX0Z0HuIkj+p/dp+c=;
+        b=Ye47TcDwl36hiIIY/V216Mjell+JTfC+lqa26KjtwlafaOi6ROVxjiiz6Rf5JEvz92
+         4fGCWswLY8ewJqpjb4ElHqOZ+X6fHysp/DjgzdUqqp43tqxfTC0R2G/QcXInVSq36o2A
+         pl70tzgCWZKTcd5C3/x2fm6EiFu9XLYq8QTI6bcoh0g0uYCVQUvPAQ70sdar761GoWVj
+         HsDErRmLjbYrlNRx71onaLopvzKJEoFXSfFLedEdSEeCK7emHYLc67Xnlhzd0weg8qno
+         RVZpXCQsaSmlLO4YEvGAKPqPEJI3Msr05+b8EvVme3u1pp5XGQ1RuHnM1JUkGlTo+Zmo
+         FRjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789736342; x=1790341142;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=lQXJHC3pkovuXf5ldAtUgyIK3nhX0Z0HuIkj+p/dp+c=;
+        b=eqt8e2oa5iGn3Xigpk3/VY2XHgpFiDUVHHckZ0pMqsZlsU31lL1X5vjVxjt1OMcJOq
+         NcBmK+H3ZE5dQMOLOFlFk7hgPzeljLRs9OLDQlPFGrp9lvqow23P8g+o1YeGOqCr7jgk
+         r+RheIiBdB4i1Qaoy/cQKptHVJg5tnoOEaZj7vEm/1MGw+vr4O5y+6FNqZkzCP2NAGyx
+         wMsAf0HyKUzcJtCMa7rrA2x5jRcdUDv435zSEKJbuqfprlQhtEmV6HsdHWvigbbXftcY
+         JE9GfUkaMFHOhyXV734E07JF6UC2EC1ucAD/i6jzJ+cxRgS8tKe3bjRLMzZidwpWmyab
+         kIgQ==
+X-Gm-Message-State: AFuF++kTe//zSMELXfby/Ev90GumopZg86AiUy9o0Hqt3WVQ+SCbDLHM
+	NBTe8dLsxs3W0w6BrhMaOpo9VnCb0CILCYPIF4Xo9cGklPRaHG+wVZ08tD3bo5uOsoA=
+X-Gm-Gg: AYBFou23cnPZ495nMBfZ9p6GXQTAStleLrlkjmZaSRdDXknPRKiIqxs+cv31/eZPFi3
+	sgQGCuC5UaLDZ4gsG5NMNZWkqaqQFhzFjNdKaLG9XpS3n+z0ihga7pF+sK3hlrHNf65Of38rpMF
+	gvtviEkaNiqIDBGgDOAUPRTEFyBNz0px8BFIdhsvd9j3QYKlOoPPwKibptgVv8JmmSeXDBsCxOa
+	1oxri904rzk1/9gFH/FOrpJKOXgsHnCLSW4DYVYMVWgFgodPa6D0evJ7ZizmLW6IYvw7aOgLj99
+	hAyrLaJRZwynh+vJ6iSuD0ifDVpfw5IzNLR/u8tH5p7EDCFr77IT5lNjBjfXG1cUTk6s07UvR95
+	Y1xtp9NVYh6IXHJYPhe57p0TdFcstfouFEPsqcyIbfIwYb3J488c6gQu/8+/xWdRDSjglHpXvFo
+	ftgpJqlvIVCiqPPFNIaVfXjRaBnyFpps+1/tf378ahFyjLZVya9Sec7dgyDMzC3l/In78i7LXjX
+	A==
+X-Received: by 2002:a05:600c:474c:b0:49e:817a:ca7 with SMTP id 5b1f17b1804b1-49fc56c3c34mr33478845e9.8.1789736342572;
+        Fri, 18 Sep 2026 05:59:02 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fbd1d0d0bsm153252385e9.1.2026.09.18.05.59.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 18 Sep 2026 05:59:02 -0700 (PDT)
+Date: Fri, 18 Sep 2026 14:59:00 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] cgroup: Use %p for pointer formatting
+Message-ID: <aq0z3hEYggA_TuUD@localhost.localdomain>
+References: <20260918104852.1p2fz_-_@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AMlZhD_SRtH7
-Date: Fri, 18 Sep 2026 08:52:17 -0400
-From: "Chuck Lever" <cel@kernel.org>
-To: "Sirisha Mylavarapu (she/her)" <smylavarapu@everpuredata.com>,
- linux-nfs@vger.kernel.org
-Cc: cgroups@vger.kernel.org
-Message-Id: <b5fbd385-383c-4497-a927-b86565dac9c9@app.fastmail.com>
-In-Reply-To: 
- <CABc6Dy5mvvCSECx2z+-L1q6FpQGO_hQfoLaS6vtpWVud6+8zbA@mail.gmail.com>
-References: 
- <CABc6Dy5mvvCSECx2z+-L1q6FpQGO_hQfoLaS6vtpWVud6+8zbA@mail.gmail.com>
-Subject: Re: cgroup v2 io.max throttling works for NFSd reads but not writes
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="hol7rf6ipdlfvwqx"
+Content-Disposition: inline
+In-Reply-To: <20260918104852.1p2fz_-_@linutronix.de>
+
+
+--hol7rf6ipdlfvwqx
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] cgroup: Use %p for pointer formatting
+MIME-Version: 1.0
+
+On Fri, Sep 18, 2026 at 12:48:52PM +0200, Sebastian Andrzej Siewior <bigeas=
+y@linutronix.de> wrote:
+> Since commit ad67b74d2469d ("printk: hash addresses printed with
+> %p") pointers are hashed by default and the behaviour can be controller
+> by `hash_pointers' boot argument.
+> The policy on %p is to not introduce new ones.
+                %pK  should be here?
+
+I assume it based on:
+
+| This is because %pK checks are done at read() time rather than open()
+| ...
+| The correct long-term solution is to do the permission checks at
+| open() time.
+
+of Documentation/admin-guide/sysctl/kernel.rst-time
 
 
+<snip>
+> Removing %pK makes it possible to remove its handling from the library.
 
-On Wed, Sep 16, 2026, at 2:59 AM, Sirisha Mylavarapu (she/her) wrote:
-> Hi,
->
-> I have been experimenting with cgroup v2 io.max throttling for NFSd on
-> kernel 7.0.0-14-generic (Ubuntu 26.04) and I wanted to share results
-> and ask for recommendations.
->
-> Goal: Throttle NFS server I/O bandwidth using cgroup v2 io.max by
-> placing nfsd kernel threads in a dedicated cgroup, to limit block
-> device I/O performed by the NFS server.
->
-> Setup:
->
-> -NFSd direct I/O mode enabled via debugfs (io_cache_read=3D2, io_cache=
-_write=3D2).
-> -All 16 [nfsd] kernel threads moved to a dedicated cgroup
-> (system.slice/nfsd.slice)
-> -io.max throttle set to 50 MB/s on underlying block device (sdb,64GB
-> disk, major:minor 8:16).
-> -NFS export mounted locally via loopback for testing.
-> -fio used for benchmarks
->
->
-> Results:
-> Read throttling works as expected, consistently capped at 50 MB/s.
-> Write throttling doesn't work regardless of io_cache_write mode(tried
-> DIRECT=3D2 and DONTCACHE=3D1).
->
-> Root cause (as I understand it): The NFS client buffers writes in the
-> local page cache and returns immediately to the application. The
-> actual disk write happens asynchronously, so the application never
-> waits for data to reach disk =E2=80=94 meaning the throttle does not p=
-rovide
-> backpressure to the writer even when the nfsd cgroup's io.max is
-> active.
->
-> Questions:
-> 1. Is NFSd write throttling via cgroup v2 io.max a known limitation?
-> Is there active upstream work to address this?
-> 2. Are there any known workarounds or recommended approaches to
-> achieve NFS write I/O throttling at the server side?
->
-> Any pointers to upstream patches or LKML threads would be appreciated.
+This is also a good sell.
+But I see there are a few of them still here and there.
 
-I have a to-do to look at constraining memory consumption with
-cgroups, but nothing involving I/O bandwidth. As far as I am
-aware, you are now the owner of this topic.
+>=20
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> ---
+>  kernel/cgroup/debug.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
 
+Nevertheless,
+Acked-by: Michal Koutn=FD <mkoutny@suse.com>
 
---=20
-Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
+--hol7rf6ipdlfvwqx
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaq01hxsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AilwgD/Sk7Ba54CIc6wia7ML1h2
+cW1PQW/MUJiO01WGOOqPxyIA/jZ7e3RV3k12q5svEhRo/llH6pXXBZdQBmlUqViv
+s1sI
+=zDX/
+-----END PGP SIGNATURE-----
+
+--hol7rf6ipdlfvwqx--
