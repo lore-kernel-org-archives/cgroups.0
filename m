@@ -1,212 +1,257 @@
-Received: from mta0.migadu.com (out-231.mta0.migadu.com [91.218.175.231])
+Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE89D37269B
-	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 03:18:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.231
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789701507; cv=none; b=reKQ2PBWzMghb0xs4uBdGbzQx0NwME7yBhs8bwM5CUM5rOQD9yBZCIZ2gzFrrvymFJm74ArzfQTK19aCZq7XPNSFpweyiewzWdn/fLcyI2+f4pSUw2BWOmLH3NwQ1VaCRlXFrZVZYRiO2PZpamNUoIPmDm+iFE5RePxgd6cxDM0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789701507; c=relaxed/simple;
-	bh=7eayQlUR/7KI93GLbfFgMELcyS1igZwfJBcDOR9G1hg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QxUef4sN3hcnKPLuCF8TV3dtbQQdDRdfbHNjAclD7gMz85GO+LE+CFvbfh/MtkdI1DKHgmB0nE4JveSfJdU9QwKYfS1qIsuwPQsEOb3E9sCXoqvQSexUx9dYlz/M9nsnjVc7FxXvmXhtH1RxHUD4xyNqM5fZed6NXl8wZpgn9CM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GiUN8S8B; arc=none smtp.client-ip=91.218.175.231
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 514383B2D39
+	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 03:18:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.141
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789701511; cv=pass; b=RvFc89X1EXyxKqzKCG6qUrw28RWPHQeGzmO/U2KLVfDqnvY/Mm5BKzM9rCAABmbclja9jR/rO5YvkNO4XobbCe10DMZFwAGc2bDcKUU6tIaCcyqaPWLwA/8YCHC5kfDH77je2GgCID5ffzqGNin3Jeo4WeYjXwRnp+N/AjKP2sY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789701511; c=relaxed/simple;
+	bh=nPzxDn8dM3cyVLdxRT41WQUQ4PHmVQsnKSrOXOor0J0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=tOp/4CBu/gK+kptpRjWxYRIh5KqCNGnCpciN5mc6kMRtXAJQZgmyjwY1DaoSmmGMHxPqhZ/kO9Hf3hauNoJ564VHdXPbSSnvSkCdVkv+HWGZkbeZ3OKCmo464GKZ0rTysajgGADWnVSGrDcX7rsjnrChluuT8WVgU4Bx/CjiEF8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=everpuredata.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=everpuredata.com header.i=@everpuredata.com header.b=W/gmp0eW; arc=pass smtp.client-ip=74.125.225.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=everpuredata.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GiUN8S8B"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=7eayQlUR/7KI93GLbfFgMELcyS1igZwfJBcDOR9G1hg=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789701503; v=1; x=1790306303;
- b=GiUN8S8BVUSm/bpqRriP/4XaajUPywPZwnYMe+VKAux5M+d9M4yeAYZJVdqcjp2N2r3y9kXA
- roc9x5lOJ3UtHot0U3OE317Y5gNKhb7tg4SbdxgA0/9yhT1woaK6t1MQorsbkaAxwWMA7JZXTBp
- JDNe+O79sorCKbteYabjgMbI=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 0b190abebd6a7339;
-	Fri, 18 Sep 2026 03:18:23 +0000
-X-Mizu-Trace-ID: 0b190abebd6a7339
-X-Migadu-Flow: FLOW_OUT
-From: Tao Cui <cui.tao@linux.dev>
-To: tj@kernel.org,
-	josef@toxicopanda.com,
-	axboe@kernel.dk,
-	ameryhung@gmail.com
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	bpf@vger.kernel.org,
-	andrii@kernel.org,
-	eddyz87@gmail.com,
-	ast@kernel.org,
-	daniel@iogearbox.net,
-	linux-kselftest@vger.kernel.org,
-	cui.tao@linux.dev,
-	cuitao@kylinos.cn
-Subject: [RFC PATCH v5 3/5] blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
-Date: Fri, 18 Sep 2026 11:17:49 +0800
-Message-ID: <20260918031751.1255420-4-cui.tao@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260918031751.1255420-1-cui.tao@linux.dev>
-References: <20260918031751.1255420-1-cui.tao@linux.dev>
+	dkim=pass (2048-bit key) header.d=everpuredata.com header.i=@everpuredata.com header.b="W/gmp0eW"
+Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49b912e4ad9so1267685e9.2
+        for <cgroups@vger.kernel.org>; Thu, 17 Sep 2026 20:18:28 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789701506; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Gh0hgQUmdFzpDDbyZckUYcccgFnXPez0ttPg5vyKEIT0HWbtFAFKGc+q1fnRKPh7JP
+         3JgABS3r/4y0mTCvZrNoZCArU0Csb8IeFzRjz3T6iLth/O3QmdlQMrIjsig1NP6W+K8R
+         mihYIjbTv9YmziIxc++R7HmpFt2U7rqzOc4UHV5K8OrgrlPVqnBVLKffKZm8wLztiM6u
+         +TGqtaiUz7Y7Qcxh8pHnRccnqdDSJVkW0JUKQ/IAnqwgLrn3vSRcyLWrVvyTLmiK1OaQ
+         gD8tJNXJP+OzCBnSCE0eRem4DdNyPIEhFWiTHPOjQR19fxfOA8KPXWGcD3D06r5CvftY
+         zLlQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=za06zza0SSiyVOfGkgQp3ziPhEo+75L0PjkgD2oGrhw=;
+        fh=uL/QhY/NYjQfPtyVcb4puGWlANjb9bGfTK+F4PwUreE=;
+        b=Ee+lnvGSh7lHEdLK6jxEaRIJ6uWKH2+xeegBfDN05AlhISnGE8ki8LdSbx2Hl7IgV+
+         MtHs5H5M4JE59f3RNaGW5sh4IN5RklO6kF8F/c3O4+9nLlRjSpm1yh+CtIJkApk1xxzg
+         0QXywprdFSEwwdzCodiHX9rWvsPGAFVnPNbAJqnmqLJsc+He5OWl1oRpy/wHB1VUHBy2
+         aNU0SUZuIBKM9dumcHZNjpWcKuKgIfTGCM1y5f+0ae83yEGZhiH8AwT/J/RNcupmuTnf
+         BWOrNxH2MqgOLO1Ef1j0fl4TZF4Z4ZSv4dAnA2ENXbi3nurDTZ7CBbycsVCbaOtldqvA
+         O29Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=everpuredata.com; s=google; t=1789701506; x=1790306306; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=za06zza0SSiyVOfGkgQp3ziPhEo+75L0PjkgD2oGrhw=;
+        b=W/gmp0eWX/MPVMTj8+OPD1QW5SuL3WFjADvI5tzYPQtD2mpxKNPGUOkQx0aHYMMucF
+         b1PHCRQoiy5/2yl+6d7jWvxFeD17vJs1qi/6KnGPqvq6k67TlxT2dGtgtUp1EI7AswM/
+         GvHMDgv9/myy4pT6aYel7nP3hb+YoUVc0TbP4LBls7tCTLDHBemVBEvO9BLno0AeujZb
+         Pbqkz1ZRsqvsxqTEWq91omKcXNnWLbE0VKjX6dCqTVACbpecLyBysFs76rdFg7wKFPkF
+         voLbNF3CckqAFIcCh/uwXD7ZyJ2T60v535qNnmmsBzZ53t4np9qMt9MKOaWGMuhe6nmo
+         NzQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789701506; x=1790306306;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=za06zza0SSiyVOfGkgQp3ziPhEo+75L0PjkgD2oGrhw=;
+        b=sI1GwxHMoI258r1LrMrmCaqIC5/dZAEbQECGpYY4ReT1JsHzqLJSZnIR3RLubrO2nu
+         +GKmq8Hl9dBy8aXX8X2BuMZvBewwj8YidEScGbdO2hpsomgBs/zlce5fRuSsYapmKwqe
+         +VztqTcuFoYGrTqsLYx5EbRuO7s1mN48nWNsFddBAaRqsfS2szaA1S1bDMbq76DhW8se
+         Zrw3mYGQPbMm6GpqTvrfIuBQqz4ROlBo71fZKBLoYfN7nGQxJ3bW33zJSC159M21xMJt
+         +Aab+D3CWDbQ1vood5QgeMaX+zg2xKcveMkmirdGyN+KSNFy1jhhLcJ1eJ2iuwdxD/Oj
+         7Kvw==
+X-Gm-Message-State: AFuF++n61AUjypllB2sDBeUnu9+q0P6HTfgtzxUBnUOOubfm+aVKZsGa
+	YGWDPtO5Qc7IEmCIloRhhWRQ4lHfi1ZjxnY/tmOHgtwLDvSBb4zMwH66ib6+AU+T6YoWUXatvvP
+	6Vmq4gpghRqJaKif5P0o9yJzRPMUEsWEJIQeQjcd2KA==
+X-Gm-Gg: AYBFou0DJqmZa/f7XWh7f0ZyqrMBEl6QcYvqNdlb5+gnGpbzvHJtvnYNacg7bEYp4rt
+	tEyScOgAlAKofxf5RH0fO0ymBqOPM/JpYSLnYfvixu8qwUNcBXCxob4pnkx0kejSI9hkOAsV2+i
+	Y8pkp5wsWtIzonIwlm1kBK9T+bZ70y304ZSKpzYHBYTfPMSXFIqJl7uUh5HZmPV+foiJZ4yvoCC
+	eDG+fNP+i39vtFVx/3VD0iC5eMWHbKp10SEAOQt9Lu085wfQDMs1PCHU3JwYq0OF+P+ioIXXSx6
+	BbQo0Qa4qGBsCIHiJ1uKxBcncM/HmIEYaDm4R6F0cHA4g8ZYFRTZ6Q==
+X-Received: by 2002:a05:600c:1382:b0:49d:174e:2a1e with SMTP id
+ 5b1f17b1804b1-49fc574f42bmr8693865e9.19.1789701506543; Thu, 17 Sep 2026
+ 20:18:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CABc6Dy5mvvCSECx2z+-L1q6FpQGO_hQfoLaS6vtpWVud6+8zbA@mail.gmail.com>
+In-Reply-To: <CABc6Dy5mvvCSECx2z+-L1q6FpQGO_hQfoLaS6vtpWVud6+8zbA@mail.gmail.com>
+From: "Sirisha Mylavarapu (she/her)" <smylavarapu@everpuredata.com>
+Date: Fri, 18 Sep 2026 08:48:14 +0530
+X-Gm-Features: AcwNN1XG90oBANrykcFZ_7ROc-Oon6P2rE-3lMGfvVQh3SJlhn1EW0r2wCO7LMM
+Message-ID: <CABc6Dy5bmX+gA_UuHy3T-9xnY6sZ619SWq4FF1JAmWdCwTjb3w@mail.gmail.com>
+Subject: Re: cgroup v2 io.max throttling works for NFSd reads but not writes
+To: linux-nfs@vger.kernel.org
+Cc: cgroups@vger.kernel.org, snitzer@kernel.org, chuck.lever@oracle.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Tao Cui <cuitao@kylinos.cn>
+Hi,
 
-The existing iocost tracepoints are state-change driven: vrate_adj
-fires only when the adjustment logic runs, inuse_* only on surplus
-state transitions, activate/idle only on cgroup state changes.  In a
-steady state none of them fire.  The only other way to observe the
-controller (period length, vrate, busy level, active cgroup count,
-device utilization) is iocost_monitor.py, which reads kernel memory
-through drgn and is not usable in most production environments.
+Gentle ping =E2=80=94 would appreciate any thoughts or pointers on this.
 
-Add iocost_ioc_tick, emitted once per period from the tail of
-ioc_timer_fn() with the overall controller state: period_us, vrate,
-busy_level, active iocg count, usage percentage and running state.
-It fires every period the controller runs, including steady states,
-plus one final tick before the controller goes idle, which makes
-dormancy (e.g. a device saturated entirely by uncharged IO) directly
-visible.
+Thanks,
+Sirisha
 
-Depending on the autop profile this is 2-100 events per second per
-device; the added cost outside the tracepoint static key is one
-increment per active cgroup per period.
-
-Signed-off-by: Tao Cui <cuitao@kylinos.cn>
----
- block/blk-iocost.c            | 32 +++++++++++++++++++++++++
- include/trace/events/iocost.h | 45 +++++++++++++++++++++++++++++++++++
- 2 files changed, 77 insertions(+)
-
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 307065c592950..9eb97f38a39cf 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -2244,6 +2244,10 @@ static void ioc_timer_fn(struct timer_list *timer)
- 	struct ioc_now now;
- 	LIST_HEAD(surpluses);
- 	int nr_debtors, nr_shortages = 0, nr_lagging = 0;
-+	int nr_active = 0;
-+	u32 tick_period_us;
-+	u64 tick_vrate, tick_dur;
-+	int tick_busy, tick_running;
- 	u64 usage_us_sum = 0;
- 	u32 ppm_rthr;
- 	u32 ppm_wthr;
-@@ -2280,6 +2284,8 @@ static void ioc_timer_fn(struct timer_list *timer)
- 		u64 vdone, vtime, usage_us;
- 		u32 hw_active, hw_inuse;
- 
-+		nr_active++;
-+
- 		/*
- 		 * Collect unused and wind vtime closer to vnow to prevent
- 		 * iocgs from accumulating a large amount of budget.
-@@ -2441,6 +2447,14 @@ static void ioc_timer_fn(struct timer_list *timer)
- 
- 	ioc->busy_level = clamp(ioc->busy_level, -1000, 1000);
- 
-+	/*
-+	 * vrate and period_us change right below; snapshot the values
-+	 * this period ran in so the tick below reports the period's own
-+	 * parameters instead of the next period's.
-+	 */
-+	tick_period_us = ioc->period_us;
-+	tick_vrate = ioc->vtime_base_rate;
-+
- 	ioc_adjust_base_vrate(ioc, rq_wait_pct, nr_lagging, nr_shortages,
- 			      prev_busy_level, missed_ppm);
- 
-@@ -2448,6 +2462,24 @@ static void ioc_timer_fn(struct timer_list *timer)
- 
- 	ioc_forgive_debts(ioc, usage_us_sum, nr_debtors, &now);
- 
-+	/*
-+	 * Snapshot the state this period ran in before the idle
-+	 * transition below wipes it, so the final tick reports the period's
-+	 * own busy level (e.g. the saturation that drove the controller
-+	 * idle) instead of the cleared one.  usage is normalized by the
-+	 * measured period length, captured before ioc_start_period()
-+	 * overwrites period_at, the same way the donation loop does.
-+	 * Emitted before cur_period is bumped, so the tick carries the
-+	 * number of the period it describes.
-+	 */
-+	tick_busy = ioc->busy_level;
-+	tick_running = ioc->running;
-+	tick_dur = now.now - ioc->period_at;
-+
-+	trace_iocost_ioc_tick(ioc, nr_active, usage_us_sum,
-+			      tick_period_us, tick_vrate,
-+			      tick_busy, tick_running, tick_dur);
-+
- 	/*
- 	 * This period is done.  Move onto the next one.  If nothing's
- 	 * going on with the device, stop the timer.
-diff --git a/include/trace/events/iocost.h b/include/trace/events/iocost.h
-index e772b1bc60d60..32f19861a78fd 100644
---- a/include/trace/events/iocost.h
-+++ b/include/trace/events/iocost.h
-@@ -178,6 +178,51 @@ TRACE_EVENT(iocost_ioc_vrate_adj,
- 	)
- );
- 
-+/*
-+ * Periodic per-device summary, emitted once per period from the tail of
-+ * ioc_timer_fn().  Unlike the state-change events above, this fires every
-+ * period the controller is running, including steady states, and carries
-+ * the overall controller state so basic monitoring doesn't require drgn.
-+ */
-+TRACE_EVENT(iocost_ioc_tick,
-+
-+	TP_PROTO(struct ioc *ioc, int nr_active, u64 usage_us_sum,
-+		 u32 tick_period_us, u64 tick_vrate,
-+		 int tick_busy, int tick_running, u64 tick_dur),
-+
-+	TP_ARGS(ioc, nr_active, usage_us_sum, tick_period_us, tick_vrate,
-+		tick_busy, tick_running, tick_dur),
-+
-+	TP_STRUCT__entry (
-+		__string(devname, ioc_name(ioc))
-+		__field(u64, cur_period)
-+		__field(u32, period_us)
-+		__field(u64, vrate)
-+		__field(int, busy_level)
-+		__field(int, nr_active)
-+		__field(u32, usage_pct)
-+		__field(int, running)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(devname);
-+		__entry->cur_period = atomic64_read(&ioc->cur_period);
-+		__entry->period_us = tick_period_us;
-+		__entry->vrate = tick_vrate;
-+		__entry->busy_level = tick_busy;
-+		__entry->nr_active = nr_active;
-+		__entry->usage_pct = tick_dur ?
-+			div64_u64(usage_us_sum * 100, tick_dur) : 0;
-+		__entry->running = tick_running;
-+	),
-+
-+	TP_printk("[%s] period=%llu:%uus vrate=%llu busy=%d active=%d usage=%u%% running=%d",
-+		__get_str(devname), __entry->cur_period, __entry->period_us,
-+		__entry->vrate, __entry->busy_level, __entry->nr_active,
-+		__entry->usage_pct, __entry->running
-+	)
-+);
-+
- TRACE_EVENT(iocost_iocg_forgive_debt,
- 
- 	TP_PROTO(struct ioc_gq *iocg, const char *path, struct ioc_now *now,
--- 
-2.43.0
-
+On Wed, Sep 16, 2026 at 12:29=E2=80=AFPM Sirisha Mylavarapu (she/her)
+<smylavarapu@everpuredata.com> wrote:
+>
+> Hi,
+>
+> I have been experimenting with cgroup v2 io.max throttling for NFSd on
+> kernel 7.0.0-14-generic (Ubuntu 26.04) and I wanted to share results
+> and ask for recommendations.
+>
+> Goal: Throttle NFS server I/O bandwidth using cgroup v2 io.max by
+> placing nfsd kernel threads in a dedicated cgroup, to limit block
+> device I/O performed by the NFS server.
+>
+> Setup:
+>
+> -NFSd direct I/O mode enabled via debugfs (io_cache_read=3D2, io_cache_wr=
+ite=3D2).
+> -All 16 [nfsd] kernel threads moved to a dedicated cgroup
+> (system.slice/nfsd.slice)
+> -io.max throttle set to 50 MB/s on underlying block device (sdb,64GB
+> disk, major:minor 8:16).
+> -NFS export mounted locally via loopback for testing.
+> -fio used for benchmarks
+>
+>
+> Results:
+> Read throttling works as expected, consistently capped at 50 MB/s.
+> Write throttling doesn't work regardless of io_cache_write mode(tried
+> DIRECT=3D2 and DONTCACHE=3D1).
+>
+> Root cause (as I understand it): The NFS client buffers writes in the
+> local page cache and returns immediately to the application. The
+> actual disk write happens asynchronously, so the application never
+> waits for data to reach disk =E2=80=94 meaning the throttle does not prov=
+ide
+> backpressure to the writer even when the nfsd cgroup's io.max is
+> active.
+>
+> Questions:
+> 1. Is NFSd write throttling via cgroup v2 io.max a known limitation?
+> Is there active upstream work to address this?
+> 2. Are there any known workarounds or recommended approaches to
+> achieve NFS write I/O throttling at the server side?
+>
+> Any pointers to upstream patches or LKML threads would be appreciated.
+>
+> Experiment:
+> 1. Load nfsd module
+>
+> root@smylavarapu-16-0:~# modprobe nfsd
+> root@smylavarapu-16-0:~# ls /sys/kernel/debug/nfsd
+> disable-splice-read  io_cache_read  io_cache_write
+>
+> 2. Enable Direct I/O mode
+>
+> root@smylavarapu-16-0:~# echo 2 > /sys/kernel/debug/nfsd/io_cache_read
+> root@smylavarapu-16-0:~# echo 2 > /sys/kernel/debug/nfsd/io_cache_write
+> root@smylavarapu-16-0:~# cat /sys/kernel/debug/nfsd/io_cache_read
+> 2
+>
+> 3. Start NFS server and verify nfsd kernel threads
+>
+> root@smylavarapu-16-0:~# systemctl start nfs-server
+> root@smylavarapu-16-0:~# ps aux | grep '\[nfsd\]'
+> root  662609  0.0  0.0  0  0 ?  I  10:48  0:00 [nfsd]
+> root  662610  0.0  0.0  0  0 ?  I  10:48  0:00 [nfsd]
+> ... (16 threads total, PIDs 662609=E2=80=93662624)
+> root@smylavarapu-16-0:~# cat /proc/$(pgrep -x nfsd | head -1)/cgroup
+> 0::/
+>
+> 4. Format and mount real block device (sdb)
+>
+> root@smylavarapu-16-0:~# mkfs.ext4 /dev/sdb
+> mke2fs 1.47.2 (1-Jan-2025)
+> Discarding device blocks: done
+> Creating filesystem with 16777216 4k blocks and 4194304 inodes
+> ...done
+> root@smylavarapu-16-0:~# mount /dev/sdb /nfs-test-export
+> root@smylavarapu-16-0:~# ls -la /dev/sdb
+> brw-rw---- 1 root disk 8, 16 Sep 15 14:02 /dev/sdb
+> major:minor =3D 8:16
+>
+> 5. Export over NFS and mount locally
+>
+> root@smylavarapu-16-0:~# echo "/nfs-test-export
+> *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+> root@smylavarapu-16-0:~# exportfs -ra
+> root@smylavarapu-16-0:~# exportfs -v
+> /nfs-test-export
+> <world>(sync,wdelay,hide,no_subtree_check,sec=3Dsys,rw,secure,no_root_squ=
+ash,no_all_squash)
+> root@smylavarapu-16-0:~# mkdir -p /mnt/nfs-client
+> root@smylavarapu-16-0:~# mount -t nfs 127.0.0.1:/nfs-test-export /mnt/nfs=
+-client
+> root@smylavarapu-16-0:~# df -h /mnt/nfs-client
+> Filesystem                  Size  Used Avail Use% Mounted on
+> 127.0.0.1:/nfs-test-export   63G  2.0M   60G   1% /mnt/nfs-client
+>
+> 6. Move nfsd threads to dedicated cgroup
+>
+> root@smylavarapu-16-0:~# mkdir -p /sys/fs/cgroup/system.slice/nfsd.slice
+> root@smylavarapu-16-0:~# cat /sys/fs/cgroup/system.slice/cgroup.subtree_c=
+ontrol
+> cpuset cpu io memory hugetlb pids rdma misc dmem
+> root@smylavarapu-16-0:~# echo "+io" >
+> /sys/fs/cgroup/system.slice/cgroup.subtree_control
+> root@smylavarapu-16-0:~# for pid in $(pgrep -x nfsd); do
+>     echo $pid > /sys/fs/cgroup/system.slice/nfsd.slice/cgroup.procs
+> done
+> root@smylavarapu-16-0:~# cat /proc/$(pgrep -x nfsd | head -1)/cgroup
+> 0::/system.slice/nfsd.slice
+>
+> 7. Apply 50 MB/s throttle
+>
+> root@smylavarapu-16-0:~# echo "8:16 wbps=3D52428800 rbps=3D52428800" >
+> /sys/fs/cgroup/system.slice/nfsd.slice/io.max
+> root@smylavarapu-16-0:~# cat /sys/fs/cgroup/system.slice/nfsd.slice/io.ma=
+x
+> 8:16 rbps=3D52428800 wbps=3D52428800 riops=3Dmax wiops=3Dmax
+>
+> 8. Write test =E2=80=94 io_cache_write=3D2
+>
+> root@smylavarapu-16-0:~# fio --name=3Dnfs-write --rw=3Dwrite --bs=3D1M --=
+size=3D4G \
+>     --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D3=
+0
+> --time_based
+> WRITE: bw=3D1761MiB/s (1847MB/s), io=3D52.0GiB, run=3D30236msec
+> =E2=86=92 NOT throttled (1761 MB/s)
+>
+> 9. Write test after drop_caches =E2=80=94 io_cache_write=3D2
+>
+> root@smylavarapu-16-0:~# echo 3 > /proc/sys/vm/drop_caches
+> root@smylavarapu-16-0:~# fio --name=3Dnfs-write --rw=3Dwrite --bs=3D1M --=
+size=3D4G \
+>     --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D3=
+0
+> --time_based
+> WRITE: bw=3D2315MiB/s (2427MB/s), io=3D68.1GiB, run=3D30127msec
+> =E2=86=92 NOT throttled (2315 MB/s)
+>
+> 10. Read test =E2=80=94 io_cache_read=3D2
+>
+> root@smylavarapu-16-0:~# echo 3 > /proc/sys/vm/drop_caches
+> root@smylavarapu-16-0:~# fio --name=3Dnfs-read --rw=3Dread --bs=3D1M --si=
+ze=3D4G \
+>     --filename=3D/mnt/nfs-client/testfile --group_reporting --runtime=3D3=
+0
+> --time_based
+>
+> READ: bw=3D50.0MiB/s (52.4MB/s), IOPS=3D49, io=3D1501MiB, run=3D30032msec
+> =E2=86=92 THROTTLED (capped at 50 MB/s)
+>
+> Thank you,
+> Sirisha.
