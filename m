@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-2.mta0.migadu.com [91.218.175.2])
+Received: from mta0.migadu.com (out-15.mta0.migadu.com [91.218.175.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33C354848A2
-	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 05:50:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 264B64848BA
+	for <cgroups@vger.kernel.org>; Fri, 18 Sep 2026 05:50:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789710649; cv=none; b=PyQEqiIcKIAyrO6otiCepHYI1Lf+LIwtMY7VsWU3vQe/C3fgyJfS4Lbp4zVyhbFYVy6acfEZX9U2os18hDLPEEtbWRoBaWT24uGf97pstEgek3gVn3lzsHBibpBVNj1kCVZGvfGR4K0ZLeOYH5kbKbhbTwdLYsg7lHOredofh0c=
+	t=1789710650; cv=none; b=a67IPiB6DAvXfGxaehxckdMui95j4L9c6PUn6zKQDDiClZmt1pWuFE8vaxeLbZVo8Aulb71miyed/4f/iquiC1J+lgzuI/9IZd5ywdqbG3eP0uPKPrEsI4OE9G6A2AWn9Xf/lUIsXFAlO6MtHXMl+9/61P4jWdMcZMtXfYYjIq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789710649; c=relaxed/simple;
-	bh=7eayQlUR/7KI93GLbfFgMELcyS1igZwfJBcDOR9G1hg=;
+	s=arc-20240116; t=1789710650; c=relaxed/simple;
+	bh=CaK2lV/2AOaHF9x7uu4e5uISv4g8GCPtGt4aIgnl5dA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bcA0qdr7y/W1RM3F9M0sce6Cmul8FMYscWNceGd47TrgitMMOk62ULevvRVc+lw3dAwVF8q1VY6RgIx5D60CYRjyd233fNh6ZRGPFSLsJNYlZ61Js5+WxMkTYkRTwI51Fu9Gc8u+5Fg5yAAZ21GJ8E/yzwPnU53BLcKsJvOQ9rc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xU398WIk; arc=none smtp.client-ip=91.218.175.2
+	 MIME-Version; b=VU7+jgrBQeAk2L8gyYKZgPKzIFmALjBCmdfq6jHmDTPNGzTkQLILsm56NvWZWhyXEj610FCut7Ixdtvjrl/WsF1YEokJpl65qanDgY3l3ScGhGDNQVCRMhdLfTuWHL3nhnnSnT9QoH3UA4BF6CuCscNWIPc3fN7IyPGuw8Ncv2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pmu+jbR+; arc=none smtp.client-ip=91.218.175.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xU398WIk"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pmu+jbR+"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=7eayQlUR/7KI93GLbfFgMELcyS1igZwfJBcDOR9G1hg=;
+DKIM-Signature: a=rsa-sha256; bh=CaK2lV/2AOaHF9x7uu4e5uISv4g8GCPtGt4aIgnl5dA=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789710643; v=1; x=1790315443;
- b=xU398WIkPwwAWC87g6karG+89QL+RLi71kR6NAUU/stBMxqasi9wXNLBND67u5klBh3rC5FH
- a2mjVk2Y/o06zvccoqEpXg036Ul7Tg/V9T/ODZNaJ2F2fM5/FIBiA+6kk1/5XMo47N7CAMjOWP0
- VkftWye77cN3O9wdADhlotiM=
+ t=1789710646; v=1; x=1790315446;
+ b=pmu+jbR+Wl1AsUjM/i2NWyiFeJIJVjkgyLqinOFhk9HJ7Dvtfc+nRphb+liTfYdxzHQYXaav
+ 2wupMkcaXuvV8vE6pgkboPak1XGRpv+urvbOYfseSifvtTT4IduDW2HPdKzNMmoz/r61rauorOE
+ 3BWOFBCwvrEu2r+CshLWx+4M=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ae88cf7a2e256186;
-	Fri, 18 Sep 2026 05:50:43 +0000
-X-Mizu-Trace-ID: ae88cf7a2e256186
+Received: by smtp.migadu.com with ESMTPS id 870d5b6419d50bee;
+	Fri, 18 Sep 2026 05:50:46 +0000
+X-Mizu-Trace-ID: 870d5b6419d50bee
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: tj@kernel.org,
@@ -45,9 +45,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	cui.tao@linux.dev,
 	cuitao@kylinos.cn
-Subject: [RFC PATCH v6 3/5] blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
-Date: Fri, 18 Sep 2026 13:49:59 +0800
-Message-ID: <20260918055001.1273840-4-cui.tao@linux.dev>
+Subject: [RFC PATCH v6 4/5] selftests/bpf: add multi-stream sequentiality example model
+Date: Fri, 18 Sep 2026 13:50:00 +0800
+Message-ID: <20260918055001.1273840-5-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260918055001.1273840-1-cui.tao@linux.dev>
 References: <20260918055001.1273840-1-cui.tao@linux.dev>
@@ -61,152 +61,251 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-The existing iocost tracepoints are state-change driven: vrate_adj
-fires only when the adjustment logic runs, inuse_* only on surplus
-state transitions, activate/idle only on cgroup state changes.  In a
-steady state none of them fire.  The only other way to observe the
-controller (period length, vrate, busy level, active cgroup count,
-device utilization) is iocost_monitor.py, which reads kernel memory
-through drgn and is not usable in most production environments.
+Add a second example cost model which replaces the builtin
+single-cursor sequentiality heuristic with a per-cgroup table of
+stream slots: an IO is sequential iff its sector matches the expected
+next sector of any tracked stream.  Interleaved sequential readers in
+one cgroup keep their own slots instead of ping-ponging a single
+cursor, and random IO inside a hot window rarely matches a moving
+expectation.  Merged bios skip the base cost but still advance the
+matched stream position, so a merge at the expected sector does not
+make the following new IO look random.
 
-Add iocost_ioc_tick, emitted once per period from the tail of
-ioc_timer_fn() with the overall controller state: period_us, vrate,
-busy_level, active iocg count, usage percentage and running state.
-It fires every period the controller runs, including steady states,
-plus one final tick before the controller goes idle, which makes
-dormancy (e.g. a device saturated entirely by uncharged IO) directly
-visible.
+Stream state lives in a CGRP_STORAGE map keyed by the cgroup of the
+blkcg argument, following the cgroup lifetime; there is no
+fixed-size registry to exhaust.
 
-Depending on the autop profile this is 2-100 events per second per
-device; the added cost outside the tracepoint static key is one
-increment per active cgroup per period.
+Measured (QEMU, virtio-blk with the HDD profile, 4k IOs, w=1000):
+two sequential readers in one cgroup are priced 1961us/op by the
+builtin model (judged random) and 23us/op by this model (judged
+sequential), the completed IO count rises from 4495 to 207505;
+random IO inside an 8M window is priced 24us/op by builtin
+(undercharge) and 2607us/op by this model; single-stream sequential
+and whole-disk random pricing are unchanged.
+
+Stream updates are lockless like the builtin cursor; a lost update
+misclassifies a single IO.  Slots are only advanced for bios the
+builtin prices.  The streams test lives here with the model it
+loads.  The page count truncates like the builtin.
 
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- block/blk-iocost.c            | 32 +++++++++++++++++++++++++
- include/trace/events/iocost.h | 45 +++++++++++++++++++++++++++++++++++
- 2 files changed, 77 insertions(+)
+ .../selftests/bpf/prog_tests/iocost_model.c   |  34 ++++
+ tools/testing/selftests/bpf/progs/iocost_ms.c | 156 ++++++++++++++++++
+ 2 files changed, 190 insertions(+)
+ create mode 100644 tools/testing/selftests/bpf/progs/iocost_ms.c
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 307065c592950..9eb97f38a39cf 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -2244,6 +2244,10 @@ static void ioc_timer_fn(struct timer_list *timer)
- 	struct ioc_now now;
- 	LIST_HEAD(surpluses);
- 	int nr_debtors, nr_shortages = 0, nr_lagging = 0;
-+	int nr_active = 0;
-+	u32 tick_period_us;
-+	u64 tick_vrate, tick_dur;
-+	int tick_busy, tick_running;
- 	u64 usage_us_sum = 0;
- 	u32 ppm_rthr;
- 	u32 ppm_wthr;
-@@ -2280,6 +2284,8 @@ static void ioc_timer_fn(struct timer_list *timer)
- 		u64 vdone, vtime, usage_us;
- 		u32 hw_active, hw_inuse;
+diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+index 85b5ea7482eed..ac734c0e09cb0 100644
+--- a/tools/testing/selftests/bpf/prog_tests/iocost_model.c
++++ b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+@@ -4,6 +4,7 @@
+ #include <fcntl.h>
+ #include <unistd.h>
+ #include "iocost_model.skel.h"
++#include "iocost_ms.skel.h"
  
-+		nr_active++;
+ /*
+  * Write a line to io.cost.model with write(2) and return the errno of
+@@ -164,3 +165,36 @@ void serial_test_iocost_model(void)
+ 
+ 	iocost_model__destroy(skel);
+ }
 +
- 		/*
- 		 * Collect unused and wind vtime closer to vnow to prevent
- 		 * iocgs from accumulating a large amount of budget.
-@@ -2441,6 +2447,14 @@ static void ioc_timer_fn(struct timer_list *timer)
- 
- 	ioc->busy_level = clamp(ioc->busy_level, -1000, 1000);
- 
-+	/*
-+	 * vrate and period_us change right below; snapshot the values
-+	 * this period ran in so the tick below reports the period's own
-+	 * parameters instead of the next period's.
-+	 */
-+	tick_period_us = ioc->period_us;
-+	tick_vrate = ioc->vtime_base_rate;
-+
- 	ioc_adjust_base_vrate(ioc, rq_wait_pct, nr_lagging, nr_shortages,
- 			      prev_busy_level, missed_ppm);
- 
-@@ -2448,6 +2462,24 @@ static void ioc_timer_fn(struct timer_list *timer)
- 
- 	ioc_forgive_debts(ioc, usage_us_sum, nr_debtors, &now);
- 
-+	/*
-+	 * Snapshot the state this period ran in before the idle
-+	 * transition below wipes it, so the final tick reports the period's
-+	 * own busy level (e.g. the saturation that drove the controller
-+	 * idle) instead of the cleared one.  usage is normalized by the
-+	 * measured period length, captured before ioc_start_period()
-+	 * overwrites period_at, the same way the donation loop does.
-+	 * Emitted before cur_period is bumped, so the tick carries the
-+	 * number of the period it describes.
-+	 */
-+	tick_busy = ioc->busy_level;
-+	tick_running = ioc->running;
-+	tick_dur = now.now - ioc->period_at;
-+
-+	trace_iocost_ioc_tick(ioc, nr_active, usage_us_sum,
-+			      tick_period_us, tick_vrate,
-+			      tick_busy, tick_running, tick_dur);
-+
- 	/*
- 	 * This period is done.  Move onto the next one.  If nothing's
- 	 * going on with the device, stop the timer.
-diff --git a/include/trace/events/iocost.h b/include/trace/events/iocost.h
-index e772b1bc60d60..32f19861a78fd 100644
---- a/include/trace/events/iocost.h
-+++ b/include/trace/events/iocost.h
-@@ -178,6 +178,51 @@ TRACE_EVENT(iocost_ioc_vrate_adj,
- 	)
- );
- 
 +/*
-+ * Periodic per-device summary, emitted once per period from the tail of
-+ * ioc_timer_fn().  Unlike the state-change events above, this fires every
-+ * period the controller is running, including steady states, and carries
-+ * the overall controller state so basic monitoring doesn't require drgn.
++ * Same check for the multi-stream example model.  Only one model can
++ * be bound to a device at a time; both tests bind and restore, so
++ * they are serial and independent.
 + */
-+TRACE_EVENT(iocost_ioc_tick,
++void serial_test_iocost_model_streams(void)
++{
++	struct iocost_ms *skel;
++	char *dev;
++	int err;
 +
-+	TP_PROTO(struct ioc *ioc, int nr_active, u64 usage_us_sum,
-+		 u32 tick_period_us, u64 tick_vrate,
-+		 int tick_busy, int tick_running, u64 tick_dur),
++	dev = getenv("IOCOST_TEST_DEV");
++	if (!dev || geteuid() != 0) {
++		test__skip();
++		return;
++	}
++	if (!dev_has_iocost(dev)) {
++		printf("skip: %s has no iocost enabled\n", dev);
++		test__skip();
++		return;
++	}
 +
-+	TP_ARGS(ioc, nr_active, usage_us_sum, tick_period_us, tick_vrate,
-+		tick_busy, tick_running, tick_dur),
++	skel = iocost_ms__open_and_load();
++	if (!ASSERT_OK_PTR(skel, "skel_open_load"))
++		return;
 +
-+	TP_STRUCT__entry (
-+		__string(devname, ioc_name(ioc))
-+		__field(u64, cur_period)
-+		__field(u32, period_us)
-+		__field(u64, vrate)
-+		__field(int, busy_level)
-+		__field(int, nr_active)
-+		__field(u32, usage_pct)
-+		__field(int, running)
-+	),
++	err = iocost_ms__attach(skel);
++	if (ASSERT_OK(err, "attach"))
++		ASSERT_OK(bind_model(dev, "iocost_ms"), "bind_and_readback");
 +
-+	TP_fast_assign(
-+		__assign_str(devname);
-+		__entry->cur_period = atomic64_read(&ioc->cur_period);
-+		__entry->period_us = tick_period_us;
-+		__entry->vrate = tick_vrate;
-+		__entry->busy_level = tick_busy;
-+		__entry->nr_active = nr_active;
-+		__entry->usage_pct = tick_dur ?
-+			div64_u64(usage_us_sum * 100, tick_dur) : 0;
-+		__entry->running = tick_running;
-+	),
++	iocost_ms__destroy(skel);
++}
+diff --git a/tools/testing/selftests/bpf/progs/iocost_ms.c b/tools/testing/selftests/bpf/progs/iocost_ms.c
+new file mode 100644
+index 0000000000000..70019db0fd790
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/iocost_ms.c
+@@ -0,0 +1,156 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Example multi-stream sequentiality detection cost model.
++ *
++ * The builtin model keeps a single cursor per cgroup, so two
++ * interleaved sequential readers in one cgroup are all priced random
++ * (measured 89x overcharge, 12.9x throughput collapse), while random
++ * IO inside a hot window smaller than the 16MB seek threshold is
++ * priced sequential (measured 107x undercharge).  This model replaces
++ * the single cursor with a per-cgroup table of stream slots: an IO is
++ * sequential iff its sector matches the expected next sector of any
++ * tracked stream.  Interleaved streams keep their own slots, and
++ * windowed random IO rarely matches a moving expectation.
++ *
++ * Stream state lives in a CGRP_STORAGE map, so it is created and
++ * freed with the cgroup.  The model implements the full builtin
++ * linear formula itself, including flush pricing.
++ */
++#include "vmlinux.h"
++#include <bpf/bpf_helpers.h>
++#include <bpf/bpf_tracing.h>
 +
-+	TP_printk("[%s] period=%llu:%uus vrate=%llu busy=%d active=%d usage=%u%% running=%d",
-+		__get_str(devname), __entry->cur_period, __entry->period_us,
-+		__entry->vrate, __entry->busy_level, __entry->nr_active,
-+		__entry->usage_pct, __entry->running
-+	)
-+);
++/*
++ * VTIME_PER_SEC, IOC_PAGE_SIZE/SHIFT, IOC_SECT_TO_PAGE_SHIFT and
++ * IOCOST_COST_F_MERGE come from vmlinux.h (BTF enum constants)
++ */
++#define IOCOST_REQ_OP_MASK	0xff		/* REQ_OP_MASK, not in BTF */
 +
- TRACE_EVENT(iocost_iocg_forgive_debt,
- 
- 	TP_PROTO(struct ioc_gq *iocg, const char *path, struct ioc_now *now,
++/*
++ * DIV64_U64_ROUND_UP / DIV_ROUND_UP_ULL equivalents, folded at
++ * compile time
++ */
++#define RU(x, y)		((x) / (y) + (((x) % (y)) ? 1 : 0))
++
++#define RBPS	174019176ULL
++#define RSEQIOPS	41708ULL
++#define RRANDIOPS	370ULL
++#define WBPS	178075866ULL
++#define WSEQIOPS	42705ULL
++#define WRANDIOPS	378ULL
++
++#define RPAGE	(RU(VTIME_PER_SEC, RU(RBPS, IOC_PAGE_SIZE)))
++#define RSEQIO	(RU(VTIME_PER_SEC, RSEQIOPS) - RPAGE)
++#define RRANDIO	(RU(VTIME_PER_SEC, RRANDIOPS) - RPAGE)
++#define WPAGE	(RU(VTIME_PER_SEC, RU(WBPS, IOC_PAGE_SIZE)))
++#define WSEQIO	(RU(VTIME_PER_SEC, WSEQIOPS) - WPAGE)
++#define WRANDIO	(RU(VTIME_PER_SEC, WRANDIOPS) - WPAGE)
++
++#define NSLOTS	4
++
++struct streams {
++	__u64 expected[NSLOTS];	/* next expected sector, per stream */
++	__u64 stamp[NSLOTS];	/* LRU stamp, 0 = empty */
++};
++
++/*
++ * per-cgroup stream table: keyed by the cgroup, freed with it
++ */
++struct {
++	__uint(type, BPF_MAP_TYPE_CGRP_STORAGE);
++	__uint(map_flags, BPF_F_NO_PREALLOC);
++	__type(key, int);
++	__type(value, struct streams);
++} stream_tab SEC(".maps");
++
++SEC("struct_ops")
++u64 BPF_PROG(iocost_ms_calc_cost, u64 opf, u64 nbytes, u64 sector,
++	     struct blkcg *blkcg, u64 model_flags)
++{
++	struct streams *s;
++	u64 pages, base, coef_page, randio, advance, now;
++	u32 i, victim = 0, found = 0xFFFFFFFF;
++
++	if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ) {
++		base = RSEQIO; coef_page = RPAGE; randio = RRANDIO;
++	} else if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE) {
++		base = WSEQIO; coef_page = WPAGE; randio = WRANDIO;
++	} else {
++		/*
++		 * a fully owning model must price every op; unknown
++		 * ops are priced as per-page writes
++		 */
++		base = 0; coef_page = WPAGE; randio = 0;
++	}
++	advance = RU(nbytes, 512);	/* sectors */
++
++	/* only bios the builtin prices participate in stream tracking */
++	if (!(((opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ ||
++	       (opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE) && nbytes)) {
++		pages = nbytes >> IOC_PAGE_SHIFT;
++		if (!pages)
++			pages = 1;
++		return base + pages * coef_page;
++	}
++
++	s = bpf_cgrp_storage_get(&stream_tab, blkcg->css.cgroup, NULL,
++				 BPF_LOCAL_STORAGE_GET_F_CREATE);
++	if (!s) {
++		/* no storage: price per page, truncating like the builtin */
++		pages = nbytes >> IOC_PAGE_SHIFT;
++		if (!pages)
++			pages = 1;
++		return base + pages * coef_page;
++	}
++
++	/*
++	 * Slot access is lockless, mirroring the builtin single-cursor
++	 * update in ioc_rqos_throttle(): concurrent CPUs submitting for
++	 * the same cgroup can race on slot updates; mispricing is
++	 * bounded and acceptable for an example model.
++	 */
++	now = bpf_ktime_get_ns();
++	for (i = 0; i < NSLOTS; i++) {
++		if (s->expected[i] == sector && s->stamp[i]) {
++			found = i;
++			break;
++		}
++	}
++	if (found != 0xFFFFFFFF) {
++		/* sequential: keep the seq base from the op branch */
++		s->expected[found] = sector + advance;
++		s->stamp[found] = now;
++	} else {
++		base = randio;
++		for (i = 1; i < NSLOTS; i++) {
++			if (s->stamp[i] < s->stamp[victim])
++				victim = i;
++		}
++		s->expected[victim] = sector + advance;
++		s->stamp[victim] = now;
++	}
++
++	/* builtin truncates: max(sectors >> IOC_SECT_TO_PAGE_SHIFT, 1) */
++	pages = nbytes >> IOC_PAGE_SHIFT;
++	if (!pages)
++		pages = 1;
++	if (model_flags & IOCOST_COST_F_MERGE) {
++		/*
++		 * merged bios skip the base cost but still advance
++		 * the stream position above, so a merge at the
++		 * expected sector does not make the following new IO
++		 * look random
++		 */
++		base = 0;
++	}
++
++	return base + pages * coef_page;
++}
++
++SEC(".struct_ops")
++struct iocost_model_ops iocost_ms = {
++	.calc_cost = (void *)iocost_ms_calc_cost,
++	.name = "iocost_ms",
++};
++
++char LICENSE[] SEC("license") = "GPL";
 -- 
 2.43.0
 
