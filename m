@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-18.mta0.migadu.com [91.218.175.18])
+Received: from mta0.migadu.com (out-138.mta0.migadu.com [91.218.175.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B93A3A71AD
-	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 02:56:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66DE81C5D59
+	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 03:07:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789786600; cv=none; b=UwLP1E/q+G3jr0XVruv0lUAKcoXe92E/bcT5RQe7TbyTQ9xtAd8oEMWcehdFGElQsO9en9ZWxFoNVmMFXuQVuamu31DGLRwWNZWe3wYOuM3XLSqxRpk4peV069LF9VJni6LNEi49ZjGB03trzr6s2v7aYRp9b6EfVzKSI86K6t4=
+	t=1789787236; cv=none; b=nUyV3jnq3u8NHEhPquL8euL/qRWdToT5Q9DMTXgtowYKA6UjlwEejv/GyQhO1kvxuiuWcbfMCMlhTYD5zsY6K69rJQzikXGuQNEv5gMu1qgCtPKpVArplsz1mVLzqpLHLU6DJQmPeWVJAaQl/DJjRtoxcsARn1GbuOX9VNqMMQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789786600; c=relaxed/simple;
-	bh=yW5QWWhUZOq7BqV6E9+8epbPkMvdcw1AQwYZWc1Wphg=;
+	s=arc-20240116; t=1789787236; c=relaxed/simple;
+	bh=mEv5lyTLXjPbg50EKTMVu3qs0TVt6kgprNwgFGaHm1A=;
 	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=l5RBW++ZsXOpA8goJW092h01TyuZSzMHSq319ySFstFap0hhv17HBeV5JdnOhhRs/061ahsu3HIO+Vd7oRtKjZqs3t1d4rQNABv5sh0wV+RWAZNZJ9UJn91G5Zev9EnW61dUqlb5hEeKwMzIcHyp2/caGCo8ihan5bC9Y3aKZiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Hh06aIAM; arc=none smtp.client-ip=91.218.175.18
+	 Message-Id:References:To; b=kmRoIupo6ZRjCbwYWIQrWBF99+SO6z/+E/FhVguN/s+HbajSHoJc/lKoAN8T5BHZ0wKvZD+6stYrqlRclKLjQzhFgTxFSwLjxy3q7dIQ627OxZ9P7f0G9xEbqLAoiI9FRulrB0RZATXI+4OqMhwR6wMxosBhwKZN27WWqj5TiwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ifvYuX75; arc=none smtp.client-ip=91.218.175.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Hh06aIAM"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ifvYuX75"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=yW5QWWhUZOq7BqV6E9+8epbPkMvdcw1AQwYZWc1Wphg=;
+DKIM-Signature: a=rsa-sha256; bh=mEv5lyTLXjPbg50EKTMVu3qs0TVt6kgprNwgFGaHm1A=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789786594; v=1; x=1790391394;
- b=Hh06aIAM7INTTm2SAQkKnoi0XXEorzfU2t6eDKFA6Ea+Gb6D40MbaKp0PXPoY+rjSEsJ+K2T
- 9B4dLTNaaO8VAZbXMk7DPL3iPFOs5ofEkQke9K7peBwxYRj3G4/X4LSiM3jjAviKWV9Y5WXx41L
- +SvYDz26aaZqTT0rVVe0+J0w=
+ t=1789787232; v=1; x=1790392032;
+ b=ifvYuX75R8iXE4R5+yLfLclZ9qZ+bvjVAIHDAeAnKmQ23BbiUsuQntm9tt7kYASOT7HVGnDG
+ BbpUX2Jgu5DHYaDau3GiQaR/Srz7I3rgl8+s9Oj1CzXMN5HLcfEFXUysvrs3ZN3RTxSvpeCRccG
+ +5cJFT+QgO9/+mX+Lh5r+mOo=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 1f3e88304aab8456;
-	Sat, 19 Sep 2026 02:56:34 +0000
-X-Mizu-Trace-ID: 1f3e88304aab8456
+Received: by mta10.migadu.com with ESMTPS id 17c77f7b96f6f559;
+	Sat, 19 Sep 2026 03:07:12 +0000
+X-Mizu-Trace-ID: 17c77f7b96f6f559
 X-Migadu-Flow: FLOW_OUT
 Content-Type: text/plain;
 	charset=us-ascii
@@ -37,11 +37,10 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.1\))
-Subject: Re: [PATCH 2/4] memcg: base swap charge accounting on memcgid root
- status
+Subject: Re: [PATCH 3/4] memcg: manipulate memcg private ID references by ID
 From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20260918-bingfangguo-memcgid-rework-v1-2-5bbf3220d88f@tencent.com>
-Date: Sat, 19 Sep 2026 10:56:15 +0800
+In-Reply-To: <20260918-bingfangguo-memcgid-rework-v1-3-5bbf3220d88f@tencent.com>
+Date: Sat, 19 Sep 2026 11:06:49 +0800
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
  Michal Hocko <mhocko@kernel.org>,
  Roman Gushchin <roman.gushchin@linux.dev>,
@@ -61,9 +60,9 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
  linux-mm@kvack.org,
  linux-kernel@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <BACBDEEA-F7FD-4EC3-81E8-7806289E8762@linux.dev>
+Message-Id: <90F1D900-0756-4A33-AEB9-5554D646DA57@linux.dev>
 References: <20260918-bingfangguo-memcgid-rework-v1-0-5bbf3220d88f@tencent.com>
- <20260918-bingfangguo-memcgid-rework-v1-2-5bbf3220d88f@tencent.com>
+ <20260918-bingfangguo-memcgid-rework-v1-3-5bbf3220d88f@tencent.com>
 To: bingfangguo@tencent.com
 X-Mailer: Apple Mail (2.3864.700.51.1.1)
 
@@ -74,37 +73,35 @@ X-Mailer: Apple Mail (2.3864.700.51.1.1)
 >=20
 > From: Bingfang Guo <bingfangguo@tencent.com>
 >=20
-> A private ID currently pins its original memcg, so testing whether the
-> ID belongs to root is equivalent to testing whether the resolved memcg
-> is root.
+> This is a preparatory work for moving memcgid from memcg to objcg.
 >=20
-> That equivalence will no longer hold when IDs refer to objcgs. A
-> non-root ID may resolve to root after reparenting, but its swap =
-entries
-> still carry counter charges inherited by root. Skipping their uncharge
-> based on the resolved memcg would leave those charges behind.
+> Swap entries retain a private ID rather than a memcg pointer. Once
+> private ID references are moved to objcgs, the ID can also outlive the
+> memcg to which it was originally assigned.  So it's better to make the
+> get and put functions accept the ID itself instead of the memcg.
 >=20
-> Use the private ID's root status to decide whether a swap entry =
-carries
-> a counter charge. A root-ID entry carries none, while a non-root-ID
-> entry must release its charge even if its current accounting memcg has
-> become root.
+> Rename mem_cgroup_private_id_get_online() to
+> mem_cgroup_private_id_get(), and make it return the ID only.  If the
+> memcg is already dying, the dying memcg will still be used for =
+charging
+> and stats accounting in v2 swap charging path. But they are =
+hierarchical
+> and will be reparented after offlining so it doesn't matter.
 >=20
-> This patch adds a new helper to check if the memcgid equals to that of
-> the root memcg.  For swap uncharging and v2 swap charging, simply =
-decide
-> whether to charge/uncharge memsw or swap counter based on the swap
-> memcgid is root or not. For v1 swapout, don't recharge the memsw
-> counter, just cancel the charge if the swap memcg ID refers to the =
-root
-> memcg.
+> Make mem_cgroup_private_id_put() take the ID and resolve the reference
+> holder internally. Convert swap uncharge and charge rollback to =
+release
+> the reference using that ID.  This introduces an extra xarray lookup =
+for
+> now, which will be removed in the final patch.
 >=20
-> This makes memory and swap charging have similar semantics: one relys =
-on
-> the objcg's root status, and the other relys on the memcgid's root
-> status.
+> Separate the online-state reference release into
+> mem_cgroup_private_id_kill(). The offline path already has the memcg
+> pointer and can call the underlying put helper directly.
 >=20
 > Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
+
+With Shakeel's suggestion.
 
 Acked-by: Muchun Song <muchun.song@linux.dev>
 
