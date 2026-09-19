@@ -1,155 +1,128 @@
-Received: from mail-qk2-f42.google.com (mail-qk2-f42.google.com [74.125.230.234])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47DFF2DF126
-	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 16:08:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.234
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A76E92D9ECA;
+	Sat, 19 Sep 2026 17:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789834096; cv=none; b=k9CARgMpGvVp48oM223l+FEC0D19Maz1/JRicOm3QbtgySKJNdEVGpipe8yxa8giW0MbhTsEOEJRZ82c7IhdhuZ1+D3GB9oAU7vpJ1DgxTCi+CEA+s2ibKJ5w/TmwXVg4EN6TMrn4/yvu5FD+qRkxuQijxjAAnSMAhK2oluKbA8=
+	t=1789837908; cv=none; b=VNsESIXN0tgYI5en5+kUZtFk3yzhkCgX96GlNt2rq34b3HX3F9F1nf4HSgNeYw4q3Hv0lxWE6Q+rcpO+lDBOPk2uHzbUOQKQd7jYkLuYhqC2/OAZ4St51LSUa+KftZ+JtGXJNQ1w4YJH4UjCYzmJaIDxj1o4K1a8ARRkxANOt3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789834096; c=relaxed/simple;
-	bh=EI5XLXPHTu/1vw3/pA66slomIjIqbs5I6JK37l78UKo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J/aC0xc+Apz01Q05OoloNoqzMcDhgJiq2WA6rYf/wq0NUa88WHDeCkIVH6VYT6Ik6tjOEhTEMCOETp9/2pZlz4KmqoY6ifFCRKnYjw1uplDcBezmY6p6AqZxQUu+ckOrZZrD0Nj5v/lOfm2XP5xpSPZU5zJJPAJGx79Of+OBqGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=krq+7ktc; arc=none smtp.client-ip=74.125.230.234
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	s=arc-20240116; t=1789837908; c=relaxed/simple;
+	bh=Oe3N+uS0QPFJ/FFJyoZURZ9yar/4u8esXnbjRjNR7NI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ty4QSD/UpPz5gdegKEu8OIr3KW+5IcI2cylNxZ169uokDNyUEL8HHDSxQvueVrLJuw4A642n+OJuckV2MKtNjOHal/0QcL1IPnJKCxeyBFKDk47dzn8JsCWYyIy/ti+3aACyg5qUuTk1ngHGvf54uva1msSdO4ncfV2WPBUEfm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=arcLEb2C; arc=none smtp.client-ip=96.67.55.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="krq+7ktc"
-Received: by mail-qk2-f42.google.com with SMTP id af79cd13be357-93be29bb454so159246285a.1
-        for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 09:08:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1789834094; x=1790438894; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=v1ENvgPhr2wkBzngQIEflRDSjK2asd8jt545To7DKdg=;
-        b=krq+7ktcJcLLxzPRR2XcRReeNPXnRQBlfY9D40yyZ1PoX6XqQrfVMQRq28NOhZu6nQ
-         FxAEeEKHKoKC17VcAaJzcjBbqe6O4vOuJ7EmwhUAST8h+1YtrJjvUmcDNxetxKfQXa3X
-         biLGbSMuG+EL7fNpdY70fn8l27CkAwtKZKtMEJTgUEeDSHuleryxJYC8naTW+CAeE7py
-         jgow3/h5bieabnxtLl83h0WUXlYGVAycLao0fowUOk+1c6R8mtiaUAipg7MHO7ycoN1S
-         DvRzj24bu4eKH+2TDkG3BUy8mGeRiAXTsCSpBPbQZtHZh7aD+fBOImapVUPz9QPYHpYP
-         ZUQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789834094; x=1790438894;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=v1ENvgPhr2wkBzngQIEflRDSjK2asd8jt545To7DKdg=;
-        b=2DSSWYLCluAaZh0Us6ABqIMwAgNZo3/kyT+Fi9Ww5Shz2sxlBka0SpCFRB3XZsfBr2
-         /WW4xYT6qIQCUW4y0pQYoCc3GMfYFvCGviLDbMmWkIdHxkHbNGR8I/KLwtDgRMHBr0jH
-         FRKRsMKl3MH0XB2ak0Wz3EDSlq9rLqUe0M3G2frgsX9ogU8twPQxYhcWwWuOSNqemsbP
-         DQVOi9oFCYUR6Y9U/KCWZYcaMUpGRcZSdCFlImoELCOlI+a0n75+kKiQd6VJk/P6plQQ
-         lYtSesss7JGA+Jo/ZT/57PzWr0gy7lXzpeHWhID2wrleRdykCvQSTMRn5PJUHgPtwevA
-         lYeA==
-X-Forwarded-Encrypted: i=1; AKwUvBwOp9QZDhoAMdsISpFP7dE//IR1S8FM2V8wPtTdeahHwc7NOjjY6aTWojxeK3rljwNw/SyMKCQP@vger.kernel.org
-X-Gm-Message-State: AFuF++l6v8otxiyS93Uyr+MPDiye+2gLcGv/T9Jnw0V+JwPF6dDjckmx
-	VAqYQcQKmJtAjePXTeJRll8W+myQ6vliN/A7+uMT61ubqJxYegnshKiXV0T0dHqF5JI=
-X-Gm-Gg: AYBFou0a2rrcAOu4egzifeijG3x3WLB1h1MpyL0NmjtXVq3Oiq2ne8ONsqkJstdK3bs
-	iwqPy6+HulFJL98evgJbNJyUwEf7CdI0C6498o56Oy/KQNuaPiYTFAgzDhmkjjEJTD9Z96bkBpV
-	v3eUwYkYCB4CPVfdejpLXjg2GwkFkKGxMQcIZysh8cOxQF2/XahJdyGKr9kdCxnE9BowoW7AY19
-	F8/f23tXKo094eS8ddRz9KqOQZHXkx2J1Bjp5LgnaoFcdr9Ul3Df3dWk1+MyTM49g8oAUmr1Djm
-	DyHf1GnNa7WW9pestSmK8B921QPUgSjZa1mfdNJBl5nm4CZRudRdwNVTPOlZ7/HKgyte+9M8lop
-	K8nJB/sjuntkUYUWG+yhRgHWIlsH9R/Y06S3vCH4Pf68jlj3ftaicfOaUwPK3241hLtAByggjrN
-	70sUTyHjdDMgnpp2PrYnB/y1grMIe/phiiU7hesjhuxcB+s3t3neySd8PvR5ShOOLEiiMrCCmCm
-	QwHyDiNOtcxk9SS7+g+0iFqOwsTTzXODkI93jt3aA9ov5oMZZmO8lI=
-X-Received: by 2002:a05:620a:371e:b0:939:10dd:9c01 with SMTP id af79cd13be357-93bf5731121mr233734485a.38.1789834094077;
-        Sat, 19 Sep 2026 09:08:14 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93bedb05a2esm213660485a.33.2026.09.19.09.08.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Sep 2026 09:08:13 -0700 (PDT)
-Date: Sat, 19 Sep 2026 12:08:11 -0400
-From: Gregory Price <gourry@gourry.net>
-To: Chris Li <chrisl@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
-	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Rik van Riel <riel@surriel.com>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Kunwu Chan <kunwu.chan@linux.dev>, Meta kernel team <kernel-team@meta.com>, 
-	Linux Memory Management List <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, 
-	linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="arcLEb2C"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
+	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
+	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID; bh=Oe3N+uS0QPFJ/FFJyoZURZ9yar/4u8esXnbjRjNR7NI=; b=arcLEb
+	2CeUUpzCxBoMZbPq+6APyrTcjBmjWSdDoMptbEDMAUYH5nO3Ps7esFPKfvynXY8q/B2PY1vs7BQFh
+	x6cWtTCbVAMhocYl9K+/oaS22wp7w4Gi3ZxhioGDvwv3mWKOdJ9kNnfBPVTu6qfnQUk4ewadO4GI2
+	XreMzsokA78ZVO32BkujrFWECY/RJLt6Ll9mtePsMqLWpmqiePaYmMSmU4r4GCSERTMEoQaLWZ5Ve
+	zpP6cNBJkB4WEacr4ebnSJFkGFAg8TUEn7NKJ+4vc2LhXMmx42HyGl8kf707O3wY5JBgX/lbmKm11
+	IH/9e0V+V7zPwfcu7/BPIMrCHwbg==;
+Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
+	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.99.5)
+	(envelope-from <riel@surriel.com>)
+	id 1x7xjJ-0000000CHJQ-2RY1;
+	Sat, 19 Sep 2026 16:15:57 +0000
+Message-ID: <7ee199ddee81bf8026688def82f78ad9db09be9e.camel@surriel.com>
 Subject: Re: Path forward for Virtualized Swap?
-Message-ID: <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F>
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <aqJXx2vtbKaRLt3x@fedora>
- <aqLi6cIjD2wJwk0B@cmpxchg.org>
- <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+From: Rik van Riel <riel@surriel.com>
+To: Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
+ Kairui Song <kasong@tencent.com>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>,  Roman Gushchin
+ <roman.gushchin@linux.dev>, Yosry Ahmed <yosry@kernel.org>, David
+ Hildenbrand <david@kernel.org>,  Muchun Song <muchun.song@linux.dev>,
+ Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
+ YoungJun Park <youngjun.park@lge.com>, Chengming Zhou
+ <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)"	 <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)"
+ <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
+ =?UTF-8?Q?Baghdasaryan=EF=BF=BC?=	 <surenb@google.com>, Qi Zheng
+ <qi.zheng@linux.dev>, Axel Rasmussen	 <axelrasmussen@google.com>, Yuanchu
+ Xie <yuanchu@google.com>, Wei Xu	 <weixugc@google.com>, Gregory Price
+ <gourry@gourry.net>, Wenchao Hao	 <haowenchao22@gmail.com>, Jonathan Corbet
+ <corbet@lwn.net>, Hugh Dickins	 <hughd@google.com>, Baolin Wang
+ <baolin.wang@linux.alibaba.com>, Tejun Heo	 <tj@kernel.org>, Michal
+ =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Shuah Khan
+ <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, Meta kernel
+ team	 <kernel-team@meta.com>, Linux Memory Management List
+ <linux-mm@kvack.org>,  Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, "open
+ list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
+ Kairui Song <ryncsn@gmail.com>,  Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Sat, 19 Sep 2026 12:15:57 -0400
+In-Reply-To: <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
+References: 
+	<CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+	 <aqJXx2vtbKaRLt3x@fedora> <aqLZ5TVDAqEbIeMN@linux.dev>
+	 <aqP81aqNbwAbs2P0@fedora> <aqQrPLPXHXiuKup0@linux.dev>
+	 <aqjcFb6MFNiA6n4V@fedora> <aqjpYHbZ14A8xRtK@fedora>
+	 <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
+Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
+ keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
+ eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
+ Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
+ lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
+ dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
+ mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
+ gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
+ r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
+ WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
+ 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
+ Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
+ +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
+ g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
+ KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
+ fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
+ 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
+ G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
+ okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
+ TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
+ cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
+ omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
+ QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
+ c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
 
-On Sat, Sep 19, 2026 at 03:45:03AM -0500, Chris Li wrote:
-> 
-> I found this new concept of "compression space" very confusing to me.
-> Can you explain the swap behavior and problem using only normal memory
-> usage reduction and latency without introducing a new term or new
-> metrics?
-> 
-> The normal user doesn't even know what compression space is, let alone
-> what makes it transparent.
->
+On Sat, 2026-09-19 at 01:55 -0500, Chris Li wrote:
+>=20
+> We don't have to address all issues in one series. I actually advise
+> against lump too many patches into one series.
+>=20
+There are two things here.
 
-Sure they do - it's the amount of memory consumed by compressed data,
-including the metadata associated with it.
+I totally agree that we can merge things piecemeal,
+and not aim for perfection at the start.
 
-converting Johannes statement to diagram:
+However, I believe we do need to take care that
+whatever design we go with is actually able to
+support the end user functionality we want.
 
->> Compression space is not a separate resource. It's page tables,
->> backing pages, and swap descriptors. It's just MEMORY. 
+We have to make sure that the path we pick does
+allow us to very easily add the user visible
+functionality that people need.
 
-                          Page Data (PD)
-  [page tables][                uncompressed page                  ]
+We can always swap out technical details behind
+the scenes later, but user interfaces are supposed
+to be stable.
 
-
-                        Compressed Data (CD)
-  [      recovered space     ][pte][swap meta data][compressed page]
-                              |                                    |
-                              |---------compression space----------|
-
-
-                        Memory Pre-Compression
- |[  PD  ][  PD  ][  PD  ][  PD  ][  PD  ][  PD  ][  PD  ][  PD  ]|
-
-
-			Memory Post-Compression
- |[CD][CD][CD][CD][CD][CD][CD][CD]-------- free space ------------|
-   ^----------------------------^
-         Compression Space
-
-
-It's actually really confusing to represent this space as a traditional
-swap device - built on the assumption of a pre-defined size limit - when
-that size limit has already been defined (the memory itself).
-
-Baking any kind of pre-defined limit *into the infrastructure* (whether for
-an optimization or ease of implementation) is what requires users to know
-what compression space is.
-
-Even using memory capacity at boot as a limit is wrong - hotplug exists.
-
-> Why does the user need to care about compression space again?
-
-They shouldn't need to, that's very much the point.
-
-~Gregory
+--=20
+All Rights Reversed.
