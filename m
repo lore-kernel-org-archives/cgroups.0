@@ -1,137 +1,136 @@
-Received: from mail-pz2-f40.google.com (mail-pz2-f40.google.com [74.125.228.40])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F76A339394
-	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 22:17:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25DB035DA65;
+	Sat, 19 Sep 2026 22:51:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789856250; cv=none; b=or5YTZaNcCjLhjr9KcOs79x1htfcISTFPMvaZyUxmHcdQiiFs/AEo45hkJnTFfoMaE3Jr45l5qjBbPO038ot2pxdIrKwwlNFPVlqRc66HdBUa3nEpupQ3THXdbD5xfksMbllCQelIDp83vQn+3cgN5zceJ1OWTfvWn39eh0pxds=
+	t=1789858296; cv=none; b=O53ujbJv4dYCopaTg87c6dAnfGLiH7SFvRRrHW6r1VxlGzi96YkaiL5t1yxNCjSiRBC6P80IxZdk5ySX9ku/666FC9A8NnWSxPJmwQ63g1bx/ewgFwg+pw368hsywTc+W0kxBZP/pvS+cW9ucEHtg80D//eDMUvUABXubRR6gYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789856250; c=relaxed/simple;
-	bh=PBlYrbUMa8c9n2w8jCK5pWTavFbfpz7iWRc+vhU8O+k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=U65Vx7P5tEBlslXOaSyih7cPWWJHHRMj93LH68Nswm2nyaVysbUlaYgzN1G0ZHb0Qi82GvXOVDGJTX0Q4zQ94pY2oxMigpUsYOMvSzftMIqziMGlMdXYZ70lKniHcIn6NWMs7khBE02j3czODDjXqVaXTW5o/SgB7tlBtn98zxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JlUv+6LJ; arc=none smtp.client-ip=74.125.228.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789858296; c=relaxed/simple;
+	bh=f8d7sITBlX746VHdplJawn77x/S/0Xqzqh3iLiQlXkA=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=LrQnIUbEs0amP3BrvfoGnW9T2AE/E37kTIdL+Jk3Ja+uLZDHUNQjHVDfJduedTFuVOE91T4MssaAey1YYwOa8/GpBAbYx4CYFseK0uuQ38rXDtEDORItQz8gr0pJOf7txTgBglBte0t1M3HBn3teX4NYuDEfuq3rbzqp9i+XsjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=PzXLo/Nq; arc=none smtp.client-ip=96.67.55.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JlUv+6LJ"
-Received: by mail-pz2-f40.google.com with SMTP id 41be03b00d2f7-cc515bef69dso1207048a12.2
-        for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 15:17:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789856249; x=1790461049; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=nHjDEI31PmhjL+jQcpe7FJPCDJTSJKQhfDFskj8mPNE=;
-        b=JlUv+6LJhRQOcs562CtY6Wdl47GuDZqmxZRMRuVwmW885sl3UvQBN9cRsEtlVns/53
-         1TWgeH9j5m9S7HvCI7u6Mj2SUq6pbL4iFmCA0lpidEz80K1bWF3vPED9zGB6lw/24yBj
-         Hpfx2Hqy4qLlyOJLfBe8y/pussFBYo0GRsjTLs9Fhprhbciu5TASAH7TdCQaIHjJRF1f
-         kxwgGWK15+Z9AUHbwyh5hT+waW7j2sCMH3rU5FbXxx3fphAd+GwuIThnIZ6UWJPrDka/
-         j1xuesKjLYVEIJLvhcu5/EWeAyepBRDQSf5B1/a3OmzfYQRUQBRIw7G+ReZZrFlFR4Pt
-         qdSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789856249; x=1790461049;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=nHjDEI31PmhjL+jQcpe7FJPCDJTSJKQhfDFskj8mPNE=;
-        b=m504fZwzvMMRSVasmyS4p0f8/iD4sgvzidh74C0f65da2mxqC+jNhiP+SXRXdV5I5r
-         tngJ1YiqrQEXC7YFWdeMJNvlhsk4D/xecWumZSdowL67aEJvwCyOkWGND5Mk579wBp0j
-         FWlARF+b0iBn1Jzh1pDhLJb5+UBGsEtDi6awqJBlZiK5JdYt3okU2W2OfeAr1atqTDxL
-         v459E9CX8YXrl1GvcXq4bRiv2i12b1csHktzMy0lUdzFHE+jQBOo/xgZxw1iooeGnJ4i
-         eaLMufY12gNLMFFmpRHOFz9torfZvDOoOSk87fUeOoEgVwzlBul2DcZYRTptbeud8GEm
-         KXxQ==
-X-Gm-Message-State: AFuF++lpkrRk4P2ppHDGc9NIgSf0u/cuntFlPV3LCPCk4h0K29dBZvBX
-	5NjtKf3oWupS+PvWKSjYdpO1QUmE7GWiXR4ngLuJ3DO4VnO+unh2eKEw
-X-Gm-Gg: AYBFou083LI62pdFq1fzPMkBPiR+cRQYIk5QqgJzN7hwtb5rkOEJNsmv7QRP7FyEUck
-	z6DAHIuwt2Mmvc/o+WNCEBEc32SerTSMvymVWgyVYbufL5lek6f8BSE4CTkZWMRo8DE+VMuACHa
-	B4b4Hq1qSm1+s+Zu4EAduLB3TLFC0rMD+L0Wccqta8pZXdgJs6imZ2viV3CHEpkSXePFrqf0md9
-	k7sQNM0WrqfkgvxMxzoBUYNDw9MRV42gyTtPk/EBRAAFso1K7w97uAMuuttrY1TzL4OgvdGNaV5
-	vhmpcS5NIMcmiL0WnCO1KxlqQ+HpTam6estskrrBjfVhAHOcVsv1unJLo9Wf7EQcHoB7gGuY7P1
-	FO3Om5uLQWsmj95ua0uW7Yk+2oR/ZB+RAtJyprRg8FjJNV76ehtZcypE/pOgv+uz3IKEeQ+fgwR
-	j0B75WRvDwcW8fEdEl78lsqbd9PCySc60Nh9pUAb8CyYaeq2JF4qUaZEqRT9ChxLMh7Z3uLaJrE
-	sGwt22FMdkNjCYr2WLYey2kVnLdRrQQ0Ke2jbGFnHzfocPTgYJDfmOPkB+VtIDfV1dE3f52A4p7
-	WAyGwZPv08Bsap/8Vp/P
-X-Received: by 2002:a17:90b:5281:b0:3a0:3673:dbbf with SMTP id 98e67ed59e1d1-3a03673dd7bmr458144a91.59.1789856248664;
-        Sat, 19 Sep 2026 15:17:28 -0700 (PDT)
-Received: from phui-2.c.googlers.com.com (78.123.83.34.bc.googleusercontent.com. [34.83.123.78])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e6c37a88csm6240077a91.8.2026.09.19.15.17.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Sep 2026 15:17:28 -0700 (PDT)
-From: Hui Peng <benquike@gmail.com>
-To: longman@redhat.com,
-	ridong.chen@linux.dev,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] cgroup/cpuset: prevent overlapping local and remote partition creation
-Date: Sat, 19 Sep 2026 22:17:27 +0000
-Message-ID: <20260919221727.3706964-1-benquike@gmail.com>
-X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
+	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="PzXLo/Nq"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
+	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
+	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID; bh=f8d7sITBlX746VHdplJawn77x/S/0Xqzqh3iLiQlXkA=; b=PzXLo/
+	Nq6WzlrF+qYH+2ZM3LrsL+0tC1/ZVEXWSS6dkqg6eOpjgbjglyC4ZN+c9tf7o80oY+0IKP5G12fSB
+	U2kKzzGJxDF3AYZfscMUGwRmSVrHKPwHIwgNLru6wacqk8AGgDg5YuF0BsEHElM0nsQSQh8SRosvo
+	RXkaFlgBwU3Q72Zap4DnAEwOqLMd0efJuArtBecrNMzI2nF864X+XrrKFCZIa2Qlv3cwHTrDofx8V
+	7k5pCylGInTLI4RvgeS6jOM9/RskcxQn/UMc2E+56DG48n4bge5648QYrpDftYLQl42k5TggJSiyq
+	GhgmA9FWVd7ldDoqfhdHbX7wyYCA==;
+Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
+	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.99.5)
+	(envelope-from <riel@surriel.com>)
+	id 1x83sj-0000000CNrZ-2Nmi;
+	Sat, 19 Sep 2026 22:50:05 +0000
+Message-ID: <f3ca71f1c561f28a341de0e5a1b3f24bd4da3201.camel@surriel.com>
+Subject: Re: Path forward for Virtualized Swap?
+From: Rik van Riel <riel@surriel.com>
+To: Chris Li <chrisl@kernel.org>
+Cc: Baoquan He <baoquan.he@linux.dev>, Shakeel Butt
+ <shakeel.butt@linux.dev>,  Nhat Pham <nphamcs@gmail.com>, Kairui Song
+ <kasong@tencent.com>, Johannes Weiner <hannes@cmpxchg.org>,  Michal Hocko
+ <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Yosry Ahmed
+ <yosry@kernel.org>,  David Hildenbrand	 <david@kernel.org>, Muchun Song
+ <muchun.song@linux.dev>, Kemeng Shi	 <shikemeng@huaweicloud.com>, Barry
+ Song <baohua@kernel.org>, YoungJun Park	 <youngjun.park@lge.com>, Chengming
+ Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)"	
+ <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka
+ (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
+ =?UTF-8?Q?Baghdasaryan=EF=BF=BC?=	 <surenb@google.com>, Qi Zheng
+ <qi.zheng@linux.dev>, Axel Rasmussen	 <axelrasmussen@google.com>, Yuanchu
+ Xie <yuanchu@google.com>, Wei Xu	 <weixugc@google.com>, Gregory Price
+ <gourry@gourry.net>, Wenchao Hao	 <haowenchao22@gmail.com>, Jonathan Corbet
+ <corbet@lwn.net>, Hugh Dickins	 <hughd@google.com>, Baolin Wang
+ <baolin.wang@linux.alibaba.com>, Tejun Heo	 <tj@kernel.org>, Michal
+ =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Shuah Khan
+ <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, Meta kernel
+ team	 <kernel-team@meta.com>, Linux Memory Management List
+ <linux-mm@kvack.org>,  Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, "open
+ list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
+ Kairui Song <ryncsn@gmail.com>,  Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Sat, 19 Sep 2026 18:50:03 -0400
+In-Reply-To: <CACePvbVA+DnDJprMx3qOrGb98y1ORQ-LfaENy_Btfx3uW=E4eQ@mail.gmail.com>
+References: 
+	<CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+	 <aqJXx2vtbKaRLt3x@fedora> <aqLZ5TVDAqEbIeMN@linux.dev>
+	 <aqP81aqNbwAbs2P0@fedora> <aqQrPLPXHXiuKup0@linux.dev>
+	 <aqjcFb6MFNiA6n4V@fedora> <aqjpYHbZ14A8xRtK@fedora>
+	 <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
+	 <7ee199ddee81bf8026688def82f78ad9db09be9e.camel@surriel.com>
+	 <CACePvbVA+DnDJprMx3qOrGb98y1ORQ-LfaENy_Btfx3uW=E4eQ@mail.gmail.com>
+Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
+ keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
+ eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
+ Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
+ lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
+ dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
+ mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
+ gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
+ r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
+ WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
+ 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
+ Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
+ +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
+ g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
+ KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
+ fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
+ 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
+ G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
+ okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
+ TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
+ cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
+ omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
+ QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
+ c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Fix two partition validation bugs in kernel/cgroup/cpuset.c:
+On Sat, 2026-09-19 at 11:21 -1000, Chris Li wrote:
+> On Sat, Sep 19, 2026 at 6:16=E2=80=AFAM Rik van Riel <riel@surriel.com>
+> wrote:
+> >=20
+>=20
+> > However, I believe we do need to take care that
+> > whatever design we go with is actually able to
+> > support the end user functionality we want.
+>=20
+> Agree. I want to add that we should support new functionality without
+> sacrificing existing user functionality.
+>=20
+That means things need to work both for users
+who want to configure a zswap size, and for
+those who do not.
 
-1. In remote_partition_enable(), check whether the requested effective
-   xcpus intersect parent->subpartitions_cpus so a remote partition
-   cannot claim CPUs already delegated to a local child partition.
-2. In validate_partition(), verify that enabling a local partition does
-   not overlap CPUs already allocated to an active remote partition.
+The cgroup memory.swap.max is an existing
+interface that does that on a per cgroup
+basis for swap, though in practice the=C2=A0
+limit mostly seems to be set to 0 (no swap),
+or to max (no limit).
 
-Fixes: aa7d3a56a20f ("cpuset: fix warning when disabling remote partition")
-Assisted-by: LLM
-Signed-off-by: Hui Peng <benquike@gmail.com>
----
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 2538faac9aba..13fad096c494 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -713,7 +713,10 @@ static inline bool cpus_excl_conflict(struct cpuset *trial, struct cpuset *sibli
- 		return true;
- 
- 	/* Exclusive_cpus cannot intersect */
--	return cpumask_intersects(trial->exclusive_cpus, sibling->exclusive_cpus);
-+	return cpumask_intersects(trial->exclusive_cpus,
-+				  cpumask_empty(sibling->exclusive_cpus)
-+				  ? sibling->effective_xcpus
-+				  : sibling->exclusive_cpus);
- }
- 
- static inline bool mems_excl_conflict(struct cpuset *cs1, struct cpuset *cs2)
-@@ -1591,8 +1594,8 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 	 * above it or remote partition root underneath it is not allowed.
- 	 */
- 	compute_excpus(cs, tmp->new_cpus);
--	WARN_ON_ONCE(cpumask_intersects(tmp->new_cpus, subpartitions_cpus));
- 	if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
-+	    cpumask_intersects(tmp->new_cpus, subpartitions_cpus) ||
- 	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
- 		return PERR_INVCPUS;
- 	if (((new_prs == PRS_ISOLATED) &&
-@@ -2411,6 +2414,10 @@ static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *tri
- 	if (cpumask_empty(trialcs->effective_xcpus))
- 		return PERR_INVCPUS;
- 
-+	if ((parent == &top_cpuset) &&
-+	    cpumask_intersects(trialcs->effective_xcpus, subpartitions_cpus))
-+		return PERR_REMOTE;
-+
- 	if (prstate_housekeeping_conflict(trialcs->partition_root_state,
- 					  trialcs->effective_xcpus))
- 		return PERR_HKEEPING;
-@@ -2970,7 +2977,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		 * local or remote partition.
- 		 */
- 		if ((parent == &top_cpuset) &&
--		    cpumask_intersects(cs->exclusive_cpus, subpartitions_cpus)) {
-+		    cpumask_intersects(user_xcpus(cs), subpartitions_cpus)) {
- 			err = PERR_REMOTE;
- 			goto out;
- 		}
+memory.zswap.max does the same on the zswap
+side, again mostly 0 or max are used.
+
+Are you saying you rely on having something
+like that at the system level, too?
+
+--=20
+All Rights Reversed.
