@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9ADB36923F
-	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 07:08:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6672D315D58
+	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 07:24:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789801689; cv=none; b=Vs8Ruvs7wgvZByz+xAMMC5x7rt8BGbCD83UWeaaMRBnaTNiQL3b6R063YVMdFum+AuAUlBqyFhX/FqJFdiI6ngoLhoek5VAvDjkXm595KlLXAjQk+WPliif5akmE7Et1nmN+wHsVrL8eiGJMCMw8ERHN0Uzb3n2bmhKOdm4NPhI=
+	t=1789802647; cv=none; b=c6xu5xf5KqCKGxXL0oNJi1QsPhXritjTq9v8Prb7kgUbnnZUn6HEDo36D7lIBZ52xaTde6/yXC8KkV1xCzLYwkf6NGVM3RwPHbOB1MWc/3/nb5v2FA7sfFvlDWyWuDW0O4SyVXWKRh35p5XbSAAqkCEWl1I8qIclGb/EwSJESaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789801689; c=relaxed/simple;
-	bh=rrsp1i5LIXFwyVvVNp3h1o8lIsm5uPBaJpVC8/T6XK4=;
+	s=arc-20240116; t=1789802647; c=relaxed/simple;
+	bh=CcwKFo/x3d7KIrwrdSc6FIvo/aUmSvp1opSXGURZ5hk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=o1qpk9687swjVNdkKa6v5l2TZTXHGOCjz0yvypiQh73pNOyQE12E1L3pN8kY0Bj+dkgamNyMs37dagJQ27tpQcRxFclMtLi9vXKoxN3ykoDoTCpQDCPV1WSK6MkocPGBR9E4FRKyehYqL52daS2R8wzlUlnysqs5SPtENv5+oIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nZS6+QU2; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=Eb6Q/ODxmqJf1l2u40Q6IzwTycCal1MowfeGyaB7VH4ATl9kGOH63sEuEw6iX2wcOnisCTabgxIEaHSG7C6tsLmhGhKskdVPOEDwbqllRvaR6X+hmcsJ8q6/ZFVN0LvLFw2hxtjEDXD+FrY1eCNcLmJr/hZThT/xl2W5GmN7HaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UL7fUD1R; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nZS6+QU2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56C5E1F008BF
-	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 07:08:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UL7fUD1R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A8F31F00901
+	for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 07:24:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789801687;
-	bh=gE+paBGkzkQFjuoRRz7bb7MKq5Y27OcpesK3wuYSa7w=;
+	s=k20260515; t=1789802646;
+	bh=CcwKFo/x3d7KIrwrdSc6FIvo/aUmSvp1opSXGURZ5hk=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=nZS6+QU2FaK7JEHO2/S2dt3qa+Hi3bOONBdvlpRuSaE2yM1DodwkSJ8OS5OT8dmOb
-	 Qq2TI7DCEgw52pfjYZQLhHoypYwaiMiP/Lw4E+cTiL5ZZm6MG1KGVuiUDCjht2ODYd
-	 u3ucCeh8M0UlhTjpXymQkwhHx1FZRus31fuJNfzCSfhfAG9ma9R8/siVyuqyTgPd+d
-	 Jr6w8ym0RPu+yPowWicpZTRbtTxzRgtou4+Z8sZfEQi/Bode4gqK04V6ez8uqUcV6u
-	 PrjA8fOb9FiU61dampiMRE+TcZnoTEfV8M9OY1MrmbVst7bqhTBdDV60/e6H0aBdC+
-	 rMF33t/t/NSJQ==
-Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-6729c4030f0so247314d50.2
-        for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 00:08:07 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBxK56sg6k8bSd8EmbFDYwIKJG2dGUp50RmqKAwZOnjSz0yO8/HV0oRtONRiJlt7L7W/iXDxNvqQ@vger.kernel.org
-X-Gm-Message-State: AFuF++nIamUixwd0dXzl+NmJr1ZH6qAayUWPxI76cT8TUpJfmAaiDdRK
-	7ZN4WjBj+YJ6ZF8Pvp5lELVMQkuBvpykP2oEtcjpsKD+rx6gtotw57nsPl4kPhIAzGsA2gAfzwM
-	zkSnWo23D6EupGtKcqlWzw0qEADahtOG19rmDXZwKFg==
-X-Received: by 2002:a53:d5c8:0:b0:671:33ba:b4dd with SMTP id
- 956f58d0204a3-6717fe4c8a9mr1153659d50.93.1789801686606; Sat, 19 Sep 2026
- 00:08:06 -0700 (PDT)
+	b=UL7fUD1R+LFfRdNyW3BYbQT13vuIzvV9VwxPU0lGVypZMMtFBwv8hMGA3f6+g2jXc
+	 FSMv7385C4wyeX31P82/p8Vlsqz0rbOTA/FwhmYef7KLB2CqBkic40zrVshI6+7iKb
+	 /8PLo5AiSkgoXdsC+XuO5IC92XdJaQVs1ffGGXfl55qM53lVC47M9hlEsTtFwxmj4j
+	 /No8o+O4Bb4IJ9QUh3IZsORNIlcw62NrjY0wS1Vz0LPicbigMk1SWE9LG9DB6tfDEH
+	 KAd6OZYR2KzufTieJL2FIDnOKJxNuBN+7dIryv3mm8+96VrfroaeZ4II1SPsJ1TkAa
+	 6E4CmL3ENNGrg==
+Received: by mail-yx2-f39.google.com with SMTP id 956f58d0204a3-66f7a9afe43so1263247d50.1
+        for <cgroups@vger.kernel.org>; Sat, 19 Sep 2026 00:24:06 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvByua1x7Lb4Bi1g4+kcxA+DYfYTCFIybT7pQcu43BH9reCv0W8CMDgcuhrWbIUFQ6KfFptgE/GQJ@vger.kernel.org
+X-Gm-Message-State: AFuF++lRgL6wH29urmR51s/vs7seKOGL9TmjMEfHBpSJoArS8QQivXns
+	Z4ADfg4MUNzWvGAvoGao8Uaf5fM/ec6kpXwqT/OmW5q2qHI/uBn0csEALb46oY+cIAoxAy+j5Zw
+	DALEwJl1VwMlKgzyXLdNHgFrwXK/nQk8XA/uU4hCnAA==
+X-Received: by 2002:a05:690e:4504:10b0:66b:14e5:d226 with SMTP id
+ 956f58d0204a3-6717fcca387mr1086959d50.34.1789802645443; Sat, 19 Sep 2026
+ 00:24:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -42,24 +42,25 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <aqJXx2vtbKaRLt3x@fedora> <aqLZ5TVDAqEbIeMN@linux.dev> <aqP81aqNbwAbs2P0@fedora>
- <aqQrPLPXHXiuKup0@linux.dev> <aqjcFb6MFNiA6n4V@fedora>
-In-Reply-To: <aqjcFb6MFNiA6n4V@fedora>
+ <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com>
+ <aqBT_35E-eSoN_zj@cmpxchg.org> <CAKEwX=N4aaq_oD2agTUNrUNXhaYGeQ9vxu+dywFvEFgWFi4uQg@mail.gmail.com>
+ <CAMgjq7AfNBUpMamcv29JFzpX=7ApNYVLtPjWT4Sm8cXjSLYL9g@mail.gmail.com> <aqU81l1oqGItb-0C@cmpxchg.org>
+In-Reply-To: <aqU81l1oqGItb-0C@cmpxchg.org>
 From: Chris Li <chrisl@kernel.org>
-Date: Sat, 19 Sep 2026 02:07:55 -0500
-X-Gmail-Original-Message-ID: <CACePvbWxnr27ZczLdBco4X53aKcgq16VqZouO2qXQPrSv9Koww@mail.gmail.com>
-X-Gm-Features: AcwNN1WBLwbT5ruT7e5y0cS0b9GaV16VkekND9NewldgAksHMI-xQQPGAeCaO3Q
-Message-ID: <CACePvbWxnr27ZczLdBco4X53aKcgq16VqZouO2qXQPrSv9Koww@mail.gmail.com>
+Date: Sat, 19 Sep 2026 02:23:53 -0500
+X-Gmail-Original-Message-ID: <CACePvbWLHAT5DjC=HidzN10XF5_cnkpxXXDR_yfEJjTY_uDvDQ@mail.gmail.com>
+X-Gm-Features: AcwNN1Ugv2uKjDvI3UlN6yWV2c11EGmbN_5p9iXtBCp6zavSXduB5hlfoQJWQ5A
+Message-ID: <CACePvbWLHAT5DjC=HidzN10XF5_cnkpxXXDR_yfEJjTY_uDvDQ@mail.gmail.com>
 Subject: Re: Path forward for Virtualized Swap?
-To: Baoquan He <baoquan.he@linux.dev>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
-	Kairui Song <kasong@tencent.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Kairui Song <ryncsn@gmail.com>, Nhat Pham <nphamcs@gmail.com>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
 	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
 	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
 	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
@@ -71,149 +72,56 @@ Cc: Shakeel Butt <shakeel.butt@linux.dev>, Nhat Pham <nphamcs@gmail.com>,
 	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
 	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+	Joshua Hahn <joshua.hahnjy@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 15, 2026 at 12:48=E2=80=AFAM Baoquan He <baoquan.he@linux.dev> =
-wrote:
+On Sat, Sep 12, 2026 at 6:52=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org=
+> wrote:
 >
-> On 09/11/26 at 09:45am, Shakeel Butt wrote:
-> > On Fri, Sep 11, 2026 at 09:06:29PM +0800, Baoquan He wrote:
-> > > On 09/10/26 at 09:39am, Shakeel Butt wrote:
-> > > > On Thu, Sep 10, 2026 at 03:09:59PM +0800, Baoquan He wrote:
-> > > > > Hi Nhat,
-> > > > >
-> > > > > On 09/04/26 at 02:14pm, Nhat Pham wrote:
-> > > > > .....snip...
-> > > >
-> > > > [...]
-> > > >
-> > > > > With VM_SPARSE, xswap's cluster access is exactly the plain-array=
- line the
-> > > > > rest of swap already uses:
-> > > > >
-> > > > >     return &si->cluster_info[offset / SWAPFILE_CLUSTER];
-> > > > >
-> > > > > no branch, no RCU discipline, no tear-down state machine, and no =
-NULL
-> > > > > return. So VM_SPARSE doesn't add complexity to close a gap; it le=
-ts the
-> > > > > cluster layer stay as simple as it already is, which is precisely=
- the
-> > > > > part later work (writeback, rmap lookup, memcg charging, THP) has=
- to sit
-> > > > > on.
-> > > > >
-> > > > > I'm not going to claim xswap wins on throughput. I measured it:
-> > > > > on a 64G/64-thread swapout, xswap, vswap and plain swap+zswap are=
- all
-> > > > > within ~2-3% of each other, effectively identical.
-> > > >
-> > > > So the claim is VM_SPARSE is simpler than xarray based approach. I =
-feel like
-> > > > we are discussing implementation details before deciding the design=
- and
-> > > > architecture. So, instead of VM_SPARSE vs xarray, let's discuss and=
- decide the
-> > > > need for dynamic growth. Why we want dynamic growth upfront or can =
-it be added
-> > > > later? Once we decide that then it will be very easy to pick an imp=
-lementation
-> > > > that would take us there.
-> > >
-> > > Hi Shakeel,
-> > >
-> > > Thank you for joining the discussion and for taking the time to comme=
-nt.
 > >
-> > Hi Baoquan,
-> >
-> > I am mainly trying to facilitate the discussion but your use of LLM is =
-causing
-> > more confusion. LLM use is fine but please at least re-read before send=
-ing that
-> > the sentences flow and makes sense.
+> > Is the limit, the heuristic exists only to make "a seriously wild
+> > allocation fail" (as documented). But on a vswap-only machine,
+> > reasonable allocations fail. Common swap devices, zram, or xswap don't
+> > have this problem. One could argue that the size there is just an
+> > optimistic guess, the compression ratio is not controllable. But that
+> > heuristic is a guess by design, and a plausible number serves it fine.
+> > "Unlimited" seems break that.
 >
-> Sorry, my bad. I used LLM to find Nhat's words. But I did check it by
-> myself. I wrote most of them by myself. While at it ath the moment, my
-> logic could be unclear.
+> That cuts both ways, though. If the configured compression space is
+> large and compression ratio is poor, it lets through allocations that
+> can be considered "seriously wild" for this machine.
 >
-> As said, how swap_cluster_info[] is built is the foundation. Whatever
-> you do, you have to make swap_cluster_info[] ready, then you can do
-> writeback, rmap lookup, thp support, etc, on top of it.
-> swap_cluster_info[] is the basement, then you continue building 2nd
-> floor, 3rd floor, till a high building is done with things added. Nobody
-> wants to claim he just need the high building, while no basement.
+> It's a filter. I wouldn't say that letting things through is evidence
+> that it's working.
 >
-> Now, the foundation has been built with the lazy vmalloc, it can grow on
-> demand. It keeps swap_cluster_info accessing as swap_cluster_info[],
-> a basic array semantics. And since we our target is to support a very
-> large swap device with an extendable logical space, grow on demand and
-> shrink becomes important. Now it is there.
->
-> That's my understanding, not sure if there's anything I can't get so
-> that writeback need be made first.
->
-> [I type each of above by hand.]
+> Since compression space is backed by memory, it still makes sense to
+> me to reference this heuristic to RAM. Cut it off at 2xRAM or 3xRAM
+> tops if compression space is available.
 
-LLMs are just tools, like spell checkers are tools. They all make
-mistakes. Even people make mistakes. Don't beat yourself up for it.
+What is this "compression space"? Isn't it just a swap entry allocated
+by vswap or xswap?
 
-Our community should be more inclusive of non-English native speaking
-developers.
+For our deployment, we only compress about 7-10% of the system memory
+before performance starts to suffer. The feedback loop will scale it
+back. I am very curious do you have actual work load to swap out 100%
+of the RAM. I find that very hard to imagine on servers with huge
+amounts of memory. I would love to learn more about your swap fault
+latency history in those cases.
+
+8PB discussed in other threads seems way too excessive.
+
+> That all being said, I've laid out implications and concerns around
+> limiting compression space in this thread, too. Collecting pros and
+> cons is fine, but if you bring up cons for the unlimited case, it's
+> fair to ask that you engage with cons brought up on the limited case,
+> too, so that we can weigh the tradeoffs.
+
+I think having a kernel config with a default that works for most
+cases is good enough; maybe add a commandline to override it.. e.g.
+200% RAM. If you worry about overflow, you can set yours to MAX which
+is ridiculously big. I don't understand why you force others aren't
+allowed to set a reasonable default. I do want to have a reasonable
+default config. It should be configurable.
 
 Chris
-
-
-> >
-> > >
-> > > Agreed on requirement first - but this one was already decided, and n=
-ot by me. In
-> > > the July ghost swapfile thread Nhat rejected exactly the shape of "gr=
-ow only, can
-> > > be added later":
-> > >
-> > >     "Except for my virtual swap design, which does support dynamic gr=
-owth AND
-> > >      shrinking of capacity on demand ;) If it cannot grow (and furthe=
-rmore, if it
-> > >      requires userspace operation to trigger swapfile growth), why do=
- we need this
-> > >      at all? Might as well create a new swapfile with swapon?"
-> > >
-> > > To me what it converged on was "dynamic growth and shrink, no writeba=
-ck yet".
-> >
-> > I am not getting how out of context above paragraph shows the conclusio=
-n about
-> > dynamic growth/shrink and *no writeback*.
-> >
-> > > So automatic growth *and* shrink is the requirement, and the simpler =
-alternative
-> > > was already on the table.
-> > >
-> > > And I keep mentioning it in the cover-letter of each version of my po=
-sting. I
-> > > only did the foundtation via lazy vmalloc. And Nhat will do the core
-> > > part including writabck, rmap lookup, memcg accounting, zero page fil=
-l,
-> > > etc.
-> >
-> > I don't see any evidense of this decision. Actually this whole email th=
-read
-> > shows that there is no such decision.
-> >
-> > >
-> > > What is still genuinely open, and I would like us to settle, is how l=
-arge the
-> > > device's address space should be, because the metadata scales with it=
-:
-> >
-> > With dynamic growth/shrink, is this really a blocker?
-> >
-> > Anyways, I will let Nhat and others discuss the technical details (unle=
-ss I am
-> > asked for it). My main reason to join the conversation is to converge t=
-he
-> > discussion to a decision and resolution.
