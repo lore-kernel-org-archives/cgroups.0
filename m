@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C98FB49620;
-	Sat, 19 Sep 2026 14:59:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3496D372ECB;
+	Sat, 19 Sep 2026 15:00:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789829993; cv=none; b=NMQkumBmntsAINkYvwto3PZ6Tj7GP5PAvSgMUmhI6cBuUepBi3OOtY9LPBOQNMeimlJEdWlh4z/GouPFPXmg5djzVE4f6/zzMuDxQQroUQQtxDMFyjFLMU6YtGt0jGwJCK6SoeVB6CJDTEb3xxtgkMxqTI/HeJdnIfAmnXG7BRI=
+	t=1789830014; cv=none; b=Q+Q1BN6+8gwHmAWKyGGA50+u9Yh7oWQ+CvQoMrbPo6PKKWNLCX5Mm4SEriUsRaErxFhvmD34xDp+TpRmfPZPs0eVlyVKJ4YlP4C3OK42w6OEVaCpcHxfCggvfxwR3lGiFe5CA+3bniG5eluMy5e/ECy05S8ClsF2+Xm44ka0Bdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789829993; c=relaxed/simple;
-	bh=b/5TyoQZRO0ss3L7pu5A+OLk7BdID+zAINyTKYHt3Ro=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=MgjbhgxqZo/764fiJVXYCyx1bASfCAAeIT3I3A5B2mZkyYpTt7PO9nAmW1UOwuch6hY5+23WGMxoLoQcVlhX2TSWrYMypM6nef118TvvFcII3B1uXGKqHsbTiKdMY2Ib9nUhhe75wy6O5xzHz+rKh/Ow0IEkq63GBDOVdqyaOEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IOrpF/Zi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789830014; c=relaxed/simple;
+	bh=6NLWoCpkjR1cSW/Aj+qWSMno/6JOq3xXDW8WKhOGAi8=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=PL/sXunMwFIW2uHE9oUHjnCVsOWw0vsiEbY1za/seLahg0EtMKWnol+U6SBQZplwLHn1iGA2vfsabQZs6LkH2x3fRNbqC6X8MPWvYzgJ7IicQW+jOsYZFA8hEk5O980jMQP1itcFHlOxF919uL0MVx/z6yBkKSuu9drVTDjOj7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C/9/oWDf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IOrpF/Zi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 349381F000FF;
-	Sat, 19 Sep 2026 14:59:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C/9/oWDf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A72471F000FF;
+	Sat, 19 Sep 2026 15:00:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789829992;
-	bh=G6UrRUnwPk27soo9sZRN/gCGVOcIjOkGOc/TAsrOnY0=;
+	s=k20260515; t=1789830012;
+	bh=N0SRPEmy4Q1/oaLUGgV5UjqSLniLvx/2YO2EScSp0S4=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=IOrpF/ZigHHog3C08bzBhLbtwm1SJhgCNCIl3mir+4sI4sNg+SaaDVWwczkKfwvFI
-	 6IXfXoLGwPVIctpTQY3DRWeq79VldceApGlMbPlL0KRXdUmvLWCfjpxNYKNCFdPMY7
-	 oB3valLF7zlr0ZVoauMcku/0WaHtLEBBlQv7+UIKpWAr+er03hCXQntwIRKiNhJkUj
-	 vwvQpQnELUmPF7Xs9cagvwlssCMzaBe1/w59K6fmpIP+zVLYF02bvQFiEVFErRHQzI
-	 jPyIcURzoy6arA28k4apN6yM+amt4VIo/9y0mIQGKlfGop9vwGCF84oGKLw8x45XSW
-	 y2OH2e6Gy5KTA==
-Date: Sat, 19 Sep 2026 04:59:51 -1000
-Message-ID: <9575357186118be214d6377dd80a21e8@kernel.org>
+	b=C/9/oWDfjmUt9/R4FSDrBn49E9BMmjrJOIvfIX8dglkbPi+gtBrpAaRqdGCE6Hh1o
+	 hixoBBRQMRXWBnZqSwCppOe1DsVMsgSEny60v8KEefd9pEwJss5Om53Jud9TU50UkY
+	 kkiYw8xvKh4GoJw7Z6+WhruKuVtp1ud/opoLHom/Q7CdZIMHcV6+hNMNfd2LilZrsk
+	 NgQpAZ+/8+c/SK78dhqb5gf+LG0MbrcXKhX81iSmaZgPc3a7Yd0eFe0CIPxewdAeLs
+	 1EpP8pLifaOJmk8k6fi4AAxnoV/ifZD+g3LZSPbi3GIMX0w+e9cXnNT2hU5ZpxF2vM
+	 OhaqT/TkgTofQ==
+Date: Sat, 19 Sep 2026 05:00:12 -1000
+Message-ID: <084ec3b97432a6d1520948417d9b9bc1@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cui.tao@linux.dev>
 Cc: Josef Bacik <josef@toxicpanda.com>,
@@ -38,11 +38,11 @@ Cc: Josef Bacik <josef@toxicpanda.com>,
 	linux-kernel@vger.kernel.org,
 	cuitao@kylinos.cn,
 	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/4] blk-iocost: charge flushes as pageless random
- writes
-In-Reply-To: <20260916085304.1080271-2-cui.tao@linux.dev>
+Subject: Re: [PATCH v2 2/4] blk-iocost: charge zone appends as page-counted
+ sequential writes
+In-Reply-To: <20260916085304.1080271-3-cui.tao@linux.dev>
 References: <20260916085304.1080271-1-cui.tao@linux.dev>
-	<20260916085304.1080271-2-cui.tao@linux.dev>
+	<20260916085304.1080271-3-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,31 +51,32 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
 Hello, Tao.
 
-On Wed, Sep 16, 2026 at 04:53:01PM +0800, Tao Cui wrote:
-> Charge the flush component of any REQ_PREFLUSH bio on top of its data
-> cost, priced as a pageless random write (LCOEF_WRANDIO), which provides
-> an approximation of the device time consumed by a flush.  For profiles
-> where WRANDIO clamps to zero (ssd_dfl / ssd_fast), use a one-page floor
-> (LCOEF_WPAGE).
+On Wed, Sep 16, 2026 at 04:53:02PM +0800, Tao Cui wrote:
+> A zone append advances the zone write pointer and is therefore
+> sequential from the device's perspective; the actual sector is only
+> returned after completion, so the cursor-based seq/rand classification
+> doesn't apply.  Price it as a page-counted sequential write.
 
-Pricing a flush as a random write, or as a page where that comes out to
-zero, is as arbitrary as pricing it at zero, and it changes what existing
-setups get charged. 013adcbef165 ("blk-iocost: skip empty flush bio in
-iocost") zeroed them because the flush machinery coalesces flushes and the
-write coefficients don't say anything about what a flush costs.
+Whether an append is cheap depends on where the previous IO went, the same
+as for a regular write, and the cursor already tracks that. The sector is
+the zone start rather than the write pointer, but the cursor gets set from
+the same sector, so back-to-back appends to the same zone are a bio length
+apart and classify sequential, appends to different zones are a zone apart
+and classify random, and emulated appends already arrive here as regular
+writes at the write pointer.
 
-Can you instead add the flushiops parameter you mentioned in the v1 thread
-to the linear model? A flush costs VTIME_PER_SEC / flushiops, and zero when
-the parameter isn't set, including in the builtin profiles, so nothing
-changes until it's configured or the profiles are regenerated with a flush
-measurement.
+It isn't exact. A read or regular write into a zone being appended to is
+measured from the zone start rather than the write pointer, so it drifts
+toward random as the zone fills, and the last append in one zone and the
+first in the next are contiguous but compute as a zone apart. Both are
+bounded by the difference between the seq and rand base costs of one IO,
+which is small on the flash devices that do native appends. Mostly right
+is fine here. Can you just add REQ_OP_ZONE_APPEND to the REQ_OP_WRITE case
+and leave the cursor update alone?
 
-The same charge should cover REQ_FUA the way the flush machinery does: one
-flush for PREFLUSH, and one for FUA on a device without FUA support, which
-is when a post-flush gets issued.
-
-Please also drop the Fixes tag on this patch. With the parameter, this is
-an extension rather than a fix.
+Also, the Fixes tags on this patch and 3/4 should point at 0512a75b98f8
+("block: Introduce REQ_OP_ZONE_APPEND"), which added the op without pricing
+it, rather than the iocost commit that predates it.
 
 Thanks.
 
