@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AC50368D40;
-	Sat, 19 Sep 2026 00:54:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35BE0224B1E;
+	Sat, 19 Sep 2026 00:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789779287; cv=none; b=q83w4uw+nM068vrIPS+6NrbALKzV3/cCh2WMzcpnidm4V7aZB41LDYDwAE6UpQdNtLsc98YIVZ5DDFLe12pOT/PFG8wZm+OJZUYSP+SXkzzRtsNuX6B3MtoBC6jB8FGt1PZfgPcvqrGFD6QNwGQc3Vv5TrAbDaq2MpLIpvJBy1w=
+	t=1789779373; cv=none; b=B5fm8y4Suu9zj94yqPY2bl5mniurTC94WgjOTxPrvEY4Mm+//dHL6vObqf3vPW9ssQikurWrELUM05JVg3nKd/xeEAOCvGg9NoOZY6ST+64PTM73JpVlmshkCFHZOM+AMR+d8wYUpWn//beonf3FP2kfjJF+n6moVn9TFXJRr38=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789779287; c=relaxed/simple;
-	bh=IwBsmTUbuuGAia1irSsv7QexvDhvkp9EOgiEBMMJjBI=;
+	s=arc-20240116; t=1789779373; c=relaxed/simple;
+	bh=ZEe3qN8HRBObdSPlBohZtAfjNDxdYaqiRtmORA+7JO4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iyxosv8wfxBORZ0GBc8ChK6HfdLmYE6GcIhagEWMFVZ4D2HtSr7b1WXlyQ1nd7l+PH4WL6xVDnqBRACLdgtEGzH7JP3EM4jVQJQ+fvjAD3OjnsUtX9wh5x5NmpH/G/4eov5XB9PGJQPJjsxMbyUa78uw37lg2lkYhlfZDq3Lfg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gbKXm6GM; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=gvnkIbPKyDIg+HfFFZtU77SVWpKTJPFPyXj3dL8XCy8BLZBhWSmNTKPC6PURApEXIiOoeIpwoc+EWIY5HBHISqo0XJpKUtn5Z6I+z5BMVSDLOdahI1JGFzr255MT2+sa8yPi2lPHu26N33eMPNgpxo//JeseWkrfI52E2GqtQ7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=koKWAmIM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gbKXm6GM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2445B1F000FF;
-	Sat, 19 Sep 2026 00:54:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="koKWAmIM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFDD31F000FF;
+	Sat, 19 Sep 2026 00:56:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789779282;
-	bh=rj4ybuE76WuF89f1n+gXLecWdMn9NDviS9spf9nLa4M=;
+	s=k20260515; t=1789779365;
+	bh=WLSey5EwmTczQHfC6e3oURw6GECTJUovFx/5PEz81tk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gbKXm6GMPcpzlVpDWfLpRuHsropA3OOvGBk/dC9HOxo9dJIshBc40hoFsxVom6EQh
-	 cX0dSOe7uxseZ1viRL9fHJXKX+sKtLgqSgo/UvXHXQBRLToZ904Hov63N3XncL8oIJ
-	 oTQDxDWDvz0Kad8zgq4+9b7u9b6DfDL662O8adLCMtTSNzUdO64vcu7LvL6gyeiE3g
-	 o2q47THez9vdeDOWen3+xn2E7BGB8qCK+KCB0tDzkJ5oeQhTCAwcTgnXEw3OzEGojz
-	 elp8IABXkmM/W/vfVbnxCxoPZ+I8ckrWKtE4zpBboHALfO6iNJOh7EHKDkp/Xi55Xn
-	 LLQrpdbz3/sJg==
+	b=koKWAmIMGFrgR6e4punkJ0rHQ3GZ7gEbdrPdo87NikvO4TC8/dENCzrPHJl5M3T8s
+	 u8zPcj0hZsixZOzJtiu9cYcviqrjA58gX2Nyf9tHMwMArgyVnqVVc7mKuamx7Id9BV
+	 j0cXS5abW64bUyXkZOi1sh/yyo1e1Jy+8vsFspQiWO8+iJKYQINEb00XxL8AYRtWbO
+	 VOnR9Mkk2yoPn+aEwbAMlxwlxKpauG5VlAMOXbgq7e8q0zhMR2Kg8av0T7NS0AHELm
+	 30k2qYLXz8IQXe/lPFQ+4aJclxZJJCgG4N/ebdrUwQDXiKvDt3asq6Qh0tFOjTIl6t
+	 ySQjcFvjt1Ung==
 From: SJ Park <sj@kernel.org>
 To: Sang-Heon Jeon <ekffu200098@gmail.com>
 Cc: SJ Park <sj@kernel.org>,
@@ -37,11 +37,11 @@ Cc: SJ Park <sj@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	linux-mm@kvack.org,
 	Muchun Song <muchun.song@linux.dev>
-Subject: Re: [PATCH 1/2] memcg: remove unused page_memcg_check()
-Date: Fri, 18 Sep 2026 17:54:34 -0700
-Message-ID: <20260919005435.87535-1-sj@kernel.org>
+Subject: Re: [PATCH 2/2] memcg: remove unused mod_memcg_page_state()
+Date: Fri, 18 Sep 2026 17:55:57 -0700
+Message-ID: <20260919005558.87687-1-sj@kernel.org>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260918165601.1014666-2-ekffu200098@gmail.com>
+In-Reply-To: <20260918165601.1014666-3-ekffu200098@gmail.com>
 References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -51,11 +51,10 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Sat, 19 Sep 2026 01:55:57 +0900 Sang-Heon Jeon <ekffu200098@gmail.com> wrote:
+On Sat, 19 Sep 2026 01:55:58 +0900 Sang-Heon Jeon <ekffu200098@gmail.com> wrote:
 
-> Since commit 90f095b816e2 ("mm/page_owner: use memcg_data snapshot to
-> avoid TOCTOU in print_page_owner_memcg()"), page_memcg_check() has no
-> callers.
+> Since commit c466412c73c3 ("mm: memcontrol: switch to native NR_VMALLOC
+> vmstat counter"), mod_memcg_page_state() has no callers.
 > 
 > So remove it.
 > 
