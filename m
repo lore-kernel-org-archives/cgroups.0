@@ -1,36 +1,36 @@
-Received: from mta1.migadu.com (out-99.mta1.migadu.com [95.215.58.99])
+Received: from mta1.migadu.com (out-47.mta1.migadu.com [95.215.58.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31FF2318BB5
-	for <cgroups@vger.kernel.org>; Sun, 20 Sep 2026 06:30:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46E673D9DDE
+	for <cgroups@vger.kernel.org>; Sun, 20 Sep 2026 07:09:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789885836; cv=none; b=SzNCTSJpTRs65zvGLUso1K3EXPMyXmjQHwXnvhH6gBxH3fB8vlr5poh8eWGYO8Mw50m5vlsHiL65b5BD8Nwsz5fWV8b1of1ktCUGyerJ6cJck0G3rtWt7H99ViSkX4J9EJmvpvdP8lZLmg0JsIKawVXCyFegoZrgIV7aMz+3GuI=
+	t=1789888143; cv=none; b=T3nWxMPXQr4eZlD9ilXKrYt8KpFVylbX0jL84WRrPBZNTYJ2cUAbEqZbGi3UQ6hk+T0MsEruVrNOdz1Eg2srRrKDpoIRlHrS/jCLvy41asBwSmkk/g/7fm7i4ogveMCWGtQ0Gh9xaqYuvDui5CD0+O0CS3J2y0OgTQDa6njCCB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789885836; c=relaxed/simple;
-	bh=Pv9EV8bO6mfi0NkJtb1zwwVK+S+58D5VVIJK1Mf9buw=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=a5c94l9BPOigjyKrepvLcxDR04XCcAUZfcvWtNwOREzaf8plczh6adp5VxINt++lrK4hQUsqOppm+wUqKrSvDgdEn+atNcBbBo5L9VWX4WBOs1wLGa+nX8CzocsDcKhu1h371lJia0LCnLM77mAaYOp1Dvj68cbpbOJRX33moA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=bJqq4dnD; arc=none smtp.client-ip=95.215.58.99
+	s=arc-20240116; t=1789888143; c=relaxed/simple;
+	bh=VgeBjtVfHDvoQqBuILT+p6c6cwhxbzBnIRRxf84zUQc=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ErVI7Crh0WOhNk5dE375BUHdCihFChDjZeaRDLV8HV6al3lN4eSrmDxQlplP+pLcSgWC2Tb2o0cSQ7utSpDveC9AFcXf1l/5iK27TXsAkqmSF5YKMkmW6BkpzWZFRuKCcYWOPkbe6cXfh3s02+3BjNV7dNlYnFvyIMgsoRp8+xE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=j19dSBIc; arc=none smtp.client-ip=95.215.58.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="bJqq4dnD"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="j19dSBIc"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Pv9EV8bO6mfi0NkJtb1zwwVK+S+58D5VVIJK1Mf9buw=;
+DKIM-Signature: a=rsa-sha256; bh=VgeBjtVfHDvoQqBuILT+p6c6cwhxbzBnIRRxf84zUQc=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789885830; v=1; x=1790490630;
- b=bJqq4dnDE7JmrGAB/QQj7Pfn+CXGIgD63exg0pKJwDVAgHyVlHqFzCDAy8ZLU5OGuSjWkS3Z
- /FfxZHIlMgdFcgYts84CJLsTaY3NhaS847XF1rs3poNN93/GZkZ/XIhYOqWtaHQm/lrfbClwbVe
- x8YT8IHpZzcVdFg0j6aOWD3c=
+ t=1789888139; v=1; x=1790492939;
+ b=j19dSBIcYF/FfClW4UyntiOwbTP1RxAWh+hHdeXCSMEq8BjQcWVrnOnrHcZTT1trc71DPRVT
+ haf/m9zbHJxcQoD5KCxwWr1O3bAZgvs/jLI6b5CAPdccqJW2zNXaNPSthYmgN6fScdGNrsjdPsj
+ gdhFbMcYqNZwRAT1zoLev27E=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 24ca9784efa152a4;
-	Sun, 20 Sep 2026 06:30:30 +0000
-X-Mizu-Trace-ID: 24ca9784efa152a4
+Received: by smtp.migadu.com with ESMTPS id b40f69e8e1eff5f6;
+	Sun, 20 Sep 2026 07:08:59 +0000
+X-Mizu-Trace-ID: b40f69e8e1eff5f6
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <25b72fce-5354-435b-9256-482c15ae7b06@linux.dev>
-Date: Sun, 20 Sep 2026 14:30:23 +0800
+Message-ID: <ab72a564-108c-4b74-adf3-1eadbbf01084@linux.dev>
+Date: Sun, 20 Sep 2026 15:08:54 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,135 +38,83 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-Subject: Re: [PATCH] cgroup/cpuset: prevent overlapping local and remote
- partition creation
-To: Hui Peng <benquike@gmail.com>, longman@redhat.com, ridong.chen@linux.dev,
- tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260919221727.3706964-1-benquike@gmail.com>
-Content-Language: en-US
-In-Reply-To: <20260919221727.3706964-1-benquike@gmail.com>
+Cc: cui.tao@linux.dev, Josef Bacik <josef@toxicpanda.com>,
+ josef@toxicopanda.com, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@infradead.org>, cgroups@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cuitao@kylinos.cn
+Subject: Re: [PATCH v2 1/4] blk-iocost: charge flushes as pageless random
+ writes
+To: Tejun Heo <tj@kernel.org>
+References: <20260916085304.1080271-1-cui.tao@linux.dev>
+ <20260916085304.1080271-2-cui.tao@linux.dev>
+ <9575357186118be214d6377dd80a21e8@kernel.org>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <9575357186118be214d6377dd80a21e8@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+Hello Tejun,
 
-
-在 2026/9/20 06:17, Hui Peng 写道:
-
-Hello Hui,
-
-> Fix two partition validation bugs in kernel/cgroup/cpuset.c:
+在 2026/9/19 22:59, Tejun Heo 写道:
+> Hello, Tao.
 > 
-> 1. In remote_partition_enable(), check whether the requested effective
->    xcpus intersect parent->subpartitions_cpus so a remote partition
->    cannot claim CPUs already delegated to a local child partition.
-> 2. In validate_partition(), verify that enabling a local partition does
->    not overlap CPUs already allocated to an active remote partition.
+> On Wed, Sep 16, 2026 at 04:53:01PM +0800, Tao Cui wrote:
+>> Charge the flush component of any REQ_PREFLUSH bio on top of its data
+>> cost, priced as a pageless random write (LCOEF_WRANDIO), which provides
+>> an approximation of the device time consumed by a flush.  For profiles
+>> where WRANDIO clamps to zero (ssd_dfl / ssd_fast), use a one-page floor
+>> (LCOEF_WPAGE).
 > 
-> Fixes: aa7d3a56a20f ("cpuset: fix warning when disabling remote partition")
-> Assisted-by: LLM
-> Signed-off-by: Hui Peng <benquike@gmail.com>
-> ---
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 2538faac9aba..13fad096c494 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -713,7 +713,10 @@ static inline bool cpus_excl_conflict(struct cpuset *trial, struct cpuset *sibli
->  		return true;
->  
->  	/* Exclusive_cpus cannot intersect */
-> -	return cpumask_intersects(trial->exclusive_cpus, sibling->exclusive_cpus);
-> +	return cpumask_intersects(trial->exclusive_cpus,
-> +				  cpumask_empty(sibling->exclusive_cpus)
-> +				  ? sibling->effective_xcpus
-> +				  : sibling->exclusive_cpus);
->  }
->  
->  static inline bool mems_excl_conflict(struct cpuset *cs1, struct cpuset *cs2)
-> @@ -1591,8 +1594,8 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
->  	 * above it or remote partition root underneath it is not allowed.
->  	 */
->  	compute_excpus(cs, tmp->new_cpus);
-> -	WARN_ON_ONCE(cpumask_intersects(tmp->new_cpus, subpartitions_cpus));
->  	if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
-> +	    cpumask_intersects(tmp->new_cpus, subpartitions_cpus) ||
->  	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
->  		return PERR_INVCPUS;
+> Pricing a flush as a random write, or as a page where that comes out to
+> zero, is as arbitrary as pricing it at zero, and it changes what existing
+> setups get charged. 013adcbef165 ("blk-iocost: skip empty flush bio in
+> iocost") zeroed them because the flush machinery coalesces flushes and the
+> write coefficients don't say anything about what a flush costs.
+> 
 
-I have been going through this part of the code repeatedly recently, and I
-would like to share one thought.
+Understood.  The write-coefficient pricing was only an approximation and
+would change the accounting behavior for existing setups, so I'll drop it
+and rework the series around a dedicated flush cost.
 
-Should this return PERR_NOCPUS instead?
+> Can you instead add the flushiops parameter you mentioned in the v1 thread
+> to the linear model? A flush costs VTIME_PER_SEC / flushiops, and zero when
+> the parameter isn't set, including in the builtin profiles, so nothing
+> changes until it's configured or the profiles are regenerated with a flush
+> measurement.
+> 
 
-+	if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
-+		return PERR_NOCPUS;
+Will do.  I'll add flushiops to the linear model using the same conversion
+as the other iops coefficients:
 
-In the first reproducer you described in your reply to Ridong:
+- add a flushiops=%u token for io.cost.model and translate it to
+  LCOEF_FLUSH = VTIME_PER_SEC / flushiops
+- keep flushiops zero in builtin profiles, with no fallback, so existing
+  profiles keep their current behavior
+- account REQ_PREFLUSH and REQ_FUA consistently with the flush machinery:
+  PREFLUSH charges one flush, and FUA adds another flush when the device
+  does not support native FUA
 
-Minimized reproducer (Scenario 1):
-#!/bin/sh
-mkdir -p /tmp/cg1
-mount -t cgroup2 none /tmp/cg1
-echo "+cpuset" > /tmp/cg1/cgroup.subtree_control
+The rest of the series (zone append charging, latency accounting, and the
+comment fix) remains unchanged.
 
-mkdir /tmp/cg1/A
-echo 1 > /tmp/cg1/A/cpuset.cpus
-echo 1 > /tmp/cg1/A/cpuset.cpus.exclusive
-echo root > /tmp/cg1/A/cpuset.cpus.partition
-echo "+cpuset" > /tmp/cg1/A/cgroup.subtree_control
+> The same charge should cover REQ_FUA the way the flush machinery does: one
+> flush for PREFLUSH, and one for FUA on a device without FUA support, which
+> is when a post-flush gets issued.
+> 
+> Please also drop the Fixes tag on this patch. With the parameter, this is
+> an extension rather than a fix.
+> 
 
-mkdir /tmp/cg1/A/B
-echo 1 > /tmp/cg1/A/B/cpuset.cpus
-echo 1 > /tmp/cg1/A/B/cpuset.cpus.exclusive
-echo "+cpuset" > /tmp/cg1/A/B/cgroup.subtree_control
+Done.  v3 will position this as a cost model extension.
 
-mkdir /tmp/cg1/A/B/D
-echo 1 > /tmp/cg1/A/B/D/cpuset.cpus
-echo 1 > /tmp/cg1/A/B/D/cpuset.cpus.exclusive
-echo root > /tmp/cg1/A/B/D/cpuset.cpus.partition
-
-CPU 1 is active, and the requested CPU mask itself is valid. The failure
-happens because CPU 1 has already been allocated to partition A, so the
-top cpuset can no longer distribute it to the remote partition D.
-
-remote_cpus_update() uses PERR_NOCPUS for the same kind of
-subpartitions_cpus conflict:
-
-else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
-         cpumask_subset(top_cpuset.effective_cpus,
-                        tmp->addmask))
-        WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
-
-Would using PERR_NOCPUS here be more appropriate? This would keep the
-initial remote-partition enable path consistent with the CPU update path
-for an existing remote partition, and it also seems to describe the
-failure more accurately: the CPU itself is not invalid, but has already
-been allocated to another partition, so the parent can no longer
-distribute it downstream.
+One remaining question is whether builtin profiles should eventually carry
+measured flushiops values, or whether flushiops is expected to remain
+user-configured.  This series leaves it at zero because I don't have
+reliable measurements for the existing profiles.
 
 Thanks,
-Guopeng
+Tao
 
->  	if (((new_prs == PRS_ISOLATED) &&
-> @@ -2411,6 +2414,10 @@ static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *tri
->  	if (cpumask_empty(trialcs->effective_xcpus))
->  		return PERR_INVCPUS;
->  
-> +	if ((parent == &top_cpuset) &&
-> +	    cpumask_intersects(trialcs->effective_xcpus, subpartitions_cpus))
-> +		return PERR_REMOTE;
-> +
->  	if (prstate_housekeeping_conflict(trialcs->partition_root_state,
->  					  trialcs->effective_xcpus))
->  		return PERR_HKEEPING;
-> @@ -2970,7 +2977,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  		 * local or remote partition.
->  		 */
->  		if ((parent == &top_cpuset) &&
-> -		    cpumask_intersects(cs->exclusive_cpus, subpartitions_cpus)) {
-> +		    cpumask_intersects(user_xcpus(cs), subpartitions_cpus)) {
->  			err = PERR_REMOTE;
->  			goto out;
->  		}
+> Thanks.
+> 
 
