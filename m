@@ -1,74 +1,72 @@
 Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F73C78F3A;
-	Sun, 20 Sep 2026 01:07:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CF872BE034;
+	Sun, 20 Sep 2026 01:15:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789866470; cv=none; b=NBP6yLp1eDtxpWUuSe2lmYflBRkhJcd/NRsQPKz3IZHHBfzOhou0Ge5TasRt1TC2BntZyMYZYbuPmquxPM+GAl/XfFAsOp39k/m0Lt7JRaJoP4qPm2C1ILk0U6VOySHRvWFzBV8tdzH3ZC5AVK0HZ2N6KIHfLS6E05wGBFB936Q=
+	t=1789866928; cv=none; b=F7Rug9X3vRP+2oHqhyPzYEVCjhTObxQdYQ5cBVtUaj/1bIZUf9YEZ+pWWPMk3Dr2UTmK5s9HJgHFHL6zYUYxyTcMahM7KdkvNxSoPOFRJ1deTXq/aqKe6SKxBD9RNvqF6HdcPBm18Wn35mHA7jZJhrzkzejMTOF0Do16H9eYbq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789866470; c=relaxed/simple;
-	bh=b2GOIQfJ4bDeLmMopprtcZG7Nh8TrMUvDf5T9aGfuhg=;
+	s=arc-20240116; t=1789866928; c=relaxed/simple;
+	bh=HTuSBU8KK3K7/N83f4aPJRBXiU0OTjT5r5WttsKnUKk=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=iMZ+L5Ld7HdD34HKelzusy9rRdxW9Ms4wqFNN5xUiAqslpbWDl1D8A6LH0apHqH5HZ4AmUmDHcS0MhnGyxY450og6ENY0q9JXx3qwD8/PRfwvVSqOw5siW7l33niJv9IPEHqJklBFgxZorbGG2HWxcDGfMF94jsbCjwtB2kNvgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=Pdc6DabR; arc=none smtp.client-ip=96.67.55.147
+	 Content-Type:MIME-Version; b=pVHyj5Yn5Zw1UnNZebZffw/TBENHXs9g01nGjQ8So0QG8lBsEIl32iJIHh17F62Mz3dBqwAr9As0vfnoP7MM7GlHJl1pZISt2sOb4yS47deye+BpStFue38u0KrzB5wqZ7BaMr+7kfmuoNksAnNrlBe0oZpy+hPMi3+YAW36HGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=ZeeUys33; arc=none smtp.client-ip=96.67.55.147
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="Pdc6DabR"
+	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="ZeeUys33"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
 	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
 	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID; bh=b2GOIQfJ4bDeLmMopprtcZG7Nh8TrMUvDf5T9aGfuhg=; b=Pdc6Da
-	bRI5hQv74SAhUyEsQ7m6MJ6naENkUfD9RL4OJRa8leXWbar+hCtKi4zI+xiqCN99VDdDtf4Y8Hujp
-	v5gBRlB/Se4g+ESvOWvaFrjb6wun/7fSGO4EnYXRkeIrEW2heUy2uKTZ+dgT5BIWoeXrRxZ9MdmqD
-	adUenGybBOdlNOACzDIOnbgsN6xup/QBRqu7gg45bU16A6jc/JJkUL70s0P1nHKelJLSA3cnGulHO
-	6CcdEEZBFDpdEQhxDEwmVtZt5cmvsux5xecBA3c4zKQUWdnpLNZd8kSa9D9amrPmtRfqoj70f1WnD
-	bp0QhSLiU5zFSArPI8vsuEKZngdg==;
+	:Resent-Message-ID; bh=HTuSBU8KK3K7/N83f4aPJRBXiU0OTjT5r5WttsKnUKk=; b=ZeeUys
+	33i+AIcqdU1FJxq8rMKnhaX3Y8Bo7yAhndQ65XRY1f4CRE7xJXO+0W9BgMYZeuf4+1KFpzCuzPY6o
+	XUQTD3gCKBDlHrJ/dd5QFNOiEU13Us14W0MN765tdamM4e5rcwVExXurLUIlN138oGbZLfBaTRjm9
+	bsv1vlPpMaYSPCbgoXsaYJiHJif2Ss2i+UjxGGxxlVUMKxf1YfMH/polRdcKPkckYQQJ3TDVCdZre
+	4yvgYwf0cPp5hpD4Mwbf62YZeKH28w/R4CkFoelojGoiSl/4DNs3p7nfpjF8L7sETieMCE6Wndb7u
+	wh4PcgzlBOOaOLZIruOLyvOc931A==;
 Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
 	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
 	(Exim 4.99.5)
 	(envelope-from <riel@surriel.com>)
-	id 1x8613-0000000CQGs-3lB1;
-	Sun, 20 Sep 2026 01:06:49 +0000
-Message-ID: <e42d8bb0bb13067609e8ff8c858a26ca056368bd.camel@surriel.com>
+	id 1x868U-0000000CQPL-0vV5;
+	Sun, 20 Sep 2026 01:14:30 +0000
+Message-ID: <6dd762e3775de977cbf09b73cd2f9d375f04d6b3.camel@surriel.com>
 Subject: Re: Path forward for Virtualized Swap?
 From: Rik van Riel <riel@surriel.com>
-To: Chris Li <chrisl@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Kairui Song <ryncsn@gmail.com>, Nhat Pham <nphamcs@gmail.com>, Michal
- Hocko	 <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt	 <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>,
+To: Chris Li <chrisl@kernel.org>, Gregory Price <gourry@gourry.net>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>,
+  Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, Michal
+ Hocko <mhocko@kernel.org>,  Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
  David Hildenbrand	 <david@kernel.org>, Muchun Song <muchun.song@linux.dev>,
- Kemeng Shi	 <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>,
- Barry Song	 <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>,
- Chengming Zhou	 <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)"
- <ljs@kernel.org>,  "Liam R. Howlett"	 <liam@infradead.org>, "Vlastimil
- Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
- =?UTF-8?Q?Baghdasaryan=EF=BF=BC?= <surenb@google.com>, Qi Zheng	
- <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, Yuanchu
- Xie	 <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Gregory Price	
- <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet	
- <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, Baolin Wang	
- <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Michal
- =?ISO-8859-1?Q?Koutn=FD?=	 <mkoutny@suse.com>, Shuah Khan
- <skhan@linuxfoundation.org>, Kunwu Chan	 <kunwu.chan@linux.dev>, Meta
- kernel team <kernel-team@meta.com>, Linux Memory Management List	
+ Kemeng Shi	 <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>,
+ YoungJun Park	 <youngjun.park@lge.com>, Chengming Zhou
+ <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)"	 <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)"
+ <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
+ =?UTF-8?Q?Baghdasaryan=EF=BF=BC?=	 <surenb@google.com>, Qi Zheng
+ <qi.zheng@linux.dev>, Axel Rasmussen	 <axelrasmussen@google.com>, Yuanchu
+ Xie <yuanchu@google.com>, Wei Xu	 <weixugc@google.com>, Wenchao Hao
+ <haowenchao22@gmail.com>, Jonathan Corbet	 <corbet@lwn.net>, Hugh Dickins
+ <hughd@google.com>, Baolin Wang	 <baolin.wang@linux.alibaba.com>, Tejun Heo
+ <tj@kernel.org>, Michal =?ISO-8859-1?Q?Koutn=FD?=	 <mkoutny@suse.com>,
+ Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan	 <kunwu.chan@linux.dev>,
+ Meta kernel team <kernel-team@meta.com>, Linux Memory Management List	
  <linux-mm@kvack.org>, Linux Kernel Mailing List
  <linux-kernel@vger.kernel.org>, 	linux-doc@vger.kernel.org, "open
  list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
  <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
- Joshua Hahn	 <joshua.hahnjy@gmail.com>
-Date: Sat, 19 Sep 2026 21:06:48 -0400
-In-Reply-To: <CACePvbWLHAT5DjC=HidzN10XF5_cnkpxXXDR_yfEJjTY_uDvDQ@mail.gmail.com>
+ Kairui Song <ryncsn@gmail.com>,  Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Sat, 19 Sep 2026 21:14:30 -0400
+In-Reply-To: <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
 References: 
 	<CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
-	 <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com>
-	 <aqBT_35E-eSoN_zj@cmpxchg.org>
-	 <CAKEwX=N4aaq_oD2agTUNrUNXhaYGeQ9vxu+dywFvEFgWFi4uQg@mail.gmail.com>
-	 <CAMgjq7AfNBUpMamcv29JFzpX=7ApNYVLtPjWT4Sm8cXjSLYL9g@mail.gmail.com>
-	 <aqU81l1oqGItb-0C@cmpxchg.org>
-	 <CACePvbWLHAT5DjC=HidzN10XF5_cnkpxXXDR_yfEJjTY_uDvDQ@mail.gmail.com>
+	 <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org>
+	 <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+	 <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F>
+	 <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
 Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
  keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
  eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
@@ -103,18 +101,19 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
+On Sat, 2026-09-19 at 09:02 -1000, Chris Li wrote:
 >=20
-> For our deployment, we only compress about 7-10% of the system memory
-> before performance starts to suffer. The feedback loop will scale it
-> back. I am very curious do you have actual work load to swap out 100%
-> of the RAM.
+> Secondly, I notice that you are reasoning from the memory usage
+> aspect. That is a different usage requirement angle than the SLO
+> violations. Maybe we need a separate counter to track actual memory
+> usage, regardless of compression status.
+>=20
+That's what the cgroup memory.current does.
 
-One common workload is a web browser with idle tabs.
-
-Those often compress pretty well, a ratio of 4:1 is
-not unheard of, which makes it easy to fill up
-1/3 of memory with 133% of memory's worth of compressed
-memory.
+It adds up anonymous, file, accounted slab, and
+(after compression) zswap memory use for a cgroup,
+and can be limited with all the usual cgroup
+limits.
 
 --=20
 All Rights Reversed.
