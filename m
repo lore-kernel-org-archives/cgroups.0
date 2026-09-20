@@ -1,149 +1,109 @@
-Received: from mail-pz2-f43.google.com (mail-pz2-f43.google.com [74.125.228.43])
+Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0233C3C3C14
-	for <cgroups@vger.kernel.org>; Sun, 20 Sep 2026 16:20:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD360446821
+	for <cgroups@vger.kernel.org>; Sun, 20 Sep 2026 18:14:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789921220; cv=none; b=QKChedYpEM6s21lLR8p28TDGeV3ylHlJ/bsLKk/pQCN1Vk6vRawljbbJeV2Zz7TIDAcza8g79pp2jszvI+CW3n8PuXOFlgODm4ESr1prVwc6xkDg7BP/MXql7b2dVdTYC0yJbN1laaEAhCE3IRMbQOTCYMss5Fk8X/feH3KA//g=
+	t=1789928090; cv=none; b=RCoBn+8F1iI9M15+lb2Z+OAUS2eypwIZewapN9qJs6JaDrWncTWRnREi6o4932XRAcP7vVEV/PHscdY+HnHb32/vH5A+v5DQpOHP88aM8Ia0ax1XE/UOLJzT/1lufuKvJ4wz2JnPRW9l+b7g01am6GP8RssRdsQMBqsfwdsT9BY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789921220; c=relaxed/simple;
-	bh=vy+mJB3Db1v2pbkJ/M2R+/MB10DPkK/0qsLGoEZF3PY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C8mIb/aRwqIPB0kR0fQT3I439cQUCR4jmUKa3c6mg60aP3hWDTH5/9hK11/uMciv0tnwK+fxsg6V6qAle5OWCmK7IBHV3rStGhK/Jv6hNO+QfPMtNxVEx11UvU9dcqU61dyzWa+prjLfrIbUvB91Oa96qq6G16nV9/aZ7EmzMP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lXAyp8Wl; arc=none smtp.client-ip=74.125.228.43
+	s=arc-20240116; t=1789928090; c=relaxed/simple;
+	bh=WXF66WmtMtCT657v10dcTOpqc4WfEbuJJpMl3klh4YM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ZrYbDfCI1eAv8MyAu61KuMxrlV+7zVKDRRPTVmISlKwPlcOrDBpw2ktBkTYLrL+rhBo6YBuQSZmHPJLHuUcNkAv4jBK6NIO5nc9X5T7iaeJWTKdUMQGbqs3ifeY0lC4apBiHSmWFAFFoC1eIzOBvDQkYyvTT73qhTfvQR60qCrI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MzyzQgNr; arc=none smtp.client-ip=74.125.227.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lXAyp8Wl"
-Received: by mail-pz2-f43.google.com with SMTP id d2e1a72fcca58-85469d249c4so2006577b3a.2
-        for <cgroups@vger.kernel.org>; Sun, 20 Sep 2026 09:20:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MzyzQgNr"
+Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-396ccdaea75so744266a91.1
+        for <cgroups@vger.kernel.org>; Sun, 20 Sep 2026 11:14:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789921218; x=1790526018; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1789928089; x=1790532889; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Ua2PeUg5BEcfgC5FSR37S5o47FCdmEaQbiS+1Z8zlCM=;
-        b=lXAyp8WltKlGTIsJAv1F3x1AL7PZnHFlSXPh99tXia+Lu0HzLjJUCr7c4P+Fy1161k
-         Lyb9GwK3Lee3/ExKc3lXuS4QOPxxnOHD6LDhASyXRQXFZllUl9hcgomU6yDBcVV8Bzku
-         5EVP/8IkdoIuZcqdfTVr1OdDzz5PQPf1ToNuyf4ec0QwKhb9MMpm+8DO3Pfn71shbeMn
-         fXfKgPrirXCxtBCB17LoKDpLuS8RnWfPlqe1jOAtK7m3f9F3eqzsFZevtTnlsU2BXsOu
-         X3sMCdvOWG71TX9wPX4wmx3I+d3nPmPdmboDuN6urAfB5+AriVHkcTq1GFIO7rnjXzmm
-         zXkA==
+        bh=WXF66WmtMtCT657v10dcTOpqc4WfEbuJJpMl3klh4YM=;
+        b=MzyzQgNrlzdBXuR15LDX/wzqNolpU1UwdkIVxi/HRm72W2hdgmjeU7kBu7paxZUhLH
+         MU001Llk/9EjOHxIt+bYWriyKz2cIAcVQFuWnJAm20y/9YclW/xlhRKNGtLhRU9b0T7C
+         erCzrzkA+kITuHhc3kwsUobmG1VufZ/UMlaxn2+wsb/nMI2EEz5qprM1NdpnInTssXJi
+         hrZac22HhWLrOQG6ABtkoTzpca8JiNkW+4Ty7uMSphQlbLbhDdwxfq+Z5BBHIXF3t7ut
+         ZDNHmvKMBZjZaivhdyOsHtduT7zxxnjiu6WBmcerExlcGNAYIgzYwpjwtdTwulQyto8M
+         pmPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789921218; x=1790526018;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1789928089; x=1790532889;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Ua2PeUg5BEcfgC5FSR37S5o47FCdmEaQbiS+1Z8zlCM=;
-        b=X9fl9crRU1/D/6jjs5t8GAKRF0KCtfd4IBRNBcdjKSP1BYIfxEq/neRrF1FnhOXGJM
-         bMZDvrCsN3ZP5km4DHiWybYgDrsqxIMwguCmlznHd8YGcw9GDw074WtZHe0XiSqcqItE
-         xPnucAkmZXF5j4R8I7U0eXcATTqXQ0ILDjONYZ+a90hefJKa+fMmqtjuGFPnD/SxUFyr
-         hVd2QvOhscxvwKIfDc9IVKcRAu6+pKrq+0YN4AKGnF0Gc0eo6RfUeroM5j0mUB+8OgRW
-         cSL81Xl1tx6hAeUdf7vdae6YRQGgjuzNTLFCZ+o+27t4GxFC7KxkHj7+oc3odbrEzvtw
-         YI2g==
-X-Forwarded-Encrypted: i=1; AKwUvBwO+YAE1H0AhALeepOuTisfqamGfGt98OJNhoaiYfa1ulThf54vSPZLDIoRJPN30xkt5jmVkKnE@vger.kernel.org
-X-Gm-Message-State: AFuF++kA63EVZXI73zGaowA/aDtrSLa0JMvNClnTfU6r4sHcMWMEqxtY
-	CVMVhMm01xk3bil33nL1zhrQUaJykSvmYZ+bm7zwtwsLyUneDw/VNUif
-X-Gm-Gg: AYBFou2tflhq97sCG1GOc2QAPP5fzl7d1N5zArnnRfXd/wB2LYi1IpyoQX4hfYcwaUR
-	XtetcloBQWmDzusa1o76V9TjrY4L1Xkclxih6Eyk95PrWGlVusgNLURHzkNcCavATzko9IES0CZ
-	cH0vRQAmmcu7AV8mOMeMorJH+YWjY54c3gBoF25J/Tceacc5YE82yFGGNzttKoVbBdct8AuIqOf
-	AfnpdKPmd4u6K0T2oDtDaFTGkHFOv6xLN3b4UfA5RF7vREyY2KhQ6cihrMwrw+c+CalzeHe4XAC
-	x7+3c5iKcRL/Vh0JEvkRlszVvglNafmb4UaFcHLmmhiCL8ZlP2Ncvu4rh6gAYRls8mZ4sON7MH0
-	9uJoGXVVLRDJzBO8lOtNdQQQI2d7GrN+IS0eoHc18g81ozwRkII74hcQABczFygSykwlz6W/lF2
-	2FOLmcRUamUafTCYwyn1fcRJaT7MU5KS8RIhhMw78f+Ox8qbukRH4Ha5x1YK7WNCDBSUcnMJ9Ro
-	kcfEGS4ncBZh6g1mg4EjTNxADeXXviiAFZfL5Kx58Q=
-X-Received: by 2002:a05:6a00:ad89:b0:857:726d:2e99 with SMTP id d2e1a72fcca58-874dd7f8d8cmr12002193b3a.22.1789921218131;
-        Sun, 20 Sep 2026 09:20:18 -0700 (PDT)
-Received: from gmail.com ([220.85.166.190])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-877aa1099e5sm2093196b3a.49.2026.09.20.09.20.12
+        bh=WXF66WmtMtCT657v10dcTOpqc4WfEbuJJpMl3klh4YM=;
+        b=tXfVnr5G+pZBH3sfRcSChf94DRfrNSAPdYX2qv074/2oyxM/Z3etaZQrd4ARkNTXP/
+         oyqmsCHzdcpGeV8cArWFaNxX0/9KjeB+CUSlwBUWgXMml+OoGuhH37Whk51X0PslgaU0
+         iOfpWDFumD9hk0ahe88geNARH4umqKDiEIRVtyB94yYVXOHgNgFGRwzbZCuwO02quMHi
+         FwwW2tkFIKEReoaTdUM2EH9Yr8VkYfWunxno+oDcnNCBjsimWQZ5DfjOThlxwvBcc/M+
+         hsHsfVK+g0FqJl/VU+zm9O9lKfO8jeG/QPd7ukwM2lMws0QJn1tgT9LfssKumiBO2X21
+         tT3A==
+X-Forwarded-Encrypted: i=1; AKwUvBwj2/0Xf5WCaaw2J5Axw6yrQvcC6SDg+m4ZMMm7kwWBOOCTszNmjdCMfS9vbebXNv8a8mEpcTxB@vger.kernel.org
+X-Gm-Message-State: AFuF++lMTZ17nMbAWF4va6bgCAm+AyFD4Fxu/WnH5Rnrn1kP69O6SffD
+	ayap4r4sdtl9pGlyWUGTmxoct/6McxRzpRzccju39nzzVU70kOSJXjsT
+X-Gm-Gg: AYBFou3QLH7KUGZPxQjRvyYo0TCh/yHQp76SyiJcnT6cXRsGnsB7HXAHO5yH7H6M4+Y
+	wqnK4xi5DX7kS064dB9ZaGsRd68RcZcLRbfIxXLunO5neF5xHo1tV9d6hVsShglwNtpfJIB46NZ
+	hHlEoN5OgGoX12xhT80qu6L3meyuzg7lGoqOrWXo+cLMcQrawF6IjRxjgnQJHSz8oQd4m40q18D
+	zwz8FZAWLL+PIjz6wlnlEZZwKNOPeEsbz4aZCmJeEJVIrA+4KiJz1w543NLBfP0bE8L1tPWsHpb
+	tpl0sj/JbukhkRcTnwcL2yotuS14kbyV2yX+lvmUArDPnj6tM2oxJvtfUQXkL8ii0IpWXKAPclL
+	KnUvyg9R0fzqL0xv/jLGQflgefEVkwu7EgEwLw37xeX/LSb9Se0FxEHsaOkzJiEZkIWpqKenOnj
+	f309p6CNzZ25gF/Qb9KKozAmjTNQCVdP3/uU39xFgQOPPxLYEHL3Eo5XXPQyzJHPGs2sz7GzG9M
+	DNzC5iHQdeYekH+CsPwKTVQ+37/UTqrfkvDaiiQH3Qo9tKBvZznPLnAWNidJgHUBqNajrPBoQW+
+	Pyf6
+X-Received: by 2002:a17:90a:a82:b0:39e:6c66:cbdd with SMTP id 98e67ed59e1d1-39e6c66d00bmr3882116a91.21.1789928089015;
+        Sun, 20 Sep 2026 11:14:49 -0700 (PDT)
+Received: from phui-2.c.googlers.com (78.123.83.34.bc.googleusercontent.com. [34.83.123.78])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e554e5529sm5863256a91.4.2026.09.20.11.14.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Sep 2026 09:20:17 -0700 (PDT)
-Date: Mon, 21 Sep 2026 01:20:11 +0900
-From: Youngjun Park <her0gyugyu@gmail.com>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Youngjun Park <youngjun.park@lge.com>, akpm@linux-foundation.org,
-	chrisl@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kasong@tencent.com, mhocko@kernel.org,
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, shikemeng@huaweicloud.com,
-	baoquan.he@linux.dev, baohua@kernel.org, yosry@kernel.org,
-	joshua.hahnjy@gmail.com, taejoon.song@lge.com, lianux.mm@gmail.com
-Subject: Re: [RFC PATCH v11 0/4] mm/swap: priority-based swap tiers with
- per-cgroup selection
-Message-ID: <arAHu_BD5oqpZJER@gmail.com>
-References: <20260916183437.2946306-1-youngjun.park@lge.com>
- <20260916200434.GA5784@cmpxchg.org>
+        Sun, 20 Sep 2026 11:14:48 -0700 (PDT)
+From: Hui Peng <benquike@gmail.com>
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Waiman Long <longman@redhat.com>,
+ Ridong Chen <ridong.chen@linux.dev>
+Cc: Michal Koutny <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>,
+ cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] cgroup/cpuset: prevent local partition activation
+ over remote partition and sibling xcpus conflict
+Date: Sun, 20 Sep 2026 18:14:47 +0000
+Message-ID: <178992808796.3122215.5327280843811501376@gmail.com>
+In-Reply-To: <aa90bb73-c2af-4d13-8f2a-0435aa528058@linux.dev>
+References: <139d9231-4723-4365-9af7-8142e6581ede@linux.dev>
+ <20260920082335.257680-1-benquike@gmail.com>
+ <20260920082335.257680-2-benquike@gmail.com>
+ <aa90bb73-c2af-4d13-8f2a-0435aa528058@linux.dev>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260916200434.GA5784@cmpxchg.org>
 
-On 2026-09-16 16:04, Johannes Weiner wrote:
-> On Thu, Sep 17, 2026 at 03:34:33AM +0900, Youngjun Park wrote:
-> > Per-cgroup swap in debugfs
-> > ==========================
-> > 
-> > Patches 3 and 4 let a memory cgroup choose its tiers through debugfs.
-> > 
-> >   # swapon -p 100 /dev/nvme0n1p2
-> >   # swapon -p 50 /dev/sdb2
-> >   # cat /sys/kernel/debug/swap/tiers
-> >   Idx   Prio
-> >   0     100
-> >   1     50
-> >   # echo "/batch 0x2" > /sys/kernel/debug/swap/memcg_tiers
-> > 
-> > Bit i of the mask is tier i, so /batch swaps only to sdb2. A tier keeps
-> > its index for its lifetime, so the mask keeps selecting the same tier
-> > across swapon and swapoff.
+On Sun, Sep 20, 2026 at 04:57:39PM +0800, Guopeng Zhang wrote:
+> I think this patch is still missing a Fixes: tag for the
+> cpus_excl_conflict() change.
 >
+> The validate_partition() change can be covered by 6da580ec656a.
+>
+> However, the sibling CPU ownership issue fixed in cpus_excl_conflict()
+> was introduced by the following commit:
+> Fixes: 2a3602030d80 ("cgroup/cpuset: Don't invalidate sibling partitions on=
+ cpuset.cpus conflict")
 
-Hello Johannes,
+Thanks for pointing this out, Guopeng!
 
-Sorry for the late reply on a good suggestion :)
+In v3, I have split the validate_partition() change (with
+Fixes: 6da580ec656a) and the cpus_excl_conflict() change (with
+Fixes: 2a3602030d80) into separate patches ([PATCH v3 2/3] and
+[PATCH v3 3/3]) so that each patch fixes a single logical issue with its
+corresponding Fixes: tag.
 
-> Can the cgroup be given a priority limit? That would have pretty
-> obvious inheritance semantics:
-> root
-> `- batch (memory.swap.prio.max = 20)
->    `- task (memory.swap.prio.max = max)
->    `- logs (memory.swap.prio.max = 10)
-> `- interactive (memory.swap.prio.max = max)
->    `- task (memory.swap.prio.max)
-
-Right, the inheritance is clear and easy to understand, and with this I
-can pre-define the limit without knowing the mask value.
-
-But first, let me check the intent. Is the point that capping batch keeps
-it from taking the faster tiers, so they are left for interactive?
-
-If so, that matches our use case. Latency sensitive workloads get the
-fast tiers, non-latency sensitive ones get the slow tiers. But...
-
-Even then, the reverse cannot be expressed. A cap only cuts from the top,
-so a latency sensitive workload given max can still fall back to the slow
-tiers once the fast ones fill up. For example,
-
-  tier0  tier1  tier2  tier3
-    0     10     20     30
-
-there is no way to say "use tier0 and tier1, but never fall back to tier2
-or tier3". To cover that, the interface would also need a min value, or
-some way to express a range.
-
-And even a range is not enough. Excluding only tier2 leaves a hole in the
-middle, which no min/max pair can express. That needs per-tier selection,
-which is what the mask,  and what I'd carry over to the memcg
-interface later (Currently memcg.swap.tiers.max).
-
-How do you think?
-
-Thanks!
-Youngjun Park
+Best regards,
+Hui
