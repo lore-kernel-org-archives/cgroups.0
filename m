@@ -1,125 +1,110 @@
-Received: from mail-qv2-f43.google.com (mail-qv2-f43.google.com [74.125.230.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D71E49AA5A
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 12:53:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A54E849BD9C;
+	Mon, 21 Sep 2026 13:16:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789995187; cv=none; b=n0nNRRR5GhD3AoX+HMwy0AfEC26+gl67i66WDZPyZD1vEIx8bo/i/zSwVA6t0dNOINoZAUc/T84F0R/lz2pNnDE2PfCHpD7nBnOklrf0Jyz7mMzHFuPWgsFEVLPLj33Fwi98x3ySqExd2ZpwQcrKeckZZQtOQnG8kHqc0bNQuZc=
+	t=1789996602; cv=none; b=RQefTqMKEFKj32lQQ6KnlMxLiAoSYxgqWGaIhKpjlAGXHNqQmJT/0cd0yubkvdK2ygaLX0hlQf+cf5qvkTkX5KhfebxHLotsbNwzCuPfA+smHQ6GD7RNcbwpnRLN2AsdD6mkYH4L7CH0pd6Xuw4bb9Vr63cNBOxJpHxlRVHD2dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789995187; c=relaxed/simple;
-	bh=qeUCWpsUPbHHM5IIG7RF8FHuHvdD0eOD/zFOkfdQrYM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CtBzPsqbjeK25M+pLLjorQWryaXsfaN8paisJ1uQaJZvM4EB3yzDBwODcg5VSjCgut/oW59D+UOcdQzpXgjWkTA6Ghbu0MsdZIkWSNBcaNxzn2iKpk72X0mDrbgf2GpBLsQvaTU8akylGL+2/pnzwhAQ+WTlZDvSHMPdX4dns4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=fBaQ6FPL; arc=none smtp.client-ip=74.125.230.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="fBaQ6FPL"
-Received: by mail-qv2-f43.google.com with SMTP id 6a1803df08f44-90cdfcbe207so35754276d6.3
-        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 05:53:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1789995185; x=1790599985; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Jdk8bFx0tKHj9Yl5yPuBwHegOpkKYh3D6iyI0OsSHvo=;
-        b=fBaQ6FPLrsis2sQg/MQTL21JZNv+KF1s2lpMc3WLk8mupnzw7vw3dOXpboNWUd2JFO
-         hVYq6Zo7oD/ZxUonGGXzp9Wu0qaH7WG/oBBIWdL3wvePWoqmP7cb2sueyzvAGWVsMJo1
-         Yk3gL2Y/cGrjs+LRMGfWMlokO+d9wsLeXqgaHqWv1lw/7INCWA4LAGFQWfLYNq+a0hLs
-         r7ivypwfYSZUmLEgsSFlN0gK01xMxN5UT7wC3MqtqpYuAyAPVElLg6rAdSPgQmk/gIi2
-         /dj/OsMoF+viZ/XOEzdpDmCRlwbvLcWW65KztY92+OMyp3kTuO12BIKeJXYqulsX7YQT
-         GTgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789995185; x=1790599985;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=Jdk8bFx0tKHj9Yl5yPuBwHegOpkKYh3D6iyI0OsSHvo=;
-        b=S3BPabWF5s+o1bJ265J3K/S1GwIwwJkgaPgw2Zs6SU5qgu5RI2rLdGaM7t/ThA8Twn
-         kJ29Bi9RcWCtDiTHsJ1DWAR7Deo5vkXz3LitGTAkSxjdOGvCN86kKrp0jcooZrk56K4V
-         XHiyAVEZIGP3hozSMKMgAHaSU5ThxeNC5n8CmKcImBm4E0vjPFX43GgL9rbGmjaUHnSg
-         6rg2q2cLYxrf2xbSPbHIpg9AVglWJgbANWvgTcYVhxppAeeDJRGdy47qqEi1i2iMIU+q
-         /CdklRvICKwuS6qLGifTz7p8pTaBRh2zaYiTIlgFw0tAacvt+2HIrneK+adYWmvpZS8P
-         wikA==
-X-Forwarded-Encrypted: i=1; AKwUvByY740jq9+lWVP/zUD2xLMqfRuEG7Fzn7W9AuizDosX+QyZyYtVkgTKq26WwHB8cUifkzI8HiUZ@vger.kernel.org
-X-Gm-Message-State: AFuF++nYOP+KCiZM34oqwvgjl+g20Xi2+spcauBh5Dk95CunlHTCaqnX
-	J5Yx4BEgqVJbCXXtypaafEPK/Fmg7pOQSdvgn8s4JBEXjoCN0s7zFGK0YOEVr3VpuA8=
-X-Gm-Gg: AYBFou2rlnUpjiDO7Pzs/Kh5G4u2RA2ZbBx4b7+igCijDMXeGgXV5dUAkzdJVBPlE5C
-	fj/BYT9OD6TenCjHgmgBu6DJ4WxFHRtxMkrVhDfEiySSSyVIbxIm68QoBCbZtIwNaCkYtKF91y0
-	oNMx66J+PRi9kfbbfjpKS+R5pwWBErXzEZdydxDcPUTF+NIka5BX9G4VwrSTaIIDTc9aPpt4lHw
-	CU0eJJwR0lBe0oYmZQ3NrUFy60zeZPwRhz1WBAvJ4p/n/3XMrtxYnKhc8YeW6DSmWM9KAKUdAON
-	kO8e3vwVcqfrqwbJRNhcZ5yGQEz+M0wFK49eM7zo4c1RF3megLOnorrbcH3utMj5Y5JWKA3d66p
-	T0N11gJgvUbREvBrL7qoOmCTLX5dc2aLwC8Sn2nTV7UjNwscrHG2s3O4UjPv9cDmb4SqKsR8S9s
-	8dfoicRnJBWkBwuPOoWE9ukMTv+J0DPDZSjvfqvw2dg9BM5QDz+g1eQQInbW64dA+vPUL1Ba3Mm
-	lzyFCQONb+JbEbTIsh9Uug4J903RcPwofT5wCH6rQu2ESaP640Znt0=
-X-Received: by 2002:a05:6214:5990:b0:912:517b:20e9 with SMTP id 6a1803df08f44-913fc969610mr4155346d6.49.1789995184825;
-        Mon, 21 Sep 2026 05:53:04 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91260a6267csm68171296d6.25.2026.09.21.05.53.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 05:53:04 -0700 (PDT)
-Date: Mon, 21 Sep 2026 08:53:02 -0400
-From: Gregory Price <gourry@gourry.net>
-To: Chris Li <chrisl@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
-	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Rik van Riel <riel@surriel.com>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Kunwu Chan <kunwu.chan@linux.dev>, Meta kernel team <kernel-team@meta.com>, 
-	Linux Memory Management List <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, 
-	linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-Message-ID: <arEVDBlfsUYKK004@gourry-fedora-PF4VCD3F>
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <aqJXx2vtbKaRLt3x@fedora>
- <aqLi6cIjD2wJwk0B@cmpxchg.org>
- <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
- <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F>
- <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
- <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
- <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+	s=arc-20240116; t=1789996602; c=relaxed/simple;
+	bh=ny9kj5UxpSjiy3RXxKQ4tP5Nb0ArRzlWoFjWBBy09iM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=irjw1bvPVKQXj7LNvvItn0XbQXsHzGNrcMzALPdWP3UXYSHLjJoq2kYw0KdSS7c7IIlYIM8Vxj2MA543qfZ6aDKRro0G1hsHKRt2dL2e0pAKWoauD3LKuZXvFRrRxQuWtmXiZ7Oj7qbE5G4wEQLKGB21pb7esdDwofm2djFULM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: a774e672b5be11f19a56ed5b684f684d-20260921
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
+	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
+	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
+	HR_TO_NAME, HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, SA_TRUSTED
+	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
+	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
+	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:4f0a2cda-90f8-47fd-a734-959b1bf39393,IP:10,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:10
+X-CID-INFO: VERSION:1.3.19,REQID:4f0a2cda-90f8-47fd-a734-959b1bf39393,IP:10,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:10
+X-CID-META: VersionHash:7db8b62,CLOUDID:950ff3d5b25a25a7153a29519c3a72f6,BulkI
+	D:260921211633Z580QKMB,BulkQuantity:0,SF:10|66|78|102|127|865|898,TC:nil,C
+	ontent:0|15|50|99,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:n
+	il,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: a774e672b5be11f19a56ed5b684f684d-20260921
+X-User: sunshaojie@kylinos.cn
+Received: from sunshaojie-pc [(223.70.159.239)] by mailgw.kylinos.cn
+	(envelope-from <sunshaojie@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 408941128; Mon, 21 Sep 2026 21:16:28 +0800
+From: Shaojie Sun <sunshaojie@kylinos.cn>
+To: Tejun Heo <tj@kernel.org>,
+	cgroups@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	mkoutny@suse.com,
+	Shuah Khan <shuah@kernel.org>,
+	linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Li Wang <li.wang@linux.dev>,
+	Hongfu Li <lihongfu@kylinos.cn>,
+	Shakeel Butt <shakeel.butt@linux.dev>
+Subject: [PATCH 0/2] selftests/cgroup: fix truncated reads of /proc/self/mounts
+Date: Mon, 21 Sep 2026 21:15:54 +0800
+Message-ID: <20260921131556.444661-1-sunshaojie@kylinos.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
 
-On Sun, Sep 20, 2026 at 11:43:59PM -1000, Chris Li wrote:
-> On Sat, Sep 19, 2026 at 3:53 PM Gregory Price <gourry@gourry.net> wrote:
-> 
-> Let's start with the real question: on your fleet what is the max % of
-> zswap memory compared to total RAM?
-> 
+The cgroup selftests read /proc/self/mounts with read_text(), which issued
+a single read(2) and treated the result as the whole file.  For a seq_file
+larger than one page it never is: seq_read_iter() copies out at most one
+internal PAGE_SIZE buffer per call and leaves the rest for the next
+read(2), no matter how much room the caller's buffer has.
 
-You're asking me to predict the future.  Any number I give you today
-will be wrong 3 seconds from now.
+On a machine with ~80 mounts /proc/self/mounts is 7177 bytes, a single
+read(2) into the 40K buffer in cg_find_root() returns 4035 bytes, and the
+cgroup2 entry starts at offset 4953.  cg_find_root() therefore never sees
+the unified hierarchy, and all ten test binaries that call
+cg_find_unified_root() exit with SKIP "cgroup v2 isn't mounted" without
+running a single test.  The same truncation hits proc_mount_contains(),
+so a mount option listed after the first 4K is reported as absent.
 
-You can't know the compressibility of memory until after you compress
-it, and requiring a user to predict the future by forcing them to limit
-the total amount of workload compressibility does not scale with the
-number of workloads of variable compressibility of data.
+Behind that there is a second failure mode: if the buffer really is too
+small and the cut lands inside an entry, strtok() returns NULL for the
+missing fields and cg_find_root() dereferences it, so a short read ends in
+a segfault rather than a plain "no cgroup2 entry found".
 
-That should tell you that your model of reasoning about this issue is
-ill-suited to address the problem.
+The series fixes both: read_text() reads until the buffer is full or EOF,
+and cg_find_root() stops parsing as soon as a field is missing.  The write
+path is untouched and files that fit in max_len - 1 bytes still return
+identical bytes, so callers that read a prefix on purpose, such as
+cg_read_strcmp() and the 1-byte read in test_zswap, behave as before.
 
-~Gregory
+Tested with the mount table above: test_kill goes from
+"1..0 # SKIP cgroup v2 isn't mounted" to "1..4"; with BUF_SIZE forced to
+6, the old code segfaults in cg_find_unified_root() where the patched one
+returns -1.
+
+Shaojie Sun (2):
+  selftests/cgroup: read the entire file in read_text()
+  selftests/cgroup: don't crash on a truncated mount entry in
+    cg_find_root()
+
+ .../selftests/cgroup/lib/cgroup_util.c        | 45 ++++++++++++++++---
+ 1 file changed, 39 insertions(+), 6 deletions(-)
+
+-- 
+2.50.1
+
