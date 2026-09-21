@@ -1,38 +1,38 @@
-Received: from mta0.migadu.com (out-105.mta0.migadu.com [91.218.175.105])
+Received: from mta0.migadu.com (out-110.mta0.migadu.com [91.218.175.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE0BA45C711
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 09:13:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46C5845FFA6
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 09:13:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789981986; cv=none; b=JgTuW66nUMUP9KJT8fcg6wU3N2My7LEK1yBMsosD2J1410cjDOVZAfDawCDJG9DkewCmlFeZL+nteY8x6MCJ5izvVkGaqVjKiidoq6i6UWz2x4a3XqQLACf352Do27uNPDWP5JvNMiv4hacI8l+/vucBctBPfYK9txEuXIKyw1k=
+	t=1789981994; cv=none; b=M24oZrHatIHCPGu+fMp/JaAkQOfj+URdWXwLIZnkbOfXyENCHHM5tk5BEVlh3fe/4s0zwrfk13e6GIVf5gTdh7Cwhqe7ROEvT/GeABc/CLmd1pwiXOHKu19UkyFA77XZi5txrGphZ+SGz4prkhhshdHnez+mIthYD64ZKZNB5yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789981986; c=relaxed/simple;
-	bh=TDH3vD9yd/dcLeLc/jAleyN9Qqat0NKvlnxsmihr/nM=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=IbU3KSDKPj/EpBQaR6j1yVTZQmh5GjgrBra4CwaF4+1MGdmZcdgle+E0DM5MSD7/Mx979LJcyuxeR+IuEfvNPc4D/8j42jxg1QBHe+Z906+87qaKu7dHq4vDowe/xq0mhlAJzPgiNjS+lelyNozLh7cpQWgVmXs13dvJ7ITIQrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=h1CwbFmm; arc=none smtp.client-ip=91.218.175.105
+	s=arc-20240116; t=1789981994; c=relaxed/simple;
+	bh=Cu2ExFzZ0wPeXHlo/H4RTvXS1GKs5wBwOLrGXeuqp+k=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=mjQpQde58SmrxLBtRRgF/fhG4Wr1S/iQssuXRUgWscalhItJ/zkk83oPRvsXNCfOV48tgsoxAbeJ4UacOWLhK+SzGYhJrz2IlzoaRMz8CUG7AWFNg0fxlRzvkjw+nnTHrxgJ8Ru5a3cl7LdpDAhehYtKiWSR+br76P3LSeWFNaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Miis2Cv4; arc=none smtp.client-ip=91.218.175.110
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="h1CwbFmm"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Miis2Cv4"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=TDH3vD9yd/dcLeLc/jAleyN9Qqat0NKvlnxsmihr/nM=;
+DKIM-Signature: a=rsa-sha256; bh=Cu2ExFzZ0wPeXHlo/H4RTvXS1GKs5wBwOLrGXeuqp+k=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789981982; v=1; x=1790586782;
- b=h1CwbFmmpll9Q7aI6HpACAo7/eqEd5FKAV6XZ7oS+IMPr2B/1EcGG7pKtz1QyGViCaFufY02
- TDARzFETiVuov/zV4x50qJzRSr7l3LTqFwZ1JBDNT2rppo8yFrYztpQpB8xGEOE8N3foPl68cro
- htpI9UGhPNjKAJZ+0vMngRHc=
+ t=1789981990; v=1; x=1790586790;
+ b=Miis2Cv4MjcWjIMZzm2CtRBTMulDYVqwjxWv0zqNylRVpysSxP27oY6zsOOCZnraLLmrFyv/
+ XVV1D2tJlPWCMeYMVBuI7M7Q14Cre+b7zjaeHfavZYFtRtBt/AeWhLMNC1AMwz0POKmoOnrOJ+F
+ /17o2PHquQeDW9GpjHZ/m2aA=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 2b44032c6d1bb854;
-	Mon, 21 Sep 2026 09:13:02 +0000
-X-Mizu-Trace-ID: 2b44032c6d1bb854
+Received: by smtp.migadu.com with ESMTPS id fd58ae7357b5b993;
+	Mon, 21 Sep 2026 09:13:10 +0000
+X-Mizu-Trace-ID: fd58ae7357b5b993
 X-Migadu-Flow: FLOW_OUT
 From: Hongfu Li <hongfu.li@linux.dev>
-Subject: [PATCH 0/2] mm: fix hugetlb NR_HUGETLB accounting on folio
- migration
-Date: Mon, 21 Sep 2026 17:12:33 +0800
-Message-Id: <20260921-for-hugetlb_state-v1-0-8a6eec92661f@kylinos.cn>
+Date: Mon, 21 Sep 2026 17:12:34 +0800
+Subject: [PATCH 1/2] mm/hugetlb: account migration target folio in per-node
+ NR_HUGETLB vmstat
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,10 +41,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQqDMBBG4avIrA04CqntVYqIib86pWjJRBHEu
- 5u2y2/x3kGKIFB6ZAcFbKKyzAmcZ+Snbh5hpE+msihtcWdrhiWYaR0R367V2EUY2BvXFXt2rqb
- UfQIG2X/PZ/O3ru4FH78jOs8LfbIOGnUAAAA=
-X-Change-ID: 20260916-for-hugetlb_state-e671831c1bb8
+Message-Id: <20260921-for-hugetlb_state-v1-1-8a6eec92661f@kylinos.cn>
+References: <20260921-for-hugetlb_state-v1-0-8a6eec92661f@kylinos.cn>
+In-Reply-To: <20260921-for-hugetlb_state-v1-0-8a6eec92661f@kylinos.cn>
 To: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
  David Hildenbrand <david@kernel.org>, 
  Andrew Morton <akpm@linux-foundation.org>, 
@@ -56,55 +55,105 @@ Cc: hongfu.li@linux.dev, Joshua Hahn <joshua.hahnjy@gmail.com>,
  linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
  Hongfu Li <lihongfu@kylinos.cn>, stable@vger.kernel.org
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789981974; l=2043;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1789981974; l=3203;
  i=lihongfu@kylinos.cn; s=20260915; h=from:subject:message-id;
- bh=TDH3vD9yd/dcLeLc/jAleyN9Qqat0NKvlnxsmihr/nM=;
- b=5SGaDRkirvqoNfdMgtlmPP3KU7kwjMhLUgb1e9QeRVHp4qxVn0rMhMIy01kpGfZMAOiVKtDaM
- UQcucSy2UbUDTzf5P+f6znaJUZyoTauMnD0nLr015Eh7OBzV75pTBiG
+ bh=qFQURuvqIWZRduSFy2tOfQ/YWYqYpSChKzoedQvCG4U=;
+ b=alqTdmVgU+bX1/P6i4lpe9eRPyzHnbFGO5R5WIL/PQfB4BeOJYPmPMpV6DQ7XbSba/uZrVhJW
+ ifPbV5agVEODv7ZRdaHq4bMs4Yc+A/BUxoZMSwYZei0bAwbxGooDdMp
 X-Developer-Key: i=lihongfu@kylinos.cn; a=ed25519;
  pk=rUpDSpB3neoNZRlGG6dHlFb3RepiJakcev+ucyqaZzw=
 
-The hugeTLB counters added by 05d4532b60e3 ("memcg/hugetlb: add hugeTLB
-counters to memcg") are maintained in two per-node places:
-  - the per-node vmstat counter NR_HUGETLB, exposed as nr_hugetlb in
-    /proc/vmstat;
-  - the per-node memcg lruvec stat, exposed via memory.numa_stat.
+From: Hongfu Li <lihongfu@kylinos.cn>
 
-Both are accounted against the folio's node, and both drift when a
-hugetlb folio is migrated, though in different ways.
+The NR_HUGETLB vmstat counter is maintained per folio's node: incremented
+when a huge page is handed to a user via hugetlb_alloc_folio() and
+decremented when it is returned to the pool via free_huge_folio().
 
-A migration target folio is allocated by alloc_hugetlb_folio_nodemask()
-and inherits the old folio's state without ever being accounted, while
-the old folio is freed right after and its free is accounted. That
-alone loses vmstat accounting: the target node has no matching increment
-for the decrement on the old node, so /proc/vmstat's nr_hugetlb shrinks
-by nr_pages per migration. Patch 1 accounts the folio where it is
-obtained, so the increment pairs with the free in free_huge_folio() on
-the successful as well as the failed migration path. The memfd page
-cache preallocation helper has the same asymmetry and is fixed in the
-same patch.
+A folio obtained by alloc_hugetlb_folio_nodemask() never goes through
+hugetlb_alloc_folio(), so it is never accounted, while its free always
+is. For a migration target this means the target node gets no matching
+increment for the decrement on the old node, so the global nr_hugetlb in
+/proc/vmstat drops by nr_pages for each migration. The same asymmetry
+affects the failed migration path, which frees the target again right
+away, and the temporary folio hugetlb_mfill_atomic_pte() takes from the
+same helper.
 
-The per-node lruvec stat breaks differently. mem_cgroup_migrate()
-moves the charge to the new folio and drops the old folio's memcg data,
-so the old folio's free right after migration skips the memcg per-node
-decrement; the count stays attributed to the old node for the rest of
-the charge's life, and the target folio never gets an increment on its
-new node. Patch 2 moves that per-node accounting alongside the charge
-in mem_cgroup_migrate().
+alloc_hugetlb_folio_reserve(), used to preallocate the memfd page cache
+folios, has the same asymmetry: the folio is handed to a user without
+being accounted, while its free is accounted through free_huge_folio().
 
+Account the folio where it is obtained, in alloc_hugetlb_folio_nodemask()
+and alloc_hugetlb_folio_reserve(), so that the increment pairs with the
+decrement in free_huge_folio(): a successful migration hands the folio
+to a user, a failed one frees it again.
+
+Fixes: 05d4532b60e3 ("memcg/hugetlb: add hugeTLB counters to memcg")
+Cc: stable@vger.kernel.org
+Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
 ---
-Hongfu Li (2):
-      mm/hugetlb: account migration target folio in per-node NR_HUGETLB vmstat
-      mm/memcg: migrate per-node hugetlb lruvec stat together with hugetlb folio
+ mm/hugetlb.c | 35 +++++++++++++++++++++++------------
+ 1 file changed, 23 insertions(+), 12 deletions(-)
 
- mm/hugetlb.c    | 35 +++++++++++++++++++++++------------
- mm/memcontrol.c | 31 +++++++++++++++++++++++++++++++
- 2 files changed, 54 insertions(+), 12 deletions(-)
----
-base-commit: b08a65b93426d86e3f354d655d6225397b591877
-change-id: 20260916-for-hugetlb_state-e671831c1bb8
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 1b53ba991d36..8ccc769bf48c 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -2206,6 +2206,11 @@ struct folio *alloc_hugetlb_folio_reserve(struct hstate *h, int preferred_nid,
+ 	}
+ 
+ 	spin_unlock_irq(&hugetlb_lock);
++
++	if (folio)
++		lruvec_stat_mod_folio(folio, NR_HUGETLB,
++				      folio_nr_pages(folio));
++
+ 	return folio;
+ }
+ 
+@@ -2213,24 +2218,30 @@ struct folio *alloc_hugetlb_folio_reserve(struct hstate *h, int preferred_nid,
+ struct folio *alloc_hugetlb_folio_nodemask(struct hstate *h, int preferred_nid,
+ 		nodemask_t *nmask, gfp_t gfp_mask, bool allow_alloc_fallback)
+ {
+-	spin_lock_irq(&hugetlb_lock);
+-	if (available_huge_pages(h)) {
+-		struct folio *folio;
++	struct folio *folio = NULL;
+ 
++	spin_lock_irq(&hugetlb_lock);
++	if (available_huge_pages(h))
+ 		folio = dequeue_hugetlb_folio_nodemask(h, gfp_mask,
+ 						preferred_nid, nmask);
+-		if (folio) {
+-			spin_unlock_irq(&hugetlb_lock);
+-			return folio;
+-		}
+-	}
+ 	spin_unlock_irq(&hugetlb_lock);
+ 
+-	/* We cannot fallback to other nodes, as we could break the per-node pool. */
+-	if (!allow_alloc_fallback)
+-		gfp_mask |= __GFP_THISNODE;
++	if (!folio) {
++		/*
++		 * We cannot fallback to other nodes, as we could break the
++		 * per-node pool.
++		 */
++		if (!allow_alloc_fallback)
++			gfp_mask |= __GFP_THISNODE;
+ 
+-	return alloc_migrate_hugetlb_folio(h, gfp_mask, preferred_nid, nmask);
++		folio = alloc_migrate_hugetlb_folio(h, gfp_mask, preferred_nid,
++						    nmask);
++	}
++
++	if (folio)
++		lruvec_stat_mod_folio(folio, NR_HUGETLB, folio_nr_pages(folio));
++
++	return folio;
+ }
+ 
+ static nodemask_t *policy_mbind_nodemask(gfp_t gfp)
 
-Best regards,
---  
-Hongfu Li <lihongfu@kylinos.cn>
+-- 
+2.54.0
 
