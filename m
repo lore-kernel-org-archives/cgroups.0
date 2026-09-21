@@ -1,40 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5AC33AC0C7
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 09:44:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789983853; cv=none; b=TJzBfpzEnU2Eew+5DR9S47cUU5u1xZ328xnnlvMMGG3a2pqeBKhtM3YF1PF9dLpkJydtfzEWF400rLEcB6Ze/igMFIZAChUpUcY+wgYFAQvn0SFi5rlIDBzMj8RcYgV8GuRFy6YEFBDRgKRkS+dRhNfipafCgWvUsi6GodRkmLs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789983853; c=relaxed/simple;
-	bh=e8UbLM76z0pEEVd3kFwvexh1litq+aFnA/e+aZEDGOM=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65838470EAC
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 10:01:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.181
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789984921; cv=pass; b=PrkDMFxxvv4OJupLL/vtKhPML4dITfQF/irBLG6yeh9zqRAqm/hoYfZatS3WcGVYdcu3ecCCSh2gySl8PZENzlDPfcxGtNgzhdpSfAyv8WtDnvHYIZFNtK/CnVL8PxREIy1RnjAV3CER1uILJN9Dvhd+7gYyw/wpeH30Teo90Is=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789984921; c=relaxed/simple;
+	bh=C0u7dFIOwFw7/Fou9k8GunftPf/Pv/MvXmJEJ9Wf4iw=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lKa6tL1GLptT+yDRPwwP3ymjDrxAD2AMwG1YtFhY3+52fkF94b7wng1p0Qo0c5V9jp6wr5XezvUofTY3xjJQjZBT53/tvdVG4UTi1tZphpNtkmoaCN14cFjPAsderGWmi5CM+r2fBuW3nL8uVCr1EfHnRsLv4QtXb1J/d6GaRA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0WzrlNe; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=qCJO3RricjY0dExIq+EpAxne7DA9zeM3qFBGS/ESsTnXS7K7PGjy+H/U9KyzGk5JV1zw1hxdBW+Fe1NNRxxGqpz9r45S28usYo1NCFrRG0pQnO1M9XVPf09rzv1FVuCAzdcTqej1ZewIIm+Aw+j71b12w0if5TPN+OjLU5AQ7uw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZzlxFC1R; arc=pass smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0WzrlNe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ECDE1F0089D
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 09:44:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789983851;
-	bh=iT8if2mD/aPImn8Sm68Z/gW49Co1dlEv8RYUDg0WoK4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=l0WzrlNeFwS35n4gD5mWRMLGPAYWMSYHLNUgBqszppDslumljtwnzJCATFfAxhlTv
-	 3vP8gEA4yIAFU4MKa9qwitfabtnstPyXxfTTCTZcxlqaXxwij/lrm+rq4W9nxqB7B1
-	 5QOSXr7J6whdBgyS8PgRyKnVveY41m8wF4eO4f4D+sWe3UbmLEnlEORhFqt1TbAvMQ
-	 b0vsWPUQbVdydRtevpYz45puCriu7BKH6N5iMC5nZt6iC26FE9VSmadsIl6kfTY1Pl
-	 5KTu037fLirhUYa9/ZvahySuWL/y9Bv1j+UgbkQwJcSHS/0ASPeUDTzGeJZHzdYtgf
-	 icnBxmjjxFXKQ==
-Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-6729c4030f0so1169434d50.2
-        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 02:44:11 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBxJzmmOUv4+KzkXskoQz5AFxzrurt7yXpW3P3TbmWf0ZuTdB6TKa+CBDLdmE4JXI2K697juIW5u@vger.kernel.org
-X-Gm-Message-State: AFuF++nzyrDg5oAqCtlF6ukreT8ICnEP2BTUHHIMWLm1Bjf2mjSJfhV7
-	M3x5Uh6/9akD21CpWBhNb6VSrjzo7nTBAVTfDnczc17JGN+sDezG2Db0EyFABg0dNAEOODbeUSU
-	XXFLaE2tc7X04clzOVJpYh9mGxO4IOTLh3sR+BJXnTg==
-X-Received: by 2002:a05:690e:1206:b0:672:aad4:3ff5 with SMTP id
- 956f58d0204a3-672aad4408amr1095386d50.62.1789983850636; Mon, 21 Sep 2026
- 02:44:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZzlxFC1R"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-86ec25cf7ecso3430466b3a.1
+        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 03:01:59 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789984919; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Z42n/NXAGdVnfFksQWl8p+ggcy6vgdcArq2KwuI9hvp0kNCvV/YZcYTHwUMqa1mSVe
+         ijPLSSjj4cQ1LxJ0Bonn07gLmdNrYu+ev1mNN2WRiSnE2BQmOXHLVOV0UoRpzfx8EDaL
+         S4JkGLVLHh3Wsk4N9eP4kq8lzoKsdcYHDTTEo0eJtjgSwa3O/sXjhEk5exRRMJVugHdw
+         Iae/H4wz2z87wq0pdAoW0Yoq62GUKV3zXaL3NLUTdKTnzd4IXQg7//RtIIt2n1DDlP2o
+         oXbgjFwsuaNbYNNldc1qC4RFZJjsHG+qn+UWCBNZrDNSTGpZsdrGPVwU6keDgJIkl7Iz
+         awpw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=rtgPtMT7frKhH4WMKdwbGRv258dVgwZlagcB0deq+D8=;
+        fh=rrMpukLb9sr41UQZlsu3kRW8Ia8Df6aTrkPWClCMDfE=;
+        b=ok/8HtI4okenAH1pSXKOTv0eDOUg5/y1KZ96uITY7y/Zkf4c/YlEONShxrT24scdUI
+         ryOMU1T23SocYx0mCAfiv+58LKqFh1mHjD4xgpDBEnIg79/LnwR28E51WDK+JyCQ5ZPr
+         JgGiFdHDZ8mrX7FFGrklQWHHwq0VTwHV4TUmA2dTVI5GrLHU0ocMS5a0xqVyUQz0udTL
+         fujhrIzs7w1PNS1OcjxFpKKZYtB2tsxD75K4BkS8YXtwx9+GAiPs93ozAkxV7SaRMsgQ
+         OFhgmdKGXvmWNWfEx1HwLUEvYFPBVlpP+r7EvFRi1bgvUxGKgvLPqx+8SLZd9iVXEzJq
+         RB5w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789984919; x=1790589719; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=rtgPtMT7frKhH4WMKdwbGRv258dVgwZlagcB0deq+D8=;
+        b=ZzlxFC1R189DrN3TSnXfYhpWLK28QabWnQcJ4+wU5jN31B7nigwVthzzf4P+0COfY0
+         dNEgN7ioxlGortpcWozAnFnb5zQZS8JCwof/IoT8RCNcXUraPQu0pT5/H4zM1CEtoK9n
+         KzuXBAXw+l7MzSuUOIN1NMjLsKcCHTMoW8YFj0PkG/9LnvEvmsy/7rUh1rHfOoHU4y4D
+         pPlO3BHVPOMcSLTicIZdiceAmKVXviv1209VCuC1KelByIo86HHO/udjGtDtEqfTmScZ
+         VjX0d24IGt0LJ8DAtNt+PMW5BYO5oti1bveV9E4zlrYTTkDWG6rPfiCwsmbXToQJ2Akc
+         NNFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789984919; x=1790589719;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=rtgPtMT7frKhH4WMKdwbGRv258dVgwZlagcB0deq+D8=;
+        b=Svc+aylx5XGLgrO+TtuILO5joCiyIe+Y6qPwCL7hXkUVcFPQo9m2834AON+aBu0H7G
+         Vc0uGzimbK/fkymR0Sbfscy47mnXDu4G60EDzDd5Cq4kKRFlmN2FGkZWpOyl/yEqytLS
+         T7tbWup1VSKiPFTCfwKmM6ljIREWPrVyqvEuNJYdsH/Tn9tJIwiDMh9ouWMcncZoZfaD
+         57AoUS8H7tolBb4HKp04lR2jVYLc1D213/FMTSJHrOTvZOrTjnvPE7UY/x0XR8r0R6hc
+         /5KJIw02d+fqjZKx5TmJnd0mmUN8ziPGJEH9sHL0iM/6SRUt9Q1vLCgQT2zDCJHcxeYJ
+         r1bg==
+X-Forwarded-Encrypted: i=1; AKwUvBwzbT/k8EqgMH9Xr55SCeqYS0fqiWmlEV+eyJRn5vMcRGEGGpiaaHbPiTgRs9AGNDaAw/LenniQ@vger.kernel.org
+X-Gm-Message-State: AFuF++k1+xF5KEJmc8VtsFNyu3YIGbq/MOH3PVuRPiBWtfPbDcKhHzfK
+	oCKU7oUB24moaFLtolG4eyegmV8YeJu9wr9ISPxTGvts8dSNKChCEjTC3G2RsMAk2PhE7wtQypw
+	AMlcBJyGKGFHTLiBCnq1I/xDZtKsV4Eg=
+X-Gm-Gg: AYBFou2NCpxsdFMAsuQz5Ce9mguyjDMg9eUOu0gcLuD3JybqsaZ6zxjZwImtxt6+JOB
+	7spOVyfuY9o1cr6J5fE9qPXJ0I2a0CCxRXxdG3gnq6li45zyQajQT3zFSINKLbmG3RfxIvYymT4
+	27/TRpHtW7/s1UOre7ok2d+B8SnTUSXOj67svhHkCFyOKVbu7UK+lP/E/pllGBxAjWxUetJVkFJ
+	eyMtGMRpyGW987C5MGMWG7NEuhQQUMFe4rqkA0KroQtuwIGDd720FKBHqHQf1oofoIZO3GPlBwV
+	XRbVtVObpQwAAvKAAGvWjKyf52b52ghNWzYYK4VpOQKQGzVMaKkWBHysZeLNLQPn4gRMdgEg94K
+	EfPE7H5kfroA=
+X-Received: by 2002:a05:6a00:2d93:b0:857:73c3:4466 with SMTP id
+ d2e1a72fcca58-87343ea8041mr17463837b3a.21.1789984919241; Mon, 21 Sep 2026
+ 03:01:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -44,19 +86,18 @@ MIME-Version: 1.0
 References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
  <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org> <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
  <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F> <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
- <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
-In-Reply-To: <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
-From: Chris Li <chrisl@kernel.org>
-Date: Sun, 20 Sep 2026 23:43:59 -1000
-X-Gmail-Original-Message-ID: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
-X-Gm-Features: AcwNN1UvMXXPXLi0GhVBjP_wTYqT1-_o3r1PAGjjggfPSSuKF_y4-p-b05lQBwE
-Message-ID: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+In-Reply-To: <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Mon, 21 Sep 2026 12:01:18 +0200
+X-Gm-Features: AcwNN1W4zNuvHUUOGHULyeGe0PhiMgbBymHHBRLY42qLX54efbcuYBMEOcf7diI
+Message-ID: <CAMgjq7CJBHkoZmg9oKNgGA8czL0djyBTCAkPz8ETm-tX=Qci4g@mail.gmail.com>
 Subject: Re: Path forward for Virtualized Swap?
-To: Gregory Price <gourry@gourry.net>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+To: Chris Li <chrisl@kernel.org>
+Cc: Gregory Price <gourry@gourry.net>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
 	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
 	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
 	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
@@ -71,102 +112,69 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>,
 	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
 	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+	Joshua Hahn <joshua.hahnjy@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Sep 19, 2026 at 3:53=E2=80=AFPM Gregory Price <gourry@gourry.net> w=
-rote:
+On Sat, Sep 19, 2026 at 9:02=E2=80=AFPM Chris Li <chrisl@kernel.org> wrote:
 >
-> On Sat, Sep 19, 2026 at 09:02:28AM -1000, Chris Li wrote:
-> > On Sat, Sep 19, 2026 at 6:08=E2=80=AFAM Gregory Price <gourry@gourry.ne=
-t> wrote:
+> On Sat, Sep 19, 2026 at 6:08=E2=80=AFAM Gregory Price <gourry@gourry.net>=
+ wrote:
+> >
+> > On Sat, Sep 19, 2026 at 03:45:03AM -0500, Chris Li wrote:
 > > >
-> > >                         Memory Post-Compression
-> > >  |[CD][CD][CD][CD][CD][CD][CD][CD]-------- free space ------------|
-> > >    ^----------------------------^
-> > >          Compression Space
+> > > I found this new concept of "compression space" very confusing to me.
+> > > Can you explain the swap behavior and problem using only normal memor=
+y
+> > > usage reduction and latency without introducing a new term or new
+> > > metrics?
+> > >
+> > > The normal user doesn't even know what compression space is, let alon=
+e
+> > > what makes it transparent.
+> > >
 > >
-> > Thanks for the explanation. So the compression space is just the
-> > actual data store backing the zswap/xswap/zram.
->
-> No.  That is not what I said.
->
-> I said
->
->    It's the *amount* of memory consumed by compressed data,
->          including the metadata associated with it.
->
-> I do not know how to be clearer than this. It is an amount of memory.
-
-Sure the amount, that is what I have in mind as well. That is why I
-said swap counter.
->
-> It is not the memory itself or an abstraction to describe how much
-> memory, it is literally the active amount of consumption - a number.
-
-Yes, compress zswap counter.
->
-> > Maybe we need a separate counter to track actual memory usage,
-> > regardless of compression status.
->
-> the separate counter is... the existing memory and zswap counters.
-
-Exactly. So, did that solve your problem? If not, why not?
-
->
-> > I want to add support for your usage case as well. Please clearly
-> > specify what user usage you want, what the expected outcome
-> > is, and why you want that.
+> > Sure they do - it's the amount of memory consumed by compressed data,
+> > including the metadata associated with it.
 > >
+> > converting Johannes statement to diagram:
+> >
+> > >> Compression space is not a separate resource. It's page tables,
+> > >> backing pages, and swap descriptors. It's just MEMORY.
+> >
+> >                           Page Data (PD)
+> >   [page tables][                uncompressed page                  ]
+> >
+> >
+> >                         Compressed Data (CD)
+> >   [      recovered space     ][pte][swap meta data][compressed page]
+> >                               |                                    |
+> >                               |---------compression space----------|
+> >
+> >
+> >                         Memory Pre-Compression
+> >  |[  PD  ][  PD  ][  PD  ][  PD  ][  PD  ][  PD  ][  PD  ][  PD  ]|
+> >
+> >
+> >                         Memory Post-Compression
+> >  |[CD][CD][CD][CD][CD][CD][CD][CD]-------- free space ------------|
+> >    ^----------------------------^
+> >          Compression Space
 >
-> I want:
-
-I am sorry, that is not actual user usage. You need to start from an
-actual usage case: I have a workload X, only want to give limit Y for
-the cgroup jobs but with Z SLO requirement. That kind of actual usage
-requirement.
-
-You are basically saying you want a pony. I also want an antimatter
-pony. Let's battle with our ponies.
-
+> Thanks for the explanation. So the compression space is just the
+> actual data store backing the zswap/xswap/zram.
 >
->   1) zswap on machines with no swapfile
+> > It's actually really confusing to represent this space as a traditional
+> > swap device - built on the assumption of a pre-defined size limit - whe=
+n
+> > that size limit has already been defined (the memory itself).
 >
->   2) without being asked "how big?" - there is no number I can give
->      that stays correct, and
+> First of all, the traditional swap counter has a very well-defined
+> meaning. It is the size of the memory that, when accessed, requires a
+> page fault. A page fault adds significant latency to memory access
 
-Because you can't answer a question, we have to bend over backwards
-for you? That does not make sense. There are a lot of questions I
-can't answer either; that does not make my pony request more legit.
-Apparently, you can't even answer what max(%) of RAM you swap out to
-zswap in your fleet. One way to get that answer is to find out what
-that % number in the fleet across different years, then you can pick
-up the trend and leave a safe margin. FYI, in our case, that number
-has been stable for our deployment over many years.
-
->   3) the bound should be the memory limit that already exists,
->      not a number guessed at boot that hotplug invalidates or
->      guessed at swapon time that different workloads invalidate.
-
-I am sorry, that feels like a rule you invented.
-
-Let's start with the real question: on your fleet what is the max % of
-zswap memory compared to total RAM?
-
-I am not designing the swap system for hypothetical situations. I
-design it for actual usage. Hypothetical solutions suffice for
-hypothetical usage. No patches needed.
-
-As you can tell, I am less interested in the hypothetical solutions
-discussion. It is not the best use of my time.
-
->
-> This requires decoupling swap *file* accounting from zswap accounting.
-
-What are your thoughts on current deployment usage depending on the
-zswap charge to the swap counters? Changing that will be a
-user-visible behavior change and could break other existing
-deployments.
-
-Chris
+Yeah I agree on this. Swap just about makes resources not directly
+accessible by the CPU act as RAM, whether that is storage on disk,
+compressed memory, or a network resource, all accessed through a page
+fault. I hope we won't make this fuzzy in the future by introducing
+too many magics.
