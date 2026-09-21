@@ -1,55 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 555C74E1C7A;
-	Mon, 21 Sep 2026 17:23:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81AA74DA9B6;
+	Mon, 21 Sep 2026 17:33:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790011396; cv=none; b=ox7Z66M/o7zJD4YQgYAmy9F8v8657YD+nKyhoF7QaoZCuZkRBX5JSCwyKgow5gA2A+cuic/gAkNmdQlELidt9fFgrLHgyKFtaVKfcpx62pSNTnL6+wiUltF3USBx0P14fnCjT8ljP+GZMtIRZ297KKEmIBRVh2V2w7ZaDv+tGks=
+	t=1790012033; cv=none; b=SOT1D6MmwNkcHx5/DKjF379vejvgtmGMuaI7Qr36p6YLsEh3GqPhtEYSAItsiJHWVLw6iNZGI64sGod6CXoJdyF3KPy0pjBQJtJtNGXkjntRNr9xzJlohwqjyk6wRh5Or3313g0VAnPRAWQLjL/Ej0crpyNXDA8JXR3DSutDVn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790011396; c=relaxed/simple;
-	bh=GE7Pp15ua9+0nIRr+aqmuiFCFX0bRcA8pWHoIoDyI4U=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=hjb/Jh4S/qOHcsf9HeUydpIK1BibyHnTNWCOZxhzGWPZOo7j4ni8+dPp0oj8VAwBTDdTGxf2b2JySrDIWpvPMjylojFLw9yv6ZZbNWcsNDnjdQu5rvDKpe5TT9PoF7+VLVfW8HVEf53NjQv3uWl36ppslGKSY1nfyjDD8VNh4Pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O/rO7cOo; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790012033; c=relaxed/simple;
+	bh=uR7wV36xAa8iPqPouAh4nJajwisvFjBFYaA5qZKz864=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=mSfWLJd7Uiev4hOw2uuLL9terIGqo91awuwhNY8eIdKK5jd5MxmMQ8FrwRBuKqmOWLGweL9EOmljxrKXpppZMy5QjHLQDvGbBlA/hjZ757YYyLgG5+0jGQU8ZkSGHFE5RHIQpRws4qeyQrLSy1hXHd3ZToPVlQIRzHLe3sGblBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f1nYUKKA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O/rO7cOo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B43911F000FF;
-	Mon, 21 Sep 2026 17:23:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f1nYUKKA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4F251F00893;
+	Mon, 21 Sep 2026 17:33:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790011395;
-	bh=cvBCBEwzvo5dM+hFdnUoFjkzjksM6/2gzXaPJcwymaE=;
+	s=k20260515; t=1790012032;
+	bh=uR7wV36xAa8iPqPouAh4nJajwisvFjBFYaA5qZKz864=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=O/rO7cOoNfns1nqprM7eB3yzatErXJhxLDasS+Y7EV97Hnh3LW5H6iqUczgIf9DCp
-	 oLLW+gJLOCn8uNa+e48UprFMd9JUxGR+2nLRzVCiWeHkSEO0rHxlrELiYkfl5jAN8I
-	 5eP+uQG1xnHLCXQxGWQxA2d+gD1OUJ/WlqnKOopnSvcQqcHUtnqdbKonampLx0kTum
-	 tfK8OcBG7+Nmg8Xd4qCSHtDeBJ+WmVav2yXYCW3ZbpE/HRjFrRm91N1R4Xyb5+TlNO
-	 L3ZyMFixCQSeh//HoVEWA+NfQ9TryDjWpLMQ0ibW0fYqkidrBSVCgOaqtWl54quno3
-	 bx3kF7lJYY2gQ==
-Date: Mon, 21 Sep 2026 07:23:13 -1000
-Message-ID: <150a0e69f95d9271881d840ad309f944@kernel.org>
+	b=f1nYUKKADbDxvyTGIvuLqeMi6GTZQ3oRCtcLuiunGUURq9/FssEI75Pi209WogUEx
+	 rRCR+xPa1C0uoG1hf2sr3imM+wvIEdWcSC1DFmLB53yXlh4WL3bdV8uI07wwregggP
+	 cc67IVeJ2Flf87UWEW2+kSAbdq3bOb9xbEhxEcd47mP0OhV87hWQfOuaNPw8LnBOow
+	 Q4HF7El8VO+KOZjauX9BkHbS0YvQ+3lbw95iLIXbGbdMP0A16OCpa0Sjt74eRngzP/
+	 n7CtoYT37osoV3AUYfqStZWBEvH+wBL4hxwNRBHpHCNBOvvjUy+mt2gFgvjb8rAGOL
+	 IxwOO7Fonpkng==
+Date: Mon, 21 Sep 2026 07:33:51 -1000
+Message-ID: <ffbe8ebdff9cf70efdec0eed8b37c107@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Shaojie Sun <sunshaojie@kylinos.cn>
-Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
-	shuah@kernel.org, linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org, li.wang@linux.dev,
-	lihongfu@kylinos.cn, shakeel.butt@linux.dev, tj@kernel.org
-Subject: Re: [PATCH 0/2] selftests/cgroup: fix truncated reads of
- /proc/self/mounts
-In-Reply-To: <20260921131556.444661-1-sunshaojie@kylinos.cn>
-References: <20260921131556.444661-1-sunshaojie@kylinos.cn>
+To: Guopeng Zhang <guopeng.zhang@linux.dev>
+Cc: Waiman Long <longman@redhat.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>
+Subject: Re: [PATCH v2] cgroup/cpuset: Remove redundant sched domain rebuild
+ from update_prstate()
+In-Reply-To: <20260920025256.24991-1-guopeng.zhang@linux.dev>
+References: <20260920025256.24991-1-guopeng.zhang@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-On Mon, Sep 21, 2026 at 09:15:54PM +0800, Shaojie Sun wrote:
-> Shaojie Sun (2):
->   selftests/cgroup: read the entire file in read_text()
->   selftests/cgroup: don't crash on a truncated mount entry in
->     cg_find_root()
+Hello,
 
-Applied 1-2 to cgroup/for-7.4.
+Applied to cgroup/for-7.4.
 
 Thanks.
 
