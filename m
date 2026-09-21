@@ -1,67 +1,85 @@
-Received: from mta0.migadu.com (out-175.mta0.migadu.com [91.218.175.175])
+Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 161D4493645
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 11:47:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B32B448F01E
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 11:55:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789991224; cv=none; b=frcugCPeuNMDw3hK8zRvVhA/X7MyVplcXHzCopMgikYzMdnj920pih9Up7GYlxBVxmojy6+5/8587eKH/BDVOCbimz+y6Vupv7dJCUGik1fNKy2VgVzmV/wd2x7yF4myDYGbJqsl7iukE5GCAo3Py1K6F8+MCpPz1XZNA06Wc8s=
+	t=1789991736; cv=none; b=fJuNAEdPJCmdVEY+B0F8HcjH3CoqNoV12LdPMPKikWylzmgL/3giiCCMFZSvzM44Hd16SvcI/Edj1N1OsIAVgv4KnyOxcW1hybZ+Abih4dmqyBRoMVxhYLsZ2KuTZBj26Z4ugWIVExzXYbJkaNEBpVIRPPe/2xUeISAxG/LzBh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789991224; c=relaxed/simple;
-	bh=RS4wOY+QJioWn2TQk9dWx0Y0VJvp9GgHoELvPCPlwGQ=;
+	s=arc-20240116; t=1789991736; c=relaxed/simple;
+	bh=DdTVPz1QfbBgtnVhbDH8nDBRYlMIKdCe0cBp7p+nEA4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kaV/DeDAJaXbv4vfV13WFSNjsiPlRHMcS1qNOR2A8ZZkyswxClhmsB/K1emDqNxofP2AZlx33g2dfl/GzQROYURvAyH0h1Uxob+BNFyORYfkbOMT+mUjHJzNnLSsqJrUMH8m4zZOIP5BM24hZ2ii4rFHi2r+gIWg+F6b8EOcmOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jl4Nnb2D; arc=none smtp.client-ip=91.218.175.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 MIME-Version; b=aKsUSw3GovXee6mqsIeuU4Qso6+PWZ+l5BGqdMGa3Ca+wOp/7zuFYyl/c8pUPbfGVDHompjHfmtMHqEjhkn1yxyIEcKcj3BlIGUQD7Ws3pUlK0AwtTonmlob5tb6EAeSCJhfA1qlnMLUMOBr/nK0dJWCPAcHHeNK6FQhfsC7k4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=cSt71z95; arc=none smtp.client-ip=74.125.228.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jl4Nnb2D"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=RS4wOY+QJioWn2TQk9dWx0Y0VJvp9GgHoELvPCPlwGQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789991218; v=1; x=1790596018;
- b=jl4Nnb2Dy5EL9NNWbh8ffmRN3XuCFwvwlrenmQ6KQTBm3Mlk9b+FZWKMoGxQ7eSNSOiOz+3M
- vy70+G6di+SLND3geXfUSii8gl6236BWs+FPkMHhoNOyAuXyAFxlg6Q7lUuIpEnG9yRd+CVomBl
- 9fJ/dhTUXVWrX3kWwgxPSWvg=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id f94b05048a23a332;
-	Mon, 21 Sep 2026 11:46:58 +0000
-X-Mizu-Trace-ID: f94b05048a23a332
-X-Migadu-Flow: FLOW_OUT
-From: Ridong Chen <ridong.chen@linux.dev>
-To: Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Dave Chinner <david@fromorbit.com>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Muchun Song <muchun.song@linux.dev>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Kairui Song <kasong@tencent.com>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	Wei Xu <weixugc@google.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH RFC 4/4] mm/vmscan: pass scan_control to the reclaim-begin tracepoints
-Date: Mon, 21 Sep 2026 19:46:06 +0800
-Message-Id: <20260921114606.3871820-5-ridong.chen@linux.dev>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260921114606.3871820-1-ridong.chen@linux.dev>
-References: <20260921114606.3871820-1-ridong.chen@linux.dev>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="cSt71z95"
+Received: by mail-pz2-f12.google.com with SMTP id d2e1a72fcca58-8686f46e4adso2400600b3a.0
+        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 04:55:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1789991734; x=1790596534; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4yFs7aKADwEnqQrd+7DVxwZtTJDiMzxWaAyfpMFtjl0=;
+        b=cSt71z95Pwwd+tl8Zw2fR+SC3BkLWDggRiKFaPPr0J3g2IP+7dHY6POnl0ShDX7sdG
+         1f+uI7s9An7OY0SNe5YDID7gaG0rrWtjrjebL7hnfFe7fpBm2BUc1CWleaT9GMUgVw45
+         CdKGqj44SeBfuUcsdnlh65N0nVUb+ttOKtkbrmbrdZrPEr/BuL4sh7GwWb4RpbkBcCgR
+         urgqhzKnGoYt0k/91UGasM+39x6GtwR+0N7/C3KbKbGaVC8pM6Po+UPaW6Kn3zEdVmrB
+         idikAN8BbRxf6WXAGkVE05O+fsuyFCnvrAvRni8YolBBeBAKBTTc0lGQz8tZqJFvwZhv
+         vXgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789991734; x=1790596534;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4yFs7aKADwEnqQrd+7DVxwZtTJDiMzxWaAyfpMFtjl0=;
+        b=BSmdM9s12OMMKLjSizA92U09SvgnVb75EpZbvEgItA2tx4GloOfUNLcpsTjGaF2sjZ
+         /OjYUqNEO1SoPKRttoIITLGycgdKa3YtwYssG603zLiRHL4pU3MdCm9f6ddRqdj57Zez
+         HpQxrNPvg2zAQU+ez82x3yajc9aHMi7kJK6KHgVlCQ42ZjYu8xCgGZQl+AlRq780NkDY
+         upGC9+blHP7etzVuZewH6qTaNiN7X4rEgApNdAsn3zDi/RHkWv1o76Jg3iPCZpcAagvf
+         gktRf4dIdpVJgTCA3tvRHyQxBouhM6doZSTJWj2Ry1Pal2X6czf6/FRh3LB0ElHrrn/3
+         qSQg==
+X-Forwarded-Encrypted: i=1; AKwUvBzjt6ZcYYfECURd5lVTVYWmt77/dZQGxdYUNNPS+YYOJC/8aHqfVy8/NTTwsGJt4ljgWL43vOoT@vger.kernel.org
+X-Gm-Message-State: AFuF++k17o4UpHmZrtWVmpmaDhblKPKu314jxES1Eo17kVyINYXWsOSu
+	EYD6WF4puTpwtZGGWDF2E81NXAhB+62hApXVVSMAolPTPLcVjeQ9W+VMmrY+esPnx1E=
+X-Gm-Gg: AYBFou2XcHtcHeTE/BZGMmKAle2iam1vEsfaF4K7trBh4v5bUnoSBNaYbzoTR/qdMuk
+	OBSKXmEjGD0EkIiyeKznDd7vHGuoNBBoQekSKRTdLpVoBqXinO7qofuJHnzIkrYU09rmKZs8X9H
+	7QMgNpf+WFcoAjvoH/RXUVzDswYl0LCDGWB0LPLzS6zCqnMqhb9kdfHukpcdycl4bgMtfX7trVJ
+	vnkfRpR5u4wfsKeTrjK8mSfDNPy0seXnBYv8e8fsdS04UZAfQTGQzOZmwpk06Z1fOiiiuHO57Fg
+	bLzCd+eQw3YhfWK75qrM+/iqNgtDgf79EEFxogxG8sQRjLOmMCmRNhaGIIfIvgHcMHdFduiER4C
+	d3tj8ZuTEoIMMtMJxDAkEpxeMk028oi9jY517sZF41ivAMk9VUTPlrV76lnGUFrCJdISWcx/Wb5
+	EITF3dBp5Pfi96UWDhrWMjgNJugXD5iVeS6O2PBZPO7ILGKnaxjLpSmy/9NzoQe1LhAf/Pk+5w6
+	1A=
+X-Received: by 2002:a05:6a00:2e2a:b0:878:34d7:6a26 with SMTP id d2e1a72fcca58-87834d76ddfmr7083089b3a.40.1789991733620;
+        Mon, 21 Sep 2026 04:55:33 -0700 (PDT)
+Received: from localhost ([106.38.226.134])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-877a95f915csm3093687b3a.29.2026.09.21.04.55.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Sep 2026 04:55:33 -0700 (PDT)
+From: Julian Sun <sunjunchao@bytedance.com>
+To: linux-block@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org
+Cc: axboe@kernel.dk,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	willy@infradead.org,
+	jack@suse.cz,
+	tj@kernel.org,
+	akpm@linux-foundation.org
+Subject: [PATCH v7 0/3] memcg,writeback: flush foreign bdev mappings separately
+Date: Mon, 21 Sep 2026 19:55:27 +0800
+Message-Id: <20260921115530.1613717-1-sunjunchao@bytedance.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20260917065759.2643940-1-sunjunchao@bytedance.com>
+References: <20260917065759.2643940-1-sunjunchao@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -70,127 +88,137 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Ridong Chen <chenridong@xiaomi.com>
+Hi,
 
-The reclaim-begin tracepoints describe the entry conditions of a reclaim
-invocation, which struct scan_control already carries. Now that the struct
-is visible from the trace header, pass sc directly and pick the fields out
-in TP_fast_assign instead of spelling out gfp_mask and order at every
-callsite. The exported event format is unchanged.
+This series avoids owner-wide foreign writeback triggered by dirtying
+shared bdev inodes. Instead, it tracks bdev targets separately and
+schedules writeback of their mappings.
 
-No functional change.
+Problem
+=======
 
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
----
- mm/trace_vmscan.h | 24 ++++++++++++------------
- mm/vmscan.c       |  7 +++----
- 2 files changed, 15 insertions(+), 16 deletions(-)
+Bdev inodes are commonly shared by many memcgs. Dirtying their pages
+can cause the owner wb to be tracked as foreign, triggering writeback
+of the entire wb rather than just the bdev mapping.
 
-diff --git a/mm/trace_vmscan.h b/mm/trace_vmscan.h
-index c8ac5d4e4043..c9f16267c0a2 100644
---- a/mm/trace_vmscan.h
-+++ b/mm/trace_vmscan.h
-@@ -291,9 +291,9 @@ TRACE_EVENT(mm_vmscan_wakeup_kswapd,
- 
- DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_begin_template,
- 
--	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
-+	TP_PROTO(struct scan_control *sc, struct mem_cgroup *memcg),
- 
--	TP_ARGS(gfp_flags, order, memcg),
-+	TP_ARGS(sc, memcg),
- 
- 	TP_STRUCT__entry(
- 		__field(	unsigned long,	gfp_flags	)
-@@ -302,8 +302,8 @@ DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_begin_template,
- 	),
- 
- 	TP_fast_assign(
--		__entry->gfp_flags	= (__force unsigned long)gfp_flags;
--		__entry->order		= order;
-+		__entry->gfp_flags	= (__force unsigned long)sc->gfp_mask;
-+		__entry->order		= sc->order;
- 		__entry->memcg_id	= mem_cgroup_id(memcg);
- 	),
- 
-@@ -317,17 +317,17 @@ DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_begin_template,
- 
- DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_direct_reclaim_begin,
- 
--	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
-+	TP_PROTO(struct scan_control *sc, struct mem_cgroup *memcg),
- 
--	TP_ARGS(gfp_flags, order, memcg)
-+	TP_ARGS(sc, memcg)
- );
- 
- #ifdef CONFIG_MEMCG
- DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_memcg_reclaim_begin,
- 
--	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
-+	TP_PROTO(struct scan_control *sc, struct mem_cgroup *memcg),
- 
--	TP_ARGS(gfp_flags, order, memcg)
-+	TP_ARGS(sc, memcg)
- );
- #endif /* CONFIG_MEMCG */
- 
-@@ -664,9 +664,9 @@ TRACE_EVENT(mm_vmscan_lru_shrink_active,
- 
- TRACE_EVENT(mm_vmscan_node_reclaim_begin,
- 
--	TP_PROTO(int nid, int order, gfp_t gfp_flags),
-+	TP_PROTO(int nid, struct scan_control *sc),
- 
--	TP_ARGS(nid, order, gfp_flags),
-+	TP_ARGS(nid, sc),
- 
- 	TP_STRUCT__entry(
- 		__field(int, nid)
-@@ -676,8 +676,8 @@ TRACE_EVENT(mm_vmscan_node_reclaim_begin,
- 
- 	TP_fast_assign(
- 		__entry->nid = nid;
--		__entry->order = order;
--		__entry->gfp_flags = (__force unsigned long)gfp_flags;
-+		__entry->order = sc->order;
-+		__entry->gfp_flags = (__force unsigned long)sc->gfp_mask;
- 	),
- 
- 	TP_printk("nid=%d order=%d gfp_flags=%s",
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 2fd9b42f89d8..2fed83738b4b 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -6885,7 +6885,7 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
- 		return 1;
- 
- 	set_task_reclaim_state(current, &sc.reclaim_state);
--	trace_mm_vmscan_direct_reclaim_begin(sc.gfp_mask, order, NULL);
-+	trace_mm_vmscan_direct_reclaim_begin(&sc, NULL);
- 
- 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
- 
-@@ -6926,7 +6926,7 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 	struct zonelist *zonelist = node_zonelist(numa_node_id(), sc.gfp_mask);
- 
- 	set_task_reclaim_state(current, &sc.reclaim_state);
--	trace_mm_vmscan_memcg_reclaim_begin(sc.gfp_mask, 0, memcg);
-+	trace_mm_vmscan_memcg_reclaim_begin(&sc, memcg);
- 	noreclaim_flag = memalloc_noreclaim_save();
- 
- 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
-@@ -7882,8 +7882,7 @@ static unsigned long __node_reclaim(struct pglist_data *pgdat,
- 	unsigned int noreclaim_flag;
- 	unsigned long pflags;
- 
--	trace_mm_vmscan_node_reclaim_begin(pgdat->node_id, sc->order,
--					   sc->gfp_mask);
-+	trace_mm_vmscan_node_reclaim_begin(pgdat->node_id, sc);
- 
- 	cond_resched();
- 	psi_memstall_enter(&pflags);
+In production, almost all the foreign dirtying we traced came from bdev
+inodes. Across our observations, a bdev mapping had as little as about
+10 MiB of dirty pages, yet foreign flushes targeted the entire owner
+wb. On one machine, we observed 599 such works queued on one wb, with
+an average request budget of about 43 GiB per work.
+
+Measured impact
+===============
+
+The synthetic test used a VM with 4 vCPUs, 8 GiB RAM, ext4 and cgroup
+v2, with device write bandwidth capped at 200 MiB/s. Background fio
+repeatedly overwrote a 256 MiB file using buffered I/O, while
+foreground fio performed sequential direct writes. Four memcgs
+generated metadata and buffered writes to trigger foreign flushes.
+
+We measured completed block writes to the background fio file,
+including final sync, and foreground fio bandwidth, latency and
+completion time.
+
+Across three runs per kernel, mean background file write I/O decreased
+by 72.7%, foreground bandwidth increased by 23.0%, and completion time
+decreased by 18.8%.
+
+Metric                         Baseline    Patched     Change
+Background file write I/O (GiB)    6.154      1.680     -72.7%
+Foreground bandwidth (MiB/s)      150.29     184.81     +23.0%
+Foreground completion time (s)   109.203     88.652     -18.8%
+Foreground mean latency (ms)      212.84     172.74     -18.8%
+
+How it helps
+============
+
+Frequent writeback of the file overwritten by background fio reduces
+the opportunity to coalesce buffered writes in the page cache.
+Several overwrites of the same page can otherwise result in a single
+write of its latest contents. Flushing between updates instead writes
+the same page repeatedly, generating more device I/O for the same
+application writes.
+
+This additional I/O makes the device reach its performance limit
+more easily and competes with foreground I/O for device bandwidth.
+
+The benefit is expected to be most pronounced when these conditions
+occur together on the same device:
+
+1. Limited device bandwidth, as with an HDD, makes the additional
+   writeback I/O more likely to saturate the device.
+2. Multiple cgroups perform buffered overwrites. Frequent foreign
+   writeback reduces write coalescing and increases device I/O.
+3. Concurrent direct I/O bypasses the page cache and competes directly
+   with writeback I/O for device bandwidth.
+
+Approach
+========
+
+Following Jan's suggestion, this series records foreign bdev targets
+separately and flushes their mappings instead of their owner wbs. This
+preserves a way for dirty throttling to initiate bdev writeback while
+avoiding owner-wide writeback triggered by these records. The existing
+foreign-wb mechanism remains unchanged for other inodes.
+
+Tracking is best effort: each memcg keeps a bounded set of device
+numbers without persistent device or inode references. Recording runs
+under mapping->i_pages with IRQs disabled, while dropping a device
+reference can sleep. A memcg that never enters dirty throttling could
+also retain an unused record and pin the device object indefinitely.
+Recording only dev_t avoids these lifetime constraints. Device removal
+and device-number reuse may cause an unintended best-effort flush,
+which is an accepted trade-off.
+
+Writeback submission may block for a long time, with up to four work
+items outstanding per memcg. A dedicated unbound workqueue provides
+a separate max_active budget so these flushes do not exhaust active
+slots on a shared workqueue and delay unrelated work. If allocation
+fails, the existing foreign-wb mechanism remains in use.
+
+This primarily affects filesystems that keep metadata in the bdev page
+cache, such as ext4 and other buffer_head users, rather than the usual
+metadata writeback paths of XFS and Btrfs. The decision still does not
+account for how much of the memcg's dirty memory belongs to the bdev:
+even a single dirty bitmap block can trigger writeback of the entire
+bdev mapping when the memcg enters dirty throttling.
+
+Changes since v6:
+- Drop open_mutex and the openers check from bdev_flush_by_dev(), and
+  add a !CONFIG_BLOCK stub.
+- Follow the existing foreign-wb tracking policy: use timestamps for
+  oldest-first replacement and expiry, and allow dirtying during an
+  in-flight flush to re-arm the record.
+- Replace frn_lock with an atomic in-flight flag.
+- Drop WQ_MEM_RECLAIM and explain the separate max_active budget.
+- Guard bdev work submission when workqueue allocation has failed.
+- Expand the dev_t lifetime rationale and filesystem scope, update
+  the foreign-dirty overview, and drop the Fixes tag.
+
+Changes since v5:
+- Fix repeated overwriting of slot 0 in patch 2 and add comments.
+
+Changes since v4:
+- Add before-and-after performance comparisons to the cover letter.
+
+Changes since v3:
+- Flush foreign-dirtied bdev inode mappings separately, as suggested
+  by Jan.
+
+Thanks.
+
+Julian Sun (3):
+  block: introduce bdev_flush_by_dev()
+  memcg,writeback: flush foreign bdev mappings separately from owner wbs
+  writeback: record bdev targets in foreign writeback tracepoints
+
+ block/bdev.c                     |  18 +++++
+ include/linux/blkdev.h           |   4 +
+ include/linux/memcontrol.h       |  12 +++
+ include/trace/events/writeback.h |  22 ++++--
+ mm/memcontrol.c                  | 124 ++++++++++++++++++++++++++++---
+ 5 files changed, 160 insertions(+), 20 deletions(-)
+
 -- 
-2.34.1
-
+2.39.5
