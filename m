@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-88.mta0.migadu.com [91.218.175.88])
+Received: from mta1.migadu.com (out-130.mta1.migadu.com [95.215.58.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BF2232720C
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 03:35:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.88
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5AAE335081
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 03:35:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789961753; cv=none; b=CSNschRmTEGlh5gwD62hW/4/LMEfwSjVrP+g4Ir16nJ498RCgXllK5ExVKYWFjjXN5D4GfuqJiPxYPPK3p8E5DTvet0fnkqGhZXqmrgko2ouZz7B6zY+X6EJLqo0kauhbAQ8TQCoQGJZcJM3hBXdRjMr8gS7JIA61ZP5uXyOGzM=
+	t=1789961753; cv=none; b=EIbZbb9/+PHB1Kevb1CZYAQt4tb+o2JX6OJmPKcWtPt22GU+5kQOkhKN2QIrSEMZFQ/B63NHthwPbDR730JUwLLFiwAXCHWHFgqw5OHmqJUz5s36QAR8NsxQmNS3GI7WgxgpXfSkqZJS1OVwBtit/57GzKmDkwM5aZB0Zy7t86M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789961753; c=relaxed/simple;
-	bh=v0HiealU7885g0c3g+4B6E2DHNlEcOC9YbJ131S/PB0=;
+	bh=T90yU4yQzsA33m2pyuxCSgQK5dK6cah7IeuH2VTNOwo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ap/2Z6MZg8Aulw2cSgwqwB9DtXxsYNcNk2LUQkHl2cR0t3AgZ1NTKtPHShkaFmfpViSzfO4dGNTtZ7ZvolDRrZ0kkaErydl3XR+YUj13iVk5sKExhMK6u76egYgYR/oMtsWYNIfjHElzdM0eZV8fKgPFNaEIDQuKGl1JeVfos1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=g9jqXlu3; arc=none smtp.client-ip=91.218.175.88
+	 MIME-Version; b=hLVZhlUv/bC+Td1Pu2wxTd5nVxLnSDFmpW8f3+44FmxYI3gYdXSSI7+eQRA2DTKkar3wIA7rEjBc5PJiyBYYdWgWwWsDTkJOhLQCkt0MKFrjaS047zXk53k3j09MimdtU6u1h2Fe717Pp/FKfgr8l9lamiU0wfOcAd+xsxq3RyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pj8g1oiE; arc=none smtp.client-ip=95.215.58.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="g9jqXlu3"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pj8g1oiE"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=v0HiealU7885g0c3g+4B6E2DHNlEcOC9YbJ131S/PB0=;
+DKIM-Signature: a=rsa-sha256; bh=T90yU4yQzsA33m2pyuxCSgQK5dK6cah7IeuH2VTNOwo=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789961749; v=1; x=1790566549;
- b=g9jqXlu3rvhX+iwml4Je+I12xJjNktC18AxYcerH4EcSCMOKOfdNZl6FRv9+h6zDq+8Mvrdo
- PWvoOWHb7khbBubbqpZbuDpCrX7dKfpZO2UO76XmZKmbhaCdYLngImK67cddg+c6godc9TsjW5u
- Tb49Or0rKS1kZrkkOzEdnLdU=
+ t=1789961744; v=1; x=1790566544;
+ b=pj8g1oiE/N4ACKjmeVG+Fm3GzfmDhQvEJGg/rMqI0HugYd14zLRuwZXYKhGn1Q7qN6Sk6Hxm
+ qzcBMI3qvohE2c1792gkNK7lOZCwz+6p2aNgcKxf0clqy4bWEPwpGSp4zYeFluicqfAHpFKzYbN
+ 2cdmKztQkFfGDy4Ie1cMzKyg=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9725d05abe37e048;
-	Mon, 21 Sep 2026 03:35:49 +0000
-X-Mizu-Trace-ID: 9725d05abe37e048
+Received: by smtp.migadu.com with ESMTPS id 5a515e88813954e3;
+	Mon, 21 Sep 2026 03:35:44 +0000
+X-Mizu-Trace-ID: 5a515e88813954e3
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: tj@kernel.org,
@@ -40,9 +40,9 @@ Cc: cgroups@vger.kernel.org,
 	cui.tao@linux.dev,
 	cuitao@kylinos.cn,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 4/4] blk-iocost: fix stale comment in ioc_rqos_throttle()
-Date: Mon, 21 Sep 2026 11:34:53 +0800
-Message-ID: <20260921033453.1912971-5-cui.tao@linux.dev>
+Subject: [PATCH v3 3/4] blk-iocost: account zone append completions in latency stats
+Date: Mon, 21 Sep 2026 11:34:52 +0800
+Message-ID: <20260921033453.1912971-4-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260921033453.1912971-1-cui.tao@linux.dev>
 References: <20260921033453.1912971-1-cui.tao@linux.dev>
@@ -56,38 +56,47 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-The comment says that priority-inversion IOs are "punted to
-@ioc->aux_iocg", but no aux_iocg field ever existed in struct ioc.
-The comment was introduced already stale by commit da437b95db83
-("blk-iocost: grab ioc->lock for debt handling").  Update it to
-describe the current use_debt / iocg->abs_vdebt mechanism.
+ioc_rqos_done() only accounts READ and WRITE completions, so zone
+append completions are excluded from the latency window: the vrate
+feedback loop cannot see ZA-induced latency, leaving it unable to
+respond to device saturation caused by zone appends.  Similarly,
+calc_size_vtime_cost_builtin() does not classify zone append as a
+write operation.
 
+Charging (the cost model) and feedback (the latency window) are
+separate mechanisms, so this is not covered by the previous patch
+that prices zone appends.
+
+Treat zone append as WRITE for both latency accounting and cost
+classification.
+
+Fixes: 0512a75b98f8 ("block: Introduce REQ_OP_ZONE_APPEND")
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-iocost.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ block/blk-iocost.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index ec10028249fb..7475a4f79b97 100644
+index 7ce68e2c2e1a..ec10028249fb 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -2751,10 +2751,11 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
- 
- 	/*
- 	 * We're over budget. This can be handled in two ways. IOs which may
--	 * cause priority inversions are punted to @ioc->aux_iocg and charged as
--	 * debt. Otherwise, the issuer is blocked on @iocg->waitq. Debt handling
--	 * requires @ioc->lock, waitq handling @iocg->waitq.lock. Determine
--	 * whether debt handling is needed and acquire locks accordingly.
-+	 * cause priority inversions are issued regardless and charged against
-+	 * @iocg->abs_vdebt as debt. Otherwise, the issuer is blocked on
-+	 * @iocg->waitq. Debt handling requires @ioc->lock, waitq handling
-+	 * @iocg->waitq.lock. Determine whether debt handling is needed and
-+	 * acquire locks accordingly.
- 	 */
- 	use_debt = bio_issue_as_root_blkg(bio) || fatal_signal_pending(current);
- 	ioc_locked = use_debt || READ_ONCE(iocg->abs_vdebt);
+@@ -2609,6 +2609,7 @@ static void calc_size_vtime_cost_builtin(struct request *rq, struct ioc *ioc,
+ 	case REQ_OP_READ:
+ 		*costp = pages * ioc->params.lcoefs[LCOEF_RPAGE];
+ 		break;
++	case REQ_OP_ZONE_APPEND:
+ 	case REQ_OP_WRITE:
+ 		*costp = pages * ioc->params.lcoefs[LCOEF_WPAGE];
+ 		break;
+@@ -2879,6 +2880,7 @@ static void ioc_rqos_done(struct rq_qos *rqos, struct request *rq)
+ 		pidx = QOS_RLAT;
+ 		rw = READ;
+ 		break;
++	case REQ_OP_ZONE_APPEND:
+ 	case REQ_OP_WRITE:
+ 		pidx = QOS_WLAT;
+ 		rw = WRITE;
 -- 
 2.43.0
 
