@@ -1,129 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498112C237E
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 00:53:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD7FF2F87B
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 02:46:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789952013; cv=none; b=jmPJ7so2/X6lAf83QvyvyN9gtonBtyk4FUMWJhBTicV6WGlcySTcgTkDmr5z87FRFiImrft3OWv28f+COYZRIdglhPOwBBdz0YNt7uCEMSl9aIfI8TU66uxhfelmis0SNKfkdTdcuM9u93YqW4Xg+VcVLHRSt5XRE5wBhsPYOaA=
+	t=1789958795; cv=none; b=mfw6IMwYcP99YoLFdXpQq10J2poF+WeTqzEJqi5LZVe1ajZC42uv4x3aQ5i4fy8MtEO9bMygQsgRDhuGAB2Muea0IrmtIQrS97t4uG32zGoZz2aNBWeHRtf19bPyz2mFSjQzHHgr/ryCAVOkmGPtE7oE3ZKlJRn3LtfTIPlcqvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789952013; c=relaxed/simple;
-	bh=uT3QSlJyDb/QyaIb6RQq4e3wjco3xR5/xUinc0PHAM8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BgTDqBBfOsYHxt24NXl5G/XZYd5G+vQ03Rnow4Kbm6Rj/j5/q2EeWY264UNd8/FXoLUAh4JaZFovAmwNFztpznew9sDOF91puYlqGFeQip9Vzr/CHdGGmzzKv/8RZWL9ICZ9VLHJ+ylNFfiSSm390WncJh1SP/BJq7W9iny/zvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kNf4VhZu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789958795; c=relaxed/simple;
+	bh=zrNzY+eAXsNHITbizGrQwVQ8pjNQ61cL9S+ZPXEvtNY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lOQK11LmZccR1+Ta+oEGfDHUuY6GezfDXwqurikcmttUe/6c7XxWXAEhcGjT8lL3xSWgGa2N3FmhbzI609LMUIzi2OUnWBy+4D8UJ6+GHL0XdZzZ5pH2AQKzLu/QQbB7rnG6L+jOchwFKJm7R/zKLBJAr6SVPa9u1fuBfkIACJ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WsSMkVcN; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kNf4VhZu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E001D1F0089D
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 00:53:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789952011;
-	bh=uT3QSlJyDb/QyaIb6RQq4e3wjco3xR5/xUinc0PHAM8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=kNf4VhZuDIvhoHhBEgS5FaNAtmLQtbFJJFaWFUSiDrsrgInPvblGDRq9u0mULquuN
-	 tZyzw3ixN9O4u1QAB64hMMVZMg3hmMC+zByEs1PgUohC64XLZKy4hmToq5yzrIuJTm
-	 LPcqA7i8AdE/fTV3LufjoZRYPKfbFuUG+exErfNeRLQR8mmbLQuKAkSX6JBSXpETAe
-	 Xyg69lEkgO/zPs3I8NKTSURat+Pp1HH17/p+GNEU4e+F+ruHhryYc8XHiAK0a9Uh7R
-	 tuyjb0EZiTtyI+dA7tTm/rYnTtfiULxcMFx3Y/1JUTui5eCDWkDCun6bvABQi34ss2
-	 QI4Y59T2L/oNw==
-Received: by mail-yx2-f12.google.com with SMTP id 956f58d0204a3-66f943b286fso2041333d50.2
-        for <cgroups@vger.kernel.org>; Sun, 20 Sep 2026 17:53:31 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvByHEaF3d8AwwYCE8hMef4YUjHGFWCB+hbrTWsKd8z/bkjO47twNFJ34hShniCtwMmMCB4vHNpll@vger.kernel.org
-X-Gm-Message-State: AFuF++mLoyOOKmWkEtyUwwpaN7J6n4KAcpx42YooPcze3Kfddpaouegm
-	0ZQpvn6PlO2G//dUlDWo+wQZnq6gFUJx1/i4BxBm3u9U8oqBytD9jhTwWCpPnOGJt/VlNXNLTc0
-	Hzm/bFZiqW0Odq6ZVo1TnZEjA69+CvLos35TOupe0tg==
-X-Received: by 2002:a05:690e:813:10b0:671:2228:1137 with SMTP id
- 956f58d0204a3-6717fcd026amr1947180d50.44.1789952010724; Sun, 20 Sep 2026
- 17:53:30 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WsSMkVcN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1789958792;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ybEXVD+RVkifaQltAIcZER0Zvs5L7kxdbiy0I9qQQeU=;
+	b=WsSMkVcNBFDM1veDiNIM/b25sHn634f+mFEFGDMxX/P2cHfMJ7RCFunpyR45quT6phRGHq
+	Yhc4Ij8d4hBlnv2/2w8dR6fpzSWdgvUfcfzKUppPbHKb03jdA4e4HaCZ4Hg8K2PcQdJemg
+	KHbkE/mjLUwL4nufzfdxROruGtzek0U=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-73-oQvblMsgPBuqZZY0a50iUw-1; Sun,
+ 20 Sep 2026 22:46:27 -0400
+X-MC-Unique: oQvblMsgPBuqZZY0a50iUw-1
+X-Mimecast-MFC-AGG-ID: oQvblMsgPBuqZZY0a50iUw_1789958785
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2DE49195422D;
+	Mon, 21 Sep 2026 02:46:25 +0000 (UTC)
+Received: from [100.91.18.181] (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 542A31800352;
+	Mon, 21 Sep 2026 02:46:23 +0000 (UTC)
+Message-ID: <95b36b23-91bd-4546-8090-2cd735efbc1e@redhat.com>
+Date: Sun, 20 Sep 2026 22:46:22 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <CAMgjq7AHRzBsbmGOx0s=TQFBwcn=DEU1naR443sO6x+pJd6hAg@mail.gmail.com>
- <aqBT_35E-eSoN_zj@cmpxchg.org> <CAKEwX=N4aaq_oD2agTUNrUNXhaYGeQ9vxu+dywFvEFgWFi4uQg@mail.gmail.com>
- <CAMgjq7AfNBUpMamcv29JFzpX=7ApNYVLtPjWT4Sm8cXjSLYL9g@mail.gmail.com>
- <aqU81l1oqGItb-0C@cmpxchg.org> <CACePvbWLHAT5DjC=HidzN10XF5_cnkpxXXDR_yfEJjTY_uDvDQ@mail.gmail.com>
- <e42d8bb0bb13067609e8ff8c858a26ca056368bd.camel@surriel.com>
- <CACePvbXDDDHo0rwkR3Ln4==teQugYP2=5y87J+A48Lagk1X_zg@mail.gmail.com> <da13e0e48568da3ccccc304aeb449ababf085e14.camel@surriel.com>
-In-Reply-To: <da13e0e48568da3ccccc304aeb449ababf085e14.camel@surriel.com>
-From: Chris Li <chrisl@kernel.org>
-Date: Sun, 20 Sep 2026 14:53:18 -1000
-X-Gmail-Original-Message-ID: <CACePvbWg3be1KippqraPp6xV0xkrtw0ZAW74tFj8so83+t55dw@mail.gmail.com>
-X-Gm-Features: AcwNN1UZiIocWVlz0qgZ7OJFByEl-O8xTB4E1qJAixnrA0sBJyczejwjOKx08OA
-Message-ID: <CACePvbWg3be1KippqraPp6xV0xkrtw0ZAW74tFj8so83+t55dw@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Rik van Riel <riel@surriel.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Kairui Song <ryncsn@gmail.com>, Nhat Pham <nphamcs@gmail.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
-	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] cgroup/cpuset: Remove redundant sched domain rebuild
+ from update_prstate()
+To: Guopeng Zhang <guopeng.zhang@linux.dev>,
+ Ridong Chen <ridong.chen@linux.dev>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260920025256.24991-1-guopeng.zhang@linux.dev>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260920025256.24991-1-guopeng.zhang@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Sun, Sep 20, 2026 at 2:36=E2=80=AFPM Rik van Riel <riel@surriel.com> wro=
-te:
+On 9/19/26 10:52 PM, Guopeng Zhang wrote:
+> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 >
-> On Sun, 2026-09-20 at 14:18 -1000, Chris Li wrote:
-> > On Sat, Sep 19, 2026 at 3:07=E2=80=AFPM Rik van Riel <riel@surriel.com>
-> > wrote:
-> > >
-> > > >
-> > > > For our deployment, we only compress about 7-10% of the system
-> > > > memory
-> > > > before performance starts to suffer. The feedback loop will scale
-> > > > it
-> > > > back. I am very curious do you have actual work load to swap out
-> > > > 100%
-> > > > of the RAM.
-> > >
-> > > One common workload is a web browser with idle tabs.
-> > >
-> > > Those often compress pretty well, a ratio of 4:1 is
-> > > not unheard of, which makes it easy to fill up
-> > > 1/3 of memory with 133% of memory's worth of compressed
-> > > memory.
-> >
-> > You did not answer my question. You are talking about user-space
-> > processes (browsers). Do you run your browser in the data center, or
-> > is that a laptop workload?
+> Both callers of update_prstate(), cpuset_partition_write() and
+> cpuset_css_killed(), call cpuset_update_sd_hk_unlock() immediately
+> afterwards. That helper rebuilds sched domains when force_sd_rebuild is
+> set before releasing the cpuset locks, so the check in update_prstate()
+> is redundant.
 >
-> The browser runs on the desktop, but the same
-> kernel runs on both.
+> Commit 3bfe47967191 ("cgroup/cpuset: Move
+> housekeeping_update()/rebuild_sched_domains() together") removed the
+> same check from cpuset_write_resmask(). Remove the remaining one from
+> update_prstate().
+>
+> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> ---
+> Changes in v2:
+> - Rename the patch to avoid the misleading "defer" wording.
+>
+>   kernel/cgroup/cpuset.c | 2 --
+>   1 file changed, 2 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 8f24171b6055..d58ecf56f384 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -3039,8 +3039,6 @@ out:
+>   	update_partition_sd_lb(cs, old_prs);
+>   
+>   	notify_partition_change(cs, old_prs);
+> -	if (force_sd_rebuild)
+> -		rebuild_sched_domains_locked();
+>   	free_tmpmasks(&tmpmask);
+>   	return 0;
+>   }
 
-Interesting. The desktop is having a GUI or headless?
+LKTM
 
-> The things we build here cannot be optimized for
-> just one single workload. They have to work
-> everywhere.
+Reviewed-by: Waiman Long <longman@redhat.com>
 
-Sure, but on your desktop or laptop, what is the max amount of zswap
-swapout compared to system RAM? It is obviously bounded somehow. What
-is the actual number across all your deployments? You don't have to
-give me an exact number; something with one digit of accuracy for the
-maximum is good enough.
-
-I am wondering why you keep dodging the question? It is just a number.
-Do you not know the actual number, or do you not want to share it for
-some unknown reason? I shared that our deployment commonly uses 7-10%
-for zswap.
-
-Chris
