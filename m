@@ -1,152 +1,132 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DD254825B1
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 14:13:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB4E4ABBB1;
+	Mon, 21 Sep 2026 15:17:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790000001; cv=none; b=A1GFmYalBMofg7r93xKCIby0h4kOReVP/XwshUyre4fK9CPCnSel9+3Aum1mXGCNLfH4GG4bA8MNX0xWQt4ut6WCgGvDhxsCb9Dz3czeCFUDlAvlviVFUAMkecEmA70j4FZrD3Aq857h5LvpOaTQa/ekFsdSwP2IG6sdU4/XfLw=
+	t=1790003853; cv=none; b=dH2FxkkpJnNtztaXY4gsgX7Xo8xJbpQ6UXxKRcPCPVaUxdN5hj2daCuXSObDQEjkgEltJZztWReEgIY/xo1fmgBobNg7HaIaaT93O/Ry5RvkekhqCLWROdhfAcD4SYpHA8apwCA8KFk7R/vaNu8zJFG0Tz76vlXL8jRHq8Hhy28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790000001; c=relaxed/simple;
-	bh=FPWqC66o0DYZqJN5PzsSkHRliknVuMnTz8yDSq8JJ2M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cvdgDPQF6HkKplQyaXbQfpLJ4hA+KAPaUegLPnV/FuJp4XqA57piNJkUw1VaA3cBqATTjKLWaIFae1dGnyDvcCtonA/Yh/yb8+HFRCo+GC+AlBxudbA29jT7w/8KGTa2ft0eqd+7iRlpG37gQe80cTmPK4/Uf6OD+bl/6ru1VMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=fzu2CmwN; arc=none smtp.client-ip=209.85.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1790003853; c=relaxed/simple;
+	bh=W2+G+uyaywvTjosHHXQQCOH8WG7Itl4tMszraMzJ8Ss=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=naQwsnhRFzu3naDrlWsPC8tbwNo8tnABHTAr9eTgtE5eMB9eLUyiCYfPQ8OWcQnKxAQP26OH+zPEenJGbEV+waV3B1lhaVhvO/slzITZx1B3lYtv2ttajBJ1/+5iaGxv223tBzGQn4l9WBQfPT9eZ1gFyS6R/7dDxnXQnjZNp04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=jfCP2IUN; arc=none smtp.client-ip=96.67.55.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="fzu2CmwN"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-49e73611928so19429775e9.1
-        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 07:13:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1789999997; x=1790604797; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cZmbAJJNnfDZG7kkKrTMELDcFp2a6nfaCSWGLZAt/V4=;
-        b=fzu2CmwNwmu4EzyDm/SS+HyLsxT9GLO6/oTBd7xz4C1+ZERrsqJ/T4lE3y/ntmOUu8
-         iNt49knAFeGGNGAmBdrwAuw+cyegVmc5P1ZaitZYOmDilf8wyaWpGNp9muuEsKRGJpe4
-         W6jo2WRhigpu/r9DDGq+jcywXQZU+N9fHOJkMXis7yh/eIWnYVQ9b5r1PKLKvk9pEHFp
-         Afu7JC4jS14TexS9zgW9KK4b94J1balJ386mJB/75wEtZWWyHi7fpaA4PxYiMFLdlYm+
-         thJMOexv22zR+emVktFgKcg3ZRZ8WM4tezCKgTJIb6FxqH4vAN6MXQKFV4Qus1z1qRQI
-         MsYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789999997; x=1790604797;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=cZmbAJJNnfDZG7kkKrTMELDcFp2a6nfaCSWGLZAt/V4=;
-        b=ryvvjy1lcVzfEDw1tIY50t+Rq23hXW1k+S6pk1ibvYpNHuWk+GziRA6hniQQxxDuG3
-         6FQMWKyAcCqBruYjQ/TaHKnL2YF2tNX7Mifnw+7nW1eFnTi8OwZjZzPWhr/jLYHw8/J8
-         VNEo8E64ZkWc81xRXrdwPAsL7QvHgz1SkXAUzsKISSjNlp6pleou4SbfBuxlkEZqsaEN
-         z5XHBStQk9ZpjJz+3xSr277dK2PUqSudi1c+TsL0BSagMeuyUIbeelyWlrBxIxwlahFO
-         eE51hdTMDxjdW7NMV/SsdkIvbHSm08p6zoZrv92O6je3dfMZLOk/+UMyPwEuhWo6ZImT
-         kHyA==
-X-Forwarded-Encrypted: i=1; AKwUvByKBTj/4Bix7B863s/CVcMM+FtaKOHcByyugJGIJV+PZjK7JTLu1lIgUkJ5cZdIRbIkCqyZ7lJy@vger.kernel.org
-X-Gm-Message-State: AFuF++lGSBrxns9BmPSQnuZ0ZoCs2UVNFuFxkGWh2lshqxb+mi7fxjnq
-	40m/6wv8prVt5EQ09qR8HWoQE+xp5wA+TNVBgfTEtgyvycfMJY6ZMo6Qxv3aHQjFHzk3Fz8Dg6+
-	bCNPCjr4=
-X-Gm-Gg: AYBFou3k1K8RWGdj2dM+yZKEPJ9Tx5QQRgjfzNMvJkAd1aGQsQZPfhhz+5STProWWPx
-	keUDV+ohoEQAG8YTvLef0cSyB7a8Z+aZvqXl9saEn8nrjcrAsZoE+i5/4uvmczPDJKCh+8MdQlw
-	u7dX0uSvucmfmhSUGSp36aIlckBN30fNZ3pBk5sjoEbTCgziRgPCxWJbfMOA9wziQJPOjRaJXHi
-	5ihOjcMOIUOpovkc3gK2DSam3aUqYGM5WzXot23q6Uiyw/mhOO2mVe2rilFbPz6UJlRZjhSxxIZ
-	+EmnadBNIkZOJ8xE0p3aHXigtfSIIhcefXsMMH0aewLPNzC9LgNMJH0DJISzoruvIG9M/z4obZ1
-	1420BEgUwtZ1crlcYQ5wL/bMDSSo2TZq8DDvqOpXK91nnfMXLgyeTZJF4Udoxs76oFrnQYY3xEr
-	YB0jVk8SnKM1ItfHBrcxK0kEznR8AJd4l5fizswbCdZXmvs5XnXixilapEPGn/usgp8b8vpQJWN
-	BgjSIifKil+5g==
-X-Received: by 2002:a05:600c:c0d5:b0:49f:bd43:5a1c with SMTP id 5b1f17b1804b1-49fbd435a63mr227453445e9.15.1789999997444;
-        Mon, 21 Sep 2026 07:13:17 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48724562bcbsm24917482f8f.16.2026.09.21.07.13.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 07:13:17 -0700 (PDT)
-Date: Mon, 21 Sep 2026 16:13:15 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: "Peng Fan (OSS)" <peng.fan@oss.nxp.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>, 
-	linux-kernel@vger.kernel.org, Peng Fan <peng.fan@nxp.com>, cgroups@vger.kernel.org
-Subject: Re: [PATCH] cgroup: use assign_bit() where applicable
-Message-ID: <arE7Zx-ur8W9Jsij@localhost.localdomain>
-References: <20260920022738.3145820-1-peng.fan@oss.nxp.com>
+	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="jfCP2IUN"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
+	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
+	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID; bh=W2+G+uyaywvTjosHHXQQCOH8WG7Itl4tMszraMzJ8Ss=; b=jfCP2I
+	UNOb0CUFjSlH8xD3YQYIQR9UCBcVQgmXPkbNVSQ11bZTMujdHnzgiP2EhpeDGg/7r0zlt3EAt/VOF
+	3DzTuKZJZE3rga59XuztNvS/rLI0vmGbwMEck5RHyf/80WN2O25yCkSTDFNdY8MORT9yZbuewnZbs
+	vSyP/zWbNgOuplhVnp6oHvh1NfE6hMIk6RaDfsW4CKOLnjfZ2rrOeqhecunTfKhGhxn12Xrn67Ggk
+	XhQRHbfgoaFGhcIYiOrWmJ53RRRnZoQ0ZDOiHHH9ZHTgoYbiR5+GKXICfJwLZ5s7qSM01f2SOudih
+	imoBUxxwNDeXpHLIG7/Es1+ge+Uw==;
+Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
+	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.99.5)
+	(envelope-from <riel@surriel.com>)
+	id 1x8fkX-0000000D3NB-3H4d;
+	Mon, 21 Sep 2026 15:16:09 +0000
+Message-ID: <e879ac65cb0940325736df7984c737edf1c6be94.camel@surriel.com>
+Subject: Re: Path forward for Virtualized Swap?
+From: Rik van Riel <riel@surriel.com>
+To: Chris Li <chrisl@kernel.org>, Gregory Price <gourry@gourry.net>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>,
+  Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, Michal
+ Hocko <mhocko@kernel.org>,  Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+ David Hildenbrand	 <david@kernel.org>, Muchun Song <muchun.song@linux.dev>,
+ Kemeng Shi	 <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>,
+ YoungJun Park	 <youngjun.park@lge.com>, Chengming Zhou
+ <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)"	 <ljs@kernel.org>,
+ "Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)"
+ <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
+ =?UTF-8?Q?Baghdasaryan=EF=BF=BC?=	 <surenb@google.com>, Qi Zheng
+ <qi.zheng@linux.dev>, Axel Rasmussen	 <axelrasmussen@google.com>, Yuanchu
+ Xie <yuanchu@google.com>, Wei Xu	 <weixugc@google.com>, Wenchao Hao
+ <haowenchao22@gmail.com>, Jonathan Corbet	 <corbet@lwn.net>, Hugh Dickins
+ <hughd@google.com>, Baolin Wang	 <baolin.wang@linux.alibaba.com>, Tejun Heo
+ <tj@kernel.org>, Michal =?ISO-8859-1?Q?Koutn=FD?=	 <mkoutny@suse.com>,
+ Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan	 <kunwu.chan@linux.dev>,
+ Meta kernel team <kernel-team@meta.com>, Linux Memory Management List	
+ <linux-mm@kvack.org>, Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, 	linux-doc@vger.kernel.org, "open
+ list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
+ Kairui Song <ryncsn@gmail.com>,  Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Mon, 21 Sep 2026 11:16:09 -0400
+In-Reply-To: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+References: 
+	<CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+	 <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org>
+	 <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+	 <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F>
+	 <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
+	 <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
+	 <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
+ keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
+ eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
+ Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
+ lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
+ dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
+ mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
+ gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
+ r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
+ WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
+ 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
+ Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
+ +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
+ g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
+ KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
+ fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
+ 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
+ G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
+ okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
+ TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
+ cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
+ omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
+ QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
+ c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260920022738.3145820-1-peng.fan@oss.nxp.com>
 
-On Sun, Sep 20, 2026 at 10:27:37AM +0800, "Peng Fan (OSS)" <peng.fan@oss.nxp.com> wrote:
-> From: Peng Fan <peng.fan@nxp.com>
-> 
-> Convert open-coded if/else with set_bit/clear_bit and their
-> non-atomic __set_bit/__clear_bit variants to the assign_bit/__assign_bit
-> API.
-> 
-> Done with Coccinelle semantic patch:
->     // set_bit -> clear_bit => assign_bit
-> 
->     @@
->     expression cond, bit, addr;
->     @@
-> 
->     -if (cond)
->     -        set_bit(bit, addr);
->     -else
->     -        clear_bit(bit, addr);
->     +assign_bit(bit, addr, cond);
-> 
->     // clear_bit -> set_bit => assign_bit
-> 
->     @@
->     expression cond, bit, addr;
->     @@
-> 
->     -if (cond)
->     -        clear_bit(bit, addr);
->     -else
->     -        set_bit(bit, addr);
->     +assign_bit(bit, addr, !cond);
-> 
->     // __set_bit -> __clear_bit => __assign_bit
-> 
->     @@
->     expression cond, bit, addr;
->     @@
-> 
->     -if (cond)
->     -        __set_bit(bit, addr);
->     -else
->     -        __clear_bit(bit, addr);
->     +__assign_bit(bit, addr, cond);
-> 
->     // __clear_bit -> __set_bit => __assign_bit
-> 
->     @@
->     expression cond, bit, addr;
->     @@
-> 
->     -if (cond)
->     -        __clear_bit(bit, addr);
->     -else
->     -        __set_bit(bit, addr);
->     +__assign_bit(bit, addr, !cond);
-> 
-> Signed-off-by: Peng Fan <peng.fan@nxp.com>
-> ---
->  kernel/cgroup/cgroup-v1.c | 10 ++--------
->  kernel/cgroup/cpuset.c    | 16 ++++------------
->  kernel/cgroup/freezer.c   |  5 +----
->  3 files changed, 7 insertions(+), 24 deletions(-)
+On Sun, 2026-09-20 at 23:43 -1000, Chris Li wrote:
+>=20
+> I am sorry, that is not actual user usage. You need to start from an
+> actual usage case: I have a workload X, only want to give limit Y for
+> the cgroup jobs but with Z SLO requirement. That kind of actual usage
+> requirement.
 
-Nice use of Coccinelle,
-Acked-by: Michal Koutný <mkoutny@suse.com>
+Limiting how much anonymous memory can be zswapped
+does not guarantee an SLO, though.
 
-(You may consider sharing an adjusted variant for
-scripts/coccinelle/misc/ via cocci@inria.fr ML.)
+We have seen plenty of examples in practice of
+workloads that have swap DISABLED, and are still
+thrashing, because part of the working set of
+that program is in the page cache, and that still
+gets evicted.
 
+The way you can guarantee the workload is not
+thrashing is to limit the total (anon + file
+cache) address space of the program to within
+some size.
+
+Anything else is not a guarantee.
+
+What is it you are actually asking for?
+
+--=20
+All Rights Reversed.
