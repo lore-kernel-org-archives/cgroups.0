@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D7623AB285;
-	Mon, 21 Sep 2026 19:37:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4C13AFD08;
+	Mon, 21 Sep 2026 19:37:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790019437; cv=none; b=nPsGJzfTyduMS+f5dGPZFf8Jy9UN3brRnuyCPJXjZ3q/CH/c/JHh2e24TVW9oeVOy/QU85eTjiNbvbmTxWQkCne80VbS6ejmNoHUp5DmpNrAQENENqOwy6MotRi4+Dl2l8R/BH+nf9Y3cGjKm7o0hwee38BbgyJiaQckH3AZHOk=
+	t=1790019438; cv=none; b=JzJJ33bjkIa7SSDuboj9Jt7RYFVevDmHaUrt5wvMJ7aoHR9VS0yjiA9TM8TDC+o28nfELh5QL/HpyhQT0Z+BPj28zX8yUHluhr4z4zP8ODxbJ48WVGhO6YvkvAhZ4R7hhwvgq9WK2zEpZwhzHo9ey8xwPVedJuWUf27F+tSi5Fk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790019437; c=relaxed/simple;
-	bh=bjtvupucEyb/Lj+tMZY1BxWruj7KXDijzJrlHWmBV1Q=;
+	s=arc-20240116; t=1790019438; c=relaxed/simple;
+	bh=UEhp+M6uzGZAoB1SP2XF8MMdYUEVtqe4WaLWbKs/7U4=;
 	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=iLAaUmPo6RDvDVrYU1mSvTFj5Rc53Xy5qa2BlXrZM7jEHZvkbH6e6+oXgKIoxdVv4cfMvSK5FrNedrI3Gy9GfEBBxap/MiZOtoiJYcFQZ92rPrNLH5fC0ItvQAW2s56F8Ib+NVKuQi7ajs0WrYOeCXwyFLWo3c2azzbZALxc0Ek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RAzZx6Zy; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:MIME-Version; b=D4yCKjM+dCxXSvVe1u8FPNVewozDrn+xjFdGzk3cmB8DYcW1N7msFDmrfokvAMTISJyPIwdgEBRMVny+11tm0v51uW7qBmoGpPqZv4DmrzMqoKqygb0lbymbT1zKl+yDJ/OudbiSYWuFfqIjUiUWQrEvheG5kIajjDpVSqaDwwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b68eWj3Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RAzZx6Zy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF79B1F00898;
-	Mon, 21 Sep 2026 19:37:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b68eWj3Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D90E21F000FF;
+	Mon, 21 Sep 2026 19:37:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790019436;
-	bh=ySzWx1xSQBsNp+c9aoHmykOTuTGRcZG9S6R1gGtJWhs=;
+	s=k20260515; t=1790019437;
+	bh=D4BUo3gWAt0lmzTIDyeCjhR1jQ3mSGxnxe6GUia/2CQ=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=RAzZx6ZyrY+ItF5e6rOMHjxYj4h0Kp25Q+doLBaIJd8OL5PTuBzV2sk2detBwS5PZ
-	 OQTIh7C7M4xhwff6WTEoZwZ50x+jWI8jQL/iAnB5SsMTdMgKC4U4MW5aV+xyiglf2P
-	 MWJ7V2FimofnSXMaEPM0Xe3gyKrX3elfb9UvAdA4dlPGSFgCRkPANqAgnCK4WSZhoH
-	 DO4ciOs+Y82mgmXDse05uSI9RB1y/VAlXpqlhCOCM7WNcs3yb47P5zpTNwQlppQ/7A
-	 dXl5S6KgLHjJtgVub02NqyNe5cZBrlpF4BBL9BOy4uE6oTiH9g2bDXOQWduaLRKt0j
-	 mtB4j3uY789aQ==
-Date: Mon, 21 Sep 2026 09:37:15 -1000
-Message-ID: <e95fad14874587df6ca17c5cf767d24e@kernel.org>
+	b=b68eWj3ZD68iF7854hRzWquQQGmKfF6p3mP1x5Jb4S1039H7EnPt/hUPkCRZN8glz
+	 B32zhonmRE88enzDEdMg86t2B06HC54jGkUl4QY4pvAI1ASQS9NYehm+z4feP8ktEu
+	 uj/raKc6UlTeCUenbXq8VQzvyeCa92EKu7M5IT6mygzj3O4wTiditpqBeydFao7Z11
+	 rG2ZguL6UOI/cdkx3wsQcy9UKLnHCqbQkHZ8y0sI1P31IQY4F0QFvcl7ovaTnqfxxA
+	 c8zl5GeTxy/ncdPLT6AuYEpsaYxUI3+Jsr6v13BJDUmmoG0YgaxYjw43pTLO/bsX0O
+	 Uxz04TGI2Ezyw==
+Date: Mon, 21 Sep 2026 09:37:16 -1000
+Message-ID: <7203f0453d62336bb1ca712c8e7cf569@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cui.tao@linux.dev>
 Cc: tj@kernel.org, josef@toxicopanda.com, axboe@kernel.dk,
@@ -35,11 +35,11 @@ Cc: tj@kernel.org, josef@toxicopanda.com, axboe@kernel.dk,
  linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org,
  eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net,
  linux-kselftest@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
-Subject: Re: [RFC PATCH v6 1/5] blk-iocost: add BPF struct_ops cost model
- support
-In-Reply-To: <20260918055001.1273840-2-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v6 3/5] blk-iocost: add iocost_ioc_tick tracepoint for
+ per-period device summary
+In-Reply-To: <20260918055001.1273840-4-cui.tao@linux.dev>
 References: <20260918055001.1273840-1-cui.tao@linux.dev>
- <20260918055001.1273840-2-cui.tao@linux.dev>
+ <20260918055001.1273840-4-cui.tao@linux.dev>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -51,18 +51,24 @@ MIME-Version: 1.0
 
 Hello, Tao.
 
-On Fri, 18 Sep 2026 13:49:57 +0800, Tao Cui wrote:
+On Fri, 18 Sep 2026 13:49:59 +0800, Tao Cui wrote:
 
-> +	mutex_lock(&iocost_bpf_reg_lock);
-> +	{
-> +		struct iocost_bpf_model *other;
-> +
-> +		list_for_each_entry(other, &iocost_bpf_models, list) {
+> +	/*
+> +	 * vrate and period_us change right below; snapshot the values
+> +	 * this period ran in so the tick below reports the period's own
+> +	 * parameters instead of the next period's.
+> +	 */
+> +	tick_period_us = ioc->period_us;
+> +	tick_vrate = ioc->vtime_base_rate;
 
-No need for a block to scope a variable. Declare it at the top of the
-function, or in the body if it has to sit inside an #ifdef block. Same for
-the other blocks in this patch and the cursor block in the 2x example
-model.
+Everything the tick reports is already final at this point. busy_level
+was just computed, running and cur_period haven't changed yet, and
+nr_active and usage_us_sum are complete. Can you emit the tracepoint here
+instead and drop the snapshots? The event can then read the fields
+directly and the only cost outside the static key is the nr_active
+increment.
+
+Looks fine otherwise.
 
 Thanks.
 
