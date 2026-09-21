@@ -1,176 +1,172 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E2E949A3DC;
-	Mon, 21 Sep 2026 09:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5AC33AC0C7
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 09:44:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789982929; cv=none; b=acpyy6ZXnHuo/bglX5iP+YPnmBGw+2uBydQLi4Z8QCqujtaETkfJ1yeTJXShP1+UpaaQZrd0+4iMF/sigAOTEeQ0paFyiuMGqopmLIw2ILPbTQHVNOJBUFc70KpmI1k6+Dy/BBwmndUovD7A56cQEnXqzmyFs/wdQ+R3pwgkTNI=
+	t=1789983853; cv=none; b=TJzBfpzEnU2Eew+5DR9S47cUU5u1xZ328xnnlvMMGG3a2pqeBKhtM3YF1PF9dLpkJydtfzEWF400rLEcB6Ze/igMFIZAChUpUcY+wgYFAQvn0SFi5rlIDBzMj8RcYgV8GuRFy6YEFBDRgKRkS+dRhNfipafCgWvUsi6GodRkmLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789982929; c=relaxed/simple;
-	bh=2ja0iXhncaSOLX4279w1X4woaAq7vhERXDmpS9kJ4oI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ih8zIlNSwccfcSU66qdyvXz0L541S8A6VJreZ+HsySScI3WUuruiGq1D8ycNLCyIp06j/de3lzZL7fa0FEK4dGvYsIzN0ecZMWtPmth2wWEA1EuGgWhaFsWjOeWgj+BnhnGGJedQBMwy9aWBD+nTS96KpdnBjPQ+Kr3dUMfq0JA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=LbpNXzuF; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1789983853; c=relaxed/simple;
+	bh=e8UbLM76z0pEEVd3kFwvexh1litq+aFnA/e+aZEDGOM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lKa6tL1GLptT+yDRPwwP3ymjDrxAD2AMwG1YtFhY3+52fkF94b7wng1p0Qo0c5V9jp6wr5XezvUofTY3xjJQjZBT53/tvdVG4UTi1tZphpNtkmoaCN14cFjPAsderGWmi5CM+r2fBuW3nL8uVCr1EfHnRsLv4QtXb1J/d6GaRA8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0WzrlNe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="LbpNXzuF"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68L7ZbnX672354;
-	Mon, 21 Sep 2026 09:27:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=G1939M
-	Elcb2kM01/7HPbHzZLx6pN/KmlSSE/eI9FBUg=; b=LbpNXzuFadRu4xefU1BRaQ
-	h06fCzfQKzfgJVO+GdlysRBuw3CYS0h9INHzdvY3mycdGE8B4aCXmajbflhXM83m
-	ptcP7kCNPw7U5yE7EQVhYZbolmvC65PE01R+sPRX1TAwDsp3zu59hoqOFt/AvSFu
-	5pqA8S4gXwqDoq7dFjtx3V6977yRg6lME+gwPDU4gqT+I3OVD5aSSVh7R8w6dn0T
-	kiKHMCbbohscsdNiKn1Zx2pPlBr3PIYgVRxD/D5LlFRG64591dn0jOnilV2QvhBv
-	bToDpdeuPAeQZrnWFVRBLnCUhYPuTDfHfi8SVj+Rm2GBZJhlYSmRWoRw9xze2Cvw
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gske17ksg-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 21 Sep 2026 09:27:30 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68L7HTui924403;
-	Mon, 21 Sep 2026 09:27:29 GMT
-Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gt4qq4sv7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 21 Sep 2026 09:27:29 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68L9RTIS62783920
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 21 Sep 2026 09:27:29 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EAD7558063;
-	Mon, 21 Sep 2026 09:27:28 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2F3D55804B;
-	Mon, 21 Sep 2026 09:27:14 +0000 (GMT)
-Received: from [9.61.138.180] (unknown [9.61.138.180])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 21 Sep 2026 09:27:13 +0000 (GMT)
-Message-ID: <37de70f6-67f8-466f-a267-03584973dd3a@linux.ibm.com>
-Date: Mon, 21 Sep 2026 14:57:12 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0WzrlNe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ECDE1F0089D
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 09:44:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789983851;
+	bh=iT8if2mD/aPImn8Sm68Z/gW49Co1dlEv8RYUDg0WoK4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=l0WzrlNeFwS35n4gD5mWRMLGPAYWMSYHLNUgBqszppDslumljtwnzJCATFfAxhlTv
+	 3vP8gEA4yIAFU4MKa9qwitfabtnstPyXxfTTCTZcxlqaXxwij/lrm+rq4W9nxqB7B1
+	 5QOSXr7J6whdBgyS8PgRyKnVveY41m8wF4eO4f4D+sWe3UbmLEnlEORhFqt1TbAvMQ
+	 b0vsWPUQbVdydRtevpYz45puCriu7BKH6N5iMC5nZt6iC26FE9VSmadsIl6kfTY1Pl
+	 5KTu037fLirhUYa9/ZvahySuWL/y9Bv1j+UgbkQwJcSHS/0ASPeUDTzGeJZHzdYtgf
+	 icnBxmjjxFXKQ==
+Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-6729c4030f0so1169434d50.2
+        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 02:44:11 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBxJzmmOUv4+KzkXskoQz5AFxzrurt7yXpW3P3TbmWf0ZuTdB6TKa+CBDLdmE4JXI2K697juIW5u@vger.kernel.org
+X-Gm-Message-State: AFuF++nzyrDg5oAqCtlF6ukreT8ICnEP2BTUHHIMWLm1Bjf2mjSJfhV7
+	M3x5Uh6/9akD21CpWBhNb6VSrjzo7nTBAVTfDnczc17JGN+sDezG2Db0EyFABg0dNAEOODbeUSU
+	XXFLaE2tc7X04clzOVJpYh9mGxO4IOTLh3sR+BJXnTg==
+X-Received: by 2002:a05:690e:1206:b0:672:aad4:3ff5 with SMTP id
+ 956f58d0204a3-672aad4408amr1095386d50.62.1789983850636; Mon, 21 Sep 2026
+ 02:44:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/3] blk-cgroup: store blkcg in bio instead of blkg
-To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Josef Bacik <josef@toxicpanda.com>, Tejun Heo <tj@kernel.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Randy Dunlap
- <rdunlap@infradead.org>, Coly Li <colyli@fygo.io>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Alasdair Kergon
- <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
-        Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>,
-        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
-        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
-        Youngjun Park <youngjun.park@lge.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Bill Wendling
- <morbo@google.com>,
-        Justin Stitt <justinstitt@google.com>
-Cc: Yu Kuai <yukuai@fygo.io>, Christoph Hellwig <hch@lst.de>,
-        Tao Cui <cuitao@kylinos.cn>, linux-block@vger.kernel.org,
-        cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-        gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, llvm@lists.linux.dev
-References: <20260920092351.2434283-1-yukuai@kernel.org>
- <20260920092351.2434283-3-yukuai@kernel.org>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <20260920092351.2434283-3-yukuai@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: -Xd8a0RVEhrxDFm6gn4h3GOonDYckOi9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIxMDEzMCBTYWx0ZWRfXyA4xNH3cYzqc
- l3LhAHGkDdB9wr6wJVvzkOiW0PLTrY+6N2xnfwVvAXBEgUZUUlnqQoZ9S/t2ec53rKELusYcvWT
- di0gP2G3AgYQrqIZGwv4XAk6ZTbicrvfmdi3M2UDvbThVuKLxf2bVg5EnsFXBr4KXrs6etQpgoD
- euKLu2Q+XaIsRVuhlHm+asbpr7zvK5ks3HxoZmC3tfKIKTo9gLj/L+nXXm8Qa6LpaYS6fCQWKwA
- rPtKbOsDw0UQzNsyd8H9bnPf3SqR3/y1I/PXuxjss5kLLxairvDG61ZUizIHrj9aHnJa9muRUGp
- 7oMtV5GSfddGruww+e3uDCJcaCC0OqzGH5jLo19DzokCNvtkRFr5gRuQY3TQAjpzacqfLjYt61q
- p4U3ri+iYIaoZm7NV0kKr27cQE0po2JDzt0VLOolD+KbjSIIi30aCQOJhnnHY4hngd24Su44C9I
- iTTkkhvJogiX4hApA1A==
-X-Authority-Analysis: v=2.4 cv=O/KsLx9W c=1 sm=1 tr=0 ts=6ab0f883 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8
- a=yt32EUx3BFOMUVNgjeUA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIxMDEzMCBTYWx0ZWRfX5rV0t/6BeebN
- XqLIK4QGbSN4xT9UKi23paOxlW7Ykt3xnAjLGUCmr0jYvC/s6nTF8lOI7DuZlUqbCJZ4FsSaWjL
- tAtASM6ortzkp/bMC84v/5e+hKTSbak=
-X-Proofpoint-GUID: STTiMO6o3fOhik_S7E0XjsEtuaK9UoBW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-21_03,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 phishscore=0 impostorscore=0 suspectscore=0
- bulkscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609210130
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org> <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+ <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F> <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
+ <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
+In-Reply-To: <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
+From: Chris Li <chrisl@kernel.org>
+Date: Sun, 20 Sep 2026 23:43:59 -1000
+X-Gmail-Original-Message-ID: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+X-Gm-Features: AcwNN1UvMXXPXLi0GhVBjP_wTYqT1-_o3r1PAGjjggfPSSuKF_y4-p-b05lQBwE
+Message-ID: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Gregory Price <gourry@gourry.net>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>, 
+	Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
+	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
+	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 9/20/26 2:53 PM, Yu Kuai wrote:
-> From: Yu Kuai<yukuai@fygo.io>
-> 
-> A bio currently stores and pins a queue-local blkg. This forces bio
-> association and remap paths to look up or create a blkg even when no
-> blkcg policy will use the bio, and ties the stored state to the current
-> block device.
-> 
-> Store and reference the queue-independent blkcg in the bio instead. Add
-> helpers that lazily look up or create the queue-local blkg when a policy
-> needs it, and pin the result until the bio changes devices or releases
-> its cgroup state. Look up and pin existing blkgs under RCU, taking the
-> queue lock only when a blkg may need to be created.
-> 
-> Keep completion and accounting users lookup-only when they do not create
-> a blkg themselves. In particular, blk_cgroup_bio_start() only accounts a
-> bio when an online blkg already exists. This avoids creating a blkg
-> from the unconditional accounting hook when no policy is enabled.
-> 
-> Protect every rhashtable lookup with an RCU read-side critical section.
-> Annotate the lookup helpers and recursive wrappers with
-> __must_hold_shared(RCU) so Clang can verify that contract.
-> 
-> Before entering a bio-based driver's ->submit_bio(), drop the pinned blkg
-> after blk_cgroup_bio_start() has completed bio accounting. blk-throttle is
-> the only policy supported by bio-based queues, so no queue-local blkg
-> state needs to enter stacking drivers. The queue-independent blkcg
-> association remains attached to the bio.
-> 
-> If blkg creation fails while walking down the hierarchy, use the closest
-> available ancestor and update the bio's blkcg association before
-> recording the blkg reference. This keeps later CSS ID hash lookups
-> matched with the pinned blkg.
-> 
-> Signed-off-by: Yu Kuai<yukuai@fygo.io>
+On Sat, Sep 19, 2026 at 3:53=E2=80=AFPM Gregory Price <gourry@gourry.net> w=
+rote:
+>
+> On Sat, Sep 19, 2026 at 09:02:28AM -1000, Chris Li wrote:
+> > On Sat, Sep 19, 2026 at 6:08=E2=80=AFAM Gregory Price <gourry@gourry.ne=
+t> wrote:
+> > >
+> > >                         Memory Post-Compression
+> > >  |[CD][CD][CD][CD][CD][CD][CD][CD]-------- free space ------------|
+> > >    ^----------------------------^
+> > >          Compression Space
+> >
+> > Thanks for the explanation. So the compression space is just the
+> > actual data store backing the zswap/xswap/zram.
+>
+> No.  That is not what I said.
+>
+> I said
+>
+>    It's the *amount* of memory consumed by compressed data,
+>          including the metadata associated with it.
+>
+> I do not know how to be clearer than this. It is an amount of memory.
 
-Looks good to me.
+Sure the amount, that is what I have in mind as well. That is why I
+said swap counter.
+>
+> It is not the memory itself or an abstraction to describe how much
+> memory, it is literally the active amount of consumption - a number.
 
-Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
+Yes, compress zswap counter.
+>
+> > Maybe we need a separate counter to track actual memory usage,
+> > regardless of compression status.
+>
+> the separate counter is... the existing memory and zswap counters.
 
+Exactly. So, did that solve your problem? If not, why not?
 
+>
+> > I want to add support for your usage case as well. Please clearly
+> > specify what user usage you want, what the expected outcome
+> > is, and why you want that.
+> >
+>
+> I want:
+
+I am sorry, that is not actual user usage. You need to start from an
+actual usage case: I have a workload X, only want to give limit Y for
+the cgroup jobs but with Z SLO requirement. That kind of actual usage
+requirement.
+
+You are basically saying you want a pony. I also want an antimatter
+pony. Let's battle with our ponies.
+
+>
+>   1) zswap on machines with no swapfile
+>
+>   2) without being asked "how big?" - there is no number I can give
+>      that stays correct, and
+
+Because you can't answer a question, we have to bend over backwards
+for you? That does not make sense. There are a lot of questions I
+can't answer either; that does not make my pony request more legit.
+Apparently, you can't even answer what max(%) of RAM you swap out to
+zswap in your fleet. One way to get that answer is to find out what
+that % number in the fleet across different years, then you can pick
+up the trend and leave a safe margin. FYI, in our case, that number
+has been stable for our deployment over many years.
+
+>   3) the bound should be the memory limit that already exists,
+>      not a number guessed at boot that hotplug invalidates or
+>      guessed at swapon time that different workloads invalidate.
+
+I am sorry, that feels like a rule you invented.
+
+Let's start with the real question: on your fleet what is the max % of
+zswap memory compared to total RAM?
+
+I am not designing the swap system for hypothetical situations. I
+design it for actual usage. Hypothetical solutions suffice for
+hypothetical usage. No patches needed.
+
+As you can tell, I am less interested in the hypothetical solutions
+discussion. It is not the best use of my time.
+
+>
+> This requires decoupling swap *file* accounting from zswap accounting.
+
+What are your thoughts on current deployment usage depending on the
+zswap charge to the swap counters? Changing that will be a
+user-visible behavior change and could break other existing
+deployments.
+
+Chris
