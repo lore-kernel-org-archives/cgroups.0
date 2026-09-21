@@ -1,173 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E45B4C10D1;
-	Mon, 21 Sep 2026 17:58:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA8847532E
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 18:10:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790013483; cv=none; b=T0LwsbojI20UAoXb7qesBiKE5MtdLMmSBfaLQuz5pDpm8Jug3VNj13OD0CzVWXjkc3IBA53V/BiyHGOxF69UavTzQMagt+B7LcvN6VdSO4VVIaRbgK28U5cydAWJjvXDMiOv7aeAavnmfQFiGoL15BGWyFBPVVacuFS7r1p6g7U=
+	t=1790014258; cv=none; b=iZn8jLKALmblVe9AN5bZPytAL9ONE/7hMBSlqQ/9BC8lCdJOqXaYQXhTJOc4phgiCgm6UJCh7tg0ZqRCKs8LcJYh8ilczb482rmXnQE8WSEE5PT6eUysQiMt2lL9utKXF9nxHUWXLUANQCDDqwQn/UziUVlBKvnLWLTrJ4QoNcY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790013483; c=relaxed/simple;
-	bh=ACnVqDRu9L4EX0PIQzq+ln5rZQhr/h9DYNn8XFGJUm8=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PSmAaMr63TIImloQBey7PlsTzEu9Q8Lea+xGZucoESd88z9lbuC64RO2MNlEHcx0b3zct4FZsVNfqWFyaq89h0YkUr1avJWWg65J7n7er8nJW/dEUCh0JGUMxhAlxF1RbFgZpJzbHGOuM386a9jGJlXJ9Ast31TuzXMsq2kMcbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/sDK9og; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790014258; c=relaxed/simple;
+	bh=A4YlHk0Z4dBpT4St85qh+RwCN1WxOsQET3StnHyFn1k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ixr+uY1ReCVxxT5UTnki8h4XGDSUYdOvYujjGM8l5KEXNwff04QpGcFQ0KpnqtEnxcrln06CyQeGFpSYsJMtPjFPDteV1hQkdpF0qJAc3aRi8Qbrdo0oVj+yJzwq+hsReTxHIwAooWIxFXnv2OQwqAAT/epsFSCTGnrKM49HB0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IH5rwEdk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/sDK9og"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 904521F000FF;
-	Mon, 21 Sep 2026 17:58:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IH5rwEdk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0C0C1F00898
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 18:10:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790013481;
-	bh=VrEKRxhpsxO4YB1Z88WoC1VfhzGFQ3EMsTjDujrRO+w=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=R/sDK9ogDpGJxJewL8iIUth9DWQnev+2MEzZXFhD0YypTxIon+lddkV/B5MiXsboO
-	 byMrkKP0wfUx7XngMjTu9nAl2JaQK7zF3Phju/+ez58bU954kYLbxc8z3/4Vc0WgzQ
-	 KOftHb5AUK5N9gFffvyEvRM47sRdl27CRx18LUuqQktKtMjB9/XICkbjwojAmHMCx0
-	 IOUpxI7tR5Dak2iI8yZqV+B2DzvoXQOeYv7BXJA3uNEFbHCW1NXGE79SgsXboqYDFB
-	 G+yzrNcbI31AM4MpDGbVDD6WgYVtVj6uG6HlTqlFELJEHb+bHt6BsCAnyTE5hCf2DX
-	 y4CbMiaMOzh0w==
-Message-ID: <b15c63490f9164bf46d68ff3ec5dfc02@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Julian Sun <sunjunchao@bytedance.com>
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-fsdevel@vger.kernel.org, axboe@kernel.dk, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, willy@infradead.org, jack@suse.cz, tj@kernel.org,
- akpm@linux-foundation.org
-Subject: Re: [PATCH v7 2/3] memcg,writeback: flush foreign bdev mappings
- separately from owner wbs
-Date: Mon, 21 Sep 2026 07:55:17 -1000
-In-Reply-To: <20260921120658.1627992-3-sunjunchao@bytedance.com>
-References: <20260921120658.1627992-1-sunjunchao@bytedance.com>
- <20260921120658.1627992-3-sunjunchao@bytedance.com>
+	s=k20260515; t=1790014256;
+	bh=wuTO6WkU+BVPbOKs1CY34gM4QOwUjJ4/vjC8gwb3pGc=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=IH5rwEdkNykcUif9gMv8j9TJ/wUud26NxLv/E1xqwBprlePzeNnePoOVJJw8rMNFJ
+	 cK/oSe/NAZJjaWT2u099PGQz6q4UVexLV/Y3n3dZap0V56CpgxOnRHoubF/ywKCDPU
+	 QL91PXMq4O2ETLWD3Sj4Ii5oxgOBg+pH3B9pHSUDXqZcgrvRDZyvgdZEFfbJ8IrM41
+	 Ycm6eERSfkAZDMqmlgb6Rq0FjL2NO2D9qet2y8FcgEWNVybC2D0UYDN4tlOsATqgkp
+	 9Uw56dxmaN05GTx9h8mRT1ZVe76X9nt+h2gGv6Dr9f7kVsqRbbTemnS/goUrsBjcj/
+	 foL3CBj/yz7rg==
+Received: by mail-yx1-f46.google.com with SMTP id 956f58d0204a3-6714595153cso115917d50.0
+        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 11:10:56 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBw0b35AXA0t0FWnLBYSZ0agvY+niWxtb+zcDj4kBJ7a2H22VCnU2aeT2B7R0PRU/oKnveV6qZqm@vger.kernel.org
+X-Gm-Message-State: AFuF++laK2DZTNf2sCgBtvX3aZ2kwJTosaT1BUL+EiqrMO6BndZykE/a
+	UHvUCprmYfC12vZq7kzZmsQ4sMOYC629M3gHoS26JZ4vvwIiXvTYAwuUQyhvTj9Vjts9RVb2hgy
+	rnKtvhS8Q/vQ00eCx2BYHBf1+jEKGm6ppEo8H5KG7Rw==
+X-Received: by 2002:a53:acc3:0:20b0:66f:c1bc:4054 with SMTP id
+ 956f58d0204a3-672c2ace221mr196906d50.28.1790014255888; Mon, 21 Sep 2026
+ 11:10:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org> <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+ <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F> <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
+ <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F> <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+ <e879ac65cb0940325736df7984c737edf1c6be94.camel@surriel.com>
+ <CACePvbXThspPYD8DZkAeiJtYuMV79vGgC1SGhpMwhn4COWOtcg@mail.gmail.com> <785353ef79844e81a8cd97e87b00ef1f785b15e5.camel@surriel.com>
+In-Reply-To: <785353ef79844e81a8cd97e87b00ef1f785b15e5.camel@surriel.com>
+From: Chris Li <chrisl@kernel.org>
+Date: Mon, 21 Sep 2026 08:10:44 -1000
+X-Gmail-Original-Message-ID: <CACePvbXZ4i-DsmbQdNtBQb79y59uwZC9J8qHD2wTWpcYaet3LQ@mail.gmail.com>
+X-Gm-Features: AcwNN1Woo8T3qId4JZp_7iimts7F23BOwDAY_HBZQCCsQ8GnkQO5p6KKJ1Z6pBw
+Message-ID: <CACePvbXZ4i-DsmbQdNtBQb79y59uwZC9J8qHD2wTWpcYaet3LQ@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Rik van Riel <riel@surriel.com>
+Cc: Gregory Price <gourry@gourry.net>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
+	Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
+	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello, Julian.
-
-This is an AI review. The series was built here, and the bdev reference
-across a racing last close and disk removal, the slot races, and the
-css_free ordering were traced and look correct. Two behavioral notes and
-some description and comment fixups.
-
-On Mon, Sep 21, 2026 at 08:06:57PM +0800, Julian Sun wrote:
-> Use fixed per-memcg slots. Tracking is best effort: record only dev_t
-
-The slot policy this version adopted, oldest-first replacement, expiry
-after dirty_expire_interval, and re-arming when the mapping is dirtied
-while a flush is in flight, isn't stated anywhere. Can you add a sentence?
-
-> If allocation fails, retain the existing foreign-wb path.
-
-Andrew found this unclear on v6 and the subject is still implied. Something
-like "If the workqueue can't be allocated at boot, bdev inodes keep using
-the existing foreign-wb path."?
-
-> This primarily affects filesystems that keep metadata in the bdev page
-> cache, such as ext4 and other buffer_head users, rather than the usual
-
-The branch keys on sb_is_blkdev_sb(), so buffered writers of raw block
-devices are covered too whenever the bdev inode's wb belongs to another
-cgroup. Worth a mention.
-
-> +struct bdev_frn_flush_ctx {
-> +	struct work_struct work;
-> +	dev_t dev;			/* for bdev inode, device hint */
-> +	u64 at;				/* last recorded dirtying time in jiffies */
-> +	atomic_t inflight;
-> +};
-
-It sits next to memcg_cgwb_frn and is memcg's, so maybe memcg_bdev_frn?
-"for bdev inode, device hint" doesn't say what the value is. Following the
-sibling's comments, "dev_t of the foreign bdev inode", and @inflight could
-use one too.
-
-> + * For non-bdev inodes, when a foreign page - a page whose memcg and
-> + * writeback ownerships don't match - is dirtied,
-> + * mem_cgroup_track_foreign_dirty() records the inode owning bdi_writeback
-> + * on the page owning memcg. When balance_dirty_pages() decides that the
-> + * memcg needs to sleep due to high dirty ratio, it calls
->   * mem_cgroup_flush_foreign() which queues writeback on the recorded
->   * foreign bdi_writebacks which haven't expired.  Both the numbers of
->   * recorded bdi_writebacks and concurrent in-flight foreign writebacks are
->   * limited to MEMCG_CGWB_FRN_CNT.
-
-The flush sentence and the slot limit apply to both paths now, so the "For
-non-bdev inodes" scoping reads wrong. Maybe keep the original paragraph and
-let the new one state only the difference: separate MEMCG_CGWB_FRN_CNT
-slots keyed by dev_t, flushing only the bdev mapping, same expiry.
-
-> + * These wb/bdev_inodes records only remember IDs and don't hold any object
-> + * references. As being wrong occasionally doesn't matter, updates and
-> + * accesses to the records are lockless and racy.
-
-The paragraph above already says the bdev records hold no references, and
-"wb/bdev_inodes records" doesn't parse. "Both kinds of records only
-remember IDs ..." would do.
-
-> +	if (memcg_bdev_frn_wq && bdev_inode &&
-> +	    sb_is_blkdev_sb(bdev_inode->i_sb)) {
-> +		mem_cgroup_track_foreign_bdev(memcg, bdev_inode->i_rdev);
-> +		return;
-> +	}
+On Mon, Sep 21, 2026 at 6:40=E2=80=AFAM Rik van Riel <riel@surriel.com> wro=
+te:
 >
->  	trace_track_foreign_dirty(folio, wb);
+> On Mon, 2026-09-21 at 06:31 -1000, Chris Li wrote:
+> >
+> > Give me some real-world examples of people hitting this kind of
+> > limit.
+> > e.g. MAX(%)  > 100% and still have a usesable system. I suspect that
+> > with 100% zswap usage, the system becomes unusable. Please show me a
+> > real world case that proves me wrong.
+> >
+>
+> Here's my desktop system right now. The amount
+> of Zswapped is more than twice AnonPages, and
+> the system stays perfectly usable.
+>
+> $ grep -E '(Anon|Zswap|GPU|Swap)' /proc/meminfo
+> SwapCached:       252340 kB
+> SwapTotal:      41523604 kB
+> SwapFree:        9802088 kB
+> Zswap:           8812236 kB
+> Zswapped:       24927876 kB
+> AnonPages:      11615760 kB
+> AnonHugePages:   1402880 kB
+> GPUActive:      13112428 kB
+> GPUReclaim:        95980 kB
+>
+> This is also an example where I cannot really
+> predict how much zswap space I need, because
+> that depends on what AI model is loaded,
+> which drives the GPUActive number, as well
+> as the number of browser tabs.
+>
+> The system is perfectly responsive.
 
-With this patch alone, foreign dirtying of a bdev folio no longer hits
-track_foreign_dirty at all and patch 3 adds the call back inside the
-branch. Can you keep the tracepoint firing on the bdev path here so that
-patch 3 only adds the argument? Also, @bdev_inode can't be NULL:
-__folio_mark_dirty() checked folio->mapping under the same lock and
-folio_account_dirtied() already dereferenced mapping->host.
+Great, that is getting somewhere. We are talking about actual usage. I
+really appreciate that.
 
-> +static void bdev_frn_flush_work(struct work_struct *work)
-> +{
-> +	struct bdev_frn_flush_ctx *ctx =
-> +		container_of(work, struct bdev_frn_flush_ctx, work);
-> +
-> +	bdev_flush_by_dev(ctx->dev);
-> +
-> +	atomic_set(&ctx->inflight, 0);
-> +}
+May I ask what the total amount of memory (RAM) in your system is?
 
-The in-flight window is now just the submission of the bdev mapping, and
-mem_cgroup_flush_foreign() runs on every throttle-loop iteration, so a
-memcg that keeps dirtying and throttling requeues the flush back to back.
-A folio the flush redirties, e.g. a buffer locked by a jbd2 checkpoint
-write, re-stamps the slot on its own. The old record stayed in flight for
-the whole owner-wb work. With a journal the write cadence of hot metadata
-is still bounded by the commit interval, but for nojournal ext4 and other
-buffer_head users it's bounded only by the throttle pause, for every
-tenant of the filesystem while any tenant throttles. Not measured. The
-description covers the target size but not the cadence.
+I am not asking zswap compare to ANA memory. I want to get the % of
+the total RAM.
+I assume your desktop has more than 8G of RAM, right?
 
-Each pass also goes through wbc_attach_fdatawrite_inode() and
-wbc_detach_inode(), so it votes in the bdev inode's wb-switch detection
-like the owner-wb flush did, at the higher pass rate. Whether the bdev
-inode ends up switching wbs more often is an open question.
+Chris
 
-> +		if (memcg_bdev_frn_wq && time_after64(ctx->at, now - intv) &&
-> +		    atomic_cmpxchg(&ctx->inflight, 0, 1) == 0) {
-
-Records are only created when the workqueue exists and @at stays 0
-otherwise, so the wq test can't be false with a live record. Fine as
-documentation, but the cover lists it as a fix.
-
-> +		INIT_WORK(&ctx->work, bdev_frn_flush_work);
-> +		atomic_set(&ctx->inflight, 0);
-
-memcg is zero-allocated, so the atomic_set() isn't needed.
-
-On patch 1, the kerneldoc's "does not wait for all I/O to complete"
-understates it, the flush waits for nothing.
-
-Thanks.
-
---
-tejun
+>
+> --
+> All Rights Reversed.
