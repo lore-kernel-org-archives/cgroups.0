@@ -1,170 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-45.mta1.migadu.com [95.215.58.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B57B35F19D;
-	Mon, 21 Sep 2026 06:16:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A108367F25
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 06:38:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789971393; cv=none; b=nWCEYQTu1WIOmM0bfzCHES8rzo0kps0WOTRgJP+nhcHQ3gS+RMCeUkWZYK0EffdI1bPlgcEtjggEM5uWvqo/MOu/Ii9nnMvV9xvTVYLqC825MkXbnL+lL26CnUQiGWUQFyQ9Sfr0tO02TmfN2fD5g00cmV0tM9O2lFO2iU/mFfI=
+	t=1789972725; cv=none; b=UggJOJcRIlOUhHMh4GYB857Ra7tU4jI2h6s2mkroz0kE+qiGgkjbOk07eGRCPCCTeuWYUJukxU3mPwve4cYnBdfCfeV1HQs6q8CzDLa/dsfwQvXSz5YFfznnZglDV59TCrS1fNXwvwQ1VdNdhg3jf9sYYS94beopnkLldEqPV5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789971393; c=relaxed/simple;
-	bh=6MJxPjqbgb7Y/VEHgxJibzuGMSiGTlHjpPp7ebXihAI=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=CxkkfLNfCs25k1AvrthNkoR0si/a+NooRv3Z+TRQifIfPRchQfqRwFl8np4YN6Tun0ZOpX1ciOZsAX6Sg4Y4KWD2QSD1HAZWjnIW7kzzpvh0urqe1fYu5kvoPEPMyy3Al+VKyVMOU5dOxRgPskuZiwvgQsFKJfvbmxcFbwaww2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=arr/3l/7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1789972725; c=relaxed/simple;
+	bh=eCQoMNXNnHawS/dODP70/YAqXxck9fKoWjcvs4Kbv1I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZA1RpCrWdmp0DDffk1rwwDjOBzyRNLi1KkXl4Y//3IcGvC9SYMAzo5lPq0OdjEqk6ye7AYw7AHb8riEpDPiSzYKRwbVBuySnD1Oy64MkCIZAxs4N5YavvkT9UkFDGRUVnvMB3JbDJh8Yi/wSbMYMnaksMWSeuOwcegT6FszqtVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=l5tSEPwC; arc=none smtp.client-ip=95.215.58.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="arr/3l/7"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E7062C2BCB3;
-	Mon, 21 Sep 2026 06:16:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1789971393;
-	bh=6MJxPjqbgb7Y/VEHgxJibzuGMSiGTlHjpPp7ebXihAI=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=arr/3l/7JjqQDfbP6AjgzUB5eCnkfAd4OIFidWwe6EjU/vnlLaOyO6x4UJI74xXZA
-	 sFD8ECSyUJ2k5mMV4JmNFuRz/Vp+YA32hAa7bhD7TxYCQNVq2YWOEfKmI5hyMq6MTo
-	 gioFnoTlCqZTwmPWHAsHOoh22El8u2UHMXjZ8ZsFI7Pq+OapElBbogD4f7fMM8IN/d
-	 owPDW7TYzRWgIcj5SCgaussS164qoo0vqa7j1YdAsaB6xm9t58Gf/MbQ99fpOUUUCQ
-	 dCqGyfy1Rqn4mNoiZuxoXSYnH7Ia8eW/P7QhmGPWIwKp8p5N6+OcsxKJd+MQ8aZ5ng
-	 ygrYfL7CJNuTA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1787C982DE;
-	Mon, 21 Sep 2026 06:16:32 +0000 (UTC)
-From: Bingfang Guo via B4 Relay <devnull+bingfangguo.tencent.com@kernel.org>
-Subject: [PATCH v2 0/4] memcg: move memcgid refcount to objcg to unpin
- dying memcgs
-Date: Mon, 21 Sep 2026 14:16:23 +0800
-Message-Id: <20260921-bingfangguo-memcgid-rework-v2-0-6c0637dc0edb@tencent.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="l5tSEPwC"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=eCQoMNXNnHawS/dODP70/YAqXxck9fKoWjcvs4Kbv1I=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789972721; v=1; x=1790577521;
+ b=l5tSEPwCJxTl6TvHz51A5z8Q4PfgTPbpTi4LiS8bzb8KmZZo77lGiKfazIEViAHhA3poLNqV
+ TZhiOrLPJVueOAtOLL0ZBP4q1SIfDrEE8axwyRN41nYDUXy4dD2gaxfxfON/gVNY0qcL8Ie9yD2
+ gTo2B7us7Sj30993S8LMW1KA=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id a4d8cef4eba2cd67;
+	Mon, 21 Sep 2026 06:38:41 +0000
+X-Mizu-Trace-ID: a4d8cef4eba2cd67
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <8ecbc327-cd54-439c-8493-78ceb11645bb@linux.dev>
+Date: Mon, 21 Sep 2026 14:38:35 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] docs: cgroup-v2: Describe effective CPUs of partition
+ roots
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Waiman Long <longman@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
+ <rdunlap@infradead.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20260918102359.71826-1-guopeng.zhang@linux.dev>
+ <20260918102359.71826-3-guopeng.zhang@linux.dev>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20260918102359.71826-3-guopeng.zhang@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIALfLsGoC/33OwYrCMBAG4FcpORtJptSMnhYEH8CreGiSSYxLE
- 0lrd0X67kaFxQXx+M/A9/9X1lMO1LNVdWWZxtCHFEuAWcXMoY2eeLAlMxCwEAiK6xC9Kw9/Try
- jzvhgeaaflL/5skaChkyrW2AFOGVy4feB7/YlH0I/pHx5dI3yfn2yS4mf2FFywRutXQ0gLKL7G
- igaisPcpI7d4e1mXY3wAgr5EYQCIlmrnGoVNPI9+LIQZf2HJH00/jkKawvSLLDRSv03pmm6AWn
- jPadbAQAA
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
- Roman Gushchin <roman.gushchin@linux.dev>, 
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
- Andrew Morton <akpm@linux-foundation.org>, 
- Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, 
- Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>, 
- Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
- Wei Xu <weixugc@google.com>, David Hildenbrand <david@kernel.org>, 
- Lorenzo Stoakes <ljs@kernel.org>, Bingfang Guo <bfguo@icloud.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, 
- linux-kernel@vger.kernel.org, Bingfang Guo <bingfangguo@tencent.com>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1789971391; l=4662;
- i=bingfangguo@tencent.com; s=20260812; h=from:subject:message-id;
- bh=6MJxPjqbgb7Y/VEHgxJibzuGMSiGTlHjpPp7ebXihAI=;
- b=5Q7x040B0vUoB3GYgoqElocEo3xrwnGVk/iMGoohpF+TahdOPrG0amEOKcw9ubP44iLWxwITD
- E7hGSZoG2lGBt81pbdcPmQLrg8Az/uTwnuMmf9i08Y9/zUEWeKSZz+H
-X-Developer-Key: i=bingfangguo@tencent.com; a=ed25519;
- pk=q7u9S7d5e7VijWrYF9O+vv9/XvqWduVGtwGtuCObAHE=
-X-Endpoint-Received: by B4 Relay for bingfangguo@tencent.com/20260812 with
- auth_id=942
-X-Original-From: Bingfang Guo <bingfangguo@tencent.com>
-Reply-To: bingfangguo@tencent.com
 
-Changes in v2:
-- Remove the NULL test and use the root in lru_gen_test_recent() to fix
-  the uninitialized lruvec pointer. (Shakeel)
-- Wrap rcu section in the swap charging path with scoped_guard.
-  (Shakeel)
-- Replace rcu lock with lockdep assertion in mem_cgroup_private_id_put().
-  (Shakeel)
-- Keep memcg->private_id datatype unchanged and send it separately later
-  for simplicity of this series. (Muchun)
-- Add blank lines between variable definitions and assertions. (Muchun)
-- Remove redundant comments. (Muchun & Shakeel)
-- Collect Acked-by tags.
-- Link to v1: https://lore.kernel.org/r/20260918-bingfangguo-memcgid-rework-v1-0-5bbf3220d88f@tencent.com
 
-Although the dying memcg problem caused by LRU pages is fixed, I can
-still see many dying memcgs on some workloads that use shmem and those
-pages are swapped out. For example, programs populating logs to tmpfs or
-containers sharing data using shmem.  This series binds the memcgid
-refcount to objcgs so dying memcgs can be freed normally in this case.
 
-The memcg private ID identifies memcgs for objects that can outlive the
-cgroup itself: swap entries and workingset shadows.  Today the ID's
-refcount is embedded in the css, and every outstanding ID reference
-(mostly swap entries) pins the css, keeping the entire memcg alive.
-This causes a problem: A swapped-out page holds a memcgid reference that
-pins the css, so the memcg cannot be freed until the page is swapped
-back in and charged back to its online parent.
+On 9/18/2026 6:23 PM, Guopeng Zhang wrote:
+> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> 
+> The cpuset.cpus.effective description says that the effective CPUs are
+> granted by the parent and are normally a subset of cpuset.cpus. This
+> does not always hold for a valid non-root partition root. Its effective
+> CPUs are the active CPUs in cpuset.cpus.exclusive.effective after CPUs
+> assigned to valid child partition roots are removed.
+> 
+> If cpuset.cpus.exclusive differs from cpuset.cpus, the effective CPUs
+> may therefore be outside cpuset.cpus. Remote partitions also do not
+> necessarily get their CPUs from their immediate parent.
+> 
+> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> ---
+>   Documentation/admin-guide/cgroup-v2.rst | 29 ++++++++++++++++---------
+>   1 file changed, 19 insertions(+), 10 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 272e9f2432bd..49ce8deb4115 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -2505,16 +2505,25 @@ Cpuset Interface Files
+>   	A read-only multiple values file which exists on all
+>   	cpuset-enabled cgroups.
+>   
+> -	It lists the onlined CPUs that are actually granted to this
+> -	cgroup by its parent.  These CPUs are allowed to be used by
+> -	tasks within the current cgroup.
+> -
+> -	If "cpuset.cpus" is empty, the "cpuset.cpus.effective" file shows
+> -	all the CPUs from the parent cgroup that can be available to
+> -	be used by this cgroup.  Otherwise, it should be a subset of
+> -	"cpuset.cpus" unless none of the CPUs listed in "cpuset.cpus"
+> -	can be granted.  In this case, it will be treated just like an
+> -	empty "cpuset.cpus".
+> +	It lists the active CPUs available to tasks in this cgroup.
+> +
+> +	For a cgroup that is not a valid partition root, an empty
+> +	"cpuset.cpus" makes "cpuset.cpus.effective" show all CPUs
+> +	available from the parent cgroup.  Otherwise, it is a subset
+> +	of "cpuset.cpus" unless none of the requested CPUs can be
+> +	granted.  In that case, it is treated like an empty
+> +	"cpuset.cpus".
+> +
+> +	For a valid non-root partition root, "cpuset.cpus.effective" contains
+> +	the active CPUs from "cpuset.cpus.exclusive.effective" except
+> +	those granted to valid child partition roots.  If
+> +	"cpuset.cpus.exclusive" is set to a value different from
+> +	"cpuset.cpus", the effective CPUs need not be a subset of
+> +	"cpuset.cpus".  For example, if CPUs 2-5 are active,
+> +	available, and not assigned to a valid child partition root,
+> +	a partition root with "cpuset.cpus" set to "0-3" and
+> +	"cpuset.cpus.exclusive" set to "2-5" has "2-5" in
+> +	"cpuset.cpus.effective".
+>   
+>   	Its value will be affected by CPU hotplug events.
+>   
 
-The work done by Muchun Song and Qi Zheng already charges folios to the
-objcg, which is reparented to its parent when the memcg offlines.  This
-series applies similar idea to the memcg private ID: the ID's refcount
-moves from the css into the objcg, and the memcgid xarray holds a
-reference to an objcg instead of pinning the css.  When the memcg
-offlines, the objcg is reparented and any remaining memcgid references
-resolve to the ancestor, so swapped-out pages no longer pin the dying
-memcg and get the online parent naturally on swapin.
+Hi Guopeng,
 
-Unbinding the ID from the memcg has three consequences the series has to
-deal with:
+Thank you for your effort.
 
-  1. The ID stops pinning the memcg, so the paths that relied on the ID
-     reference to keep the memcg alive have to hold the RCU read lock
-     instead.  (Patch 1)
+May I suggest adding a simple diagram to help clarify the relationship? 
+Similarly, could you add a simple diagram to illustrate the relationship? 
+Something like:
 
-  2. Charge and uncharge no longer necessarily happen on the same memcg:
-     swapout charges the folio's memcg, while the slot free resolves the
-     nearest live ancestor.  The counters are hierarchical, and the
-     MEMCG_SWAP stat is either reparented at offline (v1) or not visible
-     (v2), so nothing leaks.  But "does this entry carry a counter
-     charge at all" can no longer be answered from the resolved memcg:
-     root is skipped only because root's swap is not accounted, and a
-     non-root ID whose memcg was reparented into root still carries a
-     charge that must be released.  Patch 2 adds
-     mem_cgroup_private_id_is_root() and makes all three swap paths
-     decide on the ID's root status.
+```
+   A(cpu,memory) - B(memory) - C()
+                             \ D()
+```
 
-  3. An ID can now outlive the memcg it was allocated to, so the memcg
-     resolved from an ID is not necessarily the memcg the ID was handed
-     out for.  Callers that need exactly that memcg (list_lru, the
-     workingset and MGLRU shadow tests) now get NULL and skip the entry,
-     while the swap paths, which only need something to account to, get
-     the nearest live ancestor.  (Patch 4)
+I mean adding one diagram for the valid root case and another for the others 
+(member / invalid root), so it becomes easier to see how they differ. What do 
+you think?
 
-The series is now four patches. The first three are preparation that
-keeps today's semantics while the ID is still bound to the css. Only the
-last patch changes behavior.
-
-** Testing **
-
-RFC v1 contains some scripts and codes for reproducing the problem and
-testing the fix [1].
-
-[1] https://lore.kernel.org/r/20260813-memcgid-objcg-v1-0-83d21c685b77@tencent.com
-
-Signed-off-by: Bingfang Guo <bingfangguo@tencent.com>
----
-Bingfang Guo (4):
-      memcg: keep swap charging under RCU protection
-      memcg: base swap charge accounting on memcgid root status
-      memcg: manipulate memcg private ID references by ID
-      memcg: move memcg private ID refcount to objcg
-
- include/linux/memcontrol.h |   7 +--
- mm/list_lru.c              |   2 +-
- mm/memcontrol-v1.c         |  21 ++++----
- mm/memcontrol-v1.h         |   8 ++-
- mm/memcontrol.c            | 125 +++++++++++++++++++++++++++++++--------------
- mm/workingset.c            |   2 +-
- 6 files changed, 109 insertions(+), 56 deletions(-)
----
-base-commit: 8d61431ed2607386b427752505379536eb634ce8
-change-id: 20260827-bingfangguo-memcgid-rework-938e25ecaba2
-
-Best regards,
 -- 
-Bingfang Guo <bingfangguo@tencent.com>
-
+Best regards
+Ridong
 
