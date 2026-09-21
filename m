@@ -1,224 +1,125 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+Received: from mail-qv2-f43.google.com (mail-qv2-f43.google.com [74.125.230.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36C7D355F46
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 12:07:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D71E49AA5A
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 12:53:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789992439; cv=none; b=NXXKSYHUdVC33VVxQKeSyOjHHKO46q2d/ICmEn+lwAaTfXAeFwy4BZ+SRrQg8bERRJLZ4/LiQey4PuVBeTTyXtzMnSdii1UEPDKa0oQ7izg64xfmlhK/GyHh38cYlO+B2CiSBBTs4iCCG01BmpBgW+G1qbrOyGSTABCNtV/rKNc=
+	t=1789995187; cv=none; b=n0nNRRR5GhD3AoX+HMwy0AfEC26+gl67i66WDZPyZD1vEIx8bo/i/zSwVA6t0dNOINoZAUc/T84F0R/lz2pNnDE2PfCHpD7nBnOklrf0Jyz7mMzHFuPWgsFEVLPLj33Fwi98x3ySqExd2ZpwQcrKeckZZQtOQnG8kHqc0bNQuZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789992439; c=relaxed/simple;
-	bh=NK5MrrWQV+rQZfgb6tbm/RA+jKzDKw8/WieRmRh/hLo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GTjTmOAGYRFwUqpuRt47R1kI5B0wUt35EnZ2OaNcTXeIUm31fENHWe61ujV1q0yzy26DVOUeWj/A32OFpY+IENyE9+4xR35uVPDo3edj3p+Fp0SmU63OOBHaeXyn3GXCN6k0aYF79hvuVClTbeZL2E0MEZ5OCkpSXEDtvZBMC5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=VKZwF+3X; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1789995187; c=relaxed/simple;
+	bh=qeUCWpsUPbHHM5IIG7RF8FHuHvdD0eOD/zFOkfdQrYM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CtBzPsqbjeK25M+pLLjorQWryaXsfaN8paisJ1uQaJZvM4EB3yzDBwODcg5VSjCgut/oW59D+UOcdQzpXgjWkTA6Ghbu0MsdZIkWSNBcaNxzn2iKpk72X0mDrbgf2GpBLsQvaTU8akylGL+2/pnzwhAQ+WTlZDvSHMPdX4dns4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=fBaQ6FPL; arc=none smtp.client-ip=74.125.230.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="VKZwF+3X"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-853e2610bb4so2152630b3a.0
-        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 05:07:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="fBaQ6FPL"
+Received: by mail-qv2-f43.google.com with SMTP id 6a1803df08f44-90cdfcbe207so35754276d6.3
+        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 05:53:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1789992437; x=1790597237; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=P0BhgCT09QkgxSYiuPM6SIpincAZrzVbnzV7okAgnX8=;
-        b=VKZwF+3XQHbfPlacjy4KX1qfTvz01/5isOOnmrQO4vdDm4gpE2mrjqoQR3EWByODzt
-         /EXKLtzaAhkHCEM83lyHvfta76YDF4ZN0HZUY8fQmKc/EpmzypAcL7Ega8SaR6So3r4b
-         0lk18OtkpgGR4EHGLswbBpSOWhnwLzVKCW2SFF9gAJZ5AV6LoopXDQsx7L/WSJqnakhg
-         VC84FoZt5OEk9av2yPVBvP1vQZVdBdbh0tg7/RnY0ausC5xrfN8lTYg9N0CTOKavoKmj
-         Shi5y8j0DPOJTeU9mI5EDylyJ7AzMZnD4dRiBLsj3c28ycMhmMr7NuBKbq49Lsh1VTTF
-         hZMw==
+        d=gourry.net; s=google; t=1789995185; x=1790599985; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Jdk8bFx0tKHj9Yl5yPuBwHegOpkKYh3D6iyI0OsSHvo=;
+        b=fBaQ6FPLrsis2sQg/MQTL21JZNv+KF1s2lpMc3WLk8mupnzw7vw3dOXpboNWUd2JFO
+         hVYq6Zo7oD/ZxUonGGXzp9Wu0qaH7WG/oBBIWdL3wvePWoqmP7cb2sueyzvAGWVsMJo1
+         Yk3gL2Y/cGrjs+LRMGfWMlokO+d9wsLeXqgaHqWv1lw/7INCWA4LAGFQWfLYNq+a0hLs
+         r7ivypwfYSZUmLEgsSFlN0gK01xMxN5UT7wC3MqtqpYuAyAPVElLg6rAdSPgQmk/gIi2
+         /dj/OsMoF+viZ/XOEzdpDmCRlwbvLcWW65KztY92+OMyp3kTuO12BIKeJXYqulsX7YQT
+         GTgw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789992437; x=1790597237;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=P0BhgCT09QkgxSYiuPM6SIpincAZrzVbnzV7okAgnX8=;
-        b=yP2+emomr0SN5Gl9SdncOyJE4GO2EQa5A9dk3JmkAuRmnNdwjsPNyHSSkwQX9eK5A0
-         TtZepZBiqnWitijBHTeILcyW13OFX6OzdNYwt+Qg3/jfBlTwe7mXeD4v/RDghF0K502X
-         +bNV5UbR1a+ey4JUhv3FipW6YdU92j0cAUt02WlU82AYyyDs09i1tjG/f8hNwq8jh+Cf
-         hSpKkhibr+tz30W8gsSUFCEt1qWs943DhIcXeMJHWMwRRoS+fQ9+Z9zpQa0UnZxgUHtH
-         GpK/H1L/RE2rXP5A5V8egZ3u9nYzjmZk1nE9M/QKbtAqLWbiQ5EFuJx95llwQ+hrhKYJ
-         DzHg==
-X-Forwarded-Encrypted: i=1; AKwUvBxlQwy1ChbphhS02jCpzUNL+FZGBtj728rAeW9zXw+nVGorTEoFipoYPtlMTLCTUMtsznP1BWsJ@vger.kernel.org
-X-Gm-Message-State: AFuF++m4jvFMpR4GHHQougTUfjVPgwLFuXXe201Z0g8x39xnzq/G4PTG
-	04NghH8m0KNBssk+iGLNHy1ap+Q8JPboglWx9M5t4T0HzvX0UKh6k5JtLcaZQl9aK8g=
-X-Gm-Gg: AYBFou1dBeZ8QPAc3dXbnDX8MEvPCvXkcHkqNj6XCPC9pDnXOEawAYrY4CAkb/Qhux7
-	/KbWcFShf+TaZYLB2e4tQH275UcbD5uvGsLsmIYRd0/uUtgcfij0j3rlzGuOc+UzZV5t0LLu1gL
-	fvWgVFndvumLDdVRTlMCnYcXa2RjOLjCBZtUK9ZcQB0MqNpLQU81moeSy3jKvwhsFwtakb1aynJ
-	N04r9Bh6TXCTWg50OG8VkEW8K/dqk72d1uYBMzyud+QoRICcFWh9KFqCQruwi0W+mlWUpS+O7gX
-	TOT9zVeE+QGX8c7AQyMcrNflWRUuAZPujrDZEDsp/pioC647IkSBbXvVCUbnIVBu7zTAfBfR+wN
-	PfT52LXSH5TdipV7LEla5mQ+9wT3x/al53nW/nck7KtIAsJlrXFCJ3tjP1MGR66hW05AtFMDRNH
-	AEJgxUgCJ7cRGeuwdI1/3ho+HO7Es+LkfGu3cFCLoGOdMH68ZZcV43M+aIzNLn8KLmyICaaQtbN
-	kw=
-X-Received: by 2002:a05:6a00:3d0a:b0:837:f111:b70 with SMTP id d2e1a72fcca58-87341085fb9mr17288545b3a.4.1789992437273;
-        Mon, 21 Sep 2026 05:07:17 -0700 (PDT)
-Received: from localhost ([106.38.226.177])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-877aa108e58sm3104740b3a.48.2026.09.21.05.07.16
+        d=1e100.net; s=20260707; t=1789995185; x=1790599985;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=Jdk8bFx0tKHj9Yl5yPuBwHegOpkKYh3D6iyI0OsSHvo=;
+        b=S3BPabWF5s+o1bJ265J3K/S1GwIwwJkgaPgw2Zs6SU5qgu5RI2rLdGaM7t/ThA8Twn
+         kJ29Bi9RcWCtDiTHsJ1DWAR7Deo5vkXz3LitGTAkSxjdOGvCN86kKrp0jcooZrk56K4V
+         XHiyAVEZIGP3hozSMKMgAHaSU5ThxeNC5n8CmKcImBm4E0vjPFX43GgL9rbGmjaUHnSg
+         6rg2q2cLYxrf2xbSPbHIpg9AVglWJgbANWvgTcYVhxppAeeDJRGdy47qqEi1i2iMIU+q
+         /CdklRvICKwuS6qLGifTz7p8pTaBRh2zaYiTIlgFw0tAacvt+2HIrneK+adYWmvpZS8P
+         wikA==
+X-Forwarded-Encrypted: i=1; AKwUvByY740jq9+lWVP/zUD2xLMqfRuEG7Fzn7W9AuizDosX+QyZyYtVkgTKq26WwHB8cUifkzI8HiUZ@vger.kernel.org
+X-Gm-Message-State: AFuF++nYOP+KCiZM34oqwvgjl+g20Xi2+spcauBh5Dk95CunlHTCaqnX
+	J5Yx4BEgqVJbCXXtypaafEPK/Fmg7pOQSdvgn8s4JBEXjoCN0s7zFGK0YOEVr3VpuA8=
+X-Gm-Gg: AYBFou2rlnUpjiDO7Pzs/Kh5G4u2RA2ZbBx4b7+igCijDMXeGgXV5dUAkzdJVBPlE5C
+	fj/BYT9OD6TenCjHgmgBu6DJ4WxFHRtxMkrVhDfEiySSSyVIbxIm68QoBCbZtIwNaCkYtKF91y0
+	oNMx66J+PRi9kfbbfjpKS+R5pwWBErXzEZdydxDcPUTF+NIka5BX9G4VwrSTaIIDTc9aPpt4lHw
+	CU0eJJwR0lBe0oYmZQ3NrUFy60zeZPwRhz1WBAvJ4p/n/3XMrtxYnKhc8YeW6DSmWM9KAKUdAON
+	kO8e3vwVcqfrqwbJRNhcZ5yGQEz+M0wFK49eM7zo4c1RF3megLOnorrbcH3utMj5Y5JWKA3d66p
+	T0N11gJgvUbREvBrL7qoOmCTLX5dc2aLwC8Sn2nTV7UjNwscrHG2s3O4UjPv9cDmb4SqKsR8S9s
+	8dfoicRnJBWkBwuPOoWE9ukMTv+J0DPDZSjvfqvw2dg9BM5QDz+g1eQQInbW64dA+vPUL1Ba3Mm
+	lzyFCQONb+JbEbTIsh9Uug4J903RcPwofT5wCH6rQu2ESaP640Znt0=
+X-Received: by 2002:a05:6214:5990:b0:912:517b:20e9 with SMTP id 6a1803df08f44-913fc969610mr4155346d6.49.1789995184825;
+        Mon, 21 Sep 2026 05:53:04 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91260a6267csm68171296d6.25.2026.09.21.05.53.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 05:07:16 -0700 (PDT)
-From: Julian Sun <sunjunchao@bytedance.com>
-To: linux-block@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org
-Cc: axboe@kernel.dk,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	willy@infradead.org,
-	jack@suse.cz,
-	tj@kernel.org,
-	akpm@linux-foundation.org
-Subject: [PATCH v7 3/3] writeback: record bdev targets in foreign writeback tracepoints
-Date: Mon, 21 Sep 2026 20:06:58 +0800
-Message-Id: <20260921120658.1627992-4-sunjunchao@bytedance.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20260921120658.1627992-1-sunjunchao@bytedance.com>
-References: <20260921120658.1627992-1-sunjunchao@bytedance.com>
+        Mon, 21 Sep 2026 05:53:04 -0700 (PDT)
+Date: Mon, 21 Sep 2026 08:53:02 -0400
+From: Gregory Price <gourry@gourry.net>
+To: Chris Li <chrisl@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
+	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Rik van Riel <riel@surriel.com>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Kunwu Chan <kunwu.chan@linux.dev>, Meta kernel team <kernel-team@meta.com>, 
+	Linux Memory Management List <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, 
+	linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+Message-ID: <arEVDBlfsUYKK004@gourry-fedora-PF4VCD3F>
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <aqJXx2vtbKaRLt3x@fedora>
+ <aqLi6cIjD2wJwk0B@cmpxchg.org>
+ <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+ <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F>
+ <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
+ <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
+ <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
 
-Add dev to track_foreign_dirty and flush_foreign so traces can
-distinguish foreign-wb tracking from the bdev-only path. Append the
-field to each event and print it as major:minor; zero denotes the
-normal foreign-wb path.
+On Sun, Sep 20, 2026 at 11:43:59PM -1000, Chris Li wrote:
+> On Sat, Sep 19, 2026 at 3:53 PM Gregory Price <gourry@gourry.net> wrote:
+> 
+> Let's start with the real question: on your fleet what is the max % of
+> zswap memory compared to total RAM?
+> 
 
-Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
----
- include/trace/events/writeback.h | 22 ++++++++++++++--------
- mm/memcontrol.c                  |  7 +++++--
- 2 files changed, 19 insertions(+), 10 deletions(-)
+You're asking me to predict the future.  Any number I give you today
+will be wrong 3 seconds from now.
 
-diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-index 13ee076ccd16..ffd1b8df4231 100644
---- a/include/trace/events/writeback.h
-+++ b/include/trace/events/writeback.h
-@@ -273,9 +273,9 @@ TRACE_EVENT(inode_switch_wbs,
- 
- TRACE_EVENT(track_foreign_dirty,
- 
--	TP_PROTO(struct folio *folio, struct bdi_writeback *wb),
-+	TP_PROTO(struct folio *folio, struct bdi_writeback *wb, dev_t dev),
- 
--	TP_ARGS(folio, wb),
-+	TP_ARGS(folio, wb, dev),
- 
- 	TP_STRUCT__entry(
- 		__array(char,		name, 32)
-@@ -284,6 +284,7 @@ TRACE_EVENT(track_foreign_dirty,
- 		__field(u64,		cgroup_ino)
- 		__field(u64,		page_cgroup_ino)
- 		__field(unsigned int,	memcg_id)
-+		__field(dev_t,		dev)
- 	),
- 
- 	TP_fast_assign(
-@@ -295,34 +296,37 @@ TRACE_EVENT(track_foreign_dirty,
- 		__entry->ino		= inode ? inode->i_ino : 0;
- 		__entry->memcg_id	= wb->memcg_css->id;
- 		__entry->cgroup_ino	= __trace_wb_assign_cgroup(wb);
-+		__entry->dev		= dev;
- 
- 		rcu_read_lock();
- 		__entry->page_cgroup_ino = cgroup_ino(folio_memcg(folio)->css.cgroup);
- 		rcu_read_unlock();
- 	),
- 
--	TP_printk("bdi %s[%llu]: ino=%llu memcg_id=%u cgroup_ino=%llu page_cgroup_ino=%llu",
-+	TP_printk("bdi %s[%llu]: ino=%llu memcg_id=%u cgroup_ino=%llu page_cgroup_ino=%llu dev=%u:%u",
- 		__entry->name,
- 		__entry->bdi_id,
- 		__entry->ino,
- 		__entry->memcg_id,
- 		__entry->cgroup_ino,
--		__entry->page_cgroup_ino
-+		__entry->page_cgroup_ino,
-+		MAJOR(__entry->dev), MINOR(__entry->dev)
- 	)
- );
- 
- TRACE_EVENT(flush_foreign,
- 
- 	TP_PROTO(struct bdi_writeback *wb, unsigned int frn_bdi_id,
--		 unsigned int frn_memcg_id),
-+		 unsigned int frn_memcg_id, dev_t dev),
- 
--	TP_ARGS(wb, frn_bdi_id, frn_memcg_id),
-+	TP_ARGS(wb, frn_bdi_id, frn_memcg_id, dev),
- 
- 	TP_STRUCT__entry(
- 		__array(char,		name, 32)
- 		__field(u64,		cgroup_ino)
- 		__field(unsigned int,	frn_bdi_id)
- 		__field(unsigned int,	frn_memcg_id)
-+		__field(dev_t,		dev)
- 	),
- 
- 	TP_fast_assign(
-@@ -330,13 +334,15 @@ TRACE_EVENT(flush_foreign,
- 		__entry->cgroup_ino	= __trace_wb_assign_cgroup(wb);
- 		__entry->frn_bdi_id	= frn_bdi_id;
- 		__entry->frn_memcg_id	= frn_memcg_id;
-+		__entry->dev		= dev;
- 	),
- 
--	TP_printk("bdi %s: cgroup_ino=%llu frn_bdi_id=%u frn_memcg_id=%u",
-+	TP_printk("bdi %s: cgroup_ino=%llu frn_bdi_id=%u frn_memcg_id=%u dev=%u:%u",
- 		__entry->name,
- 		__entry->cgroup_ino,
- 		__entry->frn_bdi_id,
--		__entry->frn_memcg_id
-+		__entry->frn_memcg_id,
-+		MAJOR(__entry->dev), MINOR(__entry->dev)
- 	)
- );
- #endif
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 494540cf6278..6c3083fcc063 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3959,11 +3959,12 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
- 
- 	if (memcg_bdev_frn_wq && bdev_inode &&
- 	    sb_is_blkdev_sb(bdev_inode->i_sb)) {
-+		trace_track_foreign_dirty(folio, wb, bdev_inode->i_rdev);
- 		mem_cgroup_track_foreign_bdev(memcg, bdev_inode->i_rdev);
- 		return;
- 	}
- 
--	trace_track_foreign_dirty(folio, wb);
-+	trace_track_foreign_dirty(folio, wb, 0);
- 
- 	/*
- 	 * Pick the slot to use.  If there is already a slot for @wb, keep
-@@ -4029,6 +4030,7 @@ void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
- 		if (memcg_bdev_frn_wq && time_after64(ctx->at, now - intv) &&
- 		    atomic_cmpxchg(&ctx->inflight, 0, 1) == 0) {
- 			ctx->at = 0;
-+			trace_flush_foreign(wb, 0, 0, ctx->dev);
- 			queue_work(memcg_bdev_frn_wq, &ctx->work);
- 		}
- 	}
-@@ -4045,7 +4047,8 @@ void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
- 		if (time_after64(frn->at, now - intv) &&
- 		    atomic_read(&frn->done.cnt) == 1) {
- 			frn->at = 0;
--			trace_flush_foreign(wb, frn->bdi_id, frn->memcg_id);
-+			trace_flush_foreign(wb, frn->bdi_id, frn->memcg_id,
-+					    0);
- 			cgroup_writeback_by_id(frn->bdi_id, frn->memcg_id,
- 					       WB_REASON_FOREIGN_FLUSH,
- 					       &frn->done);
--- 
-2.39.5
+You can't know the compressibility of memory until after you compress
+it, and requiring a user to predict the future by forcing them to limit
+the total amount of workload compressibility does not scale with the
+number of workloads of variable compressibility of data.
 
+That should tell you that your model of reasoning about this issue is
+ill-suited to address the problem.
+
+~Gregory
