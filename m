@@ -1,43 +1,43 @@
 Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB4E4ABBB1;
-	Mon, 21 Sep 2026 15:17:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40983331207;
+	Mon, 21 Sep 2026 15:33:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790003853; cv=none; b=dH2FxkkpJnNtztaXY4gsgX7Xo8xJbpQ6UXxKRcPCPVaUxdN5hj2daCuXSObDQEjkgEltJZztWReEgIY/xo1fmgBobNg7HaIaaT93O/Ry5RvkekhqCLWROdhfAcD4SYpHA8apwCA8KFk7R/vaNu8zJFG0Tz76vlXL8jRHq8Hhy28=
+	t=1790004826; cv=none; b=LtwLFNmZmE0jUFQgVjdT0czK5u7MTrwH/1u+1w43X9OdVb3EmPr6H5j/vrCid44LCJdUnmGBY/WGJvqseewf7rmYJIgM+bdAt1zpgH17QyzunNHYBKBGTiK28r/Z5gOpFbEvK9nYLjIE8xsnvYvGam9Rtfq442NL7gtDTFNQZbY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790003853; c=relaxed/simple;
-	bh=W2+G+uyaywvTjosHHXQQCOH8WG7Itl4tMszraMzJ8Ss=;
+	s=arc-20240116; t=1790004826; c=relaxed/simple;
+	bh=ECga6oDpoCruvyTKSpfjLdMo1wBocXlUoX6lA7eLn7Y=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=naQwsnhRFzu3naDrlWsPC8tbwNo8tnABHTAr9eTgtE5eMB9eLUyiCYfPQ8OWcQnKxAQP26OH+zPEenJGbEV+waV3B1lhaVhvO/slzITZx1B3lYtv2ttajBJ1/+5iaGxv223tBzGQn4l9WBQfPT9eZ1gFyS6R/7dDxnXQnjZNp04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=jfCP2IUN; arc=none smtp.client-ip=96.67.55.147
+	 Content-Type:MIME-Version; b=SEtVS6Jf4ez3wmT863AlNzVtGI9exoxI3fJHNZo/Vyxr8uuZGuQKXWL2VsBrvd4dbBou784x6QwZUKlH4tiX8TfrPL0wYUnoEkTg0bAF1MY/Wc0+DssRHkkWz+/yjqfmg+Su18O5vFjK7zT4BsakA1JBo2wNZ8EtO5Hh6AlqeK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=efgwaBKk; arc=none smtp.client-ip=96.67.55.147
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="jfCP2IUN"
+	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="efgwaBKk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
 	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
 	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID; bh=W2+G+uyaywvTjosHHXQQCOH8WG7Itl4tMszraMzJ8Ss=; b=jfCP2I
-	UNOb0CUFjSlH8xD3YQYIQR9UCBcVQgmXPkbNVSQ11bZTMujdHnzgiP2EhpeDGg/7r0zlt3EAt/VOF
-	3DzTuKZJZE3rga59XuztNvS/rLI0vmGbwMEck5RHyf/80WN2O25yCkSTDFNdY8MORT9yZbuewnZbs
-	vSyP/zWbNgOuplhVnp6oHvh1NfE6hMIk6RaDfsW4CKOLnjfZ2rrOeqhecunTfKhGhxn12Xrn67Ggk
-	XhQRHbfgoaFGhcIYiOrWmJ53RRRnZoQ0ZDOiHHH9ZHTgoYbiR5+GKXICfJwLZ5s7qSM01f2SOudih
-	imoBUxxwNDeXpHLIG7/Es1+ge+Uw==;
+	:Resent-Message-ID; bh=ECga6oDpoCruvyTKSpfjLdMo1wBocXlUoX6lA7eLn7Y=; b=efgwaB
+	Kkp8U69RMu9ga/r9YVd2154V7Qfkh9sTTMQNQBFdl2dHB4xFcwxIAqj8a9RghJaLSqG2s4Z+fiFff
+	zxWyOF6kYoI+Lv3SUjDp7cMZBfZl0qwMDpiKXBX/nsYvT9nIEdrJA29VspiDjz1BNCpaYmRHPYVvC
+	n/HgcL9zB+Kj/dS2BgV1T6KCwegd86XvB589ElAvWnNFqyEm1D7qZaq/2xvqLg1RgDDzZRkgVtgzJ
+	myGRxsnHIO4J99uyCl2mavzcKjOo6GzaD7GFdFmnU/GkmOlUXlFu1OlWGgZxsW1Ex5thke8SuE6w+
+	agrU0syzmCcVpxgJwBh6LD0xeZFg==;
 Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
 	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
 	(Exim 4.99.5)
 	(envelope-from <riel@surriel.com>)
-	id 1x8fkX-0000000D3NB-3H4d;
-	Mon, 21 Sep 2026 15:16:09 +0000
-Message-ID: <e879ac65cb0940325736df7984c737edf1c6be94.camel@surriel.com>
+	id 1x8fvt-0000000D3Zy-41sO;
+	Mon, 21 Sep 2026 15:27:53 +0000
+Message-ID: <f3af5902412b9ff1c1a37211eeeb9c0ffc22f814.camel@surriel.com>
 Subject: Re: Path forward for Virtualized Swap?
 From: Rik van Riel <riel@surriel.com>
-To: Chris Li <chrisl@kernel.org>, Gregory Price <gourry@gourry.net>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>,
-  Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, Michal
+To: Gregory Price <gourry@gourry.net>, Kairui Song <ryncsn@gmail.com>
+Cc: Chris Li <chrisl@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+ Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, Michal
  Hocko <mhocko@kernel.org>,  Roman Gushchin <roman.gushchin@linux.dev>,
  Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
  David Hildenbrand	 <david@kernel.org>, Muchun Song <muchun.song@linux.dev>,
@@ -58,17 +58,17 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>,
  <linux-kernel@vger.kernel.org>, 	linux-doc@vger.kernel.org, "open
  list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
  <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
- Kairui Song <ryncsn@gmail.com>,  Joshua Hahn <joshua.hahnjy@gmail.com>
-Date: Mon, 21 Sep 2026 11:16:09 -0400
-In-Reply-To: <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+ Joshua Hahn	 <joshua.hahnjy@gmail.com>
+Date: Mon, 21 Sep 2026 11:27:53 -0400
+In-Reply-To: <arEotFqE7ZZoxMHd@gourry-fedora-PF4VCD3F>
 References: 
 	<CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
 	 <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org>
 	 <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
 	 <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F>
 	 <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
-	 <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
-	 <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+	 <CAMgjq7CJBHkoZmg9oKNgGA8czL0djyBTCAkPz8ETm-tX=Qci4g@mail.gmail.com>
+	 <arEotFqE7ZZoxMHd@gourry-fedora-PF4VCD3F>
 Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
  keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
  eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
@@ -103,30 +103,47 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Sun, 2026-09-20 at 23:43 -1000, Chris Li wrote:
+On Mon, 2026-09-21 at 09:27 -0400, Gregory Price wrote:
 >=20
-> I am sorry, that is not actual user usage. You need to start from an
-> actual usage case: I have a workload X, only want to give limit Y for
-> the cgroup jobs but with Z SLO requirement. That kind of actual usage
-> requirement.
+> In short:
+>=20
+> =C2=A0 memory.swap=C2=A0=C2=A0 =3D logical swap=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 - workload/SLO limit
+> =C2=A0 memory.pswap=C2=A0 =3D physical swap=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ - storage limit
+> =C2=A0 memory.zswap=C2=A0 =3D compressed memory=C2=A0 - RAM limit
+>=20
+> This would preserve the existing memory.swap semantics while allowing
+> both backing resources to be constrained independently.
+>=20
+My first thought was "this is confusing", but
+after a minute I realized that most users will=C2=A0
+never set those options to anything=C2=A0other than=C2=A0
+"0" or "max", and the few who do only need to
+touch one of them.
+=20
 
-Limiting how much anonymous memory can be zswapped
-does not guarantee an SLO, though.
+Some people may want to limit a particular
+workload to having no more than 8 GB in a
+place that is not directly accessible.
 
-We have seen plenty of examples in practice of
-workloads that have swap DISABLED, and are still
-thrashing, because part of the working set of
-that program is in the page cache, and that still
-gets evicted.
+They would set memory.swap =3D 8G
 
-The way you can guarantee the workload is not
-thrashing is to limit the total (anon + file
-cache) address space of the program to within
-some size.
 
-Anything else is not a guarantee.
+Other people may want to limit how much
+memory is used for the zswap pool.
 
-What is it you are actually asking for?
+They use memory.zswap.
+
+
+Yet other people may want to limit how much
+physical swap space is used for a particular
+cgroup. They use memory.pswap.
+
+
+Almost nobody would use all three.
+
+Which one you use depends on your use case.
 
 --=20
 All Rights Reversed.
