@@ -1,33 +1,33 @@
-Received: from mta1.migadu.com (out-107.mta1.migadu.com [95.215.58.107])
+Received: from mta1.migadu.com (out-112.mta1.migadu.com [95.215.58.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EFA03939C9
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 19:26:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.107
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05B4F397699
+	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 19:26:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790018792; cv=none; b=Uxzir/f4l1UZzlddA1idsJuV39B2S5sM9VdRuJFHwtm7tllF7rNMFhcI0pKUr5IoR1+YTNOWaMO0bP5wf213zLA81doMmzl7jOiIDcqVIDCjbwAJXaM15gOv0IIFgsyqpRVAfyKbHgJpGeIfn21oIYG/rnQsMcwqH2FHataNlqk=
+	t=1790018798; cv=none; b=uhffpKit3WS3v9qPDQGu8WaEmrmedLbLFQ9f8+/Vsj6y+Sx5HG8D5w8vdZrHZgQiLpxOX30AVNweNg2ZY6XNvqCaARFF/iodxTz6ICs7zN4vmtIgG+Pd/Xh6iWXXNBJaIqllaDPJjMspbjkPB+VwqqkJz5cV5hpFea+4IZMLFKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790018792; c=relaxed/simple;
-	bh=4jN9R36egL4VbLgEQnL5XK49Oe5ZOfWY6kBaMsR1BSA=;
+	s=arc-20240116; t=1790018798; c=relaxed/simple;
+	bh=S4IiI0QtQMZJ6UHYEdTwEsQ4SJWFZYS+fNpb6Z0WBxU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JlqwUzOPKP0GeSsa2U/f+cb4XXQjixPArBLkjO3lLZvW1zXWu6v/rHoXSaHG5COmX6pdSXlmNz1npPTJ/IzMOcK6sO5/JNbMWQaZWSIQPo5ImTm6vZ+YPlf3WTgX9ULvhdUg++OfzrXFGt+ZtRfxiHDl59fZ3lKGUu9wGlLGSaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fd30Z+xm; arc=none smtp.client-ip=95.215.58.107
+	 MIME-Version; b=BaX7dhAvcw/W0o27xTZ6bsbu4iBqH2F/xdY84965U8NEKh6+J3bphjMs3xP+aAfD4NAZS6xy9q339l2s0IcRc+8VBjNMdL4wDMXhEcGgd4XLTmVMvMcxsWebx92PJV3CbjOM1OZjrEOnLFC7cny+HEt/Ayx9codS3lgsZG/201M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=h1YidvtP; arc=none smtp.client-ip=95.215.58.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fd30Z+xm"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="h1YidvtP"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=4jN9R36egL4VbLgEQnL5XK49Oe5ZOfWY6kBaMsR1BSA=;
+DKIM-Signature: a=rsa-sha256; bh=S4IiI0QtQMZJ6UHYEdTwEsQ4SJWFZYS+fNpb6Z0WBxU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790018787; v=1; x=1790623587;
- b=fd30Z+xmERNSfxlCfvTJoTqWMA5iM2XfUDK4VqaRQut2kOI9t5JsbEkSJuBV0qJOGbu1nsZF
- ceg5yKYs5LEm5G0maUdWO+xdwJJAG6oGyS9uyt9pArfZTp5gpGI843uYd11JzkHnG7TKAQZOQYk
- dsDFRQOAwpYXTH4aZsN3nfco=
+ t=1790018794; v=1; x=1790623594;
+ b=h1YidvtPF/BMmhACJVDlhSVdqZR0Q2VpuuiNocO/6hDPxq3TbMfAZsyzHS1mMv8uIcDu7FX/
+ OeDmh4XubtmXU/C1LU2QJPuaMSjAbnN+uFgJtv4ekidvhKwYEUsT/T1FsOp1IukiRrHag+7jU+a
+ /GKyASDiqCEPLOz2n1qqBQVs=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 5760c232baafb0d6;
-	Mon, 21 Sep 2026 19:26:27 +0000
-X-Mizu-Trace-ID: 5760c232baafb0d6
+Received: by smtp.migadu.com with ESMTPS id 923039e922c66b75;
+	Mon, 21 Sep 2026 19:26:34 +0000
+X-Mizu-Trace-ID: 923039e922c66b75
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>,
@@ -60,9 +60,9 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	bpf@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH 3/4] memcg_ext: allow BPF to defer memory.high enforcement
-Date: Mon, 21 Sep 2026 12:25:58 -0700
-Message-ID: <20260921192559.2619635-4-shakeel.butt@linux.dev>
+Subject: [RFC PATCH 4/4] selftests/bpf: add a cgroupfs lock-holder bpf_memcg_ops sample
+Date: Mon, 21 Sep 2026 12:25:59 -0700
+Message-ID: <20260921192559.2619635-5-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260921192559.2619635-1-shakeel.butt@linux.dev>
 References: <20260921192559.2619635-1-shakeel.butt@linux.dev>
@@ -74,325 +74,286 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Before it returns, try_charge_memcg() calls __mem_cgroup_handle_over_high(),
-which reclaims and can throttle the task.  That happens wherever the charge
-happens, so a task holding a kernel lock can be stuck there, and everything
-waiting on the lock is stuck behind it.
+A bpf_memcg_ops policy that keeps tasks holding a cgroupfs kernfs lock out
+of inline memory.high enforcement.
 
-Let's add high_policy ops through which a program gets a read-only snapshot
-of the charge and returns a request.  There is one so far:
-BPF_MEMCG_HIGH_DEFER_INLINE skips the inline call.
+About forty functions take that lock, one of them through guard(rwsem_read),
+so the sample tracks the lock rather than its callers.  A SEC("syscall")
+program finds kernfs_rwsem and kernfs_supers_rwsem inside
+cgrp_dfl_root.kf_root, and fentry/fexit on the rwsem primitives keeps a
+per-task depth for those two addresses.  Every other kernfs user has its own
+kernfs_root, so its own locks, which keeps this to cgroupfs.
 
-A charge runs the policies of its cgroup and of every ancestor.
-task_struct::in_bpf_memcg stops a program that allocates from re-entering
-the charge path and the dispatcher with it.
+down_*() return once the lock is held, so an acquire is counted on their
+exit and a release on the entry of up_*().  The killable, interruptible and
+trylock forms are covered too, checking the return so a failed acquire does
+not count.  downgrade_write() needs no hook.  The depth is clamped at zero
+for tasks already holding the lock when the hooks went on.
 
-A memcg outlives its cgroup while it has charges, and cgroup_bpf_release()
-frees the arrays when the cgroup goes. Take the reference for the walk.
+Two counters guard against passing for the wrong reason: one counts a holder
+that reached inline enforcement anyway, and one counts a holder that could
+not be tracked.  Both must be 0.
+
+Measured with a reproducer [1] for the bug fixed by the patch proposed
+in [2], on a kernel without that fix:
+
+                                      baseline    policy    upstream fix
+  max kernfs_rwsem hold, worker        2.049 s     199 us   not taken
+  max kernfs_supers_rwsem hold         2.049 s     4.8 ms   2.056 s
+  max kernfs_rwsem write wait          4.096 s     6.2 ms   8.7 ms
+  walker passes over /sys/fs/cgroup        352       5711   6700
+  churn mkdir+rmdir ops                 13 059    364 832   415 488
+  churn max latency                     30.7 s    15.1 ms   12.7 ms
+
+The policy does better than the fix on kernfs_supers_rwsem, which the fix
+does not help: it drops kernfs_rwsem from the delivery loop, while the
+policy stops the worker stalling at all.
+
+The throughput columns are about 8% under what the same policy reaches
+hooking one function.  That is the cost of the tracking and motivates
+more optimized way to track the shared locks which can cause isolation
+issues between unrelated workloads.
+
+There is no harness yet, so these numbers come from the reproducer and not
+from the test suite.
+
+[1] https://github.com/shakeelb/mempressure-repros/tree/main/kernfs-notify-memcg
+[2] https://lore.kernel.org/20260910045406.485295-1-shakeel.butt@linux.dev/
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- MAINTAINERS                    |  1 +
- include/linux/bpf-cgroup.h     |  3 ++
- include/linux/bpf_memcontrol.h | 53 +++++++++++++++++++++-
- include/linux/cgroup.h         |  7 +++
- include/linux/sched.h          |  4 ++
- mm/bpf_memcontrol.c            | 82 +++++++++++++++++++++++++++++++++-
- mm/memcontrol.c                | 31 ++++++++++++-
- 7 files changed, 176 insertions(+), 5 deletions(-)
+ .../bpf/progs/memcg_ops_lockholder.c          | 222 ++++++++++++++++++
+ 1 file changed, 222 insertions(+)
+ create mode 100644 tools/testing/selftests/bpf/progs/memcg_ops_lockholder.c
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6215fcb07770..0c84beab396f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5032,6 +5032,7 @@ L:	bpf@vger.kernel.org
- L:	linux-mm@kvack.org
- S:	Maintained
- F:	mm/bpf_memcontrol.c
-+F:	include/linux/bpf_memcontrol.h
- 
- BPF [MISC]
- L:	bpf@vger.kernel.org
-diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-index 4e8150848bd2..e19cf83e58f3 100644
---- a/include/linux/bpf-cgroup.h
-+++ b/include/linux/bpf-cgroup.h
-@@ -517,6 +517,9 @@ static inline int cgroup_bpf_struct_ops_attach(struct bpf_map *map,
- 
- #define cgroup_bpf_enabled(atype) (0)
- #define cgroup_bpf_enabled_runtime(atype) (0)
-+/* Nothing can be attached, so the walk has nothing to walk. */
-+#define bpf_cgroup_struct_ops_foreach(var, item, cgrp, atype)		\
-+	for ((void)(cgrp), (item) = NULL, (var) = NULL; 0; )
- #define BPF_CGROUP_RUN_SA_PROG_LOCK(sk, uaddr, uaddrlen, atype, t_ctx) ({ 0; })
- #define BPF_CGROUP_RUN_SA_PROG(sk, uaddr, uaddrlen, atype) ({ 0; })
- #define BPF_CGROUP_PRE_CONNECT_ENABLED(sk) (0)
-diff --git a/include/linux/bpf_memcontrol.h b/include/linux/bpf_memcontrol.h
-index 8204d894761e..76ea5d1c3d32 100644
---- a/include/linux/bpf_memcontrol.h
-+++ b/include/linux/bpf_memcontrol.h
-@@ -5,13 +5,62 @@
-  * A bpf_memcg_ops is attached to a cgroup.  A charge runs the policies of
-  * that cgroup and of every ancestor, and the kernel combines what they
-  * return.  BPF only picks between things the kernel already does.
-- *
-- * The type has no members yet; they come with the policies that use them.
-  */
- #ifndef _LINUX_BPF_MEMCONTROL_H
- #define _LINUX_BPF_MEMCONTROL_H
- 
-+#include <linux/types.h>
-+#include <linux/gfp_types.h>
-+
-+struct mem_cgroup;
-+struct task_struct;
-+
+diff --git a/tools/testing/selftests/bpf/progs/memcg_ops_lockholder.c b/tools/testing/selftests/bpf/progs/memcg_ops_lockholder.c
+new file mode 100644
+index 000000000000..09a74f21f3da
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/memcg_ops_lockholder.c
+@@ -0,0 +1,222 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * What a policy can ask for when a cgroup is over memory.high.  The kernel
-+ * ORs them, so one policy cannot undo another.
++ * Keep tasks holding a cgroupfs kernfs lock out of inline memory.high
++ * enforcement.
 + */
-+enum bpf_memcg_high_request {
-+	BPF_MEMCG_HIGH_NO_OPINION	= 0,
-+	/*
-+	 * Skip the inline reclaim and throttle.  The debt is kept and paid on
-+	 * the way back to userspace, where no kernel locks are held.
-+	 */
-+	BPF_MEMCG_HIGH_DEFER_INLINE	= 1U << 0,
++
++#include "vmlinux.h"
++#include <bpf/bpf_helpers.h>
++#include <bpf/bpf_tracing.h>
++#include <bpf/bpf_core_read.h>
++
++char _license[] SEC("license") = "GPL";
++
++/* cgrp_dfl_root has no BTF variable, so take it as an untyped ksym. */
++extern const void cgrp_dfl_root __ksym;
++
++/* Set by resolve_locks() below, before any of the hooks are attached. */
++__u64 kernfs_rwsem_addr;
++__u64 kernfs_supers_rwsem_addr;
++
++struct lock_state {
++	__s32 depth;
 +};
 +
-+#define BPF_MEMCG_HIGH_VALID_MASK	BPF_MEMCG_HIGH_DEFER_INLINE
++struct {
++	__uint(type, BPF_MAP_TYPE_TASK_STORAGE);
++	__uint(map_flags, BPF_F_NO_PREALLOC);
++	__type(key, int);
++	__type(value, struct lock_state);
++} lock_state SEC(".maps");
 +
-+/* Read-only snapshot.  Only values the caller already has. */
-+struct bpf_memcg_ctx {
-+	struct mem_cgroup	*memcg;			/* charged memcg */
-+	struct mem_cgroup	*memcg_over_limit;	/* NULL if none found */
-+	struct task_struct	*task;			/* current */
-+	u64			cgroup_id;
-+	u64			over_limit_cgroup_id;	/* 0 if none */
-+	u64			nr_pages_over_high;
-+	u32			gfp_flags;
++/* Charges from a task holding one of the locks: each is a stall avoided. */
++__u64 deferrals;
++/* Charges from everyone else, where we said nothing. */
++__u64 passthroughs;
++/* A holder reached inline enforcement anyway.  Must stay zero. */
++__u64 violations;
++/*
++ * A holder went untracked because task storage could not be created.  That
++ * looks just like a pass, and gets likelier under the pressure we are
++ * testing.  Must stay zero too.
++ */
++__u64 mark_failures;
++
++/*
++ * Find the two rw_semaphores in the cgroup2 kernfs_root.  The loader runs this
++ * once before attaching the hooks, so none of them sees a zero address.  Every
++ * other kernfs user has its own kernfs_root, hence its own locks, which is
++ * what keeps this to cgroupfs.
++ */
++SEC("syscall")
++int resolve_locks(void *ctx)
++{
++	struct cgroup_root *root = (struct cgroup_root *)&cgrp_dfl_root;
++	struct kernfs_root *kf;
++
++	kf = BPF_CORE_READ(root, kf_root);
++	if (!kf)
++		return 1;
++
++	kernfs_rwsem_addr = (__u64)kf +
++		bpf_core_field_offset(struct kernfs_root, kernfs_rwsem);
++	kernfs_supers_rwsem_addr = (__u64)kf +
++		bpf_core_field_offset(struct kernfs_root, kernfs_supers_rwsem);
++	return 0;
++}
++
++static __always_inline bool is_cgroup_kernfs_lock(const void *sem)
++{
++	__u64 addr = (__u64)sem;
++
++	return addr && (addr == kernfs_rwsem_addr ||
++			addr == kernfs_supers_rwsem_addr);
++}
++
++static __always_inline void note_acquire(const void *sem)
++{
++	struct lock_state *st;
++
++	if (!is_cgroup_kernfs_lock(sem))
++		return;
++
++	st = bpf_task_storage_get(&lock_state, bpf_get_current_task_btf(), NULL,
++				  BPF_LOCAL_STORAGE_GET_F_CREATE);
++	if (!st) {
++		__sync_fetch_and_add(&mark_failures, 1);
++		return;
++	}
++	st->depth++;
++}
++
++static __always_inline void note_release(const void *sem)
++{
++	struct lock_state *st;
++
++	if (!is_cgroup_kernfs_lock(sem))
++		return;
++
++	st = bpf_task_storage_get(&lock_state, bpf_get_current_task_btf(), NULL, 0);
++	if (!st)
++		return;
++	/* A task already holding it when we attached has no acquire to match. */
++	if (st->depth > 0)
++		st->depth--;
++}
++
++/*
++ * down_*() return once the lock is held, so the hold runs from their exit to
++ * the entry of up_*().  That excludes the wait.
++ *
++ * downgrade_write() needs no hook: the lock stays held, and the up_read()
++ * after it pairs with the original down_write().
++ */
++
++SEC("fexit/down_read")
++int BPF_PROG(down_read_exit, struct rw_semaphore *sem)
++{
++	note_acquire(sem);
++	return 0;
++}
++
++SEC("fexit/down_write")
++int BPF_PROG(down_write_exit, struct rw_semaphore *sem)
++{
++	note_acquire(sem);
++	return 0;
++}
++
++/* The killable and interruptible forms return 0 when they got the lock. */
++SEC("fexit/down_read_killable")
++int BPF_PROG(down_read_killable_exit, struct rw_semaphore *sem, int ret)
++{
++	if (!ret)
++		note_acquire(sem);
++	return 0;
++}
++
++SEC("fexit/down_read_interruptible")
++int BPF_PROG(down_read_interruptible_exit, struct rw_semaphore *sem, int ret)
++{
++	if (!ret)
++		note_acquire(sem);
++	return 0;
++}
++
++SEC("fexit/down_write_killable")
++int BPF_PROG(down_write_killable_exit, struct rw_semaphore *sem, int ret)
++{
++	if (!ret)
++		note_acquire(sem);
++	return 0;
++}
++
++/* The trylocks return 1 when they got the lock. */
++SEC("fexit/down_read_trylock")
++int BPF_PROG(down_read_trylock_exit, struct rw_semaphore *sem, int ret)
++{
++	if (ret == 1)
++		note_acquire(sem);
++	return 0;
++}
++
++SEC("fexit/down_write_trylock")
++int BPF_PROG(down_write_trylock_exit, struct rw_semaphore *sem, int ret)
++{
++	if (ret == 1)
++		note_acquire(sem);
++	return 0;
++}
++
++SEC("fentry/up_read")
++int BPF_PROG(up_read_enter, struct rw_semaphore *sem)
++{
++	note_release(sem);
++	return 0;
++}
++
++SEC("fentry/up_write")
++int BPF_PROG(up_write_enter, struct rw_semaphore *sem)
++{
++	note_release(sem);
++	return 0;
++}
++
++/* If a holder gets here, the policy did not work. */
++SEC("fentry/__mem_cgroup_handle_over_high")
++int BPF_PROG(over_high_enter)
++{
++	struct lock_state *st;
++
++	st = bpf_task_storage_get(&lock_state, bpf_get_current_task_btf(), NULL, 0);
++	if (st && st->depth > 0)
++		__sync_fetch_and_add(&violations, 1);
++	return 0;
++}
++
++/* BPF_PROG() uses "ctx" for the raw argument array, hence "mctx" here. */
++SEC("struct_ops")
++__u32 BPF_PROG(kernfs_high_policy, const struct bpf_memcg_ctx *mctx)
++{
++	struct lock_state *st;
++
++	/*
++	 * mctx->task is the charging task.  No F_CREATE, so this is just an
++	 * RCU read, and the counters are atomics on .bss.  Both are fine here.
++	 */
++	st = bpf_task_storage_get(&lock_state, mctx->task, NULL, 0);
++	if (!st || st->depth <= 0) {
++		__sync_fetch_and_add(&passthroughs, 1);
++		return BPF_MEMCG_HIGH_NO_OPINION;
++	}
++
++	__sync_fetch_and_add(&deferrals, 1);
++
++	/* The kernel ORs this with what the other policies return. */
++	return BPF_MEMCG_HIGH_DEFER_INLINE;
++}
++
++SEC(".struct_ops.link")
++struct bpf_memcg_ops kernfs_lockholder = {
++	.high_policy = (void *)kernfs_high_policy,
 +};
-+
- struct bpf_memcg_ops {
-+	/**
-+	 * high_policy - say where memory.high should be enforced
-+	 * @ctx: snapshot of the charge
-+	 *
-+	 * Return: bits from enum bpf_memcg_high_request, or 0.  Other bits
-+	 * are dropped.
-+	 */
-+	u32 (*high_policy)(const struct bpf_memcg_ctx *ctx);
- };
- 
-+/*
-+ * Run every high_policy on @memcg's cgroup and its ancestors, and return the
-+ * combined request for the caller to act on.
-+ *
-+ * @memcg:	the memcg being charged, never NULL
-+ * @over_limit:	first memcg found over memory.high or swap.high, or NULL
-+ * @gfp_mask:	the charge's gfp mask
-+ */
-+u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
-+			  struct mem_cgroup *over_limit, gfp_t gfp_mask);
-+
- #endif /* _LINUX_BPF_MEMCONTROL_H */
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 5dfa915a630e..cf92b6cec819 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -959,10 +959,17 @@ static inline void cgroup_bpf_put(struct cgroup *cgrp)
- 	percpu_ref_put(&cgrp->bpf.refcnt);
- }
- 
-+/* Fails once the cgroup is gone and its bpf state has been freed. */
-+static inline bool cgroup_bpf_tryget_live(struct cgroup *cgrp)
-+{
-+	return percpu_ref_tryget_live_rcu(&cgrp->bpf.refcnt);
-+}
-+
- #else /* CONFIG_CGROUP_BPF */
- 
- static inline void cgroup_bpf_get(struct cgroup *cgrp) {}
- static inline void cgroup_bpf_put(struct cgroup *cgrp) {}
-+static inline bool cgroup_bpf_tryget_live(struct cgroup *cgrp) { return false; }
- 
- #endif /* CONFIG_CGROUP_BPF */
- 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 8b3d47a325cc..4b20a346aaa8 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1031,6 +1031,10 @@ struct task_struct {
- #ifdef CONFIG_MEMCG_V1
- 	unsigned			in_user_fault:1;
- #endif
-+#ifdef CONFIG_MEMCG
-+	/* A bpf_memcg_ops program is running; do not recurse into policy */
-+	unsigned			in_bpf_memcg:1;
-+#endif
- #ifdef CONFIG_LRU_GEN
- 	/* whether the LRU algorithm may apply to this access */
- 	unsigned			in_lru_fault:1;
-diff --git a/mm/bpf_memcontrol.c b/mm/bpf_memcontrol.c
-index fd6dff150f01..cfd0f1d443c9 100644
---- a/mm/bpf_memcontrol.c
-+++ b/mm/bpf_memcontrol.c
-@@ -246,8 +246,17 @@ static const struct btf_kfunc_id_set bpf_memcontrol_reclaim_kfunc_set = {
-  * request and the kernel acts on it.  Nothing here reclaims or sleeps.
-  */
- 
--/* CFI stubs.  A slot points at these while its policy is being detached. */
-+/*
-+ * CFI stubs.  These really run: a slot points at them while its policy is
-+ * being detached.  Return 0, the identity for the kernel's OR.
-+ */
-+static u32 high_policy_stub(const struct bpf_memcg_ctx *ctx)
-+{
-+	return BPF_MEMCG_HIGH_NO_OPINION;
-+}
-+
- static struct bpf_memcg_ops __bpf_memcg_ops = {
-+	.high_policy = high_policy_stub,
- };
- 
- static const struct bpf_func_proto *
-@@ -326,6 +335,77 @@ static struct bpf_struct_ops bpf_memcg_ops_desc = {
- 	 */
- };
- 
-+static void bpf_memcg_ctx_init(struct bpf_memcg_ctx *ctx,
-+			       struct mem_cgroup *memcg,
-+			       struct mem_cgroup *over_limit, gfp_t gfp_mask)
-+{
-+	ctx->memcg = memcg;
-+	ctx->memcg_over_limit = over_limit;
-+	ctx->task = current;
-+	ctx->cgroup_id = cgroup_id(memcg->css.cgroup);
-+	ctx->over_limit_cgroup_id = over_limit ?
-+		cgroup_id(over_limit->css.cgroup) : 0;
-+	ctx->nr_pages_over_high = current->memcg_nr_pages_over_high;
-+	ctx->gfp_flags = (__force u32)gfp_mask;
-+}
-+
-+u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
-+			  struct mem_cgroup *over_limit, gfp_t gfp_mask)
-+{
-+	const struct bpf_prog_array_item *item;
-+	const struct bpf_memcg_ops *ops;
-+	struct bpf_memcg_ctx ctx;
-+	u32 acc = BPF_MEMCG_HIGH_NO_OPINION;
-+	struct cgroup *cgrp;
-+
-+	if (!cgroup_bpf_enabled(CGROUP_MEMCG_OPS))
-+		return acc;
-+
-+	/*
-+	 * Only the default hierarchy has a cgroup_bpf, and the static key is
-+	 * global, so one policy anywhere turns this on for v1 memcgs too.  A
-+	 * v1 memcg still cannot get here, because memory.high and swap.high
-+	 * are both v2-only and so it never builds the debt that leads to this
-+	 * call.  A hook on a path v1 can reach needs its own cgroup_on_dfl()
-+	 * test: a v1 cgroup has no effective array and an uninitialised
-+	 * cgrp->bpf.refcnt.
-+	 */
-+	cgrp = memcg->css.cgroup;
-+
-+	/*
-+	 * A program can allocate and re-enter the charge path.  Skip the
-+	 * nested call.  This guards the callbacks only.
-+	 */
-+	if (current->in_bpf_memcg)
-+		return acc;
-+	current->in_bpf_memcg = 1;
-+
-+	rcu_read_lock_dont_migrate();
-+
-+	/*
-+	 * A memcg outlives its cgroup while it has charges, and
-+	 * cgroup_bpf_release() frees the arrays when the cgroup goes.
-+	 */
-+	if (!cgroup_bpf_tryget_live(cgrp))
-+		goto out;
-+
-+	bpf_memcg_ctx_init(&ctx, memcg, over_limit, gfp_mask);
-+
-+	bpf_cgroup_struct_ops_foreach(ops, item, cgrp, CGROUP_MEMCG_OPS) {
-+		if (ops->high_policy)
-+			acc |= ops->high_policy(&ctx) &
-+			       BPF_MEMCG_HIGH_VALID_MASK;
-+	}
-+
-+	cgroup_bpf_put(cgrp);
-+out:
-+	rcu_read_unlock_migrate();
-+
-+	current->in_bpf_memcg = 0;
-+
-+	return acc;
-+}
-+
- static int __init bpf_memcg_ops_register(void)
- {
- 	/*
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1271d390b617..bc283680640b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -28,6 +28,7 @@
- #include <linux/cgroup-defs.h>
- #include <linux/page_counter.h>
- #include <linux/memcontrol.h>
-+#include <linux/bpf_memcontrol.h>
- #include <linux/cgroup.h>
- #include <linux/cpuset.h>
- #include <linux/sched/mm.h>
-@@ -2642,9 +2643,26 @@ void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
- 	css_put(&memcg->css);
- }
- 
-+/*
-+ * Ask the attached bpf_memcg_ops whether to skip the inline memory.high
-+ * reclaim and throttle.
-+ *
-+ * @memcg:	the memcg being charged
-+ * @over_limit:	first memcg found over memory.high or swap.high, starting at
-+ *		the charged one, or NULL if the walk found none
-+ */
-+static bool bpf_memcg_high_defer(struct mem_cgroup *memcg,
-+				 struct mem_cgroup *over_limit, gfp_t gfp_mask)
-+{
-+	u32 req = bpf_memcg_high_policy(memcg, over_limit, gfp_mask);
-+
-+	return req & BPF_MEMCG_HIGH_DEFER_INLINE;
-+}
-+
- static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 			    unsigned int nr_pages)
- {
-+	struct mem_cgroup *leaf_memcg = memcg;
- 	unsigned int batch = max(MEMCG_CHARGE_BATCH, nr_pages);
- 	int nr_retries = MAX_RECLAIM_RETRIES;
- 	struct mem_cgroup *mem_over_limit;
-@@ -2846,8 +2864,17 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	 */
- 	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
- 	    !(current->flags & PF_MEMALLOC) &&
--	    gfpflags_allow_blocking(gfp_mask))
--		__mem_cgroup_handle_over_high(gfp_mask);
-+	    gfpflags_allow_blocking(gfp_mask)) {
-+		/*
-+		 * The loop above left @memcg as the first memcg it found over
-+		 * memory.high or swap.high -- possibly the charged one itself
-+		 * -- or NULL if it found none.  Note the debt can be left over
-+		 * from an earlier charge, so NULL does not mean no pressure.
-+		 * The policy wants the memcg we charged.
-+		 */
-+		if (!bpf_memcg_high_defer(leaf_memcg, memcg, gfp_mask))
-+			__mem_cgroup_handle_over_high(gfp_mask);
-+	}
- 	return 0;
- }
- 
 -- 
 2.53.0-Meta
 
