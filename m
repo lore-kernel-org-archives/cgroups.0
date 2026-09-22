@@ -1,125 +1,341 @@
-Received: from mail-oi2-f23.google.com (mail-oi2-f23.google.com [74.125.231.215])
+Received: from mta1.migadu.com (out-234.mta1.migadu.com [95.215.58.234])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DB672E266C
-	for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 23:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.215
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CCA23876B3
+	for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 02:24:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.234
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790031836; cv=none; b=UzoT+hlR413DzDmhgamfhr/rCMvD0P2ob30uIYOaiKVuBWKOAA23n5/m+t31qMHZC5Bh3q5+UbUBqBRfv+ctyhAtLupfS9x8K/mzKdPndYwtMThNs1aS03qnwS8zySmk4m01IPqmIncUjTShkqOLNOSgnyqh2RQhErWID/mmgoc=
+	t=1790043867; cv=none; b=fmdvKEe35MaBNwOctndOyHX4flQCEgv3mfGoAcBvgQxnPekhKAzi+KNG3lOY08uXfCZ3ELF6yr3+qlXDLDEkHHpcaZ+Q+/CEcy+ewoNsJ52ddb1eK8ebSd8AmaNVuNwPIBCZltvH08qE5emY3310tbyhtnl06L6OiYPnjd4lRdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790031836; c=relaxed/simple;
-	bh=kh9puILIR9r20G3kwpzzv7NaVqtxLvbguKQW3SwMZ5M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TKEop/116YvSVRvUY0ro6fM/Eg/AIfBgiGQQ4BUBr6N9i7fWuHJNWWWnYtw4A0+styWd/vIrLu5UmS9s6m2Hb/7DnQw5eEzCHPSyJKv4UDqaYKTjU9S8miRVbMTUJEkKzZJbEUVwlEzmGF+i1cnY7zV9Wi/a3JEEhE9yJ+pW/qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RJtiu6gf; arc=none smtp.client-ip=74.125.231.215
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790043867; c=relaxed/simple;
+	bh=DWZKjp4sCqIk8e08lozR04iXNlC3I5VUKgCLN8uovio=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ApG5oudBj9ZP/9ANOQCOhqx4r+nd5eXC2UW0+lRktruTtrGg6IJqPHCvJ/74wNklQoO+7dh/UhiUcuDvkQw08K/OB93POOreqVKPXotFq2hpro9p8QYvVezJHPUxSjr+CGg++vuAg0bI5Fc95OWhE3OT3XnbIO46w+FAdHhEoh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=t4IaOsFw; arc=none smtp.client-ip=95.215.58.234
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RJtiu6gf"
-Received: by mail-oi2-f23.google.com with SMTP id 46e09a7af769-7f4f0d37dccso1939321a34.3
-        for <cgroups@vger.kernel.org>; Mon, 21 Sep 2026 16:03:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790031833; x=1790636633; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=OdbPBPyzaOM2wXlSY62pNAL0ZMKs+usFBD9FO5JbEdo=;
-        b=RJtiu6gf6NVWi16q+NFEmBHvIqrrqdw3bUrNst3yKEkzLY9nwfl3bJhtXM0mELCNkf
-         RCdbB4qA3RIBfyTipAR50KyF9Bjm2eDI16LGJVZ4mgd2hvKxiV1mSRFCTSQjBwbH4QO3
-         XT9Ax1UgRmZQpPeaCgltVBurOsXB5XhRy+ZtXsnSBAJcmv9PhC2WUblhPnZRthDQiH3e
-         xESxURzq1Zw7hdsSI+aaxIn2P7oUBm9sqcF6nNRLMDNErYnYpuYXFvjgyi9yDdaKDQnN
-         Y+lNKe7d0LBJq0f5yE6dlrQz+H8qs7InnnDgFCKNWNePWtNIpOymedxoGiTD4n7ifo61
-         WcLw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790031833; x=1790636633;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=OdbPBPyzaOM2wXlSY62pNAL0ZMKs+usFBD9FO5JbEdo=;
-        b=iFiaaehCNYH/+yJs6IBIB2rzr5pYQyw6SxS8MymTipjPO1srQf106YjzWs4wGsdPqk
-         som/9UW3awFkHSpiufOqnm3IoCaCkeZygLeA8xa5jrvy7fQ6Ki1Fa4pt/07v4jhKsUsJ
-         irgF3wZYP99kiYCcCJiH8dalIV+4w3uxaZ6ymYkAax7mp5NWoI/fgUeX+B9JJ5HanTRy
-         KVEJ63mK2E4r7jTY+VzJtZJw6e8pOGjQvhh1mX1++y5WH4Wb5t6jP1oM0W682sxJ12MZ
-         VU6bkzh7QBSjJMBCgihAgSgqXsikZqcimBWicMHrjSZsDyRQxXk2C0XA6b6dtH4r5Kv1
-         IOOg==
-X-Forwarded-Encrypted: i=1; AKwUvByhwcMzfG3z+6MI/quuqerFeMW0mdjHY1Nasu2owM/MHgL09raWVcWMVac+95cJo9zSQzsIyDur@vger.kernel.org
-X-Gm-Message-State: AFuF++lSzTFelo+BqQlR9dbDXPfjdj9SSNYAi15Pv7WgKkeVjFF/biQD
-	5EnnOqYbEgvrU5EJo4XTjPRa+r+U/nzlrlFcdn0uT9GaDgpa7K2rzW63
-X-Gm-Gg: AYBFou33YEb2Ve2FFZaYnqclVzaGZ2y/t/Cnl0jad3oIfNKaznkx3xFc+oVoJFZD5EP
-	P+SghR4s872Bk2WBS4+rvd1ClEH3svQBJKoVsSuWAR5S8HFjfpPxywUAKnonKq4DUK8QHGJy2fo
-	hzvsc/LyGYjDBjuGKt8E+0/HNiXr6hS2d/bD4HIZy6QLZ+AJfzXz7kCAP+vGuCxIUfe+N592PMk
-	VUxNVfcdXCK9cmpJkfUv7TPuxCqx7BW0qoyY6XUJd/nnO57Wf4XqZiOy+4/11dFDMV13ElRmOd1
-	kEIBccX24xYaJsWZ51YAwBEHGxp0WJRuEgQrcmhqEFwDNNwcw06vVA8942T+unmEHFUfRjWVxdc
-	0znGBf2T6+0V7GTfnEEqpIj1vcFrarGG0foxuHpphdP1xQ3vjXfiQWVYwRNXu0sNXqmpX3WPtpN
-	87mfmH3wPvjug/lpm5ICi31Ozpcsmk9ol0hLeosGYRHTWvWWq7x+SKP49wAp6lpNL6JPBg1Viqb
-	zGXkjv7nTKhOgpJ0luqSj5boPXU
-X-Received: by 2002:a05:6830:610f:b0:806:e047:cd7d with SMTP id 46e09a7af769-80de045b1d3mr12860708a34.7.1790031833370;
-        Mon, 21 Sep 2026 16:03:53 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:f::])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-814e648bd3asm184805a34.17.2026.09.21.16.03.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2026 16:03:52 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Hongfu Li <hongfu.li@linux.dev>
-Cc: Muchun Song <muchun.song@linux.dev>,
-	Oscar Salvador <osalvador@suse.de>,
-	David Hildenbrand <david@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Michal Hocko <mhocko@suse.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Chris Down <chris@chrisdown.name>,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="t4IaOsFw"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=DWZKjp4sCqIk8e08lozR04iXNlC3I5VUKgCLN8uovio=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790043863; v=1; x=1790648663;
+ b=t4IaOsFwT42y5LoTk6Wi5j+VZ7kgkjZsD6fKr/vhVV70mVtBlmonjRMmEX9KKXcnn85wDr0Y
+ BUuQhtngeKVwdzpnsv6eQN1y6agd3i3Jm00bSNwUC8QiVHAQifwxHRdN6L4gWbJLji/RhzZ1f7C
+ aXZnBDSXmMH8y4BFZ5uI0+ok=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id e4324fc653d572c0;
+	Tue, 22 Sep 2026 02:24:23 +0000
+X-Mizu-Trace-ID: e4324fc653d572c0
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 22 Sep 2026 10:24:16 +0800
+From: Baoquan He <baoquan.he@linux.dev>
+To: Ridong Chen <ridong.chen@linux.dev>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	Hongfu Li <lihongfu@kylinos.cn>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 2/2] mm/memcg: migrate per-node hugetlb lruvec stat together with hugetlb folio
-Date: Mon, 21 Sep 2026 16:03:49 -0700
-Message-ID: <20260921230350.3649114-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260921-for-hugetlb_state-v1-2-8a6eec92661f@kylinos.cn>
-References: 
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Dave Chinner <david@fromorbit.com>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+	Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: Re: [PATCH RFC 3/4] mm/vmscan: move struct scan_control to the local
+ trace header
+Message-ID: <arHm0PVMaG08bq-Z@fedora>
+References: <20260921114606.3871820-1-ridong.chen@linux.dev>
+ <20260921114606.3871820-4-ridong.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260921114606.3871820-4-ridong.chen@linux.dev>
 
-On Mon, 21 Sep 2026 17:12:35 +0800 Hongfu Li <hongfu.li@linux.dev> wrote:
-
-> From: Hongfu Li <lihongfu@kylinos.cn>
+On 09/21/26 at 07:46pm, Ridong Chen wrote:
+> From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> memory.numa_stat exposes per-node hugetlb counters from per-node lruvec
-> stats. These stats are accounted against folio_nid(): incremented on
-> the folio's node when handed to a user, decremented when the folio is
-> returned to the pool.
+> Now that the vmscan tracepoints live in mm/trace_vmscan.h, move
+> struct scan_control there as well so the trace events can reference
+> reclaim-internal state directly. The definition is wrapped in its own
+> include guard because the trace header is re-read under
+> TRACE_HEADER_MULTI_READ, while a C struct may only be defined once.
 > 
-> During hugetlb folio migration, mem_cgroup_migrate() moves the charge
-> to the new folio and drops the memcg data of the old one, so the free
-> of the old folio right after the migration skips the memcg per-node
-> lruvec decrement. The hugetlb count stays attributed to the old node
-> for the rest of the life of the charge, while the target folio gets no
-> increment on the new node; its later free decrements a counter that
-> was never incremented.
+> No functional change.
 > 
-> Migrate the per-node lruvec accounting alongside migration. Global
-> memcg totals remain balanced because they track resource consumption,
-> not node placement.
+> Assisted-by: Claude:claude-opus-4-8
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> ---
+>  mm/trace_vmscan.h | 115 ++++++++++++++++++++++++++++++++++++++++++++++
+>  mm/vmscan.c       | 108 -------------------------------------------
+>  2 files changed, 115 insertions(+), 108 deletions(-)
+> 
+> diff --git a/mm/trace_vmscan.h b/mm/trace_vmscan.h
+> index c5d824fef554..c8ac5d4e4043 100644
+> --- a/mm/trace_vmscan.h
+> +++ b/mm/trace_vmscan.h
 
-Hi Hongfu,
+This looks not good, I would rather see it's added in mm/internal.h, or
+a new mm/vmscan.h. Putting scan_control in mm/trace_vmscan.h is too weird.
 
-This is another great catch, thank you for working on the fix!
-I was able to confirm that the issue exists and was fixed by this patch.
-
-Tested-by: Joshua Hahn <joshua.hahnjy@gmail.com>
-Reviewed-by: Joshua Hahn <joshua.hahnjy@gmail.com>
-
-> Fixes: 05d4532b60e3 ("memcg/hugetlb: add hugeTLB counters to memcg")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
+> @@ -9,8 +9,123 @@
+>  #include <linux/tracepoint.h>
+>  #include <linux/mm.h>
+>  #include <linux/memcontrol.h>
+> +#include <linux/swap.h>
+>  #include <trace/events/mmflags.h>
+>  
+> +/* Guard the struct against define_trace.h's repeated inclusion. */
+> +#ifndef _MM_VMSCAN_INTERNAL_H
+> +#define _MM_VMSCAN_INTERNAL_H
+> +
+> +struct scan_control {
+> +	/* How many pages shrink_list() should reclaim */
+> +	unsigned long nr_to_reclaim;
+> +
+> +	/*
+> +	 * Nodemask of nodes allowed by the caller. If NULL, all nodes
+> +	 * are scanned.
+> +	 */
+> +	const nodemask_t *nodemask;
+> +
+> +	/*
+> +	 * The memory cgroup that hit its limit and as a result is the
+> +	 * primary target of this reclaim invocation.
+> +	 */
+> +	struct mem_cgroup *target_mem_cgroup;
+> +
+> +	/*
+> +	 * Scan pressure balancing between anon and file LRUs
+> +	 */
+> +	unsigned long	anon_cost;
+> +	unsigned long	file_cost;
+> +
+> +	/* Swappiness value for proactive reclaim. Always use sc_swappiness()! */
+> +	int *proactive_swappiness;
+> +
+> +	/* Can active folios be deactivated as part of reclaim? */
+> +#define DEACTIVATE_ANON 1
+> +#define DEACTIVATE_FILE 2
+> +	unsigned int may_deactivate:2;
+> +	unsigned int force_deactivate:1;
+> +	unsigned int skipped_deactivate:1;
+> +
+> +	/* zone_reclaim_mode, boost reclaim */
+> +	unsigned int may_writepage:1;
+> +
+> +	/* zone_reclaim_mode */
+> +	unsigned int may_unmap:1;
+> +
+> +	/* zone_reclaim_mode, boost reclaim, cgroup restrictions */
+> +	unsigned int may_swap:1;
+> +
+> +	/* Not allow cache_trim_mode to be turned on as part of reclaim? */
+> +	unsigned int no_cache_trim_mode:1;
+> +
+> +	/* Has cache_trim_mode failed at least once? */
+> +	unsigned int cache_trim_mode_failed:1;
+> +
+> +	/* Proactive reclaim invoked by userspace */
+> +	unsigned int proactive:1;
+> +
+> +	/*
+> +	 * Cgroup memory below memory.low is protected as long as we
+> +	 * don't threaten to OOM. If any cgroup is reclaimed at
+> +	 * reduced force or passed over entirely due to its memory.low
+> +	 * setting (memcg_low_skipped), and nothing is reclaimed as a
+> +	 * result, then go back for one more cycle that reclaims the protected
+> +	 * memory (memcg_low_reclaim) to avert OOM.
+> +	 */
+> +	unsigned int memcg_low_reclaim:1;
+> +	unsigned int memcg_low_skipped:1;
+> +
+> +	/* Shared cgroup tree walk failed, rescan the whole tree */
+> +	unsigned int memcg_full_walk:1;
+> +
+> +	unsigned int hibernation_mode:1;
+> +
+> +	/* One of the zones is ready for compaction */
+> +	unsigned int compaction_ready:1;
+> +
+> +	/* There is easily reclaimable cold cache in the current node */
+> +	unsigned int cache_trim_mode:1;
+> +
+> +	/* The file folios on the current node are dangerously low */
+> +	unsigned int file_is_tiny:1;
+> +
+> +	/* Always discard instead of demoting to lower tier memory */
+> +	unsigned int no_demotion:1;
+> +
+> +	/* Allocation order */
+> +	s8 order;
+> +
+> +	/* Scan (total_size >> priority) pages at once */
+> +	s8 priority;
+> +
+> +	/* The highest zone to isolate folios for reclaim from */
+> +	s8 reclaim_idx;
+> +
+> +	/* This context's GFP mask */
+> +	gfp_t gfp_mask;
+> +
+> +	/* Incremented by the number of inactive pages that were scanned */
+> +	unsigned long nr_scanned;
+> +
+> +	/* Number of pages freed so far during a call to shrink_zones() */
+> +	unsigned long nr_reclaimed;
+> +
+> +	struct {
+> +		unsigned int dirty;
+> +		unsigned int congested;
+> +		unsigned int writeback;
+> +		unsigned int immediate;
+> +		unsigned int taken;
+> +	} nr;
+> +
+> +	/* for recording the reclaimed slab by now */
+> +	struct reclaim_state reclaim_state;
+> +};
+> +
+> +#endif /* _MM_VMSCAN_INTERNAL_H */
+> +
+>  #define RECLAIM_WB_ANON		0x0001u
+>  #define RECLAIM_WB_FILE		0x0002u
+>  #define RECLAIM_WB_MIXED	0x0010u
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 0eb7fa8e1d43..2fd9b42f89d8 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -73,114 +73,6 @@
+>  #define CREATE_TRACE_POINTS
+>  #include "trace_vmscan.h"
+>  
+> -struct scan_control {
+> -	/* How many pages shrink_list() should reclaim */
+> -	unsigned long nr_to_reclaim;
+> -
+> -	/*
+> -	 * Nodemask of nodes allowed by the caller. If NULL, all nodes
+> -	 * are scanned.
+> -	 */
+> -	const nodemask_t *nodemask;
+> -
+> -	/*
+> -	 * The memory cgroup that hit its limit and as a result is the
+> -	 * primary target of this reclaim invocation.
+> -	 */
+> -	struct mem_cgroup *target_mem_cgroup;
+> -
+> -	/*
+> -	 * Scan pressure balancing between anon and file LRUs
+> -	 */
+> -	unsigned long	anon_cost;
+> -	unsigned long	file_cost;
+> -
+> -	/* Swappiness value for proactive reclaim. Always use sc_swappiness()! */
+> -	int *proactive_swappiness;
+> -
+> -	/* Can active folios be deactivated as part of reclaim? */
+> -#define DEACTIVATE_ANON 1
+> -#define DEACTIVATE_FILE 2
+> -	unsigned int may_deactivate:2;
+> -	unsigned int force_deactivate:1;
+> -	unsigned int skipped_deactivate:1;
+> -
+> -	/* zone_reclaim_mode, boost reclaim */
+> -	unsigned int may_writepage:1;
+> -
+> -	/* zone_reclaim_mode */
+> -	unsigned int may_unmap:1;
+> -
+> -	/* zone_reclaim_mode, boost reclaim, cgroup restrictions */
+> -	unsigned int may_swap:1;
+> -
+> -	/* Not allow cache_trim_mode to be turned on as part of reclaim? */
+> -	unsigned int no_cache_trim_mode:1;
+> -
+> -	/* Has cache_trim_mode failed at least once? */
+> -	unsigned int cache_trim_mode_failed:1;
+> -
+> -	/* Proactive reclaim invoked by userspace */
+> -	unsigned int proactive:1;
+> -
+> -	/*
+> -	 * Cgroup memory below memory.low is protected as long as we
+> -	 * don't threaten to OOM. If any cgroup is reclaimed at
+> -	 * reduced force or passed over entirely due to its memory.low
+> -	 * setting (memcg_low_skipped), and nothing is reclaimed as a
+> -	 * result, then go back for one more cycle that reclaims the protected
+> -	 * memory (memcg_low_reclaim) to avert OOM.
+> -	 */
+> -	unsigned int memcg_low_reclaim:1;
+> -	unsigned int memcg_low_skipped:1;
+> -
+> -	/* Shared cgroup tree walk failed, rescan the whole tree */
+> -	unsigned int memcg_full_walk:1;
+> -
+> -	unsigned int hibernation_mode:1;
+> -
+> -	/* One of the zones is ready for compaction */
+> -	unsigned int compaction_ready:1;
+> -
+> -	/* There is easily reclaimable cold cache in the current node */
+> -	unsigned int cache_trim_mode:1;
+> -
+> -	/* The file folios on the current node are dangerously low */
+> -	unsigned int file_is_tiny:1;
+> -
+> -	/* Always discard instead of demoting to lower tier memory */
+> -	unsigned int no_demotion:1;
+> -
+> -	/* Allocation order */
+> -	s8 order;
+> -
+> -	/* Scan (total_size >> priority) pages at once */
+> -	s8 priority;
+> -
+> -	/* The highest zone to isolate folios for reclaim from */
+> -	s8 reclaim_idx;
+> -
+> -	/* This context's GFP mask */
+> -	gfp_t gfp_mask;
+> -
+> -	/* Incremented by the number of inactive pages that were scanned */
+> -	unsigned long nr_scanned;
+> -
+> -	/* Number of pages freed so far during a call to shrink_zones() */
+> -	unsigned long nr_reclaimed;
+> -
+> -	struct {
+> -		unsigned int dirty;
+> -		unsigned int congested;
+> -		unsigned int writeback;
+> -		unsigned int immediate;
+> -		unsigned int taken;
+> -	} nr;
+> -
+> -	/* for recording the reclaimed slab by now */
+> -	struct reclaim_state reclaim_state;
+> -};
+> -
+>  #ifdef ARCH_HAS_PREFETCHW
+>  static inline void prefetchw_prev_lru_folio(struct folio *folio,
+>  		struct list_head *base)
+> -- 
+> 2.34.1
+> 
