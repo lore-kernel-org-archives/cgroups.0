@@ -1,225 +1,169 @@
-Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
+Received: from mta1.migadu.com (out-182.mta1.migadu.com [95.215.58.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A6D0548566
-	for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 12:50:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F1985476F9
+	for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 13:11:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790081436; cv=none; b=MTEIGl3Yv5i9f5gtnDwD6XeG0g+542wbkzLZsOiYVDgX1XcuDkDNLGT7iQa9DfaVmNYr5L6l2WEYVQ/r/Xay556JzUJBUz7i0NEA4JbVvmc+QKrQmCagn5zo3SlJ66wTxFZFN7JH8mZn5TRw7JSjISjRbFIplfxTQuPzbuTlB8k=
+	t=1790082718; cv=none; b=RQl0ZKxGOSe02WvVax4RJu118igEbqy06owAOkRaL0ntnO0sUHq9cGo3dVFks9ryUJL+UZLtOz3DygmosEMwovQxVIup7XPHeDIB7XCM7wEVSls761YAe6R3v8rAdzYEi0731diXBYIS0bE821TPfnOGl7h/aKO5AYOnVsCTZh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790081436; c=relaxed/simple;
-	bh=SI3Qwx8gHmHgetJUzIPJ++C7VjKAFpkXf6OzpxqmoBw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=inokMjcigT9uddy+9Fsg7MszwfHtV0CHzisGjOVrRNGhhvGn56/o/NOwfFGMOdkMu7pgrzEfK3C/b4iSbqB4cBV/969y/+Cr9f/Km3x1k8ySFQkpiHc02c/6Hjzse5UZ9hXrvI+FS5yXFrrUAjjifGpFTMAFMk7Ngib+IXAiXyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=ejbEwdyo; arc=none smtp.client-ip=74.125.228.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1790082718; c=relaxed/simple;
+	bh=wGfhs1JUoZWlzQjOG4m/OoSrn0nHg+mo1158dIosQAk=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=dT30CNrCkJVze8mPYU1s8gtbXh1ZM7SB+/pGMCmE7JVOnis+2qpjpWIwge4cMJuJgkSFYqWg1acVUf3jR4k17NW6rJTVoVbOBjY+W1u+ZSUlQ9XOBj63t0ZjfnG2vFlI3i5oACx2L9IWm5U1MGJiS3pZ7YVHY3Qm/r+LWOsvhGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=nbW4g3rK; arc=none smtp.client-ip=95.215.58.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="ejbEwdyo"
-Received: by mail-pz2-f12.google.com with SMTP id d2e1a72fcca58-85469d249c4so3616970b3a.2
-        for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 05:50:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1790081433; x=1790686233; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=juILZvA/W9TMtNBQ/eIZx9CWcsdMz7oCJkpEETYimaY=;
-        b=ejbEwdyo+VsleXu/AfJGzQEXA/CdrFE3XdBo6tcdMRFrA4KnkJFujtW+hfiCBzxBh4
-         1o3QJjCT/t0um9nPXHuK4zAmIgzZWd9SGHIKQv0jTxYX6QLz6y5L6PAALneOu7vKE+lE
-         GH5YtLhLlfEsVDpaacz/zgPGjBlRDSnYSrlkMfq4Z6fdoJJgYzsroGsyaPrdF6B2uG1r
-         M3JdASrHWPrsgvQ/xa8w+V51AdtvW4CMNDgpvu6snMlR/Q4acPX+yXfLYnsJ1jMwiNRG
-         XTjL32wP2gPsdRzGkxUbkwNI3GoVDIAToIYrudAVpU5wJPmMBrcpCSJ9i6ljzxJuAnan
-         SUHg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790081433; x=1790686233;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=juILZvA/W9TMtNBQ/eIZx9CWcsdMz7oCJkpEETYimaY=;
-        b=NXvtOkXb5AfLu+VzkMuHHyhkJ8cy8gfRr4jwXUBW6UqD4M13ISqULPE7/KES89IcG9
-         mJ8eQNXG+pBeI5lnixSd5dxHqVhIvbhNF8OpaYgr1HpBLgGGI36ACO6yx2YGQewaZ2GR
-         PQPXHTtEZYIUw2wxrkfEg0/g3n18o7pfcuBgd8I6ccVNtL/oRJJwohQgybLEUFe0jWSJ
-         ftYfgUIXYg/y03JYE/GHz2O5nJuTakCjTBzI/zp9LVIKkhMSpXCDo3Ku2HDebZpioGLI
-         k7Wlu6tfbXZjMa3IoTYTU1GugjMv6kk/KrSg6WgQnaRzEMbZDdLYd9o1kbSeFIUsoRYU
-         60KQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxYOwBghOIhxwf0HF8lKP/Sho2++gE+5xj0Rhg1SXo4KRnYPQ9JJyG0sBt2Y3Sy/uGn0mONR9NT@vger.kernel.org
-X-Gm-Message-State: AFuF++mtE447AmRN8U5AEb4dUNju9WBL0w13EcBCvnACZHjL//Q0kSMv
-	/HfY3VdFSaYwCHshjsvaJVDmEavefqzNkXVrINjlKqgFpiZCUhkwmn8KS0g0RYzmOKc=
-X-Gm-Gg: AYBFou0J2s882PaDpMFxbT3pdsnwSbDm41gMnk78Z0MfYZXGEmVEt0uvrAGxFKtHV41
-	+EGZE5oP7BNDSq1NbE3NJPwxkkGzeYOYffoF8s793ET1APbIuOfWYrpINHfgtf5sxInSo0+rDUj
-	pTtUy8cXV82ojVSESbV41PZhEdhtQLIwbhhThSfAjOlvTcHaXC0IuaTlEKZpv8U9/IijhIxgS4D
-	Qk2eGALUdoqIKBr1Vx4U9cSScHDvXAT9upZoCIBKtwYgj79wL3scbN80hVRI0C8QhkgmsS4Igw2
-	t306yeC6dh/PNrmRvYL9+TX2/KxgAcJvrFHCybec9urflRojC6qlgblqnVMahkXf8A67H7B4Apj
-	Il1K79s2j3QbliqUI4N0KAwAkuBLcSpEbNxAuv2mnEUhS5Ib2WMQUOAKMENwI+CAgA9tYwv4rhL
-	KPHVMUfvIeLf51bbc1JHgw3/vo2saHbgKJxBFtVtw7X8jG4ROH/Pfb12Ij8lcs4vsVCW6coXZJA
-	8Q=
-X-Received: by 2002:a05:6a00:3c95:b0:879:531d:199 with SMTP id d2e1a72fcca58-87c84043665mr1114410b3a.39.1790081433323;
-        Tue, 22 Sep 2026 05:50:33 -0700 (PDT)
-Received: from localhost ([106.38.226.138])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-87c331b0629sm774868b3a.51.2026.09.22.05.50.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Sep 2026 05:50:33 -0700 (PDT)
-From: Julian Sun <sunjunchao@bytedance.com>
-To: linux-block@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org
-Cc: axboe@kernel.dk,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	willy@infradead.org,
-	jack@suse.cz,
-	tj@kernel.org,
-	akpm@linux-foundation.org
-Subject: [PATCH v8 3/3] writeback: record bdev targets in foreign writeback tracepoints
-Date: Tue, 22 Sep 2026 20:50:15 +0800
-Message-Id: <20260922125015.3435215-4-sunjunchao@bytedance.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20260922125015.3435215-1-sunjunchao@bytedance.com>
-References: <20260922125015.3435215-1-sunjunchao@bytedance.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="nbW4g3rK"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=wGfhs1JUoZWlzQjOG4m/OoSrn0nHg+mo1158dIosQAk=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790082714; v=1; x=1790687514;
+ b=nbW4g3rKdfWmRz3tODJTkXHyEhmxEKMFXjZtMMkhuNEoV/31BVSjlsDCQ6imVTupIrcpQTVQ
+ OGlRgelbDtOgC0oALvX9eyucpf0K7rdog+OJY7G9800QL0MqsOsLt2KVjlC6QHYFmHGdDPR5Hrr
+ Nre5CquD3FI/SMXe+pd/5o9E=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 1857d476125c5e27;
+	Tue, 22 Sep 2026 13:11:54 +0000
+X-Mizu-Trace-ID: 1857d476125c5e27
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <25b59080-42f7-4b2b-a488-db7c99d68c07@linux.dev>
+Date: Tue, 22 Sep 2026 21:11:49 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, josef@toxicopanda.com, axboe@kernel.dk,
+ ameryhung@gmail.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org,
+ eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net,
+ linux-kselftest@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [RFC PATCH v6 0/5] blk-iocost: BPF struct_ops cost model
+To: Tejun Heo <tj@kernel.org>
+References: <20260918055001.1273840-1-cui.tao@linux.dev>
+ <e5656ccd4760f26772f5db86dfdea80a@kernel.org>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <e5656ccd4760f26772f5db86dfdea80a@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Add dev to track_foreign_dirty and flush_foreign so traces can
-distinguish foreign-wb tracking from the bdev-only path. Append the
-field to each event and print it as major:minor; zero denotes the
-normal foreign-wb path.
+Hello, Tejun.
 
-Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
----
- include/trace/events/writeback.h | 22 ++++++++++++++--------
- mm/memcontrol.c                  |  8 +++++---
- 2 files changed, 19 insertions(+), 11 deletions(-)
+在 2026/9/22 03:37, Tejun Heo 写道:
+> Hello, Tao.
+> 
+> On Fri, 18 Sep 2026 13:49:56 +0800, Tao Cui wrote:
+> 
+>> The registration and binding model follows the TCP congestion
+>> control model registration pattern: registering a struct_ops makes
+>> the model available by its name, while io.cost.model binds one
+>> registered model to a device with "model=<name>" and restores the
+>> builtin model with "model=linear".
+> 
+> Alexei is right, this isn't what I meant. One struct_ops instance per
+> device: attaching binds the instance to the device and switches the device
+> to the model, detaching switches it back to the builtin. That removes the
+> name registry, the lifecycle list and the refcounting on top of the
+> struct_ops map reference. Putting the device id in the struct_ops the way
+> hid_bpf_ops does works fine. I don't have a strong opinion on how the
+> device is identified.
+> 
 
-diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-index 13ee076ccd16..ffd1b8df4231 100644
---- a/include/trace/events/writeback.h
-+++ b/include/trace/events/writeback.h
-@@ -273,9 +273,9 @@ TRACE_EVENT(inode_switch_wbs,
- 
- TRACE_EVENT(track_foreign_dirty,
- 
--	TP_PROTO(struct folio *folio, struct bdi_writeback *wb),
-+	TP_PROTO(struct folio *folio, struct bdi_writeback *wb, dev_t dev),
- 
--	TP_ARGS(folio, wb),
-+	TP_ARGS(folio, wb, dev),
- 
- 	TP_STRUCT__entry(
- 		__array(char,		name, 32)
-@@ -284,6 +284,7 @@ TRACE_EVENT(track_foreign_dirty,
- 		__field(u64,		cgroup_ino)
- 		__field(u64,		page_cgroup_ino)
- 		__field(unsigned int,	memcg_id)
-+		__field(dev_t,		dev)
- 	),
- 
- 	TP_fast_assign(
-@@ -295,34 +296,37 @@ TRACE_EVENT(track_foreign_dirty,
- 		__entry->ino		= inode ? inode->i_ino : 0;
- 		__entry->memcg_id	= wb->memcg_css->id;
- 		__entry->cgroup_ino	= __trace_wb_assign_cgroup(wb);
-+		__entry->dev		= dev;
- 
- 		rcu_read_lock();
- 		__entry->page_cgroup_ino = cgroup_ino(folio_memcg(folio)->css.cgroup);
- 		rcu_read_unlock();
- 	),
- 
--	TP_printk("bdi %s[%llu]: ino=%llu memcg_id=%u cgroup_ino=%llu page_cgroup_ino=%llu",
-+	TP_printk("bdi %s[%llu]: ino=%llu memcg_id=%u cgroup_ino=%llu page_cgroup_ino=%llu dev=%u:%u",
- 		__entry->name,
- 		__entry->bdi_id,
- 		__entry->ino,
- 		__entry->memcg_id,
- 		__entry->cgroup_ino,
--		__entry->page_cgroup_ino
-+		__entry->page_cgroup_ino,
-+		MAJOR(__entry->dev), MINOR(__entry->dev)
- 	)
- );
- 
- TRACE_EVENT(flush_foreign,
- 
- 	TP_PROTO(struct bdi_writeback *wb, unsigned int frn_bdi_id,
--		 unsigned int frn_memcg_id),
-+		 unsigned int frn_memcg_id, dev_t dev),
- 
--	TP_ARGS(wb, frn_bdi_id, frn_memcg_id),
-+	TP_ARGS(wb, frn_bdi_id, frn_memcg_id, dev),
- 
- 	TP_STRUCT__entry(
- 		__array(char,		name, 32)
- 		__field(u64,		cgroup_ino)
- 		__field(unsigned int,	frn_bdi_id)
- 		__field(unsigned int,	frn_memcg_id)
-+		__field(dev_t,		dev)
- 	),
- 
- 	TP_fast_assign(
-@@ -330,13 +334,15 @@ TRACE_EVENT(flush_foreign,
- 		__entry->cgroup_ino	= __trace_wb_assign_cgroup(wb);
- 		__entry->frn_bdi_id	= frn_bdi_id;
- 		__entry->frn_memcg_id	= frn_memcg_id;
-+		__entry->dev		= dev;
- 	),
- 
--	TP_printk("bdi %s: cgroup_ino=%llu frn_bdi_id=%u frn_memcg_id=%u",
-+	TP_printk("bdi %s: cgroup_ino=%llu frn_bdi_id=%u frn_memcg_id=%u dev=%u:%u",
- 		__entry->name,
- 		__entry->cgroup_ino,
- 		__entry->frn_bdi_id,
--		__entry->frn_memcg_id
-+		__entry->frn_memcg_id,
-+		MAJOR(__entry->dev), MINOR(__entry->dev)
- 	)
- );
- #endif
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6042c694d56c..534b0d537a09 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3956,12 +3956,12 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
- 	struct inode *inode = mapping->host;
- 
- 	if (memcg_bdev_frn_wq && sb_is_blkdev_sb(inode->i_sb)) {
--		trace_track_foreign_dirty(folio, wb);
-+		trace_track_foreign_dirty(folio, wb, inode->i_rdev);
- 		mem_cgroup_track_foreign_bdev(memcg, inode->i_rdev);
- 		return;
- 	}
- 
--	trace_track_foreign_dirty(folio, wb);
-+	trace_track_foreign_dirty(folio, wb, 0);
- 
- 	/*
- 	 * Pick the slot to use.  If there is already a slot for @wb, keep
-@@ -4032,6 +4032,7 @@ void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
- 			 * the timestamp for a later flush.
- 			 */
- 			frn->at = 0;
-+			trace_flush_foreign(wb, 0, 0, frn->dev);
- 			queue_work(memcg_bdev_frn_wq, &frn->work);
- 		}
- 	}
-@@ -4048,7 +4049,8 @@ void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
- 		if (time_after64(frn->at, now - intv) &&
- 		    atomic_read(&frn->done.cnt) == 1) {
- 			frn->at = 0;
--			trace_flush_foreign(wb, frn->bdi_id, frn->memcg_id);
-+			trace_flush_foreign(wb, frn->bdi_id, frn->memcg_id,
-+					    0);
- 			cgroup_writeback_by_id(frn->bdi_id, frn->memcg_id,
- 					       WB_REASON_FOREIGN_FLUSH,
- 					       &frn->done);
--- 
-2.39.5
+I misunderstood what you meant by per-device.  v7 reworks this in the
+hid_bpf_ops style: one struct_ops instance per device, with the target
+device identified through the struct_ops instance.  .reg binds it to
+the device and .unreg detaches it and restores the builtin model.  The
+name registry, lifecycle list and additional refcounting layer are
+gone; attaching a second model to an already-bound device fails with
+-EBUSY.
+
+>>     u64 calc_cost(u64 opf, u64 nbytes, sector_t sector,
+>> 		  struct blkcg *blkcg, u64 model_flags)
+> 
+> Why not pass the bio itself? The model can read whatever it needs from it.
+> The merge indicator still needs the flags argument as it isn't a property
+> of the bio.
+> 
+
+calc_cost() takes the bio itself now, so the model can read the
+operation, size, sector and issuing cgroup from it; only the merge
+indicator stays in the separate flags argument.
+
+>> blkcg is passed so the model can key
+>> per-cgroup state; state stored in BPF_MAP_TYPE_CGRP_STORAGE
+>> follows the cgroup lifetime, and optional blkcg_online()/
+>> blkcg_offline() callbacks mirror the css lifecycle for models
+>> which want eager setup or teardown.
+> 
+> With a per-device instance, these should be bound to the iocg pd init and
+> free rather than the blkcg css. That gives the model the same per cgroup
+> per device lifetime as the builtin cursor and drops the global mutex from
+> the cgroup online and offline paths.
+> 
+
+Done: the callbacks are bound to the iocg pd init and free paths,
+giving the model the same per-(cgroup, device) lifetime as the builtin
+cursor and avoiding the global mutex in the cgroup online/offline
+paths.
+
+>> The completion-time request sizing for the
+>> latency met/missed accounting still uses the builtin coefficients
+>> (the request's bio, and with it the issuing cgroup, is gone by then);
+>> extending the model there is left open by this interface.
+> 
+> Let's be explicit here. For now, the struct_ops should carry the transfer
+> cost coefficients, vtime per page for reads and writes, and the builtin
+> latency tracking and vrate adjustment should use these instead of the
+> linear coefficients while the model is attached.
+> 
+
+The pricing paths now use the transfer cost coefficients (vtime per page
+for reads and writes) provided by the struct_ops while the model is
+attached.  This covers completion-time request sizing, latency tracking
+and vrate adjustment, which no longer use the linear coefficients in
+this case.  There is one remaining model call in the completion path in
+my current tree which does not belong to this interface; it will be
+removed in the posted version.
+
+> Down the line, a model should be able to take over the QoS side too. The
+> vrate adjustment is driven by an empirically derived table and being able
+> to replace it is a good part of the value of a pluggable model. The shape
+> I have in mind is an rq_done(struct request *) callback which disables the
+> builtin latency tracking and periodic vrate adjustment, with the model
+> modulating directly through kfuncs to set the base vrate and the
+> saturation state and to read the block layer clock. That doesn't have to
+> be part of this series.
+> 
+
+Understood.  The QoS-side takeover (rq_done() and kfunc-based vrate
+and saturation control) stays out of this series.
+
+> While a model is attached, the linear coefficients are inert. Coefficient
+> writes can be stored and take effect again on detach, autop shouldn't step
+> profiles based on vrate the same way it doesn't when the cost model is
+> user-set, and io.cost.model can report the model in the model field, in a
+> form which identifies it as a BPF model, with ctrl still describing the
+> coefficients.
+> 
+
+Yes, coefficient writes are stored and take effect again on detach.
+autop will only step profiles when no model is attached, matching the
+user-set cost model behavior.  io.cost.model readback will report the
+BPF model in the model field while ctrl continues to describe the
+coefficient source (user/auto).
+
+I'll send the reworked series.
+
+Thanks,
+Tao
+
+> Thanks.
+> 
+> --
+> tejun
 
