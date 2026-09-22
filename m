@@ -1,132 +1,219 @@
-Received: from mail-qk2-f43.google.com (mail-qk2-f43.google.com [74.125.230.235])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 020E12AD03
-	for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 15:20:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.235
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43694556B89
+	for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 15:23:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790090453; cv=none; b=rmmzSXJQInGp86dBDbAqoqYaOYv0XGH7GELo2FDCWQj7QQO8NtpqiZ+YbOr343T+4l/hJ4WtR+p6PVXPwCfGaq+aTSDfB2OvDDCkMLuVUe9PTWzirBPxViXQYKNeWJjq1VDCOVpM75W4xRXUytrNdeyqTYNWkr/beHWfHlC/CAY=
+	t=1790090627; cv=none; b=edZIlXd5ojYUm2qJ4bdCmD7q737DdKWUTStvIrVT9oayk/l3ZVOXM6YM92SUUdHvGhPPuUjFKIfzLwZoSTEmj2DdI66n1cXeTLOWJbE5Zrn/I/Y90l/tjR0vcbO3+8cMqxPn/SzV8zP5cz0gEa3OCiIka4sVNmVh3cKVOFfrtTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790090453; c=relaxed/simple;
-	bh=vOwCSITAZ4wT5Vmjl5c2eUZEHU4ha0KsU1gy9XxWQ5U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dtXf49qqoxRwJOmwgyrWw0rhf2BCsQzhDv0TmlmTUPYnTAz0MtMtwzcHuH+db4mbaCWOOVfKLKMDcnGWQzmHhAjsK428ARnQ9S7r7k1Eeho0QtvGJPY/xP1DBC+Katcohhe39CNMqYtCUmw0FHpDp0ThlK36RRs/+IvN7Cz1n6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=kdYQvB+Q; arc=none smtp.client-ip=74.125.230.235
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	s=arc-20240116; t=1790090627; c=relaxed/simple;
+	bh=xoDh0r7//01rAPLh77iu0xIHd3jbw+Zhv4FLE61Vkg4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DGHnhz7jNYcDLZe/pk+wYonzGfj8g5HFuJH9RBIpvB5OcSItwDot4zoZL/M5EYUEIQecEvTV4VHVqruX8mgkcQUYPMcn597PrC5xTZBg0c79vXqPf55L8TgV98ZaAc4FF/3V/bUdU+8K6lfpjPg3tp0GjeTUqMaHJXEMlVia0a4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f0KIDibg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="kdYQvB+Q"
-Received: by mail-qk2-f43.google.com with SMTP id d75a77b69052e-52fb76ef19aso388651cf.2
-        for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 08:20:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1790090451; x=1790695251; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=1GRx/g24FB4lP9hKxncW6XGKAeFROn+FyWjD+Llh4VI=;
-        b=kdYQvB+QGHhWLiQzl586f/42jWC6ZmqItihk9aTPXP0fewn2OC6mO3hx+a96AWH2YF
-         UpVANBki9wUUSus9JKurukP9JQVt1a9Jq7+CTG7fHmkKSRb6SKa51og3FJQfdFnQZU7c
-         7QeL045HHnvFvwLje1eEw2C5SzOJ0OA0O3dU76yIUPBd3SQ3LViRiBclHs7gMt6EuBYU
-         lpPN8k9Y0KV7RN6INHA05gGlLhvdAuyIKi8Yq+uaZPFjnFQbMTBqVPkPWcT2fxScHuw0
-         oWSnLNzgS9DzPRifOHiE4OBbTrIGpbA4ty+RyNMBt6Cm+KW4gPF55djQ8nqrtZbB8a1+
-         DlvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790090451; x=1790695251;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=1GRx/g24FB4lP9hKxncW6XGKAeFROn+FyWjD+Llh4VI=;
-        b=VuGhvn5fRebA3hycU8ZJD1SoMEUdK/JPwETljSJCh5Xf5+huz4hzOxy5Ct1zK4oq2W
-         AdhYaS8U+rHRv+CYZ65VkP0QxupUt3JXXMN75C5fif5Bp/s5hORT2Z060lsnJ0uIbSuU
-         t7+UZUndhjVYdhiPbwsxqf2k5UfgxBnn4xxQW7rOj0TDmPCl9gQB/7PfFc7Rypg/5mS5
-         053Bpa3rvReUZA2tJaXi7+4M/3tMAjLSh4cR/gwJXQtoWvIriPnRdEj4lnpm2+Bp3GR7
-         i3CbSh1xymJSwg4A4tBkZRLgNjmbSEFDT19EYuWEnMkyFgr6FLNTxHTB27dMdHIpQlK2
-         lYiQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzujI9J2SG1vGJI9Xq6IPh+gm9L2XuT+ZLaZ8x67AwD/svGIa+ESeE/aalGKObkBDgeXL6shZ0j@vger.kernel.org
-X-Gm-Message-State: AFuF++nYhuSmD7fMJeVUf7CtBURNrsKJlI0CrnkXy5LE4mqOKzuIEeTw
-	s2D5WlrxtlHw11xU+lARL5hsHH/Hy0voT+HSIceOX+weWDvNM5VCf3IGr7ZJ+uMWCGI=
-X-Gm-Gg: AYBFou1RfO5EZadxRzf5+by0riNsvpKtG/YFUzAPtfcO5U1QEiRwsvyxPRplU0h4rX2
-	0HHbBTID7vK3y74RmmXGw9Ywlq3tsY+vB+DVrKi+ZP6hCrgo17rDkboGVa4E9ST4R+IQLfPS8A+
-	3Ox/SOKeRNwdICf7FTl4B+RN9ecDzMKdDmfGh67HUd7+BUYJ675NlNoUWpyYxFM+hyX0o/1rikY
-	1V6OUi9TCCcFFvc9dLMbV2BEH+mTdXMVki4o4juU7AmHjt73bekWc31/uqMFKsSPUQ195Pcp3e4
-	U0lueVDLvYBNJ0gMaxFdn13QgTVI7/1vyGgj00lJi0X04g1oDUC4qNCVd+DsHKI5QFRfUJW+IG3
-	DQFr5Jk81YXdhGoesgstIm/msOmy4CasqVAOeq9CjtNN8qJd4w2/X+H3I551dI7ljBbb5aOGTSI
-	LI0aBtmKUq1fbTYLGkoAhyXSKKB8Yt2KaNfmD0GQJQ8nI3nafdIMb/KCWchhddt/M0qrBBbbzKa
-	ROGb3YG9YR4xeAycncmLzRos5C10807xhuPu1YjOZAHo1QYUUYbU9o=
-X-Received: by 2002:a05:620a:280f:b0:93b:e9d2:5ece with SMTP id af79cd13be357-93c15e412a9mr594708785a.39.1790090450524;
-        Tue, 22 Sep 2026 08:20:50 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93c1cf0dcd9sm181244085a.4.2026.09.22.08.20.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Sep 2026 08:20:49 -0700 (PDT)
-Date: Tue, 22 Sep 2026 11:20:47 -0400
-From: Gregory Price <gourry@gourry.net>
-To: Chris Li <chrisl@kernel.org>
-Cc: Rik van Riel <riel@surriel.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, Kairui Song <kasong@tencent.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
-	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Hugh Dickins <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Tejun Heo <tj@kernel.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-Message-ID: <arKbXe1Qe-FDCTMM@gourry-fedora-PF4VCD3F>
-References: <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F>
- <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
- <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F>
- <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
- <e879ac65cb0940325736df7984c737edf1c6be94.camel@surriel.com>
- <CACePvbXThspPYD8DZkAeiJtYuMV79vGgC1SGhpMwhn4COWOtcg@mail.gmail.com>
- <785353ef79844e81a8cd97e87b00ef1f785b15e5.camel@surriel.com>
- <CACePvbXZ4i-DsmbQdNtBQb79y59uwZC9J8qHD2wTWpcYaet3LQ@mail.gmail.com>
- <83539be885f15bb567b30264f5f62e718f4a9fd0.camel@surriel.com>
- <CACePvbXZQERwLF_f2FYTHsv--kq_-Aw2vVVFF+z+ovdnsHy1bA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f0KIDibg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A05161F00921
+	for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 15:23:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790090624;
+	bh=HSxYC9PBu6O3qFc8TB9GBt3gfPrtp72o3ge0jqAtRpI=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=f0KIDibghpuCfT//z5YJBWxvFz2V4tCU0i0WBKMDTdWD3n5JHLjhSrXi7M+Bd6uwu
+	 SBIuxdzV+3PvsWQEaBXEy8KygyslWiTn8kWjWDXqKj+RXo9C2Y1LRLL1Satgc5EbFW
+	 db1vY9ShYPHMRn0Vj93U0YTgPQNAUGft8b+7dIiqSQmuzVu6zN1veFE6dDKOaenJ1A
+	 6EBYqwuvfhDpg9jM/74fZQO3Igiz3EIBGcOksIoBtD0qgD9zlt75DYlQK5XlWhH52q
+	 1+Y4YgLmeDGFvrzmwe9SUnziWvrJnNXc4M7qrT8oqlCbOyG3eTF/R9PeQpQB+R55A0
+	 ymDtoW6bFe+/w==
+Received: by mail-yx2-f13.google.com with SMTP id 956f58d0204a3-6713d20d375so3848492d50.0
+        for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 08:23:44 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBxtWfao8lHSAwIZmDtWdvWQrVulbH1+IfSegGi9/0MKrTLOiBRj5+yhTwXo3VWwkoMs9B0gd3Jj@vger.kernel.org
+X-Gm-Message-State: AFuF++lDv/WW/BVqmEyYCyZToJxzoT3RNLPiqZJuFLR3NF/LqaCORSV8
+	Nh2cqSOwMGP/3ScKkYnW1AO+Jd/lQcWFa5hDGPfVLoaMJM9rGLnEEDxJRv3LbpvZ1AMGQ6DYG+K
+	QzmqGTDd5Z9EQttO3ObGBTPe+IB2W8S8VBaFSRJ+ZeA==
+X-Received: by 2002:a05:690e:488d:10b0:671:2bb8:ceb0 with SMTP id
+ 956f58d0204a3-672c54637fdmr881282d50.65.1790090623628; Tue, 22 Sep 2026
+ 08:23:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACePvbXZQERwLF_f2FYTHsv--kq_-Aw2vVVFF+z+ovdnsHy1bA@mail.gmail.com>
+References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
+ <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org> <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+ <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F> <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
+ <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F> <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
+ <e879ac65cb0940325736df7984c737edf1c6be94.camel@surriel.com>
+ <CACePvbXThspPYD8DZkAeiJtYuMV79vGgC1SGhpMwhn4COWOtcg@mail.gmail.com>
+ <785353ef79844e81a8cd97e87b00ef1f785b15e5.camel@surriel.com>
+ <CACePvbXZ4i-DsmbQdNtBQb79y59uwZC9J8qHD2wTWpcYaet3LQ@mail.gmail.com>
+ <83539be885f15bb567b30264f5f62e718f4a9fd0.camel@surriel.com>
+ <CACePvbXZQERwLF_f2FYTHsv--kq_-Aw2vVVFF+z+ovdnsHy1bA@mail.gmail.com> <a75b2eac4297ca6b238dde6f9246d2c1807b935f.camel@surriel.com>
+In-Reply-To: <a75b2eac4297ca6b238dde6f9246d2c1807b935f.camel@surriel.com>
+From: Chris Li <chrisl@kernel.org>
+Date: Tue, 22 Sep 2026 05:23:31 -1000
+X-Gmail-Original-Message-ID: <CACePvbW_-6M63_a7Cp+09dTmpHeMEdj9VDQZf8g8qoYKQD=wvw@mail.gmail.com>
+X-Gm-Features: AcwNN1UFfFWGyxcUua8pbkXO0R-XB3znLXKYfEROGrlAbT6An5bo9JO7s142iI4
+Message-ID: <CACePvbW_-6M63_a7Cp+09dTmpHeMEdj9VDQZf8g8qoYKQD=wvw@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Rik van Riel <riel@surriel.com>
+Cc: Gregory Price <gourry@gourry.net>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
+	Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
+	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 22, 2026 at 03:32:44AM -1000, Chris Li wrote:
-> > Right now it has 64GB of memory.
-> 
-> That is exactly my point. You are running 1/8 = 12.5% system ram.
-> 
+On Tue, Sep 22, 2026 at 4:59=E2=80=AFAM Rik van Riel <riel@surriel.com> wro=
+te:
+>
+> On Tue, 2026-09-22 at 03:32 -1000, Chris Li wrote:
+> > On Mon, Sep 21, 2026 at 8:53=E2=80=AFAM Rik van Riel <riel@surriel.com>
+> > wrote:
+> > >
+> > > On Mon, 2026-09-21 at 08:10 -1000, Chris Li wrote:
+> > > > On Mon, Sep 21, 2026 at 6:40=E2=80=AFAM Rik van Riel <riel@surriel.=
+com>
+> > > > wrote:
+> > > > >
+> > > > > On Mon, 2026-09-21 at 06:31 -1000, Chris Li wrote:
+> > > > > >
+> > > > > > Give me some real-world examples of people hitting this kind
+> > > > > > of
+> > > > > > limit.
+> > > > > > e.g. MAX(%)  > 100% and still have a usesable system. I
+> > > > > > suspect
+> > > > > > that
+> > > > > > with 100% zswap usage, the system becomes unusable. Please
+> > > > > > show
+> > > > > > me a
+> > > > > > real world case that proves me wrong.
+> > > > > >
+> > > > >
+> > > > > Here's my desktop system right now. The amount
+> > > > > of Zswapped is more than twice AnonPages, and
+> > > > > the system stays perfectly usable.
+> > > > >
+> > > > > $ grep -E '(Anon|Zswap|GPU|Swap)' /proc/meminfo
+> > > > > SwapCached:       252340 kB
+> > > > > SwapTotal:      41523604 kB
+> > > > > SwapFree:        9802088 kB
+> > > > > Zswap:           8812236 kB
+> > > > > Zswapped:       24927876 kB
+> > > > > AnonPages:      11615760 kB
+> > > > > AnonHugePages:   1402880 kB
+> > > > > GPUActive:      13112428 kB
+> > > > > GPUReclaim:        95980 kB
+> > > > >
+> > > > > This is also an example where I cannot really
+> > > > > predict how much zswap space I need, because
+> > > > > that depends on what AI model is loaded,
+> > > > > which drives the GPUActive number, as well
+> > > > > as the number of browser tabs.
+> > > > >
+> > > > > The system is perfectly responsive.
+> > > >
+> > > > Great, that is getting somewhere. We are talking about actual
+> > > > usage.
+> > > > I
+> > > > really appreciate that.
+> > > >
+> > > > May I ask what the total amount of memory (RAM) in your system
+> > > > is?
+> > > >
+> > > > I am not asking zswap compare to ANA memory. I want to get the %
+> > > > of
+> > > > the total RAM.
+> > > > I assume your desktop has more than 8G of RAM, right?
+> > >
+> > > Right now it has 64GB of memory.
+> >
+> > That is exactly my point. You are running 1/8 =3D 12.5% system ram.
+> >
+>
+> > My point is that, I haven't seen a case where the application is
+> > still
+> > usable with a reasonable SLO when 100% of RAM is zswapped out.
+>
+> In my numbers above, the applications have 11.6GB
+> AnonPages, and 25GB Zswap.
+>
+> That is about 68% of anon memory stored in zswap. Not 8%.
+>
+> Out of (anon + zswap), zswap takes up 43%
+>
+> Can we at least agree on the observed numbers?
 
-Chris you are missing the point
+Yes, I can agree on what you observed. You are using anon + zswap on
+that app alone. That is not what I originally asked.
 
-Zswap:           8812236 kB
-Zswapped:       24927876 kB
+My original request was for the whole system: what percentage of the
+total system RAM size has been swapped out to zswap.
 
-To support this, you'd need to know you were going to get a 3:1
-compression ratio and allocate 24GB of storage (24GB of swap slots).
+Because when you have 100% of zswap out, it will likely trigger
+different kernel code path on allocating memory. You might suffer
+global memory pressure you did not observe in the single app memory
+pressure case.
 
-An hour from now he might run a workload that's 4:1 compressible and
-there would be 32GB zswapped - but if he'd only allocated 24GB of swap
-he'd be limited to 24GB arbitrarily.
 
-On a 1.5 TB server, that number is oppressive.  It's 192GB of
-potentially dead storage space.  At 1 million servers that up to 183
-Petabytes of pointless provisioned flash if you know that most of the
-memory is zswappable.
+> > >
+>
+> > > hen the amount needed to fit a workload
+> > > does not have a positive correlation with
+> > > the amount of system memory?
+> >
+> > It absolutely has a positive correlation with % of the system memory
+> > based on my experience. The % of memory swap out has a very positive
+> > correlation with the thrashing on the application.
+>
+> The applications thrash much harder once zswap flows
+> over onto disk! Out of all the swap options available,
+> zswap is the fastest, lowest latency one.
 
-You're focused on the wrong problem.
+I agree zswap is the fastest one, no question about it. In our
+deployment, we have only used zswap for a very long time. Things might
+change now. My observation is that, even with zswap, when 100% of
+system RAM is swapped out, the application suffers greatly. There is a
+reason why we only have 7-10% system RAM swapped out. There were many
+OMG in the past that established this boundary for us. We did not make
+up that number; it came from the real data feedback from the fleet.
 
-~Gregory
+So again I question the real data point for the 100% RAM swap out
+case. Do we even know what the system looks like at that point?
+
+>
+> Forcing things out to disk "because too much zswap
+> is slow" could just slow things down further.
+
+I did not think zswap was slow. I assumed the swap was only zswap, and
+that even 100% usage was too much.
+
+> Now, there is probably some upper bound where
+> the zswap pool itself starts to hurt performance
+> because it's crowding the applications out of
+> memory, but that could be quite large.
+
+In my experiment, 100% is already way above that bound, which is why
+I'm curious about your data point. How do you run and test your system
+at 100%? Please correct me if I am wrong, but it looks like you
+haven't.
+
+Chris
