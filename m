@@ -1,92 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-231.mta0.migadu.com [91.218.175.231])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BFE436404D;
-	Tue, 22 Sep 2026 08:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DF463515E6
+	for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 08:10:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.231
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790064243; cv=none; b=CVWPvGZ7X8CWLoGi/s1PCmJ4cmNHWN6xxOve7w+/zk/g7h3ra5AsJtkiOFbKvhym8jf18YA6ewHHmYT9owh1qH3ZsREq9Zy8ROmSNirF21GBXjEWilkAVCxdhRytbDjPbfA1lM4nUcHHKi8sPAm+mMJ7lTL3MyAvPXWhEWb85l8=
+	t=1790064623; cv=none; b=qigAjWxLfHY8Yo9uvtwkXPnfGXh1shGnxWyRVaq3szvvXOgsnUuuyNHYKtB1MD/io7aN/GKBiHLuF9dmlJXV0/vi4/jWwmQColqxYBeDOWnHlRqr4BJyY1qDwtmuad6hoAWzhAfHQo6DI+0XcXZubtrp2h8vE27dPgbWqS1X22Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790064243; c=relaxed/simple;
-	bh=rKzC6ijtYS99rEzAal5n4agHKy/S1Dy0DTP3DnN+7g0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YLasYf1XF/SE9w1Lu0/dYdLOSOTFf+4BglZOzQuRH8fEGRLCJxtrqmXRyqssyTbfgZ59KY7TWrI0WCQzI7Hqf6Id410EY2g+7PxWIWDv5pcPKEco5OcROwtbA4uLWz21qesAkUOVDn2glWcfyTZSD/VW1ZZLtbU3eBBI3VbAbIE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pkk8hJkz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790064623; c=relaxed/simple;
+	bh=NlF78RerIOTo/MnyozLSa9euZ5Hw7BjWTrePBtX97Ok=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=F68dazYXhfDGtGD/q4WNWMTWBLChuArcIVMKiMmT7ImlL4sJpiN99e8bJc2N9PfcwCdQhF0j/mLnRh6BEXvmPpQW9B+xmvtqxizaZULCRdNl7jEu2WORO3mllP1E/Dbc+lcqA2WHXX5a57tqbYYuwGZucZa5owgUorLKhZ2GNRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lpsvjEIe; arc=none smtp.client-ip=91.218.175.231
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pkk8hJkz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E1991F000FF;
-	Tue, 22 Sep 2026 08:03:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790064230;
-	bh=iz5ZvXuN69BjPyv2G6HIms6qrpA+v8co7aU/JAxPMNE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Pkk8hJkz+KwRWDTWURSLDurufWOnqDbYDUTIZvYXp9jfWOkdjCM/lvETnNtDoI+LS
-	 weuk7KILNbiDpsCFZUmltc1Xv7VITIdVF1H2oDuxtlrKssjRaAsgmNRV2hAr5C4SeQ
-	 bZ/80zCO8tXpnUnlLHyelefCFy8yEvMbmP9VMlwSO1DLccj29DgxZ7QexRl8x2wU7k
-	 fTdqHnUv9AVXxk5dnorcXIFA8Peq7IgJWCVjlGznMMm05cuXM6uyfS9EWxIwApJwpK
-	 DXsQ17/1MOkMBuP4zJ74q36cN6eF1s7VZkd7lMrYU+rofAevR3gfQLNsSR3/mGgEhl
-	 sgglkuVP99KSA==
-Date: Tue, 22 Sep 2026 09:03:40 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: linuszeng@tencent.com
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Maarten Lankhorst <dev@lankhorst.se>, 
-	Maxime Ripard <mripard@kernel.org>, Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Oscar Salvador <osalvador@suse.de>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Randy Dunlap <rdunlap@infradead.org>, Jingxiang Zeng <jingxiangzeng.cas@gmail.com>, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH 0/6] mm: memcontrol: implement the memsw limit on cgroup
- v2
-Message-ID: <arI2So8-IHlUjuv0@gremlin>
-References: <20260918-descriptive-name-v1-0-dfcfdd91b456@tencent.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lpsvjEIe"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=NlF78RerIOTo/MnyozLSa9euZ5Hw7BjWTrePBtX97Ok=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790064604; v=1; x=1790669404;
+ b=lpsvjEIexqKARa1Z6TX2LfmsrV+h8MVVmH2OVoxlDa3dvMz/U89bSyl7jMTUSngyLh/GGZQI
+ 7uDLtBL1/4tBn3w0CdvgVyUSbmSwUn42yraZrwvJq6ObbJ+BTWZgZFlLusmdumzpl2dujYuSI1N
+ C/ovEGPnVIxIeCFMuDFC7Tyw=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 316ad890671470eb;
+	Tue, 22 Sep 2026 08:10:02 +0000
+X-Mizu-Trace-ID: 316ad890671470eb
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <acd79732-1ef3-47d5-96fc-4dd3ff3eee27@linux.dev>
+Date: Tue, 22 Sep 2026 16:09:57 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260918-descriptive-name-v1-0-dfcfdd91b456@tencent.com>
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, axboe@kernel.dk, kbusch@kernel.org, hch@lst.de,
+ sagi@grimberg.me, yukuai@fygo.io, linux-block@vger.kernel.org,
+ linux-nvme@lists.infradead.org, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, cuitao@kylinos.cn
+Subject: Re: [RFC PATCH 1/1] block: charge passthrough requests to the
+ submitter's cgroup
+To: Tejun Heo <tj@kernel.org>
+References: <20260921070647.1928289-1-cui.tao@linux.dev>
+ <20260921070647.1928289-2-cui.tao@linux.dev>
+ <arFgjkKUwYGWbV8H@slm.duckdns.org>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <arFgjkKUwYGWbV8H@slm.duckdns.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi,
+Hi Tejun,
 
-For one of several possible reasons this mail has triggered an AI
-detector script.
+在 2026/9/22 00:51, Tejun Heo 写道:
+> On Mon, Sep 21, 2026 at 03:06:47PM +0800, Tao Cui wrote:
+>> From: Tao Cui <cuitao@kylinos.cn>
+>>
+>> Passthrough requests (SG_IO, bsg, nvme passthrough ioctls and uring
+>> commands) are dispatched via blk_execute_rq{,_nowait}() without ever
+>> passing through submit_bio(), so the bio mapped by blk_rq_map_user()
+>> carries no blkcg association: the transferred bytes never show up in
+>> cgroup io.stat, and every rq_qos policy on the queue (iocost,
+>> iolatency, wbt) is bypassed, as is blk-throttle, which hooks
+>> submit_bio_noacct() directly rather than going through rq_qos.
+>>
+>> A quick demonstration on a scsi_debug device with iocost enabled and
+>> vrate pinned to its 1% floor: a direct fio writer was throttled ~10x
+>> while the same cgroup issuing sg_dd writes ran at full device speed
+>> with zero io.stat accounting.
+>>
+>> Associate the mapped bio with the submitter's blkcg at dispatch time
+>> and run the regular bio accounting (blk_cgroup_bio_start()) and
+>> rq_qos throttle paths with it.  DRV_IN/DRV_OUT commands are mapped to
+>> READ/WRITE so io.stat classifies their bytes normally; request
+>> completion already pairs with the throttle through bio_endio() ->
+>> rq_qos_done_bio().
+>>
+>> The charge is gated by opcode (READ/WRITE/DRV_IN/DRV_OUT) and to
+>> queues that already have a gendisk: commands issued during device
+>> probing (SCSI INQUIRY etc.) have no gendisk yet and stay exempt,
+>> following the same probe-exemption reasoning as the passthrough
+>> iostats support.
+> 
+> Do you have an actual use case where this matters?
+> 
 
-Note that, while we are fine with AI assistance, it is kernel
-policy that you must disclose this with an Assisted-by tag like:
+I don't have a specific passthrough workload that triggered this in
+production. I ran into it while testing blk-iocost accounting coverage.
 
-Assisted-by: LLM
+The relevant concern here is cgroup IO isolation. The expectation of
+blkcg IO control is that the IO consumed by a cgroup is reflected in its
+accounting and subject to blkcg IO policies. Today that is true for IO
+going through submit_bio(), but not for passthrough requests.
 
-See https://docs.kernel.org/process/coding-assistants.html
+The concrete observation was that the same cgroup issuing equivalent
+writes through two paths gets different results: normal bio IO is
+accounted in io.stat and subject to blkcg IO policies, while SG_IO
+writes consume device bandwidth without accounting or blkcg IO control.
 
-It is also kernel policy that you must fully understand and take
-responsibility for every patch that you send.
+So the motivation is not a particular SG_IO application, but whether
+passthrough IO should be considered part of the IO usage controlled by
+blkcg.
 
-See https://docs.kernel.org/process/generated-content.html most
-notably:
+I don't know yet whether the right answer is always-on behavior or an
+opt-in mechanism. The RFC was mainly to discuss whether passthrough
+paths should be covered by blkcg accounting/enforcement at all.
 
-        If tools permit you to generate a contribution automatically, expect
-        additional scrutiny in proportion to how much of it was generated.
+Thanks,
+Tao
 
-        As with the output of any tooling, the result may be incorrect or
-        inappropriate. You are expected to understand and to be able to
-        defend everything you submit. If you are unable to do so, then do
-        not submit the resulting changes.
+> Thanks.
+> 
 
-        If you do so anyway, maintainers are entitled to reject your series
-        without detailed review.
-
-In general, if you are a newcomer to mm, we expect you to do smaller work
-before moving on to larger changes, so you build understanding of both the
-technical aspects of mm and how we do things.
-
---
-Cheers, Lorenzo
