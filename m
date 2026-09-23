@@ -1,212 +1,126 @@
-Received: from mta1.migadu.com (out-8.mta1.migadu.com [95.215.58.8])
+Received: from mail-qk2-f24.google.com (mail-qk2-f24.google.com [74.125.230.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1DB355F5C
-	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 03:41:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ECB23AB460
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 03:45:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790134867; cv=none; b=OhykmMtU6BNAsdAYkQy9vJRqClojlOsA23N3W92kOvIhXPqQGT7aOa72TNxRacRJC0bSIHaoI8Km3y/056/+9YDJPuuGGj0JKUfF0B9paWlugR3QP2E5J8DF3mblSfvh/cTgZfgvIoD38q2XmXAnsBaXRckrEEt/Wixx7csyZO8=
+	t=1790135149; cv=none; b=C6lDGJ6B16lXDkK28uJZBpjgHvOC++/869hZwCFwogtNvy1w8o17105PAeZOyI0ABUUoNqh/Lly4neW/vJqooAW/N4ZPRiGIh1XKXoTPk9aoKdveVGmFaldOD2N7LL6Ff5tptTm4UjUQlXnALBJWzwSaEvqGlm2y9Hqs4u5Lpjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790134867; c=relaxed/simple;
-	bh=g0/Z5c9aDwytCwk3EVHISBOUhMOmw+UqfCuabJU23Po=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Bkeccyju12vZaDySompl4ak0NdWxlB1naNFE16Tdxe0nkaKCNAoukGHkoS0+n95r5AsZV1zC3mXIEC3hZ2RVxfxTpSikGj478eEmucosHIZTaSqOS0Uq4hsswniC+JTLqD9S4yjp/iSbsRjEIz9w916KHfW646HoHz8/M9h/vFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=t5KzfUbR; arc=none smtp.client-ip=95.215.58.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790135149; c=relaxed/simple;
+	bh=VV1daVIrklm8NAgbxgWTs5E3t9FJPZkllrfVvHSGNKw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MXttokhXS8wT/H09Urt7v94C/gQO8ghaTOBEYcTGSfmONJ/4NIFDKPXMbtJkdBjzB6xcCH4tTgCtaIRS3B/KM1//VX41p4wGrf1ypHjwCDSzpDxZJvNcGm9yejl+Xv4+5Y4G+PbshoxMnEk3X3cwX4nUonndBhkMNhMAFi3keLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=Zt/OGiWx; arc=none smtp.client-ip=74.125.230.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="t5KzfUbR"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=g0/Z5c9aDwytCwk3EVHISBOUhMOmw+UqfCuabJU23Po=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790134863; v=1; x=1790739663;
- b=t5KzfUbRPgwv6bU849Gk4sjU/WqthHJxWnYgZ9CznQ3o4Ck0wIbxT85pCzznXxrcJtwcMKwQ
- DMe4S/Mui0Td3ETfzxqRd45JJF1Q+PDHNHQjSK/l7mYjRq3dJxcyFjZq6B5/J6f/2Xg9tiZtcQL
- 33KAUZsseBYKCQ+GFiDjP/p4=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6f051fd9b05117c8;
-	Wed, 23 Sep 2026 03:41:03 +0000
-X-Mizu-Trace-ID: 6f051fd9b05117c8
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <1835413c-e2de-41b0-8225-161afa50676a@linux.dev>
-Date: Wed, 23 Sep 2026 11:40:55 +0800
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="Zt/OGiWx"
+Received: by mail-qk2-f24.google.com with SMTP id af79cd13be357-939695b5741so48371485a.1
+        for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 20:45:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1790135146; x=1790739946; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ZoBrlOKKae5h9YawjwIgBVWbvwNAnx3gQiwI9yKP0ug=;
+        b=Zt/OGiWx7g8a52pa3BBPdNAIO3+0rszNi2trrvmvOe7cHSYjdF0fz0fQfT5r0avt07
+         nq8cg7ODvqcLfdAPk/YHg9azI/kUw8IOqKn1dV299dlnHschpGz65crsDNzu4YxpoxPw
+         NtHaD0MZgVYh7mlxMEqxrK4IBTL95n8vcod3yhuLfFQVP6+xVp+q2ZIV1t/kjXsCchzi
+         Prgwy14wQi5ziOJMDYxHkW8oBMqlkeuC1wZu4/cyQQo9Eo2InPZ5YSFX5g4HXEOvtLsA
+         D4DiuUv4ZIHZBmP8IQX86irI9/U9D505Yqb5Cg32OviDvJ3ddpyyrXlZn6QYlPRXAKAD
+         8F3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790135146; x=1790739946;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ZoBrlOKKae5h9YawjwIgBVWbvwNAnx3gQiwI9yKP0ug=;
+        b=2Yuubl/5RMJXTYeHdEZpq0CHjTCcutWRY3Qdy4QVMe4g2FDRcHD058du44mNyYEUrV
+         VVUCnhyE/9AKl3JzW3hMq72nJ8uA4JqRAuHi2Kc1h9Y418fBn642YRhmy+1Q/fTS5g5g
+         q9gXbOeeIgr6mOXzOpAU2IPv0An8lFBcvP1cUFDXwH8ktuAsed6iNfxaLbeUD33veMx9
+         4+Ok7AirmZmKqU4t4Qp3zwGPW58Ez2qq71B0J7Sm46Aip/uloty2SOtbJyKr69R9Hnl6
+         Aqo+5gdNIuipDZn3hqpNEWJ3JYZfnGmSAkFFFdoqPbgLyWp9BjoofhTOzmgJUltT1Smi
+         au0Q==
+X-Forwarded-Encrypted: i=1; AKwUvBwNG/oczOGn0QkpPhHq9QP6u+L93lPCpaSi8cAhJKOgSs+bClQak9IdfnA0kzYnDr1H4NSldt3f@vger.kernel.org
+X-Gm-Message-State: AFuF++lVWcj1rL4FACdzzwSfsppXH2azdMD5VS1lCY8c1PHlYY1EDiZR
+	UgowqHUlPGWdmZ9pBX6CzNqcUmfODEPWWUbwk3ENH6d7PlmUQzrL1ZP6YOI44+n9qdA=
+X-Gm-Gg: AYBFou3vwslGtUu6Y+lYWFCQ5pbzJBlaq1zFjQvwkb/+TwfS0eTQae3dFLncg5kyK+1
+	r2axanGpDT9ADVWZ0wcbpT1Lp+fiwe1/TAOx0mh5K6TM8T8aEP4nawJ0tbX+uUtg4NfjesBwNgU
+	R3ONFdez8Bcf9X7rfJpSCRXoMubScFrU4Ib0IPVt5DTJzE6nRzFqZqWQ/6yGHrgxYcUowQcR6qy
+	UhuJJ/iIGcuE2uPnA52TmeYcgo9w/Db4RHGJ1oEW/kdnuPkBy/5nOqL/4kKKmYgnII69ZmEb64A
+	KOeU97bmwDyN7G3FOny3Q17J4Z9EfY0RnBbudWyJTQd2ykwaV3jsiJ091M7OIr5fWVJUygJVREC
+	c1bLSJQOJFlRZ1nPo4qRvqwG3UTjPuBNhkbWOSwW0f8n+eOVuoksS0R5UbqzqYqmMdm9fC4g/I/
+	wgBh+eUuCUwe2jcZlwGloqipjHN/ZBwKhYPcS9EDtB+UXQTWHJPKa4vBxACiLoEZkbetMTkXoAV
+	vbi0+BBJE8Rx1Atg/V0CSjhyOKeWiPM0rPcO8d/fIOCnEuy4yY33VU=
+X-Received: by 2002:a05:620a:6f04:b0:93b:d79e:18f6 with SMTP id af79cd13be357-93c2521bb42mr221267385a.57.1790135146524;
+        Tue, 22 Sep 2026 20:45:46 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93c248a1481sm136441685a.35.2026.09.22.20.45.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Sep 2026 20:45:46 -0700 (PDT)
+Date: Tue, 22 Sep 2026 23:45:44 -0400
+From: Gregory Price <gourry@gourry.net>
+To: Qinyun Tan <qinyuntan@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
+	David Hildenbrand <david@kernel.org>, Zi Yan <ziy@nvidia.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Usama Arif <usama.arif@linux.dev>, 
+	Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	Nhat Pham <nphamcs@gmail.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	Xunlei Pang <xlpang@linux.alibaba.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] mm: memcontrol: drop kmemcg_id and use the memcg
+ ID for list_lru indexing
+Message-ID: <arNK64PxTXbVEhis@gourry-fedora-PF4VCD3F>
+References: <20260907110111.2286932-1-qinyuntan@linux.alibaba.com>
+ <20260907110111.2286932-2-qinyuntan@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: hongfu.li@linux.dev, Chris Down <chris@chrisdown.name>,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- stable@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
- David Hildenbrand <david@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- Shakeel Butt <shakeel.butt@linux.dev>, Michal Hocko <mhocko@suse.com>,
- Johannes Weiner <hannes@cmpxchg.org>, Joshua Hahn <joshua.hahnjy@gmail.com>,
- Nhat Pham <nphamcs@gmail.com>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>
-Subject: Re: [PATCH v2 2/2] mm/memcg: migrate per-node hugetlb lruvec stat
- together with hugetlb folio
-To: Muchun Song <muchun.song@linux.dev>, Hongfu Li <lihongfu@kylinos.cn>
-References: <20260923-for-hugetlb_state3-v2-0-e8a36245bfab@kylinos.cn>
- <20260923-for-hugetlb_state3-v2-2-e8a36245bfab@kylinos.cn>
- <15ac7069-d687-4985-90bd-25bc900b4bdd@linux.dev>
-From: Hongfu Li <hongfu.li@linux.dev>
-In-Reply-To: <15ac7069-d687-4985-90bd-25bc900b4bdd@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260907110111.2286932-2-qinyuntan@linux.alibaba.com>
 
+On Mon, Sep 07, 2026 at 07:01:08PM +0800, Qinyun Tan wrote:
+> kmemcg_id is a copy of the memcg ID assigned in memcg_online_kmem(),
+> and is only used as the list_lru xarray index.  With
+> cgroup.memory=nokmem the assignment never happens, so every memcg
+> resolves to the per-node lists.  The next patch needs the index to
+> work under nokmem as well, so drop the copy and use the memcg ID.
+> 
+> The ID works just as well as the copy did: root and NULL still
+> return -1 and use the per-node lists, and the ID is only released
+> after the list_lru reparenting, so a stale or recycled ID can never
+> reach a live list_lru entry.
+> 
+> The early return of memcg_offline_kmem() under nokmem is dropped as
+> well, so the reparenting also covers lrus that stay memcg aware
+> without kmem accounting.
+> 
+> Signed-off-by: Qinyun Tan <qinyuntan@linux.alibaba.com>
 
-On 9/23/26 10:40 AM, Muchun Song wrote:
->
->
-> On 2026/9/23 10:05, Hongfu Li wrote:
->> From: Hongfu Li <lihongfu@kylinos.cn>
->>
->> memory.numa_stat exposes per-node hugetlb counters from per-node lruvec
->> stats. These stats are accounted against folio_nid(): incremented on
->> the folio's node when handed to a user, decremented when the folio is
->> returned to the pool.
->>
->> During hugetlb folio migration, mem_cgroup_migrate() moves the charge
->> to the new folio and drops the memcg data of the old one, so the free
->> of the old folio right after the migration skips the memcg per-node
->> lruvec decrement. The hugetlb count stays attributed to the old node
->> for the rest of the life of the charge, while the target folio gets no
->> increment on the new node; its later free decrements a counter that
->> was never incremented.
->>
->> Migrate the per-node lruvec accounting alongside migration. Global
->> memcg totals remain balanced because they track resource consumption,
->> not node placement.
->>
->> Fixes: 05d4532b60e3 ("memcg/hugetlb: add hugeTLB counters to memcg")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Hongfu Li <lihongfu@kylinos.cn>
->> Tested-by: Joshua Hahn <joshua.hahnjy@gmail.com>
->> Reviewed-by: Joshua Hahn <joshua.hahnjy@gmail.com>
->> Reviewed-by: Oscar Salvador <osalvador@suse.de>
->> ---
->>   include/linux/memcontrol.h |  8 ++++++++
->>   mm/hugetlb.c               | 25 +++++++++++++++++++++++++
->>   mm/memcontrol.c            |  5 ++---
->>   3 files changed, 35 insertions(+), 3 deletions(-)
->>
->> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->> index a8358f297b65..74110a324f9e 100644
->> --- a/include/linux/memcontrol.h
->> +++ b/include/linux/memcontrol.h
->> @@ -984,6 +984,9 @@ unsigned long lruvec_page_state_monotonic(const 
->> struct lruvec *lruvec,
->>   unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
->>                         enum node_stat_item idx);
->>   +void mod_memcg_lruvec_state(struct lruvec *lruvec,
->> +                enum node_stat_item idx, int val);
->> +
->>   void mem_cgroup_flush_stats(struct mem_cgroup *memcg);
->>   void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg);
->>   @@ -1452,6 +1455,11 @@ static inline unsigned long 
->> lruvec_page_state_local(const struct lruvec *lruvec,
->>       return node_page_state(lruvec_pgdat(lruvec), idx);
->>   }
->>   +static inline void mod_memcg_lruvec_state(struct lruvec *lruvec,
->> +                      enum node_stat_item idx, int val)
->> +{
->> +}
->> +
->>   static inline void mem_cgroup_flush_stats(struct mem_cgroup *memcg)
->>   {
->>   }
->> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
->> index 519c30b338a8..76d019594b39 100644
->> --- a/mm/hugetlb.c
->> +++ b/mm/hugetlb.c
->> @@ -23,6 +23,7 @@
->>   #include <linux/mmdebug.h>
->>   #include <linux/sched/signal.h>
->>   #include <linux/rmap.h>
->> +#include <linux/rcupdate.h>
->>   #include <linux/string_choices.h>
->>   #include <linux/string_helpers.h>
->>   #include <linux/swap.h>
->> @@ -7378,12 +7379,36 @@ void folio_putback_hugetlb(struct folio *folio)
->>       folio_put(folio);
->>   }
->>   +static void move_hugetlb_lruvec_stat(struct folio *old_folio,
->> +                     struct folio *new_folio)
->> +{
->> +    struct mem_cgroup *memcg;
->> +    long nr_pages = folio_nr_pages(old_folio);
->> +    int old_nid = folio_nid(old_folio);
->> +    int new_nid = folio_nid(new_folio);
->> +
->> +    if (old_nid == new_nid)
->> +        return;
->> +
->> +    guard(rcu)();
->> +
->> +    memcg = folio_memcg(new_folio);
->> +    if (!memcg)
->> +        return;
->> +
->> +    mod_memcg_lruvec_state(mem_cgroup_lruvec(memcg, 
->> NODE_DATA(old_nid)),
->> +                   NR_HUGETLB, -nr_pages);
->
-> Why not use mod_lruvec_state? mod_memcg_lruvec_state is an internal
-> API for memcg, I don't want it to be exported.
+This breaks an assert in memcg_struct_check - i think you want to drop
+this line as well
 
-Thank you for the review.
+---
 
-mod_lruvec_state() would update the node counter a second time.  It calls
-mod_node_page_state() as well, and the target's node counter is already
-updated in alloc_hugetlb_folio_nodemask() (patch 1/2):
-
-     lruvec_stat_mod_folio(folio, NR_HUGETLB, folio_nr_pages(folio));
-
-For an uncharged folio lruvec_stat_mod_folio() only updates the node
-counter.  The target folio is not charged to any memcg at that point; its
-charge only appears later in mem_cgroup_migrate().  So the node side is
-already covered and only the per-memcg attribution has to follow the
-charge here.
-
->
-> Thanks.
->
->> + mod_memcg_lruvec_state(mem_cgroup_lruvec(memcg, NODE_DATA(new_nid)),
->> +                   NR_HUGETLB, nr_pages);
->> +}
->> +
->>   void move_hugetlb_state(struct folio *old_folio, struct folio 
->> *new_folio,
->>               enum migrate_reason reason)
->>   {
->>       struct hstate *h = folio_hstate(old_folio);
->>         hugetlb_cgroup_migrate(old_folio, new_folio);
->> +    move_hugetlb_lruvec_stat(old_folio, new_folio);
->>       folio_set_owner_migrate_reason(new_folio, reason);
->>         /*
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 88824f783571..a5335da5d425 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -1015,9 +1015,8 @@ static void __mod_memcg_lruvec_state(struct 
->> mem_cgroup_per_node *pn,
->>       put_cpu();
->>   }
->>   -static void mod_memcg_lruvec_state(struct lruvec *lruvec,
->> -                     enum node_stat_item idx,
->> -                     int val)
->> +void mod_memcg_lruvec_state(struct lruvec *lruvec,
->> +                enum node_stat_item idx, int val)
->>   {
->>       struct pglist_data *pgdat = lruvec_pgdat(lruvec);
->>       struct mem_cgroup_per_node *pn;
->>
->
--- 
-Best regards,
-Hongfu
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 5d7a26c91610..fcba9eb55659 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5886,8 +5886,6 @@ static void __init memcg_struct_check(void)
+ 				      private_id_objcg);
+ 	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_read_mostly,
+ 				      private_id);
+-	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_read_mostly,
+-				      kmemcg_id);
+ 	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_read_mostly,
+ 				      oom_group);
+ 
