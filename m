@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-96.mta0.migadu.com [91.218.175.96])
+Received: from mta1.migadu.com (out-227.mta1.migadu.com [95.215.58.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C53E538F64D
-	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 05:01:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CED3DD87A
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 05:01:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790139716; cv=none; b=GakEEHAK+U/8xpWbX411Idgk0tj8slvrRTaX2AkcBxxq/wBy9KNATodMNmZaPjynTwN47IwUExVdaOB+QnuM4TVRey6zxhLr43SEL8HNdZxxppIddn4EK+aPhKWIIiA49wcj0wI4zPJKAIdSUE7zVoIZGcAXIQs9Z5IWSTyvovM=
+	t=1790139716; cv=none; b=k0NHhaJzjRGreztvq3feiHtP/+VoBEjuAbgj/YBIPelYTU+xNKk/C7lgbIe763+rKCE1EXworrav4k27r1nO1iXhSs0720CZKWewtgGXNU4izYA/+IeE65jSXO1ID1qbGcaEuIFmUw9kXqtZVVNMcoRK6qItr4n3O0Rt5gYpVJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790139716; c=relaxed/simple;
-	bh=fY0M/nvwSqFu2VO+4chH0AAhbw1JI0Dvh901qmDdq38=;
+	bh=/WnTB8msSHSCldW0fmcb/5h6xZ2faRRaUT+OuE281eI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gmZLBA5FsT4mPRFyqpudiGmGg8CsZ4kHr4UfV6hk5wgvM/7gTNt8JFqjq30OqGLYKW+2pZY/Lsd2+6QVO8Uoeppq/WsSZB1dPykPxXrY1CO4lPGIZoDCvAgT/GqVZ+O7aBHmyZmXwA4iHq57YuAoSLRy0vuB00qunAqAz9l/vQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=EZEBh/yH; arc=none smtp.client-ip=91.218.175.96
+	 MIME-Version; b=o8Z1+PWF7LdV34s4Wj/iYbdN1bkcxaU49NnqJk5k6CVcjzSCk/MXskAClju3sEb5VsXdVuUh+xiKI4VjR7h/zQAR27Ze1GYrqOs6QKD5g5yrUkgRk9WCIPlpxb6FQ3wGG0yulejFa5A2gYoXhzAdY3tgXHPNuC3oNbHYgCxjO9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=InLj/Qtp; arc=none smtp.client-ip=95.215.58.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="EZEBh/yH"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="InLj/Qtp"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=fY0M/nvwSqFu2VO+4chH0AAhbw1JI0Dvh901qmDdq38=;
+DKIM-Signature: a=rsa-sha256; bh=/WnTB8msSHSCldW0fmcb/5h6xZ2faRRaUT+OuE281eI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790139710; v=1; x=1790744510;
- b=EZEBh/yH+PwbeZzR3Qq+fMUhnztnBRFmnh8+Fj1VWU2C/BsRI5ooYMiV30dmvcq+NKCJBt5t
- QpW8OZ65GWGlPkG76bmKLie3zha2zWRcjkl1c58SpZS5s3XPnUnVggWa3IpXVkCQtFleaG7ik+r
- iycS/EzB6Wxqeffbv6CLsFzI=
+ t=1790139712; v=1; x=1790744512;
+ b=InLj/QtpfRrA8mIkiAhM8kSQmc97y3EKdTgYlE8oWmg7Pyn+VE0oP/1dMm+Ys9D6ktLdFWmT
+ bjhz6PSvDLFRHSZBbQinXyax4MNiL2+GMwRUC8DyFRqxlbqiBhs4noHEAvw8RnHRtM4ZU8uk14w
+ cVpBjZfVZ9rPJrZbBHQj9kHA=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 741ee65c5c697fb7;
-	Wed, 23 Sep 2026 05:01:50 +0000
-X-Mizu-Trace-ID: 741ee65c5c697fb7
+Received: by smtp.migadu.com with ESMTPS id e259994b195d5eaf;
+	Wed, 23 Sep 2026 05:01:52 +0000
+X-Mizu-Trace-ID: e259994b195d5eaf
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Peter Zijlstra <peterz@infradead.org>,
@@ -46,9 +46,9 @@ Cc: Paul McKenney <paulmck@kernel.org>,
 	cgroups@vger.kernel.org,
 	driver-core@lists.linux.dev,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/7] locking/mutex: track holders of opted-in mutexes
-Date: Tue, 22 Sep 2026 22:01:20 -0700
-Message-ID: <44ecb2e59077254374f3e41dbe105a5df4e80ea9.1790139577.git.shakeel.butt@linux.dev>
+Subject: [PATCH 4/7] locking/percpu-rwsem: track holders of opted-in percpu_rw_semaphores
+Date: Tue, 22 Sep 2026 22:01:21 -0700
+Message-ID: <796a07c0784fff2c92f17f8d234ea9d2c5dcf5ad.1790139577.git.shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <cover.1790139577.git.shakeel.butt@linux.dev>
 References: <cover.1790139577.git.shakeel.butt@linux.dev>
@@ -60,211 +60,160 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add mutex_track_holder() to opt a mutex in to holder tracking.
+Add percpu_rwsem_track_holder() to opt a percpu_rw_semaphore in to
+holder tracking.
 
-On !PREEMPT_RT, current takes a mutex only in __mutex_trylock_common()
-and __mutex_trylock_fast(), and releases it only in
-__mutex_unlock_fast() and __mutex_unlock_slowpath(). Hooking these four
-places covers every mutex_lock*(), mutex_trylock(), ww_mutex_lock*() and
-handoff. __mutex_unlock_fast() drops the count after the release, which
-needs no care: the count is in current, not in the mutex.
+The read fast and slow paths meet before the hook in
+percpu_down_read_internal(), so one hook covers both.
+percpu_down_read_trylock() counts only on success.
 
-On PREEMPT_RT, the hooks are in __mutex_lock_common(), mutex_trylock(),
-_mutex_trylock_nest_lock() and mutex_unlock() in rtmutex_api.c. There,
-ww_mutex is an rt_mutex and is not covered. mutex_track_holder() itself
-is shared by both builds.
+percpu_rwsem_release() and percpu_rwsem_acquire() pass a held lock to
+another task. Filesystem freeze uses them to return to user space
+holding the lock, and async writes (kiocb_start_write()) use them
+because the write may complete in another context. Move the count in
+these calls too, so it stays right for each task.
 
-As with rwsem, mutex_track_holder() warns and does nothing if the mutex
-is held, and mutex_init() clears the flag with the rest of ->owner.
-
-The opt-in is bit 3 of ->owner, which is below the alignment of a
-task_struct pointer. It is sticky: unlike the other flag bits it
-survives unlock, so a free tracked mutex reads MUTEX_FLAG_TRACKED rather
-than zero.
-
-Bit 3 needs a task_struct aligned to 16 rather than the 8 that bits 0-2
-needed. fork_init() aligns to at least L1_CACHE_BYTES, whose smallest
-value in the tree is 16, so a static_assert() records the requirement.
+The read side counts inside the preempt-disabled region, so a task is
+never preemptible holding @sem without being counted for it.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- include/linux/mutex.h        | 14 +++++++
- kernel/locking/mutex.c       | 79 ++++++++++++++++++++++++++++++++----
- kernel/locking/mutex.h       | 48 +++++++++++++++++++++-
- kernel/locking/rtmutex_api.c | 36 ++++++++++++++--
- 4 files changed, 165 insertions(+), 12 deletions(-)
+ include/linux/percpu-rwsem.h  | 42 +++++++++++++++++++++++++++++++++++
+ kernel/locking/percpu-rwsem.c | 28 +++++++++++++++++++++++
+ 2 files changed, 70 insertions(+)
 
-diff --git a/include/linux/mutex.h b/include/linux/mutex.h
-index 734048c02f4f..74f54ee83685 100644
---- a/include/linux/mutex.h
-+++ b/include/linux/mutex.h
-@@ -75,6 +75,20 @@ do {									\
-  */
- #define mutex_init_with_key(mutex, key) __mutex_init((mutex), #mutex, (key))
+diff --git a/include/linux/percpu-rwsem.h b/include/linux/percpu-rwsem.h
+index 39d5bf8e6562..1a131ed8e8f1 100644
+--- a/include/linux/percpu-rwsem.h
++++ b/include/linux/percpu-rwsem.h
+@@ -8,6 +8,7 @@
+ #include <linux/wait.h>
+ #include <linux/rcu_sync.h>
+ #include <linux/lockdep.h>
++#include <linux/lockholder.h>
+ #include <linux/cleanup.h>
+ 
+ struct percpu_rw_semaphore {
+@@ -16,6 +17,13 @@ struct percpu_rw_semaphore {
+ 	struct rcuwait		writer;
+ 	wait_queue_head_t	waiters;
+ 	atomic_t		block;
++#ifdef CONFIG_TRACK_LOCK_HOLDERS
++	/*
++	 * Set by percpu_rwsem_track_holder() before first use. Fits in the
++	 * padding after block, so the struct does not grow on 64-bit.
++	 */
++	bool			tracked;
++#endif
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+ 	struct lockdep_map	dep_map;
+ #endif
+@@ -65,6 +73,11 @@ static inline void percpu_down_read_internal(struct percpu_rw_semaphore *sem,
+ 		this_cpu_inc(*sem->read_count);
+ 	else
+ 		__percpu_down_read(sem, false, freezable); /* Unconditional memory barrier */
++	/*
++	 * Count the lock before preemption comes back, so the task is
++	 * never preemptible holding @sem but not counted for it.
++	 */
++	lock_holder_acquired(sem);
+ 	/*
+ 	 * The preempt_enable() prevents the compiler from
+ 	 * bleeding the critical section out.
+@@ -95,6 +108,12 @@ static inline bool percpu_down_read_trylock(struct percpu_rw_semaphore *sem)
+ 		this_cpu_inc(*sem->read_count);
+ 	else
+ 		ret = __percpu_down_read(sem, true, false); /* Unconditional memory barrier */
++	/*
++	 * Count the lock before preemption comes back, as in
++	 * percpu_down_read_internal().
++	 */
++	if (ret)
++		lock_holder_acquired(sem);
+ 	preempt_enable();
+ 	/*
+ 	 * The barrier() from preempt_enable() prevents the compiler from
+@@ -111,6 +130,7 @@ extern void __percpu_up_read(struct percpu_rw_semaphore *sem);
+ 
+ static inline void percpu_up_read(struct percpu_rw_semaphore *sem)
+ {
++	lock_holder_released(sem);
+ 	rwsem_release(&sem->dep_map, _RET_IP_);
+ 
+ 	preempt_disable();
+@@ -129,6 +149,20 @@ extern bool percpu_is_read_locked(struct percpu_rw_semaphore *);
+ extern void percpu_down_write(struct percpu_rw_semaphore *);
+ extern void percpu_up_write(struct percpu_rw_semaphore *);
  
 +#ifdef CONFIG_TRACK_LOCK_HOLDERS
 +/**
-+ * mutex_track_holder - track the holder of a mutex
-+ * @lock: initialized mutex that no one holds yet
++ * percpu_rwsem_track_holder - track the holders of a percpu_rw_semaphore
++ * @sem: initialized percpu_rw_semaphore that no one holds yet
 + *
-+ * Count @lock in task_nr_tracked_locks() of the task holding it. Use it
++ * Count @sem in task_nr_tracked_locks() of the tasks holding it. Use it
 + * for locks whose holders can stall unrelated work. Call it before anyone
-+ * can take @lock, e.g. right after mutex_init().
++ * can take @sem, e.g. right after percpu_init_rwsem().
 + */
-+void mutex_track_holder(struct mutex *lock);
++void percpu_rwsem_track_holder(struct percpu_rw_semaphore *sem);
 +#else
-+static inline void mutex_track_holder(struct mutex *lock) { }
++static inline void percpu_rwsem_track_holder(struct percpu_rw_semaphore *sem) { }
 +#endif
 +
- #ifndef CONFIG_PREEMPT_RT
- #define __MUTEX_INITIALIZER(lockname) \
- 		{ .owner = ATOMIC_LONG_INIT(0) \
-diff --git a/kernel/locking/mutex.c b/kernel/locking/mutex.c
-index 942a939cee95..d4b5a3674e39 100644
---- a/kernel/locking/mutex.c
-+++ b/kernel/locking/mutex.c
-@@ -28,6 +28,7 @@
- #include <linux/spinlock.h>
- #include <linux/interrupt.h>
- #include <linux/debug_locks.h>
-+#include <linux/lockholder.h>
- #include <linux/osq_lock.h>
- #include <linux/hung_task.h>
+ DEFINE_GUARD(percpu_read, struct percpu_rw_semaphore *,
+ 	     percpu_down_read(_T), percpu_up_read(_T))
+ DEFINE_GUARD_COND(percpu_read, _try, percpu_down_read_trylock(_T))
+@@ -156,9 +190,16 @@ extern void percpu_free_rwsem(struct percpu_rw_semaphore *);
+ #define percpu_rwsem_is_held(sem)	lockdep_is_held(sem)
+ #define percpu_rwsem_assert_held(sem)	lockdep_assert_held(sem)
  
-@@ -45,6 +46,7 @@
- 
- static void __mutex_init_generic(struct mutex *lock)
++/*
++ * These pass a held lock to another task. For example, filesystem freeze
++ * returns to user space holding the lock, and thaw, maybe in another
++ * task, releases it. The holder count moves with the lock, as lockdep's
++ * view of it does.
++ */
+ static inline void percpu_rwsem_release(struct percpu_rw_semaphore *sem,
+ 					unsigned long ip)
  {
-+	/* Clearing owner also clears MUTEX_FLAG_TRACKED. */
- 	atomic_long_set(&lock->owner, 0);
- 	scoped_guard (raw_spinlock_init, &lock->wait_lock) {
- 		lock->first_waiter = NULL;
-@@ -81,6 +83,9 @@ unsigned long mutex_get_owner(struct mutex *lock)
- 
- /*
-  * Returns: __mutex_owner(lock) on failure or NULL on success.
-+ *
-+ * Only this and __mutex_trylock_fast() take the lock for current, so the
-+ * holder count goes up in these two.
-  */
- static inline struct task_struct *__mutex_trylock_common(struct mutex *lock, bool handoff)
- {
-@@ -109,8 +114,10 @@ static inline struct task_struct *__mutex_trylock_common(struct mutex *lock, boo
- 		}
- 
- 		if (atomic_long_try_cmpxchg_acquire(&lock->owner, &owner, task | flags)) {
--			if (task == curr)
-+			if (task == curr) {
-+				lock_holder_acquired_if(flags & MUTEX_FLAG_TRACKED);
- 				return NULL;
-+			}
- 			break;
- 		}
- 	}
-@@ -154,12 +161,28 @@ static __always_inline bool __mutex_trylock_fast(struct mutex *lock)
- 	__cond_acquires(true, lock)
- {
- 	unsigned long curr = (unsigned long)current;
--	unsigned long zero = 0UL;
-+	/*
-+	 * A free tracked mutex reads MUTEX_FLAG_TRACKED, not 0, and the
-+	 * flag has to survive the acquire, so both the expected and the
-+	 * new value carry it. Reading it first keeps this to a single
-+	 * cmpxchg, and the read cannot race because the flag is sticky.
-+	 */
-+	unsigned long flag = mutex_tracked_flag(lock);
-+	unsigned long expected = flag;
- 
- 	MUTEX_WARN_ON(lock->magic != lock);
- 
--	if (atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, curr))
-+	if (atomic_long_try_cmpxchg_acquire(&lock->owner, &expected, curr | flag)) {
-+#ifdef CONFIG_TRACK_LOCK_HOLDERS
-+		/*
-+		 * The flag is only set once the static branch is on, so a
-+		 * set flag means tracking is enabled.
-+		 */
-+		if (flag)
-+			__lock_holder_acquired();
-+#endif
- 		return true;
-+	}
- 
- 	return false;
- }
-@@ -168,8 +191,23 @@ static __always_inline bool __mutex_unlock_fast(struct mutex *lock)
- 	__cond_releases(true, lock)
- {
- 	unsigned long curr = (unsigned long)current;
-+	/*
-+	 * A tracked mutex unlocks to MUTEX_FLAG_TRACKED, not to 0. Read the
-+	 * flag while the mutex is still held, so this needs only a single
-+	 * cmpxchg and never looks at @lock after giving it away.
-+	 */
-+	unsigned long flag = mutex_tracked_flag(lock);
-+	unsigned long owner = curr | flag;
-+
-+	if (atomic_long_try_cmpxchg_release(&lock->owner, &owner, flag)) {
-+#ifdef CONFIG_TRACK_LOCK_HOLDERS
-+		if (flag)
-+			__lock_holder_released();
-+#endif
-+		return true;
-+	}
- 
--	return atomic_long_try_cmpxchg_release(&lock->owner, &curr, 0UL);
-+	return false;
++	lock_holder_released(sem);
+ 	lock_release(&sem->dep_map, ip);
  }
  
- #else /* !CONFIG_DEBUG_LOCK_ALLOC */
-@@ -242,7 +280,7 @@ __mutex_remove_waiter(struct mutex *lock, struct mutex_waiter *waiter)
- 	__must_hold(&lock->wait_lock)
+@@ -166,6 +207,7 @@ static inline void percpu_rwsem_acquire(struct percpu_rw_semaphore *sem,
+ 					bool read, unsigned long ip)
  {
- 	if (list_empty(&waiter->list)) {
--		__mutex_clear_flag(lock, MUTEX_FLAGS);
-+		__mutex_clear_flag(lock, MUTEX_STATE_FLAGS);
- 		lock->first_waiter = NULL;
- 	} else {
- 		if (lock->first_waiter == waiter)
-@@ -257,7 +295,7 @@ __mutex_remove_waiter(struct mutex *lock, struct mutex_waiter *waiter)
- /*
-  * Give up ownership to a specific task, when @task = NULL, this is equivalent
-  * to a regular unlock. Sets PICKUP on a handoff, clears HANDOFF, preserves
-- * WAITERS. Provides RELEASE semantics like a regular unlock, the
-+ * WAITERS and TRACKED. Provides RELEASE semantics like a regular unlock, the
-  * __mutex_trylock() provides a matching ACQUIRE semantics for the handoff.
-  */
- static void __mutex_handoff(struct mutex *lock, struct task_struct *task)
-@@ -270,7 +308,7 @@ static void __mutex_handoff(struct mutex *lock, struct task_struct *task)
- 		MUTEX_WARN_ON(__owner_task(owner) != current);
- 		MUTEX_WARN_ON(owner & MUTEX_FLAG_PICKUP);
+ 	lock_acquire(&sem->dep_map, 0, 1, read, 1, NULL, ip);
++	lock_holder_acquired(sem);
+ }
  
--		new = (owner & MUTEX_FLAG_WAITERS);
-+		new = (owner & (MUTEX_FLAG_WAITERS | MUTEX_FLAG_TRACKED));
- 		new |= (unsigned long)task;
- 		if (task)
- 			new |= MUTEX_FLAG_PICKUP;
-@@ -986,6 +1024,7 @@ static noinline void __sched __mutex_unlock_slowpath(struct mutex *lock, unsigne
- 	unsigned long owner;
- 	unsigned long flags;
- 
-+	lock_holder_released_if(mutex_is_tracked(lock));
- 	mutex_release(&lock->dep_map, ip);
- 	__release(lock);
- 
-@@ -1276,6 +1315,32 @@ __weak int arch_contended_release_trace_reg(void) { return 0; }
- 
- __weak void arch_contended_release_trace_unreg(void) { }
+ #endif
+diff --git a/kernel/locking/percpu-rwsem.c b/kernel/locking/percpu-rwsem.c
+index 6c78961fe753..e100c33731ca 100644
+--- a/kernel/locking/percpu-rwsem.c
++++ b/kernel/locking/percpu-rwsem.c
+@@ -22,6 +22,9 @@ int __percpu_init_rwsem(struct percpu_rw_semaphore *sem,
+ 	rcuwait_init(&sem->writer);
+ 	init_waitqueue_head(&sem->waiters);
+ 	atomic_set(&sem->block, 0);
++#ifdef CONFIG_TRACK_LOCK_HOLDERS
++	sem->tracked = false;
++#endif
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+ 	debug_check_no_locks_freed((void *)sem, sizeof(*sem));
+ 	lockdep_init_map(&sem->dep_map, name, key, 0);
+@@ -201,6 +204,28 @@ bool percpu_is_read_locked(struct percpu_rw_semaphore *sem)
+ }
+ EXPORT_SYMBOL_GPL(percpu_is_read_locked);
  
 +#ifdef CONFIG_TRACK_LOCK_HOLDERS
-+void mutex_track_holder(struct mutex *lock)
++void percpu_rwsem_track_holder(struct percpu_rw_semaphore *sem)
 +{
 +	/*
-+	 * A task holding @lock now was not counted, so its mutex_unlock()
++	 * A task holding @sem now was not counted, so its percpu_up_*()
 +	 * would make its count wrong.
 +	 */
-+	if (WARN_ONCE(mutex_is_locked(lock),
-+		      "%s: mutex is held; opt in before it is published\n",
++	if (WARN_ONCE(percpu_is_read_locked(sem) || percpu_is_write_locked(sem),
++		      "%s: rwsem is held; opt in before it is published\n",
 +		      __func__))
 +		return;
 +
@@ -273,188 +222,29 @@ index 942a939cee95..d4b5a3674e39 100644
 +	 * flag always has them on.
 +	 */
 +	lock_holder_tracking_enable();
-+#ifdef CONFIG_PREEMPT_RT
-+	lock->rtmutex.tracked = true;
-+#else
-+	atomic_long_or(MUTEX_FLAG_TRACKED, &lock->owner);
-+#endif
++	sem->tracked = true;
 +}
-+EXPORT_SYMBOL_GPL(mutex_track_holder);
++EXPORT_SYMBOL_GPL(percpu_rwsem_track_holder);
 +#endif
 +
- /**
-  * atomic_dec_and_mutex_lock - return holding mutex if we dec to 0
-  * @cnt: the atomic which we are to dec
-diff --git a/kernel/locking/mutex.h b/kernel/locking/mutex.h
-index 3e263e98e5fc..833f084d5bb0 100644
---- a/kernel/locking/mutex.h
-+++ b/kernel/locking/mutex.h
-@@ -7,6 +7,7 @@
-  *  Copyright (C) 2004, 2005, 2006 Red Hat, Inc., Ingo Molnar <mingo@redhat.com>
-  */
- #ifndef CONFIG_PREEMPT_RT
-+#include <linux/lockholder.h>
- #include <linux/mutex.h>
  /*
-  * This is the control structure for tasks blocked on mutex, which resides
-@@ -29,12 +30,32 @@ struct mutex_waiter {
-  * Bit0 indicates a non-empty waiter list; unlock must issue a wakeup.
-  * Bit1 indicates unlock needs to hand the lock to the top-waiter
-  * Bit2 indicates handoff has been done and we're waiting for pickup.
-+ * Bit3 indicates the lock opted in to holder tracking. Unlike the others
-+ * it is sticky: it survives unlock, so an unlocked tracked mutex reads
-+ * MUTEX_FLAG_TRACKED rather than 0.
-  */
- #define MUTEX_FLAG_WAITERS	0x01
- #define MUTEX_FLAG_HANDOFF	0x02
- #define MUTEX_FLAG_PICKUP	0x04
-+#ifdef CONFIG_TRACK_LOCK_HOLDERS
-+#define MUTEX_FLAG_TRACKED	0x08
-+#else
-+#define MUTEX_FLAG_TRACKED	0x00
-+#endif
+  * Return true if the modular sum of the sem->read_count per-CPU variable is
+  * zero.  If this sum is zero, then it is stable due to the fact that if any
+@@ -256,11 +281,14 @@ void __sched percpu_down_write(struct percpu_rw_semaphore *sem)
+ 	rcuwait_wait_event(&sem->writer, readers_active_check(sem), TASK_UNINTERRUPTIBLE);
+ 	if (contended)
+ 		trace_contention_end(sem, 0);
 +
-+/* The state flags, which unlock clears. */
-+#define MUTEX_STATE_FLAGS	(MUTEX_FLAG_WAITERS | MUTEX_FLAG_HANDOFF | \
-+				 MUTEX_FLAG_PICKUP)
-+#define MUTEX_FLAGS		(MUTEX_STATE_FLAGS | MUTEX_FLAG_TRACKED)
- 
--#define MUTEX_FLAGS		0x07
-+/*
-+ * The flags live below the task_struct pointer in ->owner, so every
-+ * task_struct has to be aligned past them. Bits 0-2 needed 8 bytes;
-+ * MUTEX_FLAG_TRACKED needs 16. fork_init() aligns task_struct to at
-+ * least L1_CACHE_BYTES and init_task is __aligned(L1_CACHE_BYTES), so
-+ * that is the value to check; its smallest value in the tree is 16.
-+ */
-+static_assert(L1_CACHE_BYTES > MUTEX_FLAGS);
- 
- /*
-  * Internal helper function; C doesn't allow us to hide it :/
-@@ -48,6 +69,31 @@ static inline struct task_struct *__mutex_owner(struct mutex *lock)
- 	return (struct task_struct *)(atomic_long_read(&lock->owner) & ~MUTEX_FLAGS);
++	lock_holder_acquired(sem);
  }
+ EXPORT_SYMBOL_GPL(percpu_down_write);
  
-+static inline bool mutex_is_tracked(struct mutex *lock)
-+{
-+	if (!IS_ENABLED(CONFIG_TRACK_LOCK_HOLDERS))
-+		return false;
-+
-+	return atomic_long_read(&lock->owner) & MUTEX_FLAG_TRACKED;
-+}
-+
-+/*
-+ * The opt-in flag as it sits in owner, for the fast paths that fold it
-+ * into a cmpxchg. The flag is only set once the static branch is on, so
-+ * an off branch means no mutex carries it and the read can be skipped.
-+ */
-+static inline unsigned long mutex_tracked_flag(struct mutex *lock)
-+{
-+#ifdef CONFIG_TRACK_LOCK_HOLDERS
-+	if (!static_branch_unlikely(&lock_holder_tracking_key))
-+		return 0;
-+
-+	return atomic_long_read(&lock->owner) & MUTEX_FLAG_TRACKED;
-+#else
-+	return 0;
-+#endif
-+}
-+
- static inline struct mutex *get_task_blocked_on(struct task_struct *p)
+ void percpu_up_write(struct percpu_rw_semaphore *sem)
  {
- 	guard(raw_spinlock_irqsave)(&p->blocked_lock);
-diff --git a/kernel/locking/rtmutex_api.c b/kernel/locking/rtmutex_api.c
-index eb18b094473c..41ca3c1d92f6 100644
---- a/kernel/locking/rtmutex_api.c
-+++ b/kernel/locking/rtmutex_api.c
-@@ -2,6 +2,7 @@
- /*
-  * rtmutex API
-  */
-+#include <linux/lockholder.h>
- #include <linux/spinlock.h>
- #include <linux/export.h>
++	lock_holder_released(sem);
+ 	rwsem_release(&sem->dep_map, _RET_IP_);
  
-@@ -544,10 +545,26 @@ void rt_mutex_debug_task_free(struct task_struct *task)
- /* Mutexes */
- static void __mutex_rt_init_generic(struct mutex *mutex)
- {
-+	/* rt_mutex_base_init() also clears the holder tracking opt-in. */
- 	rt_mutex_base_init(&mutex->rtmutex);
- 	debug_check_no_locks_freed((void *)mutex, sizeof(*mutex));
- }
- 
-+/*
-+ * mutex_track_holder() is in mutex.c, shared with !PREEMPT_RT. Here the
-+ * opt-in is a flag in the padding inside the rtmutex, not a bit of
-+ * ->owner: rt_mutex clears ->owner on unlock, so a bit there would not
-+ * survive.
-+ */
-+static inline bool mutex_is_tracked(struct mutex *lock)
-+{
-+#ifdef CONFIG_TRACK_LOCK_HOLDERS
-+	return lock->rtmutex.tracked;
-+#else
-+	return false;
-+#endif
-+}
-+
- static __always_inline int __mutex_lock_common(struct mutex *lock,
- 					       unsigned int state,
- 					       unsigned int subclass,
-@@ -560,10 +577,12 @@ static __always_inline int __mutex_lock_common(struct mutex *lock,
- 	might_sleep();
- 	mutex_acquire_nest(&lock->dep_map, subclass, 0, nest_lock, ip);
- 	ret = __rt_mutex_lock(&lock->rtmutex, state);
--	if (ret)
-+	if (ret) {
- 		mutex_release(&lock->dep_map, ip);
--	else
-+	} else {
- 		lock_acquired(&lock->dep_map, ip);
-+		lock_holder_acquired_if(mutex_is_tracked(lock));
-+	}
- 	return ret;
- }
- 
-@@ -623,8 +642,10 @@ int __sched _mutex_trylock_nest_lock(struct mutex *lock,
- 		return 0;
- 
- 	ret = __rt_mutex_trylock(&lock->rtmutex);
--	if (ret)
-+	if (ret) {
- 		mutex_acquire_nest(&lock->dep_map, 0, 1, nest_lock, _RET_IP_);
-+		lock_holder_acquired_if(mutex_is_tracked(lock));
-+	}
- 
- 	return ret;
- }
-@@ -666,10 +687,16 @@ EXPORT_SYMBOL(mutex_lock_io);
- 
- int __sched mutex_trylock(struct mutex *lock)
- {
-+	int ret;
-+
- 	if (IS_ENABLED(CONFIG_DEBUG_RT_MUTEXES) && WARN_ON_ONCE(!in_task()))
- 		return 0;
- 
--	return __rt_mutex_trylock(&lock->rtmutex);
-+	ret = __rt_mutex_trylock(&lock->rtmutex);
-+	if (ret)
-+		lock_holder_acquired_if(mutex_is_tracked(lock));
-+
-+	return ret;
- }
- EXPORT_SYMBOL(mutex_trylock);
- #endif /* !CONFIG_DEBUG_LOCK_ALLOC */
-@@ -677,6 +704,7 @@ EXPORT_SYMBOL(mutex_trylock);
- void __sched mutex_unlock(struct mutex *lock)
- 	__releases(lock) __no_context_analysis
- {
-+	lock_holder_released_if(mutex_is_tracked(lock));
- 	mutex_release(&lock->dep_map, _RET_IP_);
- 	__rt_mutex_unlock(&lock->rtmutex);
- }
+ 	if (trace_contended_release_enabled() && wq_has_sleeper(&sem->waiters))
 -- 
 2.53.0-Meta
 
