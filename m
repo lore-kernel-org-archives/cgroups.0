@@ -1,225 +1,176 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx2-f13.google.com (mail-yx2-f13.google.com [74.125.224.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E871B3EB815;
-	Wed, 23 Sep 2026 17:01:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790182901; cv=fail; b=qzDr96M6mKuUX58yNr+7Ih6Z345nVdRW696zdR04+Br9gWADxHvaa0EiARD2a7gf8JFkS9X+Eo2C+TKpCgy1V4ELYRZMg6rxIUuNF2WoYUrczudwd9tfIFJnM1eqRoJzKTYh8XSg/MpWAQNxLLBVy+SfYEMmwIzDhA21YgkWbpw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790182901; c=relaxed/simple;
-	bh=jx4dE8tX24PK8IS00abW6mxPIL7CtuCO8Y5TqhPdLpE=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=lEadJOfES6TyZXTwX7fGgDCeh+sDs3ANCQ+XJozfMH3dcrDE3k+ypYeEGEDOgucu9MX6R6yEZ5PCDdYUmT3KRlIqBY972UZans/8WxwVWwz60h2+NWoWjvxsgv20oB6c6kFjUpKQExaOZIsImCGe2nBCb1QWMfEDsTcLcQmtJj0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Lbipr3p7; arc=fail smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8056D414DFA
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 17:15:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.141
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790183727; cv=none; b=Ksyd+Erno8a/RWror8e20JUlcMRf2rb3YEHDmq3Kyprfuv6pUIsKxe3bUeu/p0BUL66yos0QPbAHr3fGdsNfNIBdhqTXVIWikRQXYo0r5gHPLmV3fThxI/CVqKzoMVhYpiwDtqCrsuvzwqryKX8mhIGU2U9/mfxBM11nK004PQw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790183727; c=relaxed/simple;
+	bh=EtOSZieVqck/qf7QjhpRBraqaoUIyhy0x35464xd6nw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X7lPE0ZdGnHTWXdIOF2WttvCKHdARZAsz4N5J4WyfwX3jbsfR2UIIl+C/I+/7+CYmaX0lj2V4gbWltlId3+0y7Chjbpap5VVzfsjHka/Q7uK8KSrK3zQaWexW7V1LlUqKHUPkgn8tFgl2rfj714hHF9xGQ5GExYZrpDAA5fdr7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=CXHsW9bB; arc=none smtp.client-ip=74.125.224.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Lbipr3p7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1790182898; x=1821718898;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=jx4dE8tX24PK8IS00abW6mxPIL7CtuCO8Y5TqhPdLpE=;
-  b=Lbipr3p7LWuPYCPIvM/XMSeGqw6QYy8XYq7NVPeMwJHsJeGuPTst26Ht
-   Qxe8fIS/726C6k1RXA4UpHPBbkKEL9JY8lEafqqKCrnhlcDA/OBGtc7E0
-   obrGaTn0ZKimx3vOd1qC33i+PFWdlnTkj4U8kfssxkMBQXAGBIlrbXgZ3
-   RGQfcswN2gyhEamB/NX9M/qpkeVZKhLRy0n61oPtwHVflJ9Z0KmfUDayp
-   wMEGJiVI6NLVt6Rfl6TwuFG+9tCgh0GQpezw8M9E4ung6V8tQs8vu0lyL
-   E15CCsQGfNSEGiuAUp+GhBtOtfsI0LcE8LTzL33LV8yRDIhBkt3aDM9Vt
-   A==;
-X-CSE-ConnectionGUID: 6qU5uormTq+rse8/S6U7hQ==
-X-CSE-MsgGUID: DxvSKwppTXC9xwy777u+3A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11914"; a="94722121"
-X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="94722121"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 10:01:37 -0700
-X-CSE-ConnectionGUID: 6jn8KQEVTnG8yih/9mkczg==
-X-CSE-MsgGUID: 67JCPu6aQguPRYSM/OK6xA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,118,1787036400"; 
-   d="scan'208";a="272286253"
-Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
-  by fmviesa006.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2026 10:01:36 -0700
-Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
- fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 23 Sep 2026 10:01:36 -0700
-Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
- FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46 via Frontend Transport; Wed, 23 Sep 2026 10:01:36 -0700
-Received: from CO1PR03CU002.outbound.protection.outlook.com (52.101.46.6) by
- edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 23 Sep 2026 10:01:34 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xAlkKgDBZdMg9xcCGL1nOn0EOVwkGplLE/Fnbm3peNFbWagvHHmpS9B5V1s2Za5ZzodR+s6KcRQOPI3XnLp37mPjFRCTCxU8tFYRBNcesdgTZNNkyxIo8cjnIrGQq0R34jgqBO581i3Oy9L9bk5uEL77KhfZYo9D9iU4P+F4uvOGOrbigV+SEFMGE2XDzx6ZAhHaCNZqUCIrPRZOhhHyCc0begp2TjRByuqYKn130tuHCMLJzsq9nTm99o3k7DL2dzv9RdVI9cBO1lQEZHHx2l1ErPFnRA2//T5SSqvgarn+Nv0ZZx5thWQ5757sO0n4EfuhcX2O0T4DZ2nIZvkozg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LX+Lu0wUKshBgPzSwb/qcveKTBpPrq3N7P4bEPiYszQ=;
- b=WdgouZVV+hJMVeWwN81QKyojVK1ze8YpbJzEjqoD1VecoYL3TW16FZVhxn0ctAbGNgMR0SIoplPnN/aGPZqZ7TsxEyuayXUXD4GNh5JWdhkImfV2OXk6tnpt0pWfrien9d2rr7eg89S8vFlxRHJ9sKfLYDBbUnzc47/nc/5Y8sowuS3iQcd7LBf3/gS7pro569ikuwvmN3hh31uLNX3JYX3sHSX8U0szOAF+hwp1fgIMLzrq3De1CgSg3PfON+ByPmynwvqlSwdoa3xDWYsbfOvCO28GwqrSuStiT3ChMgO/cWVgxRYokrcNkQ8Uv21fgU9KPztgTu1SWBgW1MvQuA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from DM4PR11MB6020.namprd11.prod.outlook.com (2603:10b6:8:61::19) by
- LV2PR11MB6070.namprd11.prod.outlook.com (2603:10b6:408:179::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.14; Wed, 23 Sep
- 2026 17:01:30 +0000
-Received: from DM4PR11MB6020.namprd11.prod.outlook.com
- ([fe80::3058:1480:e4ac:5765]) by DM4PR11MB6020.namprd11.prod.outlook.com
- ([fe80::3058:1480:e4ac:5765%3]) with mapi id 15.21.0451.014; Wed, 23 Sep 2026
- 17:01:26 +0000
-Date: Thu, 24 Sep 2026 00:48:10 +0800
-From: Chen Yu <yu.c.chen@intel.com>
-To: Aishwarya Rambhadran <aishwarya.rambhadran@arm.com>
-CC: Peter Zijlstra <peterz@infradead.org>, <mingo@kernel.org>,
-	<longman@redhat.com>, <chenridong@huaweicloud.com>, <juri.lelli@redhat.com>,
-	<vincent.guittot@linaro.org>, <dietmar.eggemann@arm.com>,
-	<rostedt@goodmis.org>, <bsegall@google.com>, <mgorman@suse.de>,
-	<vschneid@redhat.com>, <tj@kernel.org>, <hannes@cmpxchg.org>,
-	<mkoutny@suse.com>, <cgroups@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <jstultz@google.com>,
-	<kprateek.nayak@amd.com>, <qyousef@layalina.io>, Ryan Roberts
-	<ryan.roberts@arm.com>, <chen.yu@linux.dev>
-Subject: Re: [REGRESSION] [PATCH v3 7/7] sched/eevdf: Move to a single
- runqueue
-Message-ID: <arQCykkkCnADu5ek@chenyu-dev>
-References: <20260605105513.354837583@infradead.org>
- <20260605124052.227463677@infradead.org>
- <bd81bbec-ee59-401a-bec6-116196ad3a34@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <bd81bbec-ee59-401a-bec6-116196ad3a34@arm.com>
-X-ClientProxiedBy: TY4P301CA0065.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:405:36a::14) To DM4PR11MB6020.namprd11.prod.outlook.com
- (2603:10b6:8:61::19)
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="CXHsW9bB"
+Received: by mail-yx2-f13.google.com with SMTP id 956f58d0204a3-66e4ab201f9so1011464d50.0
+        for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 10:15:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1790183720; x=1790788520; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=FNQHNSKZkECfWRp+ScI6OE+kyYlP/vtiU1JMeWIOhRQ=;
+        b=CXHsW9bBS9FfoisRaZk83bfh0DxRf7G6KKCj0xKkgx9VjcJGglbB8Gj8UuD655805R
+         7GM2sHTBfD+1+5BGqA6+8QJP7bKM9HwxpansBx8D2T/qoFRnLV8uJswbXemJ1021Eruu
+         R1xpIRSZL6pZN+45k/v0R7Ze0CGMPgVvPYKaDpR3EIussj2rqSb90BCzCFOn5NJTGzQC
+         ferybH2PpXXA89C34MJd+PBG7UakecWBiTjyRVQqSzWNRmwE+kN1rM8iuyz8tT64oW75
+         L7/FlCP2x2OqX9iq+KNE69WDHHJId6dZNdJb1OfRRwF/w6Ux0TeG9b6viExn1EiZTAvd
+         VhbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790183720; x=1790788520;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=FNQHNSKZkECfWRp+ScI6OE+kyYlP/vtiU1JMeWIOhRQ=;
+        b=GI2i7IxgQg68BUewCwqmiimcisQL0j3sP6ckwAt8kskR9YeAEeY+6zXCJw1FXlCyFo
+         ZZ8T3n1u/pJYVVAunPyQxBfrbzy6kvRVpN6I6qNGVpH4YpaMmKkL1oKjkZ0NSuhudnCn
+         dUjU5qZW2Tgk2dzXxpEtfIqQ6uNK9Sq4X4Rkvnbj3I4Rto6yau64eq3Z0DMfaPjvGM2U
+         cSEhuEcHH18AVuFQbSOeK69nlUxGdxQfK73SABr7vkENMtJxUNDSgXYRyIYWmA/aj0ps
+         089wAnw6I5syJTAWtSeQ2sLu5Y19tPD1iOEewQJKoFnKKVYZ8c/GL6Ti7fjlxCRgWcW+
+         h6kg==
+X-Forwarded-Encrypted: i=1; AKwUvBz4bqmnpk3utdsiohKG+IzP64F2FVDZ1BqmC/b6BHkh00xdGqclbsscVX4cL+TKicVqUCmLa4O5@vger.kernel.org
+X-Gm-Message-State: AFuF++kLK13TBSW3YJSA3nzLGRG0dk7DOLs5rg2IBnZatSiYH9agG3RR
+	yAWnCTi04rFxmTA2jje1vUyagvS4u8gFfAhJGHnsRXh5qcr6gCbvFCxY1Y74gif8SEE=
+X-Gm-Gg: AYBFou3mTO/wpLfXa7dHyFzqkWk1oVWhrQ+FlvNXnSP3aiwVh4otncVZAzHvLV/8no9
+	WJxqr2AMneFWhKmCSteJFD0MxpHtAUGLA9RHnutVKEXlsNempgZHLUXFROa0vRxOeAiY37KH/uW
+	Bq5vlygWxPLKjxToiS4iQfm1yde0ExipKphZXkp+s+D2m692hlGkVykyHtkad/pPBbJcIM5HFk4
+	DYbUvSLpqnRbk54ACiECGA0ViKoE+/ZPCxsRDqau3rVQmtanQ9TSZ+T+0IkecgrvSe557EB+MIu
+	ZEWKo7VcWGaSTqpjcZsw3M6ik03MNP8YlRY8e8wonn020DggMxutrMjCOU93EVm3Nm+u2GIsFM7
+	xuCq/MIf1XAJZjTg1ONDoK/8mWOOHjpfUx4PMnn89lnaKMAD9+KA9qC3EXit4eJjFXU2YzWQ1FT
+	+Nwz8eE+AZa27ztqC5hqfuG/VbVQgFx9Y8cDIYKyx7D0MBXBUj9gnFoxozKfcpiGMRjmYZtA==
+X-Received: by 2002:a05:690e:d51:b0:671:2519:a915 with SMTP id 956f58d0204a3-672d57b43bfmr1318283d50.59.1790183719867;
+        Wed, 23 Sep 2026 10:15:19 -0700 (PDT)
+Received: from localhost ([2603:7001:f100:500:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9140c482cb4sm24670056d6.49.2026.09.23.10.15.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Sep 2026 10:15:18 -0700 (PDT)
+Date: Wed, 23 Sep 2026 13:15:14 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Youngjun Park <her0gyugyu@gmail.com>
+Cc: Youngjun Park <youngjun.park@lge.com>, akpm@linux-foundation.org,
+	chrisl@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kasong@tencent.com, mhocko@kernel.org,
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, shikemeng@huaweicloud.com,
+	baoquan.he@linux.dev, baohua@kernel.org, yosry@kernel.org,
+	joshua.hahnjy@gmail.com, taejoon.song@lge.com, lianux.mm@gmail.com
+Subject: Re: [RFC PATCH v11 0/4] mm/swap: priority-based swap tiers with
+ per-cgroup selection
+Message-ID: <arQJIjzE0BlUg0CV@cmpxchg.org>
+References: <20260916183437.2946306-1-youngjun.park@lge.com>
+ <20260916200434.GA5784@cmpxchg.org>
+ <arAHu_BD5oqpZJER@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM4PR11MB6020:EE_|LV2PR11MB6070:EE_
-X-MS-Office365-Filtering-Correlation-Id: 21fe0e45-97a7-4cf2-76e0-08df19944e0f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|23010399003|1800799024|376014|7416014|6133799003|10067099003|56012099006|11063799006|4143699003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info: /YhTUDFg02vn1H+uHsJbiqwAp+K6SIlyCCh4tYi5ecYOMIK/Jp6ggaBOam3mQOCBsUkkqKlbJ9j92ckCc/AVP0xiRrRNUuE+MWTyig6vvnFG8FKl6q5D1QCfQ07gRG7cCIpBd3dXHHaO+ASfTbefZvlTYheZTff8iqc91ewq+XIV44tb/9NGDZb01HoJ4jLxom76q0qMdgdnbIfhpf1G7xBzwj2mGMa8canUugETUY4fXSxiGlZQG4kPMNMKklTKAFzent1nPwgco9gJvImTeEvXdivxVfgQNnPfgun27HS/rLZ4pYPx37Am9FNzry7KzaLoheWH6cGuZ0zbYXRTNsKCa2uaRF6U+SaGJZVXS54aaCXi0gTl1ZpB5Boj+D405OCvfjlqGoKRhBNeYCDSjFl3iBLO+Uu68vuXYH90EpTxDXCM/Qca79w7T9XHheNBsZ1tDOB3mY2o4yS7Abh4eSMOG7ZA7n+bB7LykfLNP9ptM9vmvwVCil21lf78C/VX7+jheaVtBtgcPDI1pRJN688Rg5wBw06E2FrQCzumiDZrlCMkg1h/cpJ69CuTDZZSmgKnQv2Zz4lf+pc3u5fcEsTXigIAL6mUJrfCUQJGKLfVE3W7xUcOsY59VvawspCe5mhWr4LjByQDEl2UyqkZj50BwpvD7lo+b9u6rsQGT+c=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR11MB6020.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(376014)(7416014)(6133799003)(10067099003)(56012099006)(11063799006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?FoeAx5JrhWq4ekSlC9tWhDm5Sq5K+fnqzeoBxWJJcpIU8J9uYP6Z1VhTEJv6?=
- =?us-ascii?Q?J3wQZoBbu94QSOBSuGhUhUf5zS62Msztyyv1ZPlNP6OT4uojubVtTH8SwJdI?=
- =?us-ascii?Q?Kwl3yyJaORzZTvRxwl8vxqNa4i1SPDIUDP8Le6i13poCfPcyErGmUmO46Dwv?=
- =?us-ascii?Q?RxJ0AJfoSmGWuIqh3YuxkQ0QIRW2d1Q9m7F8bafL0Mh+fa76NLQf5MeBL2G6?=
- =?us-ascii?Q?xwnqk90pQkSBQjh4le40ZAmrCa7btL+Np6MsmuT7LblHgIsXfvv/6ts94vPl?=
- =?us-ascii?Q?3HTVnJdMPwXuEiw0E4AJ05ieaC9VnoaizOJIQzVtb31ze1tPvKH89sxwA137?=
- =?us-ascii?Q?3w8XICGjQUp9ghwLoozYh/pBtPxeEOkMZ0SKwh+HJdWSvvIEYcXfIWO8suWh?=
- =?us-ascii?Q?U8LI+Gbst447uOr9s4Xm9/tNjz2qEd2LFMfVRTDiPDNo8MkVItDPB1HHagjI?=
- =?us-ascii?Q?EN/j3cOPgz9HujVht+hyRiQJchQCd8mfSwsLlgL8qcN0Et0xFQ1me/6YC0OV?=
- =?us-ascii?Q?9UJif4T4Nb7vJ2SMf//krqQ74d1suxGn70eELkJoTBclolMZZQTcB5/Yv0MG?=
- =?us-ascii?Q?MIjMUYsBnRfBDE8e0jd5FWNNT62Cd1lUb94qhS9/rxPS4lHOQR1JFbiK6lA3?=
- =?us-ascii?Q?SN7xs8cszzNjrBGCwRakVZMXYACGND9EJRbNvWJmmEJ+SnCTl03FkABCjFvA?=
- =?us-ascii?Q?o+WvF59RBHMDlQ+zHGk0kO0VvjVde7ocpYgO/rgwwetyUJfOMmixJMGWLPQL?=
- =?us-ascii?Q?O+BKz8NgVcvCWbMbS2wraX2FwyEuxahT9MUXJxUN61GF+DOoB9OShY1Q7uqE?=
- =?us-ascii?Q?vR7SBye8EJgMQGyZJaSmojqkpp0sgEW3qAlMfp2cdmlmXzQCjf3Vq0bWrDLm?=
- =?us-ascii?Q?KfrlIdpfKLLwiw8xRZoHlHQsEazISUX3OKcKs55b0pV8G4Hnjskbo5FGU4eV?=
- =?us-ascii?Q?Fw1Ist6DLTUkMFtBRICzo+kDH0MD1Jw2IptWlYLJz5c/O99smFC2zZ8MY84e?=
- =?us-ascii?Q?bGK1zAhIDip2xlZC3tQ4ITbhA/efxYdGgeN/7Mh1TkQONsK4PSnA6uh2V/NM?=
- =?us-ascii?Q?H5ktsdyCyLZDHH/6978xh//IbU5UOGyWK0qxMEdR+YG4YRx0iwEPcvtizHrJ?=
- =?us-ascii?Q?gdBNp5K0HyOrqPI+cu8kqBQ1QBNoNziVpu980gHgg9RA3VHZDkQQcFw4vUY6?=
- =?us-ascii?Q?2LeXzgyaePTO71lZerVFjum9+9RNPRoc4+TSRPHnOpCJZBYqhsozWJC3OHzy?=
- =?us-ascii?Q?uHQ5hK9YRrcJ7Hpgmo+Qn8trCvdpXHCduLtwm8BnN/0ebyr4TWSO5x6kUZUE?=
- =?us-ascii?Q?5JovZsY0dvqeqrd6NY9VyVVLy3ceCvRFLpAze2NIZPoYmnGU9b8XnRAncKek?=
- =?us-ascii?Q?/QOCromjAD92Hr10PXkgENgYgjslshSTqV9BtKDSyMogh46cyVWOGZNzEx5o?=
- =?us-ascii?Q?57Vno08Kn7eVm3+haXj3DPv4DUlRgytpdDB2lU8G53hWv9baoPdlO+o7nkqA?=
- =?us-ascii?Q?QRcS8/1sKwhEf7duhNGmqXy6ZXyXsvSQiIFB8wLycfksZG90rQ5BOwM9ILAg?=
- =?us-ascii?Q?vP1WzhkfY38j6cxfvDEkJY7kewpQQ8lIhW8bJZXN/QYFBKUc3z8RuPC9t1uI?=
- =?us-ascii?Q?1GVh9Xv1Ohz/QTqAIORhfHha0FmGxSxKSpEAbUqXOsSw4ISn+z6Zfuyk1SzE?=
- =?us-ascii?Q?+QlLsKg8ccJdUyyhEZarMZuMVtH/74ckOuVl4WWd5iL7M4qsiREOIRTfb0ni?=
- =?us-ascii?Q?z6YRYeebfQ=3D=3D?=
-X-Exchange-RoutingPolicyChecked: FEd+l/UuFuFcG2JKfEpmH1ha1js7M1kMW6gVYE7g5LvOSzTC2WMGjto316XF1Of23iy0dblbjmxF/4iAXMnHP7dLrG1d+NaCj3NlqE9RAxf/KlUCJZQKIvx+EqJti7bBmqJU9/Dp0mLEaEsd+5H1A+wbUi00SwiOnzaHsFdtg/owVdqVmxSQLg/hgA1tvXUIeS/C5mwHg41lLLtNum855mgQPKx/bp3QnCTePDfRv9mnNAD0jRrI8nnj46S/XyeiaYmAZ69jk3QzkQvtVC+jo/flQV6QNvNWtp8V3m3TjjCpvv6nI+FD5dzbueOZGF95Je+4ocBem8Ir0D79rc/Vhg==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 21fe0e45-97a7-4cf2-76e0-08df19944e0f
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR11MB6020.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2026 17:01:26.7067
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JR4XGrNyfTuPDRPHXqaxf6ZIvYWKXLJ73CsRLJeG4nvkxEZVx5E5m+jxtIbnMbL+Ra404kOvKF4T8YVWJmDoNg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR11MB6070
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <arAHu_BD5oqpZJER@gmail.com>
 
-On Wed, Sep 23, 2026 at 07:51:35PM +0530, Aishwarya Rambhadran wrote:
-> Hi Peter,
+On Mon, Sep 21, 2026 at 01:20:11AM +0900, Youngjun Park wrote:
+> On 2026-09-16 16:04, Johannes Weiner wrote:
+> > On Thu, Sep 17, 2026 at 03:34:33AM +0900, Youngjun Park wrote:
+> > > Per-cgroup swap in debugfs
+> > > ==========================
+> > > 
+> > > Patches 3 and 4 let a memory cgroup choose its tiers through debugfs.
+> > > 
+> > >   # swapon -p 100 /dev/nvme0n1p2
+> > >   # swapon -p 50 /dev/sdb2
+> > >   # cat /sys/kernel/debug/swap/tiers
+> > >   Idx   Prio
+> > >   0     100
+> > >   1     50
+> > >   # echo "/batch 0x2" > /sys/kernel/debug/swap/memcg_tiers
+> > > 
+> > > Bit i of the mask is tier i, so /batch swaps only to sdb2. A tier keeps
+> > > its index for its lifetime, so the mask keeps selecting the same tier
+> > > across swapon and swapoff.
+> >
 > 
-> We have observed some schbench p99 request latency regressions while
-> comparing v7.2 against v7.3 cycle on an AWS Graviton3 (m7g.metal)
-> using Fastpath (Linux kernel performance benchmarking tool).
+> Hello Johannes,
 > 
-> The schbench suite as a whole does not show a significant regression,
-> and the results appear to be a mix of improvements and regressions
-> depending on the thread configuration. However, a few configurations
-> show fairly large p99 request latency regressions. For example,
-> comparing v7.2 against v7.3-rc4:
+> Sorry for the late reply on a good suggestion :)
+
+No worries, and same ^_^
+
+> > Can the cgroup be given a priority limit? That would have pretty
+> > obvious inheritance semantics:
+> > root
+> > `- batch (memory.swap.prio.max = 20)
+> >    `- task (memory.swap.prio.max = max)
+> >    `- logs (memory.swap.prio.max = 10)
+> > `- interactive (memory.swap.prio.max = max)
+> >    `- task (memory.swap.prio.max)
 > 
-> message-thread:16, worker-thread:16
-> v7.2 = 662869 us
-> v7.3-rc4 = 969557 us
-> change% = -31.63%
-> 
-> message-thread:64, worker-thread:4
-> v7.2 = 730453 us
-> v7.3-rc4 = 942251 us
-> change% = -22.48%
-> 
-> message-thread:32, worker-thread:4
-> v7.2 = 74251 us
-> v7.3-rc4 = 56725 us
-> change% = +30.90%
-> 
-> 
-> So this does not appear to be a general latency degradation; some
-> configs improve while others regress.
-> 
-> I also ran a Fastpath automated git bisection for the m 16, t 16 p99
-> request latency regression between v7.2 and v7.3-rc1, which identified
-> this commit as the first bad commit. The original regression was ~30.9%,
-> & the bisection reproducibility check showed ~27.8% regression with 20
-> repeats across 2 boot sessions.
-> 
-> This commit looks relevant since it changes EEVDF runqueue organization
-> and is intended, in part, to address latency issues with hierarchical fair/
-> cgroup scheduling. I also noticed that there have been fixes on top of this
-> change, including 68e37487810a ("sched/fair: Fix flat hierarchy"), which
-> fixes vruntime handling and has a Fixes: 85570f10a4c6 tag.
-> 
-> Given that the overall schbench result is mostly neutral while some p99
-> configurations move considerably in both directions, I wanted to check
-> whether this could be an expected trade-off from the single-runqueue
-> change, or whether the p99 regressions are worth investigating further.
-> 
-> I can run additional tests or provide the full results/bisection data if
-> useful.
-> 
+> Right, the inheritance is clear and easy to understand, and with this I
+> can pre-define the limit without knowing the mask value.
 >
+> But first, let me check the intent. Is the point that capping batch keeps
+> it from taking the faster tiers, so they are left for interactive?
 
-Would disabling WA_WEIGHT help? I happened to find that this workaround works
-for me to restore netperf performance (though it is a throughput score rather
-than a latency one), it seems that task_h_load() becomes much
-larger(also on sched/task_h_load):
-echo NO_WA_WEIGHT > /sys/kernel/debug/sched/features
-https://lore.kernel.org/lkml/aoxah90s0bQ4tcUW@three-body/ 
+Yes, basically, that's what I tried to express. Interactive has access
+to all available capacity. Batch only has access to lower tiers.
 
-thanks,
-Chenyu
+> If so, that matches our use case. Latency sensitive workloads get the
+> fast tiers, non-latency sensitive ones get the slow tiers. But...
+> 
+> Even then, the reverse cannot be expressed. A cap only cuts from the top,
+> so a latency sensitive workload given max can still fall back to the slow
+> tiers once the fast ones fill up. For example,
+> 
+>   tier0  tier1  tier2  tier3
+>     0     10     20     30
+> 
+> there is no way to say "use tier0 and tier1, but never fall back to tier2
+> or tier3". To cover that, the interface would also need a min value, or
+> some way to express a range.
 
+Correct, this isn't covered by the above.
+
+> And even a range is not enough. Excluding only tier2 leaves a hole in the
+> middle, which no min/max pair can express. That needs per-tier selection,
+> which is what the mask,  and what I'd carry over to the memcg
+> interface later (Currently memcg.swap.tiers.max).
+> 
+> How do you think?
+
+I think it could help to aggregate the usecases in the cover
+letter. Your cover letter describes how it works, which is great, but
+it would be good to understand better what the constraints are, how it
+fits in with other existing control surface and broader usage models.
+
+With the above, yes, you can restrict who gets access to the
+privileged tiers top down, but not bottom up. Is that an issue? Keep
+in mind the alternative is cutting privileged groups OFF from certain
+available capacity. This seems somewhat counter-intuitive to me, and
+doesn't reflect a clean privilege hierarchy anymore.
+
+If you can think of a good usecase, memory.swap.prio.min would be
+certainly a natural extension. But we should get the usecase laid out.
+
+The requirement to punch holes is the one I can relate to least. Why
+would a cgroup need access to good tiers and bad tiers, but skip the
+middle ones?
+
+This would seem less like tiering/hierarchy and more like flat
+per-cgroup swap pools but with obstacles.
 
