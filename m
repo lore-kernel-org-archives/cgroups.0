@@ -1,195 +1,300 @@
-Received: from mail-lf2-f13.google.com (mail-lf2-f13.google.com [74.125.229.205])
+Received: from mail-yx2-f12.google.com (mail-yx2-f12.google.com [74.125.224.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19C24DEC2E
-	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 12:52:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.205
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790167950; cv=none; b=gjijUiYLvQ8PKmQxI5yOaGAnJZmV+/gBQqGypnUw+Y4p7pqLZYsfOMVKxFctY3JZLo5Umv0l/UTqhtJILiU8UxrwsCKL+B+5jEN3s1ym36MmInPm1i5dJUnTIHvcCi706cXUElo0rYC31fWNRQ0vKsDSrhzhafvw5SvQE62ctvs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790167950; c=relaxed/simple;
-	bh=WAI2SPpJ8puZMu37X97Tb+6oxDR/Qi6/9yk8IhH1Rz0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RbCihFKNyOz6AXw/ixV/cLH7yILVz0jFeFrl29ITyJk1NQhUJnhFEWsw3TLaPyx8C6JCxBHZsWoos2U/WXofMiGDNgIFcHxOOTgDDWf3a5ty/ReA+VG6GpFOXQKe/etJnxsk8fcd6Y51D+A3ZSHZDpZ1xc92isi5+VFQj9LxzsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K1cVActw; arc=none smtp.client-ip=74.125.229.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FF23527599
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 13:08:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.140
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790168901; cv=pass; b=rm3fSu8oewgcCOLHvLMZr5HzZwWh9FzawujNy8+ch7ScPWm/YV1r1VJsmKShGnhexeLlT6+cwXm7568iOo3bMQkyZJSbpv1KmXVBplCKNRrYQXjrB6fFH5Lo+hbO9RcCy/Ak1bPpaD8q8JyTzzjTTe35JuDvRxpZ3gIR/lZiD3U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790168901; c=relaxed/simple;
+	bh=/RAtfZYaGrMgM0hFBipcgr1fQfwrDzFXi14Gl2TQCFk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jNo8H+A5CJaL0tJcgi/ZfAcjAEk4XZbSlekt3NFqKfhHzJWd2aBRYyx6N467KHfVooa6xwXdoWDXoJ0DMWMDqRoJQeuAmfOluazNXrVn87F+DD5ye8U3uTYAdEkZRT80ruuaCxAN1t7TvG4XurIjRABLkv6WMSHEKs9PLNtz4PI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mpySlabk; arc=pass smtp.client-ip=74.125.224.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K1cVActw"
-Received: by mail-lf2-f13.google.com with SMTP id 2adb3069b0e04-5b8c1b8d7b5so791217e87.0
-        for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 05:52:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mpySlabk"
+Received: by mail-yx2-f12.google.com with SMTP id 00721157ae682-85d43f9b119so14165887b3.2
+        for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 06:08:17 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790168897; cv=none;
+        d=google.com; s=arc-20260327;
+        b=dL6wi68AjdoHcCwk5JHXODLQiYZ7kw4JhPklycUaU10AMEcY/8cJ2xsVSnPgTxgOCf
+         lzWJ7DJftVF5cRVHks+7z9YWjQJHjqUdvL3ouDJKKL6twqY4Ow2GCgTp3rveeqaXHyO5
+         LDX/d45LE0Fp8yU9hv6NXfZlte86z4w4TrWhiUAbk6FqwJhp7t40MO19WqRpcGIFUNuy
+         cgMm0Syi/MzyOLN3ttEKOGDECxT++rmg6NwUqgKeqGzjizV/pE5Rx1n1/D6z0qBcz0qV
+         RlB35Z5l4+4+qX/3Sx/MThdb/k49Us8KNgdLtdGwtXXMfOcvIBavKzcjfVMNfWvNaGCG
+         7YQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=IHUbabRXBqdvbV25eXrArHoQuD9SOTIdcQ2oJXMH2as=;
+        fh=a5dUc+3dz/i/GVtgRyo63opdys7k/jBW1BgGvYql8cg=;
+        b=H/6jV8mvj0G/L8WRxrtfXPj0PNhXOuKVcJFaeMTSwf62bWs+r6AmmRrSDMt8olygpX
+         ppq3BsK5/DOLTi/Y+0OQYG8BuIVdg7Vf3IIbpvHgHHS5EcEWA2P19+GXJa8pVTwHrIYP
+         PSzdAewPXSk4M0RxrMUVOa4tgkNlUTm8ahRc5RIzvcibnRhasp+X1qvc2mQPZ1EJzfDt
+         GlyePHWp8uIYJcXcyybLAVqGUwJBGtuOmPYGWarNnUOTVPjw0m227mk4pfBLEl2y2Mfz
+         ep8TsjXyo6b4TBDrllHU3pw7jp4ad/TSNd/NcjJiJhAWwiEdXGOjMOFnom27rIU79ck8
+         lipw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790167946; x=1790772746; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=sm7vKUqKVBNM8fpsiqdcEcneUTHOJiE76zYrPR0ilCY=;
-        b=K1cVActwFcDsjZT//i/mfB8v9KJpJvYseaGPk2FkC0KjxU4b6RsEf3COWAlP1RTDQz
-         smMge2qR22zCmc82xCqreoXQNJuubsLmJojOhzn+4q2TTaH1W3r+kiOmmj9LkJdOtedl
-         e1INrx411WVKfLmfX8HqBMZBIf2xMfABZLi/HeV9NtdGWKWg9hTtnU+sqcVDI3b4r96+
-         Cx7X7pvKVAyceoszelTcEvknJk4wbSbBJ7luYz7aQkBD6zHS9tdQB9+CmW66UeEEN5gI
-         3GAtcY6tGHOS2FCgh8tyeRwIM7R4HMSu4w5F5ZMXz045xynvmftA85L4mS6NdYKbcZLZ
-         Z1vQ==
+        d=gmail.com; s=20251104; t=1790168897; x=1790773697; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=IHUbabRXBqdvbV25eXrArHoQuD9SOTIdcQ2oJXMH2as=;
+        b=mpySlabk+67WBHYYonxW93h5M/oebjNrbO8YhKE5Eaxtm4EAnxukVHCmtNuwy+BZCe
+         lQ183KmbuJQL8XzoTkya8bWd/Dxr1P8SQvwb5WHpyCg+bCCDRLcmOA7ylDw71/9rFH/o
+         AERfEoGc3NA56ogqxsaN/MRET0SOKkymjwMrHf6eFlucPoUhwxWuaQDD/bqf1rl3I4rj
+         Jb/9/4GjXKXloNompG9LedGS9P6+C20eXVGRKMywPkNDz/VcOPF1JrTysLF6e0K9QNZG
+         Ga6LESimDyGSdazypjYH+cXgVMnoAJ05i1a260WgGhQMQJJDPfE35AvH6HFDEIkjt44n
+         0cqg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790167946; x=1790772746;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=sm7vKUqKVBNM8fpsiqdcEcneUTHOJiE76zYrPR0ilCY=;
-        b=1zSJmsX8V9h9TllMDKYP3swt07kVHnlPElUlIy26aBa5N1bH+UbiEHv9oNSYSRXYpL
-         i9WauhP5axih+/qtgjtI1eRnzTLY746i1PezpFUKUjtsFC0P8aTA16aXWqvRQMUka5QK
-         4hAkrIj2+2KhmCaY081Aou1NWxYGRLsSJaJd5crF4KdtBIMZVXEn4B+XSFPmzKkc9a3K
-         L49glrzNRBtNYky00ju/uIia4dTtrAMu913X3xJ4y+3BHZVFtd2FCdOD2wf/tmmzHNo7
-         lsWgGZlB5PRyVg1NBf36XkoYlaW6b8+7ALd/UNnMYxrD/MTv7Yk/rUEl7iVU5SA2GGy2
-         cWaQ==
-X-Forwarded-Encrypted: i=1; AKwUvByDjU0a7zFKWGgyVMe9hhzsUUOri/3f175nwt1TCzgv4QVDPL/8ui+RxHvCA9jyjZ/I9suAVvbZ@vger.kernel.org
-X-Gm-Message-State: AFuF++kMHGIx3kDml50dEVZqZs3+VXGGh3fDd8U4LZrbLvzROS6EOxM9
-	okdFCQdzMoILYRU3JEf1+NnuhNq2muvaA3hZmVS/M1Okq6M+kpD2SWWR
-X-Gm-Gg: AYBFou0oOVU4afqXPiBADPEZx7tvuv5igfpTdxFjo2wk/YxNHoxv0hswcbUKFVi98xc
-	RwwKdIW7RIFskJaZ4aYjXaj0Daq292MWyPAWvI5gAzxdfDwOvNdbxfXVUCY65F+Lx1N1acLur8F
-	x6yMRIMaFG3s/vqo03F2vZH3W9o6jZWzYH+6/Q9aoMlOFlscCPJ7AMcH/cPLSQXoSMCn9AcW3JL
-	d0LqbWZthA3xL1ARn3/7H1uOGFilUZ7LLNd6ZMD6BhEw4Og55zFkUxJlWJjMPQCr4WWorV/pzLk
-	Hk2CkqyOiQYLUAafOcf4GcPyEwG0Hpe2m+05vEcE89bG3IJ8JW9X2432RcOYrmruhyeQbS/icsv
-	gVRWaoMl6ao/d4lkgKjBZSc9tnsWLhbxLYLiWfmw3lbWEs3RcLeEPueGqaLJCEu+C7JVW9jg6RH
-	232ac1LfdzaXrYVR1qwjugzp6/HXF+7Ge+ycKt8FothnBMMydnlTsvLUnLxZQEb5tUEJiXuzcnX
-	g4uDq0CN+d/CJLs3yogu+fiV96R
-X-Received: by 2002:a05:6512:b22:b0:5b0:113d:8ae5 with SMTP id 2adb3069b0e04-5b8d895fe88mr1057730e87.10.1790167945480;
-        Wed, 23 Sep 2026 05:52:25 -0700 (PDT)
-Received: from localhost (sol-eduroam-pathost130.ki.se. [130.237.96.130])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b8d85956c0sm567280e87.78.2026.09.23.05.52.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2026 05:52:24 -0700 (PDT)
-Date: Wed, 23 Sep 2026 14:52:22 +0200
-From: Klara Modin <klarasmodin@gmail.com>
-To: Chris Li <chrisl@kernel.org>
-Cc: Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
-	Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, 
-	Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Hugh Dickins <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Tejun Heo <tj@kernel.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-Message-ID: <arO0RCCE3Woh_I_z@parmesan.int.kasm.eu>
-References: <e879ac65cb0940325736df7984c737edf1c6be94.camel@surriel.com>
- <CACePvbXThspPYD8DZkAeiJtYuMV79vGgC1SGhpMwhn4COWOtcg@mail.gmail.com>
- <785353ef79844e81a8cd97e87b00ef1f785b15e5.camel@surriel.com>
- <CACePvbXZ4i-DsmbQdNtBQb79y59uwZC9J8qHD2wTWpcYaet3LQ@mail.gmail.com>
- <83539be885f15bb567b30264f5f62e718f4a9fd0.camel@surriel.com>
- <CACePvbXZQERwLF_f2FYTHsv--kq_-Aw2vVVFF+z+ovdnsHy1bA@mail.gmail.com>
- <arKbXe1Qe-FDCTMM@gourry-fedora-PF4VCD3F>
- <CACePvbWW4avTV2WB6iRU+LN5zqkMTg3UhBrq41R0iw91-7Ni0g@mail.gmail.com>
- <5a7ad159b2fabf377b7e1fc4248c433287ac11fb.camel@surriel.com>
- <CACePvbUtEdQLmmudON_qC2aKuLYCNktBuAecFKiSvDC6eTfXeQ@mail.gmail.com>
+        d=1e100.net; s=20260707; t=1790168897; x=1790773697;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IHUbabRXBqdvbV25eXrArHoQuD9SOTIdcQ2oJXMH2as=;
+        b=PvIFH0zrES4XsJww1zZljt1qChvtTXaGu1pvH/MINyrGwvE6+X2agn+8N6k9tfAJdH
+         AsNHnWwriiJcuFN/NPMxxWyF+d3q+WdR3k5ZayNZ7e+gUwy9KTppq8G7pmhJV5GgLKMd
+         epIVnltVrURPvyH+K5gCSXHywDAOV6tpU+Z67BkJIEFgAY0zZvIj7sa0MToUjqx4ie2j
+         ShBSvYYN07p5OZ/tdhWr2S29vDbW+6R0wRNCiWsLg757ygQxH8xb1sQeSqJJWZhRzzZz
+         pmX9Hq7mBNzu020VOH8cGxA91CbpXq6X9YjYlgCjN3T4JBsQsT1T21W1MZCZS4qUIEwk
+         cFzQ==
+X-Forwarded-Encrypted: i=1; AKwUvByMjp6NZPqoATJY8WCuED9KwIpLlgYnpaYnN1N9naLWkr3QLgCBZBcp9ZwXsLMqdow4AWudATuC@vger.kernel.org
+X-Gm-Message-State: AFuF++mXbmTMteMSCaq1+U+JK3LKQPSyDTb3/1AMuh1+dBHF9PbK1Wbl
+	PIudzREuiqzXT0n4uW6Jjg7DN0v34T3F0afN3nIDDt6SEOLv3q6VBkWGAb1b8mooKPdPR6X12kP
+	MWgzYMSjPJUjKF6ftPoTUz/TDMItDRZE=
+X-Gm-Gg: AYBFou1Ie9i2AwBx5SmxHlMhSn5nRNEckYsvMogPp8RSW0dbW0fFTz+msEDJG0Iwz3j
+	VrIKPiDjMQ7BsbW/yr6je3bhHYaLCdME2magZ0m0g3jGD52UJRCf8jeyxy1wPI+EgJv007Q432L
+	Zeetfqy5h3dc3Le44CCC5d1ySBtycrMDiyU3H8R7bn7LLCTATDbtVtKjRdu4C36dEmgWQ/wV6pu
+	02+/vtxppiMxWGLjkwjIIl/Li2IQlwY9m95RGeJSfs8j6l7r4Ky+wB6evMsuG9JxlCttkktpEaz
+	VL+EX/xNPvmza+ojqkaNNu62G3G1FlE29XewdtI1pZ+N9MdDwRR4wjQu7LwA8E7h61WsdvAzDEb
+	ljO5WWWVjESDGVCqRoy6bPs35p42Jr9HiHQ==
+X-Received: by 2002:a05:690c:7483:b0:8a5:1570:a2b2 with SMTP id
+ 00721157ae682-8a51570a635mr6866957b3.89.1790168896597; Wed, 23 Sep 2026
+ 06:08:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CACePvbUtEdQLmmudON_qC2aKuLYCNktBuAecFKiSvDC6eTfXeQ@mail.gmail.com>
+References: <20260921192559.2619635-1-shakeel.butt@linux.dev>
+In-Reply-To: <20260921192559.2619635-1-shakeel.butt@linux.dev>
+From: Yafang Shao <laoar.shao@gmail.com>
+Date: Wed, 23 Sep 2026 21:07:40 +0800
+X-Gm-Features: AclHuK_8Jda0panK7HLuZ7wwf7U44o1nunsdozOcDRu1nw23Gwnh2GufMO41nA0
+Message-ID: <CALOAHbA4EgGw_uWfbXD0Q87exP7ek=z9ENuU_ARgb+DgBgy1kQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/4] memcg_ext: memcg policy through cgroup-attached struct_ops
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Alexei Starovoitov <ast@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, Michal Koutny <mkoutny@suse.com>, 
+	Amery Hung <ameryhung@gmail.com>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
+	Yonghong Song <yonghong.song@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>, 
+	Jiri Olsa <jolsa@kernel.org>, Ihor Solodrai <ihor.solodrai@linux.dev>, 
+	John Fastabend <john.fastabend@gmail.com>, Jiayuan Chen <jiayuan.chen@linux.dev>, hui.zhu@linux.dev, 
+	Donet Tom <donettom@linux.ibm.com>, Greg Thelen <gthelen@google.com>, 
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, bpf@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Tue, Sep 22, 2026 at 3:30=E2=80=AFAM Shakeel Butt <shakeel.butt@linux.de=
+v> wrote:
+>
+> This is the first series of memcg_ext, proposed at [1].  It adds
+> bpf_memcg_ops, a struct_ops type through which memory controller policy i=
+s
+> attached to a cgroup.  A charge runs the policies of its cgroup and of
+> every ancestor, and the kernel combines what they return.  BPF picks
+> between things the kernel already does; it never does the work itself and
+> never touches a page counter.
+>
+> The plan is to grow this one member at a time, and to add a member only
+> when there is a concrete problem it solves and a measurement showing it
+> does.  Nothing is added because it might be useful later.  So this first
+> series adds one member, for one problem.
+>
+> The problem
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>
+> try_charge_memcg() calls __mem_cgroup_handle_over_high() before it return=
+s,
+> which reclaims and can throttle the task.  That happens wherever the char=
+ge
+> happens, so a task holding a kernel lock can be stuck there, and everythi=
+ng
+> waiting on that lock is stuck behind it.
+>
+> One concrete scenario which can be resolved by this new feature is the
+> kernfs notify worker. It delivers notifications with the cgroup2
+> kernfs_rwsem held for read, and the charge for the delivery allocation go=
+es
+> to the cgroup that set the watch, usually one already under pressure. So
+> the worker reclaims while holding the lock, a waiting writer blocks every
+> later reader, and anything touching cgroupfs stalls for seconds. The patc=
+h
+> proposed in [2] fixes that one path in the kernel only for kernfs_rwsem.
+> The same path still takes kernfs_supers_rwsem.
+>
+> One can make an argument that if we know the source of the issue in the
+> kernel, why not fix it similarly to [2] instead of having a generic
+> solution? The reason is that it will be an uphill and continuous battle a=
+s
+> the kernel keeps evolving and new sources of lock holders doing allocatio=
+ns
+> keep coming up. In addition, there will be cases where it might not be
+> possible to move the allocations out of locks, or where doing so would
+> make the code really ugly [3].
+>
+> high_policy() lets a policy say where memory.high should be enforced
+> instead.  Its one request, BPF_MEMCG_HIGH_DEFER_INLINE, skips the inline
+> call, leaving the debt to be paid at the return to userspace.
+>
+> Results
+> =3D=3D=3D=3D=3D=3D=3D
+>
+> Measured on a kernel without [2], with a policy that marks cgroupfs kernf=
+s
+> lock holders.  Reproducer at [4].
+>
+>                                       baseline    policy    upstream fix
+>   max kernfs_rwsem hold, worker        2.049 s     199 us   not taken
+>   max kernfs_supers_rwsem hold         2.049 s     4.8 ms   2.056 s
+>   max kernfs_rwsem write wait          4.096 s     6.2 ms   8.7 ms
+>   walker passes over /sys/fs/cgroup        352       5711   6700
+>   churn mkdir+rmdir ops                 13 059    364 832   415 488
+>   churn max latency                     30.7 s    15.1 ms   12.7 ms
+>
+> The policy matches the fix on the bystander numbers, and does better on
+> kernfs_supers_rwsem, which the fix does not help: it drops kernfs_rwsem
+> from the delivery loop, while the policy stops the worker stalling at all=
+,
+> so every lock it holds benefits.
+>
+> The patches
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>
+> Patch 1 is a build fix.  __cgroup_bpf_query() only works because
+> CGROUP_TCP_SOCK_OPS is the one struct_ops attach type; a second one break=
+s
+> the build and makes a query for type 0 return the wrong thing.
+>
+> Patch 2 adds the type and its registration, with no members, so nothing i=
+s
+> dispatched and behaviour does not change.  It also moves the attach type
+> enum out of CONFIG_CGROUP_BPF and fixes the register_bpf_struct_ops() no-=
+op
+> stub, which never compiled because no caller reached it.
+>
+> Patch 3 adds high_policy() and wires it into try_charge_memcg().
+>
+> Patch 4 is the sample.  It tracks the two cgroupfs kernfs locks by hookin=
+g
+> the rwsem primitives rather than the forty-odd functions that take them.
+>
+> Known open questions
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>
+> The semantics of memory.high for remote chargers or kernel threads is a
+> grey area and this series does not aim to resolve that.
+>
+> Another open question is whether a bound on debt deferral is needed. At
+> the moment, we think that rather than putting a limit on deferral for
+> memory.high, it will be better to handle that through an async worker lik=
+e
+> memcg->high_work.  We aim to introduce that later, along with the right C=
+PU
+> accounting for that async work.
 
-On 2026-09-22 21:10:53 -1000, Chris Li wrote:
-> On Tue, Sep 22, 2026 at 5:53 AM Rik van Riel <riel@surriel.com> wrote:
-> >
-> > On Tue, 2026-09-22 at 05:43 -1000, Chris Li wrote:
-> > > On Tue, Sep 22, 2026 at 5:20 AM Gregory Price <gourry@gourry.net>
-> > > wrote:
-> > > >
-> > > > On Tue, Sep 22, 2026 at 03:32:44AM -1000, Chris Li wrote:
-> > > > > > Right now it has 64GB of memory.
-> > > > >
-> > > > > That is exactly my point. You are running 1/8 = 12.5% system ram.
-> > > > >
-> > > >
-> > > > Chris you are missing the point
-> > > >
-> > > > Zswap:           8812236 kB
-> > > > Zswapped:       24927876 kB
-> > >
-> > > I am well aware of the point. The 7%-10% data I provided is before
-> > > compression. After compression, the real saving is about 1.5% - 2%.
-> > >
-> > Here I'm at 28% without any issues, with room for
-> > more.
-> 
-> 28% is one thing, 100% is a difference beast completely. If you
-> haven't tried it, don't assume 100% will behave the same as 28%. There
-> is a point where too much zswap makes the system unusable. It is hard
-> to pinpoint the exact upper boundary. However, figuring out the upper
-> bound larger than that exact boundary is not hard at all. I haven't
-> seen any one can use 100% system RAM sized memory swap out to zswap.
-> If you have a data point showing what that system with 100% swap to
-> zswap looks like, please share it.
-> 
+Hello Shakeel,
 
-Chiming in as more of a user perspective.
+On the open question of how deferred debt eventually gets paid: would
+it make sense for the policy to also notify userspace (e.g. via
+ringbuf) when it defers, and have a userspace reclaimer do the reclaim
+through memory.reclaim?
 
-On my 4 GiB BPI-F3, I can reach more than 10:1 compression ratio on
-zswap during some parts when building GCC 17 snapshots. E.g:
+I understand one of the concerns for the async worker is CPU
+accounting. If the concern is that the kworker's CPU usage is not
+charged to the target cgroup, the userspace reclaimer could instead be
+spawned with clone3(CLONE_INTO_CGROUP) so it runs inside the target
+cgroup, and both its CPU and memory usage get charged there.
 
-MemTotal:        3966864 kB
-SwapCached:        31872 kB
-SwapTotal:      16777212 kB
-SwapFree:       16638128 kB
-Zswap:            280140 kB
-Zswapped:        2859840 kB
-AnonPages:       2927376 kB
-AnonHugePages:   1409024 kB
+One caveat: intermediate cgroups with the no-internal-process
+constraint cannot take processes, so this would only work for leaf
+cgroups.
 
-While this is 72 % rather than the 100 % you asked for, I think this
-shows that what size a potential limit on the uncompressed size of zswap
-is suitable heavily depends on the workload.
+What do you think?
 
-I have been using vswap consistently on all my machines since about
-August, and I have also tried one or two versions of xswap (but the
-current lack of writeback makes it inconvenient for me). I really
-appreciate the work being put in to decouple zswap from needing a
-physical swap device to work.
+>
+> There is no prog_tests harness, so the numbers above come from the
+> reproducer and not from the test suite.
+>
+> The sample's lock tracking costs about 8% throughput, because it
+> instruments every rwsem operation on the system.  That is fine for a samp=
+le
+> that has to cover every path, but it argues for a cheaper way to track
+> locks that cause isolation problems between unrelated workloads.
+>
+> Future work
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>
+> Asking the kernel to reclaim on the policy's behalf, so a task that canno=
+t
+> be throttled still pays. More members, each with a use case: hard-limit
+> policy, reclaim shaping, dynamic protection.
+>
+> This builds on "bpf: A common way to attach struct_ops to a cgroup", whic=
+h
+> supplies attach, detach, ordering, update, query and the RCU rules.
+> bpf_memcg_ops is its second user.
+>
+> [1] https://lore.kernel.org/20260307182424.2889780-1-shakeel.butt@linux.d=
+ev/
+> [2] https://lore.kernel.org/20260910045406.485295-1-shakeel.butt@linux.de=
+v/
+> [3] https://lore.kernel.org/20260917-wehten-achtfach-getarnt-c85a4812337d=
+@brauner/
+> [4] https://github.com/shakeelb/mempressure-repros/tree/main/kernfs-notif=
+y-memcg
+>
+> Shakeel Butt (4):
+>   bpf, cgroup: fix cgroup struct_ops query for a second attach type
+>   memcg_ext: add cgroup-attached bpf_memcg_ops
+>   memcg_ext: allow BPF to defer memory.high enforcement
+>   selftests/bpf: add a cgroupfs lock-holder bpf_memcg_ops sample
+>
+>  MAINTAINERS                                   |   1 +
+>  include/linux/bpf-cgroup-defs.h               |  22 +-
+>  include/linux/bpf-cgroup.h                    |  14 +-
+>  include/linux/bpf.h                           |   2 +-
+>  include/linux/bpf_memcontrol.h                |  66 ++++++
+>  include/linux/cgroup.h                        |   7 +
+>  include/linux/sched.h                         |   4 +
+>  kernel/bpf/cgroup.c                           |   3 +-
+>  mm/bpf_memcontrol.c                           | 188 ++++++++++++++-
+>  mm/memcontrol.c                               |  31 ++-
+>  .../bpf/progs/memcg_ops_lockholder.c          | 222 ++++++++++++++++++
+>  11 files changed, 546 insertions(+), 14 deletions(-)
+>  create mode 100644 include/linux/bpf_memcontrol.h
+>  create mode 100644 tools/testing/selftests/bpf/progs/memcg_ops_lockholde=
+r.c
+>
+>
+> base-commit: 6e36e099b15bed1e8e5b3e3136c5e3eb56a15aa7
+> --
+> 2.53.0-Meta
+>
+>
 
-> >
-> > > You are not listening. The boundary was set due to feedback from the
-> > > application SLO. Those are real deployments not imaginary usage.
-> > > Please respect the user.
-> > >
-> > Different users need different things.
-> >
-> > The kernel needs to be able to accommodate all of them.
-> >
-> > The kernel default should accommodate the people who
-> > are least capable of configuring their systems.
-> >
-> > Hyperscalers can set their own defaults across their
-> > fleets. They know how to adjust settings.
-> 
-> They can use a safe value, e.g., 100% of RAM. Let the people who know
-> exactly what they want to swap configure the boundary they want.
-
-My personal preference would be for a default uncapped (or very high,
-and I don't think 100 % of RAM is high) limit on the uncompressed data
-which is backed by zswap, since that would mean one less knob to tune.
-
-> 
-> Chris
-
-Regards,
-Klara Modin
+--=20
+Regards
+Yafang
