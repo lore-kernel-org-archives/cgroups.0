@@ -1,62 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6D1435C1B2
-	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 07:20:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38555443AB4
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 07:32:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790148032; cv=none; b=bMv6Ln95IWz6BckQle7v42ykJQeizi5Dp8FJ6T8QyMrGzWi1hSK/a5ZGR6+PHcT6Z+7XAg8UXdZBFcBh+hnvmbMPOBkb9YvVsWhFtuvLFlFe7aXBLKf3ANsD9ky3xiij6tfKFlPs96nbZjxn7ZCKFKxtyWiKmY3hJRwZ8Wk+MF4=
+	t=1790148752; cv=none; b=f1ffVpRnEBGcYuB5EyPgaruHtfREafZNlolwJeibNWhe5nL/HySLFzIqjDGjU6sCk6+0v+djN0ZDdRBBtBohze9sdRK9MPWtkqa+kxQwxeDBGKuKwVDY/rQwn9gzd0ZgnPRqYRhIzQu52VLo14T9Z/KlUIr3jbVbO5IlvGxGvXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790148032; c=relaxed/simple;
-	bh=nLS1n8qV6eC9W4rvdxBSwAmsHoTxZonjQLzxFgw28Wo=;
+	s=arc-20240116; t=1790148752; c=relaxed/simple;
+	bh=nj4ZzwUvAOkZMBrzgklCswTw3PmjVyBwhU+8VdYjpJc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NbkGZdukWkMwKqylkxTXFULfO/FMRF05qdfnBLJhZI+/qId1V1KNebNoSqhEX/JVt3Mt3X+lHj8kan+yL6otblztAVIgTXlb9uR/KLlVOUQ7hz6MUPi0P1jE9gCuauapufF0YqxiwOoh+ko84tI6LU2L8qEHiy9jtkl42cdNdhc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UguBxu4m; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=obPgyMFwnO14cxJh5RgZhKrTK7lmonhdFoRFh+Y1otK6v99K2cHku3N4trD5uLUDXp38rytGyHq2pSoxs4MeV6l0ZKChYrZenbCt6Ijizf/gE+8yNqiXTymhiLBgcWWedMFCeMJr0w/FGTdSg1jo0MPli7y2SdDjjCXxv47LGbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=otszdD8O; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UguBxu4m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66B1C1F008A0
-	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 07:20:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="otszdD8O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D05BC1F00893
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 07:32:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790148030;
-	bh=nLS1n8qV6eC9W4rvdxBSwAmsHoTxZonjQLzxFgw28Wo=;
+	s=k20260515; t=1790148750;
+	bh=nj4ZzwUvAOkZMBrzgklCswTw3PmjVyBwhU+8VdYjpJc=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=UguBxu4mwJWYSrWKx4bzSAfl6n/EYHutzXXLv6onceqt9w1Km/iiVb/srT0FUSS3N
-	 ZlBe8al3MoCZHCXXUmLZRGHqOkWcH4YF986CCdhw7DHmWj+AVGuu0Bm8MTO4I8W+Xs
-	 LVaglygw6aT21BY7iqKZ3TB+Blqn5Tf9HXWiYeKHcDjvXA7hfU5PuPfIX2/IraV4Kg
-	 a8eesWwn9H+7T7iIsfawE9eRlxnNpiDIHo8uiQcgHMW7CYGtgkZGHVwMkAoVPZlpTr
-	 Y1Gm8i8UJwngCs0OXbxok+thnuNz7iI3uoRywcP+T4XXWwH1lmTbRws5mX9yfdUDiM
-	 9v134bJUlxv0g==
-Received: by mail-yx2-f16.google.com with SMTP id 956f58d0204a3-66e56a1fe83so559267d50.2
-        for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 00:20:30 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBzywrYAdGu/J2B4CzdRZPaoH4z435MQ+RYIPeyFjlJoren25xOJ3Rl3wRw+elzRFrxDebT587mr@vger.kernel.org
-X-Gm-Message-State: AFuF++mZmMBbEluUKsJBW19ltnzaCd8BrCgPm/pgROpYCe5sh/u8GInP
-	sxDXJOI5MypNMV/bgTDT623aoDyZeFWnP6WSdjNwHLgD+/tNbKNXZ3ZDqwS8VrxNYZ3yNTAjzrY
-	DHwqLMYcWC+n6Qqxza8yaWHjmfphuIUYvod7sZwX3tQ==
-X-Received: by 2002:a05:690e:bc8:b0:672:9f72:7c04 with SMTP id
- 956f58d0204a3-672d5a1405bmr755720d50.102.1790148029577; Wed, 23 Sep 2026
- 00:20:29 -0700 (PDT)
+	b=otszdD8Os0bzZ8eXh2j6csvFV0p8ptu8cTdhSBMGgfBuWsr1n3mD+qbDtKphb/SRV
+	 PM5RBJZDZw3IWPVHD5bYyFVRJysL/qYhR3qpFd10j/UyZaCPY5XJDbz657KZBu7BsZ
+	 WHxDF0dLpP5qVYJQWwPNamOQnNe2je/E4DjQZliA8AhR1H9ss9JBjBK8sMyZSpw4lZ
+	 FkKTma1zeCkI+0gg81spvDl9lhESMQCeL71oabrM2FnGlud8KIG36R2f3J2Ha0FLap
+	 3kNORyNYExctlvOryvhm0KLGYOkBU6FIv31qBW4HEhE/P8qOWpa294w2nKOJsIVQdz
+	 cVpCXtEZ1eaeg==
+Received: by mail-yx2-f16.google.com with SMTP id 956f58d0204a3-66e56a1fe83so565710d50.2
+        for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 00:32:30 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBz3jpGZ4UO9+gMpJli2PR/B2CKTNdDLeS4a5+uBdjeZRU4CxuMPetWqZXzRUiLH1a01ja+MPIeG@vger.kernel.org
+X-Gm-Message-State: AFuF++nmFZ3z3S9k3k5rvtT+iO9ruEqVQwOt1O3uhY30b85mFTydRCHV
+	jmWiHOGjhf+F3LUYtn+mm0l48WkBB2JOkb4syUCLpkq2ZfL4F+2Dw9H0FsManHUSFMWWDrr+NjC
+	N0dvM8q1fzqYACs3Iz9kAJ25nOgUxElk+gZh+FFjZZA==
+X-Received: by 2002:a05:690e:1247:b0:66d:2e0e:ef59 with SMTP id
+ 956f58d0204a3-672d5827acemr761335d50.25.1790148750115; Wed, 23 Sep 2026
+ 00:32:30 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org> <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
+References: <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org>
+ <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
  <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F> <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
  <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F> <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
  <arEVDBlfsUYKK004@gourry-fedora-PF4VCD3F> <CACePvbXG5kjZmRsdd0a4HfbnNa6w5s9b_1OCySbwvY+HuCqOVg@mail.gmail.com>
- <ad1c4de51f1fbbfc7345036af8f39fb450c1f3c7.camel@surriel.com> <CAKEwX=NKC=N-YaiwZK7HPM4MfX-7JG_KeHukS0+vjHqMZTV4dA@mail.gmail.com>
-In-Reply-To: <CAKEwX=NKC=N-YaiwZK7HPM4MfX-7JG_KeHukS0+vjHqMZTV4dA@mail.gmail.com>
+ <ad1c4de51f1fbbfc7345036af8f39fb450c1f3c7.camel@surriel.com> <arK7gLYD0GJwzKFq@cmpxchg.org>
+In-Reply-To: <arK7gLYD0GJwzKFq@cmpxchg.org>
 From: Chris Li <chrisl@kernel.org>
-Date: Tue, 22 Sep 2026 21:20:16 -1000
-X-Gmail-Original-Message-ID: <CACePvbUijn+9poYGFL0kiA+ADAxLULcmuVpfx3=9UbbRemyjRw@mail.gmail.com>
-X-Gm-Features: AcwNN1XNF8jCOBxQkoAP5mypVrfmU5thuNYjjY3TJ8Y1KZCkSFtYtgfK_yupyfs
-Message-ID: <CACePvbUijn+9poYGFL0kiA+ADAxLULcmuVpfx3=9UbbRemyjRw@mail.gmail.com>
+Date: Tue, 22 Sep 2026 21:32:17 -1000
+X-Gmail-Original-Message-ID: <CACePvbW9=HTg69J1JTAUROZui4vD00g4=xbFk8QfL5Xdrg6pAQ@mail.gmail.com>
+X-Gm-Features: AcwNN1XZ0IsprA-C8dqObJkA-pxjPDodoFJH1SBPupUOnBC57SVyi9s-WU2Mdio
+Message-ID: <CACePvbW9=HTg69J1JTAUROZui4vD00g4=xbFk8QfL5Xdrg6pAQ@mail.gmail.com>
 Subject: Re: Path forward for Virtualized Swap?
-To: Nhat Pham <nphamcs@gmail.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Baoquan He <baoquan.he@linux.dev>, 
+	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
 	Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
 	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
 	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
@@ -78,33 +78,13 @@ Cc: Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 22, 2026 at 7:21=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrote=
-:
+On Tue, Sep 22, 2026 at 7:31=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org=
+> wrote:
 >
-> On Tue, Sep 22, 2026 at 10:15=E2=80=AFAM Rik van Riel <riel@surriel.com> =
-wrote:
-> >
+> On Tue, Sep 22, 2026 at 01:14:31PM -0400, Rik van Riel wrote:
 > > On Mon, 2026-09-21 at 06:11 -1000, Chris Li wrote:
 > > > On Mon, Sep 21, 2026 at 2:53=E2=80=AFAM Gregory Price <gourry@gourry.=
 net>
-> > > wrote:
-> > >
-> > > >
-> > > > You can't know the compressibility of memory until after you
-> > > > compress
-> > > > it, and requiring a user to predict the future by forcing them to
-> > > > limit
-> > > > the total amount of workload compressibility does not scale with
-> > > > the
-> > > > number of workloads of variable compressibility of data.
-> > >
-> > > You likely just need to pull a SQL query on your fleet to get that
-> > > number.
-> >
-> > This feature is not being developed for just one
-> > user. It has to work for everybody.
-> >
-> > >
 > > > > That should tell you that your model of reasoning about this issue
 > > > > is
 > > > > ill-suited to address the problem.
@@ -118,22 +98,54 @@ net>
 > > allowed to take more than half of memory, because
 > > at that point the compressed content will be
 > > crowding other things out of memory.
+> >
+> > That seems like the kind of limit that is large
+> > enough that very few people will run into it,
+> > while also being small enough to prevent actual
+> > corner case trouble.
 >
-> I actually am skeptical of gating zswap usage (both pre- and
+> Just to be sure we're all on the same page:
+>
+> Zswap *backing memory*, the space needed for compressed data, is not
+> the problem. It actually has a limit that defaults to 20% of
+> memory. And there is memory.zswap.max for users to define everybody's
+> fair share of that limited backing storage.
 
-Isn't there a zswap limit some thing like that? In our deployment we
-have limits for memory + swap as well as page fault latency to detect
-SLO issues. There is a feedback loop.
+Just curious, how is the 20% determined? May I apply the same argument
+used in this thread: since you haven't surveyed all users in the world
+so you can't determine that 20% is a good value. Let's make that 200%
+for safety.
 
-> post-compression), but I would like to note that for post-compression
-> size, we already have that knob for zswap, default to 20% of physical
-> RAM.
+Clarify, I am not actually challenging the 20% value. I am trying to
+see if I can use the same method you used to decide on 20% to convince
+you that there can be a similar upper bound for the amount of swap
+space.
 
-I think swapping too much to zswap does not make sense. e.g. 100% of
-system RAM. That is my point. It is not a value you cannot determine.
-We can find an universal answer with a safe margin if we want. That is
-my point: it's not a value you can't determine. We can find the answer
-with a safe margin if we choose to. If you don't want to, then that is
-a different story.
+> The point of conflict is the pre-compressed side. How many swap
+> entries can vswap hand out. Hard limiting this is the point of
+> conflict. Any given swap entry can refer to several things: a page
+> full of zeroes that has no backing space; a compressed page in zswap
+> that consumes some amount of backing space; a page that was written
+> back from zswap and now consumes physical swapfile space.
+>
+> All mapped by the same address space.
+>
+> I don't see why you would limit this at all. I don't see how you would
+> pick a sane default. And if you limit it and workloads run into it,
+> there are no cgroup controls to manage fair access.
+
+I am not using a limit to enforce the workload. I am just using the
+limit with a safe margin to set the vmalloc max size for xswap. This
+is similar to the 20% for the compressed pool. I do believe the app
+will suffer if too much of its memory is swapped out. e.g. 100% of
+system RAM.
+
+> (Despite what has been said in this thread, memory.swap.max is for
+> those entries that compete over physical swapfile space. It must not
+> and can not control vswap space used for all sorts of backends.)
+
+Doesn't memory.swap.max limit existing zswap? Then that is a
+user-visible behavior change to make zswap don't go through the swap
+counter. That is a change we need to avoid.
 
 Chris
