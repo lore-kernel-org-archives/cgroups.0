@@ -1,128 +1,177 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAD423F888A
-	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 06:11:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F3AF3803DB
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 06:44:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790143869; cv=none; b=IcN9EW03XoxgBTs/HrJYbZqSr02uD3qc5oBScaRDcLJllAVJCAplJVe1aaeqWS+ZTTUJNyGoPLhY9BaKNN7AcsGBrSBUJCseHyLYwivKs4XE+tQOBVGTslkuCnnvH1NsB0Io+BeWFetbZwfikl0cyyQaXI3xIzUgrRqTRYrCeSM=
+	t=1790145902; cv=none; b=CDWZgKQtnK7CO+lIGiuar9DzTROnQ8n+a/ZG9hxZY6tTjOgegztU3IrAtlxmBzbNzqAOxgZhIr8X7/65WbD98kygRKNxOMInbgzD/DvTygfkv6aS8UbYFqLpObq/WX1eBzipZp8+ihJS8ajqbQPErHktTG9ovU81FZBexiQZkbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790143869; c=relaxed/simple;
-	bh=36DkvQ40d2yR8/sYsHjVsChpTAqtkzflfa13QYZVKCI=;
+	s=arc-20240116; t=1790145902; c=relaxed/simple;
+	bh=U3Fe3GZkBaknJJQrEX2RpwW4P0WOBIbz21H+JhSeOuc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=sK+QNaMkLFj00piZUzc3FamHV7eLOj8Q8vci0PKfv4s5kin8xvaMYUw+HdPxRpqKNmOCnv1QQkLzHas1KuwxsrrPh91nZDwade+h+OguqKeceQAfjIrQfwlG3FjagIpziwO6bOLo9nd/GsUN541iUfbIgB9qsCS/T/4cvGDWrt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YsC81ZtB; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=Nw6gYD4b8R91bimX7aiiRAF0DL+1NJOfogAPiaFZ+kxz6nFPcBmmUP08nBhvI2aWuIf9PpoVGMG/l2EtcgXkz26oSOSw0WWv9XKeIXQBvPzzREDb3rjjn6OFefsGgbzm7r/rXJoumKKV8WXoKpf6P/9z2ELUc/W1VxPHHsWXB6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KH+6SRSN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YsC81ZtB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF2071F00893
-	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 06:11:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KH+6SRSN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69BFA1F0089D
+	for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 06:44:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790143867;
-	bh=36DkvQ40d2yR8/sYsHjVsChpTAqtkzflfa13QYZVKCI=;
+	s=k20260515; t=1790145895;
+	bh=U3Fe3GZkBaknJJQrEX2RpwW4P0WOBIbz21H+JhSeOuc=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=YsC81ZtB6p7Ye8J46St0nIWpDIGBXr6BqfcMKpWBw7i7WWStGXBNu4rTz+xt2hrr/
-	 DIAGBS33T1UQMR78d9BXCabEGL/VmdMdKbKAmx276njXWB+srosYnd3yS2QLyNets9
-	 jqiTOmvWxS3e3PzL7oa5QfPoLa012fZUlplwW2/6VE+kD8jMTNMyQyH5julGBbVHUa
-	 j09h5z94LvTKm9AAQO/XfK5gEiSXJ7nK3KQkEv1kDrtIvkoRnwmRyUzFEKkqMGKRfG
-	 nP8IE5JX4twuozutakMC9Kj+bBcZZNkEA21DOYZEpPCf56PaVqtjUeIFIXOE5kOnqv
-	 s6fsaaWCsL49g==
-Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-672ce86b21aso619896d50.3
-        for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 23:11:07 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvByquhj1Kr0+czmQQkN+x9Y79KuHswVz1kBl3sOLq2UlYs8APbCU+8pnA1MMBIdkj7qog3H/ztRG@vger.kernel.org
-X-Gm-Message-State: AFuF++kkieKCRRd1sKraeMw998gqzELhd3ICvs8v3SNxozZl3b5oblSC
-	rXDJT+U+PFKLuKC2u9Sqm72zQy7MyKTIV/5UL/Z0RXmt2OGaMqO+RfsxG73SMBYvSRnFGc3zrKa
-	wL1kzlh5Vtn3Hm411uN2eatbqBAOD8kSR1hjWJpjRbA==
-X-Received: by 2002:a05:690e:806:20b0:671:4a50:cac8 with SMTP id
- 956f58d0204a3-672d57377eamr504474d50.32.1790143866547; Tue, 22 Sep 2026
- 23:11:06 -0700 (PDT)
+	b=KH+6SRSNEvqMduDQyrAk1/m5V6SS0ddO7ePNHzpfLJs8HzeRvVSi0MYcTbY4ASQYX
+	 wpbI2WceWE2GFNraMR5MG8cOZPwg3dsaUpf2jzzvfRnW8RbzTJliBFcwM7aakKm/pa
+	 rDVBbrblG0sQAVQ1/QB1x7vYTpcyBqdPmO2tkufLwdnZkekzWJLQArwe3c8Z+LIlaR
+	 J3Au44TJJMbFiRsw9v00qM2/UtbkbXUriIjohRWxBxd24lKUprGOM5ozhLJh+z41WA
+	 auoSIMkEGV/BhM69FLPP/47DiQMJi5PEEqK+oNovw6q/Scd9wIfxSEegEY2whp0+wM
+	 8/5+3fw+fxJuw==
+Received: by mail-yx2-f36.google.com with SMTP id 956f58d0204a3-66e4aaf2ecfso476499d50.1
+        for <cgroups@vger.kernel.org>; Tue, 22 Sep 2026 23:44:55 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBxljUcLBBv7jWSa5W6MkkoAZLfqLMjKH0IsszFL4amkUBzpZnkDHzZ6Uj4226PZVJ4gn9z7g44w@vger.kernel.org
+X-Gm-Message-State: AFuF++mRk0sf/PU5O3TmjsjrnzYBVhj/MNez8y12otLLrWyjQGqSXX1F
+	KAkd6pqhr4dcA4sK45P+HN4d+Sq6uGFSQNewS9jjS5R75oBCwcnEMvJ5x8/vCrCLUctAbwCPOcr
+	FfcTxJab37krBFF6ex4TGpqXbvsJzLsD2uD+PmOAx1w==
+X-Received: by 2002:a05:690e:1909:b0:672:c9eb:4755 with SMTP id
+ 956f58d0204a3-672d5765c2bmr1091423d50.23.1790145894673; Tue, 22 Sep 2026
+ 23:44:54 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <aq8dja2-timYBwyB@gourry-fedora-PF4VCD3F> <CACePvbXudjxQ5vrrY4D1nOXKaFNQUn-tL+p3O0zfxtHXK99ojQ@mail.gmail.com>
- <e879ac65cb0940325736df7984c737edf1c6be94.camel@surriel.com>
- <CACePvbXThspPYD8DZkAeiJtYuMV79vGgC1SGhpMwhn4COWOtcg@mail.gmail.com>
- <785353ef79844e81a8cd97e87b00ef1f785b15e5.camel@surriel.com>
- <CACePvbXZ4i-DsmbQdNtBQb79y59uwZC9J8qHD2wTWpcYaet3LQ@mail.gmail.com>
- <83539be885f15bb567b30264f5f62e718f4a9fd0.camel@surriel.com>
- <CACePvbXZQERwLF_f2FYTHsv--kq_-Aw2vVVFF+z+ovdnsHy1bA@mail.gmail.com>
- <a75b2eac4297ca6b238dde6f9246d2c1807b935f.camel@surriel.com>
- <CACePvbW_-6M63_a7Cp+09dTmpHeMEdj9VDQZf8g8qoYKQD=wvw@mail.gmail.com> <arKiK06mfWTw9I9a@cmpxchg.org>
-In-Reply-To: <arKiK06mfWTw9I9a@cmpxchg.org>
+References: <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
+ <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
+ <aqgMCIOFi0dKx_6L@fedora> <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
+ <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
+ <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
+ <arKRdaNEaKvFOtMg@linux.dev> <CACePvbX7aM45SE9H0hg1_uXBt1i4W7Pgk+d33Z2sG5bj8cHudA@mail.gmail.com>
+ <arKZpJDpsavixjPx@cmpxchg.org> <CACePvbUmVLVk=w1sJinBfKVYoXcO57A163RrXv7C_QLzM4yQZQ@mail.gmail.com>
+ <arKgladcnmeTWUKb@linux.dev>
+In-Reply-To: <arKgladcnmeTWUKb@linux.dev>
 From: Chris Li <chrisl@kernel.org>
-Date: Tue, 22 Sep 2026 20:10:54 -1000
-X-Gmail-Original-Message-ID: <CACePvbWaNGKSZHdWtUw6JvaydvPqKmcUR52j+7CXt4_9w4uYuw@mail.gmail.com>
-X-Gm-Features: AcwNN1V7JRD8IWTWDQf-4vF0gQsA2D-aYRiLEM1ny74LPtNp-fFSHWF5S-AZcVU
-Message-ID: <CACePvbWaNGKSZHdWtUw6JvaydvPqKmcUR52j+7CXt4_9w4uYuw@mail.gmail.com>
+Date: Tue, 22 Sep 2026 20:44:40 -1000
+X-Gmail-Original-Message-ID: <CACePvbUYhwSjOEXCM08Na_5bccOo6Oz-9BatRSPDO7R310YjaA@mail.gmail.com>
+X-Gm-Features: AcwNN1U76kw9ArcfhXgJlon_Ze0jFZEqulu20gcTSrQsz-WCh9osS09uot1Y_ic
+Message-ID: <CACePvbUYhwSjOEXCM08Na_5bccOo6Oz-9BatRSPDO7R310YjaA@mail.gmail.com>
 Subject: Re: Path forward for Virtualized Swap?
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>, 
-	Baoquan He <baoquan.he@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
-	Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, 
+	"David Hildenbrand (Arm)" <david@kernel.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
 	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
 	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
+	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
 	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
 	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
 	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
 	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
 	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Kairui Song <ryncsn@gmail.com>, Joshua Hahn <joshua.hahnjy@gmail.com>
+	Joshua Hahn <joshua.hahnjy@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 22, 2026 at 5:43=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org=
-> wrote:
+On Tue, Sep 22, 2026 at 5:46=E2=80=AFAM Shakeel Butt <shakeel.butt@linux.de=
+v> wrote:
 >
-> On Tue, Sep 22, 2026 at 05:23:31AM -1000, Chris Li wrote:
-> > In my experiment, 100% is already way above that bound, which is why
-> > I'm curious about your data point. How do you run and test your system
-> > at 100%? Please correct me if I am wrong, but it looks like you
-> > haven't.
+> On Tue, Sep 22, 2026 at 05:30:44AM -1000, Chris Li wrote:
+> > On Tue, Sep 22, 2026 at 5:07=E2=80=AFAM Johannes Weiner <hannes@cmpxchg=
+.org> wrote:
+> > >
+> > > On Tue, Sep 22, 2026 at 04:56:48AM -1000, Chris Li wrote:
+> > > > On Tue, Sep 22, 2026 at 4:43=E2=80=AFAM Shakeel Butt <shakeel.butt@=
+linux.dev> wrote:
+> > > > >
+> > > > > People can speak for themselves and suggest other time slots. You=
+ do not speak
+> > > > > for anyone but yourself here. At this point this is derailing the=
+ conversation.
+> > > > >
+> > > >
+> > > > I am expressing my opinion, freedom of speech. As you can see in th=
+e
+> > > > previous discussion, Baoquan wasn't able to join that time slot. He=
+ is
+> > > > a major shareholder in XSwap. I worry that alignment vswap vs xswap
+> > > > without Baoquan is ineffective. That is my opinion.
+> > >
+> > > Actually, he said he is not sure if he can make it, and before Nhat
+> > > could respond to that soft push you drew a hard line without actually
+> > > proposing a workable alternative that made Nhat give up instead.
+> >
+> > Please consider that it is 1AM in Beijing if I remember correctly. I
+> > don't consider that is a workable and reasonable ask.
+> >
+> > > So my free speech opinion is the same as Shakeel's: you're speaking
+> > > for others and thereby derailing efforts to align on something.
+> >
+> > I sympathize with asking Baoquan to join a meeting at midnight.
+> >
+> > >
+> > > We all want Baoquan in the room.
+> >
+> > In Chinese we have this saying: don't apply things to others that you
+> > wouldn't want applied to yourself. Do you want to participate in a
+> > technical meeting at 1 AM?
 >
-> You're conflating machine size with workingset residency.
->
-> Rik showed an example where the compressed set was twice as large as
-> the anon set, and it worked fine. And why is that surprising?
+> Three emails in, you have rejected the proposed slot and proposed
+> none, and your own conclusion was to drop the meeting and keep this on
+> the list. That is not inclusiveness, it is a veto, and the outcome
 
-Where did I say surprised? I am just saying that is not the metric I
-am looking for.
+You skip an important step. I raised the concern that the time zone
+does not work for Asian developers; we should find a time zone
+friendly to Asia.
 
-> We know many applications have long tails of cold pages. Idle tmpfs
-> files and shmem segments. Things that get rarely used. memcache style
-> workloads have a small, hot index and a huge data segment with poor
-> access locality. Even if large parts of it are in compressed space
-> that's better than storage fetches.
+Nhat still suggested the original time slot, disregarding my concern.
+Which implicitly exclude Baoquan from the discussion. That is the fact
+that you missed.
 
-So what is the max (%) in your fleet based on my metric definition?
->
-> Your "this will thrash after 7-10%" is an average based on common
-> workingsets that are actually hot. It doesn't mean there aren't cases
-> that benefit from much higher overcommit.
+Then I suggested using email discussion instead, because the key
+shareholder couldn't attend. There is no veto. I suggested the same
+approach Nhat suggested. If you call my suggestion a veto, Nhat veto
+first. Nhat issued the first veto. Mine was only a response to Nhat's
+insistence.
 
-That is what I have been repeatedly asking for regarding your
-deployment setup. What is the amount of memory swapped out to zswap
-relative to the total system RAM? This should be a simple query on
-your end. Nobody has been able to provide a data point where that
-percentage reaches 100.
+> serves Baoquan and xswap worse than any hour of the day would have.
 
-> Why even get into this? Why even try to find some universal limit on
-> something that just costs memory anyway, when memory containment is
-> already a solved problem?
+Baoquan can't make it at 1AM. It is not a reasonable ask.
 
-Because I suspect that if that number goes above 100 the machine is
-unusable. If this statement is true, then nobody would want to zswap
-100% of the RAM. I don't need to preserve that much a space. Asking
-for too large a value is ridiculous.
+> Baoquan said he was not sure he could make it. He is perfectly capable
+> of declining himself, or of sending alternative timeslots to the list.
+
+In Baoquan's own words:
+"About the meeting time. I am in UTC+8. If the meeting is before 23:00
+my time, I can join. If it is later than that, it is too late for me,
+and I can only discuss in the mailing list."
+
+He already made it very clear he will not be able to join that time
+slot. It is not a maybe. It is a 'can't'. His reply was very clear
+before you sent yours. I don't know what part of "not sure" you read
+from his email. What is your motivation for twisting this?
+
+Suggesting a 1 AM meeting without considering the time zone difference
+is an understandable mistake. Insisting on that time, as Nhat and you
+do, reveals more about you. Attacking me for point it out?
+
+> You turned his "not sure" into a hard no on his behalf, then argued
+> with everyone who pointed that out.
+
+It is a hard no. 1AM is not a reasonable ask in the first place. Even
+after I pointed out it is not Asia friendly, Nhat is still insisting
+on it. That was before I suggested we discuss it via email instead.
+Get your facts straight.
 
 Chris
+
+> Please reply with two or three specific windows in UTC that work for
+> people not in US timezone. If they overlap with the other participants,
+> we use one of them.
