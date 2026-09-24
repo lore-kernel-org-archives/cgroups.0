@@ -1,32 +1,32 @@
-Received: from mta1.migadu.com (out-87.mta1.migadu.com [95.215.58.87])
+Received: from mta1.migadu.com (out-204.mta1.migadu.com [95.215.58.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E625B2D8DC4
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 18:46:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.87
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4440242CB01
+	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 18:47:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790275574; cv=none; b=aF3RkiBPDnvJB0g8/aUBgHI4/WzT1IuZBlKTc60ekB/c6drbGy6/HS3FH7Js5Ehjmy040hppcibFBJImFIBYhdODrS/BaGrfI5mtjdeDCMG8lmCJPXdO3S6Foenk9QhamftUF1m/c7cWF+fOPUbuLtdm2IYMpHkn/GEGQShKlwM=
+	t=1790275662; cv=none; b=b/pEwAM28tCpqCV2VlaLJXgi4I1IVsrwCAOsZ2EPUysj7+BUX40QJLYED3YycVv/x6MpDooammRumXo531ZowyS3nu4zlYx6TAKGRFQIIlvP+geJHpb6mJeYZdbISiRC7wmL4lGy5d0+Z3FuR7rdYBbBCYUFCX7qKohfQs8CyBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790275574; c=relaxed/simple;
+	s=arc-20240116; t=1790275662; c=relaxed/simple;
 	bh=91syfsU5GYx0rGSvaym71XNdT9fl8e/N6mWVzG2+jLQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=C3u9Xhs5Y8dEEfNqBivTpZWOHSfZXlE7F1DwB2k22IMquhfKmYfwHvMBrRyqz3YanId0+VVQ3RWJc+JusrTYb3JlAU2YU9+3l4+RKbpzuQ5ay0Z0jDp9FtinvorZYaQLsbFJdvBQjoOFDwabOTwfWpWtKcBpAEeuO7X8lWMp6mo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=IOIYj5+V; arc=none smtp.client-ip=95.215.58.87
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WEc7+v4FDR/32IGZx+jM0xFempddrCVpcsEZ/WsyEbca5Eip0YiEuSFqImn6MC+noKYhD1f7p/bDYI1TiiTLD08NzvVD0s7HObfcI892ai/fn2M7SMHNjadVmI4j2x1mCsLN+RomMl8Ut2AioEfg652XBQB4vkOzDYDj0L9Mwbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=BJ7CNNkA; arc=none smtp.client-ip=95.215.58.204
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="IOIYj5+V"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="BJ7CNNkA"
 X-Envelope-To: cgroups@vger.kernel.org
 DKIM-Signature: a=rsa-sha256; bh=91syfsU5GYx0rGSvaym71XNdT9fl8e/N6mWVzG2+jLQ=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790275560; v=1; x=1790880360;
- b=IOIYj5+VjsG9hUuYSnQhqlVYL/2iq+akA2W0bwrSeUSazTjLI/+WYRim3Ko5k6PxAi/HFseq
- Qmcl8gNMsI29I5ZSQtFR4dQ1kvOFDxPLF9eEIz4ttvhwcGvOl3uaubsA2DwYTnVDqky5mdy2AQZ
- pZUUyHwQ6RbIr7DV2TjHJW20=
+ t=1790275650; v=1; x=1790880450;
+ b=BJ7CNNkAtDTueQyd6x06oSMxBm3hXHxKM1rIpa6OiarT3yhC1yiJOy5g2ESesjCDUjt1O2nr
+ X5VaYxbYJirw8WOW7gSr/SEBK6xnsFqi+GxiKdOB0WfiIhuUZaCL5mfX1glS3NenpWYVslIODbO
+ c2Vocr9mU1gEpMiE540y3TNY=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 69da63fa5bdfc846;
-	Thu, 24 Sep 2026 18:46:00 +0000
-X-Mizu-Trace-ID: 69da63fa5bdfc846
+Received: by smtp.migadu.com with ESMTPS id 93734a899e7f4e5a;
+	Thu, 24 Sep 2026 18:47:30 +0000
+X-Mizu-Trace-ID: 93734a899e7f4e5a
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Tejun Heo <tj@kernel.org>,
@@ -54,14 +54,15 @@ Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
 	Aaron Lu <ziqianlu@bytedance.com>,
 	Daniel Jordan <daniel.m.jordan@oracle.com>,
 	Hao Lee <haolee.swjtu@gmail.com>,
+	kernel-team@meta.com,
 	cgroups@vger.kernel.org,
 	bpf@vger.kernel.org,
 	linux-mm@kvack.org,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Subject: [RFC PATCH 0/7] cgroup: charge kernel work to the cgroup it is done for
-Date: Thu, 24 Sep 2026 11:45:21 -0700
-Message-ID: <20260924184529.879516-1-shakeel.butt@linux.dev>
+Date: Thu, 24 Sep 2026 11:47:04 -0700
+Message-ID: <20260924184714.912181-1-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
