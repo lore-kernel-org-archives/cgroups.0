@@ -1,56 +1,56 @@
-Received: from mta1.migadu.com (out-145.mta1.migadu.com [95.215.58.145])
+Received: from mta0.migadu.com (out-239.mta0.migadu.com [91.218.175.239])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 232004DA9CA
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 21:11:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DEDB1BD9C9
+	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 21:19:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.239
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790284266; cv=none; b=AS6XTY5Qi5ljdPM9e43PQSgnBprADIPE4oDCgK1MzskCKozmRkUGH4oSeFLSxZUQgxlUOzhSTXQCp98SwWAxT6/93x+AKkhpmA/G+N1wswRmj6qY19X6p1poke4IyBYhoF6LbLDATHdpdSJq4vOJNowrE1aHyiCfMVPFVYeESh8=
+	t=1790284749; cv=none; b=AjXliEDE/yFKC2QGrBueFofm20c6+GiZh7Bd5rrdd4sERWdn1nC+21bzWIJFipamCDyGmbMvFwOaov2cLsvl9wO/k++uxU8dNYks6J4SNPLJM8FAQlS8GVOJ9odYf/HNZX/dXz5rSyxkaqfKt4eUIuTT0DZI60YIzz4hNHJa1RQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790284266; c=relaxed/simple;
-	bh=geWEgMSYQDaXHL8PI+SwL20O2XP2TtLwPQS9ZQiVmS0=;
+	s=arc-20240116; t=1790284749; c=relaxed/simple;
+	bh=mU5oJrgH1sYUjWonRB98Yad1omw/P5Tdsx9/iTNI1j0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ESu2FwCKGW2b40bbs5w6MDVj8X0p9q/8qBHlBZqecO8LO6OeSykwJo0o6XCdv5Vj97anVnWOq+5rUtargBrlG2MFAvUMIrO7sr50s6lYNBhuZVG1hsIDe3OQoK3ckW+scqrRBdRqJqh8z/zT+PXcB4/EhCT3tjsja3zreX1ptbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Eeh4tDSK; arc=none smtp.client-ip=95.215.58.145
+	 Content-Type:Content-Disposition:In-Reply-To; b=RsVLikG+mFFFoz0u+9eqTNrA2j/wTf8W7GmntS1QGhuo63eUr1U0FaolUxdzFMrwCUXKbN2NQ/1bXaP6OgeHqgV8pBxBEEERN0OwPg9MlV0C6nyaZh+UakgyVXOT1zoBk8ezy0Q/3SGqfL+ZNVjuF2eraeZxe064ZUVEMRLJqvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=u4brnE0F; arc=none smtp.client-ip=91.218.175.239
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Eeh4tDSK"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="u4brnE0F"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=geWEgMSYQDaXHL8PI+SwL20O2XP2TtLwPQS9ZQiVmS0=;
+DKIM-Signature: a=rsa-sha256; bh=mU5oJrgH1sYUjWonRB98Yad1omw/P5Tdsx9/iTNI1j0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790284262; v=1; x=1790889062;
- b=Eeh4tDSK23G+TbvqhrDIDogpAxLZ6xsTOdlLHlKDetZUvHYMlAb3Ik1/Ut9G4V0OpLuS3y0m
- tmLn0/6MzpnzE+zUdW0zakrd9SIewOskKFysWTXFiUgIYljj4C4UMB51spUhO9DV8AYOc1SNMmb
- p165Nm7nJOoKWTlpRoaGar18=
+ t=1790284746; v=1; x=1790889546;
+ b=u4brnE0F1411IWpvTlPuKrmb+pPcXKQAcZcbVyFNSaPhlH7xA6yjcjVwGCK9iTlyyLrmu5OM
+ GeMZ7BW5QY2OYrigXc1iTUf0IP4j9GWGb4sEcvhcARFhE3qMbI/YKf6SbM9fVrv8z9zfkBynsPZ
+ bcJswsyvHNLV3jNCSgLDV9OM=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id de8f8ffe1b04012f;
-	Thu, 24 Sep 2026 21:11:01 +0000
-X-Mizu-Trace-ID: de8f8ffe1b04012f
+Received: by smtp.migadu.com with ESMTPS id 840ded800c29f88f;
+	Thu, 24 Sep 2026 21:19:06 +0000
+X-Mizu-Trace-ID: 840ded800c29f88f
 X-Migadu-Flow: FLOW_OUT
-Date: Thu, 24 Sep 2026 14:11:00 -0700
+Date: Thu, 24 Sep 2026 14:19:04 -0700
 From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, 
-	Peter Zijlstra <peterz@infradead.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
+To: JP Kobryn <jp.kobryn@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Alexei Starovoitov <ast@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, 
-	Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, 
-	Valentin Schneider <vschneid@redhat.com>, K Prateek Nayak <kprateek.nayak@amd.com>, 
-	Suren Baghdasaryan <surenb@google.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, 
-	David Dai <david.dai@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>, 
-	Frederic Weisbecker <frederic@kernel.org>, Aaron Lu <ziqianlu@bytedance.com>, 
-	Daniel Jordan <daniel.m.jordan@oracle.com>, Hao Lee <haolee.swjtu@gmail.com>, kernel-team@meta.com, 
-	cgroups@vger.kernel.org, bpf@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/7] cgroup: charge kernel work to the cgroup it is
- done for
-Message-ID: <arWLq4p488JPhuZ1@linux.dev>
-References: <20260924184714.912181-1-shakeel.butt@linux.dev>
- <befc0a9b9998db0292c9998c639a3a9f@kernel.org>
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, Michal Koutny <mkoutny@suse.com>, 
+	Amery Hung <ameryhung@gmail.com>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Martin KaFai Lau <martin.lau@linux.dev>, 
+	Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, 
+	Emil Tsalapatis <emil@etsalapatis.com>, Jiri Olsa <jolsa@kernel.org>, 
+	Ihor Solodrai <ihor.solodrai@linux.dev>, John Fastabend <john.fastabend@gmail.com>, 
+	Jiayuan Chen <jiayuan.chen@linux.dev>, hui.zhu@linux.dev, Donet Tom <donettom@linux.ibm.com>, 
+	Greg Thelen <gthelen@google.com>, Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, 
+	bpf@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 3/4] memcg_ext: allow BPF to defer memory.high
+ enforcement
+Message-ID: <arWTPMEm5C9tFeGc@linux.dev>
+References: <20260921192559.2619635-1-shakeel.butt@linux.dev>
+ <20260921192559.2619635-4-shakeel.butt@linux.dev>
+ <c8b8504c-8e54-479f-a372-3d2755edaf88@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -59,63 +59,75 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <befc0a9b9998db0292c9998c639a3a9f@kernel.org>
+In-Reply-To: <c8b8504c-8e54-479f-a372-3d2755edaf88@linux.dev>
 
-On Thu, Sep 24, 2026 at 10:28:10AM -1000, Tejun Heo wrote:
-> Hello, Shakeel.
+On Thu, Sep 24, 2026 at 01:14:59PM -0700, JP Kobryn wrote:
+[...]
+> > +static void bpf_memcg_ctx_init(struct bpf_memcg_ctx *ctx,
+> > +			       struct mem_cgroup *memcg,
+> > +			       struct mem_cgroup *over_limit, gfp_t gfp_mask)
+> > +{
+> > +	ctx->memcg = memcg;
+> > +	ctx->memcg_over_limit = over_limit;
+> > +	ctx->task = current;
+> > +	ctx->cgroup_id = cgroup_id(memcg->css.cgroup);
+> > +	ctx->over_limit_cgroup_id = over_limit ?
+> > +		cgroup_id(over_limit->css.cgroup) : 0;
+> > +	ctx->nr_pages_over_high = current->memcg_nr_pages_over_high;
+> > +	ctx->gfp_flags = (__force u32)gfp_mask;
+> > +}
+> > +
+> > +u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
+> > +			  struct mem_cgroup *over_limit, gfp_t gfp_mask)
+> > +{
+> > +	const struct bpf_prog_array_item *item;
+> > +	const struct bpf_memcg_ops *ops;
+> > +	struct bpf_memcg_ctx ctx;
+> > +	u32 acc = BPF_MEMCG_HIGH_NO_OPINION;
+> > +	struct cgroup *cgrp;
+> > +
+> > +	if (!cgroup_bpf_enabled(CGROUP_MEMCG_OPS))
+> > +		return acc;
+> > +
+> > +	/*
+> > +	 * Only the default hierarchy has a cgroup_bpf, and the static key is
+> > +	 * global, so one policy anywhere turns this on for v1 memcgs too.  A
+> > +	 * v1 memcg still cannot get here, because memory.high and swap.high
+> > +	 * are both v2-only and so it never builds the debt that leads to this
+> > +	 * call.  A hook on a path v1 can reach needs its own cgroup_on_dfl()
+> > +	 * test: a v1 cgroup has no effective array and an uninitialised
+> > +	 * cgrp->bpf.refcnt.
+> > +	 */
+> > +	cgrp = memcg->css.cgroup;
+> > +
+> > +	/*
+> > +	 * A program can allocate and re-enter the charge path.  Skip the
+> > +	 * nested call.  This guards the callbacks only.
+> > +	 */
+> > +	if (current->in_bpf_memcg)
+> > +		return acc;
+> > +	current->in_bpf_memcg = 1;
+> > +
+> > +	rcu_read_lock_dont_migrate();
+> > +
+> > +	/*
+> > +	 * A memcg outlives its cgroup while it has charges, and
+> > +	 * cgroup_bpf_release() frees the arrays when the cgroup goes.
+> > +	 */
+> > +	if (!cgroup_bpf_tryget_live(cgrp))
+> > +		goto out;
+> > +
+> > +	bpf_memcg_ctx_init(&ctx, memcg, over_limit, gfp_mask);
+> > +
+> > +	bpf_cgroup_struct_ops_foreach(ops, item, cgrp, CGROUP_MEMCG_OPS) {
+> > +		if (ops->high_policy)
+> > +			acc |= ops->high_policy(&ctx) &
+> > +			       BPF_MEMCG_HIGH_VALID_MASK;
+> > +	}
 > 
-> On Thu, Sep 24, 2026 at 11:47:04AM -0700, Shakeel Butt wrote:
-> > This series lets a kernel thread say which cgroup it is working for.
-> > That cgroup then sees the CPU time in its cpu.stat and the stalls in
-> > its memory.pressure, and the CPU time comes out of its cpu.max quota.
-> > The first user is the memcg reclaim that runs from high_work.
-> 
-> This doesn't translate to net rx, which is another major source of
-> displaced CPU usage. Switching membership on each packet isn't going to
-> work there. Attribution can't happen that way. We'd much rather count
-> per-cgroup received packets and prorate the CPU consumption. If at all
-> possible, I think it'd be better to adopt an approach which can cover
-> both use cases.
+> If I'm reading correctly, the gfp_mask at this point doesn't account for
+> task restrictions, so the BPF program may see __GFP_FS, __GFP_IO, etc
+> which may later be cleared when setting up the scan_control instance.
 
-Very good point. I think we need to think for net rx for two scenarios. First,
-the modern NICs with rx steering support and second, old NIC with shared queues.
-
-On the modern NICs where the workloads get their own rx queues, I think the
-proposed mechanism can help to do the accurate accounting (I have to extend this
-to softirqs as it is limited to kthreads atm) very easily.
-
-The challenge you mentioned is for the old NICs where we get to know the cgroup
-assosiation of the rx packets very late (or deep) in the stack. Also CPU spent
-on each packet is not necessarily uniform (due to out-of-order or drops or
-checksum errors or window shrinking) but for simplicity we can assume uniform
-CPU. Maybe the right place to charge for such scenario might be at application
-receiving those packets into the memory. I feel like we might need a very
-special way to account for this case (maybe through BPF or something). At
-the moment to me it seems very hard to have a universal solution which helps
-this case and the reclaim case I am targetted.
-
-If you don't mind, I think having solution for modern NICs i.e. dedicated rx
-queues, should suffice for now (unless you want the solution for old NICs as
-well). Let me know what you think.
-
-> 
-> >  - The debt is capped at one period's quota, so one long piece of
-> >    work cannot starve the cgroup for long. Time over the cap still
-> >    shows up in cpu.stat. Writing cpu.max or cpu.max.burst clears the
-> >    debt.
-> 
-> I don't like the debt capping. Having debt doesn't have to mean that
-> the cgroup doesn't get any bandwidth at all. The cgroup just needs to
-> be slowed down enough that the generation of new work is throttled and
-> the whole thing doesn't go out of control. IO control already does
-> this: when IO debt is accumulated, userspace is heavily throttled, but
-> not completely stalled, until the whole cgroup's consumption comes
-> under control. I don't see why the debts would need to be forgiven
-> unconditionally. The cgroup can keep paying them while running at a
-> minimal rate to avoid triggering stall failures, and if the situation
-> doesn't resolve quickly, that will most likely trigger pressure based
-> kills in any reasonable setup anyway.
-
-Sounds good, I will remove this capping in the next version.
-
-Thanks for taking a look.
+I am passing the same gfp_mask which has been passed to try_charge_memcg(), so
+it should be same as what reclaim_high (reclaim internal) sees.
