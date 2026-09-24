@@ -1,265 +1,199 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011005.outbound.protection.outlook.com [40.107.208.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1466F3EDE43;
-	Thu, 24 Sep 2026 06:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790231418; cv=none; b=npPQnwM2OyHqaNheNSSbjDkyC+nOyZ/4+YiRmpKtGhWBZFy0cguhnh1koUBX8K34+lPV5YAHr8IO1KMVuz/66QjIRVlhSf4X3f/ks8GXC8g3pdHtzn/AjTj5nC6Q0o/g5hLAcxmNFPtD3Co6btpfYoQBazKzLE8VFlqx0TCLZf8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790231418; c=relaxed/simple;
-	bh=/JZ9eTH+cCJ8CPcHJGFAzukhXlFXtJ6fBtRKjn2tIGg=;
-	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=Vb3amD2elKGNHg3jHhRkQu3wzBteMN//Mgw26EdWzLXi+UozK6cD6/VruUHcyq83EAyR5baWGa3qf4vR9c7G0oIGIn6TuwiwrphSXmfGP8D/r67c0aOPYsyxMZNaZzbF/Hd2YEwHzuqFFvGn52Lvo5IHb0D/OPitF5RUOHZcy54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nv2eY9Q+; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDC373CF032;
+	Thu, 24 Sep 2026 07:05:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.5
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790233539; cv=fail; b=NL344KM751E8U2WiFRDuus+F8AuO2vSG8lMN16kjYqDbcMhSywfQN7FulWT93GYWMetQ5rLn5D9nS0BgpqEOWcB47m8jvy+eqOSXLz+aZPusqLRBNKTwIetfazc0fu0/dG/Ft8EUk2ppOGPQSNeq2xtwnH3vMTHv6W9SkgIa4zE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790233539; c=relaxed/simple;
+	bh=hDjbenmg+oCjsBJHn7Lcef85AOBAC6Sz2muO4Dg/XF4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=L9hvK0Y9yYh0ymQVHZ1NJiql6FMXLBWRVrNykm+GmHIYVZYNpMQtge0ihkADu6Js/ILTSJn63NQoMCY4Hx6R1PiB1jzhjw1sKvOIvmEsCiPD8tV1ylTaGIw4hZmhlZw7aaJPkDGJUPaTPahPH7SPxdiqUnvCY+ghlQsdOtXuabE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Ti1mdKsX; arc=fail smtp.client-ip=40.107.208.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nv2eY9Q+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67D801F00893;
-	Thu, 24 Sep 2026 06:30:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790231416;
-	bh=PbUnL7Dp8W4lDbAThqkmUJ0eg5I5/4s5qPPqTg4hmVQ=;
-	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=Nv2eY9Q+EOCRBN8dAA4cSOUc5FOoaNc9lGhYgb6ontWHYPb5AOVPAXN2c80gkknci
-	 Ulhwqjn/RxVRuQTsjbRUL5RQ39hTIeBYgyFeBlGaVYPdB36UhkqPMZwvVXOTLjdcx1
-	 sTLWKHE0AQH+P5jFGtN30DB8vtvv//LqquGrs7w5QTxnRzGEx9TOYprI77WKjaMKC7
-	 IreWkAk/AdpRuHLxf3fB3FA/Y/i3t5xUZQDpiZsYL6JuWD0uupsmD6/VzKMkZKzqHU
-	 Dg9YNL3WEynqCWEHPOogU6fLSAktHZnxT9eDq+gyJMm2aVDM55NiUBmkjsj8CnhWIT
-	 JgxSHjXMoZ0RQ==
-Content-Type: multipart/mixed; boundary="===============0377911730758240839=="
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Ti1mdKsX"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=TixWmMCRB6TskAoo7rAsH18tpyYpOje72B4eWXQiSHdPCLRaCv+0RJSY7667wx7+7yBKVVQYTClVqqPx8EGjxMpBlgp11/1QtKw50etL3xlny5JmRmbCo8LWw/o3y7+K9qDLiT+0K29aHG6mznV4gDAyTqeHVxV1H9nWuvZDdFtgYcpEcyq1GS4NVt6OyQGIMQBPCE0lMEyBi1RFp0vKxUnHToUBbiJ6u4YFSC0uj/C2L5FHalDJPZWdMHfiZT6UKc/5/NYmcXuEc4tycPQL79qLlVZXv2f+c1F3hXWAnwvFwbfKdtMBdMaVMPmzqYBZNzArRYiEaLJG+ImqlzUHnw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BvMEg7D9/3hCH3UG8U800lSvDw3XcWh/Ekf1wwu+TcA=;
+ b=AqTcPqvvMo881q5ksWDRMmJlJ4Ym3ucro3UehVykNpKb8FHPDkaoPphw0ug+3Rgq5cNJTtagDjAQhmMu3uQlf4b0vDnZxJnJ0u/7GL6EquxtUVYFHal4j06TJC3s9Mc0BP14fa0zItlbLwtcuZQJBU3N05Y38ZPRfJyEJxCBx6IfjE+Ru72Q6FZU2mPOVe7OyFtgJUO64Gwq80VexcwHjV/1s+io09YA+mIYY52vmKvpvsJdb60bXettrY4Pr98qxaPr4ohCBFWtKQ54oh0FNYg7CykvjtdiRA8PvxKekFG9XhQZoM09ccblB+TW8hT+FRpUQDU7rYk611ClhzZzVA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=intel.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BvMEg7D9/3hCH3UG8U800lSvDw3XcWh/Ekf1wwu+TcA=;
+ b=Ti1mdKsXaowOP6pxD7BRHyg36YgNRTh2nByjrVv9Q5CRPkNtYFpeba//LWSSaCSI41fwdTIWzaUb7pknR8iFiB2T2wbLJ0KEX9BcKG0aWhLqTzInylrx0bUModZ1/4/IdD+LHQ3vejgzRKjqfJMiOl9J71rLhL37nU6Nm8RigcY=
+Received: from BN9PR03CA0139.namprd03.prod.outlook.com (2603:10b6:408:fe::24)
+ by DS8PR12MB333896.namprd12.prod.outlook.com (2603:10b6:8:447::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.18; Thu, 24 Sep
+ 2026 07:05:27 +0000
+Received: from BN3PEPF00022BC3.namprd05.prod.outlook.com
+ (2603:10b6:408:fe:cafe::67) by BN9PR03CA0139.outlook.office365.com
+ (2603:10b6:408:fe::24) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.451.17 via Frontend Transport; Thu,
+ 24 Sep 2026 07:05:27 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ BN3PEPF00022BC3.mail.protection.outlook.com (10.167.248.215) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.451.8 via Frontend Transport; Thu, 24 Sep 2026 07:05:27 +0000
+Received: from satlexmb10.amd.com (10.181.42.219) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Thu, 24 Sep
+ 2026 02:05:27 -0500
+Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb10.amd.com
+ (10.181.42.219) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Thu, 24 Sep
+ 2026 02:05:26 -0500
+Received: from [10.136.33.35] (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.49 via Frontend
+ Transport; Thu, 24 Sep 2026 02:05:20 -0500
+Message-ID: <587a9b32-bc54-46b9-b81e-c46a19f47e17@amd.com>
+Date: Thu, 24 Sep 2026 12:35:19 +0530
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <708eecd95cb24c85757f7f217915bfbb2bbd855b8f963a4cc32aa61ad6031034@mail.kernel.org>
-In-Reply-To: <20260924054549.2271705-2-cui.tao@linux.dev>
-References: <20260924054549.2271705-2-cui.tao@linux.dev>
-Subject: Re: [RFC PATCH v7 1/4] blk-iocost: add BPF struct_ops cost model support
-From: bot+bpf-ci@kernel.org
-To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk
-Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,ast@kernel.org,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,alexei.starovoitov@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Thu, 24 Sep 2026 06:30:14 +0000 (UTC)
-
---===============0377911730758240839==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] [PATCH v3 7/7] sched/eevdf: Move to a single
+ runqueue
+To: Chen Yu <yu.c.chen@intel.com>, Aishwarya Rambhadran
+	<aishwarya.rambhadran@arm.com>
+CC: Peter Zijlstra <peterz@infradead.org>, <mingo@kernel.org>,
+	<longman@redhat.com>, <chenridong@huaweicloud.com>, <juri.lelli@redhat.com>,
+	<vincent.guittot@linaro.org>, <dietmar.eggemann@arm.com>,
+	<rostedt@goodmis.org>, <bsegall@google.com>, <mgorman@suse.de>,
+	<vschneid@redhat.com>, <tj@kernel.org>, <hannes@cmpxchg.org>,
+	<mkoutny@suse.com>, <cgroups@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <jstultz@google.com>, <qyousef@layalina.io>,
+	Ryan Roberts <ryan.roberts@arm.com>, <chen.yu@linux.dev>
+References: <20260605105513.354837583@infradead.org>
+ <20260605124052.227463677@infradead.org>
+ <bd81bbec-ee59-401a-bec6-116196ad3a34@arm.com> <arQCykkkCnADu5ek@chenyu-dev>
+Content-Language: en-US
+From: K Prateek Nayak <kprateek.nayak@amd.com>
+In-Reply-To: <arQCykkkCnADu5ek@chenyu-dev>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN3PEPF00022BC3:EE_|DS8PR12MB333896:EE_
+X-MS-Office365-Filtering-Correlation-Id: d2076868-e3a8-4b5d-15f8-08df1a0a3683
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|376014|7416014|82310400026|1800799024|36860700016|13003099007|6133799003|10067099003|56012099006|11063799006|4143699003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	6UwxFnG/jo19u4wciIzCGHH2EyOBc2B3uMzHTVqRc1ciX4M86HEE4kZQxA6oUWQX4Ro7LeKFx+DPKCRYWXvIvEBAJQ5ii899EXEyWH37h3S0dT0egl/3uUtTAY2hE0MJFhFa5pwwE0qBWysnIZ/sj4JOz2GupGSwWWF49DDTT3K4enPHT/8UOkJQB2eUvCJuMExBmRatjoM6Tqi4BveOX/g7ce1tmUmW38vkv1Rg2zci2NL3GD0KLtuWjD5bOvgknY3FmhyL0x7Kf+ql5ohUpWB7gXT5+on3zxCaQXg8gkAn+FGbm/CPRA32732y77FH7NZXtCbk6qZWmnRDnbWxC8iKI+FqKIB4E1ps2tyJNxidDAQuMt/E3MsvT0q2j1VRUXAydaSF62h04LEhq+BOOcnER2goE+Xbrxi82q+RPxZhZxzyISzhfe3c0w40ItfbNI6INcp2Simymbggk1vPXfW+KoKBFzUHuWGTajDsXsVpF1rh8gp8d2EWKUrCmeIDElSbZZYHVQtBXBq++9sZsPX02SPG7L2VhVZB9sKs5Vofy6XBmbu6et4Er+xGbYIoSJxTM2Rw5uT9lJrmwH9eq3G5Tegdwle5glOVA0wAm9pqUxgJ0Q1f08FbO9drXNbGx3VdheQwjDORYzXzBaUJ4w==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(82310400026)(1800799024)(36860700016)(13003099007)(6133799003)(10067099003)(56012099006)(11063799006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	+aUHELLA8nP49KSJEUWbdieXqNZkzbBXBVLATmXRbAxNrD0XHZSId1eA+fahloJkDREvnJ89gUEHOkGFw1WmYf8l9BBNF1rR9Ddvyrj+nUYKdjuLzFDX/wg5AkdyUD7SfyJyRSFG3OGODyKGJozgoRX069n2U40TBVBiTRv4fz8TFriunXLGvqPCQBUfK9l3BMK7qxC08d4B+zx5lrjEBnp14ysXJ83kYGLRwOLG5G/+MTtYR5txYa6CJ1yf+jL8DrVfL6p1fsr7qV+iqdX+e4i4j/sEBOh6P7Fk18OVuW6G30kmko9nEZ0o7ClgKSigfbUK5sYgu6NnVBAAteGGvkfK/as1pBic/6sH3fwOkt766pOX7P4R9GLCEO94x2juSq3vtSiHxvQqrmappgSMUFjg4FOa0ff6hjiTnYJe/ErTwA5ERe9uqON+9cHvwnZ+
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Sep 2026 07:05:27.6053
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: d2076868-e3a8-4b5d-15f8-08df1a0a3683
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN3PEPF00022BC3.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS8PR12MB333896
 
-> diff --git a/block/blk-iocost-bpf.c b/block/blk-iocost-bpf.c
-> new file mode 100644
-> index 000000000000..2306c5fd6d8d
-> --- /dev/null
-> +++ b/block/blk-iocost-bpf.c
+On 9/23/2026 10:18 PM, Chen Yu wrote:
+> On Wed, Sep 23, 2026 at 07:51:35PM +0530, Aishwarya Rambhadran wrote:
+>> Hi Peter,
+>>
+>> We have observed some schbench p99 request latency regressions while
+>> comparing v7.2 against v7.3 cycle on an AWS Graviton3 (m7g.metal)
+>> using Fastpath (Linux kernel performance benchmarking tool).
+>>
+>> The schbench suite as a whole does not show a significant regression,
+>> and the results appear to be a mix of improvements and regressions
+>> depending on the thread configuration. However, a few configurations
+>> show fairly large p99 request latency regressions. For example,
+>> comparing v7.2 against v7.3-rc4:
+>>
+>> message-thread:16, worker-thread:16
+>> v7.2 = 662869 us
+>> v7.3-rc4 = 969557 us
+>> change% = -31.63%
+>>
+>> message-thread:64, worker-thread:4
+>> v7.2 = 730453 us
+>> v7.3-rc4 = 942251 us
+>> change% = -22.48%
+>>
+>> message-thread:32, worker-thread:4
+>> v7.2 = 74251 us
+>> v7.3-rc4 = 56725 us
+>> change% = +30.90%
+>>
+>>
+>> So this does not appear to be a general latency degradation; some
+>> configs improve while others regress.
+>>
+>> I also ran a Fastpath automated git bisection for the m 16, t 16 p99
+>> request latency regression between v7.2 and v7.3-rc1, which identified
+>> this commit as the first bad commit. The original regression was ~30.9%,
+>> & the bisection reproducibility check showed ~27.8% regression with 20
+>> repeats across 2 boot sessions.
+>>
+>> This commit looks relevant since it changes EEVDF runqueue organization
+>> and is intended, in part, to address latency issues with hierarchical fair/
+>> cgroup scheduling. I also noticed that there have been fixes on top of this
+>> change, including 68e37487810a ("sched/fair: Fix flat hierarchy"), which
+>> fixes vruntime handling and has a Fixes: 85570f10a4c6 tag.
+>>
+>> Given that the overall schbench result is mostly neutral while some p99
+>> configurations move considerably in both directions, I wanted to check
+>> whether this could be an expected trade-off from the single-runqueue
+>> change, or whether the p99 regressions are worth investigating further.
+>>
+>> I can run additional tests or provide the full results/bisection data if
+>> useful.
+>>
+>>
+> 
+> Would disabling WA_WEIGHT help? I happened to find that this workaround works
+> for me to restore netperf performance (though it is a throughput score rather
+> than a latency one), it seems that task_h_load() becomes much
+> larger(also on sched/task_h_load):
+> echo NO_WA_WEIGHT > /sys/kernel/debug/sched/features
+> https://lore.kernel.org/lkml/aoxah90s0bQ4tcUW@three-body/ 
 
-[ ... ]
+In addition to Chenyu's suggestion, I would also suggest trying out
+different cgroup modes via "/sys/kernel/debug/sched/cgroup_mode" if
+NO_WA_WEIGHT doesn't resolve your issue.
+(P.S. Peter has a branch with some fixes for the task_h_load() at
+https://git.kernel.org/pub/scm/linux/kernel/git/peterz/queue.git/log/?h=sched/task_h_load
+in case you can try a custom kernel build on your setup)
 
-> +static int bpf_iocost_reg(void *kdata, struct bpf_link *link)
-> +{
-> +	struct iocost_model_ops *ops = kdata;
-> +
-> +	if (!ops->dev)
-> +		return -EINVAL;
-> +
-> +	return ioc_bpf_attach(ops);
-> +}
+In my testing, I did see some regression in schbench with the default
+"concur" mode for RPS metric but the "smp" mode which used the older
+formula for weight calculation seemed to be running on par with the
+hierarchical pick.
+https://lore.kernel.org/lkml/65980119-a26a-40d6-bec8-dd597833a6e8@amd.com/
 
-Does this guard against multiple registrations of the same struct_ops?
+-- 
+Thanks and Regards,
+Prateek
 
-bpf_struct_ops_link_create() allows several links from one BPF_F_LINK map.
-bpf_struct_ops_valid_to_reg() only checks the map type, BPF_F_LINK flag,
-and the READY state.  The state stays READY after a link is created, so
-every bpf_link_create() on the map calls ->reg(st_map->kvalue.data, link)
-on the same kdata.
-
-hid_bpf_reg(), which the commit message names as the model, guards this
-case:
-
-    /* prevent multiple attach of the same struct_ops */
-    if (ops->hdev)
-        return -EINVAL;
-
-While the first link is attached, a second link on the same device is
-refused by the ioc->model check in ioc_bpf_attach() with -EBUSY.  That
-check stops working once the device goes away:
-
-1. link1 = bpf_link_create(map). ioc_bpf_attach() opens f1 =
-   bdev_file_open_by_dev(dev) and stores ops->q = q1 and ops->bdev_file =
-   f1.
-2. The disk is removed, for example a null_blk device deleted through
-   configfs. null_del_dev() calls ida_free(&nullb_indexes, nullb->index)
-   and then del_gendisk(). __del_gendisk() -> rq_qos_exit() ->
-   ioc_rqos_exit() clears ioc->model and calls ioc_bpf_detach(), which does
-   WRITE_ONCE(ops->q, NULL) but deliberately leaves ops->bdev_file = f1.
-   The old disk and queue stay alive because f1 pins them. __del_gendisk()
-   also calls bdev_unhash(), so the old bdev can no longer be looked up by
-   dev_t.
-3. A new null_blk device is created. It gets the same index, and so the
-   same dev_t, because null_add_dev() sets disk->first_minor = nullb->index
-   and the index was already freed.
-4. link2 = bpf_link_create(map). bpf_iocost_reg() sees ops->dev != 0.
-   ioc_bpf_attach() opens f2 on the new disk and finds no model on the new
-   ioc. It then runs:
-       rcu_assign_pointer(ioc->model, ops);
-       ops->q = q;
-       ops->bdev_file = bdevf;
-   This overwrites f1, and nothing ever releases f1. The dead gendisk,
-   request_queue, bdev and the driver module reference held through the
-   open file are leaked, so null_blk can no longer be unloaded.
-5. Closing link1 then runs bpf_iocost_unreg() -> ioc_bpf_unreg(). It reads
-   q = new queue and bdevf = f2, detaches the model from the new device and
-   fputs f2. link2 is still alive but its model has been silently removed.
-   When link2 is released, ops->q and ops->bdev_file are both NULL and
-   nothing happens.
-
-The map's dev cannot be changed after the first update, because
-map_update_elem requires state INIT, so dev_t reuse is the trigger.  Every
-step can be reached by a user with CAP_BPF, CAP_PERFMON and the ability to
-add and remove block devices.
-
-> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index 2745bffcd5ee..21e4f8cbd9f2 100644
-> --- a/block/blk-iocost.c
-> +++ b/block/blk-iocost.c
-
-[ ... ]
-
-> +#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-> +/*
-> + * Attach a BPF cost model to the device named by ops->dev: resolve the
-> + * queue, make sure iocost is on it, and publish the model.  Attaching
-> + * switches the device away from the builtin linear model; detaching
-> + * restores it.  The struct_ops core holds the program alive for the
-> + * whole registered period, so no extra reference is taken on the ops.
-> + */
-> +int ioc_bpf_attach(struct iocost_model_ops *ops)
-> +{
-> +	struct block_device *bdev;
-> +	struct request_queue *q;
-> +	struct ioc *ioc;
-> +	const struct iocost_model_ops *old;
-> +	struct file *bdevf;
-> +	int ret;
-> +
-> +	bdevf = bdev_file_open_by_dev(new_decode_dev(ops->dev),
-> +				      BLK_OPEN_READ, NULL, NULL);
-> +	if (IS_ERR(bdevf))
-> +		return PTR_ERR(bdevf);
-> +	bdev = file_bdev(bdevf);
-> +
-> +	if (bdev_is_partition(bdev)) {
-> +		fput(bdevf);
-> +		return -EINVAL;
-> +	}
-> +
-> +	q = bdev->bd_queue;
-> +	if (!queue_is_mq(q)) {
-> +		fput(bdevf);
-> +		return -EOPNOTSUPP;
-> +	}
-> +
-> +	mutex_lock(&q->rq_qos_mutex);
-> +	ioc = q_to_ioc(q);
-> +	if (!ioc) {
-> +		ret = blk_iocost_init(bdev->bd_disk);
-
-Does this check that the disk is still live?
-
-ioc_bpf_attach() takes q->rq_qos_mutex and, if the queue has no ioc, calls
-blk_iocost_init() to add one. It never checks that the disk is still live.
-The only liveness check is the one bdev_file_open_by_dev() does under
-open_mutex at open time, and __del_gendisk() does not wait for existing
-openers.
-
-The blkcg config path handles the same race explicitly in
-blkg_conf_open_bdev():
-
-    mutex_lock(&bdev->bd_queue->rq_qos_mutex);
-    if (!disk_live(bdev->bd_disk)) {
-        blkdev_put_no_open(bdev);
-        mutex_unlock(&bdev->bd_queue->rq_qos_mutex);
-        return -ENODEV;
-    }
-
-Without that check, this interleaving is possible:
-
-1. bpf_iocost_reg() -> ioc_bpf_attach(): bdev_file_open_by_dev() succeeds
-   while the disk is live.
-2. __del_gendisk() on another CPU: bdev_unhash, GD_DEAD, blk_unregister_queue,
-   device_del, blk_mq_freeze_queue_wait, then rq_qos_exit(q). rq_qos_exit()
-   unlinks every rqos under rq_qos_mutex and runs ioc_rqos_exit(), so
-   q->rq_qos no longer has an ioc.
-3. ioc_bpf_attach() then gets rq_qos_mutex. q_to_ioc(q) is NULL, so
-   blk_iocost_init() runs on the dead disk. rq_qos_add() only checks for a
-   duplicate id, so it links a new rqos, and blkcg_activate_policy() succeeds
-   because the blkgs are only destroyed later in disk_release(). The model is
-   then published and blk_stat accounting is turned on.
-
-Nothing tears down an rqos added after rq_qos_exit(). disk_release() only
-calls blkcg_exit_disk(), and blk_free_queue() does not look at q->rq_qos.
-The consequences depend on who owns the queue:
-
-- GD_OWNS_QUEUE: the ioc and its pcpu_stat leak.
-- Queue not owned by the disk, e.g. SCSI sd, where __del_gendisk()
-  unfreezes the queue and it is reused for the next disk on sd rebind: the
-  stale ioc stays on q->rq_qos with ioc->rqos.disk pointing at the freed
-  old gendisk. The following paths then dereference it:
-  - the next rq_qos_exit(), via ioc_rqos_exit() ->
-    blkcg_deactivate_policy(rqos->disk, ...)
-  - ioc_rqos_queue_depth_changed() -> ioc_refresh_params() ->
-    ioc_refresh_params_disk(ioc, force, ioc->rqos.disk)
-  - an io.cost.qos write on the new disk, where q_to_ioc() returns the
-    stale ioc
-
-[ ... ]
-
-> @@ -3531,11 +3778,31 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
->  				user = false;
->  			else if (!strcmp(buf, "user"))
->  				user = true;
-> +#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-> +			else if (!strcmp(buf, "bpf")) {
-> +				/*
-> +				 * readback value while a BPF model is
-> +				 * attached; attaching is done by loading
-> +				 * the struct_ops, not through this file
-> +				 */
-> +				continue;
-> +			}
-> +#endif
->  			else
->  				goto unlock;
-
-Is ctrl=bpf meant to be accepted here?
-
-The COST_CTRL case now accepts "ctrl=bpf" as a silent no-op. Before this
-patch the write failed with -EINVAL. The comment justifies this as a
-"readback value while a BPF model is attached", and the documentation
-(da89d4c2165e) says ctrl=bpf is accepted "so a saved configuration still
-parses". But the read side never produces ctrl=bpf. ioc_cost_model_prfill()
-still prints only
-
-    dname, ioc->user_cost_model ? "user" : "auto",
-    model ? "bpf" : "linear",
-
-so only model= can read back as "bpf". The same docs commit also says
-"ctrl keeps describing the builtin coefficients" and lists ctrl as "auto"
-or "user". So no saved configuration can contain ctrl=bpf, and the stated
-reason for accepting it does not hold.
-
-The branch adds a write-only io.cost.model token with no read-side
-counterpart and no effect. As user ABI it would have to be kept forever.
-It is also accepted when no BPF model is attached, so a mistyped config is
-taken silently where it used to be rejected.
-
-The model=bpf branch in COST_MODEL is consistent with the readback and is
-not affected.
-
-
----
-AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
-See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
-
-CI run summary: https://github.com/kernel-patches/bpf/actions/runs/35962141400
---===============0377911730758240839==--
