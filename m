@@ -1,127 +1,80 @@
-Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-12.mta1.migadu.com [95.215.58.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BED14AA41E;
-	Thu, 24 Sep 2026 18:15:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5307414DF6
+	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 18:19:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790273722; cv=none; b=N76zGZtLsWXQ5lSTf5Bu46+EsctSPLXJ+VLcfzS9fIv/jii1eO0Jyrn6qCTdW+gQ2Wpui7epmOYMxKzj3nyvY44SI7klA//r9rNXrJSRo0Sn12F5Way8sXweKQ/UI35Ny75HncDvF/D5rQJ6fcBEnjmkzMlUmWp1mCyN91Vhkcs=
+	t=1790273965; cv=none; b=i2CxVZtaikP8kPtdlIV32exApDlAKnRy7ag3UAA0gZBq7654hcmtlhfL1MdkeRWy5D+rZjzjKKlIn8QZWjZBhKTU02ddAQDLP0usW9f9SoyQg7XnuzWstUj7QkrdJ0INbNWbEaxjUDZVtaPdarbpHM6QTXWW1xU/gGr+rac7xj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790273722; c=relaxed/simple;
-	bh=wX8CSj2fNMWwCN/CUlUpxrxanIa2BZUzno2ME71/0zE=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=pkAE8VOeBdkdMnvsOZADj8WCHh2jcfvH0UWKGqioTIJ2KZi4neyWgF87uxhBlB6jVeu+iugemUwNUSxXbpaWlycInk4+YI0QeE/ZYR1162GVItQU/cZ/t9ubVmIhkECc7OIgBYle8dCx2Hqi/Cqi5/vY8DI5FBvLPjY/YcEbfPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=OAIh3WtG; arc=none smtp.client-ip=96.67.55.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
+	s=arc-20240116; t=1790273965; c=relaxed/simple;
+	bh=IvUR2431T4OLwHWTHJUJSLYNuzeAJuOHiFRGzJguyA8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nQ6eQg5lDnZRqC+sqkCoXzCmDjtY/ONX+BH4CmqYYn+TsY3YgDMH36z6DCGmj7Pg+J1L5FxaY292ftGFc4BgmvSNqWwo8XX812vHIS3icH5/B4prpY8SmEafcsnDeXE5FYuvvA8CJ+gQHwCbYKRAfXwro8He7sRhwwrdG14jG28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=teN5b8t9; arc=none smtp.client-ip=95.215.58.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="OAIh3WtG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
-	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
-	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID; bh=wX8CSj2fNMWwCN/CUlUpxrxanIa2BZUzno2ME71/0zE=; b=OAIh3W
-	tGD3YH8owDqUp8FviZpRcyXxHQqpTPleog+faXwIQZh19fWn0SW/U5aEYDzlYglaflJbiiF6t1k4m
-	bo+fCQ0U0Q2u0m+jicUUH42aRuCUD15VoZfupmNR9d8u1FdUiLCnRKlFLcun1d6znBHhkFXN2lBhP
-	TiBv7p9NChjggdQrsD/M/jrX1xnYse8KbIMqauuw+rhFMSAcHD5KnyOlz6L3YYHQNaRLX4pj59uHO
-	GRAYtKLvk5mtHCh9uydQQD53zlJ+Vuqv4n7i8XdEEFAfd0maQ1ogkh90OFcOznMeq0pxq5ksBHe7G
-	a4XmqjJKjRthdWfxgUF722GpMqHg==;
-Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
-	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <riel@surriel.com>)
-	id 1x9nvx-00000004TfP-3vhu;
-	Thu, 24 Sep 2026 18:12:37 +0000
-Message-ID: <7571f005bca65aa4ad5e7ec89e62801ad058b689.camel@surriel.com>
-Subject: Re: [PATCH v5 01/11] mm, swap: add virtual swap device
- infrastructure
-From: Rik van Riel <riel@surriel.com>
-To: Chris Li <chrisl@kernel.org>, Nhat Pham <nphamcs@gmail.com>
-Cc: akpm@linux-foundation.org, kasong@tencent.com, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	yosry@kernel.org, david@kernel.org, muchun.song@linux.dev, 
-	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
-	youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org, 
-	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
-	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
-	weixugc@google.com, gourry@gourry.net, haowenchao22@gmail.com,
- corbet@lwn.net, 	hughd@google.com, baolin.wang@linux.alibaba.com,
- tj@kernel.org, mkoutny@suse.com, 	skhan@linuxfoundation.org,
- kunwu.chan@linux.dev, kernel-team@meta.com, 	linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Date: Thu, 24 Sep 2026 14:12:36 -0400
-In-Reply-To: <CACePvbVaDNspMDSw_qAcapKAzXj3JGV-KMYmow7aePa0POHpSg@mail.gmail.com>
-References: <20260918180241.3424851-1-nphamcs@gmail.com>
-	 <20260918180241.3424851-2-nphamcs@gmail.com>
-	 <CACePvbVaDNspMDSw_qAcapKAzXj3JGV-KMYmow7aePa0POHpSg@mail.gmail.com>
-Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
- keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
- eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
- Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
- lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
- dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
- mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
- gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
- r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
- WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
- 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
- Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
- +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
- g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
- KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
- fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
- 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
- G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
- okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
- TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
- cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
- omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
- QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
- c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="teN5b8t9"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=IvUR2431T4OLwHWTHJUJSLYNuzeAJuOHiFRGzJguyA8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790273960; v=1; x=1790878760;
+ b=teN5b8t9bKbTUQ3Lj30hIJgvaD0bf+Ce8XzvZ/BHc0exHNHnNPcepAb1TpvRp+7xdyXe3qqZ
+ SR8+78GPwvWvbAueVDPu+FfMJ2h4uFMZmWrLawh+YYfM7grWVhSX+dXe1hLwQ/6JZGXOcy9RO7L
+ WsMqE7GiDtBV3nubUms/VtFo=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 8885b918f5ba5891;
+	Thu, 24 Sep 2026 18:19:20 +0000
+X-Mizu-Trace-ID: 8885b918f5ba5891
+X-Migadu-Flow: FLOW_OUT
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-5b8c42da963so1339e87.0
+        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 11:19:20 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBxtLo9d077oI/VqCydPiwWY51W8pyUn81vc7piCF+r6P1jaBihe+0NWv+7vNHSkEvrfrvMH4SHH@vger.kernel.org
+X-Gm-Message-State: AFuF++kfiZYA1m2AzdcQSkOzz/ru3zr9Ze3zQd1seNT9XAamwuuJxGUt
+	K2vDSl7ymMbSEmy0ohGwgCWi8UdfcICuuzv02NdtOq3hw41+kDA1b8/zL064lVPbhyHb6fQbylQ
+	BBRotbKxOya7WCb6c/JJDkeDhKZvUN5CCWkGWY3NZ
+X-Received: by 2002:a05:6512:3ca9:b0:5b8:e262:d32e with SMTP id
+ 2adb3069b0e04-5b8e57821dcmr16882e87.1.1790273959309; Thu, 24 Sep 2026
+ 11:19:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20260922071945.693714-1-fuad.tabba@linux.dev> <20260922071945.693714-2-fuad.tabba@linux.dev>
+ <arVQutV75u2gGVr4@google.com>
+In-Reply-To: <arVQutV75u2gGVr4@google.com>
+From: Fuad Tabba <fuad.tabba@linux.dev>
+Date: Thu, 24 Sep 2026 19:18:43 +0100
+X-Gmail-Original-Message-ID: <CA+EHjTz=n2Tnq73amL3cok0=_vn-cigesdd1r-emt=+__Xatog@mail.gmail.com>
+X-Gm-Features: AclHuK8gQuMnh5G0uSWpcfUI1aukInqrdbq0WmB1N5HLh0hWNnycc7FfERA0vUQ
+Message-ID: <CA+EHjTz=n2Tnq73amL3cok0=_vn-cigesdd1r-emt=+__Xatog@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] KVM: selftests: Fix arm64 sysreg header dependencies
+To: Sean Christopherson <seanjc@google.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, Shuah Khan <shuah@kernel.org>, 
+	Oliver Upton <oupton@kernel.org>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	James Houghton <jthoughton@google.com>, Will Deacon <will@kernel.org>, kvm@vger.kernel.org, 
+	kvmarm@lists.linux.dev, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 2026-09-22 at 23:18 -1000, Chris Li wrote:
-> On Fri, Sep 18, 2026 at 1:03=E2=80=AFPM Nhat Pham <nphamcs@gmail.com> wro=
-te:
-> >=20
-> >=20
-> > @@ -482,6 +491,11 @@ void swap_read_folio(struct swap_io_ctx *ctx,
-> > struct folio *folio)
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (zswap_load(folio) !=3D -=
-ENOENT)
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 goto finish;
-> >=20
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (unlikely(swap_is_vswap(sis)))=
- {
->=20
-> There are too many swap_is_vswap() in this series. It fragments the
-> code path, making things harder to reason about. Esepcially around
-> locks. I count 22 in this patch alone.
->=20
-> I consider this the biggest drawback of this series. This
-> fragmentation of the code path.
+Hi Sean,
 
-Could we avoid that by simply always having everything
-go through the vswap abstraction layer?
+On Thu, 24 Sep 2026 17:32:58 +0100, Sean Christopherson
+<seanjc@google.com> wrote:
+[...]
+> Definitely doesn't have to be now, but at some point should we split out some of
+> this arch-specific sub-Makefiles?  It's nice not having to hunt around to figure
+> out which tests are supported by which arch, but the amount of arch specific goo
+> we're accruing is getting unwieldy.
 
-When everything in vswap, we don't need to test for it.
+I think so. I'd keep the test lists where they are and move the
+per-arch build logic (the ifeq ($(ARCH),...) blocks) into arch-specific
+sub-Makefiles. I could send that as a follow-up once this patch lands.
 
-Handling the details of what's behind the vswap would
-be handled one layer down.
-
-Chris, do you think that would be cleaner?
-
-What am I missing?
-
---=20
-All Rights Reversed.
+Cheers,
+/fuad
