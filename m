@@ -1,33 +1,33 @@
-Received: from mta0.migadu.com (out-142.mta0.migadu.com [91.218.175.142])
+Received: from mta0.migadu.com (out-150.mta0.migadu.com [91.218.175.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79417429023
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 18:47:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19C704BB5B7
+	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 18:47:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790275679; cv=none; b=RiKSyd65Q9meGYZx/j5q3Cz/nKUaDiYrGB1umCyTSwKWLejUsnhm3+Otvta6ukDA3PKxCeinIAGjP0HrDupmUMYHLN3MBL48ydm8IrF5BiFoEWEwxoJSaNgdbMSw/1wWRhs5DPjAIiS/AzY0uILwc4G/mJT3kr3ZwqxjbsPbS5Q=
+	t=1790275681; cv=none; b=BTA7p13m31g6VEaL00QPI2lg1YIQrdTnaoz9Awp8Kv/9EDz77lhBAo7ZS/3jyAe/vk+G3v6/gC2Y2dKdBDyOm+qVBAiYTizQZCe3YYTRg6UQzS2z3hhBg2hZ51Oaooi/bUSKYD3d1BIhvuMC5OC+5CiWfzGZ/VB51iHRMyz+ABU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790275679; c=relaxed/simple;
-	bh=PCLpGfGy//n9UKU35pNohFAj9dJU7KEFqV53+5uIk0w=;
+	s=arc-20240116; t=1790275681; c=relaxed/simple;
+	bh=fiIPJORvS4gxPp3xcAjHqBOYrPmfNQt6sseBDUijnxI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pc3CK2cTwZChU47k9YjSMHUOHGS43QNAUzFBRjBy1+4PvXpZaYU+HJ+qXtD0pC5uBCFAP8r4QkzTgjfqsXjjT03PsQV0eem9hbEE5NgR3rho9EqsMeT7CkYGMUFkLSfcmA6UKpI/2w3w3voaFr4varYcKrMSnlNqyhXfyggwEJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mbQdCytu; arc=none smtp.client-ip=91.218.175.142
+	 MIME-Version; b=DwruyrvV1CUTvbjvojatnn3fjZgkhhBa1IiRa/iXgmzoNDSFuxfqslz74U3fkZfbDd+0dlsCxG4GyhPDI5mQunLUyb17jdItSiosa23278oALcqscOWRzLJ2jlKpU0z1syeZfwH93i9ST/nNYGaSZgiP+ZkJvu4zJpAHxmF9ogc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=AY6vKe1X; arc=none smtp.client-ip=91.218.175.150
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mbQdCytu"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="AY6vKe1X"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=PCLpGfGy//n9UKU35pNohFAj9dJU7KEFqV53+5uIk0w=;
+DKIM-Signature: a=rsa-sha256; bh=fiIPJORvS4gxPp3xcAjHqBOYrPmfNQt6sseBDUijnxI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790275661; v=1; x=1790880461;
- b=mbQdCytucYohHkXCoCDfpZaaMDUh3P1wGCpd9SyJEfSVghsL1cc8lWLca6m/zs91j6nDnJD2
- DW/w+/rnaF+CDss0AOXDKlQUwOVTN6nKaHjK2tC22yQ/F5rD1kfC3YOh/uUHYhblDdWslS2e5rj
- vVmSRkMSxkQfLWv7D7vya008=
+ t=1790275667; v=1; x=1790880467;
+ b=AY6vKe1Xmz4DW0XO0ofRpvtZ91wB4dFj7FYmcajb6TMWFYdJgJTq+V1Xc8iG+sbbztvScxMq
+ whPgx0fEIjMBN+n8v4jEVidNiTApBWcfyeEjs6Zkb/H1CVFjL36/09bicfrlC+3IJsgA4wznxld
+ rY0TU/3RIKfdZ/oNn4/6laBM=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id b5bb50beb49d0e34;
-	Thu, 24 Sep 2026 18:47:41 +0000
-X-Mizu-Trace-ID: b5bb50beb49d0e34
+Received: by smtp.migadu.com with ESMTPS id fb43f222c7f5ccb1;
+	Thu, 24 Sep 2026 18:47:47 +0000
+X-Mizu-Trace-ID: fb43f222c7f5ccb1
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Tejun Heo <tj@kernel.org>,
@@ -61,9 +61,9 @@ Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
 	linux-mm@kvack.org,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH 2/7] cgroup: add set_active_cgroup() to charge CPU time to a cgroup
-Date: Thu, 24 Sep 2026 11:47:06 -0700
-Message-ID: <20260924184714.912181-3-shakeel.butt@linux.dev>
+Subject: [RFC PATCH 3/7] psi: charge pressure to the task's active cgroup
+Date: Thu, 24 Sep 2026 11:47:07 -0700
+Message-ID: <20260924184714.912181-4-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260924184714.912181-1-shakeel.butt@linux.dev>
 References: <20260924184714.912181-1-shakeel.butt@linux.dev>
@@ -75,192 +75,101 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A kernel thread that does work for a cgroup, like memcg reclaim from a
-workqueue, has that CPU time charged to its own cgroup, usually root.
+When a kernel thread works for a cgroup under set_active_cgroup(), its
+stalls, like memory reclaim, should count as that cgroup's pressure.
 
-Add task_struct::active_cgroup. When set, the task's CPU time goes to
-that cgroup instead. set_active_cgroup() sets it and returns the old
-value, like set_active_memcg(). It first charges the time used so far to
-the old cgroup, so even short work is charged to the right place.
-
-Code under set_active_cgroup() is kernel code, so charge its time as
-system time right away. Skip the tick and vtime path for it, which could
-charge it late, after the old value is back. Forced idle time from core
-scheduling comes through that path too. It is not run time, so charge it
-to the active cgroup there.
-
-Only allow callers in the root cgroup, like kworkers. The scheduler still
-runs the caller in its own cgroup and takes the time from that cgroup's
-cpu.max, and on nohz_full CPUs vtime can post system time from inside the
-scope to that cgroup after the old value is back. Warn and do nothing for
-other callers.
-
-Warn and clear it if a task exits with it still set.
+Make task_psi_group() use the active cgroup. When it changes, move the
+task's pressure state from the old groups to the new ones, the same way
+cgroup_move_task() does for a real cgroup move.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- include/linux/cgroup.h | 26 +++++++++++++++++++++++++
- include/linux/sched.h  |  2 ++
- kernel/cgroup/cgroup.c |  4 ++++
- kernel/fork.c          |  4 ++++
- kernel/sched/core.c    | 43 ++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 79 insertions(+)
+ kernel/sched/core.c  |  2 +-
+ kernel/sched/psi.c   | 22 +++++++++++++++++++++-
+ kernel/sched/stats.h | 10 ++++++++++
+ 3 files changed, 32 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 7b19ded2578d..761bd0a81c67 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -879,6 +879,8 @@ static inline void cgroup_account_system_time(struct cgroup *cgrp,
- 	}
- }
- 
-+struct cgroup *set_active_cgroup(struct cgroup *cgrp);
-+
- static inline void cgroup_account_cputime(struct task_struct *task,
- 					  u64 delta_exec)
- {
-@@ -886,6 +888,12 @@ static inline void cgroup_account_cputime(struct task_struct *task,
- 
- 	cpuacct_charge(task, delta_exec);
- 
-+	/* Time spent under set_active_cgroup() is all kernel time. */
-+	if (task->active_cgroup) {
-+		cgroup_account_system_time(task->active_cgroup, delta_exec);
-+		return;
-+	}
-+
- 	cgrp = task_dfl_cgroup(task);
- 	if (cgroup_parent(cgrp))
- 		__cgroup_account_cputime(cgrp, delta_exec);
-@@ -899,6 +907,20 @@ static inline void cgroup_account_cputime_field(struct task_struct *task,
- 
- 	cpuacct_account_field(task, index, delta_exec);
- 
-+	/*
-+	 * cgroup_account_cputime() has charged the run time already. Forced
-+	 * idle time from core scheduling is not run time: charge it here.
-+	 */
-+	if (task->active_cgroup) {
-+#ifdef CONFIG_SCHED_CORE
-+		if (index == CPUTIME_FORCEIDLE &&
-+		    cgroup_parent(task->active_cgroup))
-+			__cgroup_account_cputime_field(task->active_cgroup,
-+						       index, delta_exec);
-+#endif
-+		return;
-+	}
-+
- 	cgrp = task_dfl_cgroup(task);
- 	if (cgroup_parent(cgrp))
- 		__cgroup_account_cputime_field(cgrp, index, delta_exec);
-@@ -913,6 +935,10 @@ static inline void cgroup_account_cputime_field(struct task_struct *task,
- 						u64 delta_exec) {}
- static inline void cgroup_account_system_time(struct cgroup *cgrp,
- 					      u64 delta_exec) {}
-+static inline struct cgroup *set_active_cgroup(struct cgroup *cgrp)
-+{
-+	return NULL;
-+}
- 
- #endif	/* CONFIG_CGROUPS */
- 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 5ce350a616e4..002941f60e88 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1356,6 +1356,8 @@ struct task_struct {
- 	struct css_set __rcu		*cgroups;
- 	/* cg_list protected by css_set_lock and tsk->alloc_lock: */
- 	struct list_head		cg_list;
-+	/* If set, CPU time is charged here; see set_active_cgroup(): */
-+	struct cgroup			*active_cgroup;
- #ifdef CONFIG_PREEMPT_RT
- 	struct llist_node		cg_dead_lnode;
- #endif	/* CONFIG_PREEMPT_RT */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 804318ae160e..f51ed71c122f 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -7173,6 +7173,10 @@ void cgroup_task_exit(struct task_struct *tsk)
- 	struct cgroup_subsys *ss;
- 	int i;
- 
-+	/* The task forgot to undo set_active_cgroup(). */
-+	if (WARN_ON_ONCE(tsk->active_cgroup))
-+		set_active_cgroup(NULL);
-+
- 	/* see cgroup_post_fork() for details */
- 	do_each_subsys_mask(ss, i, have_exit_callback) {
- 		ss->exit(tsk);
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 39be51048d77..044a4a5de8ef 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1006,6 +1006,10 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
- 	tsk->active_memcg = NULL;
- #endif
- 
-+#ifdef CONFIG_CGROUPS
-+	tsk->active_cgroup = NULL;
-+#endif
-+
- #ifdef CONFIG_X86_BUS_LOCK_DETECT
- 	tsk->reported_split_lock = 0;
- #endif
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 57dad4fc163e..ccb7ee9f2f26 100644
+index ccb7ee9f2f26..b9e288b76da9 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -5732,6 +5732,49 @@ unsigned long long task_sched_runtime(struct task_struct *p)
- 	return ns;
+@@ -5768,7 +5768,7 @@ struct cgroup *set_active_cgroup(struct cgroup *cgrp)
+ 	rq->donor->sched_class->update_curr(rq);
+ 
+ 	old = p->active_cgroup;
+-	p->active_cgroup = cgrp;
++	psi_set_active_cgroup(p, cgrp);
+ 	task_rq_unlock(rq, p, &rf);
+ 
+ 	return old;
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index 4e152410653d..7e03be26b8d3 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -886,7 +886,7 @@ static inline struct psi_group *task_psi_group(struct task_struct *task)
+ {
+ #ifdef CONFIG_CGROUPS
+ 	if (static_branch_likely(&psi_cgroups_enabled))
+-		return cgroup_psi(task_dfl_cgroup(task));
++		return cgroup_psi(task->active_cgroup ?: task_dfl_cgroup(task));
+ #endif
+ 	return &psi_system;
+ }
+@@ -1213,6 +1213,26 @@ void cgroup_move_task(struct task_struct *task, struct css_set *to)
+ 	task_rq_unlock(rq, task, &rf);
  }
  
-+#ifdef CONFIG_CGROUPS
-+/**
-+ * set_active_cgroup - charge current's CPU time to another cgroup
-+ * @cgrp: the cgroup to charge, or NULL for current's own cgroup
-+ *
-+ * For kernel code that does work for a cgroup. The time it uses is charged
-+ * to @cgrp as kernel time. Returns the old value, which the caller restores
-+ * when done. @cgrp must stay alive until then.
-+ *
-+ * Only for callers in the root cgroup, like kworkers. The scheduler still
-+ * runs the caller in its own cgroup, so from any other cgroup the time would
-+ * also count against that cgroup's cpu.max, and on nohz_full CPUs some of
-+ * it could show up in that cgroup's cpu.stat. It warns and does nothing for
-+ * such a caller.
++/*
++ * Set @task's active cgroup and move its pressure state along with it.
++ * The caller holds the task's rq lock.
 + */
-+struct cgroup *set_active_cgroup(struct cgroup *cgrp)
++void psi_set_active_cgroup(struct task_struct *task, struct cgroup *cgrp)
 +{
-+	struct task_struct *p = current;
-+	struct cgroup *old;
-+	struct rq_flags rf;
-+	struct rq *rq;
++	unsigned int task_flags = task->psi_flags;
 +
-+	WARN_ON_ONCE(!in_task());
-+	WARN_ON_ONCE(cgrp && cgrp->root != &cgrp_dfl_root);
++	lockdep_assert_rq_held(task_rq(task));
 +
-+	scoped_guard(rcu) {
-+		if (cgrp && WARN_ON_ONCE(cgroup_parent(task_dfl_cgroup(p))))
-+			return p->active_cgroup;
++	if (!static_branch_likely(&psi_cgroups_enabled) || !task_flags) {
++		task->active_cgroup = cgrp;
++		return;
 +	}
 +
-+	rq = task_rq_lock(p, &rf);
-+	/* Charge the time used so far to the old cgroup. */
-+	update_rq_clock(rq);
-+	rq->donor->sched_class->update_curr(rq);
++	psi_task_change(task, task_flags, 0);
++	task->active_cgroup = cgrp;
++	psi_task_change(task, 0, task_flags);
++}
 +
-+	old = p->active_cgroup;
-+	p->active_cgroup = cgrp;
-+	task_rq_unlock(rq, p, &rf);
-+
-+	return old;
+ void psi_cgroup_restart(struct psi_group *group)
+ {
+ 	int cpu;
+diff --git a/kernel/sched/stats.h b/kernel/sched/stats.h
+index ebe0a7765f98..60f46b7b598c 100644
+--- a/kernel/sched/stats.h
++++ b/kernel/sched/stats.h
+@@ -103,6 +103,9 @@ __schedstats_from_se(struct sched_entity *se)
+ void psi_task_change(struct task_struct *task, int clear, int set);
+ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+ 		     bool sleep);
++#ifdef CONFIG_CGROUPS
++void psi_set_active_cgroup(struct task_struct *task, struct cgroup *cgrp);
++#endif
+ #ifdef CONFIG_IRQ_TIME_ACCOUNTING
+ void psi_account_irqtime(struct rq *rq, struct task_struct *curr, struct task_struct *prev);
+ #else /* !CONFIG_IRQ_TIME_ACCOUNTING: */
+@@ -227,6 +230,13 @@ static inline void psi_sched_switch(struct task_struct *prev,
+ 				    bool sleep) {}
+ static inline void psi_account_irqtime(struct rq *rq, struct task_struct *curr,
+ 				       struct task_struct *prev) {}
++#ifdef CONFIG_CGROUPS
++static inline void psi_set_active_cgroup(struct task_struct *task,
++					 struct cgroup *cgrp)
++{
++	task->active_cgroup = cgrp;
 +}
 +#endif
-+
- static u64 cpu_resched_latency(struct rq *rq)
- {
- 	int latency_warn_ms = READ_ONCE(sysctl_resched_latency_warn_ms);
+ #endif /* !CONFIG_PSI */
+ 
+ #ifdef CONFIG_SCHED_INFO
 -- 
 2.53.0-Meta
 
