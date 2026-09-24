@@ -1,186 +1,151 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C5F3C37AF
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 16:20:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790266837; cv=pass; b=gU77TpVkMx3B9BFzFB6b4Ol0+eSTw0MhI9z/X7m+QcQoYRrx6xEoQKaRL976TAJDZv2RHfN8WnQjccIljqRWi/QeP1lZfFL/OtTNcs7NqIDfCSU0+eLKmNKuYbB0yVwswa6598cs54hiGazllvyJC5eifFHitty2uut29Jf97xk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790266837; c=relaxed/simple;
-	bh=RSp2l1x3VML/TUH7NBwrx8HvLT3W4YMiteDUtD6oAoM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EacRfWSzYiGQ0LOKyYPlgQBeMAawE6aphWiL1fT0mRjCWapsmvirIM0PkszKkBTtTSV4q8E1CzXniZKHY1ZL6uGFyjJFbczLxk5stoqz6u5TxoA0IeDFNzwz2DMuyZni2IEQFcJa7FPnD+m+ThCJQiLg4veNhS7P1AsGbWbw+Gs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PCpCDWgX; arc=pass smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ABDD4570D8
+	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 16:33:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790267581; cv=none; b=XUKl3lmvUXBgJBrpZ6L80uoTcIeRAZPpfn1Wypb6DAGccOYTP7adjRHAhKWr2+EHuohYq1J5qAgEUtR9apXEU6Xh650mSHDC7PWjFGNnUNPxayWl6ZChpmL2bxZlPZ8/2XlZMHU4+9Arpg+DuFUM6WYlAb7GcA8ACt3jrge7SdA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790267581; c=relaxed/simple;
+	bh=6jk4WNq35FvtRPXwxvwFFQkIMdTLJNaw0ZthxIMDruE=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=LDpOOc7Q5IoNGMUgXYc6kteRoaQOqdyIq8tGEiJJf12H/v8LBKZmA2FcTJum+mpDQELqcSbHMQTDHO0eb0M5y+YP3pc+JwdbjUSoRZ7xriuvaxacCqfjV49vZGeESHsX4qk93yZZb6DXEdQSoABnsMXcC/10acwbE9zBqqr2xmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Liz9XyzJ; arc=none smtp.client-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PCpCDWgX"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-485984ebf5cso741f8f.0
-        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 09:20:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790266834; cv=none;
-        d=google.com; s=arc-20260327;
-        b=PBYxqBiqQ47ZGYrH5FSrTiYZFbKhU8GFgDoATHocjmpp0+m+K/Ng3wSnPvUwtJ+RT2
-         ecIVTe6CmPteqfPn7w58oSQAS6AR+t9xlGuiyvTVWKYfGzdquIxMQahRC1LM0D+NrETC
-         yuRL+gDFGCOAjGkmbF7ESynnNMv+jqepMZaJAaYHh/RP2tsYb+PaILcdqOL2dIAFmcxq
-         Kq2RsMavaVTU0h5bJo0T1trvq84e9ZHgGqOL7Gyn2JdSg6gsf4NAb4YE6RWDT4MMjmr1
-         7UHKbA4/fT6I6nEt0FWRlBQGhkg9Di5k3YLHzLdBjQXpPAM+8/d6WnSYyYB9nLIr/IB7
-         WdAg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Y4C/eEY5hpNw6IZ6GmmYyn13brOMotH1yARGM3FuI/E=;
-        fh=R3NBfq9ERlgpqUURAR8R+pxRVc4/q8IOVpHNHnuEzaQ=;
-        b=Qz86dL78IaeC4d/0kE+8DHvdaKMOGbSCeco/500Q31ZwmAx+UO5SAvRn7KRFDeA/o8
-         +odCTW7fRdDxtrPunjBC9Sq07nTs6ut0A+CCMim2Q7maJYaGoNeJbsLD3kW/HX+DKHJK
-         Y/pt4iBKUYt+sHgmdTk0KjwVLt9NGCmynCzxLgb8PNruFY6cNN4/SsO3NqD7TAQbIxk3
-         zuKERDvltwA43PwtVgQGEjLcuSLfY62G6EHUDhEg8QSEVJW0iTiKBiRdWWngzCdwR3k+
-         YGTAhSArw4pcyYA292jOuWaER0LcfL/MHXtICzcuOtH7sO6PqW2KTeYDzzbDe6U15Xag
-         0fZg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Liz9XyzJ"
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc7361c62b9so1646368a12.3
+        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 09:33:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790266834; x=1790871634; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Y4C/eEY5hpNw6IZ6GmmYyn13brOMotH1yARGM3FuI/E=;
-        b=PCpCDWgXouIzhtlsM1Cz/m22yXk3HLuDl/7iiEUVUQXb8dalyr/v+itsCLjAM3YU8m
-         eAMbllXGH9dncQnIF4y35V3EnJCmKQMF+QGLHyoo0Ck102zKYF8l+O0RoUXq4VHWKKbw
-         feTuDO9Fm1PmhpuosM75c04GnAmPGH5oybiaHrPFARtpdYKKeQMtf/Y/aV29/vw15BTJ
-         mkNc01PHDd7BU1nNWb9H0b/1SAFbJspaTY1+K/roQqc5iJmL/9W3ByrRj6OtXjWxhOhT
-         cE+KkUwWavN6PvWKvIseyDn/w0JfNWH2F5OzfnqP6zIclBexkEMQOicMq7P8nbnorDM6
-         yrJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790266834; x=1790871634;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1790267580; x=1790872380; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Y4C/eEY5hpNw6IZ6GmmYyn13brOMotH1yARGM3FuI/E=;
-        b=i/XHVPK40g35ssxx1Je03JrLVXyEC1CtB8y5MkVU6u2MdwhdktxD4ftJ/j630pU5wJ
-         /RXRklXntdMbQ+Q4Pl2JxnXePJsW8ePW802X84f/iTx2XDDah6eAoVNYtOPV5xus+49z
-         nwCTSYQYH/nE4sqZU3YFSlv3Qbapq24P41dB6RS19wYEIiFbLt1a45Ur1FepRWBlmvsF
-         0fI1Khzbk7NyLg97gvNj7mi2tkxRoCNgarawikLskaqkByqf5nNOIBtlagMa7umfjMgb
-         Wp48O1s6tlZ3LDsTCrGSgkELUBoNKYfOny8YF08yNyKWl/QpPEJCCxJHnVDI8PsLSWVL
-         fsog==
-X-Forwarded-Encrypted: i=1; AKwUvBxql8xI7tvs5v6iKAWvHVD1wUee0DhiGbaosZ8JfAeVKMm0etFs+x853PdqVsCGAXBIZQN0ykCJ@vger.kernel.org
-X-Gm-Message-State: AFuF++kbv0VhILiuU6xFqitQBDNgcShOyF8TsI5ur01nmqvLx7RSNZ/G
-	pBH37fGXs2ru1hRig11/sLG+SFEX768CrHXiRQC8fiba6wuDik6d2IxDVPxMlynn8So+5rtMw9D
-	N6wCsDQCeLWre2g5C02gEZYAhEUXPq5Q=
-X-Gm-Gg: AYBFou3NOU9fcKZ3EpEqsBgAnskA4jpDNDycdqo2fxT0DFpC+6mR/rY2LJZ0+tJ3vnw
-	FayXcQEHWPutVCLoUjwSGpEnV/NLrcuFCzhY5Hk53rC10lqTgrU/U7TR81gyISgmEvwx9NvgZQJ
-	Y+ehNFT7bKe76hco+mJJEDhPa2jLtZ7J9KSUWjXvLCdj488BMYOhiuV2cqu7EiUCV6TeyrFeisn
-	cl7kzx0qiuymVsb6L5pWDsEG1lxA/fJX7btTF5jD4TjI0qCQwBQ6UQLzlD/Xg4ltiNSOjnOh42+
-	DIEJq5+Tnxn/V535bAi/2W+pyvvUZcssTZ8SOTDaWs9ZFLR7OdWZbHD5bcPhfhXq09wihxErg6K
-	1Hk5DU8k8fA==
-X-Received: by 2002:a05:6000:26cd:b0:486:fe8d:298e with SMTP id
- ffacd0b85a97d-48872ad7729mr4973566f8f.53.1790266833368; Thu, 24 Sep 2026
- 09:20:33 -0700 (PDT)
+        bh=4FrL8f+6ILVgPFeXZ79NGmNXRfQTnNh/rpX573POM54=;
+        b=Liz9XyzJXHDZLtyzO+Ji1OVq/7HSs0ajW1gz5T6luK7zemEnHnhchgrDr6ZzxcSePt
+         4qmTTUFQuQmy4/tX/7B3kCzQucc85DWhXjlj3XAJ5A+mMoOJZgrF0c2xl6N99gtwIMtZ
+         6w7xdUdJvrCY0eBzNbGoGknJLOw1w0yuMIPrW7zhcxGX31zja3ofXdwzzX1kwKC8NsYg
+         ELqfBmHK+uL2xCFxgrnPL1e6rto9WptOqJ4jSLSwhus5kus4NqtjrUt9uZ8/Dd451Lk4
+         LzKIf+XxmieZ5GkffQrZ9hxBAD754W2rnWMqN7LZzkffZHvYa/9DrX9jGqWqe74RogEA
+         L1SQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790267580; x=1790872380;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4FrL8f+6ILVgPFeXZ79NGmNXRfQTnNh/rpX573POM54=;
+        b=HQLaBGbWtUR08c8KKCh8Rh05u9+ni14g5HlrGoJYLK0VZMOK3AFIJn3CXEkq8XoTxw
+         00NIA5+2nk3A/mGdoCQnd4QZIkJERRIV6UbGZfb+BbW52aWi74Fe4F/4THUp/1XYJ4Zp
+         ZkERKOXuJPyis+YeisBTRYFnBwz2CS97lZouI1NLfp4JCyU6n2VO/JmsKj0CvLkFYcu7
+         Iq9BRGESVT+QxMKjrXp3mQafF/f1ZVuVEYEa1q1vouwjoAt6/bfS72trUUtC+ZXVuX4X
+         GDvSKhBk/GmGq4OsH5FPl1J1+ptPnH/jbbDWYOooI7Ml8cs8fJyOYaosvoq2gXrS+Zec
+         Y4qA==
+X-Forwarded-Encrypted: i=1; AKwUvBzFt4F+qamlxRXsJ0S9BSx8Ham5rejEgqnfbaU0uRh4u9dzI2ssx3JhRWUrD66WL40CHOdB6+Ue@vger.kernel.org
+X-Gm-Message-State: AFuF++nFrzmsLFTq8XAhCD3wtCI8PqiioFknp5AzdnT6Nw4bQtuMdleH
+	xn/SVtk2afcyUOkviraIyeYhRSGifI+/97Y5BHjIdUJgh8DAeoNdEy1jDXL9R7MBDaF9chqKfdu
+	Lo/N58g==
+X-Received: from pgdu19.prod.google.com ([2002:a05:6a02:2f53:b0:cc7:5e81:4448])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:2250:b0:39e:4c7f:8b1b
+ with SMTP id 98e67ed59e1d1-3a098e37392mr2572091a91.32.1790267579477; Thu, 24
+ Sep 2026 09:32:59 -0700 (PDT)
+Date: Thu, 24 Sep 2026 09:32:58 -0700
+In-Reply-To: <20260922071945.693714-2-fuad.tabba@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260918180241.3424851-1-nphamcs@gmail.com> <20260918180241.3424851-2-nphamcs@gmail.com>
- <CACePvbVaDNspMDSw_qAcapKAzXj3JGV-KMYmow7aePa0POHpSg@mail.gmail.com>
-In-Reply-To: <CACePvbVaDNspMDSw_qAcapKAzXj3JGV-KMYmow7aePa0POHpSg@mail.gmail.com>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Thu, 24 Sep 2026 09:20:22 -0700
-X-Gm-Features: AclHuK-lGJJsKLxr6Qb-y2IvmlUpoUB7yhNg4AVw4NM-rENBoqlMKdnr9zU6afg
-Message-ID: <CAKEwX=OP3Gb9sVOvch+p4j7quzgy-rUY=UTZau5ztMj7heJJoA@mail.gmail.com>
-Subject: Re: [PATCH v5 01/11] mm, swap: add virtual swap device infrastructure
-To: Chris Li <chrisl@kernel.org>
-Cc: akpm@linux-foundation.org, kasong@tencent.com, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	yosry@kernel.org, david@kernel.org, muchun.song@linux.dev, 
-	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
-	youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org, 
-	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
-	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
-	weixugc@google.com, riel@surriel.com, gourry@gourry.net, 
-	haowenchao22@gmail.com, corbet@lwn.net, hughd@google.com, 
-	baolin.wang@linux.alibaba.com, tj@kernel.org, mkoutny@suse.com, 
-	skhan@linuxfoundation.org, kunwu.chan@linux.dev, kernel-team@meta.com, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+References: <20260922071945.693714-1-fuad.tabba@linux.dev> <20260922071945.693714-2-fuad.tabba@linux.dev>
+Message-ID: <arVQutV75u2gGVr4@google.com>
+Subject: Re: [PATCH v2 1/2] KVM: selftests: Fix arm64 sysreg header dependencies
+From: Sean Christopherson <seanjc@google.com>
+To: Fuad Tabba <fuad.tabba@linux.dev>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, Shuah Khan <shuah@kernel.org>, 
+	Oliver Upton <oupton@kernel.org>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	"Michal =?utf-8?Q?Koutn=C3=BD?=" <mkoutny@suse.com>, James Houghton <jthoughton@google.com>, Will Deacon <will@kernel.org>, 
+	Fuad Tabba <tabba@google.com>, kvm@vger.kernel.org, kvmarm@lists.linux.dev, 
+	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 
-On Wed, Sep 23, 2026 at 2:18=E2=80=AFAM Chris Li <chrisl@kernel.org> wrote:
->
->
-> There are too many swap_is_vswap() in this series. It fragments the
-> code path, making things harder to reason about. Esepcially around
-> locks. I count 22 in this patch alone.
->
-> I consider this the biggest drawback of this series. This
-> fragmentation of the code path.
+On Tue, Sep 22, 2026, Fuad Tabba wrote:
+> The rule generating the arm64 sysreg header targets the generated
+> directory, and its only prerequisite is tools/arch/arm64/tools/*,
+> which expands to the inner Makefile. An existing directory looks up
+> to date, so an incremental build never regenerates sysreg-defs.h for
+> a change to the sysreg table. A selftest referencing a register added
+> to the table since then fails with undeclared SYS_* identifiers. Clean
+> builds are unaffected.
+> 
+> Always recurse into tools/arch/arm64/tools, whose Makefile already
+> tracks the generator's inputs, and target the header rather than its
+> directory. The recursion leaves the header untouched when nothing
+> changed, so the dependents rebuild only when the header does.
+> 
+> Fixes: 70c7b704ca725 ("KVM: selftests: Avoid using forced target for generating arm64 headers")
+> Link: https://lore.kernel.org/r/arGRhHgP_izSwW4T@kernel.org
+> Assisted-by: LLM
+> Signed-off-by: Fuad Tabba <fuad.tabba@linux.dev>
+> ---
+>  tools/testing/selftests/kvm/Makefile.kvm | 16 +++++++++++-----
+>  1 file changed, 11 insertions(+), 5 deletions(-)
+> 
+> diff --git a/tools/testing/selftests/kvm/Makefile.kvm b/tools/testing/selftests/kvm/Makefile.kvm
+> index 96bab7002d39e..81dca3dbc16b4 100644
+> --- a/tools/testing/selftests/kvm/Makefile.kvm
+> +++ b/tools/testing/selftests/kvm/Makefile.kvm
+> @@ -303,10 +303,16 @@ arm64_hdr_outdir := $(tools_dir)/
+>  endif
+>  
+>  GEN_HDRS := $(arm64_hdr_outdir)arch/arm64/include/generated/
+> +GEN_SYSREG_DEFS := $(GEN_HDRS)asm/sysreg-defs.h
+>  CFLAGS += -I$(GEN_HDRS)
+>  
+> -$(GEN_HDRS): $(wildcard $(arm64_tools_dir)/*)
+> +# The inner Makefile tracks the generator's inputs and leaves the header
+> +# untouched when nothing changed, so dependents rebuild only when it does.
+> +$(GEN_SYSREG_DEFS): FORCE
+>  	$(MAKE) -C $(arm64_tools_dir) OUTPUT=$(arm64_hdr_outdir)
+> +
+> +FORCE:
+> +.PHONY: FORCE
+>  endif
 
-This will mirror my response at [1], but I'm responding here for the
-record and for your convenience.
+Definitely doesn't have to be now, but at some point should we split out some of
+this arch-specific sub-Makefiles?  It's nice not having to hunt around to figure
+out which tests are supported by which arch, but the amount of arch specific goo
+we're accruing is getting unwieldy.
 
-It is needed because vswap *is* a special device, with its own
-requirements. If you don't special case-it, you'd get undesirable
-behaviors.
-
-Let's take Baoquan's patch series as an example.  It treats the xswap
-device as just another swap device, without any special consideration
-for it. Which creates several problem:
-
-1. At allocation time, cgroups that disable zswap might get an xswap
-slot, because you don't do any check that the device you allocating
-the swap slots for is xswap. At swap_writeout() time, it is *stuck* -
-we already do the unmapping step, so we cannot reclaim the page.
-
-Ironically a physical swapfile backend could have bailed us out here,
-but it's not in that patch series yet :)
-
-Vswap both has swapfile backend, AND allows you to bypass it if the
-cgroup disables zswap. Both involves a bit of swap_is_vswap() check,
-but I think it's worth it :)
-
-2. Per-CPU allocation caching: since all devices share the same cache,
-xswap will invalidate the caching of other devices, and vice versa. It
-would be fine if the these devices are interchangeable, but as noted
-above, it's not, especially without physical swapfile as the backend
-option. So you're forced to taken the slow path more often.
-
-Vswap gets around this by adding its own per-cpu allocation caching,
-
-So by being too lazy and not carefully distinguish the swap devices,
-not only does xswap not work for the writeback use case, it cannot
-even work in deployments where some workloads (cgroup) select zswap,
-whereas others select disk swap. It can only work if you intend to
-have a single class of device - either virtual/xswap or disk swap -
-but not both.
-
-Maybe instead of just grepping for swap_is_vswap() and throw your hand
-at the complexity, read the code and try to understand why it's
-necessary first, then propose simplifications if you have good ideas
-in minds.
-
->
-> This is questionable. A vswap device does not go through swap on.
->
-> This changes the behavior where swap devices always go through swap on/of=
-f.
->
-> I wish the swap device went through swap on to be able to start swapping.
->
-> Chris
-
-What usecase would necessitate the need for swapon/swapoff interface?
-Other than just trying to shoehorn it to an existing interface?
-
-I've expressed why I dislike the interface in [1]. Other than the
-sizing aspect, which we are already discussing in another thread,
-priority also makes zero sense. You are literally exposing an
-interface with only one correct answer - what's the point?
-
-Justify your interface choice with real userspace use case, not just by
-conforming to the status quo.
-
-[1]: https://lore.kernel.org/all/CAKEwX=3DPEEkYiNRaVhCuM4E6mxB9huPKfkDa4m62=
-VMTzedg1oYw@mail.gmail.com/
+>  no-pie-option := $(call try-run, echo 'int main(void) { return 0; }' | \
+> @@ -359,10 +365,10 @@ EXTRA_CLEAN += $(GEN_HDRS) \
+>  	       $(TEST_GEN_OBJ) \
+>  	       cscope.*
+>  
+> -$(LIBKVM_C_OBJ): $(OUTPUT)/%.o: %.c $(GEN_HDRS)
+> +$(LIBKVM_C_OBJ): $(OUTPUT)/%.o: %.c $(GEN_SYSREG_DEFS)
+>  	$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@
+>  
+> -$(LIBKVM_S_OBJ): $(OUTPUT)/%.o: %.S $(GEN_HDRS)
+> +$(LIBKVM_S_OBJ): $(OUTPUT)/%.o: %.S $(GEN_SYSREG_DEFS)
+>  	$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@
+>  
+>  # Compile the string overrides as freestanding to prevent the compiler from
+> @@ -372,10 +378,10 @@ $(LIBKVM_STRING_OBJ): $(OUTPUT)/%.o: %.c
+>  	$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c -ffreestanding $< -o $@
+>  
+>  $(shell mkdir -p $(sort $(dir $(TEST_GEN_PROGS))))
+> -$(SPLIT_TEST_GEN_OBJ): $(GEN_HDRS)
+> +$(SPLIT_TEST_GEN_OBJ): $(GEN_SYSREG_DEFS)
+>  $(TEST_GEN_PROGS): $(LIBKVM_OBJS)
+>  $(TEST_GEN_PROGS_EXTENDED): $(LIBKVM_OBJS)
+> -$(TEST_GEN_OBJ): $(GEN_HDRS)
+> +$(TEST_GEN_OBJ): $(GEN_SYSREG_DEFS)
+>  
+>  cscope: include_paths = $(LINUX_TOOL_INCLUDE) $(LINUX_HDR_PATH) include lib ..
+>  cscope:
+> -- 
+> 2.39.5
+> 
