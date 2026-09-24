@@ -1,186 +1,187 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from oss.cyber.gouv.fr (oss.cyber.gouv.fr [51.159.188.251])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B1C935C1B2
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 11:03:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E5F83ACF0F;
+	Thu, 24 Sep 2026 11:12:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.159.188.251
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790247790; cv=none; b=s2YZZoUsHk82Lm0MhYkd+MurJL2zL+aeQBF+wPZONWi8IODVhuwhAvPcvMMTEUL+wGtLQS1hdu5F6HQxC+9UOTKXM2AdkA2aDDNOsc1NilFRy2QXbW89ic7j22a5ZfyRRk5vElyxSqV7TPXtW3rusLKIIFE0bfYEjXJOBJBR23A=
+	t=1790248335; cv=none; b=PvgBIM4KOJQV3z4GCewVQgOrszywyEsfAQdRHngiPl5G3yPzZiKihI8E7lt8ndc09kb7IkHTA6B+5N5CzcHdnQodkTRqbUrBhmuSWE4uJYOoVDDryy4miWtv21e1/kE0SeMeOveoXOnOC+zGowUyZC89ej5OblXlqLHgHqXIXjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790247790; c=relaxed/simple;
-	bh=QHzsWZeESkFprgTXj2DHa5TPoY9T+JiNfra5izuial8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IQKVqegYgiJX3bLy64iuOAAlovRq8SzE2G34TdLwg2R/JMLbs7shFxmnKUb8DuwrFJCpWHJxo+qeZzJyuyGMyx85ciqQPAu7Uzq1NcrXSSEDOmns0YuvrUaJoA+0HEuZEVcYHsTT0C6hqLFH4321CHkxUhoJbOnS0I5AmY3voJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iaruF16c; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790248335; c=relaxed/simple;
+	bh=R98odZAY++6LdgzPJiYgkeT2qsirtAoW5ulT9+MxFs8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pqzOQbCWzTMbC92OKbvTGA19XMOGaTp6SXdlx35ES7O5C0Xn8J4iJy8DWe0Qml2iwVO3sPBoXJ1qioaYxPCZ18aqQpWbSaJiGQZCFBBlgOriFF81HktK7r278KrjOiglRV2qUGzeYUWohjxD7hQRfMUrZAFOPYVZIUHfrs0b+Fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.cyber.gouv.fr; spf=pass smtp.mailfrom=oss.cyber.gouv.fr; dkim=pass (2048-bit key) header.d=oss.cyber.gouv.fr header.i=@oss.cyber.gouv.fr header.b=LCULTzdf; arc=none smtp.client-ip=51.159.188.251
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.cyber.gouv.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.cyber.gouv.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iaruF16c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31E381F00899
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 11:03:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790247788;
-	bh=qb5cHE2dgUrO0e26v2XgbM47NF6xvjd6olYZGEGtg3M=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=iaruF16c2G/cqjPSVprB5bCJNcjbvA/mX1AvmBrCN8B07E6qtOfbqcjiRFAG9sTAQ
-	 3V5fGKtIn4/uIpfE0ORNmjAKzsBpDoDXAgqdeHtToWTNEDOrCkpwjfCoBhDY9/LTyS
-	 MPDF33u00byP9ILEiJ6ebFfyGIagy5wEbc4Fn7tkYCo1nSGnxA95nHQbEkydNB3hsa
-	 ktFNOrWV0+Gdf/dfOeLJJ7f6HTDrTuuro6R/r+xy69a+YMWDEu6QxpCH0ENUiemFrF
-	 4DYyr6YdFUJK7WFIuhILlgD5C/vSP1ij7M4hWS3BVBQx+Y129btYPHTr9Uw18yntWV
-	 nz6IP5RigS+XQ==
-Received: by mail-yx2-f12.google.com with SMTP id 956f58d0204a3-66e4aa8d882so1979897d50.0
-        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 04:03:08 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBw1gssMI8NJt3hroHMaGdVMeyZLINB3HLs0+b5zod15iYJa1YlgUJtLVUa6Pua0Om4I4fihiXxR@vger.kernel.org
-X-Gm-Message-State: AFuF++kJRtxIer90C+18Qk0r8X+/fBvob/0cwRo1HT8pM8le0XFHodn6
-	YlWqIFSAT5rXy9JsB3cKNXihn+tPmhTf7wmySNrvYYPw30szHejo+SMtJ3VTeIPCLDxfFHpO24e
-	VBWAHhRix0PdiPQSlb0+sTMeEN5/mVPOLpfMco02FBg==
-X-Received: by 2002:a05:690e:43c3:b0:671:1256:56f3 with SMTP id
- 956f58d0204a3-672ed2624cdmr748540d50.21.1790247787078; Thu, 24 Sep 2026
- 04:03:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oss.cyber.gouv.fr header.i=@oss.cyber.gouv.fr header.b="LCULTzdf"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=oss.cyber.gouv.fr; s=default; h=Content-Transfer-Encoding:Content-Type:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Reply-To:Sender:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:In-Reply-To:References;
+	bh=syNMsSRIXMzNTK8CHqG6k+F/HIohW8kB3DavqYIhYUI=; b=LCULTzdf8263borXvSDQI5jy3W
+	rw74Sgai27+9eCCyh3Fh/MtSuDYm1mDtL1Hv8N0ziN2UFySWCo92acZcIJR+fCsyGsWRo57TQ9dlS
+	ceqEQ5IzydrTme3QPgWkxv8NHYQu3qWe4zUOatc0R3B09ZNkynplM4tMr3CkNIih5KaYcP3oyNKtX
+	csBf5i+yyfyTi1IZPwGpnQyzjL/omgKzKYsbvI5GW2IeZgaYstsejGzkVKWF9HxxISyADdFJEGkWJ
+	+38vM50tpb5seSecjGHOpEWGNDjtYCloCrtvR3DddPkp+Ayd2CndOmV/RXj0L3s5MB1MdQaki5E6i
+	DCjj4uKg==;
+Received: from [151.115.150.205] (port=58226 helo=gepetto..)
+	by pf-012.whm.fr-par.scw.cloud with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.100.1)
+	(envelope-from <Jeremy.Jean@oss.cyber.gouv.fr>)
+	id 1x9hN5-000000047uG-0ty9;
+	Thu, 24 Sep 2026 13:12:11 +0200
+From: =?UTF-8?q?J=C3=A9r=C3=A9my=20Jean?= <Jeremy.Jean@oss.cyber.gouv.fr>
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD=20?= <mkoutny@suse.com>
+Cc: brads@mainlining.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	=?UTF-8?q?J=C3=A9r=C3=A9my=20Jean?= <Jeremy.Jean@oss.cyber.gouv.fr>
+Subject: [PATCH v2] cgroup: prevent css_set UAF after namespace publication
+Date: Thu, 24 Sep 2026 11:10:37 +0000
+Message-ID: <20260924111036.3330268-2-Jeremy.Jean@oss.cyber.gouv.fr>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <aqJXx2vtbKaRLt3x@fedora> <aqLi6cIjD2wJwk0B@cmpxchg.org> <CACePvbUG1ApMzMdEzf-63rpjgGVNsRk21pT72OQGJpM=OtRUew@mail.gmail.com>
- <aq6cVXPLUUwJA7-2@gourry-fedora-PF4VCD3F> <CACePvbVaPDnva8X-Xmz84r7j5HjTuih-w5phpw7cerK2uPnK6w@mail.gmail.com>
- <CAMgjq7CJBHkoZmg9oKNgGA8czL0djyBTCAkPz8ETm-tX=Qci4g@mail.gmail.com>
- <arEotFqE7ZZoxMHd@gourry-fedora-PF4VCD3F> <CACePvbXb1WLz=OAAzVawf3oc3+dE3Z7qfPdagQ2dYuf3OALc2g@mail.gmail.com>
- <arFe215hUcjLhvmS@gourry-fedora-PF4VCD3F> <arOeYHEf9aO7AU5X@MiWiFi-R3L-srv>
-In-Reply-To: <arOeYHEf9aO7AU5X@MiWiFi-R3L-srv>
-From: Chris Li <chrisl@kernel.org>
-Date: Thu, 24 Sep 2026 01:02:54 -1000
-X-Gmail-Original-Message-ID: <CACePvbXHan6Sfmdq6JFrcaMMy6SGvzPs-pautLtg-9D6=W09qg@mail.gmail.com>
-X-Gm-Features: AclHuK8VFQcjyBqPb4h6LbJpz-yiYCZ7Fqjey1egs43oMEG0gsapG1F4wdinNfg
-Message-ID: <CACePvbXHan6Sfmdq6JFrcaMMy6SGvzPs-pautLtg-9D6=W09qg@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Baoquan He <baoquan.he@linux.dev>
-Cc: Gregory Price <gourry@gourry.net>, Kairui Song <ryncsn@gmail.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Nhat Pham <nphamcs@gmail.com>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
-	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - pf-012.whm.fr-par.scw.cloud
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - oss.cyber.gouv.fr
+X-Get-Message-Sender-Via: pf-012.whm.fr-par.scw.cloud: authenticated_id: jeremy.jean@oss.cyber.gouv.fr
+X-Authenticated-Sender: pf-012.whm.fr-par.scw.cloud: jeremy.jean@oss.cyber.gouv.fr
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 
-On Tue, Sep 22, 2026 at 11:39=E2=80=AFPM Baoquan He <baoquan.he@linux.dev> =
-wrote:
->
-> On 09/21/26 at 01:02pm, Gregory Price wrote:
-> > On Mon, Sep 21, 2026 at 06:32:56AM -1000, Chris Li wrote:
-> > > On Mon, Sep 21, 2026 at 3:27=E2=80=AFAM Gregory Price <gourry@gourry.=
-net> wrote:
-> > > >
-> > > > This would preserve the existing memory.swap semantics while allowi=
-ng
-> > > > both backing resources to be constrained independently.
-> > >
-> > > It sounds like you want memory.tiers have limit enforced.
-> > >
-> > > I suppose it is possible. Again I want to see how people would
-> > > actually use this feature.
-> > >
-> >
-> > Possible, but arguably not needed. the swap and zswap counters already
-> > work for this existing interaction.
-> >
-> > As I pointed to in my response to Rik, in every reasonable use of
-> > pswap+zswap the global swap counter is pointless.
-> >
-> > So then pswap=3Dswap and we're left with zswap and swap.
-> >
-> > And I'm not convinced your reading of the swap counter as a limit on th=
-e
-> > *logical* memory allowed to be swapped out is actually accurate.
-> >
-> >   memory.swap.current
-> >         The total amount of swap currently being used by the cgroup
-> >         and its descendants.
-> >
-> >   memory.swap.max
-> >         Swap usage hard limit.  If a cgroup's swap usage reaches this
-> >         limit, anonymous memory of the cgroup will not be swapped out.
-> >
-> > There is no documentation I can find that has ever documented these
-> > counters as "the amount of memory requiring a fault".  If you put a
-> > compression system in front of physical swap - the counters as-describe=
-d
-> > would still be accurate, while your reading would be broken.
-> >
-> > "swap" here is highly implied to mean "storage" as opposed to memory,
-> > which is why "zswap" defines its limits in terms of memory.
-> >
-> >   memory.zswap.current
-> >         The total amount of memory consumed by the zswap compression
-> >         backend.
-> >
-> >   memory.zswap.max
-> >         Zswap usage hard limit. If a cgroup's zswap pool reaches this
-> >         limit, it will refuse to take any more stores before existing
-> >         entries fault back in or are written out to disk.
-> >
-> > If you're presently using swap.max to mean the "logical amount of memor=
-y
-> > allowed to be swapped" - then your usage does not meet the definition o=
-f
-> > the knob.  You need to justify that your use case cannot be expressed
-> > via memory.min/low controls:
-> >
-> >   memory.min
-> >         Hard memory protection.  If the memory usage of a cgroup
-> >         is within its effective min boundary, the cgroup's memory
-> >         won't be reclaimed under any conditions. If there is no
-> >         unprotected reclaimable memory available, OOM killer
-> >         is invoked. Above the effective min boundary (or
-> >         effective low boundary if it is higher), pages are reclaimed
-> >         proportionally to the overage, reducing reclaim pressure for
-> >         smaller overages.
-> >
-> > That's an SLO interface.  memory.swap is a provisioning interface.
-> >
-> > As it stands, I'm left viewing zswap's counter inclusion in swap as mor=
-e
-> > of a bug than a feature - they account for different things (memory vs
-> > storage usage).
->
-> It's hard to say. When 37e84351198b ("mm: memcontrol: charge swap to
-> cgroup2") introduced memory.swap.*, it was clearly defined as charging
-> "the actual number of swap entries used by a cgroup". Please see the
-> commit log. With that, zswap still reserved a swap slot even when the
-> data never reached disk. And not to mention zram, it's backend is RAM,
-> but not physical disk.
+copy_cgroup_ns() sets the root of a new cgroup namespace to the parent's
+css_set. When the child is created in a different cgroup,
+cgroup_post_fork() replaces that root with the child's css_set after the
+namespace is visible.
 
-Right, that definition matches what I have in mind. The actual number
-of swap entries regardless of the backing type.
+Publishing the namespace before root_cset is final lets readers race with
+cgroup_post_fork(). A reader can load the old root just before it is
+replaced and its reference is dropped, then continue using the freed
+css_set. KASAN reports:
 
-Changing the meaning of that breaks existing users.
+  BUG: KASAN: slab-use-after-free in kernfs_get.part.0+0x47/0x60
+  Write of size 4 at addr ff1100000379f320 by task ns-path-probe/69
+   kernfs_walk_and_get_ns+0x1cc/0x280
+   cgroup_get_from_path+0xfb/0x340
+   nft_socket_cgroup_subtree_level+0x14/0x1a0
 
-> Now some deployments do use memory.swap.* as an SLO signal, and that is
-> real use cases as Chris and Kairui told. So I don't think this is about
-> who is right and who is wrong.
->
-> To keep the existing deployment working and at the same time give the
-> physical slot its own knob, I think the solution is to add a memory.pswap=
-.*
-> counter as you suggested. And that is not something we think of from a
-> brain storm, it comes from real deployments which already depend on the
-> current memory.swap.* behavior.
+Finalize root_cset before adding the namespace to the tree. Allocate the
+namespace ID at creation, add unshared namespaces after creation succeeds,
+and only remove namespaces that were added.
 
-I think it is important not to break the existing usage of
-memory.swap.* behavior. I am fine with adding another counter.
+Fixes: ef2c41cf38a7 ("clone3: allow spawning processes into cgroups")
+Assisted-by: LLM
+Signed-off-by: Jérémy Jean <Jeremy.Jean@oss.cyber.gouv.fr>
+---
+Changes in v2:
+- Finalize root_cset before publication.
+- Defer tree insertion on fork.
+- Handle unshare and failed forks.
 
-Chris
+v1: https://lore.kernel.org/all/20260923204935.2253203-2-Jeremy.Jean@oss.cyber.gouv.fr/
+
+ kernel/cgroup/cgroup.c    | 22 +++++++++++++---------
+ kernel/cgroup/namespace.c |  5 +++--
+ kernel/nsproxy.c          |  5 +++++
+ 3 files changed, 21 insertions(+), 11 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 227d09704ca5..78f6d235c19b 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -7009,6 +7009,19 @@ int cgroup_can_fork(struct task_struct *child, struct kernel_clone_args *kargs)
+ 			goto out_revert;
+ 	} while_each_subsys_mask();
+ 
++	/* Publish a new cgroup namespace only after its root is final. */
++	if (kargs->flags & CLONE_NEWCGROUP) {
++		struct cgroup_namespace *ns = child->nsproxy->cgroup_ns;
++		struct css_set *rcset = ns->root_cset;
++
++		if (rcset != kargs->cset) {
++			get_css_set(kargs->cset);
++			ns->root_cset = kargs->cset;
++			put_css_set(rcset);
++		}
++		ns_tree_add_raw(ns);
++	}
++
+ 	return 0;
+ 
+ out_revert:
+@@ -7127,15 +7140,6 @@ void cgroup_post_fork(struct task_struct *child,
+ 		ss->fork(child);
+ 	} while_each_subsys_mask();
+ 
+-	/* Make the new cset the root_cset of the new cgroup namespace. */
+-	if (kargs->flags & CLONE_NEWCGROUP) {
+-		struct css_set *rcset = child->nsproxy->cgroup_ns->root_cset;
+-
+-		get_css_set(cset);
+-		child->nsproxy->cgroup_ns->root_cset = cset;
+-		put_css_set(rcset);
+-	}
+-
+ 	/* Cgroup has to be killed so take down child immediately. */
+ 	if (unlikely(kill))
+ 		do_send_sig_info(SIGKILL, SEND_SIG_NOINFO, child, PIDTYPE_TGID);
+diff --git a/kernel/cgroup/namespace.c b/kernel/cgroup/namespace.c
+index ea4ee13936be..6c8ac36231d9 100644
+--- a/kernel/cgroup/namespace.c
++++ b/kernel/cgroup/namespace.c
+@@ -30,12 +30,14 @@ static struct cgroup_namespace *alloc_cgroup_ns(void)
+ 	ret = ns_common_init(new_ns);
+ 	if (ret)
+ 		return ERR_PTR(ret);
++	ns_tree_gen_id(new_ns);
+ 	return no_free_ptr(new_ns);
+ }
+ 
+ void free_cgroup_ns(struct cgroup_namespace *ns)
+ {
+-	ns_tree_remove(ns);
++	if (ns_tree_active(ns))
++		ns_tree_remove(ns);
+ 	put_css_set(ns->root_cset);
+ 	dec_cgroup_namespaces(ns->ucounts);
+ 	put_user_ns(ns->user_ns);
+@@ -85,7 +87,6 @@ struct cgroup_namespace *copy_cgroup_ns(u64 flags,
+ 	new_ns->ucounts = ucounts;
+ 	new_ns->root_cset = cset;
+ 
+-	ns_tree_add(new_ns);
+ 	return new_ns;
+ }
+ 
+diff --git a/kernel/nsproxy.c b/kernel/nsproxy.c
+index d9d3d5973bf5..01c4dcf26993 100644
+--- a/kernel/nsproxy.c
++++ b/kernel/nsproxy.c
+@@ -238,6 +238,11 @@ int unshare_nsproxy_namespaces(unsigned long unshare_flags,
+ 		goto out;
+ 	}
+ 
++#ifdef CONFIG_CGROUPS
++	if (flags & CLONE_NEWCGROUP)
++		ns_tree_add_raw((*new_nsp)->cgroup_ns);
++#endif
++
+ out:
+ 	return err;
+ }
+-- 
+2.47.3
