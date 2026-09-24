@@ -1,143 +1,138 @@
-Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
+Received: from mail-oi2-f13.google.com (mail-oi2-f13.google.com [74.125.231.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2CED3F88B8
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 04:27:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790224055; cv=none; b=rdcfNBI64xE8IEuxRhRFVevsd1Bi7uDhWf4//fRgW5rHkTgGoYtO6o9/Xmpdt8HG03cSPrioZpBZcuc0oL5L04zb9jGnbEwmz5y3y1p7LOFKNnkUi87xLIr3P933PrEy2h3PXng8/0inxOhWPK6FnzVOmNSRkn7LeiY9PmOcT+w=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790224055; c=relaxed/simple;
-	bh=SlPzGPDevJ712yV3K8dLA8Akc44d66oXNW6JLxeKPxg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gSRs4H26qXHpIVznEHD6fJBdM3Owxm48441e8Cjzfvu3uK8lV4cvsr6pifXi2vYvUmH1wmPsdJhIoTR9irF3zU5GwOzjANNgApDhva8rTO+kkhuMlQ+CHS3WOGPW3DXooVPnV71+sz2N85Iu31pL04H7SNZ+s6jiXTmh+5ziO1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MR2PlY+h; arc=none smtp.client-ip=74.125.227.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302AB359A70
+	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 04:35:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.231.205
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790224507; cv=pass; b=LAzkz8PjXvYDRht5rmyGLTSD2rsHxTDkk9p0tIRZMVyktfvzIJ8IhQDB2OyauWEDFS69lkacivWbq+pQCQi5YZDt8wrQVtEa/9EGGeA9kco2GztcBls/IbUR0xma3z1bUaGj7CQUBrIqnpyjTzOYepd6AX5wgVoZgHkbLk/MGAg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790224507; c=relaxed/simple;
+	bh=th4Y241gR8fKqXdszPTrMDgI2QzkfuYH1UjS4q/XE0o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JFDVcRJWgxTUx7hB2iYKPRWYp9mlB4lBAFBgXwPdiEQX6Ox8elwg+3kN9cl9ajTKO/6BQKNpOHgUvuxKuF+D5RSDmFPSpK+1QhpICV7k89KemfNTZNvbol3ZWlvT7ZRJamPDiC96iF7g4jcoKKfdOl+pSaobD9tKT9MOfzCpVVs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yn0yF/PV; arc=pass smtp.client-ip=74.125.231.205
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MR2PlY+h"
-Received: by mail-pj2-f13.google.com with SMTP id d9443c01a7336-2dd4b43b20bso8288035ad.1
-        for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 21:27:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yn0yF/PV"
+Received: by mail-oi2-f13.google.com with SMTP id 5614622812f47-4b37a3688a2so1321740b6e.0
+        for <cgroups@vger.kernel.org>; Wed, 23 Sep 2026 21:35:05 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790224505; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XkIM8elvRzI1P92d5ZIEMtcYryIR3iqj7bnAmtzI0YMxQU/lDD7+f8PRMiPLXyt0hU
+         FFarkgtc+AkUH1QW4Jl7CoCypNOARPHaJ0aY5qDaMnQAUftJQ8kH4v9Dvm+Xv1bVMeCn
+         OxSKO31/joUYQWRorZ5IcOH92UNl1hQroq5DikZVLEGFKFsVqBFKp3+94aPrAmYomXWv
+         iyTwfg2k9cOsYPrZrKkf6mNQvQLYNaFNLOYW12mFwa0dse62Q+GD+ZEEXCGEa4jFdRF3
+         X2UpHVQJdsBzpcjOq0GMqwe7EgRcE+X4WYhbdNyPBi8aewRPfIdkbli6TeH+oPLn/6DN
+         42fA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=HgPIQmEvwYaItDda9jIvvcgV4nx3Zf69aHXsVWLINFs=;
+        fh=szjJXMZWrdGRFJQGIfPRyaNCmK4drijeyj+tlQHJdqU=;
+        b=aU8+tUiUukl179vW5vzzbr77HOJ196EtmDHfn4wQfFD92/OZJ8iy2ssNRuD8soMV0a
+         k+sZv8l9lahm/CmgH4LenMBB4T9eFBJEmEogy+NROwVpSZ0hYKfCfVr5nNScCDcL+MBN
+         9bZLabh7M2m6bssVbcHUzHMO4ndtZUXwYqqyCZJ8P2JIYLgGlBPGEopf5vFlFPS1TPZj
+         wYUptpMfuhoD3+1BfX0cZquJfIN3nUwj30CkLMkoK9HzTrvoIsDVqQOsAdYTEHFvNsaZ
+         1s9sPpkc/+6vbl2WSV7gjREhMi7iwHShf/hBypJE+SAIndudw+hd0BylmYUgpJTv8F+U
+         ciMg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790224053; x=1790828853; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=dF6lxsisMCHm/KxhSC1onb0PhKT95yZ7vVRGieeLH5c=;
-        b=MR2PlY+haYYzIFjabcl3HIPSmBOFopJfZpkMUrd5tIrFmuoOdT/QKNp5mPzvpVfNgZ
-         ck4DOOH8HhQ+l50epqiUcqMmggFbcU2RAQnXCWeqf1YOu2M12EdZW3sDv+voJm3/yXa1
-         lHGCXBtcyT9Ttwcs25vJFpYdUBzd7QFEHLh3Gr+liLau8VxDgmPI+RK+SfExHiYHGzh1
-         pvG6Enk5ggT+xdlYAuR0foDzCPqzhmWAFioOCaKMWOy6EZN20X4epoSRroQw6jwAZd3/
-         kpv1tPoPSry5nXA2Chcfn39m+k655KPVFoHXq88a2QSCAIyeWpZoLsjZXHt9OnRhPtAU
-         zPyg==
+        d=gmail.com; s=20251104; t=1790224505; x=1790829305; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=HgPIQmEvwYaItDda9jIvvcgV4nx3Zf69aHXsVWLINFs=;
+        b=Yn0yF/PV+g1RlFbDOnz3BVwuIlFOiZkSVx9KP8g9JJeaiPf/TB7+EAkKOzB80b0Iy4
+         ZWASIaRpVAjMSxa+V80uzprm9U65TszsVkBeT8OgaGR7QthwnFstQHNT2W0AbkhyKp3+
+         yit4S/I77KtNKm9MVfYwkL0vJ5lLO6dTffb3N5Q2jEX6lldmUZ/6SEe82WdSzCPyxoc1
+         A+/T7jTV3gL3zpvS799EPh34D2EgigO5yP9P9iUdOnykei9r+IvIw6Kq2UE0dDFE2DMZ
+         qeUdj6ms6Gez9aF6jCdHxQfj1O6IKHUpPeML4ge7l49SRhtEb2VIigkauQB6FqexXzIH
+         x3iQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790224053; x=1790828853;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=dF6lxsisMCHm/KxhSC1onb0PhKT95yZ7vVRGieeLH5c=;
-        b=otnKK+CNysy3fR9j1KIVxV4pDiyX4lhF4HDMRcuu+CKB10et0ArGrg+6Z3xG2yDUxu
-         cXi1W8Ak7NGLLWWHmG+fV7wgZETHbRTaClvcB33ud6OOanlyY2jGo+R3Tk+QcOBdkdPV
-         IF2VeMoZJBtoYfaJsXJhvMGkjDq1P3GZCfqcQwOKq7pI+9h54ZONpy48OUAo/FqrMc5O
-         PjTDQPIi2mj6GahX5k+XqoY/JgmpqPskxt2r9V3aXJAIyVwqe/HS8G0Y+QpN7J75hH0n
-         uG7jqP5e/2B0W1CgX0jo1QwZaE38Tfj0QTCsSJZ/4yrxuOZuGMmED3EOAVsZYGZRcgzH
-         RZKQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzsUAf1XsLxFTo9PiubKpcXTfyIq8ywLWrouHtnU3dCbjCeH2tdmTgS5kEIwAuBwt7Pc40hEvr3@vger.kernel.org
-X-Gm-Message-State: AFuF++lRFMu/3lR19ezFMa+y01HCx/QmYjIncG5Fe9vyjsEV9JXTibo2
-	td3ESjlCjAu+RE/PlBjr+5ezE9M9W9VVDXe5PBuwAaFoSJBqbUPv+lt5
-X-Gm-Gg: AYBFou16Taw22CXL+GQnAhC7HW4gFA6RnFv1963e51R+ZXROx1JgU+dQiyPQi35EnkU
-	uT0VSavv2unoUaSlAyIBUdW46DwmTAZSp2cZniBIP9mKz/wHxGFrjiUxC4tUjBNJS2u33xw8JAj
-	M9vINfSfkVjFzIHd0EFX5Dby+ZfPaTiDiDFV64joBPiUSME5TZWJkgEdhjGouwuRrTcsx2tuKVZ
-	zG+KFJaJGvRWR0mTP7CCdwKnvV4l8eWmZwU6fcXOVIHDgMS9JBGaW56KOihu8orHZluSPvV12Up
-	MLD/bYYI4mp/UL0D2ZcwfVQ77g0CuCHHprRBE32TRjYl13Tqs9EWxJgtT0KS9OevFDdWUdWgmk1
-	Dp7U7n/6EtrdU/xLLNjHxVzH9+S84MI3oqTB9NLuqdBWTrxtOOp5LRIMrrregd8ugrAqRszKWXa
-	PzjuI/bdAeRsG1DXnQaC0BLwcSPtXoT+r+A5SL25WUPceSzGuSHjLEpg3MhwijV5LOCljS0cqi0
-	NFEODMI8yHXOd2hbPleu65dcQ8YU+OGlDnXU3rAaMHnlclCQsDVUi57+eORdo5IYV5dyF8g/BKa
-	MTxu9+CrbA==
-X-Received: by 2002:a17:902:d481:b0:2dd:b83b:fe1e with SMTP id d9443c01a7336-2df7de9309fmr10196965ad.22.1790224053300;
-        Wed, 23 Sep 2026 21:27:33 -0700 (PDT)
-Received: from phui-2.c.googlers.com.com (67.51.127.34.bc.googleusercontent.com. [34.127.51.67])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2df6a5a4997sm19710685ad.27.2026.09.23.21.27.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2026 21:27:33 -0700 (PDT)
-From: Hui Peng <benquike@gmail.com>
-To: Waiman Long <longman@redhat.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Shuah Khan <shuah@kernel.org>,
-	Chen Ridong <chenridong@huawei.com>,
-	cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hui Peng <benquike@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v4 3/3] cgroup/cpuset: check sibling effective_xcpus in cpus_excl_conflict()
-Date: Thu, 24 Sep 2026 04:27:29 +0000
-Message-ID: <20260924042729.1908863-4-benquike@gmail.com>
-X-Mailer: git-send-email 2.56.0.rc1.310.g51773c2048-goog
-In-Reply-To: <20260924042729.1908863-1-benquike@gmail.com>
-References: <20260924042729.1908863-1-benquike@gmail.com>
+        d=1e100.net; s=20260707; t=1790224505; x=1790829305;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=HgPIQmEvwYaItDda9jIvvcgV4nx3Zf69aHXsVWLINFs=;
+        b=hM/9tMIzZ4xjEa8H4bMIQrtxQJE3AOPgR9HYoiCJNdHnZEEj09GYDZZQ7CNVbi0CgM
+         HJ29wzR5eeqazM3DP/Y/ddRzxatRGWH91FR/qXron4lvBSK7G1qunqrDx/PI+ZSRW8a2
+         S1arR+VZdHp8ok0ZwPgocaUQgX7eh+rId3aVwQ9EjJ+1Kkz1sf4LuFAAQGqhPwvCu3zb
+         mW4rldp0U0kzEnEEpJfOLE5pPp5CUzK+INaBeHRbskpSNEG2Yvf2obDaiBm4ADt5098L
+         CJJoxcj6OalL+oCGGOUPmcCpxPHI/MK8en9wVoMZBlIUQbTBUwlNhkdqsJw7rDvQJ855
+         qMfg==
+X-Forwarded-Encrypted: i=1; AKwUvBxdZFzI4l1rFYTU21WOzDaC0Z8FlH5nmPHy1pTjbK1PPW4k5sOFssyPMiOAxRJXcZKeZE1LE+Ez@vger.kernel.org
+X-Gm-Message-State: AFuF++kN5HwWCtAtPTwqS9GfL18CQRxy6FZx0OfqVsHSkTemTR3f1pDJ
+	YSEsjTPKGY3bRehzZ+2/BpTFKPcTd0npSdYY74FAhnZHySkqBtY0KoBjVQFaeBtQ+oyv0t9QNHe
+	GK9kyMg0kkVbQm80iVsDb5eDDv3/xN4Q=
+X-Gm-Gg: AYBFou00yBxflT2jotBEHInx3CBPCOjaB8jpXJFDwC5lY2yoJrOMwXDzEYHGMhbPiwT
+	BoBeGsGZBmwoBybhm4HSTAJb65YZSSR6kKRTgRik6EupT2ruW1s0ynWshuPFnzwBEjXSfD0lCXp
+	Lpc3CvCE4M/3qDTcwLEBpWXqNd14yDMkXdPYn/Nm44F8b9N/1sggOPaEOZlzGkMxdJWm4YolphA
+	vye6Lb7mxDLUIjNrOUvBZBRnqdS38ONZT6pSuKb6z/qZJz1x/kS1NkPr53xS35KyJBiahQipXjP
+	Lwaq/tORTeOHPXAkcczBmomFAJGFpoQhgZh/GP4gtZfAn0FahNqNZ9gpt7rteb/xQGsN1P1MNIs
+	v7qn6gnKRJEQ=
+X-Received: by 2002:a05:6808:1992:b0:4b2:98a3:a567 with SMTP id
+ 5614622812f47-4d72be39068mr1776744b6e.4.1790224504958; Wed, 23 Sep 2026
+ 21:35:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260923152653.40953-1-yupeng0921@gmail.com> <arP0TmdK3FnNfbwH@localhost.localdomain>
+In-Reply-To: <arP0TmdK3FnNfbwH@localhost.localdomain>
+From: peng yu <yupeng0921@gmail.com>
+Date: Wed, 23 Sep 2026 21:34:48 -0700
+X-Gm-Features: AclHuK942CAMjDTV2Zi3exg6L6EKi3Q-gOuQhHvB5LNabYOBYKDQn8SWx2V9lpQ
+Message-ID: <CAG3TDc0bQJATmJR5dF5j9RoDp1ti-tbAiUkLRGq4zX2CYD3unQ@mail.gmail.com>
+Subject: Re: [PATCH v3] nvmet: add cgroup_path to charge namespace I/O to a cgroup
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
+	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Josef Bacik <josef@toxicpanda.com>, 
+	Jens Axboe <axboe@kernel.dk>, Maurizio Lombardi <mlombard@arkamax.eu>, cgroups@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-In cpus_excl_conflict(), when a valid local partition A1 uses implicit
-exclusive CPUs (cpuset.cpus set without cpuset.cpus.exclusive, so
-sibling->exclusive_cpus is empty while sibling->effective_xcpus is
-populated), a sibling cgroup B1 can still set cpuset.cpus.exclusive on
-the same CPUs because cpus_excl_conflict() only checks
-sibling->exclusive_cpus.
+On Wed, Sep 23, 2026 at 8:53=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.co=
+m> wrote:
+>
+> On Wed, Sep 23, 2026 at 08:26:53AM -0700, Peng Yu <yupeng0921@gmail.com> =
+wrote:
+> > Scenario:
+> > * Create multiple nvmet subsystems/namespaces.
+> > * The namespaces are backed by different LVM logical volumes.
+> > * Some of the logical volumes share the same physical volumes.
+>
+> Why are LVMs mentioned? (The test scenario doesn't seem to use those.
+> And the example is backed by RAM, so where would be any IO to control at
+> all? Note: I'm only giving this part of my attention span.)
 
-Fall back to sibling->effective_xcpus in cpus_excl_conflict() when
-sibling->exclusive_cpus is empty, and add a regression test case to
-tools/testing/selftests/cgroup/test_cpuset_prs.sh.
+The LVMs are close to my real use case, so I mentioned them to explain why
+I need this feature.
+When I write the testing code, I try to demonstrate the usage in a
+simpler way, so
+I use RAM devices.
+Sorry for the inconsistency.
 
-Tested in QEMU on Linux 7.3.0-rc3 using
-tools/testing/selftests/cgroup/test_cpuset_prs.sh.
 
-Fixes: 2a3602030d80 ("cgroup/cpuset: Don't invalidate sibling partitions on cpuset.cpus conflict")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Hui Peng <benquike@gmail.com>
----
- kernel/cgroup/cpuset.c                            | 5 ++++-
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+> > * The subsystems are exported to different users.
+> > * We should provide each user a specific iops/bps quota, thus a noisy
+> >   neighbor won't impact the performance of other logical volumes.
+>
+> Why cannot you place users into respective cgroups and configure
+> appropriate per-device limits?
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7c5b4a8f1f3a..f46a51f07938 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -713,7 +713,10 @@ static inline bool cpus_excl_conflict(struct cpuset *trial, struct cpuset *sibli
- 		return true;
- 
- 	/* Exclusive_cpus cannot intersect */
--	return cpumask_intersects(trial->exclusive_cpus, sibling->exclusive_cpus);
-+	return cpumask_intersects(trial->exclusive_cpus,
-+				  cpumask_empty(sibling->exclusive_cpus)
-+				  ? sibling->effective_xcpus
-+				  : sibling->exclusive_cpus);
- }
- 
- static inline bool mems_excl_conflict(struct cpuset *cs1, struct cpuset *cs2)
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index f4d1822d4e21..f62155cf6162 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -445,6 +445,7 @@ TEST_MATRIX=(
- 
- 	# Changes to cpuset.cpus.exclusive that violate exclusivity rule is rejected
- 	"   C0-3     .      .    C4-5   X0-3     .      .     X3-5   1 A1:0-3|B1:4-5"
-+	"  C0-3:P1   .      .    C4-5     .      .      .     X3-5   1 A1:0-3|B1:4-5 A1:P1|B1:P0"
- 
- 	# cpuset.cpus.exclusive cannot be set to a superset of sibling's cpuset.cpus
- 	"   C0-3     .      .    C4-5   X3-5     .      .      .     1 A1:0-3|B1:4-5"
--- 
-2.49.0
+I export the devices to nvme target. Per my understanding, the IOs are
+controlled by kernel threads. The users are remote users, so I can't find
+a way to put them in a local cgroup.
+
+> Thanks for providing more context about the scenario so that I can
+> understand what's the goal and obstacle.
+>
+> Michal
