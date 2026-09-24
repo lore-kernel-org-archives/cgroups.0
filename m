@@ -1,246 +1,260 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E468D30E0CC;
-	Thu, 24 Sep 2026 06:30:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1466F3EDE43;
+	Thu, 24 Sep 2026 06:30:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790231414; cv=none; b=QBgFGI3YXa87yFuAwxypZGLH01FEjcR+zDs1hRvoU3azwkveJ+4lXO2Mtehbsyu8RWic5HHsv/1lw88YJ5ieWDZyqT9UR3JQygMW33L+DRre5ayU6S8GuG+qf8QksPLCH48XW1gpT+YuKnBzB7BHGfC8SbtIjAryp+Y1jo9xbgk=
+	t=1790231418; cv=none; b=npPQnwM2OyHqaNheNSSbjDkyC+nOyZ/4+YiRmpKtGhWBZFy0cguhnh1koUBX8K34+lPV5YAHr8IO1KMVuz/66QjIRVlhSf4X3f/ks8GXC8g3pdHtzn/AjTj5nC6Q0o/g5hLAcxmNFPtD3Co6btpfYoQBazKzLE8VFlqx0TCLZf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790231414; c=relaxed/simple;
-	bh=t+tIvd7uqEf1f6LwP+9o2kdH7x86lDHMcSrJONs98Dc=;
+	s=arc-20240116; t=1790231418; c=relaxed/simple;
+	bh=/JZ9eTH+cCJ8CPcHJGFAzukhXlFXtJ6fBtRKjn2tIGg=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=U3A2y7Wt8QLMkgUL2EmoggE5eHH+X4DB4sm7mQdT1a7luRnzsuZJm//6hdkz3A52bRD7ddG/Gbne/qBVXvjLnxNLpzhO06G7cDamxd2kUTDxKYK/BA8renwWsQLFGJNzsJeBwrekODTjCuBF4iSYm/3HxhUQKkJcXhTBNWUPoY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cTJAjCpy; arc=none smtp.client-ip=100.103.45.18
+	 Subject:From:To:Cc:Date; b=Vb3amD2elKGNHg3jHhRkQu3wzBteMN//Mgw26EdWzLXi+UozK6cD6/VruUHcyq83EAyR5baWGa3qf4vR9c7G0oIGIn6TuwiwrphSXmfGP8D/r67c0aOPYsyxMZNaZzbF/Hd2YEwHzuqFFvGn52Lvo5IHb0D/OPitF5RUOHZcy54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nv2eY9Q+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cTJAjCpy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 419561F000FF;
-	Thu, 24 Sep 2026 06:30:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nv2eY9Q+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67D801F00893;
+	Thu, 24 Sep 2026 06:30:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790231412;
-	bh=uvkvGa8eLCS8bv228xMX5YNhuFyAcnvMiHTYL/NBW6I=;
+	s=k20260515; t=1790231416;
+	bh=PbUnL7Dp8W4lDbAThqkmUJ0eg5I5/4s5qPPqTg4hmVQ=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=cTJAjCpyWJ/dVAXE/xBtLaQo+vz+GHMB1rf0XnzQmgaF5DQC/RFWKFgX9Hh6shxJi
-	 u1ALVOVScAx5RnWwDXvvshuu8pz27FOFpsyd0HGewMbrSrWyKwh0Lx63IcJk1QmDwI
-	 snsFhCY9vsdGkc35y37l8U1S3kYgHnSuRG9LHLYXLA6VWvFmQlw+lfxq5ZGMfP5iX+
-	 vDe//fG8ZOrcaNKsEsLPwheljlgScu0Tg5vsry+HDulRaFLZz8o3a/+8aIxOKMt64K
-	 TRSBAfWQQmSH/8IlZjMRjHzuliMXencO6KW7sWNjeM0v15lYAIl0TujThM4JASUrk4
-	 iopeAm1UtPrPQ==
-Content-Type: multipart/mixed; boundary="===============5958733685988634967=="
+	b=Nv2eY9Q+EOCRBN8dAA4cSOUc5FOoaNc9lGhYgb6ontWHYPb5AOVPAXN2c80gkknci
+	 Ulhwqjn/RxVRuQTsjbRUL5RQ39hTIeBYgyFeBlGaVYPdB36UhkqPMZwvVXOTLjdcx1
+	 sTLWKHE0AQH+P5jFGtN30DB8vtvv//LqquGrs7w5QTxnRzGEx9TOYprI77WKjaMKC7
+	 IreWkAk/AdpRuHLxf3fB3FA/Y/i3t5xUZQDpiZsYL6JuWD0uupsmD6/VzKMkZKzqHU
+	 Dg9YNL3WEynqCWEHPOogU6fLSAktHZnxT9eDq+gyJMm2aVDM55NiUBmkjsj8CnhWIT
+	 JgxSHjXMoZ0RQ==
+Content-Type: multipart/mixed; boundary="===============0377911730758240839=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <ba40303966f4ff1232d01ad0b481ed69c9ed30d6beec4fbba43e5836ed8bc975@mail.kernel.org>
-In-Reply-To: <20260924054549.2271705-3-cui.tao@linux.dev>
-References: <20260924054549.2271705-3-cui.tao@linux.dev>
-Subject: Re: [RFC PATCH v7 2/4] selftests/bpf: add iocost cost model test
+Message-Id: <708eecd95cb24c85757f7f217915bfbb2bbd855b8f963a4cc32aa61ad6031034@mail.kernel.org>
+In-Reply-To: <20260924054549.2271705-2-cui.tao@linux.dev>
+References: <20260924054549.2271705-2-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v7 1/4] blk-iocost: add BPF struct_ops cost model support
 From: bot+bpf-ci@kernel.org
 To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk
 Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,ast@kernel.org,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,alexei.starovoitov@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Thu, 24 Sep 2026 06:30:10 +0000 (UTC)
+Date: Thu, 24 Sep 2026 06:30:14 +0000 (UTC)
 
---===============5958733685988634967==
+--===============0377911730758240839==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+> diff --git a/block/blk-iocost-bpf.c b/block/blk-iocost-bpf.c
 > new file mode 100644
-> index 000000000000..156c75367af0
+> index 000000000000..2306c5fd6d8d
 > --- /dev/null
-> +++ b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
-> @@ -0,0 +1,182 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +#include <test_progs.h>
-> +#include <fcntl.h>
-> +#include <sys/sysmacros.h>
-> +#include <unistd.h>
-> +#include "iocost_model.skel.h"
-> +#include "iocost_ms.skel.h"
-> +
-> +/*
+> +++ b/block/blk-iocost-bpf.c
 
 [ ... ]
 
-> +/*
-> + * Attach the example model to one device, given as major:minor in
-> + * $IOCOST_TEST_DEV: the dev member is written through the struct_ops
-> + * map's initial value before load, as hid_bpf_ops does with hid_id,
-> + * and loading attaches the model to the device.  Detaching the
-> + * struct_ops restores the builtin model.
-
-Is this description accurate?  The comment says "loading attaches the
-model to the device", but the code and commit message indicate otherwise.
-
-For non-link SEC(".struct_ops") maps, the kernel only calls .reg from
-bpf_struct_ops_map_update_elem(), and libbpf issues that BPF_MAP_UPDATE_ELEM
-only from bpf_map__attach_struct_ops().  So the attach happens during
-iocost_model__attach(), not during iocost_model__load().
-
-The test itself relies on this distinction.  It calls
-iocost_model__load(second) at line 103 while the first model is attached and
-expects the load to succeed (line 103, ASSERT_OK(err, "second_load")).  The
--EBUSY failure is expected only from bpf_map__attach_struct_ops() at line
-110.  The commit message also says "attaching the struct_ops attaches the
-model to the device".
-
-Should the comment say "attaching" rather than "loading"?
-
-> + * Requires root, cgroup v2 and a device with iocost support.
-> + */
-> +void serial_test_iocost_model(void)
+> +static int bpf_iocost_reg(void *kdata, struct bpf_link *link)
 > +{
-> +	struct iocost_model *skel, *second;
-> +	unsigned int maj, min;
-> +	__u64 *ops_dev, *sdev;
-> +	int err;
-> +	char model[32], *dev;
+> +	struct iocost_model_ops *ops = kdata;
 > +
-> +	dev = getenv("IOCOST_TEST_DEV");
-> +	if (!dev || geteuid() != 0 || sscanf(dev, "%u:%u", &maj, &min) != 2) {
-> +		test__skip();
-> +		return;
-> +	}
-
-A subsystem pattern flags this as potentially concerning: both
-serial_test_iocost_model() and serial_test_iocost_model_streams() call
-test__skip() without printing a message.  Three different conditions lead
-there: IOCOST_TEST_DEV not set, not running as root, or a malformed
-major:minor string.  Since IOCOST_TEST_DEV is never set in CI, these tests
-are always skipped, and nothing in the output explains that
-IOCOST_TEST_DEV=<maj>:<min> is needed to run them.
-
-Many prog_tests print a short message before test__skip() to explain why
-(like "printf(\"%s:SKIP: set IOCOST_TEST_DEV=<maj>:<min>\\n\", __func__);").
-test_progs still prints a SKIP status line for the test, so the skip is not
-entirely silent, but the message would tell a developer how to opt in.
-
-Also, ioc_bpf_attach() returns -EOPNOTSUPP when the device's queue is not
-blk-mq or lacks iocost support.  The tests assert ASSERT_OK(err, "attach")
-at lines 84 and 169, so a device without the right support is reported as a
-failure rather than a skip.  Is this the intended behavior?
-
+> +	if (!ops->dev)
+> +		return -EINVAL;
 > +
-> +	skel = iocost_model__open();
+> +	return ioc_bpf_attach(ops);
+> +}
+
+Does this guard against multiple registrations of the same struct_ops?
+
+bpf_struct_ops_link_create() allows several links from one BPF_F_LINK map.
+bpf_struct_ops_valid_to_reg() only checks the map type, BPF_F_LINK flag,
+and the READY state.  The state stays READY after a link is created, so
+every bpf_link_create() on the map calls ->reg(st_map->kvalue.data, link)
+on the same kdata.
+
+hid_bpf_reg(), which the commit message names as the model, guards this
+case:
+
+    /* prevent multiple attach of the same struct_ops */
+    if (ops->hdev)
+        return -EINVAL;
+
+While the first link is attached, a second link on the same device is
+refused by the ioc->model check in ioc_bpf_attach() with -EBUSY.  That
+check stops working once the device goes away:
+
+1. link1 = bpf_link_create(map). ioc_bpf_attach() opens f1 =
+   bdev_file_open_by_dev(dev) and stores ops->q = q1 and ops->bdev_file =
+   f1.
+2. The disk is removed, for example a null_blk device deleted through
+   configfs. null_del_dev() calls ida_free(&nullb_indexes, nullb->index)
+   and then del_gendisk(). __del_gendisk() -> rq_qos_exit() ->
+   ioc_rqos_exit() clears ioc->model and calls ioc_bpf_detach(), which does
+   WRITE_ONCE(ops->q, NULL) but deliberately leaves ops->bdev_file = f1.
+   The old disk and queue stay alive because f1 pins them. __del_gendisk()
+   also calls bdev_unhash(), so the old bdev can no longer be looked up by
+   dev_t.
+3. A new null_blk device is created. It gets the same index, and so the
+   same dev_t, because null_add_dev() sets disk->first_minor = nullb->index
+   and the index was already freed.
+4. link2 = bpf_link_create(map). bpf_iocost_reg() sees ops->dev != 0.
+   ioc_bpf_attach() opens f2 on the new disk and finds no model on the new
+   ioc. It then runs:
+       rcu_assign_pointer(ioc->model, ops);
+       ops->q = q;
+       ops->bdev_file = bdevf;
+   This overwrites f1, and nothing ever releases f1. The dead gendisk,
+   request_queue, bdev and the driver module reference held through the
+   open file are leaked, so null_blk can no longer be unloaded.
+5. Closing link1 then runs bpf_iocost_unreg() -> ioc_bpf_unreg(). It reads
+   q = new queue and bdevf = f2, detaches the model from the new device and
+   fputs f2. link2 is still alive but its model has been silently removed.
+   When link2 is released, ops->q and ops->bdev_file are both NULL and
+   nothing happens.
+
+The map's dev cannot be changed after the first update, because
+map_update_elem requires state INIT, so dev_t reuse is the trigger.  Every
+step can be reached by a user with CAP_BPF, CAP_PERFMON and the ability to
+add and remove block devices.
+
+> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+> index 2745bffcd5ee..21e4f8cbd9f2 100644
+> --- a/block/blk-iocost.c
+> +++ b/block/blk-iocost.c
 
 [ ... ]
 
-> diff --git a/tools/testing/selftests/bpf/progs/iocost_model.c b/tools/testing/selftests/bpf/progs/iocost_model.c
-> new file mode 100644
-> index 000000000000..369818bda1cf
-> --- /dev/null
-> +++ b/tools/testing/selftests/bpf/progs/iocost_model.c
-> @@ -0,0 +1,139 @@
-> +// SPDX-License-Identifier: GPL-2.0
+> +#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
 > +/*
-> + * Example iocost cost model: the builtin linear HDD formula with all
-> + * costs doubled, for one device given by the dev member of the
-> + * struct_ops.
-> + *
-> + * The constants mirror what calc_lcoefs() derives from the AUTOP_HDD
-> + * defaults (rbps=174019176 rseqiops=41708 rrandiops=370, w-side
-> + * analog) in vtime units where 1s == 2^37.  On a rotational device
-> + * still on ctrl=auto, a device with this model attached charges
-> + * twice the builtin model under the same workload, so the
-> + * doubled cost is a direct check that accounting goes through the
-> + * BPF path.  On a non-rotational device, or one with user-pinned
-> + * coefficients, the ratio to the builtin model is arbitrary.
-> + *
-> + * A zero cursor means "no previous IO".  The cursor advances for
-> + * every priced bio with a non-zero size (READ/WRITE), merged ones
-> + * included, truncating to whole sectors like the builtin, so flushes
-> + * and discards leave it alone and merged streams do not drift past
-> + * the 16MB seek threshold.
-> + *
-> + * The model implements the full linear formula itself, including
-> + * flushes: there is no fallback to the builtin model, a dataless
-> + * A dataless WRITE|REQ_PREFLUSH keeps the write base: the op is still
-> + * WRITE, so it carries WSEQIO (or WRANDIO after a seek) plus one page.
-
-Two things here: there's a broken sentence ("... a dataless\n * A dataless
-WRITE|REQ_PREFLUSH ..."), and the description contradicts what the code
-actually does.
-
-Lines 3-4 say the model is "the builtin linear HDD formula with all costs
-doubled", and lines 10-11 say it "charges twice the builtin model under the
-same workload".  The commit message also describes it as "the full builtin
-linear HDD formula at double cost".
-
-However, the builtin linear formula does not price flushes.
-calc_vtime_cost_builtin() starts with `if (!bio->bi_iter.bi_size) goto out;`
-and returns cost 0, so ioc_rqos_throttle() does not charge a zero-cost bio.
-This model instead charges a dataless WRITE|REQ_PREFLUSH as
-`2 * (base + 1 * WPAGE)`.
-
-An empty flush bio also has bi_sector == 0 (blkdev_issue_flush() calls
-bio_init() with no sector).  The `cur && priced` branch at lines 114-119
-therefore measures the "seek" as the absolute cursor position.  So once the
-cgroup has done any IO beyond the first 16MB, every fsync-style flush is
-priced as WRANDIO: 2 * (360433855 + 3161261) = 727190232 vtime, about 5.3ms
-of device time, where the builtin charges 0.
-
-The same header in iocost_ms.c (lines 16-17) says "The model implements the
-full builtin linear formula itself, including flush pricing", but the builtin
-has no flush pricing, so that is inaccurate too.  On any workload with
-flushes (or discards, see below), the "twice the builtin" claim and the
-commit message's 1.99x figure do not hold.
-
-Could the header be clarified to state that flushes are priced even though
-the builtin charges them nothing, and that because a flush carries sector 0
-it is effectively always priced as random IO?
-
+> + * Attach a BPF cost model to the device named by ops->dev: resolve the
+> + * queue, make sure iocost is on it, and publish the model.  Attaching
+> + * switches the device away from the builtin linear model; detaching
+> + * restores it.  The struct_ops core holds the program alive for the
+> + * whole registered period, so no extra reference is taken on the ops.
 > + */
+> +int ioc_bpf_attach(struct iocost_model_ops *ops)
+> +{
+> +	struct block_device *bdev;
+> +	struct request_queue *q;
+> +	struct ioc *ioc;
+> +	const struct iocost_model_ops *old;
+> +	struct file *bdevf;
+> +	int ret;
 > +
-> +#include "vmlinux.h"
-> +#include <bpf/bpf_helpers.h>
-> +#include <bpf/bpf_tracing.h>
-
-[ ... ]
-
-> +	if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ) {
-> +		base = RSEQIO; coef_page = RPAGE; randio = RRANDIO;
-> +	} else if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE) {
-> +		base = WSEQIO; coef_page = WPAGE; randio = WRANDIO;
-> +	} else {
-> +		/*
-> +		 * a fully owning model must price every op; unknown
-> +		 * ops are priced as a single page write
-> +		 */
-> +		base = 0; coef_page = WPAGE; randio = 0;
+> +	bdevf = bdev_file_open_by_dev(new_decode_dev(ops->dev),
+> +				      BLK_OPEN_READ, NULL, NULL);
+> +	if (IS_ERR(bdevf))
+> +		return PTR_ERR(bdevf);
+> +	bdev = file_bdev(bdevf);
+> +
+> +	if (bdev_is_partition(bdev)) {
+> +		fput(bdevf);
+> +		return -EINVAL;
 > +	}
+> +
+> +	q = bdev->bd_queue;
+> +	if (!queue_is_mq(q)) {
+> +		fput(bdevf);
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+> +	mutex_lock(&q->rq_qos_mutex);
+> +	ioc = q_to_ioc(q);
+> +	if (!ioc) {
+> +		ret = blk_iocost_init(bdev->bd_disk);
+
+Does this check that the disk is still live?
+
+ioc_bpf_attach() takes q->rq_qos_mutex and, if the queue has no ioc, calls
+blk_iocost_init() to add one. It never checks that the disk is still live.
+The only liveness check is the one bdev_file_open_by_dev() does under
+open_mutex at open time, and __del_gendisk() does not wait for existing
+openers.
+
+The blkcg config path handles the same race explicitly in
+blkg_conf_open_bdev():
+
+    mutex_lock(&bdev->bd_queue->rq_qos_mutex);
+    if (!disk_live(bdev->bd_disk)) {
+        blkdev_put_no_open(bdev);
+        mutex_unlock(&bdev->bd_queue->rq_qos_mutex);
+        return -ENODEV;
+    }
+
+Without that check, this interleaving is possible:
+
+1. bpf_iocost_reg() -> ioc_bpf_attach(): bdev_file_open_by_dev() succeeds
+   while the disk is live.
+2. __del_gendisk() on another CPU: bdev_unhash, GD_DEAD, blk_unregister_queue,
+   device_del, blk_mq_freeze_queue_wait, then rq_qos_exit(q). rq_qos_exit()
+   unlinks every rqos under rq_qos_mutex and runs ioc_rqos_exit(), so
+   q->rq_qos no longer has an ioc.
+3. ioc_bpf_attach() then gets rq_qos_mutex. q_to_ioc(q) is NULL, so
+   blk_iocost_init() runs on the dead disk. rq_qos_add() only checks for a
+   duplicate id, so it links a new rqos, and blkcg_activate_policy() succeeds
+   because the blkgs are only destroyed later in disk_release(). The model is
+   then published and blk_stat accounting is turned on.
+
+Nothing tears down an rqos added after rq_qos_exit(). disk_release() only
+calls blkcg_exit_disk(), and blk_free_queue() does not look at q->rq_qos.
+The consequences depend on who owns the queue:
+
+- GD_OWNS_QUEUE: the ioc and its pcpu_stat leak.
+- Queue not owned by the disk, e.g. SCSI sd, where __del_gendisk()
+  unfreezes the queue and it is reused for the next disk on sd rebind: the
+  stale ioc stays on q->rq_qos with ioc->rqos.disk pointing at the freed
+  old gendisk. The following paths then dereference it:
+  - the next rq_qos_exit(), via ioc_rqos_exit() ->
+    blkcg_deactivate_policy(rqos->disk, ...)
+  - ioc_rqos_queue_depth_changed() -> ioc_refresh_params() ->
+    ioc_refresh_params_disk(ioc, force, ioc->rqos.disk)
+  - an io.cost.qos write on the new disk, where q_to_ioc() returns the
+    stale ioc
 
 [ ... ]
 
-> +
-> +	cost = 2 * (base + pages * coef_page);
-> +	return cost;
+> @@ -3531,11 +3778,31 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+>  				user = false;
+>  			else if (!strcmp(buf, "user"))
+>  				user = true;
+> +#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
+> +			else if (!strcmp(buf, "bpf")) {
+> +				/*
+> +				 * readback value while a BPF model is
+> +				 * attached; attaching is done by loading
+> +				 * the struct_ops, not through this file
+> +				 */
+> +				continue;
+> +			}
+> +#endif
+>  			else
+>  				goto unlock;
 
-Does the comment match the code?  The comment says "unknown ops are priced as
-a single page write", but the code prices them per page of bi_size.
+Is ctrl=bpf meant to be accepted here?
 
-pages is computed earlier as `nbytes >> IOC_PAGE_SHIFT` (clamped to at least
-1), so the charge is `2 * pages * coef_page`.  For REQ_OP_DISCARD,
-REQ_OP_WRITE_ZEROES and REQ_OP_SECURE_ERASE, bi_iter.bi_size is the size of
-the range, not a transfer size.  A 1MB write-zeroes bio is 256 pages, which
-is about 1.6e9 vtime (~12ms).  Any range of about 85MB or more hits the
-VTIME_PER_SEC clamp in calc_vtime_cost(), so each such bio is charged a full
-second of device time.  A single page write would be about 6.3e6 vtime
-(~46us).
+The COST_CTRL case now accepts "ctrl=bpf" as a silent no-op. Before this
+patch the write failed with -EINVAL. The comment justifies this as a
+"readback value while a BPF model is attached", and the documentation
+(da89d4c2165e) says ctrl=bpf is accepted "so a saved configuration still
+parses". But the read side never produces ctrl=bpf. ioc_cost_model_prfill()
+still prints only
 
-For comparison, calc_vtime_cost_builtin() takes `default: goto out;` for
-these ops and returns 0, and ioc_rqos_throttle() then skips the bio with
-`if (!abs_cost) return;`.  So these ops are not "twice the builtin" either.
+    dname, ioc->user_cost_model ? "user" : "auto",
+    model ? "bpf" : "linear",
 
-The sibling iocost_ms.c has identical code with the comment "unknown ops are
-priced as per-page writes", which matches its code, so the iocost_model.c
-comment looks stale.
+so only model= can read back as "bpf". The same docs commit also says
+"ctrl keeps describing the builtin coefficients" and lists ctrl as "auto"
+or "user". So no saved configuration can contain ctrl=bpf, and the stated
+reason for accepting it does not hold.
 
-Since this file is presented as the reference example for the new
-iocost_model_ops API, should the comment say per-page pricing, or should
-pages be forced to 1 for these ops if a single page was intended?
+The branch adds a write-only io.cost.model token with no read-side
+counterpart and no effect. As user ABI it would have to be kept forever.
+It is also accepted when no BPF model is attached, so a mistyped config is
+taken silently where it used to be rejected.
+
+The model=bpf branch in COST_MODEL is consistent with the readback and is
+not affected.
 
 
 ---
@@ -248,4 +262,4 @@ AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
 See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/35962141400
---===============5958733685988634967==--
+--===============0377911730758240839==--
