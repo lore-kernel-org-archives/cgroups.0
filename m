@@ -1,185 +1,186 @@
-Received: from mta1.migadu.com (out-197.mta1.migadu.com [95.215.58.197])
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B7284A92EA
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 15:51:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.197
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790265077; cv=none; b=fKK3lLyg15WzVhaUL+H9dR3JE2Hx+iRIR2TvM86E/208AE1W9xD2HumPMe4CAtDo/eC7LLPNBvKc3XI9fsePP590YHoaFgaxqavSWn6wBjeowAPy1/P0trTo4OYQpmk/MkOQeWZdbXN6gd8RCg+ee5E3TtgpdJtjElg0jhbxTcY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790265077; c=relaxed/simple;
-	bh=Ne424r/36je1ilOD3xcuRjIqebPC+88WgD6Zv6z4z2Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oyLquWKCAJNGRthsxYDfp4fb8RGM0kGctptMBCdpYNrH/aCStLaAa92Snh7sXVjUXoPe1G8QDO10Ldmi2AnFDQuvcl2NkRpZ1Zf6ukjYeMiVSZaImV0pCPuRUIRKGEHBcaA7jinwLg8bVg+TTW90tQPsgvlec9X2f4mGYdT2U1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=BXtvTzyd; arc=none smtp.client-ip=95.215.58.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C5F3C37AF
+	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 16:20:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790266837; cv=pass; b=gU77TpVkMx3B9BFzFB6b4Ol0+eSTw0MhI9z/X7m+QcQoYRrx6xEoQKaRL976TAJDZv2RHfN8WnQjccIljqRWi/QeP1lZfFL/OtTNcs7NqIDfCSU0+eLKmNKuYbB0yVwswa6598cs54hiGazllvyJC5eifFHitty2uut29Jf97xk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790266837; c=relaxed/simple;
+	bh=RSp2l1x3VML/TUH7NBwrx8HvLT3W4YMiteDUtD6oAoM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=EacRfWSzYiGQ0LOKyYPlgQBeMAawE6aphWiL1fT0mRjCWapsmvirIM0PkszKkBTtTSV4q8E1CzXniZKHY1ZL6uGFyjJFbczLxk5stoqz6u5TxoA0IeDFNzwz2DMuyZni2IEQFcJa7FPnD+m+ThCJQiLg4veNhS7P1AsGbWbw+Gs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PCpCDWgX; arc=pass smtp.client-ip=74.125.225.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="BXtvTzyd"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Ne424r/36je1ilOD3xcuRjIqebPC+88WgD6Zv6z4z2Q=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790265073; v=1; x=1790869873;
- b=BXtvTzydL7v0prAOoASk9PdgJnEKqHbiY+HJNs6fIR7O7l/a3uP/XWHZWcxYlO3tMYyO8k50
- /Uq0JKIfVz4FNIKXgw/1MXAIVGphWUhGVCDKVBWzjy+/pYtXPTweyyAeMXXgk1mfbgfl/tBSkFM
- 8chGPsdYDDBDSOzqeFUm4Da4=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id df65bdec98111fa4;
-	Thu, 24 Sep 2026 15:51:12 +0000
-X-Mizu-Trace-ID: df65bdec98111fa4
-X-Migadu-Flow: FLOW_OUT
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Will Deacon <will@kernel.org>,
-	Boqun Feng <boqun@kernel.org>,
-	Waiman Long <longman@redhat.com>
-Cc: Paul McKenney <paulmck@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tejun Heo <tj@kernel.org>,
-	Christian Brauner <christian@brauner.io>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Meta kernel team <kernel-team@meta.com>,
-	cgroups@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH RESEND 7/7] kernfs, cgroup: track holders of the cgroupfs locks
-Date: Thu, 24 Sep 2026 08:50:25 -0700
-Message-ID: <20260924155025.949998-8-shakeel.butt@linux.dev>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260924155025.949998-1-shakeel.butt@linux.dev>
-References: <20260924155025.949998-1-shakeel.butt@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PCpCDWgX"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-485984ebf5cso741f8f.0
+        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 09:20:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790266834; cv=none;
+        d=google.com; s=arc-20260327;
+        b=PBYxqBiqQ47ZGYrH5FSrTiYZFbKhU8GFgDoATHocjmpp0+m+K/Ng3wSnPvUwtJ+RT2
+         ecIVTe6CmPteqfPn7w58oSQAS6AR+t9xlGuiyvTVWKYfGzdquIxMQahRC1LM0D+NrETC
+         yuRL+gDFGCOAjGkmbF7ESynnNMv+jqepMZaJAaYHh/RP2tsYb+PaILcdqOL2dIAFmcxq
+         Kq2RsMavaVTU0h5bJo0T1trvq84e9ZHgGqOL7Gyn2JdSg6gsf4NAb4YE6RWDT4MMjmr1
+         7UHKbA4/fT6I6nEt0FWRlBQGhkg9Di5k3YLHzLdBjQXpPAM+8/d6WnSYyYB9nLIr/IB7
+         WdAg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Y4C/eEY5hpNw6IZ6GmmYyn13brOMotH1yARGM3FuI/E=;
+        fh=R3NBfq9ERlgpqUURAR8R+pxRVc4/q8IOVpHNHnuEzaQ=;
+        b=Qz86dL78IaeC4d/0kE+8DHvdaKMOGbSCeco/500Q31ZwmAx+UO5SAvRn7KRFDeA/o8
+         +odCTW7fRdDxtrPunjBC9Sq07nTs6ut0A+CCMim2Q7maJYaGoNeJbsLD3kW/HX+DKHJK
+         Y/pt4iBKUYt+sHgmdTk0KjwVLt9NGCmynCzxLgb8PNruFY6cNN4/SsO3NqD7TAQbIxk3
+         zuKERDvltwA43PwtVgQGEjLcuSLfY62G6EHUDhEg8QSEVJW0iTiKBiRdWWngzCdwR3k+
+         YGTAhSArw4pcyYA292jOuWaER0LcfL/MHXtICzcuOtH7sO6PqW2KTeYDzzbDe6U15Xag
+         0fZg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790266834; x=1790871634; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Y4C/eEY5hpNw6IZ6GmmYyn13brOMotH1yARGM3FuI/E=;
+        b=PCpCDWgXouIzhtlsM1Cz/m22yXk3HLuDl/7iiEUVUQXb8dalyr/v+itsCLjAM3YU8m
+         eAMbllXGH9dncQnIF4y35V3EnJCmKQMF+QGLHyoo0Ck102zKYF8l+O0RoUXq4VHWKKbw
+         feTuDO9Fm1PmhpuosM75c04GnAmPGH5oybiaHrPFARtpdYKKeQMtf/Y/aV29/vw15BTJ
+         mkNc01PHDd7BU1nNWb9H0b/1SAFbJspaTY1+K/roQqc5iJmL/9W3ByrRj6OtXjWxhOhT
+         cE+KkUwWavN6PvWKvIseyDn/w0JfNWH2F5OzfnqP6zIclBexkEMQOicMq7P8nbnorDM6
+         yrJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790266834; x=1790871634;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Y4C/eEY5hpNw6IZ6GmmYyn13brOMotH1yARGM3FuI/E=;
+        b=i/XHVPK40g35ssxx1Je03JrLVXyEC1CtB8y5MkVU6u2MdwhdktxD4ftJ/j630pU5wJ
+         /RXRklXntdMbQ+Q4Pl2JxnXePJsW8ePW802X84f/iTx2XDDah6eAoVNYtOPV5xus+49z
+         nwCTSYQYH/nE4sqZU3YFSlv3Qbapq24P41dB6RS19wYEIiFbLt1a45Ur1FepRWBlmvsF
+         0fI1Khzbk7NyLg97gvNj7mi2tkxRoCNgarawikLskaqkByqf5nNOIBtlagMa7umfjMgb
+         Wp48O1s6tlZ3LDsTCrGSgkELUBoNKYfOny8YF08yNyKWl/QpPEJCCxJHnVDI8PsLSWVL
+         fsog==
+X-Forwarded-Encrypted: i=1; AKwUvBxql8xI7tvs5v6iKAWvHVD1wUee0DhiGbaosZ8JfAeVKMm0etFs+x853PdqVsCGAXBIZQN0ykCJ@vger.kernel.org
+X-Gm-Message-State: AFuF++kbv0VhILiuU6xFqitQBDNgcShOyF8TsI5ur01nmqvLx7RSNZ/G
+	pBH37fGXs2ru1hRig11/sLG+SFEX768CrHXiRQC8fiba6wuDik6d2IxDVPxMlynn8So+5rtMw9D
+	N6wCsDQCeLWre2g5C02gEZYAhEUXPq5Q=
+X-Gm-Gg: AYBFou3NOU9fcKZ3EpEqsBgAnskA4jpDNDycdqo2fxT0DFpC+6mR/rY2LJZ0+tJ3vnw
+	FayXcQEHWPutVCLoUjwSGpEnV/NLrcuFCzhY5Hk53rC10lqTgrU/U7TR81gyISgmEvwx9NvgZQJ
+	Y+ehNFT7bKe76hco+mJJEDhPa2jLtZ7J9KSUWjXvLCdj488BMYOhiuV2cqu7EiUCV6TeyrFeisn
+	cl7kzx0qiuymVsb6L5pWDsEG1lxA/fJX7btTF5jD4TjI0qCQwBQ6UQLzlD/Xg4ltiNSOjnOh42+
+	DIEJq5+Tnxn/V535bAi/2W+pyvvUZcssTZ8SOTDaWs9ZFLR7OdWZbHD5bcPhfhXq09wihxErg6K
+	1Hk5DU8k8fA==
+X-Received: by 2002:a05:6000:26cd:b0:486:fe8d:298e with SMTP id
+ ffacd0b85a97d-48872ad7729mr4973566f8f.53.1790266833368; Thu, 24 Sep 2026
+ 09:20:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260918180241.3424851-1-nphamcs@gmail.com> <20260918180241.3424851-2-nphamcs@gmail.com>
+ <CACePvbVaDNspMDSw_qAcapKAzXj3JGV-KMYmow7aePa0POHpSg@mail.gmail.com>
+In-Reply-To: <CACePvbVaDNspMDSw_qAcapKAzXj3JGV-KMYmow7aePa0POHpSg@mail.gmail.com>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Thu, 24 Sep 2026 09:20:22 -0700
+X-Gm-Features: AclHuK-lGJJsKLxr6Qb-y2IvmlUpoUB7yhNg4AVw4NM-rENBoqlMKdnr9zU6afg
+Message-ID: <CAKEwX=OP3Gb9sVOvch+p4j7quzgy-rUY=UTZau5ztMj7heJJoA@mail.gmail.com>
+Subject: Re: [PATCH v5 01/11] mm, swap: add virtual swap device infrastructure
+To: Chris Li <chrisl@kernel.org>
+Cc: akpm@linux-foundation.org, kasong@tencent.com, hannes@cmpxchg.org, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	yosry@kernel.org, david@kernel.org, muchun.song@linux.dev, 
+	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
+	youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org, 
+	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
+	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
+	weixugc@google.com, riel@surriel.com, gourry@gourry.net, 
+	haowenchao22@gmail.com, corbet@lwn.net, hughd@google.com, 
+	baolin.wang@linux.alibaba.com, tj@kernel.org, mkoutny@suse.com, 
+	skhan@linuxfoundation.org, kunwu.chan@linux.dev, kernel-team@meta.com, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Opt the cgroupfs kernfs rwsems, cgroup_mutex and cgroup_threadgroup_rwsem
-in to lock holder tracking.
+On Wed, Sep 23, 2026 at 2:18=E2=80=AFAM Chris Li <chrisl@kernel.org> wrote:
+>
+>
+> There are too many swap_is_vswap() in this series. It fragments the
+> code path, making things harder to reason about. Esepcially around
+> locks. I count 22 in this patch alone.
+>
+> I consider this the biggest drawback of this series. This
+> fragmentation of the code path.
 
-Add KERNFS_ROOT_TRACK_LOCK_HOLDERS, which opts in a root's kernfs_rwsem,
-kernfs_iattr_rwsem and kernfs_supers_rwsem, and pass it from
-cgroup_setup_root(). Other kernfs users have their own roots, so only
-cgroupfs is affected. All three are held across work that can allocate,
-so a holder stuck in reclaim can stall many other cgroupfs operations;
-kernfs_iattr_rwsem is write-held across kernfs_iattrs(), which allocates
-with GFP_KERNEL.
+This will mirror my response at [1], but I'm responding here for the
+record and for your convenience.
 
-cgroup_mutex is taken by every cgroup create, destroy and migrate, and is
-held across the same kind of work, so a stalled holder stalls the whole
-cgroupfs control plane.
+It is needed because vswap *is* a special device, with its own
+requirements. If you don't special case-it, you'd get undesirable
+behaviors.
 
-cgroup_threadgroup_rwsem is taken for read on every fork and exit, and
-usually for write on migration, so a stalled holder can stall process
-creation on the whole machine.
+Let's take Baoquan's patch series as an example.  It treats the xswap
+device as just another swap device, without any special consideration
+for it. Which creates several problem:
 
-The last two are statically defined, so opt them in from cgroup_init().
-That runs after jump_label_init() and before anything can take either
-lock.
+1. At allocation time, cgroups that disable zswap might get an xswap
+slot, because you don't do any check that the device you allocating
+the swap slots for is xswap. At swap_writeout() time, it is *stuck* -
+we already do the unmapping step, so we cannot reclaim the page.
 
-signal->cgroup_threadgroup_rwsem, used with favordynmods, is left alone.
-Its readers also hold cgroup_threadgroup_rwsem, so they are counted
-already, and its writer only blocks the process being migrated.
+Ironically a physical swapfile backend could have bailed us out here,
+but it's not in that patch series yet :)
 
-These opt-ins are for a policy that reads the count. On their own they
-only turn on the static branch, so they should go in with that policy.
+Vswap both has swapfile backend, AND allows you to bypass it if the
+cgroup disables zswap. Both involves a bit of swap_is_vswap() check,
+but I think it's worth it :)
 
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
----
- fs/kernfs/dir.c        |  5 +++++
- include/linux/kernfs.h |  7 +++++++
- kernel/cgroup/cgroup.c | 27 ++++++++++++++++++++++++++-
- 3 files changed, 38 insertions(+), 1 deletion(-)
+2. Per-CPU allocation caching: since all devices share the same cache,
+xswap will invalidate the caching of other devices, and vice versa. It
+would be fine if the these devices are interchangeable, but as noted
+above, it's not, especially without physical swapfile as the backend
+option. So you're forced to taken the slow path more often.
 
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index cc6288d5b4cc..1116bb38c1ff 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -1035,6 +1035,11 @@ struct kernfs_root *kernfs_create_root(struct kernfs_syscall_ops *scops,
- 	init_rwsem(&root->kernfs_rwsem);
- 	init_rwsem(&root->kernfs_iattr_rwsem);
- 	init_rwsem(&root->kernfs_supers_rwsem);
-+	if (flags & KERNFS_ROOT_TRACK_LOCK_HOLDERS) {
-+		rwsem_track_holder(&root->kernfs_rwsem);
-+		rwsem_track_holder(&root->kernfs_iattr_rwsem);
-+		rwsem_track_holder(&root->kernfs_supers_rwsem);
-+	}
- 	INIT_LIST_HEAD(&root->supers);
- 	rwlock_init(&root->kernfs_rename_lock);
- 
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index 73786b567ccd..ea2efdc5277e 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -156,6 +156,13 @@ enum kernfs_root_flag {
- 	 * Renames must not change the parent node.
- 	 */
- 	KERNFS_ROOT_INVARIANT_PARENT		= 0x0010,
-+
-+	/*
-+	 * Track the holders of this root's rwsems (see
-+	 * CONFIG_TRACK_LOCK_HOLDERS).  Use it for roots whose locks are
-+	 * shared so widely that a stalled holder stalls unrelated work.
-+	 */
-+	KERNFS_ROOT_TRACK_LOCK_HOLDERS		= 0x0020,
- };
- 
- /* type-specific structures for kernfs_node union members */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 804318ae160e..87d66aae2558 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2191,11 +2191,18 @@ int cgroup_setup_root(struct cgroup_root *root, u32 ss_mask)
- 	kf_sops = root == &cgrp_dfl_root ?
- 		&cgroup_kf_syscall_ops : &cgroup1_kf_syscall_ops;
- 
-+	/*
-+	 * Track the holders of the cgroupfs kernfs locks.  They are held
-+	 * across work that can charge memory, so a holder stuck in reclaim
-+	 * can stall many other cgroupfs operations.  Other kernfs users have
-+	 * their own roots and are not affected.
-+	 */
- 	root->kf_root = kernfs_create_root(kf_sops,
- 					   KERNFS_ROOT_CREATE_DEACTIVATED |
- 					   KERNFS_ROOT_SUPPORT_EXPORTOP |
- 					   KERNFS_ROOT_SUPPORT_USER_XATTR |
--					   KERNFS_ROOT_INVARIANT_PARENT,
-+					   KERNFS_ROOT_INVARIANT_PARENT |
-+					   KERNFS_ROOT_TRACK_LOCK_HOLDERS,
- 					   root_cgrp);
- 	if (IS_ERR(root->kf_root)) {
- 		ret = PTR_ERR(root->kf_root);
-@@ -6552,6 +6559,24 @@ int __init cgroup_init(void)
- 	get_user_ns(init_cgroup_ns.user_ns);
- 	cgroup_rt_init();
- 
-+	/*
-+	 * cgroup_mutex is taken by every cgroup create, destroy and migrate
-+	 * and is held across work that can allocate, so a holder stuck in
-+	 * reclaim stalls the whole cgroupfs control plane.
-+	 *
-+	 * cgroup_threadgroup_rwsem is taken for read by fork and exit, and
-+	 * usually for write by migration, so a stalled holder can stall
-+	 * process creation on the whole machine.
-+	 *
-+	 * Neither can be held yet, as rest_init() has not run.
-+	 *
-+	 * signal->cgroup_threadgroup_rwsem is not tracked.  Its readers hold
-+	 * cgroup_threadgroup_rwsem too, so they are counted already, and its
-+	 * writer only blocks the process being migrated.
-+	 */
-+	mutex_track_holder(&cgroup_mutex);
-+	percpu_rwsem_track_holder(&cgroup_threadgroup_rwsem);
-+
- 	cgroup_lock();
- 
- 	/*
--- 
-2.53.0-Meta
+Vswap gets around this by adding its own per-cpu allocation caching,
 
+So by being too lazy and not carefully distinguish the swap devices,
+not only does xswap not work for the writeback use case, it cannot
+even work in deployments where some workloads (cgroup) select zswap,
+whereas others select disk swap. It can only work if you intend to
+have a single class of device - either virtual/xswap or disk swap -
+but not both.
+
+Maybe instead of just grepping for swap_is_vswap() and throw your hand
+at the complexity, read the code and try to understand why it's
+necessary first, then propose simplifications if you have good ideas
+in minds.
+
+>
+> This is questionable. A vswap device does not go through swap on.
+>
+> This changes the behavior where swap devices always go through swap on/of=
+f.
+>
+> I wish the swap device went through swap on to be able to start swapping.
+>
+> Chris
+
+What usecase would necessitate the need for swapon/swapoff interface?
+Other than just trying to shoehorn it to an existing interface?
+
+I've expressed why I dislike the interface in [1]. Other than the
+sizing aspect, which we are already discussing in another thread,
+priority also makes zero sense. You are literally exposing an
+interface with only one correct answer - what's the point?
+
+Justify your interface choice with real userspace use case, not just by
+conforming to the status quo.
+
+[1]: https://lore.kernel.org/all/CAKEwX=3DPEEkYiNRaVhCuM4E6mxB9huPKfkDa4m62=
+VMTzedg1oYw@mail.gmail.com/
