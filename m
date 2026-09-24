@@ -1,170 +1,64 @@
-Received: from mta1.migadu.com (out-2.mta1.migadu.com [95.215.58.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31534DA528
-	for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 20:42:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C57F4E06D4;
+	Thu, 24 Sep 2026 20:54:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790282558; cv=none; b=t7Etn2W34uOBAr92ug1CiONbw7+atz1NJGu39B30nRaU6q44/QToInODS5ZXysCghPGDP4uEoTUZ2XsNzpxesD22M1ooWh6PRC3J//U3FWu6vFb7jkT8kpFtlkUkOmmWpkNgUWlEcgIvn/LB3qSlYgYd0zqSxTnJdLCZM8GwuCI=
+	t=1790283293; cv=none; b=pdPlW2beQ99r8NoStAWT+WISiBQiHh3d2fKKapplCeSj5su4GQbckyB1/qIG25IBWAkn4PWMu4uyf97jfIoAUj3R0VCmzjfFuVRIphlVXTK7rtZJl0g1VJdUtus/ZsptnANwHg7HmjxAPkr4y9HLe1MtSvLqMwSkgGTLcJsk6z8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790282558; c=relaxed/simple;
-	bh=nnArrsZ9H8yG5uIeRkg0y81lA15dy/yoQgT4igabXhs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=chfz+FuCkwA0k07l53dmz+vEzzmvq7NhOFcY68HLe8xMKKL9k9dN60oss5Ifb5mFa0aLlnVDjEEUzUGWKvNJGVPhnRYz1RJhKKI3cCQhNBXmEKk8kRXCYbNJmBhYPgysFlSJcNOWB+RBjC3GgIBsvaWYNzWWVz71WvbdTOG5Rpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=movhOMzi; arc=none smtp.client-ip=95.215.58.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790283293; c=relaxed/simple;
+	bh=b1P+dpAJd4ilROWRR7JOoHU3ZN+/43f++yN0FOOmJOg=;
+	h=Message-ID:From:To:Cc:Subject:In-Reply-To:References:Date; b=OnCYDObDjTT/qWu4sK7wKb6bYNW/6FwuywoBWZxJG30eoGGpQnQwtVwW5QQj9h5TadH6sOHZ70h574KYln54eJu5StDGtNLfhEwvYGyw472uWwqWC3Sd0SZQRB9mzrApmjvl6niQOnwMVObVS4jdu63JSRMY9tpmhNhNk6Vnmyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pfp05dVs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="movhOMzi"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=nnArrsZ9H8yG5uIeRkg0y81lA15dy/yoQgT4igabXhs=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790282547; v=1; x=1790887347;
- b=movhOMziQtRSeKkzCtOdTDgLn/vpuXyK3ONg4P+AqvP9xRlLcvwoVH9I7sTEjNelr4oKA0T0
- CMQdTkWulpOzBLIKErJjheg6krYOy5tP0AhfgpKjLrwDUpoWsRduXhpPGkriFs1QtDMs2SledM4
- 3KOQyAivloZDBVXZgA8qgW2A=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id e2e7b493161569e3;
-	Thu, 24 Sep 2026 20:42:26 +0000
-X-Mizu-Trace-ID: e2e7b493161569e3
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 24 Sep 2026 13:42:24 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Alexei Starovoitov <ast@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	JP Kobryn <jp.kobryn@linux.dev>, Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Michal Koutny <mkoutny@suse.com>, Amery Hung <ameryhung@gmail.com>, 
-	Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, 
-	Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, 
-	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
-	Yonghong Song <yonghong.song@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>, 
-	Jiri Olsa <jolsa@kernel.org>, Ihor Solodrai <ihor.solodrai@linux.dev>, 
-	John Fastabend <john.fastabend@gmail.com>, Jiayuan Chen <jiayuan.chen@linux.dev>, hui.zhu@linux.dev, 
-	Donet Tom <donettom@linux.ibm.com>, Greg Thelen <gthelen@google.com>, 
-	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pfp05dVs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C2151F000FF;
+	Thu, 24 Sep 2026 20:54:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790283291;
+	bh=b1P+dpAJd4ilROWRR7JOoHU3ZN+/43f++yN0FOOmJOg=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=Pfp05dVs/nLmYIwmmnLuU0LGKKQVgRhmPpAa63GrlYfezIpIa8MiknbvumacL5KHr
+	 aD5LGT1J4G+sxM3szSR/SVopfWCk9palAi+9ftWzHPYV/uH9CiblGWpQd7TxEKR1BX
+	 vp/0x2ADg47hr0O/G0zNYtjv5gs7y6BpIJr9bgsOBUirZosc0dkx/+2RXmdIDx4IhY
+	 B3xZjK/CVoI+D+NVjl+Jj7rM1eLEJ0n0OxU/ySHWKH9VDSc1BLuDmCsoNAeS1hyV11
+	 8kxiyhLyfmz9UTxzFfAPuFHBBLbvUzI4zlSxTaIgOeeJY01834C2XRexO3sZT2b613
+	 VeiSrrWV5JUGQ==
+Message-ID: <b54f443b33e1637e31a4db8d56c11a1c@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: =?UTF-8?Q?J=C3=A9r=C3=A9my_Jean?= <Jeremy.Jean@oss.cyber.gouv.fr>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+	brads@mainlining.org, cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/4] memcg_ext: memcg policy through cgroup-attached
- struct_ops
-Message-ID: <arWJBBOdvLsOSdCt@linux.dev>
-References: <20260921192559.2619635-1-shakeel.butt@linux.dev>
- <CALOAHbA4EgGw_uWfbXD0Q87exP7ek=z9ENuU_ARgb+DgBgy1kQ@mail.gmail.com>
- <arPyspcEFNkqfNyr@linux.dev>
- <CALOAHbDKRw9cPN_GxOYbp9u50cvr7PzPyoGPsSwoPDPAwBCGbA@mail.gmail.com>
+Subject: Re: [PATCH v2] cgroup: prevent css_set UAF after namespace
+ publication
+In-Reply-To: <20260924111036.3330268-2-Jeremy.Jean@oss.cyber.gouv.fr>
+References: <20260924111036.3330268-2-Jeremy.Jean@oss.cyber.gouv.fr>
+Date: Thu, 24 Sep 2026 10:52:45 -1000
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALOAHbDKRw9cPN_GxOYbp9u50cvr7PzPyoGPsSwoPDPAwBCGbA@mail.gmail.com>
 
-On Thu, Sep 24, 2026 at 06:01:27PM +0800, Yafang Shao wrote:
-> On Wed, Sep 23, 2026 at 11:47 PM Shakeel Butt <shakeel.butt@linux.dev> wrote:
-> >
-> > Hi Yafang,
-> >
-> > On Wed, Sep 23, 2026 at 09:07:40PM +0800, Yafang Shao wrote:
-> > > On Tue, Sep 22, 2026 at 3:30 AM Shakeel Butt <shakeel.butt@linux.dev> wrote:
-> > > >
-> > > Hello Shakeel,
-> > >
-> > > On the open question of how deferred debt eventually gets paid: would
-> > > it make sense for the policy to also notify userspace (e.g. via
-> > > ringbuf) when it defers,
-> >
-> > I think the notification through bpf programs is already possible and a bpf
-> > program deciding to bypass memory.high can already do notification via ringbuf.
-> >
-> > > and have a userspace reclaimer do the reclaim
-> > > through memory.reclaim?
-> > >
-> > > I understand one of the concerns for the async worker is CPU
-> > > accounting. If the concern is that the kworker's CPU usage is not
-> > > charged to the target cgroup, the userspace reclaimer could instead be
-> > > spawned with clone3(CLONE_INTO_CGROUP) so it runs inside the target
-> > > cgroup, and both its CPU and memory usage get charged there.
-> > >
-> > > One caveat: intermediate cgroups with the no-internal-process
-> > > constraint cannot take processes, so this would only work for leaf
-> > > cgroups.
-> > >
-> > > What do you think?
-> >
-> > I think all of this is possible without additional code and with this series.
-> > With AI, should be very easy to prototype it. Please take a stab and I will look
-> > into it as well (time permitting).
-> 
-> An LLM helped me quickly implement a userspace async memcg reclaimer
-> based on your series, and it seems to work quite well.
+Hello, Jeremy.
 
-That's awesome. Please do take a look at the code and provide feedback and if
-you don't mind, a tested-by tag would be awesome.
+On Thu, Sep 24, 2026 at 11:10:37AM +0000, Jeremy Jean wrote:
+> copy_cgroup_ns() sets the root of a new cgroup namespace to the parent's
+> css_set. When the child is created in a different cgroup,
+> cgroup_post_fork() replaces that root with the child's css_set after the
+> namespace is visible.
 
-> 
-> >
-> > Thanks for taking a look and also please let me know what other ways you think
-> > memcg can be customized through BPF in a beneficial way.
-> 
-> Sure. On our production servers we have been running a set of BPF
-> programs to tailor kernel behavior for different workloads — all of
-> them global programs so far — and I believe they are all good
-> candidates for per-cgroup BPF policies now that cgroup-attached
-> struct_ops is available. They have been really helpful in our
-> Kubernetes production environment. I have sent some of them upstream,
-> such as:
-> 
->   - BPF-THP
->     https://lwn.net/Articles/1039689/
->   - BPF-auto-NUMA
->     https://lwn.net/Articles/1054030/
-> 
-> Perhaps we can revisit both of them and turn them into per-cgroup
-> policies — what do you think?
+Looks good to me.
 
-Yes seems interesting and I remember other folks (I think Rik) were interested
-in these ideas as well.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-> 
-> We are also running some custom BPF programs that have not been sent
-> upstream yet, such as:
-> 
->   - BPF-async-reclaimer
->     We don't care about the CPU accounting of the kworker, so we just
-> wake up a kworker to do the async reclaiming.
+Can you repost with the namespace maintainers cc'd (Christian Brauner and
+the NAMESPACES entry in MAINTAINERS)? I'd like their acks too.
 
-I understand but I think for general solution we do need accounting for this and
-I have rfc out for this.
+Thanks.
 
->   - BPF-fault-around
-> 
-> Both are really beneficial to our workloads, and both are global programs today.
-> 
-> We are planning a few more customizations to resolve painful
-> production issues, such as:
-> 
->   - The long-standing inode::lock contention caused by dentries [0].
->     We have not started implementing it yet, but we might introduce a
-> memcg->dentry_limit or a memcg->vfs_cache_pressure as BPF policies..
->   - cgroup-level readahead.
-> 
-> So, to answer your question directly: for memcg itself, the beneficial
-> customizations for us are the reclaim policy (the async reclaimer
-> above), the dentry/vfs cache pressure knobs, and fault-around; the
-> rest are per-cgroup MM policies that would need the
-> struct_ops-to-cgroup mechanism generalized beyond memcg — which is why
-> I hope these use cases can help make the design more generic.
-> 
-
-Thanks a lot for this information, I will think more on these.
-
-> [0] https://lore.kernel.org/linux-fsdevel/20240511200240.6354-2-torvalds@linux-foundation.org/
-> 
-> -- 
-> Regards
-> Yafang
+--
+tejun
