@@ -1,328 +1,304 @@
 Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E28F03B777C
-	for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 16:54:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E90433939B1
+	for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 18:04:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.76
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790355290; cv=pass; b=ECkCYZ/Fr06FUjHWlVhjBJVg/YxQQZtzylfNyLX4V6EmaRJfttn4xuP5kLYG7lP279eAvaFUC5eXssXapYWIn7Ggw5PCs17tAMDzR6HHRNBaaM5h9bFium7VTePOrVqkk1ZqRmgjWEFO/5ffi7N+6T9qbqQpN7LGM7RWz6dlTLc=
+	t=1790359485; cv=pass; b=eBlAxxzZKg+pPD8sP1/AKxIeG0Aysz9wZh2QvFDlAVgMSkgLat6V2YT2NUaRmYMIjPStkwULxiEdwSQ2ACTnwCp8x8rovBeoEzIMRhWiA7BoZFZ9A8Oa2MT+z8UqST1BlUUjHf+9xCP6U3KmVPg/5RI5V55hJQagiDFEI2KWUZY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790355290; c=relaxed/simple;
-	bh=Rq8JlmKjQPqCOGt36H4bhTZin8GIP9f142Zycu8n3OI=;
+	s=arc-20240116; t=1790359485; c=relaxed/simple;
+	bh=QEH8L5cDVVxNiTq6xVhREUG3v4qVPQmEXXMWF/9zco8=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=k3NLopfCLlWinvW7/2imtzt0xkPlso0Hg+vo5Vuda4EtRh95SmfSJgD3i8cWLC987CBrGfarHAdtJ2d/A5sFWaHFxRlDEA/XfVHPflN4bQMBUw9zvdT6r2XXx6jY0ZjW/47/N1HoW9iwQlO036Kb3VEkYUjqA1ZR7E6j7H7fjJ8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YTl1cngy; arc=pass smtp.client-ip=74.125.225.76
+	 To:Cc:Content-Type; b=oulKMhzEFciKeeJtJ+Y63Ztpusas6j9cfj37NNLpMbV9vhouybdz9R7FY+X40f71+WNomJd887Rgsqhyghn/AdearkIh8M5plByUzx6S9dyODmUHBP9Kl+AO7ZVvEuys904BALT+lwFNs71cxvgGfhpryxOrXUtzqH20f80rPDE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MPkuGcz0; arc=pass smtp.client-ip=74.125.225.76
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YTl1cngy"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f63546c5so923409f8f.2
-        for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 09:54:39 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790355277; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MPkuGcz0"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f635552aso909804f8f.2
+        for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 11:04:43 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790359482; cv=none;
         d=google.com; s=arc-20260327;
-        b=VTLuadnJVMNYDMEMfbUrZNwsvKVAltxr15UAc+Km6Xwe/2ln430Z24eGJO+11c2RN/
-         Y1nDUutIR9P8tRFCgFfwXOJPvdsltue9yAooHFFI08svH1JXZSyVbZDqnKXPqbj1eLAP
-         I31jmyTVdE60SScqpRcbejdhI4jrbNfhiWIWtWmfJI1WFwwZiNXdVkHxqXBP/lcTRhSv
-         q0x2Vt0Rrndo0mgaN1x5PVd0hFanOD0jFCD8pzHuSIbigOPbbvmoyCx20V9f+HRz0SZi
-         huraKY8TX8Mys26TBZPs6+lhaVm2wP0ZU1x5c+ciWlEF899rxYpLZuiHoRZFsfd46Fxu
-         5qYQ==
+        b=E6hICALQ1y7Mtj5GVBWKnp+ArxcrXiuVoga/+y8z+PgKqQwGBFaXPCFcnChdHn4qmp
+         mI1v4V5WpqdkFfl0ZKnv5hEtIe1cQKPJRiFN4uCr75aXvmxK1iGLfo1PjlpH8jlHvCeT
+         a2WqTyMM/B/v2hIDaoLC7FE5eA6SoWdPTxoCB9usqxoRdeQsXMQI1glikRA8nh/SQAwf
+         rr1FRoKYyZ9oQrYdkCJb/Z4iGztMBJOUqZAbuS/dp3J3QIaxR4gwjYi80QGWyUabRB9g
+         zMRmSAdBDjCq7DNaObbODMUVYLlFt0IItA87im9qIGJmUwm4xxzfZ1yf8H8S4rdyuVvI
+         YLBQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=zB6y5YhkOLzSNaiUrMoC/Z2pJ3kqHY43Xibqpz7MDRs=;
-        fh=MNxQ0siM8xGOpC1zzX6gZF9hNf79ZjkdVTYdSS+X+sQ=;
-        b=B8yiWPu0TycNPRKrGadh1Zbc1APv2DYp+Yug60Vr/fxvxJJ76LLt5uhhOWjBBsy8ry
-         Lsv0KkbwBRtifV6W55tg1oYxkgW4i94QOGtwzoZUGq86dEcsRrRB0jXlM8fSQbPrFey0
-         LrtB2rUQlwVcfdwDbOGEL6TKnkxBJoOcI3I3Dq9ckWtGYYdd231Ee6dfaoFmsyN+q9fK
-         x7jYuei0oqqICznQtuNJYGybGwdJnlT4RjSfskJWxrpOUfqEbYm2tIBhsQ7EeUiUWBqf
-         +kkBoHeg51nFkvBkGN/qz7uYFBU2I53ysBL/J6BVzuDuUa5UgMeQeWZHanGNXCdVRupK
-         cUxQ==;
+        bh=vBI+n6R1FCbaNpcY2beRWPIJrzbCO758rgC3BSuPO/g=;
+        fh=Y7FN1ewIacT91CtEIgt1GXIw94yz15RVT5rE5roElaM=;
+        b=KzebvWhmHXtkUziHS8yz0kMHIuuWCcZW3FkGSn5JqNW+/bKLg2jErafE8NgZ/WVx3F
+         Q3CZ1/CyZa94XObzgrpxTQ9b/gcvb6yZ6SJQQ2p1+PbFudCknhctEbJrpJVrxVao3iB+
+         p43Q7VS019VYRtnmoz1309SlZ3BJt7NWU/Yb3IQSQB5VgVmeknL01k7POOuBUD+gtTi3
+         7/OcOjQxi3lHjMpk+BOHaRMDcMh3VphqzPfgU4eLFk+BkXcZDDQ1jnSgF8drsGVlE5I7
+         IQT768goqlqDIJTtSEdzYUX011qkFVhZLknFTJL57JZP13LBqfaIU4tm2ePP9Rm+/IPo
+         7nPw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790355277; x=1790960077; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790359482; x=1790964282; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=zB6y5YhkOLzSNaiUrMoC/Z2pJ3kqHY43Xibqpz7MDRs=;
-        b=YTl1cngyva0z4WhvRtyB2EXtfsgpzF6BRD6CQnHXqoE91l/eC3TCidBhVn69KJ6fxC
-         kmq0MBFXBOEGmfl+mu5jMxIfjJmuJShXWKZEyodZxw9p0pTgYRdeveRpnty22LIUd567
-         P4zPw0JbSJg6DhkTtqFP52fKy9X69R9WYhI0n+eFsnEX54YvWVkLLIxRTJYvSKbBGRPE
-         mqmx6myzJDRz/Bu62ukSWYUH3DfLygiPzecFUoDV/j+eS7wB3BYJCBt3QiJ+Fa0qHWUA
-         I1HDPzscBnfcOYZYiwnWjcvxYLKoqK2+h4yGGKkLbb/N62PiEiEmHQT8YXqcfLQD3AUm
-         dvdA==
+        bh=vBI+n6R1FCbaNpcY2beRWPIJrzbCO758rgC3BSuPO/g=;
+        b=MPkuGcz0vLDQc2fb6kFEdZF9hKQ173BCZpK7mgdUD5eloYUxfn4x3O8v1Xz71sqFy3
+         pvulI2vzB57DaN43okv/1HzCeVRC5xq4Jp2Fc6BkqkHKt5dVIyt/8akpDmBDvbwq2K7j
+         IOBb3s7aHYI6pWt6Pv4UlwAYgPnmSz7Zm+VXp+BSK9G8aKyL5wnT2KgKbmgsXfKnP402
+         koWgmc284r6Vx719JWO+mUkHAIlq/PGdowxYFcDc5PGq6w6WsUmH1HlCIlFn7DS3XnYq
+         /uLfJugGMp+1jCMM7/tirzzFmi/Nc3N1A6anuAXXFt9swRUn1pZFHpkMjjAjN6NfkHkg
+         96Pg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790355277; x=1790960077;
+        d=1e100.net; s=20260707; t=1790359482; x=1790964282;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=zB6y5YhkOLzSNaiUrMoC/Z2pJ3kqHY43Xibqpz7MDRs=;
-        b=kuJqmFL7hOaOAT2qu09C1BMKSWo2hRten6EyKDPQVFBspxRyM+U6dd8XSFaYmHTxdk
-         78iTXKxm7GogYwy7LGoet5vGzSz1YDsYKUNq8EEdRMlnFk9cFHOwQVWmXoreo0VysfdU
-         502KPg4UcDOQJoJz0E4b3W3Hh3SccOYUDMAfiwqrE7A4LnwPL7lQxpSIepD4rYN9QFuf
-         TO6Ye/XWFe4Ox7v74fc19GQEzalCYorZrHAy1Oukc0VKwVQ6reTWpR3oe8VcmEVKVkUM
-         yuxtL3VVxe/7+BjAkEzKA5u2SSgCnow+55kN3AeZ2nlNefRbSkAVK+hpwfrQ49H/0dUC
-         m9rg==
-X-Forwarded-Encrypted: i=1; AKwUvByP8sb/KdOHsKwDvW9a03AHdRwEKgRaypCawf9TitxwliPIKmFmOs79+ep/HuO80supLmTLTF93@vger.kernel.org
-X-Gm-Message-State: AFuF++mdsUwVgcvJHqwR1tcewTKWa6ve98At49r7LUsJTSqw/GfiUScM
-	iaDKy6H/72bwUlaOPaJRINnDIkSu4QMlbzWeT61y7qGgbnchtmG1NQ3rSMsdTFdAJtIbVzrmZ8c
-	2pbMWczNteSh1XdNnYx7GqfnPB29/XE0=
-X-Gm-Gg: AYBFou1F8mWmLj7xj6XrSxoZ7NcECaa2O6sBKo00tHyZtKu8+xrg/tbVGsYKD29/jz8
-	iV2YB42hmJdqEA3jF6+ya7BUDqSubkUTWIpeuZBV76K6sNvXvYHnnbDpdAHlsXWZN1Avc/X2i5F
-	cpax/Ak/250dRWVdpN6FHHXWy4HrqbSekTHSPtAVrrr/td9Q4U/zk4ROu3OMq6BOgsiMD5Xi8oB
-	YpePGo90ou9UpvgciQNoWCi5e82Lk4uliMnX0FCLqrLzSATc46+zavDb9ZhfnWOjeC0lu3Isdef
-	QGvtLWKmisf+wHt1WMsYt619d+8/E4HbZLTAINYQiICpIuC+7H+mHLlliswQGqpntv/FEF6ZG72
-	TgscCZblk4hA=
-X-Received: by 2002:a05:6000:2c0e:b0:488:8546:d0b2 with SMTP id
- ffacd0b85a97d-4888546d0e7mr166478f8f.51.1790355276640; Fri, 25 Sep 2026
- 09:54:36 -0700 (PDT)
+        bh=vBI+n6R1FCbaNpcY2beRWPIJrzbCO758rgC3BSuPO/g=;
+        b=YhfIMJhcpgSsolSDIY9vtQd59t8RiN4BUE6wRRB5Fhh4gbJvRIi1FOrZbBkKnGbSAV
+         tiYcPBt9Ap4E8V13its0hn8Gh6tch67FYPGqbIgNctIgl3gdnOcquTFJM+SpS4pc2Skp
+         nSSmAUu0n7aYS+8WkZmvbT/0m4gbjx6yxhyJNrHxNnVBj1z/KULwx6KmVCXA/N6G5zSe
+         Gm4Hk4is+jf81O22lM3y3e9S3DT4zRvMQgfTDIJwcHMQMN905UpIObqI6LubL987rl7V
+         nPODvSh7tzFiMEG7SWO5Zyko57QKErB/j0z2iaspoNF1iI9Cd3+XgIOiifX2p4ANQRj1
+         gOgQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzJfacvd9YijroaYhyPa1UdzzNPJYY4OsWb/KVNGz1TivIt/z5LS1ncZJOECIzn4SMgtPpu4tI1@vger.kernel.org
+X-Gm-Message-State: AFuF++mrAGWk9BYbmpHukNGcncAic7Mopw/SoT/9dR1KPj8zBkWHCjti
+	3i01wsW5mcT3ZDQmUvSXUefUzX/dNHDZg9/w99SV68WPLLx7LQ+MnJJvkIaBVb/kQEX0DZOJcel
+	M7SDR+KEY5Hp6FTjr1PnKnKT23++Yvus=
+X-Gm-Gg: AYBFou1zHmb4alfF0V8t9ugx7C3Rf5nThPIuQ01GJNU3tkjB2tKllmg+RHUN8zkyeZM
+	uE1JqS25kU3+EBmx5Og5KCBoRZZMTtP4dSdLKn7YctcGzxAVFddH5NZ7DByzg/C/r8mtsGNEdwa
+	RMF45l3oXpH1PbmrLtoeuX4gtQU12fxgd7cO0nV5Uno2UVlm0w2deoO8JAcpwNdxH/KYvaL3Fit
+	oOz8/01BS4CJGJR4Nc2/zu14NSbB/Eg+j5hTTK9l1R7wf0qdDAaFiKmlCwq+/EVNuxM8td2NdDI
+	eI6fXRjgX6aHg2RpaAjSBSGJkZtbUeTKV27SgOF/X8zfd7zUzlzdhf3QRjBLmIz7Tq9FLl39ILI
+	xfox7cfarrQ==
+X-Received: by 2002:adf:e188:0:b0:486:f980:2361 with SMTP id
+ ffacd0b85a97d-48872ac750cmr11089879f8f.45.1790359481944; Fri, 25 Sep 2026
+ 11:04:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <aqQrPLPXHXiuKup0@linux.dev> <aqjcFb6MFNiA6n4V@fedora>
- <aqjpYHbZ14A8xRtK@fedora> <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
- <7ee199ddee81bf8026688def82f78ad9db09be9e.camel@surriel.com>
- <CACePvbVA+DnDJprMx3qOrGb98y1ORQ-LfaENy_Btfx3uW=E4eQ@mail.gmail.com>
- <f3ca71f1c561f28a341de0e5a1b3f24bd4da3201.camel@surriel.com>
- <CACePvbX5Oy98DygLZjC=Z03Lqb0nk50_OEKQCT9svbQOOwwDew@mail.gmail.com>
- <CAKEwX=Mv+tnL8K4rfPuof6mKaLQp=tqR_qjtKrtY0-5L85FLfw@mail.gmail.com>
- <CACePvbUF2QQMh_GiCNQn-RTmZNkkLWkmaHSYzdQwv2fupjNQiw@mail.gmail.com> <arUcil9kxUPiymXI@KASONG-MC4>
-In-Reply-To: <arUcil9kxUPiymXI@KASONG-MC4>
+References: <20260918180241.3424851-1-nphamcs@gmail.com> <20260918180241.3424851-2-nphamcs@gmail.com>
+ <CACePvbVaDNspMDSw_qAcapKAzXj3JGV-KMYmow7aePa0POHpSg@mail.gmail.com>
+ <CAKEwX=OP3Gb9sVOvch+p4j7quzgy-rUY=UTZau5ztMj7heJJoA@mail.gmail.com> <CACePvbVQsHXt4=+qfKz-KTar9CG+3OiAfLd1EZgnRE-1gyoKOQ@mail.gmail.com>
+In-Reply-To: <CACePvbVQsHXt4=+qfKz-KTar9CG+3OiAfLd1EZgnRE-1gyoKOQ@mail.gmail.com>
 From: Nhat Pham <nphamcs@gmail.com>
-Date: Fri, 25 Sep 2026 09:54:25 -0700
-X-Gm-Features: AclHuK-Pj8MGTN6slhH4ZC6bRNscyhuI_rUSwJmyxZ_HRRIbsrEA4QXnbtSmaac
-Message-ID: <CAKEwX=PXRB35bUL1=O4Bgx9A7aD4izZZ3dcEcCuMBBhBrMv7fg@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Kairui Song <ryncsn@gmail.com>
-Cc: Chris Li <chrisl@kernel.org>, Rik van Riel <riel@surriel.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Kairui Song <kasong@tencent.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Fri, 25 Sep 2026 11:04:30 -0700
+X-Gm-Features: AclHuK9M6sByraBalcuxusp1b55zwq77trojcuE4-O8KiH1MjzZCIBnwjTVVWQA
+Message-ID: <CAKEwX=M8pJUYhmADfvdk+09O53EROyDRC+_b05vtimQE5VN=qQ@mail.gmail.com>
+Subject: Re: [PATCH v5 01/11] mm, swap: add virtual swap device infrastructure
+To: Chris Li <chrisl@kernel.org>
+Cc: akpm@linux-foundation.org, kasong@tencent.com, hannes@cmpxchg.org, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	yosry@kernel.org, david@kernel.org, muchun.song@linux.dev, 
+	shikemeng@huaweicloud.com, baoquan.he@linux.dev, baohua@kernel.org, 
+	youngjun.park@lge.com, chengming.zhou@linux.dev, ljs@kernel.org, 
+	liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, surenb@google.com, 
+	qi.zheng@linux.dev, axelrasmussen@google.com, yuanchu@google.com, 
+	weixugc@google.com, riel@surriel.com, gourry@gourry.net, 
+	haowenchao22@gmail.com, corbet@lwn.net, hughd@google.com, 
+	baolin.wang@linux.alibaba.com, tj@kernel.org, mkoutny@suse.com, 
+	skhan@linuxfoundation.org, kunwu.chan@linux.dev, kernel-team@meta.com, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	cgroups@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Sep 25, 2026 at 6:15=E2=80=AFAM Kairui Song <ryncsn@gmail.com> wrot=
-e:
+On Thu, Sep 24, 2026 at 5:44=E2=80=AFPM Chris Li <chrisl@kernel.org> wrote:
 >
-> On Tue, Sep 22, 2026 at 09:44:37PM +0100, Chris Li wrote:
-> > It seems you are talking about a different topic: the vswap charging is=
-sue.
-> > There is a golden rule that we should follow: don't break existing
-> > users. At least with the same persistence, this rule should apply
-> > universally.
-> > In the swap tiers discussion, the UAPI was such a big deal that we
-> > couldn't implement new UAPI. On the other hand here we argue for
-> > liberally changing user-space visible behavior.
+> On Thu, Sep 24, 2026 at 6:20=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wro=
+te:
 > >
-> > BTW, I already shared that changing swap counter charging will break
-> > our and others' existing deployments.
+> > On Wed, Sep 23, 2026 at 2:18=E2=80=AFAM Chris Li <chrisl@kernel.org> wr=
+ote:
+> > >
+> > >
+> > > There are too many swap_is_vswap() in this series. It fragments the
+> > > code path, making things harder to reason about. Esepcially around
+> > > locks. I count 22 in this patch alone.
+> > >
+> > > I consider this the biggest drawback of this series. This
+> > > fragmentation of the code path.
+> >
+> > This will mirror my response at [1], but I'm responding here for the
+> > record and for your convenience.
 >
-> Hi all
+> Thank you. Really appriciate that.
+>
+> > It is needed because vswap *is* a special device, with its own
+> > requirements. If you don't special case-it, you'd get undesirable
+> > behaviors.
+>
+> Ack, that is why I am against making it a special device. That is the
+> whole idea behind xswap. It is just normal swap device implemented via
+> swap_ops just like ext4 is a file system implemnet on top of VFS.
+>
+> > Let's take Baoquan's patch series as an example.  It treats the xswap
+> > device as just another swap device, without any special consideration
+> > for it. Which creates several problem:
+>
+> That is a careful design choice. Keep in mind that design choice
+> usually has pros and cons.
+>
+> I will follow your feedback here.
+>
+> > 1. At allocation time, cgroups that disable zswap might get an xswap
+> > slot, because you don't do any check that the device you allocating
+> > the swap slots for is xswap. At swap_writeout() time, it is *stuck* -
+> > we already do the unmapping step, so we cannot reclaim the page.
+> >
+> > Ironically a physical swapfile backend could have bailed us out here,
+> > but it's not in that patch series yet :)
+>
+> I am not sure I follow. Are you referring to the uncompressible pages
+> that xswap would have to reject?
+>
+> One way to address that is for xswap to just bite the bullet and store
+> the uncompressible pages within xswap. That way it will stay out of
+> the reclaim LRU. Zswap also stores some uncompressible pages. The last
+> time I checked, it was unfortunately not able to serve my case but
+> perfect for yours.
 
-Hi Kairui,
+Not even that. Say you have two kind of workloads in the same host:
+workload enables disk swap but disable zswap (zswap.max =3D 0), and
+workload that wants zswap. Let's even ignore writeback for now.
 
-Thank you for your thoughtful response! Lots of food for thought for me :)
+You add 2 "swap devices" to the system: xswap and NVME swapfile.
 
-
->
-> As I read the threads and try to clean up the requirement, just
-> realized that I forgot and ignored something previously. I think I can
-> share a few things here.
->
-> I also see that Rik mentioning that:
->
-> > It adds up anonymous, file, accounted slab, and
-> > (after compression) zswap memory use for a cgroup,
-> > and can be limited with all the usual cgroup
-> > limits.
->
-> That's very true, and that's also the one reason we can't
-> migrate some workload to zswap easily (at least yet) :D
-> See below.
->
-> The discussion on this can be saw two years before (I know
-> things are different for V2, so see below):
-> https://lore.kernel.org/linux-mm/CAMgjq7AYA91f4g-bknUZOMg6hApTD-X5LqjcTBN=
-2u-Lu8pjs+w@mail.gmail.com/
->
-> An minor update for that, memsw in V1 serves pretty well (we also
-> modded that part and would try push to upstream if doable), and as
-> memsw is missing in V2, we can still workaround that using
-> memory.current and memory.swap.current. BUt missing the offloaded
-> part in memory.swap seems a problem.
->
-> First a little bit off topic, I'll be really happy if we can make
-> both compressed memory and swap as separate counters (I even once
-> tried to implement a zpool accounting to account compressed memory
-> in some unified way, but, well, zpool got killed before I post
-> that :P), or at least a way to do that, e.g. something like nokmem.
-> Due to our real usage:
->
-> With compressed memory staying in a separate counter (which
-> we manged to do that with ZRAM) the memory.current + memory.swap
-> (or, memsw for cgv1) could be the exactly planned or sold size of a
-> container, the scheduler (e.g. from k8s level) is fully aware of
-> the packing rate of a host based on this reading. and can make
-> scheduling decisions based on that. And can control it by
-> adjusting the limit two combined.
->
-> But with compression as a fixed part in memory.current, first the
-> compression rate is totally uncontrollable, both the user and us
-> will be fully *unaware* of how much memory they can *actually* use,
-> that makes the planning really awkward. memory.max stops being the
-> bound of what we planned or sold, anything compressed lets the raw
-> footprint go past it by however much the compression ratio happens
-> to give, so what we oversold is bounded by the workload's data and
-> not by anything we configure. We can substract the zswap reading
-> though with adaption, however it's hard to change the performance,
-> OOM behavior or reclaim behavior:
->
-> As you may considering compression is trading CPU time with memory,
-> then two things here: the user could use more memory than we expected
-> by burning the CPU. And, some users has a leaking application, the
-> application could goes super slow or experiencing high CPU usage due
-> to memory being compressed. They really just want to get OOM killed
-> in time when ever the application leaks beyound a threshold (and
-> yes that is a real and actually practical model for many applications).
-> And, we can't simply disable memory compression for them.
->
-> In many cases we just want a best effort compression to make space
-> for low priority tasks, and do not want ordinary containers to use
-> compression at the cost of lose of performance. While still has
-> a fixed limit as usual. So simply disable memory compression is also
-> not the plan, we do need compression to make place for other
-> applications, we just don't want their real raw usage to exceed
-> memory.max, and we can dynamically adjust memory.swap.max to
-> control the oversold part, compression or physical.
->
-> And this is not about residency, so memory.min/low don't help here:
-> it's about overselling, and about not leaving a container thrashing in
-> compress/decompress loops instead of being killed.
->
-> And if the memory compression is really fully transparent (not
-> doable by software), yeah, that's great as there is nothing to do
-> with reclaim.  But, for now, we have to go through page fault / folio
-> allocation / map it again. So For example, if we already have
-> memory.max =3D=3D memory.current or under high pressure, then now
-> doing any read from the compressed part would need to some
-> require further eviction first to make place for the decompressed
-> new data, this is not like any kind of "real" memory, something
-> feels not right here.
->
-> Another thing is that I think we has been assuming that physical
-> swap is slower than compressed memory, which is not always true either.
-> They all need to be read through page fault, the page fault could
-> be the real blocker here rather than IO or de-compression.
->
-> I also want to separate two things that I think got bundled together
-> here: not requiring a physical slot behind a compressed entry, and not
-> charging the raw size to the swap counter. The first one is great, yeah,
-> and it's exactly the part we want, it's what makes compression usable
-> without provisioning disk. The second one is a policy change, maybe it's
-> not needed for the first stage, charging a cgroup for the
-> memories it has offloaded doesn't require any slot to exist behind them.
-> If someone wants to run memory compression with no disk at all,
-> memory.swap.max defaults to max, so that still works fine, right?
->
-> And I'm not saying "keep everything as it is forever": it is that the
-> raw offloaded size (the entries, whatever the backing ends up being)
-> should stays accounted and enforceable, and that anything which wants
-> to describe physical storage gets its own counter.
->
-> And I'm not asking the compression layer to have an opinion on how
-> much compression or ratio is too much, just think we need a sane limit
-> for container schedulers to sets on top of it.
->
-> And "it's opt-in so nobody breaks" doesn't really hold for us: we do
-> want generic compression solution, that's the whole point, so we would
-> be turning the knob on and losing the counter at the same time. If we
-> want one generic solution for memory compression, this is not opt-in.
->
-> And if we check again, currently, with upstream kernel,
-> using ZRAM, we have:
->
-> memory.max: control the raw usage of application.
-> memory.swap.current/max: controls the offloaded size/limit of a applicati=
-on.
-> With (memory.max + memory.swap.max) <=3D planned usage (and this is memsw=
-).
->
-> We can keep the compressed part in memory.current of course, as already
-> did in upstream with ZSWAP, and things can be further adapted, we
-> still have:
->
-> memory.max: control the real usage of application.
-> memory.swap.current/max: controls the offloaded size/limit of a applicati=
-on.
-> With (memory.max - <compress memory> + memory.swap.max) <=3D planned usag=
-e.
->
-> Things are not too crazy, but if we lose the compressed raw size in
-> memory.swap, things seem to be out of control: the raw footprint can go
-> past memory.max by whatever the compression ratio happens to give, and
-> nothing bounds it in raw terms, memory.zswap.max is in compressed bytes
-> and zero-filled entries are not covered by anything. I can't see a very
-> clean offloading model for us here.  And we note, use use both kind
-> of deployments, pure compression and hybrid writeback.
+At swap allocation time, xswap patch series does not check carefully
+which swap device is being used, so you might get an xswap slot for
+the cgroup that disables zswap. You're stuck at swap_writeout() time.
+You can't undo it anymore, and you don't even support the physical
+swapfile backend to fallback.
 
 
-Thanks for explaining your perspective!
+>
+> > Vswap both has swapfile backend, AND allows you to bypass it if the
+> > cgroup disables zswap. Both involves a bit of swap_is_vswap() check,
+> > but I think it's worth it :)
+>
+> If xswap needs the lower tier it can allocate for one. I don't think
+> xswap should need to have swap_is_xswap() there. Also xswap does not
+> have all the baggage of zswap.writeback enable interface.
+
+But that's my point. As of now, it does not. Unless you merge the
+other RFC series, which brings it to roughly the same size as what I'm
+doing here.
 
 >
-> Just for reference. Maybe a seperate counter, tiering, is a better idea
-> than changing the swap counter?
+>
+> >
+> > 2. Per-CPU allocation caching: since all devices share the same cache,
+> > xswap will invalidate the caching of other devices, and vice versa. It
+> > would be fine if the these devices are interchangeable, but as noted
+> > above, it's not, especially without physical swapfile as the backend
+> > option. So you're forced to taken the slow path more often.
+>
+> This will be addressed by the swap tiers series if it is not delayed.
+> This should be addressed in the core swap layer not vswap. Kairui also
+> has some ideas to improve that. Yes, it is a problem area, but it is
+> not specific to xswap. We are well aware of it and have plans to
+> improve it.
 
-I think memory.swap.* is never meant to be used as the "offloaded
-footprint". It is incidentally correct, because of architectural
-limitations: zswap/swap cache/zero page usage leads to real
-consumption of real resources (physical swapfile).
 
-But I understand your concerns regarding the missing observability of
-the "logical" footprint (i.e the "offloaded size"), and how that would
-hamper legitimate use cases.
+Which is 2 massive patch series away. Also, I don't know how close we
+are to reaching a consensus on swap.tier. I defer that to memcg
+maintainers.
 
-How about a vswap counter that tracks the vswap usage? That would
-provide the "logical" view. Userspace can then monitor and act based
-on it.
+>
+> >
+> > Vswap gets around this by adding its own per-cpu allocation caching,
+> >
+> > So by being too lazy and not carefully distinguish the swap devices,
+> > not only does xswap not work for the writeback use case, it cannot
+> > even work in deployments where some workloads (cgroup) select zswap,
+> > whereas others select disk swap. It can only work if you intend to
+> > have a single class of device - either virtual/xswap or disk swap -
+> > but not both.
+>
+> Baoquan's writeback series is out. It is by no means perfect. But it
+> is much closer to what I have in mind. That is a much better base to
+> work on.
 
-I think that should cover both of the situations that you (and
-Johannes in [1]) pointed out:
+It's *literally* the same design as me, from a metadata design. The
+only difference is:
 
-(1): With memory.current and this vswap counter, you can kill any
-workloads that violate the level of overcommitting that you set out.
+1. It moves the metadata from a new dynamic cluster struct and shoves
+it into the existing physical struct.
 
-(2): For us, we can use memory.swap.* counter to provide isolation to
-the physical swap space, which is a real, static resource that can be
-hogged.
+Like, you can check patch 11 of this series. It's practically the same
+thing, with the only difference being ou
 
-There will unfortunately be changes in userspace programs/scripts that
-is required. It's unavoidable. We're adding a new behavior. It's the
-whole point of this line of work. But I think as long as we provide a)
-a way for userspace to index on (the param which tells you if vswap is
-enabled or not) and b) enough userspace machinery to achieve most
-common use cases, it should be good.
+> >
+> > Maybe instead of just grepping for swap_is_vswap() and throw your hand
+> > at the complexity, read the code and try to understand why it's
+> > necessary first, then propose simplifications if you have good ideas
+> > in minds.
+>
+> Yes, I already read your code I decide that most of the
+> swap_is_vswap() should not be needed if taking a proper swap_ops
+> approach. I wanted to offer you the chance to work closely with me to
+> achieve that, but you did not follow that suggestion.
+>
+> Quote from my old email:
+> https://lore.kernel.org/all/CACePvbX+3tO91BmRwaLqf3Xia32GCemt3W8tayErG81B=
+YLgrzA@mail.gmail.com/
+>
+> "I am happy to spend some time working with you to discuss the generic
+> adopted version of vswap, if you are open to it. Or if you don't want
+> to waste time on it. I can have someone else or myself come up with
+> the generic adopted version of vswap for you to review, which I prefer
+> less."
+>
+> Anyway, Baoquan's xswap writeback patch series is out. I suggest
+> following and improving that series instead.
+>
+> > > This is questionable. A vswap device does not go through swap on.
+> > >
+> > > This changes the behavior where swap devices always go through swap o=
+n/off.
+> > >
+> > > I wish the swap device went through swap on to be able to start swapp=
+ing.
+> > >
+>
+> >
+> > What usecase would necessitate the need for swapon/swapoff interface?
+> > Other than just trying to shoehorn it to an existing interface?
+>
+> I like universal interfaces. Your vswap will break the /etc/fstab. The
+> current suggestion for xswap using sysfs will break that as well.
+> I would like to keep the /etc/fstab interface working, including
+> support for UUIDs for swap devices, etc.
 
-Let me know what you think. I look forward to hearing from you :)
+"Universal interfaces" is not a use case. None of the thing you list
+out here is a use case. It's an interface, but you have not
+constructed a single use case to justify all of that.
 
-[1]: https://lore.kernel.org/all/araWKyJ5MENBwXCL@cmpxchg.org/
+> I am very concerned that vswap will start kicking in without me
+> explicitly enabling it. That changes the previous user-visible
+> behavior. It breaks my mental model. Please take this feedback
+> seriously.
+
+I mean, there's a knob for it. How can it start kicking in without
+your enablement?
+
+
+>
+> > I've expressed why I dislike the interface in [1]. Other than the
+> > sizing aspect, which we are already discussing in another thread,
+> > priority also makes zero sense. You are literally exposing an
+> > interface with only one correct answer - what's the point?
+> >
+> > Justify your interface choice with real userspace use case, not just by
+> > conforming to the status quo.
+>
+> That is why I feel your patch series are really unclean. I dislike
+> special cases, I try to avoid them as much as possible.
+
+Again, your disliking something is not a use case.
