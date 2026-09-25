@@ -1,322 +1,238 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+Received: from mail-pz2-f40.google.com (mail-pz2-f40.google.com [74.125.228.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5586543F4B8
-	for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 06:42:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790318544; cv=pass; b=g8Z+Yg5YTXJ+prL9+5EvLb/VYi4u/pPRx+taWXKbCXSxp/V27yRJwNQ3+GNZdTJfQbHtypFS21NTlt0t5jxQB2gx1nINlYj6J+QwdtGk9JYfY+6jQg6SBkTSkNgEm0/FaFgGgVJrLTMzh26HSGBwoIwE5vdCrOMI/WM6H7M++EM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790318544; c=relaxed/simple;
-	bh=PIlXHAeNurzh/y2B+H0FitUxNrKxWKb3mLvgkGiI3zk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=L+rF638rm9nJujK5Z8ham1km8vSWopIItZOuOS1AFpd6uCjfkg5sZhHKYOpuwp9ZeN800C83mrTzWUelsQ8a8jkBqiW3xXdrzo9M6fKKKAokUDmj0xrRswvhoBMz4MEzrkuYQ75H5Y2lhTqT7dxOpTqpu5R2+oPvcSChskaHPwA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ua0NHD76; arc=pass smtp.client-ip=209.85.208.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A306442FA4
+	for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 06:44:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.40
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790318689; cv=none; b=aIzqtRYhXo3nugMsI5GJYPZ8lasqQ5SUJlHSwZrSTMy2CNt09rvsHXWyXRKCqo45B9bK9atxvoZ1maJg9gJUvGPy+eaJVjVQ59IyZxHSZ0Xwwkk8S6QGwO5VL3+gG/rHeE5AHKix01JhJ6i8jYmotewLI5cNn3SNnmEpz9Fy6+s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790318689; c=relaxed/simple;
+	bh=WNzj1ofvlW/StQGSjkT6hTMDk1NSQ+fH1rnZp30fMcI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=juzOHJNt4P3GA+zP/uxRCprJRKuScgcVqHbbCcFl9haeBZ3pyPv/hx3RgWUGBny/oIyhUIpi75hEu2jHUE5rg/4hDjyVDrcCCRVNN6KFojUalF1JunVnevKCUyF3xSBjzZ4vBghQzImISG2drA/VxMu7u0dHPybXoB2QmTGoWdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=XSd+N3aq; arc=none smtp.client-ip=74.125.228.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ua0NHD76"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6a5f9b036f9so5008a12.1
-        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 23:42:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790318540; cv=none;
-        d=google.com; s=arc-20260327;
-        b=S0YvFO1BbVuy8pP+/87wIPAm1PzLPjAvF0SM1DpgbBqKhI0KHZvBq3H/gHkP93Q7c+
-         fudii1XQdg8TmR1IWHwN0u+eEhTCgwAh+xJbb64gn4u7g/vmCMu3NYt9qOrXGVJE3+sv
-         Wb4WQ7q1pLFFF3kL857Emwr1shT8Pxe+lI26skArHEltjFAA0FZax1JRn+neWRIH5zhJ
-         WRkPV801C06CSfMs6BQ6n2/aaJt+Buip2V1hA54MPIJBnTbqfz52iEXW1qeEmXJpVQd2
-         T6dIKSetwn7ZNch10bcCMXuyz7np6XfOhWBsIMCIFm/yhingE3x693lCgARRg4uUFOBu
-         gDtA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=U931IUFkMVd98OtvL0P43sJytu2CWHhy0Gubri2GWP8=;
-        fh=cllYhWdThclhp0KOBZkjJjkTXwMYgCue8EL+3J41RUE=;
-        b=Tkte1VP4Z9H2KvQwmSc+TExx+uk/vLD0KDuiLwBFqIlT+oZfrKNauHp/NkBD83bcpf
-         Lwomh9C34RcwwqW9x8Qm7pdL0nD9UntU8lITWZMjzuXWs9+N/jNbSn2UmElLYSBD3ASp
-         f5PMrdeDIV2CYID8Hcgek1YQUfcYiBCP6fCMFedkqIPaEGPaEjQkdGNUR3XVve2wyfh1
-         M+srBPFlM7QtYXvHT9uq/KGH2wifMEKMi3KMQ+DAT0LXXVUw1iBeSsIs44UqjkTbJAVc
-         7Cr8CMiNOEXQWUCj2KTHn+NTfDPH1AG6DZMc1wTqaJl2onrcbUrEcnJH3wW/aqEdXQLw
-         YynA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="XSd+N3aq"
+Received: by mail-pz2-f40.google.com with SMTP id d2e1a72fcca58-8804c1728f9so207364b3a.3
+        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 23:44:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790318540; x=1790923340; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=U931IUFkMVd98OtvL0P43sJytu2CWHhy0Gubri2GWP8=;
-        b=ua0NHD763Klybd6sOAhy6Zrkh90RyVqAwPpOOTWSbJNQQMoCY0etb1ln7bjuhdmErJ
-         6Qp0Jr6BkEni5ttUluyDnlbXphc/SRJK0CrDmi/ZNxcApRXbcMasxDOJFZvJA9XS5VqT
-         rxH6frhGT3DtFMA8QbE5fAMc9vtXUK+M4Y+aOTmRgZwHqh+fAvt4gWFlk8ufCWC8G0od
-         DsMNNRrCPDyOSwbxYm38BJSPOitaeFCX68Re4W/UMNBQ0TBvYpDzJdbYIoHFWzXRVUFU
-         rhDY1xV/7706WnhQiU8+SQZkn6Qh6je215QbDkj/DuihwCcQojPaCtqZf2NkKfyeQXGY
-         rXgQ==
+        d=bytedance.com; s=google; t=1790318687; x=1790923487; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2CDje0QwiVgx6IbktJTGL2P21t+Ebt9LY+FLAFXNJ+o=;
+        b=XSd+N3aqlnjwpCcoFJltBJxUkZhszXf62y/RTIrKn17nMMtycfIwQyOczOxhMm1OfF
+         fI57bKs/1euARjygFEhN3Sz47Q2emjgwzURlkCvRLcXucoEKPg+Z7z+pv+2ydeQqbhFY
+         mS4Zsl/64TS/5KUlLsibvg5ywnatU22BWtvGQDaQKDWMyMwsSsYCQZ6Pa4KZHu1vCmbk
+         hVDsCeqIpMOp4qcBsaLX7qNxDVP1kpciuYKpuwAmhTOSFUZSVI4tTGeMAW/X/MZj8geB
+         HaOajKlsH0OTas8RNXAF7DHWTfvV8RPrCRm4ig83hGrGjuw2MF14+9055xAvL0QS+4Sn
+         I+TA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790318540; x=1790923340;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=U931IUFkMVd98OtvL0P43sJytu2CWHhy0Gubri2GWP8=;
-        b=XmuEbL0HyA9WiXV9CvwwRKA+v9VvdzbxDJe92+2NvvKcIynBDDXW8GlTYke2C/ReTE
-         /OEP1htC2Ds9LVFxPiDWs1ULExaB5jXFCD4Hz8xGdXveSUfV/hMCZ8hWW2BlLgpQRx/P
-         MPgDTt9S3XE/rYN83wAXsCYFvCzUMcMSSDGhPy2yGEOR0UhJF70TM3iPW6AVmH0tFSci
-         mPtoU3OyRABhwglJMvIQcLgsP0cC64DTkHw5xFguz2QbBVQOFxZz1OhDdfr7Tvw9Lwhy
-         k1PQ00GwtF5t6DDHUU/vGe/WlRIBTuS+/HnL2QPDn4dB4lcGj8QQjT+KhzBcs7Uf1xcM
-         PyOQ==
-X-Forwarded-Encrypted: i=1; AKwUvByMFCFId3ZqP72godZKxTBVwrxiBooC+18VYQ5Ocwb2cRoQm3P77FvXb7rrL96t5HeDa5Li1gwQ@vger.kernel.org
-X-Gm-Message-State: AFuF++lLkjpgbP5i9d2oNPddhAsMAvdImLhL4mAwd7CTCoqMGhOjcfZC
-	TGT4uXWk3cNKB2DwM5zItR33aTvIku6XMNjN0KXSbS0SGrg1rkNF+TNDAh0RtQ6C8bBmdL01+Iv
-	idnCdybt83EfRWK3aTy9L+lEl8SLxZDNDj0HYNKJX
-X-Gm-Gg: AYBFou2ggyc0r1b40/wIxvdAmBzMwvz+VKZ42UVIslfbDzfl6uutaorK/fOzlDLWTB/
-	VwpqfsGdIe+8Mop8ZUsp6mIr7RCPykApV8vBue6hiz47M2js5XMsqVsGqnEgP0onUcp4IjIurjV
-	l2Rx/TL5ZyvGO0ZDO0phGMJceyZmYwt/kUcnk2Hsyc4kJhk7uyj4KIac4r7t04OjnjKMitMCRMs
-	aiXqerLAlJJJrc0yY1Q6aYIECyICFB/XFeGn4JP+RO1VNJteJsfCsWfc8InR9HM5M9ur8j2w91A
-	YRn+eyCOtgqOGh17uJnrOz3XdBvaHm+dHAiZ/CBTy1WZ7ehf+03Eyw==
-X-Received: by 2002:a05:6402:38c:b0:6aa:b663:4801 with SMTP id
- 4fb4d7f45d1cf-6aaea0fb6d8mr14030a12.15.1790318539859; Thu, 24 Sep 2026
- 23:42:19 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790318687; x=1790923487;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=2CDje0QwiVgx6IbktJTGL2P21t+Ebt9LY+FLAFXNJ+o=;
+        b=0AouTnsE/OqvLUyMUy/XLbDocHSRoA1Rv50OLaWIAnOVDSmD5ZzwuZYyPD6F+iGWHm
+         qc8UU81eNsOiPMP1evrMqE/XSSXkIv3IgUR1bTHMlejxNJqkKEPRMvXmU6uyud9Pfzmp
+         +pS6s2ZewQ0wOFgY+Ols4u8hqRfl/jTNSpNsFl1HXNY6Pxs7Mz7StJKBWdcEeon/wcCA
+         smc2hTmK22BYQIhMNtZifI4ueUYuCSlhtDunBUif7qOb4ts1WIeenuC++aVhWpAS5Na6
+         MpRD2aLsCl0UFFwShVtHv8kjSYzJwHFsZDXn8AoP+BiRyzsHnyn0rEpJCNComt/OlVOG
+         5cCw==
+X-Forwarded-Encrypted: i=1; AKwUvBw60f35dOZgqXShOBnwt6QuA2LhMDpH7F3sQSeupl+BHTXlix4HuGXe6X3SBeywjayGF4UlyifI@vger.kernel.org
+X-Gm-Message-State: AFuF++njE5XGvtXXJJrljIMXGcqr01fKe5gbZasNgieDnfnaRjd8bb5r
+	nYN49WNJGAqVGMPS9BH/Epg+yVu5/9WA6GyBne4nq61BCJ2wwjRJ1vqvklzJ0K6AgUQ=
+X-Gm-Gg: AYBFou1GGerdzBHf6GF1OzAkZnGbfkMcIS1xariFisCSM1VqKdJyrfZbEjrt0J7GrMh
+	0irT4JrrHk3d4G+VBWFDOYLHixB9j7JqFMb91l7lxvoXLXcENMpeLVanQnVNO7TC8rCGonjs3LN
+	dHwqGUMZMkISn62Cs2gCIP18KWI87/qqhK9UICoRiDB/ycpyQ7weHVZHPJWxS8EpOWjYqs4pna2
+	D4Yl6fbjS8Foi9tpyFMUL61waZ8j4CJdnacr+ygamNvHvwO4ZLX7EuP01bKG5i64toGWi+oS4jH
+	/Fg9EflqFyXp2lG0ALqFpyZ3OKFtiaiKDki3csZ4L5BXWiaTyKz8GEgTDsU45spFWTizg1sj8hG
+	V/Qpj4p8dXV+8K1Vvrp5K6V5eWJdtsejTwlkzq0lPdKsH+umXLjdf3iOjJclLYS294RJEjD0f0p
+	Q7v7zdoMkquaMSsw5PB9kQRn53LgBXJTIgOppsE3Hoz3ImFRtzPqC6qPF+nXn0WZ4qe3H98gUeb
+	sKAGpDCcKv6XQ==
+X-Received: by 2002:a05:6a00:6088:b0:871:2152:980e with SMTP id d2e1a72fcca58-87e9995d1c6mr3952766b3a.23.1790318687288;
+        Thu, 24 Sep 2026 23:44:47 -0700 (PDT)
+Received: from localhost ([106.38.226.167])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-87feb57e56csm575244b3a.48.2026.09.24.23.44.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Sep 2026 23:44:46 -0700 (PDT)
+From: Julian Sun <sunjunchao@bytedance.com>
+To: linux-block@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org
+Cc: axboe@kernel.dk,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	willy@infradead.org,
+	jack@suse.cz,
+	tj@kernel.org,
+	akpm@linux-foundation.org
+Subject: [PATCH v9 0/3] memcg,writeback: flush foreign bdev mappings separately
+Date: Fri, 25 Sep 2026 14:44:41 +0800
+Message-Id: <20260925064444.3944820-1-sunjunchao@bytedance.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260902040725.877155-1-cui.tao@linux.dev> <aphkAGKpg3dgFc6c@localhost.localdomain>
- <8c816b23-d394-4389-94ab-7fec889b1300@linux.dev>
-In-Reply-To: <8c816b23-d394-4389-94ab-7fec889b1300@linux.dev>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Thu, 24 Sep 2026 23:42:06 -0700
-X-Gm-Features: AclHuK-5vOY-egLSEE_bH_0i2hCHj7p-HnkJlCAYVNPv8oCs54l4oqzVV9WylcQ
-Message-ID: <CAJuCfpEFmV9hE4dT2B_KTEaZfPe-tfkwJmYhgRRRFm-LqiwUrQ@mail.gmail.com>
-Subject: Re: [PATCH v5] selftests/cgroup: add PSI pressure trigger and
- validation tests
-To: Tao Cui <cui.tao@linux.dev>
-Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, 
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Ziyang Men <ziyang.meme@gmail.com>, 
-	Tao Cui <cuitao@kylinos.cn>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Sep 3, 2026 at 12:24=E2=80=AFAM Tao Cui <cui.tao@linux.dev> wrote:
->
-> Hello Michal, Suren,
->
-> =E5=9C=A8 2026/9/3 02:47, Michal Koutn=C3=BD =E5=86=99=E9=81=93:
-> > Hello Tao.
-> >
-> > On Wed, Sep 02, 2026 at 12:07:25PM +0800, Tao Cui <cui.tao@linux.dev> w=
-rote:
-> >> +/* PSI triggers are written with a trailing NUL the kernel parser exp=
-ects. */
-> >> +static ssize_t write_trigger(int fd, const char *trigger)
-> >> +{
-> >> +    return write(fd, trigger, strlen(trigger) + 1);
-> >> +}
-> >
-> > Hyrum's law. It all works for me: NUL, \n or just write(2) the exact
-> > length of the string.
-> > For conventionality, I'd prefer the simple literals and plain strlen() =
-+
-> > 0. (I reckon cg_write() cannot be used because of FD access.)
-> >
->
-> Your Hyrum's law point made me look at the parser, and I'm glad it
-> did, because the behavior is more subtle than "all of them work".
-> psi_write() does
->
->         buf[buf_size - 1] =3D '\0';
->
-> i.e. it overwrites the last byte of whatever was written. With a plain
-> strlen()-sized write that eats the last digit: "some 150000 2000000"
-> silently arms a 200000us window when privileged, and fails with EINVAL
-> for unprivileged users (200000 is not a multiple of the 2s minimum). I
-> reproduced both on 7.0.0-28 here. I suspect your runs succeeded
-> because a truncated window still makes a valid trigger for root, so
-> nothing looked off.
->
-> I went with your \n variant instead: the newline gets clobbered, the
-> payload stays intact, and it is the conventional procfile form. So the
-> reliance on the undocumented NUL is gone, even though not quite via
-> strlen()+0.
->
-> Two follow-ups this suggests, if there is interest (I'm not pushing
-> either within this series):
->
-> - psi.rst says nothing about the terminator while sysfs documents its
->   (append, not clobber) behavior explicitly; a sentence in psi.rst
->   would at least make the convention discoverable.
-> - kernfs and sysfs both append the NUL after the written data, so the
->   user bytes survive. psi_write() could do the same with
->   buf_size =3D min(nbytes, sizeof(buf) - 1) and buf[buf_size] =3D '\0'.
->   Terminator-terminated writes keep their exact meaning, and a bare
->   strlen() write would parse in full instead of losing its last digit.
->   That would be the more principled fix, but it is a behavior change
->   for unterminated writes, so it needs a call from the PSI maintainers.
+Hi,
 
-Yeah, I was expecting a NUL-terminated string with the NUL included
-when we write, like shown in the psi.rst code example:
+This series avoids owner-wide foreign writeback triggered by dirtying
+shared bdev inodes. Instead, it tracks bdev targets separately and
+schedules writeback of their mappings.
 
-write(fds.fd, trig, strlen(trig) + 1)
+Problem
+=======
 
-but I agree that this might be unconventional.
-I guess we could check if buf[buf_size - 1] is already '\0' then do
-nothing (keeps current users happy) and otherwise we append the NUL at
-the end. That way both write(fds.fd, trig, strlen(trig) + 1) and
-write(fds.fd, trig, strlen(trig) + 0) would work. Would you agree or
-did I miss anything?
+Bdev inodes are commonly shared by many memcgs. Dirtying their pages
+can cause the owner wb to be tracked as foreign, triggering writeback
+of the entire wb rather than just the bdev mapping.
 
->
-> >> +
-> >> +static int pressure_open(const char *resource)
-> >> +{
-> >> +    char path[PATH_MAX];
-> >> +    int fd;
-> >> +
-> >> +    snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
-> >> +    fd =3D open(path, O_RDWR);
-> >> +    if (fd < 0)
-> >> +            ksft_perror(path);
-> >
-> > This outputs:
-> > | # /proc/pressure/irq: No such file or directory (2)
-> > | #      SKIP      /proc/pressure/irq unavailable
-> >
-> > I.e. similar message is printed twice.
-> > Since strace is a companion of cgroup selftests, I'd keep this helper
-> > silent.
-> >
->
-> Agreed, the helper is silent now. The duplicate was my own doing: I
-> added the print in v5 on Suren's v4 request (it replaced a raw
-> fprintf) without noticing the SKIP message right below it already
-> carries the reason, so removing it satisfies both comments.
->
-> >> +    return fd;
-> >> +}
-> >> +
-> >> +FIXTURE(psi)
-> >> +{
-> >> +    char root[PATH_MAX];
-> >> +    char *cg;
-> >> +};
-> >> +
-> >> +FIXTURE_SETUP(psi)
-> >> +{
-> >> +    int psi_fd;
-> >> +
-> >> +    if (cg_find_unified_root(self->root, sizeof(self->root), NULL))
-> >> +            SKIP(return, "cgroup v2 isn't mounted");
-> >> +
-> >> +    /* PSI must be enabled (CONFIG_PSI=3Dy, not disabled on the cmdli=
-ne). */
-> >> +    psi_fd =3D open("/proc/pressure/memory", O_RDONLY);
-> >> +    if (psi_fd < 0)
-> >> +            SKIP(return, "PSI unavailable (CONFIG_PSI=3Dn or psi=3D0)=
-");
-> >> +    close(psi_fd);
-> >> +
-> >> +    self->cg =3D cg_name(self->root, "psi_trigger_test");
-> >> +    if (!self->cg)
-> >> +            SKIP(return, "failed to allocate cgroup name");
-> >> +    if (cg_create(self->cg))
-> >> +            SKIP(return, "failed to create cgroup: %s", strerror(errn=
-o));
-> >
-> > Why are these two SKIPs (not failures)?
-> >
->
-> You're right, they are not environment problems. They are ASSERTs in
-> FIXTURE_SETUP() now, so a run without privileges fails loudly instead
-> of vanishing into skips.
->
-> >> +TEST_F(psi, cgroup_trigger_fire)
-> >> +{
-> >> +    char *cpupress;
-> >> +    struct pollfd pfd =3D { .events =3D POLLPRI };
-> >> +    long ncpus;
-> >> +    int fd;
-> >> +    int i;
-> >> +
-> >> +    cpupress =3D cg_control(self->cg, "cpu.pressure");
-> >> +    ASSERT_NE(NULL, cpupress);
-> >> +    fd =3D open(cpupress, O_RDWR);
-> >> +    free(cpupress);
-> >> +    ASSERT_GE(fd, 0);
-> >> +    pfd.fd =3D fd;
-> >> +
-> >> +    /*
-> >> +     * 1usec threshold over a 2s window: any CPU stall fires it. The =
-2s
-> >> +     * window is the smallest unprivileged users are allowed to arm.
-> >> +     */
-> >> +    ASSERT_GT(write_trigger(fd, "some 1 2000000"), 0);
-> >
-> > The selftest rarely can be run as unprivileged user (even test cgroup
-> > creation needs privileges), so this comment is irrelevant. (But it's
-> > fine to test with that value.)
-> >
->
-> Dropped.
->
-> > On the more abstract level -- I was playing with this and thinking abou=
-t
-> > a value that'd test both sides, i.e. false triggers as well as false
-> > non-triggers. I'd find that to be the half of the window and the number
-> > of tasks should be then (3*ncpus + 1) / 2.
-> > Or perhaps test two thresholds, one tiny like you did and one maximum
-> > (whole window) with same amount tasks but expect trigger, no trigger
-> > respectively.
-> >
->
-> I tried both of your variants before picking one. The half-window
-> threshold with (3*ncpus+1)/2 hogs fired reliably, and the two-threshold
-> variant also held up on the negative side: with the threshold equal to
-> the whole window, ncpus+1 hogs never fired it (measured cpu.pressure
-> "some" stays around 2-17% under that oversubscription, so the margin
-> is comfortable rather than borderline). I kept the existing tiny-
-> threshold test and added cgroup_trigger_no_fire for the whole-window
-> side, which matches your second variant and keeps the hog setup shared.
->
-> >
-> >> +
-> >> +    ncpus =3D sysconf(_SC_NPROCESSORS_ONLN);
-> >> +    if (ncpus =3D=3D -1)
-> >> +            TH_LOG("sysconf(_SC_NPROCESSORS_ONLN): %s", strerror(errn=
-o));
-> >> +    ASSERT_NE(-1, ncpus);
-> >
-> > Same as messages from pressure_open() above. Simply assert.
-> >
-> >> +
-> >> +    /* ncpus+1 hogs guarantee CPU contention inside the cgroup. */
-> >> +    for (i =3D 0; i < ncpus + 1; i++)
-> >> +            ASSERT_GE(cg_run_nowait(self->cg, hog_cpu, NULL), 0);
-> >> +
-> >> +    ASSERT_EQ(1, poll(&pfd, 1, PSI_POLL_TIMEOUT_MS));
-> >> +    ASSERT_NE(0, pfd.revents & POLLPRI);
-> >> +    close(fd);
-> >> +}
-> >> +
-> >> +TEST_HARNESS_MAIN
-> >
-> > All in all, this looks so much better than the initial version, well
-> > done. Just a few polishing touches.
-> >
->
-> All 7 tests pass on a 2-CPU and a 16-CPU machine.
->
-> Thank you both, this series learned a lot from you: Suren walked me
-> through the harness conversion and the reporting details, and you kept
-> the semantics honest, which is what surfaced the parser behavior. The
-> test is in a much better shape than what I started with, and the
-> parser finding above came out of your push on both directions of the
-> trigger.
->
-> Thanks
-> Tao
->
-> > Michal
->
+In production, almost all the foreign dirtying we traced came from bdev
+inodes. Across our observations, a bdev mapping had as little as about
+10 MiB of dirty pages, yet foreign flushes targeted the entire owner
+wb. On one machine, we observed 599 such works queued on one wb, with
+an average request budget of about 43 GiB per work.
+
+Measured impact
+===============
+
+The synthetic test used a VM with 4 vCPUs, 8 GiB RAM, ext4 and cgroup
+v2, with device write bandwidth capped at 200 MiB/s. Background fio
+repeatedly overwrote a 256 MiB file using buffered I/O, while
+foreground fio performed sequential direct writes. Four memcgs
+generated metadata and buffered writes to trigger foreign flushes.
+
+We measured completed block writes to the background fio file,
+including final sync, and foreground fio bandwidth, latency and
+completion time.
+
+Across three runs per kernel, mean background file write I/O decreased
+by 72.7%, foreground bandwidth increased by 23.0%, and completion time
+decreased by 18.8%.
+
+Metric                         Baseline    Patched     Change
+Background file write I/O (GiB)    6.154      1.680     -72.7%
+Foreground bandwidth (MiB/s)      150.29     184.81     +23.0%
+Foreground completion time (s)   109.203     88.652     -18.8%
+Foreground mean latency (ms)      212.84     172.74     -18.8%
+
+How it helps
+============
+
+Frequent writeback of the file overwritten by background fio reduces
+the opportunity to coalesce buffered writes in the page cache.
+Several overwrites of the same page can otherwise result in a single
+write of its latest contents. Flushing between updates instead writes
+the same page repeatedly, generating more device I/O for the same
+application writes.
+
+This additional I/O makes the device reach its performance limit
+more easily and competes with foreground I/O for device bandwidth.
+
+The benefit is expected to be most pronounced when these conditions
+occur together on the same device:
+
+1. Limited device bandwidth, as with an HDD, makes the additional
+   writeback I/O more likely to saturate the device.
+2. Multiple cgroups perform buffered overwrites. Frequent foreign
+   writeback reduces write coalescing and increases device I/O.
+3. Concurrent direct I/O bypasses the page cache and competes directly
+   with writeback I/O for device bandwidth.
+
+Approach
+========
+
+Following Jan's suggestion, this series records foreign bdev targets
+separately and flushes their mappings instead of their owner wbs. This
+preserves a way for dirty throttling to initiate bdev writeback while
+avoiding owner-wide writeback triggered by these records. The existing
+foreign-wb mechanism remains unchanged for other inodes.
+
+Tracking uses oldest-first replacement and expiry after
+dirty_expire_interval. Further dirtying during an ongoing flush can
+trigger another flush after it finishes.
+
+Tracking is best effort: each memcg keeps a bounded set of device
+numbers without persistent device or inode references. Recording runs
+under mapping->i_pages with IRQs disabled, while dropping a device
+reference can sleep. A memcg that never enters dirty throttling could
+also retain an unused record and pin the device object indefinitely.
+Recording only dev_t avoids these lifetime constraints. Device removal
+and device-number reuse may cause an unintended best-effort flush,
+which is an accepted trade-off.
+
+Writeback submission may block for a long time, with up to four work
+items outstanding per memcg. A dedicated unbound workqueue provides
+a separate max_active budget so these flushes do not exhaust active
+slots on a shared workqueue and delay unrelated work. If the workqueue
+cannot be allocated at boot, bdev inodes continue to use the existing
+foreign-wb path.
+
+Flushes use write_inode_now() with WB_SYNC_NONE to skip inodes already
+under writeback, avoiding competing writeback passes on the same bdev
+inode.
+
+This primarily affects filesystems that keep metadata in the bdev page
+cache, such as ext4 and other buffer_head users, rather than the usual
+metadata writeback paths of XFS and Btrfs. This also covers buffered
+writes to raw block devices. The decision still does not account for
+how much of the memcg's dirty memory belongs to the bdev: even a single
+dirty bitmap block can trigger writeback of the entire bdev mapping
+when the memcg enters dirty throttling.
+
+Changes since v8:
+- Use write_inode_now() with WB_SYNC_NONE to avoid competing writeback
+  passes on the same bdev inode.
+- Fix a race in foreign bdev tracking.
+- Add separate tracepoints for foreign bdev tracking and flushing.
+
+Changes since v7:
+- Update comments and commit messages as suggested by Tejun Heo.
+
+Changes since v6:
+- Drop open_mutex and the openers check from bdev_flush_by_dev(), and
+  add a !CONFIG_BLOCK stub.
+- Follow the existing foreign-wb tracking policy: use timestamps for
+  oldest-first replacement and expiry, and allow dirtying during an
+  in-flight flush to re-arm the record.
+- Replace frn_lock with an atomic in-flight flag.
+- Drop WQ_MEM_RECLAIM and explain the separate max_active budget.
+- Expand the dev_t lifetime rationale and filesystem scope, update
+  the foreign-dirty overview, and drop the Fixes tag.
+
+Changes since v5:
+- Fix repeated overwriting of slot 0 in patch 2 and add comments.
+
+Changes since v4:
+- Add before-and-after performance comparisons to the cover letter.
+
+Changes since v3:
+- Flush foreign-dirtied bdev inode mappings separately, as suggested
+  by Jan.
+
+Thanks.
+
+Julian Sun (3):
+  block: introduce bdev_flush_by_dev()
+  memcg,writeback: flush foreign bdev mappings separately from owner wbs
+  writeback: add tracepoints for foreign bdev writeback
+
+ block/bdev.c                     |  19 +++++
+ include/linux/blkdev.h           |   4 +
+ include/linux/memcontrol.h       |  12 +++
+ include/trace/events/writeback.h |  67 ++++++++++++++++
+ mm/memcontrol.c                  | 127 ++++++++++++++++++++++++++++---
+ 5 files changed, 220 insertions(+), 9 deletions(-)
+
+-- 
+2.39.5
