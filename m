@@ -1,386 +1,322 @@
-Received: from mail-pz2-f42.google.com (mail-pz2-f42.google.com [74.125.228.42])
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 273693D9DC0
-	for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 06:04:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790316297; cv=none; b=piWLujWCyG+/t9Fn8p9V6m9nJghAg64uQg6Pdlv4VDzaWK8XdA5tu0CSU93+WtSqkrQrMHVgZL5UpYCJKSbjBONDYYLfDfcaAUOasipeUHmY6/NQ5m39CzECjfRKkblF8pVXBm7mqbIvmXU2IZJHzxLHG7Y+jSX/qm7ZfTCi4lI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790316297; c=relaxed/simple;
-	bh=Jb7bJ/8dxKNgLiFNUwzYWxkWU3HloefUqPLlJBCSpEI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Y7WglsYgYel+vTzFWpvkDcF2+Tux7ZW610Kvjim45eHF/pUz6f+iery/V4NTCu0mS7uo6gcnO+STL0wN6HFtYSHffh+ijMqbWKxVSImQB/Akchs+Ve9xVbpeSDYw5k0e4EsJIryVCwj3O+vDKlMEPgBgdwn9KwcpU0NHRugjLEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=NJjPDrNg; arc=none smtp.client-ip=74.125.228.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5586543F4B8
+	for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 06:42:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790318544; cv=pass; b=g8Z+Yg5YTXJ+prL9+5EvLb/VYi4u/pPRx+taWXKbCXSxp/V27yRJwNQ3+GNZdTJfQbHtypFS21NTlt0t5jxQB2gx1nINlYj6J+QwdtGk9JYfY+6jQg6SBkTSkNgEm0/FaFgGgVJrLTMzh26HSGBwoIwE5vdCrOMI/WM6H7M++EM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790318544; c=relaxed/simple;
+	bh=PIlXHAeNurzh/y2B+H0FitUxNrKxWKb3mLvgkGiI3zk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=L+rF638rm9nJujK5Z8ham1km8vSWopIItZOuOS1AFpd6uCjfkg5sZhHKYOpuwp9ZeN800C83mrTzWUelsQ8a8jkBqiW3xXdrzo9M6fKKKAokUDmj0xrRswvhoBMz4MEzrkuYQ75H5Y2lhTqT7dxOpTqpu5R2+oPvcSChskaHPwA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ua0NHD76; arc=pass smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="NJjPDrNg"
-Received: by mail-pz2-f42.google.com with SMTP id 41be03b00d2f7-cc1ceb47d53so63463a12.0
-        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 23:04:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ua0NHD76"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6a5f9b036f9so5008a12.1
+        for <cgroups@vger.kernel.org>; Thu, 24 Sep 2026 23:42:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790318540; cv=none;
+        d=google.com; s=arc-20260327;
+        b=S0YvFO1BbVuy8pP+/87wIPAm1PzLPjAvF0SM1DpgbBqKhI0KHZvBq3H/gHkP93Q7c+
+         fudii1XQdg8TmR1IWHwN0u+eEhTCgwAh+xJbb64gn4u7g/vmCMu3NYt9qOrXGVJE3+sv
+         Wb4WQ7q1pLFFF3kL857Emwr1shT8Pxe+lI26skArHEltjFAA0FZax1JRn+neWRIH5zhJ
+         WRkPV801C06CSfMs6BQ6n2/aaJt+Buip2V1hA54MPIJBnTbqfz52iEXW1qeEmXJpVQd2
+         T6dIKSetwn7ZNch10bcCMXuyz7np6XfOhWBsIMCIFm/yhingE3x693lCgARRg4uUFOBu
+         gDtA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=U931IUFkMVd98OtvL0P43sJytu2CWHhy0Gubri2GWP8=;
+        fh=cllYhWdThclhp0KOBZkjJjkTXwMYgCue8EL+3J41RUE=;
+        b=Tkte1VP4Z9H2KvQwmSc+TExx+uk/vLD0KDuiLwBFqIlT+oZfrKNauHp/NkBD83bcpf
+         Lwomh9C34RcwwqW9x8Qm7pdL0nD9UntU8lITWZMjzuXWs9+N/jNbSn2UmElLYSBD3ASp
+         f5PMrdeDIV2CYID8Hcgek1YQUfcYiBCP6fCMFedkqIPaEGPaEjQkdGNUR3XVve2wyfh1
+         M+srBPFlM7QtYXvHT9uq/KGH2wifMEKMi3KMQ+DAT0LXXVUw1iBeSsIs44UqjkTbJAVc
+         7Cr8CMiNOEXQWUCj2KTHn+NTfDPH1AG6DZMc1wTqaJl2onrcbUrEcnJH3wW/aqEdXQLw
+         YynA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1790316294; x=1790921094; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=ErGbHipHg92SiVnmafTU9VPVGftyId1XraUSz8ZzpyI=;
-        b=NJjPDrNgGyHKdtgJG8AX96AAyHbcLt1B2tI8MdJHmnF4xRf5I8SKrjd5stnERNStEn
-         FEXZF05TRfQXYqRlNZ/RCcIDM2kXVZiAVYukZG3UTs08wzTHoDWGI5tIcXEWlaHukXXs
-         WzCkMejTydkjR+tJ3pO8Hvx872h13EBYoIhfS4YUnTw5tfm6c9TqaWRzd4AgpF/js4p3
-         dJJeGznb9Rb+lIuuIAn/ucQ0XDtWnon10CodM3h7XxCyv/Mx1xR2v22DyRzUEFdFbV+d
-         vffwB5W2bD5SxxX00bCx7vjpixwDUxzzZNgAh6CPIuGbY1ENMuwKn+g3H+y6xyg2YBnt
-         CWCg==
+        d=google.com; s=20251104; t=1790318540; x=1790923340; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=U931IUFkMVd98OtvL0P43sJytu2CWHhy0Gubri2GWP8=;
+        b=ua0NHD763Klybd6sOAhy6Zrkh90RyVqAwPpOOTWSbJNQQMoCY0etb1ln7bjuhdmErJ
+         6Qp0Jr6BkEni5ttUluyDnlbXphc/SRJK0CrDmi/ZNxcApRXbcMasxDOJFZvJA9XS5VqT
+         rxH6frhGT3DtFMA8QbE5fAMc9vtXUK+M4Y+aOTmRgZwHqh+fAvt4gWFlk8ufCWC8G0od
+         DsMNNRrCPDyOSwbxYm38BJSPOitaeFCX68Re4W/UMNBQ0TBvYpDzJdbYIoHFWzXRVUFU
+         rhDY1xV/7706WnhQiU8+SQZkn6Qh6je215QbDkj/DuihwCcQojPaCtqZf2NkKfyeQXGY
+         rXgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790316294; x=1790921094;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:x-gm-gg
+        d=1e100.net; s=20260707; t=1790318540; x=1790923340;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ErGbHipHg92SiVnmafTU9VPVGftyId1XraUSz8ZzpyI=;
-        b=zmE1zyiSNcN9wrE3ZUT8bswkddxee+q654iYWzaswOa7FeLj5YAwj5YiV9GPr/aJbD
-         ySKubWi1omAaKY3BMpAQHK3YWhf/mDgR/Iuy+6olbjKAHsx+ZL02hrDCbJC7TfAhDGND
-         Uq1eh9Y1J85sb0PJwMjkGJoltg6kh/T5LLPpxKeRmHAQUZ/nojGWCUpL6UXLr3VMJbP+
-         NaS5YLIOeQ/8Xm130stA5oFQ6b5fiL4qcAxmRsTDR1j60z3J5Bd+BPqThrHKQM8KZQQM
-         Bdndn45eoXR/2zWnRQJNikemJtBDDLTKoRDbOsyBh6h1Z5C9jJeTGQ4r4Ip+Bki4fLr5
-         BQUA==
-X-Forwarded-Encrypted: i=1; AKwUvBzHFM1kqAYw20GtAYGh31xDyVJsfkRz3vdkuSBZR/At1UU3pjzt2AQiN/huRAh2x4oBEdn3yJoQ@vger.kernel.org
-X-Gm-Message-State: AFuF++kI9FaClKCYJKv5js8CmrMGMlf+J0a3evoUeepfs9PlANVyGZiF
-	FQrtelwfraER7kt0VNR4TwAWu0jF1Ab5HiiazOuE02eTw6DPYLT2SIzIFcVfB6+PAEc=
-X-Gm-Gg: AYBFou3EjCBu+831a8WaEjPfuojAUwyvOCCif2jF+aDmU6PmrOdwZRSffHTOO4k5Of/
-	g9l+jRxD8pBGo/aoFUhxQjX7wcKVC4AFgX3TOQZJDBKpFPxYXKMm6IjyimmjKSI6Chi2D00yi5J
-	ujo1OkkVri4+a+bkLTyhieD3fKiFQcGuFeOKjFOC7sCDWW+0xrt4ucs3Op2sUgGvD0j55hxxlnm
-	bRuP6M/dwkWFUYBFWi46fDCjK6m1k6o5GxXkfT5MMey59qaI4JrsQzxDkc1OI6L8Va0rRAHQ+r4
-	KXCT9gOOBIDHaRBLURoeTCFL86ION91LCiLHgylXdPa3ql97b8xW9upRku/ilUCuf8gngsgrgaX
-	PMRnGf/0HImBGTvO18nCZ9+XL683Wz0t0CIafB2vvnNIbems0id2xcBDr1aZ+INBdR7vcXCp8qJ
-	gYNQ+MeW+LWs78/JGvbjtujv0Y6TNxxZHXfYpj7fGSM1dM/93OBVhZX2VR4Vk8rzSO/9CCiQaqZ
-	abP8dHSOtgoxZvDYwpYT+NRMB5eG5Y=
-X-Received: by 2002:a17:90b:224b:b0:3a0:78b6:588e with SMTP id 98e67ed59e1d1-3a098ac6431mr2758704a91.23.1790316294171;
-        Thu, 24 Sep 2026 23:04:54 -0700 (PDT)
-Received: from [10.254.237.61] ([139.177.225.234])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a0ba31f408sm651548a91.3.2026.09.24.23.04.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Sep 2026 23:04:53 -0700 (PDT)
-Message-ID: <d031dea9-aeea-4f2d-8b42-6b7362b857b1@bytedance.com>
-Date: Fri, 25 Sep 2026 14:04:39 +0800
+        bh=U931IUFkMVd98OtvL0P43sJytu2CWHhy0Gubri2GWP8=;
+        b=XmuEbL0HyA9WiXV9CvwwRKA+v9VvdzbxDJe92+2NvvKcIynBDDXW8GlTYke2C/ReTE
+         /OEP1htC2Ds9LVFxPiDWs1ULExaB5jXFCD4Hz8xGdXveSUfV/hMCZ8hWW2BlLgpQRx/P
+         MPgDTt9S3XE/rYN83wAXsCYFvCzUMcMSSDGhPy2yGEOR0UhJF70TM3iPW6AVmH0tFSci
+         mPtoU3OyRABhwglJMvIQcLgsP0cC64DTkHw5xFguz2QbBVQOFxZz1OhDdfr7Tvw9Lwhy
+         k1PQ00GwtF5t6DDHUU/vGe/WlRIBTuS+/HnL2QPDn4dB4lcGj8QQjT+KhzBcs7Uf1xcM
+         PyOQ==
+X-Forwarded-Encrypted: i=1; AKwUvByMFCFId3ZqP72godZKxTBVwrxiBooC+18VYQ5Ocwb2cRoQm3P77FvXb7rrL96t5HeDa5Li1gwQ@vger.kernel.org
+X-Gm-Message-State: AFuF++lLkjpgbP5i9d2oNPddhAsMAvdImLhL4mAwd7CTCoqMGhOjcfZC
+	TGT4uXWk3cNKB2DwM5zItR33aTvIku6XMNjN0KXSbS0SGrg1rkNF+TNDAh0RtQ6C8bBmdL01+Iv
+	idnCdybt83EfRWK3aTy9L+lEl8SLxZDNDj0HYNKJX
+X-Gm-Gg: AYBFou2ggyc0r1b40/wIxvdAmBzMwvz+VKZ42UVIslfbDzfl6uutaorK/fOzlDLWTB/
+	VwpqfsGdIe+8Mop8ZUsp6mIr7RCPykApV8vBue6hiz47M2js5XMsqVsGqnEgP0onUcp4IjIurjV
+	l2Rx/TL5ZyvGO0ZDO0phGMJceyZmYwt/kUcnk2Hsyc4kJhk7uyj4KIac4r7t04OjnjKMitMCRMs
+	aiXqerLAlJJJrc0yY1Q6aYIECyICFB/XFeGn4JP+RO1VNJteJsfCsWfc8InR9HM5M9ur8j2w91A
+	YRn+eyCOtgqOGh17uJnrOz3XdBvaHm+dHAiZ/CBTy1WZ7ehf+03Eyw==
+X-Received: by 2002:a05:6402:38c:b0:6aa:b663:4801 with SMTP id
+ 4fb4d7f45d1cf-6aaea0fb6d8mr14030a12.15.1790318539859; Thu, 24 Sep 2026
+ 23:42:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 2/3] memcg,writeback: flush foreign bdev mappings
- separately from owner wbs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-fsdevel@vger.kernel.org, axboe@kernel.dk, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, willy@infradead.org, tj@kernel.org,
- akpm@linux-foundation.org
-References: <20260922125015.3435215-1-sunjunchao@bytedance.com>
- <20260922125015.3435215-3-sunjunchao@bytedance.com>
- <ncq6yhwolbwkivpsohfsanfap7qwix752g53zvo6hx3ywxn5f2@hgay3kms7jsd>
-From: Julian Sun <sunjunchao@bytedance.com>
-In-Reply-To: <ncq6yhwolbwkivpsohfsanfap7qwix752g53zvo6hx3ywxn5f2@hgay3kms7jsd>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260902040725.877155-1-cui.tao@linux.dev> <aphkAGKpg3dgFc6c@localhost.localdomain>
+ <8c816b23-d394-4389-94ab-7fec889b1300@linux.dev>
+In-Reply-To: <8c816b23-d394-4389-94ab-7fec889b1300@linux.dev>
+From: Suren Baghdasaryan <surenb@google.com>
+Date: Thu, 24 Sep 2026 23:42:06 -0700
+X-Gm-Features: AclHuK-5vOY-egLSEE_bH_0i2hCHj7p-HnkJlCAYVNPv8oCs54l4oqzVV9WylcQ
+Message-ID: <CAJuCfpEFmV9hE4dT2B_KTEaZfPe-tfkwJmYhgRRRFm-LqiwUrQ@mail.gmail.com>
+Subject: Re: [PATCH v5] selftests/cgroup: add PSI pressure trigger and
+ validation tests
+To: Tao Cui <cui.tao@linux.dev>
+Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, 
+	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Ziyang Men <ziyang.meme@gmail.com>, 
+	Tao Cui <cuitao@kylinos.cn>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 9/24/26 8:02 PM, Jan Kara wrote:
-> On Tue 22-09-26 20:50:14, Julian Sun wrote:
->> Bdev inodes are routinely shared by multiple memcgs. Recording their
->> owner wb as foreign can flush unrelated file data when a source memcg
->> enters dirty throttling.
->>
->> Record bdev device numbers separately and queue work on
->> memcg_bdev_frn_flusher to write only their mappings. Keep the existing
->> foreign-wb mechanism for non-bdev inodes.
->>
->> Use fixed per-memcg slots. Tracking uses oldest-first replacement and
->> expiry after dirty_expire_interval. Further dirtying during an ongoing
->> flush can trigger another flush after it finishes.
->>
->> Tracking is best effort: record only dev_t without holding device or
->> inode references. Records are updated under the mapping->i_pages lock
->> with IRQs disabled, but dropping a bdev reference can sleep. Also, since
->> foreign flushes are triggered by dirty throttling, a memcg that never
->> throttles could retain an unused record and pin the device object
->> indefinitely. Recording only dev_t avoids these lifetime constraints,
->> but device removal and device-number reuse may race with lookup. Such
->> races are expected under the best-effort semantics.
->>
->> Bdev writeback submission can block for a long time on congested devices,
->> with up to four work items outstanding per memcg. Use a dedicated unbound
->> workqueue to give these flushes a separate max_active budget, so they do
->> not exhaust a shared workqueue's active slots and delay unrelated work.
->> If the workqueue cannot be allocated at boot, bdev inodes continue to use
->> the existing foreign-wb path.
->>
->> This primarily affects filesystems that keep metadata in the bdev page
->> cache, such as ext4 and other buffer_head users, rather than the usual
->> metadata writeback paths of XFS and Btrfs. This also covers buffered writes
->> to raw block devices. The decision still does not account for how much of
->> the memcg's dirty memory belongs to the bdev. Even a single dirty bitmap
->> block can trigger writeback of the entire bdev mapping when the memcg
->> enters dirty throttling.
->>
->> Suggested-by: Jan Kara <jack@suse.cz>
->> Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
-> 
-> Mostly looks good. What I somewhat dislike about this particular
-> implementation is that we are going to have new IO issuers (additional
-> workers for bdev foreign flushes) - potentially as many as there are memcgs
-> using the bdev - which could increase contention for the device. But OTOH
-> we already have as many wb_writeback issuers as there are memcgs for each
-> device so it isn't something fundamental. What is unique that all these
-> issuers will all flush the same inode (normally inode belongs only to one
-> issuer) but OTOH these are bdev inodes where IO submission path is trivial
-> and the IO pattern is mostly random so maybe the contention isn't going
-> to be too severe.
-> 
-> So I'm somewhat wondering if the 'foreign flush work' shouldn't be a
-> global 'per-bdev' thing but after some thought that would get a bit complex
-> and it probably isn't warranted at this point. I guess the simplest way to
-> reduce the unnecessary contention on bdev inode would be to use
-> write_inode_now(bdev_inode, 0) which will just skip the inode if someone is
-> already writing it (I_SYNC check) which is I think what we want.
-> 
-> Also one more technical comment below.
-> 
->> +/*
->> + * No extra memcg reference is taken: this work is embedded in the memcg,
->> + * and mem_cgroup_css_free() waits for it to finish before freeing the memcg.
->> + */
->> +struct memcg_bdev_frn {
->> +	struct work_struct work;
->> +	dev_t dev;			/* dev_t of the foreign bdev inode */
->> +	u64 at;				/* last recorded dirtying time in jiffies */
->> +	atomic_t inflight;		/* flush work is queued or running */
->> +};
->> +
->>  /*
->>   * Bucket for arbitrarily byte-sized objects charged to a memory
->>   * cgroup. The bucket can be reparented in one piece when the cgroup
->> @@ -279,6 +290,7 @@ struct mem_cgroup {
->>  #ifdef CONFIG_CGROUP_WRITEBACK
->>  	struct wb_domain cgwb_domain;
->>  	struct memcg_cgwb_frn cgwb_frn[MEMCG_CGWB_FRN_CNT];
->> +	struct memcg_bdev_frn bdev_frn[MEMCG_CGWB_FRN_CNT];
->>  #endif
->>  
->>  #ifdef CONFIG_LRU_GEN_WALKS_MMU
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 856a7d07586c..6042c694d56c 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -39,6 +39,7 @@
->>  #include <linux/smp.h>
->>  #include <linux/page-flags.h>
->>  #include <linux/backing-dev.h>
->> +#include <linux/blkdev.h>
->>  #include <linux/bit_spinlock.h>
->>  #include <linux/rcupdate.h>
->>  #include <linux/limits.h>
->> @@ -104,6 +105,7 @@ static struct kmem_cache *memcg_pn_cachep;
->>  
->>  #ifdef CONFIG_CGROUP_WRITEBACK
->>  static DECLARE_WAIT_QUEUE_HEAD(memcg_cgwb_frn_waitq);
->> +static struct workqueue_struct *memcg_bdev_frn_wq __ro_after_init;
->>  #endif
->>  
->>  static inline bool task_is_dying(void)
->> @@ -3875,20 +3877,72 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
->>   * most recent foreign dirtying events and initiating remote flushes on
->>   * them when local writeback isn't enough to keep the memory clean enough.
->>   *
->> - * The following two functions implement such mechanism.  When a foreign
->> - * page - a page whose memcg and writeback ownerships don't match - is
->> - * dirtied, mem_cgroup_track_foreign_dirty() records the inode owning
->> - * bdi_writeback on the page owning memcg.  When balance_dirty_pages()
->> + * When a foreign page - a page whose memcg and writeback ownerships don't
->> + * match - is dirtied, mem_cgroup_track_foreign_dirty() records the inode
->> + * owning bdi_writeback on the page owning memcg. When balance_dirty_pages()
->>   * decides that the memcg needs to sleep due to high dirty ratio, it calls
->>   * mem_cgroup_flush_foreign() which queues writeback on the recorded
->>   * foreign bdi_writebacks which haven't expired.  Both the numbers of
->>   * recorded bdi_writebacks and concurrent in-flight foreign writebacks are
->>   * limited to MEMCG_CGWB_FRN_CNT.
->>   *
->> - * The mechanism only remembers IDs and doesn't hold any object references.
->> - * As being wrong occasionally doesn't matter, updates and accesses to the
->> - * records are lockless and racy.
->> + * Bdev inodes are commonly shared by many memcgs. Flushing their owner wb
->> + * can write unrelated file data, so each memcg tracks foreign bdevs
->> + * separately in MEMCG_CGWB_FRN_CNT slots keyed by dev_t. These records
->> + * use the same expiry policy, but trigger writeback of only the bdev
->> + * mappings.
->> + *
->> + * Both kinds of records only remember IDs and don't hold any object
->> + * references. As being wrong occasionally doesn't matter, updates and
->> + * accesses to the records are lockless and racy.
->>   */
->> +
->> +static void mem_cgroup_track_foreign_bdev(struct mem_cgroup *memcg, dev_t dev)
->> +{
->> +	struct memcg_bdev_frn *frn;
->> +	int i;
->> +	int oldest = -1;
->> +	u64 now = get_jiffies_64();
->> +	u64 oldest_at = now;
->> +
->> +	/*
->> +	 * Pick the slot to use.  If there is already a slot for @dev, keep
->> +	 * using it.  If not replace the oldest one which isn't being
->> +	 * written out.
->> +	 */
->> +	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++) {
->> +		frn = &memcg->bdev_frn[i];
->> +		if (frn->dev == dev)
->> +			break;
->> +		if (atomic_read(&frn->inflight))
->> +			continue;
->> +		if (time_before64(frn->at, oldest_at)) {
->> +			oldest = i;
->> +			oldest_at = frn->at;
->> +		}
->> +	}
-> 
-> The handling of 'inflight' looks racy. After we check, the flush can be
-> queued and we'll just rewrite the entry under the pending flush below
-> leading to odd behavior (like missing flush later in case 'at' gets
-> clobbered to 0 by the running flush)...
-> 
->> +
->> +	if (i < MEMCG_CGWB_FRN_CNT) {
->> +		/*
->> +		 * Re-using an existing one.  Update timestamp lazily to
->> +		 * avoid making the cacheline hot.  We want them to be
->> +		 * reasonably up-to-date and significantly shorter than
->> +		 * dirty_expire_interval as that's what expires the record.
->> +		 * Use the shorter of 1s and dirty_expire_interval / 8.
->> +		 */
->> +		unsigned long update_intv =
->> +			min_t(unsigned long, HZ,
->> +			      msecs_to_jiffies(dirty_expire_interval * 10) / 8);
->> +
->> +		if (time_before64(frn->at, now - update_intv))
->> +			frn->at = now;
->> +	} else if (oldest >= 0) {
->> +		/* replace the oldest free one */
->> +		memcg->bdev_frn[oldest].dev = dev;
->> +		memcg->bdev_frn[oldest].at = now;
-> 
-> .. so I think here we need to block submission of work (retry search if
-> busy) and only then update the entry.
+On Thu, Sep 3, 2026 at 12:24=E2=80=AFAM Tao Cui <cui.tao@linux.dev> wrote:
+>
+> Hello Michal, Suren,
+>
+> =E5=9C=A8 2026/9/3 02:47, Michal Koutn=C3=BD =E5=86=99=E9=81=93:
+> > Hello Tao.
+> >
+> > On Wed, Sep 02, 2026 at 12:07:25PM +0800, Tao Cui <cui.tao@linux.dev> w=
+rote:
+> >> +/* PSI triggers are written with a trailing NUL the kernel parser exp=
+ects. */
+> >> +static ssize_t write_trigger(int fd, const char *trigger)
+> >> +{
+> >> +    return write(fd, trigger, strlen(trigger) + 1);
+> >> +}
+> >
+> > Hyrum's law. It all works for me: NUL, \n or just write(2) the exact
+> > length of the string.
+> > For conventionality, I'd prefer the simple literals and plain strlen() =
++
+> > 0. (I reckon cg_write() cannot be used because of FD access.)
+> >
+>
+> Your Hyrum's law point made me look at the parser, and I'm glad it
+> did, because the behavior is more subtle than "all of them work".
+> psi_write() does
+>
+>         buf[buf_size - 1] =3D '\0';
+>
+> i.e. it overwrites the last byte of whatever was written. With a plain
+> strlen()-sized write that eats the last digit: "some 150000 2000000"
+> silently arms a 200000us window when privileged, and fails with EINVAL
+> for unprivileged users (200000 is not a multiple of the 2s minimum). I
+> reproduced both on 7.0.0-28 here. I suspect your runs succeeded
+> because a truncated window still makes a valid trigger for root, so
+> nothing looked off.
+>
+> I went with your \n variant instead: the newline gets clobbered, the
+> payload stays intact, and it is the conventional procfile form. So the
+> reliance on the undocumented NUL is gone, even though not quite via
+> strlen()+0.
+>
+> Two follow-ups this suggests, if there is interest (I'm not pushing
+> either within this series):
+>
+> - psi.rst says nothing about the terminator while sysfs documents its
+>   (append, not clobber) behavior explicitly; a sentence in psi.rst
+>   would at least make the convention discoverable.
+> - kernfs and sysfs both append the NUL after the written data, so the
+>   user bytes survive. psi_write() could do the same with
+>   buf_size =3D min(nbytes, sizeof(buf) - 1) and buf[buf_size] =3D '\0'.
+>   Terminator-terminated writes keep their exact meaning, and a bare
+>   strlen() write would parse in full instead of losing its last digit.
+>   That would be the more principled fix, but it is a behavior change
+>   for unterminated writes, so it needs a call from the PSI maintainers.
 
-Thanks for the review and suggestions, Jan. 
-Your suggestions make sense, and I'll address them in the next version.
-> 
-> 								Honza 
-> 
->> +	}
->> +}
->> +
->>  void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
->>  					     struct bdi_writeback *wb)
->>  {
->> @@ -3898,6 +3952,14 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
->>  	u64 oldest_at = now;
->>  	int oldest = -1;
->>  	int i;
->> +	struct address_space *mapping = folio_mapping(folio);
->> +	struct inode *inode = mapping->host;
->> +
->> +	if (memcg_bdev_frn_wq && sb_is_blkdev_sb(inode->i_sb)) {
->> +		trace_track_foreign_dirty(folio, wb);
->> +		mem_cgroup_track_foreign_bdev(memcg, inode->i_rdev);
->> +		return;
->> +	}
->>  
->>  	trace_track_foreign_dirty(folio, wb);
->>  
->> @@ -3941,6 +4003,16 @@ void mem_cgroup_track_foreign_dirty_slowpath(struct folio *folio,
->>  	}
->>  }
->>  
->> +static void bdev_frn_flush_work(struct work_struct *work)
->> +{
->> +	struct memcg_bdev_frn *frn =
->> +		container_of(work, struct memcg_bdev_frn, work);
->> +
->> +	bdev_flush_by_dev(frn->dev);
->> +
->> +	atomic_set(&frn->inflight, 0);
->> +}
->> +
->>  /* issue foreign writeback flushes for recorded foreign dirtying events */
->>  void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
->>  {
->> @@ -3949,6 +4021,21 @@ void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
->>  	u64 now = jiffies_64;
->>  	int i;
->>  
->> +	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++) {
->> +		struct memcg_bdev_frn *frn = &memcg->bdev_frn[i];
->> +
->> +		/* Keep the workqueue availability check explicit. */
->> +		if (memcg_bdev_frn_wq && time_after64(frn->at, now - intv) &&
->> +		    atomic_cmpxchg(&frn->inflight, 0, 1) == 0) {
->> +			/*
->> +			 * Clear now so dirtying during writeback can refresh
->> +			 * the timestamp for a later flush.
->> +			 */
->> +			frn->at = 0;
->> +			queue_work(memcg_bdev_frn_wq, &frn->work);
->> +		}
->> +	}
->> +
->>  	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++) {
->>  		struct memcg_cgwb_frn *frn = &memcg->cgwb_frn[i];
->>  
->> @@ -4202,9 +4289,13 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
->>  	memcg->kmemcg_id = -1;
->>  #ifdef CONFIG_CGROUP_WRITEBACK
->>  	INIT_LIST_HEAD(&memcg->cgwb_list);
->> -	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++)
->> +	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++) {
->> +		struct memcg_bdev_frn *frn = &memcg->bdev_frn[i];
->> +
->>  		memcg->cgwb_frn[i].done =
->>  			__WB_COMPLETION_INIT(&memcg_cgwb_frn_waitq);
->> +		INIT_WORK(&frn->work, bdev_frn_flush_work);
->> +	}
->>  #endif
->>  	lru_gen_init_memcg(memcg);
->>  	return memcg;
->> @@ -4386,8 +4477,10 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
->>  	int __maybe_unused i;
->>  
->>  #ifdef CONFIG_CGROUP_WRITEBACK
->> -	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++)
->> +	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++) {
->>  		wb_wait_for_completion(&memcg->cgwb_frn[i].done);
->> +		flush_work(&memcg->bdev_frn[i].work);
->> +	}
->>  #endif
->>  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
->>  		static_branch_dec(&memcg_sockets_enabled_key);
->> @@ -5703,6 +5796,12 @@ int __init mem_cgroup_init(void)
->>  	memcg_wq = alloc_workqueue("memcg", WQ_PERCPU, 0);
->>  	WARN_ON(!memcg_wq);
->>  
->> +#ifdef CONFIG_CGROUP_WRITEBACK
->> +	memcg_bdev_frn_wq = alloc_workqueue("memcg_bdev_frn_flusher",
->> +					    WQ_UNBOUND, 0);
->> +	WARN_ON(!memcg_bdev_frn_wq);
->> +#endif
->> +
->>  	for_each_possible_cpu(cpu) {
->>  		INIT_WORK(&per_cpu_ptr(&memcg_stock, cpu)->work,
->>  			  drain_local_memcg_stock);
->> -- 
->> 2.39.5
->>
+Yeah, I was expecting a NUL-terminated string with the NUL included
+when we write, like shown in the psi.rst code example:
 
-Thanks,
--- 
-Julian Sun <sunjunchao@bytedance.com>
+write(fds.fd, trig, strlen(trig) + 1)
+
+but I agree that this might be unconventional.
+I guess we could check if buf[buf_size - 1] is already '\0' then do
+nothing (keeps current users happy) and otherwise we append the NUL at
+the end. That way both write(fds.fd, trig, strlen(trig) + 1) and
+write(fds.fd, trig, strlen(trig) + 0) would work. Would you agree or
+did I miss anything?
+
+>
+> >> +
+> >> +static int pressure_open(const char *resource)
+> >> +{
+> >> +    char path[PATH_MAX];
+> >> +    int fd;
+> >> +
+> >> +    snprintf(path, sizeof(path), "/proc/pressure/%s", resource);
+> >> +    fd =3D open(path, O_RDWR);
+> >> +    if (fd < 0)
+> >> +            ksft_perror(path);
+> >
+> > This outputs:
+> > | # /proc/pressure/irq: No such file or directory (2)
+> > | #      SKIP      /proc/pressure/irq unavailable
+> >
+> > I.e. similar message is printed twice.
+> > Since strace is a companion of cgroup selftests, I'd keep this helper
+> > silent.
+> >
+>
+> Agreed, the helper is silent now. The duplicate was my own doing: I
+> added the print in v5 on Suren's v4 request (it replaced a raw
+> fprintf) without noticing the SKIP message right below it already
+> carries the reason, so removing it satisfies both comments.
+>
+> >> +    return fd;
+> >> +}
+> >> +
+> >> +FIXTURE(psi)
+> >> +{
+> >> +    char root[PATH_MAX];
+> >> +    char *cg;
+> >> +};
+> >> +
+> >> +FIXTURE_SETUP(psi)
+> >> +{
+> >> +    int psi_fd;
+> >> +
+> >> +    if (cg_find_unified_root(self->root, sizeof(self->root), NULL))
+> >> +            SKIP(return, "cgroup v2 isn't mounted");
+> >> +
+> >> +    /* PSI must be enabled (CONFIG_PSI=3Dy, not disabled on the cmdli=
+ne). */
+> >> +    psi_fd =3D open("/proc/pressure/memory", O_RDONLY);
+> >> +    if (psi_fd < 0)
+> >> +            SKIP(return, "PSI unavailable (CONFIG_PSI=3Dn or psi=3D0)=
+");
+> >> +    close(psi_fd);
+> >> +
+> >> +    self->cg =3D cg_name(self->root, "psi_trigger_test");
+> >> +    if (!self->cg)
+> >> +            SKIP(return, "failed to allocate cgroup name");
+> >> +    if (cg_create(self->cg))
+> >> +            SKIP(return, "failed to create cgroup: %s", strerror(errn=
+o));
+> >
+> > Why are these two SKIPs (not failures)?
+> >
+>
+> You're right, they are not environment problems. They are ASSERTs in
+> FIXTURE_SETUP() now, so a run without privileges fails loudly instead
+> of vanishing into skips.
+>
+> >> +TEST_F(psi, cgroup_trigger_fire)
+> >> +{
+> >> +    char *cpupress;
+> >> +    struct pollfd pfd =3D { .events =3D POLLPRI };
+> >> +    long ncpus;
+> >> +    int fd;
+> >> +    int i;
+> >> +
+> >> +    cpupress =3D cg_control(self->cg, "cpu.pressure");
+> >> +    ASSERT_NE(NULL, cpupress);
+> >> +    fd =3D open(cpupress, O_RDWR);
+> >> +    free(cpupress);
+> >> +    ASSERT_GE(fd, 0);
+> >> +    pfd.fd =3D fd;
+> >> +
+> >> +    /*
+> >> +     * 1usec threshold over a 2s window: any CPU stall fires it. The =
+2s
+> >> +     * window is the smallest unprivileged users are allowed to arm.
+> >> +     */
+> >> +    ASSERT_GT(write_trigger(fd, "some 1 2000000"), 0);
+> >
+> > The selftest rarely can be run as unprivileged user (even test cgroup
+> > creation needs privileges), so this comment is irrelevant. (But it's
+> > fine to test with that value.)
+> >
+>
+> Dropped.
+>
+> > On the more abstract level -- I was playing with this and thinking abou=
+t
+> > a value that'd test both sides, i.e. false triggers as well as false
+> > non-triggers. I'd find that to be the half of the window and the number
+> > of tasks should be then (3*ncpus + 1) / 2.
+> > Or perhaps test two thresholds, one tiny like you did and one maximum
+> > (whole window) with same amount tasks but expect trigger, no trigger
+> > respectively.
+> >
+>
+> I tried both of your variants before picking one. The half-window
+> threshold with (3*ncpus+1)/2 hogs fired reliably, and the two-threshold
+> variant also held up on the negative side: with the threshold equal to
+> the whole window, ncpus+1 hogs never fired it (measured cpu.pressure
+> "some" stays around 2-17% under that oversubscription, so the margin
+> is comfortable rather than borderline). I kept the existing tiny-
+> threshold test and added cgroup_trigger_no_fire for the whole-window
+> side, which matches your second variant and keeps the hog setup shared.
+>
+> >
+> >> +
+> >> +    ncpus =3D sysconf(_SC_NPROCESSORS_ONLN);
+> >> +    if (ncpus =3D=3D -1)
+> >> +            TH_LOG("sysconf(_SC_NPROCESSORS_ONLN): %s", strerror(errn=
+o));
+> >> +    ASSERT_NE(-1, ncpus);
+> >
+> > Same as messages from pressure_open() above. Simply assert.
+> >
+> >> +
+> >> +    /* ncpus+1 hogs guarantee CPU contention inside the cgroup. */
+> >> +    for (i =3D 0; i < ncpus + 1; i++)
+> >> +            ASSERT_GE(cg_run_nowait(self->cg, hog_cpu, NULL), 0);
+> >> +
+> >> +    ASSERT_EQ(1, poll(&pfd, 1, PSI_POLL_TIMEOUT_MS));
+> >> +    ASSERT_NE(0, pfd.revents & POLLPRI);
+> >> +    close(fd);
+> >> +}
+> >> +
+> >> +TEST_HARNESS_MAIN
+> >
+> > All in all, this looks so much better than the initial version, well
+> > done. Just a few polishing touches.
+> >
+>
+> All 7 tests pass on a 2-CPU and a 16-CPU machine.
+>
+> Thank you both, this series learned a lot from you: Suren walked me
+> through the harness conversion and the reporting details, and you kept
+> the semantics honest, which is what surfaced the parser behavior. The
+> test is in a much better shape than what I started with, and the
+> parser finding above came out of your push on both directions of the
+> trigger.
+>
+> Thanks
+> Tao
+>
+> > Michal
+>
