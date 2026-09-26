@@ -1,245 +1,194 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877BA36A361
-	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 21:28:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEB57254B03
+	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 23:32:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790458084; cv=none; b=KTAL4c1otd1UDMS/9lQxhLVDNmvZQ4UgWRJ+FtLaKXFYlXVc5NiOvNL/+nvzJ9+TEcSOFyyFdgYLcQTq/zmoPiDWli67GxMxfwHM36tw5VymuTEsZJ5KrZ0lUELKRWUgxGhxyaiUM9W+7oohJiRET6TzF+qPgLSGeL6oGXltKqo=
+	t=1790465540; cv=none; b=ClWfJrZuw+2RnKkBEctyalcvLL8u8q6GdiCkWIh3a0ZZ7X1v+ov1PhSbi8QZG8GKTZNHYnvyoaHHE+H9bqq0mnBJfs0xJD+gLVW5SBSTY2Ph0ZoiQAg7O2lVLajFgDIEUXZq5YHp086O3KypYrMbKQAb4/rZ8mo7bqPpCbtybiM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790458084; c=relaxed/simple;
-	bh=ZGfdlvSoM9BZXTGn+SBJNjjtFMewX0+1I96V97NJx/I=;
+	s=arc-20240116; t=1790465540; c=relaxed/simple;
+	bh=/4VC4x9PpIfi2jsGgmcRErzz+roJvLD2iHnoUCXfJK4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YJrfa2cxYakcfIhBzh/FPYIeqjHfkYs2dm2vEZfGHU9hNM//1MbZPi4E6pADRywv7/LZfQ6wmN6LDXRIz8ZDjJGTgV2nMyWxdwvltRWvAJnV0JwHCwKYBeKXM3sdOm/C3SvIZwspj9xcNTRFXSMZY4xrYg1siZObTJ9B7sM3MIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BF0hrkya; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=e3LeaqHWsQHK08Va4TCgwqQKlbaIsQbAAuIwVbZcR82nP9DDzkHyrRHeZkI/pzyU3zZb8tuY7h0YnjkKjVfgYVhG7FT9B9tm2Xio11EsqXnLoj0kP2rySHLz2tEOwOrAWwFBQJ6gdd7gzJr+jNNJ3Dcs0/3noYQ95WBQQNo/r+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SOntKYBx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BF0hrkya"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2780B1F00898
-	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 21:28:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SOntKYBx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BFDA1F0089C
+	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 23:32:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790458083;
-	bh=/b3/K9KEy+XA6wgbrrLssczCgmMTCJmP39vuys8Y1Dk=;
+	s=k20260515; t=1790465538;
+	bh=nw4tcFFem5fMw8F25atJ8BPsyQyyVvwGckLrZIYusgw=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=BF0hrkyarADqibYnuEb3qf5aWoG5nRUSPDUHCUk1E4hoNmTWEqh5MQ9He3+NiVeyb
-	 K9DYKhBcPgoh8ty+PK+ioTMlu2hEnJZR+cTyNHBFCjfmKdE8vvNrG8Y45KU9jVZS7V
-	 TMh7DMQJv15/q/Fxat96gaUhkaRkUfQsd1iQjM+qiDN7QjXtuOJK8sfJMeoOaDeaoc
-	 1AUPIjTiBnxecQqk7xekIuINmMy7kxDQccID//JMC/Hquc7SX1HtzhFVgQmJLPx15+
-	 C8OkocZpUbrj/d6YtCOGbFfXyPIS+lgl+lq9TF9UPfSKER7G8Fhjgo6TihArZNSH6+
-	 EzfA2KagwJ+rg==
-Received: by mail-ej2-f43.google.com with SMTP id a640c23a62f3a-c2af3a4f193so178030066b.3
-        for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 14:28:03 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBzzAa6jcWOjklBTA+sKvZipeKKtpKrRl1WGvS96Fdu3VLtfO0lu8BMZKMmH4efSOytISP1pARuD@vger.kernel.org
-X-Gm-Message-State: AFuF++kzca/Li6Wn2SO5OT2dD+dOZ+crlgXwdOxHhQMnKABcc8vsbFG+
-	dejP6q5rE1DMv/OE/V0MFA0QEkD70ohjeg6kJVJWvAXl0fi4R7jV9lxRG4fwQF7ACNE/SQ1HWmy
-	MMWhb3ksO50hYGw+Q3upOZqlzxxG8p1yt6nFxdH32KQ==
-X-Received: by 2002:a17:907:97cd:b0:c25:5d2:acf0 with SMTP id
- a640c23a62f3a-c2ac241f82emr841881766b.8.1790458080847; Sat, 26 Sep 2026
- 14:28:00 -0700 (PDT)
+	b=SOntKYBx3mVDqzQQqKmTLcy5SmH61dXRyWMz0CKfqKDGhmmX6DzBF3I+b5HvtGETW
+	 PxGXDUWq6iL8F9Jd+QR4jj7Ei5t9F9818kuauVMuFHw/taZntebsNY+G4fYhG8IKr8
+	 gzX5bwD26p1BOmhW86v+HIWAPt+lIsFjWRKPNalZEb6eul6QjDRNUuSVIS9vJZtM0G
+	 gcroxCinZJzF9ShuIDqq1EosXzHliS/g5ECjIh48ei+DBMQXx3UCPyqKPngM+74oTS
+	 AqJdxm8iJp5FWBKA25WxTTBCgvaIrqddbE99s5/kFPFaCn8NBID1BPVsoFwCIcO7+f
+	 Zcx92O+aH+Fqw==
+Received: by mail-ej2-f43.google.com with SMTP id a640c23a62f3a-c2af3701927so245514866b.3
+        for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 16:32:18 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBw9bEfuYiHxlsNuOJS8vUhEcRbLpPh5KYgtfp0kv9ZMiEE5u97HHSSws3O0PoWm6V1l1PGxd+av@vger.kernel.org
+X-Gm-Message-State: AFuF++laqKjysyyqowLWUJX9SVWkR97Bw5UI3sK30OOBpn2PC6Xfak71
+	rUTzJOqpTXrgLNaJ77VYBx6TRRZ1CBJHuKxsh9BNEJENBbMB5LY8mqy1iBA4vLDXCm5qzjYPGxC
+	JXTBvk66PHQQBAusffdGIIuElpoiknIi3QQySMC3vBg==
+X-Received: by 2002:a17:907:962a:b0:c2d:ca32:2176 with SMTP id
+ a640c23a62f3a-c2dca3235abmr54019966b.8.1790465537433; Sat, 26 Sep 2026
+ 16:32:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <aqjcFb6MFNiA6n4V@fedora> <aqjpYHbZ14A8xRtK@fedora>
- <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
- <7ee199ddee81bf8026688def82f78ad9db09be9e.camel@surriel.com>
- <CACePvbVA+DnDJprMx3qOrGb98y1ORQ-LfaENy_Btfx3uW=E4eQ@mail.gmail.com>
- <f3ca71f1c561f28a341de0e5a1b3f24bd4da3201.camel@surriel.com>
- <CACePvbX5Oy98DygLZjC=Z03Lqb0nk50_OEKQCT9svbQOOwwDew@mail.gmail.com>
- <CAKEwX=Mv+tnL8K4rfPuof6mKaLQp=tqR_qjtKrtY0-5L85FLfw@mail.gmail.com>
- <CACePvbUF2QQMh_GiCNQn-RTmZNkkLWkmaHSYzdQwv2fupjNQiw@mail.gmail.com>
- <arUcil9kxUPiymXI@KASONG-MC4> <araWKyJ5MENBwXCL@cmpxchg.org>
-In-Reply-To: <araWKyJ5MENBwXCL@cmpxchg.org>
+References: <20260926045517.3458413-1-matthias.goergens@gmail.com>
+In-Reply-To: <20260926045517.3458413-1-matthias.goergens@gmail.com>
 From: Chris Li <chrisl@kernel.org>
-Date: Sat, 26 Sep 2026 11:27:48 -1000
-X-Gmail-Original-Message-ID: <CACePvbV0Z3OhxkEn-MiMrxpSmtbt1YwCt2N2_ZW3jbdh87jgFA@mail.gmail.com>
-X-Gm-Features: AclHuK-pGdbWiVt-UuTNcQ1lUDuTYQAqi73TzSdqZqJN9ntFblbZL_BJbUvjbEg
-Message-ID: <CACePvbV0Z3OhxkEn-MiMrxpSmtbt1YwCt2N2_ZW3jbdh87jgFA@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Kairui Song <ryncsn@gmail.com>, Nhat Pham <nphamcs@gmail.com>, Rik van Riel <riel@surriel.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Kairui Song <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
-	David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Sat, 26 Sep 2026 13:32:06 -1000
+X-Gmail-Original-Message-ID: <CACePvbWPLegjMtF4jYN4+_1ZeoEuBHwZuwNyMpYwPZaA0edO5A@mail.gmail.com>
+X-Gm-Features: AclHuK9AxoX5x-gecpb2ks2aU57CnhQ2g3FIIpOxpjBk-hgB0LOGfyaEJiKPKFM
+Message-ID: <CACePvbWPLegjMtF4jYN4+_1ZeoEuBHwZuwNyMpYwPZaA0edO5A@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 0/4] mm/swap: reserve swap areas for deliberate offload
+To: Matthias Goergens <matthias.goergens@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Kairui Song <kasong@tencent.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, David Hildenbrand <david@kernel.org>, Michal Hocko <mhocko@kernel.org>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Nhat Pham <nphamcs@gmail.com>, Yosry Ahmed <yosry@kernel.org>, 
+	Youngjun Park <youngjun.park@lge.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Barry Song <baohua@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-api@vger.kernel.org, 
+	Alejandro Colomar <alx@kernel.org>, linux-man@vger.kernel.org, Karel Zak <kzak@redhat.com>, 
+	util-linux@vger.kernel.org, Jani Nikula <jani.nikula@linux.intel.com>, 
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+	Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, intel-gfx@lists.freedesktop.org, 
+	dri-devel@lists.freedesktop.org, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Pavel Machek <pavel@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Will Deacon <will@kernel.org>, linux-pm@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Shuah Khan <shuah@kernel.org>, 
+	linux-kselftest@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Sep 25, 2026 at 5:41=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org=
-> wrote:
->
-> On Fri, Sep 25, 2026 at 09:15:17PM +0800, Kairui Song wrote:
-> > On Tue, Sep 22, 2026 at 09:44:37PM +0100, Chris Li wrote:
-> > > It seems you are talking about a different topic: the vswap charging =
-issue.
-> > > There is a golden rule that we should follow: don't break existing
-> > > users. At least with the same persistence, this rule should apply
-> > > universally.
-> > > In the swap tiers discussion, the UAPI was such a big deal that we
-> > > couldn't implement new UAPI. On the other hand here we argue for
-> > > liberally changing user-space visible behavior.
-> > >
-> > > BTW, I already shared that changing swap counter charging will break
-> > > our and others' existing deployments.
-> >
-> > Hi all
-> >
-> > As I read the threads and try to clean up the requirement, just
-> > realized that I forgot and ignored something previously. I think I can
-> > share a few things here.
-> >
-> > I also see that Rik mentioning that:
-> >
-> > > It adds up anonymous, file, accounted slab, and
-> > > (after compression) zswap memory use for a cgroup,
-> > > and can be limited with all the usual cgroup
-> > > limits.
-> >
-> > That's very true, and that's also the one reason we can't
-> > migrate some workload to zswap easily (at least yet) :D
-> > See below.
-> >
-> > The discussion on this can be saw two years before (I know
-> > things are different for V2, so see below):
-> > https://lore.kernel.org/linux-mm/CAMgjq7AYA91f4g-bknUZOMg6hApTD-X5LqjcT=
-BN2u-Lu8pjs+w@mail.gmail.com/
-> >
-> > An minor update for that, memsw in V1 serves pretty well (we also
-> > modded that part and would try push to upstream if doable), and as
-> > memsw is missing in V2, we can still workaround that using
-> > memory.current and memory.swap.current. BUt missing the offloaded
-> > part in memory.swap seems a problem.
-> >
-> > First a little bit off topic, I'll be really happy if we can make
-> > both compressed memory and swap as separate counters (I even once
-> > tried to implement a zpool accounting to account compressed memory
-> > in some unified way, but, well, zpool got killed before I post
-> > that :P), or at least a way to do that, e.g. something like nokmem.
->
-> Thanks for your thoughtful email, Kairui.
->
-> > Due to our real usage:
-> >
-> > With compressed memory staying in a separate counter (which
-> > we manged to do that with ZRAM) the memory.current + memory.swap
-> > (or, memsw for cgv1) could be the exactly planned or sold size of a
-> > container, the scheduler (e.g. from k8s level) is fully aware of
-> > the packing rate of a host based on this reading. and can make
-> > scheduling decisions based on that. And can control it by
-> > adjusting the limit two combined.
-> >
-> > But with compression as a fixed part in memory.current, first the
-> > compression rate is totally uncontrollable, both the user and us
-> > will be fully *unaware* of how much memory they can *actually* use,
-> > that makes the planning really awkward. memory.max stops being the
-> > bound of what we planned or sold, anything compressed lets the raw
-> > footprint go past it by however much the compression ratio happens
-> > to give, so what we oversold is bounded by the workload's data and
-> > not by anything we configure. We can substract the zswap reading
-> > though with adaption, however it's hard to change the performance,
-> > OOM behavior or reclaim behavior:
-> >
-> > As you may considering compression is trading CPU time with memory,
-> > then two things here: the user could use more memory than we expected
-> > by burning the CPU. And, some users has a leaking application, the
-> > application could goes super slow or experiencing high CPU usage due
-> > to memory being compressed. They really just want to get OOM killed
-> > in time when ever the application leaks beyound a threshold (and
-> > yes that is a real and actually practical model for many applications).
-> > And, we can't simply disable memory compression for them.
-> >
-> > In many cases we just want a best effort compression to make space
-> > for low priority tasks, and do not want ordinary containers to use
-> > compression at the cost of lose of performance. While still has
-> > a fixed limit as usual. So simply disable memory compression is also
-> > not the plan, we do need compression to make place for other
-> > applications, we just don't want their real raw usage to exceed
-> > memory.max, and we can dynamically adjust memory.swap.max to
-> > control the oversold part, compression or physical.
-> >
-> > And this is not about residency, so memory.min/low don't help here:
-> > it's about overselling, and about not leaving a container thrashing in
-> > compress/decompress loops instead of being killed.
-> >
-> > And if the memory compression is really fully transparent (not
-> > doable by software), yeah, that's great as there is nothing to do
-> > with reclaim.  But, for now, we have to go through page fault / folio
-> > allocation / map it again. So For example, if we already have
-> > memory.max =3D=3D memory.current or under high pressure, then now
-> > doing any read from the compressed part would need to some
-> > require further eviction first to make place for the decompressed
-> > new data, this is not like any kind of "real" memory, something
-> > feels not right here.
-> >
-> > Another thing is that I think we has been assuming that physical
-> > swap is slower than compressed memory, which is not always true either.
-> > They all need to be read through page fault, the page fault could
-> > be the real blocker here rather than IO or de-compression.
-> >
-> > I also want to separate two things that I think got bundled together
-> > here: not requiring a physical slot behind a compressed entry, and not
-> > charging the raw size to the swap counter. The first one is great, yeah=
-,
-> > and it's exactly the part we want, it's what makes compression usable
-> > without provisioning disk. The second one is a policy change, maybe it'=
-s
-> > not needed for the first stage, charging a cgroup for the
-> > memories it has offloaded doesn't require any slot to exist behind them=
-.
-> > If someone wants to run memory compression with no disk at all,
-> > memory.swap.max defaults to max, so that still works fine, right?
->
-> I think what we found out over the course of this discussion is that
-> people have been using memory.swap.max in two ways. Regardless of what
-> we do, we will "break" one side.
->
-> (1) The usecase you're describing. Use memory.swap.max, combined with
-> memory.max, to set a "total", predictable footprint of in-use
-> application address space. You can mmap whatever you want, but the
-> number of unique pages you can touch is limited to this sum. And you
-> can control residency vs non-residency through the invididual values
-> of those settings. If compressed entries are not included, this
-> usecase will break.
+On Fri, Sep 25, 2026 at 6:55=E2=80=AFPM Matthias Goergens
+<matthias.goergens@gmail.com> wrote:
+> The series fixes zram selftest device tracking and error reporting, adds
+> the swap policy with DRM eligibility checks, and tests routing, workingse=
+t
+> activation and retained-entry write refusal. It is based on mm-new at
+> 995829088503.
 
-Thanks for the very nice write-up; that is the exact usage case I have
-in mind. You put it up there much nicer than I can. Really appreciate
-that.
+Hi Matthias,
 
->
-> (2) The use case we have. Use memory.swap.max to divide a finite space
-> in storage. We only have so much space on disk, and we need to manage
-> fair access. Note that this isn't about speed. We have a mix of
-> containers where some use writeback and others do not. The ones who
-> write back to the swapfile need to be able to get their fair share -
-> not more, not less. Including something that doesn't actually consume
+I can't find mm-new 995829088503 anymore.
 
-Just want to make sure I understand correctly. Do you mean the fair
-share of compressed memory used in the zswap case?
+Your patch does not apply cleanly to the current tip of mm-new
+mm-unstable, or mm-stable branches.
+Do you have a git repo with your patch applied?
 
-> this separate finite resource is also a behavioral change that would
-> break that usecase. And arguably it's a deviation from how the control
-> was intended and from the broader cgroup design philosophy.
->
-> I think we need to build tools to support both cases. But somebody
-> will have to change how they're doing things... :/
-
-Agree.
+mm-new is whatever Andrew can find on the mailing list, regardless of
+whether it has been reviewed. That mm-new branch is very unstable,
+even more so than mm-unstable, which should at least have some review
+already. Maybe consider using mm-stable or mm-unstable as base next
+time.
 
 Chris
+
+>
+> Feedback is particularly welcome on:
+>
+> - Activation-time eligibility versus backend placement or migration:
+>   is retained-entry refusal, with possible reclaim churn or OOM,
+>   acceptable without migration?
+> - Eligible-capacity accounting, including overcommit limits and OOM
+>   scoring; cache recovery, cluster invalidation and workingset activation=
+.
+> - Persistent activation and visibility: current swap listings do not
+>   expose the policy.
+>
+> Validation includes x86 builds, affected arm64 MTE objects and builds
+> without swap or memory cgroups. QEMU tests covered routing, retained-entr=
+y
+> recovery, data integrity and cleanup, with negative controls for write
+> refusal and teardown failure.
+>
+> I have also been using this policy on my own machine with experimental
+> bcachefs swap support, with no problems observed so far. Deliberate stres=
+s
+> testing is confined to VMs; I do not deliberately stress-test this machin=
+e.
+>
+> Changes since v1, incorporating Sashiko's public review [7]:
+>
+> - Improve selftest isolation, retained-swap measurement and memlock skips=
+.
+> - Track allocated zram devices, wait for udev probes and report cleanup
+>   errors without deleting data through a mount that could not be released=
+.
+> - Clarify activation, capacity reporting and conventional fallback limits=
+.
+>
+> [1] https://patchew.org/linux/20260825153238.2695446-1-nphamcs@gmail.com/
+> [2] https://patchew.org/linux/20260713025644.170839-1-youngjun.park@lge.c=
+om/
+> [3] https://openzfs.github.io/openzfs-docs/Project%20and%20Community/FAQ.=
+html#using-a-zvol-for-a-swap-device-on-linux
+> [4] https://engineering.fb.com/2022/06/20/data-infrastructure/transparent=
+-memory-offloading-more-memory-at-a-fraction-of-the-cost-and-power/
+> [5] https://www.kernel.org/doc/html/latest/admin-guide/mm/damon/reclaim.h=
+tml
+> [6] https://www.kernel.org/doc/html/latest/admin-guide/mm/zswap.html
+> [7] https://sashiko.dev/#/patchset/20260914104501.3960616-1-matthias.goer=
+gens@gmail.com
+> [8] https://github.com/util-linux/util-linux/pull/4633
+> [9] https://lore.kernel.org/all/20260914105606.3997649-1-matthias.goergen=
+s@gmail.com/
+>
+> v1: https://lore.kernel.org/all/20260914104501.3960616-1-matthias.goergen=
+s@gmail.com/
+>
+> Matthias Goergens (4):
+>   selftests: zram: track owned devices and report cleanup failures
+>   mm: restrict offload-only swap to proactive reclaim
+>   selftests: zram: cover offload-only swap policy
+>   selftests: zram: cover retained offload-only entries
+>
+>  Documentation/mm/swap.rst                     | 105 ++++
+>  drivers/gpu/drm/i915/gem/i915_gem_shrinker.c  |   2 +-
+>  .../gpu/drm/i915/gem/selftests/huge_pages.c   |   6 +-
+>  drivers/gpu/drm/msm/msm_gem_shrinker.c        |   2 +-
+>  drivers/gpu/drm/panthor/panthor_gem.c         |   2 +-
+>  drivers/gpu/drm/ttm/ttm_backup.c              |   2 +-
+>  drivers/gpu/drm/xe/tests/xe_bo.c              |   2 +-
+>  include/linux/swap.h                          |  29 +-
+>  include/linux/vm_event_item.h                 |   1 +
+>  mm/memcontrol.c                               |  20 +-
+>  mm/page_io.c                                  |  24 +-
+>  mm/swapfile.c                                 | 123 ++++-
+>  mm/vmscan.c                                   |  31 +-
+>  mm/vmstat.c                                   |   1 +
+>  tools/testing/selftests/zram/.gitignore       |   2 +
+>  tools/testing/selftests/zram/Makefile         |   4 +-
+>  tools/testing/selftests/zram/README           |  20 +-
+>  tools/testing/selftests/zram/config           |  10 +-
+>  tools/testing/selftests/zram/settings         |   1 +
+>  tools/testing/selftests/zram/swap_offload.c   | 425 +++++++++++++++++
+>  .../selftests/zram/workingset_offload.c       | 207 ++++++++
+>  tools/testing/selftests/zram/zram.sh          |   9 +
+>  tools/testing/selftests/zram/zram01.sh        |   9 +-
+>  tools/testing/selftests/zram/zram02.sh        |   9 +-
+>  tools/testing/selftests/zram/zram03.sh        | 174 +++++++
+>  tools/testing/selftests/zram/zram04.sh        | 164 +++++++
+>  tools/testing/selftests/zram/zram05.sh        | 447 ++++++++++++++++++
+>  tools/testing/selftests/zram/zram_lib.sh      | 189 ++++++--
+>  28 files changed, 1926 insertions(+), 94 deletions(-)
+>  create mode 100644 tools/testing/selftests/zram/settings
+>  create mode 100644 tools/testing/selftests/zram/swap_offload.c
+>  create mode 100644 tools/testing/selftests/zram/workingset_offload.c
+>  create mode 100755 tools/testing/selftests/zram/zram03.sh
+>  create mode 100755 tools/testing/selftests/zram/zram04.sh
+>  create mode 100755 tools/testing/selftests/zram/zram05.sh
+>
+> --
+> 2.55.0
+>
