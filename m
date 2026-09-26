@@ -1,85 +1,82 @@
-Received: from mail-wr2-f35.google.com (mail-wr2-f35.google.com [74.125.225.99])
+Received: from mail-pj2-f42.google.com (mail-pj2-f42.google.com [74.125.227.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3219A37F305
-	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 05:52:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5BDE38DC6B
+	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 06:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790401924; cv=none; b=nvyOACj6Hvye3ItvrttzycGWP+5Aa1p5ZCRwaczD4lujtzCC5BigrrQTR/u4HK2heW2iZ8Dlte7i1zgijYcTFN0Nb7piTZzuCgJIFTfXlPmXIsMubjvq/0QQdltID5deFNNFZOp/kzzFkfZcT4I2P3xk4VDvHj6f+nEM41gAJlY=
+	t=1790404414; cv=none; b=l+u2tbS5kIIixguqhfWamqydYVIdb7huA3hH47nVM//yLx6qE6KqUHS8t8kuC9X7Ke/enqDg7IK4qn52oYQ35CS9wL2iekOZi4SwPETAfLyNKIONnU52JgXDD+YaiVd+QbAV2fsZ5z9vsSjJsunb3kqt7Dx/N+xFZNCFUyAWLn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790401924; c=relaxed/simple;
-	bh=U2oS7pgjyyIjvqi/orzXz9qBfDp++XWRg3ncB3XLl8o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NiGkPw3Osc3ZbrKWPjhcnbWHL77qsaOOUGrFDEdpcHhNAlIdHfkHTovO33I3xEnx88zJRhTo98ZSC6svTDTSd/pOsPtjjqi67VBUOgLmtG+s7zr0BO/37T494El70CFg25iRSixWtrJrnR/1gRQ6nZ0MI4dsuwmQZl4Cg17Q7iQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TZnFlP17; arc=none smtp.client-ip=74.125.225.99
+	s=arc-20240116; t=1790404414; c=relaxed/simple;
+	bh=67sOexwvNB8oNwHlLhm0JdMRdQfyPnVTudrDRY1E+3o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JB2EIS+xRfIrc/xPgNwh2GJMbHLvzmzYELCvLJXRtPfq1bHsnyokIRWmNgLgiKgx8Nkl3rDAf1GruhGDh/AOxZdlyAhg0t/aqy61h2PdY373eR4i6PhOybrWufTJQQYrnnPgg5z0uFYMcamXHyZFrAhnaQpOG9nuR6qWzuuWRM4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=F0IVx87Y; arc=none smtp.client-ip=74.125.227.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TZnFlP17"
-Received: by mail-wr2-f35.google.com with SMTP id ffacd0b85a97d-4887f690df6so897303f8f.1
-        for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 22:52:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F0IVx87Y"
+Received: by mail-pj2-f42.google.com with SMTP id d9443c01a7336-2df4aa80a73so9257165ad.3
+        for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 23:33:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790401921; x=1791006721; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=IlS6Cm29yDumSGG9d2x8b2HduKmhAprb8xwGaPSX0YE=;
-        b=TZnFlP17yTqHURL/h8uDdkLEUqIMxh2rCjRS+ZaK8J6ZbHK7n4w/vBK5hJ0gO3Np8d
-         WQ0w91HdGRy6iwtCWhj0D2M7JPCFk2YeUIchwKNxQ8R+dTgye74XiFLvCbouLdR7Rbol
-         LsPpA62uuOWCYp+or69ff9tmdDXOdrcod+bwrVoiEG1Navofwc9zMvSoTXvCk13C9og6
-         p3cLntt2r5Aqfs56m7XR+IRz34NpjkidSDia/Af9tpO6r9o2LxpE1AGEx2ubNryrPUAb
-         YKcoEpqE+jsAEUOboxZ/5hZ3pI9eLr0HfdCFXbwTpvLfvi0ZOVDATikpI+gPhn69Jxci
-         K9uw==
+        d=gmail.com; s=20251104; t=1790404412; x=1791009212; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=v8XYO5YM5s3vZvbrjVcN9xgfREmdqmZ1B6r1XIDErl8=;
+        b=F0IVx87Y/9+d1Wst+TMmPwJlaLnlHRKq3RYmtFQH9f5u7MeSNCJzqOv73+6FTrtxmH
+         U0SHRRLPUkJEnBjjW0mLxhRy8NuVBRsVwjRinkj5eAaTsgtzAQ0smDPGQVf6+dTRH3U+
+         rBiIpyY3AgUfei8fB00qgNKX7LHtcRghyPtRc1etjdi/3W5meNrDYj0yAChkc4Nb8l/H
+         VGW/2gcfN7HRkKjtOiYwEaG4DFnZMqifiC2GfqV9DrJVUxbwe0I74wLX/6q4gKm9H2E2
+         BNK/G6RNL2XfMspXD8dxkUAQundW5YMnp5lePPeZ+pYSia3DUuwl0ateA6G8fTXjz+f/
+         tl8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790401921; x=1791006721;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=IlS6Cm29yDumSGG9d2x8b2HduKmhAprb8xwGaPSX0YE=;
-        b=TxD2tX3g2V2AEU+0+vcRqbUR5lc8R7ce2cdZIlHX8SeZD5Kg/nXJPPZc5Yb7A5LkQs
-         h1/++WmcPfAyeIUMiMX8xlDybpekexPUOOodlrPKx5Uf/y/tSAJdkw/TCrjBtMhaNMa0
-         lgLE4F68qW0Iga+SJ/JbgpTZs7dejvXA0+0h3Ma6Z7NxAUVG4HzoXQdEHrNZcNFb8DYN
-         m1rt0XNGW/yyNlom3c5XEVsqvvfYngBuo+ct/wMRRwsNs0L8OaDyBWZ5XvxsYGWFlJDv
-         DF8Aig+P7RRkLoz5XnjNu+Lvu2YEDhvMglzlIoKXcygjGJ+8ZaSVTvDNrVjHdeB1HRYo
-         aL0Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxIMuV0lI5gnZ9U9vN92q5miLjBTu+7iKdQubLp1tQyfijofDUsPNYuuMyyJKi9P53mDT2V3jkF@vger.kernel.org
-X-Gm-Message-State: AFuF++kk/U+ngCW5W+NXPcWZvYayGIvpYsSngTlNv9UwQPbbe9+9S6Co
-	HPadANlIrh41IfEvxqzRCkf/SXCzu38dLfl/nrHUIAVMz3tFQw/sI3Mu
-X-Gm-Gg: AYBFou2PjlfuEOXkIvY2OiWwYuWo4Mnw4uIWyemxn+lhhPnAO7dEBYFfnVE9wZ/SoK5
-	ZQZ11Cf9D47nxiCJk+ti+ddtqPEut5FgbJ7gcDaJ3Thi6LKBSU5Z3dOc8bZnUgtoHQTJWpSXYDz
-	scRc7LQ50ZAmEl/i6JkckdvxewTF/xa0yWfRW7J011NkAIiT80E1C0+aHL7cuIqB+n+4bBjFDqY
-	Ail6WIRaX2QQWGDoUb4XRnZQqFnG5nTZy9IoDxXjtvIlbthod01U8+CCUMxhgjjKDPbR6ehw+Y8
-	dQKNXr+w5wKtkY4e2CCdHaTlHEo5H7AJvsxBAzte0Sx1qzo0WRz/vnuOYktROeKWqoDTMNSrrOz
-	WnfGUXEFBY/Q+FI5jLZYqhNnLW54fHD2WwrsVCItyxMdY8vNK99Ntc8ci/jgd9Y3/ttk0fT6h9T
-	rLmUd1fpsgrn9+35CEQsW94uWjt2RMNu6bZ7FT4dCx8lZU+wjapmaJjyC424Hs1sDWv8clkVq5b
-	LeqJOpLDGqS/m4FbtQOb/9A7+RNAbWUWMPhwXNd7MYa
-X-Received: by 2002:a05:6000:388:b0:487:24a:f3ba with SMTP id ffacd0b85a97d-488716a63ffmr13631454f8f.26.1790401921483;
-        Fri, 25 Sep 2026 22:52:01 -0700 (PDT)
-Received: from localhost.suse.org ([37.109.167.253])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a30bcc4sm12317560f8f.1.2026.09.25.22.52.00
+        d=1e100.net; s=20260707; t=1790404412; x=1791009212;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=v8XYO5YM5s3vZvbrjVcN9xgfREmdqmZ1B6r1XIDErl8=;
+        b=eJmSy7OeCBWgJ3zGA6aIc1Tx44ZM8dF137OGj1lVUxmOQOkuX6mgqY8vogP+t6KrFo
+         ZRevkg+tgXF2+ndISMCIUBmpXI38HmAAIksvtG34S/FC5J3U9cqWNo3vvQJR1D0lT3Zj
+         rmVAZi55tmdXbICUFUJDgmCgddlgJiANs5q5I04IWPFHzQzHo2SErbBJsVXoVYps+/ng
+         IwX/UUpQmbnym6f8rMASNihjUHdE92w+quwZAsNVtOSwaYBR8l8WYU9xbUUPrdb69dgW
+         bDVTGyQJ5qMYcvpWYynEJL7GHkbMHeydVEwWTN5oisDX4kakgCQOVWg0vydKuNFVwGv1
+         KC2w==
+X-Forwarded-Encrypted: i=1; AKwUvBx92seXoFZ22Eq/uxnOFZVSsKa4xPwXR2mIR1dzd9vDlKunhVw6rCVUF+7444Id+DjChkGF3qQY@vger.kernel.org
+X-Gm-Message-State: AFq9FYKiqccL7OrgIn5Qu3UulszPpjrBmd5C+nqsM78c6LrVT3/xKSj1
+	lWvCHHBSLILHl/FTkmQzIsRLM0ZILMtJhK4yh+7rT1xz4tNrrD/hj1ka
+X-Gm-Gg: AYBFou3z8aDlELHgDvgTlbw//XigKuBzE24A8Hx5msPyFdPPTIo7ZqvWcSnvclYpX5C
+	1yHjePyIEGOyFtWaIw9W0/L7TnLMT41XogYwBOEErk0oXtIZR2QumGyRp/tew5DqZLB9lq1f1i5
+	JGoN1SqwHTY4qcHePh0Qf4JFaC1sKGlNqwW/uvXlVrtifaY3UBT/Q5YbC99/mrNvWtjkqobhH18
+	HFYbPdEtMatrJm9DUn661Rdtp9HpzzJ18MxjgDSjS9ZLf3o4mQnbOngrtDTQU1UtiQ3OxDHh3h5
+	HLJiWy0GJIv3XKkE4/wDJ1iY2PuGJpbAinoK1aZ1UBF8MljoeuBAQPotxuRpbG3dUdZHDr7fQau
+	NhX3XGAXo9mBKUpCzZCOoKFD2E2UOpFyaN7k/VdtFZr+Vcebe/iY4ihQMvYlN7pK0tOGR6tmoFO
+	KVSXn9a5fiBF3EjPRufq1HPiBQ7hH5zQ2OBc0kl3oCFDgaMuLCguj0kAG6bzwNC/K3YfmB7Lsfn
+	Ili8nLU8kHrKpC2ZTdnOX0WMs1hH+Az6lyIEzODSNoqF0bxMOk8HvD74ARvs9/a8yWWTiiUXuoq
+	Llk=
+X-Received: by 2002:a17:902:c404:b0:2dd:c0ff:e728 with SMTP id d9443c01a7336-2df7dfdda93mr62813445ad.58.1790404411724;
+        Fri, 25 Sep 2026 23:33:31 -0700 (PDT)
+Received: from yupeng-XPS-15-9520.. (c-73-169-192-12.hsd1.wa.comcast.net. [73.169.192.12])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2df91460aaasm19196895ad.73.2026.09.25.23.33.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Sep 2026 22:52:01 -0700 (PDT)
-From: Sebastian Chlad <sebastianchlad@gmail.com>
-X-Google-Original-From: Sebastian Chlad <sebastian.chlad@suse.com>
-To: Tejun Heo <tj@kernel.org>,
+        Fri, 25 Sep 2026 23:33:31 -0700 (PDT)
+From: Peng Yu <yupeng0921@gmail.com>
+To: Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>
+Cc: Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: Sebastian Chlad <sebastian.chlad@suse.com>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Maurizio Lombardi <mlombard@arkamax.eu>,
 	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/2] selftests: cgroup: Report memory.current shortfall in alloc_pagecache_50M_check
-Date: Sat, 26 Sep 2026 07:51:48 +0200
-Message-ID: <20260926055152.1684-3-sebastian.chlad@suse.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260926055152.1684-1-sebastian.chlad@suse.com>
-References: <20260926055152.1684-1-sebastian.chlad@suse.com>
+	linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Peng Yu <yupeng0921@gmail.com>
+Subject: [PATCH v5 0/2] nvmet: add cgroup_id to charge namespace I/O to a cgroup
+Date: Fri, 25 Sep 2026 23:33:26 -0700
+Message-ID: <20260926063328.257023-1-yupeng0921@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -88,88 +85,166 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-alloc_pagecache_50M_check() fails silently when memory.current is below
-the 50M that was just written to the page cache. This is the check that
-can trip when the page cache of the test cgroup is reclaimed under
-global memory pressure, so print the observed value.
+Scenario:
+* Create multiple nvmet subsystems/namespaces.
+* The namespaces are backed by different LVM logical volumes.
+* Some of the logical volumes share the same physical volumes.
+* The subsystems are exported to different users.
+* We should provide each user a specific iops/bps quota, thus a noisy
+  neighbor won't impact the performance of other logical volumes.
 
-test_memcg_high() runs the same helper with memory.high set to 30M and
-expects it to fail, so reporting there would print a misleading failure
-message on every passing run. Split the body into
-__alloc_pagecache_50M_check() with a report flag, and give
-test_memcg_high() a quiet variant.
+Test:
+1 Load kernel modules.
+sudo modprobe brd rd_nr=2 rd_size=1048576
+sudo modprobe nvmet
+sudo modprobe nvmet_tcp
+sudo modprobe nvme_tcp
 
-Assisted-by: claude-opus-5-5
-Signed-off-by: Sebastian Chlad <sebastian.chlad@suse.com>
----
- .../selftests/cgroup/test_memcontrol.c        | 27 ++++++++++++++++---
- 1 file changed, 23 insertions(+), 4 deletions(-)
+2 The two brd devices are used for a bdev backed namespace and a file
+backed namespace, remember their major/minor.
+lsblk --noheadings --nodeps --output NAME,MAJ:MIN,SIZE /dev/ram0 /dev/ram1
+ram0   1:0      1G
+ram1   1:1      1G
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 8882c7faeb32..759e1640746d 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -222,7 +222,7 @@ static int alloc_anon_50M_check(const char *cgroup, void *arg)
- 	return ret;
- }
- 
--static int alloc_pagecache_50M_check(const char *cgroup, void *arg)
-+static int __alloc_pagecache_50M_check(const char *cgroup, bool report)
- {
- 	size_t size = MB(50);
- 	int ret = -1;
-@@ -237,14 +237,19 @@ static int alloc_pagecache_50M_check(const char *cgroup, void *arg)
- 		goto cleanup;
- 
- 	current = cg_read_long(cgroup, "memory.current");
--	if (current < size)
-+	if (current < size) {
-+		if (report)
-+			fprintf(stderr, "memory.current %ld < expected %zu\n",
-+				current, size);
- 		goto cleanup;
-+	}
- 
- 	file = cg_read_key_long(cgroup, "memory.stat", "file ");
- 	if (file < 0)
- 		goto cleanup;
- 
--	if (!values_close_report(file, current, 10))
-+	if (report ? !values_close_report(file, current, 10) :
-+		     !values_close(file, current, 10))
- 		goto cleanup;
- 
- 	ret = 0;
-@@ -254,6 +259,20 @@ static int alloc_pagecache_50M_check(const char *cgroup, void *arg)
- 	return ret;
- }
- 
-+static int alloc_pagecache_50M_check(const char *cgroup, void *arg)
-+{
-+	return __alloc_pagecache_50M_check(cgroup, true);
-+}
-+
-+/*
-+ * Same as alloc_pagecache_50M_check(), but silent on failure, for callers
-+ * that expect the allocation to be held below 50M.
-+ */
-+static int alloc_pagecache_50M_check_quiet(const char *cgroup, void *arg)
-+{
-+	return __alloc_pagecache_50M_check(cgroup, false);
-+}
-+
- /*
-  * This test create a memory cgroup, allocates
-  * some anonymous memory and some pagecache
-@@ -735,7 +754,7 @@ static int test_memcg_high(const char *root)
- 	if (cg_run(memcg, alloc_anon, (void *)MB(31)))
- 		goto cleanup;
- 
--	if (!cg_run(memcg, alloc_pagecache_50M_check, NULL))
-+	if (!cg_run(memcg, alloc_pagecache_50M_check_quiet, NULL))
- 		goto cleanup;
- 
- 	if (cg_run(memcg, alloc_pagecache_max_30M, NULL))
+3 Enable the io controller and create two cgroups, one for the bdev
+backed namespace, another for the file backed namespace.
+echo "+io" | sudo tee /sys/fs/cgroup/cgroup.subtree_control
+sudo mkdir -p /sys/fs/cgroup/nvmet-bdev
+sudo mkdir -p /sys/fs/cgroup/nvmet-file
+
+4 Create a file system and a file on ram0.
+sudo mkfs.ext4 /dev/ram0
+sudo mkdir -p /mnt/nvmet-file
+sudo mount -o noatime /dev/ram0 /mnt/nvmet-file
+sudo dd if=/dev/zero of=/mnt/nvmet-file/ns.img bs=1M count=512 oflag=direct
+
+5 Create the bdev backed subsystem and namespace.
+sudo mkdir -p /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/attr_allow_any_host
+echo /dev/ram1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/device_path
+stat -c %i /sys/fs/cgroup/nvmet-bdev | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/cgroup_id
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/enable
+
+6 Create the file backed subsystem and namespace.
+sudo mkdir -p /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/attr_allow_any_host
+echo /mnt/nvmet-file/ns.img | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/device_path
+stat -c %i /sys/fs/cgroup/nvmet-file | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/cgroup_id
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/enable
+
+7 Export the two subsystems to 127.0.0.1.
+sudo mkdir -p /sys/kernel/config/nvmet/ports/1
+echo ipv4 | sudo tee /sys/kernel/config/nvmet/ports/1/addr_adrfam
+echo tcp | sudo tee /sys/kernel/config/nvmet/ports/1/addr_trtype
+echo 127.0.0.1 | sudo tee /sys/kernel/config/nvmet/ports/1/addr_traddr
+echo 4420 | sudo tee /sys/kernel/config/nvmet/ports/1/addr_trsvcid
+sudo ln -s /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:bdev
+sudo ln -s /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:file
+
+8 Connect the two subsystems from 127.0.0.1.
+sudo nvme connect -t tcp -a 127.0.0.1 -s 4420 -n nqn.2026-09.io.test01:bdev
+sudo nvme connect -t tcp -a 127.0.0.1 -s 4420 -n nqn.2026-09.io.test01:file
+sudo udevadm settle
+
+9 Set riops to 20k and run fio.
+echo "1:1 riops=20000 wiops=max rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=20000 wiops=max rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=randread --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=20.0k, BW=78.1MiB/s (81.9MB/s)(781MiB/10001msec)
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=randread --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=20.0k, BW=78.2MiB/s (82.0MB/s)(782MiB/10001msec)
+
+10 Set rbps to 100M and run fio.
+echo "1:1 riops=max wiops=max rbps=104857600 wbps=max" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=max wiops=max rbps=104857600 wbps=max" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=read --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=97, BW=100MiB/s (105MB/s)(1041MiB/10399msec)
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=read --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=97, BW=100MiB/s (105MB/s)(1031MiB/10299msec)
+
+11 Set wiops to 20k and run fio.
+echo "1:1 riops=max wiops=20000 rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=max wiops=20000 rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=randwrite --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=20.0k, BW=78.1MiB/s (81.9MB/s)(781MiB/10001msec); 0 zone resets
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=randwrite --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=20.0k, BW=78.1MiB/s (81.9MB/s)(781MiB/10002msec); 0 zone resets
+
+12 Set wbps to 100M and run fio.
+echo "1:1 riops=max wiops=max rbps=max wbps=104857600" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=max wiops=max rbps=max wbps=104857600" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=write --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=97, BW=100MiB/s (105MB/s)(1032MiB/10307msec); 0 zone resets
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=write --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=97, BW=100MiB/s (105MB/s)(1033MiB/10296msec); 0 zone resets
+
+13 Cleanup the environment.
+sudo nvme disconnect -n nqn.2026-09.io.test01:bdev
+sudo nvme disconnect -n nqn.2026-09.io.test01:file
+sudo udevadm settle
+
+sudo rm -f /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:bdev
+sudo rm -f /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:file
+sudo rmdir /sys/kernel/config/nvmet/ports/1
+
+echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/enable
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev
+
+echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/enable
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file
+
+sudo umount /mnt/nvmet-file
+sudo rmdir /mnt/nvmet-file
+sudo modprobe -r brd
+
+sudo rmdir /sys/fs/cgroup/nvmet-bdev
+sudo rmdir /sys/fs/cgroup/nvmet-file
+
+sudo rmmod nvme_tcp
+sudo rmmod nvmet_tcp
+sudo rmmod nvmet
+
+Peng Yu (2):
+  cgroup: export cgroup_e_css()
+  nvmet: add cgroup_id to charge namespace I/O to a cgroup
+
+ drivers/nvme/target/configfs.c    | 47 ++++++++++++++++++++++++
+ drivers/nvme/target/core.c        | 54 ++++++++++++++++++++++++++++
+ drivers/nvme/target/io-cmd-bdev.c | 18 +++++++++-
+ drivers/nvme/target/io-cmd-file.c | 21 +++++++++--
+ drivers/nvme/target/nvmet.h       | 59 +++++++++++++++++++++++++++++++
+ drivers/nvme/target/zns.c         |  5 +++
+ kernel/cgroup/cgroup.c            |  1 +
+ 7 files changed, 202 insertions(+), 3 deletions(-)
+
+
+base-commit: d9cc476535d29a44df3f2aa3b14af9a833fddf90
 -- 
-2.51.0
+2.53.0
 
