@@ -1,62 +1,62 @@
-Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+Received: from mail-wr2-f35.google.com (mail-wr2-f35.google.com [74.125.225.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C29563515D2
-	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 05:42:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5480836D9E7
+	for <cgroups@vger.kernel.org>; Sat, 26 Sep 2026 05:51:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790401332; cv=none; b=IVsq2r2RP4sWfW5W8wWl4wtbwg+kz1TUh5AOC6TcZtc19B8w/EVoblWc9VYR79B4V0FmEhnPNmD+Bb/f8DKmqTufW1UqU48StruOCxyKH6GYceiDqq3yJxt82ZQKgdw/1hXEcXYyt9irFxDx5EjkCv7a96Lcudo1fOyIBU0TA7s=
+	t=1790401919; cv=none; b=lwDYdCUZlETnsccC/Q9O12cKH/O2ZM1nEIrfQSwg/50mU75Pt9D8rsi2FP1QZAGmASqYSbqOPBxKiS8Z0gxIkWk/wiOA+Wh7WRTp0F62Jo48o1Dv1+WQPKtQJG96PM2lKqctNcGsUXW81WMqtNiH19BfOJlqKIwTbLPU88ekZJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790401332; c=relaxed/simple;
-	bh=ihSErNzL28dopbbYtQk6sfe08O6dP4QtdIBtZVb4Srg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X/egzkj6cMoKqc6jsAPV+hGpmooti3pMsk3axh8QldIPVHFqryDVyzZ84vkfChNrshx8m+YxJZaVF+jab8VzJg94xH+v+nVf3qpy9YoS26Pht8gkoXpNR/e9JG3HUgyelzmaZLeMAUe9oD40e5+my3CXJi6NzSWLV2hNKUHWf3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p1tx3DnV; arc=none smtp.client-ip=74.125.225.141
+	s=arc-20240116; t=1790401919; c=relaxed/simple;
+	bh=9RXKOWZdfkg5EyFwqm8qaMXGUne5S50EBQ/ThlsAPSs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HJT5z7oTzx3bl2cI+WCKyc6jvWJb7zodq49hYBcvYc4YrXEPgsfMaGQOvqfQnUGdQZuNK2Omdl7heCWTLqsvskQxuce9UVbNwJylPfSY0RFgo/MrKfbYe95isiZOzuA5v0kMHHbPSxRMgSemt4tGB7OzBRNYMzaKVdBS8486eiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MbnMnVe5; arc=none smtp.client-ip=74.125.225.99
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p1tx3DnV"
-Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49b912e2406so7439145e9.1
-        for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 22:42:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MbnMnVe5"
+Received: by mail-wr2-f35.google.com with SMTP id ffacd0b85a97d-4885a1480a2so826577f8f.3
+        for <cgroups@vger.kernel.org>; Fri, 25 Sep 2026 22:51:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790401329; x=1791006129; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790401916; x=1791006716; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=poMR+QoD4H3NHZQTFS1CZaPTIlu9qbIcYvmcDeHr1ig=;
-        b=p1tx3DnVVwWjOFwADRo6uLbq1ztMJJ4/vjhUmWOw5FWhkmnAnw8pKPuIaTROtM/6Fe
-         2z+LnIvYoACIncm62wZ4rqxahJ4YHayGVfRgcdfD8pbY//jl4G2NoRtDR3dtmv16OBBc
-         wqtr8F8w60WpxiIztu3q4nYUyWW47BOGTx8g0FVeZz6qQ4VHJKNktPaa6GBLaQ7cSuqX
-         k9XRG5wwzugG67nBG7QnLCvEM8UmY7HrsuhuTr/HvhtRnoUcZ99qpEwca6J+L2DuKEdV
-         LngO1WtQwZD1sqN/mECpXJXw8GL1q8Mj5waqBzuGturUJtxF0lgOXWZKK/BC+uTWEdjX
-         ESKQ==
+        bh=cuKCG/8Yq7XE4kptDjfwqIDbhWjCk5cWtvEdVchH9Gg=;
+        b=MbnMnVe5wQtZuWkfL2YrIkxta8viJ0lQkq3RhrcogMZ17MBJkZR/WpBv2lSE5rJZhx
+         6j3Rxt7YceHCpjbQ+w55i22EJAzFxE14ONUyE7j8pjZ+eiSH1K6RE6cjec+XZBWTJ48M
+         xt1iDZxnqZt7SCxUH8kNOBPzDD+K6jQ/IF7dIhmxqK7fkLDd5LNDJQd9aCtOC0gkFQ1x
+         IibdhTAFLLgSPNuMh5U2FWw6UlM565yAvMBW87OIAOx7/jeA3HDKBcWJWw1RzbwR/scp
+         IZnFgQwsGcWNQmjZ343s4qHQr7ZCQEuGioTPhzu9oldATgxt+ZeQA5LJDS4d7zuYq67b
+         dWGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790401329; x=1791006129;
+        d=1e100.net; s=20260707; t=1790401916; x=1791006716;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=poMR+QoD4H3NHZQTFS1CZaPTIlu9qbIcYvmcDeHr1ig=;
-        b=nh9BL+gNkFNoVK3MCjGIeg+XScnPCQALcJXFKdJdmnxHJGDIdF3LibAY+vliGYzqpV
-         KBeAdq+eLCpcUbIBqHga77z3aNQizrRXuTgPpXCiv0ZL2fz8PTm6VJ1jPUTd589Aql7t
-         TwttlIo+GqT8bgeE7PILn8eOK0UCk9E6KCw+f2oaBmSsE60hx6qg5ykG1Vk8XoMCgWBQ
-         RglIp7BijDDIkYd0zAYdLJseb+pLBfrNaLvhfPnCd/NFtT4RpdE8JnURI1DJAoUKvzFV
-         vDSt+9/8Hta0Wp1XODUhCHS6pu39xSWMS0mADOSHqhbxBHPcvmHMlpcKlOQPRNFKjuo1
-         7jew==
-X-Forwarded-Encrypted: i=1; AKwUvBzlhQ0HFbu7EiBkrbVXmPsnOu8Hm2CuhS7l/hd3BKjTv5hXBtoG+xO7elseQx1eUbKiDGcGE2is@vger.kernel.org
-X-Gm-Message-State: AFuF++kUUTlbRXbrmu96XdTNUbmyGMU+hn3DMBVgtck96iDkgMBJ4MFJ
-	5fKLXZ2ZwVsJKYGgMfmeWs/JctZi+3OzHZVn9l7QgzDba/C6xf1M2awI
-X-Gm-Gg: AYBFou0FmK02eNjc0U5g+n5tpqN4n+6BUcAUrv3ywb2dy89iXDjuu2A04ZK/H3UFRwe
-	DuE07o6Wnj8JhSgaTTALMYVV8NVQRl9KOas5HLWthLpAgHjqAi/wzXaUD5uJZ3wUszdKu1U8+ec
-	UyD24KJ+n53DxTFJzF/YgO4J4RASSQRQsso+8UpH+ae6rtoACtiS0fr+LPTL+vRPIzEist4xKVn
-	NtRPaKPbOhPVKdFgHnWZtPeyI+zkbEpwvLZYtFau9FWmCQpggcbzTvu/rY2EPT1FZRbPrmN7B3O
-	Y8XScCfeFQ64fCfqgk268RW8n37vrSzyIDj1MCt4tECc1gw8Ja0h58qqkYozf3GlSF2Xrb1rUwC
-	jOy0Yvkh+VDvKp41h40kKI/v+4xJfVWBLati48f+dwDoWSrMvtl3QQwDzrrLefGRu+JAZoTfanv
-	dOB8C4tQ31XuvGqdcIwwdVfTdeVpNdLQvA8IsR1Yjm16/pnwrFJ56/zQZ8CcHGpL7GSV+lZqVzB
-	F+Um3+hJABBhCn0BDV4J+NcxwfdAlCIpI/qlAJpSvDg
-X-Received: by 2002:a05:600c:6986:b0:49f:c5aa:9ef4 with SMTP id 5b1f17b1804b1-49fe66d05d7mr126116765e9.8.1790401328777;
-        Fri, 25 Sep 2026 22:42:08 -0700 (PDT)
+        bh=cuKCG/8Yq7XE4kptDjfwqIDbhWjCk5cWtvEdVchH9Gg=;
+        b=E1FjrKWGuklblWiOLp46O6xT9qb864UON/tYQXJZ1w9GiCheFf4WajpLNqklnSZmiO
+         u2jzM44s13r99Mz71xBaU+dgErUdbS1bNHAM8zXUxZRRFlB/0y9C596kEZs5dvA6kwkk
+         mUm8c23yRs5IEIa+/yXqX4Ql+fpl++W2gvYnL31aJQWGMH0b1ijYwYh7R1RlKOsE7NiL
+         WWPMopgz454lGJXb4nEJAxQgWLkRShADgNxXy6AgCnW4e5wIboef/vPCZC04FpIzpttI
+         q4msgJRIFOKX5IqHlwylaaZGCUXZCZ6B9X/Pk/opfF9c5ySrWPGwmvy2yhakqswXi2a0
+         odgA==
+X-Forwarded-Encrypted: i=1; AKwUvByxW9qhYlQaMGVDdvk17AiVTqoj8GmayF7WYtxY1Q/mGK7mi+KUd8LTGuDiEY47BG0ER+f9Gksu@vger.kernel.org
+X-Gm-Message-State: AFuF++kybZ68Enkz5jM7cBs+sYnnDO21E9vEdzkV1nV6htIeQaE+gui2
+	xZFKgegaGUhj7UYsy6dJa6mK2SgiDLiw2va8pc4n4wdr2Rpp6hivV4Xw
+X-Gm-Gg: AYBFou3Bg+4BAZloa6iWvlMnmNYgI09SeXnKSSoXADmkGivA4l/upYJMn+T0B+asT29
+	DyvsD/BL2e1ZBAma0KY3cJ1AjcVee6oCnUBJ5/j5zGO29UT6oRgUL+Y2pi/LDNppSbrkAhKqLMe
+	tITbkRg/tCNocYaWyqjHDoN0v5nfmOIs+Kc45taN/OEgoxOD8h291jFXQrEEdxAT/qtsJmsMPNF
+	TTEPH1ibfh1xDKNnZtkvVbMp1+BdKILeoX5NNV+k5F0qhd7WjKIPYpDOtLQiKyrleyhjHy5IAz5
+	5dAOCxiufTx4ewc+s4bltXnc54nfe/+g2jLBK6ZlJ9VKvht5Tvgv+j2BfMpHeaLXx1aWBmo1BpF
+	/D8bioRetUwfPzX7Jx0ZpctS83oPLPDvcPWjlZjU4RNW5T00z7Yfb+T1tC3PHT/P7hojgxXvSvt
+	rM0XB9QCGmBsO4m1+Nft/4+jm/EiPvGAyauEl4d6Lv4Kw2lEow9pTFdg4yoMFV0gsU0MtkM61Kq
+	gdnsDWFTaJCew41CuwlD3bJ6nCDTolDAkdrmFkwGfKQ
+X-Received: by 2002:a05:6000:2906:b0:487:ff1:6274 with SMTP id ffacd0b85a97d-488716b290cmr15769328f8f.7.1790401916378;
+        Fri, 25 Sep 2026 22:51:56 -0700 (PDT)
 Received: from localhost.suse.org ([37.109.167.253])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49ff065873csm104782365e9.2.2026.09.25.22.42.07
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a30bcc4sm12317560f8f.1.2026.09.25.22.51.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Sep 2026 22:42:08 -0700 (PDT)
+        Fri, 25 Sep 2026 22:51:55 -0700 (PDT)
 From: Sebastian Chlad <sebastianchlad@gmail.com>
 X-Google-Original-From: Sebastian Chlad <sebastian.chlad@suse.com>
 To: Tejun Heo <tj@kernel.org>,
@@ -64,7 +64,6 @@ To: Tejun Heo <tj@kernel.org>,
 	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
 	Shuah Khan <shuah@kernel.org>
 Cc: Sebastian Chlad <sebastian.chlad@suse.com>,
-	"T . J . Mercier" <tjmercier@google.com>,
 	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
@@ -73,9 +72,9 @@ Cc: Sebastian Chlad <sebastian.chlad@suse.com>,
 	linux-mm@kvack.org,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] selftests: memcg: Don't hang in the inotify tests without IN_DELETE_SELF
-Date: Sat, 26 Sep 2026 07:42:03 +0200
-Message-ID: <20260926054205.28933-1-sebastian.chlad@suse.com>
+Subject: [PATCH v2 0/2] selftests: cgroup: Report failed checks in test_memcontrol
+Date: Sat, 26 Sep 2026 07:51:46 +0200
+Message-ID: <20260926055152.1684-1-sebastian.chlad@suse.com>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -85,101 +84,58 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-test_memcg_inotify_delete_file() and test_memcg_inotify_delete_dir()
-wait for IN_DELETE_SELF with a blocking read() on the inotify fd. On a
-kernel that does not send IN_DELETE_SELF for kernfs files and
-directories, the read() never returns and test_memcontrol hangs until
-it is killed by the kselftest timeout. The remaining tests do not run
-and no result is reported for the inotify tests.
+test_memcontrol fails intermittently, but most of its checks fail
+silently, so a "not ok" line gives no indication of how far off the
+measured value was. This series makes those failures print the observed
+and expected values. It does not change any threshold or pass/fail
+behaviour.
 
-Wait for the first event with poll() and a timeout. If IN_DELETE_SELF
-does not arrive in time, report it and fail the test instead of
-blocking, so that test_memcontrol completes and the remaining results
-are reported.
+Patch 1 converts the terminal tolerance checks to values_close_report(),
+as was done for test_cpu in commit 4cdde87d723a ("selftests: cgroup: Use
+values_close_report in test_cpu"). values_close() is kept where it is a
+loop or retry condition, where a mismatch is expected.
 
-Assisted-by: claude-opus-5-5
-Signed-off-by: Sebastian Chlad <sebastian.chlad@suse.com>
----
- .../selftests/cgroup/test_memcontrol.c        | 27 ++++++++++++++++---
- 1 file changed, 23 insertions(+), 4 deletions(-)
+Patch 2 reports the "memory.current < 50M" check in
+alloc_pagecache_50M_check(). Because test_memcg_high() calls the same
+helper expecting it to fail, it gets a quiet variant. An alternative
+would be to pass the flag through the currently unused void *arg of
+the cg_run() callback; I am happy to switch to that if preferred.
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 0ed82347044e..c00420acc9a1 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -11,6 +11,7 @@
- #include <sys/types.h>
- #include <unistd.h>
- #include <sys/inotify.h>
-+#include <poll.h>
- #include <sys/socket.h>
- #include <sys/wait.h>
- #include <arpa/inet.h>
-@@ -1655,10 +1656,20 @@ static int test_memcg_oom_group_score_events(const char *root)
- 	return ret;
- }
- 
-+#define INOTIFY_TIMEOUT_MS 5000
-+
- static int read_event(int inotify_fd, int expected_event, int expected_wd)
- {
-+	struct pollfd pfd = { .fd = inotify_fd, .events = POLLIN };
- 	struct inotify_event event;
- 	ssize_t len = 0;
-+	int ret;
-+
-+	ret = poll(&pfd, 1, INOTIFY_TIMEOUT_MS);
-+	if (ret == 0)
-+		return -ETIMEDOUT;
-+	if (ret < 0)
-+		return -1;
- 
- 	len = read(inotify_fd, &event, sizeof(event));
- 	if (len < (ssize_t)sizeof(event))
-@@ -1678,7 +1689,7 @@ static int test_memcg_inotify_delete_file(const char *root)
- {
- 	int ret = KSFT_FAIL;
- 	char *memcg = NULL;
--	int fd, wd;
-+	int fd, wd, err;
- 
- 	memcg = cg_name(root, "memcg_test_0");
- 
-@@ -1701,7 +1712,11 @@ static int test_memcg_inotify_delete_file(const char *root)
- 	free(memcg);
- 	memcg = NULL;
- 
--	if (read_event(fd, IN_DELETE_SELF, wd))
-+	err = read_event(fd, IN_DELETE_SELF, wd);
-+	if (err == -ETIMEDOUT)
-+		fprintf(stderr, "no IN_DELETE_SELF event within %d ms\n",
-+			INOTIFY_TIMEOUT_MS);
-+	if (err)
- 		goto cleanup;
- 
- 	if (read_event(fd, IN_IGNORED, wd))
-@@ -1723,7 +1738,7 @@ static int test_memcg_inotify_delete_dir(const char *root)
- {
- 	int ret = KSFT_FAIL;
- 	char *memcg = NULL;
--	int fd, wd;
-+	int fd, wd, err;
- 
- 	memcg = cg_name(root, "memcg_test_0");
- 
-@@ -1746,7 +1761,11 @@ static int test_memcg_inotify_delete_dir(const char *root)
- 	free(memcg);
- 	memcg = NULL;
- 
--	if (read_event(fd, IN_DELETE_SELF, wd))
-+	err = read_event(fd, IN_DELETE_SELF, wd);
-+	if (err == -ETIMEDOUT)
-+		fprintf(stderr, "no IN_DELETE_SELF event within %d ms\n",
-+			INOTIFY_TIMEOUT_MS);
-+	if (err)
- 		goto cleanup;
- 
- 	if (read_event(fd, IN_IGNORED, wd))
+With patch 1 applied, we observe at times failures like these:
+
+  not ok 3 test_memcg_min
+  [FAIL] actual=18722816 expected=30408704 | diff=11685888 | limit=7369725 | tolerance=15% | actual_error=23.78%
+
+  not ok 4 test_memcg_low
+  [FAIL] actual=20852736 expected=30408704 | diff=9555968 | limit=7689210 | tolerance=15% | actual_error=18.64%
+
+  not ok 4 test_memcg_low
+  [FAIL] actual=14364672 expected=22020096 | diff=7655424 | limit=7276940 | tolerance=20% | actual_error=21.04%
+
+These are the child memory.current checks in test_memcg_protection()
+(expected ~29M and ~21M). Their tolerances were already raised in commit
+d2def68ae06a ("selftests: memcg: increase error tolerance of child
+memory.current check in test_memcg_protection()"), and the values above
+still fall outside them. In the first case the child is about 38% below
+the expected 29M. This series only makes such failures visible; whether
+the expectations or the tolerances should change is left for a separate
+discussion.
+
+Changes in v2:
+- Patch 1: pass the measured value first in the alloc_anon_50M_check()
+  values_close_report() call, so that a failure prints actual and
+  expected the right way round (reported by Sashiko AI review).
+
+v1: https://lore.kernel.org/all/20260926034923.31718-1-sebastian.chlad@suse.com/
+
+Sebastian Chlad (2):
+  selftests: cgroup: Use values_close_report in test_memcontrol
+  selftests: cgroup: Report memory.current shortfall in
+    alloc_pagecache_50M_check
+
+ .../selftests/cgroup/test_memcontrol.c        | 50 +++++++++++++------
+ 1 file changed, 36 insertions(+), 14 deletions(-)
+
 -- 
 2.51.0
 
