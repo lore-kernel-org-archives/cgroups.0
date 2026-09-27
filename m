@@ -1,237 +1,143 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2924E3D331E
-	for <cgroups@vger.kernel.org>; Sun, 27 Sep 2026 11:48:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B623C942C;
+	Sun, 27 Sep 2026 12:30:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790509722; cv=none; b=DQh9ORdTiE96lU91SpHnZcjqZL+aywekjcENmXPdNGSkN0ULTvuCG5N33VckRQSRYXQhqo+81X4PCDOJpX4xz6aS2LQ9WcJQm29Z/UeWYrXgIpLHd3alC6Zs8uYjExBWam/XFptn3f7vN+wcMr5RLSVt0u4ejlqFq1IJ595utUs=
+	t=1790512245; cv=none; b=tbzgPtaOER1OgV/QAjj5NS643nqxdDsNKpzGFU3+miQVWTyGgokdHGzuleBmxkL4b5koDF42YKYX8nKRnTcFay2z/2JZ+rV0GixOkA2svwA+PfeiAURpEuEcAnuqC3TKKbBwnOlcZdOyecspfFxZjQdneVRKngKT8p5PlIYBjTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790509722; c=relaxed/simple;
-	bh=L6smztHc7Zu7OvGd8/tyj4fHgTUBsP8/eRiT/kR8iU0=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=OEh0f1xPXafXyfalFwIczl7p6B6kVDeY/suARmuSOtdAL6hgzSaaz5phCKyCsuJBi5Q+rxdoJ+hU/Yr8Z+jhzFHwGX7SuVoPFBW/sddMhj3o94LG8q+m71BTmA3fx1AWQ9a1ME7Y65P6Ar4sa82xQaT+01QcemGJJr+T4/odpL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=emtXiVyz; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1790512245; c=relaxed/simple;
+	bh=pka8Z6mvCOBJwU98rqsj3rYDII0HYG+bU+VXYYz6wio=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Q8hhQ5ro7tK2CD9Ci7l630pgeVKKIjPASYzt5ZkQp42A7kbkuj0lUb12Zp6Zt/BZyLqZhlL7cKqPBCMSE7dtpHaFWY1Ic9rZNHu1/WQwKZ11CTNxY69KgCt15cnWCWfffqR5IFn74XPdVZFXfnDhYC4excbqIVVlpeThc/6SVEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=Qs32YnbA; arc=none smtp.client-ip=96.67.55.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="emtXiVyz"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2caced6038eso13136765ad.0
-        for <cgroups@vger.kernel.org>; Sun, 27 Sep 2026 04:48:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1790509718; x=1791114518; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:references:cc:to
-         :from:subject:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=6UgoZARQeqwbtbTZxY5jfWds9R7jptg+w98Z3sju2mM=;
-        b=emtXiVyzWe0iGdGJIPu6n8xh/tyFrCYzT3KO6q94Mw470wu+mJ3slsqfKQFSDWZGO4
-         Pt/2uFbO6UtfI/tQnLGX7PHQEqN4UD5LSPvrYgPsMuWvjEGA9vkyX42jzFHABANzZdRm
-         jDzNv1kFnpxNXpaQGAfqkfPUuc33ih8sraYjWx5L/Zn9Ut/KmtL+kxTfXGEbuoVz/p8e
-         urLfwh/7hIDerrMfkMpCh5Yv/Pk1K4JT5Zu6jMLHOmaOtPRTPul4gP84XOrlUs0nPETr
-         O3fK/b3iOLMkdp3QVlFFAhXm2yQiCu1fjZQwrnA66J8hdGtyYseZ1Hw+tqJXbln8WzME
-         4HPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790509718; x=1791114518;
-        h=content-transfer-encoding:content-type:in-reply-to:references:cc:to
-         :from:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6UgoZARQeqwbtbTZxY5jfWds9R7jptg+w98Z3sju2mM=;
-        b=CT2FNj5WqnM+K8KcL9os/zvzH8u/JFnpFsMzxXBmfbwHVoK7EVP7ygML20Q/5CTvfC
-         gYH5XmAw6YCfrXQElHfnt1cnq2H8s1MrJynu04mZD9apEGrT0jPk5Y3TEkY5+g7xvvGk
-         sYQZz3H0bHvccVYWwuCmd35Unp+SIlXkNlfzfZoqjx7W96Y3ruZ/t4maEs/+aLUCZsZo
-         ORsVZhqCnL0fgurJhGRCeOtgnR494TKfVADWMQ5PrRYpKEZXWA6PGYBA/F15UmAe9uiC
-         uvkGdzY/xBJkbjMB94Qo1NRgWNqIhofNBXvZksxhwmR9XQg4u0bKMJIru/yaYydZu9Yd
-         myRA==
-X-Forwarded-Encrypted: i=1; AKwUvByRc8EfsqbqT+bofsGTBeJXBVyGW1BC4wG+tTeGqeE4+bqAQmznFBk+GpssFVLVK4OLWS32cGUQ@vger.kernel.org
-X-Gm-Message-State: AFq9FYKvORq3PYfi0UDIe/xKQ51V4nMOKL432Yo5ffx8kkOAXg05C6JK
-	la5gnU1uOUqYXmSrmeGXsQvTJtAH+0VoovkNFv0YBHx3EPW/L1fT0wFRUJPQttHKFWs=
-X-Gm-Gg: AYBFou2OzeQA4mHBjMj7/dWvPJu7CvsMEVgy6etdlU9Q/8lyh1jjp/GHBZ16pJ4wvYt
-	ussnHWs1vYgvdboRLCn8TM073CZasxjI9gWLXkb4B6mGS9KWNT+WcOrmBzj+0sByd4fwmQbS4ea
-	41l3ziAhjIEK5tBGhvvck4d6iR6pDOlIfZ9+WzkDEyb8UhCtjLf9XQKZhUd5m3HlIkG+sczATqq
-	bSkRZOIQ3ANgy7G51kGzAq+p0v75HkOBznAtFH4yVEG6OKINvIAuakP3DwRJj6TxQL2KXSV+S63
-	zzyHxoKMkNkbiT9QmMNJ6wWa3D1LrHxMhRxOaJ8nbWEGm+f8Zbx4H4nepRjKcTj9cjmgCS3Q9MU
-	F+3elLSDHLvaUxymQJwZImZ2HZnzltJaGT1kZbzZUlCWHtBE6j037QFNe+/HnEiutlO4IUew5Lr
-	VfKVRi+DvxSmmn4R+WPEy6YNzluQBDD2aCUh4yHNhfIee9t9CCnpB2F1ceffJ8aNY4xgqCje6rP
-	bZfQeepswYcczkrAFyasOryJfMe5zzXSBv3Z1sRJ+Zvm1O3FA9P4iBf9g4776nGR/09IBM4FVDs
-	XI4THQ==
-X-Received: by 2002:a17:903:144e:b0:2d7:1cbd:9ceb with SMTP id d9443c01a7336-2df7dfc2e54mr63334925ad.12.1790509718121;
-        Sun, 27 Sep 2026 04:48:38 -0700 (PDT)
-Received: from ?IPV6:2409:8a04:3024:f231:884:d8f1:aab5:6785? ([2409:8a04:3024:f231:884:d8f1:aab5:6785])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2df9146ed7csm28018285ad.80.2026.09.27.04.48.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 27 Sep 2026 04:48:37 -0700 (PDT)
-Message-ID: <b5da5c30-7c8b-4c60-aa3b-d2e3603e82c1@bytedance.com>
-Date: Sun, 27 Sep 2026 19:48:26 +0800
+	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="Qs32YnbA"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
+	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
+	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID; bh=pka8Z6mvCOBJwU98rqsj3rYDII0HYG+bU+VXYYz6wio=; b=Qs32Yn
+	bA5WLO1Ej9z+B+PWd5S/mJoCk3txk9/xz2ibWRRLFoGweAEAVdN7JT4WU80e5qhYbqo9abA6LPCzh
+	t+VhanqKcKh19I/5M/lg7JCQN5+ohVrjJ2v7Tsu/ALCBsBcrvP79Ce8t3k7wMTtgJ9R/aXdptQPOw
+	TpQpV9cda36yKhusJrvAjreh1UsaiehX2qouYjmkjh5T+INh8XCY1EsHNR1O8Z/2INa1T22HQ26fL
+	DUvGzdnxAkSLgTwxsihksJBE2+9vfLEh2kfY7jJymNHMcsxOOxgajW5cRrGCobNBYk1A9U5OkOp9+
+	zEuQNmWammTBJeXPYHU3LF7/JQcg==;
+Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
+	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.99.5)
+	(envelope-from <riel@surriel.com>)
+	id 1xAo0Q-00000008CBI-2vSZ;
+	Sun, 27 Sep 2026 12:29:22 +0000
+Message-ID: <b792823cce613ce756227a3b60cc245b0316a800.camel@surriel.com>
+Subject: Re: Path forward for Virtualized Swap?
+From: Rik van Riel <riel@surriel.com>
+To: Chris Li <chrisl@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Kairui Song <ryncsn@gmail.com>, 
+ Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, Shakeel
+ Butt <shakeel.butt@linux.dev>,  Kairui Song <kasong@tencent.com>, Michal
+ Hocko <mhocko@kernel.org>, Roman Gushchin	 <roman.gushchin@linux.dev>,
+ Yosry Ahmed <yosry@kernel.org>, David Hildenbrand	 <david@kernel.org>,
+ Muchun Song <muchun.song@linux.dev>, Kemeng Shi	
+ <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, YoungJun Park	
+ <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>,
+ "Lorenzo Stoakes (Oracle)"	 <ljs@kernel.org>, "Liam R. Howlett"
+ <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike
+ Rapoport <rppt@kernel.org>, Suren =?UTF-8?Q?Baghdasaryan=EF=BF=BC?=	
+ <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen	
+ <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu	
+ <weixugc@google.com>, Gregory Price <gourry@gourry.net>, Wenchao Hao	
+ <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins	
+ <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo	
+ <tj@kernel.org>, Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Shuah
+ Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, Meta
+ kernel team	 <kernel-team@meta.com>, Linux Memory Management List
+ <linux-mm@kvack.org>,  Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, "open
+ list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
+ Joshua Hahn	 <joshua.hahnjy@gmail.com>
+Date: Sun, 27 Sep 2026 08:29:21 -0400
+In-Reply-To: <CACePvbWdJSUDuEbR2FXczbeWwvxP86WDGHTL-eO0A8WwMDoNRQ@mail.gmail.com>
+References: <aqjcFb6MFNiA6n4V@fedora> <aqjpYHbZ14A8xRtK@fedora>
+	 <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
+	 <7ee199ddee81bf8026688def82f78ad9db09be9e.camel@surriel.com>
+	 <CACePvbVA+DnDJprMx3qOrGb98y1ORQ-LfaENy_Btfx3uW=E4eQ@mail.gmail.com>
+	 <f3ca71f1c561f28a341de0e5a1b3f24bd4da3201.camel@surriel.com>
+	 <CACePvbX5Oy98DygLZjC=Z03Lqb0nk50_OEKQCT9svbQOOwwDew@mail.gmail.com>
+	 <CAKEwX=Mv+tnL8K4rfPuof6mKaLQp=tqR_qjtKrtY0-5L85FLfw@mail.gmail.com>
+	 <CACePvbUF2QQMh_GiCNQn-RTmZNkkLWkmaHSYzdQwv2fupjNQiw@mail.gmail.com>
+	 <arUcil9kxUPiymXI@KASONG-MC4> <araWKyJ5MENBwXCL@cmpxchg.org>
+	 <CACePvbV0Z3OhxkEn-MiMrxpSmtbt1YwCt2N2_ZW3jbdh87jgFA@mail.gmail.com>
+	 <9499bc084e30df4d10bc069ed26d576e4dd3de80.camel@surriel.com>
+	 <CACePvbWdJSUDuEbR2FXczbeWwvxP86WDGHTL-eO0A8WwMDoNRQ@mail.gmail.com>
+Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
+ keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
+ eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
+ Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
+ lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
+ dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
+ mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
+ gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
+ r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
+ WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
+ 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
+ Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
+ +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
+ g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
+ KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
+ fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
+ 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
+ G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
+ okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
+ TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
+ cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
+ omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
+ QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
+ c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 0/3] memcg,writeback: flush foreign bdev mappings
- separately
-From: Julian Sun <sunjunchao@bytedance.com>
-To: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-fsdevel@vger.kernel.org
-Cc: axboe@kernel.dk, hannes@cmpxchg.org, mhocko@kernel.org,
- roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev,
- willy@infradead.org, jack@suse.cz, tj@kernel.org, akpm@linux-foundation.org
-References: <20260922125015.3435215-1-sunjunchao@bytedance.com>
-In-Reply-To: <20260922125015.3435215-1-sunjunchao@bytedance.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 9/22/26 8:50 PM, Julian Sun wrote:
+On Sat, 2026-09-26 at 20:23 -1000, Chris Li wrote:
+> On Sat, Sep 26, 2026 at 2:59=E2=80=AFPM Rik van Riel <riel@surriel.com>
+> wrote:
+>=20
+>=20
+> > The fair resource use from memory.swap.max
+> > is to control how much of the fixed swap file
+> > (or swap partition) space each cgroup gets.
+>=20
+> That is the part I am not sure I understand correctly. Fair in what
+> sense? Using the swap file proportional to the memory limit of the
+> cgroup? Do you have an example of perfectly fair swap file usage for
+> a
+> cgroup with an 8G memory limit versus one with a 1G limit?
+>=20
+> Sorry I am a bit slow grasping what exactly the fair behavior is.
 
-Hi,
+Say we have a 64GB swap file, and several
+cgroups on the system, applications A & B,
+and system.slice.
 
-Do you have any further thoughts on this series?
-Should I rename bdev_flush_by_dev() to bdev_writeback_by_dev()
-and send the next revision?
+We might give system.slice a 10GB memory.swap.max,=C2=A0
+and each application a 25GB memory.swap.max.
 
-> Hi,
-> 
-> This series avoids owner-wide foreign writeback triggered by dirtying
-> shared bdev inodes. Instead, it tracks bdev targets separately and
-> schedules writeback of their mappings.
-> 
-> Problem
-> =======
-> 
-> Bdev inodes are commonly shared by many memcgs. Dirtying their pages
-> can cause the owner wb to be tracked as foreign, triggering writeback
-> of the entire wb rather than just the bdev mapping.
-> 
-> In production, almost all the foreign dirtying we traced came from bdev
-> inodes. Across our observations, a bdev mapping had as little as about
-> 10 MiB of dirty pages, yet foreign flushes targeted the entire owner
-> wb. On one machine, we observed 599 such works queued on one wb, with
-> an average request budget of about 43 GiB per work.
-> 
-> Measured impact
-> ===============
-> 
-> The synthetic test used a VM with 4 vCPUs, 8 GiB RAM, ext4 and cgroup
-> v2, with device write bandwidth capped at 200 MiB/s. Background fio
-> repeatedly overwrote a 256 MiB file using buffered I/O, while
-> foreground fio performed sequential direct writes. Four memcgs
-> generated metadata and buffered writes to trigger foreign flushes.
-> 
-> We measured completed block writes to the background fio file,
-> including final sync, and foreground fio bandwidth, latency and
-> completion time.
-> 
-> Across three runs per kernel, mean background file write I/O decreased
-> by 72.7%, foreground bandwidth increased by 23.0%, and completion time
-> decreased by 18.8%.
-> 
-> Metric                         Baseline    Patched     Change
-> Background file write I/O (GiB)    6.154      1.680     -72.7%
-> Foreground bandwidth (MiB/s)      150.29     184.81     +23.0%
-> Foreground completion time (s)   109.203     88.652     -18.8%
-> Foreground mean latency (ms)      212.84     172.74     -18.8%
-> 
-> How it helps
-> ============
-> 
-> Frequent writeback of the file overwritten by background fio reduces
-> the opportunity to coalesce buffered writes in the page cache.
-> Several overwrites of the same page can otherwise result in a single
-> write of its latest contents. Flushing between updates instead writes
-> the same page repeatedly, generating more device I/O for the same
-> application writes.
-> 
-> This additional I/O makes the device reach its performance limit
-> more easily and competes with foreground I/O for device bandwidth.
-> 
-> The benefit is expected to be most pronounced when these conditions
-> occur together on the same device:
-> 
-> 1. Limited device bandwidth, as with an HDD, makes the additional
->    writeback I/O more likely to saturate the device.
-> 2. Multiple cgroups perform buffered overwrites. Frequent foreign
->    writeback reduces write coalescing and increases device I/O.
-> 3. Concurrent direct I/O bypasses the page cache and competes directly
->    with writeback I/O for device bandwidth.
-> 
-> Approach
-> ========
-> 
-> Following Jan's suggestion, this series records foreign bdev targets
-> separately and flushes their mappings instead of their owner wbs. This
-> preserves a way for dirty throttling to initiate bdev writeback while
-> avoiding owner-wide writeback triggered by these records. The existing
-> foreign-wb mechanism remains unchanged for other inodes.
-> 
-> Tracking uses oldest-first replacement and expiry after
-> dirty_expire_interval. Further dirtying during an ongoing flush can
-> trigger another flush after it finishes.
-> 
-> Tracking is best effort: each memcg keeps a bounded set of device
-> numbers without persistent device or inode references. Recording runs
-> under mapping->i_pages with IRQs disabled, while dropping a device
-> reference can sleep. A memcg that never enters dirty throttling could
-> also retain an unused record and pin the device object indefinitely.
-> Recording only dev_t avoids these lifetime constraints. Device removal
-> and device-number reuse may cause an unintended best-effort flush,
-> which is an accepted trade-off.
-> 
-> Writeback submission may block for a long time, with up to four work
-> items outstanding per memcg. A dedicated unbound workqueue provides
-> a separate max_active budget so these flushes do not exhaust active
-> slots on a shared workqueue and delay unrelated work. If the workqueue
-> cannot be allocated at boot, bdev inodes continue to use the existing
-> foreign-wb path.
-> 
-> This primarily affects filesystems that keep metadata in the bdev page
-> cache, such as ext4 and other buffer_head users, rather than the usual
-> metadata writeback paths of XFS and Btrfs. This also covers buffered
-> writes to raw block devices. The decision still does not account for
-> how much of the memcg's dirty memory belongs to the bdev: even a single
-> dirty bitmap block can trigger writeback of the entire bdev mapping
-> when the memcg enters dirty throttling.
-> 
-> Changes since v7:
-> - Update comments and commit messages as suggested by Tejun Heo.
-> 
-> Changes since v6:
-> - Drop open_mutex and the openers check from bdev_flush_by_dev(), and
->   add a !CONFIG_BLOCK stub.
-> - Follow the existing foreign-wb tracking policy: use timestamps for
->   oldest-first replacement and expiry, and allow dirtying during an
->   in-flight flush to re-arm the record.
-> - Replace frn_lock with an atomic in-flight flag.
-> - Drop WQ_MEM_RECLAIM and explain the separate max_active budget.
-> - Expand the dev_t lifetime rationale and filesystem scope, update
->   the foreign-dirty overview, and drop the Fixes tag.
-> 
-> Changes since v5:
-> - Fix repeated overwriting of slot 0 in patch 2 and add comments.
-> 
-> Changes since v4:
-> - Add before-and-after performance comparisons to the cover letter.
-> 
-> Changes since v3:
-> - Flush foreign-dirtied bdev inode mappings separately, as suggested
->   by Jan.
-> 
-> Thanks.
-> 
-> Julian Sun (3):
->   block: introduce bdev_flush_by_dev()
->   memcg,writeback: flush foreign bdev mappings separately from owner wbs
->   writeback: record bdev targets in foreign writeback tracepoints
-> 
->  block/bdev.c                     |  18 ++++++
->  include/linux/blkdev.h           |   4 ++
->  include/linux/memcontrol.h       |  12 ++++
->  include/trace/events/writeback.h |  22 ++++---
->  mm/memcontrol.c                  | 123 +++++++++++++++++++++++++++++++++++----
->  5 files changed, 160 insertions(+), 19 deletions(-)
-> 
+This way a memory leak in application B
+does not result in application A being
+unable to run.
 
-Thanks,
--- 
-Julian Sun <sunjunchao@bytedance.com>
+The thing that leaks (if anything) ends up=C2=A0
+getting killed, not the innocent bystander.=20
+
+--=20
+All Rights Reversed.
