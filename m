@@ -1,144 +1,148 @@
-Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B01542C0F6C;
-	Sun, 27 Sep 2026 01:00:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91AE02701B6
+	for <cgroups@vger.kernel.org>; Sun, 27 Sep 2026 01:45:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790470834; cv=none; b=J68wcZ4U4H9SOBZ9dZH0kS7KwVJnROhG52knnGgjPbg3LeBVINCzhEMdQEcKMQPyVZ8ormKebwyb1EtpCgp7gkQxIx7AH13s1DB2hX9JnM4scmmHChX9PPRQSSyAFYcD1fUzOapAcjh7a+1pClOFGs0q9RJBdt6K4+6CitjR3io=
+	t=1790473526; cv=none; b=Qo68VedgVdc8zlZ5OC7eoeDKAK5T0F9d7pzjtKPwhDD8VeVUptfmj6DI/37pQagHHdGHYN2FUMq0oUbb80x+guJr1je7dL8dEPHQWtWtWecCa0UElEVFoMgpjhzOCN3xH1BR3gBwVc6P6NuVW0YRQAnZqRfRaMUnqamwwW0lTKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790470834; c=relaxed/simple;
-	bh=JtRF9MD3P2Hs0hSXn7s/JaY4f07p7uwsfCVagJl5fsA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=r+BWOOEsCNXeYA/6q62Vi7ExZnCCvC3BBRdOGx/uI0kXr/9sGdg0fi39lT4msC23U0TM00vMySRNiYwFNZWHsBQv4IwRym7RglfM+jTMsNy5jBMS9U6LPAXsZxS9KgAE2TI4H8IKOdQB/fGbvwHEfl3L7ZgPeA4dPF0DbFlPUbw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=mdL7B7C1; arc=none smtp.client-ip=96.67.55.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
+	s=arc-20240116; t=1790473526; c=relaxed/simple;
+	bh=ZmshJRVNGhiDD241iabHMvHEahKSg7LVi7ZdIgOie5M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CqpLHwAFrHkIkvMdHdHXvvRPHRe1W5/A0y2K1WpYvDou3FGnMgJKGeth4vq7cTf/Gl6GF4ZUJKKa+z4vIUHlNQ7q0uVJAAL+gPWOFxUqP6lYbr0ibbDABWn32hFNS50VTkeukiMIM2810jl3cSDx3RINeTIuV8YcuWaQyUOskGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Cabk/nVq; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="mdL7B7C1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
-	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
-	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID; bh=JtRF9MD3P2Hs0hSXn7s/JaY4f07p7uwsfCVagJl5fsA=; b=mdL7B7
-	C1hqqpjU58HGllGA3MLoruebFtyD5610lcHcyyTa2i1JNQxXzLqbeGvXEUSrr3/9Zp6FSXB3WvGsy
-	xhgCFMdO78xx7jwTEee9N/xpFpEz69hmFt8bcNXx/AGv/0diHdfLZvaclqXxiQ2wp1O1N9Tgj0q2B
-	NCYeOkwXrr1Cih8CSuAYigsLqJrwNMzxWIzdhjwOb3TM6W71xbZJ53OpdhRQfxwQhB4cuG46lCTo3
-	woM4mw7c3QGPyxNlsMDyFv2CDAOXSmXvdHldYwzgc97XHbGsW0nfdjfviiSSdR474je0WdXnzlLV2
-	WrQ+HGD5PdRa5D6t2QPcP/E3tObA==;
-Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708]
-	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <riel@surriel.com>)
-	id 1xAdE5-00000007UmZ-3HPN;
-	Sun, 27 Sep 2026 00:58:45 +0000
-Message-ID: <9499bc084e30df4d10bc069ed26d576e4dd3de80.camel@surriel.com>
-Subject: Re: Path forward for Virtualized Swap?
-From: Rik van Riel <riel@surriel.com>
-To: Chris Li <chrisl@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Kairui Song <ryncsn@gmail.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan
- He	 <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, Kairui
- Song	 <kasong@tencent.com>, Michal Hocko <mhocko@kernel.org>, Roman
- Gushchin	 <roman.gushchin@linux.dev>, Yosry Ahmed <yosry@kernel.org>, David
- Hildenbrand	 <david@kernel.org>, Muchun Song <muchun.song@linux.dev>,
- Kemeng Shi	 <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>,
- YoungJun Park	 <youngjun.park@lge.com>, Chengming Zhou
- <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)"	 <ljs@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)"
- <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
- =?UTF-8?Q?Baghdasaryan=EF=BF=BC?=	 <surenb@google.com>, Qi Zheng
- <qi.zheng@linux.dev>, Axel Rasmussen	 <axelrasmussen@google.com>, Yuanchu
- Xie <yuanchu@google.com>, Wei Xu	 <weixugc@google.com>, Gregory Price
- <gourry@gourry.net>, Wenchao Hao	 <haowenchao22@gmail.com>, Jonathan Corbet
- <corbet@lwn.net>, Hugh Dickins	 <hughd@google.com>, Baolin Wang
- <baolin.wang@linux.alibaba.com>, Tejun Heo	 <tj@kernel.org>, Michal
- =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Shuah Khan
- <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, Meta kernel
- team	 <kernel-team@meta.com>, Linux Memory Management List
- <linux-mm@kvack.org>,  Linux Kernel Mailing List
- <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, "open
- list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
- <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
- Joshua Hahn	 <joshua.hahnjy@gmail.com>
-Date: Sat, 26 Sep 2026 20:58:44 -0400
-In-Reply-To: <CACePvbV0Z3OhxkEn-MiMrxpSmtbt1YwCt2N2_ZW3jbdh87jgFA@mail.gmail.com>
-References: <aqjcFb6MFNiA6n4V@fedora> <aqjpYHbZ14A8xRtK@fedora>
-	 <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
-	 <7ee199ddee81bf8026688def82f78ad9db09be9e.camel@surriel.com>
-	 <CACePvbVA+DnDJprMx3qOrGb98y1ORQ-LfaENy_Btfx3uW=E4eQ@mail.gmail.com>
-	 <f3ca71f1c561f28a341de0e5a1b3f24bd4da3201.camel@surriel.com>
-	 <CACePvbX5Oy98DygLZjC=Z03Lqb0nk50_OEKQCT9svbQOOwwDew@mail.gmail.com>
-	 <CAKEwX=Mv+tnL8K4rfPuof6mKaLQp=tqR_qjtKrtY0-5L85FLfw@mail.gmail.com>
-	 <CACePvbUF2QQMh_GiCNQn-RTmZNkkLWkmaHSYzdQwv2fupjNQiw@mail.gmail.com>
-	 <arUcil9kxUPiymXI@KASONG-MC4> <araWKyJ5MENBwXCL@cmpxchg.org>
-	 <CACePvbV0Z3OhxkEn-MiMrxpSmtbt1YwCt2N2_ZW3jbdh87jgFA@mail.gmail.com>
-Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
- keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
- eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
- Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
- lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
- dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
- mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
- gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
- r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
- WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
- 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
- Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
- +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
- g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
- KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
- fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
- 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
- G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
- okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
- TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
- cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
- omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
- QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
- c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Cabk/nVq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790473523;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XUoH5rgAH1n+by9vaKnGPJrkH26uAPsRf2XvFcpnSDw=;
+	b=Cabk/nVqsN/+tLGG77U2gAqJ4y0OujBIdsdodMyXDE0lrC5dtZy/7zWiInicLXHZs0Z2a7
+	6Wtbdq5DQpCM/I8yuZpPbCPxbF3b5yW6v5Mbo6n3E3Mrm4EWU7J5pkXbIezbi3knyiyUR1
+	tHeFcwH/alKKteYI3522jKaPRbuucHA=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-277-tMlZC61VNVufI_UeeYlH9w-1; Sat,
+ 26 Sep 2026 21:45:16 -0400
+X-MC-Unique: tMlZC61VNVufI_UeeYlH9w-1
+X-Mimecast-MFC-AGG-ID: tMlZC61VNVufI_UeeYlH9w_1790473515
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7A1CD1955F7A;
+	Sun, 27 Sep 2026 01:45:14 +0000 (UTC)
+Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D528C180034F;
+	Sun, 27 Sep 2026 01:45:11 +0000 (UTC)
+Message-ID: <b5926447-1b52-4a8b-86d8-8adf40ca5f3f@redhat.com>
+Date: Sat, 26 Sep 2026 21:45:10 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/3] cgroup/cpuset: prevent activating local partition
+ over remote one
+To: Hui Peng <benquike@gmail.com>, Ridong Chen <ridong.chen@linux.dev>,
+ Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: Shuah Khan <shuah@kernel.org>, Chen Ridong <chenridong@huawei.com>,
+ cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20260924042729.1908863-1-benquike@gmail.com>
+ <20260924042729.1908863-3-benquike@gmail.com>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260924042729.1908863-3-benquike@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Sat, 2026-09-26 at 11:27 -1000, Chris Li wrote:
-> On Fri, Sep 25, 2026 at 5:41=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.o=
-rg>
-> wrote:
->=20
-> >=20
-> > (2) The use case we have. Use memory.swap.max to divide a finite
-> > space
-> > in storage. We only have so much space on disk, and we need to
-> > manage
-> > fair access. Note that this isn't about speed. We have a mix of
-> > containers where some use writeback and others do not. The ones who
-> > write back to the swapfile need to be able to get their fair share
-> > -
-> > not more, not less. Including something that doesn't actually
-> > consume
->=20
-> Just want to make sure I understand correctly. Do you mean the fair
-> share of compressed memory used in the zswap case?
->=20
-Compressed zswap memory is already accounted for
-under cgroup.memory.max.
+On 9/24/26 12:27 AM, Hui Peng wrote:
+> Commit 6da580ec656a ("cgroup/cpuset: Don't allow creation of local
+> partition over a remote one") added a check in update_prstate() to reject
+> creating a top-level local partition whose cs->exclusive_cpus intersects
+> subpartitions_cpus.
+>
+> However, if a top-level cgroup A1 has a child A1/A2 enabled as a remote
+> partition on a subset of its exclusive CPUs (X2-3 on A1, CX2-3:P2 on
+> A1/A2), and A1 is then set to "root" (P1, becoming "root invalid" via
+> update_prstate() because its exclusive CPUs intersect subpartitions_cpus)
+> followed by expanding its CPUs to include additional non-remote CPUs
+> (CX1-3), update_cpumask() / update_exclusive_cpumask() calls
+> validate_partition() without going through update_prstate(). Because
+> validate_partition() does not check trialcs->exclusive_cpus against
+> subpartitions_cpus, A1 transitions from "root invalid" to a valid local
+> partition over the existing remote partition A1/A2 and triggers:
+>
+>    WARNING: kernel/cgroup/cpuset.c:1943 at update_parent_effective_cpumask+0x189b/0x1fd0
+>
+> Check trialcs->exclusive_cpus against subpartitions_cpus in
+> validate_partition() when !is_partition_valid(cs), and add a regression
+> test case to tools/testing/selftests/cgroup/test_cpuset_prs.sh.
+>
+> Tested in QEMU on Linux 7.3.0-rc3 using
+> tools/testing/selftests/cgroup/test_cpuset_prs.sh.
+>
+> Fixes: 6da580ec656a ("cgroup/cpuset: Don't allow creation of local partition over a remote one")
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM
+> Signed-off-by: Hui Peng <benquike@gmail.com>
+> ---
+>   kernel/cgroup/cpuset.c                            | 4 ++++
+>   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 2 ++
+>   2 files changed, 6 insertions(+)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 7381fa8502e7..7c5b4a8f1f3a 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2415,6 +2415,10 @@ static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *tri
+>   	if (cpumask_empty(trialcs->effective_xcpus))
+>   		return PERR_INVCPUS;
+>   
+> +	if ((parent == &top_cpuset) && !is_partition_valid(cs) &&
+> +	    cpumask_intersects(trialcs->exclusive_cpus, subpartitions_cpus))
+> +		return PERR_REMOTE;
+> +
+>   	if (prstate_housekeeping_conflict(trialcs->partition_root_state,
+>   					  trialcs->effective_xcpus))
+>   		return PERR_HKEEPING;
+The code change looks good to me.
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> index b732078bf319..4a451350ad84 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> @@ -321,6 +321,8 @@ TEST_MATRIX=(
+>   	" C1-3:P2  X4:P2    .      .      .    X3:P2    .      .     0 A1:1-2|XA1:1-3|A2:3:XA2:3 A1:P2|A2:P2 1-3"
+>   	" C0-3:P2    .      .    C4-6   C0-4     .      .      .     0 A1:0-4|B1:5-6 A1:P2|B1:P0"
+>   	" C0-3:P2    .      .    C4-6 C0-4:C0-3  .      .      .     0 A1:0-3|B1:4-6 A1:P2|B1:P0 0-3"
+> +	"   X2-3  CX2-3:P2  .      .  P1:CX1-3   .      .      .     0 A1:1|A2:2-3|XA2:2-3 \
+> +								       A1:P-1|A2:P2 2-3"
+>   
 
-Compressed zswap memory sits under memory.max
-together with anonymous, file, and slab cache
-memory.
+This test case is problematic as it fails on my test system because of a 
+bug in the SCHED_DEADLINE task shrink test in validate_change() that can 
+be triggered if there are deadline tasks in the system which will fail 
+the test. I am going to post a patch to fix that bug. Can you take out 
+this test case from this patch as I don't want this test to be 
+backported to stable releases? You can send this out as a separate 
+testing patch if you want to.
 
-We do not need or want another limit there,=C2=A0
-though I understand other people do.
+Cheers,
+Longman
 
-The fair resource use from memory.swap.max
-is to control how much of the fixed swap file
-(or swap partition) space each cgroup gets.
+>   	# Local partition invalidation tests
+>   	" C0-3:X1-3:P2 C1-3:X2-3:P2 C2-3:X3:P2 \
 
---=20
-All Rights Reversed.
