@@ -1,148 +1,279 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91AE02701B6
-	for <cgroups@vger.kernel.org>; Sun, 27 Sep 2026 01:45:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D2A1DED42
+	for <cgroups@vger.kernel.org>; Sun, 27 Sep 2026 05:04:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790473526; cv=none; b=Qo68VedgVdc8zlZ5OC7eoeDKAK5T0F9d7pzjtKPwhDD8VeVUptfmj6DI/37pQagHHdGHYN2FUMq0oUbb80x+guJr1je7dL8dEPHQWtWtWecCa0UElEVFoMgpjhzOCN3xH1BR3gBwVc6P6NuVW0YRQAnZqRfRaMUnqamwwW0lTKc=
+	t=1790485482; cv=none; b=H1kT9q1bDFd2KfZItr88ggLvrMk0i+Dxl4ML1zfqjNl2/IrNhnodS4Z8SWRvzjPqIvG95YslzbRMMKayASwCCKSxmnrKPZl8U8OMUg457NfNltuyTBQ/SscOM0BpIQ5xrGLRGuybj3KJ/hTrjXE2NArTF37Gs0xMNtWkptcAWzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790473526; c=relaxed/simple;
-	bh=ZmshJRVNGhiDD241iabHMvHEahKSg7LVi7ZdIgOie5M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CqpLHwAFrHkIkvMdHdHXvvRPHRe1W5/A0y2K1WpYvDou3FGnMgJKGeth4vq7cTf/Gl6GF4ZUJKKa+z4vIUHlNQ7q0uVJAAL+gPWOFxUqP6lYbr0ibbDABWn32hFNS50VTkeukiMIM2810jl3cSDx3RINeTIuV8YcuWaQyUOskGI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Cabk/nVq; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790485482; c=relaxed/simple;
+	bh=TvjgwKfxRWoop+S5G5ZIakPAQZmM9hjcQdoUj56GMq0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=mLDPn4kh5suIS2ZkuJGXP+r6Nx8N97Es33/ZmLRxXWOunQtsJqsAKUoZPFoO1ALn+/1FPyvQeegxf7VMUNDjSFwXsZRg7lm90gX7xYQz5MhuB9ZMfEeh6JyzYJXQcmjVSVpuGuHw7QY+MS9f4IL2NUwAvQlIUqj6twB7F/EEeW0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=kknxETGX; arc=none smtp.client-ip=149.72.141.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Cabk/nVq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790473523;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XUoH5rgAH1n+by9vaKnGPJrkH26uAPsRf2XvFcpnSDw=;
-	b=Cabk/nVqsN/+tLGG77U2gAqJ4y0OujBIdsdodMyXDE0lrC5dtZy/7zWiInicLXHZs0Z2a7
-	6Wtbdq5DQpCM/I8yuZpPbCPxbF3b5yW6v5Mbo6n3E3Mrm4EWU7J5pkXbIezbi3knyiyUR1
-	tHeFcwH/alKKteYI3522jKaPRbuucHA=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-277-tMlZC61VNVufI_UeeYlH9w-1; Sat,
- 26 Sep 2026 21:45:16 -0400
-X-MC-Unique: tMlZC61VNVufI_UeeYlH9w-1
-X-Mimecast-MFC-AGG-ID: tMlZC61VNVufI_UeeYlH9w_1790473515
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7A1CD1955F7A;
-	Sun, 27 Sep 2026 01:45:14 +0000 (UTC)
-Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D528C180034F;
-	Sun, 27 Sep 2026 01:45:11 +0000 (UTC)
-Message-ID: <b5926447-1b52-4a8b-86d8-8adf40ca5f3f@redhat.com>
-Date: Sat, 26 Sep 2026 21:45:10 -0400
+	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="kknxETGX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
+	h=from:date:subject:mime-version:content-type:content-transfer-encoding:
+	to:cc:cc:content-type:date:from:subject:to;
+	s=s1; t=1790485479;
+	bh=+4jro1MTzUF06io04gLz+PFvy0PpidJfPQA84CrpgNI=;
+	b=kknxETGXBLiN+fC0CeXE1ukNhZOsuMLR5UzCAlEaXRQeDgkRzLcNF0OOkTfPgNQWiICR
+	3AUVExFJIvOhYg/aoVp3N7mjOGkoFtcXAMSIy+UiilUxqSuFbn4T/fxxwYuap5EVqd9pxA
+	3LJk4TGrz8g5yBaYzJwiFmFMU6mBsODIiSEHZmtFv78lXQ7Qcr1MF8FXuwRdNesa9fUy0y
+	XrndeTaWyntZUDlINYJGdOWidPHEmmQOJeSdd7AcA4bkeZXrfnycHeWqYK5Mr/udkFgw7U
+	x2ssd1dkBi2d5Xfd3XGrjdzwZe6kSRxSc2AhR7FzcyrLEldwwSgBSOKwSvEfOE8w==
+Received: by recvd-859f4b9877-dwngx with SMTP id recvd-859f4b9877-dwngx-1-6AB8A3E7-47
+	2026-09-27 05:04:39.464940507 +0000 UTC m=+206322.744621825
+Received: from [127.0.1.1] (unknown)
+	by geopod-ismtpd-20 (SG) with ESMTP
+	id CwOn27KUQ7m8N7Fcb1r4_Q
+	Sun, 27 Sep 2026 05:04:39.406 +0000 (UTC)
+From: Liz Fong-Jones <lizf@honeycomb.io>
+Date: Sun, 27 Sep 2026 05:04:39 +0000 (UTC)
+Subject: [PATCH] writeback: let foreign flushes reach dying cgwbs
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/3] cgroup/cpuset: prevent activating local partition
- over remote one
-To: Hui Peng <benquike@gmail.com>, Ridong Chen <ridong.chen@linux.dev>,
- Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>
-Cc: Shuah Khan <shuah@kernel.org>, Chen Ridong <chenridong@huawei.com>,
- cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260924042729.1908863-1-benquike@gmail.com>
- <20260924042729.1908863-3-benquike@gmail.com>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260924042729.1908863-3-benquike@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Message-Id: <20260926-wb-dying-cgwb-flush-v1-1-a8d898085a3a@honeycomb.io>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWMywqDMBBFf0Vm3YE0i4D+inSRxxhHJC2ZWlvEf
+ 3esu3u4nLOBUGUS6JoNKn1Y+FkU7rcG4uhLJuSkDNZYZ1rrcA2YflwyxqxzmBcZ0TjSl6wPPoG
+ ar0oDf//V/nGxLGGi+D5TsO8HW4+owXcAAAA=
+X-Change-ID: 20260926-wb-dying-cgwb-flush-06e260e2abad
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8522; i=lizf@honeycomb.io;
+ s=gpg; h=from:subject:message-id;
+ bh=TvjgwKfxRWoop+S5G5ZIakPAQZmM9hjcQdoUj56GMq0=;
+ b=owEBbQGS/pANAwAKAaXO1OOXra/CAcsmYgBquKPn1sNIzpCLby9DFncuje+MLA0Jh6n64I/7x
+ T0INynFIhiJATMEAAEKAB0WIQSfW1LPQ0gyJmoTHwelztTjl62vwgUCarij5wAKCRClztTjl62v
+ wgqtB/9JY2u8FDB4jdu0zx08IpYZbBst2X/t92lMZU/EhRadpIbqbAcbQhiTHD48+MH6n3ERy24
+ tsVF1Vr+QV3T2zpzzxgarSuCPtGS/ZRPmWY0G3Fa+KQC8pDqJ1+LohkTEUZ1JxzKavSeOGbelC3
+ r3pPpQqhEaZXeZeTMxhqLKDhBX+ei6plsi5qAmvLRh+N/sF0eg4qLWJt9z47Btll94kTwD6FT0H
+ ZVsAi4tFOGbUPxG7CDcv7PQARoNdQh7LTkv1QrBtQy1Ba4HqUoiAK8EBnugu58XeesHkWZ2loLs
+ 1YxiVg8idpW15lSEMAL4gLK4AEnVs8ITAXJ+Cd0gmhKn3Syn
+X-Developer-Key: i=lizf@honeycomb.io; a=openpgp;
+ fpr=1F7714D7EC3441D2CECC24606A3F8B00FBDDD2A4
+X-SG-EID: 
+ =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
+ =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeUj22rDtwFPn?=
+ =?us-ascii?Q?6t5WoqjriadbwirARoiyHWAvFOS2kX70JYRV+VB?=
+ =?us-ascii?Q?yTo5789UNL2v4=2FqF1gmk28QYLOV8QYCFeeMX2hE?=
+ =?us-ascii?Q?tt9jtFj=2FdAtsJmm4z6ab2FGK49iAB2Jwb4T9nDD?=
+ =?us-ascii?Q?Aytt4VX1zbvp7lVXmNYG+8WGadxtMHXiQ9+S159?= =?us-ascii?Q?Tzlm?=
+To: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Tejun Heo
+	<tj@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>,
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner
+	<hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+	<shakeel.butt@linux.dev>, Xin Yin <yinxin.x@bytedance.com>,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ian@honeycomb.io, stable@vger.kernel.org,
+	Liz Fong-Jones <lizf@honeycomb.io>
+X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
 
-On 9/24/26 12:27 AM, Hui Peng wrote:
-> Commit 6da580ec656a ("cgroup/cpuset: Don't allow creation of local
-> partition over a remote one") added a check in update_prstate() to reject
-> creating a top-level local partition whose cs->exclusive_cpus intersects
-> subpartitions_cpus.
->
-> However, if a top-level cgroup A1 has a child A1/A2 enabled as a remote
-> partition on a subset of its exclusive CPUs (X2-3 on A1, CX2-3:P2 on
-> A1/A2), and A1 is then set to "root" (P1, becoming "root invalid" via
-> update_prstate() because its exclusive CPUs intersect subpartitions_cpus)
-> followed by expanding its CPUs to include additional non-remote CPUs
-> (CX1-3), update_cpumask() / update_exclusive_cpumask() calls
-> validate_partition() without going through update_prstate(). Because
-> validate_partition() does not check trialcs->exclusive_cpus against
-> subpartitions_cpus, A1 transitions from "root invalid" to a valid local
-> partition over the existing remote partition A1/A2 and triggers:
->
->    WARNING: kernel/cgroup/cpuset.c:1943 at update_parent_effective_cpumask+0x189b/0x1fd0
->
-> Check trialcs->exclusive_cpus against subpartitions_cpus in
-> validate_partition() when !is_partition_valid(cs), and add a regression
-> test case to tools/testing/selftests/cgroup/test_cpuset_prs.sh.
->
-> Tested in QEMU on Linux 7.3.0-rc3 using
-> tools/testing/selftests/cgroup/test_cpuset_prs.sh.
->
-> Fixes: 6da580ec656a ("cgroup/cpuset: Don't allow creation of local partition over a remote one")
-> Cc: stable@vger.kernel.org
-> Assisted-by: LLM
-> Signed-off-by: Hui Peng <benquike@gmail.com>
-> ---
->   kernel/cgroup/cpuset.c                            | 4 ++++
->   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 2 ++
->   2 files changed, 6 insertions(+)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 7381fa8502e7..7c5b4a8f1f3a 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -2415,6 +2415,10 @@ static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *tri
->   	if (cpumask_empty(trialcs->effective_xcpus))
->   		return PERR_INVCPUS;
->   
-> +	if ((parent == &top_cpuset) && !is_partition_valid(cs) &&
-> +	    cpumask_intersects(trialcs->exclusive_cpus, subpartitions_cpus))
-> +		return PERR_REMOTE;
-> +
->   	if (prstate_housekeeping_conflict(trialcs->partition_root_state,
->   					  trialcs->effective_xcpus))
->   		return PERR_HKEEPING;
-The code change looks good to me.
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index b732078bf319..4a451350ad84 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -321,6 +321,8 @@ TEST_MATRIX=(
->   	" C1-3:P2  X4:P2    .      .      .    X3:P2    .      .     0 A1:1-2|XA1:1-3|A2:3:XA2:3 A1:P2|A2:P2 1-3"
->   	" C0-3:P2    .      .    C4-6   C0-4     .      .      .     0 A1:0-4|B1:5-6 A1:P2|B1:P0"
->   	" C0-3:P2    .      .    C4-6 C0-4:C0-3  .      .      .     0 A1:0-3|B1:4-6 A1:P2|B1:P0 0-3"
-> +	"   X2-3  CX2-3:P2  .      .  P1:CX1-3   .      .      .     0 A1:1|A2:2-3|XA2:2-3 \
-> +								       A1:P-1|A2:P2 2-3"
->   
+cgwb_kill() takes an offline memcg's wbs out of bdi->cgwb_tree, but
+inodes that are still being dirtied stay attached to them. When a
+replacement container keeps appending to those files, its foreign
+flushes fail with -ENOENT in wb_get_lookup(), and it sleeps in
+balance_dirty_pages() for seconds to minutes.
 
-This test case is problematic as it fails on my test system because of a 
-bug in the SCHED_DEADLINE task shrink test in validate_change() that can 
-be triggered if there are deadline tasks in the system which will fail 
-the test. I am going to post a patch to fix that bug. Can you take out 
-this test case from this patch as I don't want this test to be 
-backported to stable releases? You can send this out as a separate 
-testing patch if you want to.
+Fall back to searching bdi->wb_list, where killed wbs stay until they
+are released. With commit 168a8c13159c ("writeback: size foreign
+flushes by target wb dirty pages"), the flush is then sized from the
+wb's own dirty pages and writes out what the replacement dirtied.
 
-Cheers,
-Longman
+Test, on top of that commit: a cgroup appends to 1000 files at
+250MiB/s and is removed, then a second cgroup keeps appending to the
+same files under a 4G parent limit. Worst lag of the second writer
+behind schedule over 120s, in three runs:
 
->   	# Local partition invalidation tests
->   	" C0-3:X1-3:P2 C1-3:X2-3:P2 C2-3:X3:P2 \
+  without this patch   85.3s  46.9s  52.1s
+  with this patch       1.0s   1.0s   1.1s
+
+Fixes: d62241c7a406 ("writeback, memcg: Implement cgroup_writeback_by_id()")
+Cc: stable@vger.kernel.org
+Assisted-by: Claude:claude-opus-5-5 checkpatch sparse
+Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+---
+At Honeycomb, a container that reads from Kafka and writes columnar
+files to a host volume stalls for 30-60s after each deploy replaces it
+(v6.18). This is likely the cause: the stall looks the same as in the
+reproducer (little CPU use, lag growing linearly and then recovering),
+though we haven't traced it in production yet.
+
+Based on vfs-7.4.misc, next to Xin Yin's 168a8c13159c, which fixes the
+sizing but not the lookup of a removed cgroup's wb. Each helps without
+the other; this one also applies cleanly to mainline. On mainline
+(fd179f8a05be), without 168a8c13159c, the test from the changelog gave
+52.8s, 73.3s and 5.2s worst lag before this patch and 1.0s, 1.0s and
+1.0s after.
+
+Trigger: a cgroup dirties files and is removed while they are still
+dirty; a sibling keeps appending to the same files under a parent memory
+limit. Symptom: cgroup_writeback_by_id() returns -ENOENT and the sibling
+stalls in balance_dirty_pages(). Minimal recipe below; the harness that
+produced the numbers (paced writer, lag per second, MODE=alive control)
+is at https://gist.github.com/lizthegrey/2209d831930588f63076bdc0ac7b78e2.
+
+On ext4, syncing before the removal doesn't reliably help: writeback can
+leave inodes I_DIRTY_SYNC after syncfs, and cleanup_offline_cgwbs_workfn()
+then skips the dying wb entirely (2 of 3 runs at 5000 files; a second
+syncfs avoided it in 5 of 5). On XFS one syncfs left the wb clean in 5
+of 5 runs.
+
+Harness settings for all numbers: MEM_MAX=max POD_MAX=4G RATE_MBPS=250,
+plus NFILES=5000 SYNC_OLD=1 (or 2) for the syncfs runs and
+NFILES=500000 OLD_SECS=120 SYNC_OLD=1 POD_HOP=10 for the 500k-file runs.
+
+Also reproduced unpatched on bare-metal arm64 with Ubuntu's 7.0 kernel
+(ext4 on a loop device): 12.9s worst lag with the old cgroup removed,
+2.5s with it kept.
+
+Tested: arm64 KVM guests (virtme-ng), ext4 and XFS on virtio. No lockdep,
+PROVE_RCU, DEBUG_ATOMIC_SLEEP or DEBUG_PAGEALLOC reports. W=1, sparse
+and checkpatch --strict clean.
+No new warnings building arm64 defconfig with and without
+CGROUP_WRITEBACK, allnoconfig, arm multi_v7_defconfig with
+CGROUP_WRITEBACK, and the touched files (W=1) under arm64 allmodconfig
+and x86_64 defconfig with CGROUP_WRITEBACK.
+
+Not tested: x86, production, linux-next.
+
+Workaround until this lands: lowering vm.dirty_expire_centisecs from
+3000 to 500 cut the worst lag on unpatched mainline to 4.8s, 4.6s and
+14.3s, but did not remove the stall.
+
+Stable: please take 168a8c13159c too. Without it the flush is sized from
+the dead memcg's own dirty pages, so this only helps while it has some.
+f6988c90671e (already in mainline and tagged for stable) also matters:
+on XFS with 500k synced inodes and the pod cgroup removed 10s later, the
+handover was slow enough without it that the replacement fell 21-22s
+behind (vfs-7.4.misc), against 1.0-1.2s with it (mainline).
+Before 5.14 there is no offline_cgwbs cleanup, but the bdi->wb_list walk
+should still apply.
+
+Not covered: after a blkcg association change, wb_get_lookup() finds the
+new clean wb, so the fallback doesn't run.
+
+Developed with Claude Opus 5.5, which wrote the code, the reproducers
+and first drafts of this text, and ran the builds and VM tests. I drove
+the investigation from the production symptoms, designed the
+experiments and controls (repeated runs, parent-commit baselines,
+testing this patch on its own), and reviewed the analysis, code and
+results.
+
+Minimal recipe:
+	#!/bin/bash
+	# As root, cgroup v2, in a directory on ext4/xfs/btrfs ($DIR).
+	cg=/sys/fs/cgroup/wbmini
+	mkdir $cg && echo +memory > $cg/cgroup.subtree_control
+	echo 4G > $cg/memory.max
+	mkdir $cg/old $cg/new
+	append() {  # append $1 blocks of $2 to each of 1000 files
+		for i in $(seq 1000); do
+			dd if=/dev/zero of=$DIR/f$i bs=$2 count=$1 \
+			   oflag=append conv=notrunc status=none
+		done
+	}
+	(echo $BASHPID > $cg/old/cgroup.procs
+	 append 8 1M            # old owner writes the files...
+	 append 1 64k)          # ...and exits with all of them dirty
+	rmdir $cg/old           # its cgroup goes away while they are dirty
+	bpftrace -e 'kretprobe:cgroup_writeback_by_id { @ret[(int32)retval] = count(); }' &
+	sleep 3
+	time (echo $BASHPID > $cg/new/cgroup.procs
+	      append 4 1M)      # replacement keeps appending to the same files
+	kill -INT $!; wait
+	rmdir $cg/new $cg
+	# Unpatched: many @ret[-2] (-ENOENT) and the append stalls.
+	# Patched: @ret[0] only.
+---
+ fs/fs-writeback.c           |  2 ++
+ include/linux/backing-dev.h |  2 ++
+ mm/backing-dev.c            | 31 +++++++++++++++++++++++++++++++
+ 3 files changed, 35 insertions(+)
+
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index d26b2cf05283..5fb70c16488d 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1189,6 +1189,8 @@ int cgroup_writeback_by_id(u64 bdi_id, int memcg_id,
+ 	 * there's nothing to flush, don't create one.
+ 	 */
+ 	wb = wb_get_lookup(bdi, memcg_css);
++	if (!wb)
++		wb = wb_get_lookup_dying(bdi, memcg_css);
+ 	if (!wb) {
+ 		ret = -ENOENT;
+ 		goto out_css_put;
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index c2284466e7aa..2bbc74b3b180 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -151,6 +151,8 @@ static inline void bdi_wb_stat_mod(struct inode *inode, enum wb_stat_item item,
+ 
+ struct bdi_writeback *wb_get_lookup(struct backing_dev_info *bdi,
+ 				    struct cgroup_subsys_state *memcg_css);
++struct bdi_writeback *wb_get_lookup_dying(struct backing_dev_info *bdi,
++					  struct cgroup_subsys_state *memcg_css);
+ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+ 				    struct cgroup_subsys_state *memcg_css,
+ 				    gfp_t gfp);
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index cecbcf9060a6..1437f80ed7e3 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -807,6 +807,37 @@ struct bdi_writeback *wb_get_lookup(struct backing_dev_info *bdi,
+ 	return wb;
+ }
+ 
++/**
++ * wb_get_lookup_dying - get a killed wb for a given memcg
++ * @bdi: target bdi
++ * @memcg_css: cgroup_subsys_state of the target memcg (must have positive ref)
++ *
++ * wb_get_lookup() only finds wbs that are still in @bdi->cgwb_tree.  A
++ * killed wb leaves the tree but stays on @bdi->wb_list until it is
++ * released, and inodes attached to it can keep collecting dirty pages from
++ * other memcgs until they are written back and switched away, so foreign
++ * flushes still need to reach it.  Returns a wb of @memcg_css on @bdi which
++ * has dirty IO, with a reference held, or %NULL.  If there are several,
++ * the first one found is returned; this is best effort.
++ */
++struct bdi_writeback *wb_get_lookup_dying(struct backing_dev_info *bdi,
++					  struct cgroup_subsys_state *memcg_css)
++{
++	struct bdi_writeback *wb;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(wb, &bdi->wb_list, bdi_node) {
++		if (wb->memcg_css == memcg_css && wb_has_dirty_io(wb) &&
++		    wb_tryget(wb)) {
++			rcu_read_unlock();
++			return wb;
++		}
++	}
++	rcu_read_unlock();
++
++	return NULL;
++}
++
+ /**
+  * wb_get_create - get wb for a given memcg, create if necessary
+  * @bdi: target bdi
+
+---
+base-commit: 168a8c13159c6e3f0f08da6f8fa2f633a91ba9fd
+change-id: 20260926-wb-dying-cgwb-flush-06e260e2abad
+
+Best regards,
+--  
+Liz Fong-Jones <lizf@honeycomb.io>
 
