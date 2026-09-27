@@ -1,65 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB19130F95C;
-	Sun, 27 Sep 2026 20:26:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F3483859EC
+	for <cgroups@vger.kernel.org>; Sun, 27 Sep 2026 21:53:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790540792; cv=none; b=DdVFYS+iHFEcCIxOZVMnKpG3DHwy7SUlvHvJbcJM5qvPRdERRU1QjDtBnz6+DUfqVmLpU/uA+LjqkMAJB0SSAIYaibat6e2znGuyUDTudC+CeQsRE+AprZB6CFNJYTAoiL56nhcfDm0vBzCFPwLnf7Wo81hiwdRBWDkTC/pQ608=
+	t=1790546027; cv=none; b=WkOy3tCRIQlZLj7TEwxHuJkOBBglbB5XmC+tXFwIiKbZv3LFX+FY31122UkQFstp8KSklour1eE+I3Sy5io6wAfFnFy+cp/z9H6rDTJ2iLRf8v09V2oo3oDUTBXVCIhuobr6gcS4wYjwkavMSSbuE5NFaI9oi0RjzK3u6pQ9aGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790540792; c=relaxed/simple;
-	bh=7ofVbKI7UwbZtzf8DCr38YnkemcRoO+lOYfaE/MEjJM=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=ZhBUQaaY8myRXvIjqy3+BFVsDEYYubagVpq7WG95G4hohN7BsJ+irZG0qZP70onEI4Spqdcc62GHPBZN8kBgpcgdYSfP7Zdbd/UPKZ8jGcpvMpNAqZbkCpOuIFQZk8xFxoIvEfdKqqt1rloliHMBrihuoIpo100Z62VkXojGAv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=fKhzG8Id; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790546027; c=relaxed/simple;
+	bh=eRxtN20qVgmSKHWYiDSV0CrelvjK2ghyUv5/UlR5jHo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iCuxKkv/qY2xEqEuKqlqUEQcp4WeRmnhpWBpOnWbe58+RL4aNm5CRsTVEDT68lhOAjZ8I7XqPz7ff2mt5+r0PeYBO930GWlNTPetL4XWSKHvh3y+tPZq4/cc324l2WCYu1+Q5J8FtJUmlrfQD/vlRg7ETfMFWuZYISGp7zLp/ks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KF2aPQZ5; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="fKhzG8Id"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D446D1F000FF;
-	Sun, 27 Sep 2026 20:26:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1790540791;
-	bh=Wtc36Zd26DF0UV6qt4ILyxcIdl7ocFhXmsZv9Dy+w+Y=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=fKhzG8IdBSyYx4WwzMQqnpwOPZCr3ooh55LHrwrwCvxbLPkvxBO5t+3+ccAfMHSzE
-	 gjHo4hWgMwEazfMjspTgDHCK6Rt8WL8Jiop6CSr+TZqw73IJUiiQm93mcCE9E0f5Ei
-	 a0w+rkZtrFS+ecXZrAa+HYyVW7xszMLOpwQAwMzE=
-Date: Sun, 27 Sep 2026 13:26:30 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Julian Sun <sunjunchao@bytedance.com>
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org,
- linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, axboe@kernel.dk,
- hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
- shakeel.butt@linux.dev, muchun.song@linux.dev, willy@infradead.org,
- jack@suse.cz, tj@kernel.org
-Subject: Re: [PATCH v8 0/3] memcg,writeback: flush foreign bdev mappings
- separately
-Message-Id: <20260927132630.eef2d0f1704534c7bde8e538@linux-foundation.org>
-In-Reply-To: <b5da5c30-7c8b-4c60-aa3b-d2e3603e82c1@bytedance.com>
-References: <20260922125015.3435215-1-sunjunchao@bytedance.com>
-	<b5da5c30-7c8b-4c60-aa3b-d2e3603e82c1@bytedance.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KF2aPQZ5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790546024;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=kZH4v7K1jaDieo8jJAF8+gFQF7CFWBnSD4vp3wuUmQ0=;
+	b=KF2aPQZ5f6vpZKAPKud0/9km4IfUV8nzAlwqk36KzdkwEwXc8ffprjLbttn0NPJjPVaHlj
+	ymSWpdmDCVSRThq5ASlN6+/hs2q652hlw/vNH13di9OSZINXYrrEqxhwLbS540je0x74uh
+	zeUQHXxAmOICNxWGywziMso0f9EucBM=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-81-ZzbZE6N2O9mo8gIUMmroyg-1; Sun,
+ 27 Sep 2026 17:53:40 -0400
+X-MC-Unique: ZzbZE6N2O9mo8gIUMmroyg-1
+X-Mimecast-MFC-AGG-ID: ZzbZE6N2O9mo8gIUMmroyg_1790546019
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 05A3F1800632;
+	Sun, 27 Sep 2026 21:53:39 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.rmtusnh.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id F2AF441D;
+	Sun, 27 Sep 2026 21:53:36 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hui Peng <benquike@gmail.com>,
+	Guopeng Zhang <guopeng.zhang@linux.dev>,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH-next v2 0/2] cgroup/cpuset: Run SCHED_DEADLINE shrink test on valid partition root only
+Date: Sun, 27 Sep 2026 17:53:17 -0400
+Message-ID: <20260927215319.382422-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-On Sun, 27 Sep 2026 19:48:26 +0800 Julian Sun <sunjunchao@bytedance.com> wrote:
+v2:
+ - Leave the v1 code as is and switch between using is_cpu_exclusive()
+   for v1 and is_partition_valid() for v2.
 
-> Do you have any further thoughts on this series?
+When testing some upstream cpuset patch, it was found that the current
+SCHED_DEADLINE shrink test in validate_change() can incorrectly get
+triggered due to the fact that the exclusive flag may get set on a
+cpuset that is not a valid partition root. This series fixes this
+problem by making sure that the test will only be triggered on a valid
+partition root and remove the now unnecessary code to handle the
+exclusive flag in the v2 code.
 
-I'd like to see some feedback from memcg maintainers, please.
+Waiman Long (2):
+  cgroup/cpuset: Run SCHED_DEADLINE shrink test on valid partition root
+    only
+  cgroup/cpuset: Remove CS_CPU_EXCLUSIVE handling code from v2
 
-> Should I rename bdev_flush_by_dev() to bdev_writeback_by_dev()
-> and send the next revision?
+ kernel/cgroup/cpuset.c | 59 ++++++------------------------------------
+ 1 file changed, 8 insertions(+), 51 deletions(-)
 
-Yes please.  "flush" is a pet peeve of mine.  It's used to mean either
-"writeback" or "invalidate" in various places.  Or both.  Annoying!
-
-Also, I agree with the "dont check alloc succeeded in __init code". 
-Both places.  Maybe save this little cleanup for the next development
-cycle.
+-- 
+2.55.0
 
