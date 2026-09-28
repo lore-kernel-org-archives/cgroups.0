@@ -1,96 +1,96 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598BB1AF4E9;
-	Mon, 28 Sep 2026 18:24:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A52A6380FCF;
+	Mon, 28 Sep 2026 18:44:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790619883; cv=none; b=iajjHaucUMH6HgOn1uzLVaeAwTdjMo7Qo+kcTN1M3gUeXavJamr8d5f+UK4zqLCOCx1/OHpMBV3vyfeoAcc2bxb+Sl2aesZJAoSC5u2vQeo2hsiwjqk44NiS0JCneEeqPEffel4Z2a0M/soSyBVmlPsgB6AlcNnLSnUP3PeKCM4=
+	t=1790621082; cv=none; b=GSpxl9UeUeE+afi1IJSA+MvCRXrrQgRvt0FVS+W09WxiVHHhuFPbxUwQpKs59ssbtej28Z4oFqmHiJHpIhfYgb4AYYa/s+RFWpIpNUXiLLZX6nO4+fFDV5udFC1bHcTmVB/JSCtJDoefSwqnhAiLM9Gv52r1H7+9KE9Bnjg302I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790619883; c=relaxed/simple;
-	bh=hNpw31ZRSc7M/qXGQtUCTYNFVyvFPmZHgaxdreCHxIM=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=jheIL55eeTspEbxMFqpfRTbZgXIBIBvMKzB84OfJWUOHGwGL1sO1p6mq/yaS1U1fCDuzBiUfO2auEOxE4s76zdK6Y2ikKkm+HxEr5VeuvJsDe7JeanLPfDbE0CwxLdgBgEqrTNvhfuV1DbcxTeVeFMoMn1GnQjEKzfwjW/V9L+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JXEl6xoI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790621082; c=relaxed/simple;
+	bh=RJ6Fq24d/7hGk0qZr2yJH3/pE7vmJFFF7o9EYI+0iBg=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nEw1I5x/M/xDaHSmzMWB24RDUfITeLb3EDQxEmLx+E51hReWNTyVpu9xt7MYGG7X4koAYbDsFud4Ee46mWAY1Vk57mfr800hAhx9t/H6R7nt4xisYtovJinlq/OxnWc1XOm21lMTfYB1/289qVh9QpLfGcc6q3N1OU3e+vl6TY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j5Tvij0b; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JXEl6xoI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4D241F000FF;
-	Mon, 28 Sep 2026 18:24:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j5Tvij0b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 631821F000FF;
+	Mon, 28 Sep 2026 18:44:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790619882;
-	bh=jFgegtxrqBLiSDoehqBbaOYTYpSiUebKsQY5pgr6G+M=;
+	s=k20260515; t=1790621081;
+	bh=DcgMX0HJpEAJ3K/p/lHFYWlG8Zs8BJeb4wFz0L27lRM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=JXEl6xoISVDdzEfU5MH19jz7JFJTYMQWsyJMMaCTTEg5BSRtsUV7kLJy1NKhv+oX4
-	 F6Vo06jedsKB3C+Y42PEdDmvCkCdP1OScHxKcz9YOl7s85sLV1VkupV40OtI0RhRzI
-	 6iJid23uoc1Vl+VpVOZ75SPAUd+Fo5vu3BMx4r6EdK2GAPcKBiRneoa43wE/H/1Kyt
-	 iKDRt5SHpp0MVtqKQZTE+kVb2LKXj7XsJj31o2agOCxvZuRsWvLKlNVDZdpX12BYUh
-	 W5Vj6Qn1bRrbGs7CdhAav5wXCgUGFceWf2fQiZOC83SOyddCXbu3v4pMJVCrMHuI8x
-	 1nHcQigxzcVrA==
-Date: Mon, 28 Sep 2026 08:24:41 -1000
-Message-ID: <dfe81db2d9bc6cc6b17fc1f440af184b@kernel.org>
+	b=j5Tvij0bAOP9BdxKdep/dbLEs1KltE6l2kG7DAWf3xlrJd6tYTPJLAoMcVyb9yrQs
+	 2A2ifvrZ7249ViqHiNIcRNAecUci3p7hBcoAKmFyZAcNq9/mqFQ6GKPL3Z3qMx7Fe6
+	 p7P5gnibUkyqIBwYpUCyfC0zrjq5ryiEuy942amaVV07KOkI+Co8uiME2K8afWgze9
+	 VtRMOpVhSaYeWmU5edGMVWv02ZrNvO44Dfo9TSDtPGDqXvE5gjAS1j33t1F8J4FlpJ
+	 dt0J0BMHxp7hy9AJfyTiwsfO5Xl2gNDX0lBSEetpbIca/wEKNPrMOSX9C6zRmsaUc7
+	 j07U54Y1QfgUQ==
+Date: Mon, 28 Sep 2026 08:44:40 -1000
+Message-ID: <7f4c57b26ad120ab30adf35653f1dd94@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Peng Yu <yupeng0921@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
-	Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>,
-	Maurizio Lombardi <mlombard@arkamax.eu>, cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 0/3] nvmet: add cgroup_id to charge namespace I/O to a
- cgroup
-In-Reply-To: <20260928061417.1574676-1-yupeng0921@gmail.com>
-References: <20260928061417.1574676-1-yupeng0921@gmail.com>
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long <longman@redhat.com>
+Cc: Ridong Chen <ridong.chen@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>,
+ cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] cgroup/cpuset: Invalidate remote partition on
+ housekeeping conflict
+In-Reply-To: <20260927095722.70660-1-guopeng.zhang@linux.dev>
+References: <20260927095722.70660-1-guopeng.zhang@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 
-Hello, Peng.
+Hello, Guopeng.
 
 The following is a Claude-generated review.
 
-On Sun, Sep 27, 2026 at 11:14:14PM -0700, Peng Yu wrote:
-> Scenario:
-> * Create multiple nvmet subsystems/namespaces.
-> * The namespaces are backed by different LVM logical volumes.
-> * Some of the logical volumes share the same physical volumes.
-> * The subsystems are exported to different users.
-> * We should provide each user a specific iops/bps quota, thus a noisy
->   neighbor won't impact the performance of other logical volumes.
+On Sun, Sep 27, 2026 at 05:57:21PM +0800, Guopeng Zhang wrote:
+> +	bool updating = is_remote_partition(cs);
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return PERR_ACCESS;
+> +
+> +	if (!updating &&
+> +	    (!cpumask_intersects(excpus, cpu_active_mask) ||
+> +	     cpumask_subset(top_cpuset.effective_cpus, addcpus)))
+> +		return PERR_INVCPUS;
 
-- 1/3: Can you explain why in the description? Per-IO users such as nvmet
-  need the lookup to be O(1) instead of walking up the hierarchy.
+cs->remote_partition can be stale when remote_partition_enable() is
+called. If a root <-> isolated switch of a valid remote partition fails
+in update_prstate(), the partition is made invalid without
+remote_partition_disable(), so the flag stays set and its CPUs stay in
+subpartitions_cpus. A later enable then skips the PERR_INVCPUS checks.
+With isolcpus=domain,4:
 
-  rebind_subsystems() moves root csses between hierarchies without
-  updating e_css[]. This is fine as a root cgroup's e_css[] always points
-  to init_css_set.subsys[], but that isn't obvious. Maybe note it in a
-  comment in init_cgroup_root()?
+1. A is a member with cpuset.cpus 2-6 and cpuset.cpus.exclusive 2-4. B
+   has cpuset.cpus 2-4 and no cpuset.cpus.exclusive.
+2. "isolated" to B's cpuset.cpus.partition. B becomes a valid remote
+   partition with effective_xcpus 2-4.
+3. "root" to B's cpuset.cpus.partition fails with PERR_HKEEPING.
+   effective_xcpus is cleared but remote_partition stays set.
+4. 5-6 to A's cpuset.cpus.exclusive. B's excpus becomes empty, which
+   matches the cleared effective_xcpus, so update_cpumasks_hier() skips
+   B.
+5. "isolated" to B's cpuset.cpus.partition. This used to fail with
+   PERR_INVCPUS. Now B becomes a valid isolated partition with empty
+   effective_xcpus and the WARN_ON_ONCE() at the end of update_prstate()
+   triggers.
 
-  Can you also add a comment on the new e_css[] field like the fields
-  around it? It should say what it points to (the css of the nearest
-  ancestor including self which has the subsystem enabled) and that it's
-  updated under cgroup_mutex and read under RCU.
+This is from reading the code, not reproduced. Maybe have the callers
+pass whether it's an enable or an update instead of deriving it from
+cs->remote_partition?
 
-- 2/3: This isn't needed with the change suggested for 3/3 below.
-  Otherwise, cgroup_e_css() now has the same shape as cgroup_css() and
-  could be a static inline in include/linux/cgroup.h instead of an export.
-
-- 3/3: nvmet_blkcg_set_bio() calls bio_associate_blkg_from_css() under
-  rcu_read_lock(). If the blkg doesn't exist yet, it grabs queue_lock
-  inside the RCU section. f928145cbcb5 ("mm/page_io: don't nest queue_lock
-  under rcu in bio_associate_blkg_from_page()") removed the same nesting
-  from mm/page_io.c to prepare for protecting blkcg with blkcg_mutex
-  instead of queue_lock. How about the following instead?
-
-	css = cgroup_get_e_css(ns->cgrp, &io_cgrp_subsys);
-	bio_associate_blkg_from_css(bio, css);
-	css_put(css);
-
-  With 1/3, this is O(1) too and it skips csses which are going offline
-  the same way nvmet_blkcg_begin() does. It also only uses symbols which
-  are already exported.
+The stale flag itself is a separate, pre-existing bug. Switching B back
+to member after step 3 trips the WARN_ON_ONCE(old_prs < 0) in
+partition_xcpus_del().
 
 Thanks.
 
