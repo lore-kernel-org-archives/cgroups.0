@@ -1,95 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CADFD502D5F;
-	Mon, 28 Sep 2026 22:39:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E4D549B21F;
+	Mon, 28 Sep 2026 23:30:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790635160; cv=none; b=bFtArPcSJxod82WEM7ZNKQ1AVJfU3dfBMehOSjvHEZyXuo4Iqu93dngd4B+rp8FixFqtyv1te+w1QAupLmvwvOQwKgA06lRX2aLay9ktz1hwJs0rOEM3CchroL7E+LDpywKxeCqFsu0EndLP3M1x6Zz+bcZYvnxLyox4aAVtdz8=
+	t=1790638206; cv=none; b=J+TTrBcOz621Qg5AJOKWa2tkx3ke+St5rUa074Id3k86tbi2b5Fv4ZUHPI14VuJGWGWEY4b9/yk5Y9/JmNViWMK1jK3pfZtDfDugpKlvu7t85Q8QkdQsGXDIVwjMAxIP9thTam883S+7u3CqJDCVHzT2HELyFwZj4SAsOFUBJ9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790635160; c=relaxed/simple;
-	bh=0DcTnoia+4xLSrCsg5TVEUmSrD1P5AixIs8yunT2mbo=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=Guzs/4CS5m2K2pWe6XFnoigxQbbLwlLrR3yHzXfVJbcEG7G8Fw5wwpNh7NxV+mLp/VJxjQQzMR6uJaGL6SmBJaOslAagNasBqzKaplNn6xG3Ck6rzjroRK7lheyXR5AqhA6xjGgUDzyTkeRussgIIxBpZUgBW72tQFbj3jIod2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nvC1M3Ic; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790638206; c=relaxed/simple;
+	bh=MUUL9U8QzlTw5KJtMkh/O68n6/WEB7aiRo1fJw3OISU=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=iHb9jYjeA5WUU2N/ixPwPduWvZxgsc8LJcuIV7gOW1fs3j90IO5DDpxui1hehtj8+9u9Ut8LbE0Yo2US+Rtshs+GC0U1WgRjWrUtHHYdxbpJd5Ud/ElxJQB+/WsfUuf6OFqht+CysJJcLEFkS0u5nXmJmaclHiQUZvYOk0hkGa8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mp2k2TBP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nvC1M3Ic"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 771F01F000FF;
-	Mon, 28 Sep 2026 22:39:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mp2k2TBP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C308E1F000FF;
+	Mon, 28 Sep 2026 23:30:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790635158;
-	bh=0DcTnoia+4xLSrCsg5TVEUmSrD1P5AixIs8yunT2mbo=;
+	s=k20260515; t=1790638205;
+	bh=H0XE7IoMyItwyaCzzcE2PkwcpGvCdLwnkryM7cP8W2E=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=nvC1M3IcvbjGKpuIeoOXjwdt4kNlIDUq7OoP/yr+feT3CCiUuC8a1GV8p+mbtQFYO
-	 uou5WRLU8eKJeRWvKfNvBVnhh9l9YHewiwmKYE9hO+wemXQwqTckvZL7vavzqysKiR
-	 hAXz/2Ae/xHx1xeUh2G7b4XmEAznKdHly1jHEJsIfbEXFjyldks0Gb4T5PTXtuyl7s
-	 ODG0CcrT1DXPcLfxo9c49uEJwD6X4E+KApLeD6JPvydwH/xbAYjbCdpRD87SnR/UC5
-	 l+Qi24UmRyohYuc7M2fxjf6gGbfQ4mFBtWVlOVSrOcNWupOfEigalg1zsY2rtg7XhH
-	 Fguwz6dSvzcPw==
-Date: Mon, 28 Sep 2026 12:39:17 -1000
-Message-ID: <e2ede7c4172c421c0894f1962fbe8517@kernel.org>
+	b=mp2k2TBPVaaa0oxas9pidANxg0LgDSy5BpcWNRKUDZ2xfRnQMMIHH1Qe8npsm2EwZ
+	 JQvL7o+ufYOIqkwRDBmD2qLfMkSW0hBKvMr28f3rNeL3uSw/vNuK9gPPyMXPS75ITO
+	 dwgzwWjZY7IfJp1M4npH9DnI3l+UKPmhlO1KI+8FASh/ZgwvfeKPI0DYvfXtqQ0GLf
+	 uS4VM5KEsvr1YvvJ4k+4lYQ3eRehbzxv/1jz1tCe/IVj/FmY+H7Le3yVGYVorc5yE8
+	 ypt8nmUXeDxZYuzrfESvJ8/kDeRIh+ZBI8yo2vIfJByvMHdHRNCS4IggAjf/zsEGpv
+	 8Q1ZH0jViPjeg==
+Date: Mon, 28 Sep 2026 13:30:04 -1000
+Message-ID: <6d0542fc07639c8df7672b12f4ecd906@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	David Dai <david.dai@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Aaron Lu <ziqianlu@bytedance.com>,
-	Daniel Jordan <daniel.m.jordan@oracle.com>,
-	Hao Lee <haolee.swjtu@gmail.com>, kernel-team@meta.com,
-	cgroups@vger.kernel.org, bpf@vger.kernel.org, linux-mm@kvack.org,
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/7] cgroup: charge kernel work to the cgroup it is
- done for
-In-Reply-To: <arWLq4p488JPhuZ1@linux.dev>
-References: <20260924184714.912181-1-shakeel.butt@linux.dev>
- <befc0a9b9998db0292c9998c639a3a9f@kernel.org>
- <arWLq4p488JPhuZ1@linux.dev>
+To: Liz Fong-Jones <lizf@honeycomb.io>
+Cc: Christian Brauner <brauner@kernel.org>,
+ Jan Kara <jack@suse.cz>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Jens Axboe <axboe@kernel.dk>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Xin Yin <yinxin.x@bytedance.com>,
+ linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org,
+ cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ ian@honeycomb.io
+Subject: Re: [PATCH v2] writeback: let foreign flushes reach dying cgwbs
+In-Reply-To: <20260928-wb-dying-cgwb-flush-v2-1-56b54cda74f2@honeycomb.io>
+References: <20260928-wb-dying-cgwb-flush-v2-1-56b54cda74f2@honeycomb.io>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 
-Hello, Shakeel.
+Hello, Liz.
 
-On Thu, Sep 24, 2026 at 02:11:00PM -0700, Shakeel Butt wrote:
-> On the modern NICs where the workloads get their own rx queues, I think the
-> proposed mechanism can help to do the accurate accounting (I have to extend this
-> to softirqs as it is limited to kthreads atm) very easily.
+On Mon, Sep 28, 2026 at 10:12:59PM +0000, Liz Fong-Jones wrote:
+> +	/* a newer wb may have taken the slot, see cgwb_create() */
+> +	spin_lock_irq(&cgwb_lock);
+> +	radix_tree_delete_item(&bdi->cgwb_tree, wb->memcg_css->id, wb);
+> +	spin_unlock_irq(&cgwb_lock);
 
-Rx steering is useful for partitioning the whole machine, but it doesn't
-seem like the right tool for attributing CPU cycles to each cgroup. It's
-cumbersome to set up and the granularity doesn't match. We aren't going
-to be steering net rx processing per cgroup.
+Maybe use scoped_guard() here and move list_del(&wb->offline_node) from
+further down into the same block?
 
-> If you don't mind, I think having solution for modern NICs i.e. dedicated rx
-> queues, should suffice for now (unless you want the solution for old NICs as
-> well). Let me know what you think.
+> +static bool cgwb_dying(struct bdi_writeback *wb)
+> +{
+> +	lockdep_assert_held(&cgwb_lock);
+> +
+> +	return percpu_ref_is_dying(&wb->refcnt);
+> +}
 
-This doesn't have to be exact or completely synchronous. I don't see why
-net rx charging and reclaim CPU charging can't share the same mechanism,
-where the cycles are force charged to the cgroup after the fact.
+Can you drop this and use wb_dying() instead? Requiring lockdep for testing
+an atomic state is a bit odd.
 
-I don't think PSI needs to be involved either. Shared execution in
-itself shouldn't create pressure. The forced charge changes the cgroup's
-usage, and that usage then creates pressure in the cgroup. IO works the
-same way.
+> +/*
+> + * A killed wb stays in bdi->cgwb_tree until it is released, so that foreign
+> + * flushes can still find it through wb_get_lookup().  Inodes attached to it
+
+"until it is released or replaced in cgwb_create()"?
+
+>  	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
+> -	if (wb && wb->blkcg_css != blkcg_css) {
+> +	if (wb && !cgwb_dying(wb) && wb->blkcg_css != blkcg_css)
+>  		cgwb_kill(wb);
+> +	if (wb && cgwb_dying(wb))
+>  		wb = NULL;
+> -	}
+
+Maybe filter out dying wbs right after the lookup and leave the mismatch
+block as-is?
+
+	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
+	if (wb && wb_dying(wb))
+		wb = NULL;
+	if (wb && wb->blkcg_css != blkcg_css) {
+		cgwb_kill(wb);
+		wb = NULL;
+	}
+
+> +		} else if (cgwb_dying(radix_tree_deref_slot_protected(slot,
+> +								      &cgwb_lock))) {
+> +			radix_tree_replace_slot(&bdi->cgwb_tree, slot, wb);
+> +			ret = 0;
+
+After the takeover, the old wb is out of foreign flushes' reach while its
+inodes may still be dirty. Kicking writeback on it would move them over to
+the new wb as they get written back. Can you add that as a separate patch
+when posting the next version?
+
+>  	radix_tree_for_each_slot(slot, &bdi->cgwb_tree, &iter, 0)
+> -		cgwb_kill(*slot);
+> +		if (!cgwb_dying(*slot))
+> +			cgwb_kill(*slot);
+
+Can you add {} around the loop body?
 
 Thanks.
 
---
+-- 
 tejun
