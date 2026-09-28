@@ -1,45 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A52A6380FCF;
-	Mon, 28 Sep 2026 18:44:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE79B3B774D;
+	Mon, 28 Sep 2026 19:19:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790621082; cv=none; b=GSpxl9UeUeE+afi1IJSA+MvCRXrrQgRvt0FVS+W09WxiVHHhuFPbxUwQpKs59ssbtej28Z4oFqmHiJHpIhfYgb4AYYa/s+RFWpIpNUXiLLZX6nO4+fFDV5udFC1bHcTmVB/JSCtJDoefSwqnhAiLM9Gv52r1H7+9KE9Bnjg302I=
+	t=1790623179; cv=none; b=FqtKiD4Sv0y9FHvPkmBnVeimWtS628M5NG6TBFkMSDLS5RUfAccEUpRgiXiy3V2yUNw1apscax4pxx2IBKFTifndcAPInkIZwBewOLDCdCt9c+ieYDoK3ZWlFy26MOj8qWb1pUQDfahCjPM4rngN25hnsZLmMFvTnE/C9osG5OQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790621082; c=relaxed/simple;
-	bh=RJ6Fq24d/7hGk0qZr2yJH3/pE7vmJFFF7o9EYI+0iBg=;
+	s=arc-20240116; t=1790623179; c=relaxed/simple;
+	bh=i2nati6hdcx1oxdgTVKEqHv+x+qm//MmCWTE2dPlONM=;
 	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nEw1I5x/M/xDaHSmzMWB24RDUfITeLb3EDQxEmLx+E51hReWNTyVpu9xt7MYGG7X4koAYbDsFud4Ee46mWAY1Vk57mfr800hAhx9t/H6R7nt4xisYtovJinlq/OxnWc1XOm21lMTfYB1/289qVh9QpLfGcc6q3N1OU3e+vl6TY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j5Tvij0b; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=OfGn0ERuSi6fYv4g4TTbNy4rcPQMa/O2y+am27vrhKjYNoP7J/z0OHA0X5Nn5lDY+vZ2j12IgQvfO/bTkGzpiJLIk1L42jGiyHuXTB4qFLvsQ8tCe/wFgd/HNFlHG5TKqil0f4i9eddNmA5V0Zj1XtkLLefyRluoIYxQKt2R+VY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WAYnUTXM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j5Tvij0b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 631821F000FF;
-	Mon, 28 Sep 2026 18:44:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WAYnUTXM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45BAA1F000FF;
+	Mon, 28 Sep 2026 19:19:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790621081;
-	bh=DcgMX0HJpEAJ3K/p/lHFYWlG8Zs8BJeb4wFz0L27lRM=;
+	s=k20260515; t=1790623178;
+	bh=3OTxVK/IdLEHqgZUY95Y42pkKEW+PjtSBC6ONnLsZ9Y=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=j5Tvij0bAOP9BdxKdep/dbLEs1KltE6l2kG7DAWf3xlrJd6tYTPJLAoMcVyb9yrQs
-	 2A2ifvrZ7249ViqHiNIcRNAecUci3p7hBcoAKmFyZAcNq9/mqFQ6GKPL3Z3qMx7Fe6
-	 p7P5gnibUkyqIBwYpUCyfC0zrjq5ryiEuy942amaVV07KOkI+Co8uiME2K8afWgze9
-	 VtRMOpVhSaYeWmU5edGMVWv02ZrNvO44Dfo9TSDtPGDqXvE5gjAS1j33t1F8J4FlpJ
-	 dt0J0BMHxp7hy9AJfyTiwsfO5Xl2gNDX0lBSEetpbIca/wEKNPrMOSX9C6zRmsaUc7
-	 j07U54Y1QfgUQ==
-Date: Mon, 28 Sep 2026 08:44:40 -1000
-Message-ID: <7f4c57b26ad120ab30adf35653f1dd94@kernel.org>
+	b=WAYnUTXMTXFJKySbFuqmzPeYKgqYlqqRd7oCs3fqws60PvxNF/9klFq7Oc0tur97v
+	 v2klAFQ0UtKjB23cHitm4X8qmLcY0tql6Sfay8DLht6bG41WBKFxrtPijuj5XzIKyW
+	 /RENMf0MhvCZ9/bNd/7Hx1ljqhzWXqJnaUN1Whoi1WK1/tJWt9JF4rWiswaTBi48Dg
+	 EbzImNa1nN+ucQhgWHRlTi0W0x8A6k1dQsXIM67gUPzMXzz75Yg0TfwpDSAqw87viy
+	 WUf82vC80QtmXOSQSNGU+hi75dVP8dHJ6WHuEq5Ix6PFeyY0nQ9kBSmTehgred27gu
+	 znOwWLZdQ1T7Q==
+Date: Mon, 28 Sep 2026 09:19:37 -1000
+Message-ID: <ee85445f60194cfbc78897cb6fe744c7@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long <longman@redhat.com>
-Cc: Ridong Chen <ridong.chen@linux.dev>,
+To: Liz Fong-Jones <lizf@honeycomb.io>
+Cc: Christian Brauner <brauner@kernel.org>,
+ Jan Kara <jack@suse.cz>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Jens Axboe <axboe@kernel.dk>,
+ Andrew Morton <akpm@linux-foundation.org>,
  Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Guopeng Zhang <zhangguopeng@kylinos.cn>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Xin Yin <yinxin.x@bytedance.com>,
+ linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org,
  cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] cgroup/cpuset: Invalidate remote partition on
- housekeeping conflict
-In-Reply-To: <20260927095722.70660-1-guopeng.zhang@linux.dev>
-References: <20260927095722.70660-1-guopeng.zhang@linux.dev>
+ linux-kernel@vger.kernel.org,
+ ian@honeycomb.io,
+ stable@vger.kernel.org
+Subject: Re: [PATCH] writeback: let foreign flushes reach dying cgwbs
+In-Reply-To: <20260926-wb-dying-cgwb-flush-v1-1-a8d898085a3a@honeycomb.io>
+References: <20260926-wb-dying-cgwb-flush-v1-1-a8d898085a3a@honeycomb.io>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -48,51 +56,32 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 
-Hello, Guopeng.
+Hello, Liz.
 
-The following is a Claude-generated review.
+On Sun, Sep 27, 2026 at 05:04:39AM +0000, Liz Fong-Jones wrote:
+> Fall back to searching bdi->wb_list, where killed wbs stay until they
+> are released. With commit 168a8c13159c ("writeback: size foreign
+> flushes by target wb dirty pages"), the flush is then sized from the
+> wb's own dirty pages and writes out what the replacement dirtied.
 
-On Sun, Sep 27, 2026 at 05:57:21PM +0800, Guopeng Zhang wrote:
-> +	bool updating = is_remote_partition(cs);
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return PERR_ACCESS;
-> +
-> +	if (!updating &&
-> +	    (!cpumask_intersects(excpus, cpu_active_mask) ||
-> +	     cpumask_subset(top_cpuset.effective_cpus, addcpus)))
-> +		return PERR_INVCPUS;
+Instead of walking bdi->wb_list, can't we update the lifetime rule so that
+a wb stays on bdi->cgwb_tree until it's actually released? That is, remove
+it from the tree in cgwb_release_workfn() instead of cgwb_kill() and have
+the creation paths skip dying wbs. cgroup_writeback_by_id() would then
+find the dying wb through the regular lookup.
 
-cs->remote_partition can be stale when remote_partition_enable() is
-called. If a root <-> isolated switch of a valid remote partition fails
-in update_prstate(), the partition is made invalid without
-remote_partition_disable(), so the flag stays set and its CPUs stay in
-subpartitions_cpus. A later enable then skips the PERR_INVCPUS checks.
-With isolcpus=domain,4:
+Note that the blkcg association check in wb_get_lookup() would have to
+move to the creation side. If io is enabled on the removed cgroup,
+cgroup_get_e_css() returns an ancestor's io css and a dying wb would never
+match.
 
-1. A is a member with cpuset.cpus 2-6 and cpuset.cpus.exclusive 2-4. B
-   has cpuset.cpus 2-4 and no cpuset.cpus.exclusive.
-2. "isolated" to B's cpuset.cpus.partition. B becomes a valid remote
-   partition with effective_xcpus 2-4.
-3. "root" to B's cpuset.cpus.partition fails with PERR_HKEEPING.
-   effective_xcpus is cleared but remote_partition stays set.
-4. 5-6 to A's cpuset.cpus.exclusive. B's excpus becomes empty, which
-   matches the cleared effective_xcpus, so update_cpumasks_hier() skips
-   B.
-5. "isolated" to B's cpuset.cpus.partition. This used to fail with
-   PERR_INVCPUS. Now B becomes a valid isolated partition with empty
-   effective_xcpus and the WARN_ON_ONCE() at the end of update_prstate()
-   triggers.
+> Fixes: d62241c7a406 ("writeback, memcg: Implement cgroup_writeback_by_id()")
+> Cc: stable@vger.kernel.org
 
-This is from reading the code, not reproduced. Maybe have the callers
-pass whether it's an enable or an update instead of deriving it from
-cs->remote_partition?
-
-The stale flag itself is a separate, pre-existing bug. Switching B back
-to member after step 3 trips the WARN_ON_ONCE(old_prs < 0) in
-partition_xcpus_del().
+I don't think this qualifies as a fix. Can you drop the Fixes: and stable
+tags?
 
 Thanks.
 
---
+-- 
 tejun
