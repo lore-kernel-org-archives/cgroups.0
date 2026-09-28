@@ -1,209 +1,179 @@
-Received: from mail-wr2-f27.google.com (mail-wr2-f27.google.com [74.125.225.91])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8826A28852E
-	for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 12:39:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.91
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790599147; cv=pass; b=WYAeaq72go4gUgpEUkf5jcd1vMGXd5XZAMJ9ii6ixNeocZ5IebAotUI5JtjKgA5+kDToONvPnp0+A+mgjr1Lqnrk3uvrXfic32QcYB48G3wg8Yv6VWoXcNivPu43NjIZ04YzgrsNs0IXP7HNNBPuCdDeIHS+814n/3k7jddfiA4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790599147; c=relaxed/simple;
-	bh=DR3g9bGNtZFpf0xFNaanuycRzVRv1O6/PdQwaVpb92k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Y8nVmKcpnYLR0Q5nd65vAI73GSIIaTIvcL2s/QseaXiVmFJaQ0ej2ebLFCBkqJ7kH/oAEj/YuPleNVBKU985MbCQU1yvCmf7Rv1Bvu5LXRoYWkFYFozi49xLpV4f3ZDM5kfsKLYxJFCGRmhxfjfY9yB+vVaGpgzV81Mo3TvCdJo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l7plmV5f; arc=pass smtp.client-ip=74.125.225.91
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36C503DC87B;
+	Mon, 28 Sep 2026 13:00:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.20
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790600435; cv=none; b=Gyckz3sC/n7suP5oDX2Vi9ThxQdjJzMc2tLnQDxnkd9PSBsnEKpElZGDP6Vrpc28MuzsnVDOipueqEXSk1KoDBGZcXBHODsP+FPQog4I9ZmTP7biyEdVMep+WTe6YguVvoQGOyIyKbluL69qLJqpGkBwfXhUiyXwjkFkC+WrGVU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790600435; c=relaxed/simple;
+	bh=0ji0m/7TpVUZJeEnAvLR1aKypQLulQY/QfB/5mfR66U=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=dCt0brk9Nz+kSSAFtn48CLoXpJL62e06FL/MNF3t5gT/LWzIPJffS7PFR0Amn66PgizA4i+xL5ByaPTExoEWAxr92K34QM3SO1N5hch3BiBFz2u5f38TgG3Ij54FnyppjIZtLRvBLJOmvN0yvdXsxdlltfORSXZS9s2FdDo9kCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b=fcFd6Mcs; arc=none smtp.client-ip=212.227.17.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l7plmV5f"
-Received: by mail-wr2-f27.google.com with SMTP id ffacd0b85a97d-4843796e373so1689368f8f.1
-        for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 05:39:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790599144; cv=none;
-        d=google.com; s=arc-20260327;
-        b=rlKF5ZGvjOaPZzuqrYc3+eM/y5dny85v8Bup7lLURdTaybG1M5laDWUTc3Uw5dFE2A
-         pSyGrghM2XWOZ55z15wDTRr690QTC8ZLFy1tfju85W7G2TbWJtRLLj45SE57jjhKN+zU
-         zJmhircFhZRnnWQAC5u/7K+1sPP9Mj83y4ByeMYFv1dIJaa+61K6otweDDcZr+3hmq7j
-         HFuhwvGJtbXjlfqd9qPe6vJJZ15wbQldCkoDTHjV7UNixZmTTNxEL23EfAvhB8IXMwKm
-         jE4igblMKcMSH4xnRRXBzA5XKQfol34/jj3FjpsuVGPaYDifWIIyDX2YPEQzH3Kc11L5
-         37Dg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=DR3g9bGNtZFpf0xFNaanuycRzVRv1O6/PdQwaVpb92k=;
-        fh=PrqzJ1NMIJudMSgJN0Vi9M6JXF6cUVd9/sIW+mI8jdY=;
-        b=R0JLoNbcMN2vitnTVB6dovLRUgonSEhRTdfatSd75/DpFLo/RF1kF2jWBbGlJ2G4gB
-         Yc48M7QfWEa+lOHkkQnyWFmCLcTAf/RZZglVewx1Iw/ZCZDa7lD2ggkTK+RbyAwiJgGX
-         UaW8cnwUuVso/EI2fSHIjugpjng6VR590qfveoEaUlfB7lX57UL+FIDz86hGbi/yjUUO
-         mTy6vl+YghBSi0sK7PE75vD0oMd5SilgvMHjIt5wMI8paukjKjLM8F8YEGSiqbzB3pme
-         kzlVrl0s1jTsXlH4WPaW6d7hYfIuAbCnJw350a4MpQF4bnBR5oUggM52THEKjt3JVDej
-         AwrA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790599144; x=1791203944; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=DR3g9bGNtZFpf0xFNaanuycRzVRv1O6/PdQwaVpb92k=;
-        b=l7plmV5fKwZ9PSQKJEmlTz0kRbxPB6UbjFGJL+ySee8T69iIeGtU+DxVeE79XGNqUy
-         LuWr46y/XOzOwedoDKBE9vgohQTOa27GeNAPPwhjt8Z1KegP1429TJiWLgPVfn+LhnIG
-         ZP+YJytIkWa7X22gV92qlzrXZb94bycTi293bnb8CoAJJbQOPQhozf6zrZa1a3PhE30A
-         YdrHppdyEwGzg1BP/rbdyf9Zl+PvS+/tl3sQIElvJBnfFCPPaw+O9kr3jwPH/AbdH84N
-         XEH5sE8E85ieHj6d5vJt+6jflRvUKbLLt0xB9v7+3AYrRyBJ73h64GCR3R4Mh05D4RGN
-         xhGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790599144; x=1791203944;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=DR3g9bGNtZFpf0xFNaanuycRzVRv1O6/PdQwaVpb92k=;
-        b=OXkTwxL1D8zJL+qvXGxVB5CJr8HGAr9y8LhytJGxdSHXauHFcjNkqS4XRoqeMyCYRo
-         aTTW/qKoqElFUn6nCme+NtHKC5efY1/bezQKUFUphc+GMc2ooZhPoGd1exj/8EEYF4SX
-         DDKtFK/WUWTwzAygfb2ONO8duNmiY1qynNWdKzSdWwYRX+1P6S7G5160EdHwEMUHmYoq
-         EoZojaB+ul3JhsXyiHP+z0diZ+lbi3t1LY3jNC5zw1BZn1DKYwXqw6lf3KaqWcwXTwdQ
-         Qp6CZ4T/E0C3zldA1qiFnYqLZ0lrJ+PQo0j0KgNr88TTEDYq492ZQt4tFZsurINDWQhA
-         OoGQ==
-X-Forwarded-Encrypted: i=1; AKwUvByTa6EyB5HAfnThtad7FzFx769N+if98ter+N5GXbJFUfCHsKS1HA6WPcls+q83W4+y2Sc626U0@vger.kernel.org
-X-Gm-Message-State: AFq9FYIxQvnR5DtjLvqUhdX5mSeFzO5ncBGhriqqEWyfYwtmwPZuOFYF
-	ZK0U37wcYwukgJCZtE3+cpQ3yYbIvDVvsgxVfoLuAgcXtpLjJf6fuuNhltmoGFj87zRuYDk+ny1
-	2rvK/L/sFvggWH2Ogykic66zQ9K2/C4Q=
-X-Gm-Gg: AYBFou3dM28EKUrqr3+b/Ou5N9ec29V9wC+1YI7Ivw3Z5VK8mieRNemdCuSo3q1DNNl
-	VUBasRTnk9pSdV8q9yLVGT2z4UmJr4E8BjzOYP94KvnPYwTIfa3AndW+wb4l/LN0TNwELZZyvqr
-	jqUmI+fJ6h2w3jwEIut1CJeQmjgsaVsiMciwJED2chisq0FGLOafbKqgCdJZbM1iiQIwML+Hpln
-	XDnNg4uiNXCNV3clXspBBd3jVm+F86fCBiKsEQ+dGA9nsUjiz0ds1dQJS7nr2X30av3pX6bAfCs
-	6GBAJm7VlNz2ssBUtOTTZU1lmPS03Y5i2+aSjkKsFYYI9u6hxbzhUGLQKv6tUn+yw8FeaBB98EY
-	04n23wRp49dBdR9Qzm4JUhVQFdyw=
-X-Received: by 2002:a5d:5850:0:b0:488:8132:1425 with SMTP id
- ffacd0b85a97d-48881321709mr15591817f8f.17.1790599143518; Mon, 28 Sep 2026
- 05:39:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b="fcFd6Mcs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
+	s=s31663417; t=1790600410; x=1791205210; i=efault@gmx.de;
+	bh=YAXNPyYicVcBhKqsD1VcCjlEC2QfNeAe0Jk7ZO+USv8=;
+	h=X-UI-Sender-Class:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:MIME-Version:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=fcFd6Mcsvn0HotrW1JbzaJipB2uaZe1IfncghthKkkAAqy/4iE4R0IM0zJyRQsfu
+	 Hd58+/cjh5rSRgJ6TtvH8LkMPM6zuS+wtegxIyp/BeYso9QRXcApDJ8fproG40Jnc
+	 ZxXBxA4VwADA2B4KE0ssm30IMHaNAYNY6DMLU2/BaraKsls8HkmbUvaa1b8fwA4Rh
+	 9t98xxRG1jtwvvAVSb5U0wpZ/vKm6pYv39gsCboXXYe52VN1dI9e/wbGiejg6++CH
+	 SU8Vx+mWboFGL08gS64IGbx9HNHyGq9NkVOTtOze6buW3Eo4+POti0tlLUFD463v0
+	 B+D/QAQ8HE/kcQb0KA==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from client.hidden.invalid by mail.gmx.net (mrgmx105
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1MVN6t-1xKhCv2HoN-00LaQL; Mon, 28
+ Sep 2026 15:00:10 +0200
+Message-ID: <4d4f5fdee4d1f462ba3490a6b3921006285e7fcc.camel@gmx.de>
+Subject: Re: [REGRESSION] [PATCH v3 7/7] sched/eevdf: Move to a single
+ runqueue
+From: Mike Galbraith <efault@gmx.de>
+To: Chen Yu <yu.c.chen@intel.com>, kprateek.nayak@amd.com
+Cc: Aishwarya Rambhadran <aishwarya.rambhadran@arm.com>, Peter Zijlstra	
+ <peterz@infradead.org>, mingo@kernel.org, longman@redhat.com, 
+	chenridong@huaweicloud.com, juri.lelli@redhat.com,
+ vincent.guittot@linaro.org, 	dietmar.eggemann@arm.com, rostedt@goodmis.org,
+ bsegall@google.com, mgorman@suse.de, 	vschneid@redhat.com, tj@kernel.org,
+ hannes@cmpxchg.org, mkoutny@suse.com, 	cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, jstultz@google.com, 	qyousef@layalina.io,
+ Ryan Roberts <ryan.roberts@arm.com>, chen.yu@linux.dev
+Date: Mon, 28 Sep 2026 15:00:04 +0200
+In-Reply-To: <arnbKNWNIIEcQ0a-@chenyu-dev>
+References: <20260605105513.354837583@infradead.org>
+	 <20260605124052.227463677@infradead.org>
+	 <bd81bbec-ee59-401a-bec6-116196ad3a34@arm.com>
+	 <arQCykkkCnADu5ek@chenyu-dev>
+	 <128e93ca1424630546e39f9e9c1377f8185f7644.camel@gmx.de>
+	 <arnbKNWNIIEcQ0a-@chenyu-dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <aqjpYHbZ14A8xRtK@fedora> <CACePvbUwTxcMPVK_1GAz5gPDdh0BV9JZSnKXaUFLqDHBzBmPQg@mail.gmail.com>
- <7ee199ddee81bf8026688def82f78ad9db09be9e.camel@surriel.com>
- <CACePvbVA+DnDJprMx3qOrGb98y1ORQ-LfaENy_Btfx3uW=E4eQ@mail.gmail.com>
- <f3ca71f1c561f28a341de0e5a1b3f24bd4da3201.camel@surriel.com>
- <CACePvbX5Oy98DygLZjC=Z03Lqb0nk50_OEKQCT9svbQOOwwDew@mail.gmail.com>
- <CAKEwX=Mv+tnL8K4rfPuof6mKaLQp=tqR_qjtKrtY0-5L85FLfw@mail.gmail.com>
- <CACePvbUF2QQMh_GiCNQn-RTmZNkkLWkmaHSYzdQwv2fupjNQiw@mail.gmail.com>
- <arUcil9kxUPiymXI@KASONG-MC4> <CAKEwX=PXRB35bUL1=O4Bgx9A7aD4izZZ3dcEcCuMBBhBrMv7fg@mail.gmail.com>
- <arbTTKE6nYWlNCLd@KASONG-MC4>
-In-Reply-To: <arbTTKE6nYWlNCLd@KASONG-MC4>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Mon, 28 Sep 2026 13:38:49 +0100
-X-Gm-Features: AclHuK-lq27s41PviCE5Zcm-NPp3FDhb-jdltfQx3nihLbWFQzzSVs0yJpd5MbI
-Message-ID: <CAKEwX=MPrgkJdzAc-xjuz57nC2Rd7MrVkFzvorBpn1kV600iXQ@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Kairui Song <ryncsn@gmail.com>
-Cc: Chris Li <chrisl@kernel.org>, Rik van Riel <riel@surriel.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Kairui Song <kasong@tencent.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, David Hildenbrand <david@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:KUUPpKNXiKaXxpr5TCfYnbGZgGReCwKZl8TJDsOn10FYsPmYo2E
+ 8avXXY8zGppimPpHwpm1Rlh8iig+/oaLZJENSS6MOjoLceMhKKz2YfWHQTphT9NyeuFxojf
+ lfzA5y3aur1vvww0FzBiUdbRBhKXhfol0/YGrDu/rhKffJ0E4LTTLfamT5X3Jy3Gu/x2DJc
+ J0q6ZfRhM+qQhmvesQ3tw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:68HU/8K76ik=;CEjxExAdS33Sh03NX1XGf+QbKYf
+ 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
+ KF8aGuZ2dXpIstTfsC113+nXWGmRo+5
 
-On Fri, Sep 25, 2026 at 9:26=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrot=
-e:
->
-> On Fri, Sep 25, 2026 at 09:54:25AM +0800, Nhat Pham wrote:
-> > On Fri, Sep 25, 2026 at 6:15=E2=80=AFAM Kairui Song <ryncsn@gmail.com> =
-wrote:
-> > >
-> > > On Tue, Sep 22, 2026 at 09:44:37PM +0100, Chris Li wrote:
-> > > > It seems you are talking about a different topic: the vswap chargin=
-g issue.
-> > > > There is a golden rule that we should follow: don't break existing
-> > > > users. At least with the same persistence, this rule should apply
-> > > > universally.
-> > > > In the swap tiers discussion, the UAPI was such a big deal that we
-> > > > couldn't implement new UAPI. On the other hand here we argue for
-> > > > liberally changing user-space visible behavior.
-> > > >
-> > > > BTW, I already shared that changing swap counter charging will brea=
-k
-> > > > our and others' existing deployments.
-> > >
-> > > Hi all
-> >
-> > Hi Kairui,
-> >
-> > Thank you for your thoughtful response! Lots of food for thought for me=
- :)
->
-> Hi Nhat, thanks for the reply!
->
-> > >
-> > > Just for reference. Maybe a seperate counter, tiering, is a better id=
-ea
-> > > than changing the swap counter?
-> >
-> > I think memory.swap.* is never meant to be used as the "offloaded
-> > footprint". It is incidentally correct, because of architectural
-> > limitations: zswap/swap cache/zero page usage leads to real
-> > consumption of real resources (physical swapfile).
->
-> It's not that "incidentally" I think? TGhe defination from the function
-> level seems pretty clear, folio_alloc_swap -> charge. A logical
-> limitation.
->
+On Mon, 2026-09-28 at 11:12 +0800, Chen Yu wrote:
+>=20
+> According to my test last week, stacking the waker and wakee on the same =
+CPU brings
+> a big improvement on my machine, iff the memory bandwidth is saturated. B=
+y comparison,
+> if the memory bandwidth is low, stacking the wakee on top of the waker ca=
+uses harm.
 
-I don't think so. It's just that until now, architecturally, physical
-swap is always required, regardless of the state a swapped out page is
-in (whether it's in swap cache, in zswap, or already wrriten out to
-disk). So folio_alloc_swap() gets you a physical swap slot, which you
-need to charge. That changes when a "swap slot" can now be virtual.
+Ditto CPU wise.  The impact of even modest waker/wakee concurrency is
+considerable.  For much of netperf, the post-wakeup tail becomes a CPU
+service latency injection for the wakee when unnecessarily stacked.=20
+While cache misses sting, those hurt.
 
-memcg folks can explain better than I can, but cgroupv2 is meant to
-isolate concrete physical resources, because physical resources are
-often limited/static, and can therefore be contended. As Johannes
-commented, that's sort of why memsw was not ported to cgroupv2 - it's
-not an actual "physical" resource, but rather just a logical quantity
-(that's useful to reason about). You can also find this quote in the
-documentation that explicitly spells out that cgroupv2 is meant for
-physical resources:
+As box approaches saturation, stacking of somewhat synchronous stuff
+becomes a better bet.  Aiming for having only waker's tail between
+wakee and CPU has decent chance of being a winner in a box full of
+wider obstacles.
 
-"For trusted jobs, on the other hand, a combined counter is not an
-intuitive userspace interface, and it flies in the face of the idea
-that cgroup controllers should account and limit specific physical
-resources. Swap space is a resource like all others in the system, and
-that=E2=80=99s why unified hierarchy allows distributing it separately."
-
-So I don't think memory.swap is meant to represent "offloaded
-footprint". I mean even in the current state, that conceptualization
-is already shaky - a page in swap cache is resident in memory. If you
-mincore() that page, it's reported as resident. It's not offloaded.
-But it's counted towards memory.swap because memory.swap tracks
-physical swap usage, and swap cache page, despite being resident,
-still occupies physical swap (until vswap is in the picture).
-
-A really good analogy would be virtual vs physical memory. Correct me
-if I'm wrong, but I believe we do not charge/limit virtual memory
-usage at the cgroup level (at least in v2)?
-
-I think it is fair to expose useful counters that users can monitor and act
-upon. We have a bunch of such counters (anon/file usage, thp usage,
-etc). But virtual swap usage is not a resource that can create
-contention or isolation issue independently of the backend it take. I
-don't think it should be handled/charged similar to (or together with)
-physical swap!
+	-Mike
