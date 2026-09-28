@@ -1,102 +1,95 @@
-Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EE0F502D52
-	for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 22:13:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CADFD502D5F;
+	Mon, 28 Sep 2026 22:39:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790633632; cv=none; b=Cru9VEvOUbbaRmPCUjmunHtpLtXahOGPjrN4Lhe1d9MT7StWR6rznjr8PiFYE+sOQtvF7XDYOL++DgRDmVoNq3iSWlqJIJMD+xgCHfx05CUPgGgpAeA1PQnV9xR3lht7jzz92u73ASyUCTLC0GbERhe1pUAve3Jv0rXroTNmaTs=
+	t=1790635160; cv=none; b=bFtArPcSJxod82WEM7ZNKQ1AVJfU3dfBMehOSjvHEZyXuo4Iqu93dngd4B+rp8FixFqtyv1te+w1QAupLmvwvOQwKgA06lRX2aLay9ktz1hwJs0rOEM3CchroL7E+LDpywKxeCqFsu0EndLP3M1x6Zz+bcZYvnxLyox4aAVtdz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790633632; c=relaxed/simple;
-	bh=LhPr/3N5CT4HP3diIFgEUTiiw9QHBmCdPdCTJgVnTTM=;
-	h=From:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
-	 To:Cc:Content-Type; b=tfxTRbjorx1AOy49xMoAGv/4fsYfHW4WzDWPGfG5yTNvZrNbdrEwVw4c4uWYPuIQZLnN8QCR8kqXBwm3OpZfcbkj3CcX9NTTMxUOdrVZa2k6nfol3Yuqrx/KApOk0vALbi6hNS+agDKktQopooQyg9ZJaAujG0xVfu0V75uQI6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=xMqpEhE5; arc=none smtp.client-ip=149.72.141.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
+	s=arc-20240116; t=1790635160; c=relaxed/simple;
+	bh=0DcTnoia+4xLSrCsg5TVEUmSrD1P5AixIs8yunT2mbo=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=Guzs/4CS5m2K2pWe6XFnoigxQbbLwlLrR3yHzXfVJbcEG7G8Fw5wwpNh7NxV+mLp/VJxjQQzMR6uJaGL6SmBJaOslAagNasBqzKaplNn6xG3Ck6rzjroRK7lheyXR5AqhA6xjGgUDzyTkeRussgIIxBpZUgBW72tQFbj3jIod2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nvC1M3Ic; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="xMqpEhE5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
-	h=from:subject:date:in-reply-to:references:mime-version:to:cc:
-	content-type:content-transfer-encoding:cc:content-type:date:from:subject:to;
-	s=s1; t=1790633630;
-	bh=LhPr/3N5CT4HP3diIFgEUTiiw9QHBmCdPdCTJgVnTTM=;
-	b=xMqpEhE5onvhmJUwCGRu0ueRhvnCyFfpSqVbzGhcC5+thgrQXTKMsshRzAxSO674H8GQ
-	DlhWReUDbIZyOL34PQpjyiggwg2v7AyUl2a5zK84bPO7nrhTfgB0r/LhRqDdPjBB+RzSmP
-	+G2Fl/768QVVZisel2lvZ8ypwMdx4SCKCIGuQBVIE9kRf7+UPNdGe1Yn3Hi3z7o1TD1xoW
-	/XIoZrKn+/35VQ0cc65Ydgv/UXJPEWHVC4ERWIw77M3EcayT7GBZES5x/ECUrFxPmpFZxh
-	gzGCHx2yocdZP5qWnKHUdh2O8WEkEWa1OF6R3l1b+i8vHbFeZ6ybaMlhcmtsiOMA==
-Received: by recvd-canary-7bc664d96-rr7cp with SMTP id recvd-canary-7bc664d96-rr7cp-1-6ABAE69E-A
-	2026-09-28 22:13:50.058278031 +0000 UTC m=+354514.976073350
-Received: from daisy.dens.ffj.family (unknown)
-	by geopod-ismtpd-13 (SG)
-	with ESMTP
-	id GsnC_o2GSBmkpLj7FchG8A
-	Mon, 28 Sep 2026 22:13:50.000 +0000 (UTC)
-From: Liz Fong-Jones <lizf@honeycomb.io>
-Subject: Re: [PATCH] writeback: let foreign flushes reach dying cgwbs
-Date: Mon, 28 Sep 2026 22:13:50 +0000 (UTC)
-Message-ID: <20260928221349.1443179-1-lizf@honeycomb.io>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <ee85445f60194cfbc78897cb6fe744c7@kernel.org>
-References: <20260926-wb-dying-cgwb-flush-v1-1-a8d898085a3a@honeycomb.io> <ee85445f60194cfbc78897cb6fe744c7@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nvC1M3Ic"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 771F01F000FF;
+	Mon, 28 Sep 2026 22:39:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790635158;
+	bh=0DcTnoia+4xLSrCsg5TVEUmSrD1P5AixIs8yunT2mbo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=nvC1M3IcvbjGKpuIeoOXjwdt4kNlIDUq7OoP/yr+feT3CCiUuC8a1GV8p+mbtQFYO
+	 uou5WRLU8eKJeRWvKfNvBVnhh9l9YHewiwmKYE9hO+wemXQwqTckvZL7vavzqysKiR
+	 hAXz/2Ae/xHx1xeUh2G7b4XmEAznKdHly1jHEJsIfbEXFjyldks0Gb4T5PTXtuyl7s
+	 ODG0CcrT1DXPcLfxo9c49uEJwD6X4E+KApLeD6JPvydwH/xbAYjbCdpRD87SnR/UC5
+	 l+Qi24UmRyohYuc7M2fxjf6gGbfQ4mFBtWVlOVSrOcNWupOfEigalg1zsY2rtg7XhH
+	 Fguwz6dSvzcPw==
+Date: Mon, 28 Sep 2026 12:39:17 -1000
+Message-ID: <e2ede7c4172c421c0894f1962fbe8517@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
+	Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	David Dai <david.dai@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Aaron Lu <ziqianlu@bytedance.com>,
+	Daniel Jordan <daniel.m.jordan@oracle.com>,
+	Hao Lee <haolee.swjtu@gmail.com>, kernel-team@meta.com,
+	cgroups@vger.kernel.org, bpf@vger.kernel.org, linux-mm@kvack.org,
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 0/7] cgroup: charge kernel work to the cgroup it is
+ done for
+In-Reply-To: <arWLq4p488JPhuZ1@linux.dev>
+References: <20260924184714.912181-1-shakeel.butt@linux.dev>
+ <befc0a9b9998db0292c9998c639a3a9f@kernel.org>
+ <arWLq4p488JPhuZ1@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-SG-EID: 
- =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
- =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeUC5kvTHBdlB?=
- =?us-ascii?Q?Y0OEXhZWKcE3XqZx=2F9VWoKqLYD00fyqtReTCMYv?=
- =?us-ascii?Q?qGuChLBBTQO4UfKoiNfWejExKSbUBMct5f6Op2a?=
- =?us-ascii?Q?L4iflnpRD5xlounm2jOrCKwOCzt+Fok+dX6Q5dF?=
- =?us-ascii?Q?0pqfH=2FmeZZqe2xyw0XNRxenifYyFeRmHlY64+M0?= =?us-ascii?Q?cF9D?=
-To: Tejun Heo <tj@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>,
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner
-	<hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
-	<shakeel.butt@linux.dev>, Xin Yin <yinxin.x@bytedance.com>,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ian@honeycomb.io, stable@vger.kernel.org
-X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 
-Hi Tejun,
+Hello, Shakeel.
 
-On Mon, Sep 28, 2026 at 09:19:37AM -1000, Tejun Heo wrote:
-> Instead of walking bdi->wb_list, can't we update the lifetime rule so that
-> a wb stays on bdi->cgwb_tree until it's actually released? That is, remove
-> it from the tree in cgwb_release_workfn() instead of cgwb_kill() and have
-> the creation paths skip dying wbs. cgroup_writeback_by_id() would then
-> find the dying wb through the regular lookup.
+On Thu, Sep 24, 2026 at 02:11:00PM -0700, Shakeel Butt wrote:
+> On the modern NICs where the workloads get their own rx queues, I think the
+> proposed mechanism can help to do the accurate accounting (I have to extend this
+> to softirqs as it is limited to kthreads atm) very easily.
 
-Yes, that's cleaner, thanks for the suggestion. Implemented in v2:
-https://lore.kernel.org/all/20260928-wb-dying-cgwb-flush-v2-1-56b54cda74f2@honeycomb.io/
+Rx steering is useful for partitioning the whole machine, but it doesn't
+seem like the right tool for attributing CPU cycles to each cgroup. It's
+cumbersome to set up and the granularity doesn't match. We aren't going
+to be steering net rx processing per cgroup.
 
-One edge case: a live memcg whose blkcg association changes needs a new
-wb in the same slot while the killed one is still there, so
-cgwb_create() takes over a dying wb's slot and cgwb_release_workfn()
-uses radix_tree_delete_item() to only remove a wb that still owns it.
-cgwb_bdi_unregister() skips dying wbs so they aren't killed twice.
+> If you don't mind, I think having solution for modern NICs i.e. dedicated rx
+> queues, should suffice for now (unless you want the solution for old NICs as
+> well). Let me know what you think.
 
-> Note that the blkcg association check in wb_get_lookup() would have to
-> move to the creation side.
+This doesn't have to be exact or completely synchronous. I don't see why
+net rx charging and reclaim CPU charging can't share the same mechanism,
+where the cycles are force charged to the cgroup after the fact.
 
-Done, along with a wb_tryget_live() for the creation paths, including
-wb_get_create_current().
+I don't think PSI needs to be involved either. Shared execution in
+itself shouldn't create pressure. The forced charge changes the cgroup's
+usage, and that usage then creates pressure in the cgroup. IO works the
+same way.
 
-> I don't think this qualifies as a fix. Can you drop the Fixes: and stable
-> tags?
+Thanks.
 
-Dropped in v2. I'd tagged it because foreign flushes can't reach the
-owning wb in exactly the case where its memcg has gone away, which
-looked like a bug in the original implementation. But we avoided it in
-userspace by syncing after the old container's last write, so agreed, it
-doesn't need to go to stable.
-
-Thanks,
-Liz
+--
+tejun
