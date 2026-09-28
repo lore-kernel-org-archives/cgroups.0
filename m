@@ -1,103 +1,115 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-226.mta0.migadu.com [91.218.175.226])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1086390C81;
-	Mon, 28 Sep 2026 06:24:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7E345FFD2
+	for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 07:47:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790576646; cv=none; b=dmH7tsWkrkgz0QYu1C1Bvm4h5uGQuM4OAbRfTZZ/DQ2bg+58/ymDomEc0BsH6n6T8H/YnklhYXmMJc2bHPUHbDcgPzggH+ld8TM0toOrdf1rFqIxlPjsHAUpFd4mZLMsGm9uTQ2r4C/yFCuZ3IjsUbshWd6lRAsrch4H5pAGYj0=
+	t=1790581626; cv=none; b=gKSD62dv0lGTpcBqr8QIcx0cq6xdX/1dE0TuS2B0Jks/oKmyz+HGGstYDLGJAzd7iDxRDlGcjJX2HR4ym28msyR+kyK/A39XZ9HJWIInRBNR8VQ7bgwgIbnu1zGqfUepz8PuSB5EPOmdqPbGS0mH9qX7sVSjXd4ciAKUOA+NZo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790576646; c=relaxed/simple;
-	bh=Z8hcR5Go5z5dVx+mFfXo4yccX9Q0+zJAOiaLnyrUtTQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LuK46Ds6W5AhlJ3d0b7GwAW/ckjDTc0+CAhTmIPtDdzmxoKAQsPUonC4QuG1wNwmqtfcaewZKVYagcv6JCaf/fdX8lPuw7O+qwzm2g8tnlg+S5yclCIhUa2nCOqRKgeq1vh+rxGETB3dr355KXxBUpI2v9Df+e5+HRz/7WidcbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=keukrEB2; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1790581626; c=relaxed/simple;
+	bh=0ZBxtusrkUwe3BRrbG7eDoQq7t2MC7aQDv03qnnAI5U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qIlRh9gB5Lu8QtPB+sErux/JJZ7utfi0Awn98scY+q41oGIfj6mBd1my8dHO68sgchHAB6pZegsSYoTpGAFJvltqoiyI17+UVqvuSofBFvhG9DqAT4+yMDJ96s5O1s2X4FCv4proHTPlR6xJYANh5FwCHvjgrOnCod1fY+GoW0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=K+V6s3D7; arc=none smtp.client-ip=91.218.175.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="keukrEB2"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=DR/hwaEZILg/9rvVDgZU74EvXnZO71agIm5YgCpk650=; b=keukrEB25vjEoqL/8zVNNWoGFM
-	2FBJRmD+w+My6XUr8jIFsV/2GBFZ2lG14Za7h23vhi1GJDZi9mMJtwcASd+HqE+mJ0ah8L66hc7a2
-	3HG8FJStZ8ItddZyxkLFDuerZh4rpvbjp1c1tGJPxKjpE4vdKHTtfjAVjF6/ffMIf4nMsWl+RYrmP
-	Sob/bxS39PhpKuYbIZThEFM2e9HyDBcLjN9dZQRNXoW6IBZ5BT5/AUvSsKnUvFbURriMxPPPd0P21
-	HOiTaTHd3KzuYOVj/wmFcvAK49SbIB3DqGqmi28XpaYDnZamfZNx8BgAoseyofHdpsGIvv/mnsAK5
-	Pog5nVMg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1xB4mQ-0000000HRoj-1T7I;
-	Mon, 28 Sep 2026 06:24:02 +0000
-Date: Sun, 27 Sep 2026 23:24:02 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Julian Sun <sunjunchao@bytedance.com>, linux-block@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, axboe@kernel.dk, hannes@cmpxchg.org,
-	mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, willy@infradead.org, tj@kernel.org,
-	akpm@linux-foundation.org, Boris Burkov <boris@bur.io>
-Subject: Re: [PATCH v9 1/3] block: introduce bdev_flush_by_dev()
-Message-ID: <aroIAqoCNDBPlB2A@infradead.org>
-References: <20260925064444.3944820-1-sunjunchao@bytedance.com>
- <20260925064444.3944820-2-sunjunchao@bytedance.com>
- <arYaMbJUh6unvz_t@infradead.org>
- <3w6vfwfkojmfqy2qs5j4q2s2366ajqiwmqf624lyn3odrv42v2@va2r7a6ngfz6>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="K+V6s3D7"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=0ZBxtusrkUwe3BRrbG7eDoQq7t2MC7aQDv03qnnAI5U=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790581620; v=1; x=1791186420;
+ b=K+V6s3D77VZfwYCDGVM9bjAeNvGmmaYgH2xT1Xb9hYM4fKfeZpwEnyeiQJ2HROQuMpfmIcg+
+ 9CVksi3sPD9sqZfl2nOx54SLReggTdIZ66mVG20Cj3qg3Hj61aVooxSHEE+Icvn2T7eyk7ewRVh
+ 7dzMCRoLRlod41RIq5wP9H0g=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 1589a60bc4c36ce2;
+	Mon, 28 Sep 2026 07:47:00 +0000
+X-Mizu-Trace-ID: 1589a60bc4c36ce2
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <4844cad2-5460-470c-a367-200a6a995ff1@linux.dev>
+Date: Mon, 28 Sep 2026 15:46:52 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3w6vfwfkojmfqy2qs5j4q2s2366ajqiwmqf624lyn3odrv42v2@va2r7a6ngfz6>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH-next v2 1/2] cgroup/cpuset: Run SCHED_DEADLINE shrink test
+ on valid partition root only
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Hui Peng <benquike@gmail.com>, Guopeng Zhang <guopeng.zhang@linux.dev>
+References: <20260927215319.382422-1-longman@redhat.com>
+ <20260927215319.382422-2-longman@redhat.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20260927215319.382422-2-longman@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Sep 25, 2026 at 12:34:52PM +0200, Jan Kara wrote:
-> On Thu 24-09-26 23:52:33, Christoph Hellwig wrote:
-> > On Fri, Sep 25, 2026 at 02:44:42PM +0800, Julian Sun wrote:
-> > > Add bdev_flush_by_dev() to submit page-cache writeback for a device
-> > > identified by dev_t without requiring callers to hold a persistent
-> > > device reference.
-> > 
-> > This isn't really a flush is it?  This is writeback.
+
+
+On 9/28/2026 5:53 AM, Waiman Long wrote:
+> Commit f82f80426f7a ("sched/deadline: Ensure that updates to exclusive
+> cpusets don't break AC") adds a check in validate_change() to make
+> sure that there is enough bandwidth for SCHED_DEADLINE tasks if we
+> shrink a v1 exclusive cpuset that has CS_CPU_EXCLUSIVE flag set.
 > 
-> So bdev_writeback_by_dev()? Fine by me.
-
-Yes.
-
-> Well, Julian is explaining that in the cover letter. We don't want memcgs
-> to hold bdev references just for foreign flush tracking. There's no easy
-> way to get rid of them so they could pin bdevs for a long time leading to
-> strange artifacts.
-
-I have to admit I didn't get it when flying over the cover letter.
-But this also really belongs into the patch where it is more obvious,
-or even better into code comments.
-
+> With the introduction of cpuset partition in cgroup v2, we keep setting
+> the CS_CPU_EXCLUSIVE flag for a partition root so that the SCHED_DEADLINE
+> check will continue to work as intended. However it turns out that the
+> current code isn't perfect and there are cases where a cpuset isn't
+> a valid partition root, but the exclusive flag is still incorrectly
+> set. This can leads to SCHED_DEADLINE check being incorrectly triggered
+> when there are deadline tasks in the system. This can result in unexpected
+> -EBUSY failure when making changes to cpuset control files. Fix that
+> by checking for a valid partition root for v2 and is_cpu_exclusive()
+> for v1. It is far easier and less cumbersome than to make sure that
+> the exclusive flag is only set for valid partition roots.
 > 
-> As you write, we could just hold a reference to the bdev inode. Those get
-> unhashed when the device dies (__del_gendisk()) so memcgs would be just
-> wasting some memory by holding these inodes alive. But still, transitioning
-> from inode to proper bdev reference verifying bdev is still alive will add
-> a bit of hairy code (essentially what blkdev_get_no_open() does plus
-> verification inode is still hashed). Plus when replacing foreign flush
-> entries you're under irqsafe xa_lock so doing iput() from there is kind of
-> a nogo.
+> Even though commit a86ce68078b2 ("cgroup/cpuset: Extract out
+> CS_CPU_EXCLUSIVE & CS_SCHED_LOAD_BALANCE handling") is marked as a
+> commit to be fixed, the problem may exist before that.
 > 
-> So I think tracking devices by dev_t is a good way of dealing with these
-> problems. But then when flushing you have to transition from dev_t to
-> struct block_device and blkdev_get_no_open() is the canonical way of doing
-> that (and note this use is just internal to block/bdev.c).
+> Fixes: a86ce68078b2 ("cgroup/cpuset: Extract out CS_CPU_EXCLUSIVE & CS_SCHED_LOAD_BALANCE handling")
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>   kernel/cgroup/cpuset.c | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 753aa65afcd7..104fe10c336d 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -771,8 +771,8 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+>   	 * For v1, effective_cpus == cpus_allowed & user_xcpus() returns
+>   	 * cpus_allowed.
+>   	 *
+> -	 * For v2, is_cpu_exclusive() & is_sched_load_balance() are true only
+> -	 * for non-isolated partition root. At this point, the target
+> +	 * For v2, is_partition_valid(cur) & is_sched_load_balance() are true
+> +	 * only for non-isolated partition root. At this point, the target
+>   	 * effective_cpus isn't computed yet. user_xcpus() is the best
+>   	 * approximation.
+>   	 *
+> @@ -781,7 +781,8 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+>   	 * becomes an issue.
+>   	 */
+>   	ret = -EBUSY;
+> -	if (is_cpu_exclusive(cur) && is_sched_load_balance(cur) &&
+> +	if ((is_partition_valid(cur) || (!cpuset_v2() && is_cpu_exclusive(cur))) &&
+> +	    is_sched_load_balance(cur) &&
+>   	    !cpuset_cpumask_can_shrink(cur->effective_cpus, user_xcpus(trial)))
+>   		goto out;
+>   
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Thanks.
+-- 
+Best regards
+Ridong
 
-I'd really prefer not to grow more blkdev_get_no_open users.
-
-But the more I look at this I wonder why we even bother.  Trying to
-attribute individual bits of dirty metadata to cgroups is pretty much
-insane.  Why don't we bypass memcg accounting for buffer_heads like we
-always did for the XFS buffer cache, and what btrfs switched to last
-year? See commit b55102826d7d ("btrfs: set AS_KERNEL_FILE on the
-btree_inode") for the btrfs side.
