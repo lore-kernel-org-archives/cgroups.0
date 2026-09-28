@@ -1,182 +1,114 @@
-Received: from mail-pj2-f31.google.com (mail-pj2-f31.google.com [74.125.227.159])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A044E73C6
-	for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 15:24:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.159
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7839041D108
+	for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 16:13:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790609090; cv=none; b=No7fpmioGYdOImMM6iYPjO83myMk7ACb9MWjurnhhpkCxBltyVJBpF0LDI0UPwbEAW0QszZCZQz/UAsoTs30o6NGKiuqKSj490TOQZTR6F0oklPhz40mbcxR0z3JFuAx/7nORy9fj2fnkzyIT5smlk+z1qiSuxjiSGawentJlHU=
+	t=1790611994; cv=none; b=aWXLKjX3hgp81xnfXhevaH2V+xmiEyo8FoVNPdyoLKHD/Brbnomtm6ZaDy+8OkK5RczhRkZw/Ds3y3nLEGhOW+oyaKBn8xwFVu1ccmCgb8Uxm/wSoUB2oWDQ2wnwduQZYD39YQcoXeWIEPWmZnDdyDXaC+EVJDLhWftsy4nexg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790609090; c=relaxed/simple;
-	bh=yxtx1EJ3OSLAngmQ5We+tQv0+fpWAPHQncr3wp30thY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KBinE4Nq9h4AKXthqStIuIrAKBw6i+g9t+UBv93NsJ/ZCrpxvnsuoqSOqTT5AXOfEnsxfUCBk3A9ywqX0IpO2twH9mQvFzfEE7zmR5k7AkdedW10oremtS4EORoLp7qey50K05TNVoKiXgXhSh+m9/0G3PJzHOtuxF05ZnR+rQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pn9ZdRYv; arc=none smtp.client-ip=74.125.227.159
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790611994; c=relaxed/simple;
+	bh=6gtprv+I7d5L3pBHaUUFHArfk9rtSviWLekbvSkYtZo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PaQCCjO1lHBKmPHlRFgYuu8lKCBbVYFSBvNq6RPOy/Bt9LiMe/ywBOG0oKqy+1xrnjHv+/198nGjX7WRxnU453+jemSJgXwV5Zz5M8ie76mYQof+gePnJRLdTPx5i/b/3RQTrWJ3cy29A8SSiUHiVg+UpEAuSP6DnLBgSXecXQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dOrcAdAo; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pn9ZdRYv"
-Received: by mail-pj2-f31.google.com with SMTP id d9443c01a7336-2dd53691be5so21540545ad.1
-        for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 08:24:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790609088; x=1791213888; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=C6Pp7UXENL802jIZX5zKHy4TP058XOOA4yzitIGnZCM=;
-        b=pn9ZdRYvlkN3EFcS92im4IWq4r9xRxvYrshv4Q1xuiS+F0Q6TInugqBpxE1cCJPEKi
-         RVnvKxFS1fBtxAP5dXGzfj1uRL/0XT/zYu7+dpWXL6cxBHyjc7qwQlhGgJyVuYtsd5Zm
-         T1z9Df90tFp8nafD49suOZVEHH3GaD7yr4IyMaP19h86GaIdOlDfE/FDPlGGEASfEkm5
-         t0QLxT1NgymuxSqRuD3XxyuCz5nnfAhOHQux10k+lL9Sd9I4/uwSmdIlwiOftk17if3l
-         AUe1qpcJPApLvztKFL4C343Ugtdx01iJQ4uHD3SlX9uzYFrBv3jRZIm2L9/Qvn7qpdD9
-         6FGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790609088; x=1791213888;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=C6Pp7UXENL802jIZX5zKHy4TP058XOOA4yzitIGnZCM=;
-        b=RhbyJOZr0gPTPBPNZrg8isTlIpSytDHMsjnD5rfgI+CwypT80tUci8ettN+ASsq3RO
-         X5m5WyNVShudY5nbPjCPHJ+90Z4ozCk20TNHPDqDzyESj5CT8xC6+1pY4y+JW3yh1Ok/
-         +rFSIs421HEFPvemZghf7qMe1Qp0v9bveyw77OJ7YC3AIqJbPaBEgArh4B+BV317dY1I
-         U7tPn11a4TeacMtA5ZNnAQCnQvncvjW25lhX+q0uXR1pz7jHl68tNaaSyxVI7bA9bPCA
-         69B7TfSjFEtGWhY4Xkr/YuuA+m4wP0RldsvpKHkZ+pFi4sE6UAlgQz0LurUqtfO5J6Nw
-         V60A==
-X-Forwarded-Encrypted: i=1; AKwUvBzN6is6Motii3+7VR+ffN346UH7kG6mF/u+GdcPVFyvi66sD1nwnhmu7grNLYMCVe2tD8ArjMe+@vger.kernel.org
-X-Gm-Message-State: AFq9FYKIzElYtS/KWAf3yy8jbrjt0IDMwKlXUat15+2l83pMIdwX/i3T
-	PfSJcj4NMJlvNJMvf8ignr8bTd/1X8GqbachbOKrhlYOKdjvDI4SoELi
-X-Gm-Gg: AYBFou2YMFoRtoAkEZrzTvwrLed+gqDKDZLWRJlNFROI1A/7+ECG9yWScte9N1ss1Pu
-	KC+u71ZBcbC05LdVEdPa7ndx83oejU0R5IDmhiyeEpT6VADIpKQFORB2RlhBDOv2p6cFTswTnYT
-	FR9jTLuRh4u2X4x14tFmsNNK8FKF9O9fBUbk/fgw8IQsPqA9KwbF/mliL3k93n9X3YBzg0yPDKO
-	jLkZ9vCbRyg1oxKio7CfLC1wSA8PhwuGdMEVXf64WH9q55Jk43vS3QBP8OEr1Y5GpyiX0IP/TSO
-	5m8EVYSPNPbme4ofE2Bhmy2BSMSpC/+f3aHqYbH+ST/Rpq9u9LgsQG2pVPenJttJLkjUVM0RIkW
-	A5wRidby5raSp9c7fi9fk8FhpgjwLR2KDSw5adUlZQSHIY1Yvm0/TCfAq5YCIEnTEIMuuhOPJlj
-	DIjIucpbLEYs2EHFCrOkyAZw+Hu+Citt+Yw0NIr80Vl5x0QmYMBFcUXNJHWrBqCohD+6bE/MZIf
-	LUUokJiMyOoO85Xk8xl9WKBirIRSJAIsgR4NII/YVg54v7Xt2rcK2CIDukJyKGFMBm96diuwvi+
-	7sl5GDv3E9YwlARKEj4+zPxfjQYTWwSdT9Hy74P0A32j28jOtCtR5tIc98s=
-X-Received: by 2002:a17:903:2408:b0:2dd:c100:9435 with SMTP id d9443c01a7336-2df94c1bc19mr71037265ad.51.1790609088305;
-        Mon, 28 Sep 2026 08:24:48 -0700 (PDT)
-Received: from spider.bream-herring.ts.net ([103.6.151.236])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2dfafe765cdsm25166465ad.33.2026.09.28.08.24.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 08:24:47 -0700 (PDT)
-From: Matthias Goergens <matthias.goergens@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	David Hildenbrand <david@kernel.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Yosry Ahmed <yosry@kernel.org>,
-	Youngjun Park <youngjun.park@lge.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-api@vger.kernel.org,
-	Alejandro Colomar <alx@kernel.org>,
-	linux-man@vger.kernel.org,
-	Karel Zak <kzak@redhat.com>,
-	util-linux@vger.kernel.org,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Vivi Rodrigo <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	intel-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	Rafael J Wysocki <rafael@kernel.org>,
-	Pavel Machek <pavel@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	linux-pm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Shuah Khan <shuah@kernel.org>,
-	linux-kselftest@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/4] mm/swap: reserve swap areas for deliberate offload
-Date: Mon, 28 Sep 2026 23:24:38 +0800
-Message-ID: <20260928152438.2694783-1-matthias.goergens@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <3FDF3191-94A5-42B3-A33E-12021344D7BD@amacapital.net>
-References: <20260926045517.3458413-1-matthias.goergens@gmail.com> <3FDF3191-94A5-42B3-A33E-12021344D7BD@amacapital.net>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dOrcAdAo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790611992;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3yjRvgCo71Q2/uVN+UiK3J2F/H+VV1qWlgtYqAluoao=;
+	b=dOrcAdAo9NrDjLcfO17x1D+t3DaJdwYddZoNQqIkDPcZ7CJxsoamPU5znNAgobBrpdd4kN
+	xHMh/RmxAXecnmz+v1B8xp7tYHO6/HPaCDUZV2fcg5y3nZ5nnmAGy6ejgsG2+xCCR/t81D
+	cb6oA4BSQhe35k3p10zZuVl9APj7oww=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-518-SzX7qyHtNEW_m7DoV7sE-w-1; Mon,
+ 28 Sep 2026 12:13:10 -0400
+X-MC-Unique: SzX7qyHtNEW_m7DoV7sE-w-1
+X-Mimecast-MFC-AGG-ID: SzX7qyHtNEW_m7DoV7sE-w_1790611986
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9889618DA5C8;
+	Mon, 28 Sep 2026 16:13:05 +0000 (UTC)
+Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 41E741956047;
+	Mon, 28 Sep 2026 16:13:02 +0000 (UTC)
+Message-ID: <7e8fa7ac-4438-4dea-b3e0-c142523aeab3@redhat.com>
+Date: Mon, 28 Sep 2026 12:13:02 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/3] cgroup/cpuset: prevent activating local partition
+ over remote one
+To: Ridong Chen <ridong.chen@linux.dev>, Hui Peng <benquike@gmail.com>,
+ Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: Shuah Khan <shuah@kernel.org>, Chen Ridong <chenridong@huawei.com>,
+ cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20260924042729.1908863-1-benquike@gmail.com>
+ <20260924042729.1908863-3-benquike@gmail.com>
+ <93e48fe3-d229-4870-af8a-32431d236211@linux.dev>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <93e48fe3-d229-4870-af8a-32431d236211@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Hi Andy,
+On 9/27/26 9:40 PM, Ridong Chen wrote:
+>
+>
+> On 9/24/2026 12:27 PM, Hui Peng wrote:
+>> Commit 6da580ec656a ("cgroup/cpuset: Don't allow creation of local
+>> partition over a remote one") added a check in update_prstate() to 
+>> reject
+>> creating a top-level local partition whose cs->exclusive_cpus intersects
+>> subpartitions_cpus.
+>>
+>> However, if a top-level cgroup A1 has a child A1/A2 enabled as a remote
+>> partition on a subset of its exclusive CPUs (X2-3 on A1, CX2-3:P2 on
+>> A1/A2), and A1 is then set to "root" (P1, becoming "root invalid" via
+>> update_prstate() because its exclusive CPUs intersect 
+>> subpartitions_cpus)
+>> followed by expanding its CPUs to include additional non-remote CPUs
+>> (CX1-3), update_cpumask() / update_exclusive_cpumask() calls
+>> validate_partition() without going through update_prstate(). Because
+>> validate_partition() does not check trialcs->exclusive_cpus against
+>> subpartitions_cpus, A1 transitions from "root invalid" to a valid local
+>> partition over the existing remote partition A1/A2 and triggers:
+>>
+>>    WARNING: kernel/cgroup/cpuset.c:1943 at 
+>> update_parent_effective_cpumask+0x189b/0x1fd0
+>>
+>> Check trialcs->exclusive_cpus against subpartitions_cpus in
+>> validate_partition() when !is_partition_valid(cs), and add a regression
+>> test case to tools/testing/selftests/cgroup/test_cpuset_prs.sh.
+>>
+>
+> Was this message assisted by an LLM?
+>
+> It would be helpful if you could provide the reproducer as I replied 
+> earlier, so that it can be understood more easily and tested.
 
-Thanks for reading it, and for the direct feedback.
+The provided test case for test-cpuset_prs.sh is supposed to be the 
+reproducer if you don't have deadline task running in the test system or 
+the kernel includes the last cpuset patch that I sent out.
 
-> if the system is under overall memory pressure, why do you care what
-> triggered the particular swap operation that is being processed?
+Cheers,
+Longman
 
-You're right, and that question gets at what I actually want better
-than the series does.  The goal is: when there is no memory pressure,
-swap-out may do more work, including allocating memory (compression,
-copy-on-write, filesystem-backed swap), because moving cold pages out
-to make room for page cache is what swap is for most of the time.
-Under real pressure, swap-out must not depend on that.
-
-The RFC was the smallest change I could think of in that direction.
-It used "who started the reclaim" as a stand-in for "is there
-pressure", and that is wrong both ways: memory.reclaim during global
-pressure may allocate, while kswapd with plenty of free memory may
-not.  Building on Kairui's suggestion in this thread (swap tiers), or
-on virtual swap, may well be the better route, and I'm looking at both
-for v3.
-
-> Why can't the kernel figure this out itself?
-
-It can: the backend knows whether its writes may allocate (zram knows
-it compresses, a filesystem knows at swapon whether the swapfile is
-copy-on-write or compressed), so it should declare that, rather than
-the administrator setting a flag.
-
-On the practical questions: v2 does nothing to balance fullness
-between areas or to empty conventional swap, and does not change OOM
-selection.  Those are fair gaps and I'll address them, or say
-explicitly what is out of scope, in v3.
-
-On the recursion question: within the reclaiming task it can't
-happen.  memory.reclaim and per-node reclaim both run with PF_MEMALLOC
-set (memalloc_noreclaim_save() in try_to_free_mem_cgroup_pages() and
-__node_reclaim()), so an allocation the backend makes in that task
-never enters direct reclaim; it either fails or, unless it passes
-__GFP_NOMEMALLOC, dips into the reserves.  Two things do need care.  A
-backend allocating there can drain the emergency reserves unless it
-passes __GFP_NOMEMALLOC or fails fast.  And work the backend hands to
-another thread, such as a filesystem or zvol worker, runs without
-PF_MEMALLOC and can enter reclaim itself; that is only safe if that
-reclaim never waits for the write the worker is meant to complete.
-
-> The remainder of the writeup is IMO somewhat incoherent.
-
-Agreed.  I cut the v1 cover letter down too far and lost the
-definitions it depended on.  v3's will start from the goal above and
-define its terms.
-
-> Adding "eligible" to a bunch of calls does nothing to explain what's
-> going on.
-
-It exists because v2 made "how much swap is free" depend on who asks.
-Reclaim itself checks free swap before scanning anonymous pages
-(can_reclaim_anon_pages(), MGLRU's get_swappiness()) and before
-allocating a slot (folio_alloc_swap()), and callers such as the GPU
-shrinkers check it before pushing objects towards swap.  With an
-offload-only area, each of those would otherwise count space that the
-calling reclaim may not use.  In v3 I'd keep get_nr_swap_pages()
-meaning "usable by ordinary reclaim", so those checks stay as they are
-and only the offload path asks for a different count.
-
-Thanks,
-Matthias
