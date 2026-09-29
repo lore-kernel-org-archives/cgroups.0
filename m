@@ -1,161 +1,210 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx2-f42.google.com (mail-yx2-f42.google.com [74.125.224.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F2DE3E7647
-	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 09:16:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81B9133EB01
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 11:49:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.170
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790673385; cv=fail; b=gbfiYgH9lYgBY9muesKy26YEKawdXTxlQl3DzA6k57nqsH48Fy8gBoqjjV3PwuEWyKUbYgp+EcujdnCbLG5UCxPrxF8jdW0icNJJADiEN7dzDkAtXDGd8COB92zgckU5uxLkQDz0anM+d/x4pDxJVAWRfackGe3osCyon2w579Q=
+	t=1790682586; cv=pass; b=d6VRhBKlRN7vvG8B8avoi5oOKgSur5fzOHai3ySEN+fdrRl6OXHRhv+hK51Tn54i3ikBZEbdsIxolxNnsHl4lFRUJqEHsFAuXTxT75+/GFAE9pfXoXPYv/XYKGw9HOWX94rz5NG8QVS4+1f+wGcFE+xvKMcf9naoS8Ne6Jppoyo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790673385; c=relaxed/simple;
-	bh=BNVccYi1LnLrZu/mffNsQ0VeGIIlEsAHZtAlQgUKSho=;
+	s=arc-20240116; t=1790682586; c=relaxed/simple;
+	bh=kgjy2BB8Nwb8PNLZfFsqLbfjDohsf0KQ3TZfyRHIEYc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iiZoez4U6Da8Xcp4FRxErwBQ0q6QNOLBrGNrgclHcXYhNZp1CDTsSC4MhNFR6H/OWXmv6oNxsOE/B5lAcnsT48WaSS8V4A8QEvjeB5KtLM7YgY6o0mbZf+p98oi96csMWKFQMvSfgDaHxNZKh4Bv5UlRg3HHY9WHFL8XRHJdEys=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=KWF2oOLW; arc=fail smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	 To:Cc:Content-Type; b=axOHBVZXSGMQiiK23k7EOpDPm/idBIYAT84yW36AzC4t3PG0bcCp2A3KpyBArqEiwS1VvMwcouAFXvd2/rbbg02XmYqO4ZFZV1cj/gFlmWVaNU29aM8wXSUTV6pH5Zo+yYno9Dl9PhvO1v7W/b++TtFaiUYBMI/ULfWH/jws/PU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GwhE5rIr; arc=pass smtp.client-ip=74.125.224.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="KWF2oOLW"
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-	by m0001303.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 68T7UV2w079583
-	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 02:16:16 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	pps82601-s2048-2026-q3; bh=UXOt0DR/qucJrjzcbWN633PqrJV6/4ZYqTTDG
-	6UnQU4=; b=KWF2oOLWZqV0qtVOV+RAoOj/bKInEHA2dCJiDhdsxUn/NCwq6IWJK
-	Tz9cgDhv3tNVxM3VJLUJOe4yxCcEK+JG2p7LZE30TQ6S+jz4iogQ/XPcGPCUoHpl
-	n2OZjxjDadiP4BLSbClNOosKwfwSyLfPFHvexb8nKGF1xK7HnOT/hpbdziidMu0V
-	eQXF2tvCjJaQ41VREWyRlkPJTDNG+C/OAxmLb/QCFg+CQzx5lSmaJozJIeLxDsN0
-	KEdLb0JNvn4tAmjuRaLLGTRdHr5jcwsnR4ZmzY89fKCoj2cdHLguRjp7XGPQw5D0
-	PTPMWHscS0t5Gai/UfjzDBFfpPbvpuoUA==
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com [209.85.218.71])
-	by m0001303.ppops.net (PPS) with ESMTPS id 4gx9q8ud2m-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 02:16:16 -0700 (PDT)
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-c29959eb71fso405352966b.1
-        for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 02:16:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790673375; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GwhE5rIr"
+Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-6729ca45e37so4173088d50.2
+        for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 04:49:44 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790682583; cv=none;
         d=google.com; s=arc-20260327;
-        b=c/D++4CivaD2bTifP6s8awUalwq0PURB2z0scgY355gipWNx/ARPlbJhyOhGc2K43+
-         IWyavCwXWPdH+vPOmlC+1OMVyU8YkC7/P5pIZrFF4yICPqqP7CDWYeoW1wTLC0r/i15Z
-         h6hXpVHOHMefl4Aj//4SRwdQ3K9gueWaVo+jm8LIX0IqwZtl8t4F8mMymRpqPN337HJw
-         Z3MUO8OX45kf2A76dyrqG4BlgpwqHcrP15Ikap6BR7HD8RXHMtEMCJ+ELPQy80D7nSvg
-         brwvgEL1CKSxyIpqAt2KlVMlLkC2lxHdPPrHvVtY//0fH9xNPLFSCyuqA5AbP8EpHoJs
-         gWXQ==
+        b=A6Ef8RohdT4a/J9NguqWWerSGe7iW5bO+mk13guoV0heahWfsvZn3xVToayiLAClNd
+         oLmyTtOBNvxoX2eVEsNSEsa6JjhAPd1VLuze24yJmqK0qSCKZdeAzUHRkZvSDoQ558Pj
+         66qnXqK9+SEQd89E8+Whmi0eBt4pBN20VyN22K28mn9vfC2hhp+iYNuCV4l3XHoVhgSe
+         mhiA9lcf/EWt9aimgi6N/RiZpn5U6OTmQrncau3uUqFDWS5UM4X5hUk38/kT624xaTPQ
+         j+GRzQgWplu8IFUBrPxUy0gGRspMNArebOghk7Ben5wtl2MUMTeZ6hhxfy38ecT72oTy
+         euGQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=RutqN0XzeZ2DQTMI7Gduqm3yztWbS2+NpNwUibf3R/c=;
-        fh=cTWQPT8k/AJv5P4pcp1e3Cay9M2Ilo5xT0adeSNnPLQ=;
-        b=RiGDFPf/kGQue5rVY1cyEZ/KxW/jRbegmlEgyIuB15SRU3p95NRb1jnFBbW7CUmSQj
-         hyzjBtIU/DCKLdg7rLN0uNCSbkRRLmRzPp8qIcJNQaLdJ4Q9n+KoX1LY7FYaJmWNeVvm
-         nofgUvfSkB3eRvJF9LvHhHetiE2t1WJ6NcRTY2XLtBo4emiPFG4eJnGcZqNlrKNmCNjR
-         Ytno1IDh81VqgMkkq4VhDwAFGll26bVYWrJ605/x5xnhq05RH8J3RjgILIN3YQtpTIzT
-         PBBGUx2B1gSUIdcnZFT1uC18O0M002OcsiarIMv6O4QEEkGG1FLNiRzGe2hEfSanOLgw
-         GvIw==;
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=PinsfWb5o3H1N8+JPrpcg6f6Oxc9ozJUPh0iCkDqvJw=;
+        fh=1xtYh4+JNnQKzTRCiqj3oksZjCGMJmfntHhMffRq2DE=;
+        b=my3CGKg7YM9708vBaygqwZTWqleuhKT6sg0C6h+oTl0ShIx+h1bdV0WtK4IzDFyO3U
+         vM8tYGYKchmeE8k6J3FJNlqoK3PuXx/MculJsZwY1REyjS1E1e2KKbm2GD+JrGG/OK9g
+         s/YQ4AnJzjsAWSfdwsJssJvsf88sEEl8XHvLV/7yWsWxOteowCmEiCtSzMMeOWzRvV4Q
+         E2VaoQ9NIZlPOzB7Wq1X7IscEA2N39psyy7CJ+WH3twwI740FfUZ9OSuPRQ6LZ2LNzkR
+         d4upf+sHd9YBadLKIgjzbalW4VCHpTN9bhwJzTyleRFwfrNisnA1LDlM75ZKE/rPpHhv
+         UzFQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790682583; x=1791287383; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=PinsfWb5o3H1N8+JPrpcg6f6Oxc9ozJUPh0iCkDqvJw=;
+        b=GwhE5rIrih0pY2UIXirrTWjpTlblATUKmmDYILdI35pc/2y7JVOR/hYrvlTxQV+10A
+         pCA5Ta12ibOETBKTEwhMjKjM8NCJJ/PqInEC721YWfO/BCM+hilBXJUTI5OxizkA2K+v
+         GuS0ibKZH6CtMb39fU4MBNlgRH8AxZWlHAloTlZZF22NyhU5wn9N5xKZ7SDD1u8vDBhm
+         zVq1/C5zayoM2IOhl7wBVBc5n7Q6LV6He53wTiCyugtTQgIB1Q+0UaTg+74+8GjaMppv
+         DYyl9SxXRcNJXoD3yd2/GUopP2MBEXEiflJs4DHtWlTmJ4zFQ4xNI0mZMYsg5AQ3C0be
+         dxHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790673375; x=1791278175;
+        d=1e100.net; s=20260707; t=1790682583; x=1791287383;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=RutqN0XzeZ2DQTMI7Gduqm3yztWbS2+NpNwUibf3R/c=;
-        b=I72t0tUhpGpboMhrIAeIkKthmdUdkJCRxFWQKt7uAftZhxX4iURD8XTeofgFR/IJSK
-         3KP70ajN6lLFyltfSQrjSWo0pLUwPqwxig6QWsyri+hxdwU266+Dn5YuLM+90fQ9KlT4
-         63rb9Z2J6zvxNyx81ZEEgpcE+xETdec6r+9cOak+UbPVKTy/DEG06KC1HstGQUiHPev3
-         tpxu3RsPKPqTMUZksPq3WNc0aAd5oGGCg2zMbo+j+DAr26qlyf6Q8O1zljVYdVFi3Yww
-         6/mTe2aRfVjkJmVAXV8JuzGi4UH12VMfutPgQ7wql8Ii6buNtgj47jd8/KRuKRU7uUUX
-         fM9g==
-X-Forwarded-Encrypted: i=1; AKwUvBxxbRTmYobvFAizj38P769Ked70TIeEji1aC78g+1PnS3niZ5dVs4YdYbAS8wWFnuj5WcZB04VV@vger.kernel.org
-X-Gm-Message-State: AFuF++kRl+rlzUfksMW4WVZBluaIqEPkUUnCKVWDFInz+PUwdDJrk7nd
-	IlDFWEU332vOJwIyYfKOjCboAMKpp0vdpMBRUzcY1Ls3RTbFrHwQ6ooNDn7YgXMudbFpwbyNKLa
-	DdBmdaly0rGM36+0Yb7vpixVr20hVSut3EMYVoDHEzNT5ujCYtVZq8Dj37fLC8KLZjDYVdKoI0g
-	VIqsGL9sGmA8ssRduinGVJK/yk81sbIzzl
-X-Gm-Gg: AYBFou2eXXK0bwdiAhZUxysc6Bdr62smKM43BxNZzpdat/juahWbtKrc3Qrpt1S2FJm
-	usOz6cTMSWkwePGBb7qie6C0EoD6BJguOC9KJqNO7Ow8IbT/VBuVQX2QSkrv2KyFGrfhDfq+hNM
-	35vnjv6DtMj3q0y6yEIZLbzIr/sMyr91ioSOjvWRUru64g02QcBvGkpxCkvKI/eL6CaWXd06H2C
-	uxpQ/L21kNPWBgXfQ==
-X-Received: by 2002:a17:907:6ea3:b0:c26:1649:47af with SMTP id a640c23a62f3a-c2ac53cb0afmr1291010966b.37.1790673375128;
-        Tue, 29 Sep 2026 02:16:15 -0700 (PDT)
-X-Received: by 2002:a17:907:6ea3:b0:c26:1649:47af with SMTP id
- a640c23a62f3a-c2ac53cb0afmr1291009966b.37.1790673374768; Tue, 29 Sep 2026
- 02:16:14 -0700 (PDT)
+        bh=PinsfWb5o3H1N8+JPrpcg6f6Oxc9ozJUPh0iCkDqvJw=;
+        b=FpvGKcetfpVoZrYfBiMFINhQ2/LIyptPnSPfq209ofFpjkrsZ+qDynTafkAKwLvSFD
+         PODPemdG9JOEDXBVGq3ybVZvQn6XacjCsJKd723woL+87D6pRPX/Pr0gCbY+q21Vjgjk
+         F+uwnuDGaX1FYog0sM6VcJpmlo0E+670Hn6oukRF5sn+h0Lzo77hBIGy1/qIVdG2a9Ev
+         2tD54zMJXRGJ6OAoDHzqCoWV6aDLKgAWamzDBLvfwVK5uPlQuOj5eGRLAb3eAGsVrI02
+         GMPJ1Ys0qLhC4Tnr3qTKZJ1NvIY1uLJb6MhcwASik2LO0tv5WDRWtN4YDwG77Ta+dYLT
+         4cQQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwSCxOIs7TLeRPwzybVBUlQ31xHrxmQj6kXVD2iv1R2iWft5NfZzhxPPH3InTsqkAXo8Mb91Qxh@vger.kernel.org
+X-Gm-Message-State: AFq9FYKMzpYFhn7wno0eS3kvWXPNSbDvdF5DEiWq8oVxLu2cPzmfKHBI
+	LqvWq3t59omiVFeszg8s1xR/cdBf4P0GbS5ig1XaaPRphrwzmJ6B1/BRLBVi5cTCjvblqGTR0os
+	8ye0qQQAdeySOKkufa7UO3thuRY6ADUo=
+X-Gm-Gg: AYBFou1AkmOs8C602FB1kgC+2OU10c70I8sa+y9ZCgqwJ0UMUpF7gOi5Fy0wKuJqDkb
+	o+vXa282pLU6zNL8D6MP365H8E9ieuoit8KP2FArshblVyzqFNXyhik8GOtxG0js0TCcrbZRhZV
+	/5jvVNfrWFjD5qYXTg5U3lvnH0xSJH50mIY/Ha1NnEGZ9Dlu27P9qZYXGXMXQifoBHvqQcXCQgQ
+	Z1q1C9dwjZBrDj6R26gr3cYV4OWHLVrN+rBGYBgRb3CO9tgKMf29eonOIsDFsj5jPWxzUHxWcX6
+	za0rjKIvwaR4UJgb9c2VQIhrKnPRdKKL9OH14GSD3dUJcGY8TfipEq/X3bJP2UvG/5kLpecCWYH
+	DRWIsON9tug==
+X-Received: by 2002:a05:690e:144e:b0:668:9230:e266 with SMTP id
+ 956f58d0204a3-674112442a9mr4372761d50.46.1790682583424; Tue, 29 Sep 2026
+ 04:49:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260928081900.4187482-1-alex@ghiti.fr> <20260928081900.4187482-2-alex@ghiti.fr>
- <aro28ZGuYgmNg_n5@infradead.org>
-In-Reply-To: <aro28ZGuYgmNg_n5@infradead.org>
-From: Alexandre Ghiti <alexghiti@meta.com>
-Date: Tue, 29 Sep 2026 11:16:03 +0200
-X-Gm-Features: AclHuK-D9BofbMEsWSFPaoMRP_iu1F-Wj4thWHCh7PID9jFqkf7sbSb8Hc_0i2s
-Message-ID: <CAEmasaX-6v_EpwAxHtnhA5SXk=jGW8+Lm4m8zAC=+f0yXmiCxw@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/4] block: do not issue background swap bios as root
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alexandre Ghiti <alex@ghiti.fr>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
-        david@kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
-        Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>,
-        Chengming Zhou <chengming.zhou@linux.dev>,
-        Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>, Chris Li <chrisl@kernel.org>,
-        Kairui Song <kasong@tencent.com>,
-        Kemeng Shi <shikemeng@huaweicloud.com>,
-        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
-        Youngjun Park <youngjun.park@lge.com>
+References: <20260921192559.2619635-1-shakeel.butt@linux.dev> <20260921192559.2619635-2-shakeel.butt@linux.dev>
+In-Reply-To: <20260921192559.2619635-2-shakeel.butt@linux.dev>
+From: Yafang Shao <laoar.shao@gmail.com>
+Date: Tue, 29 Sep 2026 19:49:02 +0800
+X-Gm-Features: AclHuK-nFEkgx8S0aZZQyW2aKsafwpBB_ccNYji7zHIK6DtT7XurPCTCqUpsYEY
+Message-ID: <CALOAHbAb_aKHNxKV3ecUW6ZxK3VR8XAwxD0vHiaZa__6e2pKwQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/4] bpf, cgroup: fix cgroup struct_ops query for a
+ second attach type
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Alexei Starovoitov <ast@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, Michal Koutny <mkoutny@suse.com>, 
+	Amery Hung <ameryhung@gmail.com>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
+	Yonghong Song <yonghong.song@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>, 
+	Jiri Olsa <jolsa@kernel.org>, Ihor Solodrai <ihor.solodrai@linux.dev>, 
+	John Fastabend <john.fastabend@gmail.com>, Jiayuan Chen <jiayuan.chen@linux.dev>, hui.zhu@linux.dev, 
+	Donet Tom <donettom@linux.ibm.com>, Greg Thelen <gthelen@google.com>, 
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, bpf@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-GUID: afv3Dx9nPe0kurVhMX8Wfp99YrRILCq3
-X-Authority-Analysis: v=2.4 cv=Oc0NnRTY c=1 sm=1 tr=0 ts=6abb81e0 cx=c_pps
- a=Ak8bExYEjeps3Jj0Zi+cTQ==:117 a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=_78whYxrdx1mplLwxq1U:22
- a=JfrnYn6hAAAA:8 a=gdocsb_8Clbhv9H3gegA:9 a=QEXdDO2ut3YA:10
- a=1CNFftbPRP8L7MoqJWF3:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI5MDAzNiBTYWx0ZWRfX6vW6i253/QST
- mxaB9I4czHeNjatD4lrQ2MiX+DGFoNhjhaAkMhI228tzYJH6HJdNrwd2W/da1aZRULwVPQ5Uf/t
- s9jqTA9QR4h5+DNbMgYOXC10jwdVntTiBLh9FMC8Gldcrf1T9XPkugkTUlnFQHUbJgtCCgsIa4F
- JWi9JokdCHmh+ihq5QDDPOkPgs/tXHfZ7yO1SMnMaMZ4AF9fImEk6bTrZ1GHlaY7iUxip3lPMYV
- A0weC1HL6zEuP6YdmJBGqNIVoqdbifsJvFVPA4tKp0h1TaCaBjGZYQBuCjvOBZc/RmwJImxaeI0
- fUFQwwyRmTH3DmqR2XM0+NLSfPHlHV1HnRRi33PuWYMElQZV1cJCKJmFGA3eXJumGVnKusnorQU
- 1cIB74aZ718hm4wVTWXywgcCkeWOigu5Xb3J733sF/m/6Tcw3EC/lF4prHuqP/Mp3V0OCKDxXWQ
- e591MhJpzAnvTXXuwAg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI5MDAzNiBTYWx0ZWRfX7zRzpe5jiLFM
- 6SYrBu4vi71Nqnp75znvSkftTIT74rtMGxbT6j2AIrHcEeJ7k2KDFi2s+5RhwMk5HECMsQY7WPX
- W5bBRGOr94lsFL0OAUzBS8jPRaj/Yz0=
-X-Proofpoint-ORIG-GUID: afv3Dx9nPe0kurVhMX8Wfp99YrRILCq3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-29_03,2026-09-21_02,2025-10-01_01
 
-Hi Christoph,
+On Tue, Sep 22, 2026 at 3:31=E2=80=AFAM Shakeel Butt <shakeel.butt@linux.de=
+v> wrote:
+>
+> Two things in __cgroup_bpf_query() work only because CGROUP_TCP_SOCK_OPS =
+is
+> the only one struct_ops attach type.
+>
+> It calls cgroup_bpf_enabled(atype) with an atype that
+> find_atype_by_struct_ops_id() works out at runtime.  That macro is an asm
+> goto and needs a constant.  Today the compiler can see there is only one
+> value; add a second type and the build breaks with "impossible constraint=
+ in
+> 'asm'".  Add cgroup_bpf_enabled_runtime(), which reads the key instead, a=
+nd
+> use it here.  This is a syscall path, so the cost does not matter.
+>
+> And find_atype_by_struct_ops_id() matches on type_id alone.  An attach ty=
+pe
+> whose subsystem is not built keeps type_id 0, so a query for type 0 finds=
+ it
+> and returns success with nothing instead of -ENOENT.  Skip such slots.
+>
+> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 
-On Mon, Sep 28, 2026 at 11:44=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
-rg> wrote:
+Acked-by: Yafang Shao <laoar.shao@gmail.com>
+
+Could you please send this fix separately from the series so it can
+land in bpf-next on its own?
+
+> ---
+>  include/linux/bpf-cgroup.h | 9 +++++++++
+>  kernel/bpf/cgroup.c        | 3 ++-
+>  2 files changed, 11 insertions(+), 1 deletion(-)
 >
-> >
-> On Mon, Sep 28, 2026 at 10:18:36AM +0200, Alexandre Ghiti wrote:
-> > bio_issue_as_root_blkg() issues every REQ_SWAP bio as root, bypassing
-> > the cgroup IO controllers, because reclaim cannot stall indefinitely on
-> > swap writes. Some swap writes are not urgent though: zswap writeback is
-> > best effort.
-> >
-> > Such a bio cannot simply drop REQ_SWAP: dm-crypt and dm-thin rely on it
-> > for limit_swap_bios, which caps in-flight swap bios to avoid a memory
-> > deadlock, see commit a666e5c05e7c ("dm: fix deadlock when swapping to
-> > encrypted device").
+> diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
+> index 8a75a6cd7309..3b2c127d401d 100644
+> --- a/include/linux/bpf-cgroup.h
+> +++ b/include/linux/bpf-cgroup.h
+> @@ -76,6 +76,14 @@ to_cgroup_bpf_attach_type(enum bpf_attach_type attach_=
+type)
 >
-> Is that true?  REQ_BACKGROUND very much implies the I/O can the throttled
-> and thus better not be foreground paging, and thus the caller should be
-> able to tolerate a failure.
+>  extern struct static_key_false cgroup_bpf_enabled_key[MAX_CGROUP_BPF_ATT=
+ACH_TYPE];
+>  #define cgroup_bpf_enabled(atype) static_branch_unlikely(&cgroup_bpf_ena=
+bled_key[atype])
+> +/*
+> + * Same test when @atype is not a constant.  cgroup_bpf_enabled() uses
+> + * static_branch_unlikely which creates jump-label site and requires sta=
+tically
+> + * selected key. Since key is selected dynamically, use static_key_enabl=
+ed here
+> + * and keep it off fast paths.
+> + */
+> +#define cgroup_bpf_enabled_runtime(atype) \
+> +       static_key_enabled(&cgroup_bpf_enabled_key[atype])
+>
+>  struct bpf_cgroup_storage_map;
+>
+> @@ -508,6 +516,7 @@ static inline int cgroup_bpf_struct_ops_attach(struct=
+ bpf_map *map,
+>  }
+>
+>  #define cgroup_bpf_enabled(atype) (0)
+> +#define cgroup_bpf_enabled_runtime(atype) (0)
+>  #define BPF_CGROUP_RUN_SA_PROG_LOCK(sk, uaddr, uaddrlen, atype, t_ctx) (=
+{ 0; })
+>  #define BPF_CGROUP_RUN_SA_PROG(sk, uaddr, uaddrlen, atype) ({ 0; })
+>  #define BPF_CGROUP_PRE_CONNECT_ENABLED(sk) (0)
+> diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
+> index 696b27383974..99b4e96f5db7 100644
+> --- a/kernel/bpf/cgroup.c
+> +++ b/kernel/bpf/cgroup.c
+> @@ -45,6 +45,7 @@ static enum cgroup_bpf_attach_type find_atype_by_struct=
+_ops_id(u32 type_id)
+>
+>         for (atype =3D 0; atype < MAX_CGROUP_BPF_ATTACH_TYPE; atype++) {
+>                 if (cgroup_bpf_is_struct_ops_atype(atype) &&
+> +                   cgroup_struct_ops[atype].type_id &&
+>                     cgroup_struct_ops[atype].type_id =3D=3D type_id)
+>                         return atype;
+>         }
+> @@ -1448,7 +1449,7 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, =
+const union bpf_attr *attr,
+>                         return -ENOENT;
+>                 from_atype =3D to_atype =3D atype;
+>                 flags =3D 0;
+> -               if (!cgroup_bpf_enabled(atype))
+> +               if (!cgroup_bpf_enabled_runtime(atype))
+>                         goto skip_count;
+>         } else if (type =3D=3D BPF_LSM_CGROUP) {
+>                 if (!effective_query && attr->query.prog_cnt &&
+> --
+> 2.53.0-Meta
+>
 >
 
-Yes, I agree, zswap writebacks are only best effort and in case of
-failure, the compressed entry still lives. I don't see how
-REQ_BACKGROUND could be an issue there?
+
+--=20
+Regards
+Yafang
