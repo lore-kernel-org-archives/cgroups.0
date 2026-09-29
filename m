@@ -1,48 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C3C51B18F;
-	Tue, 29 Sep 2026 16:27:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7532D3D9025;
+	Tue, 29 Sep 2026 16:42:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790699267; cv=none; b=pZ33on5YEw/T1br/D5GNg2aqDsKuOBeeM/db0X0NiHMZHyPGt7FCmyJ0Dg+cmal5N/8QBMatYPhM+NU8WCYZ5TbJPilLrBNLXUPvDibPAVxw6w1BsAqlRa56m8eWyHm+MOb3v8fo9sbodSpIZc6qmS/KgzUBsA/3a9GME9IYy/A=
+	t=1790700171; cv=none; b=MTrpSshMe3m2xKZXkfTrdyeGNuYrhOTwy5ZPXuOHhXA6kTt/6US7nSaZAnvyJqw0ZBU6iiw+gaBYvyJAWJQxaaTx3MXNFXKjfRFS9lj4+qlo6TExLYXYrppM727ufowk6Blc+EGza3rAJzP4U1jofRzoe1wQcNPfWHlcXU5X6xs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790699267; c=relaxed/simple;
-	bh=FToVisFcHGImeZQTI0lUkw0nqou7C9qIziIjjD3y+Rw=;
+	s=arc-20240116; t=1790700171; c=relaxed/simple;
+	bh=PJTmzlkWnb+w88GrJxMt3YvCO0j2DpPdLmhH+hCDH70=;
 	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y7xsRemAu9DWSzlARkV1EfH8Vu089pYIYnjsAArW+UbRvFuAjqLFmXt6NizGzHdqRoei8mDpCtmt9ALUwXiuLgqtMpoUUA6u5sdkggHRO5xrcO61eumqU5bNFOFvF2UPeMIsXMIyhP1V+KyNgeMHjhvEihX9Qp43gvWCgahasfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bCpQ48o/; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=fyMoiM5Dehgxpn0v5UAsEHP3jftuPOv+DCauaUiqx5cySORys12ICpJjvLQVEbZAvpr+BbA2hyt/U5NL6BM1IcP37O68h2LGcvQwf1eBdEO1eFDAIWc6NzZSuQDrEZfDi85gT4SNHNVLni/BorVYZHI9GPhh2tYoWnz0SzZjtbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g13IqXb+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bCpQ48o/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAEB01F00893;
-	Tue, 29 Sep 2026 16:27:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g13IqXb+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E25881F000FF;
+	Tue, 29 Sep 2026 16:42:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790699266;
-	bh=o0Zicd12ssGapXPbpFh0mo1gZMSR9A8dcAbcZMHgOb8=;
+	s=k20260515; t=1790700170;
+	bh=PJTmzlkWnb+w88GrJxMt3YvCO0j2DpPdLmhH+hCDH70=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=bCpQ48o/2PCA1BJxDW+3lH5GraekOEYVsFTTXKTroQoSuAWJA3P2LIRTQAtqf5PLK
-	 lCLByBMEG9FSS30LH1uMM3Nglgue5PKm2a5b1H4AQrDzh3Vv9b89Arv5aE5LUc4toa
-	 EACu2NXquzjy3NdhbYi2I9VMpQT/IEGpz81FyiNtR190W+UuEx6XkkpLpEIx0TBDd6
-	 IZVRRVgMawC2bVNGWMq26BRHPBNZLEYdDgFE/FK3n0d6ZCuhxc56bqHHLlCO3sOHoa
-	 4/sFqhyMVLI3CXBVk/B1mFFHTNkH1JfI2YSRThC1H9qCdFIYi33H0HczHalmJBFM3h
-	 H3uAG4IJfrr3Q==
-Date: Tue, 29 Sep 2026 06:27:45 -1000
-Message-ID: <aeb50cff4d3014a43ded85247a5786da@kernel.org>
+	b=g13IqXb+hBCDavcvf9ZB7xrzN9NTHXrTTPEe96CQ1AAlB6I4qYe/3gYwf6dstDXe4
+	 5CHjTAv7jBVyjszTne9boZ2F8MCPPHWY13+fALjG/JEhoIdRgFXr83twGlPd8tsGdr
+	 8LuwWC6XngVfIVdSdKIrSblXWKLVQmERcDf+BIIT/a9Xcpr3XFOz0F0jMzMHgfEtr6
+	 W7fWKDfrrhrX7+HbjiSz0iP/VggiA/Xld24WvDbiExL9JVqngiY3EQLUb/FB2V5iLj
+	 XVqDmqN627QRK58qN3QfwALmMCtzHbac+ZWAE+Dc0tScRdyXwpYYebTuLdpG2bYcuH
+	 iGFvro42V/Veg==
+Date: Tue, 29 Sep 2026 06:42:49 -1000
+Message-ID: <95e04dc55645c84c033ccca1a1359d84@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- bpf@vger.kernel.org, andrii@kernel.org, eddyz87@gmail.com, ast@kernel.org,
- daniel@iogearbox.net, linux-kselftest@vger.kernel.org,
- Tao Cui <cuitao@kylinos.cn>, ameryhung@gmail.com,
- alexei.starovoitov@gmail.com
-Subject: Re: [RFC PATCH v7 1/4] blk-iocost: add BPF struct_ops cost model
- support
-In-Reply-To: <daf428f7-d666-447f-9b6e-a77da4194e91@linux.dev>
-References: <20260924054549.2271705-1-cui.tao@linux.dev>
- <20260924054549.2271705-2-cui.tao@linux.dev>
- <4412563645504aa9a87d3cafd544c97c@kernel.org>
- <daf428f7-d666-447f-9b6e-a77da4194e91@linux.dev>
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long <longman@redhat.com>
+Cc: Ridong Chen <ridong.chen@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Hui Peng <benquike@gmail.com>,
+ cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] cgroup/cpuset: Properly disable partition when
+ partition state switching fails
+In-Reply-To: <5e658521-1d8f-47bd-87a2-809a79a10186@linux.dev>
+References: <20260928235159.515654-1-longman@redhat.com>
+ <941e5affde16b803741ddaf87b937f3d@kernel.org>
+ <07403332-9fc3-41cf-ba2c-63a1f83a231c@redhat.com>
+ <5e658521-1d8f-47bd-87a2-809a79a10186@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,33 +52,19 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
-Hello, Tao.
+Hello,
 
-On Tue, 29 Sep 2026 21:42:51 +0800, Tao Cui wrote:
-> That leaves one race: .unreg may observe a non-NULL ops->q before
-> ioc_rqos_exit() clears it, then block on rq_qos_mutex while the
-> ejection drops the last bdev reference.  This looks analogous to
-> hid_bpf's .unreg vs. destroy_device synchronization.
->
-> Does that seem acceptable here too, or would you rather have .unreg
-> own the final reference unconditionally?
+On Tue, Sep 29, 2026 at 03:40:27PM +0800, Guopeng Zhang wrote:
+> However, after the parent is created, the ownership of full housekeeping
+> CPUs can still change, so passing the check at creation time doesn't seem
+> to guarantee that returning CPUs later is still safe.
 
-No, there can't be a crash window like that. The underlying problem is
-that .unreg sleeps on a mutex inside a queue it holds no reference on. The
-model should still be ejected when the device goes away, but exactly when
-doesn't matter much as long as it happens in a reasonable amount of time.
-
-request_queues are RCU-freed, so maybe .unreg can rcu_dereference() ops->q
-and try to get a queue reference under rcu_read_lock()? blk_get_queue()
-fails on a dying queue, so this would need a tryget wrapper around
-q->refs. Holding its own reference, .unreg can then take rq_qos_mutex and
-test ops->q for NULL to tell whether removal already ejected the model.
-
-Also, when .unreg detaches, the device is still live and the BPF code may
-be running. Freezing and quiescing the queue covers the IO paths but not
-iocg_init() and iocg_free() called from ioc_pd_init() and ioc_pd_free(),
-so the iocg_free() walk and clearing the model need to be synchronized
-against those too.
+I think any CPU under an isolated partition should count as isolated when
+testing whether the system has a housekeeping CPU left, whether child
+partitions carved some out or not. Those CPUs go back to the isolated
+parent whenever the child partition is disabled or invalidated, so they
+can't be counted on for housekeeping. In your example, making C isolated
+would then fail.
 
 Thanks.
 
