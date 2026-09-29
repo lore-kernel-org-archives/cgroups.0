@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97AD037F756;
-	Tue, 29 Sep 2026 00:42:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC0F380FFB;
+	Tue, 29 Sep 2026 00:42:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790642544; cv=none; b=Hsebo1nBFrSaJwDfiLr2mGTllsYfz9kmX5l6MwJv04CS3Xoc5nO7qejrYZVwd4tyYzttrdynjqnfLhDxDLj2WfLPdDPNInLWgDZ1hClLtGgaxgJQEzfdX5HWvHrcHwUW04YXR7BGm4wJIAro1+lJyr8LTF5M3vA6gHLWbbHWsAI=
+	t=1790642544; cv=none; b=pSDHXvlY5i3oxySy9sG8AfMMvZlDEexqaOLdnxcLa85+YpqLZmTpmpX9RQ1YPVQS8ME5yYPmBHGSrW+drEAaD24YQqazxUqKhZ7Hgl24/HXwdyAW2DYiQ8AEhxiCOIGG3rtwfZg8WOAJTIDGVKuKLYhWhddvJpRhdnILZcLLuIw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790642544; c=relaxed/simple;
-	bh=iCOr47U1US0/MzlD0PEVg5YWbbJbDs9iH7rvb52PWbw=;
+	bh=uVIuYkzuaJw7Zz/Tbel3b5SvmDQDvfBFYtSORJpaNYk=;
 	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Hd8YJX+TaLKV8XPWtd9MAoygAax6ivBS3UaKoBYxw3a48HmnKI+97lvQZsMQlVBy33YJx/HwdenZX84QriP9pzsXDn4UkxfM1/7flMouBXqZoxS91TqpRKRjusbWgAl28wjznQuLbB0Hy6hMPUifNgIA7uYr5S3cuJtcCmndw6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=be7GGEM6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=MsRgl412fiL2oGQUX5c6V6I9tQMhWWQ7UyTzq4Z+Y6i+2bGXvnjZv+IXzi/jA/fm3aCb90vReVKSgtB7IsUKp5KlosafgPefenSwKSoliXA9Z6Yio3zia96WdyQsSNNs5M+HcMNvDVzUqrhQmk2qzkWQxgOTFokfl6gChrWRZpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=atSryl01; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="be7GGEM6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6FEE1F000FF;
-	Tue, 29 Sep 2026 00:42:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="atSryl01"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC9281F00893;
+	Tue, 29 Sep 2026 00:42:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790642542;
-	bh=iCOr47U1US0/MzlD0PEVg5YWbbJbDs9iH7rvb52PWbw=;
+	s=k20260515; t=1790642543;
+	bh=qabIyLDYNcn0aC6+7dBkZKy9dGM8JJT1KIakYgnj0aE=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=be7GGEM6Gl1Zuj3OlinDUbWLUmeCcdNKEx5toCqJYB9aeYM6dKP8qbqlORDsSE+j1
-	 tqwafD+QS8OOeuqL+FPqOWuyOTf49NTAl8jTgWKchv+yJxeETx+ErUBorIrk+35Upd
-	 bdz4qjUPFE2blHqILxrTOc4wAIbh7oBRMj7PS88twyB4/PAVpOqWfmRNFwDIhOpPCB
-	 oVCw+sypwR5/z8U5HZjOZgP6dvQIRtEUkmWI42/YKnubwR3/a4Vxw5LD+HDnEsyLpS
-	 IhEsviAFBPst6JTsMRzVRosD6h4iBGODO1dzRmew96dyv4v+NcqSHeCk/PkaDnCvkg
-	 KD911IalsgrXA==
-Date: Mon, 28 Sep 2026 14:42:21 -1000
-Message-ID: <6f80eca83c87b60398110c3a6d735aec@kernel.org>
+	b=atSryl01XT9URytke0ehPLuwP7MAb3sqC8jMzgCjlidKHHTexyN5sk1Tg4dX2KeW3
+	 CNfPTWu+coesdEa6qGQ/nSK5UfRImCcqA5bhv4nUmqIfjB+4XSHNu+2iaLjc7YPxUF
+	 YMUDfOmLXpGCot50FoXnGhrfgDtRATd3nORUxOcliHLiW17x6zWPl73cde5rrCR4f4
+	 lIYV+Xf7PjBZejPE0zRQ427uu4Ny7qn5zK9lHQf7UuCGBYDR6WW3puXh8g04Dzam9K
+	 aKBvxHjhv6ISMkhLORbZ5a9HzObbyibVLEI/pizpeIFf1GB2quKc2I/VBZfbO4GPGq
+	 qOH0w/jn077Nw==
+Date: Mon, 28 Sep 2026 14:42:22 -1000
+Message-ID: <4412563645504aa9a87d3cafd544c97c@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cui.tao@linux.dev>
 Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
@@ -36,9 +36,11 @@ Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
  daniel@iogearbox.net, linux-kselftest@vger.kernel.org,
  Tao Cui <cuitao@kylinos.cn>, ameryhung@gmail.com,
  alexei.starovoitov@gmail.com
-Subject: Re: [RFC PATCH v7 0/4] blk-iocost: BPF struct_ops cost model
-In-Reply-To: <20260924054549.2271705-1-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v7 1/4] blk-iocost: add BPF struct_ops cost model
+ support
+In-Reply-To: <20260924054549.2271705-2-cui.tao@linux.dev>
 References: <20260924054549.2271705-1-cui.tao@linux.dev>
+ <20260924054549.2271705-2-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,46 +52,52 @@ Content-Transfer-Encoding: 7bit
 
 Hello, Tao.
 
-On Thu, 24 Sep 2026 13:45:45 +0800, Tao Cui wrote:
+On Thu, 24 Sep 2026 13:45:46 +0800, Tao Cui wrote:
 
-> loading attaches the model to
-> that device and switches it away from the builtin linear model,
-> detaching the struct_ops restores the builtin model, and the
-> struct_ops core owns the program lifetime.
+> -	/* if user is overriding anything, maintain what was there */
+> -	if (ioc->user_qos_params || ioc->user_cost_model)
+> +	/* if user is overriding anything, maintain what was there; the
+> +	 * same while a BPF model is attached: the builtin coefficients
+> +	 * are inert then, so stepping the profile is pointless
+> +	 */
+> +	if (ioc->user_qos_params || ioc->user_cost_model
+> +#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
+> +	    || rcu_dereference_protected(ioc->model,
+> +					 lockdep_is_held(&ioc->lock))
+> +#endif
+> +	   )
 
-I don't think attaching should enable the controller. v7 currently turns
-it on without the queue freeze and quiesce that ioc_qos_write() goes
-through. Attaching can create the ioc if needed like an io.cost.model
-write does and switch the model under the same freeze and quiesce,
-leaving enabling to io.cost.qos.
+Can you add a helper which returns the model in use with a stub returning
+NULL for !CONFIG_BLK_CGROUP_IOCOST_BPF? That'd remove most of the #ifdefs
+including the one in this condition and the duplicated seq_printf() in
+ioc_cost_model_prfill().
 
-This is different from what I said on v1, where switching back to the
-builtin model detached the struct_ops, but with the controller state left
-to io.cost.qos it seems more consistent to keep the attachment independent
-too. Writing enable=0 or model=linear wouldn't detach the struct_ops,
-model=bpf would switch back to the attached model, and only detaching
-would remove it. This is the same as the linear coefficients, which are
-kept while the BPF model is in use and take effect again when switched
-back.
+> +		/* sub-page IO: nothing to transfer-price */
+> +		if (!pages)
+> +			return 0;
+> +		/* zero transfer cost is a legal model; guard the division */
+> +		if (!coeff)
+> +			return 0;
+> +		/* pages * coeff can wrap and dodge the clamp below */
+> +		if (coeff > VTIME_PER_SEC || pages > VTIME_PER_SEC / coeff)
+> +			return VTIME_PER_SEC;
+> +		return min(pages * coeff, VTIME_PER_SEC);
 
-> iocg_init()/iocg_free()
-> callbacks, invoked from the iocg policy init and free paths with
-> the same per (cgroup, device) lifetime, let models manage their own
-> per-cgroup state.
+This can just be pages * coeff like the builtin. An overflow only skews
+the met/missed accounting, same as a user-set linear coefficient, and it
+also gets rid of the 64-bit division.
 
-Existing cgroups don't get iocg_init() on attach and iocg_free() isn't
-delivered on detach, so init and free don't pair up. Can you call
-iocg_init() for all existing iocgs on attach and iocg_free() for the
-remaining ones on detach? That's what sched_ext does with
-ops.cgroup_init() and ops.cgroup_exit() on enable and disable.
+> +	bdevf = bdev_file_open_by_dev(new_decode_dev(ops->dev),
+> +				      BLK_OPEN_READ, NULL, NULL);
 
-> Writing "ctrl=bpf" or "model=bpf" is accepted as a no-op so a saved
-> configuration still parses; re-attaching the model requires loading
-> the struct_ops again, not writing to this file.
-
-ctrl keeps describing the coefficients and never reads back "bpf", so
-ctrl=bpf shouldn't be accepted. model=bpf should fail when no model is
-attached.
+When the disk goes away, the model should be ejected completely.
+ioc_rqos_exit() unbinds it but the open bdev file keeps the dead disk and
+the driver module pinned until the link is destroyed. Can you drop all
+device references on removal like hid_bpf_destroy_device() does and look
+up the device like blkg_conf_open_bdev() does, with blkdev_get_no_open()
+and disk_live() checked under rq_qos_mutex? The two attach issues bpf-ci
+reported, the missing re-attach check in .reg and the missing disk_live()
+check, are real.
 
 Thanks.
 
