@@ -1,131 +1,114 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-137.mta1.migadu.com [95.215.58.137])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05A7C3783C3;
-	Tue, 29 Sep 2026 02:07:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CA8B29D294
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 02:33:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.137
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790647640; cv=none; b=bZaqMH8U65um9LRoCGuvIlEgNTsz0TrhO2EIf9tZx6bsVS6He6/UUbb+8n3Pc0N75PaNhgD8wohZ/BmWeIj/3sMvAe5KrA9ue5J78e2V148Ch9y0B8/Z7+Wr/LnuG5p8Bsqqeq11hOoVOOxxVLKsZx0bQ6jWTBzavFEd8mPlUBI=
+	t=1790649204; cv=none; b=lnJVP7cVS2Vz0yvNi10IczndSU1NndPIGAB201drJBCmGvuGktSUQ1RL8QE1gHd5ZeZmQ53Uxry61BKwkShzePpRqmgFj83nKc1+GtWMMK23YHdMVynseArv3hNl3BXB2934VN8+Er+fYTuyLbHOSDiyMHw967p9Cb6kPNO9uGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790647640; c=relaxed/simple;
-	bh=aE96zJr67kH87ZzJpOUnfS7IQIJx8pXfv8T/Iq1xJcI=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ub6arHApYPORTZt5V0BYk9koIBcGNnOiYrcFDPxzEm6BFSKcHhyg7Hp4evNfpoMnnMepcMqBdKiKV9yJjfVFgODD5W8nP+EBT3LGX/qxfLswZGuPyxe8bsSQtbCXj0UODPQE/TLFfASauexG99mnY9ngqA2r1yBIycX1imoWg4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fOAnRJKg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790649204; c=relaxed/simple;
+	bh=Gu5yHS65dhVH/p46qgUJfWxS/h6ydn962EOVADsvkyY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FadDLNiDELALnLOdsO4mWtVO7dC0ndEkmInQ1IrUE/frvVXOOQfe3QLYd4xlaTyZWMXFlULt7yM8uyvowrc4Ls7H6Nxh+nW0S5hL66GZkUiQRQUX/BraAEQDdyo5YKlrvt1T5ZucsCn7B36t1Y/idVe0kMruTcRj9pVTfWiQBPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fhMtNgrz; arc=none smtp.client-ip=95.215.58.137
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fOAnRJKg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B35E1F000FF;
-	Tue, 29 Sep 2026 02:07:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790647638;
-	bh=0oFuEd6wtq46KTeuSqyE3yQTRsrXC8YYPEexGHBfeJE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=fOAnRJKg3WU49qaLOTHoQiboYV1kOch2/JcHCVX/IupmO10AfAU08bxE3//oXwS4/
-	 tnWJb07aq8bQQhvN8tZcB3XqOdSOQTYIjmCznTtUBXlqUYEpz8gDQC2r9LjjzqFgcL
-	 DO6EXz08yhbwfj/GWNgEMRW6aYLWubJHyB3vijyVSsD0GYUBjwzgIRaVBVszDUK84S
-	 0ulWCjoVXG0w8zmtBQYANpGeJMA+4WvBcworv5q1y9QQlAbxfOshilrrPceQ3/0aN+
-	 L+dvYZP4kxpRFxPq+Xcx++fplfzSu9a9IVWhva3tdwuJWhrpFFhmC7kzqg4bRXK0l9
-	 fpMwM/qJkpniA==
-Date: Mon, 28 Sep 2026 16:07:17 -1000
-Message-ID: <941e5affde16b803741ddaf87b937f3d@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Waiman Long <longman@redhat.com>
-Cc: Ridong Chen <ridong.chen@linux.dev>,
- Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Hui Peng <benquike@gmail.com>,
- Guopeng Zhang <guopeng.zhang@linux.dev>,
- cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cgroup/cpuset: Properly disable partition when
- partition state switching fails
-In-Reply-To: <20260928235159.515654-1-longman@redhat.com>
-References: <20260928235159.515654-1-longman@redhat.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fhMtNgrz"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Gu5yHS65dhVH/p46qgUJfWxS/h6ydn962EOVADsvkyY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790649200; v=1; x=1791254000;
+ b=fhMtNgrztPhrhALa3UUOGYYU5cmLasPfMC5j/JUL8Y2ptUuhthQDqmPfphB9CDzil6PUNtbJ
+ nhqTdY0lHe4WfUjMW34uPne028YPEVbUygPyc+XRO+PVu7dcJCfpw7f8UoAJazU8ZvVbzseO0vz
+ wZB2yX3BVm/UX/vr9p5x2xbc=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 060f2ea0ef6ca05a;
+	Tue, 29 Sep 2026 02:33:20 +0000
+X-Mizu-Trace-ID: 060f2ea0ef6ca05a
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <c4dcad59-bca3-406f-b726-74813bbcdfc2@linux.dev>
+Date: Tue, 29 Sep 2026 10:33:16 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] cgroup/cpuset: Invalidate remote partition on
+ housekeeping conflict
+To: Tejun Heo <tj@kernel.org>, Waiman Long <longman@redhat.com>
+Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner
+ <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260927095722.70660-1-guopeng.zhang@linux.dev>
+ <7f4c57b26ad120ab30adf35653f1dd94@kernel.org>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <7f4c57b26ad120ab30adf35653f1dd94@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello, Waiman.
 
-The following is a Claude-generated review.
 
-On Mon, Sep 28, 2026 at 07:51:59PM -0400, Waiman Long wrote:
-> Before commit 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full
-> don't leave any housekeeping"), the partition state can be freely switched
-> from "root" to "isolated" and vice versa. After that commit, the switch
-> from "root" to "isolated" can fail if it exhausts all the housekeeping
-> CPUs. Later on, the switch from "isolated" to "root" can also fail if
-> some of the partition CPUs are boot-time isolated by "isolcpus".
+在 2026/9/29 02:44, Tejun Heo 写道:
+Hi，Tejun
 
-The isolated -> root failure came from b1034a690129 ("cgroup/cpuset:
-Ensure domain isolated CPUs stay in root or isolated partition"). Maybe
-add a Fixes: tag for it too?
+> Hello, Guopeng.
+> 
+> The following is a Claude-generated review.
+> 
+> On Sun, Sep 27, 2026 at 05:57:21PM +0800, Guopeng Zhang wrote:
+>> +	bool updating = is_remote_partition(cs);
+>> +
+>> +	if (!capable(CAP_SYS_ADMIN))
+>> +		return PERR_ACCESS;
+>> +
+>> +	if (!updating &&
+>> +	    (!cpumask_intersects(excpus, cpu_active_mask) ||
+>> +	     cpumask_subset(top_cpuset.effective_cpus, addcpus)))
+>> +		return PERR_INVCPUS;
+> 
+> cs->remote_partition can be stale when remote_partition_enable() is
+> called. If a root <-> isolated switch of a valid remote partition fails
+> in update_prstate(), the partition is made invalid without
+> remote_partition_disable(), so the flag stays set and its CPUs stay in
+> subpartitions_cpus. A later enable then skips the PERR_INVCPUS checks.
+> With isolcpus=domain,4:
+> 
+> 1. A is a member with cpuset.cpus 2-6 and cpuset.cpus.exclusive 2-4. B
+>    has cpuset.cpus 2-4 and no cpuset.cpus.exclusive.
+> 2. "isolated" to B's cpuset.cpus.partition. B becomes a valid remote
+>    partition with effective_xcpus 2-4.
+> 3. "root" to B's cpuset.cpus.partition fails with PERR_HKEEPING.
+>    effective_xcpus is cleared but remote_partition stays set.
+> 4. 5-6 to A's cpuset.cpus.exclusive. B's excpus becomes empty, which
+>    matches the cleared effective_xcpus, so update_cpumasks_hier() skips
+>    B.
+> 5. "isolated" to B's cpuset.cpus.partition. This used to fail with
+>    PERR_INVCPUS. Now B becomes a valid isolated partition with empty
+>    effective_xcpus and the WARN_ON_ONCE() at the end of update_prstate()
+>    triggers.
+> 
+> This is from reading the code, not reproduced. Maybe have the callers
+> pass whether it's an enable or an update instead of deriving it from
+> cs->remote_partition?
 
-> The partition is made invalid when the switch fails. However, the
-> remote_partition flag for a remote partition can remain set and the CPUs
-> from the invalidated partition aren't cleared from subpartitions_cpus.
-> Fix this by properly disable the partition in this case.
+You're right. I'll fix it in v3.
 
-The reproducer below is a local partition and the fix covers that case
-too. The CPUs weren't given back to the parent, which is what leaves them
-in subpartitions_cpus and isolated_cpus in the example. Maybe describe
-both? Also, "properly disable" -> "disabling".
+Thanks,
+Guopeng
+> 
+> The stale flag itself is a separate, pre-existing bug. Switching B back
+> to member after step 3 trips the WARN_ON_ONCE(old_prs < 0) in
+> partition_xcpus_del().
+> 
+> Thanks.
+> 
+> --
+> tejun
 
-> In the case of remote_partition flag, it should be cleared for a
-> invalidated remote partition. To be safe, the reset_partition_data() is
-> now enhanced to always clear the remote_partition flag. So there is no
-> need to explicitly clear remote_partition in remote_partition_disable().
-
-After the update_prstate() change, every path that invalidates a remote
-partition goes through remote_partition_disable(), so the other
-reset_partition_data() callers never see the flag set. If one did,
-clearing only the flag would leave its CPUs in subpartitions_cpus and turn
-the WARN_ON_ONCE() in partition_xcpus_del() into a silent leak. Maybe drop
-this part?
-
-> On a x86 test system with boot option "isolcpus=10 cgroup_debug" set
-> and more than 16 cores, the following commands was executed after boot.
-
-"a x86" -> "an x86", "commands was" -> "commands were".
-
-> @@ -2946,27 +2947,32 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  		 */
->  		if (((new_prs == PRS_ISOLATED) &&
->  		     !isolated_cpus_can_update(cs->effective_xcpus, NULL)) ||
-> -		    prstate_housekeeping_conflict(new_prs, cs->effective_xcpus))
-> +		    prstate_housekeeping_conflict(new_prs, cs->effective_xcpus)) {
->  			err = PERR_HKEEPING;
-> -		else
-> +			disable_partition = true;
-
-If a root -> isolated switch fails isolated_cpus_can_update() under an
-isolated parent, partcmd_disable hands the CPUs back to the parent and
-partition_xcpus_del() adds them to isolated_cpus, which is the state the
-check just rejected. Switching to member ends up in the same place, so
-this may be fine as is.
-
-> +	}
-> +out:
-> +	if (disable_partition) {
-
-The early goto out paths never need the disable. Maybe put this block
-before out: instead?
-
-Also, update_cpumasks_hier() below gets force only when switching to
-member, to update effective_xcpus. Now that the failure path disables the
-partition too, should it pass disable_partition?
-
-Separately, a partition invalidated with PERR_HKEEPING can become valid
-again through partcmd_update without newmask (hotplug, or
-update_cpumasks_hier() from an ancestor), which doesn't check
-housekeeping. A failed member -> root enable has the same problem, so it
-isn't from this patch.
-
-Thanks.
-
---
-tejun
