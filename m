@@ -1,187 +1,279 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010031.outbound.protection.outlook.com [52.101.61.31])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f43.google.com (mail-pj2-f43.google.com [74.125.227.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 683D0388E4B;
-	Tue, 29 Sep 2026 19:58:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.31
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790711905; cv=fail; b=a9XlQUGE1nWTM2ZgIVGJmByP1G6vofrqRagLVuMQBnEpKYa7XcQ6nOCIz36do+gc4fKvjUvgjwb6BKMg+j/GaNr0tsJkkU9Yr60hJ3mRcs3hio6B5GomOOGaHt/FIr+V0hjaXuTDGGzitwBqPgIZ76/rX1Dv7Z2lAs6WmrPGhn0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790711905; c=relaxed/simple;
-	bh=V4of4D2m7ccw84UWZQo7kI1tzk4ybtpPqdWrWpsYTIk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=QdznclvlynmEXIANAW2bfwBgus4ZsQOZBLbuHvOfY4/awluCR9Jjl+knsb6az+zvfJkd6IbOhuBYgnawzbjOti+XfEl/sTC8w4uzPFcVXn10vJ10N/1SYQ2ygDxW2drRP5YoH8BQ7E6ROnoDoOL0WgTHleZs8xe6ACwGcBj4zBo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=fail (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=qohFHI2z reason="signature verification failed"; arc=fail smtp.client-ip=52.101.61.31
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA3AB4C4F62
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 23:24:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790724258; cv=none; b=jFXY97JnB4DTrx36QwLB+NYXQa5qxxKR0lgz0mOdazyL0N07lGR/YMymuZciId0BNcCIxQYh+0nKrMhwR2U3CUm0OM+AjWMf5UKy58CHshlDHjjn2LByKt302pMmFBEUckifxYrCe1bh3Hc3npxtAfg8tbkJhuz37CTS4YAIj4k=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790724258; c=relaxed/simple;
+	bh=l+ODbziUsCsodJP0tJtfa6YvEYqHs3zu/ydWE/aLqaM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qXLe7K+6/ZpetC8huEOUkZ8GEPZt7ErOp5cyPX/DMujw2B9DhmS8aIu8mBbcbAdPbblp2CqvUb59zRW9wAOtiaAhvG8vuXh6Mq13y7aUwpchMWKCyQeWpr70lorFJK1JybWWR0RtbD1WWUQ9srqbwqrB2fBO5Wa2JrWSUmwoYlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qRZ3p9eS; arc=none smtp.client-ip=74.125.227.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="qohFHI2z"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=p81PlFX8bW5PWQ0l8QQFFri/Seq3KvrdSQWpmeLInpkh+GghVkf2OAY6H8Jp8yzQ9HtMiALrQBh9OyXOFShkDF0fNUhgz6GjYGqJ3CXbImGSfV40iqGOcOnz2jqImDDVwCHs1gr2dSF1ZyWwfQ0O7l+sAqjbHH6eflRtxfHjFeeWowoLfvjvncIx2VElm6S709yAECtWugtLgHQ+YVTWwkQ094RAutzYAETCChmmlN6oZyY+gjzL4qSaNvItCul+MvbG9KRJWUNp5uz4GwptWjxf++6LlV2Mdro8CDKJmzR38mq5rmbganBJy79hM9czKYzjfZgRYJDPorRl3CunFg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nEC3+2Cs0OE2kwwP9J49EtCcb5k1dFvJNJucQiOUvdk=;
- b=gnwp/Xp83s93ihsCIzBvhDksKH7bZ2YIWW/YdCtFZurpsINFiAe0gFKgyP9yPUywNQtQ5PtqYoNCgmQiZ3Gz1zSKbusR7hL/KzrT/6lUkkJ2dMhTCQd1ECZv8LBuSG9aN+1jaLG089JnFbEAMwynE8sNHppL9ph+yoTkRTZ0szr+fI3opN8aciYZzXJUmN4qW+H2wOnr4Mr+tE/mxZZuUqBOWN8BKoo2m3u38/KQJg5sa2DxMDiONCndJ5NNJoVvvQUCsOgR4C6oR/eQ8h612lHa+trbt1Eqv2fYh6cx/OxPnGlv1P2FxQIuQbpfNhNGL4cVYHNvW5uR5w8Gki0pBQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nEC3+2Cs0OE2kwwP9J49EtCcb5k1dFvJNJucQiOUvdk=;
- b=qohFHI2zqtvOlOVlsg6Cwnc6N/NH5KgFhvaBL4moxRnHQFsCDlgNjIbKVSVqKxhvnUhJoGU5KaRXeAqJ72u2TiUbwUtJFZFbPX5GPf/O+69ma8HDxLIccc7537aFU7Mu1VLTwlM9DBKp3eeWYSC3TqXSVlenpg/ckvn1SjXfUt4IBnGuLdlAIIdwIMjLo+dKjDaR5NHnTtUqVjpj1/9xSRKy3NXr47/7D6pkyjPgXjvQed28LbQ5zS4LpTkwl0JZQWAvrR5krh3NEbe3y1dRYDUKbZkHYHNRbNI6IKb41USNanPBa+9Qcz+RyUn0KtyPU7LvnKwKTN2jrQBrI3kVBw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DM6PR12MB4827.namprd12.prod.outlook.com (2603:10b6:5:1d6::14)
- by DM4PR12MB8498.namprd12.prod.outlook.com (2603:10b6:8:183::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.24; Tue, 29 Sep
- 2026 19:57:48 +0000
-Received: from DM6PR12MB4827.namprd12.prod.outlook.com
- ([fe80::6261:3040:864b:159c]) by DM6PR12MB4827.namprd12.prod.outlook.com
- ([fe80::6261:3040:864b:159c%6]) with mapi id 15.21.0451.022; Tue, 29 Sep 2026
- 19:57:48 +0000
-Date: Tue, 29 Sep 2026 21:57:38 +0200
-From: Andrea Righi <arighi@nvidia.com>
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, David Vernet <void@manifault.com>,
-	Changwoo Min <changwoo@igalia.com>,
-	Waiman Long <longman@redhat.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>, sched-ext@lists.linux.dev,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 1/3] cgroup/cpuset: Protect is_in_v2_mode() in
- cpuset_num_cpus()
-Message-ID: <arwYMtRrbObni2qk@gpd4>
-References: <20260929084124.626693-1-arighi@nvidia.com>
- <20260929084124.626693-2-arighi@nvidia.com>
- <20260929-making-language-254d9c6a6605@there>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260929-making-language-254d9c6a6605@there>
-X-ClientProxiedBy: MI1P293CA0025.ITAP293.PROD.OUTLOOK.COM
- (2603:10a6:290:3::11) To DM6PR12MB4827.namprd12.prod.outlook.com
- (2603:10b6:5:1d6::14)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qRZ3p9eS"
+Received: by mail-pj2-f43.google.com with SMTP id d9443c01a7336-2d93ff61046so25295305ad.3
+        for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 16:24:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790724256; x=1791329056; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=IS6TByWFgsxOTPGaMQkR8btgGIqLwW1a4rgcn4lxTW4=;
+        b=qRZ3p9eSe+bkKOXVduSJEEVKhmkz6mwtKLf/bt+n+c/2XUc+NczhxV5lrLMConx3l+
+         oqM4vTm4LhdXyUSMLQNMSbfyo8rC5TlMSIOZ2/yOyKXBZsueNfF/6TdRK1CKGlHLf9to
+         N71JKw3Fquo+eBwjHJ4Py6Un5T6yyje6xNMLllpVMtV8Noz8FzWvSrEYv0u4L+Bg6g1n
+         qJWub5Q2FwzYOJ7FyugV3e+Ef/2Rtz95gu90TAI8vQxUvhdr7D044OpzGDnQVYJrNUBt
+         IgoOyHcOTENzfheigP8rUWV7XF47F+9dGeb9kFMnAbo5nDQJi7dUkw1VABPZyDtMxsU0
+         2dQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790724256; x=1791329056;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=IS6TByWFgsxOTPGaMQkR8btgGIqLwW1a4rgcn4lxTW4=;
+        b=s3xCgilso0Z0UQ6+FhO2NWl/PIItdOdoWKr1JIwgFFBiI0+GIXPSUH9tq7qs5aZwt2
+         vfiNkzN6AKQqunJhtRnc5AM3ZtuCi6PsyGcQ6UUaTBISD7t8jQzjyC2/2fPsp/WYzZBH
+         6NQ7reWtMx3Z+jXM007poHTRQD1ee/ab45dubS1MaVxxDLhxRva2LEZ9ikQQYhLMgDxW
+         ouZPkfHYtNZFe6SMPLSnK4jrXr17XK2MVjV6wJuGGebeFoEGm6xCz8F1Pvl6C8lWrptA
+         VmfEf9A75B71ogvJf/Uz93wD3LKH53yX4uXNBW4YVdVyQ7OVfnKPNdICfB/qyJSKhn8g
+         gKCQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzoDwEfCouPHEgL7gBoZSNTkUurHzSPjkgRKwhRf6xfkUOodRpr15L1lhMbhVvG9+dCFaHIX5uF@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ4NlVYInrPlQSq1MJd+/cPhwiGvCtVlffc+3t5R7IItiBWLYvL
+	UjtzrD2b21d/gqyb8XEgiuz3Y0QjLQlQSu91xEMzvBmcDOonqmwDmbff
+X-Gm-Gg: AYBFou1jIocQWy61E9H91eRjALmTjRm20gr4irDJdPwtRbtASIK9EvAlQo86AtPi7R3
+	N5E/Wx+UAGXTbL/tpCzH6/z61MZNNizcVaXSr9Wz0x30PSfjnuOnxGYUXvTcf0V8QUi9SZ5k/zm
+	rKD7cvJ8iv36jvKWvltKp/4Q7xAvddP/fboe5SFgwANnuZgMqyPpZsqg6ckZTQT8J30HqGAcs1J
+	z9D0Vce5NCYcqhmLTvccG8ZNeY6lRmM3Co+tq7YGrdZquc0wX/N2HH0wqw7I17n/7003Elfc+dv
+	2ikaOalrW3LLpy+7Ft4BmNAIddPfhfh4aK0HMIeWthmvB7mEyuY1jYaytWFCT62/zDuHNSfXnX8
+	uADxhLh0X1DGn5dVc3PCaZx4Gg6Mr2VVivd69qlKtj1cyu75ULjevjjor6t86Gqof8EyF2W73ik
+	AGS4iA8xjtI/FNKFsoZe6UTrn/V4EsOe3w1oq/Hkhs31rhz/Y2lQLmHsW2IqIcSVYLM7BQzluqc
+	U9E9rXbhcvZ5V3/0ciJfdSTMuA9aLpDFhDMOFCA1rGlFVZkH86t/lzKShVm9M3JPTXlfKILOwXu
+	9Y4=
+X-Received: by 2002:a17:90b:4f89:b0:3a0:4444:ef1e with SMTP id 98e67ed59e1d1-3a4bfe73db9mr752355a91.29.1790724256010;
+        Tue, 29 Sep 2026 16:24:16 -0700 (PDT)
+Received: from yupeng-XPS-15-9520.. (c-73-169-192-12.hsd1.wa.comcast.net. [73.169.192.12])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a4ca78102csm138700a91.4.2026.09.29.16.24.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Sep 2026 16:24:15 -0700 (PDT)
+From: Peng Yu <yupeng0921@gmail.com>
+To: Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>
+Cc: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Maurizio Lombardi <mlombard@arkamax.eu>,
+	cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Peng Yu <yupeng0921@gmail.com>
+Subject: [PATCH v7 0/2] nvmet: add cgroup_id to charge namespace I/O to a cgroup
+Date: Tue, 29 Sep 2026 16:24:09 -0700
+Message-ID: <20260929232411.101087-1-yupeng0921@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR12MB4827:EE_|DM4PR12MB8498:EE_
-X-MS-Office365-Filtering-Correlation-Id: cb3cd2e9-9393-442f-aa88-08df1e63ef91
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|7416014|10067099003|11063799006|56012099006|4143699003|6133799003|3023799007|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	p3WBQ0OlC06zlhmH7gxF/whuzkemDAQslnha7cZ8BMhDVMykY9Q358PrQ/OhdnO02824qsasyCr4XeNOSa1nDV7vgH5QJcwJyYJvcmpTBYxrVVIEcSe0osC40/2k1s/F9EL9Aw9thTXgnwn8aN4N1D3XGq1UMKCkv9RPQ9zi8FNPXvxYnsUcJhvWsPYV+5qxRCUdqGg4SN4x2zRK+jbo+Fr3bIKXh3Fijtj0lbIX0C7rZJ5uI9xdh8FtBj3s28QnHCNCRTMoMbPnsBw1aQe5Wi+6pYZv2vhhRfWkS3t/1W48rg6VAB9pJbPtcfLbRsJX27vEdFh5KPsbFyPf/ua7agL4A44rUJQzsvBOpb+z1RhRKPz0HCTSfcMst6VFjiUyB6B5tsjVSM4KYgvVGnBirbbRPrVd1oBL2klbl7PP1rh3nj8BW7hXkdSkY732c27yFxmO2jL9hRWa/uVOZQMGSeTnsMFcViBBY8eOcKlyCgNhTcOBBTmLB+f1rMHVTpY2N2UHrCpERJKbNi4GjdSfW7kjWcb9/2uUc+qrTmS9W1GUuPCsfppvQDX1Dc9kpUl1pQjWU1JhsgCyI2NR7wZu/NpUi2nplmqu12LtKidc0TgvEua18Tvyus4zyEs8tvM/OZjj3ClDjyH8Z4koaGClOZGuO3q8ohzdHcTowXmjqiQ=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB4827.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(7416014)(10067099003)(11063799006)(56012099006)(4143699003)(6133799003)(3023799007)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?iso-8859-1?Q?QgVYPWt+YYCXaBpTZdqGLZKieWlBMjnvxo3wPq0qA5zOl7ZrW9iL5wuomZ?=
- =?iso-8859-1?Q?LF+JaQaBVfPQ6Soe/xM+gNBM5wOmHpLAjvST+DVWyEXw57uZu5kN3eD40e?=
- =?iso-8859-1?Q?I2KRBDGqWJYCsnyNAK2/XXKQO9s3QfuwhbHOs3SYN89oLlD/vilVj56kQP?=
- =?iso-8859-1?Q?dxdZTyT6dYMOPbckxurGufm7XwTRRmJ9XLSnLPOiN63RXWnSUrxnFxAZxb?=
- =?iso-8859-1?Q?Qri3mceND2kStIKukw/3hVj98E9U/NH5FMCeuKUqelw6Mg1EjWDwrETxa1?=
- =?iso-8859-1?Q?IaKfzhcMDYWop3rf9+NKGTHsASsoGGnp/MAhZopNInD3ZY7GqUZoGOEzQl?=
- =?iso-8859-1?Q?NK2nWM+YaGkB7CkwMq43BpLLcTbrbwpICLHP6bULXQQQj/gMuSa4kMpXI5?=
- =?iso-8859-1?Q?4b3bEfGz18XKKu+t2QiSx39TTjx2wEtjdjJYaPcthJbG2KNFz5eedYnqX4?=
- =?iso-8859-1?Q?lHnHOVfgiw59aY76NZYu0H/PCHEHQwvjPdle+yk8dwUVjtiVCWz9lPRKEc?=
- =?iso-8859-1?Q?JoTKWAdt13m+ei7DvNrHT9OqK/2iung0wPcZPOnp/2wpYLNXzoUZNmyGxF?=
- =?iso-8859-1?Q?2heA+HEjRoqSBXRJ+pnnRewkJkYu79SGDFyhhyJpigJH40uIeg8S8XNKd9?=
- =?iso-8859-1?Q?G4NxFvsDK7y4h+tcNlSLrTiyS+OrRi+dVRqfQq4aFG1RmMyYMFOsamHE4x?=
- =?iso-8859-1?Q?xSu2cwZKiGF8IXZ4Xy1aKi41JMzzkX8JHD/0ks+I4knFZsB4sZBynjlrR1?=
- =?iso-8859-1?Q?LycChfMyPfkbjh2HF9rvfGaJvuuyw2hAWtNX9a21agJuWEdQlpd3bgJeee?=
- =?iso-8859-1?Q?bAKmTysZPeTbI4oOgxX8FYv86V5M/rbB59Qf2VI2+J/8iM4R9N1yyC0DNE?=
- =?iso-8859-1?Q?eIityTrCIjM9il47tRePv4/lMduObMWNpgUy0cGcbnX7xW5Eo7IsbZ3yfg?=
- =?iso-8859-1?Q?CT7YrG6VLtQsyd/YaS1v4i1ChcuOInOf8/DHUZNdnNOnFdknomw0FhVKXV?=
- =?iso-8859-1?Q?sd9nNAMUsVKCN/0LOhvGW6S0ark/RIrVZaZkX0/0PEZ3h4teoSZZ72Jd3l?=
- =?iso-8859-1?Q?FLQDhAvijDP0xzukAURLTOtgQyG78GfFunljUGYxBeKgT6HrjHglrV1npo?=
- =?iso-8859-1?Q?aKuaO0Y2CN4mmJ8XT2KXF7xI/AtjJscHyPvlAZE0AK3kEM+7TELvgkjiv5?=
- =?iso-8859-1?Q?DgKWg6LOEFj7psxx7P2YBIKcTSTaVYcvYhEpbOb3GCly59U10c8Orb9oOD?=
- =?iso-8859-1?Q?epfAzCk3weReuBx1dLWAU7nr7OBIekvdjxgvPZO/qG+LHwSaE1tmVsc3Ad?=
- =?iso-8859-1?Q?5PoST3qlzJwXJ9Bz2bvXqFr/yLewXNYBspCn8RCC1PDATEFKzv4G64O8zu?=
- =?iso-8859-1?Q?embsiaGWHR6Uyo1OYs2y7hU8YNy5NyB6otgdbBNfKUihgCCpQgHDoYs3AH?=
- =?iso-8859-1?Q?qcqYhLkGG5wRmCdCtSY1Nj6dK92nP6xcWpJFeqf5sfhBCFMbZV42QN2DOt?=
- =?iso-8859-1?Q?ZofmqfqAHStj5NQ5wsJWYISN34L+Coh7yDSW5T//m+ZE7KEdCttxZaP3/V?=
- =?iso-8859-1?Q?qDGilduPPsVWlkBBA3MYWqjNvCkde1zfiN4Z0Xjhtr5evyO5qA+kV6IPjB?=
- =?iso-8859-1?Q?rDegwvD3VNc7GAR7a3ElAS1TU6pQE8yQNDdSlvjhjPCFEplIHw1ILHhh+Q?=
- =?iso-8859-1?Q?ohBym1OkfDQvkg/IuCW/Q2Dq3dfoaJKGtbJdT2v2a1laZW8F8FeVY+LFew?=
- =?iso-8859-1?Q?U1c/0lEtJduHBVy6xRcELR5OGjs4ANJR1GEXsd9CFtj6ipGxxPbHbzcXwW?=
- =?iso-8859-1?Q?3EpWQeXWVQ=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cb3cd2e9-9393-442f-aa88-08df1e63ef91
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB4827.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Sep 2026 19:57:48.1427
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Zi4yGbotHW8k35C70q+gjTf7DAvdBA8K4o21sDTC4Ut9swS9GpTu4iBMLPvsQj7HpUyEOc19wbmF6OYjFgxx5A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB8498
+Content-Transfer-Encoding: 8bit
 
-Hi Michal,
+Change since v6:
+* 1/2: Explain in the commit message why the effective css is tracked,
+  and add comments on e_css[] and in init_cgroup_root() (Tejun).
+* 2/2: Use cgroup_get_e_css() and css_put() in nvmet_blkcg_set_bio()
+  instead of cgroup_e_css() under rcu_read_lock() (Tejun).
+* Drop "cgroup: export cgroup_e_css()", which is no longer needed (Tejun).
 
-On Tue, Sep 29, 2026 at 03:47:59PM +0200, Michal Koutný wrote:
-> Hi.
-> 
-> On Tue, Sep 29, 2026 at 10:37:38AM +0200, Andrea Righi <arighi@nvidia.com> wrote:
-> > cpuset_num_cpus() enters its RCU read-side section only after checking
-> > is_in_v2_mode(). When cpuset is bound to a v1 hierarchy, is_in_v2_mode()
-> > dereferences cpuset_cgrp_subsys.root, which is freed via kfree_rcu()
-> > once that hierarchy is destroyed and cpuset is rebound to the default
-> > hierarchy. A preemptible caller outside RCU can therefore read the flags
-> > of a freed root.
-> > 
-> > The only current caller, fair's group share calculation, runs under the
-> > rq lock with preemption disabled, so it can't hit this. However, the
-> > helper already means to protect itself with RCU, and upcoming sched_ext
-> > support exposes it to sleepable BPF programs.
-> > 
-> > Take the RCU read lock before is_in_v2_mode() so that the whole lookup
-> > is protected regardless of the caller's context.
-> 
-> This feels like mere querying of the mode shouldn't require such
-> constraints (despite it's needed anyway later down). But it could truly
-> happen with the novel usage (CONFIG_CPUSET_V1 && unmounting cpuset
-> hierarchy for some reason, I wonder how you noticed :)).
-> 
-> Then I'd welcome more structured approach with at least:
-> 
-> diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-> index 3754d697854b3..7f4d346cfb119 100644
-> --- a/include/linux/cgroup-defs.h
-> +++ b/include/linux/cgroup-defs.h
-> @@ -841,7 +841,7 @@ struct cgroup_subsys {
->         const char *legacy_name;
-> 
->         /* link to parent, protected by cgroup_lock() */
-> -       struct cgroup_root *root;
-> +       struct cgroup_root __rcu *root;
-> 
->         /* idr for css->id */
->         struct idr css_idr;
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 227d09704ca59..a718b5f521fb2 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -1909,7 +1909,7 @@ int rebind_subsystems(struct cgroup_root *dst_root, u32 ss_mask)
->                 /* rebind */
->                 RCU_INIT_POINTER(scgrp->subsys[ssid], NULL);
->                 rcu_assign_pointer(dcgrp->subsys[ssid], css);
-> -               ss->root = dst_root;
-> +               rcu_assign_pointer(ss->root, dst_root);
+Change since v5:
+* Add "cgroup: track the effective css in each cgroup", so looking up
+  the effective css for each I/O is O(1) (Tejun).
 
-About the __rcu annotations of ss->root, I agree it'd be nice, but it makes
-sparse complain about all the other plain ss->root accesses. Maybe we could do
-this as a separate cgroup patch/series on top of this one?
+Change since v4:
+* Hold the cgroup and look up its effective io css for each I/O,
+  instead of pinning one io css when the namespace is enabled (Tejun).
+* Allow a cgroup that doesn't have the io controller enabled (Tejun).
+* Add "cgroup: export cgroup_e_css()".
 
-Thanks,
--Andrea
+The two patches don't depend on each other: 2/2 only uses symbols that
+are already exported and works without 1/2, with the slower lookup.
+1/2 can go through the cgroup tree and 2/2 through the nvme tree.
+
+v6: https://lore.kernel.org/all/20260928061417.1574676-1-yupeng0921@gmail.com/
+v5: https://lore.kernel.org/all/20260926063328.257023-1-yupeng0921@gmail.com/
+v4: https://lore.kernel.org/all/20260924053121.17703-1-yupeng0921@gmail.com/
+v3: https://lore.kernel.org/all/20260923152653.40953-1-yupeng0921@gmail.com/
+v2: https://lore.kernel.org/all/20260922065115.22508-1-yupeng0921@gmail.com/
+v1: https://lore.kernel.org/all/20260908011214.11344-1-yupeng0921@gmail.com/
+
+Scenario:
+* Create multiple nvmet subsystems/namespaces.
+* The namespaces are backed by different LVM logical volumes.
+* Some of the logical volumes share the same physical volumes.
+* The subsystems are exported to different users.
+* We should provide each user a specific iops/bps quota, thus a noisy
+  neighbor won't impact the performance of other logical volumes.
+
+Test:
+1 Load kernel modules.
+sudo modprobe brd rd_nr=2 rd_size=1048576
+sudo modprobe nvmet
+sudo modprobe nvmet_tcp
+sudo modprobe nvme_tcp
+
+2 The two brd devices are used for a bdev backed namespace and a file
+backed namespace, remember their major/minor.
+lsblk --noheadings --nodeps --output NAME,MAJ:MIN,SIZE /dev/ram0 /dev/ram1
+ram0   1:0      1G
+ram1   1:1      1G
+
+3 Enable the io controller and create two cgroups, one for the bdev
+backed namespace, another for the file backed namespace.
+echo "+io" | sudo tee /sys/fs/cgroup/cgroup.subtree_control
+sudo mkdir -p /sys/fs/cgroup/nvmet-bdev
+sudo mkdir -p /sys/fs/cgroup/nvmet-file
+
+4 Create a file system and a file on ram0.
+sudo mkfs.ext4 /dev/ram0
+sudo mkdir -p /mnt/nvmet-file
+sudo mount -o noatime /dev/ram0 /mnt/nvmet-file
+sudo dd if=/dev/zero of=/mnt/nvmet-file/ns.img bs=1M count=512 oflag=direct
+
+5 Create the bdev backed subsystem and namespace.
+sudo mkdir -p /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/attr_allow_any_host
+echo /dev/ram1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/device_path
+stat -c %i /sys/fs/cgroup/nvmet-bdev | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/cgroup_id
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/enable
+
+6 Create the file backed subsystem and namespace.
+sudo mkdir -p /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/attr_allow_any_host
+echo /mnt/nvmet-file/ns.img | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/device_path
+stat -c %i /sys/fs/cgroup/nvmet-file | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/cgroup_id
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/enable
+
+7 Export the two subsystems to 127.0.0.1.
+sudo mkdir -p /sys/kernel/config/nvmet/ports/1
+echo ipv4 | sudo tee /sys/kernel/config/nvmet/ports/1/addr_adrfam
+echo tcp | sudo tee /sys/kernel/config/nvmet/ports/1/addr_trtype
+echo 127.0.0.1 | sudo tee /sys/kernel/config/nvmet/ports/1/addr_traddr
+echo 4420 | sudo tee /sys/kernel/config/nvmet/ports/1/addr_trsvcid
+sudo ln -s /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:bdev
+sudo ln -s /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:file
+
+8 Connect the two subsystems from 127.0.0.1.
+sudo nvme connect -t tcp -a 127.0.0.1 -s 4420 -n nqn.2026-09.io.test01:bdev
+sudo nvme connect -t tcp -a 127.0.0.1 -s 4420 -n nqn.2026-09.io.test01:file
+sudo udevadm settle
+
+9 Set riops to 20k and run fio.
+echo "1:1 riops=20000 wiops=max rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=20000 wiops=max rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=randread --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=20.0k, BW=78.1MiB/s (81.9MB/s)(781MiB/10001msec)
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=randread --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=20.0k, BW=78.2MiB/s (82.0MB/s)(782MiB/10001msec)
+
+10 Set rbps to 100M and run fio.
+echo "1:1 riops=max wiops=max rbps=104857600 wbps=max" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=max wiops=max rbps=104857600 wbps=max" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=read --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=97, BW=100MiB/s (105MB/s)(1041MiB/10399msec)
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=read --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  read: IOPS=97, BW=100MiB/s (105MB/s)(1031MiB/10299msec)
+
+11 Set wiops to 20k and run fio.
+echo "1:1 riops=max wiops=20000 rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=max wiops=20000 rbps=max wbps=max" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=randwrite --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=20.0k, BW=78.1MiB/s (81.9MB/s)(781MiB/10001msec); 0 zone resets
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=randwrite --bs=4k --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=20.0k, BW=78.1MiB/s (81.9MB/s)(781MiB/10002msec); 0 zone resets
+
+12 Set wbps to 100M and run fio.
+echo "1:1 riops=max wiops=max rbps=max wbps=104857600" | sudo tee /sys/fs/cgroup/nvmet-bdev/io.max
+echo "1:0 riops=max wiops=max rbps=max wbps=104857600" | sudo tee /sys/fs/cgroup/nvmet-file/io.max
+
+sudo fio --name=t --filename=/dev/nvme0n1 --rw=write --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=97, BW=100MiB/s (105MB/s)(1032MiB/10307msec); 0 zone resets
+
+sudo fio --name=t --filename=/dev/nvme1n1 --rw=write --bs=1M --iodepth=32 --numjobs=1 \
+--direct=1 --ioengine=libaio --time_based --runtime=10 --ramp_time=3 \
+--group_reporting 2>/dev/null | grep -E '^ +(read|write): IOPS'
+  write: IOPS=97, BW=100MiB/s (105MB/s)(1033MiB/10296msec); 0 zone resets
+
+13 Cleanup the environment.
+sudo nvme disconnect -n nqn.2026-09.io.test01:bdev
+sudo nvme disconnect -n nqn.2026-09.io.test01:file
+sudo udevadm settle
+
+sudo rm -f /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:bdev
+sudo rm -f /sys/kernel/config/nvmet/ports/1/subsystems/nqn.2026-09.io.test01:file
+sudo rmdir /sys/kernel/config/nvmet/ports/1
+
+echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/enable
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev
+
+echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1/enable
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file/namespaces/1
+sudo rmdir /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:file
+
+sudo umount /mnt/nvmet-file
+sudo rmdir /mnt/nvmet-file
+sudo modprobe -r brd
+
+sudo rmdir /sys/fs/cgroup/nvmet-bdev
+sudo rmdir /sys/fs/cgroup/nvmet-file
+
+sudo rmmod nvme_tcp
+sudo rmmod nvmet_tcp
+sudo rmmod nvmet
+
+Peng Yu (2):
+  cgroup: track the effective css in each cgroup
+  nvmet: add cgroup_id to charge namespace I/O to a cgroup
+
+ drivers/nvme/target/configfs.c    | 47 ++++++++++++++++++++++++
+ drivers/nvme/target/core.c        | 54 ++++++++++++++++++++++++++++
+ drivers/nvme/target/io-cmd-bdev.c | 18 +++++++++-
+ drivers/nvme/target/io-cmd-file.c | 21 +++++++++--
+ drivers/nvme/target/nvmet.h       | 58 ++++++++++++++++++++++++++++++
+ drivers/nvme/target/zns.c         |  5 +++
+ include/linux/cgroup-defs.h       |  8 +++++
+ kernel/cgroup/cgroup.c            | 60 ++++++++++++++++++++-----------
+ 8 files changed, 247 insertions(+), 24 deletions(-)
+
+
+base-commit: 2ee54f01f07c0307deaf90ca8691a4643ae0357b
+-- 
+2.53.0
+
