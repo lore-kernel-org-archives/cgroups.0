@@ -1,69 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-132.mta1.migadu.com [95.215.58.132])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 752DF386C17;
-	Tue, 29 Sep 2026 00:42:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A6C4321445
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 01:23:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790642546; cv=none; b=aVzkweuNHp4TxN8m94YBvEe1sKCggZXViIKNUb8SZyAoowEmiNy14yl4lEKXgERWkTmi5k9xTUMAMHYzd0YsokoN8oq3ht5if2KoZYNeLphQy/Y9lPX1FGGl4CVw2KVgZ5GILij4gV225MBuykPRGholcxpqdKHvpv3XDyMDTRs=
+	t=1790644995; cv=none; b=BGdIuD38zJT1n5dyKivYxYRGgOR+WHBoPSR6kkGXNmIpGjfMJRzl1ky6sbLhQimXMao3p8/KoFyF2Q9QFGslJzlDEZFDRg2N6hLDXRxDEUS4lP4zHy4AIKT+pCOIxaIuVoKgf3dHp0hDca0hgbnWLgizX8pj/DoV6BXar2veB48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790642546; c=relaxed/simple;
-	bh=S9xPAU/9/TKIf6DgBdZhMLcz2QhAmyPlTKG+BECZji4=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fAlIb+OLD+J5YyE9Hh2Ays6uTENJt6fZXiqcVBlBmqODDVnymA+9wJwtIDDtfY1vCkKfF3CBWFu20xowHJ8vMOTcwx+YVh+beC32iwU5FhTl6QIQ9a3h1hpL6v1m38N4X2DrBXDD8RtQ7kCvFG7XwAzFFE6eGvHntNtEekIfDaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bZnlEW6h; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790644995; c=relaxed/simple;
+	bh=XyITaakx/9RJUoMK2YKO6mwBOUANECL8e5bCzpNLG+Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BNcihLocmY76yXXmEvNV5Dck0Mw+2ySAD34Q4BkWvNlbL6ad6RiCCfe76/PxmaxfCsaaPHBRKQwmhP364jQrIsfbQGllLyucVjHQRrh5jaKWGGtS+kl9D/ZyNnsGhWZivshqIW5vxEZbRyLe6221fa6f2q42pUd7adiqXR60N9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lpzghxEc; arc=none smtp.client-ip=95.215.58.132
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bZnlEW6h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4BBE1F00898;
-	Tue, 29 Sep 2026 00:42:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790642544;
-	bh=ZSkuFme1leGMg1COAGhFiRyunbh28v3KGifLjAR+V7s=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=bZnlEW6hDCC0qhf2Df3A+4KYxgsloJMp2cghtj4Zl4YDXBep7rfOBipzv4z/XKb7g
-	 1ZsUmkk7wWzsFoYxnIdxoHkL9uSQvqBTmYQnBbdBdh5Lax9NSzd5vN3kFy4yBcicem
-	 EYFiDPL2XacWkURHY+7kYGSk29PFwKQWecyhTuXjpn8hLPUypZRgGqLaQ1I7l7sohz
-	 yX5TK4ooH4WaqAQ8J7sh6BPPtKATbM7ay/4ouCS/azCpCIAL7ZBoUiz2I6uPRZDxoq
-	 mKxO3z/pcrkp4bIFAyH0IKHEIpjsW+g7JquhYF+pu+t0EHAhNWLttTKkeIBQQmas4Z
-	 IZehZPghSATbA==
-Date: Mon, 28 Sep 2026 14:42:23 -1000
-Message-ID: <4af70c48e8c7d1eac1425d368be92dcb@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- bpf@vger.kernel.org, andrii@kernel.org, eddyz87@gmail.com, ast@kernel.org,
- daniel@iogearbox.net, linux-kselftest@vger.kernel.org,
- Tao Cui <cuitao@kylinos.cn>, ameryhung@gmail.com,
- alexei.starovoitov@gmail.com
-Subject: Re: [RFC PATCH v7 3/4] blk-iocost: add iocost_ioc_tick tracepoint
- for per-period device summary
-In-Reply-To: <20260924054549.2271705-4-cui.tao@linux.dev>
-References: <20260924054549.2271705-1-cui.tao@linux.dev>
- <20260924054549.2271705-4-cui.tao@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lpzghxEc"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=XyITaakx/9RJUoMK2YKO6mwBOUANECL8e5bCzpNLG+Q=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790644992; v=1; x=1791249792;
+ b=lpzghxEcAc61Mq0M3jbMVIPTQLZI/unrfekJIP1XM+D4PdhLn0PEdgyN0JpBos9yMQYWnz4I
+ mrJr1QSSVt3lSwTHUrVmC9Tpj0RCiYBdG3n6ocN6tb2LMiUFeDr+LjyBP+5r54Kyp+zERK0/yEo
+ 52sGTKUqR5tsaoDHJJlL3OSk=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 20ec7aca34141e9c;
+	Tue, 29 Sep 2026 01:23:11 +0000
+X-Mizu-Trace-ID: 20ec7aca34141e9c
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <9bd4bf8e-c159-400d-abd1-d6084bf94148@linux.dev>
+Date: Tue, 29 Sep 2026 09:23:00 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC v2 1/7] mm/memcontrol: drop unused vmscan tracepoint
+ include
+To: Muchun Song <muchun.song@linux.dev>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+ Masami Hiramatsu <mhiramat@kernel.org>, Johannes Weiner
+ <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>, Dave Chinner
+ <david@fromorbit.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Qi Zheng <qi.zheng@linux.dev>, Kairui Song <kasong@tencent.com>,
+ Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Baoquan He <baoquan.he@linux.dev>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>,
+ "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <linux-mm@kvack.org>, Ridong Chen <chenridong@xiaomi.com>
+References: <20260928114625.3609130-1-ridong.chen@linux.dev>
+ <20260928114625.3609130-2-ridong.chen@linux.dev>
+ <FFCBD11C-B723-441A-B6ED-6AD6E59648E7@linux.dev>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <FFCBD11C-B723-441A-B6ED-6AD6E59648E7@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Hello, Tao.
 
-On Thu, 24 Sep 2026 13:45:48 +0800, Tao Cui wrote:
 
-> +	trace_iocost_ioc_tick(ioc, nr_active, usage_us_sum,
-> +			      ioc->period_us, ioc->vtime_base_rate,
-> +			      ioc->busy_level, ioc->running,
-> +			      now.now - ioc->period_at);
+On 9/28/2026 8:08 PM, Muchun Song wrote:
+> 
+> 
+>> On Sep 28, 2026, at 19:46, Ridong Chen <ridong.chen@linux.dev> wrote:
+>>
+>> From: Ridong Chen <chenridong@xiaomi.com>
+>>
+>> memcontrol.c includes <trace/events/vmscan.h> but does not use any of
+>> the tracepoints or macros it defines: all tracepoints invoked here come
+>> from memcg.h and writeback.h.  Removing the include still compiles
+>> cleanly.
+>>
+>> Assisted-by: Claude:claude-opus-4-8
+> 
+> Since commit 816d9992d9ed, the label we recommend is Assisted-by: LLM.
+> 
 
-These are still passed in. Can you pass only ioc, &now, nr_active and
-usage_us_sum and read the rest from ioc in TP_fast_assign() like the
-other iocost events do?
+Thank you for the reminder; I will update it in the next version.
 
-Thanks.
 
---
-tejun
+>> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+>> ---
+>> mm/memcontrol.c | 2 --
+>> 1 file changed, 2 deletions(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index aad0498a7bd6..95c2322d4a6f 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -77,8 +77,6 @@
+>> #include <trace/events/memcg.h>
+>> #undef CREATE_TRACE_POINTS
+>>
+>> -#include <trace/events/vmscan.h>
+>> -
+>> struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+>> EXPORT_SYMBOL(memory_cgrp_subsys);
+> 
+> Acked-by: Muchun Song <muchun.song@linux.dev>
+> 
+> Thanks.
+
+-- 
+Best regards
+Ridong
+
