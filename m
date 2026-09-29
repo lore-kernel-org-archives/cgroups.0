@@ -1,76 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-71.mta0.migadu.com [91.218.175.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D74214FD7B2;
-	Tue, 29 Sep 2026 13:30:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E38B52B1D3
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 13:39:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790688638; cv=none; b=bayIW6pbLzBaSOtH9B8S+qE/2OsCck2s0PePF5Kt2hSnKhRrS0k9txJXSkawyGLW5+eV8RsYL9QHoriSJBjaz/DVkpJ/JtX5a91qO4MFP5ceLkBXYPMWOjlVLO9eL4ozeE+gNUBPSxNLLilkSrFDY7Vbt0Kc5h1HaHFJUACGVFs=
+	t=1790689153; cv=none; b=OwFUSih4zha3q1RQxDJGN3IqNVCn5GcdFs6bLDzPDXhBV0jKwAL1OH7C6txjyp5r3j/y+/I3k8EAEBKf1XVmkoU/SSFwaOybY6e7eO9x04EMPTYbf/QlUMzNAphyZmX0DxcTL0ENprKqWeOJu7y36xycROvtJm3Ph30dtTZ5CSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790688638; c=relaxed/simple;
-	bh=CRSnFDcudn+O1z3dXdbQUFJ7Fo6ozes9yh9CgLUwIMs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=me/Qv0MLiGOR0+Wu++zdXYbldY9fs2dRbgTTN/DNpxfxXmGAPe0B0s5LmvMDgb7JvArp/g+78A9BIVbpYDgFTQttSoZNpTuQCcS8LbpQS5Z/bvYCF1LbPkOt2tx5+KpBQWKicFRDjme3vDaY2D2O41QV2CSCpITxaZIEovWX4gE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OwQw2msT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790689153; c=relaxed/simple;
+	bh=p0HopqRbmThSdHTCdVhwQwUjMsWdv84GVBnYu35sdLQ=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=Nmt1kLlEUsTz8Ybhn9TM+1D8RFugyDGrvwX6n+m6p2nUA2dowtIbddjbQwWaYbHLeJcvw1H1bkm6wTqhEVEgTvyBAtc9/f5UIdZa5MYrSv1eb8htgZatuBMfvjkPwiqdAyaS7FvJ/jNPbTysJC1Qj3Sd53/ZZt/u2YHNTaBoC5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=eOZQiVso; arc=none smtp.client-ip=91.218.175.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OwQw2msT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FA871F00893;
-	Tue, 29 Sep 2026 13:30:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790688637;
-	bh=CktuKaVpQF4v7fUWgp1B/FLtTW+0VHvulKFUhKzny6M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OwQw2msTwGYBWjPIoGKWVaY9WOrD1EfK00LheuYYhSxVBHTi2aKUA3nRNzWydFewU
-	 WgoXCi06D905T8lhQFKvNWjqkRDrHGUNbaaLm/N0HEKKq0Bs6jb0MR3YwfUqs18DLQ
-	 4eHYqxCVQZmmQvSDMZVWPugfwOuA70ZEOktwOaEICARldtAvNcN6MuQeA++r4KqfXR
-	 IS1k+/0fdIHSaG+OXsD/WvDZo6VQWrFxON6f4A60vmBvvJWBP7yeOfEhHm6+enA7zR
-	 5+8oou/1UJFxgoVbvH6Gm+5GZw0Crq5dBu/hEmLy1BLSsR6wM9kUBlWoLjUXidPRan
-	 sgp66J7A8QPaw==
-Date: Tue, 29 Sep 2026 14:30:35 +0100
-From: Harry Yoo <harry@kernel.org>
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R . Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
-	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Oscar Salvador <osalvador@suse.de>, cgroups@vger.kernel.org, 
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@meta.com
-Subject: Re: [PATCH v6 RESEND 1/5] mm/memcontrol: flatten try_charge_memcg
- control flow
-Message-ID: <aru8sLRda2q3DMoF@thinkstation>
-References: <20260928192349.3432886-1-joshua.hahnjy@gmail.com>
- <20260928192349.3432886-2-joshua.hahnjy@gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="eOZQiVso"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=p0HopqRbmThSdHTCdVhwQwUjMsWdv84GVBnYu35sdLQ=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790689148; v=1; x=1791293948;
+ b=eOZQiVsooQobzNEYBrZz8JvKpe2lnq36dZZFAwBPG26qKrOJDdy03BgJQYBMFG4hxmZfhyTD
+ 3UO1JCJ0DTdsojyKgqNBlh0Wzj+yFDcYkQZb9oEt36g1sbgZhXSzNEDP+kKJRaAx8TukXejdK4B
+ QXfeFug0RB7rP1EKTNVdUFUo=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id fd0607d5a2665ee1;
+	Tue, 29 Sep 2026 13:39:08 +0000
+X-Mizu-Trace-ID: fd0607d5a2665ee1
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <4f1571a1-7e56-4264-aa7f-8dce32931ddb@linux.dev>
+Date: Tue, 29 Sep 2026 21:39:00 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260928192349.3432886-2-joshua.hahnjy@gmail.com>
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, josef@toxicopanda.com, axboe@kernel.dk,
+ cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org,
+ eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net,
+ linux-kselftest@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>,
+ ameryhung@gmail.com, alexei.starovoitov@gmail.com
+Subject: Re: [RFC PATCH v7 0/4] blk-iocost: BPF struct_ops cost model
+To: Tejun Heo <tj@kernel.org>
+References: <20260924054549.2271705-1-cui.tao@linux.dev>
+ <6f80eca83c87b60398110c3a6d735aec@kernel.org>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <6f80eca83c87b60398110c3a6d735aec@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Sep 28, 2026 at 12:23:44PM -0700, Joshua Hahn wrote:
-> Refactor try_charge_memcg by flattening the nested memsw/memory
-> page_counter operations to separate the logic between the two.
-> 
-> When page_counter_try_charge is made stock-aware, this flattening makes
-> the control flow easier to follow since each page counter now has its
-> own success/failure paths.
-> 
-> No functional changes intended.
-> 
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
-> ---
+Hello, Tejun.
 
-Looks good to me,
-Reviewed-by: Harry Yoo (Meta) <harry@kernel.org>
+在 2026/9/29 08:42, Tejun Heo 写道:
+> Hello, Tao.
+> 
+> On Thu, 24 Sep 2026 13:45:45 +0800, Tao Cui wrote:
+> 
+>> loading attaches the model to
+>> that device and switches it away from the builtin linear model,
+>> detaching the struct_ops restores the builtin model, and the
+>> struct_ops core owns the program lifetime.
+> 
+> I don't think attaching should enable the controller. v7 currently turns
+> it on without the queue freeze and quiesce that ioc_qos_write() goes
+> through. Attaching can create the ioc if needed like an io.cost.model
+> write does and switch the model under the same freeze and quiesce,
+> leaving enabling to io.cost.qos.
+> 
+> This is different from what I said on v1, where switching back to the
+> builtin model detached the struct_ops, but with the controller state left
+> to io.cost.qos it seems more consistent to keep the attachment independent
+> too. Writing enable=0 or model=linear wouldn't detach the struct_ops,
+> model=bpf would switch back to the attached model, and only detaching
+> would remove it. This is the same as the linear coefficients, which are
+> kept while the BPF model is in use and take effect again when switched
+> back.
+> 
 
--- 
-Cheers,
-Harry / Hyeonggon
+Done.  The implicit enable and the wbt_disable_default() are gone.
+Attaching now checks disk_live() and creates the ioc under
+rq_qos_mutex, like blkg_conf_open_bdev() does, and switches the
+active model under the same freeze and quiesce sequence as the
+io.cost.model writes.
+
+To make sure I understood correctly: attaching switches the active
+model to the attached BPF model, while model=linear and model=bpf
+only switch between the attached model and the builtin model without
+affecting the attachment itself.  The attachment survives enable=0,
+and only .unreg removes it.  Please shout if I still got that wrong.
+
+>> iocg_init()/iocg_free()
+>> callbacks, invoked from the iocg policy init and free paths with
+>> the same per (cgroup, device) lifetime, let models manage their own
+>> per-cgroup state.
+> 
+> Existing cgroups don't get iocg_init() on attach and iocg_free() isn't
+> delivered on detach, so init and free don't pair up. Can you call
+> iocg_init() for all existing iocgs on attach and iocg_free() for the
+> remaining ones on detach? That's what sched_ext does with
+> ops.cgroup_init() and ops.cgroup_exit() on enable and disable.
+> 
+
+Done.  One note on the implementation: the existing iocgs are walked
+over q->blkg_list under q->blkcg_mutex, the same walk the blkcg
+policy teardown uses, rather than over the cgroup tree - this is a
+per-device walk and the queue is frozen and quiesced at that point.
+Cgroups without a blkg on the device yet are not missed: their blkg
+is created later and ioc_pd_init()/ioc_pd_free() deliver the
+callbacks then, so init and free pair up either way.
+>> Writing "ctrl=bpf" or "model=bpf" is accepted as a no-op so a saved
+>> configuration still parses; re-attaching the model requires loading
+>> the struct_ops again, not writing to this file.
+> 
+> ctrl keeps describing the coefficients and never reads back "bpf", so
+> ctrl=bpf shouldn't be accepted. model=bpf should fail when no model is
+> attached.
+> 
+Done as suggested; the bpf-ci review of v7 reported the same two.
+
+Thanks.
+Tao> Thanks.
+> 
+> --
+> tejun
+
