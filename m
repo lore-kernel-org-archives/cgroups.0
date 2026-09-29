@@ -1,210 +1,134 @@
-Received: from mail-yx2-f42.google.com (mail-yx2-f42.google.com [74.125.224.170])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81B9133EB01
-	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 11:49:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05CDF4FE2D4
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 13:14:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.140
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790682586; cv=pass; b=d6VRhBKlRN7vvG8B8avoi5oOKgSur5fzOHai3ySEN+fdrRl6OXHRhv+hK51Tn54i3ikBZEbdsIxolxNnsHl4lFRUJqEHsFAuXTxT75+/GFAE9pfXoXPYv/XYKGw9HOWX94rz5NG8QVS4+1f+wGcFE+xvKMcf9naoS8Ne6Jppoyo=
+	t=1790687670; cv=pass; b=N8G+vVLJ5IovOE1R98cduFgCQbgSZ6iee2PdlhKzpmt9+o3SvRBcT4XSe+OGCzvvSUqq4APKkTnm5Zlrll/DY7q2OAOs4NU4EmBoo999S94IJRSkoRGUsgYxZCxCIWB4B8nyO4IN8IYo1cKsE5z4aJ3Qw8A2qd52mbvkseIhSx0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790682586; c=relaxed/simple;
-	bh=kgjy2BB8Nwb8PNLZfFsqLbfjDohsf0KQ3TZfyRHIEYc=;
+	s=arc-20240116; t=1790687670; c=relaxed/simple;
+	bh=mc9ZngTcAoluBbUuX2lmbdpcrwmnX9oPwgK3aLjWg04=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=axOHBVZXSGMQiiK23k7EOpDPm/idBIYAT84yW36AzC4t3PG0bcCp2A3KpyBArqEiwS1VvMwcouAFXvd2/rbbg02XmYqO4ZFZV1cj/gFlmWVaNU29aM8wXSUTV6pH5Zo+yYno9Dl9PhvO1v7W/b++TtFaiUYBMI/ULfWH/jws/PU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GwhE5rIr; arc=pass smtp.client-ip=74.125.224.170
+	 To:Cc:Content-Type; b=Qk8pLfE8o8pa6rHnXtCu7DNICaH0IAPcLithjpd3lE5yCc6tp6BcNAtmAjCIkxNeXLZxIjMMPKauzW0jWaB7Q4rUkdxkdk6CXHJy/VZPeAZQEgyhUgUR+P3MCAgajYLBghYjkHnolqyQY/Xh2jBBK13qGoci7CdbnNW64rlgHrg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iCg4rfp1; arc=pass smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GwhE5rIr"
-Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-6729ca45e37so4173088d50.2
-        for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 04:49:44 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790682583; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iCg4rfp1"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49ffa15f67fso17932825e9.2
+        for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 06:14:28 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790687667; cv=none;
         d=google.com; s=arc-20260327;
-        b=A6Ef8RohdT4a/J9NguqWWerSGe7iW5bO+mk13guoV0heahWfsvZn3xVToayiLAClNd
-         oLmyTtOBNvxoX2eVEsNSEsa6JjhAPd1VLuze24yJmqK0qSCKZdeAzUHRkZvSDoQ558Pj
-         66qnXqK9+SEQd89E8+Whmi0eBt4pBN20VyN22K28mn9vfC2hhp+iYNuCV4l3XHoVhgSe
-         mhiA9lcf/EWt9aimgi6N/RiZpn5U6OTmQrncau3uUqFDWS5UM4X5hUk38/kT624xaTPQ
-         j+GRzQgWplu8IFUBrPxUy0gGRspMNArebOghk7Ben5wtl2MUMTeZ6hhxfy38ecT72oTy
-         euGQ==
+        b=j15JU/RXDvVNKRiJej5laX/lbLT8foCfDJMqJdHF0jd2KBhNjvcE8oFnakjaVlC61S
+         ZDSx3nv78r9pI4ano/jYaV9PZNjHMuuIVe2Nqt4XrBmRuAxHQxBnf+uKyP1Tl+vGyedR
+         kZTbNfAqR/NWDpAgWQxHH2i98/9UowGGjSfs7Z4LrsiAyjLrW7XmF5mUVa+PPVwYsXx0
+         0vW+VrMJghyKIRJrxNLjqtfPH9fzKUhUzd6jJVTtZ2YVbCBum/z2MAp3zfZ6EvIMR3gR
+         7ngZHd36c8bT9c02TqdWJPRB1yJLz8tVX7d9hEhrBpDjGiibfxoqhNn6FBdjKawZWqXu
+         gFBg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=PinsfWb5o3H1N8+JPrpcg6f6Oxc9ozJUPh0iCkDqvJw=;
-        fh=1xtYh4+JNnQKzTRCiqj3oksZjCGMJmfntHhMffRq2DE=;
-        b=my3CGKg7YM9708vBaygqwZTWqleuhKT6sg0C6h+oTl0ShIx+h1bdV0WtK4IzDFyO3U
-         vM8tYGYKchmeE8k6J3FJNlqoK3PuXx/MculJsZwY1REyjS1E1e2KKbm2GD+JrGG/OK9g
-         s/YQ4AnJzjsAWSfdwsJssJvsf88sEEl8XHvLV/7yWsWxOteowCmEiCtSzMMeOWzRvV4Q
-         E2VaoQ9NIZlPOzB7Wq1X7IscEA2N39psyy7CJ+WH3twwI740FfUZ9OSuPRQ6LZ2LNzkR
-         d4upf+sHd9YBadLKIgjzbalW4VCHpTN9bhwJzTyleRFwfrNisnA1LDlM75ZKE/rPpHhv
-         UzFQ==;
+        bh=SYRpRMxccbtbpG1laeX3wfTBykfDUuE+jqqX7h3vEZ0=;
+        fh=BMSENzMRJG0EIFmBpFsAcx7a76FZkbi07WoLa8w6Hw0=;
+        b=jz5QZHAAKTO+gJg+q+6/StrbTB+Zgu78SQH6xK7Q7MTnx15BSc5aihOWvjGN0+Hhr8
+         mbBGGxirwyu7eR5DMmum0MT22vGbbdTknrR0mTq4Z9IE0AhCyuoVp9EPISQfjXuFe0Fp
+         FKpItBh6sMIJ45GjNRkhhLDDbwoCRNBfa6fdtFPx4I/qsd7BlVVY4wLVbwtG/reGCXHB
+         sh90L7mwAr+ZXVyTjNW4fUjyoVhNco0hxqTRw7NUSp06vcXgxWjQv1kWQeHN9et6zub/
+         v5GF7Tj7EHwNAE3Zb9nD0+A5GOrZNg682gKEfEKPmKAOuRshDY6zfgGPzfyh2M6KjlTV
+         2ang==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790682583; x=1791287383; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790687667; x=1791292467; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=PinsfWb5o3H1N8+JPrpcg6f6Oxc9ozJUPh0iCkDqvJw=;
-        b=GwhE5rIrih0pY2UIXirrTWjpTlblATUKmmDYILdI35pc/2y7JVOR/hYrvlTxQV+10A
-         pCA5Ta12ibOETBKTEwhMjKjM8NCJJ/PqInEC721YWfO/BCM+hilBXJUTI5OxizkA2K+v
-         GuS0ibKZH6CtMb39fU4MBNlgRH8AxZWlHAloTlZZF22NyhU5wn9N5xKZ7SDD1u8vDBhm
-         zVq1/C5zayoM2IOhl7wBVBc5n7Q6LV6He53wTiCyugtTQgIB1Q+0UaTg+74+8GjaMppv
-         DYyl9SxXRcNJXoD3yd2/GUopP2MBEXEiflJs4DHtWlTmJ4zFQ4xNI0mZMYsg5AQ3C0be
-         dxHQ==
+        bh=SYRpRMxccbtbpG1laeX3wfTBykfDUuE+jqqX7h3vEZ0=;
+        b=iCg4rfp14eSuBBOibIB2qwEDqX7qD8s2MEzh1y2AaasArYmYpvIeJXGhXNRMYFmkb2
+         zuMGGQb4SGdrYm7nI4bg4/0ILMs/+6qhTny2PiYw+Gie0KPZWt9QtXLLRtlf5Hk0uA41
+         T/Y1M4g7dLbSk5wVWRqxrTGC0hia7y2DBuFGbdzRrWWIeHFvXfR6XgP+/rojWvSpuI8+
+         cVnTEMvUbJp8zYOUiVrMbC0cB8jMw7X+Q3bquNiYLmUIefX43lG9i/VsyuTCFPgU8Uw/
+         kgqO4u+ZkZSsXWN6n8w3pw1Wo2ejmrwPDpkVTTZL8A0IyhYaFho+gZaDWO30x69a5ux0
+         PFhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790682583; x=1791287383;
+        d=1e100.net; s=20260707; t=1790687667; x=1791292467;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=PinsfWb5o3H1N8+JPrpcg6f6Oxc9ozJUPh0iCkDqvJw=;
-        b=FpvGKcetfpVoZrYfBiMFINhQ2/LIyptPnSPfq209ofFpjkrsZ+qDynTafkAKwLvSFD
-         PODPemdG9JOEDXBVGq3ybVZvQn6XacjCsJKd723woL+87D6pRPX/Pr0gCbY+q21Vjgjk
-         F+uwnuDGaX1FYog0sM6VcJpmlo0E+670Hn6oukRF5sn+h0Lzo77hBIGy1/qIVdG2a9Ev
-         2tD54zMJXRGJ6OAoDHzqCoWV6aDLKgAWamzDBLvfwVK5uPlQuOj5eGRLAb3eAGsVrI02
-         GMPJ1Ys0qLhC4Tnr3qTKZJ1NvIY1uLJb6MhcwASik2LO0tv5WDRWtN4YDwG77Ta+dYLT
-         4cQQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwSCxOIs7TLeRPwzybVBUlQ31xHrxmQj6kXVD2iv1R2iWft5NfZzhxPPH3InTsqkAXo8Mb91Qxh@vger.kernel.org
-X-Gm-Message-State: AFq9FYKMzpYFhn7wno0eS3kvWXPNSbDvdF5DEiWq8oVxLu2cPzmfKHBI
-	LqvWq3t59omiVFeszg8s1xR/cdBf4P0GbS5ig1XaaPRphrwzmJ6B1/BRLBVi5cTCjvblqGTR0os
-	8ye0qQQAdeySOKkufa7UO3thuRY6ADUo=
-X-Gm-Gg: AYBFou1AkmOs8C602FB1kgC+2OU10c70I8sa+y9ZCgqwJ0UMUpF7gOi5Fy0wKuJqDkb
-	o+vXa282pLU6zNL8D6MP365H8E9ieuoit8KP2FArshblVyzqFNXyhik8GOtxG0js0TCcrbZRhZV
-	/5jvVNfrWFjD5qYXTg5U3lvnH0xSJH50mIY/Ha1NnEGZ9Dlu27P9qZYXGXMXQifoBHvqQcXCQgQ
-	Z1q1C9dwjZBrDj6R26gr3cYV4OWHLVrN+rBGYBgRb3CO9tgKMf29eonOIsDFsj5jPWxzUHxWcX6
-	za0rjKIvwaR4UJgb9c2VQIhrKnPRdKKL9OH14GSD3dUJcGY8TfipEq/X3bJP2UvG/5kLpecCWYH
-	DRWIsON9tug==
-X-Received: by 2002:a05:690e:144e:b0:668:9230:e266 with SMTP id
- 956f58d0204a3-674112442a9mr4372761d50.46.1790682583424; Tue, 29 Sep 2026
- 04:49:43 -0700 (PDT)
+        bh=SYRpRMxccbtbpG1laeX3wfTBykfDUuE+jqqX7h3vEZ0=;
+        b=iksbOPu2ko63qAabbXfBtuL6kTUmbotFnWpYnf104pEz0+LJzI32MCp50IS5KUBzKh
+         wLPxVhHrUsRzsAk7NXt0wcM6//K+9TJUzVQQF9/q8Vr0tbDf2wnSSU0h32qRPAsGEGFx
+         IEJ8fn5aNgp4keAEBMGY0ABda6CbfS6DDzMAk9+p6ytZqnPaV2EDcqHo92f5yB4lP1hf
+         qXVi/8PY2Gafxn7OTClnPz2a6xdAQDUJs68u0fF4VyrMRavPybpjMgoKTI/3Iir3lUAN
+         iY2iHVA128llIC3bCB5ngHJq8E44hYUwOaA+Msrtv7wlufk2WI5qDdjhHuS8KKlhKEsf
+         sidA==
+X-Forwarded-Encrypted: i=1; AKwUvBzOPnRQenKbDkAnb4Aizxar43wC9XIAzgHUmUuNYsjzMOC41r/m7Nld9TRWkoAwtyohM0+cVfj0@vger.kernel.org
+X-Gm-Message-State: AFuF++nWe3Xm7Ht8fpGIeCMRGsEfHwL1BuiiomVy9Wc9v2tXE1uSif++
+	W+pfesXZdUeYaAmkkjFJ8xQ26eR55Gwok3aXh3kD2G/CgBzQBPt5oePAb0SjSTIQ4RrFHjq9EjX
+	U0XdZVJ2F7EqdvJ5/Ws+GIBHp5ueilu4=
+X-Gm-Gg: AYBFou0uK/hSNL9Oqw2WFeI0th8eyXp/yXhUeWjw31lg5GoodFzWyf8YdtT1YsldRkN
+	riatDsaOpHpR0Z3xm2Bdy0oXZde7ndZNh0XxyB8R4ADMoG4PZn3vgrxAIXj5+Wzw50kH4y5mqOh
+	P3G+4+FFZVD5ypjNHUMNTP83OkcVYrgtOrNxoMvGSBLwlwQaAB/kQA6pZyvIEI/a5bJ5VuTCegm
+	wbHBoKJYft0f+o5BaoX8/zr6DogKG/H5fvWISLsjnUR/pavFwxgrypfHv750ZuZh80Dl8vu7sRb
+	yEmk5SkCSi4JKjqwuX3JkWTRXv76EWD0y2GZRWnSgBeQpPHahBN+fmcmZBDL+qw+4jYHC+2QYfS
+	Xe+7S2WJ62N37dVz1zN7H7nA6a8s=
+X-Received: by 2002:a05:600c:310b:b0:49c:ee20:e787 with SMTP id
+ 5b1f17b1804b1-49fe66c8959mr264819315e9.1.1790687666921; Tue, 29 Sep 2026
+ 06:14:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260921192559.2619635-1-shakeel.butt@linux.dev> <20260921192559.2619635-2-shakeel.butt@linux.dev>
-In-Reply-To: <20260921192559.2619635-2-shakeel.butt@linux.dev>
-From: Yafang Shao <laoar.shao@gmail.com>
-Date: Tue, 29 Sep 2026 19:49:02 +0800
-X-Gm-Features: AclHuK-nFEkgx8S0aZZQyW2aKsafwpBB_ccNYji7zHIK6DtT7XurPCTCqUpsYEY
-Message-ID: <CALOAHbAb_aKHNxKV3ecUW6ZxK3VR8XAwxD0vHiaZa__6e2pKwQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/4] bpf, cgroup: fix cgroup struct_ops query for a
- second attach type
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alexei Starovoitov <ast@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, Michal Koutny <mkoutny@suse.com>, 
-	Amery Hung <ameryhung@gmail.com>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
-	Yonghong Song <yonghong.song@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>, 
-	Jiri Olsa <jolsa@kernel.org>, Ihor Solodrai <ihor.solodrai@linux.dev>, 
-	John Fastabend <john.fastabend@gmail.com>, Jiayuan Chen <jiayuan.chen@linux.dev>, hui.zhu@linux.dev, 
-	Donet Tom <donettom@linux.ibm.com>, Greg Thelen <gthelen@google.com>, 
-	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, bpf@vger.kernel.org, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260928081900.4187482-1-alex@ghiti.fr>
+In-Reply-To: <20260928081900.4187482-1-alex@ghiti.fr>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Tue, 29 Sep 2026 14:14:13 +0100
+X-Gm-Features: AclHuK-gHF1dvlctEtmdSR2RHiaD0wcMX6yQUH1GuqMtNTGrIvszFdFCGGkiTPs
+Message-ID: <CAKEwX=MzVBTF46m6qBedUtpSgZFksRNonG6Gkw0kEMaCF17SBA@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/4] mm/zswap: make shrinker writeback work with iocost
+To: Alexandre Ghiti <alex@ghiti.fr>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, cgroups@vger.kernel.org, 
+	Andrew Morton <akpm@linux-foundation.org>, david@kernel.org, 
+	Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, 
+	Josef Bacik <josef@toxicpanda.com>, Chris Li <chrisl@kernel.org>, 
+	Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>, 
+	Youngjun Park <youngjun.park@lge.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 22, 2026 at 3:31=E2=80=AFAM Shakeel Butt <shakeel.butt@linux.de=
-v> wrote:
+On Mon, Sep 28, 2026 at 9:19=E2=80=AFAM Alexandre Ghiti <alex@ghiti.fr> wro=
+te:
 >
-> Two things in __cgroup_bpf_query() work only because CGROUP_TCP_SOCK_OPS =
-is
-> the only one struct_ops attach type.
+> We want to enable the zswap shrinker on our fleet, which runs iocost,
+> but with it on, a large production workload is slower than with it
+> off. Two reasons:
 >
-> It calls cgroup_bpf_enabled(atype) with an atype that
-> find_atype_by_struct_ops_id() works out at runtime.  That macro is an asm
-> goto and needs a constant.  Today the compiler can see there is only one
-> value; add a second type and the build breaks with "impossible constraint=
- in
-> 'asm'".  Add cgroup_bpf_enabled_runtime(), which reads the key instead, a=
-nd
-> use it here.  This is a syscall path, so the cost does not matter.
+> 1. zswap writeback is REQ_SWAP, so the IO controllers issue it as root
+>    and charge it to the cgroup afterwards, as debt. The workload pays it
+>    back: its swapin and page cache reads wait, and iocost eventually
+>    stalls its allocations, which in turn stalls the application.
+>    Patches 1-3 let zswap writeback be throttled instead, by marking it
+>    REQ_BACKGROUND.
 >
-> And find_atype_by_struct_ops_id() matches on type_id alone.  An attach ty=
-pe
-> whose subsystem is not built keeps type_id 0, so a query for type 0 finds=
- it
-> and returns success with nothing instead of -ENOENT.  Skip such slots.
->
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> 2. A throttled write sleeps in its submitter, which for the shrinker is
+>    whoever entered reclaim, often an application thread in a page fault.
+>    Patch 4 moves that writeback to a per-lruvec kworker.
 
-Acked-by: Yafang Shao <laoar.shao@gmail.com>
+Yeah that tracks with an older experiment of mine, where I add some
+manual throttling to zswap shrinker to reduce latency :) So I think
+this problem is real - thanks for root-causing this, Alex!
 
-Could you please send this fix separately from the series so it can
-land in bpf-next on its own?
+I'm a bit nervous about adding multiple kworker threads though, hmmm.
+Per-lruvec sounds like a lot of threads... Do we have to scale this by
+lruvec? Why not per-cpu, or just a global thread? Is there any data to
+support this autoscaling?
 
-> ---
->  include/linux/bpf-cgroup.h | 9 +++++++++
->  kernel/bpf/cgroup.c        | 3 ++-
->  2 files changed, 11 insertions(+), 1 deletion(-)
->
-> diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-> index 8a75a6cd7309..3b2c127d401d 100644
-> --- a/include/linux/bpf-cgroup.h
-> +++ b/include/linux/bpf-cgroup.h
-> @@ -76,6 +76,14 @@ to_cgroup_bpf_attach_type(enum bpf_attach_type attach_=
-type)
->
->  extern struct static_key_false cgroup_bpf_enabled_key[MAX_CGROUP_BPF_ATT=
-ACH_TYPE];
->  #define cgroup_bpf_enabled(atype) static_branch_unlikely(&cgroup_bpf_ena=
-bled_key[atype])
-> +/*
-> + * Same test when @atype is not a constant.  cgroup_bpf_enabled() uses
-> + * static_branch_unlikely which creates jump-label site and requires sta=
-tically
-> + * selected key. Since key is selected dynamically, use static_key_enabl=
-ed here
-> + * and keep it off fast paths.
-> + */
-> +#define cgroup_bpf_enabled_runtime(atype) \
-> +       static_key_enabled(&cgroup_bpf_enabled_key[atype])
->
->  struct bpf_cgroup_storage_map;
->
-> @@ -508,6 +516,7 @@ static inline int cgroup_bpf_struct_ops_attach(struct=
- bpf_map *map,
->  }
->
->  #define cgroup_bpf_enabled(atype) (0)
-> +#define cgroup_bpf_enabled_runtime(atype) (0)
->  #define BPF_CGROUP_RUN_SA_PROG_LOCK(sk, uaddr, uaddrlen, atype, t_ctx) (=
-{ 0; })
->  #define BPF_CGROUP_RUN_SA_PROG(sk, uaddr, uaddrlen, atype) ({ 0; })
->  #define BPF_CGROUP_PRE_CONNECT_ENABLED(sk) (0)
-> diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
-> index 696b27383974..99b4e96f5db7 100644
-> --- a/kernel/bpf/cgroup.c
-> +++ b/kernel/bpf/cgroup.c
-> @@ -45,6 +45,7 @@ static enum cgroup_bpf_attach_type find_atype_by_struct=
-_ops_id(u32 type_id)
->
->         for (atype =3D 0; atype < MAX_CGROUP_BPF_ATTACH_TYPE; atype++) {
->                 if (cgroup_bpf_is_struct_ops_atype(atype) &&
-> +                   cgroup_struct_ops[atype].type_id &&
->                     cgroup_struct_ops[atype].type_id =3D=3D type_id)
->                         return atype;
->         }
-> @@ -1448,7 +1449,7 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, =
-const union bpf_attr *attr,
->                         return -ENOENT;
->                 from_atype =3D to_atype =3D atype;
->                 flags =3D 0;
-> -               if (!cgroup_bpf_enabled(atype))
-> +               if (!cgroup_bpf_enabled_runtime(atype))
->                         goto skip_count;
->         } else if (type =3D=3D BPF_LSM_CGROUP) {
->                 if (!effective_query && attr->query.prog_cnt &&
-> --
-> 2.53.0-Meta
->
->
-
-
---=20
-Regards
-Yafang
+And do we have any concerns with work (CPU) accounting, from a cgroup
+perspective...?
