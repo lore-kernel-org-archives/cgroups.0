@@ -1,125 +1,149 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F6B3470429
-	for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 23:56:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F12AD349CF8
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 00:27:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790639780; cv=none; b=ahJRRdCjJKjfnRTaMi2fR1hqL8VC9P4OAZHk+AdXj+rpyWsUcJXmwwQvh7FQpk0Ge/W24V/WC8A68e8Nthup/N2CrCmUAWxvXLjM9YDolgWZVHmAhchBXQxHytvfHkiC1qmRe08uUUUisbJjfMv/VaY05EOMn1bzfDb88JYB5uk=
+	t=1790641668; cv=none; b=Ex3d1QtiUv3viqqwd3Yh93lfCl3E9ERe0amdxnZ1xSSi+GiuG89KGbgcQyCdb57qFz5m5dunJz5kxDTgdaJW1eXJwZcOXsnCpq98DXCP3Ik2GZnHPQM4Uquba75cQ8Mie2Nt5EHnS0ND+uOxvamYE5VNR0kfz2dooxSO1Kqht6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790639780; c=relaxed/simple;
-	bh=IUzkJe7E2I+7iIA+Hf+NS+6dXXddmPQQJyCxBlmf+yE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XGaBcFgzEpikpWusFhxSwV2WUHZzX2Sb19+S+iZBaxuFYbLENJOBFe39sffsTeALpFoJ4oVWURiBcpgYpJC10UW+rwwOB11QbBzrRJ7uFUOYXHgq95BB3bvoyjV8K+jSJYuGewa93IYwFLdkdQS1eWDTOBuX83VxNkM1Abt5lkg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XzYNOKXQ; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790641668; c=relaxed/simple;
+	bh=pMvCDTEkuAALUIrceyZBHP9kCx7IfJSFKZfbXoVEGjQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=emSMiKGh9Sie1sGOra2j4k2AcXoz/R6+YoWT1uinwoqnYHvrN8Y+AK286i/vx574V6OhlnW97BBfHElzIRMY6Dhv++eG/Bao88mQ/gXUSejKd4oNi5FOMLxKlX8ugDQbgUz1TF+T/Nfj0ancNZBAks5SzdzYt4yYm4s2B9qO2SQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ESq97FFa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XzYNOKXQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790639778;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3OWddXProFqB61LokMw/W+fAhbCgqprBFmOTTSgo40E=;
-	b=XzYNOKXQqifSKa3/mP8FJr/4H+M1KNVnspIfNl35yVPkYcSUNjIZ0R3BI69SYUmR+WIwnu
-	Rvs7HXGuM2vrhRXcRYRfvaEaXHYkIgsygSpKctrUkBI+TlLuEVqIoQkHWGiKBqj0kGsKLT
-	bbyAbsx4w6fKIeDEuZxpmxF6gc3ffv0=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-678-zfFkeGlKNNG0C7s-FFwMHw-1; Mon,
- 28 Sep 2026 19:56:13 -0400
-X-MC-Unique: zfFkeGlKNNG0C7s-FFwMHw-1
-X-Mimecast-MFC-AGG-ID: zfFkeGlKNNG0C7s-FFwMHw_1790639772
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 786EB1801377;
-	Mon, 28 Sep 2026 23:56:11 +0000 (UTC)
-Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1FB2F180036E;
-	Mon, 28 Sep 2026 23:56:08 +0000 (UTC)
-Message-ID: <ac493a53-378f-4c06-b2cd-e0a27ec64957@redhat.com>
-Date: Mon, 28 Sep 2026 19:56:08 -0400
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ESq97FFa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D24CF1F0089A
+	for <cgroups@vger.kernel.org>; Tue, 29 Sep 2026 00:27:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790641666;
+	bh=APJhL/UXcBCjjwICTLFT+qLin1KDXiRR0y2N5bPp8T8=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=ESq97FFaS8q6O+WGq8mTMUSToYKUb+XzvsNnBGTw4Yfq//3liXu2B3bAv7bcygdli
+	 EcHwpI4uM9pG+PUVngoWR6FzLO0tgC/0cKz935SPY0E8pLtZbxVA2GkK9LZprUpqw2
+	 kp586WFL9UgLZZQwTNyhbLUWzYUgkY8T2hW91Gxa2Jj7QLSxcnI/egjRJOFsyE6zTH
+	 MQitmOsQu/01PuHkjjIBs3OQA+lJn8aPHg151owirTWk+5lo2DtlA/4bwfsWrrPey4
+	 MOb1YDPRUwN4TweCY78GvrHPfK0ZNR7urK4fizgTgf4M+q8ttD/pIntwgzWSW9hTmc
+	 eAfxlQdMmxqdg==
+Received: by mail-ej2-f18.google.com with SMTP id a640c23a62f3a-c2b40e4744eso343117666b.2
+        for <cgroups@vger.kernel.org>; Mon, 28 Sep 2026 17:27:46 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBx8yw46SpPiLcrft64YibYGVJrJqCBttNG4vFZtychsy9BwokSa07w6KDRp0NKtzPyqFTIHZ2Tx@vger.kernel.org
+X-Gm-Message-State: AFuF++lgp/R23CwzPjbhSTpsME3/+bwT+NR8i0bZua8UV4aOPmit0rTK
+	+EwDOe0EWfgb4gooNRgSpqb112SO2D7niBGfehAt0s24DDnzlnSndRbHB2hVGgAZXSz8VuqzhiQ
+	yJ07CvuNlH6FSIzCQCD6nGQAWMUraMewtiPsGRJzXSw==
+X-Received: by 2002:a17:907:a909:b0:c26:1649:47b4 with SMTP id
+ a640c23a62f3a-c2ac53fbdb4mr1170576266b.42.1790641665270; Mon, 28 Sep 2026
+ 17:27:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] cgroup/cpuset: Invalidate remote partition on
- housekeeping conflict
-To: Tejun Heo <tj@kernel.org>, Guopeng Zhang <guopeng.zhang@linux.dev>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner
- <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260927095722.70660-1-guopeng.zhang@linux.dev>
- <7f4c57b26ad120ab30adf35653f1dd94@kernel.org>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <7f4c57b26ad120ab30adf35653f1dd94@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+References: <20260926045517.3458413-1-matthias.goergens@gmail.com>
+ <CACePvbWM8kMjtJbH4vc6Qt=TBZQ-0d-Yj9NOtkepZmtNN3wd9w@mail.gmail.com> <20260928151924.2686290-1-matthias.goergens@gmail.com>
+In-Reply-To: <20260928151924.2686290-1-matthias.goergens@gmail.com>
+From: Chris Li <chrisl@kernel.org>
+Date: Mon, 28 Sep 2026 14:27:33 -1000
+X-Gmail-Original-Message-ID: <CACePvbW=fZ3G1JwnbiRo+_qsteN2smbbf3jX0UPFmhVyWA5_6A@mail.gmail.com>
+X-Gm-Features: AclHuK_oifA42INPrgsCc_iqlMTCQtFcDVPMyqJSWfGYorE6tGAaJtv8iXHRTRc
+Message-ID: <CACePvbW=fZ3G1JwnbiRo+_qsteN2smbbf3jX0UPFmhVyWA5_6A@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 0/4] mm/swap: reserve swap areas for deliberate offload
+To: Matthias Goergens <matthias.goergens@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Kairui Song <kasong@tencent.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, David Hildenbrand <david@kernel.org>, Michal Hocko <mhocko@kernel.org>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Nhat Pham <nphamcs@gmail.com>, Yosry Ahmed <yosry@kernel.org>, 
+	Youngjun Park <youngjun.park@lge.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Barry Song <baohua@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-api@vger.kernel.org, 
+	Alejandro Colomar <alx@kernel.org>, linux-man@vger.kernel.org, Karel Zak <kzak@redhat.com>, 
+	util-linux@vger.kernel.org, Jani Nikula <jani.nikula@linux.intel.com>, 
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+	Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, intel-gfx@lists.freedesktop.org, 
+	dri-devel@lists.freedesktop.org, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Pavel Machek <pavel@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Will Deacon <will@kernel.org>, linux-pm@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Shuah Khan <shuah@kernel.org>, 
+	linux-kselftest@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 9/28/26 2:44 PM, Tejun Heo wrote:
-> Hello, Guopeng.
+On Mon, Sep 28, 2026 at 5:19=E2=80=AFAM Matthias Goergens
+<matthias.goergens@gmail.com> wrote:
 >
-> The following is a Claude-generated review.
+> Hi Chris,
 >
-> On Sun, Sep 27, 2026 at 05:57:21PM +0800, Guopeng Zhang wrote:
->> +	bool updating = is_remote_partition(cs);
->> +
->> +	if (!capable(CAP_SYS_ADMIN))
->> +		return PERR_ACCESS;
->> +
->> +	if (!updating &&
->> +	    (!cpumask_intersects(excpus, cpu_active_mask) ||
->> +	     cpumask_subset(top_cpuset.effective_cpus, addcpus)))
->> +		return PERR_INVCPUS;
-> cs->remote_partition can be stale when remote_partition_enable() is
-> called. If a root <-> isolated switch of a valid remote partition fails
-> in update_prstate(), the partition is made invalid without
-> remote_partition_disable(), so the flag stays set and its CPUs stay in
-> subpartitions_cpus. A later enable then skips the PERR_INVCPUS checks.
-> With isolcpus=domain,4:
+> Thanks for resolving the conflicts yourself and reviewing it.
 >
-> 1. A is a member with cpuset.cpus 2-6 and cpuset.cpus.exclusive 2-4. B
->     has cpuset.cpus 2-4 and no cpuset.cpus.exclusive.
-> 2. "isolated" to B's cpuset.cpus.partition. B becomes a valid remote
->     partition with effective_xcpus 2-4.
-> 3. "root" to B's cpuset.cpus.partition fails with PERR_HKEEPING.
->     effective_xcpus is cleared but remote_partition stays set.
-> 4. 5-6 to A's cpuset.cpus.exclusive. B's excpus becomes empty, which
->     matches the cleared effective_xcpus, so update_cpumasks_hier() skips
->     B.
-> 5. "isolated" to B's cpuset.cpus.partition. This used to fail with
->     PERR_INVCPUS. Now B becomes a valid isolated partition with empty
->     effective_xcpus and the WARN_ON_ONCE() at the end of update_prstate()
->     triggers.
+> > What is the high-level user-visible impact of this series?
 >
-> This is from reading the code, not reproduced. Maybe have the callers
-> pass whether it's an enable or an update instead of deriving it from
-> cs->remote_partition?
->
-> The stale flag itself is a separate, pre-existing bug. Switching B back
-> to member after step 3 trips the WARN_ON_ONCE(old_prs < 0) in
-> partition_xcpus_del().
+> Being able to use more interesting swap backends and logic when the
+> machine is not under memory pressure.  It is much easier to write a
+> swap backend that may occasionally allocate memory than one that is
+> guaranteed never to, so today such backends are either unsafe as swap
 
-You are right. It is a bug that has to be fixed. I have posted a cpuset 
-patch to fix that partition state switch bug.
+I actually don't know of a swap backend that absolutely will not
+allocate memory on swap out yet. Some backends allocate more than
+others. Because the proactive reclaim can write to the non-offloaded
+swap backend. That brings me back to my original question, in what way
+this series helps.
 
-Cheers,
-Longman
+So the answer seems to be that previously, some backends were unusable
+by swap, due to possible memory allocation. With this series, those
+back ends are usable for the proactive reclaim now. It is a 0 to 0.5
+improvement because direct reclaim can't use it yet.
+
+
+> or ruled out (btrfs, for example, refuses swapfiles that are
+> copy-on-write, checksummed or compressed).
+>
+> > I am curious: if we never run out of swap file space on the
+> > non-offload swap area, does that mean we don't need this patch series?
+>
+> No: running out of conventional swap isn't the point.  Without the
+> series, any active swap area may be written under pressure, so a
+> backend that may allocate can't be used as swap at all, however much
+> conventional swap there is next to it.
+
+But proactive reclaim can also use the non-offload swap area. So if we
+have plenty of non-offload swap area, both proactive reclaim and
+direct reclaim can use that non-offload area. The value of this series
+isn't apparent. If you don't have a traditional swap-capable backend,
+then your non-offload area is zero.  That is considered a special case
+of running out of non-offload swap area: never having a traditional
+swap area in the first place.
 
 >
-> Thanks.
+> > However, direct reclaim can use both types of swap areas.
 >
-> --
-> tejun
+> In v2 it can't: only memory.reclaim, per-node reclaim and MGLRU's
 
+Sorry I meant proactive reclaim can use both types, nothing constrains
+proactive reclaim.
+
+> debugfs eviction may write new data to an offload-only area; direct
+> reclaim, kswapd, MADV_PAGEOUT and DAMON reclaim may not.  But I think
+> your suggestion to flip it round is closer to what I want: mark the
+
+Flipping it around might provide additional benefit. I know some users
+maintain off tree patches to turn off zswap on the direct reclaim path
+exactly because zswap might allocate more memory before it can free
+some. If the kernel can be smart about it. It provides additional
+value to the status quo.
+
+> areas whose writes may allocate, and keep pressure reclaim away from
+> those, rather than tying it to what started the reclaim.  I'll work
+> that into v3, together with Kairui's suggestion to build on the swap
+> tiers work.
+
+Yes, I feel that cluster-level marking might not be needed, you can
+remember which si has the offload flag. However the per cpu cache
+needs to know which context might require using a different cached
+cluster. That is the trickiest part. The rest of the patch is just
+enough plumbing to preserve whether the swap-out context is proactive
+or not.
+
+Chris
