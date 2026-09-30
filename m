@@ -1,77 +1,101 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAE8544E055;
-	Wed, 30 Sep 2026 08:11:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7611E471432;
+	Wed, 30 Sep 2026 08:45:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790755904; cv=none; b=afmKHM3B+O92utvLp/37p6Is9OcAmwIhHc6W/ZPdV6OSHhPIn6r3oe5+TrmWkrsRZXp9L85KwlS4zR0ar3Nzu5P5e5SgFvJhQ7ORi17vgcABgJSyS2Y2GX+DeIahiVDuhhqqKFNvaYwywzdjZ5rgwdVIDHTaCXDXwMA1OSc29a8=
+	t=1790757915; cv=none; b=c06r4cmAoWS4oFpVySQfAh8jxVGl86aCCFreQ334IF3ml+iCmDuQ7ToJZVD8uRaz2PthZKXTGdN/TMrUM7r8vA9z35qbtxwAIQ7HFeCfEJpnS8cNbXsuR4xAQiRYcHOjIZNQeoHMHi01bjsGC+wkCHqc2vDL5wnc0FYR1nKfIh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790755904; c=relaxed/simple;
-	bh=n6LqOCOL05LpmXLjZqV2F6/Qv/JfqGYo6fy5jnfWq9E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WfO+XjFUGiV7Q39+YKcC5l//+c85FZlBifs1nizzemk8VHpz84seTJgDvxs/IWYGAd+zHHQzNPLK0uvBK92BklgGJxHPBVM76AQ8cSdCRPkUGQIXrOkMdVifogMclzKje/BBzjioNkMH8zPKS1Uwp71zHv/p5i2t09xzq/7SQLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Nw2M0uL1; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1790757915; c=relaxed/simple;
+	bh=+xtx+T+y3RrRKTqC8Bf8SkRbgyyqyiqJI5xvwc6gtGU=;
+	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
+	 Subject:From:To:Cc:Date; b=X/U+p3Zxfxa7OahS0orI3JmP0Xj37qiLckj+b8JbBbRdFvBzAoehSgR3hcZpHz6Kby0R6JE6mZQF7q2wwFffarrCn6sx1sZ8BHxjLXs9/0m10WDeRURqmfXtyRlMxUByuxgItFmsFxtBQUlyhxKAtxTALPREiZrybuAxus3Kp74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LlqXmAPW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Nw2M0uL1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=n6LqOCOL05LpmXLjZqV2F6/Qv/JfqGYo6fy5jnfWq9E=; b=Nw2M0uL14wIlEsHYUYs6yOzm3j
-	+dKb5C0Kk3YlSidiL0Ba6JIcuRbWgH5asWlAeQ6RCIgUTxc8oiYwiaW9pTy1YcjraqGOvNuLBHXrR
-	o6hn63cIpymrVnr+g8y2G3DqDw/KecId2PjM7AdgZpUfR5cMKrxcl+ElFJk6DeoSaXvarakfuClBG
-	YUcAa5vqwPJiKioSUMjpt7VInDRpT/eTyDtuCJbY8saKmkBDjg9R/pkGHuEeyyQRGAmJTC7023SEp
-	jLgLIIH8diWHICjaA6J7xsH8JAQC+ZoUOPBCRIWTUGyGPSuAfv/Z09DwpiGj9al/luT4ysuuPEirh
-	s3odEgwg==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.99.2 #2 (Red Hat Linux))
-	id 1xBpPT-00000003Vu7-3kBu;
-	Wed, 30 Sep 2026 08:11:28 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id B93F4300673; Wed, 30 Sep 2026 10:11:25 +0200 (CEST)
-Date: Wed, 30 Sep 2026 10:11:25 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Waiman Long <longman@redhat.com>
-Cc: Andrea Righi <arighi@nvidia.com>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Tejun Heo <tj@kernel.org>, David Vernet <void@manifault.com>,
-	Changwoo Min <changwoo@igalia.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>, sched-ext@lists.linux.dev,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] cgroup/cpuset: Protect is_in_v2_mode() in
- cpuset_num_cpus()
-Message-ID: <20260930081125.GF88198@noisy.programming.kicks-ass.net>
-References: <20260929084124.626693-1-arighi@nvidia.com>
- <20260929084124.626693-2-arighi@nvidia.com>
- <20260929-making-language-254d9c6a6605@there>
- <af938567-01d2-4518-8f7e-974828e25d3e@redhat.com>
- <arv2-3-6-Ewv0gpb@gpd4>
- <b8f66cbe-bb1e-4148-b2e2-55bd95f1c8d1@redhat.com>
- <20260929190853.GE88198@noisy.programming.kicks-ass.net>
- <500cb19a-549b-4055-a807-c3c40da787ae@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LlqXmAPW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24C661F000FF;
+	Wed, 30 Sep 2026 08:45:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790757905;
+	bh=arDYhxHpGG4MOLTb9VLYxs9bYjwV6esCnhBx9b/qxHs=;
+	h=In-Reply-To:References:Subject:From:To:Cc:Date;
+	b=LlqXmAPWub7bJ2s18Jgni9t8rZyX5fg6Eoppdh5lzZrOiHJ15zFibMPXPnb8/rE8m
+	 tvuQZM8ZriEmMMvIpgPjJvWW+dE1DhnWGMUXtS5amNKLJgt45TmNN5/2GQU1nbbd+b
+	 NMrUu8G7gZAVztaQTtalB5Ck11+q+SAXtGmBt8n61htXj8IBi/n2yIBol7UsTmaz74
+	 LjaEsFtNwXlFWASq25ieB1sDYR8gFPM2M6She53J9fXsiPckztvuGws/8wyi/h1Ogl
+	 Gb7gCestXo3tQd4ayOXIn6leHZgcqmZkRQaxilPHrilqbFrFf75+uvEnd9k2YdBkiX
+	 t5t2S5YAgY2qA==
+Content-Type: multipart/mixed; boundary="===============5156715475000709067=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <500cb19a-549b-4055-a807-c3c40da787ae@redhat.com>
+Message-Id: <17920ecc726c484de4a46eb61ddbe63000838a799bdb87783f55c50ca743af94@mail.kernel.org>
+In-Reply-To: <20260930075154.189958-5-cui.tao@linux.dev>
+References: <20260930075154.189958-5-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v8 4/4] docs: cgroup-v2: document the iocost BPF cost model attachment
+From: bot+bpf-ci@kernel.org
+To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk
+Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,ast@kernel.org,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,alexei.starovoitov@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
+Date: Wed, 30 Sep 2026 08:45:04 +0000 (UTC)
 
-On Tue, Sep 29, 2026 at 03:46:23PM -0400, Waiman Long wrote:
+--===============5156715475000709067==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-> The cpuset_v2_mode mount option is only for making the cpuset.cpus and
-> cpuset.mems behave like in v2. The cpu-cgroup and cpuset-cgroup can still be
-> in separate hierarchies. If cross-cgroup transition is the main point, it
-> won't work with the cpuset_v2_mode mount option. We should switch to use
-> cpuset_v2().
+> docs: cgroup-v2: document the iocost BPF cost model attachment
 
-Yes, the cross-cgroup transition is fundamental to how this works.
-Without that you cannot reasonably talk about the CPUs of a cpu-cgroup,
-you need to have cpu and cpuset aligned.
+TL;DR: Commit message only: it claims the docs cover detach restoring the
+builtin model and ctrl= never selecting a model, but the added text may not
+say either; add a sentence or trim the message.
 
+> docs: cgroup-v2: document the iocost BPF cost model attachment
+>
+> Document the BPF cost model attachment in the io.cost.model section
+> of the cgroup v2 documentation: attaching an iocost_model_ops
+> struct_ops to a device by its major:minor, the model=bpf readback
+> while attached (ctrl keeps describing the coefficients), that
+> detaching restores the builtin model, and that ctrl= writes never
+> select a model.
+>
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+
+The commit message says the patch documents "that detaching restores the
+builtin model, and that ctrl= writes never select a model".  Does the added
+text actually cover both of those points?
+
+The new paragraph says:
+
+    only detaching removes the model, after which "model=bpf" fails.
+    "ctrl" keeps describing the builtin coefficients, ...
+
+It never says that the device goes back to the builtin model on detach,
+although ioc_bpf_detach() clears ioc->model and the readback then shows
+"linear".
+
+It also never says that a ctrl= write cannot select the BPF model.  That
+is what the code does:
+
+block/blk-iocost.c:ioc_cost_model_write() {
+    ...
+    accepts only ctrl=auto and ctrl=user, and any other value takes
+    'goto unlock' and returns -EINVAL
+    ...
+}
+
+Could a sentence be added to the documentation saying that "ctrl" accepts
+only "auto" or "user" and that detaching returns the device to the builtin
+model?  Otherwise, could those two clauses be dropped from the commit
+message?
+
+
+---
+AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
+See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
+
+CI run summary: https://github.com/kernel-patches/bpf/actions/runs/36689638400
+--===============5156715475000709067==--
