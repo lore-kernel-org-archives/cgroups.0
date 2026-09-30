@@ -1,137 +1,117 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B67B52842C
-	for <cgroups@vger.kernel.org>; Wed, 30 Sep 2026 17:57:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE863C0A0C
+	for <cgroups@vger.kernel.org>; Wed, 30 Sep 2026 19:03:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790791075; cv=none; b=reS6gu2HnA/RP2TyNwwp2/Qdzz0nGhWp7PUlgYVd9PzXBzdyeQmrIjwx6ZmuuiGPB5TFTCqFCZ79I+ahC9ZD5sMWa4p+PAPSi+1M3aZrCanGI3wWEDkCBgjIC/9JIuQdorlXRFWFYPs+j7hhnDGIsR4bdWcX8OfyH4G7JfHw63M=
+	t=1790795028; cv=none; b=j2RRP/OrUp+q9xl4e14te7xVZeEvQy4YGWuuGXCKv0TlLxibQWWiwdln+KxeDhntnPMkKr0F6j9qSBu3xncvz7cLb8VqNEQdGlAUHFyuTshDu9b/SpdwyRWTcvrBmOxWeTWPcOlq+xVmlCHPTp0DZ55uN/oYjLpd1DKkRPtYytY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790791075; c=relaxed/simple;
-	bh=TEDQv8i1zZeBpGJQIMmmqZAa0WLbo55RWkJJZStpWZE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kHS6lnMBZttBQ1RQSxxWZJV0wzOcnh9lGCChOtnwL1GGInr7GWvefEzkr5Qxj7niA0kBDvEIcFTGsdamZAePBf9oOEdfiyjl8/iLaF4DSv9nmPZ+GKwW+HC5ETd9sN3YhX1w6IuLJOKXgXOKaMlD4PdhL0WX9ROnl9K2X5WR7aI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=ABeQbkco; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1790795028; c=relaxed/simple;
+	bh=4+oie+eTfH4jo2XaFBzr53mKqHLBWRYbAnYHwX1qjgE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hVl7N3Atbqb7f+oMHtrMuefQskT/VAbpkTZSC4y/axZgyiLm+yF1UmGmY7hCEPF7nbY9pOFb/PCbiHRxJUpr/AcyGsqhCA748rWRDYzophkpvG3p0TXIXbg3Kmo25IXlJCBVmjk1dktU1u8jeMOTRAQ7m+GudtBB5cwgXK8Dy20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XxOZS0eR; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ABeQbkco"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e6598dd44so35754295e9.1
-        for <cgroups@vger.kernel.org>; Wed, 30 Sep 2026 10:57:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1790791072; x=1791395872; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=TEDQv8i1zZeBpGJQIMmmqZAa0WLbo55RWkJJZStpWZE=;
-        b=ABeQbkcoyrKS8KPngYQ6bDoSIZ1vpUKXDTS7qAoW6HMo94WnLFrF3D8UQ6OB0FR+Bf
-         ofQPGoyTI27agGmZWwGbI+I8zSYd+tsRi7EUNUU3g0vcQKavacJuzDj0CqlbETMmj7kt
-         MIrjZmfVLDWKduIuYwcAmxy+Ul5rvJNiOqZkxYJXT3hrmTYWE0HkptLo9DkXluDoiflP
-         F3ab8TD0pbai5Lu+sTftZBOAeeXkSoVqw24rincBABAOtT4k1l4NeuZ6hb4VYqTuM2D4
-         +LInGfbtYZ8S/lY2aBoFeEqKYxwfP+uf+4zmeT/EHNDBu7D3YGcEGo4Kqj/8rDuHurl8
-         TPww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790791072; x=1791395872;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=TEDQv8i1zZeBpGJQIMmmqZAa0WLbo55RWkJJZStpWZE=;
-        b=nGKX2xnemsWE4fcYyOmvCY8bZmMjsLF+R9J9wJCcqgYPrEn9TizOimgq1OwqK8UO8y
-         U9UH4ewO2auhqCRm3Vnn8hXdtfMngB35+l+YwuwpHZIFlsoN3Ofh5PutHGZkUQ3riBZZ
-         Dn/BzTNe3cDvccvJMXF8ZoExMro0CeQpIwDBulws/IgtvutAw+reuBb4xRJQA3LHMryc
-         ROrzE9OMAxFZXzyJ3SvwhnwZN1A3E4pW6Gqwkor+MOOJmSaeW7B1Df9bG3stJHleyVbU
-         EkVWjnosYGbBVugt2ppNDsUpohpthNl3g6tlS/2SfpkmBdpBZ8AA1kfBPhfFDUC4OUQ1
-         HaNA==
-X-Forwarded-Encrypted: i=1; AKwUvBx9fse7FlGthJaIVro1AE/9GaJwrBAVtRvUIEaRKuqZ3LPpVnNQW+tYAh4T5li58MhuSG9FaG4Z@vger.kernel.org
-X-Gm-Message-State: AFuF++l8iuFAZ9/eyjNagivevhZjNaPBw4tOesz3+m8yN4KCq0xP/ias
-	3kypnnkTKic8FXuET5yaHuzpRkGmLvDBIB0Vo2qcCnn7KZgE53C1bwwwCCh6Q4Sjb8A=
-X-Gm-Gg: AYBFou2uCLFGdX1aAIUDH5lvkUW1vszTqW8kDiTLiZqk68MOA1luOy6ugI677CgcGt1
-	rrbqD55uUfSWRt49i2DNyBxRAZFsE2BCCL8xqPmcShmdfegK+Kej22E/07QQaUu9N5NkP9mg35Z
-	W+Ebzz2osyWEr61XVXmUtIVbfKecBWG7ckZ3nDI54/tsHr6r140L1/34K8IRrZwwjDSTKTkyyLv
-	cwdqFQaoFK8rqZ0S4a5FOzOqcTyCDJhWjS+WH0DsEaRYUiA4nZNpUiW8jVUkSYreNNbRcMcMOln
-	oG0wDVTMBLC60ELAyrbDYEyVSTjUTV/AUzi2zQErG1uWI8QgyUBQxAQ6RfCkSTswmnghYnSHwav
-	uneveb38PJXxF+uPmTyroBjkmxJdZOD7tjlfEqnOe1M/xVwiXl0wEYHyVmK6RgFOYmnDRzPhO9f
-	1yQdnwmfcEK2O0vkvznblClcRE7VCObQHNZ3k2uciY+WV9ikrS8J6Ey2W65QVUrIpb1KcWDUlX/
-	A==
-X-Received: by 2002:a05:600c:4445:b0:4a0:1b14:e845 with SMTP id 5b1f17b1804b1-4a01b14e85dmr37856555e9.2.1790791072471;
-        Wed, 30 Sep 2026 10:57:52 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a01eb8372dsm9607045e9.14.2026.09.30.10.57.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Sep 2026 10:57:51 -0700 (PDT)
-Date: Wed, 30 Sep 2026 19:57:50 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Waiman Long <longman@redhat.com>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Andrea Righi <arighi@nvidia.com>
-Subject: Re: [PATCH v2] cgroup/cpuset: Don't access cpuset_cgrp_subsys.root
- in is_in_v2_mode()
-Message-ID: <20260930-marlin-roaming-0be876825765@there>
-References: <20260930031833.660267-1-longman@redhat.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XxOZS0eR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790795026;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XXomPzkAX9lYEuybyM3DBpwDXJ1S/KAjTHXLk9lllvI=;
+	b=XxOZS0eRqQi6I5ZJNzK75GXhf8gL/7H/g7Vh55Uck9/GvF7lhbY9OjV0PgOYqMbkMRfMsE
+	AjfUxIyqBBgCtmhQIJy5hw3gVHMs8++jQJGoV2lqz7E+j/aEhkdG2whHWw+egpMMf+FBe8
+	oailgcEV59AyPavmyWKcBE1UAWT6URY=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-611-NUf9f8fROdK4G8xkWV_LWw-1; Wed,
+ 30 Sep 2026 15:03:39 -0400
+X-MC-Unique: NUf9f8fROdK4G8xkWV_LWw-1
+X-Mimecast-MFC-AGG-ID: NUf9f8fROdK4G8xkWV_LWw_1790795018
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B77931944ABF;
+	Wed, 30 Sep 2026 19:03:37 +0000 (UTC)
+Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 49AD7433;
+	Wed, 30 Sep 2026 19:03:36 +0000 (UTC)
+Message-ID: <b3a241b4-b769-41d4-988b-95b14e7db1f0@redhat.com>
+Date: Wed, 30 Sep 2026 15:03:35 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="67ozboih2pymuqad"
-Content-Disposition: inline
-In-Reply-To: <20260930031833.660267-1-longman@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] cgroup/cpuset: Don't access cpuset_cgrp_subsys.root in
+ is_in_v2_mode()
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Andrea Righi <arighi@nvidia.com>
+References: <20260930031833.660267-1-longman@redhat.com>
+ <20260930-marlin-roaming-0be876825765@there>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260930-marlin-roaming-0be876825765@there>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+
+On 9/30/26 1:57 PM, Michal Koutný wrote:
+> On Tue, Sep 29, 2026 at 11:18:33PM -0400, Waiman Long <longman@redhat.com> wrote:
+>> After seeing the patch [1] to guard is_in_v2_mode() with RCU, it makes
+>> me realize that is_in_v2_mode() may be called in a context where a new
+>> cgroup filesystem is being rebound with stale cpuset_cgrp_subsys.root
+>> pointer.
+> add: which is a privileged operation.
+>
+>> Avoid this potential UaF situation by adding a new cpuset_v2_mode
+>> flag which is set when the cpuset_v2_mode mount option is used. This
+>> flag is written into only when cpuset_bind() is being called with a
+>> stable cpuset_cgrp_subsys.root value. The is_in_v2_mode() helper is
+>> modified to read the new cpuset_v2_mode flag instead of accessing
+>> cpuset_cgrp_subsys.root directly.
+> You write about "potential" situation. But are there any such callers
+> (after the cpuset_v2() conversion in cpuset_num_cpus())?
+
+Other than the cpuset_num_cpus(), is_in_v2_mode() should only be used 
+with either cpuset_mutex or callback_lock held. Rebinding a cgroup 
+subsystem is protected by holding cgroup_mutex. I am not aware of any 
+situation where rebinding is happening while cpuset code is being called 
+into, but I can't rule out that possibility. Also it is possible that 
+future cpuset code extension may make it possible that this race 
+condition can happen. For safety, it is better to make the code safe. 
+That is the reason why I said it is a potential situation.
 
 
---67ozboih2pymuqad
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Subject: Re: [PATCH v2] cgroup/cpuset: Don't access cpuset_cgrp_subsys.root
- in is_in_v2_mode()
-MIME-Version: 1.0
+>
+>> Fixes: b8d1b8ee93df ("cpuset: Allow v2 behavior in v1 cgroup")
+> I'd even consider (pruning to)
+> Fixes: d23b5c5777158 ("cgroup: Make operations on the cgroup root_list RCU safe")
+>
+> (Admittedly, is_in_v2_mode() wasn't always called under cgroup_mutex, but
+> I'd argue (without comprehensive analysis) that predicate's callers were
+> synchronized via cpuset_mutex in cpuset_bind() (and cgroup_mutex)
+> anyways.)
+>
+> The caching you proposed looks safe. (I'm mainly writing because of the
+> commit message wrt UaF.)
 
-On Tue, Sep 29, 2026 at 11:18:33PM -0400, Waiman Long <longman@redhat.com> wrote:
-> After seeing the patch [1] to guard is_in_v2_mode() with RCU, it makes
-> me realize that is_in_v2_mode() may be called in a context where a new
-> cgroup filesystem is being rebound with stale cpuset_cgrp_subsys.root
-> pointer.
+I said UaF because it is what Andrea patch is implying. As I said 
+before, I don't think that can happen, but I can't rule it out.
 
-add: which is a privileged operation.
+Cheers,
+Longman
 
-> Avoid this potential UaF situation by adding a new cpuset_v2_mode
-> flag which is set when the cpuset_v2_mode mount option is used. This
-> flag is written into only when cpuset_bind() is being called with a
-> stable cpuset_cgrp_subsys.root value. The is_in_v2_mode() helper is
-> modified to read the new cpuset_v2_mode flag instead of accessing
-> cpuset_cgrp_subsys.root directly.
+>
+> Michal
 
-You write about "potential" situation. But are there any such callers
-(after the cpuset_v2() conversion in cpuset_num_cpus())?
-
-> Fixes: b8d1b8ee93df ("cpuset: Allow v2 behavior in v1 cgroup")
-
-I'd even consider (pruning to)
-Fixes: d23b5c5777158 ("cgroup: Make operations on the cgroup root_list RCU safe")
-
-(Admittedly, is_in_v2_mode() wasn't always called under cgroup_mutex, but
-I'd argue (without comprehensive analysis) that predicate's callers were
-synchronized via cpuset_mutex in cpuset_bind() (and cgroup_mutex)
-anyways.)
-
-The caching you proposed looks safe. (I'm mainly writing because of the
-commit message wrt UaF.)
-
-Michal
-
---67ozboih2pymuqad
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCar1NmhsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Agn0QD/Ys5S8WNqZm2/wRvcOmxa
-B3l6WjTaKqXvj0JQJsZk0G0A/R3IYRhO5z8otfIlpYDTiVt8wTuxQsTR0nue3nyu
-xxcM
-=Auae
------END PGP SIGNATURE-----
-
---67ozboih2pymuqad--
