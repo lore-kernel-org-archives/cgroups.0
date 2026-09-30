@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 938EC4AD7DB;
-	Wed, 30 Sep 2026 23:47:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D49D4BB297;
+	Wed, 30 Sep 2026 23:47:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790812074; cv=none; b=no9d+MpCAihi2zIwsJK1CE6H2ticbzjDhppPY4jKFT/CJwcsfMLiuLobpcz++cK3qGo/RU7N34SE6lyYDzAIc9ZyCf3iO9cO8yZTRxRuuPfcGxNC96I243PuGFus1HBrUKVJdHa7GdtrcGElzkEtWQO2w1Wxkr2xwi32IuX4SSM=
+	t=1790812075; cv=none; b=ChYkeqqiDWcRtSrLrFosjn6uphyAoH6fvMvJrciXALBYkg4gvAykmJO/UGbVF6Y1QDlQnvmgwhIZ/l2UYjFhHY/+V9D05/f8aYjNEQyrTEAr8gJskQExrSbC8XGaXYqmlNyUep3Ynv8YUCInKKFJZBM0g2H8inV4q/93f7OdJlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790812074; c=relaxed/simple;
+	s=arc-20240116; t=1790812075; c=relaxed/simple;
 	bh=4VoGU1NwqBGtSmcV8S/OrxbuIr6TwzH3SwjGst9fLaI=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=aguuZexqjDiRs6XDYz9xBM5rI+df2MCDFKT51Wa8Hccan8fAASsWFohTNcSAe3RxlKA9jCLGWBVulUwMXixyinYCCVvLVA/ec+iQ5f0ff3tHZBk8I9/RLeaVaZoGFaFAW+sCnD1HnQbyF/+kCVYqTI+JFF6mNjvoBSXTL3Y3vkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cqfsJYMr; arc=none smtp.client-ip=100.103.45.18
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=p44r+YTEpnidndm7X23p3Mb2hsHDINgcqDGRy54phzGTPW34yM4ikLUi2uRpBh8gyK7g3MWDlVLs4u9UlS/XlzzQux+uIoCIawmUft5ZXcOYO6War474p2dhb06+AF+72pX9flp1QO2qYGb700J9Cr9vzK7SUIbNtzHpGjDnspI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d7ieJHZM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cqfsJYMr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CF1F1F000FF;
-	Wed, 30 Sep 2026 23:47:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d7ieJHZM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14E9D1F00898;
+	Wed, 30 Sep 2026 23:47:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790812073;
+	s=k20260515; t=1790812074;
 	bh=4VoGU1NwqBGtSmcV8S/OrxbuIr6TwzH3SwjGst9fLaI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=cqfsJYMrMp7i4hci3BhAK46ZFLySdulgHHi78ZS/cpzDDnY7HfaxfSvdVSvhuhaec
-	 Ui1SdUADxOBNo8NY2LZXhkEbIGPinPgcFv2NjEVJW3KnTQIvnQeK1bhh3iWAgeRJFl
-	 8QFXUbj+n9+pVE3bYv7p7KkIRWApazbKTf+9KBKFIoPTEQAG1s6gZLnOnTN2xL+yaK
-	 BgLC2me9EEOX/RnRgExJhjKPwzn8lJafRc7zeEFbmS554wcSsQa1lMB0Q+BAH8amcB
-	 y4c8UxwITeB1D3j1TJYn4Mx3g+Bffg6pzKIQafeGj1eoCEBXzCNhJhKeP6+fbuFIAr
-	 jC+rGqH1HsvcQ==
-Date: Wed, 30 Sep 2026 13:47:52 -1000
-Message-ID: <37a3066e971a4a8657cc76159a226a28@kernel.org>
+	b=d7ieJHZMuZIspp/qHUGuPRgbW3kqQbvaX4Harj8GfK5vpFiErqLepEz+/n3wicf4W
+	 c36rqw2WE67lPuOkpzT2mYXpp9/tYi8JR2eAIC1mCebtOsZdbIC5bASBDb0q7Vm8KX
+	 dA4QR+6fjaw308D77caTNORnM2kMAKdxPK0H5pNYVw6rslyhoZDOSgWy/qgRTq7UrM
+	 Ix2S6yldloetxjDrS2+qXcsN3oHLVpW1fGz6DjpXWogugTBQDSHh8fPA6S0gRAyYz3
+	 uZQMDlVsYIe3J9r2jGOzZOpqvI2zSEATN506Ipn3LT/N8Vkq8Bs1Mq+Z1zapo8AXqZ
+	 92vhxfs+Xc6Kw==
+Date: Wed, 30 Sep 2026 13:47:53 -1000
+Message-ID: <1ed2e00f25c6735c84870faf72aa0237@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Ren Tamura <ren.tamura.oss@gmail.com>
 Cc: hannes@cmpxchg.org,
  mkoutny@suse.com,
  shuah@kernel.org,
- void@manifault.com,
  cgroups@vger.kernel.org,
  linux-kselftest@vger.kernel.org,
  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] selftests: cgroup: enable the cpu controller in test_cpu
-In-Reply-To: <179074810117.139422.8287518907118199923@gmail.com>
-References: <179074810117.139422.8287518907118199923@gmail.com>
+Subject: Re: [PATCH] selftests: cgroup: preserve command arguments in
+ with_stress.sh
+In-Reply-To: <179074810121.139422.1170111592692928081@gmail.com>
+References: <179074810121.139422.1170111592692928081@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
