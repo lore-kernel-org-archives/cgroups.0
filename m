@@ -1,36 +1,36 @@
-Received: from mta1.migadu.com (out-110.mta1.migadu.com [95.215.58.110])
+Received: from mta1.migadu.com (out-146.mta1.migadu.com [95.215.58.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8882E379C50
-	for <cgroups@vger.kernel.org>; Wed, 30 Sep 2026 04:12:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A79F35C68E
+	for <cgroups@vger.kernel.org>; Wed, 30 Sep 2026 04:13:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790741542; cv=none; b=TsT7kCi8kJP10oEFeSAI+w/dz3YMOcNg8Q3WobFwT4LsnshXB1QcaHehfQsknWq+UhKobnKyaQ4I1CDEPzGdvxgOWQbfvhUMHAtvYioJD/2vocnlyshQBz80eLbGJ+QhwC1pxjGWH6PPA7OL82sOWLc8xop5Q9cGdUrZ0uEbAEo=
+	t=1790741603; cv=none; b=tmyZXdZB0TsINTyLj6/MiZgskTbzVVR5O6B3kYDXvFcgFnTfE4YRFIZb3NLxn2/qVQGgc6lFK/+CbNiI3TebTzD27JySbFl4fyF/PPdPJss0T1jSKiG8Wp5C4pd//ub+Fubw+IiXkXC+FQ2KLUyi6BXlarJIHqs5Yv+vuTeoSxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790741542; c=relaxed/simple;
-	bh=5ZodmMk5mazCcATEXU3st4ZtMCZZcl1LFNQi48kL3+c=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=HO7wAHMYUrSA6U5K63Nt12BeElQc5amr2j4mpGfkwAsr2GC7t0zYBIS+1tv40dYt5oY18P9xF2LKXuUqM6P/JMZTVKVhaaT2SSdfgCThThe6MSHHSC3lDYQsAORzpXVGiL88IuhR32YuHky0TX6MT1u4doAwYwDuCQiCYJrYNCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=HiODBe9H; arc=none smtp.client-ip=95.215.58.110
+	s=arc-20240116; t=1790741603; c=relaxed/simple;
+	bh=+YMgdyQ3kqxTH63sfeairkBZNu2g9beRZTZOyKzE0B0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=i03kF997kDRA5DaVVfZx8qKrIJuxLN09duaEJwnOBDdpBM4YrmZoqJc+nxkB/ypqDWgR45a5+zV9ALsUo6BH6JFcgw8cZOEIreg7lBelmu8qIBtAbsBU9zlLu/ECwo5b/mi/AektkoaRQcpJAwWnYJ+AiO27nHbDb4a3WevqGNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=IbKyIsrO; arc=none smtp.client-ip=95.215.58.146
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="HiODBe9H"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="IbKyIsrO"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5ZodmMk5mazCcATEXU3st4ZtMCZZcl1LFNQi48kL3+c=;
+DKIM-Signature: a=rsa-sha256; bh=+YMgdyQ3kqxTH63sfeairkBZNu2g9beRZTZOyKzE0B0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790741537; v=1; x=1791346337;
- b=HiODBe9HJYSiStjIaj0hKbWEyCJHh2u7tZa3Sy5HEHm61R7IQSiGrQ3mSNfRPDkakKiNXhUy
- JC/6NYE9rgobU5kOYroEBvdFT+ardKefMXCg5ge7Qi/MGKQGBVg6D34YjixFFVXkQKWkF9Tn3sT
- EdRAj5dmvG3ibtbLXaTKc6/8=
+ t=1790741599; v=1; x=1791346399;
+ b=IbKyIsrOF2G6y61qX3Mft0F3H/3HrfM+pYOdY0y5TNcQTvZ8rk+wvLbLBzH5qMuXmbel0Hc1
+ gMqrYHablqtN5bcH6f6EzJoh3JDffeqxdRbqwMVSOSWub+3MX6MAoJWC791yv2Cckl4WXgUueVP
+ uA+r/LMxcvWMCV+1S/55Q6Jw=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8e53c0bfa2c49de2;
-	Wed, 30 Sep 2026 04:12:17 +0000
-X-Mizu-Trace-ID: 8e53c0bfa2c49de2
+Received: by smtp.migadu.com with ESMTPS id 8dfc395441b677a1;
+	Wed, 30 Sep 2026 04:13:19 +0000
+X-Mizu-Trace-ID: 8dfc395441b677a1
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <693c4abd-e074-463d-a859-ac8033982c81@linux.dev>
-Date: Wed, 30 Sep 2026 12:09:39 +0800
+Message-ID: <f00b6340-c86f-4c8d-8424-26faab877de4@linux.dev>
+Date: Wed, 30 Sep 2026 12:13:13 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -38,47 +38,83 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, josef@toxicopanda.com, axboe@kernel.dk,
- cgroups@vger.kernel.org, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org,
- eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net,
- linux-kselftest@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>,
- ameryhung@gmail.com, alexei.starovoitov@gmail.com
-Subject: Re: [RFC PATCH v7 0/4] blk-iocost: BPF struct_ops cost model
-To: Tejun Heo <tj@kernel.org>
-References: <20260924054549.2271705-1-cui.tao@linux.dev>
- <6f80eca83c87b60398110c3a6d735aec@kernel.org>
- <4f1571a1-7e56-4264-aa7f-8dce32931ddb@linux.dev>
- <44f02289433805946d1e3272f626a925@kernel.org>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <44f02289433805946d1e3272f626a925@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v2] cgroup/cpuset: Don't access cpuset_cgrp_subsys.root in
+ is_in_v2_mode()
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Andrea Righi <arighi@nvidia.com>
+References: <20260930031833.660267-1-longman@redhat.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20260930031833.660267-1-longman@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello, Tejun.
 
-在 2026/9/30 00:27, Tejun Heo 写道:
-> Hello, Tao.
+
+On 9/30/2026 11:18 AM, Waiman Long wrote:
+> After seeing the patch [1] to guard is_in_v2_mode() with RCU, it makes
+> me realize that is_in_v2_mode() may be called in a context where a new
+> cgroup filesystem is being rebound with stale cpuset_cgrp_subsys.root
+> pointer. Avoid this potential UaF situation by adding a new cpuset_v2_mode
+> flag which is set when the cpuset_v2_mode mount option is used. This
+> flag is written into only when cpuset_bind() is being called with a
+> stable cpuset_cgrp_subsys.root value. The is_in_v2_mode() helper is
+> modified to read the new cpuset_v2_mode flag instead of accessing
+> cpuset_cgrp_subsys.root directly.
 > 
-> On Tue, 29 Sep 2026 21:39:00 +0800, Tao Cui wrote:
->> To make sure I understood correctly: attaching switches the active
->> model to the attached BPF model, while model=linear and model=bpf
->> only switch between the attached model and the builtin model without
->> affecting the attachment itself.  The attachment survives enable=0,
->> and only .unreg removes it.  Please shout if I still got that wrong.
+> [1] https://lore.kernel.org/lkml/20260929084124.626693-2-arighi@nvidia.com
 > 
-> Yes, except that removing the device also removes the attachment, as
-> ioc_rqos_exit() ejects the model.
+> Fixes: b8d1b8ee93df ("cpuset: Allow v2 behavior in v1 cgroup")
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>   kernel/cgroup/cpuset.c | 11 +++++++++--
+>   1 file changed, 9 insertions(+), 2 deletions(-)
 > 
+> [v2] Update the comment as suggested by Ridong
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 19661df6244f..4a2b6f154609 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -152,6 +152,12 @@ static cpumask_var_t	isolated_cpus;		/* CSCB */
+>    */
+>   static bool		update_housekeeping;	/* RWCS */
+>   
+> +/*
+> + * Set if "cpuset_v2_mode" mount option is used
+> + * Cached at bind time and not lock protected; accessed via {READ,WRITE}_ONCE
+> + */
+> +static bool		cpuset_v2_mode;
+> +
+>   /*
+>    * Copy of isolated_cpus to be passed to housekeeping_update()
+>    */
+> @@ -439,8 +445,7 @@ static inline bool cpuset_v2(void)
+>    */
+>   static inline bool is_in_v2_mode(void)
+>   {
+> -	return cpuset_v2() ||
+> -	      (cpuset_cgrp_subsys.root->flags & CGRP_ROOT_CPUSET_V2_MODE);
+> +	return cpuset_v2() || READ_ONCE(cpuset_v2_mode);
+>   }
+>   
+>   /**
+> @@ -3664,6 +3669,8 @@ static void cpuset_bind(struct cgroup_subsys_state *root_css)
+>   	mutex_lock(&cpuset_mutex);
+>   	spin_lock_irq(&callback_lock);
+>   
+> +	WRITE_ONCE(cpuset_v2_mode,
+> +		   !!(cpuset_cgrp_subsys.root->flags & CGRP_ROOT_CPUSET_V2_MODE));
+>   	if (is_in_v2_mode()) {
+>   		cpumask_copy(top_cpuset.cpus_allowed, cpu_possible_mask);
+>   		cpumask_copy(top_cpuset.effective_xcpus, cpu_possible_mask);
 
-Thanks for confirming.  I had left out the device removal case in
-the summary.  v8 keeps the attachment independent from controller state
-and model selection; only .unreg and device removal (where
-ioc_rqos_exit() ejects the model) remove the attachment.
-
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
 Thanks.
-Tao> Thanks.
-> 
-> --
-> tejun
+
+-- 
+Best regards
+Ridong
 
