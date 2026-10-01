@@ -1,102 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E71FB389E04;
-	Thu,  1 Oct 2026 18:10:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D4EA364943;
+	Thu,  1 Oct 2026 18:42:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790878234; cv=none; b=N/M/Eu3cWn4aBRXyYLaRn4rcWI6c0Yue9prY+BtiIIQbo071DWJ+eVzWb5SrLpwJjbRTGOwqRbJIIvpzLLOl/MAv6xL2VNTLzAqixw6NiWHz4cwzSChJhlIZ57IZ5WSraCOginmmOEzI3up9wOhTCidFhBwKoVeEi76RLuTTj/I=
+	t=1790880180; cv=none; b=WZFQtuhxQ7JvtgWeBnynUwhr11NX8eu5IzciT54HDMF3M7peilKoBUYj1SShj6IdbVKIhNG3YkMIsRRE6iQbTUhG3MZMrUmAfvDEPJa5i3aDX2lVvRphurPHxkMc9Rj68hKVDLIhoIdbO7OyxVJkfHyH/KxgjbR7ZAjIA0MdqDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790878234; c=relaxed/simple;
-	bh=9Y4pAK88qjMP8X+cySTC8/pCIkPvhO450+5FFkVjxkY=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PyGG37Ip8oSrka3mhcCQjuc9QIiK5+vouNZoiSmtlpWJWCJwHiBP+q7Z06E2ECeVIgc1tzosBek3UzrFy7bcM8NmD5eNhCKGkGO8lj4sf0pXcAd+QsKsEdEtHq8Rjb6ihlLuzTfWdf6cQQ9I4kLOCHnnyDAcF5mpEQSbEuRqt4k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ac2A2e/1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790880180; c=relaxed/simple;
+	bh=uwZ2rsWGvMJKClUG1hn9YbZEiJLt9Kacj4MriMozc3I=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=k0odKYMwl6kNhlCCy9jwB/D7dCFMtoSLVlKchS3EaEG7L7nmHEOgHgMrkjaCx9Z/cH/7AC1w2byY4FFPLBKO0MJq4LZTwE+2qUDOZyAJR2GdGtqQwJr/GL9P48Dgj85Hte9NdVYppXDcYD7/cVs4CZQIauG6YFQb7jW+RnRziEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sip89Hr+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ac2A2e/1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 623CD1F000FF;
-	Thu,  1 Oct 2026 18:10:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sip89Hr+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 396861F000FF;
+	Thu,  1 Oct 2026 18:42:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790878228;
-	bh=KofKL6DMyNwNkFRP22JD3bKVkyzb29TfyRjV0Y0r2Ug=;
+	s=k20260515; t=1790880176;
+	bh=uwZ2rsWGvMJKClUG1hn9YbZEiJLt9Kacj4MriMozc3I=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=ac2A2e/1DeJpjHbdIlYtlc+6CQqqF/PXDx6JHdS/ed69jP1C9UqP2vRJsvXiPHGmz
-	 ws0jxuHv4us6LHnU1dg4EB+0EssuL4AuT+JTnkMiFLq54ZkYlsIGfzVc6y/5sRR5nI
-	 /YESSgJG389pcBLZH9S2PTODgL9d0gaDFwux97KyvDkCuifnTB8R04D4ijp0xjP1CL
-	 x8a/ZaVyjlJON9QokgNIBAUKTxFHvbaFzSQeNu8hnNQyKzeb5h3FEy6zAq67rqHkOG
-	 pUjG4deHNgVvZXKH9IFBFm57bI6tbkJ3o1OZ9+z2dms7aId7MSaxFwCexNezcmbV2o
-	 5A3o/TJxPJZQA==
-Date: Thu, 01 Oct 2026 08:10:27 -1000
-Message-ID: <b214a375adad1579b2b17c0e9a0f4869@kernel.org>
+	b=Sip89Hr+ljBrGcOlZuTFng6Yqymu0XsVLS6Q+f1OX0DDrRQnrOKfRUf3xbLFMK5Rr
+	 MGzF7i7XGQBNseZmtpyyiB/Co3VpFaNBPSf2A74ffOjYSaMlwK3tDSZvpKMzRupD6R
+	 O7Xg0CYiEN8k4Xxe1v/zA5BBufzoFWLjZrfaDx9f6akDG7TpDC3QSzRxH0HaqePBFW
+	 mrBwdm3/WvWzMp44+0w5Tij93tXGXbnQFnhTGYdA2kAKzrhgE/Rj8tO8MEMa0uEMIc
+	 K9C0k4xw42SyxBL5TIQKuefJfoCPrIhOgScPhNRWq6O8+nWwnBdTqR5KUA+FCO5nOa
+	 bXT1IZ1Ueruuw==
+Date: Thu, 01 Oct 2026 08:42:55 -1000
+Message-ID: <31a871a07fccc99e953a2d633fc51edc@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Peng Yu <yupeng0921@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Maurizio Lombardi <mlombard@arkamax.eu>,
-	cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	JP Kobryn <jp.kobryn@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+	Michal Koutny <mkoutny@suse.com>, Amery Hung <ameryhung@gmail.com>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Emil Tsalapatis <emil@etsalapatis.com>, Jiri Olsa <jolsa@kernel.org>,
+	Ihor Solodrai <ihor.solodrai@linux.dev>,
+	John Fastabend <john.fastabend@gmail.com>,
+	Jiayuan Chen <jiayuan.chen@linux.dev>, hui.zhu@linux.dev,
+	Donet Tom <donettom@linux.ibm.com>, Greg Thelen <gthelen@google.com>,
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org,
+	bpf@vger.kernel.org, cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 2/2] nvmet: add cgroup_id to charge namespace I/O to a
- cgroup
-In-Reply-To: <20260929232411.101087-3-yupeng0921@gmail.com>
-References: <20260929232411.101087-1-yupeng0921@gmail.com>
- <20260929232411.101087-3-yupeng0921@gmail.com>
+Subject: Re: [RFC PATCH 0/4] memcg_ext: memcg policy through cgroup-attached
+ struct_ops
+In-Reply-To: <ar2kvmCPR9q31V8M@linux.dev>
+References: <20260921192559.2619635-1-shakeel.butt@linux.dev>
+	<bda525506b3fb3e61da28a112f28abba@kernel.org>
+	<arw4rjVkm2ob9ioL@linux.dev>
+	<bc6815954b8d08e75deadd43e1a2192c@kernel.org>
+	<ar2kvmCPR9q31V8M@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 
-Hello, Peng.
+Hello, Shakeel.
 
-On Tue, Sep 29, 2026 at 04:24:11PM -0700, Peng Yu wrote:
-> Implementation:
-> * Add a `cgroup_id` attribute under the nvmet namespace folder, e.g.:
->   /sys/kernel/config/nvmet/subsystems/nqn.2026-09.io.test01:bdev/namespaces/1/cgroup_id
-> * We can write a cgroup id to it, then that cgroup will control
->   the IOs used by the namespace.
+On Wed, Sep 30, 2026 at 06:00:41PM -0700, Shakeel Butt wrote:
+> mlock(), madvise(POPULATE), fadvise(WILLNEED) are the obvious ones where large
+> amount of memory can be allocated before returning to userspace.
 
-This doesn't follow the usual description format or content. Can you
-write it as prose explaining why the change is needed and what it does,
-along the lines of the scenario section in the cover letter?
+These are explicit bulk memory operations running in the calling task's own
+context, so they can be special-cased. Each is a loop with points between
+chunks where no locks are held, and the same over-high handler the
+return-to-userspace path runs can run there. That keeps the throttling on
+the task which asked for the memory and can't cause priority inversions. The
+set of such paths is small and obvious, so I don't think it'd be onerous to
+maintain.
 
-> +CONFIGFS_ATTR(nvmet_ns_, cgroup_id);
+> > This doesn't seem like a policy problem.
+>
+> What is "This" in the above statement?
 
-Documentation/ABI/stable/configfs-nvmet has an entry for each namespace
-attribute. Can you add one for cgroup_id? It should say that it takes a
-cgroup2 ID, that 0 clears it, that it can only be changed while the
-namespace is disabled, and that the namespace's I/Os are charged to the
-cgroup's effective io css.
+The whole thing, how memory.high should be enforced when the overrun happens
+inside the kernel or from a kthread.
 
-> +static inline void nvmet_blkcg_set_bio(struct nvmet_ns *ns, struct bio *bio)
-> +{
-> +	struct cgroup_subsys_state *css;
-> +
-> +	if (!ns->cgrp)
-> +		return;
-> +
-> +	css = cgroup_get_e_css(ns->cgrp, &io_cgrp_subsys);
-> +	bio_associate_blkg_from_css(bio, css);
-> +	css_put(css);
-> +}
+> Here if you meant that default behavior of memory.high should work for most (if
+> not all) users then we are on same page. If some user want memory.high reclaim
+> to happen in a separate thread instead of return-to-userspace or synchronously,
+> this proposal provides mechanism through BPF to such users to achieve their
+> goals.
 
-bio_init() and bio_alloc() already associate the bio with the current
-kthread's blkcg, so each of these bios gets associated twice. If the rw
-and zone append paths wrapped their bio allocations in
-nvmet_blkcg_begin()/end() like the discard and flush paths do, this
-function wouldn't be needed and chained bios would be covered
-automatically. Not a blocker either way.
-
-Otherwise, from the cgroup side, this looks fine to me.
+I think there's a common reasonable solution here, which is deciding by who
+the charge is for. A task charging for itself gets return-to-userspace
+enforcement plus the checks in the explicit bulk operations above. A kthread
+or anything else charging on behalf of a cgroup shouldn't be throttled for
+the cgroup's overrun. The overrun is attributed to the cgroup, async reclaim
+is kicked, and the cgroup's own tasks absorb the throttling on their next
+return to userspace. The in-charge synchronous fallback goes away. Each case
+has one reasonable answer, so I don't see a policy choice to expose here.
 
 Thanks.
 
