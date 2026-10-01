@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA0D2BCF4C;
-	Thu,  1 Oct 2026 00:20:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18108351C27;
+	Thu,  1 Oct 2026 00:20:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790814059; cv=none; b=GLpehKR//ORrlIx7BQaYSQNlov1DYGtiHX81imkxj1h/8Q/0ydNTP2ZwuiTcfeQlAeZjnt5Xd9LN+kfke5W6w7kxxaJWCeuAqmXMknj0K3deGpQMZuoEFko4WCQMaChQpaBB3QZNvS1CiKmBOfWtXoqGrAfyQOyqT5ymDigk1HI=
+	t=1790814061; cv=none; b=WxPRoudf0jKfDoXpn77lsCfMPRNivft3jFr4tw49WgYGrWxE5KqyFTdbcPEQwxZ6XJ4ts6GWFqqTJtarqvRNpPcPuNIjJ6CTsamGnJ/8cISdGNb4zb9SeP+HwKg6g84VORh9bX2czA/3yYkVTnERW12s5fG12pAHSrjVgduy/Nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790814059; c=relaxed/simple;
-	bh=iD+W5tOd6rzZ/EvSduabToCEIt8D/QP5DnEYsrL58lw=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=Tr/rRxLvsNGZrESFJcrTtkWAvDaLkAVl+eSEr7N1AzSnwqgTXTOYmGDxIjFvTdL9R6NgEd5prOqwIplTxfuT2OyhVyTAPPPzRAcbEb+BYrr7fE1/XHQOrOQZ+1twOE1BFThigEDnJpmVUYNXM/6+jSF3lKofszwc70VHNoxflk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EGPBpMKT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790814061; c=relaxed/simple;
+	bh=yuxORQlGnMOpW40kkc3YnhipWX5peIfy6092QZ5/UMY=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=ln4Y/j9Nag1+9muSTyl7BR3QQerrIqN9/t+LhUzyL206ZWrx6X9RohMrYX4ccD4Pd85lHYPb4FtM/+2DQlU7vCg8HXVeZuYK98rqawVsraqOFGnpbnF+oSFfhh69giswetJ1Zl8TgUXH2n0NobFL8MvPcXdLLG2fcE12neCol2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dylWqnLb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EGPBpMKT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39F0B1F00898;
-	Thu,  1 Oct 2026 00:20:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dylWqnLb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 402971F00899;
+	Thu,  1 Oct 2026 00:20:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790814058;
-	bh=Locet4wNAte/Pi9J29JLBsvThdCGg6zldHZQc7ssGV8=;
+	s=k20260515; t=1790814059;
+	bh=seO9E854noC/3LuUfYHeeC5yA+NY/bP6dH3CPl3Ojno=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=EGPBpMKTIeniDKFmz7/fJD23xh2vmjZN96/0Q3HRRk2MaAWpCnnBjwbWg4OrQsKoO
-	 qVd4xi2rIUUV0+1FtLh65d5+1H3Q+AdmtKyGdgabEfgGolHIbzNfqlPg09IZQMeQtV
-	 zMiT3ZwaRgpis0R8bT/ipQKOwiYD2UOC9xr4JuXyzyuRnBWFyQ9CTJcab/mOyK4p5b
-	 IEsRxscuYviE8rhhYmImJFLfZqcn2JPLzgenzgm+ZZCaXn8RJsqwCDLi5gWtSYWFHO
-	 DDy/S6KYFbrPfiH3Kbc4lV2ZTrDio3vEGJi3liiJi57FbMuLaOwi46VObA6QJZEx8t
-	 gyylprqziyNzA==
-Date: Wed, 30 Sep 2026 14:20:57 -1000
-Message-ID: <50cb57cb36c935f24e3a5ec2d301c148@kernel.org>
+	b=dylWqnLbxwpki/jkNGcysEtewyGj20XNw+Op3O/Uuc07cculTfxK9beJ9lpao25EN
+	 qhCi8T78RJv7dC5lFg+V5CQ+hzOPW9zs3cUzRoqFRiayYsNVcBu0oYm46rn3wi1zo4
+	 C6EXWKMgYJP2AqRV2eEAAjIImvDrFAHxdVik296WHiYF9XwAcRpMfIU/OFcITk7QkA
+	 G1ZeWRv0NSfr0eoMjX/l7RWqih4QFENnR+RXKA/YLnKGBXpakjVHaezSUB2IpY/SPO
+	 4C2Xi9jL7im6OQWBnTjovmr454cvtrtcQSG1vEYRJoWg1KxaoCI5TlemeZLptcilYJ
+	 jG4KMNFmaaVpw==
+Date: Wed, 30 Sep 2026 14:20:58 -1000
+Message-ID: <7335927f4aeb61a7b92066aa58d45446@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cui.tao@linux.dev>
 Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
@@ -35,10 +35,11 @@ Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
 	ast@kernel.org, daniel@iogearbox.net, linux-kselftest@vger.kernel.org,
 	Tao Cui <cuitao@kylinos.cn>, ameryhung@gmail.com,
 	alexei.starovoitov@gmail.com
-Subject: Re: [RFC PATCH v8 2/4] selftests/bpf: add iocost cost model test
-In-Reply-To: <20260930075154.189958-3-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v8 3/4] blk-iocost: add iocost_ioc_tick tracepoint for
+ per-period device summary
+In-Reply-To: <20260930075154.189958-4-cui.tao@linux.dev>
 References: <20260930075154.189958-1-cui.tao@linux.dev>
-	<20260930075154.189958-3-cui.tao@linux.dev>
+	<20260930075154.189958-4-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,65 +50,25 @@ Hello, Tao.
 
 The following is a Claude-generated review.
 
-On Wed, 30 Sep 2026 15:51:52 +0800, Tao Cui wrote:
-> Add an example cost model implementing the full builtin linear HDD
-> formula at double cost, and a test which attaches it to one device:
-> the dev member of the struct_ops is written through the map's
-> initial value before load, as hid_bpf tests do with hid_id, and
-> loading the struct_ops attaches the model to the device.  The test
-> verifies the ctrl=bpf readback while attached, that a second model
-> on the same device fails with -EBUSY, and that detaching restores
-> the builtin model.
+On Wed, 30 Sep 2026 15:51:53 +0800, Tao Cui wrote:
+> Add iocost_ioc_tick, emitted once per period from the tail of
+> ioc_timer_fn() with the overall controller state: period_us, vrate,
+> busy_level, active iocg count, usage percentage and running state.
+> It fires every period the controller is running, including steady
+> states, plus one final tick before the controller goes idle, which
+> makes dormancy (e.g. a device saturated entirely by uncharged IO)
+> directly visible.
 ...
-> cgroup that comes back starts fresh.  opf carries the full bio->bi_opf
-> including REQ_* flag bits, so the operation must be extracted with a
-> mask, not compared for equality.
+> +		__entry->running = ioc->running;
 
-The description is out of date. The test reads back model=bpf and checks
-that ctrl=bpf is rejected, calc_cost() takes the bio so there is no opf
-argument, attaching rather than loading binds the model, and the
-multi-stream model and its test aren't mentioned at all.
-
-> +	if (fwrite(buf, 1, strlen(buf), fp) != strlen(buf))
-> +		err = ferror(fp) ? errno : EIO;
-> +	if (fclose(fp) && !err)
-> +		err = errno;
-> +	return err;
-...
-> +		err = write_cost_model(dev, "ctrl=bpf");
-> +		ASSERT_ERR(err, "ctrl_bpf_rejected");
-
-write_cost_model() returns a positive errno while ASSERT_ERR() wants a
-negative value, so this and model_bpf_after_detach fail with "unexpected
-success: 22" on a correct kernel. Return -errno. Can you double check
-that the posted runner passes against the posted kernel?
-
-> +	/* dev is the first member of struct iocost_model_ops */
-> +	ops_dev = bpf_map__initial_value(skel->maps.iocost_2x, NULL);
-
-The skeleton exposes the struct_ops shadow type, so
-skel->struct_ops.iocost_2x->dev = ... is type checked and drops the
-layout assumption. Same for iocost_ms.
-
-> +SEC(".struct_ops")
-> +struct iocost_model_ops iocost_2x = {
-
-With a plain struct_ops map, a test that dies between attach and detach
-leaves the model attached until something deletes the map element. The
-hid and sched_ext selftests use ".struct_ops.link" so that closing the fd
-detaches. Can you use that here too?
-
-> +	cur = *cursor;
-> +	if (cur && priced) {
-> +		seek_pages = sector > cur ? sector - cur
-> +					   : cur - sector;
-
-A dataless flush is REQ_OP_WRITE|REQ_PREFLUSH at sector 0 with bi_size 0,
-so priced is set here. Once a cgroup's cursor is past 16MB, every fsync
-is judged a random write and charged 2 * (WRANDIO + WPAGE), about 5ms,
-not the one-page write the header comment describes, and iocost_ms.c
-prices the same bio with the sequential base. Can you gate the seek
-judgement on a non-zero size?
+The timer only runs while ioc->running is IOC_RUNNING and the switch to
+IOC_IDLE happens after the trace call, so this field always reads running
+except when racing ioc_rqos_exit(). The final tick before going idle
+reads active=0 running=1, and dormancy is only visible through the ticks
+stopping, not through the field. Can you either drop the field or report
+list_empty(&ioc->active_iocgs), and adjust the description? The event is
+also emitted before the vrate adjustment and the period transition, not
+from the tail of the function.
 
 Thanks.
 
