@@ -1,43 +1,47 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11AE831E106;
-	Thu,  1 Oct 2026 12:19:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CF22371D11;
+	Thu,  1 Oct 2026 12:40:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790857149; cv=none; b=K4Wmrih2/SucxgTI4PYIekEHZkZQ3H415xB3WUVKw9Gz0Nd2W9Q/NAQ2/GY0DSpla+Ebz7+MG1p4JKXZ9JW0Nm6ICKv5fjOyGXutn1Z/JNQVF1D+RHCUzYze4FYK5yOBbpE/WgMxA2zx/NiP04TP+4yO637dcHUXf0UYsqPC4w4=
+	t=1790858419; cv=none; b=jbZEEa1Q6eYW+ZJdOYA+mZCVQob/TNPUQmPgfrVuAfucf/LzGAcLxhmbf2eqqV+K8mrY3JG/QYtEtCbq6+lYRqqKuewooZl2Wcj+f7ZgEjaarTIPDjlMcqm+/tdd1yvT6mC+ybbzeyNPFtbW1P78636c3gt+B6EKzZoItFr5H/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790857149; c=relaxed/simple;
-	bh=L2x4F+RZepP9Ibzqqt/hat84vnlTSP8mV9e6KOzkB/Q=;
+	s=arc-20240116; t=1790858419; c=relaxed/simple;
+	bh=gLqblHCn0+YwQDfFcGJsfXpbJ0y+P7fK7Am4ryV7fh8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pkiOIvpNT+8nPPaxf8nwGfkL4700WysfCy0bIMR+UqgmqrR6TEY995iLIgLGxdFKQpxsWDK3WokIOIjzdIbHn6JtYFexkCx9VNTwuw33ZVEJMlWxo4WwiMoFqXf5Xu1nma3IMf9kopbfvvgnNwsq5jaXN1AT3f1aB+13EGc936k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OiPIkXFh; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=IKBXd2//4i2019NyO28x/0p8mvrk7CVrIucbN6tksiHScpZD90unLeWYBl/lxdxCg2zDDDEqyz14IJdpGECEhUWzPIOkJtlKdPRGBVkFtSNeXRbJmNcgXZleGQAPD/gvvgNC1fWhFwQVrIVKdNkOTywbF0D6i5AaqWvnzjiMdsM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=vNaTELMc; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=pAZafPjW; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OiPIkXFh"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=7xQHNY097cBtbkyro3E4qxSO+Gg+rAp0ETijwlM2SaY=; b=OiPIkXFhwRsB7f4czffZ0jIZlm
-	MCegJdLQMkRCITcBPZnjFi+xdFJmNsNYnkZ9B4CHXl8n/ymjc5GGKywxn+HO8CUzgI4tyswsKvAqG
-	IEyk1gdrEjJcyNNll0GXiOdPIz5+009/vS4jAKYGN/PZVHPDP/KfEHnFARdHdAzaotCRe7FHa03Ox
-	w4x26e8bbZjFvBTInTMYBT4reQytBaZGcobnOqemIzcSVXJhMp+X6GhTYVW5Lmy/4lvxbBJyn/kM8
-	JG5Hsrb89Bs24SboJ23d6HZHCLw5zeztahs1xSuG6b0YPmq/plhVBaGeh66+OVKS56EtawE8lKtqS
-	bkU1HZPQ==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.99.2 #2 (Red Hat Linux))
-	id 1xCFkK-00000004xMh-08zf;
-	Thu, 01 Oct 2026 12:18:44 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 1EE53300578; Thu, 01 Oct 2026 14:18:42 +0200 (CEST)
-Date: Thu, 1 Oct 2026 14:18:42 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>,
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vNaTELMc";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="pAZafPjW"
+Date: Thu, 1 Oct 2026 14:40:13 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1790858415;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1IYPn7YfrvPH70i6iIWikqwHZmBwJ1LMaRivmCTeR70=;
+	b=vNaTELMcGtZilr3kGDKfaocYqzlhPhhj4xUL8tc8l010QOAzqE1gfbhxJxRwY/CJQP2iNN
+	dHH9FpmfCdOtt3+N3ScPLclEH64H0HxXM0XyxMXuAR4+tua64mSsXSPvBxry0xTcvdbkgm
+	KPRAZxR5XGVY81qLZ13LeTCgnXQJ8G/pcZnnyr1fQKL3ADxyj2/P+q44R5p5vwJEURPdve
+	lDaLdKElLZTBjIqC6N6SL4+K/9BV7zd5iVpAb4rYcJyYrsh5EVPwtridKE5DW3m8G1VJLC
+	Umo9drwa6UmjTEY4g0S+6CJYedQIHJzFOepjcyObBpIb6WpgFvmNXH1pzeKY4g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1790858415;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1IYPn7YfrvPH70i6iIWikqwHZmBwJ1LMaRivmCTeR70=;
+	b=pAZafPjW5uf+ns5DVLvxgNdHgjcPnL7GKMJPYR3Qva+5gI6njuOLuPRYsAYBNuVlPHuNQB
+	PI483XSZ/izTLNCg==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
 	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
@@ -60,7 +64,7 @@ Cc: Shakeel Butt <shakeel.butt@linux.dev>,
 	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [RFC PATCH 0/7] cgroup: charge kernel work to the cgroup it is
  done for
-Message-ID: <20261001121842.GJ4121620@noisy.programming.kicks-ass.net>
+Message-ID: <20261001124013.UZsWvi4g@linutronix.de>
 References: <20260924184714.912181-1-shakeel.butt@linux.dev>
  <befc0a9b9998db0292c9998c639a3a9f@kernel.org>
  <20261001105909.GL4121339@noisy.programming.kicks-ass.net>
@@ -70,11 +74,11 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 In-Reply-To: <20261001105909.GL4121339@noisy.programming.kicks-ass.net>
 
-On Thu, Oct 01, 2026 at 12:59:09PM +0200, Peter Zijlstra wrote:
+On 2026-10-01 12:59:09 [+0200], Peter Zijlstra wrote:
 > On Thu, Sep 24, 2026 at 10:28:10AM -1000, Tejun Heo wrote:
 > > Hello, Shakeel.
 > > 
@@ -97,11 +101,21 @@ On Thu, Oct 01, 2026 at 12:59:09PM +0200, Peter Zijlstra wrote:
 > I know PREEMPT_RT has been wanting something like that for ages. Not all
 > queues are created equal. Some might want RT priority while others
 > should definitely not.
-> 
+
+What currently kind of works is threaded NAPI. The interrupt wakes the
+NAPI thread rather than adding NET_RX to the global flag softirq flags.
+
+I was thinking about making the softirq flags per-thread rather than
+per-CPU. This avoid the "catch up" of other raised but unrelated
+softirqs.
+
+For now a painless setup is to have "bulk queues" and "real-time" queues
+and what gets where is configured via hardware filters.
+
 > Furthermore, without ingress throttling, your RX back charge could
 > completely deplete the actual cgroup time quota.
 > 
 > Anyway, if you get per queue RX processing threads, then you can move
 > them into cgroups where so desired.
 
-Gemini is trying to tell me this exists and is called Threaded NAPI.
+Sebastian
