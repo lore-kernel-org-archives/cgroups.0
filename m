@@ -1,41 +1,42 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A6744E046;
-	Thu,  1 Oct 2026 10:54:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61B9C4052A9;
+	Thu,  1 Oct 2026 10:59:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790852095; cv=none; b=XRmN8G+w2sN5ylXiUr9URx2ifukDeRL+odwycYKtTioKWK9JrRItMMQk3sfZ7e0SWO/gVJLx0GHlP/Za0sjujZhp1HZDZIZCwOLGAiK/fRHL4Fo1npLdxpJbuLwi6UqMcJClZA+LjRS/yn15XNpMNG1MPzHBOPLnYKJb57bcZoM=
+	t=1790852373; cv=none; b=ME4OU926/abbA/RRUQysqAjOAp7VuuYTuEQCrPNtQMbR2RcZkLtXvSkwX3zQG+vcR97BSeMjqb1+axBqYGMa1tRQEDcwxINV2D0Bj0JhXcv9bDLcUiBaAet98g62D6LHfKtboIN86Dshn9K8l/ICa3pff2RXZJrQkah+bO8snkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790852095; c=relaxed/simple;
-	bh=wTx6Mvyr5xDbxsqv9Qcf07k2wHNrFdQv99ODg9frgbA=;
+	s=arc-20240116; t=1790852373; c=relaxed/simple;
+	bh=P2mPmdSeN7M/92lKbHc68p8T0hLOu0rZMNpkrr+Q7S8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s2wjqrGVyneVcQZiJwlvd3JpI33+4FqqhV0JfC2mhmc67Nzzeg9UNKl5sK5W86SX1lNp7q4B1Wri4VXOFmhrR2ylcmFMchxD6nWxxpZcYVH9yrEAYEJpK7Zfkx5WNIk+q+1jU3kNSnColYPdMpLOSMHf/DlJiiS7zzPgWd0by8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=la9C++oV; arc=none smtp.client-ip=90.155.92.199
+	 Content-Type:Content-Disposition:In-Reply-To; b=p+TuZH63WJEWulYv8TyEPyfMO52YboAKb8OEW4wPGvPhfhx2hnjUUhe/Z99/eionTomHcNG/V7g5SfyFNeAZ3vQ7lKhrfz3QU8bj4ZfQ4x/4k1KcPWTqasdDCT9EqkKz6pXBlCAtCdiP9aODUSVaJZzPmnAq80W+W51R9PRIyw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LCl1OI8l; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="la9C++oV"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LCl1OI8l"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
 	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=QMQi3pfWB0wiaCHgvp5eiKUKLsxkaOq5Mv0PAKIuKqE=; b=la9C++oVmy91EssZzyrMx0EQyi
-	2Z2A4CAKhpig2EEh/JoYbzxfMSZdRpsk75dwabdgBm56msfF9NGMtsXwNLbBo5Je5P38DpMMQVbCS
-	vPOQF2ukfYIISDmrJWMkKKLolN2Ksu2QsR4MXoql+tu63gXEHZcDYh8ym3Urr+98GbbbFciqI3JN7
-	V22+O8+OfAj/JqLQj40+ts5CdvGafHKZUpHuWcPStSH2DJ5+dNhaCr+MU881mU5yPCtF3H1Kuq50A
-	Ikj+NcN24Kdhfox9zWY/yzhIdsxCiCjFFP8rJVG/sMqP2K89HbjXcxOeLBcG28E4ZBuBTFpInoyq4
-	khXNRqow==;
+	bh=MXA2KDE32vmEL8dBfumYlL+dA+/j3dJ1ohxuDqggpGk=; b=LCl1OI8lRvcv+outLHBWL9A2bo
+	DG5ITJUiFjfuw/CEH5vbNjtI/P+BGLUvwXGLDA3jC0T340gY/Wk7k1gpkQvW1Z70RfVbhOYmCo3xw
+	AQrPBZuoPECelcO87vpNBk1zQqZk4sUCEzOkgiymVqQuPddoPjUy5oK3h0Qme/AB7rJNngceuc7hq
+	SpH7CHPQ+yTaxLRhMOeVVPTVIV3l0euLPDh5NhuMo38PzhWMuEE+tFR7wdSAxCvYvgzjUDCfjyRZJ
+	2Vfd5RXX1oJ8sfOXd6TivgxG21zO1fScJ0vlE+bpH4aP4s6m55zck+Q/N8LB/P1cBonRI090dOtPd
+	BxfbrTrw==;
 Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.99.2 #2 (Red Hat Linux))
-	id 1xCEQk-00000004rjo-0GEu;
-	Thu, 01 Oct 2026 10:54:26 +0000
+	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xCEVK-00000006r8z-1WSi;
+	Thu, 01 Oct 2026 10:59:10 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id B11FD3001FD; Thu, 01 Oct 2026 12:54:24 +0200 (CEST)
-Date: Thu, 1 Oct 2026 12:54:24 +0200
+	id E81DA3001FD; Thu, 01 Oct 2026 12:59:09 +0200 (CEST)
+Date: Thu, 1 Oct 2026 12:59:09 +0200
 From: Peter Zijlstra <peterz@infradead.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+To: Tejun Heo <tj@kernel.org>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>,
 	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
 	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
@@ -59,8 +60,9 @@ Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [RFC PATCH 0/7] cgroup: charge kernel work to the cgroup it is
  done for
-Message-ID: <20261001105424.GK4121339@noisy.programming.kicks-ass.net>
+Message-ID: <20261001105909.GL4121339@noisy.programming.kicks-ass.net>
 References: <20260924184714.912181-1-shakeel.butt@linux.dev>
+ <befc0a9b9998db0292c9998c639a3a9f@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -69,85 +71,33 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260924184714.912181-1-shakeel.butt@linux.dev>
+In-Reply-To: <befc0a9b9998db0292c9998c639a3a9f@kernel.org>
 
-On Thu, Sep 24, 2026 at 11:47:04AM -0700, Shakeel Butt wrote:
+On Thu, Sep 24, 2026 at 10:28:10AM -1000, Tejun Heo wrote:
+> Hello, Shakeel.
+> 
+> On Thu, Sep 24, 2026 at 11:47:04AM -0700, Shakeel Butt wrote:
+> > This series lets a kernel thread say which cgroup it is working for.
+> > That cgroup then sees the CPU time in its cpu.stat and the stalls in
+> > its memory.pressure, and the CPU time comes out of its cpu.max quota.
+> > The first user is the memcg reclaim that runs from high_work.
+> 
+> This doesn't translate to net rx, which is another major source of
+> displaced CPU usage. Switching membership on each packet isn't going to
+> work there. Attribution can't happen that way. We'd much rather count
+> per-cgroup received packets and prorate the CPU consumption. If at all
+> possible, I think it'd be better to adopt an approach which can cover
+> both use cases.
 
-> Options we looked at
-> ====================
-> 
-> A. Keep the shared kworker, and only charge the cgroup.
-> 
->   A1. Measure how long the reclaim ran, then charge that time to the
->       memcg's cgroup.
-> 
->   A2. Let the kworker say "charge this cgroup" while it works, the
->       same way set_active_memcg() works for memory.
-> 
-> B. Also make the cgroup's CPU limits apply.
-> 
->   B1. Run the kworker in the cgroup's scheduling group while it works,
->       so cpu.weight and cpu.max apply to it.
-> 
->   B2. Run the reclaim at full speed, then take its CPU time out of the
->       cgroup's cpu.max quota afterwards (back-charging).
-> 
-> C. Do the reclaim inside the cgroup.
-> 
->   C1. Record the overage as a debt on the memcg, and let the memcg's
->       own tasks pay it the next time they charge memory or return to
->       user space.
-> 
->   C2. Give each memcg its own reclaim thread that lives in the cgroup.
-> 
->   C3. Use a cgroup-aware workqueue, as in [1], or per-cgroup worker
->       pools.
+Ideally RX would be split for each network queue, rather than lumped
+into the one giant softirq that nobody owns.
 
-> What we chose and why
-> =====================
-> 
-> We chose A2, together with B2 for cpu.max.
-> 
-> We do not throttle the reclaim itself. Adding limits to it is more
-> complicated and most probably unneeded, as we envision that we will
-> need concurrent background reclaimers instead of throttling in a
-> real-world environment. We are working on developing a system to
-> balance the rate of allocations/charges with the rate of reclaim, to
-> keep the system always running effectively.
-> 
-> In addition, reclaim takes sleeping locks, like i_mmap_rwsem and the
-> anon_vma lock in rmap walks, and fs locks in shrinkers. With a low
-> cgroup weight, the kworker can be preempted while it holds them, and
-> then tasks in other cgroups wait on it. It also hurts the workqueue. A
-> kworker that is runnable but not running still counts as running, and
-> the workqueue only spots CPU hogs by the CPU time they use. So other
-> work queued on that CPU's system_wq waits too.
+I know PREEMPT_RT has been wanting something like that for ages. Not all
+queues are created equal. Some might want RT priority while others
+should definitely not.
 
-With proxy execution, this should be alleviated. Then all tasks waiting
-on a lock acquisition will contribute to the runnability of the lock
-holder.
+Furthermore, without ingress throttling, your RX back charge could
+completely deplete the actual cgroup time quota.
 
-> Still, the reclaim should not be free CPU time on top of the cgroup's
-> limit. With A2 alone, the reclaim shows up in cpu.stat, but the
-> cgroup's own tasks still get their full cpu.max quota. B2 fixes that
-> without slowing the reclaim down. The kworker runs at full speed, and
-> afterwards its time is taken out of the cgroup's cpu.max quota, so the
-> cgroup's own tasks get less CPU time instead. This is the
-> back-charging Tejun described [2]. It only covers cpu.max.
-> Back-charging cpu.weight is future work.
-
-Fiddling with weight sounds like horrible garbage. If you find you need
-that, I would really rather you went C[23].
-
-> We did not take C2 or C3. A high_work run asks for only 64 pages,
-> which is far too little to pay for moving a thread into a cgroup
-> through the global cgroup locks. A thread per memcg means thousands of
-> threads. cgroup v2 does not allow tasks in a non-leaf domain cgroup.
-> And a kernel thread in a cgroup shows up in cgroup.procs and blocks
-> rmdir.
-
-You don't move the threads, you spawn them on group creation and leave
-them there. I'm sure you can fudge the rmdir thing with less ugly than
-you're proposing here and in the other series.
-
-
+Anyway, if you get per queue RX processing threads, then you can move
+them into cgroups where so desired.
