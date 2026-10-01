@@ -1,112 +1,128 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+Received: from mta1.migadu.com (out-205.mta1.migadu.com [95.215.58.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C30E747F764
-	for <cgroups@vger.kernel.org>; Thu,  1 Oct 2026 13:29:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15E9251AEF3
+	for <cgroups@vger.kernel.org>; Thu,  1 Oct 2026 14:19:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790861345; cv=none; b=uzCoFE7XI5dFiMlQ/KvU3UV50clAf2ay2zEPM0Y5xiKS7UlyOR7AK7IJx3rhCbDxzQdtJVIipg05Hteg3fsO/jfRxaI84SuuyTOGQNGbFit1wuiaI/827/yT4O61Y/GXn8uy6SOraEstCiPXhz99D20YhWop+k8DIRajQXrMZWc=
+	t=1790864349; cv=none; b=JgV0QYOyWBgUjTNe6UmVzYNY0d6d7Mv2bEMM8YHNTjNBTl1t6aovJcqeh0MHf3md68LjLb946jJCufc0uonLMBaifWf0W4GpjHFOifNYP+3Qo+zxC6+kRx7iHfj2oivr/iZnR+dcaR1VSopS0qxhp5YNp2FKZ9k/pKUDkZSnAzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790861345; c=relaxed/simple;
-	bh=W5Z61Nq5ztKiixSzOg/KI+CWrMFLg5vyI2wky8v9fwc=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:In-Reply-To:
-	 References:MIME-Version; b=TT8LLeiBuYjtJpJ9dojwegMP7M7av/PeXHeP/4F+F0TWMaWfJAlfolpZKZDqlYqapfWxcMZJQMXHZy2xO1ecJTp5LLSmtebDFW/i762vBCgYAdIRl6HZoo0cSdVWcpKebKU/YIO+PzljKtdUuvrRhv3qc0wMwxQ2GYNDz2gKmQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p+dPQ6Ip; arc=none smtp.client-ip=209.85.215.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790864349; c=relaxed/simple;
+	bh=weY1YjX1ml+PqTzLzYH2YTbOr+K3mljuFSCdICr58sw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rIr2rReJPNfwljZkOgXu7ccLBdMSCNXvU6rMWn0Iz3ID07RxKbHiijNDllPTuwmD/F7jlBl/snOlzUbA0BC01L29OSXjREaDPjp9AIdTqDw9Ux6znwT6gEmu7c1fcwHqLNR+bM6KgdLwZ2xB4CRSLlN0i73Mi4mh9QeO2Y8zyEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=svUEB3Up; arc=none smtp.client-ip=95.215.58.205
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p+dPQ6Ip"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-cbedd5aece4so230846a12.0
-        for <cgroups@vger.kernel.org>; Thu, 01 Oct 2026 06:29:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790861343; x=1791466143; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:references:in-reply-to:to
-         :from:subject:cc:message-id:date:content-type:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=41trAFy/D/tRuSshg4paU2rmIdPH/gR2P5hv3iAAWQ4=;
-        b=p+dPQ6IphpwIxRgcwWEZEA2sA7DrF0VLrDqOYBO8qziVvYdxIuDfAyjWtp8Wa9RPqM
-         KH4q4SAzVOMaj+JRkfrXeb71FkAekMj4+IcaWrp7Qnf/5WPlWy4L6VItMpzzO0GYIe3d
-         4nl2tUjcjHnqlqpowD1oIU2/TaAGgklhtV1q8DeoeTULFaAAcS2YyDFCEd8vpRVt5ONU
-         xOaMV1iXUneSZGBacoaiWxG7UPP9vlJstglZNnNgBVfSeCU3YTVs2OcS0RpRoYyFSvCQ
-         Ia8kJ52zq2rof+1MaM4VJEjWsIXCuZc+x/8AQwLpXax4YYICLyvGL1o1fYi7FUzcgJF0
-         BPWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790861343; x=1791466143;
-        h=mime-version:content-transfer-encoding:references:in-reply-to:to
-         :from:subject:cc:message-id:date:content-type:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=41trAFy/D/tRuSshg4paU2rmIdPH/gR2P5hv3iAAWQ4=;
-        b=oH2tEzNAreHfm7rg8Nfp/HBl0e6sXpsGQWzMbiyuHHTf8jxqtgRa9Vn695fy3mnqgp
-         1JU+IuWfvVilWnMUqoA9OSjzg3+qsiXXMAxEIoq6fmJMU30n62YoAMj0WLwy+uDHDLZC
-         GvuqQEelBlbpmL61mub5gAhWAXgclTV0jFm710faOwUf3vEcc19DoD1XZ9vpX+rFYqNc
-         x0oUYTatGpne/whDLXbEd+2lMzHMFiPoiGQLIgvQGDFoJ8iKeiK7mypeu4HEEucW7/7n
-         eWxjCvnUM/e6jThn+Sud175gSMF+7TOVqnpdOB456Oe6YoVYujlIqqstamgNYFUcqiXT
-         GWgw==
-X-Forwarded-Encrypted: i=1; AKwUvBxRSoyFYjFDE2E9iVH1BLfBJTSfKCGHu08yEy3BCckPOIq2z/xdb93wgtM8UmT0Jkk3orzRfGsN@vger.kernel.org
-X-Gm-Message-State: AFuF++ncWInSqrmb7bY/UZWzusP6BfHkTerA9J+1Z2nWCFIuA7icoV9i
-	OSHXd+s0g/JU4A/Vbf31qoVuM94u9nsIHzv+RrOGPJtQqYP8k7eV9WpLYOmjfyzF
-X-Gm-Gg: AYBFou3K7+tAP8y8W+ZzCXxNS3AbtuZ+Vmj0lqETzkf/7c4se9f0IVPypDA3Hrx9qR4
-	iQXyJ09Xmcljbd2hKUtk8fBPNAKFZPbKnJrrWb2SOb8P7zO4HjF26nBPk4CZmRNQ8SVbE9jrZfZ
-	LT87Qx3m+7wpuPqMVBwXGVctmidKN7fC5M6nDWrtc0Qj5P0NAKLm2ZuI1rYX+3dpEmkaDRTpYqG
-	vF9MmsxNa7z+4DrAOu1Vx98MtiNFir4rMwhJQ+FVknPdDWUcCyQbLZzNGiROnjn/fTmh9Y78CdW
-	nEa8bIX+H1lhBKeeRQuiy839DBbN3eo09VHbm8c7lrPxjO5QrbBohI7hNM4FY0lC6c0zN7gbpn+
-	6SDhkRZdSz/oBFxf1/S45EK/bKtuhI8CJQBGrvpL2emkTEdSyvrZkGC1JnGPub+m8/4d+wPZjcF
-	X018nbg/Hnjklyo5c4TkV8L/5GpDclmMjUEW/07ukEYf3aWwP2UwnZQJFa7KRt0vUFwm25hT55j
-	zciMaEkkhAssms0wu3YDZ8lSab0NOHhCW7m4sJMWNSSB46JO4CYwDNTwzuwMa39OO1vuIokSUiO
-	G4XX0qPSTpsIhg==
-X-Received: by 2002:a05:6a21:748e:b0:3dd:a9a9:396d with SMTP id adf61e73a8af0-3deace089c9mr2562419637.49.1790861342684;
-        Thu, 01 Oct 2026 06:29:02 -0700 (PDT)
-Received: from localhost ([153.61.198.250])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc7e5285aa8sm1549511a12.0.2026.10.01.06.29.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Oct 2026 06:29:02 -0700 (PDT)
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 01 Oct 2026 13:29:01 +0000
-Message-Id: <DLTJD2PTJ81W.FWH9UA1B59MR@gmail.com>
-Cc: "Eduard Zingerman" <eddyz87@gmail.com>, "Kumar Kartikeya Dwivedi"
- <memxor@gmail.com>, "Martin KaFai Lau" <martin.lau@linux.dev>, "Song Liu"
- <song@kernel.org>, "Yonghong Song" <yonghong.song@linux.dev>, "Jiri Olsa"
- <jolsa@kernel.org>, "Emil Tsalapatis" <emil@etsalapatis.com>, "Ihor
- Solodrai" <ihor.solodrai@linux.dev>, "Amery Hung" <ameryhung@gmail.com>,
- "Tejun Heo" <tj@kernel.org>, "Meta kernel team" <kernel-team@meta.com>,
- <cgroups@vger.kernel.org>, <bpf@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, "Yafang Shao" <laoar.shao@gmail.com>
-Subject: Re: [PATCH] bpf, cgroup: fix cgroup struct_ops query for a second
- attach type
-From: "Alexei Starovoitov" <alexei.starovoitov@gmail.com>
-To: "Shakeel Butt" <shakeel.butt@linux.dev>, "Daniel Borkmann"
- <daniel@iogearbox.net>, "John Fastabend" <john.fastabend@gmail.com>,
- "Andrii Nakryiko" <andrii@kernel.org>
-In-Reply-To: <20260930135159.3926039-1-shakeel.butt@linux.dev>
-References: <20260930135159.3926039-1-shakeel.butt@linux.dev>
-X-Mailer: mkdraft (claude review draft; edit before sending)
-Content-Transfer-Encoding: 8bit
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="svUEB3Up"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=weY1YjX1ml+PqTzLzYH2YTbOr+K3mljuFSCdICr58sw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790864345; v=1; x=1791469145;
+ b=svUEB3UpUR1AmBzyPyzHyy99fmiI84MvThwHDwZnOyeYaWsmJaIER7uEmx//xCcQ3jR5u6nP
+ NEUU+v6zepPSA5b9tbBvd/tO1B3jFREwmIVg/HvnaDn/GaqcdWcw4s4/X9TjeI3lhzA03aQvWHf
+ fI2l5sG6ifnQP6PWIusQ0KOs=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 5109a60fab2357ff;
+	Thu, 01 Oct 2026 14:19:04 +0000
+X-Mizu-Trace-ID: 5109a60fab2357ff
+X-Migadu-Flow: FLOW_OUT
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	John Fastabend <john.fastabend@gmail.com>,
+	Andrii Nakryiko <andrii@kernel.org>
+Cc: Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
+	Ihor Solodrai <ihor.solodrai@linux.dev>,
+	Amery Hung <ameryhung@gmail.com>,
+	Tejun Heo <tj@kernel.org>,
+	Meta kernel team <kernel-team@meta.com>,
+	cgroups@vger.kernel.org,
+	bpf@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH bpf-next v2] bpf, cgroup: fix cgroup struct_ops query for a second attach type
+Date: Thu,  1 Oct 2026 07:19:01 -0700
+Message-ID: <20261001141901.3225830-1-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed, Sep 30, 2026 at 06:51 AM Shakeel Butt <shakeel.butt@linux.dev> wrote:
-> +#define cgroup_bpf_enabled_runtime(atype) \
-> +	static_key_enabled(&cgroup_bpf_enabled_key[atype])
+Two things in __cgroup_bpf_query() work only because CGROUP_TCP_SOCK_OPS is
+the only struct_ops attach type.
 
-[...]
+It calls cgroup_bpf_enabled(atype) with an atype that
+find_atype_by_struct_ops_id() works out at runtime.  That macro is an asm
+goto and needs a constant.  Today the compiler can see there is only one
+value; add a second type and the build breaks with "impossible constraint
+in 'asm'".  The check is not needed anyway.  When the key is off nothing is
+attached, so progs[atype] and effective[atype] are empty and the count loop
+leaves total_cnt at 0.  The other attach types already use that loop with
+no such check.  Drop the check and the skip_count label.
 
-> @@ -1448,7 +1449,7 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
->  			return -ENOENT;
->  		from_atype = to_atype = atype;
->  		flags = 0;
-> -		if (!cgroup_bpf_enabled(atype))
-> +		if (!cgroup_bpf_enabled_runtime(atype))
->  			goto skip_count;
+And find_atype_by_struct_ops_id() matches on type_id alone.  An attach type
+whose subsystem is not built keeps type_id 0, so a query for type 0 finds
+it and returns success with nothing instead of -ENOENT.  Skip such slots.
 
-No need for a new macro.
-When the key is off nothing is attached, so progs[atype] and
-effective[atype] are empty and the loop below leaves total_cnt at 0.
-All other attach types go through that loop without such check.
-Just drop the check and the skip_count label.
+Fixes: 369d9dcd8fb8 ("bpf: Add infrastructure to support attaching struct_ops to cgroups")
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+Acked-by: Yafang Shao <laoar.shao@gmail.com>
+Reviewed-by: Amery Hung <ameryhung@gmail.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+v2:
+- Drop the cgroup_bpf_enabled() check and the skip_count label instead of
+  adding cgroup_bpf_enabled_runtime() (Alexei).
+- Add the bpf-next subject prefix (Amery).
 
-pw-bot: cr
+v1: https://lore.kernel.org/all/20260930135159.3926039-1-shakeel.butt@linux.dev/
+
+ kernel/bpf/cgroup.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
+index 2bbe77de89f0..ce82963bcfc7 100644
+--- a/kernel/bpf/cgroup.c
++++ b/kernel/bpf/cgroup.c
+@@ -45,6 +45,7 @@ static enum cgroup_bpf_attach_type find_atype_by_struct_ops_id(u32 type_id)
+ 
+ 	for (atype = 0; atype < MAX_CGROUP_BPF_ATTACH_TYPE; atype++) {
+ 		if (cgroup_bpf_is_struct_ops_atype(atype) &&
++		    cgroup_struct_ops[atype].type_id &&
+ 		    cgroup_struct_ops[atype].type_id == type_id)
+ 			return atype;
+ 	}
+@@ -1448,8 +1449,6 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+ 			return -ENOENT;
+ 		from_atype = to_atype = atype;
+ 		flags = 0;
+-		if (!cgroup_bpf_enabled(atype))
+-			goto skip_count;
+ 	} else if (type == BPF_LSM_CGROUP) {
+ 		if (!effective_query && attr->query.prog_cnt &&
+ 		    prog_ids && !prog_attach_flags)
+@@ -1476,7 +1475,6 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+ 		}
+ 	}
+ 
+-skip_count:
+ 	/* always output uattr->query.attach_flags as 0 during effective query */
+ 	flags = effective_query ? 0 : flags;
+ 	if (copy_to_user(&uattr->query.attach_flags, &flags, sizeof(flags)))
+
+base-commit: 6a75c73eebd4d497ded7d08b47894f9ddbebb5a9
+-- 
+2.53.0-Meta
+
