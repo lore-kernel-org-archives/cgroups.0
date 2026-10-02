@@ -1,110 +1,116 @@
-Received: from mta1.migadu.com (out-174.mta1.migadu.com [95.215.58.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98AF047013D
-	for <cgroups@vger.kernel.org>; Fri,  2 Oct 2026 22:19:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB5E42B301;
+	Fri,  2 Oct 2026 23:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790979590; cv=none; b=ltv9xcBwBx9mDFkWohba9r2oVtC/IYpOeDIV96Amw5lkobFuatWddgmgGKfX2pbfyr66i3WxkWUIFC1XHw1Nfia+uBK1/0dTL/bVsKLKV7x/X3ayM3+qJiZsoghJPQ+J/RoYuBawm2go3BzPsjP/yyLadNtjsr0Xh32Mi/VmI98=
+	t=1790982694; cv=none; b=tP9v+bPHs+LeUp70BMQ5SoVNl1+SZD+D+2hGoFDWsnoH1Su2wyJy3CYO3pujdHGj+VcpAoJldxmUqOQQDj/oSmLMNMGd13wxps07zjO+vellnBg9t4i8KCwZTEPn29kNQy10mJr1maEigi8xQPsIefQsiVVWb/gR8wJV9bddZAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790979590; c=relaxed/simple;
-	bh=LIeypzTLxZFUaXt5ugGV2tt9HvkLhl45i2GZQQOzRtA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nevp9DLgn18It4ID3aKr3YPmUOJjZQ/6IY9R+l58Afelfc322Qx8DSnIggTCPH2AOQXltkf8OC/sFC/0tq9jG8CNG5iCWcy+RZeQltRa8XLHO31FPRSJ2OoldDo2ephgkx6xaqLD454l2ZyVjKuqS9ZUP6PpiArkVzlRcWJUZEs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=BhepoCzX; arc=none smtp.client-ip=95.215.58.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1790982694; c=relaxed/simple;
+	bh=AuGTrggSMMdoLaFPyZC7inBFjquZSoja7nsY11s+2D0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=NSMJg2nBzkOmv7Ax/RgcnGxT8X0ysWLanSk6QPnqOWuDH0ArsZciWi4/7nJetAYmp2vlD198ieGjwoKJeLylNthSZ/SQp+gCvQJn3jXEM4CUCcq5dMyEVIbOAhEmY/+QQwfaA2yOFYFTgSmKJsfNPt94LXWzMuwU/ZmWV53gHqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JlKtFw36; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="BhepoCzX"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=LIeypzTLxZFUaXt5ugGV2tt9HvkLhl45i2GZQQOzRtA=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790979584; v=1; x=1791584384;
- b=BhepoCzXqCV6+2aFXT/5CmOqdAoSYoHbqDxEnkF4m0Xvdqb6AWvH8+ChwpvQPvS343Ccuu3o
- J42qH3XqO24w3NmnS8ix4Pe+F7ROpe3BO3JCMsVAwMHUneXcpT9E/0xfeCr/FHmKGgh1yIX2Baa
- kARXwtyunWysy7L0cbgpXQKM=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 2a1b46a32a9d1e0a;
-	Fri, 02 Oct 2026 22:19:43 +0000
-X-Mizu-Trace-ID: 2a1b46a32a9d1e0a
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 2 Oct 2026 15:19:38 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Alexei Starovoitov <ast@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	JP Kobryn <jp.kobryn@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Michal Koutny <mkoutny@suse.com>, Amery Hung <ameryhung@gmail.com>, 
-	Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, 
-	Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, 
-	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, 
-	Yonghong Song <yonghong.song@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>, 
-	Jiri Olsa <jolsa@kernel.org>, Ihor Solodrai <ihor.solodrai@linux.dev>, 
-	John Fastabend <john.fastabend@gmail.com>, Jiayuan Chen <jiayuan.chen@linux.dev>, hui.zhu@linux.dev, 
-	Donet Tom <donettom@linux.ibm.com>, Greg Thelen <gthelen@google.com>, 
-	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/4] memcg_ext: memcg policy through cgroup-attached
- struct_ops
-Message-ID: <ar_fuYs_-qS46dVk@linux.dev>
-References: <20260921192559.2619635-1-shakeel.butt@linux.dev>
- <bda525506b3fb3e61da28a112f28abba@kernel.org>
- <arw4rjVkm2ob9ioL@linux.dev>
- <bc6815954b8d08e75deadd43e1a2192c@kernel.org>
- <ar2kvmCPR9q31V8M@linux.dev>
- <31a871a07fccc99e953a2d633fc51edc@kernel.org>
- <ar7H__jzvWVtqSn5@linux.dev>
- <c1fdbe4f99352a102b38c7d131215d5a@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JlKtFw36"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 262921F00893;
+	Fri,  2 Oct 2026 23:11:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790982693;
+	bh=il8A1RVRfAP3LmRZEt7D66Nfnu4TVGi121lkczSMSiQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=JlKtFw36eMlMokCbuuuhmSgbjFdvD0tBMPp4BfTVPh4znMWqlOezpIfvnGghA7Lt9
+	 1/ulIEAd9JSdiW2+8S9+59b7c1R5f1loUnQMEet6ohlEp9rT80vC6BxYfkihNGWSHH
+	 GhTejv/kjnALRVLtt7jKiCmLct37U6U78GlulMI4tRTIl3ioPWHlYZdpD39ONoDZjC
+	 wGGtCMaf+yyp1cYUQzEsBgJOJUUtK5Z9hqmKDhrtNSomzwyGtE+YMUoz3AVBWmfhOz
+	 jF0zD+5Jkk4eP3lU5K+TtK4ZF/29zAaLrA+ODnU+QiQXToxOyBESzh7HW6OflkMYDL
+	 OhYhb6szA80uw==
+From: Kees Cook <kees@kernel.org>
+To: Vlastimil Babka <vbabka@kernel.org>
+Cc: Kees Cook <kees@kernel.org>,
+	Harry Yoo <harry@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Hao Li <hao.li@linux.dev>,
+	Christoph Lameter <cl@gentwo.org>,
+	David Rientjes <rientjes@google.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	linux-mm@kvack.org,
+	Pedro Falcato <pfalcato@suse.de>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	linux-hardening@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Simon Horman <horms@kernel.org>,
+	Jason Xing <kerneljasonxing@gmail.com>,
+	Willem de Bruijn <willemb@google.com>,
+	Mina Almasry <almasrymina@google.com>,
+	=?UTF-8?q?Bj=C3=B6rn=20T=C3=B6pel?= <bjorn@kernel.org>,
+	Jiayuan Chen <jiayuan.chen@linux.dev>,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH net-next v5 1/7] mm/slab: Mark the kmem_buckets_create() context as a Context: section
+Date: Fri,  2 Oct 2026 16:11:21 -0700
+Message-Id: <20261002231132.1646573-1-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261002231120.late.500-kees@kernel.org>
+References: <20261002231120.late.500-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c1fdbe4f99352a102b38c7d131215d5a@kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1768; i=kees@kernel.org; h=from:subject; bh=AuGTrggSMMdoLaFPyZC7inBFjquZSoja7nsY11s+2D0=; b=owGbwMvMwCVmps19z/KJym7G02pJDFkHrGSLN2YfELwjaF+9xSuq945av3Z70zMbxZzA3XpLR C84B2/oKGVhEONikBVTZAmyc49z8XjbHu4+VxFmDisTyBAGLk4BmMj/3wz/y/i2W0Ve4VA4uefW tHu/j8hE5eiVPDzOc8TywXvtMDvLFYwM0/k2L172aIVZ9fylfqsrn0V4f+0p/2MleMr164qMbzG F/AA=
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 02, 2026 at 06:25:08AM -1000, Tejun Heo wrote:
-> Hello, Shakeel.
-> 
-> On Thu, Oct 01, 2026 at 03:56:47PM -0700, Shakeel Butt wrote:
-> > We are in agreement on (1) and (2) completely. For (3), I am fine with removing
-> > the sync enforcement, but for throttling points for bulk operation sites,
-> > I think we should only add them when there is an actual use case for that
-> > or someone complains about overrun from those sites.
-> 
-> On (3), if removing synchronous enforcement wouldn't regress anything,
-> that's fine, but why was it added in the first place?
-> 
+kmem_buckets_create() had the same sentence about calling context as
+kmem_cache_create(), but lacked the "Context:" prefix, so kernel-doc
+rendered in the body instead of as a "context" section.
 
-I added the sync enforcement to replace a Google internal feature which, on
-memcg OOM, allows node controller couple of seconds to either increase the max
-limit or let the memcg die. With sync enforcement, memory.high helped in simple
-benchmarks. However later testing on some realistic Google workloads, I found
-out that several thousand threads are very normal of typical Google workload and
-memory.high sync enforcement is not effective on applications with large amount
-of threads. In addition, there were workloads which on noticing blocked threads,
-keep forking more threads. At the end implementing that feature using
-memory.high didn't pan out.
+Give it the missing prefix. Additionally fix the "a interrupt" typo
+__kmem_cache_create_args() had.
 
-> > Now, setting aside the default behavior of memory.high, I want to provide
-> > additional flexibility to users for (3) specifically. One specific case is
-> > letting users opt in to async reclaim instead of the other forms of memory.high
-> > enforcement. Basically, users can specify that instead of having their
-> > application threads throttled, they would prefer async reclaim to bring their
-> > usage back below memory.high.
-> 
-> As for flexibility, we already have a gradient of enforcement around
-> memory.high. Is the need here to make the shape of that gradient
-> configurable? Can you give specific examples where this is needed?
-> 
+Fixes: b32801d1255be ("mm/slab: Introduce kmem_buckets_create() and family")
+Assisted-by: LLM
+Reviewed-by: Harry Yoo (Meta) <harry@kernel.org>
+Acked-by: Pedro Falcato <pfalcato@suse.de>
+Reviewed-by: Hao Li <hao.li@linux.dev>
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+ mm/slab_common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-The concrete example I have is the kswapd like async reclaimers (plural) per
-memcg. Kswapd is woken up on free pages falling below low watermark and then
-when free pages fall below min watermark, allocators get throttled (enter direct
-reclaim). I want to apply similar concept to memcg (but with right cpu
-accounting and more concurrency). 
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index b19ba1b31484..270408ce5a9d 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -311,7 +311,7 @@ __kmem_cache_alias(const char *name, unsigned int size, slab_flags_t flags,
+  * &SLAB_TYPESAFE_BY_RCU - Slab page (not individual objects) freeing delayed
+  * by a grace period - see the full description before using.
+  *
+- * Context: Cannot be called within a interrupt, but can be interrupted.
++ * Context: Cannot be called within an interrupt, but can be interrupted.
+  *
+  * Return: a pointer to the cache on success, NULL on failure.
+  */
+@@ -422,7 +422,7 @@ static struct kmem_cache *kmem_buckets_cache __ro_after_init;
+  *		to/from userspace.
+  * @ctor: A constructor for the objects, run when new allocations are made.
+  *
+- * Cannot be called within an interrupt, but can be interrupted.
++ * Context: Cannot be called within an interrupt, but can be interrupted.
+  *
+  * Return: a pointer to the cache on success, NULL on failure. When
+  * CONFIG_SLAB_BUCKETS is not enabled, ZERO_SIZE_PTR is returned, and
+-- 
+2.34.1
 
