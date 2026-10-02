@@ -1,130 +1,70 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D26CF4D179C
-	for <cgroups@vger.kernel.org>; Fri,  2 Oct 2026 16:54:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9001A342C80;
+	Fri,  2 Oct 2026 18:39:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790960093; cv=none; b=hoJSI0k6EbXxXRfnNHL6eZH04YtWLFba4x3ERbWY6V2zgtHaUpDZ2OMOjmwNQ24Gku+1X1hLaD++gRxqnprVIl2nALYMd7nP9TSmSCh87GzFVxKTv7EIokdlb24ewn+9h0zNZsYLKtwwon1AGq8/U+umR6jnYEKTXQwwKbWJjPw=
+	t=1790966350; cv=none; b=qheV/kFli4/oFDbAeTMqxMpUjMVAphqPkRgc6sDpR19vaIQv/Z05knZjlluDYM6sKDafLP09HSPBclZeIj2HWnMH+2uWYYKbwE2ZNMgMbDs+YVuq/xkiu5o9wsMv62oDpPJuFO7oOaOn2vth1vuQGzveAviII9UehG3enTrzuYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790960093; c=relaxed/simple;
-	bh=F3lX++ECEDnCerWaE/Qm2cVLVgUL0h3RSsZEjxjpA7g=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pJw5bHjHUCYb51URYNts5Aca0SvuAbv7mpiTtGzT15hmFP8v5rlAuZJrB87EaYQ0+Wo0F8VNWf5HbkSVgGr8uMwi8j1aAOm48+zqjXde2yENF4K2uSKlI03JPFgKWPmsid+EPF2iWtDTs8OnncX9BhslvfEZHT3DUk5OU4/DbYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CWVOIwqt; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790966350; c=relaxed/simple;
+	bh=0UDRBfmhI0tAjUkuyTfjPYv6VlXpVARAoUfgLbuSjr8=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Cfc2iydpNnVKqH0qv3h2fIJWUoUMRAy2tL+U5fwdUr/PYChcLR8gS06kjPI7lTeKruJAuCP7fghBeRvx/w3Ey0cfQsSBK9GmHBn1PljDCAdH8f7JqyPFsihqKonUTl3EUrx2zaDbXsdQZklL/ltG9OuctLnSZlPORQwtpxPOzCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LHlmoXQK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CWVOIwqt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790960090;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=3venwHttFa+LgHQOSujImduuESDWjIxfZmH5qy3F8h4=;
-	b=CWVOIwqtkKk1zciziW/8Mr5fsRDLOwQo8D5LlQHibVCQr2DRSxiajKaKG5JxeiG8yX85GB
-	ZpskFbg/+bpUXvsQVhuydG5SMshiml7N0cMoSvVS5HSSzyXqnjWxUBekxLjU2d9LR4CfhF
-	5yZekb8gyx4PCrZc2qMFTLwkaUyWHxc=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-669-0DeL34JjN4OoD5f_MtJ0XA-1; Fri,
- 02 Oct 2026 12:54:49 -0400
-X-MC-Unique: 0DeL34JjN4OoD5f_MtJ0XA-1
-X-Mimecast-MFC-AGG-ID: 0DeL34JjN4OoD5f_MtJ0XA_1790960088
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A26681954121;
-	Fri,  2 Oct 2026 16:54:47 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.rmtusnh.csb (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CA8CA1956042;
-	Fri,  2 Oct 2026 16:54:45 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Ridong Chen <ridong.chen@linux.dev>,
-	Tejun Heo <tj@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LHlmoXQK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3C801F000FF;
+	Fri,  2 Oct 2026 18:39:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790966349;
+	bh=YnmYqM14oidyo+alFbzDt4rEXRQW1eTvKWOsfdzLCNo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=LHlmoXQKeZDUMe4HTP+HQL4C1Fx9GohPKAP3uFK0SbiDkkD9waMVV8H8BoJoQPfcE
+	 3KmPU9cfZX72EopYhLk0FpcvPkbkGNsmvmuzv8120vxX/mV4C52D8bgP/JYGkjxv+T
+	 iiC69hgwa21nMeqUjDPL1m7CE+UK1lHYwD2oI6hAdv2Jm2SOWdm9kLQAlbgROQ5DuJ
+	 AWVlwZ3VHex/NXowheEJ7ZmPKWFfA+fllD1SaiBBrfdA6S3N3t1NOsoCUNwOaC5vVW
+	 w8rVepQe1FdY+2cQvKHK9mmWd/QQZ60F0RIWtMxDsEVqRXUpLTbM9W1k5CeiI6XkkQ
+	 XSZZ//mw/iCZA==
+Date: Fri, 02 Oct 2026 08:39:08 -1000
+Message-ID: <17a3acfd8b57e96b03dab38fc44a7031@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Ridong Chen <ridong.chen@linux.dev>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
 	Farhad Alemi <farhad.alemi@berkeley.edu>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH v2] cgroup/cpuset: Handle cpu hotplug race in guarantee_active_cpus()
-Date: Fri,  2 Oct 2026 12:54:38 -0400
-Message-ID: <20261002165438.951550-1-longman@redhat.com>
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] cgroup/cpuset: Handle cpu hotplug race in
+ guarantee_active_cpus()
+In-Reply-To: <20261002165438.951550-1-longman@redhat.com>
+References: <20261002165438.951550-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-With commit 2125c0034c5d ("cgroup/cpuset: Make cpuset hotplug processing
-synchronous"), the cpuset hotplug operation becomes synchronous. That
-commit also removes the code that handles race between cpuset_hotplug_work
-and cpu hotplug notifier with the assumption that race is now gone.
-Later commit 7a0aabd9ce69 ("cgroup/cpuset: Always use cpu_active_mask")
-updates the cpuset code to always use cpu_active_mask instead of
-cpu_ohline_mask in some places including guarantee_online_cpus() which
-is renamed to guarantee_active_cpus() in that commit.
+On Fri, Oct 02, 2026 at 12:54:38PM -0400, Waiman Long wrote:
+> With commit 2125c0034c5d ("cgroup/cpuset: Make cpuset hotplug processing
+> synchronous"), the cpuset hotplug operation becomes synchronous. That
+> commit also removes the code that handles race between cpuset_hotplug_work
+> and cpu hotplug notifier with the assumption that race is now gone.
+> Later commit 7a0aabd9ce69 ("cgroup/cpuset: Always use cpu_active_mask")
+> updates the cpuset code to always use cpu_active_mask instead of
+> cpu_ohline_mask in some places including guarantee_online_cpus() which
+> is renamed to guarantee_active_cpus() in that commit.
 
-In the case of CPU offline operation, cpuset_active_mask is updated
-first in sched_cpu_deactivate() to remove the offline CPU before
-cpuset_handle_hotplug() is called to update the effective_cpus of the
-affected cpusets. The cpu_online_mask is updated after that near the end
-of the offline operation to remove the offline CPU. As a result, the race
-comes back and the top cpuset may not have any active CPU leading to NULL
-pointer dereference during the race window when guarantee_active_cpus()
-is called after cpu_active_mask is updated to remove the CPU to be torn
-down but before cpuset_handle_hotplug() is able to properly update the
-effective_cpus of the top cpuset.
+Applied to cgroup/for-7.3-fixes with two typos fixed and the following tag
+added:
 
-Fix this by adding back the NULL cs check to avoid this problem.
+  Cc: stable@vger.kernel.org # v6.16+
 
-Fixes: 7a0aabd9ce69 ("cgroup/cpuset: Always use cpu_active_mask")
-Reported-by: Farhad Alemi <farhad.alemi@berkeley.edu>
-Link: https://lore.kernel.org/lkml/CA+0ovChh3VjsKN1g+ZGjwwY2fGTpP7uD+aCCByLj5Qbymw=bfQ@mail.gmail.com
-Tested-by: Farhad Alemi <farhad.alemi@berkeley.edu>
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+Thanks.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index ddc4c9c9b4fb..92559fc4c444 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -517,10 +517,26 @@ static void guarantee_active_cpus(struct task_struct *tsk,
- 	rcu_read_lock();
- 	cs = task_cs(tsk);
- 
--	while (!cpumask_intersects(cs->effective_cpus, pmask))
-+	while (!cpumask_intersects(cs->effective_cpus, pmask)) {
- 		cs = parent_cs(cs);
--
-+		if (unlikely(!cs)) {
-+			/*
-+			 * The top cpuset doesn't have any active cpu as a
-+			 * consequence of a race between its caller and the cpu
-+			 * hotplug operation where cpu_active_mask is updated
-+			 * asynchronously before cpuset_handle_hotplug() is
-+			 * being called to adjust the effective_cpus of the
-+			 * affected cpusets. But we know the top cpuset's
-+			 * effective_cpus is on its way to be identical to
-+			 * cpu_active_mask minus the exclusive CPUs dedicated
-+			 * to other valid cpuset partitions. Just pass back
-+			 * the filtered cpu_active_mask in this case.
-+			 */
-+			goto out_unlock;
-+		}
-+	}
- 	cpumask_and(pmask, pmask, cs->effective_cpus);
-+out_unlock:
- 	rcu_read_unlock();
- }
- 
--- 
-2.55.0
-
+--
+tejun
