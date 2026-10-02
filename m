@@ -1,64 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06BE64BA1D6;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06ADD4B7A5D;
 	Fri,  2 Oct 2026 23:11:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790982696; cv=none; b=Lk0I3mNcCIK95dFfz5sbtgO3lNjWY2gZ4+S5l5Jyz/o+5+QM4OldHnXlvoWwjVxO6idCdDVVNU49X/FlCt/mpcVdutjEWcEuviRy2++Ec2Fl3PMowKLru9idpmuZSAqdoxue5W6lImmEDZk808RTjjPo6HkbPS6o4fCzL4BPQ0w=
+	t=1790982696; cv=none; b=gu3z/Fipe5X+zFX+MQ5GR8cYI0X2ho8xeLGsFFI5YNn0BEy6MxrQqUAnysTjHj9ZUX+IGQY5bUaMIHye20Fn1c0xjA0Iw6225bZNutQio1/DhOzsFqzxSYMpmp0cl2GxpIdUzH2rRO/bb2dIf2saqlsBFefEzzx88nUxMOXrOBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790982696; c=relaxed/simple;
-	bh=bjKkE0PS44xIIBmXfOgrzZyg+bEE8UE2hoDOlBTc8gA=;
+	bh=tchXc7NwCKm8PR533pBMbCGPjPw8PbVDz6gXpuQlS0o=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RFXqXUduOaosEMfSVOhDrreXD25SWgiQf8yBkLldXrhiHP6gJ8f5IjONp+35E+zL13Wsi1+zYb/a9z/ZcINIZbaEV4pNXXUD46BuLm9kWRvlQt7IEVr6vMiDYVTFZZ3lsmS+61jV4sasqW4qOSUXouTQCBe6xDchqMr1iLwmieo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fZwDDJgA; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=SBtfFVjUj5qtXjkyNlLoJ6wZKZ5i+oDYlPEtJdQECyLeH5iSWPldbKAc9C7vjTzTZMe6zxY+6guQhWl25DZwbfgQhmBS5ymDllIR8S+6SqKp6bK109RK6zZvNw9TohAlIs7i5BuyAomv67lzZNNnjQqN420zqLZzgzg654L3Mx0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCAmiCEb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fZwDDJgA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68F0F1F00A06;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCAmiCEb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66BC21F00A05;
 	Fri,  2 Oct 2026 23:11:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1790982693;
-	bh=2S6KB+pb+BQT5oUBqFqBJ538QVfRgtrf68Zq5YYeGCI=;
+	bh=vzksZEAFYFLYmLdPMdRVNGG/Ht2OGYmdABRr9SBKULY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fZwDDJgAQSghfefVAcf1aopBete44JcDPrKGL6PJwJzfBYFU8vMxVqCe6UyXBmz/x
-	 TNQeNLWMRwMUN6KJG15N/2h49A9XaujWv7NDH6MJZ720SGkGECRdDU990p97hf1aLN
-	 wAG6n7Qf+ekX54iwAG64JAb0SfxnTUZU0ru3PwUjtQYvvLu2bltbmU8PIsXEvWyi1J
-	 FcQVEDnLZz+hh18WTUf3Y+ZIDWphF2xeYyAF9qJWzxbt7uWdJHiwOm/AYHppugfpFU
-	 YqLeFIvXsYj6Ah3zUyhGN1j2oAN4O/dEO9yCtD3zJGrV75IJQB8zw3Mt7Zd+4wiy0l
-	 hyQT9D+tFV0Yw==
+	b=LCAmiCEbErTgs9OGD1kfMoS099cQPavbLCq7WBC0WuSTfXjXuO/B1VTKV1gqR8Znl
+	 CJd2xj1IYjvUnwjFAiQWDMVOgKLjH7LBjQgpNrVFwCQpilhMmH83Vza3ebTPyAe36N
+	 YxWGCn0wFoc8dB0Bh4mzr6WODWhOOcw6sCJSiI9aAshhxoH657tuKJhsGsGdk82nS3
+	 w5ZvDl/s7FWONjQJ47Oyy88qY68NyBRnLybC0tDxCT8zrnviEwofRT+UFLEaO0To2t
+	 Dks5QBfd5mVQU7wB8QIBecWmHY7eNeAMZBUpaM1ZStvrjPFBNLOoSyTObGhyuzvyD3
+	 4zf5AgMD9kSLw==
 From: Kees Cook <kees@kernel.org>
 To: Vlastimil Babka <vbabka@kernel.org>
 Cc: Kees Cook <kees@kernel.org>,
-	Pedro Falcato <pfalcato@suse.de>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Willem de Bruijn <willemb@google.com>,
-	Jason Xing <kerneljasonxing@gmail.com>,
-	netdev@vger.kernel.org,
-	Kuniyuki Iwashima <kuniyu@google.com>,
-	linux-hardening@vger.kernel.org,
-	"Harry Yoo (Meta)" <harry@kernel.org>,
+	Harry Yoo <harry@kernel.org>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Hao Li <hao.li@linux.dev>,
 	Christoph Lameter <cl@gentwo.org>,
 	David Rientjes <rientjes@google.com>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
+	linux-mm@kvack.org,
+	Pedro Falcato <pfalcato@suse.de>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	linux-hardening@vger.kernel.org,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
+	cgroups@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Simon Horman <horms@kernel.org>,
+	Jason Xing <kerneljasonxing@gmail.com>,
+	Willem de Bruijn <willemb@google.com>,
 	Mina Almasry <almasrymina@google.com>,
 	=?UTF-8?q?Bj=C3=B6rn=20T=C3=B6pel?= <bjorn@kernel.org>,
 	Jiayuan Chen <jiayuan.chen@linux.dev>,
 	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org
-Subject: [PATCH net-next v5 7/7] net: skb: isolate skb data area allocations into a separate bucket
-Date: Fri,  2 Oct 2026 16:11:27 -0700
-Message-Id: <20261002231132.1646573-7-kees@kernel.org>
+	netdev@vger.kernel.org
+Subject: [PATCH net-next v5 5/7] mm/slab: Provide kmalloc type fallback for bucket allocations
+Date: Fri,  2 Oct 2026 16:11:25 -0700
+Message-Id: <20261002231132.1646573-5-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261002231120.late.500-kees@kernel.org>
 References: <20261002231120.late.500-kees@kernel.org>
@@ -68,81 +68,202 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3039; i=kees@kernel.org; h=from:subject; bh=6RSadgWMGYr7w5XXzzDRtJ8OGCSMMWfVJU83WYKH/TQ=; b=owGbwMvMwCVmps19z/KJym7G02pJDFkHrOT9qv5cV5CaV7MmgWXeH1HWxZ+47u33u886tfcO4 5dt0X7bOkpZGMS4GGTFFFmC7NzjXDzetoe7z1WEmcPKBDKEgYtTACai/JGRYWrn6d6I6MO9V+1E U86tY6maqum/cdUiy7XHdti1hjKz5zP8Mw/kaXirdKske23hPeVWuZSW3raY3fPuW9cr3hX8+b2 ACQA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6703; i=kees@kernel.org; h=from:subject; bh=tchXc7NwCKm8PR533pBMbCGPjPw8PbVDz6gXpuQlS0o=; b=owGbwMvMwCVmps19z/KJym7G02pJDFkHrORCL077r5G3c+HxeMZyH/XHx5/1T75abb7m8Mwvs jnbPBn1OkpZGMS4GGTFFFmC7NzjXDzetoe7z1WEmcPKBDKEgYtTACYyg4mR4UFTkUvzEkm/Shnz Gt/vFzRrfv45UvJ0Y4GA7wIPOeEprAz/3f9c2TAzeoOztNObU03TWY+eXFH3v63xxF0Z3QUnXzW o8AIA
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-From: Pedro Falcato <pfalcato@suse.de>
+kmem_buckets_create() clones kmalloc_caches[KMALLOC_NORMAL].
+kmalloc_slab() figures out the kmalloc type the caller asks for, but
+then ignored it whenever a bucket set was in use, returning a normal
+cache regardless. This would be a problem if a caller asked for GFP_DMA,
+__GFP_ACCOUNT, etc. None of the current users do this, so there is no
+problem, but it makes adding new users fragile. For example, skb data[1]
+needs to handle GFP_DMA (rarely) and __GFP_ACCOUNT (often).
 
-SKB data area allocations (as done from alloc_skb()) use kmalloc().
-These allocations can be variably sized and their contents can be more
-or less controlled from userspace, which makes them useful for attackers
-that want to overwrite a use-after-free'd object from the same kmalloc slab
-(which often just requires the sizes to roughly match into the same kmalloc
-bucket). [0] is an easy example of an exploit that uses netlink skb
-allocation to target another similarly-sized accidentally freed object.
+Send those allocations to the general caches instead so nothing breaks and
+regular allocations remain isolated with the bucket. The kmem_bucket_type
+enum contains only a single item here, but will be expanded in the next
+patch.
 
-While other mitigations like CONFIG_RANDOM_KMALLOC_CACHES exist, these are
-probabilistic. Use the existing kmem buckets API to further isolate these
-allocations in a guaranteed fashion, when CONFIG_SLAB_BUCKETS=y.
+The test checks mem_cgroup_kmem_disabled() before expecting an accounted
+cache, so export it for KUnit only, which a modular build of the test
+needs to link.
 
-Ask for the accounted kmalloc type as well as the normal one. AF_UNIX
-sets sk_allocation to GFP_KERNEL_ACCOUNT, so without it every AF_UNIX
-skb data area would fall back to the general caches, and those are the
-ones most worth isolating. GFP_DMA is left to fall back, being passed to
-an skb allocator only by rare devices.
+Built and tests pass with ARCH=x86_64 defconfig with GCC 16.2.0, with
+CONFIG_SLAB_BUCKETS as y and n.
 
-Link: https://github.com/google/security-research/blob/master/pocs/linux/kernelctf/CVE-2023-4207_lts_cos_mitigation_2/docs/exploit.md [0]
-Reviewed-by: Kees Cook <kees@kernel.org>
-Signed-off-by: Pedro Falcato <pfalcato@suse.de>
-Acked-by: Paolo Abeni <pabeni@redhat.com>
+Assisted-by: LLM
+Link: https://lore.kernel.org/all/04debe19-bbe8-4b5f-9668-753d1f97832d@redhat.com/ [1]
 Signed-off-by: Kees Cook <kees@kernel.org>
 ---
- net/core/skbuff.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ include/linux/slab.h   | 13 ++++++++++
+ mm/slab.h              | 23 ++++++++++++++++--
+ lib/tests/slub_kunit.c | 54 ++++++++++++++++++++++++++++++++++++++++++
+ mm/memcontrol.c        |  2 ++
+ 4 files changed, 90 insertions(+), 2 deletions(-)
 
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index 966af3beed94..e0660b2dbc19 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -586,6 +586,8 @@ struct sk_buff *napi_build_skb(void *data, unsigned int frag_size)
- }
- EXPORT_SYMBOL(napi_build_skb);
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 4e6e74b3a990..bdd00235d4b0 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -742,6 +742,19 @@ typedef struct kmem_cache * kmem_buckets[KMALLOC_SHIFT_HIGH + 1];
  
-+static kmem_buckets *skb_data_buckets __ro_after_init;
+ extern kmem_buckets kmalloc_caches[NR_KMALLOC_TYPES];
+ 
++/*
++ * The kmalloc types a bucket set can hold a copy of. This is deliberately not
++ * enum kmalloc_cache_type: the KMALLOC_PARTITION copies are all "normal" to a
++ * bucket set, which already separates what they were there to separate, so
++ * indexing by those would mean up to KMALLOC_PARTITION_CACHES_NR unusable
++ * rows per set. Allocations of any type not listed here are served by the
++ * general caches.
++ */
++enum kmem_bucket_type {
++	KMEM_BUCKET_NORMAL = 0,
++	NR_KMEM_BUCKET_TYPES
++};
 +
- static void *kmalloc_pfmemalloc(size_t obj_size, gfp_t flags, int node)
- {
- 	if (!gfp_pfmemalloc_allowed(flags))
-@@ -593,7 +595,8 @@ static void *kmalloc_pfmemalloc(size_t obj_size, gfp_t flags, int node)
- 	if (!obj_size)
- 		return kmem_cache_alloc_node(net_hotdata.skb_small_head_cache,
- 					     flags, node);
--	return kmalloc_node_track_caller(obj_size, flags, node);
-+	return kmem_buckets_alloc_node_track_caller(skb_data_buckets, obj_size,
-+						    flags, node);
+ /*
+  * Define gfp bits that should not be set for KMALLOC_NORMAL.
+  */
+diff --git a/mm/slab.h b/mm/slab.h
+index 8fd6835e4235..7f1bfee83b92 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -421,6 +421,26 @@ static inline unsigned int size_index_elem(unsigned int bytes)
+ 	return (bytes - 1) / 8;
  }
  
++/*
++ * Which set of buckets to use for the given kmalloc_cache_type. If not
++ * handled by the kmem_buckets, fall back to general caches.
++ */
++static inline kmem_buckets *
++kmalloc_choose_bucket(kmem_buckets *bucket, enum kmalloc_cache_type type)
++{
++	enum kmem_bucket_type btype;
++
++	if (!bucket)
++		return &kmalloc_caches[type];
++
++	if (type <= KMALLOC_PARTITION_END)
++		btype = KMEM_BUCKET_NORMAL;
++	else
++		return &kmalloc_caches[type];	/* No set holds a row for it. */
++
++	return &bucket[btype];
++}
++
  /*
-@@ -634,7 +637,7 @@ static void *kmalloc_reserve(unsigned int *size, gfp_t flags, int node,
- 	 * Try a regular allocation, when that fails and we're not entitled
- 	 * to the reserves, fail.
- 	 */
--	obj = kmalloc_node_track_caller(obj_size,
-+	obj = kmem_buckets_alloc_node_track_caller(skb_data_buckets, obj_size,
- 					flags | __GFP_NOMEMALLOC | __GFP_NOWARN,
- 					node);
- 	if (likely(obj))
-@@ -5235,6 +5238,10 @@ void __init skb_init(void)
- 						0,
- 						SKB_SMALL_HEAD_HEADROOM,
- 						NULL);
-+	skb_data_buckets = kmem_buckets_create_types("skb_data", 0, SLAB_PANIC,
-+						     0, INT_MAX, NULL,
-+						     BIT(KMEM_BUCKET_NORMAL) |
-+						     BIT(KMEM_BUCKET_CGROUP));
- 	skb_extensions_init();
+  * Find the kmem_cache structure that serves a given size of
+  * allocation
+@@ -438,8 +458,7 @@ kmalloc_slab(size_t size, kmem_buckets *b, gfp_t flags, kmalloc_token_t token,
+ 	if (alloc_flags & SLAB_ALLOC_NO_OBJ_EXT)
+ 		type = KMALLOC_NO_OBJ_EXT;
+ 
+-	if (!b)
+-		b = &kmalloc_caches[type];
++	b = kmalloc_choose_bucket(b, type);
+ 	if (size <= 192)
+ 		index = kmalloc_size_index[size_index_elem(size)];
+ 	else
+diff --git a/lib/tests/slub_kunit.c b/lib/tests/slub_kunit.c
+index 3c923a3af825..9768de01e6f9 100644
+--- a/lib/tests/slub_kunit.c
++++ b/lib/tests/slub_kunit.c
+@@ -720,6 +720,58 @@ static void test_kmem_buckets_destroy(struct kunit *test)
+ 	KUNIT_EXPECT_EQ(test, 2, slab_errors);
  }
+ 
++/*
++ * A bucket set holds only the kmalloc types it was created with, so an
++ * allocation that asks for a different one has to come from the general
++ * caches. Check that it does, rather than being served a normal cache that
++ * does not satisfy what the flags asked for.
++ */
++static void test_kmem_buckets_type_fallback(struct kunit *test)
++{
++	struct kmem_cache *c;
++	kmem_buckets *b;
++	void *p;
++
++	if (!IS_ENABLED(CONFIG_SLAB_BUCKETS))
++		kunit_skip(test, "needs CONFIG_SLAB_BUCKETS");
++
++	b = kmem_buckets_create("test_buckets", 0, 0, 0, INT_MAX, NULL);
++	KUNIT_ASSERT_BUCKETS_CREATED(test, b);
++
++	/* A plain allocation stays isolated in the bucket set. */
++	p = kmem_buckets_alloc(b, 128, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, p);
++	c = cache_of(p);
++	kfree(p);
++	KUNIT_ASSERT_NOT_NULL(test, c);
++
++	KUNIT_EXPECT_TRUE_MSG(test, strstarts(c->name, "test_buckets-"),
++			      "expected a bucket cache, got %s", c->name);
++
++	/* One that needs ZONE_DMA cannot, so it falls back. */
++	if (IS_ENABLED(CONFIG_ZONE_DMA)) {
++		p = kmem_buckets_alloc(b, 128, GFP_KERNEL | GFP_DMA);
++		KUNIT_ASSERT_NOT_NULL(test, p);
++		c = cache_of(p);
++		kfree(p);
++		KUNIT_ASSERT_NOT_NULL(test, c);
++
++		KUNIT_EXPECT_TRUE_MSG(test, strstarts(c->name, "dma-kmalloc-"),
++				      "expected a DMA cache, got %s", c->name);
++	}
++
++	/* Nor can one that has to be accounted. */
++	if (IS_ENABLED(CONFIG_MEMCG) && !mem_cgroup_kmem_disabled()) {
++		p = kmem_buckets_alloc(b, 128, GFP_KERNEL | __GFP_ACCOUNT);
++		KUNIT_ASSERT_NOT_NULL(test, p);
++		c = virt_to_slab(p)->slab_cache;
++		kfree(p);
++
++		KUNIT_EXPECT_TRUE_MSG(test, strstarts(c->name, "kmalloc-cg-"),
++				      "expected an accounted cache, got %s", c->name);
++	}
++}
++
+ static struct kunit_case test_cases[] = {
+ 	KUNIT_CASE(test_clobber_zone),
+ 
+@@ -747,6 +799,7 @@ static struct kunit_case test_cases[] = {
+ 	KUNIT_CASE(test_kmem_buckets_explicit_alignment),
+ 	KUNIT_CASE(test_kmem_buckets_disabled),
+ 	KUNIT_CASE(test_kmem_buckets_destroy),
++	KUNIT_CASE(test_kmem_buckets_type_fallback),
+ 	{}
+ };
+ 
+@@ -757,5 +810,6 @@ static struct kunit_suite test_suite = {
+ };
+ kunit_test_suite(test_suite);
+ 
++MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
+ MODULE_DESCRIPTION("Kunit tests for slub allocator");
+ MODULE_LICENSE("GPL");
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1271d390b617..5ceeb5a0b614 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -62,6 +62,7 @@
+ #include <linux/seq_buf.h>
+ #include <linux/sched/isolation.h>
+ #include <linux/kmemleak.h>
++#include <kunit/visibility.h>
+ #include "internal.h"
+ #include "swap.h"
+ #include "swap_table.h"
+@@ -135,6 +136,7 @@ bool mem_cgroup_kmem_disabled(void)
+ {
+ 	return cgroup_memory_nokmem;
+ }
++EXPORT_SYMBOL_IF_KUNIT(mem_cgroup_kmem_disabled);
+ 
+ static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages);
  
 -- 
 2.34.1
