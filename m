@@ -1,81 +1,51 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC66737A496
-	for <cgroups@vger.kernel.org>; Sat,  3 Oct 2026 20:45:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB342F8EA3;
+	Sat,  3 Oct 2026 23:13:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791060357; cv=none; b=Ow6atghaKB/JN4LxYS7Jk44wgb133F8Sf06huZIW+LEsYlY/l0Cw6prkifaZbgwS7lc211lG26t3MHYBJU5dTWGuT+7CLH1sjGGn8OcBZD1c8vDi4mGdGgz8EenUiDcXLPS/uddP1NF1zHSDXltF2ePPnO9SJRnEkQT0qD+VxCQ=
+	t=1791069199; cv=none; b=NavZJ5PmRmn1Ik7ju4tmUvrdeL/k1hplyd90TsPUT2fnaheShaFW+pL9Hm7tukre6v74HSJx701j0cW5ZmlmeY9UQrnHSOVlEXQ4XPkZHx1sSYFm14K8lV+03QNx3MmhOeBRxu1c6XAKYSPNqKvqj/q6L6qIkQW03gQO7XjrAqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791060357; c=relaxed/simple;
-	bh=FRp4Cct50HXCeTViDVPkOvyv0qHQZnD+X0WubEU1Bpg=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:In-Reply-To:
-	 References:MIME-Version; b=KmIbL+4gp3DX44ZPqzR2tuK8j3c9JpI1ywK8/56t+XshDPcCvlPfXiAM15/i+HK04J5eGBX3CEY+wORQw8H0JoFQjfVhuGjG6qmQUp4t4ERnWbiUpqFt/CcOnBNO+1mcpeM78X4hGfmd54fvM4MTqT4ZVa60xXEubV9l3FrTtm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=n8Zkw1si; arc=none smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791069199; c=relaxed/simple;
+	bh=fEjCB1lbfVFBNRGpvRk3/BU+mxgdqA0AVatYtov8ebo=;
+	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=rIucghGkC7v3OrLVt9XJSp3p9U16fKiWbeDxU6ElRmlFi9/chzn1KQjnu/6mGALVLsvDryTCU4HNjbFfcymHRsvforFqsb9tXTDGT6ATz7T3ha/c+bMVeRdr8/i6FJwlHFxnMJTFpvK1WyIbv66bUYVaosxKT+jBU7blka6zML8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ACFoJW1Y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="n8Zkw1si"
-Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2d90ba1d807so4245675ad.3
-        for <cgroups@vger.kernel.org>; Sat, 03 Oct 2026 13:45:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791060355; x=1791665155; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:references:in-reply-to
-         :subject:cc:to:from:message-id:date:content-type:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FRp4Cct50HXCeTViDVPkOvyv0qHQZnD+X0WubEU1Bpg=;
-        b=n8Zkw1sihXcl4/Pod6zhjI9skgCU8j8F1VKkIOWyX5CldojzAfWimmAks5nfi9OI3O
-         LbN7M7jT2pSdPqOjAibpwHGhCfkmKEeJa16o1lM2yFRjyEhm4MeQNUwLEe02xZF4vbj4
-         NeZadT6r48WSu8JRikuJCVsKoEhQMgAxyyGz7+cPMHDGRx2a07APhzA/cXMI5ZAkknsi
-         +8Qoz0NWe0WKvKeW4oFLFGxdiBrgDzayaQPcO0bTL6xSS8av6YHG6ltu0YR4yjKo1gb2
-         gbzTkclD39paWI8LoyivQfZbiFf+84u6SYhDpdYnX/ohVVesjMuxLL5xG1Uye/24m7/6
-         Ta2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791060355; x=1791665155;
-        h=mime-version:content-transfer-encoding:references:in-reply-to
-         :subject:cc:to:from:message-id:date:content-type:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FRp4Cct50HXCeTViDVPkOvyv0qHQZnD+X0WubEU1Bpg=;
-        b=RW5d8e7Q8WwWcjokZnSADNG9ObgcTqtzeU+hhLVL0B7iudmyRvDJHlPj44QUtV83V7
-         Wv+vpyicAgD9mWwDzDnxc8Kp1Gd9HT16/DE/08tMEY/w7veJu1U6sexschfrCRBDSd48
-         KkjtP2IRzPHGYPJaEXYS4ORzZg+AV1xbOfDpAWRgbAtLJJZBYCJNgCl2hPEeAPIPPw4b
-         X8s6+P/o9NdxTp72pP4gAURW93y3M6o9XZoVFE2lnDjxuVY0t/mn/q1nTgu1wtQiz59T
-         g42uMV6gnze7ZO4l7//QLupVjrx80oVY2kWmgg9RrsOsO9wxjnQcG5R1I4q47iNLi8ci
-         isww==
-X-Gm-Message-State: AFq9FYKghYYkjI9gSpL2MdZQywRxxTGv37RpP2WqwFTJyFnGvNCMPlAQ
-	05fEG4T5k8fcU5rhc4sors6cKNwZQOrTgZ/O4zIL5aXpT7fJ7Vde4rAQ
-X-Gm-Gg: AYBFou2m42m6BmcLArtQwWPISDwAWjCQIpy5IGaiueOZIMOoQItpicJcW4y/Lxlr4Rb
-	x41bTwskTSYsp5HjHgNGj0zETmnJoLk/o6XiE2oYF6g2ij6q3Q8Em+fUv3aNm50Yb4GQPs37pqg
-	DQ6UmAJFEmG1kEFa9UdMhhBfsPTR3QvvSSGOWsMDDoi0XXqMBZGWy/USvHP2RuC5VUPyEFEmBgP
-	YOniXOK/rMvqHOnbUVohw4htMcM6HWihoEJCJeF2NrZZYUJKheesPx7v1N2SCLosMvewptOEW/o
-	axUK886wJhF9OXMk46vSwC2jWizBNa2uWDUbW3qjETljaNe8JE40Ft4Ug7sfQqQcKi2RIdWNOil
-	maM9V820XGTK5hvaVcm6F+3STnbsBFMTH1VF+3V9VHwwnHvXNou4r6qtQhqtRQRHC2vRhqoowx6
-	UdMi7gJBh5WY/xm15pWOTkRYLNpKuG9HkqgxLpF4Guv94Bi1FjdTYbSAUtYVH0RYhd3+072Zrou
-	0aoCIbn4GlshPcmhgdqjsL2DuTDAGcK4MGyLUzhnI7Q+VZnxtTx1lful5vtCOG1Ue4dE+rrkRuq
-	uYKJfKab2jBfgg==
-X-Received: by 2002:a17:902:da91:b0:2df:83ce:724f with SMTP id d9443c01a7336-2e49b615cf2mr61626695ad.30.1791060355061;
-        Sat, 03 Oct 2026 13:45:55 -0700 (PDT)
-Received: from localhost ([153.61.198.243])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e533e8397bsm7343265ad.78.2026.10.03.13.45.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 03 Oct 2026 13:45:54 -0700 (PDT)
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 03 Oct 2026 20:45:53 +0000
-Message-Id: <DLVHWNL0AVKU.NV007WEHWST8@gmail.com>
-From: "Alexei Starovoitov" <alexei.starovoitov@gmail.com>
-To: "Tao Cui" <cui.tao@linux.dev>, <tj@kernel.org>, <josef@toxicopanda.com>,
- <axboe@kernel.dk>
-Cc: <cgroups@vger.kernel.org>, <linux-block@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <bpf@vger.kernel.org>, <andrii@kernel.org>,
- <eddyz87@gmail.com>, <daniel@iogearbox.net>,
- <linux-kselftest@vger.kernel.org>, <cuitao@kylinos.cn>,
- <ameryhung@gmail.com>
-Subject: Re: [RFC PATCH v10 1/4] blk-iocost: add BPF struct_ops cost model
- support
-In-Reply-To: <20261003124045.1289305-2-cui.tao@linux.dev>
-References: <20261003124045.1289305-1-cui.tao@linux.dev> <20261003124045.1289305-2-cui.tao@linux.dev>
-X-Mailer: mkdraft (claude review draft; edit before sending)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ACFoJW1Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29E391F0089B;
+	Sat,  3 Oct 2026 23:13:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791069197;
+	bh=kkWuqiqDosdsTbfepDgk4n0A+zN7/i6H4vHC4Dh3MNA=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=ACFoJW1Yqe6PGgxJwf2F0m/u9oHT/ybq1nr1yppwIboE848XqG6pzYYuviGG+XCGl
+	 YUbMHVEFd9oVT7MfpDDrA23d0TxDAuYAZ63q7j0MQ2mgC+4BEaBPMQdbh0hz1VtBOE
+	 6HqqMocAtP58uJ5lkDb1cHZDiElUuGDZyFfUruArUgEAFZu0Ouy9zoKL8essQKfWGZ
+	 yUpTIqmrR3CTfDmGmojK+aTk0hS43+4y9Dpy7HN4LnLktfsfrGp0mbIf3SHlKaud+Z
+	 M1zLOdD+exlMggRd4CpZqTfLin6nAkRuEGzMOkQwToXb+PJywA2c+YGnmbvI+TkUXs
+	 bQyW+AeOMWrZg==
+Subject: Re: [PATCH net-next v5 2/7] mm/slab: Let kmem_buckets_create() take
+ an alignment
+From: netdev-bot+sashiko@kernel.org
+To: kees@kernel.org
+Cc: vbabka@kernel.org, harry@kernel.org, akpm@linux-foundation.org,
+ hao.li@linux.dev, cl@gentwo.org, rientjes@google.com,
+ roman.gushchin@linux.dev, linux-mm@kvack.org, pfalcato@suse.de,
+ kuniyu@google.com, linux-hardening@vger.kernel.org, davem@davemloft.net,
+ hannes@cmpxchg.org, mhocko@kernel.org, shakeel.butt@linux.dev,
+ muchun.song@linux.dev, edumazet@google.com, kuba@kernel.org,
+ pabeni@redhat.com, horms@kernel.org, kerneljasonxing@gmail.com,
+ willemb@google.com, almasrymina@google.com, bjorn@kernel.org,
+ jiayuan.chen@linux.dev, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+ netdev@vger.kernel.org
+Date: Sat, 03 Oct 2026 23:13:15 +0000
+Message-ID: <179106919567.434549.8926945061923138895@kernel.org>
+In-Reply-To: <20261002231132.1646573-2-kees@kernel.org>
+References: <20261002231132.1646573-2-kees@kernel.org>
+X-sashiko-severity: Medium
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -84,11 +54,139 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Sat, Oct 03, 2026 at 08:40 PM Tao Cui <cui.tao@linux.dev> wrote:
+Thank you for your contribution! Sashiko AI review found 2 potential
+issue(s) to consider.
 
-v10 was sent 11 hours after v9.
-Patch 1 grew from 712 to 789 lines and device removal is still
-not tested.
-Pls slow down. Wait for Tejun before sending v11.
+Critical: 0 · High: 0 · Medium: 1 · Low: 1
 
-pw-bot: cr
+If you believe none of the issues are legitimate, please reply to each
+issue of Medium severity or higher and explain why the AI is wrong.
+If any of them are legitimate and you plan to respin, please let patchwork
+know by including "pw-bot: cr" as a separate line at the end of your reply
+(one such reply per series is enough).
+
+- [Medium] When kmem_buckets_create() gets a non-zero @align, it uses
+  that value as the cache alignment instead of the alignment of the…
+- [Low] The new kernel-doc for kmem_buckets_create() (mm/slab_common.c
+  lines 418-420, copied to include/linux/slab.h and…
+
+--
+
+mm/slab: Let kmem_buckets_create() take an alignment
+
+This commit adds an align argument to kmem_buckets_create(). When align is
+0, each bucket cache takes the alignment of the kmalloc cache of the same
+size, so bucket allocations match kmalloc() when slab metadata is enabled.
+Both existing callers now pass 0.
+
+> diff --git a/mm/slab_common.c b/mm/slab_common.c
+> index b93fdb5cb0219..71926f726a07a 100644
+> --- a/mm/slab_common.c
+> +++ b/mm/slab_common.c
+> @@ -415,6 +415,9 @@ static struct kmem_cache *kmem_buckets_cache __ro_after_init;
+>   *			 allocations via kmem_buckets_alloc()
+>   * @name: A prefix string which is used in /proc/slabinfo to identify this
+>   *	  cache. The individual caches with have their sizes as the suffix.
+> + * @align: The required alignment for the objects, or 0 to give each cache
+> + *	   the alignment of the kmalloc cache of the same size, as a caller
+> + *	   moving from kmalloc() may depend on.
+
+[Severity: Low]
+The new kernel-doc calls @align "The required alignment for the objects".
+Does every path covered by this doc honour it?
+
+With CONFIG_SLAB_BUCKETS=n, kmem_buckets_create() returns without looking
+at align:
+
+	if (!IS_ENABLED(CONFIG_SLAB_BUCKETS))
+		return ZERO_SIZE_PTR;
+
+PASS_BUCKET_PARAM(_b) is also NULL in that config, so allocations are served
+from the general caches.
+
+When set creation fails, the doc says callers can keep using the NULL
+result and that allocations "will fall back to kmalloc()". The caller in
+ipc/msgutil.c:init_msg_buckets() never checks the return value.
+
+In both cases, kmalloc_slab() does this:
+
+	if (!b)
+		b = &kmalloc_caches[type];
+
+The object then gets only kmalloc's natural alignment for that size. Take
+align=256 with 64-byte objects, which is the case in the series' kunit test
+(the test skips itself when !CONFIG_SLAB_BUCKETS). That caller would get
+less-aligned memory on some configs and see no warning.
+
+Later in the series, allocations of kmalloc types the set does not cover
+also go to the general caches and lose align in the same way.
+
+Should the kernel-doc say that a non-zero align only applies when the set
+was actually created? Or should these fallback paths honour it?
+
+>   * @flags: SLAB flags (see kmem_cache_create() for details).
+>   * @useroffset: Starting offset within an allocation that may be copied
+>   *		to/from userspace.
+
+[ ... ]
+
+> @@ -487,7 +491,8 @@ kmem_buckets *kmem_buckets_create(const char *name, slab_flags_t flags,
+>  			if (WARN_ON(!cache_name))
+>  				goto fail;
+>  			(*b)[aligned_idx] = kmem_cache_create_usercopy(cache_name, size,
+> -					0, flags, cache_useroffset,
+> +					align ?: kmalloc_caches[KMALLOC_NORMAL][idx]->align,
+
+[Severity: Medium]
+A non-zero align replaces the alignment of the mirrored kmalloc cache
+instead of being combined with it. Below this, calculate_alignment() only
+raises it to arch_slab_minalign():
+
+	align = max(align, arch_slab_minalign());
+
+Nothing raises it to ARCH_KMALLOC_MINALIGN, ARCH_DMA_MINALIGN, or the
+power-of-two size alignment that create_boot_cache() gives kmalloc caches.
+
+Could a caller that passes a small non-zero align end up with weaker
+alignment than plain kmalloc()?
+
+kmem_buckets_alloc() goes through __kmalloc_node_noprof(), which is
+declared __assume_kmalloc_alignment. Some architectures leave
+ARCH_KMALLOC_MINALIGN at its default of ARCH_DMA_MINALIGN. On those, an
+explicit align below that value, with KASAN, SLUB_DEBUG_ON or slab_debug=
+enabled, would break the compiler's alignment assumption.
+
+dma_kmalloc_size_aligned() also decides whether to bounce from the size
+alone:
+
+	/*
+	 * Larger kmalloc() sizes are guaranteed to be aligned to
+	 * ARCH_DMA_MINALIGN.
+	 */
+	if (size >= 2 * ARCH_DMA_MINALIGN ||
+
+For example, take align=64 on arm64 (ARCH_DMA_MINALIGN=128) with slab_debug
+enabled. The 2048-byte objects would be only 64-byte aligned, and swiotlb
+would never bounce them. Is that the same non-coherent DMA problem this
+patch fixes for align == 0, just reached through a non-zero align?
+
+Every in-tree caller passes 0 through the end of the series. The only
+non-zero caller is the kunit test with align=256, so nothing triggers this
+today. The comment in test_kmem_buckets_explicit_alignment says it "checks
+the override both ways". That suggests alignment weaker than kmalloc's is
+intended.
+
+The same expression appears later in the series in
+kmem_buckets_create_row(), as align ?: kmalloc_caches[type][idx]->align.
+
+Would max(align, kmalloc_caches[KMALLOC_NORMAL][idx]->align) keep the
+kmalloc guarantees that bucket users and the DMA layer rely on? Clamping to
+at least ARCH_KMALLOC_MINALIGN might also work.
+
+> +					flags, cache_useroffset,
+>  					cache_usersize, ctor);
+>  			kfree(cache_name);
+>  			if (WARN_ON(!(*b)[aligned_idx]))
+
+-- 
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20261002231120.late.500-kees%40kernel.org
