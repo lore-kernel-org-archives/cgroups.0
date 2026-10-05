@@ -1,150 +1,203 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06E63480950
-	for <cgroups@vger.kernel.org>; Sun,  4 Oct 2026 18:14:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F20DC372058
+	for <cgroups@vger.kernel.org>; Mon,  5 Oct 2026 07:06:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791137653; cv=none; b=hDsv0qZnG/j4delaUkrnKm4rpSzSbXh6d+m9tMWZuEYr4WrME3KENi8mLP3cB6uF7DX6vLdmOyFWArTnbrBuVn2tAyn3PFeBIFR0yJOSzEsUedgQBYyABGPm/RtK0Rnn7FOtLLIWBLkNH3XraCG46rWYy0ZKC+TgVcvMn/6s6M4=
+	t=1791183997; cv=none; b=bPohBc7SjMSnHOeh6NYtXhLC8A1YQzGrTHFY4sMzJrXEyB0OgAWjS0g13LjqWXg7JD2OohD0SzSePyU9fvtCzZaTVYzA+Sakj2E/lyBsxtdYXVefptz7yX6Fhm84p2i6ofu8khVymmgWJZ+AN4ZCdPkjHiWqHFOAN9wlapWFgGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791137653; c=relaxed/simple;
-	bh=sjH5S0CNZClDmqdFY8S86gTYCINMCORIQDzBcILuZbw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CqbqAQMgEk+NfjI6O+OIFyWG4dyWCehLZXpVLNxdUE2Xk0arJDz8mPHXWd26a9zkGkdO4WB/kGudYfuZ3+IfPwiO37/zsuTt+5M8wmUyjgnIPA9DrMPSFXEqLlFobnP0gKhKngVSQ+rIRDPGfY6iVQC0B0bneU6VCjJQwlqYLTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K4Sa1s33; arc=none smtp.client-ip=74.125.227.140
+	s=arc-20240116; t=1791183997; c=relaxed/simple;
+	bh=05kHoko/nqMI072En1PJNukfGt9/4zUx6GVdib+NbNo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=j/YOAwcEFF/7FZYlU1q2dGk9nD9r4xMjvIJp9zNtC7CApoXMTto5w+KvW1+h0CkrmpjH357Wwgj/Snh4U0tl8+GsfRAb1Bbaf/H7zlDX1rB8bK2FeVbR3gQ3cdvMyZyjqTJ39v1IzRbvwMD1OP3wHgLmJjhgdUr96zhAx8zdKXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=o9OikwFl; arc=none smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K4Sa1s33"
-Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-396ccc02279so588653a91.1
-        for <cgroups@vger.kernel.org>; Sun, 04 Oct 2026 11:14:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o9OikwFl"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e66390995so8605485e9.2
+        for <cgroups@vger.kernel.org>; Mon, 05 Oct 2026 00:06:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791137648; x=1791742448; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=zvp184+VDrAAELa45MrIVjzHZuD6h0h7teUaAj2z138=;
-        b=K4Sa1s33e0topBLGrjJINZJoi62x44og/j03tLJmjWt2c/pJvzX2HTGqfrHcMxLOGo
-         KxzYBuopU972XPuBVEcR0ycGt415fw4raN5VEPo2z6muL17lWZ/HIG88g123LWJTPd9Q
-         rirdz9jjIW7qf6CNJ02pHhxBu7iA1urwiQXBk8Wvo5pIeMbSY2jZaZ/D1EBhVzv2BTh6
-         jqs959cePI9HiTQN5HMLqSTDbZ4rKf638sNEpvZ7ucTiJSi0gF2+JfvYODsxEmFKBRLK
-         o8+oSJ+fc86F3abO3LxElskwxBc8NX974Oso3GKIkN2Vqx+k+AED2wHfPestHNGGQ+cW
-         BnyQ==
+        d=gmail.com; s=20251104; t=1791183993; x=1791788793; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+vg5y7TFdC/oAYFLNYNMU7By8Gx4IwKuOI2ehF5mxV8=;
+        b=o9OikwFlJm20JBMrFsPyBqtt36XEsmOcUdkVWn6tJW7rgN7ouWHKhhwSMQy6Lk7Q1m
+         c7Mre0y/sNHdNeu5+uYMrwH2rpjeMrWhlxT1lUvEC35HcuitDDK6M5WpV7Tat3f1q9x+
+         +mV7hGdHU/ZF1zVilNbW2ZTYBok5yk3kVFV6gsNb4HJ6spBmxOKCFtZgNYLwEDVKmmb5
+         2APkXVlCx6kY0E5BGdnFnL+pIElnZJC70+RFteRJtmFqtRIPBOd05bj2s1CC0waYqevD
+         RLx1LoIngjQySglANuKJS8Aehk3DC8+yL8jS5K5G7ASRplpyegIDKItLr689Lb4FcvCh
+         liZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791137648; x=1791742448;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=zvp184+VDrAAELa45MrIVjzHZuD6h0h7teUaAj2z138=;
-        b=TD3fmPQL/PVTq/V6RRyNQ/Zo1/HvN3VChiu62tCXSiteklxELMfdg0bJaG4Vx0Rwu5
-         m9OOuGGzg5WDVH5ufDhCU+XoBUogD5ddAQZcJYdpCfwr25vKWXZngwvVmA5Za9/SrdiF
-         4X72KustqMsqLIgm5+9MhOY197bH243t1jaiHBDoU2Z8qJXZ1dQjgtcOT2L0ztXsEhxu
-         DjN+cpMtkAgUqRSLZSvd3BFmWr3NvRIw+idXO2aX97xgIppLPKjFGKrEi9jo8baXJz55
-         1dHQmYlDrYCD3CuF+vANry1Co5sSKqrl6DstFI4UX7OqKA0NhopQf/xlv+AJul8QiuR/
-         CTPQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxQUXM+RJgDLmyFRuDdKotihluhJl2oCkn1A1Cn3iyvmoEzyTU+dLWxN3YmS9c8A41BgqfoPAao@vger.kernel.org
-X-Gm-Message-State: AFq9FYLnWomKklqZuU25NXuwewbqeKgmHUUmB6DQi7T4PGUf+BXQZ4fy
-	sCGlZQ7hZzgb3mhPdmQMaysS3/pUxlwtvgci4Oo0izxI5Jo+Y+eC2Rc3p88MQ8nc
-X-Gm-Gg: AYBFou0M0mB/HQ3d7MFjkoNP2BcfvTD+B/csDs99zWFPlN+HrX93akdYim/K2On1Xr4
-	AQ7Jw1sKdRHYkFC4MoJ0Z89ijIb0EN6gKSh7gh+cjb1exqTJsPaXlsE3GwIZ0TPRvMur8+sZj4X
-	gkqKEf7n12NKtibCwUjATpZv2qagyNJ6p7Mtd9J5jAVb/1BEHNmewQckIHX3+JCbkr0b9uPQ/V3
-	sG5lzd4uhXO00fz5GGckGRMblQVzcmjRsvWZ4u+joS4hz63236lvtp89oATVHxBF4U5h8A6iUdH
-	s3+DdrdcrKLnG1fu9+MvwOfA4Xgs6iqwLFqKUe8mDvOjg8iMWjog05/lhC73rbVIJ2P/ugdoG2Q
-	LqvtMf0Df+HXBUnB6qam01paNscVqIZCflel4cwDEebiOW6Up3e3k9H14WI7UwfUBVNMwKmGVZO
-	FO9THRsPGyM9y9h3oKxXDYCT2A6835lgxLWbaSJQawqh+h0yMMEDHVOxrwbIlE2+xT8sM9P4wEv
-	NkvFIP9HC4tsinXfPMrDcsdHjdFSpSL5T9bFpABbw==
-X-Received: by 2002:a17:90b:4ac3:b0:3a0:a781:2c39 with SMTP id 98e67ed59e1d1-3a6ce3a978dmr7662178a91.7.1791137648512;
-        Sun, 04 Oct 2026 11:14:08 -0700 (PDT)
-Received: from gmail.com ([220.85.166.190])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a78d59f1cdsm7460304a91.0.2026.10.04.11.14.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 04 Oct 2026 11:14:06 -0700 (PDT)
-Date: Mon, 5 Oct 2026 03:13:58 +0900
-From: Youngjun Park <her0gyugyu@gmail.com>
-To: Matthias Goergens <matthias.goergens@gmail.com>
-Cc: Kairui Song <ryncsn@gmail.com>,
+        d=1e100.net; s=20260707; t=1791183993; x=1791788793;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+vg5y7TFdC/oAYFLNYNMU7By8Gx4IwKuOI2ehF5mxV8=;
+        b=XLz7XXZHIIKzXBHbzQR/LB0OLv+/ZbFN3uXQyYLWmi250ByZjsbH4Cqeehf44D8DoJ
+         LU61w9sV1StgXHaP5T786Tq8p3c4viutUFM78Kn2CRVDUqEk0vosWeVDzM+OcyZYcvMP
+         QzWkIhMj6RMInY2Uur3QT6BTvwCIPC43AyEwBtWnPNK8ZLCePH14HLboGbaGRLwtB/TL
+         S77Cgsr9t80HS3ktDASDrrOrrhT1eRZqFPe2/ADsSfDnxKBZiPOmB7fL1LEpncBSIA4p
+         4lPyeDy2c8Rv4ECvMX8Vx+wKFaP4phsbZ0C5JDykFFhf3cRQyPmgj1BVrKvI0LRWKp52
+         683Q==
+X-Forwarded-Encrypted: i=1; AKwUvByUUcVYaFyEdXUBnysQ+scQYRSc3iJcxEqaO6hW+uunnEKT3xWPy/o4txbohbJ1BXKQCB9Tx0gS@vger.kernel.org
+X-Gm-Message-State: AFuF++km9yfT2hMrd+BQB+yXGO6a6cQvk/M9vUUKdIuSyu2oLiobGu1D
+	6J1bib3Ix6tySsaFoCWsG13JhNhkceqNNLI4Gy3qzJQUWaR+Kd+UXH+N
+X-Gm-Gg: AYBFou1dHvR2pM3uyvSmq0sxqH8FkGtaL0Kgoo4nJaf8GzMvTKoUjuqCeevSOZy37lV
+	FX2D9pqKAUCvbEkwpFuNv1fCNjEzzbQ+vo9dy2hLTHmcroNxmir7eXiVlie62BOjBc4gUaxJc7Y
+	YKJGwWb2os0xYF5gZiZY+Mt99YzwcEAdqQPaS4hIFB+bfNC6Sza2n+SQQk/Awo/A1FMzm5McUnN
+	8OYiDeOY2eCyJOEtgHYcJBS1h+f+dTqs59dfKFqe9FDIGZO/SHNNI8Ut4WbRbZnO8AV3vUtKFZH
+	k+Qq0BDWNDSwSbQbTe5JQ5lixVameMfbdsapBTXV7rx4yynxb6LjOtlPEys350C1p3tEH7cMah4
+	IXxak6cHrpcds7F+3W0Cvkuha18p/D+qI0mSdco21oOwrNxgFZNWByLvyfdEjr4di1sKqbfKmPh
+	BfzWFyNbHAgO0xa6LD7glOEjASU0ZzEOTRe36VvkiE374XorJ+c/28iJA1oqPhKpeTl3DyCXLes
+	dOPfcCy5Y6JoipiIcvtZcfr72Sv5adf/Wu/0p0gjTTKR3o9h6OKz5IRjAjITPSy8MZzPgGT1u+F
+	rMDz9meBMgIfhXXVKMxEQCb4y7Zxr83LKHZu+qRmTxk6RYbbTWIR7yNtbjloufO7cMtYPaqgL1q
+	amQ==
+X-Received: by 2002:a05:600c:c4a6:b0:4a0:25e9:bc47 with SMTP id 5b1f17b1804b1-4a02759a443mr172676745e9.19.1791183992976;
+        Mon, 05 Oct 2026 00:06:32 -0700 (PDT)
+Received: from localhost.localdomain (dynamic-2a02-3100-b305-2001-39fa-3d24-821a-4eae.310.pool.telefonica.de. [2a02:3100:b305:2001:39fa:3d24:821a:4eae])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a16bcb9a21sm283461465e9.10.2026.10.05.00.06.31
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Mon, 05 Oct 2026 00:06:32 -0700 (PDT)
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: Peter Zijlstra <peterz@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Harry Yoo <harry@kernel.org>,
+	Alexei Starovoitov <ast@kernel.org>
+Cc: Karl Mehltretter <kmehltretter@gmail.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Will Deacon <will@kernel.org>,
+	Boqun Feng <boqun@kernel.org>,
+	Waiman Long <longman@redhat.com>,
+	Jonathan Corbet <corbet@lwn.net>,
 	David Hildenbrand <david@kernel.org>,
-	Michal Hocko <mhocko@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>, Yosry Ahmed <yosry@kernel.org>,
-	Barry Song <baohua@kernel.org>, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	linux-api@vger.kernel.org, Alejandro Colomar <alx@kernel.org>,
-	linux-man@vger.kernel.org, Karel Zak <kzak@redhat.com>,
-	util-linux@vger.kernel.org,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Pavel Machek <pavel@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>, linux-pm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Shuah Khan <shuah@kernel.org>,
-	linux-kselftest@vger.kernel.org, Kairui Song <kasong@tencent.com>
-Subject: Re: [RFC PATCH v2 0/4] mm/swap: reserve swap areas for deliberate
- offload
-Message-ID: <asKXZv5SxBtxQxqf@gmail.com>
-References: <20260926045517.3458413-1-matthias.goergens@gmail.com>
- <CAMgjq7B7jem_dwtUEX7ZJPQm_pKBegR6WS9+B7nFp-gZugpUng@mail.gmail.com>
- <20260928151944.2686626-1-matthias.goergens@gmail.com>
+	David Stevens <stevensd@google.com>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Shuah Khan <shuah@kernel.org>,
+	Amery Hung <ameryhung@gmail.com>,
+	Swaraj Gaikwad <swarajgaikwad1925@gmail.com>,
+	Clark Williams <clrkwllms@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-rt-devel@lists.linux.dev,
+	bpf@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: [RFC PATCH v2 0/3] locking, mm: Add atomic allocator trylocks on RT
+Date: Mon,  5 Oct 2026 09:06:22 +0200
+Message-Id: <20261005070625.8871-1-kmehltretter@gmail.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260928151944.2686626-1-matthias.goergens@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On 2026-09-28 23:19, Matthias Goergens wrote:
+On PREEMPT_RT, a BPF task-storage program attached to sched_waking
+can deadlock when kmalloc_nolock() obtains an rtmutex-backed allocator
+spinlock while try_to_wake_up() holds p->pi_lock. Releasing the allocator
+lock can enter priority-inheritance or wakeup code and re-enter scheduler
+locking.
 
-Hi Matthias !
+The first RFC [1] rejected every non-preemptible caller. That prevents the
+deadlock, but it also rejects BPF arena allocation and faults under the
+arena's ordinary raw lock.
 
-> > Just like we already have a "swappiness=" parameter in the reclaim
-> > interface, perhaps adding a "swap.tier=" would be better and much
-> > cleaner to achieve the same goal? Based on Youngjun's work here:
-> > https://lore.kernel.org/all/20260916183437.2946306-1-youngjun.park@lge.com/
->
-> Thanks, I think that's the right base.  I tried it: on top of
-> Youngjun's v11, a "swap.tier=" argument to memory.reclaim is about 40
-> lines.  In a VM with zram at a higher priority than a disk swap
-> device, and a cgroup whose tier mask allowed only the disk, ordinary
-> reclaim in that cgroup stayed on the disk, while memory.reclaim with
-> "swap.tier=" pointing at zram went to zram only.
+This RFC instead adds an atomic owner state for bounded PREEMPT_RT spinlock
+trylocks. Atomic acquisition succeeds only from the completely free state.
+A regular waiter sets HAS_WAITERS before waiting, which prevents a later
+atomic owner from barging. Atomic release preserves HAS_WAITERS and does
+not enter priority inheritance or wake a task. Preemption and local
+interrupts remain disabled for the atomic-owner section.
 
-There is an earlier attempt that may be worth a look.
-https://lore.kernel.org/all/20260618044857.69439-1-jiahao.kernel@gmail.com/
+The design tradeoff is that a regular waiter cannot boost an atomic owner
+and spins with interrupts disabled until the bounded allocator section
+finishes. I would value locking review of whether that owner state and
+handoff are acceptable, or whether the no-lock allocator should instead
+fail in these contexts.
 
-If you go this way, the discussion in that thread worth refering too.
+Patch 2 uses the new operation for global SLUB and page-allocator locks. It
+avoids regular per-CPU RT local-lock slow paths and reuses centralized
+objcg credit when the per-CPU stock is unavailable. Patch 3 adds a BPF
+selftest for task-storage allocation from hrtimer_start while the hrtimer
+base raw lock is held.
 
-> What it doesn't cover yet is reclaim outside any configured cgroup:
-> under global pressure, a cgroup nobody configured still reached the
+The series has one prerequisite, recorded by prerequisite-patch-id in this
+cover letter:
 
-Right, so for now every cgroup has to be set to exclude zram, unless
-another idea or more code covers it.
+  mm/page_alloc: skip shuffling and reporting for no-lock frees
 
-> zram tier.  So for v3 I'd like to add a system-wide limit on which
-> tiers pressure reclaim may use, on top of the per-cgroup settings.
-> I'll wait for Youngjun's v12 and build on that.
+That independent fix has been posted as a normal patch [2]. It keeps a
+successful no-lock page free out of allocator shuffling and page-reporting
+notification. It is separate because the issue begins with the v6.15
+free_pages_nolock() API rather than the v7.0 slab regression addressed by
+patch 2.
 
-I have looked through the whole series, and I will keep this use case
-in mind while working on v12. :)
+Patch 2 should also be evaluated with David Stevens's pending memory.high
+deferral fix [3]. There is no build dependency, but bypassing the per-CPU
+stock can make a no-lock charge reach that pre-existing schedule_work()
+hazard more often.
 
-Also, to share what I had in mind, I was planning a sysfs interface
-for each swap tier, /sys/kernel/mm/swap/tiers/<tier name> (exact
-naming TBD). Maybe the system-wide limit could be handled there as one
-of its use cases?
+The pre-rebase version of these atomic-owner changes passed four-vCPU
+x86-64 PREEMPT_RT QEMU in release and lockdep/debug-rtmutex builds. Tests
+completed 5,000 forced waiter handoffs without barging, kept asynchronous
+IPIs out of atomic-owner sections and passed the BPF hrtimer workload.
 
-Let's discuss it in more detail after v12.
+After rebasing onto current mainline and the prerequisite, the affected
+locking and MM objects build with PREEMPT_RT and lockdep. I have not
+repeated the runtime campaigns for this RFC rebase.
 
-Thanks,
-Youngjun
+If this direction is accepted, patches 1 and 2 would need joint stable
+backports for v7.0 and later.
+
+Changes since the RFC v1:
+
+  - replace the blanket context rejection with an atomic rtmutex owner
+  - preserve local IRQ state across a successful atomic trylock
+  - cover the global slab, page allocator and memcg-cache paths
+  - bound shared objcg credit when the per-CPU stock is skipped
+  - add forced-handoff, caller-attribution and BPF hrtimer tests
+  - keep the independent no-lock page-free fix as a prerequisite
+
+[1] https://lore.kernel.org/r/20260919171443.90512-1-kmehltretter@gmail.com
+[2] https://lore.kernel.org/r/20261005063515.6312-1-kmehltretter@gmail.com
+[3] https://lore.kernel.org/r/20260904173145.2028377-1-stevensd@google.com
+
+Karl Mehltretter (3):
+  locking/rtmutex: Support atomic PREEMPT_RT spin trylocks
+  mm: use atomic RT trylocks for no-lock allocation
+  selftests/bpf: exercise task storage from hrtimer_start
+
+ Documentation/locking/rt-mutex.rst            |  40 ++--
+ include/linux/rtmutex.h                       |   4 +-
+ include/linux/spinlock.h                      |   3 +
+ include/linux/spinlock_rt.h                   |  28 ++-
+ kernel/locking/rtmutex.c                      | 211 ++++++++++--------
+ kernel/locking/spinlock_rt.c                  |  66 +++++-
+ mm/internal.h                                 |  27 ++-
+ mm/memcontrol.c                               |  90 ++++++--
+ mm/page_alloc.c                               |  33 ++-
+ mm/slub.c                                     |  36 +--
+ .../bpf/prog_tests/task_storage_hrtimer.c     |  50 +++++
+ .../bpf/progs/task_storage_hrtimer.c          |  48 ++++
+ 12 files changed, 479 insertions(+), 157 deletions(-)
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/task_storage_hrtimer.c
+ create mode 100644 tools/testing/selftests/bpf/progs/task_storage_hrtimer.c
+
+
+base-commit: e767a4ea70a3992c37ed604157d32f0dfbf9b1e3
+prerequisite-patch-id: 33838040c410e5de0aef855a2719a092b561a5c4
+-- 
+2.53.0
+
