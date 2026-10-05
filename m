@@ -1,111 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AE3735E92F;
-	Mon,  5 Oct 2026 07:53:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 723C03806D0;
+	Mon,  5 Oct 2026 08:23:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791186795; cv=none; b=M/Vn9j8vEtTPaAYutl7Uo7F7wWKwX2YO9KUB2gfovlQL0h6DCRBJxVOyQ17l8wSSArHxgpih7LNoAdDy360XsT6pjnH1dgwoBd4fgwhpDD5BzRR+qEtyuptAtSCA9BGilJVbzR4NXvkwF6xW7n/E7VF5cUbKehbapoGUfCdL648=
+	t=1791188619; cv=none; b=cixgOUFwAnfcvYVlkoq1f5Shp9O5L8/NxnfzK7sZMVoXt2guVRC2XjEC3jC/CACjQLaojLGV5zL0I+siO9R+SDdBzSkCLtrjRoecbNSibVjZEmiCnEiGgfE2duejK9iqSqs6XldcS8ZgofTzdgYhozzUIPQDB3hapNHxNXyv6fI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791186795; c=relaxed/simple;
-	bh=PBXa2DuXdFqBZRICIabALpvUzRmhBpiMuPaWLmZTUGs=;
-	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=WzxOdAGTHAWM6xYZnoiIWysoS9mv+sipFIMWgt3rQm43yo4MkSRQMYDJ+aC0hdj9hM7lPQIYsPOBnvQ6cvkcHGo6MvVnBiYl5OCg5JwNQxjOAQO+y/jfoNj1DwQIcxt0SBAOzEUBdPwCeIX4wZ8dJilSaKSM+dPuuFtZ2u9Gjgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EEX+P8CP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791188619; c=relaxed/simple;
+	bh=huvwHf6b6kpQy5qa5RyvFFPMRCNF22BZPSUsHgW1VMA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GMaEARzl+i0uHIkyjMGa53y7FQA/khMSbfdqzRhpAoF2Ql2X0usPkYsDSKYhW8kbWZAFHxRkXTso+MOAD0zeLowtRD9dphOLNvIWipTzUUtVKnohQr5cut6PPfaapBwL0qZHwq9VcGlH57ewhmmi6LZgz327iCHM+UdPiar6Syo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YqNqHgSG; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EEX+P8CP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB9521F000FF;
-	Mon,  5 Oct 2026 07:53:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791186793;
-	bh=p8pB98yXVn3emMjSSVc5iGuD87aD74hXLFXwrp1IR14=;
-	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=EEX+P8CPFeqWLSN59RzmGW3okJrWBjL6X4WZQ29o3f4Nq0tIqMaqJhXpenBYRESYX
-	 yLr/6vNkyiB/QVgs5zLCeYF1lZ/eWykY2jayP+n3JLO0BDVzLklA2oN66POyCpJ0M8
-	 ACoSS1yP91wzs2/kkXR6AGYVCW0G3/htMwHDa56r5fUmx5ZGlnI2TlDZval00GP2vd
-	 evxYEkphbACrDVnO3o/U/I9epZ0n8riPwtBTcw9qOkk/kHJh8Lw7KxjINSemSfbp9e
-	 jjBzb3UMLUYfwz81sU923vgWgmRmwclgx/rRb5kdSlzAN6+bKnYI9hvtvI9VL3OaWd
-	 EQXmRq8LXJ6Mw==
-Content-Type: multipart/mixed; boundary="===============0647874907332121866=="
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YqNqHgSG"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=z6VraAbnd2mT0BKdlhv+L+o2/2Wa3LZYIp6gFv/bUHI=; b=YqNqHgSGGmvFI3iveGjHa2tQ2L
+	/jV3Ue8G5JbgDOIW+Gk4sFHwIF2YOp+16iyTnT9RAjDCE+Yqtx7kTfP0FJcXsNz2o8T05Vm9rVD+G
+	1psAI2EuqbDvwbuvfVYIESVhuvVi5w+VRMVb9Lamqgt1kIxqVmFPYRAcWxWE0cH0khMrZlahHqj8/
+	EEnFIEoASG2pNz5gA6XfR3c0TlJyU5I8OhDTddikXAVOMQwcysbo+fJvWSO2venfdD18/pjs8wOOl
+	q5o7G+o3NxhQbKCXPhbFIZygzSFInSBjkGaRHlVZFrAscdKwbjawO+gzny9tYUcY7koj9JTMvZh+V
+	jC0O0gKQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1xDdyk-0000000FsEH-47BZ;
+	Mon, 05 Oct 2026 08:23:23 +0000
+Date: Mon, 5 Oct 2026 01:23:22 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Alexandre Ghiti <alexghiti@meta.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Alexandre Ghiti <alex@ghiti.fr>,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org, cgroups@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>, david@kernel.org,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Yosry Ahmed <yosry@kernel.org>, Nhat Pham <nphamcs@gmail.com>,
+	Chengming Zhou <chengming.zhou@linux.dev>,
+	Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>, Chris Li <chrisl@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
+	Youngjun Park <youngjun.park@lge.com>
+Subject: Re: [RFC PATCH 1/4] block: do not issue background swap bios as root
+Message-ID: <asNeenTiIme0kzI6@infradead.org>
+References: <20260928081900.4187482-1-alex@ghiti.fr>
+ <20260928081900.4187482-2-alex@ghiti.fr>
+ <aro28ZGuYgmNg_n5@infradead.org>
+ <CAEmasaX-6v_EpwAxHtnhA5SXk=jGW8+Lm4m8zAC=+f0yXmiCxw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <3a4688cd7929354339fc61a5f4e8a0109e426a83097d9d9a2357ac6e3fe2c9ea@mail.kernel.org>
-In-Reply-To: <20261005070625.8871-4-kmehltretter@gmail.com>
-References: <20261005070625.8871-4-kmehltretter@gmail.com>
-Subject: Re: [RFC PATCH v2 3/3] selftests/bpf: exercise task storage from hrtimer_start
-From: bot+bpf-ci@kernel.org
-To: kmehltretter@gmail.com,peterz@infradead.org,tglx@linutronix.de,bigeasy@linutronix.de,akpm@linux-foundation.org,vbabka@kernel.org,harry@kernel.org,ast@kernel.org
-Cc: kmehltretter@gmail.com,mingo@redhat.com,will@kernel.org,boqun@kernel.org,longman@redhat.com,corbet@lwn.net,david@kernel.org,hannes@cmpxchg.org,shakeel.butt@linux.dev,stevensd@google.com,daniel@iogearbox.net,andrii@kernel.org,martin.lau@linux.dev,shuah@kernel.org,ameryhung@gmail.com,swarajgaikwad1925@gmail.com,clrkwllms@kernel.org,rostedt@goodmis.org,linux-kernel@vger.kernel.org,linux-doc@vger.kernel.org,linux-mm@kvack.org,linux-rt-devel@lists.linux.dev,bpf@vger.kernel.org,linux-kselftest@vger.kernel.org,cgroups@vger.kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Mon,  5 Oct 2026 07:53:09 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAEmasaX-6v_EpwAxHtnhA5SXk=jGW8+Lm4m8zAC=+f0yXmiCxw@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
---===============0647874907332121866==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+On Tue, Sep 29, 2026 at 11:16:03AM +0200, Alexandre Ghiti wrote:
+> > >
+> > > Such a bio cannot simply drop REQ_SWAP: dm-crypt and dm-thin rely on it
+> > > for limit_swap_bios, which caps in-flight swap bios to avoid a memory
+> > > deadlock, see commit a666e5c05e7c ("dm: fix deadlock when swapping to
+> > > encrypted device").
+> >
+> > Is that true?  REQ_BACKGROUND very much implies the I/O can the throttled
+> > and thus better not be foreground paging, and thus the caller should be
+> > able to tolerate a failure.
+> >
+> 
+> Yes, I agree, zswap writebacks are only best effort and in case of
+> failure, the compressed entry still lives. I don't see how
+> REQ_BACKGROUND could be an issue there?
 
-> selftests/bpf: exercise task storage from hrtimer_start
+The issue is that by definition it doesn't need REQ_SWAP then.
 
-TL;DR: Test-organization question only: should the new hrtimer task-storage
-selftest be a subtest of task_local_storage.c instead of a separate file? The
-review finds the test logic correct and the standalone file defensible.
-
-> diff --git a/tools/testing/selftests/bpf/prog_tests/task_storage_hrtimer.c b/tools/testing/selftests/bpf/prog_tests/task_storage_hrtimer.c
-> new file mode 100644
-> index 000000000000..216e66263bf6
-> --- /dev/null
-> +++ b/tools/testing/selftests/bpf/prog_tests/task_storage_hrtimer.c
-> @@ -0,0 +1,50 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +#include <sys/timerfd.h>
-> +#include <unistd.h>
-> +
-> +#include <test_progs.h>
-> +#include "task_storage_hrtimer.skel.h"
-> +
-> +#define TRIGGER_COUNT 1000
-> +
-> +void test_task_storage_hrtimer(void)
-> +{
-
-A subsystem pattern flags this as potentially concerning: this adds a new
-top-level test file for a narrow variant of behavior that an existing test
-in the same directory already covers more generally.
-
-prog_tests/task_local_storage.c already groups the general task-local
-storage tests as subtests, including test_nodeadlock(), backed by
-progs/task_storage_nodeadlock.c.  That subtest performs the same
-bpf_task_storage_get(..., BPF_LOCAL_STORAGE_GET_F_CREATE) followed by
-bpf_task_storage_delete() sequence and counts failures, just from a
-different hook (lsm.s/socket_post_create).
-
-The only difference here is the attach point, tp_btf/hrtimer_start, which
-reaches the task storage allocator under the hrtimer base raw lock on
-PREEMPT_RT.
-
-Should this be a new subtest of test_task_local_storage() instead of a
-separate prog_tests/task_storage_hrtimer.c?
-
-For balance, the standalone file may well be defensible.  It uses its own
-skeleton, as the existing task_local_storage.c subtests also do, so folding
-it in would mostly move the test function rather than share setup.  It also
-exercises a path that no existing selftest reaches: none of the current
-programs that use task storage attach to tracepoints emitted from inside the
-hrtimer code, and the programs that do use hrtimer tracepoints
-(timer_start_deadlock.c, test_vmlinux.c) do not use task storage.
-
-The test logic itself looks correct: the tp_btf prototype matches
-TP_PROTO(hrtimer, mode, was_armed), and timerfd_settime() with a non-zero
-it_value emits one trace_hrtimer_start under cpu_base->lock, so the counter
-assertions are consistent.
-
-
----
-AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
-See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
-
-CI run summary: https://github.com/kernel-patches/bpf/actions/runs/37277547264
---===============0647874907332121866==--
+Then again the whole concept of REQ_SWAP looks sketchy to me, non-swap
+paging can be just as important for forward progress, so if a driver
+needs it, it has other issues anyway.
