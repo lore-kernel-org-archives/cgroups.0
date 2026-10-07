@@ -1,142 +1,87 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 132C1287247
-	for <cgroups@vger.kernel.org>; Wed,  7 Oct 2026 16:55:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E2A13AAF50;
+	Wed,  7 Oct 2026 17:15:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791392102; cv=none; b=gZeeSw3r/OewmI8VDA5GAfU0fRp7hVffZwG/2RPv/9vOOn9KhqZlaeE8xV+EodvNeAmuYh+Y59jcfFe5cdLxgPPKbM+thUEMDspsAe/m0uXbwz/v+lKntAUhoV0mIsljMR3HdFvPYkey9xZPAfTHXqfJuOs1/KssNZOJXTzRNRg=
+	t=1791393333; cv=none; b=Is7QaYrgJqMcTBhxSjmRklhzDAZ8A3rUe6rgN0mgi86YtFgQYXNznWjJvl08oFlpMF5W5RnAuTZAKGILB1K+3jUyXdj8udLOd4qbAMaLxOkZL8rxRa8SOF47x8vv86/AlkD0Qt2hu9xD2GnRp872LRO9P94D8Q8+gW/pWGO9uwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791392102; c=relaxed/simple;
-	bh=feQbNDosn/G0wuU19MK7YPSXaXPT3Dkc2lbt5afIcIw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ePaEJthrpPivhFgyzpoFN83pMJFYjGEcKtrkc+xUSbpgsZ+YdwywiqNLwjDCGVBVApDEofoM/Qnlr5KABD6opqOlUA1IFotx5nKzy8t7kbAdUthdJ1QkUXuQA61AH8b6wquv1kaVTtITQqRKfOh3JPwgzOYkUr+iV0izUU4Roe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RdT7kkLT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791393333; c=relaxed/simple;
+	bh=l7ksrUuuCrFADahNiGgjjX0cjZTD0/LzwDWvKyN3YR4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ke2QGcJajGAL+qewQV+vOksuhde0puJmzULxQ15vMDt6A9Q5a6op6NykRR4daH3LHpePhpOe38I1bCeUQ2K2OHkz7v4jfiwq8criG4rmeQDI5FHLm9lIBqyBiZqitQAaS/y8wyjL2TEW19yV3sBIAWKImCODSGodg3RwpmcnRAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BqcVsecx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RdT7kkLT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9DAA1F0089B
-	for <cgroups@vger.kernel.org>; Wed,  7 Oct 2026 16:55:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BqcVsecx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0EB31F000FF;
+	Wed,  7 Oct 2026 17:15:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791392100;
-	bh=feQbNDosn/G0wuU19MK7YPSXaXPT3Dkc2lbt5afIcIw=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=RdT7kkLTKLh46STd7Tze+uwzyqDjA1CazbqmouoRjpFiy9XQofCGJ7jiyRaDwVzYC
-	 Q1RNwhx8aUQTQ/E3E0zQS4XSpILTt9/6wy51cFWBee8kGtBQg3RfAQeTIF+5gF1Zgp
-	 ckZLmM3ihCgK99joCouCGo2v48oFBSVitdnr3hg8g+qrEzt8r7qtV+jw8bsJfrgDLW
-	 b9XKiC86+V4dJOYd8Vw4wG/P+qsp567H1oN0rSJ1jWRbhkm1JPTvo7qooAMkoXpy6e
-	 iGhMyaPykmP+Xg7RnXiBHXthhHHR9Z71q7YN0iqenRkpEpxvZ/ZjtBdM42vqWVE3Vp
-	 z/Mf4DenhMa5g==
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c2e7496f947so320311866b.1
-        for <cgroups@vger.kernel.org>; Wed, 07 Oct 2026 09:55:00 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBz4wQ3C9PdYntBCJa7IaH87OOjvGuYYG2g3aHxp551NW4hpd7NT7q6I61X+fazt33yziIs1N4gS@vger.kernel.org
-X-Gm-Message-State: AFq9FYLVqdbfqlVmVKXE75fvRtr0jFGUzYWJAZf5l0A4qs81sL5naQbS
-	6nXZafsaiXbpfoyR0ISSYKI5Um+7Mr5tUrxi5xiKJ6ZF5x65R6tXmn8l8ea9gMTNqtppKtpBkMP
-	0ZE8UVT9YTXETocfnijV3iItNnNOPQA8=
-X-Received: by 2002:a17:907:c604:10b0:c31:82aa:dd60 with SMTP id
- a640c23a62f3a-c3182aae430mr164122266b.15.1791392099666; Wed, 07 Oct 2026
- 09:54:59 -0700 (PDT)
+	s=k20260515; t=1791393332;
+	bh=IKPv1AXkbOVrLzSJbysUwydgPgY8ZEOPRGlNsK+wMds=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BqcVsecxmXNy4fg5mqGk7N0ypwHtyajS81nsbXd5i2Wu2JIBduH8S6XXVmRPLmT3g
+	 HKoSujXLfVVRD73FwlUyDSd4AOVs1oJDfsy3KwTF1RdwfXDRYgxe1P0uLaXkRlJ3jE
+	 lzsYtMv8NcvuHKlhWPA/VZFDRk5O4/3MfNIfxYhfUSD+9c3plZRiyFJCkjExVJYfsr
+	 IpcQPdJRGzG0qB3tzsOqSxtGfjOa/QC9cwlOkWIZvd046tDwLJDuGuQg25VISH2BPO
+	 g33ELEp6mj95IliGKNd/jRqTK5yLbX8wtTIqd2/p8jAe0hjq/rZ0pfdOEMZpRX8rlR
+	 YMjMUcStMfhQg==
+Date: Wed, 7 Oct 2026 19:15:29 +0200
+From: Harry Yoo <harry@kernel.org>
+To: Karl Mehltretter <kmehltretter@gmail.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, 
+	Thomas Gleixner <tglx@linutronix.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Alexei Starovoitov <ast@kernel.org>, Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>, 
+	Boqun Feng <boqun@kernel.org>, Waiman Long <longman@redhat.com>, 
+	Jonathan Corbet <corbet@lwn.net>, David Hildenbrand <david@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	David Stevens <stevensd@google.com>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, 
+	Shuah Khan <shuah@kernel.org>, Amery Hung <ameryhung@gmail.com>, 
+	Swaraj Gaikwad <swarajgaikwad1925@gmail.com>, Clark Williams <clrkwllms@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-mm@kvack.org, linux-rt-devel@lists.linux.dev, bpf@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
+Subject: Re: [RFC PATCH v2 0/3] locking, mm: Add atomic allocator trylocks on
+ RT
+Message-ID: <asZ8jmWNoGk5tYce@thinkpad>
+References: <20261005070625.8871-1-kmehltretter@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org> <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
- <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org> <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
- <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
- <aqgMCIOFi0dKx_6L@fedora> <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
- <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
- <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
- <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org> <CAKEwX=N28g4T8mqniB-e+e57ie9D3Koaeq-EmV-TEk-u41FBPA@mail.gmail.com>
-In-Reply-To: <CAKEwX=N28g4T8mqniB-e+e57ie9D3Koaeq-EmV-TEk-u41FBPA@mail.gmail.com>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Wed, 7 Oct 2026 09:54:46 -0700
-X-Gmail-Original-Message-ID: <CAO9r8zMCp2wsePz0DLs0B3X=urXmE2tD9P8mm3r8omgRhAL9Ag@mail.gmail.com>
-X-Gm-Features: AclHuK98dP9awLd-NBKuJA3ihGk1PaIzKHPWkhcUxdhHKgbZN_qVBJw0GCQiETI
-Message-ID: <CAO9r8zMCp2wsePz0DLs0B3X=urXmE2tD9P8mm3r8omgRhAL9Ag@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Nhat Pham <nphamcs@gmail.com>
-Cc: "David Hildenbrand (Arm)" <david@kernel.org>, Chris Li <chrisl@kernel.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261005070625.8871-1-kmehltretter@gmail.com>
 
-On Wed, Oct 7, 2026 at 9:47=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrote:
->
-> On Mon, Oct 5, 2026 at 2:19=E2=80=AFPM David Hildenbrand (Arm) <david@ker=
-nel.org> wrote:
-> >
-> > On 9/22/26 15:38, Chris Li wrote:
-> > > On Mon, Sep 21, 2026 at 8:56=E2=80=AFAM Nhat Pham <nphamcs@gmail.com>=
- wrote:
-> > >>
-> > >> On Fri, Sep 18, 2026 at 11:50=E2=80=AFPM Chris Li <chrisl@kernel.org=
-> wrote:
-> > >>> No that time slot is too late for Asia developers. I don't think we
-> > >>> should use that time slot for swap alignment.
-> > >>>
-> > >>> We should find a time slot more friendly to Asia.
-> > >>
-> > >> Any time slot would have that kind of problem. We're spread out acro=
-ss
-> > >> the globe.
-> > >>
-> > >> Let's just use a standardized time slot we have for MM alignment ses=
-sions.
-> > >
-> > > There are more swap maintainers in Asia than in the US + Europe, at
-> > > least based on the maintainer file. Please be more inclusive. If the
-> > > alignment is done without key stakeholders, it miss the point.
-> > >
-> > > Sigh, we can't even align on a time slot.
-> > >
-> > > In that case, let's keep discussing on the mailing list. At least it
-> > > is accessible to every one.
-> >
-> > Looking at the mailing list, that approach doesn't seem to work.
-> >
-> > Finding a time slot that makes US, Europe and Asia happy is ... tricky.
-> >
-> > 1 AM is certainly unpleasant.
-> >
-> > US vs. Asia is also tricky, but doable.
-> >
-> > China 8AM vs. US West Coast 5PM?
-> >
-> > China 9AM vs. US West Coast 6PM?
-> >
-> > (Europe is 2AM vs. 3AM, who besides me from Europe would join?)
->
-> Thanks for suggesting the time slots, and for offering to stay up for it =
-:)
->
-> Either one is good for me. But there are folks in east coast who might
-> wanna join (Johannes).
->
-> Johannes, do you have a preference? How about the first one?
->
-> And would next week work for everyone? Say on Wednesday?
+On Mon, Oct 05, 2026 at 09:06:22AM +0200, Karl Mehltretter wrote:
+> On PREEMPT_RT, a BPF task-storage program attached to sched_waking
+> can deadlock when kmalloc_nolock() obtains an rtmutex-backed allocator
+> spinlock while try_to_wake_up() holds p->pi_lock. Releasing the allocator
+> lock can enter priority-inheritance or wakeup code and re-enter scheduler
+> locking.
+> 
+> The first RFC [1] rejected every non-preemptible caller. That prevents the
+> deadlock, but it also rejects BPF arena allocation and faults under the
+> arena's ordinary raw lock.
+> 
+> This RFC instead adds an atomic owner state for bounded PREEMPT_RT spinlock
+> trylocks. Atomic acquisition succeeds only from the completely free state.
 
-I know I have been quiet, but please count me in. Next week works for
-me, most days should be fine, and both time slots (although I
-naturally prefer the former, and I believe others in the east coast
-might do as well).
+Please don't skip discussion stage and jump into submitting a very
+intrusive change across locking and mm, assisted by LLM? :/
+
+I don't think attempts to tackle this problem will make progress without
+discussing and getting buy-in from (PREEMPT_RT) locking folks.
+
+> A regular waiter sets HAS_WAITERS before waiting, which prevents a later
+> atomic owner from barging. Atomic release preserves HAS_WAITERS and does
+> not enter priority inheritance or wake a task. Preemption and local
+> interrupts remain disabled for the atomic-owner section.
+
+-- 
+Cheers,
+Harry / Hyeonggon
