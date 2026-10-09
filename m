@@ -1,168 +1,114 @@
 Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 778E63C98B7
-	for <cgroups@vger.kernel.org>; Fri,  9 Oct 2026 07:02:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE61472067
+	for <cgroups@vger.kernel.org>; Fri,  9 Oct 2026 07:07:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791529356; cv=none; b=TXZgQ1LW/wz9aVRDutrZBu2vrar4paEqipjVcM52uKv31Ob+FL7Ms9tcVMzT72V2X514HNdSwuyPNwOUQjIRA2aO13K69dho0NWz8Fbm9jdZniQI81yBC/roXx3pj43QWwqXibXSIPr9cBKb6Vb6bE/GOnndz6HaCB67Bx6fSjM=
+	t=1791529666; cv=none; b=t/V0xoACtQwPWp6aEXyXSTNbtgwItxANQlL6OV2k4k/mtUeiSxw4SXSvqlJLVqy4XHAxCxxELMnBHlsLKqOGMV9P5+hcv+OlsKrc9hvFUgzOv/Qkyc71mxz3zg3Rdr0JO3E0ZtdsNa1U/o2Ov2wsuELVqzzJ4y+STb6BgtFUn34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791529356; c=relaxed/simple;
-	bh=TPxOKHJ895l/zZBrxoHbLiI9IaPlmjfGv9C/U5YFa/8=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=AHOzTmEvedT42XYbl6+kP6pUfaYXmpdwN0noOiRjG+iATWnn4rm7bscFfRwGVTYBBGs0OBpiPzILVe65BOpOqqMAGlm3EtCvCbVVdMCgfVL1jFMM2NG8VREn0di8IxrpWez4FZXFZu6QtbvTWbRblVXuIvnbYuYxSmr+S/kylCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=C9N8jCAC; arc=none smtp.client-ip=209.85.128.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1791529666; c=relaxed/simple;
+	bh=AOBfyMObxsPKe5555MA7X0XhuhbKoT8tcSGCgf4g340=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jj4bNZkS6kplieStn1vq53ZmDSBgXqcFD/uKoEj7BMGPPvOrZUSLKHqS4pGbwwCyS6pjdgdx7C5ZaKXxR1rQdpGJFoOvrS8tCEjed/zO3dLc5lA9POdj2rHKmJKqdGbx4j5+GVXPFAhI/vrxnVD/QshMU2N+WhytZYeMxTy4qhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B0FazBUM; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="C9N8jCAC"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a005aa0838so1408375e9.0
-        for <cgroups@vger.kernel.org>; Fri, 09 Oct 2026 00:02:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B0FazBUM"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4998b5a63e2so58986535e9.1
+        for <cgroups@vger.kernel.org>; Fri, 09 Oct 2026 00:07:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1791529354; x=1792134154; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id
-         :references:in-reply-to:user-agent:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=TPxOKHJ895l/zZBrxoHbLiI9IaPlmjfGv9C/U5YFa/8=;
-        b=C9N8jCAC0Iem1Aze75g9YeAY9EO3ZF5Z442gaZX7XR9vuY01P9rjdlkS25mnhvk3kd
-         Zkp+WuYXNqWqZop75J/P2Diz5NYOOQjuBr4fNKZpuxvCuBwE7c22xEd2pSwWum9xNWs4
-         p5nQ5YhW0Rs75Axh6UW1V0yDby3Y5oAzB7ZM1tHLxJZlXE1nGg2vmuevQTsWVTNllKPn
-         AT+F4z8aMZ/7y4xqcGj2laFVgUN92AZKiVe1gRq+79We61VOV34WiGarv96vEHJkSFjS
-         9pQXcGLx1zpE3Y67O4KSUxvzG5kefPZXVoN+UQs5qwVGBfUwsbabIZ5Eym8pHzB56jB4
-         ccsA==
+        d=gmail.com; s=20251104; t=1791529663; x=1792134463; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=sKKm9SmEIl/bnNoeHMWb5gysBaP9kkRYpBJirexaJDo=;
+        b=B0FazBUMi25Nrrx2P3zFQv2Ew0+HrurV02ZxT0ILniaokSjQwT9spny6pLPlp1arCQ
+         1nAdmH3V1brYpLPo7/AztGbTYqYoJJgWo98R3F97yxJ4sq8ZBEGYHgri/atjcF2d6pkI
+         jbLcBH9o3tVEXeAtKs1O/scczwwJxtXZS/4/mls0BYyO8yOsEFwj5Kijs9eJehnAmisA
+         iA+GKPcr1x1HpVpwtgwfz5NeI+GgRU+dMy9ucDUovhkXoMK+uXY4w6cFkRYrzzAzLSUg
+         ca2YmFMruULHowX/r57yL5GemGkCyKceU0f55382ZLGYbx2V3I9+xMDTRJCZAJjnrGlp
+         Q0QQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791529354; x=1792134154;
-        h=content-transfer-encoding:content-type:mime-version:message-id
-         :references:in-reply-to:user-agent:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1791529663; x=1792134463;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=TPxOKHJ895l/zZBrxoHbLiI9IaPlmjfGv9C/U5YFa/8=;
-        b=qRJUpHs4CRBGAWh/q8svFFk6hfljtzO/ADI7NU3sLpDTNbINmlD+e5RP1BErXw3OTD
-         goM481Wd8kRV5tUuuez+m7OuwbvLWHhS4xhg3V3kRPSJVdgvmyljNWLgvPnWsMuCWDTr
-         UvDrmgYR9zC8HvAcpsPDcbTQtAlnPECXZgMrd6z/DXkH6igTYQavx9zoGqlSrGSDC7Vb
-         8oc7LQMWCKbVAgUe/L+kCj4pUtYe7qQ7IPmq4pNIglSYeBYoRzYcYeMTAjDNas0Uty7c
-         EEmgGA9wNwMEKnA9m+Ul8X49YV2O3nywB0zfihzAiuQRcNGer7kyr2KMj8jwvG33rhoj
-         I7Lg==
-X-Forwarded-Encrypted: i=1; AKwUvBxtrpOlJU7VKO4jAIfAuRKyiBthylNFPnX/Mz9Ip2hEtnyNCJb4kSJ2+sqFDTISBKh0hZ3Djx1B@vger.kernel.org
-X-Gm-Message-State: AFuF++ngPOMlRipfLpKcvcZ+8eoOio3c8WoY3WXapkznu/d2+eRu1Eu3
-	2q0FQGN4NxK9k2Y/bStmljdM2+O4zpjBVvfUtnbOw38thOaicATgcnzmQ9MTQfyCkU8=
-X-Gm-Gg: AYBFou2eDF6rgpl0dh6HC35qYSIya4R/C5/9dp3VlIEfw37Y0LcXSkcK5XSTJZ+pubr
-	nA/P//MkpgCqEjCawjLdYuonkcMjQMJ8lbK2LRO4cSRE5GV9YIiC4QTmzg3Nq96X5Uk4CFU5gYZ
-	40qkogRar22rsv5uPIleWgi8JJWXa+wXjFYD+ULvFYFu4oYU5P5OFmn3M411NWruVFEVnft1bNP
-	AYCsclRyDhy9B0d8TpEIbitWV/yQfBosip4As8dHpxWMVkbSnBcB2WNTjXS7NEEAVPuF9DZxpjF
-	usw5NdlZnbnyvtaoXj0G3MxzfVAxTUidLNNLeRwJFV9ouhta9umB7rBYZM/FWPpNgomvvkIo15A
-	OnWZ4fDK1R6JqYGPusae8Sov/z+GP8ZCQulvHyArNFRdPW7JV1iIhXh1OW0hjIePT1rCaVSRhps
-	8nZV1etbirWJjA3wsmPrVZ0mzJ1XdudbJ2xwuw5gKn41zQ1dVcMT1GwV52Mw4AzOeVpiGbSh6Pd
-	wC1cQ==
-X-Received: by 2002:a05:600c:a086:b0:4a0:1f9e:5f78 with SMTP id 5b1f17b1804b1-4a18e3ea887mr15384705e9.0.1791529353543;
-        Fri, 09 Oct 2026 00:02:33 -0700 (PDT)
-Received: from ehlo.thunderbird.net ([2a00:11b1:1081:dc93:96ae:ba90:5787:8bd2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18be96549sm52255005e9.6.2026.10.09.00.02.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 09 Oct 2026 00:02:33 -0700 (PDT)
-Date: Fri, 09 Oct 2026 09:02:31 +0200
-From: Vlastimil Babka <vbabka@suse.com>
-To: Harry Yoo <harry@kernel.org>, Kees Cook <kees@kernel.org>
-CC: Vlastimil Babka <vbabka@kernel.org>, "David S. Miller" <davem@davemloft.net>,
- Andrew Morton <akpm@linux-foundation.org>, Hao Li <hao.li@linux.dev>,
- Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Roman Gushchin <roman.gushchin@linux.dev>, Pedro Falcato <pfalcato@suse.de>,
- Kuniyuki Iwashima <kuniyu@google.com>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
- Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>,
- Willem de Bruijn <willemb@google.com>,
- Jason Xing <kerneljasonxing@gmail.com>, cgroups@vger.kernel.org,
- netdev@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- linux-hardening@vger.kernel.org
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_net-next_v6_0/8=5D_net=3A_skb=3A_isolate_s?=
- =?US-ASCII?Q?kb_data_area_allocations_into_a_separate_bucket?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <asgAh4mrr_yd622U@thinkpad>
-References: <20261006092030.got.500-kees@kernel.org> <asgAh4mrr_yd622U@thinkpad>
-Message-ID: <70EBD8E2-6DBA-4758-9CA3-D5CB661CD3B7@suse.com>
+        bh=sKKm9SmEIl/bnNoeHMWb5gysBaP9kkRYpBJirexaJDo=;
+        b=StWFulMa+Tm8Pyr7Uz6XsOZ9jCru2sla+hMo1/IoX4IIZKYNElOAcDw8mrUhz5VxkE
+         T9QoQxvnVAuX2OWdqzE8Uy9o7pUycrrOqpNJ0OOX4TRus2ZGWdjIdRIfuE2LGVy7QCmn
+         MzjIGaxHhKKjBQRz6Rz28NESDW9whMi4JnHYa/p+ndm7Y35WxIefnanP+Wq2cp2cDI+0
+         teCIpozdtXaIOE+wJZbJxklPG7rOUCH75R8T5b23muFt2Mi0xzj7xEoUImHTzmMvVfHi
+         qGakMwD06wi+quvV61MQ49hHEPjiqDDYjKWHjL6uj4wFX5Q8pZiOB7mac3UmFfkMmQQJ
+         9NtQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxzfZjL4ZTjgpD6V0IxbaP2YL5SG+OQLM3MLaUYTcQ21pDEl2Eta7de6xeQA46vBsChKeWfyRdm@vger.kernel.org
+X-Gm-Message-State: AFuF++l7F6JeQoKjyeoay5Rs0OaXQsDlGjjoE9UogaTuLJ055pCiuDIG
+	tjqsnNKy+aFWEFND6rHbuv7MhGXFjnVWugov6e8TYBrLjK7zXOSwFuIG
+X-Gm-Gg: AYBFou27mOWSe0m9aTTqNbxL/WQNpXSnT4+CptNUVVTrck29yvr8YOLe0raXXRgAQ3U
+	IbfFaK6yGVbOKaIHJBMjGEQgXy2tcXg7qOkOaKMVv/XrAkLG30Rti7wJlfBw58PrC26fpPU/OyW
+	Cuhgd2PQ8Vl90cZNdQNw7c6LRTHT5+Yth1C8rjwH/QQCyXw2Dg3uYrMtxAJ5b5qYgZ+mWILbvqB
+	Kd0njbtZPUXFd2OwHNop6mM9U9/p+sGKQ1hV+mF1zlONIK6bmiHif2Omx2qEi2bDhbCqKIEYBvI
+	qZiW7YN8sdSi9DNjbW4+hGoYTLLs6FdKe0iuLfncsyMaW7w9FzdmaLgxEM/Txarlsp84+Gbrqs+
+	YA8rifenG+mI9joLg7g5CMLs11AnCIwJKVS8eSR6yjW1hUCc3aENb8ICvQKSC8eZm/LmUFiaSkF
+	ktwtxSjwMcNmE9Ixs3203HDa5/hNfbHWFMSJXygVW9U7kIS71LBhkTdkvoNU9/TTUn+SBFWvaim
+	4Z1kaJRwBCX02KPxHHzut98QsoOkAZfD1ILGkatxoSO4NRYS0mN7Ed2DPylSufU3t61NnYk5aNd
+	D/rpn79gWm1GKxVerNR47BL5qnRwdcq9hiVgbb4h82kZPunfGtQRvFavpBVnQK5Y84ilAY6hKLV
+	djIEvECHjXQ==
+X-Received: by 2002:a05:600c:8708:b0:4a1:7b05:3a6d with SMTP id 5b1f17b1804b1-4a18e49881amr14849175e9.8.1791529663117;
+        Fri, 09 Oct 2026 00:07:43 -0700 (PDT)
+Received: from unknown748F3CBA5068 (dynamic-2a02-3100-a128-aa01-297a-7094-853e-a20c.310.pool.telefonica.de. [2a02:3100:a128:aa01:297a:7094:853e:a20c])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18bf2caf4sm41656205e9.10.2026.10.09.00.07.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 00:07:42 -0700 (PDT)
+Date: Fri, 9 Oct 2026 09:07:41 +0200
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: Harry Yoo <harry@kernel.org>
+Cc: Vlastimil Babka <vbabka@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
+	David Rientjes <rientjes@google.com>, Muchun Song <muchun.song@linux.dev>, 
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Clark Williams <clrkwllms@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, Alexei Starovoitov <ast@kernel.org>, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev
+Subject: Re: [PATCH 1/2] mm/slub: preserve no-lock freeing after memcg charge
+ failure
+Message-ID: <asiSUpAYYU8Od4HM@gmail.com>
+References: <20261001044056.75079-1-kmehltretter@gmail.com>
+ <20261001044056.75079-2-kmehltretter@gmail.com>
+ <asaAwg1KeZoEYd4K@thinkpad>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <asaAwg1KeZoEYd4K@thinkpad>
 
-On October 8, 2026 11:25:13 PM GMT+02:00, Harry Yoo <harry@kernel=2Eorg> wr=
-ote:
->On Tue, Oct 06, 2026 at 02:20:26AM -0700, Kees Cook wrote:
->> Hi!
->
->Hi Kees!
->
->Was hoping to say hi to you at LPC but I missed the chance ;)
->Maybe next time=2E Safe travels!
->
->Uh, my mailbox stopped working for a few days as I forgot to renew
->subscription=2E (Kiryl told me it's bouncing, thanks!) Hopefully I didn't
->miss too much=2E=2E=2E
->
->> This gets the buckets able to handle memcg (GFP_KERNEL_ACCOUNT) with
->> isolation (since it's common due to AF_UNIX),
->
->Cool!
->
->> and GFP_DMA with fall back
->> (since it's rare)=2E
->
->> It gave me an excuse to build out bucket kunit tests
->> too, and that (and LLM review) found a couple other issues that needed
->> fixing too, including msg_msg allocations going uncharged to their memc=
-g
->> when CONFIG_SLAB_BUCKETS=3Dn (fixed in 2/8)=2E
->
->Oh=2E
->
->> Harry, on your v4 question[1] about bucket users giving their own
->> alignment: I tried that in v5, but a set's allocations don't always
->> come from its own caches=2E With CONFIG_SLAB_BUCKETS=3Dn, after a faile=
-d
->> kmem_buckets_create(), and for the DMA and reclaimable fallbacks, they
->> come from the general kmalloc caches, which can only give kmalloc()'s
->> alignment=2E
->>
->> So v6 goes back to mirroring the kmalloc cache's alignment,
->
->I might be missing something, but why is that a problem?
->
->For kmem_buckets users, the reason* to specify alignment is because
->they might need less strict alignment than kmalloc=2E
->
->(*Perhaps it's nice to document that in the comment)
->
->However, because kmem_buckets can fall back to kmalloc on e=2Eg=2E kernel=
-s
->w/o CONFIG_SLAB_BUCKETS, it should be fine to fall back=2E No?
->
->Creating kmem_buckets with more strict alignment than
->kmalloc doesn't make sense=2E=20
->
->> and drops the ctor and flags arguments for the same reason=2E
->
->Uh, for ctor and flags, yes=2E We can't have them in kmem_buckets=2E
->
->> And the whole
->> exploration made me realize I had a completely wrong understanding of
->> how memcg worked=2E :P
->>=20
->> The bulk of this is mm/slab, but the final patch is netdev, which Paolo
->> acked in v4, so I'm hoping this whole series can go via slab?
->
->Going thorough slab/for-next sounds reasonable to me once it gets
->some reviews=2E
->
->Vlastimil?
+On Wed, Oct 07, 2026 at 07:40:17PM +0100, Harry Yoo wrote:
+> > 
+> > Use kfree_nolock() when the allocation flags disallow spinning.  This
+> > keeps the SLUB object rollback on the no-lock free path.  The failed
+> > allocation continues to return NULL.
+> 
+> When this happens, the object is not charged by memcg.
+> 
+> The kernel should not invoke memcg_slab_free_hook() (called by
+> kfree_nolock()) for a slab object that is not charged by memcg.
+> 
 
-Sure! If you review and feel it's ready to be added there, please do so=2E=
- I couldn't yet due to conferencing, should be able next week=2E
+Agreed. I'll avoid the memcg free hook on charge abort.
 
+One question: kfree_nolock() currently skips init_on_free, while the
+existing charge-abort path honors it. Was that intentional? I couldn't
+find it discussed in the introduction threads.
+
+If kfree_nolock() should honor init_on_free, I'll include that fix as
+the first patch in the revised series. The charge-abort fix will then
+reuse the shared initialization helper.
+
+Karl
