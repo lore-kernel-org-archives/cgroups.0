@@ -1,136 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-140.mta1.migadu.com [95.215.58.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 153094E13EF;
-	Fri,  9 Oct 2026 14:22:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6C83CFF51
+	for <cgroups@vger.kernel.org>; Fri,  9 Oct 2026 17:40:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791555725; cv=none; b=UhP7wywFJPZCFNij9RJMiSOV3v+73DLoI5marHfXE0GfQmUmSiLBkzzDOLn7LfX12zmW12MEXxZ2zaJv88VO5NIX+X+e3CPWc2tsusmwLHngRN6oowr0T6Z5Up06nqGAHgY9AGpTTrP3jIbZPldPMk6t0JaCSF/ownFofYi/1z4=
+	t=1791567659; cv=none; b=JzeZILukjQB0qDchgfGDFI56nNDBT3XmHaMPVD46vOZJGYBcxUre/lqre+hv9tJqnEquCSdYy3W8F3HVKREGdD4nQA2Lc6hFY8zkKE7nOidF8GeyIGbQzy6eHf6eyC/cB05nXcHWXv3MnFzQAh1sqmtloDz3Wsw/5/nk8Hynf+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791555725; c=relaxed/simple;
-	bh=cEk7UtfOw0m/HJ5m4IqOoQp4D/REMPzShSeM3GZ78xU=;
+	s=arc-20240116; t=1791567659; c=relaxed/simple;
+	bh=NCJUfRqteXNa9rV0Ul+4wMwjj6UjxOxMpqC4BSP0B7U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eH7KT6CZ5YvwapMzwk2PxUUbQEn/Uqll+XYjmxsdBTzW624DNnfLa10L+5p591guHzoHTpOwm/u5R7aNtjqqGGMhVMQesgRrmcul8Iu7LEeKStfVBFh+PXfgTHZG81I/HzG95kUSyd+LPMRbAy4fqfdzIfMJbrOS/Ub8UST90r0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J0VPT2ge; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=kfHW8Ai4A/KcMTubAdtmmEXHwyzAw2GYB0GL9EMyt9yq70Sn8SLkjDq5ii44laf6hn+8bMt3t/ThzOnnXVRWty9qn9jHe8/B9C7laDRGZsxyfXi80MLEbac8OwFFLJiAL9IYX54dsOuQMXKmn6Ea7MB/BkQ0vTTdk2dBYjAvgEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xaMle+yZ; arc=none smtp.client-ip=95.215.58.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J0VPT2ge"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07C6D1F00893;
-	Fri,  9 Oct 2026 14:22:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791555723;
-	bh=zBnO3x40NIzVOgWJRZVkADybTZas0fGVJZTACvz2ApI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=J0VPT2geg9nK4PxvkGdJPDu1Ax2DB4cYIOYa0LlOk5CNt47gcJXXwVes5he9zpyMb
-	 fdcj3kb6IcAbic2YTs83/uVmj2sIRXVbOmtG8+qjWDvrGYZu/sbGQm6GszWj4esD0s
-	 ZnSZiOSAhpQTGTKtFvJaG0gsTUFnzqpG1rQRrNwzwTmF3KnNL7oakXb+GkJpQ354HY
-	 uVOsd+bTqrzZ8V/WvNG4TSwgcA028JmqpUSzBnupx7vRy+L1mbvoarx0ECPbxOsUGD
-	 sOm77pYYA2gkT4AvO7UMrqNENyeR2dpGpbfEWb1ic+Qze5UmCZxXqlaWxyuiaGFBNQ
-	 ZDrR6oUHQOsYg==
-Date: Fri, 9 Oct 2026 16:22:01 +0200
-From: Harry Yoo <harry@kernel.org>
-To: Kees Cook <kees@kernel.org>
-Cc: Vlastimil Babka <vbabka@kernel.org>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xaMle+yZ"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=NCJUfRqteXNa9rV0Ul+4wMwjj6UjxOxMpqC4BSP0B7U=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791567656; v=1; x=1792172456;
+ b=xaMle+yZrk3JCIMZFC+5PNJ+fLbORE4xEONXDNweZB6hqTcZ4IpWDRHgVd1XgK2YiU5Js6mN
+ HwHBPL/MEdTlpCl6YQ4zvkK5gI6H6Se7GuEIMmuIfjRINhsloxOLN0kJwz5BIWjpCWxM8B6qwz3
+ qWjXrDITG2MLB0SBjAUySLIo=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 63215eb558c466a3;
+	Fri, 09 Oct 2026 17:40:54 +0000
+X-Mizu-Trace-ID: 63215eb558c466a3
+X-Migadu-Flow: FLOW_OUT
+Date: Fri, 9 Oct 2026 10:40:53 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: "David Hildenbrand (Arm)" <david@kernel.org>
+Cc: Chris Li <chrisl@kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, 
 	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org, 
-	linux-mm@kvack.org, Pedro Falcato <pfalcato@suse.de>, 
-	Kuniyuki Iwashima <kuniyu@google.com>, linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH net-next v6 2/8] ipc, msg: Account msg_msg allocations
- with GFP_KERNEL_ACCOUNT again
-Message-ID: <asjhg2e4-WSeKuXd@thinkpad>
-References: <20261006092030.got.500-kees@kernel.org>
- <20261006092035.166776-2-kees@kernel.org>
+	Roman Gushchin <roman.gushchin@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
+	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Kunwu Chan <kunwu.chan@linux.dev>, Meta kernel team <kernel-team@meta.com>, 
+	Linux Memory Management List <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, 
+	linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+Message-ID: <askmzoB_Bcn1BfCN@linux.dev>
+References: <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
+ <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
+ <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org>
+ <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
+ <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
+ <aqgMCIOFi0dKx_6L@fedora>
+ <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
+ <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
+ <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
+ <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261006092035.166776-2-kees@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org>
 
-On Tue, Oct 06, 2026 at 02:20:28AM -0700, Kees Cook wrote:
-> Since commit 734bbc1c97ea7 ("ipc, msg: Use dedicated slab buckets for
-> alloc_msg()"), alloc_msg() allocates with GFP_KERNEL, and a msg_msg is
-> accounted only through SLAB_ACCOUNT on its bucket caches.
-
-> With
-> CONFIG_SLAB_BUCKETS=n, kmem_buckets_create() creates no caches and
-> kmem_buckets_alloc() is a GFP_KERNEL kmalloc() from the general caches,
-> which do not account it; the same happens when kmem_buckets_create()
-> fails. Either way, the allocation is not charged to the sender's memory
-> cgroup.
-
-Ouch, now I see what's gone wrong here... 
-The fix for this bug should be Cc: stable IMHO.
-Allowing to escape memcg charging is not good.
-
-> Allocate with GFP_KERNEL_ACCOUNT again, as before that commit. Memcg
-> charges such an allocation in whichever cache serves it, so drop the
-> SLAB_ACCOUNT, which no longer adds anything.
-
-Hmm in the long term we don't want allowing __GFP_ACCOUNT allocations
-that are served from slab caches without SLAB_ACCOUNT, as this wastes
-memory.
-
-See: https://lore.kernel.org/linux-mm/20260720-b4-objext_split-v2-0-2fa7c6f60dbe@kernel.org
-
-And now I see the initial kmem_buckets design did not sufficiently
-tackle the question "How this should work when kmem_buckets falls back
-to kmalloc?"
-
-I suppose the kmem_buckets' abstraction should not be too tightly
-coupled with kmalloc caches. Creating a kmem_buckets should be
-conceptually equivalent to creating a set of caches with speicifc
-slab flags, size, align, useroffset/size. (for variable size allocation).
-
-When it falls back to kmalloc, kmem_buckets itself should provide a
-compatibility layer when falling back to kmalloc.
-(Okay, allowing ctor is completely broken, but other attributes are fine)
-
-...I don't agree with the idea that "since kmem_buckets can fall back to
-kmalloc, kmem_buckets can only have the same requirements as kmalloc
-(slab flags, alignment, etc.)".
-
-By that logic, shouldn't we give up specifying useroffset and usersize
-too? :-)
-
-> Build tested ARCH=x86_64 defconfig with GCC 16.2.0, with
-> CONFIG_SLAB_BUCKETS as y and n.
+On Mon, Oct 05, 2026 at 01:06:28PM +0200, David Hildenbrand (Arm) wrote:
+> On 9/22/26 15:38, Chris Li wrote:
+> > On Mon, Sep 21, 2026 at 8:56 AM Nhat Pham <nphamcs@gmail.com> wrote:
+> >>
+> >> On Fri, Sep 18, 2026 at 11:50 PM Chris Li <chrisl@kernel.org> wrote:
+> >>> No that time slot is too late for Asia developers. I don't think we
+> >>> should use that time slot for swap alignment.
+> >>>
+> >>> We should find a time slot more friendly to Asia.
+> >>
+> >> Any time slot would have that kind of problem. We're spread out across
+> >> the globe.
+> >>
+> >> Let's just use a standardized time slot we have for MM alignment sessions.
+> > 
+> > There are more swap maintainers in Asia than in the US + Europe, at
+> > least based on the maintainer file. Please be more inclusive. If the
+> > alignment is done without key stakeholders, it miss the point.
+> > 
+> > Sigh, we can't even align on a time slot.
+> > 
+> > In that case, let's keep discussing on the mailing list. At least it
+> > is accessible to every one.
 > 
-> Fixes: 734bbc1c97ea7 ("ipc, msg: Use dedicated slab buckets for alloc_msg()")
->
-> Assisted-by: LLM
-> Signed-off-by: Kees Cook <kees@kernel.org>
-> ---
->  ipc/msgutil.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+> Looking at the mailing list, that approach doesn't seem to work.
 > 
-> diff --git a/ipc/msgutil.c b/ipc/msgutil.c
-> index e28f0cecb2ec..1ba8e59cb255 100644
-> --- a/ipc/msgutil.c
-> +++ b/ipc/msgutil.c
-> @@ -43,7 +43,7 @@ static kmem_buckets *msg_buckets __ro_after_init;
->  
->  static int __init init_msg_buckets(void)
->  {
-> -	msg_buckets = kmem_buckets_create("msg_msg", SLAB_ACCOUNT,
-> +	msg_buckets = kmem_buckets_create("msg_msg", 0,
->  					  sizeof(struct msg_msg),
->  					  DATALEN_MSG, NULL);
->  
-> @@ -58,7 +58,8 @@ static struct msg_msg *alloc_msg(size_t len)
->  	size_t alen;
->  
->  	alen = min(len, DATALEN_MSG);
-> -	msg = kmem_buckets_alloc(msg_buckets, sizeof(*msg) + alen, GFP_KERNEL);
-> +	msg = kmem_buckets_alloc(msg_buckets, sizeof(*msg) + alen,
-> +				 GFP_KERNEL_ACCOUNT);
->  	if (msg == NULL)
->  		return NULL;
+> Finding a time slot that makes US, Europe and Asia happy is ... tricky.
+> 
+> 1 AM is certainly unpleasant.
+> 
+> US vs. Asia is also tricky, but doable.
+> 
+> China 8AM vs. US West Coast 5PM?
+> 
+> China 9AM vs. US West Coast 6PM?
+> 
+> (Europe is 2AM vs. 3AM, who besides me from Europe would join?)
+> 
 
--- 
-Cheers,
-Harry / Hyeonggon
+Thanks David for pushing this.
+
+Kairui, Chris & Baoquan, please respond which time slot is better for you?
