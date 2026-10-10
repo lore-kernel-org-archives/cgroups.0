@@ -1,51 +1,60 @@
-Received: from mta0.migadu.com (out-202.mta0.migadu.com [91.218.175.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C03E372662
-	for <cgroups@vger.kernel.org>; Sat, 10 Oct 2026 21:10:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3FBD32142B
+	for <cgroups@vger.kernel.org>; Sat, 10 Oct 2026 22:20:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791666635; cv=none; b=Y2IrMd3L+zanF4GdpK8IxToHzHbSP9lPfFIoafTKgd//1dV9OFAsDD32o8KXjDp4MP5EtjMXY0LPQQAdprsmO8qWORuTq/iemOPL+746PIf73UoFBrLt99QpegbU8NVH/9zFJsnhegpXBdHZ2kgs05wInShea13F+8YkGfnNgco=
+	t=1791670805; cv=none; b=KGkBLHe9N8imUeq/Dk0PZ8+e5boY2olPJyh9yyRm/vKFYCffGpfRn8ZwTetKAE55xtUbk34I8NM3S8OXOiZtWF6QxDd7rGqgBAILY9dHM8MsWeONe/oBnOM1HTLV8jkW0HKa2Cwg4FMhHUtsuhqY4hIK7Eo7iadjL+FvNQTZJEA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791666635; c=relaxed/simple;
-	bh=3hqX3BARmjWtAQ46OvzECobezGOVuBR47j+5rD5PZIo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EA4N84yi4pGWCcAyAJEwX2Qi+20kqP6zaenoiPE4ZN3G93olVPc2+MZKOIrXLbi+BxIh49+W10aWHc8AysCc41RUoHQkSOh8pD1RqbdKh9rEG0wLuNPfC1SNg2Iwbl0OV/36gfucMW/uymzdAWpfbY0hYc3DuUuEAEE0UsrfViM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=aH1NCR1d; arc=none smtp.client-ip=91.218.175.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791670805; c=relaxed/simple;
+	bh=8M/HLatrySuK91muF/3AxnaVQnHzyFlrpDf35ZdHhgU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OdorbF/RKUYeyCfkoFZdbdsU9IMQ/yMg5c9Vw3IkEkv0P1/NcsP6gu2n/zAL+NALL/G22rfGZ6rT7zu9JoKWMoLWoKJElXeO3k5Eg4IDXTPZ8Jac2Ly45MR2BfCwC1qIrTW7BmdqcHKrLITXt8lAGRwGm0F/cFRU4cTk/FoVVys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gry+6fJ0; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="aH1NCR1d"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=3hqX3BARmjWtAQ46OvzECobezGOVuBR47j+5rD5PZIo=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791666631; v=1; x=1792271431;
- b=aH1NCR1dMaFgP7EOlDMiGX6daB+ScA4bILjgQ9I8YJfm87SX3DCWjztZEU35hF3slmfXfmS4
- f+RiiIHYwWPW9D42UA0uOKSiVhV92tB518YKTVkWLcgK92uzNXeumEAeEM6ziJIh68AiHUT/bsI
- 8OGtWTAaTQfQlGizT66Dvvzc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4cd0ae48d6d3e480;
-	Sat, 10 Oct 2026 21:10:31 +0000
-X-Mizu-Trace-ID: 4cd0ae48d6d3e480
-X-Migadu-Flow: FLOW_OUT
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gry+6fJ0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791670802;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Z4IaVNVLUW4GvtVkHUILuCPdsadbUzjm6pOrDBwn+Z8=;
+	b=gry+6fJ0xtVseI5SH7aWP/jEMpPitfRQ7VAcL57h0zNkl5oUnAGJ6Oihq2QHpF+Boh/9mu
+	5bAxaY575LKp38Cvd3t958qAts3ZE8kM95ZbFbAMBCMBdiE2N5j1RrEMdf9xXm5vc3gHaw
+	rvu+b9lt1drbOSIn7/y5fjlt1x2rRHw=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-618-QcmVpveXN6SAGT28mi1POA-1; Sat,
+ 10 Oct 2026 22:20:01 +0000
+X-MC-Unique: QcmVpveXN6SAGT28mi1POA-1
+X-Mimecast-MFC-AGG-ID: QcmVpveXN6SAGT28mi1POA_1791670799
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 075D41955D99;
+	Sat, 10 Oct 2026 22:19:59 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.redhat.corp (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9C3721800579;
+	Sat, 10 Oct 2026 22:19:55 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>,
 	Tejun Heo <tj@kernel.org>,
-	Meta kernel team <kernel-team@meta.com>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH for-7.5 5/5] memcg: simplify high limit handling after a charge
-Date: Sat, 10 Oct 2026 14:09:57 -0700
-Message-ID: <20261010210957.1350874-6-shakeel.butt@linux.dev>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261010210957.1350874-1-shakeel.butt@linux.dev>
-References: <20261010210957.1350874-1-shakeel.butt@linux.dev>
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Hui Peng <benquike@gmail.com>,
+	Guopeng Zhang <guopeng.zhang@linux.dev>,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH-next v2 0/6] cgroup/cpuset: Fix various housekeeping check problems
+Date: Sat, 10 Oct 2026 18:19:32 -0400
+Message-ID: <20261010221938.243859-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -53,159 +62,39 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Separate the hierarchy scan from high-limit enforcement. Find the first
-cgroup over the applicable limit, then queue high_work or record the
-task's overage after the scan. Worker contexts check only memory.high;
-local charges also check memory.swap.high.
+ v2:
+  - Update patches 2 and 3 to address bugs reported by sashiko.
+  - Add a new test_cpuset_prs.sh patch to skip the test if some of the
+    required CPUs are offline.
 
-Read in_task() once and clarify the enforcement comments. Keep the
-synchronous pending-overage check independent of the scan result so a
-blocking charge still handles overage left by earlier charges.
+Commit 4a74e418881f ("cgroup/cpuset: Check partition conflict with
+housekeeping setup") and commit 103b08709e8a ("cgroup/cpuset: Fail if
+isolated and nohz_full don't leave any housekeeping") add housekeeping
+checks to fail partition changes that will violate the housekeeping
+rules. However there are several issues that make the check incomplete
+and missing in some cases. This series fixes the various known
+housekeeing check issues and adds additional test cases in
+test_cpuset_prs.sh to test for some of those issues.
 
-No functional change intended.
+Waiman Long (6):
+  cgroup/cpuset: Consolidate isolated_cpus_can_update() into
+    prstate_housekeeping_conflict()
+  cgroup/cpuset: Consider all the exclusive CPUs when doing housekeeping
+    check
+  cgroup/cpuset: Do housekeeping check before converting invalid
+    partition to valid
+  cgroup/cpuset: Properly disabling partition when partition state
+    switching fails
+  selftests/cgroup: Add tests for housekeeping check
+  selftests/cgroup: Skip test_cpuset_prs.sh test if some required CPUs
+    are offline
 
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
----
- mm/memcontrol.c | 100 +++++++++++++++++++++---------------------------
- 1 file changed, 43 insertions(+), 57 deletions(-)
+ kernel/cgroup/cpuset.c                        | 170 +++++++++---------
+ .../selftests/cgroup/test_cpuset_prs.sh       | 125 ++++++++++---
+ 2 files changed, 195 insertions(+), 100 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d1e022e6572f..2a3742036b45 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2602,9 +2602,8 @@ static unsigned long calculate_high_delay(unsigned int nr_pages,
- }
- 
- /*
-- * Reclaims memory over the high limit. Called directly from
-- * try_charge() (context permitting), as well as from the userland
-- * return path where reclaim is always able to block.
-+ * Handle pending high overage during a blocking charge or on return
-+ * to userspace.
-  */
- void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
- {
-@@ -2704,78 +2703,65 @@ void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
- static void memcg_enforce_high(struct mem_cgroup *memcg, unsigned int nr_pages,
- 			       gfp_t gfp_mask)
- {
-+	struct mem_cgroup *iter;
- 	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
--	bool use_worker = !in_task() || (current->flags & PF_KTHREAD) ||
--		!current->mm || !mm_match_cgroup(current->mm, memcg);
-+	bool task_context = in_task();
-+	bool kthread = task_context && (current->flags & PF_KTHREAD);
-+	bool use_high_work = !task_context || kthread || !current->mm ||
-+		!mm_match_cgroup(current->mm, memcg);
- 
- 	/*
- 	 * Reclaim can charge memory, for example when zswap stores a page.
- 	 * Don't queue high_work from a reclaiming task, or the
- 	 * high_work worker could keep queuing itself.
- 	 */
--	if (in_task() && use_worker && (current->flags & PF_MEMALLOC))
-+	if (task_context && use_high_work && (current->flags & PF_MEMALLOC))
- 		return;
- 
- 	/*
--	 * If the hierarchy is above the normal consumption range, schedule
--	 * reclaim on returning to userland.  We can perform reclaim here
--	 * if __GFP_RECLAIM but let's always punt for simplicity and so that
--	 * GFP_KERNEL can consistently be used during reclaim.  @memcg is
--	 * not recorded as it most likely matches current's and won't
--	 * change in the meantime.  As high limit is checked again before
--	 * reclaim, the cost of mismatch is negligible.
-+	 * Check the charged cgroup and its parents. Local charges normally defer
-+	 * reclaim until return to userspace so it can use GFP_KERNEL. Large
-+	 * pending overages may be handled synchronously below. The handler looks
-+	 * up current->mm and rechecks the limits.
- 	 */
--	do {
-+	for (iter = memcg; iter; iter = parent_mem_cgroup(iter)) {
- 		bool mem_high, swap_high;
- 
--		mem_high = page_counter_read(&memcg->memory) >
--			READ_ONCE(memcg->memory.high);
--		swap_high = page_counter_read(&memcg->swap) >
--			READ_ONCE(memcg->swap.high);
--
--		/*
--		 * Don't make an unrelated interrupted task handle this charge.
--		 * Kernel threads may be working for other tasks, so let a worker
--		 * reclaim instead.
--		 * Remote charges need reclaim from their charged hierarchy.
--		 */
--		if (use_worker) {
--			if (mem_high) {
--				if (allow_spinning)
--					schedule_work(&memcg->high_work);
--				else
--					irq_work_queue(&memcg->high_irq_work);
--				break;
--			}
--			continue;
--		}
--
--		if (mem_high || swap_high) {
--			/*
--			 * The allocating tasks in this cgroup will need to do
--			 * reclaim or be throttled to prevent further growth
--			 * of the memory or swap footprints.
--			 *
--			 * Target some best-effort fairness between the tasks,
--			 * and distribute reclaim work and delay penalties
--			 * based on how much each task is actually allocating.
--			 */
--			current->memcg_nr_pages_over_high += nr_pages;
--			set_notify_resume(current);
-+		mem_high = page_counter_read(&iter->memory) >
-+			READ_ONCE(iter->memory.high);
-+		swap_high = !use_high_work &&
-+			(page_counter_read(&iter->swap) > READ_ONCE(iter->swap.high));
-+		if (mem_high || swap_high)
- 			break;
--		}
--	} while ((memcg = parent_mem_cgroup(memcg)));
-+	}
- 
--	/* Interrupts, kernel threads, and remote chargers stop here. */
--	if (use_worker)
-+	/*
-+	 * Use a worker for interrupts, kernel threads, and tasks whose mm
-+	 * does not match the charged hierarchy.
-+	 */
-+	if (use_high_work) {
-+		if (!iter)
-+			return;
-+		if (allow_spinning)
-+			schedule_work(&iter->high_work);
-+		else
-+			irq_work_queue(&iter->high_irq_work);
- 		return;
-+	}
-+
-+	if (iter) {
-+		/*
-+		 * Count the full batch so reclaim work and delay penalties scale
-+		 * with the pages charged by this task.
-+		 */
-+		current->memcg_nr_pages_over_high += nr_pages;
-+		set_notify_resume(current);
-+	}
- 
- 	/*
--	 * Reclaim is set up above to be called from the userland
--	 * return path. But also attempt synchronous reclaim to avoid
--	 * excessive overrun while the task is still inside the
--	 * kernel. If this is successful, the return path will see it
--	 * when it rechecks the overage and simply bail out.
-+	 * Earlier charges may have left high overage pending even if this charge
-+	 * found no new overage. Handle it now if this charge can block, to limit
-+	 * overrun while the task remains in the kernel.
- 	 */
- 	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
- 	    !(current->flags & PF_MEMALLOC) &&
 -- 
-2.53.0-Meta
+2.55.0
 
