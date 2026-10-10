@@ -1,64 +1,54 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-115.mta0.migadu.com [91.218.175.115])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43338399368
-	for <cgroups@vger.kernel.org>; Sat, 10 Oct 2026 08:29:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948CD4B95D4
+	for <cgroups@vger.kernel.org>; Sat, 10 Oct 2026 19:15:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.115
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791620979; cv=none; b=D2+H8c6h6JWMKG07j+LhuWIpgVKJNTaQq0mgGzB1VLwYatkOYU+WgBYJ33GDf5cr7jrY46YTtRCzTGKdafJ4NgqVoN1vWk3O684m8TBD61v1hEfkFUWBDrEisOJjLEkS4fMUpwc07nSzhmO1cR7d7DohyPeMLQ25Jvc46ffmMH8=
+	t=1791659717; cv=none; b=UIAhSRdS36aOUmbxFN7Irx0knW1spk0NzrwCBCwzzOurNEoEoqDPu26Ne55sq8D7Bk1iGoMVUBzevowAOQ5ss7HYBIWj6+59+N6Csgm6M3qXTqTe5j+iswRQINdiHtgRDAfGL4YtWOsnwLdwnvmTm8ZVjy9j5tTUd6KKa4iRsG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791620979; c=relaxed/simple;
-	bh=wemRMvJXRsdXJg0zK7hzUz8eslL4RJfnRzpPkRCJHHI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kaETI/nqQfc6GGIHLW3pdKwQk8gQImuMFqmUyc4UMnTpQ+VM+XSJg3VCwcco+Ax1GXa6o36km4ZpF6OTO+hSrKMu2vJa/VPI9K3C5PzVtuEAhDUX+C/aWYl5sKAVgOOU6SVEFit55NF1gwRsIMVEwF0TpA/ZQgxQxTEhBfhQ5fo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Zm1g2Lhx; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1791659717; c=relaxed/simple;
+	bh=3NootzqI/O3+CC49sjVYixviyBMP0OLY4tolwLWBCqY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eLRsAg7CniS1JTSjsrtQO8xF9YyC+9Fhrhfv7CWNLt6/uzVzMBixNik1ZjfAXhQSy1b9U1fqZpSp8Ly7CrJxzpdkuSSbEgVkmGoutpeh30SqWctOriSh7UtckQQwOMkYgqQRZ3Zbtg9Y6O2B61gbiF11ydJ1QUT95Mf7er7pXls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=WunxtgpF; arc=none smtp.client-ip=91.218.175.115
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Zm1g2Lhx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1791620977;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Wi0PyvptVAB6sZgcYrYRmOEGvWnEz/WqGXB3++Gy8Y4=;
-	b=Zm1g2Lhxruc6TkYkWCdlHRK8MY7wiMwTbgrKXom+6IJ8Wo2lyfwk0U8LvThEtfY6V09Ryq
-	kFzMIZtcQy8LkNOXqdkkgQsJDUZt8W+dUzik5fOF1LDQe0yoqcBIXBLKekYF9hL/nBbCHz
-	0r3FOe+pWqgrs89w4I+q1eJNHKFUMPY=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-503-lX7RDpmGPEWvdV1JSmP7Yw-1; Sat,
- 10 Oct 2026 08:29:35 +0000
-X-MC-Unique: lX7RDpmGPEWvdV1JSmP7Yw-1
-X-Mimecast-MFC-AGG-ID: lX7RDpmGPEWvdV1JSmP7Yw_1791620973
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9E35719560AD;
-	Sat, 10 Oct 2026 08:29:33 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.redhat.corp (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C4B68180034F;
-	Sat, 10 Oct 2026 08:29:30 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Ridong Chen <ridong.chen@linux.dev>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Hui Peng <benquike@gmail.com>,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH-next 5/5] selftests/cgroup: Add tests for housekeeping check
-Date: Sat, 10 Oct 2026 04:28:48 -0400
-Message-ID: <20261010082848.193182-6-longman@redhat.com>
-In-Reply-To: <20261010082848.193182-1-longman@redhat.com>
-References: <20261010082848.193182-1-longman@redhat.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="WunxtgpF"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=3NootzqI/O3+CC49sjVYixviyBMP0OLY4tolwLWBCqY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791659709; v=1; x=1792264509;
+ b=WunxtgpFZosZ7b9DNfW0Qj51YCICbBdVdAQdiHvA5wqX5ocFetVODfW80KsFOnZNs6o8/SJn
+ REXQdqQEHuoNkgafBfCDHZZ8LXuORi+4OJFWexepRO2FbQPcIncToxv9UWjZbz/RYwbKHvG71Yu
+ PJqPK6LkkaSloM87xZ6ZRUkE=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 585ebba4e45e8649;
+	Sat, 10 Oct 2026 19:15:06 +0000
+X-Mizu-Trace-ID: 585ebba4e45e8649
+X-Migadu-Flow: FLOW_OUT
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Peter Zijlstra <peterz@infradead.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>,
+	Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Meta kernel team <kernel-team@meta.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] sched/psi: Remove the RCU wait from trigger destruction
+Date: Sat, 10 Oct 2026 12:15:00 -0700
+Message-ID: <20261010191500.3895736-1-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -66,208 +56,108 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Whenever a partition is enabled or the cpumask of a valid partition
-changes, a housekeeping check will be performed to ensure that the
-change won't violate the imposed housekeeping constraints. One of the
-constraints is that a boot-time isolated CPU will not be used to form
-a non-isolated root partition.  This requires the presence of boot-time
-isolated CPUs when a test is run.
+In the Meta fleet, we found PSI trigger destruction waiting for an RCU
+grace period while holding kernfs node_mutex, blocking other users [1].
+File close and node drain hold this mutex while calling the release
+callback. Cgroup removal and disabling cgroup.pressure also hold
+cgroup_mutex during the drain.
 
-The test_cpuset_prs.sh test script is now updated to run a set a
-special housekeeping check tests that will only be run if a suitable
-boot-time isolated CPU is present. This will enable us to detect bugs
-or regressions in the housekeeping checking code though a "isolcpus="
-boot parameter with CPUs beyond CPU 8 must be present.
+The wait was added by commit 0e94682b73bf ("psi: introduce psi monitor")
+to protect worker and trigger lookups. Commit 461daba06bdc
+("psi: eliminate kthread_worker from psi trigger scheduling mechanism")
+replaced the worker queue with a group timer. The scheduler now only
+checks whether rtpoll_task is NULL; it uses neither the task nor the
+trigger. Commit a06247c6804f ("psi: Fix uaf issue when psi trigger is
+destroyed while being polled") removed trigger replacement and polling's
+RCU lookup.
 
-Adding test to check for exhaustion of all the housekeeping CPUs is
-much harder and so will not be attempted at this time.
+Trigger lists are protected by mutexes. Proc poll/select entries are
+removed before their file references are dropped. eventpoll_release()
+removes epoll entries before the file release callback.
+Commit aff037078eca ("sched/psi: use kernfs polling functions for PSI
+trigger polling") moved cgroup polling to a kernfs waitqueue whose
+lifetime follows the file.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
+A late timer firing only wakes the group waitqueue. The system group is
+static, and commit 5457025fa8ca ("sched/psi: Shut down rtpoll_timer in
+psi_cgroup_free()") shuts down the cgroup timer before freeing the group.
+Cgroup reclamation already waits for scheduler readers.
+
+Remove synchronize_rcu() from psi_trigger_destroy() and use
+rcu_access_pointer() for the worker NULL check. Keep kthread_stop()
+outside the trigger mutex.
+
+Tested trigger churn, notifications and cgroup removal in an 8-CPU VM
+with KASAN, lockdep, and full and lazy preemption. No warnings were found.
+
+Link: https://github.com/bpftrace/user-tools/tree/master/runnablelockmonitor [1]
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- .../selftests/cgroup/test_cpuset_prs.sh       | 105 ++++++++++++++----
- 1 file changed, 85 insertions(+), 20 deletions(-)
+ kernel/sched/psi.c | 25 +++++--------------------
+ 1 file changed, 5 insertions(+), 20 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index 7efd5e645767..6cfe90b09107 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -86,26 +86,37 @@ echo "" > test/cpuset.cpus
- 
- #
- # If isolated CPUs have been reserved at boot time (as shown in
--# cpuset.cpus.isolated), these isolated CPUs should be outside of CPUs 0-8
--# that will be used by this script for testing purpose. If not, some of
--# the tests may fail incorrectly. Wait a bit and retry again just in case
--# these isolated CPUs are leftover from previous run and have just been
--# cleaned up earlier in this script.
-+# /sys/devices/system/cpu/isolated), these isolated CPUs should be outside of
-+# CPUs 0-8 that will be used by this script for testing purpose. If not, some
-+# of the tests may fail incorrectly.
- #
--# These pre-isolated CPUs should stay in an isolated state throughout the
-+# The current set of isolated CPUs (as shown in cpuset.cpus.isolated) should
-+# be the same as the boot value. If not, wait a bit and retry again just in
-+# case these isolated CPUs are leftover from previous run and have just been
-+# cleaned up earlier in this script. If they still don't match, we report an
-+# warning and skip the test.
-+#
-+# These boot isolated CPUs should stay in an isolated state throughout the
- # testing process for now.
- #
--BOOT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
-+BOOT_ISOLCPUS=$(cat /sys/devices/system/cpu/isolated)
-+CURRENT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
-+FIRST_ISOLCPUS=
-+TEST_ISOLCPUS=
-+
- [[ -n "$BOOT_ISOLCPUS" ]] && {
-+	FIRST_ISOLCPUS=$(echo $BOOT_ISOLCPUS | sed -e "s/[,-].*//")
-+	[[ $FIRST_ISOLCPUS -le 8 ]] &&
-+		skip_test "Boot-isolated CPUs ($BOOT_ISOLCPUS) overlap CPUs to be tested"
-+	echo "Boot-isolated CPUs: $BOOT_ISOLCPUS"
-+}
-+
-+[[ "$BOOT_ISOLCPUS" != "$CURRENT_ISOLCPUS" ]] && {
- 	sleep 0.5
--	BOOT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
-+	CURRENT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
-+	[[ "$BOOT_ISOLCPUS" != "$CURRENT_ISOLCPUS" ]] &&
-+		skip_test "Current isolated CPUs ($CURRENT_ISOLCPUS) don't match boot isolated CPUs!"
- }
--if [[ -n "$BOOT_ISOLCPUS" ]]
--then
--	[[ $(echo $BOOT_ISOLCPUS | sed -e "s/[,-].*//") -le 8 ]] &&
--		skip_test "Pre-isolated CPUs ($BOOT_ISOLCPUS) overlap CPUs to be tested"
--	echo "Pre-isolated CPUs: $BOOT_ISOLCPUS"
--fi
- 
- cleanup()
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index 4e152410653d..7c5381423334 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -626,8 +626,6 @@ static void init_rtpoll_triggers(struct psi_group *group, u64 now)
+ static void psi_schedule_rtpoll_work(struct psi_group *group, unsigned long delay,
+ 				   bool force)
  {
-@@ -202,7 +213,7 @@ test_add_proc()
- #
- # ECPUs    - effective CPUs of cpusets
- # Pstate   - partition root state
--# ISOLCPUS - isolated CPUs (<icpus>[,<icpus2>])
-+# ISOLCPUS - isolated CPUs (<icpus>[,<icpus2>] or .)
- #
- # Note that if there are 2 fields in ISOLCPUS, the first one is for
- # sched-debug matching which includes offline CPUs and single-CPU partitions
-@@ -444,6 +455,35 @@ TEST_MATRIX=(
- 	"   C0-3     .      .    C4-5   X3-5     .      .      .     1 A1:0-3|B1:4-5"
- )
+-	struct task_struct *task;
+-
+ 	/*
+ 	 * atomic_xchg should be called even when !force to provide a
+ 	 * full memory barrier (see the comment inside psi_rtpoll_work).
+@@ -635,19 +633,16 @@ static void psi_schedule_rtpoll_work(struct psi_group *group, unsigned long dela
+ 	if (atomic_xchg(&group->rtpoll_scheduled, 1) && !force)
+ 		return;
  
-+# Test matrix with boot time isolated CPUs present for housekeeping check testing
-+ISOLCPUS_TEST_MATRIX=(
-+	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
-+	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-+	# A local isolated partition containing boot isolated CPU cannot be
-+	# switched to root partition.
-+	" C1-2,I:P2  .      .      .      P1     .      .      .     0 A1:1-2,I A1:P-1 ."
-+
-+	# A remote isolated partition containing boot isolated CPU cannot be
-+	# switched to root partition.
-+	" X1-2,I CX1-2,I:P2 .      .       .    P1      .      .     0 A2:1-2,I A2:P-1 ."
-+
-+	# A local isolated partition with a boot isolated CPU distributed to a
-+	# child isolated partition also cannot be switched to a root partition.
-+	" C1-3,I:P2 C1,I:P2 .      .      P1     .      .      .     0 A1:1-3,I|A2:1,I A1:P-1|A2:P-2 ."
-+
-+	# A remote isolated partition with a boot isolated CPU distributed to a
-+	# child isolated partition also cannot be switched to a root partition.
-+	" X1-3,I C1-3,I:P2 C1,I:P2 .       .    P1      .      .     0 A2:1-3,I|A3:1,I A2:P-1|A3:P-2 ."
-+
-+	# The cpumask of a local root partition cannot be changed to include a
-+	# boot isolated CPU.
-+	" C1-2:P1    .      .      .     C2,I    .      .      .     0 A1:2,I A1:P-1 ."
-+
-+	# The cpumask of a remote root partition cannot be changed to include a
-+	# boot isolated CPU.
-+	" CX1-2,I  CX1-2:P1 .      .       .   CX2,I    .      .     0 A1:1-2,I|A2:2,I A2:P-1 ."
-+)
-+
- #
- # Cpuset controller remote partition test matrix.
- #
-@@ -541,6 +581,27 @@ write_cpu_online()
- 	pause 0.05
+-	rcu_read_lock();
+-
+-	task = rcu_dereference(group->rtpoll_task);
+ 	/*
+-	 * kworker might be NULL in case psi_trigger_destroy races with
+-	 * psi_task_change (hotpath) which can't use locks
++	 * Only test whether a worker is installed; do not dereference the task.
++	 * A racing trigger destruction may leave the timer armed.
++	 * psi_cgroup_free() shuts it down before freeing the group.
++	 * The system PSI group is static.
+ 	 */
+-	if (likely(task))
++	if (likely(rcu_access_pointer(group->rtpoll_task)))
+ 		mod_timer(&group->rtpoll_timer, jiffies + delay);
+ 	else
+ 		atomic_set(&group->rtpoll_scheduled, 0);
+-
+-	rcu_read_unlock();
  }
  
-+#
-+# Set the CPUS values
-+#  $1 - the passed in cpu parameter
-+#
-+# The special ",I" suffix if present is being replaced by the first boot CPU
-+# and assigned to the "CPUS" variable when the TEST_ISOLCPUS flag is set.
-+# If not, the program will exit with an error.
-+#
-+set_cpus()
-+{
-+	local cpus=$1
-+	if [[ $(expr "$cpus" : .*,I) -gt 0 ]]
-+	then
-+		[[ -z "$TEST_ISOLCPUS" ]] &&
-+			skip_test "',I' added to non-isolcpus testing matrix!"
-+		CPUS=$(echo $cpus | sed -e "s/,I/,$FIRST_ISOLCPUS/")
-+	else
-+		CPUS=$cpus
-+	fi
-+}
-+
- #
- # Set controller state
- #  $1 - cgroup directory
-@@ -575,16 +636,16 @@ set_ctrl_state()
- 		}
- 		case $CMD in
- 		    X*)
--			CPUS=${CMD#?}
-+			set_cpus ${CMD#?}
- 			COMM="echo $CPUS > $XFILE"
- 			eval $COMM $REDIRECT
- 			;;
- 		    CX*)
--			CPUS=${CMD#??}
-+			set_cpus ${CMD#??}
- 			COMM="echo $CPUS > $CFILE; echo $CPUS > $XFILE"
- 			eval $COMM $REDIRECT
- 			;;
--		    C*) CPUS=${CMD#?}
-+		    C*) set_cpus ${CMD#?}
- 			COMM="echo $CPUS > $CFILE"
- 			eval $COMM $REDIRECT
- 			;;
-@@ -978,8 +1039,11 @@ run_state_test()
- 	I=0
- 	eval CNT="\${#$TEST[@]}"
+ static void psi_rtpoll_work(struct psi_group *group)
+@@ -1488,22 +1483,12 @@ void psi_trigger_destroy(struct psi_trigger *t)
+ 		mutex_unlock(&group->rtpoll_trigger_lock);
+ 	}
  
-+	# Skip isolcpus specific test matrix if FIRST_ISOLCPUS not defined
-+	[[ -n "$TEST_ISOLCPUS" && -z "$FIRST_ISOLCPUS" ]] && return
-+
- 	reset_cgroup_states
--	console_msg "Running state transition test ..."
-+	console_msg "Running state transition test for $TEST ..."
- 
- 	while [[ $I -lt $CNT ]]
- 	do
-@@ -998,7 +1062,7 @@ run_state_test()
- 		NEW_A3=$7
- 		NEW_B1=$8
- 		RESULT=$9
--		ECPUS=${10}
-+		ECPUS=$(echo ${10} | sed -e "s/,I/,${FIRST_ISOLCPUS}/g")
- 		STATES=${11}
- 		ICPUS=${12}
- 
-@@ -1284,6 +1348,7 @@ test_inotify()
- trap cleanup 0 2 3 6
- run_state_test TEST_MATRIX
- run_remote_state_test REMOTE_TEST_MATRIX
-+TEST_ISOLCPUS=1 run_state_test ISOLCPUS_TEST_MATRIX
- test_isolated
- test_boot_isolated
- test_inotify
+-	/*
+-	 * Wait for psi_schedule_rtpoll_work RCU to complete its read-side
+-	 * critical section before destroying the trigger and optionally the
+-	 * rtpoll_task.
+-	 */
+-	synchronize_rcu();
+ 	/*
+ 	 * Stop kthread 'psimon' after releasing rtpoll_trigger_lock to prevent
+ 	 * a deadlock while waiting for psi_rtpoll_work to acquire
+ 	 * rtpoll_trigger_lock
+ 	 */
+ 	if (task_to_destroy) {
+-		/*
+-		 * After the RCU grace period has expired, the worker
+-		 * can no longer be found through group->rtpoll_task.
+-		 */
+ 		kthread_stop(task_to_destroy);
+ 		atomic_set(&group->rtpoll_scheduled, 0);
+ 	}
 -- 
-2.55.0
+2.53.0-Meta
 
