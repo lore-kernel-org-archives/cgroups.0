@@ -1,50 +1,50 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C047146AA66;
-	Sun, 11 Oct 2026 22:34:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3BC46EC84;
+	Sun, 11 Oct 2026 22:34:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791758058; cv=none; b=RwcyUuhYlsknETuSu178ipbS5OkliOblZjYH7VvNQWCXcZgL9qTPd6D6GIJelt5o/+61FhiBtyrKEniCQKhxb92s7r4O6Y7UfPw8O3AEoq73srLsHj8G0/WHzz4UNiIBz1hPgCTMk4Nn4J7aYKOy5AlEnBOgPAbimp4BYAxqLWM=
+	t=1791758061; cv=none; b=IDO0KjMHBnsu44yNTCfuCfZq39dEjG9p/No4bwbNzBSYbthk/ZwMPu8hvI0/mGjy3zQtII8Tpr+ek70gJhV0oAzv4YR2eLjonimY8MObrIqa0vuMT8KRarfqVPOjTWNCBGsfSJg6vLAyR/hubVZgHR4LyTNw6r4jZTYPieX20ag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791758058; c=relaxed/simple;
-	bh=cqh6tlFJZjhez+ao6RTIP2gIoYEZzEwhNiTrCHAQAnY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Npyr9hSL9Q3FfGEUfONMKI7rIksmSNstOl2E6I+Z2CdrYZ7jWATXL/ZwnLNVjb3l6x/Wt7C2TBukz7/wPXlG66UrvMVEEX9QMBc+PfN69AUXtUPFMolS7A/Inp7wtRVoP/giqvS/NN0VE9DjDdQVSaOg7k7iVsgr4NFIiJCNBfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KoMFCYlY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791758061; c=relaxed/simple;
+	bh=FtIcu6AuXNFhD75PsUd5wJaXxDlCmgnClBrQK3EYzQA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=b1zjjmSOkEkOiETHlxu/kynirMv1d+VFRSTYpzQVVk/CZ/tPCgzQT8IeKH+G4qMIyLGtK3GNSkXYs8h0e/MHq1osfdcfn3Z1pt6c8OrGrdcJWdz/N8t50aEG2cyRbrxxyr87e//zf2c3zQFD9T558555kXXZPxx3oWy9ffWTih0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bfwRQ5EK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KoMFCYlY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E80A21F0089C;
-	Sun, 11 Oct 2026 22:34:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bfwRQ5EK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C74831F0089B;
+	Sun, 11 Oct 2026 22:34:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791758057;
-	bh=9MrFerv6Jpm1jokOVRLuq0IMQxsqJAGOQf/Q+BYiBtc=;
+	s=k20260515; t=1791758060;
+	bh=f7AQDySFLtUgs27lY0yLdMRGLjRcMyst2lqiD9WLTvk=;
 	h=From:To:Cc:Subject:Date;
-	b=KoMFCYlYq7yX0NexNVslRP2Q9jdRQkju78eMkJLUKn7l2uJ5FnFzwSwQ5Rxvj98A2
-	 7CgYxhsprVNiSpMYq7XsFGHw5k1IJE4dh+EcGTtgjiNpj0l8UYSigqG+C697yBuKBz
-	 SDmj19j8c04V8qee2RoSjF00Sv7rLm7TYD5AXf4ZU6bwxEN7Ek6MqTp3famAKyWkpZ
-	 HmlqM9tqOH3IsMj1by1iPmWTqf+rDxa33ZYFWN74QIEgkziTfg8fSJF5L+QYL69moA
-	 sQPyifw1RjeXmxkSO+L3sELLw32vPOWA1JD009MILJwn2Ne/8s4bk/wZ3rkKyeADeg
-	 UWqRXTJdxRERg==
+	b=bfwRQ5EKiy+BsKqVol4YNekR1lb8bmZRSyWcXRM+ykDAm8obV7Kkbtx0LWy0ZlxFp
+	 +ACJ5dsaAMoKcwxX6fg9fuhep3GXxTxXJuqeVZ0wm1+xAf7FEv6HOtWtHfCim5aIsg
+	 moDgm6EY17vwuRBOkCdE5It9NSVy5IKa7nf2WrjhtS6GmbjDXJEAxaUlaPx3Br3ZgE
+	 6vd/6wbViCXA7WnSMbcnqmneBPOTtAgKY7nYcrg3NtKBWiVbM1syFAMthdHqMAfFrO
+	 5FL9iW5G2+BeydrWsFNUNNqXqmvfuH/nAU6YjBdp9xkxYOgit8Q2sppNn6+n75kytX
+	 a2RaoKbXNvfLg==
 From: Sasha Levin <sashal@kernel.org>
-To: Johannes Weiner <hannes@cmpxchg.org>,
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>,
 	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
-	Tejun Heo <tj@kernel.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"T.J. Mercier" <tjmercier@google.com>,
-	Amir Goldstein <amir73il@gmail.com>
+	Amir Goldstein <amir73il@gmail.com>,
+	"T.J. Mercier" <tjmercier@google.com>
 Cc: Sasha Levin <sashal@kernel.org>,
 	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
 	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] selftests: memcg: don't close an uninitialized fd
-Date: Sun, 11 Oct 2026 18:33:37 -0400
-Message-ID: <20261011223358.2327625-9-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [PATCH] selftests/cgroup: free the paths returned by cg_control()
+Date: Sun, 11 Oct 2026 18:33:38 -0400
+Message-ID: <20261011223358.2327625-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -54,43 +54,88 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-test_memcg_inotify_delete_file() and test_memcg_inotify_delete_dir()
-jump to cleanup before the inotify fd is created when cg_name() or
-cg_create() fails, and cleanup then closes whatever fd holds:
+cg_control() returns a path allocated with malloc(). The two callers
+that pass it straight to inotify_add_watch() never free it, and pass
+NULL to it if the allocation fails.
 
-  test_memcontrol.c:1685:6: warning: variable 'fd' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
+Keep the path in a local variable, check it, and free it when done.
 
-Initialize fd to -1.
-
+Fixes: 5313bfe425c8a ("kselftests: cgroup: add freezer controller self-tests")
 Fixes: 2de27980e1d46 ("selftests: memcg: Add tests for IN_DELETE_SELF and IN_IGNORED")
 Assisted-by: LLM
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- tools/testing/selftests/cgroup/test_memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ tools/testing/selftests/cgroup/lib/cgroup_util.c | 13 ++++++++++---
+ tools/testing/selftests/cgroup/test_memcontrol.c |  9 +++++++--
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
+diff --git a/tools/testing/selftests/cgroup/lib/cgroup_util.c b/tools/testing/selftests/cgroup/lib/cgroup_util.c
+index 2596c12cd8645..ed99a235e76e1 100644
+--- a/tools/testing/selftests/cgroup/lib/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/lib/cgroup_util.c
+@@ -626,18 +626,25 @@ int clone_into_cgroup_run_wait(const char *cgroup)
+ 
+ static int __prepare_for_wait(const char *cgroup, const char *filename)
+ {
+-	int fd, ret = -1;
++	char *path;
++	int fd, ret;
++
++	path = cg_control(cgroup, filename);
++	if (!path)
++		return -1;
+ 
+ 	fd = inotify_init1(0);
+ 	if (fd == -1)
+-		return fd;
++		goto out;
+ 
+-	ret = inotify_add_watch(fd, cg_control(cgroup, filename), IN_MODIFY);
++	ret = inotify_add_watch(fd, path, IN_MODIFY);
+ 	if (ret == -1) {
+ 		close(fd);
+ 		fd = -1;
+ 	}
+ 
++out:
++	free(path);
+ 	return fd;
+ }
+ 
 diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 0ed82347044ed..047d487f6dd57 100644
+index 047d487f6dd57..7bcf772bcea2d 100644
 --- a/tools/testing/selftests/cgroup/test_memcontrol.c
 +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -1678,7 +1678,7 @@ static int test_memcg_inotify_delete_file(const char *root)
+@@ -1677,7 +1677,7 @@ static int read_event(int inotify_fd, int expected_event, int expected_wd)
+ static int test_memcg_inotify_delete_file(const char *root)
  {
  	int ret = KSFT_FAIL;
- 	char *memcg = NULL;
--	int fd, wd;
-+	int fd = -1, wd;
+-	char *memcg = NULL;
++	char *memcg = NULL, *events = NULL;
+ 	int fd = -1, wd;
  
  	memcg = cg_name(root, "memcg_test_0");
+@@ -1692,7 +1692,11 @@ static int test_memcg_inotify_delete_file(const char *root)
+ 	if (fd == -1)
+ 		goto cleanup;
  
-@@ -1723,7 +1723,7 @@ static int test_memcg_inotify_delete_dir(const char *root)
- {
- 	int ret = KSFT_FAIL;
- 	char *memcg = NULL;
--	int fd, wd;
-+	int fd = -1, wd;
+-	wd = inotify_add_watch(fd, cg_control(memcg, "memory.events"), IN_DELETE_SELF);
++	events = cg_control(memcg, "memory.events");
++	if (!events)
++		goto cleanup;
++
++	wd = inotify_add_watch(fd, events, IN_DELETE_SELF);
+ 	if (wd == -1)
+ 		goto cleanup;
  
- 	memcg = cg_name(root, "memcg_test_0");
+@@ -1714,6 +1718,7 @@ static int test_memcg_inotify_delete_file(const char *root)
+ 		close(fd);
+ 	if (memcg)
+ 		cg_destroy(memcg);
++	free(events);
+ 	free(memcg);
  
+ 	return ret;
 -- 
 2.53.0
 
