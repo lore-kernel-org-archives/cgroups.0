@@ -1,78 +1,56 @@
-Received: from mta0.migadu.com (out-209.mta0.migadu.com [91.218.175.209])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A0B9469821
-	for <cgroups@vger.kernel.org>; Mon, 12 Oct 2026 17:13:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.209
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EEB24C33CA;
+	Mon, 12 Oct 2026 17:51:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791825192; cv=none; b=K1DF94mpVgsYdP/V/BJDiMONpVHZ5a91p0BJlf5oyD6VimBQrNWYwvsJq8fqwYYFHWEcIqHyqcEQD1EbtbcgjHu0vK26doJz+zCB897PccXrxFvQMDiulnz+Rl7nESUMj1RVzNh/yNeAaquK8HPK8r58m52sBoJHwwsfu+5jzKw=
+	t=1791827515; cv=none; b=uM/IW4Vsk6RmJLf4q2v/V/HP8HXt8rCKGazowKK3E7a+g4ExF4vSkRCMVYmFkhTXuObzuU3wmQlPoPrOUwrBIGic1JyevnCh56YICzyl4AaQdtFUtTAgacqQiZeP7gxCQqVsaJL6F79+9yT88b1L0hyrhNY9ZjwTucVUe6JF6+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791825192; c=relaxed/simple;
-	bh=ic4+7nPuzg/HmHoJ2BxucAspSzm/umEUsEWucPmNFHQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n2KiGs5h6nN1A8aK197K1+98T/e71No3+N74VrsQDmieklDdk9Wt+jR9DZ0RCT+AFy9cc2/iLQTyJbA9xAadBm+9Q4Im8DyX/acDGr/WMA7RDsIkXRo9i68RjYe2bRebUJ6cSDJTcqE4xIuanEhoKY+ljJu0iUuzYj2xjlDsaaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cyB8tXet; arc=none smtp.client-ip=91.218.175.209
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791827515; c=relaxed/simple;
+	bh=qDINUBxZZPw1zhFnyXj5oTfCOVb0IJMJx4thMwKV8YA=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=WLdltILvYXvRbZ+MQf1HwlDwlMAty59p9b6LgoB8/T7KoZlg2yPlUzrjr71Kv+ybSb23i1k2wIKaBCgRVAv7IXY6GzDRv9jIizuRalVWjrgGv057bbR9fb1W6dmV292w/Dc3FsUljWoHLSfpA8Iw79NNIAkjaoQd5JqVam2W2R4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oYo3Ib9T; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cyB8tXet"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=ic4+7nPuzg/HmHoJ2BxucAspSzm/umEUsEWucPmNFHQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791825188; v=1; x=1792429988;
- b=cyB8tXet0S4df4apJMch8hp4ChFn3KtFj33KQZLWux3HkLcdfrTHxP2jAKNmMKEHshUCv8w8
- 6eggwE1VOvCPdgqwcFuwB/zyr6glmCRymX86tL0r2VEi81dBQE6qIxYVWqLhBfWWx4ydyxevu/p
- yzBoemKjX5Lrov3ycJXm/XnQ=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 5adfa5a0e15eca74;
-	Mon, 12 Oct 2026 17:13:08 +0000
-X-Mizu-Trace-ID: 5adfa5a0e15eca74
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 12 Oct 2026 10:13:06 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Harry Yoo <harry@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH for-7.5 1/5] memcg: move memory.high enforcement out of
- try_charge_memcg()
-Message-ID: <as0U-erMrDTG9fkt@linux.dev>
-References: <20261010210957.1350874-1-shakeel.butt@linux.dev>
- <20261010210957.1350874-2-shakeel.butt@linux.dev>
- <aszdXDpqLUX1S4Qq@thinkstation>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oYo3Ib9T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67F5D1F0089B;
+	Mon, 12 Oct 2026 17:51:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791827513;
+	bh=kNahywYLBv8aIcm/NKKEaAKhrF/aTvhTm1jlesIR1Tw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=oYo3Ib9T2TZSshkFrVUqEOLiXFfRi1YL/5Ep6sBc6dUG5N/yAlaONNYFmgvEBgrHc
+	 b9gj1QMF/XT2BhOc8rgrHhkT2xYAb2qbmTW1urn3miOGHSekiPjh4ErT4cMJ0M/21i
+	 9a/MJ3coYndW9WG5251ppIixuze1q+EOYOT5rSnr4G9VGICdyxxTbg+z3lo8BYW+Vs
+	 EEGdBOaSVLLMudVkvldsDK3nm3hwVFj7QKz5ZiXF152X1DHBP1sEOZXa2Gl9mEU8N2
+	 i6fzl2GUCx66cs+DXUYZo9F4c9PdUJTvzejtHoBFarjZMvq7xew3/QlWrXnYjxjlVX
+	 Thln3g3+yC+Xg==
+Date: Mon, 12 Oct 2026 07:51:52 -1000
+Message-ID: <d9a3367a1852158f60cc2e89677fb12f@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, eddyz87@gmail.com, memxor@gmail.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, akpm@linux-foundation.org, david@kernel.org, gourry@gourry.net, hannes@cmpxchg.org, mkoutny@suse.com, shakeel.butt@linux.dev, roman.gushchin@linux.dev, yu.c.chen@intel.com, zhao1.liu@intel.com, bpf@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v2 0/3] BPF-based per-cgroup NUMA balancing mode selection
+In-Reply-To: <20261012120438.52849-1-laoar.shao@gmail.com>
+References: <20261012120438.52849-1-laoar.shao@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aszdXDpqLUX1S4Qq@thinkstation>
 
-On Mon, Oct 12, 2026 at 02:22:40PM +0100, Harry Yoo wrote:
-> On Sat, Oct 10, 2026 at 02:09:53PM -0700, Shakeel Butt wrote:
-> > try_charge_memcg() does a lot. It charges the page counters, reclaims
-> > when a limit is hit, may call the OOM killer, and at the end it checks
-> > and enforces memory.high. Move the memory.high part into a new function,
-> > memcg_enforce_high(), so that try_charge_memcg() is shorter and the
-> > memory.high code is easier to read and change.
-> > 
-> > The code and its comments move as they are. The only difference is that
-> > the new function gets allow_spinning from gfp_mask itself.
-> > 
-> > No functional change.
-> > ---
-> 
-> Missing Signed-off-by: ?
+Hello,
 
-Oh I don't know how I missed this.
+On Mon, Oct 12, 2026 at 08:04:35PM +0800, Yafang Shao wrote:
+> This series adds a bpf_numab_ops struct_ops which attaches to a
+> cgroup. The kernel consults the policies of the matching cgroup and of
+> every ancestor and combines what they return.
 
-> 
-> Otherwise LGTM.
-> Reviewed-by: Harry Yoo (Meta) <harry@kernel.org>
+The op doesn't compute anything. It returns a fixed mode per cgroup and
+that's all the series uses it for. BPF is unnecessary here. This is a
+prctl() feature, not a struct_ops one.
 
-Thanks for the review.
+Thanks.
+
+-- 
+tejun
