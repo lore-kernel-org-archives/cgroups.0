@@ -1,111 +1,146 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-dy1-f177.google.com (mail-dy1-f177.google.com [74.125.82.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D63FA33F59C
-	for <cgroups@vger.kernel.org>; Mon, 12 Oct 2026 05:42:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791783749; cv=none; b=shEVsb+PIokLYoYgTTSYPOHdwNgmIXkZIQSVZvGPM2sNdyS191k+Nhpf+p0hve8t31DxdhhX8LQW1NTLc/IL73MoI2kTXZJnmyhbAPBHHD/MDR/1Pnguh55QGz0ZwYZKsqIihNCsJQh5nVC2LRG6lvCiwQsgIsYlBCKGV4boj68=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791783749; c=relaxed/simple;
-	bh=p+9HQ/2qU6hqqbNv9Hj0rg3//zMxgJo30lA7NXPrBp0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Fa0Ea7HlNUP/qn01kcW9LTn+jklOpJzmixy17rdQNHhfp0rEBse0NfNC3Oel6S9RQQnYRVQufYBRndIJh5KfjOma+DDjiIDhHPUdAAaJydr1EmK+VKKpA4RHCTqJauyITGrE51PvyI5avmpD3ttj1+qehH8zsG8VKa3i0ESslig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nGRnOnwz; arc=none smtp.client-ip=209.85.221.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A6A2448CEC
+	for <cgroups@vger.kernel.org>; Mon, 12 Oct 2026 08:17:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791793079; cv=pass; b=qdTZ6mYD+8EC8yT8+M0cbzSY/m/r2PYKPXhUP9RhVEJhV3k7+zcFiVEW5FCNyFn2QMypSES8fUFRu5o5sprKf7qZT+8cHQnzyv8mmgKVTpgKMa5k1Afkqm6AaCMx4/RM22srbQOJWtMIcnlZAmgE7CtLSAYAm3Xzzqmb8JxADwo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791793079; c=relaxed/simple;
+	bh=1GLLejLzmf38Sqpzl/J1qn5yJLV3HZP8rb7jIFgq2Vc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qBbzsGIjrjwlULZwgHqK6umszQwANUOOWJ0soKMnSdkk6XFKSvC7ra1x4l+3M0Eh7DZW0Gpd/m6rv5MeQ5XxXOwrqdg9IqZ6f/LbSksI5VwqQytdWr7ClQeMTrOioB8DKSXjb7si4aGT/mBzuGSoJngr0aBoouh/3Gw4eN1Qwgo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com; spf=pass smtp.mailfrom=shopee.com; dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b=ZDd4GRkQ; arc=pass smtp.client-ip=74.125.82.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nGRnOnwz"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48dd33a7bd4so107770f8f.3
-        for <cgroups@vger.kernel.org>; Sun, 11 Oct 2026 22:42:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.b="ZDd4GRkQ"
+Received: by mail-dy1-f177.google.com with SMTP id 5a478bee46e88-30b6dad2382so3766666eec.0
+        for <cgroups@vger.kernel.org>; Mon, 12 Oct 2026 01:17:58 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791793078; cv=none;
+        d=google.com; s=arc-20260327;
+        b=mpkmxEQZfvsS+pIINKjqSsxMq0ZF1vQVQA8Gvay3ZeyBleOvPEIk2aUPvASNSrK1Zb
+         buPeiakmzeulrrpZcYBRd4sFlVn8DSrJGyqQjKqFusDTDa3Mrxs/fIeXgbsr19Pv81eS
+         LD254+VO7TwpycXrdOYuVt50Lp537dnIpYb0dIXkYZYlyMvygSeArPLBaVoc9j4ayvBo
+         ftJmHSK19ynGPQ8yDNPfWijB01K99U+KyVEAz8h9r7H7cLmW0fO/VVrnD3j6h2YfalKX
+         cABqUJxrxQeDUQDYh/ERlZ+uBiOmPPzXsFKVvikoLR6AmSK35AsRLmcZ4KiM16Hxm3xR
+         2z2Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=9Dd4TAZB19XGjWX3ZomXrsadjEIedrZeOBjDL75jfIE=;
+        fh=0XKS7uGyXWPWA5td55zHdD9zMGmVhUpIp6uoeRt102o=;
+        b=IxfHGNfIeRglOySOSvaRXgCpqsXmRTsa4Wzq1MmwfTKnQkthjALLg79mZphiVzjvK2
+         mFfdfG1RleLHzwIo9HNH/H3jcTYR/enGtUwvfjjQStZvuneopwdNoK1IPm4pQNNSwhwI
+         0OhOk6zvSrRinCWpx8RCBcQd3G8XNYukbU/cDzGFfP2pMxyRv5S6khfQk4oOO6pPkiLM
+         wPukj3gt76PR2ddt9f+9o9dRmMSb0gi/Vutiav9lzvZPS1Dy3S64JbFhK3vbQ7Fnh2vh
+         lnpNuuUIdMfTexl3vUFWPgHNfxXmpxqh4pvYvB6wNGm52txpfDN7IjIfXLwPN3cqMfhJ
+         CZDg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791783746; x=1792388546; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Oj5XhgSe0FpI9L7joKTl2xjZXYCjBG3XVmlBR03TmF0=;
-        b=nGRnOnwz1VXC3wSgdHIAa4X7KSrT4RUbyNxx3OTmzOu7Td0FqvwmqHvVZhxO5ojUql
-         rRkGbTt+0iyoYns8AK6eb1Ts1VZ7eKQUV+MEkIWh9WO22RjzROLGmjHEgk8wCX2DIS7a
-         BOu6po5dG8iqS4XAg6CwU1I+ecNrBUutEuvwjAzLkUt/kzrpq6vEi04RVtImW9SBU7NM
-         +zJhsuOqOFdAgxLdlUziMm/Bdq//gTQ8RNBPoM64X+UHr190eRDqATDo9V5oka8uvHBh
-         b0lKSNfqYml8ItWXtktkin/Hy1mxhQvJZ3JLZDkjHubk9GpYf15trpRXHZSml3tL/cjU
-         fQlA==
+        d=shopee.com; s=shopee.com; t=1791793078; x=1792397878; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9Dd4TAZB19XGjWX3ZomXrsadjEIedrZeOBjDL75jfIE=;
+        b=ZDd4GRkQlr+cV2bZlli0MKa/uFLU2ghsGslO1Hg2wxhjtJjoK+re0KjPo6MeivTaVv
+         8RWOEGa7LS4jHPM990Ls5MHaK1OldubIiPigS47fRYHIwWf+imiS9biO58axwmZJoOob
+         4t6dXZ5Bc1+RTWUUXl4zrQj0h2Ql2s2/t5GYcgok+Z1g78tDU33KD57ynQADbVV4+3Sf
+         NzPSZ/mfCOwGhKiOTBTa5wHmE8ztD6WiRwXztk/dyptbzTvDN7qHNO16tvK0a5eHFv4P
+         Cgx6/MdGhkmX8bga6Hw19GVes9xX7OMwdxzY+AbP1ruj2P8sXsiH3nw2LAu8x3DqtRgI
+         OOKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791783746; x=1792388546;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Oj5XhgSe0FpI9L7joKTl2xjZXYCjBG3XVmlBR03TmF0=;
-        b=w185PZXywj9BKFWHeDPDwp7WUHSPnF2xwZk124wfKbL6THrSFurBDYhtmRsh2S3Dlp
-         kalmKYJanVHYdiZILTHkmiE1ItuYJisYALQzUyqZsb8Ei6w6Q00ODKl8uaCutsLvpQNx
-         gxWjmXayVOSPR/XDkLc+9EI1EOwR3+YWxi1khORiqziWM51kUfqqYy8OWahqx/0IRRoo
-         oaVLwdOpmgBfxeoVYbMY84YdylhelYuGQKwam5tmoMsQTog1kkjBW27TCJSqWJwTQGpt
-         w7Ad+oyGmLbC7OCOYCgjXI2vYpEr9vWaE3QJI5EfjWpZoXIJRui7TrAjDn420JAt5nMI
-         fjqw==
-X-Forwarded-Encrypted: i=1; AKwUvBy/V7F3tk5NbOJpGhWYuT1rs4Mr50ENLDwyxM5yH0DPXyb6pC2Jeqz5SGWVBnxIOQAvdMEjZfYu@vger.kernel.org
-X-Gm-Message-State: AFq9FYIK4VM1pQBR3O+xHTJmui7oV+EsbbGrME9Goh4h/Hmu4frja2mY
-	dOXSB89fGq0m1m9613jDr3nMFqIQbZlGCvJnihzuSn8vtGrBe7YC5dcB19BVAUny
-X-Gm-Gg: AYBFou1ChkhFKChOAlKidpmwHMZE+4T1c7fGLf96QeZCZZtrm8Ubb4B4hGr8ebHRdVW
-	arOltWtyYnEKxd+hVoSSM1TppA0f8c0SaFAdEWNkIyCuoDg7uGE3kirLTow3KnW6CthPQD3Av/1
-	X1ll1+2Gv00eVkcetbO4vR2zLIPb7jZG6ms7jdCya9FEdF57iNAzIOG0IbScr/N7DxRCROhzHl5
-	u/8sYFdPMkYxxxtd/l7bAD6ca4MymUZ5IUNOUxcY0yGK60z4S2RBzPNgUguLKbWIAoduQE4f68W
-	rzzRRoydiEmejecuQMXyBeQiB4q1A7prx/B+WBI1ylJrJHHFllOPJ+t21NUPnhQK7BZzCJNGQ0+
-	1FAvGRVH2uT+5ooNklRhqXgIS2AcYPm4FnWz/yKuODy4v7kp7FEIsCwSlCjNl68UO/RbjOcYFlI
-	wKq5T7RPLDXoC3NA2dorsSXUteyKK63WyNkqhjDYUAKk+vzhxzVk8cC+OtT27mPqt/E+/tqUubk
-	N45HkGHG/P+dwT6Db1zoy59Hq/HJHb5fhcFgqEsnZ2TInc8nOLw7bfbCngCAQSjVRk13Ah1srpH
-	p7kPTBiEC732ihXCm2ZqtpHmwEmTWmkj83Ag+YdFXJ7z4iFL/Ke0U8o6nKADuBBwbD71I3ijdCo
-	=
-X-Received: by 2002:a5d:6312:0:b0:48d:ba1b:e151 with SMTP id ffacd0b85a97d-48dbaaeb490mr11563603f8f.38.1791783745844;
-        Sun, 11 Oct 2026 22:42:25 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-2a02-3100-a8ab-0f01-016a-c770-797f-eaee.310.pool.telefonica.de. [2a02:3100:a8ab:f01:16a:c770:797f:eaee])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48ddbbd745dsm1013851f8f.15.2026.10.11.22.42.25
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 11 Oct 2026 22:42:25 -0700 (PDT)
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Karl Mehltretter <kmehltretter@gmail.com>,
-	Li Zefan <lizefan@huawei.com>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] cgroup: Avoid warning when procfs is disabled
-Date: Mon, 12 Oct 2026 07:42:19 +0200
-Message-Id: <20261012054219.13365-1-kmehltretter@gmail.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+        d=1e100.net; s=20260707; t=1791793078; x=1792397878;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=9Dd4TAZB19XGjWX3ZomXrsadjEIedrZeOBjDL75jfIE=;
+        b=LkQfbaMDhUaI9z2erboLMelzQSSJwYBpccvVaJEoPajlRlnDbqLMPwUwkAGWxH4XJJ
+         cf0k6skgqas2Evo4xAiVGRioUya3glQGWfdMCLURHIUyQq7F8yJ7rM3/47xo239cA4Bh
+         nPfLVUhnTXaaZvPpKIvVrPDFSxMSojn2jj7zoa5s86Pgm3gnK30Mpn8/94iYqxftqnlS
+         vVXa4AVm36NSy25QIanAv2vZgim19lQPRpsnHEU/CXZdw8zgNFcwSHyo2BOjZk/8/9r3
+         JVpYhgxcj0fQ50i13LizB9cAQ2c/zj0hcDRX5fw5lZecMW2sPzuTiZZIlO42YsA3mMF/
+         9BMw==
+X-Forwarded-Encrypted: i=1; AKwUvBym8jliUmCiHwzvfW6AVec2oVCs+gfjMXNYoiou9u2/q/42It+UH9Jz71VWqNv1lwh9ovXiVmKX@vger.kernel.org
+X-Gm-Message-State: AFq9FYKEKFBu96Rgcw8hrDfymojmS+aAU2T5sL6UgyoSDvKU2lvhrCZt
+	wiRYDuV4CwXwcSDTVfvxHGAmMTTcoOkTAPwUfsZdM1IxL7LCsZeCBXZDUOqtu3HNg9JzFA0Ep01
+	MQDLHt/UEQF65lRYNRWrPwC26EQ2me4bLwcaz6UrtM9l1b+C9nbieFKcd2WA5
+X-Gm-Gg: AYBFou0hSh/XRdLxw8G4kSKUZqLsZIDZbMyu3vTekIct0V/fnReAh+BNTV8XSMCOdpH
+	dlT8yDtVAlrGn+GipBEut77MR+Gz8g0icY/bOsOis5+TXayB5SyrOlq+/q9hVhRzBAyisCs3AWr
+	NpXKRFgXVAYD86Fgj24sQLdPu1HD/j+6AndFfCV1OkaRvalMHvh3tAkHNJdCZQh/wpwSGtuGtCI
+	MCqFiqVzKfxFfAY5z8mGiqK3Jjtox26XHt0CQMjErWeWEsInJOP37Ll1jJQDtqlS7//oIt9Fd1P
+	nWq02NwDlXseQ8DUu0zOv48qLDGUDiFeBLaGRFDpr1DYmYtCZwH8tGw=
+X-Received: by 2002:a05:701b:4305:b0:149:d501:b990 with SMTP id
+ a92af1059eb24-16a5f3f191dmr9983232c88.25.1791793077611; Mon, 12 Oct 2026
+ 01:17:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260911032905.63683-1-mingyu.he@shopee.com> <aqRXqcynCx88D2QK@linux.dev>
+In-Reply-To: <aqRXqcynCx88D2QK@linux.dev>
+From: Mingyu He <mingyu.he@shopee.com>
+Date: Mon, 12 Oct 2026 16:17:46 +0800
+X-Gm-Features: AclHuK-_Zx2LzZN02tzISzVWGha4IvMdOMWo2JFUzwRP2aZsF1MCrxc-_yMLwpY
+Message-ID: <CAAoBcuS=sqOAPFr9Gda9aTwuCMHMPzBMEee8qvPNHtNxrRWKuw@mail.gmail.com>
+Subject: Re: [PATCH] memcg: keep propagating stats updates to ancestors
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm@kvack.org, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Yosry Ahmed <yosry@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	littleswimmingwhale@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-With CGROUPS=y and PROC_FS=n, proc_create_single() returns NULL and
-cgroup initialization warns during every boot.
+Hi Shakeel,
 
-Only check creation of /proc/cgroups when procfs is enabled.
+  This came from a reproducible workload with a custom in-kernel consumer,
+  not a conjecture or an AI analysis. I uses aggregated file pages statistics to
+  decide whether reclamation is needed.
 
-Fixes: 035f4f510583 ("cgroup: replace error handling in cgroup_init() with WARN_ON()s")
-Assisted-by: LLM
-Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
----
- kernel/cgroup/cgroup.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+  Tracing showed leaf stats_updates at 6656 while root stayed at 6144
+  (the threshold). Further updates stopped at the leaf, and root flush
+  requests were skipped.
+  In one reclamation check, memcg_page_state(leaf, NR_FILE_PAGES) returned
+  about 2.64 GiB from the aggregated statistics. In the same invocation,
+  a bpftrace probe sequentially summed the leaf's per-CPU NR_FILE_PAGES
+  counters and obtained about 6.58 GiB. This sum was not an atomic snapshot,
+  but it exposed a large discrepancy with the value used by the check.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 227d09704ca5..567afb75a4ec 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6612,7 +6612,9 @@ int __init cgroup_init(void)
- 	WARN_ON(sysfs_create_mount_point(fs_kobj, "cgroup"));
- 	WARN_ON(register_filesystem(&cgroup_fs_type));
- 	WARN_ON(register_filesystem(&cgroup2_fs_type));
--	WARN_ON(!proc_create_single("cgroups", 0, NULL, proc_cgroupstats_show));
-+	if (IS_ENABLED(CONFIG_PROC_FS))
-+		WARN_ON(!proc_create_single("cgroups", 0, NULL,
-+					    proc_cgroupstats_show));
- #ifdef CONFIG_CPUSETS_V1
- 	WARN_ON(register_filesystem(&cpuset_fs_type));
- #endif
--- 
-2.53.0
+  The periodic flush does restore progress. But issue for this consumer is
+  the missed reclamation decisions before that flush, not permanently lost
+  accounting.
 
+  Regarding the BPF interface, the implementation in the tree I found is:
+
+  __bpf_kfunc void bpf_mem_cgroup_flush_stats(struct mem_cgroup *memcg)
+  {
+          mem_cgroup_flush_stats(memcg);
+  }
+  This bpf function still uses memcg_rstat_updated() benethe.
+  It doesn't handle the issue.
+
+  I originally called mem_cgroup_flush_stats() before reading the counters.
+  After observing this issue, I switched the consumer to css_rstat_flush()
+  on the relevant subtree.
+
+  If waiting for the 2 seconds periodic flush is acceptable for this
+function even
+  under continued updates, I agree there is no need to change it.
+
+  However, the comment in memcg_rstat_updated() states:
+
+          If @memcg is already flushable then all its ancestors are
+          flushable as well
+
+  Concurrent counter resets can invalidate that assumption, as the trace
+  shows. If the early exit is retained as an acceptable trade-off, could
+  we update the comment to acknowledge this and the reliance on a later
+  flush to restore progress?
+
+  Thanks,
+  Runli
