@@ -1,38 +1,37 @@
 Received: from relay.virtuozzo.com (relay.virtuozzo.com [130.117.225.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B223BCD0D;
-	Mon, 12 Oct 2026 18:59:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5750422533;
+	Mon, 12 Oct 2026 19:02:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=130.117.225.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791831573; cv=none; b=qAF9vDS9rwWLOCegvhImuhktQQV5aDO21jrd0kiz34Zt+2DyDlDBVlHneRTaPy8dPiA1BcT4B/4PMjAM7S7UttrQ9G6v2UoEDKfpZWTSJ00dMzKVvsKeUzwUdxVBurLZexL4mDiaoe0NZ7i8oxz/msUrh7wOmktw0x24eT5Np6Q=
+	t=1791831746; cv=none; b=oS5Qyopj0pSkRV2Pe8Q8cWfiTO5kgHHcAw0wQWGfi9g5cqFtNzR9RgLtpDoJrBCVod5BNrVf2i4KEPZ7Hr1/GkWAvMgqKSZl6Fssmes5c3+pIJD9k5A2oL1PdwwYuB1yP5BthzeB1lgqYJMBF+mkmYJVXhHVlDkNuFcXqmCtixU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791831573; c=relaxed/simple;
-	bh=2bPcfVGTS80cMbqLQOtpnz41cUxttMSol2uwcpqfi0s=;
+	s=arc-20240116; t=1791831746; c=relaxed/simple;
+	bh=sgqSFWt9QMaYDbRATjwngu1xgWH6JMIrDwHY0LfYDgI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=P0H5+RF8tgzad4s8832uv3Y0twpjzD5k3bVykR+02J076bEdacgDt+jtKX6QU/sAcAxYQQdeBPp1UT8V38Uaic6GABUy0BGn7XRNbx+AgfBilza/lOZIq3h4H7lWnnmgJ6MuYfJqwREyj8QFs0a2bhd6A2XSPSsqatUhjzk1hLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com; spf=pass smtp.mailfrom=virtuozzo.com; dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b=NsHntO7f; arc=none smtp.client-ip=130.117.225.111
+	 In-Reply-To:To:Cc; b=DXBR0hvd3j7sHyfORrcyjNutN86awCEUkC+KrAsMrHCUoY8KlZfUFyz0S5rvV4paG2wKVbdULFVZutQPXUqcwqn92H8L/MgCT3GQAc3m7d6lp95ZKh75fbSdthX9Alxtl43qZ4kj3IW5P6ts0QgOM5v4l0iVwpBsLD8kyrlC3Tc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com; spf=pass smtp.mailfrom=virtuozzo.com; dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b=KPIVWejy; arc=none smtp.client-ip=130.117.225.111
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=virtuozzo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b="NsHntO7f"
+	dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b="KPIVWejy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=virtuozzo.com; s=relay; h=Message-Id:Content-Type:MIME-Version:Subject:Date
-	:From; bh=qA5EK/Wa96FVW4oU58RgT4UF+JCxctbidCL6ltk8p1o=; b=NsHntO7fnZYNFH7wFAI
-	Iyqnr4jJ0d4L9lU9rnQ7iOzrSQd81v5lxgyvYhHhYyIjLOo9PnLM1CS0K2s9Krqb63BaoAHKm0J3Z
-	bJdvdvgmaoPMANUy5nqLKbngfJRSmT4M8lscLptxLDPOA5/7/LdjmJowTGWnX65GNnfCIxQ+bZnpb
-	MTz1wSnFJ2z2Wco1WjzwITTkCYb1ifMMj0DuKLkC660lqp+sKnSZfHjeMO7WpuxOSlrRJhAidnyCt
-	hiI5ntaM4FTmbpoIXBFTMPxFIf2h1pNog1e8MnwrKfpB4O0ul2UUUfvIBb0Z1Q7e1DS56h1JLlRjv
-	J27dwsb62pDcjCQ==;
+	:From; bh=0I8GOwsNfVBf1ocQIOmC6adonpYL2n9Kt8qHuFjsm9o=; b=KPIVWejyViqjaa/MrnX
+	I2L86UP++7eo1ClCfbW7c4BLwK9juPQXZEZKcXpDgXGuJ1Qj2lD0+Y91JYsUuGEWuLMxXboiqiCY8
+	7lFxWKNkU1aa9xy33O12hZRtKMeqXR319CZ7yfVi9lgo6kDP8ghl1Y0Hcmd0wEQPhogbe819eBEfE
+	Ej5vZM8i0rKUU4bxyTOymzyj09u7gYqIE3+kqLSQviTmWccHdunXlXfy+iReqUMCnAGER+SIgmCUD
+	8eDNZ1GEIbSFP5JsBfRFefL7aHZvwlt5qoMm/n5MtRhuGiIkRpVTs3xYTIb7O92Li0wJ9EKkSxbNr
+	pkfkWDp5L6simrQ==;
 Received: from ch-demo-asa.virtuozzo.com ([130.117.225.8] helo=f0.sw.ru)
 	by relay.virtuozzo.com with esmtp (Exim 4.96)
 	(envelope-from <khorenko@virtuozzo.com>)
-	id 1xGLBb-007pPW-1u;
-	Mon, 12 Oct 2026 20:59:09 +0200
+	id 1xGLEY-007syj-2S;
+	Mon, 12 Oct 2026 21:02:12 +0200
 From: Konstantin Khorenko <khorenko@virtuozzo.com>
-Date: Mon, 12 Oct 2026 20:59:06 +0200
-Subject: [PATCH 2/2] selftests: cgroup: make test_memcg_sock check flushed
- sock stats
+Date: Mon, 12 Oct 2026 21:02:13 +0200
+Subject: [PATCH 1/2] mm/shrinker: size shrinker_info_unit to a power of two
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,225 +40,108 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261012-b4-prep-vstor-149854-let-test_memcg_sock-compare-flushed-sock-stats-v1-2-bc864b1950ad@virtuozzo.com>
-References: <20261012-b4-prep-vstor-149854-let-test_memcg_sock-compare-flushed-sock-stats-v1-0-bc864b1950ad@virtuozzo.com>
-In-Reply-To: <20261012-b4-prep-vstor-149854-let-test_memcg_sock-compare-flushed-sock-stats-v1-0-bc864b1950ad@virtuozzo.com>
-To: Tejun Heo <tj@kernel.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
- Shakeel Butt <shakeel.butt@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>, 
+Message-Id: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
+References: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-0-5a7608393b7a@virtuozzo.com>
+In-Reply-To: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-0-5a7608393b7a@virtuozzo.com>
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, 
  Roman Gushchin <roman.gushchin@linux.dev>, 
- Muchun Song <muchun.song@linux.dev>, Shuah Khan <shuah@kernel.org>, 
- Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org, 
- linux-mm@kvack.org, linux-kselftest@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>
+ Muchun Song <muchun.song@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
+ Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+ cgroups@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7763;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3121;
  i=khorenko@virtuozzo.com; h=from:subject:message-id;
- bh=2bPcfVGTS80cMbqLQOtpnz41cUxttMSol2uwcpqfi0s=;
- b=owEBbQKS/ZANAwAKAVGWCkf5YVwqAcsmYgBqzS4DgaidbMKjbP3IgO7QMgUbXfw4p7qrhlWbW
- f8xX0sK/nOJAjMEAAEKAB0WIQRWD23IPcXT0GO9CCxRlgpH+WFcKgUCas0uAwAKCRBRlgpH+WFc
- KlOJD/0d2kRvQ33GJ+qflRrSnLSsOysIGJGWhBG3BnIqBP+Ve184OLIAryF81XiNiZQm5rmDM1p
- W5GdsV3nH39IsZMQCn6x71QVw48tGPWwrz3pAIIL839ayQAyHV9RxEBhepZTolStdUtJYONbhTm
- 46TLxH1qzvECUiAeZlkr+9tOIjIn/k3E1YesZq0sIhfUVb47wAdq2kDnKN+q6AM9WQxNUVKeUSh
- DFjR63+RkY2hmrEKdMbDivtskEytCxZsOCYew6hQE70AUS6vHZhjBHYkWgwQAPuFGotjC7VraIM
- J8MDkpyJFQXnJf8rIohipaPn0gpwZy2ou73//aMVaEtqV7IQI9u5FsMb9egiBqCQHJXwpDbh6Z0
- EdY6r5iOowBsXpivcYBPO+rwIiA+oMZVrnYjT3sNnlbmMkGALvFhywDiDh0JNz2PD6CSUmIZGkU
- oVMKNIrCfxHAnj85ch9iJKoi7zt1Ne9TbxQXIoKjYO4U2yhYAnKwFRK9tBU4GnPNxx7XNqvrTMW
- 3KI5aIMVFvToR0oLpL849XMfXJU9XEstZ0S+NhAfLjkNZwnN08PmL46QclOHLcJtKwy0TW1Y/3u
- oD2BrXy1eitotWv47ftKYBqAeVXaAEDdRAsuSOqOHFEWUC50mEUgx5RSD+a1582hnR1d9WOOxRR
- qirwr6ygfFqY9qw==
+ bh=sgqSFWt9QMaYDbRATjwngu1xgWH6JMIrDwHY0LfYDgI=;
+ b=owEBbQKS/ZANAwAKAVGWCkf5YVwqAcsmYgBqzS67Pc6tMLHtOZDm0nqsnTDjnJAAAjUD5NZnN
+ GVUqCYMcZaJAjMEAAEKAB0WIQRWD23IPcXT0GO9CCxRlgpH+WFcKgUCas0uuwAKCRBRlgpH+WFc
+ KqGbD/49yWgPWlLPSl3HXbdfNNzYwu0VYpGP0ZgzeFk1e9Rhcrgf5Yyt9gIQVQyKvrQY8icvmJg
+ qbenPSuqznrQoyPu8h/ZxP/hyO/puP9PFQs8PlR0sYiLsZ8ArLOrMMDHCcgLdKdq6MWugLGICQZ
+ viYJ0mvSbL0OkXKgq8FK9iczkJArFQNeNrpKPMX5EddIhE/X/eknopupw7EoTpKtCThRgt8tXOo
+ oeKPvgZ2+U9E3osu0Q6E+tLRY5hqi+Bm5NISk2XrbNgO8p414M+Zq17bzYAZfQr1CtcOGBQB3Ih
+ RoDbQ3WNyHgu0k4OKruYPCoDHcAGgnerDWry7oZQOCvMnKq8ICtmABTQCBqGgGS+FuweTcTRyaE
+ YOYsQqhdwtQRn6FMMT/zd9SnvH/NIlUwv5zTxVom9/LgC4RwlPaHabbcH6YeP5WsrLCQk89cHOa
+ umQXigP7ijQtXlKfFPUS1/t7DiO/1abQSyByF0uY9cANTNcMjuQ9Ig+dc/oLayRpkpqrrv2e+Qt
+ EMO4XwDp+CA3zTkjMOf8FFC97bsfC9l+JfblFnmzbj7Q48z7PKY3vt/WGUaExWhXSm1ZNOJPWbY
+ voEFYRYCtSohnaICiDj78D9AVgeWKLvWw2rEyYtNfp1ZIej/bOB1X7LJPjB7XBT75FTSgUQSttK
+ xX6gB0I2p6RbXAA==
 X-Developer-Key: i=khorenko@virtuozzo.com; a=openpgp;
  fpr=560F6DC83DC5D3D063BD082C51960A47F9615C2A
 
-test_memcg_sock compares memory.current with the "sock " entry of
-memory.stat. memory.current changes at charge time, "sock " only when
-the memcg stats are flushed: by a memory.stat read once enough updates
-are pending (MEMCG_CHARGE_BATCH per online CPU), or by a periodic,
-deferrable worker. Nothing in the test makes sure a flush happens:
+Every memory cgroup allocates, per NUMA node, one shrinker_info_unit
+for every SHRINKER_UNIT_BITS shrinker ids up to shrinker_nr_max. The
+unit holds BITS_PER_LONG atomic_long_t of deferred work, a power of
+two, plus the one-word bitmap of shrinkers with objects charged to the
+cgroup. That word takes the unit just past the power of two, to 520
+bytes on 64-bit, so every unit comes from kmalloc-1k and almost half of
+it is padding.
 
-- tcp_client() takes 16 readings right after connect(). If no flush
-  lands among them, "sock " reads 0, and the test either passes on
-  0 == 0 without checking anything or, once memory.current shows the
-  first charge, cannot pass any more and fails:
+The units are allocated when the cgroup goes online and freed when it is
+freed, so a dying cgroup keeps them until the last reference to it is
+gone. Their number is the number of memory cgroups, times the NUMA
+nodes, times shrinker_nr_max / SHRINKER_UNIT_BITS. shrinker_nr_max is
+the peak number of memcg-aware shrinkers registered at once, and every
+superblock registers one, so a host that mounts many filesystems and
+runs many cgroups carries the padding as unreclaimable slab, and keeps
+paying it for new cgroups after the mounts are gone.
 
-    not ok 11 test_memcg_sock
-
-- The final check waits 3 seconds for "sock " to drop to 0, counting on
-  the deferrable worker, which can run later than that on an idle
-  machine.
-
-Make the test cause the flushes instead of waiting for them. Every page
-of socket or anonymous memory that comes and goes in the cgroup counts
-towards the flush threshold, and MEMCG_FLUSH_BYTES (twice the vmstat error
-test_kmem allows for) is enough to cross it. After that much, either
-another flush has reset the count or the next memory.stat read flushes.
-
-- tcp_client() sets a small receive buffer before it connects. Only
-  the server's socket is charged to the test cgroup, and with a large
-  receive window its data moves straight on to the client; with few
-  CPUs the client then drains it between reads and "sock " stays near 0.
-  A small window keeps the data queued in the server's socket.
-- tcp_client() then keeps reading, comparing after every read, until
-  "sock " is nonzero and matches memory.current, for up to four times
-  MEMCG_FLUSH_BYTES. A comparison can still miss after a flush: one
-  that came midway leaves "sock " behind, and memory.current also holds
-  the per-CPU charge stock. The budget leaves room for several flushes.
-- After the server has exited, the test allocates and frees
-  MEMCG_FLUSH_BYTES of anonymous memory in the cgroup and reads "sock ",
-  for up to three rounds until it reads 0. The socket memory is
-  uncharged before the first round, so any flush that has gone through
-  all CPUs since sees "sock " at 0. A flush still running in parallel
-  can reset the count before it reaches the CPU that did the uncharge,
-  and the read then misses the uncharge. That flush only has to finish
-  its walk over the CPUs for the next read to see it, and each round
-  gives it the time of another allocation. Three rounds are a margin for
-  a flusher that gets rescheduled midway, not a guarantee: nothing
-  bounds how long it can be held up.
-
-MEMCG_CHARGE_BATCH goes to cgroup_util.h, and test_kmem's
-MAX_VMSTAT_ERROR uses it too.
+Let a unit cover one id less than a word holds. The bitmap still fits
+one word, and nr_deferred[] plus that word add up to BITS_PER_LONG
+longs, so the unit fills a power-of-two kmalloc slot exactly and, on
+64-bit, the memory taken by units halves, for about one unit more in
+BITS_PER_LONG.
+round_up() in expand_shrinker_info() needs a power-of-two step and
+becomes roundup(); the other uses of SHRINKER_UNIT_BITS are divisions,
+modulos and multiplications that do not care. Assert the unit size at
+build time, since the layout depends on it.
 
 Assisted-by: LLM
 Signed-off-by: Konstantin Khorenko <khorenko@virtuozzo.com>
 ---
- .../selftests/cgroup/lib/include/cgroup_util.h     |  3 ++
- tools/testing/selftests/cgroup/test_kmem.c         |  2 +-
- tools/testing/selftests/cgroup/test_memcontrol.c   | 47 +++++++++++++---------
- 3 files changed, 31 insertions(+), 21 deletions(-)
+ include/linux/shrinker.h | 9 ++++++++-
+ mm/shrinker.c            | 2 +-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/lib/include/cgroup_util.h b/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-index 5d39c709ac7a4..5307f3bf32a09 100644
---- a/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-+++ b/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-@@ -21,6 +21,9 @@
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index 1a00be90d93a9..c250ab68d346c 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -7,7 +7,11 @@
+ #include <linux/refcount.h>
+ #include <linux/completion.h>
  
- #define DEFAULT_WAIT_INTERVAL_US (100 * 1000) /* 100 ms */
+-#define SHRINKER_UNIT_BITS	BITS_PER_LONG
++/*
++ * One id less than a word holds, so that nr_deferred[] and the map word add
++ * up to BITS_PER_LONG longs: a power of two, which fills a kmalloc slot.
++ */
++#define SHRINKER_UNIT_BITS	(BITS_PER_LONG - 1)
  
-+/* from include/linux/memcontrol.h, which userspace cannot include */
-+#define MEMCG_CHARGE_BATCH	64
-+
  /*
-  * Checks if two given values differ by less than err% of their sum.
-  */
-diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
-index 437f2d35f205e..30af47ad69793 100644
---- a/tools/testing/selftests/cgroup/test_kmem.c
-+++ b/tools/testing/selftests/cgroup/test_kmem.c
-@@ -24,7 +24,7 @@
-  * the maximum discrepancy between charge and vmstat entries is number
-  * of cpus multiplied by 64 pages.
-  */
--#define MAX_VMSTAT_ERROR (sysconf(_SC_PAGESIZE) * 64 * get_nprocs())
-+#define MAX_VMSTAT_ERROR (sysconf(_SC_PAGESIZE) * MEMCG_CHARGE_BATCH * get_nprocs())
+  * Bitmap and deferred work of shrinker::id corresponding to memcg-aware
+@@ -18,6 +22,9 @@ struct shrinker_info_unit {
+ 	DECLARE_BITMAP(map, SHRINKER_UNIT_BITS);
+ };
  
- #define KMEM_DEAD_WAIT_RETRIES        80
- 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index a24c1e07b2035..e9d3a04ecf7fc 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -18,11 +18,14 @@
- #include <netdb.h>
- #include <errno.h>
- #include <sys/mman.h>
-+#include <sys/sysinfo.h>
- 
- #include "kselftest.h"
- #include "cgroup_util.h"
- 
--#define MEMCG_SOCKSTAT_WAIT_RETRIES        30
-+/* enough page updates for a memory.stat read to flush, see MAX_VMSTAT_ERROR in test_kmem.c */
-+#define MEMCG_FLUSH_BYTES	\
-+	(2 * sysconf(_SC_PAGESIZE) * MEMCG_CHARGE_BATCH * get_nprocs())
- 
- static bool has_localevents;
- static bool has_recursiveprot;
-@@ -1333,7 +1336,8 @@ static int tcp_client(const char *cgroup, unsigned short port)
- 	const char server[] = "localhost";
- 	struct addrinfo *ai;
- 	char servport[6];
--	int retries = 0x10; /* nice round number */
-+	long budget = 4 * MEMCG_FLUSH_BYTES;
-+	int rcvbuf = 64 * 1024;
- 	int sk, ret;
- 	long allocated;
- 
-@@ -1347,17 +1351,25 @@ static int tcp_client(const char *cgroup, unsigned short port)
- 	if (sk < 0)
- 		goto free_ainfo;
- 
-+	/* keep the data in the server's socket, the one charged to the cgroup */
-+	ret = setsockopt(sk, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf));
-+	if (ret < 0)
-+		goto close_sk;
++static_assert(!(sizeof(struct shrinker_info_unit) &
++		(sizeof(struct shrinker_info_unit) - 1)));
 +
- 	ret = connect(sk, ai->ai_addr, ai->ai_addrlen);
- 	if (ret < 0)
- 		goto close_sk;
- 
- 	ret = KSFT_FAIL;
--	while (retries--) {
-+	while (budget > 0) {
- 		uint8_t buf[0x100000];
- 		long current, sock;
-+		ssize_t len;
- 
--		if (read(sk, buf, sizeof(buf)) <= 0)
-+		len = read(sk, buf, sizeof(buf));
-+		if (len <= 0)
- 			goto close_sk;
-+		budget -= len;
- 
- 		current = cg_read_long(cgroup, "memory.current");
- 		sock = cg_read_key_long(cgroup, "memory.stat", "sock ");
-@@ -1366,7 +1378,7 @@ static int tcp_client(const char *cgroup, unsigned short port)
- 			goto close_sk;
- 
- 		/* exclude the memory not related to socket connection */
--		if (values_close(current - allocated, sock, 10)) {
-+		if (sock > 0 && values_close(current - allocated, sock, 10)) {
- 			ret = KSFT_PASS;
- 			break;
- 		}
-@@ -1411,6 +1423,7 @@ static int test_memcg_sock(const char *root)
- 	unsigned short port;
- 	char *memcg;
- 	long sock_post = -1;
-+	int flush_rounds = 3;
- 
- 	if (memcg_sockets_disabled())
- 		return KSFT_SKIP;
-@@ -1468,21 +1481,15 @@ static int test_memcg_sock(const char *root)
- 	if (cg_read_long(memcg, "memory.current") < 0)
- 		goto cleanup;
- 
--	/*
--	 * memory.stat is updated asynchronously via the memcg rstat
--	 * flushing worker, which runs periodically (every 2 seconds,
--	 * see FLUSH_TIME). On a busy system, the "sock " counter may
--	 * stay non-zero for a short period of time after the TCP
--	 * connection is closed and all socket memory has been
--	 * uncharged.
--	 *
--	 * Poll memory.stat for up to 3 seconds (~FLUSH_TIME plus some
--	 * scheduling slack) and require that the "sock " counter
--	 * eventually drops to zero.
--	 */
--	sock_post = cg_read_key_long_poll(memcg, "memory.stat", "sock ", 0,
--					 MEMCG_SOCKSTAT_WAIT_RETRIES,
--					 DEFAULT_WAIT_INTERVAL_US);
-+	/* the uncharge is done, but a flush still walking the CPUs can hide it from a read */
-+	while (flush_rounds--) {
-+		if (cg_run(memcg, alloc_anon, (void *)MEMCG_FLUSH_BYTES))
-+			goto cleanup;
-+
-+		sock_post = cg_read_key_long(memcg, "memory.stat", "sock ");
-+		if (!sock_post)
-+			break;
-+	}
- 	if (sock_post)
- 		goto cleanup;
+ struct shrinker_info {
+ 	struct rcu_head rcu;
+ 	int map_nr_max;
+diff --git a/mm/shrinker.c b/mm/shrinker.c
+index 7ec2a9704f6f2..a9418072a509e 100644
+--- a/mm/shrinker.c
++++ b/mm/shrinker.c
+@@ -159,7 +159,7 @@ static int expand_one_shrinker_info(struct mem_cgroup *memcg, int new_size,
+ static int expand_shrinker_info(int new_id)
+ {
+ 	int ret = 0;
+-	int new_nr_max = round_up(new_id + 1, SHRINKER_UNIT_BITS);
++	int new_nr_max = roundup(new_id + 1, SHRINKER_UNIT_BITS);
+ 	int new_size, old_size = 0;
+ 	struct mem_cgroup *memcg;
  
 
 -- 
