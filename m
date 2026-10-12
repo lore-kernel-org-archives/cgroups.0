@@ -1,209 +1,213 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84DA336B934;
-	Mon, 12 Oct 2026 11:28:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FE97463B95
+	for <cgroups@vger.kernel.org>; Mon, 12 Oct 2026 12:05:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791804506; cv=none; b=dnKNMbTIfn2mWeu3A690dCea9I3XmxlwJRuIKctnmnn7Qhr6/vc9a3BeOcbRSb09t3EMI2VAUZuHrt5J1NGEgvJDmcjOUWmgBgMquu2ZsJ4vUNxBfgAnoGVMnH5EsNCthri8kPizyJ07jUbfHYgV5a43l2dudxLd3P4UuViU2hE=
+	t=1791806737; cv=none; b=mBET2KthZXxFJbeXWd89fyN7xDmoBGGokc9uHHEgDqPBcmZ3Si5FA89bR4i3Hat4ibEYiWn6Xr8GjuoDOm1Enq7SwiJznQ1XB+ZOdZ/FzHGR1ZOJ09wkHe8b8FiCLqyEYO2SKGEG4za6WGrc6YuiH/Ms4JUdo6+HhNICxpUoycU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791804506; c=relaxed/simple;
-	bh=Xe3ysctnOP/WlwH4oT+i5RjaQac9BV9NUkzQgwKW++Q=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=mpj3/XL6YlZFv9FT9KWwRkV/DYZVErLQvSZKvlXlKLsGFLh1SwQQROi/b4bPQGPkJjd7a1w7+sQ+XyjqanCNGlmHvattv64LYG9Luw15I7CUEwwgYowcOtxb7L7OvhCq6TSGb3Mni2SrIF+1L8m6TzB25NMfmw7JteYyhDB19f4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b=o2SEg7FA; arc=none smtp.client-ip=212.227.15.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
+	s=arc-20240116; t=1791806737; c=relaxed/simple;
+	bh=Z7nW14BwPeLbnkIrxEhbUH7laRhJdISK7ruJlh482mk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sC25knQn07pXNAfIxrZU4YrZ6a4zOmF6BisrPoUfy/Vu32YkMRJOsxRGL8KP0h0RTunLXJnJ2PWsvy0GG6Btf0gqR1hni6/o7+smMYsxMRaWRKGi8Jv78e/C/UbOOI9qmNis8wNaRJnA0nKALD+hmS3mBrpQ5n7M6x8dUKi5VNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e8VRHiHq; arc=none smtp.client-ip=209.85.215.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b="o2SEg7FA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
-	s=s31663417; t=1791804485; x=1792409285; i=efault@gmx.de;
-	bh=x5BBFMF1gG5o+EQAeBTvQmrQMUPKaE6GcPhAe8NhLAg=;
-	h=X-UI-Sender-Class:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:MIME-Version:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=o2SEg7FAnKEDQrWIwU+mnMQbIYQZyEunsuFyRDeHOYbH6mvUX7V+sC/hQLD5sp9t
-	 QDfrJXOKT8oQYj8O1vDEgAW8dwxCfZyMeT2uYikcO2I1qd0Lf4GzQZ+uGyNk1r2OL
-	 Vuxi8ihuS/jfqcXlpuzDJPaoOId+Z8NSMZnsl3MxLrt6uBkULfYVfxd/59lGNxWxr
-	 Ye5a5mL4DFhHfrCDYIuLUwRq/hsEOYtaPFxF/xFIsYaGOHI7yY6vs/kVMjvAN/9mE
-	 7AVhPZ59fQexJN1bSyhjNncptlSBd5JhW3fxsN/jH1UMP7eMPhq4uD8rfwNmy8KbX
-	 gmTidtUEGhT89QLIZg==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from client.hidden.invalid by mail.gmx.net (mrgmx005
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MfpOd-1wjOYf3cs5-00khBX; Mon, 12
- Oct 2026 13:28:05 +0200
-Message-ID: <eac663e09be5dbadaded334f2f80d2c21f3b14cb.camel@gmx.de>
-Subject: Re: [REGRESSION] [PATCH v3 7/7] sched/eevdf: Move to a single
- runqueue
-From: Mike Galbraith <efault@gmx.de>
-To: Aishwarya Rambhadran <aishwarya.rambhadran@arm.com>, Chen Yu
-	 <yu.c.chen@intel.com>, kprateek.nayak@amd.com
-Cc: Peter Zijlstra <peterz@infradead.org>, mingo@kernel.org,
- longman@redhat.com, 	chenridong@huaweicloud.com, juri.lelli@redhat.com,
- vincent.guittot@linaro.org, 	dietmar.eggemann@arm.com, rostedt@goodmis.org,
- bsegall@google.com, mgorman@suse.de, 	vschneid@redhat.com, tj@kernel.org,
- hannes@cmpxchg.org, mkoutny@suse.com, 	cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, jstultz@google.com, 	qyousef@layalina.io,
- Ryan Roberts <ryan.roberts@arm.com>, chen.yu@linux.dev
-Date: Mon, 12 Oct 2026 13:27:58 +0200
-In-Reply-To: <d9f31316-38fb-4841-9050-8a9f3a042847@arm.com>
-References: <20260605105513.354837583@infradead.org>
-	 <20260605124052.227463677@infradead.org>
-	 <bd81bbec-ee59-401a-bec6-116196ad3a34@arm.com>
-	 <arQCykkkCnADu5ek@chenyu-dev>
-	 <128e93ca1424630546e39f9e9c1377f8185f7644.camel@gmx.de>
-	 <arnbKNWNIIEcQ0a-@chenyu-dev>
-	 <4d4f5fdee4d1f462ba3490a6b3921006285e7fcc.camel@gmx.de>
-	 <d9f31316-38fb-4841-9050-8a9f3a042847@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e8VRHiHq"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-cc7cc8aafe6so637299a12.3
+        for <cgroups@vger.kernel.org>; Mon, 12 Oct 2026 05:05:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791806736; x=1792411536; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=kLbm/HnztJlhbsvLEPa7IOES1RKYfU4H2Ro9opKpO1w=;
+        b=e8VRHiHqptxnVL7vepBOegj5Tc82qiTIZOB5aq8irRssgr1MBzB7QcGoJa8JBdMrXC
+         oSAJDNs2iufKIATXaWnrmZjFRpojH2SaU1wUAcxe3lqmQhgin1CS1Bjp2T95Xvh6A53M
+         OnSOvA3wc+xCUmjTmd+LXO/2GjJDtygxuIaQ+jsya4402n9p0PJjHXKs3y9/qAbDj1/O
+         5cHR88laVw+Cvjd4emn0mrqAFJoGZ8GPLiPZ5M8eHBAyK+S33g/X0EkieAxvGFL7QMjB
+         KrgDxzkgzXshVCdYeuXhvcnWkrQ0uf6hoImkBD2E1RUASaf8SZ2F6szXFMgkfbxLPXgN
+         cPUQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791806736; x=1792411536;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=kLbm/HnztJlhbsvLEPa7IOES1RKYfU4H2Ro9opKpO1w=;
+        b=xee6dsj0rgf7y4U5GhpQvjfl5bWrvRQ2GzPTy+gsxy9bSx3LkFshU8V9ZF3L/FJy1D
+         C9mSgvvCyW5siyOT2+mxbfaE5Upe6iinmeiAi8uiAp6ouu6g1NMKTzb23md5xNGqXPfR
+         POKZleHRZLz4bZR3z0+3yy2UkNxik770frtBlYEWk/S8XkdzfD69+h64XS+H2y+gVR7/
+         agVNZzEUdxJyCfTgE2UIqXWY+7+W3VR1mLt1w7as/a01DS/mXL6dIf3Lm0VmzRcRCfvn
+         WgHTBqSF+xsXeiFWgelkPKeotRI3leZQbB9cOQBGjtqeoPwWxP/e6rLQVuAhaaeBcK0d
+         fPrg==
+X-Forwarded-Encrypted: i=1; AKwUvBynQVF63hxsaRIMROFkMFsA64XZ1ZsyI3nY8mTm9F1lHdi+2d6mltSmTYbh3K9d+xda49J+4Me+@vger.kernel.org
+X-Gm-Message-State: AFq9FYL/DczJO+Bj8LWl1A33bCxXJGyC0k/6xN4mVHo+5wn2k833HRq3
+	c0d+SqwIxBLRGM4slPrWuQDFlDtxPeLa7tE26wUz01JkhILYj+FJqVwo
+X-Gm-Gg: AYBFou200ThEr70Z7duMzLNwF8taL6PEyooc8xDMvHNpPc7Ef6ETlhD5Ikv68rL2Fp/
+	nTuICv4syy+XWkGKjo9WiO3byGabfZmMV6p1Xlouf/pmEbN1VpKZwAlmEk+hcuRGYnb8spbZgkk
+	q8UNNrJwTIr2yCBVo0t1ncqOT6jv8QLO5HP2GVHn/jR2X9JIRGnHREcZVxNI/rCG5OWZMwkYsM2
+	PJy8/U3TLbNXqIid12WIX6O/uhkISSEdmIOLZtkQXasXw7STBmvxOU6VRLvlbeyrJ+tAPDDuzAm
+	vs8HeEr0OzXw2sus/sNZmuTscoQctju5442NbuQsFNRGRGIk5WlW5xyqBJ7SYD7KrLKs9LSHxnw
+	weLvpwk8gcAkxpx4qa7ZQi6TvY+FRQTNXTWX5gt3r6WwaK6n0N2x84FhprIbvFsy+aD1CJiirCl
+	Yrv0nKdtut1a18KsKzwT4Tbo1gf2iVpkZ3bhfY1XcNrjvbrBdLoQG3AD4ahyY9PX+IcmlhshFiP
+	/qJ7NYIxFaGcvIT3VcGUv7AYik1lP141+k4nC+9DE6gsA==
+X-Received: by 2002:a17:90b:3b84:b0:3aa:f4af:1e16 with SMTP id 98e67ed59e1d1-3ab3a4871e5mr7188609a91.7.1791806735133;
+        Mon, 12 Oct 2026 05:05:35 -0700 (PDT)
+Received: from yafangs-Air ([101.82.170.24])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ab371c32cesm15722454a91.16.2026.10.12.05.05.22
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Mon, 12 Oct 2026 05:05:33 -0700 (PDT)
+From: Yafang Shao <laoar.shao@gmail.com>
+To: ast@kernel.org,
+	daniel@iogearbox.net,
+	andrii@kernel.org,
+	eddyz87@gmail.com,
+	memxor@gmail.com,
+	mingo@redhat.com,
+	peterz@infradead.org,
+	juri.lelli@redhat.com,
+	vincent.guittot@linaro.org,
+	akpm@linux-foundation.org,
+	david@kernel.org,
+	gourry@gourry.net,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shakeel.butt@linux.dev,
+	roman.gushchin@linux.dev,
+	yu.c.chen@intel.com,
+	zhao1.liu@intel.com
+Cc: bpf@vger.kernel.org,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yafang Shao <laoar.shao@gmail.com>
+Subject: [RFC PATCH v2 0/3] BPF-based per-cgroup NUMA balancing mode selection
+Date: Mon, 12 Oct 2026 20:04:35 +0800
+Message-ID: <20261012120438.52849-1-laoar.shao@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Provags-ID: V03:K1:59f2PzY6Xiu44/s4q08HglAb/O/ultXatkzqDHMFsOS1T0h5xpQ
- Sf1gRa+CPnPBztZjnu0o7MV4hBNX7ICKTGYsUt+MtXryBkJPZFIPL4JZapT8Napn4TLb55/
- GbGocdmz2CSD3LYIof1oikZ6U9TJCnfK1777EIJt43Z5k4wln5VgBwqq2ufsfYGFrVBVuem
- HkeMyia31yW8NPJs9x1lQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Azj028gUsPU=;euZOiS8aL12xemZTMAtiN0tqCqP
- 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
- nj6hwczH6n5Z+8FoUKHm1ATbhHC2LN2eJng==
+Content-Transfer-Encoding: 8bit
 
-On Wed, 2026-10-07 at 17:35 +0530, Aishwarya Rambhadran wrote:
-> Hi all,
->=20
-> Thanks for the suggestions. I ran a couple of follow-up tests on the
-> same AWS Graviton3 (m7g.metal) setup with v7.3-rc4:
->=20
-> 1. Disable WA_WEIGHT:
-> echo NO_WA_WEIGHT > /sys/kernel/debug/sched/features
->=20
-> 2. Use the "smp" cgroup mode:
-> echo smp > /sys/kernel/debug/sched/cgroup_mode
->=20
-> Both tests were run with 20 repeats across 2 boot sessions. Below are
-> the request latency p99 results for schbench configurations discussed
-> earlier (usec, smaller is better):
->=20
-> message-thread:16, worker-thread:16
-> v7.2 =3D 662869
-> v7.3-rc4 =3D 969557
-> NO_WA_WEIGHT =3D 958541
-> smp =3D 723098
->=20
-> message-thread:64, worker-thread:4
-> v7.2 =3D 730453
-> v7.3-rc4 =3D 942251
-> NO_WA_WEIGHT =3D 740454
-> smp =3D 818483
->=20
-> message-thread:32, worker-thread:4
-> v7.2 =3D 74251
-> v7.3-rc4 =3D 56725
-> NO_WA_WEIGHT =3D 59008
-> smp =3D 82053
->=20
-> For the m:16 t:16 case that I originally bisected, disabling WA_WEIGHT
-> does not materially change the regression. Switching to cgroup_mode=3Dsmp=
-,
-> however, recovers most of it.
+The Problem
+===========
 
-I took flat back to 7.2 (to test only that) and did a little mixed load
-7.2-virgin vs 7.2+flat testing with defaults. CPU distribution delta
-when switching competitor load configuration from 1 group of 8 to 4
-groups of 2 vs a fixed 4 client netperf load made it clear that numbers
-for anything cgroup vs cgroup will definitely wiggle more than usual.
+In our large fleet of Kubernetes-managed servers, NUMA balancing has
+been historically disabled globally on each server. With the increasing
+deployment of multi-socket AMD EPYC servers, cross-NUMA access has
+become a critical performance issue, which made us reconsider.
 
-	-Mike
+Enabling NUMA balancing globally is still not acceptable: it increases
+the overall system overhead and can introduce latency spikes for
+latency-sensitive workloads. What we need is to choose per workload
+whether NUMA balancing runs at all, and which mode it runs in. A
+latency-sensitive service may want the scheduler's NUMA statistics
+without tiering's promotion machinery, while a batch service wants its
+PMEM-resident memory promoted when hot without paying for
+scheduler-driven migration. No single global switch serves both.
+
+The Design
+==========
+
+This series adds a bpf_numab_ops struct_ops which attaches to a
+cgroup. The kernel consults the policies of the matching cgroup and of
+every ancestor and combines what they return. One policy question, two
+surfaces: the kernel passes the task when it acts on a task and the
+folio when it acts on a folio; exactly one of the two is set, so a
+memory answer cannot be keyed on whoever happens to touch the folio.
+A policy can always opt a workload out, so no cgroup is ever forced
+into heavier machinery than its own policy asks for. The demotion and
+migration-fallback machinery stays global, as it is keyed on
+node-level reclaim state rather than on any cgroup's policy.
+
+The hook is designed to be free for everyone who does not use it.
+Every call site (scheduler tick, NUMA hinting faults, folio
+migration) first tests the cgroup_bpf_enabled() static key of the
+new attach type. The key stays off until the first policy is
+attached anywhere in the system, so with no policy attached the
+added cost is a single patched branch.
+
+The BPF consult comes before the global sched_numa_balancing static key
+rather than after it, because the primary use case is a fleet which runs
+with global NUMA balancing disabled and enables it per workload: a policy
+must be able to turn balancing on for its cgroup while the global switch
+stays off.
+
+Once any policy is attached, the key is on for the whole system and
+every task pays the walk: a cgroup lookup, a percpu refcount tryget
+and an iteration of the pre-aggregated effective array, so the cost
+is proportional to the number of policies in the chain rather than
+to its depth, plus one trampoline call per policy. This is also why
+patch #2 rejects a policy which implements nothing: attaching one
+would flip the static key for the whole system and make every task
+pay the walk for no effect. The key turns back off when the last
+policy is detached.
+
+Measured with schbench (64 worker threads, 30 s per run) on the test
+box. Wakeup latency percentiles from the final cumulative window, in
+usec:
+
+                            p50  p99
+  balancing=0, no policy    15   207
+  balancing=0, policy       15   205
+  balancing=1, no policy    15   199
+  balancing=1, policy       14   201
+
+With a policy attached, wakeup percentiles stay within a few percent
+of the no-policy baseline whether the global switch is on or off, and
+throughput stays within the benchmark's own run-to-run variance.
+
+On this box the global on and off states are themselves
+indistinguishable for this workload, so these numbers isolate the
+cost of the hook, not the benefit of the selection; the benefit side
+needs multi-node, memory-heavy workloads.
+
+Changes since v1
+================
+
+v1 keyed the hook on the memory cgroup and temporarily embedded the cgroup
+id into the struct-ops value, because the cgroup struct_ops integration was
+still under development. v2 attaches through the cgroup struct_ops support
+that has since landed in bpf-next [0], keys the task surface on the task's
+cgroup and the memory surface on the folio's memcg, and adds the
+memory-tiering mode alongside enable and disable.
+
+This is still an RFC with limited testing. Feedback is welcome.
+
+[0] https://lore.kernel.org/bpf/20260706171918.317102-1-ameryhung@gmail.com/
+
+RFC v1: https://lwn.net/Articles/1054030/
+
+Yafang Shao (3):
+  sched: add helpers for numa balancing
+  sched: add per-cgroup NUMA balancing mode selection via BPF
+  selftests/bpf: add tests for the bpf_numab_ops struct_ops
+
+ include/linux/bpf-cgroup-defs.h               |   1 +
+ include/linux/bpf-cgroup.h                    |   2 +-
+ include/linux/bpf_numab.h                     |  77 ++++++
+ include/linux/sched/numa_balancing.h          |  82 ++++++
+ kernel/sched/Makefile                         |   5 +
+ kernel/sched/bpf_numab.c                      | 164 ++++++++++++
+ kernel/sched/fair.c                           |  16 +-
+ kernel/sched/sched.h                          |   1 -
+ mm/memory-tiers.c                             |   9 +-
+ mm/mempolicy.c                                |   7 +-
+ mm/migrate.c                                  |   7 +-
+ mm/vmscan.c                                   |   6 +-
+ .../selftests/bpf/prog_tests/bpf_numab_ops.c  | 250 ++++++++++++++++++
+ .../selftests/bpf/progs/bpf_numab_ops.c       |  57 ++++
+ 14 files changed, 660 insertions(+), 24 deletions(-)
+ create mode 100644 include/linux/bpf_numab.h
+ create mode 100644 kernel/sched/bpf_numab.c
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/bpf_numab_ops.c
+ create mode 100644 tools/testing/selftests/bpf/progs/bpf_numab_ops.c
+
+-- 
+2.52.0
+
