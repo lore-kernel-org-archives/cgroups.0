@@ -1,78 +1,53 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE927392806
-	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 08:22:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 826703B9D8C;
+	Tue, 13 Oct 2026 08:52:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791879758; cv=none; b=ewjEHxHmtlzntTKlchfrOUi8UROqt2JNqxrb5sFQ8kCjDi/dNGtx8+WT5dyt9r9u2srhAFfZM3p4TVw0RiuWla53TWKlh/E/jabQ67j5xlzHheEcENHbntK40r/MXJ0lSGnKHLpWLnCSK3GbDvNCfYk99wB9d1Ghp1TdDfZwdLY=
+	t=1791881563; cv=none; b=g/ZaYm5ko/p+v7LiNI3u4oiWYdF1rboFuq8tzmI68n+l45yjla/dAu68APastQ45TmtN5PQUhAvHoWUrzlEgzLB1AuTVbcamx5GxF78kimSzKTjkexA+oLlgxs8Q1FS0749Qyu0TofWFtLVaIKrr9FdtfrK/mR0eQ5sHDwUunXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791879758; c=relaxed/simple;
-	bh=bAvuor41lLlVeDP8wdYZS7BlOwLbZAT1AumUAtJEv+I=;
+	s=arc-20240116; t=1791881563; c=relaxed/simple;
+	bh=Fbdb+Ik5HuvM0X+FL4LuDIrjVgtG6QAf/crtrWIiA0I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a5Sm6xvsAKlfRhAHMcqJFeN6iyq6v99qVmZXaLZFLzIUMBROKcTrFVWeklKZLrS8TPyj+M8khTCs/txzAZiEzn873wuxlB0dT5luGkpITRzkmUoAvQ0fuImZeHus3snepJZjwERqbAzlnB9PFhH19rf4H+K6Y1Xjzno3Y8vrJds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=azfqxOvS; arc=none smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=lv3/rH/I0C9RPEb3zVzco2Xkx+gy2wWgQXV0Ww19UvINNM3Wcj/rBIWN3iIeRkEkZN/mf1GZFppFLriwjnpVVnGsYcqIIKcdycVg/nWNzw1ncFjBQ4Ds7tkgcOVQWhOEVvbSFt/OcOo6e4PgbN/itwPJrlj1y0jBd9NkfVd5Ivg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bU+MNADL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="azfqxOvS"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48b060ec084so1644586f8f.0
-        for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 01:22:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1791879755; x=1792484555; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=0o16lOHfFj6vVRWcNjQS9Yl6CwcGXYm//tE7X4074jE=;
-        b=azfqxOvS/XsDHcKIaBlu0Y+fnz4WAmqghKzJvAQ454WRiUJo/sLKcxZdwc/OUkxjBa
-         GCl4g0Xcthcb0NZI+9wPZTinnkYwvBrWDhQ6gRZ9/Es0n5SpiIq/Ymvc/fy0xvmJnGTe
-         f4pAMuNf8p2E0Vr9jBFVIM3gZXt25+Io1WsuBiB2+Fgn2qdWIXDvBage3CTgjk1o/eh1
-         B+WuLhu8I0Ga+VOA8q+QRxtIzKR9VkrRzVuOC4tRR7fGSy3BiB9XloN9R4O+BZxytRVH
-         sGFotlr0a+nwglqlvrIYsA1M+0xgIzC1ZgPC14GSNVqdetaiJoxBYkWPAgcbF2ySB9q9
-         fkuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791879755; x=1792484555;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0o16lOHfFj6vVRWcNjQS9Yl6CwcGXYm//tE7X4074jE=;
-        b=RwtoXGEmieb7ezv77dYFEyBXAujMHefyvUTahbyW2c3Z4I5RoirQx/QwGpiloizQY1
-         W677bWh4AHrtJZzlCtoE3RO14W8QDKqogzMT/Ww0dHuh+RCBwVVLK2hichdoIu9Sk/AX
-         0vs0l16X+t43LzC4YkxfIYwNqYSPQbRDS5r/XC05dDZqO2sh9Oh9e0OoLd3xQr2N6oZz
-         Tys7f9R2w8G0LM5H6NzNhnhGXQeCgABt7obUVeIqGas+WCfFR7z4eeLFQS1lVBnzSFfN
-         Bsuelo2JFi8wGxfn1CkjWVM+z5/36CFRkQFmZyNkiUTkrQygeVinlYTbMZN1+g2+BEZz
-         oiMQ==
-X-Forwarded-Encrypted: i=1; AKwUvBx7dG+ukvbmQLNxwAnVnZWHmozU6WoPsmFEGoSZrDDGDnUFnmPn8F43thrc8e4OKsou9tqHg2VF@vger.kernel.org
-X-Gm-Message-State: AFq9FYIuYjQscYujvLoVyZ+V3Awi0eE0XpOmBQpQpjGm1j4yxn7VxIwW
-	JfbxJOTriAOEsVYxgXhhKuNjPyiR4S1YeDpeDd01ihJKYxNoZEWCIvOHmLou3TDkUgA=
-X-Gm-Gg: AYBFou0k2Y2EzcuOODPrtPQWU6CnUJHsjDJVQqJqKNq99QL5Bmk6X+UcjEhxRuBfkQL
-	BfKtpDPPg8vJtF2pi4FRpS2Mk+eXHS2HLgGT2C6A4h5KF++Rff3BfFt1DVpI4CrdiEr+yS45UlK
-	cKJ2eyvj0Y3pkYAsPV1xolfKNluL0i7HuGiP9QiOZlFJTJrenwo1EXcqSIqx2XMC0eVAlN0Uuhd
-	rZ8EhCIxUi4iwd/YZAMOVpsMfI0o13Llaz/BLyklP3GxhESb8Xhdt/WR23GXOa6nufb26PIH17v
-	YqsNFm8G9LywEZTQUg8KSPyD89svxU8bHWMIYAeOLQ5YrAVrBbR+nuPm0lUKdwxtQOYVC8cDIut
-	RvDqTOGX3b+W+1Pd6ORCSVFoQ+Hp0k6MMB0KuoAaiau8qAbuUoSZaSaTufc/7/EIkloY300k3w0
-	/guuWoyLshdbkjK6to67hQM0o2CeX9MCWd71AT3f69JNAVh51KbY/o3kGCFFWpt1nmVKxfAdBD4
-	pWgpPfZ470b
-X-Received: by 2002:a05:6000:2388:b0:48b:26b:7f8b with SMTP id ffacd0b85a97d-48dbacfbd3amr21310103f8f.57.1791879754824;
-        Tue, 13 Oct 2026 01:22:34 -0700 (PDT)
-Received: from localhost (109-81-32-161.rct.o2.cz. [109.81.32.161])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48de0aaabc3sm3951815f8f.16.2026.10.13.01.22.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Oct 2026 01:22:34 -0700 (PDT)
-Date: Tue, 13 Oct 2026 10:22:33 +0200
-From: Michal Hocko <mhocko@suse.com>
-To: Rohit Ner <rohitner@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bU+MNADL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CF791F000FF;
+	Tue, 13 Oct 2026 08:52:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791881562;
+	bh=fkY85AEaM1dcKivKhNaNHUeuabYCcoXX8xBxsWbUhJM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=bU+MNADLypUQVfbqs4yErGMSqSx8UTEensTSDlB3hILthlX7jXiysW5XCK8w3Wgne
+	 +qsKvAVV67misGTcQFezprIijSe//cDAi61D+HiH+PrXDz66M+RQgAsyepQqatnOkw
+	 C83dhwA6jl7P3WJ+2YNow3ButEoWQcQrQ381Wo2YqHbIp2FI1DvqBlI7RrrfpxPP3D
+	 3WDNSNVnKR/z/zbtd8j1RgF5SPVBsqTN0aiF/CDe/xhAdL4+Nw2L8Xax6doYzIf9OB
+	 svfE9gigE0RcgQBxJbDc8PiWLnzTi5f1OeCjkCKQRjfUTk1SJmatj/E3sZV6pc5eMF
+	 mAVD56KO7uG+Q==
+Date: Tue, 13 Oct 2026 01:52:42 -0700
+From: Kees Cook <kees@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Harry Yoo <harry@kernel.org>, Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
 	Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mm/memcontrol: log userspace OOM wait entry and
- completion
-Message-ID: <as3qSdvoU2dESCsR@tiehlicka>
-References: <20261013040034.3919469-1-rohitner@google.com>
+	linux-mm@kvack.org, Pedro Falcato <pfalcato@suse.de>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net-next v6 2/8] ipc, msg: Account msg_msg allocations
+ with GFP_KERNEL_ACCOUNT again
+Message-ID: <202610130141.E186B6E@keescook>
+References: <20261006092030.got.500-kees@kernel.org>
+ <20261006092035.166776-2-kees@kernel.org>
+ <asjhg2e4-WSeKuXd@thinkpad>
+ <ask5kpMS4mpI8Api@thinkpad>
+ <202610092014.AAB20B81@keescook>
+ <01c89e02-28e0-4424-b32b-50363e4d2b95@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -81,29 +56,80 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261013040034.3919469-1-rohitner@google.com>
+In-Reply-To: <01c89e02-28e0-4424-b32b-50363e4d2b95@kernel.org>
 
-On Tue 13-10-26 04:00:34, Rohit Ner wrote:
-> When a memory cgroup hits its limit with memory.oom_control
-> oom_kill_disable configured, mem_cgroup_oom_synchronize() puts the
-> faulting task to sleep on memcg_oom_waitq and notifies userspace OOM
-> handlers to reclaim memory, enlarge limits, or terminate tasks. On
-> platforms where userspace is severely stalled under memory pressure
-> before a hardware or software watchdog reset, no kernel breadcrumb is
-> currently emitted when a memcg enters or exits this userspace OOM wait.
+On Mon, Oct 12, 2026 at 11:19:01PM +0200, Vlastimil Babka (SUSE) wrote:
+> On 10/10/26 05:18, Kees Cook wrote:
+> > On Fri, Oct 09, 2026 at 09:39:48PM +0200, Harry Yoo wrote:
+> >> On Fri, Oct 09, 2026 at 04:22:03PM +0200, Harry Yoo wrote:
+> >> > When it falls back to kmalloc, kmem_buckets itself should provide a
+> >> > compatibility layer when falling back to kmalloc.
+> >> 
+> >> For example, calculate_sizes() converts certain SLAB_* flags into
+> >> GFP flags (s->allocflags) for allocation. We can have a similar
+> >> logic when falling back to kmalloc.
+> >> 
+> >> Though current implementation does not allow this and requires
+> >> some rework.
+> > 
+> > I think the current series does everything correctly in the sense that
+> > nothing is allowing for mismatched fallbacks/passthrus. We could iterate
+> > from there once we have a need for this where a non-kmalloc-alignment is
+> > wanted, etc?
+> 
+> I think we can indeed simply make sure buckets have the same alignment as
+> kmalloc. It comes naturally and should (more than) satisfy everyone. I doubt
+> anyone would be needing a more specific alignment than that for a class of
+> allocations with a variable size?
 
-Correct, this is an inherent limitation of the feature. You rely that
-the userspace OOM killer implementation is correct and memory pressure
-aware.
+Right, the whole point of kmem_buckets was to replace general kmalloc
+uses, where no callers cared about alignment.
 
-> Log rate-limited KERN_ERR messages (pr_err_ratelimited) upon entering
-> and completing the userspace OOM wait in mem_cgroup_oom_synchronize(),
-> including the memcg path, memory usage/limit/unevictable stats, elapsed
-> waited_ms, and whether the task exited due to a fatal signal.
+> ctor removal is clear I think
 
-Isn't this something you can achieve by adding dynamic tracepoints, bpf
-progs etc.? Why do we need that for all users?
+Completely. I was blinded by the API of kmem_cache_create(). :)
+
+> for __GFP_ACCOUNT and __GFP_RECLAIMABLE I think what we could do is not to
+> drop the flags argument kmem_buckets_create and instead require that it
+> matches the usage:
+> 
+> __GFP_RECLAIMABLE requires SLAB_RECLAIM_ACCOUNT and vice versa and I can't
+> imagine there would be a buckets instance that would allocate both kinds
+> (either with or without __GFP_RECLAIMABLE)
+
+Okay. (We have no users of this yet, FWIW.)
+
+> SLAB_ACCOUNT requires __GFP_ACCOUNT, memcg objexts are always created and used
+
+Right.
+
+> SLAB_MAY_ACCOUNT allows __GFP_ACCOUNT, memcg objexts are always created, and
+> used when __GFP_ACCOUNT given
+> - perhaps not as optimal as the separate kmalloc types, but good enough?
+
+I think it's fine from studying what happens with the skb data. Though
+right now, SLAB_ACCOUNT and SLAB_MAY_ACCOUNT are functionally identical,
+yes?
+
+> __GFP_ACCOUNT without either SLAB_ACCOUNT or SLAB_MAY_ACCOUNT is wrong,
+> __GFP_ACCOUNT would be ignored
+
+*ignored* is, I think, wrong here. It would create differing behavior
+between SLAB_BUCKETS=y/n. If we passed __GFP_ACCOUNT through to general
+kmalloc when the buckets lacked SLAB_ACCOUNT and SLAB_MAY_ACCOUNT, you'd
+lose the isolation, but not the accounting. (And could WARN_ONCE about
+it.) But if it was ignored, you'd lose accounting under
+SLAB_BUCKETS=y.
+
+> with SLAB_BUCKETS=y these rules could be checked e.g. with a VM_WARN_ON_ONCE()
+> 
+> with SLAB_BUCKETS=n these rules won't be checked but also not matter in practice
+
+Agreed. That's what I was going for on this version. But like above,
+"SLAB_ACCOUNT requires __GFP_ACCOUNT" means what? Under SLAB_BUCKETS=y
+the allocation returns NULL? Or it passes through with WARN_ONCE? I'd
+rather not break something completely; better to fallback on a mismatch
+so the requested type happens (be it DMA, ACCOUNTing, etc).
 
 -- 
-Michal Hocko
-SUSE Labs
+Kees Cook
