@@ -1,141 +1,82 @@
-Received: from mta0.migadu.com (out-218.mta0.migadu.com [91.218.175.218])
+Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BC7D518153
-	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 13:14:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.218
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D98C5208DB
+	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 13:34:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791897297; cv=none; b=K4RfWOHgeLG+e8WIqyGuhFoZjPZXStioX0Sv6Ij17gqJ+e8bB46p731kY0sazUDTF7Bnu8/criIRE8+tYMUbluqfpzWk5lXOjW7y+26J71qlMJ1+wNPc+VR4u5uYj1mgT/+6qNkKwjbACwaevIdr+pO1CSgJIddRhcHctuSMVeU=
+	t=1791898472; cv=none; b=LFbwI28cI9eV0CYYRgRzLixx8wjnoRMlva833Gh+SuckqwdZeNaCDHAcmfdI8teAUcTeY+0NWdHHAJqUDwA3HHuFw5Oi4S9mmdYUqIkouS/nSiTYrZsPh5q11rX2FdkN6jw1K+XRgpUw3L4fxmwOJEJ+ezTesWOpPEBj6JZdchk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791897297; c=relaxed/simple;
-	bh=vBSg1QkKVy4BttTL6yPnGCNW6hVkILXIMHPxGW5nELA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dzWGzlI/eMn5GZmvILbldi2vCKluCIzoT3IyTPzdAwEUcHaJ+kxQ172mp6EICeVYyQc0d0+UY7BZLdd+WQr5VtXOcPT4Lu9SAoCOXZwoTUyqjZW3qyB6dIE/G9moSptmmSia/eUIrly/X2cggJXYcxDZ0dM3v6Mw9W54dSTOTc4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=WsU6N/hc; arc=none smtp.client-ip=91.218.175.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791898472; c=relaxed/simple;
+	bh=Yjc3wFNOxrypJJyu5rTq8Vr1Hd3Zz2aUY0wPnZO4Ji4=;
+	h=From:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
+	 To:Cc:Content-Type; b=IBeOWRz/rOlsDmG/AOnnKEMxEkYRllIoiixRmFzyfdK9y7/TzolQDyBfyWBnPFmD4+kWnVi7Al/QUWpVNMr0TLzIJ6VUg88/lADLsgNC+g2nY1GoOdXTx8Btq4EeZyB+EcDX02N7l8FrHGtNi/O/FFq4Qqo9hN06ZGbWBhKzdGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=cjPfxSlL; arc=none smtp.client-ip=149.72.141.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="WsU6N/hc"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=vBSg1QkKVy4BttTL6yPnGCNW6hVkILXIMHPxGW5nELA=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791897294; v=1; x=1792502094;
- b=WsU6N/hc2sC7uwnFSTAPvEc2meOej7IlBokFEtkZr0E2eZ9tAXGEGKLM7D+PiTfg5qRWzAHV
- FFyeQmYXM/uH7Dau5BMnp4q1jrcfcho5U+eg5Iwk1HS0rsdIsup8sa9lTkDGySG7l9AdnAiNb/O
- oTUKe8GoFXySefMAgnJ/q9Vc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 208741b0836346c2;
-	Tue, 13 Oct 2026 13:14:54 +0000
-X-Mizu-Trace-ID: 208741b0836346c2
-X-Migadu-Flow: FLOW_OUT
-From: Ridong Chen <ridong.chen@linux.dev>
-To: Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Dave Chinner <david@fromorbit.com>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Muchun Song <muchun.song@linux.dev>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>,
-	Wei Xu <weixugc@google.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	linux-kernel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
-	bpf@vger.kernel.org (open list:BPF [MISC]:Keyword:(?:\b|_)bpf(?:\b|_)),
-	Ridong Chen <ridong.chen@linux.dev>,
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH RFC v3 7/7] mm/vmscan: pass scan_control to mm_vmscan_balance_pgdat_end
-Date: Tue, 13 Oct 2026 21:13:09 +0800
-Message-Id: <20261013131309.2790253-8-ridong.chen@linux.dev>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261013131309.2790253-1-ridong.chen@linux.dev>
-References: <20261013131309.2790253-1-ridong.chen@linux.dev>
+	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="cjPfxSlL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
+	h=from:subject:date:in-reply-to:references:mime-version:to:cc:
+	content-type:content-transfer-encoding:cc:content-type:date:from:subject:to;
+	s=s1; t=1791898469;
+	bh=Yjc3wFNOxrypJJyu5rTq8Vr1Hd3Zz2aUY0wPnZO4Ji4=;
+	b=cjPfxSlLQkSUdnf0bT733QfnqIyHwuJRNG6OpW0Z7CvBWxnySk5RMr67Oc8aartloIne
+	pK56lqo0wA7bw51ni+1Fcut5Q7x9y5Uavv6FVrVtcE40SFKySwMzXlVILGojlgwyFfNLit
+	qbCv0j92NNahom4tTuy0p3LA+dH3TRYvluTbZWUUAdx9ss+S44ajRzJIPWJ4tjWXb0kRLP
+	Jef/3beZF2rrIcoj0XVGTFmtxqIksgGYEiSMqcrlhfMjLfbhiI+HLfHgCRTBLcWDW2QwjJ
+	gtkvyi8l/XWlXAkflQ0eA+zJtTzDlbJameOVs3/1VpBZormpIJ+VqyABDXqJfqQA==
+Received: by recvd-b6785b758-pms9j with SMTP id recvd-b6785b758-pms9j-1-6ACE3364-52
+	2026-10-13 13:34:28.727189614 +0000 UTC m=+1197221.645450126
+Received: from daisy.dens.ffj.family (unknown)
+	by geopod-ismtpd-canary-0 (SG) with ESMTP
+	id j7TrPBHQTSyTSY7St2F5YQ
+	Tue, 13 Oct 2026 13:34:28.641 +0000 (UTC)
+From: Liz Fong-Jones <lizf@honeycomb.io>
+Subject: Re: [PATCH v6 0/3] writeback: let foreign flushes reach dying cgwbs
+Date: Tue, 13 Oct 2026 13:34:29 +0000 (UTC)
+Message-ID: <20261013133428.725790-1-lizf@honeycomb.io>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261002-wb-dying-cgwb-flush-v6-0-1991b4e2dcff@honeycomb.io>
+References: <20261002-wb-dying-cgwb-flush-v6-0-1991b4e2dcff@honeycomb.io>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-SG-EID: 
+ =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
+ =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeYytsq=2Fs6xFQ?=
+ =?us-ascii?Q?u5VO+EtT9LXkYGlxJUqGOEwoCTZ8+dJNWoztJgA?=
+ =?us-ascii?Q?83GYMzdfkdF5Gw1J8iDpMcYzuTiSEt9CPgxMQTC?=
+ =?us-ascii?Q?pGzZVQm1U1ZxuHaYW8hkL+IXUDC1TPCzS99Yu3W?=
+ =?us-ascii?Q?zXvwbwrQcgmHqTKsNE3l2E5NTbcl7UEbm3pLqXw?= =?us-ascii?Q?ZeAq?=
+To: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Christian Brauner
+	<brauner@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>,
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner
+	<hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+	<shakeel.butt@linux.dev>, Xin Yin <yinxin.x@bytedance.com>,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ian@honeycomb.io
+X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-From: Ridong Chen <chenridong@xiaomi.com>
+Tejun and Jan,
 
-balance_pgdat() passes sc.order and sc.nr_reclaimed to
-mm_vmscan_balance_pgdat_end as bare arguments. Pass the enclosing
-struct scan_control instead and read the fields out in TP_fast_assign,
-consistent with the other reclaim tracepoints. highest_zoneidx stays a
-separate argument: it is a balance_pgdat() parameter, and
-sc.reclaim_idx may differ from it by the time the end event fires.
+Gentle ping on v6. Patches 1 and 2 carry Tejun's acks. Patch 3 changed
+in v6 to queue replaced_work again when a switch lands on a wb that was
+replaced after the switch was queued, as Tejun suggested on v5, and it
+hasn't had review yet. Jan, you confirmed on v3 that switching all of a
+replaced wb's inodes, dirty ones included, is safe; would you have time
+to look at patch 3?
 
-No functional change. The tracefs event format (TP_STRUCT__entry and
-TP_printk) is unchanged, so tracefs-based consumers are unaffected.
-BPF programs attached via raw_tp/tp_btf see the new TP_PROTO and need
-to be adjusted; tracepoints are not a stable ABI (see
-Documentation/bpf/bpf_design_QA.rst).
+Christian, if they're happy with it, could the series go into
+vfs-7.4.misc next to Xin's 168a8c13159c? It still applies cleanly there
+and to 7.3-rc7. If that's too late for this cycle, I'm happy to repost
+on whatever base you'd like to queue it on.
 
-Assisted-by: LLM
-Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
----
- mm/trace_vmscan.h | 9 ++++-----
- mm/vmscan.c       | 3 +--
- 2 files changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/mm/trace_vmscan.h b/mm/trace_vmscan.h
-index 96e41f444924..10b3cda1c435 100644
---- a/mm/trace_vmscan.h
-+++ b/mm/trace_vmscan.h
-@@ -124,10 +124,9 @@ TRACE_EVENT(mm_vmscan_balance_pgdat_begin,
- 
- TRACE_EVENT(mm_vmscan_balance_pgdat_end,
- 
--	TP_PROTO(int nid, int order, int highest_zoneidx,
--		 unsigned long nr_reclaimed),
-+	TP_PROTO(int nid, struct scan_control *sc, int highest_zoneidx),
- 
--	TP_ARGS(nid, order, highest_zoneidx, nr_reclaimed),
-+	TP_ARGS(nid, sc, highest_zoneidx),
- 
- 	TP_STRUCT__entry(
- 		__field(int, nid)
-@@ -138,9 +137,9 @@ TRACE_EVENT(mm_vmscan_balance_pgdat_end,
- 
- 	TP_fast_assign(
- 		__entry->nid = nid;
--		__entry->order = order;
-+		__entry->order = sc->order;
- 		__entry->highest_zoneidx = highest_zoneidx;
--		__entry->nr_reclaimed = nr_reclaimed;
-+		__entry->nr_reclaimed = sc->nr_reclaimed;
- 	),
- 
- 	TP_printk("nid=%d order=%d highest_zoneidx=%-8s nr_reclaimed=%lu",
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index b3278dbe47bf..561e14dd490c 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -7403,8 +7403,7 @@ static int balance_pgdat(pg_data_t *pgdat, int order, int highest_zoneidx)
- 	psi_memstall_leave(&pflags);
- 	set_task_reclaim_state(current, NULL);
- 
--	trace_mm_vmscan_balance_pgdat_end(pgdat->node_id, sc.order,
--					  highest_zoneidx, sc.nr_reclaimed);
-+	trace_mm_vmscan_balance_pgdat_end(pgdat->node_id, &sc, highest_zoneidx);
- 
- 	/*
- 	 * Return the order kswapd stopped reclaiming at as
--- 
-2.34.1
-
+Thanks,
+Liz
