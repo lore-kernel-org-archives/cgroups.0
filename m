@@ -1,135 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-228.mta0.migadu.com [91.218.175.228])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C658472530
-	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 05:27:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DFF44AC16F
+	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 06:18:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791869224; cv=none; b=IGIBuHOxVqNZGJY6+c1wKHaTOOr0YXy35jRmRb+PnoNpyOUtlurIkaw7hncN10ioe/6jQCJdPlC6UHTPW3oQ6blWOvKtiDwf9CmFJCAhS6ZFN57/doElnFzBOmtCecGuugs9+oNdxGeX7N5MRLrdOEg5NHkHWRmawGCfteIaxVY=
+	t=1791872304; cv=none; b=MTllDg5/4lvOKGnh3ufeNs6y7mBCPz++HPLdDM/jFI6OBLXRsFG1tqbmEhC21zrVBvuQDrt8Q01zbVfJM9+uZZsAmLhxWXHDZlcXhsNEvCjYtLtZauvuKwwsto2Zgb0FW84RtC//I0GBmyDcQt9IBsd/8bEWuAJhW2TDVNlRzrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791869224; c=relaxed/simple;
-	bh=hjt7WdqvBS+sKPOEWx62yXCoipEnUvIuBL1q83yUbyo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Y0Z15dua9NcgZdtIESgKDgSEfa02dlQMGtjac62lXXUtw9FlOlr90WHbfxSMRASE+jzLc0pwrm2jKCDJ6bpFDxguyz9btAoCDLyjrITE4yRA1NUiBvAEDa2ZPjT9p9UepN4mx0xHiHisBCeTM2tCFb66uzIKWr9crG5DbuSe3Ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n+NCQmjW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791872304; c=relaxed/simple;
+	bh=sILqVf6vf2c7wxEo7EF7BwyGO93H6KbwkBm9lngJlDI=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=kM7fXxsd5Koi5OhobQzK2ZArllpL8ZbM7LyDIAk3tMUl/nTFKEVorZxb63AJ0XPczgtxQAJ4hsI/tQ4qcBW5z7dKRZyIBawinctztPF2vZ3mTQZRhxbfYQOxAKXE5GWCM5Sjwhd5ETUfmfthzhXT1SiN6knuaZNmME0ihLs9d1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=VJD2Xkb5; arc=none smtp.client-ip=91.218.175.228
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n+NCQmjW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DD721F00893
-	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 05:27:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791869222;
-	bh=hjt7WdqvBS+sKPOEWx62yXCoipEnUvIuBL1q83yUbyo=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=n+NCQmjWoXbOOZxAomCytsmbb3aASwIZLPL3YVbo8rDWFRajKdOYFtX9TTerL1mmg
-	 CK4m51usMzr5qm17bBqE5xYBOCZKpmVMEFrxfk+WlMC4OSlAJ9rVNclUE6x/BTvkkK
-	 054SeUaZ1Pg9UMuOw8h0BM6Biq7qSuYcatAAJnuD91PfgmklFOUDcfL0vnXU6NzYIA
-	 o6JNU89q3wedXxDRA4m0ldetoqhCmvucflGiledMqA0w368d1gbIdzjiEhkaxBbanw
-	 HYMFffm2IG01aoR1Uk31n7rQzrTBciGsschJMz531fPAoTmUkPi9VpW3z8VLduW/rn
-	 LVHtxVMN6lcHg==
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-c247f6687dcso381604966b.2
-        for <cgroups@vger.kernel.org>; Mon, 12 Oct 2026 22:27:02 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvByaIyl/RprvSdkHKWENkWMD1wfI6biOSP8LvP3jv6+4h5lnmp/C5HZ1wtTuUr493OMB7HPi2w6u@vger.kernel.org
-X-Gm-Message-State: AFq9FYKHsdH70WDDEOOoNxUg9EPmJsDlGJTYZpMkMHygVKjUxvg+LgXl
-	kpVXlh2fUZ19BoXRN3RDNQd4Wc7KIPBWQcYzDYMY1RcWq1V953v/7y//W3tj9uQBjxJZV02+81P
-	T3aP1UzVr+N7EZ8SOTunSdlt9dkYIfq7qMRnGW86Vsw==
-X-Received: by 2002:a17:906:630c:b0:c2e:4601:24d7 with SMTP id
- a640c23a62f3a-c31aa0b038fmr1163593566b.39.1791869221297; Mon, 12 Oct 2026
- 22:27:01 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="VJD2Xkb5"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=sILqVf6vf2c7wxEo7EF7BwyGO93H6KbwkBm9lngJlDI=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1791872301; v=1; x=1792477101;
+ b=VJD2Xkb5iPjNVTQQT86PnpZrSqwCJhrf3AyrLsUtmueIyYhYVwYwhrBhlRWiRZQQRu/kbim/
+ DtYFw+AUOX0BmvSFsDkHALXLVg78FKmexZsLhkRVfApS3wsL5+uD8wh5qB0SNW8Fm70pqD5c2Uw
+ EsJ8rxIH3D9SlRNLocVw0rxM=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id da02f3bab437fe5c;
+	Tue, 13 Oct 2026 06:18:21 +0000
+X-Mizu-Trace-ID: da02f3bab437fe5c
+X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org> <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
- <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org> <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
- <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
- <aqgMCIOFi0dKx_6L@fedora> <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
- <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
- <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com> <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org>
-In-Reply-To: <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org>
-From: Chris Li <chrisl@kernel.org>
-Date: Mon, 12 Oct 2026 22:26:49 -0700
-X-Gmail-Original-Message-ID: <CACePvbVTnCOh51jvEpkDJ32idvCubgN1eHBps6vESjhVC8E_aQ@mail.gmail.com>
-X-Gm-Features: AclHuK_DfQCPO4j2m10REoB4qF9zAuO9SjVMLTAFlHAeodT0hj3mwVtXkmxRAyo
-Message-ID: <CACePvbVTnCOh51jvEpkDJ32idvCubgN1eHBps6vESjhVC8E_aQ@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Kairui Song <ryncsn@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Yosry Ahmed <yosry@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: Re: [PATCH 1/2] mm/shrinker: size shrinker_info_unit to a power of
+ two
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
+Date: Tue, 13 Oct 2026 14:18:01 +0800
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Dave Chinner <david@fromorbit.com>,
+ Qi Zheng <qi.zheng@linux.dev>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <EDF08D88-7AD8-4697-A1EE-F20BB1F83AF6@linux.dev>
+References: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-0-5a7608393b7a@virtuozzo.com>
+ <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
+To: Konstantin Khorenko <khorenko@virtuozzo.com>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-On Mon, Oct 5, 2026 at 5:19=E2=80=AFAM David Hildenbrand (Arm) <david@kerne=
-l.org> wrote:
->
-> On 9/22/26 15:38, Chris Li wrote:
-> > On Mon, Sep 21, 2026 at 8:56=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> w=
-rote:
-> >>
-> >> On Fri, Sep 18, 2026 at 11:50=E2=80=AFPM Chris Li <chrisl@kernel.org> =
-wrote:
-> >>> No that time slot is too late for Asia developers. I don't think we
-> >>> should use that time slot for swap alignment.
-> >>>
-> >>> We should find a time slot more friendly to Asia.
-> >>
-> >> Any time slot would have that kind of problem. We're spread out across
-> >> the globe.
-> >>
-> >> Let's just use a standardized time slot we have for MM alignment sessi=
-ons.
-> >
-> > There are more swap maintainers in Asia than in the US + Europe, at
-> > least based on the maintainer file. Please be more inclusive. If the
-> > alignment is done without key stakeholders, it miss the point.
-> >
-> > Sigh, we can't even align on a time slot.
-> >
-> > In that case, let's keep discussing on the mailing list. At least it
-> > is accessible to every one.
->
-> Looking at the mailing list, that approach doesn't seem to work.
->
-> Finding a time slot that makes US, Europe and Asia happy is ... tricky.
->
-> 1 AM is certainly unpleasant.
->
-> US vs. Asia is also tricky, but doable.
->
-> China 8AM vs. US West Coast 5PM?
->
-> China 9AM vs. US West Coast 6PM?
 
-Hi David,
 
-Thanks for organizing this. Time slot that works for Baoquan and
-Kairui should also work for me.
+> On Oct 13, 2026, at 03:02, Konstantin Khorenko =
+<khorenko@virtuozzo.com> wrote:
+>=20
+> Every memory cgroup allocates, per NUMA node, one shrinker_info_unit
+> for every SHRINKER_UNIT_BITS shrinker ids up to shrinker_nr_max. The
+> unit holds BITS_PER_LONG atomic_long_t of deferred work, a power of
+> two, plus the one-word bitmap of shrinkers with objects charged to the
+> cgroup. That word takes the unit just past the power of two, to 520
+> bytes on 64-bit, so every unit comes from kmalloc-1k and almost half =
+of
+> it is padding.
+>=20
+> The units are allocated when the cgroup goes online and freed when it =
+is
+> freed, so a dying cgroup keeps them until the last reference to it is
+> gone. Their number is the number of memory cgroups, times the NUMA
+> nodes, times shrinker_nr_max / SHRINKER_UNIT_BITS. shrinker_nr_max is
+> the peak number of memcg-aware shrinkers registered at once, and every
+> superblock registers one, so a host that mounts many filesystems and
+> runs many cgroups carries the padding as unreclaimable slab, and keeps
+> paying it for new cgroups after the mounts are gone.
+>=20
+> Let a unit cover one id less than a word holds. The bitmap still fits
+> one word, and nr_deferred[] plus that word add up to BITS_PER_LONG
+> longs, so the unit fills a power-of-two kmalloc slot exactly and, on
+> 64-bit, the memory taken by units halves, for about one unit more in
+> BITS_PER_LONG.
+> round_up() in expand_shrinker_info() needs a power-of-two step and
+> becomes roundup(); the other uses of SHRINKER_UNIT_BITS are divisions,
+> modulos and multiplications that do not care. Assert the unit size at
+> build time, since the layout depends on it.
+>=20
+> Assisted-by: LLM
+> Signed-off-by: Konstantin Khorenko <khorenko@virtuozzo.com>
+> ---
+> include/linux/shrinker.h | 9 ++++++++-
+> mm/shrinker.c            | 2 +-
+> 2 files changed, 9 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index 1a00be90d93a9..c250ab68d346c 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -7,7 +7,11 @@
+> #include <linux/refcount.h>
+> #include <linux/completion.h>
+>=20
+> -#define SHRINKER_UNIT_BITS BITS_PER_LONG
+> +/*
+> + * One id less than a word holds, so that nr_deferred[] and the map =
+word add
+> + * up to BITS_PER_LONG longs: a power of two, which fills a kmalloc =
+slot.
+> + */
+> +#define SHRINKER_UNIT_BITS (BITS_PER_LONG - 1)
+>=20
+> /*
+>  * Bitmap and deferred work of shrinker::id corresponding to =
+memcg-aware
+> @@ -18,6 +22,9 @@ struct shrinker_info_unit {
+> DECLARE_BITMAP(map, SHRINKER_UNIT_BITS);
+> };
+>=20
+> +static_assert(!(sizeof(struct shrinker_info_unit) &
+> + 		(sizeof(struct shrinker_info_unit) - 1)));
 
-Hi Kairui,
+This assertion is not straightforward. I'd like to use =
+is_power_of_two().
+Like:
 
-I understand that you have some face-to-face discussions at the
-conference. Do we have a list of what has been aligned and what is
-pending to discuss? We should have an agenda to avoid repeating
-already aligned items.
+  BUILD_BUG_ON(!is_power_of_2(sizeof(struct shrinker_info_unit)));
 
-Chris
+Muchun,
+Thanks.
+
+> +
+> struct shrinker_info {
+> struct rcu_head rcu;
+> int map_nr_max;
+> diff --git a/mm/shrinker.c b/mm/shrinker.c
+> index 7ec2a9704f6f2..a9418072a509e 100644
+> --- a/mm/shrinker.c
+> +++ b/mm/shrinker.c
+> @@ -159,7 +159,7 @@ static int expand_one_shrinker_info(struct =
+mem_cgroup *memcg, int new_size,
+> static int expand_shrinker_info(int new_id)
+> {
+> 	int ret =3D 0;
+> - 	int new_nr_max =3D round_up(new_id + 1, SHRINKER_UNIT_BITS);
+> + 	int new_nr_max =3D roundup(new_id + 1, SHRINKER_UNIT_BITS);
+> 	int new_size, old_size =3D 0;
+> 	struct mem_cgroup *memcg;
+>=20
+>=20
+> --=20
+> 2.43.0
+>=20
+
