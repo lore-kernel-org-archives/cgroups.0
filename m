@@ -1,30 +1,30 @@
-Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
+Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0693935C6B9;
-	Tue, 13 Oct 2026 03:12:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1D17374A12;
+	Tue, 13 Oct 2026 03:12:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791861160; cv=none; b=Nqw2V2HbcKyHdUSX+Jl0yqXamwxVa9VHm+IcWs9di5fK+l2XoEtS80dIPDexvz/GpyAjoUjvyCTAV+16tKNaY3RVwdY4WfIpprrllMo1Vz/1XSqV4NcNO/lUvHcFU2gnmGogHnkk3rDYMQHQObwQNG4YYp2OIt4q9L/g1fQZ7Fs=
+	t=1791861160; cv=none; b=sYSRtLi+8rWwMXeFtV0ZbKkzWNdxF2De+Br22rgpnSVOaF9lQwNI+El30IdKwcDYsD/J0xZHYIPzxVQWUoNiSDzifOg3/HoQEoeb3sT0jurSkR1dZL/4hURFQb5V7SWRkfgE6NhsKwY9ZSHdv53PcybG6t3bs2Hq0jgN9O9aYAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791861160; c=relaxed/simple;
-	bh=EC9nAHk+K2TPuQZdh2tqhkTGbDJCnfDnBB79UHGYPt4=;
+	bh=cKBnw0HVVyxle7u9yosNmZv3ltQviOkhRmlXJVRymww=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XmIs4qb6TB2EiuiKuA9s/cfS6aBHaGZWgHtNu2ngq285MEGnqHaTFg2sNMyphh2VPvLPLrj7IoFKWwbnxu3rvxOLVcac5jGspHZaieQQkAeaxLKiDqjXtx5r/YZxfyXP7u7k353Or9kH01Nd6ONeFdC2YDMmA15+sLrSmBo2FNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=SJ/tpuiO; arc=none smtp.client-ip=115.124.30.124
+	 MIME-Version:Content-Type; b=u/H/2qEJp2uvhdE/KraTgEzQac+nGFAYnU0DSmDkTwzICaBHelEtf14jPJwe4+kpZkQnBGy8zkbs+YG0KsYuYjvGPSArUI2i+2rD8YrMQWBVIw1F9BTr7QIV7YMeZo3IdKFL94pq1gyGV825Af8+kdYg3Vp05k7IeTvn1xdW1aY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=S5F0k88r; arc=none smtp.client-ip=115.124.30.98
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="SJ/tpuiO"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="S5F0k88r"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1791861150; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=goZgGhsuDnXRMkG633Mg/AsrAm2B4reGrlV8Qh0TTu0=;
-	b=SJ/tpuiOv6lSj0kPhKuS/IUcX7UYeo+BWeZEXRP1sALyw3Lj37EnZYSHoblxNKd3CCuy76mNYokm9l06KmO4al8+ysd+uw053peJgCjRo9u9Al7A0fqHSPqO4Fvx/1t1RdCIeAfe8jfc9NibzYNxJjKrPXkWF7X77OHg3wP3Y7M=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R191e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=23;SR=0;TI=SMTPD_---0XCkEjdM_1791861147;
-Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XCkEjdM_1791861147 cluster:ay36)
+	t=1791861151; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=mhdlXR8A75L7YeWWJ2AV4SzYhiaJarkmp87eHXPOcrA=;
+	b=S5F0k88rgBf+hdnM0/oGyAWVuzwn25NNh8uMVR2BlLkOyRPPcEIY8G+mj+BWq/2PZaM/wmjP++Ejmpe/edEYrjFAvrjbXl02O14qp8Ju2TTGgT0jwgEl0afL+94tqySRD0JYPCl5RbvMcm4GnPqyuE6pLNIrco0SSnYKytsKSro=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R631e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=23;SR=0;TI=SMTPD_---0XCkEjdu_1791861148;
+Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XCkEjdu_1791861148 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Tue, 13 Oct 2026 11:12:28 +0800
+          Tue, 13 Oct 2026 11:12:29 +0800
 From: Qinyun Tan <qinyuntan@linux.alibaba.com>
 To: akpm@linux-foundation.org
 Cc: hannes@cmpxchg.org,
@@ -49,9 +49,9 @@ Cc: hannes@cmpxchg.org,
 	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
 	Qinyun Tan <qinyuntan@linux.alibaba.com>
-Subject: [PATCH v4 3/5] mm: list_lru: keep per-memcg lists with nokmem for NONSLAB-backed lrus
-Date: Tue, 13 Oct 2026 11:12:19 +0800
-Message-ID: <20261013031221.1997194-4-qinyuntan@linux.alibaba.com>
+Subject: [PATCH v4 4/5] mm: thp: restore SHRINKER_NONSLAB on the deferred split shrinker
+Date: Tue, 13 Oct 2026 11:12:20 +0800
+Message-ID: <20261013031221.1997194-5-qinyuntan@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
 References: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
@@ -61,46 +61,59 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-With cgroup.memory=nokmem, __list_lru_init() collapses every list_lru
-into per-node lists.  That is fine for slab objects, which are not
-charged per memcg without kmem accounting.  But a lru backed by a
-SHRINKER_NONSLAB shrinker, e.g. the THP deferred split queue or the
-zswap entries, holds user memory, which is charged regardless of
-nokmem.  Collapsing such an lru loses the per-memcg view of its
-objects.  Reclaim can no longer target just the cgroup under pressure.
+On a system booted with cgroup.memory=nokmem, the deferred split
+shrinker is demoted to a non-memcg-aware one.  As a result, partially
+unmapped THPs are only split under global reclaim; memcg
+(limit-induced) reclaim never splits them, so a cgroup under memory
+pressure keeps its underused THPs intact.
 
-Keep such lrus memcg aware under nokmem when their backing shrinker is
-registered SHRINKER_NONSLAB.
+The shrinker has carried SHRINKER_NONSLAB since commit 0a432dcbeb32
+("mm: shrinker: make shrinker not depend on memcg kmem") precisely
+so it would keep working with kmem accounting disabled.  Commit
+fafaeceb89a5 ("mm: switch deferred split shrinker to list_lru")
+dropped it knowingly: under nokmem the list_lru collapses into a
+shared per-node list while __list_lru_add() still sets the shrinker
+bit on whichever memcg happens to add the first item, and with the
+flag set the shrinker would run twice per reclaim cycle.
 
-This leaves the savings of nokmem intact: slab-backed lrus (e.g. the
-superblock dentry/inode lrus) still fall back to the per-node lists,
-and the per-memcg lists are allocated only when a memcg actually holds
-such objects.
+NONSLAB-backed lrus keep their per-memcg lists under nokmem now, so
+the shrinker bit identifies the owning memcg again.  Restore the
+flag.
 
+This was noticed by Michal during review of the patch "mm/list_lru:
+don't copy stale shrinker id from non-memcg-aware shrinkers".
+
+Link: https://lore.kernel.org/all/ah9PGv12mqai84ES@cmpxchg.org/
+Link: https://lore.kernel.org/lkml/697713c4-0857-485b-aba7-c74f37a3c8b4@linux.alibaba.com/
 Fixes: fafaeceb89a5 ("mm: switch deferred split shrinker to list_lru")
+Suggested-by: Michal Koutný <mkoutny@suse.com>
 Signed-off-by: Qinyun Tan <qinyuntan@linux.alibaba.com>
+Acked-by: Zi Yan <ziy@nvidia.com>
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+Acked-by: Usama Arif <usama.arif@linux.dev>
+Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
 Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/list_lru.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ mm/huge_memory.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/mm/list_lru.c b/mm/list_lru.c
-index 8e9577c5cb19..7c8d0b959bed 100644
---- a/mm/list_lru.c
-+++ b/mm/list_lru.c
-@@ -690,7 +690,9 @@ int __list_lru_init(struct list_lru *lru, bool memcg_aware, struct shrinker *shr
- 	else
- 		lru->shrinker_id = -1;
- 
--	if (mem_cgroup_disabled() || mem_cgroup_kmem_disabled())
-+	if (mem_cgroup_disabled() ||
-+	    (mem_cgroup_kmem_disabled() &&
-+	     (!shrinker || !(shrinker->flags & SHRINKER_NONSLAB))))
- 		memcg_aware = false;
- #endif
- 
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index a62d6592af7e..4ddbbdbfcc2d 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -1059,7 +1059,8 @@ int folio_memcg_alloc_deferred(struct folio *folio)
+ static int __init thp_shrinker_init(void)
+ {
+ 	deferred_split_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE |
+-						 SHRINKER_MEMCG_AWARE,
++						 SHRINKER_MEMCG_AWARE |
++						 SHRINKER_NONSLAB,
+ 						 "thp-deferred_split");
+ 	if (!deferred_split_shrinker)
+ 		return -ENOMEM;
 -- 
 2.43.7
 
