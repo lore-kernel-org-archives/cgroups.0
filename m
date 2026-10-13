@@ -1,87 +1,141 @@
-Received: from mta1.migadu.com (out-40.mta1.migadu.com [95.215.58.40])
+Received: from mta1.migadu.com (out-139.mta1.migadu.com [95.215.58.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F26F03E867A
-	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 02:23:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75DB847142E
+	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 02:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791858213; cv=none; b=DCXOYtU6zssSgPeHshEaNuhfxq/oCQuZPqZoFH/b3o1pY1SDHOx9z5zlYYtRP63WXftpX+kNkqMNzSpWnwYxwdyzJlHnxwLnlv2dl3f0IIZD4EAQmwApcBVrwoBmd1U71YfddTHKHCZq9QS2B/7gnN6O2aGGulDM+kmZjK7iO4w=
+	t=1791859956; cv=none; b=DZkWH9FkCtfkIHP3cslZTA6FIX8VLdM+QLYp7EQ1ldI/WgF/b/LfXwpP3jCqTF3SrMitAA7tdJsO1LsyAztPlPU28aB91fDq9gIUaj7wVgQC0RWuo+c98c7WNF3f6fmgGPk2wza5azNBuwZOtuBbqRf1KSBXhunnu+pgt/Mrz18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791858213; c=relaxed/simple;
-	bh=wCnL6viEy1CesNNIWQQHyBFJylxrQHFF/Yc3GsIfI3M=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=ksYVOShz7pH6SqgChv0ynMP2D1RBG4eLYCbLLCcXxu3cg7IMd2eiH8NT0H9GnY24eRY9cwLYDF27UUgIKR5Ra1438j7sXfe2ZazT4iCXSwHwexvE72Iqb6hb0B7+xAiQnu7INdut6ZQoNlqRgw192NRiyLI6OJTqfhIvsARzfG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=sth5oaSX; arc=none smtp.client-ip=95.215.58.40
+	s=arc-20240116; t=1791859956; c=relaxed/simple;
+	bh=uL6ePUcLBZZOUIyB5RLHnAYGU9PprjKQPlmJBefHVMY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Nu2amkKz7QDWIqJJCcLSNh4TUgdmJUJkYUKQ5zCyeYWb05Awl6TGdVj4arwPuhQnqP+5NhHpNtQ/E9GDRoVEq6i8t/P9JZME2vaxX6uDVXgfV07/uyE/yvFpp5tbjE/V28J6eQvhrIU1oGsRPpF4dYVG2+LjkQ/akThaIajZmoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NAMtpaTP; arc=none smtp.client-ip=95.215.58.139
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="sth5oaSX"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NAMtpaTP"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=wCnL6viEy1CesNNIWQQHyBFJylxrQHFF/Yc3GsIfI3M=;
+DKIM-Signature: a=rsa-sha256; bh=uL6ePUcLBZZOUIyB5RLHnAYGU9PprjKQPlmJBefHVMY=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791858209; v=1; x=1792463009;
- b=sth5oaSXVmazhbqjMSm9UreItIu7BqfmBHDx3GkxkSOr2A2T6L7KwtBHUW0WLaBq2sQ9efAH
- HznDHucugTQ+K43NcNThdrwVa8LD3m8o78pjyOlQo2yFnjVQ0H8G7dEBK1xPn0h44ta4QG0OPXI
- lk3PosVQwvW+cMpjqXLIUdzg=
+ t=1791859953; v=1; x=1792464753;
+ b=NAMtpaTPaCQ5A3BTTO3fwnlTUTeVof9HIoOGcULZS+jzEK5ALCPSDHs+G2rJtftClVL2B4Uw
+ 8G2dxy/mHsi0XK3sZIcQYIjPxYzpVb9PGXdsqCR1OIgj+Rb24JiQONZiPoa5aomONHCzQcDD9QG
+ OrXo0ye+S5CeYVkCzx/61iIs=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id c5dacfae51997a19;
-	Tue, 13 Oct 2026 02:23:29 +0000
-X-Mizu-Trace-ID: c5dacfae51997a19
+Received: by smtp.migadu.com with ESMTPS id 6830bd04216ac914;
+	Tue, 13 Oct 2026 02:52:33 +0000
+X-Mizu-Trace-ID: 6830bd04216ac914
 X-Migadu-Flow: FLOW_OUT
-Content-Type: text/plain;
-	charset=us-ascii
+Message-ID: <c2d25c25-2fd4-4bb5-a021-3cdf23e493d0@linux.dev>
+Date: Tue, 13 Oct 2026 10:52:28 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
-Subject: Re: [PATCH] iommu/sva: Charge IOPF allocations to the faulting mm's
- memcg
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20261012200823.699316-1-peizheliu@utexas.edu>
-Date: Tue, 13 Oct 2026 10:23:14 +0800
-Cc: Joerg Roedel <joro@8bytes.org>,
- Will Deacon <will@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>,
- Lu Baolu <baolu.lu@linux.intel.com>,
- Jason Gunthorpe <jgg@nvidia.com>,
- Kevin Tian <kevin.tian@intel.com>,
- Jean-Philippe Brucker <jpb@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- iommu@lists.linux.dev,
- linux-mm@kvack.org,
- cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] mm/shrinker: size shrinker_info_unit to a power of
+ two
+To: Konstantin Khorenko <khorenko@virtuozzo.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Dave Chinner
+ <david@fromorbit.com>, Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-0-5a7608393b7a@virtuozzo.com>
+ <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
+From: Qi Zheng <qi.zheng@linux.dev>
+In-Reply-To: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <38FAA6E2-15C2-4C1A-9E3F-3F0B079A9D08@linux.dev>
-References: <20261012200823.699316-1-peizheliu@utexas.edu>
-To: Peizhe Liu <peizheliu@utexas.edu>
-X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
 
 
-> On Oct 13, 2026, at 04:08, Peizhe Liu <peizheliu@utexas.edu> wrote:
+On 10/13/26 3:02 AM, Konstantin Khorenko wrote:
+> Every memory cgroup allocates, per NUMA node, one shrinker_info_unit
+> for every SHRINKER_UNIT_BITS shrinker ids up to shrinker_nr_max. The
+> unit holds BITS_PER_LONG atomic_long_t of deferred work, a power of
+> two, plus the one-word bitmap of shrinkers with objects charged to the
+> cgroup. That word takes the unit just past the power of two, to 520
+> bytes on 64-bit, so every unit comes from kmalloc-1k and almost half of
+> it is padding.
 > 
-> iommu_sva_handle_mm() runs from the IOPF workqueue and calls
-> handle_mm_fault() for the faulting mm, but does not set the active
-> memcg. File-backed faults can allocate page cache through
-> mem_cgroup_charge(folio, NULL, gfp), which falls back to the root memcg
-> when the worker has neither an active memcg nor a current->mm. Page
-> cache faulted in by a device is therefore charged to root and escapes
-> the task's memory.max.
+> The units are allocated when the cgroup goes online and freed when it is
+> freed, so a dying cgroup keeps them until the last reference to it is
+> gone. Their number is the number of memory cgroups, times the NUMA
+> nodes, times shrinker_nr_max / SHRINKER_UNIT_BITS. shrinker_nr_max is
+> the peak number of memcg-aware shrinkers registered at once, and every
+> superblock registers one, so a host that mounts many filesystems and
+> runs many cgroups carries the padding as unreclaimable slab, and keeps
+> paying it for new cgroups after the mounts are gone.
 > 
-> Set the active memcg to the one associated with the faulting mm while
-> handling the fault, and restore the previous value afterwards.
+> Let a unit cover one id less than a word holds. The bitmap still fits
+> one word, and nr_deferred[] plus that word add up to BITS_PER_LONG
+> longs, so the unit fills a power-of-two kmalloc slot exactly and, on
+> 64-bit, the memory taken by units halves, for about one unit more in
+> BITS_PER_LONG.
+> round_up() in expand_shrinker_info() needs a power-of-two step and
+> becomes roundup(); the other uses of SHRINKER_UNIT_BITS are divisions,
+> modulos and multiplications that do not care. Assert the unit size at
+> build time, since the layout depends on it.
 > 
-> Fixes: fc36479db74e ("iommu: Add a page fault handler")
-> Signed-off-by: Peizhe Liu <peizheliu@utexas.edu>
+> Assisted-by: LLM
+> Signed-off-by: Konstantin Khorenko <khorenko@virtuozzo.com>
+> ---
+>   include/linux/shrinker.h | 9 ++++++++-
+>   mm/shrinker.c            | 2 +-
+>   2 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index 1a00be90d93a9..c250ab68d346c 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -7,7 +7,11 @@
+>   #include <linux/refcount.h>
+>   #include <linux/completion.h>
+>   
+> -#define SHRINKER_UNIT_BITS	BITS_PER_LONG
+> +/*
+> + * One id less than a word holds, so that nr_deferred[] and the map word add
+> + * up to BITS_PER_LONG longs: a power of two, which fills a kmalloc slot.
+> + */
+> +#define SHRINKER_UNIT_BITS	(BITS_PER_LONG - 1)
+>   
+>   /*
+>    * Bitmap and deferred work of shrinker::id corresponding to memcg-aware
+> @@ -18,6 +22,9 @@ struct shrinker_info_unit {
+>   	DECLARE_BITMAP(map, SHRINKER_UNIT_BITS);
+>   };
+>   
+> +static_assert(!(sizeof(struct shrinker_info_unit) &
+> +		(sizeof(struct shrinker_info_unit) - 1)));
+> +
+>   struct shrinker_info {
+>   	struct rcu_head rcu;
+>   	int map_nr_max;
+> diff --git a/mm/shrinker.c b/mm/shrinker.c
+> index 7ec2a9704f6f2..a9418072a509e 100644
+> --- a/mm/shrinker.c
+> +++ b/mm/shrinker.c
+> @@ -159,7 +159,7 @@ static int expand_one_shrinker_info(struct mem_cgroup *memcg, int new_size,
+>   static int expand_shrinker_info(int new_id)
+>   {
+>   	int ret = 0;
+> -	int new_nr_max = round_up(new_id + 1, SHRINKER_UNIT_BITS);
+> +	int new_nr_max = roundup(new_id + 1, SHRINKER_UNIT_BITS);
+>   	int new_size, old_size = 0;
+>   	struct mem_cgroup *memcg;
+>   
+> 
 
-Acked-by: Muchun Song <muchun.song@linux.dev>
+Acked-by: Qi Zheng <qi.zheng@linux.dev>
 
-Thanks.
+Thanks,
+Qi
+
+
 
