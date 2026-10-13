@@ -1,30 +1,30 @@
-Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F045C472094;
-	Tue, 13 Oct 2026 03:12:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D624A476CE9;
+	Tue, 13 Oct 2026 03:12:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791861157; cv=none; b=aN4HQbkCeFsg+g1w28iu6ye/69EaAQO4Ryn1Y/7Y2LVEr7yoitTLNCo1tCrOEaSGEpJPBXZYK6L0zBVGkyVlDguk9RjxgstygNmO7allvlNiR2buOjX+yVJ6ztfaF+nWImWmMWY9OUlnLmivqkeavFzomzSUr8V08B6jS/XvEXE=
+	t=1791861158; cv=none; b=CqeHVorNEJqvI9psd9V1mSFm0I90M4wHyyKuvbRlPAvy+b3Q6cnLnCF+9ylKxmo4oja7Wh+HpgfBA7oBeV20yrtKpOPPCszjHftZeASRTBvMwPKYkhfoVcGPv9nqFx3g09xjCvdrpICiVSoFijb94KZojNqEwEU2E4DOnW+hS7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791861157; c=relaxed/simple;
-	bh=6ick7YbNm0weH+4VhwBbZ/k4EoYWMJDUV5+U9c7y9Nw=;
+	s=arc-20240116; t=1791861158; c=relaxed/simple;
+	bh=opwtVw5zO11Aj+PPe+0rVWFHThZWRIxyMzNFEb9XYco=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=D9AJbZvNJH5AMRFTqUr+g0rZ98BKNo5WSG6zzRc3/b/+cQ1BLK6Kyt8nos9jDRkrCP2tei17e6jfhIgsJ+8xtZcYTey/K1fZsvbiHYiDlCdne710qqxE476AeuC3PDXSqyzzp7yc5QpvkYjCAv25W2MjMvxISZMqsNZFZWZzU+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ixpPW12J; arc=none smtp.client-ip=115.124.30.119
+	 MIME-Version; b=oWCvmagDSI4fY2ivgPdxgPS6hsqDCAR2OrLuRQOF4A7jafJfS2MNKrx/e00WSJ7c/CnqK8TsWsMq7bsRnfg+ImscXb5ewYq/vTkk9OQl7FZMaVYyXOS6pI+WDtWjMGGzddujhWzdN4LpE95hxkHUzuincgttXupv7wV9SVci+l4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=iG3LMKi+; arc=none smtp.client-ip=115.124.30.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ixpPW12J"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="iG3LMKi+"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1791861147; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=iLVAW+fTIOsvFqz8AUTyojT4okins1Fy/sb2HWay26A=;
-	b=ixpPW12JVf3KeSMwMCy1XiMPjs/90JZkRn19YHL2unsp/kDVtILLV+fA9HVxvEajvemE6zY+yMumHYEQXU6/MYe3FlsHIbifYSNiuBL4l2knMXEXrjdmPi8FUkXqADvZ/WUAO/2qIsSGxR5vh2tNezkGfY2V+rl4gEAoHwJ9YYE=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=23;SR=0;TI=SMTPD_---0XCkEjcd_1791861144;
-Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XCkEjcd_1791861144 cluster:ay36)
+	t=1791861148; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=Vi8x8kQIttn/cG7icAjrqsgg9Nfk4NMWqLP7ng53iWA=;
+	b=iG3LMKi+9GR6NsKZhSTY9hHQAzwqVhuZIzP26jX3uOfaoQKpoRpWjpk0V2XCEx3Uc/Y8Lyy81GTgm568eMMaOG5aRSxoFcgCXVn5Jh0ej/K0xLTUyZNHX70c3fALjquyeYTGIRKgqSlVijLmMAfIvFZaWeJigG0BRgaGMqHNafA=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=23;SR=0;TI=SMTPD_---0XCkEjd9_1791861145;
+Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XCkEjd9_1791861145 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Tue, 13 Oct 2026 11:12:25 +0800
+          Tue, 13 Oct 2026 11:12:26 +0800
 From: Qinyun Tan <qinyuntan@linux.alibaba.com>
 To: akpm@linux-foundation.org
 Cc: hannes@cmpxchg.org,
@@ -49,9 +49,9 @@ Cc: hannes@cmpxchg.org,
 	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
 	Qinyun Tan <qinyuntan@linux.alibaba.com>
-Subject: [PATCH v4 1/5] mm: list_lru: pass the memcg index directly to the walker
-Date: Tue, 13 Oct 2026 11:12:17 +0800
-Message-ID: <20261013031221.1997194-2-qinyuntan@linux.alibaba.com>
+Subject: [PATCH v4 2/5] mm: memcontrol: drop kmemcg_id and use mem_cgroup_id() for list_lru indexing
+Date: Tue, 13 Oct 2026 11:12:18 +0800
+Message-ID: <20261013031221.1997194-3-qinyuntan@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
 References: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
@@ -63,256 +63,231 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-list_lru_walk_node() looks up the memcg for each xarray index, only to
-have __list_lru_walk_one() translate that memcg back to an index to
-find the sublist.  The walker has no other use for the memcg.
+kmemcg_id is a copy of the private memcg ID and serves no purpose
+other than indexing the per-memcg list_lru xarray.  It is assigned
+when kmem accounting goes online, which never happens with
+cgroup.memory=nokmem, and the memcgs then all resolve to the
+per-node lists.  The next patch needs the index to work under nokmem
+as well.
 
-Pass the index directly and drop the reverse lookup and the temporary
-CSS reference.  The sublist is still looked up under RCU, and the
-lookup is repeated when a callback drops the lock.
+Index the lists with mem_cgroup_id().  The cgroup ID is unique per
+memcg and is only recycled once the cgroup is destroyed, long after
+offlining has erased the xarray entries, so a recycled ID cannot
+resurrect a stale entry.
 
-Split the memcg-based locking helper into an index-based primitive and
-a parent-traversing wrapper, replacing the skip_empty parameter.
-
-This is a preparation step for switching the xarray keys from the
-private memcg ID to the cgroup ID, which has no reverse lookup helper.
-The unsigned long index type matches the xarray API and fits the u64
-cgroup IDs; zero is reserved for the root per-node list.
+Also drop the nokmem early return from the offline path, so that the
+reparenting covers lrus that stay memcg aware without kmem
+accounting.  memcg_online_kmem() and memcg_offline_kmem() are each
+down to a single statement now; inline them into the css online and
+offline hooks, dropping the root check, as css_offline() is never
+called for the root and a memcg that failed css_online() cannot have
+list_lru entries.
 
 Signed-off-by: Qinyun Tan <qinyuntan@linux.alibaba.com>
 ---
- mm/list_lru.c | 98 +++++++++++++++++++++++++++++----------------------
- 1 file changed, 55 insertions(+), 43 deletions(-)
+ include/linux/memcontrol.h | 16 --------------
+ mm/list_lru.c              | 16 ++++++++------
+ mm/memcontrol.c            | 45 +++++++-------------------------------
+ 3 files changed, 17 insertions(+), 60 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 74110a324f9e..dc89d46e3d77 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -328,8 +328,6 @@ struct mem_cgroup {
+ 	/* Private memcg ID. Used to ID objects that outlive the cgroup */
+ 	int private_id;
+ 
+-	int kmemcg_id;
+-
+ 	/*
+ 	 * Should the OOM killer kill all belonging tasks, had it kill one?
+ 	 */
+@@ -1820,15 +1818,6 @@ static inline void memcg_kmem_uncharge_page(struct page *page, int order)
+ 		__memcg_kmem_uncharge_page(page, order);
+ }
+ 
+-/*
+- * A helper for accessing memcg's kmem_id, used for getting
+- * corresponding LRU lists.
+- */
+-static inline int memcg_kmem_id(const struct mem_cgroup *memcg)
+-{
+-	return memcg ? memcg->kmemcg_id : -1;
+-}
+-
+ struct mem_cgroup *mem_cgroup_from_virt(void *p);
+ 
+ static inline void count_objcg_events(struct obj_cgroup *objcg,
+@@ -1896,11 +1885,6 @@ static inline bool memcg_kmem_online(void)
+ 	return false;
+ }
+ 
+-static inline int memcg_kmem_id(const struct mem_cgroup *memcg)
+-{
+-	return -1;
+-}
+-
+ static inline struct mem_cgroup *mem_cgroup_from_virt(void *p)
+ {
+ 	return NULL;
 diff --git a/mm/list_lru.c b/mm/list_lru.c
-index d1d256822ccc..61248b88441c 100644
+index 61248b88441c..8e9577c5cb19 100644
 --- a/mm/list_lru.c
 +++ b/mm/list_lru.c
-@@ -37,6 +37,13 @@ static inline void unlock_list_lru(struct list_lru_one *l, bool irq_off,
- 		spin_unlock(&l->lock);
+@@ -39,9 +39,10 @@ static inline void unlock_list_lru(struct list_lru_one *l, bool irq_off,
+ 
+ static inline unsigned long list_lru_memcg_idx(const struct mem_cgroup *memcg)
+ {
+-	int idx = memcg_kmem_id(memcg);
++	if (!memcg || mem_cgroup_is_root(memcg))
++		return 0;
+ 
+-	return idx < 0 ? 0 : idx;
++	return mem_cgroup_id(memcg);
  }
  
-+static inline unsigned long list_lru_memcg_idx(const struct mem_cgroup *memcg)
-+{
-+	int idx = memcg_kmem_id(memcg);
-+
-+	return idx < 0 ? 0 : idx;
-+}
-+
  #ifdef CONFIG_MEMCG
- static LIST_HEAD(memcg_list_lrus);
- static DEFINE_MUTEX(list_lrus_mutex);
-@@ -72,9 +79,9 @@ static int lru_shrinker_id(struct list_lru *lru)
+@@ -548,7 +549,7 @@ void memcg_reparent_list_lrus(struct mem_cgroup *memcg, struct mem_cgroup *paren
+ 		 * allocating a new mlru since CSS_DYING is already set for this
+ 		 * memcg a rcu grace period ago.
+ 		 */
+-		mlru = xa_load(&lru->xa, memcg->kmemcg_id);
++		mlru = xa_load(&lru->xa, list_lru_memcg_idx(memcg));
+ 		if (!mlru)
+ 			continue;
+ 
+@@ -563,7 +564,7 @@ void memcg_reparent_list_lrus(struct mem_cgroup *memcg, struct mem_cgroup *paren
+ 		for_each_node(i)
+ 			memcg_reparent_list_lru_one(lru, i, &mlru->node[i], parent);
+ 
+-		xa_erase_irq(&lru->xa, memcg->kmemcg_id);
++		xa_erase_irq(&lru->xa, list_lru_memcg_idx(memcg));
+ 
+ 		/*
+ 		 * Here all list_lrus corresponding to the cgroup are guaranteed
+@@ -578,9 +579,10 @@ void memcg_reparent_list_lrus(struct mem_cgroup *memcg, struct mem_cgroup *paren
+ static inline bool memcg_list_lru_allocated(struct mem_cgroup *memcg,
+ 					    struct list_lru *lru)
+ {
+-	int idx = memcg->kmemcg_id;
++	if (!memcg || mem_cgroup_is_root(memcg))
++		return true;
+ 
+-	return idx < 0 || xa_load(&lru->xa, idx);
++	return xa_load(&lru->xa, list_lru_memcg_idx(memcg));
  }
  
- static inline struct list_lru_one *
--list_lru_from_memcg_idx(struct list_lru *lru, int nid, int idx)
-+list_lru_from_memcg_idx(struct list_lru *lru, int nid, unsigned long idx)
- {
--	if (list_lru_memcg_aware(lru) && idx >= 0) {
-+	if (list_lru_memcg_aware(lru) && idx) {
- 		struct list_lru_memcg *mlru = xa_load(&lru->xa, idx);
- 
- 		return mlru ? &mlru->node[nid] : NULL;
-@@ -83,15 +90,13 @@ list_lru_from_memcg_idx(struct list_lru *lru, int nid, int idx)
- }
- 
- static inline struct list_lru_one *
--lock_list_lru_of_memcg(struct list_lru *lru, int nid,
--		       struct mem_cgroup **memcg, bool irq,
--		       unsigned long *irq_flags, bool skip_empty)
-+lock_list_lru_of_memcg_idx(struct list_lru *lru, int nid, unsigned long idx,
-+			   bool irq, unsigned long *irq_flags)
- {
- 	struct list_lru_one *l;
- 
- 	rcu_read_lock();
--again:
--	l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(*memcg));
-+	l = list_lru_from_memcg_idx(lru, nid, idx);
- 	if (likely(l)) {
- 		lock_list_lru(l, irq, irq_flags);
- 		if (likely(READ_ONCE(l->nr_items) != LONG_MIN)) {
-@@ -100,17 +105,26 @@ lock_list_lru_of_memcg(struct list_lru *lru, int nid,
+ static int __memcg_list_lru_alloc(struct mem_cgroup *memcg,
+@@ -614,7 +616,7 @@ static int __memcg_list_lru_alloc(struct mem_cgroup *memcg,
+ 			if (!mlru)
+ 				return -ENOMEM;
  		}
- 		unlock_list_lru(l, irq, irq_flags);
+-		xas_set(&xas, pos->kmemcg_id);
++		xas_set(&xas, list_lru_memcg_idx(pos));
+ 		do {
+ 			xas_lock_irqsave(&xas, flags);
+ 			if (!xas_load(&xas) && !css_is_dying(&pos->css)) {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index aad0498a7bd6..fcba9eb55659 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3807,33 +3807,6 @@ void folio_split_memcg_refs(struct folio *folio, unsigned old_order,
+ 	obj_cgroup_get_many(folio_objcg(folio), new_refs);
+ }
+ 
+-static void memcg_online_kmem(struct mem_cgroup *memcg)
+-{
+-	if (mem_cgroup_kmem_disabled())
+-		return;
+-
+-	if (unlikely(mem_cgroup_is_root(memcg)))
+-		return;
+-
+-	static_branch_enable(&memcg_kmem_online_key);
+-
+-	memcg->kmemcg_id = memcg->private_id;
+-}
+-
+-static void memcg_offline_kmem(struct mem_cgroup *memcg)
+-{
+-	struct mem_cgroup *parent;
+-
+-	if (mem_cgroup_kmem_disabled())
+-		return;
+-
+-	if (unlikely(mem_cgroup_is_root(memcg)))
+-		return;
+-
+-	parent = parent_mem_cgroup(memcg);
+-	memcg_reparent_list_lrus(memcg, parent);
+-}
+-
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 
+ #include <trace/events/writeback.h>
+@@ -4309,7 +4282,6 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
+ 	seqlock_init(&memcg->socket_pressure_seqlock);
+ #endif
+ 	memcg1_memcg_init(memcg);
+-	memcg->kmemcg_id = -1;
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&memcg->cgwb_list);
+ 	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++)
+@@ -4383,7 +4355,8 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 	struct obj_cgroup *objcg;
+ 	int nid;
+ 
+-	memcg_online_kmem(memcg);
++	if (!mem_cgroup_kmem_disabled() && likely(!mem_cgroup_is_root(memcg)))
++		static_branch_enable(&memcg_kmem_online_key);
+ 
+ 	/*
+ 	 * A memcg must be visible for expand_shrinker_info()
+@@ -4391,7 +4364,7 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 	 * here, when mem_cgroup_iter() can't skip it.
+ 	 */
+ 	if (alloc_shrinker_info(memcg))
+-		goto offline_kmem;
++		goto reparent_lrus;
+ 
+ 	for_each_node(nid) {
+ 		objcg = obj_cgroup_alloc();
+@@ -4449,8 +4422,8 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 		}
  	}
--	/*
--	 * Caller may simply bail out if raced with reparenting or
--	 * may iterate through the list_lru and expect empty slots.
--	 */
--	if (skip_empty) {
--		rcu_read_unlock();
--		return NULL;
-+	rcu_read_unlock();
-+	return NULL;
-+}
-+
-+static inline struct list_lru_one *
-+lock_list_lru_of_memcg(struct list_lru *lru, int nid,
-+		       struct mem_cgroup **memcg, bool irq,
-+		       unsigned long *irq_flags)
-+{
-+	struct list_lru_one *l;
-+
-+	for (;;) {
-+		l = lock_list_lru_of_memcg_idx(lru, nid,
-+					       list_lru_memcg_idx(*memcg),
-+					       irq, irq_flags);
-+		if (likely(l))
-+			return l;
-+		VM_WARN_ON(!css_is_dying(&(*memcg)->css));
-+		*memcg = parent_mem_cgroup(*memcg);
- 	}
--	VM_WARN_ON(!css_is_dying(&(*memcg)->css));
--	*memcg = parent_mem_cgroup(*memcg);
--	goto again;
+ 	free_shrinker_info(memcg);
+-offline_kmem:
+-	memcg_offline_kmem(memcg);
++reparent_lrus:
++	memcg_reparent_list_lrus(memcg, parent_mem_cgroup(memcg));
+ 	mem_cgroup_private_id_remove(memcg);
+ 	return -ENOMEM;
  }
- #else
- static void list_lru_register(struct list_lru *lru)
-@@ -132,15 +146,14 @@ static inline bool list_lru_memcg_aware(struct list_lru *lru)
- }
+@@ -4466,11 +4439,11 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
  
- static inline struct list_lru_one *
--list_lru_from_memcg_idx(struct list_lru *lru, int nid, int idx)
-+list_lru_from_memcg_idx(struct list_lru *lru, int nid, unsigned long idx)
- {
- 	return &lru->node[nid].lru;
- }
+ 	zswap_memcg_offline_cleanup(memcg);
  
- static inline struct list_lru_one *
--lock_list_lru_of_memcg(struct list_lru *lru, int nid,
--		       struct mem_cgroup **memcg, bool irq,
--		       unsigned long *irq_flags, bool skip_empty)
-+lock_list_lru_of_memcg_idx(struct list_lru *lru, int nid, unsigned long idx,
-+			   bool irq, unsigned long *irq_flags)
- {
- 	struct list_lru_one *l = &lru->node[nid].lru;
+-	memcg_offline_kmem(memcg);
++	memcg_reparent_list_lrus(memcg, parent_mem_cgroup(memcg));
+ 	/*
+ 	 * The reparenting of objcg must be after the reparenting of
+-	 * the list_lru in memcg_offline_kmem(), which ensures that
+-	 * they will not mistakenly get the parent list_lru.
++	 * the list_lru above, which ensures that they will not
++	 * mistakenly get the parent list_lru.
+ 	 */
+ 	memcg_reparent_objcgs(memcg);
+ 	reparent_shrinker_deferred(memcg);
+@@ -5913,8 +5886,6 @@ static void __init memcg_struct_check(void)
+ 				      private_id_objcg);
+ 	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_read_mostly,
+ 				      private_id);
+-	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_read_mostly,
+-				      kmemcg_id);
+ 	CACHELINE_ASSERT_GROUP_MEMBER(struct mem_cgroup, memcg_read_mostly,
+ 				      oom_group);
  
-@@ -148,13 +161,21 @@ lock_list_lru_of_memcg(struct list_lru *lru, int nid,
- 
- 	return l;
- }
-+
-+static inline struct list_lru_one *
-+lock_list_lru_of_memcg(struct list_lru *lru, int nid,
-+		       struct mem_cgroup **memcg, bool irq,
-+		       unsigned long *irq_flags)
-+{
-+	return lock_list_lru_of_memcg_idx(lru, nid, 0, irq, irq_flags);
-+}
- #endif /* CONFIG_MEMCG */
- 
- struct list_lru_one *list_lru_lock(struct list_lru *lru, int nid,
- 				   struct mem_cgroup **memcg)
- {
- 	return lock_list_lru_of_memcg(lru, nid, memcg, /*irq=*/false,
--				      /*irq_flags=*/NULL, /*skip_empty=*/false);
-+				      /*irq_flags=*/NULL);
- }
- 
- void list_lru_unlock(struct list_lru_one *l)
-@@ -166,7 +187,7 @@ struct list_lru_one *list_lru_lock_irq(struct list_lru *lru, int nid,
- 				       struct mem_cgroup **memcg)
- {
- 	return lock_list_lru_of_memcg(lru, nid, memcg, /*irq=*/true,
--				      /*irq_flags=*/NULL, /*skip_empty=*/false);
-+				      /*irq_flags=*/NULL);
- }
- 
- void list_lru_unlock_irq(struct list_lru_one *l)
-@@ -179,7 +200,7 @@ struct list_lru_one *list_lru_lock_irqsave(struct list_lru *lru, int nid,
- 					   unsigned long *flags)
- {
- 	return lock_list_lru_of_memcg(lru, nid, memcg, /*irq=*/true,
--				      /*irq_flags=*/flags, /*skip_empty=*/false);
-+				      /*irq_flags=*/flags);
- }
- 
- void list_lru_unlock_irqrestore(struct list_lru_one *l, unsigned long *flags)
-@@ -313,7 +334,7 @@ unsigned long list_lru_count_one(struct list_lru *lru,
- 	long count;
- 
- 	rcu_read_lock();
--	l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
-+	l = list_lru_from_memcg_idx(lru, nid, list_lru_memcg_idx(memcg));
- 	count = l ? READ_ONCE(l->nr_items) : 0;
- 	rcu_read_unlock();
- 
-@@ -334,7 +355,7 @@ unsigned long list_lru_count_node(struct list_lru *lru, int nid)
- EXPORT_SYMBOL_GPL(list_lru_count_node);
- 
- static unsigned long
--__list_lru_walk_one(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
-+__list_lru_walk_one(struct list_lru *lru, int nid, unsigned long idx,
- 		    list_lru_walk_cb isolate, void *cb_arg,
- 		    unsigned long *nr_to_walk, bool irq_off)
- {
-@@ -344,8 +365,8 @@ __list_lru_walk_one(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
- 	unsigned long isolated = 0;
- 
- restart:
--	l = lock_list_lru_of_memcg(lru, nid, &memcg, /*irq=*/irq_off,
--				   /*irq_flags=*/NULL, /*skip_empty=*/true);
-+	l = lock_list_lru_of_memcg_idx(lru, nid, idx, /*irq=*/irq_off,
-+				       /*irq_flags=*/NULL);
- 	if (!l)
- 		return isolated;
- 	list_for_each_safe(item, n, &l->list) {
-@@ -396,8 +417,8 @@ list_lru_walk_one(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
- 		  list_lru_walk_cb isolate, void *cb_arg,
- 		  unsigned long *nr_to_walk)
- {
--	return __list_lru_walk_one(lru, nid, memcg, isolate,
--				   cb_arg, nr_to_walk, false);
-+	return __list_lru_walk_one(lru, nid, list_lru_memcg_idx(memcg),
-+				   isolate, cb_arg, nr_to_walk, false);
- }
- EXPORT_SYMBOL_GPL(list_lru_walk_one);
- 
-@@ -406,8 +427,8 @@ list_lru_walk_one_irq(struct list_lru *lru, int nid, struct mem_cgroup *memcg,
- 		      list_lru_walk_cb isolate, void *cb_arg,
- 		      unsigned long *nr_to_walk)
- {
--	return __list_lru_walk_one(lru, nid, memcg, isolate,
--				   cb_arg, nr_to_walk, true);
-+	return __list_lru_walk_one(lru, nid, list_lru_memcg_idx(memcg),
-+				   isolate, cb_arg, nr_to_walk, true);
- }
- 
- unsigned long list_lru_walk_node(struct list_lru *lru, int nid,
-@@ -422,21 +443,12 @@ unsigned long list_lru_walk_node(struct list_lru *lru, int nid,
- #ifdef CONFIG_MEMCG
- 	if (*nr_to_walk > 0 && list_lru_memcg_aware(lru)) {
- 		struct list_lru_memcg *mlru;
--		struct mem_cgroup *memcg;
- 		unsigned long index;
- 
- 		xa_for_each(&lru->xa, index, mlru) {
--			rcu_read_lock();
--			memcg = mem_cgroup_from_private_id(index);
--			if (!memcg || !mem_cgroup_tryget(memcg)) {
--				rcu_read_unlock();
--				continue;
--			}
--			rcu_read_unlock();
--			isolated += __list_lru_walk_one(lru, nid, memcg,
-+			isolated += __list_lru_walk_one(lru, nid, index,
- 							isolate, cb_arg,
- 							nr_to_walk, false);
--			mem_cgroup_put(memcg);
- 
- 			if (*nr_to_walk <= 0)
- 				break;
-@@ -502,7 +514,7 @@ static void memcg_reparent_list_lru_one(struct list_lru *lru, int nid,
- 					struct list_lru_one *src,
- 					struct mem_cgroup *dst_memcg)
- {
--	int dst_idx = dst_memcg->kmemcg_id;
-+	unsigned long dst_idx = list_lru_memcg_idx(dst_memcg);
- 	struct list_lru_one *dst;
- 
- 	spin_lock_irq(&src->lock);
 -- 
 2.43.7
 
