@@ -1,210 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010043.outbound.protection.outlook.com [52.101.85.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 858304718FD;
-	Tue, 13 Oct 2026 09:48:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791884911; cv=none; b=lEFNbhq8/4Z+AEFP3grx0bnvDo1NrkfXV4iDNsMbwmQ0S4u/jx48Va8x4Au+Kc61aZRYvEcVCFzma1J5tgmXbnTmJ6vazfHCeu+fChspzGUk9nsjieB5lf9NQVACdWENyNPydeBITmPtJoalpaP6A0FO2i5nkLKO6FCSSOzv/fI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791884911; c=relaxed/simple;
-	bh=adYx3/9qwjzcfl0P1PH8mIts+UkvzybnFPplU/EoSJ4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rxrWDlRgx7Wvi1dTYF4uuao20qgfNGw+0bnVoHCpmOx2YvitRCmk5EpYciGPd2xONrB5mMLNGYCF1tv2Gy2JeLQa8MZwWZjjzFrnbVZm+npEevkOmbZdfHNtzUXJO5wi9vZimBe8lp/nYVa2zMGcEyB1jUURxY+raBmk8+YaB+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=no58pOgz; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A2073B892D;
+	Tue, 13 Oct 2026 12:22:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791894168; cv=fail; b=P18JjqWsdCn0e1SXk6Y5kzNO2CuCp69u2GBXV1HwnGO7QZoX53CQx93cOEXY+sY3Ns1zbJw4wiPmnZHxYpRlpUjYpJ9YvbzVhXqAXbp7NI+vy7bFkUhAcaDlDgRpg2ll0fmWLbo8hWiCrSyvI+7Yn7e5nnLY1nDkr9OJWvdz7fU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791894168; c=relaxed/simple;
+	bh=wXmyGuPqtt4tOahdNTPMAEJMyYtSrcYOpWAFAg4iirM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=nlLFWbexDEQ8HjfqE2/ou0TcehSLWzygxtSctoSruEoufGTobPkRfAHJYfBzxW3oJSWL6dMA2Y6vKll6HTVtJnR5GLWTHK+NdidcA5aOEagUIlBMMWljldTtWaacMYfm0t3yESr9Js1G3Ry1Jv8K9iYWC0fxySTawHemmwXSiV8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=rNN0xJWg; arc=fail smtp.client-ip=52.101.85.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="no58pOgz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB2091F000FF;
-	Tue, 13 Oct 2026 09:48:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791884910;
-	bh=ZWMA85UhpZgb1xgUdrTwIN+V9GMQeZAE1Tnoo9sRrhQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=no58pOgzSmPldS01bBjuPk++JqubDKPmL2Ty43rG1Dk1gxqKDHTt3ug4IEX1R4Anh
-	 upFo/sfwURQy4YZ1YuyVJVdC6ZALMDx1eotH8YIlnJy5/3O/63McAEAgeSofDFjwNF
-	 SGSWr1MOetWEtNIx3rkdpKcOEKeeCbKJee5svlDnIlW2F045FDvVE2QC2F/kvaFMJ5
-	 y/tawclwKENd1WOydkibyRSlBpXUqEdLBI95yeEdlBWhYSsAd9WBcq2i+NugsSlZvg
-	 r7dyVlS0osChdnjP0KmEkjI7QLIMNBtensaF3go3Bji51QP5cFa2P/g9eZB+F4o/xy
-	 4QthqCk5pq7Tw==
-Message-ID: <2d970074-c6db-4c18-8103-da0744ca86bb@kernel.org>
-Date: Tue, 13 Oct 2026 11:48:24 +0200
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="rNN0xJWg"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bSfg7CoM7QN4YaVYBMxYHLVqzT9OyC8v4HndltKDq/Fla6LeQQTpzBnxklCSV4To4PUCiOZMYP/RIUvykHpElGfYd+W+CU8/hQh29krtKJQ90Hm9+FxkJus/wQKd9XkRoObSgcfe4NqiI0Ug+3yYpaY++/fJJSwnXRCvAg5zoFyBZr1aEwbJp0JDzg8WgW8kCLJb+2f4Ss30pCrOchd36C3FnmutgMImKoDc6S09RjYqwSwBno1/DXh2K9/bD6rjDay+FLt9UkvpYF/7nvOSFvt5JRweIOnJqetvaZWSgBSRs8vpZRMbhwJqzRQ9s9EsTCUwGkrI4J22FkYj4V6JJg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=v+wEt9RoxMstqYDfMgU/aZVdd2TgXoSCaXwYp6a3UlQ=;
+ b=d5ulFDfOVrErUJITsFWBTOQ5Bij0WHKcutJTwhPLOO94bNOq2OJU5IRCnyBLbr5DR3YDi0ui/5zls5lBHMb9gvGPo9wzW4s2tThIp7SKawDgoQwvUzgnUbMa4Ewre1l359tqQ9sPdEJX4GysfwtVEVT1Rb+JUxGTjNE2w3KPwDNycif+rGYRiJUY16kt9kjH4JSEz7kRGWxai+cQibo+bFxf/qEj0sBRH4hUL/lmjIfG8l++9FBl95VxGC2c4yzRNrDTBz7GQI3tYaLZZM6R1hudhAt/4qcqOJIlNPm4Za0qBqzrSFJshtLnVP3Yi26eYfuMELbNgBLvB2osBnjjYg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=v+wEt9RoxMstqYDfMgU/aZVdd2TgXoSCaXwYp6a3UlQ=;
+ b=rNN0xJWgfZd3UxFXfL/HshtKE+k5cpt0+Zka8o4/RC0WsvbzTsduN8LWSfOi5k+6DsPBV73A68l8nclDuZsUkKBoGD4vRELlgBp8hLYCwvzuGJNmhvOLaalP9T5U2gcXCxIA0ANF2RKSI8pnfg6AYTHqbPzxUX9oWkkWHHvg4v0jTibFtn5Fa3GuqVB5rSPaMGWtZ8SCDYztUWAJPxzzQPUtCfA69eXOwH0aNWAWF/pxUXwfY01i6Llh312C5/BJJc/rsdgRZmqQFvW6gE1MUiLErH+tD7Ep2kcimBRfgvwOcX+ABw0EMf+3TbfXT8tqWgg5tgP3UrIs0PkSg7pCTw==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12) by PH7PR12MB6564.namprd12.prod.outlook.com
+ (2603:10b6:510:210::22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.15; Tue, 13 Oct
+ 2026 12:22:42 +0000
+Received: from CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d]) by CHBPR12MB731189.namprd12.prod.outlook.com
+ ([fe80::b0e5:123d:fe06:e10d%6]) with mapi id 15.21.0496.021; Tue, 13 Oct 2026
+ 12:22:42 +0000
+Date: Tue, 13 Oct 2026 09:22:41 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Peizhe Liu <peizheliu@utexas.edu>
+Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Jean-Philippe Brucker <jpb@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, iommu@lists.linux.dev,
+	linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iommu/sva: Charge IOPF allocations to the faulting mm's
+ memcg
+Message-ID: <20261013122241.GR13920@nvidia.com>
+References: <20261012200823.699316-1-peizheliu@utexas.edu>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261012200823.699316-1-peizheliu@utexas.edu>
+X-ClientProxiedBy: YT4P288CA0074.CANP288.PROD.OUTLOOK.COM
+ (2603:10b6:b01:d0::7) To CHBPR12MB731189.namprd12.prod.outlook.com
+ (2603:10b6:610:33d::12)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH net-next v6 2/8] ipc, msg: Account msg_msg allocations
- with GFP_KERNEL_ACCOUNT again
-To: Kees Cook <kees@kernel.org>
-Cc: Harry Yoo <harry@kernel.org>, Christian Brauner <brauner@kernel.org>,
- Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- cgroups@vger.kernel.org, linux-mm@kvack.org, Pedro Falcato
- <pfalcato@suse.de>, Kuniyuki Iwashima <kuniyu@google.com>,
- linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261006092030.got.500-kees@kernel.org>
- <20261006092035.166776-2-kees@kernel.org> <asjhg2e4-WSeKuXd@thinkpad>
- <ask5kpMS4mpI8Api@thinkpad> <202610092014.AAB20B81@keescook>
- <01c89e02-28e0-4424-b32b-50363e4d2b95@kernel.org>
- <202610130141.E186B6E@keescook>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <202610130141.E186B6E@keescook>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CHBPR12MB731189:EE_|PH7PR12MB6564:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0839bd9a-38bb-4261-506b-08df2924adc1
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|23010399003|11063799006|56012099006|10067099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	4C7mDuG3OVog8beT9u+Y1yc35wX/9HZEKKX4mQuoaOWo7dzgJSgXH+1nVmkKYrH24jTdD9e9+SoSQ7MYP076uNnRq/aOH5W8gGCBxsUPo3L43UV+GSbO+CgUne1m4870DBXSr63LY6TwYy5tVC6nSxPavmdqGi/dIZ8bsC9omVKRCYY9bTyVgPu6HoOz/vBNuH+4ABJrDor8LRR45ViwVrmO3+WGVjgyozzYxlvY94qoPd14joWWxLwBsikqBGksGHjxvcyhrSX26JWaU7wLoz3apnRrBqA77q26DrPaffSznUm96tgWKZEGPQEXVzbB1dvDggwcf8fQ8AaopOuOp5c1bRs/iG/M1fGGmtsr6W4chXmEPS73uH97CP7HWBODVUNw/W6UYHCcWwmgKuh1nHjkwBuhfmv8p74Bow+XFpPlx0+OLPlnB4JqmKliuByTtKp+i0FLVozuqr2aM6Q56gE7Won86WFxoUb9zzqAmfoVN1GQ4Nk65+IESpIz2eUfh5JNZx4wRVLoFoGia5LzK9mAe9b1urXshJ7I0kYiaROnz4//hZO7s2fLMdt+4Hbu6Jf3RvkBfAe+DvJZMdZlhV4mceFJqurqVLMz7oveo3jv8vLHM+i5uLDnm4SHEyDjA4wOnptHeyTGWz2dmc7hL3E/S/20Anho0nc6Y5sDxYM=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CHBPR12MB731189.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(23010399003)(11063799006)(56012099006)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?MSI7gjAPuPZPDZ8HyZUkQer2I654r5rtTSnJh3Q19ZkAamr1ZPaTDcu9DWSe?=
+ =?us-ascii?Q?hUzxRtF7UPZxBILmOy3FALR+GrMtbr6rC38QDxgln6R/KVMCpJLpkkPY3lKW?=
+ =?us-ascii?Q?jUoZveMFET84lvXESSpJ6OryxwBVA2oh7ldWG7qU6+5S6ign7qQ4g+CLtcRo?=
+ =?us-ascii?Q?M9B8R3Grr4wjojjsVVstcX281DR3J55sPkz1aj6vPEouGLVH3iGFKLhtNtGa?=
+ =?us-ascii?Q?XLU6xUcQ/VU8wmMtzXBwyMviBMKiqTvTZyHBX2Kt+/l0xoethtOIoUpSmBoI?=
+ =?us-ascii?Q?Qf7xcAFE/80xx0v8aUHL26+kIBltQ48bG5CXQStv6c+bmqs3khtCKSzc6D35?=
+ =?us-ascii?Q?KPEEXR4tOMI8Ed05geZ1G56q8ZKUBm3onnvl+EGXal442b0CidD29Rg7CjqQ?=
+ =?us-ascii?Q?VpzRfiQ7iyoSSdcPXzaN9rfDJOKrpTnb4qHC2C1aRSmE5Xn+c++NB5ie/MYC?=
+ =?us-ascii?Q?j8m3sLcWlFWvKqYDb01c0YUPu+TRc7Hs7qsL2aBnbnwcVUZZ9TQDfPRG2nHs?=
+ =?us-ascii?Q?iMFfJUzOSieA+SJIt4otVHLHlsD90nVnjNIbFC9jPmkoyR9YxjvQqB+msaqT?=
+ =?us-ascii?Q?yIPP7pb6aKEg0ollFbman8o+ffyV+bfgkJuryELvVWhBmBX8Y9TjNjRQAJVk?=
+ =?us-ascii?Q?ws2LCzRMD+tvRMy2y0Vzn9QMh4TidV7jn2BNzLco9SaNZ5FsT1EbO6j+xhHL?=
+ =?us-ascii?Q?98aK/LEHSoweECWe3yQijsaxHRpXyUpuXGLElkCeFdZNC6/ldYvR7AS7taPx?=
+ =?us-ascii?Q?ujgS5r8AVJkYw20e8gPlakMIxeNNR9eVNohwvphaCNAjXtx2aFOMhYeblZ36?=
+ =?us-ascii?Q?xM6lp53QPquYXqM5iX6K8J5aBtkBn0mt9VP1OluMe688kjlvYV7PqtBGnJeY?=
+ =?us-ascii?Q?RJEYzjEvhTDNbgKipuwGgUo3zagOxvvpRNzUD5070gZgQFhPW2WBbaX54mWV?=
+ =?us-ascii?Q?xa9SmwE0oePVUMq0SD+dP3Eo7qgxyK4nX6CJrdsibfASSWrgcnq5vbTJmlFO?=
+ =?us-ascii?Q?c7v6vO3lhlapy5GrQMMhrYDaBwsaSb5PVpyMm+lSz8PSAz6eJZQm2vev349Y?=
+ =?us-ascii?Q?pTJYBgXMAtOub5xHOdgY99eqY7TUoTq/J5ndCCaqBZvg5U5FR0Qu4H7Dqo8P?=
+ =?us-ascii?Q?Se5MtENZoBIeRsd9IP4ZlXKR9xOdCoQm7vGOwKO3jt9gHa6P7nY6GXTn06hx?=
+ =?us-ascii?Q?Lw+rd6enUpP2k48qBtgBPT8V+dGJnfJhuygGEEHYbQQkyc1qqhkh0BIp84Ek?=
+ =?us-ascii?Q?ptwi+7dJdYOQyDrT54i78+XhZVq78Dd4ntOaj7w41nrrHcgB/CaUhjYb/r4j?=
+ =?us-ascii?Q?BFmiZPa4F2dzR2JmJxvX7mgeA51MhLtDtev1wLuMW+PXzny1ekVk4IsfILUA?=
+ =?us-ascii?Q?PziPWd5Owe78HN0pgMtQnb+ngH8kYaXlX7ViW8UoOE6qIpgDiozDIB3yR5dt?=
+ =?us-ascii?Q?/S9QGYUN2DJMLGqbM3CByVP2dIEjpyvtUKQLOxk57drsVglLQR58vCAV4cEJ?=
+ =?us-ascii?Q?onRYtyEm8WGV9m1tcPqXljSkItua/1kmgqnxSnsfsOEy+llfzKGhQnwfqHUj?=
+ =?us-ascii?Q?2SAVZO7WcoIlvZHDge84h6KxG4BdApfgQmsKzn3B4j3UaEUAONAnWHIXwUEn?=
+ =?us-ascii?Q?K0vKRbiGBZ2FsrWjWoMqTCNJ2jQX4uRyV7VsGLlBDkE6RztbQ3sqByjrD9nm?=
+ =?us-ascii?Q?3xV+gYh0mX3WZoDEi5U+/KUuj5yQJgDRLqlyw9jY0AO1Nkr8?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0839bd9a-38bb-4261-506b-08df2924adc1
+X-MS-Exchange-CrossTenant-AuthSource: CHBPR12MB731189.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 12:22:42.1288
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: jEbfVCIIfBCSWUdevXGyJzlhCxBYsCFWZSUBSuQDUnnnZVBkr0OXI3cU+LWGXAnZ
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6564
 
-On 10/13/26 10:52, Kees Cook wrote:
-> On Mon, Oct 12, 2026 at 11:19:01PM +0200, Vlastimil Babka (SUSE) wrote:
->> On 10/10/26 05:18, Kees Cook wrote:
->> > On Fri, Oct 09, 2026 at 09:39:48PM +0200, Harry Yoo wrote:
->> >> On Fri, Oct 09, 2026 at 04:22:03PM +0200, Harry Yoo wrote:
->> >> > When it falls back to kmalloc, kmem_buckets itself should provide a
->> >> > compatibility layer when falling back to kmalloc.
->> >> 
->> >> For example, calculate_sizes() converts certain SLAB_* flags into
->> >> GFP flags (s->allocflags) for allocation. We can have a similar
->> >> logic when falling back to kmalloc.
->> >> 
->> >> Though current implementation does not allow this and requires
->> >> some rework.
->> > 
->> > I think the current series does everything correctly in the sense that
->> > nothing is allowing for mismatched fallbacks/passthrus. We could iterate
->> > from there once we have a need for this where a non-kmalloc-alignment is
->> > wanted, etc?
->> 
->> I think we can indeed simply make sure buckets have the same alignment as
->> kmalloc. It comes naturally and should (more than) satisfy everyone. I doubt
->> anyone would be needing a more specific alignment than that for a class of
->> allocations with a variable size?
+On Mon, Oct 12, 2026 at 03:08:23PM -0500, Peizhe Liu wrote:
+> iommu_sva_handle_mm() runs from the IOPF workqueue and calls
+> handle_mm_fault() for the faulting mm, but does not set the active
+> memcg. File-backed faults can allocate page cache through
+> mem_cgroup_charge(folio, NULL, gfp), which falls back to the root memcg
+> when the worker has neither an active memcg nor a current->mm. Page
+> cache faulted in by a device is therefore charged to root and escapes
+> the task's memory.max.
 > 
-> Right, the whole point of kmem_buckets was to replace general kmalloc
-> uses, where no callers cared about alignment.
+> Set the active memcg to the one associated with the faulting mm while
+> handling the fault, and restore the previous value afterwards.
 > 
->> ctor removal is clear I think
+> Fixes: fc36479db74e ("iommu: Add a page fault handler")
+> Signed-off-by: Peizhe Liu <peizheliu@utexas.edu>
+> ---
+> Tested on a Xeon Gold 5512U with Intel DSA, based on iommu/next.
+> Before/after testing confirmed that the block-on-fault case charges
+> the page cache to the task's memcg after this change and is subject
+> to memory.max.
 > 
-> Completely. I was blinded by the API of kmem_cache_create(). :)
-> 
->> for __GFP_ACCOUNT and __GFP_RECLAIMABLE I think what we could do is not to
->> drop the flags argument kmem_buckets_create and instead require that it
->> matches the usage:
->> 
->> __GFP_RECLAIMABLE requires SLAB_RECLAIM_ACCOUNT and vice versa and I can't
->> imagine there would be a buckets instance that would allocate both kinds
->> (either with or without __GFP_RECLAIMABLE)
-> 
-> Okay. (We have no users of this yet, FWIW.)
-> 
->> SLAB_ACCOUNT requires __GFP_ACCOUNT, memcg objexts are always created and used
-> 
-> Right.
-> 
->> SLAB_MAY_ACCOUNT allows __GFP_ACCOUNT, memcg objexts are always created, and
->> used when __GFP_ACCOUNT given
->> - perhaps not as optimal as the separate kmalloc types, but good enough?
+>  drivers/iommu/iommu-sva.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 
-Ah there's already a precedent, e.g. specifying __GFP_RECLAIM means you get
-a KMALLOC_RECLAIM cache, but it may or may not be accounted depending on
-passing also __GFP_ACCOUNT and there are no separate sets of slabs for
-these. Also same can happen with kmem_cache_create() cache when only some
-allocations are __GFP_ACCOUNT.
-> I think it's fine from studying what happens with the skb data. Though
-> right now, SLAB_ACCOUNT and SLAB_MAY_ACCOUNT are functionally identical,
-> yes?
+It makes sense to me
 
-Both mean that objcg pointers might exist for the slabs from the cache, but
-SLAB_ACCOUNT also implies __GFP_ACCOUNT for every allocation from the cache
-even if not given. But for kmem_bucket_alloc() with SLAB_BUCKETS=n with we
-have nowhere to store that this implication should be done (that would be
-the "compatibility layer").
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 
->> __GFP_ACCOUNT without either SLAB_ACCOUNT or SLAB_MAY_ACCOUNT is wrong,
->> __GFP_ACCOUNT would be ignored
-> 
-> *ignored* is, I think, wrong here. It would create differing behavior
-> between SLAB_BUCKETS=y/n.
-
-Yes that's why we must avoid it. SLAB_MAY_ACCOUNT is a new thing and because
-there were already many caches that may or may not pass __GFP_ACCOUNT, we
-just assume it for now in __kmem_cache_create_args(). But that's a TODO to
-start tightening it. With buckets we only have a handful of users so we
-could try doing that right away, and have warnings in place to catch any
-changes that push it into the "wrong" state.
-
-> If we passed __GFP_ACCOUNT through to general
-> kmalloc when the buckets lacked SLAB_ACCOUNT and SLAB_MAY_ACCOUNT, you'd
-> lose the isolation, but not the accounting. (And could WARN_ONCE about
-> it.) But if it was ignored, you'd lose accounting under
-> SLAB_BUCKETS=y.
-
-We could warn and fallback then, I guess.
-
->> with SLAB_BUCKETS=y these rules could be checked e.g. with a VM_WARN_ON_ONCE()
->> 
->> with SLAB_BUCKETS=n these rules won't be checked but also not matter in practice
-> 
-> Agreed. That's what I was going for on this version. But like above,
-> "SLAB_ACCOUNT requires __GFP_ACCOUNT" means what? Under SLAB_BUCKETS=y
-> the allocation returns NULL? Or it passes through with WARN_ONCE? I'd
-
-"SLAB_ACCOUNT requires __GFP_ACCOUNT" means that if it's not done and
-SLAB_BUCKETS=n, then we get the issue that patch 2 fixes, and have no way to
-actually find out and warn that it's the case (with SLAB_BUCKETS=n... the
-warning can be issued with SLAB_BUCKETS=y and then it passes through as if
-there was __GFP_ACCOUNT).
-
-> rather not break something completely; better to fallback on a mismatch
-> so the requested type happens (be it DMA, ACCOUNTing, etc).
-
-Also instead of the scheme above, maybe we could explore the idea of
-"compatibility layer" too. It would mean that even with SLAB_BUCKETS=n,
-kmem_buckets_create() would create some object to hold the gfp_flags we want
-to append to all allocations from that bucket. But then kmem_buckets_alloc()
-would have to do something a bit more than map to __kmalloc_node_noprof
-(with PASS_KMALLOC_PARAMS directly). Of course SLAB_BUCKETS=y would be using
-this way too then to avoid further complication. Maybe the result would be
-more cleaner (simplifying PASS_KMALLOC_PARAMS and getting rid of
-PASS_BUCKET_PARAMS?) but I can't say immediately how well it would work.
+Jason
