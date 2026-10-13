@@ -1,141 +1,170 @@
-Received: from mta1.migadu.com (out-139.mta1.migadu.com [95.215.58.139])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-113.freemail.mail.aliyun.com (out30-113.freemail.mail.aliyun.com [115.124.30.113])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75DB847142E
-	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 02:52:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7746435C6B9;
+	Tue, 13 Oct 2026 03:12:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791859956; cv=none; b=DZkWH9FkCtfkIHP3cslZTA6FIX8VLdM+QLYp7EQ1ldI/WgF/b/LfXwpP3jCqTF3SrMitAA7tdJsO1LsyAztPlPU28aB91fDq9gIUaj7wVgQC0RWuo+c98c7WNF3f6fmgGPk2wza5azNBuwZOtuBbqRf1KSBXhunnu+pgt/Mrz18=
+	t=1791861150; cv=none; b=Luz6Th+E2+o4K7okx17BsxRCqSoRdTqg9pDwZPCdFBV2xOBrbYYVIKmno/8nuXHUzr6SgruXlI9hLXYONcb9M0tBSvmk72pITXn5X/GTNe+RX2dA5HJMIwG4AGq9t4uSbyPycGFlcsUzEEMkkB4x0cHsFDlHvW9/PDZoq+AJC4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791859956; c=relaxed/simple;
-	bh=uL6ePUcLBZZOUIyB5RLHnAYGU9PprjKQPlmJBefHVMY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Nu2amkKz7QDWIqJJCcLSNh4TUgdmJUJkYUKQ5zCyeYWb05Awl6TGdVj4arwPuhQnqP+5NhHpNtQ/E9GDRoVEq6i8t/P9JZME2vaxX6uDVXgfV07/uyE/yvFpp5tbjE/V28J6eQvhrIU1oGsRPpF4dYVG2+LjkQ/akThaIajZmoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NAMtpaTP; arc=none smtp.client-ip=95.215.58.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791861150; c=relaxed/simple;
+	bh=VXL3asNLi0xoDi6dxYZJcCsXKlBhFzgnhKK+5b9Yfr0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cHIr0SjXKuqghTQxyiTRsWzmXC7ikTG8t/Vw3AnUBWQ4x2SklQR3/AiM0IjsfLWdW9WyLfgzlQym826wYHkJzphXe2pWIUfqivfe8MFEN7BG5fUqWyncBMftddNmWmaW6ZFGzpG/kbFOMi1fDALhyqt0Z5/bgsuUqkUBz84xI3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=MyEFSOgA; arc=none smtp.client-ip=115.124.30.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NAMtpaTP"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=uL6ePUcLBZZOUIyB5RLHnAYGU9PprjKQPlmJBefHVMY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791859953; v=1; x=1792464753;
- b=NAMtpaTPaCQ5A3BTTO3fwnlTUTeVof9HIoOGcULZS+jzEK5ALCPSDHs+G2rJtftClVL2B4Uw
- 8G2dxy/mHsi0XK3sZIcQYIjPxYzpVb9PGXdsqCR1OIgj+Rb24JiQONZiPoa5aomONHCzQcDD9QG
- OrXo0ye+S5CeYVkCzx/61iIs=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6830bd04216ac914;
-	Tue, 13 Oct 2026 02:52:33 +0000
-X-Mizu-Trace-ID: 6830bd04216ac914
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <c2d25c25-2fd4-4bb5-a021-3cdf23e493d0@linux.dev>
-Date: Tue, 13 Oct 2026 10:52:28 +0800
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="MyEFSOgA"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1791861145; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=hlzmYIV8LpHzzL0P6N9e/k7OXLBUw21KQOWVEEg7vNo=;
+	b=MyEFSOgAAD6zcQ44IvZFnycIuXUZGhDqhZUdSxvU8HOEg4MPw1538XAx4BdBsAipMlpw/46MeZXf3Od50aa3Xp34cFTiagog2A+CvuleUb5XqM+4Re6aDXM13BiXdjJKVzl4kkVJpSbDkNSh+jYabhWBrdDRktdzcMinkSAfVR8=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=23;SR=0;TI=SMTPD_---0XCkEjbj_1791861142;
+Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XCkEjbj_1791861142 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 13 Oct 2026 11:12:23 +0800
+From: Qinyun Tan <qinyuntan@linux.alibaba.com>
+To: akpm@linux-foundation.org
+Cc: hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	mkoutny@suse.com,
+	david@kernel.org,
+	ziy@nvidia.com,
+	baolin.wang@linux.alibaba.com,
+	usama.arif@linux.dev,
+	david@fromorbit.com,
+	qi.zheng@linux.dev,
+	yosry@kernel.org,
+	nphamcs@gmail.com,
+	chengming.zhou@linux.dev,
+	xlpang@linux.alibaba.com,
+	ryncsn@gmail.com,
+	gourry@gourry.net,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Qinyun Tan <qinyuntan@linux.alibaba.com>
+Subject: [PATCH v4 0/5] mm: restore per-memcg reclaim for NONSLAB shrinkers under nokmem
+Date: Tue, 13 Oct 2026 11:12:16 +0800
+Message-ID: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] mm/shrinker: size shrinker_info_unit to a power of
- two
-To: Konstantin Khorenko <khorenko@virtuozzo.com>,
- Andrew Morton <akpm@linux-foundation.org>, Dave Chinner
- <david@fromorbit.com>, Roman Gushchin <roman.gushchin@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-0-5a7608393b7a@virtuozzo.com>
- <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
-From: Qi Zheng <qi.zheng@linux.dev>
-In-Reply-To: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+With cgroup.memory=nokmem, the THP deferred split shrinker and the
+zswap shrinker are degraded in two ways.
 
+First, both shrinkers are missing the SHRINKER_NONSLAB flag, so
+shrinker_memcg_alloc() demotes them to non-memcg-aware shrinkers:
+limit-induced reclaim of a cgroup neither splits its partially
+unmapped THPs nor writes back its zswapped pages.  v1 of this series
+[1] restored the flag to fix that.
 
-On 10/13/26 3:02 AM, Konstantin Khorenko wrote:
-> Every memory cgroup allocates, per NUMA node, one shrinker_info_unit
-> for every SHRINKER_UNIT_BITS shrinker ids up to shrinker_nr_max. The
-> unit holds BITS_PER_LONG atomic_long_t of deferred work, a power of
-> two, plus the one-word bitmap of shrinkers with objects charged to the
-> cgroup. That word takes the unit just past the power of two, to 520
-> bytes on 64-bit, so every unit comes from kmalloc-1k and almost half of
-> it is padding.
-> 
-> The units are allocated when the cgroup goes online and freed when it is
-> freed, so a dying cgroup keeps them until the last reference to it is
-> gone. Their number is the number of memory cgroups, times the NUMA
-> nodes, times shrinker_nr_max / SHRINKER_UNIT_BITS. shrinker_nr_max is
-> the peak number of memcg-aware shrinkers registered at once, and every
-> superblock registers one, so a host that mounts many filesystems and
-> runs many cgroups carries the padding as unreclaimable slab, and keeps
-> paying it for new cgroups after the mounts are gone.
-> 
-> Let a unit cover one id less than a word holds. The bitmap still fits
-> one word, and nr_deferred[] plus that word add up to BITS_PER_LONG
-> longs, so the unit fills a power-of-two kmalloc slot exactly and, on
-> 64-bit, the memory taken by units halves, for about one unit more in
-> BITS_PER_LONG.
-> round_up() in expand_shrinker_info() needs a power-of-two step and
-> becomes roundup(); the other uses of SHRINKER_UNIT_BITS are divisions,
-> modulos and multiplications that do not care. Assert the unit size at
-> build time, since the layout depends on it.
-> 
-> Assisted-by: LLM
-> Signed-off-by: Konstantin Khorenko <khorenko@virtuozzo.com>
-> ---
->   include/linux/shrinker.h | 9 ++++++++-
->   mm/shrinker.c            | 2 +-
->   2 files changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-> index 1a00be90d93a9..c250ab68d346c 100644
-> --- a/include/linux/shrinker.h
-> +++ b/include/linux/shrinker.h
-> @@ -7,7 +7,11 @@
->   #include <linux/refcount.h>
->   #include <linux/completion.h>
->   
-> -#define SHRINKER_UNIT_BITS	BITS_PER_LONG
-> +/*
-> + * One id less than a word holds, so that nr_deferred[] and the map word add
-> + * up to BITS_PER_LONG longs: a power of two, which fills a kmalloc slot.
-> + */
-> +#define SHRINKER_UNIT_BITS	(BITS_PER_LONG - 1)
->   
->   /*
->    * Bitmap and deferred work of shrinker::id corresponding to memcg-aware
-> @@ -18,6 +22,9 @@ struct shrinker_info_unit {
->   	DECLARE_BITMAP(map, SHRINKER_UNIT_BITS);
->   };
->   
-> +static_assert(!(sizeof(struct shrinker_info_unit) &
-> +		(sizeof(struct shrinker_info_unit) - 1)));
-> +
->   struct shrinker_info {
->   	struct rcu_head rcu;
->   	int map_nr_max;
-> diff --git a/mm/shrinker.c b/mm/shrinker.c
-> index 7ec2a9704f6f2..a9418072a509e 100644
-> --- a/mm/shrinker.c
-> +++ b/mm/shrinker.c
-> @@ -159,7 +159,7 @@ static int expand_one_shrinker_info(struct mem_cgroup *memcg, int new_size,
->   static int expand_shrinker_info(int new_id)
->   {
->   	int ret = 0;
-> -	int new_nr_max = round_up(new_id + 1, SHRINKER_UNIT_BITS);
-> +	int new_nr_max = roundup(new_id + 1, SHRINKER_UNIT_BITS);
->   	int new_size, old_size = 0;
->   	struct mem_cgroup *memcg;
->   
-> 
+However, as Sashiko's review of v1 pointed out [2], the flag alone
+is not enough.  __list_lru_init() also collapses every list_lru into
+per-node lists under nokmem, so even with the flag restored, the
+objects of all cgroups share one list per node: the per-memcg
+shrinker bit is only set for whichever memcg happens to repopulate
+the empty list, so pressure in other cgroups may not even trigger
+the scan, and when it does, the scan walks everyone's objects.
 
-Acked-by: Qi Zheng <qi.zheng@linux.dev>
+Before commit fafaeceb89a5 ("mm: switch deferred split shrinker to
+list_lru"), THP had fully per-memcg deferred split queues embedded
+in struct mem_cgroup, working independently of kmem accounting.
+nokmem only opts out of kernel slab accounting; THPs and zswapped
+pages are user memory and remain charged to their cgroups, so
+per-memcg reclaim is still what these shrinkers want.
 
-Thanks,
-Qi
+This series keeps list_lrus backed by SHRINKER_NONSLAB shrinkers
+memcg aware under nokmem:
 
+Patch 1 passes the xarray index directly to the list_lru walker and
+drops the reverse memcg lookup that v3 still performed between the
+xarray iteration and the walk.  That lookup was the cause of the
+boot hang reported against v3 [3]: after the keys were switched to
+cgroup IDs, the walker kept resolving them as private memcg IDs, so
+the global drain kept skipping non-empty per-memcg sublists and
+shrink_dcache_sb() could loop forever.  Passing the index directly
+also removes the temporary css reference from the walk.
 
+Patch 2 drops the kmemcg_id copy, which is only assigned when kmem
+accounting is enabled, and indexes the list_lru xarray with
+mem_cgroup_id() instead, so the index works independently of kmem
+accounting.  The list_lru plumbing passes memcg pointers now, and
+memcg_online_kmem()/memcg_offline_kmem() are inlined into the css
+online/offline hooks.  It also drops the nokmem early return from
+the offline path so these lrus are reparented on offline.
 
+Patch 3 keeps a list_lru memcg aware under nokmem when its backing
+shrinker is registered SHRINKER_NONSLAB.
+
+Patches 4 and 5 restore/add SHRINKER_NONSLAB on the THP deferred
+split shrinker and the zswap shrinker.
+
+The savings of nokmem are preserved: slab-backed lrus (e.g. the
+superblock dentry/inode lrus) still fall back to per-node lists, and
+the per-memcg lists are only allocated when a memcg actually holds
+such objects.
+
+Changes in v4:
+ - Fix the boot hang reported by Kairui against v3 [3]: the walker
+   no longer reverse-resolves the xarray keys; the index is passed
+   directly through the internal walk path (new patch 1, split out
+   as a preparation so patch 2 remains a pure key switch).
+ - Drop the kmemcg_id member from memcg_struct_check() along with
+   the field removal, as pointed out by Gregory Price [4].
+ - Otherwise unchanged from v3.
+
+Changes in v3:
+ - Index the list_lru xarray with mem_cgroup_id() (the cgroup ID)
+   instead of the private memcg ID, whose lifetime only covers
+   online groups, and pass memcg pointers through the list_lru
+   plumbing; inline memcg_online_kmem()/memcg_offline_kmem() into
+   the css online/offline hooks (patch 1 as numbered in v3, per
+   Johannes's review of v2 [5]).
+ - Describe in the THP patch's changelog why fafaeceb89a5 dropped
+   SHRINKER_NONSLAB knowingly, per Johannes's pointer to the
+   original discussion [5].
+ - Collected review tags: Johannes's Reviewed-by on patches 2-4,
+   Nhat's and Yosry's Acked-by on patch 4 (numbering as in v3).
+
+Changes in v2:
+ - Keep the list_lrus behind the two shrinkers per-memcg under
+   nokmem, so the shrinker bits are set for the right memcgs and
+   scans stay scoped to the target cgroup's objects (patches 1-2
+   as numbered in v2, new; addresses Sashiko's review of v1 [2]).
+ - Patches 3-4 unchanged from v1; collected the review tags.
+
+[1] https://lore.kernel.org/lkml/20260904033503.4067283-1-qinyuntan@linux.alibaba.com/
+[2] https://sashiko.dev/#/patchset/20260904033503.4067283-1-qinyuntan@linux.alibaba.com
+[3] https://lore.kernel.org/lkml/20260910080722.3961351-1-qinyuntan@linux.alibaba.com/
+[4] https://lore.kernel.org/lkml/arNK64PxTXbVEhis@gourry-fedora-PF4VCD3F/
+[5] https://lore.kernel.org/lkml/20260907110111.2286932-1-qinyuntan@linux.alibaba.com/
+
+Qinyun Tan (5):
+  mm: list_lru: pass the memcg index directly to the walker
+  mm: memcontrol: drop kmemcg_id and use mem_cgroup_id() for list_lru
+    indexing
+  mm: list_lru: keep per-memcg lists with nokmem for NONSLAB-backed lrus
+  mm: thp: restore SHRINKER_NONSLAB on the deferred split shrinker
+  mm: zswap: mark the zswap shrinker SHRINKER_NONSLAB
+
+ include/linux/memcontrol.h |  16 ------
+ mm/huge_memory.c           |   3 +-
+ mm/list_lru.c             | 114 +++++++++++++++++++++----------------
+ mm/memcontrol.c            |  45 +++------------
+ mm/zswap.c                 |   4 +-
+ 5 files changed, 77 insertions(+), 105 deletions(-)
+
+-- 
+2.43.7
