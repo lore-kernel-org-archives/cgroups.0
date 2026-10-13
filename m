@@ -1,116 +1,99 @@
-Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C961130F52B;
-	Tue, 13 Oct 2026 03:12:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F1C83264F4;
+	Tue, 13 Oct 2026 03:40:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791861171; cv=none; b=mg9eCGzwHB9lYop1FRz0iP1SQyufMjVln+3DKCQ2Xs7JcPpaKndqWcZfZgWx/wTnyVGdpU5iYGjcpSNd0l9ib/xzE2lrSLVgFki4AhgThixqQnbstblU2fKkkSb2uLByjG1FVOyWTDSN+uJDvVTcFzI70qujSW5BiCIJcqRFO9s=
+	t=1791862824; cv=none; b=NRzrY+39B/QYx6aBvuZxdRnqVCM4jbcPzeFUsMdZTcftnGpmn3faZ6sC31igjf8ylbpc/lyYKbPEHwZC0LFkg00bC2r9dNxV3GsPc1dBY7Ai+noX2adCy69OtLzkNHu+PJV0i2QhmQUqU3at0FSuVh4ryE+NkWyr47mPjB56Jhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791861171; c=relaxed/simple;
-	bh=J8+idmgSWUPF7X54ve43ssCP/ifMKCYbf41zbi8Z8mU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nhz55ZPafvdDkrT6KZltS2XkLKLdaPkAz77delEWOiAMH8qUOqg9ycvd0FhbEzSX/EpSM6fSlSmLx5goccuk7dsdytfsHd6JhlLT5QoivDO0SkpDQ3eispT7cEqHqAvV+b4DW668dodG1fJWzReK28aygaHU3Tb8HMl1edddo4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=b2f+D+Yr; arc=none smtp.client-ip=115.124.30.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1791862824; c=relaxed/simple;
+	bh=Pf8PDlvhGyxPRJ04hgjmStlPo6N2sQGF+ut0PITXAXs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=K22IihbqoQvCLepeqjlL0JgZTwKIC3mxLq12oyk7M1MY6S+t5hKD6+eKYmGxc9pSqrn//6EIWDEitJ4op83z+LTl3W4/4DZolh7HMWJyGOr7Sk2Wy0XhW/wvD6RIbx73Xmq1gtQafq+0GcWQkpigFxJYqOynVAJAq408+pkzhxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oj5zpxoG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="b2f+D+Yr"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1791861153; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=zpf5QsizXx9EkATcGnWqX+gyIM8QWqLtiyYMZfErVsY=;
-	b=b2f+D+Yr7FaCZqUy4DlmRpZZ1cC7ZNuF5xA23n0kvkHCT4iEBGaTpDJfweO/D3ITUhIY68kGJtPPvvwLVRiYTFo2Oit1626x7aVb/XR5pPJSOYMBY7EQDU+SgmZPnS1NhMX8qtXwgBRAMJhtn0YPCwpZxxTscDpd7hlekhdpwN4=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R661e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=23;SR=0;TI=SMTPD_---0XCkEjeP_1791861150;
-Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XCkEjeP_1791861150 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 13 Oct 2026 11:12:31 +0800
-From: Qinyun Tan <qinyuntan@linux.alibaba.com>
-To: akpm@linux-foundation.org
-Cc: hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	mkoutny@suse.com,
-	david@kernel.org,
-	ziy@nvidia.com,
-	baolin.wang@linux.alibaba.com,
-	usama.arif@linux.dev,
-	david@fromorbit.com,
-	qi.zheng@linux.dev,
-	yosry@kernel.org,
-	nphamcs@gmail.com,
-	chengming.zhou@linux.dev,
-	xlpang@linux.alibaba.com,
-	ryncsn@gmail.com,
-	gourry@gourry.net,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	Qinyun Tan <qinyuntan@linux.alibaba.com>
-Subject: [PATCH v4 5/5] mm: zswap: mark the zswap shrinker SHRINKER_NONSLAB
-Date: Tue, 13 Oct 2026 11:12:21 +0800
-Message-ID: <20261013031221.1997194-6-qinyuntan@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.7
-In-Reply-To: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
-References: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oj5zpxoG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D4831F000FF;
+	Tue, 13 Oct 2026 03:40:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791862822;
+	bh=MHKRBDHmsXsK48oKqrexgIqndzfvmbI+AVfd803mUSA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Oj5zpxoGgdzmeIog+7KO1QLrI4HUFkQNtnMsz/Sf/iwRjmXaISNO5VFNexwDOfA7I
+	 QLiRzOMZyLuAs0cGPMstdgayiiW91bVrnPRgVfDxA9f45B1BQKQ9Sgcl3vWBYynlem
+	 9eFhgaA4Z7w3AHx2qx192F+EVD8bM8OD2lg7BcxAX3RJCu4AEjGD+/ajUMxe/+F0lU
+	 vAUsbFr/Gr22WvlIBVGbtqHob5Fevhl6bJtrxBAtC9YFcaDUeubtmBEl3k1SWaU16P
+	 wOPAnsesfWb+rpki9Z4AUpY3luNT5svEsOgbs3aNHBuDM0iTMVRSnTo5Z6/YR5f3Xg
+	 YheZMVbSKLEoQ==
+Date: Mon, 12 Oct 2026 20:40:22 -0700
+From: Kees Cook <kees@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Harry Yoo <harry@kernel.org>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, Pedro Falcato <pfalcato@suse.de>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net-next v6 2/8] ipc, msg: Account msg_msg allocations
+ with GFP_KERNEL_ACCOUNT again
+Message-ID: <202610122032.A63BB70@keescook>
+References: <20261006092030.got.500-kees@kernel.org>
+ <20261006092035.166776-2-kees@kernel.org>
+ <asjhg2e4-WSeKuXd@thinkpad>
+ <202610092010.934197B@keescook>
+ <20261010153714.b9e91801ea93675da099e903@linux-foundation.org>
+ <4866a382-42d9-44da-b68b-377d36642528@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4866a382-42d9-44da-b68b-377d36642528@kernel.org>
 
-With kmem accounting disabled (cgroup.memory=nokmem), memcg reclaim
-never invokes the zswap shrinker: a cgroup under memory pressure does
-not write back its own zswapped pages to make room; they are only
-written back by global reclaim or once the global pool limit kicks in.
+On Mon, Oct 12, 2026 at 06:46:48PM +0200, Vlastimil Babka (SUSE) wrote:
+> On 10/11/26 00:37, Andrew Morton wrote:
+> > On Fri, 9 Oct 2026 20:14:20 -0700 Kees Cook <kees@kernel.org> wrote:
+> > 
+> >> Anything with Fixes: will end up in stable, so I just leave off the
+> >> stable CC these days.
+> > 
+> > -stable maintainers have been asked to Not Do That for mm patches. 
+> > Other subsystems are doing the same.
+> > 
+> > I don't know how they determine whether something is an mm patch.  A
+> > patch which covers do-do-that and dont-do-that parts of the tree is
+> > likely to be mishandled.
+> > 
+> > So yeah, add that cc:stable to reduce the possibility of mistakes.
+> 
+> There's also this from the list of pain points at
+> https://lwn.net/Articles/1099594/
+> 
+>     Kroah-Hartman: subsystems that do not add CC: stable@vger.kernel.org
+> tags to patches, but which still expect the stable team to pick up the
+> important fixes anyway. The stable maintainers are overwhelmed as it is and
+> are not doing that.
 
-The zswap shrinker is registered memcg-aware but without
-SHRINKER_NONSLAB, so under nokmem it is treated as a slab shrinker:
-before commit 03375203e1da ("mm: do not allocate shrinker info with
-cgroup.memory=nokmem") it was skipped by the !memcg_kmem_online()
-check in shrink_slab_memcg(); since that commit it is demoted to
-non-memcg-aware at registration.  But the zswap shrinker is not a slab
-shrinker: it tracks zswap entries and resolves the owning memcg from
-the folio's objcg, independent of kmem accounting.
+tl;dr: yup, sorry. I will add CC:stable in the future.
 
-This was noticed by Michal during review of the patch "mm/list_lru:
-don't copy stale shrinker id from non-memcg-aware shrinkers".
+I went to go figure out where I had gotten this misunderstanding.
+netdev dropped their special handling in 2021 in commit dbbe7c962c3a
+("docs: networking: drop special stable handling"). But I
+really thought I had Greg tell me (in person somewhere?) that
+"Cc: stable" was redundant, and I think what I misread in current
+docs was, "... such tagging is unnecessary if the stable
+team can derive the appropriate versions from Fixes: tags." in
+https://docs.kernel.org/process/stable-kernel-rules.html#stable-kernel-rules
+but that, on closer reading, is about the _versioning_ syntax of the
+"Cc: stable" trailer.
 
-Mark it SHRINKER_NONSLAB so it keeps its memcg awareness and runs
-under memcg reclaim with nokmem.
-
-Link: https://lore.kernel.org/lkml/697713c4-0857-485b-aba7-c74f37a3c8b4@linux.alibaba.com/
-Fixes: b5ba474f3f51 ("zswap: shrink zswap pool based on memory pressure")
-Suggested-by: Michal Koutný <mkoutny@suse.com>
-Signed-off-by: Qinyun Tan <qinyuntan@linux.alibaba.com>
-Acked-by: Usama Arif <usama.arif@linux.dev>
-Acked-by: Nhat Pham <nphamcs@gmail.com>
-Acked-by: Yosry Ahmed <yosry@kernel.org>
-Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/zswap.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/mm/zswap.c b/mm/zswap.c
-index 572075bb1c1c..382ed1fb2847 100644
---- a/mm/zswap.c
-+++ b/mm/zswap.c
-@@ -1348,8 +1348,8 @@ static struct shrinker *zswap_alloc_shrinker(void)
- {
- 	struct shrinker *shrinker;
- 
--	shrinker =
--		shrinker_alloc(SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE, "mm-zswap");
-+	shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE |
-+				  SHRINKER_NONSLAB, "mm-zswap");
- 	if (!shrinker)
- 		return NULL;
- 
 -- 
-2.43.7
-
+Kees Cook
