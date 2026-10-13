@@ -1,32 +1,33 @@
-Received: from mta0.migadu.com (out-102.mta0.migadu.com [91.218.175.102])
+Received: from mta1.migadu.com (out-138.mta1.migadu.com [95.215.58.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019ED4FC342
-	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 13:13:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.102
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F2650255B
+	for <cgroups@vger.kernel.org>; Tue, 13 Oct 2026 13:13:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791897218; cv=none; b=bm44di27BqBufX/YIZfexIOuXJJ6u6J6lZCD2AMgSAcDePHIBtdAowcog2bFIzqZZ2yUlcs5W7lJG1dpaJrtiilmgz8RAACy0qsCvr6iy9uwZHPi4ibYL2UyzsE1zbJJvS2gZhoLUKXVzrO5XKXFaxle8iDcwzcTb838wSUi6gg=
+	t=1791897224; cv=none; b=OFFcNH3F2nAkdRiv+qgFPUAErbriN5zxRfKXQ/v4AaQdWnpG32pF7dvDKwZGCwzVYKd71SVrMKAmitrgtDaIxnXcBMpumY3a6I7f7iB1oXmSRuOHzg27TLrVqSaAMes+XK3RzNrTtr01jl+gWTnCECup0m10m7QbkNktA+Ne4Kk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791897218; c=relaxed/simple;
-	bh=dGFgIE1Ak3qC4ku6H3c6KA+1Zmp1EwOYePHWmr/QoHY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VK9ZUKqcfThVYzL05iK6vSbzJmS+Nw3s7QdQKPPq1nr7zZHbIFYg5ptLgQ4SMh/PLfr7cbF2XueJMxBBnJYEIP4Ae/dCbwfsLwE7wHp7PzmqByXDL4nbuKANgqjHcGCmezNifkvzIzoFI3ymFF/5M0oXR55hURTw7bZ4cPt2gdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=clAKT5BL; arc=none smtp.client-ip=91.218.175.102
+	s=arc-20240116; t=1791897224; c=relaxed/simple;
+	bh=wf3HFTJhVfeY9yUmZhJB3MQ0b0ETjxoSHCzWGVLQFnk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=DPkd1KXVIXUoOb8Smbvu+ruIjZ/5Ah9k1wgKxlqj/rLuJvImP8Z1pr0+xHL8zaJ4vqJpM+aNKOqgky8aNp5DDvQ2lFW1N0ZzlbBzo7PoQ503OoodM5jSr9rm67Ttd+pzBXrenH4IYlE+vV73Jqh9h/v5TcY2lr/aZ7lgcT/fCvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=m+BY8Gcq; arc=none smtp.client-ip=95.215.58.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="clAKT5BL"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="m+BY8Gcq"
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=dGFgIE1Ak3qC4ku6H3c6KA+1Zmp1EwOYePHWmr/QoHY=;
+DKIM-Signature: a=rsa-sha256; bh=wf3HFTJhVfeY9yUmZhJB3MQ0b0ETjxoSHCzWGVLQFnk=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791897214; v=1; x=1792502014;
- b=clAKT5BLyo0dgW33OiplwRE7Ov9/Z3epsAeKYFj5MgEKed3wqqMc9pig9oqoThtMKPpXgtSr
- mzw8LvyyfiwPK1cSRMjWKU6c3+/FQjvguWe2TIHjSuYyUEt2H6zipksTRQ3k3WwKPotvYWybesO
- 8whm8Op8zUJ5THLX+TQ0Z+/o=
+ t=1791897220; v=1; x=1792502020;
+ b=m+BY8Gcqu1+2Cfum7IyPU/EBxZG9nplXzofr/44k1dGB5r7ECyV8ecs1PDdWLY6APjgjAdvB
+ Xu6BgJkfBMe82Q7tdjcY24NkdFpmZylnYl+HCzZlwo5HRX1f1IWg5YIniajWp+pn9QOfOVJRbYP
+ nEmXm6fPdNW4SHVR5Au8nys4=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 2dbbb7a0f42226d5;
-	Tue, 13 Oct 2026 13:13:32 +0000
-X-Mizu-Trace-ID: 2dbbb7a0f42226d5
+Received: by smtp.migadu.com with ESMTPS id 55508975d0a73f72;
+	Tue, 13 Oct 2026 13:13:40 +0000
+X-Mizu-Trace-ID: 55508975d0a73f72
 X-Migadu-Flow: FLOW_OUT
 From: Ridong Chen <ridong.chen@linux.dev>
 To: Steven Rostedt <rostedt@goodmis.org>,
@@ -56,10 +57,12 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	bpf@vger.kernel.org (open list:BPF [MISC]:Keyword:(?:\b|_)bpf(?:\b|_)),
 	Ridong Chen <ridong.chen@linux.dev>,
 	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH RFC v3 0/7] mm/vmscan: move vmscan tracepoints to a local header
-Date: Tue, 13 Oct 2026 21:13:02 +0800
-Message-Id: <20261013131309.2790253-1-ridong.chen@linux.dev>
+Subject: [PATCH RFC v3 1/7] mm/memcontrol: drop unused vmscan tracepoint include
+Date: Tue, 13 Oct 2026 21:13:03 +0800
+Message-Id: <20261013131309.2790253-2-ridong.chen@linux.dev>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261013131309.2790253-1-ridong.chen@linux.dev>
+References: <20261013131309.2790253-1-ridong.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -70,84 +73,35 @@ Content-Transfer-Encoding: 8bit
 
 From: Ridong Chen <chenridong@xiaomi.com>
 
-This series started as an effort to add two tracepoints for MGLRU. In the
-discussion, Steven suggested moving include/trace/events/vmscan.h to
-mm/trace_vmscan.h [1], as several other subsystems already do. Once the
-header lives under mm/, struct scan_control can be moved there too, letting
-the trace events access its fields directly instead of having each callsite
-copy the scalars out by hand.
+memcontrol.c includes <trace/events/vmscan.h> but does not use any of
+the tracepoints or macros it defines: all tracepoints invoked here come
+from memcg.h and writeback.h.
 
-The series builds in small steps:
+Drop it ahead of moving the vmscan trace header under mm/, after which
+<trace/events/vmscan.h> will no longer exist.
 
-  1) drop the unused vmscan trace include from memcontrol.c;
-  2) move include/trace/events/vmscan.h to mm/trace_vmscan.h, using a
-     relative TRACE_INCLUDE_PATH so no Makefile change is needed;
-  3) move struct scan_control into a dedicated mm/vmscan.h, which
-     trace_vmscan.h pulls in, guarded against the multi-read that
-     define_trace.h performs;
-  4-7) pass scan_control to the vmscan tracepoints and pick the fields
-     out in TP_fast_assign, one group at a time: the reclaim-begin
-     events, the LRU isolate/shrink events, mm_vmscan_reclaim_pages and
-     mm_vmscan_balance_pgdat_end.
+No functional change.
 
-Besides the cleanup, this moves the loads of the tracepoint arguments out
-of the reclaim paths and into the trace event callbacks, which only run
-when the event is enabled. On x86_64 with gcc 11.4, the callers in
-mm/vmscan.o shrink accordingly (bytes), e.g.:
-
-  isolate_lru_folios    4060 -> 3896 (-164)
-  __node_reclaim        2258 -> 2076 (-182)
-  isolate_folios        8706 -> 8577 (-129)
-  shrink_active_list    3669 -> 3544 (-125)
-  evict_folios          4787 -> 4698  (-89)
-
-There is no functional change. TP_STRUCT__entry and TP_printk are
-untouched, so the tracefs event format is identical. This was confirmed
-by diffing the tracefs format files before and after, and by capturing
-the direct/memcg/node reclaim-begin events under load in a QEMU guest
-(order, gfp_flags and memcg_id all match). BPF programs attached via
-raw_tp/tp_btf do see the new TP_PROTO and need to be adjusted;
-tracepoints are not a stable ABI (see Documentation/bpf/bpf_design_QA.rst).
-
-highest_zoneidx and nr_reclaimed stay separate arguments: the former is
-a balance_pgdat() parameter (sc.reclaim_idx may differ from it by the
-time the end event fires), and the latter is the return value of
-shrink_folio_list(), which does not update sc->nr_reclaimed.
-
-[1]: https://lore.kernel.org/linux-mm/20260916095122.50cbb620@robin/
-
+Assisted-by: LLM
+Acked-by: Muchun Song <muchun.song@linux.dev>
+Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
-Changes in RFC v3:
-  - Use "Assisted-by: LLM" (Muchun).
-  - Note the BPF raw_tp/tp_btf impact in the changelogs (Sashiko).
-  - Changelog wording fixes and minor indentation fixes.
-  - Link to RFC v2: https://lore.kernel.org/all/20260928114625.3609130-1-ridong.chen@linux.dev/
+ mm/memcontrol.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Changes in RFC v2:
-  - Convert the remaining vmscan tracepoints too.
-  - Move struct scan_control to mm/vmscan.h (Baoquan).
-
-Ridong Chen (7):
-  mm/memcontrol: drop unused vmscan tracepoint include
-  mm/vmscan: move vmscan tracepoints to a local header
-  mm/vmscan: move struct scan_control to a dedicated header
-  mm/vmscan: pass scan_control to the reclaim-begin tracepoints
-  mm/vmscan: pass scan_control to the LRU isolate/shrink tracepoints
-  mm/vmscan: pass scan_control to mm_vmscan_reclaim_pages
-  mm/vmscan: pass scan_control to mm_vmscan_balance_pgdat_end
-
- MAINTAINERS                                   |   4 +
- mm/memcontrol.c                               |   2 -
- mm/shrinker.c                                 |   2 +-
- .../events/vmscan.h => mm/trace_vmscan.h      |  80 ++++++-----
- mm/vmscan.c                                   | 136 ++----------------
- mm/vmscan.h                                   | 118 +++++++++++++++
- 6 files changed, 178 insertions(+), 164 deletions(-)
- rename include/trace/events/vmscan.h => mm/trace_vmscan.h (90%)
- create mode 100644 mm/vmscan.h
-
-
-base-commit: 4eb2586bd40db27d77cc5b724ca9386ed0c71d53
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index aad0498a7bd6..95c2322d4a6f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -77,8 +77,6 @@
+ #include <trace/events/memcg.h>
+ #undef CREATE_TRACE_POINTS
+ 
+-#include <trace/events/vmscan.h>
+-
+ struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+ EXPORT_SYMBOL(memory_cgrp_subsys);
+ 
 -- 
 2.34.1
 
