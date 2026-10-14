@@ -1,167 +1,213 @@
-Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11021086.outbound.protection.outlook.com [52.101.65.86])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 127EB51B18D;
-	Wed, 14 Oct 2026 13:21:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.86
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791984065; cv=fail; b=AtnHaI2CTldm5zEXQzmsiIS2Pu428Tv0C1iwePULROkUj/3+389lm1lw3WcqghOyPjFWl4T5A104KOjojjKYJ+Gm94XjJOb9YSNuYvcsFTdoSZOBDW0z3tZ52DRdmWmh7zUGSr0VSD0MtBRPSHGJEdZtJBVZcKSApMsSFnvYvXg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791984065; c=relaxed/simple;
-	bh=zdCUhY3OGcWP0GaiBdganPrxpuVw2W03cDqVPmQ1/7M=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=NDiA8wA9gk4/Vqc9QRW8rAniCV9gS67gTMVjq8yDI3wfTG7jhtrnZEB8RerHHf78U3ATUFmGiePsfJiZG46PAJQAzJauzKnhIfd/epllMKuQFsjdmg2O3BzM5euMJlTyk8yvtRgqMusfoksU2e1tpL3benc+CiBo1Dy88vX4/Bw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com; spf=pass smtp.mailfrom=virtuozzo.com; dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b=RGlt/vA8; arc=fail smtp.client-ip=52.101.65.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=virtuozzo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B2B518121
+	for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 13:30:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791984614; cv=none; b=UXzXPowNSdD6iKOoT5bwRkBAX3dd0wc6gIvmHr9hAeeJYV0oTgpr3nM3CkdVmyo6ArLBpFmzKu6JMP9owhV9n1Qhso0TMwYFTr1rp8o8Yjq1bbZd2V/vnHkiqsqt0dzyQ26514p0lv/jqgBXiTGXcauOCrXEkOcMbdfC3POFhnw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791984614; c=relaxed/simple;
+	bh=EEpQQXTpbdUJ+1/mnq+YxrOugKWaUV+eeCGWAFt7+4Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HFKTsPmnkYq0qMiOcx34YHzqgNRLAQm260sN3hcBRVnVbuGwa8p11ZFPSGWKfsEFcAciq5VImKEhLMilkkUrFbstlanG8+e2jynx+Im/Kv/uCPvI+98fdNUH9bYjAMFBHcoph6YvrdEcyw8ne/W3ckCI4WXz7BrdgbUU5yLodQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gqi5KAWr; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b="RGlt/vA8"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yVvLjrBtIHdS2/ZhegY1/HGFnKDUJdjgesZf5tECjVkpln6e9XIbMXXUaDFxjM+QlO0m2QRucVtJg2cjRvygVYw4uSlNkPNC7dvW4H3nhqHCXL2ER8Lji3HZ97802/2n65jIPBBJij+1W2he1DiOmvxVwGPiQz72v2toUU9yQrxEQ0bx+tRFqhisxPCPan+PVgYTxh8+hhXZQ1JEHlCYWII1l2yvCtNpfV6IdEYco+VakGYQhoazrVw4aDZVXRUwEFCBKisFW6DfaeDIAw9H4ePViMkywFR5QMM3dnnYqXdk/XH5fXoI7WIwJGYsSvLsEF9us3YveGS8EIxhYW6udA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ySbuWqyOG7qfPC9SJMX9PPTulpIPyCip4Vvwurb/yuk=;
- b=PGtokdeaFIGrW/jZEpK0opJKsK+jzaqzvpOvC1PFUwSAlzXKqk/UymoOsxqj0tVCdqpES8rDR/xVadwEr1Cu4eVwMVVBLYw0W+C+DGKexnpQkR0a3sjADDguqqnzZf9nomc6go8/n2mYXM0H+xnBWbycLdgR/Ny6+tY0A/YDkwrbtZCIdgLiIQPB+m1Cnfp6QUF7ANL2HI6XMgnWkC+Bc+9JCFxDwpfDFId8cv1vnHbTSq0wXns3BhW4QVw1sjJIJDMZek1AU/jjLJ0Q5n20AjA1ugxMsV65ZQmHqkgGrpzAUWM6IwtsLwV2RwPoIO8WU7O1CJO0WIDi74VIzLiNJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=virtuozzo.com; dmarc=pass action=none
- header.from=virtuozzo.com; dkim=pass header.d=virtuozzo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ySbuWqyOG7qfPC9SJMX9PPTulpIPyCip4Vvwurb/yuk=;
- b=RGlt/vA8ePhjr8GAVrondJI1tuDCnNXbfw0d6Ng7uciSUpcgc4c6JlWN7Lz0whN38zclc0I8VEwNYRZGCv+WNxulJ7aSUj0+mJr7t3e5yDDiktHPUdn3bUSy+G/5ZU7wvQrrb9JN/9qWr97Ds9DXXcusdaBkZYMUwlEwMx80U+ZjL2QUl6Kh9q3aDWktWJ9zk2MRYCOwS3e4DMWUedkQefX/Bp7wtyjrBcuTG8Dj4OnChca4L9gOtwjYkQacGjyIm9nXry97C38cD+5faMZ4kf2IBCaJ2HTZpgfDfTWU5sS6SBoSBShgZEtztaBb39zVsx9Fdxf578DmzeLZFkQeZw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=virtuozzo.com;
-Received: from PA6PR08MB10708.eurprd08.prod.outlook.com
- (2603:10a6:102:3c7::20) by GV1PR08MB10422.eurprd08.prod.outlook.com
- (2603:10a6:150:166::8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.12; Wed, 14 Oct
- 2026 13:20:58 +0000
-Received: from PA6PR08MB10708.eurprd08.prod.outlook.com
- ([fe80::1999:c6db:dc55:494a]) by PA6PR08MB10708.eurprd08.prod.outlook.com
- ([fe80::1999:c6db:dc55:494a%5]) with mapi id 15.21.0522.011; Wed, 14 Oct 2026
- 13:20:58 +0000
-Message-ID: <7d037519-3034-4e7b-bd9d-6bac0960fcbf@virtuozzo.com>
-Date: Wed, 14 Oct 2026 15:20:53 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] mm/shrinker: size shrinker_info_unit to a power of
- two
-To: Muchun Song <muchun.song@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Shakeel Butt <shakeel.butt@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-0-5a7608393b7a@virtuozzo.com>
- <20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-1-5a7608393b7a@virtuozzo.com>
- <EDF08D88-7AD8-4697-A1EE-F20BB1F83AF6@linux.dev>
-Content-Language: en-US, ru, sr
-From: Konstantin Khorenko <khorenko@virtuozzo.com>
-In-Reply-To: <EDF08D88-7AD8-4697-A1EE-F20BB1F83AF6@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR2P281CA0008.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:a::18) To PA6PR08MB10708.eurprd08.prod.outlook.com
- (2603:10a6:102:3c7::20)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gqi5KAWr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791984605;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dAxtnhhZyiSlwHzc+JDGOuJa80/PIHSiPBPuiBDzo5s=;
+	b=gqi5KAWrIgLr+U7HUDgUoa1QdxPgiplQCBLwKmz33M3AXZI329uzgK/rL0tnG9p0O3Qckx
+	9dFVOS/0nYerROCAQFhNy++nKgboRSa4axGXwiEdwUaevz63X+V+OlRr46AqnrOyrWK5kx
+	C9pyzv/mPOMxu7YXRBbo0h4r9OrnFpk=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-546-pDcCujAfPiGCcCsVEq8cWw-1; Wed,
+ 14 Oct 2026 13:29:58 +0000
+X-MC-Unique: pDcCujAfPiGCcCsVEq8cWw-1
+X-Mimecast-MFC-AGG-ID: pDcCujAfPiGCcCsVEq8cWw_1791984597
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B970719560AF;
+	Wed, 14 Oct 2026 13:29:56 +0000 (UTC)
+Received: from [100.91.18.181] (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E2F171955F01;
+	Wed, 14 Oct 2026 13:29:54 +0000 (UTC)
+Message-ID: <8a71bf13-d715-4caa-aca9-487a6c625969@redhat.com>
+Date: Wed, 14 Oct 2026 09:29:53 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA6PR08MB10708:EE_|GV1PR08MB10422:EE_
-X-MS-Office365-Filtering-Correlation-Id: 09233156-a3dc-4995-7972-08df29f5fbe8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|1800799024|376014|366016|18002099003|22082099003|10067099003|4143699003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	w1qK37Fjj+thQJ6nWOjKAbujD8WRRLdLjNfCajkAf1vgLt5kq9gO+KM4WzC5Uq8c66jgyb5zap6gIGPMr0Rhruv4I2cyxkazp09+QRPjp6YxgeT8mD/ulddkdUOzCJhIKYl4utyJ+NORtYlts7eYx+tq/qizfs/a2supTror2cNHoJG+oTwvRn5TrDJYc8KAcTmqvwgDyAOPINbbAPmRTYoMEV74hNAzDaI4N/a/479rtoxFXGw7+ek+fWYeY2mbVWhukd7he9AcUcFVTm4WT/xLXlsdkoIT/FrfyxIeuOOQTlbWiEn2YX0g/CHf2Nimtp3iQdeNmzntEIvDybdLRge60DpbJHqKCo1y0GDv0zVMHfeEBK7kVPwMfOsdVVob5OqnTtpCplqyUYgqriQ6X/bTZS9sXxPIM4l3xkgsUZEUaK+a2YuoNODrgCJAVXKwQCvCC2huGftt76CCuudjbCMM5bi6tAdrwB2s81bFSc+kesPLNergJOUfBb7x+FouVegoya9Ow19pSCiYl3hdE9ZNKzqRodxeCSVC6FDDnN/VBqwWge8Y1I+XG/wqlBRsuM/7OWPSvV8gXIlOulqTUnFxORJW9++r0gnJxbiNWm0sO7la1+cBlk0FgczDtqfzqyPWcsLXqvs3SyqVRbGtT/W9JKrBx2aRVSkJYork1dk=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA6PR08MB10708.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(1800799024)(376014)(366016)(18002099003)(22082099003)(10067099003)(4143699003)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZUc0SzZGZG9uWnAwZ2p0M0RUWis4RHAzU1BybE8zM1hiaFR3Q1pnL3ErVFdo?=
- =?utf-8?B?OUl3UnFJUnZ6L0o4WGw5a2dlWnExN2w3T3o2Y2ZqYUs2RG05MERVOENiLzR4?=
- =?utf-8?B?dk5FS3ZaN3FEMERkeURGemltWE44TWt0Yms3Rm9hc1k3SmV0aHpNZHRQOW53?=
- =?utf-8?B?dk4rVXMxcTRsVXRPVmZXbFFRMFMxRmNETEpheXkxNGUvLzFxdk1xbDJBOWh3?=
- =?utf-8?B?ektBUVdhbk5ob0pKaXRKNWRFbmRSTW0yeWIxNmpSN3FYbGhPREFEbk9tcklF?=
- =?utf-8?B?S1U4QTk4a0RWZStWSzgxYzJyem05WksrNHBnVFJNU29mUjZOaXQvTnhQWW1X?=
- =?utf-8?B?aXNmNUdwRld2Z3B1Y3dlUElNcHVmYkNQeDI2aGd3SDNmSzl2TVNJK2phYzJN?=
- =?utf-8?B?MnF6RUZDZ2NHRWl2TlJVVGQxamFmL2E3Y0dJSS91enVxV2tNNVdlZ0t6YUIw?=
- =?utf-8?B?Z0RnMkw3VnZHZGdKaFFKdlVoOU5WeFJiZUY0b2FtcyswV1hGaUQvbEhTTEhr?=
- =?utf-8?B?MHN6L2FEWTh3YzVKVENFM2YwdU5ycENLcHZTS0FqVnFOWFRETkF2bDJvMS9Q?=
- =?utf-8?B?RU8yL1lNYW9wZ2kzUWlYVWFXYTdyZGRTN0EvZzlkbkUyYWg4dUhTMWZ2MHMr?=
- =?utf-8?B?NDVmOE54ODJiMlNHejJLaVkwaWY4aDVDYlZ5TTdyR1FONk1oNFh0UGNrc3hZ?=
- =?utf-8?B?RVduNTRWZXRsUGYyV0pVZU84RGR1eTZ4KzFLQTVWMFVZUlpQVFQzZU9sUWRs?=
- =?utf-8?B?em9keFFrKzNTbnR5ZTNIU2pQb083Q3crK1JrbkhDdnZCU25HWTltSGQ1Kytl?=
- =?utf-8?B?YW9wY1Q5bmtUaUh3aXd5Sk1neGpWU1NxRGpLTHBRWDBaeHFHSFkycVhiM2J0?=
- =?utf-8?B?aVFZaVdyZHVaSkFaRlFqMmFNcVRWSi9aVVRlTWpsN3RpSXhoYk5XSHRtNlZI?=
- =?utf-8?B?b3Z0UjNKQnk5NHAyV0gvQjhwMEFsY0xNOTdjYmI4MWVpdTJVL1pmR3RJVzY3?=
- =?utf-8?B?T1p4UWxsNUkyUStUTWRRTjBvb1VUWUgwTllGTnZvbHRpQnlXSjBUbzVTUXpv?=
- =?utf-8?B?TEZkYzJhVDJEd2QwbURodlpoa0o1RTFvUDJTcTdBdDlVd0JPVnFzZElxQjln?=
- =?utf-8?B?S201aFRoRk5IR3I1WVFYV3prNU9kWmhaZVhKRGZLUGZBV01DM1pKc1NKV0l3?=
- =?utf-8?B?UCtCaE9OWmVXWElEbVB1SkVzbngrcmJqQkI5Wkt4a2haeWZlM1dRZ2ErVWFs?=
- =?utf-8?B?VFFUZVBHNmVxQTk4UDNLZDVBNnBGZDFVUVZMZ3JVanlKMk9oUlJlNXlUL0pJ?=
- =?utf-8?B?cldWMlFSUFJ2RTZ5dGthYVErdHhKWVBkNng3OHdXMHhONThTODZOWEVGZVZu?=
- =?utf-8?B?KzJicG5oTUtGVU4zODd1QlQ1R1dnaThkN01CYzM1QXZNekFPdW9FVFZoUmVH?=
- =?utf-8?B?S28wS2hPRzN2R0YzOFhhNVZtRUhDamw5QTZ2UWRKRWZrL1dCY1BwbTBVWG5a?=
- =?utf-8?B?bW1qQ3dzT0Zma2hHdmR2V1Fyc0NTQXFVYkF3c3NBdU85QVROK0ZxK1BweEtF?=
- =?utf-8?B?VFNSWEFEajk2MGs5VGpFY1ZxQ3VNdlQrTm9JSmgyRTROUUZ2Ynlmd1BBblpu?=
- =?utf-8?B?WllOOXRiMFZkK040RWdJMGNXRXJTbitHWHVKbytOcVNmczlTS21Pa3VuSkxO?=
- =?utf-8?B?dWtIV3NLNk9XRjFGUUwwUVVrQmVXVTRQSWxWSWJaVDV5QzVkeFBhdWYyNXJP?=
- =?utf-8?B?T2I2VDR3WVFMK1Q5MTZhNEw2NWN6MHZaRkNVVlRpRGtPY1hoN1pPRFZmL3pi?=
- =?utf-8?B?dW54d3p3cGVXN2s5WUxBVVByanBBYW1STXJ4U1FreTJXN1EwenMxTDJqSk42?=
- =?utf-8?B?NWltWUJ2OWgxUm4rOE9sV2NVV3FTQnY1M3dGWURFYmdNRm9ndFdZNUxlYWRR?=
- =?utf-8?B?NmUrV085d21EamdJdDF6eFBsd2E1ZDRsNGVWVWdsei9Za2lldUZrNDFYQlBp?=
- =?utf-8?B?a21tQXh5SjVBaWhJQThXYVl2alA1NFdpdEwzVHJXa0NXaVE1QTlWUHB4QzBD?=
- =?utf-8?B?Y0hUd2R2T05rTlV2Ni9oMHJNR1ZHRWNUUURDYlVoT2kwN1htRmFJRS9qS3pV?=
- =?utf-8?B?cjRyWTdpcXczUlpuYy8yTFBtOEtUcXpSY3hhVGtya09tWm1ZNEtsQ3ZsMXdO?=
- =?utf-8?B?MXNPS3pOTmR2MmNwUVplOTVwd3kwOTRyUm9kbjY3SEViWlBZdEwvVi9sRjJ5?=
- =?utf-8?B?ZnBjMVpGVVpmemd1OFJ3ekhPSFV0M3p3M1VuZkxpV3hGUlA5Tm12QW1veEdC?=
- =?utf-8?B?MSszaW13ZVVCdWZVMGJMbkppNVdYY0Z1U3BVdGNuTU8xbGRaYjZrZz09?=
-X-OriginatorOrg: virtuozzo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 09233156-a3dc-4995-7972-08df29f5fbe8
-X-MS-Exchange-CrossTenant-AuthSource: PA6PR08MB10708.eurprd08.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2026 13:20:58.5267
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 0bc7f26d-0264-416e-a6fc-8352af79c58f
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: h3Y1q+6mEsiRyYedZ1joy6pV1Kwi5PpSN1Qr51whDBVc4D5dhckr16ojDUsHUox5F+nGd0OdJ31EmAMhgtaeGw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR08MB10422
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH-next v2 1/6] cgroup/cpuset: Consolidate
+ isolated_cpus_can_update() into prstate_housekeeping_conflict()
+To: Guopeng Zhang <guopeng.zhang@linux.dev>,
+ Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, Hui Peng <benquike@gmail.com>
+References: <20261010221938.243859-1-longman@redhat.com>
+ <20261010221938.243859-2-longman@redhat.com>
+ <7ec04fe0-994e-44d3-8c20-6732c9f20afd@linux.dev>
+ <37481345-f80b-4b28-8519-15c396fc7942@redhat.com>
+ <a0739252-5d96-4e73-825d-4d97f5be41f4@linux.dev>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <a0739252-5d96-4e73-825d-4d97f5be41f4@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 10/13/26 08:18, Muchun Song wrote:
-> 
-> 
->> On Oct 13, 2026, at 03:02, Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
+On 10/14/26 2:58 AM, Guopeng Zhang wrote:
+>
+> 在 2026/10/14 02:59, Waiman Long 写道:
+>> On 10/11/26 1:49 AM, Guopeng Zhang wrote:
+>>> Hi，Longman,
+>>> 在 2026/10/11 06:19, Waiman Long 写道:
+>>>> The isolated_cpus_can_update() and prstate_housekeeping_conflict() are
+>>>> checking different aspects of upcoming cpumask changes that may conflict
+>>>> with the current setting of the housekeeping cpumasks. There are places
+>>>> where both are called together. There are also places where only one
+>>>> of them is called. That inconsistency can contribute to missing check
+>>>> where invalid cpumask changes may be allowed to move forward.
+>>>>
+>>>> Fix that by consolidating isolated_cpus_can_update() into
+>>>> prstate_housekeeping_conflict() and call prstate_housekeeping_conflict()
+>>>> in all the places where either one of them or both are called. The
+>>>> exception is the validate_partition() function where the
+>>>> prstate_housekeeping_conflict() call is removed. It is because
+>>>> validate_partition() is called only from partition_cpus_change()
+>>>> where prstate_housekeeping_conflict() will be called from either
+>>>> remote_cpus_update() or update_parent_effective_cpumask() with
+>>>> partcmd_update if not for partition invalidatation or disablement.
+>>>>
+>>>> Now prstate_housekeeping_conflict() will be called in the following
+>>>> locations:
+>>>>    - when a partition is enabled in remote_partition_enable() or in
+>>>>      update_parent_effective_cpumask() with partcmd_enable*.
+>>>>    - when a cpumask is updated in remote_cpus_update() or in
+>>>>      update_parent_effective_cpumask() with partcmd_update.
+>>>>    - when a partition state changes from root to isolated or vice versa
+>>>>      in update_prstate().
+>>>>
+>>>> Fixes: 4a74e418881f ("cgroup/cpuset: Check partition conflict with housekeeping setup")
+>>>> Fixes: 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full don't leave any housekeeping")
+>>>> Signed-off-by: Waiman Long <longman@redhat.com>
+>>>> ---
+>>>>    kernel/cgroup/cpuset.c | 123 +++++++++++++++++------------------------
+>>>>    1 file changed, 52 insertions(+), 71 deletions(-)
+>>>>
+>>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>>> index 0ebba2d646c3..f3cebb277a68 100644
+>>>> --- a/kernel/cgroup/cpuset.c
+>>>> +++ b/kernel/cgroup/cpuset.c
+>>>> @@ -1353,65 +1353,62 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
+>>>>    }
+>>>>      /*
+>>>> - * isolated_cpus_can_update - check for isolated & nohz_full conflicts
+>>>> - * @add_cpus: cpu mask for cpus that are going to be isolated
+>>>> - * @del_cpus: cpu mask for cpus that are no longer isolated, can be NULL
+>>>> - * Return: false if there is conflict, true otherwise
+>>>> - *
+>>>> - * If nohz_full is enabled and we have isolated CPUs, their combination must
+>>>> - * still leave housekeeping CPUs.
+>>>> + * prstate_housekeeping_conflict - check for partition & housekeeping conflicts
+>>>> + * @new_prs: new partition root state to be checked
+>>>> + * @parent_prs: Parent partition root state
+>>>> + * @add_cpus: additional CPUs to be added to current cpuset
+>>>> + * @del_cpus: CPUs to be removed from current cpuset, can be NULL
+>>>> + * Return: true if there is conflict, false otherwise
+>>>>     *
+>>>> - * TBD: Should consider merging this function into
+>>>> - *      prstate_housekeeping_conflict().
+>>>> + * There are two different housekeeping conflicts to be checked:
+>>>> + * 1) If new_prs is PRS_ROOT, none of the @add_cpus can be a boot-time isolated
+>>>> + *    CPU. IOW, the whole @add_cpus must be a subset of HK_TYPE_DOMAIN_BOOT.
+>>>> + * 2) If nohz_full is enabled and we have isolated CPUs, their combination must
+>>>> + *    still leave housekeeping CPUs. This check is only needed if new_prs
+>>>> + *    differs from parent_prs and one of them is PRS_ISOLATED.
+>>>>     */
+>>>> -static bool isolated_cpus_can_update(struct cpumask *add_cpus,
+>>>> -                     struct cpumask *del_cpus)
+>>>> +static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+>>>> +                      struct cpumask *add_cpus,
+>>>> +                      struct cpumask *del_cpus)
+>>>>    {
+>>>>        cpumask_var_t full_hk_cpus;
+>>>> -    int res = true;
+>>>> +    int res;
+>>>>    -    if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE))
+>>>> +    if (housekeeping_enabled(HK_TYPE_DOMAIN_BOOT) && (new_prs == PRS_ROOT) &&
+>>>> +        !cpumask_subset(add_cpus, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT)))
+>>>>            return true;
+>>>>    -    if (del_cpus && cpumask_weight_and(del_cpus,
+>>>> -            housekeeping_cpumask(HK_TYPE_KERNEL_NOISE)))
+>>>> -        return true;
+>>>> +    if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE) ||
+>>>> +        (new_prs == parent_prs) ||
+>>>> +        (!del_cpus && (new_prs != PRS_ISOLATED)) ||
+>>>> +        ((new_prs != PRS_ISOLATED) && (parent_prs != PRS_ISOLATED)))
+>>>> +        return false;
+>>>>    
+>>> When a child partition switches from root to isolated under an isolated
+>>> parent, this returns false even though the child's CPUs were not isolated
+>>> before the switch.
+>>>
+>>> On a fresh boot with CPUs 0-15 online and nohz_full=2-15:
+>>>
+>>>       # cd /sys/fs/cgroup
+>>>       # echo +cpuset > cgroup.subtree_control
+>>>       # mkdir A B
+>>>       # echo 1-2 > A/cpuset.cpus
+>>>       # echo isolated > A/cpuset.cpus.partition
+>>>       # echo +cpuset > A/cgroup.subtree_control
+>>>       # mkdir A/C
+>>>       # echo 1 > A/C/cpuset.cpus
+>>>       # echo root > A/C/cpuset.cpus.partition
+>>>       # echo 0 > B/cpuset.cpus
+>>>       # echo isolated > B/cpuset.cpus.partition
+>>>       # cat cpuset.cpus.isolated
+>>>       0,2
+>>>       # echo isolated > A/C/cpuset.cpus.partition
+>>>       # cat A/C/cpuset.cpus.partition
+>>>       isolated
+>>>       # cat cpuset.cpus.isolated
+>>>       0-2
+>>>
+>>> CPU 1 was the last remaining housekeeping CPU: it was in neither the
+>>> nohz_full mask nor the cpuset.cpus.isolated mask. The final write isolates
+>>> CPU 1 as well, leaving no housekeeping CPU.
+>>>
+>>> Should this check also take the child's previous partition state into
+>>> account, rather than just comparing its new state with the parent's state?
+>> This is actually a problem that is hard to fix without introducing a lot of complexity. After spending a day or so trying to find a possible fix from 2 different perspectives, I realize that either one will introduce quite a lot of complexity into the existing cpuset partition code. When looking at it again from a higher level, I think we may have allowed too much freedom to create a complicated nested partition hierarchy. If we simply don't allow the creation of root partition under an isolated partition parent, this problem will not exist. It is indeed a new limitation imposed on the existing cpuset partition functionality, but it is a simple solution and I don't believe there is a real use case in the creation of a root partition under isolated partition. Please correct me if my use case assumption is wrong.
 >>
-<skipped>
+> Thanks for taking the time to look into this.
+> Your suggestion to disallow root partitions under isolated parents gives us a different perspective on some of the issues we've encountered in our product.
+> As part of our transition from cgroup v1 to v2, we've been testing various cpuset configurations allowed by the current rules.
+> Some of these tests have uncovered corner cases, including the one reported here.
+> So far, we haven't received any customer reports of a use case that requires a root partition under an isolated parent.
 
->> /*
->>  * Bitmap and deferred work of shrinker::id corresponding to memcg-aware
->> @@ -18,6 +22,9 @@ struct shrinker_info_unit {
->> DECLARE_BITMAP(map, SHRINKER_UNIT_BITS);
->> };
->>
->> +static_assert(!(sizeof(struct shrinker_info_unit) &
->> + 		(sizeof(struct shrinker_info_unit) - 1)));
-> 
-> This assertion is not straightforward. I'd like to use is_power_of_two().
-> Like:
-> 
->   BUILD_BUG_ON(!is_power_of_2(sizeof(struct shrinker_info_unit)));
+Thanks for the quick reply. Creation of an isolated partition is usually 
+a leaf or terminal node that has latency sensitive application running. 
+Even creating a child isolated partition underneath it will not be 
+common. By imposing this new limitation, we won't need to spend effort 
+to address corner cases that are highly unlikely to be used at all. So I 
+am going to impose this new restriction on the next version.
 
-No problem, i'll send a v2 with the modified assertion.
-Muchun, thank you for the review!
-
---
-Best regards,
-
-Konstantin Khorenko,
-Virtuozzo Linux Kernel Team
+Cheers,
+Longman
 
