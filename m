@@ -1,93 +1,167 @@
-Received: from mta0.migadu.com (out-52.mta0.migadu.com [91.218.175.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.hostedemail.com (smtprelay0015.hostedemail.com [216.40.44.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8050C3DB641
-	for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 16:06:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41E284E0B74;
+	Wed, 14 Oct 2026 16:49:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791993968; cv=none; b=faO1BOwPPC73HzF9hKX12elWVKYZkFTAdceZ2u9nxqMUneq4kH+C5zQnWhhvwG1skkup8MKOmcPLy4LQC3ulcXMu7jcqS9SnMVu1KK6thkpCt8M25XM7ABTA8fefNv9GR/iI06a1rMom+KZie+otCHgb6MQ/rhVWeWivwCYj+xE=
+	t=1791996564; cv=none; b=mEAPMVBTnIbnCJijCc/E8F9vEaNUbfxAZ0Dr9LxtCw+wh2UWoyoJazGau/D7fU20S2A4DNRVfLl4whT5jt4KGkXkhq2/59pG/GNe4Upcro1es3PkbIJFsT3ClN3uwqjJ1VzXthwLZG/0H3IWZZt5X8Hr9KIDjXzwbmBb4Q/C/QY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791993968; c=relaxed/simple;
-	bh=Ke8/Rh7e75umDrgNFQd+uBhuuNnz5z+dEUkUPgAImPk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P/0cYPWWN+dGavamWFIBGTEbTzWnjDYFXzZDTmq6k2+5iwvu1dfwnmNC++6sctQAShjk5jRZr8Bp4z+xJauCrvXfSohTpNvHTLs2zOGXrgUazT0rh+a52w3j6s7cwg9+Ohe8HDoQHbQgtQInsHZ757p2mHHl5DiXCxBYfigsOKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FwaBZg2e; arc=none smtp.client-ip=91.218.175.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1791996564; c=relaxed/simple;
+	bh=iSzaasvYvUiPzay+T0vJl6ArYMMDfH1SvrRmE73kiCI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RQPeWrldQfgV680T1cIwcYIGp9M20MmeYyNPyShdXDmJ1VEuc4GWgVKaQroH8+gBomYM7uqNn9l5IzK8wu2LxAJ2TdUv8ykyhOYpLDc1TxF6WuesptIeOrrGb2TUaMyrYhcMtIDUAhjIXjxDvr0uTGW09GG++qqSfpXTrV2k3c0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; dkim=pass (1024-bit key) header.d=goodmis.org header.i=@goodmis.org header.b=ZDjXae7y; arc=none smtp.client-ip=216.40.44.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FwaBZg2e"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Ke8/Rh7e75umDrgNFQd+uBhuuNnz5z+dEUkUPgAImPk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791993963; v=1; x=1792598763;
- b=FwaBZg2eq3VhmsBTg9fp+TgUc+hVxRwtrbL08KUSyDZQz+t272ehLbGesowe40gOETm1o+Lp
- 0KjUZ3KdC1ZZGEksiLNdmsd51PUT0KA/FHqHhC76L5Lwukg1swCXHX8ihGcLHhFyQbm7Gs9/5bq
- uCCFfF27YeICVpirSAdsS8Xw=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id cba1a5ea51b66b58;
-	Wed, 14 Oct 2026 16:06:03 +0000
-X-Mizu-Trace-ID: cba1a5ea51b66b58
-X-Migadu-Flow: FLOW_OUT
-Date: Wed, 14 Oct 2026 09:06:00 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Michal Hocko <mhocko@suse.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH for-7.5 4/5] memcg: avoid queuing high_work from reclaim
-Message-ID: <as97Nzob4XuzO9Ss@linux.dev>
-References: <20261010210957.1350874-1-shakeel.butt@linux.dev>
- <20261010210957.1350874-5-shakeel.butt@linux.dev>
- <as9p2uFqCQprwdnI@tiehlicka>
+	dkim=pass (1024-bit key) header.d=goodmis.org header.i=@goodmis.org header.b="ZDjXae7y"
+Received: from omf03.hostedemail.com (lb01a-stub [10.200.18.249])
+	by unirelay09.hostedemail.com (Postfix) with ESMTP id 02FCF8066A;
+	Wed, 14 Oct 2026 16:49:17 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf03.hostedemail.com (Postfix) with ESMTPA id AE89A6000A;
+	Wed, 14 Oct 2026 16:49:12 +0000 (UTC)
+Date: Wed, 14 Oct 2026 12:49:14 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Ridong Chen <ridong.chen@linux.dev>
+Cc: Masami Hiramatsu <mhiramat@kernel.org>, Johannes Weiner
+ <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin
+ <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, Andrew
+ Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Muchun Song
+ <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, David Hildenbrand
+ <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, Kairui Song
+ <kasong@tencent.com>, Barry Song <baohua@kernel.org>, Axel Rasmussen
+ <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu
+ <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, Baolin Wang
+ <baolin.wang@linux.alibaba.com>, linux-kernel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, cgroups@vger.kernel.org (open
+ list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)),
+ linux-mm@kvack.org (open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER
+ (MEMCG)), bpf@vger.kernel.org (open list:BPF
+ [MISC]:Keyword:(?:\b|_)bpf(?:\b|_)), Ridong Chen <chenridong@xiaomi.com>
+Subject: Re: [PATCH RFC v3 2/7] mm/vmscan: move vmscan tracepoints to a
+ local header
+Message-ID: <20261014124914.21c21559@gandalf.local.home>
+In-Reply-To: <20261013131309.2790253-3-ridong.chen@linux.dev>
+References: <20261013131309.2790253-1-ridong.chen@linux.dev>
+	<20261013131309.2790253-3-ridong.chen@linux.dev>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <as9p2uFqCQprwdnI@tiehlicka>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Rspamd-Server: rspamout03
+X-Rspamd-Queue-Id: AE89A6000A
+X-Stat-Signature: m7phkurr8zpyipefydjfncabm6u6cuns
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX1+2sabA8ApyQWp0KnP/HFLarVznZroqxp8=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=goodmis.org; h=date:from:to:cc:subject:message-id:in-reply-to:references:mime-version:content-type:content-transfer-encoding; s=dkim1; bh=a+jcCItmaVXvg0z3J5thFi2DsdWgCqN1j0EvdcEpj+w=; b=ZDjXae7yuY6daMhM/4jUFORVKfWrh7M3m7I1np8JJtIWO0CX68GmjeT7EEVC1ueFMeDDVtX+N0muCfk5WRWHbSgc3XbOFNIkK4Nj34ba3mrfYqHMKXppwgYEcaSgfHzFG3iN+YEgpe7FhA3ei48+cNoN4yD25t67Ejic1h5NyCw=
+X-HE-Tag: 1791996552-398790
+X-HE-Meta: U2FsdGVkX19WVIU50DbwQWQ1335aLD0DaAIUgIjNIvQ8PuHEzItAimjZ4jWFcbqXC2uQEeUl7OKKLjZZpqhlsOaTbjlt0g5JFPmtMPCLWd9sgUdQcyxnOwQ9CrJywM/QBRoqk8hbQOdJ5cDAQ38RYSlBz42nBJ9pNyLbe1tCYpApGPKp22Oa2OjUc3CRjYiV0EMElzxmGb+AOBSJE1PpBYmHO62axI0wg8DN/AGB2Fz/pcSXsN9QshQLIDo4IsZLu842OjTboQLK+3/GThFKibADAVexEZE1mMy7lMzdC84/ITa6ABJ7EBW9GFfPexV4kY5mT03a2mPMNhzIeu716uT2F3rGLy6OzmbqiER2EFUx9vVE/uNHHDyOU4TQUvYUCeaVChZwsFA4sPdaMEuwILWLuKMZRRdliS2SdjRcvmM=
 
-On Wed, Oct 14, 2026 at 01:39:06PM +0200, Michal Hocko wrote:
-> On Sat 10-10-26 14:09:56, Shakeel Butt wrote:
-> > Kernel threads and remote chargers use high_work when memory.high is
-> > exceeded. Their allocations during reclaim can also charge memory,
-> > for example when zswap stores a page.
-> > 
-> > Without a check, the high_work worker can queue itself from its own
-> > reclaim. The pending bit is cleared before high_work runs, so each run
-> > can queue another run.
+On Tue, 13 Oct 2026 21:13:04 +0800
+Ridong Chen <ridong.chen@linux.dev> wrote:
+
+> From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> What does that mean really? Does this delays the actual run?
-
-It will not delay the actual charge request. This mainly means that we keep
-enqueing the high reclaim work even from high reclaim context and can
-potentially keep wasting CPU if high reclaim is not very successful.
-
+> Move include/trace/events/vmscan.h to mm/trace_vmscan.h so that the
+> tracepoints can be extended to reference vmscan-internal structures such
+> as struct scan_control, which is not visible outside mm/.  This mirrors
+> what several other subsystems already do with their trace headers (e.g.
+> arch/x86/kvm/trace.h, drivers/gpu/drm/drm_trace.h, net/xfrm/trace_iptfs.h).
+> As they do, use a relative TRACE_INCLUDE_PATH so that no Makefile change
+> is needed.
+> 
+> No functional change.
+> 
+> Assisted-by: LLM
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> ---
+>  MAINTAINERS                                        | 2 ++
+>  mm/shrinker.c                                      | 2 +-
+>  include/trace/events/vmscan.h => mm/trace_vmscan.h | 4 ++++
+>  mm/vmscan.c                                        | 2 +-
+>  4 files changed, 8 insertions(+), 2 deletions(-)
+>  rename include/trace/events/vmscan.h => mm/trace_vmscan.h (99%)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index c5519d67b6f4..80d2a9dd0525 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -17575,6 +17575,7 @@ F:	Documentation/admin-guide/mm/multigen_lru.rst
+>  F:	Documentation/mm/multigen_lru.rst
+>  F:	include/linux/mm_inline.h
+>  F:	include/linux/mmzone.h
+> +F:	mm/trace_vmscan.h
+>  F:	mm/vmscan.c
+>  F:	mm/workingset.c
 >  
-> > Skip memory.high enforcement for charges from task context with
-> > PF_MEMALLOC set when they would use high_work. This covers kernel
-> > threads and remote charges. The memory is still charged. Interrupt
-> > charges keep their current path.
-> > 
-> > In a VM with incompressible zswap data, the worker queued itself 163 times
-> > without this check.
-> > 
-> > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> 
-> The patch itself looks OK. I am wondering whether we can unify the check
-> with the existing one which forces the allocation through in main
-> charging path.
+> @@ -17722,6 +17723,7 @@ R:	Shakeel Butt <shakeel.butt@linux.dev>
+>  R:	Lorenzo Stoakes <ljs@kernel.org>
+>  L:	linux-mm@kvack.org
+>  S:	Maintained
+> +F:	mm/trace_vmscan.h
+>  F:	mm/vmscan.c
+>  F:	mm/workingset.c
+>  
+> diff --git a/mm/shrinker.c b/mm/shrinker.c
+> index 7ec2a9704f6f..3c3e87c4b61c 100644
+> --- a/mm/shrinker.c
+> +++ b/mm/shrinker.c
+> @@ -3,7 +3,7 @@
+>  #include <linux/rwsem.h>
+>  #include <linux/shrinker.h>
+>  #include <linux/rculist.h>
+> -#include <trace/events/vmscan.h>
+> +#include "trace_vmscan.h"
+>  
+>  #include "internal.h"
+>  
+> diff --git a/include/trace/events/vmscan.h b/mm/trace_vmscan.h
+> similarity index 99%
+> rename from include/trace/events/vmscan.h
+> rename to mm/trace_vmscan.h
+> index 8a872990b4be..c5d824fef554 100644
+> --- a/include/trace/events/vmscan.h
+> +++ b/mm/trace_vmscan.h
+> @@ -648,4 +648,8 @@ TRACE_EVENT(mm_vmscan_kswapd_clear_hopeless,
+>  #endif /* _TRACE_VMSCAN_H */
+>  
+>  /* This part must be outside protection */
+> +#undef TRACE_INCLUDE_FILE
+> +#undef TRACE_INCLUDE_PATH
+> +#define TRACE_INCLUDE_PATH ../../mm
 
-The force charge (and ENOMEM) paths bypass the memory.high enforcement
-altogether. Only successful charges (done_restock label) goes through
-memory.high enforcement. So, even if we move this check in try_charge_memcg, it
-will still be a separate check before calling high enforcement function. I think
-this check is very high_work specific and better to be in the high enforcement
-function.
+The proper way to do this is to have:
 
+#define TRACE_INCLUDE_PATH .
+
+And update the Makefile with:
+
+CFLAGS_vmscan.o := -I$(src)
+
+-- Steve
+
+
+
+> +#define TRACE_INCLUDE_FILE trace_vmscan
+>  #include <trace/define_trace.h>
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 29b31446fc11..6207dad9e644 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -71,7 +71,7 @@
+>  #include "swap.h"
+>  
+>  #define CREATE_TRACE_POINTS
+> -#include <trace/events/vmscan.h>
+> +#include "trace_vmscan.h"
+>  
+>  struct scan_control {
+>  	/* How many pages shrink_list() should reclaim */
 
