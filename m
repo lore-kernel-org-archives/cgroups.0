@@ -1,42 +1,44 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-154.mta0.migadu.com [91.218.175.154])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41ABE36F429;
-	Wed, 14 Oct 2026 18:08:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C333C56853F
+	for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 18:25:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792001339; cv=none; b=OnIPfSbM/FXVrIR4YjQaEIcwRw5XjciHzX7Oy3leyZBU977DWC6/eTEVDLj7g8pczSsmvjC+Qw2H3MUJF7u4adpfmCzAFSjhT6yhzEPi0RvEIMCfx+SzCbLQUuYH9jePHa8co+TVw9xMq9r16Jph5AsidyLBcQt0sKi7+7HIaCU=
+	t=1792002320; cv=none; b=lbYkOoMaAty3P83Dy9v34s1lksQv2gK8OQxFABo6BUWCUSYA8m380+1DiHXbzoXaWdViQ8KV8otZWu8WOPbosdNpef1tfHayMjT941eV6eNbOh1oFdxHhQSCo2xhBwmDEX6/0vhuwzWp8SJWWw7Wl57x3QyrNZzmq6W6PiMMNNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792001339; c=relaxed/simple;
-	bh=hJrSunb50VnyfxfkWpoPngnUFmZt41oN1AydPjmxQoQ=;
+	s=arc-20240116; t=1792002320; c=relaxed/simple;
+	bh=UfN8ZqWj05pIM5YKkJVUzL7gKRgIUqF/r9OZzNufKig=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KcQYgrsitUer3znqeuhEeWHov114GmKDVd2X1U4090qO8aipW2sRl9FQ0k1WKrrL+IpxAr1hpnzCRQwkXAQHyHajBwKtdhpzq+FIeD600xr5O8AikbQ52ZHkUOZwAZ4qLTvYg+qRfGsbpj8u7BgADeFtbbspDxZ5iuhsZx5gaUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=monCtWUT; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=kuC7FzyaifA3iUJEiiSdDOJvgsZ9i1v/WJ7d52ZEz6eI4f0MT2L0FXVf6dLnzVJ5rxr3KX1icI4aRN2tF0GpHzaUSanIeclc9gEP+Nou03Wlv4SbgSNqnJ2kGUy52MHVFOc2QfBjYeI7owoTmEYfSFlDmeRaE516J2wU/gNrvzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=F4kcBsuu; arc=none smtp.client-ip=91.218.175.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="monCtWUT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AC421F000C4;
-	Wed, 14 Oct 2026 18:08:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792001337;
-	bh=YJDX7p+COi8qSZ2TAns/+c4C3bCMkstG1AQhV+nfC7E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=monCtWUTJM1JJiTY5ehe5iAz7kdm0NJXj6mTFYuhtNHYYqFs6snOCEPtsgac7O5JM
-	 eU2EP8c4Qc4cYC/+iTk2K+vuYSNqZ48bMmFXHuSY0hE03eDFhhhvLDe3pnCVvqkHv3
-	 Xb299Pvzs05SekBEymV81B+hy8fxlN0S1OjKT+iPpJWjHiPCNwbkNmDCScsGEJ+VW5
-	 NRtHtCRlc56Ek4lKzCMxVq2po9Y6NuLPnCixpsVmkzePzWXcUgz4EmMnYV4EbmiaRz
-	 PIMXXvg64pVoV2DLt22JcRl6/8ZbICTupKhmxWp+GmVvXhTe42yXmLySdJNo7H3MHI
-	 bYTxCfrmecq2g==
-Date: Wed, 14 Oct 2026 19:08:55 +0100
-From: Harry Yoo <harry@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="F4kcBsuu"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=UfN8ZqWj05pIM5YKkJVUzL7gKRgIUqF/r9OZzNufKig=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792002315; v=1; x=1792607115;
+ b=F4kcBsuuZ4W2n1x039ZBV9EnzhnMB3gyiDXb3jvdpUyNbRLpheLiv1SomPNIWWDEja4+Efu0
+ 48oGSOObRjNS6Y9Y2j+7GgcxcaXD+0jfFot1I4omtNNSDNJD9TAVClOaiIO74Z30blw2Ng/Ss+Y
+ aFbNxIJsufp7nV6T7G64couM=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 6dbda3fc00612143;
+	Wed, 14 Oct 2026 18:25:14 +0000
+X-Mizu-Trace-ID: 6dbda3fc00612143
+X-Migadu-Flow: FLOW_OUT
+Date: Wed, 14 Oct 2026 11:25:12 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Tal Zussman <tz2294@columbia.edu>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] mm: memcontrol: remove page_memcg_check()
-Message-ID: <as_FLaXgZu01g8zq@thinkstation>
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] mm: memcontrol: remove mod_memcg_page_state()
+Message-ID: <as_I8DoRCYpnTXJg@linux.dev>
 References: <20261014-memcg-unused-page-helpers-v1-0-240b37c53831@columbia.edu>
- <20261014-memcg-unused-page-helpers-v1-2-240b37c53831@columbia.edu>
+ <20261014-memcg-unused-page-helpers-v1-1-240b37c53831@columbia.edu>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,19 +47,12 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261014-memcg-unused-page-helpers-v1-2-240b37c53831@columbia.edu>
+In-Reply-To: <20261014-memcg-unused-page-helpers-v1-1-240b37c53831@columbia.edu>
 
-On Wed, Oct 14, 2026 at 01:08:21PM -0400, Tal Zussman wrote:
-> The last caller was removed in commit 90f095b816e2 ("mm/page_owner: use
-> memcg_data snapshot to avoid TOCTOU in print_page_owner_memcg()").
-> Remove it.
+On Wed, Oct 14, 2026 at 01:08:20PM -0400, Tal Zussman wrote:
+> The last caller was removed in commit c466412c73c3 ("mm: memcontrol:
+> switch to native NR_VMALLOC vmstat counter"). Remove it.
 > 
 > Signed-off-by: Tal Zussman <tz2294@columbia.edu>
-> ---
 
-Looks good to me,
-Reviewed-by: Harry Yoo (Meta) <harry@kernel.org>
-
--- 
-Cheers,
-Harry / Hyeonggon
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
