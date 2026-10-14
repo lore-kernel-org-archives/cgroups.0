@@ -1,98 +1,101 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C5643451AB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C4462931FB;
 	Wed, 14 Oct 2026 05:23:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791955426; cv=none; b=B6Wp3As8Jt7mymrjG5Sr1EntrAof3kwGHxAIU9isaY6PfJJUqjXOzXOkVzcAKlareM9hpXmqrvc9RG/L8SAIwJ8e4L9B//rsaE6PFsBhMgInn9thM6vPggI7gPHtTfjpcQcgw/A6vllLkuHlnQMQTZEBuw7CV8REu+Ckg9S1pjg=
+	t=1791955427; cv=none; b=SPOnzgXn9u0mW6QcfOIIWNSJ4Cxl4buGM9fDw/FOK2Ob0qEdhSDj5+H6XZKIeLjWp+4Sk6YpWYeB0xqEDXZNDSBIq2yMPIu5lIIvxOFKqjiAYhho6UC40dxm/8dkA0ewKeunxh0hmV7A2ZOFpuD+Urln6L0GECKsByWwdOcW9aE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791955426; c=relaxed/simple;
-	bh=FiVZUxotLv/zfGLKYRPLznaaXPZGHAbqigwRAF3TMZc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XVWqaIrag+oOIHW3f95u6YTN0UgpLOFirUz7wfLNTKV5ap43eV+pv+Z7E9S9aRDuUQqnfP6eBZoPmffcXHSUa6Ir2jn6hwWxd8nU9NWV0wMZZ7wZRAsP9KYfoJoKKq5SSo4CHw9qfm0aVZSbWEQgJ2t8jXWVI/VCsdcc8y2y634=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HzpPgRZW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791955427; c=relaxed/simple;
+	bh=4xzljaoL3zgY9ToiX0DtctuAz0Su3Z7YnVQTIWv8yDY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=aPaIZu3ul4OQj005TXjU3vAMaKEFIMR9RO345i027wJPNO3nafbkI4XORfe+lAXMHnMKelnRKeuT88/eEA1S5D56HPqWUtFzdrvQPUjX2CtkFLUDzaHuLpB7A4WN4N3iRS/doxki3nLdnVg8WaaQWppGbm4hT+QKa7ormjItaho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IFFOjUFY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HzpPgRZW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A40BB1F000FF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IFFOjUFY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B27301F00898;
 	Wed, 14 Oct 2026 05:23:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1791955424;
-	bh=SdSYpehsphW4ohcRgZ6kkg4WkXWb7YZZ4YKMZgeJFUc=;
-	h=From:To:Cc:Subject:Date;
-	b=HzpPgRZW7EyAIbsLd5GKX0VblZsKb+zJCeaRAKypkv55Evn8jSkn5B8p8tvMMPCm2
-	 xijzFZB2nYUOGatSBxl83G3DFQTgROkz4XPHhlcd53XCnLhOPoQSe3lsMl3UIHGqRH
-	 2ZvJZeV68clhF4aR3d8Bf+jQjTHmh/QyjoUXBhUoj5Vi3SQq9O6JWQBWA05/qcz5bH
-	 UEYeQpJ498tvF8RNUuwUyPFuynOakjljBwcHxWBE8XxkC7jaZdHqWlgEDFW5Y6kAWF
-	 96LbKMxnTjB2444qTiNG/IP3UVAw3pIGY19tFhb/pY6yKMkjHByQ7heIdqK6dPpiZZ
-	 Jm5+7g/w98v7w==
+	bh=Fxsf/nP5SXEDzQE941HiSMs2LYMrqlNVsr3+X2+Gtj0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=IFFOjUFYtKfiXQRi+/4VGn8Cho3PFcrjt/KLhzAkEOul4ZhDMTbBc8/8jnakxDy6g
+	 u53u66hNQWsQXxC1bFiGsUWo6mjwcEkvdeUGeLlyvEMAUs9PbN2psfT88MDLt4ZXJN
+	 m3e9Ffg2r9ivSVzyurM4Qn00rgI8ldjMXoiOVLn/Hriu8HOarpxNStEcgXVFObFOvh
+	 3CcmRi90wHUY5mqzDStkVnK9Lo+902pPPVBfTub5HgiqkrBy8CsqLp5b8uuE9pa9Gu
+	 Eq2BIWK8KoH40ON8I/joRIBlLtboMK+UzRp9S53IB0mEe4VtuhneFrf5nl/ZGU9vdN
+	 aqLaVe7bG3hzg==
 From: Kees Cook <kees@kernel.org>
 To: Vlastimil Babka <vbabka@kernel.org>
 Cc: Kees Cook <kees@kernel.org>,
-	Harry Yoo <harry@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Hao Li <hao.li@linux.dev>,
-	Christoph Lameter <cl@gentwo.org>,
-	David Rientjes <rientjes@google.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Pedro Falcato <pfalcato@suse.de>,
-	Kuniyuki Iwashima <kuniyu@google.com>,
 	Christian Brauner <brauner@kernel.org>,
 	Jan Kara <jack@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
-	linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH v7 0/2] mm/slab, ipc: kmem_buckets kernel-doc and msg_msg accounting fixes
-Date: Tue, 13 Oct 2026 22:23:41 -0700
-Message-ID: <20261014052338.nothing.279-kees@kernel.org>
+	linux-mm@kvack.org,
+	Pedro Falcato <pfalcato@suse.de>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	linux-hardening@vger.kernel.org,
+	stable@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v7 2/2] ipc, msg: Account msg_msg allocations with GFP_KERNEL_ACCOUNT again
+Date: Tue, 13 Oct 2026 22:23:43 -0700
+Message-ID: <20261014052344.384723-2-kees@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261014052338.nothing.279-kees@kernel.org>
+References: <20261014052338.nothing.279-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1208; i=kees@kernel.org; h=from:subject:message-id; bh=FiVZUxotLv/zfGLKYRPLznaaXPZGHAbqigwRAF3TMZc=; b=owGbwMvMwCVmps19z/KJym7G02pJDFnnBe/t3nuKReGOt/wEt9naXak37qq3HI+ODmi7oReuV aiRdlSqo5SFQYyLQVZMkSXIzj3OxeNte7j7XEWYOaxMIEMYuDgFYCLzyhkZ3t612Gb3y0vhvGLA 1/iXB8P7TM30HgSt8Rc/dmXnGsbrvgz//dzn6TWkHb2UE33h4A7N65/m50X8+XztvE6mTl1ZUv4 XFgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1410; i=kees@kernel.org; h=from:subject; bh=4xzljaoL3zgY9ToiX0DtctuAz0Su3Z7YnVQTIWv8yDY=; b=owGbwMvMwCVmps19z/KJym7G02pJDFnnBe8Zz9wX0td0zKxNvuJQ18PvdSY7ejrT1y0uYhF9J TVtZ2toRykLgxgXg6yYIkuQnXuci8fb9nD3uYowc1iZQIYwcHEKwETEFjMynMs8c+Nvx2Hl0t/P 8gIqCgKaxXOWq/M9bfQx2530uDvKjuF//Wo+9ZN8JyZJOJi8ab8Zc+SDRPyGx9NvFZTPFJQoX8L NDQA=
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-Hi!
+Since commit 734bbc1c97ea7 ("ipc, msg: Use dedicated slab buckets for
+alloc_msg()"), alloc_msg() allocates with GFP_KERNEL, and a msg_msg is
+accounted only through SLAB_ACCOUNT on its bucket caches. With
+CONFIG_SLAB_BUCKETS=n, kmem_buckets_create() creates no caches and
+kmem_buckets_alloc() is a GFP_KERNEL kmalloc() from the general caches,
+which do not account it; the same happens when kmem_buckets_create()
+fails. Either way, the allocation is not charged to the sender's memory
+cgroup.
 
-As Vlastimil suggested[1], these are the first two patches of v6, split
-out for 7.4. The rest of the skb buckets series will come back for 7.5.
+Allocate with GFP_KERNEL_ACCOUNT again, as before that commit, so the
+allocation is charged whichever cache serves it.
 
-2/2 now keeps SLAB_ACCOUNT on the msg_msg bucket caches and allocates
-with GFP_KERNEL_ACCOUNT as well, so a msg_msg is charged with
-CONFIG_SLAB_BUCKETS either way.
+Build tested ARCH=x86_64 defconfig with GCC 16.2.0, with
+CONFIG_SLAB_BUCKETS as y and n.
 
-Thanks!
+Fixes: 734bbc1c97ea7 ("ipc, msg: Use dedicated slab buckets for alloc_msg()")
+Cc: stable@vger.kernel.org
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+ ipc/msgutil.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
--Kees
-
- v7:
- - split v6's 1/8 and 2/8 out for 7.4; 3/8 to 8/8 will return for 7.5
-   (Vlastimil)
- - 2/2: keep SLAB_ACCOUNT in kmem_buckets_create(), and add Cc: stable
-   (Vlastimil, Andrew, Harry)
- v6: https://lore.kernel.org/all/20261006092030.got.500-kees@kernel.org/
- v5: https://lore.kernel.org/all/20261002231120.late.500-kees@kernel.org/
- v4: https://lore.kernel.org/all/20260921075811.too.775-kees@kernel.org/
- v3: https://lore.kernel.org/all/20260702170728.168755-1-pfalcato@suse.de/
-
-[1] https://lore.kernel.org/all/be34b92e-e82c-4f69-ac9d-b045081ea418@kernel.org/
-
-Kees Cook (2):
-  mm/slab: Mark the kmem_buckets_create() context as a Context: section
-  ipc, msg: Account msg_msg allocations with GFP_KERNEL_ACCOUNT again
-
- ipc/msgutil.c    | 3 ++-
- mm/slab_common.c | 4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
+diff --git a/ipc/msgutil.c b/ipc/msgutil.c
+index e28f0cecb2ec..12663a40e9ae 100644
+--- a/ipc/msgutil.c
++++ b/ipc/msgutil.c
+@@ -58,7 +58,8 @@ static struct msg_msg *alloc_msg(size_t len)
+ 	size_t alen;
+ 
+ 	alen = min(len, DATALEN_MSG);
+-	msg = kmem_buckets_alloc(msg_buckets, sizeof(*msg) + alen, GFP_KERNEL);
++	msg = kmem_buckets_alloc(msg_buckets, sizeof(*msg) + alen,
++				 GFP_KERNEL_ACCOUNT);
+ 	if (msg == NULL)
+ 		return NULL;
+ 
 -- 
 2.55.0
 
