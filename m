@@ -1,61 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2D2B21FF2A;
-	Wed, 14 Oct 2026 20:50:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8E304A5EB7
+	for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 22:25:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792011048; cv=none; b=CrFgX3g7nIRmUggsX5+Tzjsy0vmcbyv/mw6B33CQyyXtFwy8OXwn2aO48wbKprtgiuAp3EGRxX35s6/bZQAavi3WSutjQ06AJaiXHcKQ5kLEUN/dOEJt+XAA6w1OYUCEvlN4biy0hoS5zfNYYZU616S8nUMevqn5bOjtXnH/FRs=
+	t=1792016705; cv=none; b=rwLtSV5g4bcCDiUMnV/w3X6fVY0A/XIOT+Gq7tqYKBCNjyH4FzvkDKG82Wzwu0uWoSICsXiJCmNhHlnr26eKfebdwG2/SRpyLib/+4YknMRh/DStHdVZr36MJOvSlKyGkjzdXgSciwSTtx3G+N1Q6TkCf2DKTuCHdpcCXzraStA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792011048; c=relaxed/simple;
-	bh=i8D9yZb0UWHBI+Xz9EO0l4dYQOFG+MxhK8G5yv4G2uk=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=HFbDQzUPBxoMy+0HX8Dgl9H3gnNqezLzhCedOUbE8oIy6LOpvCAKOBWAJPb9E6kHvhIT4M18cX52qiCEOVZ39oVFVLBU3Ju1bjLoiqk27Bkji2yRQffAxM3gDTeSyv4EPu2Y3qgbyZaU7YgdtGeDTxFBBs02xLhw+LbSAureyk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=iyiO+vuz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792016705; c=relaxed/simple;
+	bh=hRA0QmNCDYX9+z5uFKoRcS834j3w2oQc0PNKxc0kF08=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=K3flK2pZlD48ksCMcoMnqGsngqD8hyhjKsfiu12DEViOm4Osk9WP9fF4gwgOMa/bJSi8rhEh7FsNGleVax87OWYewnO7tbCh6dpi7gz2pjj0udycdIgEBv8SfUO6K2FLl0809V1NIcrv+jSpHkbmgWYRtKtzWywgGTRqUAgxjwI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=Ww1AdFpO; arc=none smtp.client-ip=209.85.160.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="iyiO+vuz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A16E61F000C4;
-	Wed, 14 Oct 2026 20:50:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="Ww1AdFpO"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-53505bc6524so16777541cf.0
+        for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 15:25:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1792011047;
-	bh=rNJFLvF4P3aKAioyvIs7zgjS8vYuL/AIz3xW41h4cLI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=iyiO+vuzRlgKW3K1+bkEDfNzcyr9AHOBWIzMxQ1JJ9NF+heBdAq0HOnL41UTjtTY8
-	 FkidymqWCHajYKrqOO0SRueiqUsp3+mGTkOg1/h/g/92TfwnFYDheZUZRBpg0eMrdm
-	 4FpCdLiozbcVSwj3Iwyeam4uS9XXt0v+SCn2uG6A=
-Date: Wed, 14 Oct 2026 13:50:46 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Konstantin Khorenko <khorenko@virtuozzo.com>
-Cc: Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, Roman
- Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Shakeel Butt <shakeel.butt@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] mm/shrinker: make per-memcg shrinker units
- cheaper
-Message-Id: <20261014135046.7b13252ce99d918ffcdb1f49@linux-foundation.org>
-In-Reply-To: <20261014-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v2-0-51af2aedbe6c@virtuozzo.com>
-References: <20261014-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v2-0-51af2aedbe6c@virtuozzo.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        d=gourry.net; s=google; t=1792016701; x=1792621501; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Q7Ub4KDl09XJRSF6d4W+ZBSqnX35V2vs0yWYMavxzk8=;
+        b=Ww1AdFpOxjAWwEd2TVi61o3OrrUwFU8pqTD9JM9iey9NzPFUOW18CuB6Q7nuT4ksY7
+         hKM22/jJsJvPWS907Y9nQb/2At2OHHDS41d0ztzOPbushpR4sIQH+Z/N6PFDof4ZD2Mx
+         DzWSy0hQu+dWVAMSz4VU2lXw+O2umonDtXlqIyYrJUyxtawvcU4GXOou+oCyag6kKqHA
+         d+h7rHZwbvPZoQJIBsRyj/FlRb3BuD+XmNPdWaLdsTZ4cOyiP5iSeLTW8uNEjzQsRsXr
+         ugwiW7kquJ7sMiHfCqBrVte5kzJcg2pWHTAdVE42jy/NXedk26eWMo0MKXX19UCfr1uU
+         dS9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792016701; x=1792621501;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Q7Ub4KDl09XJRSF6d4W+ZBSqnX35V2vs0yWYMavxzk8=;
+        b=y4NI7i+4tTWxbL7r+1AaxmkjGvauktpaJ+lsuIBvuWMgW8sTB0pe9uHx7SjOlZi+3M
+         8Ass4tOvTUv0LSllhZrZSZq4ws+hX/ZbMSSpRoyE7lqZhE/HaEQz0EkNtz5ZbEhEpaf3
+         Q7lI+hEzWHhQx740QR1pN4n3yNSvNrQFjQ/1wsDZHw8hNb2vDDjxcUXL47BZj9b5B+AE
+         ZCLaof/2vs+Zhl/e3aFzjQvpVrs44gp41BWKDToWXzWU40CDKUdJZR2BVJStvkjRCO6D
+         6fSNArQPCcDEekWvg1v/k5aB/Q/4nCnLl4fcL9zoABc3Xm1m7rgk6Kki85FusEYNnGFq
+         oAbQ==
+X-Forwarded-Encrypted: i=1; AKwUvByAa4ptcvGzWVg7OpoTi1NmNf8srgObvYnnt+Hgq3xHeMdu/ARnrAgb2AU6asz5nrn/dpfaxyI8@vger.kernel.org
+X-Gm-Message-State: AFq9FYJpeokPGcN9IHnsttMKHb79dkY68OaYArYgG6Nivh/iNsDbw0wq
+	1Hu3hMMWclriZzZgTeiOMw40AH5/rKr5lKZ2/Gd6yPYHnLGQmpY9pGeaCUDwUOgQn+0=
+X-Gm-Gg: AYBFou2+dpuYrTz4FzHWah6tKQT384aWged9EDDRaiQFn3mjIZ2BaRkypiZlg8Jl8oD
+	swoMCcXBuEg8Kqy4d9de8VffE+rgNEDFv77iw262ZwPeO12lasOCOFQ5UI9wscLUW01qfKhBaD2
+	76T8nn6gN563F+gvAFsRi5/zg1hAnYGVBnMYMWc1XPph9AVXhnakrojub64b5gpYPLI1qhM/E0t
+	fe6BncUa36JE2jHCemWWm3ntT0SGUMiI1uc8IwRCIVo3RFuTH4BLLZPrOtOknT48zVHMkliGNS4
+	g5Rvzbnde3kLiDGZ7w+SR1WR11jIBp+lARjpT6BeiWnR1ZhEyS+echMXowZqHdmwGCaT1KGd5z1
+	LpyRPEpjDAlB8m+IxZ42FutrbRdMIgW1l7kLn4GnFC0qz+h0UJ98Gfhdy89H5PQWOG4gUbOExbC
+	4EW6QKN7TBBVrPLyAdMTrfgSPeZdPf4ntug06+uusYDqUUG5LGqpSqB5CQxQinzmsKjir6+gJ8Q
+	B8UG2xdehV46FFGF3dj2H3W6EJupMK9qpbKkJF7U48SqiUfvpSf9nWXQ35v
+X-Received: by 2002:a05:622a:551b:b0:535:70b3:fa09 with SMTP id d75a77b69052e-535a628f4bfmr260621911cf.37.1792016701507;
+        Wed, 14 Oct 2026 15:25:01 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F.lan (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-536128418b2sm8652601cf.30.2026.10.14.15.25.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Oct 2026 15:25:00 -0700 (PDT)
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: linux-mm@kvack.org,
+	cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	kernel-team@meta.com,
+	longman@redhat.com,
+	ridong.chen@linux.dev,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	akpm@linux-foundation.org,
+	vbabka@kernel.org,
+	surenb@google.com,
+	mhocko@suse.com,
+	brendan.jackman@linux.dev,
+	ziy@nvidia.com,
+	david@kernel.org,
+	mgorman@techsingularity.net
+Subject: [PATCH 0/2] mm: fix two allocator races with zonelist and cpuset updates
+Date: Wed, 14 Oct 2026 18:24:54 -0400
+Message-ID: <20261014222456.2318284-1-gourry@gourry.net>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed, 14 Oct 2026 16:54:36 +0200 Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
+Two small fixes for lockless allocator checks that can act on an
+inconsistent view of state another CPU is updating.
 
-> Every memory cgroup allocates, per NUMA node, one shrinker_info_unit
-> per 64 memcg-aware shrinker ids up to shrinker_nr_max, whether or not it
-> ever charges an object to those shrinkers. Every superblock registers
-> such a shrinker, so the cost is
-> 
->   memory cgroups x NUMA nodes x shrinker_nr_max / 64 x 1 KiB
-> 
-> because the unit is 520 bytes and comes from kmalloc-1k.
+Neither of these are stable-worthy.
 
-So we could almost halve this just by using a dedicated kmem_cache?
+Patch 1: the zonelist_update_seq retry is compiled out without
+CONFIG_MEMORY_HOTREMOVE, but memory hot-add can also cause the race.
+A __GFP_THISNODE allocation can observe this and fail to allocate.
+
+Patch 2: cpuset_nodemask_valid_mems_allowed() compares a mempolicy
+nodemask with mems_allowed without mems_allowed_seq. A concurrent
+cpuset update can cause a spurious empty intersection and end up
+relaxing an MPOL_BIND needlessly. This only covers task policies.
+
+Reproducers
+===========
+
+Both races were reproduced on an unmodified kernel in a QEMU guest with
+three NUMA nodes:
+   node 0: 3G, CPUs 0-1
+   node 1: 1G ZONE_NORMAL, CPU 2
+   node 2: 1G ZONE_NORMAL, CPU 3
+
+And a 512M pc-dimm cold-plugged on node 1, left offline at boot
+(CONFIG_ACPI_HOTPLUG_MEMORY=y, CONFIG_MEMORY_HOTREMOVE=n).
+
+The windows are a few instructions wide, so I used a test module to
+widens them with a kprobe placed on a single instruction inside the
+window.  This basically emulates an interrupt or vCPU preemption.
+
+Patch 1 (zonelist):
+
+  Online node 1's first memory block as ZONE_MOVABLE, which rebuilds
+  node 1's zonelists.
+
+  Stall the rebuild after it writes ZONE_MOVABLE into the first entry
+  but before it writes ZONE_NORMAL into the second.
+
+  On another CPU, allocate GFP_KERNEL | __GFP_THISNODE from node 1.
+
+  Before: the allocation fails, 3/3 runs.
+  After:  the allocation waits for the rebuild and succeeds, 3/3 runs.
+
+Patch 2 (cpuset):
+
+  Put a task in a cpuset with mems={0}
+  set_mempolicy(2) the task to MPOL_BIND={0}
+  Run the task on node2 (yes this is a little flagrant).
+  
+  Fill node 0 with HugeTLB pages to make allocations fail.
+  Stall between the two loads in cpuset_nodemask_valid_mems_allowed().
+
+  While stalled, change cpuset.mems={1,2}, this rebinds the task
+  mempolicy to MPOL_BIND={1}.
+
+  The check compares the old mems_allowed (0) with the new policy (1),
+  finds no overlap, and drops the nodemask.
+
+  Before: the allocation lands on node 2, 3/3 runs.
+  After:  the allocation lands on node 1, 3/3 runs.
+
+Gregory Price (Meta) (2):
+  mm/page_alloc: detect zonelist rebuilds from memory hot-add
+  cgroup/cpuset: use mems_allowed_seq when checking a policy nodemask
+
+ kernel/cgroup/cpuset.c | 13 ++++++++++++-
+ mm/page_alloc.c        |  4 ++--
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+
+-- 
+2.53.0-Meta
 
