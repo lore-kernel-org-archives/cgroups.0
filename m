@@ -1,200 +1,153 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09329414400
-	for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 19:11:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792005078; cv=pass; b=LuJcxVjPgQcSpf9D0P5mZGAfKV86BCrvFqWVrfdkAXDd8sFSshySXdX1YE6vD0a//s82/BvXw4yWD9m9xuTy3QZeP1qxaT6m/y811Z8HQpEfHKO3fDKcAGTqCr2RmXOJVoZz9GmspOQd2OsEWnLv+L5cxoJ0/7lioC3XiuMg/tk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792005078; c=relaxed/simple;
-	bh=4oB4aizrzm6vZ0ZydW4zr5YPF9osdEK++VeJ4BErisI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=c2taQOXAoNjXo4YV8T69WoT6fAGXVduoVqLHYydqAGuvhtAKd0z140g3BxJ+GWXCrFl0s680Ec5K3klQwvmKPxAlXwtKmVR1aqKUj+kPlNWwE5H/uA1warO0xtKzWFjS9Hh5jKfBUiO5YWwSQ3Mzd4kPg4QOVeP7vnIlU5mANBo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SY5O0Shx; arc=pass smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFABA38B14B
+	for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 19:28:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792006082; cv=none; b=IeMG+nRuiwwmc/CZDvDBb1AIBNQzJS0tRTtJa4Bdf/s3A2u5tWTyFBA2Og57oo7jWSsqSi+g1+Yx75/LLAtuKyowP+TSIZeHOhmzMOfLF9AF6XpZXQQ2Ju/Oe44jg3jzKpSYFXd84CUmiEM9ED54OLuFJJj/27eQ+UZ+ZafMDrg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792006082; c=relaxed/simple;
+	bh=U+T8zcNui896RuKy/9PmUhVVMHFkbK+hoFwjEBuIhlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=b86qZhUrfq56aeTc+pfNlZxbrPE3FtlFK0STpKIa145M5AluHNOBWZbbbu67qNNFOcRpdy408mZ6kWxIphS8C2hmuCxkIUIoG39aqreC6jrWFOD99XsZlHw8vO4IAAO1CI6XtZnw9LbeX+HcCSTyKIRsOTJkAVqfFGNRYne7uYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=e5mc20eq; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SY5O0Shx"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48df0fa43c5so352388f8f.0
-        for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 12:11:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792005075; cv=none;
-        d=google.com; s=arc-20260327;
-        b=TL0Z/+UGp+1FJWz+pu6SPRXUHWBL2OVn4Ou/w3dNWbIYEOiin218KLoO2WK+ZlRzLP
-         gZwS//dPbD92Re6IQiTFjjtqsclOf505zF6YNTLQap0IHoJIP9mdG2zHG44sgXAKE4hb
-         uSYT0t9a9o7lTtlow9Ghdd2hS8LOBwH+C/7BB7z0Sj4li8SaxtmwkjvSpqBpzGrHpHSx
-         NnDuNLBGRNxs2d0a84gLOjL07q6yTrMb7n7HVnnXJ9S9YDB9bnT+5AiHFyUDI+v4pgey
-         pr5pOh9nOBZZymImxq2ZwcMd4eIPd2KSb52xyJm8Vxi7+BBjE2U3bXg/UVwc3uHuW/zp
-         gjvg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=6Q0RE/342Z/vGnJRZ53rKL922YaGQQ/XyiajVgtWERI=;
-        fh=FkHqxO3/p9uPMpsIVHnQU2q4+U8ckSmLfn2stnu79ik=;
-        b=mCcZe7m1ldtbTR12R8WqYq39VEAs9yyR3Ay4RBpevV+RaGIfxtqcxqjbSLdwvPQT+C
-         s9s0Ugi//Z5puWPZetT07ThW/ydXbFRp2eyWAUykbqKJDfgZ2xz/SquOHxAWtuaTVRAl
-         nEM/F7zlwbsxGuVuchlaoLkLSXJ6Tb0/pPaXJxCZNp3p/hj/ZvKnFhis7J/sifEcdV1V
-         CpANqAzzR9LFBCVUky3ywgICltAcZnD0qPfgz+v85OvXv/A7VWZkMWexuGM0hIM5dUIj
-         8mzPceqMkhAOOHn5ihDcniLeooCy5e7n+alMsKnkLsKytZL5d0phe2irI4AClfcY8jcT
-         fnXg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="e5mc20eq"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4a180fbeef5so41078595e9.1
+        for <cgroups@vger.kernel.org>; Wed, 14 Oct 2026 12:28:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792005075; x=1792609875; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=suse.com; s=google; t=1792006079; x=1792610879; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=6Q0RE/342Z/vGnJRZ53rKL922YaGQQ/XyiajVgtWERI=;
-        b=SY5O0Shx6HTpqPc3ZhmZ+kpBevYpt08pmtEPAMb6HwrmD9U2OHA9Bn9aEyCG1WGZsH
-         OGDqp09cMfL6xiIqlmOoe6GOG21ZBdfO5LQcoyUfuAdHghAAN0be/SiNPPgkXLkCqfFO
-         LC8OndAQKL22Y2iUlJTnq/8e5fho0WbgBNj1pQBdPIhq9A3Xk5FFUIyWkSCJ3hA9XlRC
-         koLfTf9rDh8uxmXPkGssTIftZaGGIRn7v1gzmClJViT0BEblaOWm/bsefO26L+CFQGWQ
-         hj2xc8KmnqU+ojblMApBoz4DdVfLymAf/84RzOaaJFk9FLSzl0q8tKwO8tLaIUnGs1mV
-         pZ/w==
+        bh=79ZQLVF6/awVfagux6X340wRycgEHKIlZJR5+alEZXw=;
+        b=e5mc20eqsiJhW1Nig3xUs4wAUeT20jkdeEW8NQn/lP5yHP8v+zBP9WX9cHjaztYOjZ
+         xN8xODAVg8a5MAs/anBJ/zbrwMc1jkJilScp5nsCPD/mKpvL9+qJGZrxTfz7bfd3g7NK
+         GbqyVH0bomc+ZgmKOMkH8RSxpP6BC88e9XdghXDGU8sJZbq7hjaqnoN6IWwCtSw3QkD6
+         cOQ8EqzjN+zZJPwngyGfUBhoX5PV9qLQ7fkLRA9/k9AAXlYQ8sXx6ddkyZBrV9yZASnl
+         BRFc+pxMDjftdi5AJX7rhjb67fDplfbGhBI/ux9FOg4ZVzIeehEVIorQwk3DFao0qAuE
+         +/mg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792005075; x=1792609875;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1792006079; x=1792610879;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=6Q0RE/342Z/vGnJRZ53rKL922YaGQQ/XyiajVgtWERI=;
-        b=pxyR3GyqpyPQmNLqrN1xZqSlnkN9v/cJhlCGkPhuc+bsVcF07M4SgCQVe9ojdBaePR
-         Rxy7IcrMVZkVc6FK5cd27Q0WSTprVvBhmoC90/nUJpPDMquO5NoFHNbkdxUe4adZHbOH
-         PsqQnBU5Lh9YQWJ/KafD0hF+ZIEkIEtvzaRvt5PSK92LEI8RzH/az37xCXHd7jdmhwOl
-         QBc8bgfd5csDMe89/VW0EQSFgz4hy/0m3z9p5l6fPz9heBEnkTZbtzbZSRf8cD7CeP5N
-         iXRgt6HzX+TYqQzQB71+5DxZfQQbck5bXjc0TqS9vGGY5UWRRtpgkRe8huC1ryipj1AS
-         QZ2Q==
-X-Forwarded-Encrypted: i=1; AKwUvBwSTe2wD3jEqOVFELUkjwuqUxRCCUEca+j4R8AjzVKORbsHsd3GISxKziHU1Mn1QOfkbZNdEZtE@vger.kernel.org
-X-Gm-Message-State: AFq9FYLAjte24CCthW/COq7RUSb1Ic/Ud9Vul/sQ/mL3BPKmlVDlFUDx
-	YyC7NHDiQzyzrB84I0bbCY5jev7BG1huT5rP7d6bxVdcjF6na8J1FfSP+L/w2kWAvlGUhIcNbvk
-	Dtj2/5QVroT88a3Upv5skcg3D5Vh/akA=
-X-Gm-Gg: AYBFou1CBd2QL4EjSebjY/Fmc7kHG3ihM9cZ4eWO+PG1E3b3na+gpLAocJWXuYMto5g
-	6ygDbaB9vda4xsBy+L1lJj+ENtrIR72wDDAQKa5MshvUUA5TBKNRvZbqT/0OqaxLDkxNBmOPzx5
-	5SXLHAUZk1xjov1BlpphZEAMVbuaG/Aw8gbBzln/E7Yp9BGw0iMSkDzXD5jp/NYo+Yln6qACZxd
-	0sqAsZtF1gzJUgLDcA3kcL2iZzvobyL99eM9Tob6AyPAaRdLJgNZcCVVHnI+uOq9WD02eIH+eWl
-	DxWBKZZPSQ5Q/P+AvuD2K5rROalIS6iDF1bTKVmSeUPKFF6zzDvD3ZaxdGM+fV8nnb4LMc7fZUF
-	9hnuxpx1wl1NCAuFgKdU4OD/zZF3h0awjoJivYFuk1PFFAWrxOdoqid6sjYarh/Xh3t8ZjUMMdI
-	zhko0Mag==
-X-Received: by 2002:a5d:5e88:0:b0:48d:bafc:a3f6 with SMTP id
- ffacd0b85a97d-48dbafca4a1mr35041657f8f.0.1792005074870; Wed, 14 Oct 2026
- 12:11:14 -0700 (PDT)
+        bh=79ZQLVF6/awVfagux6X340wRycgEHKIlZJR5+alEZXw=;
+        b=UrG/igwz0eyLsqTrs8rDNDj9Aw1bjsnIh7GJQaVf2rJmyqXggtz5/kGEDqnNG34EUG
+         CImAip/1A1GwMe/tUe86nQdYnvBtTEBSK00X1yI230zwepACxeayvsRfToh+zK838NI9
+         xB02GB3yQZAqjn9v1AgzuGAxBIZiPrqVFU87jflgPbJ3iSJ8+xU8ii+bS/gw66EP9GsC
+         dlLHvgPOx1C8jrInV4yqJepZE1iVQcm8TD83yAoauPMDR1SS/ZFrNWy1nO5+NSeW//b9
+         KYKr1zpch2kDl2tjL+/C8a2L2VvrgFIFQlOLtJokP4Qw8upatUn0ci6H2o7FwbzVqQLM
+         6ZHg==
+X-Forwarded-Encrypted: i=1; AKwUvBzTXlDqHQUe/s/w0TjicpyFk0KwIWTfkresEbynrfMT2QdR52IUR8QOD9ctq6NdkCuiLNoe3w8/@vger.kernel.org
+X-Gm-Message-State: AFq9FYICa5fQHZ0FJgjuCvzvEQC3GdtB/npn8wThF9S+P44xvZHNdJmh
+	4q1wDYyoAfD8FniYMUm3qcEBqc7jjCOcHAl/JGaXa4zW6L/iJakL7hSY4zPYwYbmsKM=
+X-Gm-Gg: AYBFou1zOwMD2kAO1w0kDqE+ERBV66uNjtp3Urfr5JLJJxj86n8i0EFr6u8FutfO8IF
+	Rqsi4gRwh1Ov6paGFwE7pEL4HTskOzoc2z7M3GzwuAaSLCVYy9owOX0MEHvmlrtQ//Cik9+eO7B
+	hl1SEICblOMKJ3dy2VwbNeZc7PSPnqzQpCdq6dyT5RccbhFW/+iyZAFOq8ZatvCLBbhtq99TwPB
+	51M9kDM5WFAewWaRPW/FN9O/zjCuvEFk1usVe6yFy5KC82OUxrBlWlLVLIof1D6UJg1tJZI/9Lo
+	76XpCuc7vBTISyKfLix0J3AQFS+gjuFwV+pB9u4ypNnhLkt6VLtiEPJGDuSsd8xXxOm/12tks8B
+	D5PMcEr2x+m0HZ6pujNAYRjgeg/YwxEb4qhRyrHyb8gv2VsOcvNnuX1qxAc0UtW39O+YAFPlFeQ
+	uhVCpq4uINUxxrgYMzafjFcj1QiiTa0oP9OTz5XkWO+2hbRzfHWmks9nX7ZBmxdJ62gRPiAzBGB
+	oiAS5yqe7eg
+X-Received: by 2002:a05:600c:8b78:b0:4a1:813f:2a60 with SMTP id 5b1f17b1804b1-4a18e47acf5mr381505505e9.11.1792006079203;
+        Wed, 14 Oct 2026 12:27:59 -0700 (PDT)
+Received: from localhost (109-81-25-183.rct.o2.cz. [109.81.25.183])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd972affsm12468825e9.2.2026.10.14.12.27.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Oct 2026 12:27:58 -0700 (PDT)
+Date: Wed, 14 Oct 2026 21:27:57 +0200
+From: Michal Hocko <mhocko@suse.com>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>,
+	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH for-7.5 4/5] memcg: avoid queuing high_work from reclaim
+Message-ID: <as_XvRZzV6vR9dCo@tiehlicka>
+References: <20261010210957.1350874-1-shakeel.butt@linux.dev>
+ <20261010210957.1350874-5-shakeel.butt@linux.dev>
+ <as9p2uFqCQprwdnI@tiehlicka>
+ <as97Nzob4XuzO9Ss@linux.dev>
+ <as-08j9_1C2F_N8s@tiehlicka>
+ <as_AxtUlV8K2fkNu@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAKEwX=MP=zuTnLT=coS_EpXe2KwXq=79yBnsEGXwcZZsW3S=Yw@mail.gmail.com>
- <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org> <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
- <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org> <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
- <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
- <aqgMCIOFi0dKx_6L@fedora> <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
- <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
- <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
- <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org> <CACePvbVTnCOh51jvEpkDJ32idvCubgN1eHBps6vESjhVC8E_aQ@mail.gmail.com>
- <CAMgjq7D_=_4ZsCWJYywpZhPtg+YeH8o=ymRrV3sQ_58G6rs0sg@mail.gmail.com>
-In-Reply-To: <CAMgjq7D_=_4ZsCWJYywpZhPtg+YeH8o=ymRrV3sQ_58G6rs0sg@mail.gmail.com>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Wed, 14 Oct 2026 12:11:03 -0700
-X-Gm-Features: AclHuK-O9xN2h7Y61BKOyhDB3rUul2Ti7sGXJ2Q2LlVEmPwqRXTcsAZ_F7aCTNI
-Message-ID: <CAKEwX=MTapFb8ZjjoFNSyG-_ZKAsxqPY+x9st2s0b2iPL-d1Kw@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: Kairui Song <ryncsn@gmail.com>
-Cc: Chris Li <chrisl@kernel.org>, "David Hildenbrand (Arm)" <david@kernel.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
-	Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <as_AxtUlV8K2fkNu@linux.dev>
 
-On Wed, Oct 14, 2026 at 10:17=E2=80=AFAM Kairui Song <ryncsn@gmail.com> wro=
-te:
->
->
-> 6. The one part that I think we can and should agree on it shat the
-> implement approach: at this point I think VM_SPARSE is the right
-> direction, Nhat is concerned about the testing on it, and I think we
-> can have more data for that, and collabration is highly encouraged. I
-> previously conducted many tests on everything posted from both sides,
-> will try to post more on this too.
+On Wed 14-10-26 10:55:21, Shakeel Butt wrote:
+> On Wed, Oct 14, 2026 at 06:59:30PM +0200, Michal Hocko wrote:
+> > On Wed 14-10-26 09:06:00, Shakeel Butt wrote:
+> > > On Wed, Oct 14, 2026 at 01:39:06PM +0200, Michal Hocko wrote:
+> > > > On Sat 10-10-26 14:09:56, Shakeel Butt wrote:
+> > > > > Kernel threads and remote chargers use high_work when memory.high is
+> > > > > exceeded. Their allocations during reclaim can also charge memory,
+> > > > > for example when zswap stores a page.
+> > > > > 
+> > > > > Without a check, the high_work worker can queue itself from its own
+> > > > > reclaim. The pending bit is cleared before high_work runs, so each run
+> > > > > can queue another run.
+> > > > 
+> > > > What does that mean really? Does this delays the actual run?
+> > > 
+> > > It will not delay the actual charge request. This mainly means that we keep
+> > > enqueing the high reclaim work even from high reclaim context and can
+> > > potentially keep wasting CPU if high reclaim is not very successful.
+> > 
+> > Hmm, so is there any practical problem if we do that? What exactly do you
+> > mean by "keep wasting CPU"?
+> 
+> More specifically if high_work kworker keeps enqueing high_work, most probably
+> the memcg does not have reclaimable memory and keep retrying it wastes CPU.
 
-Let's see if I can help by doing the rebase :) We can use vswap as the base=
-line.
+Yes but this is not specific to PF_MEMALLOC context, or do I miss
+something?
+ 
+> > > > > Skip memory.high enforcement for charges from task context with
+> > > > > PF_MEMALLOC set when they would use high_work. This covers kernel
+> > > > > threads and remote charges. The memory is still charged. Interrupt
+> > > > > charges keep their current path.
+> > > > > 
+> > > > > In a VM with incompressible zswap data, the worker queued itself 163 times
+> > > > > without this check.
+> > > > > 
+> > > > > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> > > > 
+> > > > The patch itself looks OK. I am wondering whether we can unify the check
+> > > > with the existing one which forces the allocation through in main
+> > > > charging path.
+> > > 
+> > > The force charge (and ENOMEM) paths bypass the memory.high enforcement
+> > > altogether.
+> > 
+> > Exactly. Isn't that exactl what we want to achieve here as well?
+> > 
+> > > Only successful charges (done_restock label) goes through
+> > > memory.high enforcement. So, even if we move this check in try_charge_memcg, it
+> > > will still be a separate check before calling high enforcement function. I think
+> > > this check is very high_work specific and better to be in the high enforcement
+> > > function.
+> > 
+> > I meant something like the following
+> 
+> Oh ok this makes sense. Do you want to send a patch or should I add this in this
+> series replacing the 4th patch?
 
-And yeah, from a pure conceptual PoV, I'm ambivalent about VM_SPARSE.
-I just think it needs more data, as it imposes design implications on
-the rest of the implementation, whereas I already test vswap on a
-couple of workloads, including real swap-heavy production workloads
-with a mixed of swap and zswap users. Performance was good.
+Feel free to take it. I haven't even tried to compile this. Just wanted
+to show what I have in mind.
 
-My question - and we can wait until the meeting to discuss - is why
-are we insistence on dropping all of existing code to just switch to
-VM_SPARSE? I would understand if it is indeed very difficult to switch
-down the line, but I don't think it is, based on my past hacky
-attempts to do it?
-
->
-> That's a lot of problems already. I think we can discuss these points
-> further in the meeting.
-
-Thanks for the summary, Karui. From my end, these are my concerns:
-
-1. Interface: I don't like interface without justification. It has
-real userspace impact. Things like priority should not be exposed at
-all.
-
-And we should also avoid overloading swap interfaces with things other
-interfaces are better suited to handle. For instance, while I
-sympathize with your logical memory use cases, but I chatted with
-Johannes, and he pointed out that the overcommitting interface is
-better than swap for this purpose.
-
-Idk - maybe expanding /proc/sys/vm/overcommit_memory?
-
-2. Charging: personally I don't want virtual slots to charge to
-physical swap space, but I won't speak for memcg maintainers. One
-thing we can discuss is what kind of use case relies on the existing
-charging behavior, and come up with alternative setups to handle these
-use cases.
-
-3. Make sure any solution supports setups with mixed backends (per-cpu
-caching should also distinguish vswap v.s other swap solutions).
-
-Once we have a better idea of the rough design, then we can talk about
-implementations.
-
-Things I think we can skip:
-
-1. Writeback - this is a given now, I don't want to argue about it
-anymore. Just include it please.
-
-2. Swapoff - I don't think it should be a blocker in the first place.
-Vswap does not expose that functionality to userspace, but exposing it
-is trivial, because the machinery is identical to physical swapfile
-swapoff. If you want it could be a small-ish follow up patch.
-
-3. Memsw:  I think it's mostly a separate conversation. Vswap does not
-block memsw. FWIW, right now I keep vswap charged to memsw in cgroupv1
-because my understanding is that it's a logical counter, so it should
-count a page regardless of the physical reality.
-
-So if you expose memsw to cgroupv2, it will work as-is. The question
-is whether memsw will exposed to v2 in the first place, and that's
-orthogonal. Maybe the memcg folks can have a separate meeting to
-discuss it?
+-- 
+Michal Hocko
+SUSE Labs
