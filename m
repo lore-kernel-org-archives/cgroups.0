@@ -1,93 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD1913FFABF;
-	Wed, 14 Oct 2026 18:54:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F536145B3F;
+	Wed, 14 Oct 2026 19:05:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792004060; cv=none; b=TG/IHHxz9BdEUs0giMJDp/BLl2nE5ipF8K1e6KkAyxRPjFo3TkEBsiIcNLVP6WDdPSYNRgEQI0ntqrEzUSdPF0zfzmZhaCtToEBKqlKVv8nvv/B2HTbqL+bZWfvWDXG+hBCfVTJ3b1YsABh8eg+hw8QYCP4wkMN36lORqsju4EI=
+	t=1792004741; cv=none; b=MS+2ugcHjntUIE11e5qbaOOnFrahi5mEnOhKwnsYXBaDt2IeVU1EoNuuHGMLqfSubeeuEf6QtPA5zh2Xcpl7o40TXLVTnr/2MItykCrzf+YvWDbwgBUDLq5kTBtfF6llxCaCdOmmz01k1xSrFvQ+oXQ++zu9w0K+08YkuAITvdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792004060; c=relaxed/simple;
-	bh=Shp1V24z7twJ2gmzVTdpyt3bw71+ZJyAoCLTQZz5Ntc=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=grfo5s6UzvVb4/R3HUHhfN/+omNVEdbgIxQuDA+BqcXNCi/BUqSpfSC2OQt2AZVt6FGt5cyu5ingOkb83EJIzfmYJ7F9a9Q3nTjO12zdv8mOHOrBhNKgWTZYoHyrwn2o5ANSSMZY1AECYvJAJp0TKId3mFF+/iRjytMBCfjs0RM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QzdOHYUN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792004741; c=relaxed/simple;
+	bh=bqwt4easrNgYXL0S8q08n+eJvcS2ScFTvqicsmr3CJk=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VqKC9Tfq/faiLMwxUAD5qRFTdMCl9eIHVxJbsZhc+EvboGiemFLqVlBOtPEh+n0qrO5CkKBw0CeqPrQ4MFgK5waoEUkDCe+urOTdI+It8I62nfKeZU3c/IwcSeZZwxAoRZSikm/f96NTxmiWgmWK0KuI2XIBoD9Y0KQ4MeAx84U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T2KwKket; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QzdOHYUN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 324E21F000C4;
-	Wed, 14 Oct 2026 18:54:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T2KwKket"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1FE81F000C4;
+	Wed, 14 Oct 2026 19:05:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792004059;
-	bh=Sn0TUje/xLNp9okf+baAS0Cznr3CBb1Va+Y4WHDu8rg=;
+	s=k20260515; t=1792004739;
+	bh=YyINmxXO7pd+spEYBHJ/vCjoSEPDem460Y+EQItZG60=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=QzdOHYUNssCudHcHWErpVxpNeG1l1YNTpc6/KyfI/mjurZH7fnrXGh/oBkyuKQbVD
-	 68Uu/kn2UyV4WorjsEIgnjt+D1r8B6NgQYsfo6qO9wUBHgi78zqTTBjqCVFIB0Ymgc
-	 bEdHL2sTNNikPZ9b7uhYyPIa1p7ELP1gukWdueFQbO2aqjB7ptjRtTbmG3nWCcRBSS
-	 ftn8lrH2MNX01PCz6Nly78IypC8KJTxwLRtBnnYqFZQ31EB9PQUowSgKIO/fiyuNlN
-	 5pTPdwqysFTTJywroVhhrTZxYYsoNXrZwx87vs+MQkmxf3RLWdTZdYMlbuTS4I3i+J
-	 6zLykRgXzGvnA==
-Date: Wed, 14 Oct 2026 08:54:18 -1000
-Message-ID: <81a8a0d64d269851ce4b48a240aa673c@kernel.org>
+	b=T2KwKketgjd78ySIjWZfpm14SK8fmn/dOIHeg5mSexSu49wSiIFL09CZgoCSlNZmV
+	 dRSwwOOBSwSht+owNr5w6EKvDRfvqfCX3RrdYlgV427de0Ct/6OnNgMEQGoNkZpZhS
+	 XWq+FzHLiklU/hnG3eZKRkX5HJ1Wg8sf8lMbt9yEO3ukX4BwkRnmng/FuAXpg8ONTn
+	 /dgm3svw5odmG9ltLLcFDAC/v5bC9DoVDcIRhA/kfudaDw4H/lRAY3xihqBbQM3khC
+	 YVFb15bIeGtRCGC97m61q8Syu2fhAEPXlV/DeFwWk5ytvozOGNoeLdlAb74nxTwBBo
+	 ROPpDl6OXoiWA==
+Date: Wed, 14 Oct 2026 09:05:38 -1000
+Message-ID: <0bc5d58533f10b4841807be3025daa11@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Sahaj Chaudhari <sahaj123.sc@gmail.com>
-Cc: hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] selftests/cgroup: test pids.events notification
-In-Reply-To: <20261013064812.875787-1-sahaj123.sc@gmail.com>
-References: <20261013064812.875787-1-sahaj123.sc@gmail.com>
+To: Liz Fong-Jones <lizf@honeycomb.io>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Jens Axboe <axboe@kernel.dk>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Xin Yin <yinxin.x@bytedance.com>,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	ian@honeycomb.io
+Subject: Re: [PATCH v6 3/3] writeback: switch a replaced cgwb's inodes to its successor
+In-Reply-To: <20261002-wb-dying-cgwb-flush-v6-3-1991b4e2dcff@honeycomb.io>
+References: <20261002-wb-dying-cgwb-flush-v6-0-1991b4e2dcff@honeycomb.io>
+ <20261002-wb-dying-cgwb-flush-v6-3-1991b4e2dcff@honeycomb.io>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-Hello, Sahaj.
+Hello, Liz.
 
 The following is a Claude-generated review.
 
-On Tue, Oct 13, 2026 at 12:18:12PM +0530, Sahaj Chaudhari wrote:
-> Add a selftest for pids.events notifications. When pids_localevents is
-> enabled, a fork rejected by pids.max must increment pids.events and
-> generate an IN_MODIFY inotify event on that file.
+On Fri, Oct 02, 2026 at 09:40:48PM +0000, Liz Fong-Jones wrote:
+> + * Switch all inodes attached to @wb, dirty or not, to the wb that foreign
+> + * flushes now find for @wb's memcg.  If that one is already gone, fall back
 
-Can you mention 1765a153d985 ("cgroup/pids: Restore pids.events
-notifications in local mode") here as the fix this test covers?
+The scan only reaches inodes on @wb's lists, so any inode attached to @wb
+but on none of them stays behind, not just one from the
+__inode_attach_wb() race. A clean inode switched over from the root wb,
+which keeps clean inodes off its lists, is one example. Maybe say "all
+inodes on @wb's lists" here and broaden that sentence in the description?
 
-> Check for a failed read() of the inotify event before comparing its
-> signed ssize_t result with sizeof(struct inotify_event). Otherwise -1 is
-> converted to a large unsigned length and the uninitialized event buffer
-> is inspected.
+> +	spin_lock(&wb->list_lock);
+> +	restart = isw_prepare_wbs_switch(new_wb, isw, &wb->b_attached, &nr) ||
+> +		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_dirty, &nr) ||
+> +		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_io, &nr) ||
+> +		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_more_io, &nr) ||
+> +		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_dirty_time, &nr);
+> +	spin_unlock(&wb->list_lock);
 
-This describes the v1 to v2 change. As v1 never landed, it belongs only in
-the changelog below the --- line.
+With f6988c90671e ("writeback: bound cleanup_offline_cgwb() rescans by
+rotating scanned inodes") on mainline, isw_prepare_wbs_switch() moves
+every scanned inode to the newest end of the list, and wb_switch_rwsem
+keeps switches from landing during a sync but doesn't cover this scan.
+On b_dirty, that can make a sync miss data:
 
-> +TEST_GEN_PROGS += test_pids_local_events
+1. A background work on the replaced wb yields to a sync_inodes_sb()
+   work and leaves inodes on b_io.
 
-Can this be a test in test_pids.c instead? Its main() already does the
-same setup, so the new test fits as another T() entry next to
-test_pids_events() without the Makefile and .gitignore changes. It can
-then use cg_run_nowait() with run_success() for the fork and cg_control()
-for the pids.events path.
+2. The sync work fixes dirtied_before at entry but doesn't queue_io()
+   until b_io drains.
 
-> +	if ((size_t)n < sizeof(struct inotify_event) ||
-> +	    !(event_buf.align.mask & IN_MODIFY)) {
-> +		reason = "received no pids.events modify notification";
-> +		goto cleanup;
-> +	}
-> +	if (cg_read_key_long(cgroup, "pids.events", "max ") != 1) {
-> +		reason = "pids.events did not count the rejected fork";
-> +		goto cleanup;
-> +	}
+3. Meanwhile, the memcg dirties a clean inode, which goes to the head of
+   b_dirty.
 
-This repeats the counter check before poll(). Nothing can change the
-counter in between, so maybe drop it?
+4. This scan fills an isw from the tail of b_dirty and moves those older
+   inodes in front of the new one.
 
-> +	if (proc_mount_contains("pids_localevents") <= 0)
-> +		ksft_exit_skip("mount cgroup2 with pids_localevents to run this test\n");
+5. Their switches block on wb_switch_rwsem, which the sync holds for
+   write.
 
-Is this skip necessary? In the default mode, the rejected fork also
-increments the test cgroup's pids.events and notifies it, as the test
-cgroup is the one over the limit. The same checks hold, so without the
-skip the test covers the notification in both modes and still catches
-the regression on a pids_localevents mount.
+6. queue_io() stops at the new inode, so the older ones, dirtied before
+   the sync started, are still dirty when it returns.
+
+Maybe hold wb_switch_rwsem for read across the scan?
+
+> +/* called with cgwb_lock held, possibly with interrupts disabled */
+
+cgwb_lock is always taken with irqs disabled and lockdep_assert_held()
+already says the rest. Maybe drop the comment?
+
+> + * cgwb_kick_replaced - switch inodes away from @wb again if it was replaced
+
+This queues replaced_work rather than switching anything. Maybe "queue
+@wb's replaced_work if @wb has been replaced"?
 
 Thanks.
 
