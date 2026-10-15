@@ -1,152 +1,222 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f46.google.com (mail-dl1-f46.google.com [74.125.82.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 971A63DD86F;
-	Thu, 15 Oct 2026 07:59:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 575204D5966
+	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 11:12:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792051179; cv=none; b=FZU1nYiiLL2f6LAbUeNwyIeVcUPXqpiAiXExY/1/nTLd0Y8Lvtr55f4eZ/2u116j2wVupgL7NoABgLlwYR0D5VU3Mt+BNh4lNZW0Oev0LlxsfW13/FJwF/e8aR134RHreCmP0thGG2yczgOp6mySMdquK5WbIGkJKRaRaIwsJXo=
+	t=1792062727; cv=none; b=dXQbTDi/TOZIwqie0OM+GdWoWaQ1Vu06FxTU7dOwPP5qpkO3T+ARvjFbzcswKdn7UdYKIK84JTpq1h1wIekK8XALF9fXeU8dRMlyPdto4uvSQPB/j7cpE4t2yELiBL/2syhCaqelKD5QVU/gqcZ0FRzAOQ3uOs/VhLmT0cLndy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792051179; c=relaxed/simple;
-	bh=Bzh4jsN+sNKRR5/mXutSsDbZ4OrUdZP76LPRV3A1S/A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SPQ1k94hkbC5L875OgxwZDqt/KIi/3tdV4MUD8H4rTVRjrHEGK03QBjysILeghYsZpi7PkQy2SY+a8Dh1FKmbKgzqgHOhHZVafXBpO9x3qP4vmwTMyZDeE1uvrzhHPJvrKjQ4fBqSOs8iqX0ZltOxqpSIUDrCdWyipTLINDN0F4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vit6hou7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792062727; c=relaxed/simple;
+	bh=souBc5LM+ZP8bJKYxVLBa3N/cFi5YYK6F4kM1fz93jg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AQZ0dZyd0jztD+FWATA6ud3AtCZqFOYXzknB2WshRQzzNWHVQfNeydVmKGvjO4EMe6FaVGbY0B1aJ0HpkiLT05vQ2+5hWesX9c2dWgVXIT3G+9H9G/JGLeU7HzPQSusRuTUiFsgBqhn46klQctt7a+FQS4KlVyl3UaTc+W82qWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Edmfl/ug; arc=none smtp.client-ip=74.125.82.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vit6hou7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935271F000C4;
-	Thu, 15 Oct 2026 07:59:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792051178;
-	bh=Um2S9IpesnEJKKZWLH+IYiQoAlWFeglzqoe6Ojkwdfs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Vit6hou76Pr582DIhmm1r+3MqLDTBVVV70tHLFKt343D8W+HATDggoGM5YZ+NkQWi
-	 6PMEUBEvbfP/k4unJJn9xUjFCLbEB07rPwgfbog6ZnS27hAsp6ifVAKTw1Rjge9tbU
-	 Ei+CHSJra4nXJh/3KdVz2h6sGvUAU1FQb8EBqi0n2VByyzkE4pBt+F2Kcb/sp8Fp32
-	 4HPMKSqBMNJ4e276wsxEuuetcDXGm+nPsQLQcbwv7kkUclNQOcVcFy1Lgatcc+Cj9r
-	 u25ERhSbH0N3O/F1xWHrm1Fq5lQ9UgPofMdrmywkwCP/gjgYm/Wm1fxn+/OxPiCmOD
-	 DbSJZsVuQ0OPA==
-Message-ID: <8d611a0a-4ada-4536-875d-061492773e05@kernel.org>
-Date: Thu, 15 Oct 2026 09:59:31 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Edmfl/ug"
+Received: by mail-dl1-f46.google.com with SMTP id a92af1059eb24-15168a20b47so3438258c88.1
+        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 04:12:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792062725; x=1792667525; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6Qizvs/lAA8DOR5ycYqynzWycuQET1RhOhDF12u5Cew=;
+        b=Edmfl/ugV82J4/VO+IXtix9zNicjfBXsa8aRqgFxv5untoSnqpikEEgTmQHh/l172U
+         Gs7fHj17C3ZUFy3IltxrbNYMKO7dcm728IVTuT/B5G8RrpFudQOX1Vk5cy4N6ol3WCac
+         f1vY4yggZOVhLtpmwikh+vU/0IU4Pn6pcTS0RXmfDolDVZQ1q2FNCVkzSKcBVw7hpToD
+         7gnBfifIp0n9sxUQ/dSDdO3EGG5nKO9g3JUS0KjselU9svlwcfY1GuF3TOtmeIV0Mpln
+         k4lkYs2whvV3MEcScV8pS0C9CGoP2cYbj2Y5b0jHuUHZxoZkFee3LjLpSTP/S1AspyQK
+         icMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792062725; x=1792667525;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6Qizvs/lAA8DOR5ycYqynzWycuQET1RhOhDF12u5Cew=;
+        b=UTXr1yt4LGElsV2NjoyQNWDXiCdzOXh1qpxnTDwCjcKLRMOFmikqCvBdWxlM1P7h0P
+         StzBfUiZVs8BS2Rvl81knLLQL7rdYPj3Ee/OVjHA5ydpLHKiXNZkdpYdcgfLPy0Ug4mK
+         Wnsti1ffjiUNrUayD3J6jO1QtzJITA54n1hoJgrkQZZ4DNx12n9GOboUzO486sb8I3rT
+         Id2T7k6Y0E5eSA6tFAAfZxLIRDxs19iGX2U7w/3fCEcB3tEZhvdyT4/va5fiBw2sVGZW
+         lmOV58J5iB0MOsZx6SAQ3WFCMje3HSTvWGU98FsaS4Og2EAu7C+ba1RogcFkCcNcZlhJ
+         mW3g==
+X-Forwarded-Encrypted: i=1; AKwUvBxaMlue4vidCp3SMHUtaEucvNK+anibB1WSm+uEfA8HJXzKpxEH7nq0S16pJddcuRpw3UFxNu5+@vger.kernel.org
+X-Gm-Message-State: AFq9FYIINwIC5PSLByWZb4PtySPSHco+sMREhgJy8cxohtr0pXO6Rhwy
+	og5LyihNdhEnjK9KFg6LtUrI+atLFlUKoqpcTx4mmn0VApceNdwaEU7N
+X-Gm-Gg: AYBFou1CGMjauZSed7DFltYXOclPjEfsGBaN8tfuDF+ji1Mv2o7V8I3bkzuFkat4Mim
+	bpzYXhDN+ZAsJsCC8GcMgl7XywnMGqvMBnD/vguQaTOt2pmd479z659vc0CZbcVPoDYDNSQCKgO
+	8kYKs3lKkzKSq86n2NZC8KdBT2lUGRG/riwc2Ghxl68GeWWtMT14MeWaGndMCfWtE3AC2Mk57hv
+	MDDQeHLQBUe3zDmZD2X/1NJK/5NNfPDpo64tWc8OXbTs3Gtpa/xlYBQMlhOe3kL38ihsNicOk7r
+	yh7zcgBzkkSZ61DAcsazSXFGAf9bqePMeCeJOCFngVjnuP1jVjUttORHj5jJ5xpwUvX3iGgS5ay
+	jvnL4BbAO82lm8LeOMK2JW/WXv12gjJtdR7LZtFD/UWl543ei7rao4N54aZNxFYtKsPt4idYxZv
+	ETCYFEYVZ9vV0h6G3VN5IZwboDQRB6VmlEkByXk9raxcPlvbiYbF4lZ5+grCcvTWcxvK0vxqf1Y
+	nID3P0azDU3pXXDGxinUw/cYYpiLw7Hu+4XSYc=
+X-Received: by 2002:a05:701b:4343:b0:15e:e4e7:20f with SMTP id a92af1059eb24-16a5f01dfaamr26153079c88.25.1792062725109;
+        Thu, 15 Oct 2026 04:12:05 -0700 (PDT)
+Received: from obadmin-Precision-3680.atlascopco.group ([136.226.232.200])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-16997c21ff3sm54696473c88.2.2026.10.15.04.12.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Oct 2026 04:12:03 -0700 (PDT)
+From: Sahaj Chaudhari <sahaj123.sc@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Sahaj Chaudhari <sahaj123.sc@gmail.com>
+Subject: [PATCH v4] selftests/cgroup: test pids.events notification
+Date: Thu, 15 Oct 2026 16:42:43 +0530
+Message-ID: <20261015111243.1551387-1-sahaj123.sc@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] cgroup/cpuset: use mems_allowed_seq when checking a
- policy nodemask
-Content-Language: en-US
-To: "Gregory Price (Meta)" <gourry@gourry.net>, linux-mm@kvack.org,
- cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kernel-team@meta.com, longman@redhat.com,
- ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
- akpm@linux-foundation.org, surenb@google.com, mhocko@suse.com,
- brendan.jackman@linux.dev, ziy@nvidia.com, david@kernel.org,
- mgorman@techsingularity.net
-References: <20261014222456.2318284-1-gourry@gourry.net>
- <20261014222456.2318284-3-gourry@gourry.net>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <20261014222456.2318284-3-gourry@gourry.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 10/15/26 00:24, Gregory Price (Meta) wrote:
-> A cpuset update changes the task's mems_allowed and rebinds its
-> mempolicy in separate steps under mems_allowed_seq, but the check
-> reads both without it.  This can cause a spurious numa placement
-> miss under some cpuset/mempolicy combinations.
-> 
-> A reader that loads one mask before the update and the other after
-> it can see a spurious empty intersection and drop the nodemask.
-> 
-> For example, a task with cpuset.mems={0} and MPOL_BIND={0}.  If the 
-> cpuset moves to mems={1,2}, the policy is rebound to {1}.
-> 
-> The allocator can race and compare the old mems_allowed {0} against
-> the new policy {1} - which will result in a dropped nodemask and a
-> misplaced allocation on node 2.
+Add a test to test_pids.c that checks a fork rejected by pids.max
+increments pids.events and generates an IN_MODIFY inotify event on that
+file. The test cgroup is the one over the limit, so the notification is
+expected both on a default mount and with pids_localevents.
 
-> Simply retry the intersection until mems_allowed_seq is stable.
-> 
-> This covers the task policy, which is rebound under mems_allowed_seq.
-> VMA policies are rebound afterwards by mpol_rebind_mm(), outside
-> mems_allowed_seq, and are not covered by this change.
-> 
-> Fixes: cc9a6c877661 ("cpuset: mm: reduce large amounts of memory barrier related damage v3")
-> Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
+This covers the fix in commit 1765a153d985 ("cgroup/pids: Restore
+pids.events notifications in local mode"), where a rejected fork changed
+pids.events without waking its pollers when pids_localevents was enabled.
 
-Should the comment and/or code in check_retry_cpuset() be updated as well?
+Tested on x86_64 under QEMU without KVM, on kernels built from the
+cgroup for-7.4 branch (eb69e955de7b) and from the same tree with that
+fix reverted. With the fix, the new test passes on a default cgroup2
+mount and on a pids_localevents mount. With the fix reverted, it passes
+on a default mount and fails on a pids_localevents mount. No kernel
+warnings were logged.
 
-> ---
->  kernel/cgroup/cpuset.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 3f52717c19654..8ee239d5c6b48 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -4354,10 +4354,21 @@ nodemask_t cpuset_mems_allowed(struct task_struct *tsk)
->   * @nodemask: the nodemask to be checked
->   *
->   * Are any of the nodes in the nodemask allowed in current->mems_allowed?
-> + *
-> + * A cpuset update rebinds the task's mempolicy and changes mems_allowed in
-> + * separate steps, so retry if an update raced with the check.
->   */
->  int cpuset_nodemask_valid_mems_allowed(const nodemask_t *nodemask)
->  {
-> -	return nodes_intersects(*nodemask, current->mems_allowed);
-> +	unsigned int seq;
-> +	int ret;
-> +
-> +	do {
-> +		seq = read_mems_allowed_begin();
-> +		ret = nodes_intersects(*nodemask, current->mems_allowed);
-> +	} while (read_mems_allowed_retry(seq));
-> +
-> +	return ret;
->  }
->  
->  /*
+Link: https://lore.kernel.org/r/20261013064812.875787-1-sahaj123.sc@gmail.com
+Signed-off-by: Sahaj Chaudhari <sahaj123.sc@gmail.com>
+---
+Changes in v4:
+- Move the test into test_pids.c as test_pids_events_notify(), using
+  cg_run_nowait() and cg_control(), instead of a separate program. This
+  drops the Makefile and .gitignore changes.
+- Drop the pids_localevents skip. The test cgroup is the one over the
+  limit, so the rejected fork notifies it on both mount types.
+- Drop the duplicate pids.events check after reading the inotify event.
+- Cite 1765a153d985 as the fix the test covers.
+- Move the read() error-handling note from the commit message to this
+  changelog.
+- Rebase onto the cgroup for-7.4 branch.
+
+Changes in v3:
+- Check for a failed read() of the inotify event before comparing its
+  signed result with sizeof(struct inotify_event).
+
+v3: https://lore.kernel.org/r/20261013064812.875787-1-sahaj123.sc@gmail.com
+ tools/testing/selftests/cgroup/test_pids.c | 73 ++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
+
+diff --git a/tools/testing/selftests/cgroup/test_pids.c b/tools/testing/selftests/cgroup/test_pids.c
+index 710109b53dfe..e775c5510cf2 100644
+--- a/tools/testing/selftests/cgroup/test_pids.c
++++ b/tools/testing/selftests/cgroup/test_pids.c
+@@ -3,8 +3,11 @@
+ 
+ #include <errno.h>
+ #include <linux/limits.h>
++#include <poll.h>
+ #include <signal.h>
++#include <stdlib.h>
+ #include <string.h>
++#include <sys/inotify.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+@@ -133,6 +136,75 @@ static int test_pids_events(const char *root)
+ 
+ 
+ 
++/*
++ * This test checks that a fork rejected by pids.max increments pids.events
++ * and notifies pollers of that file, with or without pids_localevents.
++ */
++static int test_pids_events_notify(const char *root)
++{
++	union {
++		struct inotify_event align;
++		char bytes[sizeof(struct inotify_event) + NAME_MAX + 1];
++	} event;
++	int ret = KSFT_FAIL;
++	int inotify_fd = -1;
++	char *cg_pids = NULL, *events_path = NULL;
++	struct pollfd pfd;
++	ssize_t n;
++
++	cg_pids = cg_name(root, "pids_notify_test");
++	if (!cg_pids)
++		goto cleanup;
++
++	if (cg_create(cg_pids))
++		goto cleanup;
++
++	if (cg_write(cg_pids, "pids.max", "1"))
++		goto cleanup;
++
++	events_path = cg_control(cg_pids, "pids.events");
++	if (!events_path)
++		goto cleanup;
++
++	inotify_fd = inotify_init1(IN_CLOEXEC | IN_NONBLOCK);
++	if (inotify_fd < 0)
++		goto cleanup;
++
++	if (inotify_add_watch(inotify_fd, events_path, IN_MODIFY) < 0)
++		goto cleanup;
++
++	if (cg_enter_current(cg_pids))
++		goto cleanup;
++
++	if (cg_run_nowait(cg_pids, run_success, NULL) != -1 || errno != EAGAIN)
++		goto cleanup;
++
++	if (cg_read_key_long(cg_pids, "pids.events", "max ") != 1)
++		goto cleanup;
++
++	pfd.fd = inotify_fd;
++	pfd.events = POLLIN;
++	if (poll(&pfd, 1, 1000) <= 0)
++		goto cleanup;
++
++	n = read(inotify_fd, event.bytes, sizeof(event.bytes));
++	if (n < (ssize_t)sizeof(event.align) || !(event.align.mask & IN_MODIFY))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	cg_enter_current(root);
++	if (inotify_fd >= 0)
++		close(inotify_fd);
++	if (cg_pids)
++		cg_destroy(cg_pids);
++	free(events_path);
++	free(cg_pids);
++
++	return ret;
++}
++
+ #define T(x) { x, #x }
+ struct pids_test {
+ 	int (*fn)(const char *root);
+@@ -140,6 +212,7 @@ struct pids_test {
+ } tests[] = {
+ 	T(test_pids_max),
+ 	T(test_pids_events),
++	T(test_pids_events_notify),
+ };
+ #undef T
+ 
+-- 
+2.43.0
 
