@@ -1,65 +1,65 @@
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
+Received: from mail-vs1-f48.google.com (mail-vs1-f48.google.com [209.85.217.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E15883C09FA
-	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 15:33:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22753E3C53
+	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 15:33:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792078434; cv=none; b=TDjz0WA40C6uIu1f5KRYIWy892mJTPyltQBvNKTeCsEukukxWEq3vk7Br7NUnc4FOuyrbQbPP8VFlbfl2SDnRarcophmv+tQ4qgAPz7YEnS2SpXbml15cOLCJDonE6FLF8wt+DNeUwRlx0XQStRep8LG6L5X0VUPz2Y0oaFO34g=
+	t=1792078439; cv=none; b=bZKRMROSZNs6G5BSMRlXrWeX0FfhZ9C0+zVyE+vD5gEJvtOwDMR5Zq0rYV+8ZQw+OLKVWxd2C6cBaJB8pAafGPR7xOV07asGpmxrUwOnHaAq4zSgjxwxaN8MeYHbXKRKjUUXG3MztQnBmZxor2plcbHX79fIKdYj3DbUZ3uXNb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792078434; c=relaxed/simple;
-	bh=xIsKSaZ15J6nRnEfuzzXZSdo/Z37NoDAuoNVv8bXw50=;
+	s=arc-20240116; t=1792078439; c=relaxed/simple;
+	bh=pInOOQJmC+exJgomtDsmGTSAzIbtk8stOtgVAuykFHo=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=n6H4gSwoP+CXxfvq/xeYo4U92RoI/9rgr9ohgQLyB4rFKtvkEo1oB/W7R8ux/tc2Mc8l7jIQvdUWDCIncdsgmbvhHtXDoiFZAXYbAupsWRI0ydzMwsH/4+p4tBAoebFlHgIw3q6CnFrbfemW/Z5fx//PpWP15ZaZZaWL6ZIjk1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=hpop1ysz; arc=none smtp.client-ip=209.85.217.51
+	 MIME-Version; b=KOYhHIA6fkYbVfjc/NItAdKhiIBCjjeBdXZtUKVJILHUElP8+apCSJhqCEhmlR8LiA7nGCveEL6JrHYElazZkKIvc+l1Oat8xSyWjaDlIBVjUj12Y7x4NwLxrOkrlAiW+l0p1cIR+yss2/nmFAwJ7uaWcdFbJtAL/I3cZHHe3Wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=arfBvT7y; arc=none smtp.client-ip=209.85.217.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="hpop1ysz"
-Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-7bec5112765so986458137.1
-        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 08:33:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="arfBvT7y"
+Received: by mail-vs1-f48.google.com with SMTP id ada2fe7eead31-7c03744ef27so535263137.1
+        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 08:33:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1792078420; x=1792683220; darn=vger.kernel.org;
+        d=soleen.com; s=google; t=1792078423; x=1792683223; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=IofewvjhR0Ae8pfrPVVge9u/2aO2fEHS91BGZ9RvoVo=;
-        b=hpop1yszrAQaeSTB0MZVTOzYTkVZrx3j9OjOGRY3TmG9Cl9j4KFfz/jRcajzYK56qR
-         d5QxHIkMohTZ1xGq/Ru3nToRSU2gdfTL2NVA/RXP8oQZGo0Ec2Hnj3xOaG9HXaRdbc0p
-         YlBr/cLku4oBzI7INa4Bp7Aj1d+XXTHAFl6HZVm6Yus12Vv4XKB8/u3oeCWFr1amTQkZ
-         xNas1Nyy4FNp/zwoxSc9ZaIpLpxwMyH94dfUg9RYYik+uYlCNRUfov0xxQxABu/txv3j
-         i2KjWMjMIG+TpLOzEeb0oOUclfp7p+2pZmZGrG1zWAUE5qRmzBXHHNtq4Dj4jkZBYhsY
-         JdUA==
+        bh=72zF3yLWX3oeYl+y53VRvYROQBmMjAwdTi7nEp+9VUA=;
+        b=arfBvT7yf0Oauqa4m7owwqeUgbXiELvgnoqsScp23YRc5e2hGrN6dmnMb0cieqh5NI
+         3e0aG0sUxPNyYpiMzpVlL7wSgjipjYozuFkZZIH6Tmhr9RSln40oTPRZ72/b4y5RR9QJ
+         FBryxvAHc7fz6G7LLZuveqOd2mZWKIiKaFriwIURcngaoQ6RJAQ7Bl8nSqCd6myTwoEL
+         IHfn1pJDMd5AM+QAZFGFG2bspCJzVGdeMKirjLGZFedWdoV2zZKO8E7MihLZVvdL1Ag5
+         lr1oDkcEzkiED73U1KMWpf+m6w3eR3YqNlzbgNbziCraVO+HrKuWBWBFI2sItjUFBP4o
+         9/qA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792078420; x=1792683220;
+        d=1e100.net; s=20260707; t=1792078423; x=1792683223;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=IofewvjhR0Ae8pfrPVVge9u/2aO2fEHS91BGZ9RvoVo=;
-        b=QZLJUkYwzPAoFryO827GPQ7ZMfM4VPtd3kUCnq4+h8PHTWV4f3Ori4QV2ALF+26fgr
-         aa9Xs66c0Z1x+0l6UhG6f4o5zZKMWKNKlzNvwU2Vz4Nj3wJxiz9WDuR/ljmI/trqez/A
-         k9h8OFfTrhYOaQXzSn3YcQUWDcqkoGPGhfrKrO5nuVEbAotCdnQ7SMm0YI/EDLE7sVOy
-         HxQpIXSrCCLfWXFI0q4MyeghH/ge7ch+c2vmPwgJM6a1QlmAKzfC0gzTLGs/+rBUacsO
-         gPU+fTj8eXo1PiruR8RH+8yQRB0LeF+UJgqeayrR2XswMwmnhidvFzfKPATG9WU1elwX
-         0Oew==
-X-Forwarded-Encrypted: i=1; AKwUvByJRZYGJExhhoEkxDJQ7R6+2PPL9WYJn9+hS7Icl+XTqwx+nUy6Q67ve7BNvBRWXzESkpghjLB6@vger.kernel.org
-X-Gm-Message-State: AFq9FYIWbIZeC+nTeDUF/YhX+Bh4UJZ0YEZKYzlX8HhMEJJgo9DEFjKl
-	A8VPfIb8QfD31gfOj8XJhSZnVKe5nstnlJl/L7XL9DZ94klU6mb4S9jEfdo+0n4kicY=
-X-Gm-Gg: AYBFou2DxO9mBWH+5ID7Pt4mJfhf3RqVpxYjWvmu540H1vt4GLil4eUnFFkrGmTQFl/
-	3+5Qcx41cv7ivIrjB80MaDcOgXx3Zkkbq1UnvcRkozfmomq7MuegVrxGBxZd7xojfKXQioeux91
-	NRc54vViprU0sJQ94B3bTemWj/iIuOtA91X0VZL3Ela7m5V1DSUngRrrVDv8ac2ndUjOCQuwmDM
-	sTWhKYuBiq0leKOFZqIodYmYEi0k252wtwSrudME6A63IeB0NMf/Tid9hwTSYWOwz9NA++3xVxH
-	oMJp/IknRLNPRR8lFkdQV2Bm5O6M/xiCd1VuqTHdd4JifERMCRsVuVWlwo7gSh3Ksmdx1jSy5LG
-	t0dxYywNpAJl0d7ws01Ifj+v/SIJdM03I74NxPGe8wVQamsPzrgo/cvXn37XRlLxKCh2n/lTsW6
-	2K+pGNhiYKVlaqu5x2X4XJz5ATsKMki7dZD4ohxDwi461Suaqw/CmPZQhqvzrseXhzwQuToJ3d0
-	blM/S6smg6B0n6EG6TbrAUqTedBlkpJeuZbr7vud4elBDW25mScM3tQgOfjpdlbPSH+yc9yALWI
-	x9dsbKMh5E7UlSWWjNA=
-X-Received: by 2002:a05:6102:8088:b0:7c1:62d2:e18a with SMTP id ada2fe7eead31-7cb372f3a68mr6949040137.16.1792078420419;
-        Thu, 15 Oct 2026 08:33:40 -0700 (PDT)
+        bh=72zF3yLWX3oeYl+y53VRvYROQBmMjAwdTi7nEp+9VUA=;
+        b=nQk0f88wgYhyBNTc5BMrD+Qo1qDCnjceBgfUnJPaWQTxYGw7p0qE6S2dFszhB+evCN
+         kGKDb0DJM3HiOKr9g+Q/9MHepDkBkVNMjyssc1GFYRNfUQ1gZT8SsWxI84Ttb8b8I8fz
+         5R9wIfYfKYKVo6SE2Y7IC+h0Za58bKCAP89DEIBewqfBqLoxT446NTWvoHbv43rPovSv
+         SrIdoUDw3SIFfYFSRZJ+nPONAE9fbJziHYKQDlakVd0xwR8r1fAKhkWafpcNue7vI4C/
+         JI2feMAFjuwoFYa3L0Q0vuxrI2es8qr5IROgmamdyrGdHCTcvksAYJ/KdoMNpizi+a8c
+         VDLw==
+X-Forwarded-Encrypted: i=1; AKwUvBzTKVFs9k2JStI4G+n8sIpz4gADff8vEX7ZRMcLYBHO8dqomDMjlDJxwaVQIM6/rlMiMLy8e8Dn@vger.kernel.org
+X-Gm-Message-State: AFq9FYK7YRAJLHBxSGE5PdwOwU5s4moXWAOJ40KMekzYECCWlcaOBtSI
+	Zt962/Am5iCJmygCzbg96PUggS+OOZmUPHeVdbQy/7eyd8ymn4Ow3cC7f6vDBQ0y8gY=
+X-Gm-Gg: AYBFou2TNHw72GUNLKXXa8PUUH5mllLrsq+s6aNXE7EU1KKqqFMFA/j1YiVtS2EeMXZ
+	0ZE+r8c9q9CMDkKuDwURzsU5vgn3EJHBbY8ZdNa+8b1Wj4hUGy9Dm564rwRti/x2bLLtNplqZK+
+	EZe7YlBzpFTHxL8YrdzRyMmfLZiTCHG7/9CGxmdenIGsnkqqFbHDYg1D2a5iu1gtbkO/bvho4K1
+	TE2TJD0713UpymaHY1rBUxzQ/tfeGXBti+/e7e6jtNfmwDenJxIAJJNO+kdTaNUEIRbIjGq10LW
+	apdt6FZhG51tOncLsMQcvuxRSoTT9PWTZgd4GI2x0VZjcD2xcO37tFKaGv+68h+IrXiQtQZsj0K
+	2W6XPsspUTTKWhwyyOBf58vKuaarAFUpBM7JUUUdBh5gRq8awVBZxBhLbgUEb7/QiabYza/fQ8k
+	uGf9eQqm2H8eRqAa57t/9Uw7aVnEd/6FtCnzlsbV8ynPyxQf02iBICllryan0viJrlHDbBSphE9
+	3ns4ifS1syfHjL73faBLmjTaBsIYd4uJaGZ8stIU9bW4JVzvgIeuEzz9EuGlwzGECdpM0EJ8BYO
+	dOk5B3SX/ZzHg1Ypo8c=
+X-Received: by 2002:a05:6102:c4a:b0:7a7:19aa:f0d8 with SMTP id ada2fe7eead31-7cb37b3015cmr4260402137.37.1792078421907;
+        Thu, 15 Oct 2026 08:33:41 -0700 (PDT)
 Received: from soleen.c.googlers.com.com (16.49.199.35.bc.googleusercontent.com. [35.199.49.16])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-99003f66ad9sm12986347241.10.2026.10.15.08.33.38
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-99003f66ad9sm12986347241.10.2026.10.15.08.33.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 08:33:39 -0700 (PDT)
+        Thu, 15 Oct 2026 08:33:41 -0700 (PDT)
 From: Pasha Tatashin <pasha.tatashin@soleen.com>
 To: kees@kernel.org,
 	rppt@kernel.org,
@@ -106,9 +106,9 @@ To: kees@kernel.org,
 	ridong.chen@linux.dev,
 	longman@redhat.com,
 	bsegall@google.com
-Subject: [PATCH v1 3/8] x86/mce/intel: Bound cmci_rediscover() to a single topology peer
-Date: Thu, 15 Oct 2026 11:33:26 -0400
-Message-ID: <20261015153331.1872641-4-pasha.tatashin@soleen.com>
+Subject: [PATCH v1 4/8] x86/cacheinfo, mtrr: Skip stop_machine rendezvous in cache_ap_online() when MTRRs match
+Date: Thu, 15 Oct 2026 11:33:27 -0400
+Message-ID: <20261015153331.1872641-5-pasha.tatashin@soleen.com>
 X-Mailer: git-send-email 2.56.0.385.gd3acb90ef8-goog
 In-Reply-To: <20261015153331.1872641-1-pasha.tatashin@soleen.com>
 References: <20261015153331.1872641-1-pasha.tatashin@soleen.com>
@@ -120,163 +120,145 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When a CPU goes offline, cmci_clear() disables CMCI on any MCA banks
-owned by that CPU, and mce_cpu_dead() calls cmci_rediscover(). Currently
-cmci_rediscover() invokes on_each_cpu(cmci_rediscover_work_func, NULL, 1),
-sending a synchronous broadcast IPI to every online CPU in the system,
-all of which contend on the global cmci_discover_lock while reading up
-to 32 MSR_IA32_MCx_CTL2 MSRs.
+When a single CPU is brought online at runtime
+(cache_aps_delayed_init == false), cache_ap_online() unconditionally
+calls stop_machine_from_inactive_cpu() to rendezvous all online CPUs
+while the incoming AP runs cache_cpu_init() to disable caches
+(CR0.CD = 1, plus wbinvd() when X86_FEATURE_SELFSNOOP is not set),
+reprogram MTRRs via mtrr_generic_set_state(), and re-enable caches.
 
-Any bank disabled by cmci_clear() is either thread-private, core-scoped
-(shared between SMT threads of the same physical core), L2-cluster-scoped,
-die-scoped, or package-scoped:
-1. Any bank index that is already owned by the target peer in its own
-   mce_banks_owned bitmap is private to a narrower scope than the shared
-   level and will be skipped by cmci_skip_bank() on the target anyway.
-2. Core- or cluster-shared MCA banks can only be claimed by an online
-   SMT sibling or L2 cluster peer.
-3. Shared die-scoped or package-scoped uncore banks can be claimed in a
-   single pass by one online peer on the same die or package.
+During initial boot (cache_aps_init()) and across warm CPU offline/online
+cycles, the AP's hardware MTRR MSRs have already been programmed to match
+the saved mtrr_state. Stopping all online CPUs in stop_machine (and
+flushing caches on the AP) when the AP's MTRRs already match mtrr_state
+is unnecessary.
 
-Record the bitmap of banks disabled by __cmci_disable_bank() in
-cmci_orphaned_banks, select a single online topology peer
-cmci_orphaned_target (SMT sibling, L2 cluster peer, die peer, or package
-peer) in cmci_clear(), and mask out any bank indices already owned by
-that target peer. In cmci_rediscover(), return immediately when
-cmci_orphaned_banks is empty; otherwise probe only cmci_orphaned_target
-via a single smp_call_function_single() call.
+Add mtrr_generic_state_matches() to compare the local CPU's
+MSR_MTRRdefType, variable MTRR ranges, and fixed MTRR ranges against
+mtrr_state (including k8_check_syscfg_dram_mod_en() on AMD), and check it
+on the AP in cache_ap_online() before invoking
+stop_machine_from_inactive_cpu(). If the hardware MTRRs already match
+mtrr_state, initialize PAT locally on the AP and return.
 
 2-socket, 480-CPU Intel Xeon 6985P-C (N=479, mean of 10 runs):
-  Offline:  11.42 s ->  9.63 s (-15.7%)
-  Online:   11.08 s -> 11.11 s
-  Total:    22.50 s -> 20.74 s (-7.8%)
-  cmci_rediscover() (cpu479 offline):
-    7,720.6 us -> 0.6 us (-99.99%)
+  Offline:   9.63 s ->  9.85 s
+  Online:   11.11 s ->  8.69 s (-21.8%)
+  Total:    20.74 s -> 18.54 s (-10.6%)
+  cache_ap_online() (cpu479 online):
+    7,704.0 us -> 4.7 us (-99.94%)
+
+2-socket, 512-CPU AMD EPYC 9B45 (N=511, mean of 10 runs):
+  Offline:   4.53 s ->  4.51 s (-0.4%)
+  Online:    3.92 s ->  3.15 s (-19.6%)
+  Total:     8.45 s ->  7.66 s (-9.3%)
+  cache_ap_online() (cpu511 online):
+    1,354.6 us -> 6.4 us (-99.53%)
 
 Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
 ---
- arch/x86/kernel/cpu/mce/intel.c | 57 +++++++++++++++++++++++++++++++--
- 1 file changed, 55 insertions(+), 2 deletions(-)
+ arch/x86/include/asm/mtrr.h        |  2 ++
+ arch/x86/kernel/cpu/cacheinfo.c    |  7 +++++
+ arch/x86/kernel/cpu/mtrr/generic.c | 49 ++++++++++++++++++++++++++++++
+ 3 files changed, 58 insertions(+)
 
-diff --git a/arch/x86/kernel/cpu/mce/intel.c b/arch/x86/kernel/cpu/mce/intel.c
-index 4655223ba5606..f57718b097d9b 100644
---- a/arch/x86/kernel/cpu/mce/intel.c
-+++ b/arch/x86/kernel/cpu/mce/intel.c
-@@ -11,6 +11,7 @@
- #include <linux/percpu.h>
- #include <linux/sched.h>
- #include <linux/cpumask.h>
-+#include <linux/topology.h>
- #include <asm/apic.h>
- #include <asm/cpufeature.h>
- #include <asm/cpu_device_id.h>
-@@ -40,6 +41,8 @@
-  * owned by the offlined cpu.
-  */
- static DEFINE_PER_CPU(mce_banks_t, mce_banks_owned);
-+static mce_banks_t cmci_orphaned_banks;
-+static unsigned int cmci_orphaned_target;
+diff --git a/arch/x86/include/asm/mtrr.h b/arch/x86/include/asm/mtrr.h
+index 76b95bd1a4058..0527e216808c4 100644
+--- a/arch/x86/include/asm/mtrr.h
++++ b/arch/x86/include/asm/mtrr.h
+@@ -61,6 +61,7 @@ extern int amd_special_default_mtrr(void);
+ void mtrr_disable(void);
+ void mtrr_enable(void);
+ void mtrr_generic_set_state(void);
++bool mtrr_generic_state_matches(void);
+ #  else
+ static inline void guest_force_mtrr_state(struct mtrr_var_range *var,
+ 					  unsigned int num_var,
+@@ -106,6 +107,7 @@ static inline int mtrr_trim_uncached_memory(unsigned long end_pfn)
+ #define mtrr_disable() do {} while (0)
+ #define mtrr_enable() do {} while (0)
+ #define mtrr_generic_set_state() do {} while (0)
++static inline bool mtrr_generic_state_matches(void) { return true; }
+ #  endif
  
- /*
-  * cmci_discover_lock protects against parallel discovery attempts
-@@ -244,6 +247,7 @@ static void cmci_claim_bank(int bank, u64 val, int bios_zero_thresh, int *bios_w
+ #ifdef CONFIG_COMPAT
+diff --git a/arch/x86/kernel/cpu/cacheinfo.c b/arch/x86/kernel/cpu/cacheinfo.c
+index 13ed16527905f..64796d5b34fdc 100644
+--- a/arch/x86/kernel/cpu/cacheinfo.c
++++ b/arch/x86/kernel/cpu/cacheinfo.c
+@@ -770,6 +770,13 @@ static int cache_ap_online(unsigned int cpu)
+ 	if (!memory_caching_control || get_cache_aps_delayed_init())
+ 		return 0;
  
- 	/* This CPU successfully set the enable bit. */
- 	set_bit(bank, (void *)this_cpu_ptr(&mce_banks_owned));
-+	__clear_bit(bank, cmci_orphaned_banks);
- 
- 	if ((val & MCI_CTL2_CMCI_THRESHOLD_MASK) == CMCI_STORM_THRESHOLD) {
- 		pr_notice("CPU%d BANK%d CMCI inherited storm\n", smp_processor_id(), bank);
-@@ -328,6 +332,7 @@ static void __cmci_disable_bank(int bank)
- 	val &= ~MCI_CTL2_CMCI_EN;
- 	wrmsrq(MSR_IA32_MCx_CTL2(bank), val);
- 	__clear_bit(bank, this_cpu_ptr(mce_banks_owned));
-+	__set_bit(bank, cmci_orphaned_banks);
- 
- 	if ((val & MCI_CTL2_CMCI_THRESHOLD_MASK) == CMCI_STORM_THRESHOLD)
- 		cmci_storm_end(bank);
-@@ -339,6 +344,8 @@ static void __cmci_disable_bank(int bank)
-  */
- void cmci_clear(void)
- {
-+	unsigned int cpu = smp_processor_id();
-+	unsigned int target;
- 	unsigned long flags;
- 	int i;
- 	int banks;
-@@ -346,8 +353,31 @@ void cmci_clear(void)
- 	if (!cmci_supported(&banks))
- 		return;
- 	raw_spin_lock_irqsave(&cmci_discover_lock, flags);
-+	bitmap_zero(cmci_orphaned_banks, MAX_NR_BANKS);
-+	/*
-+	 * A bank is shared by the CPUs of one SMT core, L2 cluster, die or
-+	 * package, and these scopes nest. The first online peer found from
-+	 * the innermost scope outwards is therefore part of every sharing
-+	 * scope that still has an online CPU, so it alone can claim every
-+	 * orphaned bank that is still claimable. If it already owns an index,
-+	 * the instance released here is not shared with it, hence not with
-+	 * any online CPU, and that index can be dropped from the rediscovery.
-+	 */
-+	target = cpumask_any_but(topology_sibling_cpumask(cpu), cpu);
-+	if (target >= nr_cpu_ids)
-+		target = cpumask_any_but(topology_cluster_cpumask(cpu), cpu);
-+	if (target >= nr_cpu_ids)
-+		target = cpumask_any_but(topology_die_cpumask(cpu), cpu);
-+	if (target >= nr_cpu_ids)
-+		target = cpumask_any_but(topology_core_cpumask(cpu), cpu);
-+	cmci_orphaned_target = target;
- 	for (i = 0; i < banks; i++)
- 		__cmci_disable_bank(i);
-+	if (target < nr_cpu_ids)
-+		bitmap_andnot(cmci_orphaned_banks, cmci_orphaned_banks,
-+			      per_cpu(mce_banks_owned, target), MAX_NR_BANKS);
-+	else
-+		bitmap_zero(cmci_orphaned_banks, MAX_NR_BANKS);
- 	raw_spin_unlock_irqrestore(&cmci_discover_lock, flags);
++	if (!(memory_caching_control & CACHE_MTRR) ||
++	    mtrr_generic_state_matches()) {
++		if (memory_caching_control & CACHE_PAT)
++			pat_cpu_init();
++		return 0;
++	}
++
+ 	/*
+ 	 * Ideally we should hold mtrr_mutex here to avoid MTRR entries
+ 	 * changed, but this routine will be called in CPU boot time,
+diff --git a/arch/x86/kernel/cpu/mtrr/generic.c b/arch/x86/kernel/cpu/mtrr/generic.c
+index 67cf69f24b005..8760a7b4dc38b 100644
+--- a/arch/x86/kernel/cpu/mtrr/generic.c
++++ b/arch/x86/kernel/cpu/mtrr/generic.c
+@@ -981,6 +981,55 @@ void mtrr_generic_set_state(void)
+ 	}
  }
  
-@@ -360,15 +390,38 @@ static void cmci_rediscover_work_func(void *arg)
- 		cmci_discover(banks);
- }
- 
--/* After a CPU went down cycle through all the others and rediscover */
-+/*
-+ * After a CPU went down, rediscover orphaned shared banks on a single
-+ * topology peer (SMT sibling, L2 cluster peer, die peer, or package peer)
-+ * selected in cmci_clear(). Core-private banks whose core is now completely
-+ * offline cannot be claimed by any other core, so probing more than one
-+ * peer is redundant.
-+ */
- void cmci_rediscover(void)
- {
-+	unsigned int target;
-+	unsigned long flags;
-+	bool orphaned;
- 	int banks;
- 
- 	if (!cmci_supported(&banks))
- 		return;
- 
--	on_each_cpu(cmci_rediscover_work_func, NULL, 1);
-+	raw_spin_lock_irqsave(&cmci_discover_lock, flags);
-+	orphaned = !bitmap_empty(cmci_orphaned_banks, MAX_NR_BANKS);
-+	target = cmci_orphaned_target;
-+	raw_spin_unlock_irqrestore(&cmci_discover_lock, flags);
++bool mtrr_generic_state_matches(void)
++{
++	struct msr val;
++	unsigned int i;
 +
-+	if (!orphaned)
-+		return;
++	if (!cpu_feature_enabled(X86_FEATURE_MTRR))
++		return true;
 +
-+	if (target < nr_cpu_ids && cpu_online(target))
-+		smp_call_function_single(target, cmci_rediscover_work_func,
-+					 NULL, 1);
++	rdmsrq(MSR_MTRRdefType, val.q);
++	if ((val.l & MTRR_DEF_TYPE_TYPE) != mtrr_state.def_type ||
++	    ((val.l & MTRR_DEF_TYPE_ENABLE) >> MTRR_STATE_SHIFT) != mtrr_state.enabled)
++		return false;
 +
-+	raw_spin_lock_irqsave(&cmci_discover_lock, flags);
-+	bitmap_zero(cmci_orphaned_banks, MAX_NR_BANKS);
-+	raw_spin_unlock_irqrestore(&cmci_discover_lock, flags);
- }
- 
- /*
++	for (i = 0; i < num_var_ranges; i++) {
++		struct mtrr_var_range *vr = &mtrr_state.var_ranges[i];
++
++		rdmsrq(MTRRphysBase_MSR(i), val.q);
++		if ((vr->base_lo & ~MTRR_PHYSBASE_RSVD) != (val.l & ~MTRR_PHYSBASE_RSVD) ||
++		    (vr->base_hi & ~phys_hi_rsvd) != (val.h & ~phys_hi_rsvd))
++			return false;
++
++		rdmsrq(MTRRphysMask_MSR(i), val.q);
++		if ((vr->mask_lo & ~MTRR_PHYSMASK_RSVD) != (val.l & ~MTRR_PHYSMASK_RSVD) ||
++		    (vr->mask_hi & ~phys_hi_rsvd) != (val.h & ~phys_hi_rsvd))
++			return false;
++	}
++
++	if (mtrr_state.have_fixed) {
++		u64 *saved = (u64 *)mtrr_state.fixed_ranges;
++		int block = -1, range;
++
++		/*
++		 * Ensure MtrrFixDramModEn is clear so fixed MTRR reads do not
++		 * expose K8 RdMem/WrMem bits and cause false mismatches.
++		 */
++		k8_check_syscfg_dram_mod_en();
++
++		while (fixed_range_blocks[++block].ranges) {
++			for (range = 0; range < fixed_range_blocks[block].ranges; range++) {
++				rdmsrq(fixed_range_blocks[block].base_msr + range, val.q);
++				if (val.q != *saved++)
++					return false;
++			}
++		}
++	}
++
++	return true;
++}
++
+ /**
+  * generic_set_mtrr - set variable MTRR register on the local CPU.
+  *
 -- 
 2.56.0.385.gd3acb90ef8-goog
 
