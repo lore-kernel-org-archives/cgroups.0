@@ -1,336 +1,172 @@
-Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11021082.outbound.protection.outlook.com [40.107.130.82])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A255F4FD78B
-	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 11:40:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792064455; cv=none; b=NysCGr/uICiuKMLf/SwHjKXLdStm6Lq630GAc4t7vhhQC4pk6EzQRvxH7brxtoAl2e0pwQ/haMFOpUFDIZf3RoTonK/gyJVMa/gViV7isWU5OiBM2Q2oTjOw+uYPW7cydcOchha9oY1G9IDQwqEqEljnNLNic61NGf4ZDLEWPeA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792064455; c=relaxed/simple;
-	bh=EOUFPzaXXBL5LIsCoIVhylFtOir+N4LjEMyTLE7RxXw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=DKsDJkqNfpiVvZfIIswG93wFZzaBzdHfMyLQ56/tfoxUT1fTH3dD20DneDZhEYfo9nE9ns5A59jjBG8xSwc3uUuIs7FtoBaRTY9XsCZFnYFWNZhIP2QIBbC7Lfaao2Qb5uAmv29kbZujJ7XS0VZtwJUFlVR8NURLQAQnRULSmRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=p4Jb80sF; arc=none smtp.client-ip=149.72.141.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1FC5277C96;
+	Thu, 15 Oct 2026 11:42:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.82
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792064570; cv=fail; b=KOh5oW2nto5VWZAIvN6cerbbrJs0dNtseJIiCeLl0C0ip1dr50liWVvF5EDLrUKzOc+imN0HXjbscCH2mTbeb2z981Q1pLNMcWVoNNlxp8p9WQZg0E08yN2haHqZE+8VEdyULARk04KtvuxQLWx9rHtV4+y1loTz858Gfo6ABrw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792064570; c=relaxed/simple;
+	bh=Jh7Vvtj1UPk74IuhhiD0cuY1hhgQ5MnVbe3/bgIEClk=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=W5QB98vsr8zktRJ5crPMuUnS5tc1Z7X4lUzSBlRZd9rlhHSwBLP/OnC577UFFulyey6hnMdx3om6PZpwGq+5g2gyADvcnF5a4iB9ZGcjHxPHTaY4Fwx7cXZTfsAfNo2JI+6YyXR2cKAv1JHncH8GD2b/beF70Jl5DC2/Ye5Ik0I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com; spf=pass smtp.mailfrom=virtuozzo.com; dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b=UPODPDh6; arc=fail smtp.client-ip=40.107.130.82
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=virtuozzo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="p4Jb80sF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
-	h=from:date:subject:mime-version:content-type:content-transfer-encoding:
-	references:in-reply-to:to:cc:cc:content-type:date:from:subject:to;
-	s=s1; t=1792064449;
-	bh=g9zPEjdqzeftXjAFlwNKTuUI/Q0TI5SBmPG5yYlzU0s=;
-	b=p4Jb80sFh3+r9sMIwmr+S+FiTRnGJQJwfFHkTYevYR7z0/H+CncOatVk8BmeJQDlHnuv
-	tz344nqQQ5eXkvCWqn2XBAdWUVtKmYQ4tRAKGVKhqx1pbwFrGAzUC4NWLximVFyw+PXsG7
-	CWxZYkCXW6Ut0FcoHyLpc/XHaFVanER3UfxRgZXOB0d1LrS54CJB3+GrZCfN/JrgBu5Voy
-	3132DlWPs+Xgyul9MUi0zdS5ADv72vDe/NDXlI5NOOpPr9M/hlwphcqhtR6uy3gTxpG9iC
-	eCL+CsTOnEjCgR4WyrCsVeLREPi/k1DhPG8JTz4V9cioN8YzsHvN9FeNIvGlmH7w==
-Received: by recvd-7dd44dbfb-xtt67 with SMTP id recvd-7dd44dbfb-xtt67-1-6AD0BBC0-94
-	2026-10-15 11:40:48.974646699 +0000 UTC m=+1363210.471780216
-Received: from [127.0.1.1] (unknown)
-	by geopod-ismtpd-34 (SG) with ESMTP
-	id HwkYD4PQT62gGITnmY5big
-	Thu, 15 Oct 2026 11:40:48.880 +0000 (UTC)
-From: Liz Fong-Jones <lizf@honeycomb.io>
-Date: Thu, 15 Oct 2026 11:40:49 +0000 (UTC)
-Subject: [PATCH v7 3/3] writeback: switch a replaced cgwb's inodes to its
- successor
+	dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b="UPODPDh6"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=tTHIFzvBkZhgpBwg3BekgajBKrgzD7K/qb1RRyhrdCTMfoI7dbZ+VIhZkP+uxESiuEQw3uOlESQK6DW3QdQJBft5wntsUpgOqSyeVIdvGpz0lcpdidob3UBPud6ceJQyqOhrbJnYZpg5scfk9OU0G13NLMuc1jdpbE7M9ffbPVR4FnLO9bxzetBAS3wlKtGNiryhWwW788hCcpzreFGGVNMFHb0EKE962HEjcq27BxBmEH9T7WG2aj8UEJFQUTweDn7A6iY6ZYxCEXmrOmVcMkZZOMLp/F5mVdrb4Jw76k/+yZvh1JlMrFFoZUE5KZACn2GfuM3+/1ng/l3Mfo1yuA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/T4hyFcGXUMRK8yb0SqCkYfpKnS/MxgxRiSmFAUtN6E=;
+ b=WzIdJa6fSlPEs166kgUXdzLivj8rjBjz0xK/CKk7IIe/P2r23DgO79gzpV2L6eGrzhbxZULc/PwGsDf1I+I7E8KZ7wdQKOeHQtyr4VLU+AJujH9B45v6Ds3LKWnOdqoublWOc/s3HoGEq6gOBVs/F4celLH7uTgXXFWZyMPo/UGbwp4/Xs87NlCfCSS2qDkI+XJnjlXcNvBraQ+fcA/QLwNO2IiAphe86G/6J6UjHebHIduLLG5+L4MH61xGtUUYtkOunMNfK6kqy6L2euMMSQ49Uuo/Ixya9Bh3DyvD0QfK+j/cpPSFV8rTghttls1P098JqKyrka/feuv+LloRug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=virtuozzo.com; dmarc=pass action=none
+ header.from=virtuozzo.com; dkim=pass header.d=virtuozzo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/T4hyFcGXUMRK8yb0SqCkYfpKnS/MxgxRiSmFAUtN6E=;
+ b=UPODPDh63zvKx3yCKjn4wSFXfTzdqth0ToXgv0I/RwQmaEGZwXbBABAV7TM8jfxgFgW+L+wG8Z9dOoosCWkob1P7SYtNbWi3LEhbAQCvQBj+ZPSQH652CD/QJdx1reBhlAl3gArORIkWNqH0vcbbYRcAOzTiYwWkPSucGStgprJg6dc9+i2RdL9fspe+txgxCME+WWmE1j4t+nuvwRLsyvGlqxD2aUkFxZtuSg7raLK6O1zJQcu/dID0i3tKerEcVpa81L1M1PAxTj5iifIHjFnbW0/RLv9bApc6I5pkE8F0FyOllY55DvAz9TP1+nt0/KAHbA8c5BTZ2MzxPOzXMA==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=virtuozzo.com;
+Received: from PA6PR08MB10708.eurprd08.prod.outlook.com
+ (2603:10a6:102:3c7::20) by AS1PR08MB7659.eurprd08.prod.outlook.com
+ (2603:10a6:20b:47a::14) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.7; Thu, 15 Oct
+ 2026 11:42:43 +0000
+Received: from PA6PR08MB10708.eurprd08.prod.outlook.com
+ ([fe80::1999:c6db:dc55:494a]) by PA6PR08MB10708.eurprd08.prod.outlook.com
+ ([fe80::1999:c6db:dc55:494a%5]) with mapi id 15.21.0546.006; Thu, 15 Oct 2026
+ 11:42:43 +0000
+Message-ID: <84c9e97b-67c0-4c9b-bb7d-81811af8a16b@virtuozzo.com>
+Date: Thu, 15 Oct 2026 13:42:41 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/2] mm/shrinker: make per-memcg shrinker units cheaper
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20261014-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v2-0-51af2aedbe6c@virtuozzo.com>
+ <20261014135046.7b13252ce99d918ffcdb1f49@linux-foundation.org>
+Content-Language: en-US, ru, sr
+From: Konstantin Khorenko <khorenko@virtuozzo.com>
+In-Reply-To: <20261014135046.7b13252ce99d918ffcdb1f49@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AS4P190CA0024.EURP190.PROD.OUTLOOK.COM
+ (2603:10a6:20b:5d0::15) To PA6PR08MB10708.eurprd08.prod.outlook.com
+ (2603:10a6:102:3c7::20)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261015-wb-dying-cgwb-flush-v7-3-9278d9ebaf5d@honeycomb.io>
-References: <20261015-wb-dying-cgwb-flush-v7-0-9278d9ebaf5d@honeycomb.io>
-In-Reply-To: <20261015-wb-dying-cgwb-flush-v7-0-9278d9ebaf5d@honeycomb.io>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=10110; i=lizf@honeycomb.io;
- s=gpg; h=from:subject:message-id;
- bh=EOUFPzaXXBL5LIsCoIVhylFtOir+N4LjEMyTLE7RxXw=;
- b=owEBbQGS/pANAwAKAaXO1OOXra/CAcsmYgBq0Lu8Nz3+ZFaYgxjl18aa1sbxXGJlFR+1q8Yyb
- 7sK8oVfNk2JATMEAAEKAB0WIQSfW1LPQ0gyJmoTHwelztTjl62vwgUCatC7vAAKCRClztTjl62v
- wnFUB/0WF9UayyAY3c1x+kRcUnD/w4SixYxG1NaDvBMs75tjNu6StKOEv0goPT9hNy09yMghHUO
- grODQuFQ87YwhP79k6OOrQdrqp18X1Gs74OSlNTINGMr6otGEiheyINyENt9J92/ldmrAny35h1
- rRb1qfc1unF9DoNjfOtTX5s6K46uF2go7nXBjFZ25/0gRSL5XDN+IxpfPKUZc0BxtsnRX15brc7
- qRMjnqNfZpjplY1QtbfJefMnNLqqaQlh74BBtJnweSsh7F3bAUE5lywl4yomWI8RLPZ5cPKHBGv
- KIunHQIHuJHk442U+ZnPJn7rxvxkdr5KOTv0Bb4rh1nKJo8G
-X-Developer-Key: i=lizf@honeycomb.io; a=openpgp;
- fpr=1F7714D7EC3441D2CECC24606A3F8B00FBDDD2A4
-X-SG-EID: 
- =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
- =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeYGeH8fsp8CL?=
- =?us-ascii?Q?edR=2FZhwrSbP=2FOwSw5EjBx5TUKicZYtObFQ1D6of?=
- =?us-ascii?Q?vDgD3Ni3kwdVi6ZzF+PbmZkIRZbZWPZiZMmNJzj?=
- =?us-ascii?Q?X2cAODMDb3MotS=2F8FJGxw2t5Ao6zyNgJ3JMPsJv?=
- =?us-ascii?Q?dk8EemGODAf7ZdWpx880Dls6R+XguZHCZL1qsY9?= =?us-ascii?Q?poPc?=
-To: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Tejun Heo
-	<tj@kernel.org>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>,
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner
-	<hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
-	<shakeel.butt@linux.dev>, Xin Yin <yinxin.x@bytedance.com>,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ian@honeycomb.io, Liz Fong-Jones
-	<lizf@honeycomb.io>
-X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA6PR08MB10708:EE_|AS1PR08MB7659:EE_
+X-MS-Office365-Filtering-Correlation-Id: a7b7afdb-2fea-4451-2e21-08df2ab16ce5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|7416014|23010399003|22082099003|18002099003|10067099003|4143699003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	VsrSJCRwYQ5mLnaBihJvOzz0AdXZj3Z/j3p+V/9+urEZfolibwKa6pjv5dtumAAFGSo2gJusf3kJQKBBSd/9GZ+Nc0OxSIIYBWKz3QDWJ44ipRoRQcj080eMXeN3eLQ1sPDn+Y46A4iThIzjLgNSlCLn/jUY+2t8gkuPXP2l2Awjc3OPbmB1A0/frPhx7O7et/2A4SAK8232jvY0HY8OTqZyQpYGIMVL74YnDVwfUXXyKH5OjbYH7cgWXp1KLd+aliNTh9KlPQ1sYGjuJ9gJIrMJ8IO/qZ1g1NlUtTIY+pK5RhhqMQqujYe7nbj4Gem2HoxLVaZJuE2o2PgasPyo58e7ABHr6BGxu0UzSwvZH0Av8P9SUgRZvfxGg6cmoR4dVZItBJv2oj2jMQnzqJSEX3BPkxz8tHuEttnPxas9yaMCVnI69JUwS6kCzKiD+eEgL2O5BUdKi5FRNp76NFn58bZOhfb7FURVd7mIO3a60UVSZV0OktmAuuz3lToLVgwuOH+a0D5/9ZPK6ZGnGgydCZEWBsYIq1immTq9y0/z2O2qePZW0otOyneLJg17P89J57ikKl5Zf19lXyOQnkf5CugnwkrYcmGOS6pMwCmkqxQam+ztT1HaaouyY6om9JmXZ2P5GAQXbfH7JNbYxb/oPJAxZC2YREa4IxhMIWulpLs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA6PR08MB10708.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(23010399003)(22082099003)(18002099003)(10067099003)(4143699003)(56012099006);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SUd1cGZicFhkTVMzNTlkdDhuY3pHU0pXV2lDSzhQbHJsUzV3RFBNWjlMVkRI?=
+ =?utf-8?B?RkxGNCtUOGhldUdocTdEeEJPeTgzZ0R2YTNzYmRTcVJUaGxDRmdqcnVxVzJS?=
+ =?utf-8?B?amRMNDdLWmF6by9hNE9ocE9ZWWJQY2h3eWh6OVMvVmhFdFhDc3Y0ckRLU1Z5?=
+ =?utf-8?B?UkljL2s3N014VGdWVE1LNTRZRFJYcXAxZjBuamlLTXJCZHhQbWRPMkhLY0tz?=
+ =?utf-8?B?ajVzVkhvSWFuN1JYN09rNkdhbDFuSk9GQXNYaGQzUGFhNjg3ZmZtQ25HNjBm?=
+ =?utf-8?B?bGlNS1JWSG1xRlRYWUljUEN1bUJkNmFJaFE3RThJS2s0Y0wyVHljSmZuRWhH?=
+ =?utf-8?B?bWpBeDBhNjZUU1BWNW1qdVZKYkk1bll3cENyVlI2bUVBZU9UWENZYWlYb0dY?=
+ =?utf-8?B?MVNRUjhVQ1JDaTBNRld6Q1NoLzJ5Sk12WDVRTjFPb3cvbkR1alQwWGxRQzZQ?=
+ =?utf-8?B?WEhrbHFTcWx5eTFGbStWNjhvNjQ3VzFuTUszVWNRMG0wcG5OL2pXVjBTVlBr?=
+ =?utf-8?B?djFzTDJIWTFrNVVsb09LWjRBdC96djkxNmJ0ZllOT2FTbjZYYUVTWjFPd0M2?=
+ =?utf-8?B?UTluNlVlUVVtMW9icmRiOXpZV1Q0WmlJTEVWaWJuOWxFeXJkVXRaUGZGSTBI?=
+ =?utf-8?B?NkRZaWcrSDJGOC92dlg5eHJDR3N2Q09MMWd3cEdoT2djZE9ISkdjNXlaQ0U0?=
+ =?utf-8?B?dTM1N3p5b3ZZRGNKNnBWcFdXWFREb25tYTlOZGNobkFRVFJuc2xzaXI1cGwz?=
+ =?utf-8?B?bThNU3Arb1dhNGpxL3F2OVYxbXdZVm9PRlprNEpSMXFEN3ZwZGdiZi9YKzIr?=
+ =?utf-8?B?L3B0dTUvcGZzL1dCcWJBODg2emp2bFVPSDg2eDRiRXVMbEVrT3g5Y3NQQmI0?=
+ =?utf-8?B?WFphKzA1TnZEZnFIdm1QVVEvUG5GZ2ErUkdqT1NTSkIwaUNENmJFOEpveFZ2?=
+ =?utf-8?B?ZWxvSGt4R0lSTjBrS2dEdVFrQThNNHQ5WDkzZWpibS9rcW1lcEFQRHRFOEZM?=
+ =?utf-8?B?TG10eVlYd3Nhb2crV0NlOCt2ZnY4OFRsbGVQZmV3N2JNaUxwZXQ3TzMzSEF4?=
+ =?utf-8?B?ZHJKZ0lnd2xFSHdXYitMQ2tNODQ2d2Nwanplci9rVWc0cDlkNjFubDFmVTN0?=
+ =?utf-8?B?b3lTK2JKem53RndFbnJIMS9wMGVBeTJkWnd1YW9LaHpramRvaW83blVGSFYy?=
+ =?utf-8?B?dXFvNlhWanM5N3NJZ1ZVd1dyQ0FWbExhYXN1THFISUN4aDlUSXNKYjdpckVq?=
+ =?utf-8?B?RXNBVkNieDdMR1czTmFURUZoZVlNSFRpb3RPUXJkcEExQ0tlaFZOSFIwZDEy?=
+ =?utf-8?B?ZUpHQzd5L0RJTm9NTHRvR2w5TVI5aVRlZ2diUHVaNE52L3FRWHMvSmZQWlh5?=
+ =?utf-8?B?Y2hSaU44WTI2emJQMGl5YTA4TElqRkl2dGhzMXgzZEJYanhtLy9pdjhKanZC?=
+ =?utf-8?B?THdvb0YwU1pQSFJoOUIycEZXZm1TdnRyNGJubWVQTURVZm55aXhNOWR3L2Jp?=
+ =?utf-8?B?eHRBVFFSU21ka2kzb215dlFsM0RaNkY3S01DR3YzcVZ4YmJMNlJRYXlmMDRs?=
+ =?utf-8?B?U09MRExIMkRMZEMrMUpSamlBUnpQZlk2cVdtN0x6VGtsUnAvQS9jVit2eUZW?=
+ =?utf-8?B?eXBRcHE3MEtjQXlKVFBGT0xqSmpPdzA4aXNhamtuVTF5ejFIRHNyc3ZqczJp?=
+ =?utf-8?B?eGhXbXh1MW82YjZKSjJTQzdvclBGS3ptMXVaQ2hJZWxrQnVoamo0dUZiVXpO?=
+ =?utf-8?B?MS9MWE1leVVPNmlqeFF2S3lXV2RoN0huSnVYTit5VEF4c2NUU1QzQnZrRnhO?=
+ =?utf-8?B?UGZRM1dhUEVBSFpBbENKdVUrMG5XMFdiZDNKYzhNL0tsNFVVQmVwY1N0cFJ0?=
+ =?utf-8?B?d2VSSkFTeU5idnczZktNOHpKcmZvVEFPUTVqQ2V2Q3NPWFhmTmVwRFhMZU9y?=
+ =?utf-8?B?em1zTTZDTjBSbGVFYzVTTUpBK0cvMnZGSkJZZlMwVnZNd1pDeVZrSGltUEZi?=
+ =?utf-8?B?TUUzRnhiS0xjVXpVZ3RLMTBqb0lOSmN5ekIwTGNEaUJOSWl5TzF5RmlwKzBN?=
+ =?utf-8?B?aHVxaDNYenErT050Wm5pUnppK05xTG9WeGpnSmpkb3hXdC9DRmRvdmp5a0ZH?=
+ =?utf-8?B?V1FLMGVKNEdXcnBreXg4cUFla1BlcW1ZUDZ5bXNhN1MzQlNQNVJTOHVrRG9T?=
+ =?utf-8?B?MCtIMk1BeUxtQjBjNU4zZWV1SUdFZUMrWXhDK25uRnRzRlBWdnI1cmJTUVdU?=
+ =?utf-8?B?NjBVQXJQMHpsRFJJVVJtRjVZS1A4cVJlbWxXNlRKd1ZvdFpieFF0cTkzYUlP?=
+ =?utf-8?B?N1hFTmNxeHA3NG1RQTBpUXNxa25UN3I3Ri8wM2hhWmZqR1NiSkVDQT09?=
+X-OriginatorOrg: virtuozzo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a7b7afdb-2fea-4451-2e21-08df2ab16ce5
+X-MS-Exchange-CrossTenant-AuthSource: PA6PR08MB10708.eurprd08.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2026 11:42:43.6219
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 0bc7f26d-0264-416e-a6fc-8352af79c58f
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: EGRj4cRm3Cok5vl/qOJ/OTofUQdt+1axLmeP4f7LHo6jjbBPi3N9KLGorpxe6oOpyOQLN+TqAYxoow+d0vUpVg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS1PR08MB7659
 
-When a live memcg's blkcg association changes, cgwb_create() replaces
-its killed wb in bdi->cgwb_tree. Foreign flushes for the memcg then
-find the new wb, but the inodes, dirty or not, are still attached to the
-old one, and they only move over as they are written back (see
-wbc_attach_and_unlock_inode()). Until then, other memcgs appending to
-those inodes stall in balance_dirty_pages().
+On 10/14/26 22:50, Andrew Morton wrote:
+> On Wed, 14 Oct 2026 16:54:36 +0200 Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
+> 
+>> Every memory cgroup allocates, per NUMA node, one shrinker_info_unit
+>> per 64 memcg-aware shrinker ids up to shrinker_nr_max, whether or not it
+>> ever charges an object to those shrinkers. Every superblock registers
+>> such a shrinker, so the cost is
+>>
+>>   memory cgroups x NUMA nodes x shrinker_nr_max / 64 x 1 KiB
+>>
+>> because the unit is 520 bytes and comes from kmalloc-1k.
+> 
+> So we could almost halve this just by using a dedicated kmem_cache?
 
-After the takeover, queue a work item that switches all inodes on the
-old wb's lists to the wb foreign flushes now find, like
-cleanup_offline_cgwb() does for b_attached and b_dirty_time, but
-including b_dirty, b_io and b_more_io. The switch carries the dirty and
-writeback page counts, so nothing needs to be written back first.
-cgwb_create() can run with interrupts disabled (folio_account_dirtied()
--> inode_attach_wb()), so it only queues the work. A switch to the old
-wb that was queued before it was replaced can land after the work ran,
-so inode_switch_wbs_work_fn() queues the work again when the wb it
-switched inodes to is dying and no longer owns its slot. Inodes attached
-to the old wb but on none of its lists, such as one attached as the wb
-is replaced (see __inode_attach_wb()) or a clean one switched over from
-the root wb, still move over only when written back. If the successor is
-already gone, fall back like cleanup_offline_cgwb() does, to the nearest
-live ancestor's wb or the root wb.
+Yeap, a dedicated cache gets approximately the same cost per shrinker id.
+On a 48-CPU box SLUB puts 31 units in an order-2 slab, about 528 bytes each:
 
-Since commit f6988c90671e ("writeback: bound cleanup_offline_cgwb()
-rescans by rotating scanned inodes"), the scan moves the inodes it walks
-to the newest end of each list, so hold wb_switch_rwsem for read across
-it, like the switches themselves. Otherwise a sync that has fixed its
-cutoff but not yet queued inodes can find older dirty inodes moved
-behind a newer one on b_dirty and return without writing them.
+                                      ids/unit  bytes/unit  bytes/id
+    today, kmalloc-1k                    64        1024        16
+    patch 1, kmalloc-512                 63         512       ~8.1
+    dedicated cache                      64        ~528       ~8.3
+    dedicated cache, HWCACHE_ALIGN       64         576        9
 
-Test: a live cgroup appends to 5000 files on XFS at 250MiB/s, io is
-disabled on its parent so its wb is killed, it creates a file (the
-takeover), and a sibling keeps appending to its files under a 4G parent
-limit. Worst lag of the sibling behind schedule over 30s, in three runs:
+So the two are ~equal on memory, and the choice is about the code.
 
-  without this patch    9.1s   4.0s   1.0s
-  with this patch       1.7s   1.3s   1.0s
+I went with 63 ids per unit because the unit then simply fills the
+kmalloc slot it already comes from.
 
-Without this patch, moving the old wb's inodes over took up to 11s,
-first switch to last; with it, all 5001 were switched in a 23-35ms
-window, with up to 98MiB of the old cgroup's pages dirty.
+The price is an odd SHRINKER_UNIT_BITS and roundup() instead of round_up(),
+plus the static_assert.
 
-Suggested-by: Tejun Heo <tj@kernel.org>
-Assisted-by: Claude:claude-opus-5-5 checkpatch sparse
-Assisted-by: Claude:claude-fable-5-1
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
----
- fs/fs-writeback.c                | 67 ++++++++++++++++++++++++++++++++++++++++
- include/linux/backing-dev-defs.h |  1 +
- include/linux/backing-dev.h      |  1 +
- include/linux/writeback.h        |  1 +
- mm/backing-dev.c                 | 48 ++++++++++++++++++++++++++++
- 5 files changed, 118 insertions(+)
+If you prefer the cache, I'm happy to redo patch 1 that way.
+Patch 2 does not care about the unit size.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 050d507aa554..eeaca6b41619 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -624,6 +624,8 @@ void inode_switch_wbs_work_fn(struct work_struct *work)
- 
- 	llist_for_each_entry_safe(isw, next_isw, list, list)
- 		process_inode_switch_wbs(new_wb, isw);
-+	/* @new_wb may have been replaced while the switches were queued */
-+	cgwb_kick_replaced(new_wb);
- 	wb_put(new_wb);
- }
- 
-@@ -809,6 +811,71 @@ bool cleanup_offline_cgwb(struct bdi_writeback *wb)
- 	return restart;
- }
- 
-+/**
-+ * switch_replaced_cgwb - switch a replaced wb's inodes to its successor
-+ * @wb: target wb, replaced in bdi->cgwb_tree by another wb of its memcg
-+ *
-+ * Switch all inodes on @wb's lists, dirty or not, to the wb that foreign
-+ * flushes now find for @wb's memcg.  If that one is already gone, fall back
-+ * like cleanup_offline_cgwb() does, to the nearest live ancestor's wb or the
-+ * root wb.  The switch carries the dirty and writeback page counts, so
-+ * nothing needs to be written back first.  Returns %true if not all inodes
-+ * were switched and the function has to be restarted.
-+ */
-+bool switch_replaced_cgwb(struct bdi_writeback *wb)
-+{
-+	struct cgroup_subsys_state *memcg_css;
-+	struct inode_switch_wbs_context *isw;
-+	struct bdi_writeback *new_wb;
-+	bool restart;
-+	int nr = 0;
-+
-+	new_wb = wb_get_lookup(wb->bdi, wb->memcg_css);
-+	for (memcg_css = wb->memcg_css->parent; !new_wb && memcg_css;
-+	     memcg_css = memcg_css->parent)
-+		new_wb = wb_get_create(wb->bdi, memcg_css, GFP_KERNEL);
-+	if (!new_wb)
-+		new_wb = &wb->bdi->wb; /* wb_get() is noop for bdi's wb */
-+	if (WARN_ON_ONCE(new_wb == wb)) {
-+		wb_put(new_wb);
-+		return false;
-+	}
-+
-+	isw = kzalloc_flex(*isw, inodes, WB_MAX_INODES_PER_ISW);
-+	if (!isw) {
-+		wb_put(new_wb);
-+		return false;
-+	}
-+
-+	atomic_inc(&isw_nr_in_flight);
-+
-+	/*
-+	 * The scan reorders @wb's lists.  Keep it out of a sync's way, which
-+	 * could otherwise miss dirty inodes moved past its cutoff on b_dirty.
-+	 */
-+	down_read(&wb->bdi->wb_switch_rwsem);
-+	spin_lock(&wb->list_lock);
-+	restart = isw_prepare_wbs_switch(new_wb, isw, &wb->b_attached, &nr) ||
-+		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_dirty, &nr) ||
-+		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_io, &nr) ||
-+		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_more_io, &nr) ||
-+		  isw_prepare_wbs_switch(new_wb, isw, &wb->b_dirty_time, &nr);
-+	spin_unlock(&wb->list_lock);
-+	up_read(&wb->bdi->wb_switch_rwsem);
-+
-+	if (nr == 0) {
-+		atomic_dec(&isw_nr_in_flight);
-+		wb_put(new_wb);
-+		kfree(isw);
-+		return restart;
-+	}
-+
-+	trace_inode_switch_wbs_queue(wb, new_wb, nr);
-+	wb_queue_isw(new_wb, isw);
-+
-+	return restart;
-+}
-+
- /**
-  * wbc_attach_and_unlock_inode - associate wbc with target inode and unlock it
-  * @wbc: writeback_control of interest
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index 33e06b1b1e1c..7713fd60c985 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -162,6 +162,7 @@ struct bdi_writeback {
- 					 * to this wb */
- 	struct llist_head switch_wbs_ctxs;	/* queued contexts for
- 						 * writeback switching */
-+	struct work_struct replaced_work;	/* see switch_replaced_cgwb() */
- 
- 	union {
- 		struct work_struct release_work;
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index f7ef5895625a..84057fa92f24 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -151,6 +151,7 @@ static inline void bdi_wb_stat_mod(struct inode *inode, enum wb_stat_item item,
- 
- struct bdi_writeback *wb_get_lookup(struct backing_dev_info *bdi,
- 				    struct cgroup_subsys_state *memcg_css);
-+void cgwb_kick_replaced(struct bdi_writeback *wb);
- struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
- 				    struct cgroup_subsys_state *memcg_css,
- 				    gfp_t gfp);
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index b749a9a5a5ee..88e4b5049698 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -209,6 +209,7 @@ int cgroup_writeback_by_id(u64 bdi_id, int memcg_id,
- 			   enum wb_reason reason, struct wb_completion *done);
- void cgroup_writeback_umount(struct super_block *sb);
- bool cleanup_offline_cgwb(struct bdi_writeback *wb);
-+bool switch_replaced_cgwb(struct bdi_writeback *wb);
- 
- /**
-  * inode_attach_wb - associate an inode with its wb
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 85b2c95a920c..0c09b51d5f40 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -637,9 +637,50 @@ static void cgwb_release_workfn(struct work_struct *work)
- 	bdi_put(bdi);
- 	WARN_ON_ONCE(!list_empty(&wb->b_attached));
- 	WARN_ON_ONCE(work_pending(&wb->switch_work));
-+	WARN_ON_ONCE(work_pending(&wb->replaced_work));
- 	call_rcu(&wb->rcu, cgwb_free_rcu);
- }
- 
-+static void cgwb_replaced_workfn(struct work_struct *work)
-+{
-+	struct bdi_writeback *wb = container_of(work, struct bdi_writeback,
-+						replaced_work);
-+
-+	do {
-+		cond_resched_tasks_rcu_qs();
-+	} while (switch_replaced_cgwb(wb));
-+	wb_put(wb);
-+}
-+
-+static void cgwb_queue_replaced_work(struct bdi_writeback *wb)
-+{
-+	lockdep_assert_held(&cgwb_lock);
-+
-+	if (wb_tryget(wb) && !queue_work(system_dfl_wq, &wb->replaced_work))
-+		wb_put(wb);
-+}
-+
-+/**
-+ * cgwb_kick_replaced - queue @wb's replaced_work if @wb has been replaced
-+ * @wb: wb that inodes were just switched to
-+ *
-+ * An inode switch pins its target wb before the switch lands, and the wb
-+ * may be replaced in cgwb_create() and have its replaced_work run in
-+ * between.  Kick the work again so that those inodes reach the successor
-+ * too.  A dying wb that still owns its slot is left alone: foreign flushes
-+ * can reach it, and the work would look up @wb itself.
-+ */
-+void cgwb_kick_replaced(struct bdi_writeback *wb)
-+{
-+	if (!wb_dying(wb))
-+		return;
-+
-+	spin_lock_irq(&cgwb_lock);
-+	if (radix_tree_lookup(&wb->bdi->cgwb_tree, wb->memcg_css->id) != wb)
-+		cgwb_queue_replaced_work(wb);
-+	spin_unlock_irq(&cgwb_lock);
-+}
-+
- static void cgwb_release(struct percpu_ref *refcnt)
- {
- 	struct bdi_writeback *wb = container_of(refcnt, struct bdi_writeback,
-@@ -724,6 +765,7 @@ static int cgwb_create(struct backing_dev_info *bdi,
- 	INIT_WORK(&wb->switch_work, inode_switch_wbs_work_fn);
- 	init_llist_head(&wb->switch_wbs_ctxs);
- 	INIT_WORK(&wb->release_work, cgwb_release_workfn);
-+	INIT_WORK(&wb->replaced_work, cgwb_replaced_workfn);
- 	set_bit(WB_registered, &wb->state);
- 	bdi_get(bdi);
- 
-@@ -748,6 +790,12 @@ static int cgwb_create(struct backing_dev_info *bdi,
- 			old_wb = radix_tree_deref_slot_protected(slot, &cgwb_lock);
- 			if (wb_dying(old_wb)) {
- 				radix_tree_replace_slot(&bdi->cgwb_tree, slot, wb);
-+				/*
-+				 * @old_wb is out of foreign flushes' reach
-+				 * but may still have inodes attached, dirty
-+				 * or not.  Switch them over to @wb.
-+				 */
-+				cgwb_queue_replaced_work(old_wb);
- 				ret = 0;
- 			} else {
- 				ret = -EEXIST;
-
--- 
-2.53.0
+--
+Best regards,
+Konstantin
 
