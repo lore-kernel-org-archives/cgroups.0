@@ -1,99 +1,128 @@
-Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
+Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88F6A4BD7BE
-	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 11:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D9644FC8D8
+	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 11:40:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792062739; cv=none; b=FQv0HLNucnac0i77M+Ynjsi1417ikhXVASakZUZQw0R+bLxzBb3Y12GBW2PlooYtlLXRPOT0ONddz+0qbWhwi/fT+m64Slx0txYuVkiWo1D0pPIeul3zE3QfPmKmnOFRPFBm8eLcwXT96/0A4V37/6J0/w2KTqZ3nuDHRt9tLzk=
+	t=1792064451; cv=none; b=ULG3+ecwaVZlUoVbOgBXsXWZzluEm3fZqly5bO1/LKKaFO9iFLgKlwaQGfUyu6dKi+oe1TNNgqCUdUxtEprf5lpClSdQTwi79HYa8bzb2Ejxx+9KBCwOQ8+Qqd3xzkHbPmkHPZHe+2l9NLy8pFpQAz0ovUWOhiBO+Swh01cUQZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792062739; c=relaxed/simple;
-	bh=GfSfulDlANmtg1D1eMp1tdJTvpZbf++7/H8np/gPaKk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sjFfaqJqREV54D7KiSQCQdOySyVbtWZ3mFzWsu+ae8We8BWaj8uMuK3+97KGc/mnDlMVsOOGPRJgqDhhJeIFHdHr4MSKhjUymCk75Cmj44KJLJdSS/zZdp8zqO3HC58mfU5P1fpTVojCUmVWqV0axvoLXQPQFr0z6cW0BlTgYwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JzUyr8ga; arc=none smtp.client-ip=74.125.82.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792064451; c=relaxed/simple;
+	bh=KBWkxkWj46zd0xpwSYEYCzKTU4VSqzbWDHFWbIpbEgE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=VHH/gkXFycZRBQqlg74biOP5vtla2knLy7cw9kWrlPz+Dtc638JmzHUEW4Zu4CpOt4PzfCh/8wcCTTFkg76GOSNBjPfthLOPX/r2NhG5mR7h8HFx2mFzZoKopSSEjsUxG+6rg2w5GsNXL6Hkpt1ozOsJlVUgETxXhFlc4NExoCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=bwKMju6z; arc=none smtp.client-ip=149.72.141.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JzUyr8ga"
-Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-353804b591eso9041359eec.0
-        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 04:12:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792062737; x=1792667537; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=GfSfulDlANmtg1D1eMp1tdJTvpZbf++7/H8np/gPaKk=;
-        b=JzUyr8gazr1tTMu0P2xNsDtZ0ml0rpJkXqiSB8vP0bxeSSSM4HYIE0yWES6X3NoTVD
-         UAfTLJ0LpL0CAc6iDiOp/JftX1cn6SL2B1KuPGSY1kvuIMM4HNAr9YwuVuUyswLhxFCW
-         +5IyKykn8FSdtWQ4/nGo8fWAJK5CaavgolBAtu9gNM+Fa/lfkYJr4iJS0HANvV14tjfi
-         6nGUeJYtRKzPgbojNV9XZixpQR+hRjKEF4Wh+0W3KBSxfNvg/0Ply/yCfIZMj6Rg2d2Z
-         n4b7Zv8wP8kFBmLFwCmjf9NQLKou73+nsO0B1ReRcXi6ob23+I9iOxNDpHk5/7CtVNeV
-         cPAg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792062737; x=1792667537;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GfSfulDlANmtg1D1eMp1tdJTvpZbf++7/H8np/gPaKk=;
-        b=PER6G6OavdBv8UFVWffLPuMZiNJZMixq9iTiE/Vmivrd96mg+Bhu3UK/vrLdxuRMJY
-         I5vYX/FVv35grRBZp8U5z1cfMpMNjcXriaFvgLh3Mnb/VGQGCjOrfryDHlpD7FMgkvmN
-         0YWoRcp9bMUfNhOMD1CBUnv3RaKx3c73t3NTvoD0Mi5Ln7rDNsQk9/xW2LGkrYzYID52
-         rMK/I+Vuep8K1hlbcEN7WWpnzFqDf6ssoZLDzhX3qo0rmMk2Efyi/MVDH45BtX7DJT4X
-         RQ+FG8AYqgP7rdqkEp4i3AbyMmSVvoq5+i+fSKlih8VqSbztbzHoqsEVSfn2vwHsWyVV
-         sl5w==
-X-Forwarded-Encrypted: i=1; AKwUvBwEHjk1z2/rDkfxaStKmIW2u3iOELL0juV463vKTQ+rKX7p0Swk3vZicCk1pUEF4tLjOMNFBYQX@vger.kernel.org
-X-Gm-Message-State: AFq9FYI+yDj5dLDkbgIYYXI4I9atdpZGW9ojr02JjN546MFH421/QY7q
-	YdZtI8247s4PF8gugRr6EbdFOK/qKJAp8qBdmxOAV8dNnivOFzTLUu4t
-X-Gm-Gg: AYBFou2Skc4pOIY0kZKMNj3/9bziVtbWFrlxRAiPakqyTrJnmf3M1XA0zfly4TrViMy
-	AvizlUzbS9mfaqaFx2VkAMjkrFNktAlysB6jvDPReFgMtvwRtHyfuyYpcVg4XcfZ0gDclI7dtEq
-	a2562m0IHHZm4TLvTM0JVwFVTS9MT+xi3UciHQ/yXQGAg4l69N0uF1sCNLUBPX6+PzfMj0em0Or
-	L7V24bGdsc8jzZSWoWyzLbqGp70fQ8E9jSmToq498hh+/ZlEwyVE0zyUzy62Wma5+oByTnlOG5L
-	LR+CrWeu7hotKMgoKAqHTtbxlEYw31e2hgAKhBbtcKRM8nDdDoIBn2UvJppCDPgOXPR5WhD3HuL
-	Uveha3nAR0qY2bHxSwDF2YxHSMBXuIYYkqUeZbbqLAjKX4F3rXo99QEQCQKyS0jby/U79fvQUyc
-	tZKU96o13vIGsg9Fqpe+A23Bgn8sJT9WI3ew04Sgv/hJMSbE0LDVSwc9/RyMNImCpLgQJBPJbA+
-	6Pr1H4qUv/9084EcwS+B9mEgwq019/8
-X-Received: by 2002:a05:7300:ac81:b0:353:7e33:664c with SMTP id 5a478bee46e88-3537e3369c5mr35858267eec.37.1792062737176;
-        Thu, 15 Oct 2026 04:12:17 -0700 (PDT)
-Received: from obadmin-Precision-3680.atlascopco.group ([136.226.232.200])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca0e64csm68338413eec.10.2026.10.15.04.12.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 04:12:16 -0700 (PDT)
-From: Sahaj Chaudhari <sahaj123.sc@gmail.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Sahaj Chaudhari <sahaj123.sc@gmail.com>
-Subject: Re: [PATCH v3] selftests/cgroup: test pids.events notification
-Date: Thu, 15 Oct 2026 16:42:56 +0530
-Message-ID: <20261015111256.1551933-1-sahaj123.sc@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <81a8a0d64d269851ce4b48a240aa673c@kernel.org>
-References: <20261013064812.875787-1-sahaj123.sc@gmail.com> <81a8a0d64d269851ce4b48a240aa673c@kernel.org>
+	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="bwKMju6z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
+	h=from:date:subject:mime-version:content-type:content-transfer-encoding:
+	references:in-reply-to:to:cc:cc:content-type:date:from:subject:to;
+	s=s1; t=1792064446;
+	bh=W1u+B47QVH+BqoNNDPxX4qPg/iyN+d0UIT6/3msYHfQ=;
+	b=bwKMju6zvUCM87kUBYN1FpffWt7b6O+/rGJ7+Yn29K+I8ZFuMEwVrrYaiJQwQ8BXKpTG
+	r3i6L6/iSdKA8UBpfXRnQlAnIGIitDpes3q+er8at3OQ0CygfQXn4fdlf/Ms93THwG3C+1
+	h8DZVR0sUd9XB/0nD1VqOAnQOTQ4ME1VgCmOSrAFHPW6vRNUz3BudbGBJlpMWBYgJA5pwQ
+	bTq8c1C0NioY3XfCz3kgDLcTr80TfoVBMIqj7HGGFG3Ek2spJYyXpivufAr63Jtb9X3ZKy
+	UKSh/YV7+0P00VdJZRfU69iHL5rX1Pn93ZW/MeGXQRf1DZ56K0a2CQeNEHI7PjMg==
+Received: by recvd-6bcc8657fd-7xfmc with SMTP id recvd-6bcc8657fd-7xfmc-1-6AD0BBBE-5A
+	2026-10-15 11:40:46.841842789 +0000 UTC m=+1363199.854799708
+Received: from [127.0.1.1] (unknown)
+	by geopod-ismtpd-34 (SG) with ESMTP
+	id VqFvasx4SLG8b5RDUQfJFg
+	Thu, 15 Oct 2026 11:40:46.754 +0000 (UTC)
+From: Liz Fong-Jones <lizf@honeycomb.io>
+Date: Thu, 15 Oct 2026 11:40:46 +0000 (UTC)
+Subject: [PATCH v7 1/3] writeback: clear the old wb's dirty IO state after
+ switching inodes
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261015-wb-dying-cgwb-flush-v7-1-9278d9ebaf5d@honeycomb.io>
+References: <20261015-wb-dying-cgwb-flush-v7-0-9278d9ebaf5d@honeycomb.io>
+In-Reply-To: <20261015-wb-dying-cgwb-flush-v7-0-9278d9ebaf5d@honeycomb.io>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1745; i=lizf@honeycomb.io;
+ s=gpg; h=from:subject:message-id;
+ bh=KBWkxkWj46zd0xpwSYEYCzKTU4VSqzbWDHFWbIpbEgE=;
+ b=owEBbQGS/pANAwAKAaXO1OOXra/CAcsmYgBq0Lu8rKtwblHFjr9VRJbmtr+LLZ3cYYunp4xOW
+ WrZUBkpr4KJATMEAAEKAB0WIQSfW1LPQ0gyJmoTHwelztTjl62vwgUCatC7vAAKCRClztTjl62v
+ wp1LCADqhkBoYfmjxiMI2Tf9lnvY+4nejQr0tz3w5LnXY8N8R11E73joo7VVogUf0R/ovhudv8v
+ 2V9KqUJirxbnh88lQsSqoEjaBPQsved22/sekx2x1ixn+ytyZaY5KSnsoPiv60hKHz8rld6vaZs
+ KIAaBczYFhy/bPOtGhW4/DlYGww/wRHyUq28PYO8mkVIOON9rHPeV0Nz+vv4Ax95oYnMesw+RqH
+ cut5rYVPbs3bS5pIK6M5eymh6WV3cOa3/SEWIVrXXfXntwyAbrtUfro7Xq0TkkZoesAH2qO/WCk
+ sekOINs+cWvCKohc0kKQxlba3IjhAdbczK+672cGv5xp6S7X
+X-Developer-Key: i=lizf@honeycomb.io; a=openpgp;
+ fpr=1F7714D7EC3441D2CECC24606A3F8B00FBDDD2A4
+X-SG-EID: 
+ =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
+ =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeew8=2FcRq885E?=
+ =?us-ascii?Q?u3Ov4f8W5n5pP8=2Fa06ebyKdHexyEXibOUIzFFzp?=
+ =?us-ascii?Q?FtJT92p6u4X8vyHcALfAGBnicOn8G3J8x1TRjdZ?=
+ =?us-ascii?Q?j8jIE0lEYuYj5+FK+htbdYjPEyiREs=2FoG2QuXdV?=
+ =?us-ascii?Q?YFnBycKoXDbahRhnb1PKjEv=2FugY6GW73Wg6gRZw?= =?us-ascii?Q?SWrq?=
+To: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Tejun Heo
+	<tj@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>,
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner
+	<hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+	<shakeel.butt@linux.dev>, Xin Yin <yinxin.x@bytedance.com>,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ian@honeycomb.io, Liz Fong-Jones
+	<lizf@honeycomb.io>
+X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
 
-Hello Tejun,
+Switching a dirty inode to another wb can leave WB_has_dirty_io set on
+the old one. inode_do_switch_wbs() moves the inode onto new_wb->b_dirty
+through inode_io_list_move_locked(), which only updates new_wb, and
+nothing calls wb_io_lists_depopulated() on old_wb. A live wb clears the
+bit on its next dirty to clean transition, but a wb that gets no more
+inodes, such as a dying one, is freed with its avg_write_bandwidth still
+in bdi->tot_write_bandwidth, which wb_split_bdi_pages() and
+wb_min_max_ratio() divide by.
 
-Thanks for the review. All five points are addressed in v4:
-https://lore.kernel.org/r/20261015111243.1551387-1-sahaj123.sc@gmail.com
+Call wb_io_lists_depopulated(old_wb) after the switch loop in
+process_inode_switch_wbs(), while old_wb->list_lock is still held.
 
-The test is now test_pids_events_notify() in test_pids.c, runs on both
-mount types, drops the skip and the duplicate counter check, and cites
-1765a153d985. The v1 to v2 note moved to the changelog.
+Test: after the last patch in this series switched a replaced wb's dirty
+inodes away, BdiWriteBandwidth stayed at 411700 and 407820 kBps with no
+writers and b_dirty, b_io and b_more_io all empty; with this patch it
+read 0, in 3 of 3 runs.
 
-I tested it in QEMU on the cgroup for-7.4 branch. It passes on a default
-mount and on a pids_localevents mount, and it fails on a
-pids_localevents mount with 1765a153d985 reverted.
+Suggested-by: Tejun Heo <tj@kernel.org>
+Assisted-by: Claude:claude-opus-5-5 checkpatch sparse
+Assisted-by: Claude:claude-fable-5-1
+Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+---
+ fs/fs-writeback.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Separately, the existing test_pids_events fails on a pids_localevents
-mount, with and without this patch. I have not looked into it further.
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index d26b2cf05283..050d507aa554 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -566,6 +566,12 @@ static void process_inode_switch_wbs(struct bdi_writeback *new_wb,
+ 		}
+ 	}
+ 
++	/*
++	 * inode_do_switch_wbs() only updates @new_wb's dirty IO state.  Clear
++	 * @old_wb's if its IO lists are now empty.
++	 */
++	wb_io_lists_depopulated(old_wb);
++
+ 	spin_unlock(&new_wb->list_lock);
+ 	spin_unlock(&old_wb->list_lock);
+ 
+
+-- 
+2.53.0
+
