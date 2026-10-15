@@ -1,71 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-151.mta1.migadu.com [95.215.58.151])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E6A94EDCC3;
-	Wed, 14 Oct 2026 23:59:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53E953AB269
+	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 02:12:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792022388; cv=none; b=nAs4AcICS/vsfODrmZKH6cwfsZrcIEsKeo84BQ2TJEBq6zfXny/bUqxXN+1OSUiWAK+UL5uxfrqfuxODo6T6KVXm0yjRjvNs0vShUpBVIrz3wY1f6XE1vrPquEGEKF/LEhuQ6NqWikiAi9lxdR/paWFhqdt1aQfGgC4/w97BY5s=
+	t=1792030325; cv=none; b=XcD/tP4+DKTEt3W1WqSjOJHmNlp5kX7i5w/OC5TzrF9HWYO+UNG0VB+yBHnE5G2Y08ypjOk4GVHNRflgETlQY6TgDhjqEm4/TsHbC8zD0TDkSM39XH5jAWdNvIStOh3yC+RAdXLZqkewRHe9tSctpUhCzek3KPJCeu5XmGznqgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792022388; c=relaxed/simple;
-	bh=nXhd8Xu0p7RT7+l9wH6swVnTjTvFwHU1lQCjT6dzVM0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cAbwZ7Y2F/bM0/KOme18Fwe6zXbx2jTnZaVicCGi1qGkLBufwFC3j0jz16TqiJWi0LZcxcLbq0jabDfP2OmnMBSws2jegpPq4LRcAhlhXL1FcLsN60MhzIRLuL8XCd+9vOywivYSj/a39dEVCjxndE3bisI89aDgQNuj/aWHf24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bipez7Ht; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792030325; c=relaxed/simple;
+	bh=OaHjNXyKVR2ly4XZ9rh+SeN1xPX6G78FfZWEiWx20n4=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=nw2RH2wHHsnscAdkMxgCky+lHKjsNBtl3S70bDiRbuigAm4cjtTzKaPLfxVNfGUOJYfExstK8yamdJbLA0vES6ACtoS/2yVstDI7irSuYlCOLFIQRCAEYXMfVy2t0EPImuIsz5iTAYrzK07kmXSrUv7c+AYq9mOQKWjXgHB6JzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=obWgQgFK; arc=none smtp.client-ip=95.215.58.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bipez7Ht"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB4CC1F000C4;
-	Wed, 14 Oct 2026 23:59:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792022387;
-	bh=u79nAdAkK0/gGpKFfO0nUzFOj1lq5Wr2kWciwdFQTiE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=bipez7Ht4bxO5601jdtc2fcZcO6bY2C/SWuclR1gQz3fXPfL/ED0fEvKsKH8QHi8V
-	 EfWHR5+sqRGDCCQ0nkJAZ/sg1SU2cLrq1d2ZDQpzXx5XA4wbzxCLmos1DAB7j0Bek/
-	 tAI/o+f+b/gMV5R1T/nOa9rzq9mkY+46RGbWJl2cYJY5RESbz70p4/HEbvmOcSzpCS
-	 nuy8401E1lYan8/hj3lnx3W1F/cNVOp8aasyjdP2EgXEqjdzKpeEmrDPpVmARYkVeg
-	 +lJDIynx3l2P7rmIqNgXObASjaFts72hWCoeDp3Rfbmn4Si/1aTIVkilTy8yIfow5m
-	 i/Hi/UN85q4SQ==
-From: SJ Park <sj@kernel.org>
-To: Tal Zussman <tz2294@columbia.edu>
-Cc: SJ Park <sj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] mm: memcontrol: remove page_memcg_check()
-Date: Wed, 14 Oct 2026 16:59:39 -0700
-Message-ID: <20261014235939.3830-1-sj@kernel.org>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261014-memcg-unused-page-helpers-v1-2-240b37c53831@columbia.edu>
-References: 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="obWgQgFK"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=OaHjNXyKVR2ly4XZ9rh+SeN1xPX6G78FfZWEiWx20n4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792030320; v=1; x=1792635120;
+ b=obWgQgFKylyRSXIAYIH/47rFfzoaJ5EnykGXq4AADvSC/ZAymcJIr/2U8t6KLbFK1LbYUps2
+ xXurWVcUwK/OnifeqzavjyWNgS8hk/9e2JLM4F5r+I5j+Wo9fjs/4OE5gNvR+fKndTzPk1DdP5j
+ gqO9kZpp0ZItbjiuWXKzI2RM=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id cf6ef34820450841;
+	Thu, 15 Oct 2026 02:12:00 +0000
+X-Mizu-Trace-ID: cf6ef34820450841
+X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: Re: [PATCH 2/2] mm: memcontrol: remove page_memcg_check()
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20261014-memcg-unused-page-helpers-v1-2-240b37c53831@columbia.edu>
+Date: Thu, 15 Oct 2026 10:11:45 +0800
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ cgroups@vger.kernel.org,
+ linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Message-Id: <CFB8FDE5-CA38-4F62-8565-C94D62EB4A76@linux.dev>
+References: <20261014-memcg-unused-page-helpers-v1-0-240b37c53831@columbia.edu>
+ <20261014-memcg-unused-page-helpers-v1-2-240b37c53831@columbia.edu>
+To: Tal Zussman <tz2294@columbia.edu>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-On Wed, 14 Oct 2026 13:08:21 -0400 Tal Zussman <tz2294@columbia.edu> wrote:
 
+
+> On Oct 15, 2026, at 01:08, Tal Zussman <tz2294@columbia.edu> wrote:
+> 
 > The last caller was removed in commit 90f095b816e2 ("mm/page_owner: use
 > memcg_data snapshot to avoid TOCTOU in print_page_owner_memcg()").
 > Remove it.
-
-Makes sense to me.
-
 > 
 > Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 
-Reviewed-by: SJ Park <sj@kernel.org>
+Acked-by: Muchun Song <muchun.song@linux.dev>
 
+Thanks.
 
-Thanks,
-SJ
-
-[...]
