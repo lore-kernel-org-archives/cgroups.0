@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9865A572682;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 789E056853B;
 	Thu, 15 Oct 2026 18:15:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792088156; cv=none; b=Cg1LUAooXAkRiKChgsOg6zwqY8enaLI9bFTvquJC07fOlcsWxw5scyUkN2h6CXfCwqcvaWWlBFOB2SVm3a074JakJgMDA0Ch6Fnw6jFvL4cQyg6CzsaoUYkQYA/bIbdXkNXqW6nSYyTfPpRtNhng3/pOPwwKBhp9v5licvz8rXw=
+	t=1792088156; cv=none; b=Niud19qnYLz4yfB9zyDsJZcjlz4uiIo4zHB4W6Q8Q5A2PzduaV1DU6ON1S6+mBCKAMym3fiXWxiHzTYAo5/gCxdG13TjiBWFG6llEKmUmCOZbyWIJeq9UknaCXcN1fnSIIDbPshd4ypmq2996kV20VECZCiXhWErpwvkWVT3ZjI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1792088156; c=relaxed/simple;
-	bh=9vYadqVkh4WrhDMsH1jX5lN/XH9JwLR+fwEjQqvXr+8=;
+	bh=rFRURW/PYDXky6uYP0rMZlZedhJeCXhr2ivNXilJ7Dg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=tnkL1029knAPoPnZlJzmEXTXGJ18dV7fCIydBk1BC4yIFnjNhkStF+Y8dNMN/+YUbhA+HLdbHJRJQRXr7Zqj8dHloLJyZiSpS4NrVc8ccYum2tKn4yKaW7+ahlnBaHapyuUv+4aF9FLT/93Fyq4p9SJGhK0ofrxZJOibOthGJXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M/VSqVM9; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=CqHuI3LAEn+zYQNekB91Pd3Q0zmDKyF9Rs3iCbM6LnKrtJBs5rqKWqp5PfPvnzwDXpj+HnLohLCKrGrKLbgtR0nBIBaXFH8MxF8qqYKSuhPWR/NMc8zCrv/LpdirTajUOJc1FWyHhEbZri8oj50KSRI9Hak+9rYJxGUvMyHC2jM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c3oZNbx3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M/VSqVM9"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 76DCAC2BD05;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c3oZNbx3"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 512DBC32782;
 	Thu, 15 Oct 2026 18:15:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1792088156;
-	bh=9vYadqVkh4WrhDMsH1jX5lN/XH9JwLR+fwEjQqvXr+8=;
+	bh=rFRURW/PYDXky6uYP0rMZlZedhJeCXhr2ivNXilJ7Dg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=M/VSqVM9jJUGAMm2rmzaGRTlfA1KecX+avNavtRyTAfdlsSBYSzUgFtLcsq4XD3aS
-	 wU3RIHerSYc+iW5yiW8PxYF4E+++seprkzUMoLXA8hCUq7GBle9n5VW6wY24yxhG+q
-	 gteyIE0lOqQYcw6X87lY46GlqqfRSA3DT74VvWOpjCksfA6vqR4uHuEyx4soGNYKZ4
-	 JNkUdGDRr+mFbPMImkog47DofQrw9N2LmqNU43+r5RpvKJp6331Xgq8kX5EgKDqqsj
-	 W0V3LUjXEeSDEWXPtMem3RwzrwPbPJ3xaPggetVITO0wHJn9957FMFd20Gz9q96B2M
-	 LTvlP1bXbY35g==
+	b=c3oZNbx35iFJaJYyQQzfTVwfSGyS6ZmAWVL5L22BTt1nigZ3j5j2Bak2YZddPKajk
+	 AUBTSEjXvry+IT/HzjjwtgpwoymrZYVYUiHN9aZyDao+x1Y87YI99bx5Dkl+MqLfTR
+	 asM5RByEamNtlrAYd659OQuFhP3cECgnSihEolkvEsBzT1Q84WSMRby9vHdti5giJT
+	 AsKECMG7SnYDLXfEsLBLb6KXrtxR/dG4qCU6gGxSTkVKSNE04t2+9wjnC5FtSh0wWY
+	 zK3pCgZAEGLSMDne44XqlQCVPJIhfVgIoDyT1oStoGdgmn8NlYumM1zirlcYsCyHSn
+	 rUGwQCI/xxLhQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63007CC6B38;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BA4CCCA464;
 	Thu, 15 Oct 2026 18:15:56 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Fri, 16 Oct 2026 02:16:06 +0800
-Subject: [PATCH v4 17/17] Documentation/mm: multi-gen LRU: update for
- frequency guided promotion
+Date: Fri, 16 Oct 2026 02:16:04 +0800
+Subject: [PATCH v4 15/17] mm/mglru: make folio_inc_lru_refs lruvec lockless
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261016-mglru-fg-v4-17-2106750c0bfa@tencent.com>
+Message-Id: <20261016-mglru-fg-v4-15-2106750c0bfa@tencent.com>
 References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
 In-Reply-To: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
 To: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, 
@@ -74,11 +73,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
  damon@lists.linux.dev, Kairui Song <kasong@tencent.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792088152; l=5953;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792088152; l=8176;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=H9ePyPxQfKEyJG8pjQryA22Bu9URRS7jnmN2RCV298Y=;
- b=Vb9KmjNNstGoNvaMOwNk7ofyjEq/gP8OVY3K9CwFsX4iWIUxqEgFFz0bvwWvH+Y2p0iByDKlP
- wZqWyoquQutCr8DLLctzG4RU7bhi8F6VKDcrlaEAi+LHGq3mAiOnAnb
+ bh=OP0akykE/qzlFerevSA96IrPzDmEgd2usDkP1ftKRMM=;
+ b=orSajrE9bbuxD//LSvEthgkATHbgp1nA0A44mNSIzqup47QSbfW8puy/w5H7buxcJScuNX5St
+ 9sHzgmv0w4NAp65DSJmbKz7VLv8d1/gTNaUlmmJ7K5CfygKrmXm2Mo6
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -88,110 +87,210 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-The design doc still describes the old tier and promotion model:
+The lruvec spinlock in folio_inc_lru_refs was only taken to keep
+concurrent aging from corrupting the size counters.  This is no
+longer needed: the per-generation counters are atomic, and the
+active/inactive ABI counters are updated per folio and linearized by
+the CAS on the folio flags, so concurrent aging can no longer corrupt
+them.  The same argument already allowed folio_reset_lru_refs() to
+drop the lock.
 
-- Tiers are no longer order_base_2() of the file descriptor accesses.
-  A folio's tier is derived from its referenced count, which counts
-  accesses from both page tables and file descriptors.
+Use folio_lruvec_live_get()/folio_lruvec_live_put() to hold the RCU
+read lock around the lruvec lookup, and drop the spinlock entirely.
 
-- A young PTE no longer always promotes a folio to the newest
-  generation.  The first access only moves a folio one generation
-  forward if it is at the tail of its LRU, i.e., in one of the two
-  oldest generations of its type, a second access promotes it, and
-  executable file folios are promoted on their first access.
+Without the lock, aging can advance max_seq while a promotion is in
+flight.  Generations are indexed by seq % MAX_NR_GENS, so the folio
+flags can return to the value read earlier and the cmpxchg succeeds
+with a target gen computed from a stale max_seq.  Recheck max_seq after
+a gen-changing cmpxchg: if it moved, account the committed update and
+retry with LRU_REF_FORCE, which promotes the folio to the newest gen.
+The retry may count the access twice, which is acceptable and avoids
+folio_activate(), whose LRU lock causes latency jitter.  smp_rmb()
+orders the flags read, including the one returned by a failed
+cmpxchg(), before the max_seq read.
 
-- The eviction no longer uses the first tier as the only baseline.
-  The type is selected by comparing all tiers of each type, and a tier
-  is protected by comparing it against the tiers below it.
+Also simplify the post-CAS accounting guards: gen is only assigned
+non-negative values after the old_gen < 0 early exit, so gen != old_gen
+implies gen >= 0, and lru_gen_update_size() needs no explicit guard.
+The active/inactive ABI update keeps its gen >= 0 check because an
+off-LRU folio has no lruvec to update.
 
-Update the aging and eviction sections accordingly.
-
-Assisted-by: LLM
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- Documentation/mm/multigen_lru.rst | 57 ++++++++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 24 deletions(-)
+ include/linux/mm_inline.h | 10 ++++-----
+ include/linux/mmzone.h    |  3 ++-
+ mm/vmscan.c               | 53 ++++++++++++++++++++++++++++++-----------------
+ 3 files changed, 41 insertions(+), 25 deletions(-)
 
-diff --git a/Documentation/mm/multigen_lru.rst b/Documentation/mm/multigen_lru.rst
-index 52ed5092022f..ec8744c1f42c 100644
---- a/Documentation/mm/multigen_lru.rst
-+++ b/Documentation/mm/multigen_lru.rst
-@@ -95,16 +95,19 @@ at most ``MAX_NR_GENS`` generations. The gen counter stores a value
- within ``[1, MAX_NR_GENS]`` while a page is on one of
- ``lrugen->folios[]``; otherwise it stores zero.
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 41c2e9150c70..fd77dbfdaf70 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -308,10 +308,9 @@ static inline bool lru_gen_at_tail(struct lruvec *lruvec, int type, int gen)
+ 	       gen == lru_gen_from_seq(min_seq + 1);
+ }
  
--Each generation is divided into multiple tiers. A page accessed ``N``
--times through file descriptors is in tier ``order_base_2(N)``. Unlike
--generations, tiers do not have dedicated ``lrugen->folios[]``. In
--contrast to moving across generations, which requires the LRU lock,
--moving across tiers only involves atomic operations on
--``folio->flags`` and therefore has a negligible cost. A feedback loop
--modeled after the PID controller monitors refaults over all the tiers
--from anon and file types and decides which tiers from which types to
--evict or protect. The desired effect is to balance refault percentages
--between anon and file types proportional to the swappiness level.
-+Each generation is divided into multiple tiers. A page's tier is
-+derived from its referenced count, which counts the accesses collected
-+from both channels above and is capped at ``LRU_REFS_MAX``: pages
-+accessed at most once are in the lowest tier, and the tiers above hold
-+pages accessed at least twice. Unlike generations, tiers do not have
-+dedicated ``lrugen->folios[]``. In contrast to moving across
-+generations, which requires the LRU lock, updating the referenced
-+count only involves atomic operations on ``folio->flags`` and
-+therefore has a negligible cost. A feedback loop modeled after the PID
-+controller monitors refaults over all the tiers from anon and file
-+types and decides which tiers from which types to evict or protect.
-+The desired effect is to balance refault percentages between anon and
-+file types proportional to the swappiness level.
+-static inline void lru_gen_update_size(struct lruvec *lruvec, struct folio *folio,
+-				       int old_gen, int new_gen)
++static inline void lru_gen_update_size(struct lruvec *lruvec, int type,
++		struct folio *folio, int old_gen, int new_gen)
+ {
+-	int type = folio_is_file_lru(folio);
+ 	int zone = folio_zonenum(folio);
+ 	int delta = folio_nr_pages(folio);
+ 	struct lru_gen_folio *lrugen = &lruvec->lrugen;
+@@ -386,7 +385,7 @@ static inline bool lru_gen_add_folio(struct lruvec *lruvec, struct folio *folio,
+ 	/* use the refs from the atomic snapshot to avoid raced update */
+ 	refs = lru_get_refs_flags(flags);
  
- There are two conceptually independent procedures: the aging and the
- eviction. They form a closed-loop system, i.e., the page reclaim.
-@@ -122,25 +125,31 @@ and calls ``walk_page_range()`` with each ``mm_struct`` on this list
- to scan PTEs, and after each iteration, it increments ``max_seq``. For
- the latter, when the eviction walks the rmap and finds a young PTE,
- the aging scans the adjacent PTEs. For both, on finding a young PTE,
--the aging clears the accessed bit and updates the gen counter of the
--page mapped by this PTE to ``(max_seq%MAX_NR_GENS)+1``.
-+the aging clears the accessed bit and bumps the referenced count of
-+the page mapped by this PTE. A second access promotes the page by
-+updating its gen counter to ``(max_seq%MAX_NR_GENS)+1``; the first
-+access only moves a page one generation forward if it is at the tail
-+of its LRU, i.e., in one of the two oldest generations of its type,
-+so that the next time it becomes the oldest one, its accessed bit
-+reflects whether it has been used again. Executable file pages are
-+promoted on their first access, since reclaiming them causes typical
-+I/O thrashing.
+-	lru_gen_update_size(lruvec, folio, -1, gen);
++	lru_gen_update_size(lruvec, type, folio, -1, gen);
+ 	if (lru_refs_is_active(refs))
+ 		lru += LRU_ACTIVE;
+ 	__update_lru_size(lruvec, lru, zone, delta);
+@@ -404,6 +403,7 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ {
+ 	unsigned long flags;
+ 	int gen, refs;
++	int type = folio_is_file_lru(folio);
+ 	int zone = folio_zonenum(folio);
+ 	int delta = folio_nr_pages(folio);
+ 	enum lru_list lru = folio_is_file_lru(folio) * LRU_INACTIVE_FILE;
+@@ -426,7 +426,7 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+ 	if (!reclaiming && ((max_seq - gen) % MAX_NR_GENS) < MIN_NR_GENS)
+ 		folio_set_active(folio);
  
- Eviction
- --------
- The eviction consumes old generations. Given an ``lruvec``, it
- increments ``min_seq`` when ``lrugen->folios[]`` indexed by
--``min_seq%MAX_NR_GENS`` becomes empty. To select a type and a tier to
--evict from, it first compares ``min_seq[]`` to select the older type.
--If both types are equally old, it selects the one whose first tier has
--a lower refault percentage. The first tier contains single-use
--unmapped clean pages, which are the best bet. The eviction sorts a
--page according to its gen counter if the aging has found this page
--accessed through page tables and updated its gen counter. It also
--moves a page to the next generation, i.e., ``min_seq+1``, if this page
--was accessed multiple times through file descriptors and the feedback
--loop has detected outlying refaults from the tier this page is in. To
--this end, the feedback loop uses the first tier as the baseline, for
--the reason stated earlier.
-+``min_seq%MAX_NR_GENS`` becomes empty. To select a type to evict from,
-+it first compares ``min_seq[]`` to select the older type. If both
-+types are equally old, it compares the refault percentages of all the
-+tiers of each type proportional to the swappiness level. To select a
-+tier to protect, it compares the refault percentage of each tier
-+against that of the tiers below it. The lowest tier contains pages
-+accessed at most once, which are the best bet. The eviction sorts a
-+page according to its gen counter if the aging or an access has
-+updated its gen counter. It also moves a page to the next generation,
-+i.e., ``min_seq+1``, if the feedback loop has detected outlying
-+refaults from the tier this page is in.
+-	lru_gen_update_size(lruvec, folio, gen, -1);
++	lru_gen_update_size(lruvec, type, folio, gen, -1);
+ 	if (lru_refs_is_active(refs))
+ 		lru += LRU_ACTIVE;
+ 	__update_lru_size(lruvec, lru, zone, -delta);
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index dacf066b499e..f50449d10242 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -559,9 +559,10 @@ enum lruvec_flags {
+ #define LRU_TIER_MIN		0U
+ #define LRU_TIER_MAX		(MAX_NR_TIERS - 1)
  
- Working set protection
- ----------------------
+-/* Access source flags for folio_inc_lru_refs() */
++/* Flags for folio_inc_lru_refs() */
+ #define LRU_REF_MAPPED		0x1U
+ #define LRU_REF_EXEC		0x2U
++#define LRU_REF_FORCE		0x4U
+ 
+ #define LRU_REFS_REFERENCED	0x1
+ #define LRU_REFS_WORKINGSET	0x2
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index a9c224377234..e604b0893847 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -966,6 +966,9 @@ enum folio_references {
+  * LRU_REFS_PROTECTED, so it starts at or below the protected tier regardless
+  * of its old-generation access history.  PID protection (folio_inc_gen) caps
+  * at LRU_REFS_WORKINGSET independently.
++ *
++ * folio_inc_lru_refs() retries with LRU_REF_FORCE if the aging recycled the
++ * gen index it was about to store: newest gen and an extra reference.
+  */
+ 
+ /*
+@@ -982,37 +985,35 @@ void folio_inc_lru_refs(struct folio *folio, unsigned int flags)
+ 	long nr_pages = folio_nr_pages(folio);
+ 	struct lru_gen_folio *lrugen;
+ 	struct lruvec *lruvec = NULL;
++	bool aged = false;
+ 
++retry:
+ 	old_flags = READ_ONCE(*folio_flags(folio, 0));
+ 	do {
+ 		new_flags = old_flags;
+ 		old_gen = lru_get_gen_flags(old_flags);
+ 		old_refs = lru_get_refs_flags(old_flags);
+-		file = folio_flags_is_file_lru(&old_flags);
+ 		refs = old_refs + 1;
+ 		gen = old_gen;
++		file = folio_flags_is_file_lru(&old_flags);
+ 		if (old_gen < 0)
+ 			goto out;
+-		/*
+-		 * Lock the lruvec if the folio is on-list. We are already
+-		 * doing lazy promotion so in theory we don't need this,
+-		 * but for now, concurrent aging would still corrupt the
+-		 * size counters.  This is a temporary limitation and
+-		 * will be lifted very soon, so the lock here is not a
+-		 * performance concern.
+-		 */
+ 		if (!lruvec) {
+-			lruvec = lruvec_live_lock_irq(folio_lruvec(folio));
++			lruvec = folio_lruvec_live_get(folio);
+ 			lrugen = &lruvec->lrugen;
+ 		}
++		/*
++		 * Read the flags before max_seq, paired with the store of a
++		 * gen, which samples max_seq first.
++		 */
++		smp_rmb();
+ 		max_seq = READ_ONCE(lrugen->max_seq);
+ 		max_gen = lru_gen_from_seq(max_seq);
+ 		if (old_gen == max_gen)
+ 			goto out;
+-
+-		if (flags & (LRU_REF_MAPPED | LRU_REF_EXEC)) {
+-			/* Promote second page table access or executable */
+-			if (refs > LRU_REFS_REFERENCED || flags & LRU_REF_EXEC)
++		if (flags & (LRU_REF_MAPPED | LRU_REF_EXEC | LRU_REF_FORCE)) {
++			if (refs > LRU_REFS_REFERENCED ||
++			    flags & (LRU_REF_EXEC | LRU_REF_FORCE))
+ 				gen = max_gen;
+ 			/* First access only defers eviction of a tail gen */
+ 			else if (lru_gen_at_tail(lruvec, file, old_gen))
+@@ -1036,9 +1037,19 @@ void folio_inc_lru_refs(struct folio *folio, unsigned int flags)
+ 			break;
+ 	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+ 
+-	if (gen != old_gen)
+-		lru_gen_update_size(lruvec, folio, old_gen, gen);
+-	if (lru_refs_is_active(old_refs) != lru_refs_is_active(refs) && old_gen >= 0) {
++	if (gen != old_gen) {
++		/*
++		 * Gen-index reuse can fool cmpxchg(). Retry locklessly, accepting
++		 * an extra reference to avoid folio_activate() latency.
++		 */
++		if (unlikely(READ_ONCE(lrugen->max_seq) != max_seq)) {
++			flags = LRU_REF_FORCE;
++			aged = true;
++		}
++		lru_gen_update_size(lruvec, file, folio, old_gen, gen);
++	}
++
++	if (lru_refs_is_active(old_refs) != lru_refs_is_active(refs) && gen >= 0) {
+ 		enum lru_list lru = file * LRU_INACTIVE_FILE;
+ 
+ 		__update_lru_size(lruvec, lru + lru_refs_is_active(old_refs),
+@@ -1046,8 +1057,12 @@ void folio_inc_lru_refs(struct folio *folio, unsigned int flags)
+ 		__update_lru_size(lruvec, lru + lru_refs_is_active(refs),
+ 				  folio_zonenum(folio), nr_pages);
+ 	}
++	if (aged) {
++		aged = false;
++		goto retry;
++	}
+ 	if (lruvec)
+-		lruvec_unlock_irq(lruvec);
++		folio_lruvec_live_put(lruvec);
+ }
+ 
+ /*
+@@ -3647,7 +3662,7 @@ static int folio_inc_gen(struct lruvec *lruvec, struct folio *folio)
+ 
+ 	new_gen = __folio_inc_gen(lruvec, folio, old_gen, &gen_increased);
+ 	if (gen_increased)
+-		lru_gen_update_size(lruvec, folio, old_gen, new_gen);
++		lru_gen_update_size(lruvec, type, folio, old_gen, new_gen);
+ 
+ 	return new_gen;
+ }
 
 -- 
 2.56.0
