@@ -1,346 +1,275 @@
-Received: from mx10.didiglobal.com (mx10.didiglobal.com [111.202.70.125])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 288CB52BE29;
-	Thu, 15 Oct 2026 14:03:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=111.202.70.125
+Received: from mail-vs1-f49.google.com (mail-vs1-f49.google.com [209.85.217.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74E8F3E1D11
+	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 15:33:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792073007; cv=none; b=hzPc9JCkBVDyqhjQ0sflSGhbt4iQy5MEQYNbbpc+6EYW4Acc6muYte1t5bLvmE1WW0dC30T08nP42GQnMTCV8WEnD/Z7IXvx0XjZ81MMJp4OqxkwFKomGsow21hDaN4mHfBcz333mHUQTTT+mrZEIwknH7tPnrHbypVA28A39hU=
+	t=1792078426; cv=none; b=nAc7HKy4rVX5tGvl5eOVSxEcHlH6zxzOiepTlyfO3OIxBch/6oOwscg0noaKTzIdfvmXAE6UrrU2tOoqpzmL7W4Z9/sY2EL0YAj0/SNu9Eyvy4dosdZsqaXMl4AhgX13QQV05OCTpu+WmDifpsQjDXmHrowSnY+gUVz10bwP44o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792073007; c=relaxed/simple;
-	bh=Rez634XUXJFnkU6ETDVZZ221/YI/33k9K4C0697uO4Q=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Nla0MOPr8sHKIcK8J4VNE1pgPc3qf88gM4tDgh0fqTSxg5YemHODzQJi4pw8fR9adsLITuwYx2Na9hbTewo/ulQSB7iBMvA7XiT02RoH4bJrGshHmpMTEbkYZhuwCeOM+nxUjBwRn9YciTt97/7EpDRne8FZhL+XsMl04+ug2YI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=didiglobal.com; spf=pass smtp.mailfrom=didiglobal.com; dkim=pass (1024-bit key) header.d=didiglobal.com header.i=@didiglobal.com header.b=YXmNsoGF; arc=none smtp.client-ip=111.202.70.125
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=didiglobal.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=didiglobal.com
+	s=arc-20240116; t=1792078426; c=relaxed/simple;
+	bh=FzBM/Ds+FUQXzcI5GyEdRpBe53pipf1qT8h91NAXYwM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Qs4YwSBHB4RmMZaP2A3FY1E6KMG/OKm0Ti1A94YRq6TrY9tntt3mwSeypvWLAg+OVR6fYzmvE5dE5Cca3NjnYezL3k23CigVMl8sYS0UFgMd2zjKrgFAtDYpqMIyPy46xsLpu/CFUboow5MrF4KTP/atm0ptDQYrxO2FA6N7A5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=kn8Ti6F0; arc=none smtp.client-ip=209.85.217.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=didiglobal.com header.i=@didiglobal.com header.b="YXmNsoGF"
-Received: from mail.didiglobal.com (unknown [10.79.64.21])
-	by mx10.didiglobal.com (MailData Gateway V2.8.8) with ESMTPS id EF2721861844D6;
-	Thu, 15 Oct 2026 21:59:56 +0800 (CST)
-Received: from BJ01-ACTMBX-05.didichuxing.com (10.79.64.32) by
- BJ01-ACTMBX-02.didichuxing.com (10.79.64.21) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Thu, 15 Oct 2026 21:59:56 +0800
-Received: from ml-justfortest.ys (10.79.64.102) by
- BJ01-ACTMBX-05.didichuxing.com (10.79.64.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.45; Thu, 15 Oct 2026 21:59:56 +0800
-X-MD-Sfrom: daikunhai@didiglobal.com
-X-MD-SrcIP: 10.79.64.21
-From: Kunhai Dai <daikunhai@didiglobal.com>
-To: <tj@kernel.org>
-CC: <axboe@kernel.dk>, <josef@toxicpanda.com>, <yukuai@fygo.io>,
-	<cgroups@vger.kernel.org>, <linux-block@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <rostedt@goodmis.org>, <mhiramat@kernel.org>,
-	<mathieu.desnoyers@efficios.com>, <linux-trace-kernel@vger.kernel.org>
-Subject: [PATCH] blk-iocost: publish hweights as one atomic value
-Date: Thu, 15 Oct 2026 09:59:19 -0400
-Message-ID: <20261015135919.210740-1-daikunhai@didiglobal.com>
-X-Mailer: git-send-email 2.27.0
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="kn8Ti6F0"
+Received: by mail-vs1-f49.google.com with SMTP id ada2fe7eead31-74ab99038afso3462116137.3
+        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 08:33:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=soleen.com; s=google; t=1792078416; x=1792683216; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IWqiGzk/pYHC1ZT+qsWV7wuDwiIjMUnX6pd7W6OrNuo=;
+        b=kn8Ti6F0YKZlxxGLYpHUMatp8G9CKeNHfApjbAUEPBXJ0iI6Lk3FnnEUHbvXABhr+Q
+         nK2EEbGZTluojdcPBfOfOgESsu/mOinPYbGvYIr/7BkR3FAXvGlVTxlLXBhvmfhsylIQ
+         g3LEfmaN/g14fjZEcrXG75w6VNFe3XyuQI9lATBJ11Lomb4mQuqZGenm8fk33vQ50vMW
+         NPoio9cOMCl8QJiNNX6QN/rFA6dwlOCrVe4UyVfkBLT81vBRhIQmVftUeDzbGUk2SllI
+         UE3gnlgJ/T97WxnfIYS8894ZLSzVr2IapMFAPhzZXwZQMDDjN2hRK1v/plnXw3bsgSSn
+         uT/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792078416; x=1792683216;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=IWqiGzk/pYHC1ZT+qsWV7wuDwiIjMUnX6pd7W6OrNuo=;
+        b=rDNwuJNdXD2aoOZGcDggHacuc8eSKMQNnTnN+0rKeA7M7OSbrq5cfDXRI400Cin3Mo
+         Dm9wNsYAhpeV+95nqU/mMfHBrzGG66cBV9BrW7QpO/AHh8Sz8wIuKq8uHUf+QEguQWXc
+         pmKFICjYi12/XyLrgtGI0Lsyt7POmwuaF9gKXVVv9QW5Xf7WOTy81KdRAzOdW2gpc0QI
+         dTfacA3iTyKFnnX1vg6UsgYtRZD+fCSzOoi0Llgl9YZD4VV/CQNzvcUwq7gxFG9ytjvw
+         al4cKt2Ju3iEPcNG/NEI5baU8et+ioBuU7FM6fGeSIeQKhuc3+bmIfnetsR0nX7a+M42
+         uawg==
+X-Forwarded-Encrypted: i=1; AKwUvBzw9vi6+hgk118C9cDWGvfy604F0obtneGZN7Lb9obgpee5yPT/Jbjqbe+9M5tMxl9jGNJ944IR@vger.kernel.org
+X-Gm-Message-State: AFq9FYJYHbVYPKHUlfkZIq7ULmKxoLGSkc8uBcb+u3KX9lTW7u5sX72x
+	NhgsO57M5swYZacQD/F/ON1wbnkQhpLFQizi6NJu1N3k8RC13M98pnksZWZ1lXagOK0=
+X-Gm-Gg: AYBFou2Z8egUJ2bYAZk5br3Bz3t20av2QiXz6TX0tTa+Bd/NxRcI3VYl0xdavI8jtUa
+	KwXLFROOrNDOBPHApdKRnOlyYcY49G1lQxhP4ANHpjYL0I6CeVnumFE2WOYAXWwcBYRZ4gtBqZ2
+	Q+LwO3/mhHrFWyeDj1KfZPQHf0B/hIsab0ERw4EB7qCucCkY62zhi6A3Y9c72IMqBl43Q9S0FdU
+	3Ynrr8Lxi+6GPowjqqYdak2Ft1TefhmfttxO8kiB4qH82eWMnAtBbqz8b5SEHveQB9qvbfCTejk
+	j4d5ekMwlQ6yA0/D4KkxmivCJEphWb6lZkG3baaNJh3RRzRFu99cVN/qj7cWKqiGFFzN4pgfqcD
+	M4vINLTl7sxuB9Lc2OjDVU24tY5L+Co1Jl1kJT8ai54y2jfBR7GTaUWoY/RYiwq3UbQWWtdr7Xw
+	MjabIx47BRvzbhuCcR5Mrr4lG2qgxDYyrj3yBQ6vzvtmP/MJHr9xzHBTj4Ryu5zLupokm5/QU5h
+	vm6jF7MKCouXEMb/sN31wvJNcDengdTYvVuYWLEKfV2yJ/wB+q/fvt3fESmwYEchYKkCj8+q1zh
+	EEqe0WwF/w0Px9LILZI=
+X-Received: by 2002:a05:6102:c09:b0:78e:1e0f:ea42 with SMTP id ada2fe7eead31-7cb3971582emr7015724137.2.1792078415811;
+        Thu, 15 Oct 2026 08:33:35 -0700 (PDT)
+Received: from soleen.c.googlers.com.com (16.49.199.35.bc.googleusercontent.com. [35.199.49.16])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-99003f66ad9sm12986347241.10.2026.10.15.08.33.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Oct 2026 08:33:35 -0700 (PDT)
+From: Pasha Tatashin <pasha.tatashin@soleen.com>
+To: kees@kernel.org,
+	rppt@kernel.org,
+	juri.lelli@redhat.com,
+	nik.borisov@suse.com,
+	tglx@kernel.org,
+	vschneid@redhat.com,
+	kprateek.nayak@amd.com,
+	vincent.guittot@linaro.org,
+	bp@alien8.de,
+	thorsten.blum@linux.dev,
+	cgroups@vger.kernel.org,
+	tony.luck@intel.com,
+	david@kernel.org,
+	mingo@redhat.com,
+	akpm@linux-foundation.org,
+	linux-mm@kvack.org,
+	seanjc@google.com,
+	ljs@kernel.org,
+	zhangguopeng@kylinos.cn,
+	dietmar.eggemann@arm.com,
+	mhocko@suse.com,
+	vinicius.gomes@intel.com,
+	tj@kernel.org,
+	vbabka@kernel.org,
+	linux-kernel@vger.kernel.org,
+	peterz@infradead.org,
+	surenb@google.com,
+	hpa@zytor.com,
+	x86@kernel.org,
+	pasha.tatashin@soleen.com,
+	dmatlack@google.com,
+	tim.c.chen@linux.intel.com,
+	kexec@lists.infradead.org,
+	pratyush@kernel.org,
+	dave.hansen@linux.intel.com,
+	rostedt@goodmis.org,
+	gmonaco@redhat.com,
+	jgross@suse.com,
+	mgorman@suse.de,
+	graf@amazon.com,
+	linux-edac@vger.kernel.org,
+	liam@infradead.org,
+	ridong.chen@linux.dev,
+	longman@redhat.com,
+	bsegall@google.com
+Subject: [PATCH v1 0/8] x86, sched, mm: Speed up CPU hotplug on large systems
+Date: Thu, 15 Oct 2026 11:33:23 -0400
+Message-ID: <20261015153331.1872641-1-pasha.tatashin@soleen.com>
+X-Mailer: git-send-email 2.56.0.385.gd3acb90ef8-goog
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BJ03-PUBMBX-01.didichuxing.com (10.79.71.11) To
- BJ01-ACTMBX-05.didichuxing.com (10.79.64.32)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=didiglobal.com;
-	s=2026; t=1792072803;
-	bh=y9XYAQWJLQjskYaRpaAgKQEqKsSVCy9b8K0r0Tqi8mE=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type;
-	b=YXmNsoGFH3epWKrpNZ5NpgudQX/xma0HyIouyna9SWa5iQySfrLI322UcDMR3pHEc
-	 FyfmYyoEyugyQ/ZfXNXD77ea+3lUPdmHM52WYmN/VT0n7Y7Ew7770eZZGGhJYEORJn
-	 eV1SS4rydH8SwyVvOXpnMEez2YJwUxo4CFgFIof8=
 
-current_hweight() uses separate plain stores for the cache generation and
-both weights. The compiler can publish the generation before the weights,
-letting an interrupt accept stale weights as current. Multiple refreshers
-can also interleave their stores. Invalid donation budgets may then lead
-to a divide error in transfer_surpluses().
+For live update we require a fast CPU online and offline capability.
+However, sequentially offlining and onlining all application processors
+on modern high-core-count x86 servers exposes a series of hardware and
+algorithmic bottlenecks across arch/x86, the scheduler topology builder,
+deadline bandwidth accounting, and vmstat.
 
-Pack the generation and both weights into a single atomic64_t. Hierarchical
-weights are in [1, 65536], so storing each weight minus one preserves its
-full range in 16 bits and leaves 32 bits for the generation. Readers copy
-one complete entry, and refreshers publish one complete entry. Return the
-local snapshot instead of rereading fields another refresher can modify.
+This series addresses these bottlenecks, reducing the time to offline and
+online all AP CPUs by 95.2% (21.0x faster) on a 2-socket, 480-CPU Intel
+Xeon 6985P-C and by 59.8% (2.5x faster) on a 2-socket, 512-CPU AMD EPYC
+9B45.
 
-Keep the existing lockless refresh and cache reuse behavior. A late
-refresh may replace a newer entry, but carries its own generation so the
-next reader can detect the mismatch. Preserve the existing barrier paired
-with commit_weights() and the allowance for approximate hierarchy reads.
+Benchmark workload (mean of 10 runs per step):
 
-Keep the old weight fields solely as donation workspace. Update cache
-initialization, activation invalidation, tracepoints and the drgn monitor
-accordingly. Tracepoints decode one cached snapshot without recalculating
-or refreshing weights. Stop invalid donation calculations before applying
-leaf adjustments, and check donating before subtracting one.
+  # echo 1 > /sys/kernel/rcu_expedited
+  # for i in {1..N}; do echo 0 > /sys/devices/system/cpu/cpu$i/online; done
+  # for i in {1..N}; do echo 1 > /sys/devices/system/cpu/cpu$i/online; done
+  # echo 0 > /sys/kernel/rcu_expedited
 
-Validated against commit 24a19b953e2a ("Linux 7.3-rc7"):
-- clean application, whitespace and strict checkpatch checks;
-- W=1 compilation of blk-iocost.o with the existing x86-64 configuration
-  and PREEMPT_RT plus PROVE_LOCKING;
-- extracted production-function checks covering all weight values,
-  generation high bits, publication interleavings, donation cleanup and
-  400000 concurrent refresh calls using C11 atomic test stubs;
-- Python syntax and actual monitor-decoder checks;
-- x86-64 disassembly confirms a single 64-bit cache load and store.
+  2-socket, 480-CPU Intel Xeon 6985P-C (N=479):
+    Offline:  40.40 s ->  3.09 s  (-92.4%, 13.1x faster)
+    Online:   65.83 s ->  1.98 s  (-97.0%, 33.2x faster)
+    Total:   106.23 s ->  5.07 s  (-95.2%, 21.0x faster)
 
-Runtime kprobe injection on an x86-64 VM with 32 vCPUs completed three
-rounds without WARN or panic. With a 30 ms publication delay, the probe
-reported 23102 publication-point holds, 3234 cache-change observations
-within those windows and 72 matching-generation reader observations. The
-unpatched baseline panicked under the corresponding reproduction load.
+  2-socket, 512-CPU AMD EPYC 9B45 (N=511):
+    Offline:   4.53 s ->  2.30 s  (-49.2%,  2.0x faster)
+    Online:    3.88 s ->  1.08 s  (-72.2%,  3.6x faster)
+    Total:     8.41 s ->  3.38 s  (-59.8%,  2.5x faster)
 
-The runtime build predates this revision's tracepoint-only simplification;
-the packed-cache and donation logic are unchanged. The current tracepoint
-change has passed normal and PREEMPT_RT compilation, but has not been
-rerun in the runtime injection test. Performance regression testing has
-not been performed.
+  (On AMD EPYC 9B45, each 8-core CCD has a 32 MB L3 where WBINVD takes
+   < 0.5 ms, offline uses acpi_idle rather than mwait_play_dead(), and
+   Intel CMCI is unused, so Patches 1-3 do not affect AMD, which enters
+   Patch 4 at 4.53 s offline / 3.92 s online / 8.45 s total. Without
+   rcu_expedited=1, final 10-run mean total time with all 8 patches
+   applied is 12.04 s on Intel and 15.99 s on AMD.)
 
-Developed with assistance from OpenAI Codex.
+1. x86 WBINVD, CMCI rediscovery, and MTRR rendezvous (Patches 1-4):
 
-Assisted-by: LLM
-Signed-off-by: Kunhai Dai <daikunhai@didiglobal.com>
+   On processors with large shared last-level caches (such as the 504 MB
+   L3 per socket on Xeon 6985P-C), CPU hotplug is initially dominated by
+   full coherence-domain cache flushes (WBINVD), each taking ~85-115 ms
+   per CPU while stalling active cores:
 
----
-Reproduction outline (x86-64, cgroup v2):
-1. Enable BLK_CGROUP_IOCOST and KPROBES. Enable the io controller at each
-   parent, and configure io.cost.qos and io.cost.model for the test device.
-2. Create four leaves: rt/s1, rt/K/s2, rt/K/P/s3 and rt/K/P/C. Run continuous
-   direct 1 MiB writes in the first three; issue four direct 4 KiB writes
-   every 200 ms in C, keeping it active with low utilization.
-3. Every 300 ms, alternate the K/P/C chain weights between 1 and 10000,
-   with the sibling leaves s1/s2/s3 taking the opposite weights. This
-   repeatedly makes C's hierarchical share fall to the minimum of 1.
-4. On the unpatched build, confirm that the compiler placed the cached
-   generation store before the weight stores. Insert a kprobe delay of
-   30 ms after that generation store and before the weight stores.
-   Derive the instruction offset from the binary being tested.
-5. On the packed-cache build, delay just before the atomic cache store
-   instead: there is no separate generation-publication window. This
-   stresses concurrent refresh completion and late cache overwrites.
+   - Patch 1 removes the obsolete WBINVD from trampoline_start, which was
+     added in the 1990s for Sequent NUMA-Q hardware (removed in commit
+     b5660ba76b41 ("x86, platforms: Remove NUMAQ")). Per the Intel SDM
+     and AMD APM, INIT preserves cache contents and leaves CR0.CD and
+     CR0.NW unchanged. Removing it cuts 479-CPU online time on Intel from
+     65.83 s to 11.14 s (-83.1%) and total time from 106.23 s to 51.60 s
+     (-51.4%).
 
-Unpatched baseline, abbreviated crash and stack excerpt:
+   - Patch 2 skips the redundant WBINVD before MWAIT in mwait_play_dead()
+     during runtime CPU offline (retaining it when cpuhp_tasks_frozen is
+     set for system sleep). Architectural MWAIT C-states maintain cache
+     coherency while the package remains powered and flush core-private
+     L1/L2 caches to the LLC on C-state entry, just like normal idle in
+     intel_idle. Skipping it for runtime offline cuts 479-CPU offline
+     time on Intel from 40.46 s to 11.42 s (-71.8%) and total time from
+     51.60 s to 22.50 s (-56.4%).
 
-  iocg: invalid donation weights in /rt/K/P:
-        active=1 donating=1 after=0
-  Oops: divide error: 0000 [#1] SMP PTI
-  RIP: 0010:transfer_surpluses+0x43e/0x6b0
-  RAX: ffffffffffffffff  RCX: 0000000000000000
-   <IRQ>
-   ioc_timer_fn+0x1158/0x13b0
-   call_timer_fn+0x1e/0x100
-   __run_timer_base.part.36+0x1f0/0x220
-   [...]
-   handle_softirqs+0xa9/0x2a0
-   irq_exit_rcu+0x48/0xe0
-   sysvec_apic_timer_interrupt+0x6b/0x80
-   </IRQ>
-   [...]
-   win_pre+0x44/0x70 [repro_iocost]
-   [...]
-   ? current_hweight+0xc1/0x110
-   ? adjust_inuse_and_calc_cost+0x44/0x290
-   ? ioc_rqos_throttle+0x13e/0x590
-  Kernel panic - not syncing: Fatal exception in interrupt
+   - Patch 3 bounds cmci_rediscover() on CPU teardown. Currently,
+     cmci_rediscover() broadcasts an IPI via on_each_cpu() to all online
+     CPUs, serializing them on cmci_discover_lock while reading up to 32
+     MCA MSRs. Because any disabled MCA bank is shared at most with an
+     SMT sibling, L2 cluster peer, or die/package peer, probing a single
+     online topology peer via smp_call_function_single() (or returning
+     immediately when no shared banks were orphaned) reduces 479-CPU
+     offline time on Intel from 11.42 s to 9.63 s (-15.7%) and total time
+     from 22.50 s to 20.74 s (-7.8%).
 
- block/blk-iocost.c             | 65 ++++++++++++++++++++++++++++--------------
- include/trace/events/iocost.h  |  6 ++--
- tools/cgroup/iocost_monitor.py |  7 +++--
- 3 files changed, 53 insertions(+), 25 deletions(-)
+   - Patch 4 skips the stop_machine_from_inactive_cpu() all-CPU
+     rendezvous (and the AP's cache disable/flush and MTRR reprogramming
+     in cache_cpu_init()) in cache_ap_online() when the AP's hardware
+     MTRR MSRs already match mtrr_state (which cache_aps_init() already
+     programmed during initial boot and warm reset preserves). This cuts
+     online time on Intel from 11.11 s to 8.69 s (-21.8%; total 20.74 s
+     -> 18.54 s, -10.6%) and on AMD from 3.92 s to 3.15 s (-19.6%; total
+     8.45 s -> 7.66 s, -9.3%).
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 2745bffcd..fcc7ae866 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -472,8 +472,8 @@ struct ioc_gq {
- 	 *
- 	 * When an idle cgroup becomes active its `active` goes from 0 to
- 	 * `weight`.  `inuse` is the surplus adjusted active weight.
--	 * `active` and `inuse` are used to calculate `hweight_active` and
--	 * `hweight_inuse`.
-+	 * `active` and `inuse` determine the hierarchical weights cached in
-+	 * `hweight_cache`.
- 	 *
- 	 * `last_inuse` remembers `inuse` while an iocg is idle to persist
- 	 * surplus adjustments.
-@@ -520,7 +520,9 @@ struct ioc_gq {
- 	u64				child_active_sum;
- 	u64				child_inuse_sum;
- 	u64				child_adjusted_sum;
--	int				hweight_gen;
-+	/* Generation in bits 63:32; active - 1 and inuse - 1 in 31:16/15:0. */
-+	atomic64_t			hweight_cache;
-+	/* Donation workspace, protected by ioc->lock. */
- 	u32				hweight_active;
- 	u32				hweight_inuse;
- 	u32				hweight_donating;
-@@ -1154,13 +1156,17 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
- {
- 	struct ioc *ioc = iocg->ioc;
- 	int lvl;
--	u32 hwa, hwi;
--	int ioc_gen;
--
--	/* hot path - if uptodate, use cached */
--	ioc_gen = atomic_read(&ioc->hweight_gen);
--	if (ioc_gen == iocg->hweight_gen)
-+	u32 hwa, hwi, ioc_gen;
-+	u64 cache;
-+
-+	/* Read the generation and both weights as one atomic snapshot. */
-+	ioc_gen = (u32)atomic_read(&ioc->hweight_gen);
-+	cache = (u64)atomic64_read(&iocg->hweight_cache);
-+	if ((u32)(cache >> 32) == ioc_gen) {
-+		hwa = ((cache >> 16) & (WEIGHT_ONE - 1)) + 1;
-+		hwi = (cache & (WEIGHT_ONE - 1)) + 1;
- 		goto out;
-+	}
- 
- 	/*
- 	 * Paired with wmb in commit_weights(). If we saw the updated
-@@ -1194,14 +1200,22 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
- 		hwi = div64_u64((u64)hwi * inuse, inuse_sum);
- 	}
- 
--	iocg->hweight_active = max_t(u32, hwa, 1);
--	iocg->hweight_inuse = max_t(u32, hwi, 1);
--	iocg->hweight_gen = ioc_gen;
-+	hwa = max_t(u32, hwa, 1);
-+	hwi = max_t(u32, hwi, 1);
-+	/*
-+	 * Each weight is in [1, WEIGHT_ONE]. Subtracting one preserves its
-+	 * full range in 16 bits, leaving 32 bits for the generation. An
-+	 * interrupt or another CPU can only observe a complete snapshot.
-+	 * A late refresher may overwrite a newer cache, but its generation
-+	 * stays paired with its own weights and forces a future refresh.
-+	 */
-+	cache = ((u64)ioc_gen << 32) | ((u64)(hwa - 1) << 16) | (hwi - 1);
-+	atomic64_set(&iocg->hweight_cache, (s64)cache);
- out:
- 	if (hw_activep)
--		*hw_activep = iocg->hweight_active;
-+		*hw_activep = hwa;
- 	if (hw_inusep)
--		*hw_inusep = iocg->hweight_inuse;
-+		*hw_inusep = hwi;
- }
- 
- /*
-@@ -1300,10 +1314,12 @@ static bool iocg_activate(struct ioc_gq *iocg, struct ioc_now *now)
- 
- 	/*
- 	 * Activate, propagate weight and start period timer if not
--	 * running.  Reset hweight_gen to avoid accidental match from
--	 * wrapping.
-+	 * running. Invalidate the cached generation to avoid accidental match
-+	 * from wrapping.
- 	 */
--	iocg->hweight_gen = atomic_read(&ioc->hweight_gen) - 1;
-+	atomic64_set(&iocg->hweight_cache,
-+		     ((u64)(u32)(atomic_read(&ioc->hweight_gen) - 1) << 32) |
-+		     (u32)atomic64_read(&iocg->hweight_cache));
- 	list_add(&iocg->active_list, &ioc->active_iocgs);
- 
- 	propagate_weights(iocg, iocg->weight,
-@@ -1863,7 +1879,7 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
- 	list_for_each_entry(iocg, surpluses, surplus_list) {
- 		u32 hwa;
- 
--		current_hweight(iocg, &hwa, NULL);
-+		current_hweight(iocg, &hwa, &iocg->hweight_inuse);
- 		after_sum += iocg->hweight_after_donation;
- 
- 		if (iocg->hweight_after_donation > hwa) {
-@@ -1946,8 +1962,10 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
- 
- 		iocg->hweight_donating = min(iocg->hweight_donating,
- 					     iocg->hweight_active);
--		iocg->hweight_after_donation = min(iocg->hweight_after_donation,
--						   iocg->hweight_donating - 1);
-+		if (iocg->hweight_donating > 1)
-+			iocg->hweight_after_donation =
-+				min(iocg->hweight_after_donation,
-+				    iocg->hweight_donating - 1);
- 		if (WARN_ON_ONCE(iocg->hweight_active <= 1 ||
- 				 iocg->hweight_donating <= 1 ||
- 				 iocg->hweight_after_donation == 0)) {
-@@ -1956,6 +1974,7 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
- 			pr_cont(": active=%u donating=%u after=%u\n",
- 				iocg->hweight_active, iocg->hweight_donating,
- 				iocg->hweight_after_donation);
-+			goto out;
- 		}
- 	}
- 
-@@ -2054,6 +2073,7 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
- 		__propagate_weights(iocg, iocg->active, inuse, true, now);
- 	}
- 
-+out:
- 	/* walk list should be dissolved after use */
- 	list_for_each_entry_safe(iocg, tiocg, &inner_walk, walk_list)
- 		list_del_init(&iocg->walk_list);
-@@ -2360,7 +2380,7 @@ static void ioc_timer_fn(struct timer_list *timer)
- 				 */
- 				TRACE_IOCG_PATH(inuse_shortage, iocg, &now,
- 						iocg->inuse, iocg->active,
--						iocg->hweight_inuse, new_hwi);
-+						old_hwi, new_hwi);
- 
- 				__propagate_weights(iocg, iocg->active,
- 						    iocg->active, true, &now);
-@@ -3032,6 +3052,9 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
- 	INIT_LIST_HEAD(&iocg->active_list);
- 	INIT_LIST_HEAD(&iocg->walk_list);
- 	INIT_LIST_HEAD(&iocg->surplus_list);
-+	atomic64_set(&iocg->hweight_cache,
-+		     ((u64)(u32)(atomic_read(&ioc->hweight_gen) - 1) << 32) |
-+		     U32_MAX);
- 	iocg->hweight_active = WEIGHT_ONE;
- 	iocg->hweight_inuse = WEIGHT_ONE;
- 
-diff --git a/include/trace/events/iocost.h b/include/trace/events/iocost.h
-index e772b1bc6..aac25edaa 100644
---- a/include/trace/events/iocost.h
-+++ b/include/trace/events/iocost.h
-@@ -34,6 +34,8 @@ DECLARE_EVENT_CLASS(iocost_iocg_state,
- 	),
- 
- 	TP_fast_assign(
-+		u64 cache = (u64)atomic64_read(&iocg->hweight_cache);
-+
- 		__assign_str(devname);
- 		__assign_str(cgroup);
- 		__entry->now = now->now;
-@@ -44,8 +46,8 @@ DECLARE_EVENT_CLASS(iocost_iocg_state,
- 		__entry->vtime = vtime;
- 		__entry->weight = iocg->weight;
- 		__entry->inuse = iocg->inuse;
--		__entry->hweight_active = iocg->hweight_active;
--		__entry->hweight_inuse = iocg->hweight_inuse;
-+		__entry->hweight_active = ((cache >> 16) & (WEIGHT_ONE - 1)) + 1;
-+		__entry->hweight_inuse = (cache & (WEIGHT_ONE - 1)) + 1;
- 	),
- 
- 	TP_printk("[%s:%s] now=%llu:%llu vrate=%llu "
-diff --git a/tools/cgroup/iocost_monitor.py b/tools/cgroup/iocost_monitor.py
-index bdd78ba27..8a4f844c9 100644
---- a/tools/cgroup/iocost_monitor.py
-+++ b/tools/cgroup/iocost_monitor.py
-@@ -149,8 +149,11 @@ class IocgStat:
-         self.weight = iocg.weight.value_() / WEIGHT_ONE
-         self.active = iocg.active.value_() / WEIGHT_ONE
-         self.inuse = iocg.inuse.value_() / WEIGHT_ONE
--        self.hwa_pct = iocg.hweight_active.value_() * 100 / WEIGHT_ONE
--        self.hwi_pct = iocg.hweight_inuse.value_() * 100 / WEIGHT_ONE
-+        hweight_cache = iocg.hweight_cache.counter.value_()
-+        hwa = ((hweight_cache >> 16) & (WEIGHT_ONE - 1)) + 1
-+        hwi = (hweight_cache & (WEIGHT_ONE - 1)) + 1
-+        self.hwa_pct = hwa * 100 / WEIGHT_ONE
-+        self.hwi_pct = hwi * 100 / WEIGHT_ONE
-         self.address = iocg.value_()
- 
-         vdone = iocg.done_vtime.counter.value_()
+2. Scheduler domain rebuilds, deadline accounting, and vmstat (Patches 5-8):
+
+   Once the x86 hardware bottlenecks are removed, CPU hotplug on both
+   Intel and AMD is dominated by O(N^2) and O(N^3) work inside
+   partition_sched_domains_locked(), build_sched_domains(), and
+   refresh_zone_stat_thresholds():
+
+   - Patch 5 avoids redundant O(N^3) group weight, SMT core-mask, and
+     asym_prefer_cpu recomputations in init_sched_groups_capacity() by
+     caching those fields on struct sched_group_capacity, reuses
+     already-initialized sgc instances in init_overlap_sched_group(), and
+     allocates sdd->sg, sdd->sgc, and d->sds lazily on demand. This cuts
+     total hotplug time on Intel from 18.54 s to 9.20 s (-50.4%) and on
+     AMD from 7.66 s to 5.29 s (-30.9%).
+
+   - Patch 6 eliminates three O(N^2) dl_server bandwidth walks per
+     hotplug step. Because fair_server is enabled on every runqueue by
+     default, rq_attach_root() performs O(N^2) remote extra_bw updates
+     when attaching def_root_domain during teardown and again when
+     attaching the new root_domain during build, followed by a nested
+     O(N^2) loop in dl_clear_root_domain(). Dropping the redundant
+     __dl_server_attach_root() calls in rq_attach_root() and converting
+     dl_clear_root_domain() to two linear O(N) passes cuts
+     dl_clear_root_domain() at ~500 CPUs from 1.8-5.5 ms to < 65 us,
+     reducing total hotplug time by 30.5% on Intel (9.20 s -> 6.39 s)
+     and 18.7% on AMD (5.29 s -> 4.30 s).
+
+   - Patch 7 eliminates per-CPU bitmap scans over already-covered groups
+     in build_sched_groups(), reuses temporary per-CPU domain pointer
+     arrays across rebuilds instead of calling alloc_percpu() and
+     free_percpu() on every hotplug step, reuses precomputed domain/child
+     span weights, and hoists LLC size calculations. This cuts total
+     hotplug time by 15.0% on Intel (6.39 s -> 5.43 s) and 19.5% on AMD
+     (4.30 s -> 3.46 s).
+
+   - Patch 8 avoids unconditionally zeroing and rewriting every online
+     CPU's per-CPU stat_threshold in refresh_zone_stat_thresholds() on
+     every hotplug step (since calculate_normal_threshold() only changes
+     at powers of two and is clamped once num_online_cpus() >= 64),
+     reducing refresh_zone_stat_thresholds() by ~88-91% on Intel and ~51%
+     on AMD, and bringing total hotplug time down to 5.07 s on Intel
+     (-6.6%) and 3.38 s on AMD (-2.3%).
+
+Pasha Tatashin (8):
+  x86/realmode: Remove unnecessary WBINVD from AP startup trampoline
+  x86/smp: Remove unnecessary WBINVD from mwait_play_dead()
+  x86/mce/intel: Bound cmci_rediscover() to a single topology peer
+  x86/cacheinfo, mtrr: Skip stop_machine rendezvous in cache_ap_online()
+    when MTRRs match
+  sched/topology: Avoid redundant O(N^3) group capacity walks and unused
+    allocations in build_sched_domains()
+  sched/deadline, topology: Avoid O(N^2) dl_server bandwidth walks
+    during root_domain rebuilds
+  sched/topology: Avoid redundant percpu allocations and bitmap walks in
+    build_sched_domains()
+  mm/vmstat: Avoid redundant per-CPU stat_threshold writes in
+    refresh_zone_stat_thresholds()
+
+ arch/x86/include/asm/mtrr.h          |   2 +
+ arch/x86/kernel/cpu/cacheinfo.c      |   7 +
+ arch/x86/kernel/cpu/mce/intel.c      |  57 ++++-
+ arch/x86/kernel/cpu/mtrr/generic.c   |  49 ++++
+ arch/x86/kernel/smpboot.c            |  16 +-
+ arch/x86/realmode/rm/trampoline_32.S |   2 -
+ arch/x86/realmode/rm/trampoline_64.S |   1 -
+ include/linux/cpuset.h               |   6 +-
+ include/linux/sched/deadline.h       |   1 -
+ kernel/sched/deadline.c              |  89 ++++---
+ kernel/sched/sched.h                 |  10 +-
+ kernel/sched/topology.c              | 339 ++++++++++++++++-----------
+ mm/vmstat.c                          |  58 ++---
+ 13 files changed, 422 insertions(+), 215 deletions(-)
+
+
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+-- 
+2.56.0.385.gd3acb90ef8-goog
