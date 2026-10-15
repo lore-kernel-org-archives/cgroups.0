@@ -1,145 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E07DC56C641;
-	Thu, 15 Oct 2026 19:11:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F71B481236
+	for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 20:14:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792091498; cv=none; b=C6TdoWb7zWmfLbO8B0kjzdyJ8RGQHFcZT5xDh6L2wH8hdxuUrkEDhdMsmtCbL2tE+Rz8Nq+acUr4EGXSMSLCSNc5SA8dnYk7g/hq1h7/v6fnXZVJ2cFbehTXEpiXPTrM2uFOLQZT/C0fe9i5dhM40ZQLk/5av+a3Kq8RlYwQXIc=
+	t=1792095245; cv=none; b=nAdjJV/uIGZMCEexzeMxbncbVGP15WqNPUxIsFbb+K4vY8duUv+gVcrhExL3T+5wGnYnTy5ikJVF9olG4IOMnDe9UX/jQOeZdD72MX0ma5axkMYMwS7XQt/2QGyJo/72/EiBNTVWXzapXCQkAkUho3mlls9xJs9gxERmZIZTGbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792091498; c=relaxed/simple;
-	bh=WfYnkLvsxFQ2Iy1AZblL4oivfqAitetwqf0jIRb78zM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nx60Wqd2S2bwOHqe1EhEk8f7dMkb3BW6ZyjhXp6l1O1i0iVA473eZh8EXWgLB5dioTLnSeuf6LyMl1u7fj7DtJJ7WXNFaP28T5ivTrMrw+u8tmOSPCmlr4HVcd2I1ILwupXSYQbhKulogTdWBgSda0mSccBL9Id/8/FTDC3H4P0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cOi0wl0w; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792095245; c=relaxed/simple;
+	bh=SnbfDLY4tTJqB1v8LhA/WdScgHkhh06wd2LjFSIubrE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=trhbp82/Km7mFeMfFQPC1lTnmwO5nr/8BGRdFiqCzUWtNA5SdyZoLoSsQ3BZ/40a+WhDd8VvzdhvKNAGWrRwiYTjmhSjVyD8jtNa+HYXufx2S5JmsaENCq39k/lprec9abSW3HzvOCc6wqJxER9ockzFkVi1cN5JeAHH2xw8SoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NGd0BrrN; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cOi0wl0w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB8A11F000C4;
-	Thu, 15 Oct 2026 19:11:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792091483;
-	bh=SAUwP8uv+umPvOo9Qj4Nscuwt4gS+Jp3uOlXS5VCJX8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cOi0wl0wIMf7h6fRzBGzvmfNVak4QfBXmz5UnHGQQ//LoBbqmk8ISLwwLjlNRe5Zs
-	 GA+DIVBtyk2epQQzkS5TNPlbIs+JwXJKrmqRcEsBJSWfZtwEwp6uOhULQfYLjtyqt4
-	 5KFgSQL9Dhu9YzqkojCN/j3wcVZQRzcNzEZZCuKeaA4OZVyM6vtQtE5Sek2XP1xDQo
-	 mkYJ0zv8NUdXBgNONVQzRTD6VJVLkWBPUdxhdnHztVjO68F4vBJaRJUizOkps3jn4S
-	 0PY3ZMjpwDIuyI2Bc9jmPKHvakp8HRDb918uC+aEDjli9MTrM19VmYHLO5mSfkiozk
-	 53TZ4XwXpuMYg==
-Date: Thu, 15 Oct 2026 20:11:21 +0100
-From: Harry Yoo <harry@kernel.org>
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, 
-	SJ Park <sj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
-	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
-	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
-	Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, 
-	Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>, 
-	Zicheng Wang <wangzicheng@honor.com>, Chen Ridong <chenridong@xiaomi.com>, 
-	Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>, 
-	Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh <ehab.ababneh@intel.com>, 
-	zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang <lianux.mm@gmail.com>, 
-	Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	damon@lists.linux.dev
-Subject: Re: [PATCH v4 03/17] mm/memcg: add folio-based lruvec live helper
-Message-ID: <atEkfmRFgXJCbJuK@thinkstation>
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016-mglru-fg-v4-3-2106750c0bfa@tencent.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NGd0BrrN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792095242;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UYRSFyiULvh6szKRePAOtHKD+7/o0oF90IjOubYIGB4=;
+	b=NGd0BrrNNpUaHMu1wF9oB7YWTthf+jJTtMx5f6hyc54RnkIwCH/rSMl9ngcTLKjrWhqaDb
+	zH6LP1SPTj3Y2M+SaoKB0A3Fj3Y8BEqkC46kUu1RetC2nDRsCO6wCc2jIEtGTokfJsqCs3
+	ffUwcqng3WmNf7Vu9Pq24zjtipuWND0=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-600-IdpI9AU0N62UZVqT0kj7fQ-1; Thu,
+ 15 Oct 2026 20:13:56 +0000
+X-MC-Unique: IdpI9AU0N62UZVqT0kj7fQ-1
+X-Mimecast-MFC-AGG-ID: IdpI9AU0N62UZVqT0kj7fQ_1792095234
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A9BBB1955F1A;
+	Thu, 15 Oct 2026 20:13:53 +0000 (UTC)
+Received: from [100.91.18.181] (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6D8397C6;
+	Thu, 15 Oct 2026 20:13:50 +0000 (UTC)
+Message-ID: <f12ad8ee-4cad-4c7e-a0c9-c22fe894f14c@redhat.com>
+Date: Thu, 15 Oct 2026 16:13:49 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261016-mglru-fg-v4-3-2106750c0bfa@tencent.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 0/2] tick/nohz: Add runtime control of non-idle tick
+ suppression
+To: Peng Wang <peng_wang@linux.alibaba.com>
+Cc: Anna-Maria Behnsen <anna-maria@linutronix.de>,
+ Frederic Weisbecker <frederic@kernel.org>, Ingo Molnar <mingo@kernel.org>,
+ Thomas Gleixner <tglx@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Danilo Krummrich
+ <dakr@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>,
+ He Rongguang <herongguang@linux.alibaba.com>, linux-kernel@vger.kernel.org,
+ linux-api@vger.kernel.org, driver-core@lists.linux.dev,
+ linux-trace-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <cover.1792067271.git.peng_wang@linux.alibaba.com>
+ <8d10bb84-d312-4be0-8c43-ddd602850a1d@redhat.com>
+ <atER8P0ws6Gg4GWE@MacBook-Pro.local>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <atER8P0ws6Gg4GWE@MacBook-Pro.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-On Fri, Oct 16, 2026 at 02:15:52AM +0800, Kairui Song via B4 Relay wrote:
-> From: Kairui Song <kasong@tencent.com>
-> 
-> Add a helper that resolves a stable lruvec for a folio under RCU
-> without taking the lruvec lock.  It takes a folio directly so the
-> lruvec lookup happens inside the RCU read-side critical section,
-> which a lruvec-based interface cannot guarantee.
-> 
-> No functional change.
-> 
-> Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
+On 10/15/26 1:48 PM, Peng Wang wrote:
+> On Thu, Oct 15, 2026 at 12:00:25PM -0400, Waiman Long wrote:
+>> On 10/15/26 8:43 AM, Peng Wang wrote:
+>>> Workloads and their need for periodic ticks can change after boot.
+>>> This series lets userspace choose at runtime which CPUs in the boot-time
+>>> nohz_full set retain the non-idle scheduler tick and which are permitted
+>>> to stop it, while preserving the existing isolation configuration.
+>>>
+>>> The first patch adds a per-CPU tick dependency; the second exposes a
+>>> sysfs CPU list. Permission defaults to all nohz_full CPUs. Revocation
+>>> uses the existing asynchronous kick. Idle tick suppression is unchanged,
+>>> and policy persists across hotplug.
+>> So you are basically setting up more nohz_full CPUs than the system actually
+>> needs to use at the moment and so want to disable nohz/tick part of
+>> nohz_full CPUs that don't need it. Can you elaborate more about the problems
+>> solve by introducing this new behavior?
+> Hi Waiman,
+>
+> Yes. We have CPU-pinned workloads that benefit from reduced periodic
+> tick interference. The desired tick policy changes with CPU allocation.
+>
+> With spare capacity, we allow selected nohz_full CPUs to stop their
+> tick. When capacity is fully allocated, we prefer to retain the
+> non-idle periodic tick across CPUs, avoiding an additional difference
+> in tick interference between housekeeping and nohz_full CPUs.
+What problem does that cause?
+> A CPU may still have only one runnable task in either case, so the
+> existing tick dependencies do not express this policy.
+>
+> This series keeps the boot-time nohz_full CPU set, context tracking,
+> RCU offloading and housekeeping configuration unchanged. It only
+> controls whether those CPUs may stop their non-idle tick. The policy
+> can be changed without taking CPUs offline.
 
-This new helper is doing the the same thing as what
-get_non_dying_memcg_start/end() do.
+So the policy is to make the tick keeps running when there is only one 
+running task. Right? I am just not clear about the advantage of doing 
+that. Is there a use case that will require this particular feature? I 
+doubt this will get accepted unless there is a compelling reason to show 
+why we will want to have this feature.
 
->  include/linux/memcontrol.h | 39 +++++++++++++++++++++++++++++++++++++++
->  1 file changed, 39 insertions(+)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 74110a324f9e..829ab776ab44 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -1535,6 +1535,45 @@ static inline void lruvec_lock_irq(struct lruvec *lruvec)
->  	spin_lock_irq(&lruvec->lru_lock);
->  }
->  
-> +/**
-> + * folio_lruvec_live_get - get a live lruvec for a folio under RCU
-> + * @folio: the folio
-> + *
-> + * Computes @folio's lruvec and walks up to the nearest live ancestor
-> + * if the folio's memcg is dying.  Paired with folio_lruvec_live_put().
-> + * The result may be stale: RCU keeps it alive but does not pin @folio
-> + * to it.  That is fine as the counters are fixed up on reparenting.
-> + *
-> + * Return: the live lruvec, with rcu_read_lock held.
-> + */
-> +static inline struct lruvec *folio_lruvec_live_get(struct folio *folio)
-> +{
-> +#ifdef CONFIG_MEMCG
-> +	struct lruvec *lruvec;
-> +	struct pglist_data *pgdat;
-> +	struct mem_cgroup *memcg;
-> +
-> +	rcu_read_lock();
-> +	lruvec = folio_lruvec(folio);
-> +	pgdat = lruvec_pgdat(lruvec);
-> +	memcg = lruvec_memcg(lruvec);
-> +	while (unlikely(memcg && css_is_dying(&memcg->css))) {
-> +		memcg = parent_mem_cgroup(memcg);
-> +		lruvec = mem_cgroup_lruvec(memcg, pgdat);
-> +	}
-> +	return lruvec;
-> +#else
-> +	return folio_lruvec(folio);
-> +#endif
-> +}
-> +
-> +static inline void folio_lruvec_live_put(struct lruvec *lruvec)
-> +{
-> +#ifdef CONFIG_MEMCG
-> +	rcu_read_unlock();
-> +#endif
-> +}
-> +
->  static inline struct lruvec *lruvec_live_lock_irq(struct lruvec *lruvec)
->  {
->  #ifdef CONFIG_MEMCG
-> 
-> -- 
-> 2.56.0
-
--- 
 Cheers,
-Harry / Hyeonggon
+Longman
+
