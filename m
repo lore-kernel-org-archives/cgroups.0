@@ -1,330 +1,223 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-198.mta1.migadu.com [95.215.58.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20D24446855;
-	Fri, 16 Oct 2026 08:43:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28507470139
+	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 09:10:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792140195; cv=none; b=Egq1tFujplLpga5cF1w3cSY+VQi5aAWF/dQ1B8ghzpIGs3gr2Zd7YprL3G0CszSn1952IlsLVeKa7Pmb/356M+BEvjl2GEwink4pUAeCx4aTeyQpicAAYgotT9mtOblIswA+mtCzXo8xbKi37/gBE8jb1RMtIMKU0jKakviMXR8=
+	t=1792141851; cv=none; b=G/94sOGwdLJNc5IYWSwe5/ppyuvXsFhU/NMAq4HCxjKfWensIIE3nQKHqLLCorAEbcSrGycFcL3dmYv1+iTF26Iq0jP5MMWT2e4d8TslVs1yZa+PWHW0PX6SVj/i9m4tEkKAbeLCI+Xk6FG8t2bx6XwO2xqA6xK9Fi3MCHeN4EI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792140195; c=relaxed/simple;
-	bh=JPSACOaMlTfpve9+sZEgKufMkhYE6UnAah6afFDSS3M=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=c3TEdNDuPyuC/qaOk8P/v9j69RE4QUaKveGwg3bLjD+xRcVTGJp+5Gfee+XjM0OErlhihjvTvJIzUQG2yS6Dgp3Mk0uZ/kl8swz1HYsSbCfXMEQjob/VOsQkzF3MRo5xhumWD4KausIOKzbkx0KS9Pd0c77W9zJMbb/diODGJiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mK5F7RTu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792141851; c=relaxed/simple;
+	bh=OENjaTjOgQb8XGZqbEf0lEkD3kxNX07o2dz0fysyuho=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=YG2vf/Xhnql7toNv/CufcE7c6snWvHdVSACwNEPMkdUde3SFdtzm7P7XAKMjZCGlPKXSXTC6zx2bz3K85GGhgWr7x4iABbtjb9eF9IbdB4vqLiCBDL51B03eLo7pcvhppeXgRlComTSyoYOZrEL9rQ+kTOMRdLZ1GsXL4WbEOoc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rpoRrS5a; arc=none smtp.client-ip=95.215.58.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mK5F7RTu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C31DE1F000C4;
-	Fri, 16 Oct 2026 08:42:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792140188;
-	bh=uuyYLjc88NlqPqUJ8TG17oI3ayh7MbBbcx6eKptcvgM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mK5F7RTuDashr/9tLlHIbBsWn89AqnBSS/stQsnZFK0udCKKJwwx0mXZQaQ6y0/mL
-	 v7mGlbkHWvwzlsaxzGgTYFMZenluZzn+ThpKvxfT1FQwf36UkwlkhVENj2wBZxT6cs
-	 Oa73yOwEZyWaWTtUMKIkWXdzfEtYmHJhKqUn83wmEv5Y9Nr09h6UQgTdLpZXLBsi7T
-	 BcJoBYPrSNER1hYyvdrJ3OG1NANEuudau4hCEy8QMvdL5eSFm1HA0gqGHf6uV6haqE
-	 H7kcsX+z4rgxil/LicfKzRXo4ZkbGiIH/R/Cu4kTDkLTAUpEZrSf+0BJA/cTdijfKW
-	 IT70BEsYqnSLA==
-From: "Barry Song (Xiaomi)" <baohua@kernel.org>
-To: devnull+kasong.tencent.com@kernel.org
-Cc: akpm@linux-foundation.org,
-	axelrasmussen@google.com,
-	baohua@kernel.org,
-	baolin.wang@linux.alibaba.com,
-	baoquan.he@linux.dev,
-	cgroups@vger.kernel.org,
-	chenridong@xiaomi.com,
-	chrisl@kernel.org,
-	damon@lists.linux.dev,
-	david@kernel.org,
-	dev.jain@arm.com,
-	ehab.ababneh@intel.com,
-	gourry@gourry.net,
-	hannes@cmpxchg.org,
-	hughd@google.com,
-	kasong@tencent.com,
-	kunwu.chan@gmail.com,
-	lance.yang@linux.dev,
-	liam@infradead.org,
-	lianux.mm@gmail.com,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	liuxiang.277@bytedance.com,
-	ljs@kernel.org,
-	mhocko@kernel.org,
-	muchun.song@linux.dev,
-	nico.pache@linux.dev,
-	nphamcs@gmail.com,
-	qi.zheng@linux.dev,
-	rientjes@google.com,
-	roman.gushchin@linux.dev,
-	ryan.roberts@arm.com,
-	ryncsn@gmail.com,
-	shakeel.butt@linux.dev,
-	shikemeng@huaweicloud.com,
-	sj@kernel.org,
-	surenb@google.com,
-	tz2294@columbia.edu,
-	usama.arif@linux.dev,
-	vbabka@kernel.org,
-	vernon2gm@gmail.com,
-	wangzicheng@honor.com,
-	weixugc@google.com,
-	willy@infradead.org,
-	ying.huang@linux.alibaba.com,
-	youngjun.park@lge.com,
-	yuanchu@google.com,
-	yuzhao@google.com,
-	zhaozhengzhuo@uniontech.com,
-	ziy@nvidia.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v4 00/17] mm/mglru: frequency guided promotion (MGLRU-FG) and flag cleanup
-Date: Fri, 16 Oct 2026 16:42:56 +0800
-Message-Id: <20261016084256.12955-1-baohua@kernel.org>
-X-Mailer: git-send-email 2.39.3 (Apple Git-146)
-In-Reply-To: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rpoRrS5a"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=OENjaTjOgQb8XGZqbEf0lEkD3kxNX07o2dz0fysyuho=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792141846; v=1; x=1792746646;
+ b=rpoRrS5a1PR0n77GkrgpQtkfCZiSCkTqYPQmHkMrlKTb3QLWzUX5wSPpaRGOncktWn1egHmt
+ WkoqcdYjfO0mBpGqQOAaBZLeZMfinRLqp/+vpvcapMUX9NO4uUvImqCEvx0pTl1pcJ0PEsqNzC9
+ m+dyKWNcCgkUNfhKBu/lo+gY=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id 059766e191225fb4;
+	Fri, 16 Oct 2026 09:10:20 +0000
+X-Mizu-Trace-ID: 059766e191225fb4
+X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: Re: [PATCH v4 03/17] mm/memcg: add folio-based lruvec live helper
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <CAMgjq7D-2HyvuD5U58ohv4YuyuCEbxYAO_wxkx==WxhsNQrXXw@mail.gmail.com>
+Date: Fri, 16 Oct 2026 17:09:54 +0800
+Cc: linux-mm@kvack.org,
+ "Liam R. Howlett" <liam@infradead.org>,
+ SJ Park <sj@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Qi Zheng <qi.zheng@linux.dev>,
+ Ying Huang <ying.huang@linux.alibaba.com>,
+ Chris Li <chrisl@kernel.org>,
+ Baoquan He <baoquan.he@linux.dev>,
+ Nico Pache <nico.pache@linux.dev>,
+ Usama Arif <usama.arif@linux.dev>,
+ Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ David Hildenbrand <david@kernel.org>,
+ Lorenzo Stoakes <ljs@kernel.org>,
+ Barry Song <baohua@kernel.org>,
+ Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>,
+ Wei Xu <weixugc@google.com>,
+ Vlastimil Babka <vbabka@kernel.org>,
+ Suren Baghdasaryan <surenb@google.com>,
+ Kemeng Shi <shikemeng@huaweicloud.com>,
+ Nhat Pham <nphamcs@gmail.com>,
+ Youngjun Park <youngjun.park@lge.com>,
+ Zi Yan <ziy@nvidia.com>,
+ Gregory Price <gourry@gourry.net>,
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>,
+ Ryan Roberts <ryan.roberts@arm.com>,
+ Dev Jain <dev.jain@arm.com>,
+ Lance Yang <lance.yang@linux.dev>,
+ Hugh Dickins <hughd@google.com>,
+ David Rientjes <rientjes@google.com>,
+ Yu Zhao <yuzhao@google.com>,
+ Vernon Yang <vernon2gm@gmail.com>,
+ Zicheng Wang <wangzicheng@honor.com>,
+ Chen Ridong <chenridong@xiaomi.com>,
+ Tal Zussman <tz2294@columbia.edu>,
+ Xiang Liu <liuxiang.277@bytedance.com>,
+ Ehab Ababneh <ehab.ababneh@intel.com>,
+ zhaozhengzhuo <zhaozhengzhuo@uniontech.com>,
+ Lian Wang <lianux.mm@gmail.com>,
+ Kunwu Chan <kunwu.chan@gmail.com>,
+ linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org,
+ damon@lists.linux.dev
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <89B5F552-25E1-4EE7-9B76-8239490125B0@linux.dev>
+References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
+ <20261016-mglru-fg-v4-3-2106750c0bfa@tencent.com>
+ <342E57E7-9B7F-4193-805E-D1EBB41299FF@linux.dev>
+ <CAMgjq7D-2HyvuD5U58ohv4YuyuCEbxYAO_wxkx==WxhsNQrXXw@mail.gmail.com>
+To: Kairui Song <ryncsn@gmail.com>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-On Fri, Oct 16, 2026 at 2:15 AM Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org> wrote:
-[...]
->
-> LevelDB Scan/Get
-> ================
-> I also retested the LevelDB benchmark from the cache_ext paper [5].
-> Interestingly, mainline MGLRU already beats CLRU on this one after a
-> recent change in lru_gen_folio_seq that bumps new folios with refs == 1
-> to the second-oldest generation as discussed. That change accidentally
-> gave random reads a higher hotness level while making sequential reads
-> much colder as described before [14]. However it's unreliable and
-> incorrect because it depends on LRU drain timing, and hurts some workloads
-> as reported, or where the sequential part is actually hotter (any workload
-> involving hotter large file and many small cold files will be affected)
-> which is reproduced below.
->
-> This series improves it while covering ordinary workloads too and should
-> fix regressions:
->
-> LevelDB Scan / Get, Throughput Total:
-> CLRU:         4708.3 ops/s
-> MGLRU:        5026.9 ops/s (faster than CLRU, but hurts other workloads)
-> MGLRU After:  5179.2 ops/s (even better in all cases, and no regression)
->
-> The hot-sequential and cold-random workload can be easily reproduced with
-> SQLite and grep. SQLite continuously scans and looks up a small hot
-> portion of a DB file, while grep iterates over a set of small files much
-> larger than RAM [6]:
->
->          SQLite scan & lookup time:       Grep iterate time:
-> CLRU:                       14.51ms               13281.37ms
-> MGLRU mainline:            567.05ms               13694.47ms
-> MGLRU After this series:    10.58ms               12930.43ms
->
 
-Thanks, Kairui. I'll do a thorough review of the whole patchset over
-the next two weeks.
 
-BTW, do you think we need a quick fix patch like the one below
-for the above problem before this patchset, so that it can be
-backported to stable? I assume your patchset is too large to
-backport?
+> On Oct 16, 2026, at 15:54, Kairui Song <ryncsn@gmail.com> wrote:
+>=20
+> On Fri, Oct 16, 2026 at 3:39=E2=80=AFPM Muchun Song =
+<muchun.song@linux.dev> wrote:
+>>=20
+>>> On Oct 16, 2026, at 02:15, Kairui Song via B4 Relay =
+<devnull+kasong.tencent.com@kernel.org> wrote:
+>>>=20
+>>> From: Kairui Song <kasong@tencent.com>
+>>>=20
+>>> Add a helper that resolves a stable lruvec for a folio under RCU
+>>> without taking the lruvec lock.  It takes a folio directly so the
+>>> lruvec lookup happens inside the RCU read-side critical section,
+>>> which a lruvec-based interface cannot guarantee.
+>>>=20
+>>> No functional change.
+>>>=20
+>>> Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
+>>> Signed-off-by: Kairui Song <kasong@tencent.com>
+>>> ---
+>>> include/linux/memcontrol.h | 39 =
++++++++++++++++++++++++++++++++++++++++
+>>> 1 file changed, 39 insertions(+)
+>>>=20
+>>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>>> index 74110a324f9e..829ab776ab44 100644
+>>> --- a/include/linux/memcontrol.h
+>>> +++ b/include/linux/memcontrol.h
+>>> @@ -1535,6 +1535,45 @@ static inline void lruvec_lock_irq(struct =
+lruvec *lruvec)
+>>> spin_lock_irq(&lruvec->lru_lock);
+>>> }
+>>>=20
+>>> +/**
+>>> + * folio_lruvec_live_get - get a live lruvec for a folio under RCU
+>>> + * @folio: the folio
+>>> + *
+>>> + * Computes @folio's lruvec and walks up to the nearest live =
+ancestor
+>>> + * if the folio's memcg is dying.  Paired with =
+folio_lruvec_live_put().
+>>> + * The result may be stale: RCU keeps it alive but does not pin =
+@folio
+>>> + * to it.  That is fine as the counters are fixed up on =
+reparenting.
+>>> + *
+>>> + * Return: the live lruvec, with rcu_read_lock held.
+>>> + */
+>>> +static inline struct lruvec *folio_lruvec_live_get(struct folio =
+*folio)
+>>> +{
+>>> +#ifdef CONFIG_MEMCG
+>>> +     struct lruvec *lruvec;
+>>> +     struct pglist_data *pgdat;
+>>> +     struct mem_cgroup *memcg;
+>>> +
+>>> +     rcu_read_lock();
+>>> +     lruvec =3D folio_lruvec(folio);
+>>> +     pgdat =3D lruvec_pgdat(lruvec);
+>>> +     memcg =3D lruvec_memcg(lruvec);
+>>> +     while (unlikely(memcg && css_is_dying(&memcg->css))) {
+>>> +             memcg =3D parent_mem_cgroup(memcg);
+>>> +             lruvec =3D mem_cgroup_lruvec(memcg, pgdat);
+>>> +     }
+>>> +     return lruvec;
+>>=20
+>> Hi Kairui,
+>>=20
+>=20
+> Hi Muchun, thanks for the review.
+>=20
+>> Actually, we don't have any means to guarantee that the memcg
+>> to which the returned lruvec belongs will not become dying
+>> after the return, right?
+>=20
+> Yeah but Qi once mentioned that RCU prevents reparenting, right? Even
+> if the memcg is dead after return, things happended to it
+> (non-hieratical counter reparenting, ones in __lru_gen_reparent_memcg)
+> will only occurs after RCU unlock so we can apply counter update to it
+> without grabbing an ref, just hold the RCU.
 
-From f9683205d2ab6e3b185022d7d5af3496dfe5f35f Mon Sep 17 00:00:00 2001
-From: "Barry Song (Xiaomi)" <baohua@kernel.org>
-Date: Fri, 16 Oct 2026 11:48:06 +0800
-Subject: [PATCH] mm/mglru: fix using folio_mark_accessed to replace
- folio_set_active
+Thanks for the info. I checked the code and confirmed that, aside from
+keeping the memcg from being freed, RCU also ensures the memcg doesn't =
+get
+reparented. If your scenario requires mutual exclusion with the =
+reparenting
+operation, RCU can handle that.
 
-Commit 6cbdd9726fb5 ("mm/mglru: use folio_mark_accessed to
-replace folio_set_active") tried to avoid over-protecting
-fault-around read-ahead file folios by placing them in the
-second-oldest generation instead of the youngest generations.
+Thanks,
+Muchun
 
-However, it abuses `PG_referenced` on read-ahead file folios
-for this purpose, potentially coupling their handling with
-normal syscall-based file accesses that also use
-`PG_referenced`.
+>=20
+>>> +#else
+>>> +     return folio_lruvec(folio);
+>>=20
+>> Then, I'm wondering why folio_lruvec() doesn't apply to the
+>> memcg scenario.
+>>=20
+>> Internally, folio_lruvec() obtains the memcg through
+>> obj_cgroup_memcg(). So when the memcg becomes dying, it should
+>> be reparented to the parent memcg within a short time.
+>=20
+> I wasn't sure if grabbing RCU can ensure an already dead cgroup has
+> not been reparented yet. If we apply the counter update to a already
+> reparented lruvec, then the counter is leaked. This new helper is just
+> a folio version of lruvec_live_lock_irq.
+>=20
+> I got the idea from commit de4660898b7a, which says:
+>=20
+> """
+> .... check CSS_DYING under RCU before
+> flushing the pending batch.  A non-dying memcg keeps the original =
+lruvec
+> stable against RCU-delayed offlining; a dying memcg redirects the =
+deltas
+> to the first non-dying ancestor.
+> """
+>=20
+> Applying counter update to a dead but not reparented lruvec is fine =
+though.
 
-This could regress some workloads, as reported by Kairui Song[1]
-and Ehab Ababneh[2]. Many thanks to both for reporting these
-issues!
-
-The long-term fix is Kairui's MGLRU-FG, but in the meantime,
-we also need a quick fix that can be backported to stable.
-
-This patch reverts all of the original commit's behavior that
-abuses `PG_referenced`, while preserving the semantics of
-avoiding over-protection of fault-around read-ahead file
-folios by adjusting only `lru_gen_folio_seq()`.
-Specifically, fault-around read-ahead file folios with
-`PG_active` set but `PG_workingset` clear are placed in the
-second-oldest generation.
-Activated file folios and refaulted workingset file folios
-are still placed in the youngest generations.
-
-Build kernel cases in a memcg shows it not only perserve
-the benefit of original patch, but also even improve
-performance further.
-
-w/o fix:
-
-real    1m49.094s
-user    25m31.484s
-sys     3m40.959s
-pswpin: 662112
-pswpout: 2504415
-pgpgin: 4424336
-pgpgout: 10355273
-refault_file: 359626
-refault_anon: 670724
-
-w/ fix:
-
-real	1m48.913s
-user	25m31.639s
-sys	3m30.875s
-pswpin: 689815
-pswpout: 2689894
-pgpgin: 4422659
-pgpgout: 11043464
-refault_file: 326566
-refault_anon: 697138
-
-Revert original patch:
-
-real	1m50.044s
-user	25m37.137s
-sys	4m4.493s
-pswpin: 1349087
-pswpout: 4317933
-pgpgin: 7083597
-pgpgout: 17602735
-refault_file: 337676
-refault_anon: 1368542
-
-[1] https://lore.kernel.org/linux-mm/20261003-mglru-fg-v3-0-cbd4546a5bd9@tencent.com/
-[2] https://lore.kernel.org/linux-mm/20260901180704.168106-1-ehab.ababneh@intel.com/
-Fixes: 6cbdd9726fb5 ("mm/mglru: use folio_mark_accessed to replace folio_set_active")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Barry Song (Xiaomi) <baohua@kernel.org>
----
- include/linux/mm_inline.h |  8 +++++---
- mm/folio.c                | 16 +++-------------
- mm/vmscan.c               |  9 ++-------
- mm/workingset.c           | 10 ++++------
- 4 files changed, 14 insertions(+), 29 deletions(-)
-
-diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index ab69b9930893..7aaff4e06e80 100644
---- a/include/linux/mm_inline.h
-+++ b/include/linux/mm_inline.h
-@@ -311,7 +311,8 @@ static inline unsigned long lru_gen_folio_seq(const struct lruvec *lruvec,
- 	 * | Accessed through page tables and  | Accessed through file descriptors |
- 	 * | promoted by folio_update_gen()    | and protected by folio_inc_gen()  |
- 	 * +-----------------------------------+-----------------------------------+
--	 * | PG_active (set while isolated)    |                                   |
-+	 * | PG_active (set while isolated)    | PG_active (files|                 |
-+	 * |                                   | fault-readahead)|                 |
- 	 * +-----------------+-----------------+-----------------+-----------------+
- 	 * |  PG_workingset  |  PG_referenced  |  PG_workingset  |  LRU_REFS_FLAGS |
- 	 * +-----------------------------------+-----------------------------------+
-@@ -319,7 +320,8 @@ static inline unsigned long lru_gen_folio_seq(const struct lruvec *lruvec,
- 	 * |<---------------------------- MAX_NR_GENS ---------------------------->|
- 	 */
- 	if (folio_test_active(folio))
--		gen = MIN_NR_GENS - folio_test_workingset(folio);
-+		gen = MIN_NR_GENS - folio_test_workingset(folio) +
-+		      (type ? !folio_test_workingset(folio) : 0);
- 	else if (reclaiming)
- 		gen = MAX_NR_GENS;
- 	else if ((!folio_is_file_lru(folio) && !folio_test_swapcache(folio)) ||
-@@ -327,7 +329,7 @@ static inline unsigned long lru_gen_folio_seq(const struct lruvec *lruvec,
- 		  (folio_test_dirty(folio) || folio_test_writeback(folio))))
- 		gen = MIN_NR_GENS;
- 	else
--		gen = MAX_NR_GENS - (folio_test_workingset(folio) || folio_test_referenced(folio));
-+		gen = MAX_NR_GENS - folio_test_workingset(folio);
-
- 	return max(READ_ONCE(lrugen->max_seq) - gen + 1, READ_ONCE(lrugen->min_seq[type]));
- }
-diff --git a/mm/folio.c b/mm/folio.c
-index 35e242b48870..2af724cecb31 100644
---- a/mm/folio.c
-+++ b/mm/folio.c
-@@ -474,20 +474,10 @@ void folio_add_lru(struct folio *folio)
- 			folio_test_unevictable(folio), folio);
- 	VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
-
--	/*
--	 * For refaulted workingset folios, set PG_active so they
--	 * can be added to active generations.
--	 * For prefaulted file folios, folio_mark_accessed() sets
--	 * PG_referenced so lru_gen_folio_seq() places them into
--	 * the second oldest generation.
--	 */
-+	/* see the comment in lru_gen_folio_seq() */
- 	if (lru_gen_enabled() && !folio_test_unevictable(folio) &&
--	    lru_gen_in_fault() && !(current->flags & PF_MEMALLOC)) {
--		if (folio_test_workingset(folio))
--			folio_set_active(folio);
--		else if (!folio_test_referenced(folio))
--			folio_mark_accessed(folio);
--	}
-+	    lru_gen_in_fault() && !(current->flags & PF_MEMALLOC))
-+		folio_set_active(folio);
-
- 	folio_batch_add_and_move(folio, lru_add);
- }
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index daa7e37c2236..e82ba737c028 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -952,13 +952,8 @@ static bool lru_gen_set_refs(struct folio *folio, const vma_flags_t *vma_flags)
- 		return false;
- 	}
-
--	/* Promote on second access */
--	if (folio_lru_refs(folio) > 1) {
--		folio_set_workingset(folio);
--		folio_set_lru_refs(folio, 0);
--	} else {
--		folio_mark_accessed(folio);
--	}
-+	folio_set_workingset(folio);
-+	folio_set_lru_refs(folio, 0);
- 	return true;
- }
- #else
-diff --git a/mm/workingset.c b/mm/workingset.c
-index 1504f91cdca5..10d4ce202cca 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -319,13 +319,11 @@ static void lru_gen_refault(struct folio *folio, void *shadow)
-
- 	atomic_long_add(delta, &lrugen->refaulted[hist][type][tier]);
-
-+	/* see folio_add_lru() where folio_set_active() will be called */
-+	if (lru_gen_in_fault())
-+		mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + type, delta);
-+
- 	if (workingset) {
--		/*
--		 * see folio_add_lru(), where folio_set_active() is
--		 * called for workingset folios
--		 */
--		if (lru_gen_in_fault())
--			mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + type, delta);
- 		folio_set_workingset(folio);
- 		mod_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + type, delta);
- 	} else
---
-2.34.1
 
