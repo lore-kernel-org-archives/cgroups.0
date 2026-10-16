@@ -1,64 +1,67 @@
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 669E33769E9
-	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 05:28:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 682E93845C1
+	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 05:28:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792128496; cv=none; b=OgaFpVlWyCadBAHS2eUsl5XUpBXx5kNpvFb7pAwJaussHovd3dtlwHhKVkjENPqQo5IJBhE30ov/q5B+fWZj1ZG4VoBwDW2NnilLChw6wtCUSttYhcZswyGe1hclMhPujTM60sES52B5NOoP6ZbmwZ73oV3nzWcva5TdRoxVmUc=
+	t=1792128497; cv=none; b=M3aTz4Wc9Wt0yu5pvQDhoRsBo73E9LQMh8jRzVZ7Mhs26g8bAO2X/dHT6l71OQinSZZxKFVXMbwYfMaOmQ7SKu8D25zTYJMtxlXo91N/mm/mttIUJBpCltzzK6wH82/U5gk4GdnJk4YAi6ZExwup3H+Ts2WD34TquXByHsbZl3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792128496; c=relaxed/simple;
-	bh=GRHu9tivzXr4rEaQNfDTUQTIj2SbecUrIuJLV3ZRjCI=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=g7ygmnOi/pN31NADKA8wV5QHvIJ5F/6Q0HxiFoUZ57YIxsZaM5dE6n+gDsZ3mXqZfFJcHDUv44kKb0yiCJrFpK0Fjc2M5CP+3zc0/fy3y1ZGmQaU7A8VBUNEe2QrPWOTJVjpPlPLtFU6MR4KWPXyGD6rfjJ1Blab9W4l7+Ms38c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DdSE3st3; arc=none smtp.client-ip=209.85.210.198
+	s=arc-20240116; t=1792128497; c=relaxed/simple;
+	bh=0lTZQF+jnH3DXAdEsTYp+jT8gzGanh+XWAUWoY+i1+0=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=SVoyyx0R/Vstq/0kYiIN3n4Z+J4wsDpcCaALk2rXhVdM2ybzB+LXcJr6rZlQcL5JITTplgwdCGZtr8PdjHhjtNW3J7OqnIDartWmZEI5kz4xPD00mBuven+RN2ELDMJVwKFcbCFjcTLeDjGh4xuuIMKR/CnyBL3wsHQmLCX9jj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Gu2YPper; arc=none smtp.client-ip=209.85.214.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DdSE3st3"
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-89b52a188c1so1020534b3a.0
-        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 22:28:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Gu2YPper"
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2e93f67358eso25488435ad.1
+        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 22:28:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792128495; x=1792733295; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=M4ahsKpEByLpjYwM5E8QdP6uFfaxDfM+kbphj7puBv0=;
-        b=DdSE3st3z3tm4MttYcFDilhLsT0rjqYVtwmEgZOME9BxcVL3lKmLvhizfeS070ZHk2
-         HBgrP6/woNZtFQqKPBfkywKXCE69ltMIPDJdli7o4l3DiIlKgfPuDpWArriXAwknhITz
-         TbOiGR2UIvRxabbe0zOEfacOEoDGtqCgne3z/Ob76uvDFCkZuIHxKI0cPJjqbI1vPGFD
-         TqssiLgFvgSPi+BtNDpWTdo4gkJmc9NKWHq9IpYOxX8+VqyEfZLamMGUPiLEqVcsuI4o
-         ASTRxdcpXKW9kdJeOrflA18pdqoZN41w9bDPgrDSm5iNJbgF1aNGRMdYj87AeRNjrnj0
-         Dzdw==
+        d=google.com; s=20251104; t=1792128496; x=1792733296; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=q1BwP+lE50kzIYlwSLzl3kyosGMcVYA6qJzXgYspyIw=;
+        b=Gu2YPperF+9CMIyg0q+w4ad01+fLZ0A5DEvhOTQGIwfs5rECOrfCUJCdSxnsTylHve
+         NyV67uHklj+n00KZyV/eednjjb3Bl7TVEhi2l270GfDRQ7OQjsguMgIrDhuK50JtwNTO
+         xG8t8RWjJA7jeZIzGboIf1jNNbS3Ut7TwAXVAi6O9+XssMpCYdlsf1BGVC1ueL6oed8r
+         fQhI56n4M3Tk2pPRNemYl2aOZjWzJpHy+h6qo1jMJU9u/bXJcwRKctBfwEeViO9uC6bf
+         D9wdoHyxMAY597Iyg3bXOI1dPaDFvzE1OZnfvUn/HfZg7N1AkftzvDURBC4XiQQHgExl
+         E1+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792128495; x=1792733295;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:mime-version:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=M4ahsKpEByLpjYwM5E8QdP6uFfaxDfM+kbphj7puBv0=;
-        b=NmR5UI+dfBuzg5S996X8XSOOAg71kbGe5PaQewNSNsAuBcjh7C0n/0F+8m3iXVuS6g
-         JMBiXGUvfU84Yk8OgFOKYIkhDGkwb3ni+6XWKoStn4lXzq2vyxfNQ+DeI7ckEEMDyhHv
-         RyQEa1xKjdOofOdgr/tV+7gCiYMEQZIOvNqS12t+TR1DLMjht3xv22ffV/i21+Bx/zjO
-         BDCL9vVkFN5FmqZhfhwvmP4s3pADueZcVkCnCx/rmQUA479U1ocLCT7y+PrCbUYG4Hv4
-         n1hhgNgkFmUSjRN/RrGIETBqpHHLD3CBtPSjCjiWFKjs6+l6oZUYXSo6rVIQCjpx4xCb
-         L9Sg==
-X-Forwarded-Encrypted: i=1; AKwUvBy86jj3RuEI+XzPbQxo8AFGVXa+b/K3nkemItUiGrQ9/DHY9E2lhpgS3SkcmjumeVxJrYQtLz5H@vger.kernel.org
-X-Gm-Message-State: AFq9FYK+PLmn5RnLAzlcxL0lrzFfXbfY/rhCVZ/EUZK6XaTkhSXPT9K/
-	jqk/h47V06dE9h3IKw7pTB+28aYfjAY2/bW8vUgib2bD/3yrG3cH/5NWvnHF3Z2VNYs4a8lvDUk
-	IYzdAJg==
-X-Received: from pfbcl10.prod.google.com ([2002:a05:6a00:32ca:b0:89d:8f0c:4f51])
- (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:188c:b0:886:cae0:fb66
- with SMTP id d2e1a72fcca58-897c71084a7mr20396628b3a.16.1792128494333; Thu, 15
- Oct 2026 22:28:14 -0700 (PDT)
-Date: Fri, 16 Oct 2026 05:27:44 +0000
+        d=1e100.net; s=20260707; t=1792128496; x=1792733296;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=q1BwP+lE50kzIYlwSLzl3kyosGMcVYA6qJzXgYspyIw=;
+        b=k+bAEVKjNxPC0QYmJBDJuFrerjKOHse11+AF2JUepuLAQMX+26/7XDYL6+EzKMP314
+         LQjHWwKMM8e7aTve1U2r4eKnnhk0M3QMuuU4ObVWhwrxaSP+RZSxTt0iuAP+rWqT5dVL
+         w9vOEbVy727oXhGTAXBVkkXO7H4D1Bjn0X+4EpSSO1ZmarXd89WDmKCi4+7dMlbBuTRW
+         9KDhVUd0PdEmuaffyF4rmKdbvs0bzDxias4imuQwIvW+OQUTkOPFDaoMbJuKOvuD6fgD
+         b9Veusst20Lv4AdlIWRjSVkg5gH3q4QAp4QPSK31NIoolF3I201IwXhVuO1O9gxg3EWD
+         ly0A==
+X-Forwarded-Encrypted: i=1; AKwUvBz+8f2hgkize9L2BwTPUSvx2a6EWOK6YMmNce5D4BRGKSRIfSnUdLnFrx24AOTmPGAk9rw+B5v1@vger.kernel.org
+X-Gm-Message-State: AFq9FYL/FbLK78Fgh69LV+0XrYzl157uSooY3sV4GTuNC43sFbs/vlSM
+	eRecWnMbgsMQ5gonY1GeTtLvryZFIQjqnuxpBD7zf0w9waFiau6iarVgTejdBZ1Uwrelmo8GmIg
+	gsjYsXQ==
+X-Received: from plje19.prod.google.com ([2002:a17:902:ed93:b0:2e5:e061:9fb3])
+ (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:124c:b0:2e9:5c55:c477
+ with SMTP id d9443c01a7336-2e95c55c800mr44184965ad.4.1792128495239; Thu, 15
+ Oct 2026 22:28:15 -0700 (PDT)
+Date: Fri, 16 Oct 2026 05:27:45 +0000
+In-Reply-To: <20261016052811.3085635-1-kuniyu@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+References: <20261016052811.3085635-1-kuniyu@google.com>
 X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
-Message-ID: <20261016052811.3085635-1-kuniyu@google.com>
-Subject: [PATCH 0/5] memcg: Batch mod_memcg_state() for MEMCG_SOCK.
+Message-ID: <20261016052811.3085635-2-kuniyu@google.com>
+Subject: [PATCH 1/5] memcg: Remove unnecessary READ_ONCE() under memcg_stock.lock.
 From: Kuniyuki Iwashima <kuniyu@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
@@ -66,99 +69,89 @@ To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.o
 Cc: Muchun Song <muchun.song@linux.dev>, Kuniyuki Iwashima <kuniyu@google.com>, 
 	Kuniyuki Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On our production fleet, we saw mem_cgroup_sk_charge() spent over
-3x the cycles of try_charge_memcg() although the former should be
-a thin wrapper of the latter.
+this_cpu_ptr(&memcg_stock) is always modified under
+local_lock(&memcg_stock.lock).
 
-Looking at perf during tcp_rr, most of the cycles were spent in
-mod_memcg_state(MEMCG_SOCK), which incurred two heavy memory stalls
-due to cache line misses:
+Unlike is_memcg_drain_needed() under RCU, consume_stock(),
+drain_stock(), and refill_stock() do not need READ_ONCE().
 
-  mem_cgroup_sk_charge  vmlinux [Percent: local period]
-  ...
-     1.74 =E2=94=82       mov     cpu_number,%esi
-     0.70 =E2=94=82       movslq  %ebx,%rcx
-     0.31 =E2=94=82       mov     0x518(%r14),%rdx
-     8.99 =E2=94=82       add     %rcx,%gs:0x18(%rdx,%rax,8)
-                  ^-- this_cpu_add(memcg->vmstats_percpu->state[i], val);
-                      in mod_memcg_state()
- >> 31.21 =E2=94=82       test    %ebx,%ebx
-     0.05 =E2=94=82     =E2=86=93 je      97
-          =E2=94=82       mov     %r14,%rdi
-          =E2=94=82     =E2=86=92 call    __css_rstat_updated
-     0.31 =E2=94=82       mov     0x518(%r14),%rdx
-          =E2=94=82 72:   test    %rdx,%rdx
-     0.06 =E2=94=82     =E2=86=93 je      97
-          =E2=94=82       mov     this_cpu_off,%rsi
-     0.17 =E2=94=82       mov     0x10(%rsi,%rdx,1),%rax
-     6.59 =E2=94=82       mov     0xc18(%rax),%eax
-                  ^-- atomic_read(&vmstats->stats_updates)
-                      in memcg_vmstats_needs_flush()
- >> 26.02 =E2=94=82       mov     __num_online_cpus,%ecx
- ...
-     0.65 =E2=94=82 e5:   mov     %r14,%rdi
-          =E2=94=82       mov     %edx,%esi
-     1.88 =E2=94=82       mov     %ebx,%edx
-          =E2=94=82     =E2=86=92 call    try_charge_memcg
-     1.56 =E2=94=82       xor     %ebp,%ebp
-     0.18 =E2=94=82       test    %eax,%eax
-     0.22 =E2=94=82     =E2=86=91 jne     9f
-          =E2=94=82     =E2=86=91 jmp     31
+Especially, in refill_stock(), READ_ONCE() is used twice for
+stock->cached[i], which forces the compiler to emit two volatile
+loads from stock->cached[i].
 
-This series adds nr_sock[] to struct memcg_stock_pcp to batch
-mod_memcg_state() for MEMCG_SOCK.
+Let's remove the unnecessary READ_ONCE() and eliminate the
+redundant loads in refill_stock():
 
-With this change, tcp_rr w/ 20000 flows achieves ~9% more
-throughput and the TCP stack spends far fewer cycles on memcg.
+Before:
 
-  tcp_rr (20000 flows, 128 threads, 60s, average of 3 runs):
+  cached = READ_ONCE(stock->cached[i]);
+   4c 8b 80 88 d7 bd 84 	movq	-0x7b422878(%rax), %r8
+  if (memcg == READ_ONCE(stock->cached[i])) {
+   48 3b 98 88 d7 bd 84 	cmpq	-0x7b422878(%rax), %rbx
+   0f 84 86 01 00 00    	je	0xffffffff817d01e0 <refill_stock+0x210>
 
-  Metric                     |       Baseline |        Patched |    Diff
-  ---------------------------+----------------+----------------+--------
-  Throughput (RPS)           |     22,408,523 |     24,360,262 |  +8.71%
-  Latency Mean (us)          |         891.92 |         820.31 |  -8.03%
-  Latency p50 (us)           |         877.22 |         744.10 | -15.18%
-  Latency p90 (us)           |       1,085.43 |       1,082.02 |  -0.31%
+After:
 
-  perf cycles (20000 flows, 10s, average of 3 runs):
+  cached = stock->cached[i];
+   4c 8b 88 88 d7 bd 84 	movq	-0x7b422878(%rax), %r9
+  if (memcg == stock->cached[i]) {
+   4c 39 cb             	cmpq	%r9, %rbx
+   0f 84 7a 01 00 00    	je	0xffffffff817d01d0 <refill_stock+0x200>
 
-  Server (M cycles / %)      |           Baseline |            Patched |   =
- Diff
-  ---------------------------+--------------------+--------------------+---=
------
-  Host Total Cycles          |        4,994,342 M |        4,793,242 M |   =
--4.0%
-  tcp_rcv_established()      | 213,968 M (4.283%) | 210,418 M (4.390%) |   =
--1.7%
-  mem_cgroup_sk_charge()     |  12,322 M (0.247%) |   6,390 M (0.133%) |  -=
-48.1%
-  try_charge_memcg()         |   8,326 M (0.167%) |       0 M (0.000%) | -1=
-00.0%
-  mem_cgroup_sk_uncharge()   |   7,492 M (0.150%) |   5,752 M (0.120%) |  -=
-23.2%
-  refill_stock()             |   7,988 M (0.160%) |       0 M (0.000%) | -1=
-00.0%
-  Charge Total               |  20,648 M (0.413%) |   6,390 M (0.133%) |  -=
-69.1%
-  Uncharge Total             |  15,480 M (0.310%) |   5,752 M (0.120%) |  -=
-62.8%
-  Memcg Sock Total           |  36,128 M (0.723%) |  12,142 M (0.253%) |  -=
-66.4%
+Signed-off-by: Kuniyuki Iwashima <kuniyu@google.com>
+---
+ mm/memcontrol.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-
-Kuniyuki Iwashima (5):
-  memcg: Remove unnecessary READ_ONCE() under memcg_stock.lock.
-  memcg: Reduce nesting in consume_stock() and refill_stock().
-  memcg: Annotate slow paths in consume_stock() and refill_stock().
-  memcg: Batch mod_memcg_state() for MEMCG_SOCK.
-  selftests: cgroup: Deflake test_memcg_sock() in test_memcontrol.c.
-
- mm/memcontrol.c                               | 155 +++++++++++++-----
- .../selftests/cgroup/test_memcontrol.c        |   9 +-
- 2 files changed, 118 insertions(+), 46 deletions(-)
-
---=20
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 856a7d07586c..c268a7864547 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2135,10 +2135,10 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 
+ 	for (i = 0; i < NR_MEMCG_STOCK; ++i) {
+-		if (memcg != READ_ONCE(stock->cached[i]))
++		if (memcg != stock->cached[i])
+ 			continue;
+ 
+-		stock_pages = READ_ONCE(stock->nr_pages[i]);
++		stock_pages = stock->nr_pages[i];
+ 		if (stock_pages >= nr_pages) {
+ 			stock_pages -= nr_pages;
+ 			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+@@ -2168,13 +2168,13 @@ static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages)
+  */
+ static void drain_stock(struct memcg_stock_pcp *stock, int i)
+ {
+-	struct mem_cgroup *old = READ_ONCE(stock->cached[i]);
++	struct mem_cgroup *old = stock->cached[i];
+ 	uint8_t stock_pages;
+ 
+ 	if (!old)
+ 		return;
+ 
+-	stock_pages = READ_ONCE(stock->nr_pages[i]);
++	stock_pages = stock->nr_pages[i];
+ 	if (stock_pages) {
+ 		memcg_uncharge(old, stock_pages);
+ 		WRITE_ONCE(stock->nr_pages[i], 0);
+@@ -2254,11 +2254,11 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	for (i = 0; i < NR_MEMCG_STOCK; ++i) {
+-		cached = READ_ONCE(stock->cached[i]);
++		cached = stock->cached[i];
+ 		if (!cached && empty_slot == -1)
+ 			empty_slot = i;
+-		if (memcg == READ_ONCE(stock->cached[i])) {
+-			stock_pages = READ_ONCE(stock->nr_pages[i]) + nr_pages;
++		if (memcg == stock->cached[i]) {
++			stock_pages = stock->nr_pages[i] + nr_pages;
+ 			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+ 			if (stock_pages > MEMCG_CHARGE_BATCH)
+ 				drain_stock(stock, i);
+-- 
 2.56.0.212.g129ede20d9-goog
 
