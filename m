@@ -1,114 +1,121 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14EB03C3438;
-	Fri, 16 Oct 2026 22:43:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE26317166;
+	Fri, 16 Oct 2026 22:59:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792190587; cv=none; b=T0PB13VeoQVhW/kwaNzYcS4t9KaaDmdJxPt+CIaV/64+aoGkoMzrakfod/lUkFibHERFYrVVnL3gMwZXlWV/2KWNLVrB5FH6BuYSKxf5RiFOsdarPQ1YB7iSpGOkSo5i4iSZaILsBuj8zqhHZkdbw38qSTYYVTXziy2FTUHrhbE=
+	t=1792191547; cv=none; b=E51CbjrcRI/9HoGVYwQOgLFGm1cglm3+u6FDhOmd7KOppYYILoOgv9B8KJ5VXedjFa1KOhu87Le7r43NB1zmErdOcGDXVvC7Zv8zbgKLC5ZbFG1usrPmRIipaxUVLymsrraPE1KhCra+EhBqPsugC+uNAiICEIp/eIE46CcV0Fk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792190587; c=relaxed/simple;
-	bh=ky2kLmBQQDcgrQXuI9eZ052lL7tMjJhSAyVsflieb7Y=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=alHcV0V11mGxSc3g6Oq1vrDbVINyb/WAhYMniavBeZOBPnC2sZ7eUMpAihR6LDTp14Q7xhmOOpGBEBMSec7x+8z00GCnsGaf5NGaKGeq8jmJkj9/x7+GHVHbUH4Fn+88repbA45aDd3r8166sIJm4yk7v04GllImye2agyY8P8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YiEujQYp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792191547; c=relaxed/simple;
+	bh=7CN2sWylHLMTfbtQ64it+kFHyCkbiD5pCb8+yR+bEjs=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=h4VvcC4XBCpVii+6EFVrO5Viz6IigUMTGfwvmCYVS7Qg3p7lhL4qFBjjj/ABmI5HWgLl2cW3VSNPlPiZ3rRUpE7AOQfH9meUmJG89fXie6WjUWNd4WbcJg7TeSR59qoVy5ZHn2RDGPWSa6jrX1KNQutxvksZsYkObUeRCbFmLhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=K0iehqGc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YiEujQYp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 759871F000C4;
-	Fri, 16 Oct 2026 22:43:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792190585;
-	bh=/hZbe7RB6+Bi29L6udyhEOuf33yUa63JOrb9nCRpHA0=;
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="K0iehqGc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25B501F000C4;
+	Fri, 16 Oct 2026 22:59:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1792191546;
+	bh=2XIZw4yIu0sI+8wa1+fQEbc6VQXsqxREgHYBNQYWVKI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=YiEujQYpBQlsJbuSzPmj1eHQzFwASacSFLqspUDQfuGBomyDFTF6yeOvLbe23tcoY
-	 IlTTCXTUid1xqaP3KqVpUaidLGlF1o5isUFYE90qUG95Hd/b/EbY9KL0DpcG1BnAth
-	 hPwdkPC1Y60vW2KIxTIFox/PqXwVBfGHcaAAQeeRNUBvpkOV7Jtb87HnOm4/TL1BgS
-	 F6mQZm0XbqeN6vsjKKp3YAOYVcRJwaFVQlSZSV/XOtz9KDiL/v1EX6W1Fk5tm9tL+B
-	 zmF0lWKFVetyjRqk0im1FD6ObKpRD98kBZN4rGXoJ+EjUR4EL24DAhIPZXDFRomxTn
-	 s/9xa0XIQifPQ==
-Date: Fri, 16 Oct 2026 12:43:04 -1000
-Message-ID: <97f9db644113ce22a7e302d1b79bcfd3@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Liz Fong-Jones <lizf@honeycomb.io>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Jens Axboe <axboe@kernel.dk>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Xin Yin <yinxin.x@bytedance.com>,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	ian@honeycomb.io
-Subject: Re: [PATCH v7 3/3] writeback: switch a replaced cgwb's inodes to its successor
-In-Reply-To: <20261015-wb-dying-cgwb-flush-v7-3-9278d9ebaf5d@honeycomb.io>
-References: <20261015-wb-dying-cgwb-flush-v7-0-9278d9ebaf5d@honeycomb.io>
- <20261015-wb-dying-cgwb-flush-v7-3-9278d9ebaf5d@honeycomb.io>
+	b=K0iehqGcH6OaYxRdNrNEpl3rtaVqerqvgIjRBbpdxMovHc2N5nmd5gk9tKrViP3B+
+	 CVCq3cr9444LCA25tUNknkzy+Gm2THEOSPkIVShx18Q3s7BRkV6c/EuTXDzecbAv+6
+	 2CwNsL4Eu6qrnPjbXX8WPiP+LUgzjNiLytIU2bIg=
+Date: Fri, 16 Oct 2026 15:59:05 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Wang Yingjie <x-professor@outlook.com>
+Cc: Alexey Gladkov <legion@kernel.org>, "Eric W. Biederman"
+ <ebiederm@xmission.com>, Manfred Spraul <manfred@colorfullife.com>, Vasily
+ Averin <vasily.averin@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org"
+ <cgroups@vger.kernel.org>
+Subject: Re: [PATCH] ipc/sem: account enlarged sops arrays to memcg
+Message-Id: <20261016155905.2a659b7bb7d61f33467a3263@linux-foundation.org>
+In-Reply-To: <20261016152609.2528805-1-x-professor@outlook.com>
+References: <20261016152609.2528805-1-x-professor@outlook.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 15, 2026 at 11:40:49AM +0000, Liz Fong-Jones wrote:
-> When a live memcg's blkcg association changes, cgwb_create() replaces
-> its killed wb in bdi->cgwb_tree. Foreign flushes for the memcg then
-> find the new wb, but the inodes, dirty or not, are still attached to the
-> old one, and they only move over as they are written back (see
-> wbc_attach_and_unlock_inode()). Until then, other memcgs appending to
-> those inodes stall in balance_dirty_pages().
->
-> After the takeover, queue a work item that switches all inodes on the
-> old wb's lists to the wb foreign flushes now find, like
-> cleanup_offline_cgwb() does for b_attached and b_dirty_time, but
-> including b_dirty, b_io and b_more_io. The switch carries the dirty and
-> writeback page counts, so nothing needs to be written back first.
-> cgwb_create() can run with interrupts disabled (folio_account_dirtied()
-> -> inode_attach_wb()), so it only queues the work. A switch to the old
-> wb that was queued before it was replaced can land after the work ran,
-> so inode_switch_wbs_work_fn() queues the work again when the wb it
-> switched inodes to is dying and no longer owns its slot. Inodes attached
-> to the old wb but on none of its lists, such as one attached as the wb
-> is replaced (see __inode_attach_wb()) or a clean one switched over from
-> the root wb, still move over only when written back. If the successor is
-> already gone, fall back like cleanup_offline_cgwb() does, to the nearest
-> live ancestor's wb or the root wb.
->
-> Since commit f6988c90671e ("writeback: bound cleanup_offline_cgwb()
-> rescans by rotating scanned inodes"), the scan moves the inodes it walks
-> to the newest end of each list, so hold wb_switch_rwsem for read across
-> it, like the switches themselves. Otherwise a sync that has fixed its
-> cutoff but not yet queued inodes can find older dirty inodes moved
-> behind a newer one on b_dirty and return without writing them.
->
-> Test: a live cgroup appends to 5000 files on XFS at 250MiB/s, io is
-> disabled on its parent so its wb is killed, it creates a file (the
-> takeover), and a sibling keeps appending to its files under a 4G parent
-> limit. Worst lag of the sibling behind schedule over 30s, in three runs:
->
->   without this patch    9.1s   4.0s   1.0s
->   with this patch       1.7s   1.3s   1.0s
->
-> Without this patch, moving the old wb's inodes over took up to 11s,
-> first switch to last; with it, all 5001 were switched in a 23-35ms
-> window, with up to 98MiB of the old cgroup's pages dirty.
->
-> Suggested-by: Tejun Heo <tj@kernel.org>
-> Assisted-by: Claude:claude-opus-5-5 checkpatch sparse
-> Assisted-by: Claude:claude-fable-5-1
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+(Alexey, Eric, others: please weigh in)
 
-Acked-by: Tejun Heo <tj@kernel.org>
+On Fri, 16 Oct 2026 15:26:11 +0000 Wang Yingjie <x-professor@outlook.com> wrote:
+
+> Commit 50ec499b9a43 ("sysctl: allow change system v ipc sysctls
+> inside ipc namespace") lets an IPC namespace owner change kernel.sem.
+> The SEMOPM field defaults to 500 but has no semantic range check.
+> 
+> do_semtimedop() allocates nsops * sizeof(struct sembuf) with
+> GFP_KERNEL. A blocking operation retains that buffer, so a user can
+> raise SEMOPM and hold large attacker-selected amounts of host kernel
+> memory without charging the calling task memcg.
+> 
+> On the current mainline base, one 10,000,000-operation call retained
+> 60,936,448 bytes while a 32 MiB cgroup peaked at 909,312 bytes and
+> reported no limit event. Sixteen 1,000,000-operation calls retained
+> 100,860,416 bytes while the cgroup peaked at 1,310,720 bytes.
+> 
+> Commit 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in
+> do_semtimedop()") removed accounting on the premise that the buffer was
+> at most two pages. Preserve that default-sized path, but account arrays
+> larger than the default SEMOPM value.
+
+OK, I think. But...
+
+> With this change, both test configurations reach the 32 MiB cgroup
+> limit and the caller is terminated by the memcg OOM killer before it
+> can retain the enlarged arrays.
+
+Only if memcg is enabled and the task's memory cgroup has an effective
+limit.  Otherwise we can end up handing out idiotic amounts of kernel
+memory.  Memcg accounting isn't a substitute for limiting the
+allocation size.
+
+> The sysctl also accepts negative SEMOPM values. Since nsops is unsigned,
+> SEMOPM=-1 bypasses the intended operation-count check.
+
+Let's fix this first. nsops is unsigned int, whereas ns->sc_semopm is
+int. In the comparison nsops > ns->sc_semopm, a negative SEMOPM is
+converted to unsigned, so SEMOPM=-1 effectively sets the limit to
+UINT_MAX.
+
+I'm thinking:
+
+- Permit init_ipc_ns.sc_semopm to be set to any value from 1 to INT_MAX.
+  This preserves the existing ability of host root to configure larger
+  limits.
+
+- For all other IPC namespaces, permit values from 1 to 1000. The
+  documentation has long recommended 1000 as an upper limit, although
+  it hasn't been enforced. This would be a new restriction, so the
+  changelog should explain why we're introducing it.
+
+- Validate the new values before installing any of them.  The current
+  proc_ipc_sem_dointvec() updates the live array directly, and
+  rejecting an invalid value afterward would leave a window in which
+  other tasks could observe it.
+
+- Update the comment in include/uapi/linux/sem.h. The warning about
+  physical memory fragmentation is outdated now that the allocation
+  uses kvmalloc(). Document the new 1000 limit for non-initial IPC
+  namespaces instead.
+
+Ideally, a new IPC namespace would inherit its parent's configured
+limit, but currently every new namespace starts at SEMOPM=500. I don't
+think we need to change that as part of this fix.
+
+Then please redo your memcg-accounting patch as a separate followup,
+with suitably adjusted changelogging. That would provide additional
+protection for legitimately enlarged allocations in the initial IPC
+namespace and for allocations between 501 and 1000 operations elsewhere.
 
 Thanks.
-
--- 
-tejun
