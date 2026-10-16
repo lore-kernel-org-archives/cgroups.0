@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D47598C12;
-	Fri, 16 Oct 2026 17:49:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC57599A43;
+	Fri, 16 Oct 2026 17:49:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792172999; cv=none; b=W18jYOtIYsfQaFjGEY5n+BGtSzCMDMfmHy6Tkwt8AkUjbzM2qfLIFLFe4MEGWONfwK4m1TWCf0dMLLNWVwmmw/z9Mm2axpfnaegC5qVBw7nTQOz+p2kkZTSJfWmr1fbk0VIe0UqEjxoypeFGTajrT0+LEaDtwaqQNL5eUXF00nI=
+	t=1792173000; cv=none; b=FsVhNILpihLRFDWigmeQqPi45DEzBahdPXlZRSxOlKk/12A1k9bT4V9+e/yOjUuRR5D5ikidrQKM52WOmBtvIq070+/4jBL4Mw0xHYiumIm7WwTD3NkJmomizXxni9Pgy099TdxCPFayfNA3nfF9Ktpe1TbWHv6VJCTmF47wjQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792172999; c=relaxed/simple;
-	bh=a8R9Nykw0vbuP24B1Ce0ytty22BYJFKBHLQ5ty5mZ2E=;
+	s=arc-20240116; t=1792173000; c=relaxed/simple;
+	bh=sU4pZhbT1lb+nddSv3Vgs9evB7fIVdFzKSbtU/yz+Ig=;
 	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QchkekeYP7kd9XsLyYByUD7g6erkhU4tM24ZQ4eHn6Qjjmv1NEArfPazFTrXTwmqbC6zaTp9HUnsrMqGZNGdTqPd9QuOBPv2Xt+HlG6qfwXv84P80RQ47RZdol9hdm+DesV/rX9nNe4lEx1ZWN3Wk9VpZHKRdHtijSB8g2V13TI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RTs9n4Gm; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=poLehVPlGEu9E2r5vIThbco+p3JyiwlIhr0FqYu1ewpdW9QBV4vb0f6SpcLAVopMrGii3NaF0ttRZJSQqXeJT/UygPboOqI2N6lVoDcFfKKETufdv5UpnX0X9+/TE6y3UODylzhumETlKZC4zPz/4riYyH19o+fVe4ngJCXC6ZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bSpb6G4r; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RTs9n4Gm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E842A1F000C6;
-	Fri, 16 Oct 2026 17:49:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bSpb6G4r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA7701F000C4;
+	Fri, 16 Oct 2026 17:49:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792172998;
-	bh=HysAQR1U8FxlpDQ2eAHgUp6NObu+wWu6L6vjwHvn4Rc=;
+	s=k20260515; t=1792172999;
+	bh=xZAgAHLdYRRI5hQx62O9uzg561Z0UyCRFefGSVMPztc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=RTs9n4GmATQ7G7/Iv15fue3wfPGrGf2i8PV3e+PabIOU2N29auxQmLTwM+QFay/xs
-	 UdgTkd3uA2R9CSEBUhYLSgpr3xFtkW0a3uvAp2JYyX2XrEi5BBOYOhK2W8u7C3tlCB
-	 CsnyaHI9SFSyxZmsejcaPs7vpleMhqqM8jbBXxb6PKjI15/2jx0NKcL6ouQbJQWhKN
-	 E5fMPJtj8v9cdrG8me/5gweIACeWlNG9v+S20Ew/BDuQewDa3D9Oilo4TV7+8mWUa1
-	 DqSB+yJM/eE3YVdZDM9kZobZ8q7EAmuqRFsn+rFyAy+HRgYJqjEdOPA+Ri1Col6lTr
-	 EW3gCybai1jzg==
-Date: Fri, 16 Oct 2026 07:49:57 -1000
-Message-ID: <b76b821edba101b68f085f03e8613d7c@kernel.org>
+	b=bSpb6G4rhiiKoVfyTfkTKOPs7nQOnArsPl/jclUJSS1MOTcMcisEcHtAYktKC/ewL
+	 ol3u8VwnvBIU985ghi6jVLGYTqlpKGANX/9vxIg/Ma8cERZdGPN6+sCfY3HClZXfRR
+	 HzFJrIXo62WIR1le20BRrW5V0hw9uAFyZ9M11wTvogI9kfBAUixCVN1XlUw7l0F39t
+	 khTyRRQyniMoNMg+cTkj3Oo+M7BmPO76Kw7QQ3jbRMF8pzcL6Z7LfMxDPtO1QafyWK
+	 3LS6siXOk+DCPQq+rHulXNljc7VSlSbQ4UTQl1K3WFpCuRejkchIGCD6EL/XuTkEdg
+	 L3e7NkUNm96Uw==
+Date: Fri, 16 Oct 2026 07:49:58 -1000
+Message-ID: <eae39daec12cf6f121cc5010574a6c03@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cui.tao@linux.dev>
 Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
@@ -36,10 +36,10 @@ Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org,
  daniel@iogearbox.net, linux-kselftest@vger.kernel.org,
  Tao Cui <cuitao@kylinos.cn>, ameryhung@gmail.com,
  alexei.starovoitov@gmail.com
-Subject: Re: [RFC PATCH v10 3/4] blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
-In-Reply-To: <20261003124045.1289305-4-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v10 4/4] docs: cgroup-v2: document the iocost BPF cost model attachment
+In-Reply-To: <20261003124045.1289305-5-cui.tao@linux.dev>
 References: <20261003124045.1289305-1-cui.tao@linux.dev>
- <20261003124045.1289305-4-cui.tao@linux.dev>
+ <20261003124045.1289305-5-cui.tao@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,19 +51,26 @@ Content-Transfer-Encoding: 7bit
 
 Hello, Tao.
 
-On Sat, 03 Oct 2026 20:40:44 +0800, Tao Cui wrote:
-> + * Periodic per-device summary, emitted once per period from the tail of
-> + * ioc_timer_fn().  Unlike the state-change events above, this fires every
+On Sat, 03 Oct 2026 20:40:45 +0800, Tao Cui wrote:
+>  	  model		The cost model in use - "linear"
+> +			or "bpf" while the BPF model
+> +			is in use
 
-The event is emitted before the vrate adjustment and the period
-transition, not from the tail.
+"linear" or "bpf" is enough here.
 
-> +		/* whether the controller still has active iocgs */
-> +		__field(int, running)
+> +	When CONFIG_BLK_CGROUP_IOCOST_BPF is enabled, a BPF cost model
+> +	can be bound to a device by attaching an "iocost_model_ops"
+> +	struct_ops carrying the whole disk's major:minor in its "dev"
+> +	member (a partition's major:minor is rejected).  Attaching
+> +	creates the controller if needed, like an io.cost.model write
+> +	does, and
+> +	switches the device's pricing to the model; enabling and
 
-nr_active counts every entry on ioc->active_iocgs, and ioc->lock is held
-from the count to the emit point, so running always equals active != 0.
-Maybe drop the field?
+Attaching now also populates the device's line, so the existing sentence
+saying the line is populated on the first write to "io.cost.qos" or
+"io.cost.model" needs updating. The paragraph also runs 21 lines with a
+leftover break after "does, and". Can it be split into three, attaching,
+model= selection and detaching, and removal and ctrl?
 
 Thanks.
 
