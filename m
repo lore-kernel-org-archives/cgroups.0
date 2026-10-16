@@ -1,181 +1,111 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11CDF2E266C
-	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 13:18:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14241379C3E
+	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 14:28:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792156723; cv=none; b=lGTEEIe0Ym2KiNRVfJZ+cOjwaspKL7R60ajyj/RslTx6Ij2EDAXbUWDFgT1XcNGWZvWgVerMFxQYHBiCy+l+r0NzbXLzEivbrhmzfdyWH/4qqJD16vht7/MOeVnuPoHm6EN+rRrL7kMrThtLe8x0OqiX0FZexAtRxBLgYGvjAs0=
+	t=1792160895; cv=none; b=r5nPccsxi8IOir0oLDY8EuS2v7eGnfjHwNryqH29kuvDj9kDZUdpXvN8Z9yJDq1FvTLqiC/LiU64cCamL2l2ifNLsy8K6YyH3n3CH0rxTlhrU7WyblfjqJRGCZwj7upKMAb7OFX46u4zVabCBZe0Cbi+2syyuqsyayhZun0N/Do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792156723; c=relaxed/simple;
-	bh=QL8io3hFYe/v8PWzmMCFcoQk6f8JTOuZ0YD1MSHt3Ok=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=LoO6mR6Yp6HHj/FbSJNkMW/ybD3ldW4greW/f5aNCmeAd85LFKiWMmxTnzcNZB4e49JkxBBIBTQtie0jI27srgDr8sCKYRyvow1NjVLDJu1KijTv+FfU7u0eNOzbuCZKJa6XmDZmCAQiy7hg3nzsKgGRkm2xCyo1iwyqSh6k9rM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=okonski.org; spf=none smtp.mailfrom=okonski.org; dkim=pass (2048-bit key) header.d=okonski-org.20251104.gappssmtp.com header.i=@okonski-org.20251104.gappssmtp.com header.b=jJJ4uC6O; arc=none smtp.client-ip=209.85.208.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=okonski.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=okonski.org
+	s=arc-20240116; t=1792160895; c=relaxed/simple;
+	bh=GKozz/tp+bIJFpaOUq0zh72SepGChCeoHpNrT2chlz8=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=r7RW/T6qphBv70RqniDRbdGAtBX2b82OFlnw0jZ4p6ll4bc16fAKs00wCw8FPTMDxSpV/Yuh+BZrH3D9+f+x/NdtL8ZkMxcxzvSvRqajjx1zo9munfuitoAj4XSxIJMDq0sT4qq56umbJE6iSq84ozY9adycVPNoKtqCAQA8UlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=lPVO/ncz; arc=none smtp.client-ip=74.125.82.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=okonski-org.20251104.gappssmtp.com header.i=@okonski-org.20251104.gappssmtp.com header.b="jJJ4uC6O"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6b1ab2ad719so2548334a12.3
-        for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 06:18:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="lPVO/ncz"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-35f1f76ea84so3731002eec.1
+        for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 07:28:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=okonski-org.20251104.gappssmtp.com; s=20251104; t=1792156720; x=1792761520; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:subject:from:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=fWhFq5kg3woqxSUvm+Zp+h0Q0CYXygiXnJMyVN/bSws=;
-        b=jJJ4uC6O2JMRJv7OeWKJwsY3POZY8fsv6V49MFD5oelnrD8R6cccslXjFUFDzMyll+
-         kJr9M8Tpw3TFo2g0WTm1sY3d05x3fwmEm0O6A349xPBCyvxHsiR0AMFJ8Kf0l7nO8M3r
-         9HGD42hVmCL3z0YxrUZfHt+7mx0rNCFYHLDX/zgE3E0zsHLkiuj0WTM1+zshaRC9dPtk
-         jVBin+mv40C0ytRte8E4f1EyY9a+YYVapQyTnpVmesfxBQ8Q60JTgwjqVwK3FHASNeVp
-         K0tY/3Wz2dSrKvg+E34XULxCWYQRwkLCGNawpDtjoPyJlcWOwC4WU8rpOtdF67naTNu2
-         RcyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792156720; x=1792761520;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:subject:from:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1792160893; x=1792765693; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=fWhFq5kg3woqxSUvm+Zp+h0Q0CYXygiXnJMyVN/bSws=;
-        b=eFHIjEaTt73C/yJ5Cd0QviAQS/YuXVKRkkx9rRmGA63CqgJkVmmtizTb4m0lst9rpN
-         MUI3fMizNTyRMAMZCi+h99x2ieyYgr0tDOa5vmxNjW8SUK3MOU/HI17c2JX5QjClug7M
-         mBXAYA6x5uB27L1dfHmhTVhBQLBSnc5vkc+OHPQUkDsjrIKBqEfxIS9PmfsHJok1l0k9
-         53n9sSNRKLSl9Zwo7BVcVkKQuP+3u8zlGn+O7DMApQBQKPSKx4I9rXA9JH7xT2U1N62M
-         oSAApT5viHreJMCvbWiYPSOgM4uDMLnQdd1s2ZHXFqdWG3eZxUMCAQvSXpf//TqYiRmw
-         D1IQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxtfTMoeJBQ6kkuSBPF/SKIO1TxzNLYHrp2ytf4YIPU8m+lG7ik8UDDxNtbLhEi0f/svCj38zuj@vger.kernel.org
-X-Gm-Message-State: AFq9FYJnQj20oASmPcjHh8tLXk0W+2TIr3KaSIXNjYJpeXVoIf3gSlSz
-	Vw5IQPNdASjNMmzEkBluGtVbak9nIEuDkBHvKUt6qrxd2/kuNFWugAVQ0tWtRrjJDpk=
-X-Gm-Gg: AYBFou3QclTF1nz4VBN7niflRTuZY5HOwAmNBPUWigV+8SFC4Bnns3JlC43FAdZHwVv
-	JVJiKBCEM01q2cfUTOlf25tmWaaqbd0YN0WdMo+ZqR8xeloq8Krdo6L+xUpDHH7CQgWG51suc86
-	9ThVK4qWUXe5FTlmHQ50FVBet5RxM9hHSaP0YA3i3rgQrNWbYak3pYswHTNXy5HyvC/uwfh1r1V
-	LeuSz6N9oq7bkISGbzyHEK1ElfA+np9ZhwFdtgMz1PfUjPRpDV5epCNfWz9NP1cQ6oaF6qvvbpQ
-	jry0Ql04h6UQT3gq4yB6k1SU+L5uT9LeZh9nkO7DQYMBVJWElHTT1AHQB9SOAcW10VrBvmZkJ+q
-	st0R0iblqvx4IrHyzNUd6oYVYy2kqBSx8tuFCYYLHAxl+OXGU7HBSjlx/wCaAvCE5wyOt8GY5Dq
-	vEYyGF6/vQOIAhTpll0Sy2lFiF4teQOEAnHv/bkJSjKTlIfJFvL+Ed3Wg8bilTkfJXGoIU5GCcZ
-	N/jJXNuYm/tDdzR7JmdVGSNSgjevOcbD8mm2SQUvysL4Wj5kuHAX9d9mKK/p59po+w1kiDZcOAj
-	5mTTPTbOapIadaaGLPiw2g+VOzuFceTrvVGlNrWmgShETyRAL7Jntg==
-X-Received: by 2002:a17:907:72cc:b0:c2e:3ed7:7d94 with SMTP id a640c23a62f3a-c31aa0d364emr2098881066b.37.1792156720081;
-        Fri, 16 Oct 2026 06:18:40 -0700 (PDT)
-Received: from ?IPV6:2a02:21a0:10:748:1::2? ([2a02:21a0:10:748:1::2])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c40918c6e6asm68799166b.53.2026.10.16.06.18.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 16 Oct 2026 06:18:38 -0700 (PDT)
-Message-ID: <58dc8e8a-7260-43ce-aebb-8d9c29a6afc9@okonski.org>
-Date: Fri, 16 Oct 2026 15:18:36 +0200
+        bh=43txGlXvjyVAOxBJD3LVtjY+Cbo0l8Mor35q0LNFkb0=;
+        b=lPVO/nczy2fUjgL8kAqdKTL186bWK5fY2ekFwMoseo3TzQbFgqhDdeLqS58K7qsv2H
+         oA9hejzY6jtaQx0P9XZ81tSrtFu8J/YtXef+iYK80cYNbmLR9XDAsmhColXme7H/KYZH
+         kJGbCCrWjNO0AL0OFapWYwFfgiVZIred4FhO4L0S9omIIhcu3PN1D4DXk+E3cVzXqPHu
+         FG3801z5zWlj8eiQRu+H8XIyQgaUpeQSokt76//uhF/i5dJQWr31E7ze+7uztCx8zKaR
+         dtu9AAB6RtXM1jRHNXwR62qxW1adp3apwrGU1FWowGd0GiPVUH9KNAr5h96bNbZMcW7I
+         rufQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792160893; x=1792765693;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=43txGlXvjyVAOxBJD3LVtjY+Cbo0l8Mor35q0LNFkb0=;
+        b=T2janOU4jFuWDmJcrfivjZhIwglbBdWd8HVEOixSFCe2gviGBaEKoYydbjxtquFcrO
+         1Wakif2yznIYCEdyqS7tF9rqF0nCVr8d7EWQEYk8ODtItkFbW66nXU0AejxJdxzwjev1
+         2WyBoST45BWo+eGkR+EeouT1nxo66SCM81iKs9Q17qtGQWjQ2LMYQ7XRtc/Vn9fxloJO
+         PuM7uyMgQMIhEGVnnAijJAheRTm0EoxM6QN725OphMNMkg9an8nSO8z4bH2W/F9LVCuk
+         ycWuuY8kd308z3/iQ2kZ78CFdZ1mtjzIuUCNycwUdQOCfry1VsuSdnSl+/V3/J8l08KD
+         hJqg==
+X-Gm-Message-State: AFq9FYLT/wm9mPgiVkIfPP2lucKlHs2dxbfwL2s1gXtHuTztuqVIjBNM
+	JnnoanSTCHSUycyL5RY2STDQWNVdlVN0zE03zNQE2CwMwX3XskO5co7TPc8U/0k1ZsE=
+X-Gm-Gg: AYBFou3qmgmtAWT4DaBCsFSSa5qnUlghFj8tlc8B1Aa5J5c8HQbiW0S7MVah7Ln9AYw
+	aZKeVWd2WR9djwNbp6Su2W6VcdpGug/thqyl419vxD1nuIhVcWqHZkPnaAH9tkFnqiO7GC7tzKQ
+	LxDPbe58whd659aG7asXxDdwq3KV3k8BbK5FPpEEuIuNJ9hnqAKeYYQjcLkRe4lbdY+5oPwu8HK
+	e+BIKn2PP/hgBspK7uTHs/20qaS25KC8EyGbU4eBqOhPwHcf0v5rCgWTcTY92LgGhKjCvdPApZ3
+	v301Qa2gy+jqVMIIiADHjSUH/iMiqNls5uYWUFRpje3IAORvwWQMX7kJUEY6qPW86yutaFQtGnR
+	EhXwb0/N3o5UP3g+6NIxq6Y4IbVB5MksxWhShXHCsmOKqxqqQMKgVbs0VGRzZjm+xYFIqG7k7H1
+	BOFez5Oqpua0939kJ7uvkyO5y5VyWIRV+v87Sz5V7KmGyf9U5qaADEO3/pil/DEwrwtVz4GqW0n
+	hf2GO5h2OSYFs9rkzaLWmDWZg7G3pz4wi1bo3GMci+7bRITvliw2hQ20g==
+X-Received: by 2002:a05:693c:88d5:10b0:35e:5ca:e0df with SMTP id 5a478bee46e88-35e05cae713mr11058517eec.35.1792160892526;
+        Fri, 16 Oct 2026 07:28:12 -0700 (PDT)
+Received: from [192.168.1.106] ([198.8.77.135])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36081bafa7asm7150945eec.14.2026.10.16.07.28.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Oct 2026 07:28:11 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: tj@kernel.org, josef@toxicpanda.com, hch@infradead.org, 
+ Tao Cui <cui.tao@linux.dev>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, cuitao@kylinos.cn
+In-Reply-To: <20260922043856.2020116-1-cui.tao@linux.dev>
+References: <20260922043856.2020116-1-cui.tao@linux.dev>
+Subject: Re: [PATCH v4 0/4] blk-iocost: charge flushes and zone appends
+Message-Id: <179216089150.2070939.9793392159431285905.b4-ty@b4>
+Date: Fri, 16 Oct 2026 08:28:11 -0600
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: =?UTF-8?Q?Jakub_Oko=C5=84ski?= <jakub@okonski.org>
-Subject: Re: [PATCH v3 7/7] sched/eevdf: Move to a single runqueue
-To: Peter Zijlstra <peterz@infradead.org>, mingo@kernel.org
-Cc: longman@redhat.com, chenridong@huaweicloud.com, juri.lelli@redhat.com,
- vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
- bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, tj@kernel.org,
- hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, jstultz@google.com, kprateek.nayak@amd.com,
- qyousef@layalina.io
-References: <20260605105513.354837583@infradead.org>
- <20260605124052.227463677@infradead.org>
-Content-Language: en-US
-In-Reply-To: <20260605124052.227463677@infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-Hi Peter,
 
-On 6/5/26 14:40, Peter Zijlstra wrote:
-
-> Change fair/cgroup to a single runqueue.
->
+On Tue, 22 Sep 2026 12:38:52 +0800, Tao Cui wrote:
+> While testing iocost's weight-based throttling under concurrent IO, we
+> observed that a cgroup limited to 1% weight could issue an unbounded
+> number of flushes without being throttled: an fsync loop produced ~510k
+> flushes in 12s with cost.usage staying at zero the entire time.  The
+> device was monopolized while iocost reported no activity.  Zone appends
+> were in the same position: the builtin linear cost model defines
+> coefficients only for READ and WRITE, so REQ_OP_ZONE_APPEND is priced
+> at zero and excluded from the latency statistics as well.
+> 
 > [...]
->
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -9916,7 +9837,6 @@ static void wakeup_preempt_fair(struct r
->  	if (!sched_feat(WAKEUP_PREEMPTION))
->  		return;
->  
-> -	find_matching_se(&se, &pse);
->  	WARN_ON_ONCE(!pse);
->  
->  	cse_is_idle = se_is_idle(se);
 
-I think this changes how cpu.idle affects wakeup preemption.
+Applied, thanks!
 
-With the single runqueue, find_matching_se() is gone and se_is_idle()
-reduces to task_has_idle_policy(). Wouldn't this mean that SCHED_NORMAL
-tasks in a cpu.idle cgroup are no longer treated as idle for
-wakeup_preempt_fair()?
+[1/4] blk-iocost: add flush cost support with the flushiops model parameter
+      commit: f8bc5c74d9eccc87d2e27767f92b8c11b3315d72
+[2/4] blk-iocost: charge zone appends as writes
+      commit: febdbf5682fa7e8f325b07a2c115e7632c4252bd
+[3/4] blk-iocost: account zone append completions in latency stats
+      commit: c38975c427cc3d3f6eb66a36143893be5cdf4ebd
+[4/4] blk-iocost: fix stale comment in ioc_rqos_throttle()
+      commit: 40607f9a6a5eaa071797481bd0ba5ea3ef1eb405
 
-I tested my existing 7.2.9 desktop against 7.3-rc6 with the setup below.
-cyclictest doesn't reproduce it because it just sleeps and wakes, no CPU
-burn and therefore its accrued EEVDF lag keeps the latency low?
-
-cc -O2 -o wakelat wakelat.c
-systemd-run --user --collect --unit=spin -p AllowedCPUs=7 -p CPUWeight=idle sh -c 'while :; do :; done'
-systemd-run --user --collect --wait --pipe --same-dir -p AllowedCPUs=7 ./wakelat 1000 15 200 |
-  mlr --inidx --ifs space --opprint --barred --right label lat \
-    then stats1 -a count,p50,p90,p99,max -f lat then rename -r '^lat_,' \
-    then put -q 'emit mapsum({"kernel": system("uname -r")}, $*)'
-systemctl --user stop spin
-
-wakelat wakes on a fixed 1 ms schedule, records how late each wakeup
-was, then busy-loops for 200 micros (wall clock).
-
-+-----------+-------+-----+-----+------+------+
-|    kernel | count | p50 | p90 |  p99 |  max |
-+-----------+-------+-----+-----+------+------+
-|     7.2.9 | 14998 |  11 |  11 |   12 | 1869 |
-| 7.3.0-rc6 | 13853 |  11 |  12 | 2029 | 2116 |
-+-----------+-------+-----+-----+------+------+
-
-count is out of 15000 periods. rc6 had 1147 wakeups delayed by over 1 ms.
+Best regards,
+-- 
+Jens Axboe
 
 
-wakelat.c:
 
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/prctl.h>
-#include <time.h>
-
-static long long now_ns(void)
-{
-	struct timespec t;
-	clock_gettime(CLOCK_MONOTONIC, &t);
-	return t.tv_sec * 1000000000LL + t.tv_nsec;
-}
-
-int main(int argc, char **argv)
-{
-	if (argc != 4)
-		return 2;
-	long long interval = atoll(argv[1]) * 1000, dur = atoll(argv[2]) * 1000000000LL;
-	long long work = atoll(argv[3]) * 1000;
-	long max = dur / interval + 1, n = 0;
-	long *lat = malloc(max * sizeof(*lat));
-
-	prctl(PR_SET_TIMERSLACK, 1UL);
-	long long start = now_ns(), next = start + interval;
-	while (next - start < dur && n < max) {
-		struct timespec ts = { next / 1000000000LL, next % 1000000000LL };
-		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
-		long long now = now_ns();
-		lat[n++] = (now - next) / 1000;
-		while (now_ns() - now < work)
-			;
-		do next += interval; while (next <= now);
-	}
-	for (long i = 0; i < n; i++)
-		printf("%ld\n", lat[i]);
-	return 0;
-}
-
-Regards,
-Jakub
