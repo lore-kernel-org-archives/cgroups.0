@@ -1,273 +1,251 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D32324B31
-	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 01:41:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792114917; cv=pass; b=EvumwM99s06AYLu8I220qKgO7b4PIthCaHQjUFyUZEhngYBeQ374EP3qEzAQuYLuJhAWYLpc3iNoWvCA3ft6DRUFNVJ8mse3jqGxpgsz0LQlspsdUlMltA7BcdjFd3uIqpafvosJbwkrFn8hCw/YfqxiExWl9Ysm1UTQNS5/hD8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792114917; c=relaxed/simple;
-	bh=j/dhUpk8MUPUKpBECSdbGTxzHkZ/E6OYKPtq5luQEIk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nD2jiUV/iEBN8l36kLBR464PfebuoMoaGMmlm5JPZ6moZMTH/VY4xjL+q6FFddVTQmwjd3UGORlK0+Mc/EA8Zk3AxqM7CtXZh3Q1X620Tu20fHiAUQFJN8FAUkOFWUDq86KcMQ/KaBRkRxzQNxGSE00ZvjDydkxKo30YTjlRLYQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M/SB7269; arc=pass smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M/SB7269"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a1682bff3cso12167995e9.1
-        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 18:41:55 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792114914; cv=none;
-        d=google.com; s=arc-20260327;
-        b=tAMXTjraoh9JV6elQxmj5K/fJQrY0w0KCn0tHHaQhMA+h83H7W6R2QDE8a9sBke/CQ
-         mZZB6BSMDgjCzrhTwbUI7bVIzgUVusnBxmwZElEnRg8+8KdWZfcnqQA1zA+b46JY+meh
-         tTAJg8OmVwAniE52HiBlAlSwyHqbL2oizXtjwRjedacA9VO77CTqcysTNkZu2SG4JxF7
-         PfVi/Raz4qWdiI9VDZOqIPAbBi/Dc/vxetnkUhyRS7mzO5ym0Wk2dlEiuLojMXFXCmDg
-         LsSD4BbVC+eRCMZt3rPst+0lfm6B98OQSb+HK0b/fWxsQmRDwzQry52tJreqxd+MEqns
-         TGXg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=dQCjKnpPJ7GDMGuXaT1sL8RXqnIOzelAupnlRVaJRrM=;
-        fh=4qM2zP4GKA8ui2OMcPsVs/pGvFn56O1ZII+pCV1B9nY=;
-        b=IC35BmJvmNk/gNpOt7jnK0TjtJLhCoFkxyh+DCy3hl2O/4iNvN2+pI1HiHHEPyLHLT
-         M7wctp0XSuo4/ShsAYKJ8s6N2wGNxChOZuqyAKrv9eJUgOJSvBdijkv/6nQkOXFbZYvn
-         c87M+rtxHd370c/hjfDkAHNtZ3BAqvPxVr79HYKfj0czfWHTWjJJvkLhdRU0hIokVsT9
-         YD3VHzGxS+bRhhBMjW/L1zekiIcUmA4uYEy7tCUTzsGbpt/h2oSHjmGqnmFU/wE0FzF3
-         gsG4k0ZZmXd8F9fR0Pn3DPmNz5GCkKXL2233WDcDHKCCGpsWhUOtoksyj9WYxnPIGQMX
-         oakA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792114914; x=1792719714; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=dQCjKnpPJ7GDMGuXaT1sL8RXqnIOzelAupnlRVaJRrM=;
-        b=M/SB7269RETiiFDhzd6V1YWRwjcyOPEmoGaaZphIVv2hk/CMLkpzljm4250Lr1b6So
-         aFQI8dyMP4QmljfbeHIj1R4ZPUjmM0PwIJ9/tRFGZj5xTjffLob5WA9MUjklonLsbbLe
-         aTLzcUGHITDEa3mt0kqXPm1uKsL9lJvF0hPUgNRYMyWqgmla22oLy6sEaPtVw1bjS0uw
-         96QhSj/O8BK4fC5znQX6DJ2gZL4ZydcWfIZsnUh1u8ApWAWYHh62qio2WBDN8YDeMT4Y
-         OTmRwEtxITe4G+AXjEjheSkmA5OuQDAuAHzfkU1JqkIwEX7qg5bH/+7HyVgw8WqtTFrF
-         BM1A==
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31ADE17557E
+	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 01:51:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.198
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792115491; cv=none; b=ufsdHQxkK71QHaebzB7JVwdw5A8YHp35Xlmnmj5o/ZFshwZbUxMIGhBcCoTVaawiTwdm3JNfS+0AB7eyfTvYcJNw3zrsmRvWhfAy3vPWiAaPdanpG/ptcMRJpd0sD9h+k0EGb62Q5jC7D9Bep4EmfN6kemnteagvbI/FrH8ll5s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792115491; c=relaxed/simple;
+	bh=DuKiu/B2dUd5qGRA+KlNOIyWlp6IqfK58bdzQgLPpHo=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=nLWZB4iuT/h92mpU9oSTfkZQSNNvpUhgUoqi8ptBdqfmzKAVNcWGjVniy2nUeW8BEL0D53duPFOMdTE5EjRKmPVKvpeo3+sfGnnXRdONCQMWtDaYUv/yWnr5RuMPUXZ39mKGUpnn17b/tdKBCQrB1iVwv8YeGwSnnNJs2J+sx84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-4dab94dc3e7so3431581b6e.0
+        for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 18:51:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792114914; x=1792719714;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=dQCjKnpPJ7GDMGuXaT1sL8RXqnIOzelAupnlRVaJRrM=;
-        b=nLCPAhUAlyrZFSywnkkAlI3ro2mCppPPb/p7qoJdkOKyi/JOHeH9NiRMtwgl81hWsT
-         4FS7px/aXY8mQ+9f2iNNZgRTpBvhvTUccNdUTZgXtX+bNSqzMkldRBu0CYq0QTjLi/kC
-         Hfuqs1zYDf3d2U/Xpu7Ycd6Ph6A4r/gBvx1UFI5uwYPMHzEZpLrJ5dCVlDI26x7cv/eG
-         2b/vTun7Ygmx0UHWIyj0zHtsMaI0L7mTY03BobU+2k68ODODaOWHEXfb894xPRm5VVMx
-         0W9D9G0Tr9vLlpjMGZxy9EuRkCbB+2K4JdUanKZJMmYl0lDS1fWPYxzdOxBHz3VUsJSP
-         aMgg==
-X-Forwarded-Encrypted: i=1; AKwUvBwCbQTHreUe1qQW+TkA4+xWsWyC04+J4APMaRCdkNN/PQGgQG1Dx4qGEdK+nqRqnbJzy2+URA7D@vger.kernel.org
-X-Gm-Message-State: AFq9FYIVCxmLR6sKaJUvUV0XdPrXGEY7aEyybyFgTZMDqPny3gc8lbxB
-	pO56kN8y548sZJut5P1gTSeYOFxZ6mGLYztm5dGR2gf4gWzv77MeBJ8KjlggZ9ys5+6n2NjMmHk
-	0XfuKBsXhTjQZPrT+0gWyRNsL029RvpY=
-X-Gm-Gg: AYBFou0FlT9Z1Cj3NB2nLH78G19wRj6to8f6ByQU+drM2yEuGFGCjJaJeYxFFSITOgA
-	oz3jJsFM1A4uelNjyhqwsDBnOcUVQ8wGFyn5yHhSOpFRufISvZ62gTk9Enuka5Ps33OB90ngdY2
-	xPisr1RjtDxpf6EjBaPaDiemkKgq56sO7Xoq5fOtiCSEGb7KzCI0tjNgW+Bd+8B6cRBnepoXnZK
-	rhze/xqmdAsxcyDzNnq3MQAmzWL3wYYHdXG+3Nv9HRquQxZ3+bLc++oioWdCVx01lv3r6I1M2xc
-	OAT92Ou+KCY50YGOI9Xo0Beb8cLcMy+YXTrbCRylC3bCyMvBpAJ/ymOUSH7NGjNH0VAUCoTv1sl
-	Dw/35A85fx2iq5zuK9Fkz9qceW6Aw29IvKaDECg==
-X-Received: by 2002:a05:600c:4e89:b0:4a0:12d7:4c88 with SMTP id
- 5b1f17b1804b1-4a18e4ac77amr466612125e9.30.1792114913369; Thu, 15 Oct 2026
- 18:41:53 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792115489; x=1792720289;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=Bs4ER0aIIQg4GWVgoIQKKfHZ+d+lxOX71WRb5HgYtBU=;
+        b=O/M8kWOd3zd++0JV0mYb8Y0g7ZAqMQZFZWvMd3d1LH9YZxdujl/7e0uqN6imYIrNpE
+         jMyfci6+sk4R7mKxcMbTIKWSrjRGjCemKhmx42CiukVaPRCT8ThnAtQQ2ezhVrosVijN
+         i40b5ghJFj2wF4iSDMa3+MLnv26gS58Xbz/FzrQFoWNuX129A/BmoH5rIa74xu8sraKw
+         FshBdEIdD2kmv12EMWiN4GRzl69mcWeeVtpQkgyRpmMI59Ngm0uG6K88ezN3FrDlw+V7
+         Z7fgzgtiAn6BruMr0qHQWO4p1UEmM/4k3lldKKNR1Pe0KdL/YteXakhnMsr7+BtavHoS
+         3kJQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzdLFEg0XVgBIACNHEHDmRtHP/Cta3/Lk8wTu88vXTM8z7mUFLIuKRAiH8meJHzIDX+FL9KmACV@vger.kernel.org
+X-Gm-Message-State: AFq9FYItBK9E+gUhNrrt4Kfix5Z6wNTBHnKK7I82dO+O333KbhL2vE0B
+	GLUgPA7EuuAfGVtMwieZNrwIfKpOr+5Rb8JJeDdwxBPVkTRuxwUvTHg/yIHcHnI1/ey+AnKogas
+	pSLAEb2GTFDHJbzHba8vsLEFQxRfwBPV6RTS61nXhJIuw5r9W5Bl3Xa3Oziw=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJnrk1YifN22mA5PFRVrh3m_ygxax6x4_8nraG2hPqCzyzBj7A@mail.gmail.com>
- <anpsLy_pCanocgS1@google.com> <CAJnrk1Yoj7fqbzurmHkbA-vegpQu3cf-_dfvKor_VxuNhPR-AA@mail.gmail.com>
- <CAO9r8zPLipVW6bvyDK1ypSawbo=LHKvmLqWH0xA6WMR9GYNJpg@mail.gmail.com>
- <CAJnrk1ai-TqcudPoK-qFRYAJnUjBmg1kVa6Vxg3eDm5w5ivqSA@mail.gmail.com>
- <CAO9r8zNJ=Fpc0pZExrttVTDCM3yzSmLPCAU=+RS0k5Pm+hY96w@mail.gmail.com>
- <CADrL8HV7_f68qfd6hG=xCTqzupPqr77ynbwdz8jm0hzjdgDVeg@mail.gmail.com>
- <CAJnrk1aHdBm4CofvKfx7B3H-uF2xRXZUQs47J_4xeRmRZ4hcZg@mail.gmail.com>
- <CAO9r8zOkBVgxdb3pCyHs-ZQTxhwBmA1_+aH0snV7dzbVaVsPsg@mail.gmail.com>
- <CAJnrk1ayOhrFY8LOMYxqEMYZvhK10zjTTyOK93VzMgxpV5W5sA@mail.gmail.com> <as-fG4VB_4xnAI8n@google.com>
-In-Reply-To: <as-fG4VB_4xnAI8n@google.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 15 Oct 2026 18:41:40 -0700
-X-Gm-Features: AclHuK_QVOAQKY1S1XZkxawe6wbx-PftEnFXONrhi5eHzH2ij5-uw40iTGdk8vU
-Message-ID: <CAJnrk1ZezmmzrYdf8KP6re_a76izMS=qGPeC8ZZXiteHyZZC-Q@mail.gmail.com>
-Subject: Re: memcg stats flushing (WAS "Re: [PATCH] fuse: disable default bdi strictlimiting")
-To: Yosry Ahmed <yosry@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, James Houghton <jthoughton@google.com>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Miklos Szeredi <miklos@szeredi.hu>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, kernel-team@meta.com, 
-	fuse-devel <fuse-devel@lists.linux.dev>, Jingbo Xu <jefflexu@linux.alibaba.com>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, linux-mm <linux-mm@kvack.org>, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Nhat Pham <nphamcs@gmail.com>, 
-	Jesper Dangaard Brouer <hawk@kernel.org>, Yunzhao Li <yunzhao@cloudflare.com>, Song Hu <husong@kylinos.cn>
+X-Received: by 2002:a05:6808:1a21:b0:4f4:d7:b15b with SMTP id
+ 5614622812f47-50c415db066mr17134401b6e.4.1792115489161; Thu, 15 Oct 2026
+ 18:51:29 -0700 (PDT)
+Date: Thu, 15 Oct 2026 18:51:29 -0700
+In-Reply-To: <69d93248.050a0220.3030df.002f.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6ad18321.7952420f.283480.0192.GAE@google.com>
+Subject: Re: [syzbot] [cgroups?] [overlayfs?] possible deadlock in
+ cgroup_kn_lock_live (2)
+From: syzbot <syzbot+6dc923fb5b4671f0fcf0@syzkaller.appspotmail.com>
+To: amir73il@gmail.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, 
+	linux-kernel@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	miklos@szeredi.hu, mkoutny@suse.com, syzkaller-bugs@googlegroups.com, 
+	tj@kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 14, 2026 at 8:34=E2=80=AFAM Yosry Ahmed <yosry@kernel.org> wrot=
-e:
->
-> > Thinking some more about how stats are used... I think there's two
-> > categories the stats fall into: a) hot in-kernel ones (eg LRU sizes,
-> > workingset counters, dirty/writeback, zswap) which are read very
-> > frequently from the reclaim, refault, writeback and zswap paths and b)
-> > userspace-only ones (everything else) that are read through
-> > memory.stat / bpf / etc and much less often. The hot in-kernel ones
-> > are a small subset (~20 of ~80). Most of the stats fall into category
-> > b). However right now, a flush always aggregates *all* of these stats,
-> > even when the caller only needs / cares about the hot in-kernel ones.
-> > Flushing does all the work for the stats in category b), which the
-> > in-kernel flushers don't need. With the per-node lruvec copies, a
-> > flush goes through 100+ counters per cgroup per CPU vs ~30 for just
-> > the hot in-kernel ones (on a single-node machine).
->
-> I didn't measure this before, but I did tree adding a bitmask to check
-> which stats have updates and that actually made flushing more expensive.
-> It could have been the case that hot stats were distributed enough that
-> all the cachelines were being fetched anyway and the bitmask was just
-> added overhead.
->
-> I think you should do a simple experiment first about how much flushing
-> gets faster if you skip the stats not used by the kernel. It may or may
-> not matter, depends on prefetching (conversely, I wonder if explicitly
-> prefetching the entire stats array on each CPU would help).
->
-> I think it would matter less if we manage to completely get rid of root
-> flushes (except for userspace stat reads).
+syzbot has found a reproducer for the following issue on:
 
-I ran some benchmarks on the split rstat trees idea. On an x86 80-cpu
-2-node machine, it makes in-kernel flushing around 40% to 45% cheaper,
-but for the userspace flushers, reading two rstat trees adds ~25%
-overhead. I think this could be remedied though by just keeping the
-existing tree as is for userspace flushers (eg hold all the stats, not
-just the ones in-kernel flushers don't need) and adding a "slim" tree
-with just the hot in-kernel stats for the in-kernel flushers. Reading
-memory.stat would then just behave the same as it does now and the
-in-kernel flushers would just walk the slim tree. This would add a bit
-more overhead (and complexity) when updating hot stats though, but I
-haven't yet benchmarked this "extra slim tree" idea nor pursued it
-further. For the prefetching idea, when I ran some experiments with
-prefetching the entire stats array on each CPU, I saw it made flushes
-around 1% to 7% slower every time.
+HEAD commit:    045958acaa75 Merge tag 'net-7.3-rc8' of git://git.kernel.o..
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=1067ffd1580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=44ac479246d4559b
+dashboard link: https://syzkaller.appspot.com/bug?extid=6dc923fb5b4671f0fcf0
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1467ffd1580000
 
->
-> >
-> > What do you think about splitting the stats into two rstat trees, one
-> > for each category? In-kernel flushers would then only flush the hot
-> > tree (~30 counters). memory.stat would still flush both (eg userspace
-> > would see the same thing as it sees today). Each tree would have its
-> > own lock and its own stats_updates threshold.  I can run some
-> > benchmarks but I think this would make flushes a lot cheaper, and
-> > since flushes would hold the lock for less time, it should also reduce
-> > the contention we see between concurrent flushers right now. Together
-> > with using node counters for root readers, hopefully this will make
-> > the non-ratelimited flush cheap enough for all non-root in-kernel
-> > readers and ideally let us get rid of the ratelimiting variant
-> > altogether.
-> >
-> > Do you think something like this makes sense?
->
-> We have to consider the update side of things as well. How many code
-> paths will need to update both trees? That could be a problem.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+6dc923fb5b4671f0fcf0@syzkaller.appspotmail.com
 
-When I tried to measure the update cost of the split rstat trees (not
-the slim tree variant), I was seeing a lot of inconsistent / noisy
-numbers I couldn't get rid of even across boots of the same kernel and
-even between memcgs on the same boot, which seemed weird. I ran perf
-stat and that showed that the slow runs were executing the same number
-of instructions but had a lot of extra stall cycles. The variation
-between memcgs on the same boot pointed to maybe cacheline contention
-being an issue and when I ran perf c2c, it showed that the most
-contended cacheline between cpus was the first 64 bytes of
-mem_cgroup_per_node, which is strange since those are only read on
-stat updates and not written to.
+block2mtd: error: cannot open device /tmp/cg/nonexistent_mtd_bdev
+block2mtd: error: cannot open device /dev/nonexistent_mtd_bdev
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Not tainted
+------------------------------------------------------
+syz-executor140/5993 is trying to acquire lock:
+ffffffff8fe523e0 (cgroup_mutex){+.+.}-{4:4}, at: cgroup_lock include/linux/cgroup.h:482 [inline]
+ffffffff8fe523e0 (cgroup_mutex){+.+.}-{4:4}, at: cgroup_kn_lock_live+0x116/0x520 kernel/cgroup/cgroup.c:1719
 
-That struct already has cacheline padding (_pad1_) to keep the memcg,
-lruvec_stats_percpu, etc fields on a different cacheline from the
-lruvec but apparently Intel/modern cpus do "spatial prefetching" that
-pull in the adjacent cacheline (the Intel manual [1] says "This
-prefetcher strives to complete every cache line fetched to the L2
-cache with the pair line that completes it to a 128-byte aligned
-chunk"). So I think basically every time we read lruvec_stats_percpu
-(read on every per-node stat update), this pulls in the cacheline
-holding the lru list heads. The lru list heads are constantly getting
-written to by different cpus, so when the stat update happens and
-pulls in that cacheline, that ends up introducing a lot of extra
-overhead because it has to fetch that from another cpu, but also even
-worse, whichever cpu holding lru_lock has to now invalidate that copy
-before its next write and wait for all the acknowledgements to come
-back, which adds extra latency to the lru critical section and
-delays/hurts everyone who's waiting on the lru lock. I saw these same
-results on the baseline kernel even without the split changes.
+but task is already holding lock:
+ffff888071de6740 (&type->i_mutex_dir_key#7){++++}-{4:4}, at: inode_lock include/linux/fs.h:1024 [inline]
+ffff888071de6740 (&type->i_mutex_dir_key#7){++++}-{4:4}, at: vfs_rmdir fs/namei.c:5529 [inline]
+ffff888071de6740 (&type->i_mutex_dir_key#7){++++}-{4:4}, at: vfs_rmdir+0xed/0x8a0 fs/namei.c:5517
 
-I think having the update path find the per-cpu counters through the
-memcg instead of mem_cgroup_per_node fixes this. On a multi-threaded
-fault benchmark in a single memcg, it improves shmem throughput by
-~35% at 20 threads. I saw also that the inconsistent/noisy numbers I
-was seeing across reboots / memcgs on the same boot disappeared too,
-though I'm not sure yet why that fixed that issue. I'll clean up the
-change in my tree and send that out as a patch.
+which lock already depends on the new lock.
 
-But with that fix applied and with another series of local changes
-that move LRU stat updates to outside the lru lock (I'll clean up and
-send out this series as well, as it also applies to the base kernel
-regardless of the split changes), I didn't see the split changes added
-any update overhead that wasn't within noise. The lru stat updates
-changes to move it outside the lru lock are necessary though, as
-without that, there was around 2% increase in update overhead, since
-it added more latency to the lru critical section. But after that was
-moved out of the lru critical section, I didn't see any degradation
-anymore.
 
->
-> From a code perspective, it would also be a bit annoying to maintain. I
-> would check if we can eliminate root flushes first tbh, then check any
-> other potential optimizations on top. Subtrees should me a lot smaller
-> than the entire tree.
+the existing dependency chain (in reverse order) is:
 
-Will do.
+-> #3 (&type->i_mutex_dir_key#7){++++}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       down_read+0x99/0x4c0 kernel/locking/rwsem.c:1574
+       inode_lock_shared include/linux/fs.h:1039 [inline]
+       lookup_slow+0x42/0x70 fs/namei.c:1935
+       walk_component fs/namei.c:2311 [inline]
+       lookup_last fs/namei.c:2818 [inline]
+       path_lookupat+0x5e8/0xc40 fs/namei.c:2842
+       filename_lookup+0x202/0x590 fs/namei.c:2871
+       kern_path+0x37/0x50 fs/namei.c:3065
+       lookup_bdev+0xd8/0x2a0 block/bdev.c:1268
+       bdev_file_open_by_path+0x82/0x330 block/bdev.c:1123
+       add_device drivers/mtd/devices/block2mtd.c:279 [inline]
+       block2mtd_setup2.isra.0+0x2f8/0xc60 drivers/mtd/devices/block2mtd.c:459
+       block2mtd_setup+0xbd/0xd0 drivers/mtd/devices/block2mtd.c:476
+       param_attr_store+0x199/0x300 kernel/params.c:591
+       module_attr_store+0x58/0x80 kernel/params.c:906
+       sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
+       kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+       new_sync_write fs/read_write.c:595 [inline]
+       vfs_write+0x6af/0x1050 fs/read_write.c:687
+       ksys_write+0x12a/0x250 fs/read_write.c:739
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x121/0x770 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
->
-> > Separate from this but also kind of semi-related, I noticed
-> > css_rstat_flush() takes the rstat lock for every possible cpu, even
-> > cpus that have nothing to flush for the subtree. Maybe another
-> > improvement is to just first check locklessly whether there's any
-> > updates and then just skip the cpu if there aren't any. I can send a
-> > patch out for this.
->
-> Only the updated cgroups are on the update tree, not their ancestors,
-> not until the flush time. We used to put the ancestors on the tree on
-> the update side, but we don't anymore.
->
-> So we can only check the if the per-subsystem list is empty, not the
-> subtree specifically, right? Can we walk the per-subsystem list without
-> holding the lock or deleting first?
+-> #2 (param_lock){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       ieee80211_rate_control_ops_get net/mac80211/rate.c:221 [inline]
+       rate_control_alloc net/mac80211/rate.c:267 [inline]
+       ieee80211_init_rate_ctrl_alg+0x1df/0x3b0 net/mac80211/rate.c:1016
+       ieee80211_register_hw+0x2c5b/0x45c0 net/mac80211/main.c:1565
+       mac80211_hwsim_new_radio+0x2b08/0x6510 drivers/net/wireless/virtual/mac80211_hwsim_main.c:6143
+       init_mac80211_hwsim+0x5e2/0x6f0 drivers/net/wireless/virtual/mac80211_hwsim_main.c:7633
+       do_one_initcall+0x11c/0x6f0 init/main.c:1362
+       do_initcall_level init/main.c:1424 [inline]
+       do_initcalls init/main.c:1440 [inline]
+       do_basic_setup init/main.c:1460 [inline]
+       kernel_init_freeable+0x6ea/0x7b0 init/main.c:1675
+       kernel_init+0x21/0x1e0 init/main.c:1565
+       ret_from_fork+0x730/0xd60 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
 
-My thinking was that on machines with hundreds of cpus, a good number
-of them would likely have no memcg updates since the latest flush so
-even the per-subsystem list would be empty a lot of the time. I can
-try to find some data though on how often that actually happens in
-prod.
+-> #1 (rtnl_mutex){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       cgrp_css_online+0xa1/0x1f0 net/core/netprio_cgroup.c:157
+       online_css+0xb2/0x350 kernel/cgroup/cgroup.c:5871
+       css_create kernel/cgroup/cgroup.c:5949 [inline]
+       cgroup_apply_control_enable+0xa8d/0xdd0 kernel/cgroup/cgroup.c:3460
+       cgroup_mkdir+0x57f/0x1330 kernel/cgroup/cgroup.c:6150
+       kernfs_iop_mkdir+0x111/0x190 fs/kernfs/dir.c:1305
+       vfs_mkdir+0x364/0x850 fs/namei.c:5439
+       filename_mkdirat+0x48b/0x5e0 fs/namei.c:5472
+       __do_sys_mkdirat fs/namei.c:5493 [inline]
+       __se_sys_mkdirat fs/namei.c:5490 [inline]
+       __x64_sys_mkdirat+0x89/0xc0 fs/namei.c:5490
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x121/0x770 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-I think maybe walking the per-subsystem list locklessly could be
-slower in a lot of cases than just acquiring the lock? It seems like
-we'd have to walk the whole list to know for certain if it's a
-negative or not.
+-> #0 (cgroup_mutex){+.+.}-{4:4}:
+       check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
+       check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+       validate_chain kernel/locking/lockdep.c:3952 [inline]
+       __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       cgroup_lock include/linux/cgroup.h:482 [inline]
+       cgroup_kn_lock_live+0x116/0x520 kernel/cgroup/cgroup.c:1719
+       cgroup_rmdir+0x22/0x2f0 kernel/cgroup/cgroup.c:6402
+       kernfs_iop_rmdir+0x106/0x170 fs/kernfs/dir.c:1323
+       vfs_rmdir fs/namei.c:5544 [inline]
+       vfs_rmdir+0x328/0x8a0 fs/namei.c:5517
+       filename_rmdir+0x31a/0x5c0 fs/namei.c:5601
+       __do_sys_rmdir fs/namei.c:5624 [inline]
+       __se_sys_rmdir fs/namei.c:5621 [inline]
+       __x64_sys_rmdir+0x46/0x70 fs/namei.c:5621
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x121/0x770 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-My plan is to clean up and send out the changes I have in my local
-tree this next week (the cacheline fix, switching root readers to node
-counters (getting rid of root flushes), updating stats outside the lru
-lock, removing ratelimited variant of flushing (and then if needed,
-more experimentation on the slim tree idea)).
+other info that might help us debug this:
 
-Thanks,
-Joanne
+Chain exists of:
+  cgroup_mutex --> param_lock --> &type->i_mutex_dir_key#7
 
-[1] https://www.intel.com/content/dam/doc/manual/64-ia-32-architectures-opt=
-imization-manual.pdf
-(bottom of page 62/800)
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&type->i_mutex_dir_key#7);
+                               lock(param_lock);
+                               lock(&type->i_mutex_dir_key#7);
+  lock(cgroup_mutex);
+
+ *** DEADLOCK ***
+
+locks held by syz-executor140/5993: 3, last CPU#0:
+ #0: ffff88807ea22460 (sb_writers#10){.+.+}-{0:0}, at: filename_rmdir+0x1ff/0x5c0 fs/namei.c:5590
+ #1: ffff888076d68f80 (&type->i_mutex_dir_key#7/1){+.+.}-{4:4}, at: inode_lock_nested include/linux/fs.h:1069 [inline]
+ #1: ffff888076d68f80 (&type->i_mutex_dir_key#7/1){+.+.}-{4:4}, at: __start_dirop fs/namei.c:2947 [inline]
+ #1: ffff888076d68f80 (&type->i_mutex_dir_key#7/1){+.+.}-{4:4}, at: start_dirop fs/namei.c:2971 [inline]
+ #1: ffff888076d68f80 (&type->i_mutex_dir_key#7/1){+.+.}-{4:4}, at: filename_rmdir+0x258/0x5c0 fs/namei.c:5594
+ #2: ffff888071de6740 (&type->i_mutex_dir_key#7){++++}-{4:4}, at: inode_lock include/linux/fs.h:1024 [inline]
+ #2: ffff888071de6740 (&type->i_mutex_dir_key#7){++++}-{4:4}, at: vfs_rmdir fs/namei.c:5529 [inline]
+ #2: ffff888071de6740 (&type->i_mutex_dir_key#7){++++}-{4:4}, at: vfs_rmdir+0xed/0x8a0 fs/namei.c:5517
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 5993 Comm: syz-executor140 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/07/2026
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ print_circular_bug.cold+0x178/0x1be kernel/locking/lockdep.c:2087
+ check_noncircular+0x146/0x160 kernel/locking/lockdep.c:2219
+ check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
+ check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+ validate_chain kernel/locking/lockdep.c:3952 [inline]
+ __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
+ lock_acquire kernel/locking/lockdep.c:5942 [inline]
+ lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+ __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+ __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+ cgroup_lock include/linux/cgroup.h:482 [inline]
+ cgroup_kn_lock_live+0x116/0x520 kernel/cgroup/cgroup.c:1719
+ cgroup_rmdir+0x22/0x2f0 kernel/cgroup/cgroup.c:6402
+ kernfs_iop_rmdir+0x106/0x170 fs/kernfs/dir.c:1323
+ vfs_rmdir fs/namei.c:5544 [inline]
+ vfs_rmdir+0x328/0x8a0 fs/namei.c:5517
+ filename_rmdir+0x31a/0x5c0 fs/namei.c:5601
+ __do_sys_rmdir fs/namei.c:5624 [inline]
+ __se_sys_rmdir fs/namei.c:5621 [inline]
+ __x64_sys_rmdir+0x46/0x70 fs/namei.c:5621
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x121/0x770 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f81c4d28557
+Code: 00 00 90 48 83 ec 10 48 63 ff 45 31 c9 45 31 c0 6a 00 31 c9 e8 4a 02 02 00 48 83 c4 18 c3 0f 1f 44 00 00 b8 54 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 01 c3 48 c7 c2 d8 ff ff ff f7 d8 64 89 02 b8
+RSP: 002b:00007ffe71e77668 EFLAGS: 00000206 ORIG_RAX: 0000000000000054
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f81c4d28557
+RDX: 0000000000000000 RSI: 00007f81c4db03a3 RDI: 00007f81c4d83e7b
+RBP: 00007ffe71e77670 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000206 R12: 00007f81c4d83e50
+R13: 00007f81c4d83e7b R14: 000000000000001e R15: 0000000000000002
+ </TASK>
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
