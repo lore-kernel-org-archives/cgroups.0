@@ -1,334 +1,241 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11022123.outbound.protection.outlook.com [52.101.66.123])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDBE244AB68
-	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 12:12:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E250C4756D3;
+	Fri, 16 Oct 2026 12:27:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.123
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792152732; cv=pass; b=lI/N7vgFR0cgG0EDL2qoPkZ4ytaqDduBkYs5jKBzmNm8n9IRfMSL/wZjye7QjJCODWDNVsLZ5M4uJy9mrmmqIqsPTZMBHJ8p74IlGZwfn6DB5TKSEwNka6mGOEcv6NYiH4Hck5PepfwoZ95Q0zSFZAguZLDNlteSminjDXvjZS8=
+	t=1792153661; cv=fail; b=OqxECPsTREDsU+yR/jRMFYo2GTWBZjvSgS7m6v16Eoy99yFABR5rEuoyz3QGWBZjW/CsdhNxgUhWguYAlh/Hh4iWOX4QER7io+XR2ogUBEx9yMkPz0X0GhN0guEoFh+Qo3QRgDMxKhzif85J3Tgle9SQ3vR8J+Iwdm3OR3pQDH8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792152732; c=relaxed/simple;
-	bh=6IYjp02uYmxvMluUbWofrgoM9m03JSf8XQivc0rvedw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=bapg1ZxBp7mF3z3FifwEBArdgHFKRM633mRRxnk1XsE1kVbuNL0CGhtnOUKTNaOdsOkkG0FssKQyIk8f6Vyiqr+e465JIOF670bqTf6nNXQ6tLLuJWwsWWWrWkvwriZWqD0xdikdA6gEnHIu3pyDIKiVyjwTsrz6LI2QeQn61hE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KsMCenwG; arc=pass smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792153661; c=relaxed/simple;
+	bh=nKBhTKrsqjXWnPX93DCWIEAJQ5IEP+CnB+n82tipHy8=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=igMOeClLQ/mu2RfP1AlLLnBQcrkOL17rK1So2FIvFDHGjBXTdJ2gpu2RGTVIZQ1JlntObP7KIiTgoQ63svc9qF5jHzxw/zN2Gb4xmucuQU81rwt6k+xuLApxvNJf2lzWndBhrDFaOcXZ6d2V369fawC9oMAQAHuiz50IzLV/OOw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com; spf=pass smtp.mailfrom=virtuozzo.com; dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b=C0xxYPSx; arc=fail smtp.client-ip=52.101.66.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=virtuozzo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KsMCenwG"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6b1ec41d8e9so3102977a12.0
-        for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 05:12:10 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792152729; cv=none;
-        d=google.com; s=arc-20260327;
-        b=AgaYv8gt63xTjqI62OKCUvN3B2jT1jkJJzUk7knxjOtHrXSKURp8syu333OFC7WA+M
-         iKyQxuDJhKPFKy0NqWsv9X6RUt0IYBuqNvEjlRChphJY4Y9LtO4MDAv1nsYrWR/UjuHo
-         adz78yyi2KU0GzQi9PYCHEcBupW/yl0/2oR0+wO/AsAv6hPM5/JDWeI2OgKfIjyW9RkZ
-         LtDT15iqnPmw+BgEymLkSR5xDHh2c1/F3xa/dH1EVqtrtxvJL52STDEBD0Y5LzutzauB
-         9CByg8KEb7I2X1o111tqNYYhNRppNp3allwjABbIs3TVly2Tdhi5glrZaqtujZ9w9uDS
-         2WZw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=6t2J8EE3L3nlE7G0BZMfNQxPefv2h/6dn0nY1OvRibM=;
-        fh=k5qP4/S9y/VqAa1Mg3LcNKxJL6Ic5tSR1CTyuvZm4/Q=;
-        b=V86Bo3qmJ5xvRQQ9dHLp8ZA5Kx+fUeGJAVWwOYudZIwIJrwRSSzvhXlYP2VLn39MvN
-         5x0TN+fQYPRrJY7JjInjYkFgEVKtMuuLBk9FMkUfbz6LFIRtFjlPCLUItB0tkBgSX8s4
-         1i7Juz9/UI7/9jbNd2S7SqQp+PO+JIsy1zMz9wQQ4R1c0CN1pNPzZXUmmB99vpISC2Oq
-         rgsqUiYYeSiWWJjJ+8m8BQrRF1xDMCKeybGQNqWxu3Qi5/oLo9HKUq2BvKDTLmHJyMgJ
-         dm1eNAklcHbf7xubf+7UNrhSdBCxk1CybnUYbMyzUDiKRcNSoj+bepk0ZpDJCf1OLJ5A
-         2CSw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792152729; x=1792757529; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=6t2J8EE3L3nlE7G0BZMfNQxPefv2h/6dn0nY1OvRibM=;
-        b=KsMCenwG4UKWLxxBE6KqU1ddztmwWw4k1EAO0JaJSOVkMOvywgA28VEnyrrKZKZUiw
-         K6GuKxuYyH3yiJbJjrrqfXCdu80PO9CvtJ+9ngNS2ngF59q+OpZAbKlB1rcvLh5kiJ5v
-         agsC3bVm1aZPz2k1ERTKIuLLjmZQN2k3G6ulezBjR0NOyilLM0vL2ev+O73fyhwm5feH
-         Bh5no+EhvL+857OvptDpIvJ0pgIq40xAlGMcLWo+lp37iB80ZDNPtKaHWYuKKMlMyxAx
-         SzUN9tx7eAtgrBICXvoa+A4tJ7Y+FC8MGVf4hmwQQoIooOVETYMM7kLJf4Gur47LLDKJ
-         QNsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792152729; x=1792757529;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6t2J8EE3L3nlE7G0BZMfNQxPefv2h/6dn0nY1OvRibM=;
-        b=dib3LIQTboVmyO9aK5YMBvf18L6gyQfWUoqRqS7zDJY0zuPGDlTxGEZJ+0ozIBPbZ+
-         CSgBrkw4i1Hb2wuxxbnHgBBLG5Tg13Ax58u4cHruTiJj1v8OygE39719idIMOb4GA/YR
-         oYpKa+gq2BdgM8K16S1V1iJytwvjFu85QIQlRRiIK0zp0hrj/IA3tkb+aVWhSQmODSfC
-         MfgjRWZ8HCwgmj4MHFJEr2UV0pWoPH9Gu1Mx7YcJXTjPO/2FszAOnSu/r13QaF3neuJ1
-         N89mta1Oj6b4y+kY1SAGGCir0/aZJ2JIgMwZ9OmUsudcVXk/4b5AU2YcSgsIwXtBvFer
-         Vp1w==
-X-Forwarded-Encrypted: i=1; AKwUvBw2btXtklqH9UfvmEkQb+QejPNwZQds+ke1levFVrPNbjCeV02dFD91W2W06w9COrnKYt1FqxIw@vger.kernel.org
-X-Gm-Message-State: AFq9FYJiBXer1HGxhqcOfKAXn4MftCM3GKW5qQBaloE25zmBZwIC3bvV
-	QqdsuR/W+AKPbQeWto6P1Sa7Xly9JAg5YzEPfcOZlE1eWwdzyKUYfqWI5TjZF9bzpkAeyDqiyBE
-	5syevINs/xbKfYReXvY4LFK7g5y7/1H8=
-X-Gm-Gg: AYBFou2f9YRvUD+qDDBrSFE66OZq5xJMZWrTC1dWPAyyZwSdlYJWkIZ7UlAY3pNRmJj
-	vNkn7Rs0c7JNg6Synh/UL5avYi3Rc57VdoXwV+cSEe+QwyQvEHUJwPA2MYb/ZL67rVWvDx/4WiV
-	i2N4wp2DS1jXmSVNlXCkLLFJZSeAn2fpNUERe/FXlddWL3v/+J2xsZdVH5t6fcCVILv6p/UQEJ+
-	lnKPqtCGxworV+xXAZm1ZYZSUiqYMs/4E99arTIr8wNmKoRnS3E+j0mzm1zO93ufxCDFrNSIzcP
-	YG4V+gNIeqNKar38CwoiYHStO0FYeb4OOpm/4S2PESbpKjeSBEX1EP4t6xUro/nTtzEcYuvDlMe
-	TYezZ+1yXpAEl
-X-Received: by 2002:a17:906:ba90:b0:c41:1e13:4ba9 with SMTP id
- a640c23a62f3a-c411e1365e0mr83342566b.6.1792152728681; Fri, 16 Oct 2026
- 05:12:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=virtuozzo.com header.i=@virtuozzo.com header.b="C0xxYPSx"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bZR/f2o4wxGr8L4xq8x//EjkogGoQBFk4qlkGK/iEUYP47a7n8zaOWVUhBVyeZ90famWJ86miEpKmLdJLoNVEusBzj7QOTWQ/uQJnch8u1BsB0sJ1WTvWyKl0Ryn5FF0jhcbkMvVd3xcrpB1VOrGH6KbuSuwz46wk3l2VsAIzJz9Leqp+P4TAF4NqRPxEx5nXLqhrng2grbtl9m8gVq9IjVXCEU+Xm3mLnemaguQh7T5mJ9sO4TYBFVKDcnN+o2C4j1LJPTb+SCk2AJ/F51pBWGKvD/XAjps2Viwe6jThw6ga6jJpOPUS0/KhcNC/jdU/PjQy8UjdnoeDlBcGr67sQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sDs8yymC7kt1hu+CCj3hvfDmSkC9LcuDYb+F/NTbs2A=;
+ b=FPUefpTwhlcqvui1vsywN6IHkskL1Q34gGHl5/GbA7+5gUXTYhz0PcoQvL3ZCOsQRi+u3VvosIghg86EGO8IMZt4Crz7d3nnw9EcMD2x3jEblkrFM41QV4TYBLXRiLQMsVmbUo2r+MIJ1mf6e6etzu0FxYbAEa/n4RWvN8cGiWOZQjQz9K/JGjPVpaTfWu7e8h5JI/ilRozVVEdyaH/5tnCW4zbMnJMDqwBAI8slZWYgBpw3TiDTAIkbWqefGxWnCKNAL2vYLFfiuPp8XARKw6sG8/W0M3doA1ZJsKMk1tkPOah55pzwkK6IC3z3rNsmtoJoRIMHo4lFavJTrd2Zpg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=virtuozzo.com; dmarc=pass action=none
+ header.from=virtuozzo.com; dkim=pass header.d=virtuozzo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sDs8yymC7kt1hu+CCj3hvfDmSkC9LcuDYb+F/NTbs2A=;
+ b=C0xxYPSxJJYEbxmaJLv51VLOjfnkgq2rV/o8YlWuZYU9TdvOY2GYqKZ4uAJIYfpDcaIBQ6LtWrZs/04Vhp4mgdgV2hJeGHkNuedAbDffRi4T7ckugaJUfiz/ZcvUH3BNRnAA98VShb2L9KRk2ZAbR7YUtvyI2In2UYca5JmkKDPEyAOOwYofswSfVLm4jbUxZsIVK4gpiYhBQUr4nyZwlHjSyQKwsTrP0GEl+Vh7Xv4+htWE+dfdqrk7qBdXXhQFisrUuNr4n4VWQtYJb8a+4g1xPbYhHwsqiYSEqbKhZil54XA3Zh/mUZmTxyFpSXtlNL1LWG+MLw3Vz+MZ5IOU4w==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=virtuozzo.com;
+Received: from PA6PR08MB10708.eurprd08.prod.outlook.com
+ (2603:10a6:102:3c7::20) by PAXPR08MB7395.eurprd08.prod.outlook.com
+ (2603:10a6:102:2bb::9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.7; Fri, 16 Oct
+ 2026 12:27:34 +0000
+Received: from PA6PR08MB10708.eurprd08.prod.outlook.com
+ ([fe80::1999:c6db:dc55:494a]) by PA6PR08MB10708.eurprd08.prod.outlook.com
+ ([fe80::1999:c6db:dc55:494a%5]) with mapi id 15.21.0546.006; Fri, 16 Oct 2026
+ 12:27:34 +0000
+Message-ID: <79c1246f-8c9e-4e2a-adbf-e730732b33b1@virtuozzo.com>
+Date: Fri, 16 Oct 2026 14:27:32 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/2] mm/shrinker: make per-memcg shrinker units cheaper
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20261014-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v2-0-51af2aedbe6c@virtuozzo.com>
+ <20261014135046.7b13252ce99d918ffcdb1f49@linux-foundation.org>
+ <84c9e97b-67c0-4c9b-bb7d-81811af8a16b@virtuozzo.com>
+ <20261015175836.efc93cf9de01306402da61f9@linux-foundation.org>
+Content-Language: en-US, ru, sr
+From: Konstantin Khorenko <khorenko@virtuozzo.com>
+In-Reply-To: <20261015175836.efc93cf9de01306402da61f9@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AS4P195CA0007.EURP195.PROD.OUTLOOK.COM
+ (2603:10a6:20b:5e2::7) To PA6PR08MB10708.eurprd08.prod.outlook.com
+ (2603:10a6:102:3c7::20)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016084256.12955-1-baohua@kernel.org> <CAMgjq7AtuK22FsuqvGRLVZ2eWrp-N4qQ_MHoXsXDkVBprekdDA@mail.gmail.com>
-In-Reply-To: <CAMgjq7AtuK22FsuqvGRLVZ2eWrp-N4qQ_MHoXsXDkVBprekdDA@mail.gmail.com>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Fri, 16 Oct 2026 20:11:32 +0800
-X-Gm-Features: AclHuK-z6qzMGmKAbzLQtij7nv772LAigQWhuT7JqlQxVqOPHcB0PjAQdUtEGDA
-Message-ID: <CAMgjq7Ao-1q5r7KtwV-UyvuP3hSazkfr3BbmKL+fv=dSDaU2Cg@mail.gmail.com>
-Subject: Re: [PATCH v4 00/17] mm/mglru: frequency guided promotion (MGLRU-FG)
- and flag cleanup
-To: "Barry Song (Xiaomi)" <baohua@kernel.org>
-Cc: devnull+kasong.tencent.com@kernel.org, akpm@linux-foundation.org, 
-	axelrasmussen@google.com, baolin.wang@linux.alibaba.com, baoquan.he@linux.dev, 
-	cgroups@vger.kernel.org, chenridong@xiaomi.com, chrisl@kernel.org, 
-	damon@lists.linux.dev, david@kernel.org, dev.jain@arm.com, 
-	ehab.ababneh@intel.com, gourry@gourry.net, hannes@cmpxchg.org, 
-	hughd@google.com, kunwu.chan@gmail.com, lance.yang@linux.dev, 
-	liam@infradead.org, lianux.mm@gmail.com, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, liuxiang.277@bytedance.com, ljs@kernel.org, 
-	mhocko@kernel.org, muchun.song@linux.dev, nico.pache@linux.dev, 
-	nphamcs@gmail.com, qi.zheng@linux.dev, rientjes@google.com, 
-	roman.gushchin@linux.dev, ryan.roberts@arm.com, shakeel.butt@linux.dev, 
-	shikemeng@huaweicloud.com, sj@kernel.org, surenb@google.com, 
-	tz2294@columbia.edu, usama.arif@linux.dev, vbabka@kernel.org, 
-	vernon2gm@gmail.com, wangzicheng@honor.com, weixugc@google.com, 
-	willy@infradead.org, ying.huang@linux.alibaba.com, youngjun.park@lge.com, 
-	yuanchu@google.com, yuzhao@google.com, zhaozhengzhuo@uniontech.com, 
-	ziy@nvidia.com, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA6PR08MB10708:EE_|PAXPR08MB7395:EE_
+X-MS-Office365-Filtering-Correlation-Id: e2603f1b-55ef-457d-86ac-08df2b80daee
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|23010399003|5023799004|56012099006|4143699003|261009223027099003|10067099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	8BsWWbn50ZUrAqCq/i7O+qHMqUl2zbnJsAoVTqUyXt0z4aczlpMmsweqOF65/vaRpe84Du3xfhaSVlZ+KsdgC/NUn2iHE8fhRH44jNpa/yIMpi2HdugnzEWHHztFDGWAPr/AS54ADb3fJQlxc/lRxJGWwv/YxNSD+s0L66HBoES3b34YXbvBAaejzSrsa5rc/ASmBt/brevjGfnrIW8fZbqi0MFV6ebSN9SPIFqIVB8y7tpxm1US2YOzE32W6IJo6gCXUm07+UaVQDRFXAsJ21tqij8mlTjKFZQI5PzkDzsCPjG056yG0d4O6vblVIZCqG1IgXORhtQeKG/KZO+50s+SNDkSOr5WbQf+yLGe1AQ3ebzSXbDKYEnDaqmBa7fUHCb8sevtLLC4BYAeVBVZQTT0N06k0uEaU4GBvaJtFd/GFsso190I/axKWJpPpFHaEX70ajAO+tMsVMJR9K691aLy6AJRVCVsTJ+CqezRIhHlVGNXa2l5UJLg3ql/9huM5PZMrtYu4kOzM15PosDY2tsr6RanAS8m+qvvMcU4UYFcHTXrtGjsjnA6yLdoZ6ilnZbq9kJUVZ+6HCHXQj6O3oSagV4kHdmOcuwibYgs/kO+Zz6E/NJzct/avtrD7NxMd3Szlszfphcx7L8DxJVNAwROF+UiKB/e3bS9FcQBlrs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA6PR08MB10708.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(23010399003)(5023799004)(56012099006)(4143699003)(261009223027099003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?RjBhOUNaUDNkUTY4OWdUcEU0MThXWE9peTVoS3lPVW9JRkVRdU1mK2hHcXVJ?=
+ =?utf-8?B?Ulp1eGxOMFp5VjFkUUlVRURRQkZ2UXRwUHU3OC9MaXZHTUVpeXdOaUM2Sm9Q?=
+ =?utf-8?B?R0ZxVTNYSjNjTDgvWUlzZU9vZTliT0hxTVo1eCtTZjhjd2g4enhOd202OVVt?=
+ =?utf-8?B?MWFWNXd6SjltMXlVLy9tdXcwMlNJZkptTk9tU3luengzckJieEYzbHdWeUdE?=
+ =?utf-8?B?TDRWY01uVDBWdHFmK2g1VHhUVXZVWWl2cVhEV3FvRnhHWEpRemxYL2xEQ2ZN?=
+ =?utf-8?B?R1lDM0J4Q3MyYUlUMkZPbzhNeUIzUGVDcTVkb2Nic3pOWnlTck0rU0tpbkVu?=
+ =?utf-8?B?eFVKRW1sYldMRStnM3NWYnFpRWV2bEZUcFl0RWhnb0lJUDF5Vmcva2hKUjFY?=
+ =?utf-8?B?dDFYVXlRbGUrWit1Y3BJeTN1M0VjUWROMDJvRVAvQVhZS0JOYXJlWXZRT05X?=
+ =?utf-8?B?allJdFFhUE9HREhSckIrY2VFSzhLaVhyMXlwQ1pLYkxKaDA2bDhmNTRjcGtF?=
+ =?utf-8?B?ajJKaWR6czRiS1BtakRNSVhlaEpzRlFJdGhkbHI5MGM5VmJMQUNSV1Z0QzJV?=
+ =?utf-8?B?Zk8ySysrMm5xSnFIYjRqL2Z3WUZqdlV2dHdjVGE3djNMcUd5YWVPeUttdWs1?=
+ =?utf-8?B?dEVoMWthd0NaWjlBd2JRMzV2YVRjaXNCSGZYbTJxTUxoUWUrY3VLNjhab0Nr?=
+ =?utf-8?B?WEJuRE5RUk80cXRRclZSKzVLOTZWWDhCK3pRemhLWTU3OFlaNkMvMmVQM3Qz?=
+ =?utf-8?B?NDArZXBRbSsxYkp4ZjN1U0pqMjlIL2hNTjZpRC9IQlJaQzZ2R2NhcCsyYzhE?=
+ =?utf-8?B?YVlhL2ZGRHRkcUcxdCt3VzNReGQ2NVhqZmhkNEs4MUJqVWRmWnFVZnNhN1pX?=
+ =?utf-8?B?ZXBUL1lYaGJWWVR0NVpUd3lkTUh2cElMbmVNVU1Ib1R2b0Q1THkwdXU3Q1pH?=
+ =?utf-8?B?QWFIZjVZTGxsZzlIRUI3OFJuTW9zelZKYURyVE5ubFdxSFVoQk9aQlhqajFv?=
+ =?utf-8?B?K1JsK3YrbWdwVEt6eHhzaUU5U01KNXZ0bHQ3VEo3dFpYMjE5elh1dVZXaUVm?=
+ =?utf-8?B?T1grYmdPT2NaOHZMSUl2eFRPS2FzVm0xZHBtV3ozTWhzaXdTZEZ5RVNsSzR5?=
+ =?utf-8?B?SjA4YXNZV2tlMW5SbGNEd0pCQlVVaGU2RUsvL3V4OHowTXkyd0U0aDNoNVRX?=
+ =?utf-8?B?OTFXVi8xMlhJWGt2ZUtmY2Y2WHM2WS9aWFcwTmI1cmY2L3pFMHlGVkJiSXhC?=
+ =?utf-8?B?WThyRnZsWG5uTmtFSzhPNW1ZQ0RUTnBWTkxWbjl0SFFGaTRmejVKMmE3dEFk?=
+ =?utf-8?B?bEdJV0h3MEVLNXppSkgrL2Zuam9oWUdieGVaSVdqME5PR3Z3azdmbHhBalNP?=
+ =?utf-8?B?ZXV5dEY1RHNuREU4ZjdwYnhDS3d6ODY2dUlWZ3pyMFByeFhyaDVJTnFtNS9x?=
+ =?utf-8?B?SWt3ZXNzd1o3blBsOXlNdTlzb0EvQzRJMkRtTTlqbEp1Qk9CU1FZQ3FUQmt6?=
+ =?utf-8?B?YTJQelZHamRnMHJsVGNtUFlxbW9YZG1VeERMZWV4RVFOZFI1L3hEWGpzUEJx?=
+ =?utf-8?B?M2tBZHNZK1pnY0t0amlHWTd6azRNbExyVjh1eTgyV201MFM0QXg2cUVETDdF?=
+ =?utf-8?B?bitOTE1BVm5FQ3BTWVdRaG5XdDJ1U0ZrQ3dyVXgxYzRCYSswd1F1SmNFUi85?=
+ =?utf-8?B?WEhSK2NEczZzalVoRXZxTGd4SFAvM1B1MXlKaDlWRVlwSTdhU2NId2J0MGdo?=
+ =?utf-8?B?dUUyTThJVUFrQTZUWmhCOUVISUFZbWViaVBoZWF0aHo0NkNXTHNycm81a2Jr?=
+ =?utf-8?B?RkYySVNTMWJCU2luMm9LcExjWnVGZWhoTFVYdEtmZ2VXQzJpTzhhUUVXWENK?=
+ =?utf-8?B?akhQa2pKK2pSM2NNcXRxNzd5OFFQZUdYcWt6TFdpNHFYcU1UbWpVQ3ZVL3N2?=
+ =?utf-8?B?c3RlcHVGL0ZvVUVyTE81SkJINUNKTTkyU29vL1RMSko3NGtRR1VGZmxISlVE?=
+ =?utf-8?B?TDlWaEFWcUlDZE54aVlvajI0ZEVLcnJpWnRLK2hqT2lRYWxlVGVIMWJxelVX?=
+ =?utf-8?B?b3NWNTZIV21Va3JDRjdoUUhNanhlMHVJbEJMS1dhT2pCeUVEbG9US2toR2U0?=
+ =?utf-8?B?VDNhRHRqbUFhV0N2dWhTRkxvT2RMcEJJQmJhUTFJYm1nTHBNSGc2SHBXZkQ1?=
+ =?utf-8?B?Y09ZWU1PekZ5TUt4MU1nNUZ2VTE3K1RhQmhyY1pMR3V5R3A5NTdaRjlNRmFD?=
+ =?utf-8?B?ZGtSMGRPRUhpNjVJZTkrdGJGY01mS05VMUNwYzErSi94V2hERG1RbE13Tk1E?=
+ =?utf-8?B?cmU0cXpYcnNvSVRhZFpISFU5dldhOVJ3cTZaZ29FTEZxbG5TUmlJUT09?=
+X-OriginatorOrg: virtuozzo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e2603f1b-55ef-457d-86ac-08df2b80daee
+X-MS-Exchange-CrossTenant-AuthSource: PA6PR08MB10708.eurprd08.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2026 12:27:34.0482
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 0bc7f26d-0264-416e-a6fc-8352af79c58f
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: UhIOew/mGYn/q94KmTj49zkCDDS9D3c8JlPoz2OW/eDEwekEtZ9iLx1Lm7/fhAF8g8pyM69tCSFIVwaYqo9rlA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR08MB7395
 
-On Fri, Oct 16, 2026 at 7:43=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrot=
-e:
->
-> On Fri, Oct 16, 2026 at 4:43=E2=80=AFPM Barry Song (Xiaomi) <baohua@kerne=
-l.org> wrote:
-> >
-> > On Fri, Oct 16, 2026 at 2:15=E2=80=AFAM Kairui Song via B4 Relay <devnu=
-ll+kasong.tencent.com@kernel.org> wrote:
-> > [...]
-> > >
-> > > LevelDB Scan/Get
-> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > I also retested the LevelDB benchmark from the cache_ext paper [5].
-> > > Interestingly, mainline MGLRU already beats CLRU on this one after a
-> > > recent change in lru_gen_folio_seq that bumps new folios with refs =
-=3D=3D 1
-> > > to the second-oldest generation as discussed. That change accidentall=
-y
-> > > gave random reads a higher hotness level while making sequential read=
-s
-> > > much colder as described before [14]. However it's unreliable and
-> > > incorrect because it depends on LRU drain timing, and hurts some work=
-loads
-> > > as reported, or where the sequential part is actually hotter (any wor=
-kload
-> > > involving hotter large file and many small cold files will be affecte=
-d)
-> > > which is reproduced below.
-> > >
-> > > This series improves it while covering ordinary workloads too and sho=
-uld
-> > > fix regressions:
-> > >
-> > > LevelDB Scan / Get, Throughput Total:
-> > > CLRU:         4708.3 ops/s
-> > > MGLRU:        5026.9 ops/s (faster than CLRU, but hurts other workloa=
-ds)
-> > > MGLRU After:  5179.2 ops/s (even better in all cases, and no regressi=
-on)
-> > >
-> > > The hot-sequential and cold-random workload can be easily reproduced =
-with
-> > > SQLite and grep. SQLite continuously scans and looks up a small hot
-> > > portion of a DB file, while grep iterates over a set of small files m=
-uch
-> > > larger than RAM [6]:
-> > >
-> > >          SQLite scan & lookup time:       Grep iterate time:
-> > > CLRU:                       14.51ms               13281.37ms
-> > > MGLRU mainline:            567.05ms               13694.47ms
-> > > MGLRU After this series:    10.58ms               12930.43ms
-> > >
-> >
-> > Thanks, Kairui. I'll do a thorough review of the whole patchset over
-> > the next two weeks.
-> >
-> > BTW, do you think we need a quick fix patch like the one below
-> > for the above problem before this patchset, so that it can be
-> > backported to stable? I assume your patchset is too large to
-> > backport?
->
-> Hi Barry,
->
-> Good question, I think we can patch it first.
->
-> > From f9683205d2ab6e3b185022d7d5af3496dfe5f35f Mon Sep 17 00:00:00 2001
-> > From: "Barry Song (Xiaomi)" <baohua@kernel.org>
-> > Date: Fri, 16 Oct 2026 11:48:06 +0800
-> > Subject: [PATCH] mm/mglru: fix using folio_mark_accessed to replace
-> >  folio_set_active
-> >
-> > Commit 6cbdd9726fb5 ("mm/mglru: use folio_mark_accessed to
-> > replace folio_set_active") tried to avoid over-protecting
-> > fault-around read-ahead file folios by placing them in the
-> > second-oldest generation instead of the youngest generations.
-> >
-> > However, it abuses `PG_referenced` on read-ahead file folios
-> > for this purpose, potentially coupling their handling with
-> > normal syscall-based file accesses that also use
-> > `PG_referenced`.
-> >
-> > This could regress some workloads, as reported by Kairui Song[1]
-> > and Ehab Ababneh[2]. Many thanks to both for reporting these
-> > issues!
-> >
-> > The long-term fix is Kairui's MGLRU-FG, but in the meantime,
-> > we also need a quick fix that can be backported to stable.
-> >
-> > This patch reverts all of the original commit's behavior that
-> > abuses `PG_referenced`, while preserving the semantics of
-> > avoiding over-protection of fault-around read-ahead file
-> > folios by adjusting only `lru_gen_folio_seq()`.
-> > Specifically, fault-around read-ahead file folios with
-> > `PG_active` set but `PG_workingset` clear are placed in the
-> > second-oldest generation.
-> > Activated file folios and refaulted workingset file folios
-> > are still placed in the youngest generations.
-> >
-> > Build kernel cases in a memcg shows it not only perserve
-> > the benefit of original patch, but also even improve
-> > performance further.
-> >
-> > w/o fix:
-> >
-> > real    1m49.094s
-> > user    25m31.484s
-> > sys     3m40.959s
-> > pswpin: 662112
-> > pswpout: 2504415
-> > pgpgin: 4424336
-> > pgpgout: 10355273
-> > refault_file: 359626
-> > refault_anon: 670724
-> >
-> > w/ fix:
-> >
-> > real    1m48.913s
-> > user    25m31.639s
-> > sys     3m30.875s
-> > pswpin: 689815
-> > pswpout: 2689894
-> > pgpgin: 4422659
-> > pgpgout: 11043464
-> > refault_file: 326566
-> > refault_anon: 697138
-> >
-> > Revert original patch:
-> >
-> > real    1m50.044s
-> > user    25m37.137s
-> > sys     4m4.493s
-> > pswpin: 1349087
-> > pswpout: 4317933
-> > pgpgin: 7083597
-> > pgpgout: 17602735
-> > refault_file: 337676
-> > refault_anon: 1368542
-> >
-> > [1] https://lore.kernel.org/linux-mm/20261003-mglru-fg-v3-0-cbd4546a5bd=
-9@tencent.com/
-> > [2] https://lore.kernel.org/linux-mm/20260901180704.168106-1-ehab.ababn=
-eh@intel.com/
-> > Fixes: 6cbdd9726fb5 ("mm/mglru: use folio_mark_accessed to replace foli=
-o_set_active")
-> > Cc: <stable@vger.kernel.org>
-> > Signed-off-by: Barry Song (Xiaomi) <baohua@kernel.org>
-> > ---
-> >  include/linux/mm_inline.h |  8 +++++---
-> >  mm/folio.c                | 16 +++-------------
-> >  mm/vmscan.c               |  9 ++-------
-> >  mm/workingset.c           | 10 ++++------
-> >  4 files changed, 14 insertions(+), 29 deletions(-)
-> >
-> > diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> > index ab69b9930893..7aaff4e06e80 100644
-> > --- a/include/linux/mm_inline.h
-> > +++ b/include/linux/mm_inline.h
-> > @@ -311,7 +311,8 @@ static inline unsigned long lru_gen_folio_seq(const=
- struct lruvec *lruvec,
-> >          * | Accessed through page tables and  | Accessed through file =
-descriptors |
-> >          * | promoted by folio_update_gen()    | and protected by folio=
-_inc_gen()  |
-> >          * +-----------------------------------+-----------------------=
-------------+
-> > -        * | PG_active (set while isolated)    |                       =
-            |
-> > +        * | PG_active (set while isolated)    | PG_active (files|     =
-            |
-> > +        * |                                   | fault-readahead)|     =
-            |
->
-> This comment is not correct I think, faulting file folios are not
-> access through fd, we may just better leave it uncommented.
->
-> >          * +-----------------+-----------------+-----------------+-----=
-------------+
-> >          * |  PG_workingset  |  PG_referenced  |  PG_workingset  |  LRU=
-_REFS_FLAGS |
-> >          * +-----------------------------------+-----------------------=
-------------+
-> > @@ -319,7 +320,8 @@ static inline unsigned long lru_gen_folio_seq(const=
- struct lruvec *lruvec,
-> >          * |<---------------------------- MAX_NR_GENS -----------------=
------------>|
-> >          */
-> >         if (folio_test_active(folio))
-> > -               gen =3D MIN_NR_GENS - folio_test_workingset(folio);
-> > +               gen =3D MIN_NR_GENS - folio_test_workingset(folio) +
-> > +                     (type ? !folio_test_workingset(folio) : 0);
->
-> This looks a bit hard to follow. Does it mean that for active but
-> non-workingset files, they are put into the third newest generation?
-> It creates more divergence of file / anon but if it work for now, I'm
-> fine with it.
->
-> >         else if (reclaiming)
-> >                 gen =3D MAX_NR_GENS;
-> >         else if ((!folio_is_file_lru(folio) && !folio_test_swapcache(fo=
-lio)) ||
-> > @@ -327,7 +329,7 @@ static inline unsigned long lru_gen_folio_seq(const=
- struct lruvec *lruvec,
-> >                   (folio_test_dirty(folio) || folio_test_writeback(foli=
-o))))
-> >                 gen =3D MIN_NR_GENS;
-> >         else
-> > -               gen =3D MAX_NR_GENS - (folio_test_workingset(folio) || =
-folio_test_referenced(folio));
-> > +               gen =3D MAX_NR_GENS - folio_test_workingset(folio);
->
-> This is a nice change, but meanwhile the LevelDB and cerain workload
-> gain are gone too, we will again have a ~40% regression for similiar
-> workloads, I just double checked it. But that's fine, though, it was
-> never meant to be optimized that way, and the long-term fix can be
-> done later.
+On 10/16/26 02:58, Andrew Morton wrote:
+> On Thu, 15 Oct 2026 13:42:41 +0200 Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
+...
+>> If you prefer the cache, I'm happy to redo patch 1 that way.
+>> Patch 2 does not care about the unit size.
+> 
+> OK, thanks.  Yes, using a kmem_cache is a simple no-brainer.  Let's get
+> that done first and then let's look at additional optimizations on top
+> as a separate activity.
 
-Here I mean the "optimization" of 6cbdd9726fb5 is more like a side
-effect, and not reliable, that is simply not the goal of 6cbdd9726fb5.
-So I think it stands well as a fixes for 6cbdd9726fb5.
+OK, no problem. I'll redo patch 1 with a dedicated kmem_cache and send
+it separately.
+
+
+> But a tweak which reduces 145GB of bloat to half of that is lipsticking
+> the pig, and what a pig it is.
+> 
+> Why the heck is memcg allocating so many of these things?  What sort of
+> rip-out/rethink/start-over can we do to reduce this by 99.x%?
+
+That is what patch 2 does:
+  [PATCH v2 2/2] mm/shrinker: allocate the per-memcg shrinker units on demand
+
+Today every memcg allocates, on every node, a unit for every 63 shrinker
+ids up to shrinker_nr_max, whether or not it ever has an object on those
+shrinkers. Patch 2 allocates a unit only when the memcg gets a list on that
+shrinker's list_lru, so a memcg pays for the shrinkers it uses, not for
+every superblock on the host.
+
+In the synthetic test from the cover letter (8000 tmpfs mounts,
+shrinker_nr_max 8064, 2000 empty memcgs, 4 nodes):
+
+                     units               slab per memcg
+  base               1011518 x 1024 B    548 KB
+  + patch 1          1023787 x  512 B    289 KB
+  + patches 1-2          136 x  512 B     42 KB
+
+So patch 2 removes 99.99% of the units, not half. These are the numbers
+of a synthetic test, of course. The 42 KB left is the memcg's own
+structures plus 8 KB of shrinker_info pointer arrays. A memcg that uses
+two filesystems gets 8 units (4 KB) on top of that.
+
+On the host from the cover letter I'd expect the 145 GB to drop to the
+pointer arrays plus the units the memcgs really use. The arrays are
+about 1.4 GB there (45000 memcgs x 4 nodes x 8 KB at shrinker_nr_max
+52480). That is an estimate, not a measurement.
+
+What remains is the pointer array: it is still dense in
+shrinker_nr_max, per memcg and per node. We can finish that path, or
+do something different.
+
+One option is to replace the array with an xarray of units per memcg
+and node, indexed the same way.
+
+Pros:
+
+- An empty memcg pays nothing, and a memcg that uses a few units pays
+  one or two 576-byte xa_nodes per node. The worst case is about what
+  the array costs today: a leaf covers 64 units, i.e. 4032 ids, so at
+  shrinker_nr_max 52480 a memcg that touches every leaf needs 15 nodes
+  (8.6 KB) against an 8 KB array.
+
+- expand_shrinker_info() goes away. Today a mount that raises
+  shrinker_nr_max past a multiple of 63 reallocates and copies the
+  array of every memcg on every node under shrinker_mutex: 180000
+  allocations with 45000 memcgs on 4 nodes.
+
+- shrink_slab_memcg() walks only the units present, with xa_find(),
+  instead of every index up to shrinker_nr_max / 63.
+
+- The shrinker_unit_lock that patch 2 adds to order an install against
+  the copy in expand is no longer needed, the xa_lock does that.
+
+Cons:
+
+- The install can run under the i_pages lock with interrupts off
+  (__filemap_add_folio() -> xas_alloc() -> memcg_list_lru_alloc()), so
+  the xarray needs XA_FLAGS_LOCK_IRQ and its nodes are allocated with
+  the caller's gfp. That is one more allocation on that path that can
+  fail. A failure fails the list allocation, as a failed unit
+  allocation does today.
+
+- set_shrinker_bit() and the nr_deferred accessors do an xa_load(), a
+  two-level walk at these sizes, instead of an array index.
+  set_shrinker_bit() runs when a list goes from empty to non-empty,
+  not per object, so I don't expect it to show.
+
+- Root still needs its units up front for the deferred work of global
+  reclaim. They would be installed when a shrinker registers instead
+  of in expand.
+
+Size: it would replace patch 2 with two patches. The first turns the
+array into an xarray, with the units still allocated up front, and
+removes struct shrinker_info and the expand path. The second allocates
+the units on demand, without the lock and the expand handling patch 2
+needs now. Together I expect about the size of patch 2 today, around
+170 changed lines, mostly in mm/shrinker.c, with fewer lines in total
+than now.
+
+Which way would you prefer: patch 2 as it is, or the xarray version in
+its place? Or something else?
+
+
+Cheers,
+Konstantin
