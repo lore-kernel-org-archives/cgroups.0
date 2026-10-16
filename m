@@ -1,379 +1,416 @@
-Received: from mta0.migadu.com (out-1.mta0.migadu.com [91.218.175.1])
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD77344781E
-	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 11:13:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792149230; cv=none; b=TBuobleixpfxoWC0te+6XwqQdpJVOxvVFCLVeuqJUQnFFkRHHQFE54tFjAyAvsxCxtWsllmiOVsmpMGOaCPqhbcfS6vyUmuxi4sQcJnZgVJFMPGCakPv/op0SlEf3b1vk1f5HQlicR0sfAsup6H2LSJYrX7O4MscNTzvlaIsjWU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792149230; c=relaxed/simple;
-	bh=X58SwrkFFp3ztvH2Noq/jUoS6DiX16w1TaBG2g1bFV0=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Dyu+D7A2KQLsawDeSMb+GCA6PcmWpiedgTvWehdAgICukJb3iP+c0wXBtN4LBw12icq6U4gOtSQ3CW6iBpMj8qmztuGb175hMVyjfuu1CYWTKltOd9cT183fJdSycuj26sqZgNjnk/NxO0fb0cbH5riwhnGENfJo0T1wwuE4hKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=j8l9DZUL; arc=none smtp.client-ip=91.218.175.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF7B938F64D
+	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 11:43:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792151040; cv=pass; b=eky4GvUV0jGGIjAGnuqnhGilYtJyzVOthXmLU4wYyj9zPg24juz2Q3hHZhN2iMdi7rBTzt14o3jyTtBemzXXkZqrnPIdrFJmfVVrffkuA3Vclm0fxjhL1r6lrKS0nwd0LN8WNAlhkHieJ/gaLbuzhJmbZcGqQ6o5+rtJ0V0sgyE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792151040; c=relaxed/simple;
+	bh=ateyapjZ1+Cpplrl/O9ZlmzsqV17CoauWuDhejOISq4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uy2++Wys3+skHL/WC0pVWkOncftYFKjC70LQ22DqQN8OhUVQ5r4A6CWM0y5ZI5Db+o9IkUGekpUIxRdBRK/g3I+AMhXpD+/XKaMxga27ygGmEx7W+RVp4JprYev7e5EK966dZltw7KRwO2jDFxvsS7wo+fcFmCRKcPBOWpAZu7E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I/SVNt7p; arc=pass smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="j8l9DZUL"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=X58SwrkFFp3ztvH2Noq/jUoS6DiX16w1TaBG2g1bFV0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792149224; v=1; x=1792754024;
- b=j8l9DZULwB9djeur/I1AmPN0ZBwnWFxfou4ObN88P7CH5PQvqCaeGVLDmS2ISKDPckMn6JIX
- HfstcaKBYqURkxu7rviasODD9dpFtsUIO37qU9FyhOy8YuUqcHrQ1cS2KAFDGZ4ALd3FdIMkg1W
- hm02yQY5ganOJMV2oETgvIis=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 2a6eecbfcbc4b948;
-	Fri, 16 Oct 2026 11:13:44 +0000
-X-Mizu-Trace-ID: 2a6eecbfcbc4b948
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <81f61871-6852-4d30-b68a-bb08e56881f2@linux.dev>
-Date: Fri, 16 Oct 2026 19:13:36 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I/SVNt7p"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6b2232d8ef5so3270005a12.3
+        for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 04:43:58 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792151037; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Xyic0jle2ES68tyP2e2P0R/DxzTTLgeoJO869NDlpNKEbA5ioTePg6x8LFkXOIr4t/
+         j5ZjSkCsnWLBZ0v91SnNMEaclUZfoZ5a8UJhQ9D4JZqPG/bqbz+ThJdNSwcKnu/ScfVp
+         7m6uskfP1G5FyMYkGGc74Ird9iekLQUJxQzyss6b0bFrAy9YcXHAPVPkLns3sMSZf1xI
+         /hRxDrUxwjCbZG8y/5Afn9f3bEBq6eCRhkOVAMUeqrmHfML1klslrzpd3DVBNHs+a4Il
+         aPY5FFIYksH+bjSDfBp//dBcDAEM7i3F6g+02sOzftFIQvckDMz92U8SxcvNoKl1wNsg
+         XVig==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=NKuM+jtVFLfZVcVKg6kbrg0atkxIvcUrEpQMeeRVJXQ=;
+        fh=tJN1swy8n2gvBFtdQQr32Dxm4fIYdNtcvz2Etb1P7HI=;
+        b=itdmJJKX1ZKQt7mU0j8ffzRDkafsViVqM7qccYx9TBYdcgC1aZSrsZgkUNSXV99lEU
+         9+HfEbnbXXM5PeOlRWL+YrUETD9rI4JDjm3vNvI4cleBgXFOjVg1mZ9y2r2OnK5rg+af
+         +93KTACG5FgQbwB1/TiXTjRivBglXebwJ0LtAQRlB/olxqMA4puQjZ5ZUhXzWPpg49tq
+         el8slMbqzLjjdgQvNIrmE3VmQw04aeceVdjCmmdPsRVuMtp7ZmBSZ4RpA7kkAU8vZLgb
+         nPUpSUzFPTVGU41vn8piuZQy3zMA4OK4/f3BCS9QgqkMYP1VdyzTGUKr7dB29Qr44LtL
+         52uA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792151037; x=1792755837; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=NKuM+jtVFLfZVcVKg6kbrg0atkxIvcUrEpQMeeRVJXQ=;
+        b=I/SVNt7pr86tQOAOQgXPynlgsxsIiunTOaCJpVqF4L43B9x06fYYjmHDUqQztCkxdc
+         EtXuBsdmIQmGXkYNXcBRymIQIrlblW/fEWFEpINPqd2c9HE7fv7S8kKgWfn+fiNqSkxj
+         6kF8AXSb0y15/8ThoRpne3OQliL8e6EjZY39SAtDRc8nEW0H3aXsL0Oy5U006uhVHdWT
+         h2oCNklbsF7xsGFe9ivj/vE6z3njIXpg216IMEXzduoM9KOP6CKALzsXev6sGvhy2CHI
+         KIcODEU2J5Y4uEB61wEbvOTu+nR7gLDj1M0BwJkwyG8N4gIENUFomDnB2ATblFtHcV80
+         xNRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792151037; x=1792755837;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=NKuM+jtVFLfZVcVKg6kbrg0atkxIvcUrEpQMeeRVJXQ=;
+        b=hXn2Le1t2q5XB5Wdlk2q0DWVU2C5I7gSuj/oXYtYfqUuX3P9Ch91VVu9BBAVP22qFg
+         /95dBfOtSHnU04h2RhFHD/5AfWIBaE6GCO7Kyrp59Xo8356VM80FJK/wtqe8bBvG+M7m
+         zGK1L4ytaxGnwl/yCqZBsYSk0DzycfRLDRzBipBhZrMk8Nujw1r1B2w+QKx4tO5ZqWFF
+         r84F8mI/CcHv34Kn02LB9tQeaqLD7/Qhn+i38o/s5sPmgcUBNjADlPlpNESLANeT0LrF
+         PLQbPNcvBcCmOX37KNCsr3ttCeMDC6Qr5s2iHlILdl2Ii4Q9MPoYWpkVIWLWk0oCr5Bb
+         kEkg==
+X-Forwarded-Encrypted: i=1; AKwUvBwHf7O78KUfIvX8PZDiIk+vxyWYLIPCTJrthzWApODs5mqEIFPpxgAx4ZW+eFL60tyKVYUWJEZj@vger.kernel.org
+X-Gm-Message-State: AFq9FYKjaF4gYAznlROufGzmcNr3Z+O5biFjhYqSgEdSqkCSW6jEqFLg
+	awnyJnyXj3577jOralso8jAlyUkS8NYdKT5fDHSv7eacgv+qYlHE9dT+/RxNy70erTXLfEbvGV1
+	y+iSGa/op5AINS3wcfF110+FmB2ZyEUHp8DledH0EYQ==
+X-Gm-Gg: AYBFou1xKZ3Ff3Bal6wERLb2LNxPXSESxBinRC2OR9bDHnni+Jc3VhGxA8O9wHZVZSF
+	4kBv5dRZig5tNn+Z6BITxoXI3KqRES7Ona/pau4B4Jui/lvMFuJtx+haYRL91AlQroA+Z8K5Wy5
+	HMOewHr3xFVS/xz2a9q5SL1tjk5V47DibTBSso3fGPCsM2T2SZjXohpeZKiLn/hYjSxc5UGZWhu
+	FOL7bxtc5M/aJ5psEfaKm3AzphaIezjC9yvFPD3Je+HOSn0GgiIl8Zijv6LCl/dTMiGUxD0IUBi
+	gDISRasduajxSfMyhwD5rtopEJswtN2YE63TRWRn6SqNgrMO4gUm6I49+WnsbJA08BMI4f1OAnV
+	Ze/lZsCY8ky4G
+X-Received: by 2002:a17:906:4790:b0:c25:5faf:b207 with SMTP id
+ a640c23a62f3a-c31a9a10e7fmr2051644866b.3.1792151036607; Fri, 16 Oct 2026
+ 04:43:56 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, axboe@kernel.dk, josef@toxicpanda.com, yukuai@fygo.io,
- cgroups@vger.kernel.org, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, rostedt@goodmis.org, mhiramat@kernel.org,
- mathieu.desnoyers@efficios.com, linux-trace-kernel@vger.kernel.org
-Subject: Re: [PATCH] blk-iocost: publish hweights as one atomic value
-To: Kunhai Dai <daikunhai@didiglobal.com>, tj@kernel.org
-References: <20261015135919.210740-1-daikunhai@didiglobal.com>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20261015135919.210740-1-daikunhai@didiglobal.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com> <20261016084256.12955-1-baohua@kernel.org>
+In-Reply-To: <20261016084256.12955-1-baohua@kernel.org>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Fri, 16 Oct 2026 19:43:19 +0800
+X-Gm-Features: AclHuK_vD7Q6cJy-PpEfQtWOtckePrdQvkfJvtJJCDIcYrRZMuAvFqbDO7Y_PeA
+Message-ID: <CAMgjq7AtuK22FsuqvGRLVZ2eWrp-N4qQ_MHoXsXDkVBprekdDA@mail.gmail.com>
+Subject: Re: [PATCH v4 00/17] mm/mglru: frequency guided promotion (MGLRU-FG)
+ and flag cleanup
+To: "Barry Song (Xiaomi)" <baohua@kernel.org>
+Cc: devnull+kasong.tencent.com@kernel.org, akpm@linux-foundation.org, 
+	axelrasmussen@google.com, baolin.wang@linux.alibaba.com, baoquan.he@linux.dev, 
+	cgroups@vger.kernel.org, chenridong@xiaomi.com, chrisl@kernel.org, 
+	damon@lists.linux.dev, david@kernel.org, dev.jain@arm.com, 
+	ehab.ababneh@intel.com, gourry@gourry.net, hannes@cmpxchg.org, 
+	hughd@google.com, kunwu.chan@gmail.com, lance.yang@linux.dev, 
+	liam@infradead.org, lianux.mm@gmail.com, linux-kernel@vger.kernel.org, 
+	linux-mm@kvack.org, liuxiang.277@bytedance.com, ljs@kernel.org, 
+	mhocko@kernel.org, muchun.song@linux.dev, nico.pache@linux.dev, 
+	nphamcs@gmail.com, qi.zheng@linux.dev, rientjes@google.com, 
+	roman.gushchin@linux.dev, ryan.roberts@arm.com, shakeel.butt@linux.dev, 
+	shikemeng@huaweicloud.com, sj@kernel.org, surenb@google.com, 
+	tz2294@columbia.edu, usama.arif@linux.dev, vbabka@kernel.org, 
+	vernon2gm@gmail.com, wangzicheng@honor.com, weixugc@google.com, 
+	willy@infradead.org, ying.huang@linux.alibaba.com, youngjun.park@lge.com, 
+	yuanchu@google.com, yuzhao@google.com, zhaozhengzhuo@uniontech.com, 
+	ziy@nvidia.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello，Kunhai
+On Fri, Oct 16, 2026 at 4:43=E2=80=AFPM Barry Song (Xiaomi) <baohua@kernel.=
+org> wrote:
+>
+> On Fri, Oct 16, 2026 at 2:15=E2=80=AFAM Kairui Song via B4 Relay <devnull=
++kasong.tencent.com@kernel.org> wrote:
+> [...]
+> >
+> > LevelDB Scan/Get
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > I also retested the LevelDB benchmark from the cache_ext paper [5].
+> > Interestingly, mainline MGLRU already beats CLRU on this one after a
+> > recent change in lru_gen_folio_seq that bumps new folios with refs =3D=
+=3D 1
+> > to the second-oldest generation as discussed. That change accidentally
+> > gave random reads a higher hotness level while making sequential reads
+> > much colder as described before [14]. However it's unreliable and
+> > incorrect because it depends on LRU drain timing, and hurts some worklo=
+ads
+> > as reported, or where the sequential part is actually hotter (any workl=
+oad
+> > involving hotter large file and many small cold files will be affected)
+> > which is reproduced below.
+> >
+> > This series improves it while covering ordinary workloads too and shoul=
+d
+> > fix regressions:
+> >
+> > LevelDB Scan / Get, Throughput Total:
+> > CLRU:         4708.3 ops/s
+> > MGLRU:        5026.9 ops/s (faster than CLRU, but hurts other workloads=
+)
+> > MGLRU After:  5179.2 ops/s (even better in all cases, and no regression=
+)
+> >
+> > The hot-sequential and cold-random workload can be easily reproduced wi=
+th
+> > SQLite and grep. SQLite continuously scans and looks up a small hot
+> > portion of a DB file, while grep iterates over a set of small files muc=
+h
+> > larger than RAM [6]:
+> >
+> >          SQLite scan & lookup time:       Grep iterate time:
+> > CLRU:                       14.51ms               13281.37ms
+> > MGLRU mainline:            567.05ms               13694.47ms
+> > MGLRU After this series:    10.58ms               12930.43ms
+> >
+>
+> Thanks, Kairui. I'll do a thorough review of the whole patchset over
+> the next two weeks.
+>
+> BTW, do you think we need a quick fix patch like the one below
+> for the above problem before this patchset, so that it can be
+> backported to stable? I assume your patchset is too large to
+> backport?
 
-在 2026/10/15 21:59, Kunhai Dai 写道:
-> current_hweight() uses separate plain stores for the cache generation and
-> both weights. The compiler can publish the generation before the weights,
-> letting an interrupt accept stale weights as current. Multiple refreshers
-> can also interleave their stores. Invalid donation budgets may then lead
-> to a divide error in transfer_surpluses().
-> 
-> Pack the generation and both weights into a single atomic64_t. Hierarchical
-> weights are in [1, 65536], so storing each weight minus one preserves its
-> full range in 16 bits and leaves 32 bits for the generation. Readers copy
-> one complete entry, and refreshers publish one complete entry. Return the
-> local snapshot instead of rereading fields another refresher can modify.
-> 
-> Keep the existing lockless refresh and cache reuse behavior. A late
-> refresh may replace a newer entry, but carries its own generation so the
-> next reader can detect the mismatch. Preserve the existing barrier paired
-> with commit_weights() and the allowance for approximate hierarchy reads.
-> 
-> Keep the old weight fields solely as donation workspace. Update cache
-> initialization, activation invalidation, tracepoints and the drgn monitor
-> accordingly. Tracepoints decode one cached snapshot without recalculating
-> or refreshing weights. Stop invalid donation calculations before applying
-> leaf adjustments, and check donating before subtracting one.
-> 
-> Validated against commit 24a19b953e2a ("Linux 7.3-rc7"):
-> - clean application, whitespace and strict checkpatch checks;
-> - W=1 compilation of blk-iocost.o with the existing x86-64 configuration
->   and PREEMPT_RT plus PROVE_LOCKING;
-> - extracted production-function checks covering all weight values,
->   generation high bits, publication interleavings, donation cleanup and
->   400000 concurrent refresh calls using C11 atomic test stubs;
-> - Python syntax and actual monitor-decoder checks;
-> - x86-64 disassembly confirms a single 64-bit cache load and store.
-> 
-> Runtime kprobe injection on an x86-64 VM with 32 vCPUs completed three
-> rounds without WARN or panic. With a 30 ms publication delay, the probe
-> reported 23102 publication-point holds, 3234 cache-change observations
-> within those windows and 72 matching-generation reader observations. The
-> unpatched baseline panicked under the corresponding reproduction load.
-> 
-> The runtime build predates this revision's tracepoint-only simplification;
-> the packed-cache and donation logic are unchanged. The current tracepoint
-> change has passed normal and PREEMPT_RT compilation, but has not been
-> rerun in the runtime injection test. Performance regression testing has
-> not been performed.
-> 
+Hi Barry,
 
-Thanks for the thorough patch. We tried your injection protocol on our side
-(linux-next 20261014, clang 17, qemu/KVM, nullb0, the rt/s1..C topology with
-1 <-> 10000 weight alternation, a 30ms kprobe hold at the publication
-stores). The patched kernel came through cleanly -- no WARN or oops even
-with a hold on every refresh, and the tracepoint decode of the final
-revision worked in all runs, which nicely covers the gap you disclosed in
-the commit message. We could not reproduce the divide error on the baseline,
-likely because our clang build orders the stores gen-last, so the direct
-window from your step 4 does not exist in our binary -- your repro's
-precondition is indeed toolchain-dependent.
+Good question, I think we can patch it first.
 
-Two small observations:
-
-1. The goto out in transfer_surpluses() skips the donation tail for all
-   donors, so while a degenerate weight configuration persists, donation is
-   given up every period (and inuse_transfer tracepoints go quiet). Strictly
-   better than the old panic, but it might be worth a sentence in the commit
-   message.
-
-2. after == 0 may not be race-only: a boundary rounding in the over_hwa
-   rescale can also floor a small over-donor's after value to zero. So the
-   guard has some value even independent of the race.
-
-Along the same lines, would you consider splitting the patch? A small
-[1/2] with just the div0 guard (Fixes: e08d02aa5fc9, Cc: stable) would
-backport easily, while the packed hweight_cache plus tracepoint/monitor
-changes could go as [2/2] (Fixes: 7caa47151ab2). Also, the patch is
-currently missing Fixes: entirely.
-
-Thanks，
-Tao
-
-> Developed with assistance from OpenAI Codex.
-> 
-> Assisted-by: LLM
-> Signed-off-by: Kunhai Dai <daikunhai@didiglobal.com>
-> 
+> From f9683205d2ab6e3b185022d7d5af3496dfe5f35f Mon Sep 17 00:00:00 2001
+> From: "Barry Song (Xiaomi)" <baohua@kernel.org>
+> Date: Fri, 16 Oct 2026 11:48:06 +0800
+> Subject: [PATCH] mm/mglru: fix using folio_mark_accessed to replace
+>  folio_set_active
+>
+> Commit 6cbdd9726fb5 ("mm/mglru: use folio_mark_accessed to
+> replace folio_set_active") tried to avoid over-protecting
+> fault-around read-ahead file folios by placing them in the
+> second-oldest generation instead of the youngest generations.
+>
+> However, it abuses `PG_referenced` on read-ahead file folios
+> for this purpose, potentially coupling their handling with
+> normal syscall-based file accesses that also use
+> `PG_referenced`.
+>
+> This could regress some workloads, as reported by Kairui Song[1]
+> and Ehab Ababneh[2]. Many thanks to both for reporting these
+> issues!
+>
+> The long-term fix is Kairui's MGLRU-FG, but in the meantime,
+> we also need a quick fix that can be backported to stable.
+>
+> This patch reverts all of the original commit's behavior that
+> abuses `PG_referenced`, while preserving the semantics of
+> avoiding over-protection of fault-around read-ahead file
+> folios by adjusting only `lru_gen_folio_seq()`.
+> Specifically, fault-around read-ahead file folios with
+> `PG_active` set but `PG_workingset` clear are placed in the
+> second-oldest generation.
+> Activated file folios and refaulted workingset file folios
+> are still placed in the youngest generations.
+>
+> Build kernel cases in a memcg shows it not only perserve
+> the benefit of original patch, but also even improve
+> performance further.
+>
+> w/o fix:
+>
+> real    1m49.094s
+> user    25m31.484s
+> sys     3m40.959s
+> pswpin: 662112
+> pswpout: 2504415
+> pgpgin: 4424336
+> pgpgout: 10355273
+> refault_file: 359626
+> refault_anon: 670724
+>
+> w/ fix:
+>
+> real    1m48.913s
+> user    25m31.639s
+> sys     3m30.875s
+> pswpin: 689815
+> pswpout: 2689894
+> pgpgin: 4422659
+> pgpgout: 11043464
+> refault_file: 326566
+> refault_anon: 697138
+>
+> Revert original patch:
+>
+> real    1m50.044s
+> user    25m37.137s
+> sys     4m4.493s
+> pswpin: 1349087
+> pswpout: 4317933
+> pgpgin: 7083597
+> pgpgout: 17602735
+> refault_file: 337676
+> refault_anon: 1368542
+>
+> [1] https://lore.kernel.org/linux-mm/20261003-mglru-fg-v3-0-cbd4546a5bd9@=
+tencent.com/
+> [2] https://lore.kernel.org/linux-mm/20260901180704.168106-1-ehab.ababneh=
+@intel.com/
+> Fixes: 6cbdd9726fb5 ("mm/mglru: use folio_mark_accessed to replace folio_=
+set_active")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Barry Song (Xiaomi) <baohua@kernel.org>
 > ---
-> Reproduction outline (x86-64, cgroup v2):
-> 1. Enable BLK_CGROUP_IOCOST and KPROBES. Enable the io controller at each
->    parent, and configure io.cost.qos and io.cost.model for the test device.
-> 2. Create four leaves: rt/s1, rt/K/s2, rt/K/P/s3 and rt/K/P/C. Run continuous
->    direct 1 MiB writes in the first three; issue four direct 4 KiB writes
->    every 200 ms in C, keeping it active with low utilization.
-> 3. Every 300 ms, alternate the K/P/C chain weights between 1 and 10000,
->    with the sibling leaves s1/s2/s3 taking the opposite weights. This
->    repeatedly makes C's hierarchical share fall to the minimum of 1.
-> 4. On the unpatched build, confirm that the compiler placed the cached
->    generation store before the weight stores. Insert a kprobe delay of
->    30 ms after that generation store and before the weight stores.
->    Derive the instruction offset from the binary being tested.
-> 5. On the packed-cache build, delay just before the atomic cache store
->    instead: there is no separate generation-publication window. This
->    stresses concurrent refresh completion and late cache overwrites.
-> 
-> Unpatched baseline, abbreviated crash and stack excerpt:
-> 
->   iocg: invalid donation weights in /rt/K/P:
->         active=1 donating=1 after=0
->   Oops: divide error: 0000 [#1] SMP PTI
->   RIP: 0010:transfer_surpluses+0x43e/0x6b0
->   RAX: ffffffffffffffff  RCX: 0000000000000000
->    <IRQ>
->    ioc_timer_fn+0x1158/0x13b0
->    call_timer_fn+0x1e/0x100
->    __run_timer_base.part.36+0x1f0/0x220
->    [...]
->    handle_softirqs+0xa9/0x2a0
->    irq_exit_rcu+0x48/0xe0
->    sysvec_apic_timer_interrupt+0x6b/0x80
->    </IRQ>
->    [...]
->    win_pre+0x44/0x70 [repro_iocost]
->    [...]
->    ? current_hweight+0xc1/0x110
->    ? adjust_inuse_and_calc_cost+0x44/0x290
->    ? ioc_rqos_throttle+0x13e/0x590
->   Kernel panic - not syncing: Fatal exception in interrupt
-> 
->  block/blk-iocost.c             | 65 ++++++++++++++++++++++++++++--------------
->  include/trace/events/iocost.h  |  6 ++--
->  tools/cgroup/iocost_monitor.py |  7 +++--
->  3 files changed, 53 insertions(+), 25 deletions(-)
-> 
-> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index 2745bffcd..fcc7ae866 100644
-> --- a/block/blk-iocost.c
-> +++ b/block/blk-iocost.c
-> @@ -472,8 +472,8 @@ struct ioc_gq {
->  	 *
->  	 * When an idle cgroup becomes active its `active` goes from 0 to
->  	 * `weight`.  `inuse` is the surplus adjusted active weight.
-> -	 * `active` and `inuse` are used to calculate `hweight_active` and
-> -	 * `hweight_inuse`.
-> +	 * `active` and `inuse` determine the hierarchical weights cached in
-> +	 * `hweight_cache`.
->  	 *
->  	 * `last_inuse` remembers `inuse` while an iocg is idle to persist
->  	 * surplus adjustments.
-> @@ -520,7 +520,9 @@ struct ioc_gq {
->  	u64				child_active_sum;
->  	u64				child_inuse_sum;
->  	u64				child_adjusted_sum;
-> -	int				hweight_gen;
-> +	/* Generation in bits 63:32; active - 1 and inuse - 1 in 31:16/15:0. */
-> +	atomic64_t			hweight_cache;
-> +	/* Donation workspace, protected by ioc->lock. */
->  	u32				hweight_active;
->  	u32				hweight_inuse;
->  	u32				hweight_donating;
-> @@ -1154,13 +1156,17 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
->  {
->  	struct ioc *ioc = iocg->ioc;
->  	int lvl;
-> -	u32 hwa, hwi;
-> -	int ioc_gen;
-> -
-> -	/* hot path - if uptodate, use cached */
-> -	ioc_gen = atomic_read(&ioc->hweight_gen);
-> -	if (ioc_gen == iocg->hweight_gen)
-> +	u32 hwa, hwi, ioc_gen;
-> +	u64 cache;
-> +
-> +	/* Read the generation and both weights as one atomic snapshot. */
-> +	ioc_gen = (u32)atomic_read(&ioc->hweight_gen);
-> +	cache = (u64)atomic64_read(&iocg->hweight_cache);
-> +	if ((u32)(cache >> 32) == ioc_gen) {
-> +		hwa = ((cache >> 16) & (WEIGHT_ONE - 1)) + 1;
-> +		hwi = (cache & (WEIGHT_ONE - 1)) + 1;
->  		goto out;
-> +	}
->  
->  	/*
->  	 * Paired with wmb in commit_weights(). If we saw the updated
-> @@ -1194,14 +1200,22 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
->  		hwi = div64_u64((u64)hwi * inuse, inuse_sum);
->  	}
->  
-> -	iocg->hweight_active = max_t(u32, hwa, 1);
-> -	iocg->hweight_inuse = max_t(u32, hwi, 1);
-> -	iocg->hweight_gen = ioc_gen;
-> +	hwa = max_t(u32, hwa, 1);
-> +	hwi = max_t(u32, hwi, 1);
-> +	/*
-> +	 * Each weight is in [1, WEIGHT_ONE]. Subtracting one preserves its
-> +	 * full range in 16 bits, leaving 32 bits for the generation. An
-> +	 * interrupt or another CPU can only observe a complete snapshot.
-> +	 * A late refresher may overwrite a newer cache, but its generation
-> +	 * stays paired with its own weights and forces a future refresh.
-> +	 */
-> +	cache = ((u64)ioc_gen << 32) | ((u64)(hwa - 1) << 16) | (hwi - 1);
-> +	atomic64_set(&iocg->hweight_cache, (s64)cache);
->  out:
->  	if (hw_activep)
-> -		*hw_activep = iocg->hweight_active;
-> +		*hw_activep = hwa;
->  	if (hw_inusep)
-> -		*hw_inusep = iocg->hweight_inuse;
-> +		*hw_inusep = hwi;
->  }
->  
->  /*
-> @@ -1300,10 +1314,12 @@ static bool iocg_activate(struct ioc_gq *iocg, struct ioc_now *now)
->  
->  	/*
->  	 * Activate, propagate weight and start period timer if not
-> -	 * running.  Reset hweight_gen to avoid accidental match from
-> -	 * wrapping.
-> +	 * running. Invalidate the cached generation to avoid accidental match
-> +	 * from wrapping.
->  	 */
-> -	iocg->hweight_gen = atomic_read(&ioc->hweight_gen) - 1;
-> +	atomic64_set(&iocg->hweight_cache,
-> +		     ((u64)(u32)(atomic_read(&ioc->hweight_gen) - 1) << 32) |
-> +		     (u32)atomic64_read(&iocg->hweight_cache));
->  	list_add(&iocg->active_list, &ioc->active_iocgs);
->  
->  	propagate_weights(iocg, iocg->weight,
-> @@ -1863,7 +1879,7 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
->  	list_for_each_entry(iocg, surpluses, surplus_list) {
->  		u32 hwa;
->  
-> -		current_hweight(iocg, &hwa, NULL);
-> +		current_hweight(iocg, &hwa, &iocg->hweight_inuse);
->  		after_sum += iocg->hweight_after_donation;
->  
->  		if (iocg->hweight_after_donation > hwa) {
-> @@ -1946,8 +1962,10 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
->  
->  		iocg->hweight_donating = min(iocg->hweight_donating,
->  					     iocg->hweight_active);
-> -		iocg->hweight_after_donation = min(iocg->hweight_after_donation,
-> -						   iocg->hweight_donating - 1);
-> +		if (iocg->hweight_donating > 1)
-> +			iocg->hweight_after_donation =
-> +				min(iocg->hweight_after_donation,
-> +				    iocg->hweight_donating - 1);
->  		if (WARN_ON_ONCE(iocg->hweight_active <= 1 ||
->  				 iocg->hweight_donating <= 1 ||
->  				 iocg->hweight_after_donation == 0)) {
-> @@ -1956,6 +1974,7 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
->  			pr_cont(": active=%u donating=%u after=%u\n",
->  				iocg->hweight_active, iocg->hweight_donating,
->  				iocg->hweight_after_donation);
-> +			goto out;
->  		}
->  	}
->  
-> @@ -2054,6 +2073,7 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
->  		__propagate_weights(iocg, iocg->active, inuse, true, now);
->  	}
->  
-> +out:
->  	/* walk list should be dissolved after use */
->  	list_for_each_entry_safe(iocg, tiocg, &inner_walk, walk_list)
->  		list_del_init(&iocg->walk_list);
-> @@ -2360,7 +2380,7 @@ static void ioc_timer_fn(struct timer_list *timer)
->  				 */
->  				TRACE_IOCG_PATH(inuse_shortage, iocg, &now,
->  						iocg->inuse, iocg->active,
-> -						iocg->hweight_inuse, new_hwi);
-> +						old_hwi, new_hwi);
->  
->  				__propagate_weights(iocg, iocg->active,
->  						    iocg->active, true, &now);
-> @@ -3032,6 +3052,9 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
->  	INIT_LIST_HEAD(&iocg->active_list);
->  	INIT_LIST_HEAD(&iocg->walk_list);
->  	INIT_LIST_HEAD(&iocg->surplus_list);
-> +	atomic64_set(&iocg->hweight_cache,
-> +		     ((u64)(u32)(atomic_read(&ioc->hweight_gen) - 1) << 32) |
-> +		     U32_MAX);
->  	iocg->hweight_active = WEIGHT_ONE;
->  	iocg->hweight_inuse = WEIGHT_ONE;
->  
-> diff --git a/include/trace/events/iocost.h b/include/trace/events/iocost.h
-> index e772b1bc6..aac25edaa 100644
-> --- a/include/trace/events/iocost.h
-> +++ b/include/trace/events/iocost.h
-> @@ -34,6 +34,8 @@ DECLARE_EVENT_CLASS(iocost_iocg_state,
->  	),
->  
->  	TP_fast_assign(
-> +		u64 cache = (u64)atomic64_read(&iocg->hweight_cache);
-> +
->  		__assign_str(devname);
->  		__assign_str(cgroup);
->  		__entry->now = now->now;
-> @@ -44,8 +46,8 @@ DECLARE_EVENT_CLASS(iocost_iocg_state,
->  		__entry->vtime = vtime;
->  		__entry->weight = iocg->weight;
->  		__entry->inuse = iocg->inuse;
-> -		__entry->hweight_active = iocg->hweight_active;
-> -		__entry->hweight_inuse = iocg->hweight_inuse;
-> +		__entry->hweight_active = ((cache >> 16) & (WEIGHT_ONE - 1)) + 1;
-> +		__entry->hweight_inuse = (cache & (WEIGHT_ONE - 1)) + 1;
->  	),
->  
->  	TP_printk("[%s:%s] now=%llu:%llu vrate=%llu "
-> diff --git a/tools/cgroup/iocost_monitor.py b/tools/cgroup/iocost_monitor.py
-> index bdd78ba27..8a4f844c9 100644
-> --- a/tools/cgroup/iocost_monitor.py
-> +++ b/tools/cgroup/iocost_monitor.py
-> @@ -149,8 +149,11 @@ class IocgStat:
->          self.weight = iocg.weight.value_() / WEIGHT_ONE
->          self.active = iocg.active.value_() / WEIGHT_ONE
->          self.inuse = iocg.inuse.value_() / WEIGHT_ONE
-> -        self.hwa_pct = iocg.hweight_active.value_() * 100 / WEIGHT_ONE
-> -        self.hwi_pct = iocg.hweight_inuse.value_() * 100 / WEIGHT_ONE
-> +        hweight_cache = iocg.hweight_cache.counter.value_()
-> +        hwa = ((hweight_cache >> 16) & (WEIGHT_ONE - 1)) + 1
-> +        hwi = (hweight_cache & (WEIGHT_ONE - 1)) + 1
-> +        self.hwa_pct = hwa * 100 / WEIGHT_ONE
-> +        self.hwi_pct = hwi * 100 / WEIGHT_ONE
->          self.address = iocg.value_()
->  
->          vdone = iocg.done_vtime.counter.value_()
+>  include/linux/mm_inline.h |  8 +++++---
+>  mm/folio.c                | 16 +++-------------
+>  mm/vmscan.c               |  9 ++-------
+>  mm/workingset.c           | 10 ++++------
+>  4 files changed, 14 insertions(+), 29 deletions(-)
+>
+> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> index ab69b9930893..7aaff4e06e80 100644
+> --- a/include/linux/mm_inline.h
+> +++ b/include/linux/mm_inline.h
+> @@ -311,7 +311,8 @@ static inline unsigned long lru_gen_folio_seq(const s=
+truct lruvec *lruvec,
+>          * | Accessed through page tables and  | Accessed through file de=
+scriptors |
+>          * | promoted by folio_update_gen()    | and protected by folio_i=
+nc_gen()  |
+>          * +-----------------------------------+-------------------------=
+----------+
+> -        * | PG_active (set while isolated)    |                         =
+          |
+> +        * | PG_active (set while isolated)    | PG_active (files|       =
+          |
+> +        * |                                   | fault-readahead)|       =
+          |
 
+This comment is not correct I think, faulting file folios are not
+access through fd, we may just better leave it uncommented.
+
+>          * +-----------------+-----------------+-----------------+-------=
+----------+
+>          * |  PG_workingset  |  PG_referenced  |  PG_workingset  |  LRU_R=
+EFS_FLAGS |
+>          * +-----------------------------------+-------------------------=
+----------+
+> @@ -319,7 +320,8 @@ static inline unsigned long lru_gen_folio_seq(const s=
+truct lruvec *lruvec,
+>          * |<---------------------------- MAX_NR_GENS -------------------=
+--------->|
+>          */
+>         if (folio_test_active(folio))
+> -               gen =3D MIN_NR_GENS - folio_test_workingset(folio);
+> +               gen =3D MIN_NR_GENS - folio_test_workingset(folio) +
+> +                     (type ? !folio_test_workingset(folio) : 0);
+
+This looks a bit hard to follow. Does it mean that for active but
+non-workingset files, they are put into the third newest generation?
+It creates more divergence of file / anon but if it work for now, I'm
+fine with it.
+
+>         else if (reclaiming)
+>                 gen =3D MAX_NR_GENS;
+>         else if ((!folio_is_file_lru(folio) && !folio_test_swapcache(foli=
+o)) ||
+> @@ -327,7 +329,7 @@ static inline unsigned long lru_gen_folio_seq(const s=
+truct lruvec *lruvec,
+>                   (folio_test_dirty(folio) || folio_test_writeback(folio)=
+)))
+>                 gen =3D MIN_NR_GENS;
+>         else
+> -               gen =3D MAX_NR_GENS - (folio_test_workingset(folio) || fo=
+lio_test_referenced(folio));
+> +               gen =3D MAX_NR_GENS - folio_test_workingset(folio);
+
+This is a nice change, but meanwhile the LevelDB and cerain workload
+gain are gone too, we will again have a ~40% regression for similiar
+workloads, I just double checked it. But that's fine, though, it was
+never meant to be optimized that way, and the long-term fix can be
+done later.
+
+A quick test on another of my test machine using Tal's LevelDB test case:
+
+CLRU: 3098 ops/s
+MGLRU mainline: 3035 ops/s
+MGLRU-FG: 3233 ops/s
+MGLRU with this patch: 2194 ops/sec (should be same result with
+reverting 6cbdd9726fb5)
+
+>
+>         return max(READ_ONCE(lrugen->max_seq) - gen + 1, READ_ONCE(lrugen=
+->min_seq[type]));
+>  }
+> diff --git a/mm/folio.c b/mm/folio.c
+> index 35e242b48870..2af724cecb31 100644
+> --- a/mm/folio.c
+> +++ b/mm/folio.c
+> @@ -474,20 +474,10 @@ void folio_add_lru(struct folio *folio)
+>                         folio_test_unevictable(folio), folio);
+>         VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
+>
+> -       /*
+> -        * For refaulted workingset folios, set PG_active so they
+> -        * can be added to active generations.
+> -        * For prefaulted file folios, folio_mark_accessed() sets
+> -        * PG_referenced so lru_gen_folio_seq() places them into
+> -        * the second oldest generation.
+> -        */
+> +       /* see the comment in lru_gen_folio_seq() */
+>         if (lru_gen_enabled() && !folio_test_unevictable(folio) &&
+> -           lru_gen_in_fault() && !(current->flags & PF_MEMALLOC)) {
+> -               if (folio_test_workingset(folio))
+> -                       folio_set_active(folio);
+> -               else if (!folio_test_referenced(folio))
+> -                       folio_mark_accessed(folio);
+> -       }
+> +           lru_gen_in_fault() && !(current->flags & PF_MEMALLOC))
+> +               folio_set_active(folio);
+>
+>         folio_batch_add_and_move(folio, lru_add);
+>  }
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index daa7e37c2236..e82ba737c028 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -952,13 +952,8 @@ static bool lru_gen_set_refs(struct folio *folio, co=
+nst vma_flags_t *vma_flags)
+>                 return false;
+>         }
+>
+> -       /* Promote on second access */
+> -       if (folio_lru_refs(folio) > 1) {
+> -               folio_set_workingset(folio);
+> -               folio_set_lru_refs(folio, 0);
+> -       } else {
+> -               folio_mark_accessed(folio);
+> -       }
+> +       folio_set_workingset(folio);
+> +       folio_set_lru_refs(folio, 0);
+>         return true;
+>  }
+>  #else
+> diff --git a/mm/workingset.c b/mm/workingset.c
+> index 1504f91cdca5..10d4ce202cca 100644
+> --- a/mm/workingset.c
+> +++ b/mm/workingset.c
+> @@ -319,13 +319,11 @@ static void lru_gen_refault(struct folio *folio, vo=
+id *shadow)
+>
+>         atomic_long_add(delta, &lrugen->refaulted[hist][type][tier]);
+>
+> +       /* see folio_add_lru() where folio_set_active() will be called */
+> +       if (lru_gen_in_fault())
+> +               mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + type,=
+ delta);
+> +
+>         if (workingset) {
+> -               /*
+> -                * see folio_add_lru(), where folio_set_active() is
+> -                * called for workingset folios
+> -                */
+> -               if (lru_gen_in_fault())
+> -                       mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE=
+ + type, delta);
+>                 folio_set_workingset(folio);
+>                 mod_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + type, =
+delta);
+>         } else
+> --
+> 2.34.1
+>
+
+The rest most looks clean to me.
