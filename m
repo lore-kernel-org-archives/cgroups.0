@@ -1,56 +1,56 @@
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E26438D011
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B73CE38C2A7
 	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 05:28:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.71
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792128498; cv=none; b=Fu2PW/R3aX1qzhoSfpqqdC2E57ahim1wvlnxp+0UFNO9+8937FbRnmAlynKc6YrRmMY/MINxrYBklBS3OZbIFugAtFU+TkSLhKex1YmH+hobhOpmXij3eLWEQf9kOlD0P1pXnDxAn45a5VOl3TUoSHJ1fx37qDr24mxcG+IaT8Y=
+	t=1792128499; cv=none; b=bJIg6ZDCaKG9U9Nb9PWQLQjp30GgNwIwJOi+Cf2uAlyj/XO9wiAVi6A+Rif4paN0gq6L9uVrcKxf7zBJiYrc1Xl4DZb+aDXjHPa8ngKIOJJUIuT5YVGouKn1cz8ugi2eP2axCHcdB+VHiukd7L6nw+U47kw2UbC3yyyZoYF78Dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792128498; c=relaxed/simple;
-	bh=mAqJpBLhTBtYmazTeWfNObJBJAo0yrk99XqA9DI1Uv8=;
+	s=arc-20240116; t=1792128499; c=relaxed/simple;
+	bh=ujrff+erUxXKsT+FpHLpMV9IekY4YVWksLBkb9iwYpA=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=HRGgwIdHO3rxn+/hEtaAcluuNrn2QADWFExxXbNeCvCelwk2izKDRiOHzd8D/NN+gHeY7YsuNKkXNN/TPwtH3MUsaHVNUjESh5leHI2EMGAfPc8EpLPecwEw4LOwz7ixTqP7IxyZi7LkXpD0Fka6s5BjEP215vX+BusuCiVzVoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=EFjsLkwJ; arc=none smtp.client-ip=209.85.216.71
+	 To:Cc:Content-Type; b=UwBj5DD1gYilR4FPAO2jXjyeBf1CsPdbD8nwzReU5nWwYdBMt75f4dR8UvS1wyZx90eAKDwvG113BRrJ1Z/2/NzOhCMm0BRq7iVQDQU0tzzy48QkC+dQwrGSVzR9FfoSnXg4Hb6xGhSXWhP3R/nZxSghgNU/qoK7wrmFzHBfmN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ucm3vUHN; arc=none smtp.client-ip=209.85.214.200
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="EFjsLkwJ"
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38f97b3f853so3838972a91.3
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ucm3vUHN"
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2df8d1e91c9so114288335ad.0
         for <cgroups@vger.kernel.org>; Thu, 15 Oct 2026 22:28:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20251104; t=1792128497; x=1792733297; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ka7IOJqjFZQU0cr0Ja82jGg8FVBRQylVa+iOg0roN5c=;
-        b=EFjsLkwJuia+f8M2RKkikgHqJZ7nSPz3Ud9T2jXcFR63JTtyHgn7thAwDRfLvBzRDe
-         65JbJ07B/z/G15rj16bVajsYEFjpeE7BaxQqyMROZeNN3jVePZZ32JMyLCbZI6s3PPH0
-         t6vUn6wWa4KNQJ7yeZFlQ4817IX7xSpg8dv2qEuIJcCvueVKlxWKDCwKJIcemeZ0PSkG
-         9PGoYyxw04sXlVVEvXkMRoFCFZIqAngLHFTaF9eHcddUpxsrjqfUOYm3s17/qqk1e5Fg
-         FTBq7w9TvNd1jKwATby0OXb0gMroVGfdUmyqTjn/KSEtHXQUYUvhwq9mrqUHC16jTYKe
-         E0YQ==
+        bh=Ma7gRnhklfq3RjMbrjvxO/tJj3AQPjFTVpV8/fRuCwc=;
+        b=Ucm3vUHNMAPbnsdrjpXXk8svtfjT1xSTElEzhfJSjP/wx8uhguF9Ew9jkBmjYymKlZ
+         J+wEPqsH4J+4pW0nJyf3tDR2Ibh+ik5uRKXQQMyxGbIkbMF9OHYWTxp49TLz7tIskQj1
+         ufgIrhXO2aMZ/bQDTkkesQAwKTochmu1xDDnecQsMqdmMJ6KBIbC6ZJIH4CVIY8OlVa6
+         3pGKNiccAyc0MGqdRiBZZjgfdcqcfQgUa7UJG4qSvriiSBTKRfCDlLUohbJK7HuKGdU8
+         fc1MpKyk36Btf73R8UpCSIlMwWKCeH2p58xu+I4ieHMV1mUHT0G9BrsezZg0absuIVvc
+         cciA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20260707; t=1792128497; x=1792733297;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ka7IOJqjFZQU0cr0Ja82jGg8FVBRQylVa+iOg0roN5c=;
-        b=W3jqlU+EbU2onxLf7SOBsPdy35zKoEk6v+bMQH2wf/d/qOMx5i5+s8HVTUY1k4Df0q
-         EUS4KeFACfGD89VTI43CtcPnvD0Nt27bQN9vyf1SgC2fBpLN27CrjEYIfrKUNRRGkeX3
-         OQUS80m5b65PBX9ddyMCl7YyL9nVWco0X6ZE9q6RjbLu46gtUTRm936zS/HKqB63On2r
-         ZWuddyGJS2wNhT76+WXBH5n14mhfGj6jGuFUFYQR4mPAt3/RLerE0nKjEypcZ1WOUPo5
-         OzZvmbmYO2dWaitkDLZEHCcKteca+jqb5caDYSgWBLdo7C8g1dx+ioJPY6DXCSRQk4r+
-         5OJg==
-X-Forwarded-Encrypted: i=1; AKwUvBx0GDvocejFpuJ1Vz6EiuBP/w/mcURT3w3Zb71ObtIIwl3E0s3PqEp9TyiRUKawJFasj8vI4Re/@vger.kernel.org
-X-Gm-Message-State: AFq9FYK46jKVP7UxqkNVjWkhsMY+eXneRYmui5/XyX3YfmKG/+sgrQSE
-	FqBeUbxMSaWSJZ9I2+KpNW+baKPzJDkTJJqo1kiHdw0wFroplWQg6axeT4GeRPgKtbq4luTOfuD
-	dFkzUbw==
-X-Received: from pgbdk10.prod.google.com ([2002:a05:6a02:c8a:b0:cd6:688:c1d2])
- (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:1c87:b0:3ab:d26b:c2d1
- with SMTP id 98e67ed59e1d1-3abd26bc3demr18378897a91.11.1792128496210; Thu, 15
+        bh=Ma7gRnhklfq3RjMbrjvxO/tJj3AQPjFTVpV8/fRuCwc=;
+        b=O1EeOT8vyT0Yf9Hao+HNU3VDXV8nQSIvmEgI76Eh6elNQP+AHG3or15PUBFhtcbLS6
+         DSrcg6anp8DHG1A6NzEP/zhT4piUDa8RbYqrjs+un8LHUv4iE+hwSpZKk3Q3e5IBUzze
+         NO1BfHqBL10HoFTLoh4GUi72o3zx8Rh4brHyXxI9LZNyZfjKogWdaYyDD8OGpD5H0L+q
+         sVLJ9QZv7GKA6lOnX9V9JYpZFBqn1CDci9uPMOkUG7p2SMuBMIm0QSVzi6iPt/LJkQrA
+         NrJnGwpf9Y6EYf/vzJfYeg3L6NSsZprO6o7L7T2nz/b0boqwWSfF3lYY20boRlPlFIwu
+         K0Jg==
+X-Forwarded-Encrypted: i=1; AKwUvBxv+GeZP8S5IzQ6JzDx0TadJP+C4YdhyYI/pJLK6LZNbK975IxwI5gzsye/g2+LnVsBvRZVCifX@vger.kernel.org
+X-Gm-Message-State: AFq9FYJGu6bidbvyV6JpcGOxjq60htIfKVPwBYUtVqCilfSPb1ApA51R
+	N0XD7Kev7XHhcWAyMoKFtlRaRBc0i4NhTSjWJCvyhwSr7jhZa5FNskrAwKi1dbM8ZsF3jFeSHh5
+	SjzdhMw==
+X-Received: from plou8.prod.google.com ([2002:a17:903:1ae8:b0:2e8:486b:aed])
+ (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:f64f:b0:2e9:7b4f:b994
+ with SMTP id d9443c01a7336-2e97b4fbb2amr19450185ad.33.1792128496943; Thu, 15
  Oct 2026 22:28:16 -0700 (PDT)
-Date: Fri, 16 Oct 2026 05:27:46 +0000
+Date: Fri, 16 Oct 2026 05:27:47 +0000
 In-Reply-To: <20261016052811.3085635-1-kuniyu@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -60,8 +60,8 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20261016052811.3085635-1-kuniyu@google.com>
 X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
-Message-ID: <20261016052811.3085635-3-kuniyu@google.com>
-Subject: [PATCH 2/5] memcg: Reduce nesting in consume_stock() and refill_stock().
+Message-ID: <20261016052811.3085635-4-kuniyu@google.com>
+Subject: [PATCH 3/5] memcg: Annotate slow paths in consume_stock() and refill_stock().
 From: Kuniyuki Iwashima <kuniyu@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
@@ -70,105 +70,130 @@ Cc: Muchun Song <muchun.song@linux.dev>, Kuniyuki Iwashima <kuniyu@google.com>,
 	Kuniyuki Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-A later patch adds more code to the most nested block in
-consume_stock() and refill_stock().
+In consume_stock() and refill_stock(), each per-CPU stock slot
+holds up to MEMCG_CHARGE_BATCH (64) pages, so depleting a slot
+in consume_stock() (!stock_pages) or overflowing a slot in
+refill_stock() (stock_pages > MEMCG_CHARGE_BATCH) happens at most
+once per batch.
 
-Let's reduce the nesting to make the later change cleaner.
+Similarly, requests larger than MEMCG_CHARGE_BATCH, local_trylock()
+failure, and insufficient cached pages (stock_pages < nr_pages) are
+all slow paths.
+
+Without unlikely() annotations (when building without FDO, or when
+an FDO profile does not cover a caller), the compiler treats these
+branches as likely and inlines css_put() in consume_stock() and
+drain_stock() in refill_stock() right into the middle of the hot path.
+
+Consequently, the fast path has to jump over the inlined slow path
+and jump again to the function epilogue after local_unlock().
+
+Let's annotate the slow paths in consume_stock() and refill_stock()
+with unlikely() so that the compiler keeps css_put() and
+drain_stock() out-of-line at the cold tail and lets local_unlock()
+and the function epilogue fall through on the fast path:
+
+Before (refill_stock):
+
+  stock_pages = stock->nr_pages[i] + nr_pages;
+   b242: 43 02 74 3c 01          addb    0x1(%r12,%r15), %sil
+  WRITE_ONCE(stock->nr_pages[i], stock_pages);
+   b247: 43 88 74 3c 01          movb    %sil, 0x1(%r12,%r15)
+  if (stock_pages > MEMCG_CHARGE_BATCH)
+   b24c: 40 80 fe 41             cmpb    $0x41, %sil
+   b250: 72 4f                   jb      0xb2a1 <refill_stock+0x2a1>
+  struct mem_cgroup *old = stock->cached[i];   # drain_stock() inlined
+   b252: 4b 8b 5c fc 08          movq    0x8(%r12,%r15,8), %rbx
+   ...
+   b276: e8 00 00 00 00          callq   <page_counter_uncharge>
+   ...
+  local_unlock(&memcg_stock.lock);
+   b2a1: 65 48 8b 05 00 00 00 00 movq    %gs:(%rip), %rax
+   b2a9: c6 80 00 00 00 00 00    movb    $0x0, (%rax)
+   b2b0: e9 93 fd ff ff          jmp     0xb048 <refill_stock+0x48>
+
+After (refill_stock):
+
+  stock_pages = stock->nr_pages[i] + nr_pages;
+   b278: 40 02 74 03 01          addb    0x1(%rbx,%rax), %sil
+  WRITE_ONCE(stock->nr_pages[i], stock_pages);
+   b27d: 40 88 74 03 01          movb    %sil, 0x1(%rbx,%rax)
+  if (unlikely(stock_pages > MEMCG_CHARGE_BATCH))
+   b282: 40 80 fe 41             cmpb    $0x41, %sil
+   b286: 73 23                   jae     0xb2ab <refill_stock+0x27b>
+  local_unlock(&memcg_stock.lock);
+   b288: 65 48 8b 05 00 00 00 00 movq    %gs:(%rip), %rax
+   b290: c6 80 00 00 00 00 00    movb    $0x0, (%rax)
+  }
+   b297: 48 83 c4 08             addq    $0x8, %rsp
+   b29b: 5b                      popq    %rbx
+   b29c: 41 5c                   popq    %r12
+   b29e: 41 5d                   popq    %r13
+   b2a0: 41 5e                   popq    %r14
+   b2a2: 41 5f                   popq    %r15
+   b2a4: 5d                      popq    %rbp
+   b2a5: 2e e9 00 00 00 00       jmp     <__x86_return_thunk>
+  drain_stock(stock, i);
+   b2ab: 48 89 df                movq    %rbx, %rdi
+   b2ae: 89 c6                   movl    %eax, %esi
+   b2b0: e8 2b 16 00 00          callq   0xc8e0 <drain_stock>
+   b2b5: eb d1                   jmp     0xb288 <refill_stock+0x258>
 
 Signed-off-by: Kuniyuki Iwashima <kuniyu@google.com>
 ---
- mm/memcontrol.c | 59 ++++++++++++++++++++++++++-----------------------
- 1 file changed, 31 insertions(+), 28 deletions(-)
+ mm/memcontrol.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c268a7864547..7c722a593cb5 100644
+index 7c722a593cb5..cc3d78938b34 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2139,15 +2139,17 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+@@ -2128,8 +2128,8 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	bool ret = false;
+ 	int i;
+ 
+-	if (nr_pages > MEMCG_CHARGE_BATCH ||
+-	    !local_trylock(&memcg_stock.lock))
++	if (unlikely(nr_pages > MEMCG_CHARGE_BATCH ||
++		     !local_trylock(&memcg_stock.lock)))
+ 		return ret;
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+@@ -2139,12 +2139,12 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
  			continue;
  
  		stock_pages = stock->nr_pages[i];
--		if (stock_pages >= nr_pages) {
--			stock_pages -= nr_pages;
--			WRITE_ONCE(stock->nr_pages[i], stock_pages);
--			if (!stock_pages) {
--				css_put(&memcg->css);
--				WRITE_ONCE(stock->cached[i], NULL);
--			}
--			ret = true;
-+		if (stock_pages < nr_pages)
-+			break;
-+
-+		stock_pages -= nr_pages;
-+		WRITE_ONCE(stock->nr_pages[i], stock_pages);
-+		if (!stock_pages) {
-+			css_put(&memcg->css);
-+			WRITE_ONCE(stock->cached[i], NULL);
+-		if (stock_pages < nr_pages)
++		if (unlikely(stock_pages < nr_pages))
+ 			break;
+ 
+ 		stock_pages -= nr_pages;
+ 		WRITE_ONCE(stock->nr_pages[i], stock_pages);
+-		if (!stock_pages) {
++		if (unlikely(!stock_pages)) {
+ 			css_put(&memcg->css);
+ 			WRITE_ONCE(stock->cached[i], NULL);
  		}
-+
-+		ret = true;
- 		break;
- 	}
+@@ -2243,8 +2243,8 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
  
-@@ -2229,7 +2231,6 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	struct memcg_stock_pcp *stock;
- 	struct mem_cgroup *cached;
- 	uint8_t stock_pages;
--	bool success = false;
- 	int empty_slot = -1;
- 	int i;
+ 	VM_WARN_ON_ONCE(mem_cgroup_is_root(memcg));
  
-@@ -2257,29 +2258,31 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 		cached = stock->cached[i];
- 		if (!cached && empty_slot == -1)
- 			empty_slot = i;
--		if (memcg == stock->cached[i]) {
--			stock_pages = stock->nr_pages[i] + nr_pages;
--			WRITE_ONCE(stock->nr_pages[i], stock_pages);
--			if (stock_pages > MEMCG_CHARGE_BATCH)
--				drain_stock(stock, i);
--			success = true;
--			break;
--		}
--	}
+-	if (nr_pages > MEMCG_CHARGE_BATCH ||
+-	    !local_trylock(&memcg_stock.lock)) {
++	if (unlikely(nr_pages > MEMCG_CHARGE_BATCH ||
++		     !local_trylock(&memcg_stock.lock))) {
+ 		/*
+ 		 * In case of larger than batch refill or unlikely failure to
+ 		 * lock the percpu memcg_stock.lock, uncharge memcg directly.
+@@ -2264,7 +2264,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
  
--	if (!success) {
--		i = empty_slot;
--		if (i == -1) {
--			i = stock->drain_idx++;
--			if (stock->drain_idx == NR_MEMCG_STOCK)
--				stock->drain_idx = 0;
-+		if (memcg != cached)
-+			continue;
-+
-+		stock_pages = stock->nr_pages[i] + nr_pages;
-+		WRITE_ONCE(stock->nr_pages[i], stock_pages);
-+		if (stock_pages > MEMCG_CHARGE_BATCH)
+ 		stock_pages = stock->nr_pages[i] + nr_pages;
+ 		WRITE_ONCE(stock->nr_pages[i], stock_pages);
+-		if (stock_pages > MEMCG_CHARGE_BATCH)
++		if (unlikely(stock_pages > MEMCG_CHARGE_BATCH))
  			drain_stock(stock, i);
--		}
--		css_get(&memcg->css);
--		WRITE_ONCE(stock->cached[i], memcg);
--		WRITE_ONCE(stock->nr_pages[i], nr_pages);
-+
-+		local_unlock(&memcg_stock.lock);
-+		return;
- 	}
  
-+	i = empty_slot;
-+	if (i == -1) {
-+		i = stock->drain_idx++;
-+		if (stock->drain_idx == NR_MEMCG_STOCK)
-+			stock->drain_idx = 0;
-+		drain_stock(stock, i);
-+	}
-+
-+	css_get(&memcg->css);
-+	WRITE_ONCE(stock->cached[i], memcg);
-+	WRITE_ONCE(stock->nr_pages[i], nr_pages);
-+
- 	local_unlock(&memcg_stock.lock);
- }
- 
+ 		local_unlock(&memcg_stock.lock);
 -- 
 2.56.0.212.g129ede20d9-goog
 
