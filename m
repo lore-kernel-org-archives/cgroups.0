@@ -1,179 +1,154 @@
-Received: from mta0.migadu.com (out-229.mta0.migadu.com [91.218.175.229])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3957D25A645
-	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 02:22:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.229
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FD6C222580;
+	Fri, 16 Oct 2026 02:34:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792117366; cv=none; b=m8golcchqzbSdoK7bmxMl7hQM73C/jmoOApMbTgzgqc0SpwghvgqGQ41yPjPYbNOyVK0uEdgKjPDebvsRAPoqLA2kDV1hznBdW8kHYBF5D5cyorXb6JF78rOw4GJ37l++GmDX4fI+KbAgh+Ta6BKoR+np6vfNn5MOQ8rV1Ejfpo=
+	t=1792118046; cv=none; b=T9VvHgUQlZzJ1u86R1q95TKq4uiAiRzAaeU+QmZUmOg/JLGBdIjQ4NV9H8FQsOVMRhjRRrxZE7uI/t/xFAOQqClhU5zDGORmvjkRvNAdDCd1QT804MMN/vAuAwbzRxStYyNn6EMnwkojXgM4G+ojGSfzlZG87QDHp1eNhsgF6aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792117366; c=relaxed/simple;
-	bh=SdQ6kJyMEO0gh3BM/SI7J243J1sPEJVlOZXKOSbqdoc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g59eIElct1Ft2HXMxJF5zuSFwg1fLR1Iy38i2zXxlVpPaGX+RzF1isAb2VlsDibooKl9z5aYBy5FiOXJe/GKsyKzVV99IGoh5DxgnBJVirHkil7IMQUv/TqW85Wz//3KmuCAl53NOrzXRhRk/JrYFyda8IhvGpBD4mQL01OyoFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rR1TDjrw; arc=none smtp.client-ip=91.218.175.229
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1792118046; c=relaxed/simple;
+	bh=2mlYCwTuDre2pY1UtM0QzTBYr7c2iLuTUGPMKaJprRg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JQBHcFqY0J2VH21EywwaztEVTl0FiJbN590JXZ5RRrRv6O1sa68+cU4hnWys3SK6ApEQREpJX6384rC+viI50QbLu+ZRxm8dV2JzVWgkEKzq6zIyCq0HuIJQS0Vn9AC8HQlbxNP3HPaepKRdCXLy44/BvMs2gyezj+Kp7joW5/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=j4Yy7sNx; arc=none smtp.client-ip=115.124.30.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rR1TDjrw"
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=SdQ6kJyMEO0gh3BM/SI7J243J1sPEJVlOZXKOSbqdoc=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792117363; v=1; x=1792722163;
- b=rR1TDjrwnddUvXDR11Hgz8Bd2EYcDHa3XdBAbu5YFCjNxBJqqCxorGQ3vhWlawUUz1CznhEa
- FSfjqgIyqXUapI55di3C5VwbNnqBpGSiqW3azeepgnBIzDq6dFvRsvBCZ6UTVUNu/YNFVxkyvhL
- q6oMmr0xlP2o9QCFVpSdo8bk=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 42672e19db55343e;
-	Fri, 16 Oct 2026 02:22:43 +0000
-X-Mizu-Trace-ID: 42672e19db55343e
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <5c776fbf-4785-4b10-a7c4-65b54712ec94@linux.dev>
-Date: Fri, 16 Oct 2026 10:22:39 +0800
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="j4Yy7sNx"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1792118040; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
+	bh=GwRBWNugQ+ez7PQ9anvHaCPoVAAqhLatL//ZldKkejU=;
+	b=j4Yy7sNxe7z7Qw9jfOs8+FQTof7RB5qWlyP/piynZTCl6X1pYGxmogjlcTFErzhd70ZYDvvubtCGaYX0Il4JGdCQ6ZrzCeeiRVupJ2HDHvc16SZ9LvxEsuD4mE3fTAdQJEyOh8V5LJ1f4WLDgaEVRUiHRF8YF6tEMWmv0ApanNs=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R591e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=peng_wang@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XCtIv.x_1792118038;
+Received: from localhost(mailfrom:peng_wang@linux.alibaba.com fp:SMTPD_---0XCtIv.x_1792118038 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 16 Oct 2026 10:33:59 +0800
+Date: Fri, 16 Oct 2026 10:33:58 +0800
+From: Peng Wang <peng_wang@linux.alibaba.com>
+To: Waiman Long <longman@redhat.com>
+Cc: Anna-Maria Behnsen <anna-maria@linutronix.de>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>,
+	He Rongguang <herongguang@linux.alibaba.com>,
+	linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: Re: [RFC PATCH 0/2] tick/nohz: Add runtime control of non-idle tick
+ suppression
+Message-ID: <atGNFhQk9Uj-wuVu@MacBook-Pro.local>
+Reply-To: Peng Wang <peng_wang@linux.alibaba.com>
+References: <cover.1792067271.git.peng_wang@linux.alibaba.com>
+ <8d10bb84-d312-4be0-8c43-ddd602850a1d@redhat.com>
+ <atER8P0ws6Gg4GWE@MacBook-Pro.local>
+ <f12ad8ee-4cad-4c7e-a0c9-c22fe894f14c@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v3 5/9] cgroup/cpuset: Properly disabling partition
- when partition state switching fails
-To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
- Randy Dunlap <rdunlap@infradead.org>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Hui Peng <benquike@gmail.com>
-References: <20261014140548.575122-1-longman@redhat.com>
- <20261014140548.575122-6-longman@redhat.com>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <20261014140548.575122-6-longman@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f12ad8ee-4cad-4c7e-a0c9-c22fe894f14c@redhat.com>
 
+On Thu, Oct 15, 2026 at 04:13:49PM -0400, Waiman Long wrote:
+> On 10/15/26 1:48 PM, Peng Wang wrote:
+> > On Thu, Oct 15, 2026 at 12:00:25PM -0400, Waiman Long wrote:
+> > > On 10/15/26 8:43 AM, Peng Wang wrote:
+> > > > Workloads and their need for periodic ticks can change after boot.
+> > > > This series lets userspace choose at runtime which CPUs in the boot-time
+> > > > nohz_full set retain the non-idle scheduler tick and which are permitted
+> > > > to stop it, while preserving the existing isolation configuration.
+> > > > 
+> > > > The first patch adds a per-CPU tick dependency; the second exposes a
+> > > > sysfs CPU list. Permission defaults to all nohz_full CPUs. Revocation
+> > > > uses the existing asynchronous kick. Idle tick suppression is unchanged,
+> > > > and policy persists across hotplug.
+> > > So you are basically setting up more nohz_full CPUs than the system actually
+> > > needs to use at the moment and so want to disable nohz/tick part of
+> > > nohz_full CPUs that don't need it. Can you elaborate more about the problems
+> > > solve by introducing this new behavior?
+> > Hi Waiman,
+> > 
+> > Yes. We have CPU-pinned workloads that benefit from reduced periodic
+> > tick interference. The desired tick policy changes with CPU allocation.
+> > 
+> > With spare capacity, we allow selected nohz_full CPUs to stop their
+> > tick. When capacity is fully allocated, we prefer to retain the
+> > non-idle periodic tick across CPUs, avoiding an additional difference
+> > in tick interference between housekeeping and nohz_full CPUs.
+> What problem does that cause?
 
+Hi Waiman,
 
-在 2026/10/14 22:05, Waiman Long 写道:
-> Before commit 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full
-> don't leave any housekeeping"), the partition state can be freely switched
-> from "root" to "isolated" and vice versa. After that commit, the switch
-> from "root" to "isolated" can fail if it exhausts all the housekeeping
-> CPUs. Later on, the switch from "isolated" to "root" can also fail if
-> some of the partition CPUs are boot-time isolated by "isolcpus".
-> 
-> A local or remote partition is made invalid when the switch fails.
-> However there are 2 problems with the existing invalidation code.
-> 
->  1) Both the subpartitions_cpus and isolated_cpus are not properly
->     updated.
->  2) In the case of remote partition with remote_partition flag set, it
->     is not cleared.
-> 
-> Fix this by calling the proper partition disabling function in this case.
-> 
-> On an x86 test system with boot option "isolcpus=10 cgroup_debug" set
-> and more than 16 cores, the following commands were executed after boot.
-> 
->   # cd /sys/fs/cgroup
->   # echo +cpuset > cgroup.subtree_control
->   # cat cpuset.cpus.isolated
->   10
->   # mkdir A
->   # echo 10-12 > A/cpuset.cpus
->   # echo isolated > A/cpuset.cpus.partition
->   # cat A/cpuset.cpus.partition
->   isolated
-> 
-> Before the patch:
-> 
->   # echo root > A/cpuset.cpus.partition
->   # cat A/cpuset.cpus.partition
->   root invalid (partition config conflicts with housekeeping setup)
->   # cat cpuset.cpus.isolated .__DEBUG__.cpuset.cpus.subpartitions
->   10-12
->   10-12
-> 
-> After the patch:
-> 
->   # echo root > A/cpuset.cpus.partition
->   # cat A/cpuset.cpus.partition
->   root invalid (partition config conflicts with housekeeping setup)
->   # cat cpuset.cpus.isolated .__DEBUG__.cpuset.cpus.subpartitions
->   10
-> 
-> Reported-by: Tejun Heo <tj@kernel.org>
-> Link: https://lore.kernel.org/lkml/7f4c57b26ad120ab30adf35653f1dd94@kernel.org/
-> Fixes: 4a74e418881f ("cgroup/cpuset: Check partition conflict with housekeeping setup")
-> Fixes: 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full don't leave any housekeeping")
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->  kernel/cgroup/cpuset.c | 17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 51723c299ca5..40c004386af0 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -2866,6 +2866,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  	struct cpuset *parent = parent_cs(cs);
->  	struct tmpmasks tmpmask;
->  	bool isolcpus_updated = false;
-> +	bool disable_partition = false;
->  
->  	if (old_prs == new_prs)
->  		return 0;
-> @@ -2918,15 +2919,21 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  		 * A change in load balance state only, no change in cpumasks.
->  		 * Need to update isolated_cpus.
->  		 */
-> -		if (prstate_housekeeping_conflict(new_prs, cs->effective_xcpus))
-> +		if (prstate_housekeeping_conflict(new_prs, cs->effective_xcpus)) {
-> +			disable_partition = true;
->  			err = PERR_HKEEPING;
-> -		else
-> +		} else {
->  			isolcpus_updated = true;
-> +		}
->  	} else {
->  		/*
->  		 * Switching back to member is always allowed even if it
->  		 * disables child partitions.
->  		 */
-> +		disable_partition = true;
-> +	}
-> +
-> +	if (disable_partition) {
->  		if (is_remote_partition(cs))
->  			remote_partition_disable(cs, &tmpmask);
->  		else
-> @@ -2935,7 +2942,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  
->  		/*
->  		 * Invalidation of child partitions will be done in
-> -		 * update_cpumasks_hier().
-> +		 * update_cpumasks_hier() below.
->  		 */
->  	}
->  out:
-> @@ -2954,8 +2961,8 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  		isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
->  	spin_unlock_irq(&callback_lock);
->  
-> -	/* Force update if switching back to member & update effective_xcpus */
-> -	update_cpumasks_hier(cs, &tmpmask, !new_prs);
-> +	/* Force update if partition is disabled & update effective_xcpus */
-> +	update_cpumasks_hier(cs, &tmpmask, disable_partition);
->  
->  	/* A newly created partition must have effective_xcpus set */
->  	WARN_ON_ONCE(!old_prs && (new_prs > 0)
+The concern is placement-dependent performance variation between
+vCPUs sold under the same specification. Customers do not see which
+host CPU backs their vCPU, so such differences would appear as
+unexplained variation within the same specification.
 
-Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+At full allocation, we want a consistent non-idle tick policy across
+the allocated CPUs to avoid this additional source of variation.
+
+> > A CPU may still have only one runnable task in either case, so the
+> > existing tick dependencies do not express this policy.
+> > 
+> > This series keeps the boot-time nohz_full CPU set, context tracking,
+> > RCU offloading and housekeeping configuration unchanged. It only
+> > controls whether those CPUs may stop their non-idle tick. The policy
+> > can be changed without taking CPUs offline.
+> 
+> So the policy is to make the tick keeps running when there is only one
+> running task. Right? I am just not clear about the advantage of doing that.
+> Is there a use case that will require this particular feature? I doubt this
+> will get accepted unless there is a compelling reason to show why we will
+> want to have this feature.
+
+Yes. We run cloud hosts with vCPU threads pinned one-to-one to host
+CPUs. Some CPUs are kept outside nohz_full for housekeeping, but
+they also provide vCPU capacity at full allocation. Dedicating them
+exclusively to housekeeping would reduce the capacity available to
+guests.
+
+At full allocation, vCPUs also run on housekeeping CPUs, which
+retain their non-idle tick. Allowing only the nohz_full CPUs to stop
+the tick would introduce a placement-dependent difference in tick
+behavior between vCPUs of the same specification.
+
+We therefore want to restore the non-idle tick on those nohz_full
+CPUs, accepting the extra tick overhead to remove this controllable
+difference. Host-side background activity is limited in this
+deployment, and we can tolerate the remaining housekeeping noise.
+
+With spare capacity, we want to allow selected nohz_full CPUs to
+stop the tick to reduce host scheduler-tick interference with guest
+execution. This is an opportunistic optimization when capacity
+permits.
+
+Host allocation changes as customers acquire or release vCPUs, while
+other customers' VMs continue running.
+
+A nohz_full CPU hosting a remaining vCPU may still have that vCPU
+thread as its only runnable task, whether the host is fully or
+partially allocated. The existing tick dependencies therefore do
+not express the desired change in policy.
+
+The proposed control allows per-CPU runtime changes without taking
+CPUs offline or changing the boot-time nohz_full set or other
+isolation settings.
 
 Thanks,
-Guopeng
+Peng
 
+> 
+> Cheers,
+> Longman
+> 
