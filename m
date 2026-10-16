@@ -1,49 +1,76 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B5E9519DE3;
-	Fri, 16 Oct 2026 16:25:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DC4D4DE72D
+	for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 16:44:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792167925; cv=none; b=Ko7dG0cWm+OeFUDc3Z3IEOmxhn/PZFNJrRb9PJH+hypXmJfpjN3KUnCD0R0FWvInABPuMoHOxF57Xe4UBo/uIj7dBKsTYKcqtQ1+KSFEgpTaZbPYgv5c/iJKH2q0qjCwTRmj2lAToV/L9lixMst8QP1v/nc2jK2Dn95a5LbTWiw=
+	t=1792169077; cv=none; b=GijaeDXxQUh2sWYuT0GZfH9s9xT6hVpbIct3qtpqnLQC7HV9pizKF7pbv1FdO+K/4WJEZLI8bR/Kw0chM1qdvMNmYt/0d7XOUnd+8yRRsRYMi4y+XqRLWHxKJ1IxvRe3yOEgsr7fHenjjlhxeIDs7Ieffli/ScTqZUZYLDyvpUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792167925; c=relaxed/simple;
-	bh=kviyD256rRK49BqVnAS7bdkwL+XgsFYGmHgBq0Pbx8E=;
+	s=arc-20240116; t=1792169077; c=relaxed/simple;
+	bh=s9lKTZF8DBrh8wqpwctlnT2WvIuygkwQPynvZ5EjKu8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f6SGczvMcnufvVOEK6S4MyrpTE45uVAWvyAMYpMCYKrSrE3OMa+diyybRW6MVP7xvE0NTkp1bpBE/GzNC7vxxpn9PBZXVwQkEmy4SP8fScnkr0U71M77WEVqXGsHCxtqwDPEoMpT2sLYipON64hdD8rEKE6/BuK/9SCSmdL/PkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=DDnQLX4u; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=PDb8AoQ5fd18afljOnM4VcIFc3r2LLIJkrTHYdlbFXnLrxHZaqOhhFx7VSeNkMaHnbP8CWGZVZR6/io+IZOAIlWmGXnq5GFYtibv7ZrCaQ32SmZHzweJvevuR4cuDoDVs/dmce9W+1a0I+zqgseq5yzQSbjWKScj4Gv+gesMcB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=XcrqgQco; arc=none smtp.client-ip=209.85.222.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="DDnQLX4u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 258D21F000C4;
-	Fri, 16 Oct 2026 16:25:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1792167922;
-	bh=TWT4roPjmISJxTKvGQzQWU1LR7xLXo2Q7pvoSudceyg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DDnQLX4uJmcDHyArI08r+DiFRSvDYIcfJTA5a0dqMtZcD+xdbLb/9FxW1MXvjWPp9
-	 BF80p/3Y2fiKJlnsTIEMDNGn0BLGHrm9SaoNMZ9H2oVJPvq5OulDE0YynulNAxE57o
-	 qemrVo0M+buj3OKz389eclN6eGLG6kepRL1D14fM=
-Date: Fri, 16 Oct 2026 18:25:26 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Peng Wang <peng_wang@linux.alibaba.com>
-Cc: Anna-Maria Behnsen <anna-maria@linutronix.de>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
-	He Rongguang <herongguang@linux.alibaba.com>,
-	linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org
-Subject: Re: [RFC PATCH 2/2] cpu: Add sysfs control of full dynticks policy
-Message-ID: <2026101646-speller-gutter-c184@gregkh>
-References: <cover.1792067271.git.peng_wang@linux.alibaba.com>
- <e93ef15796946485eaaecd774141378351307940.1792067271.git.peng_wang@linux.alibaba.com>
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="XcrqgQco"
+Received: by mail-qk1-f179.google.com with SMTP id af79cd13be357-93f1e5d7450so12467885a.2
+        for <cgroups@vger.kernel.org>; Fri, 16 Oct 2026 09:44:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1792169074; x=1792773874; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=wEVFUYbKAFDbpMze0BDiWYsy7fzEm9zY0vOk13vTjGQ=;
+        b=XcrqgQco8JlgB1V166qMser8YEgzamOtUWbM3TsRGBEr0wskcwpQ6mUTPhjQj8fRZn
+         8MfRmzVTz5saWvvsv1zkE84UbvTbHi1DyTZlH5fB4bNJbcqRTcEo6cFXXYM0OI6rbXeX
+         F4yZPMMWI/lk/zwymDotYhkQFX4SIOYL5/P9lAbuhfnt6IG7exNO79mB4Qx4fQuC/qOA
+         ViCmJxkcy/DSWIW60pbFHEY+E2WPUwhDChs/ntsNsAXfNCY0IaPmx6/eTMFvpKIDlZLB
+         u75p+jEl7jN3zp5UnI6VAV37M9FkLgyKBm742KTViNQ0bv1U0f5ksNWnwOID2qUrRCjt
+         aG9w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792169074; x=1792773874;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wEVFUYbKAFDbpMze0BDiWYsy7fzEm9zY0vOk13vTjGQ=;
+        b=robe6DIj1tIfRv2xC0WYLOfYtaTVtxxER1fySeJEzj3QcHpTSomi6kaSrT8Km72G9a
+         hIpY7di7zQiYfYCZ3BnOXdJaVS2wNY6CuZeEul64RFmLD5aGSJKKnX3w/J2sJi9vQ+OW
+         334sR9UCzdBRkvO6yQgEUWqT7gGFIG3Hkr6/8O94Woiu8dwuuYmlIUhjzwCpeqF//4CO
+         n2PnV7T4XzjfOLqQYJUxsIr9Hy2+2Npn6SfEMqSm9xta0BAQN0vidb7ED/J7gXy5bRl0
+         C3NUSotDXUBzbMKkgmviPyxl+yytCe4CRidsW2IUUR5UFV4/8SL5Y8XSzrJYh71SNKDj
+         6s6g==
+X-Forwarded-Encrypted: i=1; AKwUvBxelaPvVH7O9UqVFUTCIeIr80BACJVQhcwI6OAY8BvNRItMob16cZBlrwXfqvEjU17qsQbGx1mB@vger.kernel.org
+X-Gm-Message-State: AFq9FYKydiQ56Hp6Ih0iZXbmP17BheQz6jzVNwu849w6IchvIm13OzQD
+	LZjlEharW5KopefQxcgeIRya26cz0ASTIRIg9CX+QeULj8LCMTpo/AoMvEtX2Fk/jD8=
+X-Gm-Gg: AYBFou0FOZkWwu1uHlyL4FTrLhlicSvILBkswi5gXGrPFs88HamOXF0FRhpYtDqxzJj
+	wL5QIoJKcyDWXssq2Kz+mWnYSnNV9VOxY00sIPLwqHmkFaHMXxIrK584t+7rOuAujMayNkYC7Kc
+	OIPGqqennuxhzu75JUZ/adJklduiAX8XvRVAyD05oywpAETviN35zWt5Cnx6A1C8vKjPCkRgzXG
+	t/h9v0LjubUjGqvoOhFv8VS1ifCy5nr2VvEw4Dsp5Dyhxa1nI+6zRgtnMOTe9a87xd4ObzeURfE
+	/uxxNr2Ww3ND6dJWWx/HREkMk5qmrPYAfU7RKfSemSRWGy42rELn3eTztBwmz75TEDMD+VsGLB8
+	ftGQWQZKzBjvWbYcOgTtVZHbJDBIDi7VA23vSwyQfOzAlJl0W3HmRweaJt4CUZXppDjMRwPVVL1
+	L/cHtcbEJr1T9PGMfxu8RbR2NV4vQ9Ys7wd0QPQB8095COEc2SdWhWLxqkBCWJd9AFltEB9T7dB
+	onb6Hx16YIysJKx4wX5fwdKSZslRqZXCVkX5nLn4WhKGDwS7fPXEMkQ
+X-Received: by 2002:a05:620a:269a:b0:93f:26e7:844 with SMTP id af79cd13be357-93f29d68b94mr65782485a.55.1792169074078;
+        Fri, 16 Oct 2026 09:44:34 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91bcb8b69f3sm27054236d6.3.2026.10.16.09.44.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Oct 2026 09:44:33 -0700 (PDT)
+Date: Fri, 16 Oct 2026 12:44:31 -0400
+From: Gregory Price <gourry@gourry.net>
+To: linux-mm@kvack.org, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, kernel-team@meta.com, longman@redhat.com, 
+	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, 
+	akpm@linux-foundation.org, vbabka@kernel.org, surenb@google.com, mhocko@suse.com, 
+	brendan.jackman@linux.dev, ziy@nvidia.com, david@kernel.org, mgorman@techsingularity.net
+Subject: Re: [PATCH 0/2] mm: fix two allocator races with zonelist and cpuset
+ updates
+Message-ID: <atJUCRRcgRkTPigw@gourry-fedora-PF4VCD3F>
+References: <20261014222456.2318284-1-gourry@gourry.net>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,126 +79,20 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e93ef15796946485eaaecd774141378351307940.1792067271.git.peng_wang@linux.alibaba.com>
+In-Reply-To: <20261014222456.2318284-1-gourry@gourry.net>
 
-On Thu, Oct 15, 2026 at 08:43:09PM +0800, Peng Wang wrote:
-> Expose nohz_full_allowed under /sys/devices/system/cpu/ as the subset of
-> nohz_full CPUs permitted to suppress their non-idle scheduler tick.
+On Wed, Oct 14, 2026 at 06:24:54PM -0400, Gregory Price (Meta) wrote:
+> Two small fixes for lockless allocator checks that can act on an
+> inconsistent view of state another CPU is updating.
 > 
-> Writes replace the entire list; reads report policy, not current tick
-> state. Reject invalid input before updating policy. Document asynchronous
-> revocation, offline CPU configuration and persistence across hotplug.
-> The existing nohz_full attribute continues to report membership.
-> 
-> Co-developed-by: He Rongguang <herongguang@linux.alibaba.com>
-> Signed-off-by: He Rongguang <herongguang@linux.alibaba.com>
-> Signed-off-by: Peng Wang <peng_wang@linux.alibaba.com>
-> ---
->  .../ABI/testing/sysfs-devices-system-cpu      | 40 ++++++++++++++++
->  drivers/base/cpu.c                            | 46 +++++++++++++++++++
->  2 files changed, 86 insertions(+)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-devices-system-cpu b/Documentation/ABI/testing/sysfs-devices-system-cpu
-> index 82d10d556cc89..edf3408fd84c8 100644
-> --- a/Documentation/ABI/testing/sysfs-devices-system-cpu
-> +++ b/Documentation/ABI/testing/sysfs-devices-system-cpu
-> @@ -767,6 +767,46 @@ Description:	Preferred MTE tag checking mode
->  
->  		See also: Documentation/arch/arm64/memory-tagging-extension.rst
->  
-> +What:		/sys/devices/system/cpu/nohz_full_allowed
-> +Date:		October 2026
-> +Contact:	Linux kernel mailing list <linux-kernel@vger.kernel.org>
-> +Description:
-> +		(RW) CPUs permitted to stop the scheduler tick while non-idle.
-> +		Available with CONFIG_NO_HZ_FULL. The default is the complete
-> +		nohz_full CPU list. Readback reports permission, not the current
-> +		tick state: all the usual tick dependencies still apply.
-> +
-> +		A write replaces the entire list, using CPU-list syntax (for
-> +		example, "1-3,5"). An empty line revokes permission from all
-> +		nohz_full CPUs. Invalid input is rejected without changing
-> +		policy. A parsed list containing CPUs outside nohz_full fails
-> +		with EINVAL. CPU numbers beyond the mask range and numeric
-> +		overflows are rejected by the CPU-list parser with ERANGE and
-> +		EOVERFLOW, respectively. Input must be shorter than PAGE_SIZE
-> +		bytes, otherwise E2BIG is returned. Embedded NULs and newlines
-> +		other than a trailing newline are rejected with EINVAL. Valid
-> +		writes without an active nohz_full configuration fail with
-> +		EOPNOTSUPP.
-> +
-> +		Reads fail with EOVERFLOW if the formatted output reaches
-> +		PAGE_SIZE - 1 bytes, rather than returning a potentially
-> +		truncated CPU list.
-> +
-> +		Revoking permission adds a per-CPU tick dependency. Online CPUs
-> +		are notified through the existing asynchronous kick mechanism
-> +		to restart a stopped non-idle tick. A successful write means
-> +		the policy is updated and any needed notification is queued;
-> +		it does not wait for tick restart. Changes to multiple CPUs
-> +		are not simultaneous. Granting permission only removes this
-> +		dependency and does not force the tick to stop.
-> +
-> +		Offline CPUs may be configured without sending notifications.
-> +		Policy persists across CPU offline/online. Idle tick suppression
-> +		is unchanged; the policy applies when a CPU leaves idle.
-> +
-> +		This interface does not change nohz_full membership, context
-> +		tracking, RCU offloading, or housekeeping configuration.
-> +
->  What:		/sys/devices/system/cpu/nohz_full
->  Date:		Apr 2015
->  Contact:	Linux kernel mailing list <linux-kernel@vger.kernel.org>
-> diff --git a/drivers/base/cpu.c b/drivers/base/cpu.c
-> index 69e52fed42415..299ce61cef895 100644
-> --- a/drivers/base/cpu.c
-> +++ b/drivers/base/cpu.c
-> @@ -324,6 +324,51 @@ static ssize_t nohz_full_show(struct device *dev,
->  	return sysfs_emit(buf, "\n");
->  }
->  static DEVICE_ATTR_RO(nohz_full);
-> +
-> +static ssize_t nohz_full_allowed_show(struct device *dev,
-> +				      struct device_attribute *attr, char *buf)
-> +{
-> +	cpumask_var_t mask;
-> +	ssize_t ret;
-> +
-> +	if (!alloc_cpumask_var(&mask, GFP_KERNEL))
-> +		return -ENOMEM;
-> +
-> +	tick_nohz_full_get_allowed(mask);
-> +	ret = sysfs_emit(buf, "%*pbl\n", cpumask_pr_args(mask));
-> +
-> +	free_cpumask_var(mask);
-> +
-> +	/* Never present a truncated CPU list as the complete policy. */
-> +	return ret == PAGE_SIZE - 1 ? -EOVERFLOW : ret;
+> Neither of these are stable-worthy.
+>
 
-Why not?  What will userspace do then if it gets -EOVERFLOW as it can
-not get the full list?
+I'm going to need to repackage this with some additional race fixes:
+https://lore.kernel.org/linux-mm/20261015210539.3243563-1-gourry@gourry.net/
++ 2 others not posted yet.
 
-> +}
-> +
-> +static ssize_t nohz_full_allowed_store(struct device *dev,
-> +				       struct device_attribute *attr,
-> +				       const char *buf, size_t count)
-> +{
-> +	cpumask_var_t mask;
-> +	int ret;
-> +
-> +	/* kernfs may truncate an oversized write to PAGE_SIZE. */
-> +	if (count >= PAGE_SIZE)
-> +		return -E2BIG;
+There's some mild conflicts with the CONFIG bits that make the entire
+series worth backporting for ease.
 
-How are you getting a larger than PAGE_SIZE value here?
-
-> +	if (memchr(buf, '\0', count) ||
-> +	    (count > 1 && memchr(buf, '\n', count - 1)))
-> +		return -EINVAL;
-
-What are you testing for here, sorry, I can't easily figure it out.
-
-thanks,
-
-greg k-h
+~Gregory
