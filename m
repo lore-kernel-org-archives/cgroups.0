@@ -1,41 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE26317166;
-	Fri, 16 Oct 2026 22:59:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54CB819A288;
+	Sat, 17 Oct 2026 02:38:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792191547; cv=none; b=E51CbjrcRI/9HoGVYwQOgLFGm1cglm3+u6FDhOmd7KOppYYILoOgv9B8KJ5VXedjFa1KOhu87Le7r43NB1zmErdOcGDXVvC7Zv8zbgKLC5ZbFG1usrPmRIipaxUVLymsrraPE1KhCra+EhBqPsugC+uNAiICEIp/eIE46CcV0Fk=
+	t=1792204724; cv=none; b=ZQ3Pqz3eyAqSx3ofXmwl2MVRN5wRyCJL08sSMumM4xqOt26LD7uww/Nkfh6EuDsX60Ckro5TkcgaWnKwI5zId44ZWaD6oqFX2KRbSTw/tlIhsd4Ld+zfpyLp03rwNhca+5HliuMX1s6EAHE8rgxxtJgOe27uWNChj3ZsrZF9JcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792191547; c=relaxed/simple;
-	bh=7CN2sWylHLMTfbtQ64it+kFHyCkbiD5pCb8+yR+bEjs=;
+	s=arc-20240116; t=1792204724; c=relaxed/simple;
+	bh=v+tWZ6wzBQDmc0TsNkvNx1aa5akEKUuEFeP4oWUd75w=;
 	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=h4VvcC4XBCpVii+6EFVrO5Viz6IigUMTGfwvmCYVS7Qg3p7lhL4qFBjjj/ABmI5HWgLl2cW3VSNPlPiZ3rRUpE7AOQfH9meUmJG89fXie6WjUWNd4WbcJg7TeSR59qoVy5ZHn2RDGPWSa6jrX1KNQutxvksZsYkObUeRCbFmLhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=K0iehqGc; arc=none smtp.client-ip=100.103.45.18
+	 Mime-Version:Content-Type; b=oNhNjGNYVy/XA7CBIO6yX2udBsVM+NrmXR/cRoJLVC3pNPGJTEnBknzYmbf8pAipPfwC5X1+vjlcvAuNjjqUsO0FYR2QTsWPPzASLjm1+C8aTbY8RO7xF+Od9U88/WYdc2xJiThEo6UMKHm3SZyiHN5OdEnMcKRNcVCHz6eVLN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=a/GEhrIG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="K0iehqGc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25B501F000C4;
-	Fri, 16 Oct 2026 22:59:06 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="a/GEhrIG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F5811F000C4;
+	Sat, 17 Oct 2026 02:38:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1792191546;
-	bh=2XIZw4yIu0sI+8wa1+fQEbc6VQXsqxREgHYBNQYWVKI=;
+	d=linux-foundation.org; s=korg; t=1792204722;
+	bh=yCYy/omc/k0UmUcHxQJgnXUXd6XKF1gPbq7tP/hUJKU=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=K0iehqGcH6OaYxRdNrNEpl3rtaVqerqvgIjRBbpdxMovHc2N5nmd5gk9tKrViP3B+
-	 CVCq3cr9444LCA25tUNknkzy+Gm2THEOSPkIVShx18Q3s7BRkV6c/EuTXDzecbAv+6
-	 2CwNsL4Eu6qrnPjbXX8WPiP+LUgzjNiLytIU2bIg=
-Date: Fri, 16 Oct 2026 15:59:05 -0700
+	b=a/GEhrIG16ujWZEtMe2TRhF0aWm3OKHO9R7aOAjmg04ODrE/hQ76QqCThdvXH6hXK
+	 l/WGCgfAhJI5+IZdEbJyG5IaaM1wkSiMeimGr9DAJRMTtlrFn2s1dLm4/Q3yImYE0f
+	 U9CL2Pw5tTCsyQd7pRk0sX0fw750Mndukm5hD3zY=
+Date: Fri, 16 Oct 2026 19:38:42 -0700
 From: Andrew Morton <akpm@linux-foundation.org>
-To: Wang Yingjie <x-professor@outlook.com>
-Cc: Alexey Gladkov <legion@kernel.org>, "Eric W. Biederman"
- <ebiederm@xmission.com>, Manfred Spraul <manfred@colorfullife.com>, Vasily
- Averin <vasily.averin@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org"
- <cgroups@vger.kernel.org>
-Subject: Re: [PATCH] ipc/sem: account enlarged sops arrays to memcg
-Message-Id: <20261016155905.2a659b7bb7d61f33467a3263@linux-foundation.org>
-In-Reply-To: <20261016152609.2528805-1-x-professor@outlook.com>
-References: <20261016152609.2528805-1-x-professor@outlook.com>
+To: Konstantin Khorenko <khorenko@virtuozzo.com>
+Cc: Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, Roman
+ Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] mm/shrinker: make per-memcg shrinker units
+ cheaper
+Message-Id: <20261016193842.5af1f5a6cffafd7a24aeb521@linux-foundation.org>
+In-Reply-To: <79c1246f-8c9e-4e2a-adbf-e730732b33b1@virtuozzo.com>
+References: <20261014-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v2-0-51af2aedbe6c@virtuozzo.com>
+	<20261014135046.7b13252ce99d918ffcdb1f49@linux-foundation.org>
+	<84c9e97b-67c0-4c9b-bb7d-81811af8a16b@virtuozzo.com>
+	<20261015175836.efc93cf9de01306402da61f9@linux-foundation.org>
+	<79c1246f-8c9e-4e2a-adbf-e730732b33b1@virtuozzo.com>
 X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -46,76 +50,62 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-(Alexey, Eric, others: please weigh in)
+On Fri, 16 Oct 2026 14:27:32 +0200 Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
 
-On Fri, 16 Oct 2026 15:26:11 +0000 Wang Yingjie <x-professor@outlook.com> wrote:
-
-> Commit 50ec499b9a43 ("sysctl: allow change system v ipc sysctls
-> inside ipc namespace") lets an IPC namespace owner change kernel.sem.
-> The SEMOPM field defaults to 500 but has no semantic range check.
+> On 10/16/26 02:58, Andrew Morton wrote:
+> > On Thu, 15 Oct 2026 13:42:41 +0200 Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
+> ...
+> >> If you prefer the cache, I'm happy to redo patch 1 that way.
+> >> Patch 2 does not care about the unit size.
+> > 
+> > OK, thanks.  Yes, using a kmem_cache is a simple no-brainer.  Let's get
+> > that done first and then let's look at additional optimizations on top
+> > as a separate activity.
 > 
-> do_semtimedop() allocates nsops * sizeof(struct sembuf) with
-> GFP_KERNEL. A blocking operation retains that buffer, so a user can
-> raise SEMOPM and hold large attacker-selected amounts of host kernel
-> memory without charging the calling task memcg.
+> OK, no problem. I'll redo patch 1 with a dedicated kmem_cache and send
+> it separately.
+
+Great.
+
 > 
-> On the current mainline base, one 10,000,000-operation call retained
-> 60,936,448 bytes while a 32 MiB cgroup peaked at 909,312 bytes and
-> reported no limit event. Sixteen 1,000,000-operation calls retained
-> 100,860,416 bytes while the cgroup peaked at 1,310,720 bytes.
+> > But a tweak which reduces 145GB of bloat to half of that is lipsticking
+> > the pig, and what a pig it is.
+> > 
+> > Why the heck is memcg allocating so many of these things?  What sort of
+> > rip-out/rethink/start-over can we do to reduce this by 99.x%?
 > 
-> Commit 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in
-> do_semtimedop()") removed accounting on the premise that the buffer was
-> at most two pages. Preserve that default-sized path, but account arrays
-> larger than the default SEMOPM value.
+> That is what patch 2 does:
+>   [PATCH v2 2/2] mm/shrinker: allocate the per-memcg shrinker units on demand
+> 
+> Today every memcg allocates, on every node, a unit for every 63 shrinker
+> ids up to shrinker_nr_max, whether or not it ever has an object on those
+> shrinkers. Patch 2 allocates a unit only when the memcg gets a list on that
+> shrinker's list_lru, so a memcg pays for the shrinkers it uses, not for
+> every superblock on the host.
+> 
+> In the synthetic test from the cover letter (8000 tmpfs mounts,
+> shrinker_nr_max 8064, 2000 empty memcgs, 4 nodes):
+> 
+>                      units               slab per memcg
+>   base               1011518 x 1024 B    548 KB
+>   + patch 1          1023787 x  512 B    289 KB
+>   + patches 1-2          136 x  512 B     42 KB
 
-OK, I think. But...
+OK.
 
-> With this change, both test configurations reach the 32 MiB cgroup
-> limit and the caller is terminated by the memcg OOM killer before it
-> can retain the enlarged arrays.
+> Size: it would replace patch 2 with two patches. The first turns the
+> array into an xarray, with the units still allocated up front, and
+> removes struct shrinker_info and the expand path. The second allocates
+> the units on demand, without the lock and the expand handling patch 2
+> needs now. Together I expect about the size of patch 2 today, around
+> 170 changed lines, mostly in mm/shrinker.c, with fewer lines in total
+> than now.
 
-Only if memcg is enabled and the task's memory cgroup has an effective
-limit.  Otherwise we can end up handing out idiotic amounts of kernel
-memory.  Memcg accounting isn't a substitute for limiting the
-allocation size.
+That sounds like a good plan.
 
-> The sysctl also accepts negative SEMOPM values. Since nsops is unsigned,
-> SEMOPM=-1 bypasses the intended operation-count check.
+> Which way would you prefer: patch 2 as it is, or the xarray version in
+> its place? Or something else?
 
-Let's fix this first. nsops is unsigned int, whereas ns->sc_semopm is
-int. In the comparison nsops > ns->sc_semopm, a negative SEMOPM is
-converted to unsigned, so SEMOPM=-1 effectively sets the limit to
-UINT_MAX.
+The xarray approach sounds more complex?  If so I'd say only do that if
+it's justified for some reason.
 
-I'm thinking:
-
-- Permit init_ipc_ns.sc_semopm to be set to any value from 1 to INT_MAX.
-  This preserves the existing ability of host root to configure larger
-  limits.
-
-- For all other IPC namespaces, permit values from 1 to 1000. The
-  documentation has long recommended 1000 as an upper limit, although
-  it hasn't been enforced. This would be a new restriction, so the
-  changelog should explain why we're introducing it.
-
-- Validate the new values before installing any of them.  The current
-  proc_ipc_sem_dointvec() updates the live array directly, and
-  rejecting an invalid value afterward would leave a window in which
-  other tasks could observe it.
-
-- Update the comment in include/uapi/linux/sem.h. The warning about
-  physical memory fragmentation is outdated now that the allocation
-  uses kvmalloc(). Document the new 1000 limit for non-initial IPC
-  namespaces instead.
-
-Ideally, a new IPC namespace would inherit its parent's configured
-limit, but currently every new namespace starts at SEMOPM=500. I don't
-think we need to change that as part of this fix.
-
-Then please redo your memcg-accounting patch as a separate followup,
-with suitably adjusted changelogging. That would provide additional
-protection for legitimately enlarged allocations in the initial IPC
-namespace and for allocations between 501 and 1000 operations elsewhere.
-
-Thanks.
