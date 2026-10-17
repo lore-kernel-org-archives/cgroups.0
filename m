@@ -1,87 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 717B438AC99;
-	Sat, 17 Oct 2026 18:39:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3BB187346
+	for <cgroups@vger.kernel.org>; Sat, 17 Oct 2026 23:26:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792262365; cv=none; b=s/ESZEZgN8ei7sQU0DJIWEt9GDQUGVzCknUTQ/+VPsoEE1L4ZaIHwBxFXV3/8nPBg/MdweNFw2AVk+HBaDyGuikC7dZrUJUW/TonB7B7rF0zGut2C/OwNAb92c6FagbKW4M1Ey3/GKSEGXFFAY1YOyvcb4Q0CYvR9xBJhruPm6M=
+	t=1792279575; cv=none; b=obrdlvR1g16tr9f1UuZkVvQKBpVRqG4gwNWO1+Sj+45hJfVmrTWCFEv9tbeUb1W+jSrj0X3d9DrEFr6ctKnbbvGSV6NoIb05yE7TxGgmLv9ntIRVzKv0ZSnjNt8aT7vyp0lHSrSBRmLLUzem7vu0NukkdsXbZd0yh4rrXzC0Kns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792262365; c=relaxed/simple;
-	bh=j1Sq7gj02Y/fsM3Bj+ujep5VUm++/+h+05QAs23TGuc=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=aZq0ouE3B2sYfvw5esqaAmgu6wTbC4Jkl6BE9qvkyMYr9UouasF1agEx0hKLlcX7M1NyFH/jIfzg2yaNLlp9Aymiv7DhP9ghUJjSKxP0VK3g78xaRc+XSTsJPqGtvIuNzh40XLnsUI+/L7tXTGPDjGv9tH3ruHRDChrEsrNr4Vk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TstxZChG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792279575; c=relaxed/simple;
+	bh=xnAVFjE1eCbBv4nwANE8WB7XFHdzRK+IhFb0m7alkCk=;
+	h=From:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
+	 To:Cc:Content-Type; b=D8jgjxibYnEue2l3Qa5ZPHcQM3ICJfB6qcWsyDQMxhVlAb4nYZ74pNJAWTG7WsLoxatciyfcn0mN04ZI6vt5ooIhkf5CJC4dxkhySkgPjG0x1HRSLiOixpR5A37u87woHaO1s6amE54grnI4D4/RyMJCSabw//e9PGWNxBaZRSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=wzZ/6EHB; arc=none smtp.client-ip=149.72.141.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TstxZChG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCD601F000C4;
-	Sat, 17 Oct 2026 18:39:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792262364;
-	bh=j1Sq7gj02Y/fsM3Bj+ujep5VUm++/+h+05QAs23TGuc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=TstxZChGQhlAuN6Vej9C86VmeJrYsg6BGTkCv6R0i0K3kqID3y+bag3dhJce+nGQH
-	 ODj7UFvSgACiwPEL1V2lXbM3HvQt116JhVq3iTZpDzgklsAI96nyqRIZwQaGKTD9BC
-	 8iytmUz8y8rfqy0kLxRKpBhXoUOgwl4ewJuFnxylRQoqr0W/LrtB4QXX5C2cX608wl
-	 hdyuNckobaYMHxvEeEROYyekawL451BiQrTfaOIWoBOdTXFT3vPmGGTt8IEZ5Ui1lT
-	 y+g2jNZHceecB7wy9xllu1qZSRqPAPaF90JpJbzPRvArfa2BGQtN6J2JD2nIT5g7vf
-	 DzeDRtAFsALNw==
-Date: Sat, 17 Oct 2026 08:39:22 -1000
-Message-ID: <39c61e6b4d8064bc10440e6fbb00ce05@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Liz Fong-Jones <lizf@honeycomb.io>
-Cc: Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>,
-	"Patrick Lu (Anthropic)" <perf.patrick.lu@gmail.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ian@honeycomb.io
-Subject: Re: [PATCH v2] writeback: keep cleanup_offline_cgwb()'s scan out of syncs
+	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="wzZ/6EHB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
+	h=from:subject:date:in-reply-to:references:mime-version:to:cc:
+	content-type:content-transfer-encoding:cc:content-type:date:from:subject:to;
+	s=s1; t=1792279572;
+	bh=5+ChxQruMtybdrIxH4Oe8hOrLdCEmzhndPHUNt+XKPE=;
+	b=wzZ/6EHBiigs8/TQYNjoDCs/bWZhBQxV0oRv+5YMCJCot3fU2FYd14whwZFUYDLrpys3
+	kZlYEeQH/bQTabrsz58OVISF2LFeixWETRaWwZKJNS0bpwZbV3qzxg1GJVA+6gpY4P8aWp
+	nUh/rCk5wI+tB5+966TTp9MOzLesKXbNHI0vV0FnmGXVIDE1txhlWWy3FG/ZqHQkfZVR0y
+	AsN32Yox8zgMV/3++bTYWWkls1ddzl1Esxw1wcFgrYDcL8f5RdIDUN+TAemb3wXQQ8AeSx
+	oKFM/1JsiluDALnxZSNCfdUudaJMqAmnvRpXnoDi54KBOm7SDYo1mw5mfWVWAFFw==
+Received: by recvd-567c5c9644-whh6j with SMTP id recvd-567c5c9644-whh6j-1-6AD40414-60
+	2026-10-17 23:26:12.752423817 +0000 UTC m=+1578342.782868143
+Received: from daisy.dens.ffj.family (unknown)
+	by geopod-ismtpd-142 (SG)
+	with ESMTP
+	id BqvlJyNgSimQIUNJgrYm1A
+	Sat, 17 Oct 2026 23:26:12.534 +0000 (UTC)
+From: Liz Fong-Jones <lizf@honeycomb.io>
+Subject: Re: [PATCH v2] writeback: keep cleanup_offline_cgwb()'s scan out of
+ syncs
+Date: Sat, 17 Oct 2026 23:26:12 +0000 (UTC)
+Message-ID: <20261017232610.58733-1-lizf@honeycomb.io>
+X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261017040710.1174009-1-lizf@honeycomb.io>
-References: <20261015114307.1041273-1-lizf@honeycomb.io>
- <20261017040710.1174009-1-lizf@honeycomb.io>
+References: <20261015114307.1041273-1-lizf@honeycomb.io> <20261017040710.1174009-1-lizf@honeycomb.io>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-SG-EID: 
+ =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
+ =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeZBE29le3x4T?=
+ =?us-ascii?Q?AizvtRpU7VP809D=2Fmwb1shMNqfUcvGTQsx53Zse?=
+ =?us-ascii?Q?L=2FBtvuK5SBXStd+Nht40iPrZhf4f+iwfv6L71g0?=
+ =?us-ascii?Q?FKLbhlTdYeICXNmofBIIRovjOiMjB5G3kdxtmqN?=
+ =?us-ascii?Q?KZuW1RCsLVxwBuN2mdNSRqdbpmI=2FqJzsyvHDOLH?= =?us-ascii?Q?aJXU?=
+To: Christian Brauner <brauner@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>,
+	"Patrick Lu (Anthropic)" <perf.patrick.lu@gmail.com>, Roman Gushchin
+	<roman.gushchin@linux.dev>, Alexander Viro <viro@zeniv.linux.org.uk>,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ian@honeycomb.io, Liz Fong-Jones
+	<lizf@honeycomb.io>
+X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-On Sat, Oct 17, 2026 at 04:07:11AM +0000, Liz Fong-Jones wrote:
-> On a filesystem mounted with lazytime, sync() and syncfs() can return
-> without persisting timestamp updates of inodes attached to a dying
-> cgroup wb, so a crash after the sync loses them. File data and sizes are
-> not affected.
->
-> Since commit f6988c90671e ("writeback: bound cleanup_offline_cgwb()
-> rescans by rotating scanned inodes"), isw_prepare_wbs_switch() moves the
-> inodes it walks to the newest end of the list. When a pass fills its isw
-> before reaching an inode that got its lazytime update after a sync's
-> cutoff, the walked inodes land past it on b_dirty_time, and the sync's
-> queue_io(), which stops at the first inode dirtied after the cutoff,
-> misses them. The late inode has to be one without a pending lazytime
-> update; one already on b_dirty_time keeps its position.
->
-> The window is narrow. cleanup_offline_cgwbs_workfn() skips wbs with
-> anything on b_dirty, b_io or b_more_io, so the scan has to land between
-> wb_writeback() fixing dirtied_before and taking list_lock for its first
-> queue_io(), unless a multi-pass drain started before the wb got dirty
-> IO.
->
-> Take wb_switch_rwsem for read across the scan, as
-> process_inode_switch_wbs() does for the switches.
->
-> Fixes: f6988c90671e ("writeback: bound cleanup_offline_cgwb() rescans by rotating scanned inodes")
-> Cc: stable@vger.kernel.org
-> Suggested-by: Tejun Heo <tj@kernel.org>
-> Link: https://lore.kernel.org/all/0bc5d58533f10b4841807be3025daa11@kernel.org/
-> Assisted-by: Claude:claude-opus-5-5 checkpatch
-> Assisted-by: Claude:claude-fable-5-1
-> Acked-by: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+Christian,
 
-Acked-by: Tejun Heo <tj@kernel.org>
+This fixes f6988c90671e, which went into 7.3-rc5, so the regression is
+new in this cycle, and f6988c90671e is already tagged for stable. Could
+it go into vfs.fixes before 7.3 is released? Tejun has acked it:
 
-Thanks.
+  b4 shazam 20261017040710.1174009-1-lizf@honeycomb.io
 
---
-tejun
+Separately, the wb-dying-cgwb-flush series now has Tejun's ack on all
+three patches and Jan's Reviewed-by, for whichever cycle suits:
+https://lore.kernel.org/all/20261015-wb-dying-cgwb-flush-v7-0-9278d9ebaf5d@honeycomb.io/
+
+Thanks,
+Liz
