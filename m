@@ -1,111 +1,149 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from o1.ptr9745.em.honeycomb.io (o1.ptr9745.em.honeycomb.io [149.72.141.136])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54CB819A288;
-	Sat, 17 Oct 2026 02:38:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FEAB2931F4
+	for <cgroups@vger.kernel.org>; Sat, 17 Oct 2026 04:07:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.72.141.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792204724; cv=none; b=ZQ3Pqz3eyAqSx3ofXmwl2MVRN5wRyCJL08sSMumM4xqOt26LD7uww/Nkfh6EuDsX60Ckro5TkcgaWnKwI5zId44ZWaD6oqFX2KRbSTw/tlIhsd4Ld+zfpyLp03rwNhca+5HliuMX1s6EAHE8rgxxtJgOe27uWNChj3ZsrZF9JcI=
+	t=1792210035; cv=none; b=LX2gW3hIvUkwhEceW9/UQmQSf4NH6T8jysBAkXxFXkksL2dS1+K+DxYOD6u+GWj/iZj55z/vtnoqmr8h+fg2cRhfy2gFBcHQCL72w2+vf5Ri1buqjLr5AhKM+rI3k/yjZrA7LaIkSo0K9tv92QVQfWouaHqXViLnqTNcpaZOZMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792204724; c=relaxed/simple;
-	bh=v+tWZ6wzBQDmc0TsNkvNx1aa5akEKUuEFeP4oWUd75w=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=oNhNjGNYVy/XA7CBIO6yX2udBsVM+NrmXR/cRoJLVC3pNPGJTEnBknzYmbf8pAipPfwC5X1+vjlcvAuNjjqUsO0FYR2QTsWPPzASLjm1+C8aTbY8RO7xF+Od9U88/WYdc2xJiThEo6UMKHm3SZyiHN5OdEnMcKRNcVCHz6eVLN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=a/GEhrIG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792210035; c=relaxed/simple;
+	bh=n5waLsgtmninFOYJHl+hKGeJUS+GtfMfXZ+vQSML2oo=;
+	h=From:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:
+	 To:Cc:Content-Type; b=G1TJDx2wyvriZyc0/XhXbAlbVW4czLSxf7tZ+7ckEZGWR4VzlC/jag4kWG/G/dMwEJlopRVuQmNwuhzOTattj23d/l76PRn9v+8uoymRdHWhgOh13T/T5fZRVWE6a9ZmTlCwcvsFN1exulipApNwhZlnskFTQ3DwTQbexXEp++k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io; spf=pass smtp.mailfrom=em.honeycomb.io; dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b=RIok+owk; arc=none smtp.client-ip=149.72.141.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=honeycomb.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em.honeycomb.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="a/GEhrIG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F5811F000C4;
-	Sat, 17 Oct 2026 02:38:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1792204722;
-	bh=yCYy/omc/k0UmUcHxQJgnXUXd6XKF1gPbq7tP/hUJKU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=a/GEhrIG16ujWZEtMe2TRhF0aWm3OKHO9R7aOAjmg04ODrE/hQ76QqCThdvXH6hXK
-	 l/WGCgfAhJI5+IZdEbJyG5IaaM1wkSiMeimGr9DAJRMTtlrFn2s1dLm4/Q3yImYE0f
-	 U9CL2Pw5tTCsyQd7pRk0sX0fw750Mndukm5hD3zY=
-Date: Fri, 16 Oct 2026 19:38:42 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Konstantin Khorenko <khorenko@virtuozzo.com>
-Cc: Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, Roman
- Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Shakeel Butt <shakeel.butt@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] mm/shrinker: make per-memcg shrinker units
- cheaper
-Message-Id: <20261016193842.5af1f5a6cffafd7a24aeb521@linux-foundation.org>
-In-Reply-To: <79c1246f-8c9e-4e2a-adbf-e730732b33b1@virtuozzo.com>
-References: <20261014-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v2-0-51af2aedbe6c@virtuozzo.com>
-	<20261014135046.7b13252ce99d918ffcdb1f49@linux-foundation.org>
-	<84c9e97b-67c0-4c9b-bb7d-81811af8a16b@virtuozzo.com>
-	<20261015175836.efc93cf9de01306402da61f9@linux-foundation.org>
-	<79c1246f-8c9e-4e2a-adbf-e730732b33b1@virtuozzo.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=honeycomb.io header.i=@honeycomb.io header.b="RIok+owk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=honeycomb.io;
+	h=from:subject:date:in-reply-to:references:mime-version:to:cc:
+	content-transfer-encoding:content-type:cc:content-type:date:from:subject:to;
+	s=s1; t=1792210031;
+	bh=vmoqsEUaflaluKIcotOa0bF0phf2HZlStSKylP4A7kA=;
+	b=RIok+owkUkDTUdDOw52vTX1SqJKmm8h9Tg1GCpuJxWMAzeJHTHhhg7Ym/Q06670vcf1e
+	o6DU/Cfpyw0Nnvli9OXDjWSyaVBSqYJCymjFhtXdpGqGHqlA94VSwqoI+2RSVIttdwAKs7
+	rFe3ed/2wtPF5TJcK31bkD+sJ5h+ECZTPDbAMuiYxo0hnZ09p7e+fXnyvvxi3f1r8QD11f
+	0fJLhDUhLK32t906GZiNaFuI6DJVxJBBke1rgP1D0JCS+Wfi8JBHYaGAnQm4jvJI943nZW
+	Df0os7/S+AHK73xH67JyfxKRvDOF05D52uUvnuUNJhupzo6oezObwduZKSZ18LaQ==
+Received: by recvd-canary-8465b4c48c-2zgt8 with SMTP id recvd-canary-8465b4c48c-2zgt8-1-6AD2F46F-5
+	2026-10-17 04:07:11.103999751 +0000 UTC m=+1508805.732609009
+Received: from daisy.dens.ffj.family (unknown)
+	by geopod-ismtpd-19 (SG)
+	with ESMTP
+	id VZBbDvTlT0KW3V3gToMmBQ
+	Sat, 17 Oct 2026 04:07:10.996 +0000 (UTC)
+From: Liz Fong-Jones <lizf@honeycomb.io>
+Subject: [PATCH v2] writeback: keep cleanup_offline_cgwb()'s scan out of syncs
+Date: Sat, 17 Oct 2026 04:07:11 +0000 (UTC)
+Message-ID: <20261017040710.1174009-1-lizf@honeycomb.io>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261015114307.1041273-1-lizf@honeycomb.io>
+References: <20261015114307.1041273-1-lizf@honeycomb.io>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+X-SG-EID: 
+ =?us-ascii?Q?u001=2ECuH7N2XAoeMR1zrzr=2F6NZrhli2vbKPOHff5fJuZuba6ZIE8QPyIf9mn4Y?=
+ =?us-ascii?Q?ezqeFFjUkh=2FeROy4LtnO7KN9jZmeX7GlhsjZ8PC?=
+ =?us-ascii?Q?Bz=2FZXm+aVDXju7NjTKrzoAAjIB+x+EO1=2FK2pA=2Fl?=
+ =?us-ascii?Q?bVTzaKDdCTENpW=2Fe+wlK3vnOG5PPz5q0KKgwTsC?=
+ =?us-ascii?Q?SgLeacwiiL6N8kw2KkGMjtQNIzeAP6nQG=2Fm2PQh?=
+ =?us-ascii?Q?Ioz2aZT4YXDo8MSgZVS4Vvtae5wWtIXWiD=2F794w?= =?us-ascii?Q?K0xo?=
+To: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, Christian Brauner
+	<brauner@kernel.org>
+Cc: "Patrick Lu (Anthropic)" <perf.patrick.lu@gmail.com>, Roman Gushchin
+	<roman.gushchin@linux.dev>, Alexander Viro <viro@zeniv.linux.org.uk>,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ian@honeycomb.io, Liz Fong-Jones
+	<lizf@honeycomb.io>
+X-Entity-ID: u001.GRlkmHQ+Ka/CKxmoC/CxTw==
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 
-On Fri, 16 Oct 2026 14:27:32 +0200 Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
+On a filesystem mounted with lazytime, sync() and syncfs() can return
+without persisting timestamp updates of inodes attached to a dying
+cgroup wb, so a crash after the sync loses them. File data and sizes are
+not affected.
 
-> On 10/16/26 02:58, Andrew Morton wrote:
-> > On Thu, 15 Oct 2026 13:42:41 +0200 Konstantin Khorenko <khorenko@virtuozzo.com> wrote:
-> ...
-> >> If you prefer the cache, I'm happy to redo patch 1 that way.
-> >> Patch 2 does not care about the unit size.
-> > 
-> > OK, thanks.  Yes, using a kmem_cache is a simple no-brainer.  Let's get
-> > that done first and then let's look at additional optimizations on top
-> > as a separate activity.
-> 
-> OK, no problem. I'll redo patch 1 with a dedicated kmem_cache and send
-> it separately.
+Since commit f6988c90671e ("writeback: bound cleanup_offline_cgwb()
+rescans by rotating scanned inodes"), isw_prepare_wbs_switch() moves the
+inodes it walks to the newest end of the list. When a pass fills its isw
+before reaching an inode that got its lazytime update after a sync's
+cutoff, the walked inodes land past it on b_dirty_time, and the sync's
+queue_io(), which stops at the first inode dirtied after the cutoff,
+misses them. The late inode has to be one without a pending lazytime
+update; one already on b_dirty_time keeps its position.
 
-Great.
+The window is narrow. cleanup_offline_cgwbs_workfn() skips wbs with
+anything on b_dirty, b_io or b_more_io, so the scan has to land between
+wb_writeback() fixing dirtied_before and taking list_lock for its first
+queue_io(), unless a multi-pass drain started before the wb got dirty
+IO.
 
-> 
-> > But a tweak which reduces 145GB of bloat to half of that is lipsticking
-> > the pig, and what a pig it is.
-> > 
-> > Why the heck is memcg allocating so many of these things?  What sort of
-> > rip-out/rethink/start-over can we do to reduce this by 99.x%?
-> 
-> That is what patch 2 does:
->   [PATCH v2 2/2] mm/shrinker: allocate the per-memcg shrinker units on demand
-> 
-> Today every memcg allocates, on every node, a unit for every 63 shrinker
-> ids up to shrinker_nr_max, whether or not it ever has an object on those
-> shrinkers. Patch 2 allocates a unit only when the memcg gets a list on that
-> shrinker's list_lru, so a memcg pays for the shrinkers it uses, not for
-> every superblock on the host.
-> 
-> In the synthetic test from the cover letter (8000 tmpfs mounts,
-> shrinker_nr_max 8064, 2000 empty memcgs, 4 nodes):
-> 
->                      units               slab per memcg
->   base               1011518 x 1024 B    548 KB
->   + patch 1          1023787 x  512 B    289 KB
->   + patches 1-2          136 x  512 B     42 KB
+Take wb_switch_rwsem for read across the scan, as
+process_inode_switch_wbs() does for the switches.
 
-OK.
+Fixes: f6988c90671e ("writeback: bound cleanup_offline_cgwb() rescans by rotating scanned inodes")
+Cc: stable@vger.kernel.org
+Suggested-by: Tejun Heo <tj@kernel.org>
+Link: https://lore.kernel.org/all/0bc5d58533f10b4841807be3025daa11@kernel.org/
+Assisted-by: Claude:claude-opus-5-5 checkpatch
+Assisted-by: Claude:claude-fable-5-1
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Liz Fong-Jones <lizf@honeycomb.io>
+---
+Changes in v2, all from Tejun's review:
+- Correct the trigger and the reordering description, and note how
+  narrow the window is
+- Reword the code comment
+- Move the test details here and trim the description
 
-> Size: it would replace patch 2 with two patches. The first turns the
-> array into an xarray, with the units still allocated up front, and
-> removes struct shrinker_info and the expand path. The second allocates
-> the units on demand, without the lock and the expand handling patch 2
-> needs now. Together I expect about the size of patch 2 today, around
-> 170 changed lines, mostly in mm/shrinker.c, with fewer lines in total
-> than now.
+Test, with a debug-only delay holding a syncfs's work on the wb between
+its cutoff and queue_io() to widen the window: 300 files on a cgroup's
+wb with lazytime atime updates, one more read after the cutoff, then
+the cgroup removed so the cleanup ran. Without this patch, syncfs()
+queued 48 of the 300 and after a crash 252 atime updates were lost, on
+ext4 (-I 4096, so neighbours' timestamps are not written along) in 3 of
+3 runs and on XFS in 1 of 1; with it, none were lost. arm64 KVM guests,
+7.3-rc7.
 
-That sounds like a good plan.
+v1: https://lore.kernel.org/all/20261015114307.1041273-1-lizf@honeycomb.io/
 
-> Which way would you prefer: patch 2 as it is, or the xarray version in
-> its place? Or something else?
+ fs/fs-writeback.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-The xarray approach sounds more complex?  If so I'd say only do that if
-it's justified for some reason.
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index ea3eb40bf828..372ac9785e03 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -789,6 +789,13 @@ bool cleanup_offline_cgwb(struct bdi_writeback *wb)
+ 		new_wb = &wb->bdi->wb; /* wb_get() is noop for bdi's wb */
+ 
+ 	nr = 0;
++	/*
++	 * The scan moves walked inodes to the newest end of b_dirty_time,
++	 * past ones it didn't reach. If one of those was dirtied after a
++	 * sync's cutoff, the sync's queue_io() stops there and misses the
++	 * moved ones. Exclude syncs as process_inode_switch_wbs() does.
++	 */
++	down_read(&wb->bdi->wb_switch_rwsem);
+ 	spin_lock(&wb->list_lock);
+ 	/*
+ 	 * In addition to the inodes that have completed writeback, also switch
+@@ -803,6 +810,7 @@ bool cleanup_offline_cgwb(struct bdi_writeback *wb)
+ 		restart = isw_prepare_wbs_switch(new_wb, isw, &wb->b_dirty_time,
+ 						 &nr);
+ 	spin_unlock(&wb->list_lock);
++	up_read(&wb->bdi->wb_switch_rwsem);
+ 
+ 	/* no attached inodes? bail out */
+ 	if (nr == 0) {
+
+base-commit: 24a19b953e2a3d0ea5a8c4951a0ab8f32720c907
+-- 
+2.53.0
 
