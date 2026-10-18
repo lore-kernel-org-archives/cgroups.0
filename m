@@ -1,66 +1,68 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25DDE3DB64D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0AB235C68C
 	for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 22:05:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792361101; cv=none; b=kehTg6pKv6WY6UTmR8/5FtEnEZthQ32WtDv15Za2KGlZfPSGs2GQ3SFVdh5irrfKygjZuyz/fFp9PMwEZASMbQgZH/yg8weJ5qK1B+MYgITp2CR8mXVK+VJA0ylimpfJ9VIR3U096KEPawB2gtJJWoqov3X4XFkynXFcAK7QfxM=
+	t=1792361102; cv=none; b=c6vTBQXrc/cwNPn30jgXsaNdyveEZG9y4rId/5aXE85WxwEKuGim+PklCXrPCNCao+WkYC5F97U4SNXvOvVOokpGR1wiB31iNay6l3YkcnHegYo+dyxGNMJmRrWxWHAha0MERGKGj+YtT0+Zb6TjSe6+pgI8M80GmR6BIcyAGS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792361101; c=relaxed/simple;
-	bh=HMm8MU0ai0yuTQwxN6AZ7cjuZpabyMi4cgQPa/Jbj9E=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=UB9fIcIVTiXGROt8z10ri73Q0imiODcarqEn9NJ8urVCIB2ntHsYmgErMMxrS3XuhF3hKk4WEN22Ii5zti7oOhreF0hv7pqIxC0Q09/OU7I1fk1fgOdFJNbI76PYehmUAIdFSDM09d8QoZrB0dEqXuqT1q169fA3QGLmW9AqAYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jWGnEfjJ; arc=none smtp.client-ip=209.85.216.50
+	s=arc-20240116; t=1792361102; c=relaxed/simple;
+	bh=1o5z+qlLCr6WNpmebs43isCJRcBKwDf+btaUTUGqPuo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=khUwfAQHS3IGSXNleUtJ4e2n3vC15+ZuJpD6XkUkGnKPR1wgrLLAyyItNKfULBlZeYtQ+1slLJn2Su+ovKAqkAE2hHfc6gduf64pjRmE8KwCbOKVQCCJfHavXibvLdWZAVvn04fhWgFv3zkUd8cQvXHmVE2v2bgD8l6nmAE8HNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ar4w6/l3; arc=none smtp.client-ip=209.85.215.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jWGnEfjJ"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3856d6fbcb3so934785a91.2
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ar4w6/l3"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-cd67cc518a6so327835a12.1
         for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 15:05:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792361099; x=1792965899; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=FXXu6sXqJk8SsG+U0f2HwCixxxfND+avQe3AD+r/VSs=;
-        b=jWGnEfjJPniSeVcbPWrgIpVJxSHni9qn5y5aId108nT9OEkVkw/sP2up90WI1DEudt
-         JiePtdWJpkYxSEo7YwLTkdKamKahooJbe6HhiJfjB6aeixqV/ThT56WmSBgyut41O4Ru
-         Cj4zolTkA9EkjTspPSySt+OMUC0DDy+W0FlUX3XZSj9BofSn8yX2bD/x85Ux4vFrMLfF
-         1HuwsAJqhMuZjzsyOJgXCa3xvTc43GBtNxWYbjMtiE0y+62z+4Lbiuc7GWWEFdYATRIE
-         vrHqpmtcFjFbs9+yzySQpW7q4jshQguU5zn1o3l+Kh2++hIZF9PMiDr1lbLEy0Ca7Hyt
-         LP4g==
+        d=gmail.com; s=20251104; t=1792361100; x=1792965900; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=t+DBlUmYYanLk/fUhQLoMO5TIIqVDKMx0kXtXYJ5c+o=;
+        b=ar4w6/l340RLtGsbX4M1KFY1vgPAR8qdXLhDTq366U4TSgT5qeobV5T1X9jMad4O1Z
+         Z7VBZtr9tUrD+XvLlZtq9c+JFROkJeQfBt2lv4BzZZS19j8/0bZstbFBazEuPo+DaKUq
+         jdLA4IF96bEDODNAses2J+HBLGIx0jLHmoMrb3EhmGRCx+ed5xBSVm28afpBPxMwNJbG
+         mLweIFgAFRn9OrEa+95TrwjKFt71DH7lKdLpkLlMixAaBaJJ0E1vC30lXWC5tQMJghMB
+         epIYZeXGRwET7OhvMjh+gDMp2E0M7wigMF2lzBJaXgYibd2pC/9B8QoxGmJxu8iKtgc6
+         ah6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792361099; x=1792965899;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=FXXu6sXqJk8SsG+U0f2HwCixxxfND+avQe3AD+r/VSs=;
-        b=hDRtRtbgsTSzZ6CkExkdN3RsjGOmwfF0/ZarbvwKX2xtqWvfVZHKsM3P8nbY19csyv
-         Feqfjb/fiQ/3r9fpp9pdi9j+O/VsajetkkF8vo9+pThsmSRuzicYZ7q2IhGXVluupI/i
-         OU8s0W8pdr3P+q1BG+x+C3cOXrARVeiSvLLgPg6yh5/pyRII0TgSXtzDfvvkIB1LW+QD
-         /F76IVtsZq45zZOTelTqwsN/qtdLQvRe+viy5pVn6nyINsF6SRCcePyDCzztkzLtqWEv
-         TpeQs6lCBMVUqRSVOg0kEJ1/VsP5MPpnMMyTx/+NhlVcNolErZlBa4/RiEI0v3N9W1Tg
-         ax7Q==
-X-Forwarded-Encrypted: i=1; AKwUvBwn0H3QkUTXkxIWdsULXJaQDkUGIFCTzxZm9g96dsIW85A7iOBgrKF/+jjuKD4CoLRKFBKkEBDF@vger.kernel.org
-X-Gm-Message-State: AFq9FYI3CuACI3eZ0rUgfDNAe8FJzTFG3GDHx9QO4vr22VrI+k3YDqKW
-	n0drpvlRVknNoPs1oa/Ik45wKZRt1RkDLm8TmgqA9RL/urb0q5dQvyTG
-X-Gm-Gg: AYBFou1yYLoEkuMEJzoorwpWWr+73p11Lf++emSxpy75t2YfmoYkSp50VTshjvn64lQ
-	v/2evFBFxVIaCwbxYOeRxbJPs+m7g4D8EBgnJx2Sysv+490q1s0Y46bF5Wi5AjXQimuhoH8nIqj
-	MVdCslpolwUe8W1Gx2oygzof6IcqwJN8zwpEusgH5vC/9PNEElpyCJfBsoIqVqbOaSuzt1k0Orp
-	+eAIFEncw6YNuD/9+NGj4GCeD/y1P8dUzt60ZU+gS6EBchu3PywBhzXVpA876AiM3MYADWw2M7Q
-	E2Ulz+lSMClRthHBtGCg4lL2UTlFKpt7DUP0F7GokUwIZvM9MwGdwwgrtUGDZSsG7ZR8A5wOkYK
-	ul6qwN1rgPDQiA9k8yv4gSn0ebbm5j4LHgsnh8VNNU2Zzr+b1n8aMhfr82vVlYDKIdTHqYnOBvL
-	P6przzXh3Mw26cd+PUFzrGajTVTbJDvzrcXa/+eiD+GscG8SBW5Cmr/vZMPnx652RVlUsZog==
-X-Received: by 2002:a17:90b:580d:b0:396:41d1:cbc7 with SMTP id 98e67ed59e1d1-3acee2939c2mr4818318a91.3.1792361099415;
-        Sun, 18 Oct 2026 15:04:59 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792361100; x=1792965900;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=t+DBlUmYYanLk/fUhQLoMO5TIIqVDKMx0kXtXYJ5c+o=;
+        b=rphSmCsGhweR9b1KJdfEkU1v0bfHuUVMgc8PQJQpkMNBnaiUywvsuaSobjHyhq0Tpi
+         XtAjJrVHl+SzjBo7RQ479Rp355Oyefi5TbTlagsOPp5H5397wls6MqANW0l4WAbdXcgg
+         wws9e7ejgmQN2ZD7TT5dZe2QxSl/h2aFZvrlD5bCTCmxslgZ1kcsu9nLm4VJXXJd/zO/
+         ZdihSh0aZeG8tz2UoIXgwGvsi7RtLY4eSiYIHT04FN0d2lXr5lRLbPJGzvEhMHeC8CJd
+         NJqzqOHsql06H1RB/POD0mR6U/dnk3T2aimxmd+JrrO07lwi086DuQ4QmEiWSeb5od6o
+         U++w==
+X-Forwarded-Encrypted: i=1; AKwUvBwPIi0NfUqjZ/SHnoBudlzBTVnAwvHKRoYJVXrXsyFz3YnPgGEFq33/Kkk5lArNhOSoLna/zBz3@vger.kernel.org
+X-Gm-Message-State: AFq9FYKDTvED/gQUwqvSLhIlVE31UdVaGKZwnHSlDBh9rqWrTWbPpb/c
+	VAtOWD4anKpJ+E04611PtzzS7e55+jJrVPKRwp759GwBSnWCbwZmnCI/
+X-Gm-Gg: AYBFou2uoR2RyT9Mem570HzOgYM+ScUDjmE4ng4OqrfEgR/Xu5upkcVMmwcL5iIwIM5
+	2kZqqJeddIvW0P8huIih7cIwVvYChM2drK/cJoshfOs9xKZImXSOCnm1UMVtIDyOwT22/Qm/jdI
+	m2Yv9+X5Cl9DnDQ7SKYJdclDRQlk4gZC+qXimkUJX6NcqlRuJ9bC0vq4LNfrGyVgJxLYb+NsjjC
+	MokqEj+twAPpvYvUH0phm2qZFhbxGVIiNd8mmqmHNUROxFB3LDC9vH28YtX+grycOyvqVg0DnfA
+	5uPO8Ho06Yvz787ddLClV/SUsEPpNeMpcV3CEO2BUZSbR/3/Vb+BCTp5IK7qq8FPLojap0MWqNC
+	M8/EFDiu5dnwvKWsO67BBxn/+zkSvzjBNoFY6Gm7A6qODSGDWgPiKwupmNOCypKdnOEmih5Qc23
+	fhaM6AzQOxXdUvPRmunPZVD3ScUt80QtyNmFBJPvV+cWMfDG+SJJIC4RJfGpYyD9dU6FBE0YOsk
+	okXttrj
+X-Received: by 2002:a17:90b:1d50:b0:3ab:c80:9370 with SMTP id 98e67ed59e1d1-3aceeb95f5dmr3676275a91.20.1792361100224;
+        Sun, 18 Oct 2026 15:05:00 -0700 (PDT)
 Received: from [10.1.2.130] ([67.185.120.12])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac945e72c6sm17718271a91.5.2026.10.18.15.04.58
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac945e72c6sm17718271a91.5.2026.10.18.15.04.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2026 15:04:58 -0700 (PDT)
+        Sun, 18 Oct 2026 15:04:59 -0700 (PDT)
 From: Kir Kolyshkin <kolyshkin@gmail.com>
-Subject: [PATCH 0/2] cgroup: fix cgroup.kill for exited thread group leader
-Date: Sun, 18 Oct 2026 15:04:38 -0700
-Message-Id: <20261018-cgroup-kill-exited-leader-v1-0-c71ad94c20cc@gmail.com>
+Date: Sun, 18 Oct 2026 15:04:39 -0700
+Subject: [PATCH 1/2] cgroup: fix cgroup.kill for exited thread group leader
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -69,10 +71,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x3MQQqDMBBG4avIrDuQSbHYXkW6CMlfHQwqEy2Ce
- PeGLr/FeycVmKLQqznJ8NWiy1wht4biGOYBrKmavPMPcdJxHGzZV540Z8ahGxJnhATjIK20T3T
- R3x3VfjV89Pi/+/d1/QDnsFMnawAAAA==
-X-Change-ID: 20261018-cgroup-kill-exited-leader-a15159e8c230
+Message-Id: <20261018-cgroup-kill-exited-leader-v1-1-c71ad94c20cc@gmail.com>
+References: <20261018-cgroup-kill-exited-leader-v1-0-c71ad94c20cc@gmail.com>
+In-Reply-To: <20261018-cgroup-kill-exited-leader-v1-0-c71ad94c20cc@gmail.com>
 To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
  =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
  Serge Hallyn <serge@hallyn.com>, Shakeel Butt <shakeel.butt@linux.dev>, 
@@ -84,35 +85,79 @@ Cc: "Eric W. Biederman" <ebiederm@xmission.com>,
  Kir Kolyshkin <kolyshkin@gmail.com>
 X-Mailer: b4 0.14.3
 
-cgroup.kill fails to kill a process whose thread group leader has
-exited while other threads are still running, leaving the cgroup
-populated. This can be used by a process in a container to survive
-the container being killed, including the case of a container with a
-private PID namespace, where such a process is the container's init.
+cgroup.kill does not work in case a process' thread group leader is gone
+but other threads are still running. This is because __cgroup_kill()
+only walks the thread group leaders and sends SIGKILL to each of them
+with send_sig(), which uses PIDTYPE_PID:
 
-Patch 1 fixes __cgroup_kill() to walk all threads and to send a
-thread-group-directed SIGKILL. Patch 2 adds selftests for both
-scenarios described in patch 1; they fail without the fix.
+1. The exited leader is still listed by CSS_TASK_ITER_PROCS as long as
+   the process has live threads, but a signal directed at a single
+   exiting task never takes effect: complete_signal() does not look for
+   another thread to deliver it to, and __send_signal_locked() now drops
+   it altogether.  The process keeps running.
 
-Tested on v7.3-rc7 (x86_64 VM): test_kill passes (30 runs), other
-cgroup selftests show no changes compared to the unpatched kernel.
+2. The live threads of such a process can be migrated to another cgroup
+   by writing any of their IDs to cgroup.procs, while the exited leader
+   stays behind.  The destination cgroup has no thread group leader to
+   iterate, so writing to its cgroup.kill does nothing at all.
 
-The issue was found in crun, see patch 1 for details.
+In both cases the cgroup stays populated after cgroup.kill, and a
+process inside a container can use this to survive the container being
+killed.  This also works with a private PID namespace when the init of
+the container is the process, as the PID namespace is not torn down
+while init has live threads.
 
+Case 1 can be fixed by using do_send_sig_info(..., PIDTYPE_TGID) instead
+of send_sig(), so that the signal is taken by a live thread even if the
+task found by the iterator is exiting. Note it was pointed out by Eric
+in [1] while reviewing v2 of cgroup.kill patchset, and v3 was meant to
+switch to it, but the change was only made in cgroup_post_fork(),
+leaving __cgroup_kill() with send_sig().
+
+Case 2 can only be fixed by iterating over all threads, so this is what
+the fix also does. Once a thread group is being killed, its other
+threads are skipped since they already have a fatal signal pending.
+
+I ran some performance checks and the added cost is ~60 ns per every
+thread on my laptop (and less than a millisecond for 10K threads),
+which seems low. The time to "populated 0" seems unchanged.
+
+The issue was found in crun by Anthropic's OSS Scanner, and crun is
+getting a workaround for it [2] (which does what we needed to do
+before cgroup.kill was added).
+
+[1] https://lore.kernel.org/all/m1v97x6niq.fsf@fess.ebiederm.org/
+[2] https://github.com/containers/crun/pull/2351
+
+Fixes: 661ee6280931 ("cgroup: introduce cgroup.kill")
 Signed-off-by: Kir Kolyshkin <kolyshkin@gmail.com>
 ---
-Kir Kolyshkin (2):
-      cgroup: fix cgroup.kill for exited thread group leader
-      selftests/cgroup: test cgroup.kill with an exited thread group leader
+ kernel/cgroup/cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- kernel/cgroup/cgroup.c                     |   4 +-
- tools/testing/selftests/cgroup/test_kill.c | 158 +++++++++++++++++++++++++++++
- 2 files changed, 160 insertions(+), 2 deletions(-)
----
-base-commit: f909e534f5e34feb2ea2701d54df63e21aa506fc
-change-id: 20261018-cgroup-kill-exited-leader-a15159e8c230
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 227d09704ca5..efb7923f0c92 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4289,7 +4289,7 @@ static void __cgroup_kill(struct cgroup *cgrp)
+ 	cgrp->kill_seq++;
+ 	spin_unlock_irq(&css_set_lock);
+ 
+-	css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED, &it);
++	css_task_iter_start(&cgrp->self, CSS_TASK_ITER_THREADED, &it);
+ 	while ((task = css_task_iter_next(&it))) {
+ 		/* Ignore kernel threads here. */
+ 		if (task->flags & PF_KTHREAD)
+@@ -4299,7 +4299,7 @@ static void __cgroup_kill(struct cgroup *cgrp)
+ 		if (__fatal_signal_pending(task))
+ 			continue;
+ 
+-		send_sig(SIGKILL, task, 0);
++		do_send_sig_info(SIGKILL, SEND_SIG_NOINFO, task, PIDTYPE_TGID);
+ 	}
+ 	css_task_iter_end(&it);
+ }
 
-Best regards,
 -- 
-Kir Kolyshkin <kolyshkin@gmail.com>
+2.55.0
 
