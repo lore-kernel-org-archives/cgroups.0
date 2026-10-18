@@ -1,246 +1,249 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 476FD33E345;
-	Sun, 18 Oct 2026 04:37:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF87B3BB115;
+	Sun, 18 Oct 2026 06:49:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792298242; cv=none; b=lZDxNpK1Mt4PoSKiFUlAqp43bpjBu4iAQ0cUsMTGKgOcqaBAv+zjtnj6s6b3ZLmx9bGFhq8A/ICoUrPLFYR83Kk6tgBdV7kw0g+1xiCJe3FQ651OntOffezrjD67o0OxRr9y4fsuEyrSr62CFKlo84SQblNU015+iDhv2Hb8gJo=
+	t=1792306193; cv=none; b=XlUZB3KdpxMR/KQBqOg7gjmt0QxtYOAT4D7xOV5P5a58OwbRgXDH0h+419Hpf6q12/otcLbuK8gT9VP2DWp/x21sB2FyiDrbbSD9oUzbX0D7Y3RWraIVc6/UFAWvRjerJXq28RKaqjWgNAJDcaUwJQhf9Q58eUH3drUtfDSACNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792298242; c=relaxed/simple;
-	bh=NvGLDLqSPDaWs1URPPrWucekvPGW/18Rqow9t6xI+Qs=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=EABvFSljRJUKNu/r9rKxgn0I+9E+2UAm0kKMGzeR80rxkwtph09a5Bk0L091gJ7SFNG5dNNMQnTNRsYEIszL65x3j2RcQ+DR1mXk0MlwaQnQnpDKC++aAjSt1xKGuL1Hg1SS3wIXZ5a8hZBjmoJJ0Pg3/tlQh/8hLMogg+Z9nIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=kA3anhgn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792306193; c=relaxed/simple;
+	bh=q/ntWjpRoBwAFRXgvSzE5667UQ5q5AK7Ik5KKRUhs2k=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=gFyCV2Qu/t0d8UJf9dQn33omNDTZJWn4UaCPDDuQkCdkAXgf/gsaDCLQFLxYMx1kVmc3qoaWdmpS4beB+Vih2UVPT9qpz6rIKk5l09L1BXX8BKBNzvo/HV5vV2j2MS+D9e2fegjZDvA0s2iO6o86uusKZT1gUZfxaBd9oMpyuFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b=Ff5qagFP; arc=none smtp.client-ip=212.227.17.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="kA3anhgn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88DEF1F000C4;
-	Sun, 18 Oct 2026 04:37:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1792298240;
-	bh=X9BtmiPUdXaKyy1Yxwr/J43UplsvVeIhpbcLZE0ZH2o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=kA3anhgnIbg8huv8B+zi9XeS9ph1nKGLhlku8EvIXLFMJ2JBxs7t94mE5wJa8QOy+
-	 1pHVBECkOGC39HNNw8cZ8VFbuhKt92jrL7b7BieMeFAYoXyWjQUaO+Nsz8DeYmsEfJ
-	 +mUGDScckDLtFEl5d3D4WWIm3ZCosyMH37636els=
-Date: Sat, 17 Oct 2026 21:37:20 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: syzbot <syzbot+af37a78f810994eae641@syzkaller.appspotmail.com>
-Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org,
- muchun.song@linux.dev, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [mm?] INFO: rcu detected stall in filemap_fault (4)
-Message-Id: <20261017213720.4f529d19d625743bba7a0e85@linux-foundation.org>
-In-Reply-To: <6ad407e5.6814cce4.34c49f.00a4.GAE@google.com>
-References: <6ad407e5.6814cce4.34c49f.00a4.GAE@google.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=efault@gmx.de header.b="Ff5qagFP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
+	s=s31663417; t=1792306174; x=1792910974; i=efault@gmx.de;
+	bh=a9qFg4rh5rJY/94lKvbhTGLmNg2V/yvXn7/WIyaspCo=;
+	h=X-UI-Sender-Class:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:MIME-Version:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=Ff5qagFPpkA+0Jlj9rmsc35uY1Pp3VVaXAN7SgCbVRYxtSqeoOKj6topdYmV4T/c
+	 ANGK4t/IFVMQCBLhodvKcizh6nKN/LD0JJzLtJJ4AnClAP3GkN59KjPlHQrwCvdHf
+	 1bEb57VJK/29fXmNC+w4Oy6BZ/BYmHVL7l46ZqwpbDnUnJXxpjfgbyBGBsOd8jamS
+	 lOsMZoi4rr53Hq78dX2GE7/2WZIPLIRajwEOwoED99jNCXHVpYfEuyWcrzLax8esI
+	 YoePmeL3EoFxT8OvNP4pvbdZnTxs5b/508zfLvinDrwdQOEOHVuBr7Gf5LpjCxHgv
+	 scr0A3c9Cf4JvfyEBw==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from client.hidden.invalid by mail.gmx.net (mrgmx105
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1MAwXh-1xTYyV2oQb-008pPw; Sun, 18
+ Oct 2026 08:49:34 +0200
+Message-ID: <b1002150c3e4f877d04790cd8e85d2149d17722f.camel@gmx.de>
+Subject: Re: [PATCH v3 7/7] sched/eevdf: Move to a single runqueue
+From: Mike Galbraith <efault@gmx.de>
+To: Jakub =?UTF-8?Q?Oko=C5=84ski?= <jakub@okonski.org>, Peter Zijlstra
+	 <peterz@infradead.org>, mingo@kernel.org
+Cc: longman@redhat.com, chenridong@huaweicloud.com, juri.lelli@redhat.com, 
+	vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, 
+	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, tj@kernel.org, 
+	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, jstultz@google.com, kprateek.nayak@amd.com, 
+	qyousef@layalina.io
+Date: Sun, 18 Oct 2026 08:49:29 +0200
+In-Reply-To: <58dc8e8a-7260-43ce-aebb-8d9c29a6afc9@okonski.org>
+References: <20260605105513.354837583@infradead.org>
+	 <20260605124052.227463677@infradead.org>
+	 <58dc8e8a-7260-43ce-aebb-8d9c29a6afc9@okonski.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-Provags-ID: V03:K1:9iNAocpG5x1CJAmMXwVqsaAqdzptXRDOt1yko+dKLlbY5IwsXZV
+ oG4luLShD2wb+EaulXzYgO0utVPpU7zbGV97FQD1NHvNoQe+bmjWghaVslZQ4JFumYWxd5M
+ 5X3eAJT2dU+PMUqdpPV/I6JasOJcs2oeQZpOlnVcMt4hrUS+h/aZPQtO5GxJAzw0cFCW9sZ
+ We0UOdBc88kmCYETUmH1w==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:yaoA2VtcRP4=;4mGPFCdxrx40IOU2VngsZhU1KuW
+ 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
+ al560AGVFs79ItVQ6vLHMfflUJvfI=
 
-On Sat, 17 Oct 2026 16:42:29 -0700 syzbot <syzbot+af37a78f810994eae641@syzkaller.appspotmail.com> wrote:
+Greetings!
 
-> Hello,
-> 
-> syzbot found the following issue on:
-> 
-> HEAD commit:    70dd4ee72eb2 Merge tag 'pinctrl-v7.3-3' of git://git.kerne..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=15b2320d580000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=4ccb65e03706547e
-> dashboard link: https://syzkaller.appspot.com/bug?extid=af37a78f810994eae641
-> compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10de5da9580000
-> 
-> Downloadable assets:
-> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-70dd4ee7.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/f1d9bae25289/vmlinux-70dd4ee7.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/d8b2b9fc2571/bzImage-70dd4ee7.xz
-> 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+af37a78f810994eae641@syzkaller.appspotmail.com
-> 
-> rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
+On Fri, 2026-10-16 at 15:18 +0200, Jakub Oko=C5=84ski wrote:
+> Hi Peter,
+>=20
+> On 6/5/26 14:40, Peter Zijlstra wrote:
+>=20
+> > Change fair/cgroup to a single runqueue.
+> >=20
+> > [...]
+> >=20
+> > --- a/kernel/sched/fair.c
+> > +++ b/kernel/sched/fair.c
+> > @@ -9916,7 +9837,6 @@ static void wakeup_preempt_fair(struct r
+> > =C2=A0	if (!sched_feat(WAKEUP_PREEMPTION))
+> > =C2=A0		return;
+> > =C2=A0
+> > -	find_matching_se(&se, &pse);
+> > =C2=A0	WARN_ON_ONCE(!pse);
+> > =C2=A0
+> > =C2=A0	cse_is_idle =3D se_is_idle(se);
+>=20
+> I think this changes how cpu.idle affects wakeup preemption.
 
-Thanks.  AI tells me "Yeah, this happens.  Don't Do That":
+My box claims this to be unrelated to the jitter you're seeing, as it
+is present in 7.2.11, with and without the sched-flat set applied.
 
+> With the single runqueue, find_matching_se() is gone and se_is_idle()
+> reduces to task_has_idle_policy(). Wouldn't this mean that SCHED_NORMAL
+> tasks in a cpu.idle cgroup are no longer treated as idle for
+> wakeup_preempt_fair()?
+>=20
+> I tested my existing 7.2.9 desktop against 7.3-rc6 with the setup below.
+> cyclictest doesn't reproduce it because it just sleeps and wakes, no CPU
+> burn and therefore its accrued EEVDF lag keeps the latency low?
+>=20
+> cc -O2 -o wakelat wakelat.c
+> systemd-run --user --collect --unit=3Dspin -p AllowedCPUs=3D7 -p CPUWeigh=
+t=3Didle sh -c 'while :; do :; done'
+> systemd-run --user --collect --wait --pipe --same-dir -p AllowedCPUs=3D7 =
+./wakelat 1000 15 200 |
+> =C2=A0 mlr --inidx --ifs space --opprint --barred --right label lat \
+> =C2=A0=C2=A0=C2=A0 then stats1 -a count,p50,p90,p99,max -f lat then renam=
+e -r '^lat_,' \
+> =C2=A0=C2=A0=C2=A0 then put -q 'emit mapsum({"kernel": system("uname -r")=
+}, $*)'
+> systemctl --user stop spin
+>=20
+> wakelat wakes on a fixed 1 ms schedule, records how late each wakeup
+> was, then busy-loops for 200 micros (wall clock).
+>=20
+> +-----------+-------+-----+-----+------+------+
+> > =C2=A0=C2=A0 kernel | count | p50 | p90 |=C2=A0 p99 |=C2=A0 max |
+> +-----------+-------+-----+-----+------+------+
+> > =C2=A0=C2=A0=C2=A0 7.2.9 | 14998 |=C2=A0 11 |=C2=A0 11 |=C2=A0=C2=A0 12=
+ | 1869 |
+> > 7.3.0-rc6 | 13853 |=C2=A0 11 |=C2=A0 12 | 2029 | 2116 |
+> +-----------+-------+-----+-----+------+------+
+>=20
+> count is out of 15000 periods. rc6 had 1147 wakeups delayed by over 1 ms.
 
-This looks like real-time scheduler starvation rather than an MM bug.
+Thanks a bunch for the proggy. I've been looking for a clear signal
+with various loads, and stuffing wakelat+awk into one of my scripts
+provided a perfectly clear signal, which I bisected and confirmed.
 
-The reproducer contains:
+Note: below is box pointing it's little silicon finger at the source of
+aforementioned jitter, not necessarily at breakage.
 
-    prlimit64(0x0, 0xe, ...={0x8, 0x8b}, 0x0)
-    sched_setscheduler(0x0, 0x2, ...=0x8)
+Reverting the fingered commit removed the jitter from 7.2.11, and force
+reverting 68e37487810a + 333238da9a19 removed it from master as well.
 
-These enable SCHED_RR at real-time priority 8.  The reproducer
-runs six processes on a single-CPU VM.
+333238da9a193ffc58792995f3e951e4cb87bfd2 is the first 'bad' commit
+commit 333238da9a193ffc58792995f3e951e4cb87bfd2
+Author: Vincent Guittot <vincent.guittot@linaro.org>
+Date:   Fri Aug 14 15:52:41 2026 +0200
 
-This can starve normal-priority tasks, including tasks preempted
-inside RCU read-side critical sections.  The report also explicitly
-states:
+    sched: Update time before requeueing delayed entities
+   =20
+    In order to compute the right lag, it is required to update time to 'no=
+w'.
+    Without this, the delayed entity might appear younger than it really is=
+ and
+    receive less compensation for having waited.
+   =20
+    Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
+    Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 
-    rcu: rcu_preempt kthread starved for 1643 jiffies!
+ kernel/sched/fair.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-This failure mode is specifically described in the RCU stall
-documentation:
-
-    https://docs.kernel.org/RCU/stallwarn.html
-
-The documentation explains how CPU-bound real-time tasks can
-prevent preempted RCU readers from running, indefinitely delaying
-grace periods.
-
-The task in mem_cgroup_from_task() was interrupted by the timer
-interrupt and preempted.  There is no evidence that it was stuck
-in that function.  filemap_fault() appears to be an innocent
-bystander.
-
-Could we rerun the reproducer with sched_setscheduler() and
-prlimit64() removed?  If that eliminates the stall, it would
-strongly support the scheduling-starvation explanation.
-
-I don't see evidence of an MM bug here.
-
-> rcu: 	Tasks blocked on level-0 rcu_node (CPUs 0-0): P5320/1:b..l
-> rcu: 	(detected by 0, t=10502 jiffies, g=61125, q=864 ncpus=1)
-> task:syz-execprog    state:R  running task     stack:22864 pid:5320  tgid:5314  ppid:5313   task_flags:0x440040 flags:0x00080000
-> Call Trace:
->  <TASK>
->  context_switch kernel/sched/core.c:5533 [inline]
->  __schedule+0x17db/0x58f0 kernel/sched/core.c:7284
->  preempt_schedule_irq+0x4b/0x90 kernel/sched/core.c:7606
->  irqentry_exit_to_kernel_mode include/linux/irq-entry-common.h:539 [inline]
->  irqentry_exit+0x14f/0x920 kernel/entry/common.c:167
->  asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:674
-> RIP: 0010:task_css include/linux/cgroup.h:548 [inline]
-> RIP: 0010:mem_cgroup_from_task+0x8f/0x120 mm/memcontrol.c:1134
-> Code: 38 48 c7 c7 58 c8 d9 8f be ff ff ff ff e8 a9 1a a8 09 85 c0 75 23 49 83 c6 2c 4c 89 f0 48 c1 e8 03 42 0f b6 04 38 84 c0 75 6e <41> f6 06 04 75 09 e8 76 f7 68 ff 85 c0 74 28 48 83 c3 20 48 89 d8
-> RSP: 0018:ffffc9000e0ef610 EFLAGS: 00010246
-> RAX: 0000000000000000 RBX: ffffffff8fd9f0c0 RCX: 0000000000000046
-> RDX: 000000009a0f617f RSI: ffffffff8e6f5004 RDI: ffffffff8c6dec80
-> RBP: 1ffff110061db463 R08: ffffffff8242ae78 R09: 0000000000000000
-> R10: dffffc0000000000 R11: ffffed10070f1e47 R12: ffff88803878f230
-> R13: dffffc0000000000 R14: ffff888000f525ac R15: dffffc0000000000
->  get_mem_cgroup_from_mm+0xd6/0x290 mm/memcontrol.c:1187
->  __mem_cgroup_charge+0x15/0x80 mm/memcontrol.c:5226
->  mem_cgroup_charge include/linux/memcontrol.h:662 [inline]
->  filemap_add_folio+0x140/0x4e0 mm/filemap.c:965
->  page_cache_ra_unbounded+0x46d/0x9d0 mm/readahead.c:293
->  do_page_cache_ra mm/readahead.c:348 [inline]
->  page_cache_ra_order+0xb47/0xee0 mm/readahead.c:558
->  do_sync_mmap_readahead+0x75e/0x990 mm/filemap.c:3443
->  filemap_fault+0x7d9/0x13b0 mm/filemap.c:3597
->  __do_fault+0x138/0x2a0 mm/memory.c:5565
->  do_read_fault mm/memory.c:6000 [inline]
->  do_fault mm/memory.c:6134 [inline]
->  do_pte_missing+0x2215/0x34b0 mm/memory.c:4700
->  handle_pte_fault mm/memory.c:6558 [inline]
->  __handle_mm_fault mm/memory.c:6707 [inline]
->  handle_mm_fault+0x1a53/0x3750 mm/memory.c:6876
->  do_user_addr_fault+0xa4f/0x1340 arch/x86/mm/fault.c:1343
->  handle_page_fault arch/x86/mm/fault.c:1483 [inline]
->  exc_page_fault+0x6a/0xc0 arch/x86/mm/fault.c:1536
->  asm_exc_page_fault+0x26/0x30 arch/x86/include/asm/idtentry.h:595
-> RIP: 0033:0x46fe0e
-> RSP: 002b:000010e09c0a5178 EFLAGS: 00010216
-> RAX: 00000000015e4970 RBX: 000000000173a820 RCX: 0000000000000000
-> RDX: 000000000001a058 RSI: 00000000015ca918 RDI: 000000000041db80
-> RBP: 000010e09c0a51a0 R08: 00000000015ca918 R09: 00000000015cb3b8
-> R10: 0000000001911ec0 R11: 0000000000000000 R12: 0000000043fdf3b9
-> R13: 0000000000000000 R14: 000010e09c078960 R15: 000000000000012a
->  </TASK>
-> rcu: rcu_preempt kthread starved for 1643 jiffies! g61125 f0x0 RCU_GP_WAIT_FQS(5) ->state=I ->cpu=0
-> rcu: 	Unless rcu_preempt kthread gets sufficient CPU time, OOM is now expected behavior.
-> rcu: RCU grace-period kthread stack dump:
-> task:rcu_preempt     state:I stack:27496 pid:17    tgid:17    ppid:2      task_flags:0x208040 flags:0x00080000
-> Call Trace:
->  <TASK>
->  context_switch kernel/sched/core.c:5533 [inline]
->  __schedule+0x17db/0x58f0 kernel/sched/core.c:7284
->  preempt_schedule_common+0x7f/0xd0 kernel/sched/core.c:7463
->  preempt_schedule_thunk+0x16/0x40 arch/x86/entry/thunk.S:12
->  __raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:211 [inline]
->  _raw_spin_unlock_irqrestore+0x76/0x80 kernel/locking/spinlock.c:221
->  debug_object_assert_init+0x20d/0x380 lib/debugobjects.c:1072
->  debug_timer_assert_init kernel/time/timer.c:803 [inline]
->  debug_assert_init kernel/time/timer.c:848 [inline]
->  __mod_timer+0x4b/0xed0 kernel/time/timer.c:1025
->  schedule_timeout+0x14d/0x2c0 kernel/time/sleep_timeout.c:98
->  rcu_gp_fqs_loop+0x30c/0x11f0 kernel/rcu/tree.c:2122
->  rcu_gp_kthread+0x9e/0x2b0 kernel/rcu/tree.c:2330
->  kthread+0x38b/0x480 kernel/kthread.c:436
->  ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
->  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
->  </TASK>
-> rcu: Stack dump where RCU GP kthread last ran:
-> CPU: 0 UID: 0 PID: 5761 Comm: syz.2.24 Not tainted syzkaller #0 PREEMPT(full) 
-> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-> RIP: 0010:get_current arch/x86/include/asm/current.h:25 [inline]
-> RIP: 0010:__sanitizer_cov_trace_pc+0x8/0x80 kernel/kcov.c:212
-> Code: 8b 3d 34 de ab 0c 48 89 de 5b e9 93 fc 66 00 cc cc cc 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa 48 8b 04 24 <65> 48 8b 0d c8 9d ce 12 65 48 8b 15 c8 9d ce 12 f7 c2 00 01 00 ff
-> RSP: 0018:ffffc9000d3278e8 EFLAGS: 00000202
-> RAX: ffffffff8be56f10 RBX: 1ffff11006b094a2 RCX: ffff888034c90000
-> RDX: ffff88803584a508 RSI: ffff88803584a508 RDI: ffffc9000d327ab8
-> RBP: 1ffff11006b094a1 R08: ffff888034c9001b R09: 1ffff11006992003
-> R10: dffffc0000000000 R11: ffffed1006992004 R12: ffff88803584a508
-> R13: ffff88803584a508 R14: ffff88803584a508 R15: ffff88803584a510
-> FS:  00007f0baa9bd6c0(0000) GS:ffff88808b0b4000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000200000000058 CR3: 000000004004c000 CR4: 0000000000352ef0
-> Call Trace:
->  <TASK>
->  __list_add include/linux/list.h:172 [inline]
->  list_add_tail include/linux/list.h:206 [inline]
->  plist_add+0x420/0x580 lib/plist.c:111
->  __futex_queue+0xed/0x160 kernel/futex/core.c:866
->  futex_queue kernel/futex/futex.h:333 [inline]
->  futex_wait_setup+0x424/0x590 kernel/futex/waitwake.c:695
->  __futex_wait+0x15f/0x400 kernel/futex/waitwake.c:717
->  futex_wait+0x121/0x390 kernel/futex/waitwake.c:750
->  do_futex+0x3e7/0x4e0 kernel/futex/syscalls.c:133
->  __do_sys_futex kernel/futex/syscalls.c:210 [inline]
->  __se_sys_futex+0x3a8/0x450 kernel/futex/syscalls.c:191
->  do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
->  do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> RIP: 0033:0x7f0ba9b9e559
-> Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-> RSP: 002b:00007f0baa9bd0e8 EFLAGS: 00000246 ORIG_RAX: 00000000000000ca
-> RAX: ffffffffffffffda RBX: 00007f0ba9e25fa8 RCX: 00007f0ba9b9e559
-> RDX: 0000000000000000 RSI: 0000000000000080 RDI: 00007f0ba9e25fa8
-> RBP: 00007f0ba9e25fa0 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-> R13: 00007f0ba9e26038 R14: 00007ffe158db450 R15: 00007ffe158db538
->  </TASK>
-> 
-> 
-> ---
-> This report is generated by a bot. It may contain errors.
-> See https://goo.gl/tpsmEJ for more information about syzbot.
-> syzbot engineers can be reached at syzkaller@googlegroups.com.
-> 
-> syzbot will keep track of this issue. See:
-> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-> 
-> If the report is already addressed, let syzbot know by replying with:
-> #syz fix: exact-commit-title
-> 
-> If you want syzbot to run the reproducer, reply with:
-> #syz test: git://repo/address.git branch-or-commit-hash
-> If you attach or paste a git patch, syzbot will apply it before testing.
-> 
-> If you want to overwrite report's subsystems, reply with:
-> #syz set subsystems: new-subsystem
-> (See the list of subsystem names on the web dashboard)
-> 
-> If the report is a duplicate of another one, reply with:
-> #syz dup: exact-subject-of-another-report
-> 
-> If you want to undo deduplication, reply with:
-> #syz undup
