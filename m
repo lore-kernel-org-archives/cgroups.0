@@ -1,199 +1,138 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C8F346FA0
-	for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 08:57:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 477BA4C4F7F
+	for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 13:58:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792313858; cv=none; b=BPvXCHO1EWc06mkdzemP9kA1VnC/jxsmdki8GySed75SDa033cghqja6tb4jysdiP8VnRfxN0hwnQE3HFwVg2bcfBUdX7g2Brblt1DcgCdfU1DBkZeXixp/eb0TL9cHeVngEjQOepwmfxEI/arkLp24VcpNNyvVf5cfykV0ASIw=
+	t=1792331908; cv=none; b=uqDlma+l1ekzRgrFhdWaofV+yBKPVQLaKPZ+K7fGDDBB+2DAbkZqaw5bcCdAjHY7p6HREug+60cOuYL0181YxrL0m/ck8efMTOCWo1mDdqA+HoOt7rvu9nxVQezLTEhRViIXk2sb86qI3VSufhqxxhiU7YqTHLeE4fQ+RbmuPPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792313858; c=relaxed/simple;
-	bh=nENAYkziLDO/dfWnrWZvMbQgf1kuFCik+87Kahko8Lw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nGPq2RgXKEfdRgf5k0WgDS2gWiEEtx/n7un7NH0xgMuU1iEESW5KucwVY/914nUZTxqk9O0TiFX3NggpZAld50fa34PUvNBT0P3W3moDA5wov6ZPjdNgcjEsr9/o/tygrnMmpgrefLV7BQ2ZSX1o5Tw3oFsDeRV30j0XbnGLTPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=colorfullife.com; spf=pass smtp.mailfrom=colorfullife.com; dkim=pass (2048-bit key) header.d=colorfullife-com.20251104.gappssmtp.com header.i=@colorfullife-com.20251104.gappssmtp.com header.b=sHz7SCeD; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=colorfullife.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=colorfullife.com
+	s=arc-20240116; t=1792331908; c=relaxed/simple;
+	bh=IwHavXJVs5lyTOCcn+pET+ahPXOw4vfy6zPC2ELLFdk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cRTU9PffhW6tTVHQlKg3ojOxzsd6mmJF5TF6FIA4WIlVZZz/8YgXXT7CdI3O+1wF/9/Xno1O6umYM+NS+70cAk3wT2IP8BqrmdCrAYrxq/dkmhXkfWdxvhsC/UAWD4hHTOTSl61nHxV71kRrHTgij6QSvWBqBNb9H//3de34Kbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=PZMI4w2M; arc=none smtp.client-ip=209.85.217.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=colorfullife-com.20251104.gappssmtp.com header.i=@colorfullife-com.20251104.gappssmtp.com header.b="sHz7SCeD"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-48e0d885929so609185f8f.3
-        for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 01:57:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="PZMI4w2M"
+Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-7c03744ef27so289753137.1
+        for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 06:58:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorfullife-com.20251104.gappssmtp.com; s=20251104; t=1792313855; x=1792918655; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=pRpMKu16Q/46x/JCsK9hFw+qY2y44myLhR4+B4ycuBg=;
-        b=sHz7SCeDkAV8fuppUWANDnj9mw888OXaz1tgzrw5K/jqAYvTKgFJUw6qDDkHK8+OUV
-         F9Nx8JcKvfI3VPbID9bywT7SKDntIih9XS7TqePhQo0apMVZMnBhsny8/qCdx7jHbetX
-         ddlf3HLiyXFtWEp/Bsm0Lbgsu8Vty87mKZYFOAzz+pxCpYspdRBn4ql4UeoZW90NO2S4
-         M9+DImJCZeTnAwaQEk80XEaqE/xiAjrZANbYyI2q95UIqmbZnw4eK/qWHVVrVvXXWcUj
-         uOSkjgleRsIrIaf0XT8PUDRaVAdJR6aSz67YhRSlYSvplpwOzBw3c88HNu7uTDKKVrkz
-         acLA==
+        d=soleen.com; s=google; t=1792331906; x=1792936706; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=ayMWfGshO3UNwVYFCcSN2BNh422miW8cad5xrtcnUvg=;
+        b=PZMI4w2MQRZzUU9IeVIa38517zEmudcio4i+U+Rm7RBsKFrLnnc7KXRC2kSh3EA3bu
+         K+DCOu8JjEzqnsxTysqWYUb2KU22ydIvG/HeV2q31xT6HylIqghGEsypGHngXgdjm7Cz
+         SSx1awLt0YgW4pIXDtfIFCb79/sB8O+lfASlhuBb8/5kw8Zthi8BDbx0dATSOs42d2PP
+         bG7NeKlNyfvVrizMWXJiftjgsHiS3BOZqo+Ep4RWC/nqOkDveesjVCmz18fqvtD9f+Jb
+         vXLd1lmmXu2FuwpzWOgeDPlDu2EvO20KZ3glq82KNmw7yb8nqpyOdQZ9aC7mPiuT4gMy
+         SlIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792313855; x=1792918655;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=pRpMKu16Q/46x/JCsK9hFw+qY2y44myLhR4+B4ycuBg=;
-        b=FlSW57cOaJ3bO/YJDnT4vk39qCi00FITWL4/9sct7Y3d69K1/qfvrFPzOP8paKRcoU
-         z8P68kfo9CnS8lnmSyQVlrlk7wyESk5LhvRUDQuR7JpPk0sk2Oe932j5Jm3+P/0YKsBA
-         UWxYEOv1S5+OjttzsHig4HgNXARto/p9pGnvFA14PQ3QuHmyF5zhvAC8VJhoQpRDL1IF
-         E6DizLDJ2s0INsW83raMHy8nnzgPVHBi97WjazHaMLyIPFN05Vsrr5mN3gtbXANtLfOQ
-         l5XeCQcJiA53EUdindljK5U3av4so9xM8QZsFv+nvlltCyu7MiA2dElsC/EjckcVORaz
-         cUPA==
-X-Forwarded-Encrypted: i=1; AKwUvBxgLL+njE8lN7l/IGVSuMT0IykBbJXutDtmEb+sc/24Q2ovo4dzUBCUMPwipHMYlFGXKn3IP8aV@vger.kernel.org
-X-Gm-Message-State: AFq9FYIn3xuW+qB8VEqDvhAAr0yIXw26REWzN8x/jO1ptj6KmJDRBWpv
-	nvZ21GwWHUXgZYhBWNhyySxEZIVi+IVS1Q8yfUUYIYJPKj5JdONhUbL+/F6lF4Dy+g==
-X-Gm-Gg: AYBFou1MjJ8rDFSZuWf+6v0cuJwsMuiKzbIIUzHMW/x0QomvUEZpSSTv9tKhBgX1qca
-	x1eXtbAgxJtsVek/rIFHgMwuwG1pWFEMZ2Fcwg1Kq36IU1WIwKqez3OKiVNAQCT+5HNkmMsjUkh
-	UCVk++bOks3xiT66y+iCaVEKvo5Z7mRdQMNUPZ5l0LE0HZIt71AG5V261DgScK4SyoEHkFCj6e3
-	Hy9TK0sq1UKMOLOFvE2rO9Wbd7HijyNGEbrNYlSFVNJUSbrZSU/RFdOaKGJkQnLCLbd9LyCl5Hc
-	zCkQmXls6efEGt0y7Wo2IHBD90ZuQTLEXWl12pHxp/0vXfUrKqtum3EaqhwjPdm7RRewMIABLWT
-	b5fI1HrBzfuX1GSZGUwhKu5rk+5obQd9ZDPYr+/dsswb28pWJacnY3Hl4IBqCq7JFfmSvkUy5Ww
-	u4qk+x99jWDsPAMP53CsS3b0frlR7kMXZrxuEEqV+bbSiqZF8B8V0aqFocDa5fF9DszoUrMta1x
-	wouAHuwT/lsvdoFYkCDMgun+upDaAdNa7yWRgZqLrt5fHH5KVXrvoHu3OgRaYN0q5HSj69K2nKq
-	nqnS/FxcWwoYETMvbSpzUm/l/VuN8ircLdqTOg==
-X-Received: by 2002:a05:600c:8219:b0:4a1:85d9:13be with SMTP id 5b1f17b1804b1-4a1d76031bfmr97737755e9.20.1792313855253;
-        Sun, 18 Oct 2026 01:57:35 -0700 (PDT)
-Received: from ?IPV6:2003:d9:9733:4d00:46a9:a5ac:4915:e68f? (p200300d997334d0046a9a5ac4915e68f.dip0.t-ipconnect.de. [2003:d9:9733:4d00:46a9:a5ac:4915:e68f])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd9a88bbsm282747915e9.3.2026.10.18.01.57.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 18 Oct 2026 01:57:34 -0700 (PDT)
-Message-ID: <51c93c19-f1dd-455f-8698-6b1ee30eb630@colorfullife.com>
-Date: Sun, 18 Oct 2026 12:46:31 +0200
+        d=1e100.net; s=20260707; t=1792331906; x=1792936706;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ayMWfGshO3UNwVYFCcSN2BNh422miW8cad5xrtcnUvg=;
+        b=Uzj7Nk80ZC0xJvA8mXpfMLvZ/QSxr002AnnY7rzjb6Nnm/MXHoHQHyUTF6jCESIDaW
+         PddE/h7Tc5wUk8R8yWniKyvYP6vM15UgAZhBLKHqeB6pPh67+uEWZqv8NJazY5230Nsv
+         ymANaN0C/Pn36zGfFKOfrpDiky+GxAS9HSaL0odjR2Yc9kVfkB5+c4B4ig+JvAIPHRiu
+         OgQYdYEn6ZdFiH4SObPC8XtrQKqbxpCTsNrG/aJo7Qx/KBZxK1iBxJB6y7JmL7vXjY6j
+         LAE34x1g75o68l8wpVjW9SUk3kojcadFnNcC3sS7OPdOrutmQP5/hbzRcJ3wvU3h25ek
+         QNoA==
+X-Forwarded-Encrypted: i=1; AKwUvBxNOqgV7jeLrVvW08SzGnXhw+qwk4NfQUSWZnh79YVCD0EtovlW96oLNgcut5BS27sNlOGq2XjG@vger.kernel.org
+X-Gm-Message-State: AFq9FYJKY7omQV+FDkjSn0MG/eNcBI3kj+ZW2I409BSqgxBFXvsbtV8E
+	5U2Z8xlNyJ5GGoesuGIPtuDr5V9oapDrimow07rJVcN5k2jurO2mJS4zXHhey3DX4ng=
+X-Gm-Gg: AYBFou00xrr/xAP02dxQmTPKeZkCfiMqxr1ohcGpu4oWTfCoZw4XFTcnZkXsSyeae2l
+	3erhZGbBaZBzePmwUIRtkKl9E8ZZU6y3KBp9ZcQ23EoMPF0H+4+wzf27BGheS9ehjvG+nlNsKB7
+	WoXdg8/T0MGpHnPBP8MPWKNkDitNxgZnxAfmwzEcw03SHEFCCKehzwg4vASZbkUJnYtgYP1my9P
+	wVXsC6Yb04RBiqWV9TlSNaZa8dK+BvYqdXy8C8oiBEJ6RvQFq1xGTHv/4kwsHkh/lZRcNd8qwZ+
+	HlbC1VMubylHtMBIK/Z+XQdIQfakTiUG/BoFZUqMKVKhLveIrXwcm/xMG94ExivRkDhQ+SD8Kam
+	qiZD97XqM/a4pr2WCLcg6p9vr+eNnUVZSnzkM00ZdzmAROuHjZ9fTDCsxCYn4iJ1E67hyN0B8Kb
+	95JJ3rSAUKqrasuggt05tTK1RQnTMwlzDuVZx3jFxyIMRklXTdK6eQziRYpAmtL7i4oR+EOfyzH
+	QxPRA+196+pwJQKPthD/pFCN7Md4vJns4GLR8Wh0Xd1M4YueeFtYO1iZyjf6xNHkraUfHoZlNQ=
+X-Received: by 2002:a05:6102:5809:b0:7a7:19aa:f0d4 with SMTP id ada2fe7eead31-7cc36af7150mr1191922137.33.1792331906038;
+        Sun, 18 Oct 2026 06:58:26 -0700 (PDT)
+Received: from google.com (16.49.199.35.bc.googleusercontent.com. [35.199.49.16])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-9908366328dsm6405154241.12.2026.10.18.06.58.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 18 Oct 2026 06:58:25 -0700 (PDT)
+Date: Sun, 18 Oct 2026 09:58:24 -0400
+From: Pasha Tatashin <pasha.tatashin@soleen.com>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: Pasha Tatashin <pasha.tatashin@soleen.com>, kees@kernel.org,
+	rppt@kernel.org, juri.lelli@redhat.com, nik.borisov@suse.com,
+	tglx@kernel.org, vschneid@redhat.com, kprateek.nayak@amd.com,
+	vincent.guittot@linaro.org, bp@alien8.de, thorsten.blum@linux.dev,
+	cgroups@vger.kernel.org, david@kernel.org, mingo@redhat.com,
+	akpm@linux-foundation.org, linux-mm@kvack.org, seanjc@google.com,
+	ljs@kernel.org, zhangguopeng@kylinos.cn, dietmar.eggemann@arm.com,
+	mhocko@suse.com, vinicius.gomes@intel.com, tj@kernel.org,
+	vbabka@kernel.org, linux-kernel@vger.kernel.org,
+	peterz@infradead.org, surenb@google.com, hpa@zytor.com,
+	x86@kernel.org, dmatlack@google.com, tim.c.chen@linux.intel.com,
+	kexec@lists.infradead.org, pratyush@kernel.org,
+	dave.hansen@linux.intel.com, rostedt@goodmis.org,
+	gmonaco@redhat.com, jgross@suse.com, mgorman@suse.de,
+	graf@amazon.com, linux-edac@vger.kernel.org, liam@infradead.org,
+	ridong.chen@linux.dev, longman@redhat.com, bsegall@google.com
+Subject: Re: [PATCH v1 0/8] x86, sched, mm: Speed up CPU hotplug on large
+ systems
+Message-ID: <atTQgM72TWSFZ0AX@google.com>
+References: <20261015153331.1872641-1-pasha.tatashin@soleen.com>
+ <atFGxagFo50iG6IS@agluck-desk3>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ipc/sem: account enlarged sops arrays to memcg
-To: Andrew Morton <akpm@linux-foundation.org>,
- Wang Yingjie <x-professor@outlook.com>
-Cc: Alexey Gladkov <legion@kernel.org>,
- "Eric W. Biederman" <ebiederm@xmission.com>,
- Vasily Averin <vasily.averin@linux.dev>, Johannes Weiner
- <hannes@cmpxchg.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-mm@kvack.org" <linux-mm@kvack.org>,
- "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
-References: <20261016152609.2528805-1-x-professor@outlook.com>
- <20261016155905.2a659b7bb7d61f33467a3263@linux-foundation.org>
-Content-Language: en-US
-From: Manfred Spraul <manfred@colorfullife.com>
-In-Reply-To: <20261016155905.2a659b7bb7d61f33467a3263@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <atFGxagFo50iG6IS@agluck-desk3>
 
-Hi,
+On 10-15 14:33, Luck, Tony wrote:
+> On Thu, Oct 15, 2026 at 11:33:23AM -0400, Pasha Tatashin wrote:
+> >    - Patch 3 bounds cmci_rediscover() on CPU teardown. Currently,
+> >      cmci_rediscover() broadcasts an IPI via on_each_cpu() to all online
+> >      CPUs, serializing them on cmci_discover_lock while reading up to 32
+> >      MCA MSRs. Because any disabled MCA bank is shared at most with an
+> >      SMT sibling, L2 cluster peer, or die/package peer, probing a single
+> >      online topology peer via smp_call_function_single() (or returning
+> >      immediately when no shared banks were orphaned) reduces 479-CPU
+> >      offline time on Intel from 11.42 s to 9.63 s (-15.7%) and total time
+> >      from 22.50 s to 20.74 s (-7.8%).
+> 
+> I took this series for a spin on a timy 2-socket Icelake (36 cores, 72
+> threads per socket). My test was to just offfline/online the 72 logical
+> CPUs on socket 1, and I saw some good speedups:
+> 
+> 	offline: 4.833s -> 3.17s
+> 	online: 6.157s -> 3.796s
+> 
+> I noticed that your cmci_rediscover() improvements mean even better
+> offline performance if you work from high to low CPU numbers as the
+> shared banks are assigned to the lowest numbered CPU within the sharing
+> topology domain. So working from high to low avoids creating as many
+> orphan banks that then need to find new owners.
+> 
+> 	reverse order offline: 2.984s
+> 
+> I haven't looked into the code yet. But the general direction seems
+> good.
 
-On 10/17/26 12:59 AM, Andrew Morton wrote:
-> (Alexey, Eric, others: please weigh in)
->
-> On Fri, 16 Oct 2026 15:26:11 +0000 Wang Yingjie <x-professor@outlook.com> wrote:
->
->> Commit 50ec499b9a43 ("sysctl: allow change system v ipc sysctls
->> inside ipc namespace") lets an IPC namespace owner change kernel.sem.
->> The SEMOPM field defaults to 500 but has no semantic range check.
->>
->> do_semtimedop() allocates nsops * sizeof(struct sembuf) with
->> GFP_KERNEL. A blocking operation retains that buffer, so a user can
->> raise SEMOPM and hold large attacker-selected amounts of host kernel
->> memory without charging the calling task memcg.
->>
->> On the current mainline base, one 10,000,000-operation call retained
->> 60,936,448 bytes while a 32 MiB cgroup peaked at 909,312 bytes and
->> reported no limit event. Sixteen 1,000,000-operation calls retained
->> 100,860,416 bytes while the cgroup peaked at 1,310,720 bytes.
+Thank you for the data, and your point about the ordering is spot on. 
+However, once single-thread performance is adequate, my end goal is to 
+parallelize the operation so the number of CPUs won't significantly 
+affect the total time it takes to remove them and add them back to the 
+scheduler. This is crucial for the live update work, as transferring CPUs 
+to Caretaker is part of the brownout, and in some configurations, the 
+blackout of the live update process.
 
-Just for understanding:
+Pasha
 
-Each sleeping thread (within do_semtimedop()) can use 60 MB, assuming it 
-triggers a 10 mio semop() call.
-
-It could be a bogus 5 mio times "increase by 1, decrease by 1" semop(), 
-or a valid semop() on a suitably large array.
-
->> Commit 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in
->> do_semtimedop()") removed accounting on the premise that the buffer was
->> at most two pages. Preserve that default-sized path, but account arrays
->> larger than the default SEMOPM value.
-> OK, I think. But...
->
->> With this change, both test configurations reach the 32 MiB cgroup
->> limit and the caller is terminated by the memcg OOM killer before it
->> can retain the enlarged arrays.
-> Only if memcg is enabled and the task's memory cgroup has an effective
-> limit.  Otherwise we can end up handing out idiotic amounts of kernel
-> memory.  Memcg accounting isn't a substitute for limiting the
-> allocation size.
-
-The previous assumption was the other way around:
-
-ipc is full of legacy users.
-
-Thus any hard limit risks to break existing setups.
-
-If I remember it right, either SHM or MSG had code that tried to split 
-the permitted allocation, i.e. if someone creates a new namespace, then 
-each name space inherits half of the limit.
-
-This was removed, since memcg would be the better substitute.
-
-Old discussion: https://marc.info/?l=linux-mm&m=139639755705736&w=2
-
-But I can't find right now the code that tried to split the limits.
-
->> The sysctl also accepts negative SEMOPM values. Since nsops is unsigned,
->> SEMOPM=-1 bypasses the intended operation-count check.
-> Let's fix this first. nsops is unsigned int, whereas ns->sc_semopm is
-> int. In the comparison nsops > ns->sc_semopm, a negative SEMOPM is
-> converted to unsigned, so SEMOPM=-1 effectively sets the limit to
-> UINT_MAX.
->
-> I'm thinking:
->
-> - Permit init_ipc_ns.sc_semopm to be set to any value from 1 to INT_MAX.
->    This preserves the existing ability of host root to configure larger
->    limits.
-> - For all other IPC namespaces, permit values from 1 to 1000. The
->    documentation has long recommended 1000 as an upper limit, although
->    it hasn't been enforced. This would be a new restriction, so the
->    changelog should explain why we're introducing it.
-
-This would mean workloads with higher SEMOPM values cannot run in 
-containers, correct?
-
-According to commit e4243b8062c1 "ipc/sem: play nicer with large nsops 
-allocations", values up to 1000 are recommended.
-
-And 
-https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Tuning_and_Optimizing_Red_Hat_Enterprise_Linux_for_Oracle_9i_and_10g_Databases/sect-Oracle_9i_and_10g_Tuning_Guide-Setting_Semaphores-An_Example_of_Semaphore_Settings.html 
-recommends to set it to SEMMSL, i.e. 5000 in the given example.
-
-> - Validate the new values before installing any of them.  The current
->    proc_ipc_sem_dointvec() updates the live array directly, and
->    rejecting an invalid value afterward would leave a window in which
->    other tasks could observe it.
->
-> - Update the comment in include/uapi/linux/sem.h. The warning about
->    physical memory fragmentation is outdated now that the allocation
->    uses kvmalloc(). Document the new 1000 limit for non-initial IPC
->    namespaces instead.
->
-> Ideally, a new IPC namespace would inherit its parent's configured
-> limit, but currently every new namespace starts at SEMOPM=500. I don't
-> think we need to change that as part of this fix.
->
-> Then please redo your memcg-accounting patch as a separate followup,
-> with suitably adjusted changelogging. That would provide additional
-> protection for legitimately enlarged allocations in the initial IPC
-> namespace and for allocations between 501 and 1000 operations elsewhere.
->
-> Thanks.
-
-
+> 
+> -Tony
