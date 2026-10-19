@@ -1,67 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792443439;
-	b=l2t4pp/bDU1dVpzDbDapa6YczBUGYs72+P3xk4UNE4fDOio5kp/pPE8JwDcBOT9X4uWm
-	 Igs7v63WK7LJNvWZms5lnU2BGCf8fnj5Kb3EzRgWb+vWYo+kXQPOjdesKv0udt7tCq38u
-	 a4ebiTsDUe+f9yW94UyPnbIWNdAZpL9XLXFp+AMVAq5EQF/jLixzN38grooKoNt9MdxZL
-	 TgQrZDO+1VYN5WrPwIRVcGanoL/XJLT0zBHV9zNG/IgHjPRR2QIBCdckSCKG8q2I1kuyh
-	 6QpnG92PoYzi3FICb2kGJydu4qX1P6hpwTxVOZni+vEKt2bNooyQCOcHx2Z+tyDbzSA==
+	t=1792451548;
+	b=nQbXBKaQWSsjX9L+okjgKJo4Ksk1WF7YgPXobhIlDbH/VJ0f8UEJ0qLEqo/LAyBslZxs
+	 jbf+KRwuBKbmr1ODseHbTUpE0yJpqPTY/a/cJlodzxHC22XBBSFVF7yAoSGkax3hmOC6B
+	 QBz9R14Xx4DLse3JsVFW772U4xDbG/Aq7MsnWlQx0XM4lP8/371snJGjG2mhEqDFeGfkE
+	 Ad5EVT/ak/zYTeK/TcCk3vtPOnAq3AfBlzG+FDAr6JuMIuo21+sH6ZP64KCmcfqlpFafA
+	 R39MR7a2ORSIrdx8qMZoxWKXKJWHFEUWz7CyNBopiWvxpXuLJrLMsx5quQ3vja4qQeA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792443439;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=iUxDgCC6thNE6bahIcLevwQy6B6nWx+XvwiMIDf3yFM=;
-	b=b0WSIUqxaU9X36Z2MbzqbQ+M1ULc26cVfUEChiM0B7xn5vBhWE0bb7at9pCDWNmYWclM
-	 SVBH0TON5Oe0o+q/JgbpMtIytIZiNgxui4/iyz0GWLeUjpeAgzVkNs+Mf2mZi5weCn9E6
-	 9P4SwnIzfRMe3DIJQWfW7wMg1nG2zKIkcZcdEV9qWrbQvSdc1u01iW6IowR2V4RY5WIcO
-	 /q/gqARjvmvm0F6pCC+pPSMPxHQIRZR4mRw3MM27weqLlsPn36OxE9Kg37jTXbGFbdZFC
-	 m11vZZZQbxCn9D0uVTAwXtEQola7ig5tQWy+vgoWrUswBSj0aSbNmv7RnfEjdSt1djw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792451548;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References;
+	bh=BI7Ojd0zS+qTT+iN7I7QYDaSDNVEbbWRYAizSN3cOgk=;
+	b=YlNT/gNVJuiIDX026OjpIla4LvQt+WEIPVRHqVOL3he/Jv3eVjetP+0Vpazkz7/85nLc
+	 d++3V+qBRXzpCp/imVaevGvAncnyiPj874HJYsRyHr5AbPunWwvtmbbkT2TpCg9kkNL+P
+	 6C5RphTUToV+jXgnAsdgaeeGQof19OsVMf+RkkljAE7jE1F+HRWm2Pq1+CPHYQiF5zsN+
+	 i/oMXDbmW+Y6r2MBzgUPXkU1e98X2SN2OVt/Z+5VVRirVRjo4ZmNVTn/VcVfBO/pKfe9x
+	 tv01Xf0bo52ZBMStkxAxqat/XCdrWaRTVVvFVgNI4NFKCOf6o0L8jhK+SJkyKPuKusw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Dc7zM8QO;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z2Cnt89d;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59ACB606A322
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 20:57:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59ACB606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EC76606A319;
+	Mon, 19 Oct 2026 23:12:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Dc7zM8QO
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792443438;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iUxDgCC6thNE6bahIcLevwQy6B6nWx+XvwiMIDf3yFM=;
-	b=Dc7zM8QOP7JmJiGACKWGlUA50hNGjvrxpGHZDh+APcvEMSuTwotSrpi1fxuFAwOWD6Cepz
-	N5KHvWzQJDo+8VtaxHCrBFZq/loU0msnNY6FwVM11JmAAFhgK9sCMtG6SSfNXKz0KjcBrl
-	y/o9nFVxcCz3kF0HO17wNlk1oDXjwqg=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-180-VXEkOMxNPdyM2fxjJV-9zg-1; Mon,
- 19 Oct 2026 20:57:14 +0000
-X-MC-Unique: VXEkOMxNPdyM2fxjJV-9zg-1
-X-Mimecast-MFC-AGG-ID: VXEkOMxNPdyM2fxjJV-9zg_1792443432
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B67881800654;
-	Mon, 19 Oct 2026 20:57:11 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 43CBE410;
-	Mon, 19 Oct 2026 20:57:08 +0000 (UTC)
-Message-ID: <3531bfe0-d5a3-4a38-af5b-68ce5406c591@redhat.com>
-Date: Mon, 19 Oct 2026 16:57:07 -0400
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z2Cnt89d
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFC301F000C4;
+	Mon, 19 Oct 2026 23:12:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792451548;
+	bh=BI7Ojd0zS+qTT+iN7I7QYDaSDNVEbbWRYAizSN3cOgk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=Z2Cnt89dXs9ce+/vvtZT5mTYPyyp51CIQfZ13iaGR+lSQuytUiUBylbPQ/6QJD5jB
+	 XjreEu2pE+zmgTLjs+/huF1m9hKhZ9R3eQ6d+VGRWN+x9GIKDVfAtIfitLnQJm6gJK
+	 XITYCnhlTxJyuf2ZLuzqC+yQPT+B0CmghXC2b+vnZhQU+t6jN3RYlVyit3jLmWjsFz
+	 JIC70HKv969eC34ZjbpYMJTLizVImgL4VtlKYFf2vwYbUxUaOORl4Rm8t11+XSGZbe
+	 C8EwwLa1TyRPPSVLn5wGIPEqyBC3SWGkyZKWTUYXUh9+WpdIRCT/MGo6BKyyBPaOxI
+	 XpqN4RAlsANXw==
+Date: Mon, 19 Oct 2026 13:12:26 -1000
+Message-ID: <367b95affe8bb5e7971f35d30b30780b@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Kunhai Dai <daikunhai@didiglobal.com>
+Cc: axboe@kernel.dk, josef@toxicpanda.com, yukuai@fygo.io, cui.tao@linux.dev, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, rostedt@goodmis.org, mhiramat@kernel.org, mathieu.desnoyers@efficios.com, linux-trace-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] blk-iocost: fix hweight cache publication and donation fail-safe
+In-Reply-To: <20261019125412.3123895-1-daikunhai@didiglobal.com>
+References: <20261019125412.3123895-1-daikunhai@didiglobal.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -70,55 +55,16 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v4 0/9] cgroup/cpuset: Fix various housekeeping check
- problems
-To: Tejun Heo <tj@kernel.org>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner
- <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
- Randy Dunlap <rdunlap@infradead.org>, cgroups@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Hui Peng <benquike@gmail.com>,
- Guopeng Zhang <guopeng.zhang@linux.dev>
-References: <20261019181020.1069325-1-longman@redhat.com>
- <ataCxJxYwg_uhS-j@slm.duckdns.org>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <ataCxJxYwg_uhS-j@slm.duckdns.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
+On Mon, Oct 19, 2026 at 08:54:10AM -0400, Kunhai Dai wrote:
+> This series fixes the blk-iocost hweight cache publication race and adds a
+> fail-safe for invalid donation weights.
 
-On 10/19/26 4:51 PM, Tejun Heo wrote:
-> On Mon, Oct 19, 2026 at 02:10:11PM -0400, Waiman Long wrote:
->>   v4:
->>    - Adjust a number of patches to fix issues reported by Sashiko and
->>      Guopeng Zhang.
->>    - Add more test cases to test_cpuset_prs.sh to improve test coverage.
->>
->>   v3:
->>    - https://lore.kernel.org/lkml/20261014140548.575122-1-longman@redhat.com
->>    - Further revise the code based on feedback from sashiko and
->>      reviewers.
->>    - Add a new fix patch which fixes a bug found during the testing process.
->>    - Add a patch to impose a new restriction that creating a child root
->>      partition under an isolated parent partition is not allowed.
->>
->>   v2:
->>    - Update patches 2 and 3 to address bugs reported by sashiko.
->>    - Add a new test_cpuset_prs.sh patch to skip the test if some of the
->>      required CPUs are offline.
-> Can you ping me after -rc1 drops?
+For the series,
 
-Yes, I will.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Cheers,
-Longman
+Thanks.
 
->
-> Thanks.
->
-
+--
+tejun
