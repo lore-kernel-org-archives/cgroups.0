@@ -1,67 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.169
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792425536;
-	b=lOks7QAuliNh6xxYuBFARzbmo2oZDmL+Peexsvx12eBblDQSzs4PFk2jkRw7mAltecKa
-	 pJSTql6puUl1xMuBjcB5OqHL/q2Ex27aoGmpZe04DGq2weuZ/Evr0peUzqnqq9V0fXkqW
-	 IUeRfbIWm5iQgNy76VpQuhV3wgZ4NgrcfxDTKg7h83wD2l56DzAgQsSPJgRBDJx7oaCPi
-	 W1Ujk/4rZc1lu1WaPYushgZKXBX2qBCA0zzWkGNWXgnRn3/obBeIk5ebZX/61oPoQBsUh
-	 E8S7gAGq2l+TJ7gWgthJrW4xnk+nEi5o5Nl+mnEI54YBPUGCGVyoZz2xvIutR8xzKlg==
+	t=1792426245;
+	b=1Po6fT6YGlQJ4Hc/bweVgTspusYj2tdSXKIDCddkLHYWkpNW/l5GkYAz8vfNPWjvMqy/
+	 GhTE8KTOsP1FPdC15xImUECsVugqCZRpNfKRhQKNHDkaQ98c+Gy6EsM9X9nIIlm6AJKtW
+	 y+t11rKs0+fA3q20r1vBWXfJF+5Hq1FGPNxTcHuXjbiw/CAk9v9XwtJNHQEZharSUrrl1
+	 /pQqKX2uLI34hxjFVNI5/zngqibDbnzFSAjL3bNW4zx0FGCK2CyjbTFTAvaGq274PPhJF
+	 vXhDurExCh+ukpVMQEsDoLwG+NzR7O+77t9KTzm5XnZTn+ATj67awkLXHjGSgeiFI1A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792425536;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=xiJEIKtkd3LoHb9/mGUKK1tAHph0ZPZhpBeMubfOR5Y=;
-	b=1H+XdIVvLSnn/h82sw+LrBY8f6CV+RlgeG4O8TpkLEapEDF9YWGVzZV8tjC+jBlUfuwD
-	 Ky9nZyHXUac98Z/L1td3IVRXxY9WLcukAMtD+siRHXzflPsEvB4Ef6FYQowpVz0Q9oPYC
-	 z+p+62jdz6+/CecmV65pAfe1LGl+55TUu2SiBq8Y85ziZWkxl3C8nv4SRTLy74/vvJpRj
-	 Bp+VgBgk0NyAYgw+80bOqzr84dMRnhWKzkV82ev83YPYPwydKVg54Gz52kN9BmbbDmUqB
-	 YztVy4piu3t+O74itUOz+u+WjFscaOSISCUmGu6l7ugPA82WMzYkJiRqJBHSpQJwK6Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792426245;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=524VuOfFgYNOliyeGIEdLFsd0yqaT8bQWUr86gODCAI=;
+	b=gzeMP4UVotWw2PPSPAv+f8fWIVKtLxD6rF3+XRl98mBFMA7qDDxjjZmzysQGZddBC3+N
+	 c4kJXW6TPAN8rvBf7/XvDI/KN1tfNa/F+z7FFNCP6hbd0vm0Pr8jjlIS49YWvFF4wImvG
+	 EFIngkJCPWGJ88LhavlXOHeKHrmGZA/+wfxKa3jywjuFIRN76Ptk810hIvIAFMbaE+WdW
+	 TAknW51pcTEYhl+xRcbql1TZVCZ41jATN3hTAiomSLFYdSZZEdEjR+t2UcAw4JAautk7X
+	 LKqnP0IXNnXbGn9ucq5lyTEEg/kElfwKNm3vIRYp3F9i1jtNivB5jFa3M48BmK9juLg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=L16HOo2W;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	arc=none smtp.remote-ip=209.85.160.169
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE6F606AAC2
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 15:58:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DEE6F606AAC2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=L16HOo2W
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792425534;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xiJEIKtkd3LoHb9/mGUKK1tAHph0ZPZhpBeMubfOR5Y=;
-	b=L16HOo2WTNL+XzQbzG9a/PXl7B9gS7z28AWoPQXtNZuhaFXqyVpy2HfFcDqqgFz+gxw/mk
-	i92JAXe93eH76UCsMFo4luikK0OG5mSUbQyNpwDVEkpqBo+poKD6aB0xzfDRuR9UcPJuAt
-	mTAofcKaV43C0XvuYaKDRbnyPlnt8bI=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-607-1evXegoyMFasyfG_YYbubw-1; Mon,
- 19 Oct 2026 15:58:50 +0000
-X-MC-Unique: 1evXegoyMFasyfG_YYbubw-1
-X-Mimecast-MFC-AGG-ID: 1evXegoyMFasyfG_YYbubw_1792425528
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 382111955F11;
-	Mon, 19 Oct 2026 15:58:47 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 07C4A195608B;
-	Mon, 19 Oct 2026 15:58:44 +0000 (UTC)
-Message-ID: <32462fc4-8a28-47f2-a32a-aaaaa9a501d7@redhat.com>
-Date: Mon, 19 Oct 2026 11:58:44 -0400
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65DFF606A33D
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 16:10:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 65DFF606A33D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-53512cd2f85so26085911cf.1
+        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 09:10:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1792426243; x=1793031043; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=524VuOfFgYNOliyeGIEdLFsd0yqaT8bQWUr86gODCAI=;
+        b=TAJh4Er47ofnVCoUNWaumAYwysFjlSVRNjlHTmpTj1ZVtJ8fNPL1utvGKmXgV/4eBn
+         WKml7mwNMk1f4tolbgazAnDGzkiSTKi9S8sXbDLJ3mZ6RBuEISEJCFx34RfbbToZYejN
+         GZebR7UyU1PJt5HKc8XJur2s0Ojoh9U+eB+PjNvpRdBhPztdPt7yw5yjOZKUqVcf41Mn
+         RZ4zmBu7vhessj9FGFWqp3joEv9m+RJWapnFHDaFxtO/DoPP+9H0PcsSGKdsdK9xVNIg
+         JhR5TvhtMwla4ZgbDGqUQtnivSkJ958HLCYzNQxMzV2lswOONH30M2fjJylmos/D2s/+
+         K9fA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792426243; x=1793031043;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=524VuOfFgYNOliyeGIEdLFsd0yqaT8bQWUr86gODCAI=;
+        b=TyfPCGyTR/nUXyP3WM6ae/23ZcCL9updrToHBfEqEwudtfqgEf6K/ktz9lAbcCzsJ/
+         zzuthZ4VvaBl0N9Hwwjo13iyR583/A39+3q3GsemY/zSMbqCBuckbTI8DV8EPo+cGUno
+         kSmGG3O1+OmVvN3zuNj/tLtvk+hQtg1hhHcRxlUCRXf48J2VGeO0QMI/RqpbTmmzlY/u
+         e5FX8tqPiospJQ5fx4Sn5EeHCJi8+N1grOfV8c2p6/Al28kjtZyehn94sAmY3U6aerP2
+         TevhTmPpDexoqNaIA+uYIAQKMCKAYxFFzY8vmUPMLFCuevRw2JjrFwb/eDIQX5djCrWa
+         BF2g==
+X-Forwarded-Encrypted: i=1; AKwUvBwzFZk9LcTEXXCPeFFUttL4DKfo29ngbF2RIenghxZWkldiqXNuf4AOS4fq7KTa2wFMWqWOfGCx@vger.kernel.org
+X-Gm-Message-State: AFq9FYI3YirkI9IgeevIne9SakBFeVwfeTOvjQTrp+1cw/Jouur1qsFB
+	BmPLIBtXZ2GXbAL30/jLG+6oYHj0JFAvIx5oIoH4sr7TC5B5znXBGvonUj/HPQ29l5U=
+X-Gm-Gg: AYBFou1pOk9VYLAz3ZLNCyFEm6MCM7qcweACBohpbz/+CaN1CtDDq+Jtdbv1xzLxyKQ
+	LnDyjp2vrWA/6JQx2T6jipeZrKMbKlyHZtMxyWOa/MsnQaPUXJPJnPMLXtjNqR7ZFiC8HzmU601
+	hQvADvMVmsYqF5OpFryJ3547DMWDvShRZd31vmTnvnI38Poms4ULJ+nM5xTXZYqFFnjgxJ3vaKh
+	Sd1siNZV0lp2NTm4BMSHTeSRq578qV+Vs+hFflY8bDtpvdKnk9ZNbBRgbF8t8+ryx2k9oKoZc/8
+	sfe2NoliUYRzWjYlVQXn6cm5CPL7O9UuoavuuGHuri7XQL7UqzGlEgT5WWHKDyOC8RMbUT8WR0K
+	HXvGFFTpLKe8+B02uxG0y/vJ8Sl49aZtv0eALxwWOibJa1aTXgKPfyyWykxMlOgnElwIp59Sta7
+	giXY/RC0TRTcBViMAuFU1LF1hChgN8ycK1ylROdmRB+bcMnVROEMdyB5aNeaNtEKJnvVVedZsLK
+	L8Jem6QdUt3xT947i9laiN1ly1y1/fUkL1KrSwckcWSDUI1eeer0xU=
+X-Received: by 2002:a05:622a:90b:b0:536:48df:345a with SMTP id d75a77b69052e-53648df3cb9mr103473081cf.32.1792426243229;
+        Mon, 19 Oct 2026 09:10:43 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5367b3d1ccbsm12827051cf.0.2026.10.19.09.10.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2026 09:10:42 -0700 (PDT)
+Date: Mon, 19 Oct 2026 12:10:40 -0400
+From: Gregory Price <gourry@gourry.net>
+To: Li Zhe <lizhe.67@bytedance.com>
+Cc: akpm@linux-foundation.org, david@kernel.org, ziy@nvidia.com, 
+	joshua.hahnjy@gmail.com, rakie.kim@sk.com, ying.huang@linux.alibaba.com, ljs@kernel.org, 
+	mhocko@suse.com, muchun.song@linux.dev, roman.gushchin@linux.dev, 
+	shakeel.butt@linux.dev, weixugc@google.com, cgroups@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
+Message-ID: <atY-LD2AzCYATRii@gourry-fedora-PF4VCD3F>
+References: <20261019141401.11927-1-lizhe.67@bytedance.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,145 +95,43 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v3 6/9] cgroup/cpuset: Don't allow a child root
- partition under an isolated parent
-To: Guopeng Zhang <guopeng.zhang@linux.dev>,
- Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>,
- Jonathan Corbet <corbet@lwn.net>, Randy Dunlap <rdunlap@infradead.org>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Hui Peng <benquike@gmail.com>
-References: <20261014140548.575122-1-longman@redhat.com>
- <20261014140548.575122-7-longman@redhat.com>
- <497db854-17ba-47ae-a9e0-8f1dacb0b205@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <497db854-17ba-47ae-a9e0-8f1dacb0b205@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261019141401.11927-1-lizhe.67@bytedance.com>
 
-On 10/15/26 11:30 PM, Guopeng Zhang wrote:
->
-> 在 2026/10/14 22:05, Waiman Long 写道:
->> Although it is not typical for real users to create a complicated nested
->> partition hierarchy, it is currently allowed to create nested root and
->> isolated partitions. In addition, disabling or invalidating a partition
->> should always be allowed especially when the cpuset is being deleted.
->>
->> With a nested root and isolated partition hierarchy, it is possible
->> that all active housekeeping CPUs can be exhausted when disabling or
->> invalidating a root partition and returning its CPUs to the isolated
->> parent.
->>
->> One way to avoid this problem is to disallow the creation of a root
->> partition under an isolated parent. It is indeed a new limitation imposed
->> on the existing cpuset partition functionality. However an isolated
->> partition is usually a left node where scheduling and some other kernel
->> noises are disabled. It doesn't make much sense to create a child root
->> partition under an isolated parent and remove some CPUs from the set
->> of isolated CPUs again. Creation of a child isolated partition under a
->> root or isolated parent is still allowed.
->>
->> The cgroup-v2 documentation is also updated to reflect this new
->> limitation. New test cases are added to test_cpuset_prs.sh to verify
->> this new behavior. Some existing test cases are also updated accordingly.
->>
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   Documentation/admin-guide/cgroup-v2.rst           |  4 +++-
->>   kernel/cgroup/cpuset-internal.h                   |  1 +
->>   kernel/cgroup/cpuset.c                            | 13 +++++++++++++
->>   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 14 ++++++++------
->>   4 files changed, 25 insertions(+), 7 deletions(-)
->>
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->> index bd8c80f3bbc9..2c445829e24d 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
->> @@ -2767,7 +2767,9 @@ Cpuset Interface Files
->>   	be retained, but behaves more like a "member".
->>   
->>   	All possible state transitions among "member", "root" and
->> -	"isolated" are allowed.
->> +	"isolated" are allowed with the exception that a local child
->> +	"root" partition is not allowed to be created under an "isolated"
->> +	parent partition.
->>   
->>   	On read, the "cpuset.cpus.partition" file can show the following
->>   	values.
->> diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
->> index 5da9c91295b0..2e44dc8634dc 100644
->> --- a/kernel/cgroup/cpuset-internal.h
->> +++ b/kernel/cgroup/cpuset-internal.h
->> @@ -35,6 +35,7 @@ enum prs_errcode {
->>   	PERR_HKEEPING,
->>   	PERR_ACCESS,
->>   	PERR_REMOTE,
->> +	PERR_ISOPARENT,
->>   };
->>   
->>   /* bits in struct cpuset flags field */
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 40c004386af0..681701ba46e1 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -60,6 +60,7 @@ static const char * const perr_strings[] = {
->>   	[PERR_HKEEPING]  = "partition config conflicts with housekeeping setup",
->>   	[PERR_ACCESS]    = "Enable partition not permitted",
->>   	[PERR_REMOTE]    = "Have remote partition underneath",
->> +	[PERR_ISOPARENT] = "Root partition is not allowed with isolated parent",
->>   };
->>   
->>   /*
->> @@ -2865,6 +2866,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->>   	int err = PERR_NONE, old_prs = cs->partition_root_state;
->>   	struct cpuset *parent = parent_cs(cs);
->>   	struct tmpmasks tmpmask;
->> +	int parent_prs = parent->partition_root_state;
->>   	bool isolcpus_updated = false;
->>   	bool disable_partition = false;
->>   
->> @@ -2910,6 +2912,14 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->>   			enum partition_cmd cmd = (new_prs == PRS_ROOT)
->>   					       ? partcmd_enable : partcmd_enablei;
->>   
->> +			/*
->> +			 * It is not allowed to create a root partition under
->> +			 * an isolated parent partition.
->> +			 */
->> +			if ((new_prs == PRS_ROOT) && (parent_prs == PRS_ISOLATED)) {
->> +				err = PERR_ISOPARENT;
->> +				goto out;
->> +			}
-> I tested the following case. Writing root initially leaves C invalid, but
-> updating its cpuset.cpus makes it valid again.
->
-> CPUs 0-15 are online, with nohz_full=2-15 and no isolcpus:
->
->      # cd /sys/fs/cgroup
->      # echo +cpuset > cgroup.subtree_control
->      # mkdir A
->      # echo 1-2 > A/cpuset.cpus
->      # echo isolated > A/cpuset.cpus.partition
->      # echo +cpuset > A/cgroup.subtree_control
->      # mkdir A/C
->      # echo 1 > A/C/cpuset.cpus
->      # echo root > A/C/cpuset.cpus.partition
->      # cat A/C/cpuset.cpus.partition
->      root invalid (Root partition is not allowed with isolated parent)
->      # echo 1-2 > A/C/cpuset.cpus
->      # cat A/C/cpuset.cpus.partition
->      root
->
-> C becomes a valid root partition.
+On Mon, Oct 19, 2026 at 10:13:59PM +0800, Li Zhe wrote:
+> memory.reclaim is a useful proactive reclaim interface for memcgs, but
+> tiered memory makes "reclaim N bytes from this memcg" underspecified for
+> userspace controllers that manage memory placement across tiers. The
+> kernel's reclaim policy is aging-based, and on tiered systems aging may
+> demote folios before they are eventually evicted. Without a way to
+> declare where reclaim pressure should start, userspace can only reclaim
+> from the memcg as a whole and observe one aggregate progress value.
 
-Thank for finding this bug. Yes, the patch is missing check in some 
-places. Will fix in the next version.
+This is not a good argument for pushing the complexity of managing tiers
+into userspace - it is an argument for fixing the reclaim interface to
+handle demotion and eviction sanely - which presently we do not do.
 
-Cheers,
-Longman
+My best examples:
+  1) the watermarks don't make sense for lower tiers that need to absorb
+     large amounts of demotions from upper tiers.  It's likely lower
+     tiers need larger WMARK_PROMO to let low-tier kswapd run longer.
 
+  2) proactive and async reclaim current reclaim top-down, which results
+     in swapping directly from top-tiers because lower tiers don't have
+     space to absorb demotions.  We should experiment with async /
+     proactive reclaim applying bottom-up (lowest tier first) so aging
+     the top-tiers demotes into lower tiers more successfully.
+
+     direct reclaim should stay top-down because we want the best page
+     with the least work to minimize stalls.
+
+I have a strong suspicion if we made these change, then memcg.reclaim
+would work more or less the way you'd want - and anything else can be
+managed more directly with madvise/process_madvise.
+
+I also have concerns with extending memory.reclaim this way permanently
+locking in reclaim implementation details that prevent us from making
+changes like this in the future.
+
+~Gregory
