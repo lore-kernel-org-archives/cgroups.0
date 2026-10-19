@@ -1,109 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-1.mta0.migadu.com [91.218.175.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ACAD423E94;
-	Mon, 19 Oct 2026 07:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACDB949B464
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 08:47:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792394666; cv=none; b=OVrpE615LRWqXfV1ybAexcz6jirk4l/9T5rIB3DFy20KHTPlvXnD1vRhFZOE4LmLcHV3Y44fghUe7WtgTjrCpbCs6cSD9MlSZiUkvWhx5o/WcooYPQrxgivdGwkoEJ9vmi5iTLtWLSNWErfTED8NocyjXcQ1goIk8z3n63JeimM=
+	t=1792399657; cv=none; b=GqIXj5bPZV2jHMIC48PogB/XT3kRXJj9vuZtNACFdqXea7Fd/rgdKfE/QWcCVpg7SWr0X9Zpxw1NoupO1+AyhRnY04DxeaERt0Rb/st8IE/gLX2NmztfWS5LQwmGbxTxWOoUgXHF0+GWlv1+Av6LMb5LUgPryRQ2mpkSyPUw7nU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792394666; c=relaxed/simple;
-	bh=PJMNtFZdCxAkfXpCGh9gdP0M/bJtvasByqnTtI9idOs=;
-	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=gHso7JPoCKRxiEcHQbQNDUH+LrRZ5Uy/91hmylVSiZ6+lI7BQYY9uvdNrHWUTX+hjyTz1I6HdGCXm7uIGrJwCPeDSHN4RtzQ41jSvBZTNbwllZO6hh0C7uWRXurFOwYYKZrJ6BGLqsM8xl3QSv6sSdQgGDs2InVNncCJmKcNHvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ggHitl0r; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792399657; c=relaxed/simple;
+	bh=jFAkyj5yoPWtYLC+zOW72R2wyKdGUE2qk/tecO0yjmA=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=p87TCJqMvNhYAGi/nFxaBQv95nqoLbjIMXPIATNi4DJgNGt9cgI0DwSZ3PvdQa72A/RM+fYhFL+9EKb/R+tAj1vlwfGoOLMUl3KvjvKl24J1wwQ7nwVBlIN3/sIYWEMDNR4pdaJ9OlL15ff3flMiz3QUxFqPON3RZsDo3vQ3aUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=JZ1ZcpQ6; arc=none smtp.client-ip=91.218.175.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ggHitl0r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC8571F000C4;
-	Mon, 19 Oct 2026 07:24:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792394665;
-	bh=kq41aEXGRIjZiDj+Lf2TBzLa687IIXYS/7guQvFIns4=;
-	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=ggHitl0rXZyzCQCjN2UknQ40BhlbBcTxZG09AcCzpp5wAsA5ho/FiflIfIJ4mEK1y
-	 6VS8S7ervff50xPjQk0fgrN1ptCCJzqUQb4SZ4i1g906kHxhuHIKQ40rN8IeTQzjwf
-	 MVsTmyF8Y2vfLeUwNqOkpOBkRcpRdwDzG2bgEIZLscXgMxX/uh0/ewXONSUWspaa1t
-	 Y259/Soj7mZdinOjIz1my6RleMtKjL0AXnVhlFaUJOBxiJtF8sqhvu+sXCqx2KT7xt
-	 8scp6w5vFlgHfAXGfA+HaNLEHeqMJJhjwO+euGG3MNxBR7C2+seS6e2BmGsvdZMBe/
-	 fLyvPT46WqT0Q==
-Content-Type: multipart/mixed; boundary="===============4963888778798225134=="
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="JZ1ZcpQ6"
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=jFAkyj5yoPWtYLC+zOW72R2wyKdGUE2qk/tecO0yjmA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792399653; v=1; x=1793004453;
+ b=JZ1ZcpQ6rs/nEXE0tIhJ2SEUgsoq0dF8fHk1c2XZC/ntxtHo0YRtOJW3N9MnO5OHSt69/45h
+ cFJMesqOXbslNCCjA7t3qGuv7hGFkdkt++X/8EHLPGzVWC05S1O2uL/N48ZTniAem+GJ/Kw3DVX
+ UvENTPelfBKUpx6sW5sqAEW8=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id d39df06ac6c62a0f;
+	Mon, 19 Oct 2026 08:47:33 +0000
+X-Mizu-Trace-ID: d39df06ac6c62a0f
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <6f2cb853-5eb5-4f3b-9021-ab24735a61c3@linux.dev>
+Date: Mon, 19 Oct 2026 16:47:26 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <737a8f07246a2cd31950ffcdb2a98b9ee81824c27a362dd17e0ba94e2281b00e@mail.kernel.org>
-In-Reply-To: <20261019064157.29885-5-laoar.shao@gmail.com>
-References: <20261019064157.29885-5-laoar.shao@gmail.com>
-Subject: Re: [RFC PATCH v3 bpf-next 4/5] sched: add BPF-based per-cgroup NUMA balancing mode selection
-From: bot+bpf-ci@kernel.org
-To: laoar.shao@gmail.com,ast@kernel.org,daniel@iogearbox.net,andrii@kernel.org,eddyz87@gmail.com,memxor@gmail.com,mingo@redhat.com,peterz@infradead.org,juri.lelli@redhat.com,vincent.guittot@linaro.org,akpm@linux-foundation.org,david@kernel.org,gourry@gourry.net,tj@kernel.org,hannes@cmpxchg.org,mkoutny@suse.com,shakeel.butt@linux.dev,roman.gushchin@linux.dev,yu.c.chen@intel.com,zhao1.liu@intel.com,tim.c.chen@linux.intel.com,lizhe.67@bytedance.com
-Cc: bpf@vger.kernel.org,linux-mm@kvack.org,cgroups@vger.kernel.org,linux-kernel@vger.kernel.org,laoar.shao@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Mon, 19 Oct 2026 07:24:24 +0000 (UTC)
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, josef@toxicopanda.com, axboe@kernel.dk,
+ cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org,
+ eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net,
+ linux-kselftest@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>,
+ ameryhung@gmail.com, alexei.starovoitov@gmail.com
+Subject: Re: [RFC PATCH v10 0/4] blk-iocost: add BPF struct_ops cost model
+ support
+To: Tejun Heo <tj@kernel.org>
+References: <20261003124045.1289305-1-cui.tao@linux.dev>
+ <a3dfbc2d-8580-478c-8189-3794d49aee11@linux.dev>
+ <20e2b2a51fd97292add8d8e527b14a45@kernel.org>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20e2b2a51fd97292add8d8e527b14a45@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
---===============4963888778798225134==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Hello Tejun,
 
-> sched: add BPF-based per-cgroup NUMA balancing mode selection
+在 2026/10/17 01:49, Tejun Heo 写道:
+> Hello, Tao.
+> 
+> On Thu, 15 Oct 2026 20:00:20 +0800, Tao Cui wrote:
+>> When you have a chance, could you take a look at this series? I'd
+>> appreciate your thoughts on whether the implementation still matches
+>> what we discussed, or whether it has drifted somewhere along the way.
+> 
+> The behavior matches what was discussed, but the implementation needs a
+> lot of cleanup, and there are bugs in the detach path and the
+> iocg_init()/iocg_free() pairing. Details are in the replies to the
+> patches.
+> 
 
-TL;DR: Comment only: the comment on task_numab_in_tiering_mode() may describe
-the return value backwards, since task_numa_fault() skips non-top-tier
-statistics when it returns true.
+Thank you for the careful review, and especially for confirming that
+the behavior is where we wanted it.
 
-> diff --git a/include/linux/sched/numa_balancing.h b/include/linux/sched/numa_balancing.h
-> index 36de57f7fb06..d63891a8be01 100644
-> --- a/include/linux/sched/numa_balancing.h
-> +++ b/include/linux/sched/numa_balancing.h
+The two bugs are mine to fix, and v11 reworks both. The detach path
+follows your map-reference suggestion, and the iocg_init()/iocg_free()
+pairing moves to ioc_pd_online() as you described, with iocg_free()
+keeping the delivered flag per your catch about bios still holding the
+blkg across offline. 
 
-[ ... ]
+>> Sashiko flagged a possible ABBA between the BPF paths and
+>> ioc_cost_model_write(): attach/detach take the queue freeze before
+>> q->rq_qos_mutex, while the cost-model write holds rq_qos_mutex across
+>> its freeze. That is indeed the current ordering, but I don't think this
+>> can deadlock because the queue freeze is a depth counter
+> 
+> The attach and detach order matches ioc_qos_write(). The reverse order in
+> ioc_cost_model_write() predates this series and is better fixed
+> separately. An earlier attempt to convert it ran into blk_iocost_init()'s
+> percpu allocation under the freeze:
+> 
+>   https://lore.kernel.org/all/aV5OwAvw1sRF1IW1@fedora/
+> 
+Agreed. The write path ordering predates the series and
+I've left it alone there.
 
-> @@ -53,6 +95,68 @@ static inline bool numab_in_normal_mode(void)
->  {
->  	return sysctl_numa_balancing_mode & NUMA_BALANCING_NORMAL;
->  }
-> +
-> +/*
-> + * Whether @p runs in tiering mode, i.e. whether faults on non-top-tier
-> + * memory still feed its NUMA statistics. The requests of the task's
-> + * cgroup and of every ancestor are combined; an opt-out wins, otherwise
-> + * the bits are read independently, as the sysctl reads them. Without
-> + * any request, the global sysctl decides.
-> + */
-> +static inline bool task_numab_in_tiering_mode(struct task_struct *p)
-> +{
-> +#ifdef CONFIG_BPF_NUMAB
-> +	if (static_branch_unlikely(&numab_cgroup_mode_set)) {
-> +		int mode = task_numab_mode(p);
-> +
-> +		if (mode != NUMAB_FOLLOW_SYSTEM)
-> +			return mode & NUMA_BALANCING_MEMORY_TIERING;
-> +	}
-> +#endif
-> +	return numab_in_tiering_mode();
-> +}
+The implementation cleanup from the patch replies is in v11 as well.
 
-The comment above task_numab_in_tiering_mode() says it reports "whether
-faults on non-top-tier memory still feed its NUMA statistics".  Is that
-the right way around?
+Thanks,
+Tao
 
-The only caller, task_numa_fault() in kernel/sched/fair.c, uses it like
-this:
+> Thanks.
+> 
 
-	if (!node_is_toptier(mem_node) &&
-	    (task_numab_in_tiering_mode(p) || !cpupid_valid(last_cpupid)))
-		return;
-
-so a true return makes task_numa_fault() bail out before recording any
-statistics for non-top-tier memory.  Should the comment say that faults on
-non-top-tier memory are kept out of the task's NUMA statistics instead?
-
-
----
-AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
-See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
-
-CI run summary: https://github.com/kernel-patches/bpf/actions/runs/39213018427
---===============4963888778798225134==--
