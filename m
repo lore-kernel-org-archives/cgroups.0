@@ -1,67 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.161.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792423475;
-	b=z5Lgoa1vo7u/6c1IJ4xnODBn9WXUU1Iul9c2SPXpDg2zim5L2cgLfbMzZKr4FWpCJPKQ
-	 cgdJfDrxrXQTGwkcvSLHzHxkdnem4UOAMvXW13Ky9McZAz4wqt8jrWSGVU5Nz2ShAnctH
-	 nSSs4FvoML4A0N7jhFmUuemKwINhlScGGKerliSQYHzryyew3D9oGnh3gh/vodrmCOmia
-	 2Hfx03wbSA+MESsmmKmnbzs6GjwBcuTYGhYaBXA/jV8EEafMKPe1wNOFvdiO/Tvj63fPS
-	 hAg3R91AwZCRPJr+kA3tT9P77vQ953KNqfDGfDYPoQrOCimYh9o7R76ZwV4Rv4kKOXA==
+	t=1792423312;
+	b=Ixs39EzHb6FaI98rC+pwVLxqAki0fKmNxvWo8bXOuAMNqAhhklmTaLcyWj2QZLHs2AR2
+	 eUCsaxGFeaxHq87Gh3VZ3SXMKzrMny6HSWZzro3f5EeATRmGgbR3uJkUFKbSHIsdP9rbF
+	 v7obQVttyr/EJ8tSdhnJ/d/pXOUKPKlQMkE8NFzi5CCrwSmETolL4/gWOjzHIUSJx3sVy
+	 fP/hjZoEH2e1EfItKcwQEHZyku7XIcsrz5GVsgoPcZNEUjw2HcLHNgE2nlEIa6viPVYQw
+	 Dh42Lf/pIEF4ZsbY9LJKtTQy1Acao0nw9FKMEW0q9nUxyiqLycIcHoRu1INNTzz1p/w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792423475;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=IFwSeD1ovfD41NQTL9oOWjnQ3ijZeEdakcY9lvs54e4=;
-	b=fONba03PmIauUg98OCU0q3QjejeahyX07XZWfIhdsdVtoxF8FUqebRHnziSIsOCM8z3u
-	 KNHAV0kmgybo/S/Tfyq5rxEv3QpJSZvinK3N/WTc6XYSIgPFfLBAFlV7LB5rGoosh1+4e
-	 PlWmduw5e84vxYXiVhFuM1w3Wxn1tF9JBpcJ2P5SgMk4805X6INwX0ebXLTftUUjrCtTk
-	 l7+s7YVzuI5vXJqW2VnU/RAfPs3D4zh/BHaA2zCQaDYnxpJmo+I31Qm9U0bfu9J/3jQAW
-	 S5NX6GwQhY9YZ8fS32Mp5N10lctP/9kb+g2cMiTQXLBwnRaW68n0sAS5xMjHCphReqQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792423312;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=09q/0iBwzQnusWfsQDP8VzXzU6qhw6PdbTeHiI84DZo=;
+	b=KiJ/NXorFLyrB0o1ABxMifKRDsb+vcd4IxUjMlfUlNyig/eVfk+j80oa1odGVtCEh10U
+	 lSsf1RD9CZm1ihmuqxIDVnPTAtrISIZnL88tfguj6EK6ftlU/ELFzBEnJ4rgoIOqkevtr
+	 2nPRbL6ZHl0bE2rmCv35jwMGijI1uy3vNwu7qkAUatMfRBMJu2aRhAES6awX/cdcvXxLF
+	 d6N+c2yTplX9X2jzMjU3t9g9xusSzeCOXh3CI8qLJuxP6CaAdvy/W0zQJmeH7mTRIiZOp
+	 MMU5H2epDjyB6f9p8uzmWUk9YTmGBzs156wkoeHKX4pQUX+Tir/W3NaRexCje+HB0NQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=PTxaK6II;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=BZxMeqSy;
+	arc=none smtp.remote-ip=209.85.161.42
+Received: from mail-oo1-f42.google.com (mail-oo1-f42.google.com [209.85.161.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABA0D60AF788
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 15:24:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ABA0D60AF788
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 484E6609CED0
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 15:21:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 484E6609CED0
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=PTxaK6II
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792423473;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IFwSeD1ovfD41NQTL9oOWjnQ3ijZeEdakcY9lvs54e4=;
-	b=PTxaK6IIIsOZRqSj8FS6B64iSOhqq+TEJkRojgjBVTH8jvXkZp+PNqXW6yqVEUwPpy1znL
-	hAtLU7nGmY23modx9rzaJZEQ5lbmAOXkkNAjYuae2e2Stx2oPcyr+flKl/uWfF9xPMMJUA
-	6jqzOOXC2sNfng1saYbWcmHfG5y/1mg=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-621-3yll3N4DOfW4SbejawhYgw-1; Mon,
- 19 Oct 2026 15:24:30 +0000
-X-MC-Unique: 3yll3N4DOfW4SbejawhYgw-1
-X-Mimecast-MFC-AGG-ID: 3yll3N4DOfW4SbejawhYgw_1792423468
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B0FA51955DAE;
-	Mon, 19 Oct 2026 15:24:27 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 377C1180057F;
-	Mon, 19 Oct 2026 15:24:25 +0000 (UTC)
-Message-ID: <75fe5ee5-035e-486c-af00-ed4ba3bf0f25@redhat.com>
-Date: Mon, 19 Oct 2026 11:24:24 -0400
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=BZxMeqSy
+Received: by mail-oo1-f42.google.com with SMTP id 006d021491bc7-6cf995766a3so1903854eaf.2
+        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 08:21:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792423311; x=1793028111; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=09q/0iBwzQnusWfsQDP8VzXzU6qhw6PdbTeHiI84DZo=;
+        b=BZxMeqSyHw1y80ZpE+7SKu/0wXvAIOP2ZQXBuB9LvBw5vhAkeBD4sx46ejdlC3rVos
+         Qs74yzruFTb6P0Z6TXSBOroWRIR+DYJNP+61SERGpZCXEfDCudFtLUGscCq1nAy/mYo7
+         Gly4NKDm9F5U36fYJWcWzxnNKndZG2S77eQuPEH92dqCkyvg9NMs+90fNwzs/3ZYEzL/
+         oqrEK9WlvWRNpbSbXBS+qzLT2Y/HeE28gdLTOCjMHNXp9IRF2lW+RVq77nEvlujS6pAR
+         5mZgEZ0PVFPTiCN8Z9RKgQ1uXOSJQ+Bn8513CosHh9Gg+WJU2+DHGsXy9Dw2W0vPFc1f
+         JIxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792423311; x=1793028111;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=09q/0iBwzQnusWfsQDP8VzXzU6qhw6PdbTeHiI84DZo=;
+        b=ztIJAPXCcB4TdwYACkERvuiUMowwgGXavvM+5Qlb2WrVRhzodLamH88Y39ma4TXWcR
+         0tu6wSgTUBJrgNy5OfA965Z3Vi+uRLKvq1wVFN12jjM8ogfeE9fX7275AQTK/XEkiSeJ
+         qGMbh/r75WOhw7jDe8LcY3G9FILXmr+3jqYSYZ80YoBLBUOFpTMGkn4l36YZdiZC7E9a
+         SZlADITY7fGrziZslPpucXpeo3S0VVghebyeM3BjOziJbJ6ALpsItwiM/nT0V8fJT94C
+         AD7aelECg98umU/pJq3LJM8gasheRTfOgks32OBbWXEcllWNb6wUBPEyV6ims5E6/0rV
+         m/Qg==
+X-Forwarded-Encrypted: i=1; AKwUvBxUfPM0gcVcp6SkTKPdADYoIrOOWVnVf3FPmXW2xhr+Y3t0bv8uMh581Utza4Arr03Jl+3J4sAB@vger.kernel.org
+X-Gm-Message-State: AFq9FYJgElArSzmIeMQi9LNkTIouoh/v9PuQL+ylMyY84fqC/Q+7Q4Ij
+	DOCj5iTDSru2AYSlUUudYAO7G10psyUAwMDkYhyUvj34lylzMXYD152l
+X-Gm-Gg: AYBFou1NuloEAr9WdE5Xa0hgV0JO6kDCD9gLr700SmukEnbFTb2C8dNF+cvyf9gqxgy
+	ahFxGtJmSuf6vRliLbCQqlc9r8xGmWXMq/y6KL0wj3Sj3UiFS8/7tvpktfEr1d3dz8exfG4UsRh
+	b5OUmH4K7fksCGG06tVU7Oa5NSVpK1+U7qRVi9FABW++jBzknwbLGyKpqXyRCQbDig96eXheuIG
+	pAzmPw1eH4Z/8ZzQsUNAz+INcwWp2NJf6Cf4gcxv8Hu/TbxcW7tgGV4eCj77JxDhTrFwnfqIUxr
+	M20WNLIZwcpyJ2S7XbkZt4GppNb8kij90yGxi6tW7IYoxJTvVmOFh0SNbRQpVC681kJSkrefZYp
+	JO3aog1tl5TAFeQfCV3sdQwJECKManzBD9qwIMY2ia810YQ2eoLP6Ecg7J5Z3+79ECiVOMxidRH
+	qap2RYq1XuB9ku/+zVvA7RtYk1MFUFebGnzbk4mOHew56RLe8bEJ9Lelq/wmBKYvqEdiOjGjdxe
+	1oZmiXs79WsBDJOQY699NUHeDqZ
+X-Received: by 2002:a05:6820:a515:20b0:703:4766:16e with SMTP id 006d021491bc7-70357099e1cmr4063847eaf.56.1792423311061;
+        Mon, 19 Oct 2026 08:21:51 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:4::])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-4a73b6cac55sm9160419fac.11.2026.10.19.08.21.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2026 08:21:50 -0700 (PDT)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: "Li Zhe" <lizhe.67@bytedance.com>
+Cc: akpm@linux-foundation.org,
+	david@kernel.org,
+	gourry@gourry.net,
+	ziy@nvidia.com,
+	joshua.hahnjy@gmail.com,
+	rakie.kim@sk.com,
+	ying.huang@linux.alibaba.com,
+	ljs@kernel.org,
+	mhocko@suse.com,
+	muchun.song@linux.dev,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	weixugc@google.com,
+	cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
+Date: Mon, 19 Oct 2026 08:21:48 -0700
+Message-ID: <20261019152148.3330024-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261019141401.11927-1-lizhe.67@bytedance.com>
+References: 
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,256 +111,141 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v3 3/9] cgroup/cpuset: Consider all the exclusive
- CPUs when doing housekeeping check
-To: Guopeng Zhang <guopeng.zhang@linux.dev>,
- Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>,
- Jonathan Corbet <corbet@lwn.net>, Randy Dunlap <rdunlap@infradead.org>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Hui Peng <benquike@gmail.com>
-References: <20261014140548.575122-1-longman@redhat.com>
- <20261014140548.575122-4-longman@redhat.com>
- <6bf0bfec-1726-41a4-b9ee-aac23da18d19@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <6bf0bfec-1726-41a4-b9ee-aac23da18d19@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On 10/15/26 10:18 PM, Guopeng Zhang wrote:
->
-> 在 2026/10/14 22:05, Waiman Long 写道:
->> When prstate_housekeeping_conflict() is called to perform housekeeping
->> check with cpumask changes, the cpumask changes are passed in via addmask
->> and delmask. With this arrangement, the exclusive CPUs owned by the child
->> partitions and not affected by the cpumask change, if any, are excluded
->> in the analysis. If the current cpuset is an isolated partition with
->> root partition children, it is possible the cpumask change will still
->> leave active housekeeping CPUs but then no housekeeping CPUs will be
->> left when the child partitions are disabled or invalidated.
->>
->> As a first step to protect against this possibility, all the exclusive
->> CPUs of the cpuset should be considered to be owned by the current cpuset
->> when doing housekeeping check. As a result, there is no need to pass in
->> separate add_mask and del_mask parameters. They are combined into a single
->> new_cpus parameter. The parent_prs parameter can be removed as well.
->>
->> With this change, the prstate_housekeeping_conflict() call in
->> update_parent_effective_cpumask() with partcmd_update and newmask
->> is now duplicative and can be removed. The housekeeping check in
->> remote_cpus_update(), however, will still be useful as this function can
->> be called directly from update_cpumasks_hier() without going through
->> partition_cpus_change(). The update_parent_effective_cpumask() call
->> from update_cpumasks_hier() is partcmd_update with no cpumask which
->> still have the housekeeping check and so is covered.
->>
->> Fixes: 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full don't leave any housekeeping")
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   kernel/cgroup/cpuset.c | 77 ++++++++++++++++--------------------------
->>   1 file changed, 30 insertions(+), 47 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 2b9aefc0edb8..b2684c98d8c0 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1355,26 +1355,20 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
->>   /*
->>    * prstate_housekeeping_conflict - check for partition & housekeeping conflicts
->>    * @new_prs: new partition root state to be checked
->> - * @parent_prs: Parent partition root state
->> - * @add_cpus: additional CPUs to be added to current cpuset
->> - * @del_cpus: CPUs to be removed from current cpuset, can be NULL
->> + * @new_cpus: cpu mask to be checked
->>    * Return: true if there is conflict, false otherwise
->>    *
->>    * There are two different housekeeping conflicts to be checked:
->> - * 1) If new_prs is PRS_ROOT, none of the @add_cpus can be a boot-time isolated
->> - *    CPU. IOW, the whole @add_cpus must be a subset of HK_TYPE_DOMAIN_BOOT.
->> + * 1) If new_prs is PRS_ROOT, none of the @new_cpus can be a boot-time isolated
->> + *    CPU. IOW, the whole @new_cpus must be a subset of HK_TYPE_DOMAIN_BOOT.
->>    * 2) If nohz_full is enabled and we have isolated CPUs, their combination must
->> - *    still leave housekeeping CPUs. This check is only needed if new_prs
->> - *    differs from parent_prs and one of them is PRS_ISOLATED.
->> + *    still leave housekeeping CPUs.
->>    */
->> -static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
->> -					  struct cpumask *add_cpus,
->> -					  struct cpumask *del_cpus)
->> +static bool prstate_housekeeping_conflict(int new_prs, struct cpumask *new_cpus)
->>   {
->>   	cpumask_var_t full_hk_cpus;
->>   	int res;
->>   
->> -	WARN_ON_ONCE(parent_prs <= 0);
->>   	if (!new_prs)
->>   		return false;
->>   
->> @@ -1393,30 +1387,18 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
->>   		new_prs = -new_prs;
->>   
->>   	if (housekeeping_enabled(HK_TYPE_DOMAIN_BOOT) && (new_prs == PRS_ROOT) &&
->> -	    !cpumask_subset(add_cpus, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT)))
->> +	    !cpumask_subset(new_cpus, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT)))
->>   		return true;
->>   
->>   	/*
->>   	 * Exit 2nd check early and return false if
->>   	 * 1) there is no boot time isolated nohz_full CPU
->> -	 * 2) new_prs is PRS_ROOT, parent_prs is PRS_ISOLATED and no CPU will
->> -	 *    be returned back to the parent.
->> +	 * 2) @new_prs is not PRS_ISOLATED
->> +	 * 3) @new_cpus is a subset of isolated_cpus
->>   	 */
->>   	if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE) ||
->> -	    (!del_cpus && (new_prs == PRS_ROOT) && (parent_prs == PRS_ISOLATED)))
->> -		return false;
->> -
->> -	/*
->> -	 * Now make sure that @add_cpus contains new CPUs to be isolated and
->> -	 * @del_cpus contains isolated CPUs to be un-isolated.
->> -	 * With the guards above, @add_cpus can't be NULL after the swap.
->> -	 */
->> -	if (parent_prs == PRS_ISOLATED)
->> -		swap(add_cpus, del_cpus);
->> -
->> -	if (del_cpus &&
->> -	   (cpumask_first_and_and(del_cpus, housekeeping_cpumask(HK_TYPE_KERNEL_NOISE),
->> -				   cpu_active_mask) < nr_cpu_ids))
->> +	    (new_prs != PRS_ISOLATED) ||
->> +	    cpumask_subset(new_cpus, isolated_cpus))
->>   		return false;
->>   
->>   	if (!alloc_cpumask_var(&full_hk_cpus, GFP_KERNEL))
->> @@ -1426,7 +1408,7 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
->>   		    housekeeping_cpumask(HK_TYPE_DOMAIN));
->>   	cpumask_andnot(full_hk_cpus, full_hk_cpus, isolated_cpus);
->>   	cpumask_and(full_hk_cpus, full_hk_cpus, cpu_active_mask);
->> -	res = !cpumask_weight_andnot(full_hk_cpus, add_cpus);
->> +	res = !cpumask_weight_andnot(full_hk_cpus, new_cpus);
->>   
-> One of my test cases regressed in v3 compared to v2. CPUs 0-15 are online,
-> with nohz_full=2-15 and no isolcpus:
->
->      # cd /sys/fs/cgroup
->      # echo +cpuset > cgroup.subtree_control
->      # mkdir A
->      # echo 0 > A/cpuset.cpus
->      # echo isolated > A/cpuset.cpus.partition
->      # cat cpuset.cpus.isolated
->      0
->      # echo 1 > A/cpuset.cpus
->      # cat A/cpuset.cpus.partition
->      isolated invalid (partition config conflicts with housekeeping setup)
->
-> The last write should release CPU 0 for housekeeping, leaving A as a valid
-> isolated partition on CPU 1. It looks like the check uses the state before
-> the update, sees only CPU 1 available for housekeeping, and incorrectly
-> invalidates A.
->
-> thanks,
-> Guopeng
+On Mon, 19 Oct 2026 22:13:59 +0800 "Li Zhe" <lizhe.67@bytedance.com> wrote:
 
-Yes, it is a known issue and will be fixed in the next version.
+> memory.reclaim is a useful proactive reclaim interface for memcgs, but
+> tiered memory makes "reclaim N bytes from this memcg" underspecified for
+> userspace controllers that manage memory placement across tiers. The
+> kernel's reclaim policy is aging-based, and on tiered systems aging may
+> demote folios before they are eventually evicted. Without a way to
+> declare where reclaim pressure should start, userspace can only reclaim
+> from the memcg as a whole and observe one aggregate progress value.
 
-Cheers,
-Longman
+Hi Li,
 
->>   	free_cpumask_var(full_hk_cpus);
->>   	return res;
->> @@ -1613,7 +1595,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
->>   		return PERR_INVCPUS;
->>   	if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
->>   		return PERR_NOCPUS;
->> -	if (prstate_housekeeping_conflict(new_prs, PRS_ROOT, tmp->new_cpus, NULL))
->> +	if (prstate_housekeeping_conflict(new_prs, tmp->new_cpus))
->>   		return PERR_HKEEPING;
->>   
->>   	spin_lock_irq(&callback_lock);
->> @@ -1715,8 +1697,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
->>   		else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
->>   			 cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
->>   			WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
->> -		else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
->> -						       tmp->addmask, tmp->delmask))
->> +		else if (prstate_housekeeping_conflict(prs, excpus))
->>   			WRITE_ONCE(cs->prs_err, PERR_HKEEPING);
->>   		if (cs->prs_err)
->>   			goto invalidate;
->> @@ -1796,7 +1777,6 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->>   	int old_prs, new_prs;
->>   	int part_error = PERR_NONE;	/* Partition error? */
->>   	struct cpumask *xcpus = user_xcpus(cs);
->> -	int parent_prs = parent->partition_root_state;
->>   	bool nocpu;
->>   
->>   	lockdep_assert_cpuset_lock_held();
->> @@ -1858,7 +1838,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->>   		if (cpumask_empty(xcpus))
->>   			return PERR_INVCPUS;
->>   
->> -		if (prstate_housekeeping_conflict(new_prs, parent_prs, xcpus, NULL))
->> +		if (prstate_housekeeping_conflict(new_prs, xcpus))
->>   			return PERR_HKEEPING;
->>   
->>   		if (tasks_nocpu_error(parent, cs, xcpus))
->> @@ -1930,14 +1910,6 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->>   					       parent->effective_xcpus);
->>   		}
->>   
->> -		/*
->> -		 * Check for housekeeping conflicts
->> -		 */
->> -		if (is_partition_valid(cs) &&
->> -		    prstate_housekeeping_conflict(old_prs, parent_prs,
->> -						  tmp->delmask, tmp->addmask))
->> -			part_error = PERR_HKEEPING;
->> -
->>   		/*
->>   		 * The new CPUs to be removed from parent's effective CPUs
->>   		 * must be present.
->> @@ -2430,6 +2402,21 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
->>   		return;
->>   
->>   	prs_err = validate_partition(cs, trialcs);
->> +	if (!prs_err && !cpumask_empty(trialcs->effective_xcpus)) {
->> +		int parent_prs = is_remote_partition(cs)
->> +			       ? PRS_ROOT : parent_cs(cs)->partition_root_state;
->> +		/*
->> +		 * Check for housekeeping CPUs conflict assuming that all
->> +		 * the exclusive CPUs belong to the current cpuset. We rely
->> +		 * on the fact that effective_xcpus has been set up by
->> +		 * compute_trial_excpus() which is called previously in
->> +		 * update_cpumask() and update_exclusive_cpumask().
->> +		 */
->> +		if (parent_prs > 0 &&
->> +		    prstate_housekeeping_conflict(trialcs->partition_root_state,
->> +						  trialcs->effective_xcpus))
->> +			prs_err = PERR_HKEEPING;
->> +	}
->>   	if (prs_err) {
->>   		WRITE_ONCE(cs->prs_err, prs_err);
->>   		trialcs->prs_err = prs_err;
->> @@ -2922,15 +2909,11 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->>   			err = remote_partition_enable(cs, new_prs, &tmpmask);
->>   		}
->>   	} else if (old_prs && new_prs) {
->> -		int parent_prs = is_remote_partition(cs)
->> -				 ? PRS_ROOT : parent->partition_root_state;
->> -
->>   		/*
->>   		 * A change in load balance state only, no change in cpumasks.
->>   		 * Need to update isolated_cpus.
->>   		 */
->> -		if (prstate_housekeeping_conflict(new_prs, parent_prs,
->> -						  cs->effective_xcpus, NULL))
->> +		if (prstate_housekeeping_conflict(new_prs, cs->effective_xcpus))
->>   			err = PERR_HKEEPING;
->>   		else
->>   			isolcpus_updated = true;
+Thank you for working on this patch. I think it's quite interesting.
+I have many comments about implementation detials but for now let's
+discuss the direction of this series first.
 
+> There is prior history here [1]. The old nodes= proposal tried to let
+> memory.reclaim scan selected NUMA nodes, but the discussion left several
+> ABI questions unresolved:
+> 
+> - nodes= did not clearly say whether the mask was a source selector, a
+>   reclaim domain, or a demotion-target constraint.
+> - The implementation did not apply the mask to the whole reclaim path,
+>   so demotion could allocate outside the mask. If userspace interpreted
+>   the mask as a domain or target constraint, the ABI did not provide
+>   that.
+> - Selecting top-tier nodes could become an implicit way to request
+>   demotion without uncharge. That would make userspace depend on a
+>   particular reclaim policy and could make future policy changes hard.
+> - The separate completion-accounting question remained: demotion can
+>   count as reclaim progress even though memory.current is not reduced.
+> 
+> This series takes a narrower approach.
+
+I think this is the way to go.
+
+> It adds a typed source= key which
+> declares only the source on which the existing memory.reclaim aging
+> pipeline should be applied.
+
+Calling it an "aging pipeline" is a big confusing to me. Maybe just call
+it eviction targets or reclaim targets?
+
+> It is not a demotion target selector, not a
+> demotion-only goal, not an eviction-only goal, and not a change to the
+> existing completion accounting. Leaving source unspecified preserves the
+> existing memory.reclaim behavior.
+> 
+> In that sense, this series extends node-scoped reclaim pressure to the
+> memcg memory.reclaim interface. The existing node memory_reclaim
+> interface can apply pressure to a node, but it is not scoped to a
+> particular memcg. This series lets userspace apply the same kind of
+> source-scoped pressure to a cgroup's resident memory on selected nodes
+> or tiers, while still using the normal memcg reclaim path.
+> 
+> The main benefit of this series is to give userspace a steering knob
+> for per-node and per-tier memory placement control. A tiering controller
+> can observe the resident memory distribution across nodes or memory
+> tiers, and then apply reclaim pressure to the source that should be
+> relieved. For example, it can apply pressure to top-tier nodes so that,
+> under the existing tiering policy, cold folios can be aged and usually
+> demoted to lower tiers, or reclaim from a terminal tier when it needs
+> actual charge reduction.
+
+To me I think the other interesting aspect is being able to evict memory
+from lower tiers out to swap so that toptier always has room for
+demotions, preventing swapouts from higher tiers. In fact I think for
+my interests this is the more important use case.
+
+> The existing memory.reclaim interface cannot express this. It applies
+> pressure to the memcg as a whole, so on a multi-tier system the kernel
+> may make progress in a tier different from the one userspace is trying
+> to control. That makes feedback control of tier ratios ineffective: the
+> controller can observe that a specific tier is over its desired resident
+> footprint, but it cannot direct the next reclaim request to that tier.
+
+This part is confusing to me. The kernel curently doesn't observe
+per-tier-memcg memory footprint and try to manage it, does it?
+( that is what I'm trying to solve currently in my tiered memcg series ; -)
+  but as it stands right now, I don't think there is any feedback loop )
+
+> Patch 1 adds source=nodes:<nodelist>, which is the basic source
+> selector.
+
+In general I agree with Lorenzo, it took me a second to realize that the
+bulk of this series is just adding a nodemask to
+try_to_free_mem_cgroup_pages. It might be helpful to just call it
+"reclaim" instead of calling it an aging pipeline.
+
+> Patch 2 adds source=tier:<N>, where N is the memory_tierN id
+> exposed by /sys/devices/virtual/memory_tiering/. The tier selector is
+> only a convenience layer over the same source semantics: it resolves the
+> current tier nodelist at write time and then uses the same source-scoped
+> reclaim path as source=nodes:<nodelist>.
+
+Personally I think that it makes more sense to just start with a
+node-based reclaim interface, and then extending it to tiers. It seems
+like the tier usecase is entirely doable with just a nodemask interface.
+
+And in this case, since we're just selecting the sources of reclaim,
+tiers don't really matter, right? That is, we don't care if the memory
+gets demoted or swapped out, we just care that the footprint for the
+tier memcg goes down. 
+
+> The remaining issues from the old discussion are intentionally left out
+> of this series. If userspace needs to control demotion targets, that
+> should be a separate target/demotion-policy ABI rather than folded into
+> source=. If userspace needs a strict "bytes actually uncharged"
+> completion mode, that should be discussed as a separate accounting or
+> goal extension because it would change the observable meaning of
+> memory.reclaim progress. This series only adds source selection for the
+> existing reclaim policy.
+
+100% agree.
+
+Thanks Li, I hope you have a great day!
+Joshua
+ 
+> References:
+> [1] https://lore.kernel.org/all/Y5bsmpCyeryu3Zz1@dhcp22.suse.cz/
+> 
+> Li Zhe (2):
+>   mm: add source selector to memory.reclaim
+>   mm: add tier source selector to memory.reclaim
+> 
+>  Documentation/admin-guide/cgroup-v2.rst | 29 +++++++++++
+>  include/linux/memory-tiers.h            |  6 +++
+>  mm/internal.h                           |  3 +-
+>  mm/memcontrol-v1.c                      |  6 ++-
+>  mm/memcontrol.c                         | 11 +++--
+>  mm/memory-tiers.c                       | 24 ++++++++++
+>  mm/vmscan.c                             | 64 +++++++++++++++++++++++--
+>  7 files changed, 133 insertions(+), 10 deletions(-)
+> 
+> -- 
+> 2.20.1
