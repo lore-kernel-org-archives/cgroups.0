@@ -1,46 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC1EF5D6C8C;
-	Mon, 19 Oct 2026 14:01:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF18D5FC780;
+	Mon, 19 Oct 2026 14:02:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418512; cv=none; b=AU+vEqCOUPuCXG9lu/LJGK7u84Y2suceJ/uPQfcJL0wNESYpILNrNP0Qt99cwDnyWUGrVKP+jL368MklPrUA0fxvDDHT5w8WKJ/Iaf8mTsrMw1XVRb/eDM9BPbrs85+wwG6vMCB0Lqm3fbX+f8a6XhDYqjsK95OQr4MVvvbVYJE=
+	t=1792418569; cv=none; b=Wbv0Jx10holXSqrLe82aKIgdRbrXFoFAw1OxzJDwJMPhBbNRuzd1pzZ3e+zIkdIeg1ZWWi+Quv33Rn0YxU19EIHbcF0MC5rWpipho8smOPBMifJEB0QfWxMcLAvTPeFFGTYNzs/X5h68VGmizw7oW4CJPFikMQ2zinX8HQF6IZg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418512; c=relaxed/simple;
-	bh=Ldn3g9pm8KgpRUyYul0Z2x5+VApmaplofuvShAA5s7U=;
+	s=arc-20240116; t=1792418569; c=relaxed/simple;
+	bh=93xRt5SqTDeuO4zPLFVami2lPD1a5rffG1IebGHPqMg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YXvdhkx1mt4BgsrpzEH7dnty8fc115XdyvqeB8zgjJvE/y9DkcXVF20eEZ530dczgN2iEZ5CvOEUF9pZpsWbS9zSaG8ymHGkT/kgc8/htjz1wOs6l5tSDc9uHrirWgK6yjVULAfNtblBqtIgXu4pqBqq4IgYxcuhVVQ4DGnhydU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C/qidoLD; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=FUYuH6siLpBJBnObBG9BcEZpWonnEmPZccHoJ++nTNN221W0vtDLpM+XR+D562xALIRC46BSM2+XNkajG7qh4q95z26hrHrcfpBzlrHxeiwUOlKrM83J9T+lx+QR5i0KA7uiYAk8g7+Ipsjwb2Iowd/+713nfu/EIkQ4z8qbTHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ak8DZthQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C/qidoLD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 974231F000C7;
-	Mon, 19 Oct 2026 14:01:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ak8DZthQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66D1A1F000C6;
+	Mon, 19 Oct 2026 14:02:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418509;
-	bh=5fYDhfE3WWxP0b5e/isSFx+04+F0Wkjxq4I0dZ4CyrE=;
+	s=k20260515; t=1792418566;
+	bh=xnMRlEbWMji5JvM0Y6k9F2Yr83rEUi+mlxkt5SalFyQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=C/qidoLD7U2R8Bw9XoHqsOqhMxMFvrLWslkUMA5SdqkEF076/mspzlsKCZtQ3CnBk
-	 f3nEtaj+H8nAe2pSOjJuWLausL5kqgTU91uOH0Qn0mqJiLhVUnSgCvEH7uAjGnT3CO
-	 aCzhLgn191iaY12GhUwLRrjksD3ohLrv90xMLKrwjlNoLvDYG5LQOiZcgHjSfbb1c0
-	 nx+5H1f9XBmqN9K3LyF8HKTh8LvzXMtPed4BfYmaVKN8MZDM66Z58cob0HuYdGVg0i
-	 c8Hxv2rlkMbzDwUaHlH1eo/4v+JoTCsLyvuGSNoDg2q6fszv3GhmE8xBCsL1PiWg7X
-	 epSZPOlf+EF5A==
+	b=Ak8DZthQfV7UxlY0jDW5rwrqfp8aI/t4J+IcFWa6FBrHkImQSFd/qB/za0WCdhQWZ
+	 xBgAwmKGENXEZhUMXqXql6yJFDjvyqKw3XKrQmG2PzZHH5o/MbENTfJGpKt3RwCXD8
+	 5EVmbekqBO2D1n9oPZamGXQrnMyHg2Suz4VzmFStrDB7B5XgmrmSv69l8lE4vDyfzy
+	 LWFxgWN/xFUK8udKethalsC0RtmjQzrJeQRiE2hA2Xm55L3lAZxfOCnv8YKfdv6IQl
+	 FeDbRQJnTeIlgtd9LS6hTlWK+3yVhJ9QWPR6R8EsMlqDTXMm+SMXVPQrzfoxLV9erY
+	 Nxlw+en1BD6HA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Joe Simmons-Talbott <joest@redhat.com>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+Cc: Zhe Liu <liuzhe1@kylinos.cn>,
+	Tao Cui <cuitao@kylinos.cn>,
 	Tejun Heo <tj@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	hannes@cmpxchg.org,
-	shuah@kernel.org,
+	mkoutny@suse.com,
+	corbet@lwn.net,
 	cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] selftests/cgroup: Adjust cpu test duration based on HZ
-Date: Mon, 19 Oct 2026 09:49:50 -0400
-Message-ID: <20261019135441.1420968-299-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] docs: cgroup-v2: fix stale "io" controller introduction
+Date: Mon, 19 Oct 2026 09:50:30 -0400
+Message-ID: <20261019135441.1420968-339-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -50,520 +51,441 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.18.57
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Joe Simmons-Talbott <joest@redhat.com>
+From: Zhe Liu <liuzhe1@kylinos.cn>
 
-[ Upstream commit a2703c2980c0776e9be7d8f9e144afd054dddb12 ]
+[ Upstream commit 3345c7248a9e2a91cb9e2477c29af16881706f4f ]
 
-For lower HZ values a quota of 1000us is much lower than the amount
-of microseconds per tick which makes the tests test_cpucg_max and
-test_cpugc_max_nested fail. Increase the test duration to accommodate
-for lower HZ values.
+The introductory paragraph for the IO controller still states that
+weight based distribution is "available only if cfq-iosched is in use"
+and that "neither scheme is available for blk-mq devices".  This text
+dates from when the cgroup v2 documentation was first written (2015)
+and was correct at the time, but is no longer accurate:
 
-Link: https://lore.kernel.org/lkml/20260625203307.1114538-1-joest@redhat.com/
-Signed-off-by: Joe Simmons-Talbott <joest@redhat.com>
-Acked-by: Michal Koutný <mkoutny@suse.com>
+  * cfq-iosched was removed in v5.0;
+  * blk-mq is now the only block I/O path, and both the absolute limit
+    scheme (io.max via blk-throttle) and the weight based scheme
+    (io.weight via iocost, or io.bfq.weight under BFQ) work on it;
+  * latency based protection (iolatency) and I/O priority (ioprio)
+    controllers have since been added.
+
+The rest of the section already documents io.weight, io.max,
+io.cost.{qos,model}, io.latency and io.prio.class correctly, so the
+introduction is the only part that contradicts them.  Rewrite it to
+reflect the current state.
+
+Signed-off-by: Zhe Liu <liuzhe1@kylinos.cn>
+Reviewed-by: Tao Cui <cuitao@kylinos.cn>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+I have enough to decide: this is a docs-only correction of text that is
+already wrong in 6.12, and the rewrite matches features this tree
+actually ships.
 
-**Step 1.1: PARSE THE SUBJECT LINE**
-- Subsystem: `selftests/cgroup`
-- Action verb: **Adjust** (makes tests pass on low-HZ kernels)
-- Claimed intent: scale `test_cpucg_max` / `test_cpucg_max_nested`
-  duration from `CONFIG_HZ` so a 1000µs quota is not smaller than one
-  tick.
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
-Record: `[selftests/cgroup] [Adjust] [scale cpu.max test duration by HZ
-so tests do not fail on low-HZ kernels]`
+Step 1.1: PARSE THE SUBJECT LINE
+Record: [docs / cgroup-v2] [fix] [rewrite the stale IO controller
+introduction so it no longer claims CFQ-only weights and no blk-mq
+support]
 
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-- `Link: https://lore.kernel.org/lkml/20260625203307.1114538-1-
-  joest@redhat.com/`
-- `Signed-off-by: Joe Simmons-Talbott <joest@redhat.com>` (author)
-- `Acked-by: Michal Koutný <mkoutny@suse.com>` (cgroup reviewer)
-- `Signed-off-by: Tejun Heo <tj@kernel.org>` (cgroup maintainer)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Cc:
-  stable` (absence expected)
-- Ignoring pipeline `Signed-off-by: Sasha Levin` and `[Upstream commit
-  ...]`
-
-Record: Author Red Hat; Ack from Michal Koutný; applied by Tejun Heo;
-lore link present; no syzbot/CVE.
-
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-The body is two sentences: a 1000µs `cpu.max` quota is much smaller than
-microseconds-per-tick at low HZ, so `test_cpucg_max` and
-`test_cpugc_max_nested` (typo for `test_cpucg_max_nested`) fail. The fix
-is a longer run so averaging can absorb tick quantization.
-
+Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
 Record:
-- Bug: kselftest false FAIL on low `CONFIG_HZ`
-- Symptom: `test_cpu` cpu.max cases fail
-- Root cause: 1000µs quota vs tick (HZ=100 → 10ms/tick)
-- No kernel oops/corruption described; kernel bandwidth behavior is
-  expected
-
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-Not disguised cleanup. It is an explicit test-robustness fix. Not a
-kernel bug.
-
-Record: `[Not a hidden kernel bug; it is a selftest false-failure fix]`
-
----
-
-## PHASE 2: DIFF ANALYSIS
-
-**Step 2.1: INVENTORY THE CHANGES**
-- `tools/testing/selftests/cgroup/lib/include/cgroup_util.h`: +1
-  (`NSEC_PER_USEC`)
-- `tools/testing/selftests/cgroup/test_cpu.c`: +38 / −6
-- Functions: new `get_config_hz()`; modified `test_cpucg_max()`,
-  `test_cpucg_max_nested()`
-
-Record: `[2 files, +38/−6] [get_config_hz, test_cpucg_max,
-test_cpucg_max_nested] [single-subsystem surgical selftest fix]`
-
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Before: hog runs 1.0s wall time; expected usage = 10 periods × 1000µs =
-10ms; pass if within 10% via `values_close_report`.
-After: `duration_usec = 1s * 1000 / hz` (HZ=1000 → 1s; HZ=250 → 4s;
-HZ=100 → 10s). Hog timespec and expected-usage math both use the scaled
-duration.
-
-Record: `[normal test path only: 1s hog → HZ-scaled hog; expected usage
-scales with duration]`
-
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-Category: **logic / test correctness** (tick quantization vs tight 10%
-check).
-
-Michal Koutný’s v2 review: tasks overrun quota on a long tick; CFS
-compensates over several periods; 1s is too short for that average to
-land inside 10%. Longer duration was chosen over changing the quota (so
-the same 1000µs quantity is still what is tested). Joe confirmed both
-approaches passed 10 iterations; they took the simpler duration
-approach.
-
-Record: `[test robustness] [quota < tick ⇒ usage noise; longer run
-shrinks relative error]`
-
-**Step 2.4: ASSESS THE FIX QUALITY**
-- Small, reviewed, v1→v5, Acked, applied to `cgroup/for-7.3`.
-- `duration_usec % USEC_PER_SEC * NSEC_PER_USEC` is left-to-right and
-  correct.
-- `1 * USEC_PER_SEC * 1000` fits in 32-bit `long`.
-- Residual issues: `get_config_hz()` only reads `/proc/config.gz`;
-  fallback HZ=1000 leaves duration at 1s, so kernels without
-  `CONFIG_IKCONFIG_PROC` still fail (Tao Cui raised this on v2 for the
-  old quota fallback; v5 still defaults to 1000). `popen`+`grep` is
-  best-effort. Reviewer noted SMP noise may still need later work. No
-  follow-up changed `get_config_hz()` on `origin/master`.
-
-Record: `[obviously correct for the stated goal; residual fallback
-limitation; userspace-only so kernel regression risk is none]`
-
----
-
-## PHASE 3: GIT HISTORY INVESTIGATION
-
-**Step 3.1: BLAME THE CHANGED LINES**
-`test_cpucg_max` added in `889ab8113ef13` (David Vernet, 2022-04).
-Duration/quota/10% check came from `954bacce36d97` (“selftests/cgroup:
-fix cpu.max tests”, 2025-07, in v6.18). That commit replaced a broken
-inverted 95% check with a real 10% comparison, which is what makes low-
-HZ mismatch actually fail.
-
-Record: `[buggy tightness: 954bacce36d97, in v6.18; tests themselves:
-889ab8113ef13 / a79906570f964, v5.19 era]`
-
-**Step 3.2: FOLLOW THE FIXES: TAG**
-No `Fixes:` tag. N/A.
-
-**Step 3.3: CHECK FILE HISTORY**
-Recent related: `954bacce36d97` (cpu.max expected-usage math),
-`4cdde87d723a0` (`values_close_report`). Standalone; not patch X/Y.
-
-Record: `[standalone follow-on to the 2025 cpu.max test correction
-already in this tree]`
-
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Joe Simmons-Talbott: this is the only cgroup selftest commit in this
-history. Michal Koutný Ack; Tejun Heo applied.
-
-Record: `[distro engineer + subsystem maintainer path]`
-
-**Step 3.5: DEPENDENT/PREREQUISITE COMMITS**
-Needs `values_close_report` and the 2025 expected-usage math — both in
-v6.18.53. `NSEC_PER_USEC` is added here. `BUF_SIZE` vs `PAGE_SIZE`
-header rename (`6e9f5c2eecd10`) is **not** in v6.18.53 and is **not**
-required.
-
-Record: `[no missing prerequisites in this tree; can apply standalone]`
-
----
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-`b4 dig -c a2703c2980c0776e9be7d8f9e144afd054dddb12` matched:
-- v3: https://patch.msgid.link/20260624160358.430354-1-joest@redhat.com
-- v4 RESEND:
-  https://patch.msgid.link/20260625203307.1114538-1-joest@redhat.com
-- v5 (applied):
-  https://patch.msgid.link/20260626202925.1527524-1-joest@redhat.com
-
-v1/v2 changed **quota** to one tick. Michal asked not to change the
-tested value; Joe tried unaligned-expectation math and longer duration;
-both passed 10 runs; v3+ uses duration. v4 naming nits; v5 inlines
-timespec math. No NAKs. No `Cc: stable` in review.
-
-Record: `[v5 applied; no NAK; no stable nomination in thread]`
-
-**Step 4.2: CHECK WHO REVIEWED**
-`b4 dig -w`: Tejun Heo, Johannes Weiner, Michal Koutný, Shuah Khan,
-cgroups@, linux-kselftest@. Michal Acked v5; Tejun: “Applied to
-cgroup/for-7.3.”
-
-Record: `[right lists; maintainer applied]`
-
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-No bugzilla/syzbot. Author hit it in testing. Tao Cui confirmed the low-
-HZ failure mode in review.
-
-Record: `[reproduced by author; 10 clean iterations after the duration
-change]`
-
-**Step 4.4: RELATED PATCHES AND SERIES**
-Standalone. Later `origin/master` commits on the same file
-(`77bc7e952f660`, `0c893d170ff8e`) are unrelated.
-
-Record: `[standalone]`
-
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-lore.kernel.org returned 403; `lei q` hung and was killed.
-
-Record: `[UNVERIFIED: no stable@ thread retrieved; none in the cgroup
-thread]`
-
----
-
-## PHASE 5: CODE SEMANTIC ANALYSIS
-
-**Step 5.1: KEY FUNCTIONS**
-`get_config_hz`, `test_cpucg_max`, `test_cpucg_max_nested`.
-
-**Step 5.2: TRACE CALLERS**
-Both tests are registered with `T(test_cpucg_max)` /
-`T(test_cpucg_max_nested)` in `test_cpu.c` (v6.18.53 lines 791–792).
-Invoked only when running that kselftest as root. Not kernel, IRQ, or
-syscall.
-
-**Step 5.3: TRACE CALLEES**
-`cg_create` / `cg_write("cpu.max")` / `cg_run(..., hog_cpus_timed)` /
-`cg_read_key_long("cpu.stat")` / `values_close_report`. `hog_cpus_timed`
-burns CPU for the given timespec on `CLOCK_MONOTONIC`.
-
-**Step 5.4: CALL CHAIN / REACHABILITY**
-Userspace kselftest only. Trigger: run `test_cpu` on a low-HZ kernel
-with cgroup cpu controller. Unprivileged users do not hit this.
-
-**Step 5.5: SIMILAR PATTERNS**
-No other `get_config_hz` in this cgroup selftest dir. Michal noted BPF
-selftests have similar HZ helpers. No sibling drivers with the same bug.
-
----
-
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Local tree: **v6.18.53** (`VERSION=6`, `PATCHLEVEL=18`, `SUBLEVEL=53`;
-`git describe HEAD` starts at `v6.18.53`).
-v6.18.53 `test_cpu.c` still uses `duration_seconds = 1` and `quota_usec
-= 1000` in both tests. Upstream
-`a2703c2980c0776e9be7d8f9e144afd054dddb12` is **not** an ancestor of
-v6.18.53.
-
-Record: `[yes, buggy 1s/1000µs tests are in v6.18.53]`
-
-**Step 6.2: BACKPORT COMPLICATIONS**
-`git show a2703c… | patch -p1 --dry-run` on a v6.18.53 archive of
-`tools/testing/selftests/cgroup` succeeded on both files.
-
-Record: `[clean apply]`
-
-**Step 6.3: RELATED FIXES ALREADY HERE**
-`954bacce36d97` (correct expected-usage + 10% check) is in v6.18. No
-later HZ-duration fix. No equivalent workaround.
-
-Record: `[no substitute already present]`
-
----
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-**Step 7.1: SUBSYSTEM AND CRITICALITY**
-`tools/testing/selftests/cgroup` — kselftests, not `kernel/` or `mm/`.
-
-Record: `[kselftests / cgroup cpu controller] [PERIPHERAL for production
-runtime; IMPORTANT for distro/CI validation of this tree]`
-
-**Step 7.2: SUBSYSTEM ACTIVITY**
-v6.18..v6.18.53 has **236** commits under `tools/testing/selftests/`,
-including cgroup ones (`13cf95d19e84b`, `0ef3f5629051f`). This series
-already takes kselftest correctness/flake fixes.
-
-Record: `[this 6.18.y tree regularly backports selftest fixes]`
-
----
-
-## PHASE 8: IMPACT AND RISK ASSESSMENT
-
-**Step 8.1: WHO IS AFFECTED**
-People running `selftests/cgroup/test_cpu` on `CONFIG_HZ` 100/250/300.
-Production cgroup cpu.max behavior is unchanged.
-
-Record: `[config-specific kselftest users / distro CI]`
-
-**Step 8.2: TRIGGER CONDITIONS**
-Run the cpu.max tests on low HZ. Common on Debian-style HZ=250 and some
-servers at HZ=100. Not unprivileged. Not a race; quantization + short
-window.
-
-**Step 8.3: FAILURE MODE SEVERITY**
-False kselftest FAIL. Kernel stays up. No corruption/UAF.
-
-Record: `[false test failure] [LOW for runtime; MEDIUM for CI that gates
-6.18.y]`
-
-**Step 8.4: RISK-BENEFIT**
-- Benefit: stops known false FAILs on configs this tree still ships;
-  matches other selftest backports already in 6.18.53.
-- Risk: userspace-only; no kernel locking/alloc/API change. Worst case:
-  tests stay FAIL without `/proc/config.gz`, same as today; or tests run
-  up to ~10s on HZ=100.
-
-Record: `[moderate CI benefit / very low risk]`
-
----
-
-## PHASE 9: FINAL SYNTHESIS
-
-**Step 9.1: EVIDENCE**
-
+- Signed-off-by: Zhe Liu <liuzhe1@kylinos.cn> (author)
+- Reviewed-by: Tao Cui <cuitao@kylinos.cn>
+- Signed-off-by: Tejun Heo <tj@kernel.org> (cgroup maintainer; applied
+  the patch)
+- No Fixes: tag (expected)
+- No Reported-by / Tested-by / Link / Cc: stable
+- Ignore any pipeline-added Sasha Levin SOB / "[Upstream commit ...]"
+  markers; they are not evidence of selection
+
+Notable pattern: maintainer SOB plus a Reviewed-by; single standalone
+patch, not a series.
+
+Step 1.3: ANALYZE THE COMMIT BODY TEXT
+Record:
+- [Bug] Admin-guide intro for the cgroup v2 "io" controller still says
+  weight-based control needs cfq-iosched and that neither weight nor
+  limits work on blk-mq.
+- [Symptom] Operators reading the intro are told IO control does not
+  work on modern (blk-mq-only) kernels, which contradicts the rest of
+  the same document.
+- [Version info] Text written in 2015; cfq-iosched removed in v5.0; blk-
+  mq is now the only block path.
+- [Root cause] Documentation was never updated after CFQ removal and
+  after iocost / iolatency / ioprio / BFQ cgroup support landed. The
+  rest of the section already documents io.weight, io.max,
+  io.cost.{qos,model}, io.latency, and io.prio.class.
+
+Step 1.4: DETECT HIDDEN BUG FIXES
+Record: Not a hidden runtime bug. It is an explicit documentation
+correction of obsolete, contradictory admin-guide text. No leak/race/UAF
+disguised as cleanup.
+
+===============================================================
+PHASE 2: DIFF ANALYSIS - LINE BY LINE
+===============================================================
+
+Step 2.1: INVENTORY THE CHANGES
+Record:
+- File: `Documentation/admin-guide/cgroup-v2.rst` (+7 / -3, 10 lines
+  with context)
+- Functions modified: none (prose only)
+- Scope: single-file surgical documentation rewrite of one introductory
+  paragraph
+
+Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
+Record:
+- Before: "weight based distribution is available only if cfq-iosched is
+  in use and neither scheme is available for blk-mq devices."
+- After: Absolute BPS/IOPS limits via blk-throttle on all devices;
+  proportional weight via iocost (`CONFIG_BLK_CGROUP_IOCOST`) and BFQ
+  (`io.bfq.weight` when BFQ is the device scheduler); also iolatency
+  (`CONFIG_BLK_CGROUP_IOLATENCY`) and ioprio
+  (`CONFIG_BLK_CGROUP_IOPRIO`).
+- Path affected: documentation readers only; no kernel execution path.
+
+Step 2.3: IDENTIFY THE BUG MECHANISM
+Record: [Logic / correctness in documentation] The intro describes
+2015-era CFQ/legacy-request_fn constraints that do not exist in this
+tree. Not a memory-safety, locking, or refcount bug.
+
+Step 2.4: ASSESS THE FIX QUALITY
+Record:
+- Obviously correct relative to this tree: CFQ is gone, blk-mq is the
+  I/O path, and the named configs/files exist.
+- Minimal: one paragraph, no unrelated edits.
+- Regression risk: none at runtime. Residual docs risk is only if the
+  new sentence were wrong; it matches `block/Kconfig`,
+  `block/Kconfig.iosched`, and the later IO sections of the same file.
+  `io.bfq.weight` is documented in `Documentation/block/bfq-
+  iosched.rst`, not in the cgroup-v2 interface-file list; that is
+  consistent with the intro pointing at BFQ's own cgroup support.
+
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
+
+Step 3.1: BLAME THE CHANGED LINES
+Record: Stale paragraph introduced by `6c2920926b10e8` ("cgroup: replace
+unified-hierarchy.txt with a proper cgroup v2 documentation", Tejun Heo,
+2015-11-16). Present since cgroup v2 docs were written. Converted to rST
+by `633b11bee40c37` (2017) without changing that claim. `git merge-base
+--is-ancestor 6c2920926b10e8 HEAD` succeeded.
+
+Step 3.2: FOLLOW THE FIXES: TAG
+Record: No Fixes: tag. Not applicable. The "bug" is long-lived stale
+documentation, not a later functional regression.
+
+Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
+Record: Recent `cgroup-v2.rst` changes in this tree are unrelated
+(writeback folio conversion, mm/zswap docs, cgroup-for-6.12 merge). No
+prerequisite refactor of the IO intro. Standalone one-patch change (b4:
+v1 only, not patch X/Y).
+
+Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
+Record: Zhe Liu has this one commit on `origin/master` for this file.
+Tejun Heo (cgroup maintainer) applied it. Tao Cui reviewed and corrected
+the CFQ-removal version in the commit message from v4.12 to v5.0.
+
+Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
+Record: No code-structure dependencies. The rewrite only names
+controllers/configs that already exist in 6.12 (`BLK_CGROUP_IOCOST`,
+`BLK_CGROUP_IOLATENCY`, `BLK_CGROUP_IOPRIO`, `BFQ_GROUP_IOSCHED`,
+`BLK_DEV_THROTTLING`). Can apply standalone. `git show 3345c7248a9e2 |
+git apply --check` succeeded at offset -172 lines.
+
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
+
+Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
+Record:
+- Commit: `3345c7248a9e2a91cb9e2477c29af16881706f4f` (not an ancestor of
+  this HEAD; `git merge-base --is-ancestor` exit 1)
+- b4 dig:
+  https://patch.msgid.link/20260810063535.327765-1-liuzhe1@kylinos.cn
+- Single v1 series; no v2/v3. Tejun applied v1 after fixing the CFQ
+  version in the changelog.
+- Reviewer feedback: Tao Cui, "cfq-iosched was removed in v5.0, not
+  v4.12 (f382fb0bcef4)". Otherwise "looks good." Reviewed-by added.
+- Tejun: "Applied to cgroup/for-7.3 with the cfq removal version in the
+  description corrected to v5.0"
+- No NAK, no stable nomination in the thread
+- Included in the v7.3 cgroup pull (`[GIT PULL] cgroup: Changes for
+  v7.3`)
+- Later `origin/master` text of this paragraph is unchanged; no follow-
+  up rewrite
+
+Step 4.2: CHECK WHO REVIEWED THE PATCH
+Record (b4 dig -w): To/Cc included tj@kernel.org, hannes@cmpxchg.org,
+mkoutny@suse.com, corbet@lwn.net, skhan@linuxfoundation.org, cgroups@,
+linux-doc@, linux-kernel@. Those are the cgroup maintainers plus linux-
+doc. Applied by Tejun Heo.
+
+Step 4.3: SEARCH FOR THE BUG REPORT
+Record: No Reported-by, bugzilla, or syzbot. Author noticed the intro
+contradicting the rest of the same document. Severity from a reporter's
+perspective: documentation accuracy, not a crash.
+
+Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
+Record: Standalone. Later cgroup-v2 doc commits on `origin/master`
+(misc.events, io.latency rotational, io.pressure, etc.) do not touch
+this paragraph and are not prerequisites.
+
+Step 4.5: CHECK STABLE MAILING LIST HISTORY
+Record: lore.kernel.org/stable WebFetch returned HTTP 403. UNVERIFIED
+whether anyone already requested or rejected this on stable@. No
+evidence from b4 or lkml mirrors of a stable discussion.
+
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
+
+Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
+Record: None. Documentation only.
+
+Step 5.2: TRACE CALLERS
+Record: N/A — no functions. Impact surface is readers of the cgroup v2
+admin guide (container/cgroup operators), not a call graph.
+
+Step 5.3: TRACE CALLEES
+Record: N/A.
+
+Step 5.4: FOLLOW THE CALL CHAIN
+Record: N/A for kernel reachability. The misleading text is in the
+primary user-facing cgroup v2 document. Userspace does not "trigger" a
+bug; operators can be misled about whether io.max / io.weight work.
+
+Step 5.5: SEARCH FOR SIMILAR PATTERNS
+Record: `cfq-iosched` in this tree's docs remains only in this stale
+intro (plus an unrelated historical RCU lockdep-splat example).
+`init/Kconfig` BLK_CGROUP help still mentions CFQ; that is a separate
+stale-help issue, not part of this patch.
+
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
+
+Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
+Record: Yes. Local tree is **6.12.111** (`pending-6.12`, `git describe
+HEAD` = p-6.12-3-gc504cf0baa3d8). Stale text is at `Documentation/admin-
+guide/cgroup-v2.rst` lines 1834–1838. Features the rewrite describes are
+present:
+- CFQ source `block/cfq-iosched.c` absent; removed by `f382fb0bcef4`
+  (ancestor of HEAD)
+- iocost: `block/blk-iocost.c`, `CONFIG_BLK_CGROUP_IOCOST`
+  (`7caa47151ab2e`, ancestor)
+- iolatency: `block/blk-iolatency.c` (`d70675121546c`, ancestor)
+- ioprio: `block/blk-ioprio.c` (`556910e39249d`, ancestor)
+- blk-throttle: `CONFIG_BLK_DEV_THROTTLING`
+- BFQ cgroup: `CONFIG_BFQ_GROUP_IOSCHED`, `io.bfq.weight` in
+  `Documentation/block/bfq-iosched.rst`
+- Same file already documents io.cost.*, io.weight, io.max, io.latency,
+  io.prio.class
+
+Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
+Record: Clean apply with hunk offset -172 (upstream intro at ~1988; this
+tree at ~1833). Surrounding Memory Ownership / IO Interface Files
+context matches. Difficulty: clean apply.
+
+Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
+Record: `git log --grep='stale "io" controller'` and `--grep='cfq-
+iosched'` on this file: empty. No equivalent fix in this checkout. `git
+merge-base --is-ancestor 3345c7248a9e2 HEAD` failed.
+
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
+
+Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
+Record: [Documentation / cgroup v2 admin-guide] Criticality: IMPORTANT
+for operators (the user-facing contract for cgroup IO), PERIPHERAL for
+kernel runtime (no code change). MAINTAINERS: CONTROL GROUP, Tejun Heo
+et al., file `Documentation/admin-guide/cgroup-v2.rst`.
+
+Step 7.2: ASSESS SUBSYSTEM ACTIVITY
+Record: cgroup-v2.rst still receives interface-doc updates. The IO intro
+itself has been untouched since 2015. Mature, long-stale paragraph
+rather than a bug in brand-new code.
+
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
+
+Step 8.1: DETERMINE WHO IS AFFECTED
+Record: Anyone reading the cgroup v2 IO intro on 6.12 (container hosts,
+systemd/cgroup users, Kubernetes node kernels). Not a
+runtime/config/platform subset. No kernel code path changes.
+
+Step 8.2: DETERMINE THE TRIGGER CONDITIONS
+Record: Reading the admin guide. Common for operators enabling IO
+control. Not a race; not triggerable as a crash by unprivileged users.
+
+Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
+Record: [Failure mode] Contradictory, obsolete documentation: claims IO
+weight/limits do not work on blk-mq, i.e. on essentially all 6.12 block
+devices. [Severity] LOW as kernel runtime; the rest of the same chapter
+already describes working interfaces. The harm is misleading operators,
+not oops/corruption/deadlock.
+
+Step 8.4: CALCULATE RISK-BENEFIT RATIO
+Record:
+- Benefit: medium for documentation accuracy of a widely used
+  controller; the intro currently tells 6.12 users the opposite of
+  reality.
+- Risk: very low (docs-only, 7 insertions / 3 deletions, apply-check
+  clean).
+- Ratio: high benefit-to-risk for a documentation exception; no runtime
+  regression vector.
+
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
+
+Step 9.1: COMPILE THE EVIDENCE
 FOR:
-- Real, reproduced failure of tests that exist in v6.18.53
-- Small (+38/−6), clean apply, no kernel code
-- v5 reviewed; Acked-by Michal Koutný; applied by Tejun Heo
-- This 6.18.y tree already backports kselftest flake/correctness fixes
-- Zero production regression surface
+- Stale intro is present in this 6.12 tree and is factually false here
+  (CFQ gone since v5.0; blk-mq-only; iocost/iolatency/ioprio/BFQ all
+  present).
+- Same document already documents the working interfaces; the intro is
+  the part that contradicts them.
+- Small, obviously correct, maintainer-applied (Tejun Heo), Reviewed-by
+  Tao Cui.
+- Applies cleanly.
+- Zero runtime risk.
+- Documentation/comment fixes are an allowed stable exception.
+- This pending-6.12 tree already carries other `docs:` backports under
+  `Documentation/admin-guide/`.
 
 AGAINST:
-- Not a kernel crash/security/corruption/deadlock
-- Best-effort HZ probe; fallback HZ=1000 does not help without
-  `config.gz`
-- Reviewer expected possible later SMP tuning
-- No `Cc: stable` in the thread (not used as a negative per
-  instructions)
+- Not a crash, UAF, deadlock, corruption, or security hole.
+- No user report / syzbot / Cc: stable (absence of Cc: stable is
+  expected and not a negative).
+- Later sections already describe the real interfaces, so a careful
+  reader can recover.
+- `stable-kernel-rules.rst` also says no trivial-without-benefit
+  changes; this is more than spelling, but it is still docs-only.
 
 UNRESOLVED:
-- Stable@ archive search (lore 403, lei hung)
+- lore.kernel.org/stable search HTTP 403; no confirmed stable@ thread.
 
-**Step 9.2: STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — v5 after review; author ran
-   10 iterations; maintainer applied.
-2. Fixes a real bug that affects users? **PASS** — false FAILs of in-
-   tree tests on valid HZ; Red Hat author hit it.
-3. Important issue? **PASS** under this tree’s practice (“oh, that’s not
-   good” kselftest failures), not under oops/CVE. Analogous to flake
-   fixes already in 6.18.y.
-4. Small and contained? **PASS** — two selftest files, &lt;50 lines.
-5. No new features or APIs? **PASS** — duration scaling only.
-6. Can apply to the local tree? **PASS** — dry-run clean on v6.18.53;
-   prerequisites present.
+Step 9.2: APPLY THE STABLE RULES CHECKLIST
+1. Obviously correct and tested? **PASS** — matches Kconfig and the rest
+   of the same document; reviewed and applied by the cgroup maintainer.
+2. Fixes a real bug that affects users? **PASS** (documentation bug) —
+   the intro is wrong for every 6.12 blk-mq system.
+3. Important issue (crash, security, corruption, deadlock)? **FAIL** as
+   a runtime severity; **PASS** under the documentation exception
+   (incorrect admin-guide, not a spelling nit).
+4. Small and contained? **PASS** — 10 lines, one file.
+5. No new features or APIs? **PASS** — describes existing 6.12
+   interfaces only.
+6. Can apply to the local tree? **PASS** — `git apply --check`
+   succeeded.
 
-**Step 9.3: EXCEPTION CATEGORIES**
-Not a device ID/quirk/DT/build/doc fix. Closest: isolated userspace test
-fix with the same risk profile as a build/doc fix.
+Step 9.3: CHECK FOR EXCEPTION CATEGORIES
+Record: **Documentation fix** (incorrect/obsolete admin-guide text).
+That exception applies. Not a device-ID, quirk, DT, or build fix.
 
-**Step 9.4: DECISION**
-The tests and the tight 10% check are in this 6.18.53 tree; the kernel
-bug is not, because there is no kernel bug. The patch only stops those
-tests from failing on low HZ, applies cleanly, and cannot regress kernel
-runtime. For this tree, that is enough.
+Step 9.4: MAKE YOUR DECISION
+This should be backported to **this** 6.12 tree. The buggy paragraph is
+here, the features the new text describes are here, the patch applies,
+and runtime risk is zero. Stable rules allow documentation corrections
+of incorrect material; this is not a feature add and not a whitespace
+cleanup.
 
-What it solves for stable users: distro/CI `test_cpu` cpu.max cases on
-HZ&lt;1000. It meets the written rules as a small, tested, in-tree test
-fix. Risk is negligible versus the CI benefit.
+What it solves for stable users: the cgroup v2 admin guide currently
+says weight-based IO control needs CFQ and that neither weights nor
+limits work on blk-mq. On 6.12 that is false for all block devices and
+contradicts io.max / io.weight / iocost / iolatency / ioprio in the same
+file.
 
----
+Risk vs benefit: documentation-only, surgical, maintainer-acked; benefit
+is correcting the primary operator document for a common container
+feature.
 
-## Verification
+Concerns: none on apply or prerequisites. Not a crash-class fix;
+accepted because it is a contained docs correction of still-present
+stale text.
 
-- [Phase 1] Parsed tags: Link to lore; SOB Joe Simmons-Talbott; Ack
-  Michal Koutný; SOB Tejun Heo; no Fixes/Reported-by/Cc:stable
-- [Phase 1] Body: low HZ + 1000µs quota ⇒ `test_cpucg_max` / nested fail
-- [Phase 2] Diff: +`NSEC_PER_USEC`; +`get_config_hz()` via `zcat
-  /proc/config.gz`; duration `* 1000 / hz` in both tests
-- [Phase 2] Operator precedence of `%`/`*` verified; 1e9 fits in 32-bit
-  long
-- [Phase 3] `git describe HEAD` / Makefile: **6.18.53**
-- [Phase 3] `git merge-base --is-ancestor
-  a2703c2980c0776e9be7d8f9e144afd054dddb12 v6.18.53` → not present
-- [Phase 3] blame: tests 889ab8113ef13 / a79906570f964 (2022); 10% check
-  954bacce36d97 (in v6.18)
-- [Phase 3] `values_close_report` present at v6.18.53 test_cpu.c:694,765
-- [Phase 4] `b4 dig -c a2703c…`: v3/v4/v5 msgid links; `b4 dig -a/-w/-m`
-  used
-- [Phase 4] v2 thread: Michal proposed duration formula; Joe: both
-  approaches passed 10 runs
-- [Phase 4] v5: Michal Ack; Tejun applied to cgroup/for-7.3; no NAK; no
-  stable Cc
-- [Phase 4] lore.kernel.org WebFetch 403; lei stable search killed after
-  30s → UNVERIFIED stable@
-- [Phase 5] Tests only in `T(...)` table; `hog_cpus_timed` is wall-clock
-  hog
-- [Phase 6] v6.18.53 still has `duration_seconds = 1` / `quota_usec =
-  1000`
-- [Phase 6] `patch --dry-run` of a2703c on v6.18.53 cgroup selftests:
-  clean
-- [Phase 6] `6e9f5c2eecd10` BUF_SIZE rename not in v6.18.53; not
-  required
-- [Phase 6] no later `get_config_hz` change on origin/master
-- [Phase 7] `git log v6.18..v6.18.53 -- tools/testing/selftests/` → 236
-  commits
-- [Phase 8] Failure = kselftest FAIL only; kernel path untouched
-- UNVERIFIED: whether `/proc/config.gz` is typical on 6.18.y distro test
-  images (fallback limitation stands either way)
-
-The tests this commit repairs are in this 6.18.53 tree, the patch
-applies cleanly, and it does not touch kernel runtime.
+Verification:
+- [Phase 1] Parsed tags: SOB Zhe Liu, Reviewed-by Tao Cui, SOB Tejun
+  Heo; no Fixes/Reported-by/Cc: stable
+- [Phase 1] Body: stale 2015 CFQ/blk-mq claims; cfq removed v5.0
+- [Phase 2] Diff: `Documentation/admin-guide/cgroup-v2.rst` +7/-3, IO
+  intro only
+- [Phase 3] `git describe HEAD` / `make kernelversion`:
+  p-6.12-3-gc504cf0baa3d8, 6.12.111, branch pending-6.12
+- [Phase 3] `git blame`: stale lines from `6c2920926b10e8` (2015);
+  ancestor of HEAD
+- [Phase 3] `git merge-base --is-ancestor 3345c7248a9e2 HEAD`: not in
+  this tree
+- [Phase 3] CFQ removal `f382fb0bcef4` is ancestor; no `block/cfq-
+  iosched.c`
+- [Phase 3] iocost `7caa47151ab2e`, iolatency `d70675121546c`, ioprio
+  `556910e39249d` are ancestors
+- [Phase 3] `git apply --check` of 3345c7248a9e2: hunk succeeded at 1833
+  (offset -172)
+- [Phase 4] b4 dig -c 3345c7248a9e2: msgid
+  20260810063535.327765-1-liuzhe1@kylinos.cn
+- [Phase 4] b4 dig -a: v1 only
+- [Phase 4] b4 dig -w: cgroup maintainers + linux-doc on the original
+  To/Cc
+- [Phase 4] lkml/openwall: Tao Cui v5.0 correction; Tejun applied to
+  cgroup/for-7.3; no NAK
+- [Phase 4] origin/master still has the rewritten paragraph; no later
+  rewrite
+- [Phase 4] lore.kernel.org/stable: HTTP 403, UNVERIFIED
+- [Phase 5] No functions/callers; docs-only
+- [Phase 6] Stale text at lines 1834–1838 of this tree's cgroup-v2.rst;
+  io.cost/io.weight/io.max/io.latency/io.prio.class already documented
+  below
+- [Phase 6] `CONFIG_BLK_CGROUP_IOCOST`, `IOLATENCY`, `IOPRIO`,
+  `BFQ_GROUP_IOSCHED`, `BLK_DEV_THROTTLING` exist in this tree
+- [Phase 7] MAINTAINERS CONTROL GROUP: Tejun Heo; file listed
+- [Phase 8] Failure mode: misleading admin-guide, severity LOW runtime /
+  docs exception
+- UNVERIFIED: whether this SHA was already discussed on stable@
 
 **YES**
 
- .../cgroup/lib/include/cgroup_util.h          |  1 +
- tools/testing/selftests/cgroup/test_cpu.c     | 43 ++++++++++++++++---
- 2 files changed, 38 insertions(+), 6 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/lib/include/cgroup_util.h b/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-index 7ab2824ed7b54..b9cd00e0e8349 100644
---- a/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-+++ b/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-@@ -8,6 +8,7 @@
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index edcd125d6992f..a62505e55dd07 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1959,9 +1959,13 @@ IO
  
- #define MB(x) (x << 20)
+ The "io" controller regulates the distribution of IO resources.  This
+ controller implements both weight based and absolute bandwidth or IOPS
+-limit distribution; however, weight based distribution is available
+-only if cfq-iosched is in use and neither scheme is available for
+-blk-mq devices.
++limit distribution.  Absolute BPS and IOPS limits are enforced by
++blk-throttle and apply to all devices, while weight based proportional
++distribution is provided by the iocost cost model controller
++(CONFIG_BLK_CGROUP_IOCOST) and, when the BFQ I/O scheduler is in use
++for a device, by BFQ's own cgroup support.  Latency-based protection
++(CONFIG_BLK_CGROUP_IOLATENCY) and I/O priority assignment
++(CONFIG_BLK_CGROUP_IOPRIO) are also available.
  
-+#define NSEC_PER_USEC	1000L
- #define USEC_PER_SEC	1000000L
- #define NSEC_PER_SEC	1000000000L
  
-diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
-index d54e2317efff2..de60967279668 100644
---- a/tools/testing/selftests/cgroup/test_cpu.c
-+++ b/tools/testing/selftests/cgroup/test_cpu.c
-@@ -639,6 +639,31 @@ test_cpucg_nested_weight_underprovisioned(const char *root)
- 	return run_cpucg_nested_weight_test(root, false);
- }
- 
-+/*
-+ * Best effort attempt to get the kernel's HZ value from the config.
-+ * Return the HZ value if found otherwise return 1000 (the default) to
-+ * indicate failure.
-+ */
-+static long
-+get_config_hz(void)
-+{
-+	long hz = 1000;
-+	FILE *f;
-+	char cmd[256] = "zcat /proc/config.gz 2>/dev/null | grep '^CONFIG_HZ='";
-+
-+	f = popen(cmd, "r");
-+
-+	if (!f)
-+		return hz;
-+
-+	if (fscanf(f, "CONFIG_HZ=%ld", &hz) == EOF)
-+		goto out;
-+
-+out:
-+	pclose(f);
-+	return hz;
-+}
-+
- /*
-  * This test creates a cgroup with some maximum value within a period, and
-  * verifies that a process in the cgroup is not overscheduled.
-@@ -646,15 +671,18 @@ test_cpucg_nested_weight_underprovisioned(const char *root)
- static int test_cpucg_max(const char *root)
- {
- 	int ret = KSFT_FAIL;
-+	long hz = get_config_hz();
- 	long quota_usec = 1000;
- 	long default_period_usec = 100000; /* cpu.max's default period */
- 	long duration_seconds = 1;
- 
--	long duration_usec = duration_seconds * USEC_PER_SEC;
-+	long duration_usec;
- 	long usage_usec, n_periods, remainder_usec, expected_usage_usec;
- 	char *cpucg;
- 	char quota_buf[32];
- 
-+	duration_usec = duration_seconds * USEC_PER_SEC * 1000 / hz;
-+
- 	snprintf(quota_buf, sizeof(quota_buf), "%ld", quota_usec);
- 
- 	cpucg = cg_name(root, "cpucg_test");
-@@ -670,8 +698,8 @@ static int test_cpucg_max(const char *root)
- 	struct cpu_hog_func_param param = {
- 		.nprocs = 1,
- 		.ts = {
--			.tv_sec = duration_seconds,
--			.tv_nsec = 0,
-+			.tv_sec = duration_usec / USEC_PER_SEC,
-+			.tv_nsec = duration_usec % USEC_PER_SEC * NSEC_PER_USEC,
- 		},
- 		.clock_type = CPU_HOG_CLOCK_WALL,
- 	};
-@@ -710,15 +738,18 @@ static int test_cpucg_max(const char *root)
- static int test_cpucg_max_nested(const char *root)
- {
- 	int ret = KSFT_FAIL;
-+	long hz = get_config_hz();
- 	long quota_usec = 1000;
- 	long default_period_usec = 100000; /* cpu.max's default period */
- 	long duration_seconds = 1;
- 
--	long duration_usec = duration_seconds * USEC_PER_SEC;
-+	long duration_usec;
- 	long usage_usec, n_periods, remainder_usec, expected_usage_usec;
- 	char *parent, *child;
- 	char quota_buf[32];
- 
-+	duration_usec = duration_seconds * USEC_PER_SEC * 1000 / hz;
-+
- 	snprintf(quota_buf, sizeof(quota_buf), "%ld", quota_usec);
- 
- 	parent = cg_name(root, "cpucg_parent");
-@@ -741,8 +772,8 @@ static int test_cpucg_max_nested(const char *root)
- 	struct cpu_hog_func_param param = {
- 		.nprocs = 1,
- 		.ts = {
--			.tv_sec = duration_seconds,
--			.tv_nsec = 0,
-+			.tv_sec = duration_usec / USEC_PER_SEC,
-+			.tv_nsec = duration_usec % USEC_PER_SEC * NSEC_PER_USEC,
- 		},
- 		.clock_type = CPU_HOG_CLOCK_WALL,
- 	};
+ IO Interface Files
 -- 
 2.53.0
 
