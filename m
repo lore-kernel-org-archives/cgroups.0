@@ -1,149 +1,137 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E674F3EBC
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 12:35:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792413337; cv=pass; b=khd/hhSYkvNivJlaw6LhBS4UAw5X6/FYHUqG52kJMYIZ7GeehlTvExGWECSNFFp7qzFarptq4SVNeb3znoMt80g5YqyOUpMGMq0gj7LbtbfIQRfgvOFiyhT+8varDoGeRwwjjY2kaMPZFvvgRP0XUVP6a2jobZS0jRoty+gLb/U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792413337; c=relaxed/simple;
-	bh=h2JbWnV9rUc1EeFvFy7Tjt14h2irL2wrPatMAzjOJ7w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AnP4WxxsZ2aSRjZKDSYffhvMl9ydIyGp6+uCLf/9+nTUEacs+zpc9llwUIpIG7Inw+q7vUMnidEVwZvW+ATVrtSmMXmV1wMrHRYLr374ZZfubVOBoVmLpsw9rJp44YeQXKT7z/+hCtSY2dBHi4r5Q438fxECphq2exJOtNK+e2Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lTvgTBaM; arc=pass smtp.client-ip=209.85.221.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B553B2D39
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 12:57:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792414670; cv=none; b=WRk8z6hueG0JNpy7TwQ6hvl+3A/3SHZDQ6wVzfGPInYG8npWK6fTlcXzrGkZiCz7f5bk2BmFX/66dZu47AA7UXRz51JggcGX7QhT43uvFMb6fhBsqIw6v5ME+aTwrBWRwM7DqSwbvhx4J6t5khx9oi5olvoOTEoHhQGJWWKPCCs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792414670; c=relaxed/simple;
+	bh=w046RqlnctneZ8SARYX+vlfSsfJJViupwrW+GsN5Rgo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QUxmYmzkQ6hZ0V5Odg7YsNhsmOcRK7dw3LH+hfyl6XQ4jOeZCvga3vBbqnkjsHnjieq885RmxkRYu4xOU7qzLkFZrB02MpSkMU72bMvutZBTBvYnGsehaZgjm3uBPb1JYA1f6QMaPUQ/ZDZv6dpP+5usVBl+d9WLC6STR9CLjdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BqkNg0fH; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lTvgTBaM"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48b0584ad71so1392201f8f.0
-        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 05:35:25 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792413323; cv=none;
-        d=google.com; s=arc-20260327;
-        b=lu88UoKmbcnB1E8jkYFCiQNOsBMqmB8YXXWTO1g2BiPudh7lkPveTLj3y77Rx/uO2L
-         HSbHNlPRT611zGgTcGF7SbMvxaQP0+L1jrdoPxkoLwgaqE9SbAYmgM36BH8VnlYyrbpk
-         /9pf70fqlEq79jPxlm9drhyOIvXl0jnik4JrDEP6KfS1qPbWGqfGkQ/2HGwfbPcNCvvF
-         2RA10CIXzkPf/8B6/EfpbE4R07Qs0vUwWM6lO7nlo0vMU4yZmpzRhyfAhXd2KT9jO7Gp
-         RHd6b2foVMS3Krm2mkNThdaA0OfRx7+e+6In0FsjKl2V6vG3TaTt3wFHUBerrU3ImWOL
-         whlg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=h2JbWnV9rUc1EeFvFy7Tjt14h2irL2wrPatMAzjOJ7w=;
-        fh=YFOtvYAloBBGixQdhati84XvdF8jyYEac0otnngo6VM=;
-        b=KBa6YlceUuPddW6Qi5JffzJ4rWLDgV8MqDI5koRaR8Wd180MtKXgDvrDjXOBZXSLcE
-         pdMptIfHo7a2zLNcsOf6yv60y7PE/D5n7Fi6Afp//8bt7Zi0ymn2xCDlkRKWfgYOlMU5
-         eCzUeWtsQ4D/XFneUjEvRn9d6rvp1O5RMo6PnZ47dFhH2z3cVFauQ851GTFeF+Dva5GF
-         Fzn4cQ3mzZK5FrRvYzEtEijT+fa7nmAwHaFXFIbYmPYBFRZ95yZPbARSkVkZw933yPAT
-         c7w76+VjDIMb2k72MBeo4zF+bJBR7YHbJGQjnskCRhs8NTHp40PNo9OROr6wZO8FYU6A
-         RCCw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792413323; x=1793018123; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=h2JbWnV9rUc1EeFvFy7Tjt14h2irL2wrPatMAzjOJ7w=;
-        b=lTvgTBaMCa4ZKG4V6wMLE2eP/d7WRz7sxcNslCTgjSzmzn7wxfsLAZGIw2FIkasboh
-         06b5zxWkhCcKg2YQ4KLKKaPhfwT1CzyVn85Cg7RxE0qnE1K+OtJGicUqiByHoo2DPcKt
-         2MZpI48UuoaK0crE+VsMbkHty1XqZ7gVlt4mWpA6LyCC+L2frjakQ7a5Fi/T2csjqrEh
-         ISuIzLpLAdXyd0CjRA0x6B71oXWjsIYKJ9e1eCUT7bq2ndNSzQLNJ6/O5rYbDoyXnjvS
-         6a7gFPZ5kDLxZtpqMJsSRzaoHTtUbUNa0Tt5mcu2kJkczGE9B9wYjxPC2UpRQFDzgCNq
-         Rsdg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792413323; x=1793018123;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=h2JbWnV9rUc1EeFvFy7Tjt14h2irL2wrPatMAzjOJ7w=;
-        b=fD9fxDhI9wLC+anpbIinaTSBS5ycyDxAoY8IBqB7nURHQEEXUYG3zC4gbtypg8tGzY
-         6SmAT+65NFPTxu0xInbZBXG8A6FkUE9NJjfGgl15sLyFWj0iBfimX7cXo9O87lQtXvwB
-         8jgn7uTiCHVVzyD5UiJz+oy4eGCy+AyoTNiuB8XCzB97Ron4tk+qPiZAA/TanOKygAi5
-         QosKANF2DIGzdmZ13a+gc6LR8inIFA7wP2NG0UxF87oSlf0BdQUNbefwIqxqVBYbosaM
-         yjmxw0MRfhwsYVTLy1opFI4ztg0deGQ8zmsBsw00i3Zuvkq4BgvlyuUNb9ZqbWi+7UCJ
-         rXFw==
-X-Forwarded-Encrypted: i=1; AKwUvByiyEP7gpgh4LO1VnUWe/Kso5yjBDoxiKbs0vOvZWPPj2oyBKjae3HilGAG0A/+/YLmrnJRkRvN@vger.kernel.org
-X-Gm-Message-State: AFq9FYIn0gyPAD7e9vKZJ0jpIskK9o3qrx1Q4dtyTFdjaAEnjXrS7z3P
-	HQZ0vEDvKLaM7QvhXJV6+IA8X4us5qaYq/3et9nEyka9je0Dt1O6mJH6xrt23YdwXGegYWoticJ
-	oodxV3t1OShDiMHhp43i987qqjjUEtGA=
-X-Gm-Gg: AYBFou3OAjGazR6WCudEhO+rGf9kGi6MQ2BAnJK3WD7sH+XWhM69eCeCyj2CC7S8Qm6
-	DiDRuzhzygAZQ/+bkeMEDgpcgDuqy81OJWpI8zHsy/FtQb4d4QSRh6P7hqVf54OZRjXY3vu6w76
-	Z1bP5qC+sD7RA/uR03eAG8k1ihElpvOzR9NdtQhZhc2KQomu7Sxw09xKoRUEFH0dIy9p6TxC/Ur
-	gquuVSgf/EKywGFovCFiAw0xOPTtMxnFK1yciRk3WNwfsvVuMqcY5qIHuJaWH0lYbPfHvmHBgEc
-	uDp65Gc9Wc7WBKXGoESmMf/Fh+smols4GBPjUxcNYJpnB/913XRx6ZqO5zstUN2ELtShv0U5sx4
-	z+0YLH9bwHafohQfoF61F093b1Cx2WNclxF3Cze5YnRDHwzeh+4MCXUcAkSenvAmbrYjzY1A=
-X-Received: by 2002:a05:6000:220b:b0:48d:ca32:e90f with SMTP id
- ffacd0b85a97d-48e07fb8457mr14720830f8f.55.1792413323141; Mon, 19 Oct 2026
- 05:35:23 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BqkNg0fH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792414668;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hRfvEtCLzTcglOUE0NGocUwOc/vYbOtviBwd3XYhKMk=;
+	b=BqkNg0fHDyKDdl/xJHZrO+GaxFMoQOLPrg8pd+O4z6XSGHBHMTTJPD3t6L6wcl5vc+GgXS
+	HzN0EPRcz1IUQJEINso5uTpf75BkoSG05YQZAqmHMCl+3fcRnSDX/GLS6L2vbzNVEupnH7
+	yQAsYXfLviI70RGrhhwidyixOsPctQY=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-310-efvPfy7BMFi2s6zVjB3iJQ-1; Mon,
+ 19 Oct 2026 12:57:38 +0000
+X-MC-Unique: efvPfy7BMFi2s6zVjB3iJQ-1
+X-Mimecast-MFC-AGG-ID: efvPfy7BMFi2s6zVjB3iJQ_1792414656
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B069E1954AC2;
+	Mon, 19 Oct 2026 12:57:35 +0000 (UTC)
+Received: from onestero-thinkpadp1gen7.tpbc.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with SMTP id CDFA21955E76;
+	Mon, 19 Oct 2026 12:57:31 +0000 (UTC)
+Received: by onestero-thinkpadp1gen7.tpbc.csb (nbSMTP-1.00) for uid 13628
+	oleg@redhat.com; Mon, 19 Oct 2026 14:57:35 +0200 (CEST)
+Date: Mon, 19 Oct 2026 14:57:30 +0200
+From: Oleg Nesterov <oleg@redhat.com>
+To: Kir Kolyshkin <kolyshkin@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Serge Hallyn <serge@hallyn.com>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Christian Brauner <brauner@kernel.org>,
+	Shuah Khan <shuah@kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH 1/2] cgroup: fix cgroup.kill for exited thread group
+ leader
+Message-ID: <atYTukAn0-7CAXmp@redhat.com>
+References: <20261018-cgroup-kill-exited-leader-v1-0-c71ad94c20cc@gmail.com>
+ <20261018-cgroup-kill-exited-leader-v1-1-c71ad94c20cc@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
- <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
- <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org> <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
- <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
- <aqgMCIOFi0dKx_6L@fedora> <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
- <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
- <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
- <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org> <20261014195354.GA371161@cmpxchg.org>
- <CAKEwX=Mwc+D+AN-B5T7p=80fqCDijdsiJjd6aN_3YMrEQjyvwQ@mail.gmail.com> <a24ca7b8-8b42-43f3-ad72-afe62f97f76c@kernel.org>
-In-Reply-To: <a24ca7b8-8b42-43f3-ad72-afe62f97f76c@kernel.org>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Mon, 19 Oct 2026 05:35:11 -0700
-X-Gm-Features: AclHuK-Ym9EzJ2CIcu1okawbU1UiB-xvQtvgaUvkzS7VoDFrSu5HhWBluHPj1QE
-Message-ID: <CAKEwX=OdbOrFbdihntP3rmcWJUyM1UpYa5n+pYjt_feMQwx8yA@mail.gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
-	Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
-	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261018-cgroup-kill-exited-leader-v1-1-c71ad94c20cc@gmail.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Mon, Oct 19, 2026 at 5:28=E2=80=AFAM David Hildenbrand (Arm)
-<david@kernel.org> wrote:
+On 10/18, Kir Kolyshkin wrote:
 >
-> On 10/19/26 14:24, Nhat Pham wrote:
+> cgroup.kill does not work in case a process' thread group leader is gone
+> but other threads are still running. This is because __cgroup_kill()
+> only walks the thread group leaders and sends SIGKILL to each of them
+> with send_sig(), which uses PIDTYPE_PID:
 >
-> I'm traveling this week, so it's a bit tricky. I cannot make Thursday mor=
-ning.
+> 1. The exited leader is still listed by CSS_TASK_ITER_PROCS as long as
+>    the process has live threads, but a signal directed at a single
+>    exiting task never takes effect: complete_signal() does not look for
+>    another thread to deliver it to, and __send_signal_locked() now drops
+>    it altogether.  The process keeps running.
 >
-> On Thursday I'll be traveling back from Cambridge. But hang on.
->
-> My plan lands on Oct 22, 11:10 PM. I should be home around Friday 1.30am =
-- 2am.
->
-> I could just naturally join that day.
->
-> So one day later would work for me.
+> 2. The live threads of such a process can be migrated to another cgroup
+>    by writing any of their IDs to cgroup.procs, while the exited leader
+>    stays behind.  The destination cgroup has no thread group leader to
+>    iterate, so writing to its cgroup.kill does nothing at all.
 
-Would that be too rushed for you? :)
+...
 
-For everyone's convenience, this would be the time slot:
+> Case 1 can be fixed by using do_send_sig_info(..., PIDTYPE_TGID) instead
+> of send_sig(), so that the signal is taken by a live thread even if the
+> task found by the iterator is exiting. Note it was pointed out by Eric
+> in [1] while reviewing v2 of cgroup.kill patchset, and v3 was meant to
+> switch to it, but the change was only made in cgroup_post_fork(),
+> leaving __cgroup_kill() with send_sig().
+>
+> Case 2 can only be fixed by iterating over all threads, so this is what
+> the fix also does. Once a thread group is being killed, its other
+> threads are skipped since they already have a fatal signal pending.
 
-PDT: Thu Oct 22, 5:00 PM
-EDT: Thu Oct 22, 8:00 PM
-Europe: Fri Oct 23, 2:00 AM
-China: Fri Oct 23, 8:00 AM
+...
+
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -4289,7 +4289,7 @@ static void __cgroup_kill(struct cgroup *cgrp)
+>  	cgrp->kill_seq++;
+>  	spin_unlock_irq(&css_set_lock);
+>
+> -	css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED, &it);
+> +	css_task_iter_start(&cgrp->self, CSS_TASK_ITER_THREADED, &it);
+
+I guess this change alone is enough to fix both problems?
+
+But even if I am right,
+
+> @@ -4299,7 +4299,7 @@ static void __cgroup_kill(struct cgroup *cgrp)
+>  		if (__fatal_signal_pending(task))
+>  			continue;
+>
+> -		send_sig(SIGKILL, task, 0);
+> +		do_send_sig_info(SIGKILL, SEND_SIG_NOINFO, task, PIDTYPE_TGID);
+
+I agree that do_send_sig_info(PIDTYPE_TGID) makes more sense.
+
+Acked-by: Oleg Nesterov <oleg@redhat.com>
+
+
+Either way, I am not sure about SEND_SIG_NOINFO. Perhaps __cgroup_kill()
+should use SEND_SIG_PRIV? I dunno.
+
+Oleg.
+
