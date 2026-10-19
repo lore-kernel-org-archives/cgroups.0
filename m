@@ -1,98 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792426904;
-	b=BHbQBiH0FJwTz3MzWSSEV0FkmhIUHiPJB/orkwgacIgaTjhPhQh96VmIromCXWFIFrCI
-	 itspsR6ZAtPPqaWChn1fhkEgxic2yu9C2egkxdhwKpjwYbKkPblNlnXOkFKt/406cgGMX
-	 DiXek3NAnarFj7SdaeLvUnA0aN7PWli0rqxNLYdKsjvesAAjFddNnWKIIqXJrBn3gOIDw
-	 ikZekyzgJnK2SSCyxrOMr6Vu8FCr/RfRiYOhot2aU0QxKyQNkB7DrlHnyxYnQk6MSBDma
-	 CaDm0mnXkEOL1igo4ii9WAA+2W2Um4zinqJYYLdNi4CePGyCQ7G/JM/zVgsWL4vm29w==
+	t=1792427490;
+	b=ZQzdlicqZN5k0zRpHlduplxjGpEbEi5MNJy/uiVO19mAbyEZ3SF9/ReIcNCwbZgifbYv
+	 N8O7OZmJOA4uMoPKVcOlcZYai7SP9Tq44ZGThNVCCJ7tqdzNMgork1C9PzcxunuxOtRCI
+	 BOqa/04edfPwkfTfx/aIzbPh8liTeM8WLsByp8rt9SLoo5oU+CubOcurSbN0sOTpuUHPy
+	 WeQ5xy6bneWKeVMV9KgjTxCVkJXu2Vb4KX/nr3rSWw1Y7Tw9hNoKXr7EZkCYvnCzwRhNE
+	 d30++q4FUPAR+/+RwTdNWXPVkjNvjTUgHzcOxrBkOlI+h3c5xgovBiZiGjQ9VWFgLWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792426904;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=AXALzYiDlqNLgw2O3tAb14ubqs9EH5rpsxDv02Io52g=;
-	b=Xo+Paq2oZFoDwQx6w75C33TxYW0i9wIsopLXhD2C1t0/wIepXTIlO9KDd6y0rjxjSzZH
-	 y4zJFPECC8v2Bg2v3m+Snfcgn2b4BB6KD0vkkq4ZoWjjGYUnPD5tNgHqBWqUyqokTagxg
-	 hX/ebQzWyu86yDDkSsChtEttEIMIUH7RLAtUmEkT0YpXa2P7d9iyETSQ2waDCUn4IF98b
-	 d5FUdxIC7ItYNjNz2nomdPEOuMn8ZfI6/k1MrleqNIxLUiq0ej9cVAh3I4Pk5KEJfuu0R
-	 8zfJgxmhoPwY/e5JzjZwTgBaTpih43WEeuYIU30Z3/ROQ3LRZ0QVjr5KS0Btqd3J/Vw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792427490;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject;
+	bh=BQkPCxRYiTAiL9B7JuC/MlADAPxMOkFS/2yakF4ZChw=;
+	b=GI2Btkjb8vIqj/t0WajZ8mQuE79BdPy7U1u8ucNAJpbcJQY//KrihnLQi/lp16Z4O+y7
+	 K9VOCuyml4cxn9MpaTLE4KD2wdZP4tqGLZSCrMTpkuOu98yS0iATbwoR9NMY4xwCqqgDs
+	 +hDgLIs7j0YMEh42KP6+VjIw/GF4Lqty7V2hHCdYmVHWvkNihfOWIsDe5srWZVs3xa2VP
+	 Lr7WbSxhJaxHY+g7vPjxE7eh46bPg9GekZwBZO6jqRvbRDAlUptrGQOrmz6m7t52agPE3
+	 a1gfbLRMQYXgXKqfKMWhYOVF0bt/3bk0+VIDIIG7ZJveKUTIYPyq3mM3iS7v9trts5w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=gourry.net;
-	spf=pass smtp.mailfrom=gourry.net;
-	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=H5phoMDY;
-	arc=none smtp.remote-ip=209.85.222.172
-Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ic3lOEBK;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3C0F606A31B
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 16:21:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E3C0F606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3339D606A31B;
+	Mon, 19 Oct 2026 16:31:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=H5phoMDY
-Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-93ead211f14so257989385a.1
-        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 09:21:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1792426903; x=1793031703; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=AXALzYiDlqNLgw2O3tAb14ubqs9EH5rpsxDv02Io52g=;
-        b=H5phoMDYTzRbKT2WQq6v53aaHIsZvm1oxzEgECPunKwtKkbsSkCE4MZxkn3xcEJxR0
-         fiG9OVJ7vkjQVXNajJY0aqT84jQrovr8c6S0wljKhLKPpFPb0SyY0/vyWAGnU8G5moAx
-         8fvA/aKfZSXKPjrxjGyt91Wl+Gu7f33xJtLuX2g/ZpAMYM0JxV5M0346QUsIK67D7i5K
-         vnUOI7rghz/gEcqY2A0ZS8nVFU9w3I85sbau0/gmmL4PH4CTRs8XX/nc2A5uTm6Q8Ux7
-         VNWBxxiDeYkDZjlZIt7Aap2r7budsQqPO9TLhv4BjSi/UeAk2pYZ/cSEMPZBa0r5V/Wd
-         XsEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792426903; x=1793031703;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=AXALzYiDlqNLgw2O3tAb14ubqs9EH5rpsxDv02Io52g=;
-        b=KxLu8If7eCswRsLGozoJBYqrteWj6T1KdEF1aLl+/rlfjtKkSy9hzgynkWSbFfmaHj
-         QZbgRGYK318aXzV+oy8k38+OdPVGgEH332RVMsFGXEHCuBzFez4liLERaOuKfcCxIa+4
-         vqTel1lbEPy0L+1f9LNq2s+Aq/UumaRXe4tjCOpy+mLuR6IrnljucbnGbVV6S7yOPyat
-         w8h8F0l6hB+r1kk6o2Lv0JsZuAm3QVNvkuC8wcSBKjMeRoLJEvs97H4bNlKGoYUU3xkb
-         0TNyCGix5PWd5rAyiTH+IIFYJP91g5/kY0FKk2aiEN01YNCawl4mWOZfXP+QOVauL3e9
-         hNjA==
-X-Forwarded-Encrypted: i=1; AKwUvBxSWWuZBTzn4DdVRcIO0JWjGivYWr/Y/MS2GMRCkOPpfDBtAQYJnJFa4F8Qo9Cf/ueg4fBoAFTo@vger.kernel.org
-X-Gm-Message-State: AFq9FYLjgwF63yBfQMAKCMvKS7KWyOKKEFsZ6hK2f4Ss6LK6rnYk1DY+
-	BQwi/B4TjbVP4Az9WfEaZNIcl4d+MIoQj3/mmYZuPxMOpQ9GNVyt7Oro2amtXtlU/gc=
-X-Gm-Gg: AYBFou2m8DmXwUklvQ4nxVu+LBGSBaO8yO71nNAqI48FJse6wtL+6bNScz/Z9lA+0Ep
-	bPJmqj7VOfTldmtW+jNsknDZX69o6iLF+99ACZo59FYlaPkiEK6aETaIJvgoUTcGsxzFhKuXuHS
-	xE3iTvzRxEZKhvaDpUGRQn/e3Z8h4sYWbMmVRFSL1X+DZjMkALciqtDdsx4H8OzOf4dXIHHoyZk
-	ELVmztvPatd3PjacHbMz3bKbCyvMt35iVlU5A7RdX1FsVIMAwUgS1UznywjE4D/OwDKQFSL8SZx
-	qvRI5PXQt7PysBM0FKAr7IIJQ6VU9COxykLbUj9tJ6pugMYdrQGJBeA2DUhLjQFT1MDMHGmV6Pj
-	gM64FPCJFvG+z6EkrXSm21780lsO9El0qNr83EOglkAW3gocSgnk1XLSZ284yn9xU3l4Yr0Z04y
-	PQNL2M/RJAmr1slaA+FahyC0zYTLCrZ+khzMV/aPHhc+ECsy4AFCTcir3AdzYo+TxvFDAnUgYaH
-	TSAtH7On2IwQZ2xNLyCglZa7V/XQ2x+1Uvx76zjlUs2BrCD5MR+tP7FCQCIGtfrK2RAlxI=
-X-Received: by 2002:a05:620a:6cc4:b0:93f:2b65:593b with SMTP id af79cd13be357-93f2b655ed6mr1165985985a.38.1792426902714;
-        Mon, 19 Oct 2026 09:21:42 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F.lan (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91bcba4b9e1sm102394026d6.14.2026.10.19.09.21.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Oct 2026 09:21:42 -0700 (PDT)
-From: "Gregory Price (Meta)" <gourry@gourry.net>
-To: linux-mm@kvack.org,
-	cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	kernel-team@meta.com,
-	longman@redhat.com,
-	ridong.chen@linux.dev,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	akpm@linux-foundation.org,
-	mgorman@suse.de,
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Subject: [PATCH v2] cgroup/cpuset: use mems_allowed_seq when checking a policy nodemask
-Date: Mon, 19 Oct 2026 12:21:38 -0400
-Message-ID: <20261019162138.3271947-1-gourry@gourry.net>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ic3lOEBK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90BDF1F000C4;
+	Mon, 19 Oct 2026 16:31:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792427489;
+	bh=BQkPCxRYiTAiL9B7JuC/MlADAPxMOkFS/2yakF4ZChw=;
+	h=Date:From:To:Cc:Subject;
+	b=ic3lOEBKFW8+8x9aXXtK2W8QGxpo8anNSSF6YEir9Q0JYW6txe0XRw+cwYf5l4S4E
+	 84WB0LafN1mPVRCVntKvIzFBdlpPHqkqYRaouxvIUoqlHSl/SVJHEO0C+RMv5iSkCr
+	 fSFChdvaB+QkNcWcyxsr21XLYNQRpRcfHw2ppmivyqA1nonyMoVTy/5z5KnoPHiBJR
+	 cQ2UiMSJ/QU5cgQT1PyG6d5WLOGNPUbeFfmh2wMImxGmTNFvz0e77wXXg+tHpac5O5
+	 PH4cFCkWEow+4ZM4GKTOgVPQWtwluIWi4tCpt8o1Jq2IJDfWxc6ncDojwJWvbA8mDo
+	 HJmMDnVy2Nf4Q==
+Date: Mon, 19 Oct 2026 06:31:28 -1000
+Message-ID: <410cdfd35a22cb6eb13ea6324bad7eda@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>,
+ Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [GIT PULL] cgroup: Changes for v7.4
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -101,68 +54,128 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-A cpuset update changes the task's mems_allowed and rebinds its
-mempolicy in separate steps under mems_allowed_seq, but the check
-reads both without it.  This can cause a spurious numa placement
-miss under some cpuset/mempolicy combinations.
+Hello,
 
-A reader that loads one mask before the update and the other after
-it can see a spurious empty intersection and drop the nodemask.
+The following changes since commit b8eb5fd5bdb4c03758b056c70e5e1d962ca89757:
 
-For example, a task with cpuset.mems={0} and MPOL_BIND={0}.  If the
-cpuset moves to mems={1,2}, the policy is rebound to {1}.
+  cgroup/cpuset: Call is_in_v2_mode() after acquiring cpuset_mutex in cpuset_handle_hotplug() (2026-10-06 06:36:51 -1000)
 
-The allocator can race and compare the old mems_allowed {0} against
-the new policy {1} - which will result in a dropped nodemask and a
-misplaced allocation on node 2.
+are available in the Git repository at:
 
-Simply retry the intersection until mems_allowed_seq is stable.
+  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.4
 
-This covers the task policy, which is rebound under mems_allowed_seq.
-VMA policies are rebound afterwards by mpol_rebind_mm(), outside
-mems_allowed_seq, and are not covered by this change.
+for you to fetch changes up to 1850c669516cb8568150937497a9a16a7bfa1582:
 
-Fixes: cc9a6c877661 ("cpuset: mm: reduce large amounts of memory barrier related damage v3")
-Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
-Reviewed-by: Waiman Long <longman@redhat.com>
-Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
----
-v2: there is no real update here, i'm breaking it off of the page_alloc
-    series so the page_alloc fixes backport collectively cleaner.
+  selftests/cgroup: test pids.events notification (2026-10-16 09:52:06 -1000)
 
- kernel/cgroup/cpuset.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+----------------------------------------------------------------
+cgroup: Changes for v7.4
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 3f52717c19654..8ee239d5c6b48 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -4354,10 +4354,21 @@ nodemask_t cpuset_mems_allowed(struct task_struct *tsk)
-  * @nodemask: the nodemask to be checked
-  *
-  * Are any of the nodes in the nodemask allowed in current->mems_allowed?
-+ *
-+ * A cpuset update rebinds the task's mempolicy and changes mems_allowed in
-+ * separate steps, so retry if an update raced with the check.
-  */
- int cpuset_nodemask_valid_mems_allowed(const nodemask_t *nodemask)
- {
--	return nodes_intersects(*nodemask, current->mems_allowed);
-+	unsigned int seq;
-+	int ret;
-+
-+	do {
-+		seq = read_mems_allowed_begin();
-+		ret = nodes_intersects(*nodemask, current->mems_allowed);
-+	} while (read_mems_allowed_retry(seq));
-+
-+	return ret;
- }
- 
- /*
+- A write to cgroup.subtree_control or cgroup.type could hang in D state for
+  as long as a task pinning a dying controller took to exit, as syzbot
+  reported. The wait is now interruptible.
+
+- cpuset: the deadline bandwidth check ran on cpusets that weren't valid
+  partition roots, failing cpuset writes with -EBUSY while deadline tasks
+  existed. The CPU count the fair class takes from cpuset assumed a shared
+  hierarchy that cgroup1 may not have.
+
+- Finding a cgroup's effective controller state no longer walks up the
+  hierarchy, for per-I/O users such as nvmet. io.stat reads of cgroups
+  without block devices skip the stat flush.
+
+- cpuset v1-only code moved to the v1 file and the exclusive flag dropped
+  from v2, with documentation corrections for partition roots and
+  boot-isolated CPUs.
+
+- Dead cgroups fail writes with -ENODEV consistently, plus small cleanups.
+
+- Selftest fixes, most visibly for tests that skipped on machines with many
+  mounts, and a new pids.events notification test.
+
+----------------------------------------------------------------
+Guopeng Zhang (3):
+      cgroup/cpuset: Remove redundant sched domain rebuild from update_prstate()
+      docs: cgroup-v2: Describe boot-isolated CPUs in cpuset.cpus.isolated
+      docs: cgroup-v2: Describe effective CPUs of partition roots
+
+Karl Mehltretter (1):
+      cgroup/dmem: Fix eviction helper reference in dmem_cgroup_try_charge()
+
+Konstantin Khorenko (2):
+      selftests: cgroup: skip test_memcg_sock under cgroup.memory=nosocket
+      selftests: cgroup: make test_memcg_sock check flushed sock stats
+
+Peng Fan (1):
+      cgroup: use assign_bit() where applicable
+
+Peng Yu (1):
+      cgroup: Track the effective css in each cgroup
+
+Ren Tamura (2):
+      selftests: cgroup: Enable the cpu controller in test_cpu
+      selftests: cgroup: Preserve command arguments in with_stress.sh
+
+Ridong Chen (1):
+      cgroup/cpuset: Move cpuset_update_flag() to cpuset-v1.c
+
+Sahaj Chaudhari (1):
+      selftests/cgroup: test pids.events notification
+
+Sasha Levin (2):
+      selftests: memcg: Don't close an uninitialized fd
+      selftests/cgroup: Free the paths returned by cg_control()
+
+Sebastian Andrzej Siewior (2):
+      cgroup: Move cgrp_dead_ task+iwork into its own struct
+      cgroup: Use %p for pointer formatting
+
+Shaojie Sun (3):
+      cgroup: namespace: Drop BUG_ON() in copy_cgroup_ns()
+      selftests/cgroup: read the entire file in read_text()
+      selftests/cgroup: don't crash on a truncated mount entry in cg_find_root()
+
+Tejun Heo (4):
+      cgroup: Return -ENODEV consistently for a dead cgroup
+      cgroup: Return ERR_PTR from cgroup_kn_lock_live()
+      cgroup: Make the offline drain interruptible
+      cgroup: Merge branch 'for-7.3-fixes' into for-7.4
+
+Usama Arif (1):
+      blk-cgroup: skip rstat flush for cgroups without blkgs
+
+Vishal Chourasia (1):
+      selftests/cgroup: add settings file with a longer timeout
+
+Waiman Long (3):
+      cgroup/cpuset: Run SCHED_DEADLINE shrink test on valid partition root only
+      cgroup/cpuset: Remove CS_CPU_EXCLUSIVE handling code from v2
+      cgroup/cpuset: Use cpuset_v2() in cpuset_num_cpus()
+
+ Documentation/admin-guide/cgroup-v2.rst            |  62 +++++--
+ block/blk-cgroup.c                                 |  11 +-
+ include/linux/cgroup-defs.h                        |   8 +
+ kernel/cgroup/cgroup-internal.h                    |   2 +-
+ kernel/cgroup/cgroup-v1.c                          |  26 ++-
+ kernel/cgroup/cgroup.c                             | 181 +++++++++++++--------
+ kernel/cgroup/cpuset-internal.h                    |   8 +-
+ kernel/cgroup/cpuset-v1.c                          |  59 ++++++-
+ kernel/cgroup/cpuset.c                             | 145 ++---------------
+ kernel/cgroup/debug.c                              |  18 +-
+ kernel/cgroup/dmem.c                               |   4 +-
+ kernel/cgroup/freezer.c                            |   5 +-
+ kernel/cgroup/namespace.c                          |   2 -
+ tools/testing/selftests/cgroup/lib/cgroup_util.c   |  58 ++++++-
+ .../selftests/cgroup/lib/include/cgroup_util.h     |   3 +
+ tools/testing/selftests/cgroup/settings            |   1 +
+ tools/testing/selftests/cgroup/test_cpu.c          |   5 +-
+ tools/testing/selftests/cgroup/test_kmem.c         |   2 +-
+ tools/testing/selftests/cgroup/test_memcontrol.c   |  81 ++++++---
+ tools/testing/selftests/cgroup/test_pids.c         |  73 +++++++++
+ tools/testing/selftests/cgroup/with_stress.sh      |   2 +-
+ 21 files changed, 471 insertions(+), 285 deletions(-)
+ create mode 100644 tools/testing/selftests/cgroup/settings
+
 -- 
-2.53.0-Meta
-
+tejun
