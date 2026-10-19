@@ -1,64 +1,64 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A9713C1D70
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 06:43:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16F939099C
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 06:43:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792392188; cv=none; b=cLmT7NbysfzRVih2RSiWoGjl1zR9+OlW8rmX5jQODt86NFC1W/zPGEjWZbX7hs0F+YzpBdTea5E+xAr7e1TfnO2UpQh0SyjsG+wmeWb2S0UD3T2ZXs0O/WvoLUaBSTXaQMEbIFf412YW/6RgbnmPrsFTdAwBbz4eEVyJPU+vx/Y=
+	t=1792392199; cv=none; b=JK2ZoVhFue8S8mdATeDRIXz+0dnGbJk8E8pO/lHy3nI+5Fa4C99ykhXRKGEsaHuDWhcNTxcibR5veBwRDoPt34gIluOSCrzGUKcobyN0XhRwX89NkObrg7K1TrpcdV4yaxVe+U9ELxugMvvtSMSTjF4zDCpHhPyxJN9CWt8FUvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792392188; c=relaxed/simple;
-	bh=aYn90Ed2Lj0BvJmtQoAqXFgzzqrh4al3KHmPoet1gxA=;
+	s=arc-20240116; t=1792392199; c=relaxed/simple;
+	bh=Jyv26P4i3B+p2N8OOcNVI7BI6tJbf0FNV4OMJgTFHJs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=opaGjwa+8/JzE+mA+Q91UI4+t4WoCPGIxLePFSavVlJMtK/JgZOfckleuAsXOjLMKcrR14UAr7V3AsNzSX5DOMNJZKI2ELnxbeGXpzMfXBr2Kxkxz3c7Yq4Zvr9zb2j5dTQmfDqiC7uRmQ8lMu5/iMA8FdQawxNVZXNxSanF5Dc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dZpasU/a; arc=none smtp.client-ip=209.85.210.179
+	 MIME-Version; b=LnRS+Tdf7ve76GD0tjuG9BJsHbgQCsGqRjJEExjQPLTlyWWkMxSincYtaMq1qD3TAC9yrbtZ2AnuoGu6v+RmnNrmPgI4/exGWgnXnYESHr2hbYxJtdPCkk0DdFff3Ij6eQScXoqrlFJfN+R7NNNgUve6Fw6ALM3eB7G50YKYSUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rHCgcapA; arc=none smtp.client-ip=209.85.216.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dZpasU/a"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-8a07078200fso106824b3a.2
-        for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 23:43:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rHCgcapA"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-3ace9e6e1a5so1161298a91.0
+        for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 23:43:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792392186; x=1792996986; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792392197; x=1792996997; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=yAD4QKN4phi8LftSY4gXSpqzCGJT6u7XrfX0ossVdRU=;
-        b=dZpasU/a+MzFNWcaL/Zc7xzr3P9Qee+mOhzxF47ieakbY5QuNtM+N7gq6S6N241hJM
-         9QQIjKvY7HJmn6m15xt404q5b5UusREe1eBFqcua4hJUgKpGIMXfn5ajYUsAuwsVMhTP
-         zKGenwEhjdOKpJKfLtCWBW8xQ2am8o8F5BXOToPCazgYRGaCb/8tJR8noaGrCcp2CLMX
-         4LilnYRkuKY6HcE3A6eM4ajINGQFSj2LagQv5sdblzfwaE9v+XcBbp63KFXUW2n9386v
-         admqR/I+z0DgJqRoXJiWorra6dfJ19ze3ji/PK7Bi8Q5qnzZGUSkoxoo8dIY8SJaQw88
-         vF6Q==
+        bh=QKAdquM1bwNLsWoLZwLO17OYT9kkSEaiRwexFyrn8po=;
+        b=rHCgcapAAlj42YTUDh7kbi7Gu3sAY2bJcSeHTuwTeBLSt+lOVK/LGe1J8vNAcBdGTt
+         7HRNUKbu+Nanv5HpTmgO1aBjUzP0uRreIS8ohX8RKlyw1weYq8sOi29XsFPh68MTRcgC
+         QsuNvFt0TcsiWY8DE6knec5xDlmc7ZqOSbasyxk8b3fBtTQZwuh+40EfHDQUxc1Ux49Z
+         5Es1CzFEHBluuUcbcJel0pua/ZIPVv2pTswX6YOU0/xgf6WUW1pLdaoTfwATnUqFLKbH
+         ePlQtT+NmQjo4NYV8/T7PbZhl6y5OwmIfcGcnNaU9E9jFOR5RIGQKsoL9RrJh7vhkBtc
+         UeAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792392186; x=1792996986;
+        d=1e100.net; s=20260707; t=1792392197; x=1792996997;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=yAD4QKN4phi8LftSY4gXSpqzCGJT6u7XrfX0ossVdRU=;
-        b=00WYPJcZeWMPC7GAKiH68vWuiouI/jdla3tuTGapeDMZS4Ub9Vp1MgNgJhOLhLfE6Q
-         kVGvKKhbxziWmrFmWbPvqoxmTrzoIT/LuX+pQt/C98fdr9RurthZfGoCPCGk7MMo4kz/
-         iyXfiWZyT3RcfdUkL9fi6TJ05pY5hU/HKY6XjcX4hQANtwG1JI+e/xD6vwk+z3/960u9
-         kvmOZZVA0AGQmyMErlVxuTb1r/N0yZhWUYUQtAUjtXKSHG5ZYCzW3/LWNwQrq3vMSTq+
-         0hPrYdd66VZfuhlWQ/EQqLgmLWK/NGiegYkC2Nu1R2x4+PiKcu8bnSP6+ek3/5fnXQcr
-         GyFA==
-X-Forwarded-Encrypted: i=1; AKwUvBxdRweXwKnUJT/6BHrocA2N6DVzVRoLZVE59Zm4kOwMfzHr/YRboW7CBoPJUnA/uJJNUa3IPDYo@vger.kernel.org
-X-Gm-Message-State: AFq9FYINmrMDtOi8bY9Qo/LhrsgkbDKC3T8Wzd3QS7BJcBUskefGg0Po
-	Dy3EpOS/Zz+8HnnxqkIdy1otm0W5kLSGsL0MO/nhWHUyVGFPkbo72xXY
-X-Gm-Gg: AYBFou0ysW/PIcg7rPonP92qbbpMOoDqPoG89+mDhD8IaarhdYwIA4Te5OfGu8HwdbB
-	6/jFAzgwVynK6zfN57hUBRGlDx5tb/IwES8vXVWShmr8mq7toX+P4V0gVfPmmnqSP87G04jA7D5
-	C6PS8SUbNCWJC2GqG9+ZuyzRFlxVSLVjcK4fBFcCh2tZsfojU8V375w6wjo2IYy2ZzqzX+F+PsA
-	+xJxWR5qtiUv3c265oXCRYI2z2PP8RJw7Je/ZvcBYI7Ulx4O4llExZxX2Qia2+oo4FK8dLEdMPa
-	AjbtpqvwN+D/jh4rZH/x+3/50/IsTY3puoqLu0hZsVcnoqjKNdkX9WZC/8GUgJGIeNw4bvNQB0a
-	1j3QKvUburQ9xBEFR24gX7wBIzNvUjJlIVQtRTuRyOUuqpRXUMa1KG4k2+PkQO56Tngjico4j4F
-	OAsjIBoVA38mtP9c0kq3Yn2dCTBzA8MozyfkRn+vmufXZCpvhWa6ISHdfABD09jPwwC2DyJDxB5
-	su09L3vhBaJvfShx8FzwrHM4bzYqQXAGcKIHLVjGztfhb7b9qkLw802fjYG+DNUmZKSi0o=
-X-Received: by 2002:a05:6a21:3a84:b0:3e1:1e99:9463 with SMTP id adf61e73a8af0-3e225f9c852mr5047641637.38.1792392185455;
-        Sun, 18 Oct 2026 23:43:05 -0700 (PDT)
+        bh=QKAdquM1bwNLsWoLZwLO17OYT9kkSEaiRwexFyrn8po=;
+        b=Qnhz1q5wiO9W3+OfewaHwmg21s58WqppbY3F55cLD9BV1AkgbZ9tt1565gyu3sWFhN
+         IMbR0tOjt/9nabkvvU0ODEXTtoSvhCtJQpTXgafxRtJ2apX7pvg9NNBcX4koT03LNrsK
+         +mEFa0G+UT6p3Dc4OGv0EDPflHX6syGQQLugdIMoLkks7UGblFfwGMnuIsBj4WMLvDHo
+         hwZJq7JX1kc11xA3+H7pbfSFWdY3EK8S1cp3T8qLPAu8ljWbkAjCPl8uSxGqRKEMr7Br
+         tXA4LPWMeymoE9+5qkXnaPGP0/mw/+o6wGbY+65BkOAWiSpghQDAeoH2bTV5pOMgmV5c
+         aoNg==
+X-Forwarded-Encrypted: i=1; AKwUvBy/SWiYO0XvATY44LuCcW0qyA4/FykxwTh+seQY/W2XDZ+sJ0hqsSNGOLp6OXOvkF5J4vpuKclp@vger.kernel.org
+X-Gm-Message-State: AFq9FYIg3+nt3CO65rX8+4Sk8IQxMLmNCCtZbrHgviRVSDff21oCfR6G
+	XQagt+TD19ITITSCg3mlYUvyh3hqqmMCcM8kGDHY5wUb8vTrhqmRglCi
+X-Gm-Gg: AYBFou2BdMQd9dCHvPtMQxWXYeKAQbNWUSugchYbB4U5tblstSuM44E+sG79mCawexG
+	ivEU0uvKopiktGnZum5/wFOSFlPQZfbtTg6P51t2WJgSBop5yWGm4/YrTMsn18AJF4n3iZrjoC5
+	F8/o9aTWj5xTUxrGNeYSbWI23zEOBNeLbLKeWXCk374AWgsvLEK605t81zVPt/45grEoMATiG2l
+	xSfJ+mArsotqddL8K36yLzBV8cllksPh8T0fqKJCIvMOWZ0Mk/k3r2mmCtlw4Vej2e/l85q0zvp
+	S5EEGvO6Q5grjk4xHZyxqqvJOtNjFf4wnGfKIKQV5X/zl0CfFAzoXUf1VPv7beeuZ+KsF8jIoKG
+	PLs6ixKRxq5iGEvfYDand/8daLbN66Lu9pekVTmNC7KFHv+oZIDs86Hs4LIGoZ4q83MkxKWpWGo
+	rocjs2Iwt4rdSw+zFItiLPx7x50c+ZyTFIMVg2IkZ4h2ciVeTpIh2fhM5AfWyY0jl0DpPVXyi5P
+	7pUoklLSBduydkhlv6ubLe9z4LS6Z55XE16AqRpM4gC73mBWM/zyxuPRr+2MqI9J1C1qw==
+X-Received: by 2002:a17:90b:3146:b0:3a4:9416:a2f8 with SMTP id 98e67ed59e1d1-3acbb879edcmr6758743a91.9.1792392196871;
+        Sun, 18 Oct 2026 23:43:16 -0700 (PDT)
 Received: from localhost.localdomain ([240e:46d:2100:3fed:6938:3f14:63eb:c479])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd654a3a592sm3688960a12.30.2026.10.18.23.42.56
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd654a3a592sm3688960a12.30.2026.10.18.23.43.05
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 18 Oct 2026 23:43:04 -0700 (PDT)
+        Sun, 18 Oct 2026 23:43:16 -0700 (PDT)
 From: Yafang Shao <laoar.shao@gmail.com>
 To: ast@kernel.org,
 	daniel@iogearbox.net,
@@ -86,9 +86,9 @@ Cc: bpf@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Yafang Shao <laoar.shao@gmail.com>
-Subject: [RFC PATCH v3 bpf-next 4/5] sched: add BPF-based per-cgroup NUMA balancing mode selection
-Date: Mon, 19 Oct 2026 14:41:56 +0800
-Message-ID: <20261019064157.29885-5-laoar.shao@gmail.com>
+Subject: [RFC PATCH v3 bpf-next 5/5] selftests/bpf: add tests for the numab kfuncs
+Date: Mon, 19 Oct 2026 14:41:57 +0800
+Message-ID: <20261019064157.29885-6-laoar.shao@gmail.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20261019064157.29885-1-laoar.shao@gmail.com>
 References: <20261019064157.29885-1-laoar.shao@gmail.com>
@@ -100,616 +100,294 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Global NUMA balancing offers no per-workload choice: kernel.numa_balancing
-is a single system-wide sysctl, where zero disables the machinery and the
-set bits select normal balancing, memory tiering, or both for every
-workload alike. However, a latency-sensitive service wants NUMA balancing
-disabled, while a batch service wants its PMEM-resident memory promoted
-when hot without paying for scheduler-driven migration. No single global
-setting serves both.
+Exercise the bpf_numab_set_mode() and bpf_numab_get_mode() kfuncs
+through BPF_PROG_TYPE_SYSCALL programs: the set/get roundtrip, the
+mode domain (NUMAB_FOLLOW_SYSTEM and the NUMA_BALANCING_* bitmasks
+accepted, anything else rejected with -EINVAL), unknown cgroup ids
+rejected with -ENOENT, and the hierarchy combination the ancestor walk
+produces (inheritance, OR-ing, and an opt-out winning over every
+request in the chain).
 
-Add a per-cgroup request. cgroup::numab_mode stores the mode a cgroup asks
-for: NUMAB_FOLLOW_SYSTEM (-1) defers to the global sysctl state, anything
-else is a NUMA_BALANCING_* bitmask. It is initialized to -1 at cgroup
-creation since kzalloc's 0 would read as an explicit opt-out. Two kfuncs
-manage it: bpf_numab_set_mode() writes the request, bpf_numab_get_mode()
-reads the combined request back.
-
-The hot paths combine the requests of the matching cgroup and of every
-ancestor: task callsites walk the task's cgroup chain, folio callsites walk
-the chain of the memcg the folio is charged to, so a memory answer is keyed
-on the folio's owner rather than on whoever happens to touch it. A kswapd
-or demotion pass decides the same way the fault path does. An opt-out
-wins: a DISABLED request anywhere in the chain opts the cgroup's tasks
-out entirely, and nothing below can re-enable it. Otherwise the
-requested bits OR together and the kernel reads them independently, the
-way kernel.numa_balancing reads them, so a combined NORMAL|TIERING
-engages both modes. A DISABLED request only speaks for tasks, never for
-the cgroup's memory. Demotion and the misplaced-migration fallback stay
-global, keyed on node-level reclaim state rather than on any cgroup's
-request. On the folio side the top-tier scanning exemption asks the
-placement question, so a NORMAL|TIERING request also feeds the
-placement statistics.
-
-The combination is deliberate: a nearest-request-wins rule would let
-any descendant re-enable machinery an ancestor turned off, and an
-opt-out is only a subtree-wide guarantee if it binds. Requests add
-instead, and the opt-out is what binds. The cost is that an ancestor
-cannot cap tiering short of a full opt-out: a descendant's TIERING
-request re-engages promotion for its own memory, and promotion is the
-mode that consumes the shared fast tier.
-
-The requests are combined at read time rather than propagated at write
-time. The walk costs a few loads up a chain a handful of levels deep, a new
-cgroup is correct by construction because it starts transparent and sees
-its ancestors' current state, and bpf_numab_get_mode() runs the same walk
-the kernel applies. Propagating a combined value down the subtree instead
-would need hooks on cgroup creation to stay coherent with concurrent sets,
-and cache a second field for the folio view, which reads opt-outs
-differently.
-
-The consult is behind the numab_cgroup_mode_set static key: while no cgroup
-overrides the global state, the hot paths pay one patched-out branch and
-nothing else. The readers run in atomic context (the scheduler tick,
-hinting faults, load balancing, hardirq included), so the walk takes no
-reference: rcu_read_lock() keeps the chain alive and the field is read
-with READ_ONCE(). The kfunc accounts the static key transitions under a
-mutex, and the cgroup free path drops the count of a request nobody
-cleared, so the key goes off again once the last request is gone.
-bpf_numab_set_mode() takes numab_mode_mutex and the jump label locks
-inside static_branch_inc()/static_branch_dec(), so it is marked
-KF_SLEEPABLE and only sleepable programs may call it.
-bpf_numab_get_mode() never sleeps, so it carries no flag.
-BPF_PROG_TYPE_SYSCALL programs run from user context, where sleeping is
-allowed, so they qualify.
-
-Suggested-by: Tejun Heo <tj@kernel.org>
+Assisted-by: LLM
 Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
 ---
- include/linux/cgroup-defs.h          |  10 ++
- include/linux/sched/numa_balancing.h | 118 +++++++++++++++-
- init/Kconfig                         |  20 +++
- kernel/cgroup/cgroup.c               |  14 ++
- kernel/sched/bpf_numab.c             | 195 +++++++++++++++++++++++++++
- kernel/sched/build_policy.c          |   4 +
- kernel/sched/fair.c                  |   4 +-
- mm/memory-tiers.c                    |   8 +-
- mm/mempolicy.c                       |   2 +-
- mm/migrate.c                         |   4 +-
- 10 files changed, 369 insertions(+), 10 deletions(-)
- create mode 100644 kernel/sched/bpf_numab.c
+ .../selftests/bpf/prog_tests/bpf_numab.c      | 227 ++++++++++++++++++
+ tools/testing/selftests/bpf/progs/bpf_numab.c |  32 +++
+ 2 files changed, 259 insertions(+)
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/bpf_numab.c
+ create mode 100644 tools/testing/selftests/bpf/progs/bpf_numab.c
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 3754d697854b..5e97806634e4 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -639,6 +639,16 @@ struct cgroup {
- #ifdef CONFIG_EXT_SUB_SCHED
- 	struct scx_sched __rcu *scx_sched;
- #endif
-+#ifdef CONFIG_BPF_NUMAB
-+	/*
-+	 * The NUMA balancing mode requested for this cgroup:
-+	 * NUMAB_FOLLOW_SYSTEM (-1) defers to the global sysctl state,
-+	 * anything else is a NUMA_BALANCING_* bitmask. Written by
-+	 * bpf_numab_set_mode() under numab_mode_mutex, read locklessly
-+	 * under RCU.
-+	 */
-+	int numab_mode;
-+#endif
- 
- 	/* All ancestors including self */
- 	union {
-diff --git a/include/linux/sched/numa_balancing.h b/include/linux/sched/numa_balancing.h
-index 36de57f7fb06..d63891a8be01 100644
---- a/include/linux/sched/numa_balancing.h
-+++ b/include/linux/sched/numa_balancing.h
-@@ -36,9 +36,51 @@ bool should_numa_migrate_memory(struct task_struct *p, struct folio *folio,
- 
- extern struct static_key_false sched_numa_balancing;
- 
--/* Whether NUMA balancing applies to @p. */
-+#ifdef CONFIG_BPF_NUMAB
-+/*
-+ * A cgroup can override the global NUMA balancing state for the tasks it
-+ * runs and the memory it owns: the bpf_numab_set_mode() kfunc stores a
-+ * requested mode in struct cgroup, and the readers below combine the
-+ * requests of the matching cgroup and of every ancestor.
-+ * numab_cgroup_mode_set stays off while no cgroup makes a request, so
-+ * the consult costs the hot paths nothing until then.
-+ */
-+extern struct static_key_false numab_cgroup_mode_set;
-+
-+/* The per-cgroup request domain: this, or a NUMA_BALANCING_* bitmask. */
-+#define NUMAB_FOLLOW_SYSTEM (-1)
-+
-+/*
-+ * The combined request for the chain of @p's cgroup:
-+ * NUMA_BALANCING_DISABLED when any cgroup in the chain opts out, the OR
-+ * of the requested bits otherwise, NUMAB_FOLLOW_SYSTEM when no cgroup
-+ * makes a request.
-+ */
-+int task_numab_mode(struct task_struct *p);
-+
-+/*
-+ * The combined request for the chain of the memcg @folio is charged to.
-+ * An opt-out never speaks for memory, so it is not part of the answer;
-+ * an uncharged folio makes no request.
-+ */
-+int folio_numab_mode(struct folio *folio);
-+#endif
-+
-+/*
-+ * Whether NUMA balancing applies to @p: the global sysctl state, possibly
-+ * overridden by the requests of @p's cgroup and of every ancestor.
-+ * A cgroup's request always takes priority over the system setting.
-+ */
- static inline bool task_numab_enabled(struct task_struct *p)
- {
-+#ifdef CONFIG_BPF_NUMAB
-+	if (static_branch_unlikely(&numab_cgroup_mode_set)) {
-+		int mode = task_numab_mode(p);
-+
-+		if (mode != NUMAB_FOLLOW_SYSTEM)
-+			return mode != NUMA_BALANCING_DISABLED;
-+	}
-+#endif
- 	return static_branch_likely(&sched_numa_balancing);
- }
- 
-@@ -53,6 +95,68 @@ static inline bool numab_in_normal_mode(void)
- {
- 	return sysctl_numa_balancing_mode & NUMA_BALANCING_NORMAL;
- }
-+
-+/*
-+ * Whether @p runs in tiering mode, i.e. whether faults on non-top-tier
-+ * memory still feed its NUMA statistics. The requests of the task's
-+ * cgroup and of every ancestor are combined; an opt-out wins, otherwise
-+ * the bits are read independently, as the sysctl reads them. Without
-+ * any request, the global sysctl decides.
-+ */
-+static inline bool task_numab_in_tiering_mode(struct task_struct *p)
-+{
-+#ifdef CONFIG_BPF_NUMAB
-+	if (static_branch_unlikely(&numab_cgroup_mode_set)) {
-+		int mode = task_numab_mode(p);
-+
-+		if (mode != NUMAB_FOLLOW_SYSTEM)
-+			return mode & NUMA_BALANCING_MEMORY_TIERING;
-+	}
-+#endif
-+	return numab_in_tiering_mode();
-+}
-+
-+/*
-+ * Whether @folio's memory participates in tiering, i.e. whether its
-+ * _last_cpupid carries an access time instead of a cpupid. The
-+ * requests of the owner cgroup and of every ancestor are combined.
-+ * DISABLED never speaks for memory (it is a task-side request), so only
-+ * NORMAL and TIERING are consulted here; without either, the global
-+ * sysctl decides.
-+ */
-+static inline bool folio_numab_in_tiering_mode(struct folio *folio)
-+{
-+#ifdef CONFIG_BPF_NUMAB
-+	if (static_branch_unlikely(&numab_cgroup_mode_set)) {
-+		int mode = folio_numab_mode(folio);
-+
-+		if (mode != NUMAB_FOLLOW_SYSTEM)
-+			return mode & NUMA_BALANCING_MEMORY_TIERING;
-+	}
-+#endif
-+	return numab_in_tiering_mode();
-+}
-+
-+/*
-+ * Whether @folio's owner asks for the normal mode, i.e. whether hinting
-+ * faults on its top-tier pages should still feed the scheduler's
-+ * placement statistics. The requests of the owner cgroup and of every
-+ * ancestor are combined; without any request, the global sysctl
-+ * decides. This is deliberately independent of tiering participation:
-+ * a folio can record access times and still keep its top-tier scanning.
-+ */
-+static inline bool folio_numab_in_normal_mode(struct folio *folio)
-+{
-+#ifdef CONFIG_BPF_NUMAB
-+	if (static_branch_unlikely(&numab_cgroup_mode_set)) {
-+		int mode = folio_numab_mode(folio);
-+
-+		if (mode != NUMAB_FOLLOW_SYSTEM)
-+			return mode & NUMA_BALANCING_NORMAL;
-+	}
-+#endif
-+	return numab_in_normal_mode();
-+}
- #else
- static inline void task_numa_fault(int last_node, int node, int pages,
- 				   int flags)
-@@ -85,6 +189,18 @@ static inline bool numab_in_normal_mode(void)
- {
- 	return false;
- }
-+static inline bool task_numab_in_tiering_mode(struct task_struct *p)
-+{
-+	return false;
-+}
-+static inline bool folio_numab_in_tiering_mode(struct folio *folio)
-+{
-+	return false;
-+}
-+static inline bool folio_numab_in_normal_mode(struct folio *folio)
-+{
-+	return false;
-+}
- #endif
- 
- #endif /* _LINUX_SCHED_NUMA_BALANCING_H */
-diff --git a/init/Kconfig b/init/Kconfig
-index ad592fdf29af..2db065d97eab 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1036,6 +1036,26 @@ config NUMA_BALANCING
- 
- 	  This system will be inactive on UMA systems.
- 
-+config BPF_NUMAB
-+	bool "Per-cgroup NUMA balancing mode selection"
-+	default y
-+	depends on NUMA_BALANCING && MEMCG && BPF_SYSCALL
-+	help
-+	  Allow BPF programs to select the NUMA balancing mode (disabled,
-+	  normal, memory tiering, or both) on a per-cgroup basis, overriding the
-+	  global NUMA balancing sysctl. A latency-sensitive service can
-+	  opt its tasks out of balancing, or a batch service can have its
-+	  PMEM-resident memory promoted when hot, without changing the
-+	  mode for the rest of the system.
-+
-+	  The request is written and read back through the
-+	  bpf_numab_set_mode() and bpf_numab_get_mode() kfuncs, callable
-+	  from BPF_PROG_TYPE_SYSCALL programs. While no cgroup makes a
-+	  request, the NUMA balancing hot paths pay a single patched-out
-+	  branch and nothing else.
-+
-+	  If unsure, say Y.
-+
- config SCHED_CACHE
- 	bool "Cache aware load balance"
- 	default y
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 227d09704ca5..e9c01a017a1d 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -39,6 +39,7 @@
- #include <linux/proc_fs.h>
- #include <linux/rcupdate.h>
- #include <linux/sched.h>
-+#include <linux/sched/numa_balancing.h>
- #include <linux/sched/task.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
-@@ -2122,6 +2123,9 @@ static void init_cgroup_housekeeping(struct cgroup *cgrp)
- 	for (int i = 0; i < ARRAY_SIZE(cgrp->bpf.revisions); i++)
- 		cgrp->bpf.revisions[i] = 1;
- #endif
-+#ifdef CONFIG_BPF_NUMAB
-+	cgrp->numab_mode = NUMAB_FOLLOW_SYSTEM;
-+#endif
- 
- 	init_waitqueue_head(&cgrp->offline_waitq);
- 	INIT_WORK(&cgrp->release_agent_work, cgroup1_release_agent);
-@@ -5719,6 +5723,16 @@ static void css_free_rwork_fn(struct work_struct *work)
- 			cgroup1_pidlist_destroy_all(cgrp);
- 		cancel_work_sync(&cgrp->release_agent_work);
- 		bpf_cgrp_storage_free(cgrp);
-+#ifdef CONFIG_BPF_NUMAB
-+		/*
-+		 * Drop the static key count of a request the caller never
-+		 * cleared. No setter can race: this path runs only after
-+		 * the last css ref is gone, and the kfunc pins the cgroup
-+		 * while it runs.
-+		 */
-+		if (cgrp->numab_mode != NUMAB_FOLLOW_SYSTEM)
-+			static_branch_dec(&numab_cgroup_mode_set);
-+#endif
- 
- 		if (cgroup_parent(cgrp)) {
- 			/*
-diff --git a/kernel/sched/bpf_numab.c b/kernel/sched/bpf_numab.c
+diff --git a/tools/testing/selftests/bpf/prog_tests/bpf_numab.c b/tools/testing/selftests/bpf/prog_tests/bpf_numab.c
 new file mode 100644
-index 000000000000..4a9da305ccb1
+index 000000000000..7ce4b8153c42
 --- /dev/null
-+++ b/kernel/sched/bpf_numab.c
-@@ -0,0 +1,195 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Per-cgroup NUMA balancing mode
-+ *
-+ * A cgroup can override the global NUMA balancing state for the tasks it
-+ * runs and the memory it owns: the bpf_numab_set_mode() kfunc stores a
-+ * requested mode in struct cgroup, and the NUMA balancing hot paths combine
-+ * the requests of the matching cgroup and of every ancestor. For a task
-+ * that is the chain of the task's cgroup; for a folio it is the chain of
-+ * the memcg the folio is charged to. An opt-out wins and binds the
-+ * subtree; otherwise the requested bits OR together and are read
-+ * independently, the way the sysctl reads them.
-+ *
-+ * Author: Yafang Shao <laoar.shao@gmail.com>
-+ */
-+#include <linux/bpf.h>
-+#include <linux/btf.h>
-+#include <linux/cgroup.h>
-+#include <linux/memcontrol.h>
-+#include <linux/module.h>
-+#include <linux/mutex.h>
-+#include <linux/sched.h>
-+#include <linux/sched/numa_balancing.h>
++++ b/tools/testing/selftests/bpf/prog_tests/bpf_numab.c
+@@ -0,0 +1,227 @@
++// SPDX-License-Identifier: GPL-2.0
 +
-+/*
-+ * Set while any cgroup overrides the global state: the hot paths skip the
-+ * consult entirely while it stays off. Counted per cgroup that makes a
-+ * request, so the key goes off again once the last request is gone.
-+ */
-+DEFINE_STATIC_KEY_FALSE(numab_cgroup_mode_set);
++#include <test_progs.h>
++#include "cgroup_helpers.h"
++#include "bpf_numab.skel.h"
 +
-+/*
-+ * Combine the requests of @cgrp and of every ancestor. A task chain
-+ * stops at an explicit opt-out: a task can never be forced into
-+ * balancing. A folio chain skips opt-outs instead (a cgroup's DISABLED
-+ * request only speaks for its tasks, never for its memory) and keeps
-+ * collecting the remaining requests.
-+ */
-+static int numab_cgroup_mode(struct cgroup *cgrp, bool folio_side)
++#define CGROUP_PATH	"/bpf_numab"
++#define CHILD_PATH	CGROUP_PATH "/child"
++
++/* The per-cgroup request domain, mirroring the kernel constants. */
++#define NUMAB_FOLLOW_SYSTEM	(-1)
++#define NUMAB_DISABLED		0
++#define NUMAB_NORMAL		1
++#define NUMAB_TIERING		2
++#define NUMAB_NORMAL_TIERING	3
++
++static int numab_set(struct bpf_numab *skel, u64 cgid,
++		     long mode)
 +{
-+	int req = 0;
++	LIBBPF_OPTS(bpf_test_run_opts, opts);
++	int ret;
 +
-+	for (; cgrp; cgrp = cgroup_parent(cgrp)) {
-+		/* data_race: the field is written under numab_mode_mutex. */
-+		int mode = data_race(READ_ONCE(cgrp->numab_mode));
++	skel->bss->set_cgid = cgid;
++	skel->bss->set_mode = mode;
++	ret = bpf_prog_test_run_opts(bpf_program__fd(skel->progs.numab_set),
++				     &opts);
++	if (!ASSERT_OK(ret, "set run"))
++		return -1;
++	return skel->bss->set_ret;
++}
 +
-+		if (mode == NUMAB_FOLLOW_SYSTEM)
-+			continue;
-+		if (mode == NUMA_BALANCING_DISABLED) {
-+			if (!folio_side)
-+				return NUMA_BALANCING_DISABLED;
-+			continue;
-+		}
-+		req |= mode;
-+	}
-+	return req ?: NUMAB_FOLLOW_SYSTEM;
++static long numab_get(struct bpf_numab *skel, u64 cgid)
++{
++	LIBBPF_OPTS(bpf_test_run_opts, opts);
++	int ret;
++
++	skel->bss->get_cgid = cgid;
++	ret = bpf_prog_test_run_opts(bpf_program__fd(skel->progs.numab_get),
++				     &opts);
++	if (!ASSERT_OK(ret, "get run"))
++		return -1;
++	return skel->bss->get_mode;
 +}
 +
 +/*
-+ * The combined request for @p. Kernel threads have no user memory to
-+ * balance, so they make no request. The walk needs no reference: the
-+ * cgroup chain is freed only after an RCU grace period, so
-+ * rcu_read_lock() keeps it alive for the whole walk.
++ * Roundtrip through the combined view: the test cgroup has no ancestor
++ * making a request, so the combined mode is the stored one.
 + */
-+int task_numab_mode(struct task_struct *p)
++static void test_set_get(void)
 +{
-+	int mode;
++	struct bpf_numab *skel;
++	int cgroup_fd;
++	u64 cgid;
 +
-+	if (!p->mm)
-+		return NUMAB_FOLLOW_SYSTEM;
++	cgroup_fd = test__join_cgroup(CGROUP_PATH);
++	if (!ASSERT_GE(cgroup_fd, 0, "join_cgroup"))
++		return;
 +
-+	rcu_read_lock();
-+	mode = numab_cgroup_mode(task_dfl_cgroup(p), false);
-+	rcu_read_unlock();
-+	return mode;
++	skel = bpf_numab__open_and_load();
++	if (!ASSERT_OK_PTR(skel, "open_and_load"))
++		goto cleanup;
++
++	cgid = get_cgroup_id(CGROUP_PATH);
++	if (!ASSERT_GT(cgid, 0, "get_cgroup_id"))
++		goto cleanup;
++
++	ASSERT_EQ(numab_set(skel, cgid, NUMAB_NORMAL), 0, "set normal");
++	ASSERT_EQ(numab_get(skel, cgid), NUMAB_NORMAL, "get normal");
++
++	ASSERT_EQ(numab_set(skel, cgid, NUMAB_TIERING), 0, "set tiering");
++	ASSERT_EQ(numab_get(skel, cgid), NUMAB_TIERING, "get tiering");
++
++	ASSERT_EQ(numab_set(skel, cgid, NUMAB_NORMAL_TIERING), 0, "set both");
++	ASSERT_EQ(numab_get(skel, cgid), NUMAB_NORMAL_TIERING, "get both");
++
++	ASSERT_EQ(numab_set(skel, cgid, NUMAB_DISABLED), 0, "set disabled");
++	ASSERT_EQ(numab_get(skel, cgid), NUMAB_DISABLED, "get disabled");
++
++	/* Back to the system setting. */
++	ASSERT_EQ(numab_set(skel, cgid, NUMAB_FOLLOW_SYSTEM), 0, "unset");
++	ASSERT_EQ(numab_get(skel, cgid), NUMAB_FOLLOW_SYSTEM, "get unset");
++
++cleanup:
++	bpf_numab__destroy(skel);
++	close(cgroup_fd);
 +}
 +
 +/*
-+ * The combined request for @folio's owner. An uncharged folio makes no
-+ * request. A folio charged to a v1 memcg resolves to a cgroup chain the
-+ * kfunc cannot reach, so it carries no request either and the folio
-+ * follows the global state.
++ * The mode domain: NUMAB_FOLLOW_SYSTEM and the NUMA_BALANCING_* bitmasks
++ * are accepted, anything else is rejected with -EINVAL.
 + */
-+int folio_numab_mode(struct folio *folio)
++static void test_invalid_mode(void)
 +{
-+	struct mem_cgroup *memcg;
-+	struct cgroup *cgrp;
-+	int mode;
++	struct bpf_numab *skel;
++	int cgroup_fd;
++	u64 cgid;
 +
-+	rcu_read_lock();
-+	memcg = folio_memcg(folio);
-+	cgrp = memcg ? memcg->css.cgroup : NULL;
-+	mode = cgrp ? numab_cgroup_mode(cgrp, true) : NUMAB_FOLLOW_SYSTEM;
-+	rcu_read_unlock();
-+	return mode;
++	cgroup_fd = test__join_cgroup(CGROUP_PATH);
++	if (!ASSERT_GE(cgroup_fd, 0, "join_cgroup"))
++		return;
++
++	skel = bpf_numab__open_and_load();
++	if (!ASSERT_OK_PTR(skel, "open_and_load"))
++		goto cleanup;
++
++	cgid = get_cgroup_id(CGROUP_PATH);
++	if (!ASSERT_GT(cgid, 0, "get_cgroup_id"))
++		goto cleanup;
++
++	ASSERT_EQ(numab_set(skel, cgid, -2), -EINVAL, "set below domain");
++	ASSERT_EQ(numab_set(skel, cgid, 4), -EINVAL, "set above domain");
++	ASSERT_EQ(numab_set(skel, cgid, 0x1000), -EINVAL, "set far above");
++
++	/* The rejected requests must not have stuck. */
++	ASSERT_EQ(numab_get(skel, cgid), NUMAB_FOLLOW_SYSTEM, "get unchanged");
++
++cleanup:
++	bpf_numab__destroy(skel);
++	close(cgroup_fd);
 +}
 +
 +/*
-+ * Serialize the static key accounting: without it, two concurrent
-+ * setters on the same cgroup could both count one transition, and the
-+ * key would stay on after the last request is gone.
++ * An id that resolves to no cgroup is rejected with -ENOENT.
 + */
-+static DEFINE_MUTEX(numab_mode_mutex);
-+
-+__bpf_kfunc_start_defs();
-+
-+/**
-+ * bpf_numab_set_mode() - Set the NUMA balancing mode requested for a cgroup.
-+ * @cgid: kernfs id of the cgroup, e.g. from name_to_handle_at() on its
-+ * directory or from bpf_get_current_cgroup_id()
-+ * @mode: NUMAB_FOLLOW_SYSTEM to defer to the global sysctl state, or a
-+ * NUMA_BALANCING_* bitmask. The kernel reads the bits independently,
-+ * the way kernel.numa_balancing reads them, so NORMAL|TIERING engages
-+ * both modes. A DISABLED request only speaks for the cgroup's tasks,
-+ * never for its memory, which follows the remaining requests of its
-+ * ancestors.
-+ *
-+ * Return: 0 on success, -EINVAL for a mode outside the domain, -ENOENT
-+ * for an id that resolves to no cgroup.
-+ */
-+__bpf_kfunc int bpf_numab_set_mode(u64 cgid, s64 mode)
++static void test_bad_cgid(void)
 +{
-+	struct cgroup *cgrp;
-+	int old;
++	struct bpf_numab *skel;
 +
-+	if (mode != NUMAB_FOLLOW_SYSTEM &&
-+	    (mode < 0 || mode > (NUMA_BALANCING_NORMAL |
-+				 NUMA_BALANCING_MEMORY_TIERING)))
-+		return -EINVAL;
++	skel = bpf_numab__open_and_load();
++	if (!ASSERT_OK_PTR(skel, "open_and_load"))
++		return;
 +
-+	cgrp = __cgroup_get_from_id(cgid);
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
++	ASSERT_EQ(numab_set(skel, 0, NUMAB_NORMAL), -ENOENT, "set cgid 0");
++	ASSERT_EQ(numab_get(skel, 0), -ENOENT, "get cgid 0");
++	ASSERT_EQ(numab_set(skel, 0xdeadbeef, NUMAB_NORMAL), -ENOENT,
++		  "set bad cgid");
++	ASSERT_EQ(numab_get(skel, 0xdeadbeef), -ENOENT, "get bad cgid");
 +
-+	mutex_lock(&numab_mode_mutex);
-+	old = cgrp->numab_mode;
-+	if (old == NUMAB_FOLLOW_SYSTEM && mode != NUMAB_FOLLOW_SYSTEM)
-+		static_branch_inc(&numab_cgroup_mode_set);
-+	else if (old != NUMAB_FOLLOW_SYSTEM && mode == NUMAB_FOLLOW_SYSTEM)
-+		static_branch_dec(&numab_cgroup_mode_set);
-+	WRITE_ONCE(cgrp->numab_mode, (int)mode);
-+	mutex_unlock(&numab_mode_mutex);
-+	cgroup_put(cgrp);
++	bpf_numab__destroy(skel);
++}
++
++/*
++ * The requests of a cgroup and of every ancestor combine: an opt-out
++ * wins over every request in the chain, otherwise the requested bits OR
++ * together, and an unset cgroup inherits what its ancestors ask for.
++ */
++static void test_hierarchy(void)
++{
++	u64 parent_cgid, child_cgid;
++	int parent_fd, child_fd;
++	struct bpf_numab *skel;
++
++	parent_fd = test__join_cgroup(CGROUP_PATH);
++	if (!ASSERT_GE(parent_fd, 0, "join_parent_cgroup"))
++		return;
++
++	child_fd = create_and_get_cgroup(CHILD_PATH);
++	if (!ASSERT_GE(child_fd, 0, "create_child_cgroup"))
++		goto cleanup_parent;
++
++	skel = bpf_numab__open_and_load();
++	if (!ASSERT_OK_PTR(skel, "open_and_load"))
++		goto cleanup;
++
++	parent_cgid = get_cgroup_id(CGROUP_PATH);
++	child_cgid = get_cgroup_id(CHILD_PATH);
++	if (!ASSERT_GT(parent_cgid, 0, "get_parent_cgid") ||
++	    !ASSERT_GT(child_cgid, 0, "get_child_cgid"))
++		goto cleanup;
++
++	/* The child inherits an ancestor's request untouched. */
++	ASSERT_EQ(numab_set(skel, parent_cgid, NUMAB_TIERING), 0,
++		  "set parent tiering");
++	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_TIERING,
++		  "child inherits");
++
++	/* A request ORs with the ancestor's; NORMAL does not undo TIERING. */
++	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_NORMAL), 0,
++		  "set child normal");
++	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_NORMAL_TIERING,
++		  "or both");
++
++	/* The child's own opt-out wins. */
++	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_DISABLED), 0,
++		  "set child disabled");
++	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_DISABLED,
++		  "own opt-out wins");
++
++	/* So does an ancestor's: a task is never forced into balancing. */
++	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_TIERING), 0,
++		  "set child tiering");
++	ASSERT_EQ(numab_set(skel, parent_cgid, NUMAB_DISABLED), 0,
++		  "set parent disabled");
++	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_DISABLED,
++		  "ancestor opt-out wins");
++
++	/* Unsetting the parent re-exposes the child's own request. */
++	ASSERT_EQ(numab_set(skel, parent_cgid, NUMAB_FOLLOW_SYSTEM), 0,
++		  "unset parent");
++	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_TIERING,
++		  "child request again");
++
++	/* Unsetting the child leaves the chain with no request. */
++	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_FOLLOW_SYSTEM), 0,
++		  "unset child");
++	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_FOLLOW_SYSTEM,
++		  "no request");
++
++cleanup:
++	bpf_numab__destroy(skel);
++	close(child_fd);
++	remove_cgroup(CHILD_PATH);
++cleanup_parent:
++	close(parent_fd);
++}
++
++void test_bpf_numab(void)
++{
++	if (test__start_subtest("set_get"))
++		test_set_get();
++	if (test__start_subtest("invalid_mode"))
++		test_invalid_mode();
++	if (test__start_subtest("bad_cgid"))
++		test_bad_cgid();
++	if (test__start_subtest("hierarchy"))
++		test_hierarchy();
++}
+diff --git a/tools/testing/selftests/bpf/progs/bpf_numab.c b/tools/testing/selftests/bpf/progs/bpf_numab.c
+new file mode 100644
+index 000000000000..b386cbbc19fa
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/bpf_numab.c
+@@ -0,0 +1,32 @@
++// SPDX-License-Identifier: GPL-2.0
++
++#include <vmlinux.h>
++#include <bpf/bpf_helpers.h>
++
++/* Inputs, set from userspace before each run. */
++long set_cgid;
++long set_mode;
++long get_cgid;
++
++/* Results, read back after each run. */
++long set_ret;
++long get_mode;
++
++extern int bpf_numab_set_mode(u64 cgid, s64 mode) __ksym;
++extern s64 bpf_numab_get_mode(u64 cgid) __ksym;
++
++SEC("syscall")
++int numab_set(void *ctx)
++{
++	set_ret = bpf_numab_set_mode((u64)set_cgid, set_mode);
 +	return 0;
 +}
 +
-+/**
-+ * bpf_numab_get_mode() - Read the NUMA balancing mode that applies to a cgroup.
-+ * @cgid: kernfs id of the cgroup
-+ *
-+ * The combined request of the cgroup and of every ancestor: an opt-out
-+ * wins, otherwise the requested bits OR together, and the kernel reads
-+ * them independently, as kernel.numa_balancing does, so a combined
-+ * NORMAL|TIERING engages both modes. NUMAB_FOLLOW_SYSTEM when nobody
-+ * makes a request. This is the view of the cgroup's tasks: its memory
-+ * follows the remaining requests of the chain when it opts out, and
-+ * that folio-side view stays internal to the kernel.
-+ *
-+ * Return: the combined mode, NUMAB_FOLLOW_SYSTEM (-1) included, or
-+ * -ENOENT for an id that resolves to no cgroup.
-+ */
-+__bpf_kfunc s64 bpf_numab_get_mode(u64 cgid)
++SEC("syscall")
++int numab_get(void *ctx)
 +{
-+	struct cgroup *cgrp;
-+	s64 mode;
-+
-+	cgrp = __cgroup_get_from_id(cgid);
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
-+
-+	rcu_read_lock();
-+	mode = numab_cgroup_mode(cgrp, false);
-+	rcu_read_unlock();
-+
-+	cgroup_put(cgrp);
-+	return mode;
++	get_mode = bpf_numab_get_mode((u64)get_cgid);
++	return 0;
 +}
 +
-+__bpf_kfunc_end_defs();
-+
-+BTF_KFUNCS_START(numab_kfunc_ids)
-+BTF_ID_FLAGS(func, bpf_numab_set_mode, KF_SLEEPABLE)
-+BTF_ID_FLAGS(func, bpf_numab_get_mode)
-+BTF_KFUNCS_END(numab_kfunc_ids)
-+
-+static const struct btf_kfunc_id_set numab_kfunc_set = {
-+	.owner = THIS_MODULE,
-+	.set   = &numab_kfunc_ids,
-+};
-+
-+static int __init numab_kfunc_init(void)
-+{
-+	return register_btf_kfunc_id_set(BPF_PROG_TYPE_SYSCALL, &numab_kfunc_set);
-+}
-+late_initcall(numab_kfunc_init);
-diff --git a/kernel/sched/build_policy.c b/kernel/sched/build_policy.c
-index 2a828725a7f9..3746c6675ff3 100644
---- a/kernel/sched/build_policy.c
-+++ b/kernel/sched/build_policy.c
-@@ -75,4 +75,8 @@
- # include "ext/sub.c"
- #endif
- 
-+#ifdef CONFIG_BPF_NUMAB
-+#include "bpf_numab.c"
-+#endif
-+
- #include "syscalls.c"
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 066818498c76..2a4ad93a262a 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -2965,7 +2965,7 @@ bool should_numa_migrate_memory(struct task_struct *p, struct folio *folio,
- 	this_cpupid = cpu_pid_to_cpupid(dst_cpu, current->pid);
- 	last_cpupid = folio_xchg_last_cpupid(folio, this_cpupid);
- 
--	if (!(numab_in_tiering_mode()) && !node_is_toptier(src_nid) &&
-+	if (!folio_numab_in_tiering_mode(folio) && !node_is_toptier(src_nid) &&
- 	    !cpupid_valid(last_cpupid))
- 		return false;
- 
-@@ -4208,7 +4208,7 @@ void task_numa_fault(int last_cpupid, int mem_node, int pages, int flags)
- 	 * node for memory tiering mode.
- 	 */
- 	if (!node_is_toptier(mem_node) &&
--	    (numab_in_tiering_mode() || !cpupid_valid(last_cpupid)))
-+	    (task_numab_in_tiering_mode(p) || !cpupid_valid(last_cpupid)))
- 		return;
- 
- 	/* Allocate buffer to track faults on a per-node basis */
-diff --git a/mm/memory-tiers.c b/mm/memory-tiers.c
-index 9009b164edc2..c68ce7f9171e 100644
---- a/mm/memory-tiers.c
-+++ b/mm/memory-tiers.c
-@@ -57,15 +57,15 @@ static const struct bus_type memory_tier_subsys = {
-  * folio_use_access_time - check if a folio reuses cpupid for page access time
-  * @folio: folio to check
-  *
-- * folio's _last_cpupid field is repurposed by memory tiering. In memory
-- * tiering mode, cpupid of slow memory folio (not toptier memory) is used to
-- * record page access time.
-+ * folio's _last_cpupid field is repurposed by memory tiering. When the
-+ * owner of @folio participates in tiering, cpupid of slow memory folio
-+ * (not toptier memory) is used to record page access time.
-  *
-  * Return: the folio _last_cpupid is used to record page access time
-  */
- bool folio_use_access_time(struct folio *folio)
- {
--	return numab_in_tiering_mode() &&
-+	return folio_numab_in_tiering_mode(folio) &&
- 	       !node_is_toptier(folio_nid(folio));
- }
- #endif
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index 442c93079fb0..fe8ae6cf5c58 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -871,7 +871,7 @@ bool folio_can_map_prot_numa(struct folio *folio, struct vm_area_struct *vma,
- 	 * Skip scanning top tier node if normal numa
- 	 * balancing is disabled
- 	 */
--	if (!numab_in_normal_mode() && node_is_toptier(nid))
-+	if (!folio_numab_in_normal_mode(folio) && node_is_toptier(nid))
- 		return false;
- 
- 	if (folio_use_access_time(folio))
-diff --git a/mm/migrate.c b/mm/migrate.c
-index a622df9a9b42..4b87d465c5fd 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -819,7 +819,7 @@ void folio_migrate_flags(struct folio *newfolio, struct folio *folio)
- 	 * memory node, reset cpupid, because that is used to record
- 	 * page access time in slow memory node.
- 	 */
--	if (numab_in_tiering_mode()) {
-+	if (folio_numab_in_tiering_mode(folio)) {
- 		bool f_toptier = node_is_toptier(folio_nid(folio));
- 		bool t_toptier = node_is_toptier(folio_nid(newfolio));
- 
-@@ -2771,7 +2771,7 @@ int migrate_misplaced_folio(struct folio *folio, int node)
- 	if (nr_succeeded) {
- 		count_vm_numa_events(NUMA_PAGE_MIGRATE, nr_succeeded);
- 		count_memcg_events(memcg, NUMA_PAGE_MIGRATE, nr_succeeded);
--		if ((numab_in_tiering_mode())
-+		if (folio_numab_in_tiering_mode(folio)
- 		    && !node_is_toptier(folio_nid(folio))
- 		    && node_is_toptier(node))
- 			mod_lruvec_state(lruvec, PGPROMOTE_SUCCESS, nr_succeeded);
++char _license[] SEC("license") = "GPL";
 -- 
 2.52.0
 
