@@ -1,77 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=10.30.226.211
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792421655;
-	b=q/M23Gj8qslGp2z5wUrtE46aaV6ZSMi4DuMNRcIeBx71oUQHrsymuxEUli7Qd7kayDYk
-	 tkCpzQvre3CI3YIaMMIntBG7Oc4d57qlIQjEyEVcI96jIrr1ZGz4MavUSw1st/LJdEkiW
-	 3deWeRaxGH8y+MqS0PivW+68KCplHd/2mIFEU0x0VmsbUHlj8rFIggndFCSvJ7ZHj/Ua1
-	 NPexw+33WPmgG9xMEeWLOJfN0SUrjHz9zyss7u0mMbDc/x6xQD1Sh+YHGCDNNpPHwQIfj
-	 1L9VZqNStQpsMV9dIG/VlgskXYwrwVFbP0Du+Q+g0fvk3bFPkmjjV9PiRq1NAWKdV2g==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792421655;
-	h=Received:DKIM-Signature:Received:X-MC-Unique:X-Mimecast-MFC-AGG-ID:
-	 Received:Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:
-	 Cc:References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=LA9yLlWDsUw4mAlFrb8iNJ8Iy8siUyde3QGxANbXUgc=;
-	b=n3362GSj2gNXOojL4haUoulSgMmwyWRKvQNWRIHzi4CxREu0RjomAaw6P4gkHj720QTd
-	 PIsIVkICX9+R2hrNQBAGdSvDABQDfS4jh7rf6tNLlUclHxma3sJJRsea8OHfkyyNH4uQr
-	 E9MK/k6PWhJTewJsVYRha9XwHgPEI3Cm6rKiT3b+Qz6+xi0voVh8a/X91SxRxh8W6qo/f
-	 G8Zug0HD+d4pIgXtJ/8zqhRYdzuQ+wU6514itcqwh7VkgVQRqZYRxd4OrE5S9K7tJ9r1p
-	 lKWbsQBz6jKaeS7QqmEr5Bjtrek5eRsJ1lmqI/yD3Sl5Z+kLCame5VxKy3FKWoLQorA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=LbEJ8Mi3;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792425536;
+	b=lOks7QAuliNh6xxYuBFARzbmo2oZDmL+Peexsvx12eBblDQSzs4PFk2jkRw7mAltecKa
+	 pJSTql6puUl1xMuBjcB5OqHL/q2Ex27aoGmpZe04DGq2weuZ/Evr0peUzqnqq9V0fXkqW
+	 IUeRfbIWm5iQgNy76VpQuhV3wgZ4NgrcfxDTKg7h83wD2l56DzAgQsSPJgRBDJx7oaCPi
+	 W1Ujk/4rZc1lu1WaPYushgZKXBX2qBCA0zzWkGNWXgnRn3/obBeIk5ebZX/61oPoQBsUh
+	 E8S7gAGq2l+TJ7gWgthJrW4xnk+nEi5o5Nl+mnEI54YBPUGCGVyoZz2xvIutR8xzKlg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792425536;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
+	bh=xiJEIKtkd3LoHb9/mGUKK1tAHph0ZPZhpBeMubfOR5Y=;
+	b=1H+XdIVvLSnn/h82sw+LrBY8f6CV+RlgeG4O8TpkLEapEDF9YWGVzZV8tjC+jBlUfuwD
+	 Ky9nZyHXUac98Z/L1td3IVRXxY9WLcukAMtD+siRHXzflPsEvB4Ef6FYQowpVz0Q9oPYC
+	 z+p+62jdz6+/CecmV65pAfe1LGl+55TUu2SiBq8Y85ziZWkxl3C8nv4SRTLy74/vvJpRj
+	 Bp+VgBgk0NyAYgw+80bOqzr84dMRnhWKzkV82ev83YPYPwydKVg54Gz52kN9BmbbDmUqB
+	 YztVy4piu3t+O74itUOz+u+WjFscaOSISCUmGu6l7ugPA82WMzYkJiRqJBHSpQJwK6Q==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=10.30.226.211
-Received: from aws-us-west-2-korg-listserv-1.web.codeaurora.org (ip-10-30-226-211.us-west-2.compute.internal [10.30.226.211])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4D4A5606DA4F
-	for <cgroups.vger.kernel.org@localhost.mlmmj>; Mon, 19 Oct 2026 14:54:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=LbEJ8Mi3
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=L16HOo2W;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6621D2741A0
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 14:54:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792421655; cv=none; b=Smr1m7agenApCFQveSnz6KyHJLWoo8FkNpnbHzqI5M+SXBBM9oO5m8dDbXKksiI8D//ORAgUdub9jCN3CKadeOKyx4DVM4MkWO7LYCjLHWlxUhLg7JJUdLBRnhfcMJxP3ErYKFboPA4FPJ+lO/am8svrAAi9SYZwSb+oYl8mAPw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792421655; c=relaxed/simple;
-	bh=f/SGXW3zS8s9qfLrgBkvDJ+xdVjRbBYrPEPmubUH4Ko=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KXijFKnFxPN0d37ix6DysO8ToZBBQ+YxO9VbRJPF/0cVynoLRwAJQo5k/g2Yak5mRMpVmg6KrRRO/tBUizMLQZ5q9SPQMicp4AoQswGGsoZ/lvh9V8DCJLlP7bG1SkuI6fLZRxkmsBx+3N5bejHT17AsQEiChfM7zIKyQfGbyq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LbEJ8Mi3; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE6F606AAC2
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 15:58:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DEE6F606AAC2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=L16HOo2W
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792421652;
+	s=mimecast20190719; t=1792425534;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=LA9yLlWDsUw4mAlFrb8iNJ8Iy8siUyde3QGxANbXUgc=;
-	b=LbEJ8Mi37Vcqra9+Ww2qQBv2dh5uy8kUl9HHp/OJzEIgxGAXMs8IBkyweVxt66xQTEWSs/
-	E6PA2ubZL7zCdAuaO81d0pEiPqW6ry8xbGQqEy25aEbdGElkEt4ZiARDjKrQiKhKs8CYyC
-	b6eM1l5IlMvy0TLRzPOP4bq9p5oGQEE=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+	bh=xiJEIKtkd3LoHb9/mGUKK1tAHph0ZPZhpBeMubfOR5Y=;
+	b=L16HOo2WTNL+XzQbzG9a/PXl7B9gS7z28AWoPQXtNZuhaFXqyVpy2HfFcDqqgFz+gxw/mk
+	i92JAXe93eH76UCsMFo4luikK0OG5mSUbQyNpwDVEkpqBo+poKD6aB0xzfDRuR9UcPJuAt
+	mTAofcKaV43C0XvuYaKDRbnyPlnt8bI=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-58-BFeS7YMuPXOJqu7Wckh88g-1; Mon,
- 19 Oct 2026 14:54:00 +0000
-X-MC-Unique: BFeS7YMuPXOJqu7Wckh88g-1
-X-Mimecast-MFC-AGG-ID: BFeS7YMuPXOJqu7Wckh88g_1792421637
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-607-1evXegoyMFasyfG_YYbubw-1; Mon,
+ 19 Oct 2026 15:58:50 +0000
+X-MC-Unique: 1evXegoyMFasyfG_YYbubw-1
+X-Mimecast-MFC-AGG-ID: 1evXegoyMFasyfG_YYbubw_1792425528
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A9A5A195399B;
-	Mon, 19 Oct 2026 14:53:46 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 382111955F11;
+	Mon, 19 Oct 2026 15:58:47 +0000 (UTC)
 Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 07778410;
-	Mon, 19 Oct 2026 14:53:42 +0000 (UTC)
-Message-ID: <1bae2a1a-e4fd-4f11-94e3-c9ff9b37a399@redhat.com>
-Date: Mon, 19 Oct 2026 10:53:41 -0400
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 07C4A195608B;
+	Mon, 19 Oct 2026 15:58:44 +0000 (UTC)
+Message-ID: <32462fc4-8a28-47f2-a32a-aaaaa9a501d7@redhat.com>
+Date: Mon, 19 Oct 2026 11:58:44 -0400
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -82,78 +72,144 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] cgroup/cpuset: use mems_allowed_seq when checking a
- policy nodemask
-To: "Gregory Price (Meta)" <gourry@gourry.net>, linux-mm@kvack.org,
- cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kernel-team@meta.com,
- ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
- akpm@linux-foundation.org, vbabka@kernel.org, surenb@google.com,
- mhocko@suse.com, brendan.jackman@linux.dev, ziy@nvidia.com,
- david@kernel.org, mgorman@techsingularity.net
-References: <20261014222456.2318284-1-gourry@gourry.net>
- <20261014222456.2318284-3-gourry@gourry.net>
+Subject: Re: [PATCH-next v3 6/9] cgroup/cpuset: Don't allow a child root
+ partition under an isolated parent
+To: Guopeng Zhang <guopeng.zhang@linux.dev>,
+ Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>,
+ Jonathan Corbet <corbet@lwn.net>, Randy Dunlap <rdunlap@infradead.org>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Hui Peng <benquike@gmail.com>
+References: <20261014140548.575122-1-longman@redhat.com>
+ <20261014140548.575122-7-longman@redhat.com>
+ <497db854-17ba-47ae-a9e0-8f1dacb0b205@linux.dev>
 Content-Language: en-US
 From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20261014222456.2318284-3-gourry@gourry.net>
+In-Reply-To: <497db854-17ba-47ae-a9e0-8f1dacb0b205@linux.dev>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 10/14/26 6:24 PM, Gregory Price (Meta) wrote:
-> A cpuset update changes the task's mems_allowed and rebinds its
-> mempolicy in separate steps under mems_allowed_seq, but the check
-> reads both without it.  This can cause a spurious numa placement
-> miss under some cpuset/mempolicy combinations.
+On 10/15/26 11:30 PM, Guopeng Zhang wrote:
 >
-> A reader that loads one mask before the update and the other after
-> it can see a spurious empty intersection and drop the nodemask.
+> 在 2026/10/14 22:05, Waiman Long 写道:
+>> Although it is not typical for real users to create a complicated nested
+>> partition hierarchy, it is currently allowed to create nested root and
+>> isolated partitions. In addition, disabling or invalidating a partition
+>> should always be allowed especially when the cpuset is being deleted.
+>>
+>> With a nested root and isolated partition hierarchy, it is possible
+>> that all active housekeeping CPUs can be exhausted when disabling or
+>> invalidating a root partition and returning its CPUs to the isolated
+>> parent.
+>>
+>> One way to avoid this problem is to disallow the creation of a root
+>> partition under an isolated parent. It is indeed a new limitation imposed
+>> on the existing cpuset partition functionality. However an isolated
+>> partition is usually a left node where scheduling and some other kernel
+>> noises are disabled. It doesn't make much sense to create a child root
+>> partition under an isolated parent and remove some CPUs from the set
+>> of isolated CPUs again. Creation of a child isolated partition under a
+>> root or isolated parent is still allowed.
+>>
+>> The cgroup-v2 documentation is also updated to reflect this new
+>> limitation. New test cases are added to test_cpuset_prs.sh to verify
+>> this new behavior. Some existing test cases are also updated accordingly.
+>>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>   Documentation/admin-guide/cgroup-v2.rst           |  4 +++-
+>>   kernel/cgroup/cpuset-internal.h                   |  1 +
+>>   kernel/cgroup/cpuset.c                            | 13 +++++++++++++
+>>   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 14 ++++++++------
+>>   4 files changed, 25 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>> index bd8c80f3bbc9..2c445829e24d 100644
+>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>> @@ -2767,7 +2767,9 @@ Cpuset Interface Files
+>>   	be retained, but behaves more like a "member".
+>>   
+>>   	All possible state transitions among "member", "root" and
+>> -	"isolated" are allowed.
+>> +	"isolated" are allowed with the exception that a local child
+>> +	"root" partition is not allowed to be created under an "isolated"
+>> +	parent partition.
+>>   
+>>   	On read, the "cpuset.cpus.partition" file can show the following
+>>   	values.
+>> diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
+>> index 5da9c91295b0..2e44dc8634dc 100644
+>> --- a/kernel/cgroup/cpuset-internal.h
+>> +++ b/kernel/cgroup/cpuset-internal.h
+>> @@ -35,6 +35,7 @@ enum prs_errcode {
+>>   	PERR_HKEEPING,
+>>   	PERR_ACCESS,
+>>   	PERR_REMOTE,
+>> +	PERR_ISOPARENT,
+>>   };
+>>   
+>>   /* bits in struct cpuset flags field */
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 40c004386af0..681701ba46e1 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -60,6 +60,7 @@ static const char * const perr_strings[] = {
+>>   	[PERR_HKEEPING]  = "partition config conflicts with housekeeping setup",
+>>   	[PERR_ACCESS]    = "Enable partition not permitted",
+>>   	[PERR_REMOTE]    = "Have remote partition underneath",
+>> +	[PERR_ISOPARENT] = "Root partition is not allowed with isolated parent",
+>>   };
+>>   
+>>   /*
+>> @@ -2865,6 +2866,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>>   	int err = PERR_NONE, old_prs = cs->partition_root_state;
+>>   	struct cpuset *parent = parent_cs(cs);
+>>   	struct tmpmasks tmpmask;
+>> +	int parent_prs = parent->partition_root_state;
+>>   	bool isolcpus_updated = false;
+>>   	bool disable_partition = false;
+>>   
+>> @@ -2910,6 +2912,14 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>>   			enum partition_cmd cmd = (new_prs == PRS_ROOT)
+>>   					       ? partcmd_enable : partcmd_enablei;
+>>   
+>> +			/*
+>> +			 * It is not allowed to create a root partition under
+>> +			 * an isolated parent partition.
+>> +			 */
+>> +			if ((new_prs == PRS_ROOT) && (parent_prs == PRS_ISOLATED)) {
+>> +				err = PERR_ISOPARENT;
+>> +				goto out;
+>> +			}
+> I tested the following case. Writing root initially leaves C invalid, but
+> updating its cpuset.cpus makes it valid again.
 >
-> For example, a task with cpuset.mems={0} and MPOL_BIND={0}.  If the
-> cpuset moves to mems={1,2}, the policy is rebound to {1}.
+> CPUs 0-15 are online, with nohz_full=2-15 and no isolcpus:
 >
-> The allocator can race and compare the old mems_allowed {0} against
-> the new policy {1} - which will result in a dropped nodemask and a
-> misplaced allocation on node 2.
+>      # cd /sys/fs/cgroup
+>      # echo +cpuset > cgroup.subtree_control
+>      # mkdir A
+>      # echo 1-2 > A/cpuset.cpus
+>      # echo isolated > A/cpuset.cpus.partition
+>      # echo +cpuset > A/cgroup.subtree_control
+>      # mkdir A/C
+>      # echo 1 > A/C/cpuset.cpus
+>      # echo root > A/C/cpuset.cpus.partition
+>      # cat A/C/cpuset.cpus.partition
+>      root invalid (Root partition is not allowed with isolated parent)
+>      # echo 1-2 > A/C/cpuset.cpus
+>      # cat A/C/cpuset.cpus.partition
+>      root
 >
-> Simply retry the intersection until mems_allowed_seq is stable.
->
-> This covers the task policy, which is rebound under mems_allowed_seq.
-> VMA policies are rebound afterwards by mpol_rebind_mm(), outside
-> mems_allowed_seq, and are not covered by this change.
->
-> Fixes: cc9a6c877661 ("cpuset: mm: reduce large amounts of memory barrier related damage v3")
-> Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
-> ---
->   kernel/cgroup/cpuset.c | 13 ++++++++++++-
->   1 file changed, 12 insertions(+), 1 deletion(-)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 3f52717c19654..8ee239d5c6b48 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -4354,10 +4354,21 @@ nodemask_t cpuset_mems_allowed(struct task_struct *tsk)
->    * @nodemask: the nodemask to be checked
->    *
->    * Are any of the nodes in the nodemask allowed in current->mems_allowed?
-> + *
-> + * A cpuset update rebinds the task's mempolicy and changes mems_allowed in
-> + * separate steps, so retry if an update raced with the check.
->    */
->   int cpuset_nodemask_valid_mems_allowed(const nodemask_t *nodemask)
->   {
-> -	return nodes_intersects(*nodemask, current->mems_allowed);
-> +	unsigned int seq;
-> +	int ret;
-> +
-> +	do {
-> +		seq = read_mems_allowed_begin();
-> +		ret = nodes_intersects(*nodemask, current->mems_allowed);
-> +	} while (read_mems_allowed_retry(seq));
-> +
-> +	return ret;
->   }
->   
->   /*
-Reviewed-by: Waiman Long <longman@redhat.com>
+> C becomes a valid root partition.
+
+Thank for finding this bug. Yes, the patch is missing check in some 
+places. Will fix in the next version.
+
+Cheers,
+Longman
 
